@@ -7,6 +7,7 @@ export {
   FrameSidebar,
   frameSidebarWidth,
   SectionDrawer,
+  SectionMenuButton,
   type SectionList,
   type SectionLists,
   useFrame,

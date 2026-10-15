@@ -15,6 +15,7 @@ export {
   frameSidebarWidth,
   PhoneConnectionBanner,
   SectionDrawer,
+  SectionMenuButton,
   type SectionList,
   type SectionLists,
   useFrame,

@@ -52,7 +52,7 @@ const windowsDistribution = /(?:Binary|No distribution for \S+)/u;
 
 export async function browseAgents(page: Page): Promise<void> {
   if (onPhone(page))
-    await page.getByRole('button', { name: 'Show navigation menu' }).click();
+    await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await settingsLink(page, 'Agents').click();
   await expect(agentLink(page, exampleAgentName)).toBeVisible();

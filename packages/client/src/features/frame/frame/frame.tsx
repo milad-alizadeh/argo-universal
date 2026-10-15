@@ -13,6 +13,10 @@ import {
   PhoneDrawerContent,
   type PhoneDrawerContentProps,
 } from '../components/phone-drawer-content/phone-drawer-content';
+import {
+  PhoneMenuButton,
+  type PhoneMenuButtonProps,
+} from '../components/phone-menu-button/phone-menu-button';
 import { useAttentionCount } from '../hooks/use-attention-count';
 import {
   ScaffoldFrame,
@@ -170,4 +174,16 @@ export type SectionDrawerProps = Omit<
 // A compact window's drawer of sections, with the live attention count; the drawing is `PhoneDrawerContent`.
 export function SectionDrawer(props: SectionDrawerProps): React.JSX.Element {
   return <PhoneDrawerContent {...props} attentionCount={useAttentionCount()} />;
+}
+
+export type SectionMenuButtonProps = Omit<
+  PhoneMenuButtonProps,
+  'attentionCount'
+>;
+
+// ☰ in a narrow section root's header, with the live attention count; the drawing is `PhoneMenuButton`.
+export function SectionMenuButton(
+  props: SectionMenuButtonProps,
+): React.JSX.Element {
+  return <PhoneMenuButton {...props} attentionCount={useAttentionCount()} />;
 }

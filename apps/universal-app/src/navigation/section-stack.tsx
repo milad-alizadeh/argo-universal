@@ -6,17 +6,20 @@ import {
   type Section,
   type SectionList,
   type SectionLists,
+  SectionMenuButton,
   sectionOf,
   useSectionList,
   useWide,
 } from '@repo/client';
-import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import {
-  type DrawerNavigationOptions,
-  DrawerToggleButton,
-} from 'expo-router/drawer';
+  type NativeStackNavigationOptions,
+  Stack,
+  useNavigation,
+} from 'expo-router';
+import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import {
+  DrawerActions,
   getFocusedRouteNameFromRoute,
   type ParamListBase,
   type RouteProp,
@@ -47,7 +50,7 @@ const wideOptions = {
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
 
-// Android's section roots show the drawer's own header, with its stock toggle, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, so iOS keeps Liquid Glass and the native search.
+// Android's section roots show the drawer's own header, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, so iOS keeps Liquid Glass and the native search.
 const drawerDrawsRootHeader = Platform.OS === 'android';
 
 // Android's back gesture owns the screen edge, so there only ☰ opens the drawer.
@@ -59,11 +62,29 @@ const atSectionRoot = (route: RouteProp<ParamListBase>): boolean =>
 // A pushed page, and every page of a wide window, keeps its stack's header; its edge swipe goes back.
 const stackOwnsHeader = { headerShown: false, swipeEnabled: false };
 
+// ☰ opens the Frame's drawer from a header inside any of its sections; the action reaches the drawer from a section's stack too.
+function DrawerMenuButton(): React.JSX.Element {
+  const navigation = useNavigation();
+
+  return (
+    <SectionMenuButton
+      onOpen={() => navigation.dispatch(DrawerActions.openDrawer())}
+    />
+  );
+}
+
+// ☰ leads a narrow section root's header, sized like its trailing items.
+const drawerMenu = (): React.JSX.Element => <DrawerMenuButton />;
+
 function drawerRootOptions(
   header: SectionList['rootHeader'],
 ): DrawerNavigationOptions {
   const shown = drawerDrawsRootHeader
-    ? { headerShown: true, ...nativeHeaderOptions(header) }
+    ? {
+        headerShown: true,
+        headerLeft: drawerMenu,
+        ...nativeHeaderOptions(header),
+      }
     : { headerShown: false };
 
   return { ...shown, swipeEnabled: edgeSwipeOpens };
@@ -76,11 +97,6 @@ export const drawerScreenOptions =
     wide || !atSectionRoot(route)
       ? stackOwnsHeader
       : drawerRootOptions(lists[sectionOf(route.name)].rootHeader);
-
-// The drawer's own stock toggle leads a narrow section root's header.
-const drawerToggle: NativeStackNavigationOptions['headerLeft'] = ({
-  tintColor,
-}) => <DrawerToggleButton tintColor={tintColor} />;
 
 interface BannerProps {
   overHeader: boolean;
@@ -126,7 +142,7 @@ function useSectionOptions(section: Section): SectionOptions {
     screenOptions: narrowOptions,
     rootOptions: drawerDrawsRootHeader
       ? { headerShown: false }
-      : { headerLeft: drawerToggle, ...screenHeaderOptions(header) },
+      : { headerLeft: drawerMenu, ...screenHeaderOptions(header) },
   };
 }
 

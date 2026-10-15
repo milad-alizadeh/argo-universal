@@ -112,11 +112,13 @@ function HeaderButtonDot(props: {
   );
 }
 
-// A header's trailing items in one row, for a header option that takes a single element.
+// A header's trailing items in one row, for a header option that takes a single element; iOS ends the last 32pt item's glyph at the screen inset, in line with the search bar.
 export function HeaderItems({
   children,
 }: {
   children: React.ReactNode;
 }): React.JSX.Element {
-  return <View className="flex-row items-center gap-1">{children}</View>;
+  return (
+    <View className="flex-row items-center gap-1 ios:-mr-1.5">{children}</View>
+  );
 }

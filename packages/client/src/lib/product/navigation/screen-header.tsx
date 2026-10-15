@@ -2,6 +2,7 @@ import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Platform } from 'react-native';
+import { hasLiquidGlass } from '#lib/generic/native-header';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { HeaderButton, HeaderItems } from '#lib/product/header-button';
 import {
@@ -28,17 +29,43 @@ interface SearchBarOptions {
   onClose: () => void;
 }
 
-// What a native header takes from a page's header props, in a shape both the drawer's header (Android) and the stack's (iOS) accept.
+type HeaderRightItems = NonNullable<HeaderOptions['unstable_headerRightItems']>;
+
+// What a native header takes from a page's header props, in a shape both the drawer's header (Android) and the stack's (iOS) accept; only iOS 26's stack header gets the separate items.
 export interface NativeHeaderOptions {
   title: string;
   headerRight?: () => React.JSX.Element;
+  unstable_headerRightItems?: HeaderRightItems;
   headerSearchBarOptions?: SearchBarOptions;
 }
 
-function trailingItems(
-  items: readonly ReactElement[],
-): Pick<NativeHeaderOptions, 'headerRight'> {
+type TrailingOptions = Pick<
+  NativeHeaderOptions,
+  'headerRight' | 'unstable_headerRightItems'
+>;
+
+type HeaderRightItem = ReturnType<HeaderRightItems>[number];
+
+// Spaced items, so iOS 26 draws each in its own glass bubble.
+function separateItems(elements: readonly ReactElement[]): HeaderRightItem[] {
+  const items = elements.flatMap((element, index) => [
+    ...(index > 0 ? [{ type: 'spacing' as const, spacing: 8 }] : []),
+    { type: 'custom' as const, element },
+  ]);
+
+  // The native side inserts a spacer at its index in the reversed list, which expo-router leaves unset.
+  return items.map((item, index) =>
+    item.type === 'spacing'
+      ? { ...item, index: items.length - 1 - index }
+      : item,
+  );
+}
+
+function trailingItems(items: readonly ReactElement[]): TrailingOptions {
   if (!items.length) return {};
+
+  if (hasLiquidGlass)
+    return { unstable_headerRightItems: () => separateItems(items) };
 
   return { headerRight: () => <HeaderItems>{items}</HeaderItems> };
 }
