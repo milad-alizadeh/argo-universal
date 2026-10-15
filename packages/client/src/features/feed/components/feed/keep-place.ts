@@ -14,7 +14,7 @@ const settledFrames = 10;
 
 const keepPlaceDuration = 500;
 
-interface Place {
+export interface Place {
   key: string;
   grownAbove: number;
   topInView: number;
@@ -48,6 +48,8 @@ interface Hold {
   list: ListRef;
   place: Place;
   opening: boolean;
+  // Older rows joined the row while it opened, so its top stays held until they have measured.
+  joined: boolean;
   startedAt: number;
   stillFrames: number;
 }
@@ -109,7 +111,13 @@ function startHold(holds: Map<string, Hold>, hold: Hold): void {
 function placeHold(list: ListRef, place: Place, opening: boolean): void {
   const holds = holdsOf(list);
   const hold = holds.get(place.key);
-  const renewed = { place, opening, startedAt: performance.now() };
+
+  const renewed = {
+    place,
+    opening,
+    joined: false,
+    startedAt: performance.now(),
+  };
 
   if (hold) Object.assign(hold, renewed, { stillFrames: 0 });
   else startHold(holds, { list, ...renewed, stillFrames: 0 });
@@ -117,6 +125,16 @@ function placeHold(list: ListRef, place: Place, opening: boolean): void {
 
 const isOpening = (list: ListRef, key: string): boolean =>
   holdsOf(list).get(key)?.opening ?? false;
+
+// Older rows join a row while it opens: they keep the place it holds, its top, which stays held until they have measured, even once it has opened.
+export function joinOpeningRow(list: ListRef, key: string): Place | undefined {
+  const hold = holdsOf(list).get(key);
+
+  if (!hold?.opening) return;
+  hold.joined = true;
+
+  return hold.place;
+}
 
 export function keepPlace(list: ListRef, place: Place): void {
   if (!isOpening(list, place.key)) placeHold(list, place, false);
@@ -146,14 +164,23 @@ function startRowTopHold(list: ListRef, key: string): void {
  * Legend can still count rows from before a fast scroll as the ones in view, and anchoring one below an
  * opening row would push the row up by all it grows, so the row's top stays where it was until it has
  * opened. The reader reads the row they opened, so its top replaces a place held for older rows, and
- * older rows that join it while it opens draw below its top. At the end, where the Feed follows new rows,
- * and once the row has opened, when the Feed follows them again, the row is left to Legend, so the hold
- * never pulls against following the end.
+ * older rows that join it while it opens draw below its top, which stays held until they have measured.
+ * At the end, where the Feed follows new rows, and once the row has opened, when the Feed follows them
+ * again, the row is left to Legend, so the hold never pulls against following the end.
  */
 export function holdRowTop(list: ListRef, key: string): void {
   if (!isOpening(list, key)) startRowTopHold(list, key);
 }
 
+// An opening hold ends with the open, unless older rows joined it: then it settles as any kept place does.
+function endOpeningHold(holds: Map<string, Hold>, hold: Hold): void {
+  if (hold.joined) placeHold(hold.list, hold.place, false);
+  else holds.delete(hold.place.key);
+}
+
 export function releaseRowTop(list: ListRef, key: string): void {
-  if (isOpening(list, key)) holdsOf(list).delete(key);
+  const holds = holdsOf(list);
+  const hold = holds.get(key);
+
+  if (hold?.opening) endOpeningHold(holds, hold);
 }

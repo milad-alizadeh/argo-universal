@@ -121,20 +121,42 @@ export function settledTopOf(findElement: () => HTMLElement): Promise<number> {
   }, settleWait);
 }
 
-// Waits until an element, in view or not, holds still for two frames, as it does once the rows around it stop moving.
-export function restingTopOf(element: HTMLElement): Promise<number> {
-  let lastTop: number | undefined;
+// Waits until a reading of an element holds for two frames.
+function restingOf(read: () => number): Promise<number> {
+  let last: number | undefined;
 
   return waitFor(async () => {
     await afterTwoFrames();
-    const { top } = element.getBoundingClientRect();
-    const resting = top === lastTop;
-    lastTop = top;
+    const value = read();
+    const resting = value === last;
+    last = value;
 
     if (!resting) throw new Error('The element is still moving');
 
-    return top;
+    return value;
   }, settleWait);
+}
+
+// Waits until an element, in view or not, holds still for two frames, as it does once the rows around it stop moving.
+export const restingTopOf = (element: HTMLElement): Promise<number> =>
+  restingOf(() => element.getBoundingClientRect().top);
+
+const bottomOf = (element: HTMLElement): number =>
+  element.getBoundingClientRect().bottom;
+
+// Waits until a row has opened down to its last item and stopped growing: its items sit in place while it opens, so only the row's own bottom shows the motion.
+export async function openedRow(
+  header: HTMLElement,
+  lastItem: () => HTMLElement,
+): Promise<void> {
+  const row = header.parentElement;
+
+  if (!row) throw new Error('No collapsible around the row header');
+  await waitFor(
+    () => expect(bottomOf(lastItem())).toBeLessThanOrEqual(bottomOf(row)),
+    settleWait,
+  );
+  await restingOf(() => bottomOf(row));
 }
 
 // Opens a closed row and waits until it reads as open.

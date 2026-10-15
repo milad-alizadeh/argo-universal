@@ -13,7 +13,7 @@ import {
   scrolledToEnd,
   scrollToTop,
   scrollUp,
-  restingTopOf,
+  openedRow,
   settledTopOf,
 } from './feed-reader.mocks';
 import {
@@ -111,8 +111,8 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
     const step = (): HTMLElement =>
       canvas.getByRole('button', { name: splitGroupStepInTail });
 
-    // The group has opened once its last command stops moving down.
-    await restingTopOf(
+    // The group has opened down to its last command before the older rows arrive.
+    await openedRow(header, () =>
       canvas.getByRole('button', { name: splitGroupLastStep }),
     );
     const top = await settledTopOf(step);
