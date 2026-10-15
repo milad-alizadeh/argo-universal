@@ -1,10 +1,13 @@
 import {
   DesktopShellDetail,
   DesktopShellSidebar,
+  type Section,
   SectionDrawer,
+  type SectionRootHeaders,
   ShellFrame,
   useDesktopSidebarWidth,
   usePhoneDrawerWidth,
+  useSectionRootHeaders,
   useWide,
 } from '@repo/client';
 import {
@@ -13,6 +16,8 @@ import {
   useDrawerStatus,
 } from 'expo-router/drawer';
 import {
+  CommonActions,
+  DrawerActions,
   getFocusedRouteNameFromRoute,
   type ParamListBase,
   type RouteProp,
@@ -23,20 +28,16 @@ import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import {
   type DrawerContent,
-  pickSection,
   sectionOfRoute,
+  sectionRoot,
+  sectionPick,
   sectionRoutes,
 } from './drawer-sections';
+import { drawerRootOptions } from './section-root-options';
 import { useDestination } from './use-destination';
-
-// The route every section's stack opens on.
-const sectionRoot = 'index';
 
 // Android's back gesture owns the screen edge, so there only ☰ opens the drawer.
 const edgeSwipeOpens = Platform.OS === 'ios';
-
-// Only Android's roots show the drawer's header; iOS and the narrow web show the root stack's own, with the drawer's toggle.
-const drawerHeader = Platform.OS === 'android';
 
 // The web's themed page shows through the drawer; a resolved colour there misses the theme.
 const drawerSurface = Platform.OS !== 'web';
@@ -51,27 +52,29 @@ const atSectionRoot = (route: ScreenSource['route']): boolean =>
 // A pushed page keeps its stack's header and its edge swipe goes back.
 const pushedPageOptions = { headerShown: false, swipeEnabled: false };
 
-const rootOptions = { headerShown: drawerHeader, swipeEnabled: edgeSwipeOpens };
-
 // A wide window's sections sit beside the permanent drawer; each page draws its own header.
 const wideScreenOptions = { headerShown: false, swipeEnabled: false };
 
 // The drawer's header shows only on a section's root, so no page shows two.
 const screenOptionsAt =
-  (wide: boolean) =>
+  (wide: boolean, headers: SectionRootHeaders) =>
   ({ route }: ScreenSource): DrawerNavigationOptions => {
     if (wide) return wideScreenOptions;
 
-    return atSectionRoot(route) ? rootOptions : pushedPageOptions;
+    if (!atSectionRoot(route)) return pushedPageOptions;
+
+    return {
+      ...drawerRootOptions(headers[sectionOfRoute(route.name)]),
+      swipeEnabled: edgeSwipeOpens,
+    };
   };
 
 function useNarrowOptions(): DrawerNavigationOptions {
   const surface = useResolveClassNames('bg-content');
 
   return {
-    // The drawer lies under the page, which slides aside; an overlay would shade the drawer, not the page.
-    drawerType: 'back',
-    overlayColor: 'transparent',
+    // The drawer slides in over the page, under the stock overlay.
+    drawerType: 'front',
     drawerStyle: [
       drawerSurface ? surface : undefined,
       { width: usePhoneDrawerWidth() },
@@ -102,6 +105,20 @@ function useDrawerOptions(wide: boolean): DrawerNavigationOptions {
     // A hidden section keeps its stack but skips renders.
     freezeOnBlur: true,
   };
+}
+
+// Picks a section through the drawer's own navigation.
+function pickSection(drawer: DrawerContent, section: Section): void {
+  const pick = sectionPick(drawer.state, section);
+
+  if (!pick) return;
+
+  drawer.navigation.dispatch({
+    ...(pick === 'close'
+      ? DrawerActions.closeDrawer()
+      : CommonActions.navigate(pick)),
+    target: drawer.state.key,
+  });
 }
 
 // Our section rows in the narrow drawer, picked through the drawer's own navigation.
@@ -137,7 +154,7 @@ const inDetail: ScreenLayout = ({ children }) => (
 );
 
 function SectionsDrawer({ wide }: { wide: boolean }): React.JSX.Element {
-  const screenOptions = screenOptionsAt(wide);
+  const screenOptions = screenOptionsAt(wide, useSectionRootHeaders());
 
   return (
     <Drawer

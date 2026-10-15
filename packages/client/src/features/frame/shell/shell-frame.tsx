@@ -7,7 +7,7 @@ import { useLayoutShell } from '../components/desktop-layout-view/desktop-layout
 import { DesktopShellFrame } from '../components/desktop-shell/desktop-shell-frame';
 import { useAttentionCount } from '../hooks/use-attention-count';
 import { LiveConnectionBanner } from './live-connection-banner';
-import { PhoneConnectionBanner } from './phone-connection-banner';
+import { SectionFiltersProvider } from './section-filters';
 import { useSectionList } from './section-list';
 
 export interface ShellFrameProps {
@@ -32,20 +32,27 @@ function useFrameShell(
   });
 }
 
-// The shell around the navigator of sections, at every width.
-export function ShellFrame({
+function FrameWithShell({
   destination,
   wide,
   children,
 }: ShellFrameProps): React.JSX.Element {
   const { inspector, shell } = useFrameShell(destination);
-  const banner = <PhoneConnectionBanner />;
 
   return (
     <InspectorProvider value={inspector}>
-      <DesktopShellFrame shell={shell} wide={wide} narrowBanner={banner}>
+      <DesktopShellFrame shell={shell} wide={wide}>
         {children}
       </DesktopShellFrame>
     </InspectorProvider>
+  );
+}
+
+// The shell around the navigator of sections, at every width, with the section filters its lists and headers share.
+export function ShellFrame(props: ShellFrameProps): React.JSX.Element {
+  return (
+    <SectionFiltersProvider>
+      <FrameWithShell {...props} />
+    </SectionFiltersProvider>
   );
 }

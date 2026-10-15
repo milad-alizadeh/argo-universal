@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import type * as React from 'react';
-import { useWide } from '../../generic/use-wide/use-wide';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 
 // A phone's native header names the page; a wide window draws the title in the page itself.
 export function PhoneTitle({

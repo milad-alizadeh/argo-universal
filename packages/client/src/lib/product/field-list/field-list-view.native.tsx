@@ -1,7 +1,7 @@
 import type * as React from 'react';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../generic/use-wide/use-wide';
 import {
   type FieldListProps,
   type FieldListSection,

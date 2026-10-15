@@ -2,26 +2,26 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import {
   type OpenSessionViewProps,
-  SessionView,
-  type SessionViewProps,
-} from '../../src/screens/sessions/$id/session-view';
+  SessionDetailView,
+  type SessionDetailViewProps,
+} from '../../src/screens/sessions/$id/session-detail-view';
 import {
   idleSession,
   runningSession,
-} from '../../src/screens/sessions/$id/session-view.mocks';
+} from '../../src/screens/sessions/$id/session-detail-view.mocks';
 
 export const feedScrollTestId = 'feed-scroll';
 
 export const meta = {
-  title: 'Tests/SessionView',
+  title: 'Tests/SessionDetailView',
   parameters: { screenPreview: true },
   args: { view: { state: 'open', ...runningSession } },
-  render: ({ view }): React.JSX.Element => <SessionView {...view} />,
-} satisfies Meta<{ view: SessionViewProps }>;
+  render: ({ view }): React.JSX.Element => <SessionDetailView {...view} />,
+} satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export type Story = StoryObj<typeof meta>;
 
-export function openProps(view: SessionViewProps): OpenSessionViewProps {
+export function openProps(view: SessionDetailViewProps): OpenSessionViewProps {
   if (view.state !== 'open')
     throw new Error('The story needs an open Session.');
 

@@ -10,12 +10,12 @@ import {
   AgentManagementFailure,
   RegistryIcon,
 } from '#features/agents';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Badge } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { PhoneTitle } from '../../../../lib/product/navigation/phone-title';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
 import { AboutSection, AgentStatusSection } from './agent-detail-sections';

@@ -1,20 +1,18 @@
 import {
   hasLiquidGlass,
+  PhoneConnectionBanner,
   ScreenHeaderProvider,
-  type ScreenHeaderProps,
+  type Section,
+  useSectionRootHeaders,
   useWide,
 } from '@repo/client';
-import { Stack, useRoute } from 'expo-router';
+import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
-import {
-  type ComponentProps,
-  type PropsWithChildren,
-  useLayoutEffect,
-} from 'react';
-import { Platform } from 'react-native';
-import { DrawerSectionHeader } from './drawer-section-header';
+import type { ComponentProps, PropsWithChildren } from 'react';
+import { View } from 'react-native';
+import { sectionRoot } from './drawer-sections';
 import { headerTitleOptions } from './header-title';
-import { RootStackHeader } from './root-stack-header';
+import { stackRootOptions } from './section-root-options';
 import { WebScreenHeader } from './web-screen-header';
 
 type StackProps = ComponentProps<typeof Stack>;
@@ -38,66 +36,53 @@ const wideOptions = {
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
 
-const sectionRoot = 'index';
-
-// Android shows the root's header on its drawer screen; iOS and the web show it on the stack.
-const drawerRootHeader = Platform.OS === 'android';
-
-const rootOptions = { headerShown: !drawerRootHeader };
-
-const RootHeader = Platform.select({
-  android: DrawerSectionHeader,
-  ios: RootStackHeader,
-  default: WebScreenHeader,
-});
-
-// A narrow window's root sets its section's header; every other page sets its own stack header.
-function NarrowHeader(header: ScreenHeaderProps): React.JSX.Element | null {
-  const Header = useRoute().name === sectionRoot ? RootHeader : WebScreenHeader;
-
-  return <Header {...header} />;
+// A narrow page's Connection banner floats under its header; a wide window's sits over the panes.
+function NarrowBanner({
+  overHeader,
+}: {
+  overHeader: boolean;
+}): React.JSX.Element | null {
+  return useWide() ? null : <PhoneConnectionBanner overHeader={overHeader} />;
 }
 
-// A wide window's pages draw their own headers.
-function NoHeader(): null {
-  return null;
-}
+// The page keeps its place in the tree at both widths.
+const pageLayout: ScreenLayout = ({ children, options }) => (
+  <View className="flex-1">
+    {children}
+    <NarrowBanner overHeader={options.headerTransparent === true} />
+  </View>
+);
 
-// Pages set their narrow header themselves and draw nothing there on a wide window, so a width change hides the header a narrow window left set.
-function HeaderOnWideHidden({
-  navigation,
-  children,
-}: Parameters<ScreenLayout>[0]): React.ReactElement {
+// The stack's options at this width, and its root's: a narrow root shows the section's header; a wide page draws its own.
+function useSectionOptions(section: Section): {
+  screenOptions: StackProps['screenOptions'];
+  rootOptions: NativeStackNavigationOptions;
+} {
   const wide = useWide();
+  const header = useSectionRootHeaders()[section];
 
-  useLayoutEffect(() => {
-    if (wide) navigation.setOptions({ headerShown: false });
-  }, [navigation, wide]);
-
-  return children;
+  return wide
+    ? { screenOptions: wideOptions, rootOptions: {} }
+    : { screenOptions: narrowOptions, rootOptions: stackRootOptions(header) };
 }
 
-const hiddenOnWide: ScreenLayout = (props) => <HeaderOnWideHidden {...props} />;
+interface SectionStackProps extends PropsWithChildren {
+  section: Section;
+}
 
-// A section's pages, always this one stack so a width change keeps them: a narrow window pushes each page over the list; a wide one shows the list beside it.
+// A section's pages, always this one stack so a width change keeps them: a narrow window pushes each page over the list under the section's header; a wide one shows the list beside it. Pages in @repo/client set a narrow web header through `ScreenHeader`.
 export function SectionStack({
+  section,
   children,
-}: PropsWithChildren): React.JSX.Element {
-  return (
-    <ScreenHeaderProvider header={useWide() ? NoHeader : NarrowHeader}>
-      <SectionPages>{children}</SectionPages>
-    </ScreenHeaderProvider>
-  );
-}
+}: SectionStackProps): React.JSX.Element {
+  const { screenOptions, rootOptions } = useSectionOptions(section);
 
-function SectionPages({ children }: PropsWithChildren): React.JSX.Element {
   return (
-    <Stack
-      screenOptions={useWide() ? wideOptions : narrowOptions}
-      screenLayout={hiddenOnWide}
-    >
-      <Stack.Screen name={sectionRoot} options={rootOptions} />
-      {children}
-    </Stack>
+    <ScreenHeaderProvider header={WebScreenHeader}>
+      <Stack screenOptions={screenOptions} screenLayout={pageLayout}>
+        <Stack.Screen name={sectionRoot} options={rootOptions} />
+        {children}
+      </Stack>
+    </ScreenHeaderProvider>
   );
 }

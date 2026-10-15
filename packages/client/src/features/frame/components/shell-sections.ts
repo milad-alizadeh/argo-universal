@@ -10,10 +10,4 @@ export const shellSections = {
   settings: { title: 'Settings', icon: 'settings' },
 } as const satisfies Record<Section, { title: string; icon: IconName }>;
 
-// The sections top to bottom in the rail and the drawer.
-export const sectionOrder = [
-  'sessions',
-  'issues',
-  'atlas',
-  'settings',
-] as const satisfies readonly Section[];
+export { sectionOrder } from '../../../lib/product/navigation/sections';

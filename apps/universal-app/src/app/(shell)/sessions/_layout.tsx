@@ -5,5 +5,5 @@ import { SectionStack } from '@/navigation/section-stack';
 export const unstable_settings = { anchor: 'index' };
 
 export default function SessionsLayout(): React.JSX.Element {
-  return <SectionStack />;
+  return <SectionStack section="sessions" />;
 }

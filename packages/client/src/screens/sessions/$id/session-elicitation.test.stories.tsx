@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import {
   elicitationMocks,
   elicitationProps,
@@ -7,16 +8,15 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { questionPlan } from '../../../../mocks/elicitation-questions';
-import { settleViewport } from '../../../lib/generic/settle-viewport';
-import type { SessionViewProps } from './session-view';
-import { idleSession, runningSession } from './session-view.mocks';
-import { Elicitation } from './session-view.stories';
+import type { SessionDetailViewProps } from './session-detail-view';
+import { idleSession, runningSession } from './session-detail-view.mocks';
+import { Elicitation } from './session-detail-view.stories';
 
 const meta = {
   title: 'Tests/SessionElicitation',
   parameters: { screenPreview: true },
   render: Elicitation.render,
-} satisfies Meta<{ view: SessionViewProps }>;
+} satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export default meta;
 
@@ -49,7 +49,7 @@ function anchoredSession(agent: Agent): Story {
 function pendingSession(
   agent: Agent,
   onAnswer: ReturnType<typeof fn>,
-): SessionViewProps {
+): SessionDetailViewProps {
   const mock = elicitationMocks.find((recording) => recording.agent === agent);
 
   if (!mock) throw new Error(`Recorded Elicitation needs ${agent}`);

@@ -8,7 +8,10 @@ export {
   sessionsHeaderSearch,
 } from './components/sessions-header';
 
-export { useSessionsFilter } from './state/sessions-filter';
+export {
+  type SessionsFilter,
+  useSessionsFilter,
+} from './state/sessions-filter';
 
 export { type StartingFeed } from './state/starting-feed';
 

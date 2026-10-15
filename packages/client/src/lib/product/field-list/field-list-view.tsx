@@ -3,12 +3,12 @@ import type * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { listTestIdProps } from '#lib/generic/list-test-id';
 import {
   groupedListGap,
   groupedListPadding,
 } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { listTestIdProps } from '../../generic/list-test-id';
 import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
 import { CardRow } from './card-row';
 import {

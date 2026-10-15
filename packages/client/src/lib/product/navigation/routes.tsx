@@ -1,5 +1,7 @@
 import type { NavigationDestination } from './context';
 
+export { sectionDestination, sectionOrder } from './sections';
+
 type NewSessionDestination = Extract<
   NavigationDestination,
   { to: 'new-session' }

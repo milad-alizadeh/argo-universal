@@ -4,9 +4,9 @@ import {
   type AgentDetailViewProps,
   installationActive,
 } from '#features/agents';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentAction } from './agent-detail-actions';
 import { AgentLinks } from './agent-links';
 

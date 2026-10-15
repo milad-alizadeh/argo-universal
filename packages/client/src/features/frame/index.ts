@@ -12,14 +12,19 @@ export {
 
 export { DesktopShell } from './components/desktop-shell/desktop-shell';
 
-export { SectionRootView } from './components/section-root-view/section-root-view';
-
-export { PlaceholderPhoneScreen } from './shell/placeholder-phone-screen';
-
 export { OnboardingShell } from './components/onboarding-shell/onboarding-shell';
 
-export { shellSections } from './components/shell-sections';
+export { sectionOrder } from './components/shell-sections';
 
 export { PhoneMenuButton } from './shell/phone-menu-button';
 
 export { LiveConnectionBanner } from './shell/live-connection-banner';
+
+export { useSectionFilters } from './shell/section-filters';
+
+export {
+  type SectionRootHeaders,
+  useSectionRootHeaders,
+} from './shell/section-root-headers';
+
+export { PhoneConnectionBanner } from './shell/phone-connection-banner';

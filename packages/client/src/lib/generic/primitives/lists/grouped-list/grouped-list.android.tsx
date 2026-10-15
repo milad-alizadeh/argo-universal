@@ -4,9 +4,9 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
-import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
 import { GroupedList as WebGroupedList } from './grouped-list.tsx';
 

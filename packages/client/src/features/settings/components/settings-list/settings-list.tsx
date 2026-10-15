@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { EmptyList } from '#features/sessions';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { settingsRows } from './settings-list-data';
 import type { SettingsListProps } from './settings-list-props';
 import { SettingsRows } from './settings-list-rows';

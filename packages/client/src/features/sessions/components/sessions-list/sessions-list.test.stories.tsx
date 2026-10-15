@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
@@ -12,7 +13,6 @@ import {
   sessionsScrollId,
   type Story,
 } from '../../../../../mocks/sessions-list/sessions-list-story-context.test.mocks';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { SessionsList } from './sessions-list';
 import { largeSessions, sessionsListProps } from './sessions-list.mocks';
 

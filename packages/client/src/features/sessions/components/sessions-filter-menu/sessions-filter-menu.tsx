@@ -1,8 +1,8 @@
 import type * as React from 'react';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Menu } from '#primitives/overlays/menu';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 const sessionsFilterChoices = [
   { value: 'active', label: 'Active' },

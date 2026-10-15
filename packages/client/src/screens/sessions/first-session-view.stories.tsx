@@ -1,7 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { SessionView } from './$id/session-view';
-import { idleSession } from './$id/session-view.mocks';
 import {
   FirstSessionView,
   type FirstSessionViewProps,
@@ -19,13 +17,3 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Loading: Story = {};
-
-// The root slots the first active Session.
-export const Chosen: Story = {
-  args: { view: { state: 'chosen', children: null } },
-  render: (): React.JSX.Element => (
-    <FirstSessionView state="chosen">
-      <SessionView state="open" {...idleSession} />
-    </FirstSessionView>
-  ),
-};

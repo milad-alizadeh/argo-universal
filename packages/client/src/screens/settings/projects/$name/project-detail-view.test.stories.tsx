@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { homePath } from '#features/settings';
+import { layoutWidths } from '#lib/generic/each-layout';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import {
   localProject,
   otherDeviceName,
   worktreeProject,
 } from '../../../../features/settings/components/settings-pages.mocks';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {

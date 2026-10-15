@@ -3,6 +3,7 @@ import { expect } from '../fixtures';
 import { closeAgentMenus } from './agent-menus';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
+import { phone } from './frame';
 
 export const agentModelLabel = 'Agent and model';
 
@@ -86,9 +87,15 @@ When(
   },
 );
 
+// A phone's Sessions list is its own page at /sessions.
+const sessionsListUrl = /\/sessions$/;
+
+const onPhone = (page: Page): boolean =>
+  (page.viewportSize()?.width ?? 0) <= phone.width;
+
 When('I return to the Sessions list', async ({ page }): Promise<void> => {
   await page.goBack();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(sessionsListUrl);
 });
 
 When(
@@ -115,8 +122,10 @@ When(
 );
 
 Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
+  const sessionUrl = page.url();
   await page.goBack();
-  await expect(page).toHaveURL(/\/$/);
+  // A wide Frame's /sessions shows its first page, here the only Session, beside the list.
+  await expect(page).toHaveURL(onPhone(page) ? sessionsListUrl : sessionUrl);
   await expect(
     // A phone shows the list as the page, a wide Frame in its sidebar.
     page.getByRole('heading', { name: 'Sessions', exact: true }),

@@ -4,11 +4,11 @@ import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   pullRequestMocks,
   withPullRequests,
-} from '../../src/screens/sessions/$id/session-view-pull-request.mocks';
+} from '../../src/screens/sessions/$id/session-detail-view-pull-request.mocks';
 import {
   idleSession,
   runningSession,
-} from '../../src/screens/sessions/$id/session-view.mocks';
+} from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import { openProps, type Story } from './session-view-story.test.mocks';
 
 const mergeLabel = 'Merge PR';

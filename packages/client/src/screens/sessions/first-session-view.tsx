@@ -1,17 +1,14 @@
-import type { ReactNode } from 'react';
+import type * as React from 'react';
 import { View } from 'react-native';
 
-export type FirstSessionViewProps =
-  | { state: 'loading' }
-  // The chosen Session or New Session, as a slot.
-  | { state: 'chosen'; children: ReactNode };
+// Only loading has a drawing; once the Sessions load, the screen opens the chosen page.
+export interface FirstSessionViewProps {
+  state: 'loading';
+}
 
-// The wide window's `/`: blank while the Sessions load, then the chosen page.
-export function FirstSessionView(props: FirstSessionViewProps): ReactNode {
-  switch (props.state) {
-    case 'loading':
-      return <View className="flex-1 bg-content" />;
-    case 'chosen':
-      return props.children;
-  }
+// A wide window's `/sessions` while the Sessions load: blank, so neither page flashes.
+export function FirstSessionView(
+  _props: FirstSessionViewProps,
+): React.JSX.Element {
+  return <View className="flex-1 bg-content" />;
 }

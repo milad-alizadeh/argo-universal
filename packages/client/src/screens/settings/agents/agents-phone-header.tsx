@@ -1,12 +1,12 @@
 import type * as React from 'react';
 import { type AgentsFilter } from '#features/agents';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import {
   ScreenHeader,
   type ScreenHeaderProps,
 } from '#lib/product/navigation/screen-header';
 import { Menu } from '#primitives/overlays/menu';
-import { useWide } from '../../../lib/generic/use-wide/use-wide';
 import {
   type AgentsFilterProps,
   type AgentsSearchProps,

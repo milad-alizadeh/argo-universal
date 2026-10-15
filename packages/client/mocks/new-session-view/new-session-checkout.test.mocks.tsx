@@ -5,8 +5,8 @@ import { expect, waitFor, within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
-import { NewSessionView } from '../../src/screens/sessions/$id/new-session-view';
-import { readyNewSession } from '../../src/screens/sessions/$id/new-session-view.mocks';
+import { SessionNewView } from '../../src/screens/sessions/$id/session-new-view';
+import { readyNewSession } from '../../src/screens/sessions/$id/session-new-view.mocks';
 import type { Story } from './new-session-story.test.mocks';
 
 const pressedAttribute = 'aria-pressed';
@@ -19,7 +19,7 @@ function ChoosingCheckout(): React.JSX.Element {
   const { configuration } = readyNewSession;
 
   return (
-    <NewSessionView
+    <SessionNewView
       state="ready"
       {...readyNewSession}
       configuration={{

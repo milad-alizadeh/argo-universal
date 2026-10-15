@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
+import { HeaderItems } from '../src/lib/product/header-button';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
 
@@ -26,7 +27,7 @@ function HeaderTitle({
   return (
     <>
       <TitleText title={title} />
-      <View className="flex-row gap-1">{right}</View>
+      <HeaderItems>{right}</HeaderItems>
     </>
   );
 }

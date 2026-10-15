@@ -9,12 +9,12 @@ import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { useCallback, useMemo } from 'react';
 import { type ClientError, useTRPC } from '#features/connection';
 import { type QueryProgress } from '#features/sessions';
-import type { SessionsViewProps } from './sessions-view';
+import type { SessionListViewProps } from './session-list-view';
 
-type SessionsSearch = Pick<SessionsViewProps, 'archived' | 'query'>;
+type SessionsSearch = Pick<SessionListViewProps, 'archived' | 'query'>;
 
 type SessionPages = Pick<
-  SessionsViewProps,
+  SessionListViewProps,
   'sessions' | 'loadMoreFailed' | 'isFetchingNextPage' | 'onLoadMore'
 > & { progress: QueryProgress };
 
@@ -46,7 +46,7 @@ function useSessionListQuery({
 
 function useUniqueSessions(
   data: SessionListQuery['data'],
-): SessionsViewProps['sessions'] {
+): SessionListViewProps['sessions'] {
   return useMemo(
     () => [
       ...new Map(

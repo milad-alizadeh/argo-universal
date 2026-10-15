@@ -3,8 +3,8 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { expect, within } from 'storybook/test';
 import { type AgentDetailViewProps } from '#features/agents';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
+import { layoutWidths } from '#lib/generic/each-layout';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import { AgentDetailView } from './agent-detail-view';
 import {
   agentDetailArgs,

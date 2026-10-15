@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import {
   DrawerItem,
@@ -10,12 +9,7 @@ import {
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { drawerAttentionBadge } from '../attention-badge/attention-badge';
 import { type Section, sectionOrder, shellSections } from '../shell-sections';
-import { headerBarHeight } from './header-bar-height';
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
-
-// The content's edge shades the drawer under it, as if the content lay on top.
-const contentEdgeShadow =
-  'shadow-[inset_-12px_0_16px_-8px_#0000001a] dark:shadow-[inset_-12px_0_16px_-8px_#00000066]';
 
 interface DrawerNavigation {
   selectedSection: Section;
@@ -54,10 +48,10 @@ function SectionButton({
   );
 }
 
-// The header bar's own height, so the title sits level with ☰ and the page's title.
+// The drawer slides in over the page's header, so its title keeps its own spacing.
 function DrawerTitle(): React.JSX.Element {
   return (
-    <View className="justify-center px-3" style={{ height: headerBarHeight }}>
+    <View className="justify-center px-3 py-3">
       <Text role="heading" accessibilityRole="heading" aria-level={2}>
         Argo
       </Text>
@@ -80,10 +74,7 @@ function DrawerGlass(navigation: DrawerNavigation): React.JSX.Element {
   const { top } = useSafeAreaInsets();
 
   return (
-    <View
-      className={cn('flex-1 bg-glass px-5 pb-8', contentEdgeShadow)}
-      style={{ paddingTop: top }}
-    >
+    <View className="flex-1 bg-glass px-5 pb-8" style={{ paddingTop: top }}>
       <DrawerTitle />
       <SectionButtons {...navigation} />
     </View>

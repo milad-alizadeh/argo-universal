@@ -8,7 +8,7 @@ Given(
   async ({ page }): Promise<void> => {
     await page.setViewportSize(phone);
     await page.addInitScript(
-      "if (location.pathname === '/') history.replaceState(null, '', '/settings/connection')",
+      "if (['/', '/sessions'].includes(location.pathname)) history.replaceState(null, '', '/settings/connection')",
     );
     await page.reload();
     await expect(page.getByText('Version', { exact: true })).toBeVisible();

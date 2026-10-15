@@ -2,8 +2,8 @@ import type * as React from 'react';
 import { createContext, useContext, useState } from 'react';
 import { type LayoutChangeEvent, View, type ViewProps } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { cn } from '#lib/generic/utils';
-import { useWide } from '../generic/use-wide/use-wide';
 
 const ContentWide = createContext<boolean | undefined>(undefined);
 

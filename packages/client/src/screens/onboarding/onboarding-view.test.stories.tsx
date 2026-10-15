@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '../../lib/generic/each-layout';
-import { settleViewport } from '../../lib/generic/settle-viewport';
+import { layoutWidths } from '#lib/generic/each-layout';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import { OnboardingView } from './onboarding-view';
 import {
   agentName,

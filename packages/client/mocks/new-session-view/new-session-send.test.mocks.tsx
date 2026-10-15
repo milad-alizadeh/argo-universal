@@ -1,18 +1,18 @@
 import { expect } from 'storybook/test';
 import { eachLayout, layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
-import type { ReadyNewSessionViewProps } from '../../src/screens/sessions/$id/new-session-view';
+import type { ReadySessionNewViewProps } from '../../src/screens/sessions/$id/session-new-view';
 import {
   openingNewSession,
   readyNewSession,
   typedDraft,
-} from '../../src/screens/sessions/$id/new-session-view.mocks';
+} from '../../src/screens/sessions/$id/session-new-view.mocks';
 import type { Story } from './new-session-story.test.mocks';
 
 const sendLabel = 'Send';
 
 export function readyArgs(
-  changes: Partial<ReadyNewSessionViewProps>,
+  changes: Partial<ReadySessionNewViewProps>,
 ): Story['args'] {
   return { view: { state: 'ready', ...readyNewSession, ...changes } };
 }

@@ -9,9 +9,9 @@ import {
 } from '#primitives/inputs/search-field';
 import type { ScreenHeaderProps } from './screen-header';
 
-// The web's JS header lays out its title and right containers by these; native-stack's options type leaves them out, so the header takes them through untyped. The title container grows so the search row fills it.
+// The web's JS header lays out its title and right containers by these; native-stack's options type leaves them out, so the header takes them through untyped. The title container grows so the search row fills it; the row keeps its own gap before the right items.
 export const headerSearchRowLayout = {
-  headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1, marginEnd: 8 },
+  headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1 },
   headerRightContainerStyle: { flexGrow: 0 },
 } satisfies Pick<
   HeaderOptions,
@@ -34,7 +34,7 @@ export function HeaderSearchRow({
   search,
 }: HeaderSearchRowProps): React.JSX.Element {
   return (
-    <View className="min-w-0 flex-1 flex-row">
+    <View className="me-2 min-w-0 flex-1 flex-row">
       <SearchField
         {...useSearchQuery(search)}
         title={<HeaderTitle title={title} />}

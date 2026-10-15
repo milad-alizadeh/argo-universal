@@ -6,10 +6,10 @@ import { Button } from '#primitives/buttons/button';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
-  SessionView,
-  type SessionViewProps,
-} from '../../src/screens/sessions/$id/session-view';
-import { idleSession } from '../../src/screens/sessions/$id/session-view.mocks';
+  SessionDetailView,
+  type SessionDetailViewProps,
+} from '../../src/screens/sessions/$id/session-detail-view';
+import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import { feedScrollTestId, type Story } from './session-view-story.test.mocks';
 
 // Collapsed, the pane is a few pixels wide, as while an expanded Inspector takes it over.
@@ -19,7 +19,7 @@ const paneWidths = { wide: 1000, collapsed: 5 } as const;
 function SessionInPane({
   view,
 }: {
-  view: SessionViewProps;
+  view: SessionDetailViewProps;
 }): React.JSX.Element {
   const [width, setWidth] = useState<number>(paneWidths.wide);
 
@@ -36,7 +36,7 @@ function SessionInPane({
         />
       </View>
       <View testID="session-pane" className="flex-1" style={{ width }}>
-        <SessionView {...view} />
+        <SessionDetailView {...view} />
       </View>
     </View>
   );

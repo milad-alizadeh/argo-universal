@@ -1,10 +1,10 @@
-import AddIcon from '@expo/material-symbols/add.xml';
-import FilterList from '@expo/material-symbols/filter_list.xml';
 import { Stack } from 'expo-router';
 import type * as React from 'react';
+import { useWide } from '#lib/generic/use-wide/use-wide';
+import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import { toolbarDot } from '#lib/product/navigation/toolbar-dot';
-import { useWide } from '../../../lib/generic/use-wide/use-wide';
+import { toolbarIcon } from '../../../lib/product/navigation/toolbar-icon';
 import {
   type AgentsFilterProps,
   type AgentsSearchProps,
@@ -16,10 +16,9 @@ import {
 type AgentsPhoneHeaderProps = AgentsFilterProps &
   AgentsSearchProps & { onAddCustomAgent: () => void };
 
-const filterIcon =
-  process.env.EXPO_OS === 'ios' ? 'slider.horizontal.3' : FilterList;
+const filterIcon = toolbarIcon(headerFilterIcon);
 
-const addIcon = process.env.EXPO_OS === 'ios' ? 'plus' : AddIcon;
+const addIcon = toolbarIcon('add');
 
 // A phone's native header, as the Stack Toolbar guide builds one: the filter menu, Add custom Agent, and the stack's search bar.
 export function AgentsPhoneHeader(

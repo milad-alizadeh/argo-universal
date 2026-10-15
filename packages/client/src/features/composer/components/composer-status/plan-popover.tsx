@@ -1,9 +1,9 @@
 import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
 import { Platform, View } from 'react-native';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { completedSteps, fullPercent } from '../../state/status';
 import { PlanSteps } from './plan-steps';
 import { Meter } from './status-meter';

@@ -2,15 +2,15 @@ import type * as React from 'react';
 import { type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { ScrollColumnContext } from '#lib/generic/scroll-column';
+import { useWide } from '#lib/generic/use-wide/use-wide';
+import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import {
   PageTitleRow,
   type PageTitleRowProps,
   type PageTitleSearch,
 } from '../generic/page-title-row/page-title-row';
-import { ScrollColumnContext } from '../generic/scroll-column';
-import { useWide } from '../generic/use-wide/use-wide';
-import { cn } from '../generic/utils';
 
 export type SettingsPageSearch = PageTitleSearch;
 

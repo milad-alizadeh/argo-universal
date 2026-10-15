@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { type ReactNode, useState } from 'react';
+import type { ReactNode } from 'react';
 import { ScrollView } from 'react-native';
-import { SessionsHeader, useSessionsFilter } from '#features/sessions';
+import { type SessionsFilter, SessionsHeader } from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
 import {
   type NavigationDestination,
@@ -10,9 +10,10 @@ import {
 import { Text } from '#primitives/display/text';
 import { SearchField } from '#primitives/inputs/search-field';
 import type { Section } from '../../../lib/product/navigation/sections';
-import { SessionsScreen } from '../../../screens/sessions/sessions-screen';
+import { LiveSessionList } from '../../../screens/sessions/live-session-list';
 import { SettingsNavigationList } from '../../../screens/settings/settings-navigation-list';
 import { shellSections } from '../components/shell-sections';
+import { type SectionFilters, useSectionFilters } from './section-filters';
 
 export interface SectionList {
   // The list's own part of the wide window's header row, when it has one.
@@ -26,10 +27,6 @@ function openSessionId(
   return destination?.to === 'session' ? destination.id : undefined;
 }
 
-type SessionsFilter = ReturnType<typeof useSessionsFilter>;
-
-type SettingsSearch = [string, (query: string) => void];
-
 interface SessionsListSource {
   sessionsFilter: SessionsFilter;
   navigate: ReturnType<typeof useNavigate>;
@@ -41,7 +38,7 @@ function sessionsScreen(
   selectedDestination?: NavigationDestination,
 ): React.JSX.Element {
   return (
-    <SessionsScreen
+    <LiveSessionList
       query={sessionsFilter.query}
       onQueryChange={sessionsFilter.onQueryChange}
       archived={sessionsFilter.archived}
@@ -63,41 +60,37 @@ function sessionsList({
   };
 }
 
-function settingsSearchField([
+function settingsSearchField({
   settingsQuery,
-  setSettingsQuery,
-]: SettingsSearch): React.JSX.Element {
+  onSettingsQueryChange,
+}: SectionFilters): React.JSX.Element {
   return (
     <SearchField
       label="Search Settings"
       value={settingsQuery}
-      onChangeText={setSettingsQuery}
+      onChangeText={onSettingsQueryChange}
       title={<ListTitle>Settings</ListTitle>}
     />
   );
 }
 
 function settingsList(
-  settingsSearch: SettingsSearch,
+  filters: SectionFilters,
   selectedDestination?: NavigationDestination,
 ): SectionList {
   return {
-    header: settingsSearchField(settingsSearch),
+    header: settingsSearchField(filters),
     list: (
       <SettingsNavigationList
         selectedDestination={selectedDestination}
-        query={settingsSearch[0]}
+        query={filters.settingsQuery}
       />
     ),
   };
 }
 
 // A placeholder until the section's list screen is built; insets itself below a transparent header.
-export function PlaceholderList({
-  section,
-}: {
-  section: Section;
-}): React.JSX.Element {
+function PlaceholderList({ section }: { section: Section }): React.JSX.Element {
   const { title } = shellSections[section];
 
   return (
@@ -115,15 +108,17 @@ export function useSectionList(
   section: Section,
   selectedDestination?: NavigationDestination,
 ): SectionList {
-  const sessionsFilter = useSessionsFilter();
-  const settingsSearch = useState('');
+  const filters = useSectionFilters();
   const navigate = useNavigate();
 
   if (section === 'sessions')
-    return sessionsList({ sessionsFilter, navigate, selectedDestination });
+    return sessionsList({
+      sessionsFilter: filters.sessions,
+      navigate,
+      selectedDestination,
+    });
 
-  if (section === 'settings')
-    return settingsList(settingsSearch, selectedDestination);
+  if (section === 'settings') return settingsList(filters, selectedDestination);
 
   return { list: <PlaceholderList section={section} /> };
 }

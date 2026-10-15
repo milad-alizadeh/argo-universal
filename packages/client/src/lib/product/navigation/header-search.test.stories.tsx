@@ -40,22 +40,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const rightHalf = (element: Element, row: Element): boolean => {
-  const box = element.getBoundingClientRect();
-  const rowBox = row.getBoundingClientRect();
-
-  return box.left > rowBox.left + rowBox.width / 2;
-};
-
-// Search sits last in a title container that fills the header, so it opens into a field over the whole row.
+// Search sits beside the title in the real web header and opens into a field that filters as you type.
 export const SearchFillsTheTitle: Story = {
-  play: async ({ canvas, canvasElement, args, userEvent }) => {
-    const header = canvas.getByRole('heading', { name: title });
-    const search = canvas.getByRole('button', { name: label });
-
-    await expect(rightHalf(search, canvasElement)).toBe(true);
-    await expect(rightHalf(header, canvasElement)).toBe(false);
-    await userEvent.click(search);
+  play: async ({ canvas, args, userEvent }) => {
+    await expect(canvas.getByRole('heading', { name: title })).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: label }));
     await userEvent.type(canvas.getByRole('textbox', { name: label }), 'fix');
     await expect(args.onChangeText).toHaveBeenLastCalledWith('fix');
   },

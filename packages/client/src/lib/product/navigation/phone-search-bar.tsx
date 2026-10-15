@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import type * as React from 'react';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import { useWide } from '../../generic/use-wide/use-wide';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 
 // iOS 26 docks the search bar at the bottom.
 const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass;

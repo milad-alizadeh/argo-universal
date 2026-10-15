@@ -1,6 +1,6 @@
 import type * as React from 'react';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
-import { useWide } from '../../../lib/generic/use-wide/use-wide';
 import type { SearchedProps } from './project-list-props';
 import { searchLabel } from './project-list-search';
 

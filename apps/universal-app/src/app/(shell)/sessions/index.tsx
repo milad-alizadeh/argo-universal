@@ -1,6 +1,6 @@
-import { SessionsRootScreen } from '@repo/client';
+import { SessionListScreen } from '@repo/client';
 import type * as React from 'react';
 
 export default function SessionsRoute(): React.JSX.Element {
-  return <SessionsRootScreen />;
+  return <SessionListScreen />;
 }

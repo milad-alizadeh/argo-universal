@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import type { ReactElement } from 'react';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export interface AgentIdentityProps {
   logo: ReactElement;

@@ -5,14 +5,14 @@ import { expect, within, waitFor } from 'storybook/test';
 import { composerStatus } from '#features/sessions';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
-import { SessionView } from './session-view';
-import { idleSession } from './session-view.mocks';
+import { SessionDetailView } from './session-detail-view';
+import { idleSession } from './session-detail-view.mocks';
 
 const meta = {
   title: 'Tests/SessionUsage',
   parameters: { screenPreview: true },
   render: (): React.JSX.Element => (
-    <SessionView state="open" {...idleSession} />
+    <SessionDetailView state="open" {...idleSession} />
   ),
 } satisfies Meta;
 
@@ -28,7 +28,7 @@ const indicator = (
   shown: boolean,
 ): Story => ({
   render: (): React.JSX.Element => (
-    <SessionView
+    <SessionDetailView
       state="open"
       {...idleSession}
       composer={{

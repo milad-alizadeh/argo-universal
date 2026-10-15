@@ -42,8 +42,6 @@ type DesktopShellFrameShell = Omit<DesktopShellProps, 'children'>;
 export interface DesktopShellFrameProps {
   shell: DesktopShellFrameShell;
   wide: boolean;
-  // Floats over a narrow window, where the panes' banner is not drawn.
-  narrowBanner: ReactNode;
   // The navigator, which draws `DesktopShellSidebar` beside `DesktopShellDetail` on a wide window.
   children: ReactNode;
 }
@@ -64,24 +62,18 @@ function useFrameParts(
 export function DesktopShellFrame({
   shell,
   wide,
-  narrowBanner,
   children,
 }: DesktopShellFrameProps): React.JSX.Element {
   const parts = useFrameParts(shell, wide);
 
   return (
     <FrameContext value={parts}>
-      <FrameRow parts={parts} narrowBanner={narrowBanner}>
-        {children}
-      </FrameRow>
+      <FrameRow parts={parts}>{children}</FrameRow>
     </FrameContext>
   );
 }
 
-type FrameRowProps = Pick<
-  DesktopShellFrameProps,
-  'narrowBanner' | 'children'
-> & {
+type FrameRowProps = Pick<DesktopShellFrameProps, 'children'> & {
   parts: FrameParts;
 };
 
@@ -91,18 +83,18 @@ interface FrameEdges {
   after: ReactNode;
 }
 
-// What sits around the navigator: a wide window's backdrop, Inspector, handles and banner, or a narrow window's banner.
-const frameEdges = (parts: FrameParts, narrowBanner: ReactNode): FrameEdges =>
+// What sits around the navigator: a wide window's backdrop, Inspector, handles and banner; a narrow window's pages place their own banner under their header.
+const frameEdges = (parts: FrameParts): FrameEdges =>
   parts.wide
     ? {
         testID: 'desktop-shell',
         before: <ShellBackground {...parts} />,
         after: <WideOverlays {...parts} />,
       }
-    : { testID: 'phone-shell', before: null, after: narrowBanner };
+    : { testID: 'phone-shell', before: null, after: null };
 
 function FrameRow(props: FrameRowProps): React.JSX.Element {
-  const { testID, before, after } = frameEdges(props.parts, props.narrowBanner);
+  const { testID, before, after } = frameEdges(props.parts);
 
   return (
     <View

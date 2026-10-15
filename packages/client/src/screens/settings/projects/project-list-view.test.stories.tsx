@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { homePath } from '#features/settings';
+import { eachLayout, layoutWidths } from '#lib/generic/each-layout';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import { findToast } from '../../../../mocks/find-toast';
 import {
   localProject,
@@ -8,8 +10,6 @@ import {
   settingsProjects,
   worktreeProject,
 } from '../../../features/settings/components/settings-pages.mocks';
-import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
-import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { ProjectListView } from './project-list-view';
 
 const folderNotFound = 'Folder not found';

@@ -1,11 +1,11 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../../lib/generic/use-wide/use-wide';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {

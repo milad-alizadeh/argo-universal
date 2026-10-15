@@ -10,30 +10,33 @@ export { useConnection } from '#features/connection';
 export {
   DesktopShellDetail,
   DesktopShellSidebar,
+  PhoneConnectionBanner,
+  PhoneMenuButton,
   SectionDrawer,
+  type SectionRootHeaders,
+  sectionOrder,
   ShellFrame,
   useDesktopSidebarWidth,
   usePhoneDrawerWidth,
+  useSectionRootHeaders,
 } from '#features/frame';
 
-export { AtlasRootScreen } from './screens/atlas/atlas-root-screen';
+export { AtlasDetailScreen } from './screens/atlas/atlas-detail-screen';
 
-export { IssuesRootScreen } from './screens/issues/issues-root-screen';
+export { IssueListScreen } from './screens/issues/issue-list-screen';
 
 export {
   OnboardingLayout,
   useOnboardingShown,
 } from './screens/onboarding/onboarding-layout';
 
-export { SessionsRootScreen } from './screens/sessions/sessions-root-screen';
+export { SessionListScreen } from './screens/sessions/session-list-screen';
 
-export { NewSessionScreen } from './screens/sessions/$id/new-session-screen';
+export { SessionDetailScreen } from './screens/sessions/$id/session-detail-screen';
 
-export { SessionScreen } from './screens/sessions/$id/session-screen';
+export { SettingsListScreen } from './screens/settings/settings-list-screen';
 
-export { SettingsPhoneScreen } from './screens/settings/settings-phone-screen';
-
-export { AccountsScreen } from './screens/settings/accounts/accounts-screen';
+export { AccountListScreen } from './screens/settings/accounts/account-list-screen';
 
 export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
 
@@ -41,13 +44,13 @@ export { AgentDetailScreen } from './screens/settings/agents/$agent/agent-detail
 
 export { CustomAgentNewScreen } from './screens/settings/agents/new/custom-agent-new-screen';
 
-export { AppearanceScreen } from './screens/settings/appearance/appearance-screen';
+export { AppearanceDetailScreen } from './screens/settings/appearance/appearance-detail-screen';
 
 export { ConnectionDetailScreen } from './screens/settings/connection/connection-detail-screen';
 
-export { DevicesScreen } from './screens/settings/devices/devices-screen';
+export { DeviceListScreen } from './screens/settings/devices/device-list-screen';
 
-export { NotificationsScreen } from './screens/settings/notifications/notifications-screen';
+export { NotificationsDetailScreen } from './screens/settings/notifications/notifications-detail-screen';
 
 export { ProjectListScreen } from './screens/settings/projects/project-list-screen';
 
@@ -80,7 +83,7 @@ export {
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
 
-export { HeaderButton } from '#lib/product/header-button';
+export { HeaderButton, HeaderItems } from '#lib/product/header-button';
 
 export {
   type Section,

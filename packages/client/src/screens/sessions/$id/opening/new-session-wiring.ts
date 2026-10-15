@@ -1,11 +1,11 @@
 import type { Navigate } from '#lib/product/navigation/context';
-import type { ReadyNewSessionViewProps } from '../new-session-view';
+import type { ReadySessionNewViewProps } from '../session-new-view';
 import type { NewSessionData } from './use-new-session-data';
 import type { AttachmentDraft, SessionOpening } from './use-session-opening';
 
 export interface NewSessionWiring {
   configuration?: Pick<
-    ReadyNewSessionViewProps['configuration'],
+    ReadySessionNewViewProps['configuration'],
     'configOptions' | 'onConfigChange'
   >;
   data: NewSessionData;
@@ -15,7 +15,7 @@ export interface NewSessionWiring {
   sessionOpening: SessionOpening;
 }
 
-export type ReadyProps<Key extends keyof ReadyNewSessionViewProps> = Pick<
-  ReadyNewSessionViewProps,
+export type ReadyProps<Key extends keyof ReadySessionNewViewProps> = Pick<
+  ReadySessionNewViewProps,
   Key
 >;

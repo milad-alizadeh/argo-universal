@@ -39,7 +39,7 @@ export interface ScreenHeaderProviderProps {
   children: ReactNode;
 }
 
-// The app supplies the native stack's header, so this package stays free of the router.
+// The app supplies the web stack's header here; Storybook supplies a mock, so a story renders a page's header without a navigator.
 export function ScreenHeaderProvider({
   header,
   children,
@@ -51,7 +51,7 @@ export function ScreenHeaderProvider({
   );
 }
 
-// Sets the header of the phone stack screen it renders in; outside a phone stack it draws nothing.
+// Sets the header of the narrow web stack page it renders in; without a provider it draws nothing.
 export function ScreenHeader(
   props: ScreenHeaderProps,
 ): React.JSX.Element | null {

@@ -2,6 +2,14 @@ import type { NavigationDestination } from './context';
 
 export type Section = 'sessions' | 'issues' | 'atlas' | 'settings';
 
+// The sections top to bottom in the rail and the drawer.
+export const sectionOrder = [
+  'sessions',
+  'issues',
+  'atlas',
+  'settings',
+] as const satisfies readonly Section[];
+
 const destinationSections: Record<NavigationDestination['to'], Section> = {
   sessions: 'sessions',
   'new-session': 'sessions',

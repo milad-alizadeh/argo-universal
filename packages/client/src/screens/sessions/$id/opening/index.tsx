@@ -1,12 +1,12 @@
 import type * as React from 'react';
-import type { NewSessionViewProps } from '../new-session-view';
-import { toNewSessionViewProps } from './new-session-view-props';
+import type { SessionNewViewProps } from '../session-new-view';
 import { openedSession, useOpenedConfiguration } from './opened-session';
+import { toSessionNewViewProps } from './session-new-view-props';
 import { useOpeningWiring } from './use-opening-wiring';
 
 interface EmptySessionOpeningProps {
   projectId?: string;
-  children: (props: NewSessionViewProps) => React.ReactNode;
+  children: (props: SessionNewViewProps) => React.ReactNode;
 }
 
 // The connected screen sees only view props and callbacks; opening and hand-off stay here.
@@ -16,7 +16,7 @@ export function EmptySessionOpening({
 }: EmptySessionOpeningProps): React.JSX.Element {
   const wiring = useOpeningWiring(projectId);
   const configuration = useOpenedConfiguration(openedSession(wiring));
-  const view = toNewSessionViewProps({ ...wiring, configuration });
+  const view = toSessionNewViewProps({ ...wiring, configuration });
 
   return <>{children(view)}</>;
 }

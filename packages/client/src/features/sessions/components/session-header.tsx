@@ -1,11 +1,12 @@
 import type * as React from 'react';
 import { useState } from 'react';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { PageHeader } from '#lib/product/page-header';
-import { useWide } from '../../../lib/generic/use-wide/use-wide';
+// Relative, so Metro picks the `.native` file on a phone.
+import { PhoneTitle } from '../../../lib/product/navigation/phone-title';
 import { SessionHeaderActions } from './session-header-actions';
 import { SessionHeaderTitle } from './session-header-meta';
 import type { SessionHeaderProps } from './session-header-props';
-import { PhoneSessionHeader } from './session-phone-header';
 import type { SessionPullRequest } from './session-pull-request';
 
 export type {
@@ -49,13 +50,15 @@ function WideSessionHeader({
   );
 }
 
-// A phone gets the native stack's own header: the plain title, its back button, and two right items. Wide draws its PageHeader with a one-line title, the meta line (status, one PR, its checks) and the actions.
-export function SessionHeader(props: SessionHeaderProps): React.JSX.Element {
+// A phone gets the native stack's own header: the plain title and its back button; the Session's actions come back as they are wired. Wide draws its PageHeader with a one-line title, the meta line (status, one PR, its checks) and the actions.
+export function SessionHeader(
+  props: SessionHeaderProps,
+): React.JSX.Element | null {
   const wide = useWide();
   const pullRequests = props.pullRequests ?? [];
   const shownPullRequest = useShownPullRequest(pullRequests);
 
-  if (!wide) return <PhoneSessionHeader title={props.title} />;
+  if (!wide) return <PhoneTitle title={props.title} />;
 
   return (
     <WideSessionHeader
