@@ -61,6 +61,8 @@ export {
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
 
+export { useHeaderCover } from '#lib/product/navigation/use-header-cover';
+
 export { HeaderButton } from '#lib/product/header-button';
 
 export type { Section } from './lib/product/navigation/sections';

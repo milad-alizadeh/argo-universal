@@ -5,7 +5,7 @@ import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { motionDuration } from '#lib/generic/motion';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
-import { useHeaderCover } from '#lib/product/navigation/screen-header';
+import { useHeaderCover } from '#lib/product/navigation/use-header-cover';
 import { SessionColumn } from '#lib/product/session-column';
 import { Icon } from '#primitives/display/icon';
 import { ShimmerText } from '../shimmer-text';
