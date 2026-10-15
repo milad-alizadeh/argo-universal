@@ -1,5 +1,6 @@
 package dev.argo.client
 
+import android.graphics.Color
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -10,7 +11,7 @@ import expo.modules.kotlin.views.OptimizedComposeProps
 import expo.modules.ui.UIComposableScope
 
 @OptimizedComposeProps
-data class HostThemeProps(val colors: ThemeColors = ThemeColors()) : ComposeProps
+data class HostThemeProps(val colors: Map<String, Color> = emptyMap()) : ComposeProps
 
 @Composable
 fun FunctionalComposableScope.HostThemeContent(props: HostThemeProps) {

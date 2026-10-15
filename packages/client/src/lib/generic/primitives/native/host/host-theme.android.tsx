@@ -1,12 +1,29 @@
+import {
+  HostPaletteContext,
+  type MaterialColors,
+  useMaterialColors,
+} from '@expo/ui/jetpack-compose';
 import { requireNativeView } from 'expo';
+import { useMemo } from 'react';
+import { materialPalette } from './host-palette';
 import type { HostThemeProps } from './host-theme-props';
 
-const NativeHostTheme = requireNativeView<HostThemeProps>(
-  'ClientTheme',
-  'HostTheme',
-);
+const NativeHostTheme = requireNativeView<{
+  children: HostThemeProps['children'];
+  colors: MaterialColors;
+}>('ClientTheme', 'HostTheme');
 
-// Expo's seeded Tonal Spot palette adds chroma even to Argo's neutral accent.
-export function HostTheme(props: HostThemeProps): React.JSX.Element {
-  return <NativeHostTheme {...props} />;
+// FieldGroup.Section reads Expo's JS context and sends explicit row colours to Compose.
+export function HostTheme({
+  colors,
+  children,
+}: HostThemeProps): React.JSX.Element {
+  const base = useMaterialColors();
+  const palette = useMemo(() => materialPalette(base, colors), [base, colors]);
+
+  return (
+    <HostPaletteContext.Provider value={palette}>
+      <NativeHostTheme colors={palette}>{children}</NativeHostTheme>
+    </HostPaletteContext.Provider>
+  );
 }
