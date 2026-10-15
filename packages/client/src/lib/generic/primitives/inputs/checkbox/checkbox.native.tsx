@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Host } from '#primitives/native/host';
+import { rowSurface } from '#primitives/native/surface';
 import { AppleCheckboxRow, CheckMark } from './checkbox-apple-row';
 import { MaterialCheckboxRow, MaterialMark } from './checkbox-material-row';
 import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
@@ -27,10 +28,12 @@ export function Checkbox(props: CheckboxProps): React.JSX.Element {
   );
 }
 
+const androidRowSurface = Platform.OS === 'android' ? rowSurface : undefined;
+
 // React Native draws the row's fill from tokens, since native rows take no colour but the Host's.
 function surfaceClass(props: CheckboxProps): string {
   if (props.variant !== 'option')
-    return 'android:overflow-hidden android:rounded-lg android:bg-muted';
+    return cn('android:overflow-hidden android:rounded-lg', androidRowSurface);
 
   return cn(
     'overflow-hidden rounded-lg android:rounded-selection',

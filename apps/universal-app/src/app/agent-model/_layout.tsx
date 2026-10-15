@@ -1,3 +1,4 @@
+import { pageSurface } from '@repo/client';
 import { Stack } from 'expo-router';
 import type * as React from 'react';
 import { useResolveClassNames } from 'uniwind';
@@ -21,7 +22,7 @@ function useConfigureOptions(): React.ComponentProps<
   typeof Stack
 >['screenOptions'] {
   const options = useSheetHeaderOptions();
-  const surface = useResolveClassNames('bg-content');
+  const surface = useResolveClassNames(pageSurface);
 
   return {
     ...options,

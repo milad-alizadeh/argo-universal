@@ -9,6 +9,7 @@ import {
 import Animated, { type AnimatedStyle } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
+import { pageSurface } from '#primitives/native/surface';
 import {
   type ScrollFadeEdgeName,
   scrollFadeDepth,
@@ -128,7 +129,7 @@ export function ScrollFadeGradient(
   props: ScrollFadeGradientProps,
 ): React.JSX.Element {
   const { edge, className, style } = props;
-  const { backgroundColor } = useResolveClassNames(className ?? 'bg-content');
+  const { backgroundColor } = useResolveClassNames(className ?? pageSurface);
   const size = fadeSize(props);
 
   return (

@@ -82,11 +82,7 @@ function WideContent(props: OverlayProps): React.JSX.Element {
 
 function CompactPopover(props: OverlayProps): React.JSX.Element {
   return (
-    <BottomSheet
-      {...sheetProps(props)}
-      surface="sidebar"
-      contentScrolls={props.listContent}
-    >
+    <BottomSheet {...sheetProps(props)} contentScrolls={props.listContent}>
       <CompactContent {...props} />
     </BottomSheet>
   );
@@ -157,8 +153,6 @@ function sheetProps(
   };
 }
 
-function compactClassName(props: ComposerPopoverProps): string {
-  return props.listContent && Platform.OS !== 'web'
-    ? 'flex-1 bg-content'
-    : 'bg-content';
+function compactClassName(props: ComposerPopoverProps): string | undefined {
+  return props.listContent && Platform.OS !== 'web' ? 'flex-1' : undefined;
 }

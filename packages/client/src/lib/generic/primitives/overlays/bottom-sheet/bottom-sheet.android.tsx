@@ -3,6 +3,7 @@ import { ModalBottomSheet } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { Host } from '#primitives/native/host';
+import { useSurfaceColors } from '#primitives/native/surface';
 import { BottomSheetContent } from './bottom-sheet-content';
 import {
   useSheetDismissal,
@@ -53,8 +54,11 @@ function useModalProps(
   sheetRef: SheetRef,
 ): ModalProps {
   const dismissible = props.dismissible !== false;
+  // Material's sheet, the grabber's strip included, on the page surface its content draws.
+  const containerColor = useSurfaceColors().page;
 
   return {
+    containerColor,
     onDismissRequest: () => dismissOrCollapse(props, sheetRef),
     sheetGesturesEnabled: dismissible || props.expandable === true,
     properties: dismissProperties(dismissible),
@@ -80,7 +84,6 @@ type SheetProps = Pick<
   | 'fit'
   | 'variant'
   | 'contentScrolls'
-  | 'surface'
 > & { sheetRef: SheetRef };
 
 function HostedSheetContent(

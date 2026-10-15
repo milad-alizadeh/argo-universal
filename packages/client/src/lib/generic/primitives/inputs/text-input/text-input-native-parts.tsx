@@ -12,10 +12,10 @@ import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { Platform } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 import type { TextRole } from '#primitives/display/text';
 import { useFollowedText } from '#primitives/native/followed-text';
 import { useUniversalTextStyle } from '#primitives/native/native-typography';
+import { useSurfaceColors } from '#primitives/native/surface';
 import { useNativeTheme } from '../../../native-theme';
 import { blurOnFocusLoss } from './focus-loss';
 import { isInvalid, type TextFieldProps } from './text-input-props';
@@ -81,9 +81,9 @@ export function StackedField({
   );
 }
 
-// Android's universal field draws no container, so the box takes the muted surface token, as Paper's field does.
+// Android's universal field draws no container, so the box takes the row surface, lighter than the page it sits on.
 function useFilledBox(): FieldBox {
-  const fill = String(useCSSVariable('--color-muted'));
+  const fill = useSurfaceColors().row;
 
   return {
     style: { backgroundColor: fill, borderRadius: 16, padding: 16 },

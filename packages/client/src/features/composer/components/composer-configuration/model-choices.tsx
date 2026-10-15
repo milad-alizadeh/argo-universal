@@ -66,7 +66,6 @@ function ModelList(props: ModelChoicesProps): React.JSX.Element {
 
 const modelListPresentation = {
   ...listTestIdProps('composer-models-scroll'),
-  surfaceClassName: 'bg-content',
   maxHeight: modelListMaxHeight,
   contentContainerStyle: {},
   estimatedItemSize: 60,

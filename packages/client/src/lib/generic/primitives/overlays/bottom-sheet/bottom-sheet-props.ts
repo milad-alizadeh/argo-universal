@@ -15,7 +15,6 @@ export interface BottomSheetProps {
   variant?: 'form';
   // The child owns scrolling, as a native GroupedList does.
   contentScrolls?: boolean;
-  surface?: 'popover' | 'sidebar';
   // False while the content holds unsaved input: a swipe, the backdrop, Escape or Back leave the sheet open.
   dismissible?: boolean;
   footer?: ReactNode;

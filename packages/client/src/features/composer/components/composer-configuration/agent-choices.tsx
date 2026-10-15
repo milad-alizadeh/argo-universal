@@ -65,7 +65,6 @@ function useAgentList(
 
 const agentListPresentation = {
   ...listTestIdProps('composer-agents-scroll'),
-  surfaceClassName: 'bg-content',
   estimatedItemSize: 52,
 };
 

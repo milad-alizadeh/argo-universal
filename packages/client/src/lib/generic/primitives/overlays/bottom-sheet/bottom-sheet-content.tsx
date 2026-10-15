@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '#lib/generic/utils';
+import { pageSurface } from '#primitives/native/surface';
 import type { BottomSheetProps } from './bottom-sheet-props';
 
 type SheetContentProps = Pick<
@@ -13,7 +14,6 @@ type SheetContentProps = Pick<
   | 'dismissible'
   | 'footer'
   | 'contentScrolls'
-  | 'surface'
 > & {
   viewportHeight?: number;
   onContentHeightChange?: (height: number) => void;
@@ -81,7 +81,7 @@ function sheetAccessibility(
 
 function sheetClass(props: SheetContentProps): string {
   return cn(
-    props.surface === 'sidebar' ? 'bg-content' : 'bg-card',
+    pageSurface,
     'ios:pt-8 ios:pb-0 min-h-0',
     fitSheetPadding(props.fit),
     {

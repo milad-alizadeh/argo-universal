@@ -49,6 +49,8 @@ export { Text, useTextStyle } from '#primitives/display/text';
 
 export { Toaster } from '#primitives/overlays/toast';
 
+export { pageSurface } from '#primitives/native/surface';
+
 export {
   type LeaveGuard,
   type Navigate,

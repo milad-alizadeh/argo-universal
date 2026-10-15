@@ -16,7 +16,6 @@ type HostedSheetProps = Pick<
   | 'footer'
   | 'dismissible'
   | 'contentScrolls'
-  | 'surface'
   | 'fit'
 >;
 

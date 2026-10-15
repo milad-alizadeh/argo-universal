@@ -1,9 +1,12 @@
 import { LegendList } from '@legendapp/list/react-native';
 import { createElement, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { useResolveClassNames } from 'uniwind';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { TextInput } from '#primitives/inputs/text-input';
+import { pageSurface, rowSurface } from '#primitives/native/surface';
+import { cn } from '../../../utils';
 import type { PickerOption, PickerProps } from './picker-props';
 import { choosePickerOption, pickerOptionsMessage } from './picker-selection';
 
@@ -22,7 +25,7 @@ export function PickerSearchList<Value extends string>(
 
   return createElement(
     View,
-    { className: 'flex-1 gap-3 bg-card px-4 pt-3' },
+    { className: cn('flex-1 gap-3 px-4 pt-3', pageSurface) },
     <TextInput {...searchInputProps(props.label, query, setQuery)} />,
     <SearchResults picker={props} options={options} />,
   );
@@ -43,7 +46,7 @@ function searchInputProps(
     placeholder: 'Search',
     value,
     onChangeText,
-    className: 'rounded-2xl border-0 bg-muted shadow-none',
+    className: cn('rounded-2xl border-0 shadow-none', rowSurface),
   };
 }
 
@@ -60,11 +63,15 @@ function SearchResults<Value extends string>(props: {
   );
 }
 
+// The options sit on one row card, lighter than the page.
+const optionsCard = cn('rounded-2xl px-4', rowSurface);
+
 function SearchChoices<Value extends string>(props: {
   picker: SearchProps<Value>;
   options: readonly PickerOption<Value>[];
 }): React.JSX.Element {
   return createElement(LegendList<PickerOption<Value>>, {
+    contentContainerStyle: useResolveClassNames(optionsCard),
     data: props.options,
     keyExtractor: (option) => option.value,
     keyboardShouldPersistTaps: 'handled',

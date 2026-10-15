@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { TextInput, View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
+import { rowSurface } from '#primitives/native/surface';
 import { cn } from '../../../utils';
 import type { ComboboxSearchProps } from './combobox-search-props';
 
@@ -23,7 +24,9 @@ export function ComboboxSearch(props: ComboboxSearchProps): React.JSX.Element {
 
 const containerClasses = (className: string | undefined): string =>
   cn(
-    'h-12 flex-row items-center gap-3 rounded-full bg-muted px-4',
+    'h-12 flex-row items-center gap-3 rounded-full px-4',
+    // On a phone the search sits on the sheet's page, so it takes the lighter row surface.
+    rowSurface,
     'android:gap-2 android:px-2',
     'wide:h-8 wide:gap-1.5 wide:bg-transparent wide:px-2 web:rounded-2xl web:wide:h-10 web:wide:gap-3 web:wide:bg-muted web:wide:px-4',
     className,

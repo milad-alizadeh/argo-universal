@@ -65,7 +65,6 @@ type SheetContentProps = Pick<
   | 'footer'
   | 'initialSize'
   | 'contentScrolls'
-  | 'surface'
 >;
 
 function SheetContent(props: SheetContentProps): React.JSX.Element {
