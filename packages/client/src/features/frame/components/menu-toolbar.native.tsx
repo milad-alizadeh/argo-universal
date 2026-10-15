@@ -6,28 +6,12 @@ import { toolbarDot } from '#lib/product/navigation/toolbar-dot';
 import {
   useOpenDrawer,
   useShellAttentionCount,
-} from '../phone-shell/phone-shell';
-import { shellSections } from '../shell-sections';
-import type { PhoneSectionHeaderProps } from './phone-section-header-props';
+} from './phone-shell/phone-shell';
 
 const menuIcon = process.env.EXPO_OS === 'ios' ? 'line.3.horizontal' : MenuIcon;
 
-// A phone section root's header, as the Stack Toolbar guide builds one: ☰ before the title, then the section's own toolbar.
-export function PhoneSectionHeader({
-  section,
-  toolbar,
-}: PhoneSectionHeaderProps): React.JSX.Element {
-  return (
-    <>
-      <Stack.Screen options={{ title: shellSections[section].title }} />
-      <MenuToolbar />
-      {toolbar}
-    </>
-  );
-}
-
-// ☰ opens the drawer of sections; on Android a dot shows while Sessions need attention.
-function MenuToolbar(): React.JSX.Element {
+// ☰ before a phone section's title; opens the drawer of sections. On Android a dot shows while Sessions need attention.
+export function MenuToolbar(): React.JSX.Element {
   const openDrawer = useOpenDrawer();
   const attention = useShellAttentionCount() > 0;
 

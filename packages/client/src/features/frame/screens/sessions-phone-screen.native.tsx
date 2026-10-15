@@ -1,45 +1,50 @@
 import FilterList from '@expo/material-symbols/filter_list.xml';
 import { Stack } from 'expo-router';
 import type * as React from 'react';
+import { View } from 'react-native';
+import { SessionsScreen, useSessionsFilter } from '#features/sessions';
 import { hasLiquidGlass } from '#lib/generic/native-header';
+import { useNavigate } from '#lib/product/navigation/context';
 import { toolbarDot } from '#lib/product/navigation/toolbar-dot';
-import type { SessionsPhoneToolbarProps } from './sessions-phone-toolbar-props';
+import { MenuToolbar } from '../components/menu-toolbar.native';
+import { shellSections } from '../components/shell-sections';
+
+type SessionsFilter = ReturnType<typeof useSessionsFilter>;
 
 const filterIcon =
   process.env.EXPO_OS === 'ios' ? 'slider.horizontal.3' : FilterList;
 
 // iOS 26 docks New Session beside the search bar at the bottom; earlier iOS keeps it in the header.
-const newSessionInHeader = process.env.EXPO_OS === 'ios' && !hasLiquidGlass;
-
 const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass;
 
-type FilterProps = Pick<
-  SessionsPhoneToolbarProps,
-  'archived' | 'onArchivedChange'
->;
+const newSessionInHeader = process.env.EXPO_OS === 'ios' && !hasLiquidGlass;
 
-// A phone's Sessions header, as the Stack Toolbar guide builds one: the filter menu, the stack's search bar, and New Session on iOS.
-export function SessionsPhoneToolbar(
-  props: SessionsPhoneToolbarProps,
-): React.JSX.Element {
+// A phone's Sessions root, as the Stack Toolbar guide builds one: ☰, the title, the filter menu, the stack's search bar, New Session on iOS, and the list.
+export function SessionsPhoneScreen(): React.JSX.Element {
+  const filter = useSessionsFilter();
+  const navigate = useNavigate();
+  const newSession = (): void => navigate({ to: 'new-session' });
+
   return (
-    <>
-      <SessionsRightToolbar {...props} />
-      <SessionsSearchBar onQueryChange={props.onQueryChange} />
-      {bottomSearch ? (
-        <SessionsBottomToolbar onNewSession={props.onNewSession} />
-      ) : null}
-    </>
+    <View className="flex-1 bg-content">
+      <Stack.Screen options={{ title: shellSections.sessions.title }} />
+      <MenuToolbar />
+      {rightToolbar(filter, newSession)}
+      {searchBar(filter.onQueryChange)}
+      {bottomSearch ? bottomToolbar(newSession) : null}
+      <SessionsScreen {...filter} />
+    </View>
   );
 }
 
-function SessionsRightToolbar(
-  props: SessionsPhoneToolbarProps,
+function rightToolbar(
+  filter: SessionsFilter,
+  newSession: () => void,
 ): React.JSX.Element {
   return (
     <Stack.Toolbar placement="right">
-      {filterMenu(props)}
-      {newSessionInHeader ? newSessionButton(props.onNewSession) : null}
+      {filterMenu(filter)}
+      {newSessionInHeader ? newSessionButton(newSession) : null}
     </Stack.Toolbar>
   );
 }
@@ -48,7 +53,7 @@ function SessionsRightToolbar(
 function filterMenu({
   archived,
   onArchivedChange,
-}: FilterProps): React.JSX.Element {
+}: SessionsFilter): React.JSX.Element {
   return (
     <Stack.Toolbar.Menu icon={filterIcon} accessibilityLabel="Filter Sessions">
       {toolbarDot(archived)}
@@ -81,9 +86,7 @@ function newSessionButton(onPress: () => void): React.JSX.Element {
 }
 
 // The stack's own search bar; closing or cancelling it clears the query.
-function SessionsSearchBar({
-  onQueryChange,
-}: Pick<SessionsPhoneToolbarProps, 'onQueryChange'>): React.JSX.Element {
+function searchBar(onQueryChange: (query: string) => void): React.JSX.Element {
   return (
     <Stack.SearchBar
       placeholder="Search Sessions"
@@ -96,14 +99,12 @@ function SessionsSearchBar({
   );
 }
 
-function SessionsBottomToolbar({
-  onNewSession,
-}: Pick<SessionsPhoneToolbarProps, 'onNewSession'>): React.JSX.Element {
+function bottomToolbar(newSession: () => void): React.JSX.Element {
   return (
     <Stack.Toolbar placement="bottom">
       <Stack.Toolbar.SearchBarSlot />
       <Stack.Toolbar.Spacer />
-      {newSessionButton(onNewSession)}
+      {newSessionButton(newSession)}
     </Stack.Toolbar>
   );
 }
