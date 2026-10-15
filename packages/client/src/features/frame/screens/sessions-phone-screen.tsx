@@ -8,10 +8,10 @@ import {
 } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/context';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
-import { PhoneMenuButton } from '../components/phone-menu-button';
 import { shellSections } from '../components/shell-sections';
+import { PhoneMenuButton } from './phone-menu-button';
 
-// A narrow web window's Sessions root: its header row with ☰, the title, the filter and search, over the list.
+// A narrow window's Sessions root: its header with ☰, the title, the filter and search, over the list.
 export function SessionsPhoneScreen(): React.JSX.Element {
   const filter = useSessionsFilter();
   const navigate = useNavigate();

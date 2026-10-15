@@ -1,34 +1,25 @@
 import {
   DesktopLayout,
   OnboardingLayout,
-  PhoneLayout,
   type NavigationDestination,
   type Section,
   useOnboardingShown,
   useWide,
 } from '@repo/client';
 import { Slot, usePathname, useRouter } from 'expo-router';
-import {
-  defaultTabsSlotRender,
-  TabList,
-  Tabs,
-  TabSlot,
-  type TabSlotProps,
-  TabTrigger,
-  useTabTrigger,
-} from 'expo-router/ui';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
+import { PhoneDrawer } from '@/navigation/phone-drawer';
 import { hrefFor } from '@/navigation/routes';
 import { useDestination } from '@/navigation/use-destination';
 
-// Each section's route and the URL it opens on.
-const sectionTabs = {
-  sessions: { name: '(sessions)', href: '/' },
-  issues: { name: 'issues', href: '/issues' },
-  atlas: { name: 'atlas', href: '/atlas' },
-  settings: { name: 'settings', href: '/settings' },
-} as const satisfies Record<Section, { name: string; href: string }>;
+// The URL each section opens on.
+const sectionHrefs = {
+  sessions: '/',
+  issues: '/issues',
+  atlas: '/atlas',
+  settings: '/settings',
+} as const satisfies Record<Section, string>;
 
 // Picks the shell by width; each section's layout picks how its pages stack.
 export default function ShellLayout(): React.JSX.Element {
@@ -66,7 +57,7 @@ function NarrowShell({
 }): React.JSX.Element {
   const onboarding = useOnboardingShown(destination);
 
-  return onboarding ? <OnboardingLayout /> : <PhoneSections />;
+  return onboarding ? <OnboardingLayout /> : <PhoneDrawer />;
 }
 
 interface ShownPage {
@@ -109,7 +100,7 @@ function ReopenPage({ page }: { page: ShownPage }): null {
   const router = useRouter();
   const [{ path, destination }] = useState(page);
   useEffect(() => {
-    if (path === sectionTabs.sessions.href) return;
+    if (path === sectionHrefs.sessions) return;
     const root = sectionRoot(path);
     router.replace(root);
 
@@ -126,50 +117,12 @@ function ReopenPage({ page }: { page: ShownPage }): null {
   return null;
 }
 
-function sectionRoot(path: string): (typeof sectionTabs)[Section]['href'] {
-  const section = Object.values(sectionTabs).find(
-    ({ href }) =>
-      href !== '/' && (path === href || path.startsWith(`${href}/`)),
+function sectionRoot(path: string): (typeof sectionHrefs)[Section] {
+  const href = Object.values(sectionHrefs).find(
+    (sectionHref) =>
+      sectionHref !== '/' &&
+      (path === sectionHref || path.startsWith(`${sectionHref}/`)),
   );
 
-  return section?.href ?? sectionTabs.sessions.href;
+  return href ?? sectionHrefs.sessions;
 }
-
-// On a phone each section is a tab: it mounts on first open, keeps its stack while another is shown, and stops rendering while hidden.
-function PhoneSections(): React.JSX.Element {
-  return (
-    <Tabs style={{ flex: 1 }}>
-      <PhoneSectionShell />
-      {/* The drawer is the tab list; this only declares the tabs, which Tabs reads from its direct children. */}
-      <TabList style={{ display: 'none' }}>{sectionTriggers}</TabList>
-    </Tabs>
-  );
-}
-
-const sectionTriggers = Object.values(sectionTabs).map((tab) => (
-  <TabTrigger key={tab.name} name={tab.name} href={tab.href} />
-));
-
-function PhoneSectionShell(): React.JSX.Element {
-  const destination = useDestination();
-  const { switchTab } = useTabTrigger({ name: sectionTabs.sessions.name });
-
-  return (
-    <PhoneLayout
-      destination={destination}
-      onSectionChange={(section) => switchTab(sectionTabs[section].name, {})}
-    >
-      <TabSlot renderFn={frozenWhenHidden} />
-    </PhoneLayout>
-  );
-}
-
-// Freezing skips a hidden section's renders; its effects and subscriptions stay live, since React's Activity, which would pause them, crashes Fabric's view mounting on Android (React Native 0.86).
-const frozenWhenHidden: NonNullable<TabSlotProps['renderFn']> = (
-  descriptor,
-  options,
-) =>
-  defaultTabsSlotRender(
-    { ...descriptor, options: { ...descriptor.options, freezeOnBlur: true } },
-    options,
-  );

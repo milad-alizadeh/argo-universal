@@ -9,7 +9,7 @@ const searchRowLayout = {
   headerRightContainerStyle: { flexGrow: 0 },
 };
 
-// A narrow web window's header row; phones declare their native header in each screen. With search, the title row is the search row: Search, last, morphs into a field over the whole row.
+// A stack page's header row, on a narrow web window and on a phone's pushed pages. With search, the title row is the search row: Search, last, morphs into a field over the whole row.
 export function WebScreenHeader(header: ScreenHeaderProps): React.JSX.Element {
   const { title, left } = header;
 

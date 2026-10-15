@@ -115,8 +115,9 @@ export function searchSaysWhenNothingMatches(width: number): Story {
     args: { query: 'mistral' },
     play: async ({ canvas }) => {
       await settleViewport(width);
+      await expect(canvas.getByText('No matching settings')).toBeVisible();
       await expect(
-        canvas.getByRole('group', { name: 'No settings match.' }),
+        canvas.getByText('No Settings page has "mistral" in its name.'),
       ).toBeVisible();
       await expect(canvas.queryByRole('link')).toBeNull();
     },

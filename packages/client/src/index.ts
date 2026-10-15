@@ -16,9 +16,11 @@ export { ConnectionDetailScreen, useConnection } from '#features/connection';
 export {
   DesktopLayout,
   OnboardingLayout,
-  PhoneLayout,
+  PhoneConnectionBanner,
+  SectionDrawer,
   SectionRootScreen,
   useOnboardingShown,
+  usePhoneDrawerWidth,
 } from '#features/frame';
 
 export {
@@ -58,7 +60,6 @@ export {
   type ScreenHeaderProps,
   ScreenHeaderProvider,
 } from '#lib/product/navigation/screen-header';
-
 
 export { HeaderButton } from '#lib/product/header-button';
 

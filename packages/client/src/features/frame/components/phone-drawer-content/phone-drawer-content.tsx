@@ -12,28 +12,22 @@ import { drawerAttentionBadge } from '../attention-badge/attention-badge';
 import { type Section, sectionOrder, shellSections } from '../shell-sections';
 import { headerBarHeight } from './header-bar-height';
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
-import type { PhoneShellProps } from './phone-shell';
 
 // The content's edge shades the drawer under it, as if the content lay on top.
 const contentEdgeShadow =
   'shadow-[inset_-12px_0_16px_-8px_#0000001a] dark:shadow-[inset_-12px_0_16px_-8px_#00000066]';
 
-type DrawerNavigation = Pick<
-  PhoneShellProps,
-  | 'selectedSection'
-  | 'attentionCount'
-  | 'onDrawerOpenChange'
-  | 'onSectionChange'
->;
-
-interface PhoneDrawerContentProps extends DrawerNavigation {
-  drawerOpen: boolean;
-  width: number;
+interface DrawerNavigation {
+  selectedSection: Section;
+  // The Sessions that need input or are Unread, for the Sessions row's badge.
+  attentionCount: number;
+  // A row was picked; the drawer closes, and a new section shows.
+  onSectionChange: (section: Section) => void;
 }
 
-function selectSection(navigation: DrawerNavigation, section: Section): void {
-  navigation.onSectionChange(section);
-  navigation.onDrawerOpenChange(false);
+export interface PhoneDrawerContentProps extends DrawerNavigation {
+  open: boolean;
+  width: number;
 }
 
 function sectionItem(
@@ -55,7 +49,7 @@ function SectionButton({
       {...sectionItem(section)}
       selected={navigation.selectedSection === section}
       badge={drawerAttentionBadge(count)}
-      onPress={() => selectSection(navigation, section)}
+      onPress={() => navigation.onSectionChange(section)}
     />
   );
 }
@@ -96,17 +90,19 @@ function DrawerGlass(navigation: DrawerNavigation): React.JSX.Element {
   );
 }
 
-export function PhoneDrawerContent(
-  props: PhoneDrawerContentProps,
-): React.JSX.Element {
+const hiddenWhileClosed = (open: boolean) =>
+  ({ 'aria-hidden': !open, accessibilityElementsHidden: !open }) as const;
+
+// The phone's drawer of sections: the title, then a row per section, over a still glow.
+export function PhoneDrawerContent({
+  open,
+  width,
+  ...glass
+}: PhoneDrawerContentProps): React.JSX.Element {
   return (
-    <View
-      className="flex-1"
-      aria-hidden={!props.drawerOpen}
-      accessibilityElementsHidden={!props.drawerOpen}
-    >
-      <PhoneDrawerBackdrop width={props.width} />
-      <DrawerGlass {...props} />
+    <View className="flex-1" {...hiddenWhileClosed(open)}>
+      <PhoneDrawerBackdrop width={width} />
+      <DrawerGlass {...glass} />
     </View>
   );
 }
