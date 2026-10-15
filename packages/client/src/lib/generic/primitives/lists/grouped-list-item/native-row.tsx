@@ -107,19 +107,14 @@ function NativeRowSpinner(): React.JSX.Element {
   );
 }
 
-const detailBottom = 12;
-
-// The row's detail control under it, such as an effort slider.
+// The row's detail control under it, such as an effort slider; the List's row insets pad it.
 export function NativeRowDetail({
   detail,
 }: Pick<GroupedListItemProps, 'detail'>): React.JSX.Element | null {
   if (!detail) return null;
 
   return (
-    <Column
-      style={{ paddingBottom: detailBottom }}
-      modifiers={Platform.OS === 'ios' ? undefined : [fillMaxWidth()]}
-    >
+    <Column modifiers={Platform.OS === 'ios' ? undefined : [fillMaxWidth()]}>
       <NativeControl>{detail}</NativeControl>
     </Column>
   );

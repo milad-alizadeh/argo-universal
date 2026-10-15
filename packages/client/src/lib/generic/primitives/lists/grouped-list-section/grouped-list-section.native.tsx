@@ -1,19 +1,12 @@
 import { Column, FieldGroup, Text, type TextProps } from '@expo/ui';
 import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
-import {
-  accessibilityAddTraits,
-  foregroundStyle,
-  headerProminence,
-} from '@expo/ui/swift-ui/modifiers';
+import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import type { TextRole } from '#primitives/display/text';
 import { useSidebarList } from '#primitives/fields/field-layout';
-import {
-  useSwiftUITextModifiers,
-  useUniversalTextStyle,
-} from '#primitives/native/native-typography';
+import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
@@ -44,31 +37,17 @@ function useBareSection(props: GroupedListSectionProps): boolean {
   return !ios && (!!props.textFields || sidebar);
 }
 
-// Increased prominence preserves an iOS header's title case; the header sets its own font.
+// The Section draws its own title, in the platform's header style.
 function Section(props: GroupedListSectionProps): React.JSX.Element {
   return (
-    <FieldGroup.Section
-      title={ios ? undefined : props.title}
-      modifiers={ios ? [headerProminence('increased')] : undefined}
-    >
-      {headerSlot(props.title)}
+    <FieldGroup.Section title={props.title}>
       {footerSlot(props)}
       {props.children}
     </FieldGroup.Section>
   );
 }
 
-// The Section finds its header and footer by the slot element's type, so these are called, not rendered as components.
-function headerSlot(title: string | undefined): React.ReactNode {
-  if (!ios || !title) return null;
-
-  return (
-    <FieldGroup.SectionHeader>
-      <HeaderText title={title} />
-    </FieldGroup.SectionHeader>
-  );
-}
-
+// The Section finds its footer by the slot element's type, so this is called, not rendered as a component.
 function footerSlot(props: GroupedListSectionProps): React.ReactNode {
   if (!props.footer) return null;
 
@@ -123,22 +102,6 @@ function Caption(props: {
   );
 }
 
-function HeaderText({ title }: { title: string }): React.JSX.Element {
-  const headingModifiers = useSwiftUITextModifiers('heading');
-
-  return (
-    <Text
-      modifiers={[
-        ...headingModifiers,
-        foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
-        accessibilityAddTraits(['isHeader']),
-      ]}
-    >
-      {title}
-    </Text>
-  );
-}
-
 function FooterText(props: {
   text: string;
   tone: GroupedListSectionProps['tone'];
@@ -146,18 +109,20 @@ function FooterText(props: {
   return <Text {...useFooterText(props.tone)}>{props.text}</Text>;
 }
 
-// A failure, such as a field's error, reads in the danger token, the one colour taken from Argo's theme rather than the Host.
+/*
+ * iOS's footer keeps the Section's own font; a failure, such as a field's error, reads in the
+ * danger token, the one colour taken from Argo's theme rather than the Host.
+ */
 function useFooterText(
   tone: GroupedListSectionProps['tone'],
 ): Pick<TextProps, 'textStyle' | 'modifiers'> {
-  const swiftModifiers = useSwiftUITextModifiers('secondary');
   const textStyle = useUniversalTextStyle('secondary');
   const { danger } = useNativeTheme().colors;
   const color = tone === 'danger' ? danger : undefined;
 
   if (!ios) return { textStyle: { ...textStyle, color } };
 
-  return { modifiers: [...swiftModifiers, ...failureColor(color)] };
+  return { modifiers: failureColor(color) };
 }
 
 function failureColor(

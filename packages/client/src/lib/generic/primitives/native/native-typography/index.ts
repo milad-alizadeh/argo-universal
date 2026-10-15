@@ -1,4 +1,1 @@
-export {
-  useSwiftUITextModifiers,
-  useUniversalTextStyle,
-} from './native-typography';
+export { useUniversalTextStyle } from './native-typography';

@@ -4,36 +4,26 @@ import {
   fillMaxWidth,
   padding,
 } from '@expo/ui/jetpack-compose/modifiers';
-import {
-  accessibilityHidden,
-  alignmentGuide,
-  frame,
-  padding as swiftPadding,
-} from '@expo/ui/swift-ui/modifiers';
+import { accessibilityHidden, frame } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
-import { useIconPixels } from '../../../symbols/icon-role';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import { RowLabel, RowTrailing } from './grouped-list-item-native-fields';
+import { RowTrailing } from './grouped-list-item-native-fields';
+import { RowHeadline } from './grouped-list-item-native-headline';
 import type { GroupedListItemProps } from './grouped-list-item-props';
-import { hasDisclosure, hasLeadingSlot } from './grouped-list-item-styles';
-import { NativeRowLeading } from './native-row';
+import { hasDisclosure } from './grouped-list-item-styles';
 
 type Modifiers = NonNullable<RowProps['modifiers']>;
 
 const ios = Platform.OS === 'ios';
 
-// SwiftUI's row spacing; Material spaces a list item's slots by 16.
-const rowSpacing = Platform.select({ ios: 12, default: 16 });
+const gutter = 16;
 
-const iosRowHeight = 44;
-
-const iosRowPadding = 12;
+// SwiftUI spaces a row's parts itself; Material spaces a list item's slots by 16.
+const rowSpacing = ios ? undefined : gutter;
 
 const androidRowHeight = 56;
-
-const gutter = 16;
 
 const androidRowPadding = 8;
 
@@ -54,7 +44,6 @@ export function RowContent(props: GroupedListItemProps): React.JSX.Element {
       style={{ opacity: props.disabled ? disabledOpacity : 1 }}
       modifiers={modifiers}
     >
-      <NativeRowLeading {...props} />
       <RowFields {...props} />
       <Disclosure visible={hasDisclosure(props)} />
     </Row>
@@ -69,28 +58,13 @@ function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
   );
 }
 
+// The Form sizes and pads an iOS row, and starts its separator under the Label's title.
 function useContentModifiers(props: GroupedListItemProps): Modifiers {
-  const iconSize = useIconPixels('row');
   const sidebar = useSidebarList();
 
   if (!ios) return [fillMaxWidth(), ...flatRowModifiers(sidebar)];
 
-  return [
-    swiftPadding({ vertical: iosRowPadding }),
-    accessibilityHidden(!!props.detail),
-    frame({ minHeight: iosRowHeight }),
-    separatorInset(props, iconSize),
-  ];
-}
-
-// The separator starts under the title, past the icon slot.
-function separatorInset(
-  props: GroupedListItemProps,
-  iconSize: number,
-): ReturnType<typeof alignmentGuide> {
-  const inset = hasLeadingSlot(props) ? iconSize + rowSpacing : 0;
-
-  return alignmentGuide('listRowSeparatorLeading', inset);
+  return [accessibilityHidden(!!props.detail)];
 }
 
 // Android's Section pads its rows on Material's tile; a flat sidebar row pads itself.
@@ -109,7 +83,7 @@ function RowFields(props: GroupedListItemProps): React.JSX.Element {
 
   const fields = (
     <>
-      <RowLabel {...props} />
+      <RowHeadline {...props} />
       <RowTrailing {...props} />
     </>
   );

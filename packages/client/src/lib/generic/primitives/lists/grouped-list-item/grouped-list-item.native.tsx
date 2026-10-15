@@ -5,7 +5,6 @@ import {
   buttonStyle,
   disabled,
   listRowBackground,
-  listRowInsets,
   listRowSeparator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
@@ -24,8 +23,6 @@ import { NativeRowDetail } from './native-row';
 type Modifiers = NonNullable<ColumnProps['modifiers']>;
 
 const ios = Platform.OS === 'ios';
-
-const inset = 16;
 
 export function GroupedListItem(
   props: GroupedListItemProps,
@@ -109,7 +106,6 @@ function rowModifiers(
     ...(sidebar
       ? [listRowBackground('transparent'), listRowSeparator('hidden')]
       : []),
-    listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     ...rowAccessibilityModifiers(props),
     disabled(!!props.disabled),
   ];
