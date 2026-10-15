@@ -4,17 +4,10 @@ import type * as React from 'react';
 import { codeFace, NativeText } from '#primitives/display/native-text';
 import { Field } from '#primitives/fields/field';
 import { useFieldText } from './text-input-field-text';
+import { requiredLabel } from './text-input-label';
 import { FieldProgress } from './text-input-progress';
-import {
-  isInvalid,
-  type PhoneFieldProps,
-  requiredLabel,
-} from './text-input-props';
+import { isInvalid, type PhoneFieldProps } from './text-input-props';
 
-/*
- * iOS: a Settings form row, the label leading and the universal field taking the rest
- * of the row with its text trailing. The hint or error sits in the footer under it.
- */
 export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
   const label = requiredLabel(props);
 
@@ -59,7 +52,6 @@ function fieldBehaviour(props: PhoneFieldProps): TextInputProps {
   };
 }
 
-// The field's hint or error in the footer under it.
-export const PhoneFieldFrame = Field;
+export const PhoneFieldWithFooter = Field;
 
 PhoneField satisfies React.ComponentType<PhoneFieldProps>;

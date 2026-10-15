@@ -6,6 +6,7 @@ import {
   useCallback,
   useState,
 } from 'react';
+import { holdRowTop } from './keep-place';
 
 type ListRef = RefObject<LegendListRef | null>;
 
@@ -51,16 +52,25 @@ function useMovingCollapsibles(
   return [moving, onMotionChange];
 }
 
-function growItem(
-  ref: LegendListRef | null,
+function setGrownSize(
+  ref: LegendListRef,
   itemKey: string,
   height: number,
 ): void {
-  if (!ref) return;
   const size = ref.getState().sizes.get(itemKey);
 
   if (size === undefined) return;
   ref.setItemSize(itemKey, { height: size + height, width: 0 });
+}
+
+// An opening row keeps its header where it was while it grows below.
+function growItem(list: ListRef, itemKey: string, height: number): void {
+  const ref = list.current;
+
+  if (!ref) return;
+
+  if (height > 0) holdRowTop(list, ref.getState(), itemKey);
+  setGrownSize(ref, itemKey, height);
 }
 
 export interface CollapsibleMotion {
@@ -74,8 +84,7 @@ export function useCollapsibleMotion(list: ListRef): CollapsibleMotion {
 
   // Called in the same frame as the collapsible's own height, so React commits the row and the rows below together; Legend's measure lands a frame late on native.
   const onGrow = useCallback(
-    (itemKey: string, height: number) =>
-      growItem(list.current, itemKey, height),
+    (itemKey: string, height: number) => growItem(list, itemKey, height),
     [list],
   );
 
