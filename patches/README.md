@@ -27,3 +27,11 @@ Remove this patch when the pinned XState release provides these graph signatures
 `node-pty@1.1.0.patch` makes `scripts/post-install.js` mark the prebuilt `spawn-helper` executable on macOS (arm64 and x64), so the Server can spawn terminal processes. Without it the helper keeps the mode it had in the package and spawning fails with a permissions error.
 
 Remove this patch when the pinned `node-pty` release ships `spawn-helper` as executable.
+
+## @expo/ui@57.0.22
+
+`@expo__ui@57.0.22.patch` exposes Compose's `clearAndSetSemantics {}` as the `clearSemantics()` modifier. GroupedListItem uses it to suppress duplicate text without hiding sibling controls.
+
+It also exposes semantic `text` and `stateDescription`. TalkBack uses these to announce a Slider's name and human-readable value while the stock control supplies its range and actions.
+
+The App builds `expo-ui` from source on Android so Expo's precompiled module does not bypass the patch. Rebuild the Android development client after applying it. Remove the patch and the source-build override when Expo UI exposes this Compose API.

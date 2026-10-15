@@ -107,7 +107,11 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
     ).toBeVisible();
     // The reader opens the group and reads one of its commands.
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Ran 10 commands' }),
+      await canvas.findByRole(
+        'button',
+        { name: 'Ran 10 commands' },
+        scrollAwayWait,
+      ),
     );
 
     const step = (): HTMLElement =>
