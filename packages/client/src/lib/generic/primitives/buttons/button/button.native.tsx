@@ -5,7 +5,7 @@ import {
   Text,
   type TextProps,
 } from '@expo/ui';
-import type { ComponentType, ReactElement } from 'react';
+import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
@@ -41,17 +41,42 @@ function SystemButton(props: SystemButtonProps): ReactElement {
 function NativeControl(props: SystemButtonProps): ReactElement {
   const variant = universalButtonVariant(props);
   const dangerColor = useDangerColor(props);
+  const common = nativeControlProps(props, variant, dangerColor);
+
+  // A text-only button hands its label to Expo, which draws it; only decoration or an Android danger label needs a row.
+  if (!needsRow(props, variant, dangerColor))
+    return <UniversalButton {...common} label={props.label} />;
 
   return (
-    <UniversalButton
-      variant={variant}
-      onPress={props.onPress}
-      disabled={isButtonDisabled(props)}
-      testID={props.testID}
-      modifiers={nativeButtonModifiers({ ...props, dangerColor })}
-    >
+    <UniversalButton {...common}>
       <ButtonRow {...props} {...rowColors(variant, dangerColor)} />
     </UniversalButton>
+  );
+}
+
+function nativeControlProps(
+  props: SystemButtonProps,
+  variant: UniversalButtonVariant,
+  dangerColor: string | undefined,
+): Omit<ComponentProps<typeof UniversalButton>, 'children' | 'label'> {
+  return {
+    variant,
+    onPress: props.onPress,
+    disabled: isButtonDisabled(props),
+    testID: props.testID,
+    modifiers: nativeButtonModifiers({ ...props, dangerColor }),
+  };
+}
+
+function needsRow(
+  props: SystemButtonProps,
+  variant: UniversalButtonVariant,
+  dangerColor: string | undefined,
+): boolean {
+  return (
+    !!props.icon ||
+    !!props.loading ||
+    androidLabelColor(variant, dangerColor) !== undefined
   );
 }
 
