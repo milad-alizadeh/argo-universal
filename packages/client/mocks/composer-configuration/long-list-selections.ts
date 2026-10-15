@@ -13,7 +13,7 @@ export async function selectLastDesktopModel(
   await openModelChoices(context);
 
   const models = await within(document.body).findByRole('radiogroup', {
-    name: 'Models',
+    name: 'Model',
   });
 
   await assertModelMenuInsideWindow();

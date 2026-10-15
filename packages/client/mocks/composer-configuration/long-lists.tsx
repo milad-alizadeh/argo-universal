@@ -89,6 +89,6 @@ function configurationScroll(testId: string): Promise<HTMLElement> {
   const overlay = within(document.body);
 
   return testId === modelsScrollId
-    ? overlay.findByRole('radiogroup', { name: 'Models' })
+    ? overlay.findByRole('radiogroup', { name: 'Model' })
     : overlay.findByTestId(testId);
 }
