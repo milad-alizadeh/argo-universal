@@ -49,6 +49,7 @@ function RowValueText({ value }: { value: string }): React.JSX.Element {
   return (
     <NativeText
       numberOfLines={ios ? undefined : 1}
+      tone="muted"
       modifiers={rowColor('secondary')}
     >
       {value}

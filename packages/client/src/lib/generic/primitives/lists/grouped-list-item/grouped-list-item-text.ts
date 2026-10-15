@@ -14,7 +14,7 @@ const ios = Platform.OS === 'ios';
 
 /*
  * iOS's system label colours, as a Form's button would tint its whole label; an accent row takes that tint.
- * Android keeps the Host palette's content colour for every tone; danger is NativeText's own.
+ * Android's NativeText and ListItem take colours through their public APIs.
  */
 const swiftColors: Partial<Record<RowTone, string>> = {
   primary: 'label',

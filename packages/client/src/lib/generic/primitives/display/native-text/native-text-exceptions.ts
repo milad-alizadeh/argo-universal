@@ -3,6 +3,8 @@ import { font } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import type { Tone } from '#primitives/display/text';
+import { toneClass } from '#primitives/display/text';
+import { usePrimitiveColor } from '#primitives/native/primitive-color';
 
 type CodeFace = Pick<TextInputProps, 'textStyle'> & {
   modifiers: NonNullable<TextInputProps['modifiers']>;
@@ -17,9 +19,16 @@ export function codeFace(code: boolean | undefined): CodeFace {
     : { textStyle: { fontFamily: 'monospace' }, modifiers: [] };
 }
 
-// The owner keeps danger red, the one exception to the Host's colours on native controls and text.
+// Danger keeps its Argo token on both native platforms.
 export function useDangerColor(tone: Tone | undefined): string | undefined {
   const color = useNativeTheme().colors.danger;
 
   return tone === 'danger' ? color : undefined;
+}
+
+// Explicit text tones use public Compose colour props; untoned text inherits its native container.
+export function useTextColor(tone: Tone | undefined): string | undefined {
+  const color = usePrimitiveColor(toneClass(tone) ?? 'text-foreground');
+
+  return tone === undefined ? undefined : color;
 }

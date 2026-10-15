@@ -56,7 +56,7 @@ export function longPlan(width: number): Story {
       await settleViewport(width);
 
       const scroll = canvas.getByRole('region', {
-        name: documentLabel,
+        name: width === layoutWidths.phone ? 'Plan proposal' : documentLabel,
       });
 
       await waitFor(() =>
@@ -77,6 +77,9 @@ export function longPlan(width: number): Story {
         expect(approve.getBoundingClientRect().bottom).toBeLessThanOrEqual(
           window.innerHeight,
         ),
+      );
+      await expect(approve.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        0,
       );
       await userEvent.click(approve);
       await expect(args.onAnswer).toHaveBeenCalledWith({

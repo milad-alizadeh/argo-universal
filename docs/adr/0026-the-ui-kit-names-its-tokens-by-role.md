@@ -22,7 +22,9 @@ Each role has a light and a dark value.
 
 ## States
 
-Every interactive component draws the same five states from shared tokens: `hover` (the `muted` fill), `pressed`, `selected` (a flat tint, today `selected`), `focus` (today `ring`) and `disabled`.
+Every interactive component draws the same five states from shared tokens: `hover`, `pressed`, `selected` (flat tints), `focus` (today `ring`) and `disabled`.
+
+Owner amendment, 2026-10-15: interaction fills have separate `hover`, `selected` and `pressed` tokens. In light mode they use black at 2%, 3% and 4%; dark mode uses white at 4%, 6% and 8%. Hover also marks the focused menu option. Quiet field fills stay `muted`, and outlines stay `border`. Native controls retain their platform state drawings through public APIs. Destructive actions keep their danger tint.
 
 ## Shape, surfaces and density
 

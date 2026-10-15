@@ -12,7 +12,7 @@ export interface NativeTextProps {
   role?: NativeTextRole;
   // Code reads in the mono face at the platform's own size.
   code?: boolean;
-  // Only danger draws here, in Argo's colour; every other tone's colour is the caller's or the Host's.
+  // Android maps explicit tones through public colour props; untoned text inherits its container.
   tone?: Tone;
   numberOfLines?: number;
   // The caller's own placement and colour; the code face and danger colour win over them.

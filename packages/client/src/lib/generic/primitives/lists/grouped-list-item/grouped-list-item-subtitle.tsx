@@ -10,6 +10,7 @@ export function RowSubtitle({
   return subtitle ? (
     <NativeText
       role="secondary"
+      tone="muted"
       code={subtitle.code}
       numberOfLines={subtitle.numberOfLines}
       modifiers={subtitleModifiers}

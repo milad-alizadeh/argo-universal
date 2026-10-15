@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
-import { layoutWidths } from '../../../src/lib/generic/each-layout';
 import { settleViewport } from '../../../src/lib/generic/settle-viewport';
 import {
   longPlanProposal,
@@ -17,7 +16,6 @@ import {
   type PlayContext,
   type Story,
 } from './plan-proposal-story-context.test.mocks';
-import { expandSheet } from './sheet-gestures.test.mocks';
 
 export function answerCollapsesExpansion(width: number): Story {
   return {
@@ -26,17 +24,6 @@ export function answerCollapsesExpansion(width: number): Story {
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
       await settleViewport(width);
-
-      if (width === layoutWidths.phone) {
-        await expandSheet(canvas, userEvent);
-        await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
-        await expect(args.onAnswer).toHaveBeenCalledWith({
-          planId: args.proposal.planId,
-          decision: 'approve',
-        });
-
-        return;
-      }
 
       for (const decision of ['approve', 'keep_planning'])
         await answerInExpansion({ canvas, userEvent, decision });

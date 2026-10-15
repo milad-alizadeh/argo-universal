@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { Variation, Variations as VariationList } from '../../../variations';
@@ -72,7 +74,10 @@ const examples: { label: string; props: ExampleProps }[] = [
   },
 ];
 
-const meta = { title: 'Design System/Primitives/Picker' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Picker',
+  parameters: { screenPreview: true },
+} satisfies Meta;
 
 export default meta;
 
@@ -80,23 +85,35 @@ type Story = StoryObj<typeof meta>;
 
 export const Variations: Story = {
   name: 'Picker',
-  render: () => (
+  render: () => <PickerVariations />,
+};
+
+function PickerVariations(): React.JSX.Element {
+  return (
+    <GroupedList>
+      <AccessoryExample />
+      <GroupedListContent>
+        <StandaloneVariations />
+      </GroupedListContent>
+    </GroupedList>
+  );
+}
+
+function StandaloneVariations(): React.JSX.Element {
+  return (
     <VariationList>
       {examples.map(({ label, props }) => (
         <Variation key={label} label={label}>
           <PickerExample {...props} />
         </Variation>
       ))}
-      <Variation label="GroupedListItem accessory">
-        <AccessoryExample />
-      </Variation>
     </VariationList>
-  ),
-};
+  );
+}
 
 function AccessoryExample(): React.JSX.Element {
   return (
-    <GroupedListSection>
+    <GroupedListSection title="GroupedListItem accessory">
       <GroupedListItem
         label="Effort"
         accessory={<PickerExample value="medium" variant="row" />}

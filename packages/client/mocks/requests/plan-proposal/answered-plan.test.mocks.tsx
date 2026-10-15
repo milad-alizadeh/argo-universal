@@ -11,7 +11,7 @@ import {
   keepPlanningLabel,
   type Story,
 } from './plan-proposal-story-context.test.mocks';
-import { expandSheet } from './sheet-gestures.test.mocks';
+import { checkProtectedSheet } from './sheet-gestures.test.mocks';
 
 export function answered(
   width: number,
@@ -50,7 +50,7 @@ export function answered(
       }
 
       if (width === layoutWidths.phone) {
-        await expandSheet(canvas, userEvent);
+        await checkProtectedSheet(canvas, userEvent);
         await expect(args.onAnswer).not.toHaveBeenCalled();
 
         return;
