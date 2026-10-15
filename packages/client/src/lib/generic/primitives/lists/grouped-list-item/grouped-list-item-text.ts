@@ -1,17 +1,8 @@
 import type { TextProps } from '@expo/ui';
-import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
-import type { TextRole } from '#primitives/display/text';
-import { useNativeTheme } from '../../../native-theme';
+import { useNativeTextExceptions } from '#primitives/native/native-typography';
 import type { GroupedListItemProps } from './grouped-list-item-props';
-
-// A code title or subtitle draws in the mono face.
-export const titleRole = (code: boolean | undefined): TextRole =>
-  code ? 'code' : 'body';
-
-export const subtitleRole = (
-  subtitle: GroupedListItemProps['subtitle'],
-): TextRole => (subtitle?.code ? 'code' : 'secondary');
 
 export type RowTone =
   | 'primary'
@@ -28,40 +19,20 @@ const swiftColors: Partial<Record<RowTone, string>> = {
   muted: 'secondaryLabel',
 };
 
-function swiftColor(
-  tone: RowTone,
-  danger: string | undefined,
-): ReturnType<typeof foregroundStyle>[] {
-  const color = danger ?? swiftColors[tone];
+function swiftColor(tone: RowTone): ReturnType<typeof foregroundStyle>[] {
+  const color = swiftColors[tone];
 
   return color === undefined ? [] : [foregroundStyle({ type: 'color', color })];
 }
 
-// A failure reads in the danger token, the one colour native text takes from Argo's theme rather than the Host.
-export function useDangerColor(tone: string | undefined): string | undefined {
-  const { danger } = useNativeTheme().colors;
-
-  return tone === 'danger' ? danger : undefined;
-}
-
-// Inherit native text metrics; code and semantic tones are the only exceptions.
+// Row-specific hierarchy stays here; repeated code/danger exceptions belong to native text.
 export function useRowText(
-  role: TextRole,
+  code: boolean | undefined,
   tone: RowTone,
 ): Pick<TextProps, 'textStyle' | 'modifiers'> {
-  const danger = useDangerColor(tone);
+  const text = useNativeTextExceptions({ code, danger: tone === 'danger' });
 
-  if (Platform.OS !== 'ios')
-    return {
-      textStyle: {
-        fontFamily: role === 'code' ? 'monospace' : undefined,
-        color: danger,
-      },
-    };
+  if (Platform.OS !== 'ios') return text;
 
-  return { modifiers: [...swiftCodeFont(role), ...swiftColor(tone, danger)] };
-}
-
-function swiftCodeFont(role: TextRole): ReturnType<typeof font>[] {
-  return role === 'code' ? [font({ design: 'monospaced' })] : [];
+  return { modifiers: [...swiftColor(tone), ...(text.modifiers ?? [])] };
 }

@@ -1,10 +1,9 @@
 import { Column, FieldGroup, Text } from '@expo/ui';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
-import { useNativeTheme } from '../../../native-theme';
+import { useNativeTextExceptions } from '#primitives/native/native-typography';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 import { GroupedListSection as WebGroupedListSection } from './grouped-list-section.tsx';
@@ -58,22 +57,11 @@ function BareSection(props: GroupedListSectionProps): React.JSX.Element {
 
 // Only an error overrides the native footer's inherited appearance.
 function FooterText(props: GroupedListSectionProps): React.JSX.Element {
-  const { danger } = useNativeTheme().colors;
-  const color = props.tone === 'danger' ? danger : undefined;
-
-  const appearance = footerAppearance(color);
+  const appearance = useNativeTextExceptions({
+    danger: props.tone === 'danger',
+  });
 
   return <Text {...appearance}>{props.footer}</Text>;
-}
-
-function footerAppearance(
-  color: string | undefined,
-): Pick<React.ComponentProps<typeof Text>, 'modifiers' | 'textStyle'> {
-  if (!color) return {};
-
-  return ios
-    ? { modifiers: [foregroundStyle(color)] }
-    : { textStyle: { color } };
 }
 
 GroupedListSection satisfies React.ComponentType<GroupedListSectionProps>;
