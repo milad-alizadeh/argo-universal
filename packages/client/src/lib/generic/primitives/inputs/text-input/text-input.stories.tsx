@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { TextInput } from './text-input';
@@ -14,16 +13,22 @@ import type {
 
 const meta = {
   title: 'Design System/Primitives/TextInput',
-  parameters: { screenPreview: true },
 } satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// The standalone field and the bare box sit on their own, outside any GroupedList.
 export const Variations: Story = {
   name: 'TextInput',
-  render: () => <VariationsExample />,
+  render: () => <OwnVariations />,
+};
+
+// Rows belong in a GroupedListSection, so they get a GroupedList of their own that fills the screen.
+export const Rows: Story = {
+  parameters: { screenPreview: true },
+  render: () => <RowsExample />,
 };
 
 const pathHint = "An absolute path, or a command on the Server's PATH.";
@@ -32,7 +37,7 @@ const spaceError = 'One path or command, without spaces.';
 
 const title = 'Drafts vanish after a reconnect';
 
-function VariationsExample(): React.JSX.Element {
+function RowsExample(): React.JSX.Element {
   return (
     <GroupedList>
       <RowSection />
@@ -40,9 +45,6 @@ function VariationsExample(): React.JSX.Element {
       <GroupedListSection title="Row disabled">
         <TypedRow label="Name" initial="Example ACP" disabled />
       </GroupedListSection>
-      <GroupedListContent>
-        <OwnVariations />
-      </GroupedListContent>
     </GroupedList>
   );
 }
@@ -117,7 +119,6 @@ const bareExamples: {
   },
 ];
 
-// The standalone field and the bare box sit on their own, outside a section.
 function OwnVariations(): React.JSX.Element {
   return (
     <VariationList>

@@ -6,10 +6,9 @@ import { Variation, Variations as VariationList } from '../../../variations';
 import { Alert } from './alert';
 import type { AlertProps } from './alert-props';
 
-const removalTitle = 'Remove Agent?';
+const removalTitle = 'Remove this Agent from Argo?';
 
-const removalMessage =
-  'Remove this Agent from Argo? Its installed files stay on this computer.';
+const removalMessage = 'Its installed files stay on this computer.';
 
 const removeAgent = 'Remove Agent';
 

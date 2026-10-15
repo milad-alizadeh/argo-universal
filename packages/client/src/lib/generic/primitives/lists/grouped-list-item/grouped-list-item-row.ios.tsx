@@ -26,7 +26,7 @@ const rowHeight = 44;
 
 const rowSpacing = 12;
 
-// A little room above and below for wrapped rows; a single line sits at the system's 44pt row height.
+// A little room above and below for wrapped rows; a single line takes the Form's own row minimum, about 54pt on iOS 26.
 const rowPadding = 6;
 
 const disabledOpacity = 0.5;

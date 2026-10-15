@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { Variation, Variations as VariationList } from '../../../variations';
@@ -87,20 +88,34 @@ export const Variations: Story = {
           <PickerExample {...props} />
         </Variation>
       ))}
-      <Variation label="GroupedListItem accessory">
-        <AccessoryExample />
-      </Variation>
     </VariationList>
   ),
 };
 
-function AccessoryExample(): React.JSX.Element {
+// A row's accessory sits in a GroupedListSection, which needs a GroupedList of its own that fills the screen.
+export const Accessory: Story = {
+  name: 'GroupedListItem accessory',
+  parameters: { screenPreview: true },
+  render: () => (
+    <GroupedList>
+      <GroupedListSection>
+        <GroupedListItem label="Effort" accessory={<AccessoryPicker />} />
+      </GroupedListSection>
+    </GroupedList>
+  ),
+};
+
+// The row's trailing slot sizes the Picker, so it takes no width of its own.
+function AccessoryPicker(): React.JSX.Element {
+  const [value, setValue] = useState<string>('medium');
+
   return (
-    <GroupedListSection>
-      <GroupedListItem
-        label="Effort"
-        accessory={<PickerExample value="medium" variant="row" />}
-      />
-    </GroupedListSection>
+    <Picker
+      label="Effort"
+      options={options}
+      value={value}
+      onValueChange={setValue}
+      variant="row"
+    />
   );
 }
