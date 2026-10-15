@@ -1,9 +1,6 @@
 {
-  "platforms": ["apple", "android"],
+  "platforms": ["apple"],
   "apple": {
     "modules": ["ClientTypographyModule"]
-  },
-  "android": {
-    "modules": ["dev.argo.client.ClientThemeModule"]
   }
 }
