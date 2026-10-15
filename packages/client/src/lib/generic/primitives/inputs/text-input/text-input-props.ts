@@ -47,5 +47,15 @@ export type TextInputProps =
   | RowTextInputProps
   | BareTextInputProps;
 
+// A phone field, on its own or as a row. An Android row says its error or hint as supporting text, as its section draws no footer there; iOS says it in the footer.
+export type PhoneFieldProps = TextFieldProps &
+  Pick<StandaloneTextInputProps, 'required' | 'numeric'> & {
+    supportingText?: string;
+  };
+
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
   (props.errors?.length ?? 0) > 0;
+
+export const requiredLabel = (
+  props: Pick<PhoneFieldProps, 'label' | 'required'>,
+): string => (props.required ? `${props.label} *` : props.label);
