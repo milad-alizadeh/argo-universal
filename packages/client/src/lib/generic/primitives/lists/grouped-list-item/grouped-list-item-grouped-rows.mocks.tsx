@@ -103,7 +103,6 @@ function ClaudeAgentRow(): React.JSX.Element {
       label="Claude Agent"
       subtitle={{ text: 'ACP wrapper for Anthropic’s Claude' }}
       icon="agent"
-      value="Ready"
       status={{ tone: 'success', label: 'Ready' }}
       onPress={onPress}
     />
@@ -116,7 +115,6 @@ function CodexRow(): React.JSX.Element {
       label="Codex"
       subtitle={{ text: 'ACP adapter for OpenAI’s coding assistant' }}
       icon="agent"
-      value="Update available"
       status={{ tone: 'warning', label: 'Update available' }}
       onPress={onPress}
     />
@@ -131,7 +129,6 @@ function GooseRow(): React.JSX.Element {
         text: 'A local, extensible, open source AI agent that automates engineering tasks',
       }}
       icon="agent"
-      value="Not installed"
       onPress={onPress}
     />
   );

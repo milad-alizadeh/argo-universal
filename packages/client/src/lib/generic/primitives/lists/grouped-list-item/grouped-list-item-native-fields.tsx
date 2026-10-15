@@ -8,7 +8,7 @@ import {
 } from './grouped-list-item-accessibility';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { useRowText } from './grouped-list-item-text';
-import { NativeRowImage, NativeRowStatus } from './native-row';
+import { NativeRowImage } from './native-row';
 
 type Modifiers = NonNullable<RowProps['modifiers']>;
 
@@ -20,7 +20,11 @@ const trailingModifiers: Modifiers | undefined = ios
   ? [fixedSize({ horizontal: false, vertical: true })]
   : undefined;
 
-export function RowTrailing(props: GroupedListItemProps): React.JSX.Element {
+export function RowTrailing(
+  props: GroupedListItemProps,
+): React.JSX.Element | null {
+  if (props.value === undefined && !props.valueLeading) return null;
+
   return (
     <Row
       alignment="center"
@@ -28,7 +32,6 @@ export function RowTrailing(props: GroupedListItemProps): React.JSX.Element {
       modifiers={trailingModifiers}
     >
       <RowValue {...props} />
-      <NativeRowStatus {...props} />
     </Row>
   );
 }

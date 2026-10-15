@@ -1,5 +1,4 @@
 import type { FieldErrors } from '#primitives/fields/field-errors';
-import type { CheckboxState } from './checkbox-state';
 
 export interface CheckboxProps {
   label: string;
@@ -18,5 +17,3 @@ export type CheckboxIndicatorProps = Pick<
   CheckboxProps,
   'value' | 'invalid' | 'disabled' | 'selection' | 'variant'
 >;
-
-export type CheckboxRowProps = CheckboxProps & { state: CheckboxState };

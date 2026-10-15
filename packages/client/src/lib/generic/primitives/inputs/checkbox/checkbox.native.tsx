@@ -1,71 +1,57 @@
-import { Checkbox as StockCheckbox } from '@expo/ui';
-import type { ComponentType } from 'react';
+import { Checkbox as UniversalCheckbox } from '@expo/ui';
+import { semantics } from '@expo/ui/jetpack-compose/modifiers';
+import { accessibilityHint, onTapGesture } from '@expo/ui/swift-ui/modifiers';
+import type { ComponentProps, ComponentType } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Host } from '#primitives/native/host';
-import {
-  AppleCheckboxRow,
-  CheckMark,
-  stockCheckboxSemantics as appleSemantics,
-} from './checkbox-apple-row';
-import {
-  MaterialCheckboxRow,
-  MaterialMark,
-  stockCheckboxSemantics as materialSemantics,
-} from './checkbox-material-row';
-import type {
-  CheckboxIndicatorProps,
-  CheckboxProps,
-  CheckboxRowProps,
-} from './checkbox-props';
+import { CheckboxAccessibility } from './checkbox-accessibility';
+import { AppleRadioRow, type CheckboxRowProps } from './checkbox-apple-row';
+import { CheckboxMark } from './checkbox-mark';
+import { MaterialRadioRow } from './checkbox-material-row';
+import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
 import { CheckboxFooter, useCheckboxState } from './checkbox-state';
 
 export type { CheckboxProps } from './checkbox-props';
 
-const isIos = Platform.OS === 'ios';
-
-const CheckboxRow = isIos ? AppleCheckboxRow : MaterialCheckboxRow;
-
-const stockSemantics = isIos ? appleSemantics : materialSemantics;
+const RadioRow = Platform.OS === 'ios' ? AppleRadioRow : MaterialRadioRow;
 
 export function Checkbox(props: CheckboxProps): React.JSX.Element {
   const state = useCheckboxState(props);
 
   return (
     <View className="gap-2">
-      {props.selection === 'single' ? (
-        <SingleChoiceRow {...props} state={state} />
-      ) : (
-        <StockRow {...props} state={state} />
-      )}
+      <CheckboxAccessibility {...props} description={state.description}>
+        <CheckboxControl {...props} state={state} />
+      </CheckboxAccessibility>
       <CheckboxFooter {...state} />
     </View>
   );
 }
 
-// Single choice keeps Argo's row; the stock Checkbox has no radio semantics.
-function SingleChoiceRow(props: CheckboxRowProps): React.JSX.Element {
-  return (
-    <View className={surfaceClass(props)}>
-      <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-        <CheckboxRow {...props} />
-      </Host>
-    </View>
-  );
-}
+function CheckboxControl(props: CheckboxRowProps): React.JSX.Element {
+  if (props.selection === 'single') return <RadioControl {...props} />;
 
-// Expo draws the label, mark, sizing and disabled state.
-function StockRow(props: CheckboxRowProps): React.JSX.Element {
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <StockCheckbox
+      <UniversalCheckbox
         label={props.label}
         value={props.value}
         disabled={props.disabled}
         onValueChange={props.state.toggle}
-        modifiers={stockSemantics(props)}
+        modifiers={checkboxModifiers(props)}
       />
     </Host>
+  );
+}
+
+function RadioControl(props: CheckboxRowProps): React.JSX.Element {
+  return (
+    <View className={surfaceClass(props)}>
+      <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+        <RadioRow {...props} />
+      </Host>
+    </View>
   );
 }
 
@@ -80,21 +66,36 @@ function surfaceClass(props: CheckboxProps): string {
   );
 }
 
+// SwiftUI's stock Toggle needs a label tap action; Android's separate mark needs the field name.
+function checkboxModifiers(
+  props: CheckboxRowProps,
+): ComponentProps<typeof UniversalCheckbox>['modifiers'] {
+  const description = props.state.description;
+  const name = [props.label, description].filter(Boolean).join('. ');
+
+  if (Platform.OS === 'android')
+    return [semantics({ contentDescription: name })];
+
+  return [
+    onTapGesture(props.state.toggle),
+    accessibilityHint(description ?? ''),
+  ];
+}
+
 export function CheckboxIndicator(
   props: CheckboxIndicatorProps,
-): React.JSX.Element | null {
-  if (Platform.OS !== 'ios')
-    return (
+): React.JSX.Element {
+  return (
+    <View
+      className="pointer-events-none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <Host matchContents>
-        <MaterialMark {...props} />
+        <CheckboxMark {...props} />
       </Host>
-    );
-
-  return props.value ? (
-    <Host matchContents>
-      <CheckMark />
-    </Host>
-  ) : null;
+    </View>
+  );
 }
 
 Checkbox satisfies ComponentType<CheckboxProps>;

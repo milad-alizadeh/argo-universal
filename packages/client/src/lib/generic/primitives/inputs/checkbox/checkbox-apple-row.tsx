@@ -3,7 +3,10 @@ import * as Swift from '@expo/ui/swift-ui/modifiers';
 import { rectangularHitArea } from '#primitives/native/native-modifiers';
 import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import type { CheckboxProps, CheckboxRowProps } from './checkbox-props';
+import type { CheckboxProps } from './checkbox-props';
+import type { CheckboxState } from './checkbox-state';
+
+export type CheckboxRowProps = CheckboxProps & { state: CheckboxState };
 
 type Modifiers = NonNullable<React.ComponentProps<typeof Row>['modifiers']>;
 
@@ -18,7 +21,7 @@ const optionInset = 12;
 const verticalInset = 8;
 
 // Apple's checklist row: the label leads and a check trails the chosen row.
-export function AppleCheckboxRow(props: CheckboxRowProps): React.JSX.Element {
+export function AppleRadioRow(props: CheckboxRowProps): React.JSX.Element {
   return (
     <Button
       variant="text"
@@ -84,9 +87,4 @@ function rowTraits(
   return Swift.accessibilityAddTraits(
     props.value ? ['isButton', 'isSelected'] : ['isButton'],
   );
-}
-
-// The stock Checkbox keeps its own name, value and traits; only the hint or error text is added.
-export function stockCheckboxSemantics(props: CheckboxRowProps): Modifiers {
-  return [Swift.accessibilityHint(props.state.description ?? '')];
 }
