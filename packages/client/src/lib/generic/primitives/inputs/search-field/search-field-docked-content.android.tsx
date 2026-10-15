@@ -5,6 +5,7 @@ import type * as React from 'react';
 import { useCSSVariable } from 'uniwind';
 import { useFollowedText } from '#primitives/native/followed-text';
 import { useUniversalTextStyle } from '#primitives/native/native-typography';
+import { useIconPixels } from '../../../symbols/icon-role';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { DockedSearchQuery } from './search-field-props';
 
@@ -14,7 +15,12 @@ const inset = 16;
 // Material's search bar: a 56dp pill.
 const barHeight = 56;
 
-// The icon's slot, so in the list's 16dp gutter the text starts where the header's title does (measured on Android 15): 60dp in after ☰'s 44pt slot, 72dp in after Material's back button.
+/*
+ * The icon's slot, so in the list's 16dp gutter the text starts where the header's title does
+ * (measured on Android 15): 60dp in after ☰'s 44pt slot, 72dp in after Material's back button.
+ * It takes the icon's height too: Expo UI maps width with height to Compose's size(), but a lone
+ * width to width(), whose record 57.0.22 cannot read from 44.0, and Android 15 crashed on launch.
+ */
 const leadingSlot = { menu: 44, back: 56 } as const;
 
 // Material's search bar as Compose content: a pill on the selection surface token, the icon in a slot that lines the text up with the title.
@@ -23,7 +29,13 @@ export function DockedSearchFieldContent(
 ): React.JSX.Element {
   return (
     <Row alignment="center" {...usePill()}>
-      <Column alignment="center" style={{ width: leadingSlot[props.leading] }}>
+      <Column
+        alignment="center"
+        style={{
+          width: leadingSlot[props.leading],
+          height: useIconPixels('action'),
+        }}
+      >
         <NativeSymbol name="search" role="action" muted />
       </Column>
       <SearchText {...props} />
