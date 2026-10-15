@@ -1,7 +1,4 @@
-import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
-import { publishAgentModelConfiguration } from '../agent-model-sheet-context';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort } from './configuration-values';
 
@@ -19,21 +16,6 @@ export function useCommitEffortFallback(
     if (effortConfigId && fallbackValue)
       onConfigChange.current(effortConfigId, fallbackValue);
   }, [effortConfigId, fallbackValue]);
-}
-
-// Phones present the Agent and model menu as a native sheet route with its own stack of pages.
-const nativeSheet = Platform.OS !== 'web';
-
-const presentSheet = (): void => router.push('/agent-model');
-
-export function useAgentModelSheet(
-  configuration: ComposerConfigurationProps,
-): (() => void) | undefined {
-  useEffect(() => {
-    if (nativeSheet) publishAgentModelConfiguration(configuration);
-  }, [configuration]);
-
-  return nativeSheet ? presentSheet : undefined;
 }
 
 function fallbackEffortValue(

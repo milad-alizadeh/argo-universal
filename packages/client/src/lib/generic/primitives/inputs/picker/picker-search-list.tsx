@@ -22,6 +22,7 @@ export function PickerSearchList<Value extends string>(
     { className: 'flex-1 bg-card px-4' },
     createElement(LegendList<PickerOption<Value>>, {
       ...searchListProps,
+      extraData: props.value,
       ...resultProps(props, query),
       ListHeaderComponent: <SearchField {...props} {...{ query, setQuery }} />,
     }),

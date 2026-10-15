@@ -1,10 +1,5 @@
 import type {} from './lib/generic/reusables-compatibility';
 
-export {
-  AgentModelSheetChoices,
-  AgentModelSheetSettings,
-} from '#features/composer';
-
 export { useConnection } from '#features/connection';
 
 export {
@@ -95,12 +90,3 @@ export { withoutNewSession } from './lib/product/navigation/new-session';
 export { AppProviders } from './app-providers';
 
 export { PortalHost } from '#primitives/overlays/portal';
-
-export {
-  FormSheetProvider,
-  useFormSheetCommands,
-  useFormSheetState,
-  FormSheetRoot,
-  FormSheetChoices,
-  type FormSheetRoutes,
-} from '#primitives/overlays/bottom-sheet';

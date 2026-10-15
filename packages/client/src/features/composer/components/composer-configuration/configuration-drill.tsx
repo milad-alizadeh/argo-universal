@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListItemEnd } from '#primitives/lists/grouped-list-item';
@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
   usePopoverClose,
 } from '#primitives/overlays/popover';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { Sheet } from '#primitives/overlays/sheet';
 import { AgentChoices } from './agent-choices';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -19,7 +19,8 @@ import { ModelChoices } from './model-choices';
 interface DrillProps {
   configuration: ComposerConfigurationProps;
   page: 'agent' | 'model';
-  onOpenPage: (page: 'agent' | 'model') => void;
+  // A desktop window opens the choices in a popover beside the row; elsewhere the row pushes the sheet's page.
+  wide: boolean;
 }
 
 interface PickerProps {
@@ -30,29 +31,26 @@ interface PickerProps {
 export function ConfigurationDrill(
   props: DrillProps,
 ): React.JSX.Element | null {
-  const wide = isDesktopDrill(useWide());
-
   if (!hasDrillOption(props)) return null;
-  const row = configurationDrillRow({ ...props, wide });
+  const content = drillRowContent(props);
 
-  return wide ? <ConfigurationDrillPopover {...props} row={row} /> : row;
-}
+  if (!props.wide) return <Sheet.Link to={props.page} {...content} />;
 
-function configurationDrillRow(
-  props: DrillProps & { wide: boolean },
-): React.JSX.Element {
   return (
-    <GroupedListItem
-      {...drillRowContent(props)}
-      accessibilityRole="button"
-      onPress={() => props.onOpenPage(props.page)}
+    <ConfigurationDrillPopover
+      {...props}
+      row={<GroupedListItem {...content} accessibilityRole="button" />}
     />
   );
 }
 
-function drillRowContent(
-  props: DrillProps & { wide: boolean },
-): React.ComponentProps<typeof GroupedListItem> {
+interface DrillContent {
+  label: string;
+  value?: string;
+  valueLeading?: React.ReactElement;
+}
+
+function drillRowContent(props: DrillProps): DrillContent {
   if (props.page === 'agent') return agentDrillContent(props);
 
   return {
@@ -61,9 +59,7 @@ function drillRowContent(
   };
 }
 
-function agentDrillContent(
-  props: DrillProps & { wide: boolean },
-): React.ComponentProps<typeof GroupedListItem> {
+function agentDrillContent(props: DrillProps): DrillContent {
   const agent = props.configuration.agents.find(
     (entry) => entry.agent === props.configuration.agent,
   );
@@ -122,9 +118,11 @@ function ConfigurationPicker(props: PickerProps): React.JSX.Element {
 
   return (
     <View className="gap-3">
-      <Text role="heading" aria-level={2} className="px-4 pt-1">
-        {pickerTitle(props.page)}
-      </Text>
+      <View className="px-4 pt-1">
+        <Text role="heading" aria-level={2}>
+          {pickerTitle(props.page)}
+        </Text>
+      </View>
       <ConfigurationPickerChoices {...props} close={close} />
     </View>
   );
@@ -144,8 +142,4 @@ function ConfigurationPickerChoices({
 
 function hasDrillOption({ configuration, page }: DrillProps): boolean {
   return page === 'agent' || !!selection(configuration, 'model');
-}
-
-function isDesktopDrill(wide: boolean): boolean {
-  return wide && Platform.OS === 'web';
 }

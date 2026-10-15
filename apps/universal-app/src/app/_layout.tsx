@@ -1,7 +1,6 @@
 import {
   AppProviders,
   PortalHost,
-  FormSheetProvider,
   NavigationProvider,
   type RenderSymbolImage,
   SymbolImagesProvider,
@@ -20,7 +19,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
-import { formSheetRoutes } from '@/navigation/form-sheet';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -58,18 +56,6 @@ const serverUrl =
 
 const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 
-// iOS opens this tall until its first page has measured itself.
-const sheetStartHeight = 0.4;
-
-const sheetOptions = {
-  presentation: 'formSheet' as const,
-  sheetAllowedDetents:
-    Platform.OS === 'android'
-      ? ('fitToContents' as const)
-      : [sheetStartHeight, 1],
-  sheetGrabberVisible: true,
-};
-
 export default function RootLayout(): React.JSX.Element {
   return (
     // The phone drawer's gestures need this root.
@@ -103,9 +89,7 @@ function ThemedApp(): React.JSX.Element {
 function RootNavigator(): React.JSX.Element {
   return (
     <NavigationProvider>
-      <FormSheetProvider routes={formSheetRoutes}>
-        <RootStack />
-      </FormSheetProvider>
+      <RootStack />
     </NavigationProvider>
   );
 }
@@ -115,8 +99,6 @@ function RootStack(): React.JSX.Element {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(frame)" />
-      <Stack.Screen name="agent-model" options={sheetOptions} />
-      <Stack.Screen name="form-sheet" options={sheetOptions} />
       <Stack.Screen name="(dev)/storybook" />
     </Stack>
   );
