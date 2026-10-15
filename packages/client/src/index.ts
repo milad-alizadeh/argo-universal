@@ -18,7 +18,8 @@ export {
   type SectionList,
   type SectionLists,
   useFrame,
-  useSectionMenuItem,
+  SectionMenuButton,
+  useNeedsAttention,
   usePhoneDrawerWidth,
   useSectionList,
 } from '#features/frame';
@@ -81,19 +82,9 @@ export {
 } from '#lib/product/navigation/navigation';
 
 export {
-  type DrawerHeaderOptions,
-  drawerHeaderOptions,
-  type ScreenHeaderProps,
+  nativeHeaderOptions,
   screenHeaderOptions,
-  screenHeaderToolbars,
 } from '#lib/product/navigation/screen-header';
-
-export { SearchDock } from '#lib/product/navigation/phone-search-bar';
-
-export {
-  type HeaderItem,
-  HeaderItemButton,
-} from '#lib/product/navigation/header-items';
 
 export {
   type Section,

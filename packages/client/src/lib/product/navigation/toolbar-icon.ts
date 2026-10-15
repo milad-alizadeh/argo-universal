@@ -1,7 +1,6 @@
 import AddIcon from '@expo/material-symbols/add.xml';
 import EditSquare from '@expo/material-symbols/edit_square.xml';
 import FilterList from '@expo/material-symbols/filter_list.xml';
-import MenuIcon from '@expo/material-symbols/menu.xml';
 import Tune from '@expo/material-symbols/tune.xml';
 import type { ImageSourcePropType } from 'react-native';
 import { iconSymbols } from '#lib/generic/symbols/icon-names';
@@ -11,7 +10,6 @@ const materialImages = {
   add: AddIcon,
   'filter-list': FilterList,
   filters: Tune,
-  menu: MenuIcon,
   'new-session': EditSquare,
 } satisfies Partial<Record<keyof typeof iconSymbols, ImageSourcePropType>>;
 

@@ -1,10 +1,10 @@
 import type * as React from 'react';
-import { headerFilterIcon } from '#lib/product/header-button';
-import type { HeaderItem } from '#lib/product/navigation/header-items';
+import { useWide } from '#lib/generic/use-wide/use-wide';
+import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Menu } from '#primitives/overlays/menu';
 
-const sessionsFilterChoices = [
+export const sessionsFilterChoices = [
   { value: 'active', label: 'Active' },
   { value: 'archived', label: 'Archived' },
 ] as const;
@@ -14,7 +14,7 @@ export interface SessionsFilterMenuProps {
   onArchivedChange: (archived: boolean) => void;
 }
 
-const filterTrigger = (
+const wideFilterTrigger = (
   <IconButton
     variant="ghost"
     className="size-7 sm:size-7"
@@ -26,33 +26,31 @@ const filterTrigger = (
   />
 );
 
-// Active or Archived, in the wide window's list header.
+function phoneFilterTrigger(archived: boolean): React.JSX.Element {
+  return (
+    <HeaderButton
+      icon={headerFilterIcon}
+      paired
+      dot={archived ? 'filter' : undefined}
+      accessibilityLabel="Filter Sessions"
+    />
+  );
+}
+
+// Active or Archived; on a phone the trigger is a native header item with a dot while Archived shows.
 export function SessionsFilterMenu({
   archived,
   onArchivedChange,
 }: SessionsFilterMenuProps): React.JSX.Element {
+  const wide = useWide();
+
   return (
     <Menu
       accessibilityLabel="Filter Sessions"
       value={archived ? 'archived' : 'active'}
       options={sessionsFilterChoices}
       onValueChange={(value) => onArchivedChange(value === 'archived')}
-      trigger={filterTrigger}
+      trigger={wide ? wideFilterTrigger : phoneFilterTrigger(archived)}
     />
   );
 }
-
-// The same choices as a phone header item, with a dot while Archived shows.
-export const sessionsFilterItem = ({
-  archived,
-  onArchivedChange,
-}: SessionsFilterMenuProps): HeaderItem => ({
-  icon: headerFilterIcon,
-  accessibilityLabel: 'Filter Sessions',
-  dot: archived ? 'filter' : undefined,
-  menu: sessionsFilterChoices.map(({ value, label }) => ({
-    label,
-    selected: (value === 'archived') === archived,
-    onPress: () => onArchivedChange(value === 'archived'),
-  })),
-});

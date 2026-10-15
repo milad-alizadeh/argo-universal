@@ -10,7 +10,8 @@ export {
   type SectionList,
   type SectionLists,
   useFrame,
-  useSectionMenuItem,
+  SectionMenuButton,
+  useNeedsAttention,
   useSectionList,
 } from './frame/frame';
 

@@ -1,13 +1,12 @@
 import type { HeaderOptions } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import {
   SearchField,
   type SearchFieldProps,
 } from '#primitives/inputs/search-field';
-import { type HeaderItem, HeaderItemButton } from './header-items';
 
 // The web's JS header lays out its title and right containers by these; native-stack's options type leaves them out, so the header takes them through untyped. The title container grows so the search row fills it; the row keeps its own gap before the right items.
 export const headerSearchRowLayout = {
@@ -21,13 +20,11 @@ export const headerSearchRowLayout = {
 export interface HeaderSearch {
   placeholder: string;
   onChangeText: (text: string) => void;
-  // A header item that goes with the search, such as New Session; iOS only, Android has its own button.
-  action?: HeaderItem;
 }
 
 interface HeaderSearchRowProps {
   title: string;
-  right?: readonly HeaderItem[];
+  right?: readonly ReactElement[];
   search: HeaderSearch;
 }
 
@@ -45,15 +42,11 @@ export function HeaderSearchRow({
       <SearchField
         {...useSearchQuery(search)}
         title={<HeaderTitle title={title} />}
-        actions={right.length ? right.map(trailingButton) : undefined}
+        actions={right.length ? right : undefined}
       />
     </View>
   );
 }
-
-const trailingButton = (item: HeaderItem): React.JSX.Element => (
-  <HeaderItemButton key={item.accessibilityLabel} item={item} paired />
-);
 
 function useSearchQuery(
   search: HeaderSearch,

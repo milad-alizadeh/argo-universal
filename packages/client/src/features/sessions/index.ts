@@ -4,9 +4,15 @@ export { EmptyList } from './components/sessions-list/sessions-list-rows';
 
 export {
   SessionsHeader,
+  searchSessionsLabel,
   sessionsHeaderItems,
   sessionsHeaderSearch,
 } from './components/sessions-header';
+
+export {
+  type SessionsFilterMenuProps,
+  sessionsFilterChoices,
+} from './components/sessions-filter-menu/sessions-filter-menu';
 
 export {
   type SessionsFilter,

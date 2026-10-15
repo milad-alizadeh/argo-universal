@@ -1,18 +1,16 @@
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { ListTitle } from '#lib/product/list-title';
-import type { HeaderItem } from '#lib/product/navigation/header-items';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { SearchField } from '#primitives/inputs/search-field';
 import type { SessionsFilter } from '../state/sessions-filter';
-import {
-  SessionsFilterMenu,
-  sessionsFilterItem,
-} from './sessions-filter-menu/sessions-filter-menu';
+import { SessionsFilterMenu } from './sessions-filter-menu/sessions-filter-menu';
 
 // On iOS a phone's New Session sits beside the search bar, where it replaces the floating button.
 export const newSessionBesideSearch = Platform.OS === 'ios';
+
+export const searchSessionsLabel = 'Search Sessions';
 
 export interface SessionsHeaderProps extends SessionsFilter {
   onNewSession: () => void;
@@ -47,7 +45,7 @@ function SessionsHeaderActions({
 export function SessionsHeader(props: SessionsHeaderProps): React.JSX.Element {
   return (
     <SearchField
-      label="Search Sessions"
+      label={searchSessionsLabel}
       value={props.query}
       onChangeText={props.onQueryChange}
       title={<ListTitle>Sessions</ListTitle>}
@@ -58,33 +56,15 @@ export function SessionsHeader(props: SessionsHeaderProps): React.JSX.Element {
 
 type HeaderSearch = NonNullable<ScreenHeaderProps['search']>;
 
-function newSessionSearchAction(
-  onNewSession: () => void,
-): Pick<HeaderSearch, 'action'> {
-  if (!newSessionBesideSearch) return {};
+// The search in Android's drawer header and the web's JS header; iOS declares its own stock search bar.
+export const sessionsHeaderSearch = (filter: SessionsFilter): HeaderSearch => ({
+  placeholder: searchSessionsLabel,
+  onChangeText: filter.onQueryChange,
+});
 
-  return {
-    action: {
-      icon: 'new-session',
-      accessibilityLabel: 'New Session',
-      onPress: onNewSession,
-    },
-  };
-}
-
-// A phone's native header search; on iOS New Session is a header item, on Android its own round button.
-export function sessionsHeaderSearch(
+// The trailing items of Android's drawer header and the web's JS header: the filter, with Search after it.
+export function sessionsHeaderItems(
   filter: SessionsFilter,
-  onNewSession: () => void,
-): HeaderSearch {
-  return {
-    placeholder: 'Search Sessions',
-    onChangeText: filter.onQueryChange,
-    ...newSessionSearchAction(onNewSession),
-  };
-}
-
-// A phone's trailing header items: the filter, with Search after it.
-export function sessionsHeaderItems(filter: SessionsFilter): HeaderItem[] {
-  return [sessionsFilterItem(filter)];
+): React.JSX.Element[] {
+  return [<SessionsFilterMenu key="filter" {...filter} />];
 }
