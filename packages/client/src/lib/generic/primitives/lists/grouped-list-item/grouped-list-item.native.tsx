@@ -1,7 +1,6 @@
 import { Button, Column, type ColumnProps } from '@expo/ui';
-import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
+import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import {
-  accessibilityAddTraits,
   buttonStyle,
   disabled,
   listRowBackground,
@@ -13,10 +12,7 @@ import { useSidebarList } from '#primitives/fields/field-layout';
 import { useWide } from '../../../use-wide/use-wide';
 import { rowAccessibilityModifiers } from './grouped-list-item-accessibility';
 import { RowContent } from './grouped-list-item-native-row';
-import {
-  type GroupedListItemProps,
-  groupedListItemName,
-} from './grouped-list-item-props';
+import { type GroupedListItemProps } from './grouped-list-item-props';
 import { GroupedListItem as WebGroupedListItem } from './grouped-list-item.tsx';
 import { NativeRowDetail } from './native-row';
 
@@ -85,11 +81,7 @@ function PressableRow(props: PressableRowProps): React.JSX.Element {
   return (
     <Button
       onPress={props.press}
-      modifiers={[
-        buttonStyle('automatic'),
-        ...props.modifiers,
-        accessibilityAddTraits(['isButton']),
-      ]}
+      modifiers={[buttonStyle('automatic'), ...props.modifiers]}
     >
       {props.children}
     </Button>
@@ -100,7 +92,7 @@ function rowModifiers(
   props: GroupedListItemProps,
   sidebar: boolean,
 ): Modifiers {
-  if (!ios) return [fillMaxWidth(), ...rowSemantics(props)];
+  if (!ios) return [fillMaxWidth(), ...rowAccessibilityModifiers(props)];
 
   return [
     ...(sidebar
@@ -109,19 +101,6 @@ function rowModifiers(
     ...rowAccessibilityModifiers(props),
     disabled(!!props.disabled),
   ];
-}
-
-function rowName(props: GroupedListItemProps): string {
-  const name = groupedListItemName(props);
-
-  return props.selected ? `${name}, Selected` : name;
-}
-
-// TalkBack reads the row as one name, unless a control in it needs its own focus.
-function rowSemantics(props: GroupedListItemProps): Modifiers {
-  if (props.control || props.detail) return [];
-
-  return [semantics({ contentDescription: rowName(props) })];
 }
 
 GroupedListItem satisfies React.ComponentType<GroupedListItemProps>;

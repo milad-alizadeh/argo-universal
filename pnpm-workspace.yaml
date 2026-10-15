@@ -167,6 +167,7 @@ hoistPattern:
   - "*"
 
 patchedDependencies:
+  "@expo/ui@57.0.22": patches/@expo__ui@57.0.22.patch
   expo-symbols@57.0.3: patches/expo-symbols@57.0.3.patch
   node-pty@1.1.0: patches/node-pty@1.1.0.patch
   react-native@0.86.3: patches/react-native@0.86.3.patch

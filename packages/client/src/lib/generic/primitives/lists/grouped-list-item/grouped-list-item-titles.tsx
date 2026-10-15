@@ -2,6 +2,7 @@ import { Column, Text } from '@expo/ui';
 import { weight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
+import { rowHeadlineAccessibility } from './grouped-list-item-accessibility';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { RowSubtitle } from './grouped-list-item-subtitle';
 import { titleRole, useRowText } from './grouped-list-item-text';
@@ -11,7 +12,13 @@ const titleModifiers = Platform.OS === 'ios' ? undefined : [weight(1)];
 
 export function RowTitles(props: GroupedListItemProps): React.JSX.Element {
   return (
-    <Column spacing={0} modifiers={titleModifiers}>
+    <Column
+      spacing={0}
+      modifiers={[
+        ...(titleModifiers ?? []),
+        ...rowHeadlineAccessibility(props),
+      ]}
+    >
       <RowTitle {...props} />
       <RowSubtitle subtitle={props.subtitle} />
     </Column>
