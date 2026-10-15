@@ -1,24 +1,11 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { type RefObject, useMemo, useState } from 'react';
 import type { FeedGrowth } from '../feed-growth-context';
+import { keepPlace } from './keep-place';
 
 type ListRef = RefObject<LegendListRef | null>;
 
 type ListState = ReturnType<LegendListRef['getState']>;
-
-// While rows measure after content grows above the reader, the Feed holds their place: within this many pixels, for this many still frames, at most this long in milliseconds.
-const placeTolerance = 0.5;
-
-const settledFrames = 10;
-
-const keepPlaceDuration = 500;
-
-interface Growth {
-  key: string;
-  height: number;
-  // Where the row's top sat in the view before it grew.
-  topInView: number;
-}
 
 // Whether a row reaches into the view and starts above its middle, the reader's line.
 const startsAboveReadingLine = (
@@ -38,54 +25,6 @@ function markGrowthStart(
 
   if (top === undefined || !startsAboveReadingLine(state, key, top)) return;
   starts.set(key, top - state.scroll);
-}
-
-// How far the row's old content sits from where it was, or undefined once the row has left the list.
-function driftOf(state: ListState, growth: Growth): number | undefined {
-  const top = state.positionByKey(growth.key);
-
-  return top === undefined
-    ? undefined
-    : top + growth.height - growth.topInView - state.scroll;
-}
-
-// Puts the row's old content back where it was; returns the still frames so far, or all of them once the row has left the list.
-function placeFrame(
-  ref: LegendListRef,
-  growth: Growth,
-  stillFrames: number,
-): number {
-  const drift = driftOf(ref.getState(), growth);
-
-  if (drift === undefined) return settledFrames;
-
-  if (Math.abs(drift) > placeTolerance) {
-    ref.setVisibleContentAnchorOffset((offset) => offset + drift);
-
-    return 0;
-  }
-
-  return stillFrames + 1;
-}
-
-const keepsGoing = (stillFrames: number, startedAt: number): boolean =>
-  stillFrames < settledFrames &&
-  performance.now() - startedAt < keepPlaceDuration;
-
-// Until rows stop measuring, the row's old content stays where it was, whichever row Legend anchors.
-function keepPlace(list: ListRef, growth: Growth): void {
-  const startedAt = performance.now();
-  let stillFrames = 0;
-
-  const frame = (): void => {
-    stillFrames = list.current
-      ? placeFrame(list.current, growth, stillFrames)
-      : settledFrames;
-
-    if (keepsGoing(stillFrames, startedAt)) requestAnimationFrame(frame);
-  };
-
-  frame();
 }
 
 function feedGrowthOf(list: ListRef, starts: Map<string, number>): FeedGrowth {
