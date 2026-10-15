@@ -1,13 +1,11 @@
-import { Row, Text, Checkbox as UniversalCheckbox } from '@expo/ui';
+import { Row, Text } from '@expo/ui';
 import * as Compose from '@expo/ui/jetpack-compose/modifiers';
 import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import type { CheckboxRowProps } from './checkbox-apple-row';
-import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
-import { RadioMark } from './checkbox-radio';
+import type { CheckboxProps } from './checkbox-props';
+import { RadioMark, type RadioMarkProps } from './checkbox-radio';
 
 type Modifiers = NonNullable<React.ComponentProps<typeof Row>['modifiers']>;
-
-type MarkProps = CheckboxIndicatorProps & { onToggle?: () => void };
 
 const rowHeight = 64;
 
@@ -28,20 +26,26 @@ const optionMarkPixels = 18;
 // Material's alpha for disabled content.
 const disabledOpacity = 0.38;
 
-// Material's checkbox row: the mark leads and the whole row toggles it.
-export function MaterialCheckboxRow(
-  props: CheckboxRowProps,
-): React.JSX.Element {
+// Material's radio row owns selection; the decorative mark has no separate action.
+export function MaterialRadioRow(props: CheckboxRowProps): React.JSX.Element {
   return (
     <Row
       alignment="center"
       spacing={props.variant === 'option' ? optionGap : rowGap}
       modifiers={[...rowSize(props), ...rowToggle(props), ...rowPadding(props)]}
     >
-      <MaterialMark {...props} onToggle={props.state.toggle} />
+      <RadioMark {...radioMarkProps(props)} />
       <RowLabel {...props} />
     </Row>
   );
+}
+
+function radioMarkProps(props: CheckboxProps): RadioMarkProps {
+  return {
+    selected: props.value,
+    disabled: props.disabled,
+    modifiers: markSize(props),
+  };
 }
 
 function RowLabel(props: CheckboxProps): React.JSX.Element {
@@ -84,35 +88,10 @@ function rowToggle(props: CheckboxRowProps): Modifiers {
 }
 
 function rowPress(props: CheckboxRowProps): Modifiers[number] {
-  return props.selection === 'single'
-    ? Compose.selectable(props.value, props.state.toggle, 'radioButton')
-    : Compose.toggleable(props.value, props.state.toggle, { role: 'checkbox' });
+  return Compose.selectable(props.value, props.state.toggle, 'radioButton');
 }
 
-export function MaterialMark(props: MarkProps): React.JSX.Element {
-  if (props.selection !== 'single') return <CheckboxMark {...props} />;
-
-  return (
-    <RadioMark
-      selected={props.value}
-      disabled={props.disabled}
-      modifiers={markSize(props)}
-    />
-  );
-}
-
-function CheckboxMark(props: MarkProps): React.JSX.Element {
-  return (
-    <UniversalCheckbox
-      value={props.value}
-      onValueChange={() => props.onToggle?.()}
-      disabled={props.disabled}
-      modifiers={markSize(props)}
-    />
-  );
-}
-
-function markSize(props: CheckboxIndicatorProps): Modifiers {
+function markSize(props: CheckboxProps): Modifiers {
   return props.variant === 'option'
     ? [Compose.size(optionMarkPixels, optionMarkPixels)]
     : [];
