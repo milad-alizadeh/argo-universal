@@ -5,19 +5,7 @@ type NewSessionDestination = Extract<
   { to: 'new-session' }
 >;
 
-// A destination's fields without `to`: they become its route's params.
-type DestinationFields<Destination> = Destination extends NavigationDestination
-  ? Omit<Destination, 'to'>
-  : never;
-
-interface RouteHref {
-  pathname: (typeof routes)[NavigationDestination['to']]['pathname'];
-  params:
-    | DestinationFields<NavigationDestination>
-    | (DestinationFields<NewSessionDestination> & { id: typeof newSessionId });
-}
-
-// The route that draws each destination; a destination's fields are its route's params.
+// A route's params, as Expo Router reads them.
 type RouteParams = Record<string, string | string[] | undefined>;
 
 // The Session id New Session's URL carries; Session ids are UUIDs, so none is ever this.
@@ -38,82 +26,133 @@ function newSession({ projectId }: RouteParams): NavigationDestination {
   return destination;
 }
 
+interface Path<Pathname extends string> {
+  pathname: Pathname;
+  // The href to the route, with a destination's fields as its params.
+  href: <Params>(params: Params) => { pathname: Pathname; params: Params };
+}
+
+function path<const Pathname extends string>(
+  pathname: Pathname,
+): Path<Pathname> {
+  return { pathname, href: (params) => ({ pathname, params }) };
+}
+
+// The route that draws each destination; a destination's fields are its route's params.
 const routes = {
-  sessions: { pathname: '/sessions', destination: () => ({ to: 'sessions' }) },
+  sessions: { ...path('/sessions'), destination: () => ({ to: 'sessions' }) },
   'new-session': {
-    pathname: '/sessions/[id]',
+    ...path('/sessions/[id]'),
     destination: sessionOrNew,
   },
   session: {
-    pathname: '/sessions/[id]',
+    ...path('/sessions/[id]'),
     destination: sessionOrNew,
   },
-  issues: { pathname: '/issues', destination: () => ({ to: 'issues' }) },
-  atlas: { pathname: '/atlas', destination: () => ({ to: 'atlas' }) },
-  settings: { pathname: '/settings', destination: () => ({ to: 'settings' }) },
+  issues: { ...path('/issues'), destination: () => ({ to: 'issues' }) },
+  atlas: { ...path('/atlas'), destination: () => ({ to: 'atlas' }) },
+  settings: { ...path('/settings'), destination: () => ({ to: 'settings' }) },
   'settings-projects': {
-    pathname: '/settings/projects',
+    ...path('/settings/projects'),
     destination: () => ({ to: 'settings-projects' }),
   },
   'settings-agents': {
-    pathname: '/settings/agents',
+    ...path('/settings/agents'),
     destination: () => ({ to: 'settings-agents' }),
   },
   'settings-accounts': {
-    pathname: '/settings/accounts',
+    ...path('/settings/accounts'),
     destination: () => ({ to: 'settings-accounts' }),
   },
   'settings-connection': {
-    pathname: '/settings/connection',
+    ...path('/settings/connection'),
     destination: () => ({ to: 'settings-connection' }),
   },
   'settings-project': {
-    pathname: '/settings/projects/[name]',
+    ...path('/settings/projects/[name]'),
     destination: (params) => ({
       to: 'settings-project',
       name: String(params.name),
     }),
   },
   'settings-agent-new': {
-    pathname: '/settings/agents/new',
+    ...path('/settings/agents/new'),
     destination: () => ({ to: 'settings-agent-new' }),
   },
   'settings-agent': {
-    pathname: '/settings/agents/[agent]',
+    ...path('/settings/agents/[agent]'),
     destination: (params) => ({
       to: 'settings-agent',
       agent: String(params.agent),
     }),
   },
   'settings-devices': {
-    pathname: '/settings/devices',
+    ...path('/settings/devices'),
     destination: () => ({ to: 'settings-devices' }),
   },
   'settings-appearance': {
-    pathname: '/settings/appearance',
+    ...path('/settings/appearance'),
     destination: () => ({ to: 'settings-appearance' }),
   },
   'settings-notifications': {
-    pathname: '/settings/notifications',
+    ...path('/settings/notifications'),
     destination: () => ({ to: 'settings-notifications' }),
   },
 } as const satisfies Record<
   NavigationDestination['to'],
-  {
-    pathname: string;
+  Path<string> & {
     destination: (params: RouteParams) => NavigationDestination;
   }
 >;
+
+// Each destination's fields, keyed by where it goes: they become its route's params.
+type DestinationFields = {
+  [Destination in NavigationDestination as Destination['to']]: Omit<
+    Destination,
+    'to'
+  >;
+};
+
+type To = keyof DestinationFields;
+
+// Each destination's href, so a route's path keeps the params it needs.
+type Hrefs = {
+  [Key in To]: {
+    pathname: (typeof routes)[Key]['pathname'];
+    params: DestinationFields[Key];
+  };
+};
+
+type NewSessionHref = {
+  pathname: Hrefs['new-session']['pathname'];
+  params: DestinationFields['new-session'] & { id: typeof newSessionId };
+};
+
+type RouteHref = Hrefs[Exclude<To, 'new-session'>] | NewSessionHref;
+
+// Typed per key, so indexing by a generic `to` keeps each path with its own params.
+type HrefBuilders = {
+  [Key in To]: { href: (params: DestinationFields[Key]) => Hrefs[Key] };
+};
+
+const hrefs: HrefBuilders = routes;
+
+function routeHref<Key extends To>(
+  to: Key,
+  params: DestinationFields[Key],
+): Hrefs[Key] {
+  return hrefs[to].href(params);
+}
 
 export function hrefFor(destination: NavigationDestination): RouteHref {
   if (destination.to === 'new-session') return newSessionHref(destination);
   const { to, ...params } = destination;
 
-  return { pathname: routes[to].pathname, params };
+  return routeHref(to, params);
 }
 
 // New Session's URL is a Session's, with an id no Session has.
-function newSessionHref(destination: NewSessionDestination): RouteHref {
+function newSessionHref(destination: NewSessionDestination): NewSessionHref {
   const { to, ...params } = destination;
 
   return {
