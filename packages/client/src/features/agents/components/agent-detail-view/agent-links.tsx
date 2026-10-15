@@ -7,7 +7,7 @@ import type { AgentDetail } from '../../state/agent-detail-types';
 
 type AgentLink = NonNullable<AgentDetail['links']>[number];
 
-// The registry entry's GitHub, Licence and Website links, each opening outside the App.
+// The registry entry's GitHub, Licence and Website links, wrapping onto a second line on a narrow screen, each opening outside the App.
 export function AgentLinks({
   links,
 }: Pick<AgentDetail, 'links'>): React.JSX.Element | null {
@@ -24,7 +24,7 @@ function LinkList({
   links: readonly AgentLink[];
 }): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-4">
+    <View className="shrink flex-row flex-wrap items-center justify-end gap-x-4 gap-y-1">
       {links.map((link) => (
         <ExternalLink key={link.url} link={link} />
       ))}

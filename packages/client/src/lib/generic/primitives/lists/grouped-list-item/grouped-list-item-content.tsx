@@ -93,6 +93,7 @@ function GroupedListItemSubtitle({
     <Text
       aria-hidden
       role="secondary"
+      numberOfLines={subtitle.numberOfLines}
       className={cn(subtitle.code && 'type-code text-muted-foreground')}
     >
       {subtitle.text}
