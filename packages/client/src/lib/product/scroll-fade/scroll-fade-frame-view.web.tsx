@@ -6,8 +6,6 @@ import type { ScrollFadeFrameProps } from './scroll-fade-frame-view';
 import {
   type ScrollFadeEdge,
   type ScrollFadeEdgeName,
-  type ScrollFadeOptions,
-  edgeDepth,
   edgeInset,
   edgeMode,
 } from './scroll-fade-options';
@@ -33,12 +31,14 @@ interface EdgeLengths {
   inset: string;
 }
 
+type FadeOptions = Omit<ScrollFadeFrameProps, 'tracking' | 'children'>;
+
 function edgeLengths(
   edge: ScrollFadeEdgeName,
-  { edges, depth, inset }: ScrollFadeOptions,
+  { edges, depth, inset }: FadeOptions,
 ): EdgeLengths {
   const mode = edgeMode(edge, edges);
-  const fadeDepth = shownDepth(mode, edgeDepth(edge, depth));
+  const fadeDepth = shownDepth(mode, depth[edge]);
 
   return {
     depth: px(fadeDepth),
@@ -48,7 +48,7 @@ function edgeLengths(
 }
 
 // The lengths the `scroll-fade` class in react-native-web.css reads.
-function fadeLengths(options: ScrollFadeOptions): FadeLengths {
+function fadeLengths(options: FadeOptions): FadeLengths {
   const top = edgeLengths('top', options);
   const bottom = edgeLengths('bottom', options);
 

@@ -9,3 +9,16 @@ export function fadedEdges(scroll: HTMLElement): FadedEdges {
 
   return { top: fades('top'), bottom: fades('bottom') };
 }
+
+const length = (style: CSSStyleDeclaration, name: string): number =>
+  Number.parseFloat(style.getPropertyValue(name)) || 0;
+
+// Where a web scroll view's bottom fade begins on screen: content below it is faded, or hidden under what covers the edge.
+export function bottomFadeStart(scroll: HTMLElement): number {
+  const style = getComputedStyle(scroll);
+  const covered =
+    length(style, '--scroll-fade-bottom') +
+    length(style, '--scroll-fade-bottom-inset');
+
+  return scroll.getBoundingClientRect().bottom - covered;
+}

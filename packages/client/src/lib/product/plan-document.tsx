@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { FeedMarkdown } from './markdown/feed-markdown';
 import {
-  PlanBottomFade,
   PlanScrollThumb,
   PlanScrollView,
   type ScrolledPlanStyle,
@@ -14,7 +13,7 @@ const flexibleContentClassName = 'flex-1 min-h-0';
 
 const cardClassName = 'bg-card rounded-xl shadow-control';
 
-const proposalScrollClassName = 'max-h-plan-proposal grow-0';
+const proposalScrollClassName = 'max-h-plan-proposal';
 
 const proposalLabel = 'Plan proposal document';
 
@@ -28,6 +27,7 @@ const scrolledPlanStyles = {
     testID: proposalTestID,
     label: proposalLabel,
     fades: true,
+    fitContent: true,
   },
   expanded: {
     frame: cn(flexibleContentClassName, cardClassName),
@@ -36,6 +36,7 @@ const scrolledPlanStyles = {
     testID: proposalTestID,
     label: proposalLabel,
     fades: false,
+    fitContent: false,
   },
   tray: {
     frame: 'max-h-plan-proposal',
@@ -44,6 +45,7 @@ const scrolledPlanStyles = {
     testID: undefined,
     label: 'Written plan document',
     fades: false,
+    fitContent: true,
   },
 } satisfies Record<string, ScrolledPlanStyle>;
 
@@ -78,7 +80,6 @@ function ScrolledPlan(props: {
       <PlanScrollView style={props.style} handlers={handlers}>
         {props.children}
       </PlanScrollView>
-      {props.style.fades && <PlanBottomFade metrics={metrics} />}
       <PlanScrollThumb metrics={metrics} />
     </View>
   );

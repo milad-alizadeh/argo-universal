@@ -4,10 +4,10 @@ import {
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
-  ScrollView,
   View,
 } from 'react-native';
-import { ScrollFadeGradient } from './scroll-fade/scroll-fade-gradient';
+import { ScrollFadeView } from './scroll-fade/scroll-fade';
+import type { ScrollFadeOptions } from './scroll-fade/scroll-fade-options';
 
 export interface ScrolledPlanStyle {
   frame: string;
@@ -17,6 +17,8 @@ export interface ScrolledPlanStyle {
   label: string;
   // A proposal fades out at its bottom while more of it is hidden below.
   fades: boolean;
+  // Grows with its content up to its max height, rather than filling its frame.
+  fitContent: boolean;
 }
 
 interface PlanScrollMetrics {
@@ -55,8 +57,13 @@ export function usePlanScroll(): PlanScroll {
 const planScrollViewDefaults = {
   role: 'region',
   showsVerticalScrollIndicator: false,
-  scrollEventThrottle: 16,
+  surfaceClassName: 'bg-card',
 } as const;
+
+const fadeEdges = (fades: boolean): ScrollFadeOptions['edges'] => ({
+  top: 'never',
+  bottom: fades ? 'scrolled' : 'never',
+});
 
 interface PlanScrollViewProps {
   style: ScrolledPlanStyle;
@@ -66,8 +73,10 @@ interface PlanScrollViewProps {
 
 export function PlanScrollView(props: PlanScrollViewProps): React.JSX.Element {
   return (
-    <ScrollView
+    <ScrollFadeView
       {...planScrollViewDefaults}
+      edges={fadeEdges(props.style.fades)}
+      fitContent={props.style.fitContent}
       testID={props.style.testID}
       accessibilityLabel={props.style.label}
       className={props.style.scroll}
@@ -75,24 +84,12 @@ export function PlanScrollView(props: PlanScrollViewProps): React.JSX.Element {
       {...props.handlers}
     >
       {props.children}
-    </ScrollView>
+    </ScrollFadeView>
   );
 }
 
 function overflows(metrics: PlanScrollMetrics): boolean {
   return metrics.contentHeight > metrics.viewportHeight + 1;
-}
-
-function hiddenBelow(metrics: PlanScrollMetrics): number {
-  return metrics.contentHeight - metrics.viewportHeight - metrics.offset;
-}
-
-export function PlanBottomFade(props: {
-  metrics: PlanScrollMetrics;
-}): React.JSX.Element | null {
-  if (!overflows(props.metrics) || hiddenBelow(props.metrics) <= 1) return null;
-
-  return <ScrollFadeGradient edge="bottom" className="bg-card" height={40} />;
 }
 
 interface ThumbPlacement {

@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -59,7 +59,7 @@ function OverlapComposer(props: { children: ReactNode }): React.JSX.Element {
   );
 }
 
-// The Feed runs to the screen's bottom edge behind the glass Composer, which keeps the home indicator's space below it until the keyboard opens; the Feed fades out above it, so no text shows through the glass.
+// The Feed runs to the screen's bottom edge behind the glass Composer, which keeps the home indicator's space below it until the keyboard opens.
 function GlassComposerLayout(props: SessionLayoutProps): React.JSX.Element {
   return (
     <Screen testID="session-layout" edges={[]} className={sessionSurface}>
@@ -76,14 +76,18 @@ type SessionStageProps = Pick<SessionLayoutProps, 'feed' | 'composer'>;
 // Its own box, so the Composer laid over its end stays above the keyboard's padding.
 function GlassComposerStage(props: SessionStageProps): React.JSX.Element {
   const { bottom } = useSafeAreaInsets();
-  const { cover, onComposerLayout } = useGlassCover(bottom);
+  const { cover, composerRef, onComposerLayout } = useGlassCover(bottom);
 
   return (
     <View className="relative min-h-0 flex-1">
       <ComposerCover.Provider value={cover}>
         {props.feed}
       </ComposerCover.Provider>
-      <GlassComposer bottom={bottom} onLayout={onComposerLayout}>
+      <GlassComposer
+        bottom={bottom}
+        composerRef={composerRef}
+        onLayout={onComposerLayout}
+      >
         {props.composer}
       </GlassComposer>
     </View>
@@ -92,6 +96,7 @@ function GlassComposerStage(props: SessionStageProps): React.JSX.Element {
 
 interface GlassComposerProps extends Pick<ViewProps, 'onLayout' | 'children'> {
   bottom: number;
+  composerRef: Ref<View>;
 }
 
 // The Composer column is measured without the home indicator's space, which follows the keyboard frame by frame.
@@ -103,7 +108,7 @@ function GlassComposer(props: GlassComposerProps): React.JSX.Element {
       className="absolute bottom-0 left-0 right-0 z-10"
       style={homeIndicatorSpace}
     >
-      <ComposerColumn onLayout={props.onLayout}>
+      <ComposerColumn ref={props.composerRef} onLayout={props.onLayout}>
         {props.children}
       </ComposerColumn>
     </Animated.View>

@@ -18,18 +18,20 @@ import {
   type ScrollFadeGradientProps,
 } from './scroll-fade-gradient';
 import {
+  type PerEdge,
   type ScrollFadeEdge,
   type ScrollFadeEdgeName,
   type ScrollFadeMetrics,
   type ScrollFadeOptions,
   type ScrollFadeTracking,
-  edgeDepth,
   edgeInset,
   edgeMode,
   scrollFadeRamp,
 } from './scroll-fade-options';
 
-export interface ScrollFadeFrameProps extends ScrollFadeOptions {
+export interface ScrollFadeFrameProps
+  extends Omit<ScrollFadeOptions, 'depth'> {
+  depth: Required<PerEdge<number>>;
   // From useScrollFadeTracking, also wired to the scroll view.
   tracking: ScrollFadeTracking;
   className?: string;
@@ -37,6 +39,8 @@ export interface ScrollFadeFrameProps extends ScrollFadeOptions {
   // The one scroll view whose content fades.
   children: ReactNode;
 }
+
+type FadeOptions = Omit<ScrollFadeFrameProps, 'tracking' | 'children'>;
 
 const fadeEdges: ScrollFadeEdgeName[] = ['top', 'bottom'];
 
@@ -69,16 +73,16 @@ function edgeOpacity(
 interface EdgeFadeProps {
   edge: ScrollFadeEdgeName;
   metrics?: ScrollFadeMetrics;
-  options: ScrollFadeOptions;
+  options: FadeOptions;
 }
 
 const gradientProps = (
   edge: ScrollFadeEdgeName,
-  options: ScrollFadeOptions,
+  options: FadeOptions,
 ): ScrollFadeGradientProps => ({
   edge,
   className: options.surfaceClassName,
-  height: edgeDepth(edge, options.depth),
+  height: options.depth[edge],
   inset: edgeInset(edge, options.inset),
 });
 
