@@ -26,11 +26,7 @@ function RevealedPlan({ entries, reveal }: RevealedPlanProps): JSX.Element {
   const revealProps = planRevealProps(reveal);
 
   return (
-    <Animated.View
-      testID="composer-plan-steps"
-      {...revealProps}
-      className="overflow-hidden"
-    >
+    <Animated.View testID="composer-plan-steps" {...revealProps}>
       <MeasuredPlan {...{ entries, reveal }} />
     </Animated.View>
   );
@@ -86,7 +82,7 @@ function PlanLayout(
 type PlanVisibility = {
   'aria-hidden': boolean;
   accessibilityElementsHidden: boolean;
-  pointerEvents: 'auto' | 'none';
+  className: string;
   style: PlanReveal['style'];
 };
 
@@ -94,7 +90,9 @@ function planRevealProps(reveal: PlanReveal): PlanVisibility {
   return {
     'aria-hidden': !reveal.expanded,
     accessibilityElementsHidden: !reveal.expanded,
-    pointerEvents: reveal.expanded ? 'auto' : 'none',
+    className: reveal.expanded
+      ? 'overflow-hidden pointer-events-auto'
+      : 'overflow-hidden pointer-events-none',
     style: reveal.style,
   };
 }

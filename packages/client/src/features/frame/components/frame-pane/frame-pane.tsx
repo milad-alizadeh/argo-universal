@@ -71,7 +71,9 @@ function useAnimatedWidth(
 
 function hiddenPaneProps(hidden: boolean): HiddenPaneProps {
   return {
-    pointerEvents: hidden ? 'none' : 'auto',
+    className: hidden
+      ? 'min-w-0 shrink-0 pointer-events-none'
+      : 'min-w-0 shrink-0 pointer-events-auto',
     accessibilityElementsHidden: hidden,
     importantForAccessibility: hidden ? 'no-hide-descendants' : 'auto',
     'aria-hidden': hidden,
@@ -99,7 +101,6 @@ export function FramePane(props: FramePaneProps): React.JSX.Element {
   return (
     <Animated.View
       testID={props.testID}
-      className="min-w-0 shrink-0"
       style={animatedStyle}
       {...hiddenPaneProps(props.hidden)}
     >

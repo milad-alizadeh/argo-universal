@@ -93,7 +93,7 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
 function ComposerText(layout: TextLayout): React.JSX.Element {
   return (
     // The card's layout lets touches through, so a press on its open space reaches the glass.
-    <View pointerEvents="box-none" className="px-4 pt-3 pb-2">
+    <View className="pointer-events-box-none px-4 pt-3 pb-2">
       <RichTextarea {...textInputProps(layout)} />
     </View>
   );

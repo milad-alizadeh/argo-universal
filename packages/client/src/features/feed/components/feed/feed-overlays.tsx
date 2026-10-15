@@ -21,8 +21,7 @@ const newRowsDot = (
 const jumpToLatestMotion = {
   entering: FadeIn.duration(motionDuration.tooltipEnter),
   exiting: FadeOut.duration(motionDuration.exit),
-  pointerEvents: 'box-none',
-  className: 'absolute inset-x-0',
+  className: 'pointer-events-box-none absolute inset-x-0',
 } as const;
 
 interface JumpToLatestProps {
@@ -39,7 +38,7 @@ function JumpToLatest(props: JumpToLatestProps): React.JSX.Element {
       {...jumpToLatestMotion}
       style={{ bottom: composerTop + jumpToLatestGap }}
     >
-      <SessionColumn pointerEvents="box-none" className="items-center">
+      <SessionColumn className="pointer-events-box-none items-center">
         <JumpToLatestButton {...props} />
       </SessionColumn>
     </Animated.View>

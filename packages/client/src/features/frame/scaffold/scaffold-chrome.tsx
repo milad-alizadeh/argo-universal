@@ -7,8 +7,7 @@ export function WindowDragStrip(): React.JSX.Element {
   return (
     <View
       testID="window-drag-strip"
-      pointerEvents="none"
-      className="absolute inset-x-0 top-0 h-[calc(var(--spacing-frame-inset)+var(--spacing-frame-control))] web:[app-region:drag]"
+      className="pointer-events-none absolute inset-x-0 top-0 h-[calc(var(--spacing-frame-inset)+var(--spacing-frame-control))] web:[app-region:drag]"
     />
   );
 }
@@ -26,8 +25,7 @@ export function PaneBanner({
 }: PaneBannerProps): React.JSX.Element {
   return (
     <View
-      pointerEvents="box-none"
-      className="absolute inset-x-0 top-3 items-center"
+      className="pointer-events-box-none absolute inset-x-0 top-3 items-center"
       style={{ left }}
     >
       {children}
