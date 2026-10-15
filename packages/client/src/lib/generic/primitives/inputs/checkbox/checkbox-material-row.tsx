@@ -1,6 +1,6 @@
-import { Row, Text, Checkbox as UniversalCheckbox } from '@expo/ui';
+import { Row, Checkbox as UniversalCheckbox } from '@expo/ui';
 import * as Compose from '@expo/ui/jetpack-compose/modifiers';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
+import { NativeText } from '#primitives/native/native-text';
 import type { CheckboxRowProps } from './checkbox-apple-row';
 import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
 import { RadioMark } from './checkbox-radio';
@@ -45,16 +45,12 @@ export function MaterialCheckboxRow(
 }
 
 function RowLabel(props: CheckboxProps): React.JSX.Element {
-  const textStyle = useUniversalTextStyle('body');
+  const dimmed = props.disabled ? [Compose.alpha(disabledOpacity)] : [];
 
   return (
-    <Text
-      textStyle={textStyle}
-      style={props.disabled ? { opacity: disabledOpacity } : undefined}
-      modifiers={[Compose.weight(1)]}
-    >
+    <NativeText modifiers={[Compose.weight(1), ...dimmed]}>
       {props.label}
-    </Text>
+    </NativeText>
   );
 }
 

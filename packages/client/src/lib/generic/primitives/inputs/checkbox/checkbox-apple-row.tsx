@@ -1,7 +1,7 @@
-import { Button, Row, Spacer, Text } from '@expo/ui';
+import { Button, Row, Spacer } from '@expo/ui';
 import * as Swift from '@expo/ui/swift-ui/modifiers';
 import { rectangularHitArea } from '#primitives/native/native-modifiers';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
+import { NativeText } from '#primitives/native/native-text';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { CheckboxProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';
@@ -44,12 +44,9 @@ function RowContent(props: CheckboxProps): React.JSX.Element {
   );
 }
 
+// The label keeps the Button's own font, which scales with Dynamic Type.
 function RowLabel(props: CheckboxProps): React.JSX.Element {
-  const textStyle = useUniversalTextStyle(
-    props.variant === 'option' ? 'nav-action' : 'body',
-  );
-
-  return <Text textStyle={textStyle}>{props.label}</Text>;
+  return <NativeText>{props.label}</NativeText>;
 }
 
 // The check takes the label's colour: native rows get no colour but the Host's tint.

@@ -1,10 +1,10 @@
-import { Column, Row, Spacer, Text } from '@expo/ui';
+import { Column, Row, Spacer } from '@expo/ui';
 import { createElement } from 'react';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { Host, type HostProps } from '#primitives/native/host';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
+import { NativeText } from '#primitives/native/native-text';
 import type { PickerProps } from './picker-props';
 import { pickerLabel } from './picker-selection';
 
@@ -56,7 +56,5 @@ function LabelledField(props: FieldProps): React.JSX.Element {
 function FieldLabel(
   props: Pick<FieldProps, 'label' | 'required'>,
 ): React.JSX.Element {
-  return (
-    <Text textStyle={useUniversalTextStyle('body')}>{pickerLabel(props)}</Text>
-  );
+  return <NativeText>{pickerLabel(props)}</NativeText>;
 }
