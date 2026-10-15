@@ -38,7 +38,7 @@ const [firstName = '', secondName = ''] = installedAgents.map(
   ({ name }) => name,
 );
 
-// A row reads its name, then its description when it has one, then its status.
+// A row reads its name, then its description when it has one, then the status its dot shows.
 const withStatus = (name: string, status: string): RegExp =>
   new RegExp(`^${name}, (.+, )?${status}$`);
 
@@ -53,14 +53,23 @@ export const ShowsInstalledAndRegistryAgentsWithTheirStatus: Story = {
       }),
     ).toBeVisible();
     await expect(
-      canvas.getByRole('link', {
-        name: withStatus(registryName, 'Not installed'),
-      }),
+      canvas.getByRole('link', { name: agentLink(registryName) }),
     ).toBeVisible();
     await expect(
       canvas.getByRole('heading', { name: 'Available for macOS' }),
     ).toBeVisible();
     await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+  },
+};
+
+// The status reads on the Agent's page; a row shows only its dot.
+export const LeavesTheStatusTextToTheAgentsPage: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('link', { name: withStatus(firstName, 'Ready') }),
+    ).toBeVisible();
+    await expect(canvas.queryByText('Ready')).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Sign-in needed')).not.toBeInTheDocument();
   },
 };
 
@@ -92,9 +101,7 @@ export const FiltersByThePills: Story = {
       canvas.queryByRole('link', { name: agentLink(firstName) }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas.getByRole('link', {
-        name: withStatus(registryName, 'Not installed'),
-      }),
+      canvas.getByRole('link', { name: agentLink(registryName) }),
     ).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'All' }));
     await expect(

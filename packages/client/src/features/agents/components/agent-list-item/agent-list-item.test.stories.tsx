@@ -99,7 +99,7 @@ export const MalformedUrlXml: Story = iconCase({
   unavailable: true,
 });
 
-// Install, Update and Sign in live on the Agent's page; a row only opens it, naming its description and status.
+// Install, Update and Sign in live on the Agent's page; a row only opens it, naming its description and the status its dot shows.
 export const NamesItsStatusAndCarriesNoAction: Story = {
   args: { agent: { ...agent, status: 'update' } },
   play: async ({ args, canvas, userEvent }) => {
@@ -107,6 +107,9 @@ export const NamesItsStatusAndCarriesNoAction: Story = {
       name: `${agent.name}, ${agent.description}, Update available`,
     });
 
+    await expect(
+      canvas.queryByText('Update available'),
+    ).not.toBeInTheDocument();
     await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
     await userEvent.click(row);
     await expect(args.onOpen).toHaveBeenCalledWith(agent.id);

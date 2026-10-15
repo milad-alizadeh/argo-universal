@@ -33,8 +33,18 @@ export function RowSubtitle({
   if (!subtitle) return null;
 
   return (
-    <Text color={mutedForeground} style={style}>
+    <Text color={mutedForeground} style={style} {...lineCap(subtitle)}>
       {subtitle.text}
     </Text>
   );
+}
+
+// A capped subtitle ends in an ellipsis on its last line.
+function lineCap({
+  numberOfLines,
+}: NonNullable<GroupedListItemProps['subtitle']>): {
+  maxLines?: number;
+  overflow?: 'ellipsis';
+} {
+  return numberOfLines ? { maxLines: numberOfLines, overflow: 'ellipsis' } : {};
 }

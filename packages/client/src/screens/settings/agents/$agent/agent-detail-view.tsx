@@ -18,7 +18,11 @@ import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 import { PhoneTitle } from '../../../../lib/product/navigation/phone-title';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
-import { AboutSection, AgentStatusSection } from './agent-detail-sections';
+import {
+  AboutSection,
+  AgentStatusSection,
+  showsStatusSection,
+} from './agent-detail-sections';
 import { AgentIdentity } from './agent-identity';
 
 export type { AgentDetailViewProps } from '#features/agents';
@@ -46,7 +50,8 @@ function AgentStatusChip({
 }: Pick<AgentDetailViewProps, 'agent'>): React.JSX.Element | null {
   const tone = statusTone(agent.status);
 
-  if (!tone) return null;
+  // A Status section names its own status, so the chip would repeat it.
+  if (!tone || showsStatusSection(agent.status)) return null;
 
   return (
     <Badge tone={tone}>
