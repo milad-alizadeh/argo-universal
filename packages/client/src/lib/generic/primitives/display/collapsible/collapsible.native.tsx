@@ -1,0 +1,98 @@
+import {
+  type ComponentProps,
+  createContext,
+  type ReactElement,
+  useContext,
+  useState,
+} from 'react';
+import { Pressable, View } from 'react-native';
+import { CollapsibleContent } from './collapsible-content';
+import {
+  CollapsibleLayoutSyncContext,
+  OpenContext,
+} from './collapsible-context';
+import type { CollapsibleProps } from './collapsible-props';
+
+// Argo-drawn on phones (ADR-0020): Feed rows animate with LegendList, which a native Host per item would break.
+
+interface Toggle {
+  disabled: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const ToggleContext = createContext<Toggle>({
+  disabled: false,
+  onOpenChange: () => {},
+});
+
+// The open state, held here unless the caller controls it.
+function useToggle(props: CollapsibleProps): Toggle & { open: boolean } {
+  const [ownOpen, setOwnOpen] = useState(Boolean(props.defaultOpen));
+
+  return {
+    open: props.open ?? ownOpen,
+    disabled: Boolean(props.disabled),
+    onOpenChange: (next) => {
+      if (props.open === undefined) setOwnOpen(next);
+      props.onOpenChange?.(next);
+    },
+  };
+}
+
+// The root draws a plain view; the open state goes to context instead.
+function viewOf({
+  open: _open,
+  defaultOpen: _defaultOpen,
+  onOpenChange: _onOpenChange,
+  disabled: _disabled,
+  ...view
+}: CollapsibleProps): CollapsibleProps {
+  return view;
+}
+
+function Collapsible(props: CollapsibleProps): ReactElement {
+  const { open, ...toggle } = useToggle(props);
+
+  return (
+    <OpenContext.Provider value={open}>
+      <ToggleContext value={toggle}>
+        <View {...viewOf(props)} />
+      </ToggleContext>
+    </OpenContext.Provider>
+  );
+}
+
+type TriggerProps = Omit<ComponentProps<typeof Pressable>, 'role'>;
+
+type TriggerBehaviour = Pick<
+  TriggerProps,
+  'accessibilityRole' | 'accessibilityState' | 'disabled' | 'onPress'
+>;
+
+function CollapsibleTrigger(props: TriggerProps): ReactElement {
+  return <Pressable {...props} {...useTriggerBehaviour(props)} />;
+}
+
+// Pressing toggles the Collapsible, then runs the caller's own press.
+function useTriggerBehaviour(props: TriggerProps): TriggerBehaviour {
+  const open = useContext(OpenContext);
+  const toggle = useContext(ToggleContext);
+  const disabled = toggle.disabled || Boolean(props.disabled);
+
+  return {
+    accessibilityRole: 'button',
+    accessibilityState: { expanded: open, disabled },
+    disabled,
+    onPress: (event) => {
+      toggle.onOpenChange(!open);
+      props.onPress?.(event);
+    },
+  };
+}
+
+export {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleLayoutSyncContext,
+  CollapsibleTrigger,
+};
