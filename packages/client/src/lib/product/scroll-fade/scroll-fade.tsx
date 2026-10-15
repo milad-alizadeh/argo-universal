@@ -11,22 +11,31 @@ export type ScrollFadeViewProps = ScrollViewProps &
     fitContent?: boolean;
   };
 
+interface Sizing {
+  frame: string;
+  scroll: { className: string };
+}
+
+const sizing = (
+  fitContent: boolean | undefined,
+  className: string | undefined,
+): Sizing => ({
+  frame: cn('min-h-0', !fitContent && 'flex-1', className),
+  scroll: { className: fitContent ? 'grow-0' : 'flex-1' },
+});
+
 // A scroll view whose content fades under each edge that hides more of it.
 export function ScrollFadeView({
   className,
-  fitContent = false,
+  fitContent,
   ...props
 }: ScrollFadeViewProps): React.JSX.Element {
   const { frame, scroll, attachScrollView } = useScrollFade(props);
-  const frameClassName = cn('min-h-0', !fitContent && 'flex-1', className);
+  const classNames = sizing(fitContent, className);
 
   return (
-    <ScrollFadeFrame {...frame} className={frameClassName}>
-      <ScrollView
-        {...scroll}
-        ref={attachScrollView}
-        className={fitContent ? 'grow-0' : 'flex-1'}
-      />
+    <ScrollFadeFrame {...frame} className={classNames.frame}>
+      <ScrollView {...scroll} {...classNames.scroll} ref={attachScrollView} />
     </ScrollFadeFrame>
   );
 }

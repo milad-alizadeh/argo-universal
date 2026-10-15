@@ -1,11 +1,4 @@
-import {
-  type RefObject,
-  createContext,
-  useContext,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
 import type { LayoutChangeEvent, View } from 'react-native';
 import { useKeyboardState } from 'react-native-keyboard-controller';
 import { type SpacingToken, useSpacing } from '#lib/generic/use-spacing';
@@ -54,29 +47,36 @@ export function useComposerFadeDepth(atEnd: boolean): number {
 
 export interface GlassCover {
   cover: number;
-  composerRef: RefObject<View | null>;
+  measureComposer: (view: View | null) => void;
   onComposerLayout: (event: LayoutChangeEvent) => void;
+}
+
+// The Composer's height, measured as it mounts and again on each layout.
+function useComposerHeight(): Omit<GlassCover, 'cover'> & {
+  height: number | undefined;
+} {
+  const [height, setHeight] = useState<number>();
+
+  // Fabric measures synchronously while the ref attaches, before the first paint, so the Feed's end never draws against a guess.
+  const measureComposer = useCallback((view: View | null) => {
+    view?.measure((...box: number[]) => setHeight(box[3]));
+  }, []);
+
+  return {
+    height,
+    measureComposer,
+    onComposerLayout: (event) => setHeight(event.nativeEvent.layout.height),
+  };
 }
 
 // How far the glass Composer covers the Feed's end: the Composer, and below it the home indicator's space, which the open keyboard takes over.
 export function useGlassCover(bottom: number): GlassCover {
-  const composerRef = useRef<View>(null);
-  const [composerHeight, setComposerHeight] = useState<number>();
+  const { height, ...composer } = useComposerHeight();
   const keyboardOpen = useKeyboardState((state) => state.isVisible);
   const below = keyboardOpen ? 0 : bottom;
 
-  // Fabric measures synchronously here, before the first paint, so the Feed's end never draws against the guessed overlap.
-  useLayoutEffect(() => {
-    composerRef.current?.measure((_x, _y, _width, height) =>
-      setComposerHeight(height),
-    );
-  }, []);
-
   return {
-    cover:
-      composerHeight === undefined ? composerOverlap : composerHeight + below,
-    composerRef,
-    onComposerLayout: (event) =>
-      setComposerHeight(event.nativeEvent.layout.height),
+    cover: height === undefined ? composerOverlap : height + below,
+    ...composer,
   };
 }

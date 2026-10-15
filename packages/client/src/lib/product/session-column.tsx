@@ -27,12 +27,9 @@ export function ComposerColumn(
 ): React.JSX.Element {
   return (
     <SessionColumn
-      ref={props.ref}
+      {...props}
       testID="composer-column"
       className="items-center"
-      onLayout={props.onLayout}
-    >
-      {props.children}
-    </SessionColumn>
+    />
   );
 }

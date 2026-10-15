@@ -6,7 +6,10 @@ import {
   type NativeSyntheticEvent,
   View,
 } from 'react-native';
-import { ScrollFadeView } from './scroll-fade/scroll-fade';
+import {
+  ScrollFadeView,
+  type ScrollFadeViewProps,
+} from './scroll-fade/scroll-fade';
 import type { ScrollFadeOptions } from './scroll-fade/scroll-fade-options';
 
 export interface ScrolledPlanStyle {
@@ -71,16 +74,30 @@ interface PlanScrollViewProps {
   children: React.ReactNode;
 }
 
+type PlanScrollStyle = Pick<
+  ScrollFadeViewProps,
+  | 'edges'
+  | 'fitContent'
+  | 'testID'
+  | 'accessibilityLabel'
+  | 'className'
+  | 'contentContainerClassName'
+>;
+
+const scrollViewStyle = (style: ScrolledPlanStyle): PlanScrollStyle => ({
+  edges: fadeEdges(style.fades),
+  fitContent: style.fitContent,
+  testID: style.testID,
+  accessibilityLabel: style.label,
+  className: style.scroll,
+  contentContainerClassName: style.content,
+});
+
 export function PlanScrollView(props: PlanScrollViewProps): React.JSX.Element {
   return (
     <ScrollFadeView
       {...planScrollViewDefaults}
-      edges={fadeEdges(props.style.fades)}
-      fitContent={props.style.fitContent}
-      testID={props.style.testID}
-      accessibilityLabel={props.style.label}
-      className={props.style.scroll}
-      contentContainerClassName={props.style.content}
+      {...scrollViewStyle(props.style)}
       {...props.handlers}
     >
       {props.children}

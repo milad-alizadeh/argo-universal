@@ -22,12 +22,17 @@ export interface ScrollFadeOptions {
 // How deep content fades at each edge unless a caller says otherwise.
 const scrollFadeDepth = { top: 28, bottom: 36 } as const;
 
+const edgeDepth = (
+  edge: ScrollFadeEdgeName,
+  depth: PerEdge<number> | undefined,
+): number => depth?.[edge] ?? scrollFadeDepth[edge];
+
 // Each edge's depth: the caller's, or the default.
 export const fadeDepth = (
   depth: PerEdge<number> | undefined,
 ): Required<PerEdge<number>> => ({
-  top: depth?.top ?? scrollFadeDepth.top,
-  bottom: depth?.bottom ?? scrollFadeDepth.bottom,
+  top: edgeDepth('top', depth),
+  bottom: edgeDepth('bottom', depth),
 });
 
 // The gap a scroll view leaves below its last row unless it sets its own bottom padding.

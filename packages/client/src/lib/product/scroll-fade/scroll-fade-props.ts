@@ -66,43 +66,66 @@ const bottomPaddings = [
 const setsBottomPadding = (style: ViewStyle): boolean =>
   bottomPaddings.some((key) => style[key] !== undefined);
 
+function withEndGap(
+  style: StyleProp<ViewStyle>,
+  endGap: number,
+): StyleProp<ViewStyle> {
+  const own = StyleSheet.flatten(style) ?? {};
+
+  return setsBottomPadding(own) ? style : { paddingBottom: endGap, ...own };
+}
+
+// Left out when unset, as Legend List's web build hands it to the DOM.
+const classNameProp = (className: string | undefined): ScrollableProps =>
+  className ? { contentContainerClassName: className } : {};
+
+const useClassNamePads = (className: string | undefined): boolean =>
+  setsBottomPadding(useResolveClassNames(className ?? ''));
+
 // The last row rests a small gap above the bottom, where the fade lies, unless the content sets its own bottom padding.
 function useEndGap({
   contentContainerStyle,
   contentContainerClassName,
 }: ScrollableProps): StyleProp<ViewStyle> {
   const endGap = useSpacing(scrollFadeEndGap);
-  const classNamePads = setsBottomPadding(
-    useResolveClassNames(contentContainerClassName ?? ''),
+  const classNamePads = useClassNamePads(contentContainerClassName);
+
+  return useMemo(
+    () =>
+      classNamePads
+        ? contentContainerStyle
+        : withEndGap(contentContainerStyle, endGap),
+    [contentContainerStyle, classNamePads, endGap],
   );
+}
 
-  return useMemo(() => {
-    const own = StyleSheet.flatten(contentContainerStyle) ?? {};
+// The content's class and style, with the end gap and the column's width.
+function useContentProps(own: ScrollableProps): ScrollableProps {
+  return {
+    ...classNameProp(own.contentContainerClassName),
+    contentContainerStyle: useScrollColumnStyle(useEndGap(own)),
+  };
+}
 
-    if (classNamePads || setsBottomPadding(own)) return contentContainerStyle;
-
-    return { paddingBottom: endGap, ...own };
-  }, [contentContainerStyle, classNamePads, endGap]);
+// The scroll view's props without the ones the fade takes over.
+function ownProps<P extends ScrollableProps>({
+  onContentSizeChange: _sizeChange,
+  contentContainerStyle: _style,
+  contentContainerClassName: _className,
+  ...rest
+}: P): Omit<P, keyof ScrollableProps> {
+  return rest;
 }
 
 function useScrollProps<P extends ScrollableProps>(
-  {
-    onContentSizeChange,
-    contentContainerStyle,
-    contentContainerClassName,
-    ...props
-  }: P,
+  props: P,
   tracking: ScrollFadeTracking,
 ): Omit<P, keyof ScrollableProps> & ScrollableProps {
-  const ownContent = { contentContainerStyle, contentContainerClassName };
-
   return {
-    ...props,
-    // Left out when unset, as Legend List's web build hands it to the DOM.
-    ...(contentContainerClassName ? { contentContainerClassName } : {}),
-    contentContainerStyle: useScrollColumnStyle(useEndGap(ownContent)),
+    ...ownProps(props),
+    ...useContentProps(props),
     ...sizeChangeProp(
-      bothCallbacks(tracking.onContentSizeChange, onContentSizeChange),
+      bothCallbacks(tracking.onContentSizeChange, props.onContentSizeChange),
     ),
   };
 }

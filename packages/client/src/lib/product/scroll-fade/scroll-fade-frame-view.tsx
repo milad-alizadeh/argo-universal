@@ -29,8 +29,7 @@ import {
   scrollFadeRamp,
 } from './scroll-fade-options';
 
-export interface ScrollFadeFrameProps
-  extends Omit<ScrollFadeOptions, 'depth'> {
+export interface ScrollFadeFrameProps extends Omit<ScrollFadeOptions, 'depth'> {
   depth: Required<PerEdge<number>>;
   // From useScrollFadeTracking, also wired to the scroll view.
   tracking: ScrollFadeTracking;

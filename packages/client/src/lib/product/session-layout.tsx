@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import type { ReactNode, Ref } from 'react';
+import type { ReactNode } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -76,18 +76,14 @@ type SessionStageProps = Pick<SessionLayoutProps, 'feed' | 'composer'>;
 // Its own box, so the Composer laid over its end stays above the keyboard's padding.
 function GlassComposerStage(props: SessionStageProps): React.JSX.Element {
   const { bottom } = useSafeAreaInsets();
-  const { cover, composerRef, onComposerLayout } = useGlassCover(bottom);
+  const { cover, measureComposer, onComposerLayout } = useGlassCover(bottom);
 
   return (
     <View className="relative min-h-0 flex-1">
       <ComposerCover.Provider value={cover}>
         {props.feed}
       </ComposerCover.Provider>
-      <GlassComposer
-        bottom={bottom}
-        composerRef={composerRef}
-        onLayout={onComposerLayout}
-      >
+      <GlassComposer measure={measureComposer} onLayout={onComposerLayout}>
         {props.composer}
       </GlassComposer>
     </View>
@@ -95,29 +91,30 @@ function GlassComposerStage(props: SessionStageProps): React.JSX.Element {
 }
 
 interface GlassComposerProps extends Pick<ViewProps, 'onLayout' | 'children'> {
-  bottom: number;
-  composerRef: Ref<View>;
+  measure: (view: View | null) => void;
 }
 
 // The Composer column is measured without the home indicator's space, which follows the keyboard frame by frame.
-function GlassComposer(props: GlassComposerProps): React.JSX.Element {
-  const homeIndicatorSpace = useHomeIndicatorSpace(props.bottom);
+function GlassComposer({
+  measure,
+  ...props
+}: GlassComposerProps): React.JSX.Element {
+  const homeIndicatorSpace = useHomeIndicatorSpace();
 
   return (
     <Animated.View
       className="absolute bottom-0 left-0 right-0 z-10"
       style={homeIndicatorSpace}
     >
-      <ComposerColumn ref={props.composerRef} onLayout={props.onLayout}>
-        {props.children}
-      </ComposerColumn>
+      <ComposerColumn {...props} ref={measure} />
     </Animated.View>
   );
 }
 
-function useHomeIndicatorSpace(
-  bottom: number,
-): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
+function useHomeIndicatorSpace(): ReturnType<
+  typeof useAnimatedStyle<ViewStyle>
+> {
+  const { bottom } = useSafeAreaInsets();
   const { progress } = useReanimatedKeyboardAnimation();
 
   return useAnimatedStyle(
