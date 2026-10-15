@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
-import { allowlistProblems, readAllowlist } from './kit-styling-allowlist.mts';
+import { allowlistProblems, readAllowlist } from './rule-allowlist.mts';
+
+const rule = 'argo/kit-styling';
 
 const row = 'packages/client/src/features/feed/row.tsx';
 
@@ -11,33 +13,38 @@ const allowlist = (files: string[]): string =>
     overrides: [{ files, rules: { 'argo/kit-styling': 'off' } }],
   });
 
-describe('the kit-styling allowlist', (): void => {
+describe('a rule allowlist', (): void => {
   it('reads the files it waives', (): void => {
-    expect(readAllowlist(allowlist([row, card]))).toEqual([row, card]);
+    expect(readAllowlist(allowlist([row, card]), rule)).toEqual([row, card]);
   });
 
   const waiver = { files: [row], rules: { 'argo/kit-styling': 'off' } };
 
-  it.each([
-    [
-      'waives another rule',
-      {
-        overrides: [
-          {
-            files: [row],
-            rules: { 'argo/kit-styling': 'off', 'argo/icon-role': 'off' },
-          },
-        ],
-      },
-    ],
-    ['has two overrides', { overrides: [waiver, waiver] }],
-  ])('rejects a list that %s', (_, list): void => {
-    expect(() => readAllowlist(JSON.stringify(list))).toThrow(ZodError);
+  it('rejects a list that waives another rule', (): void => {
+    const list = {
+      overrides: [
+        {
+          files: [row],
+          rules: { 'argo/kit-styling': 'off', 'argo/icon-role': 'off' },
+        },
+      ],
+    };
+
+    expect(() => readAllowlist(JSON.stringify(list), rule)).toThrow(
+      'must waive argo/kit-styling and nothing else',
+    );
+  });
+
+  it('rejects a list with two overrides', (): void => {
+    const list = { overrides: [waiver, waiver] };
+
+    expect(() => readAllowlist(JSON.stringify(list), rule)).toThrow(ZodError);
   });
 
   it('accepts a list that shrank and still has findings', (): void => {
     expect(
       allowlistProblems({
+        rule,
         current: [row],
         baseline: [row, card],
         flagged: new Set([row]),
@@ -48,6 +55,7 @@ describe('the kit-styling allowlist', (): void => {
   it('rejects a file added since the baseline', (): void => {
     expect(
       allowlistProblems({
+        rule,
         current: [row, card],
         baseline: [row],
         flagged: new Set([row, card]),
@@ -69,6 +77,7 @@ describe('the kit-styling allowlist', (): void => {
   it('rejects a file that no longer styles a kit component', (): void => {
     expect(
       allowlistProblems({
+        rule,
         current: [row],
         baseline: [row],
         flagged: new Set(),
@@ -81,6 +90,7 @@ describe('the kit-styling allowlist', (): void => {
   it('allows the first list when the baseline has none', (): void => {
     expect(
       allowlistProblems({
+        rule,
         current: [row],
         baseline: undefined,
         flagged: new Set([row]),

@@ -55,7 +55,7 @@ function skipProps(model: QuestionModel, wide: boolean): ActionProps {
     label: 'Skip',
     variant: wide ? 'ghost' : 'outline',
     disabled: model.inactive,
-    className: 'android:min-h-12 android:border-neutral-500',
+    className: 'android:min-h-12 android:border-muted-foreground',
     onPress: model.skip,
   };
 }

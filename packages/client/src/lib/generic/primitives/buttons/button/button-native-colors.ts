@@ -87,7 +87,7 @@ const destructiveColors: Record<
 > = {
   default: {
     container: destructiveClass,
-    content: 'text-danger-foreground',
+    content: 'text-white',
   },
   secondary: { container: 'text-danger/10', content: destructiveClass },
   outline: { container: transparentClass, content: destructiveClass },

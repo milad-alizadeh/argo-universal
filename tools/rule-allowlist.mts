@@ -1,24 +1,32 @@
 import { z } from 'zod';
 import { parseJsonc } from './not-yet-cleared/document.mts';
 
+// A shrinking allowlist: one override that turns one argo rule off for the files not yet moved over.
 const allowlistSchema = z.strictObject({
   $schema: z.string().optional(),
   overrides: z.tuple([
     z.strictObject({
       files: z.array(z.string()),
-      rules: z.strictObject({ 'argo/kit-styling': z.literal('off') }),
+      rules: z.record(z.string(), z.literal('off')),
     }),
   ]),
 });
 
-export const readAllowlist = (text: string): string[] =>
-  parseJsonc(allowlistSchema, text).overrides[0].files;
+export function readAllowlist(text: string, rule: string): string[] {
+  const [override] = parseJsonc(allowlistSchema, text).overrides;
+
+  if (Object.keys(override.rules).join(' ') !== rule)
+    throw new Error(`The allowlist must waive ${rule} and nothing else.`);
+
+  return override.files;
+}
 
 export interface AllowlistState {
+  rule: string;
   current: string[];
   // The list at the merge base with main; undefined until the list lands there.
   baseline: string[] | undefined;
-  // Files with argo/kit-styling findings when the allowlist is left out.
+  // Files with findings for the rule when the allowlist is left out.
   flagged: Set<string>;
   // Files git moved since the baseline, new path to old: a moved file keeps its waiver.
   moved?: Map<string, string>;
@@ -44,7 +52,7 @@ export function allowlistProblems(state: AllowlistState): string[] {
     .filter((file): boolean => !state.flagged.has(file))
     .map(
       (file): string =>
-        `${file}: no argo/kit-styling findings; delete it from the allowlist.`,
+        `${file}: no ${state.rule} findings; delete it from the allowlist.`,
     );
 
   return [...added, ...stale];

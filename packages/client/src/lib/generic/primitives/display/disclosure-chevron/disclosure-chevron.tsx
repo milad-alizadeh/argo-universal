@@ -13,11 +13,12 @@ import type { DisclosureChevronProps } from './disclosure-chevron-props';
 
 export function DisclosureChevron({
   open,
+  role = 'body',
   className,
 }: DisclosureChevronProps): React.JSX.Element {
   const chevron = (
     <Icon
-      role="body"
+      role={role}
       name="chevron-right"
       className={cn('text-muted-foreground', className)}
     />

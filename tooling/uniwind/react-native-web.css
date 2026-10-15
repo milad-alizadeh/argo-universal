@@ -17,7 +17,7 @@
     font-family: var(--font-sans);
   }
   :where([class*="css-text-"]) {
-    font-family: var(--font-text);
+    font-family: var(--font-sans);
   }
   /* Controls stay clickable over the desktop shell's window drag strip. */
   :where(
@@ -52,7 +52,7 @@
     user-select: none;
   }
   :where([role="heading"]) {
-    font-family: var(--font-display);
+    font-family: var(--font-sans);
   }
   :where([role="button"], [role="menuitem"], [role="tab"], [role="combobox"])
     :where([class*="css-text-"]) {

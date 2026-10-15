@@ -33,7 +33,7 @@ interface TileSelection {
   'aria-current'?: 'page';
 }
 
-const tileClass = 'rounded-selection';
+const tileClass = 'rounded-xl';
 
 function selectionProps(selected: boolean): TileSelection {
   if (!selected)

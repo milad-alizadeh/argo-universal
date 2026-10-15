@@ -90,7 +90,7 @@ const hoverClasses =
 
 function sidebarClasses(props: GroupedListItemProps): string {
   return cn(
-    'rounded-selection',
+    'rounded-xl',
     // Hover is a lighter tint than selected; a selected row keeps its tint.
     props.selected
       ? 'bg-selected'

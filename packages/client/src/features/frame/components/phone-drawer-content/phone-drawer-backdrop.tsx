@@ -8,7 +8,12 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
-import { type Glow, type GlowStop, sidebarGlows } from '../sidebar-glows';
+import {
+  type Glow,
+  type GlowStop,
+  sidebarGlows,
+  useGlowColours,
+} from '../sidebar-glows';
 
 const { glows, edgeFadeWidth } = sidebarGlows('phone', 'full');
 
@@ -22,15 +27,11 @@ interface GlowColours {
   surface: CSSValue;
 }
 
-function useGlowColours(): GlowColours {
-  const [warm, graphite, sand, surface] = useCSSVariable([
-    '--color-glow-warm',
-    '--color-glow-graphite',
-    '--color-glow-sand',
-    '--color-content',
-  ]);
+function useBackdropColours(): GlowColours {
+  const colours = useGlowColours();
+  const surface = useCSSVariable('--color-content');
 
-  return { colours: { warm, graphite, sand }, surface };
+  return { colours, surface };
 }
 
 // react-native-svg reads each stop's offset, colour and opacity from the gradient's direct children, so a stop must be a bare <Stop>, never a wrapper component.
@@ -85,7 +86,7 @@ function EdgeFadeGradient({
 }
 
 function GlowDefs(): React.JSX.Element {
-  const { colours, surface } = useGlowColours();
+  const { colours, surface } = useBackdropColours();
 
   return (
     <Defs>

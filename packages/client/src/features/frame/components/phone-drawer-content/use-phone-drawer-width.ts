@@ -1,17 +1,13 @@
 import { useWindowDimensions } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 
-// The drawer's width: its token, narrowed so a strip of the page still shows beside it.
+// The open drawer's width, and how much of the screen stays visible beside it.
+const drawerWidth = 300;
+
+const visibleScreenWidth = 64;
+
+// The drawer's width, narrowed so a strip of the page still shows beside it.
 export function usePhoneDrawerWidth(): number {
   const { width } = useWindowDimensions();
-
-  const drawerWidth = Number.parseFloat(
-    String(useCSSVariable('--spacing-phone-drawer')),
-  );
-
-  const visibleScreenWidth = Number.parseFloat(
-    String(useCSSVariable('--spacing-phone-drawer-peek')),
-  );
 
   return Math.min(drawerWidth, Math.max(0, width - visibleScreenWidth));
 }

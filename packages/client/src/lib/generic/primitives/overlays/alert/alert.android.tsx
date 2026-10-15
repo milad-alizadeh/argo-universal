@@ -40,7 +40,7 @@ function alertColors(
 ): React.ComponentProps<typeof AlertDialog>['colors'] {
   return {
     containerColor: colors.card,
-    titleContentColor: colors.cardForeground,
+    titleContentColor: colors.foreground,
     textContentColor: colors.mutedForeground,
   };
 }
