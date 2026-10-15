@@ -3,6 +3,7 @@ import { type ReactNode, useState } from 'react';
 import { ScrollView } from 'react-native';
 import {
   SessionsHeader,
+  SessionsPhoneToolbar,
   SessionsScreen,
   sessionsHeaderItems,
   sessionsHeaderSearch,
@@ -25,6 +26,8 @@ export interface SectionList {
   header?: ReactNode;
   // The list's trailing items and search in a phone's native header.
   phoneHeader?: Pick<ScreenHeaderProps, 'right' | 'search'>;
+  // The list's own native toolbar and search bar in a phone's header.
+  phoneToolbar?: ReactNode;
   list: ReactNode;
 }
 
@@ -67,11 +70,24 @@ function sessionsList({
 
   return {
     header: <SessionsHeader {...sessionsFilter} onNewSession={newSession} />,
+    ...sessionsPhoneHeader(sessionsFilter, newSession),
+    list: sessionsScreen(sessionsFilter, selectedDestination),
+  };
+}
+
+// The web header row's items and search, and the native toolbar and search bar.
+function sessionsPhoneHeader(
+  sessionsFilter: SessionsFilter,
+  newSession: () => void,
+): Pick<SectionList, 'phoneHeader' | 'phoneToolbar'> {
+  return {
     phoneHeader: {
       right: sessionsHeaderItems(sessionsFilter),
       search: sessionsHeaderSearch(sessionsFilter, newSession),
     },
-    list: sessionsScreen(sessionsFilter, selectedDestination),
+    phoneToolbar: (
+      <SessionsPhoneToolbar {...sessionsFilter} onNewSession={newSession} />
+    ),
   };
 }
 
