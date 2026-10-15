@@ -56,6 +56,8 @@ export type AcpResourceInput = {
 
 export type AcpResources = {
   invalidateAgent: (agentId: string) => void;
+  dropAgentConnections: (agentId: string) => void;
+  isDirectoryInUse: (directory: string) => boolean;
   isAgentInUse: (agentId: string) => boolean;
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;
   reserveAuthentication: (launch: AgentLaunch) => () => void;

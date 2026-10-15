@@ -11,6 +11,7 @@ import type {
 type Entry = {
   agentId: string;
   version: string;
+  directory?: string;
   connecting: Promise<AcpConnection>;
   connection: AcpConnection;
   pending: number;
@@ -23,6 +24,7 @@ const createEntry = (
 ): Entry => ({
   agentId: launch.agentId,
   version: launch.version,
+  directory: launch.installationDirectory,
   connecting,
   connection,
   pending: 0,
@@ -31,6 +33,7 @@ const createEntry = (
 class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, Entry>();
   private stopped = false;
+  private readonly connections = new Set<Entry>();
   public constructor(private readonly input: AcpResourceInput) {}
   public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
     if (this.stopped) throw new Error('ACP resources are stopped');
@@ -78,6 +81,7 @@ class EngineAcpResources implements AcpResources {
     );
 
     this.entries.set(key, entry);
+    this.connections.add(entry);
 
     return entry;
   }
@@ -93,13 +97,20 @@ class EngineAcpResources implements AcpResources {
     });
   }
   private forget(key: string, connection: AcpConnection): void {
+    this.forgetConnection(connection);
+
     if (this.entries.get(key)?.connection === connection)
       this.entries.delete(key);
+  }
+  private forgetConnection(connection: AcpConnection): void {
+    for (const entry of this.connections)
+      if (entry.connection === connection) this.connections.delete(entry);
   }
   private retire(key: string, entry: Entry): void {
     this.entries.delete(key);
     void entry.connecting
       .then((connection) => connection.shutdown())
+      .finally(() => this.connections.delete(entry))
       .catch((cause: unknown) =>
         console.error(
           'Could not stop invalidated Agent',
@@ -108,7 +119,7 @@ class EngineAcpResources implements AcpResources {
       );
   }
   public isAgentInUse = (id: string): boolean =>
-    [...this.entries.values()].some(
+    [...this.connections].some(
       (entry) =>
         entry.agentId === id && (entry.pending > 0 || entry.connection.inUse),
     );
@@ -116,10 +127,17 @@ class EngineAcpResources implements AcpResources {
     for (const [key, entry] of this.entries)
       if (entry.agentId === agentId) this.retire(key, entry);
   };
+  public dropAgentConnections = (agentId: string): void => {
+    for (const [key, entry] of this.entries)
+      if (entry.agentId === agentId) this.entries.delete(key);
+  };
+  public isDirectoryInUse = (directory: string): boolean =>
+    [...this.connections].some((entry) => entry.directory === directory);
   public reserveAuthentication = (): (() => void) => () => {};
   public async shutdown(): Promise<void> {
     this.stopped = true;
-    const entries = [...this.entries.values()];
+    const entries = [...this.connections];
+    this.connections.clear();
     this.entries.clear();
     await Promise.allSettled(
       entries.map(async (entry) => (await entry.connecting).shutdown()),

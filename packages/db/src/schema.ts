@@ -12,3 +12,7 @@ export * from './schema/projects';
 export * from './schema/sessions';
 
 export * from './schema/sync-jobs';
+
+export * from './schema/agent-servers';
+
+export * from './schema/registry-cache';

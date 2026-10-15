@@ -7,12 +7,17 @@ import {
   type ActorRefFrom,
   type AnyActorRef,
 } from 'xstate';
-import { type AcpResources, type AcpResourceInput } from '../agents';
+import {
+  createAcpResources,
+  type AcpResources,
+  type AcpResourceInput,
+} from '../agents';
 import {
   type FetchAgents,
   AgentInstallations,
   type InstallPorts,
   syncSupervisorMachine,
+  registryMachine,
 } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import {
@@ -113,6 +118,7 @@ export const engineSetup = setup({
       ({ input }): Promise<void> => recoverEngineAfterRestart(input),
     ),
     syncSupervisor: syncSupervisorMachine,
+    registry: registryMachine,
     databaseWriter: writerMachine,
     sessions: openSessionsMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
@@ -133,6 +139,7 @@ export const engineSetup = setup({
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
     stopSync: sendTo('syncSupervisor', { type: 'sync.stop' }),
+    stopRegistry: sendTo('registry', { type: 'STOP' }),
     closeCommandAdmission: ({ context }): void =>
       context.commandAdmission.abort(),
     sendToSupervisor: (_, message: EngineMessage): void => {
@@ -189,3 +196,13 @@ export const stoppingLog = ({
 }: {
   event: EngineStop;
 }): EngineLogParameters => ({ line: `stopping: ${event.reason}` });
+
+export const createEngineContext = (input: EngineInput): EngineContext => ({
+  ...input,
+  database: null,
+  server: null,
+  failure: null,
+  acpResources: createAcpResources(input.acp),
+  installations: new AgentInstallations(input.home, input.installationPorts),
+  commandAdmission: new AbortController(),
+});

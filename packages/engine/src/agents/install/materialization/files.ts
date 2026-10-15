@@ -3,6 +3,9 @@ import { access, realpath, stat } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, win32 } from 'node:path';
 import { isInstallerRecordName } from '../processes/process-record';
 
+const launchAccessMode =
+  process.platform === 'win32' ? constants.F_OK : constants.X_OK;
+
 const requireUnreservedPath = (path: string): void => {
   const first = path.split(/[\\/]/).find((part) => part !== '' && part !== '.');
 
@@ -27,6 +30,7 @@ export const installationPath = (directory: string, path: string): string => {
 export const checkInstallationFile = async (
   directory: string,
   path: string,
+  executable = true,
 ): Promise<string> => {
   const file = await realpath(installationPath(directory, path));
   const within = relative(await realpath(directory), file);
@@ -34,10 +38,10 @@ export const checkInstallationFile = async (
 
   if (!(await stat(file)).isFile())
     throw new Error('Agent launch file is not a regular file');
-  await access(
-    file,
-    process.platform === 'win32' ? constants.F_OK : constants.X_OK,
-  );
+  await access(file, fileAccessMode(executable));
 
   return file;
 };
+
+const fileAccessMode = (executable: boolean): number =>
+  executable ? launchAccessMode : constants.F_OK;

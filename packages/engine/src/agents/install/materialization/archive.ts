@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { unzipSync } from 'fflate';
+import { gunzipSync, unzipSync } from 'fflate';
 import { extract, list } from 'tar';
 import type { InstallPorts } from '../ports';
 import {
@@ -120,7 +120,7 @@ const extractCompressed = async (
   if (/\.(tar|tar.gz|tgz)$/.test(extension))
     return extractTar(input.directory, join(input.directory, '.archive'));
 
-  return extractRaw(input, extension);
+  return extractFile(input, extension);
 };
 
 const extractBinary = async (input: BinaryInput): Promise<void> => {
@@ -132,17 +132,27 @@ const extractBinary = async (input: BinaryInput): Promise<void> => {
   return extractCompressed(input, extension);
 };
 
-export const materializeBinary = async (
+export const extractBinaryFiles = async (
   input: BinaryInput,
 ): Promise<string> => {
   verifyChecksum(input.recipe, input.bytes);
   await writeFile(join(input.directory, '.archive'), input.bytes);
   await extractBinary(input);
   input.signal.throwIfAborted();
-  await chmod(
-    installationPath(input.directory, input.recipe.cmd),
-    executableMode,
-  );
 
   return input.recipe.cmd;
 };
+
+export const materializeBinary = async (
+  input: BinaryInput,
+): Promise<string> => {
+  const cmd = await extractBinaryFiles(input);
+  await chmod(installationPath(input.directory, cmd), executableMode);
+
+  return cmd;
+};
+
+const extractFile = (input: BinaryInput, extension: string): Promise<void> =>
+  extension.endsWith('.gz')
+    ? writeEntry(input.directory, input.recipe.cmd, gunzipSync(input.bytes))
+    : extractRaw(input, extension);

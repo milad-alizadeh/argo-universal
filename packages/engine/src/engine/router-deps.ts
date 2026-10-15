@@ -64,7 +64,8 @@ type EngineSupplied =
   | 'createId'
   | 'checkAgentLaunch'
   | 'agentLogins'
-  | 'installations';
+  | 'installations'
+  | 'dropAgentConnections';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
@@ -105,16 +106,22 @@ function bindInstallations(
   });
 }
 
-function createAgentSetup(
-  input: AppRouterInput,
-): Pick<
+type AgentSetup = Pick<
   AppRouterDeps,
-  'installations' | 'agentLogins' | 'createId' | 'invalidateAgent'
-> {
+  | 'installations'
+  | 'agentLogins'
+  | 'createId'
+  | 'invalidateAgent'
+  | 'dropAgentConnections'
+>;
+
+function createAgentSetup(input: AppRouterInput): AgentSetup {
   const installations = input.installations ?? createInstallations(input.home);
 
   return {
     installations,
+    dropAgentConnections:
+      input.sessions.getSnapshot().context.acpResources.dropAgentConnections,
     invalidateAgent:
       input.sessions.getSnapshot().context.acpResources.invalidateAgent,
     agentLogins: resolveAgentLogins(input, installations),

@@ -1,5 +1,6 @@
 import {
   agents,
+  agentServers,
   syncJobs,
   blob,
   feedRow,
@@ -23,3 +24,5 @@ export const blobColumns = createSelectSchema(blob);
 export const agentColumns = createSelectSchema(agents);
 
 export const syncJobsColumns = createSelectSchema(syncJobs);
+
+export const agentServerColumns = createSelectSchema(agentServers);

@@ -110,3 +110,16 @@ const installNpm = async (input: PackageInput): Promise<string> => {
 
 export const materializePackage = (input: PackageInput): Promise<string> =>
   input.recipe.kind === 'npx' ? installNpm(input) : installUv(input);
+
+export const readNpmExecutable = async (
+  directory: string,
+  name: string,
+): Promise<string> => {
+  const folder = join(directory, 'node_modules', name);
+  const metadata = await readPackageMetadata(folder);
+
+  if (metadata.name !== name)
+    throw rejectInstallMetadata('Installed npm package name does not match');
+
+  return join(folder, selectedBin(metadata.bin, name));
+};
