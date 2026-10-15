@@ -30,6 +30,7 @@ export function scrollUp(feedScroll: HTMLElement, distance: number): void {
 export const scrollToTop = (feedScroll: HTMLElement): Promise<void> =>
   waitFor(async () => {
     scrollUp(feedScroll, feedScroll.clientHeight);
+    await afterTwoFrames();
     await expect(feedScroll.scrollTop).toBe(0);
   }, scrollAwayWait);
 
