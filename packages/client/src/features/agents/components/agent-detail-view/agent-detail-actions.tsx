@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { Button } from '#primitives/buttons/button';
 import type { ButtonProps } from '#primitives/buttons/button';
+import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
 import type { AgentStatus } from '../../state/agent-status';
@@ -66,17 +67,22 @@ function InstallationAction(
   );
 }
 
-// A destructive button with no card around it, and what removing does: small on wide windows, full width on a phone.
-export function RemoveAgent(
+/*
+ * A destructive button with no card around it, and what removing does: small on wide windows, full width on a phone.
+ * GroupedList takes it as a direct child, so this is called rather than rendered.
+ */
+export function removeAgent(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   if (props.agent.status === 'not-installed') return null;
 
   return (
-    <AgentRemoval
-      name={props.agent.name}
-      onRemove={props.onRemove}
-      busy={props.management?.busy}
-    />
+    <GroupedListContent key="remove">
+      <AgentRemoval
+        name={props.agent.name}
+        onRemove={props.onRemove}
+        busy={props.management?.busy}
+      />
+    </GroupedListContent>
   );
 }

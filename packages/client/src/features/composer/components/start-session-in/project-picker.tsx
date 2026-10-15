@@ -51,9 +51,7 @@ function ProjectResults(props: ProjectPickerProps): JSX.Element {
 
   return (
     <GroupedList fit>
-      <GroupedListSection>
-        <PhoneProjects {...props} />
-      </GroupedListSection>
+      <GroupedListSection>{phoneProjects(props)}</GroupedListSection>
     </GroupedList>
   );
 }
@@ -106,15 +104,13 @@ function projectChoiceProps(
   };
 }
 
-function PhoneProjects(props: ProjectPickerProps): JSX.Element {
-  return (
-    <>
-      {props.projects.map((project) => (
-        <ProjectChoice key={project.id} {...props} project={project} />
-      ))}
-      {props.projects.length === 0 && noMatch}
-    </>
-  );
+// A section takes each child as one row, so the rows are returned as elements, not one component.
+function phoneProjects(props: ProjectPickerProps): JSX.Element[] {
+  if (props.projects.length === 0) return [noMatch];
+
+  return props.projects.map((project) => (
+    <ProjectChoice key={project.id} {...props} project={project} />
+  ));
 }
 
 interface ProjectSearchProps {

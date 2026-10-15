@@ -6,9 +6,9 @@ import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import { ConfigurationDrill } from './configuration-drill';
+import { ConfigurationDrill, hasDrillOption } from './configuration-drill';
 import { ConfigurationPage } from './configuration-page';
-import { EffortControl, SwitchOptions } from './configuration-tuning';
+import { effortRow, switchRows } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 
@@ -63,17 +63,20 @@ function ConfigurationContents(props: ContentsProps): React.JSX.Element {
   );
 }
 
+// GroupedList takes its sections, and each section its rows, as direct children, so these are called rather than rendered.
 function ConfigurationFields(props: ContentsProps): React.JSX.Element {
   return (
-    <GroupedList fit={Platform.OS === 'web' || props.wide}>
-      {props.wide && (
-        <Text role="heading" aria-level={2} className="px-4 pt-1">
-          Configure
-        </Text>
-      )}
-      <ConfigurationDrills {...props} />
-      <ConfigurationTuning configuration={props.configuration} />
-    </GroupedList>
+    <PopoverHoverGroup>
+      <GroupedList fit={Platform.OS === 'web' || props.wide}>
+        {props.wide && (
+          <Text role="heading" aria-level={2} className="px-4 pt-1">
+            Configure
+          </Text>
+        )}
+        {configurationDrills(props)}
+        {configurationTuning(props.configuration)}
+      </GroupedList>
+    </PopoverHoverGroup>
   );
 }
 
@@ -92,43 +95,36 @@ function configurationNotice(
     : undefined;
 }
 
-function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
-  const notice = hasTuning(props.configuration)
-    ? undefined
-    : configurationNotice(props.configuration);
+const drillsNotice = (
+  configuration: ComposerConfigurationProps,
+): string | undefined =>
+  hasTuning(configuration) ? undefined : configurationNotice(configuration);
 
-  return (
-    <PopoverHoverGroup>
-      <GroupedListSection footer={notice}>
-        <ConfigurationDrillRows {...props} />
-      </GroupedListSection>
-    </PopoverHoverGroup>
-  );
-}
-
-function ConfigurationDrillRows(props: ContentsProps): React.JSX.Element {
+function configurationDrills(props: ContentsProps): React.JSX.Element {
   const drillProps = {
     configuration: props.configuration,
     onOpenPage: props.openPage,
   };
 
   return (
-    <>
+    <GroupedListSection footer={drillsNotice(props.configuration)}>
       <ConfigurationDrill {...drillProps} page="agent" />
-      <ConfigurationDrill {...drillProps} page="model" />
-    </>
+      {hasDrillOption({ ...drillProps, page: 'model' }) && (
+        <ConfigurationDrill {...drillProps} page="model" />
+      )}
+    </GroupedListSection>
   );
 }
 
-function ConfigurationTuning({
-  configuration,
-}: Pick<MenuProps, 'configuration'>): React.JSX.Element | null {
+function configurationTuning(
+  configuration: ComposerConfigurationProps,
+): React.JSX.Element | null {
   if (!hasTuning(configuration)) return null;
 
   return (
     <GroupedListSection footer={configurationNotice(configuration)}>
-      <SwitchOptions configuration={configuration} />
-      <EffortControl configuration={configuration} />
+      {switchRows(configuration)}
+      {effortRow(configuration)}
     </GroupedListSection>
   );
 }

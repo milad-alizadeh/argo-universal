@@ -27,12 +27,9 @@ interface PickerProps {
   page: 'agent' | 'model';
 }
 
-export function ConfigurationDrill(
-  props: DrillProps,
-): React.JSX.Element | null {
+// Always one row: a section takes each child as a row, so the caller leaves out a drill with nothing to choose (hasDrillOption).
+export function ConfigurationDrill(props: DrillProps): React.JSX.Element {
   const wide = isDesktopDrill(useWide());
-
-  if (!hasDrillOption(props)) return null;
   const row = configurationDrillRow({ ...props, wide });
 
   return wide ? <ConfigurationDrillPopover {...props} row={row} /> : row;
@@ -142,7 +139,10 @@ function ConfigurationPickerChoices({
   );
 }
 
-function hasDrillOption({ configuration, page }: DrillProps): boolean {
+export function hasDrillOption({
+  configuration,
+  page,
+}: Pick<DrillProps, 'configuration' | 'page'>): boolean {
   return page === 'agent' || !!selection(configuration, 'model');
 }
 

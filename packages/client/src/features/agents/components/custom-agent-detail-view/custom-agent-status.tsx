@@ -49,13 +49,16 @@ const FailedChip = (): React.JSX.Element => (
 const failureOf = (check: CustomAgentCheck): string | undefined =>
   check?.status === 'failed' ? check.failure : undefined;
 
-// The last ACP initialize: running, answered, or what failed and a row to run it again.
-export function ReadinessSection(props: StatusProps): React.JSX.Element {
+/*
+ * The last ACP initialize: running, answered, or what failed and a row to run it again.
+ * GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
+ */
+export function readinessSection(props: StatusProps): React.JSX.Element {
   const { check, onCheck, onSignIn } = props;
   const failure = failureOf(check);
 
   return (
-    <GroupedListSection title="Status" {...sectionFooter(failure)}>
+    <GroupedListSection key="status" title="Status" {...sectionFooter(failure)}>
       <StatusRow check={check} />
       {onSignIn && (
         <GroupedListItem label="Sign in" tone="accent" onPress={onSignIn} />

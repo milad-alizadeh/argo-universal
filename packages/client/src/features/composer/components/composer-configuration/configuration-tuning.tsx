@@ -19,8 +19,11 @@ interface SwitchProps extends TuningProps {
   option: BooleanOption;
 }
 
-export function EffortControl(props: TuningProps): React.JSX.Element | null {
-  const effort = currentEffort(props.configuration);
+// A section takes each of its children as one row, so the rows come from functions, not components that may render none or several.
+export function effortRow(
+  configuration: ComposerConfigurationProps,
+): React.JSX.Element | null {
+  const effort = currentEffort(configuration);
 
   if (!effort.option || !effort.selected) return null;
 
@@ -28,7 +31,7 @@ export function EffortControl(props: TuningProps): React.JSX.Element | null {
     <GroupedListItem
       label="Effort"
       value={effort.selected.name}
-      detail={<EffortSlider {...props} effort={effort} />}
+      detail={<EffortSlider configuration={configuration} effort={effort} />}
     />
   );
 }
@@ -62,14 +65,16 @@ function selectEffort(
     configuration.onConfigChange(effort.option.configId, choice.value);
 }
 
-export function SwitchOptions(props: TuningProps): React.JSX.Element {
-  return (
-    <>
-      {switches(props.configuration).map((option) => (
-        <ConfigurationSwitch key={option.configId} {...props} option={option} />
-      ))}
-    </>
-  );
+export function switchRows(
+  configuration: ComposerConfigurationProps,
+): React.JSX.Element[] {
+  return switches(configuration).map((option) => (
+    <ConfigurationSwitch
+      key={option.configId}
+      configuration={configuration}
+      option={option}
+    />
+  ));
 }
 
 function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {

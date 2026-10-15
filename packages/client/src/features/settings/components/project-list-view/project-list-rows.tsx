@@ -26,7 +26,7 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
   return (
     <View className="flex-1 pt-2 wide:pt-0">
       <GroupedList search={listSearch(props)}>
-        <ProjectRows {...props} found={found} searching={query !== ''} />
+        {projectSection({ ...props, found, searching: query !== '' })}
       </GroupedList>
     </View>
   );
@@ -35,14 +35,8 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
 const countTitle = (count: number): string =>
   count === 1 ? '1 Project' : `${count} Projects`;
 
-function ProjectRows(props: FoundProps): React.JSX.Element {
-  if (props.found.length === 0)
-    return <NoProjects searching={props.searching} />;
-
-  return <FoundProjects {...props} />;
-}
-
-function NoProjects({ searching }: { searching: boolean }): React.JSX.Element {
+// GroupedList takes its section as a direct child, so this is called rather than rendered.
+function noProjectsSection(searching: boolean): React.JSX.Element {
   return (
     <GroupedListSection>
       <GroupedListItem
@@ -52,10 +46,13 @@ function NoProjects({ searching }: { searching: boolean }): React.JSX.Element {
   );
 }
 
-function FoundProjects({
+function projectSection({
   found,
+  searching,
   onOpenProject,
 }: FoundProps): React.JSX.Element {
+  if (found.length === 0) return noProjectsSection(searching);
+
   return (
     <GroupedListSection title={countTitle(found.length)}>
       {found.map((project) => (

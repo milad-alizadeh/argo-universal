@@ -25,6 +25,14 @@ export function GroupedListSection(
   );
 }
 
+// The section as GroupedList's native list takes it; the web renders the component as it is.
+export function fieldSection(
+  props: GroupedListSectionProps,
+  key?: React.Key,
+): React.JSX.Element {
+  return <GroupedListSection key={key} {...props} />;
+}
+
 function SectionRows(
   props: GroupedListSectionProps & { footerId: string },
 ): React.JSX.Element {

@@ -16,18 +16,21 @@ const statusFooters: Partial<
 
 const signInFooter = 'Run this in a terminal on the Server, then check again.';
 
-// Where an installed Agent stands, when the chip alone does not say what to do.
-export function AgentStatusSection(
+/*
+ * Where an installed Agent stands, when the chip alone does not say what to do.
+ * GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
+ */
+export function agentStatusSection(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   const { status } = props.agent;
 
-  if (status === 'sign-in') return <SignInSection {...props} />;
+  if (status === 'sign-in') return signInSection(props);
 
-  return statusFooters[status] ? <StatusRow {...props} /> : null;
+  return statusFooters[status] ? statusSection(props) : null;
 }
 
-function StatusRow({ agent }: AgentProps): React.JSX.Element {
+function statusSection({ agent }: AgentProps): React.JSX.Element {
   const tone = statusTone(agent.status);
 
   return (
@@ -46,7 +49,7 @@ function StatusRow({ agent }: AgentProps): React.JSX.Element {
  * step and a fresh probe. The step is prose ("Run codex login and sign in…"),
  * not a bare command, so it reads as body text rather than code.
  */
-function SignInSection(props: AgentDetailViewProps): React.JSX.Element {
+function signInSection(props: AgentDetailViewProps): React.JSX.Element {
   return (
     <GroupedListSection
       title="Status"
@@ -56,17 +59,13 @@ function SignInSection(props: AgentDetailViewProps): React.JSX.Element {
         label="Not signed in"
         status={{ tone: 'warning', label: '' }}
       />
-      <SignInAction {...props} />
+      {signInAction(props)}
       <CheckAgainRow onPress={props.onCheckAgain} />
     </GroupedListSection>
   );
 }
 
-function SignInCommand({
-  command,
-}: {
-  command?: string;
-}): React.JSX.Element | null {
+function signInCommand(command: string | undefined): React.JSX.Element | null {
   if (!command) return null;
 
   return (
@@ -79,13 +78,13 @@ function SignInCommand({
   );
 }
 
-function SignInAction(props: AgentDetailViewProps): React.JSX.Element | null {
+function signInAction(props: AgentDetailViewProps): React.JSX.Element | null {
   if (props.onSignIn)
     return (
       <GroupedListItem label="Sign in" tone="accent" onPress={props.onSignIn} />
     );
 
-  return <SignInCommand command={props.agent.signInCommand} />;
+  return signInCommand(props.agent.signInCommand);
 }
 
-export { AboutSection } from './agent-about-section';
+export { aboutSection } from './agent-about-section';

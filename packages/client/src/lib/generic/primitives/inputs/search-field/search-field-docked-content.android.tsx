@@ -29,17 +29,21 @@ export function DockedSearchFieldContent(
 ): React.JSX.Element {
   return (
     <Row alignment="center" {...usePill()}>
-      <Column
-        alignment="center"
-        style={{
-          width: leadingSlot[props.leading],
-          height: useIconPixels('action'),
-        }}
-      >
-        <NativeSymbol name="search" role="action" muted />
-      </Column>
+      <SearchIcon leading={props.leading} />
       <SearchText {...props} />
     </Row>
+  );
+}
+
+function SearchIcon({
+  leading,
+}: Pick<DockedSearchQuery, 'leading'>): React.JSX.Element {
+  const height = useIconPixels('action');
+
+  return (
+    <Column alignment="center" style={{ width: leadingSlot[leading], height }}>
+      <NativeSymbol name="search" role="action" muted />
+    </Column>
   );
 }
 

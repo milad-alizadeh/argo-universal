@@ -1,5 +1,4 @@
-import { Column, FieldGroup, Text, type TextProps } from '@expo/ui';
-import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
+import { FieldGroup, Text, type TextProps } from '@expo/ui';
 import {
   accessibilityAddTraits,
   foregroundStyle,
@@ -7,9 +6,6 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { useResolveClassNames } from 'uniwind';
-import type { TextRole } from '#primitives/display/text';
-import { useSidebarList } from '#primitives/fields/field-layout';
 import {
   useSwiftUITextModifiers,
   useUniversalTextStyle,
@@ -19,47 +15,45 @@ import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 import { GroupedListSection as WebGroupedListSection } from './grouped-list-section.tsx';
 
-const gutter = 16;
-
-const captionPadding = 4;
-
-const captionGap = 8;
-
 const ios = Platform.OS === 'ios';
 
 export function GroupedListSection(
   props: GroupedListSectionProps,
 ): React.JSX.Element {
-  const bare = useBareSection(props);
-
   if (useWide()) return <WebGroupedListSection {...props} />;
 
-  return bare ? <BareSection {...props} /> : <Section {...props} />;
-}
-
-// Android's Section puts every row on a filled tile; bare fields and a flat sidebar want none.
-function useBareSection(props: GroupedListSectionProps): boolean {
-  const sidebar = useSidebarList();
-
-  return !ios && (!!props.textFields || sidebar);
+  return fieldSection(props);
 }
 
 /*
+ * The stock FieldGroup.Section. Android's FieldGroup knows a section only by its element type, and
+ * wraps anything else in an implicit section card (@expo/ui 57 FieldGroup/groupChildren.tsx), so
+ * GroupedList swaps each GroupedListSection child for this element. The section makes each of its
+ * children one row (FieldSectionSlots.tsx), so rows are its direct children.
+ *
  * Increased prominence keeps an iOS header in title case, as Paper's is; without it Form uppercases
  * the header. It changes no separator, row fill or page colour; the header sets its own font.
  */
-function Section(props: GroupedListSectionProps): React.JSX.Element {
+export function fieldSection(
+  props: GroupedListSectionProps,
+  key?: React.Key,
+): React.JSX.Element {
   return (
-    <FieldGroup.Section
-      title={ios ? undefined : props.title}
-      modifiers={ios ? [headerProminence('increased')] : undefined}
-    >
+    <FieldGroup.Section key={key} {...sectionTitle(props.title)}>
       {headerSlot(props.title)}
       {footerSlot(props)}
       {props.children}
     </FieldGroup.Section>
   );
 }
+
+// iOS sets the title in its header slot; Android's Section draws the plain title itself.
+const sectionTitle = (
+  title: string | undefined,
+): Pick<
+  React.ComponentProps<typeof FieldGroup.Section>,
+  'title' | 'modifiers'
+> => (ios ? { modifiers: [headerProminence('increased')] } : { title });
 
 // The Section finds its header and footer by the slot element's type, so these are called, not rendered as components.
 function headerSlot(title: string | undefined): React.ReactNode {
@@ -79,50 +73,6 @@ function footerSlot(props: GroupedListSectionProps): React.ReactNode {
     <FieldGroup.SectionFooter>
       <FooterText text={props.footer} tone={props.tone} />
     </FieldGroup.SectionFooter>
-  );
-}
-
-/*
- * Android's text fields stand bare, apart by Material's field spacing, each saying its own hint or
- * error, so the section draws no footer; a sidebar's rows sit flat and together.
- */
-function BareSection(props: GroupedListSectionProps): React.JSX.Element {
-  const footer = props.textFields ? undefined : props.footer;
-
-  return (
-    <Column spacing={captionGap} modifiers={fullWidth}>
-      <Caption text={props.title} textRole="heading" />
-      <Column spacing={useRowGap(props.textFields)} modifiers={fullWidth}>
-        {props.children}
-      </Column>
-      <Caption text={footer} textRole="secondary" />
-    </Column>
-  );
-}
-
-const fullWidth = [fillMaxWidth()];
-
-function useRowGap(textFields: boolean | undefined): number {
-  const { gap } = useResolveClassNames('gap-4');
-
-  return textFields && typeof gap === 'number' ? gap : 0;
-}
-
-function Caption(props: {
-  text?: string;
-  textRole: TextRole;
-}): React.JSX.Element | null {
-  const textStyle = useUniversalTextStyle(props.textRole);
-
-  if (!props.text) return null;
-
-  return (
-    <Text
-      textStyle={textStyle}
-      modifiers={[padding(gutter, captionPadding, gutter, captionPadding)]}
-    >
-      {props.text}
-    </Text>
   );
 }
 

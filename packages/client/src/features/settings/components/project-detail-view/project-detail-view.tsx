@@ -8,8 +8,8 @@ import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { homePath } from '../../state/home-path';
-import { NewSessionsSection } from './project-detail-new-sessions';
-import { RemoveProject } from './project-detail-remove';
+import { newSessionsSection } from './project-detail-new-sessions';
+import { removeProject } from './project-detail-remove';
 
 export type ProjectLoad =
   | { status: 'loading' }
@@ -107,8 +107,8 @@ function ProjectSections({
         {deviceRow(otherDevice)}
         <GroupedListItem icon="folder" label={homePath(project.path)} />
       </GroupedListSection>
-      <NewSessionsSection project={project} />
-      <RemoveProject />
+      {newSessionsSection({ project })}
+      {removeProject()}
     </GroupedList>
   );
 }

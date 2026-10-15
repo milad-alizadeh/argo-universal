@@ -7,20 +7,20 @@ import type { AgentManagement } from '../../state/agent-management-types';
 
 type ManagementProps = { management?: AgentManagement };
 
-export function AgentEnablement({
-  management,
-}: ManagementProps): React.JSX.Element | null {
-  return management ? <EnablementSection management={management} /> : null;
-}
+// GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
+const availability = {
+  title: 'Availability',
+  footer:
+    'Disabled Agents cannot start new Sessions. Open Sessions keep working.',
+};
 
-type EnabledProps = { management: AgentManagement };
+export function agentEnablement(
+  management: AgentManagement | undefined,
+): React.JSX.Element | null {
+  if (!management) return null;
 
-function EnablementSection({ management }: EnabledProps): React.JSX.Element {
   return (
-    <GroupedListSection
-      title="Availability"
-      footer="Disabled Agents cannot start new Sessions. Open Sessions keep working."
-    >
+    <GroupedListSection {...availability}>
       <GroupedListItem
         label="Enabled"
         accessory={<EnablementSwitch management={management} />}

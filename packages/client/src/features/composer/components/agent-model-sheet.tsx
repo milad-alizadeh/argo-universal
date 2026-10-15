@@ -32,8 +32,6 @@ export function AgentModelSheetSettings({
 interface AgentModelSheetChoicesProps {
   page: 'agent' | 'model';
   onDone: () => void;
-  // The sheet sizes itself to this page.
-  onContentHeightChange: (height: number) => void;
 }
 
 export function AgentModelSheetChoices(

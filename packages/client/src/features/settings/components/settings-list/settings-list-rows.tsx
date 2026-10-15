@@ -9,17 +9,14 @@ type Selection = Pick<SettingsListProps, 'selectedDestination' | 'onSelect'>;
 
 type RowsProps = Selection & { rows: SettingsRow[] };
 
-export function SettingsRows({
+// A section takes each child as one row, so the rows are returned as elements, not one component.
+export function settingsRowItems({
   rows,
   ...selection
-}: RowsProps): React.JSX.Element {
-  return (
-    <>
-      {rows.map((row) => (
-        <SettingsRowItem key={row.label} row={row} {...selection} />
-      ))}
-    </>
-  );
+}: RowsProps): React.JSX.Element[] {
+  return rows.map((row) => (
+    <SettingsRowItem key={row.label} row={row} {...selection} />
+  ));
 }
 
 function SettingsRowItem({

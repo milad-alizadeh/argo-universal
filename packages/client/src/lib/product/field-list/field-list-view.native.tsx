@@ -14,30 +14,19 @@ export type { FieldListProps, FieldListSection } from './field-list-view.tsx';
  * A phone draws the sections in GroupedList's native list: a SwiftUI Form on iOS, which renders
  * its rows lazily, and Compose on Android. A wide window shares the web's virtualised list.
  */
+const sectionKey = (section: FieldListSection, index: number): string =>
+  section.title ?? `section-${index}`;
+
 export function FieldList(props: FieldListProps): React.JSX.Element {
   if (useWide()) return <VirtualFieldList {...props} />;
 
   return (
     <GroupedList search={props.search}>
       {props.sections.map((section, index) => (
-        <NativeGroupedListSection
-          key={section.title ?? `section-${index}`}
-          section={section}
-        />
+        <GroupedListSection key={sectionKey(section, index)} {...section}>
+          {section.rows}
+        </GroupedListSection>
       ))}
     </GroupedList>
-  );
-}
-
-function NativeGroupedListSection(props: {
-  section: FieldListSection;
-}): React.JSX.Element {
-  return (
-    <GroupedListSection
-      title={props.section.title}
-      footer={props.section.footer}
-    >
-      {props.section.rows}
-    </GroupedListSection>
   );
 }

@@ -1,5 +1,6 @@
 import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import {
   type FieldErrors,
   errorMessage,
@@ -27,7 +28,7 @@ const executableInput = {
 const touchedErrors = (meta: FieldMeta): FieldErrors =>
   meta?.isTouched ? meta.errors : [];
 
-function useProgramError(form: CustomAgentFormApi): string | undefined {
+export function useProgramError(form: CustomAgentFormApi): string | undefined {
   return useStore(form.store, ({ fieldMeta }) =>
     errorMessage([
       ...touchedErrors(fieldMeta.name),
@@ -36,14 +37,20 @@ function useProgramError(form: CustomAgentFormApi): string | undefined {
   );
 }
 
-// The name and the program; the footer gives the program's hint until a field has an error. Android puts each under its field.
-export function ProgramSection(props: FormPartProps): React.JSX.Element {
+/*
+ * The name and the program; the footer gives the program's hint until a field has an error. Android's field says each under itself, so its section has no footer.
+ * GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
+ */
+const programFooter = (
+  error: string | undefined,
+): ReturnType<typeof sectionFooter> =>
+  Platform.OS === 'android' ? {} : sectionFooter(error, executableHint);
+
+export function programSection(
+  props: FormPartProps & { error: string | undefined },
+): React.JSX.Element {
   return (
-    <GroupedListSection
-      textFields
-      title="Program"
-      {...sectionFooter(useProgramError(props.form), executableHint)}
-    >
+    <GroupedListSection title="Program" {...programFooter(props.error)}>
       <NameField {...props} />
       <ExecutableField {...props} />
     </GroupedListSection>

@@ -54,29 +54,21 @@ function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-content">
       <GroupedList fit>
-        <GroupedListSection>
-          <ComposerAttachItems {...menu} />
-        </GroupedListSection>
+        <GroupedListSection>{attachItems(menu)}</GroupedListSection>
       </GroupedList>
     </View>
   );
 }
 
-function ComposerAttachItems({
-  layout,
-  close,
-}: AttachMenuProps): React.JSX.Element {
+// A section takes each child as one row, so the rows are returned as elements, not one component.
+function attachItems({ layout, close }: AttachMenuProps): React.JSX.Element[] {
   const choices = layout.wide
     ? wideChoices(layout.props)
     : phoneChoices(layout.props);
 
-  return (
-    <>
-      {choices.map((item) => (
-        <ComposerAttachItem key={item.label} item={item} close={close} />
-      ))}
-    </>
-  );
+  return choices.map((item) => (
+    <ComposerAttachItem key={item.label} item={item} close={close} />
+  ));
 }
 
 type WideAttachChoices = Pick<

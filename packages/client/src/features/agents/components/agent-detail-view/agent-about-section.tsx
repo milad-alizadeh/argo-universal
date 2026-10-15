@@ -1,14 +1,13 @@
 import type * as React from 'react';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type {
   AgentDetail,
   AgentDetailViewProps,
 } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
 import { AgentAction } from './agent-detail-actions';
-import { AgentLinks } from './agent-links';
+import { agentLinks } from './agent-links';
 
 type AgentProps = { agent: AgentDetail };
 
@@ -19,27 +18,32 @@ const hasAbout = ({ agent }: AgentProps): boolean =>
 const registrySource = (agent: AgentDetail): string | undefined =>
   agent.status === 'not-installed' ? 'ACP Registry' : undefined;
 
-// Where the Agent comes from: its registry version, how the Server installs it, and its links.
-export function AboutSection(
+/*
+ * Where the Agent comes from: its registry version, how the Server installs it, and its links.
+ * GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
+ */
+export function aboutSection(
   props: AgentDetailViewProps,
+  wide: boolean,
 ): React.JSX.Element | null {
   const { agent } = props;
 
   if (!hasAbout({ agent })) return null;
 
   return (
-    <GroupedListSection title="About">
-      <AboutRow title="Source" value={registrySource(agent)} />
-      <VersionRow {...props} />
-      <AboutRow title="Distribution" value={agent.distribution} />
-      <AgentLinks links={agent.links} />
+    <GroupedListSection key="about" title="About">
+      {aboutRow('Source', registrySource(agent))}
+      {versionRow(props, wide)}
+      {aboutRow('Distribution', agent.distribution)}
+      {agentLinks(agent.links)}
     </GroupedListSection>
   );
 }
 
-function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
-  const wide = useWide();
-
+function versionRow(
+  props: AgentDetailViewProps,
+  wide: boolean,
+): React.JSX.Element | null {
   if (!props.agent.version) return null;
 
   return (
@@ -51,13 +55,13 @@ function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
   );
 }
 
-function AboutRow(props: {
-  title: string;
-  value?: string;
-}): React.JSX.Element | null {
-  if (!props.value) return null;
+function aboutRow(
+  title: string,
+  value: string | undefined,
+): React.JSX.Element | null {
+  if (!value) return null;
 
-  return <GroupedListItem label={props.title} value={props.value} />;
+  return <GroupedListItem label={title} value={value} />;
 }
 
 const versionAccessory = (

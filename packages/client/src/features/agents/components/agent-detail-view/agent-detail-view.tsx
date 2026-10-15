@@ -9,16 +9,16 @@ import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { AgentDetailViewProps } from '../../state/agent-detail-types';
 import { installationActive } from '../../state/agent-install-phase';
 import { agentStatusLabels, statusTone } from '../../state/agent-status';
-import { AgentIdentity } from '../agent-identity';
+import { agentIdentity } from '../agent-identity';
 import { useInstallToast } from '../agent-install-control/use-install-toast';
 import {
-  AgentEnablement,
   AgentManagementFailure,
+  agentEnablement,
 } from '../agent-management/agent-management';
 import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
-import { AgentAction, RemoveAgent } from './agent-detail-actions';
-import { AboutSection, AgentStatusSection } from './agent-detail-sections';
+import { AgentAction, removeAgent } from './agent-detail-actions';
+import { aboutSection, agentStatusSection } from './agent-detail-sections';
 
 export type { AgentDetailViewProps } from '../../state/agent-detail-types';
 
@@ -54,13 +54,17 @@ function AgentStatusChip({
   );
 }
 
-function DetailIdentity(props: AgentDetailViewProps): React.JSX.Element {
-  return (
-    <AgentIdentity
-      logo={<AgentIcon {...props} />}
-      description={props.agent.description ?? ''}
-      trailing={<IdentityTrailing {...props} />}
-    />
+function detailIdentity(
+  props: AgentDetailViewProps,
+  wide: boolean,
+): React.JSX.Element | null {
+  return agentIdentity(
+    {
+      logo: <AgentIcon {...props} />,
+      description: props.agent.description ?? '',
+      trailing: <IdentityTrailing {...props} />,
+    },
+    wide,
   );
 }
 
@@ -85,36 +89,44 @@ function AgentIcon({ agent }: AgentDetailViewProps): React.JSX.Element {
   return <RegistryIcon uri={agent.icon} agentName={agent.name} role="title" />;
 }
 
+// GroupedList takes its sections as direct children, so each one is called rather than rendered.
 function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
+  const wide = useWide();
+
   return (
     <GroupedList>
-      <DetailIdentity {...props} />
-      <PhoneSummary {...props} />
-      <AgentStatusSection {...props} />
-      <AgentEnablement management={props.management} />
-      <AboutSection {...props} />
-      <GroupedListContent>
-        <RemoveAgent {...props} />
-      </GroupedListContent>
+      {detailIdentity(props, wide)}
+      {phoneSummary(props, wide)}
+      {agentStatusSection(props)}
+      {agentEnablement(props.management)}
+      {aboutSection(props, wide)}
+      {removeAgent(props)}
     </GroupedList>
   );
 }
 
 // A phone's native header shows only the name, so Paper's hero opens the page: icon tile, chip, description, action.
-function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
-  const { agent } = props;
-
-  if (useWide()) return null;
+function phoneSummary(
+  props: AgentDetailViewProps,
+  wide: boolean,
+): React.JSX.Element | null {
+  if (wide) return null;
 
   return (
     <GroupedListContent>
-      <View className="items-center gap-3">
-        <PhoneIconTile {...props} />
-        <AgentStatusChip agent={agent} />
-        <PhoneDescription description={agent.description} />
-        <AgentAction {...props} fullWidth="narrow" />
-      </View>
+      <PhoneSummary {...props} />
     </GroupedListContent>
+  );
+}
+
+function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element {
+  return (
+    <View className="items-center gap-3">
+      <PhoneIconTile {...props} />
+      <AgentStatusChip agent={props.agent} />
+      <PhoneDescription description={props.agent.description} />
+      <AgentAction {...props} fullWidth="narrow" />
+    </View>
   );
 }
 

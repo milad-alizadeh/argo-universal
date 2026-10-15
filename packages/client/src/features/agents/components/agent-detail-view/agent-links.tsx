@@ -7,10 +7,13 @@ import type { AgentDetail } from '../../state/agent-detail-types';
 
 type AgentLink = NonNullable<AgentDetail['links']>[number];
 
-// The registry entry's GitHub, Licence and Website links, each opening outside the App.
-export function AgentLinks({
-  links,
-}: Pick<AgentDetail, 'links'>): React.JSX.Element | null {
+/*
+ * The registry entry's GitHub, Licence and Website links, each opening outside the App.
+ * A section takes each child as one row, so this is called rather than rendered, to leave no empty row.
+ */
+export function agentLinks(
+  links: AgentDetail['links'],
+): React.JSX.Element | null {
   if (!links?.length) return null;
 
   return (

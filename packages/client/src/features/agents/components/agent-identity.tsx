@@ -2,7 +2,6 @@ import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../../lib/generic/use-wide/use-wide';
 
 export interface AgentIdentityProps {
   logo: ReactElement;
@@ -11,14 +10,18 @@ export interface AgentIdentityProps {
   trailing: ReactElement;
 }
 
-// A wide window's first card on an Agent page, under a header that names the Agent alone; a phone opens on its centred summary instead.
-export function AgentIdentity(
+/*
+ * A wide window's first card on an Agent page, under a header that names the Agent alone; a phone opens on its centred summary instead.
+ * GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
+ */
+export function agentIdentity(
   props: AgentIdentityProps,
+  wide: boolean,
 ): React.JSX.Element | null {
-  if (!useWide()) return null;
+  if (!wide) return null;
 
   return (
-    <GroupedListSection>
+    <GroupedListSection key="identity">
       <IdentityRow {...props} />
     </GroupedListSection>
   );

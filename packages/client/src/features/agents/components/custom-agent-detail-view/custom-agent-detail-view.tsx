@@ -5,21 +5,23 @@ import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Icon } from '#primitives/display/icon';
 import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListContent } from '#primitives/lists/grouped-list-content';
+import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SubmitCustomAgent } from '../../hooks/use-custom-agent-form';
 import { customAgentDescription } from '../../state/agent-list';
 import type { AgentManagement } from '../../state/agent-management-types';
-import { AgentIdentity } from '../agent-identity';
+import { agentIdentity } from '../agent-identity';
 import {
-  AgentEnablement,
   AgentManagementFailure,
+  agentEnablement,
 } from '../agent-management/agent-management';
 import { AgentRemoval } from '../agent-management/agent-removal';
 import { AgentPlaceholder } from '../agent-placeholder';
 import { CustomAgentForm } from '../custom-agent-form/custom-agent-form';
-import { LaunchSections } from '../custom-agent-launch';
+import { launchSections } from '../custom-agent-launch';
 import { PhoneTitle } from '../phone-title';
 import type { CustomAgentCheck } from './custom-agent-status';
-import { ReadinessChip, ReadinessSection } from './custom-agent-status';
+import { ReadinessChip, readinessSection } from './custom-agent-status';
 
 export type CustomAgentDetailViewProps = {
   agentId: string;
@@ -70,31 +72,33 @@ function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
 }
 
 // The generic Agent glyph stands in for the logo a custom Agent lacks.
-function CustomAgentIdentity({
-  check,
-}: Pick<SettingsProps, 'check'>): React.JSX.Element {
-  return (
-    <AgentIdentity
-      logo={<Icon name="agent" role="title" className="text-foreground" />}
-      description={customAgentDescription}
-      trailing={<ReadinessChip check={check} />}
-    />
+function customAgentIdentity(
+  check: SettingsProps['check'],
+  wide: boolean,
+): React.JSX.Element | null {
+  return agentIdentity(
+    {
+      logo: <Icon name="agent" role="title" className="text-foreground" />,
+      description: customAgentDescription,
+      trailing: <ReadinessChip check={check} />,
+    },
+    wide,
   );
 }
 
 // The identity card and the Status, then the launch values; Edit turns the values into the form, under the same Status.
 function CustomAgentContent(props: SettingsProps): React.JSX.Element {
   const [editing, onEditing] = useState(false);
+  const wide = useWide();
 
-  // A list rather than a fragment, so a native group still sees each section.
+  // GroupedList takes its sections as direct children, so each one is called rather than rendered.
   const status = [
-    <CustomAgentIdentity key="identity" check={props.check} />,
-    <ReadinessSection
-      key="status"
-      check={props.check}
-      onCheck={props.onCheck}
-      onSignIn={props.onSignIn}
-    />,
+    customAgentIdentity(props.check, wide),
+    readinessSection({
+      check: props.check,
+      onCheck: props.onCheck,
+      onSignIn: props.onSignIn,
+    }),
   ];
 
   const content = { ...props, status, onEditing };
@@ -106,26 +110,28 @@ function LaunchView(props: ContentProps): React.JSX.Element {
   return (
     <GroupedList>
       {props.status}
-      <LaunchSections
-        definition={props.definition}
-        onEdit={() => props.onEditing(true)}
-      />
-      <AgentEnablement management={props.management} />
-      <CustomRemoval {...props} />
+      {launchSections({
+        definition: props.definition,
+        onEdit: () => props.onEditing(true),
+      })}
+      {agentEnablement(props.management)}
+      {customRemoval(props)}
     </GroupedList>
   );
 }
 
-function CustomRemoval(props: SettingsProps): React.JSX.Element | null {
+function customRemoval(props: SettingsProps): React.JSX.Element | null {
   if (!props.management) return null;
 
   return (
-    <AgentRemoval
-      name={props.definition.name}
-      custom
-      onRemove={props.management.onRemove}
-      busy={props.management.busy}
-    />
+    <GroupedListContent key="remove">
+      <AgentRemoval
+        name={props.definition.name}
+        custom
+        onRemove={props.management.onRemove}
+        busy={props.management.busy}
+      />
+    </GroupedListContent>
   );
 }
 

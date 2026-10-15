@@ -82,7 +82,7 @@ function InSection(props: ExampleProps): React.JSX.Element {
   if (props.variant === 'standalone') return <Example {...props} />;
 
   return (
-    <GroupedListSection footer={failure} tone="danger" textFields>
+    <GroupedListSection footer={failure} tone="danger">
       <Example {...props} />
     </GroupedListSection>
   );

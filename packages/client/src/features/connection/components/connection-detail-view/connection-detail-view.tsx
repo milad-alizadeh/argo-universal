@@ -27,6 +27,8 @@ export function ConnectionDetailView({
 }: {
   server: ServerDetails;
 }): React.JSX.Element {
+  useServerErrorToast(server);
+
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
       <SettingsPage
@@ -35,7 +37,7 @@ export function ConnectionDetailView({
       >
         <GroupedList>
           <GroupedListSection title="Server">
-            <ServerRows server={server} />
+            {serverRows(server)}
           </GroupedListSection>
         </GroupedList>
       </SettingsPage>
@@ -44,7 +46,7 @@ export function ConnectionDetailView({
 }
 
 // A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
-function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
+function useServerErrorToast(server: ServerDetails): void {
   useErrorToast(
     server.status === 'error'
       ? {
@@ -53,24 +55,35 @@ function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
         }
       : undefined,
   );
-
-  if (server.status !== 'loaded') {
-    return <GroupedListItem label="Connecting to the Server…" loading />;
-  }
-
-  return <LoadedRows server={server} />;
 }
 
-function LoadedRows({ server }: { server: LoadedServer }): React.JSX.Element {
-  return (
-    <>
-      <GroupedListItem label="Version" value={server.version} />
+// A section takes each child as one row, so the rows are returned as elements, not one component.
+function serverRows(server: ServerDetails): React.JSX.Element[] {
+  if (server.status !== 'loaded')
+    return [
       <GroupedListItem
-        label="Started"
-        value={formatServerStart(server.startedAt, server.clock)}
-      />
-      <GroupedListItem label="PID" value={String(server.pid)} />
-      <GroupedListItem label="Clock" value={formatServerClock(server.clock)} />
-    </>
-  );
+        key="connecting"
+        label="Connecting to the Server…"
+        loading
+      />,
+    ];
+
+  return loadedRows(server);
+}
+
+function loadedRows(server: LoadedServer): React.JSX.Element[] {
+  return [
+    <GroupedListItem key="version" label="Version" value={server.version} />,
+    <GroupedListItem
+      key="started"
+      label="Started"
+      value={formatServerStart(server.startedAt, server.clock)}
+    />,
+    <GroupedListItem key="pid" label="PID" value={String(server.pid)} />,
+    <GroupedListItem
+      key="clock"
+      label="Clock"
+      value={formatServerClock(server.clock)}
+    />,
+  ];
 }

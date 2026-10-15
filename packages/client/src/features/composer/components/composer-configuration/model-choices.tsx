@@ -43,10 +43,7 @@ function GroupedModelChoices(props: ModelChoicesProps): React.JSX.Element {
   const choices = configurationChoices(selection(props.configuration, 'model'));
 
   return (
-    <GroupedList
-      fit={Platform.OS === 'web'}
-      onContentHeightChange={props.onContentHeightChange}
-    >
+    <GroupedList fit={Platform.OS === 'web'}>
       <GroupedListSection>
         {choices.map((choice) => (
           <ModelChoice key={choice.value} choice={choice} {...props} />

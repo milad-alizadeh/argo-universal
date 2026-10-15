@@ -2,6 +2,7 @@ import {
   AppProviders,
   PortalHost,
   FormSheetProvider,
+  GroupedPageContext,
   type LeaveGuard,
   type Navigate,
   type NativeSheets,
@@ -25,6 +26,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
 import { formSheetRoutes } from '@/navigation/form-sheet';
+import { useGroupedPage } from '@/navigation/grouped-page';
 import { hrefFor, paramsOf } from '@/navigation/routes';
 
 export {
@@ -141,7 +143,9 @@ function RootNavigator(): React.JSX.Element {
     <NavigationProvider navigate={navigate} leaveGuard={useLeaveGuard}>
       <NativeSheetsProvider value={nativeSheets}>
         <FormSheetProvider routes={formSheetRoutes}>
-          <RootStack />
+          <GroupedPageContext value={useGroupedPage}>
+            <RootStack />
+          </GroupedPageContext>
         </FormSheetProvider>
       </NativeSheetsProvider>
     </NavigationProvider>

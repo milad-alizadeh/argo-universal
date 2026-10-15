@@ -20,14 +20,17 @@ type ChoiceProps = { choice: ProjectInfo['checkoutChoice'] };
 
 type PickerRowProps = Pick<PickerProps<string>, 'label' | 'value' | 'options'>;
 
-// Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
-export function NewSessionsSection({
+/*
+ * Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
+ * GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
+ */
+export function newSessionsSection({
   project,
 }: ProjectProps): React.JSX.Element {
   return (
     <GroupedListSection title="New Sessions" footer={newSessionsFooter}>
       <StartInRow choice={project.checkoutChoice} />
-      <BaseBranchRow choice={project.checkoutChoice} />
+      {baseBranchRow(project.checkoutChoice)}
       <ArchiveRow />
     </GroupedListSection>
   );
@@ -56,7 +59,9 @@ function StartInRow({ choice }: ChoiceProps): React.JSX.Element {
   );
 }
 
-function BaseBranchRow({ choice }: ChoiceProps): React.JSX.Element | null {
+function baseBranchRow(
+  choice: ChoiceProps['choice'],
+): React.JSX.Element | null {
   if (choice.type !== 'worktree') return null;
 
   return (

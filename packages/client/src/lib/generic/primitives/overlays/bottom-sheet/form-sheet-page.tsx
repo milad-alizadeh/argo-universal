@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { pageSurface } from '#primitives/native/surface';
+import { pageSurface, sheetSurfaceStyle } from '#primitives/native/surface';
 import { BottomSheetContent } from './bottom-sheet-content';
 import {
   SheetNavigationProvider,
@@ -32,7 +32,10 @@ export function FormSheetRoot(props: PageProps): ReactElement | null {
 
 function SheetBody(props: PageProps & { sheet: FormSheetProps }): ReactElement {
   return props.sheet.headerTitle ? (
-    <View className={pageClass} style={{ paddingTop: props.headerInset }}>
+    <View
+      className={pageClass}
+      style={[sheetSurfaceStyle, { paddingTop: props.headerInset }]}
+    >
       {props.sheet.children}
     </View>
   ) : (
@@ -44,7 +47,10 @@ export function FormSheetChoices(props: PageProps): ReactElement | null {
   const page = useFormSheetState()?.page;
 
   return page ? (
-    <View className={pageClass} style={{ paddingTop: props.headerInset }}>
+    <View
+      className={pageClass}
+      style={[sheetSurfaceStyle, { paddingTop: props.headerInset }]}
+    >
       {page.content}
     </View>
   ) : null;

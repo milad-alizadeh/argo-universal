@@ -2,7 +2,8 @@ import type * as React from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '#lib/generic/utils';
-import { pageSurface } from '#primitives/native/surface';
+import { GroupedPageContext } from '#primitives/lists/grouped-list';
+import { pageSurface, sheetSurfaceStyle } from '#primitives/native/surface';
 import type { BottomSheetProps } from './bottom-sheet-props';
 
 type SheetContentProps = Pick<
@@ -21,18 +22,29 @@ type SheetContentProps = Pick<
 
 const grabberInset = 32;
 
+function noGroupedPage(): void {}
+
 export function BottomSheetContent(
   props: SheetContentProps,
 ): React.JSX.Element {
   return (
     <View
-      style={{ height: props.viewportHeight }}
+      style={[sheetSurfaceStyle, { height: props.viewportHeight }]}
       className={sheetClass(props)}
       {...sheetAccessibility(props)}
     >
+      <SheetPage {...props} />
+    </View>
+  );
+}
+
+// The sheet draws its own background, so a grouped list in it leaves the screen beneath alone.
+function SheetPage(props: SheetContentProps): React.JSX.Element {
+  return (
+    <GroupedPageContext value={noGroupedPage}>
       <SheetBody {...props} />
       {props.footer}
-    </View>
+    </GroupedPageContext>
   );
 }
 

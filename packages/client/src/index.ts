@@ -51,6 +51,8 @@ export { Toaster } from '#primitives/overlays/toast';
 
 export { pageSurface } from '#primitives/native/surface';
 
+export { GroupedPageContext } from '#primitives/lists/grouped-list';
+
 export {
   type LeaveGuard,
   type Navigate,

@@ -49,7 +49,7 @@ function VariationsExample(): React.JSX.Element {
 
 function RowSection(): React.JSX.Element {
   return (
-    <GroupedListSection textFields title="Row" footer={pathHint}>
+    <GroupedListSection title="Row" footer={pathHint}>
       <TypedRow label="Name" initial="Example ACP" />
       <TypedRow mono label="Executable" initial="example-acp" hint={pathHint} />
     </GroupedListSection>
@@ -65,12 +65,7 @@ const invalidRow = {
 
 function InvalidSection(): React.JSX.Element {
   return (
-    <GroupedListSection
-      textFields
-      title="Row invalid"
-      footer={spaceError}
-      tone="danger"
-    >
+    <GroupedListSection title="Row invalid" footer={spaceError} tone="danger">
       <TypedRow {...invalidRow} />
     </GroupedListSection>
   );

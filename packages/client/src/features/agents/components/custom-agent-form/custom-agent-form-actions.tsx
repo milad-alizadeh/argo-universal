@@ -3,7 +3,6 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { FormPartProps } from './custom-agent-form-sections';
 
 export type ActionProps = FormPartProps & {
@@ -11,12 +10,17 @@ export type ActionProps = FormPartProps & {
   onCancel: () => void;
 };
 
-// The form's foot row. A phone leaves Cancel to the header's Back and gives the form one full-width action.
-export function FormActions(props: ActionProps): React.JSX.Element {
+/*
+ * The form's foot row. A phone leaves Cancel to the header's Back and gives the form one full-width action.
+ * GroupedList takes it as a direct child, so this is called rather than rendered.
+ */
+export function formActions(
+  props: ActionProps & { wide: boolean },
+): React.JSX.Element {
   return (
-    <GroupedListContent>
+    <GroupedListContent key="actions">
       <View className="items-stretch gap-2 wide:flex-row wide:justify-end">
-        {useWide() && (
+        {props.wide && (
           <CancelButton disabled={props.disabled} onPress={props.onCancel} />
         )}
         <SubmitButton {...props} />

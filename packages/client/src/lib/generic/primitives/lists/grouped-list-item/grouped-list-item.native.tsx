@@ -4,12 +4,9 @@ import {
   accessibilityAddTraits,
   buttonStyle,
   disabled,
-  listRowBackground,
-  listRowSeparator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { useSidebarList } from '#primitives/fields/field-layout';
 import { useWide } from '../../../use-wide/use-wide';
 import { rowAccessibilityModifiers } from './grouped-list-item-accessibility';
 import { RowContent } from './grouped-list-item-native-row';
@@ -33,7 +30,7 @@ export function GroupedListItem(
 }
 
 function NativeRow(props: GroupedListItemProps): React.JSX.Element {
-  const modifiers = rowModifiers(props, useSidebarList());
+  const modifiers = rowModifiers(props);
 
   return ios && props.onPress ? (
     <PressableRow press={props.onPress} modifiers={modifiers}>
@@ -96,23 +93,11 @@ function PressableRow(props: PressableRowProps): React.JSX.Element {
   );
 }
 
-/*
- * A grouped row keeps the stock Form's fill, insets and separator. A sidebar row sits flat in the
- * drawer, which draws no cards and no hairlines, so only it clears the row's fill and separator.
- */
-function rowModifiers(
-  props: GroupedListItemProps,
-  sidebar: boolean,
-): Modifiers {
+// A grouped row keeps the stock Form's fill, insets and separator.
+function rowModifiers(props: GroupedListItemProps): Modifiers {
   if (!ios) return [fillMaxWidth(), ...rowSemantics(props)];
 
-  return [
-    ...(sidebar
-      ? [listRowBackground('transparent'), listRowSeparator('hidden')]
-      : []),
-    ...rowAccessibilityModifiers(props),
-    disabled(!!props.disabled),
-  ];
+  return [...rowAccessibilityModifiers(props), disabled(!!props.disabled)];
 }
 
 function rowName(props: GroupedListItemProps): string {

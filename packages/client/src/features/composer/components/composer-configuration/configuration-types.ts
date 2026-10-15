@@ -23,5 +23,4 @@ export interface ComposerConfigurationProps {
 export interface ConfigurationChoicesProps {
   configuration: ComposerConfigurationProps;
   onSelect: () => void;
-  onContentHeightChange?: (height: number) => void;
 }

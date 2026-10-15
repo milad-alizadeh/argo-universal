@@ -4,8 +4,11 @@ import { Button } from '#primitives/buttons/button';
 import { Text } from '#primitives/display/text';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 
-// A destructive button with no card around it, in a row the native list sizes, and what removing does: small on wide windows, full width on a phone. The Server cannot remove a Project yet.
-export function RemoveProject(): React.JSX.Element {
+/*
+ * A destructive button with no card around it, in a row the native list sizes, and what removing does: small on wide windows, full width on a phone. The Server cannot remove a Project yet.
+ * GroupedList takes it as a direct child, so this is called rather than rendered.
+ */
+export function removeProject(): React.JSX.Element {
   return (
     <GroupedListContent>
       <View className="items-stretch gap-2 wide:items-start">
