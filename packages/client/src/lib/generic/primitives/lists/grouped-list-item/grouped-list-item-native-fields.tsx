@@ -48,7 +48,11 @@ function RowSubtitle({
 }: Pick<GroupedListItemProps, 'subtitle'>): React.JSX.Element | null {
   const text = useRowText(subtitleRole(subtitle), 'secondary', 'line');
 
-  return subtitle ? <Text {...text}>{subtitle.text}</Text> : null;
+  return subtitle ? (
+    <Text {...text} numberOfLines={subtitle.numberOfLines}>
+      {subtitle.text}
+    </Text>
+  ) : null;
 }
 
 const trailingModifiers: Modifiers | undefined = ios
