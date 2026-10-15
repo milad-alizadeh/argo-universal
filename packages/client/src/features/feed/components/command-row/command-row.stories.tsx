@@ -28,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 export const Overview: Story = {
   name: 'CommandRow',
   render: () => (
-    <Variations className="max-w-composer!">
+    <Variations className="max-w-column!">
       {variations.map(({ label, ...props }) => (
         <Variation key={label} label={label}>
           <CommandRow {...props} />

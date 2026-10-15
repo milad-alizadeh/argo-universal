@@ -16,15 +16,24 @@ const statusFooters: Partial<
 
 const signInFooter = 'Run this in a terminal on the Server, then check again.';
 
+// A status that needs a step gets its own section, which then names the status in place of the chip.
+export const showsStatusSection = (
+  status: AgentDetailViewProps['agent']['status'],
+): boolean => status === 'sign-in' || !!statusFooters[status];
+
 // Where an installed Agent stands, when the chip alone does not say what to do.
 export function AgentStatusSection(
   props: AgentDetailViewProps,
 ): React.JSX.Element | null {
   const { status } = props.agent;
 
-  if (status === 'sign-in') return <SignInSection {...props} />;
+  if (!showsStatusSection(status)) return null;
 
-  return statusFooters[status] ? <StatusRow {...props} /> : null;
+  return status === 'sign-in' ? (
+    <SignInSection {...props} />
+  ) : (
+    <StatusRow {...props} />
+  );
 }
 
 function StatusRow({ agent }: AgentProps): React.JSX.Element {
@@ -33,8 +42,7 @@ function StatusRow({ agent }: AgentProps): React.JSX.Element {
   return (
     <GroupedListSection title="Status" footer={statusFooters[agent.status]}>
       <GroupedListItem
-        label="Status"
-        value={agentStatusLabels[agent.status]}
+        label={agentStatusLabels[agent.status]}
         status={tone ? { tone, label: '' } : undefined}
       />
     </GroupedListSection>
@@ -53,7 +61,7 @@ function SignInSection(props: AgentDetailViewProps): React.JSX.Element {
       footer={props.onSignIn ? undefined : signInFooter}
     >
       <GroupedListItem
-        label="Not signed in"
+        label={agentStatusLabels['sign-in']}
         status={{ tone: 'warning', label: '' }}
       />
       <SignInAction {...props} />

@@ -8,7 +8,12 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
-import { type Glow, type GlowStop, sidebarGlows } from '../sidebar-glows';
+import {
+  type Glow,
+  type GlowStop,
+  sidebarGlows,
+  useGlowColours,
+} from '../sidebar-glows';
 
 const { glows, edgeFadeWidth } = sidebarGlows('phone', 'full');
 
@@ -22,15 +27,11 @@ interface GlowColours {
   surface: CSSValue;
 }
 
-function useGlowColours(): GlowColours {
-  const [warm, graphite, sand, surface] = useCSSVariable([
-    '--color-glow-warm',
-    '--color-glow-graphite',
-    '--color-glow-sand',
-    '--color-content',
-  ]);
+function useBackdropColours(): GlowColours {
+  const colours = useGlowColours();
+  const surface = useCSSVariable('--color-content');
 
-  return { colours: { warm, graphite, sand }, surface };
+  return { colours, surface };
 }
 
 function GlowStopMark({
@@ -93,7 +94,7 @@ function EdgeFadeGradient({
 }
 
 function GlowDefs(): React.JSX.Element {
-  const { colours, surface } = useGlowColours();
+  const { colours, surface } = useBackdropColours();
 
   return (
     <Defs>

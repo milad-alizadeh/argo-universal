@@ -9,7 +9,7 @@ export function RequestFrame({
 }): React.JSX.Element {
   return (
     <View className="w-full items-center p-4 wide:px-6">
-      <View className="w-full max-w-composer">{children}</View>
+      <View className="w-full max-w-column">{children}</View>
     </View>
   );
 }

@@ -9,6 +9,7 @@ import {
   useIconBox,
   useIconPixels,
 } from '../../../../lib/generic/symbols/icon-role';
+import { cssSafeUri } from './css-safe-uri';
 
 interface RegistryIconProps {
   uri: string | undefined;
@@ -54,7 +55,7 @@ function WebImage(
     <View className="dark:invert dark:hue-rotate-180">
       <Image
         accessibilityLabel={`${props.agentName} icon`}
-        source={{ uri: props.uri }}
+        source={{ uri: cssSafeUri(props.uri) }}
         style={useIconBox(props.role)}
         onError={props.onError}
       />

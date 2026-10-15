@@ -88,6 +88,7 @@ export const OpensOnTheAgentsIdentityCard: Story = {
 export const SignsInAndChecksAgain: Story = {
   args: { agent: { ...readyAgent, status: 'sign-in', signInCommand } },
   play: async ({ args, canvas, userEvent }) => {
+    // The Status section names the status once; no chip repeats it.
     await expect(canvas.getByText('Sign-in needed')).toBeVisible();
     await expect(
       canvas.getByRole('group', { name: signInCommand }),

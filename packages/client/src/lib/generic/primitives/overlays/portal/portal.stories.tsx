@@ -51,7 +51,7 @@ function NamedHost(props: {
   return (
     <Variations>
       <Variation label="Named region">
-        <View className="relative w-full min-h-32 rounded-surface bg-card p-4">
+        <View className="relative w-full min-h-32 rounded-sheet bg-card p-4">
           <PortalHost name={props.hostName} />
         </View>
         {props.children}

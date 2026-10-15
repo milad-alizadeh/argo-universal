@@ -30,7 +30,7 @@ function QuestionTitle({ title }: { title: string }): ReactElement {
       <Text
         role="heading"
         aria-level={2}
-        className="min-w-0 flex-1 ios:text-[17px] ios:leading-[22px] android:text-[18px] android:leading-6 android:font-medium ios:text-black android:text-[#1c1b1f] dark:ios:text-foreground dark:android:text-foreground"
+        className="min-w-0 flex-1 ios:text-[17px] ios:leading-[22px] android:text-[18px] android:leading-6 android:font-medium ios:text-foreground android:text-[#1c1b1f] dark:android:text-foreground"
       >
         {title}
       </Text>

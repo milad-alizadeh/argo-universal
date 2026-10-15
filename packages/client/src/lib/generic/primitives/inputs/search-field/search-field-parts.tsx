@@ -77,7 +77,7 @@ export function OpenField(props: OpenFieldProps): React.JSX.Element {
   return (
     <View {...hiddenUnlessOpen(props.open)} className="absolute inset-0">
       <Animated.View
-        className="absolute inset-y-0 right-0 rounded-2xl bg-muted"
+        className="absolute inset-y-0 right-0 rounded-2xl web:rounded-control bg-muted"
         style={useSurfaceStyle(props.progress, props.geometry)}
       />
       <QueryLayer progress={props.progress}>{props.children}</QueryLayer>

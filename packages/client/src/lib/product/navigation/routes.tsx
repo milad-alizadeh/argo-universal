@@ -10,12 +10,14 @@ type DestinationFields<Destination> = Destination extends NavigationDestination
   ? Omit<Destination, 'to'>
   : never;
 
-interface RouteHref {
-  pathname: (typeof routes)[NavigationDestination['to']]['pathname'];
-  params:
-    | DestinationFields<NavigationDestination>
-    | (DestinationFields<NewSessionDestination> & { id: typeof newSessionId });
-}
+type RouteHref = {
+  [To in NavigationDestination['to']]: {
+    pathname: (typeof routes)[To]['pathname'];
+    params: To extends 'new-session'
+      ? DestinationFields<NewSessionDestination> & { id: typeof newSessionId }
+      : DestinationFields<Extract<NavigationDestination, { to: To }>>;
+  };
+}[NavigationDestination['to']];
 
 // The route that draws each destination; a destination's fields are its route's params.
 type RouteParams = Record<string, string | string[] | undefined>;
@@ -107,9 +109,42 @@ const routes = {
 
 export function hrefFor(destination: NavigationDestination): RouteHref {
   if (destination.to === 'new-session') return newSessionHref(destination);
+
+  if (destination.to === 'session')
+    return {
+      pathname: routes.session.pathname,
+      params: { id: destination.id },
+    };
+
+  return pageHref(destination);
+}
+
+function pageHref(
+  destination: Exclude<
+    NavigationDestination,
+    { to: 'session' | 'new-session' }
+  >,
+): RouteHref {
+  if (destination.to === 'settings-project') return projectHref(destination);
+
+  if (destination.to === 'settings-agent')
+    return {
+      pathname: routes['settings-agent'].pathname,
+      params: { agent: destination.agent },
+    };
+
   const { to, ...params } = destination;
 
   return { pathname: routes[to].pathname, params };
+}
+
+function projectHref(
+  destination: Extract<NavigationDestination, { to: 'settings-project' }>,
+): RouteHref {
+  return {
+    pathname: routes['settings-project'].pathname,
+    params: { name: destination.name },
+  };
 }
 
 // New Session's URL is a Session's, with an id no Session has.

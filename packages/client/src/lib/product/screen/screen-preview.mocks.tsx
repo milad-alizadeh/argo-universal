@@ -20,7 +20,7 @@ export function ScreenPreview({
 
 export function ScreenPreviewContent(): React.JSX.Element {
   return (
-    <View className="flex-1 items-center justify-center bg-background">
+    <View className="flex-1 items-center justify-center bg-card">
       <Text>Screen content</Text>
     </View>
   );

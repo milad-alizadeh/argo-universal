@@ -8,6 +8,7 @@ import { settleViewport } from '../../../settle-viewport';
 import {
   Collapsible,
   CollapsibleContent,
+  CollapsibleHeader,
   CollapsibleTrigger,
 } from './collapsible';
 
@@ -23,9 +24,7 @@ function disclosure(width: number): Story {
   return {
     render: () => (
       <Collapsible>
-        <CollapsibleTrigger accessibilityLabel="Toggle details">
-          <Text>Toggle details</Text>
-        </CollapsibleTrigger>
+        <CollapsibleHeader icon="read" label="Toggle details" />
         <CollapsibleContent testID={animatedDetailId}>
           <View className="h-32">
             <Text>Tool call detail</Text>

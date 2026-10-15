@@ -12,7 +12,7 @@ export function SessionColumn(props: ViewProps): React.JSX.Element {
     <View pointerEvents={props.pointerEvents} className="w-full px-4 wide:px-6">
       <View
         {...props}
-        className={cn('w-full max-w-composer self-center', props.className)}
+        className={cn('w-full max-w-column self-center', props.className)}
       >
         {props.children}
       </View>
