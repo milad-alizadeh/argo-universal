@@ -10,7 +10,10 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
 import { useWide } from '../../../use-wide/use-wide';
-import { rowAccessibilityModifiers } from './grouped-list-item-accessibility';
+import {
+  rowUsesStockButton,
+  rowContainerAccessibility,
+} from './grouped-list-item-accessibility';
 import { RowContent } from './grouped-list-item-native-row';
 import { type GroupedListItemProps } from './grouped-list-item-props';
 import { GroupedListItem as WebGroupedListItem } from './grouped-list-item.tsx';
@@ -32,7 +35,7 @@ export function GroupedListItem(
 function NativeRow(props: GroupedListItemProps): React.JSX.Element {
   const modifiers = rowModifiers(props, useSidebarList());
 
-  return ios && props.onPress ? (
+  return rowUsesStockButton(props) && props.onPress ? (
     <PressableRow press={props.onPress} modifiers={modifiers}>
       <Column spacing={0}>
         <RowParts {...props} />
@@ -88,13 +91,13 @@ function rowModifiers(
   props: GroupedListItemProps,
   sidebar: boolean,
 ): Modifiers {
-  if (!ios) return [fillMaxWidth(), ...rowAccessibilityModifiers(props)];
+  if (!ios) return [fillMaxWidth(), ...rowContainerAccessibility(props)];
 
   return [
     ...(sidebar
       ? [listRowBackground('transparent'), listRowSeparator('hidden')]
       : []),
-    ...rowAccessibilityModifiers(props),
+    ...rowContainerAccessibility(props),
     disabled(!!props.disabled),
   ];
 }

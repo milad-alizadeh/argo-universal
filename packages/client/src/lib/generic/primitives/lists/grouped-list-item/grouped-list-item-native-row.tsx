@@ -9,6 +9,7 @@ import type * as React from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
 import { NativeSymbol } from '../../../symbols/native-symbol';
+import { rowDisclosureAccessibility } from './grouped-list-item-accessibility';
 import { RowTrailing } from './grouped-list-item-native-fields';
 import { RowHeadline } from './grouped-list-item-native-headline';
 import type { GroupedListItemProps } from './grouped-list-item-props';
@@ -56,7 +57,9 @@ function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
   if (!visible) return null;
 
   return (
-    <NativeSymbol name="chevron-right" role={ios ? 'body' : 'row'} muted />
+    <Row modifiers={rowDisclosureAccessibility()}>
+      <NativeSymbol name="chevron-right" role={ios ? 'body' : 'row'} muted />
+    </Row>
   );
 }
 
