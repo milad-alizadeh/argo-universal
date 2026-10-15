@@ -84,9 +84,6 @@ function rowSemantics(props: CheckboxRowProps): Modifiers {
 function rowTraits(
   props: CheckboxProps,
 ): ReturnType<typeof Swift.accessibilityAddTraits> {
-  if (props.selection !== 'single')
-    return Swift.accessibilityAddTraits(['isToggle']);
-
   return Swift.accessibilityAddTraits(
     props.value ? ['isButton', 'isSelected'] : ['isButton'],
   );

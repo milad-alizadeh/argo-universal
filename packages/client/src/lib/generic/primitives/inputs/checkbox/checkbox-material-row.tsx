@@ -84,9 +84,7 @@ function rowToggle(props: CheckboxRowProps): Modifiers {
 }
 
 function rowPress(props: CheckboxRowProps): Modifiers[number] {
-  return props.selection === 'single'
-    ? Compose.selectable(props.value, props.state.toggle, 'radioButton')
-    : Compose.toggleable(props.value, props.state.toggle, { role: 'checkbox' });
+  return Compose.selectable(props.value, props.state.toggle, 'radioButton');
 }
 
 export function MaterialMark(props: MarkProps): React.JSX.Element {
