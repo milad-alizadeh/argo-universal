@@ -11,6 +11,7 @@ import type {
   ScriptedStep,
 } from '@repo/mocks/agent/scripted-scenario';
 import type { AgentLaunch } from '../src/agents';
+import { AgentProcessExitError } from '../src/agents';
 import type { AcpProcess } from '../src/agents';
 
 type Observation = {
@@ -66,10 +67,11 @@ interface ScriptedAgentWire {
 export const createScriptedAgentWire = (
   scenario: ScriptedScenario,
   nextSessionId = (): string => 'owned-1',
+  exit?: (code: number, stderr: string) => Promise<void>,
 ): ScriptedAgentWire => {
   const toAgent = new TransformStream<Uint8Array, Uint8Array>();
   const fromAgent = new TransformStream<Uint8Array, Uint8Array>();
-  const agent = createScriptedAgent(scenario, nextSessionId);
+  const agent = createScriptedAgent(scenario, nextSessionId, exit);
   const [input, observed] = toAgent.readable.tee();
   const connection = agent.connect(fromAgent.writable, input);
 
@@ -141,12 +143,23 @@ export const createScriptedAgentProcess = (
   return {
     processes,
     launchProcess: async (launch) => {
-      const wire = createScriptedAgentWire(scenario, () => `owned-${++opened}`);
+      let exitError: Error | undefined;
+      const exited = Promise.withResolvers<void>();
+
+      const wire = createScriptedAgentWire(
+        scenario,
+        () => `owned-${++opened}`,
+        async (code, stderr) => {
+          exitError = new AgentProcessExitError(code, null, stderr);
+          exited.resolve();
+          wire.connection.close();
+        },
+      );
 
       const process = {
         ...wire,
         launch,
-        exited: Promise.withResolvers<void>(),
+        exited,
         terminations: 0,
       };
 
@@ -155,6 +168,7 @@ export const createScriptedAgentProcess = (
       return {
         stream: wire.stream,
         exited: process.exited.promise,
+        exitError: () => exitError ?? new Error('ACP transport broke'),
         terminate: async () => {
           process.terminations += 1;
           wire.connection.close();

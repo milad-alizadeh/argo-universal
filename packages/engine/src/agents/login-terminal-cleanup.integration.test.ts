@@ -5,7 +5,7 @@ import { loginOwner } from '#mocks/agent-login';
 import { createLoginTerminalMock } from '#mocks/login-terminal';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
 
-it('retains login ownership when fresh ACP initialization cannot observe cleanup', async () => {
+it('a login whose cleanup cannot be observed stays cleanup-failed without blocking a new Session', async () => {
   const initial = createScriptedAgentProcess({
     steps: [],
     initialize: {
@@ -66,7 +66,6 @@ it('retains login ownership when fresh ACP initialization cannot observe cleanup
     operationId: started.operationId,
     status: 'cleanup-failed',
   });
-  await expect(host.caller.session.new(emptySessionInput)).rejects.toThrow(
-    /login|sign-in|in use/i,
-  );
+  const opened = await host.caller.session.new(emptySessionInput);
+  await host.caller.session.close(opened);
 });

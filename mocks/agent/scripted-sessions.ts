@@ -54,6 +54,7 @@ const setSelectValue = (
 
 // Node strips types but cannot transform parameter properties, so fields are assigned by hand.
 export class ScriptedSessions {
+  private readonly resumed = new Set<string>();
   private readonly initial: readonly SessionConfigOption[];
   private readonly configurations = new Map<string, SessionConfigOption[]>();
   private readonly cancellations = new Map<
@@ -71,6 +72,14 @@ export class ScriptedSessions {
     this.configurations.set(sessionId, configOptions);
 
     return configOptions;
+  }
+  public resume(sessionId: string): SessionConfigOption[] {
+    this.resumed.add(sessionId);
+
+    return this.open(sessionId);
+  }
+  public wasResumed(sessionId: string): boolean {
+    return this.resumed.has(sessionId);
   }
   public close(sessionId: string): void {
     this.configurations.delete(sessionId);

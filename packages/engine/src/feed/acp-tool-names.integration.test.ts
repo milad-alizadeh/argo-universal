@@ -1,5 +1,6 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { FeedRowOutput } from '@repo/contracts';
+import { fixtureRegistryIds } from '@repo/mocks/agent/app-fixtures';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
@@ -46,7 +47,7 @@ it.each([
     },
   },
   {
-    agent: 'codex-acp',
+    agent: fixtureRegistryIds[1] ?? 'other-acp',
     update: {
       title: 'mcp.github.list_issues',
       kind: 'execute',

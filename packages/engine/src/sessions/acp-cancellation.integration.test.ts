@@ -100,7 +100,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       .where(eq(turn.sessionId, sessionId))
       .all();
 
-  it('cancelling a running Turn keeps its prompt observed until the final output and completion arrive', async () => {
+  it('cancelling a running Turn settles it immediately and drops late output', async () => {
     const { host, cancels } = await startCancellableEngine();
     const sessionId = await startTurn(host);
     await host.caller.session.cancel({ sessionId });
@@ -116,14 +116,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       turns: readTurns(host, sessionId),
     }).toMatchObject({
       cancels: [{ sessionId: 'owned-1' }],
-      rows: [
-        { kind: 'user_message', sameTurn: true },
-        {
-          kind: 'agent_message',
-          sameTurn: true,
-          content: [{ text: `${finalText} owned-1` }],
-        },
-      ],
+      rows: [{ kind: 'user_message', sameTurn: true }],
       turns: [{ status: 'ended', stopReason: 'cancelled' }],
     });
   });

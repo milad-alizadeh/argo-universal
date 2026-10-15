@@ -21,7 +21,6 @@ import {
   openSessionsId,
   type OpenSessionsActorRef,
 } from '../sessions';
-import { discoveryCacheMachine } from '../sessions';
 import {
   databaseWriterId,
   type WriterActorRef,
@@ -116,7 +115,6 @@ export const engineSetup = setup({
     syncSupervisor: syncSupervisorMachine,
     databaseWriter: writerMachine,
     sessions: openSessionsMachine,
-    discovery: discoveryCacheMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
       async ({ input, signal }): Promise<HttpServer> => {
         const server = await startHttpServer(input);
@@ -132,7 +130,6 @@ export const engineSetup = setup({
     processSignals,
   },
   actions: {
-    stopDiscovery: sendTo('sessionDiscovery', { type: 'discovery.stop' }),
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
     stopSync: sendTo('syncSupervisor', { type: 'sync.stop' }),

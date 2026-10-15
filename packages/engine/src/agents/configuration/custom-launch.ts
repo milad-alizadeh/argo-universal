@@ -4,24 +4,10 @@ import type { Database } from '@repo/db';
 import type { AgentLaunch, ResolveAgentLaunch } from '../agent-launch';
 import { readCustomDefinition } from './configuration-sql';
 
-// A launch passes only the environment it names, so a program still finds commands and its home.
-const inheritedNames = ['PATH', 'HOME', 'USER', 'LOGNAME', 'LANG', 'TMPDIR'];
-
-const readInheritedEnvironment = (): Record<string, string> =>
-  Object.fromEntries(
-    inheritedNames.flatMap((name): [string, string][] => {
-      const value = process.env[name];
-
-      return value === undefined ? [] : [[name, value]];
-    }),
-  );
-
 const createLaunchEnvironment = (
   definition: CustomAgentDefinition,
-): AgentLaunch['env'] => ({
-  ...readInheritedEnvironment(),
-  ...Object.fromEntries(definition.env.map(({ name, value }) => [name, value])),
-});
+): AgentLaunch['env'] =>
+  Object.fromEntries(definition.env.map(({ name, value }) => [name, value]));
 
 type LaunchProject = { id: string; path: string };
 

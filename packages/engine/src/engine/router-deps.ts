@@ -4,6 +4,7 @@ import {
   createAgentChecker,
   checkAgentLaunch,
   type AcpResourceInput,
+  type AcpResources,
 } from '../agents';
 import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
@@ -18,7 +19,6 @@ import {
   sessionActorId,
   sessionMachine,
 } from '../sessions';
-import { discoveryCacheId, discoveryCacheMachine } from '../sessions';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SystemDeps } from '../system';
 import { createEngineAgentLogins } from './agent-logins';
@@ -65,8 +65,7 @@ type EngineSupplied =
   | 'createId'
   | 'checkAgentLaunch'
   | 'agentLogins'
-  | 'installations'
-  | 'discovery';
+  | 'installations';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
@@ -99,23 +98,30 @@ function bindInstallations(
     ...input,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
+    invalidateAgent: acpResources(input).invalidateAgent,
     isInUse: (agentId) =>
       input.agentLogins.isBusy(agentId) ||
       sessionsUseAgent(input.sessions, agentId),
   });
 }
 
-function createAgentSetup(
-  input: AppRouterInput,
-): Pick<
+type AgentSetup = Pick<
   AppRouterDeps,
-  'installations' | 'agentLogins' | 'createId' | 'discovery'
-> {
+  | 'installations'
+  | 'agentLogins'
+  | 'createId'
+  | 'invalidateAgent'
+  | 'invalidateIdleAgents'
+>;
+
+function createAgentSetup(input: AppRouterInput): AgentSetup {
   const installations = input.installations ?? createInstallations(input.home);
+  const { invalidateAgent, invalidateIdleAgents } = acpResources(input);
 
   return {
     installations,
-    discovery: requireDiscovery(input.sessions),
+    invalidateAgent,
+    invalidateIdleAgents,
     agentLogins: resolveAgentLogins(input, installations),
     createId: input.createId ?? randomUUID,
   };
@@ -151,20 +157,10 @@ function sessionsUseAgent(
   );
 }
 
-function createInstallations(home: string | undefined): AgentInstallations {
-  return new AgentInstallations(home ?? '');
+function acpResources(input: AppRouterInput): AcpResources {
+  return input.sessions.getSnapshot().context.acpResources;
 }
 
-function requireDiscovery(
-  sessions: OpenSessionsActorRef,
-): AppRouterDeps['discovery'] {
-  const discovery = findMachineActor(
-    sessions.system,
-    discoveryCacheId,
-    discoveryCacheMachine,
-  );
-
-  if (!discovery) throw new Error('Discovery is unavailable');
-
-  return discovery;
+function createInstallations(home: string | undefined): AgentInstallations {
+  return new AgentInstallations(home ?? '');
 }

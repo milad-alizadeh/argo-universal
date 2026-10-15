@@ -5,7 +5,6 @@ import type {
   InitializeResponse,
   ClientCapabilities,
 } from '@agentclientprotocol/sdk';
-import { sessionCapabilities } from './open-session';
 import type { createAcpResponseReaders } from './response-readers';
 
 type InitializeCapabilities = {
@@ -24,7 +23,6 @@ const initializeRequest = (
   protocolVersion: 1,
   clientCapabilities: {
     ...terminalCapability(capabilities),
-    plan: {},
     session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
     elicitation: { form: {}, ...capabilities?.elicitation },
   },
@@ -39,8 +37,8 @@ export const negotiateAcpInitialize = async (
     await agent.request<unknown>('initialize', initializeRequest(capabilities)),
   );
 
-  if (!sessionCapabilities(response)?.close)
-    throw new Error('Agent cannot close independent ACP sessions');
+  if (response.protocolVersion < 1)
+    throw new Error('Agent requires ACP protocol version 1 or newer');
 
   return response;
 };

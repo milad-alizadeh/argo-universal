@@ -57,8 +57,12 @@ const finishTurn = async (
     )
     .toBe(5);
 
-  if (ending === 'cancel') await host.caller.session.cancel({ sessionId });
-  else requireScriptedProcessAt(host.agent.processes).disconnect();
+  await (ending === 'cancel'
+    ? host.caller.session.cancel({ sessionId })
+    : requireScriptedProcessAt(host.agent.processes).play(
+        [{ type: 'exit', code: 17, stderr: 'Agent fixture failed' }],
+        'owned-1',
+      ));
 };
 
 describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
@@ -80,7 +84,10 @@ describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
       stopReason: 'error' as const,
       errorCode: 'interrupted',
       notices: [
-        { title: 'The Agent stopped unexpectedly' },
+        {
+          title: 'Agent exited with status 17',
+          description: 'Agent fixture failed',
+        },
         {
           title: 'Output may be missing',
           description:
