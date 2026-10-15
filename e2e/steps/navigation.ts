@@ -70,7 +70,7 @@ Then(
 When(
   'I view the Connection from the drawer',
   async ({ page }): Promise<void> => {
-    await page.getByRole('button', { name: 'Show navigation menu' }).click();
+    await page.getByRole('button', { name: 'Open navigation' }).click();
     await openConnection(page);
   },
 );
@@ -78,7 +78,7 @@ When(
 // A phone Frame picks a section from the Drawer behind ☰; a wide one from its rail.
 When('I return to Sessions', async ({ page }): Promise<void> => {
   if (onPhone(page))
-    await page.getByRole('button', { name: 'Show navigation menu' }).click();
+    await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Sessions', exact: true }).click();
 });
 

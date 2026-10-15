@@ -8,6 +8,7 @@ import type * as CollapsibleKit from '#primitives/display/collapsible';
 import type * as DisclosureChevronKit from '#primitives/display/disclosure-chevron';
 import type * as IconKit from '#primitives/display/icon';
 import type * as LiquidGlassKit from '#primitives/display/liquid-glass';
+import type * as NativeTextKit from '#primitives/display/native-text';
 import type * as SelectedCheckKit from '#primitives/display/selected-check';
 import type * as SpinnerKit from '#primitives/display/spinner';
 import type * as TextKit from '#primitives/display/text';
@@ -78,6 +79,7 @@ export type Primitives = {
   LiquidGlassProps: LiquidGlassKit.LiquidGlassProps;
   MenuAction: MenuKit.MenuAction;
   MenuProps: MenuKit.MenuProps;
+  NativeTextProps: NativeTextKit.NativeTextProps;
   PickerProps: PickerKit.PickerProps<string>;
   PopoverContentProps: PopoverKit.PopoverContentProps;
   PopoverProps: PopoverKit.PopoverProps;
@@ -110,6 +112,7 @@ export type Aliases = {
   ButtonSize: ButtonKit.ButtonSize;
   FieldErrors: FieldErrorsKit.FieldErrors;
   SheetDetent: SheetKit.SheetDetent;
+  NativeTextRole: NativeTextKit.NativeTextRole;
   TextRole: TextKit.TextRole;
   Tone: TextKit.Tone;
 };

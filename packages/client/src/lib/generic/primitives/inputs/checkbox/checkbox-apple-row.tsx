@@ -1,7 +1,7 @@
-import { Button, Row, Spacer, Text } from '@expo/ui';
+import { Button, Row, Spacer } from '@expo/ui';
 import * as Swift from '@expo/ui/swift-ui/modifiers';
+import { NativeText } from '#primitives/display/native-text';
 import { rectangularHitArea } from '#primitives/native/native-modifiers';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { CheckboxProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';
@@ -21,7 +21,7 @@ const optionInset = 12;
 const verticalInset = 8;
 
 // Apple's checklist row: the label leads and a check trails the chosen row.
-export function AppleCheckboxRow(props: CheckboxRowProps): React.JSX.Element {
+export function AppleRadioRow(props: CheckboxRowProps): React.JSX.Element {
   return (
     <Button
       variant="text"
@@ -44,12 +44,9 @@ function RowContent(props: CheckboxProps): React.JSX.Element {
   );
 }
 
+// The label keeps the Button's own font, which scales with Dynamic Type.
 function RowLabel(props: CheckboxProps): React.JSX.Element {
-  const textStyle = useUniversalTextStyle(
-    props.variant === 'option' ? 'nav-action' : 'body',
-  );
-
-  return <Text textStyle={textStyle}>{props.label}</Text>;
+  return <NativeText>{props.label}</NativeText>;
 }
 
 // The check takes the label's colour: native rows get no colour but the Host's tint.
@@ -84,9 +81,6 @@ function rowSemantics(props: CheckboxRowProps): Modifiers {
 function rowTraits(
   props: CheckboxProps,
 ): ReturnType<typeof Swift.accessibilityAddTraits> {
-  if (props.selection !== 'single')
-    return Swift.accessibilityAddTraits(['isToggle']);
-
   return Swift.accessibilityAddTraits(
     props.value ? ['isButton', 'isSelected'] : ['isButton'],
   );

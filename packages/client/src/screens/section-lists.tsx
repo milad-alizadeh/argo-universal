@@ -16,11 +16,13 @@ import {
   newSessionHref,
   useNavigate,
 } from '#lib/product/navigation/navigation';
+import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import { Text } from '#primitives/display/text';
 import { SearchField } from '#primitives/inputs/search-field';
 import { newSessionId } from '../lib/product/navigation/new-session';
 import { type Section, sections } from '../lib/product/navigation/sections';
 import { LiveSessionList } from './sessions/live-session-list';
+import { SessionsRootToolbar } from './sessions/sessions-root-toolbar';
 import { useFirstSessionPage } from './sessions/use-first-session-page';
 import { SettingsNavigationList } from './settings/settings-navigation-list';
 
@@ -44,19 +46,34 @@ function sessionsList(
     list: (
       <LiveSessionList {...sessions} selectedSessionId={shownSessionId(path)} />
     ),
-    rootHeader: sessionsRootHeader(sessions, onNewSession),
+    rootHeader: sessionsRootHeader(sessions),
+    rootToolbar: sessionsRootToolbar(sessions, onNewSession),
     useFirstPage: useFirstSessionPage,
   };
 }
 
 const sessionsRootHeader = (
   sessions: SessionsFilter,
-  onNewSession: () => void,
 ): SectionList['rootHeader'] => ({
   title: sections.sessions.title,
   right: sessionsHeaderItems(sessions),
-  search: sessionsHeaderSearch(sessions, onNewSession),
+  search: sessionsHeaderSearch(sessions),
 });
+
+// iOS's stock items for the Sessions root: the filter, New Session and the search bar.
+const sessionsRootToolbar = (
+  sessions: SessionsFilter,
+  onNewSession: () => void,
+): React.JSX.Element => (
+  <SessionsRootToolbar {...sessions} onNewSession={onNewSession} />
+);
+
+// iOS's stock search bar for the Settings root.
+const settingsRootToolbar = (
+  onQueryChange: (query: string) => void,
+): React.JSX.Element => (
+  <PhoneSearchBar placeholder={searchSettings} onSearch={onQueryChange} />
+);
 
 interface SettingsQuery {
   query: string;
@@ -91,6 +108,7 @@ function settingsList(
       title: sections.settings.title,
       search: { placeholder: searchSettings, onChangeText: onQueryChange },
     },
+    rootToolbar: settingsRootToolbar(onQueryChange),
     useFirstPage: () => settingsFirstPage,
   };
 }

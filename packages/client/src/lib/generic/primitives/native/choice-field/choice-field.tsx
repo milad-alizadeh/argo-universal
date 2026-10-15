@@ -1,10 +1,10 @@
-import { Column, Row, Spacer, Text } from '@expo/ui';
+import { Column, Row, Spacer } from '@expo/ui';
 import { createElement } from 'react';
 import type * as React from 'react';
 import { Platform } from 'react-native';
+import { NativeText } from '#primitives/display/native-text';
 import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { Host, type HostProps } from '#primitives/native/host';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
 
 type FieldProps = {
   label: string;
@@ -56,8 +56,6 @@ function FieldLabel(
   props: Pick<FieldProps, 'label' | 'required'>,
 ): React.JSX.Element {
   return (
-    <Text
-      textStyle={useUniversalTextStyle('body')}
-    >{`${props.label}${props.required ? ' *' : ''}`}</Text>
+    <NativeText>{`${props.label}${props.required ? ' *' : ''}`}</NativeText>
   );
 }

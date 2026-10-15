@@ -1,5 +1,5 @@
 // The native field keeps its platform label and value drawing around a stock button.
-import { Button, Row, Text } from '@expo/ui';
+import { Button, Row } from '@expo/ui';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import {
   accessibilityHint,
@@ -8,9 +8,9 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { createElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
+import { NativeText } from '#primitives/display/native-text';
 import type { FieldDescription } from '#primitives/fields/field-description';
 import { ChoiceField, ChoiceHost } from '#primitives/native/choice-field';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { ComboboxProps } from './combobox-props';
 import { comboboxValue, type ChoiceValue } from './combobox-value';
@@ -50,9 +50,7 @@ function buttonProps<Value extends string>(
 function TriggerValue(props: ChoiceValue): ReactElement {
   return (
     <Row alignment="center" spacing={6}>
-      <Text textStyle={useUniversalTextStyle('body')}>
-        {comboboxValue(props)}
-      </Text>
+      <NativeText>{comboboxValue(props)}</NativeText>
       <NativeSymbol name="chevron-up-down" role="body" />
     </Row>
   );

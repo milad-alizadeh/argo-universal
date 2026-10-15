@@ -45,7 +45,7 @@ export interface GroupedListItemProps {
   disabled?: boolean;
   selected?: boolean;
   needsAttention?: boolean;
-  // A dot after the value. When the value already says the status, such as "Ready", the name says it once.
+  // A trailing dot beside the chevron. Its label is spoken with the row, never drawn.
   status?: { tone: 'success' | 'warning' | 'danger'; label: string };
   // A spinner takes the icon's place while the row's subject is on its way.
   loading?: boolean;

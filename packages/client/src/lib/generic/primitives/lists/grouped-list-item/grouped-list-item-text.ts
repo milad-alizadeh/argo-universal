@@ -1,27 +1,20 @@
-import type { TextProps } from '@expo/ui';
 import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
-import type { TextRole } from '#primitives/display/text';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
-import { useNativeTheme } from '../../../native-theme';
+import type { NativeTextProps } from '#primitives/display/native-text';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 
-// A code title or subtitle draws in the mono face.
-export const titleRole = (code: boolean | undefined): TextRole =>
-  code ? 'code' : 'body';
-
-export const subtitleRole = (
-  subtitle: GroupedListItemProps['subtitle'],
-): TextRole => (subtitle?.code ? 'code' : 'secondary');
+type Modifiers = NonNullable<NativeTextProps['modifiers']>;
 
 export type RowTone =
   | 'primary'
   | 'secondary'
   | NonNullable<GroupedListItemProps['tone']>;
 
+const ios = Platform.OS === 'ios';
+
 /*
  * iOS's system label colours, as a Form's button would tint its whole label; an accent row takes that tint.
- * Android uses Argo's text-role tokens through the public textStyle colour.
+ * Android's NativeText and ListItem take colours through their public APIs.
  */
 const swiftColors: Partial<Record<RowTone, string>> = {
   primary: 'label',
@@ -29,59 +22,13 @@ const swiftColors: Partial<Record<RowTone, string>> = {
   muted: 'secondaryLabel',
 };
 
-function swiftColor(
-  tone: RowTone,
-  danger: string | undefined,
-): ReturnType<typeof foregroundStyle>[] {
-  const color = danger ?? swiftColors[tone];
+export function rowColor(tone: RowTone): Modifiers {
+  const color = ios ? swiftColors[tone] : undefined;
 
   return color === undefined ? [] : [foregroundStyle({ type: 'color', color })];
 }
 
-/*
- * A Form row's text keeps the List's own font, which scales with Dynamic Type: the title and value
- * the body style, a subtitle the subheadline under it, and code the same style in the mono design.
- */
-const swiftFonts: Partial<Record<TextRole, ReturnType<typeof font>>> = {
-  secondary: font({ textStyle: 'subheadline' }),
-  code: font({ textStyle: 'body', design: 'monospaced' }),
-};
-
-const swiftFont = (role: TextRole): ReturnType<typeof font>[] => {
-  const style = swiftFonts[role];
-
-  return style === undefined ? [] : [style];
-};
-
-// A failure reads in the danger token, the one colour native text takes from Argo's theme rather than the Host.
-export function useDangerColor(tone: string | undefined): string | undefined {
-  const { danger } = useNativeTheme().colors;
-
-  return tone === 'danger' ? danger : undefined;
-}
-
-// A native row's text in its role: SwiftUI's in the List's own text styles, Compose's from the universal style.
-export function useRowText(
-  role: TextRole,
-  tone: RowTone,
-): Pick<TextProps, 'textStyle' | 'modifiers'> {
-  const textStyle = useUniversalTextStyle(role);
-  const danger = useDangerColor(tone);
-  const color = useAndroidRowColor(tone);
-
-  if (Platform.OS !== 'ios') return { textStyle: { ...textStyle, color } };
-
-  return { modifiers: [...swiftFont(role), ...swiftColor(tone, danger)] };
-}
-
-const androidToneTokens = {
-  primary: 'foreground',
-  secondary: 'mutedForeground',
-  muted: 'mutedForeground',
-  accent: 'accent',
-  danger: 'danger',
-} as const;
-
-function useAndroidRowColor(tone: RowTone): string | undefined {
-  return useNativeTheme().colors[androidToneTokens[tone]];
-}
+// A Form row's subtitle reads in the subheadline style under the List's body text, which scales with Dynamic Type.
+export const subtitleModifiers: Modifiers = ios
+  ? [font({ textStyle: 'subheadline' }), ...rowColor('secondary')]
+  : [];

@@ -2,6 +2,7 @@ import {
   hasLiquidGlass,
   nativeHeaderOptions,
   PhoneConnectionBanner,
+  SectionMenuButton,
   screenHeaderOptions,
   type Section,
   type SectionList,
@@ -10,13 +11,15 @@ import {
   useSectionList,
   useWide,
 } from '@repo/client';
-import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import {
-  type DrawerNavigationOptions,
-  DrawerToggleButton,
-} from 'expo-router/drawer';
+  type NativeStackNavigationOptions,
+  Stack,
+  useNavigation,
+} from 'expo-router';
+import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import {
+  DrawerActions,
   getFocusedRouteNameFromRoute,
   type ParamListBase,
   type RouteProp,
@@ -30,10 +33,26 @@ type StackProps = ComponentProps<typeof Stack>;
 
 type ScreenLayout = NonNullable<StackProps['screenLayout']>;
 
+/*
+ * Before Liquid Glass, an opaque iOS header takes the theme's card colour, a band over a grouped page. The stock bar
+ * instead: clear at the scroll edge, so the page shows through, and the system material once content scrolls under.
+ */
+const stockBarBeforeGlass = {
+  headerTransparent: true,
+  headerBlurEffect: 'systemChromeMaterial',
+  headerLargeStyle: { backgroundColor: 'transparent' },
+} satisfies StackProps['screenOptions'];
+
+// iOS draws its header over the page; the web's JS header sits above it.
+const headerOverPage =
+  Platform.OS === 'ios' && !hasLiquidGlass
+    ? stockBarBeforeGlass
+    : { headerTransparent: hasLiquidGlass };
+
 // Native header options every narrow stack shares: one line, no hairline border.
 const narrowOptions = {
   headerShadowVisible: false,
-  headerTransparent: hasLiquidGlass,
+  ...headerOverPage,
   headerBackButtonDisplayMode: 'minimal',
   // A page below the shown one keeps its state but skips renders.
   freezeOnBlur: true,
@@ -47,7 +66,7 @@ const wideOptions = {
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
 
-// Android's section roots show the drawer's own header, with its stock toggle, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, so iOS keeps Liquid Glass and the native search.
+// Android's section roots show the drawer's own header, with its stock toggle, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, so iOS keeps Liquid Glass, stock bar button items and the native search.
 const drawerDrawsRootHeader = Platform.OS === 'android';
 
 // Android's back gesture owns the screen edge, so there only ☰ opens the drawer.
@@ -77,10 +96,26 @@ export const drawerScreenOptions =
       ? stackOwnsHeader
       : drawerRootOptions(lists[sectionOf(route.name)].rootHeader);
 
-// The drawer's own stock toggle leads a narrow section root's header.
-const drawerToggle: NativeStackNavigationOptions['headerLeft'] = ({
-  tintColor,
-}) => <DrawerToggleButton tintColor={tintColor} />;
+function WebMenuButton(): React.JSX.Element {
+  const navigation = useNavigation();
+
+  return (
+    <SectionMenuButton
+      onOpen={() => navigation.dispatch(DrawerActions.openDrawer())}
+    />
+  );
+}
+
+/*
+ * A narrow section root's header on the stack: the web's JS header leads with ☰ and its attention dot; iOS takes the
+ * title here, and the root page declares ☰, its items and its search as stock items (`SectionRoot`).
+ */
+const stackRootOptions = (
+  header: SectionList['rootHeader'],
+): NativeStackNavigationOptions =>
+  Platform.OS === 'web'
+    ? { headerLeft: () => <WebMenuButton />, ...screenHeaderOptions(header) }
+    : screenHeaderOptions(header);
 
 interface BannerProps {
   overHeader: boolean;
@@ -126,7 +161,7 @@ function useSectionOptions(section: Section): SectionOptions {
     screenOptions: narrowOptions,
     rootOptions: drawerDrawsRootHeader
       ? { headerShown: false }
-      : { headerLeft: drawerToggle, ...screenHeaderOptions(header) },
+      : stackRootOptions(header),
   };
 }
 

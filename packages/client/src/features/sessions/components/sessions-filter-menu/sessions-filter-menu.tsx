@@ -4,7 +4,7 @@ import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Menu } from '#primitives/overlays/menu';
 
-const sessionsFilterChoices = [
+export const sessionsFilterChoices = [
   { value: 'active', label: 'Active' },
   { value: 'archived', label: 'Archived' },
 ] as const;

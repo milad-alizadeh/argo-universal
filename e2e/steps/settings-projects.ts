@@ -15,7 +15,7 @@ function settingsRow(page: Page, title: string): Locator {
 
 When('I open Settings', async ({ page }): Promise<void> => {
   if (page.viewportSize()?.width === phone.width)
-    await page.getByRole('button', { name: 'Show navigation menu' }).click();
+    await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
 });
 

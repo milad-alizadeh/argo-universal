@@ -1,16 +1,26 @@
 // FieldGroup.Section hides its tile colours, so Android groups stock ListItems with public modifiers.
-import { Column, Text } from '@expo/ui';
+import { Column } from '@expo/ui';
 import * as Material from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { useResolveClassNames } from 'uniwind';
-import { useNativeTheme } from '#lib/generic/native-theme';
+import {
+  NativeText,
+  type NativeTextRole,
+} from '#primitives/display/native-text';
 import { useSidebarList } from '#primitives/fields/field-layout';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 
 const fullWidth = [Material.fillMaxWidth()];
 
 const sectionCorner = 20;
+
+const gutter = 16;
+
+const captionInset = 4;
+
+const captionModifiers = [
+  Material.padding(gutter, captionInset, gutter, captionInset),
+];
 
 const groupedRows = [
   Material.fillMaxWidth(),
@@ -67,28 +77,18 @@ function numericGap(
 type CaptionProps = { text?: string; heading?: boolean; danger?: boolean };
 
 function Caption(props: CaptionProps): ReactElement | null {
-  const textStyle = useCaptionStyle(props);
-
   if (!props.text) return null;
 
   return (
-    <Text
-      textStyle={textStyle}
-      style={{ paddingHorizontal: 16, paddingVertical: 4 }}
+    <NativeText
+      role={captionRole(props.heading)}
+      tone={props.danger ? 'danger' : 'muted'}
+      modifiers={captionModifiers}
     >
       {props.text}
-    </Text>
+    </NativeText>
   );
 }
 
-function useCaptionStyle(
-  props: CaptionProps,
-): React.ComponentProps<typeof Text>['textStyle'] {
-  const style = useUniversalTextStyle(props.heading ? 'heading' : 'secondary');
-  const colors = useNativeTheme().colors;
-
-  return {
-    ...style,
-    color: props.danger ? colors.danger : colors.mutedForeground,
-  };
-}
+const captionRole = (heading: boolean | undefined): NativeTextRole =>
+  heading ? 'heading' : 'secondary';

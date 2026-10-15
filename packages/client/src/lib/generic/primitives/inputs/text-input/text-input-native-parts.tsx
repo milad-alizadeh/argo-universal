@@ -1,18 +1,18 @@
 import {
   Column,
   Row,
-  Text,
   TextInput,
   type TextInputProps as UniversalTextInputProps,
   useNativeState,
 } from '@expo/ui';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import { accessibilityLabel, font } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Platform } from 'react-native';
+import { codeFace, NativeText } from '#primitives/display/native-text';
+import type { Tone } from '#primitives/display/text';
 import { useFollowedText } from '#primitives/native/followed-text';
-import { useNativeTheme } from '../../../native-theme';
 import { blurOnFocusLoss } from './focus-loss';
 import { isInvalid, type TextFieldProps } from './text-input-props';
 
@@ -22,25 +22,15 @@ type FieldBox = Pick<UniversalTextInputProps, 'textAlign' | 'keyboardType'>;
 
 export type NativeFieldProps = TextFieldProps & FieldBox;
 
-// Text in the platform's own style; danger is the one colour a native field takes from the theme, for an invalid field.
-function FieldText(props: {
-  danger?: boolean;
-  children: string;
-}): React.JSX.Element {
-  const { danger } = useNativeTheme().colors;
-
-  return (
-    <Text textStyle={props.danger === true ? { color: danger } : undefined}>
-      {props.children}
-    </Text>
-  );
-}
+// An invalid field's label and supporting line read in danger.
+const invalidTone = (props: NativeFieldProps): Tone | undefined =>
+  isInvalid(props) ? 'danger' : undefined;
 
 // iOS: the label leading, the field taking the rest of the row with its text trailing.
 export function InlineField(props: NativeFieldProps): React.JSX.Element {
   return (
     <Row alignment="center">
-      <FieldText danger={isInvalid(props)}>{props.label}</FieldText>
+      <NativeText tone={invalidTone(props)}>{props.label}</NativeText>
       <NativeTextField {...props} textAlign="right" />
     </Row>
   );
@@ -53,25 +43,29 @@ export function StackedField({
 }: NativeFieldProps & { line?: string }): React.JSX.Element {
   return (
     <Column spacing={4} modifiers={[fillMaxWidth()]}>
-      <FieldText danger={isInvalid(props)}>{props.label}</FieldText>
+      <NativeText tone={invalidTone(props)}>{props.label}</NativeText>
       <NativeTextField {...props} />
-      <SupportingLine line={line} danger={isInvalid(props)} />
+      <SupportingLine line={line} tone={invalidTone(props)} />
     </Column>
   );
 }
 
 function SupportingLine(props: {
   line?: string;
-  danger: boolean;
+  tone?: Tone;
 }): React.JSX.Element | null {
   if (!props.line) return null;
 
-  return <FieldText danger={props.danger}>{props.line}</FieldText>;
+  return (
+    <NativeText role="secondary" tone={props.tone}>
+      {props.line}
+    </NativeText>
+  );
 }
 
 // The universal text field, following the form's value and blurring only once the person has left it.
 function NativeTextField(props: NativeFieldProps): React.JSX.Element {
-  const code = codeText(props.mono);
+  const code = codeFace(props.mono);
 
   return (
     <TextInput
@@ -113,19 +107,6 @@ function fieldBehaviour(props: NativeFieldProps): UniversalTextInputProps {
     keyboardType: props.keyboardType,
     textAlign: props.textAlign,
   };
-}
-
-type CodeText = Pick<UniversalTextInputProps, 'textStyle'> & {
-  modifiers: Modifiers;
-};
-
-// Code asks only for the mono face, at the platform's own body size: SwiftUI takes it as a font modifier, Compose as a font family.
-function codeText(mono: boolean | undefined): CodeText {
-  if (mono !== true) return { modifiers: [] };
-
-  return Platform.OS === 'ios'
-    ? { modifiers: [font({ textStyle: 'body', design: 'monospaced' })] }
-    : { textStyle: { fontFamily: 'monospace' }, modifiers: [] };
 }
 
 // Compose's bare field takes the column's width; SwiftUI's fills its row already.

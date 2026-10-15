@@ -1,7 +1,7 @@
 // Stock Compose AlertDialog: Expo UI has no universal alert; iOS uses SwiftUI's alert.
 import { AlertDialog, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
+import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
@@ -82,24 +82,13 @@ function AlertCancel(
 function AlertButton(
   props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction },
 ): React.JSX.Element {
-  const { danger } = useNativeTheme().colors;
-
   return (
-    <TextButton
-      onClick={alertActionPress(props.action, props.onOpenChange)}
-      colors={dangerColors(props.action, danger)}
-    >
-      <Text style={{ typography: 'labelLarge' }}>{props.action.label}</Text>
+    <TextButton onClick={alertActionPress(props.action, props.onOpenChange)}>
+      <NativeText role="control" tone={props.action.tone}>
+        {props.action.label}
+      </NativeText>
     </TextButton>
   );
-}
-
-// Danger red is the one colour kept over the Host seed, so a destructive answer stands out.
-function dangerColors(
-  action: AlertAction,
-  danger: string | undefined,
-): React.ComponentProps<typeof TextButton>['colors'] {
-  return action.tone === 'danger' ? { contentColor: danger } : undefined;
 }
 
 Alert satisfies React.ComponentType<AlertProps>;
