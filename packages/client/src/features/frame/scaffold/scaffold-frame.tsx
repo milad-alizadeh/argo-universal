@@ -98,7 +98,6 @@ function Overlays(parts: ScaffoldParts): React.JSX.Element {
 }
 
 interface FrameEdges {
-  testID: string;
   before: ReactNode;
   after: ReactNode;
 }
@@ -107,20 +106,20 @@ interface FrameEdges {
 const frameEdges = (parts: ScaffoldParts): FrameEdges =>
   parts.framed
     ? {
-        testID: 'desktop-shell',
         before: <Backdrop {...parts} />,
         after: <Overlays {...parts} />,
       }
-    : { testID: 'phone-shell', before: null, after: null };
+    : { before: null, after: null };
 
 type FrameRowProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
 function FrameRow({ parts, children }: FrameRowProps): React.JSX.Element {
-  const { testID, before, after } = frameEdges(parts);
+  const { before, after } = frameEdges(parts);
 
   return (
     <View
-      testID={testID}
+      // Named for the Size class it lays out, such as `wide-frame`.
+      testID={`${parts.scaffold.sizeClass}-frame`}
       className="flex-1 flex-row overflow-hidden bg-content"
       onLayout={parts.layout.onLayout}
     >

@@ -5,7 +5,7 @@ import {
   motionDuration,
 } from '#lib/generic/motion';
 
-// The shell's one open and close motion.
+// The Frame's one open and close motion.
 const frameTiming = cssTransition(
   motionDuration.framePane,
   easingCurve.decelerate,
@@ -15,7 +15,7 @@ export type ElementFrame = readonly [HTMLElement | null, Keyframe[]];
 
 export interface FrameTransition<T> {
   value: T;
-  // Only a change of key animates, so a window resize or a divider drag moves the shell at once.
+  // Only a change of key animates, so a window resize or a divider drag moves the Frame at once.
   transitionKey: string;
   animate: boolean;
   // The keyframes for each element, from the value before the change to the value now.
@@ -54,7 +54,7 @@ function useKeyChange<T>(
   });
 }
 
-// Plays the shell's open and close motion on the compositor-friendly properties the caller names; the inline style already holds the end state.
+// Plays the Frame's open and close motion on the compositor-friendly properties the caller names; the inline style already holds the end state.
 export function useFrameTransition<T>({
   value,
   transitionKey,

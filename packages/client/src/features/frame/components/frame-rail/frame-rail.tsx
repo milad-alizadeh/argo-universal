@@ -121,10 +121,10 @@ export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
   return (
     <View
       testID="desktop-rail"
-      className="relative w-shell-rail shrink-0 items-center pb-2"
+      className="relative w-frame-rail shrink-0 items-center pb-2"
     >
       {/* Electron draws the traffic lights here, and the window drags by it. */}
-      <View className="h-shell-control self-stretch web:[app-region:drag]" />
+      <View className="h-frame-control self-stretch web:[app-region:drag]" />
       <RailSections {...props} />
       <SidebarToggle {...props} />
       <RailEdge sidebarShown={props.sidebarShown} />

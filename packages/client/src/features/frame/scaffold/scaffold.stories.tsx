@@ -37,7 +37,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Callbacks report rail and divider changes; controls set the displayed shell props.
+// Callbacks report rail and divider changes; controls set the displayed Scaffold props.
 export const Overview: Story = { name: 'Scaffold' };
 
 // Paper's "Window / Sidebar collapsed": only the rail stays on the glass, and the glow shrinks to a hint.

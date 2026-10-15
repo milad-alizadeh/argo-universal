@@ -8,7 +8,7 @@ export function WindowDragStrip(): React.JSX.Element {
     <View
       testID="window-drag-strip"
       pointerEvents="none"
-      className="absolute inset-x-0 top-0 h-[calc(var(--spacing-shell-inset)+var(--spacing-shell-control))] web:[app-region:drag]"
+      className="absolute inset-x-0 top-0 h-[calc(var(--spacing-frame-inset)+var(--spacing-frame-control))] web:[app-region:drag]"
     />
   );
 }

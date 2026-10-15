@@ -10,7 +10,7 @@ const paletteColour = [{ messageId: 'paletteColour' }];
 ruleTester.run('style-tokens', styleTokens, {
   valid: [
     '<View className="h-5.5 min-w-5.5 bg-tray shadow-tray" />;',
-    "const list = 'w-full wide:w-shell-list wide:px-2';",
+    "const list = 'w-full wide:w-frame-list wide:px-2';",
     'const glow = `color-mix(in oklab, ${colour} 40%, transparent)`;',
     "const issue = 'See [the link](https://example.com) and items[0]';",
     "const heading = '# Title';",

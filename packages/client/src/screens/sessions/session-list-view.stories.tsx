@@ -18,7 +18,7 @@ const meta = {
     onLoadMore: action('load next page'),
     onQueryChange: action('search Sessions'),
   },
-  // The list under a plain header row, as a shell draws it.
+  // The list under a plain header row, as a Frame draws it.
   render: (args): ReactElement => <SessionsPreviewMock {...args} />,
 } satisfies Meta<typeof SessionListView>;
 

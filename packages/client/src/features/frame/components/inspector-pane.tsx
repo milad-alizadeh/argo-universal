@@ -71,7 +71,7 @@ function InspectorTitle({ title }: { title: string }): React.JSX.Element {
 
 function InspectorHeader(props: InspectorPaneProps): React.JSX.Element {
   return (
-    <View className="mt-shell-inset h-shell-control flex-row items-center gap-1 pl-4 pr-2.5">
+    <View className="mt-frame-inset h-frame-control flex-row items-center gap-1 pl-4 pr-2.5">
       <InspectorTitle title={props.title} />
       <ExpandButton {...props} />
       <CloseButton {...props} />

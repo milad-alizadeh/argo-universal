@@ -44,7 +44,7 @@ const componentFolders: [string, string[]][] = [
       'panel-resize-handle',
       'phone-drawer',
       'phone-section-view',
-      'phone-shell',
+      'compact-frame',
       'phone-shell-card',
     ],
   ],

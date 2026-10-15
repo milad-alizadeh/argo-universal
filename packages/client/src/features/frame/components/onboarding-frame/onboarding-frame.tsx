@@ -5,7 +5,7 @@ import { ContentLayout } from '#lib/product/content-layout';
 import { PaneBanner, WindowDragStrip } from '../../scaffold/scaffold-chrome';
 
 export interface OnboardingFrameProps {
-  // The connection banner, as on the full shell.
+  // The connection banner, as on the full Frame.
   banner?: ReactNode;
   children: ReactNode;
 }
@@ -16,7 +16,7 @@ export function OnboardingFrame({
   children,
 }: OnboardingFrameProps): React.JSX.Element {
   return (
-    <View testID="desktop-shell" className="flex-1 overflow-hidden bg-content">
+    <View className="flex-1 overflow-hidden bg-content">
       <WindowDragStrip />
       <View testID="desktop-detail" className="flex-1">
         <ContentLayout className="overflow-hidden">{children}</ContentLayout>

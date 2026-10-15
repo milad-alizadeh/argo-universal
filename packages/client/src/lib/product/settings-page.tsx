@@ -58,7 +58,7 @@ function WideSettingsPage(props: SettingsPageProps): React.JSX.Element {
   const settingsColumn = useSettingsColumn();
 
   return (
-    <View className="mt-shell-inset flex-1">
+    <View className="mt-frame-inset flex-1">
       <SettingsPageTop {...props} column={settingsColumn} />
       <SettingsPageBody column={settingsColumn}>
         {props.children}

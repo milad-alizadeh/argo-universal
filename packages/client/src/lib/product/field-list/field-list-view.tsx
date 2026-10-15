@@ -27,7 +27,7 @@ export interface FieldListProps {
   testID?: string;
 }
 
-// The Settings page's surface: the phone's page, or the shell behind a wide window's page.
+// The Settings page's surface: the phone's page, or the Frame behind a wide window's page.
 const fadeSurface = 'bg-content';
 
 const rowHeightEstimate = 52;

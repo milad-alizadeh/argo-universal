@@ -11,7 +11,7 @@ export function useOnboardingShown(path: string): boolean {
   return firstRun && path === '/sessions' && Platform.OS === 'web';
 }
 
-// Onboarding on its own in place of Sessions, until the first Project arrives; Settings keep the full shell.
+// Onboarding on its own in place of Sessions, until the first Project arrives; Settings keep the full Frame.
 export function OnboardingLayout(): React.JSX.Element {
   return (
     <OnboardingFrame banner={<LiveConnectionBanner />}>

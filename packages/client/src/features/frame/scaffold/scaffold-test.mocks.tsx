@@ -129,7 +129,7 @@ async function runControlled(
 
   try {
     await controlled.render({});
-    await context.canvas.findByTestId('desktop-shell');
+    await context.canvas.findByTestId('wide-frame');
     await play(context, controlled);
   } finally {
     controlled.root.unmount();

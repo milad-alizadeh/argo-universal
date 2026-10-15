@@ -114,7 +114,7 @@ function ListResizeHandle(parts: ScaffoldPartProps): React.JSX.Element | null {
 
   return (
     <View
-      className="absolute top-0 bottom-shell-inset z-40"
+      className="absolute top-0 bottom-frame-inset z-40"
       style={{ left: layout.listHandleLeft }}
     >
       <PanelResizeHandle {...listHandleProps(parts)} />

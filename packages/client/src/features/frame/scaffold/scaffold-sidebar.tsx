@@ -38,7 +38,7 @@ function SidebarListContent({
 }: ScaffoldProps): React.JSX.Element {
   return (
     <>
-      <View className="h-shell-control flex-row items-center gap-1 pl-6 pr-3.5">
+      <View className="h-frame-control flex-row items-center gap-1 pl-6 pr-3.5">
         {listHeader}
       </View>
       <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
@@ -80,7 +80,7 @@ export function ScaffoldSidebarColumn({
   ...parts
 }: ScaffoldSidebarColumnProps): React.JSX.Element {
   return (
-    <View className="p-shell-inset">
+    <View className="p-frame-inset">
       <View className="flex-1 flex-row">
         <SidebarGlass layout={parts.layout} />
         {sidebar}

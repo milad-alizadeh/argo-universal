@@ -6,6 +6,11 @@ export const phone = { width: 390, height: 844 };
 
 export const wide = { width: 1280, height: 800 };
 
+// The Frame's test ID names the Size class it lays out.
+export const compactFrame = 'compact-frame';
+
+export const wideFrame = 'wide-frame';
+
 // A phone Frame stacks each page over its list; a wide one keeps the list beside it.
 export const onPhone = (page: Page): boolean =>
   (page.viewportSize()?.width ?? 0) <= phone.width;

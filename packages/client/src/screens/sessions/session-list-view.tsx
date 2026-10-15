@@ -68,7 +68,7 @@ function useSessionsErrorToasts(props: SessionListViewProps): void {
   );
 }
 
-// The Sessions list below the shell's header row: phone full screen, or the wide window's sidebar.
+// The Sessions list below the Frame's header row: phone full screen, or the wide window's sidebar.
 export function SessionListView(
   props: SessionListViewProps,
 ): React.JSX.Element {

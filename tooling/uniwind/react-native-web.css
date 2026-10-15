@@ -19,7 +19,7 @@
   :where([class*="css-text-"]) {
     font-family: var(--font-sans);
   }
-  /* Controls stay clickable over the desktop shell's window drag strip. */
+  /* Controls stay clickable over the wide Frame's window drag strip. */
   :where(
     button,
     a,

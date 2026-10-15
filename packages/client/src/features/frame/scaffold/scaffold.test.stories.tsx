@@ -44,13 +44,13 @@ async function expectSidebarInsideScaffold({
       canvas.getByTestId(sessionListId).getBoundingClientRect().width,
     ).toBeGreaterThan(100),
   );
-  const shell = canvas.getByTestId('desktop-shell').getBoundingClientRect();
+  const frame = canvas.getByTestId('wide-frame').getBoundingClientRect();
   const sidebar = canvas.getByTestId(sessionListId).getBoundingClientRect();
-  await expect(sidebar.left).toBeGreaterThanOrEqual(shell.left);
+  await expect(sidebar.left).toBeGreaterThanOrEqual(frame.left);
   await waitFor(() =>
     expect(
       canvas.getByTestId(sessionListId).getBoundingClientRect().right,
-    ).toBeLessThanOrEqual(shell.right),
+    ).toBeLessThanOrEqual(frame.right),
   );
 }
 

@@ -14,7 +14,7 @@ import { useScrolling } from './sessions-list-scrolling';
 
 /*
  * Wide, Paper's sidebar list: the first Project sits level with the rail's first tile.
- * The shell's list pane sets the column its content keeps to, 8 from the left and 14 from the right, so rows add no side padding.
+ * The Frame's list pane sets the column its content keeps to, 8 from the left and 14 from the right, so rows add no side padding.
  */
 const contentStyle = {
   paddingLeft: 0,

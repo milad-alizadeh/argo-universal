@@ -28,7 +28,7 @@ function InsertingList({
   const [sessions, setSessions] = useState(largeSessions.slice(0, 12));
 
   return (
-    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+    <View className="flex-1 w-full wide:w-frame-list" style={{ minHeight: 0 }}>
       <Pressable
         role="button"
         onPress={() => setSessions([insertedSession, ...sessions.slice(0, 12)])}

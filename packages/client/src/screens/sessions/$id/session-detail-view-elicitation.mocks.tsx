@@ -9,7 +9,7 @@ import {
   type SessionDetailViewProps,
 } from './session-detail-view';
 
-// The Session page with an Elicitation that closes once answered, inside the shell on a wide window.
+// The Session page with an Elicitation that closes once answered, inside the Frame on a wide window.
 export function ElicitationPreview(
   props: SessionDetailViewProps,
 ): React.JSX.Element {

@@ -1,6 +1,6 @@
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { phone, reloadApp } from './frame';
+import { compactFrame, phone, reloadApp } from './frame';
 import { expectSettingsList } from './navigation';
 
 Given(
@@ -23,6 +23,6 @@ Then(
   'the phone Frame shows the Settings list',
   async ({ page }): Promise<void> => {
     await expectSettingsList(page);
-    await expect(page.getByTestId('phone-shell')).toBeVisible();
+    await expect(page.getByTestId(compactFrame)).toBeVisible();
   },
 );

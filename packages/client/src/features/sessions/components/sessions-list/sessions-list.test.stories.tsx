@@ -105,7 +105,7 @@ export const FirstAndLastRowsReachableDark: Story = {
 export const LargeListRendersWindow: Story = {
   parameters: { screenPreview: true },
   render: (args) => (
-    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+    <View className="flex-1 w-full wide:w-frame-list" style={{ minHeight: 0 }}>
       <SessionsList {...args} sessions={largeSessions} />
     </View>
   ),
@@ -122,7 +122,7 @@ export const LargeListRendersWindow: Story = {
 export const ScrollFade: Story = {
   parameters: { screenPreview: true },
   render: (args) => (
-    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+    <View className="flex-1 w-full wide:w-frame-list" style={{ minHeight: 0 }}>
       <SessionsList {...args} sessions={largeSessions.slice(0, 40)} />
     </View>
   ),

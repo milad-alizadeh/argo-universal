@@ -65,10 +65,10 @@ function useCSSPixels(name: string): number {
 
 function useScaffoldMeasures(): ScaffoldMeasures {
   return {
-    listWidth: useCSSPixels('--spacing-shell-list'),
-    inspectorWidth: useCSSPixels('--spacing-shell-inspector'),
-    railWidth: useCSSPixels('--spacing-shell-rail'),
-    inset: useCSSPixels('--spacing-shell-inset'),
+    listWidth: useCSSPixels('--spacing-frame-list'),
+    inspectorWidth: useCSSPixels('--spacing-frame-inspector'),
+    railWidth: useCSSPixels('--spacing-frame-rail'),
+    inset: useCSSPixels('--spacing-frame-inset'),
   };
 }
 
