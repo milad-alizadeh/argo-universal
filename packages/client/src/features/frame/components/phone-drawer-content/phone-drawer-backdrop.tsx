@@ -149,8 +149,7 @@ export function PhoneDrawerBackdrop({
   return (
     <View
       aria-hidden
-      pointerEvents="none"
-      className="absolute bottom-0 left-0 top-0 overflow-hidden"
+      className="pointer-events-none absolute bottom-0 left-0 top-0 overflow-hidden"
       style={{ width }}
     >
       <BackdropSvg width={width} />

@@ -34,7 +34,7 @@ function UnderHeader({
 }: PhoneConnectionBannerProps): React.JSX.Element {
   return (
     <Animated.View
-      pointerEvents="box-none"
+      className="pointer-events-box-none"
       style={
         headerHeight ? { transform: [{ translateY: headerHeight }] } : undefined
       }
@@ -49,10 +49,7 @@ export function PhoneConnectionBanner(
   props: PhoneConnectionBannerProps,
 ): React.JSX.Element {
   return (
-    <View
-      pointerEvents="box-none"
-      className="absolute inset-x-0 top-2 items-center"
-    >
+    <View className="pointer-events-box-none absolute inset-x-0 top-2 items-center">
       <UnderHeader {...props} />
     </View>
   );
