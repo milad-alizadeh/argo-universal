@@ -5,7 +5,7 @@ import {
   type TextInputProps as UniversalTextInputProps,
   useNativeState,
 } from '@expo/ui';
-import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
+import { fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
 import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -14,6 +14,7 @@ import { codeFace, NativeText } from '#primitives/display/native-text';
 import type { Tone } from '#primitives/display/text';
 import { useFollowedText } from '#primitives/native/followed-text';
 import { blurOnFocusLoss } from './focus-loss';
+import { FieldProgress } from './text-input-progress';
 import { isInvalid, type TextFieldProps } from './text-input-props';
 
 type Modifiers = NonNullable<UniversalTextInputProps['modifiers']>;
@@ -32,6 +33,7 @@ export function InlineField(props: NativeFieldProps): React.JSX.Element {
     <Row alignment="center">
       <NativeText tone={invalidTone(props)}>{props.label}</NativeText>
       <NativeTextField {...props} textAlign="right" />
+      <FieldProgress label={props.label} loading={props.loading} />
     </Row>
   );
 }
@@ -44,9 +46,21 @@ export function StackedField({
   return (
     <Column spacing={4} modifiers={[fillMaxWidth()]}>
       <NativeText tone={invalidTone(props)}>{props.label}</NativeText>
-      <NativeTextField {...props} />
+      <FieldWithProgress {...props} />
       <SupportingLine line={line} tone={invalidTone(props)} />
     </Column>
+  );
+}
+
+// While the value is checked, the field shares its row with the spinner at the end.
+function FieldWithProgress(props: NativeFieldProps): React.JSX.Element {
+  if (!props.loading) return <NativeTextField {...props} />;
+
+  return (
+    <Row alignment="center" spacing={8} modifiers={[fillMaxWidth()]}>
+      <NativeTextField {...props} width={[weight(1)]} />
+      <FieldProgress label={props.label} loading />
+    </Row>
   );
 }
 
@@ -64,7 +78,10 @@ function SupportingLine(props: {
 }
 
 // The universal text field, following the form's value and blurring only once the person has left it.
-function NativeTextField(props: NativeFieldProps): React.JSX.Element {
+function NativeTextField({
+  width = fieldWidth,
+  ...props
+}: NativeFieldProps & { width?: Modifiers }): React.JSX.Element {
   const code = codeFace(props.mono);
 
   return (
@@ -72,7 +89,7 @@ function NativeTextField(props: NativeFieldProps): React.JSX.Element {
       {...useFieldValue(props)}
       {...fieldBehaviour(props)}
       textStyle={code.textStyle}
-      modifiers={[...fieldWidth, ...code.modifiers, ...namedField(props.label)]}
+      modifiers={[...width, ...code.modifiers, ...namedField(props.label)]}
     />
   );
 }

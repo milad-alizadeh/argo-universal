@@ -33,6 +33,7 @@ function IconRows(): React.JSX.Element {
       <ProjectsRow />
       <UnavailableAgentRow />
       <AppearanceRow />
+      <InboxRow />
     </GroupedListSection>
   );
 }
@@ -46,6 +47,12 @@ function ProjectsRow(): React.JSX.Element {
       needsAttention
       onPress={onPress}
     />
+  );
+}
+
+function InboxRow(): React.JSX.Element {
+  return (
+    <GroupedListItem label="Inbox" icon="triage" badge={3} onPress={onPress} />
   );
 }
 

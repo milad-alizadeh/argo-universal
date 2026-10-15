@@ -1,10 +1,15 @@
 import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { View } from 'react-native';
+import { Spinner } from '#primitives/display/spinner';
 import { Text } from '#primitives/display/text';
 import { Field } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { BareTextInput } from './text-input-bare';
-import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
+import {
+  fieldLoadingLabel,
+  isInvalid,
+  type StandaloneTextInputProps,
+} from './text-input-props';
 
 export function StandaloneTextInput(
   props: StandaloneTextInputProps,
@@ -25,7 +30,10 @@ function TextField(props: StandaloneTextInputProps): ReactElement {
   return (
     <View className="gap-1.5">
       <FieldLabel {...props} />
-      <BareTextInput {...inputProps(props)} aria-describedby={describedBy} />
+      <View className="flex-row items-center gap-2">
+        <BareTextInput {...inputProps(props)} aria-describedby={describedBy} />
+        <FieldSpinner {...props} />
+      </View>
     </View>
   );
 }
@@ -39,6 +47,14 @@ function FieldLabel(props: StandaloneTextInputProps): ReactElement {
   );
 }
 
+function FieldSpinner(
+  props: Pick<StandaloneTextInputProps, 'label' | 'loading'>,
+): ReactElement | null {
+  if (!props.loading) return null;
+
+  return <Spinner accessibilityLabel={fieldLoadingLabel(props.label)} />;
+}
+
 type InputProps = ComponentProps<typeof BareTextInput>;
 
 function inputProps(props: StandaloneTextInputProps): InputProps & {
@@ -49,7 +65,7 @@ function inputProps(props: StandaloneTextInputProps): InputProps & {
     ...inputBehaviour(props),
     'aria-invalid': isInvalid(props),
     'aria-required': props.required,
-    className: 'rounded-control type-control shadow-none dark:bg-card',
+    className: 'flex-1 rounded-control type-control shadow-none dark:bg-card',
   };
 }
 
