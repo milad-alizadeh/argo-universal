@@ -126,24 +126,21 @@ function swipesDown(distance: number, staysOpen: boolean): Story {
       await userEvent.click(canvas.getByRole('button', rename));
       const dialog = await body.findByRole('dialog', dialogName);
       await dragLockEnds();
-      // The drag starts on the grabber: a drag across the title would select its text, and the drawer stays put while text is selected.
-      const grip = dialog.querySelector<HTMLElement>('[data-vaul-handle]');
-
-      if (!grip) throw new Error('The sheet has no grabber');
-      const { left, top } = grip.getBoundingClientRect();
+      // Start in the empty top edge of the semantic dialog surface, above its selectable title.
+      const { left, top, width } = dialog.getBoundingClientRect();
 
       const at = (y: number): PointerCoords => ({
-        clientX: left + 4,
+        clientX: left + width / 2,
         clientY: top + 4 + y,
-        pageX: left + 4 + window.scrollX,
+        pageX: left + width / 2 + window.scrollX,
         pageY: top + 4 + y + window.scrollY,
       });
 
       await userEvent.pointer([
-        { keys: '[MouseLeft>]', target: grip, coords: at(0) },
-        { target: grip, coords: at(distance / 2) },
-        { target: grip, coords: at(distance) },
-        { keys: '[/MouseLeft]', target: grip, coords: at(distance) },
+        { keys: '[MouseLeft>]', target: dialog, coords: at(0) },
+        { target: dialog, coords: at(distance / 2) },
+        { target: dialog, coords: at(distance) },
+        { keys: '[/MouseLeft]', target: dialog, coords: at(distance) },
       ]);
       await waitFor(() =>
         expect(body.queryByRole('dialog', dialogName) !== null).toBe(staysOpen),

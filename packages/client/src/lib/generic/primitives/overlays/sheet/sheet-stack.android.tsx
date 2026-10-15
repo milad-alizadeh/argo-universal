@@ -1,28 +1,21 @@
-import ArrowBack from '@expo/material-symbols/arrow_back.xml';
 import {
   AnimatedVisibility,
   Box,
   Column,
   EnterTransition,
   ExitTransition,
-  Icon,
-  IconButton,
   RNHostView,
-  Row,
-  Text,
 } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
   fillMaxHeight,
   fillMaxWidth,
-  padding,
-  semantics,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement, ReactNode } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { SheetBody } from './sheet-body';
-import { backLabel } from './sheet-page-label';
+import { PageHeader } from './sheet-page-header.android';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
 import { sheetDetents } from './sheet-state';
@@ -116,7 +109,7 @@ type PageProps = PagesProps & {
 function StackPage(props: PageProps): ReactElement {
   return (
     <Column modifiers={sheetModifiers(props.fill)}>
-      {showHeader(props) && <PageHeader {...props} />}
+      <PageHeader {...props} title={props.page.title} />
       <PageContent
         {...props}
         contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
@@ -124,42 +117,6 @@ function StackPage(props: PageProps): ReactElement {
         {props.page.content}
       </PageContent>
     </Column>
-  );
-}
-
-function showHeader(props: PageProps): boolean {
-  return !props.root || !!props.page.title;
-}
-
-function PageHeader(props: PageProps): ReactElement {
-  return (
-    <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
-      {!props.root && <BackButton stack={props.stack} />}
-      <Text maxLines={1} modifiers={titleModifiers(props.root)}>
-        {props.page.title ?? ''}
-      </Text>
-    </Row>
-  );
-}
-
-// The list's 16 dp gutter, so a root page's title lines up with the rows under it; on a pushed page the back button leads instead.
-const titleInset = 16;
-
-function titleModifiers(root: boolean): ModifierConfig[] {
-  return root
-    ? [weight(1), padding(titleInset, 0, titleInset, 0)]
-    : [weight(1)];
-}
-
-// Material's standard icon button with the Material Symbols back arrow, drawn by Compose so the press reaches the button.
-function BackButton({ stack }: Pick<PageProps, 'stack'>): ReactElement {
-  return (
-    <IconButton
-      onClick={stack.navigation.back}
-      modifiers={[semantics({ contentDescription: backLabel(stack) })]}
-    >
-      <Icon source={ArrowBack} />
-    </IconButton>
   );
 }
 

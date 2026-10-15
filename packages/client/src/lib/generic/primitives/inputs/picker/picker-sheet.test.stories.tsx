@@ -10,6 +10,8 @@ const changed = fn<(value: string) => void>();
 
 const blurred = fn<() => void>();
 
+const fruitTrigger = 'Fruit: Apple';
+
 const choices = [
   'Apple',
   'Banana',
@@ -39,14 +41,24 @@ function Choice(): React.JSX.Element {
   );
 }
 
-function Form(): React.JSX.Element {
+function Form({ protectable }: { protectable?: boolean }): React.JSX.Element {
   const [open, setOpen] = useState(false);
+  const [dismissible, setDismissible] = useState(true);
 
   return (
     <Sheet
       open={open}
       onOpenChange={setOpen}
       label="Settings"
+      dismissible={dismissible}
+      footer={
+        protectable && (
+          <Button
+            label={dismissible ? 'Start sending' : 'Finish sending'}
+            onPress={() => setDismissible(!dismissible)}
+          />
+        )
+      }
       trigger={<Button custom label="Settings" />}
     >
       <Sheet.Page name="settings" title="Settings">
@@ -75,7 +87,7 @@ export const BackAndReopen: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));
     await userEvent.click(
-      await page.findByRole('button', { name: 'Fruit: Apple' }),
+      await page.findByRole('button', { name: fruitTrigger }),
     );
     await userEvent.click(
       await page.findByRole('button', { name: 'Back to Settings' }),
@@ -83,7 +95,7 @@ export const BackAndReopen: Story = {
     await expect(changed).not.toHaveBeenCalled();
     await expect(blurred).toHaveBeenCalledTimes(1);
     await userEvent.click(
-      await page.findByRole('button', { name: 'Fruit: Apple' }),
+      await page.findByRole('button', { name: fruitTrigger }),
     );
     await userEvent.click(await page.findByRole('radio', { name: 'Cherry' }));
     await expect(
@@ -102,5 +114,36 @@ export const BackAndReopen: Story = {
     await userEvent.keyboard('{Escape}');
     await expect(blurred).toHaveBeenCalledTimes(3);
     await expect(changed).toHaveBeenCalledTimes(1);
+  },
+};
+
+// The caller changes protection while the field's page is open, as a form begins sending.
+export const ProtectionSurvivesBack: Story = {
+  render: () => <Form protectable />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));
+    await userEvent.click(
+      await page.findByRole('button', { name: fruitTrigger }),
+    );
+    await page.findByRole('radio', { name: 'Cherry' });
+    await userEvent.click(page.getByRole('button', { name: 'Start sending' }));
+    await userEvent.click(
+      page.getByRole('button', { name: 'Back to Settings' }),
+    );
+    await userEvent.keyboard('{Escape}');
+    await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: fruitTrigger }),
+    ).toBeVisible();
+    await expect(changed).not.toHaveBeenCalled();
+    await userEvent.click(page.getByRole('button', { name: 'Finish sending' }));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(
+        page.queryByRole('dialog', { name: 'Settings' }),
+      ).not.toBeInTheDocument(),
+    );
+    await expect(blurred).toHaveBeenCalledTimes(1);
   },
 };

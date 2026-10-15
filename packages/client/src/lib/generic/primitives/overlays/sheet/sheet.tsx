@@ -39,7 +39,7 @@ function DrawerSheet(props: PresentationProps): ReactElement {
     <Drawer.Root {...drawerProps(props)}>
       <SheetTrigger {...props} />
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-50 bg-black/20" />
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-scrim/20" />
         <DrawerContent {...props} />
       </Drawer.Portal>
     </Drawer.Root>

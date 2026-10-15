@@ -118,9 +118,11 @@ function ConfigurationPicker(props: PickerProps): React.JSX.Element {
 
   return (
     <View className="gap-3">
-      <Text role="heading" aria-level={2} className="px-4 pt-1">
-        {pickerTitle(props.page)}
-      </Text>
+      <View className="px-4 pt-1">
+        <Text role="heading" aria-level={2}>
+          {pickerTitle(props.page)}
+        </Text>
+      </View>
       <ConfigurationPickerChoices {...props} close={close} />
     </View>
   );
