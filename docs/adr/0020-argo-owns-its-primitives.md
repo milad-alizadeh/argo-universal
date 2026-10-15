@@ -5,8 +5,9 @@ Screens import every control from `#primitives` and nothing else (owner, 2026-10
 ## Decision
 
 - **One API, up to three drawings.** A primitive has one TypeScript type shared by all its platform files. Screens never import `@expo/ui`, `@rn-primitives`, SwiftUI or Compose types.
-- **iOS** draws the SwiftUI control from `@expo/ui` inside a `Host` (`.ios.tsx`).
-- **Android** draws the Jetpack Compose control from `@expo/ui` in Material 3, or Argo's own composition of Compose parts where Expo UI's control is the wrong pattern (`.android.tsx`). GroupedList and DrawerItem are such Argo compositions, not stock Compose components.
+- **Phones draw with Expo UI's universal components** (amended 2026-10-15, Spec 0015 #724 decision 8, #756). Each primitive has one `<name>.native.tsx` built from root `@expo/ui` (BottomSheet, Button, Checkbox, Collapsible, Column, FieldGroup, Host, Icon, List, ListItem, Picker, Row, ScrollView, Slider, Spacer, Switch, Text, TextInput), with platform modifiers where a detail needs them. A primitive keeps separate `.ios.tsx` and `.android.tsx` files only where the platforms truly differ, and a one-line comment says why. This replaces the earlier split into SwiftUI controls on iOS and Compose controls on Android.
+- **Where no universal component exists**, menus use Expo UI's `MenuView` drop-in; anything else uses the stock SwiftUI or Compose control (Alert, FilterChip and similar). Never hand-built, never patched.
+- **Colours the Expo way.** The `Host` takes `seedColor` from the accent token and `colorScheme` from the Appearance. Android generates its Material 3 palette from the seed and iOS uses it as the tint. No control sets its own Compose `colors`, and Paper's native frames follow the generated palette. Danger is the one exception (owner, 2026-10-15): the danger Button variant, destructive Alert actions on Android, an invalid field's label and error text, and danger row text and footers read the danger theme token, applied with `foregroundStyle` or `tint` on iOS and the Compose colour on Android. iOS uses the token, not `systemRed`.
 - **Web and desktop** use Expo UI's universal drawing when it meets the approved Paper master's look, states and behaviour; otherwise they use Argo's own React Native Web views, styled with Uniwind (the plain `.tsx` file). This replaces the blanket exclusion of Expo UI's web drawing (owner, 2026-10-10, #419); screens still use Argo's shared primitive API.
 - **Data props, not children.** SwiftUI and Compose buttons cannot take Argo `Text` children, so native-drawn primitives take `label`, `value`, `options` and similar props.
 - **No `className`, `style` or `*ClassName` slot on kit components** outside `lib/generic` (amended 2026-10-14, Spec 0015 #724). Layout and look come from props and the token roles of ADR-0026. An oxlint rule enforces it, with a shrinking allowlist (ADR-0016, application 13). This replaces the earlier split, where Argo-drawn primitives kept `className`.
@@ -17,15 +18,9 @@ Screens import every control from `#primitives` and nothing else (owner, 2026-10
 
 In SDK 57, radii, heights, padding, font stack and destructive red are fixed in a `StyleSheet`. The shared `style` prop is limited to padding, background, radius, border, opacity, width and height. The controls have no `className`. Button has three variants. Colours are CSS variables. Compare each control with its approved Paper master, including interaction states, before choosing its drawing. FieldSection's white bordered card and dividers do not match Argo's grouped muted cards; ListItem lacks the required hover, focus and selected drawings. Those controls keep Argo's own web drawings.
 
-## Why Android does not use Expo UI's FieldGroup
+## Android grouped lists use Expo UI's FieldGroup
 
-Expo UI's universal FieldGroup cannot be used or wrapped on Android:
-
-- It hard-codes the tile colour (surfaceContainer) and a content padding of 16, with no navigation-bar inset.
-- It matches sections by component identity, so an Argo wrapper becomes a row inside an implicit section.
-- Its FieldSection puts every child inside a Compose ListItem's headline, so a nested ListItem draws a second ListItem inside the muted tile. That doubles the inset, makes rows taller and stops the ripple short of the tile.
-
-Argo's Android GroupedList and GroupedListSection are Argo's own Compose compositions, adapted from Expo's: colours come from the theme bridge, the bottom inset from safe-area context, and each row is drawn from its props with `clickable` on the clipped tile. The same applies to the Picker, a two-line row that opens a radio dialog, and to menus.
+GroupedList and GroupedListSection draw with the universal FieldGroup on both phones (amended 2026-10-15, Spec 0015 #724 decision 8). Its fixed tile colour and padding are accepted as Material's look. On Android, Argo puts `FieldGroup.Section`s in a `Column` inside its own scroll view and Host, because FieldGroup's own lazy list cannot sit inside the page's React Native scroll view. This replaces the earlier Argo Compose composition and its theme bridge.
 
 ## Custom symbols in native rows
 

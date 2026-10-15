@@ -1,32 +1,27 @@
-import type { Text as ComposeText } from '@expo/ui/jetpack-compose';
+import type { UniversalTextStyle } from '@expo/ui';
 import { createModifier, font, lineHeight } from '@expo/ui/swift-ui/modifiers';
-import type { ComponentProps } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import { type TextRole, useTextStyle } from '#primitives/display/text';
 import { swiftFontFace } from './swift-font-face';
 
-type ComposeTextStyle = NonNullable<
-  ComponentProps<typeof ComposeText>['style']
->;
-
 interface NativeFontWeight {
   swift: NonNullable<Parameters<typeof font>[0]['weight']>;
-  compose: NonNullable<ComposeTextStyle['fontWeight']>;
+  universal: NonNullable<UniversalTextStyle['fontWeight']>;
 }
 
 // React Native's font weights, by name and number, as SwiftUI and Compose name them.
 const fontWeights = new Map<string, NativeFontWeight>([
-  ['normal', { swift: 'regular', compose: 'normal' }],
-  ['bold', { swift: 'bold', compose: 'bold' }],
-  ['100', { swift: 'ultraLight', compose: '100' }],
-  ['200', { swift: 'thin', compose: '200' }],
-  ['300', { swift: 'light', compose: '300' }],
-  ['400', { swift: 'regular', compose: '400' }],
-  ['500', { swift: 'medium', compose: '500' }],
-  ['600', { swift: 'semibold', compose: '600' }],
-  ['700', { swift: 'bold', compose: '700' }],
-  ['800', { swift: 'heavy', compose: '800' }],
-  ['900', { swift: 'black', compose: '900' }],
+  ['normal', { swift: 'regular', universal: 'normal' }],
+  ['bold', { swift: 'bold', universal: 'bold' }],
+  ['100', { swift: 'ultraLight', universal: '100' }],
+  ['200', { swift: 'thin', universal: '200' }],
+  ['300', { swift: 'light', universal: '300' }],
+  ['400', { swift: 'regular', universal: '400' }],
+  ['500', { swift: 'medium', universal: '500' }],
+  ['600', { swift: 'semibold', universal: '600' }],
+  ['700', { swift: 'bold', universal: '700' }],
+  ['800', { swift: 'heavy', universal: '800' }],
+  ['900', { swift: 'black', universal: '900' }],
 ]);
 
 export function useSwiftUITextModifiers(
@@ -80,18 +75,22 @@ function scaledValue(
   return value === undefined ? undefined : value * scale;
 }
 
-export function useComposeTextStyle(role: TextRole): ComposeTextStyle {
+// A text role as Expo UI's universal Text takes it on both phones; colour is left to the Host's palette.
+export function useUniversalTextStyle(role: TextRole): UniversalTextStyle {
   const style = useTextStyle(role);
 
   return {
-    fontFamily: composeFamily(style.fontFamily),
+    fontFamily: nativeFamily(style.fontFamily),
     fontSize: style.fontSize,
     lineHeight: style.lineHeight,
-    fontWeight: fontWeights.get(String(style.fontWeight))?.compose,
+    fontWeight: fontWeights.get(String(style.fontWeight))?.universal,
     letterSpacing: style.letterSpacing,
   };
 }
 
-function composeFamily(family: string | undefined): string | undefined {
+// SwiftUI takes a system face as no family; Compose names the sans-serif family sansSerif.
+function nativeFamily(family: string | undefined): string | undefined {
+  if (Platform.OS === 'ios') return swiftFontFace(family).family;
+
   return family === 'sans-serif' ? 'sansSerif' : family;
 }

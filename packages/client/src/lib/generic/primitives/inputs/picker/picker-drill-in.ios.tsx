@@ -1,152 +1,127 @@
+// iOS only: a long list opens a searchable page in a NavigationStack, which universal Picker cannot offer.
+import { Button, Row, Text } from '@expo/ui';
 import {
-  BottomSheet,
-  Group,
-  NavigationDestination,
-  NavigationStack,
-  RNHostView,
-  Text,
-} from '@expo/ui/swift-ui';
-import {
-  navigationBarTitleDisplayMode,
-  navigationTitle,
-  presentationBackground,
-  presentationDetents,
+  accessibilityHint,
+  accessibilityLabel,
+  accessibilityValue,
 } from '@expo/ui/swift-ui/modifiers';
-import { useState } from 'react';
-import { RoutedFormSheet } from '#primitives/overlays/bottom-sheet';
-import { useFormSheetCommands } from '#primitives/overlays/bottom-sheet';
-import { useNativeTheme } from '../../../native-theme';
+import { createElement, useState } from 'react';
+import { errorMessage } from '#primitives/fields/field-errors';
+import { useUniversalTextStyle } from '#primitives/native/native-typography';
+import { useSheetNavigation } from '#primitives/overlays/bottom-sheet';
+import { NativeSymbol } from '../../../symbols/native-symbol';
+import { PickerDrillInSheet } from './picker-drill-in-sheet.ios';
+import { PickerNativeField, PickerNativeHost } from './picker-native-field';
 import type { PickerProps } from './picker-props';
 import { PickerSearchList } from './picker-search-list';
+import { pickerValue } from './picker-selection';
 
-type DrillProps<Value extends string> = PickerProps<Value> & {
-  open: boolean;
-  onClose: () => void;
+export const drillInLimit = 7;
+
+type TriggerProps<Value extends string> = PickerProps<Value> & {
+  onPress: () => void;
 };
 
-const destination = 'picker-options';
+type DrillIn = { onPress: () => void; sheet: React.ReactNode };
 
 export function PickerDrillIn<Value extends string>(
-  props: DrillProps<Value>,
+  props: PickerProps<Value>,
 ): React.JSX.Element {
-  const commands = useFormSheetCommands();
+  const { onPress, sheet } = useDrillIn(props);
 
-  if (commands)
-    return (
-      <RoutedFormSheet {...routedProps(props)} commands={commands}>
-        <PickerSearchList {...props} />
-      </RoutedFormSheet>
-    );
-
-  return <StandalonePickerSheet {...props} />;
-}
-
-function StandalonePickerSheet<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
   return (
-    <BottomSheet {...sheetProps(props)}>
-      <PickerPage {...props} />
-    </BottomSheet>
+    <PickerNativeHost>
+      <DrillInTrigger {...props} onPress={onPress} />
+      {sheet}
+    </PickerNativeHost>
   );
 }
 
-function sheetProps(props: {
-  open: boolean;
-  onClose: () => void;
-}): Omit<React.ComponentProps<typeof BottomSheet>, 'children'> {
-  return {
-    isPresented: props.open,
-    onIsPresentedChange: (open) => {
-      if (!open) props.onClose();
-    },
+// Inside a sheet the options push onto its own navigation; elsewhere they open a sheet of their own.
+function useDrillIn<Value extends string>(props: PickerProps<Value>): DrillIn {
+  const [open, setOpen] = useState(false);
+  const navigation = useSheetNavigation();
+
+  if (navigation)
+    return { onPress: pushOptions(props, navigation), sheet: null };
+
+  const onClose = sheetClose(props, setOpen);
+  const sheet = <PickerDrillInSheet {...props} open={open} onClose={onClose} />;
+
+  return { onPress: (): void => setOpen(true), sheet };
+}
+
+function pushOptions<Value extends string>(
+  props: PickerProps<Value>,
+  navigation: NonNullable<ReturnType<typeof useSheetNavigation>>,
+): () => void {
+  return (): void =>
+    navigation.push({
+      title: props.label,
+      content: <PickerSearchList {...props} onClose={navigation.back} />,
+    });
+}
+
+function sheetClose<Value extends string>(
+  props: PickerProps<Value>,
+  setOpen: (open: boolean) => void,
+): () => void {
+  return (): void => {
+    setOpen(false);
+    props.onBlur?.();
   };
 }
 
-function PickerPage<Value extends string>(
-  props: DrillProps<Value>,
+function DrillInTrigger<Value extends string>(
+  props: TriggerProps<Value>,
 ): React.JSX.Element {
-  return (
-    <Group modifiers={usePageModifiers()}>
-      {props.open && <PickerNavigation {...props} />}
-    </Group>
+  return createElement(
+    Button,
+    triggerProps(props),
+    <PickerNativeField {...props}>
+      <TriggerValue {...props} />
+    </PickerNativeField>,
   );
 }
 
-function usePageModifiers(): ReturnType<typeof presentationDetents>[] {
-  const { card } = useNativeTheme().colors;
+function triggerProps<Value extends string>(
+  props: TriggerProps<Value>,
+): React.ComponentProps<typeof Button> {
+  return {
+    variant: 'text',
+    onPress: props.onPress,
+    disabled: props.disabled,
+    modifiers: triggerModifiers(props),
+  };
+}
 
+function TriggerValue<Value extends string>(
+  props: PickerProps<Value>,
+): React.JSX.Element {
+  return (
+    <Row alignment="center" spacing={6}>
+      <Text textStyle={useUniversalTextStyle('body')}>
+        {pickerValue(props)}
+      </Text>
+      <NativeSymbol name="chevron-up-down" role="body" />
+    </Row>
+  );
+}
+
+function triggerModifiers<Value extends string>(
+  props: PickerProps<Value>,
+): ReturnType<typeof accessibilityLabel>[] {
   return [
-    presentationDetents(['large']),
-    presentationBackground(card ?? 'clear'),
+    accessibilityLabel(props.label),
+    accessibilityValue(pickerValue(props)),
+    accessibilityHint(triggerHint(props)),
   ];
 }
 
-function PickerNavigation<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
-  return (
-    <NavigationStack {...usePickerPath(props.onClose)}>
-      <PickerRoutes {...props} />
-    </NavigationStack>
-  );
+function triggerHint<Value extends string>(props: PickerProps<Value>): string {
+  return errorMessage(props.errors ?? []) ?? hintText(props.hint);
 }
 
-function usePickerPath(
-  close: () => void,
-): Omit<React.ComponentProps<typeof NavigationStack>, 'children'> {
-  const [path, setPath] = useState([destination]);
-
-  return {
-    path,
-    onPathChange: (next) => {
-      setPath(next);
-
-      if (next.length === 0) close();
-    },
-  };
-}
-
-function PickerRoutes<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
-  return (
-    <>
-      <Text modifiers={[navigationTitle('Back')]}>{props.label}</Text>
-      <NavigationDestination value={destination}>
-        <PickerDestination {...props} />
-      </NavigationDestination>
-    </>
-  );
-}
-
-function PickerDestination<Value extends string>(
-  props: DrillProps<Value>,
-): React.JSX.Element {
-  return (
-    <Group modifiers={destinationModifiers(props.label)}>
-      <RNHostView>
-        <PickerSearchList {...props} />
-      </RNHostView>
-    </Group>
-  );
-}
-
-function destinationModifiers(
-  label: string,
-): ReturnType<typeof navigationTitle>[] {
-  return [navigationTitle(label), navigationBarTitleDisplayMode('inline')];
-}
-
-function routedProps<Value extends string>(
-  props: DrillProps<Value>,
-): Omit<React.ComponentProps<typeof RoutedFormSheet>, 'commands' | 'children'> {
-  return {
-    open: props.open,
-    label: props.label,
-    headerTitle: props.label,
-    onOpenChange: (open): void => {
-      if (!open) props.onClose();
-    },
-  };
+function hintText(hint?: string): string {
+  return hint ?? '';
 }
