@@ -124,9 +124,10 @@
       --color-primary-foreground: var(--color-neutral-50);
       /* Native controls: switch track, slider, checkmark and picker value. */
       --color-accent: var(--color-neutral-900);
-      /* A muted fill, and a hovered or pressed row, item or button: one step
-         darker than content, so it shows on content and on a card. */
-      --color-muted: var(--color-neutral-200);
+      /* A muted fill: a field, tonal button, segment or quoted block. Halfway
+         between content and neutral-200, so it shows on content and on a card
+         without looking heavy. */
+      --color-muted: oklch(94.6% 0 0);
       --color-muted-foreground: var(--color-neutral-500);
       --color-danger: var(--color-red-500);
       /* Text and icons on a danger fill, such as a badge count. */
