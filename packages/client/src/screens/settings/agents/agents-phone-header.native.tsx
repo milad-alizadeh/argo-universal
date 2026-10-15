@@ -19,7 +19,7 @@ const filterIcon = toolbarIcon(headerFilterIcon);
 
 const addIcon = toolbarIcon('add');
 
-// A phone's native header, as the Stack Toolbar guide builds one: the title, the filter menu, Add custom Agent, and the stack's search bar.
+// A phone's native header, as the Stack Toolbar guide builds one: the title, the filter menu and Add custom Agent, each in its own bubble, and the stack's search bar.
 export function AgentsPhoneHeader(
   props: AgentsHeaderProps,
 ): React.JSX.Element | null {
@@ -41,11 +41,18 @@ function rightToolbar(props: AgentsHeaderProps): React.JSX.Element {
       <Stack.Toolbar.Button
         icon={addIcon}
         accessibilityLabel={addCustomAgentLabel}
+        separateBackground
         onPress={props.onAddCustomAgent}
       />
     </Stack.Toolbar>
   );
 }
+
+const filterMenuItem = {
+  icon: filterIcon,
+  accessibilityLabel: 'Filter Agents',
+  separateBackground: true,
+};
 
 // All, Installed or Not installed, checked on the current one; on Android a dot shows while a filter narrows the list.
 function filterMenu({
@@ -53,7 +60,7 @@ function filterMenu({
   onFilter,
 }: AgentsFilterProps): React.JSX.Element {
   return (
-    <Stack.Toolbar.Menu icon={filterIcon} accessibilityLabel="Filter Agents">
+    <Stack.Toolbar.Menu {...filterMenuItem}>
       {toolbarDot(filter !== 'all')}
       {agentsFilterChoices.map(({ value, label }) =>
         filterChoice(label, value === filter, () => onFilter(value)),

@@ -55,7 +55,7 @@ When(
     const copied = await copyAppWindow(page, server.httpUrl);
     await page.close();
     await expect(
-      copied.getByRole('button', { name: /^(Settings|Show navigation menu)$/ }),
+      copied.getByRole('button', { name: /^(Settings|Open navigation)$/ }),
     ).toBeVisible();
     await reloadApp(copied);
 

@@ -18,6 +18,8 @@ export {
   type SectionList,
   type SectionLists,
   useFrame,
+  SectionMenuButton,
+  useNeedsAttention,
   usePhoneDrawerWidth,
   useSectionList,
 } from '#features/frame';

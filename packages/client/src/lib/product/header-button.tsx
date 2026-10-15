@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { hasLiquidGlass } from '#lib/generic/native-header';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import {
@@ -31,12 +30,6 @@ interface HeaderButtonFit {
 }
 
 const headerButtonFits = {
-  // iOS 26 pads each item into a glass bubble, so a 24pt item matches the system search bubble.
-  glass: {
-    hitSlop: 10,
-    size: 'size-6 sm:size-6',
-    dotPlace: '-top-0.5 -right-0.5',
-  },
   narrow: {
     hitSlop: { left: 6, right: 6 },
     size: 'size-11 sm:size-11',
@@ -56,8 +49,6 @@ const dotColors = {
 } satisfies Record<NonNullable<HeaderButtonProps['dot']>, string>;
 
 function headerButtonFit(paired: boolean): HeaderButtonFit {
-  if (hasLiquidGlass) return headerButtonFits.glass;
-
   return paired ? headerButtonFits.narrow : headerButtonFits.slot;
 }
 
@@ -65,11 +56,11 @@ function headerButtonFit(paired: boolean): HeaderButtonFit {
 const headerChrome =
   'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all dark:active:bg-muted/50 web:dark:hover:bg-muted/50 web:focus-visible:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
 
-// A list's filter in a phone header: Android's top app bar draws Material's filter list, as Paper does; iOS keeps the sliders.
+// A list's filter in a phone header: Android's top app bar draws Material's filter list, as Paper does; iOS and the web keep the sliders.
 export const headerFilterIcon: Extract<IconName, 'filter-list' | 'filters'> =
   Platform.OS === 'android' ? 'filter-list' : 'filters';
 
-// A plain icon button for a native header; the platform draws any chrome around it.
+// A plain icon button for Android's drawer header and the web's JS header; iOS headers use stock bar button items.
 export function HeaderButton(props: HeaderButtonProps): React.JSX.Element {
   const { paired = false, dot, ...buttonProps } = props;
   const fit = headerButtonFit(paired);

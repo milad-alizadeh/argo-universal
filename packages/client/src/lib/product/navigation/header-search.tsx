@@ -2,7 +2,6 @@ import type { HeaderOptions } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import type { IconName } from '#lib/generic/symbols/icon-names';
 import { Text } from '#primitives/display/text';
 import {
   SearchField,
@@ -21,17 +20,10 @@ export const headerSearchRowLayout = {
 export interface HeaderSearch {
   placeholder: string;
   onChangeText: (text: string) => void;
-  // A header item that goes with the search, such as New Session; iOS only, Android has its own button.
-  action?: {
-    icon: IconName;
-    accessibilityLabel: string;
-    onPress: () => void;
-  };
 }
 
 interface HeaderSearchRowProps {
   title: string;
-  // Each a separate item, so iOS 26 gives each its own glass bubble.
   right?: readonly ReactElement[];
   search: HeaderSearch;
 }

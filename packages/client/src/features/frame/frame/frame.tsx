@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { createContext, type ReactNode, use } from 'react';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
+import { HeaderButton } from '#lib/product/header-button';
 import {
   type InspectorControl,
   InspectorProvider,
@@ -33,8 +34,10 @@ export interface SectionList {
   // The list's own part of the sidebar's header row.
   header: ReactNode;
   list: ReactNode;
-  // The header over the list when the list is the section's root page.
+  // The header over the list when the list is the section's root page, as Android's drawer header and the web's JS header draw it.
   rootHeader: ScreenHeaderProps;
+  // The root page's own stock header items and search bar (`Stack.Toolbar`, `Stack.SearchBar`), which iOS shows instead of `rootHeader`'s.
+  rootToolbar?: ReactNode;
   /*
    * The page a window with the list beside it opens at the section's root, or undefined while
    * it is still being chosen; without one, the root keeps its own page. Called as a hook.
@@ -170,4 +173,25 @@ export type SectionDrawerProps = Omit<
 // A compact window's drawer of sections, with the live attention count; the drawing is `PhoneDrawerContent`.
 export function SectionDrawer(props: SectionDrawerProps): React.JSX.Element {
   return <PhoneDrawerContent {...props} attentionCount={useAttentionCount()} />;
+}
+
+// Whether any Session needs attention, which ☰ marks with a dot or badge on a narrow section root.
+export const useNeedsAttention = (): boolean => useAttentionCount() > 0;
+
+interface SectionMenuButtonProps {
+  onOpen: () => void;
+}
+
+// ☰ at the leading edge of the web's narrow section root header, with a dot while Sessions need attention; native headers declare a stock item instead.
+export function SectionMenuButton({
+  onOpen,
+}: SectionMenuButtonProps): React.JSX.Element {
+  return (
+    <HeaderButton
+      icon="menu"
+      accessibilityLabel="Open navigation"
+      dot={useNeedsAttention() ? 'attention' : undefined}
+      onPress={onOpen}
+    />
+  );
 }

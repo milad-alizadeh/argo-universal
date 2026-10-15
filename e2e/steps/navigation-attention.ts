@@ -3,7 +3,7 @@ import { When, Then } from './fixtures';
 import { attentionLabel } from './live-session';
 
 When('I view the phone navigation', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: 'Show navigation menu' }).click();
+  await page.getByRole('button', { name: 'Open navigation' }).click();
 });
 
 Then(
