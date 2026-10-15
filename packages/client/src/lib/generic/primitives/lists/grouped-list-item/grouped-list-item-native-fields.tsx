@@ -1,15 +1,9 @@
-import { Column, type RowProps, Row, Text } from '@expo/ui';
-import { weight } from '@expo/ui/jetpack-compose/modifiers';
-import {
-  accessibilityHidden,
-  fixedSize,
-  frame,
-} from '@expo/ui/swift-ui/modifiers';
+import { type RowProps, Row, Text } from '@expo/ui';
+import { fixedSize } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import type { GroupedListItemProps } from './grouped-list-item-props';
-import { RowSubtitle } from './grouped-list-item-subtitle';
-import { titleRole, useRowText } from './grouped-list-item-text';
+import { useRowText } from './grouped-list-item-text';
 import { NativeRowImage, NativeRowStatus } from './native-row';
 
 type Modifiers = NonNullable<RowProps['modifiers']>;
@@ -17,31 +11,6 @@ type Modifiers = NonNullable<RowProps['modifiers']>;
 const ios = Platform.OS === 'ios';
 
 const trailingSpacing = 8;
-
-// The label takes the row's spare width, so the value and status trail it on the same line.
-export function RowLabel(props: GroupedListItemProps): React.JSX.Element {
-  return (
-    <Column spacing={0} modifiers={labelModifiers(props)}>
-      <RowTitle {...props} />
-      <RowSubtitle subtitle={props.subtitle} />
-    </Column>
-  );
-}
-
-function labelModifiers(props: GroupedListItemProps): Modifiers {
-  if (!ios) return [weight(1)];
-
-  return [
-    frame({ maxWidth: Infinity, alignment: 'leading' }),
-    accessibilityHidden(!!props.control),
-  ];
-}
-
-function RowTitle(props: GroupedListItemProps): React.JSX.Element {
-  const text = useRowText(titleRole(props.code), props.tone ?? 'primary');
-
-  return <Text {...text}>{props.label}</Text>;
-}
 
 const trailingModifiers: Modifiers | undefined = ios
   ? [fixedSize({ horizontal: false, vertical: true })]

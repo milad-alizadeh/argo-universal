@@ -7,7 +7,7 @@ import { subtitleRole, useRowText } from './grouped-list-item-text';
 export function RowSubtitle({
   subtitle,
 }: Pick<GroupedListItemProps, 'subtitle'>): React.JSX.Element | null {
-  const text = useRowText(subtitleRole(subtitle), 'secondary', 'line');
+  const text = useRowText(subtitleRole(subtitle), 'secondary');
 
   return subtitle ? (
     <Text {...text} numberOfLines={subtitle.numberOfLines}>

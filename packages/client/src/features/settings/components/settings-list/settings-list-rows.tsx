@@ -5,22 +5,8 @@ import type { SettingsListProps, SettingsRow } from './settings-list-props';
 
 type Selection = Pick<SettingsListProps, 'selectedPath' | 'onSelect'>;
 
-type RowsProps = Selection & { rows: SettingsRow[] };
-
-export function SettingsRows({
-  rows,
-  ...selection
-}: RowsProps): React.JSX.Element {
-  return (
-    <>
-      {rows.map((row) => (
-        <SettingsRowItem key={row.label} row={row} {...selection} />
-      ))}
-    </>
-  );
-}
-
-function SettingsRowItem({
+// One row each, straight in the section: Android's Section gives each child it finds its own Material row.
+export function SettingsRowItem({
   row,
   selectedPath,
   onSelect,

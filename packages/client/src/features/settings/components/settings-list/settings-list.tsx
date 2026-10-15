@@ -5,7 +5,7 @@ import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { settingsRows } from './settings-list-data';
 import type { SettingsListProps } from './settings-list-props';
-import { SettingsRows } from './settings-list-rows';
+import { SettingsRowItem } from './settings-list-rows';
 
 export type { SettingsListProps } from './settings-list-props';
 
@@ -19,7 +19,9 @@ export function SettingsList(props: SettingsListProps): React.JSX.Element {
   return (
     <GroupedList variant={wide ? 'sidebar' : 'grouped'}>
       <GroupedListSection>
-        <SettingsRows rows={rows} {...selectionOf(props)} />
+        {rows.map((row) => (
+          <SettingsRowItem key={row.label} row={row} {...selectionOf(props)} />
+        ))}
       </GroupedListSection>
     </GroupedList>
   );
