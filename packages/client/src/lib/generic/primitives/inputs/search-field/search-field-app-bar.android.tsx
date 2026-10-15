@@ -1,58 +1,84 @@
-import type * as React from 'react';
+import { useNativeState } from '@expo/ui/jetpack-compose';
 import { type RefObject, useEffect, useRef, useState } from 'react';
 import { BackHandler } from 'react-native';
-import { OpenSearchHeader } from './search-field-open-bar.android';
+import {
+  AppBarSearchField,
+  type FieldValue,
+} from './search-field-app-bar-field.android';
 import type { AppBarSearch, AppBarSearchQuery } from './search-field-props';
 
 type Latest = RefObject<AppBarSearchQuery | undefined>;
 
 /*
- * Material's search from the top app bar: the search button, last in the bar, opens a full-width search in the
- * bar's place, the list filtering below it. Back, the arrow or the system's, clears the query and gives the bar back.
+ * Material's search from the top app bar: the search button, last in the bar, opens the search in the bar itself,
+ * the list filtering below it. Back, the arrow or the system's, clears the query and gives the bar back.
  */
 export function useAppBarSearch(
   search: AppBarSearchQuery | undefined,
 ): AppBarSearch {
   const [open, setOpen] = useState(false);
-  const latest = useLatest(search);
-  const close = closeSearch(latest, setOpen);
+  const query = useQuery(useLatest(search));
+  const close = closeSearch(query, setOpen);
 
   useSystemBack(open, close);
 
   return {
     open,
     openSearch: () => setOpen(true),
-    bar: open && search ? openBar(search.label, latest, close) : null,
+    close,
+    ...openParts(open && search ? search.label : undefined, query),
   };
 }
 
 // Closing clears the query.
 function closeSearch(
-  latest: Latest,
+  query: Query,
   setOpen: (open: boolean) => void,
 ): () => void {
   return (): void => {
-    latest.current?.onChangeText('');
+    query.clear();
     setOpen(false);
   };
 }
 
-function openBar(
-  label: string,
-  latest: Latest,
-  close: () => void,
-): React.JSX.Element {
-  return (
-    <OpenSearchHeader
-      label={label}
-      initialValue=""
-      onChangeText={(value): void => latest.current?.onChangeText(value)}
-      onClose={close}
-    />
-  );
+// The field and Clear while search is open; a label only while open.
+function openParts(
+  label: string | undefined,
+  query: Query,
+): Pick<AppBarSearch, 'field' | 'clear'> {
+  if (label === undefined) return { field: null };
+
+  return {
+    field: <AppBarSearchField label={label} {...query.field} />,
+    clear: query.hasText ? query.clear : undefined,
+  };
 }
 
-// The screen's latest callback, for a bar that keeps its own text once open.
+interface Query {
+  field: FieldValue;
+  hasText: boolean;
+  clear: () => void;
+}
+
+// The field's own text, so typing never waits on the screen; Clear empties both.
+function useQuery(latest: Latest): Query {
+  const text = useNativeState('');
+  const [hasText, setHasText] = useState(false);
+
+  const change = (value: string): void => {
+    setHasText(value !== '');
+    latest.current?.onChangeText(value);
+  };
+
+  const clear = (): void => {
+    text.set('');
+    change('');
+  };
+
+  return { field: { value: text, onValueChange: change }, hasText, clear };
+}
+
+// The screen's latest callback, for a field that keeps its own text once open.
 function useLatest(search: AppBarSearchQuery | undefined): Latest {
   const latest = useRef(search);
 

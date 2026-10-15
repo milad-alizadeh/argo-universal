@@ -11,7 +11,7 @@ import { screenHeaderOptions } from './screen-header-options';
 
 type Search = ScreenHeaderProps['search'];
 
-// Android's top app bar: the title, its items, then Search last, which opens a full-width search in the bar's place.
+// Android's top app bar: the title, its items, then Search last, which opens the search in the bar itself.
 export function NativeScreenHeader(
   header: ScreenHeaderProps,
 ): React.JSX.Element {
@@ -20,9 +20,21 @@ export function NativeScreenHeader(
   return <Stack.Screen options={appBarOptions(header, appBar)} />;
 }
 
+type AppBar = ReturnType<typeof useAppBarSearch>;
+
 function appBarOptions(
+  header: ScreenHeaderProps,
+  appBar: AppBar,
+): NativeStackNavigationOptions {
+  return appBar.field
+    ? openSearchOptions(header, appBar, appBar.field)
+    : closedOptions(header, appBar);
+}
+
+// Options merge, so each state sets every slot the other one fills.
+function closedOptions(
   { right = [], search, ...header }: ScreenHeaderProps,
-  appBar: ReturnType<typeof useAppBarSearch>,
+  appBar: AppBar,
 ): NativeStackNavigationOptions {
   const items = search
     ? [...right, searchButton(search, appBar.openSearch)]
@@ -30,9 +42,50 @@ function appBarOptions(
 
   return {
     ...screenHeaderOptions(header),
+    headerTitle: undefined,
+    headerRight: undefined,
     ...rightItems(items),
-    ...openBar(appBar.bar),
   };
+}
+
+/*
+ * Material's open search keeps the app bar and fills its slots: Back where the navigation icon was, the field where
+ * the title's text started, Clear where Search was. The bar keeps its height, so nothing below it moves.
+ */
+function openSearchOptions(
+  header: ScreenHeaderProps,
+  appBar: AppBar,
+  field: ReactElement,
+): NativeStackNavigationOptions {
+  const clear = appBar.clear;
+
+  return {
+    ...screenHeaderOptions({ title: header.title, left: backButton(appBar) }),
+    headerTitle: (): ReactElement => field,
+    headerRight: undefined,
+    ...rightItems(clear ? [clearButton(clear)] : []),
+  };
+}
+
+function backButton(appBar: AppBar): ReactElement {
+  return (
+    <HeaderButton
+      icon="arrow-left"
+      accessibilityLabel="Close search"
+      onPress={appBar.close}
+    />
+  );
+}
+
+function clearButton(onPress: () => void): ReactElement {
+  return (
+    <HeaderButton
+      key="clear"
+      icon="close"
+      accessibilityLabel="Clear search"
+      onPress={onPress}
+    />
+  );
 }
 
 function appBarQuery(search: Search): Parameters<typeof useAppBarSearch>[0] {
@@ -53,9 +106,4 @@ function searchButton(
       onPress={onPress}
     />
   );
-}
-
-// Options merge, so closing sets the header back to the native bar rather than leaving the open search.
-function openBar(bar: ReactElement | null): NativeStackNavigationOptions {
-  return { header: bar ? (): ReactElement => bar : undefined };
 }

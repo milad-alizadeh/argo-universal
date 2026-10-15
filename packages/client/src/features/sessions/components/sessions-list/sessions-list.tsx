@@ -31,8 +31,15 @@ const phoneContentStyle = {
   paddingTop: 20,
 };
 
-function useContentStyle(wide: boolean): typeof contentStyle {
-  return wide ? contentStyle : phoneContentStyle;
+// Flat search results start right under the open search, as Material's search results do.
+const searchResultsContentStyle = { ...phoneContentStyle, paddingTop: 0 };
+
+function useContentStyle(flat: boolean): typeof contentStyle {
+  const wide = useWide();
+
+  if (wide) return contentStyle;
+
+  return flat ? searchResultsContentStyle : phoneContentStyle;
 }
 
 function entryKey(entry: SessionsListEntry): string {
@@ -107,7 +114,7 @@ interface SessionsLegendListProps extends SessionsListProps {
 }
 
 function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
-  const contentContainerStyle = useContentStyle(useWide());
+  const contentContainerStyle = useContentStyle(props.flat ?? false);
   const rows = useListRows(props);
 
   return (

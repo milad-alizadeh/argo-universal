@@ -20,9 +20,14 @@ export type AppBarSearchQuery = Pick<
   'label' | 'onChangeText'
 >;
 
+// The open search fills the native app bar's own slots: Back in the navigation icon's, the field in the title's, Clear last.
 export interface AppBarSearch {
   open: boolean;
   openSearch: () => void;
-  // The open search, drawn in the app bar's place; null while closed.
-  bar: ReactElement | null;
+  // Clears the query and gives the bar back.
+  close: () => void;
+  // The focused field, for the title's place; null while closed.
+  field: ReactElement | null;
+  // Empties the field; set while the open search has text.
+  clear?: () => void;
 }
