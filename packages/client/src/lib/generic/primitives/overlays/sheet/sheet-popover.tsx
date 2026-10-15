@@ -25,7 +25,7 @@ function PopoverSheetContent(props: PresentationProps): ReactElement {
       onClosed={props.stack.reports.closed}
       className="w-80 overflow-hidden p-0"
     >
-      <SheetPanel {...props} />
+      <SheetPanel {...props} hideRootTitle />
     </PopoverContent>
   );
 }

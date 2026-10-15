@@ -16,6 +16,7 @@ import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import { SheetTitleRow } from './sheet-title-row';
 
 interface StackProps {
+  hideRootTitle?: boolean;
   stack: SheetStack;
   label?: string;
   children: ReactNode;
@@ -139,7 +140,7 @@ function pageClass(props: PageProps): string {
 }
 
 function PageHeader(props: PageProps): ReactElement | null {
-  if (props.index === 0 && !props.page.title) return null;
+  if (hideHeader(props)) return null;
 
   return (
     <SheetTitleRow
@@ -147,6 +148,12 @@ function PageHeader(props: PageProps): ReactElement | null {
       backLabel={pageBackLabel(props)}
       onBack={props.stack.navigation.back}
     />
+  );
+}
+
+function hideHeader(props: PageProps): boolean {
+  return (
+    props.index === 0 && (props.hideRootTitle || !props.page.title) === true
   );
 }
 

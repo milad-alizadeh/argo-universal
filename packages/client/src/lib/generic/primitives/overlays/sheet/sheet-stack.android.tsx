@@ -1,38 +1,25 @@
-import {
-  AnimatedVisibility,
-  Box,
-  Column,
-  EnterTransition,
-  ExitTransition,
-  RNHostView,
-} from '@expo/ui/jetpack-compose';
+import { HorizontalPager, Column, RNHostView } from '@expo/ui/jetpack-compose';
+import type { HorizontalPagerHandle } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
-  defaultMinSize,
+  onGloballyPositioned,
   fillMaxHeight,
   fillMaxWidth,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
-import type { ReactElement, ReactNode } from 'react';
+import { useRef, type ReactElement, type ReactNode } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { SheetBody } from './sheet-body';
 import { PageHeader } from './sheet-page-header.android';
+import {
+  usePageScroll,
+  useSheetPager,
+  type SheetPager,
+} from './sheet-pager.android';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
-import { sheetDetents } from './sheet-state';
 
 type PagesProps = SheetProps & { stack: SheetStack };
-
-// A pushed page slides in from the trailing edge and back out on Back; the root slides aside under it.
-const pushedPage = {
-  enterTransition: EnterTransition.slideInHorizontally({ initialOffsetX: 1 }),
-  exitTransition: ExitTransition.slideOutHorizontally({ targetOffsetX: 1 }),
-};
-
-const rootPage = {
-  enterTransition: EnterTransition.slideInHorizontally({ initialOffsetX: -1 }),
-  exitTransition: ExitTransition.slideOutHorizontally({ targetOffsetX: -1 }),
-};
 
 export function SheetPages(props: PagesProps): ReactElement {
   const fill = fillsHeight(props);
@@ -48,65 +35,46 @@ export function SheetPages(props: PagesProps): ReactElement {
 }
 
 function StackPages(props: PagesProps & { fill: boolean }): ReactElement {
-  const { pages, path } = props.stack;
-  const shared = { ...props, top: path.at(-1) ?? pages[0]?.name };
+  const ref = useRef<HorizontalPagerHandle>(null);
+  const pager = useSheetPager(props.stack);
+  usePageScroll(ref, props.stack.path.length, pager.ready);
 
   return (
-    <Box modifiers={usePagedSize(props.fill)}>
-      {pages.map((page, index) => (
-        <StackEntry key={page.name} {...shared} page={page} index={index} />
-      ))}
-    </Box>
+    <HorizontalPager ref={ref} {...pagerProps(pager)}>
+      {pagerPages(props, pager)}
+    </HorizontalPager>
   );
 }
 
-// Paged sheets keep at least the medium resting height even when the root has one row.
-const mediumHeightFraction = 0.5;
-
-function usePagedSize(fill: boolean): ModifierConfig[] {
-  const { height } = useWindowDimensions();
-
-  return [
-    ...sheetModifiers(fill),
-    defaultMinSize({ minHeight: height * mediumHeightFraction }),
-  ];
+function pagerProps(
+  pager: SheetPager,
+): Omit<React.ComponentProps<typeof HorizontalPager>, 'children'> {
+  return {
+    modifiers: sheetModifiers(true),
+    userScrollEnabled: false,
+    beyondViewportPageCount: 1,
+    onSettledPageChange: pager.settled,
+  };
 }
 
-type EntryProps = PagesProps & {
-  fill: boolean;
-  page: SheetPageEntry;
-  index: number;
-  // The page on top, the only one shown.
-  top: string | undefined;
-};
-
-function StackEntry(props: EntryProps): ReactElement {
-  return (
-    <AnimatedVisibility
-      visible={props.page.name === props.top}
-      {...(props.index === 0 ? rootPage : pushedPage)}
-    >
-      <StackPage {...props} root={props.index === 0} />
-    </AnimatedVisibility>
-  );
+function pagerPages(
+  props: PagesProps & { fill: boolean },
+  pager: SheetPager,
+): ReactElement[] {
+  return pager.pages.map((page, index) => (
+    <StackPage
+      key={page.name}
+      {...props}
+      page={page}
+      root={index === 0}
+      onReady={() => pager.pageReady(index)}
+    />
+  ));
 }
 
-// A sheet that rests only at its full height fills it; any other is as tall as its content.
+// Paged content keeps one sizing mode while Material owns the medium and large resting heights.
 function fillsHeight(props: PagesProps): boolean {
-  const detents = sheetDetents({
-    detents: props.detents,
-    paged: props.stack.pages.length > 0,
-  });
-
-  return detents?.join() === 'large' || scrollsOnTop(props.stack);
-}
-
-function scrollsOnTop(stack: SheetStack): boolean {
-  const name = stack.path.at(-1);
-
-  return (
-    stack.pages.find((page) => page.name === name)?.contentScrolls === true
-  );
+  return props.stack.pages.length > 0 || props.detents?.join() === 'large';
 }
 
 function sheetModifiers(fill: boolean): ModifierConfig[] {
@@ -117,11 +85,12 @@ type PageProps = PagesProps & {
   page: SheetPageEntry;
   fill: boolean;
   root: boolean;
+  onReady: () => void;
 };
 
 function StackPage(props: PageProps): ReactElement {
   return (
-    <Column modifiers={sheetModifiers(props.fill)}>
+    <Column modifiers={pageModifiers(props)}>
       <PageHeader {...props} title={props.page.title} />
       <PageContent
         {...props}
@@ -149,4 +118,8 @@ function PageContent(
       </View>
     </RNHostView>
   );
+}
+
+function pageModifiers(props: PageProps): ModifierConfig[] {
+  return [...sheetModifiers(props.fill), onGloballyPositioned(props.onReady)];
 }

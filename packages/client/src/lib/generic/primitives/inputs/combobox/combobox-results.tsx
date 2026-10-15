@@ -21,7 +21,7 @@ export function ComboboxResults<Value extends string>(
     {
       role: 'group',
       onKeyDownCapture: moveFocus,
-      className: 'flex min-h-0 flex-col',
+      className: 'flex min-h-0 flex-col wide:gap-1 wide:p-1',
     },
     props.search,
     <Options {...props} />,
@@ -44,7 +44,7 @@ function Options<Value extends string>(
 
 function optionsProps(label: string): React.ComponentProps<'div'> {
   return {
-    className: 'max-h-80 overflow-y-auto px-4 pb-4 wide:px-1 wide:pb-1',
+    className: 'max-h-80 overflow-y-auto px-4 pb-4 wide:p-0',
     role: 'radiogroup',
     'aria-label': label,
   };

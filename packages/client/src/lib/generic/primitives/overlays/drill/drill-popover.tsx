@@ -7,8 +7,6 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react';
-import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
 import {
   Popover,
   PopoverContent,
@@ -57,24 +55,12 @@ function DrillContent(props: ContentProps): ReactElement {
 }
 
 function ContentBody(props: ContentProps): ReactElement {
-  return (
-    <View className="gap-3">
-      <Text
-        role="heading"
-        accessibilityRole="heading"
-        aria-level={2}
-        className="px-4 pt-1"
-      >
-        {props.title}
-      </Text>
-      {props.children(props.close)}
-    </View>
-  );
+  return <>{props.children(props.close)}</>;
 }
 
 const fieldOffset = 4;
 
-const drillOffset = 24;
+const drillOffset = -16;
 
 function placement(props: Props): PopoverContentProps {
   return {
@@ -82,6 +68,6 @@ function placement(props: Props): PopoverContentProps {
     align: 'start',
     sideOffset: props.row ? drillOffset : fieldOffset,
     accessibilityLabel: props.title,
-    className: 'w-80 border-0 dark:border dark:border-border p-3 bg-content',
+    className: 'w-80 overflow-hidden p-0',
   };
 }

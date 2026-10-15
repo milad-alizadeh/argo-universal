@@ -18,7 +18,7 @@ export function SheetContent(props: ContentProps): ReactElement {
     <RNHostView matchContents={!props.fill}>
       <View
         style={props.fill ? undefined : { width }}
-        className={props.fill ? 'flex-1' : undefined}
+        className={props.fill ? 'flex-1 bg-content' : 'bg-content'}
       >
         <SheetBody {...props} />
       </View>

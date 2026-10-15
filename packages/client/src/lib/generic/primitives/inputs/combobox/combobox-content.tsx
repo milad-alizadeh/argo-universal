@@ -46,7 +46,7 @@ function useSearch(props: SearchOwner): SearchProps {
 
 function Search(props: SearchProps): ReactElement {
   return (
-    <View className="px-4 py-3 wide:px-1 wide:py-1">
+    <View className="px-4 py-3 wide:p-0">
       <ComboboxSearch
         {...props}
         label={`Search ${props.label}`}

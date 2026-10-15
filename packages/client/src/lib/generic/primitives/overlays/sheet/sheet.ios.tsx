@@ -3,6 +3,7 @@ import {
   type ModifierConfig,
   interactiveDismissDisabled,
   preferredColorScheme,
+  presentationBackground,
   presentationDetents,
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
@@ -109,13 +110,14 @@ function detentsOf(props: PresentationProps): SheetProps['detents'] {
   });
 }
 
-// The system's own glass and grabber; Argo's Appearance picks the presentation's light or dark.
+// Keep the system grabber and navigation, with one content surface through the safe areas.
 function useSheetModifiers(props: PresentationProps): ModifierConfig[] {
-  const { colorScheme } = useNativeTheme();
+  const { colorScheme, colors } = useNativeTheme();
   const detents = detentsOf(props);
 
   return [
     ...(detents ? [presentationDetents(detents)] : []),
+    ...(colors.content ? [presentationBackground(colors.content)] : []),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
     preferredColorScheme(colorScheme),

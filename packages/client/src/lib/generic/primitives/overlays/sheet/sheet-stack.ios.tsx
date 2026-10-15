@@ -5,10 +5,13 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   type ModifierConfig,
+  background,
+  containerBackground,
   navigationBarTitleDisplayMode,
   navigationTitle,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { SheetContent } from './sheet-content.ios';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
@@ -43,7 +46,7 @@ function SinglePage(props: PagesProps): ReactElement {
 
 function StackPage(props: PagesProps & { page: SheetPageEntry }): ReactElement {
   return (
-    <Group modifiers={pageModifiers(props.page.title)}>
+    <Group modifiers={usePageModifiers(props.page.title)}>
       <SheetContent
         {...props}
         contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
@@ -55,7 +58,18 @@ function StackPage(props: PagesProps & { page: SheetPageEntry }): ReactElement {
   );
 }
 
-function pageModifiers(title: string | undefined): ModifierConfig[] {
+function usePageModifiers(title: string | undefined): ModifierConfig[] {
+  const { content } = useNativeTheme().colors;
+
+  return [
+    ...(content
+      ? [background(content), containerBackground(content, 'navigation')]
+      : []),
+    ...titleModifiers(title),
+  ];
+}
+
+function titleModifiers(title: string | undefined): ModifierConfig[] {
   return title
     ? [navigationTitle(title), navigationBarTitleDisplayMode('inline')]
     : [];

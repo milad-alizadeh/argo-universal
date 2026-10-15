@@ -5,8 +5,8 @@ import { cn } from '../../../utils';
 import type { ComboboxSearchProps } from './combobox-search-props';
 
 /*
- * The filter at the top of a Combobox's results. Web draws a borderless muted list search field;
- * native sheets keep their platform search drawing. Header and list search is SearchField, never this.
+ * The shared React Native filter for Combobox results on every platform (owner, 2026-10-15).
+ * Header and list search is SearchField; this input belongs to a choice list.
  */
 export function ComboboxSearch(props: ComboboxSearchProps): React.JSX.Element {
   return (
@@ -24,8 +24,7 @@ export function ComboboxSearch(props: ComboboxSearchProps): React.JSX.Element {
 const containerClasses = (className: string | undefined): string =>
   cn(
     'h-12 flex-row items-center gap-3 rounded-full bg-muted px-4',
-    'android:gap-2 android:px-2',
-    'wide:h-8 wide:gap-1.5 wide:bg-transparent wide:px-2 web:rounded-2xl web:wide:h-10 web:wide:gap-3 web:wide:bg-muted web:wide:px-4',
+    'wide:h-8 wide:gap-2 wide:rounded-control wide:px-2.5',
     className,
   );
 

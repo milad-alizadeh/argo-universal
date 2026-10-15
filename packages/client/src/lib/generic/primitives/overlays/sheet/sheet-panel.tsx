@@ -15,12 +15,12 @@ export function openChange(props: PresentationProps): (open: boolean) => void {
 }
 
 // The web sheet's content, in a drawer or a popover: its pages, then the footer under them.
-export function SheetPanel(props: PresentationProps): ReactElement {
+export function SheetPanel(
+  props: PresentationProps & { hideRootTitle?: boolean },
+): ReactElement {
   return (
     <View className="min-h-0 shrink">
-      <SheetPageStack stack={props.stack} label={props.label}>
-        {props.children}
-      </SheetPageStack>
+      <SheetPageStack {...props}>{props.children}</SheetPageStack>
       {props.footer}
     </View>
   );

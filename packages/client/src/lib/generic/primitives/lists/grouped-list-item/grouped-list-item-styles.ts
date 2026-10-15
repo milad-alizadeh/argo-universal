@@ -9,6 +9,7 @@ interface Corners {
 
 // A virtualised list says whether the row ends its section, and a card's row where it sits in its card; elsewhere the last child ends it.
 export interface RowPlace {
+  overlay?: boolean;
   endsSection?: boolean;
   corners?: Corners;
   // The row below is hovered or pressed, and its shade meets the line between them.
@@ -27,8 +28,14 @@ export function rowClasses(
     stateClasses(props, sidebar),
     cornerClasses(place.corners),
     edgeClasses(props, sidebar, place),
+    overlayClasses(place.overlay),
   );
 }
+
+const overlayClasses = (overlay: boolean | undefined): string | undefined =>
+  overlay
+    ? 'bg-card rounded-xl min-h-9 wide:min-h-9 px-2 py-2 web:hover:bg-muted web:active:bg-border'
+    : undefined;
 
 // A sidebar row has no separator, and neither has the row that ends its section.
 function edgeClasses(
@@ -36,8 +43,17 @@ function edgeClasses(
   sidebar: boolean,
   place: RowPlace,
 ): string | undefined {
+  if (place.overlay) return undefined;
+
   if (sidebar) return sidebarClasses(props);
 
+  return sectionEdge(props, place);
+}
+
+function sectionEdge(
+  props: GroupedListItemProps,
+  place: RowPlace,
+): string | undefined {
   return place.endsSection === true
     ? undefined
     : separatorClasses(props, place);

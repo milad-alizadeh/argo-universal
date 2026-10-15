@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
@@ -29,7 +28,7 @@ export function isDesktopMenu(wide: boolean): boolean {
 
 function ConfigurationContents(props: ContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 wide:p-3 bg-content">
+    <View className="native:flex-1 bg-content web:wide:bg-card">
       <ConfigurationFields {...props} />
     </View>
   );
@@ -38,11 +37,6 @@ function ConfigurationContents(props: ContentsProps): React.JSX.Element {
 function ConfigurationFields(props: ContentsProps): React.JSX.Element {
   return (
     <GroupedList fit={Platform.OS === 'web' || props.wide}>
-      {props.wide && (
-        <Text role="heading" aria-level={2} className="px-4 pt-1">
-          Configure
-        </Text>
-      )}
       <ConfigurationDrills {...props} />
       <ConfigurationTuning configuration={props.configuration} />
     </GroupedList>
