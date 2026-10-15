@@ -16,6 +16,7 @@ export interface NativeSplit {
   menuLabel: string;
   primary: boolean;
   enabled: boolean;
+  size?: SplitButtonProps['size'];
 }
 
 export function nativeSplit<Value extends string>({
@@ -30,6 +31,7 @@ export function nativeSplit<Value extends string>({
     menuLabel: props.menuLabel,
     primary: props.primary === true,
     enabled: splitEnabled(props, acting),
+    size: props.size,
   };
 }
 

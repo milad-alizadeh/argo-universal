@@ -3,6 +3,7 @@ import {
   type ModifierConfig,
   accessibilityHint,
   buttonStyle,
+  controlSize,
   disabled,
   menuStyle,
 } from '@expo/ui/swift-ui/modifiers';
@@ -48,9 +49,15 @@ function splitModifiers(split: NativeSplit): ModifierConfig[] {
   return [
     menuStyle('button'),
     buttonStyle(split.primary ? 'borderedProminent' : 'bordered'),
+    ...splitControlSize(split),
     accessibilityHint(split.menuLabel),
     disabled(!split.enabled),
   ];
+}
+
+// As the kit Button: the compact `xs` split is SwiftUI's small control; every other split keeps the stock size.
+function splitControlSize(split: NativeSplit): ModifierConfig[] {
+  return split.size === 'xs' ? [controlSize('small')] : [];
 }
 
 // A choice draws as a menu toggle, so the system checkmark marks the chosen one; an action is a plain button.
