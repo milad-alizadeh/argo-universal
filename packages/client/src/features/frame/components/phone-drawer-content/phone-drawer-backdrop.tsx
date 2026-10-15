@@ -33,21 +33,15 @@ function useGlowColours(): GlowColours {
   return { colours: { warm, graphite, sand }, surface };
 }
 
-function GlowStopMark({
-  stop,
-  colour,
-}: {
-  stop: GlowStop;
-  colour: CSSValue;
-}): React.JSX.Element {
-  return (
-    <Stop
-      offset={stop.at / percent}
-      stopColor={String(colour)}
-      stopOpacity={stop.alpha / percent}
-    />
-  );
-}
+// react-native-svg reads each stop's offset, colour and opacity from the gradient's direct children, so a stop must be a bare <Stop>, never a wrapper component.
+const glowStop = (stop: GlowStop, colour: CSSValue): React.JSX.Element => (
+  <Stop
+    key={stop.at}
+    offset={stop.at / percent}
+    stopColor={String(colour)}
+    stopOpacity={stop.alpha / percent}
+  />
+);
 
 type GlowCircle = { cx: number; cy: number; r: number };
 
@@ -72,9 +66,7 @@ function GlowGradient({ glow, colour }: GlowPaint): React.JSX.Element {
       gradientUnits="userSpaceOnUse"
       {...glowCircle(glow)}
     >
-      {glow.stops.map((stop) => (
-        <GlowStopMark key={stop.at} stop={stop} colour={colour} />
-      ))}
+      {glow.stops.map((stop) => glowStop(stop, colour))}
     </RadialGradient>
   );
 }
