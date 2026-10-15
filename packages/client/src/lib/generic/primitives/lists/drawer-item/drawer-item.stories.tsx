@@ -2,8 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Badge } from '#primitives/display/badge';
-import { Text } from '#primitives/display/text';
 import type { IconName } from '../../../symbols/icon-names';
 import { DrawerItem } from './drawer-item';
 
@@ -20,22 +18,26 @@ export const Variations: Story = {
   render: () => <Drawer />,
 };
 
-const destinations: { title: string; icon: IconName }[] = [
-  { title: 'Sessions', icon: 'sessions' },
-  { title: 'Issues', icon: 'issue' },
+interface Destination {
+  title: string;
+  icon: IconName;
+  badge?: number;
+  badgeLabel?: string;
+}
+
+// Sessions counts 2 that need attention; Issues has more than a badge shows, so it reads 99+.
+const destinations: Destination[] = [
+  {
+    title: 'Sessions',
+    icon: 'sessions',
+    badge: 2,
+    badgeLabel: '2 Sessions need attention',
+  },
+  { title: 'Issues', icon: 'issue', badge: 120, badgeLabel: '120 open Issues' },
   { title: 'Settings', icon: 'settings' },
 ];
 
-const attention = {
-  label: '2 need attention',
-  element: (
-    <Badge tone="danger">
-      <Text>2</Text>
-    </Badge>
-  ),
-};
-
-// A drawer's destinations: pressing one makes it the current one; Issues carries a count.
+// A drawer's destinations: pressing one makes it the current one; two carry a count.
 function Drawer(): React.JSX.Element {
   const [current, setCurrent] = useState('Sessions');
 
@@ -53,7 +55,7 @@ function Drawer(): React.JSX.Element {
   );
 }
 
-type DestinationProps = (typeof destinations)[number] & {
+type DestinationProps = Destination & {
   current: string;
   onSelect: (title: string) => void;
 };
@@ -66,7 +68,8 @@ function Destination(props: DestinationProps): React.JSX.Element {
       label={title}
       icon={props.icon}
       selected={current === title}
-      badge={title === 'Issues' ? attention : undefined}
+      badge={props.badge}
+      badgeLabel={props.badgeLabel}
       onPress={() => onSelect(title)}
     />
   );

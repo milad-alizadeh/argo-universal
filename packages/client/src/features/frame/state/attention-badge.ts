@@ -1,19 +1,11 @@
+import { badgeCountText } from '#lib/generic/badge-count';
 import type { Section } from '../../../lib/product/navigation/sections';
-
-// Badges show counts above this as "99+".
-const maximumAttentionBadgeCount = 99;
 
 export interface AttentionBadge {
   // What a screen reader says for the badge.
   label: string;
   // What the badge draws.
   text: string;
-}
-
-function badgeText(attentionCount: number): string {
-  return attentionCount > maximumAttentionBadgeCount
-    ? `${maximumAttentionBadgeCount}+`
-    : String(attentionCount);
 }
 
 function badgeLabel(attentionCount: number): string {
@@ -24,12 +16,11 @@ function badgeLabel(attentionCount: number): string {
 
 // The Sessions-section badge for the Sessions that need input or are Unread; none when no Session does.
 export function attentionBadge(attentionCount: number): AttentionBadge | null {
-  if (attentionCount <= 0) return null;
+  const text = badgeCountText(attentionCount);
 
-  return {
-    label: badgeLabel(attentionCount),
-    text: badgeText(attentionCount),
-  };
+  if (text === undefined) return null;
+
+  return { label: badgeLabel(attentionCount), text };
 }
 
 // Only the Sessions section counts attention; every other section shows none.

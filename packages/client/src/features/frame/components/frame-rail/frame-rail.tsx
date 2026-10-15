@@ -67,7 +67,7 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
   return (
     <View>
       <SectionTile {...props} />
-      <AttentionBadge count={props.attentionCount} placement="rail" />
+      <AttentionBadge count={props.attentionCount} />
     </View>
   );
 });

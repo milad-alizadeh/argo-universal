@@ -37,13 +37,24 @@ function VariationsExample(): React.JSX.Element {
     <GroupedList>
       <RowSection />
       <InvalidSection />
-      <GroupedListSection title="Row disabled">
-        <TypedRow label="Name" initial="Example ACP" disabled />
-      </GroupedListSection>
+      <StateSections />
       <GroupedListContent>
         <OwnVariations />
       </GroupedListContent>
     </GroupedList>
+  );
+}
+
+function StateSections(): React.JSX.Element {
+  return (
+    <>
+      <GroupedListSection title="Row disabled">
+        <TypedRow label="Name" initial="Example ACP" disabled />
+      </GroupedListSection>
+      <GroupedListSection textFields title="Row checking">
+        <TypedRow mono label="Executable" initial="example-acp" loading />
+      </GroupedListSection>
+    </>
   );
 }
 
@@ -80,9 +91,9 @@ type Typed<Props> = Omit<Props, 'value' | 'onChangeText' | 'variant'> & {
   initial: string;
 };
 
-const standaloneExamples: (Typed<StandaloneTextInputProps> & {
-  example: string;
-})[] = [
+type StandaloneExample = Typed<StandaloneTextInputProps> & { example: string };
+
+const standaloneExamples: StandaloneExample[] = [
   { example: 'Required', label: 'Title', initial: title, required: true },
   {
     example: 'Invalid',
@@ -92,22 +103,21 @@ const standaloneExamples: (Typed<StandaloneTextInputProps> & {
     errors: ['Enter a whole number from 1 to 8.'],
   },
   { example: 'Disabled', label: 'Title', initial: title, disabled: true },
+  { example: 'Checking', label: 'Folder', initial: '~/Code', loading: true },
 ];
 
-const bareExamples: {
-  label: string;
-  props: Omit<BareTextInputProps, 'variant'>;
-}[] = [
+type BareProps = Omit<BareTextInputProps, 'variant'>;
+
+type BareExample = { label: string; props: BareProps };
+
+const bareExamples: BareExample[] = [
   { label: 'Bare empty', props: { placeholder: 'Email' } },
   {
     label: 'Bare filled',
     props: { defaultValue: 'hello@example.com', placeholder: 'Email' },
   },
   { label: 'Bare read-only', props: { editable: false, placeholder: 'Email' } },
-  {
-    label: 'Bare invalid',
-    props: { 'aria-invalid': true, placeholder: 'Email' },
-  },
+  { label: 'Bare invalid', props: { 'aria-invalid': true } },
   { label: 'Bare muted', props: { tone: 'muted', placeholder: 'https://' } },
   {
     label: 'Bare secure',
