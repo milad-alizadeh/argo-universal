@@ -6,11 +6,11 @@ import {
   ElicitationSheet,
   type ElicitationFormProps,
 } from '#features/requests';
-import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { PhoneTitle } from '../../../../lib/product/navigation/phone-title';
 import {
   serverSilentMessage,
   sessionOpenFailedTitle,

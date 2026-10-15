@@ -2,7 +2,6 @@ import type * as React from 'react';
 import { type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { Text } from '#primitives/display/text';
 import {
   PageTitleRow,
@@ -12,6 +11,7 @@ import {
 import { ScrollColumnContext } from '../generic/scroll-column';
 import { useWide } from '../generic/use-wide/use-wide';
 import { cn } from '../generic/utils';
+import { PhoneTitle } from './navigation/phone-title';
 
 export type SettingsPageSearch = PageTitleSearch;
 

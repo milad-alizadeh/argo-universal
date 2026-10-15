@@ -8,12 +8,12 @@ import {
   type ComposerDraft,
   StartSessionIn,
 } from '#features/composer';
-import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { Text } from '#primitives/display/text';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { PhoneTitle } from '../../../../lib/product/navigation/phone-title';
 import type { StartingFeed } from '../../state/starting-feed';
 import {
   serverSilentMessage,
