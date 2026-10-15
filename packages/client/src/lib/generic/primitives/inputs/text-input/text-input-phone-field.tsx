@@ -2,6 +2,7 @@ import { Row, TextInput, type TextInputProps, useNativeState } from '@expo/ui';
 import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { codeFace, NativeText } from '#primitives/display/native-text';
+import { Field } from '#primitives/fields/field';
 import { useFieldText } from './text-input-field-text';
 import {
   isInvalid,
@@ -55,5 +56,8 @@ function fieldBehaviour(props: PhoneFieldProps): TextInputProps {
     textAlign: 'right',
   };
 }
+
+// The field's hint or error in the footer under it.
+export const PhoneFieldFrame = Field;
 
 PhoneField satisfies React.ComponentType<PhoneFieldProps>;

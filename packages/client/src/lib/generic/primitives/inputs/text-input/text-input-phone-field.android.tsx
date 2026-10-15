@@ -9,6 +9,8 @@ import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { codeFace } from '#primitives/display/native-text';
+import type { FieldProps } from '#primitives/fields/field';
+import { errorMessage } from '#primitives/fields/field-errors';
 import { useFieldText } from './text-input-field-text';
 import {
   isInvalid,
@@ -20,8 +22,8 @@ const fullWidth = [fillMaxWidth()];
 
 /*
  * Material 3's outlined text field at its stock shape and size: the label floats
- * into the outline on focus or once it holds text, and a row says its error, else
- * its hint, as supporting text under it. Its label also names it for TalkBack.
+ * into the outline on focus or once it holds text, and it says its error, else its
+ * hint, as supporting text under it, on its own or as a row. Its label also names it for TalkBack.
  */
 export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
   const text = useNativeState(props.value);
@@ -48,10 +50,14 @@ function FieldSlots(props: PhoneFieldProps): React.JSX.Element {
         <Text>{requiredLabel(props)}</Text>
       </OutlinedTextField.Label>
       <Placeholder text={props.placeholder} />
-      <SupportingText text={props.supportingText} />
+      <SupportingText text={supportingLine(props)} />
     </>
   );
 }
+
+// The error in its place when there is one, else the hint.
+const supportingLine = (props: PhoneFieldProps): string | undefined =>
+  errorMessage(props.errors ?? []) ?? props.hint;
 
 function fieldBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
   return {
@@ -125,6 +131,11 @@ function errorColors(
     errorLabelColor: danger,
     errorSupportingTextColor: danger,
   };
+}
+
+// The field says its own hint and error, so no Field footer repeats them under it.
+export function PhoneFieldFrame(props: FieldProps): React.ReactNode {
+  return props.children;
 }
 
 PhoneField satisfies React.ComponentType<PhoneFieldProps>;
