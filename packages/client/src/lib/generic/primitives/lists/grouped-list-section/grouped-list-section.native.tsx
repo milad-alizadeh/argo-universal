@@ -3,11 +3,11 @@ import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { useSidebarList } from '#primitives/fields/field-layout';
 import {
   NativeText,
   type NativeTextRole,
-} from '#primitives/native/native-text';
+} from '#primitives/display/native-text';
+import { useSidebarList } from '#primitives/fields/field-layout';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 import { GroupedListSection as WebGroupedListSection } from './grouped-list-section.tsx';

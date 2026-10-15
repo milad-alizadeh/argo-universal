@@ -1,7 +1,7 @@
 import { Button, Row, Spacer } from '@expo/ui';
 import * as Swift from '@expo/ui/swift-ui/modifiers';
+import { NativeText } from '#primitives/display/native-text';
 import { rectangularHitArea } from '#primitives/native/native-modifiers';
-import { NativeText } from '#primitives/native/native-text';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { CheckboxProps } from './checkbox-props';
 import type { CheckboxState } from './checkbox-state';

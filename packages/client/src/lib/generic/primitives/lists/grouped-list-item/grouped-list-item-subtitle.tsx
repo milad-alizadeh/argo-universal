@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { NativeText } from '#primitives/native/native-text';
+import { NativeText } from '#primitives/display/native-text';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { subtitleModifiers } from './grouped-list-item-text';
 

@@ -10,9 +10,9 @@ import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Platform } from 'react-native';
+import { codeFace, NativeText } from '#primitives/display/native-text';
 import type { Tone } from '#primitives/display/text';
 import { useFollowedText } from '#primitives/native/followed-text';
-import { codeFace, NativeText } from '#primitives/native/native-text';
 import { blurOnFocusLoss } from './focus-loss';
 import { isInvalid, type TextFieldProps } from './text-input-props';
 

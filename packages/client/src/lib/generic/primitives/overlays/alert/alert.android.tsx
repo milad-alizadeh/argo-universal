@@ -1,8 +1,8 @@
 // Stock Compose AlertDialog: Expo UI has no universal alert; iOS uses SwiftUI's alert.
 import { AlertDialog, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
+import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
-import { NativeText } from '#primitives/native/native-text';
 import {
   alertActionPress,
   type AlertAction,

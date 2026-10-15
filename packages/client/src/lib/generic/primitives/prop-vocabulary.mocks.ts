@@ -8,6 +8,7 @@ import type * as CollapsibleKit from '#primitives/display/collapsible';
 import type * as DisclosureChevronKit from '#primitives/display/disclosure-chevron';
 import type * as IconKit from '#primitives/display/icon';
 import type * as LiquidGlassKit from '#primitives/display/liquid-glass';
+import type * as NativeTextKit from '#primitives/display/native-text';
 import type * as SelectedCheckKit from '#primitives/display/selected-check';
 import type * as SpinnerKit from '#primitives/display/spinner';
 import type * as TextKit from '#primitives/display/text';
@@ -29,7 +30,6 @@ import type * as GroupedListContentKit from '#primitives/lists/grouped-list-cont
 import type * as GroupedListItemKit from '#primitives/lists/grouped-list-item';
 import type * as GroupedListSectionKit from '#primitives/lists/grouped-list-section';
 import type * as HostKit from '#primitives/native/host';
-import type * as NativeTextKit from '#primitives/native/native-text';
 import type * as AlertKit from '#primitives/overlays/alert';
 import type * as BottomSheetKit from '#primitives/overlays/bottom-sheet';
 import type * as DialogKit from '#primitives/overlays/dialog';

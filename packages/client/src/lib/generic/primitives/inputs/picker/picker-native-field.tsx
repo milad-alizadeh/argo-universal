@@ -2,9 +2,9 @@ import { Column, Row, Spacer } from '@expo/ui';
 import { createElement } from 'react';
 import type * as React from 'react';
 import { Platform } from 'react-native';
+import { NativeText } from '#primitives/display/native-text';
 import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { Host, type HostProps } from '#primitives/native/host';
-import { NativeText } from '#primitives/native/native-text';
 import type { PickerProps } from './picker-props';
 import { pickerLabel } from './picker-selection';
 

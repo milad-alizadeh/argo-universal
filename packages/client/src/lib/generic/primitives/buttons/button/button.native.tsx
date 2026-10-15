@@ -1,8 +1,8 @@
 import { Button as UniversalButton, RNHostView, Row } from '@expo/ui';
 import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { Platform } from 'react-native';
+import { NativeText, useDangerColor } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
-import { NativeText, useDangerColor } from '#primitives/native/native-text';
 import { ButtonAdornment } from './button-adornment';
 import { ContentButton } from './button-content';
 import { withNarrowLayout } from './button-layout';
