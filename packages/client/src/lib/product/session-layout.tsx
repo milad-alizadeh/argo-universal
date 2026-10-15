@@ -59,7 +59,7 @@ function OverlapComposer(props: { children: ReactNode }): React.JSX.Element {
   );
 }
 
-// The Feed runs to the screen's bottom edge and scrolls under the glass Composer, which keeps the home indicator's space below it until the keyboard opens.
+// The Feed runs to the screen's bottom edge behind the glass Composer, which keeps the home indicator's space below it until the keyboard opens; the Feed fades out above it, so no text shows through the glass.
 function GlassComposerLayout(props: SessionLayoutProps): React.JSX.Element {
   return (
     <Screen testID="session-layout" edges={[]} className={sessionSurface}>
