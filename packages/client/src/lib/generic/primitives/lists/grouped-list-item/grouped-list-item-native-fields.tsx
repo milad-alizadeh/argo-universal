@@ -1,9 +1,10 @@
-import { type RowProps, Row, Text } from '@expo/ui';
+import { type RowProps, Row } from '@expo/ui';
 import { fixedSize } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
+import { NativeText } from '#primitives/native/native-text';
 import type { GroupedListItemProps } from './grouped-list-item-props';
-import { useRowText } from './grouped-list-item-text';
+import { rowColor } from './grouped-list-item-text';
 import { NativeRowImage } from './native-row';
 
 type Modifiers = NonNullable<RowProps['modifiers']>;
@@ -45,16 +46,12 @@ function RowValue(
 
 // Android keeps the value to one line at the row's end, as the title takes the width.
 function RowValueText({ value }: { value: string }): React.JSX.Element {
-  const text = useRowText('body', 'secondary');
-
-  if (ios) return <Text {...text}>{value}</Text>;
-
   return (
-    <Text
-      textStyle={{ ...text.textStyle, textAlign: 'right' }}
-      numberOfLines={1}
+    <NativeText
+      numberOfLines={ios ? undefined : 1}
+      modifiers={rowColor('secondary')}
     >
       {value}
-    </Text>
+    </NativeText>
   );
 }

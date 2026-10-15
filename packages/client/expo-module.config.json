@@ -1,8 +1,5 @@
 {
-  "platforms": ["apple", "android"],
-  "apple": {
-    "modules": ["ClientTypographyModule"]
-  },
+  "platforms": ["android"],
   "android": {
     "modules": ["dev.argo.client.ClientThemeModule"]
   }

@@ -29,6 +29,7 @@ import type * as GroupedListContentKit from '#primitives/lists/grouped-list-cont
 import type * as GroupedListItemKit from '#primitives/lists/grouped-list-item';
 import type * as GroupedListSectionKit from '#primitives/lists/grouped-list-section';
 import type * as HostKit from '#primitives/native/host';
+import type * as NativeTextKit from '#primitives/native/native-text';
 import type * as AlertKit from '#primitives/overlays/alert';
 import type * as BottomSheetKit from '#primitives/overlays/bottom-sheet';
 import type * as DialogKit from '#primitives/overlays/dialog';
@@ -77,6 +78,7 @@ export type Primitives = {
   LiquidGlassProps: LiquidGlassKit.LiquidGlassProps;
   MenuAction: MenuKit.MenuAction;
   MenuProps: MenuKit.MenuProps;
+  NativeTextProps: NativeTextKit.NativeTextProps;
   PickerProps: PickerKit.PickerProps<string>;
   PopoverContentProps: PopoverKit.PopoverContentProps;
   PopoverProps: PopoverKit.PopoverProps;
@@ -103,6 +105,7 @@ export type Aliases = {
   BadgeTone: BadgeKit.BadgeTone;
   ButtonSize: ButtonKit.ButtonSize;
   FieldErrors: FieldErrorsKit.FieldErrors;
+  NativeTextRole: NativeTextKit.NativeTextRole;
   TextRole: TextKit.TextRole;
   Tone: TextKit.Tone;
 };

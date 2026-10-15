@@ -1,5 +1,5 @@
 // iOS only: a long list opens a searchable page in a NavigationStack, which universal Picker cannot offer.
-import { Button, Row, Text } from '@expo/ui';
+import { Button, Row } from '@expo/ui';
 import {
   accessibilityHint,
   accessibilityLabel,
@@ -7,7 +7,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { createElement, useState } from 'react';
 import { errorMessage } from '#primitives/fields/field-errors';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
+import { NativeText } from '#primitives/native/native-text';
 import { useSheetNavigation } from '#primitives/overlays/bottom-sheet';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { PickerDrillInSheet } from './picker-drill-in-sheet.ios';
@@ -100,9 +100,7 @@ function TriggerValue<Value extends string>(
 ): React.JSX.Element {
   return (
     <Row alignment="center" spacing={6}>
-      <Text textStyle={useUniversalTextStyle('body')}>
-        {pickerValue(props)}
-      </Text>
+      <NativeText>{pickerValue(props)}</NativeText>
       <NativeSymbol name="chevron-up-down" role="body" />
     </Row>
   );

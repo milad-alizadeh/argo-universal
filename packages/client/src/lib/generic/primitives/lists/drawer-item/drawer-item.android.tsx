@@ -1,5 +1,5 @@
 // Android only: its drawer item is Material's pill, while iOS draws the drawer row in React Native as the web does.
-import { RNHostView, Row, Text } from '@expo/ui';
+import { RNHostView, Row } from '@expo/ui';
 import {
   type ModifierConfig,
   fillMaxWidth,
@@ -13,7 +13,7 @@ import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { Icon, IconSlot } from '#primitives/display/icon';
 import { Host } from '#primitives/native/host';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
+import { NativeText } from '#primitives/native/native-text';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
@@ -114,13 +114,9 @@ function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
 
 function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   return (
-    <Text
-      textStyle={useUniversalTextStyle('control')}
-      numberOfLines={1}
-      modifiers={[weight(1)]}
-    >
+    <NativeText role="control" numberOfLines={1} modifiers={[weight(1)]}>
       {label}
-    </Text>
+    </NativeText>
   );
 }
 

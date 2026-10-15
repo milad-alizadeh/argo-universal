@@ -1,13 +1,13 @@
-import { Column, FieldGroup, Text, type TextProps } from '@expo/ui';
+import { Column, FieldGroup } from '@expo/ui';
 import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
-import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import type { TextRole } from '#primitives/display/text';
 import { useSidebarList } from '#primitives/fields/field-layout';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
-import { useNativeTheme } from '../../../native-theme';
+import {
+  NativeText,
+  type NativeTextRole,
+} from '#primitives/native/native-text';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 import { GroupedListSection as WebGroupedListSection } from './grouped-list-section.tsx';
@@ -53,7 +53,9 @@ function footerSlot(props: GroupedListSectionProps): React.ReactNode {
 
   return (
     <FieldGroup.SectionFooter>
-      <FooterText text={props.footer} tone={props.tone} />
+      <NativeText role="secondary" tone={props.tone}>
+        {props.footer}
+      </NativeText>
     </FieldGroup.SectionFooter>
   );
 }
@@ -86,49 +88,18 @@ function useRowGap(textFields: boolean | undefined): number {
 
 function Caption(props: {
   text?: string;
-  textRole: TextRole;
+  textRole: NativeTextRole;
 }): React.JSX.Element | null {
-  const textStyle = useUniversalTextStyle(props.textRole);
-
   if (!props.text) return null;
 
   return (
-    <Text
-      textStyle={textStyle}
+    <NativeText
+      role={props.textRole}
       modifiers={[padding(gutter, captionPadding, gutter, captionPadding)]}
     >
       {props.text}
-    </Text>
+    </NativeText>
   );
-}
-
-function FooterText(props: {
-  text: string;
-  tone: GroupedListSectionProps['tone'];
-}): React.JSX.Element {
-  return <Text {...useFooterText(props.tone)}>{props.text}</Text>;
-}
-
-/*
- * iOS's footer keeps the Section's own font; a failure, such as a field's error, reads in the
- * danger token, the one colour taken from Argo's theme rather than the Host.
- */
-function useFooterText(
-  tone: GroupedListSectionProps['tone'],
-): Pick<TextProps, 'textStyle' | 'modifiers'> {
-  const textStyle = useUniversalTextStyle('secondary');
-  const { danger } = useNativeTheme().colors;
-  const color = tone === 'danger' ? danger : undefined;
-
-  if (!ios) return { textStyle: { ...textStyle, color } };
-
-  return { modifiers: failureColor(color) };
-}
-
-function failureColor(
-  color: string | undefined,
-): ReturnType<typeof foregroundStyle>[] {
-  return color === undefined ? [] : [foregroundStyle(color)];
 }
 
 GroupedListSection satisfies React.ComponentType<GroupedListSectionProps>;
