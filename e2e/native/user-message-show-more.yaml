@@ -1,0 +1,12 @@
+appId: dev.argo.app
+name: A collapsed user message keeps Show more pressable
+---
+# Start in the native Feed → UserMessage Storybook preview. Its "Long text"
+# prompt runs past four lines, so it clamps behind Show more.
+- scrollUntilVisible:
+    element: "^Show more$"
+    direction: DOWN
+- assertVisible: "^Show more$"
+# The tap lands on Show more only when no clipped markdown covers it.
+- tapOn: "^Show more$"
+- assertNotVisible: "^Show more$"
