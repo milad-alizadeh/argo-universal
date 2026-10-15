@@ -66,6 +66,7 @@ describe('a rule allowlist', (): void => {
   it('keeps the waiver of a file git moved', (): void => {
     expect(
       allowlistProblems({
+        rule,
         current: [card],
         baseline: [row],
         flagged: new Set([card]),
