@@ -46,7 +46,7 @@ export const HashOpensTheMatchingReferences: Story = {
     const menu = await screen.findByRole('listbox');
 
     await expect(menu).toBeVisible();
-    await expect(screen.getAllByRole('option')).toHaveLength(2);
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
   },
 };
 
