@@ -6,7 +6,7 @@ import {
   useResubscribeOnReconnect,
 } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
-import { useSessionElicitation } from '#features/sessions';
+import { useMergeMethod, useSessionElicitation } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
@@ -74,19 +74,25 @@ function useFeedElicitation(
   });
 }
 
+type SessionSurroundings =
+  | 'agents'
+  | 'navigate'
+  | 'imageUrl'
+  | 'connected'
+  | 'elicitation'
+  | 'mergeMethod';
+
 function useSessionSurroundings(
   sessionId: string,
   feed: SessionFeed,
-): Pick<
-  SessionDetailViewSources,
-  'agents' | 'navigate' | 'imageUrl' | 'connected' | 'elicitation'
-> {
+): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     elicitation: useFeedElicitation(sessionId, feed),
     agents: useAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
+    mergeMethod: useMergeMethod(),
   };
 }
 

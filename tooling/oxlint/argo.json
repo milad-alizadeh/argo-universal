@@ -111,6 +111,7 @@
     {
       // `shape` is @expo/ui Compose's own prop name on Surface and Button; the rule allows member reads but not package prop keys.
       "files": [
+        "packages/client/src/lib/generic/primitives/buttons/split-button/split-button-look.android.ts",
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-dialog.android.tsx",
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-row.android.tsx",
         "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item.android.tsx"

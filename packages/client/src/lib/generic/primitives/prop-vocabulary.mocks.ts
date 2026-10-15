@@ -80,7 +80,10 @@ export type Primitives = {
   IconSpinnerProps: IconKit.IconSpinnerProps;
   LiquidGlassProps: LiquidGlassKit.LiquidGlassProps;
   MenuAction: MenuKit.MenuAction;
+  MenuDropdownItemsProps: MenuKit.MenuDropdownItemsProps;
   MenuProps: MenuKit.MenuProps;
+  MenuRows: MenuKit.MenuRows;
+  NativeMenuItem: MenuKit.NativeMenuItem;
   NativeTextProps: NativeTextKit.NativeTextProps;
   PickerProps: PickerKit.PickerProps<string>;
   PopoverContentProps: PopoverKit.PopoverContentProps;
