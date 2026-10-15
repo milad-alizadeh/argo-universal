@@ -5,6 +5,7 @@ import type { ComponentProps, ComponentType } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Host } from '#primitives/native/host';
+import { CheckboxAccessibility } from './checkbox-accessibility';
 import { AppleRadioRow, type CheckboxRowProps } from './checkbox-apple-row';
 import { CheckboxMark } from './checkbox-mark';
 import { MaterialRadioRow } from './checkbox-material-row';
@@ -20,7 +21,9 @@ export function Checkbox(props: CheckboxProps): React.JSX.Element {
 
   return (
     <View className="gap-2">
-      <CheckboxControl {...props} state={state} />
+      <CheckboxAccessibility {...props} description={state.description}>
+        <CheckboxControl {...props} state={state} />
+      </CheckboxAccessibility>
       <CheckboxFooter {...state} />
     </View>
   );
