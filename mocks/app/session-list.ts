@@ -52,7 +52,6 @@ const baseSession: SessionInfo = {
   subagents: { running: 0, total: 0 },
   shells: { running: 0, total: 0 },
   archivedAt: null,
-  issue: null,
   pullRequest: null,
   createdAt: activityAt - 60_000,
   updatedAt: activityAt,

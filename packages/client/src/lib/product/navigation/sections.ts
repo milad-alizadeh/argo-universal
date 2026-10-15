@@ -1,17 +1,15 @@
 import type { IconName } from '#lib/generic/symbols/icon-names';
 
-export type Section = 'sessions' | 'issues' | 'atlas' | 'settings';
-
 // Each section's title and icon, top to bottom in the rail and the drawer. A section's key is also its route: `/sessions` and the drawer screen `sessions`.
 export const sections = {
   sessions: { title: 'Sessions', icon: 'sessions' },
-  issues: { title: 'Issues', icon: 'issue' },
-  atlas: { title: 'Atlas', icon: 'atlas' },
   settings: { title: 'Settings', icon: 'settings' },
-} as const satisfies Record<Section, { title: string; icon: IconName }>;
+} as const satisfies Record<string, { title: string; icon: IconName }>;
+
+export type Section = keyof typeof sections;
 
 const isSection = (name: string | undefined): name is Section =>
-  name !== undefined && name in sections;
+  name !== undefined && Object.hasOwn(sections, name);
 
 export const sectionOrder: readonly Section[] =
   Object.keys(sections).filter(isSection);

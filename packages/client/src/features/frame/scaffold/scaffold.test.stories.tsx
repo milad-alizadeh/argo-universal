@@ -31,8 +31,6 @@ export default meta;
 
 const sections = [
   ['Sessions', 'sessions'],
-  ['Issues', 'issues'],
-  ['Atlas', 'atlas'],
   ['Settings', 'settings'],
 ] as const;
 
@@ -108,9 +106,9 @@ export const SectionsAndSidebarPhone = sectionsAndSidebar(layoutWidths.phone);
 
 export const SectionsAndSidebarWide = sectionsAndSidebar(layoutWidths.wide);
 
-// The rail lists the four sections in order and keeps the sidebar toggle last; only the open section is current.
+// The rail lists the core sections in order and keeps the sidebar toggle last; only the open section is current.
 export const RailListsSectionsThenTheSidebarToggle: ScaffoldStory = {
-  args: { selectedSection: 'atlas' },
+  args: { selectedSection: 'settings' },
   play: controlledPlay(async ({ canvas }) => {
     await page.viewport(1440, 844);
     const rail = within(canvas.getByTestId(railId));
@@ -118,16 +116,14 @@ export const RailListsSectionsThenTheSidebarToggle: ScaffoldStory = {
       rail
         .getAllByRole('button')
         .map((button) => button.getAttribute('aria-label')),
-    ).toEqual(['Sessions', 'Issues', 'Atlas', 'Settings', hideSidebarLabel]);
-    await expect(rail.getByRole('button', { name: 'Atlas' })).toHaveAttribute(
-      currentAttribute,
-      'page',
-    );
+    ).toEqual(['Sessions', 'Settings', hideSidebarLabel]);
+    await expect(
+      rail.getByRole('button', { name: 'Settings' }),
+    ).toHaveAttribute(currentAttribute, 'page');
 
-    for (const section of ['Sessions', 'Issues', 'Settings'])
-      await expect(
-        rail.getByRole('button', { name: section }),
-      ).not.toHaveAttribute(currentAttribute);
+    await expect(
+      rail.getByRole('button', { name: 'Sessions' }),
+    ).not.toHaveAttribute(currentAttribute);
   }),
 };
 
