@@ -1,6 +1,10 @@
 import { FieldGroup, type RowProps } from '@expo/ui';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import { frame } from '@expo/ui/swift-ui/modifiers';
+import {
+  frame,
+  listRowBackground,
+  listRowInsets,
+} from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useWide } from '../../../use-wide/use-wide';
@@ -28,13 +32,22 @@ export function GroupedListContent(
   return Platform.OS === 'ios' ? <BareSection>{row}</BareSection> : row;
 }
 
+/*
+ * Not a list row: free content, such as a form's buttons, set between the cards. Without these the
+ * Form would put it on a white card with row insets.
+ */
+const bareRow = [
+  listRowBackground('transparent'),
+  listRowInsets({ top: 0, bottom: 0, leading: 0, trailing: 0 }),
+];
+
 function BareSection({
   children,
 }: {
   children: React.ReactElement;
 }): React.JSX.Element {
   return (
-    <FieldGroup.Section>{children}</FieldGroup.Section>
+    <FieldGroup.Section modifiers={bareRow}>{children}</FieldGroup.Section>
   );
 }
 

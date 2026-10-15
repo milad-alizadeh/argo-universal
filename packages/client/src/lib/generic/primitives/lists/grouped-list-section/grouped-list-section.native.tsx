@@ -3,6 +3,7 @@ import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
 import {
   accessibilityAddTraits,
   foregroundStyle,
+  headerProminence,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
@@ -43,10 +44,16 @@ function useBareSection(props: GroupedListSectionProps): boolean {
   return !ios && (!!props.textFields || sidebar);
 }
 
-// Increased prominence preserves an iOS header's title case; the header sets its own font.
+/*
+ * Increased prominence keeps an iOS header in title case, as Paper's is; without it Form uppercases
+ * the header. It changes no separator, row fill or page colour; the header sets its own font.
+ */
 function Section(props: GroupedListSectionProps): React.JSX.Element {
   return (
-    <FieldGroup.Section title={ios ? undefined : props.title}>
+    <FieldGroup.Section
+      title={ios ? undefined : props.title}
+      modifiers={ios ? [headerProminence('increased')] : undefined}
+    >
       {headerSlot(props.title)}
       {footerSlot(props)}
       {props.children}
