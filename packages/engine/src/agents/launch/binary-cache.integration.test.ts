@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { mkdir, readdir } from 'node:fs/promises';
+import { mkdir, readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { zipSync } from 'fflate';
@@ -94,7 +94,7 @@ it.each(['.zip', '.gz', ''] as const)(
         host.engine.getSnapshot().context.acpResources.isDirectoryInUse,
     });
 
-    expect(existsSync(command.executable)).toBe(true);
+    expect(await readFile(command.executable)).toEqual(installationExecutable);
     expect(download).toHaveBeenCalledTimes(1);
   },
 );

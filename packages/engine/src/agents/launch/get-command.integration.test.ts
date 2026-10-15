@@ -5,7 +5,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { installEntry, installationPorts } from '#mocks/installation';
 import { getCommand } from './get-command';
 
-it('downloads a lazy binary once across two Projects and resolves the target arguments', async () => {
+it('downloads a lazy binary once across two Project environments and resolves the target arguments', async () => {
   const entry = installEntry('binary');
 
   const download = vi.fn<typeof installationPorts.download>(
@@ -32,11 +32,15 @@ it('downloads a lazy binary once across two Projects and resolves the target arg
   };
 
   const [first, second] = await Promise.all([
-    getCommand(input),
-    getCommand(input),
+    getCommand({ ...input, shellEnv: { ...input.shellEnv, PROJECT: 'first' } }),
+    getCommand({
+      ...input,
+      shellEnv: { ...input.shellEnv, PROJECT: 'second' },
+    }),
   ]);
 
-  expect(first).toEqual(second);
+  expect(first.executable).toBe(second.executable);
+  expect([first.env.PROJECT, second.env.PROJECT]).toEqual(['first', 'second']);
   expect(await readFile(first.executable, 'utf8')).toContain('#!');
   expect(first.directory).toMatch(/\/registry\/fixture-install\/v_1\.2\.3_/);
   expect(download).toHaveBeenCalledTimes(1);
@@ -44,7 +48,7 @@ it('downloads a lazy binary once across two Projects and resolves the target arg
   expect(download).toHaveBeenCalledTimes(1);
 });
 
-it('installs npm with a ceiling range once across concurrent Projects and again on a new connection', async () => {
+it('installs npm with a ceiling range once across concurrent Project environments and again on a new connection', async () => {
   const entry = installEntry('npx');
 
   const host = await startEngineTestHost({
@@ -74,11 +78,15 @@ it('installs npm with a ceiling range once across concurrent Projects and again 
   };
 
   const [first, second] = await Promise.all([
-    getCommand(input),
-    getCommand(input),
+    getCommand({ ...input, shellEnv: { ...input.shellEnv, PROJECT: 'first' } }),
+    getCommand({
+      ...input,
+      shellEnv: { ...input.shellEnv, PROJECT: 'second' },
+    }),
   ]);
 
-  expect(first).toEqual(second);
+  expect(first.executable).toBe(second.executable);
+  expect([first.env.PROJECT, second.env.PROJECT]).toEqual(['first', 'second']);
   expect(
     runTool.mock.calls.filter(([call]) => call.args[0] === 'install'),
   ).toHaveLength(1);
