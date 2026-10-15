@@ -2,7 +2,7 @@ import { FieldGroup } from '@expo/ui';
 import * as React from 'react';
 import { Platform } from 'react-native';
 import { FieldLayout } from '#primitives/fields/field-layout';
-import { DockedSearchFieldContent } from '#primitives/inputs/search-field';
+import { SearchField } from '#primitives/inputs/search-field';
 import {
   GroupedListContent,
   type GroupedListContentProps,
@@ -18,9 +18,6 @@ import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
 import { GroupedList as WebGroupedList } from './grouped-list.tsx';
 import { useGroupedPage } from './grouped-page';
-
-// FieldGroup pads its sections 16 on Android (@expo/ui 57 FieldGroup.android.tsx); the search above them lines up with them.
-const androidGutter = 16;
 
 type Search = GroupedListProps['search'];
 
@@ -52,14 +49,8 @@ export function GroupedList(props: GroupedListProps): React.JSX.Element {
 function dockedSearch(search: Search): React.JSX.Element | null {
   if (Platform.OS !== 'android' || !search) return null;
 
-  return (
-    <Host
-      matchContents={{ vertical: true }}
-      style={{ paddingHorizontal: androidGutter, paddingTop: androidGutter }}
-    >
-      <DockedSearchFieldContent {...search} />
-    </Host>
-  );
+  // The kit's docked field, in the 16dp gutter FieldGroup gives its sections (@expo/ui 57 FieldGroup.android.tsx), as on Sessions.
+  return <SearchField variant="docked" className="px-4 pt-4" {...search} />;
 }
 
 /*
