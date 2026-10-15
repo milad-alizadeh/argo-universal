@@ -6,6 +6,7 @@ import {
 import { Stack, type NativeStackNavigationOptions } from 'expo-router';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { rightItems } from './header-right-items';
 import { screenHeaderOptions } from './screen-header-options';
 
@@ -62,8 +63,10 @@ function openSearchOptions(
   return {
     ...screenHeaderOptions({ title: header.title, left: backButton(appBar) }),
     headerTitle: (): ReactElement => field,
-    headerRight: undefined,
-    ...rightItems(clear ? [clearButton(clear)] : []),
+    // The trailing slot stays while search is open: the bar re-laying its items would take the field's focus.
+    headerRight: (): ReactElement => (
+      <View>{clear ? clearButton(clear) : null}</View>
+    ),
   };
 }
 
@@ -80,7 +83,6 @@ function backButton(appBar: AppBar): ReactElement {
 function clearButton(onPress: () => void): ReactElement {
   return (
     <HeaderButton
-      key="clear"
       icon="close"
       accessibilityLabel="Clear search"
       onPress={onPress}
