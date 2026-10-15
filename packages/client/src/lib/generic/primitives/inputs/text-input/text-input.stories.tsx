@@ -48,7 +48,7 @@ function VariationsExample(): React.JSX.Element {
 function StateSections(): React.JSX.Element {
   return (
     <>
-      <GroupedListSection title="Row disabled">
+      <GroupedListSection textFields title="Row disabled">
         <TypedRow label="Name" initial="Example ACP" disabled />
       </GroupedListSection>
       <GroupedListSection textFields title="Row checking">

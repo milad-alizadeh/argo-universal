@@ -52,5 +52,8 @@ export type TextInputProps =
   | RowTextInputProps
   | BareTextInputProps;
 
+export type PhoneFieldProps = TextFieldProps &
+  Pick<StandaloneTextInputProps, 'required' | 'numeric'>;
+
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
   (props.errors?.length ?? 0) > 0;
