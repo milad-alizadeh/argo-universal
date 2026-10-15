@@ -10,11 +10,10 @@ const buttonClasses = cva(
         default:
           'bg-primary web:shadow-xs active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
         outline:
-          'border border-border bg-background active:bg-hover web:hover:bg-hover dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
+          'border border-border bg-background active:bg-pressed web:hover:bg-hover web:active:bg-pressed dark:bg-border/30',
         secondary:
-          'border border-border bg-background active:bg-hover web:hover:bg-hover dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
-        ghost:
-          'active:bg-hover dark:active:bg-hover/50 web:hover:bg-hover web:dark:hover:bg-hover/50',
+          'border border-border bg-background active:bg-pressed web:hover:bg-hover web:active:bg-pressed dark:bg-border/30',
+        ghost: 'active:bg-pressed web:hover:bg-hover web:active:bg-pressed',
         link: '',
       },
       size: {

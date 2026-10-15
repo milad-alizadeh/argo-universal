@@ -7,8 +7,10 @@ export const iconButtonClasses = cva(
       variant: {
         default:
           'bg-muted active:border-focus active:bg-border web:hover:bg-border web:active:bg-border',
-        ghost: 'bg-transparent active:bg-muted web:hover:bg-muted',
-        outline: 'border-border bg-card active:bg-muted web:hover:bg-muted',
+        ghost:
+          'bg-transparent active:bg-pressed web:hover:bg-hover web:active:bg-pressed',
+        outline:
+          'border-border bg-card active:bg-pressed web:hover:bg-hover web:active:bg-pressed',
         // Reacts as the filled Button does, so both halves of a split button match.
         filled:
           'bg-primary active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',

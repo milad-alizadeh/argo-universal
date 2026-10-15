@@ -73,11 +73,12 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - Web card and popover surfaces share the `--shadow-card` shadow (owner, 2026-10-10). Native surfaces keep their platform drawings.
 - Web search fields have a `--color-muted` fill and no border or shadow (owner, 2026-10-12).
 - Web dialogs have no border in light mode. Dark web cards, popovers, menus, dialogs and sheets use a 1px `--color-border` edge and a black shadow, without a white glow (owner, 2026-10-10).
-- Feed code blocks, inline diffs and tables use `--radius-sheet` on web and have no shadow. Menu hover and focus use `--color-muted`; pressed uses `--color-border` without a border (owner, 2026-10-10).
+- Feed code blocks, inline diffs and tables use `--radius-sheet` on web and have no shadow. Rows, items and buttons without a fill of their own draw interaction states from `--color-hover` (hover and keyboard focus), `--color-pressed` and `--color-selected`, without a border (2026-10-15).
 - Destructive hover and pressed states use a light red background, 10% of `--color-danger`, with danger text (owner, 2026-10-10).
 - Text takes one of four roles from the "Components / Typography" master on the Global Components page: Title, Heading, Body, Secondary. Each role is a set of tokens, `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`; desktop text uses the `-wide` size and leading (`--text-body-wide`), phone text the plain ones. Text nodes reference role tokens, never a scale step such as `--text-sm`. In code they are the `type-title`, `type-heading`, `type-body` and `type-secondary` classes in `theme.css`. Buttons, inputs, chips, the native phone header and mono code keep their own styles.
 - Token values live only in `tooling/uniwind/theme.css`, with no second copy in the repository; each Paper file holds a copy. After a token change in `theme.css`, sync that token by hand in every canonical Paper file. Paper leads how things look; `theme.css` leads token values. A Paper token missing from `theme.css` or holding a different value is drift: report it and fix Paper.
 - Paper stores oklch with one decimal. When that rounding changes the colour, store the exact hex instead.
+- A Paper token value cannot be `color-mix()`: Paper flattens it to the opaque colour. Alpha tokens (`--color-hover`, `--color-glass`…) store the resolved value, such as `rgb(0 0 0 / 2%)`.
 - Colours come from the Tailwind palette only. Every semantic token (`--color-success`, `--color-content`) aliases a palette token.
 
 ## Icons

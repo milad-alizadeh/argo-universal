@@ -7,8 +7,8 @@ export const actionContentClassName = cn(
 );
 
 export const actionItemClassName = cn(
-  'active:bg-muted group relative flex flex-row items-center gap-2 rounded-xl px-2 py-2 sm:py-1.5',
-  'web:focus:bg-muted web:cursor-default web:outline-none web:data-disabled:pointer-events-none',
+  'active:bg-pressed group relative flex flex-row items-center gap-2 rounded-xl px-2 py-2 sm:py-1.5',
+  'web:focus:bg-hover web:cursor-default web:outline-none web:data-disabled:pointer-events-none',
 );
 
 export const actionItemTextClassName = 'select-none text-foreground';

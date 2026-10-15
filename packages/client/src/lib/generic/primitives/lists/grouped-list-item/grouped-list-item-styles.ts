@@ -86,7 +86,7 @@ const pressClasses = (sidebar: boolean): string =>
 
 // The hover shade's own line is out of flow, or it would add a gap's width to the row.
 const hoverClasses =
-  'web:hover:bg-border web:active:bg-border web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
+  'web:hover:bg-hover web:active:bg-pressed web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
 
 function sidebarClasses(props: GroupedListItemProps): string {
   return cn(
@@ -94,7 +94,7 @@ function sidebarClasses(props: GroupedListItemProps): string {
     // Hover is a lighter tint than selected; a selected row keeps its tint.
     props.selected
       ? 'bg-selected'
-      : 'bg-transparent web:hover:bg-selected/50 web:active:bg-selected',
+      : 'bg-transparent web:hover:bg-hover web:active:bg-pressed',
   );
 }
 

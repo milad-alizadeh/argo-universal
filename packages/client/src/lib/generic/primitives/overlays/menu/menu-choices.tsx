@@ -101,7 +101,7 @@ function radioKeyDown(
 
 function radioItemClassName(keyboardFocus: boolean): string {
   return cn(
-    'min-h-9 flex-row items-center gap-3 cursor-default rounded-xl outline-0 px-3 py-1.5 hover:bg-muted focus:bg-muted active:bg-border',
+    'min-h-9 flex-row items-center gap-3 cursor-default rounded-xl outline-0 px-3 py-1.5 hover:bg-hover focus:bg-hover active:bg-pressed',
     keyboardFocus &&
       'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
   );

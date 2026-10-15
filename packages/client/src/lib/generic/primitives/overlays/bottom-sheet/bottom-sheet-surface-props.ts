@@ -31,7 +31,7 @@ export function overlayProps(open: boolean): React.ComponentProps<
 } {
   return {
     'data-state': open ? 'open' : 'closed',
-    className: 'bottom-sheet-overlay absolute inset-0 bg-black/20',
+    className: 'bottom-sheet-overlay absolute inset-0 bg-scrim/20',
   };
 }
 
