@@ -29,7 +29,7 @@ function inputClassName({
   tone = 'neutral',
 }: InputProps): string {
   return cn(
-    'text-foreground flex w-full min-w-0 flex-row items-center rounded-md type-body',
+    'text-foreground flex w-full min-w-0 flex-row items-center rounded-md type-body ios:leading-none',
     editable === false && disabledInputClass,
     platformInputClass,
     toneClass[tone],
