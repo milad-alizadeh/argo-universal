@@ -2,7 +2,6 @@ import type { CustomAgentDefinition } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Icon } from '#primitives/display/icon';
 import { GroupedList } from '#primitives/lists/grouped-list';
@@ -60,7 +59,6 @@ export function CustomAgentDetailView({
 function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.definition.name} />
       <SettingsPage title={props.definition.name} onBack={props.onBack}>
         <CustomAgentContent {...props} />
       </SettingsPage>

@@ -8,7 +8,7 @@ import { searchLabel } from './project-list-search';
 // iOS 26 docks the search bar at the bottom.
 const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass;
 
-// A phone's native header: the title and the stack's search bar.
+// A phone's native header: the stack's search bar; SettingsPage sets the title.
 export function PhoneHeader({
   onSearch,
 }: Pick<SearchedProps, 'onSearch'>): React.JSX.Element | null {
@@ -16,7 +16,6 @@ export function PhoneHeader({
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Projects' }} />
       {searchBar(onSearch)}
       {bottomSearch ? bottomToolbar : null}
     </>

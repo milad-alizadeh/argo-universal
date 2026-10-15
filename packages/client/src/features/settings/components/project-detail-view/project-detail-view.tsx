@@ -1,7 +1,6 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { SettingsPage } from '#lib/product/settings-page';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
@@ -40,7 +39,6 @@ export function ProjectDetailView(
 ): React.JSX.Element {
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.name} />
       <ProjectPage {...props} />
     </View>
   );

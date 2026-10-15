@@ -24,7 +24,7 @@ const addIcon = process.env.EXPO_OS === 'ios' ? 'plus' : AddIcon;
 // iOS 26 docks the search bar at the bottom.
 const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass;
 
-// A phone's native header, as the Stack Toolbar guide builds one: the title, the filter menu, Add custom Agent, and the stack's search bar.
+// A phone's native header, as the Stack Toolbar guide builds one: the filter menu, Add custom Agent, and the stack's search bar.
 export function AgentsPhoneHeader(
   props: AgentsPhoneHeaderProps,
 ): React.JSX.Element | null {
@@ -32,7 +32,6 @@ export function AgentsPhoneHeader(
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Agents' }} />
       {rightToolbar(props)}
       {searchBar(props.onSearch)}
       {bottomSearch ? bottomToolbar : null}

@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Badge } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
@@ -30,7 +29,6 @@ export function AgentDetailView(
 
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.agent.name} />
       <SettingsPage title={props.agent.name} onBack={props.onBack}>
         <AgentSections {...props} />
       </SettingsPage>
