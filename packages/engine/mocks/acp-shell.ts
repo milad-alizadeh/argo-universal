@@ -30,21 +30,29 @@ export const openLoginShellAgent = async (): Promise<{
 };
 
 const loginEnvironment = (directory: string): void => {
-  vi.stubEnv('SHELL', '/bin/zsh');
-  vi.stubEnv('ZDOTDIR', directory);
+  // bash ships on macOS and the Linux CI image; zsh is missing on the latter.
+  vi.stubEnv('SHELL', '/bin/bash');
+  vi.stubEnv('HOME', directory);
   vi.stubEnv('ANTHROPIC_API_KEY', 'fixture-key-that-must-be-cleared');
 };
 
 type LoginProject = { directory: string; bin: string };
 
-const loginProject = (): LoginProject => {
+export const loginProject = (): LoginProject => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-shell-env-'));
   onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
   const bin = join(directory, 'bin');
   mkdirSync(bin);
   writeFileSync(
-    join(directory, '.zprofile'),
-    `export PATH="${bin}:$PATH"\nexport ARGO_LOGIN_VALUE=login\n`,
+    join(directory, '.bash_profile'),
+    [
+      'echo "ARGO_RC_NOISE=printed"',
+      'read -r _',
+      `export PATH="${bin}:$PATH"`,
+      'export ARGO_LOGIN_VALUE=login',
+      "export ARGO_MULTILINE=$'first\\nPATH=/injected'",
+      '',
+    ].join('\n'),
   );
   loginEnvironment(directory);
 

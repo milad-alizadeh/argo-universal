@@ -56,6 +56,7 @@ export type AcpResourceInput = {
 
 export type AcpResources = {
   invalidateAgent: (agentId: string) => void;
+  invalidateIdleAgents: (agentId?: string) => void;
   isAgentInUse: (agentId: string) => boolean;
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;
   reserveAuthentication: (launch: AgentLaunch) => () => void;

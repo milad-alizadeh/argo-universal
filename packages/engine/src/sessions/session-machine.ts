@@ -860,6 +860,9 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    isConfigUpdate: ({ event }): boolean =>
+      event.type === acpUpdateEvent &&
+      event.notification.update.sessionUpdate === 'config_option_update',
     isReplayedHistory: ({ context, event }): boolean =>
       event.type === acpUpdateEvent &&
       isReplayedHistory(
@@ -1133,12 +1136,7 @@ export const sessionMachine = sessionSetup.createMachine({
             'session.close': { target: '.closing' },
             'acp.failed': { target: '.closing', actions: 'recordCrash' },
             'acp.update': [
-              {
-                guard: ({ event }): boolean =>
-                  event.notification.update.sessionUpdate ===
-                  'config_option_update',
-                actions: 'applyAcpConfig',
-              },
+              { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
               {
                 guard: ({ event }): boolean =>
                   event.notification.update.sessionUpdate === 'usage_update',
@@ -1398,7 +1396,11 @@ export const sessionMachine = sessionSetup.createMachine({
                 awaitingElicitation: {},
                 cancelling: {
                   on: {
-                    'acp.update': {},
+                    // The Turn already ended; only the Session's options still change.
+                    'acp.update': [
+                      { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
+                      {},
+                    ],
                     'session.cancel': {},
                     [storageFailingEvent]: {
                       actions: 'rememberStorageFailure',

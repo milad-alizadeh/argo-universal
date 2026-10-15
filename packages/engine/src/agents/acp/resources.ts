@@ -28,6 +28,12 @@ const createEntry = (
   pending: 0,
 });
 
+const isEntryInUse = (entry: Entry): boolean =>
+  entry.pending > 0 || entry.connection.inUse;
+
+const isIdleEntryOf = (entry: Entry, agentId: string | undefined): boolean =>
+  (agentId ?? entry.agentId) === entry.agentId && !isEntryInUse(entry);
+
 class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, Entry>();
   private stopped = false;
@@ -109,12 +115,16 @@ class EngineAcpResources implements AcpResources {
   }
   public isAgentInUse = (id: string): boolean =>
     [...this.entries.values()].some(
-      (entry) =>
-        entry.agentId === id && (entry.pending > 0 || entry.connection.inUse),
+      (entry) => entry.agentId === id && isEntryInUse(entry),
     );
   public invalidateAgent = (agentId: string): void => {
     for (const [key, entry] of this.entries)
       if (entry.agentId === agentId) this.retire(key, entry);
+  };
+  // Retry and disabling stop idle Agents; Sessions keep the processes they use.
+  public invalidateIdleAgents = (agentId?: string): void => {
+    for (const [key, entry] of this.entries)
+      if (isIdleEntryOf(entry, agentId)) this.retire(key, entry);
   };
   public reserveAuthentication = (): (() => void) => () => {};
   public async shutdown(): Promise<void> {

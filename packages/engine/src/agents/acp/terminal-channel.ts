@@ -1,6 +1,10 @@
 import { createServer, type Socket } from 'node:net';
 import type { AgentLaunch, LoginTerminalProcess } from '..';
 import {
+  agentEnvironment,
+  definedEnvironment,
+} from '../launch/agent-environment';
+import {
   createTerminalChannelPath,
   removeTerminalChannelPath,
 } from './terminal-channel-path';
@@ -47,8 +51,9 @@ export class TerminalChannel {
     );
 
     try {
+      const message = await launchMessage(launch);
       await this.ready.promise;
-      this.socket?.write(`${JSON.stringify(launchMessage(launch))}\n`);
+      this.socket?.write(`${JSON.stringify(message)}\n`);
     } finally {
       clearTimeout(timer);
     }
@@ -106,9 +111,13 @@ export class TerminalChannel {
   }
 }
 
-const launchMessage = (launch: AgentLaunch): TerminalLaunchMessage => ({
+const launchMessage = async (
+  launch: AgentLaunch,
+): Promise<TerminalLaunchMessage> => ({
   executable: launch.executable,
   args: [...launch.args],
   cwd: launch.cwd,
-  env: { TERM: 'xterm-256color', ...launch.env },
+  env: definedEnvironment(
+    await agentEnvironment(launch, { TERM: 'xterm-256color' }),
+  ),
 });

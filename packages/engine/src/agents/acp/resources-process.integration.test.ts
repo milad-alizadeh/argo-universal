@@ -1,22 +1,14 @@
-import { execFileSync } from 'node:child_process';
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { z } from 'zod';
 import {
   createResourceDestination,
   createResourceOpening,
 } from '#mocks/acp-resource';
-import { openLoginShellAgent } from '#mocks/acp-shell';
 import { createAcpResources } from './index';
 
 const readProcessId = (sessionId: string): number =>
   Number(sessionId.split(':')[0]);
-
-const group = (pid: number): string =>
-  execFileSync('/bin/ps', ['-o', 'pgid=', '-p', String(pid)], {
-    encoding: 'utf8',
-  }).trim();
 
 it('the production launch port owns a real stdio process and observes its final exit', async () => {
   const base = createResourceOpening();
@@ -108,29 +100,6 @@ it.each([1, 4, 8])(
     expect(() => process.kill(agentProcess, 0)).toThrow('ESRCH');
   },
 );
-
-it('the Agent inherits its Project login-shell PATH, stays in the Engine process group, and clears the Registry vendor API key', async () => {
-  const { lease, bin } = await openLoginShellAgent();
-
-  const environment = z
-    .object({
-      PATH: z.string(),
-      ARGO_LOGIN_VALUE: z.string(),
-      ANTHROPIC_API_KEY: z.string(),
-    })
-    .parse(lease.initialization._meta?.['environment']);
-
-  expect(environment.PATH.split(':')[0]).toBe(bin);
-  expect(environment.ARGO_LOGIN_VALUE).toBe('login');
-  expect(environment.ANTHROPIC_API_KEY).toBe('');
-
-  const engineGroup = group(process.pid);
-  const agentGroup = group(readProcessId(lease.sessionId));
-  console.info(
-    `Agent process group ${agentGroup}; Engine process group ${engineGroup}`,
-  );
-  expect(agentGroup).toBe(engineGroup);
-});
 
 it('a real Agent exit reports its status and final stderr block', async () => {
   const resources = createAcpResources();
