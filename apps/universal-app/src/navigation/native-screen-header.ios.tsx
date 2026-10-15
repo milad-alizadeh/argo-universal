@@ -7,7 +7,7 @@ import { Stack, type NativeStackNavigationOptions } from 'expo-router';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { rightItems } from './header-right-items';
-import { headerSearchOptions } from './header-search-options';
+import { useHeaderSearchOptions } from './header-search-options';
 import { screenHeaderOptions } from './screen-header-options';
 
 type Search = NonNullable<ScreenHeaderProps['search']>;
@@ -20,23 +20,26 @@ type SearchBarOptions = NativeStackNavigationOptions['headerSearchBarOptions'];
 export function NativeScreenHeader(
   header: ScreenHeaderProps,
 ): React.JSX.Element {
+  const searchOptions = useHeaderSearchOptions();
+
   return (
     <>
-      <Stack.Screen options={headerOptions(header)} />
+      <Stack.Screen options={headerOptions(header, searchOptions)} />
       {header.search && hasLiquidGlass && <BottomSearch />}
     </>
   );
 }
 
-function headerOptions({
-  right = [],
-  search,
-  ...header
-}: ScreenHeaderProps): NativeStackNavigationOptions {
+type SearchOptions = ReturnType<typeof useHeaderSearchOptions>;
+
+function headerOptions(
+  { right = [], search, ...header }: ScreenHeaderProps,
+  searchOptions: SearchOptions,
+): NativeStackNavigationOptions {
   return {
     ...screenHeaderOptions(header),
     ...rightItems([...right, ...searchAction(search)]),
-    headerSearchBarOptions: searchBarOptions(search),
+    headerSearchBarOptions: searchBarOptions(search, searchOptions),
   };
 }
 
@@ -44,10 +47,13 @@ function searchAction(search: Search | undefined): ReactElement[] {
   return search?.action ? [actionButton(search.action)] : [];
 }
 
-function searchBarOptions(search: Search | undefined): SearchBarOptions {
+function searchBarOptions(
+  search: Search | undefined,
+  searchOptions: SearchOptions,
+): SearchBarOptions {
   return (
     search && {
-      ...headerSearchOptions(search),
+      ...searchOptions(search),
       placement: hasLiquidGlass ? 'integrated' : 'stacked',
       // Before iOS 26 a focused bar hides the header row, but not our custom items in it, which pile up in its corner; the row stays.
       hideNavigationBar: hasLiquidGlass,
