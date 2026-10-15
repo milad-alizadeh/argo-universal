@@ -87,7 +87,7 @@ export function CheckboxIndicator(
 ): React.JSX.Element {
   return (
     <View
-      pointerEvents="none"
+      className="pointer-events-none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
