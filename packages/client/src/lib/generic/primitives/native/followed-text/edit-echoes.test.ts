@@ -37,7 +37,7 @@ describe('values the form commits back to a native field', () => {
     const echoes = editEchoes();
 
     for (const edit of row.edits) echoes.edited(edit);
-    expect(row.commits.map((value) => echoes.isEcho(value))).toEqual(
+    expect(row.commits.map((value) => echoes.takeEcho(value))).toEqual(
       row.echoes,
     );
   });

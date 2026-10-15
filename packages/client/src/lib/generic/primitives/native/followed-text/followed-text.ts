@@ -15,7 +15,7 @@ export function useFollowedText(
   const [echoes] = useState(editEchoes);
 
   useEffect(() => {
-    if (!echoes.isEcho(value) && text.get() !== value) text.set(value);
+    if (!echoes.takeEcho(value) && text.get() !== value) text.set(value);
   }, [echoes, text, value]);
 
   return (next) => {

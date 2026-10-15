@@ -5,7 +5,7 @@
  */
 interface EditEchoes {
   edited: (text: string) => void;
-  isEcho: (value: string) => boolean;
+  takeEcho: (value: string) => boolean;
 }
 
 export function editEchoes(): EditEchoes {
@@ -15,11 +15,11 @@ export function editEchoes(): EditEchoes {
     edited: (text) => {
       pending.push(text);
     },
-    isEcho: (value) => takeEcho(pending, value),
+    takeEcho: (value) => takeEcho(pending, value),
   };
 }
 
-// Drops the edits up to this value: React commits them in order, so none can still return.
+// Drops the edits up to this value, as React commits them in order; any other value clears them all.
 function takeEcho(pending: string[], value: string): boolean {
   const index = pending.lastIndexOf(value);
   pending.splice(0, index < 0 ? pending.length : index + 1);

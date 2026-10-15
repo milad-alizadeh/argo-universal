@@ -18,10 +18,7 @@ import { isInvalid, type TextFieldProps } from './text-input-props';
 
 type Modifiers = NonNullable<UniversalTextInputProps['modifiers']>;
 
-type FieldBox = Pick<
-  UniversalTextInputProps,
-  'modifiers' | 'textAlign' | 'keyboardType'
->;
+type FieldBox = Pick<UniversalTextInputProps, 'textAlign' | 'keyboardType'>;
 
 export type NativeFieldProps = TextFieldProps & FieldBox;
 
@@ -57,7 +54,7 @@ export function StackedField({
   return (
     <Column spacing={4} modifiers={[fillMaxWidth()]}>
       <FieldText danger={isInvalid(props)}>{props.label}</FieldText>
-      <NativeTextField {...props} modifiers={[fillMaxWidth()]} />
+      <NativeTextField {...props} />
       <SupportingLine line={line} danger={isInvalid(props)} />
     </Column>
   );
@@ -74,11 +71,14 @@ function SupportingLine(props: {
 
 // The universal text field, following the form's value and blurring only once the person has left it.
 function NativeTextField(props: NativeFieldProps): React.JSX.Element {
+  const code = codeText(props.mono);
+
   return (
     <TextInput
       {...useFieldValue(props)}
       {...fieldBehaviour(props)}
-      textStyle={androidCode(props.mono)}
+      textStyle={code.textStyle}
+      modifiers={[...fieldWidth, ...code.modifiers, ...namedField(props.label)]}
     />
   );
 }
@@ -112,29 +112,25 @@ function fieldBehaviour(props: NativeFieldProps): UniversalTextInputProps {
     autoCorrect: false,
     keyboardType: props.keyboardType,
     textAlign: props.textAlign,
-    modifiers: [
-      ...(props.modifiers ?? []),
-      ...iosCode(props.mono),
-      ...namedField(props.label),
-    ],
   };
 }
 
-// Code asks only for the mono face, at the platform's own body size.
-function iosCode(mono: boolean | undefined): Modifiers {
-  return mono === true && Platform.OS === 'ios'
-    ? [font({ textStyle: 'body', design: 'monospaced' })]
-    : [];
+type CodeText = Pick<UniversalTextInputProps, 'textStyle'> & {
+  modifiers: Modifiers;
+};
+
+// Code asks only for the mono face, at the platform's own body size: SwiftUI takes it as a font modifier, Compose as a font family.
+function codeText(mono: boolean | undefined): CodeText {
+  if (mono !== true) return { modifiers: [] };
+
+  return Platform.OS === 'ios'
+    ? { modifiers: [font({ textStyle: 'body', design: 'monospaced' })] }
+    : { textStyle: { fontFamily: 'monospace' }, modifiers: [] };
 }
 
-function androidCode(
-  mono: boolean | undefined,
-): UniversalTextInputProps['textStyle'] {
-  return mono === true && Platform.OS === 'android'
-    ? { fontFamily: 'monospace' }
-    : undefined;
-}
+// Compose's bare field takes the column's width; SwiftUI's fills its row already.
+const fieldWidth: Modifiers = Platform.OS === 'android' ? [fillMaxWidth()] : [];
 
-// Android reads the label drawn beside the field; SwiftUI's field needs it named.
+// SwiftUI's field is named after its label. Universal TextInput cannot name the Compose field, so TalkBack reads the label only as the text beside it.
 const namedField = (label: string): Modifiers =>
   Platform.OS === 'ios' ? [accessibilityLabel(label)] : [];
