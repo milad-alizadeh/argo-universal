@@ -125,8 +125,7 @@
       --color-primary-foreground: var(--color-neutral-50);
       /* Native controls: switch track, slider, checkmark and picker value. */
       --color-accent: var(--color-neutral-900);
-      /* A muted fill, and a hovered or pressed row, item or button: one step
-         darker than content, so it shows on content and on a card. */
+      /* Quiet fields and secondary surfaces; interaction states have their own tints. */
       --color-muted: var(--color-neutral-200);
       --color-muted-foreground: var(--color-neutral-500);
       --color-danger: var(--color-red-500);
@@ -153,7 +152,9 @@
       --color-glow-graphite: var(--color-neutral-400);
       --color-glow-sand: var(--color-taupe-300);
       /* A selected row or rail tile: a flat tint, no border or shadow. */
-      --color-selected: color-mix(in oklab, var(--color-black) 4%, transparent);
+      --color-hover: color-mix(in oklab, var(--color-black) 2%, transparent);
+      --color-selected: color-mix(in oklab, var(--color-black) 3%, transparent);
+      --color-pressed: color-mix(in oklab, var(--color-black) 4%, transparent);
       --shadow-glass:
         inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99, 0 0 0 1px #0000000d,
         0 12px 32px #0000000f;
@@ -194,7 +195,9 @@
       --color-glow-warm: var(--color-stone-600);
       --color-glow-graphite: var(--color-neutral-700);
       --color-glow-sand: var(--color-olive-600);
+      --color-hover: color-mix(in oklab, var(--color-white) 4%, transparent);
       --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
+      --color-pressed: color-mix(in oklab, var(--color-white) 8%, transparent);
       --shadow-glass:
         inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
       --shadow-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;

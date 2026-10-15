@@ -22,7 +22,7 @@ export function rowClasses(
   place: RowPlace = {},
 ): string {
   return cn(
-    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-muted wide:min-h-11 web:select-none web:[&_*]:select-none',
+    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-card wide:min-h-11 web:select-none web:[&_*]:select-none',
     controlClasses(props),
     sizeClasses(props),
     stateClasses(props, sidebar),
@@ -34,7 +34,7 @@ export function rowClasses(
 
 const overlayClasses = (overlay: boolean | undefined): string | undefined =>
   overlay
-    ? 'bg-card rounded-xl min-h-9 wide:min-h-9 px-2 py-2 web:hover:bg-muted web:active:bg-border'
+    ? 'bg-card rounded-xl min-h-9 wide:min-h-9 px-2 py-2 web:hover:bg-hover web:active:bg-pressed'
     : undefined;
 
 // A sidebar row has no separator, and neither has the row that ends its section.
@@ -102,7 +102,7 @@ const pressClasses = (sidebar: boolean): string =>
 
 // The hover shade's own line is out of flow, or it would add a gap's width to the row.
 const hoverClasses =
-  'web:hover:bg-border web:active:bg-border web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
+  'web:hover:bg-hover web:active:bg-pressed web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
 
 function sidebarClasses(props: GroupedListItemProps): string {
   return cn(
@@ -110,7 +110,7 @@ function sidebarClasses(props: GroupedListItemProps): string {
     // Hover is a lighter tint than selected; a selected row keeps its tint.
     props.selected
       ? 'bg-selected'
-      : 'bg-transparent web:hover:bg-selected/50 web:active:bg-selected',
+      : 'bg-transparent web:hover:bg-hover web:active:bg-pressed',
   );
 }
 

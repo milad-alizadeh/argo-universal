@@ -12,7 +12,9 @@ import {
   type RefObject,
 } from 'react';
 import { View } from 'react-native';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
+import { usePrimitiveColor } from '#primitives/native/primitive-color';
 import {
   SheetLink,
   SheetNavigationProvider,
@@ -73,7 +75,12 @@ type ModalProps = Omit<
 >;
 
 function useModalProps(props: Omit<PresentationProps, 'sheetRef'>): ModalProps {
+  const colors = useNativeTheme().colors;
+
   return {
+    containerColor: colors.content,
+    contentColor: colors.foreground,
+    scrimColor: usePrimitiveColor('text-foreground/32'),
     onDismissRequest: props.stack.reports.dismissed,
     skipPartiallyExpanded: !restsHalfOpen(props),
     ...dismissal(props.dismissible !== false),

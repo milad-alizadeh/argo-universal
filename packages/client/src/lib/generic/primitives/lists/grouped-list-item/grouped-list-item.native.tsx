@@ -19,6 +19,7 @@ import {
 } from './grouped-list-item-props';
 import { GroupedListItem as WebGroupedListItem } from './grouped-list-item.tsx';
 import { NativeRowDetail } from './native-row';
+import { NativeRowFrame } from './native-row-frame';
 
 type Modifiers = NonNullable<ColumnProps['modifiers']>;
 
@@ -51,17 +52,12 @@ interface RowProps {
   modifiers: Modifiers;
 }
 
-// Android's Section already sets each row in Material's list item, so the row presses itself.
+// The platform frame supplies a stock ListItem on Android and leaves SwiftUI's Form in charge on iOS.
 function ColumnRow({ item, modifiers }: RowProps): React.JSX.Element {
   return (
-    <Column
-      spacing={0}
-      onPress={item.onPress}
-      disabled={item.disabled}
-      modifiers={modifiers}
-    >
+    <NativeRowFrame item={item} modifiers={modifiers}>
       <RowParts {...item} />
-    </Column>
+    </NativeRowFrame>
   );
 }
 

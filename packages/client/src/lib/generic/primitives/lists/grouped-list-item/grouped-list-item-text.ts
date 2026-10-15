@@ -21,7 +21,7 @@ export type RowTone =
 
 /*
  * iOS's system label colours, as a Form's button would tint its whole label; an accent row takes that tint.
- * Android keeps the Host palette's content colour for every tone but danger.
+ * Android uses Argo's text-role tokens through the public textStyle colour.
  */
 const swiftColors: Partial<Record<RowTone, string>> = {
   primary: 'label',
@@ -67,9 +67,21 @@ export function useRowText(
 ): Pick<TextProps, 'textStyle' | 'modifiers'> {
   const textStyle = useUniversalTextStyle(role);
   const danger = useDangerColor(tone);
+  const color = useAndroidRowColor(tone);
 
-  if (Platform.OS !== 'ios')
-    return { textStyle: { ...textStyle, color: danger } };
+  if (Platform.OS !== 'ios') return { textStyle: { ...textStyle, color } };
 
   return { modifiers: [...swiftFont(role), ...swiftColor(tone, danger)] };
+}
+
+const androidToneTokens = {
+  primary: 'foreground',
+  secondary: 'mutedForeground',
+  muted: 'mutedForeground',
+  accent: 'accent',
+  danger: 'danger',
+} as const;
+
+function useAndroidRowColor(tone: RowTone): string | undefined {
+  return useNativeTheme().colors[androidToneTokens[tone]];
 }

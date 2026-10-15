@@ -6,16 +6,16 @@ export const iconButtonClasses = cva(
     variants: {
       variant: {
         default:
-          'bg-muted active:border-focus active:bg-border web:hover:bg-border web:active:bg-border',
-        ghost: 'bg-transparent active:bg-muted web:hover:bg-muted',
-        outline: 'border-border bg-card active:bg-muted web:hover:bg-muted',
+          'bg-muted active:border-focus active:bg-pressed web:hover:bg-hover web:active:bg-pressed',
+        ghost: 'bg-transparent active:bg-pressed web:hover:bg-hover',
+        outline: 'border-border bg-card active:bg-pressed web:hover:bg-hover',
         // Reacts as the filled Button does, so both halves of a split button match.
         filled:
           'bg-primary active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
       },
       disabled: { true: 'opacity-[0.38]' },
       // A toggle that is on, such as Bold in the format bar.
-      pressed: { true: 'bg-muted' },
+      pressed: { true: 'bg-selected' },
       size: {
         xs: 'size-11 sm:size-7',
         sm: 'size-11 sm:size-8',

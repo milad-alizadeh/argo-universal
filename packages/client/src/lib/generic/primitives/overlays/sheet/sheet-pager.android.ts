@@ -2,6 +2,7 @@ import type { HorizontalPagerHandle } from '@expo/ui/jetpack-compose';
 import {
   useEffect,
   useState,
+  useRef,
   type Dispatch,
   type SetStateAction,
   type RefObject,
@@ -84,7 +85,20 @@ export function usePageScroll(
   target: number,
   ready: boolean,
 ): void {
+  const current = useRef(0);
+
   useEffect(() => {
-    if (ready) void ref.current?.animateScrollToPage(target);
+    if (!ready || current.current === target) return;
+
+    current.current = target;
+    scrollToPage(ref, target);
   }, [ref, target, ready]);
+}
+
+// The pager starts on zero; imperative scrolling is only needed after navigation changes its target.
+function scrollToPage(
+  ref: RefObject<HorizontalPagerHandle | null>,
+  target: number,
+): void {
+  void ref.current?.animateScrollToPage(target);
 }

@@ -56,7 +56,7 @@ function optionState<Value extends string>(
 }
 
 function optionClass(): string {
-  return 'min-h-10 w-full flex items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-muted active:bg-border focus-visible:bg-muted focus-visible:outline-none disabled:opacity-50 wide:min-h-9 wide:gap-2 wide:px-2';
+  return 'min-h-10 w-full flex items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-hover active:bg-pressed focus-visible:bg-hover focus-visible:outline-none disabled:opacity-50 wide:min-h-9 wide:gap-2 wide:px-2';
 }
 
 function OptionText({
