@@ -160,14 +160,14 @@
       --color-primary-foreground: var(--color-neutral-50);
       /* Native controls: switch track, slider, checkmark and picker value. */
       --color-accent: var(--color-neutral-900);
-      --color-muted: var(--color-neutral-100);
+      --color-muted: var(--color-neutral-200);
       --color-muted-foreground: var(--color-neutral-500);
       /* A hovered or pressed row, item or button. */
       --color-hover: var(--color-neutral-100);
       --color-hover-foreground: var(--color-neutral-900);
       --color-danger: var(--color-red-500);
       --color-danger-foreground: var(--color-white);
-      --color-border: var(--color-neutral-200);
+      --color-border: var(--color-neutral-300);
       --color-focus: var(--color-neutral-400);
       /* Finished work: a merged pull request, a completed issue. */
       --color-done: var(--color-violet-600);
@@ -175,7 +175,7 @@
       --color-info: var(--color-blue-600);
       --color-warning: var(--color-amber-600);
       --color-warning-foreground: var(--color-white);
-      --color-content: var(--color-neutral-50);
+      --color-content: var(--color-neutral-100);
       /* Glass: the sidebar panel, its darker tray, and a card on glass. */
       --color-glass: #ffffff80;
       --color-glass-muted: #e5e5e5b3;
