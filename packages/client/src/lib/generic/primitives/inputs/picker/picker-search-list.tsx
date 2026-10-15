@@ -1,4 +1,4 @@
-import { LegendList } from '@legendapp/list/react-native';
+import { LegendList, type LegendListProps } from '@legendapp/list/react-native';
 import { createElement, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
@@ -11,66 +11,88 @@ type SearchProps<Value extends string> = PickerProps<Value> & {
   onClose: () => void;
 };
 
+// One list, search field first, so iOS's automatic inset keeps all of it below a transparent sheet header.
 export function PickerSearchList<Value extends string>(
   props: SearchProps<Value>,
 ): React.JSX.Element {
   const [query, setQuery] = useState('');
 
-  const options = props.options.filter((option) =>
-    matchesQuery(option.label, query),
-  );
-
   return createElement(
     View,
-    { className: 'flex-1 gap-3 bg-card px-4 pt-3' },
-    <TextInput {...searchInputProps(props.label, query, setQuery)} />,
-    <SearchResults picker={props} options={options} />,
+    { className: 'flex-1 bg-card px-4' },
+    createElement(LegendList<PickerOption<Value>>, {
+      ...searchListProps,
+      ...resultProps(props, query),
+      ListHeaderComponent: <SearchField {...props} {...{ query, setQuery }} />,
+    }),
   );
+}
+
+function resultProps<Value extends string>(
+  props: SearchProps<Value>,
+  query: string,
+): Pick<
+  LegendListProps<PickerOption<Value>>,
+  'data' | 'ListEmptyComponent' | 'renderItem'
+> {
+  return {
+    data: searchResults(props, query),
+    ListEmptyComponent: <SearchEmpty {...props} />,
+    renderItem: ({ item }) => <SearchOption {...props} option={item} />,
+  };
+}
+
+const searchListProps = {
+  keyExtractor: (option: PickerOption<string>): string => option.value,
+  keyboardShouldPersistTaps: 'handled',
+  contentInsetAdjustmentBehavior: 'automatic',
+} as const;
+
+interface SearchFieldProps {
+  label: string;
+  query: string;
+  setQuery: (text: string) => void;
+}
+
+function SearchField(props: SearchFieldProps): React.JSX.Element {
+  return (
+    <View className="py-3">
+      <TextInput
+        variant="bare"
+        accessibilityLabel={`Search ${props.label}`}
+        placeholder="Search"
+        value={props.query}
+        onChangeText={props.setQuery}
+        className="rounded-2xl border-0 bg-muted shadow-none"
+      />
+    </View>
+  );
+}
+
+// While loading or after a failure the list stays empty and says why.
+function searchResults<Value extends string>(
+  props: SearchProps<Value>,
+  query: string,
+): readonly PickerOption<Value>[] {
+  if (pickerOptionsMessage(props)) return [];
+
+  return props.options.filter((option) => matchesQuery(option.label, query));
 }
 
 function matchesQuery(label: string, query: string): boolean {
   return label.toLocaleLowerCase().includes(query.toLocaleLowerCase());
 }
 
-function searchInputProps(
-  label: string,
-  value: string,
-  onChangeText: (text: string) => void,
-): React.ComponentProps<typeof TextInput> {
-  return {
-    variant: 'bare',
-    accessibilityLabel: `Search ${label}`,
-    placeholder: 'Search',
-    value,
-    onChangeText,
-    className: 'rounded-2xl border-0 bg-muted shadow-none',
-  };
-}
-
-function SearchResults<Value extends string>(props: {
-  picker: SearchProps<Value>;
-  options: readonly PickerOption<Value>[];
-}): React.JSX.Element {
-  const message = pickerOptionsMessage(props.picker);
+function SearchEmpty<Value extends string>(
+  props: SearchProps<Value>,
+): React.JSX.Element {
+  const message = pickerOptionsMessage(props);
 
   return message ? (
-    <SearchMessage message={message} failure={!!props.picker.loadError} />
+    <SearchMessage message={message} failure={!!props.loadError} />
   ) : (
-    <SearchChoices {...props} />
+    <Text role="secondary">No matching options</Text>
   );
-}
-
-function SearchChoices<Value extends string>(props: {
-  picker: SearchProps<Value>;
-  options: readonly PickerOption<Value>[];
-}): React.JSX.Element {
-  return createElement(LegendList<PickerOption<Value>>, {
-    data: props.options,
-    keyExtractor: (option) => option.value,
-    keyboardShouldPersistTaps: 'handled',
-    ListEmptyComponent: <Text role="secondary">No matching options</Text>,
-    renderItem: ({ item }) => <SearchOption {...props.picker} option={item} />,
-  });
 }
 
 function SearchMessage(props: {

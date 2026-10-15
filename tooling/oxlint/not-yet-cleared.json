@@ -34,7 +34,6 @@
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/features/connection/components/connection-banner/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // max-lines-per-function
-    { "files": ["packages/client/src/features/connection/components/connection-detail-view/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function, max-statements
     { "files": ["packages/client/src/features/feed/hooks/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type

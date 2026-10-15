@@ -1,19 +1,5 @@
-import { createContext, useContext, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 import type { ComposerConfigurationProps } from './composer-configuration/composer-configuration';
-
-// The app presents Composer menus as native sheet routes through these.
-export interface NativeSheets {
-  // The Agent and model menu, with its own stack of pages.
-  agentModel: () => void;
-}
-
-const NativeSheetsContext = createContext<NativeSheets | undefined>(undefined);
-
-export const NativeSheetsProvider = NativeSheetsContext.Provider;
-
-export function useNativeSheets(): NativeSheets | undefined {
-  return useContext(NativeSheetsContext);
-}
 
 // The sheet routes sit outside the Composer, so the Composer hands them what to draw.
 interface PublishedStore<Value> {

@@ -6,7 +6,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./custom-symbol-paths.json": "./src/lib/generic/symbols/custom-symbol-paths.json",
-    "./navigation": "./src/lib/product/navigation/routes.tsx",
     "./storybook": "./src/preview-config.ts"
   },
   "imports": {
@@ -23,6 +22,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@expo/material-symbols": "catalog:",
     "@expo/ui": "catalog:",
     "@legendapp/list": "catalog:",
     "@lexical/code": "catalog:",
@@ -65,10 +65,10 @@
     "expo-glass-effect": "catalog:",
     "expo-haptics": "catalog:",
     "expo-image-picker": "catalog:",
+    "expo-router": "catalog:",
     "expo-symbols": "catalog:",
     "lexical": "catalog:",
     "marked": "catalog:",
-    "react-native-drawer-layout": "catalog:",
     "react-native-gesture-handler": "catalog:",
     "react-native-keyboard-controller": "catalog:",
     "react-native-reanimated": "catalog:",

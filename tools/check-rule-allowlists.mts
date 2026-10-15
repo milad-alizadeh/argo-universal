@@ -29,10 +29,10 @@ const reportSchema = z.object({
 const git = (args: string[]): string =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8' });
 
+const base = git(['merge-base', 'HEAD', 'origin/main']).trim();
+
 // The list at the merge base with main, or undefined before it lands there.
 function baseline({ path, rule }: Allowlist): string[] | undefined {
-  const base = git(['merge-base', 'HEAD', 'origin/main']).trim();
-
   // ls-tree prints nothing for a path the commit lacks; any other git failure throws.
   const onBase = git(['ls-tree', '--name-only', base, '--', path]);
 
@@ -40,6 +40,23 @@ function baseline({ path, rule }: Allowlist): string[] | undefined {
     ? undefined
     : readAllowlist(git(['show', `${base}:${path}`]), rule);
 }
+
+const movedPair = (line: string): [string, string] => {
+  const [, from = '', to = ''] = line.split('\t');
+
+  return [to, from];
+};
+
+// Files git sees as moved since the merge base, new path to old: a moved file keeps its waiver.
+const movedFiles = (): Map<string, string> =>
+  new Map(
+    git(['diff', '--find-renames', '--name-status', base])
+      .split('\n')
+      .filter((line): boolean => line.startsWith('R'))
+      .map(movedPair),
+  );
+
+const moved = movedFiles();
 
 // oxlint prints `argo(kit-styling)` for the rule `argo/kit-styling`.
 const findingCode = (rule: string): string => {
@@ -69,6 +86,7 @@ function check(allowlist: Allowlist): number {
     current,
     baseline: baseline(allowlist),
     flagged: flaggedFiles(allowlist),
+    moved,
   });
 
   for (const problem of problems) console.error(problem);

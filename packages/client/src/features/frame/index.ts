@@ -1,12 +1,21 @@
-export { DesktopLayout } from './screens/desktop-layout';
+export { usePhoneDrawerWidth } from './components/phone-drawer-content/use-phone-drawer-width';
 
 export {
-  OnboardingLayout,
-  useOnboardingShown,
-} from './screens/onboarding-layout';
+  Frame,
+  FramePage,
+  type FrameParts,
+  FrameSidebar,
+  frameSidebarWidth,
+  SectionDrawer,
+  type SectionList,
+  type SectionLists,
+  useFrame,
+  useSectionList,
+} from './frame/frame';
 
-export { PhoneLayout } from './screens/phone-layout';
+export { OnboardingFrame } from './components/onboarding-frame/onboarding-frame';
 
-export { SectionRootScreen } from './screens/section-root-screen';
-
-export { DesktopShell } from './components/desktop-shell/desktop-shell';
+export {
+  LiveConnectionBanner,
+  PhoneConnectionBanner,
+} from './frame/connection-banner';

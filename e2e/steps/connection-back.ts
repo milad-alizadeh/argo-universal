@@ -1,6 +1,6 @@
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { phone } from './frame';
+import { compactFrame, phone, reloadApp } from './frame';
 import { expectSettingsList } from './navigation';
 
 Given(
@@ -10,7 +10,7 @@ Given(
     await page.addInitScript(
       "if (location.pathname === '/') history.replaceState(null, '', '/settings/connection')",
     );
-    await page.reload();
+    await reloadApp(page);
     await expect(page.getByText('Version', { exact: true })).toBeVisible();
   },
 );
@@ -23,6 +23,6 @@ Then(
   'the phone Frame shows the Settings list',
   async ({ page }): Promise<void> => {
     await expectSettingsList(page);
-    await expect(page.getByTestId('phone-shell')).toBeVisible();
+    await expect(page.getByTestId(compactFrame)).toBeVisible();
   },
 );

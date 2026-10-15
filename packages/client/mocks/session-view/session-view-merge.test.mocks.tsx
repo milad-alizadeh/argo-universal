@@ -1,14 +1,14 @@
 import { expect, waitFor, within } from 'storybook/test';
+import { layoutWidths } from '../../src/lib/generic/each-layout';
+import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   pullRequestMocks,
   withPullRequests,
-} from '../../src/features/sessions/components/session-view/session-view-pull-request.mocks';
+} from '../../src/screens/sessions/$id/session-detail-view-pull-request.mocks';
 import {
   idleSession,
   runningSession,
-} from '../../src/features/sessions/components/session-view/session-view.mocks';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
+} from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import { openProps, type Story } from './session-view-story.test.mocks';
 
 const mergeLabel = 'Merge PR';

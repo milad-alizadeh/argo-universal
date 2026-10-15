@@ -58,7 +58,6 @@ export type Primitives = {
   DialogContentProps: DialogKit.DialogContentProps;
   DialogRegionProps: DialogKit.DialogRegionProps;
   DisclosureChevronProps: DisclosureChevronKit.DisclosureChevronProps;
-  DockedSearchQuery: SearchFieldKit.DockedSearchQuery;
   DrawerItemProps: DrawerItemKit.DrawerItemProps;
   ErrorToast: ToastKit.ErrorToast;
   FieldDescription: FieldDescriptionKit.FieldDescription;

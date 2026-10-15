@@ -2,15 +2,15 @@ import type * as React from 'react';
 import { type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { ScrollColumnContext } from '#lib/generic/scroll-column';
+import { useWide } from '#lib/generic/use-wide/use-wide';
+import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import {
   PageTitleRow,
   type PageTitleRowProps,
   type PageTitleSearch,
 } from '../generic/page-title-row/page-title-row';
-import { ScrollColumnContext } from '../generic/scroll-column';
-import { useWide } from '../generic/use-wide/use-wide';
-import { cn } from '../generic/utils';
 
 export type SettingsPageSearch = PageTitleSearch;
 
@@ -46,7 +46,7 @@ function useSettingsColumn(): SettingsColumn {
 /*
  * One Settings page on a wide window: a centred column under its own title and caption.
  * The content's scroll view spans the pane, so its scrollbar sits at the pane's edge, and keeps its content to the column.
- * A phone's native header already shows the title, so there the page is its content alone.
+ * A phone's native header shows the title, which the page's screen sets, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
   if (!useWide()) return props.children;
@@ -58,7 +58,7 @@ function WideSettingsPage(props: SettingsPageProps): React.JSX.Element {
   const settingsColumn = useSettingsColumn();
 
   return (
-    <View className="mt-shell-inset flex-1">
+    <View className="mt-frame-inset flex-1">
       <SettingsPageTop {...props} column={settingsColumn} />
       <SettingsPageBody column={settingsColumn}>
         {props.children}

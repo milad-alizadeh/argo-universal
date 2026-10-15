@@ -1,32 +1,46 @@
 import { describe, expect, it } from 'vitest';
-import type { NavigationDestination } from './context';
-import { sectionDestination, sectionOf } from './sections';
+import { isPage, sectionOf, sectionOrder } from './sections';
 
-const cases: [NavigationDestination, string][] = [
-  [{ to: 'sessions' }, 'sessions'],
-  [{ to: 'new-session' }, 'sessions'],
-  [{ to: 'session', id: 'session-1' }, 'sessions'],
-  [{ to: 'issues' }, 'issues'],
-  [{ to: 'atlas' }, 'atlas'],
-  [{ to: 'settings' }, 'settings'],
-  [{ to: 'settings-accounts' }, 'settings'],
-  [{ to: 'settings-connection' }, 'settings'],
-  [{ to: 'settings-project', name: 'example-project' }, 'settings'],
-  [{ to: 'settings-agent-new' }, 'settings'],
-  [{ to: 'settings-agent', agent: 'first-agent' }, 'settings'],
+const sectionCases: [string | undefined, string][] = [
+  ['/sessions', 'sessions'],
+  ['/sessions/new', 'sessions'],
+  ['/sessions/[id]', 'sessions'],
+  ['/issues', 'issues'],
+  ['/atlas', 'atlas'],
+  ['/settings', 'settings'],
+  ['/settings/accounts', 'settings'],
+  ['/settings/projects/example-project', 'settings'],
+  ['/settings/agents/new', 'settings'],
+  ['settings', 'settings'],
+  ['/', 'sessions'],
+  ['index', 'sessions'],
+  [undefined, 'sessions'],
 ];
 
 describe('sectionOf', () => {
-  it.each(cases)('puts %o in %s', (destination, section) => {
-    expect(sectionOf(destination)).toBe(section);
+  it.each(sectionCases)('puts %s in %s', (path, section) => {
+    expect(sectionOf(path)).toBe(section);
   });
 });
 
-describe('sectionDestination', () => {
-  it.each(['sessions', 'issues', 'atlas', 'settings'] as const)(
-    'opens %s on its list',
-    (section) => {
-      expect(sectionDestination(section)).toEqual({ to: section });
+describe('isPage', () => {
+  it.each(['/sessions', '/settings', '/issues', '/atlas'])(
+    'reads the list %s as no page',
+    (path) => {
+      expect(isPage(path)).toBe(false);
     },
   );
+
+  it.each(['/sessions/new', '/settings/accounts', '/settings/agents/codex'])(
+    'reads %s as a page',
+    (path) => {
+      expect(isPage(path)).toBe(true);
+    },
+  );
+});
+
+describe('sectionOrder', () => {
+  it('lists the sections top to bottom', () => {
+    expect(sectionOrder).toEqual(['sessions', 'issues', 'atlas', 'settings']);
+  });
 });

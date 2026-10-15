@@ -28,12 +28,20 @@ export interface AllowlistState {
   baseline: string[] | undefined;
   // Files with findings for the rule when the allowlist is left out.
   flagged: Set<string>;
+  // Files git moved since the baseline, new path to old: a moved file keeps its waiver.
+  moved?: Map<string, string>;
 }
+
+const pathAtBaseline = (state: AllowlistState, file: string): string =>
+  state.moved?.get(file) ?? file;
 
 const addedFiles = (state: AllowlistState): string[] =>
   state.baseline === undefined
     ? []
-    : state.current.filter((file): boolean => !state.baseline?.includes(file));
+    : state.current.filter(
+        (file): boolean =>
+          !state.baseline?.includes(pathAtBaseline(state, file)),
+      );
 
 export function allowlistProblems(state: AllowlistState): string[] {
   const added = addedFiles(state).map(

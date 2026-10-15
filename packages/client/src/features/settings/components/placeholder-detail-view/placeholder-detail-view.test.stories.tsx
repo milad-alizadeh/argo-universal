@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
+import { layoutWidths } from '#lib/generic/each-layout';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import { PlaceholderDetailView } from './placeholder-detail-view';
 
 const description = 'Accounts will appear here.';
@@ -23,7 +23,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A wide window draws the page's own title and caption; a phone's native header names it instead.
+// A wide window draws the page's own title and caption; on a phone the Settings stack's header names it, so the page draws no title.
 export const TitlesTheWidePageOnly: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
@@ -38,6 +38,7 @@ export const TitlesTheWidePageOnly: Story = {
     await expect(
       canvas.queryByRole('heading', { name: 'Accounts' }),
     ).not.toBeInTheDocument();
+    await expect(canvas.queryByText(caption)).not.toBeInTheDocument();
     await expect(canvas.getByText(description)).toBeVisible();
   },
 };

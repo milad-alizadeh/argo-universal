@@ -2,16 +2,15 @@ import { useFormSheetCommands, useFormSheetState } from '@repo/client';
 import { Stack, useNavigation } from 'expo-router';
 import { useEffect, type ReactElement } from 'react';
 import { bindFormSheet } from '@/navigation/form-sheet';
-import { useSheetHeaderOptions } from '@/navigation/sheet-header';
+import { sheetHeaderOptions } from '@/navigation/sheet-header';
 
 export default function FormSheetLayout(): ReactElement {
-  const options = useSheetHeaderOptions();
   const pages = useSheetPageOptions();
   useSheetLifecycle();
   useSheetGestures();
 
   return (
-    <Stack screenOptions={options}>
+    <Stack screenOptions={sheetHeaderOptions}>
       <Stack.Screen name="index" options={pages.index} />
       <Stack.Screen name="choice" options={pages.choice} />
     </Stack>

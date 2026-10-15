@@ -90,13 +90,13 @@
   --blur-glass: 28px;
   /* Sheets, dialogs and alerts on a wide window. */
   --radius-sheet: 28px;
-  --spacing-shell-bar: 64px;
+  --spacing-frame-bar: 64px;
   /* The rail, the sidebar control bar and the Inspector bar on a wide window. */
-  --spacing-shell-rail: 72px;
-  --spacing-shell-control: 44px;
-  --spacing-shell-list: 312px;
-  --spacing-shell-inspector: 352px;
-  --spacing-shell-inset: 8px;
+  --spacing-frame-rail: 72px;
+  --spacing-frame-control: 44px;
+  --spacing-frame-list: 312px;
+  --spacing-frame-inspector: 352px;
+  --spacing-frame-inset: 8px;
   --spacing-session-plan: 40px;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   /* Popovers and menus; the same in light and dark. */

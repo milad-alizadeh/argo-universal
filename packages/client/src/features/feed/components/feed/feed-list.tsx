@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { View } from 'react-native';
 import { FeedGrowthContext } from '../feed-growth-context';
 import type { FeedEntry } from './feed-entry';
-import { FeedOverlays } from './feed-overlays';
+import { JumpToLatestWhenAway } from './feed-overlays';
 import { FeedScroll, type FeedScrollProps } from './feed-scroll';
 import { useFeedGrowth } from './use-feed-growth';
 import { useFeedScrollPosition } from './use-feed-scroll-position';
@@ -46,7 +46,7 @@ export function FeedList(props: FeedListProps): React.JSX.Element {
   return (
     <View style={fillShrinkable}>
       <FeedBody {...shared} />
-      <FeedOverlays {...shared} />
+      <JumpToLatestWhenAway {...shared} />
     </View>
   );
 }

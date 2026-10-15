@@ -1,34 +1,27 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Text } from '#primitives/display/text';
+import { HeaderItems } from '../src/lib/product/header-button';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
 
-/*
- * Stands in for the native stack's header in stories: one line of left item, title and right items.
- * A centred title keeps a left slot to balance the right one. A search row with nothing on the left
- * starts its title at the list's 16pt gutter; its last icon ends on the rows' chevron column, the
- * gutter and row inset less the header button's own inset.
- */
+// Stands in for the stack's header in stories, laid out as the web's JS header draws it (getDefaultHeaderHeight, headerTitleAlign 'left'): one 64pt line of left item, left-aligned title and right items. As ScreenHeader, a wide window has none.
 export function ScreenHeaderMock({
   title,
   left,
   right,
   search,
-}: ScreenHeaderProps): React.JSX.Element {
-  const leading = left !== undefined || !search;
+}: ScreenHeaderProps): React.JSX.Element | null {
+  if (useWide()) return null;
 
   return (
-    <View className={headerClasses(leading)}>
-      {leading ? <View className="w-23 flex-row">{left}</View> : null}
+    <View className="h-16 flex-row items-center gap-4 bg-content px-4">
+      {left ? <View className="flex-row">{left}</View> : null}
       <HeaderContent title={title} right={right} search={search} />
     </View>
   );
 }
-
-const headerClasses = (leading: boolean): string =>
-  cn('h-11 flex-row items-center bg-content', leading ? 'px-1' : 'pr-5 pl-4');
 
 function HeaderTitle({
   title,
@@ -37,7 +30,7 @@ function HeaderTitle({
   return (
     <>
       <TitleText title={title} />
-      <View className="w-23 flex-row justify-end gap-1">{right}</View>
+      <HeaderItems>{right}</HeaderItems>
     </>
   );
 }
@@ -51,7 +44,7 @@ function TitleText({
       role="nav-title"
       aria-level={1}
       numberOfLines={1}
-      className="min-w-0 flex-1 text-center"
+      className="min-w-0 flex-1"
     >
       {title}
     </Text>
@@ -69,3 +62,10 @@ function HeaderContent({
     <HeaderTitle title={title} right={right} />
   );
 }
+
+// A view's `renderHeader` slot filled with the mock, from the page's own header props.
+export const mockHeader =
+  <Props,>(toHeader: (props: Props) => ScreenHeaderProps) =>
+  (props: Props): React.JSX.Element => (
+    <ScreenHeaderMock {...toHeader(props)} />
+  );

@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { phone, wide } from './frame';
+import { phone, wide, wideFrame } from './frame';
 import { agentModelLabel, openNewSession, sendPrompt } from './new-session';
 
 export const liveTitle = 'Check the live list';
@@ -23,7 +23,7 @@ When(
     await expect(
       page.getByRole('heading', { name: 'Sessions', level: 2, exact: true }),
     ).toBeVisible();
-    await expect(page.getByTestId('desktop-shell')).toBeVisible();
+    await expect(page.getByTestId(wideFrame)).toBeVisible();
     await startSession(page, title);
   },
 );

@@ -330,8 +330,8 @@
       }
     },
     {
-      // Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021); components and stories are held further down.
-      "files": ["packages/client/src/features/*/screens/**"],
+      // A route's screen gets tRPC from useTRPC() only and reaches features through their index.ts (ADR-0009, ADR-0016 item 9, ADR-0021).
+      "files": ["packages/client/src/screens/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -339,15 +339,6 @@
             "paths": [
               {
                 "name": "@trpc/client",
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
-              },
-              {
-                "name": "../trpc/create-trpc-client",
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
-              },
-              {
-                "name": "../trpc/context",
-                "importNames": ["useTRPCClient"],
                 "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
               }
             ],
@@ -366,11 +357,11 @@
               },
               {
                 "regex": "^#features/[^/]+/",
-                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+                "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9)."
               },
               {
-                "regex": "^\\.\\./\\.\\./[^.]",
-                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+                "regex": "^(\\.\\./)+features/[^.]*$",
+                "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9); only its .mocks files are imported directly."
               },
               {
                 "group": ["@repo/client", "@repo/client/**"],
@@ -382,8 +373,13 @@
       }
     },
     {
-      // The same screen rules one folder deeper; relative feature imports gain one ../ (ADR-0016 item 9).
-      "files": ["packages/client/src/features/*/screens/*/*"],
+      // A screen's view, its stories and mocks take props only, as a feature's components do (ADR-0021).
+      "files": [
+        "packages/client/src/screens/**/*-view.tsx",
+        "packages/client/src/screens/**/*.stories.tsx",
+        "packages/client/src/screens/**/*.mocks.ts",
+        "packages/client/src/screens/**/*.mocks.tsx"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -391,16 +387,49 @@
             "paths": [
               {
                 "name": "@trpc/client",
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "name": "../../trpc/create-trpc-client",
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
+                "name": "@trpc/tanstack-react-query",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "name": "../../trpc/context",
-                "importNames": ["useTRPCClient"],
-                "message": "Screens get tRPC from useTRPC() only (ADR-0009, ADR-0021)."
+                "name": "@tanstack/react-query",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/connection",
+                "importNames": [
+                  "useTRPC",
+                  "useConnection",
+                  "useConnectionState",
+                  "useBlobUrl"
+                ],
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/agents",
+                "importNames": [
+                  "useAgents",
+                  "useAgentCatalog",
+                  "useCustomAgents"
+                ],
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/feed",
+                "importNames": ["useSessionFeed"],
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/composer",
+                "importNames": ["useImageDraft", "useNewSessionConfiguration"],
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/frame",
+                "importNames": ["useAttentionCount"],
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               }
             ],
             "patterns": [
@@ -417,12 +446,16 @@
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
-                "regex": "^#features/[^/]+/",
-                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+                "regex": "(^|/)use-[^/]*-query$",
+                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "regex": "^\\.\\./\\.\\./\\.\\./[^.]",
-                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+                "regex": "^#features/[^/]+/",
+                "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^(\\.\\./)+features/[^.]*$",
+                "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9); only its .mocks files are imported directly."
               },
               {
                 "group": ["@repo/client", "@repo/client/**"],

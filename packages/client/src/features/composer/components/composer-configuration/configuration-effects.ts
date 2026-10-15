@@ -1,9 +1,7 @@
+import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
-import {
-  publishAgentModelConfiguration,
-  useNativeSheets,
-} from '../agent-model-sheet-context';
+import { publishAgentModelConfiguration } from '../agent-model-sheet-context';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort } from './configuration-values';
 
@@ -23,15 +21,17 @@ export function useCommitEffortFallback(
   }, [effortConfigId, fallbackValue]);
 }
 
+// Phones present the Agent and model menu as a native sheet route with its own stack of pages.
+const nativeSheet = Platform.OS !== 'web';
+
+const presentSheet = (): void => router.push('/agent-model');
+
 export function useAgentModelSheet(
   configuration: ComposerConfigurationProps,
 ): (() => void) | undefined {
-  const sheets = useNativeSheets();
-  const presentSheet = sheets?.agentModel;
-  const nativeSheet = hasNativeSheet(presentSheet);
   useEffect(() => {
     if (nativeSheet) publishAgentModelConfiguration(configuration);
-  }, [nativeSheet, configuration]);
+  }, [configuration]);
 
   return nativeSheet ? presentSheet : undefined;
 }
@@ -40,8 +40,4 @@ function fallbackEffortValue(
   effort: ReturnType<typeof currentEffort>,
 ): string | undefined {
   return effort.fallback ? effort.selected?.value : undefined;
-}
-
-function hasNativeSheet(presentSheet?: () => void): boolean {
-  return !!presentSheet && Platform.OS !== 'web';
 }

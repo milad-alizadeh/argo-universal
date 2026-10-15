@@ -39,7 +39,7 @@ function OverlapComposerLayout(props: SessionLayoutProps): React.JSX.Element {
     <Screen
       testID="session-layout"
       edges={['bottom']}
-      // Wide, the shell already paints this surface, with the glow behind the glass reaching under the pane, so the container lets it show.
+      // Wide, the Frame already paints this surface, with the glow behind the glass reaching under the pane, so the container lets it show.
       className={cn(sessionSurface, 'wide:bg-transparent')}
     >
       {props.header}

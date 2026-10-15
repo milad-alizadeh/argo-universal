@@ -4,6 +4,7 @@ import { serverUrlFor } from '../server-port';
 import { browseAgents } from './agent-catalog';
 import { openProtocolSignIn } from './agent-login';
 import { When } from './fixtures';
+import { reloadApp } from './frame';
 
 When(
   'a copied App window tries sign-in for {string}',
@@ -54,9 +55,9 @@ When(
     const copied = await copyAppWindow(page, server.httpUrl);
     await page.close();
     await expect(
-      copied.getByRole('button', { name: /^(Settings|Open navigation)$/ }),
+      copied.getByRole('button', { name: /^(Settings|Show navigation menu)$/ }),
     ).toBeVisible();
-    await copied.reload();
+    await reloadApp(copied);
 
     try {
       await visitAgent(copied, name);

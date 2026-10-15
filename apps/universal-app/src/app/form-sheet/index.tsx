@@ -6,7 +6,6 @@ import {
 import { Stack, useNavigation } from 'expo-router';
 import { useEffect, type ReactElement } from 'react';
 import { formSheetRoutes } from '@/navigation/form-sheet';
-import { useSheetContentInset } from '@/navigation/use-sheet-content-inset';
 import { useSheetHeight } from '@/navigation/use-sheet-height';
 
 export default function FormSheetIndex(): ReactElement {
@@ -14,10 +13,7 @@ export default function FormSheetIndex(): ReactElement {
 
   return (
     <>
-      <FormSheetRoot
-        headerInset={useSheetContentInset()}
-        onContentHeightChange={useSheetHeight()}
-      />
+      <FormSheetRoot onContentHeightChange={useSheetHeight()} />
       <SheetBackButton />
     </>
   );

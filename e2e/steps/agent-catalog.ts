@@ -7,6 +7,7 @@ import {
 } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
+import { onPhone } from './frame';
 
 const exampleAgentName = 'Example Agent';
 
@@ -19,6 +20,15 @@ const agentLink = (page: Page, name: string): Locator =>
 const aboutRow = (page: Page, name: string | RegExp): Locator =>
   page.getByRole('group', { name, exact: true });
 
+// A Settings list row, such as Agents.
+const settingsLink = (page: Page, name: string): Locator =>
+  page.getByRole('link', { name: new RegExp(`^${name}(?:,|$)`) });
+
+// Back to the Agents list: a phone goes back to it; a wide Frame swapped it for the Agent's page, so its Settings row opens it again.
+async function returnToAgents(page: Page): Promise<void> {
+  await (onPhone(page) ? page.goBack() : settingsLink(page, 'Agents').click());
+}
+
 // Opens an Agent's page, reads its version and distribution, and comes back.
 async function expectAbout(
   page: Page,
@@ -29,7 +39,7 @@ async function expectAbout(
   await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
   await expect(aboutRow(page, 'Version, v1.2.3')).toBeVisible();
   await expect(aboutRow(page, distributionRow(distribution))).toBeVisible();
-  await page.goBack();
+  await returnToAgents(page);
 }
 
 const distributionRow = (distribution: string | RegExp): string | RegExp =>
@@ -41,12 +51,10 @@ const distributionRow = (distribution: string | RegExp): string | RegExp =>
 const windowsDistribution = /(?:Binary|No distribution for \S+)/u;
 
 export async function browseAgents(page: Page): Promise<void> {
-  const viewport = page.viewportSize();
-
-  if (viewport && viewport.width < 600)
-    await page.getByRole('button', { name: 'Open navigation' }).click();
+  if (onPhone(page))
+    await page.getByRole('button', { name: 'Show navigation menu' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
+  await settingsLink(page, 'Agents').click();
   await expect(agentLink(page, exampleAgentName)).toBeVisible();
 }
 
@@ -95,11 +103,28 @@ When(
   },
 );
 
+// Leaving the Agents page: a phone goes back to the Settings list; a wide Frame keeps that list beside it and opens another of its pages.
+async function leaveAgents(page: Page): Promise<void> {
+  await (onPhone(page)
+    ? page.goBack()
+    : settingsLink(page, 'Accounts').click());
+}
+
 // Opening the Agents page again syncs the catalog with the registry.
+async function openAgentsAgain(page: Page): Promise<void> {
+  await leaveAgents(page);
+  await settingsLink(page, 'Agents').click();
+}
+
 When('I open the Agents page again', async ({ page }): Promise<void> => {
-  await page.goBack();
-  await page.getByRole('link', { name: /^Agents(?:,|$)/ }).click();
+  await openAgentsAgain(page);
 });
+
+// From an Agent's page, the Agents page opened anew: a phone first goes back to it.
+export async function reopenAgentsFromAgent(page: Page): Promise<void> {
+  if (onPhone(page)) await page.goBack();
+  await openAgentsAgain(page);
+}
 
 Then(
   'the catalog keeps the last-good Agents with an explicit error',
