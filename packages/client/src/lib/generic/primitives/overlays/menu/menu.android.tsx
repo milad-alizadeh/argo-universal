@@ -16,7 +16,7 @@ import {
   type NativeMenuItem,
   NativeMenuTrigger,
   nativeMenuItems,
-} from './menu-native';
+} from './menu-phone-parts';
 import type { MenuProps } from './menu-props';
 
 export function Menu<Value extends string>(
