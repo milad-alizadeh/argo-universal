@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { fn } from 'storybook/test';
 import type { ElicitationFormProps } from '#features/requests';
 import { useWide } from '#lib/generic/use-wide/use-wide';
-import { DesktopShellFrame } from '../../../../mocks/desktop-shell';
+import { ScaffoldMock } from '../../../../mocks/scaffold';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
@@ -16,13 +16,13 @@ export function ElicitationPreview(
   if (!useWide()) return <InteractiveElicitation {...props} />;
 
   return (
-    <DesktopShellFrame
+    <ScaffoldMock
       onSectionChange={fn()}
       onSidebarShownChange={fn()}
       onInspectorStateChange={fn()}
     >
       <InteractiveElicitation {...props} />
-    </DesktopShellFrame>
+    </ScaffoldMock>
   );
 }
 

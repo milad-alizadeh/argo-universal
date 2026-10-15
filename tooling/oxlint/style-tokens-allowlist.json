@@ -34,17 +34,13 @@
         // 1 arbitrary
         "packages/client/src/features/feed/components/user-message/user-message-bubble.tsx",
         // 1 arbitrary
-        "packages/client/src/features/frame/components/desktop-layout-view/desktop-layout-view.stories.tsx",
+        "packages/client/src/features/frame/components/onboarding-frame/onboarding-frame.stories.tsx",
         // 1 arbitrary
-        "packages/client/src/features/frame/components/desktop-layout-view/desktop-layout-view.test.stories.tsx",
+        "packages/client/src/features/frame/components/onboarding-frame/onboarding-frame.test.stories.tsx",
         // 1 arbitrary
-        "packages/client/src/features/frame/components/desktop-shell/desktop-shell-test.mocks.tsx",
+        "packages/client/src/features/frame/scaffold/scaffold-chrome.tsx",
         // 1 arbitrary
-        "packages/client/src/features/frame/components/desktop-shell/shell-chrome.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/frame/components/onboarding-shell/onboarding-shell.stories.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/frame/components/onboarding-shell/onboarding-shell.test.stories.tsx",
+        "packages/client/src/features/frame/scaffold/scaffold-test.mocks.tsx",
         // 2 arbitrary, 2 colour
         "packages/client/src/features/requests/components/elicitation-form/elicitation-custom-answer.tsx",
         // 4 arbitrary, 5 colour

@@ -110,11 +110,11 @@ function RootNavigator(): React.JSX.Element {
   );
 }
 
-// Storybook stays outside the shell.
+// Storybook stays outside the Frame.
 function RootStack(): React.JSX.Element {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(shell)" />
+      <Stack.Screen name="(frame)" />
       <Stack.Screen name="agent-model" options={sheetOptions} />
       <Stack.Screen name="form-sheet" options={sheetOptions} />
       <Stack.Screen name="(dev)/storybook" />

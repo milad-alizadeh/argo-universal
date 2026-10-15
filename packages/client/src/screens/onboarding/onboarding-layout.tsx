@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { LiveConnectionBanner, OnboardingShell } from '#features/frame';
+import { LiveConnectionBanner, OnboardingFrame } from '#features/frame';
 import { useFirstRun } from '#features/setup';
 import { OnboardingScreen } from './onboarding-screen';
 
@@ -14,8 +14,8 @@ export function useOnboardingShown(path: string): boolean {
 // Onboarding on its own in place of Sessions, until the first Project arrives; Settings keep the full shell.
 export function OnboardingLayout(): React.JSX.Element {
   return (
-    <OnboardingShell banner={<LiveConnectionBanner />}>
+    <OnboardingFrame banner={<LiveConnectionBanner />}>
       <OnboardingScreen />
-    </OnboardingShell>
+    </OnboardingFrame>
   );
 }

@@ -4,7 +4,7 @@ import { sectionOrder } from '../../../../lib/product/navigation/sections';
 import { PhoneDrawerContent } from './phone-drawer-content';
 
 const meta = {
-  title: 'Shell/PhoneDrawerContent',
+  title: 'Frame/PhoneDrawerContent',
   component: PhoneDrawerContent,
   parameters: { screenPreview: true },
   argTypes: {

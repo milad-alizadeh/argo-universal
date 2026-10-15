@@ -4,9 +4,10 @@ import {
   PhoneConnectionBanner,
   screenHeaderOptions,
   type Section,
-  type SectionRootHeaders,
+  type SectionList,
+  type SectionLists,
   sectionOf,
-  useSectionRootHeaders,
+  useSectionList,
   useWide,
 } from '@repo/client';
 import { type NativeStackNavigationOptions, Stack } from 'expo-router';
@@ -58,7 +59,7 @@ const atSectionRoot = (route: RouteProp<ParamListBase>): boolean =>
 const stackOwnsHeader = { headerShown: false, swipeEnabled: false };
 
 function drawerRootOptions(
-  header: SectionRootHeaders[Section],
+  header: SectionList['rootHeader'],
 ): DrawerNavigationOptions {
   const shown = drawerDrawsRootHeader
     ? { headerShown: true, ...nativeHeaderOptions(header) }
@@ -67,13 +68,13 @@ function drawerRootOptions(
   return { ...shown, swipeEnabled: edgeSwipeOpens };
 }
 
-// Each section's options on the shell's drawer: its header shows only on a narrow section root, so no page shows two.
+// Each section's options on the Frame's drawer: its header shows only on a narrow section root, so no page shows two.
 export const drawerScreenOptions =
-  (wide: boolean, headers: SectionRootHeaders) =>
+  (wide: boolean, lists: SectionLists) =>
   ({ route }: { route: RouteProp<ParamListBase> }): DrawerNavigationOptions =>
     wide || !atSectionRoot(route)
       ? stackOwnsHeader
-      : drawerRootOptions(headers[sectionOf(route.name)]);
+      : drawerRootOptions(lists[sectionOf(route.name)].rootHeader);
 
 // The drawer's own stock toggle leads a narrow section root's header.
 const drawerToggle: NativeStackNavigationOptions['headerLeft'] = ({
@@ -105,7 +106,7 @@ interface SectionOptions {
 // The stack's options at this width, and its root's: a narrow root shows the section's header; a wide page draws its own.
 function useSectionOptions(section: Section): SectionOptions {
   const wide = useWide();
-  const header = useSectionRootHeaders()[section];
+  const header = useSectionList(section).rootHeader;
 
   if (wide) return { screenOptions: wideOptions, rootOptions: {} };
 
@@ -134,4 +135,17 @@ export function SectionStack({
       {children}
     </Stack>
   );
+}
+
+interface SectionRootProps {
+  section: Section;
+}
+
+// A section's root page: its list under the section's header on a narrow window; on a wide one, where the list sits beside the pages, the section's first page, so the URL names the page shown.
+export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
+  const { list, firstPage } = useSectionList(section);
+
+  if (useWide() && firstPage) return firstPage;
+
+  return <View className="flex-1 bg-content">{list}</View>;
 }

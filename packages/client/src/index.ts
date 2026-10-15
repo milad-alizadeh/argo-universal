@@ -8,16 +8,19 @@ export {
 export { useConnection } from '#features/connection';
 
 export {
-  DesktopShellDetail,
-  DesktopShellSidebar,
+  Frame,
+  FramePage,
+  FrameSidebar,
   PhoneConnectionBanner,
   SectionDrawer,
-  type SectionRootHeaders,
-  Shell,
-  useDesktopSidebarWidth,
+  type SectionList,
+  type SectionLists,
+  useFrameSidebarWidth,
   usePhoneDrawerWidth,
-  useSectionRootHeaders,
+  useSectionList,
 } from '#features/frame';
+
+export { useSectionLists } from './screens/section-lists';
 
 export { AtlasDetailScreen } from './screens/atlas/atlas-detail-screen';
 
@@ -28,11 +31,7 @@ export {
   useOnboardingShown,
 } from './screens/onboarding/onboarding-layout';
 
-export { SessionListScreen } from './screens/sessions/session-list-screen';
-
 export { SessionDetailScreen } from './screens/sessions/$id/session-detail-screen';
-
-export { SettingsListScreen } from './screens/settings/settings-list-screen';
 
 export { AccountListScreen } from './screens/settings/accounts/account-list-screen';
 

@@ -37,16 +37,15 @@ const componentFolders: [string, string[]][] = [
   [
     'features/frame/components',
     [
-      'desktop-layout-view',
-      'desktop-shell',
+      'frame-backdrop',
+      'frame-pane',
+      'frame-rail',
       'glass-surface',
       'panel-resize-handle',
       'phone-drawer',
       'phone-section-view',
       'phone-shell',
       'phone-shell-card',
-      'shell-backdrop',
-      'shell-pane',
     ],
   ],
   [

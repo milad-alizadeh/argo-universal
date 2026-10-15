@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Text } from '#primitives/display/text';
-import type { InspectorState } from './desktop-shell/desktop-shell-props';
+import type { InspectorState } from '../scaffold/scaffold-geometry';
 
 export interface InspectorPaneProps {
   title: string;

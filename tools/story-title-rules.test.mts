@@ -18,10 +18,7 @@ describe('a story title', (): void => {
       `${src}/features/feed/components/edit-row/edit-row.stories.tsx`,
       'Feed/EditRow',
     ],
-    [
-      `${src}/features/frame/components/desktop-shell/desktop-shell.stories.tsx`,
-      'Shell/DesktopShell',
-    ],
+    [`${src}/features/frame/scaffold/scaffold.stories.tsx`, 'Frame/Scaffold'],
     [
       `${src}/features/agents/components/agent-list-view/agent-list-view.stories.tsx`,
       'Screens/Settings/Agents',
@@ -76,9 +73,9 @@ describe('a story title', (): void => {
       /must start with 'Agents\/'$/,
     ],
     [
-      `${src}/features/frame/components/desktop-shell/desktop-shell.stories.tsx`,
-      'Frame/DesktopShell',
-      /'Shell\/'/,
+      `${src}/features/frame/scaffold/scaffold.stories.tsx`,
+      'Shell/Scaffold',
+      /'Frame\/'/,
     ],
     [`${src}/lib/product/screen/screen.stories.tsx`, 'Screen', /'Shared\/'/],
     [
