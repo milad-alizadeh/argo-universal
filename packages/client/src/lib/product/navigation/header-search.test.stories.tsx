@@ -1,5 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Header, SafeAreaProviderCompat } from 'expo-router/react-navigation';
+import {
+  DefaultTheme,
+  Header,
+  NavigationContainer,
+  SafeAreaProviderCompat,
+} from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { expect, fn } from 'storybook/test';
 import { HeaderSearchRow, headerSearchRowLayout } from './header-search';
@@ -8,25 +13,27 @@ const title = 'Sessions';
 
 const label = 'Search Sessions';
 
-// The real web JS header, as a narrow web window's stack draws it, with the app's search row options.
+// The real web JS header, as a narrow web window's stack draws it, with the app's search row options. The header reads the navigation and its theme from the app's container; here a bare one with the stock theme stands in.
 function WebHeaderWithSearch({
   onChangeText,
 }: {
   onChangeText: (text: string) => void;
 }): React.JSX.Element {
   return (
-    <SafeAreaProviderCompat>
-      <Header
-        title={title}
-        headerTitle={() => (
-          <HeaderSearchRow
-            title={title}
-            search={{ placeholder: label, onChangeText }}
-          />
-        )}
-        {...headerSearchRowLayout}
-      />
-    </SafeAreaProviderCompat>
+    <NavigationContainer theme={DefaultTheme}>
+      <SafeAreaProviderCompat>
+        <Header
+          title={title}
+          headerTitle={() => (
+            <HeaderSearchRow
+              title={title}
+              search={{ placeholder: label, onChangeText }}
+            />
+          )}
+          {...headerSearchRowLayout}
+        />
+      </SafeAreaProviderCompat>
+    </NavigationContainer>
   );
 }
 

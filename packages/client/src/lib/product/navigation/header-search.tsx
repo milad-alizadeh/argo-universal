@@ -1,13 +1,13 @@
 import type { HeaderOptions } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
+import type { IconName } from '#lib/generic/symbols/icon-names';
 import { Text } from '#primitives/display/text';
 import {
   SearchField,
   type SearchFieldProps,
 } from '#primitives/inputs/search-field';
-import type { ScreenHeaderProps } from './screen-header';
 
 // The web's JS header lays out its title and right containers by these; native-stack's options type leaves them out, so the header takes them through untyped. The title container grows so the search row fills it; the row keeps its own gap before the right items.
 export const headerSearchRowLayout = {
@@ -18,11 +18,23 @@ export const headerSearchRowLayout = {
   'headerTitleContainerStyle' | 'headerRightContainerStyle'
 >;
 
-type Search = NonNullable<ScreenHeaderProps['search']>;
+export interface HeaderSearch {
+  placeholder: string;
+  onChangeText: (text: string) => void;
+  // A header item that goes with the search, such as New Session; iOS only, Android has its own button.
+  action?: {
+    icon: IconName;
+    accessibilityLabel: string;
+    onPress: () => void;
+  };
+}
 
-type HeaderSearchRowProps = Pick<ScreenHeaderProps, 'title' | 'right'> & {
-  search: Search;
-};
+interface HeaderSearchRowProps {
+  title: string;
+  // Each a separate item, so iOS 26 gives each its own glass bubble.
+  right?: readonly ReactElement[];
+  search: HeaderSearch;
+}
 
 /*
  * A web header's title row with search: the title and trailing items, then Search, which morphs
@@ -45,7 +57,7 @@ export function HeaderSearchRow({
 }
 
 function useSearchQuery(
-  search: Search,
+  search: HeaderSearch,
 ): Pick<SearchFieldProps, 'label' | 'value' | 'onChangeText'> {
   const [query, setQuery] = useState('');
 
@@ -59,7 +71,7 @@ function useSearchQuery(
 
 function HeaderTitle({
   title,
-}: Pick<ScreenHeaderProps, 'title'>): React.JSX.Element {
+}: Pick<HeaderSearchRowProps, 'title'>): React.JSX.Element {
   return (
     <Text
       role="nav-title"

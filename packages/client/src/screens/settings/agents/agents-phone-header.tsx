@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { type AgentsFilter } from '#features/agents';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import {
   ScreenHeader,
@@ -9,31 +8,28 @@ import {
 import { Menu } from '#primitives/overlays/menu';
 import {
   type AgentsFilterProps,
+  type AgentsHeaderProps,
   type AgentsSearchProps,
   addCustomAgentLabel,
   agentsFilterChoices,
+  agentsTitle,
   searchLabel,
 } from './agents-toolbar';
 
-type AgentsPhoneHeaderProps = AgentsFilterProps &
-  AgentsSearchProps & { onAddCustomAgent: () => void };
+// A narrow window's header: back, the title, then the filter menu, Add custom Agent and Search.
+export const agentsHeader = (props: AgentsHeaderProps): ScreenHeaderProps => ({
+  title: agentsTitle,
+  search: headerSearch(props),
+  right: [
+    <AgentsFilterMenu key="filter" {...props} />,
+    <AddButton key="add" onPress={props.onAddCustomAgent} />,
+  ],
+});
 
-// A phone's native header: back, the title, then the filter menu, Add custom Agent and Search.
 export function AgentsPhoneHeader(
-  props: AgentsPhoneHeaderProps,
+  props: AgentsHeaderProps,
 ): React.JSX.Element | null {
-  if (useWide()) return null;
-
-  return (
-    <ScreenHeader
-      title="Agents"
-      search={headerSearch(props)}
-      right={[
-        <AgentsFilterMenu key="filter" {...props} />,
-        <AddButton key="add" onPress={props.onAddCustomAgent} />,
-      ]}
-    />
-  );
+  return <ScreenHeader {...agentsHeader(props)} />;
 }
 
 const headerSearch = ({

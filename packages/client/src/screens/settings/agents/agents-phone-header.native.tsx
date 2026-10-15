@@ -3,38 +3,38 @@ import type * as React from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
+import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { toolbarDot } from '#lib/product/navigation/toolbar-dot';
 import { toolbarIcon } from '../../../lib/product/navigation/toolbar-icon';
 import {
   type AgentsFilterProps,
-  type AgentsSearchProps,
+  type AgentsHeaderProps,
   addCustomAgentLabel,
   agentsFilterChoices,
+  agentsTitle,
   searchLabel,
 } from './agents-toolbar';
-
-type AgentsPhoneHeaderProps = AgentsFilterProps &
-  AgentsSearchProps & { onAddCustomAgent: () => void };
 
 const filterIcon = toolbarIcon(headerFilterIcon);
 
 const addIcon = toolbarIcon('add');
 
-// A phone's native header, as the Stack Toolbar guide builds one: the filter menu, Add custom Agent, and the stack's search bar.
+// A phone's native header, as the Stack Toolbar guide builds one: the title, the filter menu, Add custom Agent, and the stack's search bar.
 export function AgentsPhoneHeader(
-  props: AgentsPhoneHeaderProps,
+  props: AgentsHeaderProps,
 ): React.JSX.Element | null {
   if (useWide()) return null;
 
   return (
     <>
+      <ScreenHeader title={agentsTitle} />
       {rightToolbar(props)}
       <PhoneSearchBar placeholder={searchLabel} onSearch={props.onSearch} />
     </>
   );
 }
 
-function rightToolbar(props: AgentsPhoneHeaderProps): React.JSX.Element {
+function rightToolbar(props: AgentsHeaderProps): React.JSX.Element {
   return (
     <Stack.Toolbar placement="right">
       {filterMenu(props)}

@@ -26,12 +26,15 @@ export function SettingsList(props: SettingsListProps): React.JSX.Element {
 }
 
 const selectionOf = ({
-  selectedDestination,
+  selectedPath,
   onSelect,
 }: SettingsListProps): Pick<
   SettingsListProps,
-  'selectedDestination' | 'onSelect'
-> => ({ selectedDestination, onSelect });
+  'selectedPath' | 'onSelect'
+> => ({
+  selectedPath,
+  onSelect,
+});
 
 // A search that finds nothing says so as the Sessions list does.
 function NoMatchingSettings({

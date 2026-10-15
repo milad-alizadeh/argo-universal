@@ -1,9 +1,9 @@
 import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
+import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import type { ConfigurationChange } from '#features/composer';
 import { useTRPCClient } from '#features/connection';
 import { type EmptySessionPorts } from '#features/sessions';
-import { useNavigate } from '#lib/product/navigation/context';
 
 type Client = ReturnType<typeof useTRPCClient>;
 
@@ -69,12 +69,12 @@ export function useEmptySessionPorts(
   clearDraft: () => void,
 ): EmptySessionPorts {
   const client = useTRPCClient();
-  const navigate = useNavigate();
   const clear = useCurrentDraftClear(clearDraft);
 
   return {
     ...serverPorts(client),
-    handOff: (id) => navigate({ to: 'session', id }, { inPlace: true }),
+    // The shown New Session becomes the Session by its params alone: the same screen, no new page, and its Project left behind.
+    handOff: (id) => router.setParams({ id, projectId: undefined }),
     clearDraft: clear,
   };
 }

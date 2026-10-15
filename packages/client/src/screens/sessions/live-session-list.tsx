@@ -6,7 +6,12 @@ import {
   type QueryProgress,
   sessionsLoadState,
 } from '#features/sessions';
-import { useNavigate } from '#lib/product/navigation/context';
+import {
+  newSessionHref,
+  projectHref,
+  sessionHref,
+  useNavigate,
+} from '#lib/product/navigation/navigation';
 import {
   SessionListView,
   type SessionListViewProps,
@@ -63,11 +68,10 @@ function useSessionsNavigation(): Pick<
   const navigate = useNavigate();
 
   return {
-    onSelect: (id) => navigate({ to: 'session', id }),
-    onNewSession: () => navigate({ to: 'new-session' }),
-    onNewSessionInProject: (projectId) =>
-      navigate({ to: 'new-session', projectId }),
-    onProjectSettings: (name) => navigate({ to: 'settings-project', name }),
+    onSelect: (id) => navigate(sessionHref(id)),
+    onNewSession: () => navigate(newSessionHref()),
+    onNewSessionInProject: (projectId) => navigate(newSessionHref(projectId)),
+    onProjectSettings: (name) => navigate(projectHref(name)),
   };
 }
 

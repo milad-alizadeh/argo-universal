@@ -2,7 +2,8 @@ import type { ProjectInfo } from '@repo/contracts';
 import type { UseQueryResult } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useProjects, useServerPageCaption } from '#features/settings';
-import { useNavigate } from '#lib/product/navigation/context';
+import { projectHref, useNavigate } from '#lib/product/navigation/navigation';
+import { ProjectsPhoneHeader } from './project-list-phone-header';
 import type { ProjectsLoad } from './project-list-props';
 import { ProjectListView } from './project-list-view';
 
@@ -23,7 +24,8 @@ export function ProjectListScreen(): React.JSX.Element {
     <ProjectListView
       caption={useServerPageCaption()}
       projects={toProjectsLoad(useProjects())}
-      onOpenProject={(name) => navigate({ to: 'settings-project', name })}
+      onOpenProject={(name) => navigate(projectHref(name))}
+      renderHeader={(header) => <ProjectsPhoneHeader {...header} />}
     />
   );
 }

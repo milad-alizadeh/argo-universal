@@ -3,9 +3,13 @@ import { memo } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { IconButton } from '#primitives/buttons/icon-button';
+import {
+  type Section,
+  sectionOrder,
+  sections,
+} from '../../../../lib/product/navigation/sections';
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
-import { type Section, sectionOrder, shellSections } from '../shell-sections';
 
 interface DesktopRailProps {
   selectedSection: Section;
@@ -43,7 +47,7 @@ function selectionProps(selected: boolean): TileSelection {
 }
 
 function SectionTile(props: SectionButtonProps): React.JSX.Element {
-  const { title, icon } = shellSections[props.section];
+  const { title, icon } = sections[props.section];
 
   return (
     <IconButton

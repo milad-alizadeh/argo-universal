@@ -1,19 +1,21 @@
 import type * as React from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
-import { ScreenHeader } from '#lib/product/navigation/screen-header';
-import type { SearchedProps } from './project-list-props';
-import { searchLabel } from './project-list-search';
+import {
+  ScreenHeader,
+  type ScreenHeaderProps,
+} from '#lib/product/navigation/screen-header';
+import type { ProjectsHeaderProps } from './project-list-props';
+import { projectsTitle, searchLabel } from './project-list-search';
 
 // A narrow web window's header row: the title and Search.
-export function PhoneHeader({
+export const projectsHeader = ({
   onSearch,
-}: Pick<SearchedProps, 'onSearch'>): React.JSX.Element | null {
-  if (useWide()) return null;
+}: ProjectsHeaderProps): ScreenHeaderProps => ({
+  title: projectsTitle,
+  search: { placeholder: searchLabel, onChangeText: onSearch },
+});
 
-  return (
-    <ScreenHeader
-      title="Projects"
-      search={{ placeholder: searchLabel, onChangeText: onSearch }}
-    />
-  );
+export function ProjectsPhoneHeader(
+  props: ProjectsHeaderProps,
+): React.JSX.Element | null {
+  return <ScreenHeader {...projectsHeader(props)} />;
 }

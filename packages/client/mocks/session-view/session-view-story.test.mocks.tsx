@@ -4,11 +4,13 @@ import {
   type OpenSessionViewProps,
   SessionDetailView,
   type SessionDetailViewProps,
+  sessionPageTitle,
 } from '../../src/screens/sessions/$id/session-detail-view';
 import {
   idleSession,
   runningSession,
 } from '../../src/screens/sessions/$id/session-detail-view.mocks';
+import { ScreenHeaderMock } from '../screen-header-mock';
 
 export const feedScrollTestId = 'feed-scroll';
 
@@ -16,7 +18,13 @@ export const meta = {
   title: 'Tests/SessionDetailView',
   parameters: { screenPreview: true },
   args: { view: { state: 'open', ...runningSession } },
-  render: ({ view }): React.JSX.Element => <SessionDetailView {...view} />,
+  // A narrow window's header, as the screen sets it.
+  render: ({ view }): React.JSX.Element => (
+    <>
+      <ScreenHeaderMock title={sessionPageTitle(view)} />
+      <SessionDetailView {...view} />
+    </>
+  ),
 } satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export type Story = StoryObj<typeof meta>;

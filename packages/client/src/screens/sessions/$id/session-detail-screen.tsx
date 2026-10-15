@@ -7,11 +7,12 @@ import {
 } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
 import { useSessionElicitation } from '#features/sessions';
-import { useNavigate } from '#lib/product/navigation/context';
-import { newSessionId } from '#lib/product/navigation/routes';
+import { newSessionId, useNavigate } from '#lib/product/navigation/navigation';
+import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
+  sessionPageTitle,
 } from './session-detail-view';
 import {
   type SessionDetailViewSources,
@@ -43,7 +44,14 @@ function ConnectedSession({
 }: {
   sessionId: string;
 }): React.JSX.Element {
-  return <SessionDetailView {...useSessionViewProps(sessionId)} />;
+  const props = useSessionViewProps(sessionId);
+
+  return (
+    <>
+      <ScreenHeader title={sessionPageTitle(props)} />
+      <SessionDetailView {...props} />
+    </>
+  );
 }
 
 // A Session the Server refused to open tries again when the Connection reopens; its toast already said why.

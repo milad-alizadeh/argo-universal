@@ -1,8 +1,13 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { useProjects, useServerPageCaption } from '#features/settings';
-import { useNavigate } from '#lib/product/navigation/context';
-import { type ProjectLoad, ProjectDetailView } from './project-detail-view';
+import { useNavigate } from '#lib/product/navigation/navigation';
+import { ScreenHeader } from '#lib/product/navigation/screen-header';
+import {
+  type ProjectDetailViewProps,
+  type ProjectLoad,
+  ProjectDetailView,
+} from './project-detail-view';
 
 export interface ProjectDetailScreenProps {
   name: string;
@@ -18,17 +23,24 @@ function toProjectLoad(
   return project ? { status: 'loaded', project } : { status: 'missing' };
 }
 
+function useProjectDetail(name: string): ProjectDetailViewProps {
+  const navigate = useNavigate();
+
+  return {
+    name,
+    caption: useServerPageCaption(),
+    project: toProjectLoad(useProjects().data, name),
+    onBack: () => navigate('/settings/projects'),
+  };
+}
+
 export function ProjectDetailScreen({
   name,
 }: ProjectDetailScreenProps): React.JSX.Element {
-  const navigate = useNavigate();
-
   return (
-    <ProjectDetailView
-      name={name}
-      caption={useServerPageCaption()}
-      project={toProjectLoad(useProjects().data, name)}
-      onBack={() => navigate({ to: 'settings-projects' })}
-    />
+    <>
+      <ScreenHeader title={name} />
+      <ProjectDetailView {...useProjectDetail(name)} />
+    </>
   );
 }

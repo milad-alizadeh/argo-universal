@@ -6,7 +6,6 @@ import { SettingsPage } from '#lib/product/settings-page';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { PhoneTitle } from '../../../../lib/product/navigation/phone-title';
 import { NewSessionsSection } from './project-detail-new-sessions';
 import { RemoveProject } from './project-detail-remove';
 
@@ -40,7 +39,6 @@ export function ProjectDetailView(
 ): React.JSX.Element {
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.name} />
       <ProjectPage {...props} />
     </View>
   );

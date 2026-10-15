@@ -11,11 +11,9 @@ export {
   DesktopShellDetail,
   DesktopShellSidebar,
   PhoneConnectionBanner,
-  PhoneMenuButton,
   SectionDrawer,
   type SectionRootHeaders,
-  sectionOrder,
-  ShellFrame,
+  Shell,
   useDesktopSidebarWidth,
   usePhoneDrawerWidth,
   useSectionRootHeaders,
@@ -67,36 +65,26 @@ export { iconSymbols } from './lib/generic/symbols/icon-names';
 
 export { useWide } from './lib/generic/use-wide/use-wide';
 
+export { useSizeClass } from './lib/generic/use-size-class/use-size-class';
+
+export type { SizeClass } from './lib/generic/use-size-class/size-class';
+
 export { Text } from '#primitives/display/text';
 
 export { Toaster } from '#primitives/overlays/toast';
 
-export {
-  type LeaveGuard,
-  type Navigate,
-  type NavigationDestination,
-  NavigationProvider,
-} from '#lib/product/navigation/context';
+export { NavigationProvider } from '#lib/product/navigation/navigation';
 
 export {
-  type ScreenHeaderProps,
-  ScreenHeaderProvider,
+  nativeHeaderOptions,
+  screenHeaderOptions,
 } from '#lib/product/navigation/screen-header';
-
-export { HeaderButton, HeaderItems } from '#lib/product/header-button';
 
 export {
   type Section,
-  sectionDestination,
   sectionOf,
+  sectionOrder,
 } from './lib/product/navigation/sections';
-
-export { settingsTitles } from './lib/product/navigation/settings-titles';
-
-export {
-  HeaderSearchRow,
-  headerSearchRowLayout,
-} from './lib/product/navigation/header-search';
 
 export { AppProviders } from './app-providers';
 

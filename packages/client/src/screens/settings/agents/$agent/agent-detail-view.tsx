@@ -16,7 +16,6 @@ import { Badge } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
-import { PhoneTitle } from '../../../../lib/product/navigation/phone-title';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
 import {
   AboutSection,
@@ -35,7 +34,6 @@ export function AgentDetailView(
 
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.agent.name} />
       <SettingsPage title={props.agent.name} onBack={props.onBack}>
         <AgentSections {...props} />
       </SettingsPage>

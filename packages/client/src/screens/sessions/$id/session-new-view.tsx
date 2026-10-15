@@ -18,7 +18,6 @@ import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { Text } from '#primitives/display/text';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { PhoneTitle } from '../../../lib/product/navigation/phone-title';
 import { composerDraftProps } from './new-session-draft';
 import { NewSessionFeed } from './new-session-feed';
 
@@ -68,12 +67,7 @@ const openFailed = (message: string): ErrorToast => ({
 });
 
 // The header stays empty until the first prompt starts the Session and gives it a title.
-const newSessionHeader = (
-  <>
-    <PhoneTitle title="" />
-    <PageHeader title={null} />
-  </>
-);
+const newSessionHeader = <PageHeader title={null} />;
 
 // The Composer of a Session not yet opened: its first prompt opens it with the chosen Agent, model and effort.
 export function SessionNewView(props: SessionNewViewProps): React.JSX.Element {

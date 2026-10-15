@@ -6,9 +6,13 @@ import {
   DrawerItem,
   type DrawerItemProps,
 } from '#primitives/lists/drawer-item';
+import {
+  type Section,
+  sectionOrder,
+  sections,
+} from '../../../../lib/product/navigation/sections';
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { drawerAttentionBadge } from '../attention-badge/attention-badge';
-import { type Section, sectionOrder, shellSections } from '../shell-sections';
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
 
 interface DrawerNavigation {
@@ -27,7 +31,7 @@ export interface PhoneDrawerContentProps extends DrawerNavigation {
 function sectionItem(
   section: Section,
 ): Pick<DrawerItemProps, 'label' | 'icon'> {
-  const { title, icon } = shellSections[section];
+  const { title, icon } = sections[section];
 
   return { label: title, icon };
 }

@@ -7,11 +7,9 @@ import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { settingsTitles } from '../../../lib/product/navigation/settings-titles';
-import { PhoneHeader } from './project-list-phone-header';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
 import { LoadedProjects } from './project-list-rows';
-import { pageSearch } from './project-list-search';
+import { pageSearch, projectsTitle } from './project-list-search';
 
 // The Server's Projects, found by name or folder; each opens its own page.
 export function ProjectListView(
@@ -21,7 +19,7 @@ export function ProjectListView(
 
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneHeader onSearch={setSearch} />
+      {props.renderHeader?.({ onSearch: setSearch })}
       <ProjectsPage {...props} search={search} onSearch={setSearch} />
     </View>
   );
@@ -30,7 +28,7 @@ export function ProjectListView(
 function ProjectsPage(props: SearchedProps): React.JSX.Element {
   return (
     <SettingsPage
-      title={settingsTitles['projects/index']}
+      title={projectsTitle}
       caption={props.caption}
       actions={<AddProject />}
       search={pageSearch(props)}

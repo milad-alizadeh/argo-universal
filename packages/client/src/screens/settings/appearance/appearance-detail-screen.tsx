@@ -1,12 +1,17 @@
 import type * as React from 'react';
 import { PlaceholderDetailView } from '#features/settings';
-import { settingsTitles } from '../../../lib/product/navigation/settings-titles';
+import { ScreenHeader } from '#lib/product/navigation/screen-header';
+
+const title = 'Appearance';
 
 export function AppearanceDetailScreen(): React.JSX.Element {
   return (
-    <PlaceholderDetailView
-      title={settingsTitles.appearance}
-      description="Appearance will appear here."
-    />
+    <>
+      <ScreenHeader title={title} />
+      <PlaceholderDetailView
+        title={title}
+        description="Appearance will appear here."
+      />
+    </>
   );
 }

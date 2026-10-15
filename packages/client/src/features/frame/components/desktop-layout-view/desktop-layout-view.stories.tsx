@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { action } from 'storybook/actions';
 import { Text } from '#primitives/display/text';
 import { LayoutListMock } from '../layout-list.mocks';
 import {
@@ -13,7 +14,8 @@ const meta = {
   component: DesktopLayoutView,
   parameters: { screenPreview: true },
   args: {
-    destination: { to: 'sessions' },
+    section: 'sessions',
+    onSectionChange: action('section changed'),
     attentionCount: 1,
     // JSX in args breaks on-device Storybook's arg inference, so render draws the list and detail.
     list: null,
@@ -37,7 +39,7 @@ type Story = StoryObj<typeof meta>;
 export const Overview: Story = { name: 'DesktopLayoutView' };
 
 export const Destination: Story = {
-  args: { destination: { to: 'settings-devices' } },
+  args: { section: 'settings' },
 };
 
 export const NoAttention: Story = { args: { attentionCount: 0 } };

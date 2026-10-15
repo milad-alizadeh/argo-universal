@@ -1,4 +1,4 @@
-import type { Navigate } from '#lib/product/navigation/context';
+import type { Navigate } from '#lib/product/navigation/navigation';
 import type { ReadySessionNewViewProps } from '../session-new-view';
 import type { NewSessionData } from './use-new-session-data';
 import type { AttachmentDraft, SessionOpening } from './use-session-opening';

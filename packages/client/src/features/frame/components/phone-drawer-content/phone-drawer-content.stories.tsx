@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { sectionOrder } from '../shell-sections';
+import { sectionOrder } from '../../../../lib/product/navigation/sections';
 import { PhoneDrawerContent } from './phone-drawer-content';
 
 const meta = {

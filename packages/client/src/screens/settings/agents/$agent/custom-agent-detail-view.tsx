@@ -15,7 +15,6 @@ import {
 import { SettingsPage } from '#lib/product/settings-page';
 import { Icon } from '#primitives/display/icon';
 import { GroupedList } from '#primitives/lists/grouped-list';
-import { PhoneTitle } from '../../../../lib/product/navigation/phone-title';
 import { AgentIdentity } from './agent-identity';
 import { AgentPlaceholder } from './agent-placeholder';
 import type { CustomAgentCheck } from './custom-agent-status';
@@ -60,7 +59,6 @@ export function CustomAgentDetailView({
 function CustomAgentSettings(props: SettingsProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <PhoneTitle title={props.definition.name} />
       <SettingsPage title={props.definition.name} onBack={props.onBack}>
         <CustomAgentContent {...props} />
       </SettingsPage>

@@ -8,7 +8,7 @@ import type { useBlobUrl } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import type { ElicitationFormProps } from '#features/requests';
 import { composerStatus, toSendError } from '#features/sessions';
-import type { useNavigate } from '#lib/product/navigation/context';
+import { agentHref, type Navigate } from '#lib/product/navigation/navigation';
 import type { SessionCommands } from './use-session-commands';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
@@ -20,7 +20,7 @@ export interface OpenSession {
   view: NonNullable<SessionFeed['view']>;
   commands: SessionCommands;
   agents: ReturnType<typeof useAgents>;
-  navigate: ReturnType<typeof useNavigate>;
+  navigate: Navigate;
   imageUrl: ReturnType<typeof useBlobUrl>;
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
@@ -78,7 +78,7 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
     agent: snapshot.agent,
     configOptions: snapshot.configOptions,
     onConfigChange: open.commands.changeConfig,
-    onAgentSetup: (setup) => navigate({ to: 'settings-agent', agent: setup }),
+    onAgentSetup: (setup) => navigate(agentHref(setup)),
     onAgentRetry: agents.retry,
     turnRunning: isTurnRunning(snapshot),
     checkout: checkoutProps(snapshot.checkout),

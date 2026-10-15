@@ -10,7 +10,8 @@ import {
   useCustomAgentMutations,
   useCustomAgents,
 } from '#features/agents';
-import { useNavigate } from '#lib/product/navigation/context';
+import { useNavigate } from '#lib/product/navigation/navigation';
+import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { AgentDetailView } from './agent-detail-view';
 import { AgentPlaceholder } from './agent-placeholder';
 import { CustomAgentDetailView } from './custom-agent-detail-view';
@@ -45,10 +46,10 @@ export function AgentDetailScreen({
   agent,
 }: AgentDetailScreenProps): React.JSX.Element {
   const navigate = useNavigate();
-  const onBack = (): void => navigate({ to: 'settings-agents' });
+  const onBack = (): void => navigate('/settings/agents');
   const custom = useCustomDefinition(agent);
 
-  if (custom.status === 'pending') return <AgentPlaceholder agent={agent} />;
+  if (custom.status === 'pending') return <AgentWaiting agent={agent} />;
   const { definition } = custom;
 
   if (!definition) return <AgentPage agent={agent} onBack={onBack} />;
@@ -74,12 +75,22 @@ function AgentPage({ agent, onBack }: PageProps): React.JSX.Element {
   const login = useAgentLogin(agent);
   const view = useAgentPageView({ agent, onBack, onSignIn: login.start });
 
-  if (!view) return <AgentPlaceholder agent={agent} />;
+  if (!view) return <AgentWaiting agent={agent} />;
 
   return (
     <LoginPage name={view.agent.name} login={login}>
       <AgentDetailView {...view} />
     </LoginPage>
+  );
+}
+
+// Until the Server says which Agent this is, the page is an Agent.
+function AgentWaiting({ agent }: AgentDetailScreenProps): React.JSX.Element {
+  return (
+    <>
+      <ScreenHeader title="Agent" />
+      <AgentPlaceholder agent={agent} />
+    </>
   );
 }
 
@@ -96,6 +107,7 @@ function LoginPage({
 }: LoginPageProps): React.JSX.Element {
   return (
     <>
+      <ScreenHeader title={name} />
       {children}
       {login.sheet && <AgentLoginSheet agentName={name} {...login.sheet} />}
     </>

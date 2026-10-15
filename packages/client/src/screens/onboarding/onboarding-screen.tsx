@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { runsSessions, useAgents, useInstalledAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
 import { type AgentStep, agentStep } from '#features/setup';
-import { useNavigate } from '#lib/product/navigation/context';
+import { useNavigate } from '#lib/product/navigation/navigation';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { OnboardingView } from './onboarding-view';
 
@@ -40,7 +40,7 @@ const useServerName = (): string | undefined =>
 function useChangeAgent(): () => void {
   const navigate = useNavigate();
 
-  return () => navigate({ to: 'settings-agents' });
+  return () => navigate('/settings/agents');
 }
 
 // Onboarding on the Server: GitHub sign-in and Add Project are not built yet, so the view shows them disabled; it draws once the Agents are known.

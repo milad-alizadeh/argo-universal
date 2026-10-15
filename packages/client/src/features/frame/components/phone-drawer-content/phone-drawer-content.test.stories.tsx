@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { type Section, sectionOrder, shellSections } from '../shell-sections';
+import {
+  type Section,
+  sectionOrder,
+  sections,
+} from '../../../../lib/product/navigation/sections';
 import { PhoneDrawerContent } from './phone-drawer-content';
 
 const meta = {
@@ -63,7 +67,7 @@ function selectedRow(section: Section): Story {
     play: async ({ canvas }) => {
       for (const other of sectionOrder)
         await expect(
-          canvas.getByRole('button', { name: shellSections[other].title }),
+          canvas.getByRole('button', { name: sections[other].title }),
         ).toHaveAttribute('aria-pressed', String(other === section));
     },
   };
@@ -77,7 +81,7 @@ export const PickingARowReportsItsSection: Story = {
   play: async ({ args, canvas, userEvent }) => {
     for (const section of sectionOrder) {
       await userEvent.click(
-        canvas.getByRole('button', { name: shellSections[section].title }),
+        canvas.getByRole('button', { name: sections[section].title }),
       );
       await expect(args.onSectionChange).toHaveBeenLastCalledWith(section);
     }

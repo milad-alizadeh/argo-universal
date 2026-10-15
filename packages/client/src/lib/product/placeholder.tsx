@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
-import { PhoneTitle } from './navigation/phone-title';
 import { PageHeader } from './page-header';
 
 interface PlaceholderProps {
@@ -12,7 +11,6 @@ interface PlaceholderProps {
 export function Placeholder(props: PlaceholderProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-content">
-      <PhoneTitle title={props.title} />
       <PageHeader title={props.title} />
       <PlaceholderBody {...props} />
     </View>

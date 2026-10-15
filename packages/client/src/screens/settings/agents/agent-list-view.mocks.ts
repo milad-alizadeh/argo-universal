@@ -2,11 +2,13 @@ import type { AgentsCatalogOutput } from '@repo/contracts';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { fn } from 'storybook/test';
 import { type AgentRowEntry } from '#features/agents';
+import { mockHeader } from '../../../../mocks/screen-header-mock';
 import {
   customAgentDefinition,
   customAgentId,
 } from '../../../features/agents/components/custom-agent.mocks';
 import type { AgentListViewProps } from './agent-list-view';
+import { agentsHeader } from './agents-phone-header';
 
 const [example, python, binary, windows] = publishedRegistry.agents;
 
@@ -103,6 +105,7 @@ export const agentListArgs = (): AgentListViewProps => ({
   installed: installedAgents,
   onAddCustomAgent: fn(),
   onOpenAgent: fn(),
+  renderHeader: mockHeader(agentsHeader),
 });
 
 export const emptyCatalog: AgentsCatalogOutput = { ...catalog, agents: [] };

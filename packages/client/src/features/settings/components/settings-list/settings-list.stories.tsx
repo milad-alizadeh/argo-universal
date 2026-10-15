@@ -3,7 +3,6 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import type { NavigationDestination } from '#lib/product/navigation/context';
 import { Text } from '#primitives/display/text';
 import { SettingsList, type SettingsListProps } from './settings-list';
 import { settingsListMocks } from './settings-list.mocks';
@@ -24,7 +23,7 @@ const meta = {
     agentsNeedAttention: true,
     accountState: 'GitHub',
     deviceCount: 2,
-    selectedDestination: { to: 'settings-accounts' },
+    selectedPath: '/settings/accounts',
     onSelect: action('select Settings page'),
   },
 } satisfies Meta<typeof SettingsList>;
@@ -45,16 +44,14 @@ function SettingsHeading(): React.JSX.Element {
 
 function useSelectedPage(
   args: SettingsListProps,
-): Pick<SettingsListProps, 'selectedDestination' | 'onSelect'> {
-  const [selected, setSelected] = useState<NavigationDestination | undefined>(
-    args.selectedDestination,
-  );
+): Pick<SettingsListProps, 'selectedPath' | 'onSelect'> {
+  const [selected, setSelected] = useState(args.selectedPath);
 
   return {
-    selectedDestination: selected,
-    onSelect: (destination) => {
-      setSelected(destination);
-      args.onSelect(destination);
+    selectedPath: selected,
+    onSelect: (href) => {
+      setSelected(href);
+      args.onSelect(href);
     },
   };
 }

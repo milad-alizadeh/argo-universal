@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import {
   offeredAgents,
@@ -12,12 +12,12 @@ import {
   SettingsPage,
   type SettingsPageSearch,
 } from '#lib/product/settings-page';
-import { settingsTitles } from '../../../lib/product/navigation/settings-titles';
-import { AgentsPhoneHeader } from './agents-phone-header';
 import {
   AddAgentButton,
   AgentsFilterPills,
   type AgentsFilterProps,
+  type AgentsHeaderProps,
+  agentsTitle,
   type AgentsSearchProps,
   searchLabel,
 } from './agents-toolbar';
@@ -33,6 +33,8 @@ export type AgentListViewProps = {
   // Where the list starts, for stories.
   initialSearch?: string;
   initialFilter?: AgentsFilter;
+  // A narrow window's header, which the screen sets on its stack.
+  renderHeader?: (header: AgentsHeaderProps) => ReactNode;
 };
 
 type ListProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
@@ -68,7 +70,7 @@ export function AgentListView(props: AgentListViewProps): React.JSX.Element {
 
   return (
     <View className="flex-1 min-h-0 bg-content wide:bg-transparent">
-      <AgentsPhoneHeader {...list} />
+      {props.renderHeader?.(list)}
       <AgentsPage {...list} />
     </View>
   );
@@ -84,7 +86,7 @@ const pageSearch = (props: AgentsSearchProps): SettingsPageSearch => ({
 function AgentsPage(props: ListProps): React.JSX.Element {
   return (
     <SettingsPage
-      title={settingsTitles['agents/index']}
+      title={agentsTitle}
       actions={<AddAgentButton onPress={props.onAddCustomAgent} />}
       search={pageSearch(props)}
       toolbar={<AgentsFilterPills {...props} />}

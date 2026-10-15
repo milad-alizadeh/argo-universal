@@ -1,5 +1,6 @@
 import type { AgentInfo } from '@repo/contracts';
 import { type ChosenSettings, chooseAnotherProject } from '#features/sessions';
+import { agentHref } from '#lib/product/navigation/navigation';
 import type {
   SessionNewViewProps,
   ReadySessionNewViewProps,
@@ -48,8 +49,7 @@ const agentChoiceProps = (
 > => ({
   onAgentChange: (agent) =>
     rechoose(wiring, (current) => ({ ...current, agent })),
-  onAgentSetup: (setup) =>
-    wiring.navigate({ to: 'settings-agent', agent: setup }),
+  onAgentSetup: (setup) => wiring.navigate(agentHref(setup)),
   onAgentRetry: wiring.data.agents.retry,
 });
 

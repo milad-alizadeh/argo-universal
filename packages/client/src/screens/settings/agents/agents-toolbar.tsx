@@ -18,6 +18,12 @@ export interface AgentsSearchProps {
   onSearch: (search: string) => void;
 }
 
+// What a narrow window's header works with: the filter, the search and Add custom Agent.
+export type AgentsHeaderProps = AgentsFilterProps &
+  AgentsSearchProps & { onAddCustomAgent: () => void };
+
+export const agentsTitle = 'Agents';
+
 export const searchLabel = 'Search Agents';
 
 export const addCustomAgentLabel = 'Add custom Agent';

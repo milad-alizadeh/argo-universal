@@ -1,13 +1,5 @@
-import type { IconName } from '#lib/generic/symbols/icon-names';
-import type { Section } from '../../../lib/product/navigation/sections';
-
-export type { Section } from '../../../lib/product/navigation/sections';
-
-export const shellSections = {
-  sessions: { title: 'Sessions', icon: 'sessions' },
-  issues: { title: 'Issues', icon: 'issue' },
-  atlas: { title: 'Atlas', icon: 'atlas' },
-  settings: { title: 'Settings', icon: 'settings' },
-} as const satisfies Record<Section, { title: string; icon: IconName }>;
-
-export { sectionOrder } from '../../../lib/product/navigation/sections';
+// Kept for the old DesktopShell and DesktopLayoutView and their stories until a props-only shell view replaces them; the sections live in lib/product/navigation/sections.
+export {
+  sectionOrder,
+  sections as shellSections,
+} from '../../../lib/product/navigation/sections';

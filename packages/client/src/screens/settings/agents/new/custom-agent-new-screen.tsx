@@ -6,9 +6,11 @@ import {
   customAgentFormDescription,
   useCustomAgentMutations,
 } from '#features/agents';
-import { useNavigate } from '#lib/product/navigation/context';
+import { agentHref, useNavigate } from '#lib/product/navigation/navigation';
+import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
-import { settingsTitles } from '../../../../lib/product/navigation/settings-titles';
+
+const title = 'Add custom Agent';
 
 function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
   const navigate = useNavigate();
@@ -18,10 +20,7 @@ function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
     const result = await register(definition);
 
     if (result.status === 'ready')
-      navigate(
-        { to: 'settings-agent', agent: result.agentId },
-        { replace: true },
-      );
+      navigate(agentHref(result.agentId), { replace: true });
 
     return result;
   };
@@ -31,10 +30,8 @@ function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
 export function CustomAgentNewScreen(): React.JSX.Element {
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <SettingsPage
-        title={settingsTitles['agents/new']}
-        caption={customAgentFormDescription}
-      >
+      <ScreenHeader title={title} />
+      <SettingsPage title={title} caption={customAgentFormDescription}>
         <AddAgentForm />
       </SettingsPage>
     </View>
@@ -48,7 +45,7 @@ function AddAgentForm(): React.JSX.Element {
     <CustomAgentForm
       submitLabel="Add Agent"
       onSubmit={useRegisterAgent()}
-      onCancel={() => navigate({ to: 'settings-agents' })}
+      onCancel={() => navigate('/settings/agents')}
     />
   );
 }

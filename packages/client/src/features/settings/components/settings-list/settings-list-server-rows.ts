@@ -29,7 +29,7 @@ export function projectsRow(props: SettingsListProps): SettingsRow {
   return countedRow(props, {
     label: 'Projects',
     icon: 'folder',
-    destination: { to: 'settings-projects' },
+    href: '/settings/projects',
     count: props.projectCount,
     needsAttention: props.projectsNeedAttention,
   });
@@ -39,7 +39,7 @@ export function agentsRow(props: SettingsListProps): SettingsRow {
   return countedRow(props, {
     label: 'Agents',
     icon: 'agent',
-    destination: { to: 'settings-agents' },
+    href: '/settings/agents',
     count: props.agentCount,
     needsAttention: props.agentsNeedAttention,
   });
@@ -49,7 +49,7 @@ export function accountsRow(props: SettingsListProps): SettingsRow {
   return {
     label: 'Accounts',
     icon: 'key',
-    destination: { to: 'settings-accounts' },
+    href: '/settings/accounts',
     value: serverValue(props, props.accountState),
     disabled: serverDisabled(props),
   };
@@ -71,7 +71,7 @@ export function connectionRow(
   return {
     label: 'Connection',
     icon: 'server',
-    destination: { to: 'settings-connection' },
+    href: '/settings/connection',
     value: connectionValue(props, wide),
     status: connectionStatuses[props.status ?? 'ready'],
   };
@@ -81,7 +81,7 @@ export function devicesRow(props: SettingsListProps): SettingsRow {
   return {
     label: 'Devices',
     icon: 'phone',
-    destination: { to: 'settings-devices' },
+    href: '/settings/devices',
     value: serverValue(props, props.deviceCount?.toString()),
     disabled: serverDisabled(props),
   };

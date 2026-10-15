@@ -16,7 +16,6 @@ import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { PhoneTitle } from '../../../lib/product/navigation/phone-title';
 
 export interface OpenSessionViewProps {
   header: SessionHeaderProps;
@@ -41,6 +40,10 @@ function failureToast(props: SessionDetailViewProps): ErrorToast | undefined {
   };
 }
 
+// What a narrow window's header names the page: the open Session's title; until it opens, the page is a Session.
+export const sessionPageTitle = (props: SessionDetailViewProps): string =>
+  props.state === 'open' ? props.header.title : 'Session';
+
 // One Session: its header, its Feed, and the Composer pinned below.
 export function SessionDetailView(
   props: SessionDetailViewProps,
@@ -49,11 +52,7 @@ export function SessionDetailView(
 
   if (props.state === 'open') return <OpenSessionView {...props} />;
 
-  return (
-    <Screen edges={['bottom']}>
-      <PhoneTitle title="Session" />
-    </Screen>
-  );
+  return <Screen edges={['bottom']}>{null}</Screen>;
 }
 
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {

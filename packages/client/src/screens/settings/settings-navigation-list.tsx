@@ -6,13 +6,11 @@ import {
   type SettingsListProps,
   useProjects,
 } from '#features/settings';
-import {
-  type NavigationDestination,
-  useNavigate,
-} from '#lib/product/navigation/context';
+import { useNavigate } from '#lib/product/navigation/navigation';
 
 export interface SettingsNavigationListProps {
-  selectedDestination?: NavigationDestination;
+  // The path of the page shown, whose row the sidebar marks.
+  selectedPath?: string;
   // The sidebar's search.
   query?: string;
 }
@@ -40,15 +38,17 @@ function useServerCounts(): ServerCounts {
 }
 
 export function SettingsNavigationList({
-  selectedDestination,
+  selectedPath,
   query,
 }: SettingsNavigationListProps): React.JSX.Element {
+  const navigate = useNavigate();
+
   return (
     <SettingsList
       {...useServerCounts()}
-      selectedDestination={selectedDestination}
+      selectedPath={selectedPath}
       query={query}
-      onSelect={useNavigate()}
+      onSelect={(href) => navigate(href)}
       status={connectionStatus(useConnectionState())}
     />
   );

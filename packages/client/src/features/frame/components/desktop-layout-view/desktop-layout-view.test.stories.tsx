@@ -1,18 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { expect } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { SessionHeader } from '#features/sessions';
 import { Text } from '#primitives/display/text';
-import { createNavigationRecorder } from '../../../../../mocks/with-navigation-mocks';
 import { LayoutListMock } from '../layout-list.mocks';
 import {
   DesktopLayoutView,
   type DesktopLayoutViewProps,
 } from './desktop-layout-view';
-
-const recorder = createNavigationRecorder();
 
 const expanded = 'aria-expanded';
 
@@ -20,7 +17,8 @@ const meta = {
   title: 'Tests/DesktopLayoutView',
   component: DesktopLayoutView,
   args: {
-    destination: { to: 'sessions' },
+    section: 'sessions',
+    onSectionChange: fn(),
     attentionCount: 0,
     list: <LayoutListMock name="Section" />,
     children: <Text testID="detail-content">Detail</Text>,
@@ -30,9 +28,7 @@ const meta = {
       <DesktopLayoutView {...args} />
     </View>
   ),
-  parameters: { navigation: recorder },
   beforeEach: async (): Promise<void> => {
-    recorder.reset();
     await page.viewport(1440, 844);
   },
 } satisfies Meta<DesktopLayoutViewProps>;
@@ -42,7 +38,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const RailOpensSectionLists: Story = {
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ args, canvas, userEvent }) => {
     await expect(await canvas.findByTestId('detail-content')).toBeVisible();
     await expect(await canvas.findByText('Section list')).toBeVisible();
 
@@ -50,17 +46,22 @@ export const RailOpensSectionLists: Story = {
       await userEvent.click(
         canvas.getByRole('button', { name: new RegExp(`^${section}$`) }),
       );
-    await expect(recorder.destinations).toEqual([
-      { to: 'issues' },
-      { to: 'atlas' },
-      { to: 'settings' },
-      { to: 'sessions' },
-    ]);
+
+    for (const [call, section] of [
+      'issues',
+      'atlas',
+      'settings',
+      'sessions',
+    ].entries())
+      await expect(args.onSectionChange).toHaveBeenNthCalledWith(
+        call + 1,
+        section,
+      );
   },
 };
 
 export const SettingsRootMarksSettingsCurrent: Story = {
-  args: { destination: { to: 'settings' } },
+  args: { section: 'settings' },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Detail')).toBeVisible();
     await expect(
@@ -71,7 +72,7 @@ export const SettingsRootMarksSettingsCurrent: Story = {
 
 // Every page draws its own header, so the shell adds no title above the detail page.
 export const ShellDrawsNoPageTitle: Story = {
-  args: { destination: { to: 'settings-agent-new' } },
+  args: { section: 'settings' },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Detail')).toBeVisible();
     await expect(
@@ -99,7 +100,6 @@ export const RailBadgeHiddenWithoutAttention: Story = {
 // The open Session's Changes button opens the Inspector beside it and closes it again.
 export const ChangesOpensInspector: Story = {
   args: {
-    destination: { to: 'session', id: 'session-1' },
     children: (
       <SessionHeader title="Fix login" status="idle" startedAt={null} />
     ),
@@ -125,7 +125,6 @@ const longTitle =
 // The Session header keeps a long title on one line with its whole text in the heading's name, and never covers the header actions, with the Inspector closed or open.
 export const LongSessionTitle: Story = {
   args: {
-    destination: { to: 'session', id: 'session-1' },
     children: (
       <SessionHeader title={longTitle} status="idle" startedAt={null} />
     ),

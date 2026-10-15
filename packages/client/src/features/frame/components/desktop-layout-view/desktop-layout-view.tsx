@@ -5,14 +5,7 @@ import {
   InspectorProvider,
 } from '#lib/product/inspector';
 import { ListTitle } from '#lib/product/list-title';
-import {
-  type NavigationDestination,
-  useNavigate,
-} from '#lib/product/navigation/context';
-import {
-  sectionDestination,
-  sectionOf,
-} from '../../../../lib/product/navigation/sections';
+import type { Section } from '../../../../lib/product/navigation/sections';
 import { DesktopShell } from '../desktop-shell/desktop-shell';
 import type {
   DesktopShellProps,
@@ -22,7 +15,8 @@ import { InspectorPane, type InspectorPaneProps } from '../inspector-pane';
 import { shellSections } from '../shell-sections';
 
 export interface DesktopLayoutViewProps {
-  destination: NavigationDestination;
+  section: Section;
+  onSectionChange: (section: Section) => void;
   // The Sessions that need input or are Unread, for the rail's badge.
   attentionCount: number;
   // The open section's list, and the list's own part of the header row when it has one.
@@ -50,15 +44,12 @@ interface LayoutShell {
 
 type LayoutShellProps = Omit<DesktopLayoutViewProps, 'children'>;
 
-function useSectionProps(props: LayoutShellProps): SectionShellProps {
-  const navigate = useNavigate();
-  const section = sectionOf(props.destination);
-
+function sectionProps(props: LayoutShellProps): SectionShellProps {
   return {
-    selectedSection: section,
-    onSectionChange: (next) => navigate(sectionDestination(next)),
+    selectedSection: props.section,
+    onSectionChange: props.onSectionChange,
     listHeader: props.listHeader ?? (
-      <ListTitle>{shellSections[section].title}</ListTitle>
+      <ListTitle>{shellSections[props.section].title}</ListTitle>
     ),
   };
 }
@@ -118,7 +109,7 @@ export function useLayoutShell(props: LayoutShellProps): LayoutShell {
   return {
     inspector: useInspectorControl(inspectorState, setInspectorState),
     shell: {
-      ...useSectionProps(props),
+      ...sectionProps(props),
       ...useSidebarProps(),
       ...changesInspectorProps(inspectorState, setInspectorState),
       attentionCount: props.attentionCount,

@@ -6,7 +6,6 @@ import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useErrorToast } from '#primitives/overlays/toast';
-import { settingsTitles } from '../../../lib/product/navigation/settings-titles';
 
 export type ServerDetails =
   | { status: 'loading' }
@@ -33,7 +32,7 @@ export function ConnectionDetailView({
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
       <SettingsPage
-        title={settingsTitles.connection}
+        title="Connection"
         caption="The Argo Server this App is talking to."
       >
         <ServerList server={server} />

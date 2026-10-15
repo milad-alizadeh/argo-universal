@@ -1,39 +1,28 @@
-import type { NavigationDestination } from './context';
+import type { IconName } from '#lib/generic/symbols/icon-names';
 
 export type Section = 'sessions' | 'issues' | 'atlas' | 'settings';
 
-// The sections top to bottom in the rail and the drawer.
-export const sectionOrder = [
-  'sessions',
-  'issues',
-  'atlas',
-  'settings',
-] as const satisfies readonly Section[];
+// Each section's title and icon, top to bottom in the rail and the drawer. A section's key is also its route: `/sessions` and the drawer screen `sessions`.
+export const sections = {
+  sessions: { title: 'Sessions', icon: 'sessions' },
+  issues: { title: 'Issues', icon: 'issue' },
+  atlas: { title: 'Atlas', icon: 'atlas' },
+  settings: { title: 'Settings', icon: 'settings' },
+} as const satisfies Record<Section, { title: string; icon: IconName }>;
 
-const destinationSections: Record<NavigationDestination['to'], Section> = {
-  sessions: 'sessions',
-  'new-session': 'sessions',
-  session: 'sessions',
-  issues: 'issues',
-  atlas: 'atlas',
-  settings: 'settings',
-  'settings-projects': 'settings',
-  'settings-agents': 'settings',
-  'settings-devices': 'settings',
-  'settings-appearance': 'settings',
-  'settings-notifications': 'settings',
-  'settings-accounts': 'settings',
-  'settings-project': 'settings',
-  'settings-connection': 'settings',
-  'settings-agent-new': 'settings',
-  'settings-agent': 'settings',
-};
+const isSection = (name: string | undefined): name is Section =>
+  name !== undefined && name in sections;
 
-export function sectionOf(destination: NavigationDestination): Section {
-  return destinationSections[destination.to];
+export const sectionOrder: readonly Section[] =
+  Object.keys(sections).filter(isSection);
+
+// The section a path or drawer route is in, by its first segment; any other, such as `/` before it redirects, counts as Sessions.
+export function sectionOf(path: string | undefined): Section {
+  const name = path?.split('/').find(Boolean);
+
+  return isSection(name) ? name : 'sessions';
 }
 
-// Each section opens on its list; a wide window adds the first detail beside it without changing the URL.
-export function sectionDestination(section: Section): NavigationDestination {
-  return { to: section };
-}
+// A page is any path below its section's list, such as `/settings/accounts` under `/settings`.
+export const isPage = (path: string): boolean =>
+  path.split('/').filter(Boolean).length > 1;

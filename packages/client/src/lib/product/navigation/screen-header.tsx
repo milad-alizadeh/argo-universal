@@ -1,26 +1,14 @@
+import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import { Platform } from 'react-native';
+import { useWide } from '#lib/generic/use-wide/use-wide';
+import { HeaderButton, HeaderItems } from '#lib/product/header-button';
 import {
-  type ComponentType,
-  createContext,
-  createElement,
-  type ReactElement,
-  type ReactNode,
-  useContext,
-} from 'react';
-import type { IconName } from '#lib/generic/symbols/icon-names';
-
-export interface ScreenHeaderSearch {
-  placeholder: string;
-  onChangeText: (text: string) => void;
-  // A header item that goes with the search, such as New Session; iOS only, Android has its own button.
-  action?: ScreenHeaderAction;
-}
-
-interface ScreenHeaderAction {
-  icon: IconName;
-  accessibilityLabel: string;
-  onPress: () => void;
-}
+  type HeaderSearch,
+  HeaderSearchRow,
+  headerSearchRowLayout,
+} from './header-search';
 
 // One line: a leading item, the title, and one or two trailing items.
 export interface ScreenHeaderProps {
@@ -28,34 +16,111 @@ export interface ScreenHeaderProps {
   left?: ReactNode;
   // Each a separate item, so iOS 26 gives each its own glass bubble.
   right?: readonly ReactElement[];
-  search?: ScreenHeaderSearch;
+  search?: HeaderSearch;
 }
 
-const ScreenHeaderContext =
-  createContext<ComponentType<ScreenHeaderProps> | null>(null);
+type HeaderOptions = NativeStackNavigationOptions;
 
-export interface ScreenHeaderProviderProps {
-  header: ComponentType<ScreenHeaderProps>;
-  children: ReactNode;
+interface SearchBarOptions {
+  placeholder: string;
+  autoCapitalize: 'none';
+  onChangeText: (event: { nativeEvent: { text: string } }) => void;
+  onClose: () => void;
 }
 
-// The app supplies the web stack's header here; Storybook supplies a mock, so a story renders a page's header without a navigator.
-export function ScreenHeaderProvider({
-  header,
-  children,
-}: ScreenHeaderProviderProps): React.JSX.Element {
-  return (
-    <ScreenHeaderContext.Provider value={header}>
-      {children}
-    </ScreenHeaderContext.Provider>
-  );
+// What a native header takes from a page's header props, in a shape both the drawer's header (Android) and the stack's (iOS) accept.
+export interface NativeHeaderOptions {
+  title: string;
+  headerRight?: () => React.JSX.Element;
+  headerSearchBarOptions?: SearchBarOptions;
 }
 
-// Sets the header of the narrow web stack page it renders in; without a provider it draws nothing.
+function trailingItems(
+  items: readonly ReactElement[],
+): Pick<NativeHeaderOptions, 'headerRight'> {
+  if (!items.length) return {};
+
+  return { headerRight: () => <HeaderItems>{items}</HeaderItems> };
+}
+
+// The item that goes with the search, such as New Session on iOS.
+function searchAction(search?: HeaderSearch): React.JSX.Element[] {
+  if (!search?.action) return [];
+  const { icon, accessibilityLabel, onPress } = search.action;
+
+  return [
+    <HeaderButton
+      key="search-action"
+      icon={icon}
+      paired
+      accessibilityLabel={accessibilityLabel}
+      onPress={onPress}
+    />,
+  ];
+}
+
+// The header's own search bar; closing or clearing it clears the query.
+function searchBar(
+  search?: HeaderSearch,
+): Pick<NativeHeaderOptions, 'headerSearchBarOptions'> {
+  if (!search) return {};
+  const { placeholder, onChangeText } = search;
+
+  return {
+    headerSearchBarOptions: {
+      placeholder,
+      autoCapitalize: 'none',
+      onChangeText: (event) => onChangeText(event.nativeEvent.text),
+      onClose: () => onChangeText(''),
+    },
+  };
+}
+
+// A native header's options: the title, the trailing items and the header's own search bar, on the drawer (Android) or the stack (iOS). Only the options a page sets are written, so they never clear a section root's own.
+export function nativeHeaderOptions({
+  title,
+  right = [],
+  search,
+}: ScreenHeaderProps): NativeHeaderOptions {
+  return {
+    title,
+    ...trailingItems([...right, ...searchAction(search)]),
+    ...searchBar(search),
+  };
+}
+
+// The web's JS header: with search, the title row is the search row, where Search, last, morphs into a field over the whole row.
+function webTitleRow({
+  title,
+  right = [],
+  search,
+}: ScreenHeaderProps): HeaderOptions {
+  if (!search) return trailingItems(right);
+
+  return {
+    headerTitle: () => (
+      <HeaderSearchRow title={title} right={right} search={search} />
+    ),
+    ...headerSearchRowLayout,
+  };
+}
+
+function webHeaderOptions(header: ScreenHeaderProps): HeaderOptions {
+  const { title, left } = header;
+  const leading = left ? { headerLeft: (): ReactNode => left } : {};
+
+  return { title, ...leading, ...webTitleRow(header) };
+}
+
+// The stack header's options from a page's header props, as this platform draws them.
+export const screenHeaderOptions: (header: ScreenHeaderProps) => HeaderOptions =
+  Platform.OS === 'web' ? webHeaderOptions : nativeHeaderOptions;
+
+// A narrow window's page header, which the page sets on its section stack; a wide window's page draws its own title, so there this sets nothing.
 export function ScreenHeader(
   props: ScreenHeaderProps,
 ): React.JSX.Element | null {
-  const Header = useContext(ScreenHeaderContext);
+  if (useWide()) return null;
 
-  return Header ? createElement(Header, props) : null;
+  return <Stack.Screen options={screenHeaderOptions(props)} />;
 }

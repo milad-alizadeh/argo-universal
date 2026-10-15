@@ -3,7 +3,7 @@ import { expect, fn, type Mock, waitFor, within } from 'storybook/test';
 import {
   type LeaveGuard,
   NavigationProvider,
-} from '#lib/product/navigation/context';
+} from '#lib/product/navigation/navigation';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import type { SubmitCustomAgent } from '../../hooks/use-custom-agent-form';
@@ -67,7 +67,7 @@ const goBack = fn();
 export const AsksBeforeLeavingATouchedForm: Story = {
   decorators: [
     (Story) => (
-      <NavigationProvider navigate={fn()} leaveGuard={guarded}>
+      <NavigationProvider leaveGuard={guarded}>
         <Story />
       </NavigationProvider>
     ),
