@@ -4,6 +4,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/display/text';
+import { OverlayFields } from '#primitives/fields/field-layout';
 import { HoverProvider, PopoverHover } from './popover-hover';
 import { hoverContentProps } from './popover-hover-focus';
 import type {
@@ -86,7 +87,7 @@ function PopoverSurface(
       data-state={props.open ? 'open' : 'closed'}
     >
       <TextClassContext.Provider value="text-card-foreground">
-        {props.children}
+        <OverlayFields value>{props.children}</OverlayFields>
       </TextClassContext.Provider>
     </View>
   );

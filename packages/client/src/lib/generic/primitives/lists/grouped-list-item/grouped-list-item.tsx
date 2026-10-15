@@ -1,7 +1,10 @@
 import type * as React from 'react';
 import { type JSX, useContext } from 'react';
 import { Pressable, View } from 'react-native';
-import { useSidebarList } from '#primitives/fields/field-layout';
+import {
+  useOverlayFields,
+  useSidebarList,
+} from '#primitives/fields/field-layout';
 import { GroupedListItemBody } from './grouped-list-item-content';
 import {
   GroupedListItemCorners,
@@ -39,6 +42,7 @@ export function GroupedListItem(props: GroupedListItemProps): JSX.Element {
 
 function useRowPlace(): RowPlace {
   return {
+    overlay: useOverlayFields(),
     endsSection: useContext(GroupedListItemEnd),
     corners: useContext(GroupedListItemCorners),
     separatorHidden: useContext(GroupedListItemHover)?.separatorHidden,

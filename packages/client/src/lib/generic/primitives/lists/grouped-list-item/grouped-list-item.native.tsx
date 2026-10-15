@@ -1,11 +1,10 @@
-import { Button, Column, type ColumnProps } from '@expo/ui';
+import { Button, Column, ListItem, type ColumnProps } from '@expo/ui';
 import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import {
   accessibilityAddTraits,
   buttonStyle,
   disabled,
   listRowBackground,
-  listRowInsets,
   listRowSeparator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
@@ -25,8 +24,6 @@ type Modifiers = NonNullable<ColumnProps['modifiers']>;
 
 const ios = Platform.OS === 'ios';
 
-const inset = 16;
-
 export function GroupedListItem(
   props: GroupedListItemProps,
 ): React.JSX.Element {
@@ -36,8 +33,26 @@ export function GroupedListItem(
 }
 
 function NativeRow(props: GroupedListItemProps): React.JSX.Element {
-  const modifiers = rowModifiers(props, useSidebarList());
+  const sidebar = useSidebarList();
+  const modifiers = rowModifiers(props, sidebar);
 
+  if (!ios && sidebar) return <SidebarRow item={props} modifiers={modifiers} />;
+
+  return <GroupedRow item={props} modifiers={modifiers} />;
+}
+
+function SidebarRow({ item, modifiers }: RowProps): React.JSX.Element {
+  return (
+    <ListItem
+      onPress={item.disabled ? undefined : item.onPress}
+      modifiers={modifiers}
+    >
+      <RowParts {...item} />
+    </ListItem>
+  );
+}
+
+function GroupedRow({ item: props, modifiers }: RowProps): React.JSX.Element {
   return ios && props.onPress ? (
     <PressableRow press={props.onPress} modifiers={modifiers}>
       <Column spacing={0}>
@@ -109,7 +124,6 @@ function rowModifiers(
     ...(sidebar
       ? [listRowBackground('transparent'), listRowSeparator('hidden')]
       : []),
-    listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     ...rowAccessibilityModifiers(props),
     disabled(!!props.disabled),
   ];

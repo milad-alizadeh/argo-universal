@@ -18,7 +18,9 @@ const ios = Platform.OS === 'ios';
 const trailingSpacing = 8;
 
 // The label takes the row's spare width, so the value and status trail it on the same line.
-export function RowLabel(props: GroupedListItemProps): React.JSX.Element {
+export function RowLabel(
+  props: GroupedListItemProps & { stacked?: boolean },
+): React.JSX.Element {
   return (
     <Column spacing={0} modifiers={labelModifiers(props)}>
       <RowTitle {...props} />
@@ -27,8 +29,10 @@ export function RowLabel(props: GroupedListItemProps): React.JSX.Element {
   );
 }
 
-function labelModifiers(props: GroupedListItemProps): Modifiers {
-  if (!ios) return [weight(1)];
+function labelModifiers(
+  props: GroupedListItemProps & { stacked?: boolean },
+): Modifiers {
+  if (!ios) return props.stacked ? [] : [weight(1)];
 
   return [
     frame({ maxWidth: Infinity, alignment: 'leading' }),
@@ -46,7 +50,7 @@ function RowTitle(props: GroupedListItemProps): React.JSX.Element {
 function RowSubtitle({
   subtitle,
 }: Pick<GroupedListItemProps, 'subtitle'>): React.JSX.Element | null {
-  const text = useRowText(subtitleRole(subtitle), 'secondary', 'line');
+  const text = useRowText(subtitleRole(subtitle), 'secondary');
 
   return subtitle ? <Text {...text}>{subtitle.text}</Text> : null;
 }
@@ -79,18 +83,13 @@ function RowValue(
   );
 }
 
-// Android keeps the value to one line at the row's end, as the title takes the width.
+// Android aligns the value at the row's end and lets it wrap.
 function RowValueText({ value }: { value: string }): React.JSX.Element {
   const text = useRowText('body', 'secondary');
 
   if (ios) return <Text {...text}>{value}</Text>;
 
   return (
-    <Text
-      textStyle={{ ...text.textStyle, textAlign: 'right' }}
-      numberOfLines={1}
-    >
-      {value}
-    </Text>
+    <Text textStyle={{ ...text.textStyle, textAlign: 'right' }}>{value}</Text>
   );
 }
