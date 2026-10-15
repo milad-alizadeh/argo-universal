@@ -42,6 +42,11 @@ export const paperSessionRows: SessionInfo[] = [
     plan: { done: 5, total: 5 },
     subagents: { running: 0, total: 3 },
   },
+  {
+    ...sessionRows.unread,
+    title: 'Answer the review comments',
+    activity: 'Replied to 3 comments',
+  },
 ];
 
 export const paperSessionMetadata = {
@@ -49,7 +54,10 @@ export const paperSessionMetadata = {
     issue: { number: 128 },
     pullRequest: { number: 45, status: 'open' },
   },
-  'session-needs-input': { issue: { number: 131 } },
+  'session-needs-input': {
+    issue: { number: 131 },
+    pullRequest: { number: 45, status: 'open' },
+  },
   'session-failed': {
     subagentsFailed: true,
     issue: { number: 99 },
@@ -58,5 +66,7 @@ export const paperSessionMetadata = {
   'session-idle': {
     issue: { number: 96 },
     pullRequest: { number: 44, status: 'merged' },
+    trailing: '2h',
   },
+  'session-unread': { trailing: '12m' },
 } as const;

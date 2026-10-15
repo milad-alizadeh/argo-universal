@@ -3,8 +3,11 @@ import type { ComponentProps } from 'react';
 import type * as React from 'react';
 import {
   type SessionsFilter,
+  type SessionsLayout,
   searchSessionsLabel,
   sessionsFilterChoices,
+  sessionsLayoutChoices,
+  sessionsLayoutLabel,
 } from '#features/sessions';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { headerFilterIcon } from '#lib/product/header-button';
@@ -55,12 +58,26 @@ const filterMenuItem = {
   separateBackground: true,
 };
 
-// Active or Archived, checked on the current one.
+// Active or Archived, then the Layout section's Regular or Compact; each checked on the current one.
 function filterMenu(filter: SessionsFilter): React.JSX.Element {
   return (
     <Stack.Toolbar.Menu {...filterMenuItem}>
       {sessionsFilterChoices.map(({ value, label }) => (
         <Stack.Toolbar.MenuAction key={value} {...choiceState(value, filter)}>
+          {label}
+        </Stack.Toolbar.MenuAction>
+      ))}
+      {layoutMenu(filter)}
+    </Stack.Toolbar.Menu>
+  );
+}
+
+// An inline menu is a UIMenu section: a divider above it and its title as the heading.
+function layoutMenu(filter: SessionsFilter): React.JSX.Element {
+  return (
+    <Stack.Toolbar.Menu inline title={sessionsLayoutLabel}>
+      {sessionsLayoutChoices.map(({ value, label }) => (
+        <Stack.Toolbar.MenuAction key={value} {...layoutState(value, filter)}>
           {label}
         </Stack.Toolbar.MenuAction>
       ))}
@@ -78,6 +95,14 @@ const choiceState = (
 ): Pick<StackToolbarMenuActionProps, 'isOn' | 'onPress'> => ({
   isOn: (value === 'archived') === archived,
   onPress: () => onArchivedChange(value === 'archived'),
+});
+
+const layoutState = (
+  value: SessionsLayout,
+  { layout, onLayoutChange }: SessionsFilter,
+): Pick<StackToolbarMenuActionProps, 'isOn' | 'onPress'> => ({
+  isOn: value === layout,
+  onPress: () => onLayoutChange(value),
 });
 
 function newSessionButton(onPress: () => void): React.JSX.Element {

@@ -1,3 +1,7 @@
 export { Menu } from './menu';
 
-export { type MenuAction, type MenuProps } from './menu-props';
+export {
+  type MenuAction,
+  type MenuChoiceGroup,
+  type MenuProps,
+} from './menu-props';

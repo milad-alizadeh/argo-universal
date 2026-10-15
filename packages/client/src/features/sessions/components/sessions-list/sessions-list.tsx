@@ -25,11 +25,11 @@ const contentStyle = {
   paddingTop: 6,
 };
 
-// A phone list insets its Session cards 8 from the screen's edges, as Paper's Sessions screen does.
+// A phone list insets its Session cards 16 from the screen's edges, as Paper's Sessions screen does.
 const phoneContentStyle = {
   ...contentStyle,
-  paddingLeft: 8,
-  paddingRight: 8,
+  paddingLeft: 16,
+  paddingRight: 16,
   paddingTop: 20,
 };
 
@@ -61,10 +61,12 @@ function entryKind(entry: SessionsListEntry): SessionsListEntry['kind'] {
 
 const fillStyle = { minHeight: 0 };
 
+// A Regular row and the 8 below it; a Compact row is one line.
+const estimatedItemSize = { regular: 84, compact: 40 } as const;
+
 const listBehaviour = {
   ...listTestIdProps('sessions-scroll'),
   keyExtractor: entryKey,
-  estimatedItemSize: 76,
   // Rows hold no state of their own, so scrolling reuses them instead of mounting new ones.
   recycleItems: true,
   getItemType: entryKind,
@@ -107,6 +109,7 @@ function SessionsListSurface(
 
 interface ListChrome {
   ListEmptyComponent: React.ReactElement;
+  estimatedItemSize: number;
 }
 
 function listChrome(props: SessionsListProps): ListChrome {
@@ -114,6 +117,7 @@ function listChrome(props: SessionsListProps): ListChrome {
     ListEmptyComponent: props.placeholder ?? (
       <EmptySessionsList query={props.query} archived={props.archived} />
     ),
+    estimatedItemSize: estimatedItemSize[props.layout ?? 'regular'],
   };
 }
 

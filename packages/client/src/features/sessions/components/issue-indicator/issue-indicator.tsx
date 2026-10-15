@@ -13,7 +13,7 @@ export function IssueIndicator({
   return (
     <View
       accessibilityLabel={`Issue #${number}`}
-      className="flex-row items-center gap-1"
+      className="flex-row items-center gap-1.5"
     >
       <IssueIcon />
       <Text role="secondary">#{number}</Text>

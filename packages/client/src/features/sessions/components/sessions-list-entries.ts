@@ -2,7 +2,14 @@ import type { ProjectsListOutput, SessionInfo } from '@repo/contracts';
 
 export type SessionsListEntry =
   | { kind: 'project'; id: string; projectId: string; name: string }
-  | { kind: 'session'; id: string; session: SessionInfo }
+  | {
+      kind: 'session';
+      id: string;
+      session: SessionInfo;
+      // Where the row sits among its Project's rows, so a phone's Compact rows round the ends of their section.
+      first: boolean;
+      last: boolean;
+    }
   | { kind: 'empty'; id: string };
 
 export interface ListEntriesInput {
@@ -65,8 +72,18 @@ function projectEntries(
   return [heading, ...projectBody(project, projectSessions)];
 }
 
-function sessionEntry(session: SessionInfo): SessionsListEntry {
-  return { kind: 'session', id: session.sessionId, session };
+function sessionEntry(
+  session: SessionInfo,
+  index: number,
+  rows: readonly SessionInfo[],
+): SessionsListEntry {
+  return {
+    kind: 'session',
+    id: session.sessionId,
+    session,
+    first: index === 0,
+    last: index === rows.length - 1,
+  };
 }
 
 // Search results as one list, newest activity first, with no Project headings; only listed Projects' Sessions show.

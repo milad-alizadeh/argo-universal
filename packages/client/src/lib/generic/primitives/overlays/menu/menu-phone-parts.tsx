@@ -2,9 +2,10 @@ import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import {
   type ActionMenuProps,
-  type ChoiceMenuProps,
+  type MenuChoiceGroup,
   type MenuProps,
   isActionMenu,
+  menuChoiceGroups,
   menuLoadingLabel,
   menuValueLabel,
 } from './menu-props';
@@ -59,14 +60,35 @@ export interface NativeMenuItem {
   choose: () => void;
 }
 
+// A run of a system menu's rows, set apart from the run before it; iOS heads it with its title.
+export interface NativeMenuSection {
+  title?: string;
+  items: NativeMenuItem[];
+}
+
+export function nativeMenuSections<Value extends string>(
+  props: MenuProps<Value>,
+): NativeMenuSection[] {
+  if (props.loading) return [{ items: [loadingItem] }];
+
+  if (isActionMenu(props)) return [{ items: props.actions.map(actionItem) }];
+
+  const groups = menuChoiceGroups(props);
+
+  // A row's id is its value; with several groups, the group's place keeps their values apart.
+  const prefix = (index: number): string =>
+    groups.length > 1 ? `${index}.` : '';
+
+  return groups.map((group, index) => ({
+    title: group.label,
+    items: choiceItems(group, prefix(index)),
+  }));
+}
+
 export function nativeMenuItems<Value extends string>(
   props: MenuProps<Value>,
 ): NativeMenuItem[] {
-  if (props.loading) return [loadingItem];
-
-  if (isActionMenu(props)) return props.actions.map(actionItem);
-
-  return choiceItems(props);
+  return nativeMenuSections(props).flatMap((section) => section.items);
 }
 
 const nothing = (): void => undefined;
@@ -92,14 +114,15 @@ function actionItem(
   };
 }
 
-function choiceItems<Value extends string>(
-  props: ChoiceMenuProps<Value>,
+function choiceItems(
+  group: MenuChoiceGroup,
+  idPrefix: string,
 ): NativeMenuItem[] {
-  return props.options.map((choice) => ({
-    id: choice.value,
+  return group.options.map((choice) => ({
+    id: `${idPrefix}${choice.value}`,
     title: choice.label,
-    checked: choice.value === props.value,
+    checked: choice.value === group.value,
     disabled: Boolean(choice.disabled),
-    choose: choice.disabled ? nothing : () => props.onValueChange(choice.value),
+    choose: choice.disabled ? nothing : () => group.onValueChange(choice.value),
   }));
 }

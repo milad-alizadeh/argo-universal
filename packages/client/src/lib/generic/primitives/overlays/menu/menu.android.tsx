@@ -4,9 +4,11 @@ import { RNHostView } from '@expo/ui';
 import {
   DropdownMenu,
   DropdownMenuItem,
+  HorizontalDivider,
   Icon,
   Text,
 } from '@expo/ui/jetpack-compose';
+import { padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
@@ -14,8 +16,9 @@ import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
 import {
   type NativeMenuItem,
+  type NativeMenuSection,
   NativeMenuTrigger,
-  nativeMenuItems,
+  nativeMenuSections,
 } from './menu-phone-parts';
 import type { MenuProps } from './menu-props';
 
@@ -70,10 +73,40 @@ function MenuItems<Value extends string>(
 
   return (
     <DropdownMenu.Items>
-      {nativeMenuItems(props).map((item) => (
-        <MenuItem key={item.id} item={item} onChoose={choose} />
-      ))}
+      {nativeMenuSections(props).flatMap((section, index) =>
+        sectionRows(section, index > 0, choose),
+      )}
     </DropdownMenu.Items>
+  );
+}
+
+// A section's rows, after a divider when another section comes before it.
+function sectionRows(
+  section: NativeMenuSection,
+  divided: boolean,
+  choose: (item: NativeMenuItem) => void,
+): React.JSX.Element[] {
+  const rows = section.items.map((item) => (
+    <MenuItem key={item.id} item={item} onChoose={choose} />
+  ));
+
+  return divided
+    ? [<SectionDivider key={`divider.${section.items[0]?.id}`} />, ...rows]
+    : rows;
+}
+
+// Material sets a menu's groups apart with a divider and no heading, as MenuView's Android drawing of inline sections does; Argo binds its colour.
+const dividerInset = 8;
+
+const dividerModifiers = [padding(0, dividerInset, 0, dividerInset)];
+
+function SectionDivider(): React.JSX.Element {
+  return (
+    <HorizontalDivider
+      thickness={1}
+      color={useNativeTheme().colors.border}
+      modifiers={dividerModifiers}
+    />
   );
 }
 

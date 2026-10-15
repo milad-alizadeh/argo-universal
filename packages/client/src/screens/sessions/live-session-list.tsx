@@ -4,6 +4,7 @@ import { useConnectionState, useTRPC } from '#features/connection';
 import {
   liveUpdatesStopped,
   type QueryProgress,
+  type SessionsLayout,
   sessionsLoadState,
 } from '#features/sessions';
 import {
@@ -23,6 +24,7 @@ export interface LiveSessionListProps {
   query: string;
   onQueryChange: (query: string) => void;
   archived: boolean;
+  layout: SessionsLayout;
   // The open Session, which the wide sidebar marks.
   selectedSessionId?: string;
 }

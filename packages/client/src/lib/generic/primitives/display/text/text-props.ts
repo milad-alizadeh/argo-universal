@@ -11,7 +11,9 @@ export type TextRole =
   | 'badge'
   | 'code'
   | 'nav-title'
-  | 'nav-action';
+  | 'nav-action'
+  | 'row'
+  | 'row-detail';
 
 export type TextProps = Omit<
   React.ComponentProps<typeof RNText>,

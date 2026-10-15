@@ -29,6 +29,7 @@ import type * as GroupedListKit from '#primitives/lists/grouped-list';
 import type * as GroupedListContentKit from '#primitives/lists/grouped-list-content';
 import type * as GroupedListItemKit from '#primitives/lists/grouped-list-item';
 import type * as GroupedListSectionKit from '#primitives/lists/grouped-list-section';
+import type * as VirtualListItemKit from '#primitives/lists/virtual-list-item';
 import type * as HostKit from '#primitives/native/host';
 import type * as AlertKit from '#primitives/overlays/alert';
 import type * as DialogKit from '#primitives/overlays/dialog';
@@ -78,6 +79,7 @@ export type Primitives = {
   IconSpinnerProps: IconKit.IconSpinnerProps;
   LiquidGlassProps: LiquidGlassKit.LiquidGlassProps;
   MenuAction: MenuKit.MenuAction;
+  MenuChoiceGroup: MenuKit.MenuChoiceGroup;
   MenuProps: MenuKit.MenuProps;
   NativeTextProps: NativeTextKit.NativeTextProps;
   PickerProps: PickerKit.PickerProps<string>;
@@ -105,6 +107,7 @@ export type Primitives = {
   TextProps: TextKit.TextProps;
   TextareaProps: TextareaKit.TextareaProps;
   Toast: ToastKit.Toast;
+  VirtualListItemProps: VirtualListItemKit.VirtualListItemProps;
 };
 
 export type Aliases = {
@@ -115,4 +118,5 @@ export type Aliases = {
   NativeTextRole: NativeTextKit.NativeTextRole;
   TextRole: TextKit.TextRole;
   Tone: TextKit.Tone;
+  VirtualListPosition: VirtualListItemKit.VirtualListPosition;
 };

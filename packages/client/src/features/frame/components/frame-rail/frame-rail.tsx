@@ -42,7 +42,7 @@ function selectionProps(selected: boolean): TileSelection {
   return {
     iconClassName: 'text-foreground',
     'aria-current': 'page',
-    className: cn(tileClass, 'bg-selected'),
+    className: cn(tileClass, 'bg-selected shadow-inset'),
   };
 }
 
@@ -111,7 +111,7 @@ function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
   return (
     <View
       pointerEvents="none"
-      className="absolute bottom-4 right-0 top-4 w-px bg-selected"
+      className="absolute bottom-4 right-0 top-4 w-px bg-hairline"
     />
   );
 }

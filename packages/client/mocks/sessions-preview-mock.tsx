@@ -16,6 +16,7 @@ export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
         {...args}
         query={props.query}
         archived={props.archived}
+        layout={props.layout}
         sessions={props.sessions}
       />
     </View>
@@ -23,7 +24,18 @@ export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
 }
 
 type PreviewProps = SessionListViewProps &
-  Pick<ComponentProps<typeof SessionsHeader>, 'onArchivedChange'>;
+  Pick<
+    ComponentProps<typeof SessionsHeader>,
+    'onArchivedChange' | 'layout' | 'onLayoutChange'
+  >;
+
+function usePreviewLayout(
+  args: SessionListViewProps,
+): Pick<PreviewProps, 'layout' | 'onLayoutChange'> {
+  const [layout, setLayout] = useState(args.layout ?? 'regular');
+
+  return { layout, onLayoutChange: setLayout };
+}
 
 function usePreviewSessions(args: SessionListViewProps): PreviewProps {
   const [query, setQuery] = useState(args.query);
@@ -32,6 +44,7 @@ function usePreviewSessions(args: SessionListViewProps): PreviewProps {
 
   return {
     ...args,
+    ...usePreviewLayout(args),
     query,
     archived,
     sessions,
@@ -45,13 +58,7 @@ function PreviewHeader(
 ): ReactElement {
   return (
     <View className="min-h-11 web:h-11 wide:min-h-14 web:wide:h-14 flex-row items-center gap-0.5 px-2">
-      <SessionsHeader
-        query={props.query}
-        onQueryChange={props.onQueryChange}
-        archived={props.archived}
-        onArchivedChange={props.onArchivedChange}
-        onNewSession={props.onNewSession}
-      />
+      <SessionsHeader {...props} />
     </View>
   );
 }

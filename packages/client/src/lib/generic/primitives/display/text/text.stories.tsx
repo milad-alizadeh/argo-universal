@@ -8,6 +8,8 @@ const roles = [
   'code',
   'nav-title',
   'nav-action',
+  'row',
+  'row-detail',
 ] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';

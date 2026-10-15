@@ -2,21 +2,25 @@ import * as MenuPrimitive from '@rn-primitives/dropdown-menu';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { IconSlot } from '#primitives/display/icon';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text';
 import { MenuLoadingRow } from './menu-loading';
-import type { ChoiceMenuProps, MenuOption } from './menu-props';
+import {
+  type ChoiceMenuProps,
+  type GroupedChoiceMenuProps,
+  type MenuChoiceGroup,
+  menuChoiceGroups,
+} from './menu-props';
+import { MenuRadioItem } from './menu-radio-item';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
   onKeyboardFocusChange: (keyboardFocus: boolean) => void;
 };
 
-type RadioItemProps = React.ComponentProps<typeof MenuPrimitive.RadioItem>;
-
-type MenuChoicesProps<Value extends string> = ChoiceMenuProps<Value> & {
+type MenuChoicesProps<Value extends string> = (
+  | ChoiceMenuProps<Value>
+  | GroupedChoiceMenuProps
+) & {
   focus: KeyboardFocus;
 };
 
@@ -45,95 +49,64 @@ export function MenuChoiceContent<Value extends string>(
 function MenuChoices<Value extends string>({
   focus,
   ...props
-}: MenuChoicesProps<Value>): React.JSX.Element {
+}: MenuChoicesProps<Value>): React.JSX.Element[] {
+  return menuChoiceGroups(props).map((group, index) => (
+    <MenuChoiceGroupRows
+      key={menuGroupKey(group)}
+      group={group}
+      first={index === 0}
+      focus={focus}
+    />
+  ));
+}
+
+// A group is known by its options, which no other group of the menu shares.
+const menuGroupKey = (group: MenuChoiceGroup): string =>
+  group.options.map((choice) => choice.value).join(' ');
+
+type MenuChoiceGroupRowsProps = {
+  group: MenuChoiceGroup;
+  first: boolean;
+  focus: KeyboardFocus;
+};
+
+// One group's radio rows; a later group is set apart by space, and its heading when it has one.
+function MenuChoiceGroupRows(
+  props: MenuChoiceGroupRowsProps,
+): React.JSX.Element {
+  return (
+    <>
+      {props.first ? null : <View className="h-2.25" />}
+      <MenuGroupHeading label={props.group.label} />
+      <MenuChoiceRadios {...props} />
+    </>
+  );
+}
+
+function MenuChoiceRadios({
+  group,
+  focus,
+}: MenuChoiceGroupRowsProps): React.JSX.Element {
   return (
     <MenuPrimitive.RadioGroup
-      value={props.value}
-      onValueChange={selectChoice(props)}
+      value={group.value}
+      onValueChange={group.onValueChange}
     >
-      {props.options.map((choice) => (
+      {group.options.map((choice) => (
         <MenuRadioItem key={choice.value} choice={choice} focus={focus} />
       ))}
     </MenuPrimitive.RadioGroup>
   );
 }
 
-function selectChoice<Value extends string>(
-  props: ChoiceMenuProps<Value>,
-): (next: string) => void {
-  return (next) => {
-    const selected = props.options.find((choice) => choice.value === next);
-
-    if (selected) props.onValueChange(selected.value);
-  };
-}
-
-type MenuRadioItemProps = {
-  choice: MenuOption<string>;
-  focus: KeyboardFocus;
-};
-
-function MenuRadioItem(props: MenuRadioItemProps): React.JSX.Element {
-  const { choice, focus } = props;
+function MenuGroupHeading(props: { label?: string }): React.JSX.Element | null {
+  if (!props.label) return null;
 
   return (
-    <MenuPrimitive.RadioItem
-      value={choice.value}
-      textValue={choice.label}
-      disabled={choice.disabled}
-      onPointerMove={() => focus.onKeyboardFocusChange(false)}
-      onKeyDown={radioKeyDown(focus.onKeyboardFocusChange)}
-      className={radioItemClassName(focus.keyboardFocus)}
-    >
-      <MenuRadioContent label={choice.label} />
-    </MenuPrimitive.RadioItem>
-  );
-}
-
-function radioKeyDown(
-  onKeyboardFocusChange: KeyboardFocus['onKeyboardFocusChange'],
-): NonNullable<RadioItemProps['onKeyDown']> {
-  return (event) => {
-    onKeyboardFocusChange(true);
-
-    // The RN adapter selects on keydown; stop Radix's synthetic click selecting twice.
-    if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
-  };
-}
-
-function radioItemClassName(keyboardFocus: boolean): string {
-  return cn(
-    'min-h-9 flex-row items-center gap-3 cursor-default rounded-xl outline-0 px-3 py-1.5 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
-    keyboardFocus &&
-      'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
-  );
-}
-
-function MenuRadioContent(props: { label: string }): React.JSX.Element {
-  return (
-    <>
-      <RadioLabel label={props.label} />
-      <RadioIndicator />
-    </>
-  );
-}
-
-function RadioLabel(props: { label: string }): React.JSX.Element {
-  return (
-    <View className="min-w-0 flex-1">
-      <Text role="body" className="select-none text-foreground">
+    <View className="px-3 pb-1 pt-1.5">
+      <Text role="secondary" className="select-none">
         {props.label}
       </Text>
     </View>
-  );
-}
-
-function RadioIndicator(): React.JSX.Element {
-  return (
-    <IconSlot role="control">
-      <MenuPrimitive.ItemIndicator>
-        <SelectedCheck className="text-foreground" />
-      </MenuPrimitive.ItemIndicator>
-    </IconSlot>
   );
 }
