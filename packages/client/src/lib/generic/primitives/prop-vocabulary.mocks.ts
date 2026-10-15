@@ -52,6 +52,7 @@ export type Primitives = {
   CheckboxIndicatorProps: CheckboxKit.CheckboxIndicatorProps;
   CheckboxProps: CheckboxKit.CheckboxProps;
   CollapsibleContentProps: CollapsibleKit.CollapsibleContentProps;
+  CollapsibleHeaderProps: CollapsibleKit.CollapsibleHeaderProps;
   CollapsibleProps: CollapsibleKit.CollapsibleProps;
   ComboboxSearchProps: ComboboxSearchKit.ComboboxSearchProps;
   DialogContentProps: DialogKit.DialogContentProps;

@@ -4,7 +4,12 @@ import {
   type ElementFrame,
   useShellTransition,
 } from '../../hooks/use-shell-transition.web';
-import { type Glow, type SidebarGlows, sidebarGlows } from '../sidebar-glows';
+import {
+  type Glow,
+  type SidebarGlows,
+  sidebarGlows,
+  useGlowColours,
+} from '../sidebar-glows';
 import type { ShellBackdropProps } from './shell-backdrop';
 
 interface Backdrop extends SidebarGlows {
@@ -24,16 +29,18 @@ interface LayerProps {
   shown: boolean;
 }
 
-function glowImage({ colour, stops }: Glow): string {
+function glowImage({ stops }: Glow, colour: string): string {
   const colours = stops.map(
     ({ alpha, at }) =>
-      `color-mix(in oklab, var(--color-glow-${colour}) ${alpha}%, transparent) ${at}%`,
+      `color-mix(in oklab, ${colour} ${alpha}%, transparent) ${at}%`,
   );
 
   return `radial-gradient(circle farthest-corner at 50% 50% in oklab, ${colours.join(', ')})`;
 }
 
 function GlowSpot({ glow }: { glow: Glow }): React.JSX.Element {
+  const colours = useGlowColours();
+
   return (
     <div
       className="absolute"
@@ -42,7 +49,7 @@ function GlowSpot({ glow }: { glow: Glow }): React.JSX.Element {
         top: glow.top,
         width: glow.size,
         height: glow.size,
-        backgroundImage: glowImage(glow),
+        backgroundImage: glowImage(glow, colours[glow.colour]),
       }}
     />
   );

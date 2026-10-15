@@ -78,7 +78,7 @@ const outcomes: { label: string; answer: ElicitationAnswer }[] = [
 function ElicitationGallery(args: GalleryArgs): React.JSX.Element {
   return (
     <View className="w-full items-center py-4">
-      <Variations className="max-w-composer!">
+      <Variations className="max-w-column!">
         <FormVariations {...args} />
         <OutcomeVariations />
         <Variation label="Already answered">

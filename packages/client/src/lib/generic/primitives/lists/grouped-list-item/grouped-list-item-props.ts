@@ -5,8 +5,11 @@ import type { IconName } from '../../../symbols/icon-names';
 export interface GroupedListItemProps {
   label: string;
   value?: string;
-  // A second line under the title, such as a folder's path; code draws it in the mono face.
-  subtitle?: { text: string; code?: boolean };
+  /*
+   * A second line under the title, such as a folder's path; code draws it in the mono face.
+   * numberOfLines caps it, ending in an ellipsis, such as an Agent's description in a list.
+   */
+  subtitle?: { text: string; code?: boolean; numberOfLines?: number };
   icon?: IconName;
   // An image in the icon's slot, such as an Agent's logo; it stands in for icon.
   leading?: ReactElement;

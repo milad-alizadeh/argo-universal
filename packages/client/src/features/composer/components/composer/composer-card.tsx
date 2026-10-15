@@ -18,7 +18,7 @@ const cardGlass = {
   interactive: true,
   className: 'w-full z-10',
   fallbackClassName:
-    'rounded-2xl bg-glass-card native:bg-background shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
+    'rounded-2xl bg-card shadow-card web:backdrop-blur-glass web:backdrop-saturate-180',
 } as const;
 
 export function ComposerCard(layout: CardLayout): React.JSX.Element {

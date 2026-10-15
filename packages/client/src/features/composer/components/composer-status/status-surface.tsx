@@ -17,8 +17,7 @@ const chipSurfaceProps = {
   corners: 'capsule',
   interactive: true,
   className: 'h-6',
-  fallbackClassName:
-    'rounded-full border border-border bg-card shadow-composer',
+  fallbackClassName: 'rounded-full border border-border bg-card shadow-card',
 } as const;
 
 export function ChipSurface({

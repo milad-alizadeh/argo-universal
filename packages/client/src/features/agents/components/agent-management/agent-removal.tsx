@@ -4,7 +4,6 @@ import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
 import { Text } from '#primitives/display/text';
 import { Alert } from '#primitives/overlays/alert';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export interface AgentRemovalProps {
   name: string;
@@ -72,9 +71,8 @@ type RemovalTriggerProps = AgentRemovalProps & { onOpen: () => void };
 
 const removalButtonPresentation = (
   props: RemovalTriggerProps,
-  wide: boolean,
 ): React.ComponentProps<typeof Button> => ({
-  label: wide ? `Remove ${props.name}` : `Remove ${props.name} Agent`,
+  label: `Remove ${props.name}`,
   size: 'sm',
   fullWidth: 'narrow',
   variant: 'outline',
@@ -85,5 +83,5 @@ const removalButtonPresentation = (
 });
 
 function RemovalButton(props: RemovalTriggerProps): React.JSX.Element {
-  return <Button {...removalButtonPresentation(props, useWide())} />;
+  return <Button {...removalButtonPresentation(props)} />;
 }

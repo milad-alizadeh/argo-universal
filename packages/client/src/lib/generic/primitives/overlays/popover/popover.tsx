@@ -86,7 +86,7 @@ function PopoverSurface(
       className={cn(contentClassName, props.className)}
       data-state={props.open ? 'open' : 'closed'}
     >
-      <TextClassContext.Provider value="text-card-foreground">
+      <TextClassContext.Provider value="text-foreground">
         <OverlayFields value>{props.children}</OverlayFields>
       </TextClassContext.Provider>
     </View>
