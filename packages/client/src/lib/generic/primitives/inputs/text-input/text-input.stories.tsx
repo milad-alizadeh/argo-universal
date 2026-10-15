@@ -37,7 +37,7 @@ function VariationsExample(): React.JSX.Element {
     <GroupedList>
       <RowSection />
       <InvalidSection />
-      <GroupedListSection title="Row disabled">
+      <GroupedListSection textFields title="Row disabled">
         <TypedRow label="Name" initial="Example ACP" disabled />
       </GroupedListSection>
       <GroupedListContent>
