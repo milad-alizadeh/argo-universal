@@ -72,8 +72,9 @@ function undimmed(button: ActingButton): ReactElement {
   });
 }
 
+// Spans the group's height, which grows to the touch size on phones, with its line centred.
 const divider = (
-  <View key="divider" className="h-7 w-px justify-center bg-primary">
+  <View key="divider" className="w-px self-stretch justify-center bg-primary">
     <View className="h-3.5 bg-primary-foreground/25" />
   </View>
 );
