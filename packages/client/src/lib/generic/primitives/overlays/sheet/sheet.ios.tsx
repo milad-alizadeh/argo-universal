@@ -50,7 +50,7 @@ function SystemSheet(props: PresentationProps): ReactElement {
       onIsPresentedChange={presentedChange(props)}
       onDismiss={props.stack.reports.closed}
       fitToContents={detentsOf(props) === undefined}
-      anchor={<SheetTrigger {...props} />}
+      anchor={props.trigger ? <SheetTrigger {...props} /> : undefined}
     >
       <Group modifiers={useSheetModifiers(props)}>
         <SheetPages {...props} />
