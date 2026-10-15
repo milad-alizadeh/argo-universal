@@ -6,6 +6,7 @@ import { rowClasses } from '#primitives/lists/grouped-list-item';
 import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
 import { isInvalid, type TextFieldProps } from './text-input-props';
+import { FieldSpinner } from './text-input-spinner';
 
 // A section row: the label, then the field filling the rest; the row shows the focus ring.
 export function RowTextInput(props: TextFieldProps): React.JSX.Element {
@@ -18,6 +19,7 @@ export function RowTextInput(props: TextFieldProps): React.JSX.Element {
     >
       <RowLabel {...props} />
       <RowInput {...props} />
+      <FieldSpinner {...props} />
     </View>
   );
 }

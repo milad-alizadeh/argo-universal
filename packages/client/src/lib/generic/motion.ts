@@ -6,7 +6,7 @@ export const motionDuration = {
   enterDelay: 50,
   expand: 250,
   collapse: 200,
-  shellPane: 280,
+  framePane: 280,
 };
 
 // Cubic Bézier control points, as CSS `cubic-bezier(x1, y1, x2, y2)` takes them.

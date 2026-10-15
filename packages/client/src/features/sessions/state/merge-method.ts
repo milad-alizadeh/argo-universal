@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type QueryClient, queryOptions } from '@tanstack/react-query';
 
 // The ways GitHub merges a PR, as its merge button offers them.
-export const mergeMethods = ['squash', 'merge', 'rebase'] as const;
+const mergeMethods = ['squash', 'merge', 'rebase'] as const;
 
 export type MergeMethod = (typeof mergeMethods)[number];
 

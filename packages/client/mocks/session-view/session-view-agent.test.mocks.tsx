@@ -1,9 +1,9 @@
 import type { AgentInfo } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { idleSession } from '../../src/features/sessions/components/session-view/session-view.mocks';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
+import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import {
   idleConfiguration,
   openProps,

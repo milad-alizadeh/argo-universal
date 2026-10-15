@@ -8,7 +8,7 @@ const meta = {
   component: SessionsLoading,
   parameters: { previewPadding: false },
   render: (): React.JSX.Element => (
-    <View className="w-full bg-content wide:w-shell-list">
+    <View className="w-full bg-content wide:w-frame-list">
       <SessionsLoading />
     </View>
   ),

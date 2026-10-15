@@ -91,7 +91,7 @@ export function ComposerOverview(args: ComposerMockProps): React.JSX.Element {
 function ComposerVariations(args: ComposerMockProps): React.JSX.Element {
   return (
     <View className="w-full items-center p-4">
-      <View className="w-full max-w-composer">
+      <View className="w-full max-w-column">
         <Variations className="max-w-none">
           {variations.map((variation) => (
             <Variation key={variation.label} label={variation.label}>

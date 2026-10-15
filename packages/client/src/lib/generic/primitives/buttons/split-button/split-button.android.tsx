@@ -13,10 +13,10 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
+import { MenuDropdownItems } from '#primitives/overlays/menu';
 import { ChevronIcon } from './split-button-icons.android';
 import { type NativeSplit, nativeSplit } from './split-button-items';
 import { type HalfSide, halfLook } from './split-button-look.android';
-import { MenuItems, type RunItem } from './split-button-menu.android';
 import type { SplitButtonProps } from './split-button-props';
 
 export type {
@@ -34,8 +34,8 @@ type HalfProps = Pick<NativeSplit, 'primary' | 'enabled'> & {
 
 interface SplitMenuState {
   open: boolean;
-  setOpen: (open: boolean) => void;
-  run: RunItem;
+  show: () => void;
+  close: () => void;
 }
 
 type MenuHalfProps = NativeSplit & { menu: SplitMenuState };
@@ -65,7 +65,7 @@ function SplitRow(split: NativeSplit): React.JSX.Element {
   );
 }
 
-// The menu sits on the card surface, as Paper's popover does.
+// The kit Menu's Compose DropdownMenu and rows, on the card surface, opened from the stock chevron button.
 function MenuHalf({ menu, ...split }: MenuHalfProps): React.JSX.Element {
   const { colors } = useNativeTheme();
 
@@ -73,12 +73,12 @@ function MenuHalf({ menu, ...split }: MenuHalfProps): React.JSX.Element {
     <DropdownMenu
       color={colors.card}
       expanded={menu.open}
-      onDismissRequest={() => menu.setOpen(false)}
+      onDismissRequest={menu.close}
     >
       <DropdownMenu.Trigger>
-        <ChevronHalf {...split} onOpen={() => menu.setOpen(true)} />
+        <ChevronHalf {...split} onOpen={menu.show} />
       </DropdownMenu.Trigger>
-      <MenuItems items={split.items} run={menu.run} />
+      <MenuDropdownItems items={split.items} onChosen={menu.close} />
     </DropdownMenu>
   );
 }
@@ -101,12 +101,7 @@ function useSplitMenu(enabled: boolean): SplitMenuState {
 
   if (!enabled && open) setOpen(false);
 
-  const run = (press: () => void): void => {
-    setOpen(false);
-    press();
-  };
-
-  return { open, setOpen, run };
+  return { open, show: () => setOpen(true), close: () => setOpen(false) };
 }
 
 // A filled button beside a filled primary action, otherwise the tonal one; Argo's colours, the split's corners.

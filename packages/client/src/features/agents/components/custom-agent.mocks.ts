@@ -1,7 +1,7 @@
 import type { AgentRegistration, CustomAgentDefinition } from '@repo/contracts';
 import { fn, type Mock } from 'storybook/test';
+import type { CustomAgentDetailViewProps } from '../../../screens/settings/agents/$agent/custom-agent-detail-view';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
-import type { CustomAgentDetailViewProps } from './custom-agent-detail-view/custom-agent-detail-view';
 
 export const customAgentId = 'custom-agent-1';
 

@@ -4,7 +4,9 @@ import { Text } from '#primitives/display/text';
 import { Field } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { BareTextInput } from './text-input-bare';
+import { requiredLabel } from './text-input-label';
 import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
+import { FieldSpinner } from './text-input-spinner';
 
 export function StandaloneTextInput(
   props: StandaloneTextInputProps,
@@ -25,7 +27,10 @@ function TextField(props: StandaloneTextInputProps): ReactElement {
   return (
     <View className="gap-1.5">
       <FieldLabel {...props} />
-      <BareTextInput {...inputProps(props)} aria-describedby={describedBy} />
+      <View className="flex-row items-center gap-2">
+        <BareTextInput {...inputProps(props)} aria-describedby={describedBy} />
+        <FieldSpinner {...props} />
+      </View>
     </View>
   );
 }
@@ -33,8 +38,7 @@ function TextField(props: StandaloneTextInputProps): ReactElement {
 function FieldLabel(props: StandaloneTextInputProps): ReactElement {
   return (
     <Text aria-hidden role="body">
-      {props.label}
-      {props.required ? ' *' : ''}
+      {requiredLabel(props)}
     </Text>
   );
 }
@@ -49,7 +53,7 @@ function inputProps(props: StandaloneTextInputProps): InputProps & {
     ...inputBehaviour(props),
     'aria-invalid': isInvalid(props),
     'aria-required': props.required,
-    className: 'rounded-lg type-control shadow-none dark:bg-background',
+    className: 'flex-1 rounded-control type-control shadow-none dark:bg-card',
   };
 }
 

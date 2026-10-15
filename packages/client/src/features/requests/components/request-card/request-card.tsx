@@ -6,7 +6,7 @@ import {
   useContentWide,
 } from '#lib/product/content-layout';
 import { Text } from '#primitives/display/text';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet';
+import { Sheet } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';
@@ -77,10 +77,7 @@ function containerClassName({
 }: Pick<RequestCardProps, 'surface' | 'appearance'>): string {
   if (surface === 'tray') return 'w-full gap-3 px-3 pt-3 pb-3.5';
 
-  return cn(
-    'w-full max-w-composer',
-    appearance !== 'embedded' && cardClassName,
-  );
+  return cn('w-full max-w-column', appearance !== 'embedded' && cardClassName);
 }
 
 function RequestContents(props: RequestCardProps): ReactNode {
@@ -95,7 +92,7 @@ function RequestContents(props: RequestCardProps): ReactNode {
 }
 
 const cardClassName =
-  'rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180';
+  'rounded-2xl bg-card shadow-card web:backdrop-blur-glass web:backdrop-saturate-180';
 
 function RequestBody({
   state,
@@ -127,17 +124,16 @@ function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
 
 function RequestSheet(props: RequestCardProps): ReactNode {
   return (
-    <BottomSheet
+    <Sheet
       open
       onOpenChange={() => {}}
       dismissible={false}
-      expandable
-      initialSize={props.surface === 'tray' ? 'medium' : undefined}
+      detents={['medium', 'large']}
       label={props.sheetLabel}
       footer={<SheetFooter {...props} />}
     >
       <SheetContents {...props} />
-    </BottomSheet>
+    </Sheet>
   );
 }
 

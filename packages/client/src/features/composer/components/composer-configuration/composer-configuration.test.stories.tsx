@@ -8,7 +8,7 @@ import {
 } from '../../../../../mocks/composer-configuration/fast-mode';
 import { heldConfiguration } from '../../../../../mocks/composer-configuration/held-configuration';
 import {
-  LongListsScrollUnderFadesWide as longListsWide,
+  LongListsReachableWide as longListsWide,
   LongListsReachableInPhoneSheet as longListsPhone,
   ShortListsHaveNoFadesWide as shortListsWide,
 } from '../../../../../mocks/composer-configuration/long-lists';
@@ -16,7 +16,7 @@ import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { ComposerAgentModelControl } from './composer-configuration';
 import { DefaultEffort } from './composer-configuration.stories';
 
-export const LongListsScrollUnderFadesWide = longListsWide;
+export const LongListsReachableWide = longListsWide;
 
 export const LongListsReachableInPhoneSheet = longListsPhone;
 

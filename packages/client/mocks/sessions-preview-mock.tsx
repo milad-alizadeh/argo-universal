@@ -2,17 +2,17 @@ import { type ComponentProps, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { SessionsHeader } from '../src/features/sessions/components/sessions-header';
 import {
-  SessionsView,
-  type SessionsViewProps,
-} from '../src/features/sessions/components/sessions-view/sessions-view';
+  SessionListView,
+  type SessionListViewProps,
+} from '../src/screens/sessions/session-list-view';
 
-export function SessionsPreviewMock(args: SessionsViewProps): ReactElement {
+export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
   const props = usePreviewSessions(args);
 
   return (
     <View className="flex-1 w-full" style={{ minHeight: 0 }}>
       <PreviewHeader {...props} />
-      <SessionsView
+      <SessionListView
         {...args}
         query={props.query}
         archived={props.archived}
@@ -22,10 +22,10 @@ export function SessionsPreviewMock(args: SessionsViewProps): ReactElement {
   );
 }
 
-type PreviewProps = SessionsViewProps &
+type PreviewProps = SessionListViewProps &
   Pick<ComponentProps<typeof SessionsHeader>, 'onArchivedChange'>;
 
-function usePreviewSessions(args: SessionsViewProps): PreviewProps {
+function usePreviewSessions(args: SessionListViewProps): PreviewProps {
   const [query, setQuery] = useState(args.query);
   const [archived, setArchived] = useState(args.archived);
   const sessions = matchingSessions(args.sessions, query, archived);
@@ -57,10 +57,10 @@ function PreviewHeader(
 }
 
 function matchingSessions(
-  sessions: SessionsViewProps['sessions'],
+  sessions: SessionListViewProps['sessions'],
   query: string,
   archived: boolean,
-): SessionsViewProps['sessions'] {
+): SessionListViewProps['sessions'] {
   return sessions.filter(
     (session) =>
       (session.archivedAt !== null) === archived &&

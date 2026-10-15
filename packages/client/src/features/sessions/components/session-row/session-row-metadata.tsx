@@ -25,7 +25,7 @@ export interface SessionRowMetadataProps {
 }
 
 export function markSurface(selected: boolean): string {
-  return selected ? 'border-hover bg-hover' : 'border-content bg-content';
+  return selected ? 'border-muted bg-muted' : 'border-content bg-content';
 }
 
 function subagentsStatus({

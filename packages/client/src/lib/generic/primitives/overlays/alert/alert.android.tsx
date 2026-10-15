@@ -1,9 +1,20 @@
-import { AlertDialog, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
+// Stock Compose AlertDialog: Expo UI has no universal alert; iOS uses SwiftUI's alert.
+import {
+  AlertDialog,
+  CircularProgressIndicator,
+  Row,
+  Text,
+  TextButton,
+} from '@expo/ui/jetpack-compose';
+import { semantics, size } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { type NativeColors, useNativeTheme } from '#lib/generic/native-theme';
+import { useNativeTheme } from '#lib/generic/native-theme';
+import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
+  ignoreCloseWhileBusy,
+  isAlertActionEnabled,
   type AlertAction,
   type AlertProps,
 } from './alert-props';
@@ -20,12 +31,10 @@ export function Alert(props: AlertProps): React.JSX.Element | null {
 }
 
 function OpenAlert(props: AlertProps): React.JSX.Element {
-  const { colors } = useNativeTheme();
-
   return (
     <AlertDialog
-      onDismissRequest={() => props.onOpenChange(false)}
-      colors={alertColors(colors)}
+      colors={useDialogColors()}
+      onDismissRequest={() => ignoreCloseWhileBusy(props)(false)}
     >
       <AlertTitle title={props.title} />
       <AlertMessage message={props.message} />
@@ -35,12 +44,13 @@ function OpenAlert(props: AlertProps): React.JSX.Element {
   );
 }
 
-function alertColors(
-  colors: NativeColors,
-): React.ComponentProps<typeof AlertDialog>['colors'] {
+// The card surface, the foreground title and the muted message, through AlertDialog's colors prop.
+function useDialogColors(): React.ComponentProps<typeof AlertDialog>['colors'] {
+  const colors = useNativeTheme().colors;
+
   return {
     containerColor: colors.card,
-    titleContentColor: colors.cardForeground,
+    titleContentColor: colors.foreground,
     textContentColor: colors.mutedForeground,
   };
 }
@@ -60,7 +70,7 @@ function AlertAnswers(props: AlertProps): React.JSX.Element {
     <AlertDialog.ConfirmButton>
       <Row horizontalArrangement={{ spacedBy: 8 }}>
         {answers.map((action) => (
-          <AlertButton key={action.label} action={action} {...props} />
+          <AlertButton key={action.label} {...props} action={action} />
         ))}
       </Row>
     </AlertDialog.ConfirmButton>
@@ -88,25 +98,71 @@ function AlertCancel(
 
   return (
     <AlertDialog.DismissButton>
-      <AlertButton action={action} onOpenChange={props.onOpenChange} />
+      <AlertButton {...props} action={action} />
     </AlertDialog.DismissButton>
   );
 }
 
-function AlertButton(
-  props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction },
-): React.JSX.Element {
-  const { colors } = useNativeTheme();
+type AlertButtonProps = Pick<AlertProps, 'actions' | 'onOpenChange'> & {
+  action: AlertAction;
+};
 
-  const color = props.action.tone === 'danger' ? colors.danger : colors.primary;
-
+// Material's TextButton `enabled` greys an answer that cannot run; a running one leads with the spinner, as Button does.
+function AlertButton(props: AlertButtonProps): React.JSX.Element {
   return (
     <TextButton
+      enabled={isAlertActionEnabled(props.action, props.actions)}
+      colors={useButtonColors(props.action)}
       onClick={alertActionPress(props.action, props.onOpenChange)}
-      colors={{ contentColor: color }}
     >
-      <Text style={{ typography: 'labelLarge' }}>{props.action.label}</Text>
+      <AlertButtonLabel action={props.action} />
     </TextButton>
+  );
+}
+
+// The answer's tone; a disabled answer takes Material's 38% foreground instead.
+function useButtonColors(
+  action: AlertAction,
+): React.ComponentProps<typeof TextButton>['colors'] {
+  const colors = useNativeTheme().colors;
+
+  return {
+    contentColor: action.tone === 'danger' ? colors.danger : colors.accent,
+    disabledContentColor: colors.disabledContent,
+  };
+}
+
+// The label takes its colour from the TextButton around it.
+function AlertButtonLabel({
+  action,
+}: Pick<AlertButtonProps, 'action'>): React.JSX.Element {
+  return (
+    <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 8 }}>
+      <AlertButtonSpinner action={action} />
+      <NativeText role="control">{action.label}</NativeText>
+    </Row>
+  );
+}
+
+// Material's button icon size, ButtonDefaults.IconSize.
+const spinnerSize = 18;
+
+// A running answer is disabled, so its spinner takes the label's disabled colour.
+function AlertButtonSpinner({
+  action,
+}: Pick<AlertButtonProps, 'action'>): React.JSX.Element | null {
+  const colors = useNativeTheme().colors;
+
+  if (!action.loading) return null;
+
+  return (
+    <CircularProgressIndicator
+      color={colors.disabledContent}
+      modifiers={[
+        size(spinnerSize, spinnerSize),
+        semantics({ contentDescription: action.label }),
+      ]}
+    />
   );
 }
 

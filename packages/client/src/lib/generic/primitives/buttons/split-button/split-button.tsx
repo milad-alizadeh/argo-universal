@@ -10,11 +10,8 @@ import { cn } from '#lib/generic/utils';
 import { ButtonGroup } from '#primitives/buttons/button-group';
 import { Menu } from '#primitives/overlays/menu';
 import { chevron } from './split-button-chevron';
-import type {
-  SplitButtonProps,
-  SplitMenuItems,
-  SplitMenuProps,
-} from './split-button-props';
+import { menuRows } from './split-button-items';
+import type { SplitButtonProps, SplitMenuProps } from './split-button-props';
 
 export type {
   SplitButtonOption,
@@ -49,7 +46,7 @@ function groupClassName(props: GroupLook): string | undefined {
   if (props.size !== 'xs') return props.className;
 
   return cn(
-    'rounded-md web:shadow-xs',
+    'rounded-md web:rounded-control web:shadow-control',
     props.disabled && 'opacity-35',
     props.className,
   );
@@ -95,19 +92,10 @@ function SplitMenu<Value extends string>({
 }: SplitMenuProps<Value> & { height?: number }): ReactNode {
   return (
     <Menu
-      {...menuItems(props)}
+      {...menuRows(props)}
       disabled={props.disabled}
       accessibilityLabel={props.menuLabel}
       trigger={chevron({ ...props, height: props.narrow ? height : undefined })}
     />
   );
-}
-
-function menuItems<Value extends string>(
-  props: SplitMenuItems<Value>,
-): SplitMenuItems<Value> {
-  if (props.actions) return { actions: props.actions };
-  const { options, value, onValueChange } = props;
-
-  return { options, value, onValueChange };
 }

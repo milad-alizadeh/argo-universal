@@ -94,7 +94,7 @@ function LoadingExample(): React.JSX.Element {
 }
 
 const filterDot = (
-  <View className="absolute top-1.5 right-1.5 size-[7px] rounded-full border-[1.5px] border-background bg-foreground" />
+  <View className="absolute top-1.5 right-1.5 size-1.75 rounded-full border-[1.5px] border-card bg-foreground" />
 );
 
 function BadgeExample(): React.JSX.Element {

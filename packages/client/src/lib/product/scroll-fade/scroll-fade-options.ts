@@ -20,7 +20,23 @@ export interface ScrollFadeOptions {
 }
 
 // How deep content fades at each edge unless a caller says otherwise.
-export const scrollFadeDepth = { top: 28, bottom: 36 } as const;
+const scrollFadeDepth = { top: 28, bottom: 36 } as const;
+
+const edgeDepth = (
+  edge: ScrollFadeEdgeName,
+  depth: PerEdge<number> | undefined,
+): number => depth?.[edge] ?? scrollFadeDepth[edge];
+
+// Each edge's depth: the caller's, or the default.
+export const fadeDepth = (
+  depth: PerEdge<number> | undefined,
+): Required<PerEdge<number>> => ({
+  top: edgeDepth('top', depth),
+  bottom: edgeDepth('bottom', depth),
+});
+
+// The gap a scroll view leaves below its last row unless it sets its own bottom padding.
+export const scrollFadeEndGap = '--spacing-4';
 
 // How far content scrolls past an edge before its fade is whole; react-native-web.css keeps the same length for the web.
 export const scrollFadeRamp = 24;
@@ -46,11 +62,6 @@ export const edgeMode = (
   edge: ScrollFadeEdgeName,
   edges: PerEdge<ScrollFadeEdge> | undefined,
 ): ScrollFadeEdge => edges?.[edge] ?? 'scrolled';
-
-export const edgeDepth = (
-  edge: ScrollFadeEdgeName,
-  depth: PerEdge<number> | undefined,
-): number => depth?.[edge] ?? scrollFadeDepth[edge];
 
 export const edgeInset = (
   edge: ScrollFadeEdgeName,

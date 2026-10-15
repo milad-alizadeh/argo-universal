@@ -1,25 +1,21 @@
 import { expect, waitFor, within } from 'storybook/test';
+import { layoutWidths } from '../../src/lib/generic/each-layout';
+import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import {
   pullRequestMocks,
   withPullRequests,
-} from '../../src/features/sessions/components/session-view/session-view-pull-request.mocks';
+} from '../../src/screens/sessions/$id/session-detail-view-pull-request.mocks';
 import {
   idleSession,
   runningSession,
-} from '../../src/features/sessions/components/session-view/session-view.mocks';
-import { layoutWidths } from '../../src/lib/generic/each-layout';
-import { settleViewport } from '../../src/lib/generic/settle-viewport';
+} from '../../src/screens/sessions/$id/session-detail-view.mocks';
 import { openProps, type Story } from './session-view-story.test.mocks';
-
-type StoryContext = Parameters<NonNullable<Story['play']>>[0];
 
 const mergeLabel = 'Merge PR';
 
 const optionsLabel = 'Merge options';
 
-const rebaseLabel = 'Rebase and merge';
-
-const checksPassed = {
+export const checksPassed = {
   view: {
     state: 'open',
     ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
@@ -60,79 +56,6 @@ export const mergesWhenChecksPass: Story = {
     await expect(openProps(args.view).header.onMerge).toHaveBeenCalledWith(
       45,
       'squash',
-    );
-  },
-};
-
-async function pickMethod(
-  { canvas, userEvent }: Pick<StoryContext, 'canvas' | 'userEvent'>,
-  name: string,
-): Promise<void> {
-  await settleViewport(layoutWidths.wide);
-  await expect(
-    await canvas.findByLabelText('Checks 5/5, passed'),
-  ).toBeVisible();
-  await userEvent.click(canvas.getByRole('button', { name: optionsLabel }));
-
-  const method = await within(document.body).findByRole('menuitemradio', {
-    name,
-  });
-
-  // The menu fades in.
-  await waitFor(() => expect(method).toBeVisible());
-  await userEvent.click(method);
-}
-
-// A method picked from the chevron's menu is the one Merge PR runs, and this device keeps it.
-export const mergesByThePickedMethod: Story = {
-  args: checksPassed,
-  play: async (context) => {
-    const { header } = openProps(context.args.view);
-    await pickMethod(context, rebaseLabel);
-    await expect(header.onMergeMethodChange).toHaveBeenCalledWith('rebase');
-    await expect(header.onMerge).not.toHaveBeenCalled();
-    await context.userEvent.click(
-      context.canvas.getByRole('button', { name: mergeLabel }),
-    );
-    await expect(header.onMerge).toHaveBeenCalledWith(45, 'rebase');
-  },
-};
-
-// The menu ticks the method picked last.
-export const ticksThePickedMethod: Story = {
-  args: checksPassed,
-  play: async (context) => {
-    await pickMethod(context, rebaseLabel);
-    await context.userEvent.click(
-      context.canvas.getByRole('button', { name: optionsLabel }),
-    );
-    const menu = within(document.body);
-
-    await expect(
-      await menu.findByRole('menuitemradio', { name: rebaseLabel }),
-    ).toHaveAttribute('aria-checked', 'true');
-    await expect(
-      menu.getByRole('menuitemradio', { name: 'Squash and merge' }),
-    ).toHaveAttribute('aria-checked', 'false');
-  },
-};
-
-// The method this device used last is ticked, and Merge PR runs it.
-export const mergesByTheLastMethod: Story = {
-  args: {
-    view: {
-      ...checksPassed.view,
-      header: { ...checksPassed.view.header, mergeMethod: 'merge' },
-    },
-  },
-  play: async ({ canvas, args, userEvent }) => {
-    await settleViewport(layoutWidths.wide);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: mergeLabel }),
-    );
-    await expect(openProps(args.view).header.onMerge).toHaveBeenCalledWith(
-      45,
-      'merge',
     );
   },
 };

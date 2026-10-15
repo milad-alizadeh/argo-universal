@@ -2,6 +2,7 @@ import type { Page, WebSocketRoute } from '@playwright/test';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 import { Given, Then } from './fixtures';
+import { reloadApp } from './frame';
 
 const dropped = new WeakSet<Page>();
 
@@ -76,7 +77,7 @@ Given(
       if (dropped.has(page)) route.connectToServer();
       else interruptAcceptedResponse(page, route);
     });
-    await page.reload();
+    await reloadApp(page);
   },
 );
 

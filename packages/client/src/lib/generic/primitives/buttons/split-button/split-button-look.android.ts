@@ -1,6 +1,11 @@
-import type { ButtonColors, ButtonProps } from '@expo/ui/jetpack-compose';
-import type { NativeColors } from '#lib/generic/native-theme';
-import { roundedSidesOutline } from '#primitives/native/native-modifiers';
+import {
+  type ButtonColors,
+  type ButtonProps,
+  Shape,
+} from '@expo/ui/jetpack-compose';
+import type { NativeTheme } from '#lib/generic/native-theme';
+
+type NativeColors = NativeTheme['colors'];
 
 export type HalfSide = 'leading' | 'trailing';
 
@@ -35,4 +40,19 @@ export function halfLook(
     colors: halfColors(colors, primary),
     shape: roundedSidesOutline(start, end),
   };
+}
+
+// The stock button's own `shape`: its start corners and end corners each take one radius.
+function roundedSidesOutline(
+  start: number,
+  end: number,
+): NonNullable<ButtonProps['shape']> {
+  return Shape.RoundedCorner({
+    cornerRadii: {
+      topStart: start,
+      bottomStart: start,
+      topEnd: end,
+      bottomEnd: end,
+    },
+  });
 }

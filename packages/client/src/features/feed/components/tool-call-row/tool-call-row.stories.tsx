@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 export const Overview: Story = {
   name: 'ToolCallRow',
   render: () => (
-    <Variations className="max-w-composer!">
+    <Variations className="max-w-column!">
       <Variation label="Reading file">
         <ToolCallRow row={runningRead} />
       </Variation>

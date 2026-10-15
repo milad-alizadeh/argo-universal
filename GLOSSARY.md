@@ -204,6 +204,10 @@ _Avoid_: Notification, system message
 Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
 _Avoid_: Design system (for the code), component library
 
+**Frame**:
+The App's chrome around its pages: the rail, the section sidebar and the panes. It places them with a Scaffold.
+_Avoid_: Shell, app shell, chrome
+
 **Scaffold**:
 A kit component that arranges a screen's panes for its Size class, such as list and detail side by side on wide windows and drill-in on phones. Content is written once; the Scaffold places it.
 _Avoid_: Layout (for a whole screen), template

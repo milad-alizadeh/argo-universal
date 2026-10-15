@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
+import { reloadApp } from './frame';
 import { query } from './server-query';
 
 const titlePrefix = 'Long list Session';
@@ -86,7 +87,7 @@ Given(
   '{int} long-list Sessions',
   async ({ page, server }, count: number): Promise<void> => {
     await seedSessions(page, server.httpUrl, count);
-    await page.reload();
+    await reloadApp(page);
   },
 );
 

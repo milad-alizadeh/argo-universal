@@ -54,9 +54,11 @@ function opensAgentImage(viewportWidth: number, agent: MockAgent): Story {
         within(dialog).getByRole('img', { name: '32×32' }),
       ).toHaveAttribute('src', redSquareDataUrl);
       await userEvent.keyboard('{Escape}');
-      await expect(
-        within(document.body).queryByRole('dialog'),
-      ).not.toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          within(document.body).queryByRole('dialog'),
+        ).not.toBeInTheDocument(),
+      );
     },
   };
 }

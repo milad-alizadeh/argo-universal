@@ -7,14 +7,9 @@ import {
   menuStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
-import { optionalTint } from '#primitives/native/native-modifiers';
-import {
-  type NativeSplit,
-  type SplitMenuItem,
-  nativeSplit,
-} from './split-button-items';
+import type { NativeMenuItem } from '#primitives/overlays/menu';
+import { type NativeSplit, nativeSplit } from './split-button-items';
 import type { SplitButtonProps } from './split-button-props';
 
 export type {
@@ -23,7 +18,7 @@ export type {
   SplitMenuProps,
 } from './split-button-props';
 
-// A stock SwiftUI Menu with a primary action: a tap runs the button, a long press opens the menu.
+// A stock SwiftUI Menu with a primary action: a tap runs the button, a long press opens the menu. MenuView, the kit Menu's iOS drawing, has no primary action.
 export function SplitButton<Value extends string>(
   props: SplitButtonProps<Value>,
 ): React.JSX.Element {
@@ -35,45 +30,44 @@ export function SplitButton<Value extends string>(
 }
 
 function SplitMenu(split: NativeSplit): React.JSX.Element {
-  const modifiers = useSplitModifiers(split);
-
   return (
     <Menu
       label={split.acting.label}
       onPrimaryAction={split.acting.onPress}
-      modifiers={modifiers}
+      modifiers={splitModifiers(split)}
     >
       {split.items.map((item) => (
-        <MenuItem key={item.label} {...item} />
+        <MenuItem key={item.id} {...item} />
       ))}
     </Menu>
   );
 }
 
-// The stock button styles: prominent, in the accent, beside a primary action; bordered otherwise.
-function useSplitModifiers(split: NativeSplit): ModifierConfig[] {
-  const { accent } = useNativeTheme().colors;
-  const tint = split.primary ? optionalTint(accent) : [];
-
+// The stock button styles, prominent beside a primary action and bordered otherwise; the Host's seed colour tints them.
+function splitModifiers(split: NativeSplit): ModifierConfig[] {
   return [
     menuStyle('button'),
     buttonStyle(split.primary ? 'borderedProminent' : 'bordered'),
     accessibilityHint(split.menuLabel),
     disabled(!split.enabled),
-    ...tint,
   ];
 }
 
 // A choice draws as a menu toggle, so the system checkmark marks the chosen one; an action is a plain button.
-function MenuItem(item: SplitMenuItem): React.JSX.Element {
-  if (item.selected === undefined)
-    return <Button label={item.label} onPress={item.onPress} />;
+function MenuItem(item: NativeMenuItem): React.JSX.Element {
+  const modifiers = [disabled(item.disabled)];
+
+  if (item.checked === undefined)
+    return (
+      <Button label={item.title} onPress={item.choose} modifiers={modifiers} />
+    );
 
   return (
     <Toggle
-      label={item.label}
-      isOn={item.selected}
-      onIsOnChange={item.onPress}
+      label={item.title}
+      isOn={item.checked}
+      onIsOnChange={item.choose}
+      modifiers={modifiers}
     />
   );
 }

@@ -1,26 +1,38 @@
 import { expect, waitFor, within } from 'storybook/test';
-import {
-  modelsScrollId,
-  agentsScrollId,
-  chooseAgentLabel,
-  type PlayContext,
-} from './common';
+import { agentsScrollId, chooseAgentLabel, type PlayContext } from './common';
 import { lastLongModel, lastLongAgent } from './long-list-cases';
-import { expectScrollsUnderFades, lastVisible } from './scroll-reachability';
+import {
+  expectScrollsUnderFades,
+  lastVisible,
+  expectRowInsideScroll,
+} from './scroll-reachability';
 
 export async function selectLastDesktopModel(
   context: PlayContext,
 ): Promise<void> {
-  const overlay = within(document.body);
   await openModelChoices(context);
-  const models = await overlay.findByTestId(modelsScrollId);
+
+  const models = await within(document.body).findByRole('radiogroup', {
+    name: 'Models',
+  });
+
   await assertModelMenuInsideWindow();
-  await expectScrollsUnderFades(models, findLastModel);
+  await assertLastModelReachable(models);
   await selectLongModel(context, findLastModel);
 }
 
+async function assertLastModelReachable(models: HTMLElement): Promise<void> {
+  await waitFor(() =>
+    expect(models.scrollHeight).toBeGreaterThan(models.clientHeight),
+  );
+  models.scrollTop = models.scrollHeight;
+  await waitFor(async () =>
+    expectRowInsideScroll(models, await findLastModel()),
+  );
+}
+
 function findLastModel(): Promise<HTMLElement> {
-  return within(document.body).findByRole('button', {
+  return within(document.body).findByRole('radio', {
     name: lastLongModel.name,
   });
 }

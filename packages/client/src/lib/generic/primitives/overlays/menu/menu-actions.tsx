@@ -1,6 +1,7 @@
 import * as MenuPrimitive from '@rn-primitives/dropdown-menu';
 import type * as React from 'react';
 import { Text, TextClassContext } from '#primitives/display/text';
+import { MenuLoadingRow } from './menu-loading';
 import type { ActionMenuProps, MenuAction } from './menu-props';
 import {
   actionContentClassName,
@@ -12,12 +13,12 @@ import {
 export function MenuActions(props: ActionMenuProps): React.JSX.Element {
   return (
     <MenuPrimitive.Overlay>
-      <TextClassContext.Provider value="text-card-foreground">
+      <TextClassContext.Provider value="text-foreground">
         <MenuPrimitive.Content
           align={props.align ?? 'end'}
           className={actionContentClassName}
         >
-          {props.actions.map(actionItem)}
+          {props.loading ? <MenuLoadingRow /> : props.actions.map(actionItem)}
         </MenuPrimitive.Content>
       </TextClassContext.Provider>
     </MenuPrimitive.Overlay>
@@ -34,6 +35,7 @@ function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
       <MenuPrimitive.Item
         className={actionItemClassName}
         accessibilityState={selectedState(action)}
+        disabled={action.disabled}
         onPress={action.onPress}
         onKeyDown={stopSecondSelect}
       >

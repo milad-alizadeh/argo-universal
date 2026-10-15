@@ -30,7 +30,7 @@ function QuestionTitle({ title }: { title: string }): ReactElement {
       <Text
         role="heading"
         aria-level={2}
-        className="min-w-0 flex-1 ios:text-[17px] ios:leading-[22px] android:text-[18px] android:leading-6 android:font-medium ios:text-black android:text-[#1c1b1f] dark:ios:text-foreground dark:android:text-foreground"
+        className="min-w-0 flex-1 ios:text-[17px] ios:leading-[22px] android:text-[18px] android:leading-6 android:font-medium text-foreground"
       >
         {title}
       </Text>
@@ -43,7 +43,7 @@ function QuestionIcon(): ReactElement {
     <Icon
       name="question-bubble"
       role="body"
-      className="text-muted-foreground ios:text-[#8e8e93] android:text-[#1c1b1f] dark:ios:text-muted-foreground dark:android:text-foreground"
+      className="text-muted-foreground android:text-foreground"
     />
   );
 }
@@ -55,7 +55,7 @@ function QuestionProgress({ model }: ModelProps): ReactElement {
     <Text
       role="secondary"
       className={cn(
-        'pl-7.5 text-muted-foreground ios:text-[15px] ios:leading-5 ios:text-[#8e8e93] android:text-[#49454f] dark:ios:text-muted-foreground dark:android:text-muted-foreground',
+        'pl-7.5 text-muted-foreground ios:text-[15px] ios:leading-5',
         wide && 'pl-6.5',
       )}
     >

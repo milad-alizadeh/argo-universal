@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { contentActionClass } from '#primitives/buttons/button';
+import { CountBadge } from '#primitives/display/count-badge';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { Pressable } from '#primitives/pressable';
@@ -34,7 +35,7 @@ const drawerItemClass = (selected: boolean): string =>
   });
 
 function DrawerItemContent(props: DrawerItemProps): React.JSX.Element {
-  const { label, icon, selected, badge } = props;
+  const { label, icon, selected } = props;
   const muted = cn(!selected && 'text-muted-foreground');
   const labelClass = cn('flex-1', selected && 'font-semibold');
 
@@ -44,15 +45,9 @@ function DrawerItemContent(props: DrawerItemProps): React.JSX.Element {
       <Text role="body" className={labelClass}>
         {label}
       </Text>
-      <OptionalBadge badge={badge} />
+      <CountBadge badge={props.badge} />
     </>
   );
-}
-
-function OptionalBadge({
-  badge,
-}: Pick<DrawerItemProps, 'badge'>): React.ReactElement | null {
-  return badge?.element ?? null;
 }
 
 DrawerItem satisfies React.ComponentType<DrawerItemProps>;

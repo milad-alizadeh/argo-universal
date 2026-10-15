@@ -78,7 +78,7 @@ function webSwitchRow(props: BooleanProps): GroupedListItemProps {
 function SwitchAccessory(props: BooleanProps): React.JSX.Element {
   return (
     <View
-      pointerEvents="none"
+      className="pointer-events-none"
       aria-hidden
       importantForAccessibility="no-hide-descendants"
     >

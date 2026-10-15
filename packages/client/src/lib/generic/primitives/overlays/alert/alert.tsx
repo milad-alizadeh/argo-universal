@@ -5,26 +5,37 @@ import { Button } from '#primitives/buttons/button';
 import { DialogOverlay } from '#primitives/overlays/dialog';
 import {
   alertActionPress,
+  ignoreCloseWhileBusy,
+  isAlertActionEnabled,
   type AlertAction,
   type AlertProps,
 } from './alert-props';
 
 const contentClassName =
-  'bg-card z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6 web:w-96 web:rounded-surface web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200';
+  'bg-card z-50 mx-auto flex w-full min-w-80 max-w-sm flex-col gap-4 rounded-2xl p-6 web:w-96 web:rounded-sheet web:shadow-card web:animate-in web:fade-in-0 web:zoom-in-95 web:max-w-[calc(100%-2rem)] web:duration-200';
 
 // The web draws an alert as a centred dialog at every width, never as a sheet.
 export function Alert(props: AlertProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Root open={props.open} onOpenChange={props.onOpenChange}>
+    <DialogPrimitive.Root
+      open={props.open}
+      onOpenChange={ignoreCloseWhileBusy(props)}
+    >
       <DialogPrimitive.Portal>
         <DialogOverlay>
-          <DialogPrimitive.Content className={contentClassName}>
-            <AlertHeading title={props.title} message={props.message} />
-            <AlertButtons {...props} />
-          </DialogPrimitive.Content>
+          <AlertCard {...props} />
         </DialogOverlay>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+function AlertCard(props: AlertProps): React.JSX.Element {
+  return (
+    <DialogPrimitive.Content className={contentClassName}>
+      <AlertHeading title={props.title} message={props.message} />
+      <AlertButtons {...props} />
+    </DialogPrimitive.Content>
   );
 }
 
@@ -62,9 +73,12 @@ function cancelFirst(actions: readonly AlertAction[]): AlertAction[] {
   return [...actions].sort((a, b) => Number(!!b.cancel) - Number(!!a.cancel));
 }
 
-function AlertButton(
-  props: Pick<AlertProps, 'onOpenChange'> & { action: AlertAction },
-): React.JSX.Element {
+type AlertButtonProps = Pick<AlertProps, 'actions' | 'onOpenChange'> & {
+  action: AlertAction;
+};
+
+// A running answer draws the Button's own spinner; every answer waits for it.
+function AlertButton(props: AlertButtonProps): React.JSX.Element {
   const { action } = props;
 
   return (
@@ -72,6 +86,8 @@ function AlertButton(
       label={action.label}
       variant={action.cancel ? 'outline' : 'default'}
       tone={action.tone}
+      loading={action.loading}
+      disabled={!isAlertActionEnabled(action, props.actions)}
       onPress={alertActionPress(action, props.onOpenChange)}
     />
   );

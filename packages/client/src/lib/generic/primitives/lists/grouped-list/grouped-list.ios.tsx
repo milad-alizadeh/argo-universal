@@ -1,4 +1,6 @@
-import { Form, List } from '@expo/ui/swift-ui';
+// Split from Android: SwiftUI's Form scrolls the sections here, while Android scrolls them in React Native for its sheets.
+import { FieldGroup } from '@expo/ui';
+import { List } from '@expo/ui/swift-ui';
 import {
   listStyle,
   scrollContentBackground,
@@ -6,6 +8,7 @@ import {
 import type * as React from 'react';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
+import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
 import { GroupedList as WebGroupedList } from './grouped-list.tsx';
@@ -24,19 +27,44 @@ export function GroupedList(props: GroupedListProps): React.JSX.Element {
   );
 }
 
-// A sidebar list is a plain List, flat like the sidebar; any other is a grouped Form on the system grouped background.
+/*
+ * A sidebar list is a plain List, flat like the sidebar; any other is a grouped FieldGroup.
+ * The universal List takes no modifiers, so the plain, backgroundless sidebar List stays SwiftUI's.
+ */
 function PhoneFields({
   variant,
   children,
 }: GroupedListProps): React.JSX.Element {
-  if (variant === 'sidebar')
-    return (
-      <List modifiers={[listStyle('plain'), scrollContentBackground('hidden')]}>
-        {children}
-      </List>
-    );
+  return variant === 'sidebar' ? (
+    <SidebarFields>{children}</SidebarFields>
+  ) : (
+    <GroupedFields>{children}</GroupedFields>
+  );
+}
 
-  return <Form>{children}</Form>;
+function SidebarFields({
+  children,
+}: Pick<GroupedListProps, 'children'>): React.JSX.Element {
+  return (
+    <List modifiers={[listStyle('plain'), scrollContentBackground('hidden')]}>
+      {children}
+    </List>
+  );
+}
+
+function GroupedFields({
+  children,
+}: Pick<GroupedListProps, 'children'>): React.JSX.Element {
+  const { content } = useNativeTheme().colors;
+
+  return (
+    <FieldGroup
+      style={{ backgroundColor: content }}
+      modifiers={[scrollContentBackground('hidden')]}
+    >
+      {children}
+    </FieldGroup>
+  );
 }
 
 GroupedList satisfies React.ComponentType<GroupedListProps>;

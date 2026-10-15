@@ -2,8 +2,8 @@ import type * as React from 'react';
 import { type Ref, type RefObject, useRef } from 'react';
 import {
   type ElementFrame,
-  useShellTransition,
-} from '../../hooks/use-shell-transition.web';
+  useFrameTransition,
+} from '../../hooks/use-frame-transition.web';
 import type { GlassSurfaceProps } from './glass-surface';
 
 type PanelRef = RefObject<HTMLDivElement | null>;
@@ -35,7 +35,7 @@ function resizeAll(
 function useGlassMotion(props: GlassSurfaceProps): GlassRefs {
   const mask = useRef<HTMLDivElement>(null);
   const edge = useRef<HTMLDivElement>(null);
-  useShellTransition({
+  useFrameTransition({
     value: props.width,
     transitionKey: props.transitionKey,
     animate: props.animate,

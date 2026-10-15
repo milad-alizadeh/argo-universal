@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
@@ -12,7 +13,6 @@ import {
   sessionsScrollId,
   type Story,
 } from '../../../../../mocks/sessions-list/sessions-list-story-context.test.mocks';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { SessionsList } from './sessions-list';
 import { largeSessions, sessionsListProps } from './sessions-list.mocks';
 
@@ -62,6 +62,27 @@ export const ProjectActions: Story = {
   },
 };
 
+export const FlatSearchResults: Story = {
+  args: { query: 'a', flat: true },
+  play: async ({ canvas }) => {
+    const [firstSession] = sessionsListProps.sessions;
+
+    if (!firstSession) throw new Error('Missing Session mock');
+
+    const [firstRow] = await canvas.findAllByText(firstSession.title);
+    await expect(firstRow).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: exampleProjectName }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('button', { name: /^New Session in / }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.getAllByText(/^(now|\d+[mhdw])$/).length,
+    ).toBeGreaterThan(0);
+  },
+};
+
 export const ProjectActionsDark: Story = {
   ...ProjectActions,
   globals: { mode: 'dark' },
@@ -84,7 +105,7 @@ export const FirstAndLastRowsReachableDark: Story = {
 export const LargeListRendersWindow: Story = {
   parameters: { screenPreview: true },
   render: (args) => (
-    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+    <View className="flex-1 w-full wide:w-frame-list" style={{ minHeight: 0 }}>
       <SessionsList {...args} sessions={largeSessions} />
     </View>
   ),
@@ -101,7 +122,7 @@ export const LargeListRendersWindow: Story = {
 export const ScrollFade: Story = {
   parameters: { screenPreview: true },
   render: (args) => (
-    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+    <View className="flex-1 w-full wide:w-frame-list" style={{ minHeight: 0 }}>
       <SessionsList {...args} sessions={largeSessions.slice(0, 40)} />
     </View>
   ),

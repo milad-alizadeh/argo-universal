@@ -10,7 +10,7 @@ const InspectorContext = createContext<InspectorControl | null>(null);
 
 export const InspectorProvider = InspectorContext.Provider;
 
-// Null outside the wide shell, where no Inspector exists.
+// Null outside the wide Frame, where no Inspector exists.
 export function useInspector(): InspectorControl | null {
   return useContext(InspectorContext);
 }

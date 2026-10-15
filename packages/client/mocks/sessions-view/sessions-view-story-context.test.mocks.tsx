@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
 import { SessionsHeader } from '../../src/features/sessions/components/sessions-header';
-import { SessionsView } from '../../src/features/sessions/components/sessions-view/sessions-view';
-import { loadedSessionsView } from '../../src/features/sessions/components/sessions-view/sessions-view.mocks';
 import { useSessionsFilter } from '../../src/features/sessions/state/sessions-filter';
 import { useWide } from '../../src/lib/generic/use-wide/use-wide';
+import { SessionListView } from '../../src/screens/sessions/session-list-view';
+import { loadedSessionListView } from '../../src/screens/sessions/session-list-view.mocks';
 
 export const exampleProjectName = 'Example Project';
 
@@ -21,10 +21,10 @@ const spies = {
 };
 
 export const meta = {
-  title: 'Tests/SessionsView',
-  component: SessionsView,
+  title: 'Tests/SessionListView',
+  component: SessionListView,
   parameters: { screenPreview: true },
-  args: { ...loadedSessionsView, ...spies },
+  args: { ...loadedSessionListView, ...spies },
   // Wide, New Session sits in the sidebar's header row above the list.
   render: function WithHeader(args): React.JSX.Element {
     const wide = useWide();
@@ -35,13 +35,13 @@ export const meta = {
         {wide && (
           <SessionsHeader {...filter} onNewSession={args.onNewSession} />
         )}
-        <SessionsView {...args} />
+        <SessionListView {...args} />
       </>
     );
   },
   beforeEach: (): void => {
     for (const spy of Object.values(spies)) spy.mockClear();
   },
-} satisfies Meta<typeof SessionsView>;
+} satisfies Meta<typeof SessionListView>;
 
 export type Story = StoryObj<typeof meta>;

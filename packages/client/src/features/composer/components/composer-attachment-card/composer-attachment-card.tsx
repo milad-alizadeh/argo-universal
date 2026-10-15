@@ -24,7 +24,7 @@ export interface ComposerAttachmentCardProps {
 }
 
 const cardClass =
-  'group relative w-40 h-30 shrink-0 overflow-hidden rounded-md border bg-background';
+  'group relative w-40 h-30 shrink-0 overflow-hidden rounded-md border bg-card';
 
 const previewClass = 'h-22.5 overflow-hidden';
 
@@ -36,7 +36,7 @@ const kindClass = 'items-center justify-center gap-1 bg-muted';
 const mutedClass = 'text-muted-foreground';
 
 const removeClass =
-  'absolute right-0 top-0 size-8 sm:size-8 rounded-sm bg-background web:wide:opacity-0';
+  'absolute right-0 top-0 size-8 sm:size-8 rounded-sm bg-card web:wide:opacity-0';
 
 const removeHoverClass = (disabled: boolean): string =>
   disabled

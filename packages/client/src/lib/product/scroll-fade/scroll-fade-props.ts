@@ -1,10 +1,15 @@
-import type { StyleProp, ViewStyle } from 'react-native';
+import { useMemo } from 'react';
+import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+import { useResolveClassNames } from 'uniwind';
 import { useScrollColumnStyle } from '#lib/generic/scroll-column';
+import { useSpacing } from '#lib/generic/use-spacing';
 import type { ScrollFadeFrameProps } from './scroll-fade-frame-view';
-import type {
-  ScrollFadeOptions,
-  ScrollFadeTracking,
-  SizeChange,
+import {
+  type ScrollFadeOptions,
+  type ScrollFadeTracking,
+  type SizeChange,
+  fadeDepth,
+  scrollFadeEndGap,
 } from './scroll-fade-options';
 import { useScrollFadeTracking } from './scroll-fade-tracking';
 
@@ -12,6 +17,7 @@ import { useScrollFadeTracking } from './scroll-fade-tracking';
 interface ScrollableProps {
   onContentSizeChange?: SizeChange;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  contentContainerClassName?: string;
 }
 
 type ScrollProps<P> = Omit<
@@ -49,32 +55,107 @@ const sizeChangeProp = (
   onContentSizeChange: SizeChange | undefined,
 ): ScrollableProps => (onContentSizeChange ? { onContentSizeChange } : {});
 
+const bottomPaddings = [
+  'paddingBottom',
+  'paddingBlockEnd',
+  'paddingBlock',
+  'paddingVertical',
+  'padding',
+] as const;
+
+const setsBottomPadding = (style: ViewStyle): boolean =>
+  bottomPaddings.some((key) => style[key] !== undefined);
+
+function withEndGap(
+  style: StyleProp<ViewStyle>,
+  endGap: number,
+): StyleProp<ViewStyle> {
+  const own = StyleSheet.flatten(style) ?? {};
+
+  return setsBottomPadding(own) ? style : { paddingBottom: endGap, ...own };
+}
+
+// Left out when unset, as Legend List's web build hands it to the DOM.
+const classNameProp = (className: string | undefined): ScrollableProps =>
+  className ? { contentContainerClassName: className } : {};
+
+const useClassNamePads = (className: string | undefined): boolean =>
+  setsBottomPadding(useResolveClassNames(className ?? ''));
+
+// The last row rests a small gap above the bottom, where the fade lies, unless the content sets its own bottom padding.
+function useEndGap({
+  contentContainerStyle,
+  contentContainerClassName,
+}: ScrollableProps): StyleProp<ViewStyle> {
+  const endGap = useSpacing(scrollFadeEndGap);
+  const classNamePads = useClassNamePads(contentContainerClassName);
+
+  return useMemo(
+    () =>
+      classNamePads
+        ? contentContainerStyle
+        : withEndGap(contentContainerStyle, endGap),
+    [contentContainerStyle, classNamePads, endGap],
+  );
+}
+
+// The content's class and style, with the end gap and the column's width.
+function useContentProps(own: ScrollableProps): ScrollableProps {
+  return {
+    ...classNameProp(own.contentContainerClassName),
+    contentContainerStyle: useScrollColumnStyle(useEndGap(own)),
+  };
+}
+
+// The scroll view's props without the ones the fade takes over.
+function ownProps<P extends ScrollableProps>({
+  onContentSizeChange: _sizeChange,
+  contentContainerStyle: _style,
+  contentContainerClassName: _className,
+  ...rest
+}: P): Omit<P, keyof ScrollableProps> {
+  return rest;
+}
+
 function useScrollProps<P extends ScrollableProps>(
-  { onContentSizeChange, contentContainerStyle, ...props }: P,
+  props: P,
   tracking: ScrollFadeTracking,
 ): Omit<P, keyof ScrollableProps> & ScrollableProps {
   return {
-    ...props,
-    contentContainerStyle: useScrollColumnStyle(contentContainerStyle),
+    ...ownProps(props),
+    ...useContentProps(props),
     ...sizeChangeProp(
-      bothCallbacks(tracking.onContentSizeChange, onContentSizeChange),
+      bothCallbacks(tracking.onContentSizeChange, props.onContentSizeChange),
     ),
   };
 }
 
-// Splits any scroll view's props into its frame's and its own, and wires the two together so the fade follows the scroll.
-export function useScrollFade<P extends ScrollFadeOptions & ScrollableProps>({
+interface SplitProps<P> {
+  options: ScrollFadeOptions;
+  rest: Omit<P, keyof ScrollFadeOptions>;
+}
+
+// The fade's options apart from the scroll view's own props.
+function splitOptions<P extends ScrollFadeOptions>({
   edges,
   depth,
   inset,
   surfaceClassName,
-  ...props
-}: P): ScrollFade<P> {
+  ...rest
+}: P): SplitProps<P> {
+  return { options: { edges, depth, inset, surfaceClassName }, rest };
+}
+
+// Splits any scroll view's props into its frame's and its own, and wires the two together so the fade follows the scroll.
+export function useScrollFade<P extends ScrollFadeOptions & ScrollableProps>(
+  props: P,
+): ScrollFade<P> {
+  const { options, rest } = splitOptions(props);
   const tracking = useScrollFadeTracking();
-  const scroll = useScrollProps(props, tracking);
+  const scroll = useScrollProps(rest, tracking);
 
   return {
-    frame: { edges, depth, inset, surfaceClassName, tracking },
+    frame: { ...options, depth: fadeDepth(options.depth), tracking },
     scroll: { scrollEventThrottle: 16, ...scroll },
     attachScrollView: tracking.attachScrollView,
   };

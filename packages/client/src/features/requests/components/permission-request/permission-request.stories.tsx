@@ -83,7 +83,7 @@ function answeredState(kind: GalleryArgs['requestState']): RequestState {
 function WideGallery({ request }: { request: ReactNode }): React.JSX.Element {
   return (
     <View className="w-full items-center py-4">
-      <Variations className="max-w-composer!">
+      <Variations className="max-w-column!">
         <Variation label="Permission request">{request}</Variation>
         {galleryVariations.map(({ label, preview }) => (
           <Variation key={label} label={label}>

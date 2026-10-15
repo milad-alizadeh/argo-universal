@@ -24,7 +24,7 @@ export const meta = {
     onProjectSettings,
   },
   render: (args): React.JSX.Element => (
-    <View className="w-full wide:w-shell-list" style={{ height: 320 }}>
+    <View className="w-full wide:w-frame-list" style={{ height: 320 }}>
       <SessionsList {...args} />
     </View>
   ),

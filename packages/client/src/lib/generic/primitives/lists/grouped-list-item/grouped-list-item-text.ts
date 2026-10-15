@@ -1,20 +1,34 @@
-import type { TextRole } from '#primitives/display/text';
-import { useNativeTheme } from '../../../native-theme';
+import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import { Platform } from 'react-native';
+import type { NativeTextProps } from '#primitives/display/native-text';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 
-// A code title or subtitle draws in the mono face.
-export const titleRole = (code: boolean | undefined): TextRole =>
-  code ? 'code' : 'body';
+type Modifiers = NonNullable<NativeTextProps['modifiers']>;
 
-export const subtitleRole = (
-  subtitle: GroupedListItemProps['subtitle'],
-): TextRole => (subtitle?.code ? 'code' : 'secondary');
+export type RowTone =
+  | 'primary'
+  | 'secondary'
+  | NonNullable<GroupedListItemProps['tone']>;
 
-// The native colour a toned row's title draws in; none for a plain row.
-export function useToneColor(
-  tone: GroupedListItemProps['tone'],
-): string | undefined {
-  const { danger, accent, mutedForeground } = useNativeTheme().colors;
+const ios = Platform.OS === 'ios';
 
-  return tone && { danger, accent, muted: mutedForeground }[tone];
+/*
+ * iOS's system label colours, as a Form's button would tint its whole label; an accent row takes that tint.
+ * Android's NativeText and ListItem take colours through their public APIs.
+ */
+const swiftColors: Partial<Record<RowTone, string>> = {
+  primary: 'label',
+  secondary: 'secondaryLabel',
+  muted: 'secondaryLabel',
+};
+
+export function rowColor(tone: RowTone): Modifiers {
+  const color = ios ? swiftColors[tone] : undefined;
+
+  return color === undefined ? [] : [foregroundStyle({ type: 'color', color })];
 }
+
+// A Form row's subtitle reads in the subheadline style under the List's body text, which scales with Dynamic Type.
+export const subtitleModifiers: Modifiers = ios
+  ? [font({ textStyle: 'subheadline' }), ...rowColor('secondary')]
+  : [];

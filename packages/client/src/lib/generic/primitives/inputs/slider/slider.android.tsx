@@ -1,65 +1,87 @@
-import { Slider as NativeSlider } from '@expo/ui/jetpack-compose';
+// The universal Slider hides Compose's public colour props; keep Material's range control and drawing.
+import { Slider as MaterialSlider } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
-import type * as React from 'react';
+import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { ControlHost } from '#primitives/native/native-control';
 import type { SliderProps } from './slider-props';
-import { type SliderRange, sliderStopCount } from './slider-steps';
 
-type NativeSliderProps = React.ComponentProps<typeof NativeSlider>;
-
-// Expo's universal Slider takes no colours on Android, so Argo keeps the Compose one to draw its tint.
-export function Slider(props: SliderProps): React.JSX.Element {
-  const colors = useSliderColors();
-
+export function Slider(props: SliderProps): ReactElement {
   return (
     <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <NativeSlider
-        {...sliderAttributes(props)}
-        colors={colors}
-        modifiers={[semantics({ contentDescription: spokenName(props) })]}
-      />
+      <MaterialSlider {...controlProps(props)} colors={useSliderColors()} />
     </ControlHost>
   );
 }
 
-// @expo/ui's semantics take no state description, so TalkBack hears the value label inside the name.
-function spokenName(
-  props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
-): string {
-  return `${props.accessibilityLabel}, ${props.valueLabel}`;
-}
-
-function useSliderColors(): NativeSliderProps['colors'] {
-  const { accent, muted, border } = useNativeTheme().colors;
-
+function controlProps(
+  props: SliderProps,
+): React.ComponentProps<typeof MaterialSlider> {
   return {
-    thumbColor: accent,
-    activeTrackColor: accent,
-    inactiveTrackColor: border,
-    activeTickColor: muted,
-    inactiveTickColor: accent,
+    ...rangeProps(props),
+    enabled: !props.disabled,
+    onValueChange: changeHandler(props),
+    modifiers: [
+      semantics({
+        contentDescription: `${props.accessibilityLabel}, ${props.valueLabel}`,
+      }),
+    ],
   };
 }
 
-function sliderAttributes(props: SliderProps): NativeSliderProps {
+function changeHandler(
+  props: SliderProps,
+): React.ComponentProps<typeof MaterialSlider>['onValueChange'] {
+  if (props.disabled) return undefined;
+
+  return (value) => props.onValueChange(selectedStep(props, value));
+}
+
+function rangeProps(
+  props: SliderProps,
+): Pick<
+  React.ComponentProps<typeof MaterialSlider>,
+  'value' | 'min' | 'max' | 'steps'
+> {
   return {
     value: props.value ?? props.minimumValue,
     min: props.minimumValue,
     max: props.maximumValue,
-    steps: Math.max(0, sliderStopCount(props) - 2),
-    enabled: !props.disabled,
-    onValueChange: (value) => props.onValueChange(snapToStep(value, props)),
+    steps: rangeSteps(props),
   };
 }
 
-// Compose reports a stepped position as a float, so it is rounded onto the nearest stop.
-function snapToStep(value: number, range: SliderRange): number {
-  const stop = Math.round((value - range.minimumValue) / range.step);
+// Material counts the stops between the ends; Argo's step is the increment between values.
+function rangeSteps(props: SliderProps): number {
+  if (props.step <= 0) return 0;
 
-  return range.minimumValue + stop * range.step;
+  return Math.max(
+    0,
+    Math.round((props.maximumValue - props.minimumValue) / props.step) - 1,
+  );
+}
+
+function selectedStep(props: SliderProps, value: number): number {
+  if (props.step <= 0) return value;
+
+  return (
+    Math.round((value - props.minimumValue) / props.step) * props.step +
+    props.minimumValue
+  );
+}
+
+function useSliderColors(): React.ComponentProps<
+  typeof MaterialSlider
+>['colors'] {
+  const colors = useNativeTheme().colors;
+
+  return {
+    thumbColor: colors.primary,
+    activeTrackColor: colors.primary,
+    inactiveTrackColor: colors.border,
+    activeTickColor: colors.primaryForeground,
+    inactiveTickColor: colors.primary,
+  };
 }
 
 export type { SliderProps } from './slider-props';
-
-Slider satisfies React.ComponentType<SliderProps>;
