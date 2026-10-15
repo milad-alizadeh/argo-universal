@@ -1,7 +1,6 @@
 import { Button, Column, type ColumnProps } from '@expo/ui';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import {
-  badge,
   buttonStyle,
   disabled,
   listRowBackground,
@@ -9,7 +8,6 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { badgeCountText } from '#lib/generic/badge-count';
 import { useSidebarList } from '#primitives/fields/field-layout';
 import { useWide } from '../../../use-wide/use-wide';
 import {
@@ -101,15 +99,7 @@ function rowModifiers(
       : []),
     ...rowContainerAccessibility(props),
     disabled(!!props.disabled),
-    ...rowBadge(props.badge),
   ];
-}
-
-// SwiftUI's own List row badge: the count trails the row, before the chevron.
-function rowBadge(count: number | undefined): Modifiers {
-  const text = badgeCountText(count);
-
-  return text === undefined ? [] : [badge(text)];
 }
 
 GroupedListItem satisfies React.ComponentType<GroupedListItemProps>;
