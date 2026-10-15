@@ -3,18 +3,18 @@ import { cn } from '#lib/generic/utils';
 import type { ButtonProps } from './button-props';
 
 const buttonClasses = cva(
-  'group shrink-0 flex-row items-center justify-center gap-2 rounded-control shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-focus web:focus-visible:ring-[3px] web:focus-visible:ring-focus/50 disabled:pointer-events-none',
+  'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-focus web:focus-visible:ring-[3px] web:focus-visible:ring-focus/50 disabled:pointer-events-none',
   {
     variants: {
       variant: {
         default:
           'bg-primary web:shadow-xs active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
         outline:
-          'border border-border bg-card active:bg-muted web:hover:bg-muted dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
+          'border border-border bg-background active:bg-hover web:hover:bg-hover dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
         secondary:
-          'border border-border bg-card active:bg-muted web:hover:bg-muted dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
+          'border border-border bg-background active:bg-hover web:hover:bg-hover dark:bg-border/30 dark:active:bg-border/50 web:dark:hover:bg-border/50',
         ghost:
-          'active:bg-muted dark:active:bg-muted/50 web:hover:bg-muted web:dark:hover:bg-muted/50',
+          'active:bg-hover dark:active:bg-hover/50 web:hover:bg-hover web:dark:hover:bg-hover/50',
         link: '',
       },
       size: {
@@ -54,7 +54,7 @@ const nativeClasses = cva('ios:rounded-full android:rounded-full', {
 });
 
 // iOS labels its buttons at the size of its header text buttons, in medium weight.
-const nativeLabelClass = 'ios:type-nav-action ios:font-medium';
+const nativeLabelClass = 'ios:text-nav-action ios:font-medium';
 
 const textClasses = cva(
   'type-control web:pointer-events-none web:transition-colors',
@@ -62,9 +62,12 @@ const textClasses = cva(
     variants: {
       variant: {
         default: 'text-primary-foreground',
-        outline: 'text-foreground',
-        secondary: 'text-foreground',
-        ghost: 'text-foreground ios:font-normal',
+        outline:
+          'text-foreground group-active:text-hover-foreground web:group-hover:text-hover-foreground',
+        secondary:
+          'text-foreground group-active:text-hover-foreground web:group-hover:text-hover-foreground',
+        ghost:
+          'text-foreground group-active:text-hover-foreground ios:font-normal',
         link: 'text-primary web:underline-offset-4 group-active:underline web:group-hover:underline ios:font-normal',
       },
       destructive: { true: 'text-danger' },
@@ -84,43 +87,14 @@ export function contentButtonClass(props: ButtonClassProps): string {
   return cn(
     buttonClasses({ ...variants, fullWidth: fullWidth === true }),
     nativeClasses({ variant: props.variant, disabled: props.disabled }),
-    destructiveClasses({ tone: props.tone, variant: props.variant }),
+    props.tone === 'danger' && destructiveClass,
     className,
   );
 }
 
-const destructiveOutline =
-  'border border-border bg-card web:shadow-xs active:bg-danger/10 web:hover:bg-danger/10';
-
-const destructiveText =
-  'bg-transparent active:bg-danger/10 web:hover:bg-danger/10';
-
-// A destructive button without a variant draws as an outline.
-const destructiveClasses = cva('', {
-  variants: {
-    variant: { default: '', outline: '', secondary: '', ghost: '', link: '' },
-    tone: { danger: '' },
-  },
-  compoundVariants: [
-    {
-      tone: 'danger',
-      variant: 'default',
-      className:
-        'bg-danger ios:bg-danger active:bg-danger/90 web:hover:bg-danger/90',
-    },
-    {
-      tone: 'danger',
-      variant: ['outline', 'secondary'],
-      className: destructiveOutline,
-    },
-    {
-      tone: 'danger',
-      variant: ['ghost', 'link'],
-      className: destructiveText,
-    },
-  ],
-  defaultVariants: { variant: 'outline' },
-});
+// A destructive button is transparent whatever its variant: a red label, no fill, no border, a faint red tint on press or hover.
+const destructiveClass =
+  'border-0 bg-transparent web:shadow-none active:bg-danger/10 web:hover:bg-danger/10';
 
 export function contentTextClass(
   props: Pick<ButtonProps, 'tone' | 'variant'>,
@@ -130,7 +104,6 @@ export function contentTextClass(
   return cn(
     textClasses({ variant: props.variant, destructive }),
     nativeLabelClass,
-    destructive && props.variant === 'default' && 'text-white',
   );
 }
 

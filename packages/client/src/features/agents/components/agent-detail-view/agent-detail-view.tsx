@@ -18,7 +18,11 @@ import {
 import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
-import { AboutSection, AgentStatusSection } from './agent-detail-sections';
+import {
+  AboutSection,
+  AgentStatusSection,
+  showsStatusSection,
+} from './agent-detail-sections';
 
 export type { AgentDetailViewProps } from '../../state/agent-detail-types';
 
@@ -45,7 +49,8 @@ function AgentStatusChip({
 }: Pick<AgentDetailViewProps, 'agent'>): React.JSX.Element | null {
   const tone = statusTone(agent.status);
 
-  if (!tone) return null;
+  // A Status section names its own status, so the chip would repeat it.
+  if (!tone || showsStatusSection(agent.status)) return null;
 
   return (
     <Badge tone={tone}>

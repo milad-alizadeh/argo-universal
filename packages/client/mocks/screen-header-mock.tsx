@@ -1,23 +1,34 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
 
-// Stands in for the native stack's header in stories: one line of left item, title and right items.
+/*
+ * Stands in for the native stack's header in stories: one line of left item, title and right items.
+ * A centred title keeps a left slot to balance the right one. A search row with nothing on the left
+ * starts its title at the list's 16pt gutter; its last icon ends on the rows' chevron column, the
+ * gutter and row inset less the header button's own inset.
+ */
 export function ScreenHeaderMock({
   title,
   left,
   right,
   search,
 }: ScreenHeaderProps): React.JSX.Element {
+  const leading = left !== undefined || !search;
+
   return (
-    <View className="h-11 flex-row items-center bg-content px-1">
-      <View className="w-23 flex-row">{left}</View>
+    <View className={headerClasses(leading)}>
+      {leading ? <View className="w-23 flex-row">{left}</View> : null}
       <HeaderContent title={title} right={right} search={search} />
     </View>
   );
 }
+
+const headerClasses = (leading: boolean): string =>
+  cn('h-11 flex-row items-center bg-content', leading ? 'px-1' : 'pr-5 pl-4');
 
 function HeaderTitle({
   title,

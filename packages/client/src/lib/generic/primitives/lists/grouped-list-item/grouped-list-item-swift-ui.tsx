@@ -3,6 +3,7 @@ import {
   foregroundStyle,
   frame,
   accessibilityHidden,
+  lineLimit,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
@@ -58,8 +59,14 @@ function RowSubtitleText({
   const secondaryModifiers = useSwiftUITextModifiers(subtitleRole(subtitle));
   const muted = useRowColor('secondary');
 
+  const lines = subtitle.numberOfLines
+    ? [lineLimit(subtitle.numberOfLines)]
+    : [];
+
   return (
-    <Text modifiers={[...secondaryModifiers, muted]}>{subtitle.text}</Text>
+    <Text modifiers={[...secondaryModifiers, muted, ...lines]}>
+      {subtitle.text}
+    </Text>
   );
 }
 
