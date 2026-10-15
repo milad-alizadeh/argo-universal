@@ -1,10 +1,13 @@
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { cn } from '#lib/generic/utils';
-import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
+import {
+  ScrollFadeList,
+  useScrollFadeEndGap,
+} from '#lib/product/scroll-fade/scroll-fade-list';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListRows } from './sessions-list-entry-rows';
@@ -20,7 +23,6 @@ const contentStyle = {
   paddingLeft: 0,
   paddingRight: 0,
   paddingTop: 6,
-  paddingBottom: 28,
 };
 
 // A phone list insets its Session cards 8 from the screen's edges, as Paper's Sessions screen does.
@@ -31,8 +33,14 @@ const phoneContentStyle = {
   paddingTop: 20,
 };
 
-function useContentStyle(wide: boolean): typeof contentStyle {
-  return wide ? contentStyle : phoneContentStyle;
+// The last row rests the scroll fade's small end gap above the bottom, its fade lying in that gap.
+function useContentStyle(
+  wide: boolean,
+): typeof contentStyle & { paddingBottom: number } {
+  const paddingBottom = useScrollFadeEndGap();
+  const style = wide ? contentStyle : phoneContentStyle;
+
+  return useMemo(() => ({ ...style, paddingBottom }), [style, paddingBottom]);
 }
 
 function entryKey(entry: SessionsListEntry): string {

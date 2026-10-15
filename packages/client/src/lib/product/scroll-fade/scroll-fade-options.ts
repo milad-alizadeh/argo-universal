@@ -1,5 +1,6 @@
-import type { ScrollView } from 'react-native';
+import type { ScrollView, ViewStyle } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
+import { useResolveClassNames } from 'uniwind';
 
 export type ScrollFadeEdgeName = 'top' | 'bottom';
 
@@ -19,8 +20,36 @@ export interface ScrollFadeOptions {
   surfaceClassName?: string;
 }
 
-// How deep content fades at each edge unless a caller says otherwise.
-export const scrollFadeDepth = { top: 28, bottom: 36 } as const;
+// How deep content fades under the top edge unless a caller says otherwise.
+const scrollFadeTopDepth = 28;
+
+// The small gap a list leaves below its last row, on the spacing scale. The bottom fade is no deeper, so it overlays the content's edge: the last row rests whole just above the bottom.
+export const scrollFadeEndGapClassName = 'pb-4';
+
+// The web resolves a class to a CSS length such as "16px"; native resolves it to a number.
+const points = (length: ViewStyle['paddingBottom']): number =>
+  typeof length === 'string' ? Number.parseFloat(length) : Number(length ?? 0);
+
+// The end gap in points.
+export function useScrollFadeEndGap(): number {
+  return points(useResolveClassNames(scrollFadeEndGapClassName).paddingBottom);
+}
+
+const depthOr = (
+  depth: PerEdge<number> | undefined,
+  edge: ScrollFadeEdgeName,
+  fallback: number,
+): number => depth?.[edge] ?? fallback;
+
+// Each edge's depth: the caller's, or the top's default and the end gap at the bottom.
+export function useFadeDepth(
+  depth: PerEdge<number> | undefined,
+): Required<PerEdge<number>> {
+  return {
+    top: depthOr(depth, 'top', scrollFadeTopDepth),
+    bottom: depthOr(depth, 'bottom', useScrollFadeEndGap()),
+  };
+}
 
 // How far content scrolls past an edge before its fade is whole; react-native-web.css keeps the same length for the web.
 export const scrollFadeRamp = 24;
@@ -50,7 +79,7 @@ export const edgeMode = (
 export const edgeDepth = (
   edge: ScrollFadeEdgeName,
   depth: PerEdge<number> | undefined,
-): number => depth?.[edge] ?? scrollFadeDepth[edge];
+): number => depth?.[edge] ?? 0;
 
 export const edgeInset = (
   edge: ScrollFadeEdgeName,

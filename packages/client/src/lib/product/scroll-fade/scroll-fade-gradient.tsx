@@ -9,16 +9,13 @@ import {
 import Animated, { type AnimatedStyle } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import {
-  type ScrollFadeEdgeName,
-  scrollFadeDepth,
-} from './scroll-fade-options';
+import type { ScrollFadeEdgeName } from './scroll-fade-options';
 
 export interface ScrollFadeGradientProps {
   edge: ScrollFadeEdgeName;
   // The surface colour the content fades into.
   className?: string;
-  height?: number;
+  height: number;
   // How far something covers the list at this edge: the gradient ends there, and the surface fills the rest.
   inset?: number;
   // Its opacity, which a scroll view's frame drives on the UI thread.
@@ -53,12 +50,8 @@ interface FadeSize {
   inset: number;
 }
 
-const fadeSize = ({
-  edge,
-  height,
-  inset,
-}: ScrollFadeGradientProps): FadeSize => ({
-  depth: height ?? scrollFadeDepth[edge],
+const fadeSize = ({ height, inset }: ScrollFadeGradientProps): FadeSize => ({
+  depth: height,
   inset: inset ?? 0,
 });
 
