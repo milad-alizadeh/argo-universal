@@ -14,4 +14,4 @@ This flow does not verify TalkBack speech or slider adjustment actions. Inspect 
 
 `user-message-show-more.yaml` runs on iOS or Android. Open the App's native Storybook at **Feed → UserMessage**, then run `maestro --device <device-id> test e2e/native/user-message-show-more.yaml`.
 
-The "Long text" prompt clamps to four lines. The flow taps Show more and expects it to go. That holds only when the clipped markdown leaves Show more uncovered.
+The "Markdown" prompt clamps to four lines. The flow taps its Show more and expects it to go, which holds only when the clipped markdown leaves Show more uncovered. Clipped lines still count as visible to Maestro, so the flow checks Show more rather than the hidden text.
