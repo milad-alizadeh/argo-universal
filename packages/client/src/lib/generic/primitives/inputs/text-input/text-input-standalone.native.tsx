@@ -1,4 +1,3 @@
-import { frame, textFieldStyle } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentType, ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Field } from '#primitives/fields/field';
@@ -27,20 +26,17 @@ export function StandaloneTextInput(
   );
 }
 
-// iOS: the label leading a bordered field in one row; Android: the label above a filled box.
+// iOS: the label leading the field in one row; Android: the label above it.
 function PhoneField(props: StandaloneTextInputProps): ReactElement {
   const field = phoneField(props);
 
-  if (Platform.OS === 'ios')
-    return <InlineField {...field} rowModifiers={inlineRow} />;
+  if (Platform.OS === 'ios') return <InlineField {...field} />;
 
   return <StackedField {...field} />;
 }
 
-// iOS draws SwiftUI's stock bordered field; the modifier is ignored on Android.
 const phoneField = (props: StandaloneTextInputProps): NativeFieldProps => ({
   ...props,
-  modifiers: [textFieldStyle('roundedBorder')],
   label: props.required ? `${props.label} *` : props.label,
   keyboardType: props.numeric ? numericKeyboard : undefined,
 });
@@ -48,7 +44,5 @@ const phoneField = (props: StandaloneTextInputProps): NativeFieldProps => ({
 // Android's universal field maps `numeric` to its decimal keyboard.
 const numericKeyboard =
   Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric';
-
-const inlineRow = [frame({ minHeight: 52, maxWidth: Infinity })];
 
 StandaloneTextInput satisfies ComponentType<StandaloneTextInputProps>;
