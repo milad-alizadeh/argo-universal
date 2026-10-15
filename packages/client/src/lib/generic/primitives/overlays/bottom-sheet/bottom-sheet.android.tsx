@@ -1,8 +1,8 @@
+// Stock Compose sheet: universal BottomSheet has no ref (expand, partialExpand), no sheetGesturesEnabled and no after-hide onClosed.
 import { ModalBottomSheet } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { Host } from '#primitives/native/host';
-import { useSheetColors } from './bottom-sheet-colors.android';
 import { BottomSheetContent } from './bottom-sheet-content';
 import {
   useSheetDismissal,
@@ -52,11 +52,9 @@ function useModalProps(
   props: Omit<SheetProps, 'sheetRef'>,
   sheetRef: SheetRef,
 ): ModalProps {
-  const sheet = useSheetColors(props.surface);
   const dismissible = props.dismissible !== false;
 
   return {
-    ...sheet,
     onDismissRequest: () => dismissOrCollapse(props, sheetRef),
     sheetGesturesEnabled: dismissible || props.expandable === true,
     properties: dismissProperties(dismissible),

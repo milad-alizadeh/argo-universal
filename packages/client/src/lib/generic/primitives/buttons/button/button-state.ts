@@ -13,19 +13,8 @@ export function isButtonDisabled(
   return !!(props.disabled || props.loading);
 }
 
-// A loading button keeps its look but ignores presses, so the system never greys it out like a disabled one.
-export function readyPress(
-  props: Pick<ButtonDataProps, 'onPress' | 'disabled' | 'loading'>,
-): ButtonDataProps['onPress'] {
-  return isButtonDisabled(props) ? undefined : props.onPress;
-}
-
-// Paper and Material 3 draw a disabled button as the enabled one at this opacity, label colours kept.
-const disabledOpacity = 0.38;
-
 interface ButtonLayoutStyle {
   width?: '100%';
-  opacity?: number;
 }
 
 // The Host props that place a native button.
@@ -35,13 +24,9 @@ interface NativeButtonLayout {
   style: ButtonLayoutStyle;
 }
 
-/*
- * A button sits in the page's own layout, so a hosted one near the screen's edge keeps its place.
- * The Host fades a disabled button as one layer. Each native view would fade on its own, letting the fill
- * show through the label, and the system's own disabled style greys the fill under a label kept white.
- */
+// A button sits in the page's own layout, so a hosted one near the screen's edge keeps its place.
 export function nativeButtonLayout(
-  props: Pick<ButtonDataProps, 'fullWidth' | 'disabled'>,
+  props: Pick<ButtonDataProps, 'fullWidth'>,
 ): NativeButtonLayout {
   return {
     matchContents: { vertical: true, horizontal: props.fullWidth !== true },
@@ -51,15 +36,9 @@ export function nativeButtonLayout(
 }
 
 function layoutStyle(
-  props: Pick<ButtonDataProps, 'fullWidth' | 'disabled'>,
+  props: Pick<ButtonDataProps, 'fullWidth'>,
 ): ButtonLayoutStyle {
-  const style: ButtonLayoutStyle = {};
-
-  if (props.fullWidth === true) style.width = '100%';
-
-  if (props.disabled) style.opacity = disabledOpacity;
-
-  return style;
+  return props.fullWidth === true ? { width: '100%' } : {};
 }
 
 interface InteractionProps {

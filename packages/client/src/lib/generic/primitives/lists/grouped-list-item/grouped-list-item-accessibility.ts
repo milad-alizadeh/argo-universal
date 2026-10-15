@@ -1,10 +1,9 @@
-import type { HStack } from '@expo/ui/swift-ui';
+import type { ColumnProps } from '@expo/ui';
 import {
   accessibilityElement,
   accessibilityLabel,
   accessibilityAddTraits,
 } from '@expo/ui/swift-ui/modifiers';
-import type { ComponentProps } from 'react';
 import {
   groupedListItemName,
   type GroupedListItemProps,
@@ -24,7 +23,7 @@ function hasControls(props: GroupedListItemProps): boolean {
 
 export function rowAccessibilityModifiers(
   props: GroupedListItemProps,
-): NonNullable<ComponentProps<typeof HStack>['modifiers']> {
+): NonNullable<ColumnProps['modifiers']> {
   if (props.control || props.detail) return [];
 
   return [

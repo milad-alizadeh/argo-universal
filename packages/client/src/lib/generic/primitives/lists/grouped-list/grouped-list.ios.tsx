@@ -1,4 +1,6 @@
-import { Form, List } from '@expo/ui/swift-ui';
+// Split from Android: SwiftUI's Form scrolls the sections here, while Android scrolls them in React Native for its sheets.
+import { FieldGroup } from '@expo/ui';
+import { List } from '@expo/ui/swift-ui';
 import {
   listStyle,
   scrollContentBackground,
@@ -24,7 +26,10 @@ export function GroupedList(props: GroupedListProps): React.JSX.Element {
   );
 }
 
-// A sidebar list is a plain List, flat like the sidebar; any other is a grouped Form on the system grouped background.
+/*
+ * A sidebar list is a plain List, flat like the sidebar; any other is a grouped FieldGroup.
+ * The universal List takes no modifiers, so the plain, backgroundless sidebar List stays SwiftUI's.
+ */
 function PhoneFields({
   variant,
   children,
@@ -36,7 +41,7 @@ function PhoneFields({
       </List>
     );
 
-  return <Form>{children}</Form>;
+  return <FieldGroup>{children}</FieldGroup>;
 }
 
 GroupedList satisfies React.ComponentType<GroupedListProps>;

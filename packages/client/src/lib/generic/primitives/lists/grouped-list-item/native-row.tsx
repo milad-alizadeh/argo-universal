@@ -1,7 +1,9 @@
-import { RNHostView } from '@expo/ui';
+import { Column, RNHostView } from '@expo/ui';
+import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
-import { IconSlot } from '#primitives/display/icon';
+import { Platform } from 'react-native';
+import { IconSlot, IconSpinner } from '#primitives/display/icon';
 import { NativeControl } from '#primitives/native/native-control';
 import type { IconName } from '../../../symbols/icon-names';
 import { NativeSymbol } from '../../../symbols/native-symbol';
@@ -12,7 +14,7 @@ import {
 } from './grouped-list-item-props';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
 
-export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
+function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
   return <NativeSymbol name={icon} role="row" />;
 }
 
@@ -73,7 +75,7 @@ export function NativeRowStatus(
 }
 
 // The row's image when it has one, else its icon.
-export function NativeRowGlyph({
+function NativeRowGlyph({
   icon,
   leading,
 }: {
@@ -83,4 +85,42 @@ export function NativeRowGlyph({
   if (leading) return <NativeRowImage image={leading} />;
 
   return icon ? <NativeRowIcon icon={icon} /> : null;
+}
+
+// The row's icon or image, or a spinner in the icon's slot while the row loads.
+export function NativeRowLeading(
+  props: Pick<GroupedListItemProps, 'icon' | 'loading' | 'leading'>,
+): React.JSX.Element | null {
+  if (props.loading) return <NativeRowSpinner />;
+
+  return <NativeRowGlyph {...props} />;
+}
+
+// Paper: a Body-sized spinner in the row icon's slot, the platform's own indicator hosted in the row.
+function NativeRowSpinner(): React.JSX.Element {
+  return (
+    <RNHostView matchContents>
+      <IconSlot role="row" {...hiddenFromAccessibility}>
+        <IconSpinner iconRole="body" colorClassName="accent-foreground" />
+      </IconSlot>
+    </RNHostView>
+  );
+}
+
+const detailBottom = 12;
+
+// The row's detail control under it, such as an effort slider.
+export function NativeRowDetail({
+  detail,
+}: Pick<GroupedListItemProps, 'detail'>): React.JSX.Element | null {
+  if (!detail) return null;
+
+  return (
+    <Column
+      style={{ paddingBottom: detailBottom }}
+      modifiers={Platform.OS === 'ios' ? undefined : [fillMaxWidth()]}
+    >
+      <NativeControl>{detail}</NativeControl>
+    </Column>
+  );
 }
