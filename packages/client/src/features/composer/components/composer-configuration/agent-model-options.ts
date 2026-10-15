@@ -7,6 +7,7 @@ import type {
 import type { ComposerConfigurationProps } from './configuration-types';
 import { modelName, selection } from './configuration-values';
 
+// An Agent that is not installed says so and offers no step: installing is not a choice in the list.
 const agentAvailability = {
   not_signed_in: {
     label: 'Not signed in',
@@ -16,7 +17,7 @@ const agentAvailability = {
   },
   not_installed: {
     label: 'Not installed',
-    button: 'Install',
+    button: undefined,
     action: 'setup',
     reason: false,
   },
@@ -28,7 +29,12 @@ const agentAvailability = {
   },
 } satisfies Record<
   Exclude<AgentAvailability, 'available'>,
-  { label: string; button: string; action: 'setup' | 'retry'; reason: boolean }
+  {
+    label: string;
+    button: string | undefined;
+    action: 'setup' | 'retry';
+    reason: boolean;
+  }
 >;
 
 // Each Agent as a Picker option: one that is not ready says why and offers its next step.
@@ -69,9 +75,11 @@ function unavailableAction(
   agent: AgentInfo,
   availability: Exclude<AgentAvailability, 'available'>,
   onPress: () => void,
-): PickerOptionAction {
+): PickerOptionAction | undefined {
   const unavailable = agentAvailability[availability];
   const verb = unavailable.action === 'retry' ? 'Retry' : 'Set up';
+
+  if (!unavailable.button) return undefined;
 
   return {
     label: unavailable.button,

@@ -29,13 +29,21 @@ function useToneModifiers(
   return props.muted === true ? [mutedStyle] : undefined;
 }
 
-function useSymbolModifiers(
-  role: NativeSymbolProps['role'],
-  tone: Pick<NativeSymbolProps, 'muted' | 'accent'>,
-): ReturnType<typeof font>[] {
-  const size = useIconPixels(role);
+// The stock List checkmark's font, which scales with Dynamic Type.
+const systemMarkFont = font({ textStyle: 'body', weight: 'semibold' });
 
-  return [symbolFont(size), ...(useToneModifiers(tone) ?? [])];
+function useSymbolModifiers({
+  role,
+  systemMark,
+  ...tone
+}: Pick<
+  NativeSymbolProps,
+  'role' | 'systemMark' | 'muted' | 'accent'
+>): ReturnType<typeof font>[] {
+  const size = useIconPixels(role);
+  const symbolSize = systemMark === true ? systemMarkFont : symbolFont(size);
+
+  return [symbolSize, ...(useToneModifiers(tone) ?? [])];
 }
 
 function imageSource(
@@ -49,12 +57,12 @@ export function NativeSymbol({
   name,
   role,
   filled,
-  ...tone
+  ...look
 }: NativeSymbolProps): React.JSX.Element {
   return (
     <Image
       {...imageSource(appleSymbol(iconSymbols[name], filled))}
-      modifiers={useSymbolModifiers(role, tone)}
+      modifiers={useSymbolModifiers({ role, ...look })}
     />
   );
 }

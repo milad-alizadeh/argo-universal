@@ -1,10 +1,9 @@
 import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
-import { IconSlot } from '#primitives/display/icon';
+import { Icon, IconSlot } from '#primitives/display/icon';
 import { NativeControl } from '#primitives/native/native-control';
 import type { IconName } from '../../../symbols/icon-names';
-import { NativeSymbol } from '../../../symbols/native-symbol';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
 import {
   type GroupedListItemProps,
@@ -12,8 +11,9 @@ import {
 } from './grouped-list-item-props';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
 
+// The row's leading icon as React Native draws it in its row slot, so a native row's icon matches every other row's.
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
-  return <NativeSymbol name={icon} role="row" />;
+  return <NativeRowImage image={<Icon name={icon} role="row" />} />;
 }
 
 // An image, such as an Agent's logo, centred in the native row's icon slot.

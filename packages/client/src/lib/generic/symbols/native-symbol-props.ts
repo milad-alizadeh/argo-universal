@@ -9,4 +9,9 @@ export interface NativeSymbolProps {
   muted?: boolean;
   // Draws in the accent, as a chosen row's checkmark does.
   accent?: boolean;
+  /*
+   * Draws as the system draws its own selection mark: the body text style at the semibold weight, as a stock List's
+   * checkmark. Only SwiftUI has one; elsewhere the role sizes it.
+   */
+  systemMark?: boolean;
 }
