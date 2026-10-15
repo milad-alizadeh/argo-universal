@@ -12,9 +12,6 @@ When(
   async ({ page }, name: string): Promise<void> => {
     await page
       .getByRole('button', { name: `Remove ${name}`, exact: true })
-      .or(
-        page.getByRole('button', { name: `Remove ${name} Agent`, exact: true }),
-      )
       .click();
   },
 );

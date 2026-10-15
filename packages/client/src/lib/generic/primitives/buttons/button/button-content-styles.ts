@@ -87,43 +87,14 @@ export function contentButtonClass(props: ButtonClassProps): string {
   return cn(
     buttonClasses({ ...variants, fullWidth: fullWidth === true }),
     nativeClasses({ variant: props.variant, disabled: props.disabled }),
-    destructiveClasses({ tone: props.tone, variant: props.variant }),
+    props.tone === 'danger' && destructiveClass,
     className,
   );
 }
 
-const destructiveOutline =
-  'border border-border bg-background web:shadow-xs active:bg-danger/10 web:hover:bg-danger/10';
-
-const destructiveText =
-  'bg-transparent active:bg-danger/10 web:hover:bg-danger/10';
-
-// A destructive button without a variant draws as an outline.
-const destructiveClasses = cva('', {
-  variants: {
-    variant: { default: '', outline: '', secondary: '', ghost: '', link: '' },
-    tone: { danger: '' },
-  },
-  compoundVariants: [
-    {
-      tone: 'danger',
-      variant: 'default',
-      className:
-        'bg-danger ios:bg-danger active:bg-danger/90 web:hover:bg-danger/90',
-    },
-    {
-      tone: 'danger',
-      variant: ['outline', 'secondary'],
-      className: destructiveOutline,
-    },
-    {
-      tone: 'danger',
-      variant: ['ghost', 'link'],
-      className: destructiveText,
-    },
-  ],
-  defaultVariants: { variant: 'outline' },
-});
+// A destructive button is transparent whatever its variant: a red label, no fill, no border, a faint red tint on press or hover.
+const destructiveClass =
+  'border-0 bg-transparent web:shadow-none active:bg-danger/10 web:hover:bg-danger/10';
 
 export function contentTextClass(
   props: Pick<ButtonProps, 'tone' | 'variant'>,
@@ -133,7 +104,6 @@ export function contentTextClass(
   return cn(
     textClasses({ variant: props.variant, destructive }),
     nativeLabelClass,
-    destructive && props.variant === 'default' && 'text-danger-foreground',
   );
 }
 
