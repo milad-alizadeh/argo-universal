@@ -9,10 +9,6 @@ interface FieldText {
   onFocusChanged: (focused: boolean) => void;
 }
 
-/*
- * The native field's text, in its own platform's native state, follows the form's
- * value; leaving the field, not its first unfocused report, blurs the form field.
- */
 export function useFieldText(
   text: ObservableState<string>,
   {
@@ -21,10 +17,10 @@ export function useFieldText(
   }: Pick<TextFieldProps, 'value' | 'onChangeText' | 'onBlur'>,
 ): FieldText {
   const onChangeText = useFollowedText(text, props.value, props.onChangeText);
-  const [focus] = useState(blurOnFocusLoss);
+  const [blurOnLeave] = useState(blurOnFocusLoss);
 
   return {
     onChangeText,
-    onFocusChanged: (focused) => focus(focused, onBlur),
+    onFocusChanged: (focused) => blurOnLeave(focused, onBlur),
   };
 }
