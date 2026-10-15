@@ -20,14 +20,14 @@ import { menuTriggerElement } from './menu-text-trigger';
 export function Menu<Value extends string>(
   props: MenuProps<Value>,
 ): React.JSX.Element {
-  const { colorScheme } = useNativeTheme();
+  const { colorScheme, colors } = useNativeTheme();
 
   if (props.disabled) return <MenuTrigger {...props} />;
 
   return (
     <MenuView
       colorScheme={colorScheme}
-      actions={menuActions(props)}
+      actions={tintedActions(menuActions(props), colors)}
       onPressAction={(event) => runAction(props, event)}
     >
       <MenuTrigger {...props} />
@@ -68,6 +68,27 @@ function triggerAccessibility<Value extends string>(
       busy: Boolean(props.loading),
     },
   };
+}
+
+type ItemColors = Pick<
+  ReturnType<typeof useNativeTheme>['colors'],
+  'foreground' | 'mutedForeground'
+>;
+
+/*
+ * Android's item text through MenuAction.titleColor: the foreground, muted while disabled or loading.
+ * MenuView takes no container colour, so the menu keeps Material's surface; iOS ignores titleColor.
+ */
+function tintedActions(
+  actions: NativeMenuAction[],
+  colors: ItemColors,
+): NativeMenuAction[] {
+  return actions.map((action) => ({
+    ...action,
+    titleColor: action.attributes?.disabled
+      ? colors.mutedForeground
+      : colors.foreground,
+  }));
 }
 
 function menuActions<Value extends string>(
