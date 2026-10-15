@@ -4,6 +4,7 @@ import { Platform, StyleSheet } from 'react-native';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/display/text';
+import { OverlayFields } from '#primitives/fields/field-layout';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
 import { usePopoverDismissal } from './popover-dismissal';
 import type {
@@ -117,7 +118,7 @@ function PopoverSurface({
   return (
     <PopoverPrimitive.Content {...surfaceProps(props)}>
       <TextClassContext.Provider value="text-card-foreground">
-        {children}
+        <OverlayFields value>{children}</OverlayFields>
       </TextClassContext.Provider>
     </PopoverPrimitive.Content>
   );

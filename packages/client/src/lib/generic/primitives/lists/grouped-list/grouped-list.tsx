@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { ScrollView } from 'react-native';
-import { FieldLayout } from '#primitives/fields/field-layout';
+import { FieldLayout, useOverlayFields } from '#primitives/fields/field-layout';
 import {
   ScrollColumnContext,
   useScrollColumnStyle,
@@ -28,13 +28,13 @@ function GroupScroll(
 ): React.JSX.Element {
   const { children, fit, variant } = props;
   // Wide, the group pads none of its own, so the pane's column is all its side padding.
-  const columnStyle = useScrollColumnStyle();
+  const className = useGroupClasses(fit, variant);
 
   return (
     <ScrollView
       className={fit ? 'shrink' : 'flex-1'}
-      contentContainerStyle={columnStyle}
-      contentContainerClassName={groupClasses(fit, variant)}
+      contentContainerStyle={useScrollColumnStyle()}
+      contentContainerClassName={className}
     >
       <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
     </ScrollView>
@@ -53,3 +53,10 @@ function groupSpacing(fit: boolean | undefined): string {
 }
 
 GroupedList satisfies React.ComponentType<GroupedListProps>;
+
+function useGroupClasses(
+  fit: boolean | undefined,
+  variant: GroupedListProps['variant'],
+): string {
+  return useOverlayFields() ? 'gap-0' : groupClasses(fit, variant);
+}
