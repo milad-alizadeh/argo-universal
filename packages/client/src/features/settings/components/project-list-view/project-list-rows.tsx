@@ -1,6 +1,8 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { hasLiquidGlass } from '#lib/generic/native-header';
+import { cn } from '#lib/generic/utils';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
@@ -8,6 +10,12 @@ import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { LoadedProps } from './project-list-props';
 import { listSearch } from './project-list-search';
+
+// Before iOS 26 the header is solid, so the grouped list meets it with no strip of the content surface between.
+const listGap = cn(
+  'flex-1 pt-2 wide:pt-0',
+  Platform.OS === 'ios' && !hasLiquidGlass && 'pt-0',
+);
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
   found: ProjectInfo[];
@@ -24,7 +32,7 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
   const found = props.projects.filter((project) => matches(project, query));
 
   return (
-    <View className="flex-1 pt-2 wide:pt-0">
+    <View className={listGap}>
       <GroupedList search={listSearch(props)}>
         <ProjectRows {...props} found={found} searching={query !== ''} />
       </GroupedList>
