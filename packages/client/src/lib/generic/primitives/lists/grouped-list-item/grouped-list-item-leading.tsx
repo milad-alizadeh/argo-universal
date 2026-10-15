@@ -41,7 +41,7 @@ function LeadingSlot({
 }): React.JSX.Element {
   if (size === 'lg')
     return (
-      <View className="size-10 shrink-0 items-center justify-center rounded-xl bg-background">
+      <View className="size-10 shrink-0 items-center justify-center rounded-xl bg-card">
         {children}
       </View>
     );

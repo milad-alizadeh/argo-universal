@@ -70,7 +70,7 @@ export const SessionListRow = memo(function SessionListRow(
       testID="session-row-surface"
       className={cn(
         'overflow-hidden bg-content wide:bg-transparent wide:pb-px',
-        props.selected && 'bg-hover wide:bg-transparent',
+        props.selected && 'bg-muted wide:bg-transparent',
       )}
     >
       <SessionRow {...props} />

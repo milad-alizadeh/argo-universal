@@ -85,7 +85,7 @@ function ChoiceLabel(props: { label: string }): React.JSX.Element {
 
   return (
     <DropdownMenuItem.Text>
-      <Text color={colors.cardForeground} style={{ typography: 'bodyLarge' }}>
+      <Text color={colors.foreground} style={{ typography: 'bodyLarge' }}>
         {props.label}
       </Text>
     </DropdownMenuItem.Text>
@@ -104,10 +104,10 @@ function choiceElementColors(
   colors: NativeColors,
 ): React.ComponentProps<typeof DropdownMenuItem>['elementColors'] {
   return {
-    textColor: colors.cardForeground,
+    textColor: colors.foreground,
     disabledTextColor: colors.disabledContent,
-    leadingIconColor: colors.cardForeground,
-    trailingIconColor: colors.cardForeground,
+    leadingIconColor: colors.foreground,
+    trailingIconColor: colors.foreground,
     disabledLeadingIconColor: colors.disabledContent,
     disabledTrailingIconColor: colors.disabledContent,
   };
@@ -123,7 +123,7 @@ function MenuIndicator({ selected }: { selected: boolean }): React.JSX.Element {
       >
         {selected && (
           // Material's check glyph is padded, so beside bodyLarge it takes the Body size, not the 14 mark.
-          <SelectedCheck role="body" className="text-card-foreground" />
+          <SelectedCheck role="body" className="text-foreground" />
         )}
       </IconSlot>
     </RNHostView>

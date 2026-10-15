@@ -116,7 +116,7 @@ function PopoverSurface({
 }: SurfaceProps): React.JSX.Element {
   return (
     <PopoverPrimitive.Content {...surfaceProps(props)}>
-      <TextClassContext.Provider value="text-card-foreground">
+      <TextClassContext.Provider value="text-foreground">
         {children}
       </TextClassContext.Provider>
     </PopoverPrimitive.Content>
@@ -170,7 +170,7 @@ const overlayProps = {
 } satisfies React.ComponentProps<typeof PopoverPrimitive.Overlay>;
 
 const surfaceClass =
-  'bg-card border-border z-50 w-72 rounded-2xl border p-4 shadow-md shadow-black/5';
+  'bg-card border-border z-50 w-72 rounded-2xl border p-4 shadow-overlay shadow-black/5';
 
 Popover satisfies React.ComponentType<PopoverProps>;
 

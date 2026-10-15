@@ -99,7 +99,7 @@ function MenuItems<Value extends string>(
 function MenuPopup(
   props: Pick<DropdownMenuProps, 'expanded' | 'onDismissRequest' | 'children'>,
 ): React.JSX.Element {
-  const popupColor = usePrimitiveColor('text-card dark:text-neutral-900');
+  const popupColor = usePrimitiveColor('text-card');
 
   return <DropdownMenu {...props} color={popupColor} />;
 }

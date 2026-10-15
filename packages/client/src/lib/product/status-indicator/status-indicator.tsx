@@ -60,7 +60,7 @@ function indicatorClassName({
   className,
 }: Omit<StatusIndicatorProps, 'testID'>): string {
   return cn(
-    'shrink-0 rounded-full border-2 border-background bg-background',
+    'shrink-0 rounded-full border-2 border-card bg-card',
     sizeClassNames[size],
     className,
   );

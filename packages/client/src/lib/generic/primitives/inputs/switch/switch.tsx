@@ -42,7 +42,7 @@ function switchStateClass(
 
 function thumbClass(props: Pick<SwitchProps, 'value' | 'size'>): string {
   return cn(
-    'bg-background rounded-full transition-transform',
+    'bg-card rounded-full transition-transform',
     props.size === 'sm' ? 'size-3' : 'size-4.5 shadow-[0_1px_2px_#00000026]',
     'web:pointer-events-none web:block web:ring-0',
     thumbPosition(props),

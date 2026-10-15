@@ -4,13 +4,11 @@ import { usePrimitiveColor } from '#primitives/native/primitive-color';
 
 const colorTokens = [
   ['accent', '--color-accent'],
-  ['background', '--color-background'],
   ['foreground', '--color-foreground'],
   ['muted', '--color-muted'],
   ['mutedForeground', '--color-muted-foreground'],
   ['card', '--color-card'],
   ['content', '--color-content'],
-  ['cardForeground', '--color-card-foreground'],
   ['primary', '--color-primary'],
   ['primaryForeground', '--color-primary-foreground'],
   ['border', '--color-border'],

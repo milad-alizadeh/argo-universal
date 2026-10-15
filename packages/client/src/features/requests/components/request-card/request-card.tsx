@@ -77,10 +77,7 @@ function containerClassName({
 }: Pick<RequestCardProps, 'surface' | 'appearance'>): string {
   if (surface === 'tray') return 'w-full gap-3 px-3 pt-3 pb-3.5';
 
-  return cn(
-    'w-full max-w-composer',
-    appearance !== 'embedded' && cardClassName,
-  );
+  return cn('w-full max-w-column', appearance !== 'embedded' && cardClassName);
 }
 
 function RequestContents(props: RequestCardProps): ReactNode {
@@ -95,7 +92,7 @@ function RequestContents(props: RequestCardProps): ReactNode {
 }
 
 const cardClassName =
-  'rounded-2xl bg-glass-card native:bg-background shadow-glass-card web:backdrop-blur-glass web:backdrop-saturate-180';
+  'rounded-2xl bg-card shadow-card web:backdrop-blur-glass web:backdrop-saturate-180';
 
 function RequestBody({
   state,

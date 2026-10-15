@@ -68,7 +68,7 @@ function ContentBody(contentProps: ContentProps): React.JSX.Element {
 function ContentOverlay(props: ContentProps): React.JSX.Element {
   return (
     <SelectPrimitive.Overlay>
-      <TextClassContext.Provider value="text-card-foreground">
+      <TextClassContext.Provider value="text-foreground">
         <ContentBody {...props} />
       </TextClassContext.Provider>
     </SelectPrimitive.Overlay>
