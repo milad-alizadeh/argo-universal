@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
+import { Button } from '#primitives/buttons/button';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Sheet } from '#primitives/overlays/sheet';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Combobox } from './combobox';
 
@@ -49,7 +51,7 @@ const states = [
 
 const examples = [
   { label: 'Searchable choice', example: <ProjectChoice /> },
-  { label: 'Row', example: <ProjectRow /> },
+  { label: 'Row', example: <ProjectSheet /> },
   ...states.map(({ label, ...state }) => ({
     label,
     example: <StatusExample {...state} />,
@@ -98,7 +100,25 @@ function ProjectChoice(): ReactElement {
   );
 }
 
-// The row variant: a drill row in a grouped list, opening beside it on a desktop and as a pushed page on a phone.
+// The row variant lives in a menu or sheet: it opens beside the menu on a desktop and pushes a page of the sheet on a phone.
+function ProjectSheet(): ReactElement {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Sheet {...sheetPresentation} open={open} onOpenChange={setOpen}>
+      <Sheet.Page name="new-session" title="New Session">
+        <ProjectRow />
+      </Sheet.Page>
+    </Sheet>
+  );
+}
+
+const sheetPresentation = {
+  label: 'New Session',
+  contentScrolls: true,
+  trigger: <Button custom label="New Session" />,
+};
+
 function ProjectRow(): ReactElement {
   const [value, setValue] = useState('argo');
 
