@@ -5,7 +5,7 @@ import type {
 } from 'react-native';
 import type { FieldErrors } from '#primitives/fields/field-errors';
 
-// A labelled text field; on iOS and the web its hint and its error sit in a footer.
+// A labelled text field; on iOS and the web its hint and its error sit in a footer, on Android under the field.
 export interface TextFieldProps {
   label: string;
   value: string;
@@ -52,5 +52,13 @@ export type TextInputProps =
   | RowTextInputProps
   | BareTextInputProps;
 
+// A phone field, on its own or as a row. Android says its error or hint as the field's supporting text; iOS says it in the footer.
+export type PhoneFieldProps = TextFieldProps &
+  Pick<StandaloneTextInputProps, 'required' | 'numeric'>;
+
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
   (props.errors?.length ?? 0) > 0;
+
+export const requiredLabel = (
+  props: Pick<PhoneFieldProps, 'label' | 'required'>,
+): string => (props.required ? `${props.label} *` : props.label);
