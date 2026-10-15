@@ -145,6 +145,8 @@ catalog:
   expo-crypto: ~57.0.4
   fflate: 0.8.3
   tar: 7.5.22
+  # Android header icons as vector drawables, the source the Stack Toolbar guide recommends.
+  "@expo/material-symbols": 0.1.1
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict
