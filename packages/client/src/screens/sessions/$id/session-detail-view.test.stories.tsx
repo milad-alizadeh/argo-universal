@@ -9,6 +9,7 @@ import {
   failedWithoutReason,
   failedWithReason,
 } from '../../../../mocks/session-view/session-view-failure.test.mocks';
+import { lastRowRestsAboveTheComposer } from '../../../../mocks/session-view/session-view-feed-end.test.mocks';
 import {
   listsEveryPullRequest,
   mergesByAnotherMethod,
@@ -170,3 +171,5 @@ export const ConfigurationSecondAgent = configuration(1);
 
 export const FeedReflowsAfterThePaneCollapses =
   feedReflowsAfterThePaneCollapses;
+
+export const LastRowRestsAboveTheComposer = lastRowRestsAboveTheComposer;
