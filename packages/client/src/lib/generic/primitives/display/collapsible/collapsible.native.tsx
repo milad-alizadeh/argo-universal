@@ -11,7 +11,11 @@ import {
   CollapsibleLayoutSyncContext,
   OpenContext,
 } from './collapsible-context';
-import type { CollapsibleProps } from './collapsible-props';
+import { Header } from './collapsible-header';
+import type {
+  CollapsibleHeaderProps,
+  CollapsibleProps,
+} from './collapsible-props';
 
 // Argo-drawn on phones (ADR-0020): Feed rows animate with LegendList, which a native Host per item would break.
 
@@ -25,7 +29,6 @@ const ToggleContext = createContext<Toggle>({
   onOpenChange: () => {},
 });
 
-// The open state, held here unless the caller controls it.
 function useToggle(props: CollapsibleProps): Toggle & { open: boolean } {
   const [ownOpen, setOwnOpen] = useState(Boolean(props.defaultOpen));
 
@@ -39,7 +42,6 @@ function useToggle(props: CollapsibleProps): Toggle & { open: boolean } {
   };
 }
 
-// The root draws a plain view; the open state goes to context instead.
 function viewOf({
   open: _open,
   defaultOpen: _defaultOpen,
@@ -73,7 +75,6 @@ function CollapsibleTrigger(props: TriggerProps): ReactElement {
   return <Pressable {...props} {...useTriggerBehaviour(props)} />;
 }
 
-// Pressing toggles the Collapsible, then runs the caller's own press.
 function useTriggerBehaviour(props: TriggerProps): TriggerBehaviour {
   const open = useContext(OpenContext);
   const toggle = useContext(ToggleContext);
@@ -96,3 +97,9 @@ export {
   CollapsibleLayoutSyncContext,
   CollapsibleTrigger,
 };
+
+export { useCollapsibleHovered } from './collapsible-header';
+
+export function CollapsibleHeader(props: CollapsibleHeaderProps): ReactElement {
+  return <Header {...props} trigger={CollapsibleTrigger} />;
+}

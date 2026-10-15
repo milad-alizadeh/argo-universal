@@ -1,6 +1,6 @@
-import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
 import {
   createContext,
+  type ComponentType,
   type ReactElement,
   type ReactNode,
   useContext,
@@ -64,7 +64,17 @@ function HeaderTitle(
   );
 }
 
-type HeaderTriggerProps = CollapsibleHeaderProps & {
+type HeaderProps = CollapsibleHeaderProps & {
+  trigger: ComponentType<{
+    accessibilityLabel: string;
+    onHoverIn: () => void;
+    onHoverOut: () => void;
+    className: string;
+    children: ReactNode;
+  }>;
+};
+
+type HeaderTriggerProps = HeaderProps & {
   hovered: boolean;
   onHoveredChange: (hovered: boolean) => void;
 };
@@ -80,8 +90,10 @@ function HeaderIcon(props: CollapsibleHeaderProps): ReactElement | null {
 }
 
 function HeaderTrigger(props: HeaderTriggerProps): ReactElement {
+  const Trigger = props.trigger;
+
   return (
-    <CollapsiblePrimitive.Trigger
+    <Trigger
       accessibilityLabel={props.label}
       onHoverIn={() => props.onHoveredChange(true)}
       onHoverOut={() => props.onHoveredChange(false)}
@@ -89,12 +101,11 @@ function HeaderTrigger(props: HeaderTriggerProps): ReactElement {
     >
       <HeaderIcon {...props} />
       <HeaderTitle {...props} />
-    </CollapsiblePrimitive.Trigger>
+    </Trigger>
   );
 }
 
-// The disclosure's trigger: icon, label and a chevron after the label on one centre line, muted until hovered; no fill and no padding.
-export function CollapsibleHeader(props: CollapsibleHeaderProps): ReactElement {
+export function Header(props: HeaderProps): ReactElement {
   const [hovered, setHovered] = useState(false);
 
   return (
