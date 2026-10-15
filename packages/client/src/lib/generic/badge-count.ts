@@ -1,30 +1,34 @@
 // Badges show counts above this as "99+".
 const maximumBadgeCount = 99;
 
-// What a count badge draws; nothing when there is nothing to count.
-export function badgeCountText(count: number | undefined): string | undefined {
-  if (!count || count < 0) return undefined;
-
-  return cappedCount(count);
-}
-
-function cappedCount(count: number): string {
-  return count > maximumBadgeCount ? `${maximumBadgeCount}+` : String(count);
+// A count a row or tile shows as a badge.
+export interface BadgeCount {
+  count: number;
+  // What a screen reader says for it, such as "3 Sessions need attention"; the count when absent.
+  label?: string;
 }
 
 export interface CountBadge {
   // What the badge draws, such as "99+".
   text: string;
-  // What a screen reader says for it; the count itself unless the caller names it.
   label: string;
 }
 
-// A row's count badge, or none when there is nothing to count.
-export function countBadge(
-  count: number | undefined,
-  label: string | undefined,
-): CountBadge | undefined {
-  const text = badgeCountText(count);
+const cappedCount = (count: number): string =>
+  count > maximumBadgeCount ? `${maximumBadgeCount}+` : String(count);
 
-  return text === undefined ? undefined : { text, label: label ?? text };
+const counts = (badge: BadgeCount | undefined): badge is BadgeCount =>
+  (badge?.count ?? 0) > 0;
+
+const spoken = (badge: BadgeCount, text: string): string => badge.label ?? text;
+
+// What a count badge draws and says; nothing when there is nothing to count.
+export function countBadge(
+  badge: BadgeCount | undefined,
+): CountBadge | undefined {
+  if (!counts(badge)) return undefined;
+
+  const text = cappedCount(badge.count);
+
+  return { text, label: spoken(badge, text) };
 }

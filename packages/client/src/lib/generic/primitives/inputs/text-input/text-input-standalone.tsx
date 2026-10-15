@@ -1,15 +1,11 @@
 import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { View } from 'react-native';
-import { Spinner } from '#primitives/display/spinner';
 import { Text } from '#primitives/display/text';
 import { Field } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { BareTextInput } from './text-input-bare';
-import {
-  fieldLoadingLabel,
-  isInvalid,
-  type StandaloneTextInputProps,
-} from './text-input-props';
+import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
+import { FieldSpinner } from './text-input-spinner';
 
 export function StandaloneTextInput(
   props: StandaloneTextInputProps,
@@ -45,14 +41,6 @@ function FieldLabel(props: StandaloneTextInputProps): ReactElement {
       {props.required ? ' *' : ''}
     </Text>
   );
-}
-
-function FieldSpinner(
-  props: Pick<StandaloneTextInputProps, 'label' | 'loading'>,
-): ReactElement | null {
-  if (!props.loading) return null;
-
-  return <Spinner accessibilityLabel={fieldLoadingLabel(props.label)} />;
 }
 
 type InputProps = ComponentProps<typeof BareTextInput>;

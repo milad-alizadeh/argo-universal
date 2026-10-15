@@ -47,18 +47,9 @@ export function RowContent(props: GroupedListItemProps): React.JSX.Element {
       modifiers={modifiers}
     >
       <RowFields {...props} />
-      <RowEnd {...props} />
-    </Row>
-  );
-}
-
-// Status and chevron, in that order at the row's end.
-function RowEnd(props: GroupedListItemProps): React.JSX.Element {
-  return (
-    <>
       <NativeRowStatus {...props} />
       <Disclosure visible={hasDisclosure(props)} />
-    </>
+    </Row>
   );
 }
 
