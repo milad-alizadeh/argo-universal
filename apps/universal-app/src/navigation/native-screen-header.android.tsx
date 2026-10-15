@@ -7,7 +7,6 @@ import { Stack, type NativeStackNavigationOptions } from 'expo-router';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { rightItems } from './header-right-items';
 import { screenHeaderOptions } from './screen-header-options';
 
 type Search = ScreenHeaderProps['search'];
@@ -23,59 +22,69 @@ export function NativeScreenHeader(
 
 type AppBar = ReturnType<typeof useAppBarSearch>;
 
+/*
+ * Material's open search keeps the app bar and fills its slots: Back where the navigation icon was, the field where
+ * the title's text started, Clear where Search was. The bar keeps its height, so nothing below it moves.
+ * Options merge, so each state sets every slot the other one fills.
+ */
 function appBarOptions(
   header: ScreenHeaderProps,
   appBar: AppBar,
 ): NativeStackNavigationOptions {
-  return appBar.field
-    ? openSearchOptions(header, appBar, appBar.field)
-    : closedOptions(header, appBar);
-}
-
-// Options merge, so each state sets every slot the other one fills.
-function closedOptions(
-  { right = [], search, ...header }: ScreenHeaderProps,
-  appBar: AppBar,
-): NativeStackNavigationOptions {
-  const items = search
-    ? [...right, searchButton(search, appBar.openSearch)]
-    : right;
-
   return {
-    ...screenHeaderOptions(header),
-    headerTitle: undefined,
-    headerRight: undefined,
-    ...rightItems(items),
+    ...leadingSlots(header, appBar),
+    ...trailingSlot(barItems(header, appBar), appBar),
   };
 }
 
-/*
- * Material's open search keeps the app bar and fills its slots: Back where the navigation icon was, the field where
- * the title's text started, Clear where Search was. The bar keeps its height, so nothing below it moves.
- */
-function openSearchOptions(
-  header: ScreenHeaderProps,
-  appBar: AppBar,
-  field: ReactElement,
+// The navigation icon and title while closed; Back and the field while open.
+function leadingSlots(
+  { title, left }: ScreenHeaderProps,
+  { field, ...appBar }: AppBar,
 ): NativeStackNavigationOptions {
-  const clear = appBar.clear;
+  if (!field)
+    return { ...screenHeaderOptions({ title, left }), headerTitle: undefined };
 
   return {
-    ...screenHeaderOptions({ title: header.title, left: backButton(appBar) }),
+    ...screenHeaderOptions({ title, left: backButton(appBar.close) }),
     headerTitle: (): ReactElement => field,
-    // The trailing slot stays while search is open: the bar re-laying its items would take the field's focus.
+  };
+}
+
+// The screen's own items, then Search last.
+function barItems(
+  { right = [], search }: ScreenHeaderProps,
+  appBar: AppBar,
+): readonly ReactElement[] {
+  return search ? [...right, searchButton(search, appBar.openSearch)] : right;
+}
+
+/*
+ * One trailing slot for both states: the bar's items stay mounted, hidden while search is open, so opening and
+ * closing never re-lay the bar or remount its menus, and the open field keeps its focus.
+ */
+function trailingSlot(
+  items: readonly ReactElement[],
+  { open, clear }: AppBar,
+): NativeStackNavigationOptions {
+  if (!items.length) return { headerRight: undefined };
+
+  return {
     headerRight: (): ReactElement => (
-      <View>{clear ? clearButton(clear) : null}</View>
+      <View className="flex-row gap-1">
+        {clear ? clearButton(clear) : null}
+        <View className={open ? 'hidden' : 'flex-row gap-1'}>{items}</View>
+      </View>
     ),
   };
 }
 
-function backButton(appBar: AppBar): ReactElement {
+function backButton(onPress: () => void): ReactElement {
   return (
     <HeaderButton
       icon="arrow-left"
       accessibilityLabel="Close search"
-      onPress={appBar.close}
+      onPress={onPress}
     />
   );
 }

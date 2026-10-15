@@ -24,19 +24,33 @@ export function useAppBarSearch(
 
   return {
     open,
-    openSearch: () => setOpen(true),
+    openSearch: openSearch(query, setOpen),
     close,
     ...openParts(open && search ? search.label : undefined, query),
   };
 }
 
-// Closing clears the query.
+// Opening starts from an empty field.
+function openSearch(
+  query: Query,
+  setOpen: (open: boolean) => void,
+): () => void {
+  return (): void => {
+    query.emptyField();
+    setOpen(true);
+  };
+}
+
+/*
+ * Closing clears the screen's query in the same render that gives the bar back. The field keeps its text until then:
+ * emptying it now would show an empty field for a frame before the bar returns.
+ */
 function closeSearch(
   query: Query,
   setOpen: (open: boolean) => void,
 ): () => void {
   return (): void => {
-    query.clear();
+    query.field.onValueChange?.('');
     setOpen(false);
   };
 }
@@ -58,6 +72,7 @@ interface Query {
   field: FieldValue;
   hasText: boolean;
   clear: () => void;
+  emptyField: () => void;
 }
 
 // The field's own text, so typing never waits on the screen; Clear empties both.
@@ -70,12 +85,24 @@ function useQuery(latest: Latest): Query {
     latest.current?.onChangeText(value);
   };
 
-  const clear = (): void => {
-    text.set('');
+  const emptyField = (): void => text.set('');
+
+  return {
+    field: { value: text, onValueChange: change },
+    hasText,
+    clear: clearBoth(emptyField, change),
+    emptyField,
+  };
+}
+
+function clearBoth(
+  emptyField: () => void,
+  change: (value: string) => void,
+): () => void {
+  return (): void => {
+    emptyField();
     change('');
   };
-
-  return { field: { value: text, onValueChange: change }, hasText, clear };
 }
 
 // The screen's latest callback, for a field that keeps its own text once open.
