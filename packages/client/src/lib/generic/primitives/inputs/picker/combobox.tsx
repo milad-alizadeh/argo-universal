@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { type ComponentType, type ReactElement, useState } from 'react';
+import { Platform } from 'react-native';
 import { Button } from '#primitives/buttons/button';
 import { BottomSheet } from '#primitives/overlays/bottom-sheet';
 import {
@@ -86,8 +87,15 @@ function WideContent<Value extends string>(
   );
 }
 
-// Paper's sheet is the card surface, as tall as its options.
+// Android's sheet hugs its options; iOS rises to their height through its detents.
+const hugsOptions = Platform.OS === 'android';
+
+const sheetContent = { wide: false, fit: hugsOptions } as const;
+
+// The stock grouped sheet, as tall as its options.
 const sheetPresentation = {
+  surface: 'grouped',
+  fit: hugsOptions,
   contentScrolls: true,
   fitList: true,
   expandable: true,
@@ -105,7 +113,7 @@ function SheetCombobox<Value extends string>(
 
   return (
     <BottomSheet {...sheetProps(props, open, setOpen)}>
-      <ComboboxContent {...props} wide={false} onChoose={choose} />
+      <ComboboxContent {...props} {...sheetContent} onChoose={choose} />
     </BottomSheet>
   );
 }

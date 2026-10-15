@@ -13,9 +13,9 @@ import {
   presentationDetents,
 } from '@expo/ui/swift-ui/modifiers';
 import { useState } from 'react';
+import { groupedBackground } from '#primitives/native/grouped-background';
 import { RoutedFormSheet } from '#primitives/overlays/bottom-sheet';
 import { useFormSheetCommands } from '#primitives/overlays/bottom-sheet';
-import { useNativeTheme } from '../../../native-theme';
 import type { PickerProps } from './picker-props';
 import { PickerSearchPage } from './picker-search-page';
 
@@ -67,20 +67,16 @@ function PickerPage<Value extends string>(
   props: DrillProps<Value>,
 ): React.JSX.Element {
   return (
-    <Group modifiers={usePageModifiers()}>
+    <Group modifiers={pageModifiers}>
       {props.open && <PickerNavigation {...props} />}
     </Group>
   );
 }
 
-function usePageModifiers(): ReturnType<typeof presentationDetents>[] {
-  const { card } = useNativeTheme().colors;
-
-  return [
-    presentationDetents(['large']),
-    presentationBackground(card ?? 'clear'),
-  ];
-}
+const pageModifiers = [
+  presentationDetents(['large']),
+  presentationBackground(groupedBackground ?? 'clear'),
+];
 
 function PickerNavigation<Value extends string>(
   props: DrillProps<Value>,

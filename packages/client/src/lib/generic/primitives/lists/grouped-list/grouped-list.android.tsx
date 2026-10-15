@@ -27,12 +27,15 @@ export function GroupedList(props: GroupedListProps): React.JSX.Element {
   );
 }
 
-// React Native scrolls, not Compose: a native sheet takes the drags of anything it cannot nest-scroll.
+/*
+ * React Native scrolls, not Compose: a native sheet takes the drags of anything it cannot nest-scroll.
+ * A content-sized sheet's list takes its sections' height instead of the height left to it.
+ */
 function SectionsScroll(props: GroupedListProps): React.JSX.Element {
   const scroll = useOverflowScroll(props.onContentHeightChange);
 
   return (
-    <ScrollView className="flex-1" {...scroll}>
+    <ScrollView className={props.fit ? undefined : 'flex-1'} {...scroll}>
       {/* Viewport measurement would cap the rows at the screen's height and clip a longer list. */}
       <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
         <SectionsColumn {...props} />

@@ -1,5 +1,6 @@
 import { Text } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
+import { useResolveClassNames } from 'uniwind';
 import { useComposeTextStyle } from '#primitives/native/native-typography';
 import { useNativeTheme } from '../../../native-theme';
 import type { GroupedListItemProps } from './grouped-list-item-props';
@@ -29,11 +30,15 @@ export function RowSubtitle({
 }: Pick<GroupedListItemProps, 'subtitle'>): React.JSX.Element | null {
   const style = useComposeTextStyle(subtitleRole(subtitle));
   const { mutedForeground } = useNativeTheme().colors;
+  const tight = useResolveClassNames('leading-4').lineHeight;
 
   if (!subtitle) return null;
 
+  // A path's one line sits close under the title, as Material's supporting text does.
+  const lineHeight = subtitle.code ? tight : style.lineHeight;
+
   return (
-    <Text color={mutedForeground} style={style}>
+    <Text color={mutedForeground} style={{ ...style, lineHeight }}>
       {subtitle.text}
     </Text>
   );

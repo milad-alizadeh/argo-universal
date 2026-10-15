@@ -3,6 +3,7 @@ import {
   foregroundStyle,
   frame,
   accessibilityHidden,
+  lineLimit,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useSwiftUITextModifiers } from '#primitives/native/native-typography';
@@ -57,9 +58,13 @@ function RowSubtitleText({
 }: Required<Pick<GroupedListItemProps, 'subtitle'>>): React.JSX.Element {
   const secondaryModifiers = useSwiftUITextModifiers(subtitleRole(subtitle));
   const muted = useRowColor('secondary');
+  // A path stays on one line and ends in an ellipsis; prose reflows.
+  const oneLine = subtitle.code ? [lineLimit(1)] : [];
 
   return (
-    <Text modifiers={[...secondaryModifiers, muted]}>{subtitle.text}</Text>
+    <Text modifiers={[...secondaryModifiers, muted, ...oneLine]}>
+      {subtitle.text}
+    </Text>
   );
 }
 

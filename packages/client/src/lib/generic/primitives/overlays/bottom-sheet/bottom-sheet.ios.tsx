@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { type ColorValue, type LayoutChangeEvent, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { useNativeTheme } from '#lib/generic/native-theme';
+import { groupedBackground } from '#primitives/native/grouped-background';
 import { Host } from '#primitives/native/host';
 import { BottomSheetContent } from './bottom-sheet-content';
 import { useSheetDetents } from './bottom-sheet-detents';
@@ -68,13 +69,22 @@ function presentationProps(
     onIsPresentedChange: props.onOpenChange,
     onDismiss: () => dismissPresentation(props),
     anchor: props.trigger && (
-      <RNHostView matchContents>
-        <View style={{ maxWidth: anchorWidth }}>
-          <BottomSheetTrigger trigger={props.trigger} />
-        </View>
-      </RNHostView>
+      <SheetAnchor trigger={props.trigger} width={anchorWidth} />
     ),
   };
+}
+
+function SheetAnchor(props: {
+  trigger: NonNullable<BottomSheetProps['trigger']>;
+  width: number | undefined;
+}): React.JSX.Element {
+  return (
+    <RNHostView matchContents>
+      <View style={{ maxWidth: props.width }}>
+        <BottomSheetTrigger trigger={props.trigger} />
+      </View>
+    </RNHostView>
+  );
 }
 
 type SheetContentProps = Pick<
@@ -118,8 +128,17 @@ function useSheetModifiers(
     ...useSheetDetents(props, listHeight),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
-    ...sheetFill(props.surface === 'sidebar' ? content : glass),
+    ...sheetFill(surfaceFill(props.surface, { content, glass })),
   ];
+}
+
+function surfaceFill(
+  surface: BottomSheetProps['surface'],
+  fills: { content: ColorValue | undefined; glass: ColorValue | undefined },
+): ColorValue | undefined {
+  if (surface === 'grouped') return groupedBackground;
+
+  return surface === 'sidebar' ? fills.content : fills.glass;
 }
 
 /*
@@ -127,7 +146,7 @@ function useSheetModifiers(
  * is Paper's translucent card, which its content lets show through.
  */
 function sheetFill(fill: ColorValue | undefined): ModifierConfig[] {
-  return typeof fill === 'string' ? [presentationBackground(fill)] : [];
+  return fill === undefined ? [] : [presentationBackground(fill)];
 }
 
 function dismissPresentation(

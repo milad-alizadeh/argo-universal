@@ -1,5 +1,5 @@
 import { Image, type ImageProps } from '@expo/ui/swift-ui';
-import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '../native-theme';
 import { appleSymbol } from './apple-symbol';
@@ -12,6 +12,10 @@ const mutedStyle = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
 
 type SymbolModifiers = ReturnType<typeof foregroundStyle>[] | undefined;
 
+// The regular weight, as the React Native Icon draws it, whatever weight the row's text sets around it.
+const symbolFont = (size: number): ReturnType<typeof font> =>
+  font({ size, weight: 'regular' });
+
 const accentStyle = (color: string | undefined): SymbolModifiers =>
   color ? [foregroundStyle(color)] : undefined;
 
@@ -23,6 +27,15 @@ function useToneModifiers(
   if (props.accent === true) return accentStyle(accent);
 
   return props.muted === true ? [mutedStyle] : undefined;
+}
+
+function useSymbolModifiers(
+  role: NativeSymbolProps['role'],
+  tone: Pick<NativeSymbolProps, 'muted' | 'accent'>,
+): ReturnType<typeof font>[] {
+  const size = useIconPixels(role);
+
+  return [symbolFont(size), ...(useToneModifiers(tone) ?? [])];
 }
 
 function imageSource(
@@ -41,8 +54,7 @@ export function NativeSymbol({
   return (
     <Image
       {...imageSource(appleSymbol(iconSymbols[name], filled))}
-      size={useIconPixels(role)}
-      modifiers={useToneModifiers(tone)}
+      modifiers={useSymbolModifiers(role, tone)}
     />
   );
 }

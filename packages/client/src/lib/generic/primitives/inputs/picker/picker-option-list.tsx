@@ -26,6 +26,8 @@ export type PickerOptionListProps<Value extends string> = {
   value?: Value;
   options: readonly PickerOption<Value>[];
   wide: boolean;
+  // A phone sheet that hugs the list: the list takes its rows' height.
+  fit?: boolean;
   onChoose: (option: PickerOption<Value>) => void;
   // The row Enter would choose.
   activeValue?: Value;
