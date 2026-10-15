@@ -10,23 +10,21 @@ import Animated, {
 } from 'react-native-reanimated';
 
 /*
- * The sweep starts from Facebook Shimmer's defaults (FBShimmering.h, github.com/facebookarchive/Shimmer):
- * linear motion at shimmeringSpeed points a second, so a pass takes (fill + band) / speed seconds,
- * and shimmeringPauseDuration 0.4 seconds between passes. The owner tuned the speed from Shimmer's 230 to 270,
- * and the band below from 56 to 88.
+ * Every pass takes the same time on any bar, as in shimmer-android (Shimmer.java, github.com/facebookarchive/shimmer-android),
+ * whose animationDuration of 1000 milliseconds is fixed whatever the view's width. The speed is (fill + band) / pass,
+ * from the fill's width on each frame, so a fill that springs wider mid-pass speeds the band up.
+ * Between passes it pauses for Facebook Shimmer's shimmeringPauseDuration of 0.4 seconds (FBShimmering.h).
  */
-const pointsPerSecond = 270;
+const passMilliseconds = 1000;
 
-const pauseSeconds = 0.4;
+const pauseMilliseconds = 400;
 
-const millisecondsPerSecond = 1000;
-
-// The band runs on through the pause, out of sight, so the pause is a distance past the fill.
-const pauseDistance = pointsPerSecond * pauseSeconds;
+// A cycle is one pass, then the pause; progress runs from 0 to 1 across the pass and on to the pause's end.
+const cycleProgress = (passMilliseconds + pauseMilliseconds) / passMilliseconds;
 
 /*
- * shimmer-android's linear gradient with dropoff 0.5 keeps the outer quarters of the band clear
- * and ramps to the highlight and back across its middle half. The glint is that middle half.
+ * shimmer-android's linear gradient with dropoff 0.5 keeps the outer quarters of the band clear and ramps
+ * to the highlight and back across its middle half. The glint is that middle half. The owner widened the band to 88.
  */
 const bandWidth = 88;
 
@@ -34,30 +32,24 @@ const glintWidth = bandWidth / 2;
 
 const glintInset = (bandWidth - glintWidth) / 2;
 
-// How far the band's leading edge has run, wrapping to the start once the pause has passed.
-function nextOffset(
-  offset: number,
-  elapsed: number,
-  fillWidth: number,
-): number {
+// How far through the cycle the band is, wrapping to the start once the pause has passed.
+function nextProgress(progress: number, elapsed: number): number {
   'worklet';
 
-  const next = offset + (pointsPerSecond * elapsed) / millisecondsPerSecond;
+  const next = progress + elapsed / passMilliseconds;
 
-  return next < fillWidth + bandWidth + pauseDistance ? next : 0;
+  return next < cycleProgress ? next : 0;
 }
 
-// Moves the band at a steady speed on the UI thread, whatever the fill's width.
-function useSweepOffset(fillWidth: SharedValue<number>): SharedValue<number> {
-  const offset = useSharedValue(0);
+// Runs the cycle on the UI thread, linear in time.
+function useSweepProgress(): SharedValue<number> {
+  const progress = useSharedValue(0);
 
   useFrameCallback(({ timeSincePreviousFrame }: FrameInfo) => {
-    offset.set(
-      nextOffset(offset.get(), timeSincePreviousFrame ?? 0, fillWidth.get()),
-    );
+    progress.set(nextProgress(progress.get(), timeSincePreviousFrame ?? 0));
   });
 
-  return offset;
+  return progress;
 }
 
 interface GlintProps {
@@ -69,16 +61,17 @@ interface GlintProps {
 function useGlintStyle({
   fillWidth,
 }: GlintProps): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
-  const offset = useSweepOffset(fillWidth);
+  const progress = useSweepProgress();
 
   return useAnimatedStyle(() => {
-    const travelled = Math.min(offset.get(), fillWidth.get() + bandWidth);
+    const travelled =
+      Math.min(progress.get(), 1) * (fillWidth.get() + bandWidth);
 
     return {
       width: glintWidth,
       transform: [{ translateX: travelled - bandWidth + glintInset }],
     };
-  }, [offset, fillWidth]);
+  }, [progress, fillWidth]);
 }
 
 // FBShimmering.h's shimmeringAnimationOpacity 0.5: the highlight peaks at half strength, clear at both ends.
