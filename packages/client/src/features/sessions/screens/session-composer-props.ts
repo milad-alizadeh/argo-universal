@@ -8,6 +8,7 @@ import type { useBlobUrl } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import type { ElicitationFormProps } from '#features/requests';
 import type { useNavigate } from '#lib/product/navigation/context';
+import type { MergeMethodChoice } from '../hooks/use-merge-method';
 import { composerStatus } from '../state/composer-status';
 import { toSendError } from '../state/send-error';
 import type { SessionCommands } from './use-session-commands';
@@ -25,6 +26,7 @@ export interface OpenSession {
   imageUrl: ReturnType<typeof useBlobUrl>;
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
+  mergeMethod: MergeMethodChoice;
 }
 
 type DraftProps = Pick<

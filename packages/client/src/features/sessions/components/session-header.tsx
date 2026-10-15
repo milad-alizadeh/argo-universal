@@ -4,7 +4,11 @@ import { HeaderButton } from '#lib/product/header-button';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { PageHeader } from '#lib/product/page-header';
 import { useWide } from '../../../lib/generic/use-wide/use-wide';
-import { SessionHeaderActions } from './session-header-actions';
+import { defaultMergeMethod, type MergeMethod } from '../state/merge-method';
+import {
+  SessionHeaderActions,
+  type SessionHeaderActionsProps,
+} from './session-header-actions';
 import { SessionHeaderTitle } from './session-header-meta';
 import type { SessionHeaderProps } from './session-header-props';
 import type { SessionPullRequest } from './session-pull-request';
@@ -32,6 +36,28 @@ function useShownPullRequest(
   return [shown, setPicked];
 }
 
+type MergeMethodChoice = Pick<
+  SessionHeaderActionsProps,
+  'method' | 'onMethodChange'
+>;
+
+// The merge method Merge PR runs: the one picked here, else the device's last, else squash.
+function useMergeMethodChoice(
+  props: Pick<SessionHeaderProps, 'mergeMethod' | 'onMergeMethodChange'>,
+): MergeMethodChoice {
+  const [picked, setPicked] = useState<MergeMethod>();
+
+  const onMethodChange = (method: MergeMethod): void => {
+    setPicked(method);
+    props.onMergeMethodChange?.(method);
+  };
+
+  return {
+    method: picked ?? props.mergeMethod ?? defaultMergeMethod,
+    onMethodChange,
+  };
+}
+
 const phoneHeaderItems = [
   // Changed files and the Session menu get their actions in later issues.
   <HeaderButton
@@ -50,17 +76,19 @@ function PhoneSessionHeader({ title }: { title: string }): React.JSX.Element {
 interface WideSessionHeaderProps extends SessionHeaderProps {
   pullRequests: SessionPullRequest[];
   shownPullRequest: ShownPullRequest;
+  mergeChoice: MergeMethodChoice;
 }
 
 function WideSessionHeader({
   shownPullRequest: [shown, show],
   onMerge,
+  mergeChoice,
   ...props
 }: WideSessionHeaderProps): React.JSX.Element {
   return (
     <PageHeader
       title={<SessionHeaderTitle {...props} shown={shown} onShow={show} />}
-      actions={<SessionHeaderActions shown={shown} onMerge={onMerge} />}
+      actions={<SessionHeaderActions {...{ ...mergeChoice, shown, onMerge }} />}
     />
   );
 }
@@ -70,6 +98,7 @@ export function SessionHeader(props: SessionHeaderProps): React.JSX.Element {
   const wide = useWide();
   const pullRequests = props.pullRequests ?? [];
   const shownPullRequest = useShownPullRequest(pullRequests);
+  const mergeChoice = useMergeMethodChoice(props);
 
   if (!wide) return <PhoneSessionHeader title={props.title} />;
 
@@ -78,6 +107,7 @@ export function SessionHeader(props: SessionHeaderProps): React.JSX.Element {
       {...props}
       pullRequests={pullRequests}
       shownPullRequest={shownPullRequest}
+      mergeChoice={mergeChoice}
     />
   );
 }

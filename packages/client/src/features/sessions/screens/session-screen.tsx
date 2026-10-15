@@ -11,6 +11,7 @@ import {
   SessionView,
   type SessionViewProps,
 } from '../components/session-view/session-view';
+import { useMergeMethod } from '../hooks/use-merge-method';
 import { useSessionElicitation } from '../hooks/use-session-elicitation';
 import {
   type SessionViewSources,
@@ -56,19 +57,25 @@ function useFeedElicitation(
   });
 }
 
+type SessionSurroundings =
+  | 'agents'
+  | 'navigate'
+  | 'imageUrl'
+  | 'connected'
+  | 'elicitation'
+  | 'mergeMethod';
+
 function useSessionSurroundings(
   sessionId: string,
   feed: SessionFeed,
-): Pick<
-  SessionViewSources,
-  'agents' | 'navigate' | 'imageUrl' | 'connected' | 'elicitation'
-> {
+): Pick<SessionViewSources, SessionSurroundings> {
   return {
     elicitation: useFeedElicitation(sessionId, feed),
     agents: useAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
+    mergeMethod: useMergeMethod(),
   };
 }
 

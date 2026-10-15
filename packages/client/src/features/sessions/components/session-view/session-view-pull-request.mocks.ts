@@ -39,6 +39,11 @@ export function withPullRequests(
 ): OpenSessionViewProps {
   return {
     ...session,
-    header: { ...session.header, pullRequests, onMerge: fn() },
+    header: {
+      ...session.header,
+      pullRequests,
+      onMerge: fn(),
+      onMergeMethodChange: fn(),
+    },
   };
 }

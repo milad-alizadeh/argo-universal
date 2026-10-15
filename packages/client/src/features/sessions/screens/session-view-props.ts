@@ -41,10 +41,14 @@ const loadedFeed = ({ snapshot, view }: SessionFeed): OpenFeed | undefined =>
 const openFeed = (feed: SessionFeed): OpenFeed | undefined =>
   feed.ready ? loadedFeed(feed) : undefined;
 
-const sessionHeaderProps = (snapshot: SessionSnapshot): SessionHeaderProps => ({
+const sessionHeaderProps = ({
+  snapshot,
+  mergeMethod,
+}: OpenSession): SessionHeaderProps => ({
   title: snapshot.title,
   status: headerStatus[snapshot.state],
   startedAt: snapshot.liveHeader?.startedAt ?? null,
+  ...mergeMethod,
 });
 
 const sessionFeedProps = (open: OpenSession): FeedProps => ({
@@ -59,7 +63,7 @@ const sessionFeedProps = (open: OpenSession): FeedProps => ({
 
 const openSessionProps = (open: OpenSession): OpenSessionViewProps => ({
   elicitation: open.elicitation,
-  header: sessionHeaderProps(open.snapshot),
+  header: sessionHeaderProps(open),
   feed: sessionFeedProps(open),
   composer: sessionComposerProps(open),
 });

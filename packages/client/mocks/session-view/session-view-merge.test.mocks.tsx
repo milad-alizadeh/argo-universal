@@ -11,9 +11,20 @@ import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { openProps, type Story } from './session-view-story.test.mocks';
 
+type StoryContext = Parameters<NonNullable<Story['play']>>[0];
+
 const mergeLabel = 'Merge PR';
 
 const optionsLabel = 'Merge options';
+
+const rebaseLabel = 'Rebase and merge';
+
+const checksPassed = {
+  view: {
+    state: 'open',
+    ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
+  },
+} satisfies Story['args'];
 
 // Checks still run: the header names the PR and its checks, and Merge PR waits.
 export const mergeWaitsForChecks: Story = {
@@ -37,12 +48,7 @@ export const mergeWaitsForChecks: Story = {
 };
 
 export const mergesWhenChecksPass: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...withPullRequests(idleSession, [pullRequestMocks.checksPassed]),
-    },
-  },
+  args: checksPassed,
   play: async ({ canvas, args, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await expect(
@@ -58,26 +64,75 @@ export const mergesWhenChecksPass: Story = {
   },
 };
 
-// The chevron's menu merges by another method.
-export const mergesByAnotherMethod: Story = {
-  args: mergesWhenChecksPass.args,
+async function pickMethod(
+  { canvas, userEvent }: Pick<StoryContext, 'canvas' | 'userEvent'>,
+  name: string,
+): Promise<void> {
+  await settleViewport(layoutWidths.wide);
+  await expect(
+    await canvas.findByLabelText('Checks 5/5, passed'),
+  ).toBeVisible();
+  await userEvent.click(canvas.getByRole('button', { name: optionsLabel }));
+
+  const method = await within(document.body).findByRole('menuitemradio', {
+    name,
+  });
+
+  // The menu fades in.
+  await waitFor(() => expect(method).toBeVisible());
+  await userEvent.click(method);
+}
+
+// A method picked from the chevron's menu is the one Merge PR runs, and this device keeps it.
+export const mergesByThePickedMethod: Story = {
+  args: checksPassed,
+  play: async (context) => {
+    const { header } = openProps(context.args.view);
+    await pickMethod(context, rebaseLabel);
+    await expect(header.onMergeMethodChange).toHaveBeenCalledWith('rebase');
+    await expect(header.onMerge).not.toHaveBeenCalled();
+    await context.userEvent.click(
+      context.canvas.getByRole('button', { name: mergeLabel }),
+    );
+    await expect(header.onMerge).toHaveBeenCalledWith(45, 'rebase');
+  },
+};
+
+// The menu ticks the method picked last.
+export const ticksThePickedMethod: Story = {
+  args: checksPassed,
+  play: async (context) => {
+    await pickMethod(context, rebaseLabel);
+    await context.userEvent.click(
+      context.canvas.getByRole('button', { name: optionsLabel }),
+    );
+    const menu = within(document.body);
+
+    await expect(
+      await menu.findByRole('menuitemradio', { name: rebaseLabel }),
+    ).toHaveAttribute('aria-checked', 'true');
+    await expect(
+      menu.getByRole('menuitemradio', { name: 'Squash and merge' }),
+    ).toHaveAttribute('aria-checked', 'false');
+  },
+};
+
+// The method this device used last is ticked, and Merge PR runs it.
+export const mergesByTheLastMethod: Story = {
+  args: {
+    view: {
+      ...checksPassed.view,
+      header: { ...checksPassed.view.header, mergeMethod: 'merge' },
+    },
+  },
   play: async ({ canvas, args, userEvent }) => {
     await settleViewport(layoutWidths.wide);
-    await expect(
-      await canvas.findByLabelText('Checks 5/5, passed'),
-    ).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: optionsLabel }));
-
-    const rebase = await within(document.body).findByRole('menuitem', {
-      name: 'Rebase and merge',
-    });
-
-    // The menu fades in.
-    await waitFor(() => expect(rebase).toBeVisible());
-    await userEvent.click(rebase);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: mergeLabel }),
+    );
     await expect(openProps(args.view).header.onMerge).toHaveBeenCalledWith(
       45,
-      'rebase',
+      'merge',
     );
   },
 };

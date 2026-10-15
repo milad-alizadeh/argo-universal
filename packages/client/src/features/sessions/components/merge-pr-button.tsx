@@ -1,30 +1,22 @@
 import type * as React from 'react';
 import { Button } from '#primitives/buttons/button';
 import { SplitButton } from '#primitives/buttons/split-button';
-import type { MenuAction } from '#primitives/overlays/menu';
+import type { MergeMethod } from '../state/merge-method';
 
-export type MergeMethod = 'squash' | 'merge' | 'rebase';
-
-const mergeMethods = [
-  { method: 'squash', label: 'Squash and merge' },
-  { method: 'merge', label: 'Create a merge commit' },
-  { method: 'rebase', label: 'Rebase and merge' },
-] as const satisfies readonly { method: MergeMethod; label: string }[];
+const mergeMethodOptions = [
+  { value: 'squash', label: 'Squash and merge' },
+  { value: 'merge', label: 'Create a merge commit' },
+  { value: 'rebase', label: 'Rebase and merge' },
+] as const satisfies readonly { value: MergeMethod; label: string }[];
 
 export interface MergePrButtonProps {
   // False until the PR can merge: checks pass and nothing conflicts.
   mergeable: boolean;
+  // The method Merge PR runs, ticked in its menu.
+  method: MergeMethod;
+  onMethodChange: (method: MergeMethod) => void;
   // Absent while the Server has no way to merge; the button then stays dimmed.
   onMerge?: (method: MergeMethod) => void;
-}
-
-function mergeMethodActions(
-  onMerge: MergePrButtonProps['onMerge'],
-): MenuAction[] {
-  return mergeMethods.map(({ method, label }) => ({
-    label,
-    onPress: () => onMerge?.(method),
-  }));
 }
 
 const mergeAppearance = {
@@ -39,21 +31,22 @@ const mergeSplit = {
   size: 'xs',
   primary: true,
   menuLabel: 'Merge options',
+  options: mergeMethodOptions,
 } as const;
 
-// "Merge PR" with a menu of merge methods on its chevron; dimmed until the PR can merge.
+// "Merge PR" runs the ticked merge method; its chevron picks another, as GitHub's merge button does. Dimmed until the PR can merge.
 export function MergePrButton(props: MergePrButtonProps): React.JSX.Element {
   const disabled = !props.mergeable || !props.onMerge;
 
   return (
     <SplitButton
-      {...mergeSplit}
-      {...{ disabled, actions: mergeMethodActions(props.onMerge) }}
+      {...{ ...mergeSplit, disabled, value: props.method }}
+      onValueChange={props.onMethodChange}
     >
       <Button
         {...mergeAppearance}
         disabled={disabled}
-        onPress={() => props.onMerge?.('squash')}
+        onPress={() => props.onMerge?.(props.method)}
       />
     </SplitButton>
   );

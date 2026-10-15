@@ -9,9 +9,11 @@ import {
 } from '../../../../../mocks/session-view/session-view-failure.test.mocks';
 import {
   listsEveryPullRequest,
-  mergesByAnotherMethod,
+  mergesByTheLastMethod,
+  mergesByThePickedMethod,
   mergesWhenChecksPass,
   mergeWaitsForChecks,
+  ticksThePickedMethod,
 } from '../../../../../mocks/session-view/session-view-merge.test.mocks';
 import { feedReflowsAfterThePaneCollapses } from '../../../../../mocks/session-view/session-view-pane.test.mocks';
 import {
@@ -102,7 +104,11 @@ export const MergeWaitsForChecks = mergeWaitsForChecks;
 
 export const MergesWhenChecksPass = mergesWhenChecksPass;
 
-export const MergesByAnotherMethod = mergesByAnotherMethod;
+export const MergesByThePickedMethod = mergesByThePickedMethod;
+
+export const TicksThePickedMethod = ticksThePickedMethod;
+
+export const MergesByTheLastMethod = mergesByTheLastMethod;
 
 export const ListsEveryPullRequest = listsEveryPullRequest;
 
