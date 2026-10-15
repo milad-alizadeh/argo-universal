@@ -45,7 +45,7 @@ export { iconSymbols } from './lib/generic/symbols/icon-names';
 
 export { useWide } from './lib/generic/use-wide/use-wide';
 
-export { Text, useTextStyle } from '#primitives/display/text';
+export { Text } from '#primitives/display/text';
 
 export { Toaster } from '#primitives/overlays/toast';
 

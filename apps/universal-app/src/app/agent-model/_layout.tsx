@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import type * as React from 'react';
 import { useResolveClassNames } from 'uniwind';
-import { useSheetHeaderOptions } from '@/navigation/sheet-header';
+import { sheetHeaderOptions } from '@/navigation/sheet-header';
 
 // The Agent and model sheet pushes its pages on a stack of its own.
 export default function AgentModelLayout(): React.JSX.Element {
@@ -20,11 +20,10 @@ export default function AgentModelLayout(): React.JSX.Element {
 function useConfigureOptions(): React.ComponentProps<
   typeof Stack
 >['screenOptions'] {
-  const options = useSheetHeaderOptions();
   const surface = useResolveClassNames('bg-content');
 
   return {
-    ...options,
+    ...sheetHeaderOptions,
     headerTransparent: false,
     headerStyle: surface,
     contentStyle: surface,

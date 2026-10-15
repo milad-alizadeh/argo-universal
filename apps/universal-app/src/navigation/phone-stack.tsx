@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
-import { useHeaderTitleOptions } from './header-title';
+import { headerTitleOptions } from './header-title';
 import { WebScreenHeader } from './web-screen-header';
 
 // Native header options every phone stack shares: one line, no hairline border.
@@ -11,6 +11,7 @@ const screenOptions = {
   headerShadowVisible: false,
   headerTransparent: hasLiquidGlass,
   headerBackButtonDisplayMode: 'minimal',
+  ...headerTitleOptions,
 } satisfies ComponentProps<typeof Stack>['screenOptions'];
 
 // iOS 26's transparent header lies over the top of the screen; every other header takes its own space.
@@ -20,10 +21,6 @@ function useGlassHeaderCover(): number {
   return hasLiquidGlass ? height : 0;
 }
 
-function useScreenOptions(): ComponentProps<typeof Stack>['screenOptions'] {
-  return { ...screenOptions, ...useHeaderTitleOptions() };
-}
-
 // A phone section's native stack; its screens set their header through ScreenHeader.
 export function PhoneStack({ children }: PropsWithChildren): React.JSX.Element {
   return (
@@ -31,7 +28,7 @@ export function PhoneStack({ children }: PropsWithChildren): React.JSX.Element {
       header={WebScreenHeader}
       useHeaderCover={useGlassHeaderCover}
     >
-      <Stack screenOptions={useScreenOptions()}>{children}</Stack>
+      <Stack screenOptions={screenOptions}>{children}</Stack>
     </ScreenHeaderProvider>
   );
 }
