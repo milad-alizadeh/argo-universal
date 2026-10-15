@@ -1,14 +1,8 @@
-import {
-  RNHostView,
-  Row,
-  Text,
-  useMaterialColors,
-} from '@expo/ui/jetpack-compose';
+// Android only: its drawer item is Material's pill, while iOS draws the drawer row in React Native as the web does.
+import { RNHostView, Row } from '@expo/ui';
 import {
   type ModifierConfig,
-  background,
   fillMaxWidth,
-  height,
   padding,
   selectable,
   semantics,
@@ -18,9 +12,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { Icon, IconSlot } from '#primitives/display/icon';
+import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
-import { roundedClip } from '#primitives/native/native-modifiers';
-import { useComposeTextStyle } from '#primitives/native/native-typography';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
@@ -46,9 +39,10 @@ export function DrawerItem(props: DrawerItemProps): React.JSX.Element {
 function DrawerItemRow(props: DrawerItemProps): React.JSX.Element {
   return (
     <Row
-      horizontalArrangement={{ spacedBy: iconGap }}
-      verticalAlignment="center"
-      modifiers={[...usePillModifiers(props.selected), ...tabModifiers(props)]}
+      alignment="center"
+      spacing={iconGap}
+      style={usePillStyle(props.selected)}
+      modifiers={tabModifiers(props)}
     >
       <DrawerItemIcon {...props} />
       <DrawerItemLabel {...props} />
@@ -57,18 +51,20 @@ function DrawerItemRow(props: DrawerItemProps): React.JSX.Element {
   );
 }
 
-function usePillModifiers(selected: boolean): ModifierConfig[] {
+function usePillStyle(
+  selected: boolean,
+): React.ComponentProps<typeof Row>['style'] {
   // The theme's selection tint, as on every other selected row, in place of Material's secondary container.
   const highlight = String(useCSSVariable('--color-selected'));
 
-  return [
-    fillMaxWidth(),
-    height(itemHeight),
-    roundedClip(itemHeight / 2),
-    background(selected ? highlight : 'transparent'),
-  ];
+  return {
+    height: itemHeight,
+    borderRadius: itemHeight / 2,
+    backgroundColor: selected ? highlight : 'transparent',
+  };
 }
 
+// The press ripple fills the pill, so the padding comes after the selectable.
 function tabModifiers({
   label,
   selected,
@@ -78,6 +74,7 @@ function tabModifiers({
   const description = [label, badge?.label].filter(Boolean).join(', ');
 
   return [
+    fillMaxWidth(),
     selectable(selected, onPress, 'tab'),
     semantics({ contentDescription: description }),
     padding(startPadding, 0, endPadding, 0),
@@ -115,18 +112,11 @@ function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
   );
 }
 
-function DrawerItemLabel({
-  label,
-  selected,
-}: DrawerItemProps): React.JSX.Element {
-  const colors = useMaterialColors();
-  const color = selected ? colors.onSurface : colors.onSurfaceVariant;
-  const style = useComposeTextStyle('control');
-
+function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   return (
-    <Text color={color} style={style} maxLines={1} modifiers={[weight(1)]}>
+    <NativeText role="control" numberOfLines={1} modifiers={[weight(1)]}>
       {label}
-    </Text>
+    </NativeText>
   );
 }
 

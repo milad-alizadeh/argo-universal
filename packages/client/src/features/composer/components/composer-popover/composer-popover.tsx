@@ -1,17 +1,17 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { cloneElement, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { Text } from '#primitives/display/text';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
   usePopoverClose,
 } from '#primitives/overlays/popover';
+import { Sheet } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useAfterClose } from '../../hooks/use-after-close';
 import type { ComposerPopoverProps } from './popover-types';
@@ -48,8 +48,8 @@ export function ComposerPopover(
   const after = useAfterClose(setOpen);
   closeDisabled(props, open, setOpen);
 
-  if (props.onPresent) return <PresentedPopover {...props} layout={layout} />;
-  const Overlay = wide ? WidePopover : CompactPopover;
+  // A desktop window opens a popover; a narrow window and a phone or iPad, whose Sheet is native, a sheet.
+  const Overlay = wide && Platform.OS === 'web' ? WidePopover : CompactPopover;
 
   return <Overlay {...props} {...after} open={open} layout={layout} />;
 }
@@ -73,7 +73,7 @@ function WideContent(props: OverlayProps): React.JSX.Element {
       accessibilityLabel={props.label}
       onClosed={props.closed}
       style={{ width: popoverWidth(props) }}
-      className="composer-popover bg-content rounded-surface border-0 dark:border dark:border-border p-0 overflow-hidden"
+      className="composer-popover bg-card rounded-2xl border border-border p-0 overflow-hidden"
     >
       <PopoverPanel {...panelProps(props)} />
     </PopoverContent>
@@ -82,13 +82,13 @@ function WideContent(props: OverlayProps): React.JSX.Element {
 
 function CompactPopover(props: OverlayProps): React.JSX.Element {
   return (
-    <BottomSheet
+    <Sheet
       {...sheetProps(props)}
-      surface="sidebar"
       contentScrolls={props.listContent}
+      detents={props.listContent ? ['medium', 'large'] : undefined}
     >
       <CompactContent {...props} />
-    </BottomSheet>
+    </Sheet>
   );
 }
 
@@ -98,7 +98,7 @@ function CompactContent(props: OverlayProps): React.JSX.Element {
   return (
     <View className={className}>
       <Text role="control" className="py-3 px-4 text-center">
-        {props.label === 'Agent and model' ? 'Configure' : props.label}
+        {props.label}
       </Text>
       {props.children(props.close)}
     </View>
@@ -123,16 +123,6 @@ function closeDisabled(
   if (props.trigger.props.disabled && open) setOpen(false);
 }
 
-function PresentedPopover(
-  props: ComposerPopoverProps & Pick<OverlayProps, 'layout'>,
-): React.JSX.Element {
-  return (
-    <View style={props.layout}>
-      {cloneElement(props.trigger, { onPress: props.onPresent })}
-    </View>
-  );
-}
-
 function panelProps(props: OverlayProps): PanelProps {
   return {
     disabled: !!props.trigger.props.disabled,
@@ -144,7 +134,7 @@ function panelProps(props: OverlayProps): PanelProps {
 function sheetProps(
   props: OverlayProps,
 ): Pick<
-  React.ComponentProps<typeof BottomSheet>,
+  React.ComponentProps<typeof Sheet>,
   'style' | 'open' | 'onOpenChange' | 'onClosed' | 'trigger' | 'label'
 > {
   return {
@@ -157,8 +147,6 @@ function sheetProps(
   };
 }
 
-function compactClassName(props: ComposerPopoverProps): string {
-  return props.listContent && Platform.OS !== 'web'
-    ? 'flex-1 bg-content'
-    : 'bg-content';
+function compactClassName(props: ComposerPopoverProps): string | undefined {
+  return props.listContent && Platform.OS !== 'web' ? 'flex-1' : undefined;
 }

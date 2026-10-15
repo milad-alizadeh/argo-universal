@@ -45,7 +45,7 @@ export function Meter(props: MeterProps): JSX.Element {
 function SmartZoneBoundary(): JSX.Element {
   return (
     <View
-      className="absolute top-0 bottom-0 w-0.5 bg-background"
+      className="absolute top-0 bottom-0 w-0.5 bg-card"
       style={{ left: `${smartZonePercent}%` }}
     />
   );

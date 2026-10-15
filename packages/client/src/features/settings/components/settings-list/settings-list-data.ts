@@ -27,14 +27,14 @@ function deviceRows(props: SettingsListProps, wide: boolean): SettingsRow[] {
 const appearanceRow = (props: SettingsListProps): SettingsRow => ({
   label: 'Appearance',
   icon: 'appearance',
-  destination: { to: 'settings-appearance' },
+  href: '/settings/appearance',
   value: props.appearanceState ?? 'System',
 });
 
 const notificationsRow = (props: SettingsListProps): SettingsRow => ({
   label: 'Notifications',
   icon: 'notifications',
-  destination: { to: 'settings-notifications' },
+  href: '/settings/notifications',
   value: props.notificationsState ?? 'On',
 });
 

@@ -22,7 +22,7 @@ const meta = {
     onProjectSettings: action('Project settings'),
   },
   render: (args): React.JSX.Element => (
-    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+    <View className="flex-1 w-full wide:w-frame-list" style={{ minHeight: 0 }}>
       <SessionsList {...args} />
     </View>
   ),
@@ -51,7 +51,7 @@ export const States: Story = {
     <Variations>
       {states.map(({ label, props }) => (
         <Variation key={label} label={label}>
-          <View className="w-full wide:w-shell-list" style={{ height: 320 }}>
+          <View className="w-full wide:w-frame-list" style={{ height: 320 }}>
             <SessionsList {...args} {...props} />
           </View>
         </Variation>

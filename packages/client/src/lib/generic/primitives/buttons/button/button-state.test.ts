@@ -1,22 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { readyPress } from './button-state';
+import { isButtonDisabled } from './button-state';
 
-const press = (): void => undefined;
-
-describe('a native button press', () => {
+describe('a native button', () => {
   it.each([
-    { state: 'ready', props: { onPress: press }, expected: press },
-    {
-      state: 'loading',
-      props: { onPress: press, loading: true },
-      expected: undefined,
-    },
-    {
-      state: 'disabled',
-      props: { onPress: press, disabled: true },
-      expected: undefined,
-    },
-  ])('reaches the handler only when the button is $state', (row) => {
-    expect(readyPress(row.props)).toBe(row.expected);
+    { state: 'ready', props: {}, expected: false },
+    { state: 'loading', props: { loading: true }, expected: true },
+    { state: 'disabled', props: { disabled: true }, expected: true },
+  ])('is disabled: $expected when $state', (row) => {
+    expect(isButtonDisabled(row.props)).toBe(row.expected);
   });
 });

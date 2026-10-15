@@ -1,6 +1,10 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { LayoutAnimation, Platform } from 'react-native';
-import { listEntries, type SessionsListEntry } from '../sessions-list-entries';
+import {
+  flatEntries,
+  listEntries,
+  type SessionsListEntry,
+} from '../sessions-list-entries';
 import type { SessionsListProps } from './sessions-list-props';
 
 export interface CollapsedProjects {
@@ -39,18 +43,31 @@ export function useAnimateReorder(entries: SessionsListEntry[]): void {
   }, [entryOrder]);
 }
 
+type EntriesInput = Pick<
+  SessionsListProps,
+  'projects' | 'sessions' | 'query' | 'archived' | 'flat'
+>;
+
+function entries(
+  { projects, sessions, query, archived, flat }: EntriesInput,
+  collapsed: ReadonlySet<string>,
+): SessionsListEntry[] {
+  if (flat) return flatEntries({ projects, sessions });
+
+  return listEntries({
+    projects,
+    sessions,
+    collapsed,
+    hideEmptyProjects: !!query || archived,
+  });
+}
+
 export function useListEntries(
-  { projects, sessions, query, archived }: SessionsListProps,
+  { projects, sessions, query, archived, flat = false }: SessionsListProps,
   collapsed: ReadonlySet<string>,
 ): SessionsListEntry[] {
   return useMemo(
-    () =>
-      listEntries({
-        projects,
-        sessions,
-        collapsed,
-        hideEmptyProjects: !!query || archived,
-      }),
-    [projects, sessions, query, archived, collapsed],
+    () => entries({ projects, sessions, query, archived, flat }, collapsed),
+    [projects, sessions, query, archived, flat, collapsed],
   );
 }

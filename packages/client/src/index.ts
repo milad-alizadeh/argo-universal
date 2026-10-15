@@ -1,38 +1,56 @@
 import type {} from './lib/generic/reusables-compatibility';
 
-export {
-  AgentDetailScreen,
-  AgentListScreen,
-  CustomAgentNewScreen,
-} from '#features/agents';
+export { useConnection } from '#features/connection';
 
 export {
-  AgentModelSheetChoices,
-  AgentModelSheetSettings,
-  type NativeSheets,
-  NativeSheetsProvider,
-} from '#features/composer';
-
-export { ConnectionDetailScreen, useConnection } from '#features/connection';
-
-export {
-  DesktopLayout,
-  OnboardingLayout,
-  PhoneLayout,
-  SectionRootScreen,
-  useOnboardingShown,
+  Frame,
+  FramePage,
+  type FrameParts,
+  FrameSidebar,
+  frameSidebarWidth,
+  PhoneConnectionBanner,
+  SectionDrawer,
+  type SectionList,
+  type SectionLists,
+  useFrame,
+  SectionMenuButton,
+  useNeedsAttention,
+  usePhoneDrawerWidth,
+  useSectionList,
 } from '#features/frame';
 
-export {
-  AccountsScreen,
-  AppearanceScreen,
-  DevicesScreen,
-  NotificationsScreen,
-  ProjectDetailScreen,
-  ProjectListScreen,
-} from '#features/settings';
+export { useSectionLists } from './screens/section-lists';
 
-export { NewSessionScreen, SessionScreen } from '#features/sessions';
+export { AtlasDetailScreen } from './screens/atlas/atlas-detail-screen';
+
+export { IssueListScreen } from './screens/issues/issue-list-screen';
+
+export {
+  OnboardingLayout,
+  useOnboardingShown,
+} from './screens/onboarding/onboarding-layout';
+
+export { SessionDetailScreen } from './screens/sessions/$id/session-detail-screen';
+
+export { AccountListScreen } from './screens/settings/accounts/account-list-screen';
+
+export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
+
+export { AgentDetailScreen } from './screens/settings/agents/$agent/agent-detail-screen';
+
+export { CustomAgentNewScreen } from './screens/settings/agents/new/custom-agent-new-screen';
+
+export { AppearanceDetailScreen } from './screens/settings/appearance/appearance-detail-screen';
+
+export { ConnectionDetailScreen } from './screens/settings/connection/connection-detail-screen';
+
+export { DeviceListScreen } from './screens/settings/devices/device-list-screen';
+
+export { NotificationsDetailScreen } from './screens/settings/notifications/notifications-detail-screen';
+
+export { ProjectListScreen } from './screens/settings/projects/project-list-screen';
+
+export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
 export { hasLiquidGlass } from '#lib/generic/native-header';
 
@@ -45,37 +63,32 @@ export { iconSymbols } from './lib/generic/symbols/icon-names';
 
 export { useWide } from './lib/generic/use-wide/use-wide';
 
-export { Text, useTextStyle } from '#primitives/display/text';
+export { useSizeClass } from './lib/generic/use-size-class/use-size-class';
+
+export type { SizeClass } from './lib/generic/use-size-class/size-class';
+
+export { Text } from '#primitives/display/text';
 
 export { Toaster } from '#primitives/overlays/toast';
 
 export {
-  type LeaveGuard,
-  type Navigate,
-  type NavigationDestination,
+  type FirstPage,
   NavigationProvider,
-} from '#lib/product/navigation/context';
+} from '#lib/product/navigation/navigation';
 
 export {
-  type ScreenHeaderProps,
-  ScreenHeaderProvider,
+  nativeHeaderOptions,
+  screenHeaderOptions,
 } from '#lib/product/navigation/screen-header';
 
-export { HeaderButton } from '#lib/product/header-button';
+export {
+  type Section,
+  sectionOf,
+  sectionOrder,
+} from './lib/product/navigation/sections';
 
-export type { Section } from './lib/product/navigation/sections';
-
-export { HeaderSearchRow } from './lib/product/navigation/header-search';
+export { withoutNewSession } from './lib/product/navigation/new-session';
 
 export { AppProviders } from './app-providers';
 
 export { PortalHost } from '#primitives/overlays/portal';
-
-export {
-  FormSheetProvider,
-  useFormSheetCommands,
-  useFormSheetState,
-  FormSheetRoot,
-  FormSheetChoices,
-  type FormSheetRoutes,
-} from '#primitives/overlays/bottom-sheet';

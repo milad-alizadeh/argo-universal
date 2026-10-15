@@ -1,13 +1,11 @@
 import type * as React from 'react';
-import { View } from 'react-native';
-import { hasLiquidGlass } from '#lib/generic/native-header';
+import { Platform, View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { cn } from '#lib/generic/utils';
 import {
   IconButton,
   type IconButtonProps,
 } from '#primitives/buttons/icon-button';
-import { narrowPairs } from './header-button-pairing';
 
 export interface HeaderButtonProps extends Pick<
   IconButtonProps,
@@ -16,7 +14,7 @@ export interface HeaderButtonProps extends Pick<
   onPress?: () => void;
   icon: IconName;
   accessibilityLabel: string;
-  // Paired trailing items are 32pt wide, except on Android; a lone item fills its 44pt slot.
+  // Paired trailing items are 32pt wide; a lone item fills its 44pt slot.
   paired?: boolean;
   // A dot on the icon: Sessions need attention, or a filter other than the default is set.
   dot?: 'attention' | 'filter';
@@ -32,12 +30,6 @@ interface HeaderButtonFit {
 }
 
 const headerButtonFits = {
-  // iOS 26 pads each item into a glass bubble, so a 24pt item matches the system search bubble.
-  glass: {
-    hitSlop: 10,
-    size: 'size-6 sm:size-6',
-    dotPlace: '-top-0.5 -right-0.5',
-  },
   narrow: {
     hitSlop: { left: 6, right: 6 },
     size: 'size-11 sm:size-11',
@@ -56,19 +48,19 @@ const dotColors = {
   filter: 'bg-foreground',
 } satisfies Record<NonNullable<HeaderButtonProps['dot']>, string>;
 
-const pairedFit = narrowPairs ? headerButtonFits.narrow : headerButtonFits.slot;
-
 function headerButtonFit(paired: boolean): HeaderButtonFit {
-  if (hasLiquidGlass) return headerButtonFits.glass;
-
-  return paired ? pairedFit : headerButtonFits.slot;
+  return paired ? headerButtonFits.narrow : headerButtonFits.slot;
 }
 
 // The header fit replaces IconButton's touch minimum, border and focus outline with the header's own.
 const headerChrome =
-  'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all dark:active:bg-hover/50 web:dark:hover:bg-hover/50 web:focus-visible:outline-none web:focus-visible:ring-[3px] web:focus-visible:ring-focus/50';
+  'rounded-full p-0 border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 web:transition-all dark:active:bg-muted/50 web:dark:hover:bg-muted/50 web:focus-visible:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
 
-// A plain icon button for a native header; the platform draws any chrome around it.
+// A list's filter in a phone header: Android's top app bar draws Material's filter list, as Paper does; iOS and the web keep the sliders.
+export const headerFilterIcon: Extract<IconName, 'filter-list' | 'filters'> =
+  Platform.OS === 'android' ? 'filter-list' : 'filters';
+
+// A plain icon button for Android's drawer header and the web's JS header; iOS headers use stock bar button items.
 export function HeaderButton(props: HeaderButtonProps): React.JSX.Element {
   const { paired = false, dot, ...buttonProps } = props;
   const fit = headerButtonFit(paired);
@@ -103,10 +95,19 @@ function HeaderButtonDot(props: {
     <View
       testID="header-button-dot"
       className={cn(
-        'absolute size-[7px] rounded-full border-[1.5px] border-background',
+        'absolute size-1.75 rounded-full border-[1.5px] border-card',
         props.color,
         props.place,
       )}
     />
   );
+}
+
+// A header's trailing items in one row, for a header option that takes a single element.
+export function HeaderItems({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return <View className="flex-row items-center gap-1">{children}</View>;
 }

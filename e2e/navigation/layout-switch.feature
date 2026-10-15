@@ -21,3 +21,12 @@ Feature: Frame layout
     Given the Connection was opened on its own in a phone Frame
     When I return from the Connection
     Then the phone Frame shows the Settings list
+
+  Scenario: Back from a page opened before the Frame widened returns to its list
+    Given a phone Frame
+    When I view the Connection from the drawer
+    And the Frame becomes a wide Frame
+    Then the Connection remains open in the wide Frame
+    When the Frame becomes a phone Frame
+    And I return from the Connection
+    Then the phone Frame shows the Settings list

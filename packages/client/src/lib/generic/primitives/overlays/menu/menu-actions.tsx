@@ -12,7 +12,7 @@ import {
 export function MenuActions(props: ActionMenuProps): React.JSX.Element {
   return (
     <MenuPrimitive.Overlay>
-      <TextClassContext.Provider value="text-card-foreground">
+      <TextClassContext.Provider value="text-foreground">
         <MenuPrimitive.Content
           align={props.align ?? 'end'}
           className={actionContentClassName}

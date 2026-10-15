@@ -1,15 +1,8 @@
-import type * as React from 'react';
-import { Platform, View } from 'react-native';
-import { Text } from '#primitives/display/text';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListItemEnd } from '#primitives/lists/grouped-list-item';
+import type { ReactElement } from 'react';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  usePopoverClose,
-} from '#primitives/overlays/popover';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+  Drill,
+  type DrillProps as PrimitiveDrillProps,
+} from '#primitives/overlays/drill';
 import { AgentChoices } from './agent-choices';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -19,51 +12,43 @@ import { ModelChoices } from './model-choices';
 interface DrillProps {
   configuration: ComposerConfigurationProps;
   page: 'agent' | 'model';
-  onOpenPage: (page: 'agent' | 'model') => void;
+  wide: boolean;
 }
 
-interface PickerProps {
-  configuration: ComposerConfigurationProps;
-  page: 'agent' | 'model';
-}
+type RowContent = Pick<PrimitiveDrillProps, 'label' | 'value' | 'valueLeading'>;
 
-export function ConfigurationDrill(
-  props: DrillProps,
-): React.JSX.Element | null {
-  const wide = isDesktopDrill(useWide());
+const pages = {
+  agent: { title: 'Select Agent', Choices: AgentChoices },
+  model: { title: 'Select Model', Choices: ModelChoices },
+};
 
-  if (!hasDrillOption(props)) return null;
-  const row = configurationDrillRow({ ...props, wide });
+export function ConfigurationDrill(props: DrillProps): ReactElement | null {
+  if (!hasChoices(props)) return null;
+  const { title, Choices } = pages[props.page];
 
-  return wide ? <ConfigurationDrillPopover {...props} row={row} /> : row;
-}
-
-function configurationDrillRow(
-  props: DrillProps & { wide: boolean },
-): React.JSX.Element {
   return (
-    <GroupedListItem
-      {...drillRowContent(props)}
-      accessibilityRole="button"
-      onPress={() => props.onOpenPage(props.page)}
-    />
+    <Drill {...rowContent(props)} title={title} contentScrolls>
+      {(close) => (
+        <Choices configuration={props.configuration} onSelect={close} />
+      )}
+    </Drill>
   );
 }
 
-function drillRowContent(
-  props: DrillProps & { wide: boolean },
-): React.ComponentProps<typeof GroupedListItem> {
-  if (props.page === 'agent') return agentDrillContent(props);
-
-  return {
-    label: 'Model',
-    value: modelName(selectedChoice(props.configuration, 'model')),
-  };
+function hasChoices(props: DrillProps): boolean {
+  return props.page === 'agent' || !!selection(props.configuration, 'model');
 }
 
-function agentDrillContent(
-  props: DrillProps & { wide: boolean },
-): React.ComponentProps<typeof GroupedListItem> {
+function rowContent(props: DrillProps): RowContent {
+  return props.page === 'model'
+    ? {
+        label: 'Model',
+        value: modelName(selectedChoice(props.configuration, 'model')),
+      }
+    : agentRowContent(props);
+}
+
+function agentRowContent(props: DrillProps): RowContent {
   const agent = props.configuration.agents.find(
     (entry) => entry.agent === props.configuration.agent,
   );
@@ -75,77 +60,4 @@ function agentDrillContent(
       <AgentIcon agent={agent} role={props.wide ? 'control' : 'row'} />
     ),
   };
-}
-
-function ConfigurationDrillPopover({
-  page,
-  row,
-  configuration,
-}: PickerProps & { row: React.ReactElement }): React.JSX.Element {
-  return (
-    <GroupedListItemEnd value={page === 'model'}>
-      <Popover openOnHover>
-        <PopoverTrigger asChild>{row}</PopoverTrigger>
-        <ConfigurationDrillContent configuration={configuration} page={page} />
-      </Popover>
-    </GroupedListItemEnd>
-  );
-}
-
-const drillPopoverPlacement = {
-  side: 'right',
-  align: 'start',
-  sideOffset: 24,
-  alignOffset: -4,
-  style: { width: 284 },
-  className:
-    'bg-content border-0 dark:border dark:border-border rounded-surface p-3 shadow-card',
-} as const;
-
-function ConfigurationDrillContent(props: PickerProps): React.JSX.Element {
-  return (
-    <PopoverContent
-      {...drillPopoverPlacement}
-      accessibilityLabel={pickerTitle(props.page)}
-    >
-      <ConfigurationPicker {...props} />
-    </PopoverContent>
-  );
-}
-
-function pickerTitle(page: PickerProps['page']): string {
-  return page === 'agent' ? 'Select Agent' : 'Select Model';
-}
-
-function ConfigurationPicker(props: PickerProps): React.JSX.Element {
-  const close = usePopoverClose();
-
-  return (
-    <View className="gap-3">
-      <Text role="heading" aria-level={2} className="px-4 pt-1">
-        {pickerTitle(props.page)}
-      </Text>
-      <ConfigurationPickerChoices {...props} close={close} />
-    </View>
-  );
-}
-
-function ConfigurationPickerChoices({
-  configuration,
-  page,
-  close,
-}: PickerProps & { close: () => void }): React.JSX.Element {
-  return page === 'agent' ? (
-    <AgentChoices configuration={configuration} onSelect={close} />
-  ) : (
-    <ModelChoices configuration={configuration} onSelect={close} />
-  );
-}
-
-function hasDrillOption({ configuration, page }: DrillProps): boolean {
-  return page === 'agent' || !!selection(configuration, 'model');
-}
-
-function isDesktopDrill(wide: boolean): boolean {
-  return wide && Platform.OS === 'web';
 }

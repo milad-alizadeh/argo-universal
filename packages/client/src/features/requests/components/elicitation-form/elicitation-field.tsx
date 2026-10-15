@@ -1,7 +1,8 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
 import type { ReactElement } from 'react';
 import { Checkbox } from '#primitives/inputs/checkbox';
-import { Picker } from '#primitives/inputs/picker';
+import { Combobox } from '#primitives/inputs/combobox';
+import { Picker, type PickerProps } from '#primitives/inputs/picker';
 import {
   TextInput,
   type StandaloneTextInputProps,
@@ -75,19 +76,29 @@ function ChoiceField(props: ElicitationFieldProps): ReactElement {
   return <PickerField {...props} />;
 }
 
+const longChoiceLimit = 7;
+
 function PickerField(props: ElicitationFieldProps): ReactElement {
+  const choice = pickerProps(props);
+
+  return choice.options.length > longChoiceLimit ? (
+    <Combobox {...choice} />
+  ) : (
+    <Picker {...choice} />
+  );
+}
+
+function pickerProps(props: ElicitationFieldProps): PickerProps<string> {
   const options = elicitationChoices(props.property) ?? [];
 
-  return (
-    <Picker
-      required={props.required}
-      {...fieldProps(props)}
-      value={typeof props.value === 'string' ? props.value : undefined}
-      options={options.map((option) => ({
-        value: option.const,
-        label: option.title,
-      }))}
-      onValueChange={props.onChange}
-    />
-  );
+  return {
+    ...fieldProps(props),
+    required: props.required,
+    value: typeof props.value === 'string' ? props.value : undefined,
+    options: options.map((option) => ({
+      value: option.const,
+      label: option.title,
+    })),
+    onValueChange: props.onChange,
+  };
 }

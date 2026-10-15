@@ -56,7 +56,11 @@ When('the command is running in the Feed', async ({ page }): Promise<void> => {
 When('the Engine restarts', async ({ app, page }): Promise<void> => {
   await app.restartEngine(async () => {
     await expect(
-      page.getByText('Reconnecting…', { exact: true }).first(),
+      // Each page in a section's stack has its banner; the shown page's is the visible one.
+      page
+        .getByText('Reconnecting…', { exact: true })
+        .filter({ visible: true })
+        .first(),
     ).toBeVisible();
   });
   await expect(page.getByTestId(feedScroll)).toBeVisible({ timeout: 30_000 });

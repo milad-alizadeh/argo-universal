@@ -3,12 +3,12 @@ import { type ReactNode, useMemo } from 'react';
 import { View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { hasLiquidGlass } from '#lib/generic/native-header';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { cn } from '#lib/generic/utils';
 import {
   ScrollFadeList,
   useScrollFadeEndGap,
 } from '#lib/product/scroll-fade/scroll-fade-list';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
@@ -17,7 +17,7 @@ import { useScrolling } from './sessions-list-scrolling';
 
 /*
  * Wide, Paper's sidebar list: the first Project sits level with the rail's first tile.
- * The shell's list pane sets the column its content keeps to, 8 from the left and 14 from the right, so rows add no side padding.
+ * The Frame's list pane sets the column its content keeps to, 8 from the left and 14 from the right, so rows add no side padding.
  */
 const contentStyle = {
   paddingLeft: 0,
@@ -33,12 +33,19 @@ const phoneContentStyle = {
   paddingTop: 20,
 };
 
+// Flat search results start right under the open search, as Material's search results do.
+const searchResultsContentStyle = { ...phoneContentStyle, paddingTop: 0 };
+
 // The last row rests the scroll fade's small end gap above the bottom, its fade lying in that gap.
 function useContentStyle(
-  wide: boolean,
+  flat: boolean,
 ): typeof contentStyle & { paddingBottom: number } {
+  const wide = useWide();
   const paddingBottom = useScrollFadeEndGap();
-  const style = wide ? contentStyle : phoneContentStyle;
+  let style = phoneContentStyle;
+
+  if (wide) style = contentStyle;
+  else if (flat) style = searchResultsContentStyle;
 
   return useMemo(() => ({ ...style, paddingBottom }), [style, paddingBottom]);
 }
@@ -99,13 +106,11 @@ function SessionsListSurface(
 }
 
 interface ListChrome {
-  ListHeaderComponent?: React.ReactElement;
   ListEmptyComponent: React.ReactElement;
 }
 
 function listChrome(props: SessionsListProps): ListChrome {
   return {
-    ListHeaderComponent: props.header,
     ListEmptyComponent: props.placeholder ?? (
       <EmptySessionsList query={props.query} archived={props.archived} />
     ),
@@ -117,7 +122,7 @@ interface SessionsLegendListProps extends SessionsListProps {
 }
 
 function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
-  const contentContainerStyle = useContentStyle(useWide());
+  const contentContainerStyle = useContentStyle(props.flat ?? false);
   const rows = useListRows(props);
 
   return (

@@ -59,13 +59,12 @@ function CustomInput({ model }: ModelProps): ReactElement {
   );
 }
 
+const markClassName = (multiple: boolean): string =>
+  cn('pointer-events-none ios:hidden', !multiple && 'web:hidden');
+
 function CustomMark({ selected, multiple }: MarkProps): ReactElement {
   return (
-    <View
-      aria-hidden
-      pointerEvents="none"
-      className={cn('ios:hidden', !multiple && 'web:hidden')}
-    >
+    <View aria-hidden className={markClassName(multiple)}>
       <CheckboxIndicator
         value={selected}
         variant="option"

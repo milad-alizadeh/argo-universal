@@ -14,7 +14,7 @@ const examples: (Omit<LiquidGlassProps, 'children'> & {
     text: 'Message the Agent…',
     corners: 'card',
     className: 'w-full',
-    fallbackClassName: 'rounded-2xl bg-background shadow-glass',
+    fallbackClassName: 'rounded-2xl bg-card shadow-glass',
   },
   {
     label: 'Capsule',
@@ -22,8 +22,7 @@ const examples: (Omit<LiquidGlassProps, 'children'> & {
     corners: 'capsule',
     interactive: true,
     className: 'h-6 justify-center self-start',
-    fallbackClassName:
-      'rounded-full border border-border bg-card shadow-composer',
+    fallbackClassName: 'rounded-full border border-border bg-card shadow-card',
   },
 ];
 

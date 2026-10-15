@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { BottomSheetAnchor } from '#primitives/overlays/bottom-sheet';
 
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
 export const sessionSurface = 'bg-content';
@@ -12,7 +11,7 @@ export function SessionColumn(props: ViewProps): React.JSX.Element {
     <View pointerEvents={props.pointerEvents} className="w-full px-4 wide:px-6">
       <View
         {...props}
-        className={cn('w-full max-w-composer self-center', props.className)}
+        className={cn('w-full max-w-column self-center', props.className)}
       >
         {props.children}
       </View>
@@ -29,7 +28,7 @@ export function ComposerColumn(
       className="items-center"
       onLayout={props.onLayout}
     >
-      <BottomSheetAnchor>{props.children}</BottomSheetAnchor>
+      {props.children}
     </SessionColumn>
   );
 }

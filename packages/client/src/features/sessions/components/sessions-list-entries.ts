@@ -43,11 +43,7 @@ function projectBody(
   if (projectSessions.length === 0)
     return [{ kind: 'empty', id: `empty:${project.id}` }];
 
-  return projectSessions.map((session) => ({
-    kind: 'session',
-    id: session.sessionId,
-    session,
-  }));
+  return projectSessions.map(sessionEntry);
 }
 
 function projectEntries(
@@ -67,6 +63,23 @@ function projectEntries(
   if (collapsed.has(headingId)) return [heading];
 
   return [heading, ...projectBody(project, projectSessions)];
+}
+
+function sessionEntry(session: SessionInfo): SessionsListEntry {
+  return { kind: 'session', id: session.sessionId, session };
+}
+
+// Search results as one list, newest activity first, with no Project headings; only listed Projects' Sessions show.
+export function flatEntries({
+  projects,
+  sessions,
+}: Pick<ListEntriesInput, 'projects' | 'sessions'>): SessionsListEntry[] {
+  const listed = new Set(projects.map((project) => project.id));
+
+  return sessions
+    .filter((session) => listed.has(session.projectId))
+    .sort(byNewestActivity)
+    .map(sessionEntry);
 }
 
 // The Sessions list's rows, in Project order: each Project's heading, then its Sessions or an empty row.

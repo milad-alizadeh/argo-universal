@@ -33,7 +33,6 @@ const PREBUNDLED_DEPENDENCIES = [
   '@repo/client > expo-image-picker',
   '@repo/client > expo-symbols',
   '@repo/client > expo-symbols/androidWeights/extraLight',
-  '@repo/client > react-native-drawer-layout',
   'storybook/actions',
 ];
 

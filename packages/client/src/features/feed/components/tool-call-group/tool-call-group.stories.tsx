@@ -42,7 +42,7 @@ type Story = StoryObj<typeof meta>;
 export const Overview: Story = {
   name: 'ToolCallGroup',
   render: () => (
-    <Variations className="max-w-composer!">
+    <Variations className="max-w-column!">
       {variations.map(({ label, ...props }) => (
         <Variation key={label} label={label}>
           <ToolCallGroup {...props} renderActivity={renderRecordedActivity} />

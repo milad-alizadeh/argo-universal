@@ -3,6 +3,7 @@ import type { AgentsListOutput } from '@repo/contracts';
 import type * as React from 'react';
 import { useCallback, useMemo } from 'react';
 import type { SessionsListEntry } from '../sessions-list-entries';
+import { sessionAge, useAgeFrom } from './session-age';
 import {
   type CollapsedProjects,
   useAnimateReorder,
@@ -20,6 +21,8 @@ import {
 interface SessionRowContext {
   agentLogos: Map<string, string>;
   selectedSessionId?: string;
+  // When rows show how long ago they were active, the time that counts from.
+  ageFrom?: number;
   onSelect: (id: string) => void;
 }
 
@@ -29,19 +32,25 @@ type HeadingContext = Pick<
 > &
   CollapsedProjects;
 
-function useSessionRowContext({
-  agents,
-  selectedSessionId,
-  onSelect,
-}: SessionsListProps): SessionRowContext {
-  const agentLogos = useMemo(
+function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
+  return useMemo(
     () => new Map(agents.map((agent) => [agent.agent, agent.logo])),
     [agents],
   );
+}
+
+function useSessionRowContext({
+  agents,
+  selectedSessionId,
+  flat = false,
+  onSelect,
+}: SessionsListProps): SessionRowContext {
+  const agentLogos = useAgentLogos(agents);
+  const ageFrom = useAgeFrom(flat);
 
   return useMemo(
-    () => ({ agentLogos, selectedSessionId, onSelect }),
-    [agentLogos, selectedSessionId, onSelect],
+    () => ({ agentLogos, selectedSessionId, ageFrom, onSelect }),
+    [agentLogos, selectedSessionId, ageFrom, onSelect],
   );
 }
 
@@ -57,13 +66,14 @@ function useHeadingContext(
 
 function sessionRow(
   item: Extract<SessionsListEntry, { kind: 'session' }>,
-  { agentLogos, selectedSessionId, onSelect }: SessionRowContext,
+  { agentLogos, selectedSessionId, ageFrom, onSelect }: SessionRowContext,
 ): React.JSX.Element {
   return (
     <SessionListRow
       session={item.session}
       logo={agentLogos.get(item.session.agent) ?? ''}
       selected={selectedSessionId === item.id}
+      trailing={sessionAge(item.session, ageFrom)}
       onSelect={onSelect}
     />
   );

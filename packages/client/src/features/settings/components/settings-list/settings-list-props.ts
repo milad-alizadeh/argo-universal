@@ -1,16 +1,18 @@
-import type {
-  Navigate,
-  NavigationDestination,
-} from '#lib/product/navigation/context';
+import type { Href } from 'expo-router';
 import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
 import type { IconName } from '../../../../lib/generic/symbols/icon-names';
+
+// A page's path, one the router knows.
+export type SettingsHref = Extract<Href, string>;
 
 export interface SettingsListProps {
   // Undefined until the Server has answered: the row shows "…", or nothing while disconnected.
   projectCount?: number;
   agentCount?: number;
-  selectedDestination?: NavigationDestination;
-  onSelect: Navigate;
+  // The path of the page shown; a page's own pages keep its row selected.
+  selectedPath?: string;
+  // Opens a page by its path.
+  onSelect: (href: SettingsHref) => void;
   projectsNeedAttention?: boolean;
   agentsNeedAttention?: boolean;
   accountState?: string;
@@ -26,7 +28,8 @@ export interface SettingsListProps {
 export interface SettingsRow {
   label: string;
   icon: IconName;
-  destination: NavigationDestination;
+  // The page's path.
+  href: SettingsHref;
   value?: string;
   needsAttention?: boolean;
   disabled?: boolean;

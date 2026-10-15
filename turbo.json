@@ -38,6 +38,13 @@
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": []
     },
+    // Storybook's browser tests, apart from test so CI runs them in their own sharded job; a shard's --shard argument feeds its hash.
+    "test:stories": {
+      "dependsOn": ["transit"],
+      "env": ["VITEST_MAX_WORKERS"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
+      "outputs": []
+    },
     // @repo/e2e lists the Server, App, and Desktop as dependencies, so their sources and the web export feed this hash (Turborepo Playwright guide).
     "test:web": {
       "dependsOn": ["^build"],

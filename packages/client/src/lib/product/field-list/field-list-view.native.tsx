@@ -1,7 +1,7 @@
 import type * as React from 'react';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../generic/use-wide/use-wide';
 import {
   type FieldListProps,
   type FieldListSection,
@@ -18,7 +18,7 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
   if (useWide()) return <VirtualFieldList {...props} />;
 
   return (
-    <GroupedList search={props.search}>
+    <GroupedList>
       {props.sections.map((section, index) => (
         <NativeGroupedListSection
           key={section.title ?? `section-${index}`}

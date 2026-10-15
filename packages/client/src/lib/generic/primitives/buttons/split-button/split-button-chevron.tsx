@@ -13,7 +13,7 @@ const chevronFits = {
     size: 'sm',
     iconRole: 'secondary',
     wide: 'h-8 w-7 px-0 sm:h-8',
-    narrow: 'h-11 w-11 rounded-lg px-0 sm:h-11',
+    narrow: 'h-11 w-11 rounded-lg web:rounded-control px-0 sm:h-11',
   },
   // The group dims as one, so the chevron does not dim a second time.
   xs: {

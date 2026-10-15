@@ -13,9 +13,20 @@ describe('a native field reporting its focus', () => {
     },
   ])('blurs the form field $blurs times after $story', (row) => {
     const onBlur = vi.fn<() => void>();
-    const report = blurOnFocusLoss(onBlur);
+    const report = blurOnFocusLoss();
 
-    for (const focused of row.changes) report(focused);
+    for (const focused of row.changes) report(focused, onBlur);
     expect(onBlur).toHaveBeenCalledTimes(row.blurs);
+  });
+
+  it('blurs through the newest callback when the form rerenders during a visit', () => {
+    const first = vi.fn<() => void>();
+    const rerendered = vi.fn<() => void>();
+    const report = blurOnFocusLoss();
+
+    report(true, first);
+    report(false, rerendered);
+    expect(first).not.toHaveBeenCalled();
+    expect(rerendered).toHaveBeenCalledOnce();
   });
 });

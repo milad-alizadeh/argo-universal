@@ -3,13 +3,12 @@ import type * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import type { DockedSearchQuery } from '#primitives/inputs/search-field';
+import { listTestIdProps } from '#lib/generic/list-test-id';
 import {
   groupedListGap,
   groupedListPadding,
 } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { listTestIdProps } from '../../generic/list-test-id';
 import {
   ScrollFadeList,
   useScrollFadeEndGap,
@@ -28,12 +27,10 @@ export type { FieldListSection } from './field-list-entries';
 
 export interface FieldListProps {
   sections: readonly FieldListSection[];
-  // A phone's search above the sections; the native GroupedList draws it, as a wide window searches from its title row.
-  search?: DockedSearchQuery;
   testID?: string;
 }
 
-// The Settings page's surface: the phone's page, or the shell behind a wide window's page.
+// The Settings page's surface: the phone's page, or the Frame behind a wide window's page.
 const fadeSurface = 'bg-content';
 
 const rowHeightEstimate = 52;

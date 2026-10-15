@@ -57,13 +57,13 @@ const fadeSize = ({ height, inset }: ScrollFadeGradientProps): FadeSize => ({
 
 // Out of reach of touches and screen readers.
 const decorative = {
-  pointerEvents: 'none',
   accessibilityElementsHidden: true,
   importantForAccessibility: 'no-hide-descendants',
 } as const;
 
 const overlay = {
   position: 'absolute',
+  pointerEvents: 'none',
   left: 0,
   right: 0,
   zIndex: 10,

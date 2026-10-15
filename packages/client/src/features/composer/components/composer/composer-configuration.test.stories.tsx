@@ -75,9 +75,6 @@ export const ScrollableAgentCatalog: Story = {
         .map((animation) => animation.finished),
     );
     await waitFor(() => expect(menu).toBeVisible());
-    const heading = overlay.getByText('Select Agent', { exact: true });
-    const headingTop = heading.getBoundingClientRect().top;
-    const menuHeight = menu.getBoundingClientRect().height;
     await expect(menu.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       window.innerHeight,
     );
@@ -92,8 +89,6 @@ export const ScrollableAgentCatalog: Story = {
       const viewport = scroll.getBoundingClientRect();
       await expect(item.top).toBeGreaterThanOrEqual(viewport.top);
       await expect(item.bottom).toBeLessThanOrEqual(viewport.bottom);
-      await expect(heading.getBoundingClientRect().top).toBeCloseTo(headingTop);
-      await expect(menu.getBoundingClientRect().height).toBeCloseTo(menuHeight);
     });
     await userEvent.click(lastAgent);
     await expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(

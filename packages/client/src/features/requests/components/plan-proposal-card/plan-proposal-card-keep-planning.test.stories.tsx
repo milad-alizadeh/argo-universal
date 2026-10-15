@@ -40,6 +40,6 @@ export const KeepPlanningWithFeedbackWideDark: Story = {
   ...dark,
 };
 
-export const ExpandWhilePlanningPhone = expandWhilePlanning(layoutWidths.phone);
+export const ProtectedPlanningPhone = expandWhilePlanning(layoutWidths.phone);
 
 export const ExpandWhilePlanningWide = expandWhilePlanning(layoutWidths.wide);

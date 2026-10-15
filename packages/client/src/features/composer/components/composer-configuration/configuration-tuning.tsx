@@ -134,7 +134,7 @@ function DecorativeSwitch({
 }): React.JSX.Element {
   return (
     <View
-      pointerEvents="none"
+      className="pointer-events-none"
       aria-hidden
       importantForAccessibility="no-hide-descendants"
     >

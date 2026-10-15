@@ -1,3 +1,5 @@
+import { useCSSVariable } from 'uniwind';
+
 // Paper's "SidebarBackdrop / Warm frost (contained)": three faint glows behind the glass, faded into the window surface at the right.
 export type GlowColour = 'warm' | 'graphite' | 'sand';
 
@@ -108,4 +110,15 @@ export function sidebarGlows(
     edgeFadeWidth: Math.round(desktopEdgeFadeWidth * layoutScale[layout]),
     glows: warmFrost.map((source) => scaledGlow(source, { layout, strength })),
   };
+}
+
+// The glow colours are theme tokens (--color-glow-*), read for React Native SVG and CSS gradients alike.
+export function useGlowColours(): Readonly<Record<GlowColour, string>> {
+  const [warm, graphite, sand] = useCSSVariable([
+    '--color-glow-warm',
+    '--color-glow-graphite',
+    '--color-glow-sand',
+  ]);
+
+  return { warm: String(warm), graphite: String(graphite), sand: String(sand) };
 }

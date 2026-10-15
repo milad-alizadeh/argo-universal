@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Text } from '#primitives/display/text';
-import type { InspectorState } from './desktop-shell/desktop-shell-props';
+import type { InspectorState } from '../scaffold/scaffold-geometry';
 
 export interface InspectorPaneProps {
   title: string;
@@ -71,7 +71,7 @@ function InspectorTitle({ title }: { title: string }): React.JSX.Element {
 
 function InspectorHeader(props: InspectorPaneProps): React.JSX.Element {
   return (
-    <View className="mt-shell-inset h-shell-control flex-row items-center gap-1 pl-4 pr-2.5">
+    <View className="mt-frame-inset h-frame-control flex-row items-center gap-1 pl-4 pr-2.5">
       <InspectorTitle title={props.title} />
       <ExpandButton {...props} />
       <CloseButton {...props} />

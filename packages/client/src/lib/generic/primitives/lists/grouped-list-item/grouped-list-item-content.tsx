@@ -1,7 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
-import { useWideSidebarList } from '#primitives/fields/field-layout';
+import {
+  useOverlayList,
+  useWideSidebarList,
+} from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
 import { Disclosure } from './grouped-list-item-disclosure';
@@ -16,6 +19,7 @@ import {
   rowEmphasis,
   titleClasses,
 } from './grouped-list-item-styles';
+import { OverlayRowTitle } from './overlay-row-title';
 import { StatusDot } from './status-dot';
 
 export function GroupedListItemBody(
@@ -70,6 +74,16 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
 }
 
 function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
+  const overlay = useOverlayList();
+
+  return overlay && props.value !== undefined ? (
+    <OverlayRowTitle {...props} />
+  ) : (
+    <PlainRowTitle {...props} />
+  );
+}
+
+function PlainRowTitle(props: GroupedListItemProps): React.JSX.Element {
   const title = (
     <Text aria-hidden role="body" className={titleClasses(props)}>
       {props.label}
@@ -93,6 +107,7 @@ function GroupedListItemSubtitle({
     <Text
       aria-hidden
       role="secondary"
+      numberOfLines={subtitle.numberOfLines}
       className={cn(subtitle.code && 'type-code text-muted-foreground')}
     >
       {subtitle.text}
@@ -104,17 +119,32 @@ type TrailingProps = GroupedListItemProps & { emphasis: string };
 
 function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
   const sidebar = useWideSidebarList();
-  const valueColor = sidebar ? props.emphasis : 'text-muted-foreground';
 
   return (
     <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
-      {props.valueLeading}
-      <RowValue value={props.value} className={valueColor} />
+      <RowSelection {...props} />
       <StatusDot status={groupedListItemStatus(props)} />
       <GroupedListItemAccessory>{props.accessory}</GroupedListItemAccessory>
       {props.control}
       <Disclosure visible={hasDisclosure(props) && !sidebar} />
     </View>
+  );
+}
+
+function RowSelection(props: TrailingProps): React.JSX.Element | null {
+  const sidebar = useWideSidebarList();
+  const overlay = useOverlayList();
+
+  if (overlay) return null;
+
+  return (
+    <>
+      {props.valueLeading}
+      <RowValue
+        value={props.value}
+        className={sidebar ? props.emphasis : 'text-muted-foreground'}
+      />
+    </>
   );
 }
 
