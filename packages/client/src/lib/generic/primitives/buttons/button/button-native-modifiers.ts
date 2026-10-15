@@ -6,18 +6,12 @@ import {
 import {
   accessibilityLabel,
   buttonStyle,
-  controlSize,
   frame,
   tint,
   type ModifierConfig as SwiftModifier,
 } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
-import { capsuleButtonBorder } from '#primitives/native/native-modifiers';
-import type {
-  ButtonDataProps,
-  ButtonSize,
-  ButtonVariant,
-} from './button-props';
+import type { ButtonDataProps, ButtonVariant } from './button-props';
 import { nativeButtonVariant } from './button-state';
 
 // Expo UI's three button variants; SwiftUI and Compose have no tonal or link button in the universal set.
@@ -37,17 +31,10 @@ export function universalButtonVariant(
   return universalVariants[nativeButtonVariant(props)];
 }
 
-const controlSizes = {
-  xs: 'small',
-  sm: 'regular',
-  md: 'large',
-  lg: 'extraLarge',
-} as const satisfies Record<ButtonSize, string>;
-
 // `dangerColor` is the danger token, set only for the danger tone: the one colour a button takes besides the Host's.
 type ModifierProps = Pick<
   ButtonDataProps,
-  'tone' | 'variant' | 'size' | 'label' | 'accessibilityLabel' | 'fullWidth'
+  'tone' | 'variant' | 'label' | 'accessibilityLabel' | 'fullWidth'
 > & { dangerColor?: string };
 
 export function nativeButtonModifiers(
@@ -70,9 +57,6 @@ export function nativeLabelModifiers(
 function swiftModifiers(props: ModifierProps): SwiftModifier[] {
   return [
     ...swiftTextStyle(props),
-    capsuleButtonBorder(),
-    controlSize(controlSizes[props.size ?? 'md']),
-    frame({ minWidth: 44, minHeight: 44 }),
     accessibilityLabel(props.accessibilityLabel ?? props.label),
     ...dangerTint(props.dangerColor),
   ];
