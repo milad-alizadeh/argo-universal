@@ -12,16 +12,16 @@ import {
 } from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
 import {
+  type FirstPage,
   newSessionHref,
-  OpenFirstPage,
   useNavigate,
 } from '#lib/product/navigation/navigation';
 import { Text } from '#primitives/display/text';
 import { SearchField } from '#primitives/inputs/search-field';
 import { newSessionId } from '../lib/product/navigation/new-session';
 import { type Section, sections } from '../lib/product/navigation/sections';
-import { FirstSessionScreen } from './sessions/first-session-screen';
 import { LiveSessionList } from './sessions/live-session-list';
+import { useFirstSessionPage } from './sessions/use-first-session-page';
 import { SettingsNavigationList } from './settings/settings-navigation-list';
 
 const searchSettings = 'Search Settings';
@@ -45,7 +45,7 @@ function sessionsList(
       <LiveSessionList {...sessions} selectedSessionId={shownSessionId(path)} />
     ),
     rootHeader: sessionsRootHeader(sessions, onNewSession),
-    firstPage: <FirstSessionScreen />,
+    useFirstPage: useFirstSessionPage,
   };
 }
 
@@ -77,6 +77,8 @@ function SettingsSearch({
   );
 }
 
+const settingsFirstPage: FirstPage = { page: 'accounts' };
+
 // `/settings`: the Settings pages the search narrows; with the list beside the pages, the root opens Accounts.
 function settingsList(
   { query, onQueryChange }: SettingsQuery,
@@ -89,7 +91,7 @@ function settingsList(
       title: sections.settings.title,
       search: { placeholder: searchSettings, onChangeText: onQueryChange },
     },
-    firstPage: <OpenFirstPage page="accounts" />,
+    useFirstPage: () => settingsFirstPage,
   };
 }
 

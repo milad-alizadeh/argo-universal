@@ -1,7 +1,13 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 
-const hideSidebarLabel = 'Hide sidebar';
+// The Scaffold story holds no state of its own, so each toggle sets the story's args, as its controls do.
+const storyId = 'frame-scaffold--overview';
+
+const toggles = {
+  sidebar: [{ sidebarShown: false }, { sidebarShown: true }],
+  Inspector: [{ inspectorState: 'open' }, { inspectorState: 'closed' }],
+};
 
 const require = createRequire(new URL('../e2e/package.json', import.meta.url));
 
@@ -26,13 +32,11 @@ await session.send('Performance.enable');
 
 await session.send('Emulation.setCPUThrottlingRate', { rate: throttle });
 
-await mkdir('/tmp/argo-shell-profile', { recursive: true });
+await mkdir('/tmp/argo-frame-profile', { recursive: true });
 
-await page.goto(
-  `${origin}/iframe.html?id=shell-desktopshell--selected-section&viewMode=story&args=showInspectorControls:true`,
-);
+await page.goto(`${origin}/iframe.html?id=${storyId}&viewMode=story`);
 
-await page.getByRole('button', { name: hideSidebarLabel }).waitFor();
+await page.getByRole('button', { name: 'Hide sidebar' }).waitFor();
 
 await page.waitForTimeout(500);
 
@@ -47,20 +51,21 @@ await page.evaluate(() => {
 
     for (let row = 0; row < count; row++) {
       const item = document.createElement('div');
-      item.textContent = `Profiling row ${row}: representative text content that stays readable while the shell moves.`;
+      item.textContent = `Profiling row ${row}: representative text content that stays readable while the Frame moves.`;
       item.style.cssText = 'padding:8px 16px;font-size:14px;line-height:20px;';
       parent.appendChild(item);
     }
   }
 });
 
-for (const name of [
-  hideSidebarLabel,
-  'Show sidebar',
-  'Open Inspector',
-  'Close Inspector',
-]) {
-  await page.getByRole('button', { name, exact: true }).click();
+const setArgs = (updatedArgs) =>
+  page.evaluate((update) => window.__STORYBOOK_PREVIEW__.onUpdateArgs(update), {
+    storyId,
+    updatedArgs,
+  });
+
+for (const args of [...toggles.sidebar, ...toggles.Inspector]) {
+  await setArgs(args);
   await page.waitForTimeout(350);
 }
 
@@ -105,12 +110,7 @@ for (const panel of ['sidebar', 'Inspector']) {
         }),
     );
 
-    let name = '';
-
-    if (panel === 'sidebar')
-      name = toggle % 2 ? 'Show sidebar' : hideSidebarLabel;
-    else name = toggle % 2 ? 'Close Inspector' : 'Open Inspector';
-    await page.getByRole('button', { name, exact: true }).click();
+    await setArgs(toggles[panel][toggle % 2]);
     intervals.push(...(await sampling));
   }
 
@@ -151,7 +151,7 @@ for (;;) {
 
 await session.send('IO.close', { handle: stream });
 
-await writeFile(`/tmp/argo-shell-profile/${label}-trace.json`, trace);
+await writeFile(`/tmp/argo-frame-profile/${label}-trace.json`, trace);
 
 const events = JSON.parse(trace).traceEvents;
 
@@ -200,7 +200,7 @@ const report = {
 };
 
 await writeFile(
-  `/tmp/argo-shell-profile/${label}.json`,
+  `/tmp/argo-frame-profile/${label}.json`,
   JSON.stringify(report, null, 2),
 );
 

@@ -19,8 +19,9 @@ export type { ScaffoldProps } from './use-scaffold-layout';
 
 export {
   ScaffoldFrame,
-  useScaffoldProps,
-  useScaffoldSidebarWidth,
+  type ScaffoldParts,
+  scaffoldSidebarWidth,
+  useScaffoldParts,
 } from './scaffold-frame';
 
 const pagePlacement = ({ layout, framed }: ScaffoldParts): PanePlacement =>
@@ -33,51 +34,51 @@ const pagePlacement = ({ layout, framed }: ScaffoldParts): PanePlacement =>
       }
     : { ...layout.motion, offset: 0, width: layout.width, hidden: false };
 
-interface SidebarSlot {
+export interface ScaffoldSidebarProps {
+  parts: ScaffoldParts;
+  // The sidebar Slot, which the caller may draw apart from the Scaffold's props.
   sidebar: ReactNode;
 }
 
 // The glass panel of the sidebar Slot and the list, sized by its content.
-function SidebarColumn({ sidebar }: SidebarSlot): React.JSX.Element {
-  const { scaffold, layout } = useScaffoldParts();
-
+function SidebarColumn({
+  parts,
+  sidebar,
+}: ScaffoldSidebarProps): React.JSX.Element {
   return (
     <ScaffoldSidebarColumn
       sidebar={sidebar}
-      scaffold={scaffold}
-      layout={layout}
+      scaffold={parts.scaffold}
+      layout={parts.layout}
     />
   );
 }
 
 // The same panel, filling the drawer that holds it: the drawer stacks its content in a column.
-export function ScaffoldSidebar({ sidebar }: SidebarSlot): React.JSX.Element {
+export function ScaffoldSidebar(
+  props: ScaffoldSidebarProps,
+): React.JSX.Element {
   return (
     <View className="flex-1 flex-row">
-      <SidebarColumn sidebar={sidebar} />
+      <SidebarColumn {...props} />
     </View>
   );
 }
 
-function PagePane({ children }: PropsWithChildren): React.JSX.Element {
-  const parts = useScaffoldParts();
-
-  return (
-    <FramePane testID="desktop-detail" {...pagePlacement(parts)}>
-      <ContentLayout className="overflow-hidden" measured={parts.framed}>
-        {children}
-      </ContentLayout>
-    </FramePane>
-  );
-}
+export type ScaffoldPageProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
 // A page: beside the list on a medium or wide window, the whole window on a compact one; the tree is the same at each, so the page never remounts.
 export function ScaffoldPage({
+  parts,
   children,
-}: PropsWithChildren): React.JSX.Element {
+}: ScaffoldPageProps): React.JSX.Element {
   return (
     <View className="flex-1 flex-row">
-      <PagePane>{children}</PagePane>
+      <FramePane testID="desktop-detail" {...pagePlacement(parts)}>
+        <ContentLayout className="overflow-hidden" measured={parts.framed}>
+          {children}
+        </ContentLayout>
+      </FramePane>
     </View>
   );
 }
@@ -94,13 +95,16 @@ const shownPage = (
  * wide one the Inspector gets its own column too, with resize handles between the panes.
  */
 export function Scaffold(props: ScaffoldProps): React.JSX.Element {
+  const parts = useScaffoldParts(props);
   const framed = isFramed(props.sizeClass);
 
   return (
-    <ScaffoldFrame {...props}>
+    <ScaffoldFrame parts={parts}>
       <View className="flex-1 flex-row">
-        {framed ? <SidebarColumn sidebar={props.sidebar} /> : null}
-        <ScaffoldPage>{shownPage(framed, props)}</ScaffoldPage>
+        {framed ? (
+          <SidebarColumn parts={parts} sidebar={props.sidebar} />
+        ) : null}
+        <ScaffoldPage parts={parts}>{shownPage(framed, props)}</ScaffoldPage>
       </View>
     </ScaffoldFrame>
   );

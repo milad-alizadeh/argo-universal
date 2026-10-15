@@ -1,18 +1,20 @@
 import {
   Frame,
   FramePage,
+  type FrameParts,
   FrameSidebar,
+  frameSidebarWidth,
   type Section,
   SectionDrawer,
   sectionOf,
   sectionOrder,
-  type SectionLists,
   type SizeClass,
-  useFrameSidebarWidth,
+  useFrame,
   usePhoneDrawerWidth,
   useSectionLists,
   useSizeClass,
 } from '@repo/client';
+import { usePathname } from 'expo-router';
 import {
   Drawer,
   type DrawerContentComponentProps,
@@ -55,10 +57,10 @@ function useNarrowOptions(): DrawerNavigationOptions {
 }
 
 // The rail and the list stay beside the pages, on the window's own surface; the glass sidebar draws its own edge.
-function useWideOptions(): DrawerNavigationOptions {
+function wideOptions(frame: FrameParts): DrawerNavigationOptions {
   return {
     drawerStyle: {
-      width: useFrameSidebarWidth(),
+      width: frameSidebarWidth(frame),
       backgroundColor: 'transparent',
       borderRightWidth: 0,
     },
@@ -66,12 +68,14 @@ function useWideOptions(): DrawerNavigationOptions {
   };
 }
 
-function useDrawerOptions(sizeClass: SizeClass): DrawerNavigationOptions {
+function useDrawerOptions(
+  sizeClass: SizeClass,
+  frame: FrameParts,
+): DrawerNavigationOptions {
   const narrow = useNarrowOptions();
-  const wide = useWideOptions();
 
   return {
-    ...(sizeClass === 'wide' ? wide : narrow),
+    ...(sizeClass === 'wide' ? wideOptions(frame) : narrow),
     drawerType: drawerTypes[sizeClass],
     // A hidden section keeps its stack but skips renders.
     freezeOnBlur: true,
@@ -107,10 +111,12 @@ function NarrowDrawerContent(drawer: DrawerContent): React.JSX.Element {
   );
 }
 
-const contentAt = (wide: boolean) =>
+// `drawerContent` is called as a function on each render (DrawerContentComponentProps), so it closes over the Frame's parts.
+const contentAt = (wide: boolean, frame: FrameParts) =>
   function SectionsContent(drawer: DrawerContent): React.JSX.Element {
     return wide ? (
       <FrameSidebar
+        frame={frame}
         onSectionChange={(section) => pickSection(drawer, section)}
       />
     ) : (
@@ -121,23 +127,23 @@ const contentAt = (wide: boolean) =>
 type ScreenLayout = NonNullable<ComponentProps<typeof Drawer>['screenLayout']>;
 
 // Every section's pages sit in the Frame's page pane, which on a narrow window fills it.
-const inPage: ScreenLayout = ({ children }) => (
-  <FramePage>{children}</FramePage>
-);
+const inPage =
+  (frame: FrameParts): ScreenLayout =>
+  ({ children }) => <FramePage frame={frame}>{children}</FramePage>;
 
 interface SectionsProps {
   wide: boolean;
-  lists: SectionLists;
+  frame: FrameParts;
 }
 
-function SectionsDrawer({ wide, lists }: SectionsProps): React.JSX.Element {
-  const options = drawerScreenOptions(wide, lists);
+function SectionsDrawer({ wide, frame }: SectionsProps): React.JSX.Element {
+  const options = drawerScreenOptions(wide, frame.lists);
 
   return (
     <Drawer
-      screenOptions={useDrawerOptions(useSizeClass())}
-      screenLayout={inPage}
-      drawerContent={contentAt(wide)}
+      screenOptions={useDrawerOptions(useSizeClass(), frame)}
+      screenLayout={inPage(frame)}
+      drawerContent={contentAt(wide, frame)}
     >
       {sectionOrder.map((section) => (
         <Drawer.Screen key={section} name={section} options={options} />
@@ -146,14 +152,19 @@ function SectionsDrawer({ wide, lists }: SectionsProps): React.JSX.Element {
   );
 }
 
-// One drawer of sections at every width, so a width change keeps each section's pages; each section hands the Frame its list.
+// One drawer of sections at every width, so a width change keeps each section's pages; each section hands the Frame its list, and the Frame is told which section the path shows.
 export function FrameNavigator(): React.JSX.Element {
   const wide = useSizeClass() === 'wide';
-  const lists = useSectionLists();
+
+  const frame = useFrame({
+    sizeClass: frameSizeClass(wide),
+    section: sectionOf(usePathname()),
+    lists: useSectionLists(),
+  });
 
   return (
-    <Frame sizeClass={frameSizeClass(wide)} lists={lists}>
-      <SectionsDrawer wide={wide} lists={lists} />
+    <Frame frame={frame}>
+      <SectionsDrawer wide={wide} frame={frame} />
     </Frame>
   );
 }

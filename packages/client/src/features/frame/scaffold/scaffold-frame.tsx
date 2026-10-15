@@ -1,10 +1,5 @@
 import type * as React from 'react';
-import {
-  createContext,
-  type PropsWithChildren,
-  type ReactNode,
-  use,
-} from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import { View } from 'react-native';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
 import { FrameBackdrop } from '../components/frame-backdrop/frame-backdrop';
@@ -26,16 +21,6 @@ export interface ScaffoldParts extends ScaffoldPartProps {
   framed: boolean;
 }
 
-const ScaffoldContext = createContext<ScaffoldParts | null>(null);
-
-export function useScaffoldParts(): ScaffoldParts {
-  const parts = use(ScaffoldContext);
-
-  if (!parts) throw new Error('Render inside a ScaffoldFrame.');
-
-  return parts;
-}
-
 export const isFramed = (sizeClass: SizeClass): boolean =>
   sizeClass !== 'compact';
 
@@ -43,7 +28,8 @@ export const isFramed = (sizeClass: SizeClass): boolean =>
 const shownInspector = (props: ScaffoldProps): ScaffoldProps =>
   props.sizeClass === 'wide' ? props : { ...props, inspectorState: 'closed' };
 
-function useParts(props: ScaffoldProps): ScaffoldParts {
+// The Scaffold's props as it applies them, with its layout: what its frame, sidebar and page are drawn from.
+export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
   const scaffold = shownInspector(props);
 
   return {
@@ -55,6 +41,10 @@ function useParts(props: ScaffoldProps): ScaffoldParts {
 
 const sidebarWidth = ({ measures, shownListWidth }: ScaffoldLayout): number =>
   measures.inset * 2 + measures.railWidth + shownListWidth;
+
+// The width of the sidebar and the list, for the permanent drawer that holds them.
+export const scaffoldSidebarWidth = ({ layout }: ScaffoldParts): number =>
+  sidebarWidth(layout);
 
 export type PanePlacement = Omit<FramePaneProps, 'testID' | 'children'>;
 
@@ -111,9 +101,9 @@ const frameEdges = (parts: ScaffoldParts): FrameEdges =>
       }
     : { before: null, after: null };
 
-type FrameRowProps = PropsWithChildren<{ parts: ScaffoldParts }>;
+export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
-function FrameRow({ parts, children }: FrameRowProps): React.JSX.Element {
+function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
   const { before, after } = frameEdges(parts);
 
   return (
@@ -130,34 +120,12 @@ function FrameRow({ parts, children }: FrameRowProps): React.JSX.Element {
   );
 }
 
-type ScaffoldFrameProps = PropsWithChildren<
-  Omit<ScaffoldProps, 'sidebar' | 'page'>
->;
-
 /*
  * The Scaffold's frame without its sidebar and page, for a navigator that draws them itself:
- * `ScaffoldSidebar` as its permanent drawer and `ScaffoldPage` around each page. The navigator,
- * the children, keeps the same place in the tree at every Size class, so its pages never remount.
+ * `ScaffoldSidebar` as its permanent drawer and `ScaffoldPage` around each page, each given the
+ * same parts. The navigator, the children, keeps the same place in the tree at every Size class,
+ * so its pages never remount.
  */
-export function ScaffoldFrame({
-  children,
-  ...props
-}: ScaffoldFrameProps): React.JSX.Element {
-  const parts = useParts({ ...props, sidebar: null });
-
-  return (
-    <ScaffoldContext value={parts}>
-      <FrameRow parts={parts}>{children}</FrameRow>
-    </ScaffoldContext>
-  );
-}
-
-// The width of the sidebar and the list, for the permanent drawer that holds them.
-export function useScaffoldSidebarWidth(): number {
-  return sidebarWidth(useScaffoldParts().layout);
-}
-
-// The props the Scaffold was given, as it applies them.
-export function useScaffoldProps(): ScaffoldProps {
-  return useScaffoldParts().scaffold;
+export function ScaffoldFrame(props: ScaffoldFrameProps): React.JSX.Element {
+  return <FrameRow {...props} />;
 }

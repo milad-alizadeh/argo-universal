@@ -1,13 +1,13 @@
-import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import { createContext, type ReactNode, use } from 'react';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
-import { InspectorProvider } from '#lib/product/inspector';
-import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
 import {
-  type Section,
-  sectionOf,
-} from '../../../lib/product/navigation/sections';
+  type InspectorControl,
+  InspectorProvider,
+} from '#lib/product/inspector';
+import type { FirstPage } from '#lib/product/navigation/navigation';
+import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
+import type { Section } from '../../../lib/product/navigation/sections';
 import { FrameRail } from '../components/frame-rail/frame-rail';
 import {
   PhoneDrawerContent,
@@ -16,11 +16,15 @@ import {
 import { useAttentionCount } from '../hooks/use-attention-count';
 import {
   ScaffoldFrame,
+  ScaffoldPage,
+  type ScaffoldParts,
+  type ScaffoldProps,
   ScaffoldSidebar,
-  useScaffoldProps,
+  scaffoldSidebarWidth,
+  useScaffoldParts,
 } from '../scaffold/scaffold';
 import { LiveConnectionBanner } from './connection-banner';
-import { type FrameState, useFrameState } from './frame-state';
+import { useFrameState } from './frame-state';
 
 export { useFrameState } from './frame-state';
 
@@ -31,8 +35,11 @@ export interface SectionList {
   list: ReactNode;
   // The header over the list when the list is the section's root page.
   rootHeader: ScreenHeaderProps;
-  // The page a window with the list beside it opens at the section's root; without one, the root keeps its own page.
-  firstPage?: ReactNode;
+  /*
+   * The page a window with the list beside it opens at the section's root, or undefined while
+   * it is still being chosen; without one, the root keeps its own page. Called as a hook.
+   */
+  useFirstPage?: () => FirstPage | undefined;
 }
 
 export type SectionLists = Record<Section, SectionList>;
@@ -47,56 +54,81 @@ export function useSectionList(section: Section): SectionList {
   return lists[section];
 }
 
-export interface FrameProps {
+export interface FrameOptions {
   sizeClass: SizeClass;
+  // The section the navigator shows.
+  section: Section;
   lists: SectionLists;
+}
+
+// What the Frame and its sidebar and pages are drawn from, which the navigator holds and hands to each.
+export interface FrameParts {
+  scaffold: ScaffoldParts;
+  // For a page's header button, such as Changes, to open and close the Inspector.
+  inspector: InspectorControl;
+  section: Section;
+  lists: SectionLists;
+}
+
+type FrameScaffoldState = ReturnType<typeof useFrameState>['scaffold'];
+
+// The Scaffold's props: the Frame's sidebar and Inspector state around the shown section's list, with the live Connection banner.
+const frameScaffold = (
+  state: FrameScaffoldState,
+  { sizeClass, section, lists }: FrameOptions,
+): ScaffoldProps => ({
+  ...state,
+  sizeClass,
+  sidebar: null,
+  listHeader: lists[section].header,
+  list: lists[section].list,
+  banner: <LiveConnectionBanner />,
+});
+
+// What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
+export function useFrame(options: FrameOptions): FrameParts {
+  const { scaffold, inspector } = useFrameState();
+
+  return {
+    scaffold: useScaffoldParts(frameScaffold(scaffold, options)),
+    inspector,
+    section: options.section,
+    lists: options.lists,
+  };
+}
+
+export interface FrameProps {
+  frame: FrameParts;
   // The navigator of sections, which draws `FrameSidebar` and `FramePage` itself.
   children: ReactNode;
 }
 
-type FrameScaffoldProps = FrameProps & Pick<FrameState, 'scaffold'>;
-
-// The Scaffold's frame around the navigator, with the shown section's list and the live Connection banner.
-function FrameScaffold(props: FrameScaffoldProps): React.JSX.Element {
-  const shown = props.lists[sectionOf(usePathname())];
-
+// The App's Frame around the navigator of sections, at every Size class.
+export function Frame({ frame, children }: FrameProps): React.JSX.Element {
   return (
-    <ScaffoldFrame
-      {...props.scaffold}
-      sizeClass={props.sizeClass}
-      listHeader={shown.header}
-      list={shown.list}
-      banner={<LiveConnectionBanner />}
-    >
-      {props.children}
-    </ScaffoldFrame>
-  );
-}
-
-// The App's Frame around the navigator of sections, at every Size class: the shown section's list, the live Connection banner, and the sidebar's and the Inspector's state.
-export function Frame(props: FrameProps): React.JSX.Element {
-  const { scaffold, inspector } = useFrameState();
-
-  return (
-    <SectionListsContext value={props.lists}>
-      <InspectorProvider value={inspector}>
-        <FrameScaffold {...props} scaffold={scaffold} />
+    <SectionListsContext value={frame.lists}>
+      <InspectorProvider value={frame.inspector}>
+        <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
       </InspectorProvider>
     </SectionListsContext>
   );
 }
 
 export interface FrameSidebarProps {
+  frame: FrameParts;
   // Opens a section through the navigator that holds the sidebar.
   onSectionChange: (section: Section) => void;
 }
 
-function LiveRail({ onSectionChange }: FrameSidebarProps): React.JSX.Element {
-  const { sidebarShown, onSidebarShownChange } = useScaffoldProps();
+function LiveRail({
+  frame,
+  onSectionChange,
+}: FrameSidebarProps): React.JSX.Element {
+  const { sidebarShown, onSidebarShownChange } = frame.scaffold.scaffold;
 
   return (
     <FrameRail
-      selectedSection={sectionOf(usePathname())}
+      selectedSection={frame.section}
       attentionCount={useAttentionCount()}
       {...{ sidebarShown, onSidebarShownChange, onSectionChange }}
     />
@@ -105,13 +137,30 @@ function LiveRail({ onSectionChange }: FrameSidebarProps): React.JSX.Element {
 
 // The rail and the shown section's list, as the permanent drawer of a window with the list beside the pages.
 export function FrameSidebar(props: FrameSidebarProps): React.JSX.Element {
-  return <ScaffoldSidebar sidebar={<LiveRail {...props} />} />;
+  return (
+    <ScaffoldSidebar
+      parts={props.frame.scaffold}
+      sidebar={<LiveRail {...props} />}
+    />
+  );
 }
 
-export {
-  ScaffoldPage as FramePage,
-  useScaffoldSidebarWidth as useFrameSidebarWidth,
-} from '../scaffold/scaffold';
+export interface FramePageProps {
+  frame: FrameParts;
+  children: ReactNode;
+}
+
+// A section's page in the Frame's page pane, which on a narrow window fills it.
+export function FramePage({
+  frame,
+  children,
+}: FramePageProps): React.JSX.Element {
+  return <ScaffoldPage parts={frame.scaffold}>{children}</ScaffoldPage>;
+}
+
+// The width of the rail and the list, for the permanent drawer that holds them.
+export const frameSidebarWidth = (frame: FrameParts): number =>
+  scaffoldSidebarWidth(frame.scaffold);
 
 export type SectionDrawerProps = Omit<
   PhoneDrawerContentProps,

@@ -1,19 +1,6 @@
-import {
-  type Href,
-  router,
-  useFocusEffect,
-  useNavigation,
-  usePathname,
-} from 'expo-router';
-import { CommonActions } from 'expo-router/react-navigation';
+import { type Href, router, useNavigation, usePathname } from 'expo-router';
 import type * as React from 'react';
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useCallback,
-  useEffect,
-} from 'react';
+import { createContext, type ReactNode, use, useEffect } from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { newSessionId } from './new-session';
 import { isPage, sectionOf } from './sections';
@@ -86,29 +73,11 @@ export function useNavigate(): Navigate {
   };
 }
 
-export interface OpenFirstPageProps {
-  // The section stack's route to open, such as `accounts` or `[id]`.
+// The page a section opens at its root when its list sits beside the pages: a route of the section's stack, such as `accounts` or `[id]`, and that route's params.
+export interface FirstPage {
   page: string;
-  // That route's params; keep the object stable, since a new one opens the page again.
+  // Keep the object stable, since a new one opens the page again.
   params?: Record<string, string>;
-}
-
-// On a wide window the list sits beside the pages, so a section's index opens its first page and the URL names the page shown; the list stays below it for a narrow window's Back.
-export function OpenFirstPage({ page, params }: OpenFirstPageProps): null {
-  const navigation = useNavigation();
-
-  useFocusEffect(
-    useCallback(() => {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 1,
-          routes: [{ name: 'index' }, { name: page, params }],
-        }),
-      );
-    }, [navigation, page, params]),
-  );
-
-  return null;
 }
 
 /*

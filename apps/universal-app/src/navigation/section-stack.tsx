@@ -15,6 +15,7 @@ import {
   type DrawerNavigationOptions,
   DrawerToggleButton,
 } from 'expo-router/drawer';
+import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import {
   getFocusedRouteNameFromRoute,
   type ParamListBase,
@@ -81,13 +82,24 @@ const drawerToggle: NativeStackNavigationOptions['headerLeft'] = ({
   tintColor,
 }) => <DrawerToggleButton tintColor={tintColor} />;
 
-// A narrow page's Connection banner floats under its header; a wide window's sits over the panes.
-function NarrowBanner({
-  overHeader,
-}: {
+interface BannerProps {
   overHeader: boolean;
-}): React.JSX.Element | null {
-  return useWide() ? null : <PhoneConnectionBanner overHeader={overHeader} />;
+}
+
+// Under a header that floats over the page, the banner moves down by the header's height, as the stack reports it.
+function UnderHeaderBanner({ overHeader }: BannerProps): React.JSX.Element {
+  const headerHeight = useAnimatedHeaderHeight();
+
+  return (
+    <PhoneConnectionBanner
+      headerHeight={overHeader ? headerHeight : undefined}
+    />
+  );
+}
+
+// A narrow page's Connection banner floats under its header; a wide window's sits over the panes.
+function NarrowBanner(props: BannerProps): React.JSX.Element | null {
+  return useWide() ? null : <UnderHeaderBanner {...props} />;
 }
 
 // The page keeps its place in the tree at both widths.
@@ -135,17 +147,4 @@ export function SectionStack({
       {children}
     </Stack>
   );
-}
-
-interface SectionRootProps {
-  section: Section;
-}
-
-// A section's root page: its list under the section's header on a narrow window; on a wide one, where the list sits beside the pages, the section's first page, so the URL names the page shown.
-export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
-  const { list, firstPage } = useSectionList(section);
-
-  if (useWide() && firstPage) return firstPage;
-
-  return <View className="flex-1 bg-content">{list}</View>;
 }

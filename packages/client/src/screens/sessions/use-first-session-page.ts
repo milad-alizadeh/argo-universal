@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { useTRPC } from '#features/connection';
 import {
   chooseFirstSession,
   type FirstSessionChoice,
 } from '#features/sessions';
-import { OpenFirstPage } from '#lib/product/navigation/navigation';
+import type { FirstPage } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../lib/product/navigation/new-session';
-import { FirstSessionView } from './first-session-view';
 
 function useListedSessionIds(): string[] | undefined {
   const trpc = useTRPC();
@@ -33,18 +31,15 @@ function useFirstSessionChoice(): FirstSessionChoice | undefined {
   return next;
 }
 
-// Opens the chosen Session, or New Session when there is none, as `/sessions/[id]`.
-function OpenFirstSession({ id }: { id: string | null }): React.JSX.Element {
-  const params = useMemo(() => ({ id: id ?? newSessionId }), [id]);
-
-  return <OpenFirstPage page="[id]" params={params} />;
-}
-
-// A wide window's `/sessions`: blank while the Sessions load, then it opens the first active Session's page, or New Session when there is none.
-export function FirstSessionScreen(): React.JSX.Element {
+// `/sessions`' first page: the first active Session, or New Session when there is none; undefined while the Sessions load.
+export function useFirstSessionPage(): FirstPage | undefined {
   const next = useFirstSessionChoice();
 
-  if (next === undefined) return <FirstSessionView state="loading" />;
-
-  return <OpenFirstSession id={next} />;
+  return useMemo(
+    () =>
+      next === undefined
+        ? undefined
+        : { page: '[id]', params: { id: next ?? newSessionId } },
+    [next],
+  );
 }

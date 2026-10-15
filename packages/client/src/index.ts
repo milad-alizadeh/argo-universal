@@ -10,12 +10,14 @@ export { useConnection } from '#features/connection';
 export {
   Frame,
   FramePage,
+  type FrameParts,
   FrameSidebar,
+  frameSidebarWidth,
   PhoneConnectionBanner,
   SectionDrawer,
   type SectionList,
   type SectionLists,
-  useFrameSidebarWidth,
+  useFrame,
   usePhoneDrawerWidth,
   useSectionList,
 } from '#features/frame';
@@ -72,7 +74,10 @@ export { Text } from '#primitives/display/text';
 
 export { Toaster } from '#primitives/overlays/toast';
 
-export { NavigationProvider } from '#lib/product/navigation/navigation';
+export {
+  type FirstPage,
+  NavigationProvider,
+} from '#lib/product/navigation/navigation';
 
 export {
   nativeHeaderOptions,

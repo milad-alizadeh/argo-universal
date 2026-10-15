@@ -3,11 +3,13 @@ export { usePhoneDrawerWidth } from './components/phone-drawer-content/use-phone
 export {
   Frame,
   FramePage,
+  type FrameParts,
   FrameSidebar,
+  frameSidebarWidth,
   SectionDrawer,
   type SectionList,
   type SectionLists,
-  useFrameSidebarWidth,
+  useFrame,
   useSectionList,
 } from './frame/frame';
 

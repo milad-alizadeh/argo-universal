@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import type * as React from 'react';
 import { Animated, View } from 'react-native';
 import {
@@ -26,20 +25,18 @@ export function LiveConnectionBanner(): React.JSX.Element | null {
 }
 
 export interface PhoneConnectionBannerProps {
-  // The stack's header floats over the page (`headerTransparent`), so the banner moves down by its height; otherwise the page already starts under it.
-  overHeader: boolean;
+  // The height of a header that floats over the page (`headerTransparent`), as the stack reports it, so the banner moves down by it; without one, the page already starts under its header.
+  headerHeight?: Animated.AnimatedInterpolation<number>;
 }
 
 function UnderHeader({
-  overHeader,
+  headerHeight,
 }: PhoneConnectionBannerProps): React.JSX.Element {
-  const headerHeight = useAnimatedHeaderHeight();
-
   return (
     <Animated.View
       pointerEvents="box-none"
       style={
-        overHeader ? { transform: [{ translateY: headerHeight }] } : undefined
+        headerHeight ? { transform: [{ translateY: headerHeight }] } : undefined
       }
     >
       <LiveConnectionBanner />
@@ -47,7 +44,7 @@ function UnderHeader({
   );
 }
 
-// The same banner on a narrow page, floating just under its header so the page under it never moves. The header's height is the stack's own, as it reports it.
+// The same banner on a narrow page, floating just under its header so the page under it never moves.
 export function PhoneConnectionBanner(
   props: PhoneConnectionBannerProps,
 ): React.JSX.Element {
