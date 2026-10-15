@@ -39,7 +39,7 @@ function newSession({ projectId }: RouteParams): NavigationDestination {
 }
 
 const routes = {
-  sessions: { pathname: '/', destination: () => ({ to: 'sessions' }) },
+  sessions: { pathname: '/sessions', destination: () => ({ to: 'sessions' }) },
   'new-session': {
     pathname: '/sessions/[id]',
     destination: sessionOrNew,

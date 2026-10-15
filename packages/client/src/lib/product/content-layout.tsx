@@ -27,16 +27,23 @@ export function useContentWide(): boolean {
   return contentWide ?? windowWide;
 }
 
-export function ContentLayout(props: ViewProps): React.JSX.Element {
+export interface ContentLayoutProps extends ViewProps {
+  // False leaves the content to the window's width, as on a narrow window; the tree stays the same either way.
+  measured?: boolean;
+}
+
+export function ContentLayout({
+  measured = true,
+  ...props
+}: ContentLayoutProps): React.JSX.Element {
   const [wide, measureWidth] = useContentWidth(props.onLayout);
+  const className = cn('flex-1 min-h-0 min-w-0', props.className);
 
   return (
-    <View
-      {...props}
-      className={cn('flex-1 min-h-0 min-w-0', props.className)}
-      onLayout={measureWidth}
-    >
-      <ContentWide.Provider value={wide}>{props.children}</ContentWide.Provider>
+    <View {...props} className={className} onLayout={measureWidth}>
+      <ContentWide value={measured ? wide : undefined}>
+        {props.children}
+      </ContentWide>
     </View>
   );
 }

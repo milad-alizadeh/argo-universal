@@ -3,7 +3,6 @@ import {
   PortalHost,
   FormSheetProvider,
   type LeaveGuard,
-  type Navigate,
   NavigationProvider,
   type RenderSymbolImage,
   SymbolImagesProvider,
@@ -23,7 +22,10 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
 import { formSheetRoutes } from '@/navigation/form-sheet';
-import { hrefFor, paramsOf } from '@/navigation/routes';
+import {
+  ShellPlaceTracker,
+  useShellNavigation,
+} from '@/navigation/use-shell-navigate';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -87,15 +89,6 @@ const useLeaveGuard: LeaveGuard = (active, onBlocked) => {
   );
 };
 
-// Screens in @repo/client navigate through this.
-const navigate: Navigate = (destination, options) =>
-  options?.inPlace
-    ? router.setParams(paramsOf(destination))
-    : moveFor(options)(hrefFor(destination));
-
-const moveFor = (options: Parameters<Navigate>[1]): typeof router.navigate =>
-  options?.replace ? router.replace : router.navigate;
-
 export default function RootLayout(): React.JSX.Element {
   return (
     // The phone drawer's gestures need this root.
@@ -127,10 +120,13 @@ function ThemedApp(): React.JSX.Element {
 }
 
 function RootNavigator(): React.JSX.Element {
+  const { navigate, onPlaceChange } = useShellNavigation();
+
   return (
     <NavigationProvider navigate={navigate} leaveGuard={useLeaveGuard}>
       <FormSheetProvider routes={formSheetRoutes}>
         <RootStack />
+        <ShellPlaceTracker onPlaceChange={onPlaceChange} />
       </FormSheetProvider>
     </NavigationProvider>
   );

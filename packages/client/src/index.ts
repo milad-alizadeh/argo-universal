@@ -14,11 +14,13 @@ export {
 export { ConnectionDetailScreen, useConnection } from '#features/connection';
 
 export {
-  DesktopLayout,
+  DesktopShellDetail,
+  DesktopShellSidebar,
   OnboardingLayout,
-  PhoneConnectionBanner,
   SectionDrawer,
   SectionRootScreen,
+  ShellFrame,
+  useDesktopSidebarWidth,
   useOnboardingShown,
   usePhoneDrawerWidth,
 } from '#features/frame';
@@ -63,7 +65,11 @@ export {
 
 export { HeaderButton } from '#lib/product/header-button';
 
-export type { Section } from './lib/product/navigation/sections';
+export {
+  type Section,
+  sectionDestination,
+  sectionOf,
+} from './lib/product/navigation/sections';
 
 export { HeaderSearchRow } from './lib/product/navigation/header-search';
 

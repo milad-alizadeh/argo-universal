@@ -9,7 +9,10 @@ import { ShellResizeHandles } from './shell-resize-handles';
 import { ShellSidebar } from './shell-sidebar';
 import { type ShellPartProps, useShellLayout } from './use-shell-layout';
 
-function ShellBackground({ shell, layout }: ShellPartProps): React.JSX.Element {
+export function ShellBackground({
+  shell,
+  layout,
+}: ShellPartProps): React.JSX.Element {
   return (
     <>
       <ShellBackdrop sidebarShown={shell.sidebarShown} {...layout.motion} />
@@ -18,7 +21,7 @@ function ShellBackground({ shell, layout }: ShellPartProps): React.JSX.Element {
   );
 }
 
-const detailPlacement = (
+export const detailPlacement = (
   layout: ShellPartProps['layout'],
 ): Omit<ShellPaneProps, 'testID' | 'children'> => ({
   offset: layout.shownListWidth,
@@ -37,15 +40,21 @@ function DetailPane({ shell, layout }: ShellPartProps): React.JSX.Element {
   );
 }
 
-function InspectorPanel({ shell, layout }: ShellPartProps): React.JSX.Element {
+const inspectorPlacement = (
+  layout: ShellPartProps['layout'],
+): Omit<ShellPaneProps, 'testID' | 'children'> => ({
+  offset: layout.detailRight,
+  width: layout.inspectorTargetWidth,
+  hidden: !layout.inspectorOpen,
+  ...layout.motion,
+});
+
+export function InspectorPanel({
+  shell,
+  layout,
+}: ShellPartProps): React.JSX.Element {
   return (
-    <ShellPane
-      testID="desktop-inspector"
-      offset={layout.detailRight}
-      width={layout.inspectorTargetWidth}
-      hidden={!layout.inspectorOpen}
-      {...layout.motion}
-    >
+    <ShellPane testID="desktop-inspector" {...inspectorPlacement(layout)}>
       {shell.inspector(layout.inspectorExpanded)}
     </ShellPane>
   );

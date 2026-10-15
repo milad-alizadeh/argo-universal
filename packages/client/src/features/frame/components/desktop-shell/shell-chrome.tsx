@@ -14,15 +14,21 @@ export function WindowDragStrip(): React.JSX.Element {
 }
 
 // Floats over the top of the detail and Inspector, so an expanded Inspector still shows it; touches outside the banner reach the page.
-export function PaneBanner({
-  children,
-}: {
+interface PaneBannerProps {
+  // Where the panes start, when the sidebar beside them is not in the same row.
+  left?: number;
   children: ReactNode;
-}): React.JSX.Element {
+}
+
+export function PaneBanner({
+  left,
+  children,
+}: PaneBannerProps): React.JSX.Element {
   return (
     <View
       pointerEvents="box-none"
       className="absolute inset-x-0 top-3 items-center"
+      style={{ left }}
     >
       {children}
     </View>

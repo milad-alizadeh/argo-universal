@@ -48,7 +48,9 @@ interface LayoutShell {
   shell: Omit<DesktopShellProps, 'children'>;
 }
 
-function useSectionProps(props: DesktopLayoutViewProps): SectionShellProps {
+type LayoutShellProps = Omit<DesktopLayoutViewProps, 'children'>;
+
+function useSectionProps(props: LayoutShellProps): SectionShellProps {
   const navigate = useNavigate();
   const section = sectionOf(props.destination);
 
@@ -108,7 +110,8 @@ function changesInspectorProps(
   };
 }
 
-function useLayoutShell(props: DesktopLayoutViewProps): LayoutShell {
+// The shell's props: the open section, the sidebar and the Inspector, each with its state.
+export function useLayoutShell(props: LayoutShellProps): LayoutShell {
   const [inspectorState, setInspectorState] =
     useState<InspectorState>('closed');
 
