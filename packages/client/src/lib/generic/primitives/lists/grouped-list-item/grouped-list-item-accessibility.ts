@@ -17,15 +17,13 @@ type Modifiers = NonNullable<ColumnProps['modifiers']>;
 type RowSlots = Pick<GroupedListItemProps, 'accessory' | 'detail' | 'control'>;
 
 export type RowTextAccessibilityProps = RowSlots &
-  Pick<GroupedListItemProps, 'accessibilityLabel'>;
+  Pick<GroupedListItemProps, 'accessibilityLabel' | 'onPress'>;
 
-function hasControls(props: RowSlots): boolean {
+function hasRowControls(props: RowSlots): boolean {
   return !!props.accessory || !!props.detail || !!props.control;
 }
 
-export function rowAccessibilityModifiers(
-  props: GroupedListItemProps,
-): Modifiers {
+function rowAccessibilityModifiers(props: GroupedListItemProps): Modifiers {
   if (Platform.OS !== 'ios') return androidAccessibility(props);
 
   return [
@@ -39,20 +37,20 @@ export function rowAccessibilityModifiers(
 function rowElement(
   props: RowSlots & Pick<GroupedListItemProps, 'onPress'>,
 ): Modifiers {
-  if (hasControls(props)) return [accessibilityElement('contain')];
+  if (hasRowControls(props)) return [accessibilityElement('contain')];
 
   return props.onPress ? [] : [accessibilityElement('ignore')];
 }
 
 function rowLabel(props: GroupedListItemProps): Modifiers {
-  if (hasControls(props) && !props.accessibilityLabel) return [];
+  if (hasRowControls(props) && !namedGroup(props)) return [];
 
   return [accessibilityLabel(groupedListItemName(props))];
 }
 
 // Compose's installed semantics API has no selected/disabled state description for a Column.
 function androidAccessibility(props: GroupedListItemProps): Modifiers {
-  const name = hasControls(props)
+  const name = hasRowControls(props)
     ? props.accessibilityLabel
     : groupedListItemName(props);
 
@@ -88,7 +86,15 @@ function androidStates(
 }
 
 function namedGroup(props: RowTextAccessibilityProps): boolean {
-  return hasControls(props) && !!props.accessibilityLabel;
+  return hasRowControls(props) && hasGroupName(props);
+}
+
+function hasGroupName(
+  props: Pick<GroupedListItemProps, 'accessibilityLabel' | 'onPress'>,
+): boolean {
+  if (props.accessibilityLabel) return true;
+
+  return Platform.OS === 'ios' && !!props.onPress;
 }
 
 function hiddenTextModifiers(shouldHide: boolean, props: RowSlots): Modifiers {
@@ -98,5 +104,37 @@ function hiddenTextModifiers(shouldHide: boolean, props: RowSlots): Modifiers {
 }
 
 function androidHidden(shouldHide: boolean, props: RowSlots): Modifiers {
-  return shouldHide || !hasControls(props) ? [clearSemantics()] : [];
+  return shouldHide || !hasRowControls(props) ? [clearSemantics()] : [];
+}
+
+export function rowContainerAccessibility(
+  props: GroupedListItemProps,
+): Modifiers {
+  if (Platform.OS === 'ios' && rowHasHeadlineAction(props))
+    return [accessibilityElement('contain')];
+
+  return rowAccessibilityModifiers(props);
+}
+
+export function rowActionAccessibility(props: GroupedListItemProps): Modifiers {
+  return [
+    accessibilityLabel(groupedListItemName(props)),
+    ...(props.selected ? [accessibilityAddTraits(['isSelected'])] : []),
+  ];
+}
+
+export function rowDisclosureAccessibility(): Modifiers {
+  return Platform.OS === 'ios' ? [accessibilityHidden()] : [];
+}
+
+export function rowHasHeadlineAction(
+  props: RowSlots & Pick<GroupedListItemProps, 'onPress'>,
+): boolean {
+  return !!props.onPress && hasRowControls(props);
+}
+
+export function rowUsesStockButton(
+  props: RowSlots & Pick<GroupedListItemProps, 'onPress'>,
+): boolean {
+  return Platform.OS === 'ios' && !!props.onPress && !hasRowControls(props);
 }
