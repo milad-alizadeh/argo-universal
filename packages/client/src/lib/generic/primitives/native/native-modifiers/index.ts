@@ -1,4 +1,1 @@
-export {
-  capsuleButtonBorder,
-  rectangularHitArea,
-} from './swift-outline-modifiers';
+export { rectangularHitArea } from './swift-outline-modifiers';

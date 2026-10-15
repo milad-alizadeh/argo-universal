@@ -1,15 +1,8 @@
-import {
-  Button as UniversalButton,
-  RNHostView,
-  Row,
-  Text,
-  type TextProps,
-} from '@expo/ui';
+import { Button as UniversalButton, RNHostView, Row, Text } from '@expo/ui';
 import type { ComponentType, ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import { ButtonAdornment } from './button-adornment';
 import { ContentButton } from './button-content';
 import { withNarrowLayout } from './button-layout';
@@ -44,13 +37,12 @@ function NativeControl(props: SystemButtonProps): ReactElement {
 
   return (
     <UniversalButton
+      {...props}
       variant={variant}
-      onPress={props.onPress}
       disabled={isButtonDisabled(props)}
-      testID={props.testID}
       modifiers={nativeButtonModifiers({ ...props, dangerColor })}
     >
-      <ButtonRow {...props} {...rowColors(variant, dangerColor)} />
+      {buttonContent(props, variant, dangerColor)}
     </UniversalButton>
   );
 }
@@ -63,14 +55,36 @@ function useDangerColor(props: SystemButtonProps): string | undefined {
   return red ? colors.danger : undefined;
 }
 
-function rowColors(
+function buttonContent(
+  props: SystemButtonProps,
   variant: UniversalButtonVariant,
   dangerColor: string | undefined,
-): Pick<RowProps, 'textClass' | 'labelColor'> {
-  return {
-    textClass: adornmentClass(variant, dangerColor),
-    labelColor: androidLabelColor(variant, dangerColor),
-  };
+): ReactElement | undefined {
+  const color = androidLabelColor(variant, dangerColor);
+
+  if (props.icon || props.loading) {
+    const textClass = adornmentClass(variant, dangerColor);
+
+    return <ButtonRow {...props} textClass={textClass} labelColor={color} />;
+  }
+
+  return customLabel(props, color);
+}
+
+// SwiftUI expands the label to fill a button; Compose danger needs an explicit text colour.
+function customLabel(
+  props: SystemButtonProps,
+  color: string | undefined,
+): ReactElement | undefined {
+  const modifiers = nativeLabelModifiers(props);
+
+  if (!color && modifiers.length === 0) return undefined;
+
+  return (
+    <Text modifiers={modifiers} textStyle={{ color }}>
+      {props.label}
+    </Text>
+  );
 }
 
 // Compose takes no button colours through Expo UI, so Android reddens only the label of an unfilled button.
@@ -92,21 +106,13 @@ function ButtonRow(props: RowProps): ReactElement {
   return (
     <Row alignment="center" spacing={8} modifiers={nativeLabelModifiers(props)}>
       <HostedAdornment {...props} />
-      <ButtonLabel label={props.label} color={props.labelColor} />
+      <Text
+        textStyle={props.labelColor ? { color: props.labelColor } : undefined}
+      >
+        {props.label}
+      </Text>
     </Row>
   );
-}
-
-// Compose's universal Text drops the button's labelLarge style, so Android takes Argo's control role; iOS sizes it by controlSize.
-function ButtonLabel(props: { label: string; color?: string }): ReactElement {
-  const textStyle = useUniversalTextStyle('control');
-
-  const style: TextProps['textStyle'] =
-    Platform.OS === 'android'
-      ? { ...textStyle, color: props.color }
-      : undefined;
-
-  return <Text textStyle={style}>{props.label}</Text>;
 }
 
 // Hosted React Native views cannot read the native label colour, so the icon takes the matching token.
