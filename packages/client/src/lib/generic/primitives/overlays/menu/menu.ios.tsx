@@ -5,11 +5,8 @@ import {
 } from '@expo/ui/community/menu';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import {
-  type NativeMenuItem,
-  NativeMenuTrigger,
-  nativeMenuItems,
-} from './menu-phone-parts';
+import { type NativeMenuItem, nativeMenuItems } from './menu-native-items';
+import { NativeMenuTrigger } from './menu-phone-parts';
 import type { MenuProps } from './menu-props';
 
 // Expo UI's MenuView drop-in, a SwiftUI Menu; Android draws Compose's DropdownMenu instead.

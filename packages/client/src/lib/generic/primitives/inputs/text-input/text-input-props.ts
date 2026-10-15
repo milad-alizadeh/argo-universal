@@ -24,6 +24,9 @@ export interface TextFieldProps {
   loading?: boolean;
 }
 
+// What a field's spinner needs: the field's label to speak, and whether it checks the value now.
+export type FieldProgressProps = Pick<TextFieldProps, 'label' | 'loading'>;
+
 // What the field's spinner says while it checks the value.
 export const fieldLoadingLabel = (label: string): string => `Checking ${label}`;
 

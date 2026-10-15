@@ -1,6 +1,6 @@
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { useWide } from '../generic/use-wide/use-wide';
-import { composerFadeDepth, useFeedEndClearance } from './composer-cover';
+import { useComposerFadeDepth, useFeedEndClearance } from './composer-cover';
 import type {
   PerEdge,
   ScrollFadeEdge,
@@ -21,21 +21,15 @@ const feedFadeEdges = (wide: boolean): PerEdge<ScrollFadeEdge> => ({
   bottom: 'always',
 });
 
-function feedFadeDepth(wide: boolean, atEnd: boolean): PerEdge<number> {
-  return {
-    top: wide ? headerFadeDepth : undefined,
-    bottom: atEnd ? composerFadeDepth.atEnd : composerFadeDepth.away,
-  };
-}
-
-// The Feed fades out above the Composer, ending where the Composer begins however far it covers the Feed (its overlap, or the measured glass Composer), and wide under the header too; every fade lies in the space it can be seen in, and nothing shows under the Composer. At its end, whether the reader is there.
+// The Feed fades out where the Composer begins, so nothing shows under it, and wide under the header. At its end, whether the reader is there.
 export function useFeedFade(atEnd: boolean): ScrollFadeOptions {
   const wide = useWide();
   const { composerTop } = useFeedEndClearance();
+  const bottom = useComposerFadeDepth(atEnd);
 
   return {
     edges: feedFadeEdges(wide),
-    depth: feedFadeDepth(wide, atEnd),
+    depth: { top: wide ? headerFadeDepth : undefined, bottom },
     inset: { bottom: composerTop },
     surfaceClassName: sessionSurface,
   };

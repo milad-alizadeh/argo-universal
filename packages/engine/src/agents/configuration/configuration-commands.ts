@@ -21,6 +21,7 @@ export { checkConfiguredAgent } from './custom-check';
 
 export interface ConfigurationDeps {
   invalidateAgent?: (agentId: string) => void;
+  invalidateIdleAgents?: (agentId?: string) => void;
   database: Database;
   databaseWriter: WriterActorRef;
   createId: () => string;
@@ -148,7 +149,8 @@ const saveEnablement = (
     if (configuration.removed)
       throw new Error('Agent was removed. Install or register it again.');
 
-    return saveConfiguration(deps, { id: agentId, enabled, configuration });
+    await saveConfiguration(deps, { id: agentId, enabled, configuration });
+    deps.invalidateIdleAgents?.(agentId);
   });
 
 export const setAgentEnabled = (

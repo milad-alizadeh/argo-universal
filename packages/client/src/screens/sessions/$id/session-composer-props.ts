@@ -7,7 +7,11 @@ import type {
 import type { useBlobUrl } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import type { ElicitationFormProps } from '#features/requests';
-import { composerStatus, toSendError } from '#features/sessions';
+import {
+  type MergeMethodChoice,
+  composerStatus,
+  toSendError,
+} from '#features/sessions';
 import { agentHref, type Navigate } from '#lib/product/navigation/navigation';
 import type { SessionCommands } from './use-session-commands';
 
@@ -24,6 +28,7 @@ export interface OpenSession {
   imageUrl: ReturnType<typeof useBlobUrl>;
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
+  mergeMethod: MergeMethodChoice;
 }
 
 type DraftProps = Pick<

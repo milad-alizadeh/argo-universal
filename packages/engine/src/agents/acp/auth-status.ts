@@ -86,7 +86,4 @@ export class AcpAuthenticationStatus {
       clearTimeout(timeout);
     }
   }
-  public requireReady(): Promise<void> {
-    return Promise.resolve();
-  }
 }

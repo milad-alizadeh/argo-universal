@@ -1,5 +1,5 @@
 import type { SessionStatus } from '@repo/contracts';
-import type { MergeMethod } from './merge-pr-button';
+import type { MergeMethod } from '../state/merge-method';
 import type { SessionPullRequest } from './session-pull-request';
 
 export type SessionHeaderStatus = Extract<
@@ -16,6 +16,9 @@ export interface SessionHeaderProps {
   pullRequests?: SessionPullRequest[];
   // Absent while the Server cannot merge a PR; Merge PR then stays dimmed.
   onMerge?: (pullRequest: number, method: MergeMethod) => void;
+  // The merge method this device used last: Merge PR runs it and its menu ticks it. Squash until one is picked.
+  mergeMethod?: MergeMethod;
+  onMergeMethodChange?: (method: MergeMethod) => void;
   // Fixes the clock, for stories and tests.
   now?: number;
 }

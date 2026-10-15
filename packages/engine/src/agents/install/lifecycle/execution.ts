@@ -45,8 +45,6 @@ const selectedCatalogEntry = (
 const prepareMaterialization = (
   input: InstallExecutionInput,
 ): MaterializationInput => {
-  input.deps.invalidateAgent?.(input.operation.agentId);
-
   const catalog = selectedCatalogEntry(input),
     { agentId, operationId } = input.operation;
 
@@ -105,6 +103,8 @@ export const executeAgentInstall = async (
   try {
     input.signal.throwIfAborted();
     await saveSelection(input, selection);
+    // A reinstall can keep its version, so the old process must not be reused.
+    input.deps.invalidateAgent?.(input.operation.agentId);
   } catch (error) {
     await discardSelection(input, selection);
     throw error;

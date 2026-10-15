@@ -13,7 +13,7 @@ import type { AgentLaunch } from '..';
 import { createAgentClient, awaitAcpOpening } from './client';
 import { negotiateAcpInitialize } from './initialize';
 import { sessionCapabilities, openProtocolSession } from './open-session';
-import { launchAcpProcess } from './process';
+import { exitDrainMs, launchAcpProcess } from './process';
 import type {
   AcpOpenInput,
   AcpProcess,
@@ -23,14 +23,15 @@ import type {
 } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
 
-type Session = {
+type AgentSession = {
   destination: AcpSessionDestination;
   pending: Set<Promise<unknown>>;
   controller: AbortController;
   released: PromiseWithResolvers<void>;
+  rejected?: unknown;
 };
 
-type Registration = { opening: AcpOpenInput; session: Session };
+type Registration = { opening: AcpOpenInput; session: AgentSession };
 
 type OpeningResponse = Extract<AnyMessage, { result: unknown }>;
 
@@ -53,17 +54,15 @@ type Elicitation = ClientRequestHandlersByMethod['elicitation/create'];
 
 const closeTimeoutMs = 5_000;
 
-const exitDrainMs = 250;
-
 type ResponseInput<Result> = {
   id: string | undefined;
-  invoke: (session: Session) => Result | Promise<Result>;
+  invoke: (session: AgentSession) => Result | Promise<Result>;
   fallback: Result;
 };
 
 type LeaseOpening = {
   input: AcpOpenInput;
-  session: Session;
+  session: AgentSession;
   opened: Pick<AcpSessionLease, 'sessionId' | 'response'>;
 };
 
@@ -73,7 +72,7 @@ type CancelledResponse<Result> = {
 };
 
 const cancelledResponse = <Result>(
-  session: Session,
+  session: AgentSession,
   fallback: Result,
 ): CancelledResponse<Result> => {
   const aborted = Promise.withResolvers<Result>();
@@ -90,7 +89,9 @@ const cancelledResponse = <Result>(
 const asError = (cause: unknown): Error =>
   cause instanceof Error ? cause : new Error(String(cause));
 
-const createSession = (destination: AcpSessionDestination): Session => ({
+const createAgentSession = (
+  destination: AcpSessionDestination,
+): AgentSession => ({
   destination,
   pending: new Set(),
   controller: new AbortController(),
@@ -105,7 +106,7 @@ const elicitationSessionId = (
     : undefined;
 
 export class AcpConnection {
-  private readonly sessions = new Map<string, Session>();
+  private readonly agentSessions = new Map<string, AgentSession>();
   private readonly registrations = new Map<
     JsonRpcId,
     Registration | undefined
@@ -117,8 +118,8 @@ export class AcpConnection {
   private connection: ClientConnection | undefined;
   private initialization: InitializeResponse | undefined;
   private launching: Promise<AcpProcess> | undefined;
-  private stopping: Promise<void> | undefined;
   private failure: Error | undefined;
+  private stopping: Promise<void> | undefined;
   public constructor(
     private readonly input: AcpResourceInput,
     private readonly forget: () => void,
@@ -189,11 +190,13 @@ export class AcpConnection {
         }),
       fallback: { action: 'cancel' },
     });
-  private find(id: string | undefined): Session | undefined {
-    const session = id === undefined ? undefined : this.sessions.get(id);
+  private find(id: string | undefined): AgentSession | undefined {
+    const session = id === undefined ? undefined : this.agentSessions.get(id);
 
     if (!session)
-      console.warn(`Unknown ACP Session ${String(id)}; dropping Agent message`);
+      console.warn(
+        `Unknown Agent session ${String(id)}; dropping Agent message`,
+      );
 
     return session;
   }
@@ -215,7 +218,7 @@ export class AcpConnection {
     }
   }
   private async trackResponse<Result>(
-    session: Session,
+    session: AgentSession,
     work: Promise<Result>,
   ): Promise<Result> {
     session.pending.add(work);
@@ -262,7 +265,8 @@ export class AcpConnection {
       this.registrations.set(message.id, this.openings.shift());
   }
   private registerResponse(message: AnyMessage): Promise<void> | undefined {
-    if (!('id' in message)) return undefined;
+    // Agent requests count their ids separately, so only a response can answer an opening.
+    if (!('id' in message) || 'method' in message) return undefined;
     const registration = this.registrations.get(message.id);
     this.registrations.delete(message.id);
 
@@ -280,15 +284,38 @@ export class AcpConnection {
     return this.register(registration, message);
   }
   private register(
-    { opening, session }: Registration,
+    registration: Registration,
     response: OpeningResponse,
   ): Promise<void> | undefined {
-    const id = this.readIdentity(opening, response);
+    const id = this.readNewIdentity(registration, response);
 
+    if (id === undefined) return undefined;
+
+    return this.registerIdentity(id, registration);
+  }
+  private registerIdentity(
+    id: string,
+    { opening, session }: Registration,
+  ): Promise<void> | undefined {
     if (opening.signal?.aborted) return undefined;
-    this.sessions.set(id, session);
+    this.agentSessions.set(id, session);
 
     return opening.destination.registrationFinished;
+  }
+  // A bad or duplicate identity fails only its own open, in `requireRegistered`; a throw here would end the shared connection.
+  private readNewIdentity(
+    { opening, session }: Registration,
+    response: OpeningResponse,
+  ): string | undefined {
+    try {
+      const id = this.readIdentity(opening, response);
+
+      return this.agentSessions.has(id) ? undefined : id;
+    } catch (error) {
+      session.rejected = error;
+
+      return undefined;
+    }
   }
   private readIdentity(
     { opening }: AcpOpenInput,
@@ -302,7 +329,7 @@ export class AcpConnection {
   }
   public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
     this.requireAvailable(input);
-    const session = createSession(input.destination);
+    const session = createAgentSession(input.destination);
     const ready = this.requireReady();
     this.openings.push({ opening: input, session });
 
@@ -337,6 +364,7 @@ export class AcpConnection {
   }
   private async lease(opening: LeaseOpening): Promise<AcpSessionLease> {
     await this.releaseAbandoned(opening);
+    this.requireRegistered(opening);
     const { connection, initialization } = this.requireReady();
     let closing: Promise<void> | undefined;
 
@@ -349,6 +377,16 @@ export class AcpConnection {
       released: opening.session.released.promise,
     };
   }
+  private requireRegistered(opening: LeaseOpening): void {
+    if (this.failure) throw this.failure;
+    this.requireOwnIdentity(opening);
+  }
+  private requireOwnIdentity({ opened, session }: LeaseOpening): void {
+    if (session.rejected) throw session.rejected;
+
+    if (this.agentSessions.get(opened.sessionId) !== session)
+      throw new Error(`Agent session ${opened.sessionId} could not be opened`);
+  }
   private async releaseAbandoned({
     input,
     opened,
@@ -358,7 +396,7 @@ export class AcpConnection {
     await this.close(opened.sessionId, session);
     input.signal.throwIfAborted();
   }
-  private async close(id: string, session: Session): Promise<void> {
+  private async close(id: string, session: AgentSession): Promise<void> {
     const deadline = Promise.withResolvers<never>();
 
     const timer = setTimeout(
@@ -375,7 +413,10 @@ export class AcpConnection {
       this.release(id, session);
     }
   }
-  private async closeAndDrain(id: string, session: Session): Promise<void> {
+  private async closeAndDrain(
+    id: string,
+    session: AgentSession,
+  ): Promise<void> {
     if (this.supportsClose())
       this.readers['session/close'].parse(
         await this.connection?.agent.request('session/close', {
@@ -391,10 +432,10 @@ export class AcpConnection {
       !!sessionCapabilities(this.requireReady().initialization)?.close
     );
   }
-  private release(id: string, session: Session): void {
+  private release(id: string, session: AgentSession): void {
     session.controller.abort();
 
-    if (this.sessions.get(id) === session) this.sessions.delete(id);
+    if (this.agentSessions.get(id) === session) this.agentSessions.delete(id);
     session.released.resolve();
     this.idle();
   }
@@ -403,18 +444,20 @@ export class AcpConnection {
     this.failure = error;
     this.forget();
 
-    for (const [id, session] of this.sessions) {
+    for (const [id, session] of this.agentSessions) {
       session.destination.failed(error);
       this.release(id, session);
     }
 
-    this.closeConnection(error);
+    this.abandon(error);
   }
-  private closeConnection(error: Error): void {
+  // Transport failure can precede process exit; shutdown stays idempotent.
+  private abandon(error: Error): void {
     this.connection?.close(error);
+    void this.shutdown().catch(console.error);
   }
   public get inUse(): boolean {
-    return this.sessions.size > 0 || this.registrations.size > 0;
+    return this.agentSessions.size > 0 || this.registrations.size > 0;
   }
   public shutdown(): Promise<void> {
     this.stopping ??= this.stop();

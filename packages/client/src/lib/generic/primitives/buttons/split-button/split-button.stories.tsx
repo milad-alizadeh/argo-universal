@@ -69,7 +69,7 @@ function ChoicesExample(): React.JSX.Element {
 
 function NarrowExample(): React.JSX.Element {
   return (
-    <Variation label="Choices, narrow (Sheet)">
+    <Variation label="Choices, narrow">
       <View className="flex-row">
         <ScopeSplit narrow />
       </View>
@@ -95,5 +95,39 @@ export const Variations: Story = {
       <NarrowExample />
       <ActionsExample />
     </VariationList>
+  ),
+};
+
+type MergeMethod = 'squash' | 'merge' | 'rebase';
+
+const mergeMethods = [
+  { value: 'squash', label: 'Squash and merge' },
+  { value: 'merge', label: 'Create a merge commit' },
+  { value: 'rebase', label: 'Rebase and merge' },
+] as const;
+
+// Paper's SplitButton card: Merge PR, its method chosen from the menu.
+function MergeSplit(): React.JSX.Element {
+  const [method, setMethod] = useState<MergeMethod>('squash');
+
+  return (
+    <SplitButton
+      primary
+      menuLabel="Merge options"
+      options={mergeMethods}
+      value={method}
+      onValueChange={setMethod}
+    >
+      <Button custom label="Merge PR" />
+    </SplitButton>
+  );
+}
+
+// The split on its own, nothing else on screen, for side-by-side captures against Paper.
+export const Choices: Story = {
+  render: () => (
+    <View className="flex-row">
+      <MergeSplit />
+    </View>
   ),
 };

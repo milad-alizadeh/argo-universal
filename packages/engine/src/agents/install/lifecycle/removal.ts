@@ -37,13 +37,14 @@ export const removeAgentInstallation = async (input: {
   const agent = readConfiguredAgent(input.deps.database, input.agentId);
 
   if (!agent) throw new Error('Agent is not configured');
+  invalidateRemovedAgent(input);
 
   if (agent.configuration.source === 'registry')
     await removeManagedFiles(input.home, input.agentId);
   await saveRemoval(input.deps, agent);
-  invalidateRemovedAgent(input);
 };
 
+// Stop the idle process before its files go.
 const invalidateRemovedAgent = (input: {
   deps: ConfigurationDeps;
   agentId: string;

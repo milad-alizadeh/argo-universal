@@ -17,8 +17,6 @@ import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import type { ScrollFadeOptions } from './scroll-fade-options';
 import { type ScrollFade, useScrollFade } from './scroll-fade-props';
 
-export { useScrollFadeEndGap } from './scroll-fade-options';
-
 const listDefaults = {
   style: { position: 'absolute', inset: 0 },
   // Otherwise it shifts the scroll position as rows are measured.

@@ -6,15 +6,17 @@ import {
   type Stream,
 } from '@agentclientprotocol/sdk';
 import type { AgentLaunch } from '..';
-import { shellEnvironment } from '../launch/shell-env';
-import { vendorEnvironment } from '../vendor';
+import { agentEnvironment } from '../launch/agent-environment';
 import type { AcpProcess } from './resource-types';
 
-const exitDrainMs = 250;
+export const exitDrainMs = 250;
+
+// The Notice shows only the stderr tail; an idle Agent can log for hours.
+const stderrLimit = 16_384;
 
 export class AgentProcessExitError extends Error {
   public constructor(
-    code: number | null,
+    public readonly code: number | null,
     signal: NodeJS.Signals | null,
     public readonly stderr: string,
   ) {
@@ -50,7 +52,7 @@ class ProcessOutput {
   public constructor(private readonly child: ChildProcessWithoutNullStreams) {
     child.stderr.setEncoding('utf8');
     child.stderr.on('data', (chunk: string) => {
-      this.stderr += chunk;
+      this.stderr = (this.stderr + chunk).slice(-stderrLimit);
     });
     child.once('close', () => this.closed.resolve());
   }
@@ -70,6 +72,8 @@ class ProcessOutput {
     code: number | null,
     signal: NodeJS.Signals | null,
   ): Promise<void> {
+    // The status is known now; a connection that closes during the drain still reports it.
+    this.failure = new AgentProcessExitError(code, signal, this.stderr.trim());
     await this.drain();
     this.failure = new AgentProcessExitError(code, signal, this.stderr.trim());
   }
@@ -130,7 +134,7 @@ const spawnAgent = (
     ['-c', `exec ${[launch.executable, ...launch.args].map(quote).join(' ')}`],
     {
       cwd: launch.cwd,
-      env: { ...environment, ...launch.env, ...vendorEnvironment(launch) },
+      env: environment,
       detached: false,
       stdio: 'pipe',
     },
@@ -139,4 +143,4 @@ const spawnAgent = (
 export const launchAcpProcess = async (
   launch: AgentLaunch,
 ): Promise<AcpProcess> =>
-  ownProcess(spawnAgent(launch, await shellEnvironment(launch.cwd)));
+  ownProcess(spawnAgent(launch, await agentEnvironment(launch)));

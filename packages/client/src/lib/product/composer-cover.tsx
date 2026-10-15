@@ -1,22 +1,26 @@
-import { createContext, useContext, useState } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
+import { createContext, useCallback, useContext, useState } from 'react';
+import type { LayoutChangeEvent, View } from 'react-native';
 import { useKeyboardState } from 'react-native-keyboard-controller';
+import { type SpacingToken, useSpacing } from '#lib/generic/use-spacing';
 import { liquidGlassAvailable } from '#primitives/display/liquid-glass';
 import { useContentWide } from './content-layout';
 
 // How far the Composer reaches up over the end of the Feed; the Feed's rows are hidden under it, so none shows through its glass.
 export const composerOverlap = 48;
 
-// The Feed fades out within the space it leaves above the Composer, so a row is gone before it meets the Composer: at the end only through the empty 24 under the last row, so that row stays whole; scrolled back, deeper.
-export const composerFadeDepth = { atEnd: 24, away: 48 };
+// The Feed fades out in the space above the Composer: at its end only within the gap under the last row, so that row stays whole; scrolled back, deeper.
+const composerFadeDepth = {
+  atEnd: '--spacing-6',
+  away: '--spacing-12',
+} as const satisfies Record<string, SpacingToken>;
 
-// The Feed's empty space between its last row and the Composer.
-const feedEndGap = 24;
+// The Feed's gap between its last row and the Composer.
+const feedEndGap = '--spacing-6';
 
 // How far the Composer covers the Feed's end: its overlap, or under iOS 26's glass Composer, the whole Composer area.
 export const ComposerCover = createContext(composerOverlap);
 
-// Where the system draws Liquid Glass, the phone Composer is glass, laid over the Feed's end; the Feed fades out above it.
+// Where the system draws Liquid Glass, the phone Composer is glass, laid over the Feed's end.
 export function useGlassComposer(): boolean {
   const contentWide = useContentWide();
 
@@ -33,24 +37,46 @@ export interface FeedEndClearance {
 export function useFeedEndClearance(): FeedEndClearance {
   const cover = useContext(ComposerCover);
 
-  return { endSpace: cover + feedEndGap, composerTop: cover };
+  return { endSpace: cover + useSpacing(feedEndGap), composerTop: cover };
+}
+
+// How deep the Feed fades out above the Composer.
+export function useComposerFadeDepth(atEnd: boolean): number {
+  return useSpacing(atEnd ? composerFadeDepth.atEnd : composerFadeDepth.away);
 }
 
 export interface GlassCover {
   cover: number;
+  measureComposer: (view: View | null) => void;
   onComposerLayout: (event: LayoutChangeEvent) => void;
+}
+
+// The Composer's height, measured as it mounts and again on each layout.
+function useComposerHeight(): Omit<GlassCover, 'cover'> & {
+  height: number | undefined;
+} {
+  const [height, setHeight] = useState<number>();
+
+  // Fabric measures synchronously while the ref attaches, before the first paint, so the Feed's end never draws against a guess.
+  const measureComposer = useCallback((view: View | null) => {
+    view?.measure((...box: number[]) => setHeight(box[3]));
+  }, []);
+
+  return {
+    height,
+    measureComposer,
+    onComposerLayout: (event) => setHeight(event.nativeEvent.layout.height),
+  };
 }
 
 // How far the glass Composer covers the Feed's end: the Composer, and below it the home indicator's space, which the open keyboard takes over.
 export function useGlassCover(bottom: number): GlassCover {
-  const [composerHeight, setComposerHeight] = useState<number>();
+  const { height, ...composer } = useComposerHeight();
   const keyboardOpen = useKeyboardState((state) => state.isVisible);
   const below = keyboardOpen ? 0 : bottom;
 
   return {
-    cover:
-      composerHeight === undefined ? composerOverlap : composerHeight + below,
-    onComposerLayout: (event) =>
-      setComposerHeight(event.nativeEvent.layout.height),
+    cover: height === undefined ? composerOverlap : height + below,
+    ...composer,
   };
 }

@@ -4,6 +4,7 @@ import {
   createAgentChecker,
   checkAgentLaunch,
   type AcpResourceInput,
+  type AcpResources,
 } from '../agents';
 import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
@@ -98,8 +99,7 @@ function bindInstallations(
     ...input,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
-    invalidateAgent:
-      input.sessions.getSnapshot().context.acpResources.invalidateAgent,
+    invalidateAgent: acpResources(input).invalidateAgent,
     isInUse: (agentId) =>
       input.agentLogins.isBusy(agentId) ||
       sessionsUseAgent(input.sessions, agentId),
@@ -112,18 +112,21 @@ type AgentSetup = Pick<
   | 'agentLogins'
   | 'createId'
   | 'invalidateAgent'
+  | 'invalidateIdleAgents'
   | 'dropAgentConnections'
 >;
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
   const installations = input.installations ?? createInstallations(input.home);
 
+  const { invalidateAgent, invalidateIdleAgents, dropAgentConnections } =
+    acpResources(input);
+
   return {
     installations,
-    dropAgentConnections:
-      input.sessions.getSnapshot().context.acpResources.dropAgentConnections,
-    invalidateAgent:
-      input.sessions.getSnapshot().context.acpResources.invalidateAgent,
+    invalidateAgent,
+    invalidateIdleAgents,
+    dropAgentConnections,
     agentLogins: resolveAgentLogins(input, installations),
     createId: input.createId ?? randomUUID,
   };
@@ -157,6 +160,10 @@ function sessionsUseAgent(
       return !agent || agent === agentId;
     })
   );
+}
+
+function acpResources(input: AppRouterInput): AcpResources {
+  return input.sessions.getSnapshot().context.acpResources;
 }
 
 function createInstallations(home: string | undefined): AgentInstallations {

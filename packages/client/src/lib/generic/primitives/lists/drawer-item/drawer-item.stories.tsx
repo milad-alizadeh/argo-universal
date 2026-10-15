@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
+import type { BadgeCount } from '../../../badge-count';
 import type { IconName } from '../../../symbols/icon-names';
 import { DrawerItem } from './drawer-item';
 
@@ -21,8 +22,7 @@ export const Variations: Story = {
 interface Destination {
   title: string;
   icon: IconName;
-  badge?: number;
-  badgeLabel?: string;
+  badge?: BadgeCount;
 }
 
 // Sessions counts 2 that need attention; Issues has more than a badge shows, so it reads 99+.
@@ -30,10 +30,13 @@ const destinations: Destination[] = [
   {
     title: 'Sessions',
     icon: 'sessions',
-    badge: 2,
-    badgeLabel: '2 Sessions need attention',
+    badge: { count: 2, label: '2 Sessions need attention' },
   },
-  { title: 'Issues', icon: 'issue', badge: 120, badgeLabel: '120 open Issues' },
+  {
+    title: 'Issues',
+    icon: 'issue',
+    badge: { count: 120, label: '120 open Issues' },
+  },
   { title: 'Settings', icon: 'settings' },
 ];
 
@@ -69,7 +72,6 @@ function Destination(props: DestinationProps): React.JSX.Element {
       icon={props.icon}
       selected={current === title}
       badge={props.badge}
-      badgeLabel={props.badgeLabel}
       onPress={() => onSelect(title)}
     />
   );

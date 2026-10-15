@@ -5,6 +5,7 @@ import type * as IconButtonKit from '#primitives/buttons/icon-button';
 import type * as SplitButtonKit from '#primitives/buttons/split-button';
 import type * as BadgeKit from '#primitives/display/badge';
 import type * as CollapsibleKit from '#primitives/display/collapsible';
+import type * as CountBadgeKit from '#primitives/display/count-badge';
 import type * as DisclosureChevronKit from '#primitives/display/disclosure-chevron';
 import type * as IconKit from '#primitives/display/icon';
 import type * as LiquidGlassKit from '#primitives/display/liquid-glass';
@@ -58,6 +59,7 @@ export type Primitives = {
   ComboboxContentProps: ComboboxKit.ComboboxContentProps<string>;
   ComboboxOption: ComboboxKit.ComboboxOption<string>;
   ComboboxProps: ComboboxKit.ComboboxProps<string>;
+  CountBadgeProps: CountBadgeKit.CountBadgeProps;
   DialogContentProps: DialogKit.DialogContentProps;
   DialogRegionProps: DialogKit.DialogRegionProps;
   DisclosureChevronProps: DisclosureChevronKit.DisclosureChevronProps;
@@ -78,7 +80,10 @@ export type Primitives = {
   IconSpinnerProps: IconKit.IconSpinnerProps;
   LiquidGlassProps: LiquidGlassKit.LiquidGlassProps;
   MenuAction: MenuKit.MenuAction;
+  MenuDropdownItemsProps: MenuKit.MenuDropdownItemsProps;
   MenuProps: MenuKit.MenuProps;
+  MenuRows: MenuKit.MenuRows;
+  NativeMenuItem: MenuKit.NativeMenuItem;
   NativeTextProps: NativeTextKit.NativeTextProps;
   PickerProps: PickerKit.PickerProps<string>;
   PopoverContentProps: PopoverKit.PopoverContentProps;

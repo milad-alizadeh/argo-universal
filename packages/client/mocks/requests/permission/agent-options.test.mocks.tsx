@@ -7,7 +7,6 @@ import {
   alwaysAllow,
   alwaysAllowId,
   pickFromMenu,
-  pickFromSheet,
 } from './option-menus.test.mocks';
 import {
   allowOptions,
@@ -94,7 +93,7 @@ export function rejectMenuWide(mock?: RequestMock): Story {
   };
 }
 
-// Phone groups options like desktop: two controls, allow on top; the chevron opens a Sheet.
+// Phone width groups options like desktop: two controls, allow on top; the web chevron opens the menu.
 export function groupedPhone(mock?: RequestMock): Story {
   return {
     args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
@@ -108,7 +107,7 @@ export function groupedPhone(mock?: RequestMock): Story {
       await expect(buttons[2]).toHaveAccessibleName('Reject');
       await expect(buttons[3]).toHaveAccessibleName(rejectOptions);
       await userEvent.click(canvas.getByRole('button', { name: allowOptions }));
-      await pickFromSheet(userEvent, allowOptions, alwaysAllow);
+      await pickFromMenu(userEvent, alwaysAllow);
       await expect(args.onAnswer).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: alwaysAllow }));
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
