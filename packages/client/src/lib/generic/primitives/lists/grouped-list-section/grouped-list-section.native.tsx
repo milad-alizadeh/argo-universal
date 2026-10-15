@@ -1,6 +1,9 @@
 import { Column, FieldGroup, Text, type TextProps } from '@expo/ui';
 import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
-import { foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import {
+  foregroundStyle,
+  listRowBackground,
+} from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
@@ -40,11 +43,20 @@ function useBareSection(props: GroupedListSectionProps): boolean {
 // The Section draws its own title, in the platform's header style.
 function Section(props: GroupedListSectionProps): React.JSX.Element {
   return (
-    <FieldGroup.Section title={props.title}>
+    <FieldGroup.Section title={props.title} modifiers={useSectionSurface()}>
       {footerSlot(props)}
       {props.children}
     </FieldGroup.Section>
   );
+}
+
+// The section owns the shared card surface while SwiftUI keeps its grouped row shapes.
+function useSectionSurface(): React.ComponentProps<
+  typeof FieldGroup.Section
+>['modifiers'] {
+  const { card } = useNativeTheme().colors;
+
+  return ios && card ? [listRowBackground(card)] : [];
 }
 
 // The Section finds its footer by the slot element's type, so this is called, not rendered as a component.

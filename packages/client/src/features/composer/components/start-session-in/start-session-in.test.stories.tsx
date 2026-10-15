@@ -84,14 +84,14 @@ function switchProject(width: number): Story {
         }),
       );
       await userEvent.type(
-        await overlay.findByRole('textbox', { name: 'Find a Project' }),
+        await overlay.findByRole('searchbox', { name: 'Search Projects' }),
         landingSearch,
       );
       await expect(
-        overlay.queryByRole('button', { name: exampleProject.name }),
+        overlay.queryByRole('radio', { name: exampleProject.name }),
       ).not.toBeInTheDocument();
       await userEvent.click(
-        overlay.getByRole('button', { name: landingProject.name }),
+        overlay.getByRole('radio', { name: landingProject.name }),
       );
       await expect(args.onProjectChange).toHaveBeenCalledOnce();
       await expect(args.onProjectChange).toHaveBeenCalledWith(
@@ -105,7 +105,7 @@ function switchProject(width: number): Story {
       // One tap picks a Project and closes the picker.
       await waitFor(() =>
         expect(
-          overlay.queryByRole('textbox', { name: 'Find a Project' }),
+          overlay.queryByRole('searchbox', { name: 'Search Projects' }),
         ).not.toBeInTheDocument(),
       );
     },

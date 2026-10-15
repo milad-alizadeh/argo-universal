@@ -4,17 +4,15 @@ import { useState } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
 import { Button } from '#primitives/buttons/button';
 import { Spinner } from '#primitives/display/spinner';
-import { Sheet, useSheet } from '#primitives/overlays/sheet';
+import { Sheet } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ComposerPopover } from '../composer-popover/composer-popover';
-import { AgentChoices } from './agent-choices';
 import { AgentIcon } from './agent-icon';
 import { AgentModelMenu, isDesktopMenu } from './agent-model-menu';
 import { AgentModelTrailing } from './agent-model-trailing';
 import { useCommitEffortFallback } from './configuration-effects';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { selectedChoice, selection, modelName } from './configuration-values';
-import { ModelChoices } from './model-choices';
 
 interface ControlProps {
   configuration: ComposerConfigurationProps;
@@ -81,37 +79,20 @@ function AgentModelSheet(props: TriggerProps): React.JSX.Element {
       trigger={agentModelTrigger(props)}
       contentScrolls
     >
-      {configurationPages(props.configuration)}
+      {configurePage(props.configuration)}
     </Sheet>
   );
 }
 
-// The sheet reads its pages from its children, so they are elements, not a component of their own.
-function configurationPages(
+// Sheet reads the page declaration from its direct children.
+function configurePage(
   configuration: ComposerConfigurationProps,
-): React.JSX.Element[] {
-  return [
-    <Sheet.Page key="configure" name="configure" title="Configure">
+): React.JSX.Element {
+  return (
+    <Sheet.Page name="configure" title="Configure">
       <AgentModelMenu configuration={configuration} />
-    </Sheet.Page>,
-    <Sheet.Page key="agent" name="agent" title="Select Agent">
-      <ConfigurationChoices configuration={configuration} page="agent" />
-    </Sheet.Page>,
-    <Sheet.Page key="model" name="model" title="Select Model">
-      <ConfigurationChoices configuration={configuration} page="model" />
-    </Sheet.Page>,
-  ];
-}
-
-// A choice is made, so the sheet goes back to Configure.
-function ConfigurationChoices(props: {
-  configuration: ComposerConfigurationProps;
-  page: 'agent' | 'model';
-}): React.JSX.Element {
-  const sheet = useSheet();
-  const Choices = props.page === 'agent' ? AgentChoices : ModelChoices;
-
-  return <Choices configuration={props.configuration} onSelect={sheet.back} />;
+    </Sheet.Page>
+  );
 }
 
 function agentModelTrigger(props: TriggerProps): React.JSX.Element {

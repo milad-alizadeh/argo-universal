@@ -14,9 +14,12 @@ import {
   type SetStateAction,
 } from 'react';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { pushDestination, usePageExits } from './sheet-destinations';
+import {
+  pushDestination,
+  updateDestination,
+  usePageExits,
+} from './sheet-destinations';
 import type {
-  SheetDestination,
   SheetLinkProps,
   SheetNavigation,
   SheetPageProps,
@@ -99,11 +102,11 @@ export function useSheetStack(props: SheetProps): SheetStack {
   const presentation = usePresentation(props.open, latest);
   const [destinations, setDestinations] = useState<SheetPageEntry[]>([]);
 
-  const navigation = useSheetNavigation(
-    presentation.setPath,
+  const navigation = useSheetNavigation({
+    setPath: presentation.setPath,
     latest,
     setDestinations,
-  );
+  });
 
   const pages = [...sheetPages(props.children), ...destinations];
   usePageExits(props.open, presentation.path, pages);
@@ -137,20 +140,32 @@ function useOpening(open: boolean): boolean {
   return open && !shownOpen;
 }
 
-function useSheetNavigation(
-  setPath: Dispatch<SetStateAction<string[]>>,
-  latest: () => SheetProps,
-  setDestinations: Dispatch<SetStateAction<SheetPageEntry[]>>,
-): SheetNavigation {
+type NavigationOwners = {
+  setPath: Dispatch<SetStateAction<string[]>>;
+  latest: () => SheetProps;
+  setDestinations: Dispatch<SetStateAction<SheetPageEntry[]>>;
+};
+
+function useSheetNavigation(owners: NavigationOwners): SheetNavigation {
+  const { setPath, latest, setDestinations } = owners;
+
   return useMemo(
-    () => ({
-      push: (page: string | SheetDestination): void =>
-        pushDestination(setDestinations, setPath, page),
-      back: (): void => setPath(popPage),
-      close: (): void => latest().onOpenChange(false),
-    }),
+    () => navigationFor({ setPath, latest, setDestinations }),
     [setPath, latest, setDestinations],
   );
+}
+
+function navigationFor({
+  setPath,
+  latest,
+  setDestinations,
+}: NavigationOwners): SheetNavigation {
+  return {
+    push: (page): void => pushDestination(setDestinations, setPath, page),
+    update: (page): void => updateDestination(setDestinations, page),
+    back: (): void => setPath(popPage),
+    close: (): void => latest().onOpenChange(false),
+  };
 }
 
 // Reads the newest props from callbacks that outlive a render.

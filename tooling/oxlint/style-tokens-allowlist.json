@@ -72,7 +72,6 @@
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/inputs/checkbox/checkbox.tsx",
         // 1 arbitrary
-        "packages/client/src/lib/generic/primitives/inputs/combobox-search/combobox-search.stories.tsx",
         // 9 arbitrary, 2 palette
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-select-styles.ts",
         // 1 arbitrary

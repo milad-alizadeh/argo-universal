@@ -117,6 +117,9 @@
   max-width: calc(var(--spacing) * 160);
   margin-inline: auto;
 }
+.sheet-paged {
+  min-height: min(50dvh, calc(100dvh - var(--spacing) * 14));
+}
 .sheet-full {
   height: calc(100dvh - var(--spacing) * 14);
 }

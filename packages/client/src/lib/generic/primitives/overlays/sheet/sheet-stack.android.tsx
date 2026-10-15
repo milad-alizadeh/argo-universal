@@ -8,6 +8,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
+  defaultMinSize,
   fillMaxHeight,
   fillMaxWidth,
   weight,
@@ -51,12 +52,24 @@ function StackPages(props: PagesProps & { fill: boolean }): ReactElement {
   const shared = { ...props, top: path.at(-1) ?? pages[0]?.name };
 
   return (
-    <Box modifiers={sheetModifiers(props.fill)}>
+    <Box modifiers={usePagedSize(props.fill)}>
       {pages.map((page, index) => (
         <StackEntry key={page.name} {...shared} page={page} index={index} />
       ))}
     </Box>
   );
+}
+
+// Paged sheets keep at least the medium resting height even when the root has one row.
+const mediumHeightFraction = 0.5;
+
+function usePagedSize(fill: boolean): ModifierConfig[] {
+  const { height } = useWindowDimensions();
+
+  return [
+    ...sheetModifiers(fill),
+    defaultMinSize({ minHeight: height * mediumHeightFraction }),
+  ];
 }
 
 type EntryProps = PagesProps & {

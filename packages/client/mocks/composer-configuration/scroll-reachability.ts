@@ -17,7 +17,7 @@ export async function expectScrollsUnderFades(
   return resolveLastRow(last);
 }
 
-async function expectRowInsideScroll(
+export async function expectRowInsideScroll(
   scroll: HTMLElement,
   item: HTMLElement,
 ): Promise<void> {
@@ -29,7 +29,7 @@ async function expectRowInsideScroll(
 }
 
 export async function lastVisible(name: string): Promise<HTMLElement> {
-  const row = await within(document.body).findByRole('button', { name });
+  const row = await within(document.body).findByRole('radio', { name });
   row.scrollIntoView({ block: 'end' });
   await waitFor(() => expectRowInsideWindow(row));
 

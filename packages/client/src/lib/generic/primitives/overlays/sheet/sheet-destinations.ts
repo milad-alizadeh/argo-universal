@@ -12,6 +12,22 @@ type SetPages = Dispatch<SetStateAction<SheetPageEntry[]>>;
 
 type SetPath = Dispatch<SetStateAction<string[]>>;
 
+// A choice page follows its owner's current props, including availability and loading changes.
+export function updateDestination(
+  setPages: SetPages,
+  page: SheetDestination,
+): void {
+  setPages((current) =>
+    current.some((entry) => entry.name === page.name)
+      ? current.map((entry) =>
+          entry.name === page.name
+            ? { ...page, content: page.children }
+            : entry,
+        )
+      : current,
+  );
+}
+
 // A field supplies its choices when opened; static Sheet.Link callers push a declared name.
 export function pushDestination(
   setPages: SetPages,

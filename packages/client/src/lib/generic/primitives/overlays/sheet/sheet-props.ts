@@ -50,6 +50,7 @@ export interface SheetDestination extends SheetPageProps {
 
 export interface SheetNavigation {
   push: (page: string | SheetDestination) => void;
+  update: (page: SheetDestination) => void;
   back: () => void;
   close: () => void;
 }

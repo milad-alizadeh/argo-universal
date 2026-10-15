@@ -30,7 +30,6 @@
         "packages/client/src/features/composer/components/composer-status/status-text.tsx",
         "packages/client/src/features/composer/components/composer-status/usage-control.tsx",
         "packages/client/src/features/composer/components/composer-status/work-chips.tsx",
-        "packages/client/src/features/composer/components/start-session-in/project-picker.tsx",
         "packages/client/src/features/composer/components/start-session-in/server-location.tsx",
         "packages/client/src/features/composer/components/start-session-in/session-control-disclosure.tsx",
         "packages/client/src/features/composer/components/written-plan/written-plan-trigger.tsx",

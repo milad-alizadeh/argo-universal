@@ -32,6 +32,7 @@ const containerClasses = (className: string | undefined): string =>
 function SearchInput(props: ComboboxSearchProps): React.JSX.Element {
   return (
     <TextInput
+      role="searchbox"
       accessibilityLabel={props.label}
       placeholder={props.placeholder}
       placeholderTextColorClassName="accent-muted-foreground"

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { Button } from '#primitives/buttons/button';
 import { Sheet } from '#primitives/overlays/sheet';
-import { PickerSheet } from './picker-sheet';
+import { Combobox } from './combobox';
 
 export const changed = fn<(value: string) => void>();
 
@@ -25,7 +25,7 @@ export function Choice(): React.JSX.Element {
   const [value, setValue] = useState('Apple');
 
   return (
-    <PickerSheet
+    <Combobox
       label="Fruit"
       value={value}
       options={choices}

@@ -7,12 +7,12 @@ import {
   changed,
   blurred,
   fruitTrigger,
-} from './picker-sheet.test.mocks';
+} from './combobox-navigation.test.mocks';
 
 const cherryTrigger = 'Fruit: Cherry';
 
 const meta = {
-  title: 'Tests/PickerSheet',
+  title: 'Tests/ComboboxNavigation',
   beforeEach: async (): Promise<void> => {
     await settleViewport(390);
     changed.mockClear();

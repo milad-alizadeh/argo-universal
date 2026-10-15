@@ -18,7 +18,7 @@ import {
   selectLastAgent,
 } from './long-list-selections';
 
-export const LongListsScrollUnderFadesWide: Story = {
+export const LongListsReachableWide: Story = {
   args: { configuration: longListConfiguration() },
   render: renderArgs,
   play: async (context) => {
@@ -66,13 +66,16 @@ async function assertShortList(
   { userEvent }: PlayContext,
   testId: string,
 ): Promise<void> {
-  const overlay = within(document.body);
   await userEvent.click(await shortListTrigger(testId));
-  const scroll = await overlay.findByTestId(testId);
+
+  const scroll = await configurationScroll(testId);
+
   await waitFor(() =>
     expect(scroll.scrollHeight).toBeLessThanOrEqual(scroll.clientHeight),
   );
-  await expect(fadedEdges(scroll)).toEqual({ top: false, bottom: false });
+
+  if (testId === agentsScrollId)
+    await expect(fadedEdges(scroll)).toEqual({ top: false, bottom: false });
   await userEvent.keyboard('{Escape}');
 }
 
@@ -80,4 +83,12 @@ function shortListTrigger(testId: string): Promise<HTMLElement> {
   return within(document.body).findByRole('button', {
     name: testId === modelsScrollId ? /^Model,/ : chooseAgentLabel,
   });
+}
+
+function configurationScroll(testId: string): Promise<HTMLElement> {
+  const overlay = within(document.body);
+
+  return testId === modelsScrollId
+    ? overlay.findByRole('radiogroup', { name: 'Models' })
+    : overlay.findByTestId(testId);
 }

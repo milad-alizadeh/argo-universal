@@ -5,19 +5,18 @@ import { Platform } from 'react-native';
 import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { Host, type HostProps } from '#primitives/native/host';
 import { useUniversalTextStyle } from '#primitives/native/native-typography';
-import type { PickerProps } from './picker-props';
-import { pickerLabel } from './picker-selection';
 
-type FieldProps = Pick<
-  PickerProps<string>,
-  'label' | 'required' | 'variant'
-> & {
+type FieldProps = {
+  label: string;
+  required?: boolean;
+  variant?: 'field' | 'row';
+} & {
   children: React.ReactElement;
 };
 
 const fieldPadding = { paddingHorizontal: 16, paddingVertical: 12 };
 
-export function PickerNativeHost(props: {
+export function ChoiceHost(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
   return <Host {...useHostSize()}>{props.children}</Host>;
@@ -31,7 +30,7 @@ function useHostSize(): Pick<HostProps, 'matchContents' | 'style'> {
 }
 
 // In a row the GroupedListItem names the Picker, so only a field draws its own label.
-export function PickerNativeField(props: FieldProps): React.JSX.Element {
+export function ChoiceField(props: FieldProps): React.JSX.Element {
   const row = useInGroupedListItem() || props.variant === 'row';
 
   return row ? props.children : <LabelledField {...props} />;
@@ -57,6 +56,8 @@ function FieldLabel(
   props: Pick<FieldProps, 'label' | 'required'>,
 ): React.JSX.Element {
   return (
-    <Text textStyle={useUniversalTextStyle('body')}>{pickerLabel(props)}</Text>
+    <Text
+      textStyle={useUniversalTextStyle('body')}
+    >{`${props.label}${props.required ? ' *' : ''}`}</Text>
   );
 }

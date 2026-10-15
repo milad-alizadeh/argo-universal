@@ -13,7 +13,7 @@ interface TitleRowProps {
 // A page's title, centred, with Back before it on a pushed page.
 export function SheetTitleRow(props: TitleRowProps): ReactElement {
   return (
-    <View className="h-11 flex-row items-center px-2">
+    <View className="h-13 shrink-0 flex-row items-center px-4">
       <BackSlot {...props} />
       <Text
         role="control"
@@ -42,6 +42,7 @@ function BackButton(props: TitleRowProps): ReactElement | null {
     <IconButton
       variant="ghost"
       icon="chevron-left"
+      iconRole="title"
       accessibilityLabel={props.backLabel}
       onPress={props.onBack}
     />
