@@ -13,6 +13,7 @@ import { RowTrailing } from './grouped-list-item-native-fields';
 import { RowHeadline } from './grouped-list-item-native-headline';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { hasDisclosure } from './grouped-list-item-styles';
+import { NativeRowStatus } from './native-row';
 
 type Modifiers = NonNullable<RowProps['modifiers']>;
 
@@ -33,7 +34,7 @@ const reflowFontScale = 1.5;
 
 const reflowSpacing = 8;
 
-// A native row's icon, title and subtitle, value and status, and disclosure chevron.
+// Status and controls stay beside the chevron even when the label and value reflow.
 export function RowContent(props: GroupedListItemProps): React.JSX.Element {
   const modifiers = useContentModifiers(props);
 
@@ -45,6 +46,7 @@ export function RowContent(props: GroupedListItemProps): React.JSX.Element {
       modifiers={modifiers}
     >
       <RowFields {...props} />
+      <NativeRowStatus {...props} />
       <Disclosure visible={hasDisclosure(props)} />
     </Row>
   );
