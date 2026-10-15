@@ -133,7 +133,7 @@ const placeClass: Record<PagePlace, string> = {
 
 function pageClass(props: PageProps): string {
   return cn(
-    'flex min-h-0 shrink flex-col bg-card transition-transform duration-200 ease-out',
+    'flex min-h-0 shrink flex-col bg-content transition-transform duration-200 ease-out',
     placeClass[props.place],
     props.index > 0 && 'starting:translate-x-full',
   );
