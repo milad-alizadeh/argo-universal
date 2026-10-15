@@ -1,11 +1,16 @@
 import type * as React from 'react';
 import { type TextInputProps, View } from 'react-native';
+import { Spinner } from '#primitives/display/spinner';
 import { Text } from '#primitives/display/text';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { rowClasses } from '#primitives/lists/grouped-list-item';
 import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
-import { isInvalid, type TextFieldProps } from './text-input-props';
+import {
+  fieldLoadingLabel,
+  isInvalid,
+  type TextFieldProps,
+} from './text-input-props';
 
 // A section row: the label, then the field filling the rest; the row shows the focus ring.
 export function RowTextInput(props: TextFieldProps): React.JSX.Element {
@@ -18,8 +23,17 @@ export function RowTextInput(props: TextFieldProps): React.JSX.Element {
     >
       <RowLabel {...props} />
       <RowInput {...props} />
+      <RowSpinner {...props} />
     </View>
   );
+}
+
+function RowSpinner(
+  props: Pick<TextFieldProps, 'label' | 'loading'>,
+): React.JSX.Element | null {
+  if (!props.loading) return null;
+
+  return <Spinner accessibilityLabel={fieldLoadingLabel(props.label)} />;
 }
 
 function RowLabel(props: TextFieldProps): React.JSX.Element {

@@ -1,15 +1,24 @@
 import type { ReactElement } from 'react';
 import { ActivityIndicator, Platform } from 'react-native';
-import type { SpinnerProps } from './spinner-props';
+import type { SpinnerProps, SpinnerTone } from './spinner-props';
 
 const webSpinnerSize = 16;
 
-export function Spinner({ accessibilityLabel }: SpinnerProps): ReactElement {
+const toneColor = {
+  muted: 'accent-muted-foreground',
+  accent: 'accent-accent',
+  danger: 'accent-danger',
+} as const satisfies Record<SpinnerTone, string>;
+
+export function Spinner({
+  accessibilityLabel,
+  tone = 'muted',
+}: SpinnerProps): ReactElement {
   return (
     <ActivityIndicator
       role="progressbar"
       accessibilityLabel={accessibilityLabel}
-      colorClassName="accent-muted-foreground"
+      colorClassName={toneColor[tone]}
       size={Platform.OS === 'web' ? webSpinnerSize : 'small'}
     />
   );
