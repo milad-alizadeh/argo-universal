@@ -10,7 +10,8 @@ import {
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import type { ColorValue } from 'react-native';
+import { useState } from 'react';
+import { type ColorValue, type LayoutChangeEvent, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
@@ -27,14 +28,15 @@ import { useSheetListFit } from './sheet-list-fit';
 
 export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   const commands = useFormSheetCommands();
+  const [anchorWidth, onRootLayout] = useAnchorWidth();
 
   if (commands && props.variant === 'form')
     return <RoutedFormSheet {...props} commands={commands} />;
 
   return (
-    <BottomSheetRoot {...props}>
+    <BottomSheetRoot {...props} onLayout={onRootLayout}>
       <Host matchContents>
-        <ExpoBottomSheet {...presentationProps(props)}>
+        <ExpoBottomSheet {...presentationProps(props, anchorWidth)}>
           <SheetContent {...props} />
         </ExpoBottomSheet>
       </Host>
@@ -42,8 +44,23 @@ export function BottomSheet(props: BottomSheetProps): React.JSX.Element {
   );
 }
 
+/*
+ * A hosted trigger is measured with no width to go by but its own maximum, so it would take its
+ * full label's width and overflow its column. Capped at the width the sheet's place in the layout
+ * gives it, its label truncates instead.
+ */
+function useAnchorWidth(): [
+  number | undefined,
+  (event: LayoutChangeEvent) => void,
+] {
+  const [width, setWidth] = useState<number>();
+
+  return [width, (event) => setWidth(event.nativeEvent.layout.width)];
+}
+
 function presentationProps(
   props: BottomSheetProps,
+  anchorWidth: number | undefined,
 ): Omit<React.ComponentProps<typeof ExpoBottomSheet>, 'children'> {
   return {
     isPresented: props.open,
@@ -52,7 +69,9 @@ function presentationProps(
     onDismiss: () => dismissPresentation(props),
     anchor: props.trigger && (
       <RNHostView matchContents>
-        <BottomSheetTrigger trigger={props.trigger} />
+        <View style={{ maxWidth: anchorWidth }}>
+          <BottomSheetTrigger trigger={props.trigger} />
+        </View>
       </RNHostView>
     ),
   };
