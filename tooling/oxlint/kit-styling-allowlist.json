@@ -21,8 +21,6 @@
         "packages/client/src/features/composer/components/composer-configuration/agent-model-menu.tsx",
         "packages/client/src/features/composer/components/composer-configuration/agent-model-trailing.tsx",
         "packages/client/src/features/composer/components/composer-configuration/checkout-control.tsx",
-        "packages/client/src/features/composer/components/composer-configuration/configuration-drill.tsx",
-        "packages/client/src/features/composer/components/composer-configuration/configuration-page.tsx",
         "packages/client/src/features/composer/components/composer-configuration/mode-control.tsx",
         "packages/client/src/features/composer/components/composer-options/composer-options.tsx",
         "packages/client/src/features/composer/components/composer-popover/composer-popover.tsx",

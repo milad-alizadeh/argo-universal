@@ -105,6 +105,7 @@ export function PagedSheet(): ReactElement {
       open={open}
       onOpenChange={setOpen}
       label="Settings"
+      contentScrolls
       trigger={<Button custom label="Settings" variant="outline" />}
     >
       {fruitPages(fruit, setFruit)}

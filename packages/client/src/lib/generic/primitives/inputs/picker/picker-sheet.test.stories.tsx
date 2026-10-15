@@ -1,72 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState } from 'react';
-import { expect, fn, waitFor, within } from 'storybook/test';
-import { Button } from '#primitives/buttons/button';
-import { Sheet } from '#primitives/overlays/sheet';
+import { expect, waitFor, within } from 'storybook/test';
 import { settleViewport } from '../../../settle-viewport';
-import { PickerSheet } from './picker-sheet';
+import {
+  Choice,
+  Form,
+  changed,
+  blurred,
+  fruitTrigger,
+} from './picker-sheet.test.mocks';
 
-const changed = fn<(value: string) => void>();
-
-const blurred = fn<() => void>();
-
-const fruitTrigger = 'Fruit: Apple';
-
-const choices = [
-  'Apple',
-  'Banana',
-  'Cherry',
-  'Date',
-  'Fig',
-  'Grape',
-  'Kiwi',
-  'Lime',
-].map((label) => ({ label, value: label }));
-
-function Choice(): React.JSX.Element {
-  const [value, setValue] = useState('Apple');
-
-  return (
-    <PickerSheet
-      label="Fruit"
-      value={value}
-      options={choices}
-      onValueChange={(next) => {
-        setValue(next);
-        changed(next);
-      }}
-      onBlur={blurred}
-      trigger={<Button custom label={`Fruit: ${value}`} />}
-    />
-  );
-}
-
-function Form({ protectable }: { protectable?: boolean }): React.JSX.Element {
-  const [open, setOpen] = useState(false);
-  const [dismissible, setDismissible] = useState(true);
-
-  return (
-    <Sheet
-      open={open}
-      onOpenChange={setOpen}
-      label="Settings"
-      dismissible={dismissible}
-      footer={
-        protectable && (
-          <Button
-            label={dismissible ? 'Start sending' : 'Finish sending'}
-            onPress={() => setDismissible(!dismissible)}
-          />
-        )
-      }
-      trigger={<Button custom label="Settings" />}
-    >
-      <Sheet.Page name="settings" title="Settings">
-        <Choice />
-      </Sheet.Page>
-    </Sheet>
-  );
-}
+const cherryTrigger = 'Fruit: Cherry';
 
 const meta = {
   title: 'Tests/PickerSheet',
@@ -99,12 +42,12 @@ export const BackAndReopen: Story = {
     );
     await userEvent.click(await page.findByRole('radio', { name: 'Cherry' }));
     await expect(
-      await page.findByRole('button', { name: 'Fruit: Cherry' }),
+      await page.findByRole('button', { name: cherryTrigger }),
     ).toBeVisible();
     await expect(changed).toHaveBeenCalledTimes(1);
     await expect(changed).toHaveBeenCalledWith('Cherry');
     await expect(blurred).toHaveBeenCalledTimes(2);
-    await userEvent.click(page.getByRole('button', { name: 'Fruit: Cherry' }));
+    await userEvent.click(page.getByRole('button', { name: cherryTrigger }));
     await waitFor(() =>
       expect(page.getByRole('radio', { name: 'Cherry' })).toHaveAttribute(
         'aria-checked',
@@ -153,12 +96,15 @@ function standaloneAt(width: number): Story {
     render: () => <Choice />,
     play: async ({ canvas, canvasElement, userEvent }) => {
       await settleViewport(width);
+
       const page = within(canvasElement.ownerDocument.body);
       await userEvent.click(canvas.getByRole('button', { name: fruitTrigger }));
       await userEvent.click(await page.findByRole('radio', { name: 'Cherry' }));
+
       const field = await canvas.findByRole('button', {
-        name: 'Fruit: Cherry',
+        name: cherryTrigger,
       });
+
       await waitFor(() => expect(field).toHaveFocus());
       await expect(changed).toHaveBeenCalledTimes(1);
       await expect(changed).toHaveBeenCalledWith('Cherry');

@@ -1,4 +1,5 @@
 @theme static {
+  --color-scrim: var(--color-black);
   /* The centred content column: Feed, Composer and request cards. */
   --container-column: 800px;
   --spacing-plan-proposal: 280px;
