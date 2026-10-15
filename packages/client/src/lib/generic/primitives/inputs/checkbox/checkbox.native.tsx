@@ -1,6 +1,6 @@
 import { Checkbox as UniversalCheckbox } from '@expo/ui';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
-import { accessibilityHint } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityHint, onTapGesture } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps, ComponentType } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
@@ -36,7 +36,7 @@ function CheckboxControl(props: CheckboxRowProps): React.JSX.Element {
         value={props.value}
         disabled={props.disabled}
         onValueChange={props.state.toggle}
-        modifiers={descriptionModifiers(props.label, props.state.description)}
+        modifiers={checkboxModifiers(props)}
       />
     </Host>
   );
@@ -63,19 +63,20 @@ function surfaceClass(props: CheckboxProps): string {
   );
 }
 
-// Expo's Android label is a sibling of the native checkbox, so its mark also needs the field name.
-function descriptionModifiers(
-  label: string,
-  description?: string,
+// SwiftUI's stock Toggle needs a label tap action; Android's separate mark needs the field name.
+function checkboxModifiers(
+  props: CheckboxRowProps,
 ): ComponentProps<typeof UniversalCheckbox>['modifiers'] {
-  if (Platform.OS === 'android')
-    return [
-      semantics({
-        contentDescription: [label, description].filter(Boolean).join('. '),
-      }),
-    ];
+  const description = props.state.description;
+  const name = [props.label, description].filter(Boolean).join('. ');
 
-  return description ? [accessibilityHint(description)] : [];
+  if (Platform.OS === 'android')
+    return [semantics({ contentDescription: name })];
+
+  return [
+    onTapGesture(props.state.toggle),
+    accessibilityHint(description ?? ''),
+  ];
 }
 
 export function CheckboxIndicator(
