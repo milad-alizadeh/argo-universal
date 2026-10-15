@@ -9,6 +9,7 @@ import {
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SessionsLayout } from '../../state/sessions-layout';
 import { SessionRow, type SessionRowProps } from './session-row';
+import { showsSessionAge } from './session-row-props';
 
 export interface SessionRowListMockProps {
   sessions: readonly SessionInfo[];
@@ -43,11 +44,11 @@ const metadataOf = (
   session: SessionInfo,
 ): RowMetadata => list.metadata?.[session.sessionId] ?? {};
 
-// Regular rows show an age only in flat search results; Compact rows show it where no Plan is under way.
-const shownTrailing = (
+// The age shows only where the list would show it.
+const shownAge = (
   layout: SessionsLayout,
-  trailing: string | undefined,
-): string | undefined => (layout === 'compact' ? trailing : undefined);
+  { trailing }: RowMetadata,
+): string | undefined => (showsSessionAge(layout) ? trailing : undefined);
 
 const positionOf = (
   index: number,
@@ -64,7 +65,7 @@ interface ListedRowProps {
 function rowProps(row: ListedRowProps, wide: boolean): SessionRowProps {
   const { list, session } = row;
   const layout = list.layout ?? 'regular';
-  const { trailing, ...metadata } = metadataOf(list, session);
+  const metadata = metadataOf(list, session);
 
   return {
     ...metadata,
@@ -72,7 +73,7 @@ function rowProps(row: ListedRowProps, wide: boolean): SessionRowProps {
     logo: agentLogo(session.agent),
     selected: wide && session.sessionId === list.selectedSessionId,
     layout,
-    trailing: shownTrailing(layout, trailing),
+    trailing: shownAge(layout, metadata),
     position: positionOf(row.index, list),
     onSelect: list.onSelect,
   };

@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { useCallback, useMemo } from 'react';
 import { virtualListPosition } from '#primitives/lists/virtual-list-item';
 import type { SessionsLayout } from '../../state/sessions-layout';
+import { showsSessionAge } from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { sessionAge, useAgeFrom } from './session-age';
 import {
@@ -43,14 +44,10 @@ function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
   );
 }
 
-// Flat results and Compact rows show how long ago each Session was active.
-const showsAge = ({ flat, layout }: SessionsListProps): boolean =>
-  flat === true || layout === 'compact';
-
 function useSessionRowContext(props: SessionsListProps): SessionRowContext {
   const { agents, layout, selectedSessionId, onSelect } = props;
   const agentLogos = useAgentLogos(agents);
-  const ageFrom = useAgeFrom(showsAge(props));
+  const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
 
   return useMemo(
     () => ({ agentLogos, layout, selectedSessionId, ageFrom, onSelect }),

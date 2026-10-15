@@ -51,7 +51,7 @@ function listActions(props: SessionListViewProps): ListActions {
 
 // The list insets it below a transparent header, as it does the rows.
 const insetLoading = (
-  <View className="-mx-4">
+  <View className="-mx-4 wide:mx-0">
     <SessionsLoading />
   </View>
 );

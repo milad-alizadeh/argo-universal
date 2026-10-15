@@ -12,7 +12,7 @@ export interface SessionRowProps {
   subagentsFailed?: boolean;
   issue?: IssueIndicatorProps;
   pullRequest?: PullRequestIndicatorProps;
-  // Short text at the end of the title line, such as how long ago the Session was active; a Compact row shows it when it has no Plan under way.
+  // Short text at the end of the title line, such as how long ago the Session was active; a Compact row shows it when the Session has no PR.
   trailing?: string;
   // Regular: the activity, metadata and Plan bar. Compact: one line.
   layout?: SessionsLayout;
@@ -23,3 +23,9 @@ export interface SessionRowProps {
 
 export const sessionRowLabel = (session: SessionInfo): string =>
   `${session.title}, ${statusLabels[session.status]}`;
+
+// Compact rows, and Regular rows in flat search results, show how long ago each Session was active.
+export const showsSessionAge = (
+  layout: SessionsLayout | undefined,
+  flat = false,
+): boolean => flat || layout === 'compact';

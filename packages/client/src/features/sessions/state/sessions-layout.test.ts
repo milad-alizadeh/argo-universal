@@ -1,63 +1,46 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '../../../../mocks/memory-storage';
-import {
-  sessionsLayoutOnDevice,
-  sessionsLayoutStorageKey,
-} from './sessions-layout';
+import { chooseSessionsLayout, sessionsLayoutQuery } from './sessions-layout';
 
-function stubMemoryStorage(): ReturnType<typeof memoryStorage> {
-  const storage = memoryStorage();
-  vi.stubGlobal('window', { localStorage: storage });
-
-  return storage;
+function useMemoryStorage(): void {
+  vi.stubGlobal('window', { localStorage: memoryStorage() });
 }
 
+const loadLayout = (client = new QueryClient()): Promise<string> =>
+  client.fetchQuery(sessionsLayoutQuery());
+
 describe('the Sessions layout on this Device', () => {
-  it('starts Regular and loads the layout this Device kept', async () => {
-    stubMemoryStorage().setItem(sessionsLayoutStorageKey, 'compact');
-    const layout = sessionsLayoutOnDevice();
-    expect(layout.get()).toBe('regular');
-    await layout.loaded;
-    expect(layout.get()).toBe('compact');
+  it('is Regular when this Device kept none', async () => {
+    useMemoryStorage();
+    await expect(loadLayout()).resolves.toBe('regular');
   });
 
-  it('keeps a choice for the next start', async () => {
-    const storage = stubMemoryStorage();
-    sessionsLayoutOnDevice().choose('compact');
-    await vi.waitFor(() =>
-      expect(storage.getItem(sessionsLayoutStorageKey)).toBe('compact'),
-    );
-    const next = sessionsLayoutOnDevice();
-    await next.loaded;
-    expect(next.get()).toBe('compact');
+  it('keeps a choice for the next App start', async () => {
+    useMemoryStorage();
+    chooseSessionsLayout(new QueryClient(), 'compact');
+    await expect(loadLayout()).resolves.toBe('compact');
   });
 
-  it('keeps a choice made before the kept layout loads', async () => {
-    stubMemoryStorage().setItem(sessionsLayoutStorageKey, 'compact');
-    const layout = sessionsLayoutOnDevice();
-    layout.choose('regular');
-    await layout.loaded;
-    expect(layout.get()).toBe('regular');
-  });
-
-  it('tells subscribers when the layout changes', () => {
-    stubMemoryStorage();
-    const layout = sessionsLayoutOnDevice();
-    const listener = vi.fn<() => void>();
-    layout.subscribe(listener);
-    layout.choose('compact');
-    expect(listener).toHaveBeenCalledOnce();
+  it('keeps a choice made while an older read is still loading', async () => {
+    useMemoryStorage();
+    const client = new QueryClient();
+    const olderRead = Promise.withResolvers<string | null>();
+    vi.spyOn(AsyncStorage, 'getItem').mockReturnValue(olderRead.promise);
+    const loading = loadLayout(client).catch(() => null);
+    chooseSessionsLayout(client, 'compact');
+    olderRead.resolve('regular');
+    await loading;
+    expect(client.getQueryData(sessionsLayoutQuery().queryKey)).toBe('compact');
   });
 
   it('stays Regular when the kept layout cannot be read', async () => {
-    stubMemoryStorage();
+    useMemoryStorage();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(AsyncStorage, 'getItem').mockRejectedValue(
       new Error('Storage is unavailable'),
     );
-    const layout = sessionsLayoutOnDevice();
-    await layout.loaded;
-    expect(layout.get()).toBe('regular');
+    await expect(loadLayout()).resolves.toBe('regular');
   });
 });

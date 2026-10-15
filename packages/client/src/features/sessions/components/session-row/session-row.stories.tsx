@@ -1,10 +1,11 @@
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { useEffect, useState } from 'react';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import type { SessionsLayout } from '../../state/sessions-layout';
-import { SessionRow } from './session-row';
+import { SessionRow, type SessionRowProps } from './session-row';
 import {
   SessionRowListMock,
   type SessionRowListMockProps,
@@ -92,4 +93,34 @@ export const Hovered: Story = { name: 'Hovered', ...hovered('regular') };
 export const CompactHovered: Story = {
   name: 'Compact hovered',
   ...hovered('compact'),
+};
+
+// A checkpoint every 1.5 seconds: the fill springs from 1 to 2 to 3 of 4 done, then starts over.
+const checkpointMilliseconds = 1500;
+
+const planTotal = 4;
+
+const nextDone = (done: number): number => (done % (planTotal - 1)) + 1;
+
+function useSteppingDone(): number {
+  const [done, setDone] = useState(1);
+
+  useEffect(() => {
+    const timer = setInterval(() => setDone(nextDone), checkpointMilliseconds);
+
+    return (): void => clearInterval(timer);
+  }, []);
+
+  return done;
+}
+
+function SteppingPlanRow(args: SessionRowProps): React.JSX.Element {
+  const plan = { done: useSteppingDone(), total: planTotal };
+
+  return <SessionRow {...args} session={{ ...args.session, plan }} />;
+}
+
+export const PlanSteps: Story = {
+  name: 'Plan steps',
+  render: (args) => <SteppingPlanRow {...args} />,
 };
