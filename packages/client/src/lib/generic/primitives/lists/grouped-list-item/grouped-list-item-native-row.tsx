@@ -4,7 +4,7 @@ import {
   fillMaxWidth,
   padding,
 } from '@expo/ui/jetpack-compose/modifiers';
-import { accessibilityHidden, frame } from '@expo/ui/swift-ui/modifiers';
+import { frame } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
@@ -36,7 +36,7 @@ const reflowSpacing = 8;
 
 // Status and controls stay beside the chevron even when the label and value reflow.
 export function RowContent(props: GroupedListItemProps): React.JSX.Element {
-  const modifiers = useContentModifiers(props);
+  const modifiers = useContentModifiers();
 
   return (
     <Row
@@ -61,12 +61,12 @@ function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
 }
 
 // The Form sizes and pads an iOS row, and starts its separator under the Label's title.
-function useContentModifiers(props: GroupedListItemProps): Modifiers {
+function useContentModifiers(): Modifiers {
   const sidebar = useSidebarList();
 
   if (!ios) return [fillMaxWidth(), ...flatRowModifiers(sidebar)];
 
-  return [accessibilityHidden(!!props.detail)];
+  return [];
 }
 
 // Android's Section pads its rows on Material's tile; a flat sidebar row pads itself.

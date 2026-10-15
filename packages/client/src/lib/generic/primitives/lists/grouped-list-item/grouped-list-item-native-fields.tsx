@@ -3,6 +3,10 @@ import { fixedSize } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { NativeText } from '#primitives/display/native-text';
+import {
+  rowValueAccessibility,
+  type RowTextAccessibilityProps,
+} from './grouped-list-item-accessibility';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 import { rowColor } from './grouped-list-item-text';
 import { NativeRowImage } from './native-row';
@@ -33,24 +37,35 @@ export function RowTrailing(
   );
 }
 
-function RowValue(
-  props: Pick<GroupedListItemProps, 'value' | 'valueLeading'>,
-): React.JSX.Element {
+type RowValueProps = RowTextAccessibilityProps &
+  Pick<GroupedListItemProps, 'value' | 'valueLeading'>;
+
+function RowValue(props: RowValueProps): React.JSX.Element {
   return (
     <>
       {props.valueLeading && <NativeRowImage image={props.valueLeading} />}
-      {props.value !== undefined && <RowValueText value={props.value} />}
+      {props.value !== undefined && (
+        <RowValueText
+          value={props.value}
+          modifiers={rowValueAccessibility(props)}
+        />
+      )}
     </>
   );
 }
 
+interface ValueTextProps {
+  value: string;
+  modifiers: Modifiers;
+}
+
 // Android keeps the value to one line at the row's end, as the title takes the width.
-function RowValueText({ value }: { value: string }): React.JSX.Element {
+function RowValueText({ value, modifiers }: ValueTextProps): React.JSX.Element {
   return (
     <NativeText
       numberOfLines={ios ? undefined : 1}
       tone="muted"
-      modifiers={rowColor('secondary')}
+      modifiers={[...rowColor('secondary'), ...modifiers]}
     >
       {value}
     </NativeText>
