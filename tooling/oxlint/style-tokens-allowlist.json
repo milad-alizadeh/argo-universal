@@ -98,10 +98,6 @@
         "packages/client/src/lib/generic/primitives/overlays/dialog/dialog-overlay.tsx",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/dialog/dialog.stories.tsx",
-        // 1 palette
-        "packages/client/src/lib/generic/primitives/overlays/menu/menu-styles.ts",
-        // 1 palette
-        "packages/client/src/lib/generic/primitives/overlays/popover/popover.native.tsx",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/toast/toaster.tsx",
         // 1 arbitrary

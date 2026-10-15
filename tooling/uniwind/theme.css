@@ -99,9 +99,10 @@
   --spacing-frame-inspector: 352px;
   --spacing-frame-inset: 8px;
   --spacing-session-plan: 40px;
-  /* Shadow colours (6%, 8% and 14% black). Every shadow uses one of these
-     three. Hex, because Uniwind's native box-shadow parser adds px to the
-     bare numbers in color-mix(). */
+  /* Shadow colours (6%, 8% and 14% black) for every light drop shadow; the
+     glass highlights and dark-mode edges keep their own. Hex, because
+     Uniwind's native box-shadow parser adds px to the bare numbers in
+     color-mix(). */
   --color-shadow-subtle: #0000000f;
   --color-shadow: #00000014;
   --color-shadow-strong: #00000024;
