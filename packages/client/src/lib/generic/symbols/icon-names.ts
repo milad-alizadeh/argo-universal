@@ -63,6 +63,7 @@ export const iconSymbols = {
   explore: { sf: 'safari', material: 'explore' },
   'external-link': { sf: 'arrow.up.right.square', material: 'open_in_new' },
   'fast-mode': { sf: 'bolt', sfFilled: 'bolt.fill', material: 'bolt' },
+  'filter-list': { sf: 'line.3.horizontal.decrease', material: 'filter_list' },
   filters: { sf: 'slider.horizontal.3', material: 'tune' },
   fit: { sf: 'viewfinder', material: 'fit_screen' },
   flag: { sf: 'flag', material: 'flag' },
