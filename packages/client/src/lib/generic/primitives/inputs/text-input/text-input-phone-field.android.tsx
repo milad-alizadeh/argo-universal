@@ -94,7 +94,7 @@ function SupportingText(props: { text?: string }): React.JSX.Element | null {
   );
 }
 
-// Argo's tokens on Material's states; the outline, container and disabled alphas otherwise stay stock.
+// Argo's tokens on Material's states: the resting and disabled outline take Argo's border; the container and other disabled alphas stay stock.
 function useFieldColors(): OutlinedTextFieldProps['colors'] {
   const colors = useNativeTheme().colors;
 
@@ -104,6 +104,8 @@ function useFieldColors(): OutlinedTextFieldProps['colors'] {
     errorTextColor: colors.foreground,
     cursorColor: colors.accent,
     focusedIndicatorColor: colors.accent,
+    unfocusedIndicatorColor: colors.border,
+    disabledIndicatorColor: colors.border,
     focusedLabelColor: colors.accent,
     ...mutedColors(colors.mutedForeground),
     ...errorColors(colors.danger),
