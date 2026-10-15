@@ -19,23 +19,29 @@ const platformInputClass = cn(
   'web:rounded-control',
   'web:placeholder:text-muted-foreground web:selection:bg-primary web:selection:text-primary-foreground web:outline-none web:transition-[color,box-shadow]',
   'web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:focus-visible:ring-[3px]',
-  'web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger',
+  'web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40',
   'native:placeholder:text-muted-foreground/50',
 );
 
 function inputClassName({
   className,
-  editable,
   tone = 'neutral',
+  ...props
 }: InputProps): string {
   return cn(
     'text-foreground flex w-full min-w-0 flex-row items-center rounded-md type-body ios:leading-none',
-    editable === false && disabledInputClass,
     platformInputClass,
     toneClass[tone],
+    stateClass(props),
     className,
   );
 }
+
+const stateClass = (props: InputProps): string =>
+  cn(
+    props.editable === false && disabledInputClass,
+    props['aria-invalid'] === true && 'border-danger',
+  );
 
 // The bare box: the web field, and the plain React Native field on phones.
 export function BareTextInput({
@@ -45,8 +51,7 @@ export function BareTextInput({
   placeholderClassName: _placeholderClassName,
   ...props
 }: BareTextInputProps): ReactElement {
-  const { editable } = props;
-  const look = inputClassName({ className, tone, editable });
+  const look = inputClassName({ className, tone, ...props });
 
   return <NativeTextInput className={look} {...props} />;
 }
