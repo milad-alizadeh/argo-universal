@@ -98,10 +98,12 @@
   --spacing-frame-inspector: 352px;
   --spacing-frame-inset: 8px;
   --spacing-session-plan: 40px;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  /* Popovers and menus; the same in light and dark. */
-  --shadow-overlay:
-    0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  /* Shadow colours (6%, 8% and 14% black). Every shadow uses one of these
+     three. Hex, because Uniwind's native box-shadow parser adds px to the
+     bare numbers in color-mix(). */
+  --color-shadow-subtle: #0000000f;
+  --color-shadow: #00000014;
+  --color-shadow-strong: #00000024;
 }
 
 @layer theme {
@@ -161,13 +163,23 @@
       --color-hover: color-mix(in oklab, var(--color-black) 2%, transparent);
       --color-selected: color-mix(in oklab, var(--color-black) 3%, transparent);
       --color-pressed: color-mix(in oklab, var(--color-black) 4%, transparent);
-      --shadow-glass:
-        inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99, 0 0 0 1px #0000000d,
-        0 12px 32px #0000000f;
-      --shadow-tray: 0 0 0 1px #0000000d, 0 12px 32px #0000000f;
+      /* The shadow scale. Control: buttons, fields and small cards on a
+         surface. Card: desktop popovers, menus and toasts. Raised: phone
+         popovers, menus and floating buttons. */
+      --shadow-control: 0 1px 2px var(--color-shadow-subtle);
       --shadow-card:
-        0 1px 2px #0000000f, 0 0 40px -8px #00000024,
-        0 16px 32px -16px #00000014;
+        0 1px 2px var(--color-shadow-subtle),
+        0 0 40px -8px var(--color-shadow-strong),
+        0 16px 32px -16px var(--color-shadow);
+      --shadow-raised:
+        0 0 0 1px var(--color-shadow-subtle), 0 4px 16px var(--color-shadow);
+      --shadow-glass:
+        inset 0 1px 0 #fffffff2, inset 0 0 0 1px #ffffff99,
+        0 0 0 1px var(--color-shadow-subtle),
+        0 12px 32px var(--color-shadow-subtle);
+      --shadow-tray:
+        0 0 0 1px var(--color-shadow-subtle),
+        0 12px 32px var(--color-shadow-subtle);
     }
     @variant dark {
       --color-foreground: var(--color-neutral-50);
@@ -206,13 +218,16 @@
       --color-hover: color-mix(in oklab, var(--color-white) 4%, transparent);
       --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
       --color-pressed: color-mix(in oklab, var(--color-white) 8%, transparent);
+      --shadow-control: 0 1px 2px var(--color-shadow-subtle);
+      /* Light's shadows, plus a 1px bezel: a dark shadow on a dark ground cannot show the edge. */
+      --shadow-card:
+        0 0 0 1px #ffffff14, 0 1px 2px var(--color-shadow-subtle),
+        0 0 40px -8px var(--color-shadow-strong),
+        0 16px 32px -16px var(--color-shadow);
+      --shadow-raised: 0 0 0 1px #ffffff14, 0 4px 16px #00000066;
       --shadow-glass:
         inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
       --shadow-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
-      /* Light's shadows, plus a 1px bezel: a dark shadow on a dark ground cannot show the edge. */
-      --shadow-card:
-        0 0 0 1px #ffffff14, 0 1px 2px #0000000f, 0 0 40px -8px #00000024,
-        0 16px 32px -16px #00000014;
     }
   }
 }
@@ -297,8 +312,16 @@
 /* Shadows that change between light and dark. Tailwind's own shadow-* utility
    inlines the value at build time, so Uniwind could not switch it; these read
    the variable each theme sets. */
+@utility shadow-control {
+  box-shadow: var(--shadow-control);
+}
+
 @utility shadow-card {
   box-shadow: var(--shadow-card);
+}
+
+@utility shadow-raised {
+  box-shadow: var(--shadow-raised);
 }
 
 @utility shadow-glass {

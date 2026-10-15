@@ -1,7 +1,7 @@
 import { cn } from '#lib/generic/utils';
 
 const triggerClassName =
-  'border-border dark:bg-border/30 dark:active:bg-border/50 bg-card flex h-10 flex-row items-center justify-between gap-2 rounded-control border px-3 py-2 shadow-sm shadow-black/5 sm:h-9 web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger web:dark:hover:bg-border/50 web:w-fit web:whitespace-nowrap web:type-body web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-3 web:disabled:cursor-not-allowed web:[&_svg]:pointer-events-none web:[&_svg]:shrink-0';
+  'border-border dark:bg-border/30 dark:active:bg-border/50 bg-card flex h-10 flex-row items-center justify-between gap-2 rounded-control border px-3 py-2 shadow-control sm:h-9 web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger web:dark:hover:bg-border/50 web:w-fit web:whitespace-nowrap web:type-body web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-3 web:disabled:cursor-not-allowed web:[&_svg]:pointer-events-none web:[&_svg]:shrink-0';
 
 const plainTriggerClassName =
   'flex h-8 flex-row items-center gap-1.5 rounded-control pl-2 web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:w-fit web:whitespace-nowrap web:outline-none web:disabled:cursor-not-allowed';
@@ -72,7 +72,7 @@ function popperClassName({ position, side }: ContentStyle): string | undefined {
 
 export function selectContentClassName(props: ContentStyle): string {
   return cn(
-    'bg-card border-border relative z-50 min-w-32 rounded-2xl web:shadow-card border shadow-overlay shadow-black/5',
+    'bg-card border-border relative z-50 min-w-32 rounded-2xl web:shadow-card border shadow-raised',
     'web:animate-in web:fade-in-0 web:zoom-in-95 web:origin-(--radix-select-content-transform-origin) web:max-h-52 web:overflow-y-auto web:overflow-x-hidden',
     slideClassName(props.side),
     popperClassName(props),

@@ -45,7 +45,7 @@ function optionsClassName(wide: boolean): string {
   return cn(
     'rounded-xl android:rounded-[16px] p-1 gap-0.5 bg-muted',
     wide &&
-      'bg-card web:shadow-[0_0_0_1px_#0000000a,0_1px_2px_#0000000a] dark:shadow-none dark:border dark:border-border',
+      'bg-card web:shadow-control dark:shadow-none dark:border dark:border-border',
   );
 }
 

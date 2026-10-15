@@ -8,7 +8,7 @@ const buttonClasses = cva(
     variants: {
       variant: {
         default:
-          'bg-primary web:shadow-xs active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
+          'bg-primary web:shadow-control active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
         outline:
           'border border-border bg-background active:bg-pressed web:hover:bg-hover web:active:bg-pressed dark:bg-border/30',
         secondary:
