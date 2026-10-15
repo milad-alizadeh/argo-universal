@@ -12,7 +12,6 @@ import {
   type ModifierConfig as SwiftModifier,
 } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
-import { capsuleButtonBorder } from '#primitives/native/native-modifiers';
 import type {
   ButtonDataProps,
   ButtonSize,
@@ -70,12 +69,26 @@ export function nativeLabelModifiers(
 function swiftModifiers(props: ModifierProps): SwiftModifier[] {
   return [
     ...swiftTextStyle(props),
-    capsuleButtonBorder(),
-    controlSize(controlSizes[props.size ?? 'md']),
-    frame({ minWidth: 44, minHeight: 44 }),
-    accessibilityLabel(props.accessibilityLabel ?? props.label),
+    ...swiftControlSize(props),
+    ...swiftAccessibilityLabel(props),
     ...dangerTint(props.dangerColor),
   ];
+}
+
+// Only an explicit size leaves the stock control size.
+function swiftControlSize(
+  props: Pick<ButtonDataProps, 'size'>,
+): SwiftModifier[] {
+  return props.size ? [controlSize(controlSizes[props.size])] : [];
+}
+
+// The label already names the button; only a caller-given name replaces it.
+function swiftAccessibilityLabel(
+  props: Pick<ButtonDataProps, 'accessibilityLabel'>,
+): SwiftModifier[] {
+  return props.accessibilityLabel
+    ? [accessibilityLabel(props.accessibilityLabel)]
+    : [];
 }
 
 function dangerTint(color: string | undefined): SwiftModifier[] {
@@ -93,9 +106,9 @@ function swiftTextStyle(
 
 function composeModifiers(props: ModifierProps): ComposeModifier[] {
   return [
-    semantics({
-      contentDescription: props.accessibilityLabel ?? props.label,
-    }),
+    ...(props.accessibilityLabel
+      ? [semantics({ contentDescription: props.accessibilityLabel })]
+      : []),
     ...(props.fullWidth === true ? [fillMaxWidth()] : []),
   ];
 }
