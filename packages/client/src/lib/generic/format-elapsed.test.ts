@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatElapsed } from './format-elapsed';
+import { formatAge, formatElapsed } from './format-elapsed';
 
 describe('formatElapsed', () => {
   it.each([
@@ -19,5 +19,22 @@ describe('formatElapsed', () => {
 
   it('shows a clock running behind the Turn start as 0s', () => {
     expect(formatElapsed(-2_000)).toBe('0s');
+  });
+});
+
+describe('formatAge', () => {
+  it.each([
+    [-2_000, 'now'],
+    [59_999, 'now'],
+    [60_000, '1m'],
+    [3_599_000, '59m'],
+    [3_600_000, '1h'],
+    [86_399_000, '23h'],
+    [86_400_000, '1d'],
+    [604_799_000, '6d'],
+    [604_800_000, '1w'],
+    [3_628_800_000, '6w'],
+  ])('shows %i ms ago as %s', (milliseconds, text) => {
+    expect(formatAge(milliseconds)).toBe(text);
   });
 });

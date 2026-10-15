@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { SessionsList } from '../sessions-list/sessions-list';
 import type { SessionsListProps } from '../sessions-list/sessions-list-props';
 import { SessionsLoading } from '../sessions-loading/sessions-loading';
@@ -12,8 +12,12 @@ type ListData = Pick<
   | 'sessions'
   | 'query'
   | 'archived'
+  | 'flat'
   | 'selectedSessionId'
 >;
+
+// Android's full-screen search lists its results flat, as Paper's search does; elsewhere they stay under their Projects.
+const searchListsFlat = Platform.OS === 'android';
 
 function listData(props: SessionsViewProps): ListData {
   return {
@@ -22,6 +26,7 @@ function listData(props: SessionsViewProps): ListData {
     sessions: props.sessions,
     query: props.query,
     archived: props.archived,
+    flat: searchListsFlat && props.query !== '',
     selectedSessionId: props.selectedSessionId,
   };
 }

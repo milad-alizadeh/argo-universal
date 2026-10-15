@@ -10,6 +10,8 @@ export interface SessionsListProps {
   agents: AgentsListOutput;
   sessions: SessionInfo[];
   query: string;
+  // Results as one list with no Project headings, each row showing how long ago it was active.
+  flat?: boolean;
   archived: boolean;
   selectedSessionId?: string;
   onSelect: (id: string) => void;
