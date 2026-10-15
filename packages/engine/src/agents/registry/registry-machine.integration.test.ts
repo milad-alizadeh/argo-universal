@@ -98,3 +98,33 @@ it('fetches on Engine start without a stored row and forgets the previous run at
     .poll(async () => (await second.caller.agents.registry()).agents.length)
     .toBe(4);
 });
+
+it.each(["json = '{bad'", "fetched_at = 'invalid'"])(
+  'starts with malformed cache (%s), remains usable offline, and repairs it on refresh',
+  async (columns) => {
+    let offline = true;
+    const first = await startEngineTestHost();
+    first.database.$client.exec(`UPDATE registry_cache SET ${columns}`);
+    await first.stop();
+
+    const second = await startEngineTestHost({
+      home: first.home,
+      fetchAgents: async () => {
+        if (offline) throw new Error('Registry offline');
+
+        return JSON.stringify(publishedRegistry);
+      },
+    });
+
+    await requestRegistry(second.engine.system.get('registry'), 'STALE');
+    expect(await second.caller.agents.registry()).toEqual({
+      agents: [],
+      error: 'Error: Registry offline',
+    });
+    expect(await second.caller.agents.servers()).toEqual([]);
+    offline = false;
+    expect((await second.caller.agents.refreshRegistry()).agents).toHaveLength(
+      4,
+    );
+  },
+);

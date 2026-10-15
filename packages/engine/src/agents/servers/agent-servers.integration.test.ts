@@ -1,5 +1,5 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { createResourceOpening } from '#mocks/acp-resource';
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
@@ -60,7 +60,7 @@ it('omits unsupported saved Agents and preserves saved environment on repeated a
 });
 
 it.each(['addRegistry', 'remove'] as const)(
-  '%s drops reusable connections and retains live Session processes until shutdown',
+  '%s drops reusable connections and retires dropped processes after their last Session closes',
   async (mutation) => {
     const scripted = scriptedEngineInput();
 
@@ -88,6 +88,11 @@ it.each(['addRegistry', 'remove'] as const)(
       scripted.agent.processes.map((process) => process.terminations),
     ).toEqual([0, 0]);
     await Promise.all([first.close(), second.close()]);
+    await vi.waitFor(() =>
+      expect(
+        scripted.agent.processes.map((process) => process.terminations),
+      ).toEqual([1, 0]),
+    );
     await host.stop();
     expect(
       scripted.agent.processes.map((process) => process.terminations),

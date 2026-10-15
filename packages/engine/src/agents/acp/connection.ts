@@ -116,16 +116,19 @@ export class AcpConnection {
   );
   private connection: ClientConnection | undefined;
   private initialization: InitializeResponse | undefined;
-  private process: AcpProcess | undefined;
+  private launching: Promise<AcpProcess> | undefined;
+  private stopping: Promise<void> | undefined;
   private failure: Error | undefined;
   public constructor(
     private readonly input: AcpResourceInput,
     private readonly forget: () => void,
+    private readonly idle: () => void,
   ) {}
   public async start(launch: AgentLaunch): Promise<this> {
-    this.process = await (this.input.launchProcess ?? launchAcpProcess)(launch);
-    this.connection = this.connect(this.process.stream);
-    this.observeExit(this.process, this.connection);
+    this.launching = (this.input.launchProcess ?? launchAcpProcess)(launch);
+    const process = await this.launching;
+    this.connection = this.connect(process.stream);
+    this.observeExit(process, this.connection);
     this.initialization = await negotiateAcpInitialize(
       this.connection.agent,
       this.readers,
@@ -263,7 +266,10 @@ export class AcpConnection {
     const registration = this.registrations.get(message.id);
     this.registrations.delete(message.id);
 
-    return this.registerKnown(registration, message);
+    const registered = this.registerKnown(registration, message);
+    this.idle();
+
+    return registered;
   }
   private registerKnown(
     registration: Registration | undefined,
@@ -390,6 +396,7 @@ export class AcpConnection {
 
     if (this.sessions.get(id) === session) this.sessions.delete(id);
     session.released.resolve();
+    this.idle();
   }
   private fail(error: Error): void {
     if (this.failure) return;
@@ -409,9 +416,14 @@ export class AcpConnection {
   public get inUse(): boolean {
     return this.sessions.size > 0 || this.registrations.size > 0;
   }
-  public async shutdown(): Promise<void> {
+  public shutdown(): Promise<void> {
+    this.stopping ??= this.stop();
+
+    return this.stopping;
+  }
+  private async stop(): Promise<void> {
+    const process = await this.launching;
     this.connection?.close();
-    const process = this.process;
 
     if (!process) return;
     await process.terminate();

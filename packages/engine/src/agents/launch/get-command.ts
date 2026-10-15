@@ -41,13 +41,14 @@ const resolveCommand = async (
 ): Promise<RegistryCommand> => {
   input.signal.throwIfAborted();
   const entry = await requireEntry(input);
-  const launch = { ...input, entry, ports: input.ports ?? defaultInstallPorts };
+  const command = await distributionCommand(input, entry);
 
-  const command = await (registrySupport(entry) === 'binary'
-    ? binaryCommand(launch)
-    : npmCommand(launch));
-
-  return withEnvironment(input, command);
+  try {
+    return withEnvironment(input, command);
+  } catch (error) {
+    command.release();
+    throw error;
+  }
 };
 
 const isAvailable = (entry: ACPAgent | undefined): entry is ACPAgent =>
@@ -64,3 +65,14 @@ const withEnvironment = (
     ...readAgentServerEnv(input.database, input.id),
   },
 });
+
+const distributionCommand = (
+  input: CommandInput,
+  entry: ACPAgent,
+): Promise<RegistryCommand> => {
+  const launch = { ...input, entry, ports: input.ports ?? defaultInstallPorts };
+
+  return registrySupport(entry) === 'binary'
+    ? binaryCommand(launch)
+    : npmCommand(launch);
+};

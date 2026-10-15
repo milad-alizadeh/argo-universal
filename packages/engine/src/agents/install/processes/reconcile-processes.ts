@@ -6,6 +6,8 @@ import { cleanInstallProcess, InstallCleanupError } from './process-cleanup';
 import { installerGroupMembers } from './process-group';
 import { InstallerGroupRecord, installerRecordPath } from './process-record';
 
+const ownershipDirectoryDepth = 3;
+
 const rejections = createRejectionCounter('Installer ownership records');
 
 const StoredRecord = jsonCodec(InstallerGroupRecord);
@@ -65,14 +67,22 @@ const childDirectories = async (path: string): Promise<string[]> => {
   }
 };
 
-const releaseScopeGroups = async (scope: string): Promise<void> => {
+const releaseScopeGroups = async (
+  scope: string,
+  depth: number,
+): Promise<void> => {
+  await releaseStagingGroup(scope);
+
+  if (depth === 0) return;
+
   for (const directory of await childDirectories(scope))
-    await releaseStagingGroup(directory);
+    await releaseScopeGroups(directory, depth - 1);
 };
 
 export const releaseInstallationProcessGroups = async (
   home: string,
 ): Promise<void> => {
-  for (const scope of await childDirectories(join(home, 'agents')))
-    await releaseScopeGroups(scope);
+  // Older Registry probes wrote their record directly in home.
+  await releaseStagingGroup(home);
+  await releaseScopeGroups(join(home, 'agents'), ownershipDirectoryDepth);
 };

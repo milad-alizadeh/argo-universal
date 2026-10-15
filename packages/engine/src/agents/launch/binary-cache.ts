@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ACPAgent, BinaryTarget } from '@repo/contracts';
+import { isBinaryReserved } from './binary-reservations';
 
 const hashLength = 16;
 
@@ -39,7 +40,13 @@ const pruneVersion = async (
   },
   directory: string,
 ): Promise<void> => {
-  if (directory === input.directory || input.isDirectoryInUse(directory))
-    return;
+  if (directory === input.directory) return;
+
+  if (protectedVersion(directory, input.isDirectoryInUse)) return;
   await rm(directory, { recursive: true, force: true });
 };
+
+const protectedVersion = (
+  directory: string,
+  inUse: (directory: string) => boolean,
+): boolean => isBinaryReserved(directory) || inUse(directory);

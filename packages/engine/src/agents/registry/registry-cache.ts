@@ -20,7 +20,12 @@ export const readRegistryCache = (
     .where(eq(registryCache.id, 1))
     .get();
 
-  return row ? hydrateCache(row) : null;
+  try {
+    return row ? hydrateCache(row) : null;
+  } catch {
+    // The validated cache is disposable; rejection is logged by its reader.
+    return null;
+  }
 };
 
 export const registrySupport = (
@@ -35,14 +40,15 @@ export const readRegistry = (
   database: Database,
   error: string | null,
 ): AgentsRegistryOutput => {
-  const entries = cachedAgents(readRegistryCache(database));
+  const cached = readRegistryCache(database);
+  const entries = cachedAgents(cached);
 
   return {
     agents: entries.map((entry) => ({
       entry,
       support: registrySupport(entry),
     })),
-    error: entries.length > 0 ? null : error,
+    error: entries.length > 0 ? null : cacheError(cached, error),
   };
 };
 
@@ -92,3 +98,8 @@ const hydrateCache = (
 
   return parsed.data.json ? reader.parse(parsed.data.json) : null;
 };
+
+const cacheError = (
+  cached: ACPAgentRegistry | null,
+  error: string | null,
+): string | null => error ?? (cached ? null : 'Registry cache is unavailable');

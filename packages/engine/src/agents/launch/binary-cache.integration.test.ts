@@ -43,6 +43,7 @@ it('prunes old binary versions but retains folders used by live connections, inc
     installationDirectory: first.directory,
   };
   const lease = await resources.open(opening);
+  first.release();
   resources.dropAgentConnections(entry.id);
   const unused = join(dirname(first.directory), 'v_unused');
   await mkdir(unused);
@@ -58,6 +59,14 @@ it('prunes old binary versions but retains folders used by live connections, inc
       prompt: [],
     }),
   ).toEqual({ stopReason: 'end_turn' });
+  await lease.close();
+  await vi.waitFor(() =>
+    expect(resources.isDirectoryInUse(first.directory)).toBe(false),
+  );
+  const third = await getCommand(input);
+  expect(existsSync(first.directory)).toBe(false);
+  second.release();
+  third.release();
 });
 
 it.each(['.zip', '.gz', ''] as const)(
@@ -96,6 +105,7 @@ it.each(['.zip', '.gz', ''] as const)(
 
     expect(await readFile(command.executable)).toEqual(installationExecutable);
     expect(download).toHaveBeenCalledTimes(1);
+    command.release();
   },
 );
 
@@ -154,5 +164,7 @@ it('uses the GitHub asset digest when the Registry omits a checksum', async () =
     await readdir(join(host.home, 'agents', 'registry', entry.id)),
   ).toEqual([]);
   digest = createHash('sha256').update(installationExecutable).digest('hex');
-  expect(existsSync((await getCommand(input)).executable)).toBe(true);
+  const command = await getCommand(input);
+  expect(existsSync(command.executable)).toBe(true);
+  command.release();
 });

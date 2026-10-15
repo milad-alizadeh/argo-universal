@@ -2,14 +2,15 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 
-it('rejects malformed Registry cache columns before using the stored JSON', async () => {
+it('discards malformed Registry cache columns before using the stored JSON', async () => {
   const host = await startEngineTestHost();
   host.database.$client.exec(
     "UPDATE registry_cache SET fetched_at = 'invalid'",
   );
-  await expect(host.caller.agents.registry()).rejects.toThrow(
-    'Stored Registry cache row is malformed',
-  );
+  expect(await host.caller.agents.registry()).toEqual({
+    agents: [],
+    error: 'Registry cache is unavailable',
+  });
 });
 
 it('rejects malformed saved Agent row columns rather than silently hiding the Agent', async () => {

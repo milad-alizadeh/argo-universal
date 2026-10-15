@@ -60,6 +60,7 @@ const command = ({
   directory,
   executable,
 }: ResolvedNpm): RegistryCommand => ({
+  release: () => {},
   executable: runtime.node,
   args: [executable, ...distributionArgs(input)],
   env: { ...runtime.env, ...distribution(input).env },

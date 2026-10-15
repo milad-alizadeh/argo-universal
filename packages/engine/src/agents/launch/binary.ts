@@ -9,11 +9,12 @@ import {
   installationPath,
 } from '../install/materialization/files';
 import type { InstallPorts } from '../install/ports';
+import { InstallCleanupError } from '../install/processes/process-cleanup';
 import { resolveRegistryServerPlatform } from '../records';
 import { pruneVersions, versionFolder } from './binary-cache';
+import { reserveBinary, serializeBinary } from './binary-reservations';
 import { githubDigest } from './github-digest';
 import { resolveNode } from './node';
-import { singleFlight } from './single-flight';
 import type { CommandInput, RegistryCommand } from './types';
 
 type LaunchInput = CommandInput & { ports: InstallPorts; entry: ACPAgent };
@@ -49,13 +50,31 @@ export const binaryCommand = async (
   input: LaunchInput,
 ): Promise<RegistryCommand> => {
   const binary = binaryInput(input);
-  await singleFlight(binary.directory, () => materialize(binary));
+  const release = reserveBinary(binary.directory, input.signal);
+
+  try {
+    return await serializeBinary(baseDirectory(input), async () => ({
+      ...(await prepareBinary(binary)),
+      release,
+    }));
+  } catch (error) {
+    release();
+    throw error;
+  }
+};
+
+const prepareBinary = async (
+  binary: BinaryInput,
+): Promise<Omit<RegistryCommand, 'release'>> => {
+  binary.signal.throwIfAborted();
+  await materialize(binary);
   const executable = await commandExecutable(binary);
   await pruneVersions({
-    base: join(input.home, 'agents', 'registry', input.id),
+    base: baseDirectory(binary),
     directory: binary.directory,
-    isDirectoryInUse: input.isDirectoryInUse,
+    isDirectoryInUse: binary.isDirectoryInUse,
   });
+  binary.signal.throwIfAborted();
 
   return resolvedBinary(binary, executable);
 };
@@ -74,8 +93,9 @@ const materialize = async (input: BinaryInput): Promise<void> => {
   try {
     await extract(input, staging);
     await rename(staging, input.directory);
-  } finally {
-    await rm(staging, { recursive: true, force: true });
+  } catch (error) {
+    await cleanStaging(staging, error instanceof InstallCleanupError);
+    throw error;
   }
 };
 
@@ -140,10 +160,17 @@ const baseDirectory = (input: CommandInput): string =>
 const resolvedBinary = (
   input: BinaryInput,
   executable: string,
-): RegistryCommand => ({
+): Omit<RegistryCommand, 'release'> => ({
   executable,
   args: input.target.args ?? [],
   env: { ...input.shellEnv, ...input.target.env },
   directory: input.directory,
   version: input.entry.version,
 });
+
+const cleanStaging = async (
+  directory: string,
+  cleanupUncertain: boolean,
+): Promise<void> => {
+  if (!cleanupUncertain) await rm(directory, { recursive: true, force: true });
+};

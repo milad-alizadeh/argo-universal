@@ -2,6 +2,8 @@ import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { delimiter, dirname, join } from 'node:path';
 import type { InstallPorts } from '../install/ports';
+import { InstallCleanupError } from '../install/processes/process-cleanup';
+import { probeNode } from './node-probe';
 import type { CommandInput } from './types';
 
 type NodeInput = CommandInput & { ports: InstallPorts };
@@ -19,12 +21,13 @@ const usableNode = async (
   executable: string,
 ): Promise<boolean> => {
   try {
-    const version = await nodeVersion(input, executable);
+    const version = await probeNode(input, executable);
 
     return (
       Number(version.trim().replace(/^v/, '').split('.')[0]) >= minimumMajor
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof InstallCleanupError) throw error;
     input.signal.throwIfAborted();
 
     return false;
@@ -106,12 +109,3 @@ const checkedRuntime = async (
   npm: string,
 ): Promise<NodeRuntime | undefined> =>
   (await usableNode(input, node)) ? runtime(input, node, npm) : undefined;
-
-const nodeVersion = (input: NodeInput, executable: string): Promise<string> =>
-  input.ports.runTool({
-    executable,
-    args: ['--version'],
-    cwd: input.home,
-    env: { ...input.shellEnv },
-    signal: input.signal,
-  });

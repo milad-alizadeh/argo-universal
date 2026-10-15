@@ -16,9 +16,12 @@ const readFolders = async (path: string): Promise<string[]> => {
   }
 };
 
-const cleanScope = async (folder: string): Promise<void> => {
+const cleanScope = async (
+  folder: string,
+  prefixes: string[],
+): Promise<void> => {
   for (const entry of await readFolders(folder))
-    if (entry.startsWith('.install-'))
+    if (prefixes.some((prefix) => entry.startsWith(prefix)))
       await rm(join(folder, entry), { recursive: true, force: true });
 };
 
@@ -29,5 +32,11 @@ export const reconcileInterruptedInstallations = async (
   const root = join(home, 'agents');
 
   for (const scope of await readFolders(root))
-    await cleanScope(join(root, scope));
+    await cleanScope(join(root, scope), ['.install-']);
+  await cleanRegistry(join(root, 'registry'));
+};
+
+const cleanRegistry = async (root: string): Promise<void> => {
+  for (const scope of await readFolders(root))
+    await cleanScope(join(root, scope), ['.staging-', '.probe-']);
 };

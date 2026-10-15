@@ -16,6 +16,8 @@ export type CommandInput = {
 };
 
 export type RegistryCommand = {
+  /** Release after a connection owns directory, or when abandoning this command. Aborting the input also releases it. */
+  release: () => void;
   executable: string;
   args: readonly string[];
   env: Record<string, string>;
