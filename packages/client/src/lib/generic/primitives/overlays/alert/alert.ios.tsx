@@ -1,3 +1,4 @@
+// Stock SwiftUI alert: Expo UI has no universal alert; Android uses Compose's AlertDialog.
 import {
   Alert as SwiftAlert,
   Button as SwiftButton,

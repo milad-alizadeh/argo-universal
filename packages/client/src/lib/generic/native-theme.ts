@@ -23,7 +23,7 @@ type TokenRole = (typeof colorTokens)[number][0];
 type DisabledRole = 'disabledContent' | 'disabledContainer';
 
 // A colour is missing only while Uniwind has not resolved its token.
-export type NativeColors = Partial<Record<TokenRole | DisabledRole, string>>;
+type NativeColors = Partial<Record<TokenRole | DisabledRole, string>>;
 
 export interface NativeTheme {
   colorScheme: 'light' | 'dark';

@@ -61,8 +61,6 @@
         "packages/client/src/features/settings/components/settings-list/settings-list-status.test.stories.tsx",
         // 1 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/buttons/button/button-content-styles.ts",
-        // 1 palette
-        "packages/client/src/lib/generic/primitives/buttons/button/button-native-colors.ts",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/buttons/icon-button/icon-button-styles.ts",
         // 1 arbitrary
@@ -71,10 +69,6 @@
         "packages/client/src/lib/generic/primitives/display/badge/badge.tsx",
         // 2 arbitrary
         "packages/client/src/lib/generic/primitives/display/collapsible/collapsible-content.tsx",
-        // 1 colour
-        "packages/client/src/lib/generic/primitives/inputs/checkbox/checkbox-indicator.android.tsx",
-        // 1 arbitrary
-        "packages/client/src/lib/generic/primitives/inputs/checkbox/checkbox-native.tsx",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/inputs/checkbox/checkbox.tsx",
         // 1 arbitrary
@@ -99,8 +93,6 @@
         "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item-styles.ts",
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/alert/alert.tsx",
-        // 1 palette
-        "packages/client/src/lib/generic/primitives/overlays/bottom-sheet/bottom-sheet-colors.android.ts",
         // 3 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/overlays/bottom-sheet/bottom-sheet-surface-props.ts",
         // 2 arbitrary, 1 palette

@@ -1,4 +1,4 @@
 export {
-  useComposeTextStyle,
   useSwiftUITextModifiers,
+  useUniversalTextStyle,
 } from './native-typography';

@@ -1,5 +1,6 @@
-import { Column } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
+// Split from iOS: a native sheet takes the drags of anything it cannot nest-scroll, so React Native scrolls the sections here.
+import { Column } from '@expo/ui';
+import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
@@ -62,30 +63,30 @@ function useOverflowScroll(
   };
 }
 
-// The sections in one Compose column.
+/*
+ * FieldGroup's own lazy column cannot be measured inside a scroll view, and it wraps any child
+ * that is not literally its Section, such as a caller's section component, in a card of its own.
+ */
 function SectionsColumn(props: GroupedListProps): React.JSX.Element {
-  const modifiers = useColumnModifiers(props.variant);
+  const style = useColumnPadding(props.variant);
 
   return (
-    <Column
-      verticalArrangement={{ spacedBy: sectionGap }}
-      modifiers={modifiers}
-    >
+    <Column spacing={sectionGap} style={style} modifiers={[fillMaxWidth()]}>
       {props.children}
     </Column>
   );
 }
 
-function useColumnModifiers(
+function useColumnPadding(
   variant: GroupedListProps['variant'],
-): React.ComponentProps<typeof Column>['modifiers'] {
+): React.ComponentProps<typeof Column>['style'] {
   const insets = useSafeAreaInsets();
-  const sideGutter = sideGutterFor(variant);
 
-  return [
-    fillMaxWidth(),
-    padding(sideGutter, topPadding, sideGutter, insets.bottom + sectionGap),
-  ];
+  return {
+    paddingHorizontal: sideGutterFor(variant),
+    paddingTop: topPadding,
+    paddingBottom: insets.bottom + sectionGap,
+  };
 }
 
 // A sidebar list's rows span the screen, flat like the sidebar's; grouped cards sit in the gutter.
