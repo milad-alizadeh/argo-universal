@@ -51,8 +51,7 @@ function usePill(): Pick<
 function SearchText(props: DockedSearchQuery): React.JSX.Element {
   return (
     <TextInput
-      value={useSearchText(props.value)}
-      onChangeText={props.onChangeText}
+      {...useSearchText(props)}
       placeholder={props.label}
       autoCapitalize="none"
       autoCorrect={false}
@@ -65,12 +64,12 @@ function SearchText(props: DockedSearchQuery): React.JSX.Element {
 
 // The field's own text, which follows the caller's value when it changes from outside, such as a cleared search.
 function useSearchText(
-  value: string,
-): ReturnType<typeof useNativeState<string>> {
-  const text = useNativeState(value);
-  useFollowedText(text, value);
+  props: DockedSearchQuery,
+): Pick<React.ComponentProps<typeof TextInput>, 'value' | 'onChangeText'> {
+  const text = useNativeState(props.value);
+  const onChangeText = useFollowedText(text, props.value, props.onChangeText);
 
-  return text;
+  return { value: text, onChangeText };
 }
 
 DockedSearchFieldContent satisfies React.ComponentType<DockedSearchQuery>;

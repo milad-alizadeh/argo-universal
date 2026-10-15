@@ -82,18 +82,22 @@ function NativeTextField(props: NativeFieldProps): React.JSX.Element {
   );
 }
 
-type FieldValue = Pick<UniversalTextInputProps, 'value' | 'onFocus' | 'onBlur'>;
+type FieldValue = Pick<
+  UniversalTextInputProps,
+  'value' | 'onChangeText' | 'onFocus' | 'onBlur'
+>;
 
 function useFieldValue({
   onBlur = () => {},
   ...props
 }: NativeFieldProps): FieldValue {
   const text = useNativeState(props.value);
-  useFollowedText(text, props.value);
+  const onChangeText = useFollowedText(text, props.value, props.onChangeText);
   const [focus] = useState(blurOnFocusLoss);
 
   return {
     value: text,
+    onChangeText,
     onFocus: () => focus(true, onBlur),
     onBlur: () => focus(false, onBlur),
   };
@@ -101,7 +105,6 @@ function useFieldValue({
 
 function fieldBehaviour(props: NativeFieldProps): UniversalTextInputProps {
   return {
-    onChangeText: props.onChangeText,
     placeholder: props.placeholder,
     editable: !props.disabled,
     autoCapitalize: 'none',
