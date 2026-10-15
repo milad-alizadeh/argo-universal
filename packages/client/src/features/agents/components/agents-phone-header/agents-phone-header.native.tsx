@@ -2,7 +2,7 @@ import AddIcon from '@expo/material-symbols/add.xml';
 import FilterList from '@expo/material-symbols/filter_list.xml';
 import { Stack } from 'expo-router';
 import type * as React from 'react';
-import { hasLiquidGlass } from '#lib/generic/native-header';
+import { StackSearch } from '#lib/product/navigation/stack-search.native';
 import { toolbarDot } from '#lib/product/navigation/toolbar-dot';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import {
@@ -21,9 +21,6 @@ const filterIcon =
 
 const addIcon = process.env.EXPO_OS === 'ios' ? 'plus' : AddIcon;
 
-// iOS 26 docks the search bar at the bottom.
-const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass;
-
 // A phone's native header, as the Stack Toolbar guide builds one: the filter menu, Add custom Agent, and the stack's search bar.
 export function AgentsPhoneHeader(
   props: AgentsPhoneHeaderProps,
@@ -33,8 +30,7 @@ export function AgentsPhoneHeader(
   return (
     <>
       {rightToolbar(props)}
-      {searchBar(props.onSearch)}
-      {bottomSearch ? bottomToolbar : null}
+      <StackSearch placeholder={searchLabel} onSearch={props.onSearch} />
     </>
   );
 }
@@ -78,23 +74,3 @@ function filterChoice(
     </Stack.Toolbar.MenuAction>
   );
 }
-
-// The stack's own search bar; closing or cancelling it clears the query.
-function searchBar(onSearch: (search: string) => void): React.JSX.Element {
-  return (
-    <Stack.SearchBar
-      placeholder={searchLabel}
-      autoCapitalize="none"
-      hideWhenScrolling={false}
-      onChangeText={(event) => onSearch(event.nativeEvent.text)}
-      onCancelButtonPress={() => onSearch('')}
-      onClose={() => onSearch('')}
-    />
-  );
-}
-
-const bottomToolbar = (
-  <Stack.Toolbar placement="bottom">
-    <Stack.Toolbar.SearchBarSlot />
-  </Stack.Toolbar>
-);
