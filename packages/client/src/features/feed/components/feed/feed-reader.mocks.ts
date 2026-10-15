@@ -4,6 +4,9 @@ import {
   centreOf,
   topmostAt,
 } from '../../../../../mocks/point-hit';
+import { layoutWidths } from '../../../../lib/generic/each-layout';
+import { settleViewport } from '../../../../lib/generic/settle-viewport';
+import { splitGroupHeader } from './feed.mocks';
 
 export const feedScrollId = 'feed-scroll';
 
@@ -14,7 +17,7 @@ export const expandedAttribute = 'aria-expanded';
 // A loaded runner can take a few frames per scroll before the Feed answers.
 export const scrollAwayWait = { timeout: 15000, interval: 100 };
 
-const settleWait = { timeout: 5000 };
+export const settleWait = { timeout: 5000 };
 
 export const scrolledToEnd = (feedScroll: HTMLElement): boolean =>
   feedScroll.scrollHeight - feedScroll.scrollTop - feedScroll.clientHeight < 2;
@@ -148,3 +151,26 @@ export const scrollToEnd = (feedScroll: HTMLElement): Promise<void> =>
     await afterTwoFrames();
     await expect(scrolledToEnd(feedScroll)).toBe(true);
   }, settleWait);
+
+interface SplitGroupAtTop {
+  scroll: HTMLElement;
+  header: HTMLElement;
+}
+
+// On a phone, the reader reads back from the end to the top, where the split group starts, its older rows still on their way.
+export async function readBackToSplitGroup(
+  canvas: ReturnType<typeof within>,
+): Promise<SplitGroupAtTop> {
+  await settleViewport(layoutWidths.phone);
+  const scroll = await canvas.findByTestId(feedScrollId);
+  await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+  await scrollToTop(scroll);
+
+  const header = await canvas.findByRole(
+    'button',
+    { name: splitGroupHeader },
+    scrollAwayWait,
+  );
+
+  return { scroll, header };
+}

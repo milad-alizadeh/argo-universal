@@ -106,6 +106,13 @@ export const splitGroupRows: readonly SessionUpdate[] = [
 
 export const splitGroupStepInTail = `Step ${splitGroupSize - 2}`;
 
+export const splitGroupLastStep = `Step ${splitGroupSize}`;
+
+// The split group as the newest page draws it, and its first command there.
+export const splitGroupHeader = `Ran ${splitGroupRowsInTail} commands`;
+
+export const splitGroupFirstStepInTail = `Step ${splitGroupRowsInTail + 1}`;
+
 // The row the Agent sends while the reader is scrolled up: its first message, since plain text matches exactly where the last one ends in `done`, which other recordings send too.
 const arrivingAgentMessage = arrivingRecording.rows.find(
   (row) => row.sessionUpdate === 'agent_message',
@@ -124,3 +131,11 @@ export const arrivingRow: SessionUpdate = {
   position: lastLongRow.position + 1,
   revision: newestRevision + 1,
 };
+
+// The rows the Agent streams to the end after the arriving row, one at a time.
+export const streamedRow = (index: number): SessionUpdate => ({
+  ...arrivingRow,
+  id: `streamed-row-${index}`,
+  position: arrivingRow.position + 1 + index,
+  revision: arrivingRow.revision + 1 + index,
+});

@@ -1,11 +1,6 @@
-import type { LegendListRef } from '@legendapp/list/react-native';
-import { type RefObject, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FeedGrowth } from '../feed-growth-context';
-import { keepPlace } from './keep-place';
-
-type ListRef = RefObject<LegendListRef | null>;
-
-type ListState = ReturnType<LegendListRef['getState']>;
+import { keepPlace, type ListRef, type ListState } from './keep-place';
 
 // Whether a row reaches into the view and starts above its middle, the reader's line.
 const startsAboveReadingLine = (
@@ -39,7 +34,7 @@ function feedGrowthOf(list: ListRef, starts: Map<string, number>): FeedGrowth {
       starts.delete(key);
 
       if (topInView === undefined || height <= 0) return;
-      keepPlace(list, { key, height, topInView });
+      keepPlace(list, { key, grownAbove: height, topInView });
     },
   };
 }
