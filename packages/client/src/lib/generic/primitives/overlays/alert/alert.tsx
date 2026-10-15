@@ -5,7 +5,7 @@ import { Button } from '#primitives/buttons/button';
 import { DialogOverlay } from '#primitives/overlays/dialog';
 import {
   alertActionPress,
-  alertDismissal,
+  ignoreCloseWhileBusy,
   isAlertActionEnabled,
   type AlertAction,
   type AlertProps,
@@ -19,7 +19,7 @@ export function Alert(props: AlertProps): React.JSX.Element {
   return (
     <DialogPrimitive.Root
       open={props.open}
-      onOpenChange={alertDismissal(props)}
+      onOpenChange={ignoreCloseWhileBusy(props)}
     >
       <DialogPrimitive.Portal>
         <DialogOverlay>

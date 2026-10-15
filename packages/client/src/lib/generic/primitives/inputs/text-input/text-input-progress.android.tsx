@@ -1,15 +1,14 @@
 import { CircularProgressIndicator } from '@expo/ui/jetpack-compose';
 import { semantics, size } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { fieldLoadingLabel } from './text-input-props';
+import { type FieldProgressProps, fieldLoadingLabel } from './text-input-props';
 
-// Material's indeterminate indicator at its small 24dp size, ending the field while its value is checked.
+// The trailing slot sets only a 48dp minimum and the indicator draws 40dp by default, so it takes the 24dp icon size.
 const indicatorSize = 24;
 
-export function FieldProgress(props: {
-  label: string;
-  loading?: boolean;
-}): React.JSX.Element | null {
+export function FieldProgress(
+  props: FieldProgressProps,
+): React.JSX.Element | null {
   if (!props.loading) return null;
 
   return (

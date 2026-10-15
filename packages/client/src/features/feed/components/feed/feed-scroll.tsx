@@ -16,10 +16,10 @@ import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
 
-// Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web.
-const phoneContentStyle = { paddingTop: 16 };
+// Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web. No bottom padding: FeedEnd holds the end space.
+const phoneContentStyle = { paddingTop: 16, paddingBottom: 0 };
 
-const wideContentStyle = { paddingTop: 24 };
+const wideContentStyle = { paddingTop: 24, paddingBottom: 0 };
 
 // Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd(): React.JSX.Element {

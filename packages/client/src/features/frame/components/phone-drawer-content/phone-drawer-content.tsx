@@ -48,8 +48,7 @@ function SectionButton({
     <DrawerItem
       {...sectionItem(section)}
       selected={navigation.selectedSection === section}
-      badge={count}
-      badgeLabel={attentionBadge(count)?.label}
+      badge={attentionBadge(count)}
       onPress={() => navigation.onSectionChange(section)}
     />
   );

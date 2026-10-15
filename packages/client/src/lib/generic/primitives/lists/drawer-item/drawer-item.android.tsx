@@ -12,7 +12,7 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { countBadge } from '#lib/generic/badge-count';
+import { type CountBadge, countBadge } from '#lib/generic/badge-count';
 import { Icon, IconSlot } from '#primitives/display/icon';
 import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
@@ -39,16 +39,18 @@ export function DrawerItem(props: DrawerItemProps): React.JSX.Element {
 
 // A selectable tab row, so TalkBack says which destination is the current one.
 function DrawerItemRow(props: DrawerItemProps): React.JSX.Element {
+  const badge = countBadge(props.badge);
+
   return (
     <Row
       alignment="center"
       spacing={iconGap}
       style={usePillStyle(props.selected)}
-      modifiers={tabModifiers(props)}
+      modifiers={tabModifiers(props, badge)}
     >
       <DrawerItemIcon {...props} />
       <DrawerItemLabel {...props} />
-      <NativeBadge {...props} />
+      {badge && <NativeBadge badge={badge} />}
     </Row>
   );
 }
@@ -67,9 +69,10 @@ function usePillStyle(
 }
 
 // The press ripple fills the pill, so the padding comes after the selectable.
-function tabModifiers(props: DrawerItemProps): ModifierConfig[] {
-  const { label, selected, onPress } = props;
-  const badge = countBadge(props.badge, props.badgeLabel);
+function tabModifiers(
+  { label, selected, onPress }: DrawerItemProps,
+  badge: CountBadge | undefined,
+): ModifierConfig[] {
   const description = [label, badge?.label].filter(Boolean).join(', ');
 
   return [
@@ -119,15 +122,10 @@ function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   );
 }
 
-// Material's own Badge with its count, coloured with Argo's danger red through its containerColor and contentColor props; TalkBack reads it with the row.
-function NativeBadge(
-  props: Pick<DrawerItemProps, 'badge' | 'badgeLabel'>,
-): React.JSX.Element | null {
+// Material's Badge in Argo's danger red; TalkBack reads it with the row.
+function NativeBadge({ badge }: { badge: CountBadge }): React.JSX.Element {
   const container = String(useCSSVariable('--color-danger'));
   const content = String(useCSSVariable('--color-primary-foreground'));
-  const badge = countBadge(props.badge, props.badgeLabel);
-
-  if (!badge) return null;
 
   return (
     <Badge containerColor={container} contentColor={content}>

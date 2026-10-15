@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import type { Ref } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 
@@ -6,7 +7,9 @@ import { cn } from '#lib/generic/utils';
 export const sessionSurface = 'bg-content';
 
 // The Session's one column: as wide as the Composer at most, centred in the pane with the pane's side padding. CSS centres it on every width change, so nothing in it depends on a width measured earlier.
-export function SessionColumn(props: ViewProps): React.JSX.Element {
+export function SessionColumn(
+  props: ViewProps & { ref?: Ref<View> },
+): React.JSX.Element {
   return (
     <View pointerEvents={props.pointerEvents} className="w-full px-4 wide:px-6">
       <View
@@ -20,15 +23,13 @@ export function SessionColumn(props: ViewProps): React.JSX.Element {
 }
 
 export function ComposerColumn(
-  props: Pick<ViewProps, 'onLayout' | 'children'>,
+  props: Pick<ViewProps, 'onLayout' | 'children'> & { ref?: Ref<View> },
 ): React.JSX.Element {
   return (
     <SessionColumn
+      {...props}
       testID="composer-column"
       className="items-center"
-      onLayout={props.onLayout}
-    >
-      {props.children}
-    </SessionColumn>
+    />
   );
 }

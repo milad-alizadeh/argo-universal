@@ -1,12 +1,5 @@
-import { badgeCountText } from '#lib/generic/badge-count';
+import type { BadgeCount } from '#lib/generic/badge-count';
 import type { Section } from '../../../lib/product/navigation/sections';
-
-export interface AttentionBadge {
-  // What a screen reader says for the badge.
-  label: string;
-  // What the badge draws.
-  text: string;
-}
 
 function badgeLabel(attentionCount: number): string {
   const sessions = attentionCount === 1 ? 'Session needs' : 'Sessions need';
@@ -14,13 +7,9 @@ function badgeLabel(attentionCount: number): string {
   return `${attentionCount} ${sessions} attention`;
 }
 
-// The Sessions-section badge for the Sessions that need input or are Unread; none when no Session does.
-export function attentionBadge(attentionCount: number): AttentionBadge | null {
-  const text = badgeCountText(attentionCount);
-
-  if (text === undefined) return null;
-
-  return { label: badgeLabel(attentionCount), text };
+// The Sessions-section badge for the Sessions that need input or are Unread.
+export function attentionBadge(attentionCount: number): BadgeCount {
+  return { count: attentionCount, label: badgeLabel(attentionCount) };
 }
 
 // Only the Sessions section counts attention; every other section shows none.

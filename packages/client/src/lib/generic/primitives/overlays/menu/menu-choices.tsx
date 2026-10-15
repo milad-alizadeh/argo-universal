@@ -8,6 +8,7 @@ import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text';
 import { MenuLoadingRow } from './menu-loading';
 import type { ChoiceMenuProps, MenuOption } from './menu-props';
+import { actionItemTextClassName, choiceRowClassName } from './menu-styles';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -103,7 +104,8 @@ function radioKeyDown(
 
 function radioItemClassName(keyboardFocus: boolean): string {
   return cn(
-    'min-h-9 flex-row items-center gap-3 cursor-default rounded-xl outline-0 px-3 py-1.5 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
+    choiceRowClassName,
+    'cursor-default rounded-xl outline-0 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
     keyboardFocus &&
       'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
   );
@@ -121,7 +123,7 @@ function MenuRadioContent(props: { label: string }): React.JSX.Element {
 function RadioLabel(props: { label: string }): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
-      <Text role="body" className="select-none text-foreground">
+      <Text role="body" className={actionItemTextClassName}>
         {props.label}
       </Text>
     </View>

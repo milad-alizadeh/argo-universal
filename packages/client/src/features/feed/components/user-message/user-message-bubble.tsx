@@ -1,7 +1,7 @@
 import { useSyncLayout } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { Platform, Pressable, View, type ViewStyle } from 'react-native';
+import { Pressable, View, type ViewStyle } from 'react-native';
 import { FeedMarkdown } from '#lib/product/markdown/feed-markdown';
 import { Text } from '#primitives/display/text';
 import { ClampLeaves } from '../../../../lib/product/markdown/clamp-leaves';
@@ -9,6 +9,7 @@ import {
   useWholeLineClamp,
   type WholeLineClamp,
 } from '../../../../lib/product/markdown/use-whole-line-clamp';
+import { wholeLineClip } from '../../../../lib/product/markdown/whole-line-clip';
 
 const clampedLines = 4;
 
@@ -28,18 +29,17 @@ interface ClampedMarkdownProps extends WholeLineClamp {
   clamped: boolean;
 }
 
-// Native clips as a scroll container, so Yoga lays the content out at its full height beneath the maxHeight. With overflow hidden, Yoga fits the text into the maxHeight and iOS draws part-cut lines; the web clips either way.
-const clipOverflow: ViewStyle['overflow'] =
-  Platform.OS === 'web' ? 'hidden' : 'scroll';
-
-const clipStyle = ({ clamped, clipHeight }: ClampedMarkdownProps): ViewStyle =>
-  clamped ? { overflow: clipOverflow, maxHeight: clipHeight } : {};
+const clipStyle = ({
+  clamped,
+  clipHeight,
+}: ClampedMarkdownProps): ViewStyle | undefined =>
+  clamped && clipHeight !== undefined ? wholeLineClip(clipHeight) : undefined;
 
 function ClampedMarkdown(props: ClampedMarkdownProps): React.JSX.Element {
   const { content, onContentLayout, registerLeaf } = props;
 
   return (
-    <View className="overflow-hidden" style={clipStyle(props)}>
+    <View style={clipStyle(props)}>
       <View ref={content} onLayout={onContentLayout}>
         <ClampLeaves.Provider value={registerLeaf}>
           <FeedMarkdown text={props.text} />
