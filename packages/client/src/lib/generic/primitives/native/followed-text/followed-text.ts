@@ -1,9 +1,9 @@
-import type { useNativeState } from '@expo/ui/swift-ui';
+import type { ObservableState } from '@expo/ui';
 import { useEffect } from 'react';
 
 // The native field's text follows the form's value when the form changes it, such as on reset.
 export function useFollowedText(
-  text: ReturnType<typeof useNativeState<string>>,
+  text: ObservableState<string>,
   value: string,
 ): void {
   useEffect(() => {
