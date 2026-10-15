@@ -1,14 +1,18 @@
 import {
+  drawerHeaderOptions,
+  type HeaderItem,
+  HeaderItemButton,
   hasLiquidGlass,
-  nativeHeaderOptions,
   PhoneConnectionBanner,
+  type ScreenHeaderProps,
   screenHeaderOptions,
+  screenHeaderToolbars,
   type Section,
   type SectionList,
   type SectionLists,
-  SectionMenuButton,
   sectionOf,
   useSectionList,
+  useSectionMenuItem,
   useWide,
 } from '@repo/client';
 import {
@@ -25,7 +29,7 @@ import {
   type RouteProp,
 } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import type { ComponentProps, PropsWithChildren } from 'react';
+import type { ComponentProps, PropsWithChildren, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { headerTitleOptions } from './header-title';
 
@@ -50,7 +54,7 @@ const wideOptions = {
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
 
-// Android's section roots show the drawer's own header, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, so iOS keeps Liquid Glass and the native search.
+// Android's section roots show the drawer's own header, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, which the root page fills, so iOS keeps Liquid Glass, stock bar button items and the native search.
 const drawerDrawsRootHeader = Platform.OS === 'android';
 
 // Android's back gesture owns the screen edge, so there only ☰ opens the drawer.
@@ -62,18 +66,20 @@ const atSectionRoot = (route: RouteProp<ParamListBase>): boolean =>
 // A pushed page, and every page of a wide window, keeps its stack's header; its edge swipe goes back.
 const stackOwnsHeader = { headerShown: false, swipeEnabled: false };
 
-// ☰ opens the Frame's drawer from a header inside any of its sections; the action reaches the drawer from a section's stack too.
-function DrawerMenuButton(): React.JSX.Element {
+// ☰, which opens the Frame's drawer from a header inside any of its sections; the action reaches the drawer from a section's stack too.
+function useDrawerMenuItem(): HeaderItem {
   const navigation = useNavigation();
 
-  return (
-    <SectionMenuButton
-      onOpen={() => navigation.dispatch(DrawerActions.openDrawer())}
-    />
+  return useSectionMenuItem(() =>
+    navigation.dispatch(DrawerActions.openDrawer()),
   );
 }
 
-// ☰ leads a narrow section root's header, sized like its trailing items.
+function DrawerMenuButton(): React.JSX.Element {
+  return <HeaderItemButton item={useDrawerMenuItem()} />;
+}
+
+// ☰ leads Android's drawer header on a narrow section root.
 const drawerMenu = (): React.JSX.Element => <DrawerMenuButton />;
 
 function drawerRootOptions(
@@ -83,7 +89,7 @@ function drawerRootOptions(
     ? {
         headerShown: true,
         headerLeft: drawerMenu,
-        ...nativeHeaderOptions(header),
+        ...drawerHeaderOptions(header),
       }
     : { headerShown: false };
 
@@ -129,20 +135,37 @@ const pageLayout: ScreenLayout = ({ children, options }) => (
 interface SectionOptions {
   screenOptions: StackProps['screenOptions'];
   rootOptions: NativeStackNavigationOptions;
+  // The root's stock header items, which its `Stack.Screen` reads by type.
+  rootItems: ReactNode;
 }
+
+const wideSection: SectionOptions = {
+  screenOptions: wideOptions,
+  rootOptions: {},
+  rootItems: null,
+};
+
+const androidRoot = { rootOptions: { headerShown: false }, rootItems: null };
+
+// iOS and the web: ☰, the section's title and items, and its search, on the stack's own header.
+const stackRoot = (
+  header: ScreenHeaderProps,
+): Omit<SectionOptions, 'screenOptions'> => ({
+  rootOptions: screenHeaderOptions(header),
+  rootItems: screenHeaderToolbars(header),
+});
 
 // The stack's options at this width, and its root's: a narrow root shows the section's header; a wide page draws its own.
 function useSectionOptions(section: Section): SectionOptions {
   const wide = useWide();
   const header = useSectionList(section).rootHeader;
+  const left = useDrawerMenuItem();
 
-  if (wide) return { screenOptions: wideOptions, rootOptions: {} };
+  if (wide) return wideSection;
 
   return {
     screenOptions: narrowOptions,
-    rootOptions: drawerDrawsRootHeader
-      ? { headerShown: false }
-      : { headerLeft: drawerMenu, ...screenHeaderOptions(header) },
+    ...(drawerDrawsRootHeader ? androidRoot : stackRoot({ ...header, left })),
   };
 }
 
@@ -155,11 +178,13 @@ export function SectionStack({
   section,
   children,
 }: SectionStackProps): React.JSX.Element {
-  const { screenOptions, rootOptions } = useSectionOptions(section);
+  const { screenOptions, rootOptions, rootItems } = useSectionOptions(section);
 
   return (
     <Stack screenOptions={screenOptions} screenLayout={pageLayout}>
-      <Stack.Screen name="index" options={rootOptions} />
+      <Stack.Screen name="index" options={rootOptions}>
+        {rootItems}
+      </Stack.Screen>
       {children}
     </Stack>
   );

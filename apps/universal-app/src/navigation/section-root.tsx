@@ -1,5 +1,6 @@
 import {
   type FirstPage,
+  SearchDock,
   type Section,
   type SectionList,
   useSectionList,
@@ -44,13 +45,18 @@ interface SectionRootProps {
   section: Section;
 }
 
-// A section's root page: its list under the section's header on a narrow window; on a wide one, where the list sits beside the pages, the section's first page, which the section's list names.
+// A section's root page: its list under the section's header on a narrow window, with iOS 26's docked search; on a wide one, where the list sits beside the pages, the section's first page, which the section's list names.
 export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
-  const { list, useFirstPage } = useSectionList(section);
+  const { list, rootHeader, useFirstPage } = useSectionList(section);
 
   if (useWide() && useFirstPage) {
     return <OpenFirstPage useFirstPage={useFirstPage} />;
   }
 
-  return <View className="flex-1 bg-content">{list}</View>;
+  return (
+    <View className="flex-1 bg-content">
+      {list}
+      <SearchDock search={rootHeader.search} />
+    </View>
+  );
 }

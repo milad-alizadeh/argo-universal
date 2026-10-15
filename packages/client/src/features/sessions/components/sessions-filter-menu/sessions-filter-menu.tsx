@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
-import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
+import { headerFilterIcon } from '#lib/product/header-button';
+import type { HeaderItem } from '#lib/product/navigation/header-items';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Menu } from '#primitives/overlays/menu';
 
@@ -14,7 +14,7 @@ export interface SessionsFilterMenuProps {
   onArchivedChange: (archived: boolean) => void;
 }
 
-const wideFilterTrigger = (
+const filterTrigger = (
   <IconButton
     variant="ghost"
     className="size-7 sm:size-7"
@@ -26,31 +26,33 @@ const wideFilterTrigger = (
   />
 );
 
-function phoneFilterTrigger(archived: boolean): React.JSX.Element {
-  return (
-    <HeaderButton
-      icon={headerFilterIcon}
-      paired
-      dot={archived ? 'filter' : undefined}
-      accessibilityLabel="Filter Sessions"
-    />
-  );
-}
-
-// Active or Archived; on a phone the trigger is a native header item with a dot while Archived shows.
+// Active or Archived, in the wide window's list header.
 export function SessionsFilterMenu({
   archived,
   onArchivedChange,
 }: SessionsFilterMenuProps): React.JSX.Element {
-  const wide = useWide();
-
   return (
     <Menu
       accessibilityLabel="Filter Sessions"
       value={archived ? 'archived' : 'active'}
       options={sessionsFilterChoices}
       onValueChange={(value) => onArchivedChange(value === 'archived')}
-      trigger={wide ? wideFilterTrigger : phoneFilterTrigger(archived)}
+      trigger={filterTrigger}
     />
   );
 }
+
+// The same choices as a phone header item, with a dot while Archived shows.
+export const sessionsFilterItem = ({
+  archived,
+  onArchivedChange,
+}: SessionsFilterMenuProps): HeaderItem => ({
+  icon: headerFilterIcon,
+  accessibilityLabel: 'Filter Sessions',
+  dot: archived ? 'filter' : undefined,
+  menu: sessionsFilterChoices.map(({ value, label }) => ({
+    label,
+    selected: (value === 'archived') === archived,
+    onPress: () => onArchivedChange(value === 'archived'),
+  })),
+});

@@ -2,7 +2,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Text } from '#primitives/display/text';
-import { HeaderItems } from '../src/lib/product/header-button';
+import {
+  HeaderItemButton,
+  HeaderItemRow,
+} from '../src/lib/product/navigation/header-items';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
 
@@ -17,7 +20,7 @@ export function ScreenHeaderMock({
 
   return (
     <View className="h-16 flex-row items-center gap-4 bg-content px-4">
-      {left ? <View className="flex-row">{left}</View> : null}
+      {left ? <HeaderItemButton item={left} /> : null}
       <HeaderContent title={title} right={right} search={search} />
     </View>
   );
@@ -30,7 +33,7 @@ function HeaderTitle({
   return (
     <>
       <TitleText title={title} />
-      <HeaderItems>{right}</HeaderItems>
+      <HeaderItemRow items={right ?? []} />
     </>
   );
 }

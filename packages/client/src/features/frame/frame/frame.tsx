@@ -1,3 +1,4 @@
+import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import type * as React from 'react';
 import { createContext, type ReactNode, use } from 'react';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
@@ -5,6 +6,7 @@ import {
   type InspectorControl,
   InspectorProvider,
 } from '#lib/product/inspector';
+import type { HeaderItem } from '#lib/product/navigation/header-items';
 import type { FirstPage } from '#lib/product/navigation/navigation';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
 import type { Section } from '../../../lib/product/navigation/sections';
@@ -13,10 +15,6 @@ import {
   PhoneDrawerContent,
   type PhoneDrawerContentProps,
 } from '../components/phone-drawer-content/phone-drawer-content';
-import {
-  PhoneMenuButton,
-  type PhoneMenuButtonProps,
-} from '../components/phone-menu-button/phone-menu-button';
 import { useAttentionCount } from '../hooks/use-attention-count';
 import {
   ScaffoldFrame,
@@ -176,14 +174,17 @@ export function SectionDrawer(props: SectionDrawerProps): React.JSX.Element {
   return <PhoneDrawerContent {...props} attentionCount={useAttentionCount()} />;
 }
 
-export type SectionMenuButtonProps = Omit<
-  PhoneMenuButtonProps,
-  'attentionCount'
->;
+// ☰ at the leading edge of a narrow section root's header, with a dot while Sessions need attention; a light tap, then the drawer, which the app's navigator opens.
+export function useSectionMenuItem(onOpen: () => void): HeaderItem {
+  const attentionCount = useAttentionCount();
 
-// ☰ in a narrow section root's header, with the live attention count; the drawing is `PhoneMenuButton`.
-export function SectionMenuButton(
-  props: SectionMenuButtonProps,
-): React.JSX.Element {
-  return <PhoneMenuButton {...props} attentionCount={useAttentionCount()} />;
+  return {
+    icon: 'menu',
+    accessibilityLabel: 'Open navigation',
+    dot: attentionCount > 0 ? 'attention' : undefined,
+    onPress: () => {
+      void impactAsync(ImpactFeedbackStyle.Light);
+      onOpen();
+    },
+  };
 }

@@ -1,11 +1,15 @@
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { ListTitle } from '#lib/product/list-title';
+import type { HeaderItem } from '#lib/product/navigation/header-items';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { SearchField } from '#primitives/inputs/search-field';
 import type { SessionsFilter } from '../state/sessions-filter';
-import { SessionsFilterMenu } from './sessions-filter-menu/sessions-filter-menu';
+import {
+  SessionsFilterMenu,
+  sessionsFilterItem,
+} from './sessions-filter-menu/sessions-filter-menu';
 
 // On iOS a phone's New Session sits beside the search bar, where it replaces the floating button.
 export const newSessionBesideSearch = Platform.OS === 'ios';
@@ -81,8 +85,6 @@ export function sessionsHeaderSearch(
 }
 
 // A phone's trailing header items: the filter, with Search after it.
-export function sessionsHeaderItems(
-  filter: SessionsFilter,
-): React.JSX.Element[] {
-  return [<SessionsFilterMenu key="filter" {...filter} />];
+export function sessionsHeaderItems(filter: SessionsFilter): HeaderItem[] {
+  return [sessionsFilterItem(filter)];
 }
