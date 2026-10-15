@@ -1,4 +1,4 @@
-import { FormSheetChoices, useHeaderCover } from '@repo/client';
+import { FormSheetChoices } from '@repo/client';
 import { useNavigation } from 'expo-router';
 import { useEffect, type ReactElement } from 'react';
 
@@ -8,5 +8,5 @@ export default function FormSheetChoice(): ReactElement {
     navigation.getParent()?.setOptions({ sheetAllowedDetents: [1] });
   }, [navigation]);
 
-  return <FormSheetChoices headerInset={useHeaderCover()} />;
+  return <FormSheetChoices />;
 }

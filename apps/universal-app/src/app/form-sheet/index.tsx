@@ -1,6 +1,5 @@
 import {
   FormSheetRoot,
-  useHeaderCover,
   useFormSheetCommands,
   useFormSheetState,
 } from '@repo/client';
@@ -14,10 +13,7 @@ export default function FormSheetIndex(): ReactElement {
 
   return (
     <>
-      <FormSheetRoot
-        headerInset={useHeaderCover()}
-        onContentHeightChange={useSheetHeight()}
-      />
+      <FormSheetRoot onContentHeightChange={useSheetHeight()} />
       <SheetBackButton />
     </>
   );

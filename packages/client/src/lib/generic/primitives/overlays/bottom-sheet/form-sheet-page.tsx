@@ -9,7 +9,6 @@ import {
 import type { FormSheetProps } from './form-sheet-props';
 
 type PageProps = {
-  headerInset?: number;
   onContentHeightChange?: (height: number) => void;
 };
 
@@ -28,20 +27,15 @@ export function FormSheetRoot(props: PageProps): ReactElement | null {
 
 function SheetBody(props: PageProps & { sheet: FormSheetProps }): ReactElement {
   return props.sheet.headerTitle ? (
-    <View className="flex-1 bg-card" style={{ paddingTop: props.headerInset }}>
-      {props.sheet.children}
-    </View>
+    <View className="flex-1 bg-card">{props.sheet.children}</View>
   ) : (
     <BottomSheetContent {...props.sheet} {...props} fit={false} />
   );
 }
 
-export function FormSheetChoices(props: PageProps): ReactElement | null {
+// A page's content is its own list, which keeps itself below a transparent header.
+export function FormSheetChoices(): ReactElement | null {
   const page = useFormSheetState()?.page;
 
-  return page ? (
-    <View className="flex-1 bg-card" style={{ paddingTop: props.headerInset }}>
-      {page.content}
-    </View>
-  ) : null;
+  return page ? <View className="flex-1 bg-card">{page.content}</View> : null;
 }
