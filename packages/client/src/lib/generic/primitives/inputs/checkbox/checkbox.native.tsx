@@ -6,16 +6,27 @@ import { Host } from '#primitives/native/host';
 import {
   AppleCheckboxRow,
   CheckMark,
-  type CheckboxRowProps,
+  stockCheckboxSemantics as appleSemantics,
 } from './checkbox-apple-row';
-import { MaterialCheckboxRow, MaterialMark } from './checkbox-material-row';
-import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
+import {
+  MaterialCheckboxRow,
+  MaterialMark,
+  stockCheckboxSemantics as materialSemantics,
+} from './checkbox-material-row';
+import type {
+  CheckboxIndicatorProps,
+  CheckboxProps,
+  CheckboxRowProps,
+} from './checkbox-props';
 import { CheckboxFooter, useCheckboxState } from './checkbox-state';
 
 export type { CheckboxProps } from './checkbox-props';
 
-const CheckboxRow =
-  Platform.OS === 'ios' ? AppleCheckboxRow : MaterialCheckboxRow;
+const isIos = Platform.OS === 'ios';
+
+const CheckboxRow = isIos ? AppleCheckboxRow : MaterialCheckboxRow;
+
+const stockSemantics = isIos ? appleSemantics : materialSemantics;
 
 export function Checkbox(props: CheckboxProps): React.JSX.Element {
   const state = useCheckboxState(props);
@@ -23,7 +34,7 @@ export function Checkbox(props: CheckboxProps): React.JSX.Element {
   return (
     <View className="gap-2">
       {props.selection === 'single' ? (
-        <RadioRow {...props} state={state} />
+        <SingleChoiceRow {...props} state={state} />
       ) : (
         <StockRow {...props} state={state} />
       )}
@@ -32,12 +43,12 @@ export function Checkbox(props: CheckboxProps): React.JSX.Element {
   );
 }
 
-// Single choice keeps Argo's radio row; the stock Checkbox has no radio semantics.
-function RadioRow(props: CheckboxRowProps): React.JSX.Element {
+// Single choice keeps Argo's row; the stock Checkbox has no radio semantics.
+function SingleChoiceRow(props: CheckboxRowProps): React.JSX.Element {
   return (
     <View className={surfaceClass(props)}>
       <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-        <CheckboxRow {...props} state={props.state} />
+        <CheckboxRow {...props} />
       </Host>
     </View>
   );
@@ -52,6 +63,7 @@ function StockRow(props: CheckboxRowProps): React.JSX.Element {
         value={props.value}
         disabled={props.disabled}
         onValueChange={props.state.toggle}
+        modifiers={stockSemantics(props)}
       />
     </Host>
   );

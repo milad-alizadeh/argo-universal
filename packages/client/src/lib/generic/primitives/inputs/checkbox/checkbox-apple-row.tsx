@@ -3,10 +3,7 @@ import * as Swift from '@expo/ui/swift-ui/modifiers';
 import { rectangularHitArea } from '#primitives/native/native-modifiers';
 import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import { NativeSymbol } from '../../../symbols/native-symbol';
-import type { CheckboxProps } from './checkbox-props';
-import type { CheckboxState } from './checkbox-state';
-
-export type CheckboxRowProps = CheckboxProps & { state: CheckboxState };
+import type { CheckboxProps, CheckboxRowProps } from './checkbox-props';
 
 type Modifiers = NonNullable<React.ComponentProps<typeof Row>['modifiers']>;
 
@@ -87,4 +84,9 @@ function rowTraits(
   return Swift.accessibilityAddTraits(
     props.value ? ['isButton', 'isSelected'] : ['isButton'],
   );
+}
+
+// The stock Checkbox keeps its own name, value and traits; only the hint or error text is added.
+export function stockCheckboxSemantics(props: CheckboxRowProps): Modifiers {
+  return [Swift.accessibilityHint(props.state.description ?? '')];
 }

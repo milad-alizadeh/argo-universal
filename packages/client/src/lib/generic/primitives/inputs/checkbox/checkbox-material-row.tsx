@@ -1,13 +1,14 @@
 import { Row, Text, Checkbox as UniversalCheckbox } from '@expo/ui';
 import * as Compose from '@expo/ui/jetpack-compose/modifiers';
 import { useUniversalTextStyle } from '#primitives/native/native-typography';
-import type { CheckboxRowProps } from './checkbox-apple-row';
-import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
+import type {
+  CheckboxIndicatorProps,
+  CheckboxProps,
+  CheckboxRowProps,
+} from './checkbox-props';
 import { RadioMark } from './checkbox-radio';
 
 type Modifiers = NonNullable<React.ComponentProps<typeof Row>['modifiers']>;
-
-type MarkProps = CheckboxIndicatorProps & { onToggle?: () => void };
 
 const rowHeight = 64;
 
@@ -36,9 +37,9 @@ export function MaterialCheckboxRow(
     <Row
       alignment="center"
       spacing={props.variant === 'option' ? optionGap : rowGap}
-      modifiers={[...rowSize(props), ...rowToggle(props), ...rowPadding(props)]}
+      modifiers={[...rowSize(props), ...rowPress(props), ...rowPadding(props)]}
     >
-      <MaterialMark {...props} onToggle={props.state.toggle} />
+      <MaterialMark {...props} />
       <RowLabel {...props} />
     </Row>
   );
@@ -73,21 +74,30 @@ function rowPadding(props: CheckboxProps): Modifiers {
   return [Compose.padding(inset, verticalInset, inset, verticalInset)];
 }
 
-function rowToggle(props: CheckboxRowProps): Modifiers {
+// Android reads one description per node, so the label and the hint or error share it.
+function describedBy(props: CheckboxRowProps): Modifiers[number] {
   const description = [props.label, props.state.description].filter(Boolean);
 
-  const semantics = Compose.semantics({
-    contentDescription: description.join('. '),
-  });
-
-  return props.disabled ? [semantics] : [semantics, rowPress(props)];
+  return Compose.semantics({ contentDescription: description.join('. ') });
 }
 
-function rowPress(props: CheckboxRowProps): Modifiers[number] {
-  return Compose.selectable(props.value, props.state.toggle, 'radioButton');
+function rowPress(props: CheckboxRowProps): Modifiers {
+  const semantics = describedBy(props);
+
+  if (props.disabled) return [semantics];
+
+  return [
+    semantics,
+    Compose.selectable(props.value, props.state.toggle, 'radioButton'),
+  ];
 }
 
-export function MaterialMark(props: MarkProps): React.JSX.Element {
+// The stock Checkbox keeps its own role and state; only the description is replaced.
+export function stockCheckboxSemantics(props: CheckboxRowProps): Modifiers {
+  return [describedBy(props)];
+}
+
+export function MaterialMark(props: CheckboxIndicatorProps): React.JSX.Element {
   if (props.selection !== 'single') return <CheckboxMark {...props} />;
 
   return (
@@ -99,16 +109,19 @@ export function MaterialMark(props: MarkProps): React.JSX.Element {
   );
 }
 
-function CheckboxMark(props: MarkProps): React.JSX.Element {
+function CheckboxMark(props: CheckboxIndicatorProps): React.JSX.Element {
   return (
     <UniversalCheckbox
       value={props.value}
-      onValueChange={() => props.onToggle?.()}
+      onValueChange={decorative}
       disabled={props.disabled}
       modifiers={markSize(props)}
     />
   );
 }
+
+// A mark only shows the state; the row or the caller owns the press.
+function decorative(): void {}
 
 function markSize(props: CheckboxIndicatorProps): Modifiers {
   return props.variant === 'option'
