@@ -1,12 +1,11 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { HeaderButton } from '#lib/product/header-button';
-import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { PageHeader } from '#lib/product/page-header';
 import { useWide } from '../../../lib/generic/use-wide/use-wide';
 import { SessionHeaderActions } from './session-header-actions';
 import { SessionHeaderTitle } from './session-header-meta';
 import type { SessionHeaderProps } from './session-header-props';
+import { PhoneSessionHeader } from './session-phone-header';
 import type { SessionPullRequest } from './session-pull-request';
 
 export type {
@@ -30,21 +29,6 @@ function useShownPullRequest(
     pullRequests.at(0);
 
   return [shown, setPicked];
-}
-
-const phoneHeaderItems = [
-  // Changed files and the Session menu get their actions in later issues.
-  <HeaderButton
-    key="changes"
-    icon="pull-request"
-    paired
-    accessibilityLabel="Changes"
-  />,
-  <HeaderButton key="more" icon="more" paired accessibilityLabel="More" />,
-];
-
-function PhoneSessionHeader({ title }: { title: string }): React.JSX.Element {
-  return <ScreenHeader title={title} right={phoneHeaderItems} />;
 }
 
 interface WideSessionHeaderProps extends SessionHeaderProps {

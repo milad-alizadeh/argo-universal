@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 export interface SearchQueryProps {
   // Names the search and shows as the placeholder, such as "Search Agents".
@@ -13,21 +13,3 @@ export type SearchFieldProps = SearchQueryProps & {
   title: ReactNode;
   actions?: ReactNode;
 };
-
-// The search an app bar opens: its label names it and is the open field's placeholder.
-export type AppBarSearchQuery = Pick<
-  SearchQueryProps,
-  'label' | 'onChangeText'
->;
-
-// The open search fills the native app bar's own slots: Back in the navigation icon's, the field in the title's, Clear last.
-export interface AppBarSearch {
-  open: boolean;
-  openSearch: () => void;
-  // Clears the query and gives the bar back.
-  close: () => void;
-  // The focused field, for the title's place; null while closed.
-  field: ReactElement | null;
-  // Empties the field; set while the open search has text.
-  clear?: () => void;
-}

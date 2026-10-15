@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Badge } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
@@ -15,7 +16,6 @@ import {
   AgentEnablement,
   AgentManagementFailure,
 } from '../agent-management/agent-management';
-import { PhoneTitle } from '../phone-title';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
 import { AboutSection, AgentStatusSection } from './agent-detail-sections';

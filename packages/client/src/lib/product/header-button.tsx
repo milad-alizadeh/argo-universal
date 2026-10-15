@@ -7,7 +7,6 @@ import {
   IconButton,
   type IconButtonProps,
 } from '#primitives/buttons/icon-button';
-import { narrowPairs } from './header-button-pairing';
 
 export interface HeaderButtonProps extends Pick<
   IconButtonProps,
@@ -16,7 +15,7 @@ export interface HeaderButtonProps extends Pick<
   onPress?: () => void;
   icon: IconName;
   accessibilityLabel: string;
-  // Paired trailing items are 32pt wide, except on Android; a lone item fills its 44pt slot.
+  // Paired trailing items are 32pt wide; a lone item fills its 44pt slot.
   paired?: boolean;
   // A dot on the icon: Sessions need attention, or a filter other than the default is set.
   dot?: 'attention' | 'filter';
@@ -56,12 +55,10 @@ const dotColors = {
   filter: 'bg-foreground',
 } satisfies Record<NonNullable<HeaderButtonProps['dot']>, string>;
 
-const pairedFit = narrowPairs ? headerButtonFits.narrow : headerButtonFits.slot;
-
 function headerButtonFit(paired: boolean): HeaderButtonFit {
   if (hasLiquidGlass) return headerButtonFits.glass;
 
-  return paired ? pairedFit : headerButtonFits.slot;
+  return paired ? headerButtonFits.narrow : headerButtonFits.slot;
 }
 
 // The header fit replaces IconButton's touch minimum, border and focus outline with the header's own.

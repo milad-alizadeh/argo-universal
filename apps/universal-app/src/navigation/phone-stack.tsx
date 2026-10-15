@@ -4,7 +4,7 @@ import { useHeaderHeight } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
 import { useHeaderTitleOptions } from './header-title';
-import { NativeScreenHeader } from './native-screen-header';
+import { WebScreenHeader } from './web-screen-header';
 
 // Native header options every phone stack shares: one line, no hairline border.
 const screenOptions = {
@@ -28,7 +28,7 @@ function useScreenOptions(): ComponentProps<typeof Stack>['screenOptions'] {
 export function PhoneStack({ children }: PropsWithChildren): React.JSX.Element {
   return (
     <ScreenHeaderProvider
-      header={NativeScreenHeader}
+      header={WebScreenHeader}
       useHeaderCover={useGlassHeaderCover}
     >
       <Stack screenOptions={useScreenOptions()}>{children}</Stack>

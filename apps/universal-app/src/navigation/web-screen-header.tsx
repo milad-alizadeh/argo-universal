@@ -1,8 +1,7 @@
 import { HeaderSearchRow, type ScreenHeaderProps } from '@repo/client';
 import { Stack, type NativeStackNavigationOptions } from 'expo-router';
 import type * as React from 'react';
-import { rightItems } from './header-right-items';
-import { screenHeaderOptions } from './screen-header-options';
+import { View } from 'react-native';
 
 // The web's JS header takes these through, though native-stack's types leave them out.
 const searchRowLayout = {
@@ -10,13 +9,18 @@ const searchRowLayout = {
   headerRightContainerStyle: { flexGrow: 0 },
 };
 
-// With search, the title row is the search row: Search, last, morphs into a field over the whole row.
-export function NativeScreenHeader(
-  header: ScreenHeaderProps,
-): React.JSX.Element {
+// A narrow web window's header row; phones declare their native header in each screen. With search, the title row is the search row: Search, last, morphs into a field over the whole row.
+export function WebScreenHeader(header: ScreenHeaderProps): React.JSX.Element {
+  const { title, left } = header;
+
   return (
     <Stack.Screen
-      options={{ ...screenHeaderOptions(header), ...titleRow(header) }}
+      options={{
+        headerShown: true,
+        title,
+        headerLeft: left ? () => left : undefined,
+        ...titleRow(header),
+      }}
     />
   );
 }
@@ -33,5 +37,17 @@ function titleRow({
       <HeaderSearchRow title={title} right={right} search={search} />
     ),
     ...searchRowLayout,
+  };
+}
+
+function rightItems(
+  right: NonNullable<ScreenHeaderProps['right']>,
+): NativeStackNavigationOptions {
+  if (!right.length) return {};
+
+  return {
+    headerRight: (): React.JSX.Element => (
+      <View className="flex-row gap-1">{right}</View>
+    ),
   };
 }

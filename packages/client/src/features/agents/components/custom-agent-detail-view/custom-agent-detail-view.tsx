@@ -2,6 +2,7 @@ import type { CustomAgentDefinition } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { PhoneTitle } from '#lib/product/navigation/phone-title';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Icon } from '#primitives/display/icon';
 import { GroupedList } from '#primitives/lists/grouped-list';
@@ -17,7 +18,6 @@ import { AgentRemoval } from '../agent-management/agent-removal';
 import { AgentPlaceholder } from '../agent-placeholder';
 import { CustomAgentForm } from '../custom-agent-form/custom-agent-form';
 import { LaunchSections } from '../custom-agent-launch';
-import { PhoneTitle } from '../phone-title';
 import type { CustomAgentCheck } from './custom-agent-status';
 import { ReadinessChip, ReadinessSection } from './custom-agent-status';
 
