@@ -4,7 +4,6 @@ import {
   FieldList,
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
-import type { DockedSearchQuery } from '#primitives/inputs/search-field';
 import {
   offeredAgents,
   platformName,
@@ -17,7 +16,6 @@ import {
 } from '../../state/agent-status';
 import type { CatalogLoad } from '../../state/catalog-sync';
 import { agentRows } from '../agent-list-item/agent-list-item';
-import { searchLabel } from '../agents-toolbar';
 import {
   catalogEmptySection,
   catalogLoadingSection,
@@ -29,7 +27,6 @@ export type AgentCatalogProps = {
   installed: readonly AgentRowEntry[];
   filter: AgentsFilter;
   search: string;
-  onSearch: (search: string) => void;
   onOpenAgent: (agentId: string) => void;
 };
 
@@ -45,21 +42,9 @@ export const agentsCatalogTestId = 'agents-catalog';
  */
 export function AgentCatalog(props: AgentCatalogProps): React.JSX.Element {
   return (
-    <FieldList
-      testID={agentsCatalogTestId}
-      search={catalogSearch(props)}
-      sections={catalogSections(props)}
-    />
+    <FieldList testID={agentsCatalogTestId} sections={catalogSections(props)} />
   );
 }
-
-// The Agents page is pushed from Settings, so a back button leads its header.
-const catalogSearch = (props: AgentCatalogProps): DockedSearchQuery => ({
-  label: searchLabel,
-  value: props.search,
-  onChangeText: props.onSearch,
-  leading: 'back',
-});
 
 /*
  * Until the registry's Agents arrive, or while a failed load waits to retry, the installed

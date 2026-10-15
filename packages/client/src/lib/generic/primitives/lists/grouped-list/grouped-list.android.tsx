@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FieldLayout } from '#primitives/fields/field-layout';
-import { DockedSearchFieldContent } from '#primitives/inputs/search-field';
 import { Host } from '#primitives/native/host';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
@@ -63,7 +62,7 @@ function useOverflowScroll(
   };
 }
 
-// The sections in one Compose column, the search first when there is one.
+// The sections in one Compose column.
 function SectionsColumn(props: GroupedListProps): React.JSX.Element {
   const modifiers = useColumnModifiers(props.variant);
 
@@ -72,7 +71,6 @@ function SectionsColumn(props: GroupedListProps): React.JSX.Element {
       verticalArrangement={{ spacedBy: sectionGap }}
       modifiers={modifiers}
     >
-      {props.search && <DockedSearchFieldContent {...props.search} />}
       {props.children}
     </Column>
   );

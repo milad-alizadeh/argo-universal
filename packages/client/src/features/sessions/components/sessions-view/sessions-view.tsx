@@ -23,7 +23,7 @@ export interface SessionsViewProps {
   agents: AgentsListOutput;
   sessions: SessionInfo[];
   query: string;
-  // A phone's search at the top of the list sets it; iOS's header and a wide window's title row set it themselves.
+  // The phone's header search and a wide window's title row set it.
   onQueryChange: (query: string) => void;
   archived: boolean;
   selectedSessionId?: string;

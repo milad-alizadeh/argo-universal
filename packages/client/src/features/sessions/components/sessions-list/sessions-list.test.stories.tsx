@@ -62,6 +62,27 @@ export const ProjectActions: Story = {
   },
 };
 
+export const FlatSearchResults: Story = {
+  args: { query: 'a', flat: true },
+  play: async ({ canvas }) => {
+    const [firstSession] = sessionsListProps.sessions;
+
+    if (!firstSession) throw new Error('Missing Session mock');
+
+    const [firstRow] = await canvas.findAllByText(firstSession.title);
+    await expect(firstRow).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: exampleProjectName }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('button', { name: /^New Session in / }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.getAllByText(/^(now|\d+[mhdw])$/).length,
+    ).toBeGreaterThan(0);
+  },
+};
+
 export const ProjectActionsDark: Story = {
   ...ProjectActions,
   globals: { mode: 'dark' },

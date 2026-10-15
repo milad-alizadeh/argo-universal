@@ -20,18 +20,18 @@ function useGlassHeaderCover(): number {
   return hasLiquidGlass ? height : 0;
 }
 
+function useScreenOptions(): ComponentProps<typeof Stack>['screenOptions'] {
+  return { ...screenOptions, ...useHeaderTitleOptions() };
+}
+
 // A phone section's native stack; its screens set their header through ScreenHeader.
 export function PhoneStack({ children }: PropsWithChildren): React.JSX.Element {
-  const titleOptions = useHeaderTitleOptions();
-
   return (
     <ScreenHeaderProvider
       header={NativeScreenHeader}
       useHeaderCover={useGlassHeaderCover}
     >
-      <Stack screenOptions={{ ...screenOptions, ...titleOptions }}>
-        {children}
-      </Stack>
+      <Stack screenOptions={useScreenOptions()}>{children}</Stack>
     </ScreenHeaderProvider>
   );
 }

@@ -1,17 +1,61 @@
-import type { ScreenHeaderProps } from '@repo/client';
-import { Stack } from 'expo-router';
+import {
+  HeaderButton,
+  type ScreenHeaderProps,
+  useAppBarSearch,
+} from '@repo/client';
+import { Stack, type NativeStackNavigationOptions } from 'expo-router';
 import type * as React from 'react';
+import type { ReactElement } from 'react';
 import { rightItems } from './header-right-items';
 import { screenHeaderOptions } from './screen-header-options';
 
-// Android keeps the toolbar to its title and items; a list draws its own search bar at its top, scrolling with it.
-export function NativeScreenHeader({
-  right = [],
-  ...header
-}: ScreenHeaderProps): React.JSX.Element {
+type Search = ScreenHeaderProps['search'];
+
+// Android's top app bar: the title, its items, then Search last, which opens a full-width search in the bar's place.
+export function NativeScreenHeader(
+  header: ScreenHeaderProps,
+): React.JSX.Element {
+  const appBar = useAppBarSearch(appBarQuery(header.search));
+
+  return <Stack.Screen options={appBarOptions(header, appBar)} />;
+}
+
+function appBarOptions(
+  { right = [], search, ...header }: ScreenHeaderProps,
+  appBar: ReturnType<typeof useAppBarSearch>,
+): NativeStackNavigationOptions {
+  const items = search
+    ? [...right, searchButton(search, appBar.openSearch)]
+    : right;
+
+  return {
+    ...screenHeaderOptions(header),
+    ...rightItems(items),
+    ...openBar(appBar.bar),
+  };
+}
+
+function appBarQuery(search: Search): Parameters<typeof useAppBarSearch>[0] {
   return (
-    <Stack.Screen
-      options={{ ...screenHeaderOptions(header), ...rightItems(right) }}
+    search && { label: search.placeholder, onChangeText: search.onChangeText }
+  );
+}
+
+function searchButton(
+  search: NonNullable<Search>,
+  onPress: () => void,
+): ReactElement {
+  return (
+    <HeaderButton
+      key="search"
+      icon="search"
+      accessibilityLabel={search.placeholder}
+      onPress={onPress}
     />
   );
+}
+
+// Options merge, so closing sets the header back to the native bar rather than leaving the open search.
+function openBar(bar: ReactElement | null): NativeStackNavigationOptions {
+  return { header: bar ? (): ReactElement => bar : undefined };
 }
