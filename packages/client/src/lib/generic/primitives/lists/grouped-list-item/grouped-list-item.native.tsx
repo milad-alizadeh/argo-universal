@@ -4,13 +4,9 @@ import {
   accessibilityAddTraits,
   buttonStyle,
   disabled,
-  listRowBackground,
-  listRowInsets,
-  listRowSeparator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { useSidebarList } from '#primitives/fields/field-layout';
 import { useWide } from '../../../use-wide/use-wide';
 import { rowAccessibilityModifiers } from './grouped-list-item-accessibility';
 import { RowContent } from './grouped-list-item-native-row';
@@ -25,8 +21,6 @@ type Modifiers = NonNullable<ColumnProps['modifiers']>;
 
 const ios = Platform.OS === 'ios';
 
-const inset = 16;
-
 export function GroupedListItem(
   props: GroupedListItemProps,
 ): React.JSX.Element {
@@ -36,7 +30,7 @@ export function GroupedListItem(
 }
 
 function NativeRow(props: GroupedListItemProps): React.JSX.Element {
-  const modifiers = rowModifiers(props, useSidebarList());
+  const modifiers = rowModifiers(props);
 
   return ios && props.onPress ? (
     <PressableRow press={props.onPress} modifiers={modifiers}>
@@ -99,17 +93,10 @@ function PressableRow(props: PressableRowProps): React.JSX.Element {
   );
 }
 
-function rowModifiers(
-  props: GroupedListItemProps,
-  sidebar: boolean,
-): Modifiers {
+function rowModifiers(props: GroupedListItemProps): Modifiers {
   if (!ios) return [fillMaxWidth(), ...rowSemantics(props)];
 
   return [
-    ...(sidebar
-      ? [listRowBackground('transparent'), listRowSeparator('hidden')]
-      : []),
-    listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     ...rowAccessibilityModifiers(props),
     disabled(!!props.disabled),
   ];

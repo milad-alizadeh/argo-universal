@@ -1,10 +1,6 @@
 // Split from Android: SwiftUI's Form scrolls the sections here, while Android scrolls them in React Native for its sheets.
 import { FieldGroup } from '@expo/ui';
 import { List } from '@expo/ui/swift-ui';
-import {
-  listStyle,
-  scrollContentBackground,
-} from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
@@ -36,9 +32,7 @@ function PhoneFields({
 }: GroupedListProps): React.JSX.Element {
   if (variant === 'sidebar')
     return (
-      <List modifiers={[listStyle('plain'), scrollContentBackground('hidden')]}>
-        {children}
-      </List>
+<List>{children}</List>
     );
 
   return <FieldGroup>{children}</FieldGroup>;
