@@ -2,7 +2,6 @@ import {
   AppProviders,
   PortalHost,
   FormSheetProvider,
-  type LeaveGuard,
   NavigationProvider,
   type RenderSymbolImage,
   SymbolImagesProvider,
@@ -11,7 +10,7 @@ import {
 } from '@repo/client';
 import '../../global.css';
 import { registerDevMenuItems } from 'expo-dev-client';
-import { router, Stack, useNavigation } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
 import type * as React from 'react';
@@ -22,10 +21,6 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
 import { formSheetRoutes } from '@/navigation/form-sheet';
-import {
-  ShellPlaceTracker,
-  useShellNavigation,
-} from '@/navigation/use-shell-navigate';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -75,20 +70,6 @@ const sheetOptions = {
   sheetGrabberVisible: true,
 };
 
-// The page asks to hold its own removal; the router's beforeRemove lets it, and carries on when told to.
-const useLeaveGuard: LeaveGuard = (active, onBlocked) => {
-  const navigation = useNavigation();
-  useEffect(
-    () =>
-      navigation.addListener('beforeRemove', (event) => {
-        if (!active) return;
-        event.preventDefault();
-        onBlocked(() => navigation.dispatch(event.data.action));
-      }),
-    [navigation, active, onBlocked],
-  );
-};
-
 export default function RootLayout(): React.JSX.Element {
   return (
     // The phone drawer's gestures need this root.
@@ -120,13 +101,10 @@ function ThemedApp(): React.JSX.Element {
 }
 
 function RootNavigator(): React.JSX.Element {
-  const { navigate, onPlaceChange } = useShellNavigation();
-
   return (
-    <NavigationProvider navigate={navigate} leaveGuard={useLeaveGuard}>
+    <NavigationProvider>
       <FormSheetProvider routes={formSheetRoutes}>
         <RootStack />
-        <ShellPlaceTracker onPlaceChange={onPlaceChange} />
       </FormSheetProvider>
     </NavigationProvider>
   );
