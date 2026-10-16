@@ -6,7 +6,7 @@ import type {
   SessionPromptOutput,
 } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
-import { vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import { openFailure } from '../components/failure-messages.mocks';
 import { EmptySessionStore } from './empty-session-store';
 import type { EmptySessionPorts } from './empty-session-types';
@@ -101,6 +101,12 @@ export interface EmptySessionHarness {
   choose: (input?: SessionNewInput) => void;
   // The Local Session opens and its Feed reads its options.
   openLocal: (sessionId: string) => Promise<void>;
+  // The screen's send of the Composer's current draft, which Retry asks for on a New worktree.
+  sendDraft: Mock<() => void>;
+  // Retry, or a finished sign-in.
+  retry: () => void;
+  // The Connection reopens.
+  reconnect: () => void;
 }
 
 const noCalls = (): Calls => ({
@@ -127,6 +133,19 @@ async function openLocal(
   await settle();
 }
 
+// Retry with a spy for the screen's draft send, and the Connection reopening.
+function openAgainCauses(
+  store: EmptySessionStore,
+): Pick<EmptySessionHarness, 'sendDraft' | 'retry' | 'reconnect'> {
+  const sendDraft = vi.fn<() => void>();
+
+  return {
+    sendDraft,
+    retry: () => store.openAgain({ by: 'user', sendDraft }),
+    reconnect: () => store.openAgain({ by: 'connection' }),
+  };
+}
+
 // A started store over fake Server calls the test settles one by one.
 export function emptySessionHarness(): EmptySessionHarness {
   const calls = noCalls();
@@ -139,5 +158,6 @@ export function emptySessionHarness(): EmptySessionHarness {
     store,
     choose: (input) => store.choose({ input, connected: true }),
     openLocal: (sessionId) => openLocal(calls, store, sessionId),
+    ...openAgainCauses(store),
   };
 }

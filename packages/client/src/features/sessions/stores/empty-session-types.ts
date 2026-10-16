@@ -4,11 +4,19 @@ import type {
   SessionConfigOption,
   SessionNewInput,
   SessionNewOutput,
-  SessionOpenError,
   SessionPromptOutput,
 } from '@repo/contracts';
 import type { SavedChoices } from '#lib/product/session-configuration';
 import type { ConfigurationPicks } from '../state/session-option-choices';
+import type { OpenAttempt } from '../types/open-attempt';
+
+export const idleAttempt: OpenAttempt = { status: 'idle' };
+
+// Opening again keeps the failure on show until the open settles.
+export const openingAgain = (attempt: OpenAttempt): OpenAttempt =>
+  attempt.status === 'idle'
+    ? attempt
+    : { status: 'retrying', error: attempt.error };
 
 export type FirstPrompt = SessionNewInput['prompt'];
 
@@ -37,9 +45,8 @@ export const choiceDebounceMs = 300;
 export const promptShowTimeoutMs = 3_000;
 
 export interface EmptySessionState {
-  error: SessionOpenError | undefined;
   // Retry or a second Send opens again; the failure stays until it settles.
-  retrying: boolean;
+  attempt: OpenAttempt;
   pendingPrompt: boolean;
   // The Session the page reads options and the first prompt from, until it hands it on.
   openSessionId: string | undefined;
@@ -49,8 +56,7 @@ export interface EmptySessionState {
 }
 
 const stateFields = [
-  'error',
-  'retrying',
+  'attempt',
   'pendingPrompt',
   'openSessionId',
   'opening',

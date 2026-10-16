@@ -1,11 +1,11 @@
 import type { SessionOpenError } from '@repo/contracts';
 import { describe, expect, it, vi } from 'vitest';
+import type { OpenAttempt } from '../types/open-attempt';
 import type { SessionCalloutProps } from '../types/session-callout';
 import {
   type OpenProblem,
   openCallout,
   openProblem,
-  type OpenState,
   signsIn,
   turnCallout,
 } from './session-callouts';
@@ -35,16 +35,16 @@ const turn = {
 } as const;
 
 describe('openProblem', () => {
-  it.each<[string, OpenState, OpenProblem | undefined]>([
-    ['nothing while the open is fine', { retrying: false }, undefined],
-    ['the failure', { retrying: false, error: signInError }, refused],
+  it.each<[string, OpenAttempt, OpenProblem | undefined]>([
+    ['nothing while the open is fine', { status: 'idle' }, undefined],
+    ['the failure', { status: 'failed', error: signInError }, refused],
     [
       'a running Retry over the failure',
-      { retrying: true, error: signInError },
+      { status: 'retrying', error: signInError },
       { type: 'retrying' },
     ],
-  ])('reads %s', (_, state, problem) => {
-    expect(openProblem(state)).toEqual(problem);
+  ])('reads %s', (_, attempt, problem) => {
+    expect(openProblem({ attempt })).toEqual(problem);
   });
 });
 

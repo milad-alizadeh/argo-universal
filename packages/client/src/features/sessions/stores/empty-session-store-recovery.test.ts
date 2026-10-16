@@ -36,7 +36,10 @@ describe('A Local first prompt that goes wrong', () => {
     await settle();
 
     expect(h.store.getState()).toMatchObject({
-      error: { type: 'failed', message: failure.message },
+      attempt: {
+        status: 'failed',
+        error: { type: 'failed', message: failure.message },
+      },
       pendingPrompt: false,
       handedOff: false,
     });

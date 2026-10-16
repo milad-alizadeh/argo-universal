@@ -53,8 +53,8 @@ export function useEmptySession(
   useChooseInStore(store, choices);
   const state = useSyncExternalStore(store.subscribe, store.getState);
   useResubscribeOnReconnect({
-    status: state.error === undefined ? 'idle' : 'error',
-    reset: () => store.retry(),
+    status: state.attempt.status === 'idle' ? 'idle' : 'error',
+    reset: () => store.openAgain({ by: 'connection' }),
   });
 
   return { store, ...state };

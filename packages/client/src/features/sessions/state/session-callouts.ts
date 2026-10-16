@@ -1,4 +1,4 @@
-import type { SessionOpenError } from '@repo/contracts';
+import type { OpenAttempt } from '../types/open-attempt';
 import type { SessionCalloutProps } from '../types/session-callout';
 import type { SessionProblem } from './session-problem';
 
@@ -9,19 +9,17 @@ type Problem<Type extends SessionProblem['type']> = Extract<
 
 export type OpenProblem = Problem<'retrying' | 'open'>;
 
-export interface OpenState {
-  error?: SessionOpenError;
-  retrying: boolean;
-}
-
 // New Session's open as a problem: a running Retry, or the failure it answers.
 export const openProblem = ({
-  error,
-  retrying,
-}: OpenState): OpenProblem | undefined => {
-  if (retrying) return { type: 'retrying' };
+  attempt,
+}: {
+  attempt: OpenAttempt;
+}): OpenProblem | undefined => {
+  if (attempt.status === 'retrying') return { type: 'retrying' };
 
-  return error && { type: 'open', error };
+  return attempt.status === 'failed'
+    ? { type: 'open', error: attempt.error }
+    : undefined;
 };
 
 export interface OpenAnswers {

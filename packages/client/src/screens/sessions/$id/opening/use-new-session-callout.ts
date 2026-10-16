@@ -20,26 +20,15 @@ const authSubject = ({
       }
     : undefined;
 
-type CalloutSources = Pick<
-  NewSessionWiring,
-  'data' | 'attachmentDraft' | 'sessionOpening'
->;
-
-const reopener =
-  ({ data, attachmentDraft, sessionOpening }: CalloutSources) =>
-  (): void => {
-    if (data.choices.inNewWorktree)
-      void sessionOpening.sendFirstPrompt(attachmentDraft.draft);
-    else sessionOpening.session.store.retry();
-  };
+type CalloutSources = Pick<NewSessionWiring, 'data' | 'sessionOpening'>;
 
 /*
  * New Session's sign-in and launch callouts. Retry, or a finished sign-in, opens again:
- * a Local checkout reopens its Empty Session, and a New worktree sends the returned prompt again.
+ * a Local checkout reopens its Empty Session, and a New worktree sends the current draft again.
  */
 export function useNewSessionCallout(sources: CalloutSources): SessionCallouts {
   const problem = openProblem(sources.sessionOpening.session);
-  const openAgain = reopener(sources);
+  const { openAgain } = sources.sessionOpening;
 
   const auth = useSessionAuth({
     subject: authSubject(sources.data),

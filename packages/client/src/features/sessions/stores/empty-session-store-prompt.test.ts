@@ -22,7 +22,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-// Retry or a sign-in opens it; either runs the store's retry.
+// Retry or a sign-in opens it again.
 const failOpen = async (): Promise<void> => {
   h.calls.open.at(-1)?.call.reject(failure);
   await settle();
@@ -53,7 +53,10 @@ describe('The first prompt on a Local checkout', () => {
 
     expect(h.calls.open).toHaveLength(1);
     expect(h.store.getState()).toMatchObject({
-      error: { type: 'failed', message: failure.message },
+      attempt: {
+        status: 'failed',
+        error: { type: 'failed', message: failure.message },
+      },
       pendingPrompt: true,
     });
   });
@@ -61,7 +64,7 @@ describe('The first prompt on a Local checkout', () => {
   it('keeps the Send held through a Retry that fails again', async () => {
     await sendAfterFailure();
 
-    h.store.retry();
+    h.retry();
     await failOpen();
 
     expect(h.store.getState()).toMatchObject({ pendingPrompt: true });
@@ -82,7 +85,7 @@ describe('The first prompt on a Local checkout', () => {
     async ({ arrange }) => {
       await arrange();
 
-      h.store.retry();
+      h.retry();
       await h.openLocal('session-1');
 
       expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);

@@ -22,32 +22,40 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+const failCreate = async (): Promise<void> => {
+  h.choose(worktree);
+  h.store.send(prompt);
+  h.calls.open[0]?.call.reject(failure);
+  await settle();
+};
+
 describe('A Local open that needs sign-in', () => {
   it('says so, for the sign-in callout', async () => {
     h.choose(local('agent-one'));
     h.calls.open[0]?.call.reject(authRequired);
     await settle();
 
-    expect(h.store.getState()).toMatchObject({
+    expect(h.store.getState().attempt).toEqual({
+      status: 'failed',
       error: { type: 'auth-required' },
-      retrying: false,
     });
   });
 });
 
 describe('Retry after a failed Local open', () => {
-  it('keeps the failure while the open runs again', async () => {
+  it('opens again and keeps the failure while the open runs', async () => {
     h.choose(local('agent-one'));
     h.calls.open[0]?.call.reject(failure);
     await settle();
 
-    h.store.retry();
+    h.retry();
     await settle();
 
     expect(h.calls.open).toHaveLength(2);
-    expect(h.store.getState()).toMatchObject({
+    expect(h.sendDraft).not.toHaveBeenCalled();
+    expect(h.store.getState().attempt).toEqual({
+      status: 'retrying',
       error: { type: 'failed', message: failure.message },
-      retrying: true,
     });
   });
 
@@ -56,13 +64,10 @@ describe('Retry after a failed Local open', () => {
     h.calls.open[0]?.call.reject(failure);
     await settle();
 
-    h.store.retry();
+    h.retry();
     await h.openLocal('session-1');
 
-    expect(h.store.getState()).toMatchObject({
-      error: undefined,
-      retrying: false,
-    });
+    expect(h.store.getState().attempt).toEqual({ status: 'idle' });
   });
 
   it('shows the new failure when the open fails again', async () => {
@@ -70,46 +75,67 @@ describe('Retry after a failed Local open', () => {
     h.calls.open[0]?.call.reject(failure);
     await settle();
 
-    h.store.retry();
+    h.retry();
     h.calls.open[1]?.call.reject(authRequired);
     await settle();
 
-    expect(h.store.getState()).toMatchObject({
+    expect(h.store.getState().attempt).toEqual({
+      status: 'failed',
       error: { type: 'auth-required' },
-      retrying: false,
     });
   });
 });
 
-describe('Sending a New worktree again after it failed to open', () => {
-  it('keeps the failure while the Session is created again', async () => {
-    h.choose(worktree);
-    h.store.send(prompt);
+describe('The Connection reopening after a failed Local open', () => {
+  it('opens again', async () => {
+    h.choose(local('agent-one'));
     h.calls.open[0]?.call.reject(failure);
     await settle();
+
+    h.reconnect();
+    await settle();
+
+    expect(h.calls.open).toHaveLength(2);
+    expect(h.store.getState().attempt).toEqual({
+      status: 'retrying',
+      error: { type: 'failed', message: failure.message },
+    });
+  });
+});
+
+describe('A New worktree that failed to open', () => {
+  it('keeps the failure while a second Send creates it again', async () => {
+    await failCreate();
 
     h.store.send(prompt);
 
     expect(h.calls.open).toHaveLength(2);
-    expect(h.store.getState()).toMatchObject({
+    expect(h.store.getState().attempt).toEqual({
+      status: 'retrying',
       error: { type: 'failed', message: failure.message },
-      retrying: true,
     });
   });
 
-  // Only Send creates a New worktree, so a retry, as on the Connection reopening, leaves its failure on show.
-  it('keeps the failure when a retry has nothing to open', async () => {
-    h.choose(worktree);
-    h.store.send(prompt);
-    h.calls.open[0]?.call.reject(failure);
+  it('sends the current draft again on Retry', async () => {
+    await failCreate();
+
+    h.retry();
+
+    expect(h.sendDraft).toHaveBeenCalledOnce();
+  });
+
+  // Only a Send creates a New worktree, so the Connection reopening sends nothing and leaves Retry on show.
+  it('keeps the failed attempt when the Connection reopens, with nothing to open', async () => {
+    await failCreate();
+
+    h.reconnect();
     await settle();
 
-    h.store.retry();
-
     expect(h.calls.open).toHaveLength(1);
-    expect(h.store.getState()).toMatchObject({
+    expect(h.sendDraft).not.toHaveBeenCalled();
+    expect(h.store.getState().attempt).toEqual({
+      status: 'failed',
       error: { type: 'failed', message: failure.message },
-      retrying: false,
     });
   });
 });
