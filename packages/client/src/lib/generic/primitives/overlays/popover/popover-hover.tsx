@@ -8,6 +8,7 @@ export interface Hover {
   enter: () => void;
   leave: () => void;
   promote: () => void;
+  dismiss: () => void;
   isPointer: () => boolean;
 }
 
@@ -21,8 +22,11 @@ type Intent = ReturnType<typeof useHoverIntent>;
 
 interface HoverIntent {
   isPointer: () => boolean;
+  isSuppressed: () => boolean;
   mark: () => void;
   promote: () => void;
+  suppress: () => void;
+  clearSuppression: () => void;
 }
 
 type Root = OpenState;
@@ -75,14 +79,23 @@ function useHover(): Hover {
 
 function useHoverIntent(): HoverIntent {
   const pointer = React.useRef(false);
+  const suppressed = React.useRef(false);
 
   return {
     isPointer: () => pointer.current,
+    isSuppressed: () => suppressed.current,
     mark: () => {
       pointer.current = true;
     },
     promote: () => {
       pointer.current = false;
+    },
+    suppress: () => {
+      pointer.current = false;
+      suppressed.current = true;
+    },
+    clearSuppression: () => {
+      suppressed.current = false;
     },
   };
 }
@@ -108,6 +121,10 @@ function cancelPending(pending: ReturnType<typeof setTimeout> | null): void {
 function hoverActions(context: Root, environment: HoverEnvironment): Hover {
   return {
     isPointer: environment.intent.isPointer,
+    dismiss: () => {
+      environment.intent.suppress();
+      environment.timer.cancel();
+    },
     promote: () => {
       environment.intent.promote();
       environment.timer.cancel();
@@ -118,6 +135,7 @@ function hoverActions(context: Root, environment: HoverEnvironment): Hover {
 }
 
 function enter(context: Root, environment: HoverEnvironment): void {
+  if (environment.intent.isSuppressed()) return;
   environment.timer.cancel();
   environment.parent?.enter();
 
@@ -127,6 +145,11 @@ function enter(context: Root, environment: HoverEnvironment): void {
 }
 
 function leave(environment: HoverEnvironment): void {
+  if (environment.intent.isSuppressed()) {
+    environment.intent.clearSuppression();
+
+    return;
+  }
   if (!environment.intent.isPointer()) return;
   environment.parent?.leave();
   environment.timer.schedule();

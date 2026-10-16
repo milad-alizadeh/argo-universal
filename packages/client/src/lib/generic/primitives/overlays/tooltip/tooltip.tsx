@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { cloneElement, type ReactElement, useContext, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import type { TriggerElement } from '#primitives/overlays/open-state';
@@ -6,16 +6,57 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  usePopoverClose,
 } from '#primitives/overlays/popover';
+import { PopoverHover } from '../popover/popover-hover';
 
 type TooltipProps = { label: string; children: TriggerElement };
 
 export function Tooltip(props: TooltipProps): ReactElement {
+  const [open, setOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
   return (
-    <Popover openOnHover>
-      <PopoverTrigger>{props.children}</PopoverTrigger>
+    <Popover open={open && !dismissed} onOpenChange={setOpen} openOnHover>
+      <TooltipTrigger
+        onDismiss={() => setDismissed(true)}
+        onPointerLeave={() => setDismissed(false)}
+      >
+        {props.children}
+      </TooltipTrigger>
       <TooltipContent label={props.label} />
     </Popover>
+  );
+}
+
+function TooltipTrigger({
+  children,
+  onDismiss,
+  onPointerLeave,
+}: {
+  children: TriggerElement;
+  onDismiss: () => void;
+  onPointerLeave: () => void;
+}): ReactElement {
+  const close = usePopoverClose();
+  const hover = useContext(PopoverHover);
+  if (!children) return <PopoverTrigger>{children}</PopoverTrigger>;
+
+  return (
+    <PopoverTrigger>
+      {cloneElement(children, {
+        onPress: (event) => {
+          children.props.onPress?.(event);
+          hover?.dismiss();
+          onDismiss();
+          setTimeout(close, 0);
+        },
+        onHoverOut: (event) => {
+          children.props.onHoverOut?.(event);
+          onPointerLeave();
+        },
+      })}
+    </PopoverTrigger>
   );
 }
 
