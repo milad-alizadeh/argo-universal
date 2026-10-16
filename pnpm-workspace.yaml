@@ -99,6 +99,7 @@ catalog:
   electron: 44.5.1
   # Expo SDK 57 ranges as create-expo-app writes them, so `expo install --check` agrees.
   expo: ~57.0.26
+  expo-build-properties: ~57.0.22
   expo-constants: ~57.0.20
   expo-dev-client: ~57.0.19
   expo-font: ~57.0.4

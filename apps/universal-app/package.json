@@ -27,6 +27,7 @@
     "@storybook/react-native": "catalog:",
     "burnt": "catalog:",
     "expo": "catalog:",
+    "expo-build-properties": "catalog:",
     "expo-clipboard": "catalog:",
     "expo-constants": "catalog:",
     "expo-dev-client": "catalog:",

@@ -10,7 +10,7 @@ const notIn =
   ({ input }: { input: unknown }): string =>
     `${String(input)} is not in ${catalogue}`;
 
-const sfSymbol = z.enum(sfSymbolNames, { error: notIn('SF Symbols 4.1') });
+const sfSymbol = z.enum(sfSymbolNames, { error: notIn('SF Symbols 6.0') });
 
 const materialSymbol = z.enum(materialSymbolNames, {
   error: notIn('Material Symbols'),

@@ -5,9 +5,9 @@ import { dirname, join } from 'node:path';
 /*
  * The App draws icons through expo-symbols, so the App writes the lists Plugin manifests are checked
  * against: Material from expo-symbols' glyph map, SF from the SF Symbols release the oldest supported
- * Apple system ships. iOS 16.4 has SF Symbols 4.2, but macOS 13.0, Electron 44's minimum, has only 4.1.
+ * Apple system ships: iOS 18.0 and macOS 15.0 both have SF Symbols 6.0 (ADR-0029).
  */
-const oldestSfRelease = '4_1';
+const oldestSfRelease = '6_0';
 
 const require = createRequire(import.meta.url);
 

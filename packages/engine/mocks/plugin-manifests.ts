@@ -55,13 +55,13 @@ export const rejectedManifests = [
   },
   {
     folder: 'newer-sf-symbol',
-    patch: { icon: { sf: '2h.circle' } },
-    reason: '2h.circle is not in SF Symbols 4.1',
+    patch: { icon: { sf: '1.calendar' } },
+    reason: '1.calendar is not in SF Symbols 6.0',
   },
   {
     folder: 'unknown-sf-symbol',
     patch: { icon: { sf: 'not.a.symbol', material: 'power' } },
-    reason: 'not.a.symbol is not in SF Symbols 4.1',
+    reason: 'not.a.symbol is not in SF Symbols 6.0',
   },
   {
     folder: 'unknown-material-symbol',
