@@ -1,6 +1,5 @@
 import { writeLog } from '@repo/machine-log';
 import type { AnyActorRef, InputFrom } from 'xstate';
-import type { SyncSupervisorInput } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
 import {
@@ -42,20 +41,6 @@ export const writerInput = ({
   blobsFolder: blobsFolderIn(context.home),
 });
 
-export const syncInput = ({
-  context,
-  self,
-}: {
-  context: Pick<EngineContext, 'database' | 'fetchAgents' | 'now' | 'createId'>;
-  self: Pick<AnyActorRef, 'system'>;
-}): SyncSupervisorInput => ({
-  database: openDatabaseOf(context),
-  writer: requireDatabaseWriter(self.system),
-  fetchAgents: context.fetchAgents,
-  now: context.now,
-  createId: context.createId,
-});
-
 type SessionsSource = {
   context: Pick<
     EngineContext,
@@ -89,10 +74,9 @@ export const cleanupInput = ({
   context,
   self,
 }: {
-  context: Pick<EngineContext, 'acpResources' | 'installations'>;
+  context: Pick<EngineContext, 'acpResources'>;
   self: Pick<AnyActorRef, 'system'>;
 }): CloseAcpResourcesInput => ({
   resources: context.acpResources,
-  installations: context.installations,
   sessions: findMachineActor(self.system, openSessionsId, openSessionsMachine),
 });

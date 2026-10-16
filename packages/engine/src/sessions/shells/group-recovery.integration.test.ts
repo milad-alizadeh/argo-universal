@@ -10,7 +10,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { processIsRunning } from '#mocks/shell-process';
 import { launchShellCommand } from '../../agents';
-import { OwnedProcessRecord } from '../../lib/owned-process-record';
+import { OwnedProcessRecord } from '../../agents/acp/shell-commands/shell-process-record';
 import { createShellOutput, shellOutputPath } from './files';
 
 type InterruptedShell = {

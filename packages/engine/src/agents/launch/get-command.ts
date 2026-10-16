@@ -1,10 +1,10 @@
 import type { ACPAgent } from '@repo/contracts';
-import { defaultInstallPorts } from '../install/default-ports';
 import { readRegistryCache, registrySupport } from '../registry/registry-cache';
 import { requestRegistry } from '../registry/registry-machine';
 import { readAgentServerEnv } from '../servers/agent-servers-sql';
 import { vendorEnvironment } from '../vendor';
 import { binaryCommand } from './binary';
+import { defaultInstallPorts } from './default-ports';
 import { npmCommand } from './npm';
 import type { CommandInput, RegistryCommand } from './types';
 

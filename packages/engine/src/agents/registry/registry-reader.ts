@@ -1,4 +1,4 @@
-import type { ACPAgent, ACPAgentRegistry } from '@repo/contracts';
+import type { ACPAgentRegistry } from '@repo/contracts';
 import {
   registryAgentSchema,
   registrySchema,
@@ -6,7 +6,6 @@ import {
 import { createRejectionCounter } from '@repo/machine-log';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import { z } from 'zod';
 import {
   type CompiledSchema,
   compileSchema,
@@ -16,7 +15,6 @@ type RegistryRejections = ReturnType<typeof createRejectionCounter>;
 
 export type RegistryReader = {
   parse(text: string): ACPAgentRegistry;
-  parseAgent(metadata: string | null): ACPAgent;
   count(): number;
   reject(message: string, cause?: unknown): never;
 };
@@ -34,36 +32,15 @@ const compiledRegistry = compileSchema<ACPAgentRegistry>(
   },
 );
 
-const compiledAgent = compileSchema<ACPAgent>(validator, registryAgentSchema, {
-  rejected: 'Rejected malformed stored Agent metadata',
-  invalid: (): string => 'Stored Agent metadata is malformed',
-});
-
-// Registry Agent metadata already decoded from a stored JSON document.
-export const RegistryAgent = z.custom<ACPAgent>((value) =>
-  compiledAgent.accepts(value),
-);
-
 export function createRegistryReader(): RegistryReader {
   const rejections = createRejectionCounter('Agent registry');
 
   return {
     parse: (text): ACPAgentRegistry => parseRegistry(text, rejections),
-    parseAgent: (metadata): ACPAgent =>
-      parseRegistryAgent(metadata, rejections),
     count: (): number => rejections.count(),
     reject: (message, cause): never =>
       rejectRegistryValue(rejections, message, cause),
   };
-}
-
-function parseRegistryAgent(
-  metadata: string | null,
-  rejections: RegistryRejections,
-): ACPAgent {
-  if (metadata === null) return compiledAgent.reader(rejections).parse(null);
-
-  return decodeRegistryJson(metadata, compiledAgent, rejections);
 }
 
 function parseRegistry(

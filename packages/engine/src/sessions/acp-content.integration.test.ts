@@ -9,7 +9,6 @@ import { uploadBlob, blobsFolderIn } from '../blob';
 const imageInitialization = {
   protocolVersion: 1,
   agentCapabilities: {
-    _meta: { authStatus: {} },
     promptCapabilities: { image: true },
     sessionCapabilities: { close: {} },
   },

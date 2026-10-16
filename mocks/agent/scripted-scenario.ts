@@ -17,7 +17,6 @@ export const scriptedInitialization: InitializeResponse = {
     promptCapabilities: { image: true },
     loadSession: true,
     sessionCapabilities: { close: {}, resume: {} },
-    _meta: { authStatus: {} },
   },
 };
 

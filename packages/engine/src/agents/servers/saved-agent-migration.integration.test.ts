@@ -20,7 +20,7 @@ const previousMigrations = async (directory: string): Promise<string> => {
   await mkdir(previous);
 
   for (const entry of await readdir(migrationsFolder)) {
-    if (entry.includes('saved_agents')) continue;
+    if (entry >= '20261016150532_saved_agents') continue;
     await symlink(join(migrationsFolder, entry), join(previous, entry), 'dir');
   }
 
@@ -88,7 +88,7 @@ const seedDefinitions = (database: Database): void => {
     session.run(id, id);
 };
 
-it('Migration B copies saved Registry choices, including disabled ones, and preserves Session identities', async () => {
+it('Migrations B and C copy saved Registry choices, including disabled ones, and preserve Session identities', async () => {
   const { database, home } = await oldDatabase();
   seedDefinitions(database);
   database.$client.close();
@@ -103,9 +103,11 @@ it('Migration B copies saved Registry choices, including disabled ones, and pres
   ]);
   expect(
     host.database.$client
-      .prepare("SELECT id FROM agents WHERE id = 'custom'")
-      .get(),
-  ).toBeUndefined();
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('agents', 'sync_jobs')",
+      )
+      .all(),
+  ).toEqual([]);
   expect(
     host.database.$client
       .prepare('SELECT id, agent FROM session ORDER BY id')
@@ -118,7 +120,7 @@ it('Migration B copies saved Registry choices, including disabled ones, and pres
   ]);
 });
 
-it('Migration B leaves a fresh Server with no installed Agents', async () => {
+it('Migrations B and C leave a fresh Server with no installed Agents', async () => {
   const host = await startEngineTestHost({ fixtureAgents: [] });
   expect(await host.caller.agents.servers()).toEqual([]);
   expect(

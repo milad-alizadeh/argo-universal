@@ -1,5 +1,26 @@
 import { z } from 'zod';
-import { AgentLoginTerminalInput, loginTerminalOutputLimit } from './login';
+
+export const authTerminalOutputLimit = 262_144;
+
+export const authTerminalInputLimit = 4096;
+
+const terminalColsLimit = 500;
+
+const terminalRowsLimit = 200;
+
+export const AgentAuthTerminalInput = z.discriminatedUnion('type', [
+  z.strictObject({
+    type: z.literal('write'),
+    text: z.string().min(1).max(authTerminalInputLimit),
+  }),
+  z.strictObject({
+    type: z.literal('resize'),
+    cols: z.number().int().min(2).max(terminalColsLimit),
+    rows: z.number().int().min(2).max(terminalRowsLimit),
+  }),
+]);
+
+export type AgentAuthTerminalInput = z.infer<typeof AgentAuthTerminalInput>;
 
 export const AgentAuthSubject = z.strictObject({
   agent: z.string().min(1),
@@ -41,12 +62,12 @@ export const AgentAuthChange = AgentAuthState.extend({
 export type AgentAuthChange = z.infer<typeof AgentAuthChange>;
 
 export const AgentAuthTerminalRead = AgentAuthSubject.extend({
-  cursor: z.number().int().min(0).max(loginTerminalOutputLimit),
+  cursor: z.number().int().min(0).max(authTerminalOutputLimit),
 });
 
 export const AgentAuthTerminalFrame = z.strictObject({
-  cursor: z.number().int().min(0).max(loginTerminalOutputLimit),
-  output: z.string().max(loginTerminalOutputLimit),
+  cursor: z.number().int().min(0).max(authTerminalOutputLimit),
+  output: z.string().max(authTerminalOutputLimit),
   closed: z.boolean().optional(),
   exitCode: z.number().int().optional(),
 });
@@ -54,7 +75,7 @@ export const AgentAuthTerminalFrame = z.strictObject({
 export type AgentAuthTerminalFrame = z.infer<typeof AgentAuthTerminalFrame>;
 
 export const AgentAuthTerminalWrite = AgentAuthSubject.extend({
-  input: AgentLoginTerminalInput,
+  input: AgentAuthTerminalInput,
 });
 
 export type AgentAuthSubject = z.infer<typeof AgentAuthSubject>;

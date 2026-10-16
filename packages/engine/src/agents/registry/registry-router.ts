@@ -19,7 +19,7 @@ export type RegistryDeps = {
   dropAgentConnections: (id: string) => void;
 };
 
-export const changeAgentServer = async (
+const changeAgentServer = async (
   deps: RegistryDeps,
   id: string,
   operation: 'add' | 'remove',
@@ -34,6 +34,9 @@ export const changeAgentServer = async (
 
 export const createRegistryRouter = routerFactory((deps: RegistryDeps) =>
   router({
+    remove: publicProcedure
+      .input(RegistryAgentId)
+      .mutation(({ input }) => changeAgentServer(deps, input.id, 'remove')),
     registry: publicProcedure.query(() =>
       readRegistry(deps.database, deps.registry.getSnapshot().context.error),
     ),

@@ -1,7 +1,6 @@
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { InstallPorts, InstallToolInput } from '../install/ports';
-import { InstallCleanupError } from '../install/processes/process-cleanup';
+import type { InstallPorts, InstallToolInput } from './ports';
 import type { PortedInput as ProbeInput } from './types';
 
 export const probeNode = async (
@@ -33,12 +32,8 @@ const runProbe = async (
 ): Promise<string> => {
   try {
     const version = await ports.runTool(tool);
-    await rm(tool.cwd, { recursive: true, force: true });
-
     return version;
-  } catch (error) {
-    if (!(error instanceof InstallCleanupError))
-      await rm(tool.cwd, { recursive: true, force: true });
-    throw error;
+  } finally {
+    await rm(tool.cwd, { recursive: true, force: true });
   }
 };

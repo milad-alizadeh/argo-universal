@@ -3,14 +3,14 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { jsonCodec } from '../../../lib/json-codec';
 import {
-  OwnedProcessRecord,
-  writeOwnedProcessRecord,
-} from '../../../lib/owned-process-record';
-import {
   processGroupMembers,
   type ProcessGroupMember,
-} from '../../../lib/process-group-members';
+} from './shell-group-members';
 import { releaseShellGroup } from './shell-process-group';
+import {
+  OwnedProcessRecord,
+  writeOwnedProcessRecord,
+} from './shell-process-record';
 
 const folderIn = (home: string): string => join(home, 'shell-processes');
 
