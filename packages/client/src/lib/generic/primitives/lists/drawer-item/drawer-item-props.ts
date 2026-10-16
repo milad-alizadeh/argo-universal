@@ -1,9 +1,9 @@
 import type { BadgeCount } from '../../../badge-count';
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 
 export interface DrawerItemProps {
   label: string;
-  icon: IconName;
+  icon: IconSymbol;
   selected: boolean;
   // A count that needs attention: none at zero, and over 99 it shows 99+.
   badge?: BadgeCount;

@@ -2,11 +2,11 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Icon, IconSpinner } from '#primitives/display/icon';
 import type { IconProps } from '#primitives/display/icon';
-import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 
 interface AdornmentProps {
-  icon?: IconName;
+  icon?: IconSymbol;
   loading?: boolean;
   textClass: string;
   role: IconRole;

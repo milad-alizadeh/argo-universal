@@ -1,7 +1,29 @@
 import { z } from 'zod';
-import { IconName } from './icons';
+import { materialSymbolNames } from './material-symbol-names.gen';
+import { sfSymbolNames } from './sf-symbol-names.gen';
 
 const PluginIdentifier = z.string().regex(/^[a-z][a-z0-9-]*$/);
+
+// The error names the input, never the whole list.
+const notIn =
+  (catalogue: string) =>
+  ({ input }: { input: unknown }): string =>
+    `${String(input)} is not in ${catalogue}`;
+
+// Official SF Symbols and Material Symbols names, one or both, for the platforms the Plugin targets (ADR-0025).
+export const PluginIcon = z
+  .strictObject({
+    sf: z.enum(sfSymbolNames, { error: notIn('SF Symbols') }).optional(),
+    material: z
+      .enum(materialSymbolNames, { error: notIn('Material Symbols') })
+      .optional(),
+  })
+  .refine(
+    (icon) => icon.sf !== undefined || icon.material !== undefined,
+    'icon needs an sf or a material name',
+  );
+
+export type PluginIcon = z.infer<typeof PluginIcon>;
 
 const PluginPath = z
   .string()
@@ -17,7 +39,7 @@ export const PluginManifest = z.strictObject({
     .regex(
       /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.(?:js|mjs|cjs)$/,
     ),
-  icon: IconName,
+  icon: PluginIcon,
   contributes: z.strictObject({
     nav: z
       .array(

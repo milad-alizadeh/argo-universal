@@ -4,6 +4,6 @@
   "version": "1.0.0",
   "engines": { "argo": ">=1.0.0 <2" },
   "main": "index.js",
-  "icon": "plug",
+  "icon": { "material": "power" },
   "contributes": { "nav": [{ "id": "hello", "title": "Hello", "path": "/" }] }
 }

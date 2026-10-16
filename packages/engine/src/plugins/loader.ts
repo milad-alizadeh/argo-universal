@@ -1,7 +1,7 @@
 import type { Dirent } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { PluginList } from '@repo/contracts';
+import type { PluginList } from '@repo/contracts/plugins';
 import { z } from 'zod';
 import { readManifest } from './manifest';
 

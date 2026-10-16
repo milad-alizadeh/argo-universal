@@ -49,7 +49,7 @@ const reportedScope = (
 
 export const acpTurnUsage = (
   usage: PromptResponse['usage'],
-  agent: InitializeResponse['agentInfo'],
+  agent?: InitializeResponse['agentInfo'],
 ): TurnUsage | undefined => {
   if (usage == null) return undefined;
 

@@ -61,6 +61,11 @@ import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
 } from './acp/prompt-types';
+import {
+  routeSubagentUpdate,
+  flushSubagentFeeds,
+  type SubagentFeeds,
+} from './acp/subagent-feeds';
 import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
 import { acpContextUsage, acpTurnUsage } from './acp/usage';
 import {
@@ -88,6 +93,7 @@ import {
   TurnInsertJob,
   TurnUpdateJob,
 } from './session-storage';
+import { crashedSubagentTurns } from './subagents/crash';
 
 const setConfigEvent = 'session.setConfigOption';
 
@@ -220,6 +226,7 @@ export interface SessionContext extends SessionData {
     { type: typeof setConfigEvent }
   > | null;
   feedEnded: boolean;
+  subagentFeeds: SubagentFeeds;
   // The database writer refused this Turn's Feed rows, so the Turn is cancelled and ends with a storage error.
   storageFailedTurn: boolean;
 }
@@ -290,7 +297,7 @@ const cancelledPermissions = (
 });
 
 // The Session's one child actor: its Feed, invoked under the id "feed".
-type SessionChildren = { feed: 'feed' };
+type SessionChildren = { feed: 'feed'; [id: `subagent:${string}`]: 'feed' };
 
 const sessionSetup = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
@@ -425,6 +432,44 @@ const sessionSetup = setup({
     feed: feedMachine,
   },
   actions: {
+    routeSubagentUpdate: assign(({ context, event, spawn, self }) => {
+      assertEvent(event, acpUpdateEvent);
+      const parentFeed = self.getSnapshot().children.feed;
+
+      const databaseWriter = findMachineActor(
+        self.system,
+        databaseWriterId,
+        writerMachine,
+      );
+
+      if (!parentFeed || !databaseWriter) return {};
+
+      return {
+        subagentFeeds: routeSubagentUpdate(
+          {
+            parent: context,
+            parentId: context.sessionId,
+            database: context.input.database,
+            now: context.input.now,
+            createId: context.input.createId,
+            writer: databaseWriter,
+            write: (job) => databaseWriter.send({ type: writeFeedEvent, job }),
+            storageFailing: () => self.send({ type: storageFailingEvent }),
+            parentFeed,
+            spawn: (input) =>
+              spawn('feed', {
+                id: `subagent:${input.sessionId}`,
+                systemId: `subagent-feed:${input.sessionId}`,
+                input,
+              }),
+          },
+          context.subagentFeeds,
+          event.notification,
+        ),
+      };
+    }),
+    flushSubagentFeeds: ({ context }) =>
+      flushSubagentFeeds(context.subagentFeeds),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
     queueAcpConfig: assign(({ context, event }) => {
@@ -824,6 +869,14 @@ const sessionSetup = setup({
               : undefined,
         };
 
+        for (const child of crashedSubagentTurns(
+          context.subagentFeeds.children,
+          ending,
+        )) {
+          enqueue.sendTo(child.feed, child.event);
+          enqueue.sendTo(writer, { type: writeFeedEvent, job: child.job });
+        }
+
         if (params?.duringTurn && context.activeTurnId)
           enqueue.assign({ turnEnding: { ...context.turnEnding, ...ending } });
         else
@@ -880,6 +933,12 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    isSubagentUpdate: ({ context, event }) =>
+      event.type === acpUpdateEvent &&
+      (event.notification.update.sessionUpdate === 'subagent_update' ||
+        event.notification.update.sessionUpdate === 'session_message' ||
+        event.notification.update.sessionUpdate === 'session_message_chunk' ||
+        context.subagentFeeds.children.has(event.notification.sessionId)),
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&
       event.notification.update.sessionUpdate === 'config_option_update',
@@ -1018,6 +1077,7 @@ export const sessionMachine = sessionSetup.createMachine({
     acpLease: null,
     pendingSubmission: null,
     feedEnded: false,
+    subagentFeeds: { children: new Map(), pendingMessages: [] },
     acpPrompt: null,
     acpResponseReaders: createAcpResponseReaders(
       createRejectionCounter(`ACP Session ${input.sessionId}`),
@@ -1157,6 +1217,7 @@ export const sessionMachine = sessionSetup.createMachine({
             'session.close': { target: '.closing' },
             'acp.failed': { target: '.closing', actions: 'recordCrash' },
             'acp.update': [
+              { guard: 'isSubagentUpdate', actions: 'routeSubagentUpdate' },
               { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
               {
                 guard: ({ event }): boolean =>
@@ -1423,8 +1484,12 @@ export const sessionMachine = sessionSetup.createMachine({
                 awaitingElicitation: {},
                 cancelling: {
                   on: {
-                    // The Turn already ended; only the Session's options still change.
+                    // The parent Turn ended; Subagents still own their active Turns.
                     'acp.update': [
+                      {
+                        guard: 'isSubagentUpdate',
+                        actions: 'routeSubagentUpdate',
+                      },
                       { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
                       {},
                     ],
@@ -1558,7 +1623,7 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             flushing: {
               on: { 'session.close': {} },
-              entry: 'flushFeed',
+              entry: ['flushSubagentFeeds', 'flushFeed'],
               after: {
                 feedFlushLimit: {
                   target: closedSessionTarget,

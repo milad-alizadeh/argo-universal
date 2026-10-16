@@ -19,13 +19,18 @@ export const shortPlan: Story = {
 
       if (width === layoutWidths.phone) {
         await expect(
-          within(document.body).getByRole('dialog', { name: 'Plan proposal' }),
+          within(document.body).getByRole('dialog', {
+            name: approvePlanQuestion,
+          }),
         ).toBeVisible();
-        await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
         await expect(
           canvas.queryByRole('button', { name: expandPlanLabel }),
         ).not.toBeInTheDocument();
-      } else await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
+      }
+
+      await expect(
+        canvas.getByRole('heading', { name: approvePlanQuestion }),
+      ).toBeVisible();
       await expect(canvas.getByText(/then verify its contents/)).toBeVisible();
       await expect(
         canvas.getByText('hello.txt', { exact: true }),
@@ -43,7 +48,9 @@ export const shortPlan: Story = {
       planId: args.proposal.planId,
       decision: 'approve',
     });
-    await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
+    await expect(
+      canvas.getByRole('heading', { name: approvePlanQuestion }),
+    ).toBeVisible();
     await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
   },
 };
@@ -56,7 +63,8 @@ export function longPlan(width: number): Story {
       await settleViewport(width);
 
       const scroll = canvas.getByRole('region', {
-        name: width === layoutWidths.phone ? 'Plan proposal' : documentLabel,
+        name:
+          width === layoutWidths.phone ? approvePlanQuestion : documentLabel,
       });
 
       await waitFor(() =>
