@@ -5,8 +5,11 @@ import {
   type SessionsFilter,
   searchSessionsLabel,
   sessionsFilterChoices,
+  sessionsLayoutChoices,
+  sessionsLayoutLabel,
 } from '#features/sessions';
 import { hasLiquidGlass } from '#lib/generic/native-header';
+import { iconSymbols } from '#lib/generic/symbols/icon-names';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import { toolbarIcon } from '../../lib/product/navigation/toolbar-icon';
@@ -55,13 +58,33 @@ const filterMenuItem = {
   separateBackground: true,
 };
 
-// Active or Archived, checked on the current one.
+// Active or Archived, then the Layout section's Regular or Compact; each checked on the current one. MenuAction.icon takes the option's SF Symbol, which UIMenu draws before the title, after the check.
 function filterMenu(filter: SessionsFilter): React.JSX.Element {
   return (
     <Stack.Toolbar.Menu {...filterMenuItem}>
-      {sessionsFilterChoices.map(({ value, label }) => (
-        <Stack.Toolbar.MenuAction key={value} {...choiceState(value, filter)}>
-          {label}
+      {sessionsFilterChoices.map((choice) => (
+        <Stack.Toolbar.MenuAction
+          key={choice.value}
+          {...choiceState(choice, filter)}
+        >
+          {choice.label}
+        </Stack.Toolbar.MenuAction>
+      ))}
+      {layoutMenu(filter)}
+    </Stack.Toolbar.Menu>
+  );
+}
+
+// An inline menu is a UIMenu section: a divider above it and its title as the heading.
+function layoutMenu(filter: SessionsFilter): React.JSX.Element {
+  return (
+    <Stack.Toolbar.Menu inline title={sessionsLayoutLabel}>
+      {sessionsLayoutChoices.map((choice) => (
+        <Stack.Toolbar.MenuAction
+          key={choice.value}
+          {...layoutState(choice, filter)}
+        >
+          {choice.label}
         </Stack.Toolbar.MenuAction>
       ))}
     </Stack.Toolbar.Menu>
@@ -72,12 +95,27 @@ type StackToolbarMenuActionProps = ComponentProps<
   typeof Stack.Toolbar.MenuAction
 >;
 
+type ChoiceState = Pick<
+  StackToolbarMenuActionProps,
+  'icon' | 'isOn' | 'onPress'
+>;
+
 const choiceState = (
-  value: (typeof sessionsFilterChoices)[number]['value'],
+  { value, icon }: (typeof sessionsFilterChoices)[number],
   { archived, onArchivedChange }: SessionsFilter,
-): Pick<StackToolbarMenuActionProps, 'isOn' | 'onPress'> => ({
+): ChoiceState => ({
+  icon: iconSymbols[icon].sf,
   isOn: (value === 'archived') === archived,
   onPress: () => onArchivedChange(value === 'archived'),
+});
+
+const layoutState = (
+  { value, icon }: (typeof sessionsLayoutChoices)[number],
+  { layout, onLayoutChange }: SessionsFilter,
+): ChoiceState => ({
+  icon: iconSymbols[icon].sf,
+  isOn: value === layout,
+  onPress: () => onLayoutChange(value),
 });
 
 function newSessionButton(onPress: () => void): React.JSX.Element {

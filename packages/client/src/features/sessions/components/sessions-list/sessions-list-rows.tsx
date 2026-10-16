@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { memo, useCallback } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import {
   ProjectHeading,
@@ -89,21 +88,25 @@ export function EmptySessionsList(
   );
 }
 
-type SessionListRowProps = Pick<
+export type SessionListRowProps = Pick<
   SessionRowProps,
-  'session' | 'logo' | 'selected' | 'trailing' | 'onSelect'
+  | 'session'
+  | 'logo'
+  | 'selected'
+  | 'trailing'
+  | 'layout'
+  | 'position'
+  | 'onSelect'
 >;
 
+// Each row is held in a container of its own, so the space between rows is the container's: Regular rows sit 8 apart; Compact rows sit 2 apart wide, and a phone's grouped rows space themselves.
 export const SessionListRow = memo(function SessionListRow(
   props: SessionListRowProps,
 ) {
   return (
     <View
       testID="session-row-surface"
-      className={cn(
-        'overflow-hidden bg-content wide:bg-transparent wide:pb-px',
-        props.selected && 'bg-muted wide:bg-transparent',
-      )}
+      className={props.layout === 'compact' ? 'wide:pb-0.5' : 'pb-2'}
     >
       <SessionRow {...props} />
     </View>

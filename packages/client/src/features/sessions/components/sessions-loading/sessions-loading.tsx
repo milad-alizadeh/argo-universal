@@ -70,10 +70,10 @@ function SkeletonSessionLines({ widths }: SkeletonRowProps): React.JSX.Element {
 
 function SkeletonSessionRow({ widths }: SkeletonRowProps): React.JSX.Element {
   return (
-    <View className="flex-row gap-2 px-2.5 py-3 wide:py-2">
+    <View className="flex-row gap-3 rounded-grouped bg-card px-4 py-3.5 wide:rounded-2xl wide:bg-transparent wide:py-2 wide:shadow-hairline">
       <SkeletonLine
-        slot="h-6 wide:h-5 w-4 items-center justify-center shrink-0"
-        bar="size-4 rounded-full bg-foreground/5"
+        slot="size-6 wide:size-5 items-center justify-center shrink-0"
+        bar="size-5 wide:size-4 rounded-full bg-foreground/5"
         testID="session-skeleton-icon"
       />
       <SkeletonSessionLines widths={widths} />
@@ -86,8 +86,8 @@ export function SessionsLoading(): React.JSX.Element {
     <View
       role="status"
       accessibilityLabel="Loading Sessions"
-      // Matches the list's content padding so the rows don't shift when Sessions load.
-      className="px-2.5 pt-5 wide:gap-0.5 wide:px-2"
+      // Matches the list's content padding and the rest rows, 8 apart, so nothing shifts when Sessions load.
+      className="gap-2 px-4 pt-5 wide:px-0 wide:pt-1.5"
     >
       <SkeletonProjectHeading />
       {skeletonRowWidths.map((widths, index) => (

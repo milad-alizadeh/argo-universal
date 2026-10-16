@@ -4,6 +4,7 @@ import type {
   SessionInfo,
 } from '@repo/contracts';
 import type { ReactElement } from 'react';
+import type { SessionsLayout } from '../../state/sessions-layout';
 
 export interface SessionsListProps {
   projects: ProjectsListOutput;
@@ -13,6 +14,8 @@ export interface SessionsListProps {
   // Results as one list with no Project headings, each row showing how long ago it was active.
   flat?: boolean;
   archived: boolean;
+  // Regular rows, or Compact one-line rows; Regular when unset.
+  layout?: SessionsLayout;
   selectedSessionId?: string;
   onSelect: (id: string) => void;
   onEndReached: () => void;

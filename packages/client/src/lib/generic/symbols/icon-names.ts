@@ -1,11 +1,13 @@
 import { fileSymbols } from './file-symbols';
 import { formatSymbols } from './format-symbols';
+import { listViewSymbols } from './list-view-symbols';
 import { statusSymbols } from './status-symbols';
 import type { SymbolSource } from './symbol-source';
 
 export const iconSymbols = {
   ...fileSymbols,
   ...formatSymbols,
+  ...listViewSymbols,
   ...statusSymbols,
   activity: { sf: 'waveform.path.ecg', material: 'monitor_heart' },
   add: { sf: 'plus', material: 'add' },
@@ -67,7 +69,6 @@ export const iconSymbols = {
   filters: { sf: 'slider.horizontal.3', material: 'tune' },
   fit: { sf: 'viewfinder', material: 'fit_screen' },
   flag: { sf: 'flag', material: 'flag' },
-  'flat-view': { sf: 'list.bullet', material: 'view_list' },
   goal: { sf: 'target', material: 'target' },
   guide: { sf: 'text.book.closed', material: 'import_contacts' },
   hand: { sf: 'hand.raised', material: 'front_hand' },
@@ -127,13 +128,11 @@ export const iconSymbols = {
   'speaker-off': { sf: 'speaker.slash', material: 'volume_off' },
   'state-machine': { sf: 'circle.hexagonpath', material: 'hub' },
   steer: { sf: 'arrow.turn.down.right', material: 'subdirectory_arrow_right' },
-  'structure-view': { sf: 'square.grid.2x2', material: 'grid_view' },
   terminal: { sf: 'terminal', material: 'terminal' },
   thinking: { sf: 'brain', material: 'neurology' },
   tool: { sf: 'wrench.adjustable', material: 'build' },
   tours: { sf: 'signpost.right', material: 'signpost' },
   trace: { sf: 'figure.walk', material: 'footprint' },
-  'tree-view': { sf: 'list.bullet.indent', material: 'account_tree' },
   triage: { sf: 'tray', material: 'inbox' },
   usage: { sf: 'gauge.medium', material: 'speed' },
   'view-3d': { sf: 'cube.transparent', material: 'view_in_ar' },

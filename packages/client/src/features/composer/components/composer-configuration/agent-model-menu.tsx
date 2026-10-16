@@ -4,10 +4,11 @@ import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import { ConfigurationDrill } from './configuration-drill';
+import { AgentDrill } from './agent-drill';
 import { EffortControl, SwitchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
+import { ModelPicker } from './model-picker';
 
 interface MenuProps {
   configuration: ComposerConfigurationProps;
@@ -73,12 +74,10 @@ function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
 }
 
 function ConfigurationDrillRows(props: ContentsProps): React.JSX.Element {
-  const drillProps = { configuration: props.configuration, wide: props.wide };
-
   return (
     <>
-      <ConfigurationDrill {...drillProps} page="agent" />
-      <ConfigurationDrill {...drillProps} page="model" />
+      <AgentDrill configuration={props.configuration} wide={props.wide} />
+      <ModelPicker configuration={props.configuration} />
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { nativeMenuItems } from './menu-native-items';
+import { nativeMenuItems, nativeMenuSections } from './menu-native-items';
 
 const scopes = [
   { value: 'once', label: 'Allow once' },
@@ -32,6 +32,58 @@ describe('a system menu', () => {
     })[0]?.choose();
 
     expect(onValueChange).toHaveBeenCalledWith('once');
+  });
+
+  it('lists each group as its own section, checking each group’s own value', () => {
+    const onLayoutChange = vi.fn<(value: string) => void>();
+
+    const menu = {
+      groups: [
+        { value: 'once', options: scopes, onValueChange: vi.fn<() => void>() },
+        {
+          label: 'Layout',
+          value: 'compact',
+          options: [
+            { value: 'regular', label: 'Regular' },
+            { value: 'compact', label: 'Compact' },
+          ],
+          onValueChange: onLayoutChange,
+        },
+      ],
+    };
+
+    const items = nativeMenuItems(menu);
+
+    items[2]?.choose();
+
+    expect(
+      nativeMenuSections(menu).map((section) => section.title),
+    ).toStrictEqual([undefined, 'Layout']);
+    expect(
+      items.map(({ title, checked, divided }) => ({ title, checked, divided })),
+    ).toStrictEqual([
+      { title: scopes[0].label, checked: true, divided: undefined },
+      { title: scopes[1].label, checked: false, divided: undefined },
+      { title: 'Regular', checked: false, divided: true },
+      { title: 'Compact', checked: true, divided: undefined },
+    ]);
+    expect(onLayoutChange).toHaveBeenCalledWith('regular');
+  });
+
+  it('carries each option’s icon to its row', () => {
+    const items = nativeMenuItems({
+      options: [
+        { value: 'regular', label: 'Regular', icon: 'layout-regular' },
+        { value: 'compact', label: 'Compact' },
+      ],
+      value: 'regular',
+      onValueChange: vi.fn<(value: string) => void>(),
+    });
+
+    expect(items.map((item) => item.icon)).toStrictEqual([
+      'layout-regular',
+      undefined,
+    ]);
   });
 
   it('lists actions as they are, running the one chosen', () => {

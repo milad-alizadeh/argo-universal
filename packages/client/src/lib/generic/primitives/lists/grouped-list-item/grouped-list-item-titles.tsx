@@ -26,9 +26,11 @@ export function RowTitles(props: GroupedListItemProps): React.JSX.Element {
   );
 }
 
+// The label keeps one line and ends in an ellipsis before the row's trailing accessory or chevron.
 function RowTitle(props: GroupedListItemProps): React.JSX.Element {
   return (
     <NativeText
+      numberOfLines={1}
       code={props.code}
       tone={props.tone}
       modifiers={rowColor(props.tone ?? 'primary')}

@@ -27,9 +27,10 @@ function CodeText({ code, textClassName }: CodeTextProps): React.JSX.Element {
   );
 }
 
+// A vertical ScrollView grows by default; on iOS a fit-content parent such as the user message bubble then lays it out at its max height, leaving a blank area below the code.
 function CodeScroll(props: CodeTextProps): React.JSX.Element {
   return (
-    <ScrollView testID="code-scroll" className="max-h-75 wide:max-h-100">
+    <ScrollView testID="code-scroll" className="max-h-75 grow-0 wide:max-h-100">
       <ScrollView
         horizontal
         className="grow-0 shrink-0"
