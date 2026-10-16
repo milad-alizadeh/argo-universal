@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../../../lib/generic/variations';
-import { ComposerWorkChips } from './composer-status';
+import { ComposerStatusControls, ComposerWorkChips } from './composer-status';
 
 const meta = {
   title: 'Composer/ComposerStatus',
@@ -43,6 +43,30 @@ export const Status: Story = {
           <ComposerWorkChips {...args} status={settledStatus} />
         </View>
       </Variation>
+    </Variations>
+  ),
+};
+
+const contextLevels = [
+  { label: 'Low · 17%', context: { used: 34_000, size: 200_000 } },
+  { label: 'High · 85%', context: { used: 170_000, size: 200_000 } },
+  { label: 'Full · 100%', context: { used: 200_000, size: 200_000 } },
+];
+
+export const ContextRing: Story = {
+  name: 'Context ring',
+  render: (args) => (
+    <Variations>
+      {contextLevels.map(({ label, context }) => (
+        <Variation key={label} label={label}>
+          <View className={workPreviewClassName}>
+            <ComposerStatusControls
+              disabled={args.disabled}
+              status={{ context }}
+            />
+          </View>
+        </Variation>
+      ))}
     </Variations>
   ),
 };
