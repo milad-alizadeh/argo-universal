@@ -35,8 +35,6 @@ export {
   sessionOpenErrorMessage,
 } from './components/failure-messages';
 
-export { type EmptySessionPorts } from './state/empty-session-machine';
-
 export { canOpenSession } from './state/open-session';
 
 export {
@@ -46,7 +44,28 @@ export {
 
 export { useSessionConfigChange } from './hooks/use-session-config-change';
 
-export { emptySessionMachine } from './state/empty-session-machine';
+export { EmptySessionStore } from './stores/empty-session-store';
+
+export type {
+  EmptySessionChoices,
+  EmptySessionConfiguration,
+  LiveOptions,
+  EmptySessionPorts,
+  EmptySessionState,
+} from './stores/empty-session-types';
+
+export {
+  chosenOptions,
+  type ConfigurationPicks,
+  initialConfigOptions,
+} from './state/session-option-choices';
+
+export {
+  sessionOptionsKey,
+  useSessionOptions,
+} from './hooks/use-session-options';
+
+export { useCacheSessionOptions } from './hooks/use-cache-session-options';
 
 export {
   chooseProject,

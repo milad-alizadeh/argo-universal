@@ -8,7 +8,7 @@ import { Text } from '#primitives/display/text';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
 import { motionDuration } from '../../../../lib/generic/motion';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import type { ConnectionState } from '../../state/context';
+import type { ConnectionState } from '../../state/connection';
 
 export interface ConnectionBannerProps {
   state: ConnectionState;
