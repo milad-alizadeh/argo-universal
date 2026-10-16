@@ -41,7 +41,6 @@ export function agentsRow(props: SettingsListProps): SettingsRow {
     icon: 'agent',
     href: '/settings/agents',
     count: props.agentCount,
-    needsAttention: props.agentsNeedAttention,
   });
 }
 

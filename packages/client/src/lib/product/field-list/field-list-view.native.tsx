@@ -18,7 +18,7 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
   if (useWide()) return <VirtualFieldList {...props} />;
 
   return (
-    <GroupedList>
+    <GroupedList gap={props.gap}>
       {props.sections.map((section, index) => (
         <NativeGroupedListSection
           key={section.title ?? `section-${index}`}

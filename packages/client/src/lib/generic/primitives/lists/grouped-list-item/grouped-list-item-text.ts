@@ -20,16 +20,24 @@ const ios = Platform.OS === 'ios';
  * iOS's system label colours, as a Form's button would tint its whole label; an accent row takes that tint.
  * Android's NativeText and ListItem take colours through their public APIs.
  */
-const swiftColors: Partial<Record<RowTone, string>> = {
-  primary: 'label',
-  secondary: 'secondaryLabel',
-  muted: 'secondaryLabel',
+const swiftColors = {
+  primary: 'primary',
+  secondary: 'secondary',
+  muted: 'secondary',
+} as const;
+
+const swiftColor = (tone: RowTone): 'primary' | 'secondary' | undefined => {
+  if (!ios) return undefined;
+
+  return tone in swiftColors
+    ? swiftColors[tone as keyof typeof swiftColors]
+    : undefined;
 };
 
 export function rowColor(tone: RowTone): Modifiers {
-  const color = ios ? swiftColors[tone] : undefined;
+  const color = swiftColor(tone);
 
-  return color === undefined ? [] : [foregroundStyle({ type: 'color', color })];
+  return color === undefined ? [] : [foregroundStyle(color)];
 }
 
 // A Form row's subtitle reads in the subheadline style under the List's body text, which scales with Dynamic Type.

@@ -1,15 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { type AgentCounts, type AgentsFilter } from '#features/agents';
-import {
-  FilterPill,
-  type FilterPillProps,
-} from '#primitives/buttons/filter-pill';
-import { IconButton } from '#primitives/buttons/icon-button';
+import { type AgentsFilter } from '#features/agents';
+import { FilterPill } from '#primitives/buttons/filter-pill';
 
 export interface AgentsFilterProps {
   filter: AgentsFilter;
-  counts: AgentCounts;
   onFilter: (filter: AgentsFilter) => void;
 }
 
@@ -18,63 +13,25 @@ export interface AgentsSearchProps {
   onSearch: (search: string) => void;
 }
 
-// What a narrow window's header works with: the filter, the search and Add custom Agent.
-export type AgentsHeaderProps = AgentsFilterProps &
-  AgentsSearchProps & { onAddCustomAgent: () => void };
+export type AgentsHeaderProps = AgentsSearchProps;
 
 export const agentsTitle = 'Agents';
 
 export const searchLabel = 'Search Agents';
 
-export const addCustomAgentLabel = 'Add custom Agent';
-
 export const agentsFilterChoices = [
   { value: 'all', label: 'All' },
   { value: 'installed', label: 'Installed' },
-  { value: 'not-installed', label: 'Not installed' },
-] as const satisfies readonly { value: AgentsFilter; label: string }[];
+  { value: 'not-installed', label: 'Not Installed' },
+] as const;
 
-// A wide window's Add custom Agent, right of the Agents title and before Search.
-export function AddAgentButton(props: {
-  onPress: () => void;
-}): React.JSX.Element {
-  return (
-    <IconButton
-      variant="ghost"
-      size="xs"
-      iconRole="action"
-      iconClassName="text-muted-foreground"
-      icon="add"
-      accessibilityLabel={addCustomAgentLabel}
-      onPress={props.onPress}
-    />
-  );
-}
-
-type PillChoice = Omit<FilterPillProps, 'selected' | 'onPress'> & {
-  value: AgentsFilter;
-};
-
-const pillCounts = (counts: AgentCounts): Partial<PillChoice>[] => [
-  {},
-  { count: counts.installed },
-  { count: counts.notInstalled },
-];
-
-const pillChoices = (counts: AgentCounts): PillChoice[] =>
-  agentsFilterChoices.map((choice, index) => ({
-    ...choice,
-    ...pillCounts(counts)[index],
-  }));
-
-// A wide window's filters under the Agents title.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-1">
-      {pillChoices(props.counts).map(({ value, ...pill }) => (
+    <View className="min-h-10 flex-row items-center gap-1">
+      {agentsFilterChoices.map(({ value, label }) => (
         <FilterPill
           key={value}
-          {...pill}
+          label={label}
           selected={props.filter === value}
           onPress={() => props.onFilter(value)}
         />

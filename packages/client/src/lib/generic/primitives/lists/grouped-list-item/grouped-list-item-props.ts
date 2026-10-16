@@ -5,6 +5,9 @@ import type { IconName } from '../../../symbols/icon-names';
 export interface GroupedListItemProps {
   label: string;
   value?: string;
+  labelDetail?: string;
+  footer?: ReactElement;
+  alignment?: 'top';
   /*
    * A second line under the title, such as a folder's path; code draws it in the mono face.
    * numberOfLines caps it, ending in an ellipsis, such as an Agent's description in a list.
@@ -71,7 +74,13 @@ function distinctStatus(props: GroupedListItemProps): string | undefined {
 export function groupedListItemName(props: GroupedListItemProps): string {
   if (props.accessibilityLabel) return props.accessibilityLabel;
 
-  return [props.label, props.subtitle?.text, props.value, distinctStatus(props)]
+  return [
+    props.label,
+    props.labelDetail,
+    props.subtitle?.text,
+    props.value,
+    distinctStatus(props),
+  ]
     .filter(Boolean)
     .join(', ');
 }

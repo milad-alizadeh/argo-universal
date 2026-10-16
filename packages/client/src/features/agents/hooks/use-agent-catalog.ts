@@ -1,113 +1,81 @@
-import type { AgentsCatalogSyncOutput } from '@repo/contracts';
+import type { AgentsRegistryOutput } from '@repo/contracts';
 import {
   type UseMutationResult,
   useMutation,
   useQuery,
   useQueryClient,
-  keepPreviousData,
-  focusManager,
 } from '@tanstack/react-query';
-import { useSubscription } from '@trpc/tanstack-react-query';
-import { useEffect, useEffectEvent } from 'react';
-import type { ClientError } from '#features/connection';
-import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import {
-  applyCatalogSync,
-  type CatalogSync,
-  catalogFailed,
-} from '../state/catalog-sync';
+import { useEffect } from 'react';
+import { useTRPC, type ClientError } from '#features/connection';
 
-const messageOf = (error: ClientError | null): string | null =>
-  error === null ? null : error.message;
+export type CatalogLoad =
+  | { status: 'loading' }
+  | { status: 'failed' }
+  | { status: 'loaded'; catalog: AgentsRegistryOutput };
 
-// The whole catalog; the Agents page filters and searches it on the device.
-export function useAgentCatalog(): CatalogSync {
-  const catalogQuery = useTRPC().agents.catalog.queryOptions(undefined, {
-    placeholderData: keepPreviousData,
-  });
+export type AgentCatalog = { load: CatalogLoad; retry: () => void };
 
-  const query = useQuery(catalogQuery);
-  const refresh = useCatalogSync();
+export const registryError =
+  'Failed to load the Agent Registry. Please check your connection and try again.';
 
-  const sync = applyCatalogSync(
-    { catalog: query.data, error: messageOf(query.error) },
-    { pending: refresh.isPending, error: messageOf(refresh.error) },
-  );
-
-  useRetryOnReturn(catalogFailed(sync) && !sync.refreshing, refresh.mutate);
-
-  return sync;
-}
-
-// A failed sync tries again when the Connection reopens or the window regains focus, as failed queries do.
-function useRetryOnReturn(failed: boolean, retry: () => void): void {
-  useResubscribeOnReconnect({
-    status: failed ? 'error' : 'idle',
-    reset: retry,
-  });
-  useRetryOnFocus(failed, retry);
-}
-
-function useRetryOnFocus(failed: boolean, retry: () => void): void {
-  const retryIfFailed = useEffectEvent(() => {
-    if (failed) retry();
-  });
-
-  useEffect(
-    () =>
-      focusManager.subscribe((focused) => {
-        if (focused) retryIfFailed();
-      }),
-    [],
-  );
-}
-
-function useCatalogSync(): UseMutationResult<
-  AgentsCatalogSyncOutput,
+function useRegistryRefresh(): UseMutationResult<
+  AgentsRegistryOutput,
   ClientError,
   void
 > {
-  const trpc = useTRPC();
-  const invalidate = useCatalogInvalidation();
+  const trpc = useTRPC(),
+    cache = useQueryClient();
 
-  const sync = useMutation(
-    trpc.agents.syncCatalog.mutationOptions({ onSettled: invalidate }),
+  const onSuccess = (data: AgentsRegistryOutput): void => {
+    cache.setQueryData(trpc.agents.registry.queryKey(), data);
+    void cache.invalidateQueries(trpc.agents.servers.queryFilter());
+  };
+
+  return useMutation(
+    trpc.agents.refreshRegistry.mutationOptions({ onSuccess }),
   );
+}
 
-  useCatalogChanges(sync);
-  const { mutate } = sync;
+export function useAgentCatalog(): AgentCatalog {
+  const query = useQuery(useTRPC().agents.registry.queryOptions());
+  const refresh = useRegistryRefresh();
+  const { mutate } = refresh;
   useEffect(() => mutate(), [mutate]);
 
-  return sync;
-}
-
-function useCatalogInvalidation(): () => void {
-  const trpc = useTRPC();
-  const cache = useQueryClient();
-
-  return (): void => {
-    void cache.invalidateQueries(trpc.agents.catalog.queryFilter());
+  return {
+    load: registryLoad(
+      query.data,
+      refresh.isPending,
+      query.isError || refresh.isError,
+    ),
+    retry: () => mutate(),
   };
 }
 
-interface CatalogSyncReset {
-  error: ClientError | null;
-  reset: () => void;
-}
+const storedRegistry = (
+  catalog: AgentsRegistryOutput | undefined,
+): catalog is AgentsRegistryOutput => Boolean(catalog?.agents.length);
 
-function useCatalogChanges(sync: CatalogSyncReset): void {
-  const trpc = useTRPC();
-  const invalidate = useCatalogInvalidation();
+const failedRegistry = (
+  catalog: AgentsRegistryOutput | undefined,
+  failed: boolean,
+): boolean => failed || Boolean(catalog?.error);
 
-  const update = (): void => {
-    if (sync.error) sync.reset();
-    invalidate();
-  };
+const registryLoad = (
+  catalog: AgentsRegistryOutput | undefined,
+  pending: boolean,
+  failed: boolean,
+): CatalogLoad => {
+  if (storedRegistry(catalog)) return { status: 'loaded', catalog };
 
-  useSubscription(
-    trpc.agents.catalogChanges.subscriptionOptions(undefined, {
-      onStarted: update,
-      onData: update,
-    }),
-  );
-}
+  return pending ? { status: 'loading' } : settledRegistry(catalog, failed);
+};
+
+const settledRegistry = (
+  catalog: AgentsRegistryOutput | undefined,
+  failed: boolean,
+): CatalogLoad => {
+  if (failedRegistry(catalog, failed)) return { status: 'failed' };
+
+  return catalog ? { status: 'loaded', catalog } : { status: 'loading' };
+};

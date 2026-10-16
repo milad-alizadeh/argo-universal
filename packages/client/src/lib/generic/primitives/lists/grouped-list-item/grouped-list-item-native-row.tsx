@@ -41,7 +41,7 @@ export function RowContent(props: GroupedListItemProps): React.JSX.Element {
 
   return (
     <Row
-      alignment="center"
+      alignment={props.alignment ? 'start' : 'center'}
       spacing={rowSpacing}
       style={{ opacity: props.disabled ? disabledOpacity : 1 }}
       modifiers={modifiers}

@@ -51,6 +51,7 @@ function contentClasses(props: GroupedListItemProps, sidebar: boolean): string {
   return cn(
     'flex-1 flex-row items-center gap-3',
     contentGap(sidebar, props.size),
+    props.alignment === 'top' && 'items-start',
     props.disabled && 'opacity-65',
   );
 }
@@ -68,11 +69,7 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
 }
 
 function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
-  const title = (
-    <Text aria-hidden role="body" className={titleClasses(props)}>
-      {props.label}
-    </Text>
-  );
+  const title = <RowTitleLabel {...props} />;
 
   if (!props.subtitle) return title;
 
@@ -80,6 +77,7 @@ function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
     <View className="min-w-0 flex-1">
       {title}
       <GroupedListItemSubtitle subtitle={props.subtitle} />
+      {props.footer}
     </View>
   );
 }
@@ -140,6 +138,20 @@ function RowValue({
   return (
     <Text aria-hidden role="body" className={cn('shrink', className)}>
       {value}
+    </Text>
+  );
+}
+
+function RowTitleLabel(props: GroupedListItemProps): React.JSX.Element {
+  return (
+    <Text aria-hidden role="body" className={titleClasses(props)}>
+      {props.label}
+      {props.labelDetail && (
+        <Text role="secondary" tone="muted">
+          {' '}
+          {props.labelDetail}
+        </Text>
+      )}
     </Text>
   );
 }

@@ -20,7 +20,6 @@ const meta = {
   args: {
     ...settingsListMocks,
     projectsNeedAttention: true,
-    agentsNeedAttention: true,
     accountState: 'GitHub',
     deviceCount: 2,
     selectedPath: '/settings/accounts',

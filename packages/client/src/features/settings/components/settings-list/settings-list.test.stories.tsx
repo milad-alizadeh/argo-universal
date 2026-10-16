@@ -61,7 +61,6 @@ export const ChildSelectionAndAttention: Story = {
   args: {
     selectedPath: '/settings/projects/example-project',
     projectsNeedAttention: true,
-    agentsNeedAttention: true,
   },
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
@@ -77,7 +76,7 @@ export const ChildSelectionAndAttention: Story = {
         canvas.getByRole('link', { name: 'Projects, 1, needs attention' }),
       ).toBeVisible();
       await expect(
-        canvas.getByRole('link', { name: 'Agents, 1, needs attention' }),
+        canvas.getByRole('link', { name: 'Agents, 1' }),
       ).toBeVisible();
     }
   },

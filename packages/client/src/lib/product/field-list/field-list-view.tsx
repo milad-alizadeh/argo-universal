@@ -25,6 +25,7 @@ export type { FieldListSection } from './field-list-entries';
 export interface FieldListProps {
   sections: readonly FieldListSection[];
   testID?: string;
+  gap?: 'sm';
 }
 
 // The Settings page's surface: the phone's page, or the Frame behind a wide window's page.
@@ -48,7 +49,7 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
       {...fieldListDefaults}
       contentContainerStyle={useGroupPadding()}
       data={entries}
-      renderItem={useEntryRenderer()}
+      renderItem={useEntryRenderer(props.gap)}
     />
   );
 }
@@ -118,12 +119,10 @@ function useGroupPadding(): ViewStyle {
   };
 }
 
-function useEntryRenderer(): (
-  props: LegendListRenderItemProps<FieldListEntry>,
-) => React.JSX.Element {
-  // The web resolves the gap class to rowGap; native resolves it to gap.
-  const { rowGap, gap } = useResolveClassNames(groupedListGap);
-  const sectionGap = pixels(rowGap ?? gap);
+function useEntryRenderer(
+  density: FieldListProps['gap'],
+): (props: LegendListRenderItemProps<FieldListEntry>) => React.JSX.Element {
+  const sectionGap = useSectionGap(density);
   const [store] = useState(createHoverStore);
 
   return useCallback(
@@ -134,6 +133,14 @@ function useEntryRenderer(): (
     ),
     [sectionGap, store],
   );
+}
+
+function useSectionGap(density: FieldListProps['gap']): number {
+  // The web resolves the gap class to rowGap; native resolves it to gap.
+  const { rowGap, gap } = useResolveClassNames(groupedListGap);
+  const small = useResolveClassNames('gap-2');
+
+  return pixels(density === 'sm' ? small.gap : (rowGap ?? gap));
 }
 
 // A title or footer is GroupedListSection's own, with an empty card where the rows would be.

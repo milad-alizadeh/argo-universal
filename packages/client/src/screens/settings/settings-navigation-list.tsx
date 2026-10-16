@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { needsAction, useAgents, useInstalledAgents } from '#features/agents';
+import { useAgents, useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
 import {
   SettingsList,
@@ -15,14 +15,10 @@ export interface SettingsNavigationListProps {
   query?: string;
 }
 
-type ServerCounts = Pick<
-  SettingsListProps,
-  'projectCount' | 'agentCount' | 'agentsNeedAttention'
->;
+type ServerCounts = Pick<SettingsListProps, 'projectCount' | 'agentCount'>;
 
 /*
- * The Server's Projects and Agents the sidebar counts, and whether an Agent
- * needs the user. Each stays undefined until the Server has answered once, so
+ * The Server's Projects and Agents the sidebar counts. Each stays undefined until the Server has answered once, so
  * the list never counts 0 for what it does not know yet; once answered, the
  * cached answer stays while the Connection is down.
  */
@@ -33,7 +29,6 @@ function useServerCounts(): ServerCounts {
   return {
     projectCount: useProjects().data?.length,
     agentCount: agentsKnown ? agents.length : undefined,
-    agentsNeedAttention: agents.some(needsAction),
   };
 }
 
