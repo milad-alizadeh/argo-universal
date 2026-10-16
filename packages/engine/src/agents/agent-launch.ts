@@ -15,6 +15,18 @@ export type AgentLaunch = {
   release?: () => void;
 };
 
+/*
+ * An Installed Agent's launch before its command is resolved. ACP resources
+ * reuse a connection of the same `version` and call `resolve` only to start
+ * one; they release the resolved launch once that connection owns its folder.
+ */
+export type DeferredAgentLaunch = {
+  projectId: string;
+  agentId: string;
+  version: string;
+  resolve: (signal: AbortSignal) => Promise<AgentLaunch>;
+};
+
 export type ResolveAgentLaunch = (input: {
   agent: string;
   projectId: string;

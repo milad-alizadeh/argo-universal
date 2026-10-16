@@ -10,7 +10,7 @@ import type {
   SessionNotification,
   Stream,
 } from '@agentclientprotocol/sdk';
-import type { AgentLaunch } from '../..';
+import type { AgentLaunch, DeferredAgentLaunch } from '../..';
 import type { LaunchLoginTerminal } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
@@ -29,7 +29,12 @@ export type AcpSessionDestination = {
   createElicitation: ClientRequestHandlersByMethod['elicitation/create'];
 };
 
+// A ready launch runs as given; a deferred one resolves only when it starts a new connection.
+export type AcpLaunch = AgentLaunch | DeferredAgentLaunch;
+
 export type AcpSessionLease = {
+  /** The launch the connection's Agent process runs. */
+  launch: AgentLaunch;
   authentication?: ConnectionAuthentication;
   agent: ClientContext;
   sessionId: SessionId;
@@ -40,7 +45,7 @@ export type AcpSessionLease = {
 };
 
 export type AcpOpenInput = {
-  launch: AgentLaunch;
+  launch: AcpLaunch;
   opening: AcpSessionOpening;
   destination: AcpSessionDestination;
   signal?: AbortSignal;
@@ -60,7 +65,7 @@ export type AcpResourceInput = {
 };
 
 export type AcpResources = {
-  authentication: (launch: AgentLaunch) => Promise<ConnectionAuthentication>;
+  authentication: (launch: AcpLaunch) => Promise<ConnectionAuthentication>;
   findAuthentication: (
     agent: string,
     projectId: string,

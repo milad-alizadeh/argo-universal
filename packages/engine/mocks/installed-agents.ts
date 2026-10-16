@@ -1,12 +1,21 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import type { ACPAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
+import { onTestFinished } from 'vitest';
 import { createActor } from 'xstate';
 import {
   createAcpResources,
   createInstalledAgents,
+  type InstalledAgent,
   type InstalledAgents,
   registryMachine,
 } from '../src/agents';
 import { writerMachine } from '../src/storage';
+import { openTestDatabase } from './database';
+import { type EngineTestOptions, startEngineTestHost } from './engine';
+import { createScriptedAgentProcess } from './scripted-agent';
 
 /*
  * The real Installed Agents module for an open Sessions test that never launches an Agent:
@@ -32,3 +41,47 @@ export const unlaunchedInstalledAgents = (
       },
     }),
   });
+
+type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
+
+// The Engine's own Installed Agents module.
+export const installedAgentsOf = (host: EngineHost): InstalledAgents =>
+  host.openSessions.getSnapshot().context.installedAgents;
+
+// A Registry entry served at the Registry port, installed in a Project with a real folder; the scripted Agent answers ACP.
+export const startLaunchHost = async (
+  entry: ACPAgent,
+  options: EngineTestOptions = {},
+): Promise<{ host: EngineHost; projectPath: string }> => {
+  const projectPath = mkdtempSync(join(tmpdir(), 'argo-installed-agent-'));
+  const storage = openTestDatabase({}, projectPath);
+  const { id } = entry;
+
+  const host = await startEngineTestHost({
+    database: storage.database,
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: [entry] }),
+    acp: createScriptedAgentProcess(),
+    ...options,
+  });
+
+  onTestFinished(() => {
+    storage.remove();
+    rmSync(projectPath, { recursive: true, force: true });
+  });
+  await host.caller.agents.refreshRegistry();
+  await host.caller.agents.addRegistry({ id });
+
+  return { host, projectPath };
+};
+
+export const requireInstalled = (
+  host: EngineHost,
+  id: string,
+): InstalledAgent => {
+  const answer = installedAgentsOf(host).installedAgent(id);
+
+  if (!answer.installed) throw new Error('The fixture Agent is not installed');
+
+  return answer.agent;
+};

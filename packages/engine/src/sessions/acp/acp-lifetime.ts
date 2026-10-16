@@ -4,7 +4,7 @@ import type {
   AcpSessionDestination,
   AcpSessionLease,
 } from '../../agents';
-import type { AgentLaunch, InstalledAgents } from '../../agents';
+import type { DeferredAgentLaunch, InstalledAgents } from '../../agents';
 import { requireInstalledAgent } from '../session-command';
 import type { SessionData } from '../session-data';
 import {
@@ -87,18 +87,14 @@ export class AcpSessionLifetime {
     const destination = this.createSessionDestination(await this.bound.promise);
 
     const launch = await this.launchAgent(session);
+    this.lease = await this.openLease(session, launch, destination);
+    // Shells run with the connection's launch; Agent messages wait for registration, which follows this open.
+    this.shells?.configure(session, this.lease.launch);
 
-    try {
-      this.shells?.configure(session, launch);
-      this.lease = await this.openLease(session, launch, destination);
-
-      return this.lease;
-    } finally {
-      launch.release?.();
-    }
+    return this.lease;
   }
   // Open and Retry launch only an Installed Agent; one removed since shows Send's error.
-  private launchAgent(session: SessionData): Promise<AgentLaunch> {
+  private launchAgent(session: SessionData): Promise<DeferredAgentLaunch> {
     const { installedAgents } = this.requireDependencies();
 
     return installedAgents.launch(
@@ -109,7 +105,7 @@ export class AcpSessionLifetime {
   }
   private openLease(
     session: SessionData,
-    launch: AgentLaunch,
+    launch: DeferredAgentLaunch,
     destination: AcpSessionDestination,
   ): Promise<AcpSessionLease> {
     return this.requireDependencies().resources.open({

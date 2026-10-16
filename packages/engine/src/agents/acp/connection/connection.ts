@@ -138,11 +138,13 @@ export class AcpConnection {
   private failure: Error | undefined;
   private stopping: Promise<void> | undefined;
   private authentication?: ConnectionAuthentication;
+  private launch: AgentLaunch | undefined;
   public constructor(
     private readonly input: AcpResourceInput,
     private readonly hooks: ConnectionHooks,
   ) {}
   public async start(launch: AgentLaunch): Promise<this> {
+    this.launch = launch;
     this.launching = (this.input.launchProcess ?? launchAcpProcess)(launch);
     const process = await this.launching;
     this.connection = this.connect(process.stream);
@@ -429,21 +431,30 @@ export class AcpConnection {
 
     return { connection: this.connection, initialization: this.initialization };
   }
+  private requireLaunch(): AgentLaunch {
+    if (!this.launch) throw new Error('ACP connection is unavailable');
+
+    return this.launch;
+  }
   private async lease(opening: LeaseOpening): Promise<AcpSessionLease> {
     await this.releaseAbandoned(opening);
     this.requireRegistered(opening);
     const { connection, initialization } = this.requireReady();
-    let closing: Promise<void> | undefined;
 
     return {
       ...opening.opened,
+      launch: this.requireLaunch(),
       authentication: this.authentication,
       agent: connection.agent,
       initialization,
-      close: () =>
-        (closing ??= this.close(opening.opened.sessionId, opening.session)),
+      close: this.leaseClose(opening),
       released: opening.session.released.promise,
     };
+  }
+  private leaseClose({ opened, session }: LeaseOpening): () => Promise<void> {
+    let closing: Promise<void> | undefined;
+
+    return () => (closing ??= this.close(opened.sessionId, session));
   }
   private requireRegistered(opening: LeaseOpening): void {
     if (this.failure) throw this.failure;

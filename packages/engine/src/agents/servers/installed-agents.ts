@@ -1,15 +1,16 @@
 import {
   SessionOpenFailure,
+  type ACPAgent,
   type AgentServerEnvironment,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import { readProjectPath } from '../../projects';
 import type { AcpResources } from '../acp';
-import type { AgentLaunch } from '../agent-launch';
+import type { AgentLaunch, DeferredAgentLaunch } from '../agent-launch';
 import type { InstallPorts } from '../install/ports';
 import { definedEnvironment } from '../launch/agent-environment';
-import { getCommand } from '../launch/get-command';
+import { getEntryCommand, getRegistryEntry } from '../launch/get-command';
 import { shellEnvironment } from '../launch/shell-env';
 import type { CommandInput, RegistryCommand } from '../launch/types';
 import type { RegistryActor } from '../registry/registry-machine';
@@ -25,7 +26,8 @@ export type InstalledAgentAnswer =
 /*
  * Which Agents can start Sessions on this Server, and how one starts.
  * The caller decides what an Agent that is not installed means;
- * `launch` downloads the Agent on first launch and makes no ACP call.
+ * `launch` reads the Registry version and makes no ACP call; its `resolve`
+ * downloads the Agent on first launch.
  */
 export type InstalledAgents = {
   installedAgent: (id: string) => InstalledAgentAnswer;
@@ -33,7 +35,7 @@ export type InstalledAgents = {
     agent: InstalledAgent,
     projectId: string,
     signal: AbortSignal,
-  ) => Promise<AgentLaunch>;
+  ) => Promise<DeferredAgentLaunch>;
 };
 
 export type InstalledAgentsInput = {
@@ -74,17 +76,38 @@ type LaunchSubject = {
   signal: AbortSignal;
 };
 
-// The Project's main Checkout is the Agent's folder and the source of its login-shell env (ADR-0004).
+// The Registry version is read now; the command is resolved only when ACP resources start a connection.
 const launchInstalledAgent = async (
   input: InstalledAgentsInput,
   subject: LaunchSubject,
+): Promise<DeferredAgentLaunch> => {
+  const { agent, projectId, signal } = subject;
+  const entry = await getRegistryEntry({ ...input, id: agent.id, signal });
+  const cwd = readProjectPath(input.database, projectId);
+
+  return {
+    agentId: agent.id,
+    projectId,
+    version: entry.version,
+    resolve: (resolving) =>
+      resolveLaunch(input, { ...subject, signal: resolving }, { entry, cwd }),
+  };
+};
+
+const resolveLaunch = async (
+  input: InstalledAgentsInput,
+  subject: LaunchSubject,
+  { entry, cwd }: { entry: ACPAgent; cwd: string },
 ): Promise<AgentLaunch> => {
-  const cwd = readProjectPath(input.database, subject.projectId);
-  const command = await getCommand(await commandInput(input, subject, cwd));
+  const command = await getEntryCommand(
+    await commandInput(input, subject, cwd),
+    entry,
+  );
 
   return { ...agentLaunch(command, subject), cwd };
 };
 
+// The Project's main Checkout is the Agent's folder and the source of its login-shell env (ADR-0004).
 const commandInput = async (
   input: InstalledAgentsInput,
   { agent, signal }: LaunchSubject,

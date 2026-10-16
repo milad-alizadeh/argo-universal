@@ -1,5 +1,5 @@
 import type { AgentAuthSubject } from '@repo/contracts';
-import type { AgentLaunch } from '../agent-launch';
+import type { DeferredAgentLaunch } from '../agent-launch';
 import type { AgentsRouterDeps } from '../router';
 import { notInstalledError } from '../servers/installed-agents';
 import type { ConnectionAuthentication } from './authenticate';
@@ -10,17 +10,13 @@ export const authenticationLaunch = async (
 ): Promise<ConnectionAuthentication> => {
   const launch = await installedLaunch(deps, subject);
 
-  try {
-    return await deps.sessionConnections.acpResources().authentication(launch);
-  } finally {
-    launch.release?.();
-  }
+  return deps.sessionConnections.acpResources().authentication(launch);
 };
 
 const installedLaunch = (
   deps: AgentsRouterDeps,
   subject: AgentAuthSubject,
-): Promise<AgentLaunch> => {
+): Promise<DeferredAgentLaunch> => {
   const answer = deps.installedAgents.installedAgent(subject.agent);
 
   if (!answer.installed) throw notInstalledError(answer);

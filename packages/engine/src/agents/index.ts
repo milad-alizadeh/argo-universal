@@ -13,6 +13,7 @@ export type {
   AgentLaunch,
   AgentLaunchSubject,
   CheckAgentLaunch,
+  DeferredAgentLaunch,
   ResolveAgentLaunch,
   LoginTerminalProcess,
   LaunchLoginTerminal,

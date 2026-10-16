@@ -1,4 +1,3 @@
-import type { AgentLaunch } from '../..';
 import { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import { awaitAcpOpening } from '../connection/client';
@@ -11,7 +10,9 @@ import {
   isIdleEntryOf,
   type Entry,
 } from './resource-entry';
+import { startEntry, withdrawResolving } from './resource-launch';
 import type {
+  AcpLaunch,
   AcpOpenInput,
   AcpResourceInput,
   AcpResources,
@@ -36,11 +37,12 @@ class EngineAcpResources implements AcpResources {
       return await connection.open(input);
     } finally {
       entry.pending -= 1;
+      withdrawResolving(entry, input.signal);
       this.retireIdle(entry);
     }
   }
   public async authentication(
-    launch: AgentLaunch,
+    launch: AcpLaunch,
   ): Promise<ConnectionAuthentication> {
     if (this.stopped) throw new Error('ACP resources are stopped');
 
@@ -59,7 +61,7 @@ class EngineAcpResources implements AcpResources {
   }
   private readonly isStopped = (): boolean => this.stopped;
   // A newer Registry version starts a new connection; Sessions on the older one keep it until they end.
-  private entry(launch: AgentLaunch): Entry {
+  private entry(launch: AcpLaunch): Entry {
     const key = JSON.stringify([launch.agentId, launch.projectId]);
     const entry = this.entries.get(key);
 
@@ -70,30 +72,27 @@ class EngineAcpResources implements AcpResources {
 
     return this.start(key, launch);
   }
-  private start(key: string, launch: AgentLaunch): Entry {
+  private start(key: string, launch: AcpLaunch): Entry {
+    const connection = this.createConnection(key);
+    const connecting = Promise.withResolvers<AcpConnection>();
+    const entry = createEntry(launch, connection, connecting.promise);
+    const forget = (): void => this.forget(key, connection);
+    connecting.resolve(
+      startEntry(entry, launch, { stopped: this.isStopped, forget }),
+    );
+    this.entries.set(key, entry);
+    this.connections.add(entry);
+
+    return entry;
+  }
+  private createConnection(key: string): AcpConnection {
     const connection: AcpConnection = new AcpConnection(this.input, {
       forget: () => this.forget(key, connection),
       idle: () => this.connectionIdle(connection),
       authChanges: this.authChanges,
     });
 
-    const connecting = this.connect(key, connection, launch);
-    const entry = createEntry(launch, connection, connecting);
-
-    this.entries.set(key, entry);
-    this.connections.add(entry);
-
-    return entry;
-  }
-  private connect(
-    key: string,
-    connection: AcpConnection,
-    launch: AgentLaunch,
-  ): Promise<AcpConnection> {
-    return connection.start(launch).catch((cause: unknown) => {
-      this.forget(key, connection);
-      throw cause instanceof Error ? cause : new Error(String(cause));
-    });
+    return connection;
   }
   private forget(key: string, connection: AcpConnection): void {
     if (this.entries.get(key)?.connection === connection)
@@ -148,6 +147,8 @@ class EngineAcpResources implements AcpResources {
   public async shutdown(): Promise<void> {
     this.stopped = true;
     const entries = [...this.connections];
+
+    for (const entry of entries) entry.resolving.abort();
     this.connections.clear();
     this.entries.clear();
     await Promise.allSettled(
