@@ -14,6 +14,7 @@ it('browses upstream metadata through Agents without opening a conversation', as
   const adapter = createAgentMetadata();
 
   const { caller } = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents,
     fixtureAgents: [adapter],
   });
@@ -40,6 +41,7 @@ it('browses upstream metadata through Agents without opening a conversation', as
 
 it('shows the Server recipe rather than the App platform', async (): Promise<void> => {
   const { caller } = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents: async (): Promise<string> => JSON.stringify(publishedRegistry),
   });
 
@@ -89,7 +91,11 @@ it('keeps literal substring search local, including percent, underscore and Unic
     }),
   );
 
-  const { caller } = await startEngineTestHost({ fetchAgents });
+  const { caller } = await startEngineTestHost({
+    fetchAgents,
+    storedRegistry: true,
+  });
+
   await caller.agents.syncCatalog();
   await expect
     .poll(async () => (await caller.agents.catalog()).syncStatus)

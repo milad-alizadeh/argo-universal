@@ -1,7 +1,5 @@
 import { type Database } from '@repo/db';
 import { assign } from 'xstate';
-import { createAcpResources } from '../agents';
-import { AgentInstallations } from '../agents';
 import { openSessionsId } from '../sessions';
 import { databaseWriterId } from '../storage';
 import type { OpenDatabaseInput } from './engine-database';
@@ -11,12 +9,14 @@ import {
   recoveryInput,
   writerInput,
   syncInput,
+  registryInput,
   sessionsInput,
   serverInput,
   cleanupInput,
 } from './lifecycle-inputs';
 import {
   engineSetup,
+  createEngineContext,
   stoppingLog,
   type EngineContext,
   type EngineOutput,
@@ -32,15 +32,7 @@ export type { EngineInput } from './setup.machine';
 
 export const engineMachine = engineSetup.createMachine({
   id: 'engine',
-  context: ({ input }): EngineContext => ({
-    ...input,
-    database: null,
-    server: null,
-    failure: null,
-    acpResources: createAcpResources(input.acp),
-    installations: new AgentInstallations(input.home, input.installationPorts),
-    commandAdmission: new AbortController(),
-  }),
+  context: ({ input }): EngineContext => createEngineContext(input),
   invoke: { id: 'processSignals', src: 'processSignals' },
   initial: 'openingDatabase',
   // `live` and `live.stopping` override this.
@@ -91,6 +83,12 @@ export const engineMachine = engineSetup.createMachine({
           systemId: databaseWriterId,
           src: 'databaseWriter',
           input: writerInput,
+        },
+        {
+          id: 'registry',
+          systemId: 'registry',
+          src: 'registry',
+          input: registryInput,
         },
         {
           id: 'syncSupervisor',
@@ -162,7 +160,7 @@ export const engineMachine = engineSetup.createMachine({
           },
         },
         stopping: {
-          entry: ['closeCommandAdmission', 'stopSync'],
+          entry: ['closeCommandAdmission', 'stopSync', 'stopRegistry'],
           initial: 'closingHttp',
           on: { 'engine.stop': {} },
           states: {

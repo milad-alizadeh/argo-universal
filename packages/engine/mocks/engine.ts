@@ -26,6 +26,8 @@ export type EngineTestOptions = Partial<EngineInput> & {
   fixtureAgents?: readonly AgentIdentity[];
   database?: Database;
   runtimeDirectory?: string;
+  /** Stores an empty Registry row first, so the Engine skips its Registry fetch at start. */
+  storedRegistry?: boolean;
 };
 
 type EngineConnections = {
@@ -147,6 +149,13 @@ function seedTestCommands(
     seeded,
     options.fixtureAgents ?? [{ agent: 'mock', label: 'mock', logo: '' }],
   );
+
+  if (options.storedRegistry)
+    seeded.$client
+      .prepare(
+        'INSERT OR IGNORE INTO registry_cache (id, json, fetched_at) VALUES (1, ?, 0)',
+      )
+      .run(JSON.stringify({ version: '1.0.0', agents: [], extensions: [] }));
 
   if (!options.database && !storage) seeded.$client.close();
 }

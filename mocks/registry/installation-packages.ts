@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { scriptedAgentCommand } from '../agent/scripted-agent-launch';
 import type { ToolInput } from './installation';
@@ -96,7 +96,7 @@ export const installPackage = (
   name: string,
   version: string,
 ): Promise<void> =>
-  input.executable === 'npm'
+  basename(input.executable) === 'npm'
     ? installNpm(input, name, version)
     : installUv(input, name, version);
 

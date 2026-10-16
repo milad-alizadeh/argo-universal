@@ -65,7 +65,8 @@ type EngineSupplied =
   | 'createId'
   | 'checkAgentLaunch'
   | 'agentLogins'
-  | 'installations';
+  | 'installations'
+  | 'dropAgentConnections';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
@@ -112,16 +113,20 @@ type AgentSetup = Pick<
   | 'createId'
   | 'invalidateAgent'
   | 'invalidateIdleAgents'
+  | 'dropAgentConnections'
 >;
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
   const installations = input.installations ?? createInstallations(input.home);
-  const { invalidateAgent, invalidateIdleAgents } = acpResources(input);
+
+  const { invalidateAgent, invalidateIdleAgents, dropAgentConnections } =
+    acpResources(input);
 
   return {
     installations,
     invalidateAgent,
     invalidateIdleAgents,
+    dropAgentConnections,
     agentLogins: resolveAgentLogins(input, installations),
     createId: input.createId ?? randomUUID,
   };

@@ -21,6 +21,7 @@ it.each(
       .mockResolvedValue(JSON.stringify(value));
 
     const { caller, database } = await startEngineTestHost({
+      storedRegistry: true,
       fetchAgents,
     });
 
@@ -52,6 +53,7 @@ it.each(
 
 it('reports malformed registry JSON once without a success-shaped empty catalog', async (): Promise<void> => {
   const { caller } = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents: async (): Promise<string> => '{broken',
   });
 

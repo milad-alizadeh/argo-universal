@@ -1,5 +1,6 @@
 import {
   AgentId,
+  AgentRemovalInput,
   AgentInstallInput,
   AgentInstallCancelInput,
   AgentInstallOperation,
@@ -11,12 +12,22 @@ import {
   routerFactory,
   mergeRouters,
 } from '../../rpc';
+import {
+  changeAgentServer,
+  type RegistryDeps,
+} from '../registry/registry-router';
 import type { AgentInstallations } from './lifecycle/operations';
 
 export const createInstallRouter = routerFactory(
-  (installations: AgentInstallations) =>
+  ({
+    installations,
+    registry,
+  }: {
+    installations: AgentInstallations;
+    registry: RegistryDeps;
+  }) =>
     mergeRouters(
-      managementRouter(installations),
+      managementRouter({ installations, registry }),
       installationRouter(installations),
     ),
 );
@@ -37,10 +48,32 @@ const installationRouter = routerFactory((installations: AgentInstallations) =>
   }),
 );
 
-const managementRouter = routerFactory((installations: AgentInstallations) =>
-  router({
-    remove: publicProcedure
-      .input(AgentId)
-      .mutation(({ input }) => installations.remove(input.agentId)),
-  }),
+const managementRouter = routerFactory(
+  ({
+    installations,
+    registry,
+  }: {
+    installations: AgentInstallations;
+    registry: RegistryDeps;
+  }) =>
+    router({
+      remove: publicProcedure
+        .input(AgentRemovalInput)
+        .mutation(({ input }) =>
+          removeAgent({ input, installations, registry }),
+        ),
+    }),
 );
+
+const removeAgent = ({
+  input,
+  installations,
+  registry,
+}: {
+  input: AgentRemovalInput;
+  installations: AgentInstallations;
+  registry: RegistryDeps;
+}): Promise<void> =>
+  'id' in input
+    ? changeAgentServer(registry, input.id, 'remove')
+    : installations.remove(input.agentId);

@@ -117,17 +117,19 @@ export class AcpConnection {
   );
   private connection: ClientConnection | undefined;
   private initialization: InitializeResponse | undefined;
-  private process: AcpProcess | undefined;
+  private launching: Promise<AcpProcess> | undefined;
   private failure: Error | undefined;
-  private terminating: Promise<void> | undefined;
+  private stopping: Promise<void> | undefined;
   public constructor(
     private readonly input: AcpResourceInput,
     private readonly forget: () => void,
+    private readonly idle: () => void,
   ) {}
   public async start(launch: AgentLaunch): Promise<this> {
-    this.process = await (this.input.launchProcess ?? launchAcpProcess)(launch);
-    this.connection = this.connect(this.process.stream);
-    this.observeExit(this.process, this.connection);
+    this.launching = (this.input.launchProcess ?? launchAcpProcess)(launch);
+    const process = await this.launching;
+    this.connection = this.connect(process.stream);
+    this.observeExit(process, this.connection);
     this.initialization = await negotiateAcpInitialize(
       this.connection.agent,
       this.readers,
@@ -268,7 +270,10 @@ export class AcpConnection {
     const registration = this.registrations.get(message.id);
     this.registrations.delete(message.id);
 
-    return this.registerKnown(registration, message);
+    const registered = this.registerKnown(registration, message);
+    this.idle();
+
+    return registered;
   }
   private registerKnown(
     registration: Registration | undefined,
@@ -432,6 +437,7 @@ export class AcpConnection {
 
     if (this.agentSessions.get(id) === session) this.agentSessions.delete(id);
     session.released.resolve();
+    this.idle();
   }
   private fail(error: Error): void {
     if (this.failure) return;
@@ -445,28 +451,33 @@ export class AcpConnection {
 
     this.abandon(error);
   }
-  // A connection can fail before its process exits; nothing owns that process any more.
+  // Transport failure can precede process exit; shutdown stays idempotent.
   private abandon(error: Error): void {
     this.connection?.close(error);
-    void this.terminate().catch(console.error);
-  }
-  private terminate(): Promise<void> {
-    this.terminating ??= this.terminateProcess();
-
-    return this.terminating;
-  }
-  private async terminateProcess(): Promise<void> {
-    await this.process?.terminate();
+    void this.shutdown().catch(console.error);
   }
   public get inUse(): boolean {
     return this.agentSessions.size > 0 || this.registrations.size > 0;
   }
-  public async shutdown(): Promise<void> {
+  public shutdown(): Promise<void> {
+    this.stopping ??= this.stop();
+
+    return this.stopping;
+  }
+  private async stop(): Promise<void> {
+    const process = await this.launchedProcess();
     this.connection?.close();
-    const process = this.process;
 
     if (!process) return;
-    await this.terminate();
+    await process.terminate();
     await process.exited;
+  }
+  // A failed launch has no process to stop; start() already reported it.
+  private async launchedProcess(): Promise<AcpProcess | undefined> {
+    try {
+      return await this.launching;
+    } catch {
+      return;
+    }
   }
 }

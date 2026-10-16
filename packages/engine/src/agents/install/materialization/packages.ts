@@ -90,23 +90,45 @@ const npmExecutable = async ({
   return join(folder, selectedBin(metadata.bin, recipe.name));
 };
 
-const npmInstallArgs = (input: PackageInput): string[] => [
+export const npmInstallArgs = (
+  directory: string,
+  specification: string,
+): string[] => [
   'install',
   '--prefix',
-  input.directory,
+  directory,
   '--no-audit',
   '--no-fund',
   '--save-exact',
   '--',
-  input.recipe.package,
+  specification,
 ];
 
 const installNpm = async (input: PackageInput): Promise<string> => {
   await input.ports.runTool(toolInput(input, 'node', ['--version']));
-  await input.ports.runTool(toolInput(input, 'npm', npmInstallArgs(input)));
+  await input.ports.runTool(
+    toolInput(
+      input,
+      'npm',
+      npmInstallArgs(input.directory, input.recipe.package),
+    ),
+  );
 
   return npmExecutable(input);
 };
 
 export const materializePackage = (input: PackageInput): Promise<string> =>
   input.recipe.kind === 'npx' ? installNpm(input) : installUv(input);
+
+export const readNpmExecutable = async (
+  directory: string,
+  name: string,
+): Promise<string> => {
+  const folder = join(directory, 'node_modules', name);
+  const metadata = await readPackageMetadata(folder);
+
+  if (metadata.name !== name)
+    throw rejectInstallMetadata('Installed npm package name does not match');
+
+  return join(folder, selectedBin(metadata.bin, name));
+};

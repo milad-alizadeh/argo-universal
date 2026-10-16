@@ -9,6 +9,7 @@ export type AgentLaunch = {
   projectId: string;
   agentId: string;
   registryId?: string;
+  installationDirectory?: string;
   executable: string;
   version: string;
   args: readonly string[];

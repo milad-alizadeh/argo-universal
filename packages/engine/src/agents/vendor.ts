@@ -5,6 +5,6 @@ const environment = new Map<string, Readonly<Record<string, string>>>([
 ]);
 
 export const vendorEnvironment = (
-  launch: AgentLaunch,
+  launch: Pick<AgentLaunch, 'registryId'>,
 ): Readonly<Record<string, string>> =>
   launch.registryId ? (environment.get(launch.registryId) ?? {}) : {};
