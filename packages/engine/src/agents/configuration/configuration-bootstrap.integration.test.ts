@@ -8,7 +8,6 @@ import {
   fixtureRegistryIds,
 } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { insertSession } from '#mocks/database';
 import { readConfiguredAgents } from './configuration-sql';
 
 const configurationMigration = '20261010114515_agent_configuration';
@@ -38,8 +37,13 @@ const seedHistory = (database: Database): void => {
     .insert(project)
     .values({ id: 'project-1', path: '/p', name: 'p' })
     .run();
-  insertSession(database, { id: 'first-session', agent: claudeId });
-  insertSession(database, { id: 'second-session', agent: codexId });
+
+  const insertHistoricalSession = database.$client.prepare(
+    "insert into session (id, project_id, agent, checkout_path, projection_version) values (?, 'project-1', ?, '/project', 1)",
+  );
+
+  insertHistoricalSession.run('first-session', claudeId);
+  insertHistoricalSession.run('second-session', codexId);
   database.$client
     .prepare(
       "insert into agents (id, registry_id, catalog_present) values ('catalog-uuid', 'claude-acp', 1)",
