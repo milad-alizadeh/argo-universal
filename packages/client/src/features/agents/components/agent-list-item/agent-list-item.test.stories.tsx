@@ -11,7 +11,7 @@ import {
 import { AgentListItem } from './agent-list-item';
 
 const agent: AgentRowEntry = {
-  id: iconAgent.id,
+  id: iconAgent.entry.id,
   name: iconAgent.entry.name,
   description: iconAgent.entry.description,
   icon: iconAgent.entry.icon,

@@ -1,8 +1,6 @@
 import {
-  agents,
   agentServers,
   registryCache,
-  syncJobs,
   blob,
   feedRow,
   project,
@@ -22,10 +20,6 @@ export const turnColumns = createSelectSchema(turn);
 export const feedRowColumns = createSelectSchema(feedRow);
 
 export const blobColumns = createSelectSchema(blob);
-
-export const agentColumns = createSelectSchema(agents);
-
-export const syncJobsColumns = createSelectSchema(syncJobs);
 
 export const agentServerColumns = createSelectSchema(agentServers);
 

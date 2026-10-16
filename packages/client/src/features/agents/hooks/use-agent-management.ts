@@ -1,4 +1,4 @@
-import type { AgentRemovalInput } from '@repo/contracts';
+import type { RegistryAgentId } from '@repo/contracts';
 import {
   type UseMutationResult,
   useMutation,
@@ -15,7 +15,7 @@ export type AgentManagement = {
 
 type Mutations = {
   install: UseMutationResult<void, ClientError, { id: string }>;
-  remove: UseMutationResult<void, ClientError, AgentRemovalInput>;
+  remove: UseMutationResult<void, ClientError, RegistryAgentId>;
 };
 
 function useServerInvalidation(): () => Promise<void> {

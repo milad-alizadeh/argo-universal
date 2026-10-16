@@ -36,15 +36,3 @@ export const negotiateAcpInitialize = (
   readers: Readers,
 ): Promise<InitializeResponse> =>
   negotiate(agent, readers, { ...clientCapabilities, terminal: true });
-
-// The old login stack keeps its own capabilities until T6 deletes it.
-export const negotiateLoginInitialize = (
-  agent: ClientContext,
-  readers: Readers,
-  terminalAuth: boolean | undefined,
-): Promise<InitializeResponse> =>
-  negotiate(agent, readers, {
-    ...clientCapabilities,
-    auth: terminalAuth ? { terminal: true } : {},
-    elicitation: { form: {}, url: {} },
-  });

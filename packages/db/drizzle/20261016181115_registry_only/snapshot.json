@@ -1,15 +1,11 @@
 {
-  "id": "5478ddd5-15e9-472a-9a7b-071785650825",
-  "prevIds": [
-    "05ac97ae-ef16-4bf1-87b2-ec2f82fbb080"
-  ],
   "version": "7",
   "dialect": "sqlite",
+  "id": "c5ae7ba8-6724-4936-b038-f5ee96ca0258",
+  "prevIds": [
+    "abdc3d17-3685-47af-9ce4-a2afe5d6957c"
+  ],
   "ddl": [
-    {
-      "name": "agents",
-      "entityType": "tables"
-    },
     {
       "name": "blob",
       "entityType": "tables"
@@ -35,10 +31,6 @@
       "entityType": "tables"
     },
     {
-      "name": "sync_jobs",
-      "entityType": "tables"
-    },
-    {
       "name": "agent_servers",
       "entityType": "tables"
     },
@@ -51,84 +43,8 @@
       "entityType": "tables"
     },
     {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "agents"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "registry_id",
-      "entityType": "columns",
-      "table": "agents"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "registry_metadata",
-      "entityType": "columns",
-      "table": "agents"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "false",
-      "generated": null,
-      "name": "catalog_present",
-      "entityType": "columns",
-      "table": "agents"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "catalog_synced_at",
-      "entityType": "columns",
-      "table": "agents"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "''",
-      "generated": null,
-      "name": "catalog_search_text",
-      "entityType": "columns",
-      "table": "agents"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "configuration",
-      "entityType": "columns",
-      "table": "agents"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "true",
-      "generated": null,
-      "name": "enabled",
-      "entityType": "columns",
-      "table": "agents"
+      "name": "server_identity",
+      "entityType": "tables"
     },
     {
       "type": "text",
@@ -692,86 +608,6 @@
     },
     {
       "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "source",
-      "entityType": "columns",
-      "table": "sync_jobs"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "scope",
-      "entityType": "columns",
-      "table": "sync_jobs"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "status",
-      "entityType": "columns",
-      "table": "sync_jobs"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "requested_at",
-      "entityType": "columns",
-      "table": "sync_jobs"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "completed_at",
-      "entityType": "columns",
-      "table": "sync_jobs"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "fetched_at",
-      "entityType": "columns",
-      "table": "sync_jobs"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "error",
-      "entityType": "columns",
-      "table": "sync_jobs"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "rejected_values",
-      "entityType": "columns",
-      "table": "sync_jobs"
-    },
-    {
-      "type": "text",
       "notNull": false,
       "autoincrement": false,
       "default": null,
@@ -921,6 +757,26 @@
       "table": "shell"
     },
     {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "singleton",
+      "entityType": "columns",
+      "table": "server_identity"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "server_id",
+      "entityType": "columns",
+      "table": "server_identity"
+    },
+    {
       "columns": [
         "blob_id"
       ],
@@ -1062,16 +918,6 @@
     },
     {
       "columns": [
-        "source",
-        "scope"
-      ],
-      "nameExplicit": false,
-      "name": "sync_jobs_pk",
-      "entityType": "pks",
-      "table": "sync_jobs"
-    },
-    {
-      "columns": [
         "session_id",
         "id"
       ],
@@ -1079,15 +925,6 @@
       "name": "shell_pk",
       "entityType": "pks",
       "table": "shell"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "agents_pk",
-      "table": "agents",
-      "entityType": "pks"
     },
     {
       "columns": [
@@ -1141,6 +978,15 @@
       "nameExplicit": false,
       "name": "registry_cache_pk",
       "table": "registry_cache",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "singleton"
+      ],
+      "nameExplicit": false,
+      "name": "server_identity_pk",
+      "table": "server_identity",
       "entityType": "pks"
     },
     {
@@ -1221,15 +1067,6 @@
     },
     {
       "columns": [
-        "registry_id"
-      ],
-      "nameExplicit": false,
-      "name": "agents_registry_id_unique",
-      "entityType": "uniques",
-      "table": "agents"
-    },
-    {
-      "columns": [
         "path"
       ],
       "nameExplicit": false,
@@ -1242,6 +1079,12 @@
       "name": "registry_cache_singleton",
       "entityType": "checks",
       "table": "registry_cache"
+    },
+    {
+      "value": "\"singleton\" = 1",
+      "name": "server_identity_singleton",
+      "entityType": "checks",
+      "table": "server_identity"
     }
   ],
   "renames": []

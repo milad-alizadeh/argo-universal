@@ -31,12 +31,6 @@ export const createEntry = (
 export const entryInUse = (entry: Entry): boolean =>
   entry.pending > 0 || entry.connection.inUse;
 
-export const isIdleEntryOf = (
-  entry: Entry,
-  agentId: string | undefined,
-): boolean =>
-  (agentId ?? entry.agentId) === entry.agentId && !entryInUse(entry);
-
 // Shutdown can land while the connection is still starting, so `stopped` is read again once it resolves.
 export const entryAuthentication = async (
   entry: Entry,

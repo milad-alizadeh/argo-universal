@@ -1,0 +1,14 @@
+[
+  {
+    "id": "claude-acp",
+    "name": "Claude Agent"
+  },
+  {
+    "id": "codex-acp",
+    "name": "Codex"
+  },
+  {
+    "id": "example-agent",
+    "name": "Example Agent"
+  }
+]
