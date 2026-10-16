@@ -199,7 +199,7 @@
       "rules": { "argo/kit-styling": "off" }
     },
     {
-      // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values, no raw colours (native colour props included) and no Tailwind palette colour classes. style-tokens-allowlist.json holds the files not yet tokenised.
+      // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values, no raw colours (native colour props included) and no Tailwind palette colour classes.
       "files": ["packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
       "rules": { "argo/style-tokens": "error" }
     },

@@ -121,7 +121,7 @@ function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
   const sidebar = useWideSidebarList();
 
   return (
-    <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
+    <View className="max-w-11/20 flex-row items-center gap-2 wide:gap-3">
       <RowSelection {...props} />
       <StatusDot status={groupedListItemStatus(props)} />
       <GroupedListItemAccessory>{props.accessory}</GroupedListItemAccessory>

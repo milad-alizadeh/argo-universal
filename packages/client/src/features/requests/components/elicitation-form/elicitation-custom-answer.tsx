@@ -40,7 +40,7 @@ const customInputLook = {
   variant: 'bare',
   placeholderTextColorClassName: 'accent-muted-foreground',
   className:
-    'h-9 sm:h-9 flex-1 rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 web:rounded-none web:focus-visible:ring-0 web:focus-visible:border-transparent ios:text-[17px] ios:leading-[22px]',
+    'h-9 sm:h-9 flex-1 rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 web:rounded-none web:focus-visible:ring-0 web:focus-visible:border-transparent ios:text-row ios:leading-row',
 } as const;
 
 function CustomInput({ model }: ModelProps): ReactElement {

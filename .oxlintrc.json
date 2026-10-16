@@ -5,7 +5,6 @@
     "./tooling/oxlint/prickles.json",
     "./tooling/oxlint/argo.json",
     "./tooling/oxlint/kit-styling-allowlist.json",
-    "./tooling/oxlint/style-tokens-allowlist.json",
     "./tooling/oxlint/not-yet-cleared.json"
   ],
   "options": {
