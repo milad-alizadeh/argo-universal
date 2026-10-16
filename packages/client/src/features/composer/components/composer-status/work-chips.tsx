@@ -1,6 +1,5 @@
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { contentActionClass } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Pressable } from '#primitives/pressable';
@@ -95,7 +94,7 @@ function workPressableProps(
     onPress: work.onPress,
     className: contentActionClass({
       variant: 'ghost',
-      className: cn(chipClassName, 'has-[>[data-icon]]:px-2.5'),
+      className: chipClassName,
       disabled,
     }),
   };

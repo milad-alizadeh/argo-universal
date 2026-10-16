@@ -9,7 +9,7 @@ import { Text } from '#primitives/display/text';
 const markClasses: Record<StepMark, string> = {
   done: 'bg-success',
   next: 'bg-primary',
-  open: 'border-[1.5px] border-neutral-400',
+  open: 'border border-muted-foreground',
 };
 
 const markBase = 'size-6 shrink-0 items-center justify-center rounded-full';
@@ -24,7 +24,9 @@ function MarkContent(props: {
   number: number;
 }): React.JSX.Element {
   if (props.mark === 'done')
-    return <Icon name="check" role="body" className="text-white" />;
+    return (
+      <Icon name="check" role="body" className="text-primary-foreground" />
+    );
 
   return (
     <Text role="badge" className={numberClasses[props.mark]}>

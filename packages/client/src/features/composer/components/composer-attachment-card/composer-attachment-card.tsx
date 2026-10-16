@@ -28,8 +28,7 @@ const cardClass =
 
 const previewClass = 'h-22.5 overflow-hidden';
 
-const linesClass =
-  'p-2 font-mono text-[5px] leading-[7px] text-muted-foreground';
+const linesClass = 'p-2 font-mono text-xs leading-4 text-muted-foreground';
 
 const kindClass = 'items-center justify-center gap-1 bg-muted';
 

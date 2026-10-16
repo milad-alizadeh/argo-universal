@@ -1,8 +1,5 @@
 import type { CSSProperties } from 'react';
-import {
-  defaultTerminalAppearance,
-  type TerminalAppearance,
-} from './terminal-appearance';
+import type { TerminalAppearance } from './terminal-appearance';
 
 export type TerminalKeyProps = {
   appearance?: TerminalAppearance;
@@ -27,8 +24,6 @@ const keyStyle: CSSProperties = {
   height: 50,
   border: 0,
   borderRadius: 999,
-  background: '#f5f5f5',
-  color: '#171717',
   fontSize: 14,
 };
 
@@ -91,12 +86,8 @@ const keyProps = (
 
 const keyDrawing = (
   appearance: TerminalAppearance | undefined,
-): CSSProperties => {
-  const colors = appearance ?? defaultTerminalAppearance;
-
-  return {
-    ...keyStyle,
-    background: colors.background,
-    color: colors.buttonForeground,
-  };
-};
+): CSSProperties => ({
+  ...keyStyle,
+  background: appearance?.background,
+  color: appearance?.buttonForeground,
+});

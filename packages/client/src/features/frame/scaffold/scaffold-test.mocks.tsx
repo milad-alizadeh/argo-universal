@@ -71,7 +71,7 @@ function scaffoldTree(props: MockProps, onCommit: Commit): React.JSX.Element {
     <CommittedScaffold onCommit={onCommit}>
       <SafeAreaProvider>
         <KeyboardProvider>
-          <View className="h-[700px] w-full">
+          <View className="h-175 w-full">
             <ScaffoldMock {...props} />
           </View>
           <PortalHost />

@@ -37,7 +37,7 @@ interface ReferenceChipProps {
 
 function ReferenceChip({ reference }: ReferenceChipProps): React.JSX.Element {
   return (
-    <View className="h-[26px] flex-row items-center gap-1.5 rounded-md border border-border bg-card px-2">
+    <View className="h-6.5 flex-row items-center gap-1.5 rounded-md border border-border bg-card px-2">
       <Icon
         name={isFolder(reference) ? 'folder' : 'file'}
         role="body"

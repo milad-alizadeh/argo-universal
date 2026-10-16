@@ -1,14 +1,11 @@
 import type { DOMProps } from 'expo/dom';
 import { createElement, useEffect, useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
-import { useNativeTheme } from '../../../../lib/generic/native-theme';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import {
-  defaultTerminalAppearance,
-  terminalKeyboardHeight,
-} from './terminal-appearance';
+import { terminalKeyboardHeight } from './terminal-appearance';
 import type { LoginTerminalProps } from './terminal-props';
 import TerminalRenderer from './terminal-renderer';
+import { useTerminalAppearance } from './use-terminal-appearance';
 
 const desktopHeight = 320;
 
@@ -80,16 +77,3 @@ const terminalDOMLayout = (height: number, keyboard: boolean): DOMProps => ({
   },
   style: { height: height + (keyboard ? accessoryHeight : 0) },
 });
-
-function useTerminalAppearance(): typeof defaultTerminalAppearance {
-  const { colors } = useNativeTheme();
-
-  return {
-    background: colors.muted ?? defaultTerminalAppearance.background,
-    foreground: colors.foreground ?? defaultTerminalAppearance.foreground,
-    buttonForeground: terminalButtonForeground(colors.primary),
-  };
-}
-
-const terminalButtonForeground = (color: string | undefined): string =>
-  color ?? defaultTerminalAppearance.buttonForeground;
