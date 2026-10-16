@@ -929,7 +929,7 @@ const sessionSetup = setup({
       (event.notification.update.sessionUpdate === 'subagent_update' ||
         event.notification.update.sessionUpdate === 'session_message' ||
         event.notification.update.sessionUpdate === 'session_message_chunk' ||
-        context.subagentFeeds.has(event.notification.sessionId)),
+        context.subagentFeeds.children.has(event.notification.sessionId)),
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&
       event.notification.update.sessionUpdate === 'config_option_update',
@@ -1068,7 +1068,7 @@ export const sessionMachine = sessionSetup.createMachine({
     acpLease: null,
     pendingSubmission: null,
     feedEnded: false,
-    subagentFeeds: new Map(),
+    subagentFeeds: { children: new Map(), pendingMessages: [] },
     acpPrompt: null,
     acpResponseReaders: createAcpResponseReaders(
       createRejectionCounter(`ACP Session ${input.sessionId}`),

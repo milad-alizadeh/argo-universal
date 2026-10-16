@@ -13,9 +13,7 @@ type Message = Extract<
   { sessionUpdate: 'session_message' | 'session_message_chunk' }
 >;
 
-export type MessageRouting = SubagentRouting & {
-  associate: (id: string) => ChildFeed | undefined;
-};
+type MessageRouting = SubagentRouting;
 
 const messageId = (input: SubagentRouting, update: Message): string =>
   JSON.stringify(['session_message', input.parentId, update.messageId]);
@@ -35,8 +33,7 @@ function recipient(
   children: ReadonlyMap<string, ChildFeed>,
   update: Message,
 ): ChildFeed | undefined {
-  if (update.recipientSessionId)
-    return input.associate(update.recipientSessionId);
+  if (update.recipientSessionId) return children.get(update.recipientSessionId);
 
   return [...children.values()].find(
     (child) => previousMessage(child, messageId(input, update)) !== undefined,
@@ -101,13 +98,15 @@ export function deliverSubagentMessage(
   input: MessageRouting,
   children: ReadonlyMap<string, ChildFeed>,
   update: Message,
-): void {
+): boolean {
   const child = recipient(input, children, update);
 
-  if (!child) return;
+  if (!child) return false;
   child.feed.send({
     type: 'feed.change',
     turnId: child.turnId,
     change: { type: 'upsert', update: messageRow(input, child, update) },
   });
+
+  return true;
 }

@@ -167,6 +167,15 @@ it('retains delegated message patches and chunks with the reported child Turn ou
       {
         type: 'update',
         update: {
+          sessionUpdate: 'session_message',
+          messageId: 'unrelated',
+          recipientSessionId: 'unassociated',
+          content: [{ type: 'text', text: 'No parentage' }],
+        },
+      },
+      {
+        type: 'update',
+        update: {
           sessionUpdate: 'subagent_update',
           sessionId: 'review',
           state: { state: 'running' },
@@ -236,6 +245,7 @@ it('retains delegated message patches and chunks with the reported child Turn ou
   const [child] = await host.caller.session.subagents({ sessionId });
 
   if (!child) throw new Error(missingSubagent);
+  expect(await host.caller.session.subagents({ sessionId })).toHaveLength(1);
   expect(child).toMatchObject({
     state: 'idle',
     tokens: 12,

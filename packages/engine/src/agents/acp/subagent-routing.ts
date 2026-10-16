@@ -5,7 +5,7 @@ const associatedId = (
 ): string | null | undefined => {
   if (update.sessionUpdate === 'subagent_update') return update.sessionId;
 
-  return messageRecipient(update);
+  return undefined;
 };
 
 // Child identities belong to exactly one open root; they never become executable Agent sessions.
@@ -41,15 +41,3 @@ export class SubagentRoutes<Owner> {
       if (childOwner === owner) this.children.delete(id);
   }
 }
-
-const messageRecipient = (
-  update: SessionNotification['update'],
-): string | null | undefined => {
-  if (
-    update.sessionUpdate === 'session_message' ||
-    update.sessionUpdate === 'session_message_chunk'
-  )
-    return update.recipientSessionId;
-
-  return undefined;
-};

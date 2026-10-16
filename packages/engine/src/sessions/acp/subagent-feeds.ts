@@ -3,15 +3,14 @@ import { SessionRowUpdateJob } from '../session-storage';
 import { openChildFeed, type ChildFeed } from '../subagents/child-feed';
 import type { SubagentRouting } from '../subagents/routing-types';
 import { updateSubagentWork } from '../subagents/work';
-import {
-  deliverSubagentMessage,
-  isSubagentMessage,
-  type MessageRouting,
-} from './subagent-messages';
+import { deliverSubagentMessage, isSubagentMessage } from './subagent-messages';
 import { associationEvent } from './subagent-rows';
 import { subagentWorkState } from './subagent-work';
 
-export type SubagentFeeds = ReadonlyMap<string, ChildFeed>;
+export type SubagentFeeds = {
+  children: ReadonlyMap<string, ChildFeed>;
+  pendingMessages: readonly SessionNotification[];
+};
 
 type Association = Extract<
   SessionNotification['update'],
@@ -63,10 +62,10 @@ function updateAssociation(
 }
 
 function routeUpdate(
-  input: MessageRouting,
+  input: SubagentRouting,
   children: Map<string, ChildFeed>,
   notification: SessionNotification,
-): void {
+): boolean | void {
   const { update } = notification;
 
   if (update.sessionUpdate === 'subagent_update')
@@ -83,27 +82,31 @@ export function routeSubagentUpdate(
   previous: SubagentFeeds,
   notification: SessionNotification,
 ): SubagentFeeds {
-  const children = new Map(previous);
+  const children = new Map(previous.children);
   const source = children.get(notification.sessionId);
 
   const routing = routingSource(input, source);
 
-  routeUpdate(
-    { ...routing, associate: (id) => associate(routing, children, id) },
-    children,
-    notification,
-  );
+  const pending = [...previous.pendingMessages];
 
-  return children;
+  if (routeUpdate(routing, children, notification) === false)
+    pending.push(notification);
+
+  return {
+    children,
+    pendingMessages: pending.filter(
+      (message) => !replayMessage(input, children, message),
+    ),
+  };
 }
 
 export function flushSubagentFeeds(children: SubagentFeeds): void {
-  for (const child of children.values())
+  for (const child of children.children.values())
     child.feed.send({ type: 'feed.flush' });
 }
 
 function deliverChildUpdate(
-  children: SubagentFeeds,
+  children: ReadonlyMap<string, ChildFeed>,
   notification: SessionNotification,
 ): void {
   const source = children.get(notification.sessionId);
@@ -123,4 +126,18 @@ function routingSource(
   if (!source) return input;
 
   return { ...input, parentId: source.sessionId, parentFeed: source.feed };
+}
+
+function replayMessage(
+  input: SubagentRouting,
+  children: ReadonlyMap<string, ChildFeed>,
+  notification: SessionNotification,
+): boolean {
+  if (!isSubagentMessage(notification.update)) return false;
+
+  return deliverSubagentMessage(
+    routingSource(input, children.get(notification.sessionId)),
+    children,
+    notification.update,
+  );
 }
