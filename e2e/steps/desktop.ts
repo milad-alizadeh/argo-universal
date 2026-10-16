@@ -6,7 +6,7 @@ import { expect, type App } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { startSession } from './live-session';
 
-function desktop(app: App): NonNullable<App['desktop']> {
+function desktop(app: Pick<App, 'desktop'>): NonNullable<App['desktop']> {
   if (!app.desktop) throw new Error('This scenario needs the Electron App');
 
   return app.desktop;
@@ -103,7 +103,7 @@ Then(
 );
 
 async function expectRunningSession(
-  app: App,
+  app: Pick<App, 'desktop' | 'httpUrl'>,
   request: APIRequestContext,
 ): Promise<void> {
   const { home, supervisorPid } = desktop(app);

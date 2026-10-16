@@ -63,7 +63,10 @@ interface SupervisorEnvironment {
 
 export function ownedSupervisorEnvironment(input: {
   directory: string;
-  server: Awaited<ReturnType<typeof startOwnServer>>;
+  server: Pick<
+    Awaited<ReturnType<typeof startOwnServer>>,
+    'httpUrl' | 'registryPath' | 'installationPath'
+  >;
   agents: AppFixtureAgents;
 }): SupervisorEnvironment {
   return {

@@ -354,10 +354,10 @@ export const serverConnectionMachine = serverSetup.createMachine({
       entry: 'announceReady',
       invoke: {
         src: 'watchCounts',
-        input: ({ context }): ServerAddress => {
+        input: ({ context }): Pick<ServerAddress, 'port'> => {
           if (!context.address) throw new Error('The Server has no address');
 
-          return context.address;
+          return { port: context.address.port };
         },
       },
       initial: 'active',
