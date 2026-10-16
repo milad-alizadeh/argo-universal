@@ -61,3 +61,8 @@ export type DialogBackdropProps = Pick<PressableProps, 'onPress'> & {
   className: string;
   children: ReactNode;
 };
+
+export type DialogWindowProps = {
+  children: ReactNode;
+  dismissible?: boolean;
+};

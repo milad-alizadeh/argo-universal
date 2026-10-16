@@ -65,7 +65,7 @@ function DialogFooter({ className, ...props }: ViewProps): React.JSX.Element {
   return (
     <View
       className={cn(
-        'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+        'flex flex-col-reverse gap-2 wide:flex-row wide:justify-end',
         className,
       )}
       {...props}
