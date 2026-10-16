@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { RegistryIcon } from '#features/agents';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { AgentChoices } from './agent-picker-choices';
@@ -22,6 +23,9 @@ function AgentPicker(props: StartSessionInProps): React.JSX.Element {
     <ComposerPopover
       listContent
       label="Select Agent"
+      width={260}
+      side="bottom"
+      contentClassName="composer-popover bg-card rounded-2xl border-0 p-2 gap-2 overflow-hidden"
       trigger={agentTrigger(props)}
     >
       {(close) => <AgentChoices {...props} close={close} />}
@@ -34,7 +38,16 @@ function agentTrigger(props: StartSessionInProps): React.JSX.Element {
 
   return (
     <MenuTrigger
-      icon="agent"
+      icon={current ? undefined : 'agent'}
+      leading={
+        current ? (
+          <RegistryIcon
+            uri={current.icon}
+            agentName={current.name}
+            role="control"
+          />
+        ) : undefined
+      }
       label={current?.name ?? 'Select Agent'}
       accessibilityLabel="Select Agent"
       disabled={props.disabled}

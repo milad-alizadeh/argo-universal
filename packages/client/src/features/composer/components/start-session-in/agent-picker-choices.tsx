@@ -1,9 +1,11 @@
 import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
-import { Platform, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, View, useWindowDimensions } from 'react-native';
 import { RegistryIcon } from '#features/agents';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
+import { Icon } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
+import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import {
   GroupedListItem,
@@ -41,13 +43,7 @@ type ScrollableChoicesProps = AgentChoiceProps &
   Pick<React.ComponentProps<typeof ScrollFadeList>, 'maxHeight'>;
 
 function WebChoices(props: ScrollableChoicesProps): React.JSX.Element {
-  return (
-    <View className="px-4 wide:px-0">
-      <GroupedListSection>
-        <ChoicesList {...props} />
-      </GroupedListSection>
-    </View>
-  );
+  return <ChoicesList {...props} />;
 }
 
 function ChoicesList(props: ScrollableChoicesProps): React.JSX.Element {
@@ -55,11 +51,11 @@ function ChoicesList(props: ScrollableChoicesProps): React.JSX.Element {
     <ScrollFadeList
       data={props.agents}
       maxHeight={props.maxHeight}
-      surfaceClassName="bg-content"
+      contentContainerStyle={{ gap: 2 }}
       testID="new-session-agents-scroll"
       keyExtractor={({ id }) => id}
-      renderItem={({ item }) => <AgentChoice agent={item} choices={props} />}
-      ListFooterComponent={<AddAgents {...props} />}
+      renderItem={({ item }) => <WebAgentChoice agent={item} choices={props} />}
+      ListFooterComponent={<WebAddAgents {...props} />}
     />
   );
 }
@@ -93,6 +89,25 @@ function AgentChoice({ agent, choices }: RowProps): React.JSX.Element {
   );
 }
 
+function WebAgentChoice({ agent, choices }: RowProps): React.JSX.Element {
+  const selected = choices.agent === agent.id;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      className="min-h-9 flex-row items-center gap-3 rounded-xl px-2 web:cursor-default web:select-none web:outline-none web:hover:bg-hover web:focus:bg-hover web:active:bg-pressed"
+      onPress={() => choices.close(() => choices.onAgentChange(agent.id))}
+    >
+      <RegistryIcon uri={agent.icon} agentName={agent.name} role="row" />
+      <Text role="body" numberOfLines={1} className="min-w-0 flex-1">
+        {agent.name}
+      </Text>
+      {selected ? <SelectedCheck role="mark" /> : <View className="size-4" />}
+    </Pressable>
+  );
+}
+
 const choiceProps = (
   agent: AgentServer,
   props: AgentChoiceProps,
@@ -113,5 +128,20 @@ function AddAgents(props: AgentChoiceProps): React.JSX.Element {
       accessibilityRole="button"
       onPress={() => props.close(props.onAddAgents)}
     />
+  );
+}
+
+function WebAddAgents(props: AgentChoiceProps): React.JSX.Element {
+  return (
+    <View className="pt-1_5">
+      <Pressable
+        accessibilityRole="button"
+        className="min-h-9 flex-row items-center gap-3 rounded-xl px-2 web:cursor-default web:select-none web:outline-none web:hover:bg-hover web:focus:bg-hover web:active:bg-pressed"
+        onPress={() => props.close(props.onAddAgents)}
+      >
+        <Icon name="add" role="row" />
+        <Text role="body">Add Agents</Text>
+      </Pressable>
+    </View>
   );
 }
