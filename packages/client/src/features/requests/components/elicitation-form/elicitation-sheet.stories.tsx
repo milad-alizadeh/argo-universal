@@ -19,7 +19,7 @@ const meta = {
   title: 'Requests/ElicitationSheet',
   component: ElicitationSheet,
   parameters: { screenPreview: true },
-  args: elicitationProps({ request: questionsRequest, source: 'Claude' }),
+  args: elicitationProps({ request: questionsRequest }),
   render: (args): ReactElement => <InteractiveSheet {...args} />,
 } satisfies Meta<typeof ElicitationSheet>;
 
@@ -36,11 +36,11 @@ export const MultipleChoice: Story = {
 export const SingleChoice: Story = { args: { request: refactorRequest } };
 
 export const TextField: Story = {
-  args: { request: functionNameRequest, source: 'Codex' },
+  args: { request: functionNameRequest },
 };
 
 export const FormFields: Story = {
-  args: { request: configurationRequest, source: 'Codex' },
+  args: { request: configurationRequest },
 };
 
 function InteractiveSheet(props: ElicitationFormProps): ReactElement {

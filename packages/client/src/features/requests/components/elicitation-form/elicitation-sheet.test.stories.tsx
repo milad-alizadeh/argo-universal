@@ -106,15 +106,14 @@ export const RetainFieldAnswersAcrossTrayTransition: Story = {
   },
 };
 
-// The card names the Agent once and heads itself with the message once.
+// The card heads itself with the message once.
 export const MessageShownOnce: Story = {
-  args: { request: configurationRequest, source: 'Claude' },
+  args: { request: configurationRequest },
   play: async () => {
     const sheet = within(await within(document.body).findByRole('dialog'));
     await expect(
       sheet.getAllByRole('heading', { name: configurationRequest.message }),
     ).toHaveLength(1);
-    await expect(sheet.getAllByText('Claude asks')).toHaveLength(1);
   },
 };
 

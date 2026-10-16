@@ -22,11 +22,9 @@ function formFields(width: number): Story {
     args: {
       request: configurationRequest,
       initialValues: configurationValues,
-      source: 'Codex',
     },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await expect(canvas.getByText('Codex asks')).toBeVisible();
       await expect(
         canvas.getByText('Enter a whole number from 1024 to 65535.'),
       ).toBeVisible();

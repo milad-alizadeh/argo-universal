@@ -14,7 +14,7 @@ export type ElicitationView = {
   props: ElicitationFormProps;
   state: ElicitationFormProps['state'];
   error?: string;
-  header: Omit<ElicitationHeaderProps, 'source' | 'inactive' | 'onDismiss'>;
+  header: Omit<ElicitationHeaderProps, 'inactive' | 'onDismiss'>;
   rows: ReactElement;
   // What stops the answer, such as a field to fix.
   validation?: ReactElement;
@@ -59,7 +59,6 @@ function BodyHeader({ view }: ViewProps): ReactElement {
     <View className={cn(!wide && 'px-4')}>
       <ElicitationHeader
         {...view.header}
-        source={view.props.source}
         inactive={view.inactive}
         onDismiss={() => cancel(view)}
       />

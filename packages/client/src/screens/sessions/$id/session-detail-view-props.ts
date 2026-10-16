@@ -62,17 +62,8 @@ const sessionFeedProps = (open: OpenSession): FeedProps => ({
   checkoutBranch: open.snapshot.checkout.branch ?? undefined,
 });
 
-// The Agent that asks, named on the Elicitation as "<Agent> asks".
-const agentLabel = ({ agents, snapshot }: OpenSession): string | undefined =>
-  agents.data?.find((agent) => agent.agent === snapshot.agent)?.label;
-
-const sessionElicitation = (
-  open: OpenSession,
-): OpenSessionViewProps['elicitation'] =>
-  open.elicitation && { ...open.elicitation, source: agentLabel(open) };
-
 const openSessionProps = (open: OpenSession): OpenSessionViewProps => ({
-  elicitation: sessionElicitation(open),
+  elicitation: open.elicitation,
   header: sessionHeaderProps(open),
   feed: sessionFeedProps(open),
   composer: sessionComposerProps(open),

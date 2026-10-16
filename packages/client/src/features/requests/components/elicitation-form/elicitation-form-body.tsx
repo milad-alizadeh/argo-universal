@@ -4,10 +4,6 @@ import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import type { ElicitationFieldProps } from './elicitation-field-rows';
 import type { ElicitationValue } from './elicitation-schema';
 
-// The line naming the Agent that asks.
-export const sourceLabel = (source?: string): string | undefined =>
-  source ? `${source} asks` : undefined;
-
 export type ElicitationEntry = ElicitationModel['schema']['fields'][number];
 
 type FormFieldProps = {

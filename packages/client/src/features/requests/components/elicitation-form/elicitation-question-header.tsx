@@ -5,11 +5,8 @@ import { useContentWide } from '#lib/product/content-layout';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import { sourceLabel } from './elicitation-form-body';
 
 export type ElicitationHeaderProps = {
-  // The Agent that asks, named on its own line above the question.
-  source?: string;
   title: string;
   // What to do and where in the questions, such as "Choose one · 2 of 3".
   progress?: string;
@@ -36,7 +33,6 @@ export function ElicitationHeader(props: ElicitationHeaderProps): ReactElement {
 function HeaderText(props: ElicitationHeaderProps): ReactElement {
   return (
     <View className={cn('min-w-0 flex-1 gap-0.5', useContentWide() && 'pt-1')}>
-      <HeaderLine text={sourceLabel(props.source)} />
       <HeaderTitle title={props.title} />
       <HeaderLine text={props.progress} />
     </View>

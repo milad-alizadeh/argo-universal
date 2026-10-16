@@ -66,26 +66,24 @@ const answeredState = {
 const examples: { label: string; props: ElicitationFormProps }[] = [
   {
     label: 'Single choice',
-    props: elicitationProps({ request: refactorRequest, source: 'Claude' }),
+    props: elicitationProps({ request: refactorRequest }),
   },
   {
     label: 'Multiple choice',
     props: elicitationProps({
       request: nextWorkRequest,
       values: nextWorkValues,
-      source: 'Claude',
     }),
   },
   {
     label: 'Text field',
-    props: elicitationProps({ request: functionNameRequest, source: 'Codex' }),
+    props: elicitationProps({ request: functionNameRequest }),
   },
   {
     label: 'Form fields and validation',
     props: elicitationProps({
       request: configurationRequest,
       values: configurationValues,
-      source: 'Codex',
     }),
   },
 ];
