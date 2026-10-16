@@ -10,6 +10,7 @@ import { feedRow, session, turn, shell } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
 import {
   and,
+  count,
   desc,
   eq,
   getTableColumns,
@@ -46,10 +47,23 @@ import type {
 import { decodeStoredTurn } from './stored-turn';
 import type { WriterChange } from './writer-changes';
 
-const shellCountColumns = {
-  shellTotal: sql<number>`(select count(*) from ${shell} where ${shell.sessionId} = ${session.id})`,
-  shellRunning: sql<number>`(select count(*) from ${shell} where ${shell.sessionId} = ${session.id} and ${shell.status} = 'running')`,
-};
+const shellCount = (database: Database, running: boolean): SQL<number> =>
+  sql<number>`(${database
+    .select({ total: count() })
+    .from(shell)
+    .where(
+      and(
+        eq(shell.sessionId, session.id),
+        running ? eq(shell.status, 'running') : undefined,
+      ),
+    )})`;
+
+type ShellCountColumns = { shellTotal: SQL<number>; shellRunning: SQL<number> };
+
+const shellCountColumns = (database: Database): ShellCountColumns => ({
+  shellTotal: shellCount(database, false),
+  shellRunning: shellCount(database, true),
+});
 
 const storedTurnColumns = {
   ...getTableColumns(turn),
@@ -257,7 +271,7 @@ function readListSessions(
   const projection = readQueuedSessionRows(input.writer);
 
   const stored = input.database
-    .select({ ...storedSessionColumns, ...shellCountColumns })
+    .select({ ...storedSessionColumns, ...shellCountColumns(input.database) })
     .from(session)
     .where(
       sessionIds

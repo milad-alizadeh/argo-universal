@@ -22,8 +22,8 @@ type AgentClientInput = {
   rejectAuthStatus?: () => void;
 };
 
-export const createAgentClient = (input: AgentClientInput): ClientConnection =>
-  acceptTerminalRequests(client(), input.terminalRequests)
+const sessionClient = (input: AgentClientInput): ReturnType<typeof client> =>
+  client()
     .onNotification('session/update', ({ params }) =>
       input.acceptSessionUpdate(params),
     )
@@ -33,8 +33,12 @@ export const createAgentClient = (input: AgentClientInput): ClientConnection =>
       authStatusNotification,
       createAuthStatusReader(input.rejectAuthStatus),
       ({ params }) => input.acceptAuthStatus?.(params),
-    )
-    .connect(input.stream);
+    );
+
+export const createAgentClient = (input: AgentClientInput): ClientConnection =>
+  acceptTerminalRequests(sessionClient(input), input.terminalRequests).connect(
+    input.stream,
+  );
 
 export const awaitAcpOpening = async <Result>(
   work: Promise<Result>,

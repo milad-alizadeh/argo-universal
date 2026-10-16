@@ -26,6 +26,7 @@ export async function recoverShells(input: {
       await recoverRunningShell(input, record, path);
     await removeShellOutput(path);
   }
+
   await clearShellOutputs(input.home);
 }
 

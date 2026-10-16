@@ -63,15 +63,18 @@ it('advertises supported ACP terminals and retains full Blob output while limiti
 
 it('accepts the Agent ACP kill, wait and release sequence without inventing an exit code', async () => {
   const host = await startAcpEngine(shellScenarios['shell-stopped']);
+
   const created = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'Stop' }],
   });
+
   const snapshot = await waitForAcpSnapshot(
     host,
     created.sessionId,
     (value) => value.state === 'idle' && value.shells[0]?.status === 'stopped',
   );
+
   expect(snapshot.shells).toMatchObject([
     { status: 'stopped', exitCode: null, canStop: false },
   ]);
