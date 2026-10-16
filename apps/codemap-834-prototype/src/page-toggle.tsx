@@ -1,7 +1,7 @@
 import type { CSSProperties, JSX } from 'react';
-import { togglePlate } from './frame-styles';
 import { button } from './map-styles';
 import type { Palette, View } from './model';
+import { togglePlate } from './page-styles';
 import type { PrototypeState } from './prototype-state';
 
 interface ToggleProps {

@@ -1,9 +1,9 @@
 import { Text } from '@repo/client/text';
 import type { JSX } from 'react';
 import { CodeMap } from './code-map';
-import { map, measurePlate, selectionPlate } from './frame-styles';
-import { ViewToggle } from './frame-toggle';
 import type { Palette } from './model';
+import { map, measurePlate, selectionPlate } from './page-styles';
+import { ViewToggle } from './page-toggle';
 import type { PrototypeState } from './prototype-state';
 
 interface Props {
@@ -59,7 +59,7 @@ function ProjectMap({ state }: { state: PrototypeState }): JSX.Element {
   );
 }
 
-/** The Frame around the Code Map: its view toggle, legend and selected file sit over the map. */
+/** The prototype page around the Code Map: its view toggle, legend and selected file sit over the map. */
 export function MapArea(props: Props): JSX.Element {
   return (
     <div style={map(props.palette)}>

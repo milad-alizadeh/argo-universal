@@ -1,8 +1,8 @@
 import { Text } from '@repo/client/text';
 import type { JSX } from 'react';
 import { useEvidence } from './evidence';
-import { diagnosticStyle } from './frame-styles';
 import { source, type Palette } from './model';
+import { diagnosticStyle } from './page-styles';
 import type { PrototypeState } from './prototype-state';
 
 export function Header({ state }: { state: PrototypeState }): JSX.Element {

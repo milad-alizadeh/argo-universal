@@ -31,8 +31,10 @@ export interface LabelScreen {
 export interface LabelAnchors {
   /** The label's corner on screen, or none when the tile is too small to read there. */
   anchor: (tile: Tile) => ScreenPoint | undefined;
-  /** Whether the anchor can be seen. Asked last, only for a label that would otherwise be placed. */
+  /** Whether the anchor can be seen. Asked only for a tile with an anchor. */
   exposed: (tile: Tile) => boolean;
+  /** How many anchored, exposed tiles the view considers, largest first; the rest go unlabelled. */
+  candidates: number;
 }
 
 export const maximumLabels = 32;
@@ -111,33 +113,47 @@ interface Placement {
   anchors: LabelAnchors;
   screen: LabelScreen;
   placed: Label[];
+  considered: number;
 }
 
-function fits(label: Label | undefined, ctx: Placement): label is Label {
-  return label !== undefined && free(label, ctx.placed, ctx.screen);
+function consider(tile: Tile, ctx: Placement): Label | undefined {
+  const label = candidate(tile, ctx.anchors);
+
+  if (!label || !ctx.anchors.exposed(tile)) return;
+  ctx.considered += 1;
+
+  return label;
 }
 
 function place(tile: Tile, ctx: Placement): void {
-  const label = candidate(tile, ctx.anchors);
+  const label = consider(tile, ctx);
 
-  if (fits(label, ctx) && ctx.anchors.exposed(tile)) ctx.placed.push(label);
+  if (label && free(label, ctx.placed, ctx.screen)) ctx.placed.push(label);
+}
+
+function done(ctx: Placement): boolean {
+  return (
+    ctx.placed.length >= maximumLabels ||
+    ctx.considered >= ctx.anchors.candidates
+  );
 }
 
 /**
- * Places at most 32 labels, largest file first. A label is placed when its anchor is readable,
- * it fits on screen outside the insets, it overlaps no larger file's label, and it is exposed.
+ * Places at most 32 labels, largest file first, from the tiles the view considers. A label is
+ * placed when its anchor is readable and exposed, it fits on screen outside the insets, and it
+ * overlaps no larger file's label.
  */
 export function placeLabels(
   tiles: Tile[],
   anchors: LabelAnchors,
   screen: LabelScreen,
 ): Label[] {
-  const ctx: Placement = { anchors, screen, placed: [] };
+  const ctx: Placement = { anchors, screen, placed: [], considered: 0 };
 
   for (const tile of ordered(tiles)) {
     place(tile, ctx);
 
-    if (ctx.placed.length >= maximumLabels) break;
+    if (done(ctx)) break;
   }
 
   return ctx.placed;

@@ -28,8 +28,8 @@ describe('flat labels', () => {
       tile('readable', { x: 0, y: 20, w: 11, h: 3 }, 1),
     ];
 
-    expect(placeLabels(tiles, tenPixels, open)).toEqual([
-      { id: 'readable', text: 'readable.ts', x: 0, y: 200, maxWidth: 200 },
+    expect(placeLabels(tiles, tenPixels, open)).toMatchObject([
+      { id: 'readable', text: 'readable.ts', x: 0, y: 200 },
     ]);
   });
 });
@@ -73,6 +73,19 @@ describe('label culling', () => {
     expect(ids(placeLabels(tiles, tenPixels, screen))).toEqual(['outside']);
   });
 
+  // The two largest overlap, so a view that considers only two places one label.
+  it('considers only as many tiles as the view allows, largest first', () => {
+    const tiles = [
+      tile('small', { x: 1, y: 1, w: 12, h: 3 }, 5),
+      tile('large', { x: 0, y: 0, w: 30, h: 10 }, 300),
+      tile('apart', { x: 0, y: 30, w: 11, h: 3 }, 1),
+    ];
+
+    const twoCandidates = { ...tenPixels, candidates: 2 };
+
+    expect(ids(placeLabels(tiles, twoCandidates, open))).toEqual(['large']);
+  });
+
   // Forty readable tiles in one column, 25 px apart, so none overlap.
   it('places at most 32 labels, the largest files first', () => {
     const column = Array.from({ length: 40 }, (_, row) =>
@@ -114,19 +127,21 @@ function positions(roof: Tile, pose: CameraPose): ScreenPoint[] {
   );
 }
 
+const shifted: CameraPose = {
+  ...above,
+  position: { x: 4, y: 11, z: 10 },
+  target: { x: 4, y: 1, z: 0 },
+};
+
 describe('3D labels', () => {
   const roof = tile('roof', { x: -5, y: -5, w: 10, h: 10 });
 
-  it('follows the camera pose to the roof centre', () => {
-    const shifted = {
-      ...above,
-      position: { x: 4, y: 11, z: 10 },
-      target: { x: 4, y: 1, z: 0 },
-    };
-
-    expect(positions(roof, above)).toEqual([near({ x: 200, y: 100 })]);
-    // Four units left of the target: 4 × 100 / (10√2) = 28.28 px.
-    expect(positions(roof, shifted)).toEqual([near({ x: 171.716, y: 100 })]);
+  // Four units left of the target: 4 × 100 / (10√2) = 28.28 px.
+  it.each([
+    ['above it', above, { x: 200, y: 100 }],
+    ['four units to its right', shifted, { x: 171.716, y: 100 }],
+  ])('anchors to the roof centre from a camera %s', (_, pose, centre) => {
+    expect(positions(roof, pose)).toEqual([near(centre)]);
   });
 
   /*

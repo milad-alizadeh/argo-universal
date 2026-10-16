@@ -23,32 +23,29 @@ function near(point: Record<string, number>): Record<string, Closeness> {
 }
 
 describe('3D world to screen', () => {
-  it('projects map points through a plain camera pose', () => {
-    expect(projectPoint(front, { x: 0, y: 0 })).toEqual(
-      near({ x: 100, y: 50 }),
-    );
-    expect(projectPoint(front, { x: 10, y: 0 })).toEqual(
-      near({ x: 150, y: 50 }),
-    );
-
-    expect(projectPoint(front, { x: 0, y: 0, elevation: 5 })).toEqual(
-      near({ x: 100, y: 25 }),
-    );
+  it.each([
+    ['the target', { x: 0, y: 0 }, { x: 100, y: 50 }],
+    ['ten units right of the target', { x: 10, y: 0 }, { x: 150, y: 50 }],
+    [
+      'five units above the target',
+      { x: 0, y: 0, elevation: 5 },
+      { x: 100, y: 25 },
+    ],
+  ])('projects %s through a plain camera pose', (_, point, screen) => {
+    expect(projectPoint(front, point)).toEqual(near(screen));
   });
 
-  it('moves the projection when the pose moves', () => {
+  it.each([
+    ['the new target to the centre', { x: 10, y: 0 }, { x: 100, y: 50 }],
+    ['the old target to the left', { x: 0, y: 0 }, { x: 50, y: 50 }],
+  ])('moves %s when the pose moves', (_, point, screen) => {
     const shifted = {
       ...front,
       position: { x: 10, y: 0, z: 10 },
       target: { x: 10, y: 0, z: 0 },
     };
 
-    expect(projectPoint(shifted, { x: 10, y: 0 })).toEqual(
-      near({ x: 100, y: 50 }),
-    );
-    expect(projectPoint(shifted, { x: 0, y: 0 })).toEqual(
-      near({ x: 50, y: 50 }),
-    );
+    expect(projectPoint(shifted, point)).toEqual(near(screen));
   });
 
   it('projects nothing behind the camera', () => {

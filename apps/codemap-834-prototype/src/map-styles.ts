@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import type { Label } from './map-labels';
 import type { Palette } from './model';
 
-/** Code Map plates and buttons; the Frame's own plates reuse them. */
+/** Code Map plates and buttons; the prototype page's own plates reuse them. */
 export function button(palette: Palette): CSSProperties {
   return {
     border: 0,

@@ -20,6 +20,7 @@ export function tileCorners({ x, y, scale }: FlatTransform): LabelAnchors {
         ? { x: x + tile.x * scale, y: y + tile.y * scale }
         : undefined,
     exposed: () => true,
+    candidates: Number.POSITIVE_INFINITY,
   };
 }
 

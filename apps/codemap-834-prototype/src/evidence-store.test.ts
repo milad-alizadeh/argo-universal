@@ -40,14 +40,22 @@ describe('measurement evidence', () => {
     expect(evidence.selectedId).toBe('src/app.ts');
   });
 
-  it('tells subscribers when the evidence changes, but not for a repeated label count', () => {
+  it('tells subscribers when the evidence changes', () => {
+    const observer = observeEvidence(record(), mountedAfter(1));
+    const listener = vi.fn<() => void>();
+    observer.subscribe(listener);
+    observer.ready('3d', info);
+
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not tell subscribers about a repeated label count', () => {
     const observer = observeEvidence(record(), mountedAfter(1));
     const listener = vi.fn<() => void>();
     observer.subscribe(listener);
     observer.labels(3);
     observer.labels(3);
-    observer.ready('3d', info);
 
-    expect(listener).toHaveBeenCalledTimes(2);
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });

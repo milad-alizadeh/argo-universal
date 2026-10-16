@@ -11,6 +11,9 @@ const halves = 2;
 /** A roof narrower than this on screen is too small to label. */
 const minimumWidth = 38;
 
+/** Bounds the occlusion work per placement on a 20,000-file map. */
+const maximumCandidates = 150;
+
 /** A point across the roof at its middle depth: 0 is the left edge, 1 the right. */
 function roof(tile: Tile, across: number): MapPoint {
   return {
@@ -44,5 +47,6 @@ export function roofCentres(tiles: Tile[], pose: CameraPose): LabelAnchors {
   return {
     anchor: (tile) => anchor(tile, project),
     exposed: (tile) => !hidden(pose.position, tiles, roof(tile, 1 / halves)),
+    candidates: maximumCandidates,
   };
 }

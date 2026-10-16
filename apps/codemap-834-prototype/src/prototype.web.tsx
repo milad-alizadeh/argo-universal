@@ -4,19 +4,19 @@ import { Text } from '@repo/client/text';
  * This route has no Plugin registry or production API.
  */
 import type { JSX } from 'react';
-import { Diagnostics, Footer, Header } from './frame-details';
-import { MapArea } from './frame-map';
-import { main } from './frame-styles';
 import type { Palette } from './model';
+import { Diagnostics, Footer, Header } from './page-details';
+import { MapArea } from './page-map';
+import { main } from './page-styles';
 import { usePalette } from './palette';
 import { usePrototypeState, type PrototypeState } from './prototype-state';
 
-interface FrameProps {
+interface PageProps {
   state: PrototypeState;
   palette: Palette;
 }
 
-function Frame({ state, palette }: FrameProps): JSX.Element {
+function Page({ state, palette }: PageProps): JSX.Element {
   return (
     <main style={main(palette)}>
       <Header state={state} />
@@ -33,5 +33,5 @@ export default function CodeMap834Prototype(): JSX.Element {
 
   if (!palette) return <Text>Measuring argo-universal</Text>;
 
-  return <Frame state={state} palette={palette} />;
+  return <Page state={state} palette={palette} />;
 }

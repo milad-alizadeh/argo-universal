@@ -26,11 +26,17 @@ function overlay(): Observed {
 }
 
 describe('Code Map overlay', () => {
-  it('shows the labels a view places and reports how many', () => {
+  it('shows the labels a view places', () => {
     const map = overlay();
     map.overlay.showLabels([label('app'), label('server', 300)]);
 
     expect(map.labels.current().map(({ id }) => id)).toEqual(['app', 'server']);
+  });
+
+  it('reports how many labels a view places', () => {
+    const map = overlay();
+    map.overlay.showLabels([label('app'), label('server', 300)]);
+
     expect(map.observer.labels).toHaveBeenLastCalledWith(2);
   });
 
