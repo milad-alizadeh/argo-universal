@@ -9,16 +9,23 @@ declare global {
   var notificationProbe: {
     records: NotificationRecord[];
     click: () => void;
+    failNext: () => void;
+    attempts: number;
   };
 }
 
 export function installNotificationStub(): void {
   const records: NotificationRecord[] = [];
   const clicks: (() => void)[] = [];
+  let failNext = false;
 
   globalThis.notificationProbe = {
     records,
     click: (): void => clicks.at(-1)?.(),
+    failNext: (): void => {
+      failNext = true;
+    },
+    attempts: 0,
   };
 
   class NotificationStub {
@@ -30,6 +37,13 @@ export function installNotificationStub(): void {
       title: string,
       options: Partial<Pick<NotificationRecord, 'body' | 'tag'>>,
     ) {
+      globalThis.notificationProbe.attempts += 1;
+
+      if (failNext) {
+        failNext = false;
+        throw new Error('Native notification delivery failed');
+      }
+
       this.record = {
         title,
         body: options.body,

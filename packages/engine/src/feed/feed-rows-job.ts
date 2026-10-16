@@ -72,6 +72,10 @@ export class FeedRowsJob implements WriterJob {
     return this.input.sessionId;
   }
 
+  public changedRows(): readonly SessionUpdate[] {
+    return this.input.rows;
+  }
+
   // What the commit writes to its Session's row, as `advanceSession` does.
   public projectSession(current: SessionRecord): SessionRecord {
     const { maxRevision, activityAt, rows } = this.input;

@@ -1,5 +1,48 @@
 @electron-only @smoke
 Feature: Desktop Session notifications
+  Scenario: Failed native delivery retries without acknowledging success
+    Given a wide Frame
+    And the desktop Notification API is recorded
+    And the next desktop notification delivery fails
+    And a New Session with Agent 1
+    When I prepare the desktop prompt "Retry the notification"
+    And I leave the desktop window "hidden"
+    And I send the prepared desktop prompt without activating the window
+    Then one desktop notification for "Retry the notification" says "Turn ended"
+    And desktop notification delivery retries once
+
+  Scenario: A focused window on Settings notifies for another Session
+    Given a wide Frame
+    And the desktop Notification API is recorded
+    And a New Session with Agent 1
+    And the desktop window is focused
+    When I prepare the desktop prompt "Foreground Session"
+    And I send the prepared desktop prompt without activating the window
+    Then the notification Session shows 1 completed replies
+    And one desktop notification for "Foreground Session" says "Turn ended"
+    When I click the foreground desktop notification
+    Then the desktop notification opens its Session in the foreground
+    When I leave the Session for Settings
+    And another App prompts the notification Session
+    Then the focused window receives one desktop notification saying "Turn ended"
+    When I click the foreground desktop notification
+    Then the desktop notification opens its Session in the foreground
+
+  Scenario: A focused window on the Session stays quiet
+    Given a wide Frame
+    And the desktop Notification API is recorded
+    And a New Session with Agent 1
+    And the desktop window is focused
+    When I prepare the desktop prompt "Viewed Session"
+    And I send the prepared desktop prompt without activating the window
+    Then the notification Session shows 1 completed replies
+    And one desktop notification for "Viewed Session" says "Turn ended"
+    When I click the foreground desktop notification
+    Then the desktop notification opens its Session in the foreground
+    When another App prompts the notification Session
+    Then the notification Session shows 2 completed replies
+    And there is no additional desktop notification
+
   Scenario Outline: A Turn ending restores its Session from a notification
     Given a wide Frame
     And the desktop Notification API is recorded

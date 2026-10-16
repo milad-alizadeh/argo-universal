@@ -11,3 +11,5 @@ export * from './projects';
 export * from './sessions';
 
 export * from './system';
+
+export * from './notifications';

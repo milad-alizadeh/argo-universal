@@ -14,7 +14,7 @@ import {
   usePhoneDrawerWidth,
   useSectionLists,
   useSizeClass,
-  useDesktopNotifications,
+  useNotifications,
 } from '@repo/client';
 import { usePathname } from 'expo-router';
 import { Drawer, useDrawerStatus } from 'expo-router/drawer';
@@ -135,7 +135,7 @@ const pluginRouteId = (
 
 // One drawer of sections at every width, so a width change keeps each section's pages; each section hands the Frame its list, and the Frame is told which section the path shows.
 export function FrameNavigator(): React.JSX.Element {
-  useDesktopNotifications();
+  useNotifications(usePathname());
   const wide = useSizeClass() === 'wide';
   const plugins = usePluginSections();
 

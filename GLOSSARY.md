@@ -206,6 +206,10 @@ _Avoid_: Status line, spinner text
 A short message about the Session that is not from the Agent's conversation, such as a retry or a hook result.
 _Avoid_: Notification, system message
 
+**Notification**:
+An alert that tells the person a Session needs input or a Turn ended, outside that Session's Feed.
+_Avoid_: Notice, Feed entry
+
 ## UI
 
 **UI kit**:

@@ -1,9 +1,10 @@
 import { SessionOpenFailure } from '@repo/contracts';
 import { type AnyTRPCRouter, initTRPC } from '@trpc/server';
 import { z } from 'zod';
+import type { RpcContext } from './connection';
 
-// Routers close over their own dependencies, so a call carries no context.
-const t = initTRPC.create({
+// Routers close over domain dependencies; context identifies the actual Connection.
+const t = initTRPC.context<RpcContext>().create({
   errorFormatter: (failure) => ({
     ...failure['shape'],
     data: {

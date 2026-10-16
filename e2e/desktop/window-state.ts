@@ -39,8 +39,10 @@ async function setBackgroundState(
 async function showDesktopWindow(
   application: ElectronApplication,
 ): Promise<void> {
-  await application.evaluate(({ BrowserWindow }): void => {
+  await application.evaluate(({ app, BrowserWindow }): void => {
+    app.focus({ steal: true });
     BrowserWindow.getAllWindows()[0]?.show();
+    BrowserWindow.getAllWindows()[0]?.focus();
   });
 }
 
