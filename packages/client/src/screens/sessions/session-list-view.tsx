@@ -99,7 +99,7 @@ function NewSessionControl({
   if (wide || newSessionBesideSearch) return null;
 
   return (
-    <View className="absolute bottom-[42px] right-5">
+    <View className="absolute bottom-10.5 right-5">
       <FloatingActionButton
         accessibilityLabel="New Session"
         icon="new-session"

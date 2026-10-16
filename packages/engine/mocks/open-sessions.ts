@@ -31,7 +31,11 @@ export const createOpenSessionsModelMachine = (
     actions: forGraph
       ? {
           openSession: assign(({ context, event }): Partial<ModelContext> => {
-            assertEvent(event, ['sessions.create', 'sessions.open']);
+            assertEvent(event, [
+              'sessions.create',
+              'sessions.open',
+              'sessions.archive',
+            ]);
 
             if (context.sessions[event.sessionId]) return {};
 

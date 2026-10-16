@@ -51,6 +51,7 @@ const events: OpenSessionsEvent[] = [
       turnId: `turn-${sessionId}`,
     },
     { type: 'sessions.open', sessionId, agent: 'mock' },
+    { type: 'sessions.archive', sessionId, agent: 'mock' },
     {
       type: `xstate.done.actor.session:${sessionId}`,
       actorId: `session:${sessionId}`,

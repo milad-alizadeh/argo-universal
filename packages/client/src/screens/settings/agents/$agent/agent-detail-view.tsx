@@ -124,7 +124,7 @@ function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
 
 function PhoneIconTile(props: AgentDetailViewProps): React.JSX.Element {
   return (
-    <View className="size-16 items-center justify-center rounded-[18px] bg-muted">
+    <View className="size-16 items-center justify-center rounded-2xl bg-muted">
       <AgentIcon {...props} />
     </View>
   );

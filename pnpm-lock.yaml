@@ -362,6 +362,9 @@ catalogs:
     electron:
       specifier: 44.5.1
       version: 44.5.1
+    esbuild:
+      specifier: 0.28.2
+      version: 0.28.2
     eslint-plugin-playwright:
       specifier: 2.12.1
       version: 2.12.1
@@ -1294,6 +1297,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-rc.4(valibot@1.5.0(typescript@7.0.2))(zod@4.6.5)
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       fflate:
         specifier: 'catalog:'
         version: 0.8.3

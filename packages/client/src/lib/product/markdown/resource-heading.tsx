@@ -39,7 +39,7 @@ function ResourceUri({ uri }: { uri: string }): React.JSX.Element {
   return (
     <View accessible accessibilityLabel={uri} className="min-w-0 flex-row">
       <UriPart className="min-w-0 shrink">{uri.slice(0, split)}</UriPart>
-      <UriPart ellipsizeMode="head" className="max-w-[75%] shrink-0">
+      <UriPart ellipsizeMode="head" className="max-w-3/4 shrink-0">
         {uri.slice(split)}
       </UriPart>
     </View>

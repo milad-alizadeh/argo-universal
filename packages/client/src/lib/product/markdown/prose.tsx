@@ -22,7 +22,7 @@ type ProseTextProps = Pick<
 
 const proseVariantClassNames: Record<MarkdownVariantName, string> = {
   feed: '',
-  proposal: 'min-w-0 max-w-full ios:text-[17px] ios:leading-[22px]',
+  proposal: 'min-w-0 max-w-full ios:text-row ios:leading-row',
   summary: 'text-muted-foreground',
 };
 

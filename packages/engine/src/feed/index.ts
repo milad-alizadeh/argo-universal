@@ -56,4 +56,6 @@ export {
 
 export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';
 
+export { settleArchivedChild } from './archive-settlement';
+
 export { mapSupportedContentBlock } from './acp/content';
