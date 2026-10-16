@@ -40,8 +40,8 @@ const headerHeight = 48;
 
 const headerModifiers = [fillMaxWidth(), height(headerHeight)];
 
-// Material's top app bar title.
-const titleStyle = { typography: 'titleLarge' } as const;
+// Material's section title, as the Settings sections use: a sheet page is a section, not a screen.
+const titleStyle = { typography: 'titleMedium' } as const;
 
 // The list's 16 dp gutter, so a root page's title lines up with the rows under it; on a pushed page the back button leads instead.
 const titleInset = 16;
