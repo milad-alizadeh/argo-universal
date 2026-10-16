@@ -1,5 +1,7 @@
 import type {} from './lib/generic/reusables-compatibility';
 
+export type { DesktopBridge } from '@repo/contracts';
+
 export { useConnection } from '#features/connection';
 
 export {
