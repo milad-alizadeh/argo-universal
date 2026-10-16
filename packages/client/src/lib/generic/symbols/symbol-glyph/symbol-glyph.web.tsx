@@ -2,17 +2,21 @@ import { type SFSymbol, SymbolView } from 'expo-symbols';
 import type * as React from 'react';
 import type { CSSProperties } from 'react';
 import { cn } from '../../utils';
-import {
-  customSymbolBox,
-  customSymbolImage,
-  isCustomSymbol,
-} from '../custom-symbols';
+import { customSymbolPath, isCustomSymbol } from '../custom-symbols';
+import type { SystemDrawing } from '../drawn-symbol';
 import {
   type RenderSymbolImage,
   useSymbolImage,
   useSymbolImageRenderer,
 } from '../symbol-images';
-import type { SymbolGlyphProps } from './symbol-glyph';
+import {
+  referenceShare,
+  type SymbolPath,
+  symbolPathImage,
+  symbolPathSize,
+} from '../symbol-path';
+import { tablerSymbolPath } from '../tabler-symbols';
+import type { SymbolGlyphProps } from './symbol-glyph-props';
 import { symbolWeight } from './symbol-weight';
 
 /*
@@ -21,12 +25,6 @@ import { symbolWeight } from './symbol-weight';
  * shrinks to `circle`'s size, so wide ones such as the Sessions bubbles keep to the box.
  */
 const referenceSymbol = 'circle';
-
-// Leaves `circle`'s ink at three quarters of the box: 18 points on the rail, 12 beside Body text.
-const referenceShare = 0.88;
-
-// `circle` is this wide in 100-point type, the units of Argo's custom symbol paths.
-const referenceSymbolCustomUnits = 117;
 
 const glyphBox = {
   display: 'flex',
@@ -50,11 +48,9 @@ interface SymbolBox {
   height: number;
 }
 
-function extentsOf(...boxes: SymbolBox[]): number[] {
-  return boxes.flatMap(({ width, height }) => [width, height]);
-}
+function fitScale(pixels: number, ...boxes: SymbolBox[]): number {
+  const extents = boxes.flatMap(({ width, height }) => [width, height]);
 
-function fitScale(pixels: number, extents: number[]): number {
   return (pixels * referenceShare) / Math.max(...extents);
 }
 
@@ -73,45 +69,54 @@ export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
   );
 }
 
+type GlyphDrawingProps = Pick<SymbolGlyphProps, 'symbol' | 'pixels' | 'weight'>;
+
 /*
  * The desktop app on macOS draws SF Symbols from the system and Argo's custom symbols from their paths; the browser
- * and other desktops draw Material Symbols.
+ * and other desktops draw Material Symbols. Tabler symbols draw from their paths everywhere.
  */
 function GlyphDrawing({
-  sf,
+  symbol,
   pixels,
-  ...props
-}: SymbolGlyphProps): React.JSX.Element {
+  weight,
+}: GlyphDrawingProps): React.JSX.Element {
   const render = useSymbolImageRenderer();
 
-  if (render)
-    return <AppleSymbolImage render={render} sf={sf} pixels={pixels} />;
+  if (symbol.kind === 'tabler')
+    return <PathMask path={tablerSymbolPath(symbol.tabler)} pixels={pixels} />;
 
-  return <MaterialGlyph {...props} pixels={pixels} />;
+  if (render)
+    return <AppleSymbolImage render={render} sf={symbol.sf} pixels={pixels} />;
+
+  return <MaterialGlyph symbol={symbol} pixels={pixels} weight={weight} />;
 }
 
-type MaterialGlyphProps = Pick<
+interface MaterialGlyphProps extends Pick<
   SymbolGlyphProps,
-  'material' | 'filled' | 'pixels' | 'weight'
->;
+  'pixels' | 'weight'
+> {
+  symbol: SystemDrawing;
+}
 
-function MaterialGlyph(props: MaterialGlyphProps): React.JSX.Element {
+function MaterialGlyph({
+  symbol,
+  pixels,
+  weight,
+}: MaterialGlyphProps): React.JSX.Element {
   return (
     <SymbolView
-      key={String(props.filled)}
-      name={{ web: props.material }}
-      size={props.pixels}
-      weight={symbolWeight(props.filled, props.weight)}
+      key={String(symbol.filled)}
+      name={{ web: symbol.material }}
+      size={pixels}
+      weight={symbolWeight(symbol.filled, weight)}
       tintColor="currentColor"
     />
   );
 }
 
-interface AppleSymbolImageProps extends Pick<
-  SymbolGlyphProps,
-  'sf' | 'pixels'
-> {
+interface AppleSymbolImageProps extends Pick<SymbolGlyphProps, 'pixels'> {
   render: RenderSymbolImage;
+  sf: SystemDrawing['sf'];
 }
 
 function AppleSymbolImage({
@@ -119,27 +124,20 @@ function AppleSymbolImage({
   sf,
   pixels,
 }: AppleSymbolImageProps): React.JSX.Element {
-  if (isCustomSymbol(sf)) return <CustomSymbolImage sf={sf} pixels={pixels} />;
+  if (isCustomSymbol(sf))
+    return <PathMask path={customSymbolPath(sf)} pixels={pixels} />;
 
   return <MaskedSymbol render={render} sf={sf} pixels={pixels} />;
 }
 
-interface CustomSymbolImageProps extends Pick<SymbolGlyphProps, 'pixels'> {
-  sf: Parameters<typeof customSymbolBox>[0];
+interface PathMaskProps extends Pick<SymbolGlyphProps, 'pixels'> {
+  path: SymbolPath;
 }
 
-function CustomSymbolImage({
-  sf,
-  pixels,
-}: CustomSymbolImageProps): React.JSX.Element {
-  const box = customSymbolBox(sf);
+function PathMask({ path, pixels }: PathMaskProps): React.JSX.Element {
+  const size = symbolPathSize(path, pixels);
 
-  const scale = fitScale(pixels, [
-    referenceSymbolCustomUnits,
-    ...extentsOf(box),
-  ]);
-
-  return <SymbolMask url={customSymbolImage(sf)} {...box} scale={scale} />;
+  return <SymbolMask url={symbolPathImage(path)} {...size} scale={1} />;
 }
 
 interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
@@ -158,7 +156,7 @@ function MaskedSymbol(props: MaskedSymbolProps): React.JSX.Element | null {
   });
 
   if (!image || !reference) return null;
-  const scale = fitScale(props.pixels, extentsOf(reference, image));
+  const scale = fitScale(props.pixels, reference, image);
 
   return <SymbolMask {...image} scale={scale} />;
 }
