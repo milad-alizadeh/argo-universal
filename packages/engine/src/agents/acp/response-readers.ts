@@ -1,4 +1,8 @@
-import type { AgentRequestResponsesByMethod } from '@agentclientprotocol/sdk';
+import type {
+  Usage,
+  StateUpdate,
+  AgentRequestResponsesByMethod,
+} from '@agentclientprotocol/sdk';
 import schema from '@agentclientprotocol/sdk/schema/schema.json' with { type: 'json' };
 import addFormats from 'ajv-formats';
 import { Ajv2020, type Schema, type FormatDefinition } from 'ajv/dist/2020.js';
@@ -107,3 +111,11 @@ export const createAcpResponseReaders = (
   authenticate: schemas.authenticate.reader(rejectionReporter),
   ...createSessionResponseReaders(rejectionReporter),
 });
+
+const usageSchema = compileAcpResponseSchema<Usage>('Usage');
+
+export function readAcpUsage(state: StateUpdate): Usage | undefined {
+  const value = 'usage' in state ? state.usage : undefined;
+
+  return usageSchema.accepts(value) ? value : undefined;
+}
