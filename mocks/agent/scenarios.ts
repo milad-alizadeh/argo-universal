@@ -5,10 +5,7 @@ import {
   feedWorkSteps,
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
-import {
-  exitWithStderr,
-  processExitScenarios,
-} from './process-exit-scenarios.ts';
+import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { terminalLogin } from './terminal-login.ts';
@@ -62,9 +59,9 @@ export const scenarios = {
   file: scenario([message(fileReply)]),
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),
   'ignores-cancel': scenario([{ type: 'hold' }]),
-  ...processExitScenarios,
+  ...exitScenarios,
   'exit-with-stderr': {
-    ...scenario([exitWithStderr]),
+    ...scenario([agentExit]),
     resumedSteps: [reply],
   },
   'refuse-session': {
