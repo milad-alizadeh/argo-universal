@@ -4,6 +4,7 @@ import {
   type EmptySessionHarness,
   emptySessionHarness,
   failure,
+  launchFailureMessage,
   local,
   prompt,
   settle,
@@ -55,7 +56,7 @@ describe('Retry after a failed Local open', () => {
     expect(h.sendDraft).not.toHaveBeenCalled();
     expect(h.store.getState().attempt).toEqual({
       status: 'retrying',
-      error: { type: 'failed', message: failure.message },
+      error: { type: 'failed', message: launchFailureMessage },
     });
   });
 
@@ -98,7 +99,7 @@ describe('The Connection reopening after a failed Local open', () => {
     expect(h.calls.open).toHaveLength(2);
     expect(h.store.getState().attempt).toEqual({
       status: 'retrying',
-      error: { type: 'failed', message: failure.message },
+      error: { type: 'failed', message: launchFailureMessage },
     });
   });
 });
@@ -112,7 +113,7 @@ describe('A New worktree that failed to open', () => {
     expect(h.calls.open).toHaveLength(2);
     expect(h.store.getState().attempt).toEqual({
       status: 'retrying',
-      error: { type: 'failed', message: failure.message },
+      error: { type: 'failed', message: launchFailureMessage },
     });
   });
 
@@ -135,7 +136,7 @@ describe('A New worktree that failed to open', () => {
     expect(h.sendDraft).not.toHaveBeenCalled();
     expect(h.store.getState().attempt).toEqual({
       status: 'failed',
-      error: { type: 'failed', message: failure.message },
+      error: { type: 'failed', message: launchFailureMessage },
     });
   });
 });

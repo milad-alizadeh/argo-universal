@@ -1,11 +1,9 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import type { Page, WebSocketRoute } from '@playwright/test';
 import { readSessionCheckouts } from '@repo/mocks/git/test-repository';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
-import { Given, When, Then } from './fixtures';
-import { reloadApp } from './frame';
+import { When, Then } from './fixtures';
 import {
   agentModelLabel,
   chooseAgent,
@@ -45,8 +43,6 @@ const openedIn = ({ params }: LoggedRequest): string | undefined =>
 
 const closeRequests = (requestLogPath: string): number =>
   requests(requestLogPath, 'session/close').length;
-
-const connections = new WeakMap<Page, WebSocketRoute[]>();
 
 // A Local New Session opens its empty Session in the Project folder at once.
 When('the empty Session is open', async ({ page, app }): Promise<void> => {
@@ -91,31 +87,6 @@ Then('only the new empty Session remains', async ({ app }): Promise<void> => {
       closed: closeRequests(app.requestLogPath),
     }))
     .toEqual({ opened: 2, closed: 1 });
-});
-
-Given(
-  "the App's Connection can be dropped",
-  async ({ page }): Promise<void> => {
-    connections.set(page, []);
-    await page.routeWebSocket(/ws:\/\//, (route): void => {
-      route.connectToServer();
-      connections.get(page)?.push(route);
-    });
-    await reloadApp(page);
-  },
-);
-
-When('the Connection drops and comes back', async ({ page }): Promise<void> => {
-  const routes = connections.get(page) ?? [];
-  connections.set(page, []);
-  await Promise.all(routes.map((route) => route.close()));
-  // The App opens a new WebSocket once it notices.
-  await expect
-    .poll(() => connections.get(page)?.length ?? 0, { timeout: 15_000 })
-    .toBeGreaterThan(0);
-  await expect(page.getByText('Reconnecting…')).toHaveCount(0, {
-    timeout: 15_000,
-  });
 });
 
 // No second Session opened, so the prompt went to the one opened before the drop.

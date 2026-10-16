@@ -4,6 +4,7 @@ import {
   type EmptySessionHarness,
   emptySessionHarness,
   failure,
+  launchFailureMessage,
   local,
   prompt,
   settle,
@@ -54,7 +55,7 @@ describe('New worktree checkout', () => {
       pendingPrompt: false,
       attempt: {
         status: 'failed',
-        error: { type: 'failed', message: failure.message },
+        error: { type: 'failed', message: launchFailureMessage },
       },
       handedOff: false,
     });

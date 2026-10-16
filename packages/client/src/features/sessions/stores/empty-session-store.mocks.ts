@@ -7,7 +7,7 @@ import type {
 } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { type Mock, vi } from 'vitest';
-import { openFailure } from '../components/failure-messages.mocks';
+import { openFailure } from '../utils/open-failure.mocks';
 import { EmptySessionStore } from './empty-session-store';
 import type { EmptySessionPorts } from './empty-session-types';
 
@@ -34,7 +34,16 @@ export const prompt = [
 export const options: SessionConfigOption[] =
   recordedSessionOptions('agent-one');
 
-export const failure = new Error('The Agent did not start');
+export const launchFailureMessage = 'The Agent did not start';
+
+// A rejected `session.new` whose Agent failed to launch.
+export const failure = openFailure({
+  type: 'failed',
+  message: launchFailureMessage,
+});
+
+// A call that never reached the Agent: the Connection dropped under it.
+export const dropped = new Error('WebSocket closed');
 
 // A rejected `session.new` whose Agent needs sign-in.
 export const authRequired = openFailure({ type: 'auth-required' });

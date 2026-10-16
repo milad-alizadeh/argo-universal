@@ -18,6 +18,7 @@ import {
   sessionProblem,
   useAnsweredTurn,
   useSessionAuth,
+  useUnreachedOpenToast,
 } from '#features/sessions';
 import type { SessionCommands } from './use-session-commands';
 
@@ -55,13 +56,15 @@ interface Retry {
   openAgain: () => void;
 }
 
-// Retry opens the Session again without a Turn.
+// Retry opens the Session again without a Turn; one that never reaches the Agent says why in a toast.
 function useRetry(sessionId: string, feed: SessionFeed): Retry {
   const trpc = useTRPC();
 
   const retry = useMutation(
     trpc.session.open.mutationOptions({ onSuccess: () => feed.retryOpen() }),
   );
+
+  useUnreachedOpenToast(retry.error);
 
   return { attempt: retry, openAgain: () => retry.mutate({ sessionId }) };
 }

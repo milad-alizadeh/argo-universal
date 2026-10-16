@@ -145,6 +145,20 @@ Feature: Agent sign-in and launch callouts
       | wide  |
       | phone |
 
+  @web-only
+  Scenario: A dropped Connection is no launch failure
+    Given a phone Frame
+    And the App's Connection can be dropped
+    And a New Session with Agent 1
+    And I send the prompt "First prompt"
+    And the Agent replies "The shared fixture completed this Turn."
+    When the Connection drops and stays down
+    Then the App says it couldn't open the Session
+    And the App shows no launch failure
+    When the Connection comes back
+    And I send the prompt "Second prompt"
+    Then both submitted prompts have separate completed Turns
+
   Scenario Outline: A prompt sent after a failed Local open is delivered once Retry opens it in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 exits while opening its first Session

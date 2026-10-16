@@ -1,9 +1,6 @@
 import type { SessionOpenError } from '@repo/contracts';
 import type { FeedViewItem } from '#features/feed';
-import {
-  openFailureOf,
-  sessionOpenError,
-} from '../components/failure-messages';
+import { decodeOpenFailure } from '../utils/open-failure';
 
 // A command or Retry that may have opened the Session; `submittedAt` is 0 until it runs.
 export interface OpenAttempt {
@@ -35,31 +32,23 @@ const latest = (attempts: OpenAttempt[]): OpenAttempt | undefined => {
   return submitted.length > 0 ? submitted.reduce(newer) : undefined;
 };
 
-// Retry's own error is always a refused open; a command's only when it carries one.
-const refusedOpen = (
-  attempt: OpenAttempt,
-  retry: OpenAttempt,
-): SessionOpenError | undefined => {
-  if (!attempt.error) return undefined;
-
-  return attempt === retry
-    ? sessionOpenError(attempt.error)
-    : openFailureOf(attempt.error);
-};
+// An attempt's error is the callout's only when it is a refused open; a dropped Connection is a toast's.
+const refusedOpen = (attempt: OpenAttempt): SessionOpenError | undefined =>
+  decodeOpenFailure(attempt.error);
 
 // A Retry that opened the Session cleared the Feed's closure, so any closure here came after it.
 const closure = ({
   feedOpenError,
 }: SessionProblemSources): SessionOpenError | undefined =>
-  feedOpenError ? sessionOpenError(feedOpenError) : undefined;
+  decodeOpenFailure(feedOpenError);
 
-// The newest attempt speaks: Retry's own error, or a command's refused open; else the Feed's closure.
+// The newest attempt speaks when it was refused; else the Feed's closure.
 function openError(
   sources: SessionProblemSources,
 ): SessionOpenError | undefined {
   const attempt = latest([sources.retry, ...sources.commands]);
 
-  return (attempt && refusedOpen(attempt, sources.retry)) ?? closure(sources);
+  return (attempt && refusedOpen(attempt)) ?? closure(sources);
 }
 
 type TurnEnd = Extract<FeedViewItem, { type: 'turn_end' }>;

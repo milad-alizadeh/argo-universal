@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { sessionOpenErrorMessage } from '../components/failure-messages';
+import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { finishedSignIn } from '../state/session-auth';
 import type {
   AuthCalloutProps,
@@ -39,7 +39,7 @@ export interface SessionAuthOptions {
 }
 
 export interface SessionAuth {
-  // Loading… until the Agent's methods arrive, then the sign-in; Failed to Launch when they can't be read.
+  // Loading… until the Agent's methods arrive, then the sign-in.
   callout: SessionCalloutProps;
   // A running terminal method's panel or sheet.
   terminal: TerminalSignInProps | undefined;
@@ -70,10 +70,9 @@ const loading: SessionAuth = {
 export function useSessionAuth(options: SessionAuthOptions): SessionAuth {
   const subject = followedSubject(options);
   const state = useAuthState(subject);
+  useErrorToast(unreadableToast(state.error));
   useFollowSignIn({ subject, onSignedIn: options.onSignedIn });
   const actions = useSignInActions(subject);
-
-  if (state.error) return unreadable(state);
 
   return authOf(options.subject, state.data, actions);
 }
@@ -93,15 +92,14 @@ function useAuthState(subject: Subject | SkipToken): AuthStateQuery {
   return useQuery(trpc.agents.authState.queryOptions(subject));
 }
 
-// Methods that can't be read say why, and Retry reads them again.
-const unreadable = (state: AuthStateQuery): SessionAuth => ({
-  callout: {
-    kind: 'launch',
-    message: sessionOpenErrorMessage(state.error),
-    onRetry: () => void state.refetch(),
-  },
-  terminal: undefined,
-});
+const errorMessage = (cause: unknown): string =>
+  cause instanceof Error ? cause.message : String(cause);
+
+// Methods that can't be read keep Loading…, as a failed load does: the toast says why, and the read runs again when the Connection reopens.
+const unreadableToast = (cause: unknown): ErrorToast | undefined =>
+  cause
+    ? { title: "Couldn't check sign-in", message: errorMessage(cause) }
+    : undefined;
 
 function signIn(
   subject: SessionAuthSubject,

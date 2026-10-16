@@ -10,7 +10,7 @@ import type { ElicitationFormProps } from '#features/requests';
 import {
   type MergeMethodChoice,
   composerStatus,
-  openFailureOf,
+  decodeOpenFailure,
   toSendError,
 } from '#features/sessions';
 import { agentHref, type Navigate } from '#lib/product/navigation/navigation';
@@ -58,7 +58,7 @@ const writtenPlan = (plan: Plan | null): ComposerProps['writtenPlan'] =>
 
 // A refused open is the callout's to show, not the Composer's.
 const commandError = <Failure>(error: Failure | null): Failure | null =>
-  openFailureOf(error) ? null : error;
+  decodeOpenFailure(error) ? null : error;
 
 const sendError = (
   commands: SessionCommands,

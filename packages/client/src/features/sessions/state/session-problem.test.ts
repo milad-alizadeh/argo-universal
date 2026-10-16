@@ -1,4 +1,5 @@
 import { type Notice, SessionOpenFailure, type TurnEnd } from '@repo/contracts';
+import { TRPCClientError } from '@trpc/client';
 import { expect, it } from 'vitest';
 import type { FeedViewItem } from '#features/feed';
 import { type OpenAttempt, sessionProblem } from './session-problem';
@@ -30,6 +31,9 @@ const turnEnd = (id: string, end: Partial<TurnEnd>): FeedViewItem => {
 
 const agentExited = 'Agent exited';
 
+// The error a tRPC call or subscription gets when its WebSocket closes under it.
+const dropped = TRPCClientError.from(new Error('WebSocket closed'));
+
 const quiet = { feedOpenError: null, retry: idle, commands: [], items: [] };
 
 it('shows the open the Feed closed on', () => {
@@ -41,13 +45,8 @@ it('shows the open the Feed closed on', () => {
   ).toEqual({ type: 'open', error: { type: 'auth-required' } });
 });
 
-it('shows any other Feed closure as a launch failure', () => {
-  expect(
-    sessionProblem({ ...quiet, feedOpenError: new Error(agentExited) }),
-  ).toEqual({
-    type: 'open',
-    error: { type: 'failed', message: agentExited },
-  });
+it('asks nothing when the Feed drops with the Connection', () => {
+  expect(sessionProblem({ ...quiet, feedOpenError: dropped })).toBeUndefined();
 });
 
 it('waits on a running Retry', () => {
@@ -87,6 +86,16 @@ it.each([
   },
 );
 
+it('keeps the Feed’s closure when a Retry drops with the Connection', () => {
+  expect(
+    sessionProblem({
+      ...quiet,
+      feedOpenError: launchFailure('first'),
+      retry: { submittedAt: 2, error: dropped, isPending: false },
+    }),
+  ).toEqual({ type: 'open', error: { type: 'failed', message: 'first' } });
+});
+
 it('leaves a prompt’s other errors to the Composer', () => {
   expect(
     sessionProblem({
@@ -115,7 +124,7 @@ it('shows a Feed closure that came after a Retry opened the Session', () => {
   expect(
     sessionProblem({
       ...quiet,
-      feedOpenError: new Error(agentExited),
+      feedOpenError: launchFailure(agentExited),
       retry: { submittedAt: 2, error: null, isPending: false },
     }),
   ).toEqual({

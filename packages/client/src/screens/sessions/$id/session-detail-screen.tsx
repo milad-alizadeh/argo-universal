@@ -10,6 +10,7 @@ import {
   useCacheSessionOptions,
   useMergeMethod,
   useSessionElicitation,
+  useUnreachedOpenToast,
 } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
@@ -115,6 +116,7 @@ const useFeedCommands = (
   });
 
 function useFeedUpkeep(feed: SessionFeed): void {
+  useUnreachedOpenToast(feed.openError);
   useRetryOpenOnReconnect(feed);
   useCacheSessionOptions(feed.snapshot);
 }

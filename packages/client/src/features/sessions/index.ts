@@ -30,11 +30,13 @@ export { type StartingFeed } from './state/starting-feed';
 export { startingFeed } from './state/starting-feed';
 
 export {
-  openFailureOf,
+  decodeOpenFailure,
+  openFailureText,
   serverSilentMessage,
   sessionOpenFailedTitle,
-  sessionOpenErrorMessage,
-} from './components/failure-messages';
+} from './utils/open-failure';
+
+export { useUnreachedOpenToast } from './hooks/use-unreached-open-toast';
 
 export { canOpenSession } from './state/open-session';
 

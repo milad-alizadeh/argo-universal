@@ -3,13 +3,16 @@ import { callout } from './agent-sign-in';
 import { When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { sessionOpenTimeout } from './new-session';
+import { toast } from './toasts';
 
 const retryHint = 'Try to restart the Agent';
+
+const launchFailureTitle = 'Failed to Launch';
 
 Then(
   'the App says the Agent failed to launch',
   async ({ page }): Promise<void> => {
-    await expect(callout(page, 'Failed to Launch')).toBeVisible(
+    await expect(callout(page, launchFailureTitle)).toBeVisible(
       sessionOpenTimeout,
     );
   },
@@ -34,8 +37,22 @@ When('I put the callout away', async ({ page }): Promise<void> => {
 });
 
 Then('the launch callout is gone', async ({ page }): Promise<void> => {
-  await expect(callout(page, 'Failed to Launch')).toHaveCount(
+  await expect(callout(page, launchFailureTitle)).toHaveCount(
     0,
     sessionOpenTimeout,
   );
+});
+
+// A dropped Connection is a failed load: a toast says so, and no launch callout claims the Agent failed.
+Then(
+  "the App says it couldn't open the Session",
+  async ({ page }): Promise<void> => {
+    await expect(toast(page, "Couldn't open the Session")).toBeVisible(
+      sessionOpenTimeout,
+    );
+  },
+);
+
+Then('the App shows no launch failure', async ({ page }): Promise<void> => {
+  await expect(callout(page, launchFailureTitle)).toHaveCount(0);
 });

@@ -1,25 +1,21 @@
 import type { SessionNewInput } from '@repo/contracts';
-import { sessionOpenError } from '../components/failure-messages';
-import type { OpenAgain, OpenAttempt } from '../types/open-attempt';
+import type { OpenAgain } from '../types/open-attempt';
 import {
   type EmptySessionChoices,
   type EmptySessionConfiguration,
   type EmptySessionPorts,
   type EmptySessionState,
+  failedOpen,
   type FirstPrompt,
-  idleAttempt,
   type LiveOptions,
+  type OpenOutcome,
   openingAgain,
   sameEmptySessionState,
+  settledOpen,
 } from './empty-session-types';
 import { FirstPromptHandOff } from './first-prompt-hand-off';
 import { LocalSessionKeeper } from './local-empty-session';
 import type { CurrentSession } from './local-session';
-
-const failed = (cause: unknown): OpenAttempt => ({
-  status: 'failed',
-  error: sessionOpenError(cause),
-});
 
 // New Session's Empty Session: opened at once for a Local checkout, reopened when the Agent changes, prompted once.
 export class EmptySessionStore {
@@ -28,14 +24,15 @@ export class EmptySessionStore {
     changed: (): void => this.reconcile(),
     // A retried open keeps its failure on show until it settles.
     opening: (): void => {
-      if (this.attempt.status !== 'retrying') this.attempt = idleAttempt;
+      if (this.outcome.attempt.status !== 'retrying')
+        this.outcome = settledOpen;
     },
     opened: (): void => {
-      this.attempt = idleAttempt;
+      this.outcome = settledOpen;
     },
     // A Send stays queued through a failed open until Retry or a sign-in opens it.
     failed: (cause): void => {
-      this.attempt = failed(cause);
+      this.outcome = failedOpen(cause);
     },
   });
   private readonly handOff = new FirstPromptHandOff({
@@ -53,7 +50,7 @@ export class EmptySessionStore {
     initial: [],
   };
   private pending: FirstPrompt | undefined;
-  private attempt: OpenAttempt = idleAttempt;
+  private outcome: OpenOutcome = settledOpen;
   private stopped = false;
   private readonly listeners = new Set<() => void>();
   private state: EmptySessionState = this.currentState();
@@ -129,7 +126,7 @@ export class EmptySessionStore {
 
   // A Local Session whose open failed opens again; with none failed, the attempt stays as it is.
   private reopenLocal(): void {
-    if (this.keeper.retry()) this.attempt = openingAgain(this.attempt);
+    if (this.keeper.retry()) this.outcome = openingAgain(this.outcome);
     this.reconcile();
   }
 
@@ -138,7 +135,7 @@ export class EmptySessionStore {
     const input = this.input;
 
     if (input?.checkout.type === 'worktree') {
-      this.attempt = openingAgain(this.attempt);
+      this.outcome = openingAgain(this.outcome);
       this.handOff.create(input, this.configuration.initial, prompt);
     } else this.reconcile();
   }
@@ -166,13 +163,13 @@ export class EmptySessionStore {
   }
 
   private fail(cause: unknown): void {
-    this.attempt = failed(cause);
+    this.outcome = failedOpen(cause);
     this.pending = undefined;
   }
 
   private currentState(): EmptySessionState {
     return {
-      attempt: this.attempt,
+      ...this.outcome,
       pendingPrompt: this.pending !== undefined,
       openSessionId: this.handOff.sessionId ?? this.keeper.readingId(),
       opening: this.handOff.phase === 'choosing' && this.keeper.isOpening(),

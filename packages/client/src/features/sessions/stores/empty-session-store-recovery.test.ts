@@ -3,6 +3,7 @@ import {
   type EmptySessionHarness,
   emptySessionHarness,
   failure,
+  launchFailureMessage,
   local,
   options,
   prompt,
@@ -38,7 +39,7 @@ describe('A Local first prompt that goes wrong', () => {
     expect(h.store.getState()).toMatchObject({
       attempt: {
         status: 'failed',
-        error: { type: 'failed', message: failure.message },
+        error: { type: 'failed', message: launchFailureMessage },
       },
       pendingPrompt: false,
       handedOff: false,

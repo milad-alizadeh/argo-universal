@@ -4,6 +4,7 @@ import {
   type EmptySessionChoices,
   type EmptySessionState,
   EmptySessionStore,
+  useUnreachedOpenToast,
 } from '#features/sessions';
 import { useEmptySessionPorts } from './empty-session-adapters';
 
@@ -44,6 +45,9 @@ function useChooseInStore(
   }, [store, choiceKey, connected]);
 }
 
+const failed = ({ attempt, unreached }: EmptySessionState): boolean =>
+  attempt.status !== 'idle' || unreached !== undefined;
+
 // New Session's real, empty Session for the current choices; leaving without sending closes it.
 export function useEmptySession(
   choices: EmptySessionChoices,
@@ -52,8 +56,9 @@ export function useEmptySession(
   const store = useStore(clearDraft);
   useChooseInStore(store, choices);
   const state = useSyncExternalStore(store.subscribe, store.getState);
+  useUnreachedOpenToast(state.unreached);
   useResubscribeOnReconnect({
-    status: state.attempt.status === 'idle' ? 'idle' : 'error',
+    status: failed(state) ? 'error' : 'idle',
     reset: () => store.openAgain({ by: 'connection' }),
   });
 

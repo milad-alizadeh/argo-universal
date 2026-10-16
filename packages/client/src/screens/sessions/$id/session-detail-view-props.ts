@@ -1,8 +1,8 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import type { FeedProps, useSessionFeed } from '#features/feed';
 import {
+  openFailureText,
   type SessionHeaderProps,
-  sessionOpenErrorMessage,
   type SessionHeaderStatus,
 } from '#features/sessions';
 import type { SessionCallouts } from '#features/sessions';
@@ -45,12 +45,14 @@ function failedSession(
   return opened ? undefined : unopened(feed);
 }
 
-const unopened = ({
+// An open the Agent refused fails the page with its reason; one that never reached the Agent keeps opening, and a toast says why.
+function unopened({
   openError,
-}: SessionFeed): SessionDetailViewProps | undefined =>
-  openError
-    ? { state: 'failed', reason: sessionOpenErrorMessage(openError) }
-    : undefined;
+}: SessionFeed): SessionDetailViewProps | undefined {
+  const reason = openFailureText(openError);
+
+  return reason === undefined ? undefined : { state: 'failed', reason };
+}
 
 const loadedFeed = ({ snapshot, view }: SessionFeed): OpenFeed | undefined =>
   snapshot && view ? { snapshot, view } : undefined;
