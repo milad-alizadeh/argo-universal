@@ -52,6 +52,8 @@ Then(
   },
 );
 
+const pluginPage = 'plugin-page';
+
 const pluginUrl = (name: string): RegExp =>
   name === 'Hello'
     ? /\/plugins\/hello\/hello$/
@@ -60,14 +62,14 @@ const pluginUrl = (name: string): RegExp =>
 // Hello draws its own page from the wire; the other Plugins have no page yet, only the frame that holds it.
 const pluginHeading = (page: Page, name: string): Locator =>
   name === 'Hello'
-    ? page.getByTestId('plugin-page').getByText('Hello from a Plugin')
-    : page.getByTestId('plugin-page');
+    ? page.getByTestId(pluginPage).getByText('Hello from a Plugin')
+    : page.getByTestId(pluginPage);
 
 When(
   'I press {string} on the Plugin page',
   async ({ page }, name: string): Promise<void> => {
     await page
-      .getByTestId('plugin-page')
+      .getByTestId(pluginPage)
       .getByRole('button', { name, exact: true })
       .click();
   },
@@ -76,6 +78,6 @@ When(
 Then(
   'the Plugin page text reads {string}',
   async ({ page }, text: string): Promise<void> => {
-    await expect(page.getByTestId('plugin-page').getByText(text)).toBeVisible();
+    await expect(page.getByTestId(pluginPage).getByText(text)).toBeVisible();
   },
 );
