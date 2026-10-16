@@ -10,9 +10,7 @@ export class SessionInfoActivity {
   }
 
   public running(): boolean {
-    return this.input.live
-      ? this.input.live.activeTurnId !== null
-      : this.latest?.status === 'running';
+    return this.input.activeTurnId !== null;
   }
 
   public status(): SessionStatus {

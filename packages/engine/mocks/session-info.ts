@@ -33,6 +33,7 @@ export const idle: SessionInfoFixture = {
   live: null,
   feed: null,
   liveHeader: null,
+  activeTurnId: null,
   children: [],
 };
 

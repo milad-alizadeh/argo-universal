@@ -11,6 +11,7 @@ export const rules: {
     input: {
       ...idle,
       turns: [turn],
+      activeTurnId: 'turn-1',
       liveHeader: {
         text: 'Checking the tests',
         source: { type: 'thought' },

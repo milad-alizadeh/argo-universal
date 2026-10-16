@@ -82,7 +82,7 @@ export class SessionSnapshotReader {
     session: SessionState,
     feed: FeedState,
   ): FeedSnapshot {
-    return { ...feed, liveHeader: this.liveHeader(sessionId, session, feed) };
+    return { ...feed, ...this.liveHeader(sessionId, session, feed) };
   }
 
   private feedContext(sessionId: string, stored: FeedState): FeedState {
@@ -95,14 +95,16 @@ export class SessionSnapshotReader {
     sessionId: string,
     session: SessionState,
     feed: FeedState,
-  ): FeedSnapshot['liveHeader'] {
-    return this.readHeader({
+  ): Pick<FeedSnapshot, 'liveHeader' | 'activeTurnId'> {
+    const { header, activeTurnId } = this.readHeader({
       sessionId,
       live: session ? session.context : null,
       latestTurn: (): Turn | undefined => this.latestTurn(sessionId),
       memoryRows: feed.rows ?? {},
       writer: this.deps.findWriter(),
-    }).header;
+    });
+
+    return { liveHeader: header, activeTurnId };
   }
 
   private latestTurn(sessionId: string): Turn | undefined {

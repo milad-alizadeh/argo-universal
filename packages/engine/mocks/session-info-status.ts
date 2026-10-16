@@ -66,7 +66,7 @@ export const rules: {
     },
   },
   {
-    rule: 'the live context owns running status over a stale stored Turn',
+    rule: 'running follows the active Turn over a stale stored Turn',
     input: { ...idle, live: { ...live, activeTurnId: null }, turns: [turn] },
     expected: { information, running: false },
   },

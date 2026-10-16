@@ -19,6 +19,8 @@ export interface SessionInfoInput {
   live: (LiveSession & { failure: string | null }) | null;
   feed: { maxRevision: number; activityAt: number } | null;
   liveHeader: LiveHeader | null;
+  // The Live header reader's active Turn.
+  activeTurnId: string | null;
   children: readonly SessionRecord[];
   shells?: SessionInfo['shells'];
 }

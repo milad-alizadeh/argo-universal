@@ -1,5 +1,4 @@
 import {
-  type LiveHeader,
   SessionInfo,
   type SessionRecord,
   type SessionUpdate,
@@ -13,6 +12,8 @@ import { toSessionInfo, type SessionInfoInput } from '../information';
 import type { SessionListState } from '../state';
 import { readStoredActivity } from './activity-query';
 import type { ListReadInput } from './input';
+
+type HeaderRead = ReturnType<ListReadInput['readLiveHeader']>;
 
 type InformationInput = ListReadInput & {
   actor: SessionActorRef | undefined;
@@ -36,7 +37,7 @@ class SessionInformationRead {
   public read(): SessionListState[number] | undefined {
     const changes = this.changes();
     const header = this.header();
-    const result = this.project(changes, header.header);
+    const result = this.project(changes, header);
 
     const listed = rejectedActivity(changes, header.rejected)
       ? { ...result.information, activity: '', plan: null }
@@ -69,7 +70,7 @@ class SessionInformationRead {
     return this.live?.children.feed?.getSnapshot().context;
   }
 
-  private header(): ReturnType<ListReadInput['readLiveHeader']> {
+  private header(): HeaderRead {
     const { row, turns, writer } = this.input;
 
     return this.input.readLiveHeader({
@@ -87,16 +88,16 @@ class SessionInformationRead {
 
   private project(
     changes: (SessionUpdate | undefined)[],
-    liveHeader: LiveHeader | null,
+    header: HeaderRead,
   ): SessionListState[number] {
     const updates = activityUpdates(changes);
 
-    return toSessionInfo(this.projectionInput(updates, liveHeader));
+    return toSessionInfo(this.projectionInput(updates, header));
   }
 
   private projectionInput(
     updates: SessionUpdate[],
-    liveHeader: LiveHeader | null,
+    header: HeaderRead,
   ): SessionInfoInput {
     return {
       shells: this.input.shellCounts.get(this.input.row.id),
@@ -105,7 +106,7 @@ class SessionInformationRead {
       message: lastMessage(updates),
       plan: selectPlanRowWithLatestContent(updates),
       ...this.liveInput(),
-      liveHeader,
+      ...headerInput(header),
       children: this.children(),
     };
   }
@@ -122,6 +123,12 @@ class SessionInformationRead {
       feed: this.feed() ?? null,
     };
   }
+}
+
+function headerInput(
+  read: HeaderRead,
+): Pick<SessionInfoInput, 'liveHeader' | 'activeTurnId'> {
+  return { liveHeader: read.header, activeTurnId: read.activeTurnId };
 }
 
 function activityUpdates(

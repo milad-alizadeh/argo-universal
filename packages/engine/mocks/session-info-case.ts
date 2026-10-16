@@ -24,5 +24,6 @@ export interface SessionInfoFixture {
   live: LiveSession | null;
   feed: { maxRevision: number; activityAt: number } | null;
   liveHeader: LiveHeader | null;
+  activeTurnId: string | null;
   children: readonly SessionRecord[];
 }
