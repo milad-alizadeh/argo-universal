@@ -3,7 +3,10 @@ import type {
   TextInput as NativeTextInput,
   TextInputProps as NativeTextInputProps,
 } from 'react-native';
-import type { FieldErrors } from '#primitives/fields/field-errors';
+import {
+  errorMessage,
+  type FieldErrors,
+} from '#primitives/fields/field-errors';
 
 // A labelled text field; on iOS and the web its hint and its error sit in a footer.
 export interface TextFieldProps {
@@ -73,5 +76,6 @@ export type TextInputProps =
 
 export type PhoneFieldProps = TextFieldProps & EntryProps & RowEntryProps;
 
+// Invalid only when there is a message to show: a form may pass an empty entry while nothing has failed.
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
-  (props.errors?.length ?? 0) > 0;
+  errorMessage(props.errors ?? []) !== undefined;

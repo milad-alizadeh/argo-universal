@@ -35,7 +35,7 @@ async function titleField(): Promise<HTMLInputElement> {
   return field;
 }
 
-// The field takes focus with the whole title selected, so typing replaces it.
+// The field takes focus with the whole title selected, so typing replaces it; nothing has failed yet, so it is valid.
 function opensSelectedAt(layout: Layout): Story {
   return {
     beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
@@ -44,6 +44,7 @@ function opensSelectedAt(layout: Layout): Story {
       await waitFor(() => expect(field).toHaveFocus());
       await expect(field.selectionStart).toBe(0);
       await expect(field.selectionEnd).toBe(title.length);
+      await expect(field).not.toBeInvalid();
     },
   };
 }
