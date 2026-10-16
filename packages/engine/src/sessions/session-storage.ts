@@ -11,6 +11,7 @@ import {
   type WriterJob,
 } from '../storage';
 import { SessionArchiveJob } from './archive/archive-storage';
+import { SessionSeenJob } from './session-seen';
 import { ShellWriteJob } from './shells/storage';
 import {
   decodeStoredTurn,
@@ -296,7 +297,8 @@ const projectSessionJob = (
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
     job instanceof SessionDeleteJob ||
-    job instanceof SessionArchiveJob
+    job instanceof SessionArchiveJob ||
+    job instanceof SessionSeenJob
   )
     return job.project(current, sessionId);
 
@@ -410,6 +412,7 @@ export const changedSessionIds = (job: WriterJob): string[] => {
     job instanceof SessionRowUpdateJob ||
     job instanceof SessionDeleteJob ||
     job instanceof SessionArchiveJob ||
+    job instanceof SessionSeenJob ||
     job instanceof ShellWriteJob ||
     job instanceof TurnInsertJob
   )

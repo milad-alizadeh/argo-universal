@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { phone, wide, wideFrame } from './frame';
+import { wide, wideFrame } from './frame';
 import { agentModelLabel, openNewSession, sendPrompt } from './new-session';
 
 export const liveTitle = 'Check the live list';
@@ -18,13 +18,16 @@ export async function startSession(page: Page, title: string): Promise<void> {
 }
 
 When(
-  'I start a Session named {string}',
+  'I start a Session named {string} that waits for input',
   async ({ page }, title: string): Promise<void> => {
     await expect(
       page.getByRole('heading', { name: 'Sessions', level: 2, exact: true }),
     ).toBeVisible();
     await expect(page.getByTestId(wideFrame)).toBeVisible();
     await startSession(page, title);
+    await expect(
+      page.getByRole('button', { name: `${title}, Needs input`, exact: true }),
+    ).toBeVisible();
   },
 );
 
@@ -33,21 +36,12 @@ Given(
   async ({ page }, title: string): Promise<void> => {
     await page.setViewportSize(wide);
     await startSession(page, title);
+    // Its Turn ended while the reader watched the end of its Feed.
     await expect(
-      page.getByRole('button', { name: `${title}, Unread`, exact: true }),
+      page.getByRole('button', { name: `${title}, Idle`, exact: true }),
     ).toBeVisible();
   },
 );
-
-Given('an unread Session in a phone Frame', async ({ page }): Promise<void> => {
-  await page.setViewportSize(wide);
-  await startSession(page, liveTitle);
-  await expect(
-    page.getByRole('button', { name: `${liveTitle}, Unread`, exact: true }),
-  ).toBeVisible();
-  await page.setViewportSize(phone);
-  await page.getByRole('link', { name: /back/i }).click();
-});
 
 Then(
   'the Sessions list shows the unread Session with one attention badge',

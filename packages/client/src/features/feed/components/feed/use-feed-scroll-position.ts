@@ -70,6 +70,15 @@ function useNewestKeyWhenLeftEnd(
   return leftEndAt;
 }
 
+// Tells `onAtEndChange` whether the end is shown, as the Feed mounts and whenever that changes.
+export function useReportsAtEnd(
+  atEnd: boolean,
+  onAtEndChange: ((atEnd: boolean) => void) | undefined,
+): void {
+  const report = useEffectEvent(() => onAtEndChange?.(atEnd));
+  useEffect(() => report(), [atEnd]);
+}
+
 export interface FeedScrollPosition {
   initialIndex: number;
   newestKeyWhenLeftEnd: string | null;

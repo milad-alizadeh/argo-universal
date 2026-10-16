@@ -8,7 +8,10 @@ import type { FeedEntry } from './feed-entry';
 import { JumpToLatestWhenAway } from './feed-overlays';
 import { FeedScroll, type FeedScrollProps } from './feed-scroll';
 import { useFeedGrowth } from './use-feed-growth';
-import { useFeedScrollPosition } from './use-feed-scroll-position';
+import {
+  useFeedScrollPosition,
+  useReportsAtEnd,
+} from './use-feed-scroll-position';
 
 const fillShrinkable = { flex: 1, minHeight: 0 };
 
@@ -20,6 +23,7 @@ export interface FeedListProps {
   onStartReached: () => void;
   imageUrl: (blob: BlobRef) => string;
   now?: number;
+  onAtEndChange?: (atEnd: boolean) => void;
 }
 
 interface FeedBodyProps extends Omit<FeedScrollProps, 'atEnd'> {
@@ -41,7 +45,9 @@ function FeedBody({
 
 export function FeedList(props: FeedListProps): React.JSX.Element {
   const list = useRef<LegendListRef>(null);
-  const shared = { list, ...props, ...useFeedScrollPosition(list, props) };
+  const position = useFeedScrollPosition(list, props);
+  useReportsAtEnd(position.newestKeyWhenLeftEnd === null, props.onAtEndChange);
+  const shared = { list, ...props, ...position };
 
   return (
     <View style={fillShrinkable}>
