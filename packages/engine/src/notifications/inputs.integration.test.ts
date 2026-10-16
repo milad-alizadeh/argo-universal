@@ -49,7 +49,7 @@ it('notifies for successive request identities without a Session status transiti
   expect(new Set(app.notifications.map((event) => event.id)).size).toBe(2);
 });
 
-it('observes the new input request after fast close and reopen', async () => {
+it('observes the new input request after a fast Session reopen', async () => {
   const host = await startAcpEngine(scenarios.elicitation);
   const app = connectNotificationApp(host.url);
   await app.ready;

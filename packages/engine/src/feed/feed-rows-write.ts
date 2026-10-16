@@ -67,7 +67,7 @@ export const advanceFeedSession = (
 };
 
 // Startup recovery and archive settlement lend a transaction and write here, never as a queued `FeedRowsJob`, so their Turn endings are not live.
-export const writeBorrowedFeedRows = (
+export const writeFeedRowsInTransaction = (
   transaction: StorageTransaction,
   write: FeedRowsWrite,
 ): void => {

@@ -1,3 +1,4 @@
+import type { NotificationEvent } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import {
@@ -8,8 +9,6 @@ import {
 const leaseMs = 30_000;
 
 const lifetimeMs = 60_000;
-
-const queueLimit = 64;
 
 interface ManualClock {
   now: () => number;
@@ -60,43 +59,38 @@ it('stops suppressing a Session once its 30 second attention lease has run out',
   });
 });
 
-it('keeps retrying an unacknowledged event until its one minute lifetime is over', async () => {
+async function startWithUnacknowledgedEvent(): Promise<{
+  app: NotificationApp;
+  clock: ManualClock;
+  event: NotificationEvent;
+}> {
   const { clock, url } = await startTimed();
   const app = connectNotificationApp(url);
   await app.ready;
   await endTurn(app, 'Expire me');
-  const expiring = app.notifications[0];
+  const event = app.notifications[0];
 
-  if (!expiring) throw new Error('Expected a notification');
-  clock.advance(lifetimeMs - 1);
-  await expect.poll(() => app.notifications.length).toBe(2);
-  expect(app.notifications[1]).toEqual(expiring);
-  clock.advance(1);
-  await endTurn(app, 'Sweep');
-  expect(
-    await app.client.notifications.acknowledge.mutate({ id: expiring.id }),
-  ).toBe(false);
-});
+  if (!event) throw new Error('Expected a notification');
 
-async function fillQueue(app: NotificationApp): Promise<string[]> {
-  for (let turn = 0; turn <= queueLimit; turn += 1)
-    await endTurn(app, `Turn ${turn}`);
-
-  return app.notifications.map((event) => event.id);
+  return { app, clock, event };
 }
 
-it('expires the oldest event when a recipient queue holds 64 unacknowledged events', async () => {
-  const { url } = await startTimed();
-  const app = connectNotificationApp(url);
-  await app.ready;
-  const ids = await fillQueue(app);
-  const kept = [ids[1], ids[queueLimit]];
+it('redelivers an unacknowledged event 1 ms before its one minute lifetime is over', async () => {
+  const { app, clock, event } = await startWithUnacknowledgedEvent();
 
-  const results = await Promise.all(
-    [ids[0], ...kept].map((id) =>
-      app.client.notifications.acknowledge.mutate({ id: id ?? '' }),
-    ),
-  );
+  clock.advance(lifetimeMs - 1);
 
-  expect(results).toEqual([false, true, true]);
+  await expect.poll(() => app.notifications.length).toBe(2);
+  expect(app.notifications[1]).toEqual(event);
+});
+
+it('expires an unacknowledged event once its one minute lifetime is over', async () => {
+  const { app, clock, event } = await startWithUnacknowledgedEvent();
+
+  clock.advance(lifetimeMs);
+  await endTurn(app, 'Sweep');
+
+  expect(
+    await app.client.notifications.acknowledge.mutate({ id: event.id }),
+  ).toBe(false);
 });

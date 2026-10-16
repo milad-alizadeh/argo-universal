@@ -10,7 +10,7 @@ import {
   payloadVersion,
   toFeedRowWrite,
 } from './feed-row';
-import { writeBorrowedFeedRows } from './feed-rows-write';
+import { writeFeedRowsInTransaction } from './feed-rows-write';
 import { settleFeedTurn } from './turn-settlement';
 
 type StoredFeedRow = Omit<
@@ -118,5 +118,5 @@ export const advanceRecoveredSession = (
   sessionId: string,
   maxRevision: number,
 ): void => {
-  writeBorrowedFeedRows(transaction, { sessionId, rows: [], maxRevision });
+  writeFeedRowsInTransaction(transaction, { sessionId, rows: [], maxRevision });
 };
