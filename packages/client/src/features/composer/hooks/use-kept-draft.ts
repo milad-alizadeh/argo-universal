@@ -1,7 +1,7 @@
 import { type Dispatch, useEffect } from 'react';
-import type { AttachmentDraftEvent } from '../state/attachment-draft';
-import type { DraftKey } from '../state/draft-key';
-import { keptDrafts } from '../state/kept-draft';
+import { keptDrafts } from '../stores/kept-draft';
+import type { AttachmentDraftEvent } from '../utils/attachment-draft';
+import type { DraftKey } from '../utils/draft-key';
 
 // Empties the text when the draft's owner changes, then restores what this Device kept for the new owner.
 export function useKeptDraft(

@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { SplitButton } from '#primitives/buttons/split-button';
-import type { MergeMethod } from '../state/merge-method';
+import type { MergeMethod } from '../stores/merge-method';
 
 const mergeMethodOptions = [
   { value: 'squash', label: 'Squash and merge' },

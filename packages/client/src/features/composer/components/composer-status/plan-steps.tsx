@@ -6,7 +6,7 @@ import { cn } from '#lib/generic/utils';
 import { Icon, IconSpinner } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
-import { maximumPlanStepsHeight } from '../../state/status';
+import { maximumPlanStepsHeight } from '../../utils/status';
 import { mutedTextClassName } from './status-surface';
 
 interface StepProps {

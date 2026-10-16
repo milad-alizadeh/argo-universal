@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ErrorToast } from '#primitives/overlays/toast';
 import { dropped } from '../../../../mocks/sessions/open-failure.mocks';
-import type { OpenAttempt } from '../state/session-problem';
+import type { OpenAttempt } from './session-problem';
 import { droppedOpenToast, pastSessionDropToast } from './session-toasts';
 
 const couldNotOpen: ErrorToast = {

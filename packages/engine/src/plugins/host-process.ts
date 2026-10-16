@@ -3,13 +3,20 @@ import { HostCommand } from './runtime-protocol.ts';
 
 const workers = new HostWorkers((message) => process.send?.(message));
 
-process.on('message', (value) => {
-  const command = HostCommand.parse(value);
+function lifecycle(
+  command: Extract<HostCommand, { type: 'event' | 'stop' }>,
+): void {
+  if (command.type === 'event') workers.event(command);
+  else workers.stop(command.pluginId);
+}
 
+function handle(command: HostCommand): void {
   if (command.type === 'activate') workers.activate(command);
   else if (command.type === 'reply') workers.reply(command);
-  else workers.stop(command.pluginId);
-});
+  else lifecycle(command);
+}
+
+process.on('message', (value) => handle(HostCommand.parse(value)));
 
 // Losing the Engine also closes every worker, including hung workers.
 process.once('disconnect', () => process.exit(0));

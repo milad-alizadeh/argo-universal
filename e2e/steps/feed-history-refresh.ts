@@ -10,8 +10,9 @@ interface HeldRefresh {
   armed: boolean;
   heldId?: number;
   delayPrefetch: boolean;
+  // The current WebSocket's prefetches: each WebSocket starts its request IDs again, and the Feed may ask twice.
   prefetchIds: Set<number>;
-  releasePrefetch?: () => void;
+  heldPrefetches: (() => void)[];
   release?: () => void;
 }
 
@@ -83,7 +84,7 @@ function holdRefresh(
   const ids = responseIds(message);
 
   if (ids.some((id) => refresh.prefetchIds.has(id))) {
-    refresh.releasePrefetch = (): void => route.send(message);
+    refresh.heldPrefetches.push((): void => route.send(message));
 
     return;
   }
@@ -96,6 +97,8 @@ function holdRefresh(
 
 function connect(route: WebSocketRoute, refresh: HeldRefresh): void {
   const server = route.connectToServer();
+  refresh.prefetchIds = new Set();
+  refresh.heldPrefetches = [];
   refresh.routes.push(route);
   route.onMessage((message) => {
     for (const request of pageRequests(message)) observePage(refresh, request);
@@ -110,6 +113,7 @@ Given('the Feed history refresh can be delayed', async ({ page }) => {
     armed: false,
     delayPrefetch: true,
     prefetchIds: new Set(),
+    heldPrefetches: [],
   };
 
   refreshes.set(page, refresh);
@@ -123,14 +127,14 @@ When(
     const refresh = refreshes.get(page);
 
     if (!refresh) throw new Error('The history transport was not prepared');
-    await expect.poll(() => refresh.releasePrefetch !== undefined).toBe(true);
+    await expect.poll(() => refresh.heldPrefetches.length).toBeGreaterThan(0);
     await page.getByTestId(feedScroll).evaluate((element) => {
       element.scrollTop = element.scrollHeight;
     });
     refresh.delayPrefetch = false;
-    // A reconnected WebSocket starts its request IDs again; released prefetches must not hold those new requests.
     refresh.prefetchIds.clear();
-    refresh.releasePrefetch?.();
+
+    for (const release of refresh.heldPrefetches.splice(0)) release();
     await expect(
       page.getByRole('progressbar', { name: 'Loading earlier' }),
     ).toHaveCount(0);

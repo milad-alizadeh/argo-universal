@@ -10,6 +10,13 @@ Feature: Plugin navigation
       | Issues | Issue tracker |
       | Hello  | Hello         |
 
+  Scenario: A tap on a Plugin page reaches the Plugin and redraws the page
+    Given a wide Frame
+    When I open the Hello Plugin
+    Then the Plugin page text reads "Tapped 0 times"
+    When I press "Tap me" on the Plugin page
+    Then the Plugin page text reads "Tapped 1 times"
+
   Scenario Outline: The phone drawer opens Plugins and returns to core sections
     Given a phone Frame
     When I open the <first> Plugin

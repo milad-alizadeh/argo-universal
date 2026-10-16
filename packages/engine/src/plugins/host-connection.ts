@@ -7,6 +7,7 @@ import {
 import {
   HostMessage,
   type PluginEntry,
+  type PluginEvent,
   type PluginReply,
 } from './runtime-protocol';
 
@@ -51,6 +52,11 @@ export class HostConnection {
     if (!this.child?.connected) throw new Error('Plugin host is unavailable');
 
     this.child.send({ type: 'activate', ...entry }, this.sendError);
+  }
+
+  event(pluginId: string, event: PluginEvent): void {
+    if (this.child?.connected)
+      this.child.send({ type: 'event', pluginId, event }, this.sendError);
   }
 
   stop(pluginId: string): void {

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { contentActionClass } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Pressable } from '#primitives/pressable';
-import type { ComposerStatusProps, ComposerWork } from '../../state/status';
+import type { ComposerStatusProps, ComposerWork } from '../../utils/status';
 import {
   ChipSurface,
   chipClassName,

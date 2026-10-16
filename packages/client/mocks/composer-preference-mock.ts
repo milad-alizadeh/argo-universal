@@ -3,7 +3,7 @@ import type {
   SessionConfigSelectOption,
 } from '@repo/contracts';
 import { newSessionOptions } from '@repo/mocks/app';
-import { draftConfiguration } from '../src/features/composer/state/session-configuration-preferences';
+import { draftConfiguration } from '../src/features/composer/stores/session-configuration-preferences';
 import {
   catalogCase,
   type RecordedSession,

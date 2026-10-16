@@ -1,0 +1,50 @@
+import { PluginEvent } from '@repo/contracts/plugins/wire';
+import * as React from 'react';
+import { jsx, jsxs } from './jsx-runtime';
+import { mountPages, type Pages, type ViewSender } from './pages';
+
+const components = {
+  Text: 'Text',
+  Button: 'Button',
+  Row: 'Row',
+  Column: 'Column',
+} as const;
+
+const hooks = {
+  useState: React.useState,
+  useReducer: React.useReducer,
+  useMemo: React.useMemo,
+  useCallback: React.useCallback,
+  useRef: React.useRef,
+  useEffect: React.useEffect,
+  useContext: React.useContext,
+  createContext: React.createContext,
+  memo: React.memo,
+};
+
+// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
+const exportsOf = { ...components, ...hooks, Fragment: React.Fragment };
+
+const jsxRuntime = { jsx, jsxs, Fragment: React.Fragment };
+
+export interface Kit {
+  exports: typeof exportsOf;
+  jsxRuntime: typeof jsxRuntime;
+  registerPage: Pages['register'];
+  inbox: (json: string) => void;
+}
+
+// Bundled by esbuild and run inside a Plugin's context before its code (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
+export function createKit(send: ViewSender): Kit {
+  const pages = mountPages(send);
+
+  return {
+    exports: exportsOf,
+    jsxRuntime,
+    registerPage: pages.register,
+    inbox: (json: string): void =>
+      pages.receive(PluginEvent.parse(JSON.parse(json))),
+  };
+}
+
+Object.assign(globalThis, { __argoKit: { createKit } });

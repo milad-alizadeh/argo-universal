@@ -13,7 +13,7 @@ import type { SavedChoices } from '#lib/product/session-configuration';
 import {
   chosenOptions,
   type ConfigurationPicks,
-} from '../state/session-option-choices';
+} from '../utils/session-option-choices';
 
 // The only query this Device persists between App launches.
 export const sessionOptionsKey = 'sessionOptions';
