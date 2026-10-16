@@ -1,16 +1,27 @@
 import { useEffect, useState } from 'react';
-import { AppState, type NativeEventSubscription } from 'react-native';
+import {
+  AppState,
+  type NativeEventSubscription,
+  Platform,
+} from 'react-native';
 
 const isForeground = (): boolean => AppState.currentState === 'active';
 
 function subscribe(
   changed: (active: boolean) => void,
 ): NativeEventSubscription[] {
-  return [
+  const subscriptions = [
     AppState.addEventListener('change', (state) => changed(state === 'active')),
-    AppState.addEventListener('blur', () => changed(false)),
-    AppState.addEventListener('focus', () => changed(isForeground())),
   ];
+  // `blur` and `focus` exist on Android only; iOS throws on them.
+  if (Platform.OS === 'android') {
+    subscriptions.push(
+      AppState.addEventListener('blur', () => changed(false)),
+      AppState.addEventListener('focus', () => changed(isForeground())),
+    );
+  }
+
+  return subscriptions;
 }
 
 export function useNotificationForeground(): boolean {
