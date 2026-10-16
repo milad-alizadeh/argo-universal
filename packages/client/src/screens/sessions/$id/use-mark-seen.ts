@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 import { useTRPC } from '#features/connection';
+import { useScreenFocused } from '#lib/product/navigation/navigation';
 
 function subscribeAppState(changed: () => void): () => void {
   const subscription = AppState.addEventListener('change', changed);
@@ -35,13 +36,22 @@ function useMarksSeenRevision(sessionId: string, seenRevision: number): void {
   }, [isPending, seenRevision, sessionId, mutate]);
 }
 
+// Only the focused page shows its Feed: not iOS's long-press preview, nor the page Link preloads behind it while the preview is open.
+function usePageShown(preview: boolean): boolean {
+  const focused = useScreenFocused();
+  const appShown = useAppShown();
+
+  return focused && appShown && !preview;
+}
+
 // Marks the Session seen up to the newest revision held while the Feed's end is on screen. Returns the Feed's `onAtEndChange`.
 export function useMarkSeen(
   sessionId: string,
   revision: number,
+  preview: boolean,
 ): (atEnd: boolean) => void {
   const [atEnd, setAtEnd] = useState(false);
-  const shown = useAppShown();
+  const shown = usePageShown(preview);
   useMarksSeenRevision(sessionId, atEnd && shown ? revision : 0);
 
   return setAtEnd;

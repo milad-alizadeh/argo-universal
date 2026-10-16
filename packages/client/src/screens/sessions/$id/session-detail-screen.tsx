@@ -112,7 +112,7 @@ function useSessionSurroundings(
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
     mergeMethod: useMergeMethod(),
-    onAtEndChange: useMarkSeen(sessionId, preview ? 0 : feed.revision),
+    onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
   };
 }
 
