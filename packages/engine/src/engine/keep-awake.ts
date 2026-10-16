@@ -4,6 +4,7 @@ import {
   openSessionsId,
   openSessionsMachine,
   type OpenSessionsActorRef,
+  type SessionActorRef,
 } from '../sessions';
 import { caffeinate, type Caffeinate } from './caffeinate';
 
@@ -46,7 +47,7 @@ class IdleSleepAssertion {
 
   private update(sessions: OpenSessionsActorRef): void {
     const active = Object.values(sessions.getSnapshot().context.sessions).some(
-      (session) => session.getSnapshot().context.activeTurnId !== null,
+      hasActiveTurn,
     );
 
     if (!active) return this.release();
@@ -57,4 +58,13 @@ class IdleSleepAssertion {
     this.stop?.();
     this.stop = undefined;
   }
+}
+
+function hasActiveTurn(session: SessionActorRef): boolean {
+  const { activeTurnId, subagentFeeds } = session.getSnapshot().context;
+
+  return (
+    activeTurnId !== null ||
+    [...subagentFeeds.children.values()].some((child) => child.turnId !== null)
+  );
 }

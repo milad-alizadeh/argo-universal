@@ -1,16 +1,88 @@
+import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import type { Caffeinate } from './caffeinate';
 
+const waitForCancelStep = 'wait-for-cancel';
+
 const prompt = [{ type: 'text' as const, text: 'Work until stopped' }];
+
+it.each(['completed', 'cancelled'] as const)(
+  'keeps awake for background Subagent Turns after the parent Turn is %s',
+  async (ending) => {
+    const release = vi.fn<() => void>();
+    const caffeinate = vi.fn<Caffeinate>(() => release);
+    const steps = scenarios['subagent-background'].steps;
+
+    const host = await startAcpEngine({
+      steps:
+        ending === 'completed'
+          ? steps
+          : [...steps, { type: waitForCancelStep }],
+      caffeinate,
+    });
+
+    const created = await host.caller.session.new({
+      ...emptySessionInput,
+      prompt,
+    });
+
+    await waitForAcpSnapshot(
+      host,
+      created.sessionId,
+      (snapshot) => snapshot.subagents.length === 1,
+    );
+
+    if (ending === 'cancelled') await host.caller.session.cancel(created);
+    await waitForAcpSessionIdle(host, created.sessionId);
+    expect(await host.caller.session.subagents(created)).toEqual([
+      expect.objectContaining({ state: 'running' }),
+    ]);
+    expect(caffeinate).toHaveBeenCalledExactlyOnceWith(process.pid);
+    expect(release).not.toHaveBeenCalled();
+
+    const agent = requireScriptedProcessAt(host.agent.processes);
+    await agent.play(
+      [
+        {
+          type: 'update',
+          update: {
+            sessionUpdate: 'subagent_update',
+            sessionId: 'subagent-review',
+            state: { state: 'idle' },
+          },
+        },
+      ],
+      'owned-1',
+    );
+    await vi.waitFor(() => expect(release).toHaveBeenCalledOnce());
+    await agent.play(
+      [
+        {
+          type: 'update',
+          update: {
+            sessionUpdate: 'subagent_update',
+            sessionId: 'subagent-review',
+            state: { state: 'running' },
+          },
+        },
+      ],
+      'owned-1',
+    );
+    await vi.waitFor(() => expect(caffeinate).toHaveBeenCalledTimes(2));
+    await host.stop();
+    expect(release).toHaveBeenCalledTimes(2);
+  },
+);
 
 it('one Engine assertion spans overlapping Turns and releases on the last cancellation while Agent sessions stay open', async () => {
   const release = vi.fn<() => void>();
   const caffeinate = vi.fn<Caffeinate>(() => release);
 
   const host = await startAcpEngine({
-    steps: [{ type: 'wait-for-cancel' }],
+    steps: [{ type: waitForCancelStep }],
     caffeinate,
   });
 
@@ -56,7 +128,7 @@ it('stopping the Engine actor releases an owned assertion even before graceful S
   const release = vi.fn<() => void>();
 
   const host = await startAcpEngine({
-    steps: [{ type: 'wait-for-cancel' }],
+    steps: [{ type: waitForCancelStep }],
     caffeinate: () => release,
   });
 
