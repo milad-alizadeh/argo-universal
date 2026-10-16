@@ -58,6 +58,11 @@ export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';
 
 export { recoverTurnEnd } from './turn-end-recovery';
 
+export {
+  committedTurnEndings,
+  type CommittedTurnEnding,
+} from './committed-turn-endings';
+
 export { restartTurnError } from './turn-end';
 
 export { settleArchivedChild } from './archive-settlement';

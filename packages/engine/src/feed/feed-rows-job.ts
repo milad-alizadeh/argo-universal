@@ -1,6 +1,4 @@
 import type { SessionRecord, SessionUpdate } from '@repo/contracts';
-import { feedRow, session } from '@repo/db/schema';
-import { and, eq, gt, sql, type SQL } from 'drizzle-orm';
 import { type StorageTransaction, type WriterJob } from '../storage';
 import type { OutputBlob } from './acp/tool-output';
 import {
@@ -8,14 +6,15 @@ import {
   insertOutputBlobRefs,
   writeOutputBlobFiles,
 } from './feed-blob-storage';
-import { toFeedRowWrite } from './feed-row';
+import {
+  advanceFeedSession,
+  type FeedRowsWrite,
+  upsertFeedRows,
+} from './feed-rows-write';
 import { titleFromRows } from './prompt-title';
+import { turnEndingsOf, type CommittedTurnEnding } from './turn-end';
 
-type FeedRowsJobInput = {
-  sessionId: string;
-  rows: SessionUpdate[];
-  maxRevision: number;
-  activityAt?: number;
+type FeedRowsJobInput = FeedRowsWrite & {
   // The blobs the job's prompt rows show.
   blobIds?: string[];
   // Whole tool output the rows show as previews, stored before the rows.
@@ -24,19 +23,7 @@ type FeedRowsJobInput = {
 
 export type QueuedFeedRows = { rows: SessionUpdate[]; maxRevision: number };
 
-// A row keeps the position it was first written at, so an update leaves `position` alone.
-const feedRowUpdate = {
-  sessionUpdate: sql`excluded.session_update`,
-  revision: sql`excluded.revision`,
-  turnId: sql`excluded.turn_id`,
-  state: sql`excluded.state`,
-  payload: sql`excluded.payload`,
-  payloadVersion: sql`excluded.payload_version`,
-  sourceRef: sql`excluded.source_ref`,
-  searchText: sql`excluded.search_text`,
-};
-
-// Changed Feed rows of one Session; borrows `blob`, `blob_ref` and the `session` revision, activity and prompt title in the same commit.
+// The live Feed's changed rows of one Session, queued on the Writer; borrows `blob`, `blob_ref` and the `session` revision, activity and prompt title in the same commit.
 export class FeedRowsJob implements WriterJob {
   public readonly refusable = true;
 
@@ -59,9 +46,9 @@ export class FeedRowsJob implements WriterJob {
 
   public commit(transaction: StorageTransaction): void {
     insertOutputBlobs(transaction, this.input.blobs ?? []);
-    this.upsertRows(transaction);
+    upsertFeedRows(transaction, this.input);
     insertOutputBlobRefs(transaction, this.input);
-    this.advanceSession(transaction);
+    advanceFeedSession(transaction, this.input);
   }
 
   public queuedRows(sessionId: string): QueuedFeedRows | undefined {
@@ -72,11 +59,11 @@ export class FeedRowsJob implements WriterJob {
     return this.input.sessionId;
   }
 
-  public changedRows(): readonly SessionUpdate[] {
-    return this.input.rows;
+  public turnEndings(): CommittedTurnEnding[] {
+    return turnEndingsOf(this.input.sessionId, this.input.rows);
   }
 
-  // What the commit writes to its Session's row, as `advanceSession` does.
+  // What the commit writes to its Session's row, as `advanceFeedSession` does.
   public projectSession(current: SessionRecord): SessionRecord {
     const { maxRevision, activityAt, rows } = this.input;
 
@@ -88,44 +75,6 @@ export class FeedRowsJob implements WriterJob {
       activityAt: activityAt ?? current.activityAt,
       title: projectedPromptTitle(current, rows),
     };
-  }
-
-  private upsertRows(transaction: StorageTransaction): void {
-    if (this.input.rows.length === 0) return;
-    transaction
-      .insert(feedRow)
-      .values(this.rowWrites())
-      .onConflictDoUpdate({
-        target: [feedRow.sessionId, feedRow.id],
-        set: feedRowUpdate,
-      })
-      .run();
-  }
-
-  private rowWrites(): (typeof feedRow.$inferInsert)[] {
-    return this.input.rows.map((row): typeof feedRow.$inferInsert => ({
-      ...toFeedRowWrite(row),
-      sessionId: this.input.sessionId,
-    }));
-  }
-
-  private newerRevisionFilter(): SQL | undefined {
-    return and(
-      eq(session.id, this.input.sessionId),
-      gt(sql`${this.input.maxRevision}`, session.maxRevision),
-    );
-  }
-
-  private advanceSession(transaction: StorageTransaction): void {
-    transaction
-      .update(session)
-      .set({
-        maxRevision: this.input.maxRevision,
-        activityAt: this.input.activityAt ?? Date.now(),
-        title: sql`case when ${session.titleSource} = 'prompt' and ${session.title} = '' then ${titleFromRows(this.input.rows)} else ${session.title} end`,
-      })
-      .where(this.newerRevisionFilter())
-      .run();
   }
 }
 

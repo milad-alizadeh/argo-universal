@@ -1,7 +1,6 @@
-import type { Notice } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
-import { FeedRowsJob } from '../feed';
+import { committedTurnEndings, type CommittedTurnEnding } from '../feed';
 import { createSessionReader, type OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef, WriterJob } from '../storage';
 import type { NotificationFact } from './facts';
@@ -12,9 +11,6 @@ export interface NotificationSources {
   sessions: OpenSessionsActorRef;
   databaseWriter: WriterActorRef;
 }
-
-const hasTurnEnd = (row: Notice): boolean =>
-  row._meta?.argo?.turnEnd !== undefined;
 
 const titleOf = (title: string): string => title || 'Session';
 
@@ -53,18 +49,11 @@ export class NotificationSourcesObserver {
   }
 
   private committed(jobs: readonly WriterJob[]): void {
-    for (const job of jobs)
-      if (job instanceof FeedRowsJob) this.committedRows(job);
+    for (const ending of committedTurnEndings(jobs)) this.ending(ending);
   }
 
-  private committedRows(job: FeedRowsJob): void {
-    for (const row of job.changedRows())
-      if (row.sessionUpdate === 'notice') this.ending(job.sessionId, row);
-  }
-
-  private ending(sessionId: string, row: Notice): void {
-    if (!hasTurnEnd(row) || !row.turnId) return;
-    this.emit({ sessionId, title: '', kind: 'turn_ended', turnId: row.turnId });
+  private ending({ sessionId, turnId }: CommittedTurnEnding): void {
+    this.emit({ sessionId, title: '', kind: 'turn_ended', turnId });
   }
 
   private emit(fact: NotificationFact): void {
