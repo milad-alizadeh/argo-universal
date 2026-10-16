@@ -309,7 +309,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -350,7 +350,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -397,7 +397,7 @@
                 "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9); only its .mocks files are imported directly."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -495,7 +495,7 @@
                 "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9); only its .mocks files are imported directly."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -629,7 +629,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -759,7 +759,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -809,7 +809,7 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
-                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
                 "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
@@ -1083,7 +1083,7 @@
       }
     },
     {
-      // ADR-0026: apps read the size class only in the App's navigator, which lays out the Frame per size class. Only the last matching override's options apply, so the app blocks below repeat this path.
+      // ADR-0026: in apps/, only the navigator is kit: it lays out the Frame per size class and sits in apps/ for expo-router's route files. Only the last matching override's options apply, so the app blocks below repeat this path.
       "files": ["apps/**"],
       "rules": {
         "no-restricted-imports": [
@@ -1092,7 +1092,7 @@
             "paths": [
               {
                 "name": "@repo/client/size-class",
-                "message": "Only the kit and the App's navigator (apps/universal-app/src/navigation) read the size class: use a size-class prop or <SizeClass> (ADR-0026)."
+                "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
               }
             ]
           }
@@ -1109,7 +1109,7 @@
             "paths": [
               {
                 "name": "@repo/client/size-class",
-                "message": "Only the kit and the App's navigator (apps/universal-app/src/navigation) read the size class: use a size-class prop or <SizeClass> (ADR-0026)."
+                "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
               }
             ],
             "patterns": [
@@ -1131,7 +1131,7 @@
       }
     },
     {
-      // The App's navigator is kit under ADR-0026: D3 without the size-class ban.
+      // The navigator is kit under ADR-0026: D3 without the size-class ban. Keep these patterns in step with D3.
       "files": ["apps/universal-app/src/navigation/**"],
       "rules": {
         "no-restricted-imports": [
@@ -2072,7 +2072,7 @@
             "paths": [
               {
                 "name": "@repo/client/size-class",
-                "message": "Only the kit and the App's navigator (apps/universal-app/src/navigation) read the size class: use a size-class prop or <SizeClass> (ADR-0026)."
+                "message": "Only the kit reads the size class; in apps/ the kit is the navigator, apps/universal-app/src/navigation: use a size-class prop or <SizeClass only> (ADR-0026)."
               }
             ],
             "patterns": [
