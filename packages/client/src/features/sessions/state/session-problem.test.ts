@@ -1,6 +1,5 @@
-import { type Notice, SessionOpenFailure, type TurnEnd } from '@repo/contracts';
+import { SessionOpenFailure } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import type { FeedViewItem } from '#features/feed';
 import {
   dropped,
   serverError,
@@ -12,26 +11,6 @@ const idle: OpenAttempt = { submittedAt: 0, error: null, isPending: false };
 const launchFailure = (message: string): SessionOpenFailure =>
   new SessionOpenFailure({ type: 'failed', message });
 
-const turnEnd = (id: string, end: Partial<TurnEnd>): FeedViewItem => {
-  const row: Notice = {
-    id,
-    sessionId: 'session-1',
-    turnId: 'turn-1',
-    position: 1,
-    revision: 1,
-    state: 'settled',
-    sessionUpdate: 'notice',
-    severity: 'info',
-    title: 'Turn ended',
-  };
-
-  return {
-    type: 'turn_end',
-    row,
-    end: { stopReason: 'auth_required', error: null, durationMs: 10, ...end },
-  };
-};
-
 const agentExited = 'Agent exited';
 
 const launchFailed = (message: string): ReturnType<typeof sessionProblem> => ({
@@ -39,7 +18,14 @@ const launchFailed = (message: string): ReturnType<typeof sessionProblem> => ({
   error: { type: 'failed', message },
 });
 
-const quiet = { feedOpenError: null, retry: idle, commands: [], items: [] };
+const quiet = {
+  feedOpenError: null,
+  feedDropped: false,
+  retry: idle,
+  retryDropped: false,
+  commands: [],
+  items: [],
+};
 
 it('shows the open the Feed closed on', () => {
   expect(
@@ -51,19 +37,32 @@ it('shows the open the Feed closed on', () => {
 });
 
 it('asks nothing when the Feed drops with the Connection', () => {
-  expect(sessionProblem({ ...quiet, feedOpenError: dropped })).toBeUndefined();
+  expect(
+    sessionProblem({ ...quiet, feedOpenError: dropped, feedDropped: true }),
+  ).toBeUndefined();
 });
 
-const failedRetry = { submittedAt: 2, error: serverError, isPending: false };
+const failedRetry = (error: Error): OpenAttempt => ({
+  submittedAt: 2,
+  error,
+  isPending: false,
+});
 
+// A call with no answer is a drop only by the Connection's state, so with it up it is a failure too.
 it.each([
-  { case: 'the Feed closes', sources: { feedOpenError: serverError } },
-  { case: 'a Retry fails', sources: { retry: failedRetry } },
+  { case: 'the Feed closes on a Server error', cause: serverError, feed: true },
+  { case: 'a Retry fails on a Server error', cause: serverError, feed: false },
+  { case: 'the Feed ends with no answer', cause: dropped, feed: true },
+  { case: 'a Retry gets no answer', cause: dropped, feed: false },
 ])(
-  'shows a Server error as a launch failure when $case with no open failure',
-  ({ sources }) => {
+  'shows a launch failure when $case with the Connection up',
+  ({ cause, feed }) => {
+    const sources = feed
+      ? { feedOpenError: cause }
+      : { retry: failedRetry(cause) };
+
     expect(sessionProblem({ ...quiet, ...sources })).toEqual(
-      launchFailed(serverError.message),
+      launchFailed(cause.message),
     );
   },
 );
@@ -105,14 +104,16 @@ it.each([
   },
 );
 
-it('keeps the Feed’s closure when a Retry drops with the Connection', () => {
+// The toast says why; the Retry runs again when the Connection reopens.
+it('puts an older closure away when the Connection drops a Retry', () => {
   expect(
     sessionProblem({
       ...quiet,
       feedOpenError: launchFailure('first'),
-      retry: { submittedAt: 2, error: dropped, isPending: false },
+      retry: failedRetry(dropped),
+      retryDropped: true,
     }),
-  ).toEqual(launchFailed('first'));
+  ).toBeUndefined();
 });
 
 it('leaves a prompt’s other errors to the Composer', () => {
@@ -147,25 +148,4 @@ it('shows a Feed closure that came after a Retry opened the Session', () => {
       retry: { submittedAt: 2, error: null, isPending: false },
     }),
   ).toEqual(launchFailed(agentExited));
-});
-
-const signInExpired = turnEnd('end-1', {
-  error: { code: -32000, message: 'Sign in to Codex' },
-});
-
-const endTurn = turnEnd('end-2', { stopReason: 'end_turn' });
-
-it('asks to sign in after a Turn that ended auth_required', () => {
-  expect(sessionProblem({ ...quiet, items: [signInExpired] })).toEqual({
-    type: 'turn',
-    id: 'end-1',
-    description: 'Sign in to Codex',
-  });
-});
-
-it.each([
-  { case: 'the Turn ended well', items: [endTurn] },
-  { case: 'a later Turn ended well', items: [signInExpired, endTurn] },
-])('asks nothing once $case', ({ items }) => {
-  expect(sessionProblem({ ...quiet, items })).toBeUndefined();
 });

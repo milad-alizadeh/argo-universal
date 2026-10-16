@@ -1,5 +1,7 @@
 import { startEngineTestHost } from '@repo/engine/mocks';
+import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
+import { TRPCClientError, type TRPCClientErrorLike } from '@trpc/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Connection, ConnectionState } from '../state/connection';
 import { openConnection } from './open-connection';
@@ -38,7 +40,45 @@ const waitForConnectionLink = (
     timeout: 5000,
   });
 
+interface DroppedCall {
+  error: TRPCClientErrorLike<AppRouter>;
+  state: ConnectionState;
+}
+
+// What a live subscription, such as a Session's Feed, hears when the Server goes, and the Connection's state then.
+async function droppedSubscription(): Promise<DroppedCall> {
+  const server = await startServer();
+  const { client, connection, close } = openConnection(server.url);
+
+  closers.push(close);
+  const live = Promise.withResolvers<void>();
+  const dropped = Promise.withResolvers<DroppedCall>();
+
+  const subscription = client.system.clock.subscribe(undefined, {
+    onData: () => live.resolve(),
+    onConnectionStateChange: (change) => {
+      if (change.state === 'connecting' && change.error)
+        dropped.resolve({ error: change.error, state: connection.state() });
+    },
+  });
+
+  closers.push(() => subscription.unsubscribe());
+  await live.promise;
+  await server.stop();
+
+  return dropped.promise;
+}
+
 describe('openConnection', (): void => {
+  // A call reads as dropped from the Connection's own state, so the Connection must be down first.
+  it('shows Reconnecting before a dropped call hears the Server gave no answer', async () => {
+    const { error, state } = await droppedSubscription();
+
+    expect(state).toBe('reconnecting');
+    expect(error).toBeInstanceOf(TRPCClientError);
+    expect(error.shape).toBeUndefined();
+  });
+
   it('reconnects after the Server restarts and fetches every query again', async (): Promise<void> => {
     const server = await startServer();
     const queryClient = mountedQueryClient();

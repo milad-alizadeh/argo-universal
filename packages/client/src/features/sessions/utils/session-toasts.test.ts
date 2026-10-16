@@ -2,64 +2,89 @@ import { describe, expect, it } from 'vitest';
 import type { ErrorToast } from '#primitives/overlays/toast';
 import {
   dropped,
-  openFailure,
   serverError,
 } from '../../../../mocks/sessions/open-failure.mocks';
-import { droppedConnectionToast, signInReadToast } from './session-toasts';
+import type { OpenAttempt } from '../state/session-problem';
+import {
+  droppedOpenToast,
+  pastSessionDropToast,
+  signInReadToast,
+} from './session-toasts';
 
-const couldNotOpen = "Couldn't open the Session";
-
-const refusedOpen = openFailure({ type: 'failed', message: 'Agent exited' });
-
-const droppedToast = (title: string): ErrorToast => ({
-  title,
+const couldNotOpen: ErrorToast = {
+  title: "Couldn't open the Session",
   message: 'WebSocket closed',
   key: 'connection-dropped',
-});
+};
 
-describe('droppedConnectionToast', () => {
+describe('droppedOpenToast', () => {
   it.each([
-    {
-      case: 'an open that never happened',
-      sources: { opens: [dropped] },
-      title: couldNotOpen,
-    },
-    {
-      case: 'a Retry the Connection dropped',
-      sources: { opens: [dropped], feed: null, opened: false },
-      title: couldNotOpen,
-    },
+    { case: 'an open that never happened', sources: { open: dropped } },
     {
       case: 'the Feed of a Session that never opened',
-      sources: { opens: [null], feed: dropped, opened: false },
-      title: couldNotOpen,
+      sources: { feed: dropped, opened: false },
     },
-    {
-      case: 'the Feed of an open Session',
-      sources: { opens: [null], feed: dropped, opened: true },
-      title: 'Connection lost',
-    },
-  ])('says why for $case', ({ sources, title }) => {
-    expect(droppedConnectionToast(sources)).toEqual(droppedToast(title));
+  ])('says why for $case', ({ sources }) => {
+    expect(droppedOpenToast(sources)).toEqual(couldNotOpen);
+  });
+
+  // The App already says it is reconnecting.
+  it('shows none for the Feed of an open Session', () => {
+    expect(droppedOpenToast({ feed: dropped, opened: true })).toBeUndefined();
   });
 
   // The toast's one key keeps a second drop, shown or not, from showing another.
   it('shows one toast when the Feed and a Retry drop together', () => {
     expect(
-      droppedConnectionToast({ opens: [dropped], feed: dropped, opened: true }),
-    ).toEqual(droppedToast(couldNotOpen));
+      droppedOpenToast({ open: dropped, feed: dropped, opened: true }),
+    ).toEqual(couldNotOpen);
+  });
+
+  it('shows none with no drop', () => {
+    expect(droppedOpenToast({})).toBeUndefined();
+  });
+});
+
+const retry = (error: Error): OpenAttempt => ({
+  submittedAt: 2,
+  error,
+  isPending: false,
+});
+
+const fine = {
+  retry: { submittedAt: 0, error: null, isPending: false },
+  retryDropped: false,
+  feedOpenError: null,
+  feedDropped: false,
+};
+
+describe('pastSessionDropToast', () => {
+  it.each([
+    {
+      case: 'a Retry the Connection dropped',
+      sources: { ...fine, retry: retry(dropped), retryDropped: true },
+      opened: true,
+    },
+    {
+      case: 'a Feed the Connection dropped before the Session opened',
+      sources: { ...fine, feedOpenError: dropped, feedDropped: true },
+      opened: false,
+    },
+  ])('says why for $case', ({ sources, opened }) => {
+    expect(pastSessionDropToast(sources, opened)).toEqual(couldNotOpen);
   });
 
   it.each([
-    { case: 'a refused open', sources: { opens: [refusedOpen] } },
     {
-      case: 'a Feed closed on a launch failure',
-      sources: { opens: [null], feed: refusedOpen, opened: true },
+      case: 'a Retry that failed with the Connection up',
+      sources: { ...fine, retry: retry(dropped) },
     },
-    { case: 'a Server error', sources: { opens: [serverError] } },
-    { case: 'no error', sources: { opens: [undefined], feed: null } },
+    {
+      case: 'a Feed that closed with the Connection up',
+      sources: { ...fine, feedOpenError: dropped },
+    },
   ])('leaves $case to the callout', ({ sources }) => {
-    expect(droppedConnectionToast(sources)).toBeUndefined();
+    expect(pastSessionDropToast(sources, false)).toBeUndefined();
   });
 });
 

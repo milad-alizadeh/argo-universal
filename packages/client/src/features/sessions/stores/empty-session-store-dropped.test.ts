@@ -7,10 +7,7 @@ import {
   settle,
   worktree,
 } from '../../../../mocks/sessions/empty-session-store.mocks';
-import {
-  dropped,
-  serverError,
-} from '../../../../mocks/sessions/open-failure.mocks';
+import { dropped } from '../../../../mocks/sessions/open-failure.mocks';
 
 let h: EmptySessionHarness;
 
@@ -24,11 +21,24 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+const dropLocalOpen = async (): Promise<void> => {
+  h.choose(local('agent-one'));
+  h.drop();
+  h.calls.open[0]?.call.reject(dropped);
+  await settle();
+};
+
+const dropCreate = async (): Promise<void> => {
+  h.choose(worktree);
+  h.store.send(prompt);
+  h.drop();
+  h.calls.open[0]?.call.reject(dropped);
+  await settle();
+};
+
 describe('A Local open the Connection dropped', () => {
   it('is no launch failure: a toast says why', async () => {
-    h.choose(local('agent-one'));
-    h.calls.open[0]?.call.reject(dropped);
-    await settle();
+    await dropLocalOpen();
 
     expect(h.store.getState()).toMatchObject({
       attempt: { status: 'idle' },
@@ -37,9 +47,7 @@ describe('A Local open the Connection dropped', () => {
   });
 
   it('opens again when the Connection reopens', async () => {
-    h.choose(local('agent-one'));
-    h.calls.open[0]?.call.reject(dropped);
-    await settle();
+    await dropLocalOpen();
 
     h.reconnect();
     await h.openLocal('session-1');
@@ -52,41 +60,9 @@ describe('A Local open the Connection dropped', () => {
   });
 });
 
-// Only a dropped Connection goes to the toast: the first prompt keeps Retry for any other failure.
-describe('A Local open the Server failed with no open failure', () => {
-  it('fails to launch, with Retry', async () => {
-    h.choose(local('agent-one'));
-    h.calls.open[0]?.call.reject(serverError);
-    await settle();
-
-    expect(h.store.getState()).toMatchObject({
-      attempt: {
-        status: 'failed',
-        error: { type: 'failed', message: serverError.message },
-      },
-      connectionError: undefined,
-    });
-  });
-
-  it('delivers a prompt sent meanwhile once Retry opens it', async () => {
-    h.choose(local('agent-one'));
-    h.calls.open[0]?.call.reject(serverError);
-    await settle();
-    h.store.send(prompt);
-
-    h.retry();
-    await h.openLocal('session-1');
-
-    expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);
-  });
-});
-
 describe('A New worktree create the Connection dropped', () => {
   it('drops a toast’s failure once Send creates it again', async () => {
-    h.choose(worktree);
-    h.store.send(prompt);
-    h.calls.open[0]?.call.reject(dropped);
-    await settle();
+    await dropCreate();
     expect(h.store.getState()).toMatchObject({
       attempt: { status: 'idle' },
       connectionError: dropped,
@@ -100,5 +76,16 @@ describe('A New worktree create the Connection dropped', () => {
       attempt: { status: 'idle' },
       connectionError: undefined,
     });
+  });
+
+  // Only a Send creates a New worktree, so the Connection reopening sends nothing.
+  it('sends nothing when the Connection reopens', async () => {
+    await dropCreate();
+
+    h.reconnect();
+    await settle();
+
+    expect(h.calls.open).toHaveLength(1);
+    expect(h.sendDraft).not.toHaveBeenCalled();
   });
 });

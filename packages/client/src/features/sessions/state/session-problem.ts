@@ -12,7 +12,11 @@ export interface OpenAttempt {
 export interface SessionProblemSources {
   // The error the Feed closed on, when the Session's open failed.
   feedOpenError: unknown;
+  // The Connection dropped the Feed: a toast says why, when the Session never opened.
+  feedDropped: boolean;
   retry: OpenAttempt;
+  // The Connection dropped Retry's open: a toast says why, and Retry runs again when the Connection reopens.
+  retryDropped: boolean;
   // Prompts and setting changes, which open a past Session on the way.
   commands: OpenAttempt[];
   items: FeedViewItem[] | undefined;
@@ -32,7 +36,14 @@ const latest = (attempts: OpenAttempt[]): OpenAttempt | undefined => {
   return submitted.length > 0 ? submitted.reduce(newer) : undefined;
 };
 
-// Retry's own error is a failed open unless the Connection dropped it; a command's only when it carries one.
+// A Retry that opened the Session cleared the Feed's closure, so any closure here came after it; a dropped Feed is a toast's.
+const closure = ({
+  feedOpenError,
+  feedDropped,
+}: SessionProblemSources): SessionOpenError | undefined =>
+  feedDropped ? undefined : openErrorOf(feedOpenError);
+
+// Retry's own error is a failed open; a command's only when it carries one.
 const refusedOpen = (
   attempt: OpenAttempt,
   retry: OpenAttempt,
@@ -41,11 +52,20 @@ const refusedOpen = (
     ? openErrorOf(attempt.error)
     : decodeOpenFailure(attempt.error);
 
-// A Retry that opened the Session cleared the Feed's closure, so any closure here came after it; a dropped Feed is a toast's.
-const closure = ({
-  feedOpenError,
-}: SessionProblemSources): SessionOpenError | undefined =>
-  openErrorOf(feedOpenError);
+/*
+ * A Retry the Connection dropped asks nothing, and puts an older closure away too: a toast
+ * says why, and Retry runs again when the Connection reopens.
+ */
+const retryDropped = (
+  attempt: OpenAttempt | undefined,
+  sources: SessionProblemSources,
+): boolean => attempt === sources.retry && sources.retryDropped;
+
+const attemptError = (
+  attempt: OpenAttempt | undefined,
+  retry: OpenAttempt,
+): SessionOpenError | undefined =>
+  attempt ? refusedOpen(attempt, retry) : undefined;
 
 // The newest attempt speaks when it failed to open; else the Feed's closure.
 function openError(
@@ -53,7 +73,9 @@ function openError(
 ): SessionOpenError | undefined {
   const attempt = latest([sources.retry, ...sources.commands]);
 
-  return (attempt && refusedOpen(attempt, sources.retry)) ?? closure(sources);
+  if (retryDropped(attempt, sources)) return undefined;
+
+  return attemptError(attempt, sources.retry) ?? closure(sources);
 }
 
 type TurnEnd = Extract<FeedViewItem, { type: 'turn_end' }>;

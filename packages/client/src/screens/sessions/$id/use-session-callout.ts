@@ -1,21 +1,23 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
 import type { useAgents } from '#features/agents';
-import { useTRPC } from '#features/connection';
+import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
   type AfterSignIn,
-  droppedConnectionToast,
   type OpenAttempt,
   type PastSessionAnswers,
   type PastSessionSignIn,
   pastSessionCallout,
+  pastSessionDropToast,
   pastSessionSignIn,
   type SessionAuthSubject,
   type SessionCalloutProps,
   type SessionCallouts,
   type SessionProblem,
+  type SessionProblemSources,
   sessionProblem,
+  useConnectionDropped,
   useSessionAuth,
   useTurnSignIn,
 } from '#features/sessions';
@@ -29,6 +31,8 @@ type Agents = ReturnType<typeof useAgents>;
 export interface SessionCalloutSources {
   sessionId: string;
   feed: SessionFeed;
+  // The Connection dropped the Feed's open, so a toast says why instead of a callout.
+  feedDropped: boolean;
   commands: Pick<SessionCommands, 'promptSession' | 'setConfigOption'>;
   agents: Agents;
 }
@@ -90,39 +94,40 @@ interface SessionSignIn {
   effects: SignInEffects;
 }
 
-interface OpenProblem {
+interface RetriableProblem {
   problem: SessionProblem | undefined;
   openAgain: () => void;
 }
 
-// One toast when the Connection drops, whether under the Feed, a Retry or both.
-const useDroppedConnectionToast = (
-  retry: OpenAttempt,
-  feed: SessionFeed,
-): void =>
-  useErrorToast(
-    droppedConnectionToast({
-      opens: [retry.error],
-      feed: feed.openError,
-      opened: feed.snapshot !== null,
-    }),
-  );
+// A Retry the Connection dropped never opened the Session: it runs again when the Connection reopens.
+function useRetryOnReconnect(
+  { retryDropped }: SessionProblemSources,
+  openAgain: () => void,
+): void {
+  useResubscribeOnReconnect({
+    status: retryDropped ? 'error' : 'idle',
+    reset: openAgain,
+  });
+}
 
-// What the Session's open or last Turn asks for; a dropped Connection shows one toast instead.
-function useOpenProblem(sources: SessionCalloutSources): OpenProblem {
+// What the Session's open or last Turn asks for; an open the Connection dropped shows one toast instead.
+function useOpenProblem(sources: SessionCalloutSources): RetriableProblem {
   const { sessionId, feed, commands } = sources;
   const { attempt, openAgain } = useRetry(sessionId, feed);
 
-  useDroppedConnectionToast(attempt, feed);
-
-  const problem = sessionProblem({
+  const problemSources: SessionProblemSources = {
     feedOpenError: feed.openError,
+    feedDropped: sources.feedDropped,
     retry: attempt,
+    retryDropped: useConnectionDropped(attempt.error),
     commands: [commands.promptSession, commands.setConfigOption],
     items: feed.view?.items,
-  });
+  };
 
-  return { problem, openAgain };
+  useErrorToast(pastSessionDropToast(problemSources, feed.snapshot !== null));
+  useRetryOnReconnect(problemSources, openAgain);
+
+  return { problem: sessionProblem(problemSources), openAgain };
 }
 
 // The sign-in rule over that problem, with the Turn's sign-in kept across remounts.

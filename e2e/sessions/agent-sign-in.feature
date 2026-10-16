@@ -202,8 +202,9 @@ Feature: Agent sign-in and launch callouts
     And I send the prompt "First prompt"
     And the Agent replies "The shared fixture completed this Turn."
     When the Connection drops and stays down
-    Then the App says the Connection was lost
+    Then the App says it is reconnecting
     And the App shows no launch failure
+    And the App shows no toast
     When the Connection comes back
     And I send the prompt "Second prompt"
     Then both submitted prompts have separate completed Turns

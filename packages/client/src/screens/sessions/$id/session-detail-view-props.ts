@@ -24,10 +24,14 @@ export type SessionDetailViewSources = Omit<
   'snapshot' | 'view'
 > & {
   callouts: SessionCallouts;
+  // The Connection dropped the Feed's open: the page keeps opening, and a toast says why.
+  feedDropped: boolean;
 };
 
 type OpenSessionSources = OpenSession &
   Pick<SessionDetailViewSources, 'callouts'>;
+
+type FeedFailure = Pick<SessionDetailViewSources, 'feed' | 'feedDropped'>;
 
 const headerStatus = {
   running: 'running',
@@ -37,19 +41,20 @@ const headerStatus = {
 
 // A failed first page refetches by itself when the Connection reopens or the window regains focus. An open Session keeps its Feed and Composer when its Agent fails: the callout says why.
 function failedSession(
-  feed: SessionFeed,
+  failure: FeedFailure,
   opened: OpenFeed | undefined,
 ): SessionDetailViewProps | undefined {
-  if (feed.error) return { state: 'failed' };
+  if (failure.feed.error) return { state: 'failed' };
 
-  return opened ? undefined : unopened(feed);
+  return opened ? undefined : unopened(failure);
 }
 
-// An open the Agent refused fails the page with its reason; one that never reached the Agent keeps opening, and a toast says why.
+// An open the Agent refused fails the page with its reason; one the Connection dropped keeps opening, and a toast says why.
 function unopened({
-  openError,
-}: SessionFeed): SessionDetailViewProps | undefined {
-  const reason = openFailureText(openError);
+  feed,
+  feedDropped,
+}: FeedFailure): SessionDetailViewProps | undefined {
+  const reason = feedDropped ? undefined : openFailureText(feed.openError);
 
   return reason === undefined ? undefined : { state: 'failed', reason };
 }
@@ -95,7 +100,7 @@ export function toSessionViewProps(
   const opened = openFeed(sources.feed);
 
   return (
-    failedSession(sources.feed, opened) ??
+    failedSession(sources, opened) ??
     (opened
       ? { state: 'open', ...openSessionProps({ ...sources, ...opened }) }
       : { state: 'opening' })
