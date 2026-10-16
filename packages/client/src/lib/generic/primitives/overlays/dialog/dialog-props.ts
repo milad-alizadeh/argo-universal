@@ -70,7 +70,7 @@ export type DialogWindowProps = {
 };
 
 export interface DialogPresentation {
-  wide: boolean;
+  centred: boolean;
   sheetOpen: boolean;
   onSheetClosed?: () => void;
 }

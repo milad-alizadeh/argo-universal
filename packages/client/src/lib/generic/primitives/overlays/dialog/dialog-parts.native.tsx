@@ -15,7 +15,7 @@ import type {
   DialogTriggerProps,
 } from './dialog-props';
 
-// The phone's dialog parts, drawn with React Native views; only a wide window centres a dialog with them.
+// The phone's dialog parts, drawn with React Native views; from the medium size class up they centre a dialog.
 export function DialogRootView(props: DialogRootProps): ReactElement {
   return (
     <View className={props.className} style={props.style}>
