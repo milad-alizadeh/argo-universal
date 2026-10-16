@@ -1,0 +1,24 @@
+{
+  "name": "@repo/codemap-834-prototype",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare-map": "node scripts/generate-dataset.mjs && node scripts/copy-wasm.mjs",
+    "web": "pnpm prepare-map && pnpm --filter @repo/universal-app exec expo start --web --port 8340",
+    "export-web": "pnpm prepare-map && pnpm --filter @repo/universal-app exec expo export --platform web --output-dir dist-codemap-834 --max-workers 2",
+    "check-types": "pnpm --filter @repo/universal-app exec tsc --noEmit -p ../codemap-834-prototype/tsconfig.json"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.2",
+    "@shopify/react-native-skia": "2.6.2",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-native": "catalog:",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "0.186.0",
+    "@types/react": "catalog:"
+  }
+}
