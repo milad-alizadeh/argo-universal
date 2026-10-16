@@ -11,11 +11,11 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
 import { type CountBadge, countBadge } from '#lib/generic/badge-count';
 import { Icon, IconSlot } from '#primitives/display/icon';
 import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
@@ -59,7 +59,7 @@ function usePillStyle(
   selected: boolean,
 ): React.ComponentProps<typeof Row>['style'] {
   // The theme's selection tint, as on every other selected row, in place of Material's secondary container.
-  const highlight = String(useCSSVariable('--color-selected'));
+  const highlight = useMaterialPalette().roles.selected;
 
   return {
     height: itemHeight,
@@ -124,11 +124,10 @@ function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
 
 // Material's Badge in Argo's danger red; TalkBack reads it with the row.
 function NativeBadge({ badge }: { badge: CountBadge }): React.JSX.Element {
-  const container = String(useCSSVariable('--color-danger'));
-  const content = String(useCSSVariable('--color-primary-foreground'));
+  const { roles } = useMaterialPalette();
 
   return (
-    <Badge containerColor={container} contentColor={content}>
+    <Badge containerColor={roles.error} contentColor={roles.onError}>
       <Text>{badge.text}</Text>
     </Badge>
   );
