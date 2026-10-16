@@ -71,6 +71,7 @@ const drawnItemTypes: Record<Exclude<FeedViewItem['type'], 'row'>, boolean> = {
   exploration: true,
   tool_call: true,
   thought: false,
+  turn_end: false,
 };
 
 const drawnRows = new Set<string>([
@@ -94,7 +95,7 @@ export const FeedItem = memo(function FeedItem({
 }: FeedItemProps) {
   return (
     <FeedImageUrlContext.Provider value={imageUrl}>
-      {renderFeedItem(item, imageUrl)}
+      {item.type === 'turn_end' ? null : renderFeedItem(item, imageUrl)}
     </FeedImageUrlContext.Provider>
   );
 });
@@ -147,7 +148,7 @@ function renderRow(
 }
 
 function renderFeedItem(
-  item: FeedViewItem,
+  item: Exclude<FeedViewItem, { type: 'turn_end' }>,
   imageUrl: ImageUrl,
 ): React.JSX.Element | null {
   if (item.type === 'row') return renderRow(item.row, imageUrl);

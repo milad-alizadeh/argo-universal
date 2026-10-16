@@ -50,3 +50,7 @@ export {
 } from './turn-settlement';
 
 export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';
+
+export { recoverTurnEnd } from './turn-end-recovery';
+
+export { restartTurnError } from './turn-end';

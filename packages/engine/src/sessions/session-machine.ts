@@ -4,9 +4,6 @@ import type {
   PendingElicitation,
   PendingPermission,
   SessionConfigOption,
-  StopReason,
-  TurnError,
-  TurnUsage,
 } from '@repo/contracts';
 import type { SessionOpenError } from '@repo/contracts';
 import { countRejection } from '@repo/machine-log';
@@ -57,6 +54,10 @@ import {
   type AcpSessionDependencies,
 } from './acp/acp-lifetime';
 import type { ElicitationAnswerContent } from './acp/elicitation-types';
+import {
+  promptFailureOutcome,
+  type AcpTurnOutcome,
+} from './acp/prompt-outcome';
 import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
@@ -126,11 +127,7 @@ type LoadSessionInput = {
   writer: WriterActorRef | undefined;
 };
 
-type EndTurnParameters = {
-  stopReason: StopReason;
-  usage?: TurnUsage;
-  error?: TurnError;
-};
+type EndTurnParameters = AcpTurnOutcome;
 
 type StartTurnParameters = { turnId: string; content: ContentBlock[] };
 
@@ -662,6 +659,24 @@ const sessionSetup = setup({
     endTurn: enqueueActions(
       ({ context, enqueue }, ended: EndTurnParameters): void => {
         const params = context.storageFailedTurn ? storageFailedTurn : ended;
+        const endedAt = context.input.now();
+
+        if (context.activeTurnId)
+          enqueue.sendTo('feed', {
+            type: 'feed.completeTurn',
+            turnId: context.activeTurnId,
+            ending: {
+              kind: 'completion',
+              turnEnd: {
+                stopReason: params.stopReason,
+                error: params.error ?? null,
+                durationMs: Math.max(
+                  0,
+                  endedAt - (context.activeTurnStartedAt ?? endedAt),
+                ),
+              },
+            },
+          });
 
         if (context.activeTurnId)
           enqueue.sendTo(writer, {
@@ -671,7 +686,7 @@ const sessionSetup = setup({
               set: {
                 status: 'ended',
                 stopReason: params.stopReason,
-                endedAt: context.input.now(),
+                endedAt,
                 usage: params.usage ?? null,
                 error: params.error ?? null,
               },
@@ -1347,12 +1362,11 @@ export const sessionMachine = sessionSetup.createMachine({
                     },
                     {
                       type: 'rememberAcpOutcome',
-                      params: ({ context }): EndTurnParameters => ({
-                        stopReason:
-                          context.turnEnding.kind === 'cancel'
-                            ? 'cancelled'
-                            : 'error',
-                      }),
+                      params: ({ context, event }): EndTurnParameters =>
+                        promptFailureOutcome(
+                          context.turnEnding.kind === 'cancel',
+                          event.error,
+                        ),
                     },
                   ],
                 },

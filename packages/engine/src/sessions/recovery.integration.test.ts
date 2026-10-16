@@ -344,22 +344,24 @@ describe('Engine restart recovery', (): void => {
     expect(repaired.turns[1]?.endedAt).toBeGreaterThanOrEqual(interruptedAt);
     expect(repaired.turns[1]?.endedAt).toBeLessThanOrEqual(Date.now());
     expect(
-      repaired.rows.map(
-        ({
-          id,
-          state,
-          revision,
-          payload,
-        }): Pick<
-          typeof feedRow.$inferSelect,
-          'id' | 'state' | 'revision' | 'payload'
-        > => ({
-          id,
-          state,
-          revision,
-          payload,
-        }),
-      ),
+      repaired.rows
+        .filter((row) => row.id !== `${runningTurnId}:end`)
+        .map(
+          ({
+            id,
+            state,
+            revision,
+            payload,
+          }): Pick<
+            typeof feedRow.$inferSelect,
+            'id' | 'state' | 'revision' | 'payload'
+          > => ({
+            id,
+            state,
+            revision,
+            payload,
+          }),
+        ),
     ).toEqual([
       expect.objectContaining({
         id: 'message',
@@ -403,6 +405,29 @@ describe('Engine restart recovery', (): void => {
       }),
       expect.objectContaining({ id: 'message', state: 'settled', revision: 6 }),
     ]);
+    expect(
+      repaired.rows.find((row) => row.id === `${runningTurnId}:end`),
+    ).toMatchObject({
+      sessionUpdate: 'notice',
+      state: 'settled',
+      revision: 29,
+      position: 9,
+      turnId: runningTurnId,
+      payload: {
+        _meta: {
+          argo: {
+            turnEnd: {
+              stopReason: 'error',
+              error: {
+                code: 'interrupted',
+                message: 'The Server stopped during the Turn',
+              },
+              durationMs: expect.any(Number),
+            },
+          },
+        },
+      },
+    });
     expect(repaired.rows[7]).toEqual(unchangedRow);
     expect(repaired.rows[0]).toMatchObject({
       position: 0,
@@ -421,7 +446,7 @@ describe('Engine restart recovery', (): void => {
         }),
       ),
     ).toEqual([
-      { maxRevision: 28, epoch: 3 },
+      { maxRevision: 29, epoch: 3 },
       { maxRevision: 6, epoch: 3 },
     ]);
 
@@ -580,6 +605,7 @@ describe('Engine restart recovery', (): void => {
         { id: 'other-turn-tool', revision: 12, state: 'settled' },
         { id: 'later-message', revision: 13, state: 'settled' },
         { id: 'unscoped-message', revision: 14, state: 'settled' },
+        { id: `${runningTurnId}:end`, revision: 15, state: 'settled' },
         { id: 'future-payload', revision: 5, state: 'settled' },
       ]);
       expect(repaired.rows[1]?.payload).toEqual({
@@ -587,7 +613,9 @@ describe('Engine restart recovery', (): void => {
         content: 'not an array',
       });
       expect(repaired.rows[2]?.payload).toMatchObject({ status: 'cancelled' });
-      expect(repaired.rows[5]).toMatchObject({
+      expect(
+        repaired.rows.find((row) => row.id === 'future-payload'),
+      ).toMatchObject({
         payloadVersion: 2,
         payload: { status: 'in_progress', rawInput: { path: editedFilePath } },
       });
@@ -597,7 +625,7 @@ describe('Engine restart recovery', (): void => {
       });
       expect(
         repaired.sessions.map(({ maxRevision }): number => maxRevision),
-      ).toEqual([14, 5]);
+      ).toEqual([15, 5]);
       expect(reported).toHaveBeenCalledWith(
         'recovery: rejected Feed shape (session-1/invalid-message) #1',
         expect.anything(),

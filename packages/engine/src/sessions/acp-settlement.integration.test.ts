@@ -170,8 +170,30 @@ describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
           errorCode,
         });
       expect(
-        page.rows.filter((row) => row.sessionUpdate === 'notice'),
+        page.rows.filter(
+          (row) => row.sessionUpdate === 'notice' && !row._meta?.argo?.turnEnd,
+        ),
       ).toMatchObject(notices);
+      const marker = page.rows.at(-1);
+      expect(marker).toMatchObject({
+        sessionUpdate: 'notice',
+        state: 'settled',
+        _meta: {
+          argo: {
+            turnEnd: {
+              stopReason,
+              durationMs: expect.any(Number),
+              error: errorCode ? { code: errorCode } : null,
+            },
+          },
+        },
+      });
+      expect(events).toContainEqual(
+        expect.objectContaining({
+          type: 'row.upsert',
+          row: marker,
+        }),
+      );
       await closeStream(stream);
     },
   );
