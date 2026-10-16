@@ -96,3 +96,24 @@ it.each([
     }
   },
 );
+
+it.each([
+  ['agents', 'archive-hash', 'package', 'sub'],
+  ['agents', 'registry', 'fixture', 'v_1.2.3'],
+])(
+  'restart ignores an ownership record inside installed content at %s/%s/%s/%s',
+  async (...segments) => {
+    const home = await mkdtemp(join(tmpdir(), 'argo-installed-content-'));
+    const content = join(home, ...segments);
+
+    try {
+      await mkdir(content, { recursive: true });
+      await writeFile(join(content, installerRecordFile), '{junk');
+      await expect(
+        reconcileInterruptedInstallations(home),
+      ).resolves.toBeUndefined();
+    } finally {
+      await rm(home, { recursive: true, force: true });
+    }
+  },
+);

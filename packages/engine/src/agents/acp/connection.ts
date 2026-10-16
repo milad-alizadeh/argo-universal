@@ -465,11 +465,19 @@ export class AcpConnection {
     return this.stopping;
   }
   private async stop(): Promise<void> {
-    const process = await this.launching;
+    const process = await this.launchedProcess();
     this.connection?.close();
 
     if (!process) return;
     await process.terminate();
     await process.exited;
+  }
+  // A failed launch has no process to stop; start() already reported it.
+  private async launchedProcess(): Promise<AcpProcess | undefined> {
+    try {
+      return await this.launching;
+    } catch {
+      return;
+    }
   }
 }

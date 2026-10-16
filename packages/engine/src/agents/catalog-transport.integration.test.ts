@@ -17,6 +17,7 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
   );
 
   const first = await startEngineTestHost({
+    storedRegistry: true,
     home: stored.directory,
     fetchAgents,
   });
@@ -63,6 +64,7 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
   fetchAgents.mockRejectedValue(new Error('Registry is offline'));
 
   const restarted = await startEngineTestHost({
+    storedRegistry: true,
     home: stored.directory,
     fetchAgents,
   });
@@ -114,6 +116,7 @@ it('completes admitted sync after its WebSocket disconnects and serves the commi
   const upstream = Promise.withResolvers<string>();
 
   const host = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents: async () => upstream.promise,
   });
 

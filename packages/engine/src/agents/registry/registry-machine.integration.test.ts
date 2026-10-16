@@ -1,130 +1,99 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
-import { waitFor } from 'xstate';
-import { startEngineTestHost } from '#mocks/engine';
-import { requestRegistry, type RegistryActor } from './registry-machine';
+import { startSettledRegistryHost } from '#mocks/registry-host';
+import { requestRegistry } from './registry-machine';
 
-it('throttles launch checks per Engine run and always refreshes on page opening', async () => {
-  let now = 0;
+const hourMs = 3_600_000;
 
-  const fetchAgents = vi.fn<() => Promise<string>>(async () =>
-    JSON.stringify(publishedRegistry),
-  );
+const publishedFetch = (): ReturnType<typeof vi.fn<() => Promise<string>>> =>
+  vi.fn<() => Promise<string>>(async () => JSON.stringify(publishedRegistry));
 
-  const host = await startEngineTestHost({ now: () => now, fetchAgents });
-  const actor: RegistryActor = host.engine.system.get('registry');
-  expect(fetchAgents).not.toHaveBeenCalled();
+type FetchMock = ReturnType<typeof publishedFetch>;
+
+// A previous run that stored a row and then lost it; its fetch is not counted.
+const deletedRowHome = async (
+  fetchAgents: FetchMock,
+): Promise<{ home: string }> => {
+  const first = await startSettledRegistryHost({ fetchAgents });
+  first.database.$client.exec('DELETE FROM registry_cache');
+  await first.stop();
+  fetchAgents.mockClear();
+
+  return { home: first.home };
+};
+
+const freshHome = async (): Promise<{ home?: string }> => ({});
+
+it.each([
+  { stored: 'a fresh database', arrange: freshHome },
+  { stored: 'a deleted row from a previous run', arrange: deletedRowHome },
+])('fetches the Registry once at Engine start from $stored', async (row) => {
+  const fetchAgents = publishedFetch();
+  const home = await row.arrange(fetchAgents);
+  const host = await startSettledRegistryHost({ ...home, fetchAgents });
+  expect(fetchAgents).toHaveBeenCalledTimes(1);
+  expect((await host.caller.agents.registry()).agents).toHaveLength(4);
+});
+
+it('skips the start fetch when a Registry row is stored', async () => {
+  const fetchAgents = publishedFetch();
+  const first = await startSettledRegistryHost({ fetchAgents });
+  await first.stop();
+  await startSettledRegistryHost({ home: first.home, fetchAgents });
+  expect(fetchAgents).toHaveBeenCalledTimes(1);
+});
+
+it('checks a stored Registry on the first launch check of a new Engine run', async () => {
+  const fetchAgents = publishedFetch();
+  const first = await startSettledRegistryHost({ now: () => 0, fetchAgents });
+  await first.stop();
+
+  const second = await startSettledRegistryHost({
+    home: first.home,
+    now: () => 0,
+    fetchAgents,
+  });
+
+  await requestRegistry(second.actor, 'STALE');
+  expect(fetchAgents).toHaveBeenCalledTimes(2);
+});
+
+it('skips launch checks within an hour of the last attempt', async () => {
+  const fetchAgents = publishedFetch();
+
+  const { actor } = await startSettledRegistryHost({
+    now: () => 0,
+    fetchAgents,
+  });
+
   await requestRegistry(actor, 'STALE');
   await requestRegistry(actor, 'STALE');
   expect(fetchAgents).toHaveBeenCalledTimes(1);
-  now = 3_600_000;
+});
+
+it('refetches on a launch check an hour after the last attempt', async () => {
+  let now = 0;
+  const fetchAgents = publishedFetch();
+
+  const { actor } = await startSettledRegistryHost({
+    now: () => now,
+    fetchAgents,
+  });
+
+  now = hourMs;
   await requestRegistry(actor, 'STALE');
   expect(fetchAgents).toHaveBeenCalledTimes(2);
-  await host.caller.agents.refreshRegistry();
-  expect(fetchAgents).toHaveBeenCalledTimes(3);
-  expect(await host.caller.agents.registry()).toMatchObject({
+});
+
+it('fetches every time the Agents page refreshes', async () => {
+  const fetchAgents = publishedFetch();
+  const host = await startSettledRegistryHost({ now: () => 0, fetchAgents });
+  const registry = await host.caller.agents.refreshRegistry();
+  expect(fetchAgents).toHaveBeenCalledTimes(2);
+  expect(registry).toMatchObject({
     error: null,
     agents: expect.arrayContaining([
       expect.objectContaining({ entry: publishedRegistry.agents[0] }),
     ]),
   });
 });
-
-it('retains cached Registry entries after a failed refresh and exposes errors only without stored JSON', async () => {
-  let fail = false;
-
-  const host = await startEngineTestHost({
-    fetchAgents: async () => {
-      if (fail) throw new Error('Registry offline');
-
-      return JSON.stringify(publishedRegistry);
-    },
-  });
-
-  const cached = await host.caller.agents.refreshRegistry();
-  fail = true;
-  expect(await host.caller.agents.refreshRegistry()).toEqual(cached);
-  host.database.$client.exec(
-    `UPDATE registry_cache SET json = '{"version":"1.0.0","agents":[]}'`,
-  );
-  expect(await host.caller.agents.refreshRegistry()).toEqual({
-    agents: [],
-    error: 'Error: Registry offline',
-  });
-});
-
-it('bounds a held fetch at 30 seconds and aborts it on STOP', async () => {
-  const signals: AbortSignal[] = [];
-
-  const host = await startEngineTestHost({
-    fetchAgents: (signal) => {
-      signals.push(signal);
-
-      return new Promise<string>(() => {});
-    },
-  });
-
-  const actor: RegistryActor = host.engine.system.get('registry');
-  vi.useFakeTimers();
-
-  try {
-    const refresh = host.caller.agents.refreshRegistry();
-    await vi.waitFor(() => expect(signals).toHaveLength(1));
-    await vi.advanceTimersByTimeAsync(30_000);
-    await refresh;
-    expect(signals[0]?.aborted).toBe(true);
-    expect(actor.getSnapshot().context.error).toMatch('30 seconds');
-    actor.send({ type: 'REFRESH' });
-    await waitFor(actor, (snapshot) => snapshot.matches('fetching'));
-    actor.send({ type: 'STOP' });
-    expect(signals[1]?.aborted).toBe(true);
-  } finally {
-    vi.useRealTimers();
-  }
-});
-
-it('fetches on Engine start without a stored row and forgets the previous run attempt time', async () => {
-  const fetchAgents = vi.fn<() => Promise<string>>(async () =>
-    JSON.stringify(publishedRegistry),
-  );
-
-  const first = await startEngineTestHost({ fetchAgents });
-  await first.caller.agents.refreshRegistry();
-  first.database.$client.exec('DELETE FROM registry_cache');
-  await first.stop();
-  const second = await startEngineTestHost({ home: first.home, fetchAgents });
-  await expect.poll(() => fetchAgents.mock.calls.length).toBe(2);
-  await expect
-    .poll(async () => (await second.caller.agents.registry()).agents.length)
-    .toBe(4);
-});
-
-it.each(["json = '{bad'", "fetched_at = 'invalid'"])(
-  'starts with malformed cache (%s), remains usable offline, and repairs it on refresh',
-  async (columns) => {
-    let offline = true;
-    const first = await startEngineTestHost();
-    first.database.$client.exec(`UPDATE registry_cache SET ${columns}`);
-    await first.stop();
-
-    const second = await startEngineTestHost({
-      home: first.home,
-      fetchAgents: async () => {
-        if (offline) throw new Error('Registry offline');
-
-        return JSON.stringify(publishedRegistry);
-      },
-    });
-
-    await requestRegistry(second.engine.system.get('registry'), 'STALE');
-    expect(await second.caller.agents.registry()).toEqual({
-      agents: [],
-      error: 'Error: Registry offline',
-    });
-    expect(await second.caller.agents.servers()).toEqual([]);
-    offline = false;
-    expect((await second.caller.agents.refreshRegistry()).agents).toHaveLength(
-      4,
-    );
-  },
-);

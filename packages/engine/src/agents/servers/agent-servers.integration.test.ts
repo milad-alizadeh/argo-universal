@@ -1,12 +1,50 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { expect, it, vi } from 'vitest';
-import { createResourceOpening } from '#mocks/acp-resource';
+import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { scriptedEngineInput } from '#mocks/scripted-engine';
 
 const exampleAgentId = 'example-agent';
 
-it('saves Registry Agents without installing and hides missing or unavailable entries', async () => {
+const startPublishedHost = async (): Promise<
+  Awaited<ReturnType<typeof startEngineTestHost>>
+> => {
+  const host = await startEngineTestHost({
+    fetchAgents: async () => JSON.stringify(publishedRegistry),
+  });
+
+  await host.caller.agents.refreshRegistry();
+
+  return host;
+};
+
+it('lists Registry entries with their launch support', async () => {
+  const host = await startEngineTestHost({
+    fetchAgents: async () => JSON.stringify(publishedRegistry),
+  });
+
+  const registry = await host.caller.agents.refreshRegistry();
+  expect(registry.error).toBeNull();
+  expect(registry.agents).toContainEqual({
+    entry: publishedRegistry.agents[0],
+    support: 'npx',
+  });
+});
+
+it('saves a Registry Agent without installing it', async () => {
+  const host = await startPublishedHost();
+  expect(await host.caller.agents.servers()).toEqual([]);
+  await host.caller.agents.addRegistry({ id: exampleAgentId });
+  expect(await host.caller.agents.servers()).toEqual([
+    {
+      id: exampleAgentId,
+      name: 'Example Agent',
+      icon: publishedRegistry.agents[0]?.icon,
+      version: publishedRegistry.agents[0]?.version,
+      env: {},
+    },
+  ]);
+});
+
+it('hides a saved Agent once the Registry drops it', async () => {
   let entries = publishedRegistry.agents;
 
   const host = await startEngineTestHost({
@@ -14,34 +52,21 @@ it('saves Registry Agents without installing and hides missing or unavailable en
       JSON.stringify({ version: '1.0.0', agents: entries }),
   });
 
-  const { agents } = host.caller;
-  expect(await agents.servers()).toEqual([]);
-  const registry = await agents.refreshRegistry();
-  expect(registry.error).toBeNull();
-  expect(registry.agents).toContainEqual({ entry: entries[0], support: 'npx' });
-  await agents.addRegistry({ id: exampleAgentId });
-  expect(await agents.servers()).toEqual([
-    {
-      id: exampleAgentId,
-      name: 'Example Agent',
-      icon: entries[0]?.icon,
-      version: entries[0]?.version,
-      env: {},
-    },
-  ]);
+  await host.caller.agents.refreshRegistry();
+  await host.caller.agents.addRegistry({ id: exampleAgentId });
   entries = [];
-  await agents.refreshRegistry();
-  expect(await agents.servers()).toEqual([]);
-  await agents.remove({ id: exampleAgentId });
+  await host.caller.agents.refreshRegistry();
+  expect(await host.caller.agents.servers()).toEqual([]);
 });
 
-it('omits unsupported saved Agents and preserves saved environment on repeated add', async () => {
-  const host = await startEngineTestHost({
-    fetchAgents: async () => JSON.stringify(publishedRegistry),
-  });
-
-  await host.caller.agents.refreshRegistry();
+it('omits a saved Agent whose Registry distribution is unsupported', async () => {
+  const host = await startPublishedHost();
   await host.caller.agents.addRegistry({ id: 'python-agent' });
+  expect(await host.caller.agents.servers()).toEqual([]);
+});
+
+it('keeps the saved environment when an Agent is added again', async () => {
+  const host = await startPublishedHost();
   await host.caller.agents.addRegistry({ id: exampleAgentId });
   host.database.$client
     .prepare('UPDATE agent_servers SET env = ? WHERE id = ?')
@@ -50,6 +75,11 @@ it('omits unsupported saved Agents and preserves saved environment on repeated a
   expect(await host.caller.agents.servers()).toMatchObject([
     { id: exampleAgentId, env: { TOKEN: 'saved' } },
   ]);
+});
+
+it('deletes the saved Agent row on remove', async () => {
+  const host = await startPublishedHost();
+  await host.caller.agents.addRegistry({ id: exampleAgentId });
   await host.caller.agents.remove({ id: exampleAgentId });
   expect(await host.caller.agents.servers()).toEqual([]);
   expect(
@@ -58,44 +88,3 @@ it('omits unsupported saved Agents and preserves saved environment on repeated a
       .get(exampleAgentId),
   ).toBeUndefined();
 });
-
-it.each(['addRegistry', 'remove'] as const)(
-  '%s drops reusable connections and retires dropped processes after their last Session closes',
-  async (mutation) => {
-    const scripted = scriptedEngineInput();
-
-    const host = await startEngineTestHost({
-      ...scripted,
-      fetchAgents: async () => JSON.stringify(publishedRegistry),
-    });
-
-    await host.caller.agents.refreshRegistry();
-    await host.caller.agents.addRegistry({ id: exampleAgentId });
-    const resources = host.engine.getSnapshot().context.acpResources;
-    const opening = createResourceOpening();
-    opening.launch = { ...opening.launch, agentId: exampleAgentId };
-    const first = await resources.open(opening);
-    await host.caller.agents[mutation]({ id: exampleAgentId });
-    expect(
-      await first.agent.request('session/prompt', {
-        sessionId: first.sessionId,
-        prompt: [],
-      }),
-    ).toEqual({ stopReason: 'end_turn' });
-    const second = await resources.open(opening);
-    expect(scripted.agent.processes).toHaveLength(2);
-    expect(
-      scripted.agent.processes.map((process) => process.terminations),
-    ).toEqual([0, 0]);
-    await Promise.all([first.close(), second.close()]);
-    await vi.waitFor(() =>
-      expect(
-        scripted.agent.processes.map((process) => process.terminations),
-      ).toEqual([1, 0]),
-    );
-    await host.stop();
-    expect(
-      scripted.agent.processes.map((process) => process.terminations),
-    ).toEqual([1, 1]);
-  },
-);

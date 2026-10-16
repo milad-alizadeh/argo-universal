@@ -3,60 +3,21 @@ import { fixtureRegistryIds } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { installEntry, installationPorts } from '#mocks/installation';
+import type { InstallPorts } from '../install/ports';
 import { getCommand } from './get-command';
+import type { CommandInput } from './types';
 
-it('downloads a lazy binary once across two Project environments and resolves the target arguments', async () => {
-  const entry = installEntry('binary');
+const kinds = ['binary', 'npx'] as const;
 
-  const download = vi.fn<typeof installationPorts.download>(
-    installationPorts.download,
-  );
+type Kind = (typeof kinds)[number];
 
-  const host = await startEngineTestHost({
-    fetchAgents: async () =>
-      JSON.stringify({ version: '1.0.0', agents: [entry] }),
-  });
+type CountedPorts = { ports: InstallPorts; materializations: () => number };
 
-  await host.caller.agents.refreshRegistry();
+// Counts downloads for a binary and `npm install` runs for npx; npm leaves its entry point non-executable.
+const countedPorts = (kind: Kind): CountedPorts => {
+  const download = vi.fn<InstallPorts['download']>(installationPorts.download);
 
-  const input = {
-    database: host.database,
-    registry: host.engine.system.get('registry'),
-    home: host.home,
-    id: entry.id,
-    isDirectoryInUse:
-      host.engine.getSnapshot().context.acpResources.isDirectoryInUse,
-    shellEnv: {},
-    ports: { ...installationPorts, download },
-    signal: new AbortController().signal,
-  };
-
-  const [first, second] = await Promise.all([
-    getCommand({ ...input, shellEnv: { ...input.shellEnv, PROJECT: 'first' } }),
-    getCommand({
-      ...input,
-      shellEnv: { ...input.shellEnv, PROJECT: 'second' },
-    }),
-  ]);
-
-  expect(first.executable).toBe(second.executable);
-  expect([first.env.PROJECT, second.env.PROJECT]).toEqual(['first', 'second']);
-  expect(await readFile(first.executable, 'utf8')).toContain('#!');
-  expect(first.directory).toMatch(/\/registry\/fixture-install\/v_1\.2\.3_/);
-  expect(download).toHaveBeenCalledTimes(1);
-  await getCommand(input);
-  expect(download).toHaveBeenCalledTimes(1);
-});
-
-it('installs npm with a ceiling range once across concurrent Project environments and again on a new connection', async () => {
-  const entry = installEntry('npx');
-
-  const host = await startEngineTestHost({
-    fetchAgents: async () =>
-      JSON.stringify({ version: '1.0.0', agents: [entry] }),
-  });
-
-  const runTool = vi.fn<typeof installationPorts.runTool>(async (tool) => {
+  const runTool = vi.fn<InstallPorts['runTool']>(async (tool) => {
     const output = await installationPorts.runTool(tool);
 
     if (tool.args[0] === 'install')
@@ -65,44 +26,91 @@ it('installs npm with a ceiling range once across concurrent Project environment
     return output;
   });
 
+  const installs = (): number =>
+    runTool.mock.calls.filter(([tool]) => tool.args[0] === 'install').length;
+
+  return {
+    ports: { download, runTool },
+    materializations: () =>
+      kind === 'binary' ? download.mock.calls.length : installs(),
+  };
+};
+
+const startCommandHost = async (
+  kind: Kind,
+): Promise<CountedPorts & { input: CommandInput }> => {
+  const entry = installEntry(kind);
+  const counted = countedPorts(kind);
+
+  const host = await startEngineTestHost({
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: [entry] }),
+  });
+
   const input = {
     database: host.database,
     registry: host.engine.system.get('registry'),
     home: host.home,
     id: entry.id,
-    shellEnv: { PATH: '/shell/bin', VALUE: 'shell' },
-    ports: { ...installationPorts, runTool },
-    signal: new AbortController().signal,
     isDirectoryInUse:
       host.engine.getSnapshot().context.acpResources.isDirectoryInUse,
+    shellEnv: { PATH: '/shell/bin' },
+    ports: counted.ports,
+    signal: new AbortController().signal,
   };
 
-  const [first, second] = await Promise.all([
-    getCommand({ ...input, shellEnv: { ...input.shellEnv, PROJECT: 'first' } }),
-    getCommand({
-      ...input,
-      shellEnv: { ...input.shellEnv, PROJECT: 'second' },
-    }),
-  ]);
+  return { ...counted, input };
+};
 
-  expect(first.executable).toBe(second.executable);
-  expect([first.env.PROJECT, second.env.PROJECT]).toEqual(['first', 'second']);
-  expect(
-    runTool.mock.calls.filter(([call]) => call.args[0] === 'install'),
-  ).toHaveLength(1);
-  expect(runTool).toHaveBeenCalledWith(
-    expect.objectContaining({
-      args: ['install', 'fixture-install@0.0.0 - 1.2.3', '--save-exact'],
-    }),
+const resolveForTwoProjects = (
+  input: CommandInput,
+): Promise<Awaited<ReturnType<typeof getCommand>>[]> =>
+  Promise.all(
+    ['first', 'second'].map((project) =>
+      getCommand({
+        ...input,
+        shellEnv: { ...input.shellEnv, PROJECT: project },
+      }),
+    ),
   );
-  expect(first.args[0]).toMatch(/\/node_modules\/fixture-install\/agent.mjs$/);
-  await getCommand(input);
-  expect(
-    runTool.mock.calls.filter(([call]) => call.args[0] === 'install'),
-  ).toHaveLength(2);
+
+it.each(kinds)(
+  'materializes a %s Agent once for concurrent Project environments',
+  async (kind) => {
+    const { input, materializations } = await startCommandHost(kind);
+    const [first, second] = await resolveForTwoProjects(input);
+    expect(first?.executable).toBe(second?.executable);
+    expect(materializations()).toBe(1);
+  },
+);
+
+it.each(kinds)(
+  'keeps each Project environment on its concurrent %s command',
+  async (kind) => {
+    const { input } = await startCommandHost(kind);
+    const commands = await resolveForTwoProjects(input);
+    expect(commands.map((command) => command.env.PROJECT)).toEqual([
+      'first',
+      'second',
+    ]);
+  },
+);
+
+it('publishes a lazy binary under its version folder', async () => {
+  const { input } = await startCommandHost('binary');
+  const command = await getCommand(input);
+  expect(await readFile(command.executable, 'utf8')).toContain('#!');
+  expect(command.directory).toMatch(/\/registry\/fixture-install\/v_1\.2\.3_/);
 });
 
-it.each(['binary', 'npx'] as const)(
+it('reuses a published binary for a later command', async () => {
+  const { input, materializations } = await startCommandHost('binary');
+  await getCommand(input);
+  await getCommand(input);
+  expect(materializations()).toBe(1);
+});
+
+it.each(kinds)(
   'merges shell, distribution, vendor and saved env for %s',
   async (kind) => {
     const entry = { ...installEntry(kind), id: String(fixtureRegistryIds[0]) };

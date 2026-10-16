@@ -1,7 +1,7 @@
 // Answers with the registry document's text; the registry reader parses it.
 export type FetchAgents = (signal: AbortSignal) => Promise<string>;
 
-const fetchTimeoutMs = 30_000;
+export const fetchTimeoutMs = 30_000;
 
 const registryUrl =
   'https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json';

@@ -31,6 +31,7 @@ it.each<CatalogOutcome>(['commit', 'rollback'])(
     onTestFinished(stored.remove);
 
     const host = await startEngineTestHost({
+      storedRegistry: true,
       database: stored.database,
       fetchAgents: async () => JSON.stringify(publishedRegistry),
     });
@@ -71,7 +72,12 @@ it.each<CatalogOutcome>(['commit', 'rollback'])(
 it('preserves admission committed during shutdown for the next Engine to resume', async () => {
   const stored = openTestDatabase();
   onTestFinished(stored.remove);
-  const host = await startEngineTestHost({ database: stored.database });
+
+  const host = await startEngineTestHost({
+    database: stored.database,
+    storedRegistry: true,
+  });
+
   let stopped: Promise<void> | undefined;
   host.database.$client.function('stop_on_admission', () => {
     stopped = host.stop();
@@ -93,6 +99,7 @@ it('drains retained Session writes while stopping an active catalog fetch', asyn
   onTestFinished(stored.remove);
 
   const host = await startEngineTestHost({
+    storedRegistry: true,
     database: stored.database,
     fetchAgents: async () => new Promise(() => {}),
   });
@@ -131,6 +138,7 @@ it.each(['timeout', 'shutdown'] as const)(
     onTestFinished(stored.remove);
 
     const host = await startEngineTestHost({
+      storedRegistry: true,
       fetchAgents,
       database: stored.database,
     });
@@ -154,7 +162,11 @@ it('does not start a Registry read after Server shutdown admission closes', asyn
     JSON.stringify(publishedRegistry),
   );
 
-  const { caller, stop } = await startEngineTestHost({ fetchAgents });
+  const { caller, stop } = await startEngineTestHost({
+    fetchAgents,
+    storedRegistry: true,
+  });
+
   await stop();
   await expect(caller.agents.syncCatalog()).rejects.toThrow('aborted');
   expect(fetchAgents).not.toHaveBeenCalled();

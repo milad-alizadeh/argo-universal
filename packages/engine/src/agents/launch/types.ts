@@ -1,3 +1,4 @@
+import type { ACPAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import type { InstallPorts } from '../install/ports';
 import type { RegistryActor } from '../registry/registry-machine';
@@ -14,6 +15,10 @@ export type CommandInput = {
   bundledNpm?: string;
   isDirectoryInUse: (directory: string) => boolean;
 };
+
+export type PortedInput = CommandInput & { ports: InstallPorts };
+
+export type EntryInput = PortedInput & { entry: ACPAgent };
 
 export type RegistryCommand = {
   /** Release after a connection owns directory, or when abandoning this command. Aborting the input also releases it. */

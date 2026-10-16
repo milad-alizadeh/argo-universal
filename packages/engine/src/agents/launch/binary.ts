@@ -1,23 +1,24 @@
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rename, rm, chmod } from 'node:fs/promises';
 import { basename, join } from 'node:path';
-import type { ACPAgent, BinaryTarget } from '@repo/contracts';
+import type { BinaryTarget } from '@repo/contracts';
 import { extractBinaryFiles } from '../install/materialization/archive';
 import { executableMode } from '../install/materialization/archive-budget';
 import {
   checkInstallationFile,
   installationPath,
 } from '../install/materialization/files';
-import type { InstallPorts } from '../install/ports';
 import { InstallCleanupError } from '../install/processes/process-cleanup';
 import { resolveRegistryServerPlatform } from '../records';
 import { pruneVersions, versionFolder } from './binary-cache';
 import { reserveBinary, serializeBinary } from './binary-reservations';
 import { githubDigest } from './github-digest';
 import { resolveNode } from './node';
-import type { CommandInput, RegistryCommand } from './types';
-
-type LaunchInput = CommandInput & { ports: InstallPorts; entry: ACPAgent };
+import type {
+  CommandInput,
+  EntryInput as LaunchInput,
+  RegistryCommand,
+} from './types';
 
 type BinaryInput = LaunchInput & {
   target: BinaryTarget;
@@ -86,7 +87,7 @@ const commandExecutable = async (input: BinaryInput): Promise<string> =>
 
 const materialize = async (input: BinaryInput): Promise<void> => {
   if (existsSync(input.directory)) return;
-  const base = join(input.home, 'agents', 'registry', input.id);
+  const base = baseDirectory(input);
   await mkdir(base, { recursive: true });
   const staging = await mkdtemp(join(base, '.staging-'));
 

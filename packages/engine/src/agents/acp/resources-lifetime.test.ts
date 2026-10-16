@@ -131,3 +131,24 @@ it('a dropped withdrawn opening retains ownership until its late rejected respon
   response.reject(new Error('Session refused'));
   await vi.waitFor(() => expect(process.terminations).toBe(1));
 });
+
+it('frees the installation directory of a launch that fails', async () => {
+  const resources = createAcpResources({
+    launchProcess: async () => {
+      throw new Error('spawn failed');
+    },
+  });
+
+  onTestFinished(() => resources.shutdown());
+  const base = createResourceOpening();
+  const installationDirectory = '/agents/registry/agent/v_1';
+  await expect(
+    resources.open({
+      ...base,
+      launch: { ...base.launch, installationDirectory },
+    }),
+  ).rejects.toThrow('spawn failed');
+  await vi.waitFor(() =>
+    expect(resources.isDirectoryInUse(installationDirectory)).toBe(false),
+  );
+});

@@ -4,16 +4,20 @@ import { installEntry, installationPorts } from '#mocks/installation';
 import { getCommand } from './get-command';
 
 it.each([
-  'fixture-install@latest',
-  'fixture-install@^1.2.0',
-  'fixture-install',
+  {
+    pkg: 'fixture-install@1.2.3',
+    specification: 'fixture-install@0.0.0 - 1.2.3',
+  },
+  { pkg: 'fixture-install@latest', specification: 'fixture-install@latest' },
+  { pkg: 'fixture-install@^1.2.0', specification: 'fixture-install@^1.2.0' },
+  { pkg: 'fixture-install', specification: 'fixture-install' },
 ])(
-  'preserves npm specification %s rather than making it a ceiling',
-  async (specification) => {
+  'installs npm package $pkg as $specification',
+  async ({ pkg, specification }) => {
     const entry = installEntry('npx');
 
     if (!entry.distribution.npx) throw new Error('npm fixture is missing');
-    entry.distribution.npx.package = specification;
+    entry.distribution.npx.package = pkg;
 
     const host = await startEngineTestHost({
       fetchAgents: async () =>
@@ -23,6 +27,8 @@ it.each([
     const runTool = vi.fn<typeof installationPorts.runTool>(
       installationPorts.runTool,
     );
+
+    const directory = `${host.home}/agents/registry/npx/${entry.id}`;
 
     await getCommand({
       database: host.database,
@@ -37,7 +43,16 @@ it.each([
     });
     expect(runTool).toHaveBeenCalledWith(
       expect.objectContaining({
-        args: ['install', specification, '--save-exact'],
+        args: [
+          'install',
+          '--prefix',
+          directory,
+          '--no-audit',
+          '--no-fund',
+          '--save-exact',
+          '--',
+          specification,
+        ],
       }),
     );
   },

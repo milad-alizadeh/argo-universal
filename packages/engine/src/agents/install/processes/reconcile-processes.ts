@@ -1,12 +1,10 @@
 import { readFile, readdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { createRejectionCounter } from '@repo/machine-log';
 import { jsonCodec } from '../../../lib/json-codec';
 import { cleanInstallProcess, InstallCleanupError } from './process-cleanup';
 import { installerGroupMembers } from './process-group';
 import { InstallerGroupRecord, installerRecordPath } from './process-record';
-
-const ownershipDirectoryDepth = 3;
 
 const rejections = createRejectionCounter('Installer ownership records');
 
@@ -67,22 +65,40 @@ const childDirectories = async (path: string): Promise<string[]> => {
   }
 };
 
-const releaseScopeGroups = async (
-  scope: string,
-  depth: number,
-): Promise<void> => {
-  await releaseStagingGroup(scope);
-
-  if (depth === 0) return;
-
+const releaseScopeGroups = async (scope: string): Promise<void> => {
   for (const directory of await childDirectories(scope))
-    await releaseScopeGroups(directory, depth - 1);
+    await releaseStagingGroup(directory);
 };
+
+const stagingDirectories = async (registry: string): Promise<string[]> =>
+  (
+    await Promise.all(
+      (await childDirectories(registry)).map(async (scope) =>
+        (await childDirectories(scope)).filter((directory) =>
+          basename(directory).startsWith('.staging-'),
+        ),
+      ),
+    )
+  ).flat();
+
+const registryOperationDirectories = async (
+  registry: string,
+): Promise<string[]> => [
+  ...(await childDirectories(join(registry, 'npx'))),
+  ...(await childDirectories(join(registry, '.probes'))),
+  ...(await stagingDirectories(registry)),
+];
 
 export const releaseInstallationProcessGroups = async (
   home: string,
 ): Promise<void> => {
-  // Older Registry probes wrote their record directly in home.
-  await releaseStagingGroup(home);
-  await releaseScopeGroups(join(home, 'agents'), ownershipDirectoryDepth);
+  const agents = join(home, 'agents');
+
+  for (const scope of await childDirectories(agents))
+    await releaseScopeGroups(scope);
+
+  for (const directory of await registryOperationDirectories(
+    join(agents, 'registry'),
+  ))
+    await releaseStagingGroup(directory);
 };

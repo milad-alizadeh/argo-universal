@@ -90,20 +90,29 @@ const npmExecutable = async ({
   return join(folder, selectedBin(metadata.bin, recipe.name));
 };
 
-const npmInstallArgs = (input: PackageInput): string[] => [
+export const npmInstallArgs = (
+  directory: string,
+  specification: string,
+): string[] => [
   'install',
   '--prefix',
-  input.directory,
+  directory,
   '--no-audit',
   '--no-fund',
   '--save-exact',
   '--',
-  input.recipe.package,
+  specification,
 ];
 
 const installNpm = async (input: PackageInput): Promise<string> => {
   await input.ports.runTool(toolInput(input, 'node', ['--version']));
-  await input.ports.runTool(toolInput(input, 'npm', npmInstallArgs(input)));
+  await input.ports.runTool(
+    toolInput(
+      input,
+      'npm',
+      npmInstallArgs(input.directory, input.recipe.package),
+    ),
+  );
 
   return npmExecutable(input);
 };

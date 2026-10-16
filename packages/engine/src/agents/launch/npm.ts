@@ -3,13 +3,14 @@ import { join, relative } from 'node:path';
 import type { ACPAgent } from '@repo/contracts';
 import { checkInstallationFile } from '../install/materialization/files';
 import { requireExactPackageVersion } from '../install/materialization/package-version';
-import { readNpmExecutable } from '../install/materialization/packages';
-import type { InstallPorts, InstallToolInput } from '../install/ports';
+import {
+  npmInstallArgs,
+  readNpmExecutable,
+} from '../install/materialization/packages';
+import type { InstallToolInput } from '../install/ports';
 import { resolveNode, type NodeRuntime } from './node';
 import { singleFlight } from './single-flight';
-import type { CommandInput, RegistryCommand } from './types';
-
-type NpmInput = CommandInput & { ports: InstallPorts; entry: ACPAgent };
+import type { EntryInput as NpmInput, RegistryCommand } from './types';
 
 type NpmPackage = { name: string; specification: string };
 
@@ -22,8 +23,6 @@ type Installation = {
 
 const npmPackage = (input: NpmInput): NpmPackage => {
   const pkg = distribution(input).package;
-
-  if (!pkg) throw new Error('Registry npm distribution is missing');
   const name = pkg.replace(/@[^@/]+$/, '');
 
   return { name, specification: boundedSpecification(name, pkg) };
@@ -33,18 +32,24 @@ export const npmCommand = async (input: NpmInput): Promise<RegistryCommand> => {
   const directory = join(input.home, 'agents', 'registry', 'npx', input.id);
   const runtime = await resolveNode(input);
   const pkg = npmPackage(input);
-  await singleFlight(directory, () =>
-    install({ input, directory, runtime, specification: pkg.specification }),
-  );
-  const file = await readNpmExecutable(directory, pkg.name);
-
-  const executable = await checkInstallationFile(
+  await installOnce({
+    input,
     directory,
-    relative(directory, file),
-    false,
-  );
+    runtime,
+    specification: pkg.specification,
+  });
+  const executable = await installedExecutable(directory, pkg.name);
 
   return command({ input, runtime, directory, executable });
+};
+
+const installedExecutable = async (
+  directory: string,
+  name: string,
+): Promise<string> => {
+  const file = await readNpmExecutable(directory, name);
+
+  return checkInstallationFile(directory, relative(directory, file), false);
 };
 
 type ResolvedNpm = {
@@ -75,11 +80,16 @@ const toolInput = ({
   specification,
 }: Installation): InstallToolInput => ({
   executable: runtime.npm,
-  args: ['install', specification, '--save-exact'],
+  args: npmInstallArgs(directory, specification),
   cwd: directory,
   env: runtime.env,
   signal: input.signal,
 });
+
+const installOnce = (installation: Installation): Promise<void> =>
+  singleFlight(installation.directory, installation.input.signal, (signal) =>
+    install({ ...installation, input: { ...installation.input, signal } }),
+  );
 
 const install = async (installation: Installation): Promise<void> => {
   await mkdir(installation.directory, { recursive: true });

@@ -1,12 +1,9 @@
 import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { delimiter, dirname, join } from 'node:path';
-import type { InstallPorts } from '../install/ports';
 import { InstallCleanupError } from '../install/processes/process-cleanup';
 import { probeNode } from './node-probe';
-import type { CommandInput } from './types';
-
-type NodeInput = CommandInput & { ports: InstallPorts };
+import type { PortedInput as NodeInput } from './types';
 
 export type NodeRuntime = {
   node: string;

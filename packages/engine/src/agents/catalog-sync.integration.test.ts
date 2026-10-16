@@ -25,6 +25,7 @@ it('preserves saved local identity and custom rows across changed, removed and r
     );
 
   const { caller, database } = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents,
   });
 
@@ -82,6 +83,7 @@ it('gives new upstream entries distinct local identities from the Engine identit
   let identity = 0;
 
   const { caller } = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents: async (): Promise<string> => JSON.stringify(registry),
     createId: (): string => `local-agent-${++identity}`,
   });
@@ -106,6 +108,7 @@ it('notifies catalog subscribers about removed Agents after the replacement comm
     .mockResolvedValue(JSON.stringify({ ...publishedRegistry, agents: [] }));
 
   const { caller, database, createCaller } = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents,
   });
 

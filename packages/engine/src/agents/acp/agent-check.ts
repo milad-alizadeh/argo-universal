@@ -5,6 +5,7 @@ import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
 import type { AgentLaunchSubject, CheckAgentLaunch } from '..';
 import { ResourceCleanupError } from '../../lib/resource-cleanup-error';
+import { millisecondsPerSecond } from '../../lib/time';
 import { AcpAuthenticationStatus } from './auth-status';
 import { createAgentClient } from './client';
 import { negotiateAcpInitialize } from './initialize';
@@ -16,8 +17,6 @@ import { createAcpResponseReaders } from './response-readers';
 const answerTimeoutSeconds = 15;
 
 const exitGraceMs = 1000;
-
-const millisecondsPerSecond = 1000;
 
 // An unreferenced timer, so a pending check never keeps the process alive.
 const after = (milliseconds: number): Promise<'timeout'> =>

@@ -1,11 +1,12 @@
 import type { ACPAgentRegistry } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { assign, fromPromise, setup, waitFor, type ActorRefFrom } from 'xstate';
+import { millisecondsPerSecond } from '../../lib/time';
 import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
 } from '../../storage';
-import { fetchAgents, type FetchAgents } from './fetch-agents';
+import { fetchAgents, fetchTimeoutMs, type FetchAgents } from './fetch-agents';
 import { readRegistryCache, RegistryCacheReplaceJob } from './registry-cache';
 import { createRegistryReader } from './registry-reader';
 
@@ -65,7 +66,7 @@ export const registryMachine = setup({
       context.lastAttemptAt === null ||
       context.now() - context.lastAttemptAt >= hourMs,
   },
-  delays: { fetchLimit: 30_000 },
+  delays: { fetchLimit: fetchTimeoutMs },
 }).createMachine({
   id: 'registry',
   context: ({ input }) => ({
@@ -92,7 +93,7 @@ export const registryMachine = setup({
         fetchLimit: {
           target: 'idle',
           actions: assign({
-            error: 'Registry did not answer within 30 seconds',
+            error: `Registry did not answer within ${fetchTimeoutMs / millisecondsPerSecond} seconds`,
           }),
         },
       },

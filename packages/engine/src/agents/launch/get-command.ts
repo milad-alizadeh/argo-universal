@@ -25,9 +25,8 @@ const registryEntry = (input: CommandInput): ACPAgent | undefined =>
   readRegistryCache(input.database)?.agents.find(({ id }) => id === input.id);
 
 const requireEntry = async (input: CommandInput): Promise<ACPAgent> => {
-  input.registry.send({ type: 'STALE' });
-
-  if (!registryEntry(input)) await requestRegistry(input.registry, 'STALE');
+  if (registryEntry(input)) input.registry.send({ type: 'STALE' });
+  else await requestRegistry(input.registry, 'STALE');
   const entry = registryEntry(input);
 
   if (!isAvailable(entry))
