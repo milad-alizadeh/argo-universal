@@ -4,13 +4,14 @@ import {
   endedTurn,
   type NotificationBaseline,
 } from './notification-feed';
+import { inputRequestChanged } from './notification-input';
 
 export interface SessionNotification {
   session: SessionInfo;
   body: string;
 }
 
-const isExcluded = (session: SessionInfo): boolean =>
+export const isExcluded = (session: SessionInfo): boolean =>
   session.archivedAt !== null || session.parentSessionId !== null;
 
 function newTurnEnds(
@@ -24,19 +25,25 @@ function newTurnEnds(
   ).length;
 }
 
+export interface SessionNotificationRead {
+  session: SessionInfo;
+  page: FeedPageOutput;
+  inputId: string | null;
+}
+
 export function sessionNotifications(
   previous: NotificationBaseline | undefined,
-  session: SessionInfo,
-  page: FeedPageOutput,
+  current: SessionNotificationRead,
 ): SessionNotification[] {
-  if (isExcluded(session)) return [];
+  if (isExcluded(current.session)) return [];
+  const session = current.session;
 
   const endings = Array.from(
-    { length: newTurnEnds(page, previous) },
+    { length: newTurnEnds(current.page, previous) },
     (): SessionNotification => ({ session, body: 'Turn ended' }),
   );
 
-  if (needsInput(previous, session))
+  if (needsInput(previous, current))
     endings.push({ session, body: 'Needs your input' });
 
   return endings;
@@ -44,18 +51,18 @@ export function sessionNotifications(
 
 function needsInput(
   previous: NotificationBaseline | undefined,
-  session: SessionInfo,
+  current: SessionNotificationRead,
 ): boolean {
-  if (session.status !== 'needs_input') return false;
-
-  return previous?.session.status !== 'needs_input';
+  return inputRequestChanged(previous?.inputId, current.inputId);
 }
 
-export const notificationBaseline = (
-  session: SessionInfo,
-  page: FeedPageOutput,
-): NotificationBaseline => ({
+export const notificationBaseline = ({
   session,
+  page,
+  inputId,
+}: SessionNotificationRead): NotificationBaseline => ({
+  session,
+  inputId,
   epoch: page.epoch,
   position: page.rows.at(-1)?.position ?? -1,
 });

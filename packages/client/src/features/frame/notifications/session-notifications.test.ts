@@ -3,63 +3,37 @@ import type {
   SessionInfo,
   SessionStatus,
   SessionUpdate,
-  Notice,
   StopReason,
 } from '@repo/contracts';
-import { activeSessions } from '@repo/mocks/app';
 import { expect, test } from 'vitest';
 import { type NotificationBaseline } from './notification-feed';
 import {
   notificationBaseline,
-  sessionNotifications,
+  sessionNotifications as projectNotifications,
+  type SessionNotification,
 } from './session-notifications';
+import {
+  session,
+  end,
+  page,
+  endedPage,
+  baseline,
+  withStatus,
+  turnEndedBody,
+  read,
+} from './session-notifications.test.mocks';
 
-const fixture = activeSessions.sessions[0];
-
-if (!fixture) throw new Error('Expected a Session fixture');
-
-const session: SessionInfo = { ...fixture, status: 'idle' };
-
-const turnEndedBody = 'Turn ended';
-
-const end: Notice = {
-  sessionUpdate: 'notice',
-  sessionId: session.sessionId,
-  id: 'turn:end',
-  turnId: 'turn',
-  position: 10,
-  revision: 1,
-  state: 'settled',
-  severity: 'info',
-  title: turnEndedBody,
-  _meta: {
-    argo: { turnEnd: { stopReason: 'end_turn', error: null, durationMs: 1 } },
-  },
-};
-
-const page = (rows: SessionUpdate[]): FeedPageOutput => ({
-  epoch: 0,
-  maxRevision: 100,
-  rows,
-  hasOlder: false,
-  startCursor: rows[0]?.position ?? null,
-  staleCursor: false,
-});
-
-const endedPage = page([{ ...end, position: 10 }]);
-
-const baseline: NotificationBaseline = { session, epoch: 0, position: 0 };
-
-const withStatus = (status: SessionStatus): SessionInfo => ({
-  ...session,
-  status,
-});
+const sessionNotifications = (
+  previous: NotificationBaseline | undefined,
+  session: SessionInfo,
+  page: FeedPageOutput,
+): SessionNotification[] => projectNotifications(previous, read(session, page));
 
 const bodies = (notices: ReturnType<typeof sessionNotifications>): string[] =>
   notices.map((notice) => notice.body);
 
 test('initial history establishes its Feed position and replaying it stays quiet', () => {
-  const initial = notificationBaseline(session, endedPage);
+  const initial = notificationBaseline(read(session, endedPage));
   expect(bodies(sessionNotifications(initial, session, endedPage))).toEqual([]);
 });
 
@@ -92,25 +66,22 @@ test('a newly listed input request notifies without a prior running projection',
   ).toEqual(['Needs your input']);
 });
 
-test('an input request notifies once until the Session resumes', () => {
+test('distinct request IDs notify despite consecutive needs_input projections', () => {
   const waiting = withStatus('needs_input');
-  expect(bodies(sessionNotifications(baseline, waiting, page([])))).toEqual([
-    'Needs your input',
-  ]);
+  const previous = { ...baseline, session: waiting, inputId: 'first' };
   expect(
-    sessionNotifications({ ...baseline, session: waiting }, waiting, page([])),
-  ).toEqual([]);
+    bodies(projectNotifications(previous, read(waiting, page([]), 'second'))),
+  ).toEqual(['Needs your input']);
   expect(
-    sessionNotifications(
-      { ...baseline, session: waiting },
-      withStatus('running'),
-      page([]),
-    ),
+    projectNotifications(previous, read(waiting, page([]), 'first')),
   ).toEqual([]);
+  expect(projectNotifications(previous, read(waiting, page([]), null))).toEqual(
+    [],
+  );
 });
 
 test('reconnect replay and unrelated activity do not repeat a delivered ending', () => {
-  const delivered = notificationBaseline(session, endedPage);
+  const delivered = notificationBaseline(read(session, endedPage));
   expect(sessionNotifications(delivered, session, endedPage)).toEqual([]);
   expect(
     sessionNotifications(

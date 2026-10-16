@@ -40,7 +40,7 @@ function useBaselines(
 ): UseQueryResult<NotificationBaseline[]> {
   return useQuery({
     queryKey: ['desktop-notification-baseline'],
-    queryFn: () => readNotificationBaselines(client),
+    queryFn: ({ signal }) => readNotificationBaselines(client, signal),
     enabled: supportsDesktopNotifications(),
     staleTime: Infinity,
     gcTime: 0,

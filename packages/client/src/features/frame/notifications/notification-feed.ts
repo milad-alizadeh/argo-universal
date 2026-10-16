@@ -6,6 +6,7 @@ import type {
   TurnEnd,
 } from '@repo/contracts';
 import type { useTRPCClient } from '#features/connection';
+import { readNotificationInput } from './notification-input';
 
 export type NotificationClient = ReturnType<typeof useTRPCClient>;
 
@@ -13,18 +14,23 @@ export interface NotificationBaseline {
   session: SessionInfo;
   epoch: number;
   position: number;
+  inputId: string | null;
 }
 
 export async function readNotificationBaselines(
   client: NotificationClient,
+  signal?: AbortSignal,
 ): Promise<NotificationBaseline[]> {
   const baselines: NotificationBaseline[] = [];
   let cursor: string | undefined;
 
   do {
-    const page = await client.session.list.query({ archived: false, cursor });
+    const page = await client.session.list.query(
+      { archived: false, cursor },
+      { signal },
+    );
 
-    baselines.push(...(await readBaselinesPage(client, page.sessions)));
+    baselines.push(...(await readBaselinesPage(client, page.sessions, signal)));
     cursor = page.nextCursor ?? undefined;
   } while (cursor);
 
@@ -34,27 +40,28 @@ export async function readNotificationBaselines(
 async function readBaselinesPage(
   client: NotificationClient,
   sessions: SessionInfo[],
+  signal: AbortSignal | undefined,
 ): Promise<NotificationBaseline[]> {
   const baselines: NotificationBaseline[] = [];
 
   for (const session of sessions)
-    baselines.push(await readBaseline(client, session));
+    baselines.push(await readBaseline(client, session, signal));
 
   return baselines;
 }
 
-async function readBaseline(
+export async function readBaseline(
   client: NotificationClient,
   session: SessionInfo,
+  signal?: AbortSignal,
 ): Promise<NotificationBaseline> {
-  const page = await client.feed.page.query({
-    sessionId: session.sessionId,
-    direction: 'tail',
-    limit: 1,
-  });
+  const page = await readBaselinePage(client, session.sessionId, signal);
+
+  const inputId = await readNotificationInput(client, session, signal);
 
   return {
     session,
+    inputId,
     epoch: page.epoch,
     position: page.rows.at(-1)?.position ?? -1,
   };
@@ -138,3 +145,18 @@ const hasSameEpoch = (
   page: FeedPageOutput,
   baseline: NotificationBaseline | undefined,
 ): boolean => baseline === undefined || baseline.epoch === page.epoch;
+
+async function readBaselinePage(
+  client: NotificationClient,
+  sessionId: string,
+  signal: AbortSignal | undefined,
+): Promise<FeedPageOutput> {
+  return client.feed.page.query(
+    { sessionId, direction: 'tail', limit: 1 },
+    { signal },
+  );
+}
+
+export const baselineInputId = (
+  baseline: NotificationBaseline | undefined,
+): string | null => baseline?.inputId ?? null;

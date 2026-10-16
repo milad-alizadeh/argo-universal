@@ -1,21 +1,17 @@
-import type { ElectronApplication } from '@playwright/test';
-import { installNotificationStub } from '../desktop/notification-api.test.mocks';
+import {
+  installNotificationStub,
+  recordedNotificationBodies,
+} from '../desktop/notification-api.test.mocks';
 import {
   BackgroundState,
+  desktopApplication,
   backgroundWindow,
   windowState,
 } from '../desktop/window-state';
-import { type App, expect } from '../fixtures';
+import { expect } from '../fixtures';
 import { sessionId } from './feed';
 import { Given, When, Then } from './fixtures';
 import { expectMessage, messageLabel, sessionOpenTimeout } from './new-session';
-
-function desktopApplication(app: App): ElectronApplication {
-  if (!app.desktop)
-    throw new Error('Notifications require the Electron project');
-
-  return app.desktop.application;
-}
 
 Given(
   'the desktop Notification API is recorded',
@@ -67,9 +63,13 @@ Then(
 
 When(
   'I click the desktop notification from Settings',
-  async ({ page }): Promise<void> => {
+  async ({ page, app }): Promise<void> => {
+    const application = desktopApplication(app);
+    const background = await windowState(application);
+    expect(background.focused).toBe(false);
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\//);
+    await expect.poll(() => windowState(application)).toEqual(background);
     await page.evaluate(() => globalThis.notificationProbe.click());
   },
 );
@@ -103,6 +103,7 @@ When(
   'I prepare the desktop prompt {string}',
   async ({ page }, prompt: string): Promise<void> => {
     await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
+    await expectMessage(page, prompt);
   },
 );
 
@@ -138,3 +139,24 @@ When('I decline the desktop Elicitation', async ({ page }): Promise<void> => {
     .getByRole('button', { name: 'Decline', exact: true })
     .click();
 });
+
+Given('Agent 1 asks successive questions', async (): Promise<void> => {});
+
+When(
+  'I decline the desktop Elicitation without activating the window',
+  async ({ page }): Promise<void> => {
+    await page
+      .getByRole('region', { name: 'Elicitation questions' })
+      .getByRole('button', { name: 'Decline', exact: true })
+      .evaluate((button) => button.click());
+  },
+);
+
+Then(
+  'the desktop records {int} notifications saying {string}',
+  async ({ page }, count: number, body: string): Promise<void> => {
+    await expect
+      .poll(() => page.evaluate(recordedNotificationBodies))
+      .toEqual(Array.from({ length: count }, () => body));
+  },
+);

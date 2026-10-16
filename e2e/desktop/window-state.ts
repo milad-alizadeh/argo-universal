@@ -1,6 +1,6 @@
 import type { ElectronApplication } from '@playwright/test';
 import { z } from 'zod';
-import { expect } from '../fixtures';
+import { type App, expect } from '../fixtures';
 
 export const BackgroundState = z.enum(['hidden', 'minimized', 'unfocused']);
 
@@ -58,4 +58,11 @@ export function windowState(
       minimized: window.isMinimized(),
     };
   });
+}
+
+export function desktopApplication(app: App): ElectronApplication {
+  if (!app.desktop)
+    throw new Error('Notifications require the Electron project');
+
+  return app.desktop.application;
 }

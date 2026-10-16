@@ -10,6 +10,7 @@ import {
   feedWorkSteps,
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
+import { notificationScenarios } from './notification-scenarios.ts';
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
@@ -53,6 +54,7 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 // Shared named scenarios; tests reuse them instead of scripting their own peer.
 export const scenarios = {
   reply: scenario([reply]),
+  ...notificationScenarios,
   ...shellScenarios,
   ...subagentScenarios,
   'feed-history': scenario(feedHistorySteps),

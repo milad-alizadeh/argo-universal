@@ -49,3 +49,6 @@ export function installNotificationStub(): void {
     value: NotificationStub,
   });
 }
+
+export const recordedNotificationBodies = (): (string | undefined)[] =>
+  globalThis.notificationProbe.records.map((notice) => notice.body);

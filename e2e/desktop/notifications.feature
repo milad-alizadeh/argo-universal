@@ -56,3 +56,29 @@ Feature: Desktop Session notifications
     And the command is running in the Feed
     And I stop the desktop Turn without activating the window
     Then one desktop notification for "Run the checks" says "Turn ended"
+
+  Scenario: Successive input requests notify despite an unchanged Session list status
+    Given a wide Frame
+    And the desktop Notification API is recorded
+    And Agent 1 asks successive questions
+    And a New Session with Agent 1
+    When I prepare the desktop prompt "Ask successive questions"
+    And I leave the desktop window "hidden"
+    And I send the prepared desktop prompt without activating the window
+    Then one desktop notification for "Ask successive questions" says "Needs your input"
+    When I decline the desktop Elicitation without activating the window
+    Then the desktop records 2 notifications saying "Needs your input"
+
+  Scenario: Reconnecting keeps the notification cursor and still observes the next Turn
+    Given a wide Frame
+    And the desktop Notification API is recorded
+    And a New Session with Agent 1
+    When I prepare the desktop prompt "Before reconnect"
+    And I leave the desktop window "hidden"
+    And I send the prepared desktop prompt without activating the window
+    Then one desktop notification for "Before reconnect" says "Turn ended"
+    When the Engine restarts
+    And I prepare the desktop prompt "After reconnect"
+    And I leave the desktop window "hidden"
+    And I send the prepared desktop prompt without activating the window
+    Then the desktop records 2 notifications saying "Turn ended"
