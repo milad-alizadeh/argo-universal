@@ -82,11 +82,16 @@ Then('Issue tracker is still running', async ({ page, app }): Promise<void> => {
 });
 
 Then(
-  'there is only one toast for the Plugin crash',
+  'the Plugin crash toast stays dismissed',
   async ({ page }): Promise<void> => {
-    expect(await toast(page, title).count()).toBe(1);
+    // Check immediately so a repeated toast cannot expire into a passing assertion.
+    expect(await toast(page, title).count()).toBe(0);
   },
 );
+
+When('the Plugin crash toast dismisses', async ({ page }): Promise<void> => {
+  await expect(toast(page, title)).toHaveCount(0, { timeout: 10_000 });
+});
 
 When(
   'the Connection reconnects to the same Plugin failure',

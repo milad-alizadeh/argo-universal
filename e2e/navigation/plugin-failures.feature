@@ -6,11 +6,12 @@ Feature: Plugin crash notifications
     When the crashing Plugin starts alongside Issue tracker
     Then an error toast names the crashed Plugin
     And Issue tracker is still running
-    When I open the Issues Plugin
+    When the Plugin crash toast dismisses
+    And I open the Issues Plugin
     Then the Plugin page shows Issue tracker
-    And there is only one toast for the Plugin crash
+    And the Plugin crash toast stays dismissed
     When the Connection reconnects to the same Plugin failure
-    Then there is only one toast for the Plugin crash
+    Then the Plugin crash toast stays dismissed
 
     Examples:
       | size  |
