@@ -2,6 +2,8 @@ export interface NotificationOptions {
   attentionLeaseMs?: number;
   retryMs?: number;
   lifetimeMs?: number;
+  /** Epoch milliseconds; tests drive it to age leases and queued events. */
+  now?: () => number;
 }
 
 const defaultAttentionLeaseMs = 30_000;
@@ -24,6 +26,7 @@ export function notificationOptions(
     ),
     retryMs: duration(options.retryMs, defaultRetryMs),
     lifetimeMs: duration(options.lifetimeMs, defaultLifetimeMs),
+    now: options.now ?? Date.now,
   };
 }
 

@@ -36,7 +36,10 @@ export class Notifications {
 
   public constructor(private readonly input: NotificationsInput) {
     this.options = notificationOptions(input.notificationOptions);
-    this.attention = new NotificationAttention(this.options.attentionLeaseMs);
+    this.attention = new NotificationAttention(
+      this.options.attentionLeaseMs,
+      this.options.now,
+    );
     this.stopSources = new NotificationSourcesObserver(input, (fact) =>
       this.publish(fact),
     ).start();
@@ -143,7 +146,7 @@ export class Notifications {
       ...fact,
       id,
       serverId: this.input.serverId,
-      occurredAt: Date.now(),
+      occurredAt: this.options.now(),
     });
   }
 

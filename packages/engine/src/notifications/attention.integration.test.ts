@@ -46,8 +46,6 @@ it('suppresses a viewed Session across real Connections and notifies when anothe
   expect(first.notifications[0]).toEqual(second.notifications[0]);
 });
 
-const attentionLeaseMs = 80;
-
 const attentionLoss = [
   {
     loss: 'disconnect',
@@ -59,20 +57,12 @@ const attentionLoss = [
       app.stop();
     },
   },
-  {
-    loss: 'expiry',
-    release: async (): Promise<void> => {
-      await new Promise((resolve) => setTimeout(resolve, attentionLeaseMs));
-    },
-  },
 ];
 
 it.each(attentionLoss)(
   'releases Session attention after $loss',
   async ({ release }) => {
-    const host = await startEngineTestHost({
-      notificationOptions: { attentionLeaseMs },
-    });
+    const host = await startEngineTestHost();
 
     const viewing = connectNotificationApp(host.url, false);
     const receiving = connectNotificationApp(host.url);

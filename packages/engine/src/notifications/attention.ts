@@ -6,12 +6,15 @@ interface SessionAttention {
 export class NotificationAttention {
   private readonly connections = new Map<string, SessionAttention>();
 
-  public constructor(private readonly leaseMs: number) {}
+  public constructor(
+    private readonly leaseMs: number,
+    private readonly now: () => number,
+  ) {}
 
   public report(connectionId: string, sessionId: string | null): void {
     this.connections.set(connectionId, {
       sessionId,
-      expiresAt: Date.now() + this.leaseMs,
+      expiresAt: this.now() + this.leaseMs,
     });
   }
 
@@ -27,7 +30,7 @@ export class NotificationAttention {
   }
 
   private active(id: string, attention: SessionAttention): string | null {
-    if (attention.expiresAt > Date.now()) return attention.sessionId;
+    if (attention.expiresAt > this.now()) return attention.sessionId;
     this.connections.delete(id);
 
     return null;

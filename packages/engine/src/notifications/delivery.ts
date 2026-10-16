@@ -26,7 +26,7 @@ export class NotificationDelivery {
     this.pending.set(notification.id, {
       notification,
       retryAt: 0,
-      expiresAt: Date.now() + this.options.lifetimeMs,
+      expiresAt: this.options.now() + this.options.lifetimeMs,
     });
     this.changes.emit('changed');
   }
@@ -81,15 +81,15 @@ export class NotificationDelivery {
   private ready(entry: PendingNotification): NotificationEvent | undefined {
     if (this.discarded(entry)) return undefined;
 
-    if (entry.retryAt > Date.now()) return undefined;
-    entry.retryAt = Date.now() + this.options.retryMs;
+    if (entry.retryAt > this.options.now()) return undefined;
+    entry.retryAt = this.options.now() + this.options.retryMs;
 
     return entry.notification;
   }
 
   private discarded(entry: PendingNotification): boolean {
     const discard =
-      entry.expiresAt <= Date.now() ||
+      entry.expiresAt <= this.options.now() ||
       this.attention.includes(entry.notification.sessionId);
 
     if (discard) this.pending.delete(entry.notification.id);
