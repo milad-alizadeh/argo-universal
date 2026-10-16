@@ -2,8 +2,13 @@ import { session, turn } from '@repo/db/schema';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq } from 'drizzle-orm';
-import { expect, it, vi } from 'vitest';
-import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { expect, it, vi, onTestFinished } from 'vitest';
+import { startAcpEngine, emptySessionInput } from '#mocks/acp-engine';
+import {
+  openAcpFeedSession,
+  waitForAcpSessionIdle,
+  waitForAcpSnapshot,
+} from '#mocks/acp-feed';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
@@ -270,49 +275,80 @@ it('retains delegated message patches and chunks with the reported child Turn ou
   ).toHaveLength(1);
 });
 
-it('streams new child content while the parent Turn is idle', async () => {
-  const { host, sessionId } = await openAcpFeedSession(
-    scenarios[backgroundScenario],
-  );
+it.each(['idle', 'cancelled'] as const)(
+  'streams new child content while the parent Turn is %s',
+  async (phase) => {
+    const { host, sessionId } = await backgroundParent(phase);
 
-  const [child] = await host.caller.session.subagents({ sessionId });
+    const [child] = await host.caller.session.subagents({ sessionId });
 
-  if (!child) throw new Error(missingSubagent);
+    if (!child) throw new Error(missingSubagent);
 
-  const stream = await host.caller.feed.subscribe({
-    sessionId: child.sessionId,
-    after: null,
-  });
+    const stream = await host.caller.feed.subscribe({
+      sessionId: child.sessionId,
+      after: null,
+    });
 
-  const iterator = stream[Symbol.asyncIterator]();
-  let initial = await iterator.next();
+    const iterator = stream[Symbol.asyncIterator]();
+    let initial = await iterator.next();
 
-  while (initial.value?.type !== 'snapshot') initial = await iterator.next();
-  await requireScriptedProcessAt(host.agent.processes).play(
-    [
-      {
-        type: 'update',
-        sessionId: 'subagent-review',
-        update: {
-          sessionUpdate: 'agent_message_chunk',
-          messageId: 'later',
-          content: { type: 'text', text: 'Still reviewing' },
+    while (initial.value?.type !== 'snapshot') initial = await iterator.next();
+    await requireScriptedProcessAt(host.agent.processes).play(
+      [
+        {
+          type: 'update',
+          sessionId: 'subagent-review',
+          update: {
+            sessionUpdate: 'agent_message_chunk',
+            messageId: 'later',
+            content: { type: 'text', text: 'Still reviewing' },
+          },
         },
-      },
-    ],
-    'unused',
+      ],
+      'unused',
+    );
+
+    let next = await iterator.next();
+
+    while (
+      next.value?.type !== 'row.upsert' ||
+      next.value.row.sessionUpdate !== 'agent_message' ||
+      next.value.row.messageId !== 'later'
+    )
+      next = await iterator.next();
+    expect(next.value.row.content).toEqual([
+      { type: 'text', text: 'Still reviewing' },
+    ]);
+    await iterator.return?.();
+  },
+);
+
+async function backgroundParent(
+  phase: 'idle' | 'cancelled',
+): Promise<Awaited<ReturnType<typeof openAcpFeedSession>>> {
+  const gate = Promise.withResolvers<void>();
+  onTestFinished(() => gate.resolve());
+  const host = await startAcpEngine({
+    ...scenarios[backgroundScenario],
+    responses: {
+      'session/prompt': [
+        { steps: scenarios[backgroundScenario].steps, waitFor: gate.promise },
+      ],
+    },
+  });
+  const { sessionId } = await host.caller.session.new({
+    ...emptySessionInput,
+    prompt: [{ type: 'text', text: 'Start background work' }],
+  });
+  await waitForAcpSnapshot(
+    host,
+    sessionId,
+    (snapshot) => snapshot.subagents.length === 1,
   );
 
-  let next = await iterator.next();
+  if (phase === 'cancelled') await host.caller.session.cancel({ sessionId });
+  else gate.resolve();
+  await waitForAcpSessionIdle(host, sessionId);
 
-  while (
-    next.value?.type !== 'row.upsert' ||
-    next.value.row.sessionUpdate !== 'agent_message' ||
-    next.value.row.messageId !== 'later'
-  )
-    next = await iterator.next();
-  expect(next.value.row.content).toEqual([
-    { type: 'text', text: 'Still reviewing' },
-  ]);
-  await iterator.return?.();
-});
+  return { host, sessionId };
+}

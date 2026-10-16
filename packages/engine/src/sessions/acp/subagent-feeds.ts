@@ -83,9 +83,7 @@ export function routeSubagentUpdate(
   notification: SessionNotification,
 ): SubagentFeeds {
   const children = new Map(previous.children);
-  const source = children.get(notification.sessionId);
-
-  const routing = routingSource(input, source);
+  const routing = routingSource(input, children.get(notification.sessionId));
 
   const pending = [...previous.pendingMessages];
 
@@ -94,9 +92,7 @@ export function routeSubagentUpdate(
 
   return {
     children,
-    pendingMessages: pending.filter(
-      (message) => !replayMessage(input, children, message),
-    ),
+    pendingMessages: retainedMessages(input, children, pending),
   };
 }
 
@@ -141,3 +137,10 @@ function replayMessage(
     notification.update,
   );
 }
+
+const retainedMessages = (
+  input: SubagentRouting,
+  children: ReadonlyMap<string, ChildFeed>,
+  pending: readonly SessionNotification[],
+): readonly SessionNotification[] =>
+  pending.filter((message) => !replayMessage(input, children, message));

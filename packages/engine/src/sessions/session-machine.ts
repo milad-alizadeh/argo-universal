@@ -1475,8 +1475,12 @@ export const sessionMachine = sessionSetup.createMachine({
                 awaitingElicitation: {},
                 cancelling: {
                   on: {
-                    // The Turn already ended; only the Session's options still change.
+                    // The parent Turn ended; Subagents still own their active Turns.
                     'acp.update': [
+                      {
+                        guard: 'isSubagentUpdate',
+                        actions: 'routeSubagentUpdate',
+                      },
                       { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
                       {},
                     ],
