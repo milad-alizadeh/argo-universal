@@ -11,13 +11,13 @@ type Link = { url?: string; label: string; icon: IconName };
 const linksOf = (agent: AgentRowEntry): Link[] => [
   {
     url: agent.repository,
-    label: 'Visit Agent Repository',
+    label: 'Repository',
     icon: 'repository',
   },
-  { url: agent.website, label: 'Visit Agent Website', icon: 'web' },
+  { url: agent.website, label: 'Website', icon: 'web' },
   {
     url: agent.license_url,
-    label: 'View Agent License or Terms of Service',
+    label: 'License or terms',
     icon: 'file',
   },
 ];

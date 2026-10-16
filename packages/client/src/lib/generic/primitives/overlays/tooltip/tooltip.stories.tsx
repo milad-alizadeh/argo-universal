@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Tooltip } from './tooltip';
 
-const label = 'Visit Agent Repository';
+const label = 'Repository';
 
 const meta = {
   title: 'Design System/Primitives/Tooltip',
