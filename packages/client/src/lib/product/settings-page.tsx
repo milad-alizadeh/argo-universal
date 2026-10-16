@@ -3,7 +3,7 @@ import { type ReactNode, use, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
-import { useWide } from '#lib/generic/use-wide/use-wide';
+import { useSizeClass } from '#lib/generic/use-size-class/use-size-class';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import {
@@ -15,6 +15,8 @@ import {
 export type SettingsPageSearch = PageTitleSearch;
 
 export interface SettingsPageProps extends PageTitleRowProps {
+  // Agents has an approved inline header from medium upwards.
+  headerFrom?: 'medium' | 'wide';
   caption?: string;
   // A row of controls under the title, such as filters.
   toolbar?: ReactNode;
@@ -30,8 +32,11 @@ interface SettingsColumn {
   paddingRight: number;
 }
 
-function useSettingsColumn(): SettingsColumn {
-  const padding = Number.parseFloat(String(useCSSVariable('--spacing-8')));
+function useSettingsColumn(
+  from: SettingsPageProps['headerFrom'],
+): SettingsColumn {
+  const token = useColumnPaddingToken(from);
+  const padding = Number.parseFloat(String(useCSSVariable(token)));
 
   return useMemo(
     () => ({
@@ -43,25 +48,48 @@ function useSettingsColumn(): SettingsColumn {
   );
 }
 
+function useColumnPaddingToken(from: SettingsPageProps['headerFrom']): string {
+  const sizeClass = useSizeClass();
+
+  if (sizeClass === 'medium') return '--spacing-4';
+
+  return from === 'medium' ? '--spacing-6' : '--spacing-8';
+}
+
 /*
  * One Settings page on a wide window: a centred column under its own title and caption.
  * The content's scroll view spans the pane, so its scrollbar sits at the pane's edge, and keeps its content to the column.
  * A phone's native header shows the title, which the page's screen sets, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
-  const wide = useWide();
-  const inheritedColumn = use(ScrollColumnContext);
-  const settingsColumn = useSettingsColumn();
+  const showHeader = useShowsHeader(props.headerFrom);
+  const settingsColumn = useSettingsColumn(props.headerFrom);
+  const bodyColumn = useBodyColumn(settingsColumn);
 
   // Keep the form's ancestors in place when the window changes Size class, so its draft and open entry editor survive.
   return (
     <View className="flex-1 wide:mt-frame-inset">
-      {wide ? <SettingsPageTop {...props} column={settingsColumn} /> : null}
-      <SettingsPageBody column={wide ? settingsColumn : inheritedColumn}>
-        {props.children}
-      </SettingsPageBody>
+      {showHeader ? (
+        <SettingsPageTop {...props} column={settingsColumn} />
+      ) : null}
+      <SettingsPageBody column={bodyColumn}>{props.children}</SettingsPageBody>
     </View>
   );
+}
+
+function useBodyColumn(
+  column: SettingsColumn,
+): React.ContextType<typeof ScrollColumnContext> {
+  const sizeClass = useSizeClass();
+  const inherited = use(ScrollColumnContext);
+
+  return sizeClass === 'wide' ? column : inherited;
+}
+
+function useShowsHeader(from: SettingsPageProps['headerFrom']): boolean {
+  const sizeClass = useSizeClass();
+
+  return sizeClass === 'wide' || (from === 'medium' && sizeClass === 'medium');
 }
 
 function SettingsPageTop({
@@ -90,16 +118,29 @@ function SettingsPageBody(props: {
 
 function SettingsPageHeader(props: SettingsPageProps): React.JSX.Element {
   return (
-    <View className={cn('gap-4', props.search && 'gap-2')}>
+    <View className={headerClass(props)}>
       <View className="gap-1">
         <PageTitleRow {...props} />
-        {props.caption ? (
-          <Text role="body" className="text-muted-foreground">
-            {props.caption}
-          </Text>
-        ) : null}
+        <SettingsCaption caption={props.caption} />
       </View>
       {props.toolbar}
     </View>
+  );
+}
+
+function headerClass(props: SettingsPageProps): string {
+  return cn(
+    'gap-4',
+    (props.search || props.headerFrom === 'medium') && 'gap-2',
+  );
+}
+
+function SettingsCaption(props: Pick<SettingsPageProps, 'caption'>): ReactNode {
+  if (!props.caption) return null;
+
+  return (
+    <Text role="body" className="text-muted-foreground">
+      {props.caption}
+    </Text>
   );
 }

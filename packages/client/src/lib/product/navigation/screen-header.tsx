@@ -2,7 +2,7 @@ import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Platform } from 'react-native';
-import { useWide } from '#lib/generic/use-wide/use-wide';
+import { useSizeClass } from '#lib/generic/use-size-class/use-size-class';
 import { HeaderItems } from '#lib/product/header-button';
 import {
   type HeaderSearch,
@@ -16,6 +16,8 @@ import {
  * `Stack.Toolbar` and `Stack.SearchBar`.
  */
 export interface ScreenHeaderProps {
+  // Pages with an inline medium header hide the stack header there too.
+  hideFrom?: 'medium';
   title: string;
   left?: ReactNode;
   right?: readonly ReactElement[];
@@ -108,7 +110,18 @@ export const screenHeaderOptions: (header: ScreenHeaderProps) => HeaderOptions =
 export function ScreenHeader(
   props: ScreenHeaderProps,
 ): React.JSX.Element | null {
-  if (useWide()) return null;
+  const sizeClass = useSizeClass();
+
+  if (props.hideFrom === 'medium') {
+    const options = {
+      ...screenHeaderOptions(props),
+      headerShown: sizeClass === 'compact',
+    };
+
+    return <Stack.Screen options={options} />;
+  }
+
+  if (sizeClass === 'wide') return null;
 
   return <Stack.Screen options={screenHeaderOptions(props)} />;
 }
