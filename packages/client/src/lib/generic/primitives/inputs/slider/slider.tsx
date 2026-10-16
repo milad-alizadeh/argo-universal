@@ -9,28 +9,13 @@ const progressProperty = '--slider-progress';
 /*
  * Expo's universal web Slider hard-codes its palette, so web keeps this range input for the thumb and the full-width hit area.
  * The input's own track is hidden: a range input runs its track under the thumb at each end, so Argo draws the track from the minimum's thumb centre to the maximum's.
+ * The thumb and the drawn track's fill live in react-native-web.css (.slider-range, .slider-track): Tailwind has no variant for a range input's thumb.
  */
 const rangeClass =
-  'relative block m-0 h-5.5 w-full appearance-none bg-transparent cursor-pointer disabled:cursor-default focus-visible:outline-none';
-
-const webkitTrackClass =
-  '[&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:bg-transparent';
-
-const webkitThumbClass =
-  '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:-mt-1.5 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-card [&::-webkit-slider-thumb]:shadow-control [&::-webkit-slider-thumb]:transition-[scale,box-shadow] [&::-webkit-slider-thumb]:duration-100';
-
-const webkitThumbStateClass =
-  'enabled:hover:[&::-webkit-slider-thumb]:scale-110 enabled:active:[&::-webkit-slider-thumb]:scale-115 enabled:active:[&::-webkit-slider-thumb]:shadow-[0_0_0_6px_color-mix(in_oklab,var(--color-primary)_18%,transparent)] focus-visible:[&::-webkit-slider-thumb]:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-focus)_50%,transparent)]';
-
-const mozClass =
-  '[&::-moz-range-track]:bg-transparent [&::-moz-range-progress]:bg-transparent [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-card focus-visible:[&::-moz-range-thumb]:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-focus)_50%,transparent)]';
-
-const unsetClass =
-  '[&::-webkit-slider-thumb]:opacity-0 [&::-moz-range-thumb]:opacity-0';
+  'slider-range relative block m-0 h-5.5 w-full appearance-none bg-transparent cursor-pointer disabled:cursor-default focus-visible:outline-none';
 
 // Inset by the thumb's radius, so each end of the track is where the thumb's centre stops.
-const trackClass =
-  'absolute inset-x-2 top-2.25 h-1 rounded-full bg-[linear-gradient(to_right,var(--color-primary)_var(--slider-progress),var(--color-border)_var(--slider-progress))]';
+const trackClass = 'slider-track absolute inset-x-2 top-2.25 h-1 rounded-full';
 
 type SliderPosition = Pick<
   SliderProps,
@@ -79,14 +64,7 @@ function rangeInteraction(
 }
 
 const rangeClasses = (unset: boolean): string =>
-  cn(
-    rangeClass,
-    webkitTrackClass,
-    webkitThumbClass,
-    webkitThumbStateClass,
-    mozClass,
-    unset && unsetClass,
-  );
+  cn(rangeClass, unset && 'slider-range-unset');
 
 function progressStyle(
   props: SliderPosition,

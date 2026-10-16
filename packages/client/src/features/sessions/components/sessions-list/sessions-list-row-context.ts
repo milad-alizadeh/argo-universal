@@ -28,14 +28,17 @@ function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
   );
 }
 
-function useSessionRowInputs(
-  props: SessionsListProps,
-): Omit<SessionRowContext, 'animating' | 'closing'> {
+type RowInputs = Omit<SessionRowContext, 'animating' | 'closing'>;
+
+function useRowInputs(props: SessionsListProps): RowInputs {
   const { layout, selectedSessionId, onSelect } = props;
   const agentLogos = useAgentLogos(props.agents);
   const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
 
-  return { agentLogos, layout, selectedSessionId, ageFrom, onSelect };
+  return useMemo(
+    () => ({ agentLogos, layout, selectedSessionId, ageFrom, onSelect }),
+    [agentLogos, layout, selectedSessionId, ageFrom, onSelect],
+  );
 }
 
 export function useSessionRowContext(
@@ -43,12 +46,11 @@ export function useSessionRowContext(
   animating: boolean,
   closing: ReadonlySet<string>,
 ): SessionRowContext {
-  const inputs = useSessionRowInputs(props);
+  const inputs = useRowInputs(props);
 
   return useMemo(
     () => ({ ...inputs, animating, closing }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [...Object.values(inputs), animating, closing],
+    [inputs, animating, closing],
   );
 }
 

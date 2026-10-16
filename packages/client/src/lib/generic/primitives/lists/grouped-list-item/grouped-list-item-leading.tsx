@@ -1,6 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Icon, IconSlot, IconSpinner } from '#primitives/display/icon';
+import { useOverlayList } from '#primitives/fields/field-layout';
+import type { IconRole } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';
 import type { GroupedListItemProps } from './grouped-list-item-props';
 
@@ -39,6 +41,8 @@ function LeadingSlot({
 }: Pick<GroupedListItemProps, 'size'> & {
   children: React.ReactNode;
 }): React.JSX.Element {
+  const role = useLeadingRole();
+
   if (size === 'lg')
     return (
       <View className="size-10 shrink-0 items-center justify-center rounded-xl bg-card">
@@ -46,7 +50,12 @@ function LeadingSlot({
       </View>
     );
 
-  return <IconSlot role="row">{children}</IconSlot>;
+  return <IconSlot role={role}>{children}</IconSlot>;
+}
+
+// A popover's compact row leads with a Body-sized slot, as Paper's menu rows do; a list row keeps the row icon's.
+function useLeadingRole(): IconRole {
+  return useOverlayList() ? 'body' : 'row';
 }
 
 function RowIcon({
@@ -55,13 +64,19 @@ function RowIcon({
 }: Required<Pick<GroupedListItemProps, 'icon'>> & {
   className: string;
 }): React.JSX.Element {
-  return <Icon name={icon} role="row" className={cn('shrink-0', className)} />;
+  return (
+    <Icon
+      name={icon}
+      role={useLeadingRole()}
+      className={cn('shrink-0', className)}
+    />
+  );
 }
 
 // Paper: a Body-sized spinner in the row icon's slot.
 function RowSpinner(): React.JSX.Element {
   return (
-    <IconSlot role="row">
+    <IconSlot role={useLeadingRole()}>
       <IconSpinner iconRole="body" colorClassName="accent-foreground" />
     </IconSlot>
   );

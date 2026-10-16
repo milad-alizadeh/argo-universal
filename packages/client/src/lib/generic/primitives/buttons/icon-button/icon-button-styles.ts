@@ -13,7 +13,7 @@ export const iconButtonClasses = cva(
         filled:
           'bg-primary active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77',
       },
-      disabled: { true: 'opacity-[0.38]' },
+      disabled: { true: 'opacity-38' },
       // A toggle that is on, such as Bold in the format bar.
       pressed: { true: 'bg-selected' },
       size: {

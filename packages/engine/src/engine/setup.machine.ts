@@ -35,6 +35,7 @@ import {
   closeAgentResources,
   type CloseAcpResourcesInput,
 } from './agent-cleanup';
+import type { Caffeinate } from './caffeinate';
 import { openEngineDatabase, type OpenDatabaseInput } from './engine-database';
 import {
   recoverEngineAfterRestart,
@@ -46,6 +47,7 @@ import {
   startHttpServer,
 } from './http-server';
 import type { EngineMessage } from './ipc';
+import { caffeinateActor } from './keep-awake';
 import { type EngineStop, processSignals } from './process-signals';
 
 export type EngineLogParameters = { line: string };
@@ -79,6 +81,7 @@ export interface EngineInput extends Pick<
   loginCleanupTimeoutMs?: number;
   fetchAgents?: FetchAgents;
   installationPorts?: InstallPorts;
+  caffeinate?: Caffeinate;
 }
 
 export interface EngineContext extends EngineInput {
@@ -135,6 +138,7 @@ export const engineSetup = setup({
       async ({ input }): Promise<void> => input.server?.close(),
     ),
     processSignals,
+    caffeinate: caffeinateActor,
   },
   actions: {
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),

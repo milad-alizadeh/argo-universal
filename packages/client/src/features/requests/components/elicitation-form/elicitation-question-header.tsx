@@ -30,7 +30,7 @@ function QuestionTitle({ title }: { title: string }): ReactElement {
       <Text
         role="heading"
         aria-level={2}
-        className="min-w-0 flex-1 ios:text-[17px] ios:leading-[22px] android:text-[18px] android:leading-6 android:font-medium text-foreground"
+        className="min-w-0 flex-1 ios:text-row ios:leading-row android:text-lg android:leading-6 android:font-medium text-foreground"
       >
         {title}
       </Text>
@@ -54,10 +54,7 @@ function QuestionProgress({ model }: ModelProps): ReactElement {
   return (
     <Text
       role="secondary"
-      className={cn(
-        'pl-7.5 text-muted-foreground ios:text-[15px] ios:leading-5',
-        wide && 'pl-6.5',
-      )}
+      className={cn('pl-7.5 text-muted-foreground', wide && 'pl-6.5')}
     >
       {model.question.multiple ? 'Choose one or more' : 'Choose one'} ·{' '}
       {model.index + 1} of {model.count}

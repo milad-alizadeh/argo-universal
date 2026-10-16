@@ -8,7 +8,7 @@ import type { TextareaProps } from './textarea-props';
 function textareaClassName({ className, disabled }: TextareaProps): string {
   return cn(
     'text-foreground border-border dark:bg-border/30 flex min-h-16 w-full flex-row rounded-md border bg-transparent px-3 py-2 type-body shadow-control',
-    'web:rounded-control web:placeholder:text-muted-foreground web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger web:field-sizing-content web:resize-y web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
+    'web:rounded-control web:placeholder:text-muted-foreground web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger web:field-sizing-content web:resize-y web:outline-none web:transition web:focus-visible:ring-3 web:disabled:cursor-not-allowed',
     disabled === true && 'opacity-50',
     className,
   );
