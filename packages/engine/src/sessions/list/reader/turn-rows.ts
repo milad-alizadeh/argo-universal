@@ -3,8 +3,7 @@ import { turn } from '@repo/db/schema';
 import { and, desc, eq, inArray, notInArray, or } from 'drizzle-orm';
 import { readQueuedSessionRows } from '../../session-storage';
 import { storedTurnColumns } from '../../turns';
-import { decodeStoredTurn } from '../../turns';
-import { readChildTurnIds } from './child-turn-query';
+import { decodeStoredTurn, readLatestTurnIds } from '../../turns';
 import type { ListReadInput } from './input';
 
 type FamilyUpdates = { children: string[]; updates: string[] };
@@ -103,10 +102,15 @@ function rootTurns(
 
 function childIds(
   input: ListReadInput,
-  family: FamilyUpdates,
+  { children, updates }: FamilyUpdates,
   running: boolean,
-): ReturnType<typeof readChildTurnIds> {
-  return readChildTurnIds({ database: input.database, ...family, running });
+): ReturnType<typeof readLatestTurnIds> {
+  return readLatestTurnIds({
+    database: input.database,
+    sessionIds: children,
+    updates,
+    running,
+  });
 }
 
 function changedTurnFilter(

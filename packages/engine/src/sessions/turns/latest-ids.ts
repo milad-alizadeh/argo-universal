@@ -7,7 +7,7 @@ import {
   type SQLiteSelectWithout,
 } from 'drizzle-orm/sqlite-core';
 
-type ChildTurnIdsQuery = SQLiteSelectWithout<
+type LatestTurnIdsQuery = SQLiteSelectWithout<
   SQLiteAsyncSelectBase<
     'session',
     'sync',
@@ -19,31 +19,27 @@ type ChildTurnIdsQuery = SQLiteSelectWithout<
   'where'
 >;
 
-type ChildTurnInput = {
+type LatestTurnInput = {
   database: Database;
   updates: string[];
-  children: string[];
+  sessionIds: string[];
   running: boolean;
 };
 
-export function readChildTurnIds(input: {
-  database: Database;
-  updates: string[];
-  children: string[];
-  running: boolean;
-}): ChildTurnIdsQuery {
+// The id of each Session's latest stored Turn, or its latest running one, as a subquery; `updates` are Turns read apart.
+export function readLatestTurnIds(input: LatestTurnInput): LatestTurnIdsQuery {
   const candidate = alias(turn, 'candidate_turn');
 
-  const latest = latestChildTurn(input, candidate);
+  const latest = latestTurn(input, candidate);
 
   return input.database
     .select({ id: latest })
     .from(session)
-    .where(inArray(session.id, input.children));
+    .where(inArray(session.id, input.sessionIds));
 }
 
-function latestChildTurn(
-  input: ChildTurnInput,
+function latestTurn(
+  input: LatestTurnInput,
   candidate: ReturnType<typeof candidateTurn>,
 ): SQL<string> {
   const query = input.database
@@ -63,7 +59,7 @@ function candidateTurn(): ReturnType<
 }
 
 function candidateFilter(
-  input: ChildTurnInput,
+  input: LatestTurnInput,
   candidate: ReturnType<typeof candidateTurn>,
 ): SQL | undefined {
   return and(

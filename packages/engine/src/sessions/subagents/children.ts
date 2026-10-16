@@ -7,7 +7,7 @@ import { readQueuedSessionRows, type RowSources } from '../session-storage';
 type StoredSession = typeof session.$inferSelect;
 
 // Decodes one child Session; it throws when that child's row fails its shape, so the caller refuses only that child.
-export type ChildSessionRead = () => SessionRecord | undefined;
+type ChildSessionRead = () => SessionRecord | undefined;
 
 // A parent's child Sessions as the Writer will leave them: stored children and queued inserts, with the queued Session jobs replayed over each.
 export function readChildSessions(

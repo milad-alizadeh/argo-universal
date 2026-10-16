@@ -3,6 +3,7 @@ import {
   type SessionRecord,
   type SessionUpdate,
   type SubagentUpdate,
+  type Turn,
 } from '@repo/contracts';
 import { feedRow } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
@@ -13,8 +14,8 @@ import {
   type FeedDeps,
   type FeedRowWrite,
 } from '../../feed';
-import { readLatestTurn, type RowSources } from '../session-storage';
-import { readChildSessions, type ChildSessionRead } from './children';
+import { readLatestTurns, type RowSources } from '../session-storage';
+import { readChildSessions } from './children';
 import { toSubagent } from './subagents';
 
 type SubagentDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
@@ -37,25 +38,41 @@ class SubagentsReader {
       writer: this.deps.findWriter(),
     };
 
-    const children = readChildSessions(sources, sessionId);
+    const children = this.children(sources, sessionId);
 
     if (children.length === 0) return [];
-    const updates = this.updates(sessionId);
 
-    return children.flatMap((read): Subagent[] =>
-      this.child(sources, read, updates),
+    const latestTurn = readLatestTurns(
+      sources,
+      children.map((child): string => child.id),
+    );
+
+    return this.subagents(children, latestTurn, this.updates(sessionId));
+  }
+
+  private subagents(
+    children: SessionRecord[],
+    latestTurn: (sessionId: string) => Turn | undefined,
+    updates: SubagentUpdate[],
+  ): Subagent[] {
+    return children.flatMap((child): Subagent[] =>
+      this.validate((): Subagent[] =>
+        readSubagent(child, latestTurn(child.id), updates),
+      ),
     );
   }
 
-  private child(
-    sources: RowSources,
-    read: ChildSessionRead,
-    updates: SubagentUpdate[],
-  ): Subagent[] {
-    try {
-      const child = read();
+  private children(sources: RowSources, sessionId: string): SessionRecord[] {
+    return readChildSessions(sources, sessionId).flatMap(
+      (read): SessionRecord[] =>
+        this.validate((): SessionRecord[] => present(read())),
+    );
+  }
 
-      return child ? readSubagent(sources, child, updates) : [];
+  // One child's rows; a child whose Session or latest Turn fails its shape is refused alone.
+  private validate<Value>(read: () => Value[]): Value[] {
+    try {
+      return read();
     } catch (error) {
       this.rejections.report('rejected Subagent shape', error);
 
@@ -90,14 +107,17 @@ class SubagentsReader {
 }
 
 function readSubagent(
-  sources: RowSources,
   child: SessionRecord,
+  latest: Turn | undefined,
   updates: SubagentUpdate[],
 ): Subagent[] {
-  return toSubagent(child, readLatestTurn(sources, child.id), updates).map(
-    (value): Subagent => Subagent.parse(value),
+  return toSubagent(child, latest, updates).map((value): Subagent =>
+    Subagent.parse(value),
   );
 }
+
+const present = <Value>(value: Value | undefined): Value[] =>
+  value === undefined ? [] : [value];
 
 const isSubagentUpdate = (row: SessionUpdate): row is SubagentUpdate =>
   row.sessionUpdate === 'subagent_update';
