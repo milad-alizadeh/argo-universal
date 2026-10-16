@@ -20,7 +20,11 @@ const previousMigrations = async (directory: string): Promise<string> => {
   await mkdir(previous);
 
   for (const entry of await readdir(migrationsFolder)) {
-    if (entry.includes('saved_agents')) continue;
+    if (
+      entry.includes('saved_agents') ||
+      entry.includes('registry_agent_ids')
+    )
+      continue;
     await symlink(join(migrationsFolder, entry), join(previous, entry), 'dir');
   }
 
@@ -124,4 +128,28 @@ it('Migration B leaves a fresh Server with no installed Agents', async () => {
   expect(
     host.database.$client.prepare('SELECT * FROM agent_servers').all(),
   ).toEqual([]);
+});
+
+it('normalizes Claude and Codex stored Agent ids to their Registry ids', async () => {
+  const { database, home } = await oldDatabase();
+  const insert = database.$client.prepare(
+    'INSERT INTO agents (id, registry_id, configuration, enabled) VALUES (?, ?, NULL, 1)',
+  );
+
+  insert.run('claude', 'claude-acp');
+  insert.run('codex', 'codex-acp');
+  database.$client.close();
+
+  const host = await startEngineTestHost({ home, fixtureAgents: [] });
+
+  expect(
+    host.database.$client
+      .prepare(
+        'SELECT id, registry_id FROM agents WHERE registry_id IN (?, ?) ORDER BY registry_id',
+      )
+      .all('claude-acp', 'codex-acp'),
+  ).toEqual([
+    { id: 'claude-acp', registry_id: 'claude-acp' },
+    { id: 'codex-acp', registry_id: 'codex-acp' },
+  ]);
 });
