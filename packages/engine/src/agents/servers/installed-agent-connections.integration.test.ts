@@ -1,4 +1,6 @@
+import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, vi } from 'vitest';
+import { emptySessionInput } from '#mocks/acp-engine';
 import { createResourceOpening } from '#mocks/acp-resource';
 import { installEntry, installationPorts } from '#mocks/installation';
 import {
@@ -6,6 +8,10 @@ import {
   requireInstalled,
   startLaunchHost,
 } from '#mocks/installed-agents';
+import {
+  createScriptedAgentProcess,
+  type ScriptedProcess,
+} from '#mocks/scripted-agent';
 import type { AcpSessionLease } from '../acp';
 import type { InstallPorts } from '../install/ports';
 
@@ -72,4 +78,37 @@ it('stops the npm install once the only Session waiting on it withdraws', async 
   session.abort(new Error('Session closed'));
   await expect(opening).rejects.toThrow('Session closed');
   await vi.waitFor(() => expect(install.aborted).toBe(true));
+});
+
+const terminationsOf = (agent: { processes: ScriptedProcess[] }): number[] =>
+  agent.processes.map(({ terminations }) => terminations);
+
+it('a Registry refresh starts New Sessions on the new version while the older running Session still prompts', async () => {
+  let entry = installEntry('binary');
+  const agent = createScriptedAgentProcess();
+
+  const { host, projectPath } = await startLaunchHost(entry, {
+    fetchAgents: async () =>
+      JSON.stringify({ version: '1.0.0', agents: [entry] }),
+    acp: agent,
+  });
+
+  await initTestRepository(projectPath);
+  const newSession = { ...emptySessionInput, agent: entry.id };
+  const older = await host.caller.session.new(newSession);
+  entry = { ...entry, version: '2.0.0' };
+  await host.caller.agents.refreshRegistry();
+  await host.caller.session.new(newSession);
+
+  expect(agent.processes.map(({ launch }) => launch.version)).toEqual([
+    '1.2.3',
+    '2.0.0',
+  ]);
+  await host.caller.session.prompt({
+    sessionId: older.sessionId,
+    prompt: [{ type: 'text', text: 'Continue' }],
+  });
+  expect(terminationsOf(agent)).toEqual([0, 0]);
+  await host.caller.session.close({ sessionId: older.sessionId });
+  await vi.waitFor(() => expect(terminationsOf(agent)).toEqual([1, 0]));
 });
