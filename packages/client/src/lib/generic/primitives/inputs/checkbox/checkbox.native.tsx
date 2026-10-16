@@ -61,7 +61,7 @@ function surfaceClass(props: CheckboxProps): string {
     return 'android:overflow-hidden android:rounded-lg android:bg-muted';
 
   return cn(
-    'overflow-hidden rounded-lg android:rounded-selection',
+    'overflow-hidden rounded-lg android:rounded-xl',
     props.value && 'bg-selected',
   );
 }
