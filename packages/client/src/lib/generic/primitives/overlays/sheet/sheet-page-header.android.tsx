@@ -1,12 +1,11 @@
 import ArrowBack from '@expo/material-symbols/arrow_back.xml';
-import { Icon, IconButton, Row, Text } from '@expo/ui/jetpack-compose';
+import { Icon, IconButton, Row, Spacer, Text } from '@expo/ui/jetpack-compose';
 import {
-  type ModifierConfig,
   fillMaxWidth,
   height,
-  padding,
   semantics,
   weight,
+  width,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { backLabel } from './sheet-page-label';
@@ -23,33 +22,26 @@ export function PageHeader(props: HeaderProps): ReactElement | null {
 
   return (
     <Row verticalAlignment="center" modifiers={headerModifiers}>
-      {!props.root && <BackButton stack={props.stack} />}
-      <Text
-        maxLines={1}
-        style={titleStyle}
-        modifiers={titleModifiers(props.root)}
-      >
+      {props.root ? <Slot /> : <BackButton stack={props.stack} />}
+      <Text maxLines={1} style={titleStyle} modifiers={[weight(1)]}>
         {props.title}
       </Text>
+      <Slot />
     </Row>
   );
 }
 
 // The back button's 48 dp: a root page's title sits where a pushed page's does.
-const headerHeight = 48;
+const headerSize = 48;
 
-const headerModifiers = [fillMaxWidth(), height(headerHeight)];
+const headerModifiers = [fillMaxWidth(), height(headerSize)];
 
-// Material's section title, as the Settings sections use: a sheet page is a section, not a screen.
-const titleStyle = { typography: 'titleMedium' } as const;
+// Material's section title, as the Settings sections use: a sheet page is a section, not a screen. Centred, as Android apps title their sheets.
+const titleStyle = { typography: 'titleMedium', textAlign: 'center' } as const;
 
-// The list's 16 dp gutter, so a root page's title lines up with the rows under it; on a pushed page the back button leads instead.
-const titleInset = 16;
-
-function titleModifiers(root: boolean): ModifierConfig[] {
-  return root
-    ? [weight(1), padding(titleInset, 0, titleInset, 0)]
-    : [weight(1)];
+// An empty back-button-sized slot, so the title stays centred whether or not Back leads.
+function Slot(): ReactElement {
+  return <Spacer modifiers={[width(headerSize)]} />;
 }
 
 // Material's standard icon button with the Material Symbols back arrow, drawn by Compose so the press reaches the button.
