@@ -49,14 +49,11 @@ const refusedOpen = (
     : openFailureOf(attempt.error);
 };
 
-// A Retry that settled cleared the Feed's closure; otherwise the closure stands.
-const closure = (
-  attempt: OpenAttempt | undefined,
-  { retry, feedOpenError }: SessionProblemSources,
-): SessionOpenError | undefined =>
-  attempt !== retry && feedOpenError
-    ? sessionOpenError(feedOpenError)
-    : undefined;
+// A Retry that opened the Session cleared the Feed's closure, so any closure here came after it.
+const closure = ({
+  feedOpenError,
+}: SessionProblemSources): SessionOpenError | undefined =>
+  feedOpenError ? sessionOpenError(feedOpenError) : undefined;
 
 // The newest attempt speaks: Retry's own error, or a command's refused open; else the Feed's closure.
 function openError(
@@ -64,10 +61,7 @@ function openError(
 ): SessionOpenError | undefined {
   const attempt = latest([sources.retry, ...sources.commands]);
 
-  return (
-    (attempt && refusedOpen(attempt, sources.retry)) ??
-    closure(attempt, sources)
-  );
+  return (attempt && refusedOpen(attempt, sources.retry)) ?? closure(sources);
 }
 
 type TurnEnd = Extract<FeedViewItem, { type: 'turn_end' }>;

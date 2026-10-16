@@ -93,8 +93,7 @@ export class EmptySessionStore {
 
   // A failed open tries again: Retry, a finished sign-in, or the Connection reopening.
   public retry(): void {
-    this.retrying = this.error !== undefined;
-    this.keeper.retry();
+    this.retrying = this.keeper.retry() && this.error !== undefined;
     this.reconcile();
   }
 

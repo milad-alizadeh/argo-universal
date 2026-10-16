@@ -28,6 +28,8 @@ const turnEnd = (id: string, end: Partial<TurnEnd>): FeedViewItem => {
   };
 };
 
+const agentExited = 'Agent exited';
+
 const quiet = { feedOpenError: null, retry: idle, commands: [], items: [] };
 
 it('shows the open the Feed closed on', () => {
@@ -41,10 +43,10 @@ it('shows the open the Feed closed on', () => {
 
 it('shows any other Feed closure as a launch failure', () => {
   expect(
-    sessionProblem({ ...quiet, feedOpenError: new Error('Agent exited') }),
+    sessionProblem({ ...quiet, feedOpenError: new Error(agentExited) }),
   ).toEqual({
     type: 'open',
-    error: { type: 'failed', message: 'Agent exited' },
+    error: { type: 'failed', message: agentExited },
   });
 });
 
@@ -109,6 +111,20 @@ it('clears once a Retry opens the Session', () => {
       ],
     }),
   ).toBeUndefined();
+});
+
+// A Retry that opened the Session cleared the Feed's closure, so any closure now is a later one.
+it('shows a Feed closure that came after a Retry opened the Session', () => {
+  expect(
+    sessionProblem({
+      ...quiet,
+      feedOpenError: new Error(agentExited),
+      retry: { submittedAt: 2, error: null, isPending: false },
+    }),
+  ).toEqual({
+    type: 'open',
+    error: { type: 'failed', message: agentExited },
+  });
 });
 
 it('asks to sign in after a Turn that ended auth_required', () => {

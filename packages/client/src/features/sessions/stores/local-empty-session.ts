@@ -42,9 +42,12 @@ export class LocalSessionKeeper {
     if (key !== this.key) this.chooseKey(key);
   }
 
-  // A Session that failed to open opens again.
-  public retry(): void {
+  // A Session that failed to open opens again; false when none failed.
+  public retry(): boolean {
+    const failed = this.failedKey !== undefined;
     this.failedKey = undefined;
+
+    return failed;
   }
 
   public start(): void {

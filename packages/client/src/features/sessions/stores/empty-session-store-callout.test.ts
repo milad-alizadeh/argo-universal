@@ -96,4 +96,20 @@ describe('Sending a New worktree again after it failed to open', () => {
       retrying: true,
     });
   });
+
+  // Only Send creates a New worktree, so a retry, as on the Connection reopening, leaves its failure on show.
+  it('keeps the failure when a retry has nothing to open', async () => {
+    h.choose(worktree);
+    h.store.send(prompt);
+    h.calls.open[0]?.call.reject(failure);
+    await settle();
+
+    h.store.retry();
+
+    expect(h.calls.open).toHaveLength(1);
+    expect(h.store.getState()).toMatchObject({
+      error: { type: 'failed', message: failure.message },
+      retrying: false,
+    });
+  });
 });

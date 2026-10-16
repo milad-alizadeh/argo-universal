@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Spinner } from '#primitives/display/spinner';
@@ -9,19 +10,32 @@ import type { CalloutProps } from './callout-props';
 
 /*
  * A wide window draws the callout's content in place, for a tray such as the one behind the Composer's card.
- * A phone presents the same content as a bottom sheet that only the app closes.
+ * A phone presents the same content as a bottom sheet.
  */
 export function Callout(props: CalloutProps): React.JSX.Element {
   if (useWide()) return <WideCallout {...props} />;
 
+  return <CalloutSheet {...props} />;
+}
+
+const contentOf = ({ title, description }: CalloutProps): string =>
+  `${title}\n${description ?? ''}`;
+
+// A swipe or Escape puts the sheet away until the callout says something new.
+function CalloutSheet(props: CalloutProps): React.JSX.Element {
+  const [dismissed, setDismissed] = useState<string>();
+  const content = contentOf(props);
+
   return (
-    <Sheet open onOpenChange={keepOpen} dismissible={false} label={props.title}>
+    <Sheet
+      open={dismissed !== content}
+      onOpenChange={(open) => setDismissed(open ? undefined : content)}
+      label={props.title}
+    >
       <PhoneCallout {...props} />
     </Sheet>
   );
 }
-
-const keepOpen = (): void => {};
 
 function WideCallout(props: CalloutProps): React.JSX.Element {
   return (
