@@ -85,6 +85,7 @@ export type Primitives = {
   MenuDropdownItemsProps: MenuKit.MenuDropdownItemsProps;
   MenuProps: MenuKit.MenuProps;
   MenuRows: MenuKit.MenuRows;
+  MenuTriggerProps: MenuKit.MenuTriggerProps;
   NativeMenuItem: MenuKit.NativeMenuItem;
   NativeTextProps: NativeTextKit.NativeTextProps;
   PickerProps: PickerKit.PickerProps<string>;

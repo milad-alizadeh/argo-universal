@@ -15,8 +15,8 @@ type DenialInput = PermissionAnswersInput & { answers: PermissionAnswers };
 const denialQuestion = 'What should the Agent do instead?';
 
 const denialLayouts = {
-  wide: { row: 'flex-row gap-1', action: 'flex-none' },
-  phone: { row: 'w-full flex-col-reverse gap-2', action: undefined },
+  wide: 'flex-row gap-1',
+  phone: 'w-full flex-col-reverse gap-2',
 };
 
 const messageFieldProps = {
@@ -31,10 +31,10 @@ export function DenialActions(answers: PermissionAnswers): ReactNode {
   const layout = useContentWide() ? denialLayouts.wide : denialLayouts.phone;
 
   if (!answers.denial) return null;
-  const action = { disabled: answers.inactive, className: layout.action };
+  const action = { disabled: answers.inactive };
 
   return (
-    <View className={layout.row}>
+    <View className={layout}>
       <RequestAction {...action} onPress={answers.back}>
         Back
       </RequestAction>

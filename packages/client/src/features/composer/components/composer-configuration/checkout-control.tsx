@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { MenuTrigger } from '#primitives/overlays/menu';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ConfigurationChoice } from './configuration-choice';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -96,14 +96,15 @@ function CheckoutPath({
   checkout,
 }: Pick<CheckoutProps, 'checkout'>): React.JSX.Element {
   return (
-    <Text
-      selectable={false}
-      numberOfLines={1}
-      role={checkout.newWorktree ? 'code' : 'secondary'}
-      className="select-none min-w-0 shrink"
-    >
-      {checkoutName(checkout)}
-    </Text>
+    <View className="min-w-0 shrink">
+      <Text
+        selectable={false}
+        numberOfLines={1}
+        role={checkout.newWorktree ? 'code' : 'secondary'}
+      >
+        {checkoutName(checkout)}
+      </Text>
+    </View>
   );
 }
 
@@ -116,44 +117,22 @@ function CheckoutIcon({
     <Icon
       role="control"
       name={newWorktree ? 'branch' : 'folder'}
-      className="text-muted-foreground"
+      tone="muted"
     />
   );
 }
 
-function checkoutTrigger(props: CheckoutProps): React.JSX.Element {
-  return (
-    <Button {...checkoutButtonProps(props)} trailing={<CheckoutChevron />} />
-  );
-}
-
-type CheckoutButtonProps = Extract<
-  React.ComponentProps<typeof Button>,
-  { custom: true }
->;
-
-function checkoutButtonProps({
+function checkoutTrigger({
   checkout,
   disabled,
-}: CheckoutProps): CheckoutButtonProps {
-  return {
-    custom: true,
-    variant: 'ghost',
-    disabled,
-    accessibilityLabel: 'Checkout',
-    label: checkout.newWorktree ? 'New worktree' : 'Local',
-    icon: checkout.newWorktree ? 'branch' : 'folder',
-    className: 'h-7 sm:h-7 py-0 px-1.5 gap-1.5',
-    labelClassName: 'text-muted-foreground',
-  };
-}
-
-function CheckoutChevron(): React.JSX.Element {
+}: CheckoutProps): React.JSX.Element {
   return (
-    <Icon
-      role="control"
-      name="chevron-down"
-      className="text-muted-foreground"
+    <MenuTrigger
+      tone="muted"
+      disabled={disabled}
+      accessibilityLabel="Checkout"
+      label={checkout.newWorktree ? 'New worktree' : 'Local'}
+      icon={checkout.newWorktree ? 'branch' : 'folder'}
     />
   );
 }

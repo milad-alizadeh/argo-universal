@@ -1,9 +1,9 @@
-import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
+import type { AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
-import { Button } from '#primitives/buttons/button';
 import { Spinner } from '#primitives/display/spinner';
+import { MenuTrigger, type MenuTriggerProps } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ComposerPopover } from '../composer-popover/composer-popover';
@@ -96,18 +96,20 @@ function configurePage(
 }
 
 function agentModelTrigger(props: TriggerProps): React.JSX.Element {
-  const wide = props.wide;
-  const current = selectedChoice(props.configuration, 'model');
+  return <MenuTrigger {...agentModelTriggerProps(props)} />;
+}
 
-  return (
-    <Button
-      {...agentModelButtonProps(props, current)}
-      leading={agentModelLeading(props)}
-      trailing={
-        <AgentModelTrailing configuration={props.configuration} wide={wide} />
-      }
-    />
-  );
+function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
+  const current = selectedChoice(props.configuration, 'model');
+  const { configuration, wide } = props;
+
+  return {
+    label: modelName(current) || agentLabel(props.agent),
+    accessibilityLabel: 'Agent and model',
+    disabled: props.disabled,
+    leading: agentModelLeading(props),
+    trailing: <AgentModelTrailing configuration={configuration} wide={wide} />,
+  };
 }
 
 // A spinner while the Session opens; wide, the Agent's icon otherwise.
@@ -117,27 +119,6 @@ function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
 
   return props.wide ? <AgentIcon agent={props.agent} /> : undefined;
 }
-
-function agentModelButtonProps(
-  props: TriggerProps,
-  current?: SessionConfigSelectOption,
-): Extract<React.ComponentProps<typeof Button>, { custom: true }> {
-  return {
-    ...agentModelButtonAppearance,
-    disabled: props.disabled,
-    accessibilityLabel: 'Agent and model',
-    label: modelName(current) || agentLabel(props.agent),
-    labelNumberOfLines: 1,
-    className: 'h-7 sm:h-7 py-0 px-1.5 gap-1.5 shrink min-w-0',
-    labelClassName: 'min-w-0 shrink',
-  };
-}
-
-const agentModelButtonAppearance = {
-  custom: true,
-  size: 'xs',
-  variant: 'ghost',
-} as const;
 
 function agentLabel(agent?: AgentInfo): string {
   return agent?.label || '';

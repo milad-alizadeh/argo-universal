@@ -1,8 +1,8 @@
 import type * as React from 'react';
-import { Button } from '#primitives/buttons/button';
+import { View } from 'react-native';
+import { MenuTrigger, type MenuTriggerProps } from '#primitives/overlays/menu';
 import { CheckoutContents } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
-import { SessionControlDisclosure } from './session-control-disclosure';
 import type { StartSessionInProps } from './start-session-types';
 
 type CheckoutControlProps = Pick<StartSessionInProps, 'checkout' | 'disabled'>;
@@ -11,38 +11,33 @@ export function SessionCheckoutControl(
   props: CheckoutControlProps,
 ): React.JSX.Element {
   return (
-    <ComposerPopover
-      listContent
-      label="Checkout"
-      trigger={checkoutTrigger(props)}
-    >
-      {(close) => checkoutContents(props, close)}
-    </ComposerPopover>
+    <View className="px-4">
+      <ComposerPopover
+        listContent
+        label="Checkout"
+        trigger={checkoutTrigger(props)}
+      >
+        {(close) => checkoutContents(props, close)}
+      </ComposerPopover>
+    </View>
   );
 }
 
+// Phones only: one stacked row under the Project.
 function checkoutTrigger(props: CheckoutControlProps): React.JSX.Element {
-  return <Button {...checkoutButtonProps(props)} />;
-}
-
-function checkoutButtonProps(
-  props: CheckoutControlProps,
-): React.ComponentProps<typeof Button> {
-  return {
-    ...checkoutButtonLabels(props),
-    custom: true,
-    variant: 'ghost',
-    disabled: props.disabled || !props.checkout.onNewWorktreeChange,
-    accessibilityLabel: 'Checkout',
-    labelClassName: 'text-muted-foreground',
-    className: 'h-10 sm:h-10 px-4 gap-1.5 justify-start',
-    trailing: <SessionControlDisclosure />,
-  };
+  return (
+    <MenuTrigger
+      {...checkoutButtonLabels(props)}
+      tone="muted"
+      disabled={props.disabled || !props.checkout.onNewWorktreeChange}
+      accessibilityLabel="Checkout"
+    />
+  );
 }
 
 function checkoutButtonLabels(
   props: Pick<CheckoutControlProps, 'checkout'>,
-): Pick<React.ComponentProps<typeof Button>, 'label' | 'icon'> {
+): Pick<MenuTriggerProps, 'label' | 'icon'> {
   return props.checkout.newWorktree
     ? { label: 'New worktree', icon: 'branch' }
     : { label: 'Local', icon: 'folder' };

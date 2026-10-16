@@ -3,47 +3,28 @@ import { Pressable } from 'react-native';
 import { Text, TextClassContext } from '#primitives/display/text';
 import { ButtonAdornment } from './button-adornment';
 import { contentButtonClass, contentTextClass } from './button-content-styles';
-import type { ButtonProps, ContentButtonProps } from './button-props';
+import type { DrawnButtonProps } from './button-props';
 import { buttonInteractionProps } from './button-state';
 
-export function ContentButton(props: ButtonProps): ReactElement {
+// The button Argo draws: every Button on the web, and the acting half of a web SplitButton.
+
+export function ContentButton(props: DrawnButtonProps): ReactElement {
   const textClass = contentTextClass(props);
 
   return (
     <TextClassContext.Provider value={textClass}>
       <Pressable {...contentPressableProps(props)}>
-        <ContentAdornment button={props} side="leading" />
         <ButtonAdornment {...props} role="control" textClass={textClass} />
-        <ButtonText {...props} />
-        <ContentAdornment button={props} side="trailing" />
+        <Text role="control">{props.label}</Text>
       </Pressable>
     </TextClassContext.Provider>
   );
 }
 
-type ButtonTextProps = Pick<ButtonProps, 'label'> & {
-  labelNumberOfLines?: number;
-  labelClassName?: string;
-};
-
-function ButtonText(props: ButtonTextProps): ReactElement {
-  return (
-    <Text
-      role="control"
-      className={props.labelClassName}
-      numberOfLines={props.labelNumberOfLines}
-    >
-      {props.label}
-    </Text>
-  );
-}
-
 function contentPressableProps(
-  props: ButtonProps,
+  props: DrawnButtonProps,
 ): ComponentProps<typeof Pressable> {
   return {
-    ...contentLayoutProps(props),
-    ...contentTriggerProps(props),
     ...buttonInteractionProps(props),
     onPress: props.onPress,
     accessibilityLabel: props.accessibilityLabel ?? props.label,
@@ -51,50 +32,5 @@ function contentPressableProps(
     className: contentButtonClass(props),
     // Android fades each child on its own unless the button composites first, showing the fill through the label.
     needsOffscreenAlphaCompositing: !!props.disabled,
-  };
-}
-
-function contentLayoutProps(
-  props: Pick<ContentButtonProps, 'ref' | 'style'> & { custom?: boolean },
-): Pick<ComponentProps<typeof Pressable>, 'ref' | 'style'> {
-  if (!props.custom) return {};
-
-  return { ref: props.ref, style: props.style };
-}
-
-function ContentAdornment({
-  button,
-  side,
-}: {
-  button: ButtonProps;
-  side: 'leading' | 'trailing';
-}): ReactElement | undefined {
-  return button.custom ? button[side] : undefined;
-}
-
-type ContentPopupProps = Pick<
-  ContentButtonProps,
-  'aria-haspopup' | 'aria-expanded' | 'aria-controls'
->;
-
-function contentPopupProps(props: ContentButtonProps): ContentPopupProps {
-  return {
-    'aria-haspopup': props['aria-haspopup'],
-    'aria-expanded': props['aria-expanded'],
-    'aria-controls': props['aria-controls'],
-  };
-}
-
-function contentTriggerProps(
-  props: ButtonProps,
-): Pick<ContentButtonProps, 'id' | 'onHoverIn' | 'onHoverOut'> &
-  ContentPopupProps {
-  if (!props.custom) return {};
-
-  return {
-    id: props.id,
-    onHoverIn: props.onHoverIn,
-    onHoverOut: props.onHoverOut,
-    ...contentPopupProps(props),
   };
 }
