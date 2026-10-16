@@ -39,7 +39,7 @@ function NativeControl(props: ButtonProps): ReactElement {
 
   const common = nativeControlProps(props, variant, dangerColor);
 
-  // A text-only button hands its label to Expo, which draws it; only decoration or an Android danger label needs a row.
+  // A text-only button hands its label to Expo, which draws it; decoration, an Android danger label or an iOS full width needs a row.
   if (!needsRow(props, variant, dangerColor))
     return <NativeButton {...common} label={props.label} />;
 
@@ -70,9 +70,18 @@ function needsRow(
   dangerColor: string | undefined,
 ): boolean {
   return (
-    !!props.icon || !!props.loading || androidDangerLabel(variant, dangerColor)
+    decorated(props) ||
+    androidDangerLabel(variant, dangerColor) ||
+    iosFullWidth(props)
   );
 }
+
+const decorated = (props: Pick<ButtonProps, 'icon' | 'loading'>): boolean =>
+  !!props.icon || !!props.loading;
+
+// SwiftUI sizes a button to its label, so a full-width one draws its label in a row that fills the width.
+const iosFullWidth = (props: Pick<ButtonProps, 'fullWidth'>): boolean =>
+  Platform.OS === 'ios' && props.fullWidth === true;
 
 function rowColors(
   variant: UniversalButtonVariant,

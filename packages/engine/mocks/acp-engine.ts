@@ -24,7 +24,10 @@ export const startAcpEngine = async (
   scenario: ScriptedScenario & { autoExit?: boolean } & Partial<
       Pick<
         EngineInput,
-        'fetchAgents' | 'loginTimeoutMs' | 'loginCleanupTimeoutMs'
+        | 'fetchAgents'
+        | 'loginTimeoutMs'
+        | 'loginCleanupTimeoutMs'
+        | 'caffeinate'
       >
     > &
     Pick<
@@ -50,6 +53,7 @@ export const startAcpEngine = async (
     createId,
     loginTimeoutMs: scenario.loginTimeoutMs,
     loginCleanupTimeoutMs: scenario.loginCleanupTimeoutMs,
+    caffeinate: scenario.caffeinate,
     fixtureAgents: [createAgentMetadata(agentId)],
     acp: {
       ...agent,

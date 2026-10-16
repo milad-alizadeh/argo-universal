@@ -29,7 +29,7 @@ ruleTester.run('cross-package-import', crossPackageImport, {
     },
     { code: "require('../../packages/git/src');", errors: crossPackage },
     {
-      code: "import type { AcpSessionLease } from '../../../packages/engine/src/agents/acp/resource-types';",
+      code: "import type { AcpSessionLease } from '../../../packages/engine/src/agents/acp/resources/resource-types';",
       errors: crossPackage,
     },
   ],

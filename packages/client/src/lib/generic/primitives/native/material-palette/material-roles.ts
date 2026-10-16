@@ -25,6 +25,8 @@ interface StateRoles {
   accent: Role;
   // Argo's selection tint, in place of Material's secondary container on chips and drawer items.
   selected: Role;
+  // Argo's pressed tint, the colour of every press ripple in place of Material's state layer.
+  pressed: Role;
   disabledContent: Role;
   disabledContainer: Role;
   scrim: Role;
@@ -62,6 +64,7 @@ function stateRoles(colors: Colors): StateRoles {
     onError: colors.primaryForeground,
     accent: colors.accent,
     selected: colors.selected,
+    pressed: colors.pressed,
     disabledContent: colors.disabledContent,
     disabledContainer: colors.disabledContainer,
     scrim: colors.scrim,

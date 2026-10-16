@@ -55,8 +55,8 @@ const startInterruptedShell = async (): Promise<InterruptedShell> => {
     cwd: launch.cwd,
     launch,
     request: { ...descendantShellStep.request, sessionId: 'owned-1' },
-    output: (text): void => {
-      output += text;
+    output: (chunk): void => {
+      output += chunk.toString();
     },
   });
 

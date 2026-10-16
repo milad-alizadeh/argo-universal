@@ -14,7 +14,7 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../../rpc';
-import { toShell } from '../acp/shells';
+import { toShell } from '../acp/shells/shells';
 import type { SessionRouterDeps } from '../router-deps';
 import { validateSessionCommandAdmission } from '../session-command';
 import { requireLiveSessionActor } from '../session-system';

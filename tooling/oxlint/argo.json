@@ -105,12 +105,12 @@
     },
     {
       // #717 keeps the connection in one file; the owner approved this length exception on 2026-10-15.
-      "files": ["packages/engine/src/agents/acp/connection.ts"],
+      "files": ["packages/engine/src/agents/acp/connection/connection.ts"],
       "rules": { "max-lines": "off" }
     },
     {
       // Unknown ACP identities must be logged at warn (#717).
-      "files": ["packages/engine/src/agents/acp/connection.ts"],
+      "files": ["packages/engine/src/agents/acp/connection/connection.ts"],
       "rules": { "no-console": ["error", { "allow": ["error", "warn"] }] }
     },
     {
@@ -203,7 +203,7 @@
       "rules": { "argo/kit-styling": "off" }
     },
     {
-      // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values, no raw colours (native colour props included) and no Tailwind palette colour classes. style-tokens-allowlist.json holds the files not yet tokenised.
+      // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values, no raw colours (native colour props included) and no Tailwind palette colour classes.
       "files": ["packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
       "rules": { "argo/style-tokens": "error" }
     },
@@ -1960,6 +1960,13 @@
         "no-restricted-imports": [
           "error",
           {
+            "paths": [
+              {
+                "name": "@repo/engine/router",
+                "allowTypeImports": true,
+                "message": "Desktop may import only AppRouter's type for its own tRPC client (ADR-0016)."
+              }
+            ],
             "patterns": [
               {
                 "group": [
@@ -1967,6 +1974,7 @@
                   "!@repo/contracts",
                   "!@repo/contracts/**",
                   "!@repo/engine/server-runtime",
+                  "!@repo/engine/router",
                   "!@repo/machine-log",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
@@ -2033,6 +2041,7 @@
         "apps/server/src/supervisor/engine-process.ts",
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
+        "packages/engine/src/engine/caffeinate.ts",
         "packages/engine/src/plugins/host-connection.ts",
         "packages/engine/src/agents/acp/process.ts",
         "packages/engine/src/agents/launch/shell-env.ts",
@@ -2041,7 +2050,7 @@
         "packages/engine/src/agents/install/processes/process-wrapper.ts",
         "packages/engine/src/agents/install/processes/process-group.ts",
         "packages/engine/src/lib/process-group-members.ts",
-        "packages/engine/src/agents/acp/terminal-wrapper.mjs",
+        "packages/engine/src/agents/acp/login-terminal/terminal-wrapper.mjs",
         "apps/desktop/src/main/server-process.ts",
         "apps/desktop/scripts/storybook-mac.mts"
       ],
@@ -2147,6 +2156,9 @@
               },
               {
                 "group": [
+                  "../..",
+                  "../../index",
+                  "../../index.ts",
                   "../../../agents",
                   "../../../agents/index",
                   "../../../agents/index.ts"

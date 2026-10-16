@@ -14,9 +14,9 @@ export interface ProjectHeadingProps {
   onProjectSettings?: () => void;
 }
 
-// The heading takes the rows' hover tint; the CSS group state drives it and the actions, so no pointer event can leave them stuck.
+// The title takes the rows' hover tint on its own; the row's CSS group state reveals the actions, so no pointer event can leave them stuck.
 const rowClassName =
-  'group mb-0.5 min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-md pr-1 web:hover:bg-hover web:focus-within:bg-hover';
+  'group mb-0.5 min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-md pr-1';
 
 export const ProjectHeading = memo(function ProjectHeading(
   props: ProjectHeadingProps,

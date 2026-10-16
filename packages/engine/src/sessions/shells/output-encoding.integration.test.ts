@@ -9,15 +9,17 @@ import { startEngineTestHost } from '#mocks/engine';
 import { collectShellOutput } from '#mocks/shell-output';
 import { createShellOutput, shellOutputPath } from './files';
 
-it('resumes across a read boundary inside a UTF-8 character without losing its bytes', async () => {
+const runExitedCommand = async (
+  script: string,
+): Promise<{
+  host: Awaited<ReturnType<typeof startAcpEngine>>;
+  scope: { sessionId: string; shellId: string };
+}> => {
   const host = await startAcpEngine({
     steps: [
       {
         ...streamingShellStep,
-        request: {
-          command: process.execPath,
-          args: ['-e', "process.stdout.write('a'.repeat(65535)+'😀Z')"],
-        },
+        request: { command: process.execPath, args: ['-e', script] },
         completion: 'wait-for-exit',
       },
     ],
@@ -34,9 +36,16 @@ it('resumes across a read boundary inside a UTF-8 character without losing its b
     (value) => value.state === 'idle' && value.shells[0]?.status === 'exited',
   );
 
-  const id = snapshot.shells[0]?.id;
-  assert(id);
-  const scope = { ...created, shellId: id };
+  const shellId = snapshot.shells[0]?.id;
+  assert(shellId);
+
+  return { host, scope: { ...created, shellId } };
+};
+
+it('resumes across a read boundary inside a UTF-8 character without losing its bytes', async () => {
+  const { host, scope } = await runExitedCommand(
+    "process.stdout.write('a'.repeat(65535)+'😀Z')",
+  );
 
   const chunks = await collectShellOutput(
     await host.caller.shell.output(scope),
@@ -51,6 +60,21 @@ it('resumes across a read boundary inside a UTF-8 character without losing its b
       await host.caller.shell.output({ ...scope, after: 65535 }),
     ),
   ).toEqual([{ text: '😀Z', after: 65540, status: 'exited' }]);
+});
+
+it('keeps invalid UTF-8 bytes from captured output intact in its Blob', async () => {
+  const { host, scope } = await runExitedCommand(
+    'process.stdout.write(Buffer.from([0xff, 0xfe, 0x41]))',
+  );
+
+  const record = host.database.select().from(shell).get();
+  assert(record?.outputBlobId);
+  expect(await readFile(join(host.blobsFolder, record.outputBlobId))).toEqual(
+    Buffer.from([0xff, 0xfe, 0x41]),
+  );
+  expect(
+    await collectShellOutput(await host.caller.shell.output(scope)),
+  ).toEqual([{ text: '\uFFFD\uFFFDA', after: 3, status: 'exited' }]);
 });
 
 it.each([

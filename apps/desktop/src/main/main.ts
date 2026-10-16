@@ -60,7 +60,21 @@ const serverUrl = (address: ServerAddress): string =>
 const home = resolveHome();
 
 const server = createActor(serverConnectionMachine, {
-  input: { home, serverDirectory },
+  input: {
+    home,
+    serverDirectory,
+    askToKeepSessions: async (running): Promise<boolean> => {
+      const { response } = await dialog.showMessageBox({
+        type: 'question',
+        message: `${running} Sessions are running. Keep them going?`,
+        buttons: ['Keep', 'Stop'],
+        defaultId: 0,
+        cancelId: 0,
+      });
+
+      return response === 0;
+    },
+  },
 });
 
 // The 12px lights centred in the rail's 44px row: the glass is inset 8, and the row's 52px of lights centres in the 72px rail.
@@ -130,6 +144,9 @@ const start = (): void => {
 
     if (BrowserWindow.getAllWindows().length === 0) createWindow(url);
   });
+  server.on('badge.changed', ({ attention }): void => {
+    app.dock?.setBadge(attention > 0 ? String(attention) : '');
+  });
 
   // The failure dialog offers Retry and Quit.
   server.on('server.failed', ({ failure }): void => {
@@ -190,16 +207,14 @@ if (app.requestSingleInstanceLock()) {
 // Quit waits for the Server machine, which stops the Supervisor only if this app started it.
 server.subscribe({
   complete: (): void => {
-    app.quit();
+    queueMicrotask((): void => app.quit());
   },
 });
 
-app.on('will-quit', (event): void => {
+app.on('before-quit', (event): void => {
   if (!serverStarted || server.getSnapshot().status !== 'active') return;
+  event.preventDefault();
   server.send({ type: 'app.quit' });
-
-  // A reused Supervisor stops synchronously; prevent quit only while an owned one is stopping.
-  if (server.getSnapshot().status === 'active') event.preventDefault();
 });
 
 // Closing the last window quits, except on macOS, where the app stays until Cmd+Q.

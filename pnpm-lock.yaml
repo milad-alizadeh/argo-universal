@@ -617,6 +617,9 @@ importers:
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../../packages/machine-log
+      '@trpc/client':
+        specifier: 'catalog:'
+        version: 11.19.0(@trpc/server@11.19.0(typescript@7.0.2))(typescript@7.0.2)
       xstate:
         specifier: 'catalog:'
         version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)

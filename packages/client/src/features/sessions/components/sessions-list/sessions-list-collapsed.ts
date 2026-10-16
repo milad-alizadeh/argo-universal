@@ -2,6 +2,9 @@ import {
   type Dispatch,
   type SetStateAction,
   useCallback,
+  useEffect,
+  useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -27,20 +30,48 @@ function withoutId(ids: ReadonlySet<string>, id: string): Set<string> {
 
 type SetIds = Dispatch<SetStateAction<ReadonlySet<string>>>;
 
-// Starts a Project's fade, then moves it from closing to collapsed.
-function useClosing(
-  setCollapsed: SetIds,
-  setClosing: SetIds,
-): (id: string) => void {
+// Runs a callback later; timers still pending when the list goes are cleared.
+function useLater(): (callback: () => void, milliseconds: number) => void {
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+
+  useEffect(() => {
+    const pending = timers.current;
+
+    return (): void => {
+      for (const timer of pending) clearTimeout(timer);
+    };
+  }, []);
+
+  return useCallback((callback, milliseconds) => {
+    timers.current.add(setTimeout(callback, milliseconds));
+  }, []);
+}
+
+interface IdSetters {
+  setCollapsed: SetIds;
+  setClosing: SetIds;
+}
+
+// A Project whose fade is done leaves closing and becomes collapsed.
+const finishClosing = (
+  { setCollapsed, setClosing }: IdSetters,
+  id: string,
+): void => {
+  setCollapsed((current) => withId(current, id));
+  setClosing((current) => withoutId(current, id));
+};
+
+// Starts a Project's fade.
+function useClosing(setters: IdSetters): (id: string) => void {
+  const later = useLater();
+  const { setClosing } = setters;
+
   return useCallback(
     (id: string) => {
       setClosing((current) => withId(current, id));
-      setTimeout(() => {
-        setCollapsed((current) => withId(current, id));
-        setClosing((current) => withoutId(current, id));
-      }, closeMilliseconds);
+      later(() => finishClosing(setters, id), closeMilliseconds);
     },
-    [setCollapsed, setClosing],
+    [later, setClosing, setters],
   );
 }
 
@@ -49,7 +80,8 @@ export function useCollapsedProjects(): CollapsedProjects {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [closing, setClosing] = useState<ReadonlySet<string>>(new Set());
 
-  const close = useClosing(setCollapsed, setClosing);
+  const setters = useMemo(() => ({ setCollapsed, setClosing }), []);
+  const close = useClosing(setters);
 
   const toggleProject = useCallback(
     (id: string) => {

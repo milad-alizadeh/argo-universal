@@ -13,12 +13,14 @@ import type {
 import type { PermissionRequestProps } from './permission-request/permission-request';
 
 export {
+  configurationRequest,
+  configurationValues,
   dateFormatsRequest,
   dateFormatsValues,
   emptyAnswersRequest,
-  fieldsRequest,
-  fieldsValues,
+  functionNameRequest,
   invalidSchemaRequest,
+  refactorRequest,
 } from '../../../../mocks/requests/elicitation-requests';
 
 export {

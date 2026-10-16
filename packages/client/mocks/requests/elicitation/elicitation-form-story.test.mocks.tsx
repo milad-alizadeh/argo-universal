@@ -9,8 +9,6 @@ import {
 import { elicitationProps } from '../../../src/features/requests/components/request.mocks';
 import { RequestFrame } from '../../../src/lib/product/request-frame';
 
-export const issueTitle = 'Drafts vanish after a reconnect';
-
 export const meta: Meta<typeof ElicitationForm> = {
   component: ElicitationForm,
   parameters: { previewPadding: false },
