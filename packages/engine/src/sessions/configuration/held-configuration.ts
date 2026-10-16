@@ -53,3 +53,16 @@ export const withHeldConfiguration = (
       held.find(({ configId }) => configId === option.configId),
     ),
   );
+
+export const withoutHeldChoice = (
+  held: HeldConfigChoice[],
+  choice: HeldConfigChoice | null,
+): HeldConfigChoice[] => {
+  if (!choice) return held;
+
+  return held.filter(
+    (candidate) =>
+      candidate.configId !== choice.configId ||
+      candidate.value !== choice.value,
+  );
+};

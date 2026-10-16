@@ -40,6 +40,7 @@ const sessionDefaults = {
   checkoutBranch: null,
   vendorRef: null,
   configValues: [],
+  heldConfig: [],
   epoch: 0,
   maxRevision: 0,
   createdAt: 0,

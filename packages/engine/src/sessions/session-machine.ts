@@ -68,13 +68,16 @@ import {
   answeredRequest,
   chosenOption,
 } from './admission/answer-admission';
-import { hasConfigurationCapacity } from './admission/config-admission';
+import {
+  hasConfigurationCapacity,
+  isOfferedConfigChoice,
+} from './admission/config-admission';
 import { isReplayedHistory } from './admission/update-admission';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { currentModel, toConfigValues } from './configuration/config-choices';
 import {
   withHeldConfiguration,
-  type HeldConfigChoice,
+  withoutHeldChoice,
 } from './configuration/held-configuration';
 import { validateConfigChoice } from './session-admission';
 import {
@@ -186,6 +189,7 @@ export type SessionCommand =
       configId: string;
       value: string | boolean;
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
+      held?: boolean;
     }
   | { type: 'session.cancel' }
   | { type: 'session.close' };
@@ -219,7 +223,6 @@ export interface SessionContext extends SessionData {
   acpTurnOutcome: EndTurnParameters | null;
   turnEnding: FeedTurnEnding;
   configQueue: Extract<SessionCommand, { type: typeof setConfigEvent }>[];
-  heldConfig: HeldConfigChoice[];
   applyingConfig: Extract<
     SessionCommand,
     { type: typeof setConfigEvent }
@@ -437,7 +440,7 @@ const sessionSetup = setup({
 
       return { configQueue: [...context.configQueue, event] };
     }),
-    holdAcpConfig: assign(({ context, event }) => {
+    holdAcpConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, setConfigEvent);
 
       const heldConfig = [
@@ -447,24 +450,34 @@ const sessionSetup = setup({
         { configId: event.configId, value: event.value },
       ];
 
-      event.applied?.resolve(
-        withHeldConfiguration(context.configOptions, heldConfig),
-      );
-
-      return { heldConfig };
+      enqueue.assign({ heldConfig });
+      enqueue.sendTo(writer, {
+        type: writeFeedEvent,
+        job: new SessionRowUpdateJob({
+          id: context.sessionId,
+          set: { heldConfig },
+        }),
+        committed: {
+          resolve: () =>
+            event.applied?.resolve(
+              withHeldConfiguration(context.configOptions, heldConfig),
+            ),
+          reject: (cause: unknown) => event.applied?.reject(cause),
+        },
+      });
     }),
     releaseHeldConfig: assign(
-      ({ context }): Pick<SessionContext, 'configQueue' | 'heldConfig'> => ({
+      ({ context }): Pick<SessionContext, 'configQueue'> => ({
         configQueue: [
           ...context.configQueue,
           ...context.heldConfig.map(
             (choice): SessionContext['configQueue'][number] => ({
               type: setConfigEvent,
               ...choice,
+              held: true,
             }),
           ),
         ],
-        heldConfig: [],
       }),
     ),
     takeAcpConfig: assign(({ context }) => ({
@@ -477,15 +490,24 @@ const sessionSetup = setup({
 
         if (!nextOptions) return;
         const configValues = toConfigValues(nextOptions);
+
+        const applied =
+          options && context.applyingConfig?.held
+            ? context.applyingConfig
+            : null;
+
+        const heldConfig = withoutHeldChoice(context.heldConfig, applied);
+
         enqueue.assign({
           configOptions: nextOptions,
           configValues,
+          heldConfig,
         });
         enqueue.sendTo(writer, {
           type: writeFeedEvent,
           job: new SessionRowUpdateJob({
             id: context.sessionId,
-            set: { configValues },
+            set: { configValues, heldConfig },
           }),
         });
       },
@@ -495,18 +517,41 @@ const sessionSetup = setup({
 
       return { applyingConfig: null };
     }),
-    rejectAcpConfig: assign(({ context }, params: FailureParameters) => {
-      context.applyingConfig?.applied?.reject(params.error);
+    rejectAcpConfig: enqueueActions(
+      ({ context, enqueue }, params: FailureParameters) => {
+        context.applyingConfig?.applied?.reject(params.error);
 
-      return { applyingConfig: null };
-    }),
+        const invalid =
+          context.applyingConfig &&
+          !isOfferedConfigChoice(context.configOptions, context.applyingConfig)
+            ? context.applyingConfig
+            : null;
+
+        const heldConfig = withoutHeldChoice(context.heldConfig, invalid);
+
+        enqueue.assign({
+          applyingConfig: null,
+          heldConfig,
+          configQueue: context.configQueue.filter((choice) => !choice.held),
+        });
+
+        if (invalid?.held)
+          enqueue.sendTo(writer, {
+            type: writeFeedEvent,
+            job: new SessionRowUpdateJob({
+              id: context.sessionId,
+              set: { heldConfig },
+            }),
+          });
+      },
+    ),
     rejectPendingAcpConfig: assign(({ context }) => {
       const error = new Error('Session closed before configuration completed');
       context.applyingConfig?.applied?.reject(error);
 
       for (const config of context.configQueue) config.applied?.reject(error);
 
-      return { configQueue: [], heldConfig: [], applyingConfig: null };
+      return { configQueue: [], applyingConfig: null };
     }),
     rememberAcpUsage: assign(
       ({ context, event }): Pick<SessionContext, 'usage'> => {
@@ -923,6 +968,8 @@ const sessionSetup = setup({
       ),
     hasAcpConfig: ({ context }) => context.configQueue.length > 0,
     hasSubmission: ({ context }) => context.pendingSubmission !== null,
+    hasHeldSubmission: ({ context }): boolean =>
+      context.pendingSubmission !== null && context.heldConfig.length > 0,
     holdsAcpConfig: or([
       stateIn({ open: { acp: 'activeTurn' } }),
       stateIn({ open: { acp: 'publishing' } }),
@@ -1265,6 +1312,7 @@ export const sessionMachine = sessionSetup.createMachine({
             idle: {
               always: [
                 { guard: 'hasAcpConfig', target: configuringState },
+                { guard: 'hasHeldSubmission', actions: 'releaseHeldConfig' },
                 { guard: 'hasSubmission', target: 'committing' },
               ],
               on: {
