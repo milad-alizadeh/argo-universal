@@ -82,6 +82,10 @@ export class HostConnection {
 
       if (parsed.success) this.message(parsed.data);
     });
+    this.logFailures(child);
+  }
+
+  private logFailures(child: ChildProcess): void {
     child.on('error', (error) =>
       this.callbacks.log(`Plugin host error: ${error.message}`),
     );
