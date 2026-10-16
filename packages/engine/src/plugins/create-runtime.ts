@@ -8,8 +8,12 @@ import { PluginStorage } from './storage';
 export const createPluginRuntime = (
   home: string,
   keychain: Keychain = macKeychain,
-): PluginRuntime =>
-  new PluginRuntime(
-    (line) => writeLog({ home, label: 'plugins', line }),
-    new PluginServices(new PluginStorage(home), keychain),
+): PluginRuntime => {
+  const log = (line: string): void =>
+    writeLog({ home, label: 'plugins', line });
+
+  return new PluginRuntime(
+    log,
+    new PluginServices(new PluginStorage(home), keychain, log),
   );
+};

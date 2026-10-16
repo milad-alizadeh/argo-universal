@@ -28,13 +28,21 @@ export class PluginRuntime {
     private readonly log: (line: string) => void,
     private readonly services: PluginServices,
   ) {
-    this.host = new HostConnection({
-      log,
+    this.host = new HostConnection(this.callbacks());
+  }
+
+  private callbacks(): ConstructorParameters<typeof HostConnection>[0] {
+    return {
+      log: this.log,
       call: (message): Promise<PluginReply> =>
-        this.services.handle(message.pluginId, message.request),
+        this.services.handle(
+          message.pluginId,
+          message.generation,
+          message.request,
+        ),
       status: (message): void => this.update(message),
       crash: (message): void => this.crashed(message),
-    });
+    };
   }
 
   status(pluginId: string): PluginStatus {
@@ -71,6 +79,7 @@ export class PluginRuntime {
     return new RuntimePlugin({
       ...location,
       host: this.host,
+      release: (): void => this.services.release(location.entry.pluginId),
       log: this.log,
       changed: (status): void => this.failures.update(identity, status),
     });

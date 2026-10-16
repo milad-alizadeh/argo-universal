@@ -42,15 +42,60 @@ export const SecretCall = z.discriminatedUnion('action', [
 
 export type SecretCall = z.infer<typeof SecretCall>;
 
+export const FsCall = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('read'), path: z.string() }),
+  z.object({
+    action: z.literal('write'),
+    path: z.string(),
+    content: z.string(),
+  }),
+  z.object({ action: z.literal('list'), path: z.string() }),
+  z.object({ action: z.literal('stat'), path: z.string() }),
+]);
+
+export type FsCall = z.infer<typeof FsCall>;
+
+// A command is its argv; there is no shell to interpret it.
+export const ProcessCommand = z.object({
+  argv: z.array(z.string()).min(1),
+  cwd: z.string().optional(),
+  timeoutMs: z.number().int().positive().optional(),
+  input: z.string().optional(),
+});
+
+export type ProcessCommand = z.infer<typeof ProcessCommand>;
+
+export const ProcessCall = z.discriminatedUnion('action', [
+  ProcessCommand.extend({ action: z.literal('run') }),
+  ProcessCommand.extend({ action: z.literal('spawn') }),
+  z.object({ action: z.literal('wait'), id: z.string() }),
+  z.object({ action: z.literal('kill'), id: z.string() }),
+]);
+
+export type ProcessCall = z.infer<typeof ProcessCall>;
+
+export const FetchCall = z.object({
+  url: z.string(),
+  method: z.string().optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  body: z.string().optional(),
+});
+
+export type FetchCall = z.infer<typeof FetchCall>;
+
 export const PluginRequest = z.discriminatedUnion('api', [
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
+  z.object({ api: z.literal('fs'), call: FsCall }),
+  z.object({ api: z.literal('process'), call: ProcessCall }),
+  z.object({ api: z.literal('fetch'), call: FetchCall }),
 ]);
 
 export type PluginRequest = z.infer<typeof PluginRequest>;
 
+// Every answer to a Plugin crosses as JSON text, so it is JSON.
 export const PluginValue = z
-  .union([z.array(StorageResult), z.string(), z.null()])
+  .union([z.json(), z.array(StorageResult)])
   .optional();
 
 export type PluginValue = z.infer<typeof PluginValue>;

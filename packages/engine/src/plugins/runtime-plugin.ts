@@ -12,6 +12,7 @@ type PluginInput = {
   entry: Omit<PluginEntry, 'generation'>;
   dev: boolean;
   host: HostConnection;
+  release: () => void;
   log: (line: string) => void;
   changed: (status: PluginStatus) => void;
 };
@@ -48,6 +49,8 @@ export class RuntimePlugin {
 
   update(status: PluginStatus, generation: number): void {
     if (generation !== this.generation) return;
+
+    if (status.state === 'crashed') this.input.release();
     this.received(status);
   }
 
@@ -64,6 +67,7 @@ export class RuntimePlugin {
 
   hostCrashed(message: string): void {
     if (this.status.state !== 'running' && !this.answer) return;
+    this.input.release();
     this.received({ state: 'crashed', hanging: false, error: message });
     this.activation = null;
   }
@@ -106,8 +110,13 @@ export class RuntimePlugin {
     this.input.changed(notStarted);
 
     if (!this.answer) void this.awaitActivation();
-    this.input.host.stop(this.input.entry.pluginId);
+    this.stopWorker();
     this.load();
+  }
+
+  private stopWorker(): void {
+    this.input.host.stop(this.input.entry.pluginId);
+    this.input.release();
   }
 
   private load(): void {
@@ -128,7 +137,7 @@ export class RuntimePlugin {
   private fail(error: string): void {
     if (this.closed) return;
     this.generation += 1;
-    this.input.host.stop(this.input.entry.pluginId);
+    this.stopWorker();
     this.received({ state: 'crashed', hanging: false, error });
   }
 
