@@ -7,3 +7,5 @@ export { stepMarks } from './state/onboarding';
 export { type GitHubStep } from './state/onboarding';
 
 export { agentStep } from './state/onboarding';
+
+export { featuredAgents } from './state/featured-agents';

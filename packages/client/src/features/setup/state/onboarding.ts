@@ -1,8 +1,5 @@
-// Step 1: whether the Server has an Agent that can run Sessions.
-export type AgentStep =
-  | { status: 'done'; agentName: string }
-  // `checking` while the Agents load or the Server looks again.
-  | { status: 'not-found'; checking: boolean };
+// Step 1 completes when a Registry Agent is saved.
+export type AgentStep = { status: 'done' } | { status: 'not-installed' };
 
 // Step 2: the Server's GitHub login, in the AccountRow states designed for Settings › Accounts in Paper.
 export type GitHubStep =
@@ -26,7 +23,7 @@ const agentMarks: Record<
   Pick<StepMarks, 'agent' | 'project'>
 > = {
   done: { agent: 'done', project: 'next' },
-  'not-found': { agent: 'next', project: 'open' },
+  'not-installed': { agent: 'next', project: 'open' },
 };
 
 const githubMarks: Record<GitHubStep['status'], StepMark> = {
@@ -42,20 +39,6 @@ export function stepMarks(agent: AgentStep, github: GitHubStep): StepMarks {
   return { ...agentMarks[agent.status], github: githubMarks[github.status] };
 }
 
-type SessionAgent = { name: string };
-
-const loadedAgentStep = (
-  [first]: readonly SessionAgent[],
-  checkingAgain: boolean,
-): AgentStep =>
-  first === undefined
-    ? { status: 'not-found', checking: checkingAgain }
-    : { status: 'done', agentName: first.name };
-
-// The first of the Agents that run Sessions, or none; `undefined` while they load, so the step never claims none before the list arrives.
-export function agentStep(
-  agents: readonly SessionAgent[] | undefined,
-  checkingAgain: boolean,
-): AgentStep | undefined {
-  return agents && loadedAgentStep(agents, checkingAgain);
-}
+export const agentStep = (agents: readonly { id: string }[]): AgentStep => ({
+  status: agents.length ? 'done' : 'not-installed',
+});
