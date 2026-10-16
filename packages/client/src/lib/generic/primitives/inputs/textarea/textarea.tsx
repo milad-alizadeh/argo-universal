@@ -16,7 +16,6 @@ function textareaClassName({ className, disabled }: TextareaProps): string {
 
 function textareaInputProps({
   className: _className,
-  placeholderClassName: _placeholderClassName,
   multiline = true,
   numberOfLines = Platform.select({ web: 2, native: 8 }),
   disabled,
@@ -34,16 +33,10 @@ function editableWhen(disabled: boolean | undefined): boolean | undefined {
 function Textarea(options: TextareaProps): ReactElement {
   const colors = useTextareaColors();
 
-  const placeholderClassName = cn(
-    'text-muted-foreground',
-    options.placeholderClassName,
-  );
-
   return (
     <TextInput
       className={textareaClassName(options)}
       {...colors}
-      placeholderClassName={placeholderClassName}
       {...textareaInputProps(options)}
     />
   );

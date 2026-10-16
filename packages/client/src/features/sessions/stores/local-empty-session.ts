@@ -12,6 +12,7 @@ export interface KeeperHost {
   ports: () => EmptySessionPorts;
   changed: () => void;
   opening: () => void;
+  opened: () => void;
   failed: (cause: unknown) => void;
 }
 
@@ -41,9 +42,12 @@ export class LocalSessionKeeper {
     if (key !== this.key) this.chooseKey(key);
   }
 
-  // A Session that failed to open opens again.
-  public retry(): void {
+  // A Session that failed to open opens again; false when none failed.
+  public retry(): boolean {
+    const failed = this.failedKey !== undefined;
     this.failedKey = undefined;
+
+    return failed;
   }
 
   public start(): void {
@@ -166,6 +170,7 @@ export class LocalSessionKeeper {
   private opened(session: LocalSession, sessionId: string): void {
     if (this.session === session && !this.stopped) {
       session.opened(sessionId);
+      this.host.opened();
       this.host.changed();
 
       return;

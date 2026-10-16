@@ -58,12 +58,30 @@ function SplitRow(split: NativeSplit): React.JSX.Element {
 
   return (
     <Row horizontalArrangement={{ spacedBy: 2 }}>
-      <Half {...split} side="leading" onClick={split.acting.onPress}>
-        <Text>{split.acting.label}</Text>
-      </Half>
+      <ActingHalf {...split} />
       <MenuHalf {...split} menu={menu} />
     </Row>
   );
+}
+
+function ActingHalf(split: NativeSplit): React.JSX.Element {
+  return (
+    <Half
+      {...split}
+      side="leading"
+      onClick={split.acting.onPress}
+      modifiers={actingName(split)}
+    >
+      <Text>{split.acting.label}</Text>
+    </Half>
+  );
+}
+
+// The acting button's spoken name, when its label says too little.
+function actingName(split: NativeSplit): ModifierConfig[] {
+  const name = split.acting.accessibilityLabel;
+
+  return name ? [semantics({ contentDescription: name })] : [];
 }
 
 // The kit Menu's Compose DropdownMenu and rows, on the card surface, opened from the stock chevron button.

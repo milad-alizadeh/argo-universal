@@ -1,8 +1,14 @@
-import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
-import { DialogOverlay } from '#primitives/overlays/dialog';
+import {
+  Dialog,
+  DialogDescriptionText,
+  DialogFrame,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitleText,
+} from '#primitives/overlays/dialog';
 import {
   alertActionPress,
   ignoreCloseWhileBusy,
@@ -17,25 +23,22 @@ const contentClassName =
 // The web draws an alert as a centred dialog at every width, never as a sheet.
 export function Alert(props: AlertProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Root
-      open={props.open}
-      onOpenChange={ignoreCloseWhileBusy(props)}
-    >
-      <DialogPrimitive.Portal>
+    <Dialog open={props.open} onOpenChange={ignoreCloseWhileBusy(props)}>
+      <DialogPortal>
         <DialogOverlay>
           <AlertCard {...props} />
         </DialogOverlay>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+      </DialogPortal>
+    </Dialog>
   );
 }
 
 function AlertCard(props: AlertProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Content className={contentClassName}>
+    <DialogFrame className={contentClassName}>
       <AlertHeading title={props.title} message={props.message} />
       <AlertButtons {...props} />
-    </DialogPrimitive.Content>
+    </DialogFrame>
   );
 }
 
@@ -44,13 +47,13 @@ type AlertHeadingProps = Pick<AlertProps, 'title' | 'message'>;
 function AlertHeading(props: AlertHeadingProps): React.JSX.Element {
   return (
     <View className="gap-2">
-      <DialogPrimitive.Title className="type-heading text-foreground">
+      <DialogTitleText className="type-heading text-foreground">
         {props.title}
-      </DialogPrimitive.Title>
+      </DialogTitleText>
       {props.message ? (
-        <DialogPrimitive.Description className="type-secondary">
+        <DialogDescriptionText className="type-secondary">
           {props.message}
-        </DialogPrimitive.Description>
+        </DialogDescriptionText>
       ) : null}
     </View>
   );

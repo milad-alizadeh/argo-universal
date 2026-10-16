@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { fn } from 'storybook/test';
 import { SessionNewView, type SessionNewViewProps } from './session-new-view';
 import {
   openingNewSession,
@@ -50,7 +51,28 @@ export const FailedStart: Story = {
       state: 'ready',
       ...readyNewSession,
       draft: typedDraft,
-      openError: 'The Agent exited before it was ready.',
+      callout: {
+        kind: 'launch',
+        message: 'Agent exited with status 1\nnpm error code E404',
+        onRetry: fn(),
+      },
+    },
+  },
+};
+
+export const SignIn: Story = {
+  args: {
+    view: {
+      state: 'ready',
+      ...readyNewSession,
+      callout: {
+        kind: 'authenticate',
+        agentName: 'Codex',
+        methods: [{ id: 'chatgpt', name: 'Login with ChatGPT' }],
+        pending: false,
+        onAuthenticate: fn(),
+        onCancel: fn(),
+      },
     },
   },
 };

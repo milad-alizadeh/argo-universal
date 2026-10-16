@@ -7,14 +7,15 @@ import type { SplitMenuProps } from './split-button-props';
 type ChevronProps = Pick<
   SplitMenuProps,
   'menuLabel' | 'primary' | 'disabled' | 'narrow' | 'size'
-> & { height?: number; className?: string };
+> & { className?: string };
 
 const chevronFits = {
   sm: {
     size: 'sm',
     iconRole: 'secondary',
     wide: 'h-8 w-7 px-0 sm:h-8',
-    narrow: 'h-11 w-11 rounded-lg web:rounded-control px-0 sm:h-11',
+    // Fills the menu's wrapper, which the row stretches to its full-width button: the touch size on phones, the button's height on wider screens.
+    narrow: 'h-auto w-11 flex-1 px-0 sm:h-auto sm:w-11',
   },
   // The group dims as one, so the chevron does not dim a second time.
   xs: {
@@ -42,9 +43,20 @@ export function chevron(props: ChevronProps): React.JSX.Element {
       {...chevronTone(props)}
       accessibilityLabel={props.menuLabel}
       disabled={props.disabled}
-      className={cn(props.narrow ? fit.narrow : fit.wide, props.className)}
-      style={heightStyle(props.height)}
+      className={chevronClassName(props, fit)}
     />
+  );
+}
+
+// The button's corners, not IconButton's; the group then squares the joined side.
+function chevronClassName(
+  props: ChevronProps,
+  fit: (typeof chevronFits)[keyof typeof chevronFits],
+): string {
+  return cn(
+    'web:rounded-md',
+    props.narrow ? fit.narrow : fit.wide,
+    props.className,
   );
 }
 
@@ -52,8 +64,4 @@ function chevronTone(
   props: ChevronProps,
 ): (typeof chevronTones)[keyof typeof chevronTones] {
   return props.primary ? chevronTones.primary : chevronTones.plain;
-}
-
-function heightStyle(height?: number): { height: number } | undefined {
-  return height === undefined ? undefined : { height };
 }

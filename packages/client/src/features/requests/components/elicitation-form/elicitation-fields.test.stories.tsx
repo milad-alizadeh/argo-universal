@@ -1,13 +1,13 @@
 import { expect } from 'storybook/test';
 import {
-  issueTitle,
   meta as elicitationTestMeta,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-form-story.test.mocks';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
-  fieldsRequest,
-  fieldsValues,
+  configurationRequest,
+  configurationValues,
+  functionNameRequest,
   invalidSchemaRequest,
 } from '../request.mocks';
 
@@ -15,88 +15,111 @@ const meta = { ...elicitationTestMeta, title: 'Tests/ElicitationForm' };
 
 export default meta;
 
-function validation(width: number): Story {
+const validPort = { ...configurationValues, port: '8080' };
+
+function formFields(width: number): Story {
   return {
     args: {
-      request: fieldsRequest,
-      initialValues: fieldsValues,
-      source: 'linear',
+      request: configurationRequest,
+      initialValues: configurationValues,
     },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(
-        canvas.getByText('Enter a whole number from 1 to 8.'),
+        canvas.getByText('Enter a whole number from 1024 to 65535.'),
       ).toBeVisible();
-      await expect(canvas.getByText('Fix Estimate to submit')).toBeVisible();
+      await expect(canvas.getByText('Fix Port to submit')).toBeVisible();
       await expect(
         canvas.getByRole('button', { name: 'Submit' }),
       ).toBeDisabled();
-      const estimate = canvas.getByRole('textbox', { name: 'Estimate' });
-      await userEvent.clear(estimate);
-      await userEvent.type(estimate, '3.5');
+      const port = canvas.getByRole('textbox', { name: 'Port' });
+      await userEvent.clear(port);
+      await userEvent.type(port, '3.5');
       await expect(canvas.getByText('Enter a whole number.')).toBeVisible();
-      await userEvent.clear(estimate);
-      await userEvent.type(estimate, '8');
+      await userEvent.clear(port);
+      await userEvent.type(port, '8080');
       await userEvent.click(
-        canvas.getByRole('checkbox', { name: 'Notify the team' }),
+        canvas.getByRole('switch', { name: 'Enable logging' }),
       );
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
-        content: {
-          title: issueTitle,
-          team: 'Mobile',
-          estimate: 8,
-          notify: false,
-        },
+        content: { name: 'argo-server', port: 8080, enableLogging: false },
       });
     },
   };
 }
 
-export const FieldsPhone = validation(390);
+export const FormFieldsPhone = formFields(390);
 
-export const FieldsWide = validation(1440);
+export const FormFieldsWide = formFields(1440);
+
+// The message asks for the one string, so its field is named but draws no label.
+function textField(width: number): Story {
+  return {
+    args: { request: functionNameRequest },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.getByRole('heading', { name: functionNameRequest.message }),
+      ).toBeVisible();
+      const name = canvas.getByRole('textbox', { name: 'Function name' });
+      await expect(name).toHaveValue('processData');
+      await expect(canvas.queryByText('Function name')).not.toBeInTheDocument();
+      await userEvent.clear(name);
+      await userEvent.type(name, 'parseConfig');
+      await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        action: 'accept',
+        content: { name: 'parseConfig' },
+      });
+    },
+  };
+}
+
+export const TextFieldPhone = textField(390);
+
+export const TextFieldWide = textField(1440);
 
 export const SubmitWithEnter: Story = {
-  args: {
-    request: fieldsRequest,
-    initialValues: { ...fieldsValues, estimate: '5' },
-  },
+  args: { request: configurationRequest, initialValues: validPort },
   play: async ({ canvas, userEvent, args }) => {
     await settleViewport(1440);
-    await userEvent.click(canvas.getByRole('textbox', { name: 'Title' }));
+    await userEvent.click(canvas.getByRole('textbox', { name: /^Name/ }));
     await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
   },
 };
 
-function dismiss(width: number, action: 'cancel' | 'decline'): Story {
+// Skip declines a form, as it has no further page.
+function skip(width: number): Story {
   return {
-    args: { request: fieldsRequest },
+    args: { request: configurationRequest },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await userEvent.click(
-        canvas.getByRole('button', {
-          name: action === 'cancel' ? 'Dismiss' : 'Decline',
-        }),
-      );
-      await expect(args.onAnswer).toHaveBeenCalledWith({ action });
+      await userEvent.click(canvas.getByRole('button', { name: 'Skip' }));
+      await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'decline' });
     },
   };
 }
 
-export const DismissPhone = dismiss(390, 'cancel');
+export const SkipDeclinesPhone = skip(390);
 
-export const DismissWide = dismiss(1440, 'cancel');
+export const SkipDeclinesWide = skip(1440);
 
-export const DeclinePhone = dismiss(390, 'decline');
-
-export const DeclineWide = dismiss(1440, 'decline');
+export const DismissWide: Story = {
+  args: { request: configurationRequest },
+  play: async ({ canvas, userEvent, args }) => {
+    await settleViewport(1440);
+    await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
+    await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });
+  },
+};
 
 export const InvalidSchema: Story = {
   args: { request: invalidSchemaRequest },
   play: async ({ canvas, userEvent, args }) => {
+    await settleViewport(1440);
     await expect(
       canvas.getByText('The Agent provided an invalid form.'),
     ).toBeVisible();
@@ -108,18 +131,14 @@ export const InvalidSchema: Story = {
 
 function clearOptionalNumber(width: number): Story {
   return {
-    args: { request: fieldsRequest, initialValues: fieldsValues },
+    args: { request: configurationRequest, initialValues: validPort },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await userEvent.clear(canvas.getByRole('textbox', { name: 'Estimate' }));
+      await userEvent.clear(canvas.getByRole('textbox', { name: 'Port' }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
-        content: {
-          title: issueTitle,
-          team: 'Mobile',
-          notify: true,
-        },
+        content: { name: 'argo-server', enableLogging: true },
       });
     },
   };

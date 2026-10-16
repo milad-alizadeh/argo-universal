@@ -36,7 +36,7 @@ Feature: Drafts kept on this Device
     And the Agent replies "The shared fixture completed this Turn."
     And the Server closes the Session quietly
     When I try to send the prompt "Ship on Friday"
-    Then the Composer says the prompt couldn't send
+    Then the App says the Agent failed to launch
     When I reload the App and open the Session "Plan the release"
     Then the Message box shows "Ship on Friday"
 
@@ -52,6 +52,6 @@ Feature: Drafts kept on this Device
     And Agent 1 refuses to open a Session
     And a New Session with Agent 1
     When I try to send the prompt "Fix the flaky login test"
-    Then New Session says the Session couldn't open
+    Then the App says the Agent failed to launch
     When I reload the App and open New Session
     Then the Message box shows "Fix the flaky login test"

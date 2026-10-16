@@ -1,0 +1,1 @@
+export { createSessionSnapshotWatcher } from './observer';

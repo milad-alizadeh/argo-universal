@@ -8,7 +8,6 @@ export type BadgeTone = 'muted' | 'info' | 'success' | 'warning' | 'danger';
 
 export type BadgeProps = React.ComponentProps<typeof View> &
   React.RefAttributes<View> & {
-    asChild?: boolean;
     variant?: BadgeVariant | null;
     tone?: BadgeTone | null;
   };

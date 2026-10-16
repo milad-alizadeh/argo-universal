@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './popover';
 function PopoverPreview(): React.JSX.Element {
   return (
     <Popover>
-      <PopoverTrigger asChild>
+      <PopoverTrigger>
         <Pressable
           role="button"
           className={contentActionClass({ variant: 'outline' })}

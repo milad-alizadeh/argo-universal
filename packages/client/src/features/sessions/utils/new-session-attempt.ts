@@ -1,0 +1,50 @@
+import type { NewSessionOutcome } from '../types/new-session-attempt';
+import { openErrorOf } from './open-failure';
+
+export const settledOpen: NewSessionOutcome = {
+  attempt: { status: 'idle' },
+  connectionError: undefined,
+};
+
+// Opening again keeps the Agent's failure on show until the open settles; a dropped Connection's toast is done with.
+export const openingAgain = ({
+  attempt,
+}: NewSessionOutcome): NewSessionOutcome => ({
+  attempt:
+    attempt.status === 'idle'
+      ? attempt
+      : { status: 'retrying', error: attempt.error },
+  connectionError: undefined,
+});
+
+// Opening again found nothing to open: a retried failure is on show again, for Retry.
+const nothingToOpen = (outcome: NewSessionOutcome): NewSessionOutcome =>
+  outcome.attempt.status === 'retrying'
+    ? {
+        ...outcome,
+        attempt: { status: 'failed', error: outcome.attempt.error },
+      }
+    : outcome;
+
+// Retry on a Local Session: one whose open failed opens again; with none, a retried failure is on show again.
+export const retriedLocal = (
+  outcome: NewSessionOutcome,
+  reopened: boolean,
+): NewSessionOutcome =>
+  reopened ? openingAgain(outcome) : nothingToOpen(outcome);
+
+// A dropped Connection leaves the attempt idle for a toast; any other failure fails it, for the callout and Retry.
+export const failedOpen = (cause: unknown): NewSessionOutcome => {
+  const error = openErrorOf(cause);
+
+  return error
+    ? { attempt: { status: 'failed', error }, connectionError: undefined }
+    : { ...settledOpen, connectionError: cause };
+};
+
+// A failed open, or one the Connection dropped, opens again when the Connection reopens.
+export const failedToOpen = ({
+  attempt,
+  connectionError,
+}: NewSessionOutcome): boolean =>
+  attempt.status !== 'idle' || connectionError !== undefined;

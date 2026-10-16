@@ -3,7 +3,7 @@ import type { ComposerLayout, ComposerProps } from './composer-types';
 export type WrittenPlanLayout = Pick<ComposerLayout, 'composerId'> & {
   props: Pick<
     ComposerProps,
-    'planProposal' | 'permissionRequest' | 'writtenPlan'
+    'planProposal' | 'permissionRequest' | 'writtenPlan' | 'callout'
   >;
 };
 

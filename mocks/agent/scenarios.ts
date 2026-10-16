@@ -4,7 +4,7 @@ import {
   heldModeSteps,
   smallModelUpdate,
 } from './acp-configuration.ts';
-import { contextUsageFixtures } from './context-usage.ts';
+import { contextUsageScenarios } from './context-usage.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
   feedWorkSteps,
@@ -15,6 +15,7 @@ import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { shellScenarios } from './shell-scenarios.ts';
+import { signInScenarios } from './sign-in-scenarios.ts';
 import { subagentScenarios } from './subagent-scenarios.ts';
 import { terminalLogin } from './terminal-login.ts';
 
@@ -71,6 +72,7 @@ export const scenarios = {
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),
   'ignores-cancel': scenario([{ type: 'hold' }]),
   ...exitScenarios,
+  ...signInScenarios([reply]),
   'exit-with-stderr': {
     ...scenario([agentExit]),
     resumedSteps: [reply],
@@ -126,18 +128,7 @@ export const scenarios = {
     },
     reply,
   ]),
-  'usage-low': scenario([
-    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.low }),
-    reply,
-  ]),
-  'usage-high': scenario([
-    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.high }),
-    reply,
-  ]),
-  'usage-full': scenario([
-    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.full }),
-    reply,
-  ]),
+  ...contextUsageScenarios(reply),
   'held-mode': scenario(heldModeSteps),
   configuration: scenario([update(smallModelUpdate), reply]),
   'write-pressure': scenario([

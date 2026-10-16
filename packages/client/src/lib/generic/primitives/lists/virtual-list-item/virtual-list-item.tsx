@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '#primitives/display/text';
+import { usePressRipple } from '#primitives/native/material-palette';
 import type {
   VirtualListItemProps,
   VirtualListPosition,
@@ -12,9 +13,6 @@ import {
   surfaceClasses,
   trailingClasses,
 } from './virtual-list-item-styles';
-
-// Android's own ripple, clipped by the row's corners; its colour is the platform's.
-const ripple = { borderless: false };
 
 const hairline = { height: StyleSheet.hairlineWidth };
 
@@ -29,7 +27,7 @@ export function VirtualListItem(
 
   return (
     <View className={surfaceClasses(position, selected)}>
-      <Pressable {...pressProps(props, selected)}>
+      <Pressable {...usePressProps(props, selected)}>
         <VirtualListItemParts {...props} />
       </Pressable>
       <Separator position={position} leading={props.leading !== undefined} />
@@ -49,7 +47,8 @@ function itemPlace(props: VirtualListItemProps): ItemPlace {
   };
 }
 
-function pressProps(
+// Android's ripple, clipped by the row's corners, in the pressed tint.
+function usePressProps(
   props: VirtualListItemProps,
   selected: boolean,
 ): React.ComponentProps<typeof Pressable> & { 'aria-pressed': boolean } {
@@ -57,7 +56,7 @@ function pressProps(
     accessibilityLabel: props.accessibilityLabel ?? props.title,
     accessibilityState: { selected },
     'aria-pressed': selected,
-    android_ripple: ripple,
+    android_ripple: usePressRipple(),
     onPress: props.onPress,
     role: 'button',
     testID: props.testID,

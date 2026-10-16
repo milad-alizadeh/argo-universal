@@ -57,6 +57,8 @@ function actionSelection(width: number): Story {
         expect(page.queryByRole('menu')).not.toBeInTheDocument(),
       );
       await waitFor(() => expect(trigger).toHaveFocus());
+      // A pointer pick gives focus back without the keyboard's focus ring.
+      await expect(trigger.matches(':focus-visible')).toBe(false);
       await userEvent.keyboard('{ArrowDown}');
 
       const first = await page.findByRole('menuitem', {

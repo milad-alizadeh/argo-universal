@@ -11,11 +11,8 @@ import {
   CollapsibleLayoutSyncContext,
   OpenContext,
 } from './collapsible-context';
-import { Header } from './collapsible-header';
-import type {
-  CollapsibleHeaderProps,
-  CollapsibleProps,
-} from './collapsible-props';
+import { createCollapsibleHeader } from './collapsible-header';
+import type { CollapsibleProps } from './collapsible-props';
 
 // Argo-drawn on phones (ADR-0020): Feed rows animate with LegendList, which a native Host per item would break.
 
@@ -42,7 +39,7 @@ function useToggle(props: CollapsibleProps): Toggle & { open: boolean } {
   };
 }
 
-function viewOf({
+function viewProps({
   open: _open,
   defaultOpen: _defaultOpen,
   onOpenChange: _onOpenChange,
@@ -58,7 +55,7 @@ function Collapsible(props: CollapsibleProps): ReactElement {
   return (
     <OpenContext.Provider value={open}>
       <ToggleContext value={toggle}>
-        <View {...viewOf(props)} />
+        <View {...viewProps(props)} />
       </ToggleContext>
     </OpenContext.Provider>
   );
@@ -100,6 +97,4 @@ export {
 
 export { useCollapsibleHovered } from './collapsible-header';
 
-export function CollapsibleHeader(props: CollapsibleHeaderProps): ReactElement {
-  return <Header {...props} trigger={CollapsibleTrigger} />;
-}
+export const CollapsibleHeader = createCollapsibleHeader(CollapsibleTrigger);

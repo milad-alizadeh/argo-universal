@@ -6,6 +6,7 @@ import type {
   ListItemColors,
 } from '@expo/ui/jetpack-compose';
 import type { ComponentProps } from 'react';
+import type { PressableAndroidRippleConfig } from 'react-native';
 import type { MaterialRoles } from './material-roles';
 
 // DropdownMenuItem's `elementColors` type, which the package does not export by name.
@@ -93,4 +94,9 @@ export function listItemColors(roles: MaterialRoles): ListItemColors {
     trailingContentColor: roles.onSurfaceVariant,
     supportingContentColor: roles.onSurfaceVariant,
   };
+}
+
+// Pressable `android_ripple` (PressableAndroidRippleConfig): the stock bounded ripple in the pressed tint.
+export function ripple(roles: MaterialRoles): PressableAndroidRippleConfig {
+  return { color: roles.pressed, borderless: false };
 }

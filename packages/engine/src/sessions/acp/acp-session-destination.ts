@@ -3,7 +3,7 @@ import type { AcpSessionDestination } from '../../agents';
 import type {
   AcpRequestEvent,
   AcpSessionRequests,
-} from './acp-session-requests';
+} from './requests/acp-session-requests';
 
 export type AcpLifetimeEvent =
   | { type: 'acp.update'; notification: SessionNotification }

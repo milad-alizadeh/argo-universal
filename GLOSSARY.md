@@ -20,6 +20,10 @@ _Avoid_: Parent, watchdog, launcher
 The Server process that runs storage, the Connections, and Sessions. The Supervisor can restart it without the Server going away.
 _Avoid_: Worker, child, core
 
+**Writer**:
+The one queue in the Engine that writes Session updates, Turns, and Sessions to storage. Until a job commits, readers show its queued copy over the stored one.
+_Avoid_: Write queue, persister, flusher
+
 **App**:
 A program that shows Argo to a person: the universal app on iOS, Android, and web, or the desktop app.
 _Avoid_: Client (ACP uses that word for the Server), frontend
@@ -145,6 +149,10 @@ _Avoid_: Closed, finalised
 **Feed**:
 The ordered list of Session updates that Argo shows for one Session.
 _Avoid_: Timeline, transcript, log, history
+
+**Session snapshot**:
+Everything a Session shows that is not in its Feed, such as its title, state, Live header, Shells, and Subagents. It is sent whole on each change.
+_Avoid_: Session state (one field of it), session details
 
 **Session update**:
 One entry in the Feed, such as an agent message, a tool call, or a plan update. Its kinds use ACP names.

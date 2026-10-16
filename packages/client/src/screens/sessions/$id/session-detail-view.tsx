@@ -8,9 +8,13 @@ import {
 } from '#features/requests';
 import {
   serverSilentMessage,
+  SessionCallout,
+  type SessionCalloutProps,
   sessionOpenFailedTitle,
   SessionHeader,
   type SessionHeaderProps,
+  TerminalSignIn,
+  type TerminalSignInProps,
 } from '#features/sessions';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Screen } from '#lib/product/screen/screen';
@@ -22,6 +26,10 @@ export interface OpenSessionViewProps {
   feed: FeedProps;
   composer: ComposerProps;
   elicitation?: ElicitationFormProps;
+  // Sign-in or launch trouble, drawn above the Composer.
+  callout?: SessionCalloutProps;
+  // A terminal sign-in method's panel or sheet.
+  signInTerminal?: TerminalSignInProps;
 }
 
 export type SessionDetailViewProps =
@@ -61,6 +69,9 @@ function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
       header={<SessionHeader {...props.header} />}
       feed={<Feed {...props.feed} />}
       composer={<SessionComposer {...props} />}
+      panel={
+        props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />
+      }
     />
   );
 }
@@ -85,6 +96,7 @@ function SessionComposer(props: OpenSessionViewProps): React.JSX.Element {
       <Composer
         {...composerUnderQuestion(props.composer, props.elicitation)}
         configuration={composerConfiguration(props.composer, wide)}
+        callout={props.callout && <SessionCallout {...props.callout} />}
       />
     </View>
   );

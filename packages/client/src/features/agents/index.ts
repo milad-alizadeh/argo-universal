@@ -82,3 +82,7 @@ export {
   type CustomAgentFormProps,
   customAgentFormDescription,
 } from './components/custom-agent-form/custom-agent-form';
+
+export { AgentLoginTerminal } from './components/agent-login-terminal/agent-login-terminal';
+
+export { type LoginTerminalProps } from './components/agent-login-terminal/terminal-props';

@@ -8,6 +8,7 @@ import type {
 } from '@repo/contracts';
 import type { SavedChoices } from '#lib/product/session-configuration';
 import type { ConfigurationPicks } from '../state/session-option-choices';
+import type { NewSessionOutcome } from '../types/new-session-attempt';
 
 export type FirstPrompt = SessionNewInput['prompt'];
 
@@ -35,8 +36,7 @@ export const choiceDebounceMs = 300;
 // A Feed that never shows the prompt hands the Session on after this long anyway.
 export const promptShowTimeoutMs = 3_000;
 
-export interface EmptySessionState {
-  error: string | undefined;
+export interface EmptySessionState extends NewSessionOutcome {
   pendingPrompt: boolean;
   // The Session the page reads options and the first prompt from, until it hands it on.
   openSessionId: string | undefined;
@@ -46,7 +46,8 @@ export interface EmptySessionState {
 }
 
 const stateFields = [
-  'error',
+  'attempt',
+  'connectionError',
   'pendingPrompt',
   'openSessionId',
   'opening',

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type {
   PermissionRequestProps,
   PlanProposalCardProps,
@@ -17,6 +18,8 @@ export interface ComposerProps {
   draft: ComposerDraft;
   planProposal?: PlanProposalCardProps;
   permissionRequest?: PermissionRequestProps;
+  // A Session's sign-in or launch callout, in the request's tray; a request takes its place while one is open.
+  callout?: ReactNode;
   writtenPlan?: WrittenPlanValue;
   onDraftChange: (draft: ComposerDraft) => void;
   onAttachImages: () => void;

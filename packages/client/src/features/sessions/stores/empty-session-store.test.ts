@@ -6,7 +6,7 @@ import {
   local,
   settle,
   prompt,
-} from './empty-session-store.mocks';
+} from '../../../../mocks/sessions/empty-session-store.mocks';
 
 let h: EmptySessionHarness;
 

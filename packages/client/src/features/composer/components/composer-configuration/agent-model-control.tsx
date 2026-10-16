@@ -1,11 +1,11 @@
 import type { AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { useState } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
 import { Spinner } from '#primitives/display/spinner';
 import { MenuTrigger, type MenuTriggerProps } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { AgentIcon } from './agent-icon';
 import { AgentModelMenu, isDesktopMenu } from './agent-model-menu';
@@ -67,9 +67,7 @@ function AgentModelPopover(props: TriggerProps): React.JSX.Element {
 
 // Elsewhere Configure is a sheet whose Agent and Model rows push their choices as pages.
 function AgentModelSheet(props: TriggerProps): React.JSX.Element {
-  const [open, setOpen] = useState(false);
-
-  if (props.disabled && open) setOpen(false);
+  const [open, setOpen] = useComposerOverlay(props.disabled);
 
   return (
     <Sheet
