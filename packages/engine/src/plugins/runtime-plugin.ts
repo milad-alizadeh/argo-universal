@@ -13,6 +13,7 @@ type PluginInput = {
   dev: boolean;
   host: HostConnection;
   log: (line: string) => void;
+  changed: (status: PluginStatus) => void;
 };
 
 export class RuntimePlugin {
@@ -52,6 +53,7 @@ export class RuntimePlugin {
 
   private received(status: PluginStatus): void {
     this.status = status;
+    this.input.changed(status);
     this.answer?.(status);
     this.answer = null;
     this.activation = Promise.resolve(status);
@@ -101,6 +103,7 @@ export class RuntimePlugin {
     this.source = source;
     this.buildError = null;
     this.status = notStarted;
+    this.input.changed(notStarted);
 
     if (!this.answer) void this.awaitActivation();
     this.input.host.stop(this.input.entry.pluginId);

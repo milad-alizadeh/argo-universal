@@ -8,6 +8,9 @@ export const createPluginsRouter = routerFactory((deps: PluginServiceDeps) => {
 
   return router({
     list: publicProcedure.output(PluginList).query(() => plugins.list()),
+    failures: publicProcedure.subscription(({ signal }) =>
+      watchFailures(plugins, signal),
+    ),
     // Proposed lifecycle seam until pages, Slots and actions request activation.
     activate: publicProcedure
       .input(PluginActivation)
@@ -15,3 +18,12 @@ export const createPluginsRouter = routerFactory((deps: PluginServiceDeps) => {
       .mutation(({ input }) => plugins.activate(input.pluginId)),
   });
 });
+
+function watchFailures(
+  plugins: PluginService,
+  signal: AbortSignal | undefined,
+): ReturnType<PluginService['failures']> {
+  if (!signal) throw new Error('Plugin subscription signal is missing');
+
+  return plugins.failures(signal);
+}

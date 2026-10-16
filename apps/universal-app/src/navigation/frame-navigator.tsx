@@ -9,6 +9,7 @@ import {
   useFrame,
   pluginPath,
   usePluginSections,
+  PluginErrorToasts,
   coreNavigationSections,
   type PluginSection,
   usePhoneDrawerWidth,
@@ -136,17 +137,24 @@ const pluginRouteId = (
 export function FrameNavigator(): React.JSX.Element {
   const wide = useSizeClass() === 'wide';
   const plugins = usePluginSections();
+  const frame = useSectionsFrame(wide, plugins);
 
-  const frame = useFrame({
+  return (
+    <Frame frame={frame}>
+      <PluginErrorToasts />
+      <SectionsDrawer wide={wide} frame={frame} plugins={plugins} />
+    </Frame>
+  );
+}
+
+function useSectionsFrame(
+  wide: boolean,
+  plugins: readonly PluginSection[],
+): FrameParts {
+  return useFrame({
     sizeClass: frameSizeClass(wide),
     section: sectionOf(usePathname()),
     lists: useSectionLists(),
     items: [...coreNavigationSections, ...plugins],
   });
-
-  return (
-    <Frame frame={frame}>
-      <SectionsDrawer wide={wide} frame={frame} plugins={plugins} />
-    </Frame>
-  );
 }
