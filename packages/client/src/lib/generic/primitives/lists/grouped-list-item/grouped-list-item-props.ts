@@ -57,8 +57,11 @@ export interface GroupedListItemProps {
    * or as a description standing in for a name, such as an Agent's beside its logo, drawn muted.
    */
   tone?: 'danger' | 'accent' | 'muted';
-  // A row that stands alone as a card, such as an Agent's identity: a 40 tile leads it and it pads 16 all round.
-  size?: 'lg';
+  /*
+   * lg: a row that stands alone as a card, such as an Agent's identity: a 40 tile leads it and it pads 16 all round.
+   * sm: a compact row on a wide window, 36 tall, such as an Elicitation's choice in the Composer's tray.
+   */
+  size?: 'sm' | 'lg';
 }
 
 // The status's label, unless the value already says it.
