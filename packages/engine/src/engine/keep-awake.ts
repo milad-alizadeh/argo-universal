@@ -44,7 +44,7 @@ class IdleSleepAssertion {
     };
   }
 
-  public update(sessions: OpenSessionsActorRef): void {
+  private update(sessions: OpenSessionsActorRef): void {
     const active = Object.values(sessions.getSnapshot().context.sessions).some(
       (session) => session.getSnapshot().context.activeTurnId !== null,
     );
@@ -53,7 +53,7 @@ class IdleSleepAssertion {
     this.stop ??= this.acquire(process.pid);
   }
 
-  public release(): void {
+  private release(): void {
     this.stop?.();
     this.stop = undefined;
   }
