@@ -4,6 +4,7 @@ import { Text } from '#primitives/display/text';
 import { useWideSidebarList } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
+import { LeadingChoiceMark, useChoicePlace } from './grouped-list-item-choice';
 import { GroupedListItemDetail } from './grouped-list-item-detail';
 import { Disclosure } from './grouped-list-item-disclosure';
 import { rowLane } from './grouped-list-item-lane';
@@ -34,15 +35,37 @@ export function GroupedListItemBody(
 function GroupedListItemContent(props: ResolvedItemProps): React.JSX.Element {
   const sidebar = useWideSidebarList();
   const emphasis = rowEmphasis(props, sidebar);
+  const choice = useChoicePlace(props);
 
   // The row's name already carries its text; only an accessory, such as a picker, stays reachable.
   return (
     <View className={contentClasses(props, sidebar)}>
-      <GroupedListItemLeadingSlot {...props} emphasis={emphasis} />
-      <GroupedListItemTitle {...props} />
-      <GroupedListItemTrailing {...props} emphasis={emphasis} />
+      {choice.leading && <LeadingChoiceMark selected={props.selected} />}
+      <GroupedListItemLeadingSlot {...choice.item} emphasis={emphasis} />
+      <GroupedListItemTitle {...choice.item} />
+      <GroupedListItemEnding {...choice.item} emphasis={emphasis} />
     </View>
   );
+}
+
+// A row with nothing at its end draws no end, so a fitted popover ends at its longest label.
+function GroupedListItemEnding(props: TrailingProps): React.JSX.Element | null {
+  const sidebar = useWideSidebarList();
+
+  return hasTrailing(props, sidebar) ? (
+    <GroupedListItemTrailing {...props} />
+  ) : null;
+}
+
+function hasTrailing(props: ResolvedItemProps, sidebar: boolean): boolean {
+  return [
+    props.value !== undefined,
+    props.valueLeading,
+    groupedListItemStatus(props),
+    props.accessory,
+    props.control,
+    hasDisclosure(props) && !sidebar,
+  ].some(Boolean);
 }
 
 function contentClasses(props: ResolvedItemProps, sidebar: boolean): string {
@@ -88,9 +111,8 @@ function GroupedListItemSubtitle({
   return (
     <Text
       aria-hidden
-      role="secondary"
+      role={subtitle.code ? 'secondary-code' : 'secondary'}
       numberOfLines={subtitle.numberOfLines}
-      className={cn(subtitle.code && 'type-code text-muted-foreground')}
     >
       {subtitle.text}
     </Text>

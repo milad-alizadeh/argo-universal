@@ -1,6 +1,5 @@
 import type { AgentAvailability, AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -73,7 +72,7 @@ function agentSelectionProps(
     disabled:
       !configuration.onAgentChange || agent.availability !== 'available',
     selected,
-    accessory: selected ? <SelectedCheck /> : undefined,
+    choice: true,
     onPress: () => selectAgent(props),
   };
 }

@@ -2,6 +2,7 @@ import type { AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
+import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItemEnd } from '#primitives/lists/grouped-list-item';
@@ -14,9 +15,9 @@ const maximumHeight = 320;
 
 const screenFraction = 0.6;
 
-// A phone lists the Agents natively; a wide window and the web scroll a list.
+// A phone lists the Agents natively; a desktop popover fits its rows; a narrow web window and a tablet scroll a list.
 export function AgentChoices(props: AgentChoicesProps): React.JSX.Element {
-  if (Platform.OS === 'web') return <AgentList {...props} />;
+  if (Platform.OS === 'web') return <WebAgentChoices {...props} />;
 
   return (
     <SizeClass
@@ -36,6 +37,42 @@ function NativeAgentChoices(props: AgentChoicesProps): React.JSX.Element {
       </GroupedListSection>
     </GroupedList>
   );
+}
+
+function WebAgentChoices(props: AgentChoicesProps): React.JSX.Element {
+  return (
+    <SizeClass
+      compact={<AgentList {...props} />}
+      wide={<AgentMenu {...props} />}
+    />
+  );
+}
+
+// Paper's open listbox: the popover is as wide as its longest Agent, 4 inside its edge, and ends at the last row.
+function AgentMenu(props: AgentChoicesProps): React.JSX.Element {
+  return (
+    <ScrollFadeView
+      fitContent
+      className="max-h-80"
+      contentContainerClassName="p-1"
+      surfaceClassName="bg-content"
+      testID="composer-agents-scroll"
+    >
+      <GroupedListSection>
+        <AgentMenuRows {...props} />
+      </GroupedListSection>
+    </ScrollFadeView>
+  );
+}
+
+function AgentMenuRows(props: AgentChoicesProps): React.JSX.Element[] {
+  const agents = props.configuration.agents;
+
+  return agents.map((agent, index) => (
+    <GroupedListItemEnd key={agent.agent} value={index === agents.length - 1}>
+      <AgentChoice agent={agent} {...props} />
+    </GroupedListItemEnd>
+  ));
 }
 
 function AgentList(props: AgentChoicesProps): React.JSX.Element {

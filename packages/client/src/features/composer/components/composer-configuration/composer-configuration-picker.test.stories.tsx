@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { userEvent as browserUserEvent } from 'vitest/browser';
 import { composerUnlistedEffortConfigurations } from '../../../../../mocks/composer-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
@@ -82,6 +83,30 @@ export const HoverReplacesAdjacentPicker: Story = {
     await waitFor(() => expect(picker).not.toBeInTheDocument());
     await expect(configure).toBeVisible();
     await userEvent.keyboard('{Escape}');
+  },
+};
+
+// A real pointer: the browser reports the picker's enter before the row's leave.
+export const PointerMovesIntoPicker: Story = {
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const overlay = within(document.body);
+    await browserUserEvent.hover(
+      canvas.getByRole('button', { name: agentModelLabel }),
+    );
+
+    const configure = await overlay.findByRole('dialog', {
+      name: agentModelLabel,
+    });
+
+    const agent = within(configure).getByRole('button', { name: /^Agent,/ });
+    await browserUserEvent.hover(agent);
+    const picker = await overlay.findByRole('dialog', { name: 'Select Agent' });
+    await browserUserEvent.hover(picker);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await expect(picker).toBeInTheDocument();
+    await expect(configure).toBeInTheDocument();
+    await browserUserEvent.keyboard('{Escape}');
   },
 };
 

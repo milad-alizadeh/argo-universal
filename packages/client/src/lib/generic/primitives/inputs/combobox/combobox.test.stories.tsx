@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { Combobox } from './combobox';
 
 const changed = fn<(value: string) => void>();
+
+const searchLabel = 'Search Project';
 
 const options = [
   { value: 'argo', label: 'Argo', supporting: '~/Developer/argo' },
@@ -54,7 +56,7 @@ function searchAt(width: number): Story {
       await userEvent.click(canvas.getByRole('button', { name: 'Project' }));
 
       const search = await page.findByRole('searchbox', {
-        name: 'Search Project',
+        name: searchLabel,
       });
 
       await userEvent.type(search, 'design-sync');
@@ -72,7 +74,7 @@ function searchAt(width: number): Story {
         await page.findByRole('radio', { name: 'Paper' }),
       ).toHaveAttribute('aria-checked', 'true');
       await userEvent.type(
-        page.getByRole('searchbox', { name: 'Search Project' }),
+        page.getByRole('searchbox', { name: searchLabel }),
         'missing',
       );
       await expect(page.getByRole('status')).toHaveTextContent(
@@ -87,3 +89,31 @@ function searchAt(width: number): Story {
 export const SearchInPopover = searchAt(layoutWidths.wide);
 
 export const SearchInSheet = searchAt(layoutWidths.phone);
+
+// The popover opens beside its trigger, inside the window, where the pointer can reach it.
+export const PopoverOpensAtTrigger: Story = {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  play: async ({ canvas, userEvent }) => {
+    const trigger = canvas.getByRole('button', { name: 'Project' });
+    await userEvent.click(trigger);
+
+    const search = await within(document.body).findByRole('searchbox', {
+      name: searchLabel,
+    });
+
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(inWindow(search)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+function inWindow(element: Element): boolean {
+  const box = element.getBoundingClientRect();
+
+  return [
+    box.top >= 0,
+    box.left >= 0,
+    box.bottom <= window.innerHeight,
+    box.right <= window.innerWidth,
+  ].every(Boolean);
+}

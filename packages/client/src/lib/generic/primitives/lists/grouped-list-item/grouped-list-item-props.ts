@@ -51,6 +51,12 @@ export interface ResolvedItemProps {
   href?: string;
   disabled?: boolean;
   selected?: boolean;
+  /*
+   * The row is one choice of a set, such as an Agent in its picker, and `selected` draws the
+   * platform's mark: a leading check in a desktop popover, a trailing check in a list, and
+   * Material's radio button on an Android phone.
+   */
+  choice?: boolean;
   needsAttention?: boolean;
   // A trailing dot beside the chevron. Its label is spoken with the row, never drawn.
   status?: { tone: 'success' | 'warning' | 'danger'; label: string };
