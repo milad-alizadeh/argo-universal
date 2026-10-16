@@ -96,6 +96,7 @@ it('refuses commands for a Subagent while keeping its stored Feed readable', asy
     caller.session.setConfigOption({
       sessionId: 'subagent',
       configId: 'model',
+      type: 'id',
       value: 'small',
     }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });

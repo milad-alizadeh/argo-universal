@@ -928,6 +928,7 @@ const sessionSetup = setup({
       event.type === acpUpdateEvent &&
       (event.notification.update.sessionUpdate === 'subagent_update' ||
         event.notification.update.sessionUpdate === 'session_message' ||
+        event.notification.update.sessionUpdate === 'session_message_chunk' ||
         context.subagentFeeds.has(event.notification.sessionId)),
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&

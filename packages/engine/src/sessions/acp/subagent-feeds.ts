@@ -3,18 +3,15 @@ import { SessionRowUpdateJob } from '../session-storage';
 import { openChildFeed, type ChildFeed } from '../subagents/child-feed';
 import type { SubagentRouting } from '../subagents/routing-types';
 import { updateSubagentWork } from '../subagents/work';
-import { associationEvent, delegatedMessageEvent } from './subagent-rows';
+import { deliverSubagentMessage, isSubagentMessage, type MessageRouting } from './subagent-messages';
+import { associationEvent } from './subagent-rows';
+import { subagentWorkState } from './subagent-work';
 
 export type SubagentFeeds = ReadonlyMap<string, ChildFeed>;
 
 type Association = Extract<
   SessionNotification['update'],
   { sessionUpdate: 'subagent_update' }
->;
-
-type Message = Extract<
-  SessionNotification['update'],
-  { sessionUpdate: 'session_message' }
 >;
 
 function associate(
@@ -56,25 +53,13 @@ function updateAssociation(
   titleUpdate(input, child, update);
   children.set(
     update.sessionId,
-    updateSubagentWork(input, child, update.state?.state),
+    updateSubagentWork(input, child, subagentWorkState(update.state)),
   );
   input.parentFeed.send(associationEvent(input, child, update));
 }
 
-function deliverMessage(
-  input: SubagentRouting,
-  children: Map<string, ChildFeed>,
-  update: Message,
-): void {
-  if (!update.recipientSessionId) return;
-  const child = associate(input, children, update.recipientSessionId);
-
-  if (!child) return;
-  child.feed.send(delegatedMessageEvent(input, child, update));
-}
-
 function routeUpdate(
-  input: SubagentRouting,
+  input: MessageRouting,
   children: Map<string, ChildFeed>,
   notification: SessionNotification,
 ): void {
@@ -83,8 +68,8 @@ function routeUpdate(
   if (update.sessionUpdate === 'subagent_update')
     return updateAssociation(input, children, update);
 
-  if (update.sessionUpdate === 'session_message')
-    return deliverMessage(input, children, update);
+  if (isSubagentMessage(update))
+    return deliverSubagentMessage(input, children, update);
   deliverChildUpdate(children, notification);
 }
 
@@ -99,7 +84,11 @@ export function routeSubagentUpdate(
 
   const routing = routingSource(input, source);
 
-  routeUpdate(routing, children, notification);
+  routeUpdate(
+    { ...routing, associate: (id) => associate(routing, children, id) },
+    children,
+    notification,
+  );
 
   return children;
 }

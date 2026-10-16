@@ -5,11 +5,15 @@ import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { startEngineTestHost } from '#mocks/engine';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+
+const backgroundScenario = 'subagent-background';
+const missingSubagent = 'No Subagent was persisted';
 
 it.each(
   appFixtureAgentIds.flatMap((agentId) => [
     { agentId, scenario: 'subagent-foreground' as const, prompts: 1, turns: 1 },
-    { agentId, scenario: 'subagent-background' as const, prompts: 1, turns: 1 },
+    { agentId, scenario: backgroundScenario, prompts: 1, turns: 1 } as const,
     { agentId, scenario: 'subagent-more-work' as const, prompts: 2, turns: 2 },
   ]),
 )(
@@ -34,11 +38,11 @@ it.each(
     expect(list.sessions.map((row) => row.sessionId)).toEqual([sessionId]);
     const child = children[0];
 
-    if (!child) throw new Error('No Subagent was persisted');
+    if (!child) throw new Error(missingSubagent);
     expect(child).toMatchObject({
       parentSessionId: sessionId,
       title: 'Review the change',
-      state: scenario === 'subagent-background' ? 'running' : 'idle',
+      state: scenario === backgroundScenario ? 'running' : 'idle',
     });
 
     const stored = host.database
@@ -133,7 +137,7 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
 
   const [child] = await host.caller.session.subagents({ sessionId });
 
-  if (!child) throw new Error('No Subagent was persisted');
+  if (!child) throw new Error(missingSubagent);
   await host.stop();
 
   const restarted = await startEngineTestHost({
@@ -154,4 +158,149 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
   expect(await restarted.caller.session.subagents({ sessionId })).toMatchObject(
     [{ sessionId: child.sessionId, state: 'idle' }],
   );
+});
+
+it('retains delegated message patches and chunks with the reported child Turn outcome', async () => {
+  const { host, sessionId } = await openAcpFeedSession({
+    steps: [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'subagent_update',
+          sessionId: 'review',
+          state: { state: 'running' },
+        },
+      },
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'session_message',
+          messageId: 'delegation',
+          recipientSessionId: 'review',
+          content: [{ type: 'text', text: 'Original' }],
+        },
+      },
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'session_message',
+          messageId: 'delegation',
+          content: [{ type: 'text', text: 'Revised' }],
+        },
+      },
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'session_message',
+          messageId: 'delegation',
+          recipientSessionId: 'review',
+        },
+      },
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'session_message_chunk',
+          messageId: 'delegation',
+          content: { type: 'text', text: ' instruction' },
+        },
+      },
+      {
+        type: 'update',
+        sessionId: 'review',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          content: { type: 'text', text: 'Done' },
+        },
+      },
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'subagent_update',
+          sessionId: 'review',
+          state: {
+            state: 'idle',
+            stopReason: 'end_turn',
+            usage: {
+              totalTokens: 12,
+              inputTokens: 8,
+              outputTokens: 4,
+              thoughtTokens: null,
+            },
+          },
+        },
+      },
+    ],
+  });
+
+  const [child] = await host.caller.session.subagents({ sessionId });
+
+  if (!child) throw new Error(missingSubagent);
+  expect(child).toMatchObject({
+    state: 'idle',
+    tokens: 12,
+    stopReason: 'end_turn',
+  });
+
+  const page = await host.caller.feed.page({
+    sessionId: child.sessionId,
+    direction: 'tail',
+  });
+
+  expect(page.rows[0]).toMatchObject({
+    sessionUpdate: 'session_message',
+    messageId: 'delegation',
+    content: [
+      { type: 'text', text: 'Revised' },
+      { type: 'text', text: ' instruction' },
+    ],
+  });
+  expect(
+    page.rows.filter((row) => row.sessionUpdate === 'session_message'),
+  ).toHaveLength(1);
+});
+
+it('streams new child content while the parent Turn is idle', async () => {
+  const { host, sessionId } = await openAcpFeedSession(
+    scenarios[backgroundScenario],
+  );
+  const [child] = await host.caller.session.subagents({ sessionId });
+
+  if (!child) throw new Error(missingSubagent);
+  const stream = await host.caller.feed.subscribe({
+    sessionId: child.sessionId,
+    after: null,
+  });
+  const iterator = stream[Symbol.asyncIterator]();
+  let initial = await iterator.next();
+
+  while (initial.value?.type !== 'snapshot') initial = await iterator.next();
+  await requireScriptedProcessAt(host.agent.processes).play(
+    [
+      {
+        type: 'update',
+        sessionId: 'subagent-review',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          messageId: 'later',
+          content: { type: 'text', text: 'Still reviewing' },
+        },
+      },
+    ],
+    'unused',
+  );
+
+  for await (const event of iterator)
+    if (
+      event.type === 'row.upsert' &&
+      event.row.sessionUpdate === 'agent_message' &&
+      event.row.messageId === 'later'
+    ) {
+      expect(event.row.content).toEqual([
+        { type: 'text', text: 'Still reviewing' },
+      ]);
+
+      return;
+    }
+
+  throw new Error('No live child update');
 });

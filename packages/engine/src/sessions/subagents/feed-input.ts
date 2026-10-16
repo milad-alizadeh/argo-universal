@@ -29,11 +29,20 @@ export function childFeedInput(
   input: SubagentRouting,
   identity: { sessionId: string; epoch: number; maxRevision: number },
 ): FeedInput {
-  const pending = readQueuedFeed(input.writer, identity.sessionId);
-
   return {
     ...identity,
     ...feedServices(input, identity.sessionId),
+    ...feedPosition(input, identity),
+  };
+}
+
+function feedPosition(
+  input: SubagentRouting,
+  identity: { sessionId: string; maxRevision: number },
+): Pick<FeedInput, 'maxRevision' | 'nextPosition'> {
+  const pending = readQueuedFeed(input.writer, identity.sessionId);
+
+  return {
     maxRevision: Math.max(identity.maxRevision, pending.maxRevision),
     nextPosition: nextPosition(
       input,
