@@ -1,11 +1,10 @@
 import {
   InitialConfigOption,
   type SessionNewInput,
-  SessionRecord,
   TurnError,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { feedRow, session, turn } from '@repo/db/schema';
+import { feedRow, turn } from '@repo/db/schema';
 import {
   type Checkout,
   createCheckout,
@@ -24,12 +23,8 @@ import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
 } from '../storage';
-import { decodeStoredSession, storedSessionColumns } from './session-record';
-import {
-  readQueuedSessionRows,
-  SessionDeleteJob,
-  SessionInsertJob,
-} from './session-storage';
+import { readSessionRow } from './session-record';
+import { SessionDeleteJob, SessionInsertJob } from './session-storage';
 
 // Prompted creation carries the first Turn's id.
 export type SessionCreationInput = SessionNewInput & {
@@ -206,19 +201,12 @@ export async function loadSession(
   input: SessionInput,
   writer?: WriterActorRef,
 ): Promise<SessionData> {
-  const stored = input.database
-    .select(storedSessionColumns)
-    .from(session)
-    .where(eq(session.id, input.sessionId))
-    .get();
-
-  const pending = readQueuedSessionRows(writer).session(
-    stored && SessionRecord.parse(decodeStoredSession(stored)),
+  const row = readSessionRow(
+    { database: input.database, writer },
     input.sessionId,
   );
 
-  if (!pending) throw new Error(`No Session ${input.sessionId}`);
-  const row = pending;
+  if (!row) throw new Error(`No Session ${input.sessionId}`);
   const pendingFeed = readQueuedFeed(writer, input.sessionId);
 
   const position = input.database

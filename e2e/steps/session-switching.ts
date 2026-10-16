@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
+import { onPhone } from './frame';
 import { startSession } from './live-session';
 import { returnToSessions } from './navigation';
 import { agentModelLabel } from './new-session';
@@ -23,6 +24,24 @@ Given(
 When(
   'I open the Session {string}',
   async ({ page }, title: string): Promise<void> => {
+    await openSession(page, title);
+  },
+);
+
+// The Session page unmounts and mounts again: a phone goes back to its list; a wide Frame swaps the page for New Session.
+When(
+  'I leave the Session {string} and open it again',
+  async ({ page }, title: string): Promise<void> => {
+    if (onPhone(page)) {
+      await page.goBack();
+      await expect(page).toHaveURL(/\/sessions$/);
+    } else {
+      await page
+        .getByRole('button', { name: 'New Session', exact: true })
+        .click();
+      await expect(page).toHaveURL(/\/sessions\/new$/);
+    }
+
     await openSession(page, title);
   },
 );

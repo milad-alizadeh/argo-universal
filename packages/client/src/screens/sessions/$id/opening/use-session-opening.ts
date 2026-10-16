@@ -23,6 +23,8 @@ export interface SessionOpening {
   sending: boolean;
   starting: StartingFeed | undefined;
   sendFirstPrompt: (draft: ComposerDraft) => Promise<void>;
+  // Retry, or a finished sign-in: the store opens its checkout again, and a New worktree sends the current draft.
+  openAgain: () => void;
 }
 
 interface FirstPromptSend {
@@ -68,6 +70,13 @@ async function sendFirstPrompt(
   else sent.clear();
 }
 
+// Retry, or a finished sign-in: the store opens its checkout again, and a New worktree sends the draft as it is now.
+const openAgain = (send: FirstPromptSend): void =>
+  send.store.openAgain({
+    by: 'user',
+    sendDraft: () => void sendFirstPrompt(send, send.attachmentDraft.draft),
+  });
+
 function useFirstPrompt(
   attachmentDraft: AttachmentDraft,
   session: EmptySession,
@@ -80,6 +89,7 @@ function useFirstPrompt(
     sending,
     starting: sent.starting,
     sendFirstPrompt: (draft) => sendFirstPrompt(send, draft),
+    openAgain: () => openAgain(send),
   };
 }
 

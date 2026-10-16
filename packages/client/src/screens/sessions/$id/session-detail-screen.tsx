@@ -24,7 +24,11 @@ import {
   toSessionViewProps,
 } from './session-detail-view-props';
 import { SessionNewScreen } from './session-new-screen';
-import { useSessionCommands } from './use-session-commands';
+import { useSessionCallout } from './use-session-callout';
+import {
+  type SessionCommands,
+  useSessionCommands,
+} from './use-session-commands';
 
 export interface SessionDetailScreenProps {
   id: string;
@@ -59,7 +63,7 @@ function ConnectedSession({
   );
 }
 
-// A Session the Server refused to open tries again when the Connection reopens; its toast already said why.
+// A Session the Server refused to open tries again when the Connection reopens; its callout already said why.
 function useRetryOpenOnReconnect(feed: SessionFeed): void {
   useResubscribeOnReconnect({
     status: feed.openError ? 'error' : 'idle',
@@ -100,18 +104,35 @@ function useSessionSurroundings(
   };
 }
 
-function useSessionViewProps(sessionId: string): SessionDetailViewProps {
-  const feed = useSessionFeed(sessionId);
-
-  const commands = useSessionCommands({
+const useFeedCommands = (
+  sessionId: string,
+  feed: SessionFeed,
+): SessionCommands =>
+  useSessionCommands({
     sessionId,
     resumeAfterCommand: feed.resumeAfterCommand,
     agent: feed.snapshot?.agent,
   });
 
-  const surroundings = useSessionSurroundings(sessionId, feed);
+function useFeedUpkeep(feed: SessionFeed): void {
   useRetryOpenOnReconnect(feed);
   useCacheSessionOptions(feed.snapshot);
+}
 
-  return toSessionViewProps({ sessionId, feed, commands, ...surroundings });
+function useSessionViewProps(sessionId: string): SessionDetailViewProps {
+  const feed = useSessionFeed(sessionId);
+  const commands = useFeedCommands(sessionId, feed);
+  const surroundings = useSessionSurroundings(sessionId, feed);
+  const { agents } = surroundings;
+  const callouts = useSessionCallout({ sessionId, feed, commands, agents });
+
+  useFeedUpkeep(feed);
+
+  return toSessionViewProps({
+    sessionId,
+    feed,
+    commands,
+    callouts,
+    ...surroundings,
+  });
 }

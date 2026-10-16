@@ -4,11 +4,12 @@ import {
   type EmptySessionHarness,
   emptySessionHarness,
   failure,
+  launchFailureMessage,
   local,
   prompt,
   settle,
   worktree,
-} from './empty-session-store.mocks';
+} from '../../../../mocks/sessions/empty-session-store.mocks';
 
 let h: EmptySessionHarness;
 
@@ -52,7 +53,10 @@ describe('New worktree checkout', () => {
 
     expect(h.store.getState()).toMatchObject({
       pendingPrompt: false,
-      error: failure.message,
+      attempt: {
+        status: 'failed',
+        error: { type: 'failed', message: launchFailureMessage },
+      },
       handedOff: false,
     });
     expect(h.calls.clearDraft).toBe(0);

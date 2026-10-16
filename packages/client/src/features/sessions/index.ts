@@ -30,10 +30,15 @@ export { type StartingFeed } from './state/starting-feed';
 export { startingFeed } from './state/starting-feed';
 
 export {
+  decodeOpenFailure,
+  openFailureText,
   serverSilentMessage,
   sessionOpenFailedTitle,
-  sessionOpenErrorMessage,
-} from './components/failure-messages';
+} from './utils/open-failure';
+
+export { droppedConnectionToast } from './utils/session-toasts';
+
+export { failedToOpen } from './utils/new-session-attempt';
 
 export { canOpenSession } from './state/open-session';
 
@@ -120,3 +125,36 @@ export {
   type MergeMethodChoice,
   useMergeMethod,
 } from './hooks/use-merge-method';
+
+export { SessionCallout } from './components/session-callout/session-callout';
+
+export { TerminalSignIn } from './components/terminal-sign-in/terminal-sign-in';
+
+export type {
+  SessionCalloutProps,
+  SessionCallouts,
+  TerminalSignInProps,
+} from './types/session-callout';
+
+export {
+  type SessionAuthSubject,
+  useSessionAuth,
+} from './hooks/use-session-auth';
+
+export {
+  type OpenAttempt,
+  type SessionProblem,
+  sessionProblem,
+} from './state/session-problem';
+
+export { openCallout, openProblem, signsIn } from './state/session-callouts';
+
+export {
+  type AfterSignIn,
+  type PastSessionAnswers,
+  type PastSessionSignIn,
+  pastSessionCallout,
+  pastSessionSignIn,
+} from './utils/session-sign-in';
+
+export { useTurnSignIn } from './hooks/use-turn-sign-in';

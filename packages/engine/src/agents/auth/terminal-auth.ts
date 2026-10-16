@@ -3,7 +3,6 @@ import {
   type AgentAuthTerminalFrame,
   type AgentLoginTerminalInput,
 } from '@repo/contracts';
-import type { AuthenticationMethod } from '../acp/auth-methods';
 import { launchLoginTerminal } from '../acp/login-terminal/terminal-process';
 import type {
   AgentLaunch,
@@ -11,6 +10,11 @@ import type {
   LoginTerminalProcess,
 } from '../agent-launch';
 import { terminalSuccessPatterns } from '../vendor';
+import {
+  applyTerminalInput,
+  type TerminalResult,
+  terminalSucceeded,
+} from './terminal-program';
 
 type TerminalRun = {
   launch: AgentLaunch;
@@ -18,23 +22,12 @@ type TerminalRun = {
   signal: AbortSignal;
 };
 
-// The full get-command with the method's args appended and its env on top.
-export const terminalMethodLaunch = (
-  launch: AgentLaunch,
-  method: Pick<AuthenticationMethod, 'args' | 'env'>,
-): AgentLaunch => ({
-  ...launch,
-  args: [...launch.args, ...(method.args ?? [])],
-  env: { ...launch.env, ...method.env },
-});
-
-type TerminalResult = 'matched' | { exitCode: number; signal?: number };
-
 const patternPollMs = 1000;
 
 export class AuthTerminal {
   private output = '';
   private child?: LoginTerminalProcess;
+  private readonly started = Promise.withResolvers<LoginTerminalProcess>();
   private closed = false;
   private finishing = false;
   private exitCode?: number;
@@ -44,21 +37,25 @@ export class AuthTerminal {
     private readonly launcher: LaunchLoginTerminal = launchLoginTerminal,
   ) {
     void this.overflow.promise.catch(() => {});
+    void this.started.promise.catch(() => {});
   }
   public async run(input: TerminalRun): Promise<void> {
     input.signal.throwIfAborted();
 
     try {
-      this.child = await this.launcher(input.launch, (text) =>
-        this.append(text),
-      );
+      await this.start(input.launch);
       await this.wait(input);
     } finally {
+      this.started.reject(new Error('Sign-in terminal did not start'));
       this.finishing = true;
       clearInterval(this.timer);
       await this.child?.close();
       this.closed = true;
     }
+  }
+  private async start(launch: AgentLaunch): Promise<void> {
+    this.child = await this.launcher(launch, (text) => this.append(text));
+    this.started.resolve(this.child);
   }
   public active(): boolean {
     return !!this.child && !this.finishing;
@@ -144,16 +141,15 @@ export class AuthTerminal {
 
     return frame;
   }
+  // The App's terminal shows once the sign-in is pending: input sent while the program starts reaches it once it has.
   public input(input: AgentLoginTerminalInput): void {
-    const child = this.requireChild();
-
-    switch (input.type) {
-      case 'write':
-        child.write(input.text);
-        break;
-      case 'resize':
-        child.resize(input.cols, input.rows);
-    }
+    if (this.child || this.closed)
+      applyTerminalInput(this.requireChild(), input);
+    else
+      void this.started.promise.then(
+        (child) => applyTerminalInput(child, input),
+        () => {},
+      );
   }
   private requireChild(): LoginTerminalProcess {
     if (!this.child || this.closed)
@@ -162,8 +158,3 @@ export class AuthTerminal {
     return this.child;
   }
 }
-
-const terminalSucceeded = (result: {
-  exitCode: number;
-  signal?: number;
-}): boolean => result.exitCode === 0 && !result.signal;

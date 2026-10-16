@@ -58,7 +58,7 @@ function MenuBody<Value extends string>({
   focus,
   ...props
 }: MenuPartProps<Value>): React.JSX.Element {
-  if (isActionMenu(props)) return <MenuActions {...props} />;
+  if (isActionMenu(props)) return <MenuActions {...props} focus={focus} />;
 
   return <MenuChoiceContent {...props} focus={focus} />;
 }

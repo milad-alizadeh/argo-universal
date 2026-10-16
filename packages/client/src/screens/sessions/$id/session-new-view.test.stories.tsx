@@ -1,4 +1,4 @@
-import { expect } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import { eachLayout } from '#lib/generic/each-layout';
 import { findToast } from '../../../../mocks/find-toast';
 import {
@@ -26,7 +26,7 @@ const sendLabel = 'Send';
 
 const messageLabel = 'Message';
 
-const failedStartMessage = 'The Agent exited before it was ready.';
+const failedStartMessage = 'Agent exited with status 1';
 
 const setupStepText = 'Run `claude login` on the Server, then check again.';
 
@@ -132,13 +132,31 @@ export const Starting: Story = {
     }),
 };
 
+const onRetry = fn();
+
+// The callout sits above the Composer, which keeps the prompt; on a phone it is a sheet.
 export const FailedStart: Story = {
-  args: readyArgs({ openError: failedStartMessage, draft: typedDraft }),
-  play: async ({ canvas }) => {
-    await expect(await findToast("Couldn't open the Session")).toBeVisible();
-    await expect(await findToast(failedStartMessage)).toBeVisible();
-    await expect(canvas.queryByRole('alert')).toBeNull();
+  args: readyArgs({
+    callout: {
+      kind: 'launch',
+      message: failedStartMessage,
+      onRetry,
+    },
+    draft: typedDraft,
+  }),
+  play: async ({ canvas, userEvent }) => {
+    const retry = await canvas.findByRole('button', {
+      name: 'Try to restart the Agent',
+    });
+
+    await expect(canvas.getByText('Failed to Launch')).toBeVisible();
+    await expect(canvas.getByText(failedStartMessage)).toBeVisible();
+    await expect(
+      shownText(canvas.getByRole('textbox', { name: messageLabel })),
+    ).toBe(typedDraft.text);
     await expect(canvas.getByRole('button', { name: sendLabel })).toBeEnabled();
+    await userEvent.click(retry);
+    await expect(onRetry).toHaveBeenCalledOnce();
   },
 };
 

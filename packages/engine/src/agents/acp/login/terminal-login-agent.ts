@@ -6,7 +6,8 @@ import type {
   OpenLoginAgent,
 } from '../..';
 import { ResourceCleanupError } from '../../../lib/resource-cleanup-error';
-import { AuthTerminal, terminalMethodLaunch } from '../../auth/terminal-auth';
+import { AuthTerminal } from '../../auth/terminal-auth';
+import { terminalMethodLaunch } from '../../auth/terminal-program';
 import type { AuthenticationMethod } from '../auth-methods';
 import { launchLoginTerminal } from '../login-terminal/terminal-process';
 import type { AcpResourceInput } from '../resources/resource-types';

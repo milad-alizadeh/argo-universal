@@ -18,18 +18,18 @@ Given(
   },
 );
 
+When(
+  'I change the draft to {string}',
+  async ({ page }, draft: string): Promise<void> => {
+    await writeDraft(page, draft);
+  },
+);
+
 Given(
   'this draft in New Session:',
   async ({ page }, draft: string): Promise<void> => {
     await expect(page).toHaveURL(/\/sessions\/new$/);
     await writeDraft(page, draft);
-  },
-);
-
-Then(
-  "the Composer says the prompt couldn't send",
-  async ({ page }): Promise<void> => {
-    await expect(page.getByText(/^Couldn't send\./)).toBeVisible();
   },
 );
 

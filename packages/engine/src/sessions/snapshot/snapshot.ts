@@ -1,0 +1,127 @@
+import type { ChangesSummary, SessionSnapshot } from '@repo/contracts';
+import { toShell } from '../acp/shells/shells';
+import { withHeldConfiguration } from '../configuration/held-configuration';
+import { snapshotState, type SessionState } from './state';
+
+// The Live header reader's active Turn and Live header, with the Feed's revision.
+export type FeedSnapshot = Pick<
+  SessionSnapshot,
+  'epoch' | 'maxRevision' | 'liveHeader' | 'activeTurnId'
+>;
+
+export type StoredSnapshot = Pick<
+  SessionSnapshot,
+  | 'projectId'
+  | 'agent'
+  | 'title'
+  | 'titleSource'
+  | 'checkout'
+  | 'subagents'
+  | 'shells'
+>;
+
+type SessionDisplayContext = Pick<
+  SessionState['context'],
+  | 'usage'
+  | 'permissionQueue'
+  | 'elicitationQueue'
+  | 'configOptions'
+  | 'heldConfig'
+>;
+
+type StoredFields = Pick<
+  SessionSnapshot,
+  | 'projectId'
+  | 'agent'
+  | 'title'
+  | 'titleSource'
+  | 'checkout'
+  | 'changes'
+  | 'subagents'
+>;
+
+type SessionFields = Pick<
+  SessionSnapshot,
+  | 'usage'
+  | 'pendingPermission'
+  | 'pendingElicitation'
+  | 'pendingPlanProposal'
+  | 'configOptions'
+>;
+
+const noChanges: ChangesSummary = { files: 0, additions: 0, deletions: 0 };
+
+const idleContext: SessionDisplayContext = {
+  usage: null,
+  permissionQueue: [],
+  elicitationQueue: [],
+  configOptions: [],
+  heldConfig: [],
+};
+
+export function toSessionSnapshot(
+  session: SessionState | null,
+  feed: FeedSnapshot,
+  stored: StoredSnapshot,
+): SessionSnapshot {
+  return {
+    ...storedFields(stored),
+    ...sessionFields(session),
+    ...activeTurnFields(session, feed),
+    maxRevision: feed.maxRevision,
+    epoch: feed.epoch,
+    shells: session ? liveShells(session) : stored.shells,
+  };
+}
+
+function storedFields(stored: StoredSnapshot): StoredFields {
+  return {
+    projectId: stored.projectId,
+    agent: stored.agent,
+    title: stored.title,
+    titleSource: stored.titleSource,
+    checkout: stored.checkout,
+    changes: noChanges,
+    subagents: stored.subagents,
+  };
+}
+
+// The Live header and the active Turn it follows, which also runs a Session without a Session actor.
+function activeTurnFields(
+  session: SessionState | null,
+  feed: FeedSnapshot,
+): Pick<SessionSnapshot, 'state' | 'activeTurnId' | 'liveHeader'> {
+  return {
+    state: snapshotState(session, feed.activeTurnId),
+    activeTurnId: feed.activeTurnId,
+    liveHeader: feed.liveHeader,
+  };
+}
+
+function sessionFields(session: SessionState | null): SessionFields {
+  const context = displayContext(session);
+
+  return {
+    usage: context.usage,
+    pendingPermission: context.permissionQueue[0] ?? null,
+    pendingElicitation: context.elicitationQueue[0] ?? null,
+    pendingPlanProposal: null,
+    configOptions: withHeldConfiguration(
+      context.configOptions,
+      context.heldConfig,
+    ),
+  };
+}
+
+function displayContext(session: SessionState | null): SessionDisplayContext {
+  return session?.context ?? idleContext;
+}
+
+function liveShells(session: SessionState): SessionSnapshot['shells'] {
+  return session.context.shells.map((record) =>
+    toShell(record, {
+      now: session.context.input.now(),
+      terminalAvailable: session.context.shellRuntime.canStop(record.id),
+    }),
+  );
+}

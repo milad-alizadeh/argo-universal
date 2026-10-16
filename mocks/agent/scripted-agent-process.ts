@@ -1,4 +1,4 @@
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 import { Writable } from 'node:stream';
 import type {
   AgentRequestMethod,
@@ -21,9 +21,22 @@ const name = process.argv[2];
 
 if (!isScenarioName(name)) throw new Error(`Unknown scenario: ${name}`);
 
-const scenario: ScriptedScenario = scenarios[name];
-
 const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
+
+const named: ScriptedScenario = scenarios[name];
+
+// A scenario with a relaunch marks its failed exit, so the Agent a Retry starts again plays the relaunch.
+const exitedMarker = requestLog && `${requestLog}.${name}.exited`;
+
+const scenario: ScriptedScenario =
+  named.relaunched && exitedMarker && existsSync(exitedMarker)
+    ? named.relaunched
+    : named;
+
+if (named.relaunched && exitedMarker)
+  process.on('exit', (code) => {
+    if (code !== 0) writeFileSync(exitedMarker, '');
+  });
 
 // Appends each request to the App E2E's request log, then hands it to the response's own requests.
 const logged = <Method extends AgentRequestMethod>(
