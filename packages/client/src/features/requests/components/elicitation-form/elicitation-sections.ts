@@ -1,50 +1,82 @@
 import { useStore } from '@tanstack/react-form';
+import { Platform } from 'react-native';
 import type { GroupedListSectionProps } from '#primitives/lists/grouped-list-section';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
+import { fieldLabel } from './elicitation-field-rows';
 import {
   hasInitialValue,
   type ElicitationEntry,
 } from './elicitation-form-body';
+import { elicitationChoices } from './elicitation-property';
 
-export const holdsChoices = (entry: ElicitationEntry): boolean =>
-  entry.property.type === 'array';
+type FieldKind = 'choices' | 'switch' | 'text';
 
-// A field's description is its section's footer, so the section ends there; several choices stand alone.
-const endsSection = (entry: ElicitationEntry): boolean =>
-  holdsChoices(entry) || !!entry.property.description;
+export type FieldSection = {
+  entries: ElicitationEntry[];
+  // A section of choices is headed by its field, as its rows are the choices.
+  title?: string;
+  // Only fields to type in: Android stacks them as bare Material fields.
+  textFields: boolean;
+};
 
-const startsSection = (
+function fieldKind(entry: ElicitationEntry): FieldKind {
+  if (entry.property.type === 'boolean') return 'switch';
+
+  return elicitationChoices(entry.property) ? 'choices' : 'text';
+}
+
+// Android never sets a field to type in among rows, so a change of kind starts its section there.
+const splitsKinds = Platform.OS === 'android';
+
+// A field's description is its section's footer, so the section ends there; choices stand alone.
+function startsSection(
   entry: ElicitationEntry,
   previous: ElicitationEntry | undefined,
-): boolean => !previous || endsSection(previous) || holdsChoices(entry);
+): boolean {
+  if (!previous) return true;
 
-// The fields as grouped sections: they run on in one until a field has a footer or holds several choices.
+  return Boolean(previous.property.description) || kindsSplit(entry, previous);
+}
+
+function kindsSplit(
+  entry: ElicitationEntry,
+  previous: ElicitationEntry,
+): boolean {
+  const kinds = [fieldKind(entry), fieldKind(previous)];
+
+  return kinds.includes('choices') || (splitsKinds && kinds[0] !== kinds[1]);
+}
+
+// The fields as grouped sections: they run on in one until a field has a footer or holds choices.
 export function fieldSections(
   entries: readonly ElicitationEntry[],
-): ElicitationEntry[][] {
+): FieldSection[] {
   const starts = entries.flatMap((entry, index) =>
     startsSection(entry, entries[index - 1]) ? [index] : [],
   );
 
-  return starts.map((start, order) => entries.slice(start, starts[order + 1]));
+  return starts.map((start, order) =>
+    sectionOf(entries.slice(start, starts[order + 1])),
+  );
 }
 
-export const requiredLabel = (props: {
-  label: string;
-  required?: boolean;
-}): string => (props.required ? `${props.label} *` : props.label);
+function sectionOf(entries: ElicitationEntry[]): FieldSection {
+  return {
+    entries,
+    title: choicesTitle(entries),
+    textFields: entries.every((entry) => fieldKind(entry) === 'text'),
+  };
+}
 
-// A section of several choices is titled with its field, as its rows are the choices.
-export function choicesTitle(
-  entries: readonly ElicitationEntry[],
-): string | undefined {
-  const choices = entries.find(holdsChoices);
+const requiredLabel = (label: string, required: boolean): string =>
+  required ? `${label} *` : label;
 
-  if (!choices) return undefined;
+function choicesTitle(entries: ElicitationEntry[]): string | undefined {
+  const [first] = entries;
 
-  const label = choices.property.title ?? choices.name;
+  if (!first || fieldKind(first) !== 'choices') return undefined;
 
-  return requiredLabel({ label, required: choices.required });
+  return requiredLabel(fieldLabel(first), first.required);
 }
 
 type FieldMeta = Record<
@@ -71,24 +103,23 @@ function fieldError(meta: FieldMeta, key: string): string | undefined {
 }
 
 // A field's error shows once it is touched, or at once for a value the person did not type.
-const shownError = (
-  props: SectionFields,
-  entry: ElicitationEntry,
-  meta: FieldMeta,
-): string | undefined =>
-  shown(props, entry, meta) ? fieldError(meta, entry.key) : undefined;
+const shownErrors = (props: SectionFields, meta: FieldMeta): string =>
+  props.entries
+    .map((entry) =>
+      shown(props, entry, meta) ? fieldError(meta, entry.key) : undefined,
+    )
+    .filter(Boolean)
+    .join('\n');
 
-// The first shown error stands in for the section's hint, in the danger tone.
+// The shown errors stand in for the section's hint, in the danger tone.
 export function useSectionFooter(
   props: SectionFields,
 ): Pick<GroupedListSectionProps, 'footer' | 'tone'> {
-  const error = useStore(props.model.form.store, (state) =>
-    props.entries
-      .map((entry) => shownError(props, entry, state.fieldMeta))
-      .find(Boolean),
+  const errors = useStore(props.model.form.store, (state) =>
+    shownErrors(props, state.fieldMeta),
   );
 
-  if (error) return { footer: error, tone: 'danger' };
+  if (errors) return { footer: errors, tone: 'danger' };
 
   return { footer: props.entries.at(-1)?.property.description };
 }

@@ -1,7 +1,6 @@
 import type { RequestMock } from '@repo/mocks/app';
 import { expect } from 'storybook/test';
 import {
-  issueTitle,
   meta as elicitationTestMeta,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-form-story.test.mocks';
@@ -11,7 +10,7 @@ import {
   elicitationProps,
   elicitationMocks,
   emptyAnswersRequest,
-  fieldsRequest,
+  configurationRequest,
 } from '../request.mocks';
 import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';
 import { ElicitationOutcome } from './elicitation-outcome';
@@ -23,29 +22,26 @@ export default meta;
 export const AcceptedOutcome: Story = {
   render: () => (
     <ElicitationOutcome
-      request={fieldsRequest}
+      request={configurationRequest}
       answer={{
         action: 'accept',
-        content: {
-          title: issueTitle,
-          team: 'Mobile',
-          estimate: 8,
-          notify: false,
-        },
+        content: { name: 'argo-server', port: 3000, enableLogging: false },
       }}
     />
   ),
   play: async ({ canvas }) => {
     await expect(canvas.getByText('You answered')).toBeVisible();
     await expect(canvas.getByText('No', { exact: true })).toBeVisible();
-    await expect(canvas.getByText('Mobile', { exact: true })).toBeVisible();
+    await expect(
+      canvas.getByText('argo-server', { exact: true }),
+    ).toBeVisible();
   },
 };
 
 export const DeclinedOutcome: Story = {
   render: () => (
     <ElicitationOutcome
-      request={fieldsRequest}
+      request={configurationRequest}
       answer={{ action: 'decline' }}
     />
   ),
@@ -56,7 +52,10 @@ export const DeclinedOutcome: Story = {
 
 export const DismissedOutcome: Story = {
   render: () => (
-    <ElicitationOutcome request={fieldsRequest} answer={{ action: 'cancel' }} />
+    <ElicitationOutcome
+      request={configurationRequest}
+      answer={{ action: 'cancel' }}
+    />
   ),
   play: async ({ canvas }) => {
     await expect(canvas.getByText('You dismissed')).toBeVisible();

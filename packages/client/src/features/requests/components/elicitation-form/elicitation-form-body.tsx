@@ -1,68 +1,12 @@
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
-import { useOptionalSheet } from '#primitives/overlays/sheet';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
-import {
-  ElicitationField,
-  type ElicitationFieldProps,
-} from './elicitation-field';
+import type { ElicitationFieldProps } from './elicitation-field-rows';
 import type { ElicitationValue } from './elicitation-schema';
 
-// The line naming who asks; a phone's sheet shows it as its title.
+// The line naming the Agent that asks.
 export const sourceLabel = (source?: string): string | undefined =>
   source ? `${source} asks` : undefined;
-
-// In a phone's sheet the sheet's own title is the source, so only the message stays, wrapping to any length.
-export function ElicitationHeading(props: {
-  source?: string;
-  message: string;
-}): ReactElement {
-  const heading = <ElicitationMessage message={props.message} />;
-
-  if (useOptionalSheet()) return heading;
-
-  return (
-    <View className="gap-1">
-      <ElicitationSource source={props.source} />
-      {heading}
-    </View>
-  );
-}
-
-function ElicitationMessage({ message }: { message: string }): ReactElement {
-  return (
-    <Text role="heading" accessibilityRole="heading" aria-level={2}>
-      {message}
-    </Text>
-  );
-}
-
-function ElicitationSource({
-  source,
-}: {
-  source?: string;
-}): ReactElement | null {
-  const label = sourceLabel(source);
-
-  return label ? <Text role="secondary">{label}</Text> : null;
-}
-
-export function ElicitationFields({
-  model,
-}: {
-  model: ElicitationModel;
-}): ReactElement {
-  return (
-    <View className="gap-4">
-      {model.schema.fields.map((entry) => (
-        <ElicitationFormField key={entry.key} model={model} entry={entry}>
-          {(field) => <ElicitationField {...field} />}
-        </ElicitationFormField>
-      ))}
-    </View>
-  );
-}
 
 export type ElicitationEntry = ElicitationModel['schema']['fields'][number];
 
@@ -80,7 +24,7 @@ type FieldBinding = {
   handleBlur: () => void;
 };
 
-// One schema property bound to the form; the caller draws it, as a stacked field or a grouped row.
+// One schema property bound to the form; the caller draws its rows.
 export function ElicitationFormField(
   props: FormFieldProps & {
     children: (field: ElicitationFieldProps) => ReactElement;
@@ -107,6 +51,7 @@ function boundProps(
     ...bindingProps(field),
     showError: field.state.meta.isTouched || hasInitialValue(props),
     inactive: model.inactive,
+    lone: model.schema.fields.length === 1,
   };
 }
 

@@ -1,44 +1,63 @@
 import type { ReactElement } from 'react';
+import { useContentWide } from '#lib/product/content-layout';
 import { Button, type ButtonProps } from '#primitives/buttons/button';
-import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 
-const refusals = {
-  decline: { label: 'Decline', variant: 'outline' },
-  cancel: { label: 'Dismiss', variant: 'ghost' },
-} as const;
+export type ElicitationActionsProps = {
+  // Submit on the last page, Next before it.
+  last: boolean;
+  submitting: boolean;
+  inactive: boolean;
+  canSubmit: boolean;
+  onSubmit: () => void;
+  onSkip: () => void;
+};
 
-export function ElicitationActions({
-  model,
-}: {
-  model: ElicitationModel;
-}): ReactElement {
+// Wide, Skip leads Submit at the card's end; a phone stacks Submit over Skip at full width.
+export function ElicitationActions(
+  props: ElicitationActionsProps,
+): ReactElement {
+  const wide = useContentWide();
+  const submit = submitProps(props, wide);
+  const skip = skipProps(props, wide);
+  const [first, second] = wide ? [skip, submit] : [submit, skip];
+
   return (
     <>
-      <Button {...submitProps(model)} />
-      <Button {...refusalProps(model, 'decline')} />
-      <Button {...refusalProps(model, 'cancel')} />
+      <Button {...first} />
+      <Button {...second} />
     </>
   );
 }
 
-function refusalProps(
-  model: ElicitationModel,
-  action: keyof typeof refusals,
+function actionProps(wide: boolean): Pick<ButtonProps, 'size' | 'fullWidth'> {
+  return { size: 'sm', fullWidth: !wide };
+}
+
+function submitProps(
+  props: ElicitationActionsProps,
+  wide: boolean,
 ): ButtonProps {
   return {
-    ...refusals[action],
-    fullWidth: true,
-    disabled: model.inactive,
-    onPress: (): void => model.answer(action),
+    ...actionProps(wide),
+    label: submitLabel(props),
+    disabled: props.inactive || !props.canSubmit,
+    loading: props.submitting,
+    onPress: props.onSubmit,
   };
 }
 
-function submitProps(model: ElicitationModel): ButtonProps {
+function skipProps(props: ElicitationActionsProps, wide: boolean): ButtonProps {
   return {
-    label: model.submitting ? 'Sending…' : 'Submit',
-    fullWidth: true,
-    loading: model.submitting,
-    disabled: model.inactive || !model.isValid,
-    onPress: (): void => model.answer('accept'),
+    ...actionProps(wide),
+    label: 'Skip',
+    variant: wide ? 'ghost' : 'outline',
+    disabled: props.inactive,
+    onPress: props.onSkip,
   };
+}
+
+function submitLabel(props: ElicitationActionsProps): string {
+  if (props.submitting) return 'Sending…';
+
+  return props.last ? 'Submit' : 'Next';
 }

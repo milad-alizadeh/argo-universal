@@ -16,6 +16,10 @@ const meta = { ...questionTestMeta, title: 'Tests/ElicitationQuestions' };
 
 export default meta;
 
+// Each option is a row button whose name starts with its title.
+const option = (scope: ReturnType<typeof within>, title: string): HTMLElement =>
+  scope.getByRole('button', { name: new RegExp(`^${title}`) });
+
 export const RetainAnswersAcrossSheetTransition: Story = {
   render: (args): ReactElement => (
     <RequestFrame>
@@ -31,12 +35,13 @@ export const RetainAnswersAcrossSheetTransition: Story = {
       'Keep my answer',
     );
     await userEvent.click(canvas.getByRole('button', { name: nextQuestion }));
-    await userEvent.click(canvas.getByRole('checkbox', { name: buildFeature }));
+    await userEvent.click(option(canvas, buildFeature));
     await settleViewport(390);
     const sheet = within(await within(document.body).findByRole('dialog'));
-    await expect(
-      sheet.getByRole('checkbox', { name: buildFeature }),
-    ).toBeChecked();
+    await expect(option(sheet, buildFeature)).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await userEvent.click(
       sheet.getByRole('button', { name: previousQuestion }),
     );

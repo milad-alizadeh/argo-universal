@@ -5,8 +5,9 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   elicitationProps,
   elicitationMock,
-  fieldsRequest,
-  fieldsValues,
+  configurationRequest,
+  configurationValues,
+  refactorRequest,
 } from '../request.mocks';
 import { ElicitationSheet } from './elicitation-sheet';
 
@@ -23,9 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const titleLabel = 'Title';
-
-const retainedDraft = 'Keep this draft';
+const retainedDraft = 'keep-this-draft';
 
 export const DismissWithEscape: Story = {
   play: async ({ userEvent, args }) => {
@@ -39,30 +38,31 @@ export const DismissWithEscape: Story = {
 
 export const SubmitFields: Story = {
   args: {
-    request: fieldsRequest,
-    initialValues: { ...fieldsValues, estimate: '8' },
+    request: configurationRequest,
+    initialValues: { ...configurationValues, port: '8080' },
   },
   play: async ({ userEvent, args }) => {
-    const page = within(document.body);
-    const sheet = within(await page.findByRole('dialog'));
-    await expect(
-      sheet.getByRole('textbox', { name: titleLabel }),
-    ).toBeVisible();
-    await userEvent.click(sheet.getByRole('button', { name: /^Team/ }));
-    await userEvent.click(await page.findByRole('option', { name: 'Desktop' }));
+    const sheet = within(await within(document.body).findByRole('dialog'));
     await userEvent.click(
-      sheet.getByRole('checkbox', { name: 'Notify the team' }),
+      sheet.getByRole('switch', { name: 'Enable logging' }),
     );
     await userEvent.click(sheet.getByRole('button', { name: 'Submit' }));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
     await expect(args.onAnswer).toHaveBeenCalledWith({
       action: 'accept',
-      content: {
-        title: 'Drafts vanish after a reconnect',
-        team: 'Desktop',
-        estimate: 8,
-        notify: false,
-      },
+      content: { name: 'argo-server', port: 8080, enableLogging: false },
+    });
+  },
+};
+
+export const SkipLastQuestion: Story = {
+  args: { request: refactorRequest },
+  play: async ({ userEvent, args }) => {
+    const sheet = within(await within(document.body).findByRole('dialog'));
+    await userEvent.click(sheet.getByRole('button', { name: 'Skip' }));
+    await expect(args.onAnswer).toHaveBeenCalledWith({
+      action: 'accept',
+      content: {},
     });
   },
 };
@@ -80,49 +80,41 @@ export const SendingKeepsSheetOpen: Story = {
 
 export const RetainFieldAnswersAcrossTrayTransition: Story = {
   args: {
-    request: fieldsRequest,
-    initialValues: { ...fieldsValues, estimate: '8' },
+    request: configurationRequest,
+    initialValues: { ...configurationValues, port: '8080' },
   },
   play: async ({ userEvent, args }) => {
     const page = within(document.body);
     const sheet = within(await page.findByRole('dialog'));
-    const title = sheet.getByRole('textbox', { name: titleLabel });
-    await userEvent.clear(title);
-    await userEvent.type(title, retainedDraft);
+    const name = sheet.getByRole('textbox', { name: /^Name/ });
+    await userEvent.clear(name);
+    await userEvent.type(name, retainedDraft);
     await settleViewport(1440);
 
     const tray = within(
       await page.findByRole('region', { name: 'Elicitation questions' }),
     );
 
-    await expect(tray.getByRole('textbox', { name: titleLabel })).toHaveValue(
+    await expect(tray.getByRole('textbox', { name: /^Name/ })).toHaveValue(
       retainedDraft,
     );
     await userEvent.click(tray.getByRole('button', { name: 'Submit' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({
       action: 'accept',
-      content: {
-        title: retainedDraft,
-        team: 'Mobile',
-        estimate: 8,
-        notify: true,
-      },
+      content: { name: retainedDraft, port: 8080, enableLogging: true },
     });
   },
 };
 
-// The sheet's title is the source, so it never truncates; the message heads the body once.
+// The card names the Agent once and heads itself with the message once.
 export const MessageShownOnce: Story = {
-  args: { request: fieldsRequest, source: 'linear' },
+  args: { request: configurationRequest, source: 'Claude' },
   play: async () => {
     const sheet = within(await within(document.body).findByRole('dialog'));
     await expect(
-      sheet.getAllByRole('heading', { name: fieldsRequest.message }),
+      sheet.getAllByRole('heading', { name: configurationRequest.message }),
     ).toHaveLength(1);
-    await expect(
-      sheet.getAllByRole('heading', { name: 'linear asks' }),
-    ).toHaveLength(1);
-    await expect(sheet.getAllByText('linear asks')).toHaveLength(1);
+    await expect(sheet.getAllByText('Claude asks')).toHaveLength(1);
   },
 };
 

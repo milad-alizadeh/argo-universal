@@ -33,9 +33,17 @@ export const fieldLoadingLabel = (label: string): string => `Checking ${label}`;
 // What either labelled variant may ask of its entry: a starred label, a numeric keyboard.
 type EntryProps = { required?: boolean; numeric?: boolean };
 
+/*
+ * A row may draw no label, its placeholder or the heading above saying what to type, as a
+ * free-entry row such as "Something else…" does; the label still names the field for assistive
+ * technology. Android's stacked field then keeps its plain outline.
+ */
+type RowEntryProps = { labelHidden?: boolean };
+
 // A row inside a GroupedListSection: the label leading, the field taking the rest of the row.
 export type RowTextInputProps = TextFieldProps &
-  EntryProps & { variant: 'row' };
+  EntryProps &
+  RowEntryProps & { variant: 'row' };
 
 // A field on its own, outside a GroupedListSection, with its label above it and its footer under it.
 export type StandaloneTextInputProps = TextFieldProps &
@@ -56,7 +64,7 @@ export type TextInputProps =
   | RowTextInputProps
   | BareTextInputProps;
 
-export type PhoneFieldProps = TextFieldProps & EntryProps;
+export type PhoneFieldProps = TextFieldProps & EntryProps & RowEntryProps;
 
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
   (props.errors?.length ?? 0) > 0;

@@ -18,7 +18,7 @@ export function RowTextInput(props: PhoneFieldProps): React.JSX.Element {
         'web:focus-within:outline-2 web:focus-within:outline-focus web:focus-within:-outline-offset-2',
       )}
     >
-      <RowLabel {...props} />
+      {!props.labelHidden && <RowLabel {...props} />}
       <RowInput {...props} />
       <FieldSpinner {...props} />
     </View>
