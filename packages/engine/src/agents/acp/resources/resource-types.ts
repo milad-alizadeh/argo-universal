@@ -30,7 +30,6 @@ export type AcpSessionDestination = {
 };
 
 export type AcpSessionLease = {
-  /** The launch the connection's Agent process runs. */
   launch: AgentLaunch;
   authentication?: ConnectionAuthentication;
   agent: ClientContext;

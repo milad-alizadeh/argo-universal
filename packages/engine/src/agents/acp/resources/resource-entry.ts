@@ -11,7 +11,6 @@ export type Entry = {
   connection: AcpConnection;
   pending: number;
   dropped: boolean;
-  /** Aborts the launch's download once every opener has withdrawn. */
   resolving: AbortController;
 };
 
