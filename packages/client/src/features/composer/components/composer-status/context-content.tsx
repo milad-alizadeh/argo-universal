@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/buttons/button';
 import type { ComposerContext } from '../../state/status';
@@ -15,12 +15,15 @@ interface ContextContentProps {
   close: () => void;
 }
 
+// A phone's sheet page header already reads "Context window", so only the description stays.
 function ContextHeading(): JSX.Element {
   return (
     <View className="px-0 gap-0.5">
-      <StatusText role={'heading'} className="select-none">
-        Context window
-      </StatusText>
+      {Platform.OS === 'web' && (
+        <StatusText role={'heading'} className="select-none">
+          Context window
+        </StatusText>
+      )}
       <StatusText role="secondary" className="select-none">
         Instructions, tools, files and the conversation the Agent reads for its
         next reply.
