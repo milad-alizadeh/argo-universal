@@ -54,6 +54,7 @@ type OpeningResponse = Extract<AnyMessage, { result: unknown }>;
 type Ready = {
   connection: ClientConnection;
   initialization: InitializeResponse;
+  launch: AgentLaunch;
 };
 
 const openingMethods = new Set(['session/new', 'session/resume']);
@@ -426,24 +427,23 @@ export class AcpConnection {
     return !!sessionCapabilities(this.requireReady().initialization)?.resume;
   }
   private requireReady(): Ready {
-    if (!this.connection || !this.initialization)
+    if (!this.connection || !this.initialization || !this.launch)
       throw new Error('ACP connection is unavailable');
 
-    return { connection: this.connection, initialization: this.initialization };
-  }
-  private requireLaunch(): AgentLaunch {
-    if (!this.launch) throw new Error('ACP connection is unavailable');
-
-    return this.launch;
+    return {
+      connection: this.connection,
+      initialization: this.initialization,
+      launch: this.launch,
+    };
   }
   private async lease(opening: LeaseOpening): Promise<AcpSessionLease> {
     await this.releaseAbandoned(opening);
     this.requireRegistered(opening);
-    const { connection, initialization } = this.requireReady();
+    const { connection, initialization, launch } = this.requireReady();
 
     return {
       ...opening.opened,
-      launch: this.requireLaunch(),
+      launch,
       authentication: this.authentication,
       agent: connection.agent,
       initialization,
