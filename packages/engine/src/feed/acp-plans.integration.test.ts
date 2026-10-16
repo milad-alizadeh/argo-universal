@@ -109,5 +109,9 @@ it('an addressed Plan can replace markdown with a file reference without reading
       plan: { type: 'file', planId: 'design', uri: 'file:///missing/plan.md' },
       _meta: { argo: { removed: false, contentRevision: 3 } },
     },
+    {
+      sessionUpdate: 'notice',
+      _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
+    },
   ]);
 });

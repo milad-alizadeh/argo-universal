@@ -1,9 +1,7 @@
 import type { SessionConfigSelectOption } from '@repo/contracts';
 import type * as React from 'react';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Button } from '#primitives/buttons/button';
-import { Icon } from '#primitives/display/icon';
+import { MenuTrigger } from '#primitives/overlays/menu';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
@@ -21,8 +19,6 @@ interface ModeControlProps {
   configuration: ComposerConfigurationProps;
   disabled: boolean;
 }
-
-const destructiveTextClassName = 'text-danger';
 
 export function ComposerModeControl(
   props: ModeControlProps,
@@ -45,72 +41,30 @@ function ModePopover(
   );
 }
 
+// Wide, the icon, label and chevron; narrow, the icon alone. Full access reads red.
 function modeTrigger(
   props: ModeControlProps & { wide: boolean },
 ): React.JSX.Element {
-  const wide = props.wide;
   const current = selectedChoice(props.configuration, 'mode');
 
-  return <Button {...modeButtonProps(props, current, wide)} />;
-}
-
-const modeButtonAppearance = {
-  custom: true,
-  size: 'xs',
-  variant: 'ghost',
-  accessibilityLabel: 'Mode',
-} as const;
-
-function modeButtonProps(
-  props: ModeControlProps,
-  current: SessionConfigSelectOption | undefined,
-  wide: boolean,
-): React.ComponentProps<typeof Button> {
-  return {
-    ...modeButtonAppearance,
-    disabled: props.disabled,
-    label: visibleModeLabel(current, wide),
-    icon: modeIcon(current),
-    className: cn('h-7 sm:h-7 py-0 gap-1.5', wide ? 'px-1.5' : 'w-7 p-0'),
-    labelClassName: modeLabelClassName(current, wide),
-    trailing: wide ? <ModeChevron /> : undefined,
-  };
+  return (
+    <MenuTrigger
+      accessibilityLabel="Mode"
+      disabled={props.disabled}
+      label={modeLabel(current)}
+      icon={modeIcon(current)}
+      tone={isDangerous(current) ? 'danger' : 'muted'}
+      iconOnly={!props.wide}
+    />
+  );
 }
 
 function modeLabel(current?: SessionConfigSelectOption): string {
   return current ? configurationLabel(current.name) || 'Mode' : 'Mode';
 }
 
-function modeLabelClassName(
-  current: SessionConfigSelectOption | undefined,
-  wide: boolean,
-): string {
-  return cn(
-    'text-muted-foreground',
-    !wide && 'hidden',
-    isDangerous(current) && destructiveTextClassName,
-  );
-}
-
-function ModeChevron(): React.JSX.Element {
-  return (
-    <Icon
-      role="control"
-      name="chevron-down"
-      className="text-muted-foreground"
-    />
-  );
-}
-
 function modeIcon(
   current?: SessionConfigSelectOption,
 ): ReturnType<typeof configurationIcon> {
   return configurationIcon(current ? choiceMetadata(current)?.icon : undefined);
-}
-
-function visibleModeLabel(
-  current: SessionConfigSelectOption | undefined,
-  wide: boolean,
-): string {
-  return wide ? modeLabel(current) : '';
 }

@@ -11,9 +11,8 @@ import {
   type RefObject,
 } from 'react';
 import { View } from 'react-native';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
-import { usePrimitiveColor } from '#primitives/native/primitive-color';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import {
   SheetLink,
   SheetNavigationProvider,
@@ -67,12 +66,12 @@ type ModalProps = Omit<
 >;
 
 function useModalProps(props: Omit<PresentationProps, 'sheetRef'>): ModalProps {
-  const colors = useNativeTheme().colors;
+  const { roles } = useMaterialPalette();
 
   return {
-    containerColor: colors.content,
-    contentColor: colors.foreground,
-    scrimColor: usePrimitiveColor('text-foreground/32'),
+    containerColor: roles.surface,
+    contentColor: roles.onSurface,
+    scrimColor: roles.scrim,
     onDismissRequest: props.stack.reports.dismissed,
     skipPartiallyExpanded: !restsHalfOpen(props),
     ...dismissal(props.dismissible !== false),

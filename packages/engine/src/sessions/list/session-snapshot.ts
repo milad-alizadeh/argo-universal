@@ -5,6 +5,7 @@ import type {
 } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
 import type { feedMachine } from '../../feed';
+import { withHeldConfiguration } from '../configuration/held-configuration';
 import type { sessionMachine } from '../session-machine';
 import { toLiveHeader } from './live-header';
 
@@ -47,6 +48,7 @@ export function toSessionSnapshot(
     permissionQueue: [],
     elicitationQueue: [],
     configOptions: [],
+    heldConfig: [],
   };
 
   let state: SessionSnapshot['state'] = 'idle';
@@ -77,7 +79,10 @@ export function toSessionSnapshot(
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.elicitationQueue[0] ?? null,
     pendingPlanProposal: null,
-    configOptions: context.configOptions,
+    configOptions: withHeldConfiguration(
+      context.configOptions,
+      context.heldConfig,
+    ),
     changes: noChanges,
     shells: [],
     subagents: storedSession.subagents ?? [],

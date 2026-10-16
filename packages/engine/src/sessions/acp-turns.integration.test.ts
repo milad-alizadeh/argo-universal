@@ -92,6 +92,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         turn: expect.any(String),
         content: [{ text: 'Reply 1' }],
       },
+      { kind: 'notice', turn: expect.any(String) },
       {
         kind: 'user_message',
         turn: expect.any(String),
@@ -102,6 +103,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         turn: expect.any(String),
         content: [{ text: 'Reply 2' }],
       },
+      { kind: 'notice', turn: expect.any(String) },
     ]);
     expect(
       await host.caller.feed.row({ ...created, id: idleRowId }),
@@ -112,7 +114,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
     expect(
       host.database.$client.prepare('SELECT COUNT(*) AS count FROM turn').get(),
     ).toEqual({ count: 2 });
-    expect(page.rows[1]?.turnId).not.toBe(page.rows[3]?.turnId);
+    expect(page.rows[1]?.turnId).not.toBe(page.rows[4]?.turnId);
     expect(requests.map((request) => request.sessionId)).toEqual([
       'owned-1',
       'owned-1',
@@ -163,6 +165,11 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         state: 'settled',
         turnId: expect.any(String),
         content: [{ text: 'Final accepted text' }],
+      },
+      {
+        sessionUpdate: 'notice',
+        turnId: expect.any(String),
+        _meta: { argo: { turnEnd: { stopReason: 'cancelled' } } },
       },
     ]);
     expect(page.rows[1]?.turnId).toBe(page.rows[0]?.turnId);

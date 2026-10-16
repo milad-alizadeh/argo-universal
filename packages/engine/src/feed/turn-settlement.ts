@@ -1,10 +1,11 @@
-import type { SessionUpdate, FeedChange } from '@repo/contracts';
+import type { SessionUpdate, FeedChange, TurnEnd } from '@repo/contracts';
 import {
   applyFeedChange,
   changedRowId,
   type Feed,
   type FeedStreamEvent,
 } from './feed-change';
+import { turnEndChange } from './turn-end';
 import {
   cancelledPermissionOutcome,
   turnEndingNotice,
@@ -36,6 +37,7 @@ export type FeedTurnEnding = (
   | { kind: 'completion' | 'cancel' | 'engine_restart' }
   | Extract<TurnEndingNotice, { kind: 'agent_crash' }>
 ) & {
+  turnEnd?: TurnEnd;
   waitingPermissions?: { acpSessionId: string; toolCallIds: readonly string[] };
 };
 
@@ -58,6 +60,15 @@ const permissionChanges = (
     .filter((change) => Object.hasOwn(feed.rows, changedRowId(change)));
 };
 
+const endChanges = (
+  turnId: string | null,
+  end: TurnEnd | undefined,
+): FeedChange[] => {
+  if (!turnId) return [];
+
+  return end ? [turnEndChange(turnId, end)] : [];
+};
+
 const settlementChanges = (
   feed: Feed,
   turnId: string | null,
@@ -68,6 +79,7 @@ const settlementChanges = (
     turnEndingNotice(feed.sessionId, turnId, notice),
   ),
   ...readUnfinishedTurnRows(feed, turnId).map(settlementPatch),
+  ...endChanges(turnId, ending.turnEnd),
 ];
 
 export type SettledFeed = { feed: Feed; events: FeedStreamEvent[] };

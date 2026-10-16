@@ -22,9 +22,30 @@ export interface MenuOption<Value extends string> {
   icon?: IconName;
 }
 
+/*
+ * The labelled trigger a Menu, Picker or Composer overlay opens from: a leading icon, the label and a down chevron.
+ * Argo draws it on desktop and the web; on phones it is the label of the SwiftUI Menu or the Compose DropdownMenu anchor.
+ */
+export interface MenuTriggerProps {
+  // The current value, which names the trigger.
+  label: string;
+  icon?: IconName;
+  // Drawn in the icon's place where no symbol fits, such as an Agent's logo or a progress spinner.
+  leading?: ReactElement;
+  // Drawn between the label and the chevron, such as a model's effort.
+  trailing?: ReactElement;
+  // A quiet setting takes `muted`; a risky value, such as full access, `danger`.
+  tone?: 'muted' | 'danger';
+  // A narrow row, such as the phone Composer's: the label is hidden and read out as the trigger's name, and the chevron goes.
+  iconOnly?: boolean;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+  testID?: string;
+}
+
 interface MenuBaseProps {
   accessibilityLabel: string;
-  // The element the menu opens from, or text the menu draws as its inline trigger: a muted label and a down chevron.
+  // The element the menu opens from, such as a MenuTrigger, or text the menu draws as its inline trigger: a muted label and a down chevron.
   trigger: ReactElement | string;
   disabled?: boolean;
   // Which edge of the trigger the web menu lines up with; native menus place themselves.

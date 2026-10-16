@@ -76,7 +76,7 @@ it('equal idless replies in successive Turns remain distinct messages', async ()
 
   expect(messages).toMatchObject([
     { position: 1, content: [{ text: 'Equal' }] },
-    { position: 3, content: [{ text: 'Equal' }] },
+    { position: 4, content: [{ text: 'Equal' }] },
   ]);
   const [first, second] = messages;
   assert(first);

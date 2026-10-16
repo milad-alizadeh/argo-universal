@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Button } from '#primitives/buttons/button';
 import { Text } from '#primitives/display/text';
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
 } from '#primitives/overlays/dialog';
 import { AgentLoginTerminal } from '../agent-login-terminal/agent-login-terminal';
 import { dismissLogin, loginActions, loginStatus } from './login-actions';
-import { LoginButton } from './login-button';
 import { loginCopy } from './login-copy';
 import type { AgentLoginSheetProps } from './login-props';
 
@@ -118,7 +118,7 @@ function LoginActions(props: AgentLoginSheetProps): React.JSX.Element {
   return (
     <View className={props.snapshot?.terminal ? 'items-end gap-2' : 'gap-2'}>
       {loginActions(props).map((action, index) => (
-        <LoginButton
+        <Button
           key={action.id}
           {...action}
           fullWidth={!props.snapshot?.terminal}

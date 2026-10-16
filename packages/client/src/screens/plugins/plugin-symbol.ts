@@ -1,11 +1,9 @@
 import type { PluginIcon } from '@repo/contracts/plugins';
 import { iconSymbols } from '#lib/generic/symbols/icon-names';
-import type { SymbolSource } from '#lib/generic/symbols/symbol-source';
+import type { SystemSymbolSource } from '#lib/generic/symbols/symbol-source';
 
-// A platform the Plugin gives no name for draws Argo's Plugin icon.
-const { sf, material } = iconSymbols.plug;
-
-export const pluginSymbol = (icon: PluginIcon): SymbolSource => ({
-  sf: icon.sf ?? sf,
-  material: icon.material ?? material,
+// A Plugin may target only Apple or only Material platforms; the others still need a glyph in its Rail tile and drawer row.
+export const pluginSymbol = (icon: PluginIcon): SystemSymbolSource => ({
+  ...iconSymbols.plug,
+  ...icon,
 });

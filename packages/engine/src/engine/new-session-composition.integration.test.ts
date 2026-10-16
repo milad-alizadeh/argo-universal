@@ -71,7 +71,7 @@ it.each(fixtureAgents)(
 
         return rows.at(-1)?.sessionUpdate;
       })
-      .toBe('agent_message');
+      .toBe('notice');
     const { rows } = await caller.feed.page({ sessionId, direction: 'tail' });
     expect(rows).toEqual([
       expect.objectContaining({
@@ -84,6 +84,18 @@ it.each(fixtureAgents)(
         content: [
           { type: 'text', text: 'The shared fixture completed this Turn.' },
         ],
+      }),
+      expect.objectContaining({
+        sessionUpdate: 'notice',
+        _meta: {
+          argo: {
+            turnEnd: {
+              stopReason: 'end_turn',
+              error: null,
+              durationMs: expect.any(Number),
+            },
+          },
+        },
       }),
     ]);
     expect(new Set(rows.map((row) => row.turnId)).size).toBe(1);

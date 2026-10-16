@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { Button } from '#primitives/buttons/button';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { SplitButton } from './split-button';
 
@@ -22,6 +21,8 @@ const scopes = [
 const mergeSplit = {
   size: 'xs',
   primary: true,
+  label: 'Merge PR',
+  icon: 'merged',
   menuLabel: 'Merge options',
   actions: [
     { label: 'Squash and merge', onPress: fn() },
@@ -29,16 +30,6 @@ const mergeSplit = {
     { label: 'Rebase and merge', onPress: fn() },
   ],
 } as const;
-
-const mergeButton = (
-  <Button
-    custom
-    size="xs"
-    icon="merged"
-    label="Merge PR"
-    className="web:shadow-none"
-  />
-);
 
 function ScopeSplit(props: { narrow?: boolean }): React.JSX.Element {
   const [scope, setScope] = useState<Scope>('once');
@@ -51,9 +42,8 @@ function ScopeSplit(props: { narrow?: boolean }): React.JSX.Element {
       options={scopes}
       value={scope}
       onValueChange={setScope}
-    >
-      <Button custom label="Allow" />
-    </SplitButton>
+      label="Allow"
+    />
   );
 }
 
@@ -81,7 +71,7 @@ function ActionsExample(): React.JSX.Element {
   return (
     <Variation label="Actions, compact">
       <View className="flex-row">
-        <SplitButton {...mergeSplit}>{mergeButton}</SplitButton>
+        <SplitButton {...mergeSplit} />
       </View>
     </Variation>
   );
@@ -117,9 +107,8 @@ function MergeSplit(): React.JSX.Element {
       options={mergeMethods}
       value={method}
       onValueChange={setMethod}
-    >
-      <Button custom label="Merge PR" />
-    </SplitButton>
+      label="Merge PR"
+    />
   );
 }
 

@@ -1,9 +1,12 @@
 export { Menu } from './menu';
 
+export { MenuTrigger } from './menu-trigger';
+
 export {
   type MenuAction,
   type MenuChoiceGroup,
   type MenuProps,
+  type MenuTriggerProps,
 } from './menu-props';
 
 export { MenuDropdownItems } from './menu-dropdown-items';

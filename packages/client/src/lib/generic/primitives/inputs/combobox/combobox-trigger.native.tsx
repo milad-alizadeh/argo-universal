@@ -1,5 +1,5 @@
-// The native field keeps its platform label and value drawing around a stock button.
-import { Button, Row } from '@expo/ui';
+// The native field keeps its platform label and value drawing around a stock button in Argo's colours.
+import { Row } from '@expo/ui';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import {
   accessibilityHint,
@@ -11,6 +11,7 @@ import { Platform } from 'react-native';
 import { NativeText } from '#primitives/display/native-text';
 import type { FieldDescription } from '#primitives/fields/field-description';
 import { ChoiceField, ChoiceHost } from '#primitives/native/choice-field';
+import { NativeButton } from '#primitives/native/native-button';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { ComboboxProps } from './combobox-props';
 import { comboboxValue, type ChoiceValue } from './combobox-value';
@@ -26,7 +27,7 @@ export function ComboboxTrigger<Value extends string>(
   return (
     <ChoiceHost>
       {createElement(
-        Button,
+        NativeButton,
         buttonProps(props),
         <ChoiceField {...props}>
           <TriggerValue {...props} />
@@ -38,7 +39,7 @@ export function ComboboxTrigger<Value extends string>(
 
 function buttonProps<Value extends string>(
   props: TriggerProps<Value>,
-): React.ComponentProps<typeof Button> {
+): React.ComponentProps<typeof NativeButton> {
   return {
     variant: 'text',
     onPress: props.onPress,
@@ -58,7 +59,7 @@ function TriggerValue(props: ChoiceValue): ReactElement {
 
 function triggerModifiers(
   props: NamedValue,
-): React.ComponentProps<typeof Button>['modifiers'] {
+): React.ComponentProps<typeof NativeButton>['modifiers'] {
   if (Platform.OS !== 'ios')
     return [
       semantics({

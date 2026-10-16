@@ -19,6 +19,7 @@ export const stopReasons = [
   'refusal',
   'cancelled',
   'error',
+  'auth_required',
 ] as const;
 
 export const sessionTitleSources = ['user', 'agent', 'prompt'] as const;
@@ -44,6 +45,9 @@ export const session = snakeCase.table('session', {
   vendorRef: text({ mode: 'json' }),
   // The config values the Session last ran with, as JSON, so a resume keeps its model and mode.
   configValues: text({ mode: 'json' })
+    .notNull()
+    .default(sql`'[]'`),
+  heldConfig: text({ mode: 'json' })
     .notNull()
     .default(sql`'[]'`),
   epoch: integer().notNull().default(0),

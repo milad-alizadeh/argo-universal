@@ -814,7 +814,7 @@
                 "message": "Generic code imports neither product nor local code (A2)."
               },
               {
-                "group": ["@repo/**", "!@repo/uniwind", "!@repo/uniwind/**"],
+                "group": ["@repo/**"],
                 "message": "Generic code imports neither product nor local code (A2)."
               }
             ]

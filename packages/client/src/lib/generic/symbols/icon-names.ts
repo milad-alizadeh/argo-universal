@@ -1,5 +1,6 @@
 import { fileSymbols } from './file-symbols';
 import { formatSymbols } from './format-symbols';
+import { gitSymbols } from './git-symbols';
 import { listViewSymbols } from './list-view-symbols';
 import { statusSymbols } from './status-symbols';
 import type { SymbolSource } from './symbol-source';
@@ -7,6 +8,7 @@ import type { SymbolSource } from './symbol-source';
 export const iconSymbols = {
   ...fileSymbols,
   ...formatSymbols,
+  ...gitSymbols,
   ...listViewSymbols,
   ...statusSymbols,
   activity: { sf: 'waveform.path.ecg', material: 'monitor_heart' },
@@ -27,7 +29,6 @@ export const iconSymbols = {
   },
   attach: { sf: 'paperclip', material: 'attach_file' },
   'question-bubble': { sf: 'questionmark.bubble', material: 'help' },
-  branch: { sf: 'arrow.triangle.branch', material: 'alt_route' },
   camera: { sf: 'camera', material: 'photo_camera' },
   check: { sf: 'checkmark', material: 'check' },
   checklist: { sf: 'checklist', material: 'checklist' },
@@ -54,7 +55,6 @@ export const iconSymbols = {
   cycle: { sf: 'calendar.badge.clock', material: 'event_repeat' },
   delete: { sf: 'trash', material: 'delete' },
   diagram: { sf: 'flowchart', material: 'schema' },
-  diff: { sf: 'plusminus', material: 'difference' },
   domains: { sf: 'circles.hexagongrid', material: 'workspaces' },
   edit: { sf: 'pencil', material: 'edit' },
   engine: { sf: 'gearshape.2', material: 'manufacturing' },
@@ -99,7 +99,6 @@ export const iconSymbols = {
   'plan-mode': { sf: 'map', material: 'map' },
   plug: { sf: 'powerplug', material: 'power' },
   private: { sf: 'lock', material: 'lock' },
-  'pull-request': { sf: 'arrow.triangle.pull', material: 'fork_left' },
   read: { sf: 'book', material: 'menu_book' },
   rename: { sf: 'character.cursor.ibeam', material: 'edit_note' },
   reorder: { sf: 'arrow.up.arrow.down', material: 'drag_indicator' },

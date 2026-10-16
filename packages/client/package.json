@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./custom-symbol-paths.json": "./src/lib/generic/symbols/custom-symbol-paths.json",
+    "./tabler-symbol-paths.json": "./src/lib/generic/symbols/tabler-symbol-paths.json",
     "./storybook": "./src/preview-config.ts"
   },
   "imports": {
@@ -19,6 +20,7 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
+    "generate:plugin-symbol-names": "node tools/plugin-symbol-names/generate.mts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -98,6 +100,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",
+    "sf-symbols-typescript": "catalog:",
     "storybook": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",

@@ -3,10 +3,11 @@ import { cn } from '#lib/generic/utils';
 import { IconButton } from '#primitives/buttons/icon-button';
 import type { SplitMenuProps } from './split-button-props';
 
+// `className` is ButtonGroup's, joining the chevron to the button beside it.
 type ChevronProps = Pick<
   SplitMenuProps,
-  'menuLabel' | 'primary' | 'disabled' | 'narrow' | 'size' | 'className'
-> & { height?: number };
+  'menuLabel' | 'primary' | 'disabled' | 'narrow' | 'size'
+> & { height?: number; className?: string };
 
 const chevronFits = {
   sm: {

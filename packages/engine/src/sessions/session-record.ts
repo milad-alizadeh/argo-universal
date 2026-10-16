@@ -16,20 +16,23 @@ export const storedSessionColumns = {
   ...getTableColumns(session),
   vendorRef: sql<unknown>`${session.vendorRef}`,
   configValues: sql<unknown>`${session.configValues}`,
+  heldConfig: sql<unknown>`${session.heldConfig}`,
 };
 
 export function decodeStoredSession(row: typeof session.$inferSelect): Omit<
   typeof session.$inferSelect,
-  'vendorRef' | 'configValues'
+  'vendorRef' | 'configValues' | 'heldConfig'
 > & {
   vendorRef: ReturnType<typeof JSON.parse>;
   configValues: ReturnType<typeof JSON.parse>;
+  heldConfig: ReturnType<typeof JSON.parse>;
 } {
   return {
     ...row,
     vendorRef:
       row.vendorRef === null ? null : JSON.parse(String(row.vendorRef)),
     configValues: JSON.parse(String(row.configValues)),
+    heldConfig: JSON.parse(String(row.heldConfig)),
   };
 }
 

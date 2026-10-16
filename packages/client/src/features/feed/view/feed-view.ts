@@ -4,6 +4,7 @@ import type {
   Plan,
   SessionUpdate,
   ToolCallUpdate,
+  TurnEnd,
 } from '@repo/contracts';
 
 export interface FeedToolCall {
@@ -56,7 +57,17 @@ interface FeedStandaloneRow {
   >;
 }
 
-export type FeedViewItem = FeedActivity | FeedGroup | FeedStandaloneRow;
+export interface FeedTurnEnd {
+  type: 'turn_end';
+  row: Notice;
+  end: TurnEnd;
+}
+
+export type FeedViewItem =
+  | FeedActivity
+  | FeedGroup
+  | FeedStandaloneRow
+  | FeedTurnEnd;
 
 // The active Plan sits above the Composer.
 export interface FeedView {

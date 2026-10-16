@@ -17,6 +17,7 @@ import {
 import {
   describeLostJobs,
   stampWriterJob,
+  unpackWriterJobs,
   type WriterJob,
   writeJobFiles,
   writeJobs,
@@ -129,11 +130,11 @@ export const writerMachine = setup({
     announceAccepted: emit(({ event }): WriterJobsEvent => {
       assertEvent(event, writeEvent);
 
-      return { type: 'writer.queued', jobs: [event.job] };
+      return { type: 'writer.queued', jobs: unpackWriterJobs([event.job]) };
     }),
     announceWritten: emit(({ context }): WriterJobsEvent => ({
       type: 'writer.committed',
-      jobs: context.queue.slice(0, context.batchSize),
+      jobs: unpackWriterJobs(context.queue.slice(0, context.batchSize)),
     })),
 
     enqueue: assign({

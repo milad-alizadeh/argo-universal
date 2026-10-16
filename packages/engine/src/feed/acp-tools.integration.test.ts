@@ -55,6 +55,10 @@ it('official tool updates retain creation fields when a partial update completes
       position: 1,
       revision: 3,
     },
+    {
+      sessionUpdate: 'notice',
+      _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
+    },
   ]);
   expect(page.rows[1]?.turnId).toBe(page.rows[0]?.turnId);
 });

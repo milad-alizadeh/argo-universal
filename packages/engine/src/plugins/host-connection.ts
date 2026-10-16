@@ -76,7 +76,16 @@ export class HostConnection {
     child.once('spawn', () =>
       this.callbacks.log(`Plugin host started: ${child.pid}`),
     );
-    child.on('message', (value) => this.message(HostMessage.parse(value)));
+    child.on('message', (value) => {
+      // Node's own IPC traffic (e.g. --watch dependency reports) shares the channel.
+      const parsed = HostMessage.safeParse(value);
+
+      if (parsed.success) this.message(parsed.data);
+    });
+    this.logOutput(child);
+  }
+
+  private logOutput(child: ChildProcess): void {
     child.on('error', (error) =>
       this.callbacks.log(`Plugin host error: ${error.message}`),
     );

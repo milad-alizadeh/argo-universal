@@ -7,10 +7,10 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { codeFace } from '#primitives/display/native-text';
 import type { FieldProps } from '#primitives/fields/field';
 import { errorMessage } from '#primitives/fields/field-errors';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import { useFieldText } from './text-input-field-text';
 import { requiredLabel } from './text-input-label';
 import { FieldProgress } from './text-input-progress';
@@ -28,7 +28,7 @@ export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
       onValueChange={onChangeText}
       onFocusChanged={onFocusChanged}
       {...fieldBehaviour(props)}
-      colors={useFieldColors()}
+      colors={useMaterialPalette().outlinedFieldColors}
     >
       <FieldSlots {...props} />
     </OutlinedTextField>
@@ -95,23 +95,6 @@ function SupportingText(props: { text?: string }): React.JSX.Element | null {
       <Text>{props.text}</Text>
     </OutlinedTextField.SupportingText>
   );
-}
-
-// Only the outline, focus and error take Argo tokens (ADR-0020); every other colour stays Material's.
-function useFieldColors(): OutlinedTextFieldProps['colors'] {
-  const { accent, border, danger } = useNativeTheme().colors;
-
-  return {
-    unfocusedIndicatorColor: border,
-    disabledIndicatorColor: border,
-    focusedIndicatorColor: accent,
-    cursorColor: accent,
-    focusedLabelColor: accent,
-    errorIndicatorColor: danger,
-    errorCursorColor: danger,
-    errorLabelColor: danger,
-    errorSupportingTextColor: danger,
-  };
 }
 
 // The field says its own hint and error as supporting text, so no footer repeats them.

@@ -78,11 +78,8 @@ function ContextTotals({
 
 const compactButtonProps = {
   variant: 'outline',
-  className: 'web:sm:min-h-0 h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5',
   label: 'Compact',
   icon: 'compaction',
-  custom: true,
-  labelClassName: 'select-none type-control',
 } as const;
 
 type CompactContextProps = Pick<ContextContentProps, 'context' | 'close'>;

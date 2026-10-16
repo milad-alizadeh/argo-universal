@@ -22,6 +22,7 @@ type StoredColumnCase<Table, Column> = {
 
 type StoredColumnCases = [
   StoredColumnCase<typeof session, typeof session.configValues>,
+  StoredColumnCase<typeof session, typeof session.heldConfig>,
   StoredColumnCase<typeof session, typeof session.vendorRef>,
   StoredColumnCase<typeof turn, typeof turn.usage>,
   StoredColumnCase<typeof turn, typeof turn.error>,
@@ -35,6 +36,13 @@ it.each(
       column: session.configValues,
       id: 'session-1',
       field: 'Session config values',
+    },
+    {
+      agent,
+      table: session,
+      column: session.heldConfig,
+      id: 'session-1',
+      field: 'Session held configuration',
     },
     {
       agent,

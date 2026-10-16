@@ -10,7 +10,7 @@ const FeedPage = z.object({
       sessionUpdate: z.string(),
       turnId: z.string(),
       state: z.string(),
-      content: z.array(z.record(z.string(), z.unknown())),
+      content: z.array(z.record(z.string(), z.unknown())).optional(),
     }),
   ),
 });

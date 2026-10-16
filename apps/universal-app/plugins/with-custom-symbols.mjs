@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import symbols from '@repo/client/custom-symbol-paths.json' with { type: 'json' };
+import customSymbols from '@repo/client/custom-symbol-paths.json' with { type: 'json' };
+import tablerSymbols from '@repo/client/tabler-symbol-paths.json' with { type: 'json' };
 import configPlugins from 'expo/config-plugins.js';
 
 /*
@@ -111,6 +112,8 @@ function writeSymbolSets(modConfig) {
     'Images.xcassets',
   );
 
+  const symbols = { ...customSymbols, ...tablerSymbols };
+
   for (const [name, symbol] of Object.entries(symbols)) {
     writeSymbolSet(catalog, name, symbol);
   }
@@ -118,7 +121,7 @@ function writeSymbolSets(modConfig) {
   return modConfig;
 }
 
-// Writes each custom symbol as a symbol set in the app's asset catalog, where the patched SymbolView finds it.
+// Writes Argo's custom symbols and the Tabler git icons as symbol sets in the app's asset catalog, where the patched SymbolView finds them.
 export default function withCustomSymbols(config) {
   return configPlugins.withDangerousMod(config, ['ios', writeSymbolSets]);
 }

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Combobox } from './combobox';
@@ -118,7 +118,7 @@ function ProjectSheet(): ReactElement {
 const sheetPresentation = {
   label: 'New Session',
   contentScrolls: true,
-  trigger: <Button custom label="New Session" />,
+  trigger: <MenuTrigger label="New Session" />,
 };
 
 function ProjectRow(): ReactElement {
