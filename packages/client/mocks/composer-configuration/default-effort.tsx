@@ -80,15 +80,12 @@ function renderControlledConfiguration(
   configuration: Configuration,
   onConfigChange: Configuration['onConfigChange'],
 ): void {
-  const controlled = { ...configuration, onConfigChange };
+  const observed = { ...configuration, onConfigChange };
 
   root.render(
     <SafeAreaProvider>
       <PortalProvider>
-        <ComposerAgentModelControl
-          disabled={false}
-          configuration={controlled}
-        />
+        <ComposerAgentModelControl disabled={false} configuration={observed} />
       </PortalProvider>
     </SafeAreaProvider>,
   );
