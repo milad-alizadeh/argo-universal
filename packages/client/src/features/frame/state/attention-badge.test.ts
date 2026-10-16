@@ -13,8 +13,6 @@ describe('attentionBadge', () => {
 describe('sectionAttentionCount', () => {
   it.each([
     ['sessions', 4],
-    ['issues', 0],
-    ['atlas', 0],
     ['settings', 0],
   ] as const)('gives %s a count of %i', (section, expected) => {
     expect(sectionAttentionCount(section, 4)).toBe(expected);

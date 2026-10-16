@@ -11,7 +11,7 @@ interface SessionRowListMockProps {
   selectedSessionId?: string;
   metadata?: Record<
     string,
-    Pick<SessionRowProps, 'issue' | 'pullRequest' | 'subagentsFailed'>
+    Pick<SessionRowProps, 'pullRequest' | 'subagentsFailed'>
   >;
 }
 

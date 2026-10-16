@@ -64,7 +64,6 @@
         "packages/client/src/features/requests/components/request-card/request-card.tsx",
         "packages/client/src/features/requests/components/request-card/request-heading.tsx",
         "packages/client/src/features/requests/components/request-card/request-status.tsx",
-        "packages/client/src/features/sessions/components/issue-indicator/issue-indicator.tsx",
         "packages/client/src/features/sessions/components/project-heading/project-heading-toggle.tsx",
         "packages/client/src/features/sessions/components/project-heading/project-heading.tsx",
         "packages/client/src/features/sessions/components/pull-request-checks.tsx",

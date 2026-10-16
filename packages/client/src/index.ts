@@ -21,10 +21,6 @@ export {
 
 export { useSectionLists } from './screens/section-lists';
 
-export { AtlasDetailScreen } from './screens/atlas/atlas-detail-screen';
-
-export { IssueListScreen } from './screens/issues/issue-list-screen';
-
 export {
   OnboardingLayout,
   useOnboardingShown,
