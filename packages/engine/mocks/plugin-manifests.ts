@@ -23,9 +23,24 @@ export const rejectedManifests = [
     reason: 'never be *',
   },
   {
+    folder: 'unbounded',
+    patch: { engines: { argo: '>=0' } },
+    reason: 'no upper bound',
+  },
+  {
     folder: 'future',
     patch: { engines: { argo: '^99' } },
     reason: 'Requires Argo ^99',
+  },
+  {
+    folder: 'too-old',
+    patch: { engines: { argo: '<1.0.0' } },
+    reason: 'which is newer',
+  },
+  {
+    folder: 'missing-main',
+    patch: {},
+    reason: 'main file index.js is missing',
   },
   {
     folder: 'unknown-icon',

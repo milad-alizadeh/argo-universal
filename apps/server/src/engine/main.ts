@@ -3,6 +3,7 @@ import { composeEngine } from '@repo/engine/compose';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
+import { firstPartyPluginsDirectory } from './first-party-plugins';
 
 const highestPort = 65_535;
 
@@ -23,6 +24,7 @@ const engine = composeEngine({
   createId: randomUUID,
   port,
   version: packageJson.version,
+  firstPartyPluginsDirectory,
   startedAt: new Date().toISOString(),
 });
 

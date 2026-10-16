@@ -1,62 +1,110 @@
 import type { Dirent } from 'node:fs';
-import { readdir } from 'node:fs/promises';
+import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { PluginList } from '@repo/contracts';
 import { z } from 'zod';
 import { readManifest } from './manifest';
 
 export interface PluginsDeps {
+  // The Server's runtime directory, `ARGO_HOME` or `~/.argo` (`resolveRuntimeDirectory`); user Plugins sit in its `plugins/`.
   home?: string;
   version: string;
+  // The Server resolves where its shipped Plugins sit, so the loader never assumes a workspace layout; without one there are none.
   firstPartyPluginsDirectory?: string;
 }
 
 type Discovery = { firstParty: boolean; version: string; result: PluginList };
 
-// Discovery reads data only. Even a valid main is never imported until the Plugin host exists.
+// A Plugin sits directly in a root or in one collection folder below it, such as `plugins/examples/hello`.
+const maxDepth = 2;
+
+/*
+ * Discovery reads data only. Even a valid main is never imported until the Plugin host exists.
+ * Order: the first-party root, then `<home>/plugins`; within each, Plugins directly in the root
+ * come before collections, folders sort by name, and each manifest keeps its nav order. A later
+ * Plugin with an id already listed is reported, so a user Plugin never replaces a first-party one.
+ */
 export async function discoverPlugins(deps: PluginsDeps): Promise<PluginList> {
   const result: PluginList = { plugins: [], errors: [] };
 
-  const shipped =
-    deps.firstPartyPluginsDirectory ??
-    fileURLToPath(new URL('../../../../plugins', import.meta.url));
-
-  await scan(shipped, { firstParty: true, version: deps.version, result });
-
-  if (deps.home)
-    await scan(join(deps.home, 'plugins'), {
-      firstParty: false,
-      version: deps.version,
-      result,
-    });
+  for (const { directory, firstParty } of pluginRoots(deps))
+    await scan(directory, { firstParty, version: deps.version, result });
 
   return result;
 }
 
-// Breadth-first puts Plugins directly in the root before nested example collections; each directory has a stable order.
-async function scan(directory: string, discovery: Discovery): Promise<void> {
-  const pending = [directory];
+type PluginRoot = { directory: string; firstParty: boolean };
 
-  for (const folder of pending) {
+function pluginRoots(deps: PluginsDeps): PluginRoot[] {
+  const shipped = deps.firstPartyPluginsDirectory;
+
+  return [
+    ...(shipped ? [{ directory: shipped, firstParty: true }] : []),
+    ...(deps.home
+      ? [{ directory: join(deps.home, 'plugins'), firstParty: false }]
+      : []),
+  ];
+}
+
+type Pending = { folder: string; depth: number };
+
+// Breadth-first, so Plugins directly in the root come before nested collections.
+async function scan(directory: string, discovery: Discovery): Promise<void> {
+  const pending: Pending[] = [{ folder: directory, depth: 0 }];
+
+  for (const { folder, depth } of pending) {
     const entries = await readDirectory(folder, discovery.result);
 
     if (entries.some((entry) => entry.name === 'plugin.json'))
       await admit(folder, discovery);
-    else pending.push(...pluginFolders(folder, entries));
+    else pending.push(...(await children(folder, depth, entries)));
   }
 }
 
-const pluginFolders = (directory: string, entries: Dirent[]): string[] =>
-  entries
-    .values()
-    .filter((entry) => entry.isDirectory())
-    .filter(
-      (entry) => !entry.name.startsWith('.') && entry.name !== 'node_modules',
-    )
-    .map((entry) => join(directory, entry.name))
-    .toArray()
-    .sort();
+async function children(
+  folder: string,
+  depth: number,
+  entries: Dirent[],
+): Promise<Pending[]> {
+  if (depth >= maxDepth) return [];
+
+  const folders = await pluginFolders(folder, entries);
+
+  return folders.map((child) => ({ folder: child, depth: depth + 1 }));
+}
+
+async function pluginFolders(
+  directory: string,
+  entries: Dirent[],
+): Promise<string[]> {
+  const folders = await Promise.all(
+    entries
+      .values()
+      .filter((entry) => !skipped(entry.name))
+      .map((entry) => folderPath(entry, join(directory, entry.name)))
+      .toArray(),
+  );
+
+  return folders.flat().sort();
+}
+
+const folderPath = async (entry: Dirent, path: string): Promise<string[]> =>
+  (await isFolder(entry, path)) ? [path] : [];
+
+const skipped = (name: string): boolean =>
+  name.startsWith('.') || name === 'node_modules';
+
+// A symlinked Plugin folder, as `ln -s` during development makes, counts as a folder.
+async function isFolder(entry: Dirent, path: string): Promise<boolean> {
+  if (entry.isDirectory()) return true;
+
+  if (!entry.isSymbolicLink()) return false;
+
+  return stat(path).then(
+    (target) => target.isDirectory(),
+    () => false,
+  );
+}
 
 async function readDirectory(
   directory: string,
@@ -65,16 +113,18 @@ async function readDirectory(
   try {
     return await readdir(directory, { withFileTypes: true });
   } catch (error) {
-    const parsed = z
-      .instanceof(Error)
-      .catch(new Error(String(error)))
-      .parse(error);
+    const parsed = ThrownError.parse(error);
 
     if (!missingDirectory(parsed)) reportError(directory, parsed, result);
 
     return [];
   }
 }
+
+// Anything thrown, as an Error whose message the list reports.
+const ThrownError = z
+  .instanceof(Error)
+  .catch(({ input }) => new Error(String(input)));
 
 const missingDirectory = (error: Error): boolean =>
   'code' in error && error.code === 'ENOENT';
@@ -85,14 +135,7 @@ async function admit(directory: string, discovery: Discovery): Promise<void> {
 
     addManifest(manifest, discovery);
   } catch (error) {
-    reportError(
-      directory,
-      z
-        .instanceof(Error)
-        .catch(new Error(String(error)))
-        .parse(error),
-      discovery.result,
-    );
+    reportError(directory, ThrownError.parse(error), discovery.result);
   }
 }
 
