@@ -4,7 +4,7 @@ import {
 } from '@repo/mocks/registry/identities';
 import { expect, it } from 'vitest';
 import { agentsPage } from './agent-rows';
-import { loaded, registryOf, server } from './installed-agents.mocks';
+import { loaded, registryOf, server } from './installed-agents.mocks.ts';
 
 it.each(registryIdentities)(
   'uses Registry id and name for $name even when the saved name differs',

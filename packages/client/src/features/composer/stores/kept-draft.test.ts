@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '../../../../mocks/memory-storage';
-import { draftKey } from './draft-key';
+import { draftKey } from '../utils/draft-key';
 import { keptDraftsOnDevice } from './kept-draft';
 
 const key = draftKey({ type: 'session', sessionId: 'session-1' });

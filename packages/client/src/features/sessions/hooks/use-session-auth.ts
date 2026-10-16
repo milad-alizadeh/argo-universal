@@ -9,12 +9,12 @@ import {
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { finishedSignIn } from '../state/session-auth';
 import type {
   AuthCalloutProps,
   SessionCalloutProps,
   TerminalSignInProps,
 } from '../types/session-callout';
+import { finishedSignIn } from '../utils/session-auth';
 import { type SignInRead, unreadSignIn } from '../utils/sign-in-read';
 import { useConnectionDropped } from './use-connection-dropped';
 import {

@@ -4,7 +4,7 @@ import type {
   SessionInfo,
 } from '@repo/contracts';
 import type { ReactElement } from 'react';
-import type { SessionsLayout } from '../../state/sessions-layout';
+import type { SessionsLayout } from '../../stores/sessions-layout';
 
 export interface SessionsListProps {
   projects: ProjectsListOutput;

@@ -13,7 +13,7 @@ import {
 import {
   attentionBadge,
   sectionAttentionCount,
-} from '../../state/attention-badge';
+} from '../../utils/attention-badge';
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
 
 interface DrawerNavigation {

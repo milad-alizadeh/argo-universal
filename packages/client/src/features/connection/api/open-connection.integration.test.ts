@@ -3,7 +3,7 @@ import type { AppRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { TRPCClientError, type TRPCClientErrorLike } from '@trpc/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Connection, ConnectionState } from '../state/connection';
+import type { Connection, ConnectionState } from '../stores/connection';
 import { openConnection } from './open-connection';
 
 const closers: (() => Promise<void> | void)[] = [];
