@@ -11,9 +11,11 @@ import {
   installationExecutable,
   installationPorts,
 } from '#mocks/installation';
+import { tarBinaryArchive } from '#mocks/launch-archives';
+import { defaultInstallPorts } from './default-ports';
 import { getCommand } from './get-command';
 
-it.each(['.zip', '.gz', ''] as const)(
+it.each(['.zip', '.gz', '', '.tgz', '.tar.gz', '.tar.bz2', '.tbz2'] as const)(
   'extracts %s binary data and validates the supplied checksum before publishing',
   async (extension) => {
     const entry = installEntry('binary');
@@ -21,7 +23,7 @@ it.each(['.zip', '.gz', ''] as const)(
 
     if (!target) throw new Error('Binary fixture is missing');
 
-    const bytes = archiveBytes(extension);
+    const bytes = await archiveBytes(extension);
 
     target.archive += extension;
     target.sha256 = createHash('sha256').update(bytes).digest('hex');
@@ -41,7 +43,11 @@ it.each(['.zip', '.gz', ''] as const)(
       home: host.home,
       id: entry.id,
       shellEnv: {},
-      ports: { ...installationPorts, download },
+      ports: {
+        ...installationPorts,
+        runTool: defaultInstallPorts.runTool,
+        download,
+      },
       signal: new AbortController().signal,
       isDirectoryInUse:
         host.engine.getSnapshot().context.acpResources.isDirectoryInUse,
@@ -53,7 +59,13 @@ it.each(['.zip', '.gz', ''] as const)(
   },
 );
 
-const archiveBytes = (extension: string): Uint8Array => {
+const archiveBytes = async (extension: string): Promise<Uint8Array> => {
+  if (extension.startsWith('.t')) return tarBinaryArchive(extension);
+
+  return simpleArchive(extension);
+};
+
+const simpleArchive = (extension: string): Uint8Array => {
   if (extension === '.zip') return zipSync({ agent: installationExecutable });
 
   return extension === '.gz'
@@ -91,7 +103,11 @@ it('uses the GitHub asset digest when the Registry omits a checksum', async () =
     home: host.home,
     id: entry.id,
     shellEnv: {},
-    ports: { ...installationPorts, download },
+    ports: {
+      ...installationPorts,
+      runTool: defaultInstallPorts.runTool,
+      download,
+    },
     signal: new AbortController().signal,
     isDirectoryInUse:
       host.engine.getSnapshot().context.acpResources.isDirectoryInUse,

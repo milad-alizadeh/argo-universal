@@ -10,14 +10,14 @@ import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { processIsRunning } from '#mocks/shell-process';
 import { launchShellCommand } from '../../agents';
-import { OwnedProcessRecord } from '../../agents/acp/shell-commands/shell-process-record';
+import { ShellProcessRecord } from '../../agents';
 import { createShellOutput, shellOutputPath } from './files';
 
 type InterruptedShell = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
   created: { sessionId: string };
   recordPath: string;
-  record: OwnedProcessRecord;
+  record: ShellProcessRecord;
   pid: number;
   folder: string;
 };
@@ -70,7 +70,7 @@ const startInterruptedShell = async (): Promise<InterruptedShell> => {
   const names = await readdir(folder);
   const recordPath = join(folder, names[0] ?? 'missing');
 
-  const record = OwnedProcessRecord.parse(
+  const record = ShellProcessRecord.parse(
     JSON.parse(await readFile(recordPath, 'utf8')),
   );
 

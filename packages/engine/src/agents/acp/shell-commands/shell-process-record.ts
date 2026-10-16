@@ -5,12 +5,12 @@ import { z } from 'zod';
 
 const ownerOnlyMode = 0o600;
 
-export const OwnedProcessRecord = z.strictObject({
+export const ShellProcessRecord = z.strictObject({
   pid: z.number().int().positive(),
   token: z.string().uuid(),
 });
 
-export type OwnedProcessRecord = z.infer<typeof OwnedProcessRecord>;
+export type ShellProcessRecord = z.infer<typeof ShellProcessRecord>;
 
 const syncDirectory = async (directory: string): Promise<void> => {
   const file = await open(directory, 'r');
@@ -22,9 +22,9 @@ const syncDirectory = async (directory: string): Promise<void> => {
   }
 };
 
-export const writeOwnedProcessRecord = async (
+export const writeShellProcessRecord = async (
   path: string,
-  record: OwnedProcessRecord,
+  record: ShellProcessRecord,
 ): Promise<void> => {
   const file = await open(`${path}.pending`, 'wx', ownerOnlyMode);
 

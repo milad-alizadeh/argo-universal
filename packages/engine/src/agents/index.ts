@@ -11,6 +11,7 @@ export type {
 } from './agent-launch';
 
 export type { FetchAgents } from './registry/fetch-agents';
+
 export type { InstallPorts } from './launch/ports';
 
 export {
@@ -26,3 +27,5 @@ export { readAcpUsage } from './acp/connection/response-readers';
 export { resolveSavedAgentLaunch } from './launch/saved-launch';
 
 export { hasAgentServer } from './servers/agent-servers-sql';
+
+export { ShellProcessRecord } from './acp/shell-commands/shell-process-record';

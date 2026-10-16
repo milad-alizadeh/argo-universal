@@ -31,8 +31,7 @@ const runProbe = async (
   tool: InstallToolInput,
 ): Promise<string> => {
   try {
-    const version = await ports.runTool(tool);
-    return version;
+    return await ports.runTool(tool);
   } finally {
     await rm(tool.cwd, { recursive: true, force: true });
   }

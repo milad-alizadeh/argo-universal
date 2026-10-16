@@ -11,11 +11,7 @@ import type { writerMachine } from '../storage';
 import type { CloseAcpResourcesInput } from './agent-cleanup';
 import type { RecoveryInput } from './engine-recovery';
 import { requireRegistry } from './registry-input';
-import {
-  openDatabaseOf,
-  requireDatabaseWriter,
-  type EngineContext,
-} from './setup.machine';
+import { openDatabaseOf, type EngineContext } from './setup.machine';
 
 export const recoveryInput = ({
   context,

@@ -1,5 +1,6 @@
 import type { ReadEntry } from 'tar';
 import { installationPath } from './files';
+
 export const executableMode = 0o755;
 
 export const extractedLimit = 536_870_912;

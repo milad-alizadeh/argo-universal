@@ -7,6 +7,7 @@ import {
 } from './process-output';
 
 const diagnosticLimit = 8192;
+
 const exitGraceMs = 1000;
 
 class LaunchTool {
@@ -23,6 +24,7 @@ class LaunchTool {
     this.attachOutput();
     this.attachLifecycle();
     input.signal.addEventListener('abort', this.stop, { once: true });
+
     if (input.signal.aborted) this.stop();
   }
   public wait(): Promise<string> {
@@ -38,6 +40,7 @@ class LaunchTool {
   }
   private accept(chunk: Buffer): void {
     if (this.failure) return;
+
     try {
       this.output.accept(chunk);
     } catch (cause) {
@@ -66,8 +69,11 @@ class LaunchTool {
   };
   private async finish(code: number | null): Promise<string> {
     this.input.signal.throwIfAborted();
+
     if (this.failure) throw this.failure;
+
     if (code !== 0) throw this.exitFailure();
+
     return this.output.finish();
   }
   private exitFailure(): Error {
@@ -82,6 +88,7 @@ export const runInstallTool = async (
   input: InstallToolInput,
 ): Promise<string> => {
   input.signal.throwIfAborted();
+
   const child = spawn(input.executable, [...input.args], {
     cwd: input.cwd,
     env: input.env
@@ -89,5 +96,6 @@ export const runInstallTool = async (
       : undefined,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+
   return new LaunchTool(child, input).wait();
 };
