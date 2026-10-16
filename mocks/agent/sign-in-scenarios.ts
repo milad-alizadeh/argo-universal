@@ -80,6 +80,12 @@ const turnAuthRequired = (steps: Steps): ScriptedScenario => ({
   responses: { 'session/prompt': [{ steps: [], error: authRequired }, {}] },
 });
 
+// The first prompt ends `auth_required`, and the Agent signs in through a terminal.
+const turnTerminalSignIn = (steps: Steps): ScriptedScenario => ({
+  ...turnAuthRequired(steps),
+  initialize: terminalLogin.initialize,
+});
+
 // Exits while opening its first Session; the Agent started again after that exit opens Sessions.
 const openExitOnce = (steps: Steps): ScriptedScenario => ({
   ...base(steps),
@@ -93,6 +99,7 @@ type SignInScenarioName =
   | 'sign-in-held'
   | 'terminal-sign-in-required'
   | 'turn-auth-required'
+  | 'turn-terminal-sign-in'
   | 'open-exit-once';
 
 // Sign-in fixtures for the App's sign-in and launch callouts; each Agent process starts signed out.
@@ -104,5 +111,6 @@ export const signInScenarios = (
   'sign-in-held': signInHeld(steps),
   'terminal-sign-in-required': terminalSignInRequired(steps),
   'turn-auth-required': turnAuthRequired(steps),
+  'turn-terminal-sign-in': turnTerminalSignIn(steps),
   'open-exit-once': openExitOnce(steps),
 });

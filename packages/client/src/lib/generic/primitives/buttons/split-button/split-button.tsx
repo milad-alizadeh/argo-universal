@@ -27,7 +27,14 @@ type GroupLook = Pick<SplitMenuProps, 'size' | 'primary' | 'disabled'>;
 // What the acting half reads.
 type ActingLook = Pick<
   SplitButtonProps,
-  'label' | 'icon' | 'onPress' | 'disabled' | 'size' | 'primary' | 'narrow'
+  | 'label'
+  | 'accessibilityLabel'
+  | 'icon'
+  | 'onPress'
+  | 'disabled'
+  | 'size'
+  | 'primary'
+  | 'narrow'
 >;
 
 // ButtonGroup joins its items by passing each a className.
@@ -76,6 +83,7 @@ function leadingItems(props: ActingLook): ReactElement[] {
 function actingProps(props: ActingLook): DrawnButtonProps {
   return {
     label: props.label,
+    accessibilityLabel: props.accessibilityLabel,
     icon: props.icon,
     onPress: props.onPress,
     disabled: props.disabled,

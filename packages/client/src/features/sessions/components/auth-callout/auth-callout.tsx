@@ -16,6 +16,8 @@ export interface AuthCalloutProps {
   methods: readonly AuthCalloutMethod[];
   // The Agent's own words from `auth_required`, shown when there is one method.
   message?: string;
+  // Why this Device's last attempt failed, until the next one starts.
+  failure?: string;
   // A sign-in is running, from this Device or another.
   pending: boolean;
   // The running method is a terminal: on a phone its sheet takes the callout's place.
@@ -48,8 +50,10 @@ function MethodsCallout(props: AuthCalloutProps): React.JSX.Element {
   );
 }
 
+// A failed attempt says why; otherwise the hint to choose, or the Agent's own words.
 const authHint = (props: AuthCalloutProps): string | undefined =>
-  props.methods.length > 1 ? chooseMethodHint : props.message;
+  props.failure ??
+  (props.methods.length > 1 ? chooseMethodHint : props.message);
 
 function PendingCallout(props: AuthCalloutProps): React.JSX.Element {
   return (
@@ -113,8 +117,8 @@ function MethodSplit(props: MethodSplitProps): React.JSX.Element {
   return (
     <SplitButton
       {...splitDefaults}
+      {...chosenNames(props.methods, chosenId)}
       narrow={!useWide()}
-      label={methodName(props.methods, chosenId)}
       options={methodOptions(props.methods)}
       value={chosenId}
       onValueChange={setChosenId}
@@ -123,7 +127,16 @@ function MethodSplit(props: MethodSplitProps): React.JSX.Element {
   );
 }
 
-const methodName = (
+type ChosenNames = { label: string; accessibilityLabel?: string };
+
+// The button shows the chosen method's name, and screen readers hear its description.
+const chosenNames = (
   methods: readonly AuthCalloutMethod[],
   id: string,
-): string => methods.find((method) => method.id === id)?.name ?? '';
+): ChosenNames => {
+  const { name, description } = methods.find((method) => method.id === id) ?? {
+    name: '',
+  };
+
+  return { label: name, accessibilityLabel: description };
+};

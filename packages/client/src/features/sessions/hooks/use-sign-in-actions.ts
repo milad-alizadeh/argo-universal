@@ -1,5 +1,6 @@
-import type { AgentAuthState } from '@repo/contracts';
+import type { AgentAuthenticateOutput, AgentAuthState } from '@repo/contracts';
 import { skipToken, type SkipToken, useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTRPC, useTRPCClient } from '#features/connection';
 import type { TerminalSignInProps } from '../components/terminal-sign-in/terminal-sign-in';
 
@@ -16,6 +17,8 @@ export const inputOf = (followed: SignInSubject | SkipToken): SignInSubject =>
 
 export interface SignInActions {
   authenticate: (methodId: string) => void;
+  // Why this Device's last attempt failed, until its next one starts.
+  failure: string | undefined;
   cancel: () => void;
   read: TerminalSignInProps['terminal']['onRead'];
   input: TerminalSignInProps['terminal']['onInput'];
@@ -27,13 +30,42 @@ export function useSignInActions(
 ): SignInActions {
   const subject = inputOf(followed);
   const trpc = useTRPC();
-  const authenticate = useMutation(trpc.agents.authenticate.mutationOptions());
   const cancel = useMutation(trpc.agents.cancelAuthenticate.mutationOptions());
 
   return {
-    authenticate: (methodId) => authenticate.mutate({ ...subject, methodId }),
+    ...useAuthenticate(subject),
     cancel: () => cancel.mutate(subject),
     ...useTerminalActions(subject),
+  };
+}
+
+const failureOf = (outcome: AgentAuthenticateOutput): string | undefined =>
+  outcome.status === 'failed' ? outcome.message : undefined;
+
+interface Answers {
+  onMutate: () => void;
+  onSuccess: (outcome: AgentAuthenticateOutput) => void;
+}
+
+const answeredBy = (setFailure: (failure?: string) => void): Answers => ({
+  onMutate: () => setFailure(undefined),
+  onSuccess: (outcome) => setFailure(failureOf(outcome)),
+});
+
+// An attempt answers when it settles: a failed one says why, and the next one clears it.
+function useAuthenticate(
+  subject: SignInSubject,
+): Pick<SignInActions, 'authenticate' | 'failure'> {
+  const trpc = useTRPC();
+  const [failure, setFailure] = useState<string>();
+
+  const authenticate = useMutation(
+    trpc.agents.authenticate.mutationOptions(answeredBy(setFailure)),
+  );
+
+  return {
+    authenticate: (methodId) => authenticate.mutate({ ...subject, methodId }),
+    failure,
   };
 }
 

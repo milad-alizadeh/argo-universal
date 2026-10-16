@@ -23,7 +23,7 @@ type Story = StoryObj<typeof meta>;
 
 const { chatGpt, apiKey, openAiKey } = codexMethods;
 
-// The menu lists the methods in the Agent's order; the chosen one is what the button signs in with.
+// The menu lists the methods in the Agent's order; the chosen one is what the button signs in with, and its description names the button.
 function methodOrder(width: number): Story {
   return {
     play: async ({ canvasElement, userEvent, args }) => {
@@ -31,7 +31,7 @@ function methodOrder(width: number): Story {
       // A phone draws the callout in a sheet outside the canvas.
       const page = within(canvasElement.ownerDocument.body);
       await expect(
-        await page.findByRole('button', { name: chatGpt.name }),
+        await page.findByRole('button', { name: chatGpt.description }),
       ).toBeVisible();
       await userEvent.click(page.getByRole('button', { name: menuLabel }));
 
@@ -48,7 +48,9 @@ function methodOrder(width: number): Story {
         expect(page.queryByRole('menu')).not.toBeInTheDocument(),
       );
       await expect(args.onAuthenticate).not.toHaveBeenCalled();
-      await userEvent.click(page.getByRole('button', { name: openAiKey.name }));
+      await userEvent.click(
+        page.getByRole('button', { name: openAiKey.description }),
+      );
       await expect(args.onAuthenticate).toHaveBeenCalledOnce();
       await expect(args.onAuthenticate).toHaveBeenCalledWith(openAiKey.id);
     },

@@ -27,6 +27,7 @@ const variations: [label: string, example: GalleryArgs['example']][] = [
   ["The Agent's message", 'agentMessage'],
   ['Several methods', 'severalMethods'],
   ['Pending', 'pending'],
+  ['A failed attempt', 'failed'],
 ];
 
 // A phone presents the callout as a sheet, so it shows the one the example control picks.

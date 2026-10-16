@@ -35,4 +35,9 @@ export const authCallouts = {
   },
   severalMethods: { ...signIn, methods: [chatGpt, apiKey, openAiKey] },
   pending: { ...signIn, methods: [chatGpt], pending: true },
+  failed: {
+    ...signIn,
+    methods: [chatGpt, apiKey, openAiKey],
+    failure: 'CODEX_API_KEY is not set.',
+  },
 } satisfies Record<string, AuthCalloutData>;

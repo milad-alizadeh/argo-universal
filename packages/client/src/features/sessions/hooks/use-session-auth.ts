@@ -126,6 +126,7 @@ const calloutOf = (
   agentName: subject.agentName,
   methods: state.methods,
   message: state.description,
+  failure: actions.failure,
   pending: state.pending !== null,
   onAuthenticate: actions.authenticate,
   onCancel: actions.cancel,

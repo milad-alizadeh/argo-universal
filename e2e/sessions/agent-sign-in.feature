@@ -20,7 +20,8 @@ Feature: Agent sign-in and launch callouts
     And a Local New Session with Agent 1
     Then the App offers the sign-in methods "Sign in" then "Use an API key"
     When I choose the sign-in method "Sign in"
-    Then the App offers the sign-in methods "Sign in" then "Use an API key"
+    Then the sign-in says why it failed: "Internal error: The sign-in was refused."
+    And the App asks to authenticate to Agent 1 with "Sign in"
     When I choose the sign-in method "Sign in"
     Then the sign-in callout is gone
 
@@ -63,6 +64,23 @@ Feature: Agent sign-in and launch callouts
     And Agent 1 signs in through a terminal
     And a Local New Session with Agent 1
     When I choose the sign-in method "Terminal sign-in"
+    Then the sign-in terminal "Terminal sign-in" is open
+    When I close the sign-in terminal
+    Then the App asks to authenticate to Agent 1 with "Terminal sign-in"
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |
+
+  Scenario Outline: A Turn's terminal sign-in brings the methods back when its terminal closes in a <frame> Frame
+    Given a <frame> Frame
+    And Agent 1 ends its first Turn needing a terminal sign-in
+    And a Local New Session with Agent 1
+    When I send the prompt "Fix the flaky login test"
+    Then the Session says authentication is required: "Your subscription sign-in expired."
+    When I press Authenticate
+    And I choose the sign-in method "Terminal sign-in"
     Then the sign-in terminal "Terminal sign-in" is open
     When I close the sign-in terminal
     Then the App asks to authenticate to Agent 1 with "Terminal sign-in"

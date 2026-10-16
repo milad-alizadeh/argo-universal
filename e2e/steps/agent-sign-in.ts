@@ -7,12 +7,10 @@ import { expectMessage, messageLabel, sessionOpenTimeout } from './new-session';
 
 const menuLabel = 'Authentication options';
 
-const retryHint = 'Try to restart the Agent';
-
 const signInTerminal = 'Agent sign-in terminal';
 
 // A callout's title is a heading; a phone draws it in a sheet, so these look in the whole page.
-const callout = (page: Page, title: string | RegExp): Locator =>
+export const callout = (page: Page, title: string | RegExp): Locator =>
   page.getByRole('heading', { name: title, exact: typeof title === 'string' });
 
 // The fixture itself comes from scenario-agents.ts; sign-in and launch trouble show only once a Session opens, so the Agent is listed as available.
@@ -31,6 +29,7 @@ for (const fixture of [
   'Agent {int} holds its sign-in',
   'Agent {int} signs in through a terminal',
   'Agent {int} ends its first Turn needing sign-in',
+  'Agent {int} ends its first Turn needing a terminal sign-in',
   'Agent {int} exits while opening its first Session',
 ])
   Given(fixture, listedAsAvailable);
@@ -63,6 +62,13 @@ Then(
     await expect(options.nth(1)).toHaveAccessibleName(second);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('menu')).toHaveCount(0);
+  },
+);
+
+Then(
+  'the sign-in says why it failed: {string}',
+  async ({ page }, message: string): Promise<void> => {
+    await expect(page.getByText(message, { exact: true })).toBeVisible();
   },
 );
 
@@ -110,7 +116,9 @@ Then(
     await expect(
       page
         .getByRole('region', { name: signInTerminal })
-        .getByText('› Continue in your browser', { exact: true }),
+        .getByText('› Continue in your browser', { exact: true })
+        // The terminal also lists its lines for screen readers.
+        .first(),
     ).toBeAttached();
   },
 );
@@ -141,38 +149,4 @@ Then(
 
 When('I press Authenticate', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: 'Authenticate', exact: true }).click();
-});
-
-Then(
-  'the App says the Agent failed to launch',
-  async ({ page }): Promise<void> => {
-    await expect(callout(page, 'Failed to Launch')).toBeVisible(
-      sessionOpenTimeout,
-    );
-  },
-);
-
-Then(
-  'the launch failure shows {string}',
-  async ({ page }, stderr: string): Promise<void> => {
-    await expect(page.getByText(stderr)).toBeVisible();
-  },
-);
-
-When('I press Retry', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: retryHint }).click();
-});
-
-// A phone's sheet swipes away; a wide window's tray stays above the Composer.
-When('I put the callout away', async ({ page }): Promise<void> => {
-  if (!onPhone(page)) return;
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-});
-
-Then('the launch callout is gone', async ({ page }): Promise<void> => {
-  await expect(callout(page, 'Failed to Launch')).toHaveCount(
-    0,
-    sessionOpenTimeout,
-  );
 });
