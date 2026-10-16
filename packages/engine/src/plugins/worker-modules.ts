@@ -1,6 +1,7 @@
-import { readFile, realpath } from 'node:fs/promises';
-import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { createContext, SourceTextModule, type Module } from 'node:vm';
+import { requirePluginFile } from './plugin-files.ts';
 import type { PluginEntry } from './runtime-protocol.ts';
 
 /*
@@ -68,9 +69,7 @@ class PluginModules {
 
   private async source(path: string): Promise<string> {
     if (this.entry.source !== undefined) return this.entry.source;
-    const target = await realpath(path);
-    const root = await realpath(this.entry.directory);
-    requireInside(root, target);
+    const target = await requirePluginFile(this.entry.directory, path);
 
     return builtModuleSource(await readFile(target, 'utf8'), target);
   }
@@ -92,11 +91,4 @@ function builtModuleSource(source: string, path: string): string {
   return `const module = { exports: {} }; const exports = module.exports;
     (function(module, exports) { ${source}\n })(module, exports);
     export const register = module.exports.register;`;
-}
-
-function requireInside(root: string, target: string): void {
-  const path = relative(root, target);
-
-  if (isAbsolute(path) || path.split(sep).at(0) === '..')
-    throw new Error('Plugin entry imports must stay in its folder');
 }

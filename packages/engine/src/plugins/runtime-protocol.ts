@@ -1,4 +1,7 @@
+import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { z } from 'zod';
+
+export { PluginStatus } from '@repo/contracts/plugins/runtime';
 
 export const pluginAnswerLimitMs = 3000;
 
@@ -16,14 +19,6 @@ export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
 ]);
-
-export const PluginStatus = z.object({
-  state: z.enum(['not-started', 'running', 'crashed']),
-  hanging: z.boolean(),
-  error: z.string().nullable(),
-});
-
-export type PluginStatus = z.infer<typeof PluginStatus>;
 
 export const HostMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready') }),

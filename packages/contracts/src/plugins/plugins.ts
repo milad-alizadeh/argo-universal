@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { materialSymbolNames } from './material-symbol-names.gen';
+import { PluginStatus } from './runtime';
 import { sfSymbolNames } from './sf-symbol-names.gen';
 
 const PluginIdentifier = z.string().regex(/^[a-z][a-z0-9-]*$/);
@@ -58,12 +59,15 @@ export const PluginManifest = z.strictObject({
 
 export type PluginManifest = z.infer<typeof PluginManifest>;
 
+export const PluginActivation = z.object({ pluginId: PluginIdentifier });
+
 export const PluginList = z.object({
   plugins: z.array(
     z.object({
       manifest: PluginManifest,
       firstParty: z.boolean(),
       enabled: z.boolean(),
+      ...PluginStatus.shape,
     }),
   ),
   errors: z.array(z.object({ directory: z.string(), message: z.string() })),

@@ -22,6 +22,7 @@ export class RuntimePlugin {
   private build: Promise<BuildContext> | null = null;
   private closed = false;
   private source: string | undefined;
+  private buildError: string | null = null;
   private generation = 0;
 
   constructor(private readonly input: PluginInput) {}
@@ -79,17 +80,26 @@ export class RuntimePlugin {
   }
 
   private bundle(): void {
-    if (this.build) return this.load();
+    if (this.build) return this.loadBundled();
     this.build = watchPlugin(this.input.entry, {
       loaded: (source) => this.reloaded(source),
-      failed: (error) => this.fail(error),
+      failed: (error) => this.buildFailed(error),
     });
-    void this.build.catch((cause: unknown) => this.fail(runtimeError(cause)));
+    void this.build.catch((cause: unknown) =>
+      this.buildFailed(runtimeError(cause)),
+    );
+  }
+
+  private loadBundled(): void {
+    if (this.buildError) return this.fail(this.buildError);
+
+    if (this.source !== undefined) this.load();
   }
 
   private reloaded(source: string): void {
     if (this.closed) return;
     this.source = source;
+    this.buildError = null;
     this.status = notStarted;
 
     if (!this.answer) void this.awaitActivation();
@@ -117,5 +127,10 @@ export class RuntimePlugin {
     this.generation += 1;
     this.input.host.stop(this.input.entry.pluginId);
     this.received({ state: 'crashed', hanging: false, error });
+  }
+
+  private buildFailed(error: string): void {
+    this.buildError = error;
+    this.fail(error);
   }
 }

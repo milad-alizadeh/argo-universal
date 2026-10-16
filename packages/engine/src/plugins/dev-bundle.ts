@@ -6,6 +6,7 @@ import {
   type OutputFile,
   type BuildOptions,
 } from 'esbuild';
+import { pluginFiles } from './dev-files';
 import type { PluginEntry } from './runtime-protocol';
 
 type BundleCallbacks = {
@@ -22,8 +23,8 @@ const devBuildOptions: BuildOptions = {
 };
 
 /*
- * esbuild watches the actual import graph, including files outside the entry's
- * directory. Build output stays in memory and never changes the Plugin folder.
+ * esbuild watches the Plugin's import graph. Build output stays in memory and
+ * never changes the Plugin folder; every input is confined to that folder.
  */
 export async function watchPlugin(
   entry: Pick<PluginEntry, 'directory' | 'main'>,
@@ -35,7 +36,7 @@ export async function watchPlugin(
       contents: registrationSource(`./${entry.main}`),
       resolveDir: entry.directory,
     },
-    plugins: [reloadPlugin(callbacks)],
+    plugins: [pluginFiles(entry.directory), reloadPlugin(callbacks)],
   });
 
   await build.watch();

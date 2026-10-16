@@ -1,5 +1,4 @@
 import { fork, type ChildProcess } from 'node:child_process';
-import { once } from 'node:events';
 import { createActor } from 'xstate';
 import {
   hostLifecycleMachine,
@@ -20,6 +19,7 @@ type HostCallbacks = {
 export class HostConnection {
   private child: ChildProcess | null = null;
   private readonly lifecycle;
+  private completion: Promise<void> = Promise.resolve();
 
   constructor(private readonly callbacks: HostCallbacks) {
     this.lifecycle = createActor(hostLifecycleMachine, {
@@ -56,33 +56,29 @@ export class HostConnection {
     const child = this.child;
 
     if (!child) return;
-    const exited = once(child, 'exit');
+    const completed = this.completion;
     const force = setTimeout(() => child.kill('SIGKILL'), closeLimitMs);
     child.kill();
-    await exited.finally(() => clearTimeout(force));
+    await completed.finally(() => clearTimeout(force));
   }
 
   private start(): void {
-    this.child = fork(new URL('./host-process.ts', import.meta.url), [], {
-      execArgv: [
-        '--experimental-vm-modules',
-        '--disable-warning=ExperimentalWarning',
-      ],
-      stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
-      env: hostEnvironment(),
-    });
-    this.listen(this.child);
-    this.callbacks.log(`Plugin host started: ${this.child.pid}`);
+    const child = launchPluginHost();
+    this.child = child;
+    this.completion = hostCompletion(child, (reason) =>
+      this.exited(child, reason),
+    );
+    this.listen(child);
   }
 
   private listen(child: ChildProcess): void {
     monitorStartup(child);
+    child.once('spawn', () =>
+      this.callbacks.log(`Plugin host started: ${child.pid}`),
+    );
     child.on('message', (value) => this.message(HostMessage.parse(value)));
     child.on('error', (error) =>
       this.callbacks.log(`Plugin host error: ${error.message}`),
-    );
-    child.once('exit', (code, signal) =>
-      this.exited(child, `${code ?? signal}`),
     );
     child.stderr?.on('data', (chunk: Buffer) =>
       this.callbacks.log(chunk.toString().trim()),
@@ -105,6 +101,17 @@ export class HostConnection {
   };
 }
 
+function launchPluginHost(): ChildProcess {
+  return fork(new URL('./host-process.ts', import.meta.url), [], {
+    execArgv: [
+      '--experimental-vm-modules',
+      '--disable-warning=ExperimentalWarning',
+    ],
+    stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+    env: hostEnvironment(),
+  });
+}
+
 function hostEnvironment(): NodeJS.ProcessEnv {
   const env = { ...process.env };
 
@@ -117,5 +124,17 @@ function monitorStartup(child: ChildProcess): void {
   const deadline = setTimeout(() => child.kill('SIGKILL'), hostStartupLimitMs);
 
   child.once('message', () => clearTimeout(deadline));
-  child.once('exit', () => clearTimeout(deadline));
+  child.once('close', () => clearTimeout(deadline));
+}
+
+function hostCompletion(
+  child: ChildProcess,
+  completed: (reason: string) => void,
+): Promise<void> {
+  return new Promise((resolve): void => {
+    child.once('close', (code, signal) => {
+      resolve();
+      completed(`${code ?? signal}`);
+    });
+  });
 }
