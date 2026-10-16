@@ -9,17 +9,25 @@ const titleUpdate = (title: string | null): ScriptedStep => ({
 });
 
 type TitleScenarios = Record<
-  'agent-title' | 'agent-title-cleared',
+  'agent-title' | 'agent-title-after-question' | 'agent-title-cleared',
   ScriptedScenario
 >;
 
-export const titleScenarios = (reply: ScriptedStep): TitleScenarios => ({
-  'agent-title': {
-    configOptions: acpConfiguration,
-    steps: [titleUpdate(agentTitle), reply],
-  },
-  'agent-title-cleared': {
-    configOptions: acpConfiguration,
-    steps: [titleUpdate(null), titleUpdate('  '), reply],
-  },
+const titled = (steps: ScriptedStep[]): ScriptedScenario => ({
+  configOptions: acpConfiguration,
+  steps,
+});
+
+// The question holds the Turn, so an App sees the first prompt line as the title before the Agent's title replaces it.
+export const titleScenarios = (
+  reply: ScriptedStep,
+  question: ScriptedStep,
+): TitleScenarios => ({
+  'agent-title': titled([titleUpdate(agentTitle), reply]),
+  'agent-title-after-question': titled([
+    question,
+    titleUpdate(agentTitle),
+    reply,
+  ]),
+  'agent-title-cleared': titled([titleUpdate(null), titleUpdate('  '), reply]),
 });

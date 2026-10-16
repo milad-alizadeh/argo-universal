@@ -79,7 +79,10 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
 const namedScenarioSteps = [
   [/^(?:Given|And) Agent (\d+) supplies a long Feed history$/, 'feed-history'],
   [/^(?:Given|And) Agent (\d+) asks for an Elicitation$/, 'elicitation'],
-  [/^(?:Given|And) Agent (\d+) names its Session$/, 'agent-title'],
+  [
+    /^(?:Given|And) Agent (\d+) names its Session after a question$/,
+    'agent-title-after-question',
+  ],
 ] as const;
 
 function namedScenarioConfiguration(steps: string[]): AppFixtureAgents {
