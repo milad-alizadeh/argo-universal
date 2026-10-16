@@ -56,6 +56,19 @@ function liftMenuActions(props: ContextMenuProps): LiftMenuActions {
 type PreviewMenuProps = ContextMenuProps & { href: Href };
 
 /*
+ * A card of the page's latest content, as tall as Tailwind's h-56. `height` is only the preview's preferred size: the
+ * page lays out before iOS sizes it, so min and max hold the page to it from its first layout, or a list grows to its
+ * full content and opens at its top.
+ */
+const previewHeight = 224;
+
+const previewSize = {
+  height: previewHeight,
+  minHeight: previewHeight,
+  maxHeight: previewHeight,
+};
+
+/*
  * Link `asChild` hands its press to the View, which takes none: a tap reaches the element's own press, so the element
  * keeps its navigation; only a tap on the preview opens `href`. The root Link.Menu's `title` heads the menu, and each
  * group is an `inline` Link.Menu, which the system parts with a separator.
@@ -66,7 +79,7 @@ function PreviewMenu(props: PreviewMenuProps): ReactElement {
       <Link.Trigger>
         <View>{props.children}</View>
       </Link.Trigger>
-      <Link.Preview />
+      <Link.Preview style={previewSize} />
       <Link.Menu title={props.title}>
         {contextMenuSections(props).map(previewMenuGroup)}
       </Link.Menu>

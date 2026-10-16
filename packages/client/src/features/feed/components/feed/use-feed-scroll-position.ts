@@ -6,20 +6,26 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { type FeedEntry, entryKey } from './feed-entry';
 
 type ListRef = RefObject<LegendListRef | null>;
 
-// Opens on the newest row by estimated sizes, then a frame later at the very end; from there `followEnd` keeps it there as rows measure.
+// Opens on the newest row by estimated sizes, then a frame after the page is first shown at the very end; from there `followEnd` keeps it there as rows measure. A page preloaded unseen, as behind iOS's long-press preview, gains its header's inset only once shown.
 function useOpensAtEnd(list: ListRef, lastIndex: number): number {
   const [initialIndex] = useState(lastIndex);
+  const shown = useScreenFocused();
+  const opened = useRef(false);
   useEffect(() => {
-    const frame = requestAnimationFrame(
-      () => void list.current?.scrollToEnd({ animated: false }),
-    );
+    if (!shown || opened.current) return;
+
+    const frame = requestAnimationFrame(() => {
+      opened.current = true;
+      void list.current?.scrollToEnd({ animated: false });
+    });
 
     return (): void => cancelAnimationFrame(frame);
-  }, [list]);
+  }, [list, shown]);
 
   return initialIndex;
 }
