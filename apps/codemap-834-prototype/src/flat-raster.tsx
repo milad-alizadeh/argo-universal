@@ -9,14 +9,14 @@ import {
 import { useEffect, useRef, type JSX, type RefObject } from 'react';
 import type { FlatContext } from './flat-context';
 
-interface Drawing {
+export interface FlatDrawing {
   ctx: FlatContext;
   picture: SkPicture;
 }
 
 const halves = 2;
 
-function paint(surface: SkSurface, { ctx, picture }: Drawing): void {
+function paint(surface: SkSurface, { ctx, picture }: FlatDrawing): void {
   const canvas = surface.getCanvas();
   canvas.clear(Skia.Color(ctx.palette.card));
   canvas.translate(
@@ -57,7 +57,7 @@ function copy(surface: SkSurface, canvas: HTMLCanvasElement): void {
   }
 }
 
-function draw(canvas: HTMLCanvasElement, drawing: Drawing): void {
+function draw(canvas: HTMLCanvasElement, drawing: FlatDrawing): void {
   canvas.width = Math.round(drawing.ctx.size.width);
   canvas.height = Math.round(drawing.ctx.size.height);
   const surface = Skia.Surface.Make(canvas.width, canvas.height);
@@ -81,7 +81,7 @@ function report(ctx: FlatContext): void {
 }
 
 function useRaster(
-  drawing: Drawing,
+  drawing: FlatDrawing,
   ref: RefObject<HTMLCanvasElement | null>,
 ): void {
   const reported = useRef(false);
@@ -95,7 +95,7 @@ function useRaster(
   }, [drawing, ref]);
 }
 
-export function FlatRaster(props: Drawing): JSX.Element {
+export function FlatRaster(props: FlatDrawing): JSX.Element {
   const ref = useRef<HTMLCanvasElement | null>(null);
   const { size } = props.ctx;
   useRaster(props, ref);

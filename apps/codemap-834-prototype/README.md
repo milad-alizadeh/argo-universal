@@ -42,7 +42,9 @@ They do not claim that this Project has 20,000 unique files.
 
 The 3D view uses one instanced box mesh through R3F and three.js WebGL.
 The flat view uses a recorded Skia picture through `WithSkiaWeb` and CanvasKit.
-When WebGL is unavailable, Skia draws that picture into its public CPU surface API.
+Skia draws that picture into its public CPU surface API on every web and desktop configuration.
+This keeps map pixels in the same sRGB colour space as their token-based legend.
+Skia 2.6.2’s web Canvas hard-codes Display P3 and ignores its public colour-space prop on web.
 The App copies those pixels to a 2D canvas at DPR 1.
 Picking, labels, tokens and camera transforms use the same data and rules.
 The CPU surface and image are disposed after each completed copy.
