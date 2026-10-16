@@ -13,6 +13,7 @@ import {
   menuChoiceGroups,
 } from './menu-props';
 import { MenuRadioItem } from './menu-radio-item';
+import { menuRowsClassName } from './menu-styles';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -101,7 +102,7 @@ function MenuChoiceRadios({
 
   return (
     <RadixMenu.RadioGroup asChild value={value} onValueChange={onValueChange}>
-      <View>{radios}</View>
+      <View className={menuRowsClassName}>{radios}</View>
     </RadixMenu.RadioGroup>
   );
 }

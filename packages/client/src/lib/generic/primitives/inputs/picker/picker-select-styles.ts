@@ -84,7 +84,8 @@ export function selectViewportClassName(
   position: ContentStyle['position'],
 ): string {
   return cn(
-    'p-1',
+    // Rows keep a gap, as Android's grouped rows do, so hovered, pressed and selected tiles never touch.
+    'flex flex-col gap-0.5 p-1',
     position === 'popper' &&
       'w-full web:h-(--radix-select-trigger-height) web:min-w-(--radix-select-trigger-width)',
   );
