@@ -16,7 +16,7 @@ export interface ProjectHeadingProps {
 
 // The heading takes the rows' hover tint; the CSS group state drives it and the actions, so no pointer event can leave them stuck.
 const rowClassName =
-  'group min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-md pr-1 web:hover:bg-hover web:focus-within:bg-hover';
+  'group mb-0.5 min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-md pr-1 web:hover:bg-hover web:focus-within:bg-hover';
 
 export const ProjectHeading = memo(function ProjectHeading(
   props: ProjectHeadingProps,
