@@ -21,7 +21,6 @@ function AgentPicker(props: StartSessionInProps): React.JSX.Element {
   return (
     <ComposerPopover
       listContent
-      pageHeader
       label="Select Agent"
       trigger={agentTrigger(props)}
     >
