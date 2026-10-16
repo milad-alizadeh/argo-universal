@@ -1,6 +1,6 @@
 import {
   AppProviders,
-  PortalHost,
+  PortalProvider,
   NavigationProvider,
   type DesktopBridge,
   SymbolImagesProvider,
@@ -74,8 +74,9 @@ function ThemedApp(): React.JSX.Element {
   return (
     <ThemeProvider value={useNavigationTheme()}>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-      <RootNavigator />
-      <PortalHost />
+      <PortalProvider>
+        <RootNavigator />
+      </PortalProvider>
       <Toaster />
     </ThemeProvider>
   );

@@ -6,10 +6,11 @@ import {
   selectPlanRowWithLatestContent,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { feedRow, session, turn } from '@repo/db/schema';
+import { feedRow, session, turn, shell } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
 import {
   and,
+  count,
   desc,
   eq,
   getTableColumns,
@@ -46,6 +47,24 @@ import type {
 import { decodeStoredTurn } from './stored-turn';
 import type { WriterChange } from './writer-changes';
 
+const shellCount = (database: Database, running: boolean): SQL<number> =>
+  sql<number>`(${database
+    .select({ total: count() })
+    .from(shell)
+    .where(
+      and(
+        eq(shell.sessionId, session.id),
+        running ? eq(shell.status, 'running') : undefined,
+      ),
+    )})`;
+
+type ShellCountColumns = { shellTotal: SQL<number>; shellRunning: SQL<number> };
+
+const shellCountColumns = (database: Database): ShellCountColumns => ({
+  shellTotal: shellCount(database, false),
+  shellRunning: shellCount(database, true),
+});
+
 const storedTurnColumns = {
   ...getTableColumns(turn),
   error: sql<unknown>`${turn.error}`,
@@ -70,6 +89,7 @@ interface ListReadInput {
   readLiveHeaderRows: ReturnType<typeof createLiveHeaderRowsReader>;
   validate<Value>(read: () => Value): Value | undefined;
   rejectedSessions: Set<string>;
+  shellCounts: Map<string, SessionInfo['shells']>;
 }
 
 // Reads list rows and finds the Sessions a Writer change touches.
@@ -106,6 +126,7 @@ export function createSessionListReader(options: {
       validate,
       readLiveHeaderRows,
       rejectedSessions: new Set<string>(),
+      shellCounts: new Map<string, SessionInfo['shells']>(),
     };
 
     if (!sessionIds) parents.clear();
@@ -250,7 +271,7 @@ function readListSessions(
   const projection = readQueuedSessionRows(input.writer);
 
   const stored = input.database
-    .select(storedSessionColumns)
+    .select({ ...storedSessionColumns, ...shellCountColumns(input.database) })
     .from(session)
     .where(
       sessionIds
@@ -261,6 +282,12 @@ function readListSessions(
         : undefined,
     )
     .all();
+
+  for (const row of stored)
+    input.shellCounts.set(row.id, {
+      total: row.shellTotal,
+      running: row.shellRunning,
+    });
 
   const rows = new Map(
     stored.map((row): [string, typeof row] => [row.id, row]),
@@ -456,6 +483,7 @@ function readSessionInformation(
   });
 
   const result = toSessionInfo({
+    shells: input.shellCounts.get(row.id),
     row,
     turns,
     message: updates.findLast(

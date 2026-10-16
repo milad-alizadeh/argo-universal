@@ -20,7 +20,7 @@ export const runTerminal = async (
     sessionId: turn.sessionId,
     update: terminalUpdate(step, terminal.terminalId),
   });
-  await completeTerminal(step.completion, scope, turn);
+  await completeTerminal(step, scope, turn);
 };
 
 const terminalUpdate = (
@@ -36,15 +36,25 @@ const terminalUpdate = (
 });
 
 const completeTerminal = async (
-  completion: TerminalStep['completion'],
+  step: TerminalStep,
   scope: KillTerminalRequest,
   turn: ScriptedTurn,
 ): Promise<void> => {
-  if (completion === 'leave-running') return;
+  if (step.completion === 'leave-running') return;
 
-  if (completion === 'kill') await turn.client.request('terminal/kill', scope);
+  if (step.completion === 'kill')
+    await turn.client.request('terminal/kill', scope);
 
   await turn.client.request('terminal/wait_for_exit', scope);
-  await turn.client.request('terminal/output', scope);
+  await recordOutput(step, scope, turn);
   await turn.client.request('terminal/release', scope);
+};
+
+const recordOutput = async (
+  step: TerminalStep,
+  scope: KillTerminalRequest,
+  turn: ScriptedTurn,
+): Promise<void> => {
+  const output = await turn.client.request('terminal/output', scope);
+  step.outputs?.push(output);
 };

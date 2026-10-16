@@ -1,5 +1,6 @@
-import * as MenuPrimitive from '@rn-primitives/dropdown-menu';
+import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
+import { View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/display/text';
 import { MenuLoadingRow } from './menu-loading';
 import type { ActionMenuProps, MenuAction } from './menu-props';
@@ -12,16 +13,14 @@ import {
 // An action menu's web drawing: compact rows, each running its action.
 export function MenuActions(props: ActionMenuProps): React.JSX.Element {
   return (
-    <MenuPrimitive.Overlay>
-      <TextClassContext.Provider value="text-foreground">
-        <MenuPrimitive.Content
-          align={props.align ?? 'end'}
-          className={actionContentClassName}
-        >
+    <TextClassContext.Provider value="text-foreground">
+      {/* Radix's popper wrapper copies the content's z-index, so the content keeps it above other overlays. */}
+      <RadixMenu.Content align={props.align ?? 'end'} loop className="z-50">
+        <View className={actionContentClassName}>
           {props.loading ? <MenuLoadingRow /> : props.actions.map(actionItem)}
-        </MenuPrimitive.Content>
-      </TextClassContext.Provider>
-    </MenuPrimitive.Overlay>
+        </View>
+      </RadixMenu.Content>
+    </TextClassContext.Provider>
   );
 }
 
@@ -32,30 +31,23 @@ function actionItem(action: MenuAction): React.JSX.Element {
 function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
   return (
     <TextClassContext.Provider value={actionItemTextClassName}>
-      <MenuPrimitive.Item
-        className={actionItemClassName}
-        accessibilityState={selectedState(action)}
+      <RadixMenu.Item
+        asChild
         disabled={action.disabled}
-        onPress={action.onPress}
-        onKeyDown={stopSecondSelect}
+        onSelect={action.onPress}
       >
-        {action.content ?? <Text>{action.label}</Text>}
-      </MenuPrimitive.Item>
+        <View {...actionRow(action)}>
+          {action.content ?? <Text>{action.label}</Text>}
+        </View>
+      </RadixMenu.Item>
     </TextClassContext.Provider>
   );
 }
 
-type ItemKeyDown = NonNullable<
-  React.ComponentProps<typeof MenuPrimitive.Item>['onKeyDown']
->;
-
-// The RN adapter selects on keydown; stop Radix's synthetic click selecting twice.
-const stopSecondSelect: ItemKeyDown = (event) => {
-  if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
-};
-
-function selectedState(action: MenuAction): { selected: boolean } | undefined {
-  return action.selected === undefined
-    ? undefined
-    : { selected: action.selected };
+function actionRow(action: MenuAction): React.ComponentProps<typeof View> {
+  return {
+    className: actionItemClassName,
+    accessibilityState:
+      action.selected === undefined ? undefined : { selected: action.selected },
+  };
 }

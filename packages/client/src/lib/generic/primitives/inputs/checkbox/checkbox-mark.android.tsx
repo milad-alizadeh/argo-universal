@@ -6,12 +6,25 @@ import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { CheckboxIndicatorProps } from './checkbox-props';
 import { RadioMark } from './checkbox-radio';
 
-const optionMarkPixels = 18;
+const optionBoxPixels = 18;
 
-const optionModifiers = [size(optionMarkPixels, optionMarkPixels)];
+// Material draws its radio circle at 20dp; a smaller box clips the ring.
+const optionRadioPixels = 20;
+
+const optionModifiers = [size(optionBoxPixels, optionBoxPixels)];
+
+const radioModifiers = [size(optionRadioPixels, optionRadioPixels)];
+
+const markModifiers = (
+  props: CheckboxIndicatorProps,
+): typeof optionModifiers => {
+  if (props.variant !== 'option') return [];
+
+  return props.selection === 'single' ? radioModifiers : optionModifiers;
+};
 
 export function CheckboxMark(props: CheckboxIndicatorProps): React.JSX.Element {
-  const modifiers = props.variant === 'option' ? optionModifiers : [];
+  const modifiers = markModifiers(props);
 
   if (props.selection === 'single')
     return createElement(RadioMark, {

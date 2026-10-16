@@ -1,23 +1,65 @@
-import * as SwitchPrimitives from '@rn-primitives/switch';
 import type * as React from 'react';
+import { Pressable, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import type { SwitchProps } from './switch-props';
 
+// React Native's types leave out the web's keyboard handler, which React Native Web passes to the element.
+type SwitchWebProps = React.ComponentProps<typeof Pressable> & {
+  onKeyDown: React.KeyboardEventHandler;
+};
+
+/*
+ * The web's switch, drawn by Argo on the ARIA switch pattern: role `switch`, `aria-checked`, a press or Space
+ * toggles it. React Native Web presses on Enter for every role but on Space only for buttons, so Space is
+ * handled here.
+ */
 function Switch(props: SwitchProps): React.JSX.Element {
   const size = props.size ?? 'md';
+  const toggle = (): void => props.onValueChange(!props.value);
 
   return (
-    <SwitchPrimitives.Root
+    <Pressable
+      {...switchState(props, toggle)}
       className={switchClass({ ...props, size })}
-      checked={props.value}
-      onCheckedChange={props.onValueChange}
-      disabled={props.disabled}
-      accessibilityLabel={props.accessibilityLabel}
-      tabIndex={props.decorative ? -1 : undefined}
+      onPress={toggle}
     >
-      <SwitchThumb value={props.value} size={size} />
-    </SwitchPrimitives.Root>
+      <View role="presentation" className={thumbClass({ ...props, size })} />
+    </Pressable>
   );
+}
+
+function switchState(props: SwitchProps, toggle: () => void): SwitchWebProps {
+  return {
+    onKeyDown: spaceToggles(toggle, props.disabled),
+    role: 'switch',
+    disabled: props.disabled,
+    'aria-checked': props.value,
+    'aria-disabled': props.disabled,
+    accessibilityState: { checked: props.value, disabled: props.disabled },
+    accessibilityLabel: props.accessibilityLabel,
+    tabIndex: props.decorative ? -1 : undefined,
+  };
+}
+
+function spaceToggles(
+  toggle: () => void,
+  disabled: boolean | undefined,
+): React.KeyboardEventHandler {
+  return (event) => {
+    if (!isOwnSpace(event)) return;
+    // The page would scroll on Space.
+    event.preventDefault();
+
+    if (canToggle(disabled, event.repeat)) toggle();
+  };
+}
+
+function canToggle(disabled: boolean | undefined, repeat: boolean): boolean {
+  return !disabled && !repeat;
+}
+
+function isOwnSpace(event: React.KeyboardEvent): boolean {
+  return event.key === ' ' && event.target === event.currentTarget;
 }
 
 function switchClass(props: SwitchProps): string {
@@ -61,9 +103,3 @@ function thumbPosition(props: Pick<SwitchProps, 'value' | 'size'>): string {
 Switch satisfies React.ComponentType<SwitchProps>;
 
 export { Switch };
-
-function SwitchThumb(
-  props: Pick<SwitchProps, 'value' | 'size'>,
-): React.JSX.Element {
-  return <SwitchPrimitives.Thumb className={thumbClass(props)} />;
-}

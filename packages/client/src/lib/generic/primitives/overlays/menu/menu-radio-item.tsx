@@ -1,4 +1,4 @@
-import * as MenuPrimitive from '@rn-primitives/dropdown-menu';
+import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
@@ -10,8 +10,6 @@ import type { KeyboardFocus } from './menu-choices';
 import type { MenuOption } from './menu-props';
 import { actionItemTextClassName, choiceRowClassName } from './menu-styles';
 
-type RadioItemProps = React.ComponentProps<typeof MenuPrimitive.RadioItem>;
-
 type MenuRadioItemProps = {
   choice: MenuOption<string>;
   focus: KeyboardFocus;
@@ -21,27 +19,41 @@ export function MenuRadioItem(props: MenuRadioItemProps): React.JSX.Element {
   const { choice, focus } = props;
 
   return (
-    <MenuPrimitive.RadioItem
-      value={choice.value}
-      textValue={choice.label}
-      disabled={choice.disabled}
-      onPointerMove={() => focus.onKeyboardFocusChange(false)}
-      onKeyDown={radioKeyDown(focus.onKeyboardFocusChange)}
-      className={radioItemClassName(focus.keyboardFocus)}
+    <RadixMenu.RadioItem
+      asChild
+      {...radioValue(choice)}
+      {...focusTracking(focus)}
     >
-      <MenuRadioContent label={choice.label} icon={choice.icon} />
-    </MenuPrimitive.RadioItem>
+      <View className={radioItemClassName(focus.keyboardFocus)}>
+        <MenuRadioContent label={choice.label} icon={choice.icon} />
+      </View>
+    </RadixMenu.RadioItem>
   );
 }
 
-function radioKeyDown(
-  onKeyboardFocusChange: KeyboardFocus['onKeyboardFocusChange'],
-): NonNullable<RadioItemProps['onKeyDown']> {
-  return (event) => {
-    onKeyboardFocusChange(true);
+function radioValue(
+  choice: MenuOption<string>,
+): Pick<
+  RadixMenu.DropdownMenuRadioItemProps,
+  'value' | 'textValue' | 'disabled'
+> {
+  return {
+    value: choice.value,
+    textValue: choice.label,
+    disabled: choice.disabled,
+  };
+}
 
-    // The RN adapter selects on keydown; stop Radix's synthetic click selecting twice.
-    if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
+type FocusTracking = Pick<
+  RadixMenu.DropdownMenuContentProps,
+  'onKeyDown' | 'onPointerMove'
+>;
+
+// A key press shows the focus ring and a pointer move hides it again.
+export function focusTracking(focus: KeyboardFocus): FocusTracking {
+  return {
+    onKeyDown: () => focus.onKeyboardFocusChange(true),
+    onPointerMove: () => focus.onKeyboardFocusChange(false),
   };
 }
 
@@ -80,9 +92,11 @@ function RadioLabel(props: { label: string }): React.JSX.Element {
 function RadioIndicator(): React.JSX.Element {
   return (
     <IconSlot role="body">
-      <MenuPrimitive.ItemIndicator>
-        <SelectedCheck role="body" className="text-foreground" />
-      </MenuPrimitive.ItemIndicator>
+      <RadixMenu.ItemIndicator asChild>
+        <View>
+          <SelectedCheck role="body" className="text-foreground" />
+        </View>
+      </RadixMenu.ItemIndicator>
     </IconSlot>
   );
 }

@@ -108,7 +108,9 @@ function RequestBody({
   );
 }
 
-function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
+export function RequestError({
+  error,
+}: Pick<RequestCardProps, 'error'>): ReactNode {
   return (
     error && (
       <Text

@@ -76,10 +76,14 @@ When(
 );
 
 // A phone Frame picks a section from the Drawer behind ☰; a wide one from its rail.
-When('I return to Sessions', async ({ page }): Promise<void> => {
+export async function returnToSessions(page: Page): Promise<void> {
   if (onPhone(page))
     await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('button', { name: 'Sessions', exact: true }).click();
+}
+
+When('I return to Sessions', async ({ page }): Promise<void> => {
+  await returnToSessions(page);
 });
 
 Then(

@@ -2,33 +2,81 @@ import type { PendingElicitation } from '@repo/contracts';
 import type { ElicitationValues } from '../../src/features/requests/components/elicitation-form/elicitation-form';
 import { elicitationRequest } from './recorded-requests';
 
-export const fieldsRequest: PendingElicitation = {
+// One choice with a description for each option: a single question, headed by the message.
+export const refactorRequest: PendingElicitation = {
   ...elicitationRequest,
-  message: 'A few details for the new issue',
+  message: 'How would you like me to approach this refactoring?',
   requestedSchema: {
     properties: {
-      title: { type: 'string', title: 'Title', minLength: 1 },
-      team: { type: 'string', title: 'Team', enum: ['Mobile', 'Desktop'] },
-      estimate: { type: 'integer', title: 'Estimate', minimum: 1, maximum: 8 },
-      notify: {
-        type: 'boolean',
-        title: 'Notify the team',
-        description: "Posts the issue to the team's channel.",
+      approach: {
+        type: 'string',
+        title: 'Approach',
+        oneOf: [
+          {
+            const: 'conservative',
+            title: 'Conservative',
+            description: 'Minimal changes, keep the existing structure.',
+          },
+          {
+            const: 'balanced',
+            title: 'Balanced (Recommended)',
+            description: 'Improve the structure while keeping the public API.',
+          },
+          {
+            const: 'aggressive',
+            title: 'Aggressive',
+            description: 'Rewrite freely, breaking changes allowed.',
+          },
+        ],
       },
     },
-    required: ['title'],
+    required: ['approach'],
   },
 };
 
-export const fieldsValues: ElicitationValues = {
-  title: 'Drafts vanish after a reconnect',
-  team: 'Mobile',
-  estimate: '12',
-  notify: true,
+// One string: the message asks for it, so its row draws no label.
+export const functionNameRequest: PendingElicitation = {
+  ...elicitationRequest,
+  message: 'What should this function be named?',
+  requestedSchema: {
+    properties: {
+      name: { type: 'string', title: 'Function name', default: 'processData' },
+    },
+    required: ['name'],
+  },
+};
+
+export const configurationRequest: PendingElicitation = {
+  ...elicitationRequest,
+  message: 'Please provide configuration details.',
+  requestedSchema: {
+    properties: {
+      name: { type: 'string', title: 'Name', minLength: 1 },
+      port: {
+        type: 'integer',
+        title: 'Port',
+        minimum: 1024,
+        maximum: 65535,
+        default: 3000,
+      },
+      enableLogging: {
+        type: 'boolean',
+        title: 'Enable logging',
+        default: true,
+      },
+    },
+    required: ['name'],
+  },
+};
+
+export const configurationValues: ElicitationValues = {
+  name: 'argo-server',
+  port: '80',
 };
 
 export const emptyAnswersRequest: PendingElicitation = {
-  ...fieldsRequest,
+  ...elicitationRequest,
+  message: 'Which options apply?',
   requestedSchema: {
     properties: {
       options: {
@@ -54,7 +102,8 @@ export const emptyAnswersRequest: PendingElicitation = {
 };
 
 export const dateFormatsRequest: PendingElicitation = {
-  ...fieldsRequest,
+  ...elicitationRequest,
+  message: 'When should the release go out?',
   requestedSchema: {
     properties: {
       date: { type: 'string', title: 'Date', format: 'date' },
@@ -70,7 +119,8 @@ export const dateFormatsValues: ElicitationValues = {
 };
 
 export const invalidSchemaRequest: PendingElicitation = {
-  ...fieldsRequest,
+  ...elicitationRequest,
+  message: 'Please provide a value.',
   requestedSchema: {
     properties: { value: { type: 'string', title: 'Value', pattern: '[' } },
   },

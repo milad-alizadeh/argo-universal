@@ -1,4 +1,4 @@
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { boundedChoicesRequest } from '../../../../../mocks/elicitation-questions';
 import {
   buildFeature,
@@ -17,6 +17,12 @@ const meta = { ...questionTestMeta, title: 'Tests/ElicitationQuestions' };
 
 export default meta;
 
+const pressed = 'aria-pressed';
+
+// Each option is a row button whose name starts with its title.
+const option = (scope: ReturnType<typeof within>, title: string): HTMLElement =>
+  scope.getByRole('button', { name: new RegExp(`^${title}`) });
+
 function answers(width: number): Story {
   return {
     beforeEach: async (): Promise<void> => {
@@ -26,18 +32,15 @@ function answers(width: number): Story {
       await expect(
         canvas.getByRole('button', { name: previousQuestion }),
       ).toBeDisabled();
-      await userEvent.click(canvas.getByRole('radio', { name: buildFeature }));
-      await userEvent.click(canvas.getByRole('radio', { name: fixBug }));
-      await expect(
-        canvas.getByRole('radio', { name: buildFeature }),
-      ).not.toBeChecked();
+      await userEvent.click(option(canvas, buildFeature));
+      await userEvent.click(option(canvas, fixBug));
+      await expect(option(canvas, buildFeature)).toHaveAttribute(
+        pressed,
+        'false',
+      );
       await userEvent.click(canvas.getByRole('button', { name: /^Next$/ }));
-      await userEvent.click(
-        canvas.getByRole('checkbox', { name: buildFeature }),
-      );
-      await userEvent.click(
-        canvas.getByRole('checkbox', { name: exploreIdea }),
-      );
+      await userEvent.click(option(canvas, buildFeature));
+      await userEvent.click(option(canvas, exploreIdea));
       await userEvent.type(
         canvas.getByRole('textbox', { name: customAnswer }),
         releaseReview,
@@ -45,14 +48,15 @@ function answers(width: number): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: previousQuestion }),
       );
-      await expect(canvas.getByRole('radio', { name: fixBug })).toBeChecked();
+      await expect(option(canvas, fixBug)).toHaveAttribute(pressed, 'true');
       await userEvent.click(canvas.getByRole('button', { name: nextQuestion }));
       await expect(
         canvas.getByRole('textbox', { name: customAnswer }),
       ).toHaveValue(releaseReview);
-      await expect(
-        canvas.getByRole('checkbox', { name: buildFeature }),
-      ).toBeChecked();
+      await expect(option(canvas, buildFeature)).toHaveAttribute(
+        pressed,
+        'true',
+      );
       await userEvent.click(canvas.getByRole('button', { name: /^Next$/ }));
       await expect(
         canvas.getByRole('button', { name: nextQuestion }),
@@ -106,13 +110,11 @@ export const KeyboardSelection: Story = {
     await settleViewport(1440);
   },
   play: async ({ canvas, userEvent, args }) => {
-    await userEvent.click(canvas.getByRole('radio', { name: buildFeature }));
-    canvas.getByRole('radio', { name: fixBug }).focus();
+    await userEvent.click(option(canvas, buildFeature));
+    option(canvas, fixBug).focus();
     await userEvent.keyboard('{Enter}');
-    await expect(canvas.getByRole('radio', { name: fixBug })).toBeChecked();
-    await expect(
-      canvas.queryByRole('checkbox', { name: buildFeature }),
-    ).not.toBeInTheDocument();
+    await expect(option(canvas, fixBug)).toHaveAttribute(pressed, 'true');
+    await expect(canvas.getByText('1 of 3', { exact: false })).toBeVisible();
     await expect(args.onAnswer).not.toHaveBeenCalled();
     await userEvent.keyboard('{Escape}');
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });
@@ -125,9 +127,9 @@ export const KeepConstrainedFormValidation: Story = {
     await expect(
       canvas.queryByRole('textbox', { name: customAnswer }),
     ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('checkbox', { name: buildFeature }));
+    await userEvent.click(option(canvas, buildFeature));
     await expect(canvas.getByRole('button', { name: 'Submit' })).toBeEnabled();
-    await userEvent.click(canvas.getByRole('checkbox', { name: fixBug }));
+    await userEvent.click(option(canvas, fixBug));
     await expect(canvas.getByRole('button', { name: 'Submit' })).toBeDisabled();
   },
 };

@@ -35,7 +35,9 @@ function TextField(props: StandaloneTextInputProps): ReactElement {
   );
 }
 
-function FieldLabel(props: StandaloneTextInputProps): ReactElement {
+function FieldLabel(props: StandaloneTextInputProps): ReactElement | null {
+  if (props.labelHidden) return null;
+
   return (
     <Text aria-hidden role="body">
       {requiredLabel(props)}

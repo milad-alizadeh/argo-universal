@@ -1,29 +1,40 @@
-import type * as PopoverPrimitive from '@rn-primitives/popover';
-import type * as React from 'react';
+import type { ReactNode } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import type {
+  OpenStateProps,
+  TriggerElement,
+} from '#primitives/overlays/open-state';
 
-export type PopoverProps = React.ComponentProps<
-  typeof PopoverPrimitive.Root
-> & {
-  open?: boolean;
+export type PopoverProps = OpenStateProps & {
   // Web only: phones have no pointer to hover with, so a press opens it.
   openOnHover?: boolean;
+  className?: string;
+  style?: StyleProp<ViewStyle>;
+  children: ReactNode;
 };
 
-export type PopoverTriggerProps = React.ComponentProps<
-  typeof PopoverPrimitive.Trigger
->;
+// The caller's own pressable element, which opens the popover.
+export type PopoverTriggerProps = {
+  disabled?: boolean | null;
+  children: TriggerElement;
+};
 
 /*
- * The library's content props, whose own notes mark the few that only the web or only phones
- * read, such as the web's focus and Escape handlers.
+ * Placement and look are the web popover's: phones show the content in a Sheet, which keeps its own
+ * placement, width and padding.
  */
-export type PopoverContentProps = Omit<
-  React.ComponentProps<typeof PopoverPrimitive.Content>,
-  'ref' | 'side'
-> & {
-  // Phones open it only above or below the trigger: `left` and `right` open below there.
+export type PopoverContentProps = {
   side?: 'top' | 'bottom' | 'left' | 'right';
-  // Native only: the web portals into the document body.
-  portalHost?: string;
+  align?: 'start' | 'center' | 'end';
+  sideOffset?: number;
+  // The popover's accessible name; a phone's Sheet takes it as its label.
+  accessibilityLabel?: string;
+  className?: string;
+  style?: StyleProp<ViewStyle>;
+  // Web only: where focus goes as the popover opens and after it closes.
+  onOpenAutoFocus?: (event: Event) => void;
+  onCloseAutoFocus?: (event: Event) => void;
+  // After the popover has closed.
   onClosed?: () => void;
+  children?: ReactNode;
 };

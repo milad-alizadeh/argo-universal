@@ -34,7 +34,7 @@ function PopoverSheetTrigger(
   props: Pick<PresentationProps, 'trigger'>,
 ): ReactElement {
   return (
-    <PopoverTrigger asChild disabled={!!props.trigger?.props.disabled}>
+    <PopoverTrigger disabled={!!props.trigger?.props.disabled}>
       {props.trigger}
     </PopoverTrigger>
   );

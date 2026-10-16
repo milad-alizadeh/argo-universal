@@ -1,43 +1,74 @@
-import * as DialogPrimitive from '@rn-primitives/dialog';
-import * as React from 'react';
+import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/buttons/button';
 import type { ButtonDataProps } from '#primitives/buttons/button';
-import { useWide } from '../../../use-wide/use-wide';
 import { DialogBody } from './dialog-body';
+import { useDialogState } from './dialog-context';
 import { DialogOverlay } from './dialog-overlay';
-import type { DialogContentProps as ContentProps } from './dialog-props';
+import {
+  DialogDescriptionText,
+  DialogPortal,
+  DialogTitleText,
+  DialogTrigger,
+} from './dialog-parts';
+import { useDialogPresentation } from './dialog-presentation';
+import type {
+  DialogContentProps as ContentProps,
+  DialogProps,
+  DialogPresentation,
+  DialogTextProps,
+} from './dialog-props';
+import { DialogRoot } from './dialog-root';
 import { DialogSheet } from './dialog-sheet';
 
-const Dialog = DialogPrimitive.Root;
-
-const DialogTrigger = DialogPrimitive.Trigger;
+function Dialog(props: DialogProps): React.JSX.Element {
+  return <DialogRoot {...props} />;
+}
 
 // A wide window centres the dialog; a narrow one, phone or web, raises the same content as a bottom sheet.
 function DialogContent(props: ContentProps): React.JSX.Element {
-  if (useWide()) return <CentredDialog {...props} />;
+  const presentation = useDialogPresentation();
 
+  if (presentation.wide) return <CentredDialog {...props} />;
+
+  return <NarrowDialog {...props} presentation={presentation} />;
+}
+
+function NarrowDialog({
+  presentation,
+  ...props
+}: ContentProps & { presentation: DialogPresentation }): React.JSX.Element {
   return (
     <DialogSheet
+      open={presentation.sheetOpen}
+      onClosed={presentation.onSheetClosed}
       label={props.accessibilityLabel}
       dismissible={props.dismissible}
     >
-      {/* Paper's iOS sheet pads its content 16 on every side; Android's drag handle zone already sets the top. */}
-      <View className={cn('gap-6 px-4 ios:py-4', props.className)}>
-        {props.children}
-      </View>
+      <NarrowDialogBody {...props} />
     </DialogSheet>
+  );
+}
+
+// Paper's iOS sheet pads its content on every side; Android's drag handle zone sets the top.
+function NarrowDialogBody(
+  props: Pick<ContentProps, 'className' | 'children'>,
+): React.JSX.Element {
+  return (
+    <View className={cn('gap-6 px-4 ios:py-4', props.className)}>
+      {props.children}
+    </View>
   );
 }
 
 function CentredDialog(props: ContentProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Portal>
+    <DialogPortal>
       <DialogOverlay dismissible={props.dismissible}>
         <DialogBody {...props} />
       </DialogOverlay>
-    </DialogPrimitive.Portal>
+    </DialogPortal>
   );
 }
 
@@ -54,7 +85,7 @@ function DialogFooter({ className, ...props }: ViewProps): React.JSX.Element {
   return (
     <View
       className={cn(
-        'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+        'flex flex-col-reverse gap-2 wide:flex-row wide:justify-end',
         className,
       )}
       {...props}
@@ -66,7 +97,7 @@ function DialogFooter({ className, ...props }: ViewProps): React.JSX.Element {
 function DialogCancel(
   props: Omit<ButtonDataProps, 'onPress' | 'variant' | 'fullWidth'>,
 ): React.JSX.Element {
-  const { onOpenChange } = DialogPrimitive.useRootContext();
+  const { onOpenChange } = useDialogState();
 
   return (
     <Button
@@ -78,29 +109,19 @@ function DialogCancel(
   );
 }
 
-function DialogTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>): React.JSX.Element {
+function DialogTitle(props: DialogTextProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Title
-      className={cn('type-heading', className)}
-      {...props}
-    />
+    <DialogTitleText className={cn('type-heading', props.className)}>
+      {props.children}
+    </DialogTitleText>
   );
 }
 
-function DialogDescription({
-  className,
-  ...props
-}: React.ComponentProps<
-  typeof DialogPrimitive.Description
->): React.JSX.Element {
+function DialogDescription(props: DialogTextProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Description
-      className={cn('type-secondary', className)}
-      {...props}
-    />
+    <DialogDescriptionText className={cn('type-secondary', props.className)}>
+      {props.children}
+    </DialogDescriptionText>
   );
 }
 

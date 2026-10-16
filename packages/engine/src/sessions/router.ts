@@ -42,7 +42,7 @@ import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
-import { shellSessionRouter } from './shells/router';
+import { createShellSessionRouter } from './shells/router';
 import { unimplementedSessionRouter } from './unimplemented-router';
 
 type SessionList = ReturnType<typeof createSessionList>;
@@ -163,6 +163,6 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createAnswerRouter(deps),
     createSubagentsRouter(deps),
     unimplementedSessionRouter,
-    shellSessionRouter,
+    createShellSessionRouter(deps),
   );
 });
