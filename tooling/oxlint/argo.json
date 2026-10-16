@@ -1960,6 +1960,13 @@
         "no-restricted-imports": [
           "error",
           {
+            "paths": [
+              {
+                "name": "@repo/engine/router",
+                "allowTypeImports": true,
+                "message": "Desktop may import only AppRouter's type for its own tRPC client (ADR-0016)."
+              }
+            ],
             "patterns": [
               {
                 "group": [
@@ -1967,6 +1974,7 @@
                   "!@repo/contracts",
                   "!@repo/contracts/**",
                   "!@repo/engine/server-runtime",
+                  "!@repo/engine/router",
                   "!@repo/machine-log",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
