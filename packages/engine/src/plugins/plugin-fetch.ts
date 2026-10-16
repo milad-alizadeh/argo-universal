@@ -4,8 +4,8 @@ import { request, type RequestOptions } from 'node:https';
 import type { LookupFunction } from 'node:net';
 import { CapabilityRefusal } from './capability-refusal';
 import type { PluginAccess } from './plugin-access';
-import { allowLiteral, checkedLookup } from './plugin-addresses';
-import { describe, redirected, type Hop } from './plugin-fetch-response';
+import { checkedLookup } from './plugin-addresses';
+import { redirected, responseValue, type Hop } from './plugin-fetch-response';
 import type { FetchCall, PluginValue } from './runtime-protocol';
 
 // What the Server decides about TLS and name lookup; tests pass a fixture certificate authority and resolver.
@@ -31,10 +31,10 @@ const refusedHeaders = new Set(['host', ':authority']);
  * and checks every address a name resolves to when it connects.
  */
 export async function fetchCall(
-  call: FetchCall,
+  hop: Hop,
   context: FetchContext,
 ): Promise<PluginValue> {
-  return follow(firstHop(call), context, 0);
+  return follow(hop, context, 0);
 }
 
 async function follow(
@@ -45,7 +45,7 @@ async function follow(
   const response = await send(hop, context);
   const next = redirected(hop, response);
 
-  if (!next) return describe(response);
+  if (!next) return responseValue(response);
 
   response.resume();
 
@@ -55,13 +55,19 @@ async function follow(
   return follow(next, context, redirects + 1);
 }
 
-export function parsedUrl(url: string): URL {
+function parsedUrl(url: string): URL {
   if (!URL.canParse(url)) throw new CapabilityRefusal(`${url} is not a URL`);
 
   return new URL(url);
 }
 
-function firstHop({ url, method = 'GET', headers = {}, body }: FetchCall): Hop {
+// The call as its first request, refused before anything is sent if it names a refused header.
+export function firstHop({
+  url,
+  method = 'GET',
+  headers = {},
+  body,
+}: FetchCall): Hop {
   allowHeaders(headers);
 
   return { url: parsedUrl(url), method: method.toUpperCase(), headers, body };
@@ -90,9 +96,7 @@ function requestOptions(
   hop: Hop,
   { access, network, signal }: FetchContext,
 ): RequestOptions {
-  const rule = access.host(hop.url);
-
-  allowLiteral(hop.url, rule);
+  const rule = access.checkHost(hop.url);
 
   return {
     method: hop.method,

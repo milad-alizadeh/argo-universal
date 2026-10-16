@@ -46,7 +46,7 @@ async function writePlugin(home: string, plugin: FixturePlugin): Promise<void> {
     join(folder, main),
   );
 
-  if (plugin.dev) await markDev(folder);
+  if (plugin.dev) await addDevSource(folder);
 }
 
 async function writeManifest({
@@ -75,8 +75,8 @@ async function writeManifest({
   );
 }
 
-async function markDev(folder: string): Promise<void> {
-  await writeFile(join(folder, '.argo-dev'), '');
+// A dev Plugin's entry imports a TypeScript source the Server bundles.
+async function addDevSource(folder: string): Promise<void> {
   await cp(
     new URL('./plugin-runtime/check.ts', import.meta.url),
     join(folder, 'check.ts'),

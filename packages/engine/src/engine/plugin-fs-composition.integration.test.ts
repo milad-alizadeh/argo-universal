@@ -98,7 +98,13 @@ it.each([
   {
     name: 'a write to a git folder in the data folder',
     call: (): string => `argo.fs.write('$DATA/repo/.git/config', 'x')`,
-    reason: 'git folder',
+    reason: 'git repository',
+  },
+  {
+    name: 'a HEAD file, which makes its folder a bare git repository',
+    call: (): string =>
+      `argo.fs.write('$DATA/bare/HEAD', 'ref: refs/heads/main')`,
+    reason: 'git repository',
   },
   {
     name: 'a listing outside',

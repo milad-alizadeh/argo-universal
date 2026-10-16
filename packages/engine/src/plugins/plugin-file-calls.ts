@@ -23,16 +23,19 @@ type Opening = { access: PluginAccess; path: string; kind: FileAccess };
 // An opened file and what `fstat` said about it.
 type Opened = { handle: FileHandle; info: Stats; path: string };
 
+export const fileAccessOf = (call: FsCall): FileAccess =>
+  call.action === 'write' ? 'write' : 'read';
+
 /*
- * Runs a checked `argo.fs` call. The path is resolved and checked first; then the file that was
- * actually opened is checked again, so swapping a path for a symlink after the first check gains nothing.
+ * Runs an `argo.fs` call on the path the checker resolved and allowed. The file that was actually
+ * opened is checked again, so swapping a path for a symlink after the first check gains nothing.
  */
 export async function fsCall(
   access: PluginAccess,
   call: FsCall,
+  path: string,
 ): Promise<PluginValue> {
-  const kind: FileAccess = call.action === 'write' ? 'write' : 'read';
-  const opening = { access, kind, path: await access.path(call.path, kind) };
+  const opening = { access, kind: fileAccessOf(call), path };
 
   if (call.action === 'write') return write(opening, call.content);
 
@@ -45,7 +48,8 @@ export async function fsCall(
 async function write(opening: Opening, content: string): Promise<null> {
   if (Buffer.byteLength(content) > argoLimitBytes)
     throw new Error(`Content is over the ${argoLimitBytes} byte write limit`);
-  await mkdir(dirname(opening.path), { recursive: true });
+  await opening.access.makeDataFolder();
+  await makeParents(opening, dirname(opening.path));
 
   const flags = openFlags | constants.O_WRONLY | constants.O_CREAT;
 
@@ -56,6 +60,44 @@ async function write(opening: Opening, content: string): Promise<null> {
     return null;
   });
 }
+
+/*
+ * Creates missing parent folders one at a time, checking each folder it creates in before and
+ * after, so a folder swapped for a symlink stops the write instead of growing folders elsewhere.
+ */
+async function makeParents(opening: Opening, folder: string): Promise<void> {
+  if (await existingFolder(opening, folder)) return;
+
+  await makeParents(opening, dirname(folder));
+  await mkdir(folder).catch((error: NodeJS.ErrnoException) => {
+    if (error.code !== 'EEXIST') throw error;
+  });
+  await existingFolder(opening, folder);
+}
+
+// True when the folder exists where it was checked to be; refused when it now resolves elsewhere.
+async function existingFolder(
+  { access }: Opening,
+  folder: string,
+): Promise<boolean> {
+  const real = await realOrMissing(folder);
+
+  if (real === null) return false;
+
+  if (real !== folder)
+    throw new CapabilityRefusal(`${folder} changed while it was created`);
+
+  await access.allowPath({ target: real, shown: real }, 'write', 1);
+
+  return true;
+}
+
+const realOrMissing = (path: string): Promise<string | null> =>
+  realpath(path).catch((error: NodeJS.ErrnoException): null => {
+    if (error.code === 'ENOENT') return null;
+
+    throw error;
+  });
 
 async function opened<T>(
   opening: Opening,
@@ -92,7 +134,7 @@ async function sameFile(
   if (now !== path || !sameNode(await stat(now), info))
     throw new CapabilityRefusal(`${path} changed while it was opened`);
 
-  await access.allowPath(now, kind, linksOf(info));
+  await access.allowPath({ target: now, shown: now }, kind, linksOf(info));
 }
 
 // A folder's link count is its entries; only a file's says whether another name reaches it.

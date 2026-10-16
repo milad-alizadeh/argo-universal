@@ -1,6 +1,10 @@
 import { mkdir, realpath } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
-import type { PluginCapability } from '@repo/contracts/plugins';
+import type {
+  FetchCapability,
+  PluginCapability,
+  ProcessCapability,
+} from '@repo/contracts/plugins';
 import { CapabilityRefusal } from './capability-refusal';
 import {
   allowLinks,
@@ -9,15 +13,16 @@ import {
   argsMatch,
   childEnvironment,
   resolveReal,
-  type ProcessCapability,
   type Roots,
+  type Subject,
 } from './plugin-access-rules';
+import { allowLiteral } from './plugin-addresses';
 import type { ProcessCommand } from './runtime-protocol';
 
 export type PluginGrant = {
   capabilities: readonly PluginCapability[];
-  // The Plugin's code folder, which `argo.fs` never writes.
-  codeFolder: string;
+  // The Plugin's code folder, which `argo.fs` never writes; null for a Plugin never activated.
+  codeFolder: string | null;
 };
 
 export type AccessScope = {
@@ -39,8 +44,6 @@ export type CheckedCommand = ProcessCommand & {
 // A fetch hop the Capabilities allow; `private` is true only for a host declared with a reason.
 export type HostRule = { private: boolean };
 
-type FetchCapability = Extract<PluginCapability, { kind: 'fetch' }>;
-
 /*
  * The one checker for a Plugin's `argo.fs`, `argo.process` and `argo.fetch` calls (ADR-0030).
  * Deny beats allow, and nothing beyond the manifest is granted.
@@ -49,13 +52,13 @@ export class PluginAccess {
   constructor(private readonly scope: AccessScope) {}
 
   // Resolves symlinks and `..` before checking, so the answer is about the real file.
-  async path(path: string, access: FileAccess): Promise<string> {
+  async checkPath(path: string, access: FileAccess): Promise<string> {
     if (!isAbsolute(path))
       throw new CapabilityRefusal(`${path} is not an absolute path`);
 
     const target = await resolveReal(resolve(path));
 
-    await this.allowPath(target, access);
+    await this.allowPath({ target, shown: path }, access, 1);
 
     return target;
   }
@@ -65,17 +68,17 @@ export class PluginAccess {
    * first check gains nothing, and a hard link in the data folder can't reach a file elsewhere.
    */
   async allowPath(
-    target: string,
+    subject: Subject,
     access: FileAccess,
-    links = 1,
+    links: number,
   ): Promise<void> {
     const roots = await this.roots();
 
-    (access === 'write' ? allowWrite : allowRead)(target, roots);
-    allowLinks(target, roots, links);
+    (access === 'write' ? allowWrite : allowRead)(subject, roots);
+    allowLinks(subject, roots, links);
   }
 
-  async command(command: ProcessCommand): Promise<CheckedCommand> {
+  async checkCommand(command: ProcessCommand): Promise<CheckedCommand> {
     const matching = this.matching(command.argv);
 
     if (matching.length === 0)
@@ -90,7 +93,7 @@ export class PluginAccess {
     };
   }
 
-  host(url: URL): HostRule {
+  checkHost(url: URL): HostRule {
     if (url.protocol !== 'https:')
       throw new CapabilityRefusal(`${url.protocol} is not HTTPS`);
 
@@ -98,9 +101,13 @@ export class PluginAccess {
     const exact = capabilities.find(({ host }) => host === url.host);
 
     // Only a host named with a reason may reach a loopback or private address; `*` never does.
-    if (exact) return { private: Boolean(exact.reason) };
+    const rule = exact
+      ? { private: Boolean(exact.reason) }
+      : anyHost(capabilities, url);
 
-    return anyHost(capabilities, url);
+    allowLiteral(url, rule);
+
+    return rule;
   }
 
   private matching(argv: readonly string[]): ProcessCapability[] {
@@ -114,7 +121,7 @@ export class PluginAccess {
 
   // A command runs in the data folder unless it names a folder in the data folder or a Project.
   private async workingDirectory(cwd: string | undefined): Promise<string> {
-    if (cwd === undefined) return this.dataFolder();
+    if (cwd === undefined) return this.makeDataFolder();
 
     if (!isAbsolute(cwd))
       throw new CapabilityRefusal(`${cwd} is not an absolute path`);
@@ -123,12 +130,13 @@ export class PluginAccess {
       throw new CapabilityRefusal(`${cwd} is not a folder`);
     });
 
-    allowRead(target, await this.roots());
+    allowRead({ target, shown: cwd }, await this.roots());
 
     return target;
   }
 
-  private async dataFolder(): Promise<string> {
+  // The data folder, created if it is missing; its path is the Server's, never the Plugin's.
+  async makeDataFolder(): Promise<string> {
     await mkdir(this.scope.dataFolder, { recursive: true });
 
     return realpath(this.scope.dataFolder);
@@ -137,7 +145,9 @@ export class PluginAccess {
   private async roots(): Promise<Roots> {
     const [data, code, projects] = await Promise.all([
       resolveReal(this.scope.dataFolder),
-      realOrNull(this.scope.grant.codeFolder),
+      this.scope.grant.codeFolder === null
+        ? null
+        : realOrNull(this.scope.grant.codeFolder),
       this.scope.projects().then((paths) => Promise.all(paths.map(realOrNull))),
     ]);
 

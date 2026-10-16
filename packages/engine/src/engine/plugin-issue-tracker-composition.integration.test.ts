@@ -20,7 +20,11 @@ it('loads the shipped Issue tracker with its declared Capabilities and starts it
     firstParty: true,
     manifest: {
       capabilities: expect.arrayContaining([
-        { kind: 'process:exec', command: 'gh', args: ['issue', 'list', '**'] },
+        {
+          kind: 'process:exec',
+          command: 'gh',
+          args: ['issue', 'close', '*', '--repo', '*'],
+        },
       ]),
     },
   });

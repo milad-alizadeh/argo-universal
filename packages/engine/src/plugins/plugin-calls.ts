@@ -1,6 +1,7 @@
 import { CapabilityRefusal } from './capability-refusal';
 import type { PluginAccess } from './plugin-access';
-import { parsedUrl, type PluginNetwork } from './plugin-fetch';
+import { firstHop, type PluginNetwork } from './plugin-fetch';
+import { fileAccessOf } from './plugin-file-calls';
 import type { CheckedProcessCall } from './plugin-processes';
 import type { PluginResources } from './plugin-resources';
 import {
@@ -44,10 +45,11 @@ async function fsRequest(
   { access, resources, allowed }: MachineContext,
   call: FsCall,
 ): Promise<PluginValue> {
-  await access.path(call.path, call.action === 'write' ? 'write' : 'read');
+  const path = await access.checkPath(call.path, fileAccessOf(call));
+
   allowed();
 
-  return resources.fs(access, call);
+  return resources.fs(access, call, path);
 }
 
 async function processRequest(
@@ -65,10 +67,12 @@ async function fetchRequest(
   { access, resources, network, allowed }: MachineContext,
   call: FetchCall,
 ): Promise<PluginValue> {
-  access.host(parsedUrl(call.url));
+  const hop = firstHop(call);
+
+  access.checkHost(hop.url);
   allowed();
 
-  return resources.fetch(call, { access, network });
+  return resources.fetch(hop, { access, network });
 }
 
 // When ADR-0027's `process.spawn` Hooks land (#821), they run before this, so the check sees the final argv.
@@ -78,7 +82,7 @@ async function checkedProcess(
 ): Promise<CheckedProcessCall> {
   if (call.action === 'wait' || call.action === 'kill') return call;
 
-  return { ...(await access.command(call)), action: call.action };
+  return { ...(await access.checkCommand(call)), action: call.action };
 }
 
 // A refusal is one line naming the Plugin and the call; any other failure keeps its own line.

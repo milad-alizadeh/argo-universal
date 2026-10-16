@@ -89,6 +89,6 @@ export type PluginList = z.infer<typeof PluginList>;
 export {
   PluginCapability,
   isRefusedVariable,
-  isSpecialHost,
-  hostnameOf,
+  type FetchCapability,
+  type ProcessCapability,
 } from './capabilities';

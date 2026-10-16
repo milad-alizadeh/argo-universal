@@ -10,6 +10,7 @@ import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { onTestFinished, vi } from 'vitest';
 import { z } from 'zod';
 import type { PluginNetwork } from '../src/plugins';
+import { fixtureTls } from './fixture-tls';
 import { createRuntimePlugins } from './runtime-plugins';
 
 export const outFile = 'out.json';
@@ -86,25 +87,21 @@ type ProbeResult = z.infer<typeof ProbeResult>;
 export const probeResult = async (data: string): Promise<ProbeResult> =>
   ProbeResult.parse(JSON.parse(await readFile(join(data, outFile), 'utf8')));
 
-const tls = async (file: string): Promise<string> =>
-  readFile(new URL(`./tls/${file}`, import.meta.url), 'utf8');
-
 // A self-signed certificate for localhost, 127.0.0.1 and api.fixture.test, trusted only by tests.
 export async function fixtureNetwork(): Promise<PluginNetwork> {
-  return { ca: await tls('cert.pem'), lookup: fixtureLookup };
+  return { ca: (await fixtureTls()).cert, lookup: fixtureLookup };
 }
 
-// `api.fixture.test` is a name, not declared as loopback, that resolves to loopback: what DNS rebinding does.
+// Names, not declared as loopback, that resolve to loopback: what DNS rebinding does.
+const rebinding = new Set(['api.fixture.test', 'rebind.fixture.test']);
+
 const fixtureLookup: LookupFunction = (hostname, options, callback) =>
-  hostname === 'api.fixture.test'
+  rebinding.has(hostname)
     ? lookup('127.0.0.1', options, callback)
     : lookup(hostname, options, callback);
 
 export async function httpsServer(listener: RequestListener): Promise<number> {
-  const server = createServer(
-    { key: await tls('key.pem'), cert: await tls('cert.pem') },
-    listener,
-  );
+  const server = createServer(await fixtureTls(), listener);
 
   await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
   onTestFinished(() => void server.close());

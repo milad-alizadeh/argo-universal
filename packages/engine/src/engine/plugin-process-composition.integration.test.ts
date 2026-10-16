@@ -80,6 +80,11 @@ it.each([
     reason: declared,
   },
   {
+    name: 'an option where * takes one argument',
+    call: `argo.process.run(['gh', 'issue', 'view', '--web'])`,
+    reason: declared,
+  },
+  {
     name: 'a working directory outside',
     call: `argo.process.run(${ghList}, { cwd: '/' })`,
     reason: 'outside',
@@ -95,6 +100,8 @@ it.each([
     'NODE_OPTIONS',
     'GIT_CONFIG_COUNT',
     'BASH_ENV',
+    'NPM_CONFIG_SCRIPT_SHELL',
+    'LESSOPEN',
   ].map((name) => ({
     name,
     call: `argo.process.run(${ghList}, { env: { ${name}: '/tmp/x' } })`,
@@ -110,13 +117,27 @@ it.each([
 
   const { results, log } = await runProbe({
     calls: { refused: call },
-    capabilities: [gh],
+    capabilities: [
+      gh,
+      { kind: exec, command: 'gh', args: ['issue', 'view', '*'] },
+    ],
   });
 
   expect(results).toEqual({ refused: refusal(reason) });
   expect(refusedLines(log)).toEqual([
     expect.stringContaining('Plugin probe: refused argo.process.'),
   ]);
+});
+
+it('lets * take an option only after a declared --', async () => {
+  const { results } = await runProbe({
+    calls: {
+      afterEnd: `argo.process.run(['echo', '--', '-n']).then((r) => r.stdout)`,
+    },
+    capabilities: [{ kind: exec, command: 'echo', args: ['--', '*'] }],
+  });
+
+  expect(results).toEqual({ afterEnd: { value: '-- -n\n' } });
 });
 
 it('grants nothing a manifest does not declare', async () => {

@@ -1,57 +1,18 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { PluginCapability } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
-import { httpsServer } from '#mocks/probe-plugin';
+import {
+  fetchLimit,
+  localhost,
+  redirectTo,
+  serving,
+} from '#mocks/fetch-fixture-server';
 import { refusal, refusedLines, runProbe } from '#mocks/probe-run';
-
-const fetchLimit = 5_242_880;
 
 const undeclared = 'not a declared host';
 
 const notHttps = 'not HTTPS';
 
-const redirectPrefix = '/to/';
-
-// `/big` is over the cap, `/same` redirects home, `/to/<url>` redirects to the URL; anything else echoes.
-const routes = new Map<string, (response: ServerResponse) => void>([
-  ['/big', (response): void => void response.end('x'.repeat(fetchLimit + 1))],
-  [
-    '/same',
-    (response): void => void response.writeHead(302, { location: '/' }).end(),
-  ],
-]);
-
-const serving = (): Promise<number> =>
-  httpsServer((request, response) => {
-    const route = routes.get(request.url ?? '');
-
-    if (route) return route(response);
-
-    redirectOrEcho(request, response);
-  });
-
-function redirectOrEcho(
-  { url = '', method }: IncomingMessage,
-  response: ServerResponse,
-): void {
-  if (!url.startsWith(redirectPrefix))
-    return void response.end(JSON.stringify({ method, url }));
-
-  response
-    .writeHead(307, {
-      location: decodeURIComponent(url.slice(redirectPrefix.length)),
-    })
-    .end();
-}
-
-const localhost = (port: number): PluginCapability => ({
-  kind: 'fetch',
-  host: `localhost:${port}`,
-  reason: 'The fixture server',
-});
-
-const redirectTo = (port: number, target: string): string =>
-  `https://localhost:${port}${redirectPrefix}${encodeURIComponent(target)}`;
+const privateAddress = 'private address';
 
 it('fetches a declared host over HTTPS, follows an allowed redirect and caps the body', async () => {
   const port = await serving();
@@ -109,12 +70,18 @@ it.each([
   {
     name: 'a name that resolves to loopback without a reason',
     url: (port: number): string => `https://api.fixture.test:${port}/`,
-    reason: 'private address',
+    reason: privateAddress,
+  },
+  {
+    name: 'a name that resolves to loopback under * with a reason',
+    url: (port: number): string => `https://rebind.fixture.test:${port}/`,
+    reason: privateAddress,
+    extra: [anywhere],
   },
   {
     name: 'a raw loopback address under *',
     url: (port: number): string => `https://127.0.0.1:${port}/`,
-    reason: 'private address',
+    reason: privateAddress,
     extra: [anywhere],
   },
 ])('refuses $name and logs it once', async ({ url, reason, extra = [] }) => {
@@ -136,10 +103,10 @@ it.each([
   ]);
 });
 
-it('refuses a Host header that would reach another site on the same address', async () => {
+it('refuses a Host header that would reach another site on the same address, logging it once', async () => {
   const port = await serving();
 
-  const { results } = await runProbe({
+  const { results, log } = await runProbe({
     calls: {
       refused: `argo.fetch('https://localhost:${port}/', { headers: { Host: 'example.com' } })`,
     },
@@ -150,4 +117,7 @@ it('refuses a Host header that would reach another site on the same address', as
   expect(results).toEqual({
     refused: { error: 'Refused: The Host header is never allowed' },
   });
+  expect(log.split('\n').filter((line) => line.includes('argo.fetch'))).toEqual(
+    [expect.stringContaining('Plugin probe: refused argo.fetch GET')],
+  );
 });

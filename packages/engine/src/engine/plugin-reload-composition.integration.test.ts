@@ -1,4 +1,4 @@
-import { readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
@@ -27,49 +27,43 @@ it('reports a dev Plugin outside the first-party root and never starts it', asyn
   );
 });
 
-it.each([{ marked: true }, { marked: false }])(
-  'bundles and reloads a first-party dev Plugin (marked: $marked), recovering after runtime and build errors',
-  async ({ marked }) => {
-    const home = await createRuntimePlugins([
-      { id: 'dev', fixture: 'dev', dev: true },
-    ]);
+it('bundles and reloads a first-party dev Plugin, recovering after runtime and build errors', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'dev', fixture: 'dev', dev: true },
+  ]);
 
-    const directory = join(home, shippedFolder);
+  const directory = join(home, shippedFolder);
 
-    if (!marked) await rm(join(directory, 'dev/.argo-dev'));
+  const { caller } = await startEngineTestHost({ home });
 
-    const { caller } = await startEngineTestHost({ home });
+  const source = join(directory, 'dev/check.ts');
 
-    const source = join(directory, 'dev/check.ts');
+  expect(await caller.plugins.activate({ pluginId: 'dev' })).toMatchObject({
+    state: 'crashed',
+    error: 'Initial dev Plugin',
+  });
+  await writeFile(source, 'export function check(): void {}');
+  await expect
+    .poll(() => caller.plugins.list())
+    .toMatchObject({ plugins: [{ state: 'running', error: null }] });
 
-    expect(await caller.plugins.activate({ pluginId: 'dev' })).toMatchObject({
-      state: 'crashed',
-      error: 'Initial dev Plugin',
+  await writeFile(source, 'not valid TypeScript }');
+  await expect
+    .poll(() => caller.plugins.list())
+    .toMatchObject({ plugins: [{ state: 'crashed' }] });
+  await writeFile(
+    source,
+    'export function check(): void { throw Error("Reloaded dev Plugin"); }',
+  );
+  await expect
+    .poll(() => caller.plugins.list())
+    .toMatchObject({
+      plugins: [{ state: 'crashed', error: 'Reloaded dev Plugin' }],
     });
-    await writeFile(source, 'export function check(): void {}');
-    await expect
-      .poll(() => caller.plugins.list())
-      .toMatchObject({ plugins: [{ state: 'running', error: null }] });
-
-    await writeFile(source, 'not valid TypeScript }');
-    await expect
-      .poll(() => caller.plugins.list())
-      .toMatchObject({ plugins: [{ state: 'crashed' }] });
-    await writeFile(
-      source,
-      'export function check(): void { throw Error("Reloaded dev Plugin"); }',
-    );
-    await expect
-      .poll(() => caller.plugins.list())
-      .toMatchObject({
-        plugins: [{ state: 'crashed', error: 'Reloaded dev Plugin' }],
-      });
-    expect(await caller.plugins.activate({ pluginId: 'dev' })).toMatchObject({
-      error: 'Reloaded dev Plugin',
-    });
-    expect(await readFile(join(directory, 'dev/index.mjs'), 'utf8')).toContain(
-      'import { check }',
-    );
-  },
-  20_000,
-);
+  expect(await caller.plugins.activate({ pluginId: 'dev' })).toMatchObject({
+    error: 'Reloaded dev Plugin',
+  });
+  expect(await readFile(join(directory, 'dev/index.mjs'), 'utf8')).toContain(
+    'import { check }',
+  );
+}, 20_000);

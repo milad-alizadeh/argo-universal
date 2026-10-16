@@ -23,7 +23,7 @@ export type PluginServiceOptions = {
 };
 
 // Nothing is granted to a Plugin that was never activated with its manifest's Capabilities.
-const noGrant: PluginGrant = { capabilities: [], codeFolder: '' };
+const noGrant: PluginGrant = { capabilities: [], codeFolder: null };
 
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {

@@ -1,6 +1,4 @@
-import { stat } from 'node:fs/promises';
-import { join } from 'node:path';
-import type { PluginCapability, PluginList } from '@repo/contracts/plugins';
+import type { PluginList } from '@repo/contracts/plugins';
 import type {
   PluginFailure,
   PluginStatus,
@@ -35,9 +33,11 @@ export class PluginService {
 
     return runtime.activate({
       entry: { pluginId, directory, main: plugin.manifest.main },
-      dev: plugin.firstParty || (await markedDev(directory)),
+      // Only first-party Plugins load (the loader refuses the rest), and they run from source.
+      dev: plugin.firstParty,
       name: plugin.manifest.name,
-      capabilities: grantedCapabilities(plugin),
+      // Granted at load with no prompt (ADR-0030).
+      capabilities: plugin.manifest.capabilities ?? [],
     });
   }
 
@@ -89,16 +89,3 @@ function requireRuntime(deps: PluginServiceDeps): PluginRuntime {
 
   return deps.pluginRuntime;
 }
-
-const markedDev = (directory: string): Promise<boolean> =>
-  stat(join(directory, '.argo-dev')).then(
-    (marker) => marker.isFile(),
-    () => false,
-  );
-
-// Only first-party Plugins load, and they are granted what they declare with no prompt (ADR-0030).
-const grantedCapabilities = ({
-  firstParty,
-  manifest,
-}: PluginDescriptor): readonly PluginCapability[] =>
-  firstParty ? (manifest.capabilities ?? []) : [];

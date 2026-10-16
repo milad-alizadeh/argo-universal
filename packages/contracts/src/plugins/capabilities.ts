@@ -22,6 +22,10 @@ const refusedVariables = [
   /^(PATH|HOME|XDG_CONFIG_HOME|GH_CONFIG_DIR)$/,
   /^(EDITOR|VISUAL|PAGER|BROWSER|GH_BROWSER|GH_PAGER|SSH_ASKPASS)$/,
   /^JAVA_TOOL_OPTIONS$/,
+  // Shell start-up and pager hooks, and npm's config, which names scripts and Node options.
+  /^(ZDOTDIR|SHELLOPTS|BASHOPTS|PS4|PROMPT_COMMAND)$/,
+  /^(LESSOPEN|LESSCLOSE|MANPAGER)$/,
+  /^NPM_CONFIG_/,
 ];
 
 // Names are compared upper-cased, so a lower-case spelling can never slip past.
@@ -71,10 +75,10 @@ const specialHostnames: ((name: string) => boolean)[] = [
   (name) => name.endsWith('.localhost'),
 ];
 
-export const isSpecialHost = (host: string): boolean =>
+const isSpecialHost = (host: string): boolean =>
   specialHostnames.some((special) => special(hostnameOf(host)));
 
-export const hostnameOf = (host: string): string =>
+const hostnameOf = (host: string): string =>
   host.startsWith('[')
     ? host.slice(0, host.indexOf(']') + 1)
     : (host.split(':').at(0) ?? host);

@@ -1,9 +1,10 @@
 import type { PluginAccess } from './plugin-access';
 import { fetchCall, type FetchContext } from './plugin-fetch';
+import type { Hop } from './plugin-fetch-response';
 import { fsCall } from './plugin-file-calls';
 import { argoTimeoutMs } from './plugin-limits';
 import { PluginProcesses, type CheckedProcessCall } from './plugin-processes';
-import type { FetchCall, FsCall, PluginValue } from './runtime-protocol';
+import type { FsCall, PluginValue } from './runtime-protocol';
 
 /*
  * What one Plugin's `argo` calls hold open on the Server: child processes, timers and requests.
@@ -21,10 +22,14 @@ export class PluginResources {
     for (const cleanup of this.cleanups) cleanup();
   }
 
-  async fs(access: PluginAccess, call: FsCall): Promise<PluginValue> {
+  async fs(
+    access: PluginAccess,
+    call: FsCall,
+    path: string,
+  ): Promise<PluginValue> {
     this.assertOpen();
 
-    return fsCall(access, call);
+    return fsCall(access, call, path);
   }
 
   async process(call: CheckedProcessCall): Promise<PluginValue> {
@@ -34,7 +39,7 @@ export class PluginResources {
   }
 
   async fetch(
-    call: FetchCall,
+    hop: Hop,
     context: Omit<FetchContext, 'signal'>,
   ): Promise<PluginValue> {
     this.assertOpen();
@@ -42,7 +47,7 @@ export class PluginResources {
     const done = this.timed(request);
 
     try {
-      return await fetchCall(call, { ...context, signal: request.signal });
+      return await fetchCall(hop, { ...context, signal: request.signal });
     } finally {
       done();
     }

@@ -88,7 +88,7 @@ const without = (
 type Received = { chunks: Buffer[]; size: number };
 
 // Reads the body as a stream and stops at the cap, so a huge response is never held whole.
-export async function describe(
+export async function responseValue(
   response: IncomingMessage,
 ): Promise<PluginValue> {
   const { chunks, size } = await readCapped(response);
