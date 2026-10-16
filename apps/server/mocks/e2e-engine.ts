@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { openDatabase } from '@repo/db';
+import { project } from '@repo/db/schema';
 import { composeEngine } from '@repo/engine/compose';
 import type { EngineMessage } from '@repo/engine/ipc';
 import {
@@ -13,14 +15,16 @@ import {
   AppFixtureOptions,
   fixtureAgents,
 } from '@repo/mocks/agent/app-fixtures';
-import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { createInstallationPorts } from '@repo/mocks/registry/installation';
 import { createFileAgentsFetcher } from '@repo/mocks/registry/port';
+import { scriptedDownloads } from '@repo/mocks/registry/scripted';
 import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
 import { firstPartyPluginsDirectory } from '../src/engine/first-party-plugins';
 
 const home = resolveRuntimeDirectory();
+
+const firstStart = !existsSync(join(home, 'fixture-started'));
 
 const startedAt = new Date().toISOString();
 
@@ -29,13 +33,6 @@ const version = packageJson.version;
 const options = AppFixtureAgents.parse(
   JSON.parse(process.env.ARGO_E2E_AGENTS ?? '{}'),
 );
-
-const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
-
-// The scripted Agents log the ACP requests e2e steps check.
-const agentEnvironment: Record<string, string> = requestLog
-  ? { ARGO_E2E_REQUEST_LOG: requestLog }
-  : {};
 
 const port = z.coerce
   .number()
@@ -53,6 +50,7 @@ function publishAddress(message: EngineMessage): void {
   }
 
   if (message.type !== 'ready') return;
+  seedInitialProjects();
   writeServerAddress(home, {
     pid: process.pid,
     port: message.port,
@@ -64,32 +62,12 @@ function publishAddress(message: EngineMessage): void {
 const seed = openDatabase(join(home, 'argo.db'));
 
 const save = seed.$client.prepare(
-  "update agents set configuration = ? where id = ? and json_extract(configuration, '$.source') = 'registry' and json_extract(configuration, '$.release') is null",
+  'INSERT OR IGNORE INTO agent_servers (id) VALUES (?)',
 );
 
 for (const identity of fixtureAgents) {
-  const fixture = AppFixtureOptions.parse(options[identity.agent] ?? {});
-
-  const configuration =
-    fixture.availability === 'not_installed'
-      ? { source: 'registry', release: null, overrides: { args: [], env: [] } }
-      : {
-          source: 'custom',
-          definition: {
-            name: identity.label,
-            ...scriptedAgentCommand(
-              fixture.availability === 'not_signed_in'
-                ? 'signed-out'
-                : fixture.scenario,
-            ),
-            env: Object.entries(agentEnvironment).map(([name, value]) => ({
-              name,
-              value,
-            })),
-          },
-        };
-
-  save.run(JSON.stringify(configuration), identity.agent);
+  if (AppFixtureOptions.parse(options[identity.agent] ?? {}).installed)
+    save.run(identity.agent);
 }
 
 seed.$client.close();
@@ -105,6 +83,7 @@ const engine = composeEngine({
   report: publishAddress,
   installationPorts: createInstallationPorts({
     packageName: 'example-agent',
+    downloads: scriptedDownloads(options),
     scenarioPath: z.string().parse(process.env.ARGO_E2E_INSTALLATION_PATH),
   }),
   fetchAgents: createFileAgentsFetcher(
@@ -127,3 +106,12 @@ engine.subscribe({
 });
 
 engine.start();
+
+function seedInitialProjects(): void {
+  if (firstStart && process.env.ARGO_E2E_NO_PROJECTS === '1') clearProjects();
+  writeFileSync(join(home, 'fixture-started'), 'started');
+}
+
+function clearProjects(): void {
+  engine.getSnapshot().context.database?.delete(project).run();
+}

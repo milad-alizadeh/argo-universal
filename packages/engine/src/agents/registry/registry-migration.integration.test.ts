@@ -18,7 +18,7 @@ const previousMigrations = async (directory: string): Promise<string> => {
   await mkdir(previous);
 
   for (const entry of await readdir(migrationsFolder)) {
-    if (entry.includes('registry_cache')) continue;
+    if (entry >= '20261015224114_registry_cache') continue;
     await symlink(join(migrationsFolder, entry), join(previous, entry), 'dir');
   }
 

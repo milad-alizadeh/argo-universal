@@ -1,9 +1,4 @@
-import type {
-  AgentAuthTerminalFrame,
-  AgentLoginTerminalInput,
-  AgentCheck,
-} from '@repo/contracts';
-import type { AuthenticationMethod } from './acp/auth-methods';
+import type { AgentCheck } from '@repo/contracts';
 
 // How the Engine starts one Agent program; the ACP module launches it.
 export type AgentLaunch = {
@@ -17,12 +12,14 @@ export type AgentLaunch = {
   cwd: string;
   env: Readonly<Record<string, string>>;
   authContext: string;
+  release?: () => void;
 };
 
 export type ResolveAgentLaunch = (input: {
   agent: string;
   projectId: string;
   projectPath: string;
+  signal?: AbortSignal;
 }) => Promise<AgentLaunch>;
 
 export type AgentLaunchSubject = { name: string; launch: AgentLaunch };
@@ -31,37 +28,6 @@ export type AgentLaunchSubject = { name: string; launch: AgentLaunch };
 export type CheckAgentLaunch = (
   subject: AgentLaunchSubject,
 ) => Promise<AgentCheck>;
-
-export type LoginAgentRequest = { id: string; url: string; message: string };
-
-export type LoginAgentOutcome = {
-  status: 'ready' | 'account-rejected' | 'authentication-required';
-  failure?: string;
-};
-
-export type LoginAgentCallbacks = {
-  reserveTerminalAuthentication?: (launch: AgentLaunch) => void;
-  createElicitation: (
-    request: LoginAgentRequest,
-    signal?: AbortSignal,
-  ) => Promise<{ action: 'accept' | 'decline' | 'cancel' }>;
-  signal: AbortSignal;
-};
-
-export type LoginAgentConnection = {
-  methods: readonly AuthenticationMethod[];
-  authenticate: (methodId: string) => Promise<void>;
-  checkReady: () => Promise<LoginAgentOutcome>;
-  close: () => Promise<void>;
-  terminalActive?: () => boolean;
-  readTerminal?: (cursor: number) => AgentAuthTerminalFrame;
-  inputTerminal?: (input: AgentLoginTerminalInput) => void;
-};
-
-export type OpenLoginAgent = (
-  subject: AgentLaunchSubject,
-  callbacks: LoginAgentCallbacks,
-) => Promise<LoginAgentConnection>;
 
 export type LoginTerminalProcess = {
   exited: Promise<{ exitCode: number; signal?: number }>;

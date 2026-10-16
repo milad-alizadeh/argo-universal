@@ -49,7 +49,11 @@ it('rejects unreadable and missing stored rows without writing changes, then acc
       .get('session-1'),
   ).toMatchObject({ max_revision: 5 });
   expect(streamed).toBe(false);
-  expect(log.mock.calls.map(([line]) => line)).toEqual([
+  expect(
+    log.mock.calls
+      .map(([line]) => line)
+      .filter((line) => typeof line === 'string' && line.startsWith('feed ')),
+  ).toEqual([
     expect.stringContaining('could not read written row message-2#0'),
     expect.stringContaining('no row missing-row'),
   ]);

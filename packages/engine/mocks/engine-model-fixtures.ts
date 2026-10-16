@@ -42,7 +42,6 @@ export const mockHttpServer: HttpServer = {
     expect.unreachable('Structural model does not call procedures'),
   close: (): never =>
     expect.unreachable('The machine closes through closeHttpServer'),
-  closeSetup: async (): Promise<void> => {},
 };
 
 export const input = {

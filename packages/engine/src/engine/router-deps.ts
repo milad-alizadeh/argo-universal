@@ -23,7 +23,6 @@ import {
 } from '../sessions';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SystemDeps } from '../system';
-import { createEngineAgentLogins } from './agent-logins';
 
 export type AppRouterDeps = SessionRouterDeps &
   AgentsRouterDeps &
@@ -66,14 +65,13 @@ type EngineSupplied =
   | keyof FeedDeps
   | 'createId'
   | 'checkAgentLaunch'
-  | 'agentLogins'
   | 'installations'
   | 'dropAgentConnections'
   | 'sessionConnections';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId' | 'agentLogins' | 'installations'>> & {
+  Partial<Pick<AppRouterDeps, 'createId' | 'installations'>> & {
     acp?: AcpResourceInput;
   };
 
@@ -96,23 +94,19 @@ export function createAppRouterDeps(
 
 function bindInstallations(
   installations: AgentInstallations,
-  input: AppRouterInput &
-    Pick<AppRouterDeps, 'agentLogins' | 'createId' | 'invalidateAgent'>,
+  input: AppRouterInput & Pick<AppRouterDeps, 'createId' | 'invalidateAgent'>,
 ): void {
   installations.bind({
     ...input,
     checkAgentLaunch,
     invalidateAgent: input.invalidateAgent,
-    isInUse: (agentId) =>
-      input.agentLogins.isBusy(agentId) ||
-      sessionsUseAgent(input.sessions, agentId),
+    isInUse: (agentId) => sessionsUseAgent(input.sessions, agentId),
   });
 }
 
 type AgentSetup = Pick<
   AppRouterDeps,
   | 'installations'
-  | 'agentLogins'
   | 'createId'
   | 'invalidateAgent'
   | 'invalidateIdleAgents'
@@ -133,23 +127,8 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
     invalidateIdleAgents,
     dropAgentConnections,
     sessionConnections,
-    agentLogins: resolveAgentLogins(input, installations),
     createId: input.createId ?? randomUUID,
   };
-}
-
-function resolveAgentLogins(
-  input: AppRouterInput,
-  installations: AgentInstallations,
-): AppRouterDeps['agentLogins'] {
-  return (
-    input.agentLogins ??
-    createEngineAgentLogins({
-      sessions: input.sessions,
-      createId: input.createId ?? randomUUID,
-      installations,
-    })
-  );
 }
 
 function sessionsUseAgent(

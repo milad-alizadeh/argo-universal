@@ -4,8 +4,6 @@ export { releaseLoginTerminalGroups } from './login-terminal/terminal-record';
 
 export { checkAgentLaunch, createAgentChecker } from './connection/agent-check';
 
-export { createLoginAgentOpener } from './login/terminal-login-agent';
-
 export { createAcpResources } from './resources/resources';
 
 export { createAcpResponseReaders } from './connection/response-readers';

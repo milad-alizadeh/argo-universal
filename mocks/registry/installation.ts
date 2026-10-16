@@ -29,6 +29,7 @@ type InstallationMockOptions = {
   scenarioPath?: string;
   version?: string;
   bytes?: Uint8Array;
+  downloads?: Readonly<Record<string, Uint8Array | Error>>;
 };
 
 const pollMilliseconds = 50;
@@ -96,10 +97,10 @@ export const createInstallationPorts = (
   options: InstallationMockOptions = {},
 ): InstallationPorts => ({
   runTool: (input) => runTool(input, options),
-  download: async (_, signal) => {
+  download: async (url, signal) => {
     await awaitInstallerRelease({ signal }, options.scenarioPath);
 
-    return options.bytes ?? installationExecutable;
+    return downloadResponse(url, options);
   },
 });
 
@@ -112,3 +113,22 @@ const installSelectedPackage = async (
     options.packageName ?? 'fixture-install',
     await installationVersion(options),
   );
+
+const downloadResponse = (
+  url: string,
+  options: InstallationMockOptions,
+): Uint8Array => {
+  const response = selectedDownload(url, options);
+
+  if (response instanceof Error) throw response;
+
+  return response ?? defaultDownload(options);
+};
+
+const selectedDownload = (
+  url: string,
+  options: InstallationMockOptions,
+): Uint8Array | Error | undefined => options.downloads?.[url];
+
+const defaultDownload = (options: InstallationMockOptions): Uint8Array =>
+  options.bytes ?? installationExecutable;

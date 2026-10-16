@@ -12,7 +12,6 @@ import { blobsFolderIn } from '../blob';
 import { PluginRuntime } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
-import { createEngineAgentLogins } from './agent-logins';
 import {
   admitClose,
   connectWebSockets,
@@ -47,13 +46,11 @@ export interface HttpServer {
     options?: Parameters<AppRouter['createCaller']>[1],
   ) => ReturnType<AppRouter['createCaller']>;
   close: () => Promise<void>;
-  closeSetup: () => Promise<void>;
 }
 
 type HttpSetup = {
   blobsFolder: string;
   commandAdmission: AbortController;
-  agentLogins: ReturnType<typeof createEngineAgentLogins>;
   pluginRuntime: PluginRuntime;
 };
 
@@ -81,7 +78,6 @@ function connectHttpServer(
     close: admitClose(setup.commandAdmission, async () => {
       await Promise.all([closeConnections(), setup.pluginRuntime.close()]);
     }),
-    closeSetup: () => setup.agentLogins.shutdown(),
     createCaller: (options) => setup.appRouter.createCaller({}, options),
   };
 }
@@ -98,7 +94,6 @@ function prepareHttpSetup(options: HttpServerOptions): HttpSetup {
   return {
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
-    agentLogins: createEngineAgentLogins(options),
     pluginRuntime: new PluginRuntime((line) =>
       writeLog({ home: options.home, label: 'plugins', line }),
     ),
@@ -114,7 +109,6 @@ function createHttpRouter(
       ...options,
       blobsFolder: setup.blobsFolder,
       sessionCommandSignal: setup.commandAdmission.signal,
-      agentLogins: setup.agentLogins,
       pluginRuntime: setup.pluginRuntime,
     }),
   );

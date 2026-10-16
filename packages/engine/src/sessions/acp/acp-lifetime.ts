@@ -4,13 +4,16 @@ import type {
   AcpSessionDestination,
   AcpSessionLease,
 } from '../../agents';
-import type { ResolveAgentLaunch } from '../../agents';
+import type { AgentLaunch, ResolveAgentLaunch } from '../../agents';
 import type { SessionData } from '../session-data';
 import {
   createLifetimeDestination,
   type AcpLifetimeEvent,
 } from './acp-session-destination';
-import { selectSessionOpening } from './acp-session-opening';
+import {
+  selectSessionOpening,
+  resolveSessionAgentLaunch,
+} from './acp-session-opening';
 import { AcpSessionRequests } from './requests/acp-session-requests';
 import { withShellDestination } from './shells/shell-destination';
 import type { ShellRuntime } from './shells/shell-runtime';
@@ -84,27 +87,33 @@ export class AcpSessionLifetime {
     return this.opening;
   }
   private async openOwned(session: SessionData): Promise<AcpSessionLease> {
-    const dependencies = this.requireDependencies();
     const destination = this.createSessionDestination(await this.bound.promise);
-    const launch = await this.resolveSessionAgentLaunch(session, dependencies);
-    this.shells?.configure(session, launch);
-    this.lease = await dependencies.resources.open({
+
+    const launch = await resolveSessionAgentLaunch(
+      session,
+      this.requireDependencies(),
+      this.controller.signal,
+    );
+
+    try {
+      this.shells?.configure(session, launch);
+      this.lease = await this.openLease(session, launch, destination);
+
+      return this.lease;
+    } finally {
+      launch.release?.();
+    }
+  }
+  private openLease(
+    session: SessionData,
+    launch: AgentLaunch,
+    destination: AcpSessionDestination,
+  ): Promise<AcpSessionLease> {
+    return this.requireDependencies().resources.open({
       launch,
       opening: selectSessionOpening(session),
       destination,
       signal: this.controller.signal,
-    });
-
-    return this.lease;
-  }
-  private resolveSessionAgentLaunch(
-    session: SessionData,
-    dependencies: AcpSessionDependencies,
-  ): ReturnType<ResolveAgentLaunch> {
-    return dependencies.resolveLaunch({
-      agent: session.agent,
-      projectId: session.projectId,
-      projectPath: dependencies.projectPath(session.projectId),
     });
   }
   private requireDependencies(): AcpSessionDependencies {

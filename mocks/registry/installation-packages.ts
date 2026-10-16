@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import type { ScenarioName } from '../agent/scenarios';
 import { scriptedAgentCommand } from '../agent/scripted-agent-launch';
 import type { ToolInput } from './installation';
 
@@ -10,9 +11,12 @@ const script = scriptedAgentCommand('reply').args[0];
 
 if (!script) throw new Error('Scripted Agent needs an entry point');
 
-export const installationExecutable = Buffer.from(
-  `#!/usr/bin/env node\nprocess.argv[2] = 'reply';\nawait import(${JSON.stringify(pathToFileURL(script).href)});\n`,
-);
+export const installationExecutableFor = (scenario: ScenarioName): Uint8Array =>
+  Buffer.from(
+    `#!${process.execPath}\nprocess.argv.splice(1, 1, ${JSON.stringify(script)}, ${JSON.stringify(scenario)});\nawait import(${JSON.stringify(pathToFileURL(script).href)});\n`,
+  );
+
+export const installationExecutable = installationExecutableFor('reply');
 
 async function installNpm(
   input: ToolInput,

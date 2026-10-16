@@ -44,12 +44,11 @@ it.each(fixtureAgents)(
   async (identity): Promise<void> => {
     const root = await startNewSessionEngine(identity);
     const caller = root.createCaller();
-    expect(await caller.agents.list()).toEqual(
+    expect(await caller.agents.servers()).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          agent: identity.agent,
-          label: identity.label,
-          availability: 'available',
+          id: identity.agent,
+          name: identity.label,
         }),
       ]),
     );
