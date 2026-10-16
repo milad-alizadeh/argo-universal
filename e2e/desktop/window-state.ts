@@ -1,10 +1,19 @@
-import type { ElectronApplication } from '@playwright/test';
+import type { ElectronApplication, Page } from '@playwright/test';
 import { z } from 'zod';
 import { type App, expect } from '../fixtures';
 
 export const BackgroundState = z.enum(['hidden', 'minimized', 'unfocused']);
 
 export type BackgroundState = z.infer<typeof BackgroundState>;
+
+type WindowState = { focused: boolean; visible: boolean; minimized: boolean };
+
+// Electron on Linux keeps a minimized window visible and focused, so only macOS also reports it hidden and blurred.
+const nativeBackground: Record<BackgroundState, Partial<WindowState>> = {
+  hidden: { focused: false, visible: false, minimized: false },
+  minimized: { minimized: true },
+  unfocused: { focused: false, visible: true, minimized: false },
+};
 
 export async function backgroundWindow(
   application: ElectronApplication,
@@ -15,6 +24,16 @@ export async function backgroundWindow(
     .poll(() => windowState(application))
     .toMatchObject({ focused: true });
   await setBackgroundState(application, state);
+  await expect
+    .poll(() => windowState(application))
+    .toMatchObject(nativeBackground[state]);
+}
+
+// The App's own foreground test (use-foreground.web.ts); its notifications follow this, not the native window flags.
+export function appForeground(page: Page): Promise<boolean> {
+  return page.evaluate<boolean>(
+    "document.visibilityState === 'visible' && document.hasFocus()",
+  );
 }
 
 async function setBackgroundState(
@@ -48,7 +67,7 @@ async function showDesktopWindow(
 
 export function windowState(
   application: ElectronApplication,
-): Promise<{ focused: boolean; visible: boolean; minimized: boolean }> {
+): Promise<WindowState> {
   return application.evaluate(({ BrowserWindow }) => {
     const window = BrowserWindow.getAllWindows()[0];
 

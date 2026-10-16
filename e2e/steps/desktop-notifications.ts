@@ -3,6 +3,7 @@ import {
   recordedNotificationBodies,
 } from '../desktop/notification-api.test.mocks';
 import {
+  appForeground,
   BackgroundState,
   desktopApplication,
   backgroundWindow,
@@ -32,16 +33,12 @@ Given(
 
 When(
   'I leave the desktop window {string}',
-  async ({ app }, state: string): Promise<void> => {
-    const application = desktopApplication(app);
-    await backgroundWindow(application, BackgroundState.parse(state));
-    await expect
-      .poll(() => windowState(application))
-      .toMatchObject({
-        focused: false,
-        visible: state === 'unfocused',
-        minimized: state === 'minimized',
-      });
+  async ({ page, app }, state: string): Promise<void> => {
+    await backgroundWindow(
+      desktopApplication(app),
+      BackgroundState.parse(state),
+    );
+    await expect.poll(() => appForeground(page)).toBe(false);
   },
 );
 
@@ -66,8 +63,11 @@ When(
   async ({ page, app }): Promise<void> => {
     const application = desktopApplication(app);
     const background = await windowState(application);
-    expect(background.focused).toBe(false);
-    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    expect(await appForeground(page)).toBe(false);
+    // A hidden window paints no frames on Linux, so Playwright's stable check never ends; dispatch the click as the other background steps do.
+    await page
+      .getByRole('button', { name: 'Settings', exact: true })
+      .evaluate((button) => button.click());
     await expect(page).toHaveURL(/\/settings\//);
     await expect.poll(() => windowState(application)).toEqual(background);
     await page.evaluate(() => globalThis.notificationProbe.click());

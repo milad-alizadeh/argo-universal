@@ -267,8 +267,12 @@ jobs:
       - name: Allow user namespaces for Electron
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
+      # Bare Xvfb has no window manager, so a window never minimizes; Openbox gives the notification scenarios a real minimized state.
+      - name: Install a window manager
+        run: sudo apt-get install -y --no-install-recommends openbox
+
       - name: End-to-end tests (Electron)
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- pnpm test:e2e:electron
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- sh -c 'openbox & pnpm test:e2e:electron'
 
       - name: Upload the Electron e2e report
         if: ${{ !cancelled() }}
