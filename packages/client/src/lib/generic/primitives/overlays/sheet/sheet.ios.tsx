@@ -7,7 +7,7 @@ import {
   presentationDetents,
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
-import { cloneElement, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
@@ -22,6 +22,7 @@ import {
 import type { SheetProps } from './sheet-props';
 import { SheetPages } from './sheet-stack.ios';
 import { sheetDetents } from './sheet-state';
+import { SheetTrigger } from './sheet-trigger';
 
 type PresentationProps = SheetProps & { stack: SheetStack };
 
@@ -116,14 +117,6 @@ function HostedTrigger(props: SheetProps): ReactElement {
       <SheetTrigger {...props} />
     </RNHostView>
   );
-}
-
-function SheetTrigger(props: SheetProps): ReactElement | null {
-  if (!props.trigger) return null;
-
-  return cloneElement(props.trigger, {
-    onPress: () => props.onOpenChange(true),
-  });
 }
 
 function detentsOf(props: PresentationProps): SheetProps['detents'] {
