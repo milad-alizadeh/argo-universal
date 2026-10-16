@@ -2,8 +2,8 @@ import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
 import type { ButtonSize } from '#primitives/buttons/button';
 import type { IconProps } from '#primitives/display/icon';
-import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 
 type ActionProps = Omit<
   ComponentProps<typeof Pressable>,
@@ -14,7 +14,7 @@ type ActionProps = Omit<
 export type IconButtonSize = ButtonSize | 'xl';
 
 export type IconButtonProps = ActionProps & {
-  icon: IconName;
+  icon: IconSymbol;
   accessibilityLabel: string;
   size?: IconButtonSize;
   loading?: boolean;

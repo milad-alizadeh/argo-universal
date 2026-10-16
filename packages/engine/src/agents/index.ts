@@ -65,3 +65,5 @@ export { getCommand } from './launch/get-command';
 export type { CommandInput, RegistryCommand } from './launch/types';
 
 export { sessionOpenError } from './acp/open-error';
+
+export { readAcpUsage } from './acp/response-readers';

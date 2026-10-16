@@ -42,10 +42,21 @@ export const rejectedManifests = [
     patch: {},
     reason: 'main file index.js is missing',
   },
+  { folder: 'empty-icon', patch: { icon: {} }, reason: 'icon needs an sf' },
   {
-    folder: 'unknown-icon',
-    patch: { icon: 'not-an-argo-icon' },
+    folder: 'argo-icon-name',
+    patch: { icon: 'plug' },
     reason: 'icon',
+  },
+  {
+    folder: 'unknown-sf-symbol',
+    patch: { icon: { sf: 'not.a.symbol', material: 'power' } },
+    reason: 'not.a.symbol is not in SF Symbols',
+  },
+  {
+    folder: 'unknown-material-symbol',
+    patch: { icon: { material: 'not_a_symbol' } },
+    reason: 'not_a_symbol is not in Material Symbols',
   },
   {
     folder: 'outside-main',

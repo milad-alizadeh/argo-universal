@@ -94,6 +94,10 @@ interface AcpSessionModel {
   lease: AcpSessionLease;
 }
 
+const structuralMachine = sessionMachine.provide({
+  actions: { routeSubagentUpdate: (): void => {} },
+});
+
 export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
   entry: 'new' | 'existing' | 'opened' = 'opened',
@@ -120,7 +124,7 @@ export const createAcpSessionModel = (
     opened: { open: { acp: 'opening' } },
   } as const;
 
-  const fromState = sessionMachine.resolveState({
+  const fromState = structuralMachine.resolveState({
     value: entryStates[entry],
     context: { ...data, failure: null },
   });
@@ -132,6 +136,16 @@ export const createAcpSessionModel = (
   Object.assign(fromState.children, initial.children);
 
   const events = [
+    {
+      type: updateEvent,
+      notification: {
+        sessionId: lease.sessionId,
+        update: {
+          sessionUpdate: 'subagent_update',
+          sessionId: 'model-subagent',
+        },
+      },
+    },
     {
       type: 'xstate.done.actor.createCheckout',
       actorId: 'createCheckout',
@@ -349,10 +363,10 @@ export const createAcpSessionModel = (
   };
 
   return {
-    paths: getShortestPaths(sessionMachine, options),
+    paths: getShortestPaths(structuralMachine, options),
     model: {
       getAdjacencyMap: (): AdjacencyMap<AcpModelSnapshot, AcpModelEvent> =>
-        getAdjacencyMap(sessionMachine, options),
+        getAdjacencyMap(structuralMachine, options),
     },
     lease,
   };

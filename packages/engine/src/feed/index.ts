@@ -1,6 +1,11 @@
 export { userMessageChange, userMessageId } from './feed-change';
 
-export { type FeedActorRef, type FeedEvent, feedMachine } from './feed-machine';
+export {
+  type FeedActorRef,
+  type FeedEvent,
+  type FeedInput,
+  feedMachine,
+} from './feed-machine';
 
 export {
   type FeedRowWrite,
@@ -54,3 +59,5 @@ export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';
 export { recoverTurnEnd } from './turn-end-recovery';
 
 export { restartTurnError } from './turn-end';
+
+export { mapSupportedContentBlock } from './acp/content';

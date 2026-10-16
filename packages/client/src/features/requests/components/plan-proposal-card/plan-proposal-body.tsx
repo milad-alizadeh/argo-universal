@@ -19,6 +19,9 @@ type BodyProps = PlanProposalCardProps & InteractionProps;
 
 const feedbackQuestion = 'What should change in the plan?';
 
+// The card's heading and, on a phone, its sheet's title.
+export const approvePlanQuestion = 'Approve this plan?';
+
 export function PlanProposalBody(props: BodyProps): ReactNode {
   const wide = useWide();
 
@@ -46,7 +49,7 @@ function ProposalHeading({
   return (
     <RequestHeading
       icon="checklist"
-      title="Approve this plan?"
+      title={approvePlanQuestion}
       hint="Approving leaves Plan mode and starts the work."
       trailing={wide && <ExpansionToggle interaction={interaction} />}
     />

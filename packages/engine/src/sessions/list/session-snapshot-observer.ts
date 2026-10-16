@@ -82,9 +82,9 @@ class SessionSnapshotObserver implements Subscription {
     });
   }
 
-  // The open Sessions change with every Session's every update; only its membership matters here.
+  // Parent updates can replace a Subagent's Feed without changing registry membership.
   private openSessionsChanged(sessions: Record<string, SessionActorRef>): void {
-    if (sessions === this.registeredSessions) return;
+    if (sessions === this.registeredSessions) return this.changed();
     this.registeredSessions = sessions;
     this.sessionChanged();
   }

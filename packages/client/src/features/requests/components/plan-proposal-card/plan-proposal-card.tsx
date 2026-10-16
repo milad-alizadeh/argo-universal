@@ -7,7 +7,7 @@ import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { PlanProposalExpansion } from '../plan-proposal-expansion/plan-proposal-expansion';
 import { RequestCard, type RequestState } from '../request-card/request-card';
 import { PlanProposalActions } from './plan-proposal-actions';
-import { PlanProposalBody } from './plan-proposal-body';
+import { approvePlanQuestion, PlanProposalBody } from './plan-proposal-body';
 import {
   type PlanProposalInteraction,
   usePlanProposal,
@@ -60,7 +60,7 @@ type PanelProps = PlanProposalCardProps & {
 
 const panelChrome = {
   surface: 'tray',
-  sheetLabel: 'Plan proposal',
+  sheetLabel: approvePlanQuestion,
   testID: 'plan-proposal-card',
   mutedStatus: true,
   footerClassName: 'wide:justify-end',
