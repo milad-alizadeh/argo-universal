@@ -16,7 +16,7 @@ Feature: Desktop attention and quit
       | platform |
       | macOS    |
 
-  @supervisor @owned-supervisor
+  @supervisor @owned-supervisor @needs-focus
   Scenario Outline: Quitting an App that started its Supervisor
     Given a wide Frame
     And I start a desktop Session that keeps running
