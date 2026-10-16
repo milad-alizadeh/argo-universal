@@ -61,11 +61,18 @@ interface SupervisorEnvironment {
   ARGO_E2E_ENGINE_ENTRY: string;
 }
 
-export function ownedSupervisorEnvironment(input: {
+interface SupervisorEnvironmentInput {
   directory: string;
-  server: Awaited<ReturnType<typeof startOwnServer>>;
+  server: Pick<
+    Awaited<ReturnType<typeof startOwnServer>>,
+    'httpUrl' | 'registryPath' | 'installationPath'
+  >;
   agents: AppFixtureAgents;
-}): SupervisorEnvironment {
+}
+
+export function ownedSupervisorEnvironment(
+  input: SupervisorEnvironmentInput,
+): SupervisorEnvironment {
   return {
     ARGO_SERVER_PORT: new URL(input.server.httpUrl).port,
     ARGO_PROJECT_PATH: serverFiles(input.directory).projectPath,

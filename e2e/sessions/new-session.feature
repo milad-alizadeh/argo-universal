@@ -1,7 +1,7 @@
 Feature: New Session
   Scenario Outline: Model and effort persist through creation and App restart with Agent <agent>
     Given a phone Frame
-    And a New Session with Agent <agent>
+    And a Local New Session with Agent <agent>
     When I choose model "Small" and effort "High"
     And I send the prompt "Use my configured Session"
     Then the Agent replies "The shared fixture completed this Turn."
@@ -23,7 +23,7 @@ Feature: New Session
 
   Scenario Outline: Configure the actual Session before its first prompt with Agent <agent>
     Given a phone Frame
-    And a New Session with Agent <agent>
+    And a Local New Session with Agent <agent>
     When I enable Fast mode
     And I send the prompt "Use my configured Session"
     Then the Agent replies "The shared fixture completed this Turn."
@@ -83,7 +83,7 @@ Feature: New Session
   Scenario Outline: A refused Session keeps the first prompt with Agent <agent>
     Given a phone Frame
     And Agent <agent> refuses to open a Session
-    And a New Session with Agent <agent>
+    And a Local New Session with Agent <agent>
     Then New Session says the Session couldn't open
     When I try to send the prompt "Fix the flaky login test"
     Then New Session says the Session couldn't open
@@ -96,7 +96,7 @@ Feature: New Session
 
   Scenario: Leaving New Session without sending discards its empty Session
     Given a phone Frame
-    And a New Session with Agent 1
+    And a Local New Session with Agent 1
     When the empty Session is open
     And I return to the Sessions list
     Then the Agent closed the empty Session
@@ -105,7 +105,7 @@ Feature: New Session
 
   Scenario: Choosing another Agent closes the previous empty Session
     Given a phone Frame
-    And a New Session with Agent 1
+    And a Local New Session with Agent 1
     When the empty Session is open
     And I choose Agent 2
     Then the Agent closed the empty Session
@@ -115,12 +115,31 @@ Feature: New Session
   Scenario: A lost Connection keeps the empty Session
     Given a phone Frame
     And the App's Connection can be dropped
-    And a New Session with Agent 1
+    And a Local New Session with Agent 1
     When the empty Session is open
     And the Connection drops and comes back
     And I send the prompt "Fix the flaky login test"
     Then the prompt went to the Session opened before the drop
     And the Agent closed no Session
+
+  Scenario: Options from an earlier Session show at once after a reload
+    Given a phone Frame
+    And a Local New Session with Agent 1
+    When I choose model "Small" and effort "High"
+    And I send the prompt "Use my configured Session"
+    Then the Agent replies "The shared fixture completed this Turn."
+    When I watch for New Session's Loading
+    And I reload the App and open New Session with Agent 1
+    Then the configuration shows model "Small" and effort "High"
+    And New Session never showed Loading
+
+  Scenario: A New worktree Session is created only at Send
+    Given a phone Frame
+    And a New Session with Agent 1
+    Then the Agent opened no Session
+    When I send the prompt "Fix the flaky login test"
+    Then the Agent replies "The shared fixture completed this Turn."
+    And the Agent opened one Session in a new worktree
 
   Scenario: The Checkout choice is remembered
     Given a phone Frame

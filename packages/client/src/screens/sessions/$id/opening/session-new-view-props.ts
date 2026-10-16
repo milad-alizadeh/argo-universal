@@ -62,7 +62,6 @@ const configurationProps = (
   configOptions: [],
   onConfigChange: ignoreConfigChange,
   ...wiring.configuration,
-  opening: wiring.sessionOpening.session.opening,
   ...agentChoiceProps(wiring),
   checkout: checkoutProps(wiring.data),
 });

@@ -19,7 +19,7 @@ export function LiveConnectionBanner(): React.JSX.Element | null {
     <ConnectionBanner
       state={state}
       serverName={info.data?.name}
-      onRetry={() => connection.send({ type: 'connection.retry' })}
+      onRetry={connection.retry}
     />
   );
 }

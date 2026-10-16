@@ -1,9 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { cn } from '#lib/generic/utils';
 import { IconButton } from '#primitives/buttons/icon-button';
-import type { InteractionEvents, ProjectHeadingProps } from './project-heading';
+import type { ProjectHeadingProps } from './project-heading';
 
 const actionAppearance = {
   variant: 'ghost',
@@ -16,12 +15,10 @@ interface ProjectActionButtonProps {
   icon: IconName;
   accessibilityLabel: string;
   onPress?: () => void;
-  events: InteractionEvents;
 }
 
 function ProjectActionButton({
   onPress,
-  events,
   ...button
 }: ProjectActionButtonProps): React.JSX.Element {
   return (
@@ -30,25 +27,21 @@ function ProjectActionButton({
       {...button}
       onPress={onPress}
       disabled={!onPress}
-      {...events}
     />
   );
 }
 
-interface ProjectActionsProps extends Pick<
+type ProjectActionsProps = Pick<
   ProjectHeadingProps,
   'name' | 'onAdd' | 'addLabel' | 'onProjectSettings'
-> {
-  visible: boolean;
-  events: InteractionEvents;
-}
+>;
 
 function actionButtons({
   name,
   onAdd,
   addLabel = `Add to ${name}`,
   onProjectSettings,
-}: ProjectActionsProps): Omit<ProjectActionButtonProps, 'events'>[] {
+}: ProjectActionsProps): ProjectActionButtonProps[] {
   return [
     {
       icon: 'more',
@@ -59,20 +52,16 @@ function actionButtons({
   ];
 }
 
-function actionsClassName(visible: boolean): string {
-  return cn('flex-row items-center gap-0.5', !visible && 'opacity-0');
-}
+// A phone always shows ⋯ and +; a wide web window shows them on hover or focus.
+const actionsClassName =
+  'flex-row items-center gap-0.5 web:wide:opacity-0 web:wide:group-hover:opacity-100 web:wide:group-focus-within:opacity-100';
 
-// ⋯ opens the Project's settings and + adds to it; both fade out until wanted.
+// ⋯ opens the Project's settings and + adds to it; both wait for hover or focus on a wide window.
 export function ProjectActions(props: ProjectActionsProps): React.JSX.Element {
   return (
-    <View className={actionsClassName(props.visible)}>
+    <View className={actionsClassName}>
       {actionButtons(props).map((button) => (
-        <ProjectActionButton
-          key={button.icon}
-          {...button}
-          events={props.events}
-        />
+        <ProjectActionButton key={button.icon} {...button} />
       ))}
     </View>
   );
