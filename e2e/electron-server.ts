@@ -7,6 +7,7 @@ import {
   prepareSupervisorRuntime,
 } from './desktop/owned-supervisor';
 import { pollServer, startOwnServer } from './own-server';
+import { hasExited } from './server-process';
 
 interface DesktopServer {
   fixtureServer: Awaited<ReturnType<typeof startOwnServer>>;
@@ -38,33 +39,39 @@ export async function prepareDesktopServer(input: {
     environment: { ...environment, ARGO_HOME: home },
   };
 
-  if (!input.usesSupervisor) return server;
-  await fixtureServer.stop();
-  const runtime = await prepareSupervisorRuntime(input.directory);
-  Object.assign(
-    server.environment,
-    ownedSupervisorEnvironment({
-      directory: input.directory,
-      server: fixtureServer,
-      agents: input.agents,
-    }),
-  );
-
-  if (input.ownsSupervisor) server.launchDirectory = runtime.app;
-  else
-    server.externalSupervisor = spawn(
-      process.execPath,
-      ['--import', 'tsx', 'src/main.ts'],
-      {
-        cwd: runtime.server,
-        env: server.environment,
-        stdio: 'ignore',
-      },
+  try {
+    if (!input.usesSupervisor) return server;
+    await fixtureServer.stop();
+    const runtime = await prepareSupervisorRuntime(input.directory);
+    Object.assign(
+      server.environment,
+      ownedSupervisorEnvironment({
+        directory: input.directory,
+        server: fixtureServer,
+        agents: input.agents,
+      }),
     );
 
-  if (!input.ownsSupervisor) await waitForSupervisorAddress(home);
+    if (input.ownsSupervisor) server.launchDirectory = runtime.app;
+    else
+      server.externalSupervisor = spawn(
+        process.execPath,
+        ['--import', 'tsx', 'src/main.ts'],
+        {
+          cwd: runtime.server,
+          env: server.environment,
+          stdio: 'ignore',
+        },
+      );
 
-  return server;
+    if (!input.ownsSupervisor) await waitForSupervisorAddress(home);
+
+    return server;
+  } catch (error) {
+    await stopExternalSupervisor(server.externalSupervisor);
+    await fixtureServer.stop();
+    throw error;
+  }
 }
 
 export function waitForSupervisorAddress(
@@ -82,7 +89,7 @@ export function waitForSupervisorAddress(
 export async function stopExternalSupervisor(
   child: ChildProcess | undefined,
 ): Promise<void> {
-  if (!child || child.exitCode !== null) return;
+  if (!child || hasExited(child)) return;
 
   const exited = new Promise<void>((resolve): void => {
     child.once('exit', (): void => resolve());
