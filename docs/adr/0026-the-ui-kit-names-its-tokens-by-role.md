@@ -29,7 +29,7 @@ Owner amendment, 2026-10-15: interaction fills have separate `hover`, `selected`
 ## Shape, surfaces and density
 
 - **Shape:** `sm`, `md`, `lg`, `xl`, `2xl`, `full`, plus `control` and `sheet`. On web and desktop, `control` (the `lg` radius) rounds buttons and inputs, `xl` rounds menu and popover rows, `2xl` is the card, popover and menu radius, `full` rounds pills, and `sheet` rounds sheets. Phones keep their stock shapes.
-- **Surfaces:** `card` (the Composer and request cards too), `tray` (the Composer envelope), `glass` and `overlay` (popovers and menus), named from their shadows. iOS 26 draws `glass` with system Liquid Glass, Android uses tonal surfaces, and shadows draw on web and desktop only.
+- **Surfaces:** `card` (the Composer and request cards too), `tray` (the Composer envelope), `glass` and `overlay` (popovers and menus). `card`, `tray` and `glass` each pair a fill with the shadow of the same name; `overlay` uses the `card` fill with `shadow-card` on desktop and `shadow-raised` on phones. iOS 26 draws `glass` with system Liquid Glass, Android uses tonal surfaces, and shadows draw on web and desktop only.
 - **Density:** `default` and `compact`.
 
 ## Size classes
