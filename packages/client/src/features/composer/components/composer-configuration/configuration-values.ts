@@ -1,4 +1,5 @@
 import type {
+  AgentServer,
   ConfigOptionIcon,
   SessionConfigOption,
   SessionConfigSelectOption,
@@ -99,6 +100,11 @@ export function configurationIcon(name?: string): IconName {
   if (!name) return 'permission';
 
   return configurationIcons.get(name) ?? 'permission';
+}
+
+// The Agent's name; without an installed Agent, the fallback a surface shows instead.
+export function agentName(agent?: AgentServer, fallback = ''): string {
+  return agent ? agent.name : fallback;
 }
 
 export function modelName(choice?: SessionConfigSelectOption): string {

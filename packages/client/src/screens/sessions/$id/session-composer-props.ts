@@ -92,6 +92,7 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
 
   return {
     agent: sessionAgent(open),
+    agentId: snapshot.agent,
     configOptions: snapshot.configOptions,
     onConfigChange: open.commands.changeConfig,
     turnRunning: isTurnRunning(snapshot),

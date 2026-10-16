@@ -1,4 +1,3 @@
-import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
@@ -13,7 +12,12 @@ import { AgentModelMenu } from './agent-model-menu';
 import { AgentModelTrailing } from './agent-model-trailing';
 import { useCommitEffortFallback } from './configuration-effects';
 import type { ComposerConfigurationProps } from './configuration-types';
-import { selectedChoice, selection, modelName } from './configuration-values';
+import {
+  agentName,
+  selectedChoice,
+  selection,
+  modelName,
+} from './configuration-values';
 
 interface ControlProps {
   configuration: ComposerConfigurationProps;
@@ -124,16 +128,13 @@ function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   ) : undefined;
 }
 
-function agentLabel(agent?: AgentServer): string {
-  return agent?.name || '';
-}
-
+// Unlike Configure's Agent row, the trigger shows no id for an Agent that is not installed.
 function triggerLabel({ configuration }: TriggerProps): string {
   if (optionsAreOpening(configuration)) return 'Loading…';
 
   return (
     modelName(selectedChoice(configuration, 'model')) ||
-    agentLabel(configuration.agent)
+    agentName(configuration.agent)
   );
 }
 
