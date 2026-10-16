@@ -62,6 +62,7 @@ it('rejects a malformed cursor before reading Session rows', async (): Promise<v
   const { database, directory, remove } = openTestDatabase();
   onTestFinished(remove);
   const counted = countDatabaseReads(database);
+
   const sessions = createActor(openSessionsMachine, {
     input: {
       now: (): number => Date.now(),
@@ -71,6 +72,7 @@ it('rejects a malformed cursor before reading Session rows', async (): Promise<v
       acpResources: createAcpResources(),
     },
   });
+
   const list = createSessionList({ database: counted.database, sessions });
 
   await expect(
