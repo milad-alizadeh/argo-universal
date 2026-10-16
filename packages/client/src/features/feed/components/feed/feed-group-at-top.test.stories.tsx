@@ -5,12 +5,17 @@ import { Feed } from './feed';
 import {
   expandedAttribute,
   fullyInViewport,
+  openedRow,
   openRow,
   readBackToSplitGroup,
   settledTopOf,
   settleWait,
 } from './feed-reader.mocks';
-import { splitGroupFirstStepInTail, splitGroupRows } from './feed.mocks';
+import {
+  splitGroupFirstStepInTail,
+  splitGroupLastStep,
+  splitGroupRows,
+} from './feed.mocks';
 import { feedArgs, PagedFeed, sendOlderPage } from './paged-feed.mocks';
 
 const meta = {
@@ -56,6 +61,10 @@ const keepsHeaderInPlaceWhenGroupOpensAtTop: Story = {
     const { header } = await readBackToSplitGroup(canvas);
     const top = await settledTopOf(() => header);
     await openRow(header);
+    // The group has opened down to its last command: until then its rows are still measuring and moving.
+    await openedRow(header, () =>
+      canvas.getByRole('button', { name: splitGroupLastStep }),
+    );
     await expect(
       Math.abs((await settledTopOf(() => header)) - top),
     ).toBeLessThan(2);

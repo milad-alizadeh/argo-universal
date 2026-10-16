@@ -55,6 +55,8 @@ export function sessionsLayoutQuery(): SessionsLayoutQuery {
     queryKey: ['sessions-layout'] as const,
     queryFn: () => load().catch(loadFailed),
     staleTime: Infinity,
+    // This Device's storage answers while the Server is unreachable.
+    networkMode: 'always',
   });
 }
 
