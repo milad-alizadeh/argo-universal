@@ -1,4 +1,7 @@
-import type { SessionConfigOption } from '@agentclientprotocol/sdk';
+import type {
+  SessionConfigOption,
+  SessionUpdate,
+} from '@agentclientprotocol/sdk';
 import type { ScriptedStep } from './scripted-scenario.ts';
 
 export const acpConfiguration: SessionConfigOption[] = [
@@ -43,6 +46,15 @@ export const acpConfiguration: SessionConfigOption[] = [
     currentValue: false,
   },
 ];
+
+export const smallModelUpdate: SessionUpdate = {
+  sessionUpdate: 'config_option_update',
+  configOptions: acpConfiguration.map((option) =>
+    option.id === 'model' && option.type === 'select'
+      ? { ...option, currentValue: 'small' }
+      : option,
+  ),
+};
 
 const heldModeConfiguration: SessionConfigOption[] = acpConfiguration.map(
   (option) =>

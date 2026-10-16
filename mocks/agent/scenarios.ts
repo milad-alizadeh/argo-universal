@@ -1,5 +1,9 @@
 import type { SessionUpdate } from '@agentclientprotocol/sdk';
-import { acpConfiguration, heldModeSteps } from './acp-configuration.ts';
+import {
+  acpConfiguration,
+  heldModeSteps,
+  smallModelUpdate,
+} from './acp-configuration.ts';
 import { contextUsageFixtures } from './context-usage.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
@@ -131,17 +135,7 @@ export const scenarios = {
     reply,
   ]),
   'held-mode': scenario(heldModeSteps),
-  configuration: scenario([
-    update({
-      sessionUpdate: 'config_option_update',
-      configOptions: acpConfiguration.map((option) =>
-        option.id === 'model' && option.type === 'select'
-          ? { ...option, currentValue: 'small' }
-          : option,
-      ),
-    }),
-    reply,
-  ]),
+  configuration: scenario([update(smallModelUpdate), reply]),
   'write-pressure': scenario([
     ...Array.from({ length: writePressureTools }, (_, index) => [
       update({
