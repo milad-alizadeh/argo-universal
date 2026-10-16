@@ -11,7 +11,7 @@ type ProjectHeadingMenuProps = ProjectHeadingProps & {
   children: ReactElement<ContextMenuTriggerProps>;
 };
 
-// A long press, or a right-click, opens New Session and the Project's settings under the Project's name; the heading lifts on iOS.
+// Below a wide window, a long press opens New Session and the Project's settings under the Project's name; the heading lifts on iOS.
 export function ProjectHeadingMenu(
   props: ProjectHeadingMenuProps,
 ): ReactElement {

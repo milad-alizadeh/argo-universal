@@ -20,7 +20,7 @@ export interface ProjectHeadingProps {
 const rowClassName =
   'group mb-0.5 min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-xl pr-1 web:wide:hover:bg-muted web:wide:focus-within:bg-muted';
 
-// Only a wide window's heading draws ⋯ and +; elsewhere its long press opens the same actions.
+// Only a wide window's heading draws ⋯ and +, and has no right-click menu; elsewhere its long press opens the same actions.
 function ProjectHeadingRow(
   props: ProjectHeadingProps & ContextMenuTriggerProps,
 ): React.JSX.Element {
@@ -37,9 +37,12 @@ function ProjectHeadingRow(
 export const ProjectHeading = memo(function ProjectHeading(
   props: ProjectHeadingProps,
 ): React.JSX.Element {
+  const row = <ProjectHeadingRow {...props} />;
+
   return (
-    <ProjectHeadingMenu {...props}>
-      <ProjectHeadingRow {...props} />
-    </ProjectHeadingMenu>
+    <SizeClass
+      compact={<ProjectHeadingMenu {...props}>{row}</ProjectHeadingMenu>}
+      wide={row}
+    />
   );
 });

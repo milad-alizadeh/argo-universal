@@ -11,7 +11,7 @@ import { type FeedEntry, entryKey } from './feed-entry';
 
 type ListRef = RefObject<LegendListRef | null>;
 
-// Opens on the newest row by estimated sizes, then a frame after the page is first shown at the very end; from there `followEnd` keeps it there as rows measure. A page preloaded unseen, as behind iOS's long-press preview, gains its header's inset only once shown.
+// Opens on the newest row by estimated sizes, then a frame after the page is first shown at the very end; from there `followEnd` keeps it there as rows measure. A page preloaded out of sight, as behind iOS's long-press preview, gains its header's inset only once shown.
 function useOpensAtEnd(list: ListRef, lastIndex: number): number {
   const [initialIndex] = useState(lastIndex);
   const shown = useScreenFocused();
