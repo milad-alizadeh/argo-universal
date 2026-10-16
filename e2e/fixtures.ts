@@ -92,7 +92,6 @@ export const test = base.extend<
       try {
         const page = await context.newPage();
         await pointAppAtServer(page, server.serverUrl);
-        await page.goto('/');
         await use({
           page,
           httpUrl: server.httpUrl,

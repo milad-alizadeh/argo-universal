@@ -65,17 +65,18 @@ const findingCode = (rule: string): string => {
   return `${plugin}(${name})`;
 };
 
-function flaggedFiles({ path, rule }: Allowlist): Set<string> {
-  const report = reportSchema.parse(JSON.parse(measureFindings(root, path)));
-
+function flaggedFiles({ rule }: Allowlist, report: string): Set<string> {
   return new Set(
-    report.diagnostics
-      .filter((finding): boolean => finding.code === findingCode(rule))
+    reportSchema
+      .parse(JSON.parse(report))
+      .diagnostics.filter(
+        (finding): boolean => finding.code === findingCode(rule),
+      )
       .map((finding): string => relative(root, join(root, finding.filename))),
   );
 }
 
-function check(allowlist: Allowlist): number {
+function check(allowlist: Allowlist, report: string): number {
   const current = readAllowlist(
     readFileSync(join(root, allowlist.path), 'utf8'),
     allowlist.rule,
@@ -85,7 +86,7 @@ function check(allowlist: Allowlist): number {
     rule: allowlist.rule,
     current,
     baseline: baseline(allowlist),
-    flagged: flaggedFiles(allowlist),
+    flagged: flaggedFiles(allowlist, report),
     moved,
   });
 
@@ -98,8 +99,13 @@ function check(allowlist: Allowlist): number {
   return problems.length;
 }
 
-const problemCount = allowlists
-  .map(check)
-  .reduce((sum, count): number => sum + count, 0);
+// Checks every allowlist against a report that tools/check-lint-waivers.mts shares with the waiver check.
+export function checkRuleAllowlists(report: string): number {
+  const problemCount = allowlists
+    .map((allowlist): number => check(allowlist, report))
+    .reduce((sum, count): number => sum + count, 0);
 
-process.exit(problemCount > 0 ? 1 : 0);
+  return problemCount > 0 ? 1 : 0;
+}
+
+if (import.meta.main) process.exit(checkRuleAllowlists(measureFindings(root)));

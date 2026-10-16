@@ -6,6 +6,7 @@ Feature: Sections
     When I return to Sessions
     Then the phone Frame shows the Sessions list
 
+  @smoke
   Scenario: A section opens its first page on a wide Frame
     Given a wide Frame
     When I open Settings

@@ -15,9 +15,16 @@ export const wideFrame = 'wide-frame';
 export const onPhone = (page: Page): boolean =>
   (page.viewportSize()?.width ?? 0) <= phone.width;
 
-// The web export serves only its root, so a reload starts there and opens the page again.
+const isBlank = (page: Page): boolean => page.url() === 'about:blank';
+
+// The web export serves only its root, so a reload starts there; a blank web page is first loaded here, so a test boots the App once.
 export async function reloadApp(page: Page): Promise<void> {
-  await page.goto(new URL('/', page.url()).href);
+  await page.goto(isBlank(page) ? '/' : new URL('/', page.url()).href);
+}
+
+// For a scenario with no Frame step: the App opens in the project's viewport.
+export async function openAppOnce(page: Page): Promise<void> {
+  if (isBlank(page)) await page.goto('/');
 }
 
 export async function openConnection(page: Page): Promise<void> {
