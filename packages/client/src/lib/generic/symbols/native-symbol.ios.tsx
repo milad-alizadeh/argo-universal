@@ -2,11 +2,12 @@
 import { Image, type ImageProps } from '@expo/ui/swift-ui';
 import { font, foregroundStyle, imageScale } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { appleSymbol } from './apple-symbol';
-import { type AppleSymbol, isCustomSymbol } from './custom-symbols';
+import { isCustomSymbol } from './custom-symbols';
+import { type DrawnSymbol, drawnSymbol } from './drawn-symbol';
 import { iconSymbols } from './icon-names';
 import { type IconRole, useIconPixels } from './icon-role';
 import type { NativeSymbolProps } from './native-symbol-props';
+import { tablerAsset } from './tabler-symbols';
 
 const mutedStyle = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
 
@@ -20,10 +21,16 @@ const textSizedRoles: Partial<Record<IconRole, ImageProps['modifiers']>> = {
   row: [font({ textStyle: 'body' }), imageScale('medium')],
 };
 
+// Argo's custom and Tabler symbols are in the app's asset catalog.
 function imageSource(
-  sf: AppleSymbol,
+  symbol: DrawnSymbol,
 ): Pick<ImageProps, 'assetName' | 'systemName'> {
-  return isCustomSymbol(sf) ? { assetName: sf } : { systemName: sf };
+  if (symbol.kind === 'tabler')
+    return { assetName: tablerAsset(symbol.tabler) };
+
+  return isCustomSymbol(symbol.sf)
+    ? { assetName: symbol.sf }
+    : { systemName: symbol.sf };
 }
 
 function symbolModifiers(
@@ -51,7 +58,7 @@ export function NativeSymbol({
 
   return (
     <Image
-      {...imageSource(appleSymbol(iconSymbols[name], filled))}
+      {...imageSource(drawnSymbol(iconSymbols[name], filled))}
       size={pixels}
       modifiers={symbolModifiers(role, muted)}
     />

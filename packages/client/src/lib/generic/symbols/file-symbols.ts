@@ -1,6 +1,6 @@
 import type { SymbolSource } from './symbol-source';
 
-// Files, folders and repositories.
+// Files and folders.
 export const fileSymbols = {
   'changed-files': { sf: 'doc.badge.plus', material: 'note_add' },
   directory: { sf: 'folder.circle', material: 'topic' },
@@ -16,5 +16,4 @@ export const fileSymbols = {
   'folder-open': { sf: 'folder.fill', material: 'folder_open' },
   folders: { sf: 'rectangle.stack', material: 'folder_copy' },
   registry: { sf: 'doc.plaintext', material: 'article' },
-  repository: { sf: 'book.closed', material: 'book' },
 } as const satisfies Record<string, SymbolSource>;
