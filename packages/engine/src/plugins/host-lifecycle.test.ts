@@ -1,21 +1,25 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { expect, it } from 'vitest';
-import { getInitialSnapshot, getNextSnapshot, type SnapshotFrom } from 'xstate';
+import {
+  getInitialSnapshot,
+  getNextSnapshot,
+  type SnapshotFrom,
+  type EventFromLogic,
+} from 'xstate';
 import {
   getAdjacencyMap,
   getShortestPaths,
-  type GraphEventFromLogic,
+  type AdjacencyMap,
 } from 'xstate/graph';
 import { hostLifecycleMachine } from './host-lifecycle.machine';
 
 type HostSnapshot = SnapshotFrom<typeof hostLifecycleMachine>;
 
+type HostEvent = EventFromLogic<typeof hostLifecycleMachine>;
+
 const exited = { type: 'host.exited', reason: 'SIGKILL' } as const;
 
-const events: GraphEventFromLogic<typeof hostLifecycleMachine>[] = [
-  exited,
-  { type: 'host.close' },
-];
+const events: HostEvent[] = [exited, { type: 'host.close' }];
 
 const input = {
   now: (): number => 0,
@@ -55,9 +59,8 @@ it('structurally walks host restart, budget exhaustion and close transitions', (
   const models = [
     {
       paths,
-      getAdjacencyMap: (): ReturnType<
-        typeof getAdjacencyMap<typeof hostLifecycleMachine>
-      > => getAdjacencyMap(hostLifecycleMachine, options),
+      getAdjacencyMap: (): AdjacencyMap<HostSnapshot, HostEvent> =>
+        getAdjacencyMap(hostLifecycleMachine, options),
     },
   ];
 
