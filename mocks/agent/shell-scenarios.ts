@@ -1,4 +1,5 @@
-import type { ScriptedStep } from './scripted-types.ts';
+import { acpConfiguration } from './acp-configuration.ts';
+import type { ScriptedScenario, ScriptedStep } from './scripted-types.ts';
 
 // These commands run only when #89 supplies the real Server terminal service.
 export const runningShellStep = {
@@ -25,3 +26,14 @@ export const stoppedShellStep = {
   ...runningShellStep,
   completion: 'kill',
 } satisfies ScriptedStep;
+
+const shellScenario = (step: ScriptedStep): ScriptedScenario => ({
+  configOptions: acpConfiguration,
+  steps: [step],
+});
+
+export const shellScenarios = {
+  'shell-running': shellScenario(runningShellStep),
+  'shell-exited': shellScenario(exitedShellStep),
+  'shell-stopped': shellScenario(stoppedShellStep),
+} satisfies Record<string, ScriptedScenario>;

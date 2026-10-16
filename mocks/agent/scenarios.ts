@@ -8,11 +8,7 @@ import {
 } from './feed-work-scenario.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
-import {
-  runningShellStep,
-  exitedShellStep,
-  stoppedShellStep,
-} from './shell-scenarios.ts';
+import { shellScenarios } from './shell-scenarios.ts';
 import { terminalLogin } from './terminal-login.ts';
 
 export const sharedReply = 'The shared fixture completed this Turn.';
@@ -51,9 +47,7 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 // Shared named scenarios; tests reuse them instead of scripting their own peer.
 export const scenarios = {
   reply: scenario([reply]),
-  'shell-running': scenario([runningShellStep, reply]),
-  'shell-exited': scenario([exitedShellStep, reply]),
-  'shell-stopped': scenario([stoppedShellStep, reply]),
+  ...shellScenarios,
   'feed-history': scenario(feedHistorySteps),
   'feed-work': scenario([
     ...feedWorkSteps,
