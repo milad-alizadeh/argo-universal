@@ -53,7 +53,7 @@ it.each(['unavailable', 'corrupt'])(
       host.database.$client
         .prepare('SELECT COUNT(*) AS count FROM feed_row')
         .get(),
-    ).toEqual({ count: 0 });
+    ).toEqual({ count: 1 });
   },
 );
 
@@ -104,6 +104,10 @@ it('thoughts and messages keep separate identities while an Agent user echo adds
       sessionUpdate: 'agent_message',
       state: 'settled',
       content: [{ text: 'Answer' }],
+    },
+    {
+      sessionUpdate: 'notice',
+      _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
     },
   ]);
   expect(page.rows[1]?.id).not.toBe(page.rows[2]?.id);

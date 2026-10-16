@@ -661,7 +661,7 @@ const sessionSetup = setup({
         const params = context.storageFailedTurn ? storageFailedTurn : ended;
         const endedAt = context.input.now();
 
-        if (context.activeTurnId)
+        if (context.activeTurnId && !context.feedEnded)
           enqueue.sendTo('feed', {
             type: 'feed.completeTurn',
             turnId: context.activeTurnId,

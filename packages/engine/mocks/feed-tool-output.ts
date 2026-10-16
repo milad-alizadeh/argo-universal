@@ -48,7 +48,7 @@ export const readToolRow = async (
   // A row showing a Blob is stored once the Blob file is written.
   const page = await vi.waitFor(async () => {
     const tail = await host.caller.feed.page({ ...created, direction: 'tail' });
-    expect(tail.rows).toHaveLength(2);
+    expect(tail.rows).toHaveLength(3);
 
     return tail;
   });
