@@ -1,6 +1,6 @@
 # Notifications
 
-Session supplies input requests. The Writer supplies committed Turn-ending Feed rows. Notifications does not scan historical Feed pages or infer events from Session list status.
+Session supplies its pending Input request. Feed names the live Turn endings in each Writer commit; recovered and archive-settled endings never reach Notifications. Notifications does not scan historical Feed pages or infer events from Session list status.
 
 The Engine combines attention from actual App Connections for this Server. A viewed Session stays quiet everywhere. Attention expires after 30 seconds without a report. Apps renew attention every 15 seconds and report navigation, focus and visibility changes immediately. Disconnect or stream cancellation removes that Connection's attention.
 
