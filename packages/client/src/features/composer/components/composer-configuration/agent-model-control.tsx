@@ -1,14 +1,15 @@
 import type { AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { Spinner } from '#primitives/display/spinner';
 import { MenuTrigger, type MenuTriggerProps } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { AgentIcon } from './agent-icon';
-import { AgentModelMenu, isDesktopMenu } from './agent-model-menu';
+import { AgentModelMenu } from './agent-model-menu';
 import { AgentModelTrailing } from './agent-model-trailing';
 import { useCommitEffortFallback } from './configuration-effects';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -41,9 +42,18 @@ export function ComposerAgentModelControl(
 
 // Desktop opens the menu as a popover; everything else opens the Sheet.
 function AgentModelOverlay(props: TriggerProps): React.JSX.Element {
-  if (isDesktopMenu(useWide())) return <AgentModelPopover {...props} />;
+  if (Platform.OS !== 'web') return <AgentModelSheet {...props} />;
 
-  return <AgentModelSheet {...props} />;
+  return (
+    <>
+      <SizeClass only="wide">
+        <AgentModelPopover {...props} />
+      </SizeClass>
+      <SizeClass only="compact">
+        <AgentModelSheet {...props} />
+      </SizeClass>
+    </>
+  );
 }
 
 const agentModelPopoverLayout = {
@@ -60,7 +70,7 @@ function AgentModelPopover(props: TriggerProps): React.JSX.Element {
       {...agentModelPopoverLayout}
       trigger={agentModelTrigger(props)}
     >
-      {() => <AgentModelMenu configuration={props.configuration} />}
+      {() => <AgentModelMenu configuration={props.configuration} wide />}
     </ComposerPopover>
   );
 }
@@ -88,7 +98,7 @@ function configurePage(
 ): React.JSX.Element {
   return (
     <Sheet.Page name="configure" title="Configure">
-      <AgentModelMenu configuration={configuration} />
+      <AgentModelMenu configuration={configuration} wide={false} />
     </Sheet.Page>
   );
 }

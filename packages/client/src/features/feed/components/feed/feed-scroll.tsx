@@ -1,16 +1,17 @@
 import type {
   LegendListRef,
-  LegendListProps,
   LegendListRenderItemProps,
 } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
-import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
+import {
+  ScrollFadeList,
+  type ScrollFadeListProps,
+} from '#lib/product/scroll-fade/scroll-fade-list';
 import { type FeedEntry, entryKey, entryType } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import { LoadingEarlier } from './loading-earlier';
@@ -108,8 +109,13 @@ export interface FeedScrollProps extends EntryDrawing {
   atEnd: boolean;
 }
 
+const feedContentStyle = {
+  compact: phoneContentStyle,
+  wide: wideContentStyle,
+};
+
 type FeedListProps = Pick<
-  LegendListProps<FeedEntry>,
+  ScrollFadeListProps<FeedEntry>,
   | 'contentContainerStyle'
   | 'data'
   | 'renderItem'
@@ -126,7 +132,7 @@ function useFeedListProps(
   const { maintainScrollAtEnd, ...motion } = useCollapsibleMotion(list);
 
   return {
-    contentContainerStyle: useWide() ? wideContentStyle : phoneContentStyle,
+    contentContainerStyle: feedContentStyle,
     data: entries,
     renderItem: useRenderEntry(entries, { ...props, ...motion }),
     initialScrollIndex: props.initialIndex,

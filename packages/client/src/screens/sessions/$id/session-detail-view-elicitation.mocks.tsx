@@ -2,8 +2,8 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import type { ElicitationFormProps } from '#features/requests';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { ScaffoldMock } from '../../../../mocks/scaffold';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
@@ -13,15 +13,30 @@ import {
 export function ElicitationPreview(
   props: SessionDetailViewProps,
 ): React.JSX.Element {
-  if (!useWide()) return <InteractiveElicitation {...props} />;
+  const page = <InteractiveElicitation {...props} />;
 
+  return (
+    <>
+      <SizeClass only="wide">
+        <FramedPage>{page}</FramedPage>
+      </SizeClass>
+      <SizeClass only="compact">{page}</SizeClass>
+    </>
+  );
+}
+
+function FramedPage({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   return (
     <ScaffoldMock
       onSectionChange={fn()}
       onSidebarShownChange={fn()}
       onInspectorStateChange={fn()}
     >
-      <InteractiveElicitation {...props} />
+      {children}
     </ScaffoldMock>
   );
 }

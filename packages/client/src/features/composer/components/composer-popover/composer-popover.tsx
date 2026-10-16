@@ -12,7 +12,7 @@ import {
   usePopoverClose,
 } from '#primitives/overlays/popover';
 import { Sheet } from '#primitives/overlays/sheet';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useAfterClose } from '../../hooks/use-after-close';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import type { ComposerPopoverProps } from './popover-types';
@@ -43,15 +43,27 @@ type OverlayProps = ComposerPopoverProps &
 export function ComposerPopover(
   props: ComposerPopoverProps,
 ): React.JSX.Element {
-  const wide = useWide();
   const layout = useResolveClassNames(popoverClassName(props));
   const [open, setOpen] = useComposerOverlay(props.trigger.props.disabled);
   const after = useAfterClose(setOpen);
 
   // A desktop window opens a popover; a narrow window and a phone or iPad, whose Sheet is native, a sheet.
-  const Overlay = wide && Platform.OS === 'web' ? WidePopover : CompactPopover;
+  const Overlay = Platform.OS === 'web' ? WebOverlay : CompactPopover;
 
   return <Overlay {...props} {...after} open={open} layout={layout} />;
+}
+
+function WebOverlay(props: OverlayProps): React.JSX.Element {
+  return (
+    <>
+      <SizeClass only="wide">
+        <WidePopover {...props} />
+      </SizeClass>
+      <SizeClass only="compact">
+        <CompactPopover {...props} />
+      </SizeClass>
+    </>
+  );
 }
 
 function WidePopover(props: OverlayProps): React.JSX.Element {

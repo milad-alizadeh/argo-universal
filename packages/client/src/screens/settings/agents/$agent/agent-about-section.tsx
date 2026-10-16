@@ -4,9 +4,9 @@ import {
   type AgentDetailViewProps,
   installationActive,
 } from '#features/agents';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { AgentAction } from './agent-detail-actions';
 import { AgentLinks } from './agent-links';
 
@@ -37,11 +37,26 @@ export function AboutSection(
   );
 }
 
+// Wide, the row also offers the update the phone's summary shows.
 function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
-  const wide = useWide();
-
   if (!props.agent.version) return null;
 
+  return (
+    <>
+      <SizeClass only="wide">
+        <VersionItem {...props} wide />
+      </SizeClass>
+      <SizeClass only="compact">
+        <VersionItem {...props} wide={false} />
+      </SizeClass>
+    </>
+  );
+}
+
+function VersionItem({
+  wide,
+  ...props
+}: AgentDetailViewProps & { wide: boolean }): React.JSX.Element {
   return (
     <GroupedListItem
       label="Version"

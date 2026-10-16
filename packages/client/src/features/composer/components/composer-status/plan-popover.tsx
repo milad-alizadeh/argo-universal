@@ -1,9 +1,9 @@
 import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
 import { Platform, View } from 'react-native';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { completedSteps, fullPercent } from '../../state/status';
 import { PlanSteps } from './plan-steps';
 import { Meter } from './status-meter';
@@ -57,13 +57,17 @@ function PlanPopoverHeading({
   );
 }
 
+// A wide window heads the steps with the plan's progress; a narrow web window with its title alone.
 export function PlanPopoverContent({ entries }: PlanEntriesProps): JSX.Element {
-  const windowWide = useWide();
-
   return (
     <View>
-      {(windowWide || Platform.OS === 'web') && (
-        <PlanPopoverHeading entries={entries} windowWide={windowWide} />
+      <SizeClass only="wide">
+        <PlanPopoverHeading entries={entries} windowWide />
+      </SizeClass>
+      {Platform.OS === 'web' && (
+        <SizeClass only="compact">
+          <PlanPopoverHeading entries={entries} windowWide={false} />
+        </SizeClass>
       )}
       <PlanSteps entries={entries} />
     </View>

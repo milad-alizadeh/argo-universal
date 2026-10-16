@@ -1,10 +1,10 @@
 import { Stack } from 'expo-router';
 import type * as React from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { toolbarDot } from '#lib/product/navigation/toolbar-dot';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { toolbarIcon } from '../../../lib/product/navigation/toolbar-icon';
 import {
   type AgentsFilterProps,
@@ -20,17 +20,13 @@ const filterIcon = toolbarIcon(headerFilterIcon);
 const addIcon = toolbarIcon('add');
 
 // A phone's native header, as the Stack Toolbar guide builds one: the title, the filter menu and Add custom Agent, each in its own bubble, and the stack's search bar.
-export function AgentsPhoneHeader(
-  props: AgentsHeaderProps,
-): React.JSX.Element | null {
-  if (useWide()) return null;
-
+export function AgentsPhoneHeader(props: AgentsHeaderProps): React.JSX.Element {
   return (
-    <>
+    <SizeClass only="compact">
       <ScreenHeader title={agentsTitle} />
       {rightToolbar(props)}
       <PhoneSearchBar placeholder={searchLabel} onSearch={props.onSearch} />
-    </>
+    </SizeClass>
   );
 }
 

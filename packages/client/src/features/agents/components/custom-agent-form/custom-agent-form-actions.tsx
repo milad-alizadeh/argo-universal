@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { FormPartProps } from './custom-agent-form-sections';
 
 export type ActionProps = FormPartProps & {
@@ -16,9 +16,9 @@ export function FormActions(props: ActionProps): React.JSX.Element {
   return (
     <GroupedListContent>
       <View className="items-stretch gap-2 wide:flex-row wide:justify-end">
-        {useWide() && (
+        <SizeClass only="wide">
           <CancelButton disabled={props.disabled} onPress={props.onCancel} />
-        )}
+        </SizeClass>
         <SubmitButton {...props} />
       </View>
     </GroupedListContent>

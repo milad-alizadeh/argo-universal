@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import { AuthCallout } from './auth-callout';
 import { authCallouts } from './auth-callout.mocks';
@@ -32,18 +32,24 @@ const variations: [label: string, example: GalleryArgs['example']][] = [
 
 // A phone presents the callout as a sheet, so it shows the one the example control picks.
 function AuthCalloutGallery(args: GalleryArgs): React.JSX.Element {
-  if (!useWide())
-    return <AuthCallout {...authCallouts[args.example]} {...actions} />;
-
   return (
-    <Variations>
-      {variations.map(([label, example]) => (
-        <Variation key={label} label={label}>
-          <AuthCallout {...authCallouts[example]} {...actions} />
-        </Variation>
-      ))}
-    </Variations>
+    <>
+      <SizeClass only="wide">{gallery}</SizeClass>
+      <SizeClass only="compact">
+        <AuthCallout {...authCallouts[args.example]} {...actions} />
+      </SizeClass>
+    </>
   );
 }
+
+const gallery = (
+  <Variations>
+    {variations.map(([label, example]) => (
+      <Variation key={label} label={label}>
+        <AuthCallout {...authCallouts[example]} {...actions} />
+      </Variation>
+    ))}
+  </Variations>
+);
 
 export const Overview: StoryObj<typeof meta> = { name: 'AuthCallout' };

@@ -1,18 +1,29 @@
 import type * as React from 'react';
 import { TextInput } from '#primitives/inputs/text-input';
 import { Host } from '#primitives/native/host';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { EntrySheetField } from './entry-sheet';
 import { EntrySheetInput as WideEntrySheetInput } from './entry-sheet-input.tsx';
 
-// A phone sheet's field is a bare Material field, its label floating inside it and its error under it.
-export function EntrySheetInput({
-  field,
-}: {
+interface FieldProps {
   field: EntrySheetField;
-}): React.JSX.Element {
-  if (useWide()) return <WideEntrySheetInput field={field} />;
+}
 
+export function EntrySheetInput({ field }: FieldProps): React.JSX.Element {
+  return (
+    <>
+      <SizeClass only="wide">
+        <WideEntrySheetInput field={field} />
+      </SizeClass>
+      <SizeClass only="compact">
+        <MaterialField field={field} />
+      </SizeClass>
+    </>
+  );
+}
+
+// A phone sheet's field is a bare Material field, its label floating inside it and its error under it.
+function MaterialField({ field }: FieldProps): React.JSX.Element {
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <TextInput variant="row" mono {...field} />

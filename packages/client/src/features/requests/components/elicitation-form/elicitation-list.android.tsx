@@ -1,7 +1,7 @@
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { View, useWindowDimensions } from 'react-native';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 
 // The rows may take this share of the screen before they scroll, so the actions under them stay in view.
 const tallestShare = 0.6;
@@ -13,10 +13,21 @@ const tallestShare = 0.6;
 type ListProps = { children: ReactNode };
 
 export function ElicitationList({ children }: ListProps): ReactElement {
+  return (
+    <>
+      <SizeClass only="wide">
+        <GroupedList fit>{children}</GroupedList>
+      </SizeClass>
+      <SizeClass only="compact">
+        <SheetRows>{children}</SheetRows>
+      </SizeClass>
+    </>
+  );
+}
+
+function SheetRows({ children }: ListProps): ReactElement {
   const [height, setHeight] = useState(0);
   const tallest = useWindowDimensions().height * tallestShare;
-
-  if (useWide()) return <GroupedList fit>{children}</GroupedList>;
 
   return (
     <View style={{ height: Math.min(height, tallest) }}>

@@ -3,7 +3,7 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { ScaffoldMock } from '../../../../../mocks/scaffold';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { PageHeader } from '../../../../lib/product/page-header';
 import { EditRow } from './edit-row';
 
@@ -31,15 +31,23 @@ function WidePreview({ children }: { children: ReactNode }): React.JSX.Element {
   );
 }
 
+interface EditRowPreviewProps {
+  row: ToolCallUpdate;
+}
+
 export function EditRowPreview({
   row,
-}: {
-  row: ToolCallUpdate;
-}): React.JSX.Element {
-  const wide = useWide();
+}: EditRowPreviewProps): React.JSX.Element {
   const feed = <EditFeed row={row} />;
 
-  if (!wide) return <View className="flex-1 bg-card">{feed}</View>;
-
-  return <WidePreview>{feed}</WidePreview>;
+  return (
+    <>
+      <SizeClass only="wide">
+        <WidePreview>{feed}</WidePreview>
+      </SizeClass>
+      <SizeClass only="compact">
+        <View className="flex-1 bg-card">{feed}</View>
+      </SizeClass>
+    </>
+  );
 }

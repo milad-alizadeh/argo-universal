@@ -22,6 +22,10 @@ const medium = 'Medium breakpoint';
 
 const wide = 'Wide breakpoint';
 
+const compactContent = 'Compact content';
+
+const wideContent = 'Wide content';
+
 // The hook and the theme.css breakpoint variants change at the same widths.
 export const ChangesAtEachBreakpoint: Story = {
   play: async ({ canvas }) => {
@@ -43,6 +47,27 @@ export const ChangesAtEachBreakpoint: Story = {
         await expect(canvas.getByText(label).checkVisibility()).toBe(
           shown.some((visible): boolean => visible === label),
         );
+    }
+  },
+};
+
+// A gate draws its content at one size class only; medium follows compact until it has its own design.
+export const GatesBySizeClass: Story = {
+  play: async ({ canvas }) => {
+    const steps = [
+      [mediumBreakpoint() - 1, 'compact', compactContent],
+      [mediumBreakpoint(), 'medium', compactContent],
+      [wideBreakpoint() - 1, 'medium', compactContent],
+      [wideBreakpoint(), 'wide', wideContent],
+      [mediumBreakpoint() - 1, 'compact', compactContent],
+    ] as const;
+
+    for (const [width, sizeClass, shown] of steps) {
+      await page.viewport(width, 900);
+      await canvas.findByText(`${sizeClass} layout`, {}, layoutUpdate);
+
+      for (const label of [compactContent, wideContent])
+        await expect(canvas.queryByText(label) !== null).toBe(label === shown);
     }
   },
 };

@@ -7,7 +7,6 @@ import { Spinner } from '#primitives/display/spinner';
 import { Text } from '#primitives/display/text';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
 import { motionDuration } from '../../../../lib/generic/motion';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { ConnectionState } from '../../state/connection';
 
 export interface ConnectionBannerProps {
@@ -66,18 +65,13 @@ export function ConnectionBanner({
 }
 
 // Desktop text takes the Body role; a phone's capsule takes Secondary, the same size one step up.
-function useBannerTextRole(): 'body' | 'secondary' {
-  return useWide() ? 'body' : 'secondary';
-}
+const bannerTextRole = { compact: 'secondary', wide: 'body' } as const;
 
 function Reconnecting(): React.JSX.Element {
   return (
     <>
       <Spinner accessibilityLabel="Reconnecting" />
-      <Text
-        role={useBannerTextRole()}
-        className="pr-3.5 text-foreground wide:pr-3"
-      >
+      <Text role={bannerTextRole} className="pr-3.5 text-foreground wide:pr-3">
         Reconnecting…
       </Text>
     </>
@@ -92,7 +86,7 @@ function Offline({
     <>
       <View className="size-2 shrink-0 rounded-full bg-warning" />
       <Text
-        role={useBannerTextRole()}
+        role={bannerTextRole}
         numberOfLines={1}
         className="shrink text-foreground"
       >

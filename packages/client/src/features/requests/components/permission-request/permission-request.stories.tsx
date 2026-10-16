@@ -7,7 +7,7 @@ import {
   galleryVariations,
   PermissionPreview,
 } from '../../../../../mocks/requests/permission/permission-gallery';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import type { RequestState } from '../request-card/request-card';
 import {
@@ -54,7 +54,14 @@ export const Overview = {
   render: function RequestGallery(args): React.JSX.Element {
     const request = <PermissionPreview {...galleryRequestProps(args)} />;
 
-    return useWide() ? <WideGallery request={request} /> : request;
+    return (
+      <>
+        <SizeClass only="wide">
+          <WideGallery request={request} />
+        </SizeClass>
+        <SizeClass only="compact">{request}</SizeClass>
+      </>
+    );
   },
 } satisfies StoryObj<GalleryArgs>;
 

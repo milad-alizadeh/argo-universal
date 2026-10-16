@@ -1,11 +1,11 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -85,16 +85,33 @@ function projectDetail(project: ProjectInfo, wide: boolean): ProjectDetail {
   return { value: project.remoteHost ?? 'No remote' };
 }
 
-// One line at every width: the folder path sits only on the Project's own page.
-function ProjectRow(props: {
+type ProjectRowProps = {
   project: ProjectInfo;
   onOpen: (name: string) => void;
-}): React.JSX.Element {
+};
+
+function ProjectRow(props: ProjectRowProps): React.JSX.Element {
+  return (
+    <>
+      <SizeClass only="wide">
+        <ProjectRowItem {...props} wide />
+      </SizeClass>
+      <SizeClass only="compact">
+        <ProjectRowItem {...props} wide={false} />
+      </SizeClass>
+    </>
+  );
+}
+
+// One line at every width: the folder path sits only on the Project's own page.
+function ProjectRowItem(
+  props: ProjectRowProps & { wide: boolean },
+): React.JSX.Element {
   return (
     <GroupedListItem
       icon="folder"
       label={props.project.name}
-      {...projectDetail(props.project, useWide())}
+      {...projectDetail(props.project, props.wide)}
       onPress={() => props.onOpen(props.project.name)}
     />
   );

@@ -8,15 +8,20 @@ import {
   type SheetDetent,
   type SheetProps,
 } from '#primitives/overlays/sheet';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { TerminalSignInProps } from '../../types/session-callout';
 
 // A terminal sign-in method runs the Agent's login command on the Server: a panel under the Composer on a wide window, a sheet on a phone.
 export function TerminalSignIn(props: TerminalSignInProps): React.JSX.Element {
-  return useWide() ? (
-    <TerminalPanel {...props} />
-  ) : (
-    <TerminalSheet {...props} />
+  return (
+    <>
+      <SizeClass only="wide">
+        <TerminalPanel {...props} />
+      </SizeClass>
+      <SizeClass only="compact">
+        <TerminalSheet {...props} />
+      </SizeClass>
+    </>
   );
 }
 

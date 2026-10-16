@@ -5,7 +5,7 @@ import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { cn } from '#lib/generic/utils';
 import { Icon, IconSpinner } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { maximumPlanStepsHeight } from '../../state/status';
 import { mutedTextClassName } from './status-surface';
 
@@ -86,16 +86,19 @@ function StepsList({ entries, wide }: StepsListProps): JSX.Element {
   );
 }
 
+// A wide popover scrolls a long plan within its height; a phone's sheet scrolls itself.
 export function PlanSteps({ entries }: { entries: PlanEntry[] }): JSX.Element {
-  const wide = useWide();
-  const steps = <StepsList entries={entries} wide={wide} />;
-
-  return wide ? (
-    <ScrollView style={{ maxHeight: maximumPlanStepsHeight }}>
-      {steps}
-    </ScrollView>
-  ) : (
-    steps
+  return (
+    <>
+      <SizeClass only="wide">
+        <ScrollView style={{ maxHeight: maximumPlanStepsHeight }}>
+          <StepsList entries={entries} wide />
+        </ScrollView>
+      </SizeClass>
+      <SizeClass only="compact">
+        <StepsList entries={entries} wide={false} />
+      </SizeClass>
+    </>
   );
 }
 

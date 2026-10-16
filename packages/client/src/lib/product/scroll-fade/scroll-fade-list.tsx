@@ -14,8 +14,13 @@ import {
 } from 'react';
 import { Platform } from 'react-native';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
-import type { ScrollFadeOptions } from './scroll-fade-options';
+import {
+  type ScrollFadeListProps,
+  useSizeClassInset,
+} from './scroll-fade-list-props';
 import { type ScrollFade, useScrollFade } from './scroll-fade-props';
+
+export type { ScrollFadeListProps } from './scroll-fade-list-props';
 
 const listDefaults = {
   style: { position: 'absolute', inset: 0 },
@@ -48,13 +53,6 @@ function webListProps<P extends NativeOnlyListProps>({
 const platformListProps = <P extends NativeOnlyListProps>(
   props: P,
 ): P | WebListProps<P> => (Platform.OS === 'web' ? webListProps(props) : props);
-
-export type ScrollFadeListProps<T> = LegendListProps<T> &
-  ScrollFadeOptions & {
-    ref?: Ref<LegendListRef>;
-    // Grows with its content up to this height, then scrolls; without it the list fills its parent.
-    maxHeight?: number;
-  };
 
 const sizeSignals = ['totalSize', 'headerSize', 'footerSize'] as const;
 
@@ -133,16 +131,13 @@ function useFadingList<T>({
   refScrollView,
   ...props
 }: Omit<ScrollFadeListProps<T>, 'ref' | 'maxHeight'>): FadingList<T> {
-  const { frame, scroll, attachScrollView } = useScrollFade(props);
-  const scrollRef = useBothRefs(attachScrollView, refScrollView);
+  const fade = useScrollFade(useSizeClassInset(props));
+  const scrollRef = useBothRefs(fade.attachScrollView, refScrollView);
+  const scroll = { ...fade.scroll, refScrollView: scrollRef };
 
   return {
-    frame,
-    list: platformListProps({
-      ...listDefaults,
-      ...scroll,
-      refScrollView: scrollRef,
-    }),
+    frame: fade.frame,
+    list: platformListProps({ ...listDefaults, ...scroll }),
   };
 }
 

@@ -1,8 +1,12 @@
 import type * as React from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import { IconButton } from '#primitives/buttons/icon-button';
-import { Menu, type MenuChoiceGroup } from '#primitives/overlays/menu';
+import {
+  Menu,
+  type MenuChoiceGroup,
+  type MenuProps,
+} from '#primitives/overlays/menu';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import {
   isSessionsLayout,
   type SessionsLayout,
@@ -77,13 +81,26 @@ const filterGroups = (props: SessionsFilterMenuProps): MenuChoiceGroup[] => [
 export function SessionsFilterMenu(
   props: SessionsFilterMenuProps,
 ): React.JSX.Element {
-  const wide = useWide();
+  return (
+    <>
+      <SizeClass only="wide">
+        <FilterMenu {...props} trigger={wideFilterTrigger} />
+      </SizeClass>
+      <SizeClass only="compact">
+        <FilterMenu {...props} trigger={phoneFilterTrigger(props.archived)} />
+      </SizeClass>
+    </>
+  );
+}
 
+function FilterMenu(
+  props: SessionsFilterMenuProps & Pick<MenuProps, 'trigger'>,
+): React.JSX.Element {
   return (
     <Menu
       accessibilityLabel="Filter Sessions"
       groups={filterGroups(props)}
-      trigger={wide ? wideFilterTrigger : phoneFilterTrigger(props.archived)}
+      trigger={props.trigger}
     />
   );
 }
