@@ -6,28 +6,34 @@ import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 
+// An Agent that is not installed says so and offers no step: installing is not a choice in the list.
 const agentAvailability = {
   not_signed_in: {
     label: 'Not signed in',
     button: 'Sign in',
-    action: 'setup',
+    verb: 'Set up',
     reason: false,
   },
   not_installed: {
     label: 'Not installed',
-    button: 'Install',
-    action: 'setup',
+    button: undefined,
+    verb: 'Set up',
     reason: false,
   },
   unavailable: {
     label: 'Unavailable',
     button: 'Retry',
-    action: 'retry',
+    verb: 'Retry',
     reason: true,
   },
 } satisfies Record<
   Exclude<AgentAvailability, 'available'>,
-  { label: string; button: string; action: 'setup' | 'retry'; reason: boolean }
+  {
+    label: string;
+    button: string | undefined;
+    verb: 'Set up' | 'Retry';
+    reason: boolean;
+  }
 >;
 
 interface AgentChoiceProps {
@@ -89,31 +95,36 @@ function agentRowContent(
 function AgentAvailabilityAction(
   props: AgentChoiceProps,
 ): React.JSX.Element | null {
-  if (props.agent.availability === 'available') return null;
-  const action = agentAction(props.agent, props.configuration);
+  const action = availabilityAction(props);
 
   if (!action) return null;
 
   return (
-    <GroupedListItem
-      {...agentActionContent(props.agent)}
-      accessibilityRole="button"
-      tone="accent"
-      onPress={action}
-    />
+    <GroupedListItem {...action} accessibilityRole="button" tone="accent" />
   );
 }
 
-function agentActionContent(
-  agent: AgentInfo,
-): React.ComponentProps<typeof GroupedListItem> {
-  if (agent.availability === 'available') return { label: agent.label };
-  const unavailable = agentAvailability[agent.availability];
+function availabilityAction({
+  agent,
+  configuration,
+}: AgentChoiceProps): React.ComponentProps<typeof GroupedListItem> | undefined {
+  const button = agentButton(agent);
+  const onPress = agentAction(agent, configuration);
 
-  return {
-    label: unavailable.button,
-    accessibilityLabel: `${unavailable.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`,
-  };
+  if (!button || !onPress) return undefined;
+
+  return { ...button, onPress };
+}
+
+function agentButton(
+  agent: AgentInfo,
+): { label: string; accessibilityLabel: string } | undefined {
+  if (agent.availability === 'available') return undefined;
+  const { button, verb } = agentAvailability[agent.availability];
+
+  return button === undefined
+    ? undefined
+    : { label: button, accessibilityLabel: `${verb} ${agent.label}` };
 }
 
 function agentAction(
