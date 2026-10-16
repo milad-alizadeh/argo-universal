@@ -36,12 +36,9 @@ const questionAttributes = new Set([
   'items',
 ]);
 
+// Only choices with nothing else to check are paged as questions; anything else is one page of fields.
 function questionProperty(field: ElicitationPropertySchema): boolean {
-  return (
-    !!field.description &&
-    unconstrainedQuestion(field) &&
-    questionChoicesField(field)
-  );
+  return unconstrainedQuestion(field) && questionChoicesField(field);
 }
 
 function unconstrainedQuestion(field: ElicitationPropertySchema): boolean {

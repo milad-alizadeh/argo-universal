@@ -13,9 +13,11 @@ export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
 
   return (
     <Row alignment="center">
-      <NativeText tone={isInvalid(props) ? 'danger' : undefined}>
-        {label}
-      </NativeText>
+      {!props.labelHidden && (
+        <NativeText tone={isInvalid(props) ? 'danger' : undefined}>
+          {label}
+        </NativeText>
+      )}
       <NativeTextField {...props} label={label} />
       <FieldProgress label={props.label} loading={props.loading} />
     </Row>
@@ -48,7 +50,8 @@ function fieldBehaviour(props: PhoneFieldProps): TextInputProps {
     autoCapitalize: 'none',
     autoCorrect: false,
     keyboardType: props.numeric ? 'numbers-and-punctuation' : undefined,
-    textAlign: 'right',
+    // Beside a label the value trails the row; alone, the entry leads it as the row's title would.
+    textAlign: props.labelHidden ? 'left' : 'right',
   };
 }
 

@@ -6,9 +6,12 @@ const workQuestion = 'What should we work on next in Argo Universal?';
 
 const buildFeature = 'Build a feature';
 
-const workOptions = [buildFeature, 'Fix a bug', 'Explore an idea'].map(
-  (label) => ({ const: label, title: label }),
-);
+const exploreIdea = 'Explore an idea';
+
+const workOptions = [buildFeature, 'Fix a bug', exploreIdea].map((label) => ({
+  const: label,
+  title: label,
+}));
 
 export const questionsRequest: PendingElicitation = {
   ...elicitationRequest,
@@ -39,9 +42,25 @@ export const questionsRequest: PendingElicitation = {
   },
 };
 
+// The multi-select on its own: one question, headed by the message.
+export const nextWorkRequest: PendingElicitation = {
+  ...elicitationRequest,
+  message: workQuestion,
+  requestedSchema: {
+    properties: {
+      work: { type: 'array', title: 'Work', items: { anyOf: workOptions } },
+    },
+    required: ['work'],
+  },
+};
+
+export const nextWorkValues: ElicitationValues = {
+  work: [buildFeature, exploreIdea],
+};
+
 export const questionsValues: ElicitationValues = {
   goal: buildFeature,
-  work: [buildFeature, 'Explore an idea'],
+  work: [buildFeature, exploreIdea],
 };
 
 export const questionPlan: PlanEntry[] = [

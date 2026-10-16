@@ -1,20 +1,26 @@
-import type { ComponentProps, ReactElement } from 'react';
-import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
+import type { ReactElement } from 'react';
 import {
   useElicitationForm,
   type ElicitationModel,
 } from '../../hooks/use-elicitation-form';
-import { RequestCard } from '../request-card/request-card';
-import { ElicitationActions } from './elicitation-actions';
 import {
-  ElicitationFields,
-  ElicitationHeading,
-  ElicitationValidation,
-} from './elicitation-form-body';
+  useElicitationQuestions,
+  type QuestionModel,
+} from '../../hooks/use-elicitation-questions';
+import { ElicitationFields } from './elicitation-fields';
+import { ElicitationValidation } from './elicitation-form-body';
 import type { ElicitationFormProps } from './elicitation-form-props';
-import { ElicitationQuestionForm } from './elicitation-question-form';
-import { elicitationQuestions } from './elicitation-questions';
+import {
+  ElicitationLayout,
+  type ElicitationPlacement,
+  type ElicitationView,
+} from './elicitation-layout';
+import { QuestionPager } from './elicitation-question-pager';
+import { QuestionRows } from './elicitation-question-rows';
+import {
+  elicitationQuestions,
+  type ElicitationQuestion,
+} from './elicitation-questions';
 
 export type { ElicitationValues } from './elicitation-schema';
 
@@ -23,78 +29,146 @@ export type {
   ElicitationFormProps,
 } from './elicitation-form-props';
 
+// The request as a card, in a Feed's request frame.
 export function ElicitationForm(props: ElicitationFormProps): ReactElement {
-  return <RequestForm key={props.request.requestId} {...props} />;
-}
-
-function RequestForm(props: ElicitationFormProps): ReactElement {
-  const questions = elicitationQuestions(props.request);
-
-  return questions ? (
-    <ElicitationQuestionForm {...props} questions={questions} />
-  ) : (
-    <FieldForm {...props} />
+  return (
+    <ElicitationContent
+      key={props.request.requestId}
+      {...props}
+      placement="card"
+    />
   );
 }
 
-function FieldForm(props: ElicitationFormProps): ReactElement {
-  const model = useElicitationForm(props);
+type ContentProps = ElicitationFormProps & { placement: ElicitationPlacement };
 
-  return <ElicitationFieldForm model={model} />;
+/*
+ * Every form-mode request draws as the same card. Choices with nothing else to check page one
+ * question at a time; any other form is one page of fields, headed by its message.
+ */
+export function ElicitationContent(props: ContentProps): ReactElement {
+  const questions = elicitationQuestions(props.request);
+
+  return questions ? (
+    <QuestionContent {...props} questions={questions} />
+  ) : (
+    <FieldsContent {...props} />
+  );
 }
 
-export function ElicitationFieldForm({
+type QuestionProps = ContentProps & { questions: ElicitationQuestion[] };
+
+function QuestionContent(props: QuestionProps): ReactElement {
+  const model = useElicitationQuestions(props, props.questions);
+
+  return (
+    <ElicitationLayout
+      placement={props.placement}
+      view={questionView(props, model)}
+    />
+  );
+}
+
+function questionView(
+  props: ContentProps,
+  model: QuestionModel,
+): ElicitationView {
+  return {
+    props,
+    state: props.state,
+    error: props.error,
+    header: questionHeader(model),
+    rows: <QuestionRows model={model} />,
+    actions: questionActions(props, model),
+    inactive: model.inactive,
+    onEnter: model.advance,
+  };
+}
+
+function questionActions(
+  props: ContentProps,
+  model: QuestionModel,
+): ElicitationView['actions'] {
+  return {
+    last: model.last,
+    submitting: props.state.kind === 'submitting',
+    canSubmit: model.canAdvance,
+    onSubmit: model.advance,
+    onSkip: model.skip,
+  };
+}
+
+// A lone question is the message itself; several are each headed by their own.
+function questionHeader(model: QuestionModel): ElicitationView['header'] {
+  const choose = chooseLabel(model.question);
+
+  if (model.count === 1)
+    return { title: model.props.request.message, progress: choose };
+
+  return {
+    title: model.question.title,
+    progress: `${choose} · ${model.index + 1} of ${model.count}`,
+    pager: <QuestionPager model={model} />,
+  };
+}
+
+const chooseLabel = (question: ElicitationQuestion): string =>
+  question.multiple ? 'Choose one or more' : 'Choose one';
+
+function FieldsContent(props: ContentProps): ReactElement {
+  const model = useElicitationForm(props);
+
+  return (
+    <ElicitationLayout
+      placement={props.placement}
+      view={fieldsView(props, model)}
+    />
+  );
+}
+
+function fieldsView(
+  props: ContentProps,
+  model: ElicitationModel,
+): ElicitationView {
+  return {
+    props,
+    ...requestState(model),
+    header: { title: props.request.message },
+    rows: <ElicitationFields model={model} />,
+    validation: <FieldsValidation model={model} />,
+    actions: fieldsActions(model),
+    inactive: model.inactive,
+    onEnter: () => model.answer('accept'),
+  };
+}
+
+const requestState = (
+  model: ElicitationModel,
+): Pick<ElicitationView, 'state' | 'error'> => ({
+  state: model.state,
+  error: model.error,
+});
+
+function FieldsValidation({
   model,
 }: {
   model: ElicitationModel;
 }): ReactElement {
   return (
-    <RequestCard {...cardProps(model)}>
-      <FormBody model={model} />
-    </RequestCard>
+    <ElicitationValidation
+      answered={model.state.kind === 'answered'}
+      labels={model.invalid}
+    />
   );
 }
 
-function cardProps(
-  model: ElicitationModel,
-): Omit<ComponentProps<typeof RequestCard>, 'children'> {
+// Skip declines the form: there is nothing to page past.
+function fieldsActions(model: ElicitationModel): ElicitationView['actions'] {
   return {
-    appearance: 'embedded',
-    state: model.state,
-    error: model.error,
-    onEnter: (): void => model.answer('accept'),
-    onEscape: (): void => model.answer('cancel'),
-    footerClassName: 'flex-col items-stretch gap-2 px-4 pb-4',
-    actions: <ElicitationActions model={model} />,
+    last: true,
+    submitting: model.submitting,
+    canSubmit: model.isValid,
+    onSubmit: () => model.answer('accept'),
+    onSkip: () => model.answer('decline'),
   };
-}
-
-function FormBody({ model }: { model: ElicitationModel }): ReactElement {
-  return (
-    <>
-      <FormContent model={model} />
-      <ElicitationValidation
-        answered={model.state.kind === 'answered'}
-        labels={model.invalid}
-      />
-    </>
-  );
-}
-
-const contentClassName = (inactive: boolean): string =>
-  cn(
-    'gap-4 px-4 pt-4',
-    inactive ? 'pointer-events-none' : 'pointer-events-auto',
-  );
-
-function FormContent({ model }: { model: ElicitationModel }): ReactElement {
-  return (
-    <View className={contentClassName(model.inactive)}>
-      <ElicitationHeading
-        source={model.props.source}
-        message={model.props.request.message}
-      />
-      <ElicitationFields model={model} />
-    </View>
-  );
 }

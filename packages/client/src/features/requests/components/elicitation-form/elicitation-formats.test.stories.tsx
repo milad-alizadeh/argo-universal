@@ -1,4 +1,4 @@
-import { expect, within } from 'storybook/test';
+import { expect } from 'storybook/test';
 import {
   meta as elicitationTestMeta,
   type Story,
@@ -19,10 +19,7 @@ function emptyAnswers(width: number): Story {
     args: { request: emptyAnswersRequest },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await userEvent.click(canvas.getByRole('button', { name: /^Choice/ }));
-      await userEvent.click(
-        await within(document.body).findByRole('option', { name: 'None' }),
-      );
+      await userEvent.click(canvas.getByRole('button', { name: 'None' }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
@@ -41,14 +38,14 @@ function dateFormats(width: number): Story {
     args: { request: dateFormatsRequest, initialValues: dateFormatsValues },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await expect(canvas.getByText('Enter a valid date.')).toBeVisible();
+      await expect(canvas.getByText(/Enter a valid date\./)).toBeVisible();
       await expect(
-        canvas.getByText('Enter a valid date and time.'),
+        canvas.getByText(/Enter a valid date and time\./),
       ).toBeVisible();
       const date = canvas.getByRole('textbox', { name: /^Date$/ });
       await userEvent.clear(date);
       await userEvent.type(date, '2024-02-29T12:00:00Z');
-      await expect(canvas.getByText('Enter a valid date.')).toBeVisible();
+      await expect(canvas.getByText(/Enter a valid date\./)).toBeVisible();
       await userEvent.clear(date);
       await userEvent.type(date, '2024-02-29');
       const time = canvas.getByRole('textbox', { name: 'Date and time' });
