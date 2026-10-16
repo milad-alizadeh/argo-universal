@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/display/text';
 import { iconNames, iconSymbols } from '../../../symbols/icon-names';
 import { SymbolImagesProvider } from '../../../symbols/symbol-images';
+import { materialSymbol } from '../../../symbols/symbol-source';
 import { Icon } from './icon';
 import { renderStorybookSymbol } from './sf-symbol-images.mocks';
 
@@ -28,7 +29,7 @@ function SymbolNames({ name }: { name: IconName }): React.JSX.Element {
         {iconSymbols[name].sf}
       </Text>
       <Text role="code" className="text-muted-foreground">
-        {iconSymbols[name].material}
+        {materialSymbol(iconSymbols[name]) ?? 'Tabler path'}
       </Text>
     </>
   );

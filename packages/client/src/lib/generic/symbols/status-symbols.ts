@@ -10,7 +10,6 @@ export const statusSymbols = {
     material: 'cancel',
   },
   info: { sf: 'info.circle', material: 'info' },
-  merged: { sf: 'arrow.triangle.merge', material: 'merge' },
   passed: { sf: 'checkmark.circle', material: 'check_circle' },
   pending: { sf: 'circle', material: 'radio_button_unchecked' },
   permission: {

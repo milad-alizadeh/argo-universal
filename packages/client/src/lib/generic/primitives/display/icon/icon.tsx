@@ -11,7 +11,10 @@ import {
   SymbolGlyph,
   type SymbolGlyphProps,
 } from '../../../symbols/symbol-glyph/symbol-glyph';
-import type { SymbolSource } from '../../../symbols/symbol-source';
+import {
+  materialSymbol,
+  type SymbolSource,
+} from '../../../symbols/symbol-source';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
@@ -39,7 +42,7 @@ function symbolGlyph(
 
   return {
     sf,
-    material: symbol.material,
+    material: materialSymbol(symbol),
     filled: sf !== symbol.sf || sf.endsWith('.fill'),
   };
 }

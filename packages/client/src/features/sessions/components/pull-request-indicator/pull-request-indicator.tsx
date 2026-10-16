@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 
-// GitHub's glyph for each state, in the state's colour.
+// Each state's git icon, in the state's colour.
 export const pullRequestAppearance = {
   open: { icon: 'pr-open', tone: 'success' },
   draft: { icon: 'pr-draft', tone: 'muted' },

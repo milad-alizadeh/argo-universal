@@ -55,7 +55,6 @@ export const iconSymbols = {
   cycle: { sf: 'calendar.badge.clock', material: 'event_repeat' },
   delete: { sf: 'trash', material: 'delete' },
   diagram: { sf: 'flowchart', material: 'schema' },
-  diff: { sf: 'plusminus', material: 'difference' },
   domains: { sf: 'circles.hexagongrid', material: 'workspaces' },
   edit: { sf: 'pencil', material: 'edit' },
   engine: { sf: 'gearshape.2', material: 'manufacturing' },

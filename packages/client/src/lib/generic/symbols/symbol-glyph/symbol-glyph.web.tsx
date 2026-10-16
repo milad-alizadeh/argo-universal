@@ -3,9 +3,11 @@ import type * as React from 'react';
 import type { CSSProperties } from 'react';
 import { cn } from '../../utils';
 import {
-  customSymbolBox,
   customSymbolImage,
+  customSymbolSize,
   isCustomSymbol,
+  isTablerSymbol,
+  referenceShare,
 } from '../custom-symbols';
 import {
   type RenderSymbolImage,
@@ -21,12 +23,6 @@ import { symbolWeight } from './symbol-weight';
  * shrinks to `circle`'s size, so wide ones such as the Sessions bubbles keep to the box.
  */
 const referenceSymbol = 'circle';
-
-// Leaves `circle`'s ink at three quarters of the box: 18 points on the rail, 12 beside Body text.
-const referenceShare = 0.88;
-
-// `circle` is this wide in 100-point type, the units of Argo's custom symbol paths.
-const referenceSymbolCustomUnits = 117;
 
 const glyphBox = {
   display: 'flex',
@@ -50,11 +46,9 @@ interface SymbolBox {
   height: number;
 }
 
-function extentsOf(...boxes: SymbolBox[]): number[] {
-  return boxes.flatMap(({ width, height }) => [width, height]);
-}
+function fitScale(pixels: number, ...boxes: SymbolBox[]): number {
+  const extents = boxes.flatMap(({ width, height }) => [width, height]);
 
-function fitScale(pixels: number, extents: number[]): number {
   return (pixels * referenceShare) / Math.max(...extents);
 }
 
@@ -75,25 +69,36 @@ export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
 
 /*
  * The desktop app on macOS draws SF Symbols from the system and Argo's custom symbols from their paths; the browser
- * and other desktops draw Material Symbols.
+ * and other desktops draw Material Symbols, and Tabler symbols from their paths.
  */
 function GlyphDrawing({
   sf,
   pixels,
   ...props
-}: SymbolGlyphProps): React.JSX.Element {
+}: SymbolGlyphProps): React.JSX.Element | null {
   const render = useSymbolImageRenderer();
 
   if (render)
     return <AppleSymbolImage render={render} sf={sf} pixels={pixels} />;
 
-  return <MaterialGlyph {...props} pixels={pixels} />;
+  return <BrowserGlyph {...props} sf={sf} pixels={pixels} />;
+}
+
+function BrowserGlyph({
+  sf,
+  material,
+  ...props
+}: SymbolGlyphProps): React.JSX.Element | null {
+  if (isTablerSymbol(sf))
+    return <CustomSymbolImage sf={sf} pixels={props.pixels} />;
+
+  return material ? <MaterialGlyph {...props} material={material} /> : null;
 }
 
 type MaterialGlyphProps = Pick<
   SymbolGlyphProps,
-  'material' | 'filled' | 'pixels' | 'weight'
->;
+  'filled' | 'pixels' | 'weight'
+> & { material: NonNullable<SymbolGlyphProps['material']> };
 
 function MaterialGlyph(props: MaterialGlyphProps): React.JSX.Element {
   return (
@@ -125,21 +130,16 @@ function AppleSymbolImage({
 }
 
 interface CustomSymbolImageProps extends Pick<SymbolGlyphProps, 'pixels'> {
-  sf: Parameters<typeof customSymbolBox>[0];
+  sf: Parameters<typeof customSymbolSize>[0];
 }
 
 function CustomSymbolImage({
   sf,
   pixels,
 }: CustomSymbolImageProps): React.JSX.Element {
-  const box = customSymbolBox(sf);
+  const size = customSymbolSize(sf, pixels);
 
-  const scale = fitScale(pixels, [
-    referenceSymbolCustomUnits,
-    ...extentsOf(box),
-  ]);
-
-  return <SymbolMask url={customSymbolImage(sf)} {...box} scale={scale} />;
+  return <SymbolMask url={customSymbolImage(sf)} {...size} scale={1} />;
 }
 
 interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
@@ -158,7 +158,7 @@ function MaskedSymbol(props: MaskedSymbolProps): React.JSX.Element | null {
   });
 
   if (!image || !reference) return null;
-  const scale = fitScale(props.pixels, extentsOf(reference, image));
+  const scale = fitScale(props.pixels, reference, image);
 
   return <SymbolMask {...image} scale={scale} />;
 }

@@ -1,12 +1,14 @@
 import { type AndroidSymbol, SymbolView } from 'expo-symbols';
 import type * as React from 'react';
-import type { ColorValue, ViewStyle } from 'react-native';
-import type { AppleSymbol } from '../custom-symbols';
+import { type ColorValue, Platform, type ViewStyle } from 'react-native';
+import { type AppleSymbol, isTablerSymbol } from '../custom-symbols';
+import { CustomSymbolPath } from './custom-symbol-path';
 import { type SymbolWeight, symbolWeight } from './symbol-weight';
 
 export interface SymbolGlyphProps {
   sf: AppleSymbol;
-  material: AndroidSymbol;
+  // Absent for a Tabler symbol, which draws its path everywhere.
+  material?: AndroidSymbol;
   filled: boolean;
   pixels: number;
   glyphScale: number;
@@ -19,9 +21,12 @@ export interface SymbolGlyphProps {
 
 /*
  * iOS draws the SF Symbol and Android the Material Symbol, both natively. iOS finds a custom symbol in the app's
- * asset catalog, through the patched SymbolView (patches/README.md).
+ * asset catalog, through the patched SymbolView (patches/README.md); Android draws a Tabler symbol from its path.
  */
 export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
+  if (Platform.OS === 'android' && isTablerSymbol(props.sf))
+    return <CustomSymbolPath {...props} sf={props.sf} />;
+
   return (
     <SymbolView
       key={String(props.filled)}

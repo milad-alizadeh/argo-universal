@@ -9,3 +9,16 @@ Metro imports the font as an asset ID; Vite imports its URL. `expo-symbols` pass
 # Compose vector icons
 
 `expand-more.xml` is Material Symbols Outlined `expand_more` (the Material name for `chevron-down`) as an Android vector drawable, sized to the `control` icon role (16dp). The Android SplitButton draws it with `@expo/ui`'s Compose `Icon` inside its stock button, so the whole button takes the tap; an icon hosted from React Native would take the touch itself.
+
+# Tabler git icons
+
+`tabler/` holds the source SVGs of the git icons, unchanged from Tabler Icons v3.49.0's outline set (github.com/tabler/tabler-icons, `icons/outline`), and `tabler/LICENSE`, Tabler's MIT licence (ADR-0019).
+
+Tabler draws 2-point strokes on a 24-point grid; the asset catalog and the masks need filled shapes. `tools/sf-symbols/tabler-symbols.swift` outlines each icon's strokes with round caps and joins, unions them with Core Graphics, and places them in the custom symbols' 137.5-unit box. To regenerate on a Mac, from the repository root:
+
+```sh
+swift tools/sf-symbols/tabler-symbols.swift packages/client/src/lib/generic/symbols/assets/tabler \
+  > packages/client/src/lib/generic/symbols/tabler-symbol-paths.json
+```
+
+To add a git icon, copy its outline SVG from the same Tabler release into `tabler/`, regenerate, and map it in `git-symbols.ts`.
