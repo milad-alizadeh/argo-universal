@@ -6,9 +6,12 @@ import { PluginStorage } from '../src/plugins/storage';
 import { MemoryKeychain } from './memory-keychain';
 
 export function startPluginRuntime(home: string): PluginRuntime {
+  const log = (line: string): void =>
+    writeLog({ home, label: 'plugins', line });
+
   const runtime = new PluginRuntime(
-    (line) => writeLog({ home, label: 'plugins', line }),
-    new PluginServices(new PluginStorage(home), new MemoryKeychain()),
+    log,
+    new PluginServices(new PluginStorage(home), new MemoryKeychain(), log),
   );
 
   onTestFinished(() => runtime.close());

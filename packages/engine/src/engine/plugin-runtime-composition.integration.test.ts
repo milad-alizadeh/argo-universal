@@ -48,6 +48,7 @@ it.each(['index.mjs', 'index.cjs'])(
 it.each([
   { fixture: 'crashing', error: 'Fixture Plugin crashed' },
   { fixture: 'node-global', error: 'process is not defined' },
+  { fixture: 'require-fs', error: 'require' },
   { fixture: 'heap', error: 'memory limit' },
 ])(
   'isolates a $fixture Plugin from healthy workers and the Engine',

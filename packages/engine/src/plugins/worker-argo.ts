@@ -73,7 +73,32 @@ export const argoSource = `(() => {
     }
   };
   const secret = async (call_) => (await call({ api: 'secrets', call: call_ })) ?? null;
+  const fs = (call_) => call({ api: 'fs', call: call_ });
+  const run = (call_) => call({ api: 'process', call: call_ });
+  const spawned = (id) => Object.freeze({
+    wait: () => run({ action: 'wait', id }),
+    kill: async () => { await run({ action: 'kill', id }); },
+  });
+  const response = (reply) => Object.freeze({
+    ...reply,
+    headers: Object.freeze({ ...reply.headers }),
+    text: async () => reply.body,
+    json: async () => JSON.parse(reply.body),
+  });
   return Object.freeze({
+    fs: Object.freeze({
+      read: (path) => fs({ action: 'read', path }),
+      write: async (path, content) => { await fs({ action: 'write', path, content }); },
+      list: (path) => fs({ action: 'list', path }),
+      stat: (path) => fs({ action: 'stat', path }),
+    }),
+    process: Object.freeze({
+      run: (argv, options = {}) => run({ action: 'run', argv, ...options }),
+      spawn: async (argv, options = {}) =>
+        spawned(await run({ action: 'spawn', argv, ...options })),
+    }),
+    fetch: async (url, options = {}) =>
+      response(await call({ api: 'fetch', call: { url, ...options } })),
     storage: Object.freeze({
       batch: (queries) => call({ api: 'storage', queries }),
       execute: async (query) => (await call({ api: 'storage', queries: [query] }))[0],

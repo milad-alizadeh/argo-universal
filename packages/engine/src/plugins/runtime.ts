@@ -33,20 +33,25 @@ export class PluginRuntime {
     this.views = new PluginViews((pluginId, event) =>
       this.host.event(pluginId, event),
     );
-    this.host = new HostConnection({
-      log,
+    this.host = new HostConnection(this.callbacks());
+  }
+
+  private callbacks(): ConstructorParameters<typeof HostConnection>[0] {
+    return {
+      log: this.log,
       call: (message): Promise<PluginReply> => this.answer(message),
       status: (message): void => this.update(message),
       crash: (message): void => this.crashed(message),
-    });
+    };
   }
 
   private async answer(
     message: Extract<HostMessage, { type: 'call' }>,
   ): Promise<PluginReply> {
-    const { pluginId, request } = message;
+    const { pluginId, generation, request } = message;
 
-    if (request.api !== 'view') return this.services.handle(pluginId, request);
+    if (request.api !== 'view')
+      return this.services.handle(pluginId, generation, request);
     this.views.receive(pluginId, request.path, request.message);
 
     return { ok: true };
@@ -86,6 +91,7 @@ export class PluginRuntime {
     return new RuntimePlugin({
       ...location,
       host: this.host,
+      release: (): void => this.services.release(location.entry.pluginId),
       log: this.log,
       changed: (status): void => this.failures.update(identity, status),
     });

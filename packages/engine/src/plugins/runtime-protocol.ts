@@ -1,3 +1,8 @@
+import {
+  FetchCall,
+  FsCall,
+  ProcessCall,
+} from '@repo/contracts/plugins/argo-calls';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { PluginEvent, ViewMessage } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
@@ -5,6 +10,13 @@ import { z } from 'zod';
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
 
 export type { PluginEvent } from '@repo/contracts/plugins/wire';
+
+export {
+  FetchCall,
+  FsCall,
+  ProcessCall,
+  ProcessCommand,
+} from '@repo/contracts/plugins/argo-calls';
 
 export const StorageQuery = z.object({
   sql: z.string(),
@@ -48,6 +60,9 @@ export type SecretCall = z.infer<typeof SecretCall>;
 export const PluginRequest = z.discriminatedUnion('api', [
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
+  z.object({ api: z.literal('fs'), call: FsCall }),
+  z.object({ api: z.literal('process'), call: ProcessCall }),
+  z.object({ api: z.literal('fetch'), call: FetchCall }),
   z.object({
     api: z.literal('view'),
     path: z.string(),
@@ -57,8 +72,9 @@ export const PluginRequest = z.discriminatedUnion('api', [
 
 export type PluginRequest = z.infer<typeof PluginRequest>;
 
+// Every answer to a Plugin crosses as JSON text, so it is JSON.
 export const PluginValue = z
-  .union([z.array(StorageResult), z.string(), z.null()])
+  .union([z.json(), z.array(StorageResult)])
   .optional();
 
 export type PluginValue = z.infer<typeof PluginValue>;
