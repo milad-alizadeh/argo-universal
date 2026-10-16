@@ -20,7 +20,7 @@ pnpm --filter @repo/codemap-834-prototype web
 Open [the prototype](http://localhost:8340/codemap-834-prototype).
 Use `?view=3d` or `?view=flat`.
 Use `&files=5000` or `&files=20000` for a stress run.
-Without `files`, the map shows the real dataset once.
+Other `files` values show the real dataset once.
 
 For a production web export:
 
@@ -58,17 +58,27 @@ It writes JSON and screenshots outside git, in `/tmp/codemap-834-evidence` by de
 node apps/codemap-834-prototype/scripts/measure.mjs web
 node apps/codemap-834-prototype/scripts/measure.mjs electron
 node apps/codemap-834-prototype/scripts/measure.mjs electron-no-gpu
+node apps/codemap-834-prototype/scripts/build-desktop.mjs
+node apps/codemap-834-prototype/scripts/measure.mjs desktop
+node apps/codemap-834-prototype/scripts/measure.mjs desktop-no-gpu
 ```
 
 The reported FPS is submitted-frame cadence during a moving camera or Skia transform.
 It is not a GPU completion timer or a guarantee of physical display refresh.
 The collector records the renderer string and Electron GPU feature status.
+Scenario-ready timing starts before context creation or Electron launch and stops before the one-second settling delay.
+The in-page mount timer starts at prototype-module evaluation and ends at the renderer-ready callback.
 `electron-no-gpu` calls `app.disableHardwareAcceleration()` before `ready`.
-It adds no software-renderer flags and changes no CSP.
+The full desktop mode uses Electron’s `--disable-gpu` switch and records GPU feature status.
+Neither mode forces a software renderer or changes CSP.
 
 The Electron harness imports the unchanged production `app://` handler.
 It does not start the Server or prove the complete desktop App lifecycle.
 A protocol-harness result cannot close the full desktop App criterion.
+The `desktop` modes instead launch the unchanged App with its real Server and preload.
+Each launch uses its own `ARGO_HOME` and App data directory.
+`build-desktop.mjs` compiles the existing entry points without changing their source.
+It copies the export into the local ignored `dist` directory expected by the App.
 The PR body and the #834 comment hold measurements, screenshots, and the verdict.
 
 ## Dependencies and limits

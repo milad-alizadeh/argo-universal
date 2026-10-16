@@ -48,6 +48,6 @@ const result = {
 };
 writeFileSync(
   new URL('../src/dataset.json', import.meta.url),
-  JSON.stringify(result),
+  JSON.stringify(result, null, 2) + '\n',
 );
 console.log(`${files.length} real text files at ${result.revision}`);

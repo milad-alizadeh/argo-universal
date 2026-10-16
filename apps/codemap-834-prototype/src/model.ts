@@ -64,22 +64,24 @@ export function layout(files: FileEntry[]): Tile[] {
     if (!nodes.length) return;
     if (nodes.length === 1) {
       const node = nodes[0]!;
+      const gap = Math.min(0.13, w / 10, h / 10);
+      const inset = Math.min(0.16, w / 8, h / 8);
       if (node.file)
         tiles.push({
           ...node.file,
           x,
           y,
-          w: Math.max(0.05, w - 0.13),
-          h: Math.max(0.05, h - 0.13),
+          w: w - gap,
+          h: h - gap,
           elevation: 0.2 + Math.sqrt(node.file.height) * 0.7,
         });
       else
         split(
           [...node.children.values()].sort((a, b) => b.weight - a.weight),
-          x + 0.16,
-          y + 0.16,
-          Math.max(0.1, w - 0.32),
-          Math.max(0.1, h - 0.32),
+          x + inset,
+          y + inset,
+          w - inset * 2,
+          h - inset * 2,
         );
       return;
     }

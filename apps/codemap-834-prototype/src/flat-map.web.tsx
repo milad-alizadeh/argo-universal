@@ -165,7 +165,7 @@ export default function FlatMap({
           const y =
             (event.clientY - bounds.top - size.height / 2 - camera.y) /
             (scale * camera.zoom);
-          const tile = tiles.find(
+          const tile = tiles.findLast(
             (t) => x >= t.x && x <= t.x + t.w && y >= t.y && y <= t.y + t.h,
           );
           if (tile) onSelect(tile.id);

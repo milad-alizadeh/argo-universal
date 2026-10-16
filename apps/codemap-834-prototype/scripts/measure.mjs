@@ -1,7 +1,15 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 // Manual evidence collector, not a production test seam. Run sequentially; one browser only.
 import { createRequire } from 'node:module';
+import { createServer } from 'node:net';
 import os from 'node:os';
+async function unusedPort() {
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const port = server.address().port;
+  await new Promise((resolve) => server.close(resolve));
+  return String(port);
+}
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../../../', import.meta.url));
@@ -11,12 +19,13 @@ const { chromium, _electron } = e2e('@playwright/test');
 const directory = process.env.CODEMAP_EVIDENCE ?? '/tmp/codemap-834-evidence';
 mkdirSync(directory, { recursive: true });
 const mode = process.argv[2] ?? 'web';
+const fullDesktop = mode.startsWith('desktop');
 const counts = process.env.CODEMAP_SMOKE ? [0] : [5000, 20000];
 const results = [];
 let browser, app;
 if (mode === 'web')
   browser = await chromium.launch({ channel: 'chrome', headless: false });
-else {
+else if (!fullDesktop) {
   const { build } = await import(e2e.resolve('rolldown'));
   await build({
     input: `${root}/apps/codemap-834-prototype/scripts/electron-harness.mts`,
@@ -27,6 +36,7 @@ else {
 }
 for (const view of ['3d', 'flat'])
   for (const count of counts) {
+    const start = performance.now();
     let context, page;
     const query = `?view=${view}&files=${count}`;
     if (browser) {
@@ -41,12 +51,22 @@ for (const view of ['3d', 'flat'])
         CODEMAP_USER_DATA: `${directory}/profile-${mode}-${view}-${count}`,
         CODEMAP_EXPORT: `${root}/apps/universal-app/dist-codemap-834`,
         CODEMAP_QUERY: query,
-        CODEMAP_NO_GPU: mode === 'electron-no-gpu' ? '1' : '0',
+        CODEMAP_NO_GPU: mode.endsWith('no-gpu') ? '1' : '0',
+        ARGO_HOME: `${directory}/argo-home-${mode}-${view}-${count}`,
+        ARGO_USER_DATA_DIRECTORY: `${directory}/argo-profile-${mode}-${view}-${count}`,
+        ARGO_BACKGROUND: '0',
+        ARGO_SERVER_PORT: await unusedPort(),
       };
       delete env.ELECTRON_RUN_AS_NODE;
+      delete env.ARGO_EXPO_WEB_URL;
       app = await _electron.launch({
         executablePath: desktop('electron'),
-        args: [`${directory}/harness.cjs`],
+        args: fullDesktop
+          ? [
+              ...(mode.endsWith('no-gpu') ? ['--disable-gpu'] : []),
+              `${root}/apps/desktop`,
+            ]
+          : [`${directory}/harness.cjs`],
         env,
       });
       page = await app.firstWindow();
@@ -56,24 +76,33 @@ for (const view of ['3d', 'flat'])
     page.on('console', (message) => {
       if (message.type() === 'error') errors.push(message.text());
     });
-    const start = performance.now();
     if (browser)
       await page.goto(`http://127.0.0.1:8340/codemap-834-prototype${query}`);
+    else if (fullDesktop)
+      await page.goto(`app://app/codemap-834-prototype${query}`);
     try {
       await page.waitForFunction(
         () => window.__codemap834?.ready,
         {},
         { timeout: 25000 },
       );
+      const scenarioReadyMs = performance.now() - start;
       await page.waitForTimeout(1000);
       const evidence = await page.evaluate(() => ({
         ...window.__codemap834,
         pan: undefined,
+        viewport: {
+          width: innerWidth,
+          height: innerHeight,
+          dpr: devicePixelRatio,
+          visibility: document.visibilityState,
+        },
       }));
-      const navReadyMs = performance.now() - start;
       const samples = [];
       for (let i = 0; i < (process.env.CODEMAP_SMOKE ? 1 : 3); i++)
         samples.push(await page.evaluate(() => window.__codemap834.pan(6000)));
+      await page.getByRole('button', { name: 'Fit', exact: true }).click();
+      await page.waitForTimeout(200);
       await page.screenshot({
         path: join(directory, `${mode}-${view}-${count}.png`),
       });
@@ -104,7 +133,7 @@ for (const view of ['3d', 'flat'])
         mode,
         view,
         count,
-        navReadyMs,
+        scenarioReadyMs,
         ...evidence,
         selected,
         samples,

@@ -69,7 +69,9 @@ export default function CodeMap834Prototype() {
   const params = new URLSearchParams(
     typeof location === 'undefined' ? '' : location.search,
   );
-  const count = Number(params.get('files') ?? 0);
+  const requestedCount = params.get('files');
+  const count =
+    requestedCount === '5000' ? 5000 : requestedCount === '20000' ? 20000 : 0;
   const files = useMemo(() => getFiles(count), [count]);
   const tiles = useMemo(() => layout(files), [files]);
   const [view, setView] = useState(
