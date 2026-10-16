@@ -5,4 +5,9 @@ export {
   type VirtualListPosition,
 } from './virtual-list-item-props';
 
-export { virtualListPosition } from './virtual-list-item-styles';
+export {
+  leadingClasses as virtualListLeadingClasses,
+  rowGeometryClasses as virtualListRowGeometryClasses,
+  surfaceClasses as virtualListSurfaceClasses,
+  virtualListPosition,
+} from './virtual-list-item-styles';
