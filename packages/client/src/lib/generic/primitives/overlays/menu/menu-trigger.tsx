@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { buttonInteractionProps } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
@@ -26,14 +26,20 @@ const triggerKeys = [
   'testID',
 ] as const;
 
+// Android's own ripple, as VirtualListItem draws it; its colour is the platform's.
+const ripple = { borderless: false };
+
+// iOS takes the pressed tint, as the kit's other drawn rows do; Android's Pressable draws the ripple.
+const iosPressedTint = Platform.OS === 'ios' ? 'active:bg-pressed' : undefined;
+
 /*
  * Desktop and the web draw it 28 high with a radius-control tint for hover, press and focus. Phones draw it at the
- * stock touch height (iOS 44, Android 48) with no hover or focus, and dim it while pressed as the system menu label does.
+ * stock touch height (iOS 44, Android 48) with no hover or focus, and the stock press feedback.
  */
 const triggerClassName = cn(
   'min-w-0 shrink flex-row items-center gap-1.5 h-11 android:h-12',
   'web:h-7 web:px-1.5 web:rounded-control web:outline-none web:hover:bg-hover web:focus-visible:bg-hover web:active:bg-pressed',
-  'native:active:opacity-50',
+  iosPressedTint,
 );
 
 const iconOnlyClassName = 'w-11 android:w-12 web:w-7 web:px-0 justify-center';
@@ -53,6 +59,7 @@ function triggerPressableProps(
   return {
     ...overlayHandlers(props),
     ...buttonInteractionProps({ disabled: props.disabled }),
+    android_ripple: ripple,
     accessibilityLabel: props.accessibilityLabel ?? props.label,
     testID: props.testID,
     className: triggerClass(props),
