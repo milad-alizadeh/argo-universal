@@ -39,15 +39,14 @@ export function rowLane(
   return regularLane(props.variant, sidebar);
 }
 
-const regularLane = (
+function regularLane(
   variant: ResolvedItemProps['variant'],
   sidebar: boolean,
-): RowLane =>
-  variant === 'card'
-    ? rowLanes.card
-    : sidebar
-      ? rowLanes.loose
-      : rowLanes.compact;
+): RowLane {
+  if (variant === 'card') return rowLanes.card;
+
+  return sidebar ? rowLanes.loose : rowLanes.compact;
+}
 
 // A loading row's spinner sits in the row icon's slot, not on the tile.
 const largeLane = (
