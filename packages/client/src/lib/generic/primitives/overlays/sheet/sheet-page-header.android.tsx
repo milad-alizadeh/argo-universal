@@ -5,7 +5,7 @@ import {
   height,
   semantics,
   weight,
-  width,
+  size,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { backLabel } from './sheet-page-label';
@@ -41,7 +41,7 @@ const titleStyle = { typography: 'titleMedium', textAlign: 'center' } as const;
 
 // An empty back-button-sized slot, so the title stays centred whether or not Back leads.
 function Slot(): ReactElement {
-  return <Spacer modifiers={[width(headerSize)]} />;
+  return <Spacer modifiers={[size(headerSize, headerSize)]} />;
 }
 
 // Material's standard icon button with the Material Symbols back arrow, drawn by Compose so the press reaches the button.
