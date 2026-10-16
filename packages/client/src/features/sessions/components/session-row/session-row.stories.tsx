@@ -18,7 +18,7 @@ const meta = {
   parameters: { previewPadding: false },
   args: {
     session: sessionRows.running,
-    logo: agentsList[0]?.logo ?? '',
+    logo: agentsList[0]?.icon ?? '',
     onSelect: action('select Session'),
   },
 } satisfies Meta<typeof SessionRow>;

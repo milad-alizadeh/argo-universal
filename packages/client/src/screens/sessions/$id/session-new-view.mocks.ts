@@ -27,10 +27,11 @@ export const readyNewSession: ReadySessionNewViewProps = {
   onProjectChange: fn(),
   configuration: {
     agents: newSessionCatalogs.bothAvailable,
-    agent: firstAgent.agent,
-    configOptions: recordedSessionOptions(firstAgent.agent),
+    agent: firstAgent.id,
+    configOptions: recordedSessionOptions(firstAgent.id),
     onConfigChange: fn(),
     onAgentChange: fn(),
+    onAddAgents: fn(),
     checkout: { branch: 'main', newWorktree: true, onNewWorktreeChange: fn() },
   },
   draft: { text: '', attachments: [] },

@@ -1,5 +1,5 @@
 import {
-  type AgentInfo,
+  type AgentServer,
   type SessionConfigSelectOption,
 } from '@repo/contracts';
 
@@ -43,7 +43,7 @@ export const planTitle = 'Verify phone and desktop';
 export const planStepsId = 'composer-plan-steps';
 
 export type PickerCatalog = {
-  agent: AgentInfo;
+  agent: AgentServer;
   models: SessionConfigSelectOption[];
   currentEffort: string;
   highEffortModel: SessionConfigSelectOption;

@@ -80,3 +80,19 @@ export const SignIn: Story = {
 export const Loading: Story = { args: { view: { state: 'loading' } } };
 
 export const LoadFailure: Story = { args: { view: { state: 'load-failed' } } };
+
+export const ZeroAgents: Story = {
+  args: {
+    view: {
+      state: 'ready',
+      ...readyNewSession,
+      canOpen: false,
+      configuration: {
+        ...readyNewSession.configuration,
+        agents: [],
+        agent: '',
+        configOptions: [],
+      },
+    },
+  },
+};

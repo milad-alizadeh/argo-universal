@@ -1,13 +1,13 @@
 import type {
-  AgentInfo,
+  AgentServer,
   ProjectInfo,
   ProjectsBranchesOutput,
   SystemInfo,
 } from '@repo/contracts';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useState } from 'react';
-import { useAgents } from '#features/agents';
+import { useEffect, useState } from 'react';
+import { useAgents, useRememberedAgent } from '#features/agents';
 import { useTRPC } from '#features/connection';
 import {
   type ChosenSettings,
@@ -26,7 +26,7 @@ export interface NewSessionData {
 
 interface ListedChoices {
   projects: readonly ProjectInfo[];
-  agents: readonly AgentInfo[];
+  agents: readonly AgentServer[];
 }
 
 type ChosenSessionChoices = Pick<NewSessionData, 'choices' | 'setChosen'>;
@@ -35,8 +35,10 @@ const isMain = (project: ProjectInfo | undefined): boolean =>
   project?.checkoutChoice.type === 'main';
 
 function useProjectBranches(
-  project: ProjectInfo | undefined,
+  projects: readonly ProjectInfo[],
+  projectId: string | undefined,
 ): ProjectsBranchesOutput | undefined {
+  const project = chooseProject(projects, projectId);
   const trpc = useTRPC();
 
   return useQuery(
@@ -53,14 +55,25 @@ function useSessionChoices(
 ): ChosenSessionChoices {
   const [chosen, setChosen] = useState<ChosenSettings>({ projectId });
 
-  const branches = useProjectBranches(
-    chooseProject(listed.projects, chosen.projectId),
-  );
+  const remembered = { ...chosen, agent: useChosenAgent(chosen.agent) };
+  const branches = useProjectBranches(listed.projects, chosen.projectId);
 
-  return {
-    choices: toSessionChoices({ ...listed, chosen, branches }),
-    setChosen,
-  };
+  const choices = toSessionChoices({
+    ...listed,
+    chosen: remembered,
+    branches,
+  });
+
+  return { choices, setChosen };
+}
+
+function useChosenAgent(chosen: string | undefined): string | undefined {
+  const { agent, select } = useRememberedAgent();
+  useEffect(() => {
+    if (chosen) select(chosen);
+  }, [chosen, select]);
+
+  return chosen ?? agent;
 }
 
 // The Server's Projects and Agents with the reader's choices over their defaults.

@@ -1,13 +1,12 @@
-import type { AgentInfo, SessionConfigOption } from '@repo/contracts';
+import type { AgentServer, SessionConfigOption } from '@repo/contracts';
 
 export interface ComposerConfigurationProps {
-  agents: AgentInfo[];
+  agents: AgentServer[];
   agent: string;
   configOptions: SessionConfigOption[];
   onConfigChange: (configId: string, value: string | boolean) => void;
   onAgentChange?: (agent: string) => void;
-  onAgentSetup?: (agent: string) => void;
-  onAgentRetry?: () => void;
+  onAddAgents?: () => void;
   turnRunning?: boolean;
   // True while New Session's Session opens and takes this device's last choices.
   opening?: boolean;

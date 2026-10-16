@@ -15,7 +15,6 @@ import { longListConfiguration, shortConfiguration } from './long-list-cases';
 import {
   selectLastDesktopModel,
   selectLastPhoneModel,
-  selectLastAgent,
 } from './long-list-selections';
 
 export const LongListsReachableWide: Story = {
@@ -24,7 +23,6 @@ export const LongListsReachableWide: Story = {
   play: async (context) => {
     await openConfiguration(context, layoutWidths.wide);
     await selectLastDesktopModel(context);
-    await selectLastAgent(context);
     await context.userEvent.keyboard('{Escape}');
   },
 };
@@ -43,7 +41,6 @@ export const LongListsReachableInPhoneSheet: Story = {
   play: async (context) => {
     await openConfiguration(context, layoutWidths.phone);
     await selectLastPhoneModel(context);
-    await selectLastAgent(context);
     await expect(
       within(document.body).queryByTestId(modelsScrollId),
     ).not.toBeInTheDocument();
@@ -56,7 +53,7 @@ export const ShortListsHaveNoFadesWide: Story = {
   play: async (context) => {
     await openConfiguration(context, layoutWidths.wide);
 
-    for (const testId of [modelsScrollId, agentsScrollId])
+    for (const testId of [modelsScrollId])
       await assertShortList(context, testId);
     await context.userEvent.keyboard('{Escape}');
   },

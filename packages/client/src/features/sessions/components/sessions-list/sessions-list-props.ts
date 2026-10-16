@@ -1,5 +1,5 @@
 import type {
-  AgentsListOutput,
+  AgentServer,
   ProjectsListOutput,
   SessionInfo,
 } from '@repo/contracts';
@@ -8,7 +8,7 @@ import type { SessionsLayout } from '../../state/sessions-layout';
 
 export interface SessionsListProps {
   projects: ProjectsListOutput;
-  agents: AgentsListOutput;
+  agents: AgentServer[];
   sessions: SessionInfo[];
   query: string;
   // Results as one list with no Project headings, each row showing how long ago it was active.

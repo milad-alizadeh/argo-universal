@@ -1,5 +1,4 @@
 import {
-  type AgentsListOutput,
   type SessionSetConfigOptionInput,
   type ProjectsBranchesOutput,
   type ProjectsListOutput,
@@ -33,36 +32,9 @@ export function recordedSessionOptions(agent: string): SessionConfigOption[] {
 
 export const newSessionCatalogs = {
   bothAvailable: agentsList,
-  bothUnavailable: agentsList.map(
-    (
-      agent,
-    ): Omit<AgentsListOutput[number], 'availability'> & {
-      installStep: string;
-      availability: 'unavailable';
-    } => ({
-      ...agent,
-      availability: 'unavailable' as const,
-      installStep: "CLI didn't start",
-    }),
-  ),
-  oneNotInstalled: agentsList.map((agent, index): AgentsListOutput[number] =>
-    index === 0
-      ? {
-          ...agent,
-          availability: 'not_installed' as const,
-          installStep: 'Install this Agent on the Server.',
-        }
-      : agent,
-  ),
-  oneNotSignedIn: agentsList.map((agent, index): AgentsListOutput[number] =>
-    index === 1
-      ? {
-          ...agent,
-          availability: 'not_signed_in' as const,
-          installStep: 'Sign in to this Agent on the Server.',
-        }
-      : agent,
-  ),
+  bothUnavailable: [],
+  oneNotInstalled: agentsList.slice(1),
+  oneNotSignedIn: agentsList,
 };
 
 export const newSessionBranches: ProjectsBranchesOutput = {

@@ -1,5 +1,4 @@
 import type { Meta } from '@storybook/react-native-web-vite';
-import { unavailableAgentRetry } from '../../../../../mocks/composer-configuration/agent-retry';
 import { defaultEffort } from '../../../../../mocks/composer-configuration/default-effort';
 import {
   FastModeSwitchPhone as fastModePhone,
@@ -50,54 +49,6 @@ export const DefaultEffortPhoneSecondAgent = defaultEffort(
 export const DefaultEffortWideFirstAgent = defaultEffort(layoutWidths.wide, 0);
 
 export const DefaultEffortWideSecondAgent = defaultEffort(layoutWidths.wide, 1);
-
-export const UnavailableAgentRetryPhoneFirstAgent = unavailableAgentRetry(
-  layoutWidths.phone,
-  0,
-  'new',
-);
-
-export const UnavailableAgentRetryPhoneSecondAgent = unavailableAgentRetry(
-  layoutWidths.phone,
-  1,
-  'new',
-);
-
-export const UnavailableAgentRetryWideFirstAgent = unavailableAgentRetry(
-  layoutWidths.wide,
-  0,
-  'new',
-);
-
-export const UnavailableAgentRetryWideSecondAgent = unavailableAgentRetry(
-  layoutWidths.wide,
-  1,
-  'new',
-);
-
-export const StartedSessionAgentRetryPhoneFirstAgent = unavailableAgentRetry(
-  layoutWidths.phone,
-  0,
-  'started',
-);
-
-export const StartedSessionAgentRetryPhoneSecondAgent = unavailableAgentRetry(
-  layoutWidths.phone,
-  1,
-  'started',
-);
-
-export const StartedSessionAgentRetryWideFirstAgent = unavailableAgentRetry(
-  layoutWidths.wide,
-  0,
-  'started',
-);
-
-export const StartedSessionAgentRetryWideSecondAgent = unavailableAgentRetry(
-  layoutWidths.wide,
-  1,
-  'started',
-);
 
 export const HeldConfigurationPhoneFirstAgent = heldConfiguration(
   layoutWidths.phone,

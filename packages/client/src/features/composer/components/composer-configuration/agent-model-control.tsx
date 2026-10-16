@@ -1,4 +1,4 @@
-import type { AgentInfo } from '@repo/contracts';
+import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { useContentWide } from '#lib/product/content-layout';
 import { Spinner } from '#primitives/display/spinner';
@@ -20,7 +20,7 @@ interface ControlProps {
 }
 
 interface TriggerProps extends ControlProps {
-  agent?: AgentInfo;
+  agent?: AgentServer;
   wide: boolean;
 }
 
@@ -98,11 +98,10 @@ function agentModelTrigger(props: TriggerProps): React.JSX.Element {
 }
 
 function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
-  const current = selectedChoice(props.configuration, 'model');
   const { configuration, wide } = props;
 
   return {
-    label: modelName(current) || agentLabel(props.agent),
+    label: triggerLabel(props),
     accessibilityLabel: 'Agent and model',
     disabled: props.disabled,
     leading: agentModelLeading(props),
@@ -118,14 +117,26 @@ function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   return props.wide ? <AgentIcon agent={props.agent} /> : undefined;
 }
 
-function agentLabel(agent?: AgentInfo): string {
-  return agent?.label || '';
+function agentLabel(agent?: AgentServer): string {
+  return agent?.name || '';
 }
 
 function selectedAgent(
   configuration: ComposerConfigurationProps,
-): AgentInfo | undefined {
-  return configuration.agents.find(
-    (entry) => entry.agent === configuration.agent,
+): AgentServer | undefined {
+  return configuration.agents.find((entry) => entry.id === configuration.agent);
+}
+
+function triggerLabel(props: TriggerProps): string {
+  if (optionsAreOpening(props.configuration)) return 'Loading…';
+
+  return (
+    modelName(selectedChoice(props.configuration, 'model')) ||
+    agentLabel(props.agent)
   );
 }
+
+const optionsAreOpening = (
+  configuration: ComposerConfigurationProps,
+): boolean =>
+  Boolean(configuration.opening && !configuration.configOptions.length);

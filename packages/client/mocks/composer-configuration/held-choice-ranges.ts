@@ -24,7 +24,7 @@ function selectChoices(
   category: string,
 ): SessionConfigSelectOption[] {
   return recordedFlat(
-    recordedSessionOptions(agent.agent).find(
+    recordedSessionOptions(agent.id).find(
       (entry) => entry.category === category && entry.type === 'select',
     ),
   );
@@ -38,7 +38,7 @@ interface RecordedOptions {
 }
 
 function recordedOptions(agent: HeldAgent): RecordedOptions {
-  const options = recordedSessionOptions(agent.agent);
+  const options = recordedSessionOptions(agent.id);
 
   return {
     model: options.find((option) => option.category === 'model'),

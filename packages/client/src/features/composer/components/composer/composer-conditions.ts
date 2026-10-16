@@ -16,14 +16,7 @@ export function isInactive(props: ComposerProps): boolean {
 }
 
 export function isConfigurationInactive(props: ComposerProps): boolean {
-  return Boolean(props.sending || (props.disabled && !canRecoverAgent(props)));
-}
-
-function canRecoverAgent({ configuration }: ComposerProps): boolean {
-  return Boolean(
-    configuration?.onAgentRetry &&
-    configuration.agents.every((agent) => agent.availability !== 'available'),
-  );
+  return Boolean(props.sending || props.disabled);
 }
 
 export function isSendReady(props: ComposerProps): boolean {

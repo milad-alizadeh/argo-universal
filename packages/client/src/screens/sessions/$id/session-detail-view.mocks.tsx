@@ -1,5 +1,5 @@
 import type {
-  AgentInfo,
+  AgentServer,
   SessionSnapshot,
   SessionUpdate,
 } from '@repo/contracts';
@@ -18,7 +18,7 @@ import {
 import type { OpenSessionViewProps } from './session-detail-view';
 
 // Each recording's Agent in the catalog: agent-1 is the first entry, agent-2 the second.
-function catalogAgentOf(mock: FeedMock): AgentInfo {
+function catalogAgentOf(mock: FeedMock): AgentServer {
   const agent = newSessionCatalogs.bothAvailable.at(
     mock.agent === 'agent-1' ? 0 : 1,
   );
@@ -94,8 +94,8 @@ function recordedConfiguration(
 
   return {
     agents: newSessionCatalogs.bothAvailable,
-    agent: catalogAgent.agent,
-    configOptions: recordedSessionOptions(catalogAgent.agent),
+    agent: catalogAgent.id,
+    configOptions: recordedSessionOptions(catalogAgent.id),
     onConfigChange: fn(),
     turnRunning: snapshot.state !== 'idle',
     checkout: recordedCheckout(snapshot),

@@ -1,5 +1,5 @@
 import type {
-  AgentInfo,
+  AgentServer,
   ProjectInfo,
   ProjectsBranchesOutput,
 } from '@repo/contracts';
@@ -13,7 +13,7 @@ export interface ChosenSettings {
 
 export interface SessionChoiceInput {
   projects: readonly ProjectInfo[];
-  agents: readonly AgentInfo[];
+  agents: readonly AgentServer[];
   chosen: ChosenSettings;
   // The chosen main Project's branches; undefined until they load.
   branches: ProjectsBranchesOutput | undefined;
@@ -21,7 +21,7 @@ export interface SessionChoiceInput {
 
 export interface SessionChoices {
   project: ProjectInfo | undefined;
-  agent: AgentInfo | undefined;
+  agent: AgentServer | undefined;
   inNewWorktree: boolean;
   baseBranch: string;
   baseBranchLoaded: boolean;
@@ -41,12 +41,11 @@ export const chooseProject = (
   projects.find((entry) => entry.id === chosen) ?? projects[0];
 
 const chooseAgent = (
-  agents: readonly AgentInfo[],
+  agents: readonly AgentServer[],
   chosen: string | undefined,
-): AgentInfo | undefined =>
-  agents.find((entry) => entry.agent === chosen) ??
-  agents.find((entry) => entry.availability === 'available') ??
-  agents[0];
+): AgentServer | undefined =>
+  agents.find((entry) => entry.id === chosen) ??
+  [...agents].sort((a, b) => a.name.localeCompare(b.name))[0];
 
 type Checkout = Pick<
   SessionChoices,

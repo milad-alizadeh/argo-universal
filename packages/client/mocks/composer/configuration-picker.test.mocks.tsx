@@ -1,4 +1,4 @@
-import { type AgentInfo } from '@repo/contracts';
+import { type AgentServer } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -56,10 +56,10 @@ export function pickers(width: number, agentIndex: number): Story {
 export function ConfiguredComposer({
   agent,
 }: {
-  agent: AgentInfo;
+  agent: AgentServer;
 }): React.JSX.Element {
   const [configOptions, setConfigOptions] = useState(
-    recordedSessionOptions(agent.agent),
+    recordedSessionOptions(agent.id),
   );
 
   return (
@@ -71,7 +71,7 @@ export function ConfiguredComposer({
         onAttachImages: fn(),
         configuration: {
           agents: [agent],
-          agent: agent.agent,
+          agent: agent.id,
           configOptions,
           onConfigChange: (configId, value) =>
             setConfigOptions((options) =>

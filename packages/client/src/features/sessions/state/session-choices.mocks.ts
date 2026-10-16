@@ -1,4 +1,4 @@
-import type { AgentInfo, ProjectInfo } from '@repo/contracts';
+import type { AgentServer, ProjectInfo } from '@repo/contracts';
 import { newSessionCatalogs, newSessionProjects } from '@repo/mocks/app';
 import type { SessionChoiceInput } from './session-choices';
 
@@ -29,14 +29,9 @@ export const mainProject: ProjectInfo = required(
   'a main Project',
 );
 
-export const firstAgent: AgentInfo = required(agentOne, 'two Agents');
+export const firstAgent: AgentServer = required(agentOne, 'two Agents');
 
-export const secondAgent: AgentInfo = required(agentTwo, 'two Agents');
-
-export const notInstalled: AgentInfo = required(
-  newSessionCatalogs.oneNotInstalled[0],
-  'an Agent that is not installed',
-);
+export const secondAgent: AgentServer = required(agentTwo, 'two Agents');
 
 export const projectBaseBranch = baseBranchOf(worktreeProject);
 

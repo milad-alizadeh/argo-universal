@@ -74,8 +74,8 @@ export const EnvelopeWithInspectorOpen: Story = {
   args: {
     configuration: {
       agents: newSessionCatalogs.bothAvailable,
-      agent: firstAgent.agent,
-      configOptions: recordedSessionOptions(firstAgent.agent),
+      agent: firstAgent.id,
+      configOptions: recordedSessionOptions(firstAgent.id),
       onConfigChange: fn(),
       checkout: {
         branch: 'main',

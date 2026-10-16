@@ -1,9 +1,9 @@
-import type { AgentInfo, SessionConfigOption } from '@repo/contracts';
+import type { AgentServer, SessionConfigOption } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import type { ComposerProps } from '../src/features/composer/components/composer/composer';
 import { composerLongAgentCatalog } from './composer-agent-catalogs';
 
-function firstAvailableAgent(): AgentInfo {
+function firstAvailableAgent(): AgentServer {
   const agent = newSessionCatalogs.bothAvailable[0];
 
   if (!agent) throw new Error('Recorded catalog needs an available Agent.');
@@ -13,7 +13,7 @@ function firstAvailableAgent(): AgentInfo {
 
 const longModelAgent = firstAvailableAgent();
 
-const longModelOption = recordedSessionOptions(longModelAgent.agent).find(
+const longModelOption = recordedSessionOptions(longModelAgent.id).find(
   (option) => option.category === 'model' && option.type === 'select',
 );
 
@@ -40,8 +40,8 @@ export const composerLongListConfiguration: NonNullable<
   ComposerProps['configuration']
 > = {
   agents: [longModelAgent, ...composerLongAgentCatalog],
-  agent: longModelAgent.agent,
-  configOptions: recordedSessionOptions(longModelAgent.agent).map((option) =>
+  agent: longModelAgent.id,
+  configOptions: recordedSessionOptions(longModelAgent.id).map((option) =>
     option.configId === longModelOption.configId && option.type === 'select'
       ? {
           ...option,
@@ -63,9 +63,9 @@ export function composerFastModeConfiguration(
 ): NonNullable<ComposerProps['configuration']> {
   return {
     agents: newSessionCatalogs.bothAvailable,
-    agent: fastModeAgent.agent,
+    agent: fastModeAgent.id,
     configOptions: [
-      ...recordedSessionOptions(fastModeAgent.agent),
+      ...recordedSessionOptions(fastModeAgent.id),
       fastModeOption(on),
     ],
     onConfigChange: () => {},

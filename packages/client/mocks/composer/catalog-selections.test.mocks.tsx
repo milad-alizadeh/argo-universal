@@ -1,4 +1,4 @@
-import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
+import type { AgentServer, SessionConfigSelectOption } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
 
 export interface CatalogSelection {
@@ -7,16 +7,16 @@ export interface CatalogSelection {
 }
 
 export function selection(
-  agent: AgentInfo,
+  agent: AgentServer,
   category: string,
 ): CatalogSelection {
-  const option = recordedSessionOptions(agent.agent).find(
+  const option = recordedSessionOptions(agent.id).find(
     (entry) => entry.category === category && entry.type === 'select',
   );
 
   if (option?.type !== 'select')
     throw new Error(
-      `Recorded catalog needs ${category} options for ${agent.label}.`,
+      `Recorded catalog needs ${category} options for ${agent.name}.`,
     );
 
   return {
@@ -28,14 +28,14 @@ export function selection(
 }
 
 export function currentEffortModel(
-  agent: AgentInfo,
+  agent: AgentServer,
   models: CatalogSelection,
 ): void {
   const model = models.choices.find((entry) => entry.value === models.current);
 
   if (!supportsEffort(model))
     throw new Error(
-      `Recorded catalog needs a current model with effort for ${agent.label}.`,
+      `Recorded catalog needs a current model with effort for ${agent.name}.`,
     );
 }
 
@@ -46,7 +46,7 @@ function supportsEffort(model: SessionConfigSelectOption | undefined): boolean {
 }
 
 export function effortChoice(
-  agent: AgentInfo,
+  agent: AgentServer,
   effort: CatalogSelection,
   value: string,
 ): SessionConfigSelectOption {
@@ -54,21 +54,21 @@ export function effortChoice(
 
   if (!choice)
     throw new Error(
-      `Recorded catalog needs ${value === effort.current ? 'a current model with effort' : 'a high effort'} for ${agent.label}.`,
+      `Recorded catalog needs ${value === effort.current ? 'a current model with effort' : 'a high effort'} for ${agent.name}.`,
     );
 
   return choice;
 }
 
 export function highEffortModel(
-  agent: AgentInfo,
+  agent: AgentServer,
   models: CatalogSelection,
 ): SessionConfigSelectOption {
   const model = models.choices.find(supportsHighEffort);
 
   if (!model)
     throw new Error(
-      `Recorded catalog needs a model with high effort for ${agent.label}.`,
+      `Recorded catalog needs a model with high effort for ${agent.name}.`,
     );
 
   return model;
@@ -83,7 +83,7 @@ function effortLevels(model: SessionConfigSelectOption): string[] | undefined {
 }
 
 export function modeChoice(
-  agent: AgentInfo,
+  agent: AgentServer,
   modes: CatalogSelection,
   tone: string,
 ): SessionConfigSelectOption {
@@ -91,7 +91,7 @@ export function modeChoice(
 
   if (!mode)
     throw new Error(
-      `Recorded catalog needs Plan and dangerous modes for ${agent.label}.`,
+      `Recorded catalog needs Plan and dangerous modes for ${agent.name}.`,
     );
 
   return mode;

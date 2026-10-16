@@ -16,7 +16,7 @@ export const openedSession = ({
   data,
 }: NewSessionWiring): OpenedSession => ({
   session: sessionOpening.session,
-  agent: data.choices.agent?.agent,
+  agent: data.choices.agent?.id,
   projectId: data.choices.project?.id,
 });
 

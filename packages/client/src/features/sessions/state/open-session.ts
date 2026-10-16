@@ -1,4 +1,8 @@
-import type { AgentInfo, ProjectInfo, SessionNewInput } from '@repo/contracts';
+import type {
+  AgentServer,
+  ProjectInfo,
+  SessionNewInput,
+} from '@repo/contracts';
 import type { SessionChoices } from './session-choices';
 
 const checkoutInput = ({
@@ -9,14 +13,14 @@ const checkoutInput = ({
 
 type SettledChoices = SessionChoices & {
   project: ProjectInfo;
-  agent: AgentInfo;
+  agent: AgentServer;
 };
 
 // A Project, an Agent ready to run and, for a main checkout, its base branch.
 const settled = (choices: SessionChoices): choices is SettledChoices =>
   [
     choices.project !== undefined,
-    choices.agent?.availability === 'available',
+    choices.agent !== undefined,
     choices.baseBranchLoaded,
   ].every(Boolean);
 
@@ -29,7 +33,7 @@ export function toNewSessionInput(
 
   return {
     projectId: project.id,
-    agent: agent.agent,
+    agent: agent.id,
     checkout: checkoutInput(choices),
     configOptions: [],
     prompt: [],

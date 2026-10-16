@@ -9,16 +9,19 @@ import { Text } from '#primitives/display/text';
 const noOlderRows = (): void => {};
 
 // Wide, the question sits centred in the space a Session's Feed fills.
-function NewSessionHeading(): React.JSX.Element | null {
+function NewSessionHeading({
+  context,
+}: {
+  context?: React.ReactNode;
+}): React.JSX.Element | null {
   if (!useContentWide()) return null;
 
   return (
     <View className="flex-1 justify-center pb-10">
       <SessionColumn className="px-4">
-        <Text role="title" accessibilityRole="heading" aria-level={1}>
-          What should we work on?
-        </Text>
+        <NewSessionTitle />
       </SessionColumn>
+      {context}
     </View>
   );
 }
@@ -26,12 +29,14 @@ function NewSessionHeading(): React.JSX.Element | null {
 // The sent prompt and Working while the Session starts, else the question.
 interface NewSessionFeedProps {
   starting?: StartingFeed;
+  context?: React.ReactNode;
 }
 
 export function NewSessionFeed({
   starting,
+  context,
 }: NewSessionFeedProps): React.JSX.Element {
-  if (!starting) return <NewSessionHeading />;
+  if (!starting) return <NewSessionHeading context={context} />;
 
   return (
     <Feed
@@ -41,5 +46,13 @@ export function NewSessionFeed({
       loadingOlder={false}
       onStartReached={noOlderRows}
     />
+  );
+}
+
+function NewSessionTitle(): React.JSX.Element {
+  return (
+    <Text role="title" accessibilityRole="heading" aria-level={1}>
+      What should we work on?
+    </Text>
   );
 }

@@ -30,7 +30,7 @@ const meta = {
     screenPreview: Platform.OS !== 'web',
   },
   args: {
-    initialAgent: firstAgent.agent,
+    initialAgent: firstAgent.id,
     draft: { text: '', attachments: [] },
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
@@ -43,13 +43,13 @@ const meta = {
   argTypes: {
     initialAgent: {
       name: 'Agent',
-      options: newSessionCatalogs.bothAvailable.map((agent) => agent.agent),
+      options: newSessionCatalogs.bothAvailable.map((agent) => agent.id),
       control: {
         type: 'select',
         labels: Object.fromEntries(
           newSessionCatalogs.bothAvailable.map((agent) => [
-            agent.agent,
-            agent.label,
+            agent.id,
+            agent.name,
           ]),
         ),
       },
