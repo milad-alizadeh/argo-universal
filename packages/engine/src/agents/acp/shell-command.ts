@@ -26,11 +26,8 @@ export const observeShellCommand = async (
   output: (text: string) => void,
 ): Promise<ShellCommand> => {
   pipeShellOutput(child, output);
-  const started = Promise.withResolvers<void>();
   const exited = observeShellExit(child);
-  child.once('spawn', () => started.resolve());
-  child.once('error', (error) => started.reject(error));
-  await started.promise;
+  await waitForShellStart(child);
 
   return {
     exited,
@@ -73,9 +70,9 @@ export const shellCommandEnvironment = async (
 const shellKiller =
   (child: AcpChild): ShellCommand['kill'] =>
   () => {
-    if (shellHasExited(child)) return;
+    if (shellHasExited(child)) return false;
 
-    if (child.pid) terminateShellTree(child.pid);
+    return killRunningShell(child);
   };
 
 const drainShellOutput = (child: AcpChild, drained: () => void): void => {
@@ -96,4 +93,12 @@ const killRunningShell = (child: AcpChild): boolean => {
   terminateShellTree(child.pid);
 
   return true;
+};
+
+const waitForShellStart = (child: AcpChild): Promise<void> => {
+  const started = Promise.withResolvers<void>();
+  child.once('spawn', () => started.resolve());
+  child.once('error', (error) => started.reject(error));
+
+  return started.promise;
 };

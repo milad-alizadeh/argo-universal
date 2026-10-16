@@ -1,17 +1,13 @@
 import { SessionRecord } from '@repo/contracts';
-import { session, shell } from '@repo/db/schema';
-import { inArray, or, sql, type SQL } from 'drizzle-orm';
+import { session } from '@repo/db/schema';
+import { inArray, or, type SQL } from 'drizzle-orm';
 import { storedSessionColumns, decodeStoredSession } from '../session-record';
 import {
   readQueuedSessionRows,
   type QueuedSessionRows,
 } from '../session-storage';
 import type { ListReadInput } from './list-read-input';
-
-const shellCountColumns = {
-  shellTotal: sql<number>`(select count(*) from ${shell} where ${shell.sessionId} = ${session.id})`,
-  shellRunning: sql<number>`(select count(*) from ${shell} where ${shell.sessionId} = ${session.id} and ${shell.status} = 'running')`,
-};
+import { shellCountColumns } from './list-shell-counts';
 
 type StoredSession = typeof session.$inferSelect & {
   shellTotal: number;
@@ -43,7 +39,7 @@ function storedSessions(
   sessionIds: readonly string[] | undefined,
 ): StoredSession[] {
   return input.database
-    .select({ ...storedSessionColumns, ...shellCountColumns })
+    .select({ ...storedSessionColumns, ...shellCountColumns(input.database) })
     .from(session)
     .where(sessionFilter(sessionIds))
     .all();
