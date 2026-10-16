@@ -140,17 +140,26 @@ Feature: New Session
       | not installed |
       | not signed in |
 
-  Scenario Outline: Agent <agent> requires setup because it is <state>
+  Scenario Outline: Agent <agent> requires sign-in
     Given a phone Frame
-    And Agent <agent> is "<state>"
+    And Agent <agent> is "not signed in"
     When I view the Agent choices in New Session
-    Then Agent <agent> shows "<state>" instead of accepting a prompt
+    Then Agent <agent> shows "not signed in" instead of accepting a prompt
     When I set up Agent <agent>
     Then the Settings show Agent <agent>
 
     Examples:
-      | agent | state         |
-      | 1     | not installed |
-      | 1     | not signed in |
-      | 2     | not installed |
-      | 2     | not signed in |
+      | agent |
+      | 1     |
+      | 2     |
+
+  Scenario Outline: Agent <agent> is not installed and offers no setup step
+    Given a phone Frame
+    And Agent <agent> is "not installed"
+    When I view the Agent choices in New Session
+    Then Agent <agent> shows "not installed" without a setup step
+
+    Examples:
+      | agent |
+      | 1     |
+      | 2     |

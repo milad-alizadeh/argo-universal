@@ -7,7 +7,7 @@ import {
   presentationDetents,
   presentationDragIndicator,
 } from '@expo/ui/swift-ui/modifiers';
-import { cloneElement, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
@@ -22,6 +22,7 @@ import {
 import type { SheetProps } from './sheet-props';
 import { SheetPages } from './sheet-stack.ios';
 import { sheetDetents } from './sheet-state';
+import { SheetTrigger } from './sheet-trigger';
 
 type PresentationProps = SheetProps & { stack: SheetStack };
 
@@ -31,11 +32,12 @@ type PresentationProps = SheetProps & { stack: SheetStack };
  */
 function SheetRoot(props: SheetProps): ReactElement {
   const stack = useSheetStack(props);
-  const Presentation = useWide() && props.trigger ? PopoverSheet : SystemSheet;
+  const { popover, Presentation } = usePresentation(props);
 
   return (
     <SheetNavigationProvider value={stack.navigation}>
       <View style={props.style} className="min-w-0 shrink">
+        {!popover && <SheetTrigger {...props} />}
         <Host matchContents>
           <Presentation {...props} stack={stack} />
         </Host>
@@ -44,6 +46,22 @@ function SheetRoot(props: SheetProps): ReactElement {
   );
 }
 
+// Where the sheet draws: a popover on its trigger on a wide iPad, the system sheet elsewhere.
+type SheetPresentation = {
+  popover: boolean;
+  Presentation: (props: PresentationProps) => ReactElement;
+};
+
+function usePresentation(props: SheetProps): SheetPresentation {
+  const popover = useWide() && props.trigger !== undefined;
+
+  return { popover, Presentation: popover ? PopoverSheet : SystemSheet };
+}
+
+/*
+ * The trigger stays in React Native layout, as on Android, rather than in the sheet's anchor: an
+ * anchor is hosted at its content's size, so a field that fills its row had no width to fill.
+ */
 function SystemSheet(props: PresentationProps): ReactElement {
   return (
     <BottomSheet
@@ -51,7 +69,6 @@ function SystemSheet(props: PresentationProps): ReactElement {
       onIsPresentedChange={presentedChange(props)}
       onDismiss={props.stack.reports.closed}
       fitToContents={detentsOf(props) === undefined}
-      anchor={props.trigger ? <SheetTrigger {...props} /> : undefined}
     >
       <Group modifiers={useSheetModifiers(props)}>
         <SheetPages {...props} />
@@ -67,7 +84,7 @@ function PopoverSheet(props: PresentationProps): ReactElement {
       onIsPresentedChange={presentedChange(props)}
     >
       <Popover.Trigger>
-        <SheetTrigger {...props} />
+        <HostedTrigger {...props} />
       </Popover.Trigger>
       <Popover.Content>
         <PopoverPages {...props} />
@@ -93,12 +110,11 @@ function presentedChange(props: PresentationProps): (open: boolean) => void {
   };
 }
 
-function SheetTrigger(props: PresentationProps): ReactElement | null {
-  if (!props.trigger) return null;
-
+// A popover anchors on SwiftUI content, so there the trigger is hosted at its own size.
+function HostedTrigger(props: SheetProps): ReactElement {
   return (
     <RNHostView matchContents>
-      {cloneElement(props.trigger, { onPress: () => props.onOpenChange(true) })}
+      <SheetTrigger {...props} />
     </RNHostView>
   );
 }

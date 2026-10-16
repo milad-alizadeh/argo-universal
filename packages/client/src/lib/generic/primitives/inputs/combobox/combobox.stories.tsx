@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
+import { Button } from '#primitives/buttons/button';
+import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Sheet } from '#primitives/overlays/sheet';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Combobox } from './combobox';
 
@@ -8,7 +12,9 @@ const options = [
   {
     value: 'argo',
     label: 'argo-universal',
-    supporting: '~/Developer/argo-universal',
+    // A worktree's long path shows how a path shortens before the selected check.
+    supporting:
+      '~/Developer/worktrees/argo-universal/jovial-pelican/argo-universal',
     code: true,
     icon: 'folder',
   },
@@ -45,15 +51,21 @@ const states = [
   { label: 'Could not load', loadError: 'Projects could not be loaded.' },
 ];
 
+const examples = [
+  { label: 'Searchable choice', example: <ProjectChoice /> },
+  { label: 'Row', example: <ProjectSheet /> },
+  ...states.map(({ label, ...state }) => ({
+    label,
+    example: <StatusExample {...state} />,
+  })),
+];
+
 function ComboboxExamples(): ReactElement {
   return (
     <VariationList>
-      <Variation label="Searchable choice">
-        <ProjectChoice />
-      </Variation>
-      {states.map(({ label, ...state }) => (
+      {examples.map(({ label, example }) => (
         <Variation key={label} label={label}>
-          <StatusExample {...state} />
+          {example}
         </Variation>
       ))}
     </VariationList>
@@ -89,3 +101,42 @@ function ProjectChoice(): ReactElement {
     />
   );
 }
+
+// The row variant lives in a menu or sheet: it opens beside the menu on a desktop and pushes a page of the sheet on a phone.
+function ProjectSheet(): ReactElement {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Sheet {...sheetPresentation} open={open} onOpenChange={setOpen}>
+      <Sheet.Page name="new-session" title="New Session">
+        <ProjectRow />
+      </Sheet.Page>
+    </Sheet>
+  );
+}
+
+const sheetPresentation = {
+  label: 'New Session',
+  contentScrolls: true,
+  trigger: <Button custom label="New Session" />,
+};
+
+function ProjectRow(): ReactElement {
+  const [value, setValue] = useState('argo');
+
+  return (
+    <GroupedList fit>
+      <GroupedListSection>
+        <Combobox {...rowPresentation} value={value} onValueChange={setValue} />
+      </GroupedListSection>
+    </GroupedList>
+  );
+}
+
+const rowPresentation = {
+  variant: 'row',
+  label: 'Project',
+  title: 'Select Project',
+  options,
+  searchPlaceholder: 'Find a Project…',
+} as const;
