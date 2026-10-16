@@ -6,10 +6,7 @@ import type {
   SessionListUpdate,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { TRPCError } from '@trpc/server';
 import { type Actor, type ActorRefFrom, createActor } from 'xstate';
-import { z } from 'zod';
-import { jsonCodec } from '../../lib/json-codec';
 import { findMachineActor } from '../../lib/machine-actor';
 import {
   databaseWriterId,
@@ -22,16 +19,8 @@ import {
   type SessionListState,
   sessionListMachine,
 } from './session-list-machine';
+import { sessionListPage } from './session-list-page';
 import { createSessionListReader } from './session-list-reader';
-
-const cursorSchema = jsonCodec(
-  z.strictObject({
-    activityAt: z.int(),
-    sessionId: z.string(),
-  }),
-);
-
-const pageSize = 50;
 
 // The Session list procedures: a page, its live updates and the counts.
 interface SessionList {
@@ -80,66 +69,10 @@ export function createSessionList(options: {
 
   const listSessions = async (
     input: SessionListInput,
-  ): Promise<SessionListOutput> => {
-    let cursor: z.infer<typeof cursorSchema> | undefined;
-
-    if (input.cursor !== undefined) {
-      try {
-        cursor = cursorSchema.parse(
-          Buffer.from(input.cursor, 'base64url').toString('utf8'),
-        );
-      } catch {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Invalid Session list cursor',
-        });
-      }
-    }
-
-    const rows = readCachedRows()
-      .map((row): typeof row.information => row.information)
-      .filter(
-        (row): boolean =>
-          (input.projectId === undefined ||
-            row.projectId === input.projectId) &&
-          (row.archivedAt !== null) === input.archived &&
-          (input.query === undefined ||
-            row.title
-              .toLocaleLowerCase()
-              .includes(input.query.toLocaleLowerCase())) &&
-          (!cursor ||
-            row.activityAt < cursor.activityAt ||
-            (row.activityAt === cursor.activityAt &&
-              row.sessionId < cursor.sessionId)),
-      )
-      .sort((first, second): number => {
-        const activityOrder = second.activityAt - first.activityAt;
-
-        if (activityOrder) return activityOrder;
-
-        if (first.sessionId < second.sessionId) return 1;
-
-        if (first.sessionId > second.sessionId) return -1;
-
-        return 0;
-      });
-
-    const page = rows.slice(0, pageSize);
-    const last = page.at(-1);
-
-    return {
-      sessions: page,
-      nextCursor:
-        rows.length > pageSize && last
-          ? Buffer.from(
-              z.encode(cursorSchema, {
-                activityAt: last.activityAt,
-                sessionId: last.sessionId,
-              }),
-            ).toString('base64url')
-          : null,
-    };
-  };
+  ): Promise<SessionListOutput> =>
+    sessionListPage(input, () =>
+      readCachedRows().map((row) => row.information),
+    );
 
   const countActiveSessions = (
     rows: ReturnType<typeof readAllSessionRows>,

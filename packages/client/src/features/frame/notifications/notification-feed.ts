@@ -164,5 +164,8 @@ async function readSessionPage(
   cursor: string | undefined,
   signal: AbortSignal | undefined,
 ): Promise<SessionListOutput> {
-  return client.session.list.query({ archived: false, cursor }, { signal });
+  return client.session.list.query(
+    { archived: false, order: 'created', cursor },
+    { signal },
+  );
 }

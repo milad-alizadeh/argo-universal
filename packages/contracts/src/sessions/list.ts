@@ -7,6 +7,7 @@ export const SessionListInput = z.strictObject({
   projectId: sessionColumns.shape.projectId.optional(),
   archived: z.boolean(),
   query: z.string().optional(),
+  order: z.enum(['activity', 'created']).optional(),
   cursor: z.string().optional(),
   direction: z.literal('forward').optional(),
 });
