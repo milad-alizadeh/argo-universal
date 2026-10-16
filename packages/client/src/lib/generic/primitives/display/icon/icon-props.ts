@@ -2,7 +2,7 @@ import type { ActivityIndicatorProps, ViewProps } from 'react-native';
 import type { Tone } from '#primitives/display/text';
 import type { IconRole } from '../../../symbols/icon-role';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
-import type { SymbolGlyphProps } from '../../../symbols/symbol-glyph/symbol-glyph';
+import type { SymbolGlyphProps } from '../../../symbols/symbol-glyph/symbol-glyph-props';
 
 export interface IconProps {
   name: IconSymbol;

@@ -4,18 +4,15 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext, toneClass } from '#primitives/display/text';
-import { appleSymbol } from '../../../symbols/apple-symbol';
+import {
+  type DrawnSymbol,
+  drawnSymbol,
+  outlinedDrawing,
+} from '../../../symbols/drawn-symbol';
 import { iconSymbols } from '../../../symbols/icon-names';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
-import {
-  SymbolGlyph,
-  type SymbolGlyphProps,
-} from '../../../symbols/symbol-glyph/symbol-glyph';
-import {
-  materialSymbol,
-  type SymbolSource,
-} from '../../../symbols/symbol-source';
+import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
@@ -34,22 +31,13 @@ const TintedSymbol =
 
 const glyphScale = Platform.OS === 'android' ? materialGlyphScale : 1;
 
-type GlyphNames = Pick<SymbolGlyphProps, 'sf' | 'material' | 'filled'>;
-
-// A pair from outside the App's map draws outlined: Argo's filled Material font holds only Argo's own icons (ADR-0019).
-function symbolGlyph(
+function iconDrawing(
   name: IconSymbol,
   filled: boolean | undefined,
-): GlyphNames {
-  if (typeof name !== 'string') return { ...name, filled: false };
-  const symbol: SymbolSource = iconSymbols[name];
-  const sf = appleSymbol(symbol, filled);
-
-  return {
-    sf,
-    material: materialSymbol(symbol),
-    filled: sf !== symbol.sf || sf.endsWith('.fill'),
-  };
+): DrawnSymbol {
+  return typeof name === 'string'
+    ? drawnSymbol(iconSymbols[name], filled)
+    : outlinedDrawing(name);
 }
 
 const iconTestId = (name: IconSymbol): string =>
@@ -69,7 +57,7 @@ export function Icon(props: IconProps): React.JSX.Element {
 
   return (
     <TintedSymbol
-      {...symbolGlyph(props.name, props.filled)}
+      symbol={iconDrawing(props.name, props.filled)}
       className={colorClassName}
       colorClassName={colorClassName}
       pixels={useIconPixels(props.role)}

@@ -5,13 +5,13 @@ import type { SymbolSource } from './symbol-source';
  * same paths on iOS, Android, web and the desktop app (ADR-0019).
  */
 export const gitSymbols = {
-  branch: { sf: 'custom.git-branch' },
-  diff: { sf: 'custom.file-diff' },
-  merged: { sf: 'custom.git-merge' },
-  'pull-request': { sf: 'custom.git-pull-request' },
-  'pr-open': { sf: 'custom.git-pull-request' },
-  'pr-draft': { sf: 'custom.git-pull-request-draft' },
-  'pr-merged': { sf: 'custom.git-merge' },
-  'pr-closed': { sf: 'custom.git-pull-request-closed' },
-  'pr-conflict': { sf: 'custom.git-pull-request-conflict' },
+  branch: { tabler: 'git-branch' },
+  diff: { tabler: 'file-diff' },
+  merged: { tabler: 'git-merge' },
+  'pull-request': { tabler: 'git-pull-request' },
+  'pr-open': { tabler: 'git-pull-request' },
+  'pr-draft': { tabler: 'git-pull-request-draft' },
+  'pr-merged': { tabler: 'git-merge' },
+  'pr-closed': { tabler: 'git-pull-request-closed' },
+  'pr-conflict': { tabler: 'git-pull-request-conflict' },
 } as const satisfies Record<string, SymbolSource>;

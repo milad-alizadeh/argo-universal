@@ -39,7 +39,7 @@ Git icons are the one exception to native symbols (owner, 2026-10-16). Neither S
 - Electron on macOS and web, Windows and Linux: the page masks the path, as for the other custom symbols.
 - Android: `react-native-svg` draws the path, filled with the icon's colour.
 
-`git-symbols.ts` maps each Argo git icon to its Tabler path; such an entry has no Material name. Native menu rows draw no image for these icons, as for every custom symbol.
+`git-symbols.ts` maps each Argo git icon to its Tabler name, as `{ tabler: 'git-branch' }`; such an entry has no SF or Material name. Its asset-catalog name is `custom.<Tabler name>`, like the other custom symbols. Native menu rows draw no image for these icons, as for every custom symbol.
 
 ## Considered options
 

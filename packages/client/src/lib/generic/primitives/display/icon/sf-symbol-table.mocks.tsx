@@ -1,8 +1,8 @@
 import { View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/display/text';
+import { drawnSymbol } from '../../../symbols/drawn-symbol';
 import { iconNames, iconSymbols } from '../../../symbols/icon-names';
 import { SymbolImagesProvider } from '../../../symbols/symbol-images';
-import { materialSymbol } from '../../../symbols/symbol-source';
 import { Icon } from './icon';
 import { renderStorybookSymbol } from './sf-symbol-images.mocks';
 
@@ -22,14 +22,24 @@ function SfAndMaterialHeader(): React.JSX.Element {
   );
 }
 
+function symbolNames(name: IconName): [string, string] {
+  const symbol = drawnSymbol(iconSymbols[name]);
+
+  return symbol.kind === 'tabler'
+    ? [`Tabler ${symbol.tabler}`, `Tabler ${symbol.tabler}`]
+    : [symbol.sf, symbol.material];
+}
+
 function SymbolNames({ name }: { name: IconName }): React.JSX.Element {
+  const [sf, material] = symbolNames(name);
+
   return (
     <>
       <Text role="code" className="w-64 text-muted-foreground">
-        {iconSymbols[name].sf}
+        {sf}
       </Text>
       <Text role="code" className="text-muted-foreground">
-        {materialSymbol(iconSymbols[name]) ?? 'Tabler path'}
+        {material}
       </Text>
     </>
   );

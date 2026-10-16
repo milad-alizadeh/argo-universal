@@ -6,8 +6,8 @@ import { DropdownMenuItem, Icon } from '@expo/ui/jetpack-compose';
 import type { AndroidSymbol } from 'expo-symbols';
 import type * as React from 'react';
 import type { ImageSourcePropType } from 'react-native';
+import { drawnSymbol } from '../../../symbols/drawn-symbol';
 import { type IconName, iconSymbols } from '../../../symbols/icon-names';
-import { materialSymbol } from '../../../symbols/symbol-source';
 
 // Compose's Icon draws a bundled vector drawable, so each Material symbol a menu row shows is imported here; a symbol not listed draws no icon.
 const materialImages: Partial<Record<AndroidSymbol, ImageSourcePropType>> = {
@@ -18,9 +18,10 @@ const materialImages: Partial<Record<AndroidSymbol, ImageSourcePropType>> = {
 };
 
 function materialImage(icon?: IconName): ImageSourcePropType | undefined {
-  const material = icon && materialSymbol(iconSymbols[icon]);
+  if (!icon) return undefined;
+  const symbol = drawnSymbol(iconSymbols[icon]);
 
-  return material ? materialImages[material] : undefined;
+  return symbol.kind === 'system' ? materialImages[symbol.material] : undefined;
 }
 
 // Material's leading icon, at its 24dp size; it takes the item's leading icon colour.

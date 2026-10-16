@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 
-// Each state's git icon, in the state's colour.
 export const pullRequestAppearance = {
   open: { icon: 'pr-open', tone: 'success' },
   draft: { icon: 'pr-draft', tone: 'muted' },
