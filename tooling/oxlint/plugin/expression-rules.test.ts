@@ -6,7 +6,7 @@ import { staticImports } from './static-imports.ts';
 import { vendorName } from './vendor-name.ts';
 
 const rendererLoader =
-  '/repo/apps/codemap-834-prototype/src/renderer-loader.web.tsx';
+  '/repo/apps/codemap-834-prototype/src/code-map/renderer-loader.web.tsx';
 
 ruleTester.run('vendor-name', vendorName, {
   valid: ["const agent = 'anthropic';", "const name = 'claudette';"],
@@ -63,17 +63,20 @@ ruleTester.run('static-imports', staticImports, {
     "import { load } from './module';",
     "import type { Shape } from './module';",
     'const expression = "import(\'./module\')";',
-    { code: "await import('./three-map.web');", filename: rendererLoader },
-    { code: "await import('./flat-map.web');", filename: rendererLoader },
+    {
+      code: "await import('./three/three-map.web');",
+      filename: rendererLoader,
+    },
+    { code: "await import('./flat/flat-map.web');", filename: rendererLoader },
   ],
   invalid: [
     {
-      code: "await import('./three-map.web');",
+      code: "await import('./three/three-map.web');",
       filename: '/repo/another-loader.tsx',
       errors: [{ messageId: 'staticImports' }],
     },
     {
-      code: "await import('./flat-map.web');",
+      code: "await import('./flat/flat-map.web');",
       filename: rendererLoader.replace('codemap-834-prototype', 'another-app'),
       errors: [{ messageId: 'staticImports' }],
     },
@@ -83,12 +86,12 @@ ruleTester.run('static-imports', staticImports, {
       errors: [{ messageId: 'staticImports' }],
     },
     {
-      code: "const path = './flat-map.web'; import(path);",
+      code: "const path = './flat/flat-map.web'; import(path);",
       filename: rendererLoader,
       errors: [{ messageId: 'staticImports' }],
     },
     {
-      code: "type Module = typeof import('./flat-map.web');",
+      code: "type Module = typeof import('./flat/flat-map.web');",
       filename: rendererLoader,
       errors: [{ messageId: 'staticImports' }],
     },

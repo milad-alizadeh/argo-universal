@@ -56,8 +56,19 @@ Lights also use theme tokens. No renderer supplies a default colour.
 Labels use kit `Text` and screen-space culling, capped at 32.
 3D labels omit roof anchors hidden behind nearer buildings.
 An accessible file selector returns the same file ID as a canvas press.
-`CodeMap` (`src/code-map.tsx`) takes only ADR-0028's `label`, `view`, `files`, `selectedId` and `onSelect`; it owns the renderer, camera controls, labels, palette, readiness and file list.
-It reports readiness, labels and selection to the measurement record in `src/evidence.ts`, never through props.
+`CodeMap` (`src/code-map/`, imported through its `index.ts`) takes only ADR-0028's `label`, `view`, `files`, `selectedId` and `onSelect`; it owns the renderer, camera controls, labels, palette, readiness and file list.
+It reports readiness, labels and selection to the measurement record in `src/evidence/`, never through props.
+
+`src/` has one folder per module:
+
+- `code-map/`: the `CodeMap` module. Its `index.ts` is the only entry other folders use. Inside it:
+  - `flat/` and `three/` hold the two renderers;
+  - `viewport/` holds the camera interface both renderers satisfy, and pointer picking;
+  - `labels/` places labels from a camera pose;
+  - `layout/` is the treemap;
+  - `plates/` measures the plates over the map to keep labels clear of them.
+- `evidence/`: the measurement record behind `window.__codemap834` and the pan frame sampler.
+- `page/`: the prototype page around the map, its state and the dataset snapshot reader.
 The native entry renders nothing. Phones do not import either renderer.
 
 ## Collect evidence

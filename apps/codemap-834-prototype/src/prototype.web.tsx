@@ -4,12 +4,11 @@ import { Text } from '@repo/client/text';
  * This route has no Plugin registry or production API.
  */
 import type { JSX } from 'react';
-import type { Palette } from './model';
-import { Diagnostics, Footer, Header } from './page-details';
-import { MapArea } from './page-map';
-import { main } from './page-styles';
-import { usePalette } from './palette';
-import { usePrototypeState, type PrototypeState } from './prototype-state';
+import { usePalette, type Palette } from './code-map';
+import { Diagnostics, Footer, Header } from './page/page-details';
+import { MapArea } from './page/page-map';
+import { main } from './page/page-styles';
+import { usePrototypeState, type PrototypeState } from './page/prototype-state';
 
 interface PageProps {
   state: PrototypeState;

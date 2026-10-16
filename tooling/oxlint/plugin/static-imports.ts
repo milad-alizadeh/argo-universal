@@ -2,12 +2,17 @@ import { defineRule } from '@oxlint/plugins';
 import type { ESTree, Visitor } from '@oxlint/plugins';
 import { stringValue } from './syntax.ts';
 
-const deferredRenderers = new Set(['./three-map.web', './flat-map.web']);
+const deferredRenderers = new Set([
+  './three/three-map.web',
+  './flat/flat-map.web',
+]);
 
 const isRendererLoader = (filename: string): boolean =>
   filename
     .replaceAll('\\', '/')
-    .endsWith('/apps/codemap-834-prototype/src/renderer-loader.web.tsx');
+    .endsWith(
+      '/apps/codemap-834-prototype/src/code-map/renderer-loader.web.tsx',
+    );
 
 const isDeferredRenderer = (node: ESTree.ImportExpression): boolean =>
   node.source.type === 'Literal' &&
