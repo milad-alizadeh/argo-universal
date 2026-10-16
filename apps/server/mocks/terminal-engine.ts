@@ -20,7 +20,7 @@ process.on('SIGTERM', () => {});
 const recordPids = (terminal: number, wrapper: number): Promise<void> =>
   writeFile(
     process.env.ARGO_FIXTURE_PIDFILE ?? '',
-    JSON.stringify({ engine: process.pid, terminal, wrapper }),
+    JSON.stringify({ engine: process.pid, command: terminal, wrapper }),
   ).then(() => {
     process.send?.({ type: 'ready', port: 7337 });
   });

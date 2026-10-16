@@ -1,5 +1,6 @@
-import * as PopoverPrimitive from '@rn-primitives/popover';
 import * as React from 'react';
+import type { OpenState } from '#primitives/overlays/open-state';
+import { usePopoverState } from './popover-context';
 
 const closeGraceMs = 200;
 
@@ -24,7 +25,7 @@ interface HoverIntent {
   promote: () => void;
 }
 
-type Root = ReturnType<typeof PopoverPrimitive.useRootContext>;
+type Root = OpenState;
 
 interface HoverEnvironment {
   parent?: Hover;
@@ -62,7 +63,7 @@ export function HoverProvider({
 }
 
 function useHover(): Hover {
-  const context = PopoverPrimitive.useRootContext();
+  const context = usePopoverState();
   const parent = React.useContext(PopoverHover);
   const group = React.useContext(HoverGroup);
   const intent = useHoverIntent();

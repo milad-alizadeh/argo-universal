@@ -105,7 +105,7 @@ function HeaderTrigger(props: HeaderTriggerProps): ReactElement {
   );
 }
 
-export function Header(props: HeaderProps): ReactElement {
+function Header(props: HeaderProps): ReactElement {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -119,4 +119,15 @@ export function Header(props: HeaderProps): ReactElement {
       </TextClassContext.Provider>
     </HoveredContext.Provider>
   );
+}
+
+// Keep header composition shared while each drawing supplies its own accessible trigger.
+export function createCollapsibleHeader(
+  trigger: HeaderProps['trigger'],
+): (props: CollapsibleHeaderProps) => ReactElement {
+  return function CollapsibleHeader(
+    props: CollapsibleHeaderProps,
+  ): ReactElement {
+    return <Header {...props} trigger={trigger} />;
+  };
 }

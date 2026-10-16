@@ -14,6 +14,10 @@ import {
 
 const animatedDetailId = 'animated-detail';
 
+const toggleLabel = 'Toggle details';
+
+const expanded = 'aria-expanded';
+
 const meta = { title: 'Tests/Collapsible' } satisfies Meta;
 
 export default meta;
@@ -24,7 +28,7 @@ function disclosure(width: number): Story {
   return {
     render: () => (
       <Collapsible>
-        <CollapsibleHeader icon="read" label="Toggle details" />
+        <CollapsibleHeader icon="read" label={toggleLabel} />
         <CollapsibleContent testID={animatedDetailId}>
           <View className="h-32">
             <Text>Tool call detail</Text>
@@ -34,16 +38,16 @@ function disclosure(width: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      const trigger = canvas.getByRole('button', { name: 'Toggle details' });
+      const trigger = canvas.getByRole('button', { name: toggleLabel });
       await expect(
         canvas.queryByTestId(animatedDetailId),
       ).not.toBeInTheDocument();
       await userEvent.click(trigger);
       const detail = canvas.getByTestId(animatedDetailId);
       await waitFor(() => expect(detail).toBeVisible());
-      await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await expect(trigger).toHaveAttribute(expanded, 'true');
       await userEvent.click(trigger);
-      await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      await expect(trigger).toHaveAttribute(expanded, 'false');
       await waitFor(() =>
         expect(canvas.queryByTestId(animatedDetailId)).not.toBeInTheDocument(),
       );
@@ -80,7 +84,7 @@ export const RowBelowRestsOnce: Story = {
   render: () => (
     <View>
       <Collapsible defaultOpen>
-        <CollapsibleTrigger accessibilityLabel="Toggle details">
+        <CollapsibleTrigger accessibilityLabel={toggleLabel}>
           <Text>Toggle details</Text>
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-2">
@@ -94,7 +98,7 @@ export const RowBelowRestsOnce: Story = {
   ),
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
-    const trigger = canvas.getByRole('button', { name: 'Toggle details' });
+    const trigger = canvas.getByRole('button', { name: toggleLabel });
     const below = canvas.getByText('Next row');
 
     const tops = await sampleEachFrame(
@@ -108,6 +112,27 @@ export const RowBelowRestsOnce: Story = {
     await expect(tops.slice(rest)).toEqual(
       tops.slice(rest).map(() => tops.at(-1)),
     );
+  },
+};
+
+// A disabled Collapsible keeps its content closed when its header is pressed.
+export const DisabledStaysClosed: Story = {
+  render: () => (
+    <Collapsible disabled>
+      <CollapsibleHeader icon="read" label={toggleLabel} />
+      <CollapsibleContent testID={animatedDetailId}>
+        <Text>Tool call detail</Text>
+      </CollapsibleContent>
+    </Collapsible>
+  ),
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const trigger = canvas.getByRole('button', { name: toggleLabel });
+    trigger.click();
+    await expect(trigger).toHaveAttribute(expanded, 'false');
+    await expect(
+      canvas.queryByTestId(animatedDetailId),
+    ).not.toBeInTheDocument();
   },
 };
 

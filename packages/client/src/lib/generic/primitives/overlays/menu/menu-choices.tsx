@@ -1,4 +1,4 @@
-import * as MenuPrimitive from '@rn-primitives/dropdown-menu';
+import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -11,7 +11,7 @@ import {
   type MenuChoiceGroup,
   menuChoiceGroups,
 } from './menu-props';
-import { MenuRadioItem } from './menu-radio-item';
+import { focusTracking, MenuRadioItem } from './menu-radio-item';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -36,14 +36,15 @@ export function MenuChoiceContent<Value extends string>(
   props: MenuChoicesProps<Value>,
 ): React.JSX.Element {
   return (
-    <MenuPrimitive.Content
+    <RadixMenu.Content
       align={props.align ?? 'end'}
-      onKeyDown={() => props.focus.onKeyboardFocusChange(true)}
-      onPointerMove={() => props.focus.onKeyboardFocusChange(false)}
-      className="w-65 overflow-hidden bg-card rounded-2xl p-1 shadow-card dark:border dark:border-border"
+      loop
+      {...focusTracking(props.focus)}
     >
-      {props.loading ? <MenuLoadingRow /> : <MenuChoices {...props} />}
-    </MenuPrimitive.Content>
+      <View className="w-65 overflow-hidden bg-card rounded-2xl p-1 shadow-card dark:border dark:border-border">
+        {props.loading ? <MenuLoadingRow /> : <MenuChoices {...props} />}
+      </View>
+    </RadixMenu.Content>
   );
 }
 
@@ -91,15 +92,16 @@ function MenuChoiceRadios({
   group,
   focus,
 }: MenuChoiceGroupRowsProps): React.JSX.Element {
+  const radios = group.options.map((choice) => (
+    <MenuRadioItem key={choice.value} choice={choice} focus={focus} />
+  ));
+
+  const { value, onValueChange } = group;
+
   return (
-    <MenuPrimitive.RadioGroup
-      value={group.value}
-      onValueChange={group.onValueChange}
-    >
-      {group.options.map((choice) => (
-        <MenuRadioItem key={choice.value} choice={choice} focus={focus} />
-      ))}
-    </MenuPrimitive.RadioGroup>
+    <RadixMenu.RadioGroup asChild value={value} onValueChange={onValueChange}>
+      <View>{radios}</View>
+    </RadixMenu.RadioGroup>
   );
 }
 

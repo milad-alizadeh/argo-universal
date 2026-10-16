@@ -18,7 +18,7 @@ function SelectionAnchor({
 }: Pick<SelectionPopoverProps, 'placement'>): React.JSX.Element {
   // Only anchors the popover, so Tab skips it.
   return (
-    <PopoverTrigger asChild>
+    <PopoverTrigger>
       <View className="absolute" style={placement} tabIndex={-1} />
     </PopoverTrigger>
   );

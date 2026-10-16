@@ -6,8 +6,7 @@ export async function expectScrollsUnderFades(
   last: HTMLElement | (() => Promise<HTMLElement>),
 ): Promise<HTMLElement> {
   await expectInitialFades(scroll);
-  scroll.scrollTop = scroll.scrollHeight;
-  const item = await resolveLastRow(last);
+  const item = await scrollToLastRow(scroll, last);
   await waitFor(() => expectRowInsideScroll(scroll, item));
   await waitFor(() =>
     expect(fadedEdges(scroll)).toEqual({ top: true, bottom: false }),
@@ -41,6 +40,24 @@ async function expectRowInsideWindow(row: HTMLElement): Promise<void> {
   await expect(box.top).toBeGreaterThanOrEqual(0);
   await expect(box.bottom).toBeLessThanOrEqual(window.innerHeight);
 }
+
+// A virtualized list grows as it measures the rows it renders, so it scrolls to the end again until the last row appears.
+async function scrollToLastRow(
+  scroll: HTMLElement,
+  last: HTMLElement | (() => Promise<HTMLElement>),
+): Promise<HTMLElement> {
+  return waitFor(
+    () => {
+      scroll.scrollTop = scroll.scrollHeight;
+
+      return resolveLastRow(last);
+    },
+    { timeout: lastRowTimeout },
+  );
+}
+
+// Long enough for a few rounds of finding the row after each scroll.
+const lastRowTimeout = 5000;
 
 async function resolveLastRow(
   last: HTMLElement | (() => Promise<HTMLElement>),

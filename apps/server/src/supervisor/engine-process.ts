@@ -4,6 +4,7 @@ import { releaseInstallationProcessGroups } from '@repo/engine/installation-runt
 import { EngineMessage } from '@repo/engine/ipc';
 import { releaseLoginTerminalGroups } from '@repo/engine/login-terminal-runtime';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
+import { releaseShellGroups } from '@repo/engine/shell-runtime';
 import { createRejectionCounter } from '@repo/machine-log';
 import { fromCallback } from 'xstate';
 import {
@@ -36,6 +37,7 @@ const releaseEngineGroups = async (
   try {
     await releaseInstallationProcessGroups(home);
     await releaseLoginTerminalGroups(home);
+    await releaseShellGroups(home);
 
     return 'released';
   } catch {

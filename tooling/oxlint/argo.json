@@ -91,7 +91,7 @@
     "argo/drizzle-schema-boundary": "error",
     // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).
     "argo/cross-package-import": "error",
-    // oxlint cannot resolve the re-exported members of @rn-primitives namespaces; tsc checks every namespace member.
+    // oxlint cannot resolve the re-exported members of Radix namespaces; tsc checks every namespace member.
     "import/namespace": "off",
     // React Native has no semantic HTML tags; `role` is how a View states its role.
     "jsx-a11y/prefer-tag-over-role": "off",
@@ -105,12 +105,12 @@
     },
     {
       // #717 keeps the connection in one file; the owner approved this length exception on 2026-10-15.
-      "files": ["packages/engine/src/agents/acp/connection.ts"],
+      "files": ["packages/engine/src/agents/acp/connection/connection.ts"],
       "rules": { "max-lines": "off" }
     },
     {
       // Unknown ACP identities must be logged at warn (#717).
-      "files": ["packages/engine/src/agents/acp/connection.ts"],
+      "files": ["packages/engine/src/agents/acp/connection/connection.ts"],
       "rules": { "no-console": ["error", { "allow": ["error", "warn"] }] }
     },
     {
@@ -2050,7 +2050,7 @@
         "packages/engine/src/agents/install/processes/process-wrapper.ts",
         "packages/engine/src/agents/install/processes/process-group.ts",
         "packages/engine/src/lib/process-group-members.ts",
-        "packages/engine/src/agents/acp/terminal-wrapper.mjs",
+        "packages/engine/src/agents/acp/login-terminal/terminal-wrapper.mjs",
         "apps/desktop/src/main/server-process.ts",
         "apps/desktop/scripts/storybook-mac.mts"
       ],
@@ -2156,6 +2156,9 @@
               },
               {
                 "group": [
+                  "../..",
+                  "../../index",
+                  "../../index.ts",
                   "../../../agents",
                   "../../../agents/index",
                   "../../../agents/index.ts"

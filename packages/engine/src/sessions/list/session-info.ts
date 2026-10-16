@@ -5,6 +5,7 @@ import type {
   PendingPermission,
   PlanUpdate,
   SessionRecord,
+  SessionInfo,
   SessionUpdate,
   Turn,
 } from '@repo/contracts';
@@ -22,6 +23,7 @@ export interface SessionInfoInput {
   feed: { maxRevision: number; activityAt: number } | null;
   liveHeaderRows: readonly SessionUpdate[];
   children: readonly SessionRecord[];
+  shells?: SessionInfo['shells'];
 }
 
 export function toSessionInfo(
@@ -101,7 +103,7 @@ export function toSessionInfo(
           ),
         ).length,
       },
-      shells: { total: 0, running: 0 },
+      shells: input.shells ?? { total: 0, running: 0 },
       archivedAt: row.archivedAt,
       pullRequest: null,
     },

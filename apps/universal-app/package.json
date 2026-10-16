@@ -21,7 +21,6 @@
     "@react-native-community/slider": "catalog:",
     "@repo/client": "workspace:*",
     "@repo/uniwind": "workspace:*",
-    "@rn-primitives/portal": "catalog:",
     "@storybook/addon-ondevice-actions": "catalog:",
     "@storybook/addon-ondevice-controls": "catalog:",
     "@storybook/react-native": "catalog:",

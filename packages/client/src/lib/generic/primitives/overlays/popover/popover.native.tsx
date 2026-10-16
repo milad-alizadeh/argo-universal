@@ -1,62 +1,38 @@
-import * as PopoverPrimitive from '@rn-primitives/popover';
-import * as React from 'react';
-import { Platform, StyleSheet } from 'react-native';
-import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
-import { cn } from '#lib/generic/utils';
+import type * as React from 'react';
+import { View } from 'react-native';
 import { TextClassContext } from '#primitives/display/text';
-import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
-import { usePopoverDismissal } from './popover-dismissal';
+import { triggerChild, useOpenState } from '#primitives/overlays/open-state';
+import { Sheet } from '#primitives/overlays/sheet';
+import { PopoverContext, usePopoverState } from './popover-context';
 import type {
   PopoverContentProps as ContentProps,
+  PopoverProps,
   PopoverTriggerProps as TriggerProps,
 } from './popover-props';
-import type { PopoverProps } from './popover-props';
-import { ControlledPopoverState, Popover } from './popover-root';
 
-function PopoverTrigger({ ref, ...props }: TriggerProps): React.JSX.Element {
-  const { trigger, setRef } = useTriggerRef(ref);
-  const open = React.useContext(ControlledPopoverState);
-  const { triggerPosition } = PopoverPrimitive.useRootContext();
-  React.useEffect(() => {
-    if (open && !triggerPosition) openMeasuredTrigger(trigger.current);
-  }, [open, triggerPosition, trigger]);
+export { usePopoverClose } from './popover-context';
 
-  return <PopoverPrimitive.Trigger {...props} ref={setRef} />;
-}
+// Phones show a popover's content in a Sheet, as every overlay is a popover on desktop and a sheet on a phone.
+function Popover(props: PopoverProps): React.JSX.Element {
+  const state = useOpenState(props);
 
-function openMeasuredTrigger(
-  trigger: PopoverPrimitive.TriggerRef | null,
-): void {
-  trigger?.open();
-}
-
-interface TriggerRefs {
-  trigger: React.RefObject<PopoverPrimitive.TriggerRef | null>;
-  setRef: React.RefCallback<PopoverPrimitive.TriggerRef>;
-}
-
-function useTriggerRef(ref: TriggerProps['ref']): TriggerRefs {
-  const trigger = React.useRef<PopoverPrimitive.TriggerRef>(null);
-
-  const setRef = React.useCallback(
-    (node: PopoverPrimitive.TriggerRef | null) => {
-      trigger.current = node;
-
-      return forwardTriggerRef(ref, node);
-    },
-    [ref],
+  return (
+    <PopoverContext.Provider value={state}>
+      <View className={props.className} style={props.style}>
+        {props.children}
+      </View>
+    </PopoverContext.Provider>
   );
-
-  return { trigger, setRef };
 }
 
-function forwardTriggerRef(
-  ref: TriggerProps['ref'],
-  node: PopoverPrimitive.TriggerRef | null,
-): void | (() => void) {
-  if (typeof ref === 'function') return ref(node);
+function PopoverTrigger(props: TriggerProps): React.ReactElement | null {
+  const { open, onOpenChange } = usePopoverState();
 
-  if (ref) ref.current = node;
+  return triggerChild(
+    props.children,
+    { onPress: () => onOpenChange(!open) },
+    { role: 'button', disabled: props.disabled },
+  );
 }
 
 export function PopoverHoverGroup({
@@ -67,110 +43,25 @@ export function PopoverHoverGroup({
   return children;
 }
 
-export function usePopoverClose(): () => void {
-  const { onOpenChange } = PopoverPrimitive.useRootContext();
-
-  return React.useCallback(() => onOpenChange(false), [onOpenChange]);
-}
-
-const FullWindowOverlay =
-  Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
-
-function PopoverContent(content: ContentProps): React.JSX.Element | null {
-  const { portalHost, onClosed, ...props } = content;
-  const { open } = PopoverPrimitive.useRootContext();
-  const { mounted, style } = usePopoverDismissal(open, onClosed);
-
-  if (!mounted) return null;
+// Paper's iOS sheet pads its content 16 on every side; Android's drag handle zone already sets the top.
+function PopoverContent(props: ContentProps): React.JSX.Element {
+  const { open, onOpenChange } = usePopoverState();
 
   return (
-    <PopoverPrimitive.Portal hostName={portalHost} forceMount>
-      <WindowPopover style={style}>
-        <PopoverSurface {...props} />
-      </WindowPopover>
-    </PopoverPrimitive.Portal>
-  );
-}
-
-function PopoverOverlay({
-  children,
-  style,
-}: {
-  children?: React.ReactNode;
-  style: ReturnType<typeof usePopoverDismissal>['style'];
-}): React.JSX.Element {
-  return (
-    <PopoverPrimitive.Overlay {...overlayProps}>
-      <NativeOnlyAnimatedView style={style} as="Pressable">
-        {children}
-      </NativeOnlyAnimatedView>
-    </PopoverPrimitive.Overlay>
-  );
-}
-
-type SurfaceProps = Omit<ContentProps, 'portalHost' | 'onClosed'>;
-
-function PopoverSurface({
-  children,
-  ...props
-}: SurfaceProps): React.JSX.Element {
-  return (
-    <PopoverPrimitive.Content {...surfaceProps(props)}>
+    <Sheet
+      open={open}
+      onOpenChange={onOpenChange}
+      onClosed={props.onClosed}
+      label={props.accessibilityLabel}
+    >
       <TextClassContext.Provider value="text-foreground">
-        {children}
+        <View className="px-4 ios:py-4">{props.children}</View>
       </TextClassContext.Provider>
-    </PopoverPrimitive.Content>
+    </Sheet>
   );
-}
-
-type PrimitiveContentProps = React.ComponentProps<
-  typeof PopoverPrimitive.Content
->;
-
-function surfaceProps({
-  className,
-  align = 'center',
-  sideOffset = 4,
-  side,
-  ...props
-}: SurfaceProps): PrimitiveContentProps {
-  const placement = { align, sideOffset, side: nativeSide(side) };
-
-  return {
-    forceMount: true,
-    ...placement,
-    className: cn(surfaceClass, className),
-    ...props,
-  };
-}
-
-// The library opens anything but `top` below the trigger.
-function nativeSide(side: SurfaceProps['side']): PrimitiveContentProps['side'] {
-  if (side === undefined) return undefined;
-
-  return side === 'top' ? 'top' : 'bottom';
 }
 
 export { Popover, PopoverContent, PopoverTrigger };
-
-function WindowPopover(
-  props: React.ComponentProps<typeof PopoverOverlay>,
-): React.JSX.Element {
-  return (
-    <FullWindowOverlay>
-      <PopoverOverlay {...props} />
-    </FullWindowOverlay>
-  );
-}
-
-const overlayProps = {
-  style: StyleSheet.absoluteFill,
-  asChild: true,
-  forceMount: true,
-} satisfies React.ComponentProps<typeof PopoverPrimitive.Overlay>;
-
-const surfaceClass =
-  'bg-card border-border z-50 w-72 rounded-2xl border p-4 shadow-raised';
 
 Popover satisfies React.ComponentType<PopoverProps>;
 

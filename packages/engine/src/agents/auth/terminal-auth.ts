@@ -4,7 +4,7 @@ import {
   type AgentLoginTerminalInput,
 } from '@repo/contracts';
 import type { AuthenticationMethod } from '../acp/auth-methods';
-import { launchLoginTerminal } from '../acp/terminal-process';
+import { launchLoginTerminal } from '../acp/login-terminal/terminal-process';
 import type {
   AgentLaunch,
   LaunchLoginTerminal,
