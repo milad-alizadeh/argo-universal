@@ -7,6 +7,7 @@ import {
   AgentAuthTerminalWrite,
   AgentAuthTerminalFrame,
 } from '@repo/contracts';
+import type { z } from 'zod';
 import {
   mergeRouters,
   publicProcedure,
@@ -18,6 +19,8 @@ import {
   authentication,
   authenticate,
   cancelAuthentication,
+  findAuthentication,
+  existingAuthentication,
 } from './auth-connection';
 
 const stateRouter = routerFactory((deps: AgentsRouterDeps) =>
@@ -36,18 +39,26 @@ const stateRouter = routerFactory((deps: AgentsRouterDeps) =>
   }),
 );
 
+const readTerminal = async (
+  deps: AgentsRouterDeps,
+  input: z.infer<typeof AgentAuthTerminalRead>,
+): Promise<AgentAuthTerminalFrame> =>
+  (await findAuthentication(deps, input))?.readTerminal(input.cursor) ?? {
+    cursor: 0,
+    output: '',
+    closed: true,
+  };
+
 const terminalRouter = routerFactory((deps: AgentsRouterDeps) =>
   router({
     authTerminal: publicProcedure
       .input(AgentAuthTerminalRead)
       .output(AgentAuthTerminalFrame)
-      .query(async ({ input }) =>
-        (await authentication(deps, input)).readTerminal(input.cursor),
-      ),
+      .query(({ input }) => readTerminal(deps, input)),
     authTerminalInput: publicProcedure
       .input(AgentAuthTerminalWrite)
       .mutation(async ({ input }) =>
-        (await authentication(deps, input)).inputTerminal(input.input),
+        (await existingAuthentication(deps, input)).inputTerminal(input.input),
       ),
   }),
 );

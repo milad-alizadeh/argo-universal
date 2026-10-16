@@ -150,6 +150,7 @@ export class AcpConnection {
     return this.authentication;
   }
   private prepareAuthentication(launch: AgentLaunch): void {
+    if (this.stopping) throw new Error('Agent connection is stopped');
     this.authentication = new ConnectionAuthentication({
       launch,
       methods: authenticationMethods(this.requireReady().initialization),
@@ -511,7 +512,7 @@ export class AcpConnection {
     return this.stopping;
   }
   private cancelAuthentication(): Promise<void> | undefined {
-    return this.authentication?.cancel(false);
+    return this.authentication?.shutdown();
   }
   private async stop(): Promise<void> {
     const cancellation = this.cancelAuthentication();

@@ -1,27 +1,8 @@
 import { spawn, type IPty } from 'node-pty';
-import type {
-  AgentLaunch,
-  LaunchLoginTerminal,
-  LoginTerminalProcess,
-} from '../agent-launch';
+import type { AgentLaunch, LaunchLoginTerminal } from '../agent-launch';
 import { definedEnvironment } from '../launch/agent-environment';
 import { shellEnvironment } from '../launch/shell-env';
-
-const ownTerminal = (child: IPty): LoginTerminalProcess => {
-  const exited = new Promise<{ exitCode: number; signal?: number }>((resolve) =>
-    child.onExit(resolve),
-  );
-
-  return {
-    exited,
-    write: (text) => child.write(text),
-    resize: (cols, rows) => child.resize(cols, rows),
-    close: async () => {
-      child.kill();
-      await exited;
-    },
-  };
-};
+import { ownAuthTerminal } from './pty-owner';
 
 const spawnTerminal = async (launch: AgentLaunch): Promise<IPty> =>
   spawn(launch.executable, [...launch.args], {
@@ -42,5 +23,5 @@ export const launchAuthTerminal: LaunchLoginTerminal = async (
   const child = await spawnTerminal(launch);
   child.onData(output);
 
-  return ownTerminal(child);
+  return ownAuthTerminal(child);
 };

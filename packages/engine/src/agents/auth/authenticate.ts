@@ -47,6 +47,7 @@ const publicMethod = (
 };
 
 export class ConnectionAuthentication {
+  private stopped = false;
   private pending?: Attempt;
   private description?: string;
   private terminal?: AuthTerminal;
@@ -65,8 +66,18 @@ export class ConnectionAuthentication {
     this.description = authenticationDescription(cause);
   }
   public authenticate(methodId: string): Promise<AgentAuthenticateOutput> {
+    if (this.stopped)
+      return Promise.resolve(
+        authenticationFailed('Agent connection is stopped'),
+      );
+
     if (this.pending) return this.pending.promise;
 
+    return this.authenticateMethod(methodId);
+  }
+  private authenticateMethod(
+    methodId: string,
+  ): Promise<AgentAuthenticateOutput> {
     const method = this.input.methods.find(
       (candidate) => candidate.id === methodId,
     );
@@ -128,6 +139,11 @@ export class ConnectionAuthentication {
     };
 
     return this.terminal.run({ launch, methodId: method.id, signal });
+  }
+  public shutdown(): Promise<void> {
+    this.stopped = true;
+
+    return this.cancel(false);
   }
   public async cancel(drop = true): Promise<void> {
     const pending = this.pending;

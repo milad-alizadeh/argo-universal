@@ -23,6 +23,11 @@ export const runTerminalLoginMock = (): void => {
     return;
   }
 
+  ignoreHangup();
+  runInteractiveLogin();
+};
+
+const runInteractiveLogin = (): void => {
   process.stdin.setRawMode(true);
   process.stdout.write(
     'Sign in with your subscription.\r\n\r\n› Continue in your browser\r\n  Cancel\r\n\r\nUse ↑ / ↓ then Enter.\r\n',
@@ -36,4 +41,9 @@ const writeAuthPattern = (): void => {
   process.stdout.write(
     `${process.argv.at(-1)}\r\n${process.env.ARGO_AUTH_VALUE ?? ''}\r\n`,
   );
+};
+
+const ignoreHangup = (): void => {
+  if (!process.argv.includes('--auth-ignore-hangup')) return;
+  process.on('SIGHUP', () => {});
 };

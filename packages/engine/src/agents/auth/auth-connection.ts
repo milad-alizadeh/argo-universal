@@ -61,24 +61,27 @@ export const authentication = async (
 ): Promise<ConnectionAuthentication> => {
   if (subject.sessionId)
     return sessionAuthentication(deps, subject, subject.sessionId);
-  const resources = resourcesOf(deps);
-  const found = resources.findAuthentication(subject.agent, subject.projectId);
+  const found = findAuthentication(deps, subject);
 
   if (found) return found;
 
   return authenticationLaunch(deps, subject);
 };
 
+const requireAdmission = (deps: AgentsRouterDeps): void =>
+  deps.sessionCommandSignal?.throwIfAborted();
+
 export const authenticate = async (
   deps: AgentsRouterDeps,
   input: AgentAuthenticateInput,
 ): Promise<AgentAuthenticateOutput> => {
-  deps.sessionCommandSignal?.throwIfAborted();
+  requireAdmission(deps);
 
   try {
-    return await (
-      await authentication(deps, input)
-    ).authenticate(input.methodId);
+    const connection = await authentication(deps, input);
+    requireAdmission(deps);
+
+    return await connection.authenticate(input.methodId);
   } catch (cause) {
     return authenticationFailed(cause);
   }
@@ -95,3 +98,21 @@ export const cancelAuthentication = async (
 
   await (await found)?.cancel();
 };
+
+export const findAuthentication = (
+  deps: AgentsRouterDeps,
+  subject: Subject,
+): Promise<ConnectionAuthentication> | undefined => {
+  if (subject.sessionId)
+    return Promise.resolve(
+      sessionAuthentication(deps, subject, subject.sessionId),
+    );
+
+  return resourcesOf(deps).findAuthentication(subject.agent, subject.projectId);
+};
+
+export const existingAuthentication = async (
+  deps: AgentsRouterDeps,
+  subject: Subject,
+): Promise<ConnectionAuthentication> =>
+  requireAuthentication(await findAuthentication(deps, subject));
