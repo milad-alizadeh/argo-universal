@@ -6,7 +6,10 @@ import {
   FooterProvider,
   type SectionFooter,
 } from '#primitives/fields/field-description';
-import { useSidebarList } from '#primitives/fields/field-layout';
+import {
+  useOverlayList,
+  useSidebarList,
+} from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 
@@ -29,9 +32,10 @@ function SectionRows(
   props: GroupedListSectionProps & { footerId: string },
 ): React.JSX.Element {
   const sidebar = useSidebarList();
+  const overlay = useOverlayList();
 
   return (
-    <View className={rowsClasses(sidebar)}>
+    <View className={rowsClasses(sidebar, overlay)}>
       <FooterProvider value={footerOf(props, props.footerId)}>
         {props.children}
       </FooterProvider>
@@ -39,9 +43,11 @@ function SectionRows(
   );
 }
 
-const rowsClasses = (sidebar: boolean): string =>
+const rowsClasses = (sidebar: boolean, overlay: boolean): string =>
   cn(
     'overflow-hidden rounded-2xl',
+    // In a desktop popover, rows keep Android's grouped-row gap so hovered and pressed tiles never touch.
+    overlay && 'gap-0.5',
     // Wide, a sidebar list's selected and hovered rows keep a 1px gap from their neighbours.
     sidebar && 'rounded-none bg-transparent wide:gap-px',
   );
