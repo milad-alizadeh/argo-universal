@@ -180,7 +180,15 @@ export class SessionDeleteJob implements WriterJob {
   }
 
   public commit(transaction: StorageTransaction): void {
-    transaction.delete(session).where(eq(session.id, this.sessionId)).run();
+    transaction.run(sql`
+      WITH RECURSIVE discarded(id) AS (
+        SELECT ${session.id} FROM ${session} WHERE ${session.id} = ${this.sessionId}
+        UNION
+        SELECT child.id FROM session AS child
+        JOIN discarded ON child.parent_session_id = discarded.id
+      )
+      DELETE FROM ${session} WHERE ${session.id} IN (SELECT id FROM discarded)
+    `);
   }
 
   public project(

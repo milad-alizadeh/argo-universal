@@ -93,6 +93,7 @@ import {
   TurnInsertJob,
   TurnUpdateJob,
 } from './session-storage';
+import { crashedSubagentTurns } from './subagents/crash';
 
 const setConfigEvent = 'session.setConfigOption';
 
@@ -867,6 +868,14 @@ const sessionSetup = setup({
               ? error.stderr || undefined
               : undefined,
         };
+
+        for (const child of crashedSubagentTurns(
+          context.subagentFeeds.children,
+          ending,
+        )) {
+          enqueue.sendTo(child.feed, child.event);
+          enqueue.sendTo(writer, { type: writeFeedEvent, job: child.job });
+        }
 
         if (params?.duringTurn && context.activeTurnId)
           enqueue.assign({ turnEnding: { ...context.turnEnding, ...ending } });

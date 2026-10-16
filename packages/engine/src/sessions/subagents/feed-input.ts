@@ -1,10 +1,13 @@
 import { feedRow } from '@repo/db/schema';
-import { eq, max } from 'drizzle-orm';
+import { and, eq, max } from 'drizzle-orm';
 import {
   readQueuedFeed,
   readQueuedFeedRow,
   readWrittenRow,
   type FeedInput,
+  hydrateStoredFeedRow,
+  newestRows,
+  storedFeedColumns,
 } from '../../feed';
 import type { SubagentRouting } from './routing-types';
 
@@ -31,6 +34,7 @@ export function childFeedInput(
 ): FeedInput {
   return {
     ...identity,
+    rows: openChildRows(input, identity.sessionId),
     ...feedServices(input, identity.sessionId),
     ...feedPosition(input, identity),
   };
@@ -70,3 +74,28 @@ const nextPosition = (
   sessionId: string,
   queued: number,
 ): number => Math.max(highestPosition(input, sessionId), queued) + 1;
+
+const storedOpenRows = (
+  input: SubagentRouting,
+  sessionId: string,
+): NonNullable<FeedInput['rows']>[string][] =>
+  input.database
+    .select(storedFeedColumns)
+    .from(feedRow)
+    .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.state, 'open')))
+    .all()
+    .map((row) => hydrateStoredFeedRow(sessionId, row));
+
+function openChildRows(
+  input: SubagentRouting,
+  sessionId: string,
+): NonNullable<FeedInput['rows']> {
+  const rows = newestRows([
+    ...storedOpenRows(input, sessionId),
+    ...readQueuedFeed(input.writer, sessionId).rows,
+  ]);
+
+  return Object.fromEntries(
+    [...rows].filter(([, row]) => row.state === 'open'),
+  );
+}

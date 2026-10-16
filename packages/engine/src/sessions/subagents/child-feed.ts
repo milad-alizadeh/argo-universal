@@ -2,6 +2,7 @@ import { session } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { type FeedActorRef } from '../../feed';
 import { SessionInsertJob } from '../session-storage';
+import { activeChildTurn } from './active-turn';
 import { childFeedInput } from './feed-input';
 import type { SubagentRouting } from './routing-types';
 
@@ -72,7 +73,7 @@ export function openChildFeed(
     sessionId,
     parentId: input.parentId,
     feed: input.spawn(childFeedInput(input, identity)),
-    turnId: null,
+    turnId: activeChildTurn(input, sessionId),
   };
 }
 

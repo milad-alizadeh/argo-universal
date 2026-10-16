@@ -32,7 +32,7 @@ export function toSubagents(
         title: child.title,
         role: null,
         model: latest?.model ?? null,
-        state: state ?? (latest?.status === 'running' ? 'running' : 'idle'),
+        state: subagentState(latest, state),
         stopReason: latest?.stopReason ?? null,
         startedAt: latest?.startedAt ?? null,
         endedAt: latest?.endedAt ?? null,
@@ -45,3 +45,18 @@ export function toSubagents(
     ];
   });
 }
+
+function subagentState(
+  latest: Turn | undefined,
+  state: SubagentUpdate['subagentState'],
+): Subagent['state'] {
+  if (interruptedChild(latest)) return 'idle';
+
+  return state ?? childTurnState(latest);
+}
+
+const interruptedChild = (latest: Turn | undefined): boolean =>
+  latest?.error?.code === 'interrupted';
+
+const childTurnState = (latest: Turn | undefined): Subagent['state'] =>
+  latest?.status === 'running' ? 'running' : 'idle';

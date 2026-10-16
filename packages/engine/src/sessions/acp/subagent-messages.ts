@@ -7,13 +7,16 @@ import type {
 import { mapSupportedContentBlock } from '../../feed';
 import type { ChildFeed } from '../subagents/child-feed';
 import type { SubagentRouting } from '../subagents/routing-types';
+import { messageMetadata } from './subagent-sender';
 
 type Message = Extract<
   SessionNotification['update'],
   { sessionUpdate: 'session_message' | 'session_message_chunk' }
 >;
 
-type MessageRouting = SubagentRouting;
+type MessageRouting = SubagentRouting & {
+  children: ReadonlyMap<string, ChildFeed>;
+};
 
 const messageId = (input: SubagentRouting, update: Message): string =>
   JSON.stringify(['session_message', input.parentId, update.messageId]);
@@ -29,7 +32,7 @@ function previousMessage(
 }
 
 function recipient(
-  input: MessageRouting,
+  input: SubagentRouting,
   children: ReadonlyMap<string, ChildFeed>,
   update: Message,
 ): ChildFeed | undefined {
@@ -82,31 +85,33 @@ function messageRow(
   child: ChildFeed,
   update: Message,
 ): FeedUpdate {
-  const id = messageId(input, update);
+  const previous = previousMessage(child, messageId(input, update));
 
   return {
-    id,
+    id: messageId(input, update),
     messageId: update.messageId,
     sessionUpdate: 'session_message',
     state: 'settled',
-    content: messageContent(update, previousMessage(child, id)),
-    _meta: { argo: { senderSessionId: input.parentId } },
+    content: messageContent(update, previous),
+    _meta: messageMetadata(input, update, previous),
   };
 }
 
 export function deliverSubagentMessage(
-  input: MessageRouting,
+  input: SubagentRouting,
   children: ReadonlyMap<string, ChildFeed>,
   update: Message,
 ): boolean {
   const child = recipient(input, children, update);
 
   if (!child) return false;
-  child.feed.send({
-    type: 'feed.change',
-    turnId: child.turnId,
-    change: { type: 'upsert', update: messageRow(input, child, update) },
-  });
+
+  const change = {
+    type: 'upsert' as const,
+    update: messageRow({ ...input, children }, child, update),
+  };
+
+  child.feed.send({ type: 'feed.change', turnId: child.turnId, change });
 
   return true;
 }
