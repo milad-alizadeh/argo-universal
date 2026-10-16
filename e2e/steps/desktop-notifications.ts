@@ -110,9 +110,9 @@ When(
 When(
   'I send the prepared desktop prompt without activating the window',
   async ({ page }): Promise<void> => {
-    await page
-      .getByRole('button', { name: 'Send', exact: true })
-      .evaluate((button) => button.click());
+    const send = page.getByRole('button', { name: 'Send', exact: true });
+    await expect(send).toBeEnabled();
+    await send.evaluate((button) => button.click());
     await expect(page).toHaveURL(
       /\/sessions\/(?!new)[^/]+$/,
       sessionOpenTimeout,
