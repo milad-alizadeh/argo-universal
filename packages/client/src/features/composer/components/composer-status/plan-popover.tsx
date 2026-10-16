@@ -53,7 +53,7 @@ function PlanPopoverHeading({ entries }: PlanEntriesProps): JSX.Element {
   );
 }
 
-// A wide window heads the steps with the plan's progress; a narrow web window with its title alone, as a phone's sheet carries its own.
+// A wide window heads the steps with the plan's progress; a compact web window with its title alone, as a phone's sheet carries its own.
 export function PlanPopoverContent({ entries }: PlanEntriesProps): JSX.Element {
   const heading = <PlanPopoverHeading entries={entries} />;
 

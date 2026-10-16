@@ -13,19 +13,15 @@ const phoneHeight = 240;
 
 const accessoryHeight = 62;
 
-// A wide window gives the terminal a desktop height; a phone's shrinks while the keyboard is up.
+// A wide window gives the terminal a desktop height; a phone's shrinks while the keyboard is up. One terminal keeps its session across a resize.
 export function AgentLoginTerminal(
   props: LoginTerminalProps,
 ): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
-        <SizedTerminal {...props} wide />
-      </SizeClass>
-      <SizeClass only="compact">
-        <SizedTerminal {...props} wide={false} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<SizedTerminal {...props} wide={false} />}
+      wide={<SizedTerminal {...props} wide />}
+    />
   );
 }
 

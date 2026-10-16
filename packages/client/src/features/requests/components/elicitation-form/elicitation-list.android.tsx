@@ -14,14 +14,10 @@ type ListProps = { children: ReactNode };
 
 export function ElicitationList({ children }: ListProps): ReactElement {
   return (
-    <>
-      <SizeClass only="wide">
-        <GroupedList fit>{children}</GroupedList>
-      </SizeClass>
-      <SizeClass only="compact">
-        <SheetRows>{children}</SheetRows>
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<SheetRows>{children}</SheetRows>}
+      wide={<GroupedList fit>{children}</GroupedList>}
+    />
   );
 }
 

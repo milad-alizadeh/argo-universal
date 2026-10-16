@@ -29,12 +29,10 @@ const failed = <LaunchCallout message={exited} onRetry={() => {}} />;
 // A phone presents each state as a sheet, so it shows the one the example control picks.
 function LaunchCalloutGallery(args: GalleryArgs): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">{gallery}</SizeClass>
-      <SizeClass only="compact">
-        {args.example === 'failed' ? failed : <CalloutLoading />}
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={args.example === 'failed' ? failed : <CalloutLoading />}
+      wide={gallery}
+    />
   );
 }
 

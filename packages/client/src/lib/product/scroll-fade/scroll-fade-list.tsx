@@ -17,7 +17,7 @@ import { useSizeClassValue } from '../../generic/use-size-class/use-size-class-v
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import {
   type ScrollFadeListProps,
-  useSizeClassInset,
+  useSizeClassListProps,
 } from './scroll-fade-list-props';
 import { type ScrollFade, useScrollFade } from './scroll-fade-props';
 
@@ -133,7 +133,7 @@ function useFadingList<T>({
   refScrollView,
   ...props
 }: Omit<ScrollFadeListProps<T>, 'ref' | 'maxHeight'>): FadingList<T> {
-  const fade = useScrollFade(useSizeClassInset(props));
+  const fade = useScrollFade(useSizeClassListProps(props));
   const scrollRef = useBothRefs(fade.attachScrollView, refScrollView);
   const scroll = { ...fade.scroll, refScrollView: scrollRef };
 

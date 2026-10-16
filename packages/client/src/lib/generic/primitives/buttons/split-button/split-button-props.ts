@@ -1,6 +1,5 @@
 import type { MenuAction } from '#primitives/overlays/menu';
 import type { IconName } from '../../../symbols/icon-names';
-import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 
 export interface SplitButtonOption<Value extends string> {
   value: Value;
@@ -52,7 +51,7 @@ interface SplitActing {
   onPress?: () => void;
 }
 
-// The split once its narrow layout is resolved for the window.
+// The split once its full width is resolved for the window, as its narrow layout.
 export type ResolvedSplitProps<Value extends string = string> =
   SplitMenuProps<Value> & SplitActing;
 
@@ -61,6 +60,6 @@ export type SplitButtonProps<Value extends string = string> =
   SplitMenuItems<Value> &
     Omit<SplitMenuLook, 'narrow'> &
     SplitActing & {
-      // Web only: the narrow layout, alone or per size class.
-      narrow?: SizeClassValue<boolean>;
+      // Web only, as Button's fullWidth: true always fills the row, "narrow" fills a compact window's.
+      fullWidth?: boolean | 'narrow';
     };

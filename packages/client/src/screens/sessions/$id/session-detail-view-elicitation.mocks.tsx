@@ -15,14 +15,7 @@ export function ElicitationPreview(
 ): React.JSX.Element {
   const page = <InteractiveElicitation {...props} />;
 
-  return (
-    <>
-      <SizeClass only="wide">
-        <FramedPage>{page}</FramedPage>
-      </SizeClass>
-      <SizeClass only="compact">{page}</SizeClass>
-    </>
-  );
+  return <SizeClass compact={page} wide={<FramedPage>{page}</FramedPage>} />;
 }
 
 function FramedPage({

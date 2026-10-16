@@ -78,14 +78,10 @@ function rowProps(row: ListedRowProps, wide: boolean): SessionRowProps {
 
 function ListedRow(props: ListedRowProps): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
-        <SessionRow {...rowProps(props, true)} />
-      </SizeClass>
-      <SizeClass only="compact">
-        <SessionRow {...rowProps(props, false)} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<SessionRow {...rowProps(props, false)} />}
+      wide={<SessionRow {...rowProps(props, true)} />}
+    />
   );
 }
 

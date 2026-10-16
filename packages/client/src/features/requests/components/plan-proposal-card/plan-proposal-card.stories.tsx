@@ -90,14 +90,10 @@ export const Overview: Story = {
   name: 'PlanProposalCard',
   render: function ProposalGallery(args): React.JSX.Element {
     return (
-      <>
-        <SizeClass only="wide">
-          <WideGallery {...args} />
-        </SizeClass>
-        <SizeClass only="compact">
-          <PhoneGallery {...args} />
-        </SizeClass>
-      </>
+      <SizeClass
+        compact={<PhoneGallery {...args} />}
+        wide={<WideGallery {...args} />}
+      />
     );
   },
 };

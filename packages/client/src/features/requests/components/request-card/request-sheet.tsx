@@ -11,15 +11,10 @@ type SheetRequestProps = Omit<RequestCardProps, 'children'> & {
   children: ReactNode;
 };
 
-// A narrow window raises the request as a sheet.
+// A compact window raises the request as a sheet.
 export function SheetWhenCompact(props: SheetRequestProps): ReactNode {
   return (
-    <>
-      <SizeClass only="wide">{props.container}</SizeClass>
-      <SizeClass only="compact">
-        <RequestSheet {...props} />
-      </SizeClass>
-    </>
+    <SizeClass compact={<RequestSheet {...props} />} wide={props.container} />
   );
 }
 

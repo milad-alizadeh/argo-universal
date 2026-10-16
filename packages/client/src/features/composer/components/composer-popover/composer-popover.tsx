@@ -55,14 +55,10 @@ export function ComposerPopover(
 
 function WebOverlay(props: OverlayProps): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
-        <WidePopover {...props} />
-      </SizeClass>
-      <SizeClass only="compact">
-        <CompactPopover {...props} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<CompactPopover {...props} />}
+      wide={<WidePopover {...props} />}
+    />
   );
 }
 

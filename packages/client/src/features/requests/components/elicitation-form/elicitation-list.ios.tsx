@@ -12,11 +12,6 @@ export function ElicitationList({
   const list = <GroupedList fit>{children}</GroupedList>;
 
   return (
-    <>
-      <SizeClass only="wide">{list}</SizeClass>
-      <SizeClass only="compact">
-        <View className="flex-1">{list}</View>
-      </SizeClass>
-    </>
+    <SizeClass compact={<View className="flex-1">{list}</View>} wide={list} />
   );
 }

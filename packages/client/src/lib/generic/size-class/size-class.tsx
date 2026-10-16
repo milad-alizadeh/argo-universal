@@ -1,18 +1,22 @@
 import type * as React from 'react';
+import type { SizeClassValues } from '../use-size-class/size-class-value';
 import { useSizeClassValue } from '../use-size-class/use-size-class-value';
 
-interface SizeClassProps {
-  // Medium follows compact until it has a Paper design (#762).
-  only: 'compact' | 'wide';
-  children: React.ReactNode;
+// Medium follows compact until it has a Paper design (#762).
+type SizeClassProps =
+  | { only: 'compact' | 'wide'; children: React.ReactNode }
+  | SizeClassValues<React.ReactNode>;
+
+/*
+ * Content drawn at one size class only, such as a phone's own header, or one slot per size class.
+ * Both slots draw in one place, so the same part in each keeps its state as the window crosses a size class.
+ */
+export function SizeClass(props: SizeClassProps): React.ReactNode {
+  return useSizeClassValue(slots(props));
 }
 
-// Content drawn at one size class only, such as a phone's own header or a wide window's page header.
-export function SizeClass({ only, children }: SizeClassProps): React.ReactNode {
-  const shown = useSizeClassValue({
-    compact: only === 'compact',
-    wide: only === 'wide',
-  });
+function slots(props: SizeClassProps): SizeClassValues<React.ReactNode> {
+  if (!('only' in props)) return props;
 
-  return shown ? children : null;
+  return { compact: null, wide: null, [props.only]: props.children };
 }

@@ -33,12 +33,10 @@ const variations: [label: string, example: GalleryArgs['example']][] = [
 // A phone presents the callout as a sheet, so it shows the one the example control picks.
 function AuthCalloutGallery(args: GalleryArgs): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">{gallery}</SizeClass>
-      <SizeClass only="compact">
-        <AuthCallout {...authCallouts[args.example]} {...actions} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<AuthCallout {...authCallouts[args.example]} {...actions} />}
+      wide={gallery}
+    />
   );
 }
 

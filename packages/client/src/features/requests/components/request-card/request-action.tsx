@@ -10,7 +10,7 @@ export interface RequestActionProps {
   loading?: boolean;
 }
 
-// Wide, a small action in the card's foot; a narrow window stacks full-width actions with an edge, from the Button's narrow layout.
+// Wide, a small action in the card's foot; a compact window stacks full-width actions with an edge, from the Button's narrow layout.
 export function RequestAction({
   children,
   primary,

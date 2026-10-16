@@ -71,3 +71,19 @@ export const GatesBySizeClass: Story = {
     }
   },
 };
+
+// One slot per size class draws in one place, so the same part keeps its state as the window crosses a size class.
+export const SlotsKeepTheirState: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await page.viewport(mediumBreakpoint() - 1, 900);
+    await userEvent.click(
+      await canvas.findByText('Compact count 0', {}, layoutUpdate),
+    );
+    await expect(await canvas.findByText('Compact count 1')).toBeVisible();
+
+    await page.viewport(wideBreakpoint(), 900);
+    await expect(
+      await canvas.findByText('Wide count 1', {}, layoutUpdate),
+    ).toBeVisible();
+  },
+};

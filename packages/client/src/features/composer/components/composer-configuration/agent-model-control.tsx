@@ -45,14 +45,10 @@ function AgentModelOverlay(props: TriggerProps): React.JSX.Element {
   if (Platform.OS !== 'web') return <AgentModelSheet {...props} />;
 
   return (
-    <>
-      <SizeClass only="wide">
-        <AgentModelPopover {...props} />
-      </SizeClass>
-      <SizeClass only="compact">
-        <AgentModelSheet {...props} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<AgentModelSheet {...props} />}
+      wide={<AgentModelPopover {...props} />}
+    />
   );
 }
 

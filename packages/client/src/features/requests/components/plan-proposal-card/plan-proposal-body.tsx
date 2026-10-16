@@ -98,17 +98,15 @@ function FeedbackField({ state, interaction }: BodyProps): ReactNode {
 
 function ProposalDocument(props: BodyProps): ReactNode {
   return (
-    <>
-      <SizeClass only="wide">
+    <SizeClass
+      compact={<SheetDocument {...props} />}
+      wide={
         <PlanDocument
           content={props.proposal.content}
           layout={props.interaction.expanded ? 'expanded' : 'proposal'}
         />
-      </SizeClass>
-      <SizeClass only="compact">
-        <SheetDocument {...props} />
-      </SizeClass>
-    </>
+      }
+    />
   );
 }
 

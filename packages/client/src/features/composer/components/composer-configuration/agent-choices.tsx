@@ -19,14 +19,10 @@ export function AgentChoices(props: AgentChoicesProps): React.JSX.Element {
   if (Platform.OS === 'web') return <AgentList {...props} />;
 
   return (
-    <>
-      <SizeClass only="wide">
-        <AgentList {...props} />
-      </SizeClass>
-      <SizeClass only="compact">
-        <NativeAgentChoices {...props} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<NativeAgentChoices {...props} />}
+      wide={<AgentList {...props} />}
+    />
   );
 }
 

@@ -11,14 +11,10 @@ interface FieldProps {
 
 export function EntrySheetInput({ field }: FieldProps): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
-        <WideEntrySheetInput field={field} />
-      </SizeClass>
-      <SizeClass only="compact">
-        <MaterialField field={field} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<MaterialField field={field} />}
+      wide={<WideEntrySheetInput field={field} />}
+    />
   );
 }
 

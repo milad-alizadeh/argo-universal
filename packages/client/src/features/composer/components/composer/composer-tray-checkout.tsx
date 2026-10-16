@@ -11,16 +11,14 @@ interface TrayCheckoutProps {
 // Only a wide window names the Session's checkout by its path.
 export function TrayCheckout(props: TrayCheckoutProps): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
-        <ComposerCheckoutControl {...props} />
-      </SizeClass>
-      <SizeClass only="compact">
+    <SizeClass
+      compact={
         <ComposerCheckoutControl
           {...props}
           checkout={{ ...props.checkout, path: undefined }}
         />
-      </SizeClass>
-    </>
+      }
+      wide={<ComposerCheckoutControl {...props} />}
+    />
   );
 }

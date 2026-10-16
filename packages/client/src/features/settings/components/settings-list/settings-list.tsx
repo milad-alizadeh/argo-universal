@@ -12,14 +12,10 @@ export type { SettingsListProps } from './settings-list-props';
 // One list of the pages, without group headings, narrowed by the search: a grouped card on a phone, the sidebar in a wide window.
 export function SettingsList(props: SettingsListProps): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
-        <SettingsRows {...props} sidebar />
-      </SizeClass>
-      <SizeClass only="compact">
-        <SettingsRows {...props} sidebar={false} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<SettingsRows {...props} sidebar={false} />}
+      wide={<SettingsRows {...props} sidebar />}
+    />
   );
 }
 

@@ -55,12 +55,7 @@ export const Overview = {
     const request = <PermissionPreview {...galleryRequestProps(args)} />;
 
     return (
-      <>
-        <SizeClass only="wide">
-          <WideGallery request={request} />
-        </SizeClass>
-        <SizeClass only="compact">{request}</SizeClass>
-      </>
+      <SizeClass compact={request} wide={<WideGallery request={request} />} />
     );
   },
 } satisfies StoryObj<GalleryArgs>;

@@ -14,14 +14,10 @@ import type { TerminalSignInProps } from '../../types/session-callout';
 // A terminal sign-in method runs the Agent's login command on the Server: a panel under the Composer on a wide window, a sheet on a phone.
 export function TerminalSignIn(props: TerminalSignInProps): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
-        <TerminalPanel {...props} />
-      </SizeClass>
-      <SizeClass only="compact">
-        <TerminalSheet {...props} />
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<TerminalSheet {...props} />}
+      wide={<TerminalPanel {...props} />}
+    />
   );
 }
 

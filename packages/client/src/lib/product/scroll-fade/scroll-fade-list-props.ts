@@ -21,8 +21,8 @@ export type ScrollFadeListProps<T> = Omit<
     maxHeight?: SizeClassValue<number>;
   };
 
-// The list with its content inset resolved for the window's size class.
-export function useSizeClassInset<T>({
+// The list's props with its content inset resolved for the window's size class.
+export function useSizeClassListProps<T>({
   contentContainerStyle,
   ...props
 }: Omit<

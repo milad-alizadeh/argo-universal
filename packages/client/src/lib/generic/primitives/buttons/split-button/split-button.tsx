@@ -43,12 +43,13 @@ type JoinedMenuProps<Value extends string> = SplitMenuProps<Value> & {
 };
 
 // A button with a chevron that picks what it does or opens actions of its own, from Argo's menu; phones draw it natively.
-export function SplitButton<Value extends string>(
-  options: SplitButtonProps<Value>,
-): React.JSX.Element {
+export function SplitButton<Value extends string>({
+  fullWidth,
+  ...options
+}: SplitButtonProps<Value>): React.JSX.Element {
   const props: ResolvedSplitProps<Value> = {
     ...options,
-    narrow: useSizeClassValue(options.narrow),
+    narrow: useNarrowLayout(fullWidth),
   };
 
   return (
@@ -57,6 +58,13 @@ export function SplitButton<Value extends string>(
       <SplitMenu {...props} />
     </ButtonGroup>
   );
+}
+
+// Full width always, or "narrow" on a compact window only, as Button's fullWidth.
+function useNarrowLayout(fullWidth: SplitButtonProps['fullWidth']): boolean {
+  const compact = useSizeClassValue({ compact: true, wide: false });
+
+  return fullWidth === true || (fullWidth === 'narrow' && compact);
 }
 
 // The compact split dims as one group, so its halves do not dim a second time.

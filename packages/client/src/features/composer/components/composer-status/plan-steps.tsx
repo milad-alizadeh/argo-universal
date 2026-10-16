@@ -93,14 +93,14 @@ export function PlanSteps({ entries }: StepsListProps): JSX.Element {
   const steps = <StepsList entries={entries} />;
 
   return (
-    <>
-      <SizeClass only="wide">
+    <SizeClass
+      compact={steps}
+      wide={
         <ScrollView style={{ maxHeight: maximumPlanStepsHeight }}>
           {steps}
         </ScrollView>
-      </SizeClass>
-      <SizeClass only="compact">{steps}</SizeClass>
-    </>
+      }
+    />
   );
 }
 

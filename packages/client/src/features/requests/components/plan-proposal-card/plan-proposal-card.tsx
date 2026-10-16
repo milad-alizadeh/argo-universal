@@ -61,17 +61,17 @@ interface ExpandedProposalProps {
 // Expanded, a wide window lifts the plan over the Feed; a phone's sheet already holds it.
 function ExpandedProposal(props: ExpandedProposalProps): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
+    <SizeClass
+      compact={props.panel}
+      wide={
         <PlanProposalExpansion
           bottomInset={props.bottomInset}
           onCollapse={props.onCollapse}
         >
           {props.panel}
         </PlanProposalExpansion>
-      </SizeClass>
-      <SizeClass only="compact">{props.panel}</SizeClass>
-    </>
+      }
+    />
   );
 }
 

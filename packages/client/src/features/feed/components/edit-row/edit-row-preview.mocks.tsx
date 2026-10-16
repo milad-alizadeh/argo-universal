@@ -41,13 +41,9 @@ export function EditRowPreview({
   const feed = <EditFeed row={row} />;
 
   return (
-    <>
-      <SizeClass only="wide">
-        <WidePreview>{feed}</WidePreview>
-      </SizeClass>
-      <SizeClass only="compact">
-        <View className="flex-1 bg-card">{feed}</View>
-      </SizeClass>
-    </>
+    <SizeClass
+      compact={<View className="flex-1 bg-card">{feed}</View>}
+      wide={<WidePreview>{feed}</WidePreview>}
+    />
   );
 }

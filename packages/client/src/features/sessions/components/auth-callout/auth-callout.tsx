@@ -95,8 +95,6 @@ const methodOptions = (
 ): { value: string; label: string }[] =>
   methods.map(({ id, name }) => ({ value: id, label: name }));
 
-const narrowOnCompact = { compact: true, wide: false };
-
 function MethodSplit(props: MethodSplitProps): React.JSX.Element {
   const [chosenId, setChosenId] = useState(props.firstId);
 
@@ -104,7 +102,7 @@ function MethodSplit(props: MethodSplitProps): React.JSX.Element {
     <SplitButton
       {...splitDefaults}
       {...chosenNames(props.methods, chosenId)}
-      narrow={narrowOnCompact}
+      fullWidth="narrow"
       options={methodOptions(props.methods)}
       value={chosenId}
       onValueChange={setChosenId}
