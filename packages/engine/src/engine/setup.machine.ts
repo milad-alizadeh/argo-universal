@@ -21,6 +21,7 @@ import {
 } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import type { NotificationOptions } from '../notifications';
+import type { Keychain } from '../plugins';
 import {
   type OpenSessionsInput,
   openSessionsMachine,
@@ -76,6 +77,7 @@ export interface EngineInput extends Pick<
   port: number;
   version: string;
   firstPartyPluginsDirectory?: string;
+  keychain?: Keychain;
   startedAt: string;
   acp?: AcpResourceInput;
   loginTimeoutMs?: number;

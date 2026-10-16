@@ -1,5 +1,6 @@
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { z } from 'zod';
+import { StorageQuery, StorageResult } from './storage.ts';
 
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
 
@@ -15,9 +16,40 @@ export const PluginEntry = z.object({
 
 export type PluginEntry = z.infer<typeof PluginEntry>;
 
+export const PluginRequest = z.discriminatedUnion('api', [
+  z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
+  z.object({
+    api: z.literal('secrets'),
+    action: z.enum(['get', 'set', 'delete']),
+    account: z.string(),
+    value: z.string(),
+  }),
+]);
+
+export type PluginRequest = z.infer<typeof PluginRequest>;
+
+export const PluginValue = z
+  .union([z.array(StorageResult), z.string(), z.null()])
+  .optional();
+
+export type PluginValue = z.infer<typeof PluginValue>;
+
+export const PluginReply = z.discriminatedUnion('ok', [
+  z.object({ ok: z.literal(true), value: PluginValue }),
+  z.object({ ok: z.literal(false), error: z.string() }),
+]);
+
+export type PluginReply = z.infer<typeof PluginReply>;
+
 export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
+  z.object({
+    type: z.literal('reply'),
+    pluginId: z.string(),
+    id: z.number(),
+    reply: PluginReply,
+  }),
 ]);
 
 export const HostMessage = z.discriminatedUnion('type', [
@@ -27,11 +59,35 @@ export const HostMessage = z.discriminatedUnion('type', [
     pluginId: z.string(),
     generation: z.number(),
   }),
+  z.object({
+    type: z.literal('call'),
+    pluginId: z.string(),
+    id: z.number(),
+    request: PluginRequest,
+  }),
 ]);
 
 export type HostMessage = z.infer<typeof HostMessage>;
 
-export const WorkerMessage = z.enum(['ready', 'pong']);
+export const WorkerCall = z.object({
+  type: z.literal('call'),
+  id: z.number(),
+  request: PluginRequest,
+});
+
+export type WorkerCall = z.infer<typeof WorkerCall>;
+
+export const WorkerMessage = z.union([z.enum(['ready', 'pong']), WorkerCall]);
+
+export const WorkerReply = z.object({
+  type: z.literal('reply'),
+  id: z.number(),
+  reply: PluginReply,
+});
+
+export type WorkerReply = z.infer<typeof WorkerReply>;
+
+export const WorkerCommand = z.union([z.literal('ping'), WorkerReply]);
 
 export const notStarted: PluginStatus = {
   state: 'not-started',

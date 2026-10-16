@@ -2130,6 +2130,7 @@
         "packages/engine/src/system/info.ts",
         "packages/engine/src/engine/caffeinate.ts",
         "packages/engine/src/plugins/host-connection.ts",
+        "packages/engine/src/plugins/keychain.ts",
         "packages/engine/src/agents/acp/process.ts",
         "packages/engine/src/agents/launch/shell-env.ts",
         "packages/engine/src/agents/install/processes/process.ts",

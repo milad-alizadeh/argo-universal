@@ -7,6 +7,7 @@ import {
   WorkerMessage,
   type HostMessage,
   type PluginEntry,
+  type PluginReply,
 } from './runtime-protocol.ts';
 
 const heapLimitMb = 64;
@@ -27,6 +28,12 @@ export class HostWorkers {
 
   constructor(report: (message: HostMessage) => void) {
     this.report = report;
+  }
+
+  reply(pluginId: string, id: number, reply: PluginReply): void {
+    this.workers
+      .get(pluginId)
+      ?.worker.postMessage({ type: 'reply', id, reply });
   }
 
   activate(entry: PluginEntry): void {
@@ -68,7 +75,7 @@ export class HostWorkers {
   private listen(pluginId: string, record: WorkerRecord): void {
     record.worker.on('message', (message) => {
       if (this.workers.get(pluginId) === record)
-        this.answer(pluginId, WorkerMessage.parse(message));
+        this.received(pluginId, WorkerMessage.parse(message));
     });
     record.worker.on('error', (error) =>
       this.workerCrashed(pluginId, record, runtimeError(error)),
@@ -86,10 +93,21 @@ export class HostWorkers {
     if (this.workers.get(pluginId) === record) this.crash(pluginId, error);
   }
 
-  private answer(
+  private received(
     pluginId: string,
-    answer: z.infer<typeof WorkerMessage>,
+    message: z.infer<typeof WorkerMessage>,
   ): void {
+    if (typeof message === 'string') this.answer(pluginId, message);
+    else
+      this.report({
+        type: 'call',
+        pluginId,
+        id: message.id,
+        request: message.request,
+      });
+  }
+
+  private answer(pluginId: string, answer: 'ready' | 'pong'): void {
     const record = this.workers.get(pluginId);
 
     if (!record) return;

@@ -3,16 +3,17 @@ import { dirname, resolve } from 'node:path';
 import { createContext, SourceTextModule, type Module } from 'node:vm';
 import { requirePluginFile } from './plugin-files.ts';
 import type { PluginEntry } from './runtime-protocol.ts';
+import type { Argo } from './worker-argo.ts';
 
 /*
- * The context deliberately has no Node globals or host functions. This is a
+ * The context deliberately has no Node globals; the frozen `argo` object is its only host function. This is a
  * first-party execution boundary, not a security boundary for untrusted code.
  */
-export async function registerPlugin(entry: PluginEntry): Promise<void> {
-  const context = createContext(undefined, {
-    codeGeneration: { strings: false, wasm: false },
-  });
-
+export async function registerPlugin(
+  entry: PluginEntry,
+  argo: Readonly<Argo>,
+): Promise<void> {
+  const context = pluginContext(argo);
   const modules = new PluginModules(entry, context);
 
   const bootstrap = registrationModule(context);
@@ -25,11 +26,16 @@ export async function registerPlugin(entry: PluginEntry): Promise<void> {
   await bootstrap.evaluate();
 }
 
+const pluginContext = (
+  argo: Readonly<Argo>,
+): ReturnType<typeof createContext> =>
+  createContext({ argo }, { codeGeneration: { strings: false, wasm: false } });
+
 const registrationModule = (
   context: ReturnType<typeof createContext>,
 ): SourceTextModule =>
   new SourceTextModule(
-    'import { register } from "./entry"; await register(Object.freeze({}));',
+    'import { register } from "./entry"; await register(argo);',
     { context },
   );
 
