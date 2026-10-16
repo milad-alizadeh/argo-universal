@@ -1,37 +1,20 @@
 import type { SFSymbol } from 'expo-symbols';
-import symbols from './custom-symbol-paths.json';
+import customSymbols from './custom-symbol-paths.json';
+import type { SymbolPath } from './symbol-path';
 
 /*
- * Argo's own symbols for icons SF Symbols lacks (ADR-0019). Each path is the Regular-M glyph of an SF Symbols template,
- * relative to its baseline and centred on its advance; the viewBox is the 16-point symbol box. The Expo plugin
- * `with-custom-symbols` writes them into the iOS asset catalog, and the desktop app on macOS draws them from here.
+ * Argo's own SF Symbols, for icons SF Symbols lacks (ADR-0019). Each path is the Regular-M glyph of an SF Symbols
+ * template, relative to its baseline and centred on its advance. The Expo plugin `with-custom-symbols` writes them
+ * into the iOS asset catalog, and the desktop app on macOS draws them from here; elsewhere they draw Material names.
  */
-type CustomSymbol = keyof typeof symbols;
+type CustomSymbol = keyof typeof customSymbols;
 
 export type AppleSymbol = SFSymbol | CustomSymbol;
 
-interface SymbolBox {
-  width: number;
-  height: number;
-}
-
 export function isCustomSymbol(name: string): name is CustomSymbol {
-  return Object.hasOwn(symbols, name);
+  return Object.hasOwn(customSymbols, name);
 }
 
-// The symbol box in the paths' units, 100-point type, where the system `circle` symbol is 117 points wide.
-export function customSymbolBox(name: CustomSymbol): SymbolBox {
-  const [, , width = 0, height = 0] = symbols[name].viewBox
-    .split(' ')
-    .map(Number);
-
-  return { width, height };
-}
-
-// The symbol as an SVG data URL, for the page to use as a mask like the system symbols' PNGs.
-export function customSymbolImage(name: CustomSymbol): string {
-  const { viewBox, d } = symbols[name];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"><path d="${d}"/></svg>`;
-
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+export function customSymbolPath(name: CustomSymbol): SymbolPath {
+  return customSymbols[name];
 }

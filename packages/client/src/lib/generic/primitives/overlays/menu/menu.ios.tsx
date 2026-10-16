@@ -6,6 +6,7 @@ import {
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { isCustomSymbol } from '../../../symbols/custom-symbols';
+import { drawnSymbol } from '../../../symbols/drawn-symbol';
 import { type IconName, iconSymbols } from '../../../symbols/icon-names';
 import {
   type NativeMenuItem,
@@ -77,16 +78,18 @@ function menuAction(item: NativeMenuItem): NativeMenuAction {
   };
 }
 
-// MenuAction.image: an SF Symbol name, which the system draws before the title, after its check. It takes system names only, so Argo's custom symbols draw none.
-function itemImage(
-  icon: IconName | undefined,
-): Pick<NativeMenuAction, 'image'> {
-  if (!icon) return {};
+// MenuAction.image: an SF Symbol name, which the system draws before the title, after its check. It takes system names only, so Argo's custom and Tabler symbols draw none.
+function systemImage(icon: IconName): Pick<NativeMenuAction, 'image'> {
+  const symbol = drawnSymbol(iconSymbols[icon]);
 
-  const { sf } = iconSymbols[icon];
+  if (symbol.kind === 'tabler' || isCustomSymbol(symbol.sf)) return {};
 
-  return isCustomSymbol(sf) ? {} : { image: sf };
+  return { image: symbol.sf };
 }
+
+const itemImage = (
+  icon: IconName | undefined,
+): Pick<NativeMenuAction, 'image'> => (icon ? systemImage(icon) : {});
 
 // MenuAction.state: 'on' draws the system check; a row that never carries it has no state.
 const checkState = (
