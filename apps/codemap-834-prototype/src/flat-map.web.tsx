@@ -17,6 +17,7 @@ export default function FlatMap({
   const cameraRef = useRef(camera);
   cameraRef.current = camera;
   const scale = Math.min(size.width / 115, size.height / 100);
+  // Skia's asynchronous root retains pictures; CanvasKit finalizes their smart pointers.
   const picture = useMemo(() => {
     const recorder = Skia.PictureRecorder();
     const canvas = recorder.beginRecording(Skia.XYWHRect(-51, -41, 102, 82));
@@ -33,10 +34,10 @@ export default function FlatMap({
       canvas.drawRect(Skia.XYWHRect(tile.x, tile.y, tile.w, tile.h), paint);
     }
     const result = recorder.finishRecordingAsPicture();
+    recorder.dispose();
     paint.dispose();
     return result;
   }, [tiles, palette, selected]);
-  useEffect(() => () => picture.dispose(), [picture]);
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) =>
       setSize({
