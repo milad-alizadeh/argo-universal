@@ -33,6 +33,9 @@ const copyMigrationsBefore = (directory: string): string => {
 };
 
 const seedHistory = (database: Database): void => {
+  if (claudeId === undefined || codexId === undefined)
+    throw new Error('Both fixture Agents are required to seed Session history');
+
   database
     .insert(project)
     .values({ id: 'project-1', path: '/p', name: 'p' })
