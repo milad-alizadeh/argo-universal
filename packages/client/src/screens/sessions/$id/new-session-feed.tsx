@@ -51,7 +51,12 @@ export function NewSessionFeed({
 
 function NewSessionTitle(): React.JSX.Element {
   return (
-    <Text role="title" accessibilityRole="heading" aria-level={1}>
+    <Text
+      role="title"
+      accessibilityRole="heading"
+      aria-level={1}
+      className="text-center"
+    >
       What should we work on?
     </Text>
   );
