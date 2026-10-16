@@ -314,6 +314,9 @@ catalogs:
     '@types/react-dom':
       specifier: 19.2.3
       version: 19.2.3
+    '@types/semver':
+      specifier: 7.7.1
+      version: 7.7.1
     '@types/ws':
       specifier: 8.18.2
       version: 8.18.2
@@ -359,6 +362,9 @@ catalogs:
     electron:
       specifier: 44.5.1
       version: 44.5.1
+    esbuild:
+      specifier: 0.28.2
+      version: 0.28.2
     eslint-plugin-playwright:
       specifier: 2.12.1
       version: 2.12.1
@@ -494,6 +500,9 @@ catalogs:
     rolldown:
       specifier: 1.2.12
       version: 1.2.12
+    semver:
+      specifier: 7.8.5
+      version: 7.8.5
     sherif:
       specifier: 1.13.0
       version: 1.13.0
@@ -1288,12 +1297,18 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-rc.4(valibot@1.5.0(typescript@7.0.2))(zod@4.6.5)
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       fflate:
         specifier: 'catalog:'
         version: 0.8.3
       node-pty:
         specifier: 'catalog:'
         version: 1.1.0(patch_hash=7d1011d673c499bcb613735c649b2e5ae78dc6430f35dd2d18f077fa6a7f5e01)
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
       tar:
         specifier: 'catalog:'
         version: 7.5.22
@@ -1319,6 +1334,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.7.1
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.2
@@ -4970,6 +4988,9 @@ packages:
 
   '@types/resolve@1.20.6':
     resolution: {integrity: sha512-A4STmOXPhMUtHH+S6ymgE2GiBSMqf4oTvcQZMcHzokuTLVYzXTB8ttjcgxOVaAp2lGwEdzZ0J+cRbbeevQj1UQ==}
+
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
@@ -12687,6 +12708,8 @@ snapshots:
       csstype: 3.2.3
 
   '@types/resolve@1.20.6': {}
+
+  '@types/semver@7.7.1': {}
 
   '@types/trusted-types@2.0.7': {}
 

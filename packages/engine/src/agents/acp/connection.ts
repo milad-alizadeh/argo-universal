@@ -10,10 +10,17 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '..';
+import type { AuthChanges } from '../auth/auth-changes';
+import { ConnectionAuthentication } from '../auth/authenticate';
+import { authenticationMethods } from './auth-methods';
 import { createAgentClient, awaitAcpOpening } from './client';
 import { negotiateAcpInitialize } from './initialize';
 import { sessionCapabilities, openProtocolSession } from './open-session';
-import { exitDrainMs, launchAcpProcess } from './process';
+import {
+  drainProcessExit,
+  rejectClosedOpening,
+  launchAcpProcess,
+} from './process';
 import type {
   AcpOpenInput,
   AcpProcess,
@@ -22,6 +29,7 @@ import type {
   AcpSessionLease,
 } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
+import { SubagentRoutes } from './subagent-routing';
 
 type AgentSession = {
   destination: AcpSessionDestination;
@@ -32,6 +40,13 @@ type AgentSession = {
 };
 
 type Registration = { opening: AcpOpenInput; session: AgentSession };
+
+// What the shared resources hear from one connection.
+type ConnectionHooks = {
+  forget: () => void;
+  idle: () => void;
+  authChanges: AuthChanges;
+};
 
 type OpeningResponse = Extract<AnyMessage, { result: unknown }>;
 
@@ -107,6 +122,7 @@ const elicitationSessionId = (
 
 export class AcpConnection {
   private readonly agentSessions = new Map<string, AgentSession>();
+  private readonly subagents = new SubagentRoutes(this.agentSessions);
   private readonly registrations = new Map<
     JsonRpcId,
     Registration | undefined
@@ -120,10 +136,10 @@ export class AcpConnection {
   private launching: Promise<AcpProcess> | undefined;
   private failure: Error | undefined;
   private stopping: Promise<void> | undefined;
+  private authentication?: ConnectionAuthentication;
   public constructor(
     private readonly input: AcpResourceInput,
-    private readonly forget: () => void,
-    private readonly idle: () => void,
+    private readonly hooks: ConnectionHooks,
   ) {}
   public async start(launch: AgentLaunch): Promise<this> {
     this.launching = (this.input.launchProcess ?? launchAcpProcess)(launch);
@@ -133,9 +149,37 @@ export class AcpConnection {
     this.initialization = await negotiateAcpInitialize(
       this.connection.agent,
       this.readers,
-    );
+    ).catch((cause: unknown) => this.rejectOpening(cause));
+
+    this.prepareAuthentication(launch);
 
     return this;
+  }
+  // A stopping connection hands out no authentication, so nothing starts after shutdown.
+  public getAuthentication(): ConnectionAuthentication | undefined {
+    return this.stopping ? undefined : this.authentication;
+  }
+  private prepareAuthentication(launch: AgentLaunch): void {
+    this.authentication = new ConnectionAuthentication({
+      launch,
+      methods: authenticationMethods(this.requireReady().initialization),
+      authenticate: (methodId): Promise<void> => this.authenticate(methodId),
+      drop: this.hooks.forget,
+      settled: this.hooks.idle,
+      changed: (change): void =>
+        this.hooks.authChanges.publish(
+          { agent: launch.agentId, projectId: launch.projectId },
+          change,
+        ),
+      launchTerminal: this.input.launchLoginTerminal,
+    });
+  }
+  private async authenticate(methodId: string): Promise<void> {
+    this.readers.authenticate.parse(
+      await this.requireReady().connection.agent.request('authenticate', {
+        methodId,
+      }),
+    );
   }
   private connect(stream: Stream): ClientConnection {
     return createAgentClient({
@@ -159,16 +203,22 @@ export class AcpConnection {
   ): void {
     void connection.closed
       .then(async () => {
-        await Promise.race([
-          process.exited,
-          new Promise<void>((resolve) => setTimeout(resolve, exitDrainMs)),
-        ]);
+        await drainProcessExit(process);
         this.fail(process.exitError?.() ?? asError(connection.signal.reason));
       })
       .catch((cause: unknown) => this.fail(asError(cause)));
   }
   private readonly update = (notification: SessionNotification): undefined => {
-    this.find(notification.sessionId)?.destination.update(notification);
+    const owner = this.subagents.owner(notification.sessionId);
+
+    if (!owner) {
+      this.find(notification.sessionId);
+
+      return;
+    }
+
+    if (this.subagents.associate(notification, owner))
+      owner.destination.update(notification);
   };
   private readonly permission: Permission = (context) =>
     this.respond({
@@ -271,7 +321,7 @@ export class AcpConnection {
     this.registrations.delete(message.id);
 
     const registered = this.registerKnown(registration, message);
-    this.idle();
+    this.hooks.idle();
 
     return registered;
   }
@@ -330,19 +380,32 @@ export class AcpConnection {
   public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
     this.requireAvailable(input);
     const session = createAgentSession(input.destination);
-    const ready = this.requireReady();
     this.openings.push({ opening: input, session });
-
-    const opened = openProtocolSession({
-      agent: ready.connection.agent,
-      initialization: ready.initialization,
-      opening: input.opening,
-    });
+    const opened = this.openProtocol(input);
 
     return awaitAcpOpening(
       opened.then((result) => this.lease({ input, session, opened: result })),
       input.signal,
     );
+  }
+  private openProtocol(input: AcpOpenInput): Promise<LeaseOpening['opened']> {
+    const ready = this.requireReady();
+
+    return openProtocolSession({
+      agent: ready.connection.agent,
+      initialization: ready.initialization,
+      opening: input.opening,
+    }).catch((cause: unknown) => this.rejectOpening(cause));
+  }
+  private connectionClosed(): boolean {
+    return this.connection?.signal.aborted ?? false;
+  }
+  private async rejectOpening(cause: unknown): Promise<never> {
+    this.authentication?.recordRequired(cause);
+
+    if (!this.connectionClosed()) throw cause;
+
+    return rejectClosedOpening(await this.launchedProcess(), cause);
   }
   private requireAvailable(input: AcpOpenInput): void {
     if (this.failure) throw this.failure;
@@ -370,6 +433,7 @@ export class AcpConnection {
 
     return {
       ...opening.opened,
+      authentication: this.authentication,
       agent: connection.agent,
       initialization,
       close: () =>
@@ -436,13 +500,14 @@ export class AcpConnection {
     session.controller.abort();
 
     if (this.agentSessions.get(id) === session) this.agentSessions.delete(id);
+    this.subagents.release(session);
     session.released.resolve();
-    this.idle();
+    this.hooks.idle();
   }
   private fail(error: Error): void {
     if (this.failure) return;
     this.failure = error;
-    this.forget();
+    this.hooks.forget();
 
     for (const [id, session] of this.agentSessions) {
       session.destination.failed(error);
@@ -457,20 +522,31 @@ export class AcpConnection {
     void this.shutdown().catch(console.error);
   }
   public get inUse(): boolean {
-    return this.agentSessions.size > 0 || this.registrations.size > 0;
+    return (
+      this.agentSessions.size + this.registrations.size > 0 ||
+      this.authenticating
+    );
+  }
+  public get authenticating(): boolean {
+    return this.authentication?.state().pending != null;
   }
   public shutdown(): Promise<void> {
     this.stopping ??= this.stop();
 
     return this.stopping;
   }
+  private cancelAuthentication(): Promise<void> | undefined {
+    return this.authentication?.close();
+  }
   private async stop(): Promise<void> {
+    const cancellation = this.cancelAuthentication();
     const process = await this.launchedProcess();
     this.connection?.close();
 
     if (!process) return;
     await process.terminate();
     await process.exited;
+    await cancellation;
   }
   // A failed launch has no process to stop; start() already reported it.
   private async launchedProcess(): Promise<AcpProcess | undefined> {

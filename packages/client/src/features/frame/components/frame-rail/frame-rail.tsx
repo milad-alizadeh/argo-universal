@@ -5,13 +5,15 @@ import { cn } from '#lib/generic/utils';
 import { IconButton } from '#primitives/buttons/icon-button';
 import {
   type Section,
-  sectionOrder,
-  sections,
+  type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
 
 interface DesktopRailProps {
+  items: readonly NavigationSection[];
+  // A Plugin page has no list, so no sidebar to toggle.
+  hasSidebar: boolean;
   selectedSection: Section;
   attentionCount: number;
   sidebarShown: boolean;
@@ -23,7 +25,7 @@ type SectionButtonProps = Pick<
   DesktopRailProps,
   'attentionCount' | 'onSectionChange'
 > & {
-  section: Section;
+  section: NavigationSection;
   selected: boolean;
 };
 
@@ -47,7 +49,7 @@ function selectionProps(selected: boolean): TileSelection {
 }
 
 function SectionTile(props: SectionButtonProps): React.JSX.Element {
-  const { title, icon } = sections[props.section];
+  const { title, icon } = props.section;
 
   return (
     <IconButton
@@ -57,7 +59,7 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
       size="xl"
       variant="ghost"
       accessibilityLabel={title}
-      onPress={() => props.onSectionChange(props.section)}
+      onPress={() => props.onSectionChange(props.section.id)}
       {...selectionProps(props.selected)}
     />
   );
@@ -75,17 +77,23 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
 function RailSections(props: DesktopRailProps): React.JSX.Element {
   return (
     <View className="-mt-0.5 flex-1 gap-px">
-      {sectionOrder.map((section) => (
-        <SectionButton
-          key={section}
-          section={section}
-          selected={props.selectedSection === section}
-          attentionCount={sectionAttentionCount(section, props.attentionCount)}
-          onSectionChange={props.onSectionChange}
-        />
+      {props.items.map((section) => (
+        <SectionButton key={section.id} {...railSectionProps(section, props)} />
       ))}
     </View>
   );
+}
+
+function railSectionProps(
+  section: NavigationSection,
+  props: DesktopRailProps,
+): SectionButtonProps {
+  return {
+    section,
+    selected: props.selectedSection === section.id,
+    attentionCount: sectionAttentionCount(section.id, props.attentionCount),
+    onSectionChange: props.onSectionChange,
+  };
 }
 
 function SidebarToggle(props: DesktopRailProps): React.JSX.Element {
@@ -126,7 +134,7 @@ export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
       {/* Electron draws the traffic lights here, and the window drags by it. */}
       <View className="h-frame-control self-stretch web:[app-region:drag]" />
       <RailSections {...props} />
-      <SidebarToggle {...props} />
+      {props.hasSidebar ? <SidebarToggle {...props} /> : null}
       <RailEdge sidebarShown={props.sidebarShown} />
     </View>
   );

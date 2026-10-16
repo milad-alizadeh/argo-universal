@@ -18,7 +18,7 @@ const meta = {
     onSelect,
   },
   render: (args): React.JSX.Element => (
-    <View className="h-[700px] w-full">
+    <View className="h-175 w-full">
       <SettingsList {...args} />
     </View>
   ),

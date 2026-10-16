@@ -16,7 +16,7 @@ import { Icon, IconSlot } from '#primitives/display/icon';
 import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
 import { useMaterialPalette } from '#primitives/native/material-palette';
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
 
@@ -99,7 +99,7 @@ function DrawerItemIcon({
 }
 
 interface IconLayerProps {
-  icon: IconName;
+  icon: IconSymbol;
   filled: boolean;
   shown: boolean;
 }

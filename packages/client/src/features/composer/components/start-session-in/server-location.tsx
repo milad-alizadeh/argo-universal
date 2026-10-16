@@ -60,7 +60,7 @@ function ServerConnection({
       role="img"
       accessibilityLabel={connected ? 'Connected' : 'Reconnecting'}
       className={cn(
-        'size-[7px] shrink-0 rounded-full',
+        'size-1.75 shrink-0 rounded-full',
         connected ? 'bg-success' : 'bg-warning',
       )}
     />

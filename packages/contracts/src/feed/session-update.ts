@@ -1,6 +1,6 @@
 import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
-import { feedRowColumns } from '../columns';
+import { feedRowColumns, shellColumns } from '../columns';
 import { BlobRef, ContentBlock } from './content-block';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
@@ -52,6 +52,18 @@ export const UserMessage = z.strictObject({
   ...message,
 });
 
+export const SessionMessage = z.strictObject({
+  ...envelope,
+  sessionUpdate: kind('session_message'),
+  messageId: z.string(),
+  content: z.array(ContentBlock),
+  _meta: createFeedMetadataSchema(
+    z.strictObject({ senderSessionId: z.string() }),
+  ),
+});
+
+export type SessionMessage = z.infer<typeof SessionMessage>;
+
 export type UserMessage = z.infer<typeof UserMessage>;
 
 export const AgentMessage = z.strictObject({
@@ -96,7 +108,7 @@ export const ToolCallUpdate = z.strictObject({
       commandActions: z.array(CommandAction).optional(),
       startedAt: z.int().optional(),
       endedAt: z.int().optional(),
-      shellId: z.string().optional(),
+      shellId: shellColumns.shape.id.optional(),
       description: z.string().optional(),
     }),
   ),
@@ -198,6 +210,7 @@ export type TaskUpdate = z.infer<typeof TaskUpdate>;
 // One Feed row. An unknown `sessionUpdate` kind or an unknown key fails to parse.
 export const SessionUpdate = z.discriminatedUnion('sessionUpdate', [
   UserMessage,
+  SessionMessage,
   AgentMessage,
   AgentThought,
   ToolCallUpdate,

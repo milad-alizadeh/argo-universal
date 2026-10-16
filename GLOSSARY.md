@@ -59,12 +59,20 @@ A folder the Server loads that adds nav items, pages, Settings sections or Slot 
 _Avoid_: Extension, add-on, mod
 
 **Plugin host**:
-The Server process that runs Plugin code, each Plugin in its own worker thread. Apps never run Plugin code.
+The Server process that runs Plugin code, each Plugin in its own worker thread with no Node; a Plugin reaches the machine only through its `argo` object. Apps never run Plugin code.
 _Avoid_: Extension host, sandbox
+
+**Hook**:
+A Plugin function on a core event, such as `prompt.submit` or `tool.call`. Hooks on one event form a chain: each passes the event on, rewrites it, or answers for core.
+_Avoid_: Listener, interceptor, middleware
 
 **Slot**:
 A named, versioned place in a core page that Plugins fill, such as Project details.
 _Avoid_: Contribution point, hook, outlet
+
+**Replaceable Slot**:
+A Slot placed around a core component, such as a Tool call in the Feed. A Plugin may pass it through, change its props or draw its own; core draws its own when the Plugin's tree is refused.
+_Avoid_: Override, component override
 
 **Tracker**:
 A source of Issues inside the Issue tracker Plugin, such as GitHub Issues or Linear. Each Project chooses one.

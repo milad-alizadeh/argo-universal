@@ -144,3 +144,27 @@ export const launchAcpProcess = async (
   launch: AgentLaunch,
 ): Promise<AcpProcess> =>
   ownProcess(spawnAgent(launch, await agentEnvironment(launch)));
+
+export const drainProcessExit = async (process: AcpProcess): Promise<void> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    await Promise.race([
+      process.exited,
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, exitDrainMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+export const rejectClosedOpening = async (
+  process: AcpProcess | undefined,
+  cause: unknown,
+): Promise<never> => {
+  if (!process) throw cause;
+  await drainProcessExit(process);
+  throw process.exitError ? process.exitError() : cause;
+};

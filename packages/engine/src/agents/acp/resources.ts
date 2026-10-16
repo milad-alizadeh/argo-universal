@@ -1,8 +1,12 @@
 import type { AgentLaunch } from '..';
+import { AuthChanges } from '../auth/auth-changes';
+import type { ConnectionAuthentication } from '../auth/authenticate';
 import { awaitAcpOpening } from './client';
 import { AcpConnection } from './connection';
 import {
   createEntry,
+  entryAuthentication,
+  pendingAuthentication,
   entryInUse,
   isIdleEntryOf,
   type Entry,
@@ -18,6 +22,7 @@ class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, Entry>();
   private stopped = false;
   private readonly connections = new Set<Entry>();
+  public readonly authChanges = new AuthChanges();
   public constructor(private readonly input: AcpResourceInput) {}
   public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
     if (this.stopped) throw new Error('ACP resources are stopped');
@@ -26,46 +31,53 @@ class EngineAcpResources implements AcpResources {
     entry.pending += 1;
 
     try {
-      return await this.openConnected(entry, input);
+      const connection = await awaitAcpOpening(entry.connecting, input.signal);
+
+      return await connection.open(input);
     } finally {
       entry.pending -= 1;
       this.retireIdle(entry);
     }
   }
-  private async openConnected(
-    entry: Entry,
-    input: AcpOpenInput,
-  ): Promise<AcpSessionLease> {
-    const connection = await awaitAcpOpening(entry.connecting, input.signal);
+  public async authentication(
+    launch: AgentLaunch,
+  ): Promise<ConnectionAuthentication> {
+    if (this.stopped) throw new Error('ACP resources are stopped');
 
-    return connection.open(input);
+    return await (this.findAuthentication(launch.agentId, launch.projectId) ??
+      entryAuthentication(this.entry(launch), this.isStopped));
   }
+  public findAuthentication(
+    agent: string,
+    projectId: string,
+  ): Promise<ConnectionAuthentication> | undefined {
+    const entry =
+      pendingAuthentication(this.connections, agent, projectId) ??
+      this.entries.get(JSON.stringify([agent, projectId]));
+
+    return entry ? entryAuthentication(entry, this.isStopped) : undefined;
+  }
+  private readonly isStopped = (): boolean => this.stopped;
   private entry(launch: AgentLaunch): Entry {
     const key = JSON.stringify([launch.agentId, launch.projectId]);
     const entry = this.entries.get(key);
 
-    if (entry) return this.reuse(key, entry, launch);
-
-    return this.start(key, launch);
-  }
-  private reuse(key: string, entry: Entry, launch: AgentLaunch): Entry {
-    if (entry.version === launch.version) return entry;
-    this.retire(key, entry);
+    if (entry) {
+      if (entry.version === launch.version) return entry;
+      this.retire(key, entry);
+    }
 
     return this.start(key, launch);
   }
   private start(key: string, launch: AgentLaunch): Entry {
-    const connection = new AcpConnection(
-      this.input,
-      () => this.forget(key, connection),
-      () => this.connectionIdle(connection),
-    );
+    const connection: AcpConnection = new AcpConnection(this.input, {
+      forget: () => this.forget(key, connection),
+      idle: () => this.connectionIdle(connection),
+      authChanges: this.authChanges,
+    });
 
-    const entry = createEntry(
-      launch,
-      connection,
-      this.connect(key, connection, launch),
-    );
+    const connecting = this.connect(key, connection, launch);
+    const entry = createEntry(launch, connection, connecting);
 
     this.entries.set(key, entry);
     this.connections.add(entry);

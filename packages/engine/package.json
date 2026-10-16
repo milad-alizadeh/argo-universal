@@ -20,8 +20,10 @@
     "ajv": "catalog:",
     "ajv-formats": "catalog:",
     "drizzle-orm": "catalog:",
+    "esbuild": "catalog:",
     "fflate": "catalog:",
     "node-pty": "catalog:",
+    "semver": "catalog:",
     "tar": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",
@@ -32,6 +34,7 @@
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
+    "@types/semver": "catalog:",
     "@types/ws": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

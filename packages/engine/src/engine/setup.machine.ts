@@ -72,6 +72,7 @@ export interface EngineInput extends Pick<
   home: string;
   port: number;
   version: string;
+  firstPartyPluginsDirectory?: string;
   startedAt: string;
   acp?: AcpResourceInput;
   loginTimeoutMs?: number;

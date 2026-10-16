@@ -1,6 +1,7 @@
 import type { AuthStatusUpdateNotification } from '@repo/contracts';
 import {
   scriptedInitialization,
+  type ScriptedCredentials,
   type ScriptedScenario,
 } from './scripted-scenario.ts';
 
@@ -78,3 +79,15 @@ export const signedOutProtocolLogin = {
     ],
   },
 } satisfies Pick<ScriptedScenario, 'initialize' | 'responses'>;
+
+export const protocolSessionLogin = (
+  credentials: ScriptedCredentials,
+): ScriptedScenario =>
+  ({
+    steps: [],
+    authentication: { credentials },
+    initialize: {
+      ...scriptedInitialization,
+      authMethods: [{ id: 'login', name: 'Sign in' }],
+    },
+  }) satisfies ScriptedScenario;

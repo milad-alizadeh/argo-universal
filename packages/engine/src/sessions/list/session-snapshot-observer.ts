@@ -82,9 +82,9 @@ class SessionSnapshotObserver implements Subscription {
     });
   }
 
-  // The open Sessions change with every Session's every update; only its membership matters here.
+  // Parent updates can replace a Subagent's Feed without changing registry membership.
   private openSessionsChanged(sessions: Record<string, SessionActorRef>): void {
-    if (sessions === this.registeredSessions) return;
+    if (sessions === this.registeredSessions) return this.changed();
     this.registeredSessions = sessions;
     this.sessionChanged();
   }
@@ -127,10 +127,20 @@ class SessionSnapshotObserver implements Subscription {
   private closed(): void {
     if (this.hasStopped) return;
     this.hasStopped = true;
-    this.listener.next?.({
+    this.listener.next?.(this.closedEvent());
+  }
+
+  private closedEvent(): Extract<FeedSubscribeOutput, { type: 'closed' }> {
+    const event: Extract<FeedSubscribeOutput, { type: 'closed' }> = {
       type: 'closed',
       failure: this.failure(),
-    });
+    };
+
+    const openError = this.session?.getSnapshot().context.openError;
+
+    if (openError) event.openError = openError;
+
+    return event;
   }
 
   private failure(): Extract<

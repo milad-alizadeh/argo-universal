@@ -9,10 +9,11 @@ import {
   type WriterActorRef,
   type WriterJob,
 } from '../storage';
+import { SessionArchiveJob } from './archive/archive-storage';
 
 type SessionInsert = {
   session: typeof session.$inferInsert;
-  checkoutChoice: NonNullable<typeof project.$inferInsert.checkoutChoice>;
+  checkoutChoice?: NonNullable<typeof project.$inferInsert.checkoutChoice>;
 };
 
 type SessionRowChange = {
@@ -80,11 +81,13 @@ export class SessionInsertJob implements WriterJob {
 
   public commit(transaction: StorageTransaction): void {
     transaction.insert(session).values(this.insert.session).run();
-    transaction
-      .update(project)
-      .set({ checkoutChoice: this.insert.checkoutChoice })
-      .where(eq(project.id, this.insert.session.projectId))
-      .run();
+
+    if (this.insert.checkoutChoice)
+      transaction
+        .update(project)
+        .set({ checkoutChoice: this.insert.checkoutChoice })
+        .where(eq(project.id, this.insert.session.projectId))
+        .run();
   }
 
   public project(
@@ -178,7 +181,15 @@ export class SessionDeleteJob implements WriterJob {
   }
 
   public commit(transaction: StorageTransaction): void {
-    transaction.delete(session).where(eq(session.id, this.sessionId)).run();
+    transaction.run(sql`
+      WITH RECURSIVE discarded(id) AS (
+        SELECT ${session.id} FROM ${session} WHERE ${session.id} = ${this.sessionId}
+        UNION
+        SELECT child.id FROM session AS child
+        JOIN discarded ON child.parent_session_id = discarded.id
+      )
+      DELETE FROM ${session} WHERE ${session.id} IN (SELECT id FROM discarded)
+    `);
   }
 
   public project(
@@ -267,7 +278,8 @@ const projectSessionJob = (
   if (
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
-    job instanceof SessionDeleteJob
+    job instanceof SessionDeleteJob ||
+    job instanceof SessionArchiveJob
   )
     return job.project(current, sessionId);
 
@@ -334,6 +346,7 @@ export const changedSessionIds = (job: WriterJob): string[] => {
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
     job instanceof SessionDeleteJob ||
+    job instanceof SessionArchiveJob ||
     job instanceof TurnInsertJob
   )
     return job.changedSessionIds();

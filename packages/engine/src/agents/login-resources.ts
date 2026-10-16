@@ -1,6 +1,6 @@
 import type {
   AgentLoginTerminalInput,
-  AgentLoginTerminalFrame,
+  AgentAuthTerminalFrame,
 } from '@repo/contracts';
 import { authenticationContextKey } from '../lib/authentication-context';
 import { ResourceCleanupError } from '../lib/resource-cleanup-error';
@@ -75,7 +75,7 @@ export class LoginResources {
   public terminalActive(): boolean {
     return this.connection?.terminalActive?.() ?? false;
   }
-  public readTerminal(cursor: number): AgentLoginTerminalFrame {
+  public readTerminal(cursor: number): AgentAuthTerminalFrame {
     const read = this.requireConnection().readTerminal;
 
     if (!read) throw new Error('Login has no terminal');

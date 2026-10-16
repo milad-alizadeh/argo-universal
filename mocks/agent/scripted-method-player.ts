@@ -44,6 +44,18 @@ type MethodPlayback<Method extends AgentRequestMethod> = {
   fallback: AgentRequestResponsesByMethod[Method];
 };
 
+// Prompt playback belongs to one Agent; other method sequences may model account state across restarts.
+function scopePromptResponses(scenario: ScriptedScenario): ScriptedScenario {
+  const prompts = scenario.responses?.['session/prompt'];
+
+  if (!prompts) return scenario;
+
+  return {
+    ...scenario,
+    responses: { ...scenario.responses, 'session/prompt': [...prompts] },
+  };
+}
+
 export class ScriptedMethodPlayer {
   private readonly scenario: ScriptedScenario;
   private readonly sessions: ScriptedSessions;
@@ -53,7 +65,7 @@ export class ScriptedMethodPlayer {
     sessions: ScriptedSessions;
     wire: ScriptedWire;
   }) {
-    this.scenario = input.scenario;
+    this.scenario = scopePromptResponses(input.scenario);
     this.sessions = input.sessions;
     this.wire = input.wire;
   }

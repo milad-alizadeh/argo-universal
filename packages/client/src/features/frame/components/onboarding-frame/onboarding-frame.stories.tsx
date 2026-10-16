@@ -11,7 +11,7 @@ const meta = {
   // JSX in args breaks on-device Storybook's arg inference, so render draws the page.
   args: { children: null },
   render: (args): React.JSX.Element => (
-    <View className="h-[600px] w-full">
+    <View className="h-150 w-full">
       <OnboardingFrame {...args}>
         <View className="flex-1 items-center justify-center">
           <Text>Onboarding</Text>

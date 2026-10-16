@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { sectionOrder } from '../../../../lib/product/navigation/sections';
+import { pluginNavigationItems } from '../navigation-items.mocks';
 import { PhoneDrawerContent } from './phone-drawer-content';
 
 const meta = {
@@ -12,6 +13,7 @@ const meta = {
     attentionCount: { control: 'number' },
   },
   args: {
+    items: pluginNavigationItems,
     selectedSection: 'sessions',
     attentionCount: 1,
     open: true,

@@ -1,6 +1,6 @@
 import {
   type FirstPage,
-  type Section,
+  type CoreSection,
   type SectionList,
   useNeedsAttention,
   useSectionList,
@@ -43,7 +43,7 @@ function OpenFirstPage({ useFirstPage }: OpenFirstPageProps): React.ReactNode {
 }
 
 interface SectionRootProps {
-  section: Section;
+  section: CoreSection;
 }
 
 // A light tap, then the Frame's drawer, which the action reaches from a section's stack.
@@ -57,7 +57,7 @@ function useOpenDrawer(): () => void {
 }
 
 // ☰ as a stock bar button item, which the system places like the back chevron, with the stock badge while Sessions need attention.
-function MenuToolbar(): React.JSX.Element {
+export function MenuToolbar(): React.JSX.Element {
   const badge = useNeedsAttention() ? <Stack.Toolbar.Badge /> : null;
 
   return (

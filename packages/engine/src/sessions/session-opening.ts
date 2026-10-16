@@ -1,3 +1,4 @@
+import { SessionOpenFailure } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
@@ -84,6 +85,8 @@ function requireReadySession(
 ): SessionActorRef {
   const sessionSnapshot = sessionActor.getSnapshot();
 
+  if (sessionSnapshot.context.openError) rejectClosedSession(sessionSnapshot);
+
   if (sessionSnapshot.status !== 'active') rejectClosedSession(sessionSnapshot);
 
   if (!isSessionReady(sessionSnapshot))
@@ -97,6 +100,9 @@ function rejectClosedSession(
 ): never {
   throw new TRPCError({
     code: 'INTERNAL_SERVER_ERROR',
+    cause: snapshot.context.openError
+      ? new SessionOpenFailure(snapshot.context.openError)
+      : undefined,
     message:
       snapshot.context.failure ??
       `Session ${snapshot.context.sessionId} closed`,
@@ -138,11 +144,17 @@ function openStoredSession(
   return requireOpenSessionActor(deps.sessions, sessionId);
 }
 
-function readWritableSession(
+export function readWritableSession(
   readSession: SessionRouterDeps['readSession'],
   sessionId: string,
 ): ReturnType<SessionRouterDeps['readSession']> {
   const sessionRecord = readSession(sessionId);
+
+  if (sessionRecord.archivedAt !== null)
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: 'An archived Session is read-only',
+    });
 
   if (sessionRecord.parentSessionId !== null)
     throw new TRPCError({

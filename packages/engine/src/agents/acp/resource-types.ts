@@ -12,6 +12,8 @@ import type {
 } from '@agentclientprotocol/sdk';
 import type { AgentLaunch } from '..';
 import type { LaunchLoginTerminal } from '..';
+import type { AuthChanges } from '../auth/auth-changes';
+import type { ConnectionAuthentication } from '../auth/authenticate';
 
 export type AcpSessionOpening =
   | { method: 'session/new'; params: NewSessionRequest }
@@ -26,6 +28,7 @@ export type AcpSessionDestination = {
 };
 
 export type AcpSessionLease = {
+  authentication?: ConnectionAuthentication;
   agent: ClientContext;
   sessionId: SessionId;
   initialization: InitializeResponse;
@@ -55,6 +58,12 @@ export type AcpResourceInput = {
 };
 
 export type AcpResources = {
+  authentication: (launch: AgentLaunch) => Promise<ConnectionAuthentication>;
+  findAuthentication: (
+    agent: string,
+    projectId: string,
+  ) => Promise<ConnectionAuthentication> | undefined;
+  authChanges: Pick<AuthChanges, 'watch'>;
   invalidateAgent: (agentId: string) => void;
   dropAgentConnections: (agentId: string) => void;
   isDirectoryInUse: (directory: string) => boolean;

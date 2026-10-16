@@ -1,5 +1,6 @@
 import type {
   AgentContext,
+  CreateTerminalRequest,
   CreateElicitationRequest,
   InitializeResponse,
   RequestPermissionRequest,
@@ -25,6 +26,12 @@ type SessionElicitation =
     >;
 
 export type ScriptedStep =
+  | {
+      type: 'terminal';
+      request: Omit<CreateTerminalRequest, 'sessionId'>;
+      toolCallId: string;
+      completion: 'leave-running' | 'wait-for-exit' | 'kill';
+    }
   | { type: 'update'; update: SessionUpdate; sessionId?: string }
   | {
       type: 'permission';
@@ -61,7 +68,15 @@ export type ScriptedStep =
   | { type: 'fail'; message: string }
   | { type: 'raw'; frame: string };
 
+export type ScriptedCredentials = { signedIn: boolean };
+
 export type ScriptedScenario = {
+  /*
+   * The Agent's stored sign-in, shared like a real Agent's credentials: every
+   * scripted Agent given the same store sees one sign-in. `session/new` needs
+   * auth until it is signed in.
+   */
+  authentication?: { credentials: ScriptedCredentials };
   initialize?: InitializeResponse;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];

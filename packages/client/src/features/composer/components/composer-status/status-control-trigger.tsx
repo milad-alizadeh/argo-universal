@@ -15,9 +15,7 @@ function statusTriggerClass({
   wide,
   disabled,
 }: Pick<ControlTriggerProps, 'wide' | 'disabled'>): string {
-  const widthClass = wide
-    ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
-    : 'w-7 px-0 has-[>[data-icon]]:px-0';
+  const widthClass = wide ? 'w-auto px-1.5' : 'w-7 px-0';
 
   return contentActionClass({
     variant: 'ghost',

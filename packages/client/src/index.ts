@@ -88,3 +88,21 @@ export { withoutNewSession } from './lib/product/navigation/new-session';
 export { AppProviders } from './app-providers';
 
 export { PortalHost } from '#primitives/overlays/portal';
+
+export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
+
+export {
+  pluginAt,
+  pluginPath,
+  usePluginAt,
+  usePluginSections,
+  type PluginSection,
+} from './screens/plugins/use-plugin-sections';
+
+export {
+  coreNavigationSections,
+  isCoreSection,
+  isPluginSection,
+  type CoreSection,
+  type NavigationSection,
+} from './lib/product/navigation/sections';
