@@ -41,5 +41,5 @@ prepareTarget(target);
 cpSync(exported, target, { recursive: true });
 
 console.log(
-  'Built unchanged desktop main/preload and copied the prototype export into its expected local dist directory.',
+  'Built desktop main/preload and copied the prototype export into its expected local dist directory.',
 );

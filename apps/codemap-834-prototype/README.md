@@ -42,6 +42,11 @@ They do not claim that this Project has 20,000 unique files.
 
 The 3D view uses one instanced box mesh through R3F and three.js WebGL.
 The flat view uses a recorded Skia picture through `WithSkiaWeb` and CanvasKit.
+When WebGL is unavailable, Skia draws that picture into its public CPU surface API.
+The App copies those pixels to a 2D canvas at DPR 1.
+Picking, labels, tokens and camera transforms use the same data and rules.
+The CPU surface and image are disposed after each completed copy.
+CPU readiness is reported only after pixels reach the visible canvas.
 The token palette comes from the existing `useNativeTheme` helper.
 The browser resolves its colour strings to RGB for both renderers.
 Lights also use theme tokens. No renderer supplies a default colour.
@@ -75,10 +80,10 @@ The in-page mount timer starts at prototype-module evaluation and ends at the re
 The full desktop mode uses Electron’s `--disable-gpu` switch and records GPU feature status.
 Neither mode forces a software renderer or changes CSP.
 
-The Electron harness imports the unchanged production `app://` handler.
+The Electron harness imports the production `app://` handler.
 It does not start the Server or prove the complete desktop App lifecycle.
 A protocol-harness result cannot close the full desktop App criterion.
-The `desktop` modes instead launch the unchanged App with its real Server and preload.
+The `desktop` modes launch the App with its real Server and preload.
 Each launch uses its own `ARGO_HOME`, App data directory, and free Server port.
 Desktop collection uses the existing `ARGO_BACKGROUND=1` setting to disable background timer throttling.
 The collector then shows and focuses the App window.
@@ -94,14 +99,16 @@ All new renderer dependencies belong to this branch's separate prototype package
 The package imports kit Text and theme helpers through explicit client exports.
 The shared theme helper adds the existing warning token without changing other roles.
 Skia is pinned to 2.6.2, matching the parallel chart prototype.
-This branch does not change that prototype, its route, the universal-app manifest, or `app-protocol.ts`.
+This branch does not change the chart prototype, its route, or the universal-app manifest.
 The root lockfile adds the prototype importer and refreshes peer snapshots without changing existing pinned package versions.
 It overlaps #709 and the chart work and requires a fresh dependency reconciliation before any later integration.
 
-Main's current desktop CSP has no `wasm-unsafe-eval` allowance.
-ADR-0028 describes that allowance, and the chart branch owns its pending implementation.
-A CanvasKit CSP failure remains open until that owner integrates the change.
-This prototype does not bypass the policy.
+The desktop CSP adds only `wasm-unsafe-eval` to `script-src`, as ADR-0028 specifies.
+Every other directive stays unchanged; JavaScript `unsafe-eval` remains forbidden.
+The chart branch has an overlapping uncommitted change. Coalesce the identical CSP edit during integration.
+Normal desktop flat and GPU-disabled flat now use CanvasKit without a CSP bypass.
+3D still requires WebGL. A proposed Flat fallback is awaiting owner design approval in Atlas Explorations.
+The deferred renderer imports still await the ADR-0017/ADR-0028 policy decision.
 
 Links and trace steps are not implemented or benchmarked.
 File-only results cannot validate ADR-0028's 50,000-link or 200-step caps.
