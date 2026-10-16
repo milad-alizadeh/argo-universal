@@ -46,12 +46,22 @@ export const rejectedManifests = [
   {
     folder: 'argo-icon-name',
     patch: { icon: 'plug' },
-    reason: 'icon',
+    reason: 'expected object, received string',
+  },
+  {
+    folder: 'filled-without-sf',
+    patch: { icon: { sfFilled: 'ticket.fill', material: 'power' } },
+    reason: 'icon.sfFilled needs an sf name',
+  },
+  {
+    folder: 'newer-sf-symbol',
+    patch: { icon: { sf: '1.calendar' } },
+    reason: '1.calendar is not in SF Symbols 6.0',
   },
   {
     folder: 'unknown-sf-symbol',
     patch: { icon: { sf: 'not.a.symbol', material: 'power' } },
-    reason: 'not.a.symbol is not in SF Symbols',
+    reason: 'not.a.symbol is not in SF Symbols 6.0',
   },
   {
     folder: 'unknown-material-symbol',

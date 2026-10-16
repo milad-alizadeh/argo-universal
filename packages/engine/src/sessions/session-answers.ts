@@ -16,15 +16,20 @@ import {
   validateSessionCommandAdmission,
 } from './session-command';
 import { type SessionActorRef, sessionMachine } from './session-machine';
+import { readWritableSession } from './session-opening';
 import { sessionActorId } from './session-system';
 
-type AnswerDeps = Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>;
+type AnswerDeps = Pick<
+  SessionRouterDeps,
+  'sessions' | 'readSession' | 'sessionCommandSignal'
+>;
 
 const findAnsweredSession = (
   deps: AnswerDeps,
   sessionId: string,
 ): SessionActorRef | undefined => {
   validateSessionCommandAdmission(deps);
+  readWritableSession(deps.readSession, sessionId);
 
   return findMachineActor(
     deps.sessions.system,

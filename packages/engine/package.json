@@ -20,6 +20,7 @@
     "ajv": "catalog:",
     "ajv-formats": "catalog:",
     "drizzle-orm": "catalog:",
+    "esbuild": "catalog:",
     "fflate": "catalog:",
     "node-pty": "catalog:",
     "semver": "catalog:",

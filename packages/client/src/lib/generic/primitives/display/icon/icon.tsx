@@ -4,14 +4,9 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext, toneClass } from '#primitives/display/text';
-import {
-  type DrawnSymbol,
-  drawnSymbol,
-  outlinedDrawing,
-} from '../../../symbols/drawn-symbol';
-import { iconSymbols } from '../../../symbols/icon-names';
+import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
-import type { IconSymbol } from '../../../symbols/icon-symbol';
+import { type ResolvedIcon, resolveIcon } from '../../../symbols/icon-symbol';
 import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
 
@@ -31,17 +26,10 @@ const TintedSymbol =
 
 const glyphScale = Platform.OS === 'android' ? materialGlyphScale : 1;
 
-function iconDrawing(
-  name: IconSymbol,
+const iconDrawing = (
+  { symbol, materialFill }: ResolvedIcon,
   filled: boolean | undefined,
-): DrawnSymbol {
-  return typeof name === 'string'
-    ? drawnSymbol(iconSymbols[name], filled)
-    : outlinedDrawing(name);
-}
-
-const iconTestId = (name: IconSymbol): string =>
-  `icon-${typeof name === 'string' ? name : name.material}`;
+): DrawnSymbol => drawnSymbol(symbol, filled, materialFill);
 
 function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
   return cn(
@@ -54,16 +42,17 @@ function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
 
 export function Icon(props: IconProps): React.JSX.Element {
   const colorClassName = useIconColor(props);
+  const icon = resolveIcon(props.name);
 
   return (
     <TintedSymbol
-      symbol={iconDrawing(props.name, props.filled)}
+      symbol={iconDrawing(icon, props.filled)}
       className={colorClassName}
       colorClassName={colorClassName}
       pixels={useIconPixels(props.role)}
       glyphScale={glyphScale}
       weight={props.weight}
-      testID={props.testID ?? iconTestId(props.name)}
+      testID={props.testID ?? `icon-${icon.key}`}
     />
   );
 }

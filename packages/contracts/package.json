@@ -8,12 +8,12 @@
     "./auth-status-schema": "./src/agents/upstream/auth-status-schema.gen.json",
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",
+    "./plugins/runtime": "./src/plugins/runtime.ts",
     "./plugins/sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
     "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts"
   },
   "scripts": {
     "generate:registry": "node tools/registry/generate.mts && json2ts -i src/agents/upstream/registry.published.schema.gen.json -o src/agents/upstream/registry.gen.ts --cwd src/agents/upstream --unknownAny --bannerComment '/* Generated from ACP Registry 33a1a101ef68ab20a97624ac89d4b977eeac0daf schema and publisher literal by json-schema-to-typescript 16.0.0. */'",
-    "generate:symbol-names": "node tools/symbol-names/generate.mts",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },

@@ -36,7 +36,7 @@ function ChoosingCheckout(): React.JSX.Element {
 
 export const narrowMainColumn: Story = {
   render: () => (
-    <View className="h-full w-[600px]">
+    <View className="h-full w-150">
       <ContentLayout>
         <ChoosingCheckout />
       </ContentLayout>

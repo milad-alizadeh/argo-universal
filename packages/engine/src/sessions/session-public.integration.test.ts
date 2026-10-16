@@ -86,6 +86,20 @@ it('refuses commands for a Subagent while keeping its stored Feed readable', asy
     code: 'CONFLICT',
     message: 'A Subagent is read-only',
   });
+  await expect(
+    caller.session.cancel({ sessionId: 'subagent' }),
+  ).rejects.toMatchObject({ code: 'CONFLICT' });
+  await expect(
+    caller.session.close({ sessionId: 'subagent' }),
+  ).rejects.toMatchObject({ code: 'CONFLICT' });
+  await expect(
+    caller.session.setConfigOption({
+      sessionId: 'subagent',
+      configId: 'model',
+      type: 'id',
+      value: 'small',
+    }),
+  ).rejects.toMatchObject({ code: 'CONFLICT' });
   expect(
     await caller.feed.page({ sessionId: 'subagent', direction: 'tail' }),
   ).toMatchObject({ rows: [] });

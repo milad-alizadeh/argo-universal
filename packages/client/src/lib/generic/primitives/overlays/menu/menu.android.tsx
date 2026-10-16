@@ -4,8 +4,8 @@ import { DropdownMenu } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import { MenuDropdownItems } from './menu-dropdown-items';
 import { nativeMenuItems } from './menu-native-items';
 import { NativeMenuTrigger } from './menu-phone-parts';
@@ -29,7 +29,7 @@ function OpenableMenu<Value extends string>(
 ): React.JSX.Element {
   const [expanded, setExpanded] = useState(false);
   const close = (): void => setExpanded(false);
-  const color = useNativeTheme().colors.card;
+  const color = useMaterialPalette().roles.surfaceContainer;
 
   return (
     <DropdownMenu expanded={expanded} onDismissRequest={close} color={color}>

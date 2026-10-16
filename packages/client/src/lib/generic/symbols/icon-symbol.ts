@@ -1,5 +1,20 @@
-import type { IconName } from './icon-names';
-import type { SystemSymbolSource } from './symbol-source';
+import { type IconName, iconSymbols } from './icon-names';
+import type { SymbolSource, SystemSymbolSource } from './symbol-source';
 
 // An Argo icon name, or an SF and Material pair from outside the App's map, such as a Plugin's icon (ADR-0025).
 export type IconSymbol = IconName | SystemSymbolSource;
+
+export interface ResolvedIcon {
+  symbol: SymbolSource;
+  // Names the icon in test ids.
+  key: string;
+  materialFill: boolean;
+}
+
+export function resolveIcon(icon: IconSymbol): ResolvedIcon {
+  if (typeof icon === 'string')
+    return { symbol: iconSymbols[icon], key: icon, materialFill: true };
+
+  // Argo's filled Material font holds only Argo's own icons (ADR-0019), so any other Material glyph would draw blank filled.
+  return { symbol: icon, key: icon.material, materialFill: false };
+}

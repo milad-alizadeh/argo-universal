@@ -37,12 +37,17 @@ it('discovers first-party and user Plugin manifests through the Engine without s
       {
         manifest: {
           id: 'fixture-tracker',
+          icon: { sf: 'ticket', sfFilled: 'ticket.fill' },
           contributes: { nav: [{ id: 'issues' }, { id: 'plans' }] },
         },
         firstParty: true,
         enabled: true,
       },
-      { manifest: { id: 'fixture-hello' }, firstParty: false, enabled: true },
+      {
+        manifest: { id: 'fixture-hello', icon: { material: 'power' } },
+        firstParty: false,
+        enabled: true,
+      },
     ],
     errors: [],
   });

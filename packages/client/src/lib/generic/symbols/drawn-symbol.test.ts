@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drawnSymbol, outlinedDrawing } from './drawn-symbol';
+import { drawnSymbol } from './drawn-symbol';
 import type { SystemSymbolSource } from './symbol-source';
 
 const heart: SystemSymbolSource = {
@@ -40,14 +40,12 @@ describe('drawnSymbol', () => {
       });
     },
   );
-});
 
-describe('outlinedDrawing', () => {
-  it('draws a pair from outside the map outlined, ignoring its filled SF name', () => {
-    expect(outlinedDrawing(heart)).toEqual({
+  it('draws a filled pair from outside the map with its filled SF name but outlined Material', () => {
+    expect(drawnSymbol(heart, true, false)).toEqual({
       kind: 'system',
-      sf: 'heart',
-      material: 'favorite',
+      sf: heart.sfFilled,
+      material: heart.material,
       filled: false,
     });
   });

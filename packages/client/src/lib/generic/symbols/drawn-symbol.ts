@@ -30,12 +30,14 @@ function isTablerSource(source: SymbolSource): source is TablerSymbolSource {
 const drawnSf = (source: SystemSymbolSource, filled: boolean): AppleSymbol =>
   (filled && source.sfFilled) || source.sf;
 
+// `materialFill` is false for a pair from outside the App's map: Argo's filled Material font holds only Argo's own icons (ADR-0019).
 function systemDrawing(
   source: SystemSymbolSource,
   filled: boolean,
+  materialFill: boolean,
 ): SystemDrawing {
   const sf = drawnSf(source, filled);
-  const isFilled = sf !== source.sf || sf.endsWith('.fill');
+  const isFilled = materialFill && (sf !== source.sf || sf.endsWith('.fill'));
 
   return { kind: 'system', sf, material: source.material, filled: isFilled };
 }
@@ -44,18 +46,9 @@ function systemDrawing(
 export function drawnSymbol(
   source: SymbolSource,
   filled?: boolean,
+  materialFill = true,
 ): DrawnSymbol {
   if (isTablerSource(source)) return { kind: 'tabler', tabler: source.tabler };
 
-  return systemDrawing(source, filled === true);
-}
-
-// A pair from outside the App's map draws outlined: Argo's filled Material font holds only Argo's own icons (ADR-0019).
-export function outlinedDrawing(source: SystemSymbolSource): SystemDrawing {
-  return {
-    kind: 'system',
-    sf: source.sf,
-    material: source.material,
-    filled: false,
-  };
+  return systemDrawing(source, filled === true, materialFill);
 }

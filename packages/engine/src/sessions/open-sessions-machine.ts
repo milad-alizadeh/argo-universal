@@ -18,6 +18,14 @@ const createSessionEvent = 'sessions.create';
 
 const closeSessionEvent = 'session.close';
 
+type ClosureEvent = { type: 'session.close' | 'session.shutdown' };
+
+const closureEvent = (session: SessionActorRef): ClosureEvent => ({
+  type: session.getSnapshot().matches('archived')
+    ? 'session.shutdown'
+    : closeSessionEvent,
+});
+
 export interface OpenSessionsInput {
   database: Database;
   runtimeDirectory: string;
@@ -34,7 +42,7 @@ interface OpenSessionsContext extends OpenSessionsInput {
 export type OpenSessionsCommand =
   | ({ type: 'sessions.create'; sessionId: string } & SessionCreationInput)
   | {
-      type: 'sessions.open';
+      type: 'sessions.open' | 'sessions.archive';
       sessionId: string;
       agent: string;
     }
@@ -68,7 +76,11 @@ export const openSessionsMachine = setup({
   actions: {
     openSession: assign(
       ({ context, event, spawn }): Partial<OpenSessionsContext> => {
-        assertEvent(event, [createSessionEvent, 'sessions.open']);
+        assertEvent(event, [
+          createSessionEvent,
+          'sessions.open',
+          'sessions.archive',
+        ]);
 
         if (context.sessions[event.sessionId]) return {};
 
@@ -103,7 +115,7 @@ export const openSessionsMachine = setup({
     },
     closeSessions: enqueueActions(({ context, enqueue }): void => {
       for (const session of Object.values(context.sessions))
-        enqueue.sendTo(session, { type: closeSessionEvent });
+        enqueue.sendTo(session, closureEvent(session));
     }),
     closeReadySession: enqueueActions(({ context, event, enqueue }): void => {
       if (!('snapshot' in event)) return;
@@ -112,10 +124,11 @@ export const openSessionsMachine = setup({
 
       if (
         session &&
-        snapshot.can({ type: closeSessionEvent }) &&
-        !snapshot.matches({ open: { acp: 'closing' } })
+        snapshot.can(closureEvent(session)) &&
+        !snapshot.matches({ open: { acp: 'closing' } }) &&
+        !snapshot.matches({ open: { acp: 'archiving' } })
       )
-        enqueue.sendTo(session, { type: closeSessionEvent });
+        enqueue.sendTo(session, closureEvent(session));
     }),
   },
   guards: {
@@ -157,6 +170,7 @@ export const openSessionsMachine = setup({
           guard: 'isRegisteredAgent',
           actions: 'openSession',
         },
+        'sessions.archive': { actions: 'openSession' },
         'sessions.open': { guard: 'isRegisteredAgent', actions: 'openSession' },
         'sessions.stopAll': { target: 'stopping' },
       },

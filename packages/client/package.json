@@ -20,6 +20,7 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
+    "generate:plugin-symbol-names": "node tools/plugin-symbol-names/generate.mts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -99,6 +100,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",
+    "sf-symbols-typescript": "catalog:",
     "storybook": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
