@@ -1,10 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
-import {
-  useOverlayList,
-  useWideSidebarList,
-} from '#primitives/fields/field-layout';
+import { useWideSidebarList } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
 import { GroupedListItemDetail } from './grouped-list-item-detail';
@@ -18,10 +15,8 @@ import {
   contentGap,
   hasDisclosure,
   rowEmphasis,
-  stacksValue,
   titleClasses,
 } from './grouped-list-item-styles';
-import { OverlayRowTitle } from './overlay-row-title';
 import { StatusDot } from './status-dot';
 
 export function GroupedListItemBody(
@@ -73,16 +68,6 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
 }
 
 function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
-  const overlay = useOverlayList();
-
-  return stacksValue(props, overlay) ? (
-    <OverlayRowTitle {...props} />
-  ) : (
-    <PlainRowTitle {...props} />
-  );
-}
-
-function PlainRowTitle(props: GroupedListItemProps): React.JSX.Element {
   const title = (
     <Text aria-hidden role="body" className={titleClasses(props)}>
       {props.label}
@@ -132,9 +117,6 @@ function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
 
 function RowSelection(props: TrailingProps): React.JSX.Element | null {
   const sidebar = useWideSidebarList();
-  const overlay = useOverlayList();
-
-  if (stacksValue(props, overlay)) return null;
 
   return (
     <>

@@ -44,15 +44,6 @@ const overlayClasses = (
       )
     : undefined;
 
-// Paper's popover drill rows put their value below the label; other rows, such as Effort, keep it trailing.
-export const stacksValue = (
-  props: Pick<
-    GroupedListItemProps,
-    'value' | 'onPress' | 'tone' | 'disclosure'
-  >,
-  overlay: boolean,
-): boolean => overlay && props.value !== undefined && hasDisclosure(props);
-
 // A sidebar row has no separator, and neither has the row that ends its section.
 function edgeClasses(
   props: GroupedListItemProps,
