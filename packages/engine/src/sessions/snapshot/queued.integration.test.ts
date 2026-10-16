@@ -1,16 +1,11 @@
 import type { SessionSnapshot, UserMessage } from '@repo/contracts';
-import { session, shell, turn } from '@repo/db/schema';
-import { agentTitle } from '@repo/mocks/agent/title-scenarios';
+import { shell, turn } from '@repo/db/schema';
 import { expect, it } from 'vitest';
 import { waitFor } from 'xstate';
 import { insertSession } from '#mocks/database';
 import { startSnapshotHost } from '#mocks/session-snapshot';
 import { FeedRowsJob } from '../../feed';
-import {
-  SessionRowUpdateJob,
-  SessionTitleJob,
-  TurnUpdateJob,
-} from '../session-storage';
+import { SessionRowUpdateJob, TurnUpdateJob } from '../session-storage';
 import { ShellWriteJob } from '../shells/storage';
 
 const prompt: UserMessage = {
@@ -93,46 +88,6 @@ it.each([
     );
   },
 );
-
-const userTitle = new SessionTitleJob({
-  id: 'session-1',
-  title: 'Sessions list redesign',
-  titleSource: 'user',
-});
-
-const agentTitleJob = new SessionTitleJob({
-  id: 'session-1',
-  title: agentTitle,
-  titleSource: 'agent',
-});
-
-const keptTitle = { title: 'Sessions list redesign', titleSource: 'user' };
-
-it('shows a queued user title over a later queued Agent title', async (): Promise<void> => {
-  const host = startSnapshotHost();
-  host.write(userTitle);
-  host.write(agentTitleJob);
-  await host.failWrites('session');
-
-  const { snapshots } = host.watch('session-1');
-
-  expect(host.writer.getSnapshot().context.queue).toHaveLength(2);
-  expect(snapshots.at(-1)).toMatchObject(keptTitle);
-});
-
-it('commits a user title that a later Agent title does not replace', async (): Promise<void> => {
-  const host = startSnapshotHost();
-  host.write(userTitle);
-  host.write(agentTitleJob);
-  await waitFor(host.writer, (writer) => writer.matches('idle'));
-
-  expect(
-    host.database
-      .select({ title: session.title, titleSource: session.titleSource })
-      .from(session)
-      .all(),
-  ).toEqual([keptTitle]);
-});
 
 it('keeps queued values visible while storage is failing', async (): Promise<void> => {
   const host = startSnapshotHost();

@@ -9,6 +9,8 @@ const userTitle = 'Sessions list redesign';
 
 const promptTitle = 'Rename Projects screen to Sessions';
 
+const agentTitleScenario = 'agent-title';
+
 type AcpEngine = Awaited<ReturnType<typeof startAcpEngine>>;
 
 type ListedTitle = Pick<SessionRecord, 'title' | 'titleSource'>;
@@ -48,7 +50,7 @@ const listedTitle = async (host: AcpEngine): Promise<ListedTitle[]> =>
   );
 
 it("replaces the prompt title with the Agent's title", async () => {
-  const { host, sessionId } = await startTitledSession('agent-title');
+  const { host, sessionId } = await startTitledSession(agentTitleScenario);
 
   const snapshot = await waitForAcpSnapshot(
     host,
@@ -73,7 +75,7 @@ it('keeps the prompt title when the Agent clears or blanks its title', async () 
 });
 
 it('keeps a user rename when the Agent names the Session again', async () => {
-  const { host, sessionId } = await startTitledSession('agent-title');
+  const { host, sessionId } = await startTitledSession(agentTitleScenario);
 
   await host.caller.session.rename({ sessionId, title: `  ${userTitle} ` });
   await promptAgain(host, sessionId);
@@ -89,7 +91,7 @@ it('keeps a user rename when the Agent names the Session again', async () => {
 it.each(['', '   ', agentTitle])(
   'leaves the title alone for a blank or unchanged rename: %j',
   async (title) => {
-    const { host, sessionId } = await startTitledSession('agent-title');
+    const { host, sessionId } = await startTitledSession(agentTitleScenario);
 
     await host.caller.session.rename({ sessionId, title });
 
@@ -100,7 +102,7 @@ it.each(['', '   ', agentTitle])(
 );
 
 it('renames a stored Session without starting its Agent', async () => {
-  const { host, sessionId } = await startTitledSession('agent-title');
+  const { host, sessionId } = await startTitledSession(agentTitleScenario);
   const processes = host.agent.processes.length;
 
   await host.caller.session.close({ sessionId });
@@ -113,7 +115,7 @@ it('renames a stored Session without starting its Agent', async () => {
 });
 
 it('refuses to rename an archived Session', async () => {
-  const { host, sessionId } = await startTitledSession('agent-title');
+  const { host, sessionId } = await startTitledSession(agentTitleScenario);
 
   await host.caller.session.archive({ sessionId });
 

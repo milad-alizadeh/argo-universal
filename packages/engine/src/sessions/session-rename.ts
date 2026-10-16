@@ -13,11 +13,13 @@ export async function renameSession(
   input: SessionRenameInput,
 ): Promise<SessionRenameOutput> {
   validateSessionCommandAdmission(deps);
+
   // The title as the list shows it, with queued writes, so a queued Agent title counts as current.
   const current = readWritableSession(
     createQueuedSessionReader(deps),
     input.sessionId,
   );
+
   const title = input.title.trim();
 
   if (!title || title === current.title) return {};
