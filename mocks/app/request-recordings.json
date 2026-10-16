@@ -122,7 +122,8 @@
           "deletions": 0
         },
         "maxRevision": 4,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     },
     "answer": {
@@ -244,7 +245,8 @@
           "deletions": 0
         },
         "maxRevision": 5,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     }
   },
@@ -382,7 +384,8 @@
           "deletions": 0
         },
         "maxRevision": 4,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     },
     "answer": {
@@ -500,7 +503,8 @@
           "deletions": 0
         },
         "maxRevision": 4,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     }
   },
@@ -668,7 +672,8 @@
           "deletions": 0
         },
         "maxRevision": 7,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     },
     "answer": {
@@ -839,7 +844,8 @@
           "deletions": 0
         },
         "maxRevision": 8,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     }
   },
@@ -1007,7 +1013,8 @@
           "deletions": 0
         },
         "maxRevision": 7,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     },
     "answer": {
@@ -1195,7 +1202,8 @@
           "deletions": 0
         },
         "maxRevision": 9,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     }
   },
@@ -1329,7 +1337,8 @@
           "deletions": 0
         },
         "maxRevision": 15,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     },
     "answer": {
@@ -1458,7 +1467,8 @@
           "deletions": 0
         },
         "maxRevision": 16,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     }
   },
@@ -1541,7 +1551,8 @@
           "deletions": 0
         },
         "maxRevision": 1,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     },
     "answer": {
@@ -1603,7 +1614,8 @@
           "deletions": 0
         },
         "maxRevision": 1,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     }
   },
@@ -1675,7 +1687,8 @@
           "deletions": 0
         },
         "maxRevision": 2,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     },
     "answer": {
@@ -1753,7 +1766,8 @@
           "deletions": 0
         },
         "maxRevision": 3,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     }
   },
@@ -1825,7 +1839,8 @@
           "deletions": 0
         },
         "maxRevision": 2,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     },
     "answer": {
@@ -1920,7 +1935,8 @@
           "deletions": 0
         },
         "maxRevision": 4,
-        "epoch": 0
+        "epoch": 0,
+        "subagents": []
       }
     }
   }

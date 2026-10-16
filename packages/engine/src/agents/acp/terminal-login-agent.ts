@@ -6,7 +6,8 @@ import type {
   OpenLoginAgent,
 } from '..';
 import { ResourceCleanupError } from '../../lib/resource-cleanup-error';
-import { LoginTerminal } from './login-terminal';
+import { AuthTerminal, terminalMethodLaunch } from '../auth/terminal-auth';
+import type { AuthenticationMethod } from './auth-methods';
 import { createProtocolLoginAgentOpener } from './protocol-login-agent';
 import type { AcpResourceInput } from './resource-types';
 import { launchLoginTerminal } from './terminal-process';
@@ -17,7 +18,7 @@ class TerminalLoginConnection {
   private connection?: LoginAgentConnection;
   private pending?: Promise<void>;
   private closing?: Promise<void>;
-  private readonly terminal: LoginTerminal;
+  private readonly terminal: AuthTerminal;
   private readonly abort = (): void => {
     void this.close().catch(() => {});
   };
@@ -27,7 +28,7 @@ class TerminalLoginConnection {
     private readonly input: AcpResourceInput,
   ) {
     this.callbacks = { ...originalCallbacks, signal: this.lifetime.signal };
-    this.terminal = new LoginTerminal(
+    this.terminal = new AuthTerminal(
       input.launchLoginTerminal ?? launchLoginTerminal,
     );
     originalCallbacks.signal.addEventListener('abort', this.abort, {
@@ -70,20 +71,23 @@ class TerminalLoginConnection {
     );
 
     if (!method) throw new Error('Authentication method is not supported');
-    this.pending = method.terminal
-      ? this.runTerminal(method.terminal)
-      : this.requireConnection().authenticate(methodId);
+    this.pending =
+      method.type === 'terminal'
+        ? this.runTerminal(method)
+        : this.requireConnection().authenticate(methodId);
 
     return this.pending;
   }
-  private async runTerminal(
-    terminal: NonNullable<LoginAgentConnection['methods'][number]['terminal']>,
-  ): Promise<void> {
-    const launch = terminalLaunch(this.subject, terminal);
+  private async runTerminal(method: AuthenticationMethod): Promise<void> {
+    const launch = terminalMethodLaunch(this.subject.launch, method);
     this.callbacks.reserveTerminalAuthentication?.(launch);
     await this.requireConnection().close();
     this.connection = undefined;
-    await this.terminal.run(launch, this.callbacks.signal);
+    await this.terminal.run({
+      launch,
+      methodId: method.id,
+      signal: this.callbacks.signal,
+    });
     this.connection = await this.openProtocol();
   }
   private inputTerminal(input: AgentLoginTerminalInput): void {
@@ -107,15 +111,6 @@ class TerminalLoginConnection {
     await this.connection?.close();
   }
 }
-
-const terminalLaunch = (
-  subject: AgentLaunchSubject,
-  terminal: NonNullable<LoginAgentConnection['methods'][number]['terminal']>,
-): AgentLaunchSubject['launch'] => ({
-  ...subject.launch,
-  args: [...subject.launch.args, ...terminal.args],
-  env: { ...subject.launch.env, ...terminal.env },
-});
 
 export const createLoginAgentOpener =
   (input: AcpResourceInput = {}): OpenLoginAgent =>

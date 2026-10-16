@@ -1,16 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import {
-  type Section,
-  sectionOrder,
-  sections,
-} from '../../../../lib/product/navigation/sections';
+import type { Section } from '../../../../lib/product/navigation/sections';
+import { pluginNavigationItems } from '../navigation-items.mocks';
 import { PhoneDrawerContent } from './phone-drawer-content';
 
 const meta = {
   title: 'Tests/PhoneDrawerContent',
   component: PhoneDrawerContent,
   args: {
+    items: pluginNavigationItems,
     selectedSection: 'sessions',
     attentionCount: 0,
     open: true,
@@ -65,10 +63,10 @@ function selectedRow(section: Section): Story {
   return {
     args: { selectedSection: section },
     play: async ({ canvas }) => {
-      for (const other of sectionOrder)
+      for (const other of pluginNavigationItems)
         await expect(
-          canvas.getByRole('button', { name: sections[other].title }),
-        ).toHaveAttribute('aria-pressed', String(other === section));
+          canvas.getByRole('button', { name: other.title }),
+        ).toHaveAttribute('aria-pressed', String(other.id === section));
     },
   };
 }
@@ -77,13 +75,27 @@ export const SessionsSelected = selectedRow('sessions');
 
 export const SettingsSelected = selectedRow('settings');
 
+export const PluginSelected = selectedRow('plugins/hello/hello');
+
+// Core sections first, then each Plugin nav item in manifest order.
+export const ListsCoreSectionsBeforePluginItems: Story = {
+  play: async ({ canvas }) => {
+    const rows = canvas.getAllByRole('button', {
+      name: /^(Sessions|Settings|Issues|Hello)$/,
+    });
+
+    await expect(rows).toHaveLength(pluginNavigationItems.length);
+
+    for (const [index, item] of pluginNavigationItems.entries())
+      await expect(rows[index]).toHaveAccessibleName(item.title);
+  },
+};
+
 export const PickingARowReportsItsSection: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    for (const section of sectionOrder) {
-      await userEvent.click(
-        canvas.getByRole('button', { name: sections[section].title }),
-      );
-      await expect(args.onSectionChange).toHaveBeenLastCalledWith(section);
+    for (const { id, title } of pluginNavigationItems) {
+      await userEvent.click(canvas.getByRole('button', { name: title }));
+      await expect(args.onSectionChange).toHaveBeenLastCalledWith(id);
     }
   },
 };

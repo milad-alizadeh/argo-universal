@@ -37,7 +37,8 @@ export function toSessionSnapshot(
   storedSession: Pick<
     SessionSnapshot,
     'agent' | 'title' | 'titleSource' | 'checkout'
-  >,
+  > &
+    Partial<Pick<SessionSnapshot, 'subagents'>>,
 ): SessionSnapshot {
   const context = session?.context ?? {
     activeTurnId: null,
@@ -79,6 +80,7 @@ export function toSessionSnapshot(
     configOptions: context.configOptions,
     changes: noChanges,
     shells: [],
+    subagents: storedSession.subagents ?? [],
     maxRevision: feed.context.maxRevision,
     epoch: feed.context.epoch,
   };

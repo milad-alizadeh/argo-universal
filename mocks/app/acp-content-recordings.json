@@ -24,7 +24,8 @@
         "deletions": 0
       },
       "maxRevision": 18,
-      "epoch": 0
+      "epoch": 0,
+      "subagents": []
     },
     "rows": [
       {
@@ -225,7 +226,8 @@
         "deletions": 0
       },
       "maxRevision": 18,
-      "epoch": 0
+      "epoch": 0,
+      "subagents": []
     },
     "rows": [
       {

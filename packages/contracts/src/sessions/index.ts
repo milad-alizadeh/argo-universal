@@ -33,3 +33,5 @@ export * from './shells';
 export * from './snapshot';
 
 export * from './turn';
+
+export * from './subagent';

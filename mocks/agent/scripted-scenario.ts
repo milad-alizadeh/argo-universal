@@ -5,6 +5,7 @@ import {
 import type { ScriptedStep, ScriptedTurn } from './scripted-types.ts';
 
 export type {
+  ScriptedCredentials,
   ScriptedStep,
   ScriptedScenario,
   ScriptedTurn,

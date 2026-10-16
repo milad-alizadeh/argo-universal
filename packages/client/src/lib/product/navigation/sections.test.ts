@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { isPage, sectionOf, sectionOrder } from './sections';
 
+const issues = 'plugins/issue-tracker/issues';
+
 const sectionCases: [string | undefined, string][] = [
   ['/sessions', 'sessions'],
   ['/sessions/new', 'sessions'],
@@ -17,6 +19,11 @@ const sectionCases: [string | undefined, string][] = [
   [undefined, 'sessions'],
   ['/toString', 'sessions'],
   ['/constructor', 'sessions'],
+  ['/plugins', 'sessions'],
+  ['/plugins/hello', 'sessions'],
+  ['/plugins/hello/hello', 'plugins/hello/hello'],
+  [`/${issues}/42`, issues],
+  [issues, issues],
 ];
 
 describe('sectionOf', () => {
@@ -26,19 +33,21 @@ describe('sectionOf', () => {
 });
 
 describe('isPage', () => {
-  it.each(['/sessions', '/settings'])(
+  it.each(['/sessions', '/settings', '/plugins/hello/hello'])(
     'reads the list %s as no page',
     (path) => {
       expect(isPage(path)).toBe(false);
     },
   );
 
-  it.each(['/sessions/new', '/settings/accounts', '/settings/agents/codex'])(
-    'reads %s as a page',
-    (path) => {
-      expect(isPage(path)).toBe(true);
-    },
-  );
+  it.each([
+    '/sessions/new',
+    '/settings/accounts',
+    '/settings/agents/codex',
+    `/${issues}/42`,
+  ])('reads %s as a page', (path) => {
+    expect(isPage(path)).toBe(true);
+  });
 });
 
 describe('sectionOrder', () => {

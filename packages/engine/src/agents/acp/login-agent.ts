@@ -7,16 +7,18 @@ import { createRejectionCounter } from '@repo/machine-log';
 import type {
   LoginAgentCallbacks,
   LoginAgentConnection,
-  LoginAgentMethod,
   LoginAgentOutcome,
 } from '..';
 import { ResourceCleanupError } from '../../lib/resource-cleanup-error';
+import {
+  authenticationMethods,
+  type AuthenticationMethod,
+} from './auth-methods';
 import { AcpAuthenticationStatus } from './auth-status';
 import { createAgentClient } from './client';
-import { negotiateAcpInitialize } from './initialize';
+import { negotiateLoginInitialize } from './initialize';
 import { closeLoginProcess } from './login-cleanup';
 import { loginElicitation } from './login-elicitation';
-import { loginMethods } from './login-methods';
 import { AcpLoginWire } from './login-wire';
 import type { AcpProcess } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
@@ -26,6 +28,24 @@ type LoginInput = {
   callbacks: LoginAgentCallbacks;
   closeTimeoutMs?: number;
   terminalSupported?: boolean;
+};
+
+const unsupportedMethods = new Set(['api-key', 'gateway', 'chat-gpt']);
+
+// The login sheet's own policy: no billing-key methods, and protocol sign-in before a terminal.
+const loginMethods = (
+  initialization: InitializeResponse,
+  terminalSupported: boolean | undefined,
+): AuthenticationMethod[] => {
+  const eligible = authenticationMethods(initialization).filter(
+    (method) => !unsupportedMethods.has(method.id),
+  );
+
+  const protocol = eligible.filter((method) => method.type === 'agent');
+
+  if (protocol.length) return protocol;
+
+  return terminalSupported ? eligible : [];
 };
 
 const updateRejections = createRejectionCounter('ACP login updates');
@@ -44,7 +64,7 @@ export class AcpLoginConnection {
     createRejectionCounter('ACP login responses'),
   );
   private readonly connection: ClientConnection;
-  private methods: readonly LoginAgentMethod[] = [];
+  private methods: readonly AuthenticationMethod[] = [];
   private initialization: InitializeResponse | undefined;
   private closing: Promise<void> | undefined;
   private readonly abort = (): void => {
@@ -66,10 +86,10 @@ export class AcpLoginConnection {
     if (input.callbacks.signal.aborted) this.abort();
   }
   public async initialize(): Promise<LoginAgentConnection> {
-    this.initialization = await negotiateAcpInitialize(
+    this.initialization = await negotiateLoginInitialize(
       this.connection.agent,
       this.readers,
-      { elicitation: { url: {} }, terminalAuth: this.input.terminalSupported },
+      this.input.terminalSupported,
     );
     this.methods = this.offeredMethods();
 
@@ -80,7 +100,7 @@ export class AcpLoginConnection {
       close: () => this.close(),
     };
   }
-  private offeredMethods(): readonly LoginAgentMethod[] {
+  private offeredMethods(): readonly AuthenticationMethod[] {
     if (!this.initialization) return [];
 
     return loginMethods(this.initialization, this.input.terminalSupported);

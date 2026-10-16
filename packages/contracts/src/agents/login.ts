@@ -87,16 +87,8 @@ export const AgentLoginTerminalWrite = AgentLoginOperation.extend({
   input: AgentLoginTerminalInput,
 });
 
-export const AgentLoginTerminalFrame = z.strictObject({
-  cursor: z.number().int().min(0),
-  output: z.string().max(loginTerminalOutputLimit),
-  closed: z.boolean().optional(),
-});
-
 export type AgentLoginTerminalRead = z.infer<typeof AgentLoginTerminalRead>;
 
 export type AgentLoginTerminalInput = z.infer<typeof AgentLoginTerminalInput>;
 
 export type AgentLoginTerminalWrite = z.infer<typeof AgentLoginTerminalWrite>;
-
-export type AgentLoginTerminalFrame = z.infer<typeof AgentLoginTerminalFrame>;

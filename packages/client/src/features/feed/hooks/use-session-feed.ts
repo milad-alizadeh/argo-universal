@@ -1,3 +1,4 @@
+import { SessionOpenFailure } from '@repo/contracts';
 import type { FeedSubscribeOutput, SessionSnapshot } from '@repo/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
@@ -93,9 +94,7 @@ export function useSessionFeed(sessionId: string | undefined): SessionFeed {
 
       if (event.type === 'closed') {
         closed.current = true;
-        setClosureError(
-          event.failure === null ? null : new Error(event.failure),
-        );
+        setClosureError(closedFeedError(event));
 
         return;
       }
@@ -170,3 +169,11 @@ export function useSessionFeed(sessionId: string | undefined): SessionFeed {
     loadOlder: history.loadOlder,
   };
 }
+
+const closedFeedError = (
+  event: Extract<FeedSubscribeOutput, { type: 'closed' }>,
+): Error | null => {
+  if (event.openError) return new SessionOpenFailure(event.openError);
+
+  return event.failure === null ? null : new Error(event.failure);
+};
