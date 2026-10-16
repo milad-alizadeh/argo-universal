@@ -6,7 +6,7 @@ import {
   virtualListRowGeometryClasses,
   virtualListSurfaceClasses,
 } from '#primitives/lists/virtual-list-item';
-import type { SessionsLayout } from '../../state/sessions-layout';
+import type { SessionsLayout } from '../../stores/sessions-layout';
 
 const skeletonRowWidths = [
   ['w-44', 'w-30', 'w-22'],

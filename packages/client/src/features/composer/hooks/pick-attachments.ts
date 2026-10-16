@@ -6,7 +6,7 @@ import {
 import { getDocumentAsync } from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { launchImageLibraryAsync } from 'expo-image-picker';
-import type { PickedAttachment } from '../state/attachment-draft';
+import type { PickedAttachment } from '../utils/attachment-draft';
 
 interface ChosenFile {
   key: string;

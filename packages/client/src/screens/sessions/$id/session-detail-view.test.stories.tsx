@@ -14,6 +14,7 @@ import {
   mergeWaitsForChecks,
 } from '../../../../mocks/session-view/session-view-merge.test.mocks';
 import { feedReflowsAfterThePaneCollapses } from '../../../../mocks/session-view/session-view-pane.test.mocks';
+import { previewShowsTheFeedAlone } from '../../../../mocks/session-view/session-view-preview.test.mocks';
 import {
   feedScrollTestId,
   meta as sessionDetailViewTestMeta,
@@ -166,3 +167,5 @@ export const FeedReflowsAfterThePaneCollapses =
 export const LastRowRestsAboveTheComposer = lastRowRestsAboveTheComposer;
 
 export const AuthenticationRequired = authenticationRequired;
+
+export const PreviewShowsTheFeedAlone = previewShowsTheFeedAlone;

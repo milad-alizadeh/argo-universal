@@ -1,5 +1,8 @@
 import Archive from '@expo/material-symbols/archive.xml';
+import Edit from '@expo/material-symbols/edit.xml';
+import EditSquare from '@expo/material-symbols/edit_square.xml';
 import Inbox from '@expo/material-symbols/inbox.xml';
+import Settings from '@expo/material-symbols/settings.xml';
 import ViewAgenda from '@expo/material-symbols/view_agenda.xml';
 import ViewList from '@expo/material-symbols/view_list.xml';
 import { DropdownMenuItem, Icon } from '@expo/ui/jetpack-compose';
@@ -12,7 +15,10 @@ import { type IconName, iconSymbols } from '../../../symbols/icon-names';
 // Compose's Icon draws a bundled vector drawable, so each Material symbol a menu row shows is imported here; a symbol not listed draws no icon.
 const materialImages: Partial<Record<AndroidSymbol, ImageSourcePropType>> = {
   archive: Archive,
+  edit: Edit,
+  edit_square: EditSquare,
   inbox: Inbox,
+  settings: Settings,
   view_agenda: ViewAgenda,
   view_list: ViewList,
 };

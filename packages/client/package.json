@@ -81,7 +81,8 @@
     "react-native-svg": "catalog:",
     "tailwind-merge": "catalog:",
     "uniwind": "catalog:",
-    "vaul": "catalog:"
+    "vaul": "catalog:",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:",

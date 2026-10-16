@@ -8,7 +8,7 @@ import {
   type RegistryLoad,
 } from '#features/agents';
 import { mockHeader } from '../../../../mocks/screen-header-mock';
-import { loaded } from '../../../features/agents/state/installed-agents.mocks';
+import { loaded } from '../../../features/agents/utils/installed-agents.mocks.ts';
 import type { AgentListViewProps } from './agent-list-view';
 import { agentsHeader } from './agents-phone-header';
 

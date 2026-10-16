@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { CountBadge } from '#primitives/display/count-badge';
-import { attentionBadge } from '../../state/attention-badge';
+import { attentionBadge } from '../../utils/attention-badge';
 
 // On a rail tile's corner, the count of Sessions that need input or are Unread; nothing when none do.
 export function AttentionBadge({

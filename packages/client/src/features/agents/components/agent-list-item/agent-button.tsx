@@ -5,7 +5,7 @@ import { Button } from '#primitives/buttons/button';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import type { AgentRowEntry } from '../../state/agent-rows';
+import type { AgentRowEntry } from '../../utils/agent-rows';
 
 export type AgentActions = {
   onInstall: (id: string) => void;

@@ -7,7 +7,7 @@ import { Spinner } from '#primitives/display/spinner';
 import { Text } from '#primitives/display/text';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
 import { motionDuration } from '../../../../lib/generic/motion';
-import type { ConnectionState } from '../../state/connection';
+import type { ConnectionState } from '../../stores/connection';
 
 export interface ConnectionBannerProps {
   state: ConnectionState;

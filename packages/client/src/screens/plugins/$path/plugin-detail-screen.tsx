@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { useErrorToast } from '#primitives/overlays/toast';
 import { pluginPath, usePluginAt } from '../use-plugin-sections';
+import { usePluginView } from '../use-plugin-view';
 import { PluginDetailView } from './plugin-detail-view';
 
 interface PluginDetailScreenProps {
@@ -18,13 +19,32 @@ export function PluginDetailScreen({
 }: PluginDetailScreenProps): React.JSX.Element {
   const { section, loaded } = usePluginAt(pluginPath(path));
 
-  if (section) return <PluginDetailView name={section.name} />;
+  if (section)
+    return (
+      <PluginPage pluginId={section.pluginId} segments={section.segments} />
+    );
 
   return loaded ? (
     <PluginUnavailable />
   ) : (
     <View className="flex-1 bg-content" />
   );
+}
+
+function PluginPage({
+  pluginId,
+  segments,
+}: {
+  pluginId: string;
+  segments: readonly string[];
+}): React.JSX.Element {
+  // The segments after the Plugin id and the nav id are the page's own path.
+  const { root, dispatch } = usePluginView(
+    pluginId,
+    `/${segments.slice(2).join('/')}`,
+  );
+
+  return <PluginDetailView root={root} onEvent={dispatch} />;
 }
 
 function PluginUnavailable(): React.JSX.Element {
