@@ -1,7 +1,7 @@
 import type {
   AgentLoginTerminalRead,
   AgentLoginTerminalWrite,
-  AgentLoginTerminalFrame,
+  AgentAuthTerminalFrame,
   AgentLoginAnswer,
   AgentLoginChoose,
   AgentLoginOperation,
@@ -81,7 +81,7 @@ export class AgentLogins {
 
     return operation.snapshot(input.ownerToken);
   }
-  public readTerminal(input: AgentLoginTerminalRead): AgentLoginTerminalFrame {
+  public readTerminal(input: AgentLoginTerminalRead): AgentAuthTerminalFrame {
     return this.requireOwner(input).readTerminal(input.cursor);
   }
   public inputTerminal(input: AgentLoginTerminalWrite): void {

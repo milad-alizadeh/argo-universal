@@ -8,6 +8,7 @@ import type {
   TurnError,
   TurnUsage,
 } from '@repo/contracts';
+import type { SessionOpenError } from '@repo/contracts';
 import { countRejection } from '@repo/machine-log';
 import { createRejectionCounter } from '@repo/machine-log';
 import {
@@ -28,6 +29,7 @@ import {
 import { AgentProcessExitError } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
+import { sessionOpenError } from '../agents';
 import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import {
   messageRejectedEvent,
@@ -200,6 +202,7 @@ export interface SessionContext extends SessionData {
   configOptions: SessionConfigOption[];
   rejectedMessages: number;
   failure: string | null;
+  openError: SessionOpenError | null;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
   sessionInsertCommitted: Promise<'committed' | 'retrying' | 'failed'> | null;
@@ -586,6 +589,23 @@ const sessionSetup = setup({
         failure: String(params.error),
       }),
     ),
+    rememberOpenFailure: assign(
+      (
+        _,
+        params: FailureParameters,
+      ): Pick<SessionContext, 'failure' | 'openError'> => ({
+        failure: String(params.error),
+        openError: sessionOpenError(params.error),
+      }),
+    ),
+    recordPromptAuthentication: (
+      { context },
+      params: FailureParameters,
+    ): void => {
+      if (context.turnEnding.kind === 'cancel') return;
+
+      context.acpLease?.authentication?.recordRequired(params.error);
+    },
     addDiscardFailure: assign(
       ({ context, event }): Pick<SessionContext, 'failure'> => ({
         failure: `${context.failure}\nThe Session was not discarded: ${String('error' in event ? event.error : event)}`,
@@ -922,7 +942,7 @@ const sessionEntryOutcome = {
   onError: {
     target: 'closed',
     actions: {
-      type: 'rememberFailure',
+      type: 'rememberOpenFailure',
       params: ({
         event,
       }: {
@@ -991,6 +1011,7 @@ export const sessionMachine = sessionSetup.createMachine({
     configOptions: [],
     rejectedMessages: 0,
     failure: null,
+    openError: null,
     stored: input.kind === 'existing',
     sessionInsertCommitted: null,
     acpLifetime: new AcpSessionLifetime(input.acp, input.createId),
@@ -1023,7 +1044,7 @@ export const sessionMachine = sessionSetup.createMachine({
         checkoutLimit: {
           target: 'closed',
           actions: {
-            type: 'rememberFailure',
+            type: 'rememberOpenFailure',
             params: {
               error: `Checkout creation exceeded checkoutLimit (${checkoutLimit} ms). Retry the Session.`,
             },
@@ -1181,7 +1202,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 onError: {
                   target: 'closing',
                   actions: {
-                    type: 'rememberFailure',
+                    type: 'rememberOpenFailure',
                     params: ({ event }): FailureParameters => ({
                       error: event.error,
                     }),
@@ -1314,6 +1335,12 @@ export const sessionMachine = sessionSetup.createMachine({
                   actions: [
                     {
                       type: 'rememberPromptFailure',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
+                    {
+                      type: 'recordPromptAuthentication',
                       params: ({ event }): FailureParameters => ({
                         error: event.error,
                       }),

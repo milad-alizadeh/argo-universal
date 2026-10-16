@@ -61,7 +61,15 @@ export type ScriptedStep =
   | { type: 'fail'; message: string }
   | { type: 'raw'; frame: string };
 
+export type ScriptedCredentials = { signedIn: boolean };
+
 export type ScriptedScenario = {
+  /*
+   * The Agent's stored sign-in, shared like a real Agent's credentials: every
+   * scripted Agent given the same store sees one sign-in. `session/new` needs
+   * auth until it is signed in.
+   */
+  authentication?: { credentials: ScriptedCredentials };
   initialize?: InitializeResponse;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];

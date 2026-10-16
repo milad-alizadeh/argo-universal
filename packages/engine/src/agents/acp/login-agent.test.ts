@@ -55,7 +55,7 @@ it('prefers protocol sign-in when the Agent also offers terminal authentication'
 
   const login = await createLoginAgentOpener(peer)(subject, callbacks);
   expect(login.methods).toEqual([
-    { id: 'subscription-remote', name: 'Device login' },
+    { type: 'agent', id: 'subscription-remote', name: 'Device login' },
   ]);
   await login.close();
 });

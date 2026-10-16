@@ -1,8 +1,20 @@
+import { SessionOpenFailure } from '@repo/contracts';
 import { type AnyTRPCRouter, initTRPC } from '@trpc/server';
 import { z } from 'zod';
 
 // Routers close over their own dependencies, so a call carries no context.
-const t = initTRPC.create();
+const t = initTRPC.create({
+  errorFormatter: (failure) => ({
+    ...failure['shape'],
+    data: {
+      ...failure['shape'].data,
+      openError:
+        failure.error.cause instanceof SessionOpenFailure
+          ? failure.error.cause.openError
+          : undefined,
+    },
+  }),
+});
 
 export const router = t.router;
 

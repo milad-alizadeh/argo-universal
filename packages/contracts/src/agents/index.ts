@@ -16,3 +16,5 @@ export * from './installation';
 export * from './registry';
 
 export * from './servers';
+
+export * from './auth';
