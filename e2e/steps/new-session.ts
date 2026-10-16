@@ -12,10 +12,13 @@ export const messageLabel = 'Message';
 // Opening a Session starts the Agent process, which outlasts the default 5s under parallel load.
 export const sessionOpenTimeout = { timeout: 15_000 };
 
-// New Session's empty Session is open and holds this device's last choices once the Agent/model spinner goes.
+// New Session shows Loading while a Local Session opens for an Agent this device never opened one for.
+export const openingLabel = 'Opening the Session';
+
+// Loading is gone: no Local Session is opening for an Agent without cached options.
 export async function waitForEmptySession(page: Page): Promise<void> {
   await expect(
-    page.getByRole('progressbar', { name: 'Opening the Session' }),
+    page.getByRole('progressbar', { name: openingLabel }),
   ).toHaveCount(0, sessionOpenTimeout);
 }
 
@@ -41,6 +44,15 @@ export async function openNewSession(page: Page): Promise<void> {
   await expect(page.getByRole('button', { name: /^Project: / })).toBeVisible();
   await expect(page.getByText('Reconnecting…')).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: messageLabel })).toBeVisible();
+}
+
+export async function chooseLocalCheckout(page: Page): Promise<void> {
+  const checkout = page.getByRole('button', { name: 'Checkout' });
+  await expect(checkout).toContainText('New worktree');
+  await expect(checkout).not.toContainText('main');
+  await checkout.click();
+  await page.getByRole('button', { name: 'Local' }).click();
+  await expect(checkout).toHaveText(/Local/);
 }
 
 export async function chooseAgent(page: Page, label: string): Promise<void> {

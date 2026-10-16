@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import type { Page, WebSocketRoute } from '@playwright/test';
 import { readSessionCheckouts } from '@repo/mocks/git/test-repository';
 import { z } from 'zod';
@@ -14,29 +14,46 @@ import {
 
 const checkedAttribute = 'aria-checked';
 
-const LoggedRequest = z.object({ method: z.string() });
+const LoggedRequest = z.object({
+  method: z.string(),
+  params: z.object({ cwd: z.string().optional() }).optional(),
+});
+
+type LoggedRequest = z.infer<typeof LoggedRequest>;
 
 const argoBranches = async (projectPath: string): Promise<string[]> =>
   (await readSessionCheckouts(projectPath)).branches;
 
-const closeRequests = (requestLogPath: string): number =>
+// The Agent's session/new and session/close requests, in order.
+const loggedRequests = (requestLogPath: string): LoggedRequest[] =>
   existsSync(requestLogPath)
     ? readFileSync(requestLogPath, 'utf8')
         .split('\n')
         .filter(Boolean)
         .map((line) => LoggedRequest.parse(JSON.parse(line)))
-        .filter(({ method }) => method === 'session/close').length
-    : 0;
+    : [];
 
-// The empty Session's branch, read before the step that should close or keep it.
-const openedBranches = new WeakMap<Page, string[]>();
+const requests = (requestLogPath: string, method: string): LoggedRequest[] =>
+  loggedRequests(requestLogPath).filter((request) => request.method === method);
+
+export const openRequests = (requestLogPath: string): LoggedRequest[] =>
+  requests(requestLogPath, 'session/new');
+
+// The folder a Session opened in; temporary folders are reached through symlinks on macOS.
+const openedIn = ({ params }: LoggedRequest): string | undefined =>
+  params?.cwd === undefined ? undefined : realpathSync(params.cwd);
+
+const closeRequests = (requestLogPath: string): number =>
+  requests(requestLogPath, 'session/close').length;
 
 const connections = new WeakMap<Page, WebSocketRoute[]>();
 
+// A Local New Session opens its empty Session in the Project folder at once.
 When('the empty Session is open', async ({ page, app }): Promise<void> => {
+  await expect
+    .poll(() => openRequests(app.requestLogPath).map(openedIn))
+    .toEqual([realpathSync(app.projectPath)]);
   await waitForEmptySession(page);
-  await expect.poll(() => argoBranches(app.projectPath)).toHaveLength(1);
-  openedBranches.set(page, await argoBranches(app.projectPath));
 });
 
 When(
@@ -67,22 +84,14 @@ Then(
   },
 );
 
-Then(
-  'only the new empty Session remains',
-  async ({ page, app }): Promise<void> => {
-    const previous = openedBranches.get(page) ?? [];
-    await expect
-      .poll(async () => {
-        const branches = await argoBranches(app.projectPath);
-
-        return {
-          count: branches.length,
-          previousKept: branches.some((branch) => previous.includes(branch)),
-        };
-      })
-      .toEqual({ count: 1, previousKept: false });
-  },
-);
+Then('only the new empty Session remains', async ({ app }): Promise<void> => {
+  await expect
+    .poll(() => ({
+      opened: openRequests(app.requestLogPath).length,
+      closed: closeRequests(app.requestLogPath),
+    }))
+    .toEqual({ opened: 2, closed: 1 });
+});
 
 Given(
   "the App's Connection can be dropped",
@@ -109,11 +118,25 @@ When('the Connection drops and comes back', async ({ page }): Promise<void> => {
   });
 });
 
+// No second Session opened, so the prompt went to the one opened before the drop.
 Then(
   'the prompt went to the Session opened before the drop',
-  async ({ page }): Promise<void> => {
-    const sessionId = new URL(page.url()).pathname.split('/').at(-1);
-    expect(openedBranches.get(page)).toEqual([`argo/${sessionId}`]);
+  async ({ app }): Promise<void> => {
+    expect(openRequests(app.requestLogPath)).toHaveLength(1);
+  },
+);
+
+Then('the Agent opened no Session', async ({ app }): Promise<void> => {
+  expect(openRequests(app.requestLogPath)).toEqual([]);
+});
+
+Then(
+  'the Agent opened one Session in a new worktree',
+  async ({ app }): Promise<void> => {
+    const [opened, ...others] = openRequests(app.requestLogPath);
+    expect(others).toEqual([]);
+    expect(opened && openedIn(opened)).not.toBe(realpathSync(app.projectPath));
+    expect(await argoBranches(app.projectPath)).toHaveLength(1);
   },
 );
 
