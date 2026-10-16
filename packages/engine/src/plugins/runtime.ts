@@ -10,6 +10,7 @@ import {
   type PluginStatus,
   type HostMessage,
 } from './runtime-protocol';
+import { PluginViews } from './views';
 
 type PluginLocation = {
   entry: Omit<PluginEntry, 'generation'>;
@@ -21,6 +22,7 @@ export class PluginRuntime {
   private readonly failures = new PluginFailures();
   private readonly plugins = new Map<string, RuntimePlugin>();
   private readonly host: HostConnection;
+  readonly views: PluginViews;
   private hostError: string | null = null;
   private closed = false;
 
@@ -28,13 +30,26 @@ export class PluginRuntime {
     private readonly log: (line: string) => void,
     private readonly services: PluginServices,
   ) {
+    this.views = new PluginViews((pluginId, event) =>
+      this.host.event(pluginId, event),
+    );
     this.host = new HostConnection({
       log,
-      call: (message): Promise<PluginReply> =>
-        this.services.handle(message.pluginId, message.request),
+      call: (message): Promise<PluginReply> => this.answer(message),
       status: (message): void => this.update(message),
       crash: (message): void => this.crashed(message),
     });
+  }
+
+  private async answer(
+    message: Extract<HostMessage, { type: 'call' }>,
+  ): Promise<PluginReply> {
+    const { pluginId, request } = message;
+
+    if (request.api !== 'view') return this.services.handle(pluginId, request);
+    this.views.receive(pluginId, request.path, request.message);
+
+    return { ok: true };
   }
 
   status(pluginId: string): PluginStatus {
@@ -79,6 +94,7 @@ export class PluginRuntime {
   async close(): Promise<void> {
     this.closed = true;
     this.failures.close();
+    this.views.close();
     await Promise.all(
       [...this.plugins.values()].map((plugin) => plugin.close()),
     );
@@ -87,6 +103,7 @@ export class PluginRuntime {
   }
 
   private update(message: Extract<HostMessage, { type: 'status' }>): void {
+    if (message.state === 'running') this.views.reopen(message.pluginId);
     this.plugins.get(message.pluginId)?.update(
       {
         state: message.state,

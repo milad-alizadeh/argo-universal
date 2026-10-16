@@ -29,6 +29,8 @@ export interface OpenSessionViewProps {
   callout?: SessionCalloutProps;
   // A terminal sign-in method's panel or sheet.
   signInTerminal?: TerminalSignInProps;
+  // Drawn as iOS's long-press preview above a Session's menu: the Feed alone, with nothing to type into.
+  preview?: boolean;
 }
 
 export type SessionDetailViewProps =
@@ -67,7 +69,7 @@ function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
     <SessionLayout
       header={<SessionHeader {...props.header} />}
       feed={<Feed {...props.feed} />}
-      composer={<SessionComposer {...props} />}
+      composer={props.preview ? null : <SessionComposer {...props} />}
       panel={
         props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />
       }

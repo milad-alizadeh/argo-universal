@@ -22,7 +22,7 @@ const tonePresets = {
 } as const;
 
 // iOS and Android draw a native toast; web draws it in the Toaster.
-function showToast(toast: Toast): void {
+export function showToast(toast: Toast): void {
   const options: ToastOptions = {
     ...tonePresets[toast.tone],
     title: toastTitle(toast),

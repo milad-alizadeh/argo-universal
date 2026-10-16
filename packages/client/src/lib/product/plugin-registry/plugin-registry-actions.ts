@@ -1,0 +1,37 @@
+import type { Action } from '@repo/contracts/plugins/wire';
+import { setStringAsync } from 'expo-clipboard';
+import { router, type Href } from 'expo-router';
+import { Linking } from 'react-native';
+import { showToast } from '#primitives/overlays/toast';
+
+type External = Extract<Action, { action: 'openUrl' | 'copy' }>;
+
+async function runExternal(action: External): Promise<void> {
+  await (action.action === 'openUrl'
+    ? Linking.openURL(action.url)
+    : setStringAsync(action.text));
+}
+
+// A Plugin opens its own pages: `/plugins/<Plugin id>/<nav id>/<page>`.
+function pluginHref(path: string): Href | null {
+  const [root, ...page] = path.split('/').filter(Boolean);
+
+  return root === 'plugins' && page.length > 0
+    ? { pathname: '/plugins/[...path]', params: { path: page } }
+    : null;
+}
+
+function openPage(path: string): void {
+  const href = pluginHref(path);
+
+  if (href) router.push(href);
+  else showToast({ title: 'That page is not available', tone: 'danger' });
+}
+
+// The built-in Actions run here, in the App, with no round trip to the Server.
+export async function runAction(action: Action): Promise<void> {
+  if (action.action === 'toast')
+    showToast({ title: action.message, tone: 'success' });
+  else if (action.action === 'navigate') openPage(action.path);
+  else await runExternal(action);
+}

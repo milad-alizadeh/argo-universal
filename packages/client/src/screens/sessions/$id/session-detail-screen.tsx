@@ -1,3 +1,4 @@
+import { useIsPreview } from 'expo-router';
 import type * as React from 'react';
 import { useInstalledAgents } from '#features/agents';
 import {
@@ -50,12 +51,16 @@ export function SessionDetailScreen({
   return <ConnectedSession key={id} sessionId={id} />;
 }
 
+// iOS's long-press preview draws the page outside its stack: it takes no header, and a peek does not mark the Session seen.
 function ConnectedSession({
   sessionId,
 }: {
   sessionId: string;
 }): React.JSX.Element {
-  const props = useSessionViewProps(sessionId);
+  const preview = useIsPreview();
+  const props = useSessionViewProps({ sessionId, preview });
+
+  if (preview) return <SessionDetailView {...previewed(props)} />;
 
   return (
     <>
@@ -64,6 +69,9 @@ function ConnectedSession({
     </>
   );
 }
+
+const previewed = (props: SessionDetailViewProps): SessionDetailViewProps =>
+  props.state === 'open' ? { ...props, preview: true } : props;
 
 // A Session the Server refused to open tries again when the Connection reopens; its callout already said why.
 function useRetryOpenOnReconnect(feed: SessionFeed): void {
@@ -94,7 +102,7 @@ type SessionSurroundings =
   | 'onAtEndChange';
 
 function useSessionSurroundings(
-  sessionId: string,
+  { sessionId, preview }: SessionPage,
   feed: SessionFeed,
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
@@ -104,7 +112,7 @@ function useSessionSurroundings(
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
     mergeMethod: useMergeMethod(),
-    onAtEndChange: useMarkSeen(sessionId, feed.revision),
+    onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
   };
 }
 
@@ -140,9 +148,16 @@ function useConnectedFeed(sessionId: string): ConnectedFeed {
   };
 }
 
-function useSessionViewProps(sessionId: string): SessionDetailViewProps {
+// The Session the page draws, and whether it draws as iOS's long-press preview.
+interface SessionPage {
+  sessionId: string;
+  preview: boolean;
+}
+
+function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
+  const { sessionId } = page;
   const sources = useConnectedFeed(sessionId);
-  const surroundings = useSessionSurroundings(sessionId, sources.feed);
+  const surroundings = useSessionSurroundings(page, sources.feed);
   const { agents } = surroundings;
   const callouts = useSessionCallout({ sessionId, agents, ...sources });
 
