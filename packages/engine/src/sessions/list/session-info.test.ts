@@ -74,7 +74,6 @@ const information = {
   subagents: { total: 0, running: 0 },
   shells: { total: 0, running: 0 },
   archivedAt: null,
-  issue: null,
   pullRequest: null,
 };
 

@@ -4,23 +4,24 @@ import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { Placeholder } from './placeholder';
 
-const issues = { title: 'Issues', description: 'Issues will appear here.' };
-
-const atlas = { title: 'Atlas', description: 'Atlas will appear here.' };
+const agent = {
+  title: 'Agent',
+  description: 'Settings for Codex will appear here.',
+};
 
 const meta = {
   title: 'Tests/Placeholder',
   component: Placeholder,
   parameters: { screenPreview: true },
-  args: issues,
+  args: agent,
 } satisfies Meta<typeof Placeholder>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The Issues and Atlas pages until they are built: each names itself and says what will appear, and only a wide window draws the page's own header row; a narrow one leaves the title to the native header.
-function placeholderPage(page: typeof issues, width: number): Story {
+// The Agent placeholder: each names itself and says what will appear, and only a wide window draws the page's own header row; a narrow one leaves the title to the native header.
+function placeholderPage(page: typeof agent, width: number): Story {
   const headerRows = width >= layoutWidths.wide ? 1 : 0;
 
   return {
@@ -38,10 +39,6 @@ function placeholderPage(page: typeof issues, width: number): Story {
   };
 }
 
-export const IssuesPhone = placeholderPage(issues, layoutWidths.phone);
+export const AgentPhone = placeholderPage(agent, layoutWidths.phone);
 
-export const IssuesWide = placeholderPage(issues, layoutWidths.wide);
-
-export const AtlasPhone = placeholderPage(atlas, layoutWidths.phone);
-
-export const AtlasWide = placeholderPage(atlas, layoutWidths.wide);
+export const AgentWide = placeholderPage(agent, layoutWidths.wide);

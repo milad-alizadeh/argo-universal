@@ -10,7 +10,6 @@ import {
 import { contentActionClass } from '#primitives/buttons/button';
 import { Text, TextClassContext } from '#primitives/display/text';
 import { Pressable } from '#primitives/pressable';
-import type { IssueIndicatorProps } from '../issue-indicator/issue-indicator';
 import type { PullRequestIndicatorProps } from '../pull-request-indicator/pull-request-indicator';
 import { SessionLogo } from './session-row-logo';
 import {
@@ -24,7 +23,6 @@ export interface SessionRowProps {
   logo: string;
   selected?: boolean;
   subagentsFailed?: boolean;
-  issue?: IssueIndicatorProps;
   pullRequest?: PullRequestIndicatorProps;
   // Short text at the end of the title line, such as how long ago a search result was active.
   trailing?: string;
