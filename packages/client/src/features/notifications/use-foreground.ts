@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  AppState,
-  type NativeEventSubscription,
-  Platform,
-} from 'react-native';
+import { AppState, type NativeEventSubscription, Platform } from 'react-native';
 
 const isForeground = (): boolean => AppState.currentState === 'active';
 
@@ -13,6 +9,7 @@ function subscribe(
   const subscriptions = [
     AppState.addEventListener('change', (state) => changed(state === 'active')),
   ];
+
   // `blur` and `focus` exist on Android only; iOS throws on them.
   if (Platform.OS === 'android') {
     subscriptions.push(
