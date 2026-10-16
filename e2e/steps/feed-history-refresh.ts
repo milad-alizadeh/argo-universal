@@ -5,13 +5,18 @@ import { scrollToOldestHistoryMessage } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
 import { reloadApp } from './frame';
 
+// Request IDs restart on each WebSocket, so each one holds its own prefetches.
+interface Socket {
+  route: WebSocketRoute;
+  prefetchIds: Set<number>;
+  heldPrefetches: (() => void)[];
+}
+
 interface HeldRefresh {
-  routes: WebSocketRoute[];
+  sockets: Socket[];
   armed: boolean;
   heldId?: number;
   delayPrefetch: boolean;
-  prefetchIds: Set<number>;
-  releasePrefetch?: () => void;
   release?: () => void;
 }
 
@@ -49,10 +54,11 @@ function pageRequests(message: string | Buffer): z.infer<typeof PageRequest>[] {
 
 function observePage(
   refresh: HeldRefresh,
+  socket: Socket,
   request: z.infer<typeof PageRequest>,
 ): void {
   if (request.params.input.direction === 'before') {
-    if (refresh.delayPrefetch) refresh.prefetchIds.add(request.id);
+    if (refresh.delayPrefetch) socket.prefetchIds.add(request.id);
 
     return;
   }
@@ -76,40 +82,35 @@ function responseIds(message: string | Buffer): number[] {
 }
 
 function holdRefresh(
-  route: WebSocketRoute,
   refresh: HeldRefresh,
+  { route, prefetchIds, heldPrefetches }: Socket,
   message: string | Buffer,
 ): void {
   const ids = responseIds(message);
+  const send = (): void => route.send(message);
 
-  if (ids.some((id) => refresh.prefetchIds.has(id))) {
-    refresh.releasePrefetch = (): void => route.send(message);
-
-    return;
-  }
-
-  const isHeld = ids.some((id) => id === refresh.heldId);
-
-  if (isHeld) refresh.release = (): void => route.send(message);
-  else route.send(message);
+  if (ids.some((id) => prefetchIds.has(id))) heldPrefetches.push(send);
+  else if (ids.some((id) => id === refresh.heldId)) refresh.release = send;
+  else send();
 }
 
 function connect(route: WebSocketRoute, refresh: HeldRefresh): void {
   const server = route.connectToServer();
-  refresh.routes.push(route);
+  const socket: Socket = { route, prefetchIds: new Set(), heldPrefetches: [] };
+  refresh.sockets.push(socket);
   route.onMessage((message) => {
-    for (const request of pageRequests(message)) observePage(refresh, request);
+    for (const request of pageRequests(message))
+      observePage(refresh, socket, request);
     server.send(message);
   });
-  server.onMessage((message) => holdRefresh(route, refresh, message));
+  server.onMessage((message) => holdRefresh(refresh, socket, message));
 }
 
 Given('the Feed history refresh can be delayed', async ({ page }) => {
   const refresh: HeldRefresh = {
-    routes: [],
+    sockets: [],
     armed: false,
     delayPrefetch: true,
-    prefetchIds: new Set(),
   };
 
   refreshes.set(page, refresh);
@@ -123,14 +124,18 @@ When(
     const refresh = refreshes.get(page);
 
     if (!refresh) throw new Error('The history transport was not prepared');
-    await expect.poll(() => refresh.releasePrefetch !== undefined).toBe(true);
+
+    // Earlier WebSockets closed with the reload; only the reopened Feed's prefetches count.
+    const held = (): (() => void)[] =>
+      refresh.sockets.at(-1)?.heldPrefetches ?? [];
+
+    await expect.poll(() => held().length).toBeGreaterThan(0);
     await page.getByTestId(feedScroll).evaluate((element) => {
       element.scrollTop = element.scrollHeight;
     });
     refresh.delayPrefetch = false;
-    // A reconnected WebSocket starts its request IDs again; released prefetches must not hold those new requests.
-    refresh.prefetchIds.clear();
-    refresh.releasePrefetch?.();
+
+    for (const release of held().splice(0)) release();
     await expect(
       page.getByRole('progressbar', { name: 'Loading earlier' }),
     ).toHaveCount(0);
@@ -145,11 +150,11 @@ When(
     if (!refresh) throw new Error('The history transport was not prepared');
     refresh.armed = true;
     refresh.delayPrefetch = false;
-    const routes = refresh.routes;
-    refresh.routes = [];
-    await Promise.all(routes.map((route) => route.close()));
+    const sockets = refresh.sockets;
+    refresh.sockets = [];
+    await Promise.all(sockets.map(({ route }) => route.close()));
     await expect
-      .poll(() => refresh.routes.length, { timeout: 15_000 })
+      .poll(() => refresh.sockets.length, { timeout: 15_000 })
       .toBeGreaterThan(0);
     await expect(page.getByText('Reconnecting…')).toHaveCount(0);
   },
