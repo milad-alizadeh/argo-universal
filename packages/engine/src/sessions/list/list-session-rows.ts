@@ -12,6 +12,7 @@ const shellCountColumns = {
   shellTotal: sql<number>`(select count(*) from ${shell} where ${shell.sessionId} = ${session.id})`,
   shellRunning: sql<number>`(select count(*) from ${shell} where ${shell.sessionId} = ${session.id} and ${shell.status} = 'running')`,
 };
+
 type StoredSession = typeof session.$inferSelect & {
   shellTotal: number;
   shellRunning: number;

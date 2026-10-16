@@ -26,9 +26,3 @@ export interface SessionInfoFixture {
   liveHeaderRows: readonly SessionUpdate[];
   children: readonly SessionRecord[];
 }
-
-export type SessionInfoCase = {
-  rule: string;
-  input: SessionInfoFixture;
-  expected: unknown;
-};

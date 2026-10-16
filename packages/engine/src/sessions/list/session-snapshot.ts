@@ -1,25 +1,18 @@
-import type {
-  ChangesSummary,
-  SessionSnapshot,
-  SessionUpdate,
-} from '@repo/contracts';
-import type { SnapshotFrom } from 'xstate';
-import type { feedMachine } from '../../feed';
+import type { ChangesSummary, SessionSnapshot } from '@repo/contracts';
 import { toShell } from '../acp/shells';
-import { withHeldConfiguration } from '../configuration/held-configuration';
-import type { sessionMachine } from '../session-machine';
-import { toLiveHeader } from './live-header';
+import {
+  feedSnapshotFields,
+  sessionSnapshotFields,
+} from './session-snapshot-fields';
+import type {
+  SessionState,
+  SnapshotFeed,
+  StoredSnapshot,
+} from './session-snapshot-types';
 
-// The Checkout's changes are computed in #74.
-const noChanges: ChangesSummary = {
-  files: 0,
-  additions: 0,
-  deletions: 0,
-};
+const noChanges: ChangesSummary = { files: 0, additions: 0, deletions: 0 };
 
-export function isSessionReady(
-  session: SnapshotFrom<typeof sessionMachine>,
-): boolean {
+export function isSessionReady(session: SessionState): boolean {
   return (
     session.matches({ open: 'acp' }) &&
     !(['opening', 'closing', 'flushing'] as const).some((state) =>
@@ -29,73 +22,53 @@ export function isSessionReady(
 }
 
 export function toSessionSnapshot(
-  session: SnapshotFrom<typeof sessionMachine> | null,
-  feed: {
-    context: Pick<
-      SnapshotFrom<typeof feedMachine>['context'],
-      'epoch' | 'maxRevision'
-    > & { rows?: Record<string, SessionUpdate> };
-  },
-  storedSession: Pick<
-    SessionSnapshot,
-    'projectId' | 'agent' | 'title' | 'titleSource' | 'checkout'
-  > &
-    Partial<Pick<SessionSnapshot, 'subagents' | 'shells'>>,
+  session: SessionState | null,
+  feed: SnapshotFeed,
+  storedSession: StoredSnapshot,
 ): SessionSnapshot {
-  const context = session?.context ?? {
-    activeTurnId: null,
-    activeTurnStartedAt: null,
-    usage: null,
-    permissionQueue: [],
-    elicitationQueue: [],
-    configOptions: [],
-    heldConfig: [],
-  };
-
-  let state: SessionSnapshot['state'] = 'idle';
-
-  if (
-    session?.matches({ open: { acp: { activeTurn: 'awaitingPermission' } } }) ||
-    session?.matches({ open: { acp: { activeTurn: 'awaitingElicitation' } } })
-  ) {
-    state = 'requires_action';
-  } else if (
-    session?.matches({ open: { acp: 'committing' } }) ||
-    (session?.matches({ open: { acp: 'activeTurn' } }) &&
-      !session.matches({ open: { acp: { activeTurn: 'cancelling' } } })) ||
-    session?.matches({ open: { acp: 'publishing' } })
-  ) {
-    state = 'running';
-  }
-
   return {
-    projectId: storedSession.projectId,
-    agent: storedSession.agent,
-    title: storedSession.title,
-    titleSource: storedSession.titleSource,
-    checkout: storedSession.checkout,
-    state,
-    liveHeader: toLiveHeader(context, Object.values(feed.context.rows ?? {})),
-    activeTurnId: context.activeTurnId,
-    usage: context.usage,
-    pendingPermission: context.permissionQueue[0] ?? null,
-    pendingElicitation: context.elicitationQueue[0] ?? null,
-    pendingPlanProposal: null,
-    configOptions: withHeldConfiguration(
-      context.configOptions,
-      context.heldConfig,
-    ),
-    changes: noChanges,
-    shells: session
-      ? session.context.shells.map((record) =>
-          toShell(record, {
-            now: session.context.input.now(),
-            terminalAvailable: session.context.shellRuntime.canStop(record.id),
-          }),
-        )
-      : (storedSession.shells ?? []),
-    subagents: storedSession.subagents ?? [],
-    maxRevision: feed.context.maxRevision,
-    epoch: feed.context.epoch,
+    ...storedFields(storedSession),
+    ...sessionSnapshotFields(session),
+    ...feedSnapshotFields(session, feed),
+    shells: snapshotShells(session, storedSession),
   };
+}
+
+type StoredFields = Pick<
+  SessionSnapshot,
+  | 'projectId'
+  | 'agent'
+  | 'title'
+  | 'titleSource'
+  | 'checkout'
+  | 'changes'
+  | 'subagents'
+>;
+
+function storedFields(stored: StoredSnapshot): StoredFields {
+  return {
+    projectId: stored.projectId,
+    agent: stored.agent,
+    title: stored.title,
+    titleSource: stored.titleSource,
+    checkout: stored.checkout,
+    changes: noChanges,
+    subagents: stored.subagents ?? [],
+  };
+}
+
+function snapshotShells(
+  session: SessionState | null,
+  stored: StoredSnapshot,
+): SessionSnapshot['shells'] {
+  return session ? liveShells(session) : (stored.shells ?? []);
+}
+
+function liveShells(session: SessionState): SessionSnapshot['shells'] {
+  return session.context.shells.map((record) =>
+    toShell(record, {
+      now: session.context.input.now(),
+      terminalAvailable: session.context.shellRuntime.canStop(record.id),
+    }),
+  );
 }

@@ -5,7 +5,10 @@ import { createSessionReader } from '../session-record';
 import { storedShells } from '../shells/reader';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import { toSessionSnapshot } from './session-snapshot';
+import type { StoredSnapshot } from './session-snapshot-types';
 import { createSubagentsReader } from './subagents-reader';
+
+type SnapshotStored = ReturnType<ReturnType<typeof createSessionReader>>;
 
 type SnapshotDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
 
@@ -42,19 +45,35 @@ export class SessionSnapshotReader {
     const session = currentSession(actor);
     const stored = this.readSession(sessionId);
 
-    const feedSnapshot = this.feedSnapshot(
-      sessionId,
-      session,
-      this.feedContext(sessionId, stored),
-    );
-
     return {
-      snapshot: toSessionSnapshot(session, feedSnapshot, {
-        ...stored,
-        subagents: this.readSubagents(sessionId),
-        shells: storedShells(this.deps.database, sessionId),
-      }),
+      snapshot: this.snapshot(sessionId, session, stored),
       isClosed: closedSession(actor, stored.parentSessionId),
+    };
+  }
+
+  private snapshot(
+    id: string,
+    session: SessionState,
+    stored: SnapshotStored,
+  ): SessionSnapshot {
+    const feed = this.feedContext(id, stored);
+    const snapshot = this.feedSnapshot(id, session, feed);
+
+    return toSessionSnapshot(
+      session,
+      snapshot,
+      this.storedSnapshot(id, stored),
+    );
+  }
+
+  private storedSnapshot(
+    sessionId: string,
+    stored: SnapshotStored,
+  ): StoredSnapshot {
+    return {
+      ...stored,
+      subagents: this.readSubagents(sessionId),
+      shells: storedShells(this.deps.database, sessionId),
     };
   }
 
