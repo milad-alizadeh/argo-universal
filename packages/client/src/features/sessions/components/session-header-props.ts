@@ -1,5 +1,5 @@
 import type { SessionStatus } from '@repo/contracts';
-import type { MergeMethod } from '../state/merge-method';
+import type { MergeMethod } from '../stores/merge-method';
 import type { SessionPullRequest } from './session-pull-request';
 
 export type SessionHeaderStatus = Extract<

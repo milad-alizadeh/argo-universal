@@ -8,7 +8,7 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
-import { maximumPlanStepsHeight } from '../state/status';
+import { maximumPlanStepsHeight } from '../utils/status';
 
 const revealTiming = { duration: 200, easing: Easing.out(Easing.cubic) };
 

@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import {
   dropped,
   serverError,
-} from '../../../../mocks/sessions/open-failure.mocks';
+} from '../../../../mocks/sessions/open-failure.mocks.ts';
 import { type OpenAttempt, sessionProblem } from './session-problem';
 
 const idle: OpenAttempt = { submittedAt: 0, error: null, isPending: false };

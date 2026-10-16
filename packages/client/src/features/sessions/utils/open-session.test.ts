@@ -8,7 +8,7 @@ import {
   mainProject,
   projectBaseBranch,
   worktreeProject,
-} from './session-choices.mocks';
+} from './session-choices.mocks.ts';
 
 describe('toNewSessionInput', () => {
   it("opens an empty Session with the Project's defaults and the Agent", () => {

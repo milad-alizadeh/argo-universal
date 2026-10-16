@@ -10,7 +10,7 @@ import {
   registryOf,
   zed,
   zedEntry,
-} from './installed-agents.mocks';
+} from './installed-agents.mocks.ts';
 
 describe('installedAgents', () => {
   it.each([

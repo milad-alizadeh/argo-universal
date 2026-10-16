@@ -2,13 +2,13 @@ import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import type { ComposerStatusProps } from '../../state/status';
+import type { ComposerStatusProps } from '../../utils/status';
 import { StatusPlan } from './composer-plan';
 import { ContextControl } from './context-control';
 import { UsageControl } from './usage-control';
 import { WorkChips } from './work-chips';
 
-export type { ComposerStatusProps } from '../../state/status';
+export type { ComposerStatusProps } from '../../utils/status';
 
 interface StatusControlsProps {
   status: ComposerStatusProps;

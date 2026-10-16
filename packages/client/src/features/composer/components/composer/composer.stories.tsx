@@ -9,7 +9,7 @@ import {
   composerProps,
   type ComposerMockProps,
 } from '../../../../../mocks/composer-mock';
-import { attachmentSelectionFailureMessage } from '../../state/attachment-draft';
+import { attachmentSelectionFailureMessage } from '../../utils/attachment-draft';
 import { Composer } from './composer';
 import { ComposerOverview } from './composer-overview';
 

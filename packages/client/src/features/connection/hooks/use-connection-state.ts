@@ -1,7 +1,7 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import type { ConnectionState } from '../state/connection';
-import { shouldResubscribe } from '../state/should-resubscribe';
+import type { ConnectionState } from '../stores/connection';
 import { useConnection } from '../stores/connection-context';
+import { shouldResubscribe } from '../utils/should-resubscribe';
 
 export function useConnectionState(): ConnectionState {
   const connection = useConnection();

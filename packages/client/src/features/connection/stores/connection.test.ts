@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Connection } from './connection';
-import { type FakeLink, fakeLink, offlineDelayMs } from './connection.mocks';
+import { type FakeLink, fakeLink, offlineDelayMs } from './connection.mocks.ts';
 
 let link: FakeLink;
 
