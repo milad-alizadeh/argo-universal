@@ -1,4 +1,4 @@
-import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
+import * as RadixCollapsible from '@radix-ui/react-collapsible';
 import { type ComponentType, type ReactElement, useContext } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
@@ -19,14 +19,17 @@ const webContentMotion = (open: boolean): string =>
 function WebContent({
   className,
   children,
+  forceMount,
   ...props
 }: ContentProps): ReactElement {
   const open = useContext(OpenContext);
 
   return (
-    <CollapsiblePrimitive.Content {...props} className={webContentMotion(open)}>
-      <View className={className}>{children}</View>
-    </CollapsiblePrimitive.Content>
+    <RadixCollapsible.Content forceMount={forceMount} asChild>
+      <View {...props} className={webContentMotion(open)}>
+        <View className={className}>{children}</View>
+      </View>
+    </RadixCollapsible.Content>
   );
 }
 

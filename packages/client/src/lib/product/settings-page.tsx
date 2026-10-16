@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { type ReactNode, useMemo } from 'react';
+import { type ReactNode, use, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
@@ -49,18 +49,15 @@ function useSettingsColumn(): SettingsColumn {
  * A phone's native header shows the title, which the page's screen sets, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
-  if (!useWide()) return props.children;
-
-  return <WideSettingsPage {...props} />;
-}
-
-function WideSettingsPage(props: SettingsPageProps): React.JSX.Element {
+  const wide = useWide();
+  const inheritedColumn = use(ScrollColumnContext);
   const settingsColumn = useSettingsColumn();
 
+  // Keep the form's ancestors in place when the window changes Size class, so its draft and open entry editor survive.
   return (
-    <View className="mt-frame-inset flex-1">
-      <SettingsPageTop {...props} column={settingsColumn} />
-      <SettingsPageBody column={settingsColumn}>
+    <View className="flex-1 wide:mt-frame-inset">
+      {wide ? <SettingsPageTop {...props} column={settingsColumn} /> : null}
+      <SettingsPageBody column={wide ? settingsColumn : inheritedColumn}>
         {props.children}
       </SettingsPageBody>
     </View>
@@ -79,7 +76,7 @@ function SettingsPageTop({
 }
 
 function SettingsPageBody(props: {
-  column: SettingsColumn;
+  column: React.ContextType<typeof ScrollColumnContext>;
   children: ReactNode;
 }): React.JSX.Element {
   return (

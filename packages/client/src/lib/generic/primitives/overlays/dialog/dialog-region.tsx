@@ -1,8 +1,13 @@
-import * as DialogPrimitive from '@rn-primitives/dialog';
 import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { useId } from 'react';
 import { Portal } from '#primitives/overlays/portal';
+import {
+  DialogDescriptionText,
+  DialogFrame,
+  DialogTitleText,
+} from './dialog-parts';
 import type { DialogRegionProps as RegionProps } from './dialog-props';
+import { DialogRoot } from './dialog-root';
 
 const regionInset = 24;
 
@@ -12,30 +17,28 @@ const regionClass =
 export function DialogRegion(props: RegionProps): ReactElement {
   return (
     <Portal hostName={props.hostName} name={useId()}>
-      <DialogPrimitive.Root {...regionRootProps(props)}>
+      <DialogRoot {...regionRootProps(props)}>
         {regionContent(props)}
-      </DialogPrimitive.Root>
+      </DialogRoot>
     </Portal>
   );
 }
 
 function regionContent(props: RegionProps): ReactElement {
   return (
-    <DialogPrimitive.Content {...regionContentProps}>
-      <DialogPrimitive.Title className="sr-only">
-        {props.label}
-      </DialogPrimitive.Title>
-      <DialogPrimitive.Description className="sr-only">
+    <DialogFrame {...regionContentProps}>
+      <DialogTitleText className="sr-only">{props.label}</DialogTitleText>
+      <DialogDescriptionText className="sr-only">
         {props.description}
-      </DialogPrimitive.Description>
+      </DialogDescriptionText>
       {props.children}
-    </DialogPrimitive.Content>
+    </DialogFrame>
   );
 }
 
-function regionRootProps(
-  props: RegionProps,
-): ComponentProps<typeof DialogPrimitive.Root> {
+type RootProps = Omit<ComponentProps<typeof DialogRoot>, 'children'>;
+
+function regionRootProps(props: RegionProps): RootProps {
   return {
     open: true,
     onOpenChange: (open): void => {

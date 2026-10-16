@@ -1,52 +1,40 @@
 import * as WebPopover from '@radix-ui/react-popover';
-import * as PopoverPrimitive from '@rn-primitives/popover';
-import { Slot } from '@rn-primitives/slot';
+import { type ComponentType, type JSX, useContext } from 'react';
+import type { GestureResponderEvent } from 'react-native';
 import {
-  type ComponentProps,
-  type ComponentType,
-  type JSX,
-  useContext,
-} from 'react';
-import { Pressable, type GestureResponderEvent } from 'react-native';
+  type TriggerHandlers,
+  triggerChild,
+} from '#primitives/overlays/open-state';
+import { usePopoverState } from './popover-context';
 import { PopoverHover } from './popover-hover';
 import type { PopoverTriggerProps as TriggerProps } from './popover-props';
 
-export function PopoverTrigger({
-  asChild,
-  ...props
-}: TriggerProps): JSX.Element {
-  const Component = asChild ? Slot : Pressable;
+// Radix's Trigger anchors the content and names it; the caller's element draws the trigger.
+export function PopoverTrigger(props: TriggerProps): JSX.Element {
   const behavior = useTriggerBehavior(props);
 
   return (
     <WebPopover.Trigger asChild disabled={props.disabled ?? undefined}>
-      <Component {...props} {...behavior} role="button" />
+      {triggerChild(props.children, behavior, {
+        role: 'button',
+        disabled: props.disabled,
+      })}
     </WebPopover.Trigger>
   );
 }
 
-function useTriggerBehavior(
-  props: TriggerProps,
-): ComponentProps<typeof Pressable> {
-  const { open, onOpenChange } = PopoverPrimitive.useRootContext();
+function useTriggerBehavior(props: TriggerProps): TriggerHandlers {
+  const { open, onOpenChange } = usePopoverState();
   const hover = useContext(PopoverHover);
 
   return {
     ...hoverTrigger(hover, props.disabled),
-    onPress: (event) => {
-      triggerEvent(event, props.onPress);
+    onPress: (event: GestureResponderEvent | undefined) => {
+      // Radix's own click toggle would race the press below.
+      event?.preventDefault();
       press(hover, open, onOpenChange);
     },
   };
-}
-
-function triggerEvent(
-  event: GestureResponderEvent | undefined,
-  onPress: TriggerProps['onPress'],
-): void {
-  if (!event) return;
-  event.preventDefault();
-  onPress?.(event);
 }
 
 function press(
@@ -68,7 +56,7 @@ function press(
 function hoverTrigger(
   hover: React.ContextType<typeof PopoverHover>,
   disabled: TriggerProps['disabled'],
-): ComponentProps<typeof Pressable> {
+): TriggerHandlers {
   if (disabled || !hover) return {};
 
   return { onHoverIn: hover.enter, onHoverOut: hover.leave };

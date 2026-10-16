@@ -1,4 +1,3 @@
-import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useLayoutEffect } from 'react';
@@ -7,6 +6,7 @@ import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { fn } from 'storybook/test';
+import { PortalProvider } from '#primitives/overlays/portal';
 import { ScaffoldMock } from './scaffold.mocks';
 
 export const preservedDraft = 'Keep my draft';
@@ -71,10 +71,11 @@ function scaffoldTree(props: MockProps, onCommit: Commit): React.JSX.Element {
     <CommittedScaffold onCommit={onCommit}>
       <SafeAreaProvider>
         <KeyboardProvider>
-          <View className="h-175 w-full">
-            <ScaffoldMock {...props} />
-          </View>
-          <PortalHost />
+          <PortalProvider>
+            <View className="h-175 w-full">
+              <ScaffoldMock {...props} />
+            </View>
+          </PortalProvider>
         </KeyboardProvider>
       </SafeAreaProvider>
     </CommittedScaffold>
