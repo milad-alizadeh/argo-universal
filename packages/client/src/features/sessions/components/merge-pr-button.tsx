@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { Button } from '#primitives/buttons/button';
 import { SplitButton } from '#primitives/buttons/split-button';
 import type { MergeMethod } from '../state/merge-method';
 
@@ -19,15 +18,9 @@ export interface MergePrButtonProps {
   onMerge?: (method: MergeMethod) => void;
 }
 
-const mergeAppearance = {
-  custom: true,
-  size: 'xs',
-  icon: 'merged',
-  label: 'Merge PR',
-  className: 'web:shadow-none',
-} as const;
-
 const mergeSplit = {
+  label: 'Merge PR',
+  icon: 'merged',
   size: 'xs',
   primary: true,
   menuLabel: 'Merge options',
@@ -42,12 +35,7 @@ export function MergePrButton(props: MergePrButtonProps): React.JSX.Element {
     <SplitButton
       {...{ ...mergeSplit, disabled, value: props.method }}
       onValueChange={props.onMethodChange}
-    >
-      <Button
-        {...mergeAppearance}
-        disabled={disabled}
-        onPress={() => props.onMerge?.(props.method)}
-      />
-    </SplitButton>
+      onPress={() => props.onMerge?.(props.method)}
+    />
   );
 }

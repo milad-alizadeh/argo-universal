@@ -16,7 +16,6 @@
         // 2 arbitrary
         "packages/client/src/features/composer/components/composer-attachment-card/composer-attachment-card.tsx",
         // 1 arbitrary
-        "packages/client/src/features/composer/components/composer-status/context-content.tsx",
         // 2 arbitrary
         "packages/client/src/features/composer/components/composer-status/status-control-trigger.tsx",
         // 1 arbitrary

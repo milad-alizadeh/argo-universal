@@ -1,6 +1,6 @@
 import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
-import { Button } from '#primitives/buttons/button';
+import { MenuTrigger } from '#primitives/overlays/menu';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 
@@ -58,13 +58,11 @@ function OptionsTrigger({
   disabled,
 }: Pick<OptionsProps, 'disabled'>): React.JSX.Element {
   return (
-    <Button
-      {...optionsButtonAppearance}
+    <MenuTrigger
+      tone="muted"
       disabled={disabled}
       accessibilityLabel="Session settings"
       label="Settings"
-      className="h-7 sm:h-7 px-1.5 py-0"
-      labelClassName="text-muted-foreground"
     />
   );
 }
@@ -75,9 +73,3 @@ function contentsProps(
 ): React.ComponentProps<typeof OptionsContents> {
   return { options, onChange: configuration.onConfigChange };
 }
-
-const optionsButtonAppearance = {
-  custom: true,
-  size: 'xs',
-  variant: 'ghost',
-} as const;

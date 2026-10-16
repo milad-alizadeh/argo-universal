@@ -1,15 +1,21 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { cn } from '#lib/generic/utils';
-import { Button } from '#primitives/buttons/button';
+import { View } from 'react-native';
 import { Combobox, type ComboboxOption } from '#primitives/inputs/combobox';
+import { MenuTrigger } from '#primitives/overlays/menu';
 import { ComposerPopover } from '../composer-popover/composer-popover';
-import { SessionControlDisclosure } from './session-control-disclosure';
 import type { StartSessionLayout } from './start-session-types';
 
+// Wide, it sits in the row after the Server; on phones it is a stacked row on the page's inset.
 export function SessionProjectControl(
   layout: StartSessionLayout,
 ): React.JSX.Element {
+  const control = <ProjectPopover {...layout} />;
+
+  return layout.wide ? control : <View className="px-4">{control}</View>;
+}
+
+function ProjectPopover(layout: StartSessionLayout): React.JSX.Element {
   return (
     <ComposerPopover
       listContent
@@ -31,34 +37,16 @@ function selectProject(
   if (id !== props.projectId) props.onProjectChange(id);
 }
 
-function projectTrigger(layout: StartSessionLayout): React.JSX.Element {
-  return <Button {...projectButtonProps(layout)} />;
-}
-
-const projectButtonAppearance = {
-  custom: true,
-  variant: 'ghost',
-  labelNumberOfLines: 1,
-  icon: 'folder',
-  labelClassName: 'shrink',
-  trailing: <SessionControlDisclosure />,
-} as const;
-
-function projectButtonProps({
-  props,
-  wide,
-}: StartSessionLayout): React.ComponentProps<typeof Button> {
+function projectTrigger({ props }: StartSessionLayout): React.JSX.Element {
   const project = props.projects.find((entry) => entry.id === props.projectId);
 
-  return {
-    ...projectButtonLabels(project),
-    ...projectButtonAppearance,
-    disabled: props.disabled,
-    className: cn(
-      'gap-1.5 justify-start',
-      wide ? 'h-7 sm:h-7 px-1.5 py-0' : 'h-10 sm:h-10 px-4',
-    ),
-  };
+  return (
+    <MenuTrigger
+      {...projectButtonLabels(project)}
+      icon="folder"
+      disabled={props.disabled}
+    />
+  );
 }
 
 type ProjectButtonLabels = { accessibilityLabel: string; label: string };

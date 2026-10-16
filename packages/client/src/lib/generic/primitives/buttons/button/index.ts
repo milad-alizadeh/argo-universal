@@ -1,4 +1,4 @@
-export { Button } from './button';
+export { Button, DrawnButton } from './button';
 
 export { ButtonAdornment } from './button-adornment';
 
