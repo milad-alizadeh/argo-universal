@@ -13,18 +13,14 @@ import { resolveRegistryServerPlatform } from '../registry/platform';
 import { binarySource, serializeBinary } from './binary-cache';
 import { githubDigest } from './github-digest';
 import { resolveNode } from './node';
-import type {
-  CommandInput,
-  EntryInput as LaunchInput,
-  RegistryCommand,
-} from './types';
+import type { CommandInput, EntryInput, RegistryCommand } from './types';
 import {
   pruneVersions,
   reserveVersion,
   versionFolder,
 } from './version-folders';
 
-type BinaryInput = LaunchInput & {
+type BinaryInput = EntryInput & {
   target: BinaryTarget;
   directory: string;
 };
@@ -36,7 +32,7 @@ const validateCommand = (cmd: string): void => {
     throw new Error('Registry command must be ./relative without .., or node');
 };
 
-const binaryInput = (input: LaunchInput): BinaryInput => {
+const binaryInput = (input: EntryInput): BinaryInput => {
   const target =
     input.entry.distribution.binary?.[resolveRegistryServerPlatform()];
 
@@ -52,7 +48,7 @@ const binaryInput = (input: LaunchInput): BinaryInput => {
 };
 
 export const binaryCommand = async (
-  input: LaunchInput,
+  input: EntryInput,
 ): Promise<RegistryCommand> => {
   const binary = binaryInput(input);
   const release = reserveVersion(binary.directory, input.signal);

@@ -70,6 +70,9 @@ const pruneVersion = async (
 ): Promise<void> => {
   if (directory === input.directory) return;
 
-  if (reservations.has(directory) || input.isDirectoryInUse(directory)) return;
+  if (protectedVersion(input, directory)) return;
   await rm(directory, { recursive: true, force: true });
 };
+
+const protectedVersion = (input: Pruning, directory: string): boolean =>
+  reservations.has(directory) || input.isDirectoryInUse(directory);

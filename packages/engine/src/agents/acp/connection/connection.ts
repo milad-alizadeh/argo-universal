@@ -134,27 +134,27 @@ export class AcpConnection {
     createRejectionCounter('ACP responses'),
   );
   private connection: ClientConnection | undefined;
-  private initialization: InitializeResponse | undefined;
+  private initialized: Omit<Ready, 'connection'> | undefined;
   private launching: Promise<AcpProcess> | undefined;
   private failure: Error | undefined;
   private stopping: Promise<void> | undefined;
   private authentication?: ConnectionAuthentication;
-  private launch: AgentLaunch | undefined;
   public constructor(
     private readonly input: AcpResourceInput,
     private readonly hooks: ConnectionHooks,
   ) {}
   public async start(launch: AgentLaunch): Promise<this> {
-    this.launch = launch;
     this.launching = (this.input.launchProcess ?? launchAcpProcess)(launch);
     const process = await this.launching;
     this.connection = this.connect(process.stream);
     this.observeExit(process, this.connection);
-    this.initialization = await negotiateAcpInitialize(
+
+    const initialization = await negotiateAcpInitialize(
       this.connection.agent,
       this.readers,
     ).catch((cause: unknown) => this.rejectOpening(cause));
 
+    this.initialized = { initialization, launch };
     this.prepareAuthentication(launch);
 
     return this;
@@ -427,14 +427,10 @@ export class AcpConnection {
     return !!sessionCapabilities(this.requireReady().initialization)?.resume;
   }
   private requireReady(): Ready {
-    if (!this.connection || !this.initialization || !this.launch)
+    if (!this.connection || !this.initialized)
       throw new Error('ACP connection is unavailable');
 
-    return {
-      connection: this.connection,
-      initialization: this.initialization,
-      launch: this.launch,
-    };
+    return { connection: this.connection, ...this.initialized };
   }
   private async lease(opening: LeaseOpening): Promise<AcpSessionLease> {
     await this.releaseAbandoned(opening);

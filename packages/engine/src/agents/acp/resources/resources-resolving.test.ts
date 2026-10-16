@@ -1,8 +1,9 @@
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { createResourceOpening, resourceLaunch } from '#mocks/acp-resource';
 import { createScriptedAgentProcess } from '#mocks/scripted-agent';
-import type { AcpResourceInput, DeferredAgentLaunch } from '../../index';
-import { createAcpResources } from '../../index';
+import type { DeferredAgentLaunch } from '../../agent-launch';
+import type { AcpResourceInput, AcpResources } from '../index';
+import { createAcpResources } from '../index';
 
 type HeldLaunch = {
   launch: DeferredAgentLaunch;
@@ -38,14 +39,14 @@ const heldLaunch = (): HeldLaunch => {
   };
 };
 
+type HeldOpening = { resources: AcpResources; opening: Promise<unknown> };
+
+// Fresh resources opening one Session with the held launch.
 const openWith = (
   input: AcpResourceInput,
   held: HeldLaunch,
   signal?: AbortSignal,
-): {
-  resources: ReturnType<typeof createAcpResources>;
-  opening: Promise<unknown>;
-} => {
+): HeldOpening => {
   const resources = createAcpResources(input);
   onTestFinished(() => resources.shutdown());
 
@@ -83,6 +84,7 @@ it.each([
 
 it('shutdown aborts a launch that is still resolving', async () => {
   const held = heldLaunch();
+
   const { resources, opening } = openWith(
     createScriptedAgentProcess({ steps: [] }),
     held,
@@ -91,7 +93,7 @@ it('shutdown aborts a launch that is still resolving', async () => {
   const signal = await held.resolving;
   await resources.shutdown();
   expect(signal.aborted).toBe(true);
-  await expect(opening).rejects.toThrow();
+  await expect(opening).rejects.toThrow('aborted');
   expect(held.releases()).toBe(0);
 });
 

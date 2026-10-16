@@ -1,6 +1,12 @@
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 
+const notInstalled = 'Agent "mock" is not installed.';
+
+const notInstalledFailure = {
+  cause: { openError: { type: 'failed', message: notInstalled } },
+};
+
 it('an Installed Agent launches lazily and sends a prompt through the Engine', async () => {
   const host = await startAcpEngine({ steps: [] });
   expect(host.agent.processes).toHaveLength(0);
@@ -35,18 +41,14 @@ it('Remove preserves Session history and Send reports the removed Agent', async 
       ...session,
       prompt: [{ type: 'text', text: 'Continue' }],
     }),
-  ).rejects.toMatchObject({
-    message: 'Agent "mock" is not installed.',
-    cause: {
-      openError: { type: 'failed', message: 'Agent "mock" is not installed.' },
-    },
-  });
+  ).rejects.toMatchObject({ message: notInstalled, ...notInstalledFailure });
 });
 
 it.each(['Open', 'Retry'])(
   '%s of a Session whose Agent was removed reports the Agent is not installed',
   async (attempt) => {
     const host = await startAcpEngine({ steps: [] });
+
     const { sessionId } = await host.caller.session.new({
       ...emptySessionInput,
       prompt: [{ type: 'text', text: 'Keep this history' }],
@@ -57,16 +59,8 @@ it.each(['Open', 'Retry'])(
 
     if (attempt === 'Retry')
       await host.caller.session.open({ sessionId }).catch(() => {});
-
     await expect(host.caller.session.open({ sessionId })).rejects.toMatchObject(
-      {
-        cause: {
-          openError: {
-            type: 'failed',
-            message: 'Agent "mock" is not installed.',
-          },
-        },
-      },
+      notInstalledFailure,
     );
     expect(host.agent.processes).toHaveLength(1);
   },

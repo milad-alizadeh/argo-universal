@@ -14,8 +14,8 @@ import {
 } from '../src/agents';
 import { writerMachine } from '../src/storage';
 import { openTestDatabase } from './database';
-import { installationPorts } from './installation';
 import { type EngineTestOptions, startEngineTestHost } from './engine';
+import { installationPorts } from './installation';
 import { createScriptedAgentProcess } from './scripted-agent';
 
 /*

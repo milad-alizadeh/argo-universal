@@ -67,18 +67,17 @@ export const requireInstalledAgent = (
 ): InstalledAgent => {
   const answer = installedAgents.installedAgent(id);
 
-  if (!answer.installed)
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message: answer.message,
-      cause: new SessionOpenFailure({
-        type: 'failed',
-        message: answer.message,
-      }),
-    });
+  if (!answer.installed) throw notInstalledError(answer.message);
 
   return answer.agent;
 };
+
+const notInstalledError = (message: string): TRPCError =>
+  new TRPCError({
+    code: 'PRECONDITION_FAILED',
+    message,
+    cause: new SessionOpenFailure({ type: 'failed', message }),
+  });
 
 type LaunchSubject = {
   agent: InstalledAgent;
