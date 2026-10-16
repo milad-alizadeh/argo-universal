@@ -1,7 +1,11 @@
 import type { SubagentUpdate, TextContent } from '@repo/contracts';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
-import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import {
+  openAcpFeedSession,
+  parentSubagentUpdates,
+  waitForAcpSessionIdle,
+} from '#mocks/acp-feed';
 
 it.each(['parent', 'sibling', 'unassociated'] as const)(
   'retains the explicit %s sender across patches on a child transcript',
@@ -87,24 +91,20 @@ it.each(['parent', 'sibling', 'unassociated'] as const)(
 
 type ParentFeedHost = Awaited<ReturnType<typeof openAcpFeedSession>>['host'];
 
-type SubagentAction = NonNullable<
+type SubagentRowFacts = NonNullable<
   NonNullable<SubagentUpdate['_meta']>['argo']
 > &
   Pick<SubagentUpdate, 'subagentState'>;
 
 // What the parent Feed says about its Subagents, in Feed order.
-async function subagentActions(
+const subagentActions = async (
   host: ParentFeedHost,
   sessionId: string,
-): Promise<SubagentAction[]> {
-  const page = await host.caller.feed.page({ sessionId, direction: 'tail' });
-
-  return page.rows.flatMap((row) =>
-    row.sessionUpdate === 'subagent_update'
-      ? [{ ...row._meta?.argo, subagentState: row.subagentState }]
-      : [],
-  );
-}
+): Promise<SubagentRowFacts[]> =>
+  (await parentSubagentUpdates(host, sessionId)).map((row) => ({
+    ...row._meta?.argo,
+    subagentState: row.subagentState,
+  }));
 
 const text = (value: string): TextContent => ({ type: 'text', text: value });
 
@@ -113,7 +113,7 @@ const foregroundActions = [
   { action: 'message', prompt: [text('Review the change.')] },
   { subagentState: 'requires_action' },
   { subagentState: 'running' },
-  { action: 'message', result: [text('The change looks correct.')] },
+  { result: [text('The change looks correct.')] },
   { subagentState: 'idle' },
 ];
 
@@ -153,7 +153,7 @@ it.each([
     recipientSessionId: 'parent',
     actions: [
       { action: 'spawn' },
-      { action: 'message', result: [text('Done'), text(' and checked')] },
+      { result: [text('Done'), text(' and checked')] },
     ],
   },
   {

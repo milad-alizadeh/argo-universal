@@ -9,18 +9,15 @@ import { mapSupportedContentBlock } from '../../../feed';
 import type { ChildFeed } from '../../subagents/child-feed';
 import type { SubagentRouting } from '../../subagents/routing-types';
 import {
-  type Message,
+  type AcpSessionMessage,
   type MessageRouting,
   previousResult,
-  previousResultContent,
   replier,
   sendMessageAction,
 } from './subagent-actions';
 import { messageMetadata } from './subagent-sender';
 
-export type { MessageRouting } from './subagent-actions';
-
-const messageId = (input: SubagentRouting, update: Message): string =>
+const messageId = (input: SubagentRouting, update: AcpSessionMessage): string =>
   JSON.stringify(['session_message', input.parentId, update.messageId]);
 
 function previousMessage(
@@ -35,7 +32,7 @@ function previousMessage(
 
 function recipient(
   input: MessageRouting,
-  update: Message,
+  update: AcpSessionMessage,
 ): ChildFeed | undefined {
   if (update.recipientSessionId)
     return input.children.get(update.recipientSessionId);
@@ -51,7 +48,7 @@ const asSessionMessage = (
   row?.sessionUpdate === 'session_message' ? row : undefined;
 
 function replaceContent(
-  update: Extract<Message, { sessionUpdate: 'session_message' }>,
+  update: Extract<AcpSessionMessage, { sessionUpdate: 'session_message' }>,
   previous: ContentBlock[],
 ): ContentBlock[] {
   if (update.content === undefined) return previous;
@@ -60,7 +57,7 @@ function replaceContent(
 }
 
 function messageContent(
-  update: Message,
+  update: AcpSessionMessage,
   previous: ContentBlock[] = [],
 ): ContentBlock[] {
   if (update.sessionUpdate === 'session_message_chunk')
@@ -71,14 +68,14 @@ function messageContent(
 
 export const isSubagentMessage = (
   update: SessionNotification['update'],
-): update is Message =>
+): update is AcpSessionMessage =>
   update.sessionUpdate === 'session_message' ||
   update.sessionUpdate === 'session_message_chunk';
 
 function messageRow(
   input: MessageRouting,
   child: ChildFeed,
-  update: Message,
+  update: AcpSessionMessage,
 ): Extract<FeedUpdate, { sessionUpdate: 'session_message' }> {
   const previous = previousMessage(child, messageId(input, update));
 
@@ -93,7 +90,10 @@ function messageRow(
 }
 
 // The parent's outgoing message to its own child is that child's prompt.
-function deliverPrompt(input: MessageRouting, update: Message): boolean {
+function deliverPrompt(
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean {
   const child = recipient(input, update);
 
   if (!child) return false;
@@ -108,7 +108,7 @@ function deliverPrompt(input: MessageRouting, update: Message): boolean {
   });
 
   if (isOutgoing(input, child, row))
-    sendMessageAction(input, child, { ...update, field: { prompt } });
+    sendMessageAction(input, child, update.messageId, { prompt });
 
   return true;
 }
@@ -123,20 +123,25 @@ const isOutgoing = (
 ): boolean =>
   child.parentId === input.parentId && senderOf(row) === input.parentId;
 
-function deliverResult(input: MessageRouting, update: Message): boolean {
-  const child = replier(input, update);
+function deliverResult(
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean {
+  const previous = previousResult(input, update.messageId);
+  const child = replier(input, update, previous);
 
   if (!child) return false;
 
-  const previous = previousResult(input, update.messageId);
-  const result = messageContent(update, previousResultContent(previous));
+  const result = messageContent(update, previous?._meta?.argo?.result);
 
-  sendMessageAction(input, child, { ...update, field: { result } });
+  sendMessageAction(input, child, update.messageId, { result });
 
   return true;
 }
 
+// A result comes first: a child's reply on the parent transcript also names the
+// parent as recipient, which `deliverPrompt` would otherwise misread as a prompt.
 export const deliverSubagentMessage = (
   input: MessageRouting,
-  update: Message,
+  update: AcpSessionMessage,
 ): boolean => deliverResult(input, update) || deliverPrompt(input, update);

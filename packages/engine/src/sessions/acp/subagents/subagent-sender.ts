@@ -1,12 +1,7 @@
-import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { SessionMessage } from '@repo/contracts';
 import type { ChildFeed } from '../../subagents/child-feed';
 import type { SubagentRouting } from '../../subagents/routing-types';
-
-type Message = Extract<
-  SessionNotification['update'],
-  { sessionUpdate: 'session_message' | 'session_message_chunk' }
->;
+import type { AcpSessionMessage } from './subagent-actions';
 
 export type MessageSender = SubagentRouting & {
   children: ReadonlyMap<string, ChildFeed>;
@@ -27,7 +22,7 @@ const knownSender = (
 
 function resolveSender(
   input: MessageSender,
-  update: Message,
+  update: AcpSessionMessage,
   previous: SessionMessage | undefined,
 ): string | undefined {
   if (update.senderSessionId != null)
@@ -40,7 +35,7 @@ function resolveSender(
 
 export function messageMetadata(
   input: MessageSender,
-  update: Message,
+  update: AcpSessionMessage,
   previous: SessionMessage | undefined,
 ): MessageMetadata {
   const senderSessionId = resolveSender(input, update, previous);

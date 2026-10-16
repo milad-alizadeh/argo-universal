@@ -9,7 +9,8 @@ import type { FeedActorRef } from '../../../feed';
 import type { ChildFeed } from '../../subagents/child-feed';
 import type { SubagentRouting } from '../../subagents/routing-types';
 
-export type Message = Extract<
+// An ACP subagents RFD message, whole or as a chunk.
+export type AcpSessionMessage = Extract<
   SessionNotification['update'],
   { sessionUpdate: 'session_message' | 'session_message_chunk' }
 >;
@@ -20,10 +21,8 @@ export type MessageRouting = SubagentRouting & {
   transcriptId: string;
 };
 
-type MessageAction = {
-  messageId: string;
-  field: { prompt: ContentBlock[] } | { result: ContentBlock[] };
-};
+// Only the parent's outgoing `prompt` is a `message` action; a child's explicit `result` carries no action (#930).
+type MessageField = { prompt: ContentBlock[] } | { result: ContentBlock[] };
 
 // One row per message in the parent transcript, so its patches and chunks revise it.
 const actionId = (input: SubagentRouting, messageId: string): string =>
@@ -35,63 +34,65 @@ function writtenRow(feed: FeedActorRef, id: string): SessionUpdate | undefined {
   return context.rows[id] ?? context.findWrittenRow(id);
 }
 
-const asSubagentUpdate = (
-  row: SessionUpdate | undefined,
-): SubagentUpdate | undefined =>
-  row?.sessionUpdate === 'subagent_update' ? row : undefined;
-
-const resultOf = (row: SubagentUpdate): ContentBlock[] | undefined =>
-  row._meta?.argo?.result;
-
 // The result row this message already revises, if any.
-export const previousResult = (
+export function previousResult(
   input: MessageRouting,
   messageId: string,
-): SubagentUpdate | undefined =>
-  [
-    asSubagentUpdate(writtenRow(input.parentFeed, actionId(input, messageId))),
-  ].find((row) => row !== undefined && resultOf(row) !== undefined);
+): SubagentUpdate | undefined {
+  const row = writtenRow(input.parentFeed, actionId(input, messageId));
 
-export const previousResultContent = (
-  row: SubagentUpdate | undefined,
-): ContentBlock[] | undefined => (row ? resultOf(row) : undefined);
+  if (row?.sessionUpdate !== 'subagent_update') return undefined;
+
+  return row._meta?.argo?.result ? row : undefined;
+}
+
+const argoField = (field: MessageField): SubagentUpdate['_meta'] =>
+  'prompt' in field
+    ? { argo: { action: 'message', ...field } }
+    : { argo: field };
 
 const messageActionRow = (
   input: SubagentRouting,
   child: ChildFeed,
-  { messageId, field }: MessageAction,
+  messageId: string,
+  field: MessageField,
 ): FeedUpdate => ({
   id: actionId(input, messageId),
   sessionUpdate: 'subagent_update',
   state: 'settled',
   subagentSessionId: child.sessionId,
-  _meta: { argo: { action: 'message', ...field } },
+  _meta: argoField(field),
 });
 
 export function sendMessageAction(
   input: SubagentRouting,
   child: ChildFeed,
-  action: MessageAction,
+  messageId: string,
+  field: MessageField,
 ): void {
   input.parentFeed.send({
     type: 'feed.change',
     turnId: null,
-    change: { type: 'upsert', update: messageActionRow(input, child, action) },
+    change: {
+      type: 'upsert',
+      update: messageActionRow(input, child, messageId, field),
+    },
   });
 }
 
-const ownChild = (
+function ownChild(
   input: MessageRouting,
   vendorId: string | null | undefined,
-): ChildFeed | undefined =>
-  [input.children.get(vendorId ?? '')].find(
-    (child) => child?.parentId === input.parentId,
-  );
+): ChildFeed | undefined {
+  const child = vendorId ? input.children.get(vendorId) : undefined;
+
+  return child?.parentId === input.parentId ? child : undefined;
+}
 
 // Only a reply that names its child sender and this transcript's Session as recipient is a result.
 const explicitReplier = (
   input: MessageRouting,
-  update: Message,
+  update: AcpSessionMessage,
 ): ChildFeed | undefined =>
   update.recipientSessionId === input.transcriptId
     ? ownChild(input, update.senderSessionId)
@@ -105,13 +106,10 @@ const childById = (
     (child) => child.sessionId === row.subagentSessionId,
   );
 
-export function replier(
+// A chunk or patch of a known result names no sender, so its result row names the child.
+export const replier = (
   input: MessageRouting,
-  update: Message,
-): ChildFeed | undefined {
-  const previous = previousResult(input, update.messageId);
-
-  if (previous) return childById(input, previous);
-
-  return explicitReplier(input, update);
-}
+  update: AcpSessionMessage,
+  previous: SubagentUpdate | undefined,
+): ChildFeed | undefined =>
+  previous ? childById(input, previous) : explicitReplier(input, update);

@@ -1,11 +1,13 @@
 import { session, turn } from '@repo/db/schema';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
+import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi, onTestFinished } from 'vitest';
 import { startAcpEngine, emptySessionInput } from '#mocks/acp-engine';
 import {
   openAcpFeedSession,
+  parentSubagentUpdates,
   waitForAcpSessionIdle,
   waitForAcpSnapshot,
 } from '#mocks/acp-feed';
@@ -166,86 +168,89 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
   );
 });
 
-it('retains delegated message patches and chunks with the reported child Turn outcome', async () => {
-  const { host, sessionId } = await openAcpFeedSession({
-    steps: [
-      {
-        type: 'update',
-        update: {
-          sessionUpdate: 'session_message',
-          messageId: 'unrelated',
-          recipientSessionId: 'unassociated',
-          content: [{ type: 'text', text: 'No parentage' }],
-        },
+// The parent revises its delegation by patch and chunk, then the child ends its Turn.
+const revisedDelegation: ScriptedScenario = {
+  steps: [
+    {
+      type: 'update',
+      update: {
+        sessionUpdate: 'session_message',
+        messageId: 'unrelated',
+        recipientSessionId: 'unassociated',
+        content: [{ type: 'text', text: 'No parentage' }],
       },
-      {
-        type: 'update',
-        update: {
-          sessionUpdate: 'subagent_update',
-          sessionId: 'review',
-          state: { state: 'running' },
-        },
-      },
-      {
-        type: 'update',
-        update: {
-          sessionUpdate: 'session_message',
-          messageId: 'delegation',
-          recipientSessionId: 'review',
-          content: [{ type: 'text', text: 'Original' }],
-        },
-      },
-      {
-        type: 'update',
-        update: {
-          sessionUpdate: 'session_message',
-          messageId: 'delegation',
-          content: [{ type: 'text', text: 'Revised' }],
-        },
-      },
-      {
-        type: 'update',
-        update: {
-          sessionUpdate: 'session_message',
-          messageId: 'delegation',
-          recipientSessionId: 'review',
-        },
-      },
-      {
-        type: 'update',
-        update: {
-          sessionUpdate: 'session_message_chunk',
-          messageId: 'delegation',
-          content: { type: 'text', text: ' instruction' },
-        },
-      },
-      {
-        type: 'update',
+    },
+    {
+      type: 'update',
+      update: {
+        sessionUpdate: 'subagent_update',
         sessionId: 'review',
-        update: {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: 'Done' },
-        },
+        state: { state: 'running' },
       },
-      {
-        type: 'update',
-        update: {
-          sessionUpdate: 'subagent_update',
-          sessionId: 'review',
-          state: {
-            state: 'idle',
-            stopReason: 'end_turn',
-            usage: {
-              totalTokens: 12,
-              inputTokens: 8,
-              outputTokens: 4,
-              thoughtTokens: null,
-            },
+    },
+    {
+      type: 'update',
+      update: {
+        sessionUpdate: 'session_message',
+        messageId: 'delegation',
+        recipientSessionId: 'review',
+        content: [{ type: 'text', text: 'Original' }],
+      },
+    },
+    {
+      type: 'update',
+      update: {
+        sessionUpdate: 'session_message',
+        messageId: 'delegation',
+        content: [{ type: 'text', text: 'Revised' }],
+      },
+    },
+    {
+      type: 'update',
+      update: {
+        sessionUpdate: 'session_message',
+        messageId: 'delegation',
+        recipientSessionId: 'review',
+      },
+    },
+    {
+      type: 'update',
+      update: {
+        sessionUpdate: 'session_message_chunk',
+        messageId: 'delegation',
+        content: { type: 'text', text: ' instruction' },
+      },
+    },
+    {
+      type: 'update',
+      sessionId: 'review',
+      update: {
+        sessionUpdate: 'agent_message_chunk',
+        content: { type: 'text', text: 'Done' },
+      },
+    },
+    {
+      type: 'update',
+      update: {
+        sessionUpdate: 'subagent_update',
+        sessionId: 'review',
+        state: {
+          state: 'idle',
+          stopReason: 'end_turn',
+          usage: {
+            totalTokens: 12,
+            inputTokens: 8,
+            outputTokens: 4,
+            thoughtTokens: null,
           },
         },
       },
-    ],
-  });
+    },
+  ],
+};
+
+it('retains delegated message patches and chunks with the reported child Turn outcome', async () => {
+  const { host, sessionId } = await openAcpFeedSession(revisedDelegation);
 
   const [child] = await host.caller.session.subagents({ sessionId });
 
@@ -273,19 +278,14 @@ it('retains delegated message patches and chunks with the reported child Turn ou
   expect(
     page.rows.filter((row) => row.sessionUpdate === 'session_message'),
   ).toHaveLength(1);
+});
 
-  const parentPage = await host.caller.feed.page({
-    sessionId,
-    direction: 'tail',
-  });
+it("revises one parent prompt from patches and chunks of the parent's outgoing message", async () => {
+  const { host, sessionId } = await openAcpFeedSession(revisedDelegation);
 
-  // Patches and chunks of the parent's outgoing message revise one prompt.
   expect(
-    parentPage.rows.flatMap((row) =>
-      row.sessionUpdate === 'subagent_update' &&
-      row._meta?.argo?.action === 'message'
-        ? [row._meta.argo.prompt]
-        : [],
+    (await parentSubagentUpdates(host, sessionId)).flatMap((row) =>
+      row._meta?.argo?.action === 'message' ? [row._meta.argo.prompt] : [],
     ),
   ).toEqual([
     [

@@ -1,5 +1,5 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
-import type { SessionSnapshot } from '@repo/contracts';
+import type { SessionSnapshot, SubagentUpdate } from '@repo/contracts';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
@@ -52,4 +52,16 @@ export const openAcpFeedSession = async (
   await waitForAcpSessionIdle(host, created.sessionId);
 
   return { host, ...created };
+};
+
+// The parent Feed's Subagent rows, in Feed order.
+export const parentSubagentUpdates = async (
+  host: Pick<Awaited<ReturnType<typeof startAcpEngine>>, 'caller'>,
+  sessionId: string,
+): Promise<SubagentUpdate[]> => {
+  const page = await host.caller.feed.page({ sessionId, direction: 'tail' });
+
+  return page.rows.flatMap((row) =>
+    row.sessionUpdate === 'subagent_update' ? [row] : [],
+  );
 };
