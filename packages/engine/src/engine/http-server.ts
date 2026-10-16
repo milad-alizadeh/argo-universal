@@ -1,11 +1,14 @@
 import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
-import { writeLog } from '@repo/machine-log';
 import { type AcpResourceInput } from '../agents';
 import type { RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
-import { PluginRuntime } from '../plugins';
+import {
+  createPluginRuntime,
+  type Keychain,
+  type PluginRuntime,
+} from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
@@ -26,6 +29,7 @@ export interface HttpServerOptions {
   port: number;
   version: string;
   firstPartyPluginsDirectory?: string;
+  keychain?: Keychain;
   startedAt: string;
   database: Database;
   sessions: OpenSessionsActorRef;
@@ -106,9 +110,7 @@ function prepareHttpSetup(
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
-    pluginRuntime: new PluginRuntime((line) =>
-      writeLog({ home: options.home, label: 'plugins', line }),
-    ),
+    pluginRuntime: createPluginRuntime(options.home, options.keychain),
   };
 }
 

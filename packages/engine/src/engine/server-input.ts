@@ -20,6 +20,7 @@ type ServerSource = {
     | 'home'
     | 'port'
     | 'firstPartyPluginsDirectory'
+    | 'keychain'
     | 'version'
     | 'startedAt'
     | 'database'
@@ -30,7 +31,6 @@ type ServerSource = {
 type ServerInput = (source: ServerSource) => HttpServerOptions;
 
 export const serverInput: ServerInput = ({ context, self }) => ({
-  firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
   createId: context.createId,
   sessions: requireOpenSessions(self.system),
   databaseWriter: requireDatabaseWriter(self.system),
@@ -45,7 +45,13 @@ export const serverInput: ServerInput = ({ context, self }) => ({
 
 type ServerConfiguration = Pick<
   HttpServerOptions,
-  'home' | 'port' | 'version' | 'startedAt' | 'notificationOptions'
+  | 'home'
+  | 'port'
+  | 'version'
+  | 'startedAt'
+  | 'notificationOptions'
+  | 'firstPartyPluginsDirectory'
+  | 'keychain'
 >;
 
 function serverConfiguration(
@@ -57,5 +63,7 @@ function serverConfiguration(
     version: context.version,
     startedAt: context.startedAt,
     notificationOptions: context.notificationOptions,
+    firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
+    keychain: context.keychain,
   };
 }
