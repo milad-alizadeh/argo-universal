@@ -16,6 +16,7 @@ import { openSessionsId, openSessionsMachine } from '../src/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { fixtureRegistry, seedAgentFixtures } from './agent-fixtures';
 import { openTestDatabase } from './database';
+import { shippedFolder } from './runtime-plugins';
 import { scriptedEngineInput } from './scripted-engine';
 
 // A module's test drives the Engine through here: modules never import engine/.
@@ -80,6 +81,8 @@ export async function startEngineTestHost(
         ),
       ),
     installationPorts: createInstallationPorts(),
+    // Fixture Plugins are first-party: only that root loads (ADR-0030).
+    firstPartyPluginsDirectory: join(home, shippedFolder),
     ...options,
     home,
     port,

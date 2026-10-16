@@ -91,7 +91,7 @@ it('clears a recovered dev Plugin failure and gives a repeated crash a new ident
 
   await caller.plugins.activate({ pluginId: 'dev' });
   const initial = (await failures.next()).value;
-  const source = join(home, 'plugins/dev/check.ts');
+  const source = join(home, 'shipped/dev/check.ts');
 
   await writeFile(source, 'export function check(): void {}');
   expect((await failures.next()).value).toEqual([]);

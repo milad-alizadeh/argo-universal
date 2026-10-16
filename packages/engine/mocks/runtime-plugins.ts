@@ -4,6 +4,9 @@ import { join, extname } from 'node:path';
 import { PluginManifest } from '@repo/contracts/plugins';
 import { onTestFinished } from 'vitest';
 
+// Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
+export const shippedFolder = 'shipped';
+
 type FixturePlugin = {
   id: string;
   fixture: string;
@@ -24,7 +27,7 @@ export async function createRuntimePlugins(
 }
 
 async function writePlugin(home: string, plugin: FixturePlugin): Promise<void> {
-  const folder = join(home, 'plugins', plugin.id);
+  const folder = join(home, shippedFolder, plugin.id);
   const main = plugin.main ?? 'index.mjs';
 
   await mkdir(folder, { recursive: true });

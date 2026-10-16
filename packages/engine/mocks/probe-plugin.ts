@@ -23,7 +23,7 @@ export async function installed(
     { id: 'probe', fixture: 'healthy', ...options },
   ]);
 
-  const entry = join(home, 'plugins/probe/index.mjs');
+  const entry = join(home, 'shipped/probe/index.mjs');
 
   await writeFile(entry, source);
 

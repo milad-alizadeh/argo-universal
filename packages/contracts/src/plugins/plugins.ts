@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PluginCapability } from './capabilities';
 import { materialSymbolNames } from './material-symbol-names.gen';
 import { PluginStatus } from './runtime';
 import { sfSymbolNames } from './sf-symbol-names.gen';
@@ -64,6 +65,7 @@ export const PluginManifest = z.strictObject({
         'Nav ids must be unique',
       ),
   }),
+  capabilities: z.array(PluginCapability).optional(),
 });
 
 export type PluginManifest = z.infer<typeof PluginManifest>;
@@ -83,3 +85,10 @@ export const PluginList = z.object({
 });
 
 export type PluginList = z.infer<typeof PluginList>;
+
+export {
+  PluginCapability,
+  isRefusedVariable,
+  isSpecialHost,
+  hostnameOf,
+} from './capabilities';

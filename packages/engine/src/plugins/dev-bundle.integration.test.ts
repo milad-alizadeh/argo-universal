@@ -12,8 +12,8 @@ it.each(['../private.json', './linked.json'])(
       { id: 'dev', fixture: 'healthy', dev: true },
     ]);
 
-    const directory = join(home, 'plugins/dev');
-    const secret = join(home, 'plugins/private.json');
+    const directory = join(home, 'shipped/dev');
+    const secret = join(home, 'shipped/private.json');
     await writeFile(secret, '{"secret":"SYNTHETIC_OUTSIDE_FILE"}');
     await symlink(secret, join(directory, 'linked.json'));
     await writeFile(
@@ -44,7 +44,7 @@ it('loads imports within the Plugin folder while preserving a failed rebuild acr
     { id: 'dev', fixture: 'dev', dev: true },
   ]);
 
-  const directory = join(home, 'plugins/dev');
+  const directory = join(home, 'shipped/dev');
   const source = join(directory, 'check.ts');
   await writeFile(source, 'export function check(): void {}');
   const runtime = startPluginRuntime(home);

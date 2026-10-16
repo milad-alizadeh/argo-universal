@@ -31,7 +31,7 @@ it.each(['index.mjs', 'index.cjs'])(
       { state: 'running', hanging: false, error: null },
     ]);
     await writeFile(
-      join(home, 'plugins/healthy', main),
+      join(home, 'shipped/healthy', main),
       'throw Error("installed code is not watched")',
     );
     expect(
@@ -48,7 +48,8 @@ it.each(['index.mjs', 'index.cjs'])(
 it.each([
   { fixture: 'crashing', error: 'Fixture Plugin crashed' },
   { fixture: 'node-global', error: 'process is not defined' },
-  { fixture: 'require-fs', error: 'require' },
+  // First-party Plugins are bundled on load, so a Node import fails at bundling.
+  { fixture: 'require-fs', error: 'Could not resolve "fs"' },
   { fixture: 'heap', error: 'memory limit' },
 ])(
   'isolates a $fixture Plugin from healthy workers and the Engine',

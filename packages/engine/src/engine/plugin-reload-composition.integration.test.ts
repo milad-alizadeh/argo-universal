@@ -2,29 +2,43 @@ import { readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { createRuntimePlugins } from '#mocks/runtime-plugins';
+import { createRuntimePlugins, shippedFolder } from '#mocks/runtime-plugins';
 
-it.each([
-  { firstParty: false, folder: 'plugins' },
-  { firstParty: true, folder: 'shipped' },
-])(
-  'bundles and reloads a dev Plugin (first-party: $firstParty), recovering after runtime and build errors',
-  async ({ firstParty, folder }) => {
+it('reports a dev Plugin outside the first-party root and never starts it', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'dev', fixture: 'dev', dev: true },
+  ]);
+
+  await rename(join(home, shippedFolder), join(home, 'plugins'));
+
+  const { caller } = await startEngineTestHost({ home });
+
+  expect(await caller.plugins.list()).toEqual({
+    plugins: [],
+    errors: [
+      {
+        directory: join(home, 'plugins/dev'),
+        message: expect.stringContaining('not loaded'),
+      },
+    ],
+  });
+  await expect(caller.plugins.activate({ pluginId: 'dev' })).rejects.toThrow(
+    'Unknown Plugin: dev',
+  );
+});
+
+it.each([{ marked: true }, { marked: false }])(
+  'bundles and reloads a first-party dev Plugin (marked: $marked), recovering after runtime and build errors',
+  async ({ marked }) => {
     const home = await createRuntimePlugins([
       { id: 'dev', fixture: 'dev', dev: true },
     ]);
 
-    const directory = join(home, folder);
+    const directory = join(home, shippedFolder);
 
-    if (firstParty) {
-      await rename(join(home, 'plugins'), directory);
-      await rm(join(directory, 'dev/.argo-dev'));
-    }
+    if (!marked) await rm(join(directory, 'dev/.argo-dev'));
 
-    const { caller } = await startEngineTestHost({
-      home,
-      firstPartyPluginsDirectory: join(home, 'shipped'),
-    });
+    const { caller } = await startEngineTestHost({ home });
 
     const source = join(directory, 'dev/check.ts');
 
