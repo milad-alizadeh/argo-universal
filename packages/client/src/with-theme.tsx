@@ -43,7 +43,8 @@ function ArgoPreview(props: PreviewProps): React.JSX.Element {
 
   return (
     <PreviewProviders>
-      <PortalProvider shouldAddRootHost={props.standalone}>
+      {/* On a phone, Storybook's own UI nests a bottom sheet's portal provider, which has no root host. */}
+      <PortalProvider>
         <PreviewLayout {...props} />
       </PortalProvider>
       {props.standalone && <Toaster key={props.storyId} />}
