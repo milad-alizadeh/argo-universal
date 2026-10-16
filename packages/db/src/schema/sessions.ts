@@ -46,6 +46,9 @@ export const session = snakeCase.table('session', {
   configValues: text({ mode: 'json' })
     .notNull()
     .default(sql`'[]'`),
+  heldConfig: text({ mode: 'json' })
+    .notNull()
+    .default(sql`'[]'`),
   epoch: integer().notNull().default(0),
   projectionVersion: integer().notNull(),
   maxRevision: integer().notNull().default(0),
