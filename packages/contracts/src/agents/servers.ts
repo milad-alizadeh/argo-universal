@@ -13,4 +13,4 @@ export type AgentServer = z.infer<typeof RegistryAgentId> &
 
 export const AgentServerRecord = agentServerColumns;
 
-export type AgentRemovalInput = z.infer<typeof RegistryAgentId>;
+export type RegistryAgentId = z.infer<typeof RegistryAgentId>;

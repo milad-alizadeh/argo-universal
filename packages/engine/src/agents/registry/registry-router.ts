@@ -34,14 +34,14 @@ const changeAgentServer = async (
 
 export const createRegistryRouter = routerFactory((deps: RegistryDeps) =>
   router({
-    remove: publicProcedure
-      .input(RegistryAgentId)
-      .mutation(({ input }) => changeAgentServer(deps, input.id, 'remove')),
     registry: publicProcedure.query(() =>
       readRegistry(deps.database, deps.registry.getSnapshot().context.error),
     ),
     refreshRegistry: publicProcedure.mutation(() => refreshRegistry(deps)),
     servers: publicProcedure.query(() => readAgentServers(deps.database)),
+    remove: publicProcedure
+      .input(RegistryAgentId)
+      .mutation(({ input }) => changeAgentServer(deps, input.id, 'remove')),
     addRegistry: publicProcedure
       .input(RegistryAgentId)
       .mutation(({ input }) => changeAgentServer(deps, input.id, 'add')),

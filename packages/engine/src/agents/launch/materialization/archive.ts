@@ -7,9 +7,8 @@ import { extract, list } from 'tar';
 import type { InstallPorts } from '../ports';
 import { installationPath } from './files';
 import { ArchiveBudget, executableMode, extractedLimit } from './limits';
-import type { InstallRecipe } from './recipe';
 
-type BinaryRecipe = Extract<InstallRecipe, { kind: 'binary' }>;
+type BinaryRecipe = { archive: string; sha256?: string; cmd: string };
 
 export type BinaryInput = {
   directory: string;

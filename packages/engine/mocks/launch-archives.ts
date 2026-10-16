@@ -79,17 +79,16 @@ export const binaryRejections = [
     bytes: async (): Promise<Uint8Array> => installationExecutable,
     message: 'Unsupported Agent archive format',
   },
-  {
-    failure: 'ZIP traversal with a safe launch file',
-    cmd: './agent',
-    suffix: '.zip',
-    bytes: async (): Promise<Uint8Array> =>
-      zipSync({
-        agent: installationExecutable,
-        '../outside': new Uint8Array([1]),
-      }),
-    message: 'escapes',
-  },
+  ...['../outside', '/outside', 'C:\\outside', 'folder/../../outside'].map(
+    (name) => ({
+      failure: `unsafe ZIP entry ${name} with a safe launch file`,
+      cmd: './agent',
+      suffix: '.zip',
+      bytes: async (): Promise<Uint8Array> =>
+        zipSync({ agent: installationExecutable, [name]: new Uint8Array([1]) }),
+      message: 'escapes',
+    }),
+  ),
   {
     failure: 'tar symlink',
     cmd: './agent',

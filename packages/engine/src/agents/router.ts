@@ -1,5 +1,5 @@
 import { mergeRouters, routerFactory } from '../rpc';
-import type { SessionConnections, OpenSessionsActorRef } from '../sessions';
+import type { OpenSessionsActorRef, SessionConnections } from '../sessions';
 import { createAuthRouter } from './auth/router';
 import {
   createRegistryRouter,
@@ -7,9 +7,9 @@ import {
 } from './registry/registry-router';
 
 export type AgentsRouterDeps = RegistryDeps & {
-  sessionConnections: SessionConnections;
   sessions: OpenSessionsActorRef;
-  home: string;
+  sessionConnections: SessionConnections;
+  home?: string;
   sessionCommandSignal?: AbortSignal;
 };
 

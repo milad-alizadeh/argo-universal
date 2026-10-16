@@ -28,7 +28,7 @@ export type AppRouterDeps = SessionRouterDeps &
   NotificationsDeps &
   PluginsDeps;
 
-// The Engine supplies the ACP check to the Agents module itself.
+// The Engine owns connection lifetimes and shared Feed sources.
 type EngineSupplied =
   | keyof FeedDeps
   | 'createId'

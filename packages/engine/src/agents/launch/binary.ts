@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rename, rm, chmod } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type { BinaryTarget } from '@repo/contracts';
-import { resolveRegistryServerPlatform } from '../records';
+import { resolveRegistryServerPlatform } from '../registry/platform';
 import { pruneVersions, versionFolder } from './binary-cache';
 import { reserveBinary, serializeBinary } from './binary-reservations';
 import { githubDigest } from './github-digest';
@@ -114,7 +114,7 @@ const extractionRecipe = async (
 
   const cmd = rawCommand(input.target);
 
-  return { ...input.target, kind: 'binary', args: [], env: {}, cmd, sha256 };
+  return { ...input.target, cmd, sha256 };
 };
 
 const rawCommand = (target: BinaryTarget): string =>
