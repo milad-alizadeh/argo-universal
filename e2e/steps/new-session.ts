@@ -3,7 +3,7 @@ import { expect } from '../fixtures';
 import { closeAgentMenus } from './agent-menus';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
-import { onPhone, reloadApp } from './frame';
+import { onPhone, openAppOnce, reloadApp } from './frame';
 
 export const agentModelLabel = 'Agent and model';
 
@@ -34,6 +34,7 @@ export async function expectMessage(
 }
 
 export async function openNewSession(page: Page): Promise<void> {
+  await openAppOnce(page);
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/new$/);
   // The Server runs on this computer, so New Session names no host; its Project shows once it is ready.

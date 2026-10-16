@@ -1,6 +1,6 @@
 import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
-import { feedRowColumns } from '../columns';
+import { feedRowColumns, shellColumns } from '../columns';
 import { BlobRef, ContentBlock } from './content-block';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
@@ -96,7 +96,7 @@ export const ToolCallUpdate = z.strictObject({
       commandActions: z.array(CommandAction).optional(),
       startedAt: z.int().optional(),
       endedAt: z.int().optional(),
-      shellId: z.string().optional(),
+      shellId: shellColumns.shape.id.optional(),
       description: z.string().optional(),
     }),
   ),

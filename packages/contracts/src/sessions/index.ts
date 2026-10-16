@@ -4,6 +4,8 @@ export * from './answer-permission';
 
 export * from './answer-plan-proposal';
 
+export * from './archive';
+
 export * from './cancel';
 
 export * from './changes';
@@ -26,6 +28,10 @@ export * from './rename';
 
 export * from './set-config-option';
 
+export * from './shells';
+
 export * from './snapshot';
 
 export * from './turn';
+
+export * from './subagent';

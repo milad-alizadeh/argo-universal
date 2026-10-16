@@ -10,7 +10,7 @@ import { SessionRow, type SessionRowProps } from '../session-row/session-row';
 
 export function NoSessionsYet(): React.JSX.Element {
   return (
-    <Text role="secondary" className="pb-1 pl-session-name pr-1">
+    <Text role="secondary" className="pb-1 pl-8.5 pr-1">
       No Sessions yet.
     </Text>
   );

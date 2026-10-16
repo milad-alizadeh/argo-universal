@@ -4,6 +4,7 @@ import {
   type ConfigurationChange,
   nextRememberedChange,
 } from '#lib/product/session-configuration';
+import { sessionOpenErrorMessage } from '../components/failure-messages';
 import type {
   EmptySessionContext,
   EmptySessionEvent,
@@ -29,9 +30,6 @@ export const promptShowTimeoutMs = 3_000;
 
 const choiceKey = (input: SessionNewInput | undefined): string | undefined =>
   input && JSON.stringify(input);
-
-const errorMessage = (cause: unknown): string =>
-  cause instanceof Error ? cause.message : String(cause);
 
 const nextChange = (
   context: EmptySessionContext,
@@ -174,7 +172,8 @@ export const emptySessionMachine = setup({
           {
             target: 'failed',
             actions: assign({
-              error: ({ event }): string => errorMessage(event.error),
+              error: ({ event }): string =>
+                sessionOpenErrorMessage(event.error),
               pendingPrompt: undefined,
             }),
           },
@@ -274,7 +273,7 @@ export const emptySessionMachine = setup({
               actions: assign({
                 pendingPrompt: undefined,
                 promptShown: false,
-                error: ({ event }) => errorMessage(event.error),
+                error: ({ event }) => sessionOpenErrorMessage(event.error),
               }),
             },
           },

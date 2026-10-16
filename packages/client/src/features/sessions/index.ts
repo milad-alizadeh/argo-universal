@@ -32,6 +32,7 @@ export { startingFeed } from './state/starting-feed';
 export {
   serverSilentMessage,
   sessionOpenFailedTitle,
+  sessionOpenErrorMessage,
 } from './components/failure-messages';
 
 export { type EmptySessionPorts } from './state/empty-session-machine';

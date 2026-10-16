@@ -12,7 +12,7 @@ const identities = fixtureAgents.map(({ agent }) => agent);
 const prompt = [{ type: 'text', text: 'Continue' }] as const;
 
 it.each(identities)(
-  'rejects a %s prompt when initial startup enters recovery without waiting for a retry',
+  'reports a typed failed open when initial %s startup fails without a retry',
   async (agent) => {
     const initialization: InitializeRequest[] = [];
 
@@ -36,8 +36,13 @@ it.each(identities)(
         prompt: [...prompt],
       }),
     ).rejects.toMatchObject({
-      code: 'CONFLICT',
-      message: expect.stringContaining('cannot accept'),
+      code: 'INTERNAL_SERVER_ERROR',
+      cause: {
+        openError: {
+          type: 'failed',
+          message: expect.stringContaining('Agent startup failed'),
+        },
+      },
     });
     expect(initialization).toHaveLength(1);
   },

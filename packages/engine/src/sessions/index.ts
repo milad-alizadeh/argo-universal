@@ -29,3 +29,10 @@ export {
   TurnInsertJob,
   TurnUpdateJob,
 } from './session-storage';
+
+export { shellRouter } from './shells/router';
+
+export {
+  type SessionConnections,
+  createSessionConnections,
+} from './session-connection';

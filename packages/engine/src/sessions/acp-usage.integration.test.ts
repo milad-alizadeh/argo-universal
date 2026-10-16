@@ -4,6 +4,7 @@ import type {
   UsageUpdate,
 } from '@agentclientprotocol/sdk';
 import { TurnUsage, type ContextUsage } from '@repo/contracts';
+import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot, waitForAcpSessionIdle } from '#mocks/acp-feed';
@@ -199,24 +200,37 @@ it('drops context for an unknown identity before the session/new response', asyn
   expect(snapshot.usage).toBeNull();
 });
 
-it.each<[string, string, ContextUsage]>([
-  ['@agentclientprotocol/claude-agent-acp', '0.88.0', context],
-  [
-    '@agentclientprotocol/codex-acp',
-    '2.1.1',
-    { ...context, scope: modelCallScope },
-  ],
-])(
-  'preserves %s context counters with their verified scope',
-  async (name, version, expected) => {
+it.each(
+  (
+    [
+      { scenario: 'usage-low', used: 20_000 },
+      { scenario: 'usage-high', used: 170_000 },
+      { scenario: 'usage-full', used: 200_000 },
+    ] as const
+  ).flatMap(({ scenario, used }) => [
+    {
+      scenario,
+      name: '@agentclientprotocol/claude-agent-acp',
+      version: '0.88.0',
+      expected: { used, size: 200_000 } satisfies ContextUsage,
+    },
+    {
+      scenario,
+      name: codexName,
+      version: '2.1.1',
+      expected: {
+        used,
+        size: 200_000,
+        scope: modelCallScope,
+      } satisfies ContextUsage,
+    },
+  ]),
+)(
+  'preserves $name $scenario counters with their verified scope',
+  async ({ scenario, name, version, expected }) => {
     const host = await startAcpEngine({
+      ...scenarios[scenario],
       initialize: initialization(name, version),
-      steps: [
-        {
-          type: 'update',
-          update: { sessionUpdate: usageUpdate, ...context },
-        },
-      ],
     });
 
     const created = await host.caller.session.new(emptySessionInput);

@@ -1,8 +1,9 @@
 import type {
-  AgentLoginTerminalFrame,
+  AgentAuthTerminalFrame,
   AgentLoginTerminalInput,
   AgentCheck,
 } from '@repo/contracts';
+import type { AuthenticationMethod } from './acp/auth-methods';
 
 // How the Engine starts one Agent program; the ACP module launches it.
 export type AgentLaunch = {
@@ -31,13 +32,6 @@ export type CheckAgentLaunch = (
   subject: AgentLaunchSubject,
 ) => Promise<AgentCheck>;
 
-export type LoginAgentMethod = {
-  id: string;
-  name: string;
-  description?: string;
-  terminal?: { args: readonly string[]; env: Readonly<Record<string, string>> };
-};
-
 export type LoginAgentRequest = { id: string; url: string; message: string };
 
 export type LoginAgentOutcome = {
@@ -55,12 +49,12 @@ export type LoginAgentCallbacks = {
 };
 
 export type LoginAgentConnection = {
-  methods: readonly LoginAgentMethod[];
+  methods: readonly AuthenticationMethod[];
   authenticate: (methodId: string) => Promise<void>;
   checkReady: () => Promise<LoginAgentOutcome>;
   close: () => Promise<void>;
   terminalActive?: () => boolean;
-  readTerminal?: (cursor: number) => AgentLoginTerminalFrame;
+  readTerminal?: (cursor: number) => AgentAuthTerminalFrame;
   inputTerminal?: (input: AgentLoginTerminalInput) => void;
 };
 

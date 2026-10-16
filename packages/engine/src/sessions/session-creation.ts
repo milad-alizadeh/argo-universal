@@ -1,4 +1,5 @@
 import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
+import { SessionOpenFailure } from '@repo/contracts';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
@@ -50,6 +51,9 @@ async function waitForSessionStored(
   if (!sessionSnapshot.context.stored)
     throw new TRPCError({
       code: 'PRECONDITION_FAILED',
+      cause: sessionSnapshot.context.openError
+        ? new SessionOpenFailure(sessionSnapshot.context.openError)
+        : undefined,
       message:
         sessionSnapshot.context.failure ??
         `Session ${sessionSnapshot.context.sessionId} closed`,

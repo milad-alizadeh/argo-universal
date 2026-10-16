@@ -1,18 +1,21 @@
 import { RequestError } from '@agentclientprotocol/sdk';
 import { runQuestion } from './scripted-questions.ts';
+import { runTerminal } from './scripted-terminal.ts';
 import type { ScriptedStep, ScriptedTurn } from './scripted-types.ts';
 
 export const runStep = async (
   step: ScriptedStep,
   turn: ScriptedTurn,
 ): Promise<void> => {
+  if (step.type === 'terminal') return runTerminal(step, turn);
+
   if (step.type === 'permission') return runQuestion(step, turn);
 
   return runRemainingStep(step, turn);
 };
 
 const runRemainingStep = (
-  step: Exclude<ScriptedStep, { type: 'permission' }>,
+  step: Exclude<ScriptedStep, { type: 'permission' | 'terminal' }>,
   turn: ScriptedTurn,
 ): Promise<void> => {
   switch (step.type) {
@@ -26,7 +29,7 @@ const runRemainingStep = (
 
 type ControlStep = Exclude<
   ScriptedStep,
-  { type: 'permission' | 'elicitation' | 'request-elicitation' }
+  { type: 'permission' | 'elicitation' | 'request-elicitation' | 'terminal' }
 >;
 
 const runControlStep = (

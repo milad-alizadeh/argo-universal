@@ -7,9 +7,11 @@ import type {
 import { session } from '@repo/db/schema';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const configuredSessionId = 'configured-session';
@@ -752,5 +754,43 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     } finally {
       report.mockRestore();
     }
+  },
+);
+
+it.each(fixtureAgents.map(({ agent }) => agent))(
+  '%s delivers a held mode choice in the running Session snapshot',
+  async (agent) => {
+    const host = await startAcpEngine(scenarios['held-mode'], undefined, agent);
+
+    const created = await host.caller.session.new({
+      ...emptySessionInput,
+      agent,
+    });
+
+    await host.caller.session.prompt({
+      ...created,
+      prompt: [{ type: 'text', text: 'Report a held mode choice' }],
+    });
+
+    const snapshot = await waitForAcpSnapshot(
+      host,
+      created.sessionId,
+      (value) =>
+        value.configOptions.some(
+          (option) => option._meta?.argo?.heldUntilNextTurn,
+        ),
+    );
+
+    expect(snapshot.state).toBe('running');
+    expect(snapshot.configOptions).toMatchObject([
+      { configId: 'model', currentValue: 'large' },
+      { configId: 'effort', currentValue: 'high' },
+      {
+        configId: 'mode',
+        currentValue: 'plan',
+        _meta: { argo: { heldUntilNextTurn: true } },
+      },
+      { configId: 'fast', currentValue: false },
+    ]);
   },
 );

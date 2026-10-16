@@ -18,6 +18,7 @@ import { createInstallationPorts } from '@repo/mocks/registry/installation';
 import { createFileAgentsFetcher } from '@repo/mocks/registry/port';
 import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
+import { firstPartyPluginsDirectory } from '../src/engine/first-party-plugins';
 
 const home = resolveRuntimeDirectory();
 
@@ -91,6 +92,7 @@ const engine = composeEngine({
   home,
   port,
   version,
+  firstPartyPluginsDirectory,
   startedAt,
   now: Date.now,
   createId: randomUUID,

@@ -1,0 +1,9 @@
+{
+  "id": "issue-tracker",
+  "name": "Issue tracker",
+  "version": "0.0.1",
+  "engines": { "argo": ">=0.0.0 <1.0.0" },
+  "main": "index.js",
+  "icon": "issue",
+  "contributes": { "nav": [{ "id": "issues", "title": "Issues", "path": "/" }] }
+}

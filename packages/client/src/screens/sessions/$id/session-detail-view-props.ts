@@ -2,6 +2,7 @@ import type { SessionSnapshot } from '@repo/contracts';
 import type { FeedProps, useSessionFeed } from '#features/feed';
 import {
   type SessionHeaderProps,
+  sessionOpenErrorMessage,
   type SessionHeaderStatus,
 } from '#features/sessions';
 import {
@@ -30,7 +31,7 @@ function failedSession(feed: SessionFeed): SessionDetailViewProps | undefined {
   if (feed.error) return { state: 'failed' };
 
   if (feed.openError)
-    return { state: 'failed', reason: feed.openError.message };
+    return { state: 'failed', reason: sessionOpenErrorMessage(feed.openError) };
 
   return undefined;
 }
