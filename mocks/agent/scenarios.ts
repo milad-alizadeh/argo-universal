@@ -1,5 +1,9 @@
 import type { SessionUpdate } from '@agentclientprotocol/sdk';
-import { acpConfiguration, heldModeSteps } from './acp-configuration.ts';
+import {
+  acpConfiguration,
+  heldModeSteps,
+  smallModelUpdate,
+} from './acp-configuration.ts';
 import { contextUsageFixtures } from './context-usage.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
@@ -9,6 +13,7 @@ import {
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
+import { subagentScenarios } from './subagent-scenarios.ts';
 import { terminalLogin } from './terminal-login.ts';
 
 export const sharedReply = 'The shared fixture completed this Turn.';
@@ -47,6 +52,7 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 // Shared named scenarios; tests reuse them instead of scripting their own peer.
 export const scenarios = {
   reply: scenario([reply]),
+  ...subagentScenarios,
   'feed-history': scenario(feedHistorySteps),
   'feed-work': scenario([
     ...feedWorkSteps,
@@ -129,17 +135,7 @@ export const scenarios = {
     reply,
   ]),
   'held-mode': scenario(heldModeSteps),
-  configuration: scenario([
-    update({
-      sessionUpdate: 'config_option_update',
-      configOptions: acpConfiguration.map((option) =>
-        option.id === 'model' && option.type === 'select'
-          ? { ...option, currentValue: 'small' }
-          : option,
-      ),
-    }),
-    reply,
-  ]),
+  configuration: scenario([update(smallModelUpdate), reply]),
   'write-pressure': scenario([
     ...Array.from({ length: writePressureTools }, (_, index) => [
       update({

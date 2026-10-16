@@ -43,6 +43,7 @@ import type {
   SessionListMachineInput,
   SessionListState,
 } from './session-list-machine';
+import { decodeStoredTurn } from './stored-turn';
 import type { WriterChange } from './writer-changes';
 
 const storedTurnColumns = {
@@ -340,15 +341,7 @@ function readListTurns(
     stored = false,
   ): Turn[] => {
     const parsed = input.validate((): Turn =>
-      Turn.parse(
-        stored
-          ? {
-              ...row,
-              error: row.error === null ? null : JSON.parse(String(row.error)),
-              usage: row.usage === null ? null : JSON.parse(String(row.usage)),
-            }
-          : row,
-      ),
+      stored ? decodeStoredTurn(row) : Turn.parse(row),
     );
 
     if (!parsed) input.rejectedSessions.add(row.sessionId);

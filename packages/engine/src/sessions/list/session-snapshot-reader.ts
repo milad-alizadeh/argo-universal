@@ -4,6 +4,7 @@ import type { SessionActorRef } from '../session-machine';
 import { createSessionReader } from '../session-record';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import { toSessionSnapshot } from './session-snapshot';
+import { createSubagentsReader } from './subagents-reader';
 
 type SnapshotDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
 
@@ -20,9 +21,11 @@ interface SnapshotRead {
 
 export class SessionSnapshotReader {
   private readonly readSession: ReturnType<typeof createSessionReader>;
+  private readonly readSubagents: ReturnType<typeof createSubagentsReader>;
   private readonly readRows: ReturnType<typeof createLiveHeaderRowsReader>;
 
   public constructor(private readonly deps: SnapshotDeps) {
+    this.readSubagents = createSubagentsReader(deps);
     this.readSession = createSessionReader(deps.database);
     this.readRows = createLiveHeaderRowsReader(deps);
   }
@@ -38,7 +41,10 @@ export class SessionSnapshotReader {
     const feedSnapshot = { context: { ...feed, rows } };
 
     return {
-      snapshot: toSessionSnapshot(session, feedSnapshot, stored),
+      snapshot: toSessionSnapshot(session, feedSnapshot, {
+        ...stored,
+        subagents: this.readSubagents(sessionId),
+      }),
       isClosed: !actor && stored.parentSessionId === null,
     };
   }

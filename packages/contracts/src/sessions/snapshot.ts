@@ -4,6 +4,7 @@ import { PermissionOptionKind } from '../feed/tool-call';
 import { ChangesSummary } from './changes';
 import { SessionInfo } from './list';
 import { SessionConfigOption } from './set-config-option';
+import { Subagent } from './subagent';
 
 const SessionState = z.enum(['running', 'idle', 'requires_action']);
 
@@ -186,6 +187,7 @@ export const SessionSnapshot = z.strictObject({
   pendingPlanProposal: PendingPlanProposal.nullable(),
   configOptions: z.array(SessionConfigOption),
   changes: ChangesSummary,
+  subagents: z.array(Subagent),
   maxRevision: sessionColumns.shape.maxRevision,
   epoch: sessionColumns.shape.epoch,
 });
