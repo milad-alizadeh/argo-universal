@@ -1,7 +1,6 @@
 import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 import type { SectionList, SectionLists } from '#features/frame';
 import {
   type SessionsFilter,
@@ -17,10 +16,9 @@ import {
   useNavigate,
 } from '#lib/product/navigation/navigation';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
-import { Text } from '#primitives/display/text';
 import { SearchField } from '#primitives/inputs/search-field';
 import { newSessionId } from '../lib/product/navigation/new-session';
-import { type Section, sections } from '../lib/product/navigation/sections';
+import { sections } from '../lib/product/navigation/sections';
 import { LiveSessionList } from './sessions/live-session-list';
 import { SessionsRootToolbar } from './sessions/sessions-root-toolbar';
 import { useFirstSessionPage } from './sessions/use-first-session-page';
@@ -113,27 +111,6 @@ function settingsList(
   };
 }
 
-// A placeholder until the section's list screen is built; insets itself below a transparent header.
-function PlaceholderList({ section }: { section: Section }): React.JSX.Element {
-  return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="px-gutter py-6"
-    >
-      <Text role="secondary">
-        {sections[section].title} list will appear here.
-      </Text>
-    </ScrollView>
-  );
-}
-
-// A section whose root is its own page until its list is built.
-const placeholderList = (section: Section): SectionList => ({
-  header: <ListTitle>{sections[section].title}</ListTitle>,
-  list: <PlaceholderList section={section} />,
-  rootHeader: { title: sections[section].title },
-});
-
 /*
  * Each section's list, its header and its root header, with the Sessions filter and the
  * Settings search held once for the Frame: the sidebar's list, a root page's list and its
@@ -147,8 +124,6 @@ export function useSectionLists(): SectionLists {
 
   return {
     sessions: sessionsList(sessions, path, () => navigate(newSessionHref())),
-    issues: placeholderList('issues'),
-    atlas: placeholderList('atlas'),
     settings: settingsList({ query, onQueryChange }, path),
   };
 }

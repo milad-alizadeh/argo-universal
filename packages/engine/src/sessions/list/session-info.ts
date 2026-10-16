@@ -103,7 +103,6 @@ export function toSessionInfo(
       },
       shells: { total: 0, running: 0 },
       archivedAt: row.archivedAt,
-      issue: null,
       pullRequest: null,
     },
     running,

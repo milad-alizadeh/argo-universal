@@ -7,10 +7,6 @@ import { Badge } from '#primitives/display/badge';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import {
-  IssueIndicator,
-  type IssueIndicatorProps,
-} from '../issue-indicator/issue-indicator';
-import {
   PullRequestIndicator,
   type PullRequestIndicatorProps,
 } from '../pull-request-indicator/pull-request-indicator';
@@ -19,7 +15,6 @@ export interface SessionRowMetadataProps {
   session: SessionInfo;
   selected: boolean;
   subagentsFailed?: boolean;
-  issue?: IssueIndicatorProps;
   pullRequest?: PullRequestIndicatorProps;
 }
 
@@ -115,18 +110,6 @@ function archivedContent({
   return <ArchivedBadge key="archived" />;
 }
 
-function issueContent({
-  issue,
-}: SessionRowMetadataProps): React.JSX.Element | undefined {
-  if (!issue) return undefined;
-
-  return (
-    <IndicatorSlot key="issue" testID="session-issue-slot">
-      <IssueIndicator {...issue} />
-    </IndicatorSlot>
-  );
-}
-
 function pullRequestContent({
   pullRequest,
 }: SessionRowMetadataProps): React.JSX.Element | undefined {
@@ -142,7 +125,6 @@ function pullRequestContent({
 const metadataContents = [
   subagentsContent,
   archivedContent,
-  issueContent,
   pullRequestContent,
 ];
 

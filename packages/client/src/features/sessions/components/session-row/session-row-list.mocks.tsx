@@ -18,10 +18,7 @@ export interface SessionRowListMockProps {
   layout?: SessionsLayout;
   metadata?: Record<
     string,
-    Pick<
-      SessionRowProps,
-      'issue' | 'pullRequest' | 'subagentsFailed' | 'trailing'
-    >
+    Pick<SessionRowProps, 'pullRequest' | 'subagentsFailed' | 'trailing'>
   >;
 }
 

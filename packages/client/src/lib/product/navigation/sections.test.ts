@@ -5,8 +5,8 @@ const sectionCases: [string | undefined, string][] = [
   ['/sessions', 'sessions'],
   ['/sessions/new', 'sessions'],
   ['/sessions/[id]', 'sessions'],
-  ['/issues', 'issues'],
-  ['/atlas', 'atlas'],
+  ['/issues', 'sessions'],
+  ['/atlas', 'sessions'],
   ['/settings', 'settings'],
   ['/settings/accounts', 'settings'],
   ['/settings/projects/example-project', 'settings'],
@@ -15,6 +15,8 @@ const sectionCases: [string | undefined, string][] = [
   ['/', 'sessions'],
   ['index', 'sessions'],
   [undefined, 'sessions'],
+  ['/toString', 'sessions'],
+  ['/constructor', 'sessions'],
 ];
 
 describe('sectionOf', () => {
@@ -24,7 +26,7 @@ describe('sectionOf', () => {
 });
 
 describe('isPage', () => {
-  it.each(['/sessions', '/settings', '/issues', '/atlas'])(
+  it.each(['/sessions', '/settings'])(
     'reads the list %s as no page',
     (path) => {
       expect(isPage(path)).toBe(false);
@@ -41,6 +43,6 @@ describe('isPage', () => {
 
 describe('sectionOrder', () => {
   it('lists the sections top to bottom', () => {
-    expect(sectionOrder).toEqual(['sessions', 'issues', 'atlas', 'settings']);
+    expect(sectionOrder).toEqual(['sessions', 'settings']);
   });
 });

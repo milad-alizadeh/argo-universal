@@ -46,7 +46,7 @@ function PaperSessionList(
 }
 
 /*
- * Paper's list: every status, both Agents, Issue and pull request metadata, a failed Subagent,
+ * Paper's list: every status, both Agents, pull request metadata, a failed Subagent,
  * a finished Plan with no bar, and the first row selected on wide layouts.
  */
 export const Overview: Story = {

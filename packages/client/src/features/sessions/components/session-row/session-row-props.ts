@@ -2,7 +2,6 @@ import type { SessionInfo } from '@repo/contracts';
 import { statusLabels } from '#lib/product/status-indicator/status-indicator';
 import type { VirtualListPosition } from '#primitives/lists/virtual-list-item';
 import type { SessionsLayout } from '../../state/sessions-layout';
-import type { IssueIndicatorProps } from '../issue-indicator/issue-indicator';
 import type { PullRequestIndicatorProps } from '../pull-request-indicator/pull-request-indicator';
 
 export interface SessionRowProps {
@@ -10,7 +9,6 @@ export interface SessionRowProps {
   logo: string;
   selected?: boolean;
   subagentsFailed?: boolean;
-  issue?: IssueIndicatorProps;
   pullRequest?: PullRequestIndicatorProps;
   // Short text at the end of the title line, such as how long ago the Session was active; a Compact row shows it when the Session has no PR.
   trailing?: string;
