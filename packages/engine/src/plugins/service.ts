@@ -1,11 +1,14 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
-import type { PluginDispatchInput, ViewMessage } from '@repo/contracts/plugins/wire';
 import type {
   PluginFailure,
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
+import type {
+  PluginDispatchInput,
+  ViewMessage,
+} from '@repo/contracts/plugins/wire';
 import { discoverPlugins, type PluginsDeps } from './loader';
 import type { PluginRuntime } from './runtime';
 

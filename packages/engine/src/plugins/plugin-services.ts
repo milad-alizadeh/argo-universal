@@ -20,10 +20,7 @@ export class PluginServices {
     this.keychain = keychain;
   }
 
-  async handle(
-    pluginId: string,
-    request: StateRequest,
-  ): Promise<PluginReply> {
+  async handle(pluginId: string, request: StateRequest): Promise<PluginReply> {
     try {
       return { ok: true, value: await this.perform(pluginId, request) };
     } catch (error) {

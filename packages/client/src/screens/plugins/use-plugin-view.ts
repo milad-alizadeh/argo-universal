@@ -6,26 +6,35 @@ import {
   emptyPluginView,
   reducePluginView,
   type PluginViewState,
-} from '../../lib/generic/plugin-registry';
+} from '../../lib/product/plugin-registry';
 
 interface PluginView extends PluginViewState {
   // Sends a tapped node's event id to the Plugin's handler.
   dispatch: (eventId: string) => void;
 }
 
+type Dispatch = (eventId: string) => void;
+
+function useDispatch(pluginId: string, path: string): Dispatch {
+  const trpc = useTRPC();
+  const dispatch = useMutation(trpc.plugins.dispatch.mutationOptions());
+
+  return (eventId) => dispatch.mutate({ pluginId, path, eventId });
+}
+
 // Watches one Plugin page on the connected Server: a snapshot first, then patches.
 export function usePluginView(pluginId: string, path: string): PluginView {
   const trpc = useTRPC();
   const [state, receive] = useReducer(reducePluginView, emptyPluginView);
+
   const subscription = useSubscription(
-    trpc.plugins.view.subscriptionOptions({ pluginId, path }, { onData: receive }),
+    trpc.plugins.view.subscriptionOptions(
+      { pluginId, path },
+      { onData: receive },
+    ),
   );
-  const dispatch = useMutation(trpc.plugins.dispatch.mutationOptions());
 
   useResubscribeOnReconnect(subscription);
 
-  return {
-    ...state,
-    dispatch: (eventId) => dispatch.mutate({ pluginId, path, eventId }),
-  };
+  return { ...state, dispatch: useDispatch(pluginId, path) };
 }

@@ -1,7 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PluginTree } from '../../../lib/generic/plugin-registry';
+import { PluginTree } from '../../../lib/product/plugin-registry';
 
 export interface PluginDetailViewProps {
   // The page the Plugin draws; blank until the Server's first snapshot arrives.

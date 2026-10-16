@@ -1,4 +1,5 @@
-export { PluginTree, type PluginTreeProps } from './plugin-registry';
+export { PluginTree } from './plugin-registry';
+
 export {
   emptyPluginView,
   reducePluginView,

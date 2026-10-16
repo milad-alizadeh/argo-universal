@@ -3,7 +3,6 @@ import { PluginFailures } from './failures';
 import { HostConnection } from './host-connection';
 import type { PluginServices } from './plugin-services';
 import { RuntimePlugin } from './runtime-plugin';
-import { PluginViews } from './views';
 import type { PluginReply } from './runtime-protocol';
 import {
   notStarted,
@@ -11,6 +10,7 @@ import {
   type PluginStatus,
   type HostMessage,
 } from './runtime-protocol';
+import { PluginViews } from './views';
 
 type PluginLocation = {
   entry: Omit<PluginEntry, 'generation'>;
@@ -46,8 +46,7 @@ export class PluginRuntime {
   ): Promise<PluginReply> {
     const { pluginId, request } = message;
 
-    if (request.api !== 'view')
-      return this.services.handle(pluginId, request);
+    if (request.api !== 'view') return this.services.handle(pluginId, request);
     this.views.receive(pluginId, request.path, request.message);
 
     return { ok: true };

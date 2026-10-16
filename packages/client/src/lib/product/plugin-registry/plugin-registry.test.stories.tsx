@@ -1,5 +1,7 @@
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   helloSnapshot,
+  helloTapEventId,
   invalidPropsSnapshot,
   unknownNodesSnapshot,
 } from '@repo/contracts/plugins/wire-fixtures';
@@ -9,7 +11,7 @@ import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
 
-const rootOf = (message: typeof helloSnapshot) => {
+const rootOf = (message: typeof helloSnapshot): WireNode => {
   if (message.type !== 'snapshot') throw new Error('Fixture is a snapshot');
 
   return message.root;
@@ -27,7 +29,7 @@ export const Tap: Story = {
     await expect(canvas.getByText('Hello from a Plugin')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Tap me' }));
     await expect(onEvent).toHaveBeenCalledOnce();
-    await expect(onEvent).toHaveBeenCalledWith('0/2/0:onPress');
+    await expect(onEvent).toHaveBeenCalledWith(helloTapEventId);
   },
 };
 

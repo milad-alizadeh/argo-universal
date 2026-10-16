@@ -21,10 +21,7 @@ export function PluginDetailScreen({
 
   if (section)
     return (
-      <PluginPage
-        pluginId={section.pluginId}
-        pagePath={`/${section.segments.slice(2).join('/')}`}
-      />
+      <PluginPage pluginId={section.pluginId} segments={section.segments} />
     );
 
   return loaded ? (
@@ -36,12 +33,16 @@ export function PluginDetailScreen({
 
 function PluginPage({
   pluginId,
-  pagePath,
+  segments,
 }: {
   pluginId: string;
-  pagePath: string;
+  segments: readonly string[];
 }): React.JSX.Element {
-  const { root, dispatch } = usePluginView(pluginId, pagePath);
+  // The segments after the Plugin id and the nav id are the page's own path.
+  const { root, dispatch } = usePluginView(
+    pluginId,
+    `/${segments.slice(2).join('/')}`,
+  );
 
   return <PluginDetailView root={root} onEvent={dispatch} />;
 }

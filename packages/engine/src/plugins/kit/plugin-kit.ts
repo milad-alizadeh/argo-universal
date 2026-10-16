@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { mountPages, type KitEvent, type ViewSender } from './pages';
+import { PluginEvent } from '../plugin-event';
 import { jsx, jsxs } from './jsx-runtime';
+import { mountPages, type Pages, type ViewSender } from './pages';
 
 const components = {
   Text: 'Text',
@@ -9,7 +10,6 @@ const components = {
   Column: 'Column',
 } as const;
 
-// Bundled by esbuild and run inside a Plugin's context before its code (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
 const hooks = {
   useState: React.useState,
   useReducer: React.useReducer,
@@ -22,19 +22,28 @@ const hooks = {
   memo: React.memo,
 };
 
-export function createKit(send: ViewSender): {
-  exports: Record<string, unknown>;
-  jsxRuntime: Record<string, unknown>;
-  registerPage: (path: string, page: () => React.ReactNode) => void;
+// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
+const exportsOf = { ...components, ...hooks, Fragment: React.Fragment };
+
+const jsxRuntime = { jsx, jsxs, Fragment: React.Fragment };
+
+export interface Kit {
+  exports: typeof exportsOf;
+  jsxRuntime: typeof jsxRuntime;
+  registerPage: Pages['register'];
   inbox: (json: string) => void;
-} {
+}
+
+// Bundled by esbuild and run inside a Plugin's context before its code (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
+export function createKit(send: ViewSender): Kit {
   const pages = mountPages(send);
 
   return {
-    exports: { ...components, ...hooks, Fragment: React.Fragment },
-    jsxRuntime: { jsx, jsxs, Fragment: React.Fragment },
+    exports: exportsOf,
+    jsxRuntime,
     registerPage: pages.register,
-    inbox: (json): void => pages.receive(JSON.parse(json) as KitEvent),
+    inbox: (json: string): void =>
+      pages.receive(PluginEvent.parse(JSON.parse(json))),
   };
 }
 

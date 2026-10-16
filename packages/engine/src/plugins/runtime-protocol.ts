@@ -1,6 +1,7 @@
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { ViewMessage } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
+import { PluginEvent } from './plugin-event.ts';
 
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
 
@@ -68,19 +69,7 @@ export const PluginReply = z.discriminatedUnion('ok', [
 
 export type PluginReply = z.infer<typeof PluginReply>;
 
-// What the Server asks a running Plugin's pages to do.
-export const PluginEvent = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('open'), path: z.string() }),
-  z.object({ type: z.literal('close'), path: z.string() }),
-  z.object({
-    type: z.literal('dispatch'),
-    path: z.string(),
-    eventId: z.string(),
-    payload: z.unknown().optional(),
-  }),
-]);
-
-export type PluginEvent = z.infer<typeof PluginEvent>;
+export { PluginEvent } from './plugin-event.ts';
 
 export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
@@ -98,6 +87,8 @@ export const HostCommand = z.discriminatedUnion('type', [
     reply: PluginReply,
   }),
 ]);
+
+export type HostCommand = z.infer<typeof HostCommand>;
 
 export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
 
@@ -139,7 +130,7 @@ export const WorkerReply = z.object({
 
 export type WorkerReply = z.infer<typeof WorkerReply>;
 
-export const WorkerEvent = z.object({
+const WorkerEvent = z.object({
   type: z.literal('event'),
   event: PluginEvent,
 });
@@ -164,3 +155,5 @@ export const running: PluginStatus = {
 
 export const runtimeError = (cause: unknown): string =>
   cause instanceof Error ? cause.message : String(cause);
+
+export type WorkerCommand = z.infer<typeof WorkerCommand>;

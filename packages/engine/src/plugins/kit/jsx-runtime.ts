@@ -1,50 +1,69 @@
 import * as React from 'react';
+import type { ElementProps } from './element-props';
 
-const rejected = ['className', 'style'] as const;
+const rejected = ['className', 'style'];
 
 // The kit components that take their visible text as children.
 const textual = new Set(['Text', 'Button']);
 
-function labelOf(children: unknown): string {
+function labelOf(children: React.ReactNode): string {
   return [children]
     .flat()
     .filter((part) => typeof part === 'string' || typeof part === 'number')
     .join('');
 }
 
+function rejectStyling(type: string, props: ElementProps): void {
+  const name = rejected.find((candidate) => candidate in props);
+
+  if (name)
+    throw new Error(`${type}: ${name} is not allowed on Plugin components`);
+}
+
 // Element props such as `leading` become children of a `#slot` node, which the wire carries as a named slot.
+function slotsOf(props: ElementProps): React.ReactElement[] {
+  return Object.entries(props).flatMap(([name, value]) =>
+    React.isValidElement(value)
+      ? [React.createElement('#slot', { argoKey: name }, value)]
+      : [],
+  );
+}
+
+const plainOf = (props: ElementProps): ElementProps =>
+  Object.fromEntries(
+    Object.entries(props).filter(([, value]) => !React.isValidElement(value)),
+  );
+
+function labelProp(type: string, children: React.ReactNode): ElementProps {
+  return textual.has(type) && children !== undefined
+    ? { label: labelOf(children) }
+    : {};
+}
+
 function prepare(
   type: string,
-  props: Record<string, unknown>,
+  props: ElementProps,
   key: string | undefined,
-): Record<string, unknown> {
-  for (const name of rejected)
-    if (name in props)
-      throw new Error(`${type}: ${name} is not allowed on Plugin components`);
+): ElementProps {
+  rejectStyling(type, props);
   const { children, ...rest } = props;
-  const prepared: Record<string, unknown> = { argoKey: key };
-  const slots: React.ReactNode[] = [];
-
-  for (const [name, value] of Object.entries(rest))
-    if (React.isValidElement(value))
-      slots.push(React.createElement('#slot', { name, key: name }, value));
-    else prepared[name] = value;
-
-  if (textual.has(type) && children !== undefined)
-    prepared.label = labelOf(children);
+  const slots = slotsOf(rest);
 
   return {
-    ...prepared,
+    ...plainOf(rest),
+    ...labelProp(type, children),
+    argoKey: key,
     children: textual.has(type) ? slots : [children, slots].flat(),
   };
 }
 
 function create(
   type: React.ElementType,
-  props: Record<string, unknown>,
+  props: ElementProps,
   key: string | undefined,
 ): React.ReactElement {
-  if (typeof type !== 'string') return React.createElement(type, { ...props, key });
+  if (typeof type !== 'string')
+    return React.createElement(type, { ...props, key });
 
   return React.createElement(type, prepare(type, props, key));
 }

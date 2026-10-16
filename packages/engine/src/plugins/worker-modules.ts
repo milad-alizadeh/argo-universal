@@ -8,6 +8,7 @@ import {
   type Module,
 } from 'node:vm';
 import { bundleKit } from './kit/bundle.ts';
+import type { Kit } from './kit/plugin-kit.ts';
 import { requirePluginFile } from './plugin-files.ts';
 import type { PluginEntry } from './runtime-protocol.ts';
 import { argoSource, type ArgoBridge } from './worker-argo.ts';
@@ -20,37 +21,45 @@ export async function registerPlugin(
   entry: PluginEntry,
   bridge: ArgoBridge,
 ): Promise<PluginInbox> {
-  const { context, inbox, kit } = pluginContext(bridge, await bundleKit());
-  const modules = new PluginModules(entry, context, kit);
+  const context = sandbox(bridge, await bundleKit());
+  const { inbox, kit } = takeKit(context);
 
-  const bootstrap = registrationModule(context);
+  await bootstrap(context, new PluginModules(entry, context, kit));
 
-  await bootstrap.link((specifier, referencing) =>
-    referencing === bootstrap
+  return inbox;
+}
+
+async function bootstrap(
+  context: PluginRealm,
+  modules: PluginModules,
+): Promise<void> {
+  const module = registrationModule(context);
+
+  await module.link((specifier, referencing) =>
+    referencing === module
       ? modules.entryModule()
       : modules.link(specifier, referencing),
   );
-  await bootstrap.evaluate();
-
-  return inbox;
+  await module.evaluate();
 }
 
 // How the worker reaches a Plugin's pages: a JSON string in, nothing out.
 export type PluginInbox = (json: string) => void;
 
 interface KitModules {
-  kit: Record<string, unknown>;
-  jsxRuntime: Record<string, unknown>;
+  kit: Kit['exports'];
+  jsxRuntime: Kit['jsxRuntime'];
 }
 
-interface PluginContext {
-  context: ReturnType<typeof createContext>;
+interface TakenKit {
   inbox: PluginInbox;
   kit: KitModules;
 }
 
+type PluginRealm = ReturnType<typeof createContext>;
+
 // The kit runs first, with microtask timers for its scheduler; `argoSource` then builds the frozen `argo` from it and removes the bridge.
-function pluginContext(bridge: ArgoBridge, kitSource: string): PluginContext {
+function sandbox(bridge: ArgoBridge, kitSource: string): PluginRealm {
   const context = createContext(
     { __argoBridge: bridge },
     { codeGeneration: { strings: false, wasm: false } },
@@ -60,18 +69,20 @@ function pluginContext(bridge: ArgoBridge, kitSource: string): PluginContext {
   runInContext(kitSource, context);
   runInContext(`globalThis.argo = ${argoSource}`, context);
 
-  const inbox = runInContext('globalThis.__argoInbox', context) as PluginInbox;
-  const exported = runInContext(
-    'globalThis.__argoKitExports',
-    context,
-  ) as { exports: Record<string, unknown>; jsxRuntime: Record<string, unknown> };
+  return context;
+}
+
+// What the kit left behind for the worker: the inbox for pages, and the modules `@argo/plugin-kit` serves.
+function takeKit(context: PluginRealm): TakenKit {
+  const inbox: PluginInbox = runInContext('globalThis.__argoInbox', context);
+  const exported: Kit = runInContext('globalThis.__argoKitExports', context);
+
   runInContext(
     'delete globalThis.__argoInbox; delete globalThis.__argoKitExports',
     context,
   );
 
   return {
-    context,
     inbox,
     kit: { kit: exported.exports, jsxRuntime: exported.jsxRuntime },
   };
@@ -83,9 +94,7 @@ const kitPrelude = `
   globalThis.console = { log() {}, info() {}, warn() {}, error() {}, debug() {} };
 `;
 
-const registrationModule = (
-  context: ReturnType<typeof createContext>,
-): SourceTextModule =>
+const registrationModule = (context: PluginRealm): SourceTextModule =>
   new SourceTextModule(
     'import { register } from "./entry"; await register(argo);',
     { context },
@@ -95,14 +104,10 @@ class PluginModules {
   private readonly modules = new Map<string, Promise<SourceTextModule>>();
 
   private readonly entry: PluginEntry;
-  private readonly context: ReturnType<typeof createContext>;
+  private readonly context: PluginRealm;
   private readonly kit: KitModules;
 
-  constructor(
-    entry: PluginEntry,
-    context: ReturnType<typeof createContext>,
-    kit: KitModules,
-  ) {
+  constructor(entry: PluginEntry, context: PluginRealm, kit: KitModules) {
     this.entry = entry;
     this.context = context;
     this.kit = kit;
@@ -112,7 +117,7 @@ class PluginModules {
     return this.load(resolve(this.entry.directory, this.entry.main));
   }
 
-  private synthetic(values: Record<string, unknown>): SyntheticModule {
+  private synthetic(values: KitModules[keyof KitModules]): SyntheticModule {
     return new SyntheticModule(
       Object.keys(values),
       function (this: SyntheticModule) {
@@ -149,21 +154,28 @@ class PluginModules {
     return builtModuleSource(await readFile(target, 'utf8'), target);
   }
 
-  async link(
-    specifier: string,
-    referencing: Module,
-  ): Promise<Module> {
+  private builtin(specifier: string): SyntheticModule | null {
     if (specifier === kitSpecifier) return this.synthetic(this.kit.kit);
 
-    if (specifier === `${kitSpecifier}/jsx-runtime`)
-      return this.synthetic(this.kit.jsxRuntime);
+    return specifier === `${kitSpecifier}/jsx-runtime`
+      ? this.synthetic(this.kit.jsxRuntime)
+      : null;
+  }
 
-    if (!specifier.startsWith('./') && !specifier.startsWith('../'))
+  async link(specifier: string, referencing: Module): Promise<Module> {
+    const builtin = this.builtin(specifier);
+
+    if (builtin) return builtin;
+
+    if (!isRelative(specifier))
       throw new Error(`Plugin imports must be built or relative: ${specifier}`);
 
     return this.load(resolve(dirname(referencing.identifier), specifier));
   }
 }
+
+const isRelative = (specifier: string): boolean =>
+  specifier.startsWith('./') || specifier.startsWith('../');
 
 const kitSpecifier = '@argo/plugin-kit';
 

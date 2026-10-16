@@ -1,114 +1,126 @@
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
+import { PluginEvent } from '../plugin-event';
+import { diff } from './diff';
+import { reportFailure } from './host-config';
 import { mount, type Mounted } from './reconciler';
-import { diff, toWire, type Handlers, type Instance } from './wire-tree';
+import { toWire, type Handlers, type Instance } from './wire-tree';
 
 export type ViewSender = (path: string, message: ViewMessage) => Promise<void>;
 
-export interface KitEvent {
-  type: 'open' | 'close' | 'dispatch';
-  path: string;
-  eventId?: string;
-  payload?: unknown;
-}
-
 type Page = () => ReactNode;
 
+type Dispatch = Extract<PluginEvent, { type: 'dispatch' }>;
+
 interface OpenView {
-  mounted: Mounted;
+  path: string;
+  mounted?: Mounted;
   tree: WireNode | null;
   revision: number;
   handlers: Handlers;
 }
 
-// A page a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
-export function mountPages(send: ViewSender): {
+export interface Pages {
   register: (path: string, page: Page) => void;
-  receive: (event: KitEvent) => void;
-} {
-  const pages = new Map<string, Page>();
-  const views = new Map<string, OpenView>();
+  receive: (event: PluginEvent) => void;
+}
 
-  // An unhandled rejection ends the worker, which the Server reports as that Plugin's crash.
-  const report = (error: Error): void => {
-    void Promise.reject(error);
-  };
+interface Hub {
+  send: ViewSender;
+  pages: Map<string, Page>;
+  views: Map<string, OpenView>;
+}
 
-  const committed = (path: string, view: OpenView, container: Instance): void => {
-    const handlers: Handlers = new Map();
-    const root = container.children[0];
+// An unhandled rejection ends the worker, which the Server reports as that Plugin's crash.
+function transmit(hub: Hub, path: string, message: ViewMessage): void {
+  hub.send(path, message).catch(reportFailure);
+}
 
-    if (!root) return;
-    const next = toWire(root, handlers);
-    view.handlers = handlers;
-    publish(path, view, next);
-  };
+function nextMessage(view: OpenView, next: WireNode): ViewMessage | null {
+  const revision = view.revision + 1;
 
-  const publish = (path: string, view: OpenView, next: WireNode): void => {
-    const previous = view.tree;
-    const ops = previous ? diff(previous, next) : [];
+  if (!view.tree) return { type: 'snapshot', revision, root: next };
+  const ops = diff(view.tree, next);
 
-    if (previous && ops.length === 0) return;
-    view.revision += 1;
-    view.tree = next;
-    const message: ViewMessage = previous
-      ? { type: 'patch', revision: view.revision, ops }
-      : { type: 'snapshot', revision: view.revision, root: next };
+  return ops.length === 0 ? null : { type: 'patch', revision, ops };
+}
 
-    void send(path, message).catch(report);
-  };
+function publish(hub: Hub, view: OpenView, next: WireNode): void {
+  const message = nextMessage(view, next);
 
-  const open = (path: string): void => {
-    const existing = views.get(path);
+  if (!message) return;
+  view.revision = message.revision;
+  view.tree = next;
+  transmit(hub, view.path, message);
+}
 
-    if (existing?.tree) {
-      void send(path, {
-        type: 'snapshot',
-        revision: existing.revision,
-        root: existing.tree,
-      }).catch(report);
+function committed(hub: Hub, view: OpenView, container: Instance): void {
+  const root = container.children[0];
 
-      return;
-    }
-    const page = pages.get(path);
+  if (!root) return;
+  const handlers: Handlers = new Map();
+  const next = toWire(root, handlers);
 
-    if (!page || existing) return;
-    const view: OpenView = {
-      mounted: null as unknown as Mounted,
-      tree: null,
-      revision: 0,
-      handlers: new Map(),
-    };
-    views.set(path, view);
-    view.mounted = mount(
-      createElement(page),
-      (container) => committed(path, view, container),
-      report,
-    );
-  };
+  view.handlers = handlers;
+  publish(hub, view, next);
+}
 
-  const close = (path: string): void => {
-    views.get(path)?.mounted.unmount();
-    views.delete(path);
-  };
+function start(hub: Hub, path: string, page: Page): void {
+  const view: OpenView = { path, tree: null, revision: 0, handlers: new Map() };
 
-  const dispatch = (event: KitEvent): void => {
-    const handler = views.get(event.path)?.handlers.get(event.eventId ?? '');
+  hub.views.set(path, view);
+  view.mounted = mount(createElement(page), (container) =>
+    committed(hub, view, container),
+  );
+}
 
-    if (handler) {
-      Promise.resolve()
-        .then(() => handler(event.payload))
-        .catch(report);
-    }
-  };
+// A viewer that joins late gets the current tree again, as a snapshot.
+function resend(hub: Hub, view: OpenView): void {
+  if (!view.tree) return;
+  transmit(hub, view.path, {
+    type: 'snapshot',
+    revision: view.revision,
+    root: view.tree,
+  });
+}
+
+function open(hub: Hub, path: string): void {
+  const existing = hub.views.get(path);
+  const page = hub.pages.get(path);
+
+  if (existing) resend(hub, existing);
+  else if (page) start(hub, path, page);
+}
+
+function close(hub: Hub, path: string): void {
+  hub.views.get(path)?.mounted?.unmount();
+  hub.views.delete(path);
+}
+
+function dispatch(hub: Hub, event: Dispatch): void {
+  const handler = hub.views.get(event.path)?.handlers.get(event.eventId);
+
+  if (handler)
+    Promise.resolve()
+      .then(() => handler(event.payload))
+      .catch(reportFailure);
+}
+
+function receive(hub: Hub, event: PluginEvent): void {
+  if (event.type === 'dispatch') dispatch(hub, event);
+  else if (event.type === 'open') open(hub, event.path);
+  else close(hub, event.path);
+}
+
+// A page a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
+export function mountPages(send: ViewSender): Pages {
+  const hub: Hub = { send, pages: new Map(), views: new Map() };
 
   return {
-    register: (path, page): void => void pages.set(path, page),
-    receive: (event): void => {
-      if (event.type === 'open') open(event.path);
-      else if (event.type === 'close') close(event.path);
-      else dispatch(event);
+    register: (path, page) => {
+      hub.pages.set(path, page);
     },
+    receive: (event) => receive(hub, event),
   };
 }

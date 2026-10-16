@@ -154,7 +154,7 @@ catalog:
   semver: 7.8.5
   "@types/semver": 7.7.1
   esbuild: 0.28.2
-  '@types/react-reconciler': 0.33.0
+  "@types/react-reconciler": 0.33.0
   react-reconciler: 0.33.0
 
 # `pnpm add` fails when a version is outside the catalog.

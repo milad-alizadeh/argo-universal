@@ -33,14 +33,7 @@ export class PluginViews {
   receive(pluginId: string, path: string, message: ViewMessage): void {
     const view = this.views.get(keyOf(pluginId, path));
 
-    if (!view) return;
-
-    if (message.type === 'snapshot') view.root = message.root;
-    else if (view.root) view.root = applyPatch(view.root, message.ops);
-    else return;
-
-    view.revision += 1;
-    view.events.emit('message', current(view, message));
+    if (view) update(view, message);
   }
 
   dispatch(input: PluginDispatchInput): void {
@@ -66,40 +59,28 @@ export class PluginViews {
     signal: AbortSignal,
   ): AsyncGenerator<ViewMessage> {
     const view = this.acquire(pluginId, path);
-    const stream = on(view.events, 'message', { signal, close: ['close'] });
 
     try {
-      if (view.root)
-        yield { type: 'snapshot', revision: view.revision, root: view.root };
-
-      for await (const [message] of stream) yield message;
-    } catch (error) {
-      if (!signal.aborted) throw error;
+      yield* messages(view, signal);
     } finally {
-      await stream.return?.();
       this.release(view);
     }
   }
 
   private acquire(pluginId: string, path: string): OpenView {
     const key = keyOf(pluginId, path);
-    let view = this.views.get(key);
+    const view = this.views.get(key) ?? this.open(key, pluginId, path);
 
-    if (!view) {
-      const events: ViewEvents = new EventEmitter();
-      events.setMaxListeners(0);
-      view = {
-        pluginId,
-        path,
-        root: null,
-        revision: 0,
-        watchers: 0,
-        events,
-      };
-      this.views.set(key, view);
-      this.send(pluginId, { type: 'open', path });
-    }
     view.watchers += 1;
+
+    return view;
+  }
+
+  private open(key: string, pluginId: string, path: string): OpenView {
+    const view = createView(pluginId, path);
+
+    this.views.set(key, view);
+    this.send(pluginId, { type: 'open', path });
 
     return view;
   }
@@ -113,12 +94,70 @@ export class PluginViews {
   }
 }
 
-const keyOf = (pluginId: string, path: string): string =>
-  `${pluginId}:${path}`;
+const keyOf = (pluginId: string, path: string): string => `${pluginId}:${path}`;
 
 function current(view: OpenView, message: ViewMessage): ViewMessage {
   if (message.type === 'snapshot')
     return { type: 'snapshot', revision: view.revision, root: message.root };
 
   return { type: 'patch', revision: view.revision, ops: message.ops };
+}
+
+function createView(pluginId: string, path: string): OpenView {
+  const events: ViewEvents = new EventEmitter();
+
+  events.setMaxListeners(0);
+
+  return { pluginId, path, root: null, revision: 0, watchers: 0, events };
+}
+
+function nextRoot(
+  root: WireNode | null,
+  message: ViewMessage,
+): WireNode | null {
+  if (message.type === 'snapshot') return message.root;
+
+  return root && applyPatch(root, message.ops);
+}
+
+const snapshotOf = (view: OpenView): ViewMessage[] =>
+  view.root
+    ? [{ type: 'snapshot', revision: view.revision, root: view.root }]
+    : [];
+
+// Aborting a subscription ends its stream quietly.
+async function* untilAborted<T>(
+  source: AsyncIterable<T>,
+  signal: AbortSignal,
+): AsyncGenerator<T> {
+  try {
+    yield* source;
+  } catch (error) {
+    if (!signal.aborted) throw error;
+  }
+}
+
+// The stream starts listening before the snapshot is handed out, so no patch falls between the two.
+async function* messages(
+  view: OpenView,
+  signal: AbortSignal,
+): AsyncGenerator<ViewMessage> {
+  const stream = on(view.events, 'message', { signal, close: ['close'] });
+
+  try {
+    yield* snapshotOf(view);
+
+    for await (const [message] of untilAborted(stream, signal)) yield message;
+  } finally {
+    await stream.return?.();
+  }
+}
+
+function update(view: OpenView, message: ViewMessage): void {
+  const root = nextRoot(view.root, message);
+
+  if (!root) return;
+  view.root = root;
+  view.revision += 1;
+  view.events.emit('message', current(view, message));
 }

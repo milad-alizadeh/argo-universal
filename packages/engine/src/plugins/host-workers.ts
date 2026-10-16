@@ -71,10 +71,7 @@ export class HostWorkers {
     return {
       generation: entry.generation,
       worker,
-      deadline: setTimeout(
-        () => this.hang(entry.pluginId),
-        pluginAnswerLimitMs,
-      ),
+      deadline: this.deadline(entry.pluginId),
       heartbeat: null,
     };
   }
@@ -132,11 +129,14 @@ export class HostWorkers {
     clearTimeout(record.deadline);
 
     if (answer === 'ready') this.ready(pluginId, record);
-    else
-      record.heartbeat = setTimeout(
-        () => this.ping(pluginId, record),
-        heartbeatIntervalMs,
-      );
+    else this.beat(pluginId, record);
+  }
+
+  private beat(pluginId: string, record: WorkerRecord): void {
+    record.heartbeat = setTimeout(
+      () => this.ping(pluginId, record),
+      heartbeatIntervalMs,
+    );
   }
 
   private ready(pluginId: string, record: WorkerRecord): void {
@@ -146,18 +146,16 @@ export class HostWorkers {
       generation: record.generation,
       ...running,
     });
-    record.heartbeat = setTimeout(
-      () => this.ping(pluginId, record),
-      heartbeatIntervalMs,
-    );
+    this.beat(pluginId, record);
   }
 
   private arm(pluginId: string, record: WorkerRecord): void {
     clearTimeout(record.deadline);
-    record.deadline = setTimeout(
-      () => this.hang(pluginId),
-      pluginAnswerLimitMs,
-    );
+    record.deadline = this.deadline(pluginId);
+  }
+
+  private deadline(pluginId: string): ReturnType<typeof setTimeout> {
+    return setTimeout(() => this.hang(pluginId), pluginAnswerLimitMs);
   }
 
   private ping(pluginId: string, record: WorkerRecord): void {
