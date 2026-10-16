@@ -37,20 +37,6 @@ type SessionCaller = Awaited<ReturnType<typeof startAcpEngine>>['caller'];
 
 it.each([
   {
-    procedure: 'archive',
-    call: async (caller: SessionCaller): Promise<void> => {
-      await caller.session.archive({ sessionId: 'session-1' });
-    },
-    message: 'Session archive is not implemented yet',
-  },
-  {
-    procedure: 'unarchive',
-    call: async (caller: SessionCaller): Promise<void> => {
-      await caller.session.unarchive({ sessionId: 'session-1' });
-    },
-    message: 'Session Undo is not implemented yet',
-  },
-  {
     procedure: 'rename',
     call: async (caller: SessionCaller): Promise<void> => {
       await caller.session.rename({
