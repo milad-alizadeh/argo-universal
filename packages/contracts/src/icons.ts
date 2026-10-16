@@ -1,7 +1,9 @@
 // Argo's icon vocabulary, shared by the App's symbol map and Plugin manifests; the App's map must name exactly these.
 import { z } from 'zod';
+import { listViewIconNames } from './list-view-icons';
 
 const iconNames = [
+  ...listViewIconNames,
   'activity',
   'add',
   'agent',
@@ -62,7 +64,6 @@ const iconNames = [
   'filters',
   'fit',
   'flag',
-  'flat-view',
   'folder',
   'folder-open',
   'folders',
@@ -127,13 +128,11 @@ const iconNames = [
   'state-machine',
   'steer',
   'strikethrough',
-  'structure-view',
   'terminal',
   'thinking',
   'tool',
   'tours',
   'trace',
-  'tree-view',
   'triage',
   'usage',
   'view-3d',

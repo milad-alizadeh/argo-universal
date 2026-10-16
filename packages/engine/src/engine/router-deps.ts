@@ -97,11 +97,10 @@ export function createAppRouterDeps(
 function bindInstallations(
   installations: AgentInstallations,
   input: AppRouterInput &
-    Pick<AppRouterDeps, 'agentLogins' | 'invalidateAgent'>,
+    Pick<AppRouterDeps, 'agentLogins' | 'createId' | 'invalidateAgent'>,
 ): void {
   installations.bind({
     ...input,
-    createId: input.createId ?? randomUUID,
     checkAgentLaunch,
     invalidateAgent: input.invalidateAgent,
     isInUse: (agentId) =>
@@ -123,7 +122,6 @@ type AgentSetup = Pick<
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
   const installations = input.installations ?? createInstallations(input.home);
-
   const sessionConnections = createSessionConnections(input.sessions);
 
   const { invalidateAgent, invalidateIdleAgents, dropAgentConnections } =
@@ -170,6 +168,5 @@ function sessionsUseAgent(
   );
 }
 
-function createInstallations(home: string | undefined): AgentInstallations {
-  return new AgentInstallations(home ?? '');
-}
+const createInstallations = (home = ''): AgentInstallations =>
+  new AgentInstallations(home);
