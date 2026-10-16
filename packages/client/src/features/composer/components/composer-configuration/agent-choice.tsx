@@ -2,7 +2,6 @@ import type { AgentAvailability, AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 
@@ -51,15 +50,14 @@ export function AgentChoice(props: AgentChoiceProps): React.JSX.Element {
   );
 }
 
-function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
-  const wide = useWide();
+// A desktop menu row's icon sits inside a control; a phone row leads with a list icon.
+const agentRowIconRole = { compact: 'row', wide: 'control' } as const;
 
+function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
   return (
     <GroupedListItem
       {...agentSelectionProps(props)}
-      leading={
-        <AgentIcon agent={props.agent} role={wide ? 'control' : 'row'} />
-      }
+      leading={<AgentIcon agent={props.agent} role={agentRowIconRole} />}
     />
   );
 }

@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import type { StorageTransaction } from '../storage';
 import type { Feed } from './feed-change';
 import { hydrateStoredFeedRow, storedFeedColumns } from './feed-row';
-import { FeedRowsJob } from './feed-rows-job';
+import { writeFeedRowsInTransaction } from './feed-rows-write';
 import { settleFeedTurn } from './turn-settlement';
 
 const childRows = (
@@ -55,9 +55,9 @@ export function settleArchivedChild(
 
   for (const turnId of turns) feed = cancelTurn(feed, turnId);
 
-  new FeedRowsJob({
+  writeFeedRowsInTransaction(transaction, {
     sessionId,
     rows: Object.values(feed.rows),
     maxRevision: feed.maxRevision,
-  }).commit(transaction);
+  });
 }

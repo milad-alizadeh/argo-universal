@@ -1,9 +1,9 @@
 import type { PlanEntry } from '@repo/contracts';
 import type { JSX } from 'react';
 import { Platform, View } from 'react-native';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { completedSteps, fullPercent } from '../../state/status';
 import { PlanSteps } from './plan-steps';
 import { Meter } from './status-meter';
@@ -42,28 +42,27 @@ function PlanCompletion({ entries }: PlanEntriesProps): JSX.Element {
   );
 }
 
-function PlanPopoverHeading({
-  entries,
-  windowWide,
-}: {
-  entries: PlanEntry[];
-  windowWide: boolean;
-}): JSX.Element {
+function PlanPopoverHeading({ entries }: PlanEntriesProps): JSX.Element {
   return (
     <View className="px-4 py-3 gap-1.5">
       <PlanHeading />
-      {windowWide && <PlanCompletion entries={entries} />}
+      <SizeClass only="wide">
+        <PlanCompletion entries={entries} />
+      </SizeClass>
     </View>
   );
 }
 
+// A wide window heads the steps with the plan's progress; a compact web window with its title alone, as a phone's sheet carries its own.
 export function PlanPopoverContent({ entries }: PlanEntriesProps): JSX.Element {
-  const windowWide = useWide();
+  const heading = <PlanPopoverHeading entries={entries} />;
 
   return (
     <View>
-      {(windowWide || Platform.OS === 'web') && (
-        <PlanPopoverHeading entries={entries} windowWide={windowWide} />
+      {Platform.OS === 'web' ? (
+        heading
+      ) : (
+        <SizeClass only="wide">{heading}</SizeClass>
       )}
       <PlanSteps entries={entries} />
     </View>

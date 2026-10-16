@@ -1,12 +1,12 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { ComposerCheckoutControl } from '../composer-configuration/composer-configuration';
 import {
   ComposerPlan,
   ComposerWorkChips,
   ComposerStatusControls,
 } from '../composer-status/composer-status';
 import { WrittenPlan } from '../written-plan/written-plan';
+import { TrayCheckout } from './composer-tray-checkout';
 import type {
   TopTrayLayout,
   PlanLayout,
@@ -139,7 +139,7 @@ function ComposerTrayCheckout({
 }: CheckoutLayout): React.JSX.Element | null {
   return props.configuration ? (
     <View>
-      <ComposerCheckoutControl
+      <TrayCheckout
         checkout={props.configuration.checkout}
         disabled={inactive}
       />

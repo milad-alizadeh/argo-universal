@@ -5,7 +5,7 @@ import { PlanDocument } from '#lib/product/plan-document';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Text } from '#primitives/display/text';
 import { Textarea } from '#primitives/inputs/textarea';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { RequestHeading } from '../request-card/request-heading';
 import { useFocusOnMount } from '../use-focus-on-mount';
 import type { PlanProposalCardProps } from './plan-proposal-card';
@@ -23,12 +23,10 @@ const feedbackQuestion = 'What should change in the plan?';
 export const approvePlanQuestion = 'Approve this plan?';
 
 export function PlanProposalBody(props: BodyProps): ReactNode {
-  const wide = useWide();
-
   return (
     <View className={cn('gap-4 wide:gap-3', bodyLayout(props.interaction))}>
-      <ProposalHeading interaction={props.interaction} wide={wide} />
-      <ProposalDocument {...props} wide={wide} />
+      <ProposalHeading interaction={props.interaction} />
+      <ProposalDocument {...props} />
       {asksFeedback(props) && <ProposalFeedback {...props} />}
     </View>
   );
@@ -42,16 +40,18 @@ function asksFeedback({ interaction, state }: BodyProps): boolean {
   return interaction.planning && state.kind !== 'answered';
 }
 
-function ProposalHeading({
-  interaction,
-  wide,
-}: InteractionProps & { wide: boolean }): ReactNode {
+// Only a wide window expands the plan over the Feed.
+function ProposalHeading({ interaction }: InteractionProps): ReactNode {
   return (
     <RequestHeading
       icon="checklist"
       title={approvePlanQuestion}
       hint="Approving leaves Plan mode and starts the work."
-      trailing={wide && <ExpansionToggle interaction={interaction} />}
+      trailing={
+        <SizeClass only="wide">
+          <ExpansionToggle interaction={interaction} />
+        </SizeClass>
+      }
     />
   );
 }
@@ -96,16 +96,18 @@ function FeedbackField({ state, interaction }: BodyProps): ReactNode {
   );
 }
 
-function ProposalDocument(props: BodyProps & { wide: boolean }): ReactNode {
-  if (props.wide)
-    return (
-      <PlanDocument
-        content={props.proposal.content}
-        layout={props.interaction.expanded ? 'expanded' : 'proposal'}
-      />
-    );
-
-  return <SheetDocument {...props} />;
+function ProposalDocument(props: BodyProps): ReactNode {
+  return (
+    <SizeClass
+      compact={<SheetDocument {...props} />}
+      wide={
+        <PlanDocument
+          content={props.proposal.content}
+          layout={props.interaction.expanded ? 'expanded' : 'proposal'}
+        />
+      }
+    />
+  );
 }
 
 function SheetDocument({ proposal, interaction }: BodyProps): ReactNode {

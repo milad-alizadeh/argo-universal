@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from '#primitives/overlays/dialog';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { type TextField, touchedInput } from '../form-field';
 import { EntrySheetInput } from './entry-sheet-input';
 import { useEntryFocusReturn } from './use-entry-focus-return';
@@ -92,7 +92,7 @@ function EntrySheetActions(props: EntrySheetProps): React.JSX.Element {
   return (
     <View className="gap-3">
       <DialogFooter>
-        {useShowsCancel(props.dirty) && <CancelEntry onClose={props.onClose} />}
+        <EntryCancel dirty={props.dirty} onClose={props.onClose} />
         <Button fullWidth="narrow" onPress={props.onSave} label={'Save'} />
       </DialogFooter>
       {props.onRemove && <RemoveEntry {...props} />}
@@ -101,10 +101,13 @@ function EntrySheetActions(props: EntrySheetProps): React.JSX.Element {
 }
 
 // The backdrop closes a phone sheet until it holds input, which then needs its own way out.
-function useShowsCancel(dirty: boolean): boolean {
-  const wide = useWide();
+function EntryCancel({
+  dirty,
+  onClose,
+}: Pick<EntrySheetProps, 'dirty' | 'onClose'>): React.JSX.Element {
+  const cancel = <CancelEntry onClose={onClose} />;
 
-  return wide || dirty;
+  return dirty ? cancel : <SizeClass only="wide">{cancel}</SizeClass>;
 }
 
 function CancelEntry({

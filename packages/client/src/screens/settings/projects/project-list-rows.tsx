@@ -1,7 +1,6 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
@@ -73,28 +72,30 @@ const missingFolder: GroupedListItemProps['status'] = {
 
 type ProjectDetail = Pick<GroupedListItemProps, 'value' | 'status'>;
 
-const missingFolderDetail = (wide: boolean): ProjectDetail => ({
-  value: wide ? folderNotFound : undefined,
+const missingFolderDetail: ProjectDetail = {
+  value: { compact: undefined, wide: folderNotFound },
   status: missingFolder,
-});
+};
 
 // Where the Project's remote is, or that its folder is gone: a phone shows only the dot, which the row's name still says.
-function projectDetail(project: ProjectInfo, wide: boolean): ProjectDetail {
-  if (!project.folderExists) return missingFolderDetail(wide);
+function projectDetail(project: ProjectInfo): ProjectDetail {
+  if (!project.folderExists) return missingFolderDetail;
 
   return { value: project.remoteHost ?? 'No remote' };
 }
 
-// One line at every width: the folder path sits only on the Project's own page.
-function ProjectRow(props: {
+type ProjectRowProps = {
   project: ProjectInfo;
   onOpen: (name: string) => void;
-}): React.JSX.Element {
+};
+
+// One line at every width: the folder path sits only on the Project's own page.
+function ProjectRow(props: ProjectRowProps): React.JSX.Element {
   return (
     <GroupedListItem
       icon="folder"
       label={props.project.name}
-      {...projectDetail(props.project, useWide())}
+      {...projectDetail(props.project)}
       onPress={() => props.onOpen(props.project.name)}
     />
   );

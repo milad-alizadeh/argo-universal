@@ -1,5 +1,6 @@
+import type { ConnectionState } from '#features/connection';
 import type { NewSessionOutcome } from '../types/new-session-attempt';
-import { openErrorOf } from './open-failure';
+import { connectionDropped, openErrorOf } from './open-failure';
 
 export const settledOpen: NewSessionOutcome = {
   attempt: { status: 'idle' },
@@ -33,9 +34,17 @@ export const retriedLocal = (
 ): NewSessionOutcome =>
   reopened ? openingAgain(outcome) : nothingToOpen(outcome);
 
-// A dropped Connection leaves the attempt idle for a toast; any other failure fails it, for the callout and Retry.
-export const failedOpen = (cause: unknown): NewSessionOutcome => {
-  const error = openErrorOf(cause);
+/*
+ * An open the Connection dropped, as its state was when the open failed, leaves the attempt idle
+ * for a toast; any other failure fails it, for the callout and Retry.
+ */
+export const failedOpen = (
+  cause: unknown,
+  connection: ConnectionState,
+): NewSessionOutcome => {
+  const error = connectionDropped(cause, connection)
+    ? undefined
+    : openErrorOf(cause);
 
   return error
     ? { attempt: { status: 'failed', error }, connectionError: undefined }
@@ -43,7 +52,7 @@ export const failedOpen = (cause: unknown): NewSessionOutcome => {
 };
 
 // A failed open, or one the Connection dropped, opens again when the Connection reopens.
-export const failedToOpen = ({
+export const opensOnReconnect = ({
   attempt,
   connectionError,
 }: NewSessionOutcome): boolean =>

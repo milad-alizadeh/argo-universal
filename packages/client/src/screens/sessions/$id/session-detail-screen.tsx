@@ -8,6 +8,7 @@ import {
 import { useSessionFeed } from '#features/feed';
 import {
   useCacheSessionOptions,
+  useConnectionDropped,
   useMergeMethod,
   useSessionElicitation,
 } from '#features/sessions';
@@ -119,19 +120,34 @@ function useFeedUpkeep(feed: SessionFeed): void {
   useCacheSessionOptions(feed.snapshot);
 }
 
-function useSessionViewProps(sessionId: string): SessionDetailViewProps {
-  const feed = useSessionFeed(sessionId);
-  const commands = useFeedCommands(sessionId, feed);
-  const surroundings = useSessionSurroundings(sessionId, feed);
-  const { agents } = surroundings;
-  const callouts = useSessionCallout({ sessionId, feed, commands, agents });
+interface ConnectedFeed {
+  feed: SessionFeed;
+  // The Connection dropped the Feed's open: a toast says why, not a callout.
+  feedDropped: boolean;
+  commands: SessionCommands;
+}
 
-  useFeedUpkeep(feed);
+function useConnectedFeed(sessionId: string): ConnectedFeed {
+  const feed = useSessionFeed(sessionId);
+
+  return {
+    feed,
+    feedDropped: useConnectionDropped(feed.openError),
+    commands: useFeedCommands(sessionId, feed),
+  };
+}
+
+function useSessionViewProps(sessionId: string): SessionDetailViewProps {
+  const sources = useConnectedFeed(sessionId);
+  const surroundings = useSessionSurroundings(sessionId, sources.feed);
+  const { agents } = surroundings;
+  const callouts = useSessionCallout({ sessionId, agents, ...sources });
+
+  useFeedUpkeep(sources.feed);
 
   return toSessionViewProps({
     sessionId,
-    feed,
-    commands,
+    ...sources,
     callouts,
     ...surroundings,
   });

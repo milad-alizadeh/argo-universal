@@ -3,6 +3,8 @@ import * as React from 'react';
 import { Dimensions, PixelRatio, Platform, Text as RNText } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/generic/utils';
+import { isPerSizeClass } from '../../../use-size-class/size-class-value';
+import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { TextProps, TextRole } from './text-props';
 import { toneClass } from './text-tone';
 
@@ -28,8 +30,10 @@ export function useTextStyle(
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
+type RoleTextProps = Omit<TextProps, 'role'> & { role?: TextRole };
+
 function textClassName(
-  { role, tone, className }: Pick<TextProps, 'role' | 'tone' | 'className'>,
+  { role, tone, className }: Pick<RoleTextProps, 'role' | 'tone' | 'className'>,
   inherited?: string,
 ): string {
   return cn(
@@ -58,7 +62,7 @@ function useNativeTextKey(): number | undefined {
   return Platform.OS === 'web' ? undefined : fontScale;
 }
 
-function Text(options: TextProps): ReactElement {
+function RoleText(options: RoleTextProps): ReactElement {
   const { className, role, tone, accessibilityRole, ...props } = options;
 
   const key = useNativeTextKey();
@@ -70,6 +74,19 @@ function Text(options: TextProps): ReactElement {
     role: accessibilityRole,
     ...props,
   });
+}
+
+function SizeClassText(options: TextProps): ReactElement {
+  return <RoleText {...options} role={useSizeClassValue(options.role)} />;
+}
+
+// Only text with a role per size class reads the size class.
+function Text(options: TextProps): ReactElement {
+  return isPerSizeClass(options.role) ? (
+    <SizeClassText {...options} />
+  ) : (
+    <RoleText {...options} role={options.role} />
+  );
 }
 
 export { Text, TextClassContext };

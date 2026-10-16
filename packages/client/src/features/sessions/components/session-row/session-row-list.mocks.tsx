@@ -6,7 +6,7 @@ import {
   virtualListPosition,
   type VirtualListPosition,
 } from '#primitives/lists/virtual-list-item';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { SessionsLayout } from '../../state/sessions-layout';
 import { SessionRow, type SessionRowProps } from './session-row';
 import { showsSessionAge } from './session-row-props';
@@ -77,9 +77,12 @@ function rowProps(row: ListedRowProps, wide: boolean): SessionRowProps {
 }
 
 function ListedRow(props: ListedRowProps): React.JSX.Element {
-  const wide = useWide();
-
-  return <SessionRow {...rowProps(props, wide)} />;
+  return (
+    <SizeClass
+      compact={<SessionRow {...rowProps(props, false)} />}
+      wide={<SessionRow {...rowProps(props, true)} />}
+    />
+  );
 }
 
 const listedRows = (list: SessionRowListMockProps): React.JSX.Element[] =>

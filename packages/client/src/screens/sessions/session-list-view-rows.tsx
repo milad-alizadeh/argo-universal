@@ -60,7 +60,6 @@ function insetLoading(layout?: SessionsLayout): React.JSX.Element {
 }
 
 interface SessionsListContentProps extends SessionListViewProps {
-  wide: boolean;
   loading: boolean;
 }
 

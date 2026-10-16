@@ -5,7 +5,7 @@ import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 
 export interface PlaceholderDetailViewProps {
   title: string;
@@ -33,9 +33,12 @@ type NoteProps = Pick<PlaceholderDetailViewProps, 'description'>;
 
 // A wide page keeps the note in a row's card, where the rows will go; a phone centres it.
 function PlaceholderNote(props: NoteProps): React.JSX.Element {
-  if (useWide()) return <RowNote {...props} />;
-
-  return <CentredNote {...props} />;
+  return (
+    <SizeClass
+      compact={<CentredNote {...props} />}
+      wide={<RowNote {...props} />}
+    />
+  );
 }
 
 function RowNote({ description }: NoteProps): React.JSX.Element {

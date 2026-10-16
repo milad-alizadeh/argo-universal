@@ -7,7 +7,7 @@ import {
   rowValueAccessibility,
   type RowTextAccessibilityProps,
 } from './grouped-list-item-accessibility';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 import { rowColor } from './grouped-list-item-text';
 import { NativeRowImage } from './native-row';
 
@@ -22,7 +22,7 @@ const trailingModifiers: Modifiers | undefined = ios
   : undefined;
 
 export function RowTrailing(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
 ): React.JSX.Element | null {
   if (props.value === undefined && !props.valueLeading) return null;
 
@@ -38,7 +38,7 @@ export function RowTrailing(
 }
 
 type RowValueProps = RowTextAccessibilityProps &
-  Pick<GroupedListItemProps, 'value' | 'valueLeading'>;
+  Pick<ResolvedItemProps, 'value' | 'valueLeading'>;
 
 function RowValue(props: RowValueProps): React.JSX.Element {
   return (

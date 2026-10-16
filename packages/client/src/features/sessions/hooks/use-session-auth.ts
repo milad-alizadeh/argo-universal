@@ -9,14 +9,14 @@ import {
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { useErrorToast } from '#primitives/overlays/toast';
 import { finishedSignIn } from '../state/session-auth';
 import type {
   AuthCalloutProps,
   SessionCalloutProps,
   TerminalSignInProps,
 } from '../types/session-callout';
-import { signInReadToast } from '../utils/session-toasts';
+import { type SignInRead, unreadSignIn } from '../utils/sign-in-read';
+import { useConnectionDropped } from './use-connection-dropped';
 import {
   inputOf,
   type SignInActions,
@@ -40,7 +40,7 @@ export interface SessionAuthOptions {
 }
 
 export interface SessionAuth {
-  // Loading… until the Agent's methods arrive, then the sign-in.
+  // Loading… until the Agent's methods arrive, then the sign-in; a failed read, Failed to Launch with Retry.
   callout: SessionCalloutProps;
   // A running terminal method's panel or sheet.
   terminal: TerminalSignInProps | undefined;
@@ -62,32 +62,43 @@ const stateOf = ({
   ...state
 }: AgentAuthChange): AgentAuthState => state;
 
-const loading: SessionAuth = {
-  callout: { kind: 'loading' },
-  terminal: undefined,
-};
-
 // Zed's sign-in for a Session: the Agent's methods, Authenticate and Cancel, and every Device following one sign-in.
 export function useSessionAuth(options: SessionAuthOptions): SessionAuth {
   const subject = followedSubject(options);
   const state = useAuthState(subject);
-  useErrorToast(signInReadToast(state.error));
+  const read = useSignInRead(state);
   useFollowSignIn({ subject, onSignedIn: options.onSignedIn });
   const actions = useSignInActions(subject);
 
-  return authOf(options.subject, state.data, actions);
+  return authOf(options.subject, actions, read);
 }
 
 const authOf = (
   subject: SessionAuthSubject | undefined,
-  state: AgentAuthState | undefined,
   actions: SignInActions,
+  read: AuthRead,
 ): SessionAuth =>
-  state && subject ? signIn(subject, state, actions) : loading;
+  read.data && subject
+    ? signIn(subject, read.data, actions)
+    : { callout: unreadSignIn(read), terminal: undefined };
 
 type AuthStateQuery = UseQueryResult<AgentAuthState, unknown>;
 
-// A failed read keeps Loading…, as a failed load does: the toast says why, and the read runs again when the Connection reopens or the window regains focus.
+interface AuthRead extends SignInRead {
+  data: AgentAuthState | undefined;
+}
+
+// The read's failure, with Retry reading again; the Connection reopening reads again by itself.
+function useSignInRead({ data, error, refetch }: AuthStateQuery): AuthRead {
+  return {
+    data,
+    error,
+    dropped: useConnectionDropped(error),
+    reread: () => void refetch(),
+  };
+}
+
+// The read runs again when the Connection reopens or the window regains focus; a failed one offers Retry.
 function useAuthState(subject: Subject | SkipToken): AuthStateQuery {
   const trpc = useTRPC();
 

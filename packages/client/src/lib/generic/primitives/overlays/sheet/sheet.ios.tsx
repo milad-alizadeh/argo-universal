@@ -19,7 +19,7 @@ import {
   useSheetStack,
   type SheetStack,
 } from './sheet-pages';
-import type { SheetProps } from './sheet-props';
+import type { SheetDetent, SheetProps } from './sheet-props';
 import { SheetPages } from './sheet-stack.ios';
 import { sheetDetents } from './sheet-state';
 import { SheetTrigger } from './sheet-trigger';
@@ -132,12 +132,25 @@ function useSheetModifiers(props: PresentationProps): ModifierConfig[] {
   const detents = detentsOf(props);
 
   return [
-    ...(detents ? [presentationDetents(detents)] : []),
+    ...(detents ? [detentsModifier(detents, props.initialDetent)] : []),
     ...(colors.content ? [presentationBackground(colors.content)] : []),
     presentationDragIndicator('visible'),
     interactiveDismissDisabled(props.dismissible === false),
     preferredColorScheme(colorScheme),
   ];
+}
+
+/*
+ * presentationModifiers.d.ts: `presentationDetents(detents, { selection })` opens at `selection`
+ * and leaves the person free to drag to another detent; without one it opens at the first.
+ */
+function detentsModifier(
+  detents: SheetDetent[],
+  initialDetent: SheetDetent | undefined,
+): ModifierConfig {
+  return initialDetent
+    ? presentationDetents(detents, { selection: initialDetent })
+    : presentationDetents(detents);
 }
 
 export const Sheet = Object.assign(SheetRoot, {

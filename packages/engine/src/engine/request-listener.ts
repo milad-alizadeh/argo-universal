@@ -55,6 +55,7 @@ function dispatchRequest(
 function createGuardedTrpc(options: RequestListenerOptions): RequestListener {
   const handleTRPC = createHTTPHandler({
     router: options.router,
+    createContext: () => ({}),
     basePath: '/trpc/',
     maxBodySize,
   });

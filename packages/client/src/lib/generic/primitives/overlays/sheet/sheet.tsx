@@ -100,7 +100,7 @@ function drawerProps(props: PresentationProps): DrawerProps {
   };
 }
 
-// A sheet that rests only at its full height fills the window; any other is as tall as its content.
+// A sheet that rests only at its full height fills the window; any other is as tall as its content, so `initialDetent` is ignored.
 function drawerClass(props: PresentationProps): string {
   return cn(
     'sheet overflow-hidden fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-content pb-6 shadow-card outline-none dark:border dark:border-border',

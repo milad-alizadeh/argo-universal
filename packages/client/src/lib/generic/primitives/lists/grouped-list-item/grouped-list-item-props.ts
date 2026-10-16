@@ -1,8 +1,15 @@
 import type { ComponentProps, ReactElement } from 'react';
 import type { Pressable } from 'react-native';
 import type { IconName } from '../../../symbols/icon-names';
+import type { SizeClass } from '../../../use-size-class/size-class';
+import {
+  isPerSizeClass,
+  type SizeClassValue,
+  sizeClassValue,
+} from '../../../use-size-class/size-class-value';
 
-export interface GroupedListItemProps {
+// A row as the kit draws it, with each size-class value already picked.
+export interface ResolvedItemProps {
   label: string;
   value?: string;
   /*
@@ -57,18 +64,48 @@ export interface GroupedListItemProps {
    * or as a description standing in for a name, such as an Agent's beside its logo, drawn muted.
    */
   tone?: 'danger' | 'accent' | 'muted';
-  // A row that stands alone as a card, such as an Agent's identity: a 40 tile leads it and it pads 16 all round.
-  size?: 'lg';
+  /*
+   * lg: a row that stands alone as a card, such as an Agent's identity: a 40 tile leads it and it pads 16 all round.
+   * sm: a compact row on a wide window, 36 tall, such as an Elicitation's choice in the Composer's tray.
+   */
+  size?: 'sm' | 'lg';
+}
+
+// A row as callers give it: its value and accessory may differ by size class, such as a value only a wide row has room for.
+export interface GroupedListItemProps extends Omit<
+  ResolvedItemProps,
+  'value' | 'accessory'
+> {
+  value?: SizeClassValue<string | undefined>;
+  accessory?: SizeClassValue<ReactElement | undefined>;
+}
+
+// Whether the row is the same at every size class, so it need not follow the window.
+export function isPlainItem(
+  props: GroupedListItemProps,
+): props is ResolvedItemProps {
+  return !isPerSizeClass(props.value) && !isPerSizeClass(props.accessory);
+}
+
+export function resolvedItem(
+  { value, accessory, ...props }: GroupedListItemProps,
+  sizeClass: SizeClass,
+): ResolvedItemProps {
+  return {
+    ...props,
+    value: sizeClassValue(value, sizeClass),
+    accessory: sizeClassValue(accessory, sizeClass),
+  };
 }
 
 // The status's label, unless the value already says it.
-function distinctStatus(props: GroupedListItemProps): string | undefined {
+function distinctStatus(props: ResolvedItemProps): string | undefined {
   const status = groupedListItemStatus(props)?.label;
 
   return status === props.value ? undefined : status;
 }
 
-export function groupedListItemName(props: GroupedListItemProps): string {
+export function groupedListItemName(props: ResolvedItemProps): string {
   if (props.accessibilityLabel) return props.accessibilityLabel;
 
   return [props.label, props.subtitle?.text, props.value, distinctStatus(props)]
@@ -77,8 +114,8 @@ export function groupedListItemName(props: GroupedListItemProps): string {
 }
 
 export function groupedListItemStatus(
-  props: Pick<GroupedListItemProps, 'status' | 'needsAttention'>,
-): GroupedListItemProps['status'] {
+  props: Pick<ResolvedItemProps, 'status' | 'needsAttention'>,
+): ResolvedItemProps['status'] {
   return (
     props.status ??
     (props.needsAttention

@@ -74,6 +74,8 @@ function useModalProps(props: Omit<PresentationProps, 'sheetRef'>): ModalProps {
     scrimColor: roles.scrim,
     onDismissRequest: props.stack.reports.dismissed,
     skipPartiallyExpanded: !restsHalfOpen(props),
+    // ModalBottomSheet/index.d.ts: ignored when skipPartiallyExpanded, so only a half-open sheet opens full.
+    initialFullyExpanded: props.initialDetent === 'large',
     ...dismissal(props.dismissible !== false),
   };
 }
