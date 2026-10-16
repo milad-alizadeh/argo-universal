@@ -1,8 +1,9 @@
 import type { SizeClass } from './size-class';
 
-// One value per size class, as the kit's props take it; medium follows compact until it has a Paper design (#762).
+// Medium follows compact unless a caller supplies its approved medium layout.
 export interface SizeClassValues<T> {
   compact: T;
+  medium?: T;
   wide: T;
 }
 
@@ -17,7 +18,7 @@ export function isPerSizeClass<T>(
 function pick<T>(values: SizeClassValues<T>, sizeClass: SizeClass): T {
   const resolved: Record<SizeClass, T> = {
     compact: values.compact,
-    medium: values.compact,
+    medium: values.medium === undefined ? values.compact : values.medium,
     wide: values.wide,
   };
 
