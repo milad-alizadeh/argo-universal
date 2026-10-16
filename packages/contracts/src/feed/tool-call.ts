@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { shellColumns } from '../columns';
 import { ContentBlock, UnsupportedContent } from './content-block';
 import { createFeedMetadataSchema } from './metadata';
 import type { ToolCallUpdate } from './session-update';
@@ -82,7 +83,7 @@ export type DiffPatch = z.infer<typeof DiffPatch>;
 
 // ACP `TerminalExitStatus`.
 export const TerminalExitStatus = z.strictObject({
-  exitCode: z.int().optional(),
+  exitCode: shellColumns.shape.exitCode.unwrap().optional(),
   signal: z.string().optional(),
 });
 
@@ -105,8 +106,8 @@ export type ToolCallDiff = z.infer<typeof ToolCallDiff>;
 
 export const ToolCallTerminal = z.strictObject({
   type: z.literal('terminal'),
-  command: z.string(),
-  cwd: z.string().optional(),
+  command: shellColumns.shape.command,
+  cwd: shellColumns.shape.cwd.optional(),
   output: z.string(),
   exitStatus: TerminalExitStatus.optional(),
   _meta: createFeedMetadataSchema(z.strictObject({})),

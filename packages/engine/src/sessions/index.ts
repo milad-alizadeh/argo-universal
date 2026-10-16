@@ -30,6 +30,8 @@ export {
   TurnUpdateJob,
 } from './session-storage';
 
+export { shellRouter } from './shells/router';
+
 export {
   type SessionConnections,
   createSessionConnections,

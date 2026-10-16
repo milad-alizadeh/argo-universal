@@ -16,3 +16,5 @@ export * from './schema/sync-jobs';
 export * from './schema/agent-servers';
 
 export * from './schema/registry-cache';
+
+export * from './schema/shells';
