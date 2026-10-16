@@ -24,7 +24,6 @@ function AgentPicker(props: StartSessionInProps): React.JSX.Element {
       listContent
       label="Select Agent"
       width={260}
-      side="bottom"
       contentClassName="composer-popover bg-card rounded-2xl border-0 p-2 gap-2 overflow-hidden"
       trigger={agentTrigger(props)}
     >

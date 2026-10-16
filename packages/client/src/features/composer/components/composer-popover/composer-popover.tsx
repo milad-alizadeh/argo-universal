@@ -81,7 +81,6 @@ function WidePopover(props: OverlayProps): React.JSX.Element {
 function WideContent(props: OverlayProps): React.JSX.Element {
   return (
     <PopoverContent
-      side={props.side ?? 'top'}
       align="start"
       accessibilityLabel={props.label}
       onClosed={props.closed}
