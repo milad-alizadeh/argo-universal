@@ -1,37 +1,52 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-const directory = fileURLToPath(
-  new URL('../../universal-app/dist-codemap-834/', import.meta.url),
-);
-createServer((request, response) => {
-  const path = resolve(
-    directory,
-    `.${new URL(request.url, 'http://localhost').pathname}`,
-  );
-  if (!path.startsWith(directory)) {
-    response.writeHead(403);
-    response.end();
+import { exported } from './paths.mjs';
+
+const status = { notFound: 404, ok: 200 };
+
+const address = { host: '127.0.0.1', port: 8340 };
+
+const mime = new Map([
+  ['.wasm', 'application/wasm'],
+  ['.js', 'text/javascript'],
+  ['.css', 'text/css'],
+  ['.json', 'application/json'],
+  ['.html', 'text/html'],
+]);
+
+function requestedPath(url) {
+  const pathname = new URL(url, `http://${address.host}`).pathname;
+
+  if (!extname(pathname)) return resolve(exported, 'index.html');
+
+  return resolve(exported, '.' + pathname);
+}
+
+function readable(path) {
+  if (!path.startsWith(exported + '/')) return false;
+
+  return existsSync(path) && statSync(path).isFile();
+}
+
+function serve(request, response) {
+  const path = requestedPath(request.url);
+
+  if (!readable(path)) {
+    response.writeHead(status.notFound);
+    response.end('Not found');
+
     return;
   }
-  const target = extname(path) ? path : resolve(directory, 'index.html');
-  if (!existsSync(target)) {
-    response.writeHead(404);
-    response.end();
-    return;
-  }
-  response.setHeader(
-    'Content-Type',
-    {
-      '.html': 'text/html',
-      '.js': 'application/javascript',
-      '.css': 'text/css',
-      '.wasm': 'application/wasm',
-      '.json': 'application/json',
-    }[extname(target)] ?? 'application/octet-stream',
-  );
-  response.end(readFileSync(target));
-}).listen(8340, '127.0.0.1', () =>
-  console.log('Export at http://127.0.0.1:8340/codemap-834-prototype'),
+
+  response.writeHead(status.ok, {
+    'Content-Type': mime.get(extname(path)) ?? 'application/octet-stream',
+  });
+  response.end(readFileSync(path));
+}
+
+createServer(serve).listen(address.port, address.host);
+
+console.log(
+  `Export at http://${address.host}:${address.port}/codemap-834-prototype`,
 );

@@ -611,6 +611,9 @@ importers:
       '@react-three/fiber':
         specifier: 9.8.2
         version: 9.8.2(2b09829f5d0337d9c8c352ac37eb663f)
+      '@repo/client':
+        specifier: workspace:*
+        version: link:../../packages/client
       '@shopify/react-native-skia':
         specifier: 2.6.2
         version: 2.6.2(c0f088b35b58890c0a5044c844e02601)
@@ -627,12 +630,21 @@ importers:
         specifier: 0.186.1
         version: 0.186.1
     devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
       '@types/three':
         specifier: 0.186.0
         version: 0.186.0
+      electron:
+        specifier: 'catalog:'
+        version: 44.5.1(supports-color@8.1.1)
+      rolldown:
+        specifier: 'catalog:'
+        version: 1.2.12
 
   apps/desktop:
     dependencies:

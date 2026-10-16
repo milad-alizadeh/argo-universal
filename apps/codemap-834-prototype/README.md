@@ -33,6 +33,7 @@ node apps/codemap-834-prototype/scripts/serve-export.mjs
 
 `prepare-map` reads tracked text files from the current Checkout.
 It excludes binary files, files larger than 500,000 characters, and this prototype package.
+It also excludes its manual generator in `tools/codemap-834/`.
 The checked-in snapshot records its source revision.
 Area is line count. Height is file touches across the last 1,000 commits.
 Colour is a lexical branch count, not cyclomatic complexity.
@@ -50,9 +51,11 @@ The native entry renders nothing. Phones do not import either renderer.
 
 ## Collect evidence
 
-The collector uses the existing E2E package's Playwright and desktop package's Electron installations.
+The collector declares Playwright, Electron and rolldown through the existing workspace catalog.
+Its imports are static. The manual generator runs outside the App source.
 It launches one browser at a time, with three six-second pan samples per file count and renderer.
-It writes JSON and screenshots outside git, in `/tmp/codemap-834-evidence` by default.
+It writes JSON and screenshots outside git, in a unique temporary directory by default.
+Set `CODEMAP_EVIDENCE` to choose the directory.
 
 ```sh
 node apps/codemap-834-prototype/scripts/measure.mjs web
@@ -88,6 +91,8 @@ The PR body and the #834 comment hold measurements, screenshots, and the verdict
 ## Dependencies and limits
 
 All new renderer dependencies belong to this branch's separate prototype package.
+The package imports kit Text and theme helpers through explicit client exports.
+The shared theme helper adds the existing warning token without changing other roles.
 Skia is pinned to 2.6.2, matching the parallel chart prototype.
 This branch does not change that prototype, its route, the universal-app manifest, or `app-protocol.ts`.
 The root lockfile adds the prototype importer and refreshes peer snapshots without changing existing pinned package versions.
