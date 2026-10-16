@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { ErrorToast } from '#primitives/overlays/toast';
-import {
-  dropped,
-  serverError,
-} from '../../../../mocks/sessions/open-failure.mocks';
+import { dropped } from '../../../../mocks/sessions/open-failure.mocks';
 import type { OpenAttempt } from '../state/session-problem';
-import {
-  droppedOpenToast,
-  pastSessionDropToast,
-  signInReadToast,
-} from './session-toasts';
+import { droppedOpenToast, pastSessionDropToast } from './session-toasts';
 
 const couldNotOpen: ErrorToast = {
   title: "Couldn't open the Session",
@@ -85,18 +78,5 @@ describe('pastSessionDropToast', () => {
     },
   ])('leaves $case to the callout', ({ sources }) => {
     expect(pastSessionDropToast(sources, false)).toBeUndefined();
-  });
-});
-
-describe('signInReadToast', () => {
-  it('says the sign-in could not be checked, and why', () => {
-    expect(signInReadToast(serverError)).toEqual({
-      title: "Couldn't check sign-in",
-      message: serverError.message,
-    });
-  });
-
-  it('shows nothing while the read is fine', () => {
-    expect(signInReadToast(null)).toBeUndefined();
   });
 });

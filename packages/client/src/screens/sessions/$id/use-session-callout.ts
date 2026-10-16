@@ -4,19 +4,21 @@ import type { useAgents } from '#features/agents';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
-  type AfterSignIn,
   type OpenAttempt,
   type PastSessionAnswers,
   type PastSessionSignIn,
   pastSessionCallout,
   pastSessionDropToast,
   pastSessionSignIn,
+  runAfterSignIn,
   type SessionAuthSubject,
   type SessionCalloutProps,
   type SessionCallouts,
   type SessionProblem,
   type SessionProblemSources,
   sessionProblem,
+  type SignInEffects,
+  type TurnSignInRecord,
   useConnectionDropped,
   useSessionAuth,
   useTurnSignIn,
@@ -71,26 +73,9 @@ function useRetry(sessionId: string, feed: SessionFeed): Retry {
   return { attempt: retry, openAgain: () => retry.mutate({ sessionId }) };
 }
 
-type TurnSignIn = ReturnType<typeof useTurnSignIn>;
-
-interface SignInEffects {
-  openAgain: () => void;
-  finish: TurnSignIn['finish'];
-}
-
-// Runs what the rule says a finished sign-in does.
-const runAfterSignIn =
-  (afterSignIn: AfterSignIn, effects: SignInEffects) => (): void => {
-    if (afterSignIn.type === 'answer-turn') effects.finish(afterSignIn.turnEnd);
-    else {
-      effects.openAgain();
-      effects.finish();
-    }
-  };
-
 interface SessionSignIn {
   signIn: PastSessionSignIn;
-  turn: TurnSignIn;
+  turn: TurnSignInRecord;
   effects: SignInEffects;
 }
 
@@ -134,8 +119,8 @@ function useOpenProblem(sources: SessionCalloutSources): RetriableProblem {
 function useSessionSignIn(sources: SessionCalloutSources): SessionSignIn {
   const { problem, openAgain } = useOpenProblem(sources);
   const turn = useTurnSignIn(sources.sessionId);
-  const { answeredTurn, authenticating, finish } = turn;
-  const signIn = pastSessionSignIn({ problem, answeredTurn, authenticating });
+  const { answered, authenticating, finish } = turn;
+  const signIn = pastSessionSignIn({ problem, answered, authenticating });
 
   return { signIn, turn, effects: { openAgain, finish } };
 }
@@ -164,7 +149,7 @@ export function useSessionCallout(
   const auth = useSessionAuth({
     subject: authSubject(sources.feed.snapshot, sources.agents),
     active: signIn.follows,
-    onSignedIn: runAfterSignIn(signIn.afterSignIn, effects),
+    onSignedIn: () => runAfterSignIn(signIn.afterSignIn, effects),
   });
 
   return {

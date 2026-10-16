@@ -7,19 +7,16 @@ import {
 } from '../state/session-callouts';
 import type { SessionProblem } from '../state/session-problem';
 import type { SessionCalloutProps } from '../types/session-callout';
+import type { TurnSignIn } from '../types/turn-sign-in';
 
 // What a finished sign-in does (ADR-0004): clear the `auth_required` Turn's card, or open a refused Session again.
 export type AfterSignIn =
   | { type: 'answer-turn'; turnEnd: string }
   | { type: 'open-again' };
 
-export interface PastSessionSignInSources {
+export interface PastSessionSignInSources extends TurnSignIn {
   // A running Retry, a failed open, or the last Turn when it ended `auth_required`.
   problem: SessionProblem | undefined;
-  // The `auth_required` Turn end a sign-in has answered, kept per Session.
-  answeredTurn: string | undefined;
-  // The `auth_required` Turn end whose Authenticate was pressed.
-  authenticating: string | undefined;
 }
 
 export interface PastSessionSignIn {
@@ -30,10 +27,10 @@ export interface PastSessionSignIn {
   afterSignIn: AfterSignIn;
 }
 
-const answered = (
+const answeredTurn = (
   problem: SessionProblem | undefined,
-  answeredTurn: string | undefined,
-): boolean => problem?.type === 'turn' && problem.id === answeredTurn;
+  answered: string | undefined,
+): boolean => problem?.type === 'turn' && problem.id === answered;
 
 const afterSignInOf = (problem: SessionProblem | undefined): AfterSignIn =>
   problem?.type === 'turn'
@@ -46,16 +43,41 @@ const afterSignInOf = (problem: SessionProblem | undefined): AfterSignIn =>
  */
 export function pastSessionSignIn({
   problem: shown,
-  answeredTurn,
+  answered,
   authenticating,
 }: PastSessionSignInSources): PastSessionSignIn {
-  const problem = answered(shown, answeredTurn) ? undefined : shown;
+  const problem = answeredTurn(shown, answered) ? undefined : shown;
 
   return {
     problem,
     follows: signsIn(problem, authenticating),
     afterSignIn: afterSignInOf(problem),
   };
+}
+
+export interface SignInEffects {
+  // Runs the Session's open again without a Turn.
+  openAgain: () => void;
+  // Ends the Turn sign-in this Session keeps, answering the Turn end when given one.
+  finish: (answered?: string) => void;
+}
+
+/*
+ * Runs what a finished sign-in does: a Turn's sign-in answers its card; a refused open's opens
+ * the Session again. Either way the sign-in has finished, so no Turn's Authenticate stays pending.
+ */
+export function runAfterSignIn(
+  afterSignIn: AfterSignIn,
+  { openAgain, finish }: SignInEffects,
+): void {
+  if (afterSignIn.type === 'answer-turn') {
+    finish(afterSignIn.turnEnd);
+
+    return;
+  }
+
+  openAgain();
+  finish();
 }
 
 export type PastSessionAnswers = OpenAnswers & TurnAnswers;

@@ -46,7 +46,3 @@ export const pastSessionDropToast = (
     feed: sources.feedDropped ? sources.feedOpenError : undefined,
     opened,
   });
-
-// The Agent's sign-in methods could not be read: the callout keeps Loading…, and the read runs again on reconnect or focus.
-export const signInReadToast = (cause: unknown): ErrorToast | undefined =>
-  errorToast("Couldn't check sign-in", cause);

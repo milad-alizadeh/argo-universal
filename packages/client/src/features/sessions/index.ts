@@ -158,6 +158,8 @@ export {
   type PastSessionSignIn,
   pastSessionCallout,
   pastSessionSignIn,
+  runAfterSignIn,
+  type SignInEffects,
 } from './utils/session-sign-in';
 
-export { useTurnSignIn } from './hooks/use-turn-sign-in';
+export { type TurnSignInRecord, useTurnSignIn } from './hooks/use-turn-sign-in';
