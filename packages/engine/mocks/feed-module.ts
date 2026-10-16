@@ -103,6 +103,7 @@ const feedModuleRouterInput = (
   database: host.database,
   sessions: host.openSessions,
   databaseWriter: host.databaseWriter,
+  notifications: host.notifications,
   blobsFolder: host.blobsFolder,
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',

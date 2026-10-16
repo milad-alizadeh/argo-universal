@@ -18,3 +18,5 @@ export * from './schema/agent-servers';
 export * from './schema/registry-cache';
 
 export * from './schema/shells';
+
+export * from './schema/server-identity';

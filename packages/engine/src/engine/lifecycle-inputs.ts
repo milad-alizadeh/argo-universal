@@ -1,10 +1,6 @@
 import { writeLog } from '@repo/machine-log';
 import type { AnyActorRef, InputFrom } from 'xstate';
-import type {
-  RegistryActor,
-  RegistryInput,
-  SyncSupervisorInput,
-} from '../agents';
+import type { RegistryInput, SyncSupervisorInput } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
 import {
@@ -15,14 +11,13 @@ import {
 import type { writerMachine } from '../storage';
 import type { CloseAcpResourcesInput } from './agent-cleanup';
 import type { RecoveryInput } from './engine-recovery';
-import type { HttpServerOptions } from './http-server';
 import {
   openDatabaseOf,
   requireDatabaseWriter,
-  requireOpenSessions,
-  requireSyncSupervisor,
   type EngineContext,
 } from './setup.machine';
+
+export { serverInput } from './server-input';
 
 export const recoveryInput = ({
   context,
@@ -80,43 +75,6 @@ export const sessionsInput = ({
   isAgentSetupBusy: (agentId) => context.installations.isBusy(agentId),
 });
 
-type ServerSource = {
-  context: Pick<
-    EngineContext,
-    | 'createId'
-    | 'installations'
-    | 'commandAdmission'
-    | 'acp'
-    | 'loginTimeoutMs'
-    | 'loginCleanupTimeoutMs'
-    | 'home'
-    | 'port'
-    | 'firstPartyPluginsDirectory'
-    | 'version'
-    | 'startedAt'
-    | 'database'
-  >;
-  self: Pick<AnyActorRef, 'system'>;
-};
-
-type ServerInput = (source: ServerSource) => HttpServerOptions;
-
-export const serverInput: ServerInput = ({ context, self }) => ({
-  firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
-  createId: context.createId,
-  installations: context.installations,
-  sessions: requireOpenSessions(self.system),
-  databaseWriter: requireDatabaseWriter(self.system),
-  syncSupervisor: requireSyncSupervisor(self.system),
-  registry: requireRegistry(self.system),
-  commandAdmission: context.commandAdmission,
-  acp: context.acp,
-  loginTimeoutMs: context.loginTimeoutMs,
-  loginCleanupTimeoutMs: context.loginCleanupTimeoutMs,
-  ...serverIdentity(context),
-  database: openDatabaseOf(context),
-});
-
 export const cleanupInput = ({
   context,
   self,
@@ -130,17 +88,6 @@ export const cleanupInput = ({
   sessions: findMachineActor(self.system, openSessionsId, openSessionsMachine),
 });
 
-function serverIdentity(
-  context: Pick<EngineContext, 'home' | 'port' | 'version' | 'startedAt'>,
-): Pick<HttpServerOptions, 'home' | 'port' | 'version' | 'startedAt'> {
-  return {
-    home: context.home,
-    port: context.port,
-    version: context.version,
-    startedAt: context.startedAt,
-  };
-}
-
 export const registryInput = ({
   context,
   self,
@@ -153,11 +100,3 @@ export const registryInput = ({
   fetchAgents: context.fetchAgents,
   now: context.now,
 });
-
-const requireRegistry = (system: AnyActorRef['system']): RegistryActor => {
-  const actor = system.get('registry');
-
-  if (!actor) throw new Error('Registry is not running');
-
-  return actor;
-};

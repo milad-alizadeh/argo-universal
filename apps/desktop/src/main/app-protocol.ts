@@ -11,7 +11,7 @@ const temporaryRedirectStatus = 307;
 // The Expo web build inlines its style reset, and React Native Web inserts styles at runtime.
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: http://127.0.0.1:*",
   "font-src 'self' data:",
