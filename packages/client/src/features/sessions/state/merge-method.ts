@@ -34,6 +34,8 @@ export const mergeMethodQuery = queryOptions({
   queryKey: ['merge-method'] as const,
   queryFn: () => load().catch(loadFailed),
   staleTime: Infinity,
+  // This Device's storage answers while the Server is unreachable.
+  networkMode: 'always',
 });
 
 // Kept on this device, like the Composer's choices, never on the Server.

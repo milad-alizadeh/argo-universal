@@ -1,74 +1,38 @@
-import type { SessionNewInput } from '@repo/contracts';
-import { useActorRef, useSelector } from '@xstate/react';
-import { useCallback, useEffect, useRef } from 'react';
-import type { ActorRefFrom } from 'xstate';
-import { useResubscribeOnReconnect, useTRPCClient } from '#features/connection';
-import { emptySessionMachine } from '#features/sessions';
-import { closeQuietly, useEmptySessionPorts } from './empty-session-adapters';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useResubscribeOnReconnect } from '#features/connection';
+import {
+  type EmptySessionChoices,
+  type EmptySessionState,
+  EmptySessionStore,
+} from '#features/sessions';
+import { useEmptySessionPorts } from './empty-session-adapters';
 
-export type EmptySessionActor = ActorRefFrom<typeof emptySessionMachine>;
-
-type Snapshot = ReturnType<EmptySessionActor['getSnapshot']>;
-
-export interface EmptySession {
-  actor: EmptySessionActor;
-  error: string | undefined;
-  pendingPrompt: boolean;
-  // The open Session the page reads options from, until it hands it on.
-  openSessionId: string | undefined;
-  // True while the Session opens, reopens or takes this device's last choices.
-  opening: boolean;
-  handedOff: boolean;
+export interface EmptySession extends EmptySessionState {
+  store: EmptySessionStore;
 }
 
-const openingStates = [
-  'opening',
-  'closing',
-  { open: 'loading' },
-  { open: 'applyingRemembered' },
-] as const;
+// One store for the screen's life, given the screen's latest ports.
+function useStore(clearDraft: () => void): EmptySessionStore {
+  const ports = useEmptySessionPorts(clearDraft);
+  const [store] = useState(() => new EmptySessionStore(ports));
+  useEffect(() => {
+    store.setPorts(ports);
+  });
 
-const waitingToOpen = ({ context, ...snapshot }: Snapshot): boolean =>
-  snapshot.matches('waiting') &&
-  [context.connected, context.input !== undefined].every(Boolean);
+  // StrictMode's rehearsal stop comes before any Session opens.
+  useEffect(() => {
+    store.start();
 
-const isOpening = (snapshot: Snapshot): boolean =>
-  openingStates.some((state) => snapshot.matches(state)) ||
-  waitingToOpen(snapshot);
+    return (): void => store.stop();
+  }, [store]);
 
-// Left with an empty Session open, the screen closes it; a prompted one is the Session page's.
-const ownsOpenSession = (snapshot: Snapshot): boolean =>
-  [
-    snapshot.context.sessionId !== undefined,
-    snapshot.status === 'active',
-    !snapshot.matches('closing'),
-    !snapshot.matches({ open: 'prompting' }),
-  ].every(Boolean);
-
-const openSessionOf = (snapshot: Snapshot): string | undefined =>
-  snapshot.matches('open') || snapshot.status === 'done'
-    ? snapshot.context.sessionId
-    : undefined;
-
-// StrictMode's rehearsal unmount comes before any Session opens; a reload or a lost Connection sends nothing.
-function useCloseOnLeave(actor: EmptySessionActor): void {
-  const client = useTRPCClient();
-  useEffect(
-    () => (): void => {
-      const last = actor.getSnapshot();
-
-      if (ownsOpenSession(last) && last.context.sessionId)
-        closeQuietly(client, last.context.sessionId);
-    },
-    [actor, client],
-  );
+  return store;
 }
 
-// Each render builds the input anew; the machine hears of it only when its value changes.
-function useChoices(
-  actor: EmptySessionActor,
-  input: SessionNewInput | undefined,
-  connected: boolean,
+// The input is rebuilt each render; the store hears of it only when its value changes.
+function useChooseInStore(
+  store: EmptySessionStore,
+  { input, connected }: EmptySessionChoices,
 ): void {
   const latestInput = useRef(input);
   useEffect(() => {
@@ -76,56 +40,22 @@ function useChoices(
   });
   const choiceKey = JSON.stringify(input ?? null);
   useEffect(() => {
-    const changed = { input: latestInput.current, connected };
-    actor.send({ type: 'choices.changed', ...changed });
-  }, [actor, choiceKey, connected]);
+    store.choose({ input: latestInput.current, connected });
+  }, [store, choiceKey, connected]);
 }
-
-// A failed open tries again when the Connection reopens.
-function useRetryOnReconnect(actor: EmptySessionActor): void {
-  const failed = useSelector(actor, (snapshot) => snapshot.matches('failed'));
-  const retry = useCallback(() => actor.send({ type: 'retry' }), [actor]);
-  useResubscribeOnReconnect({
-    status: failed ? 'error' : 'idle',
-    reset: retry,
-  });
-}
-
-type EmptySessionState = Omit<EmptySession, 'actor'>;
-
-const toEmptySessionState = (snapshot: Snapshot): EmptySessionState => ({
-  error: snapshot.context.error,
-  pendingPrompt: snapshot.context.pendingPrompt !== undefined,
-  openSessionId: openSessionOf(snapshot),
-  opening: isOpening(snapshot),
-  handedOff: snapshot.status === 'done',
-});
-
-const stateFields = [
-  'error',
-  'pendingPrompt',
-  'openSessionId',
-  'opening',
-  'handedOff',
-] as const satisfies readonly (keyof EmptySessionState)[];
-
-// The page re-renders only when a field it shows changes, not on every snapshot.
-const sameState = (a: EmptySessionState, b: EmptySessionState): boolean =>
-  stateFields.every((field) => a[field] === b[field]);
 
 // New Session's real, empty Session for the current choices; leaving without sending closes it.
 export function useEmptySession(
-  input: SessionNewInput | undefined,
-  connected: boolean,
+  choices: EmptySessionChoices,
   clearDraft: () => void,
 ): EmptySession {
-  const ports = useEmptySessionPorts(clearDraft);
-  const actor = useActorRef(emptySessionMachine, { input: ports });
+  const store = useStore(clearDraft);
+  useChooseInStore(store, choices);
+  const state = useSyncExternalStore(store.subscribe, store.getState);
+  useResubscribeOnReconnect({
+    status: state.error === undefined ? 'idle' : 'error',
+    reset: () => store.retry(),
+  });
 
-  useCloseOnLeave(actor);
-  useChoices(actor, input, connected);
-  useRetryOnReconnect(actor);
-  const state = useSelector(actor, toEmptySessionState, sameState);
-
-  return { actor, ...state };
+  return { store, ...state };
 }

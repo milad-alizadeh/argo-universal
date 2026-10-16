@@ -38,11 +38,12 @@ const withEntry = (
   return {
     description: entry.description,
     ...agent,
+    name: entry.name,
     icon: agent.icon ?? entry.icon,
   };
 };
 
-// An installed Agent borrows its registry entry's description and icon where the probe has none.
+// An installed Agent takes its registry entry's name, since the probe only knows its id, and borrows the description and icon where the probe has none.
 export function withRegistryEntries(
   installed: readonly AgentRowEntry[],
   catalog: AgentsCatalogOutput,

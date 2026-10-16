@@ -1,8 +1,8 @@
 import { startEngineTestHost } from '@repo/engine/mocks';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { waitFor } from 'xstate';
-import { type ConnectionActor, openConnection } from './open-connection';
+import type { Connection, ConnectionState } from '../state/connection';
+import { openConnection } from './open-connection';
 
 const closers: (() => Promise<void> | void)[] = [];
 
@@ -21,23 +21,29 @@ async function startServer(
   return { url: url.toString(), port: Number(url.port), stop: host.stop };
 }
 
+// A mounted client, as QueryClientProvider mounts it, refetches when onlineManager comes back online.
+function mountedQueryClient(): QueryClient {
+  const queryClient = new QueryClient();
+  queryClient.mount();
+  closers.push(() => queryClient.unmount());
+
+  return queryClient;
+}
+
 const waitForConnectionLink = (
-  connection: ConnectionActor,
-  expectedLink: string,
-): ReturnType<typeof waitFor<ConnectionActor>> =>
-  waitFor(connection, (snapshot) => snapshot.value.link === expectedLink, {
+  connection: Connection,
+  expectedLink: ConnectionState,
+): Promise<void> =>
+  vi.waitFor(() => expect(connection.state()).toBe(expectedLink), {
     timeout: 5000,
   });
 
 describe('openConnection', (): void => {
   it('reconnects after the Server restarts and fetches every query again', async (): Promise<void> => {
     const server = await startServer();
-    const queryClient = new QueryClient();
+    const queryClient = mountedQueryClient();
 
-    const { client, connection, close } = openConnection(
-      server.url,
-      queryClient,
-    );
+    const { client, connection, close } = openConnection(server.url);
 
     closers.push(close);
     await waitForConnectionLink(connection, 'open');
@@ -67,12 +73,9 @@ describe('openConnection', (): void => {
   it('connects after an initial failure when the Server becomes available', async (): Promise<void> => {
     const stopped = await startServer();
     await stopped.stop();
-    const queryClient = new QueryClient();
+    const queryClient = mountedQueryClient();
 
-    const { client, connection, close } = openConnection(
-      stopped.url,
-      queryClient,
-    );
+    const { client, connection, close } = openConnection(stopped.url);
 
     closers.push(close);
 
@@ -96,17 +99,9 @@ describe('openConnection', (): void => {
   it('closes while an attempt waits for its retry delay', async () => {
     const unused = await startServer();
     await unused.stop();
-    const { connection, close } = openConnection(unused.url, new QueryClient());
-    await waitFor(
-      connection,
-      (snapshot) => snapshot.value.attempt === 'waiting',
-      {
-        timeout: 5000,
-      },
-    );
+    const { connection, close } = openConnection(unused.url);
+    await waitForConnectionLink(connection, 'reconnecting');
 
-    await close();
-
-    expect(connection.getSnapshot().status).toBe('stopped');
+    await expect(close()).resolves.toBeUndefined();
   });
 });
