@@ -34,7 +34,7 @@ function DialogPreview(): React.JSX.Element {
 
 function ProfileContent(): React.JSX.Element {
   return (
-    <DialogContent className="sm:max-w-[425px]">
+    <DialogContent className="sm:max-w-106">
       <ProfileHeader />
       <ProfileFields />
       <ProfileFooter />

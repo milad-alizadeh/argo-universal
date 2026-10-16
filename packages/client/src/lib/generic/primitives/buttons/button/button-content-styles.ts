@@ -3,7 +3,7 @@ import { cn } from '#lib/generic/utils';
 import type { ButtonProps, DrawnButtonProps } from './button-props';
 
 const buttonClasses = cva(
-  'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-focus web:focus-visible:ring-[3px] web:focus-visible:ring-focus/50 disabled:pointer-events-none',
+  'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-focus web:focus-visible:ring-3 web:focus-visible:ring-focus/50 disabled:pointer-events-none',
   {
     variants: {
       variant: {
