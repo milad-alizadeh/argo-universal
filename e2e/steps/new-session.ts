@@ -52,7 +52,10 @@ export async function chooseLocalCheckout(page: Page): Promise<void> {
   await expect(checkout).not.toContainText('main');
   await checkout.click();
   await page.getByRole('button', { name: 'Local' }).click();
-  await expect(checkout).toHaveText(/Local/);
+  // A phone's sign-in or launch callout sheet can cover the Checkout as soon as the Local open fails.
+  await expect(
+    page.getByRole('button', { name: 'Checkout', includeHidden: true }),
+  ).toHaveText(/Local/);
 }
 
 export async function chooseAgent(page: Page, label: string): Promise<void> {
@@ -169,18 +172,11 @@ When(
 );
 
 Then(
-  "New Session says the Session couldn't open",
+  'New Session says the Agent failed to launch',
   async ({ page }): Promise<void> => {
     await expect(
-      page.getByRole('region', { name: /^Notifications/ }),
-    ).toContainText("Couldn't open the Session", sessionOpenTimeout);
+      page.getByRole('heading', { name: 'Failed to Launch', exact: true }),
+    ).toBeVisible(sessionOpenTimeout);
     await expect(page).toHaveURL(/\/sessions\/new$/);
-  },
-);
-
-Then(
-  'the Composer keeps the prompt {string}',
-  async ({ page }, prompt: string): Promise<void> => {
-    await expectMessage(page, prompt);
   },
 );

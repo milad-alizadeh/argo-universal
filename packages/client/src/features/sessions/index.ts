@@ -30,6 +30,7 @@ export { type StartingFeed } from './state/starting-feed';
 export { startingFeed } from './state/starting-feed';
 
 export {
+  openFailureOf,
   serverSilentMessage,
   sessionOpenFailedTitle,
   sessionOpenErrorMessage,
@@ -120,3 +121,25 @@ export {
   type MergeMethodChoice,
   useMergeMethod,
 } from './hooks/use-merge-method';
+
+export {
+  SessionCallout,
+  type SessionCalloutProps,
+  signInCallout,
+} from './components/session-callout/session-callout';
+
+export {
+  TerminalSignIn,
+  type TerminalSignInProps,
+} from './components/terminal-sign-in/terminal-sign-in';
+
+export {
+  type SessionAuthSubject,
+  useSessionAuth,
+} from './hooks/use-session-auth';
+
+export {
+  type OpenAttempt,
+  type SessionProblem,
+  sessionProblem,
+} from './state/session-problem';

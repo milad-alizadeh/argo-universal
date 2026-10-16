@@ -69,17 +69,23 @@ const configurationProps = (
 const setupStepOf = (agent: AgentInfo | undefined): string | undefined =>
   agent && agent.availability !== 'available' ? agent.installStep : undefined;
 
+type NoticeProps = ReadyProps<
+  | 'attachmentError'
+  | 'attachmentErrorKey'
+  | 'setupStep'
+  | 'callout'
+  | 'signInTerminal'
+>;
+
 const noticeProps = ({
   data,
   attachmentDraft,
-  sessionOpening,
-}: NewSessionWiring): ReadyProps<
-  'attachmentError' | 'attachmentErrorKey' | 'setupStep' | 'openError'
-> => ({
+  callout,
+}: NewSessionWiring): NoticeProps => ({
   attachmentError: attachmentDraft.attachmentError?.message,
   attachmentErrorKey: attachmentDraft.attachmentError?.key,
   setupStep: setupStepOf(data.choices.agent),
-  openError: sessionOpening.session.error,
+  ...callout,
 });
 
 const readyProps = (

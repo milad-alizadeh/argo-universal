@@ -1,4 +1,6 @@
 import {
+  type SessionOpenError,
+  SessionOpenFailure,
   SessionOpenFailureResponse,
   sessionOpenErrorText,
 } from '@repo/contracts';
@@ -20,3 +22,15 @@ export const sessionOpenErrorMessage = (cause: unknown): string => {
 
 const errorMessage = (cause: unknown): string =>
   cause instanceof Error ? cause.message : String(cause);
+
+// The sign-in or launch failure a refused open carries; undefined for any other error.
+export const openFailureOf = (cause: unknown): SessionOpenError | undefined => {
+  if (cause instanceof SessionOpenFailure) return cause.openError;
+  const parsed = SessionOpenFailureResponse.safeParse(cause);
+
+  return parsed.success ? parsed.data.data.openError : undefined;
+};
+
+// What a failed open asks of the reader: sign in, or Retry an Agent that failed to launch.
+export const sessionOpenError = (cause: unknown): SessionOpenError =>
+  openFailureOf(cause) ?? { type: 'failed', message: errorMessage(cause) };

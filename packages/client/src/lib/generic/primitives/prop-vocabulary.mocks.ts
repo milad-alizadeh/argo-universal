@@ -4,6 +4,7 @@ import type * as FilterPillKit from '#primitives/buttons/filter-pill';
 import type * as IconButtonKit from '#primitives/buttons/icon-button';
 import type * as SplitButtonKit from '#primitives/buttons/split-button';
 import type * as BadgeKit from '#primitives/display/badge';
+import type * as CalloutKit from '#primitives/display/callout';
 import type * as CollapsibleKit from '#primitives/display/collapsible';
 import type * as CountBadgeKit from '#primitives/display/count-badge';
 import type * as DisclosureChevronKit from '#primitives/display/disclosure-chevron';
@@ -52,6 +53,7 @@ export type Primitives = {
   ButtonDataProps: ButtonKit.ButtonDataProps;
   ButtonGroupProps: ButtonGroupKit.ButtonGroupProps;
   ButtonProps: ButtonKit.ButtonProps;
+  CalloutProps: CalloutKit.CalloutProps;
   CheckboxIndicatorProps: CheckboxKit.CheckboxIndicatorProps;
   CheckboxProps: CheckboxKit.CheckboxProps;
   CollapsibleContentProps: CollapsibleKit.CollapsibleContentProps;

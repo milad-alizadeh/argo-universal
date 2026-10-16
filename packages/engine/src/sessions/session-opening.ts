@@ -1,4 +1,8 @@
-import { SessionOpenFailure } from '@repo/contracts';
+import {
+  SessionOpenFailure,
+  type SessionOpenInput,
+  type SessionOpenOutput,
+} from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
@@ -129,6 +133,19 @@ export async function openReadySession(
 
   return waitForSessionReady(openStoredSession(deps, sessionId), commandType);
 }
+
+// Opens a Session, or waits for its open, without a Turn: Retry after a failed open never resends one.
+export const openSession = async (
+  deps: Pick<
+    SessionRouterDeps,
+    'sessions' | 'readSession' | 'sessionCommandSignal'
+  >,
+  { sessionId }: SessionOpenInput,
+): Promise<SessionOpenOutput> => {
+  await openReadySession(deps, sessionId, 'session.setConfigOption');
+
+  return {};
+};
 
 function openStoredSession(
   deps: Pick<SessionRouterDeps, 'sessions' | 'readSession'>,

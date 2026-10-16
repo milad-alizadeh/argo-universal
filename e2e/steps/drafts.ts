@@ -26,10 +26,13 @@ Given(
   },
 );
 
+// A Session the Agent refused to reopen offers Retry in place of a send error.
 Then(
-  "the Composer says the prompt couldn't send",
+  'the Session says the Agent failed to launch',
   async ({ page }): Promise<void> => {
-    await expect(page.getByText(/^Couldn't send\./)).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Failed to Launch', exact: true }),
+    ).toBeVisible();
   },
 );
 

@@ -4,6 +4,7 @@ import type {
   SessionConfigOption,
   SessionNewInput,
   SessionNewOutput,
+  SessionOpenError,
   SessionPromptOutput,
 } from '@repo/contracts';
 import type { SavedChoices } from '#lib/product/session-configuration';
@@ -36,7 +37,9 @@ export const choiceDebounceMs = 300;
 export const promptShowTimeoutMs = 3_000;
 
 export interface EmptySessionState {
-  error: string | undefined;
+  error: SessionOpenError | undefined;
+  // Retry or a second Send opens again; the failure stays until it settles.
+  retrying: boolean;
   pendingPrompt: boolean;
   // The Session the page reads options and the first prompt from, until it hands it on.
   openSessionId: string | undefined;
@@ -47,6 +50,7 @@ export interface EmptySessionState {
 
 const stateFields = [
   'error',
+  'retrying',
   'pendingPrompt',
   'openSessionId',
   'opening',

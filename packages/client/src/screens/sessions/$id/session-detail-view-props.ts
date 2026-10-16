@@ -13,12 +13,21 @@ import type {
   OpenSessionViewProps,
   SessionDetailViewProps,
 } from './session-detail-view';
+import type { SessionCallouts } from './use-session-callout';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
 type OpenFeed = Pick<OpenSession, 'snapshot' | 'view'>;
 
-export type SessionDetailViewSources = Omit<OpenSession, 'snapshot' | 'view'>;
+export type SessionDetailViewSources = Omit<
+  OpenSession,
+  'snapshot' | 'view'
+> & {
+  callouts: SessionCallouts;
+};
+
+type OpenSessionSources = OpenSession &
+  Pick<SessionDetailViewSources, 'callouts'>;
 
 const headerStatus = {
   running: 'running',
@@ -26,15 +35,22 @@ const headerStatus = {
   idle: 'idle',
 } satisfies Record<SessionSnapshot['state'], SessionHeaderStatus>;
 
-// A failed first page refetches by itself when the Connection reopens or the window regains focus.
-function failedSession(feed: SessionFeed): SessionDetailViewProps | undefined {
+// A failed first page refetches by itself when the Connection reopens or the window regains focus. An open Session keeps its Feed and Composer when its Agent fails: the callout says why.
+function failedSession(
+  feed: SessionFeed,
+  opened: OpenFeed | undefined,
+): SessionDetailViewProps | undefined {
   if (feed.error) return { state: 'failed' };
 
-  if (feed.openError)
-    return { state: 'failed', reason: sessionOpenErrorMessage(feed.openError) };
-
-  return undefined;
+  return opened ? undefined : unopened(feed);
 }
+
+const unopened = ({
+  openError,
+}: SessionFeed): SessionDetailViewProps | undefined =>
+  openError
+    ? { state: 'failed', reason: sessionOpenErrorMessage(openError) }
+    : undefined;
 
 const loadedFeed = ({ snapshot, view }: SessionFeed): OpenFeed | undefined =>
   snapshot && view ? { snapshot, view } : undefined;
@@ -62,7 +78,8 @@ const sessionFeedProps = (open: OpenSession): FeedProps => ({
   checkoutBranch: open.snapshot.checkout.branch ?? undefined,
 });
 
-const openSessionProps = (open: OpenSession): OpenSessionViewProps => ({
+const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
+  ...open.callouts,
   elicitation: open.elicitation,
   header: sessionHeaderProps(open),
   feed: sessionFeedProps(open),
@@ -76,7 +93,7 @@ export function toSessionViewProps(
   const opened = openFeed(sources.feed);
 
   return (
-    failedSession(sources.feed) ??
+    failedSession(sources.feed, opened) ??
     (opened
       ? { state: 'open', ...openSessionProps({ ...sources, ...opened }) }
       : { state: 'opening' })

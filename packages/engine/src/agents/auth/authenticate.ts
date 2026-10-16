@@ -11,7 +11,8 @@ import {
 } from '../acp/auth-methods';
 import { authenticationDescription, isAuthRequired } from '../acp/open-error';
 import type { AgentLaunch, LaunchLoginTerminal } from '../agent-launch';
-import { AuthTerminal, terminalMethodLaunch } from './terminal-auth';
+import { AuthTerminal } from './terminal-auth';
+import { terminalMethodLaunch } from './terminal-program';
 
 type AuthenticationInput = {
   launch: AgentLaunch;

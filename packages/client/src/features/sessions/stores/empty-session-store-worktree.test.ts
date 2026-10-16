@@ -52,7 +52,7 @@ describe('New worktree checkout', () => {
 
     expect(h.store.getState()).toMatchObject({
       pendingPrompt: false,
-      error: failure.message,
+      error: { type: 'failed', message: failure.message },
       handedOff: false,
     });
     expect(h.calls.clearDraft).toBe(0);

@@ -35,6 +35,11 @@ export const options: SessionConfigOption[] =
 
 export const failure = new Error('The Agent did not start');
 
+// A rejected `session.new` whose Agent needs sign-in, as the tRPC client carries it.
+export const authRequired = Object.assign(new Error('Session closed'), {
+  data: { openError: { type: 'auth-required' } },
+});
+
 export const promptOutput: SessionPromptOutput = { messageId: 'message-1' };
 
 // Each open and prompt waits until the test settles it.

@@ -12,6 +12,7 @@ export interface KeeperHost {
   ports: () => EmptySessionPorts;
   changed: () => void;
   opening: () => void;
+  opened: () => void;
   failed: (cause: unknown) => void;
 }
 
@@ -166,6 +167,7 @@ export class LocalSessionKeeper {
   private opened(session: LocalSession, sessionId: string): void {
     if (this.session === session && !this.stopped) {
       session.opened(sessionId);
+      this.host.opened();
       this.host.changed();
 
       return;

@@ -24,3 +24,18 @@ it('removes a closed Session and resumes its stored Agent identity on the next p
       { sessionId: 'owned-1', prompt: [{ type: 'text', text: 'Continue' }] },
     ]);
 });
+
+it('opens a stored Session without a Turn, so a Retry never resends one', async (): Promise<void> => {
+  const { caller, openings, resumes, prompts } = await startSessionJourney();
+  const { sessionId } = await caller.session.new(newSession);
+  const opening = openings[0];
+
+  if (!opening) throw new Error('No opened Agent Session');
+  await expect.poll(() => prompts).toHaveLength(1);
+  await caller.session.close({ sessionId });
+  await expect(caller.session.open({ sessionId })).resolves.toEqual({});
+  expect(resumes).toEqual([
+    { sessionId: 'owned-1', cwd: opening.cwd, mcpServers: [] },
+  ]);
+  expect(prompts).toHaveLength(1);
+});

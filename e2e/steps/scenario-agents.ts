@@ -95,6 +95,38 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     feedHistoryConfiguration(steps),
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
+    signInConfiguration(steps),
+  );
+}
+
+const signInSteps = [
+  [/^(?:Given|And) Agent (\d+) needs sign-in$/, 'sign-in-required'],
+  [/^(?:Given|And) Agent (\d+) offers two sign-in methods$/, 'sign-in-methods'],
+  [
+    /^(?:Given|And) Agent (\d+) signs in through a terminal$/,
+    'terminal-sign-in-required',
+  ],
+  [
+    /^(?:Given|And) Agent (\d+) ends its first Turn needing sign-in$/,
+    'turn-auth-required',
+  ],
+  [
+    /^(?:Given|And) Agent (\d+) exits while opening its first Session$/,
+    'open-exit-once',
+  ],
+] as const;
+
+// Sign-in and launch fixtures for the callouts above the Composer.
+function signInConfiguration(steps: string[]): AppFixtureAgents {
+  return Object.assign(
+    {},
+    ...steps.flatMap((step) =>
+      signInSteps.flatMap(([pattern, scenario]) => {
+        const match = pattern.exec(step);
+
+        return match ? [{ [agentId(Number(match[1]))]: { scenario } }] : [];
+      }),
+    ),
   );
 }
 

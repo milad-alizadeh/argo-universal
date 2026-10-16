@@ -41,7 +41,7 @@ describe('The first prompt on a Local checkout', () => {
     h.calls.open[0]?.call.reject(failure);
     await settle();
     expect(h.store.getState()).toMatchObject({
-      error: failure.message,
+      error: { type: 'failed', message: failure.message },
       pendingPrompt: true,
     });
 
@@ -51,19 +51,29 @@ describe('The first prompt on a Local checkout', () => {
     expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);
   });
 
-  it('gives the prompt back when the open a Send retried fails again', async () => {
+  it('holds a Send made after a failed open until Retry or a sign-in opens it', async () => {
     h.choose(local('agent-one'));
     h.calls.open[0]?.call.reject(failure);
     await settle();
 
     h.store.send(prompt);
-    h.calls.open[1]?.call.reject(failure);
     await settle();
 
+    expect(h.calls.open).toHaveLength(1);
     expect(h.store.getState()).toMatchObject({
-      error: failure.message,
-      pendingPrompt: false,
+      error: { type: 'failed', message: failure.message },
+      pendingPrompt: true,
     });
+
+    h.store.retry();
+    h.calls.open[1]?.call.reject(failure);
+    await settle();
+    expect(h.store.getState()).toMatchObject({ pendingPrompt: true });
+
+    h.store.retry();
+    await h.openLocal('session-1');
+
+    expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);
   });
 
   it('hands the prompted Session to its page once the Feed shows the prompt', async () => {

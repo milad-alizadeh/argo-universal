@@ -65,7 +65,7 @@ export const SessionOpenFailureResponse = z.object({
   data: z.object({ openError: SessionOpenError }),
 });
 
-// Today's toast text for a typed open error, until T4b draws each one.
+// A typed open error as one line: the error's message, and the text where no callout draws it.
 export const sessionOpenErrorText = (openError: SessionOpenError): string =>
   openError.type === 'auth-required'
     ? 'Authentication required'

@@ -1,5 +1,5 @@
-import type { SessionNewInput } from '@repo/contracts';
-import { sessionOpenErrorMessage } from '../components/failure-messages';
+import type { SessionNewInput, SessionOpenError } from '@repo/contracts';
+import { sessionOpenError } from '../components/failure-messages';
 import {
   type EmptySessionChoices,
   type EmptySessionConfiguration,
@@ -18,13 +18,18 @@ export class EmptySessionStore {
   private readonly keeper = new LocalSessionKeeper({
     ports: (): EmptySessionPorts => this.ports,
     changed: (): void => this.reconcile(),
+    // A retried open keeps its failure on show until it settles.
     opening: (): void => {
-      this.error = undefined;
+      if (!this.retrying) this.error = undefined;
     },
-    // A Send queued while the open runs stays queued until Retry or Authenticate opens it; one that reopened it gets its prompt back.
+    opened: (): void => {
+      this.error = undefined;
+      this.retrying = false;
+    },
+    // A Send stays queued through a failed open until Retry or a sign-in opens it.
     failed: (cause): void => {
-      if (this.sendReopened) this.fail(cause);
-      else this.error = sessionOpenErrorMessage(cause);
+      this.retrying = false;
+      this.error = sessionOpenError(cause);
     },
   });
   private readonly handOff = new FirstPromptHandOff({
@@ -42,8 +47,8 @@ export class EmptySessionStore {
     initial: [],
   };
   private pending: FirstPrompt | undefined;
-  private error: string | undefined;
-  private sendReopened = false;
+  private error: SessionOpenError | undefined;
+  private retrying = false;
   private stopped = false;
   private readonly listeners = new Set<() => void>();
   private state: EmptySessionState = this.currentState();
@@ -86,8 +91,9 @@ export class EmptySessionStore {
     this.deliver(prompt);
   }
 
-  // A failed open tries again, as after the Connection reopens.
+  // A failed open tries again: Retry, a finished sign-in, or the Connection reopening.
   public retry(): void {
+    this.retrying = this.error !== undefined;
     this.keeper.retry();
     this.reconcile();
   }
@@ -112,21 +118,14 @@ export class EmptySessionStore {
     if (this.handOff.phase === 'choosing') this.keeper.closeEmpty();
   }
 
-  // A New worktree is created at Send; Send opens a Local Session that failed to open again.
+  // A New worktree is created at Send; on a Local checkout whose open failed, the prompt waits for Retry or a sign-in.
   private deliver(prompt: FirstPrompt): void {
     const input = this.input;
 
     if (input?.checkout.type === 'worktree') {
-      this.error = undefined;
+      this.retrying = this.error !== undefined;
       this.handOff.create(input, this.configuration.initial, prompt);
-    } else this.reopenFor();
-  }
-
-  // Send after a failed open opens it again for the prompt.
-  private reopenFor(): void {
-    this.sendReopened = this.error !== undefined;
-    this.error = undefined;
-    this.retry();
+    } else this.reconcile();
   }
 
   private reconcile(): void {
@@ -152,14 +151,15 @@ export class EmptySessionStore {
   }
 
   private fail(cause: unknown): void {
-    this.sendReopened = false;
-    this.error = sessionOpenErrorMessage(cause);
+    this.retrying = false;
+    this.error = sessionOpenError(cause);
     this.pending = undefined;
   }
 
   private currentState(): EmptySessionState {
     return {
       error: this.error,
+      retrying: this.retrying,
       pendingPrompt: this.pending !== undefined,
       openSessionId: this.handOff.sessionId ?? this.keeper.readingId(),
       opening: this.handOff.phase === 'choosing' && this.keeper.isOpening(),
