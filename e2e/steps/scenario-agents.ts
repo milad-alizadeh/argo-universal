@@ -95,6 +95,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     feedHistoryConfiguration(steps),
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
+    desktopConfiguration(steps),
   );
 }
 
@@ -147,5 +148,13 @@ function exitConfiguration(steps: string[]): AppFixtureAgents {
     /^(?:Given|And) Agent 1 exits mid-Turn with stderr$/.test(step),
   )
     ? { [agentId(1)]: { scenario: 'exit-with-stderr' } }
+    : {};
+}
+
+function desktopConfiguration(steps: string[]): AppFixtureAgents {
+  return steps.some((step) =>
+    step.endsWith('I start a desktop Session that keeps running'),
+  )
+    ? { [agentId(1)]: { scenario: 'permission' } }
     : {};
 }

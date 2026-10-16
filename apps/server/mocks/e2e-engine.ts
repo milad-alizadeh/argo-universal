@@ -46,6 +46,12 @@ const port = z.coerce
 
 // With no Supervisor, the Engine publishes its own address.
 function publishAddress(message: EngineMessage): void {
+  if (process.send) {
+    process.send(message);
+
+    return;
+  }
+
   if (message.type !== 'ready') return;
   writeServerAddress(home, {
     pid: process.pid,
