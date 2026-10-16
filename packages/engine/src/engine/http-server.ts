@@ -28,6 +28,7 @@ export interface HttpServerOptions {
   createId: () => string;
   port: number;
   version: string;
+  firstPartyPluginsDirectory?: string;
   startedAt: string;
   database: Database;
   sessions: OpenSessionsActorRef;

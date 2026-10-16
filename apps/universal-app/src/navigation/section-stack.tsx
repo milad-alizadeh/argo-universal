@@ -1,13 +1,10 @@
 import {
   hasLiquidGlass,
-  nativeHeaderOptions,
   PhoneConnectionBanner,
   SectionMenuButton,
   screenHeaderOptions,
-  type Section,
+  type CoreSection,
   type SectionList,
-  type SectionLists,
-  sectionOf,
   useSectionList,
   useWide,
 } from '@repo/client';
@@ -16,18 +13,15 @@ import {
   Stack,
   useNavigation,
 } from 'expo-router';
-import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
-import {
-  DrawerActions,
-  getFocusedRouteNameFromRoute,
-  type ParamListBase,
-  type RouteProp,
-} from 'expo-router/react-navigation';
+import { DrawerActions } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
 import { Platform, View } from 'react-native';
 import { headerTitleOptions } from './header-title';
+import { drawerDrawsRootHeader } from './section-drawer-options';
+
+type ScreenHeaderProps = SectionList['rootHeader'];
 
 type StackProps = ComponentProps<typeof Stack>;
 
@@ -52,36 +46,6 @@ const wideOptions = {
   animation: 'none',
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
-
-// Android's section roots show the drawer's own header, with its stock toggle, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, so iOS keeps Liquid Glass, stock bar button items and the native search.
-const drawerDrawsRootHeader = Platform.OS === 'android';
-
-// Android's back gesture owns the screen edge, so there only ☰ opens the drawer.
-const edgeSwipeOpens = Platform.OS === 'ios';
-
-const atSectionRoot = (route: RouteProp<ParamListBase>): boolean =>
-  (getFocusedRouteNameFromRoute(route) ?? 'index') === 'index';
-
-// A pushed page, and every page of a wide window, keeps its stack's header; its edge swipe goes back.
-const stackOwnsHeader = { headerShown: false, swipeEnabled: false };
-
-function drawerRootOptions(
-  header: SectionList['rootHeader'],
-): DrawerNavigationOptions {
-  const shown = drawerDrawsRootHeader
-    ? { headerShown: true, ...nativeHeaderOptions(header) }
-    : { headerShown: false };
-
-  return { ...shown, swipeEnabled: edgeSwipeOpens };
-}
-
-// Each section's options on the Frame's drawer: its header shows only on a narrow section root, so no page shows two.
-export const drawerScreenOptions =
-  (wide: boolean, lists: SectionLists) =>
-  ({ route }: { route: RouteProp<ParamListBase> }): DrawerNavigationOptions =>
-    wide || !atSectionRoot(route)
-      ? stackOwnsHeader
-      : drawerRootOptions(lists[sectionOf(route.name)].rootHeader);
 
 function WebMenuButton(): React.JSX.Element {
   const navigation = useNavigation();
@@ -138,22 +102,33 @@ interface SectionOptions {
 }
 
 // The stack's options at this width, and its root's: a narrow root shows the section's header; a wide page draws its own.
-function useSectionOptions(section: Section): SectionOptions {
+function useSectionOptions(
+  header: ScreenHeaderProps,
+  root: boolean,
+): SectionOptions {
   const wide = useWide();
-  const header = useSectionList(section).rootHeader;
 
   if (wide) return { screenOptions: wideOptions, rootOptions: {} };
 
   return {
     screenOptions: narrowOptions,
-    rootOptions: drawerDrawsRootHeader
-      ? { headerShown: false }
-      : stackRootOptions(header),
+    rootOptions: narrowRootOptions(header, root),
   };
 }
 
+function narrowRootOptions(
+  header: ScreenHeaderProps,
+  root: boolean,
+): NativeStackNavigationOptions {
+  if (!root) return screenHeaderOptions(header);
+
+  return drawerDrawsRootHeader
+    ? { headerShown: false }
+    : stackRootOptions(header);
+}
+
 interface SectionStackProps extends PropsWithChildren {
-  section: Section;
+  section: CoreSection;
 }
 
 // A section's pages, always this one stack so a width change keeps them: a narrow window pushes each page over the list under the section's header; a wide one shows the list beside it. Each page names itself through `ScreenHeader`.
@@ -161,12 +136,42 @@ export function SectionStack({
   section,
   children,
 }: SectionStackProps): React.JSX.Element {
-  const { screenOptions, rootOptions } = useSectionOptions(section);
+  return (
+    <PageStack header={useSectionList(section).rootHeader}>
+      {children}
+    </PageStack>
+  );
+}
+
+interface PageStackProps extends PropsWithChildren {
+  header: ScreenHeaderProps;
+  root?: boolean;
+  rootName?: string;
+  singular?: ComponentProps<typeof Stack.Screen>['dangerouslySingular'];
+}
+
+// Core lists and Plugin pages share stock stack headers, page placement and the Connection banner.
+export function PageStack(props: PageStackProps): React.JSX.Element {
+  const { screenOptions, rootOptions } = useSectionOptions(
+    props.header,
+    props.root ?? true,
+  );
 
   return (
     <Stack screenOptions={screenOptions} screenLayout={pageLayout}>
-      <Stack.Screen name="index" options={rootOptions} />
-      {children}
+      <Stack.Screen {...rootScreen(props, rootOptions)} />
+      {props.children}
     </Stack>
   );
+}
+
+function rootScreen(
+  props: PageStackProps,
+  options: NativeStackNavigationOptions,
+): ComponentProps<typeof Stack.Screen> {
+  return {
+    name: props.rootName ?? 'index',
+    options,
+    dangerouslySingular: props.singular,
+  };
 }

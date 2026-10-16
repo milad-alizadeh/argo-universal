@@ -9,6 +9,7 @@ import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import type { FeedDeps } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
+import type { PluginsDeps } from '../plugins';
 import {
   createSessionConnections,
   createSessionReader,
@@ -27,7 +28,8 @@ export type AppRouterDeps = SessionRouterDeps &
   AgentsRouterDeps &
   BlobUploadDeps &
   SystemDeps &
-  FeedDeps;
+  FeedDeps &
+  PluginsDeps;
 
 type FeedSourcesInput = { database: Database; sessions: OpenSessionsActorRef };
 
@@ -95,11 +97,10 @@ export function createAppRouterDeps(
 function bindInstallations(
   installations: AgentInstallations,
   input: AppRouterInput &
-    Pick<AppRouterDeps, 'agentLogins' | 'invalidateAgent'>,
+    Pick<AppRouterDeps, 'agentLogins' | 'createId' | 'invalidateAgent'>,
 ): void {
   installations.bind({
     ...input,
-    createId: input.createId ?? randomUUID,
     checkAgentLaunch,
     invalidateAgent: input.invalidateAgent,
     isInUse: (agentId) =>
@@ -121,7 +122,6 @@ type AgentSetup = Pick<
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
   const installations = input.installations ?? createInstallations(input.home);
-
   const sessionConnections = createSessionConnections(input.sessions);
 
   const { invalidateAgent, invalidateIdleAgents, dropAgentConnections } =
@@ -168,6 +168,5 @@ function sessionsUseAgent(
   );
 }
 
-function createInstallations(home: string | undefined): AgentInstallations {
-  return new AgentInstallations(home ?? '');
-}
+const createInstallations = (home = ''): AgentInstallations =>
+  new AgentInstallations(home);
