@@ -3,6 +3,7 @@ import { FieldGroup } from '@expo/ui';
 import { List } from '@expo/ui/swift-ui';
 import {
   listStyle,
+  listSectionSpacing,
   scrollContentBackground,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
@@ -11,6 +12,7 @@ import { Host } from '#primitives/native/host';
 import { useNativeTheme } from '../../../native-theme';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
+import { compactGroupedListGap } from './grouped-list-spacing';
 import { GroupedList as WebGroupedList } from './grouped-list.tsx';
 
 export function GroupedList(props: GroupedListProps): React.JSX.Element {
@@ -21,7 +23,7 @@ export function GroupedList(props: GroupedListProps): React.JSX.Element {
   return (
     <FieldLayout value={props.variant ?? 'grouped'}>
       <Host style={{ flex: 1 }} matchContents={false}>
-        <PhoneFields variant={props.variant}>{props.children}</PhoneFields>
+        <PhoneFields {...props} />
       </Host>
     </FieldLayout>
   );
@@ -34,11 +36,12 @@ export function GroupedList(props: GroupedListProps): React.JSX.Element {
 function PhoneFields({
   variant,
   children,
+  gap,
 }: GroupedListProps): React.JSX.Element {
   return variant === 'sidebar' ? (
     <SidebarFields>{children}</SidebarFields>
   ) : (
-    <GroupedFields>{children}</GroupedFields>
+    <GroupedFields gap={gap}>{children}</GroupedFields>
   );
 }
 
@@ -54,13 +57,14 @@ function SidebarFields({
 
 function GroupedFields({
   children,
-}: Pick<GroupedListProps, 'children'>): React.JSX.Element {
+  gap,
+}: Pick<GroupedListProps, 'children' | 'gap'>): React.JSX.Element {
   const { content } = useNativeTheme().colors;
 
   return (
     <FieldGroup
       style={{ backgroundColor: content }}
-      modifiers={[scrollContentBackground('hidden')]}
+      modifiers={[scrollContentBackground('hidden'), sectionSpacing(gap)]}
     >
       {children}
     </FieldGroup>
@@ -68,3 +72,8 @@ function GroupedFields({
 }
 
 GroupedList satisfies React.ComponentType<GroupedListProps>;
+
+const sectionSpacing = (
+  gap: GroupedListProps['gap'],
+): ReturnType<typeof listSectionSpacing> =>
+  listSectionSpacing(gap === 'sm' ? compactGroupedListGap : 'default');

@@ -1,54 +1,80 @@
 import type * as React from 'react';
-import { type AgentStep, type StepMark } from '#features/setup';
+import { View } from 'react-native';
+import { RegistryIcon } from '#features/agents';
+import type { StepMark } from '#features/setup';
 import { Button } from '#primitives/buttons/button';
+import { SelectedCheck } from '#primitives/display/selected-check';
+import { Text } from '#primitives/display/text';
+import { RegistryState } from '../settings/agents/catalog-states';
 import type { OnboardingViewProps } from './onboarding-props';
-import { SetupStep, type SetupStepProps } from './setup-step';
+import { SetupStep } from './setup-step';
 
-export type AgentStepViewProps = Pick<
-  OnboardingViewProps,
-  'agent' | 'onChangeAgent' | 'onCheckAgentAgain'
-> & { mark: StepMark };
-
-type StepParts = Pick<SetupStepProps, 'caption' | 'action'>;
-
-const notFoundCaption =
-  'No coding Agent found on this computer. Install one from the ACP Registry and sign in, then check again.';
-
-const doneParts = (agentName: string, onChange: () => void): StepParts => ({
-  caption: `${agentName}, signed in with your subscription.`,
-  action: (
-    <Button label="Change" variant="ghost" size="sm" onPress={onChange} />
-  ),
-});
-
-const notFoundParts = (
-  checking: boolean,
-  onCheckAgain: () => void,
-): StepParts => ({
-  caption: notFoundCaption,
-  action: (
-    <Button
-      label="Check again"
-      size="sm"
-      loading={checking}
-      onPress={onCheckAgain}
-    />
-  ),
-});
-
-const agentParts = (agent: AgentStep, props: AgentStepViewProps): StepParts =>
-  agent.status === 'done'
-    ? doneParts(agent.agentName, props.onChangeAgent)
-    : notFoundParts(agent.checking, props.onCheckAgentAgain);
-
-// Step 1, whole in itself: Spec 0013 replaces it with Add an Agent.
-export function AgentStepView(props: AgentStepViewProps): React.JSX.Element {
+export function AgentStepView(
+  props: OnboardingViewProps & { mark: StepMark },
+): React.JSX.Element {
   return (
     <SetupStep
       number={1}
       mark={props.mark}
-      title="Sign in to an Agent"
-      {...agentParts(props.agent, props)}
+      title="Agent Setup"
+      caption="Install your favorite Agents and start your first Session."
+      footer={<AgentTiles {...props} />}
     />
   );
 }
+
+function AgentTiles(props: OnboardingViewProps): React.JSX.Element {
+  if (props.catalog.status !== 'loaded')
+    return (
+      <RegistryState status={props.catalog.status} onRetry={props.onRetry} />
+    );
+
+  return (
+    <View className="w-full flex-row flex-wrap gap-3">
+      {props.featured.map((entry) => tile(entry, props))}
+    </View>
+  );
+}
+
+type TileProps = {
+  entry: OnboardingViewProps['featured'][number];
+  installed: boolean;
+  onInstall: (id: string) => void;
+};
+
+function AgentTile(props: TileProps): React.JSX.Element {
+  const { entry } = props;
+
+  return (
+    <View className="min-w-48 flex-1 flex-row items-center gap-2 rounded-control bg-card p-2">
+      <RegistryIcon uri={entry.icon} agentName={entry.name} role="row" />
+      <Text role="body">{entry.name}</Text>
+      <TileAction {...props} />
+    </View>
+  );
+}
+
+function TileAction(props: TileProps): React.JSX.Element {
+  return props.installed ? (
+    <SelectedCheck />
+  ) : (
+    <Button
+      label="Install"
+      accessibilityLabel={`Install ${props.entry.name}`}
+      size="sm"
+      onPress={() => props.onInstall(props.entry.id)}
+    />
+  );
+}
+
+const tile = (
+  entry: TileProps['entry'],
+  props: OnboardingViewProps,
+): React.JSX.Element => (
+  <AgentTile
+    key={entry.id}
+    entry={entry}
+    installed={props.installed.includes(entry.id)}
+    onInstall={props.onInstallAgent}
+  />
+);

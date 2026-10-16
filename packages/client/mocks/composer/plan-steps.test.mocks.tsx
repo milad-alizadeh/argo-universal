@@ -21,8 +21,8 @@ export function equalPlanSteps(width: number, agentIndex: number): Story {
     args: {
       configuration: {
         agents: [catalog.agent],
-        agent: catalog.agent.agent,
-        configOptions: recordedSessionOptions(catalog.agent.agent),
+        agent: catalog.agent.id,
+        configOptions: recordedSessionOptions(catalog.agent.id),
         onConfigChange: fn(),
         checkout: { branch: 'main', newWorktree: false },
       },

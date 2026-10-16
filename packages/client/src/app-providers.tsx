@@ -2,15 +2,12 @@ import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from 'react';
-import { initializeLoginOwner } from '#features/agents';
 import { ConnectionContext } from '#features/connection';
 import { openConnection } from '#features/connection';
 import { BlobUrlContext, createServerBlobUrl } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
 import { sessionOptionsKey } from '#features/sessions';
 import { queryPersistOptions } from './lib/product/query-persister';
-
-initializeLoginOwner();
 
 const persistOptions = queryPersistOptions(sessionOptionsKey);
 

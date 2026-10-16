@@ -55,7 +55,7 @@ When('the empty Session is open', async ({ page, app }): Promise<void> => {
 When(
   'I choose Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    const { label } = await readAgent(page, server.httpUrl, ordinal);
+    const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await chooseAgent(page, label);
     await waitForEmptySession(page);
   },

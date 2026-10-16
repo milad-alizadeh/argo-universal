@@ -218,6 +218,11 @@
       "rules": { "argo/vendor-name": "off" }
     },
     {
+      // #721 requires these four featured Registry ids for presentation only.
+      "files": ["packages/client/src/features/setup/state/featured-agents.ts"],
+      "rules": { "argo/vendor-name": "off" }
+    },
+    {
       // The rule names the vendors it keeps out.
       "files": ["tooling/oxlint/plugin/vendor-name*"],
       "rules": { "argo/vendor-name": "off" }

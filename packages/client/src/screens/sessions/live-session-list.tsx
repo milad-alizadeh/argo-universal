@@ -42,7 +42,7 @@ const queryProgress = (query: {
 function useSessionListLookups(): SessionListLookups {
   const trpc = useTRPC();
   const projects = useQuery(trpc.projects.list.queryOptions());
-  const agents = useQuery(trpc.agents.list.queryOptions());
+  const agents = useQuery(trpc.agents.servers.queryOptions());
 
   return {
     projects: projects.data ?? [],

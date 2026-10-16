@@ -77,7 +77,7 @@ export async function selectLastAgent({
   );
   await clickUntil({ userEvent, row: findLastAgent }, () =>
     expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(
-      lastLongAgent.agent,
+      lastLongAgent.id,
     ),
   );
 }
@@ -109,7 +109,7 @@ async function openAgentChoices(
 
 function findLastAgent(): Promise<HTMLElement> {
   return within(document.body).findByRole('button', {
-    name: `Select ${lastLongAgent.label}`,
+    name: `Select ${lastLongAgent.name}`,
   });
 }
 

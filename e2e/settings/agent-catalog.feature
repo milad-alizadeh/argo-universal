@@ -1,8 +1,9 @@
-Feature: Agent catalog
-  Scenario Outline: Browse registry Agents from each App layout
+Feature: Registry Agents
+  Scenario Outline: Browse and filter every Registry Agent
     Given a <layout> Frame
     When I browse available Agents
-    Then the catalog shows upstream Agent metadata
+    Then the Registry cards show names, versions and descriptions
+    And Python Agent is unavailable on this platform
     When I search the catalog for "python"
     Then only Python Agent is shown in the catalog
 
@@ -11,26 +12,28 @@ Feature: Agent catalog
       | wide   |
       | phone  |
 
-  Scenario Outline: Keep the last-good catalog after an unavailable sync
+  Scenario Outline: Keep the stored Registry while offline
     Given a <layout> Frame
     When I browse available Agents
-    And the registry becomes <failure>
+    And the registry becomes offline
     And I open the Agents page again
-    Then the catalog keeps the last-good Agents with an explicit error
+    Then the catalog keeps the last-good Agents without an error
 
     Examples:
-      | layout | failure   |
-      | wide   | offline   |
-      | phone  | offline   |
-      | wide   | malformed |
-      | phone  | malformed |
+      | layout |
+      | wide   |
+      | phone  |
 
-  Scenario: Sync again when the window returns after a failed sync
-    Given a wide Frame
+  @registry-offline
+  Scenario Outline: Retry a Registry failure with nothing stored
+    Given a <layout> Frame
+    And the Registry has never been stored and is offline
     When I browse available Agents
-    And the registry becomes malformed
-    And I open the Agents page again
-    Then the catalog keeps the last-good Agents with an explicit error
-    When the registry publishes "Late Agent"
-    And the window regains focus
-    Then the catalog lists "Late Agent"
+    Then the Registry shows its friendly error and Retry
+    When the Registry connection returns and I retry
+    Then the Registry cards show names, versions and descriptions
+
+    Examples:
+      | layout |
+      | wide   |
+      | phone  |

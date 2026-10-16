@@ -6,7 +6,8 @@ import type { Readable } from 'node:stream';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { findFreePort } from '@repo/mocks/network/free-port';
-import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { offlineRegistry } from '@repo/mocks/registry/catalog';
+import { scriptedRegistry } from '@repo/mocks/registry/scripted';
 import { engineBundlePath } from './engine-bundle';
 import { serverHttpUrl, serverUrlFor } from './server-port';
 import { hasExited, stderrTailLength, waitUntilReady } from './server-process';
@@ -37,6 +38,7 @@ export const serverFiles = (directory: string): ServerFiles => ({
 export async function startOwnServer(
   directory: string,
   agents: AppFixtureAgents,
+  initial: { noProjects?: boolean; registryOffline?: boolean } = {},
 ): Promise<{
   serverUrl: string;
   httpUrl: string;
@@ -50,7 +52,16 @@ export async function startOwnServer(
   const registryPath = path.join(directory, 'registry.json');
   const installationPath = path.join(directory, 'installation.json');
   await mkdir(directory, { recursive: true });
-  await writeFile(registryPath, JSON.stringify(publishedRegistry));
+  await writeFile(
+    registryPath,
+    JSON.stringify(
+      initial.registryOffline
+        ? offlineRegistry
+        : scriptedRegistry(agents, {
+            ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
+          }),
+    ),
+  );
   await writeFile(
     installationPath,
     JSON.stringify({ outcome: 'success', released: true }),
@@ -66,6 +77,7 @@ export async function startOwnServer(
         env: {
           ...process.env,
           ARGO_HOME: home,
+          ARGO_E2E_NO_PROJECTS: initial.noProjects ? '1' : '0',
           ARGO_SERVER_PORT: String(port),
           ARGO_PROJECT_PATH: projectPath,
           ARGO_E2E_AGENTS: JSON.stringify(agents),

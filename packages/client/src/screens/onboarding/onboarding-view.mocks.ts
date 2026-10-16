@@ -1,3 +1,4 @@
+import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { fn } from 'storybook/test';
 import { type GitHubStep } from '#features/setup';
 import type { OnboardingViewProps } from './onboarding-props';
@@ -19,10 +20,13 @@ export const githubSteps = {
 // The designed Onboarding: an Agent and GitHub done, Add a Project next, and every action wired.
 export const onboardingArgs = (): OnboardingViewProps => ({
   serverName,
-  agent: { status: 'done', agentName },
+  agent: { status: 'done' },
+  catalog: { status: 'loaded', catalog: { error: null, agents: [] } },
+  featured: publishedRegistry.agents.slice(0, 1),
+  installed: ['example-agent'],
+  onInstallAgent: fn(),
+  onRetry: fn(),
   github: githubSteps.signedIn,
-  onChangeAgent: fn(),
-  onCheckAgentAgain: fn(),
   onConnectGitHub: fn(),
   onAddProject: fn(),
 });

@@ -59,27 +59,32 @@ export const EscapeReturnsToConfigure: Story = {
   },
 };
 
-export const HoverReplacesAdjacentPicker: Story = {
+export const HoverOpensModelPicker: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     const overlay = within(document.body);
-    const trigger = canvas.getByRole('button', { name: agentModelLabel });
-    await userEvent.hover(trigger);
+    await userEvent.hover(
+      canvas.getByRole('button', { name: agentModelLabel }),
+    );
 
     const configure = await overlay.findByRole('dialog', {
       name: agentModelLabel,
     });
 
-    const agent = within(configure).getByRole('button', { name: /^Agent,/ });
+    await waitFor(() =>
+      expect(
+        within(configure).getByRole('group', { name: /^Agent,/ }),
+      ).toBeVisible(),
+    );
+    await expect(
+      within(configure).queryByRole('button', { name: /^Agent,/ }),
+    ).not.toBeInTheDocument();
     const model = within(configure).getByRole('button', { name: /^Model,/ });
-    await userEvent.hover(agent);
-    const picker = await overlay.findByRole('dialog', { name: 'Select Agent' });
-    await userEvent.unhover(agent);
+    await userEvent.hover(model);
+    const picker = await overlay.findByRole('dialog', { name: 'Select Model' });
+    await userEvent.unhover(model);
     await userEvent.hover(picker);
     await waitFor(() => expect(picker).toBeVisible());
-    await userEvent.hover(model);
-    await overlay.findByRole('dialog', { name: 'Select Model' });
-    await waitFor(() => expect(picker).not.toBeInTheDocument());
     await expect(configure).toBeVisible();
     await userEvent.keyboard('{Escape}');
   },

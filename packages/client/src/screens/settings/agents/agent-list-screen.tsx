@@ -1,18 +1,23 @@
 import type * as React from 'react';
-import { useAgentCatalog, useInstalledAgents } from '#features/agents';
-import { agentHref, useNavigate } from '#lib/product/navigation/navigation';
+import {
+  useAgentCatalog,
+  useInstalledAgents,
+  useAgentManagement,
+} from '#features/agents';
 import { AgentListView } from './agent-list-view';
 import { AgentsPhoneHeader } from './agents-phone-header';
 
 export function AgentListScreen(): React.JSX.Element {
-  const navigate = useNavigate();
+  const catalog = useAgentCatalog();
+  const management = useAgentManagement();
 
   return (
     <AgentListView
-      catalog={useAgentCatalog().load}
+      catalog={catalog.load}
       installed={useInstalledAgents()}
-      onAddCustomAgent={() => navigate('/settings/agents/new')}
-      onOpenAgent={(agent) => navigate(agentHref(agent))}
+      onInstall={management.install}
+      onRemove={management.remove}
+      onRetry={catalog.retry}
       renderHeader={(header) => <AgentsPhoneHeader {...header} />}
     />
   );

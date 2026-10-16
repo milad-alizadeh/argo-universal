@@ -1,8 +1,8 @@
-import type { AgentInfo } from '@repo/contracts';
+import type { AgentServer } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import type { ComposerProps } from '../src/features/composer/components/composer/composer';
 
-export const composerLongAgentCatalog: AgentInfo[] = Array.from(
+export const composerLongAgentCatalog: AgentServer[] = Array.from(
   { length: 40 },
   (_, index) => {
     const agent = newSessionCatalogs.bothAvailable[0];
@@ -11,8 +11,8 @@ export const composerLongAgentCatalog: AgentInfo[] = Array.from(
 
     return {
       ...agent,
-      agent: `development-agent-${index + 1}`,
-      label: `Agent ${String(index + 1).padStart(2, '0')}`,
+      id: `development-agent-${index + 1}`,
+      name: `Agent ${String(index + 1).padStart(2, '0')}`,
     };
   },
 );
@@ -21,23 +21,12 @@ export const composerUnlistedEffortConfigurations =
   newSessionCatalogs.bothAvailable.map(
     (agent): NonNullable<ComposerProps['configuration']> => ({
       agents: newSessionCatalogs.bothAvailable,
-      agent: agent.agent,
-      configOptions: recordedSessionOptions(agent.agent).map((option) =>
+      agent: agent.id,
+      configOptions: recordedSessionOptions(agent.id).map((option) =>
         option.category === 'thought_level' && option.type === 'select'
           ? { ...option, currentValue: 'unsupported' }
           : option,
       ),
-      onConfigChange: () => {},
-      checkout: { branch: 'main', newWorktree: false },
-    }),
-  );
-
-export const composerUnavailableConfigurations =
-  newSessionCatalogs.bothUnavailable.map(
-    (agent): NonNullable<ComposerProps['configuration']> => ({
-      agents: newSessionCatalogs.bothUnavailable,
-      agent: agent.agent,
-      configOptions: recordedSessionOptions(agent.agent),
       onConfigChange: () => {},
       checkout: { branch: 'main', newWorktree: false },
     }),

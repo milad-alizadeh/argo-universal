@@ -8,9 +8,7 @@ import { type AgentIdentity } from './metadata';
 import { isScenarioName, type ScenarioName } from './scenarios';
 
 export const AppFixtureOptions = z.object({
-  availability: z
-    .enum(['available', 'not_installed', 'not_signed_in'])
-    .default('available'),
+  installed: z.boolean().default(true),
   scenario: z.custom<ScenarioName>(isScenarioName).default('reply'),
 });
 

@@ -10,11 +10,11 @@ import {
   recoveryInput,
   writerInput,
   syncInput,
-  registryInput,
   sessionsInput,
   serverInput,
   cleanupInput,
 } from './lifecycle-inputs';
+import { registryInput } from './registry-input';
 import {
   engineSetup,
   createEngineContext,

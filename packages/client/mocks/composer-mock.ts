@@ -1,5 +1,5 @@
 import type {
-  AgentInfo,
+  AgentServer,
   PlanEntry,
   SessionConfigOption,
 } from '@repo/contracts';
@@ -22,7 +22,6 @@ export {
 export {
   composerLongAgentCatalog,
   composerUnlistedEffortConfigurations,
-  composerUnavailableConfigurations,
 } from './composer-agent-catalogs';
 
 export {
@@ -38,7 +37,7 @@ export {
 } from './composer-settings';
 
 export type ComposerMockProps = ComposerProps & {
-  initialAgent?: AgentInfo['agent'];
+  initialAgent?: AgentServer['id'];
   sessionStarted?: boolean;
   running?: boolean;
   plan?: PlanEntry[];
@@ -100,7 +99,7 @@ function defaultConfiguration(
 }
 
 function availableAgent(): string {
-  return newSessionCatalogs.bothAvailable[0]?.agent ?? '';
+  return newSessionCatalogs.bothAvailable[0]?.id ?? '';
 }
 
 type Configuration = NonNullable<ComposerProps['configuration']>;

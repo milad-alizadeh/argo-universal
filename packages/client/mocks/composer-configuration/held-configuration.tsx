@@ -86,8 +86,8 @@ function heldConfigurationArgs({
 }: HeldScenario): Configuration {
   return {
     agents: newSessionCatalogs.bothAvailable,
-    agent: recorded.agent.agent,
-    configOptions: recordedSessionOptions(recorded.agent.agent),
+    agent: recorded.agent.id,
+    configOptions: recordedSessionOptions(recorded.agent.id),
     onConfigChange,
     turnRunning: true,
     checkout: { branch: 'main', newWorktree: false },

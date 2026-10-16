@@ -4,6 +4,7 @@ import { openDatabase } from '@repo/db';
 import type { Database } from '@repo/db';
 import type { AgentIdentity } from '@repo/mocks/agent';
 import { findFreePort } from '@repo/mocks/network/free-port';
+import { createInstallationPorts } from '@repo/mocks/registry/installation';
 import { onTestFinished } from 'vitest';
 import { waitFor, type ActorRefFrom } from 'xstate';
 import { composeEngine, type EngineActor } from '../src/engine/compose';
@@ -13,7 +14,7 @@ import { findMachineActor } from '../src/lib/machine-actor';
 import type { OpenSessionsActorRef } from '../src/sessions';
 import { openSessionsId, openSessionsMachine } from '../src/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
-import { seedAgentFixtures } from './agent-fixtures';
+import { fixtureRegistry, seedAgentFixtures } from './agent-fixtures';
 import { openTestDatabase } from './database';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -72,7 +73,13 @@ export async function startEngineTestHost(
     now: Date.now,
     createId: randomUUID,
     ...scriptedEngineInput(),
-    fetchAgents: async () => JSON.stringify({ version: '1.0.0', agents: [] }),
+    fetchAgents: async () =>
+      JSON.stringify(
+        fixtureRegistry(
+          options.fixtureAgents ?? [{ agent: 'mock', label: 'mock', logo: '' }],
+        ),
+      ),
+    installationPorts: createInstallationPorts(),
     ...options,
     home,
     port,
@@ -149,7 +156,7 @@ function seedTestCommands(
 
   seedAgentFixtures(
     seeded,
-    options.fixtureAgents ?? [{ agent: 'mock', label: 'mock', logo: '' }],
+    options.fixtureAgents ?? defaultFixtureAgents(options),
   );
 
   if (options.storedRegistry)
@@ -161,3 +168,8 @@ function seedTestCommands(
 
   if (!options.database && !storage) seeded.$client.close();
 }
+
+const defaultFixtureAgents = (
+  options: EngineTestOptions,
+): readonly AgentIdentity[] =>
+  options.fetchAgents ? [] : [{ agent: 'mock', label: 'mock', logo: '' }];

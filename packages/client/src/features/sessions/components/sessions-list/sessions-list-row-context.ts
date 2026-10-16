@@ -1,4 +1,4 @@
-import type { AgentsListOutput } from '@repo/contracts';
+import type { AgentServer } from '@repo/contracts';
 import { useMemo } from 'react';
 import { virtualListPosition } from '#primitives/lists/virtual-list-item';
 import type { SessionsLayout } from '../../state/sessions-layout';
@@ -21,9 +21,9 @@ export interface SessionRowContext {
   onSelect: (id: string) => void;
 }
 
-function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
+function useAgentLogos(agents: AgentServer[]): Map<string, string> {
   return useMemo(
-    () => new Map(agents.map((agent) => [agent.agent, agent.logo])),
+    () => new Map(agents.map((agent) => [agent.id, agent.icon ?? ''])),
     [agents],
   );
 }

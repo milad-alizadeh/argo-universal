@@ -1,142 +1,52 @@
-import type { AgentsCatalogOutput } from '@repo/contracts';
+import type { AgentServer, AgentsRegistryOutput } from '@repo/contracts';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { Platform } from 'react-native';
 import { fn } from 'storybook/test';
-import { type AgentRowEntry } from '#features/agents';
 import { mockHeader } from '../../../../mocks/screen-header-mock';
-import {
-  customAgentDefinition,
-  customAgentId,
-} from '../../../features/agents/components/custom-agent.mocks';
 import type { AgentListViewProps } from './agent-list-view';
 import { agentsHeader } from './agents-phone-header';
 
-const [example, python, binary, windows] = publishedRegistry.agents;
-
-if (!example || !python || !binary || !windows)
-  throw new Error('Registry mock needs four distribution examples');
-
-export const catalog: AgentsCatalogOutput = {
-  status: 'fresh',
-  syncStatus: 'idle',
-  serverPlatform: 'darwin-aarch64',
-  fetchedAt: 1791504000000,
+export const catalog: AgentsRegistryOutput = {
   error: null,
-  rejectedValues: 0,
-  agents: [
-    {
-      id: example.id,
-      entry: example,
-      support: {
-        kind: 'npx',
-        recipe: { package: 'example-agent@1.2.3', args: ['--acp'] },
-      },
-    },
-    {
-      id: python.id,
-      entry: python,
-      support: { kind: 'uvx', recipe: { package: 'python-agent==1.2.3' } },
-    },
-    {
-      id: binary.id,
-      entry: binary,
-      support: {
-        kind: 'binary',
-        recipe: {
-          archive: 'https://example.org/agent.tar.gz',
-          cmd: './agent',
-          args: ['--acp'],
-        },
-      },
-    },
-    {
-      id: windows.id,
-      entry: windows,
-      support: {
-        kind: 'unsupported',
-        reason: 'No distribution for darwin-aarch64',
-      },
-    },
-  ],
+  agents: publishedRegistry.agents.map((entry, index) => ({
+    entry,
+    support: index === 1 ? 'unavailable' : 'npx',
+  })),
 };
 
-export const unavailableCatalog: AgentsCatalogOutput = {
-  ...catalog,
-  agents: [],
-  fetchedAt: null,
-  status: 'unavailable',
-  syncStatus: 'failed',
-  error: 'Registry is offline',
-};
+const first = catalog.agents[0]?.entry;
 
-export const failedSyncCatalog: AgentsCatalogOutput = {
-  ...catalog,
-  status: 'stale',
-  syncStatus: 'failed',
-  error: 'Registry is offline',
-};
+if (!first) throw new Error('Registry fixture needs an Agent');
 
-// Installed Agents in every state the list draws; Update available has no Server source yet.
-export const installedAgents: AgentRowEntry[] = [
+export const installedAgents: AgentServer[] = [
   {
-    id: 'first-agent',
-    name: 'First Agent',
-    description: 'Writes and reviews code',
-    status: 'ready',
-  },
-  { id: 'second-agent', name: 'Second Agent', status: 'sign-in' },
-  {
-    id: 'third-agent',
-    name: 'Third Agent',
-    description: 'Runs in the terminal',
-    status: 'update',
-  },
-  {
-    id: customAgentId,
-    name: customAgentDefinition.name,
-    description: 'Custom ACP program',
-    custom: true,
-    status: 'ready',
+    id: first.id,
+    name: first.name,
+    icon: first.icon,
+    version: first.version,
+    env: {},
   },
 ];
 
-// A loaded catalog with installed Agents, and a spy for every callback.
+export const emptyCatalog: AgentsRegistryOutput = { agents: [], error: null };
+
+export const longCatalog: AgentsRegistryOutput = {
+  error: null,
+  agents: Array.from({ length: 200 }, (_, index) => ({
+    entry: {
+      ...first,
+      id: `agent-${index}`,
+      name: `Agent ${String(index).padStart(3, '0')}`,
+    },
+    support: 'npx',
+  })),
+};
+
 export const agentListArgs = (): AgentListViewProps => ({
   catalog: { status: 'loaded', catalog },
   installed: installedAgents,
-  onAddCustomAgent: fn(),
-  onOpenAgent: fn(),
-  renderHeader: mockHeader(agentsHeader),
+  onInstall: fn(),
+  onRemove: fn(),
+  onRetry: fn(),
+  renderHeader: Platform.OS === 'web' ? mockHeader(agentsHeader) : undefined,
 });
-
-export const emptyCatalog: AgentsCatalogOutput = { ...catalog, agents: [] };
-
-export const longCatalogSize = 200;
-
-type CatalogAgent = AgentsCatalogOutput['agents'][number];
-
-// A numbered copy without the mock's grey square logo, so its row shows the Agent glyph a missing logo gets.
-const numbered = (agent: CatalogAgent, number: number): CatalogAgent => ({
-  ...agent,
-  id: `${agent.id}-${number}`,
-  entry: {
-    ...agent.entry,
-    id: `${agent.id}-${number}`,
-    name: `${agent.entry.name} ${number}`,
-    icon: undefined,
-  },
-});
-
-// The catalog's Agents copied and numbered until it offers 200, for a list that must scroll.
-export const longCatalog: AgentsCatalogOutput = {
-  ...catalog,
-  agents: Array.from(
-    { length: longCatalogSize / catalog.agents.length },
-    (_, round) =>
-      catalog.agents.map((agent, index) =>
-        numbered(agent, round * catalog.agents.length + index + 1),
-      ),
-  ).flat(),
-};
-
-// A row's link is named "<name>, <description>, <its dot's status>"; this matches it by name alone.
-export const agentLink = (name: string): RegExp => new RegExp(`^${name}, `);

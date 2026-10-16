@@ -1,109 +1,72 @@
-import type { AgentsCatalogOutput } from '@repo/contracts';
 import type * as React from 'react';
 import {
-  offeredAgents,
-  platformName,
-  withRegistryEntries,
-  type AgentRowEntry,
-  type AgentsFilter,
+  agentList,
   filterAgents,
-  type CatalogLoad,
-  agentRows,
+  agentsEmptyLabel,
+  type AgentRowEntry,
 } from '#features/agents';
+import { agentRows } from '#features/agents';
 import {
   FieldList,
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
-import {
-  catalogEmptySection,
-  catalogLoadingSection,
-  type LoadingSectionProps,
-} from './catalog-states';
+import type { AgentListViewProps } from './agent-list-view';
+import type { AgentsFilterProps, AgentsSearchProps } from './agents-toolbar';
+import { RegistryState } from './catalog-states';
 
-export type AgentCatalogProps = {
-  catalog: CatalogLoad;
-  installed: readonly AgentRowEntry[];
-  filter: AgentsFilter;
-  search: string;
-  onOpenAgent: (agentId: string) => void;
-};
-
-type LoadedProps = AgentCatalogProps & { saved: AgentsCatalogOutput };
-
-type AgentGroup = { title: string; agents: AgentRowEntry[] };
+type CatalogProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
 
 export const agentsCatalogTestId = 'agents-catalog';
 
-/*
- * The installed Agents, then the ACP Registry's other Agents for this Server, as grouped rows.
- * The registry can list hundreds of Agents, so a FieldList mounts only the rows in view.
- */
-export function AgentCatalog(props: AgentCatalogProps): React.JSX.Element {
+export function AgentCatalog(props: CatalogProps): React.JSX.Element {
   return (
-    <FieldList testID={agentsCatalogTestId} sections={catalogSections(props)} />
+    <FieldList
+      gap="sm"
+      testID={agentsCatalogTestId}
+      sections={catalogSections(props)}
+    />
   );
 }
 
-/*
- * Until the registry's Agents arrive, or while a failed load waits to retry, the installed
- * Agents show above a loading row; a toast says why a load failed.
- */
-function catalogSections(props: AgentCatalogProps): FieldListSection[] {
-  const { catalog } = props;
+const rowsOf = (props: CatalogProps): AgentRowEntry[] =>
+  props.catalog.status === 'loaded'
+    ? agentList(props.installed, props.catalog.catalog)
+    : props.installed.map((agent) => ({
+        ...agent,
+        description: '',
+        installed: true,
+        unavailable: false,
+      }));
 
-  if (catalog.status !== 'loaded') return [loadingSection(props)];
+const catalogSections = (props: CatalogProps): FieldListSection[] => {
+  const agents = filterAgents(rowsOf(props), props.filter, props.search);
+  const cards = agents.map((agent) => ({ rows: agentRows([agent], props) }));
 
-  if (catalog.catalog.status === 'unavailable')
-    return [
-      loadingSection(props, platformName(catalog.catalog.serverPlatform)),
-    ];
+  if (props.catalog.status !== 'loaded')
+    return [...cards, registrySection(props)];
 
-  return loadedSections({ ...props, saved: catalog.catalog });
-}
+  return cards.length ? cards : [emptySection(props)];
+};
 
-function loadingSection(
-  props: AgentCatalogProps,
-  platform?: string,
-): FieldListSection {
-  const section: LoadingSectionProps = {
-    installed: filterAgents(props.installed, props),
-    onOpenAgent: props.onOpenAgent,
-  };
+const registrySection = (props: CatalogProps): FieldListSection => ({
+  plain: true,
+  rows: [
+    <RegistryState
+      key="registry"
+      status={
+        props.catalog.status === 'loaded' ? undefined : props.catalog.status
+      }
+      onRetry={props.onRetry}
+    />,
+  ],
+});
 
-  if (platform) section.platform = platform;
-
-  return catalogLoadingSection(section);
-}
-
-const registryGroups = (props: LoadedProps, platform: string): AgentGroup[] => [
-  {
-    title: 'Installed',
-    agents: withRegistryEntries(props.installed, props.saved),
-  },
-  {
-    title: `Available for ${platform}`,
-    agents: offeredAgents(props.installed, props.saved),
-  },
-];
-
-// Installed, then Available for the Server's platform, leaving out a group the filters empty.
-const agentGroups = (props: LoadedProps, platform: string): AgentGroup[] =>
-  registryGroups(props, platform)
-    .map(({ title, agents }) => ({
-      title,
-      agents: filterAgents(agents, props),
-    }))
-    .filter(({ agents }) => agents.length > 0);
-
-function loadedSections(props: LoadedProps): FieldListSection[] {
-  const platform = platformName(props.saved.serverPlatform);
-  const groups = agentGroups(props, platform);
-
-  if (groups.length === 0)
-    return [catalogEmptySection({ platform, search: props.search })];
-
-  return groups.map(({ title, agents }) => ({
-    title,
-    rows: agentRows(agents, props.onOpenAgent),
-  }));
-}
+const emptySection = (props: CatalogProps): FieldListSection => ({
+  plain: true,
+  rows: [
+    <RegistryState
+      key="empty"
+      empty={agentsEmptyLabel(props.filter, props.search)}
+    />,
+  ],
+});

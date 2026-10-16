@@ -1,7 +1,11 @@
 import type { InitializeResponse } from '@agentclientprotocol/sdk';
 import type { AuthStatus } from '@repo/contracts';
 import { z } from 'zod';
-import type { LoginAgentOutcome } from '../..';
+
+export type LoginAgentOutcome = {
+  status: 'ready' | 'account-rejected' | 'authentication-required';
+  failure?: string;
+};
 
 const subscriptionPlans = new Set([
   'go',

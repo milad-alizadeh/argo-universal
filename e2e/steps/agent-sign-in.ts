@@ -4,6 +4,7 @@ import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { expectMessage, messageLabel, sessionOpenTimeout } from './new-session';
+import { agentId } from './scenario-agents';
 
 const menuLabel = 'Authentication options';
 
@@ -13,13 +14,13 @@ const signInTerminal = 'Agent sign-in terminal';
 export const callout = (page: Page, title: string | RegExp): Locator =>
   page.getByRole('heading', { name: title, exact: typeof title === 'string' });
 
-// The fixture itself comes from scenario-agents.ts; sign-in and launch trouble show only once a Session opens, so the Agent is listed as available.
-const listedAsAvailable = async (
+// The fixture itself comes from scenario-agents.ts; sign-in and launch trouble show only once a Session opens, so the Agent is listed as saved.
+const listedAsSaved = async (
   { page, server }: { page: Page; server: { httpUrl: string } },
   ordinal: number,
 ): Promise<void> => {
   expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-    availability: 'available',
+    id: agentId(ordinal),
   });
 };
 
@@ -32,12 +33,12 @@ for (const fixture of [
   'Agent {int} ends its first Turn needing a terminal sign-in',
   'Agent {int} exits while opening its first Session',
 ])
-  Given(fixture, listedAsAvailable);
+  Given(fixture, listedAsSaved);
 
 Then(
   'the App asks to authenticate to Agent {int} with {string}',
   async ({ page, server }, ordinal: number, method: string): Promise<void> => {
-    const { label } = await readAgent(page, server.httpUrl, ordinal);
+    const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await expect(callout(page, `Authenticate to ${label}`)).toBeVisible(
       sessionOpenTimeout,
     );
@@ -82,7 +83,7 @@ When(
 Then(
   'the App is authenticating to Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    const { label } = await readAgent(page, server.httpUrl, ordinal);
+    const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await expect(callout(page, `Authenticating to ${label}…`)).toBeVisible();
   },
 );
@@ -149,4 +150,11 @@ Then(
 
 When('I press Authenticate', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: 'Authenticate', exact: true }).click();
+});
+
+When('I press Return in the sign-in terminal', async ({ page }) => {
+  const terminal = page.getByRole('region', { name: 'Agent sign-in terminal' });
+  await terminal.click();
+  await terminal.getByRole('textbox').focus();
+  await page.keyboard.press('Enter');
 });

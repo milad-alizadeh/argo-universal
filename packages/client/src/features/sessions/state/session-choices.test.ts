@@ -2,7 +2,6 @@ import { newSessionCatalogs } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { chooseAnotherProject, toSessionChoices } from './session-choices';
 import {
-  firstAgent,
   input,
   mainProject,
   projectBaseBranch,
@@ -11,23 +10,23 @@ import {
 } from './session-choices.mocks';
 
 describe('toSessionChoices', () => {
-  it('starts on the first Project and the first available Agent', () => {
+  it('starts on the first Project and the first saved Agent', () => {
     const choices = toSessionChoices(
       input({ agents: newSessionCatalogs.oneNotInstalled }),
     );
 
-    expect([choices.project?.id, choices.agent?.agent]).toEqual([
+    expect([choices.project?.id, choices.agent?.id]).toEqual([
       worktreeProject.id,
-      secondAgent.agent,
+      secondAgent.id,
     ]);
   });
 
-  it('starts on the first Agent when none is available', () => {
+  it('has no Agent when none is installed', () => {
     const choices = toSessionChoices(
       input({ agents: newSessionCatalogs.bothUnavailable }),
     );
 
-    expect(choices.agent?.agent).toBe(firstAgent.agent);
+    expect(choices.agent).toBeUndefined();
   });
 
   it('starts on the Project whose heading opened New Session', () => {
@@ -48,10 +47,10 @@ describe('toSessionChoices', () => {
 
   it('opens the chosen Agent', () => {
     const choices = toSessionChoices(
-      input({ chosen: { agent: secondAgent.agent } }),
+      input({ chosen: { agent: secondAgent.id } }),
     );
 
-    expect(choices.agent?.agent).toBe(secondAgent.agent);
+    expect(choices.agent?.id).toBe(secondAgent.id);
   });
 
   it.each([

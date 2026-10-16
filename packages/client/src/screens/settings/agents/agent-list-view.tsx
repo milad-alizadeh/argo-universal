@@ -1,72 +1,40 @@
+import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import {
-  offeredAgents,
-  type AgentRowEntry,
-  type AgentsFilter,
-  countAgents,
-  type CatalogLoad,
-} from '#features/agents';
+import { type AgentsFilter, type CatalogLoad } from '#features/agents';
 import {
   SettingsPage,
   type SettingsPageSearch,
 } from '#lib/product/settings-page';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import {
-  AddAgentButton,
   AgentsFilterPills,
-  type AgentsFilterProps,
   type AgentsHeaderProps,
-  agentsTitle,
+  type AgentsFilterProps,
   type AgentsSearchProps,
+  agentsTitle,
   searchLabel,
 } from './agents-toolbar';
 import { AgentCatalog } from './catalog';
-import { useCatalogErrorToast } from './catalog-states';
 
 export type AgentListViewProps = {
   catalog: CatalogLoad;
-  // The Agents installed on the Server, built in and custom.
-  installed: AgentRowEntry[];
-  onAddCustomAgent: () => void;
-  onOpenAgent: (agentId: string) => void;
-  // Where the list starts, for stories.
+  installed: AgentServer[];
+  onInstall: (id: string) => void;
+  onRemove: (id: string) => void;
+  onRetry: () => void;
   initialSearch?: string;
   initialFilter?: AgentsFilter;
-  // A narrow window's header, which the screen sets on its stack.
   renderHeader?: (header: AgentsHeaderProps) => ReactNode;
 };
 
 type ListProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
 
-function useListState(
-  props: AgentListViewProps,
-): AgentsFilterProps & AgentsSearchProps {
-  const [search, onSearch] = useState(props.initialSearch ?? '');
-  const [filter, onFilter] = useState(props.initialFilter ?? 'all');
-
-  return {
-    search,
-    onSearch,
-    filter,
-    onFilter,
-    counts: countAgents(listedAgents(props)),
-  };
-}
-
-// The Agents the list draws before filters: installed, then the loaded registry's others.
-const listedAgents = ({
-  installed,
-  catalog,
-}: AgentListViewProps): AgentRowEntry[] =>
-  catalog.status === 'loaded'
-    ? [...installed, ...offeredAgents(installed, catalog.catalog)]
-    : installed;
-
-// The Agents page: installed Agents, then the ACP Registry's, with filters and search.
 export function AgentListView(props: AgentListViewProps): React.JSX.Element {
-  const list: ListProps = { ...props, ...useListState(props) };
-  useCatalogErrorToast(props.catalog);
+  const [search, onSearch] = useState(initialSearch(props));
+  const [filter, onFilter] = useState(initialFilter(props));
+  const list = { ...props, search, onSearch, filter, onFilter };
 
   return (
     <View className="flex-1 min-h-0 bg-content wide:bg-transparent">
@@ -76,24 +44,37 @@ export function AgentListView(props: AgentListViewProps): React.JSX.Element {
   );
 }
 
+const initialSearch = (props: AgentListViewProps): string =>
+  props.initialSearch ?? '';
+
+const initialFilter = (props: AgentListViewProps): AgentsFilter =>
+  props.initialFilter ?? 'all';
+
+function AgentsPage(props: ListProps): React.JSX.Element {
+  return (
+    <SettingsPage
+      title={agentsTitle}
+      search={pageSearch(props)}
+      toolbar={<AgentsFilterPills {...props} />}
+    >
+      <PhoneFilters {...props} />
+      <AgentCatalog {...props} />
+    </SettingsPage>
+  );
+}
+
 const pageSearch = (props: AgentsSearchProps): SettingsPageSearch => ({
   label: searchLabel,
   value: props.search,
   onChangeText: props.onSearch,
 });
 
-// A wide window's title carries Add custom Agent and Search, with the filter pills under it.
-function AgentsPage(props: ListProps): React.JSX.Element {
+function PhoneFilters(props: AgentsFilterProps): React.JSX.Element | null {
   return (
-    <SettingsPage
-      title={agentsTitle}
-      actions={<AddAgentButton onPress={props.onAddCustomAgent} />}
-      search={pageSearch(props)}
-      toolbar={<AgentsFilterPills {...props} />}
-    >
-      <View className="flex-1 min-h-0">
-        <AgentCatalog {...props} />
+    <SizeClass only="compact">
+      <View className="z-10 shrink-0 px-4 py-3">
+        <AgentsFilterPills {...props} />
       </View>
-    </SettingsPage>
+    </SizeClass>
   );
 }

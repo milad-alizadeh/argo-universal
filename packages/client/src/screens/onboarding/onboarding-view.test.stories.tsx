@@ -4,7 +4,6 @@ import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { OnboardingView } from './onboarding-view';
 import {
-  agentName,
   onboardingArgs,
   githubButtons,
   githubSteps,
@@ -25,7 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const noAgent = { status: 'not-found', checking: false } as const;
+const noAgent = { status: 'not-installed' } as const;
 
 export const DoneStepsShowTheAccount: Story = {
   play: async ({ canvas }) => {
@@ -36,14 +35,14 @@ export const DoneStepsShowTheAccount: Story = {
       canvas.getByText(`Server running on ${serverName}`),
     ).toBeVisible();
     await expect(
-      canvas.getByText(`${agentName}, signed in with your subscription.`),
+      canvas.getByRole('heading', { name: 'Agent Setup' }),
     ).toBeVisible();
     await expect(canvas.getAllByLabelText('Done')).toHaveLength(2);
     await expect(canvas.getByLabelText('Step 3')).toBeVisible();
   },
 };
 
-type Handler = 'onChangeAgent' | 'onCheckAgentAgain' | 'onAddProject';
+type Handler = 'onAddProject';
 
 // Pressing the button calls its handler.
 const pressCalls = (
@@ -58,24 +57,23 @@ const pressCalls = (
   },
 });
 
-export const ChangeOpensAgents = pressCalls('Change', 'onChangeAgent');
-
 export const AddProjectAddsOne = pressCalls(addProject, 'onAddProject');
 
-export const CheckAgainLooksAgain = pressCalls(
-  'Check again',
-  'onCheckAgentAgain',
-  { agent: noAgent },
-);
+export const InstallsFeaturedAgent: Story = {
+  args: { agent: noAgent, installed: [] },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Install Example Agent' }),
+    );
+    await expect(args.onInstallAgent).toHaveBeenCalledWith('example-agent');
+  },
+};
 
-export const NoAgentFoundWaitsOnStep1: Story = {
-  args: { agent: noAgent },
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText(/No coding Agent found on this computer/),
-    ).toBeVisible();
-    await expect(canvas.getByLabelText('Step 1')).toBeVisible();
-    await expect(canvas.queryByRole('button', { name: 'Change' })).toBeNull();
+export const RetriesRegistry: Story = {
+  args: { catalog: { status: 'failed' } },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
+    await expect(args.onRetry).toHaveBeenCalledOnce();
   },
 };
 
@@ -85,15 +83,6 @@ export const ProjectCanComeBeforeAnAgent: Story = {
     await expect(
       canvas.getByRole('button', { name: addProject }),
     ).toBeEnabled();
-  },
-};
-
-export const CheckingAgainWaits: Story = {
-  args: { agent: { status: 'not-found', checking: true } },
-  play: async ({ canvas }) => {
-    const checkAgain = canvas.getByRole('button', { name: 'Check again' });
-    await expect(checkAgain).toBeDisabled();
-    await expect(checkAgain).toHaveAttribute('aria-busy', 'true');
   },
 };
 

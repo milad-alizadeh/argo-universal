@@ -1,5 +1,5 @@
 import { recordedSessionOptions } from '@repo/mocks/app';
-import { fn, expect, within, waitFor } from 'storybook/test';
+import { fn, expect, within } from 'storybook/test';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { canPointAt } from '../point-hit';
@@ -13,7 +13,6 @@ import {
   agentModelLabel,
   agentIconId,
   contextWindowLabel,
-  pressedAttribute,
 } from './composer-test-contract.test.mocks';
 import { pickerCatalogs } from './recorded-catalog.test.mocks';
 
@@ -29,8 +28,8 @@ export function workStatusCounts(
     args: {
       configuration: {
         agents: [catalog.agent],
-        agent: catalog.agent.agent,
-        configOptions: recordedSessionOptions(catalog.agent.agent),
+        agent: catalog.agent.id,
+        configOptions: recordedSessionOptions(catalog.agent.id),
         onConfigChange: fn(),
         checkout: { branch: 'main', newWorktree: false },
       },
@@ -89,21 +88,6 @@ export async function expectWideFooter({
   const used = within(context).getByText('34k').getBoundingClientRect();
   const size = within(context).getByText('/ 200k').getBoundingClientRect();
   await expect(size.left).toBeGreaterThanOrEqual(used.right);
-}
-
-export async function expectWideAgentMenu(): Promise<void> {
-  await waitFor(expectHeldAgentList);
-}
-
-export async function expectHeldAgentList(): Promise<void> {
-  const agents = await within(document.body).findAllByRole('button', {
-    name: /^Select /,
-  });
-
-  for (const agent of agents) await expect(agent).toBeDisabled();
-  await expect(
-    agents.filter((agent) => agent.getAttribute(pressedAttribute) === 'true'),
-  ).toHaveLength(1);
 }
 
 export const linesTwoToTen =

@@ -23,13 +23,27 @@ const rowLanes = {
   },
   // A large row's image sits on a 40 tile: 16 + 40 + 12.
   tile: { gap: 'gap-3', textInset: 'web:after:left-17' },
+  // An Agent card's identity slot is 22 on a phone and 24 wide, followed by 12.
+  card: {
+    gap: 'gap-3',
+    textInset: 'web:after:left-12.5 wide:web:after:left-13',
+  },
 } as const satisfies Record<string, RowLane>;
 
 export function rowLane(
-  props: Pick<ResolvedItemProps, 'size' | 'leading' | 'loading'>,
+  props: Pick<ResolvedItemProps, 'size' | 'leading' | 'loading' | 'variant'>,
   sidebar: boolean,
 ): RowLane {
   if (props.size === 'lg') return largeLane(props);
+
+  return regularLane(props.variant, sidebar);
+}
+
+function regularLane(
+  variant: ResolvedItemProps['variant'],
+  sidebar: boolean,
+): RowLane {
+  if (variant === 'card') return rowLanes.card;
 
   return sidebar ? rowLanes.loose : rowLanes.compact;
 }

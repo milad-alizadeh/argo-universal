@@ -6,8 +6,8 @@ import type { AuthStatus, AuthStatusUpdateNotification } from '@repo/contracts';
 import schema from '@repo/contracts/auth-status-schema' with { type: 'json' };
 import { createRejectionCounter } from '@repo/machine-log';
 import { Ajv } from 'ajv';
-import type { LoginAgentOutcome } from '../..';
 import { compileSchema } from '../connection/schema-reader';
+import type { LoginAgentOutcome } from './subscription-status';
 import { reportsAuthStatus, subscriptionOutcome } from './subscription-status';
 
 const compiled = compileSchema<AuthStatusUpdateNotification>(

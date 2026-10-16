@@ -1,123 +1,76 @@
-import type { AgentInfo, AgentsCatalogOutput } from '@repo/contracts';
-import { type AgentRowEntry, availabilityStatus } from './agent-status';
+import type {
+  ACPAgent,
+  AgentServer,
+  AgentsRegistryOutput,
+} from '@repo/contracts';
 
-type CatalogAgent = AgentsCatalogOutput['agents'][number];
+export type AgentsFilter = 'all' | 'installed' | 'not-installed';
 
-interface CustomAgentName {
-  id: string;
-  name: string;
-}
-
-const platformNames = new Map([
-  ['darwin', 'macOS'],
-  ['linux', 'Linux'],
-  ['windows', 'Windows'],
-]);
-
-// "darwin-aarch64" reads as "macOS"; an unknown platform keeps its own name.
-export function platformName(serverPlatform: string): string {
-  const [system = serverPlatform] = serverPlatform.split('-');
-
-  return platformNames.get(system) ?? serverPlatform;
-}
-
-const fromCatalog = ({ id, entry }: CatalogAgent): AgentRowEntry => ({
-  id,
-  name: entry.name,
-  description: entry.description,
-  icon: entry.icon,
-  status: 'not-installed',
-});
-
-const withEntry = (
-  agent: AgentRowEntry,
-  entry?: CatalogAgent['entry'],
-): AgentRowEntry => {
-  if (!entry) return agent;
-
-  return {
-    description: entry.description,
-    ...agent,
-    name: entry.name,
-    icon: agent.icon ?? entry.icon,
-  };
+export type AgentRowEntry = Pick<
+  ACPAgent,
+  | 'id'
+  | 'name'
+  | 'version'
+  | 'description'
+  | 'icon'
+  | 'repository'
+  | 'website'
+  | 'license_url'
+> & {
+  installed: boolean;
+  unavailable: boolean;
 };
 
-// An installed Agent takes its registry entry's name, since the probe only knows its id, and borrows the description and icon where the probe has none.
-export function withRegistryEntries(
-  installed: readonly AgentRowEntry[],
-  catalog: AgentsCatalogOutput,
-): AgentRowEntry[] {
-  const entries = new Map(catalog.agents.map(({ id, entry }) => [id, entry]));
+export const agentList = (
+  installed: readonly AgentServer[],
+  registry: AgentsRegistryOutput,
+): AgentRowEntry[] => {
+  const saved = new Set(installed.map(({ id }) => id));
 
-  return installed.map((agent) => withEntry(agent, entries.get(agent.id)));
-}
-
-// Every registry Agent as a row the Server has not installed.
-const availableAgents = (catalog: AgentsCatalogOutput): AgentRowEntry[] =>
-  catalog.agents.map(fromCatalog);
-
-// The registry's Agents the list offers beside the installed ones, leaving out any already installed.
-export function offeredAgents(
-  installed: readonly AgentRowEntry[],
-  catalog: AgentsCatalogOutput,
-): AgentRowEntry[] {
-  const installedIds = new Set(installed.map(({ id }) => id));
-
-  return availableAgents(catalog).filter(({ id }) => !installedIds.has(id));
-}
-
-export const customAgentDescription = 'Custom ACP program';
-
-const logoUri = (logo: string): string | undefined =>
-  logo.startsWith('<')
-    ? `data:image/svg+xml,${encodeURIComponent(logo)}`
-    : logo || undefined;
-
-const customRow = ({ id, name }: CustomAgentName): AgentRowEntry => ({
-  id,
-  name,
-  description: customAgentDescription,
-  custom: true,
-  status: 'unavailable',
-});
-
-// An Agent as the Server's probe reports it.
-export function probedRow(info: AgentInfo, custom = false): AgentRowEntry {
-  return {
-    id: info.agent,
-    name: info.label,
-    icon: logoUri(info.logo),
-    status: hasPublishedUpdate(info)
-      ? 'update'
-      : availabilityStatus(info.availability),
-    ...customDescription(custom),
-  };
-}
-
-const hasPublishedUpdate = (info: AgentInfo): boolean => {
-  if (!info.version || !info.availableVersion) return false;
-
-  return info.version !== info.availableVersion;
+  return registry.agents
+    .map(({ entry, support }) => registryRow(entry, support, saved))
+    .sort(compareAgents);
 };
 
-// The Server's Agents as probed; a custom Agent the probe has not reached yet reads as Unavailable.
-export function installedAgents(
-  agents: readonly AgentInfo[],
-  custom: readonly CustomAgentName[],
-): AgentRowEntry[] {
-  const customIds = new Set(custom.map(({ id }) => id));
-  const probed = new Set(agents.map(({ agent }) => agent));
+export const filterAgents = (
+  agents: readonly AgentRowEntry[],
+  filter: AgentsFilter,
+  search: string,
+): AgentRowEntry[] =>
+  agents.filter(
+    (agent) =>
+      matchesFilter(agent, filter) &&
+      `${agent.name}\n${agent.description ?? ''}`
+        .toLowerCase()
+        .includes(search.trim().toLowerCase()),
+  );
 
-  return [
-    ...agents.map((info) => probedRow(info, customIds.has(info.agent))),
-    ...custom.flatMap((agent) =>
-      probed.has(agent.id) ? [] : [customRow(agent)],
-    ),
-  ];
-}
+const matchesFilter = (agent: AgentRowEntry, filter: AgentsFilter): boolean =>
+  filter === 'all' || agent.installed === (filter === 'installed');
 
-const customDescription = (
-  custom: boolean,
-): Pick<AgentRowEntry, 'custom' | 'description'> =>
-  custom ? { custom, description: customAgentDescription } : {};
+const emptyLabels = {
+  all: ['No Agents available.', 'No Agents match your search.'],
+  installed: ['No installed Agents.', 'No installed Agents match your search.'],
+  'not-installed': [
+    'No uninstalled Agents.',
+    'No uninstalled Agents match your search.',
+  ],
+} satisfies Record<AgentsFilter, [string, string]>;
+
+export const agentsEmptyLabel = (
+  filter: AgentsFilter,
+  search: string,
+): string => emptyLabels[filter][search.trim() ? 1 : 0];
+
+const registryRow = (
+  entry: ACPAgent,
+  support: AgentsRegistryOutput['agents'][number]['support'],
+  saved: Set<string>,
+): AgentRowEntry => ({
+  ...entry,
+  installed: saved.has(entry.id),
+  unavailable: support === 'unavailable',
+});
+
+const compareAgents = (a: AgentRowEntry, b: AgentRowEntry): number =>
+  Number(b.installed) - Number(a.installed) || a.name.localeCompare(b.name);

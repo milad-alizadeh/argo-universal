@@ -40,7 +40,7 @@ export interface SessionCalloutSources {
 }
 
 const labelOf = (agents: Agents, agent: string): string | undefined =>
-  agents.data?.find((entry) => entry.agent === agent)?.label;
+  agents.data?.find((entry) => entry.id === agent)?.name;
 
 const agentName = (snapshot: SessionSnapshot, agents: Agents): string =>
   labelOf(agents, snapshot.agent) ?? snapshot.agent;

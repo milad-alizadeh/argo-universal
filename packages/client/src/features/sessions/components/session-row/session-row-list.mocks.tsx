@@ -31,7 +31,7 @@ const listClassName = {
 } satisfies Record<SessionsLayout, string>;
 
 function agentLogo(agent: string): string {
-  return agentsList.find((entry) => entry.agent === agent)?.logo ?? '';
+  return agentsList.find((entry) => entry.id === agent)?.icon ?? '';
 }
 
 type RowMetadata = NonNullable<SessionRowListMockProps['metadata']>[string];

@@ -1,4 +1,4 @@
-import { newSessionBranches, newSessionCatalogs } from '@repo/mocks/app';
+import { newSessionBranches } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { canOpenSession, toNewSessionInput } from './open-session';
 import { toSessionChoices } from './session-choices';
@@ -6,7 +6,6 @@ import {
   firstAgent,
   input,
   mainProject,
-  notInstalled,
   projectBaseBranch,
   worktreeProject,
 } from './session-choices.mocks';
@@ -15,7 +14,7 @@ describe('toNewSessionInput', () => {
   it("opens an empty Session with the Project's defaults and the Agent", () => {
     expect(toNewSessionInput(toSessionChoices(input()))).toEqual({
       projectId: worktreeProject.id,
-      agent: firstAgent.agent,
+      agent: firstAgent.id,
       checkout: { type: 'worktree', baseBranch: projectBaseBranch },
       configOptions: [],
       prompt: [],
@@ -70,15 +69,8 @@ describe('canOpenSession', () => {
       },
     },
     {
-      case: 'for an Agent that needs setup',
-      overrides: {
-        choices: toSessionChoices(
-          input({
-            agents: newSessionCatalogs.oneNotInstalled,
-            chosen: { agent: notInstalled.agent },
-          }),
-        ),
-      },
+      case: 'without an installed Agent',
+      overrides: { choices: toSessionChoices(input({ agents: [] })) },
     },
     {
       case: 'without a Project',

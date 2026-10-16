@@ -1,10 +1,7 @@
 import { expect, within } from 'storybook/test';
 import { eachLayout, layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
-import {
-  agentUnavailable,
-  configuration,
-} from '../../../../mocks/session-view/session-view-agent.test.mocks';
+import { configuration } from '../../../../mocks/session-view/session-view-agent.test.mocks';
 import { authenticationRequired } from '../../../../mocks/session-view/session-view-callout.test.mocks';
 import {
   failedWithoutReason,
@@ -158,10 +155,6 @@ export const Opening: Story = {
 export const FailedWithReason = failedWithReason;
 
 export const FailedWithoutReason = failedWithoutReason;
-
-export const AgentUnavailableFirstAgent = agentUnavailable(0);
-
-export const AgentUnavailableSecondAgent = agentUnavailable(1);
 
 export const ConfigurationFirstAgent = configuration(0);
 

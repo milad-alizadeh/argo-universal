@@ -1,108 +1,59 @@
-import type {
-  ConfiguredAgent,
-  AgentRemovalInput,
-  AgentEnablementInput,
-} from '@repo/contracts';
+import type { AgentRemovalInput } from '@repo/contracts';
 import {
+  type UseMutationResult,
   useMutation,
   useQueryClient,
-  type UseMutationResult,
 } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { useTRPC, type ClientError } from '#features/connection';
 import { errorToast } from '#lib/generic/error-toast';
 import { useErrorToast } from '#primitives/overlays/toast';
-import type { AgentManagement } from '../state/agent-management-types';
-import { useConfiguredAgents } from './use-configured-agents';
 
-type Commands = {
-  remove: UseMutationResult<void, ClientError, AgentRemovalInput>;
-  enable: UseMutationResult<void, ClientError, AgentEnablementInput>;
+export type AgentManagement = {
+  install: (id: string) => void;
+  remove: (id: string) => void;
 };
 
-function useManagementMutations(onRemoved: () => void): Commands {
+type Mutations = {
+  install: UseMutationResult<void, ClientError, { id: string }>;
+  remove: UseMutationResult<void, ClientError, AgentRemovalInput>;
+};
+
+function useServerInvalidation(): () => Promise<void> {
   const trpc = useTRPC(),
     cache = useQueryClient();
 
-  const invalidate = (): Promise<void> =>
-    cache.invalidateQueries(trpc.agents.pathFilter());
-
-  const onSuccess = removalComplete(onRemoved, invalidate);
-
-  return {
-    remove: useMutation(trpc.agents.remove.mutationOptions({ onSuccess })),
-    enable: useMutation(
-      trpc.agents.setEnabled.mutationOptions({ onSuccess: invalidate }),
-    ),
-  };
+  return () => cache.invalidateQueries(trpc.agents.servers.queryFilter());
 }
 
-function presentation(
-  agent: ConfiguredAgent | undefined,
-  commands: Commands,
-): AgentManagement | undefined {
-  if (!agent) return undefined;
+function useAgentMutations(onInstalled?: (id: string) => void): Mutations {
+  const trpc = useTRPC(),
+    invalidate = useServerInvalidation();
 
-  if (agent.configuration.removed) return undefined;
-
-  return managementPresentation(agent, commands);
-}
-
-const managementPresentation = (
-  agent: ConfiguredAgent,
-  commands: Commands,
-): AgentManagement => {
-  const { remove, enable } = commands,
-    agentId = agent.id;
-
-  return {
-    enabled: agent.enabled,
-    busy: remove.isPending || enable.isPending,
-    onRemove: () => remove.mutate({ agentId }),
-    failure: remove.error?.message,
-    onDismissFailure: remove.reset,
-    onEnabledChange: (enabled) => enable.mutate({ agentId, enabled }),
-  };
-};
-
-export function useAgentManagement(
-  agentId: string,
-  onRemoved: () => void,
-): AgentManagement | undefined {
-  const configured = useConfiguredAgents(),
-    commands = useManagementMutations(onRemoved);
-
-  const agent = configured.data?.find(({ id }) => id === agentId);
-  useRemovedCustom(agent, onRemoved);
-  useEnablementFailure(commands.enable.error);
-
-  return presentation(agent, commands);
-}
-
-const removedCustom = (agent: ConfiguredAgent | undefined): boolean =>
-  agent?.configuration.source === 'custom' &&
-  agent.configuration.removed === true;
-
-function useRemovedCustom(
-  agent: ConfiguredAgent | undefined,
-  onRemoved: () => void,
-): void {
-  const removed = removedCustom(agent);
-  useEffect(() => {
-    if (removed) onRemoved();
-  }, [removed, onRemoved]);
-}
-
-function useEnablementFailure(error: ClientError | null): void {
-  useErrorToast(errorToast('Could not change Agent', error));
-}
-
-const removalComplete =
-  (
-    onRemoved: () => void,
-    invalidate: () => Promise<void>,
-  ): (() => Promise<void>) =>
-  async () => {
-    onRemoved();
+  const installed = async (_: void, { id }: { id: string }): Promise<void> => {
+    onInstalled?.(id);
     await invalidate();
   };
+
+  const install = useMutation(
+    trpc.agents.addRegistry.mutationOptions({ onSuccess: installed }),
+  );
+
+  const remove = useMutation(
+    trpc.agents.remove.mutationOptions({ onSuccess: invalidate }),
+  );
+
+  return { install, remove };
+}
+
+export function useAgentManagement(
+  onInstalled?: (id: string) => void,
+): AgentManagement {
+  const { install, remove } = useAgentMutations(onInstalled);
+  const failure = install.error ?? remove.error;
+  useErrorToast(errorToast('Could not change Agent', failure));
+
+  return {
+    install: (id) => install.mutate({ id }),
+    remove: (id) => remove.mutate({ id }),
+  };
+}

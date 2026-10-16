@@ -15,6 +15,7 @@ export type IconButtonSize = ButtonSize | 'xl';
 
 export type IconButtonProps = ActionProps & {
   icon: IconSymbol;
+  tone?: 'danger';
   accessibilityLabel: string;
   size?: IconButtonSize;
   loading?: boolean;

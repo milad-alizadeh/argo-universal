@@ -1,63 +1,45 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import { runsSessions, useAgents, useInstalledAgents } from '#features/agents';
+import {
+  useAgentCatalog,
+  useAgentManagement,
+  useInstalledAgents,
+  useRememberedAgent,
+  type CatalogLoad,
+} from '#features/agents';
 import { useTRPC } from '#features/connection';
-import { type AgentStep, agentStep } from '#features/setup';
-import { useNavigate } from '#lib/product/navigation/navigation';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { agentStep, featuredAgents } from '#features/setup';
+import type { OnboardingViewProps } from './onboarding-props';
 import { OnboardingView } from './onboarding-view';
 
-const agentsFailed: ErrorToast = {
-  title: 'Couldn’t load your Agents',
-  message: 'The Server didn’t respond. Check that it’s running.',
-};
+const featured = (load: CatalogLoad): OnboardingViewProps['featured'] =>
+  load.status === 'loaded' ? featuredAgents(load.catalog) : [];
 
-// The installed rows once the list has loaded or failed; `undefined` while it loads.
-const loadedRows = <Row,>(
-  agents: { data?: unknown; isError: boolean },
-  rows: Row[],
-): Row[] | undefined =>
-  agents.data !== undefined || agents.isError ? rows : undefined;
+function useOnboarding(): OnboardingViewProps {
+  const catalog = useAgentCatalog(),
+    installed = useInstalledAgents();
 
-type AgentStepState = { step?: AgentStep; checkAgain: () => void };
-
-// A failed load shows the toast and leaves step 1 on Check again.
-function useAgentStep(): AgentStepState {
-  const agents = useAgents();
-  const rows = useInstalledAgents();
-  useErrorToast(agents.isError ? agentsFailed : undefined);
-  const runners = loadedRows(agents, rows)?.filter(runsSessions);
+  const management = useAgentManagement(useRememberedAgent().select);
+  const serverName = useQuery(useTRPC().system.info.queryOptions()).data?.name;
 
   return {
-    step: agentStep(runners, agents.retrying),
-    checkAgain: agents.retry,
+    serverName,
+    ...installedStep(installed),
+    github: { status: 'not-connected' },
+    featured: featured(catalog.load),
+    catalog: catalog.load,
+    onInstallAgent: management.install,
+    onRetry: catalog.retry,
   };
 }
 
-const useServerName = (): string | undefined =>
-  useQuery(useTRPC().system.info.queryOptions()).data?.name;
-
-function useChangeAgent(): () => void {
-  const navigate = useNavigate();
-
-  return () => navigate('/settings/agents');
+export function OnboardingScreen(): React.JSX.Element {
+  return <OnboardingView {...useOnboarding()} />;
 }
 
-// Onboarding on the Server: GitHub sign-in and Add Project are not built yet, so the view shows them disabled; it draws once the Agents are known.
-export function OnboardingScreen(): React.JSX.Element | null {
-  const onChangeAgent = useChangeAgent();
-  const { step, checkAgain } = useAgentStep();
-  const serverName = useServerName();
-
-  if (!step) return null;
-
-  return (
-    <OnboardingView
-      serverName={serverName}
-      agent={step}
-      github={{ status: 'not-connected' }}
-      onCheckAgentAgain={checkAgain}
-      onChangeAgent={onChangeAgent}
-    />
-  );
-}
+const installedStep = (
+  installed: ReturnType<typeof useInstalledAgents>,
+): Pick<OnboardingViewProps, 'agent' | 'installed'> => ({
+  agent: agentStep(installed),
+  installed: installed.map(({ id }) => id),
+});

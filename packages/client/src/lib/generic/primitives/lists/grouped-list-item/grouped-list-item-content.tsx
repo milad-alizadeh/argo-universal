@@ -49,6 +49,7 @@ function contentClasses(props: ResolvedItemProps, sidebar: boolean): string {
   return cn(
     'flex-1 flex-row items-center',
     rowLane(props, sidebar).gap,
+    props.variant === 'card' && 'items-start',
     props.disabled && 'opacity-65',
   );
 }
@@ -60,24 +61,22 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
       loading={props.loading}
       leading={props.leading}
       size={props.size}
+      variant={props.variant}
       className={props.emphasis}
     />
   );
 }
 
 function GroupedListItemTitle(props: ResolvedItemProps): React.JSX.Element {
-  const title = (
-    <Text aria-hidden role="body" className={titleClasses(props)}>
-      {props.label}
-    </Text>
-  );
+  const title = <RowTitleLabel {...props} />;
 
   if (!props.subtitle) return title;
 
   return (
-    <View className="min-w-0 flex-1">
+    <View className={cn('min-w-0 flex-1', props.variant === 'card' && 'gap-1')}>
       {title}
       <GroupedListItemSubtitle subtitle={props.subtitle} />
+      {props.footer}
     </View>
   );
 }
@@ -138,6 +137,20 @@ function RowValue({
   return (
     <Text aria-hidden role="body" className={cn('shrink', className)}>
       {value}
+    </Text>
+  );
+}
+
+function RowTitleLabel(props: ResolvedItemProps): React.JSX.Element {
+  return (
+    <Text aria-hidden role="body" className={titleClasses(props)}>
+      {props.label}
+      {props.labelDetail && (
+        <Text role="secondary" tone="muted">
+          {' '}
+          {props.labelDetail}
+        </Text>
+      )}
     </Text>
   );
 }

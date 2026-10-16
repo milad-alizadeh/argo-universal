@@ -74,8 +74,10 @@ it('sessionId picks its live connection after its saved connection entry was dro
   await host.caller.agents.addRegistry({ id: 'mock' });
   const session = await host.caller.session.new(emptySessionInput);
   await host.caller.agents.remove({ id: 'mock' });
-  await host.caller.agents.authState(subject);
-  expect(host.agent.processes).toHaveLength(2);
+  await expect(host.caller.agents.authState(subject)).rejects.toThrow(
+    'is not installed',
+  );
+  expect(host.agent.processes).toHaveLength(1);
   expect(
     await host.caller.agents.authenticate({
       ...subject,

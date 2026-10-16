@@ -53,6 +53,7 @@ export const iconSymbols = {
   connection: { sf: 'wifi', material: 'wifi' },
   copy: { sf: 'doc.on.doc', material: 'content_copy' },
   cycle: { sf: 'calendar.badge.clock', material: 'event_repeat' },
+  unavailable: { sf: 'nosign', material: 'block' },
   delete: { sf: 'trash', material: 'delete' },
   diagram: { sf: 'flowchart', material: 'schema' },
   domains: { sf: 'circles.hexagongrid', material: 'workspaces' },

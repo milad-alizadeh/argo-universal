@@ -1,76 +1,49 @@
 import type * as React from 'react';
-import { Icon } from '#primitives/display/icon';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import {
-  type AgentRowEntry,
-  agentStatusLabels,
-  statusTone,
-} from '../../state/agent-status';
+  GroupedListItem,
+  type GroupedListItemProps,
+} from '#primitives/lists/grouped-list-item';
+import type { AgentRowEntry } from '../../state/agent-list';
 import { RegistryIcon } from '../registry-icon/registry-icon';
+import {
+  AgentButton,
+  type AgentActions,
+  type AgentCardProps,
+} from './agent-button';
+import { AgentFooter } from './agent-links';
 
-type AgentListItemProps = {
-  agent: AgentRowEntry;
-  onOpen: (agentId: string) => void;
-};
-
-// One Agent: its logo, name and up to two lines of description, then its status dot; the status reads on its page.
-export function AgentListItem({
-  agent,
-  onOpen,
-}: AgentListItemProps): React.JSX.Element {
+export function AgentListItem(props: AgentCardProps): React.JSX.Element {
   return (
     <GroupedListItem
-      label={agent.name}
-      subtitle={descriptionLine(agent)}
-      leading={<AgentGlyph agent={agent} />}
-      {...statusProps(agent)}
-      onPress={() => onOpen(agent.id)}
+      {...cardContent(props.agent)}
+      accessory={{
+        compact: <AgentButton {...props} wide={false} />,
+        wide: <AgentButton {...props} wide />,
+      }}
     />
   );
 }
 
-// A long description stops after two lines, ending in an ellipsis.
-const descriptionLine = ({
-  description,
-}: AgentRowEntry): React.ComponentProps<typeof GroupedListItem>['subtitle'] =>
-  description ? { text: description, numberOfLines: 2 } : undefined;
+const cardContent = (agent: AgentRowEntry): GroupedListItemProps => ({
+  label: agent.name,
+  labelDetail: `v${agent.version}`,
+  variant: 'card',
+  subtitle: {
+    text: agent.description,
+    numberOfLines: 2,
+  },
+  leading: cardLogo(agent),
+  footer: { compact: undefined, wide: <AgentFooter agent={agent} /> },
+});
 
-// Only the dot shows the status; its label names the row for assistive technology, and the Agent's page spells it out.
-function statusProps({
-  status,
-}: AgentRowEntry): Pick<
-  React.ComponentProps<typeof GroupedListItem>,
-  'status'
-> {
-  const tone = statusTone(status);
+const cardLogo = (agent: AgentRowEntry): React.JSX.Element => (
+  <RegistryIcon uri={agent.icon} agentName={agent.name} role="identity" />
+);
 
-  return {
-    status: tone ? { tone, label: agentStatusLabels[status] } : undefined,
-  };
-}
-
-// One row per Agent, for a FieldList section.
 export const agentRows = (
   agents: readonly AgentRowEntry[],
-  onOpen: (agentId: string) => void,
+  actions: AgentActions,
 ): React.JSX.Element[] =>
   agents.map((agent) => (
-    <AgentListItem key={agent.id} agent={agent} onOpen={onOpen} />
+    <AgentListItem key={agent.id} agent={agent} {...actions} />
   ));
-
-// A custom Agent has no registry logo, so it shows the Agent glyph. A logo fills its whole box where the glyph keeps a margin, so the logo draws one step smaller, at the Body size, to look the same size.
-function AgentGlyph({
-  agent,
-}: Pick<AgentListItemProps, 'agent'>): React.JSX.Element {
-  if (agent.custom)
-    return <Icon name="agent" role="row" className="text-foreground" />;
-
-  // A registry Agent with no logo falls back to the glyph, so it takes the glyph's size.
-  return (
-    <RegistryIcon
-      uri={agent.icon}
-      agentName={agent.name}
-      role={agent.icon ? 'body' : 'row'}
-    />
-  );
-}

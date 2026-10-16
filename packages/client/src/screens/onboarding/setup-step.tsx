@@ -95,7 +95,11 @@ export function SetupStep(props: SetupStepProps): React.JSX.Element {
     <View className="flex-row items-start gap-3 py-4">
       <StepMarkView mark={props.mark} number={props.number} />
       <StepBody {...props} />
-      <View className="w-33 shrink-0 flex-row justify-end">{props.action}</View>
+      {props.action && (
+        <View className="w-33 shrink-0 flex-row justify-end">
+          {props.action}
+        </View>
+      )}
     </View>
   );
 }

@@ -11,18 +11,6 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
   async (checkout): Promise<void> => {
     const { caller, database, git } = await startFailedSessionJourney();
 
-    const readAgentAvailability = async (): Promise<
-      | 'available'
-      | 'not_installed'
-      | 'not_signed_in'
-      | 'unavailable'
-      | undefined
-    > =>
-      (await caller.agents.list()).find(
-        ({ agent }): boolean => agent === 'unavailable',
-      )?.availability;
-
-    expect(await readAgentAvailability()).toBe('available');
     await expect(
       caller.session.new({ ...newSession, agent: 'unavailable', checkout }),
     ).rejects.toMatchObject({

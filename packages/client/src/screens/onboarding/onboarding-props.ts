@@ -1,3 +1,5 @@
+import type { ACPAgent } from '@repo/contracts';
+import type { CatalogLoad } from '#features/agents';
 import { type AgentStep, type GitHubStep } from '#features/setup';
 
 export interface OnboardingViewProps {
@@ -5,8 +7,11 @@ export interface OnboardingViewProps {
   serverName?: string;
   agent: AgentStep;
   github: GitHubStep;
-  onChangeAgent: () => void;
-  onCheckAgentAgain: () => void;
+  featured: ACPAgent[];
+  installed: string[];
+  catalog: CatalogLoad;
+  onInstallAgent: (id: string) => void;
+  onRetry: () => void;
   // Unset until the App can sign in to GitHub, so its buttons show disabled.
   onConnectGitHub?: () => void;
   // Unset until the App can add a Project, so its button shows disabled.

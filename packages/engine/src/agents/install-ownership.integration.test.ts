@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest';
-import { loginOwner } from '#mocks/agent-login';
 import {
   installEntry,
   installationExecutable,
@@ -24,12 +23,6 @@ it('two Apps cannot own competing installations', async () => {
   await requested.promise;
 
   try {
-    await expect(
-      host.caller.agents.startLogin({
-        agentId: host.agentId,
-        ownerToken: loginOwner,
-      }),
-    ).rejects.toThrow('in use by setup');
     expect(
       await host
         .createCaller()

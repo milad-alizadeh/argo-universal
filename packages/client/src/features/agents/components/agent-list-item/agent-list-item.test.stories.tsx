@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, spyOn, waitFor } from 'storybook/test';
-import type { AgentRowEntry } from '../../state/agent-status';
+import type { AgentRowEntry } from '../../state/agent-list';
 import {
   base64Icon,
   encodedIcon,
@@ -15,13 +15,15 @@ const agent: AgentRowEntry = {
   name: iconAgent.entry.name,
   description: iconAgent.entry.description,
   icon: iconAgent.entry.icon,
-  status: 'not-installed',
+  version: iconAgent.entry.version,
+  installed: false,
+  unavailable: false,
 };
 
 const meta = {
   title: 'Tests/AgentListItem',
   component: AgentListItem,
-  args: { agent, onOpen: fn() },
+  args: { agent, onInstall: fn(), onRemove: fn() },
 } satisfies Meta<typeof AgentListItem>;
 
 export default meta;
@@ -99,19 +101,32 @@ export const MalformedUrlXml: Story = iconCase({
   unavailable: true,
 });
 
-// Install, Update and Sign in live on the Agent's page; a row only opens it, naming its description and the status its dot shows.
-export const NamesItsStatusAndCarriesNoAction: Story = {
-  args: { agent: { ...agent, status: 'update' } },
+export const Installs: Story = {
   play: async ({ args, canvas, userEvent }) => {
-    const row = canvas.getByRole('link', {
-      name: `${agent.name}, ${agent.description}, Update available`,
-    });
+    await userEvent.click(canvas.getByRole('button', { name: 'Install' }));
+    await expect(args.onInstall).toHaveBeenCalledWith(agent.id);
+  },
+};
 
+export const Removes: Story = {
+  args: { agent: { ...agent, installed: true } },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Remove' }));
+    await expect(args.onRemove).toHaveBeenCalledWith(agent.id);
+  },
+};
+
+export const Unavailable: Story = {
+  args: { agent: { ...agent, unavailable: true } },
+  play: async ({ canvas }) => {
     await expect(
-      canvas.queryByText('Update available'),
+      canvas.queryByRole('button', { name: 'Unavailable' }),
     ).not.toBeInTheDocument();
-    await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
-    await userEvent.click(row);
-    await expect(args.onOpen).toHaveBeenCalledWith(agent.id);
+    await expect(
+      canvas.getByText('Unavailable', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByText(/Not supported on this platform/),
+    ).toBeVisible();
   },
 };

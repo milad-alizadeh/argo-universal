@@ -13,7 +13,6 @@ import {
 } from '../../storage';
 import type { CheckAgentLaunch } from '../agent-launch';
 import { AgentConfigurationSaveJob } from '../agent-storage';
-import type { AgentLogins } from '../login';
 import { readConfiguredAgent } from './configuration-sql';
 import { type CustomCheck, checkCustomDefinition } from './custom-check';
 
@@ -26,7 +25,6 @@ export interface ConfigurationDeps {
   databaseWriter: WriterActorRef;
   createId: () => string;
   checkAgentLaunch: CheckAgentLaunch;
-  agentLogins?: Pick<AgentLogins, 'runMutation'>;
   withAgentSetup?: <Result>(
     agentId: string,
     operation: () => Promise<Result>,
@@ -160,8 +158,7 @@ export const setAgentEnabled = (
   withSetup(deps, input.agentId, () => saveEnablement(deps, input));
 
 const runMutation = <T>(
-  deps: ConfigurationDeps,
-  agentId: string,
+  _deps: ConfigurationDeps,
+  _agentId: string,
   mutate: () => Promise<T>,
-): Promise<T> =>
-  deps.agentLogins ? deps.agentLogins.runMutation(agentId, mutate) : mutate();
+): Promise<T> => mutate();

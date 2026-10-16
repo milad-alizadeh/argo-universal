@@ -1,12 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { AgentListView } from './agent-list-view';
 import {
-  failedSyncCatalog,
-  unavailableCatalog,
   agentListArgs,
   emptyCatalog,
   longCatalog,
 } from './agent-list-view.mocks';
+
+const notInstalled = 'not-installed';
+
+const exampleSearch = 'Example';
+
+const unmatchedSearch = 'zzzz';
 
 const meta = {
   title: 'Screens/Settings/Agents',
@@ -19,44 +23,44 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Overview: Story = {};
+export const Agents: Story = {};
+
+export const Search: Story = { args: { initialSearch: exampleSearch } };
+
+export const Installed: Story = { args: { initialFilter: 'installed' } };
+
+export const NotInstalled: Story = { args: { initialFilter: notInstalled } };
 
 export const Loading: Story = { args: { catalog: { status: 'loading' } } };
 
-// Named so it does not shadow the global Error.
-export const ErrorState: Story = {
-  name: 'Error',
-  args: {
-    catalog: { status: 'failed', message: 'The Server is stopping' },
-  },
-};
+export const RegistryError: Story = { args: { catalog: { status: 'failed' } } };
 
 export const Empty: Story = {
+  args: { catalog: { status: 'loaded', catalog: emptyCatalog }, installed: [] },
+};
+
+export const EmptyInstalled: Story = {
+  args: { initialFilter: 'installed', installed: [] },
+};
+
+export const EmptyNotInstalled: Story = {
   args: {
+    initialFilter: notInstalled,
     catalog: { status: 'loaded', catalog: emptyCatalog },
     installed: [],
   },
 };
 
-export const RefreshFailed: Story = {
-  args: { catalog: { status: 'loaded', catalog: failedSyncCatalog } },
+export const SearchEmpty: Story = { args: { initialSearch: unmatchedSearch } };
+
+export const SearchEmptyInstalled: Story = {
+  args: { initialSearch: unmatchedSearch, initialFilter: 'installed' },
 };
 
-export const NoMatches: Story = {
-  args: {
-    initialSearch: 'mistral',
-    catalog: { status: 'loaded', catalog: emptyCatalog },
-  },
+export const SearchEmptyNotInstalled: Story = {
+  args: { initialSearch: unmatchedSearch, initialFilter: notInstalled },
 };
 
-export const LongCatalog: Story = {
-  args: { catalog: { status: 'loaded', catalog: longCatalog } },
-};
-
-export const NotInstalled: Story = {
-  args: { initialFilter: 'not-installed' },
-};
-
-export const NoSavedCatalog: Story = {
-  args: { catalog: { status: 'loaded', catalog: unavailableCatalog } },
+export const LongRegistry: Story = {
+  args: { catalog: { status: 'loaded', catalog: longCatalog }, installed: [] },
 };
