@@ -128,6 +128,8 @@ When(
       element.scrollTop = element.scrollHeight;
     });
     refresh.delayPrefetch = false;
+    // A reconnected WebSocket starts its request IDs again; released prefetches must not hold those new requests.
+    refresh.prefetchIds.clear();
     refresh.releasePrefetch?.();
     await expect(
       page.getByRole('progressbar', { name: 'Loading earlier' }),
