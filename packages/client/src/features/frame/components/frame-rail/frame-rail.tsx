@@ -5,15 +5,15 @@ import { cn } from '#lib/generic/utils';
 import { IconButton } from '#primitives/buttons/icon-button';
 import {
   type Section,
-  coreNavigationSections,
   type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
 import { sectionAttentionCount } from '../../state/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
 
 interface DesktopRailProps {
-  items?: readonly NavigationSection[];
-  hasSidebar?: boolean;
+  items: readonly NavigationSection[];
+  // A Plugin page has no list, so no sidebar to toggle.
+  hasSidebar: boolean;
   selectedSection: Section;
   attentionCount: number;
   sidebarShown: boolean;
@@ -77,7 +77,7 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
 function RailSections(props: DesktopRailProps): React.JSX.Element {
   return (
     <View className="-mt-0.5 flex-1 gap-px">
-      {(props.items ?? coreNavigationSections).map((section) => (
+      {props.items.map((section) => (
         <SectionButton key={section.id} {...railSectionProps(section, props)} />
       ))}
     </View>
@@ -126,8 +126,6 @@ function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
 
 // The wide window's rail on the glass: a window-controls row, the sections, and the sidebar toggle at the bottom.
 export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
-  const hasSidebar = props.hasSidebar ?? true;
-
   return (
     <View
       testID="desktop-rail"
@@ -136,7 +134,7 @@ export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
       {/* Electron draws the traffic lights here, and the window drags by it. */}
       <View className="h-frame-control self-stretch web:[app-region:drag]" />
       <RailSections {...props} />
-      {hasSidebar ? <SidebarToggle {...props} /> : null}
+      {props.hasSidebar ? <SidebarToggle {...props} /> : null}
       <RailEdge sidebarShown={props.sidebarShown} />
     </View>
   );

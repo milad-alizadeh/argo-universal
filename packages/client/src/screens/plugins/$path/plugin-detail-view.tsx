@@ -2,12 +2,14 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 
-export interface PluginPageProps {
+export interface PluginDetailViewProps {
   name: string;
 }
 
 // Foundations / PluginPage: a manifest's name, before Plugin code can draw its page.
-export function PluginPage({ name }: PluginPageProps): React.JSX.Element {
+export function PluginDetailView({
+  name,
+}: PluginDetailViewProps): React.JSX.Element {
   return (
     <View
       testID="plugin-page"

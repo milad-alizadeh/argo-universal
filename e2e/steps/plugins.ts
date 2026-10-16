@@ -1,17 +1,27 @@
-import type { Page, Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { When, Then, test } from './fixtures';
+import { When, Then } from './fixtures';
 import { onPhone } from './frame';
+
+const sectionNames = ['Sessions', 'Settings', 'Issues', 'Hello'];
+
+// A phone Frame lists sections in the Drawer behind ☰; a wide one in its Rail.
+async function navigation(page: Page): Promise<Locator> {
+  if (!onPhone(page)) return page.getByTestId('desktop-rail');
+
+  await page.getByRole('button', { name: 'Open navigation' }).click();
+
+  return page.getByTestId('phone-drawer');
+}
 
 When(
   'I open the {word} Plugin',
   async ({ page }, title: string): Promise<void> => {
-    if (onPhone(page)) {
-      await page.getByRole('button', { name: 'Open navigation' }).click();
-      await capture(page, `drawer-before-${title}`);
-    }
-
-    await page.getByRole('button', { name: title, exact: true }).click();
+    await (
+      await navigation(page)
+    )
+      .getByRole('button', { name: title, exact: true })
+      .click();
   },
 );
 
@@ -25,23 +35,19 @@ Then(
       await expect(
         page.getByRole('button', { name: /^(Hide|Show) sidebar$/ }),
       ).toHaveCount(0);
-
-    await capture(page, name);
   },
 );
 
 Then(
-  'the Rail lists core sections before Plugin items',
+  'the navigation lists core sections before Plugin items',
   async ({ page }): Promise<void> => {
-    const items = page
-      .getByTestId('desktop-rail')
-      .getByRole('button', { name: /^(Sessions|Settings|Issues|Hello)$/ });
+    const items = (await navigation(page)).getByRole('button', {
+      name: /^(Sessions|Settings|Issues|Hello)$/,
+    });
 
-    const names = ['Sessions', 'Settings', 'Issues', 'Hello'];
+    await expect(items).toHaveCount(sectionNames.length);
 
-    await expect(items).toHaveCount(names.length);
-
-    for (const [index, name] of names.entries())
+    for (const [index, name] of sectionNames.entries())
       await expect(items.nth(index)).toHaveAccessibleName(name);
   },
 );
@@ -55,11 +61,3 @@ const pluginHeading = (page: Page, name: string): Locator =>
   page
     .getByTestId('plugin-page')
     .getByRole('heading', { name, exact: true, level: 1 });
-
-async function capture(page: Page, name: string): Promise<void> {
-  if (!onPhone(page)) await page.setViewportSize({ width: 1440, height: 900 });
-  await page.screenshot({
-    path: test.info().outputPath(`${name}.png`),
-    animations: 'disabled',
-  });
-}

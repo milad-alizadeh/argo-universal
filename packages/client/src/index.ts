@@ -89,9 +89,12 @@ export { AppProviders } from './app-providers';
 
 export { PortalHost } from '#primitives/overlays/portal';
 
-export { PluginPage } from './screens/plugins/plugin-page';
+export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
 export {
+  pluginAt,
+  pluginPath,
+  usePluginAt,
   usePluginSections,
   type PluginSection,
 } from './screens/plugins/use-plugin-sections';
@@ -99,6 +102,7 @@ export {
 export {
   coreNavigationSections,
   isCoreSection,
+  isPluginSection,
   type CoreSection,
   type NavigationSection,
 } from './lib/product/navigation/sections';

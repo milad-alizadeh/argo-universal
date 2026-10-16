@@ -1,4 +1,8 @@
-import type { PluginSection, Section } from '@repo/client';
+import {
+  isPluginSection,
+  type PluginSection,
+  type Section,
+} from '@repo/client';
 import type { DrawerContentComponentProps } from 'expo-router/drawer';
 import { CommonActions, DrawerActions } from 'expo-router/react-navigation';
 import { useRef } from 'react';
@@ -39,7 +43,7 @@ function rememberPlugin(
 ): void {
   const route = drawer.state.routes.find((item) => item.name === 'plugins');
 
-  if (shown.startsWith('plugins/') && route) stacks.set(shown, route);
+  if (isPluginSection(shown) && route) stacks.set(shown, route);
 }
 
 function openSection(
@@ -84,12 +88,23 @@ function restoreStack(
     route.name === 'plugins' ? saved : route,
   );
 
-  return {
-    ...state,
-    index: routes.indexOf(saved),
-    routes,
-    history: [{ type: 'route', key: saved.key }],
-  };
+  const index = routes.indexOf(saved);
+
+  return { ...state, index, routes, history: firstRouteHistory(routes, index) };
+}
+
+type DrawerHistory = DrawerContent['state']['history'];
+
+// The history the drawer's `firstRoute` back behaviour keeps, so Back from a restored Plugin returns to the first section rather than leaving the App.
+function firstRouteHistory(
+  routes: DrawerContent['state']['routes'],
+  index: number,
+): DrawerHistory {
+  const keys = new Set(
+    [routes[0], routes[index]].flatMap((route) => (route ? [route.key] : [])),
+  );
+
+  return [...keys].map((key) => ({ type: 'route', key }));
 }
 
 function pluginDestination(

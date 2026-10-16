@@ -7,6 +7,7 @@ import {
   sectionOf,
   sectionOrder,
   useFrame,
+  pluginPath,
   usePluginSections,
   coreNavigationSections,
   type PluginSection,
@@ -124,19 +125,12 @@ interface PluginRouteParams {
   params?: { path?: string[] };
 }
 
+// The catch-all route takes a distinct key for each Plugin nav item, read from its path or the section a pick names.
 const pluginRouteId = (
   _name: string,
-  params: PluginRouteParams,
-): string | undefined => pluginSectionId(params);
-
-function pluginSectionId({
-  pluginSection,
-  params,
-}: PluginRouteParams): string | undefined {
-  const path = params?.path;
-
-  return path ? sectionOf(`plugins/${path.join('/')}`) : pluginSection;
-}
+  { pluginSection, params }: PluginRouteParams,
+): string | undefined =>
+  params?.path ? sectionOf(pluginPath(params.path)) : pluginSection;
 
 // One drawer of sections at every width, so a width change keeps each section's pages; each section hands the Frame its list, and the Frame is told which section the path shows.
 export function FrameNavigator(): React.JSX.Element {

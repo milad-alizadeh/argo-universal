@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { ListTitle } from '../../../lib/product/list-title';
 import {
   type Section,
+  coreNavigationSections,
   isCoreSection,
   sections,
 } from '../../../lib/product/navigation/sections';
@@ -67,6 +68,8 @@ function MockRail(
 ): React.JSX.Element {
   return (
     <FrameRail
+      items={coreNavigationSections}
+      hasSidebar
       selectedSection={props.section}
       attentionCount={props.attentionCount ?? 1}
       sidebarShown={props.sidebarShown}

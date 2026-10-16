@@ -1,7 +1,7 @@
 Feature: Plugin navigation
   Scenario Outline: Manifest nav items open their Plugin on a wide Frame
     Given a wide Frame
-    Then the Rail lists core sections before Plugin items
+    Then the navigation lists core sections before Plugin items
     When I open the <item> Plugin
     Then the Plugin page shows <name>
 
@@ -20,6 +20,7 @@ Feature: Plugin navigation
     Then the Plugin page shows <first name>
     When I return to Sessions
     Then the phone Frame shows the Sessions list
+    And the navigation lists core sections before Plugin items
 
     Examples:
       | first  | first name    | second | second name |

@@ -1,40 +1,18 @@
 import {
-  PluginPage,
-  type PluginSection,
-  sectionOf,
-  usePluginSections,
+  PluginDetailScreen,
+  pluginPath,
+  usePluginAt,
   useWide,
 } from '@repo/client';
-import { useLocalSearchParams, usePathname } from 'expo-router';
+import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { MenuToolbar } from './section-root';
 import { PageStack } from './section-stack';
 
-interface ShownPlugin {
-  section: PluginSection | undefined;
-  root: boolean;
-}
-
-function useShownPlugin(): ShownPlugin {
-  const { path = [] } = useLocalSearchParams<{ path?: string[] }>();
-  const plugins = usePluginSections();
-
-  const section = plugins.find(
-    (plugin) => plugin.id === sectionOf(`plugins/${path.join('/')}`),
-  );
-
-  return { section, root: path.join('/') === section?.segments.join('/') };
-}
-
+// Each Plugin nav item's pages, under its title on a narrow window; a path whose Plugin is unknown keeps ☰ to leave it.
 export function PluginLayout(): React.JSX.Element {
-  const path = usePathname();
-
-  const section = usePluginSections().find(
-    (plugin) => plugin.id === sectionOf(path),
-  );
-
-  const root = path === pluginRootPath(section);
+  const { section, root } = usePluginAt(usePathname());
 
   return (
     <PageStack
@@ -46,33 +24,23 @@ export function PluginLayout(): React.JSX.Element {
   );
 }
 
-export function PluginRoute(): React.ReactNode {
-  const { section, root } = useShownPlugin();
-  const wide = useWide();
-
-  if (!section) return null;
-
-  return (
-    <>
-      <PluginPage name={section.name} />
-      <PluginToolbar root={root} wide={wide} />
-    </>
-  );
-}
-
 const PluginMenuToolbar =
   Platform.OS === 'ios' ? MenuToolbar : (): null => null;
 
-function PluginToolbar({
-  root,
-  wide,
-}: {
-  root: boolean;
-  wide: boolean;
-}): React.ReactNode {
-  return root && !wide ? <PluginMenuToolbar /> : null;
+interface PluginRootProps {
+  path: readonly string[];
 }
 
-function pluginRootPath(section: PluginSection | undefined): string {
-  return section ? `/plugins/${section.segments.join('/')}` : '';
+// A Plugin page with, at a narrow root on iOS, ☰ as a stock bar button item, as a section root has.
+export function PluginRoot({ path }: PluginRootProps): React.JSX.Element {
+  const { root } = usePluginAt(pluginPath(path));
+  const wide = useWide();
+  const narrowRoot = root && !wide;
+
+  return (
+    <>
+      <PluginDetailScreen path={path} />
+      {narrowRoot ? <PluginMenuToolbar /> : null}
+    </>
+  );
 }

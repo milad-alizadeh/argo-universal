@@ -42,7 +42,7 @@ export interface FrameOptions {
   // The section the navigator shows.
   section: Section;
   lists: SectionLists;
-  items?: readonly NavigationSection[];
+  items: readonly NavigationSection[];
 }
 
 // What the Frame and its sidebar and pages are drawn from, which the navigator holds and hands to each.
@@ -52,7 +52,7 @@ export interface FrameParts {
   inspector: InspectorControl;
   section: Section;
   lists: SectionLists;
-  items?: readonly NavigationSection[];
+  items: readonly NavigationSection[];
 }
 
 type FrameScaffoldState = ReturnType<typeof useFrameState>['scaffold'];

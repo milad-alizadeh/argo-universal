@@ -8,7 +8,6 @@ import {
 } from '#primitives/lists/drawer-item';
 import {
   type Section,
-  coreNavigationSections,
   type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
 import {
@@ -18,7 +17,7 @@ import {
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
 
 interface DrawerNavigation {
-  items?: readonly NavigationSection[];
+  items: readonly NavigationSection[];
   selectedSection: Section;
   // The Sessions that need input or are Unread, for the Sessions row's badge.
   attentionCount: number;
@@ -69,7 +68,7 @@ function DrawerTitle(): React.JSX.Element {
 function SectionButtons(navigation: DrawerNavigation): React.JSX.Element {
   return (
     <View className="flex-1 gap-1">
-      {(navigation.items ?? coreNavigationSections).map((section) => (
+      {navigation.items.map((section) => (
         <SectionButton key={section.id} section={section} {...navigation} />
       ))}
     </View>
@@ -81,7 +80,11 @@ function DrawerGlass(navigation: DrawerNavigation): React.JSX.Element {
   const { top } = useSafeAreaInsets();
 
   return (
-    <View className="flex-1 bg-glass px-5 pb-8" style={{ paddingTop: top }}>
+    <View
+      testID="phone-drawer"
+      className="flex-1 bg-glass px-5 pb-8"
+      style={{ paddingTop: top }}
+    >
       <DrawerTitle />
       <SectionButtons {...navigation} />
     </View>

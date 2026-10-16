@@ -8,7 +8,15 @@ export const sections = {
 
 export type CoreSection = keyof typeof sections;
 
-export type Section = CoreSection | `plugins/${string}/${string}`;
+// A Plugin nav item's section: its route segment, the Plugin id and the nav item id, as in `/plugins/hello/hello`.
+export type PluginSectionId = `plugins/${string}/${string}`;
+
+export type Section = CoreSection | PluginSectionId;
+
+export const pluginSectionId = (
+  pluginId: string,
+  navId: string,
+): PluginSectionId => `plugins/${pluginId}/${navId}`;
 
 export interface NavigationSection {
   id: Section;
@@ -18,6 +26,9 @@ export interface NavigationSection {
 
 export const isCoreSection = (name: string | undefined): name is CoreSection =>
   name !== undefined && Object.hasOwn(sections, name);
+
+export const isPluginSection = (section: Section): section is PluginSectionId =>
+  !isCoreSection(section);
 
 export const sectionOrder: readonly CoreSection[] =
   Object.keys(sections).filter(isCoreSection);
@@ -32,18 +43,30 @@ export function sectionOf(path = ''): Section {
 const coreSectionOf = (name: string | undefined): CoreSection =>
   isCoreSection(name) ? name : 'sessions';
 
-// A page is any path below its section's list, such as `/settings/accounts` under `/settings`.
-export const isPage = (path: string): boolean =>
-  path.split('/').filter(Boolean).length > 1;
+// A page is any path below its section's root, such as `/settings/accounts` under `/settings` or `/plugins/tracker/issues/1` under `/plugins/tracker/issues`.
+export function isPage(path: string): boolean {
+  const segments = path.split('/').filter(Boolean);
+
+  return segments.length > rootDepth(segments);
+}
+
+// A core section's root is one segment deep; a Plugin's is three: `plugins`, the Plugin id and the nav id.
+const coreRootDepth = 1;
+
+const pluginRootDepth = 3;
+
+const rootDepth = (segments: string[]): number =>
+  pluginSectionOf(segments) ? pluginRootDepth : coreRootDepth;
 
 export const coreNavigationSections: readonly NavigationSection[] =
   sectionOrder.map((id) => ({ id, ...sections[id] }));
 
-function pluginSectionOf(segments: string[]): Section | undefined {
-  if (segments[0] !== 'plugins') return undefined;
-  const [, plugin, nav] = segments;
+function pluginSectionOf(segments: string[]): PluginSectionId | undefined {
+  const root = segments.slice(0, pluginRootDepth).join('/');
 
-  if (!nav) return undefined;
-
-  return `plugins/${plugin}/${nav}`;
+  return isPluginRoot(root) ? root : undefined;
 }
+
+// Segments arrive without empty ones, so `plugins/<Plugin id>/<nav id>` is the whole root.
+const isPluginRoot = (root: string): root is PluginSectionId =>
+  /^plugins\/[^/]+\/[^/]+$/u.test(root);
