@@ -1,5 +1,6 @@
 import type { SubagentUpdate, TextContent } from '@repo/contracts';
 import { scenarios } from '@repo/mocks/agent/scenarios';
+import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { expect, it } from 'vitest';
 import {
   openAcpFeedSession,
@@ -81,11 +82,6 @@ it.each(['parent', 'sibling', 'unassociated'] as const)(
 
     expect(message._meta?.argo?.senderSessionId).toBe(senderIds.get(sender));
     expect(children).toHaveLength(2);
-    // The child transcript's incoming view is not the parent's outgoing message.
-    expect(await subagentActions(host, sessionId)).toEqual([
-      { action: 'spawn' },
-      { action: 'spawn' },
-    ]);
   },
 );
 
@@ -97,7 +93,7 @@ type SubagentRowFacts = NonNullable<
   Pick<SubagentUpdate, 'subagentState'>;
 
 // What the parent Feed says about its Subagents, in Feed order.
-const subagentActions = async (
+const subagentRowFacts = async (
   host: ParentFeedHost,
   sessionId: string,
 ): Promise<SubagentRowFacts[]> =>
@@ -142,35 +138,84 @@ it.each([
       await waitForAcpSessionIdle(host, sessionId);
     }
 
-    expect(await subagentActions(host, sessionId)).toEqual(actions);
+    expect(await subagentRowFacts(host, sessionId)).toEqual(actions);
   },
 );
+
+const childReply = (
+  transcript: string | undefined,
+  update: { senderSessionId: string; recipientSessionId: string | undefined },
+): ScriptedStep[] => [
+  {
+    type: 'update',
+    sessionId: transcript,
+    update: {
+      sessionUpdate: 'session_message',
+      messageId: 'reply',
+      ...update,
+      content: [text('Done')],
+    },
+  },
+  {
+    type: 'update',
+    sessionId: transcript,
+    update: {
+      sessionUpdate: 'session_message_chunk',
+      messageId: 'reply',
+      content: text(' and checked'),
+    },
+  },
+];
+
+const fromChild = { senderSessionId: 'child', recipientSessionId: 'parent' };
 
 it.each([
   {
     reply: 'explicitly addressed on the parent transcript',
-    transcript: undefined,
-    recipientSessionId: 'parent',
-    actions: [
-      { action: 'spawn' },
-      { result: [text('Done'), text(' and checked')] },
+    steps: childReply(undefined, fromChild),
+    result: [text('Done'), text(' and checked')],
+  },
+  {
+    reply: 'revised by a later patch',
+    steps: [
+      ...childReply(undefined, fromChild),
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'session_message',
+          messageId: 'reply',
+          content: [text('Revised')],
+        },
+      } satisfies ScriptedStep,
     ],
+    result: [text('Revised')],
   },
   {
     reply: 'without a recipient',
-    transcript: undefined,
-    recipientSessionId: undefined,
-    actions: [{ action: 'spawn' }],
+    steps: childReply(undefined, {
+      ...fromChild,
+      recipientSessionId: undefined,
+    }),
+    result: undefined,
+  },
+  {
+    reply: 'addressed to another Session',
+    steps: childReply(undefined, { ...fromChild, recipientSessionId: 'other' }),
+    result: undefined,
+  },
+  {
+    reply: 'from a Session that is not its child',
+    steps: childReply(undefined, { ...fromChild, senderSessionId: 'stranger' }),
+    result: undefined,
   },
   {
     reply: "on the child's own transcript",
-    transcript: 'child',
-    recipientSessionId: 'parent',
-    actions: [{ action: 'spawn' }],
+    steps: childReply('child', fromChild),
+    result: undefined,
   },
 ])(
   'sets a result only from a child reply $reply',
-  async ({ transcript, recipientSessionId, actions }) => {
+  async ({ steps, result }) => {
     const { host, sessionId } = await openAcpFeedSession({
       sessionIds: ['parent'],
       steps: [
@@ -178,26 +223,7 @@ it.each([
           type: 'update',
           update: { sessionUpdate: 'subagent_update', sessionId: 'child' },
         },
-        {
-          type: 'update',
-          sessionId: transcript,
-          update: {
-            sessionUpdate: 'session_message',
-            messageId: 'reply',
-            senderSessionId: 'child',
-            recipientSessionId,
-            content: [text('Done')],
-          },
-        },
-        {
-          type: 'update',
-          sessionId: transcript,
-          update: {
-            sessionUpdate: 'session_message_chunk',
-            messageId: 'reply',
-            content: text(' and checked'),
-          },
-        },
+        ...steps,
         {
           type: 'update',
           sessionId: 'child',
@@ -209,6 +235,64 @@ it.each([
       ],
     });
 
-    expect(await subagentActions(host, sessionId)).toEqual(actions);
+    expect(await subagentRowFacts(host, sessionId)).toEqual([
+      { action: 'spawn' },
+      ...(result ? [{ result }] : []),
+    ]);
+  },
+);
+
+it.each([
+  {
+    message: "the parent's own message on the parent transcript",
+    transcript: undefined,
+    senderSessionId: undefined,
+    actions: [
+      { action: 'spawn' },
+      { action: 'spawn' },
+      { action: 'message', prompt: [text('Check the tests')] },
+    ],
+  },
+  {
+    message: "a sibling's message on the parent transcript",
+    transcript: undefined,
+    senderSessionId: 'sibling',
+    actions: [{ action: 'spawn' }, { action: 'spawn' }],
+  },
+  {
+    message: "the parent's message on the child's own transcript",
+    transcript: 'child',
+    senderSessionId: 'parent',
+    actions: [{ action: 'spawn' }, { action: 'spawn' }],
+  },
+])(
+  'records a parent prompt only from $message',
+  async ({ transcript, senderSessionId, actions }) => {
+    const { host, sessionId } = await openAcpFeedSession({
+      sessionIds: ['parent'],
+      steps: [
+        {
+          type: 'update',
+          update: { sessionUpdate: 'subagent_update', sessionId: 'sibling' },
+        },
+        {
+          type: 'update',
+          update: { sessionUpdate: 'subagent_update', sessionId: 'child' },
+        },
+        {
+          type: 'update',
+          sessionId: transcript,
+          update: {
+            sessionUpdate: 'session_message',
+            messageId: 'instruction',
+            senderSessionId,
+            recipientSessionId: 'child',
+            content: [text('Check the tests')],
+          },
+        },
+      ],
+    });
+
+    expect(await subagentRowFacts(host, sessionId)).toEqual(actions);
   },
 );

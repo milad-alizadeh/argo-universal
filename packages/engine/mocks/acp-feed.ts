@@ -61,6 +61,8 @@ export const parentSubagentUpdates = async (
 ): Promise<SubagentUpdate[]> => {
   const page = await host.caller.feed.page({ sessionId, direction: 'tail' });
 
+  if (page.hasOlder) throw new Error('The parent Feed is longer than one page');
+
   return page.rows.flatMap((row) =>
     row.sessionUpdate === 'subagent_update' ? [row] : [],
   );
