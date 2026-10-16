@@ -1,7 +1,21 @@
 import { expect, it } from 'vitest';
 import { waitFor } from 'xstate';
 import { startEngineTestHost } from '#mocks/engine';
-import { connectNotificationApp } from '#mocks/notification-app';
+import {
+  type NotificationApp,
+  connectNotificationApp,
+} from '#mocks/notification-app';
+
+const queueLimit = 64;
+
+async function endTurn(app: NotificationApp, text: string): Promise<void> {
+  const before = app.notifications.length;
+  await app.client.session.prompt.mutate({
+    sessionId: 'session-1',
+    prompt: [{ type: 'text', text }],
+  });
+  await expect.poll(() => app.notifications.length).toBe(before + 1);
+}
 
 it('retries the same event until its actual recipient acknowledges it', async () => {
   const retryMs = 40;
@@ -74,4 +88,26 @@ it('discards pending delivery everywhere as soon as an App views its Session', a
   expect(new Set(receiving.notifications.map((entry) => entry.id)).size).toBe(
     2,
   );
+});
+
+it('expires the oldest event when a recipient queue holds 64 unacknowledged events', async () => {
+  const host = await startEngineTestHost({
+    notificationOptions: { now: () => 1_000_000 },
+  });
+
+  const app = connectNotificationApp(host.url);
+  await app.ready;
+
+  for (let turn = 0; turn <= queueLimit; turn += 1)
+    await endTurn(app, `Turn ${turn}`);
+  const ids = app.notifications.map((event) => event.id);
+  const kept = [ids[1], ids[queueLimit]];
+
+  const results = await Promise.all(
+    [ids[0], ...kept].map((id) =>
+      app.client.notifications.acknowledge.mutate({ id: id ?? '' }),
+    ),
+  );
+
+  expect(results).toEqual([false, true, true]);
 });

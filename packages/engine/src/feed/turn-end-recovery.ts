@@ -3,7 +3,7 @@ import { feedRow, session } from '@repo/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import type { StorageTransaction } from '../storage';
 import { applyFeedChange, type Feed } from './feed-change';
-import { writeBorrowedFeedRows } from './feed-rows-write';
+import { writeFeedRowsInTransaction } from './feed-rows-write';
 import { turnEndChange } from './turn-end';
 
 type EndedTurn = { sessionId: string; turnId: string; end: TurnEnd };
@@ -67,7 +67,7 @@ export const recoverTurnEnd = (
 ): void => {
   const feed = endedFeed(transaction, ended);
 
-  writeBorrowedFeedRows(transaction, {
+  writeFeedRowsInTransaction(transaction, {
     sessionId: ended.sessionId,
     rows: Object.values(feed.rows),
     maxRevision: feed.maxRevision,

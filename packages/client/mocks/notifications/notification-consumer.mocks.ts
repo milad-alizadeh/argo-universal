@@ -1,5 +1,5 @@
 import type { NotificationStreamEvent } from '@repo/contracts';
-import type { NotificationClient } from './notification-consumer';
+import type { NotificationClient } from '../../src/features/notifications/notification-consumer';
 
 export const heartbeatMs = 15_000;
 
@@ -34,22 +34,24 @@ function endpoint<Recorded, Input>(
   };
 }
 
-type Refusing = () => boolean;
+interface Endpoints {
+  attention: Endpoint<string | null, { sessionId: string | null }>;
+  acknowledge: Endpoint<string, { id: string }>;
+}
 
-const attentionEndpoint = (
-  refusing: Refusing,
-): Endpoint<string | null, { sessionId: string | null }> =>
-  endpoint((input: { sessionId: string | null }) => input.sessionId, refusing);
-
-const acknowledgeEndpoint = (
-  refusing: Refusing,
-): Endpoint<string, { id: string }> =>
-  endpoint((input: { id: string }) => input.id, refusing);
+function endpoints(refusing: () => boolean): Endpoints {
+  return {
+    attention: endpoint(
+      (input: { sessionId: string | null }) => input.sessionId,
+      refusing,
+    ),
+    acknowledge: endpoint((input: { id: string }) => input.id, refusing),
+  };
+}
 
 export function fakeNotificationClient(): FakeNotificationClient {
   const fault = { refusing: false };
-  const attention = attentionEndpoint(() => fault.refusing);
-  const acknowledge = acknowledgeEndpoint(() => fault.refusing);
+  const { attention, acknowledge } = endpoints(() => fault.refusing);
 
   return {
     attentionReports: attention.log,

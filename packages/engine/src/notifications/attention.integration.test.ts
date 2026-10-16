@@ -6,7 +6,7 @@ import {
   connectNotificationApp,
 } from '#mocks/notification-app';
 
-it('suppresses a viewed Session across real Connections and notifies when another page is active', async () => {
+it('suppresses a Session viewed on any real Connection', async () => {
   const host = await startEngineTestHost();
   const first = connectNotificationApp(host.url);
   const second = connectNotificationApp(host.url);
@@ -30,6 +30,13 @@ it('suppresses a viewed Session across real Connections and notifies when anothe
     .toBe(0);
   expect(first.notifications).toEqual([]);
   expect(second.notifications).toEqual([]);
+});
+
+it('notifies every real Connection while another page is active', async () => {
+  const host = await startEngineTestHost();
+  const first = connectNotificationApp(host.url);
+  const second = connectNotificationApp(host.url);
+  await Promise.all([first.ready, second.ready]);
   await first.client.notifications.attention.mutate({
     sessionId: 'another-session',
   });

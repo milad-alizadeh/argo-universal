@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NotificationConsumer } from './notification-consumer';
 import {
   type FakeNotificationClient,
   fakeNotificationClient,
   heartbeatMs,
   ready,
   turnEnded,
-} from './notification-consumer.mocks';
+} from '../../../mocks/notifications/notification-consumer.mocks';
+import { NotificationConsumer } from './notification-consumer';
 
 let server: FakeNotificationClient;
 
@@ -68,7 +68,7 @@ describe('NotificationConsumer attention', () => {
     ]);
   });
 
-  it('stops the heartbeat and reports nothing after a disconnect', () => {
+  it('reports nothing after a disconnect', () => {
     consumer.attention('session-a');
     consumer.receive(ready);
     consumer.disconnected();
@@ -113,7 +113,7 @@ describe('NotificationConsumer attention', () => {
 });
 
 describe('NotificationConsumer delivery', () => {
-  it('shows a Notification and acknowledges it', () => {
+  it('acknowledges a Notification it showed', () => {
     consumer.receive(turnEnded('n1'));
 
     expect(shown).toEqual(['n1']);

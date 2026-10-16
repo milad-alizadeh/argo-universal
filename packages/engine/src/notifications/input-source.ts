@@ -16,7 +16,7 @@ export function pendingNotificationInput(
     ? {
         kind: 'input_requested',
         requestKind: pending.kind,
-        requestId: pending.requestId,
+        requestId: pending.request.requestId,
         turnId: context.activeTurnId,
       }
     : null;
