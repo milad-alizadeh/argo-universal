@@ -3,10 +3,12 @@ import {
   Subagent,
   type SessionUpdate,
   type SubagentUpdate,
+  type Turn,
 } from '@repo/contracts';
-import { session, feedRow } from '@repo/db/schema';
+import type { Database } from '@repo/db';
+import { session, feedRow, turn } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import {
   hydrateStoredFeedRow,
   newestRows,
@@ -15,8 +17,8 @@ import {
   type FeedDeps,
   type FeedRowWrite,
 } from '../../feed';
+import { decodeStoredTurn, storedTurnColumns } from '../turns';
 import { toSubagents } from './subagents';
-import { readLatestTurn } from './turn-reader';
 
 type SubagentDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
 
@@ -111,3 +113,14 @@ const childSession = SessionRecord.pick({
   parentSessionId: true,
   title: true,
 });
+
+function readLatestTurn(database: Database, sessionId: string): Turn[] {
+  return database
+    .select(storedTurnColumns)
+    .from(turn)
+    .where(eq(turn.sessionId, sessionId))
+    .orderBy(desc(turn.startedAt), desc(turn.id))
+    .limit(1)
+    .all()
+    .map(decodeStoredTurn);
+}

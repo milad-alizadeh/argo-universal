@@ -5,18 +5,17 @@ import type { SessionActorRef } from '../session-machine';
 import { createSessionReader } from '../session-record';
 import { storedShells } from '../shells/reader';
 import { createSubagentsReader } from '../subagents';
-import { toSessionSnapshot } from './snapshot';
-import type { StoredSnapshot } from './types';
+import {
+  toSessionSnapshot,
+  type FeedSnapshot,
+  type StoredSnapshot,
+} from './snapshot';
 
 type SnapshotStored = ReturnType<ReturnType<typeof createSessionReader>>;
 
 type SnapshotDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
 
 type SessionState = ReturnType<SessionActorRef['getSnapshot']> | null;
-
-type FeedSnapshot = {
-  context: FeedState & { rows: Record<string, SessionUpdate> };
-};
 
 type FeedState = Pick<SessionSnapshot, 'epoch' | 'maxRevision'> & {
   rows?: Record<string, SessionUpdate>;
@@ -82,9 +81,7 @@ export class SessionSnapshotReader {
     session: SessionState,
     feed: FeedState,
   ): FeedSnapshot {
-    return {
-      context: { ...feed, rows: this.headerRows(sessionId, session, feed) },
-    };
+    return { ...feed, rows: this.headerRows(sessionId, session, feed) };
   }
 
   private feedContext(sessionId: string, stored: FeedState): FeedState {

@@ -1,5 +1,8 @@
 import type { SessionSnapshot } from '@repo/contracts';
-import type { SessionState } from './types';
+import type { SnapshotFrom } from 'xstate';
+import type { sessionMachine } from '../session-machine';
+
+export type SessionState = SnapshotFrom<typeof sessionMachine>;
 
 export function snapshotState(
   session: SessionState | null,
