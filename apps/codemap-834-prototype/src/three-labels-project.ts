@@ -58,6 +58,8 @@ function addCandidate(
 }
 
 export function projectLabels(tiles: Tile[], ctx: Projection): Label[] {
+  // R3F projects labels before rendering refreshes the camera's world matrix.
+  ctx.camera.updateMatrixWorld();
   const candidates: Label[] = [];
 
   for (const tile of tiles) {
