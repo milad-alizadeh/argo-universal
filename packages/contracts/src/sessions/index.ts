@@ -4,6 +4,8 @@ export * from './answer-permission';
 
 export * from './answer-plan-proposal';
 
+export * from './archive';
+
 export * from './cancel';
 
 export * from './changes';

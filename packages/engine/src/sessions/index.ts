@@ -29,3 +29,8 @@ export {
   TurnInsertJob,
   TurnUpdateJob,
 } from './session-storage';
+
+export {
+  type SessionConnections,
+  createSessionConnections,
+} from './session-connection';

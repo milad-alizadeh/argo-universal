@@ -1,5 +1,5 @@
-# Quality, story tests and web e2e on every push, and on a pull request when its changes need them; Electron e2e on main and release/*.
-# The jobs run in parallel and the story and web e2e suites are split into shards, so a run takes as long as its slowest job.
+# Quality, Engine tests, story tests and web e2e on every push, and on a pull request when its changes need them; the Electron smoke e2e on main and release/*.
+# The jobs run in parallel and the Engine tests, story tests and web e2e are split into shards, so a run takes as long as its slowest job.
 name: CI
 
 on:
@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       quality: ${{ steps.choose.outputs.quality }}
+      engine-tests: ${{ steps.choose.outputs.engine-tests }}
       stories: ${{ steps.choose.outputs.stories }}
       e2e-web: ${{ steps.choose.outputs.e2e-web }}
     steps:
@@ -47,6 +48,7 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           quality=true
+          engine=true
           stories=true
           e2e=true
           if [ -n "$BASE" ]; then
@@ -60,6 +62,8 @@ jobs:
 
             # Turbo cannot see root files, .github/ or patches/. turbo.json gives every package a no-op test:web, so only @repo/e2e's counts.
             outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' || true)
+            engine=false
+            if [ -n "$outside" ] || affected --tasks test --packages @repo/engine; then engine=true; fi
             stories=false
             if [ -n "$outside" ] || affected --tasks test:stories; then stories=true; fi
             e2e=false
@@ -67,9 +71,10 @@ jobs:
           fi
 
           echo "quality=$quality" >> "$GITHUB_OUTPUT"
+          echo "engine-tests=$engine" >> "$GITHUB_OUTPUT"
           echo "stories=$stories" >> "$GITHUB_OUTPUT"
           echo "e2e-web=$e2e" >> "$GITHUB_OUTPUT"
-          echo "Quality runs: $quality. Story tests run: $stories. Web e2e runs: $e2e."
+          echo "Quality runs: $quality. Engine tests run: $engine. Story tests run: $stories. Web e2e runs: $e2e."
 
   quality:
     name: Quality
@@ -95,12 +100,47 @@ jobs:
           playwright: none
           turbo-team: ${{ vars.TURBO_TEAM }}
 
-      - name: Quality
+      - name: Lint
+        run: pnpm quality:lint
+
+      - name: Type checks
+        run: pnpm exec turbo run check-types --continue=dependencies-successful
+
+      # The Engine's tests run in their own sharded job below.
+      - name: Tests
         env:
           # Each test runner uses the available cores; overlapping runners distort timing budgets.
           TURBO_CONCURRENCY: 1
           VITEST_MAX_WORKERS: 1
-        run: pnpm quality:checks
+        run: pnpm exec turbo run test --filter='!@repo/engine' --continue=dependencies-successful
+
+  # The Engine's suite alone takes minutes with one worker, so it runs beside Quality in shards.
+  engine-tests:
+    name: Engine tests (${{ matrix.shard }}/3)
+    needs: changes
+    if: ${{ needs.changes.outputs.engine-tests == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      # One worker keeps the Feed workload's event-loop budget honest; a shard's --shard argument feeds its hash.
+      - name: Engine tests
+        env:
+          VITEST_MAX_WORKERS: 1
+        run: pnpm exec turbo run test --filter=@repo/engine -- --shard=${{ matrix.shard }}/3
 
   # The story tests alone take minutes, so they run beside Quality in shards; each shard's one runner keeps the config's maxWorkers.
   stories:
@@ -137,7 +177,7 @@ jobs:
           retention-days: 30
 
   e2e-web:
-    name: End-to-end tests (web ${{ matrix.shard }}/3)
+    name: End-to-end tests (web ${{ matrix.shard }}/6)
     needs: changes
     if: ${{ needs.changes.outputs.e2e-web == 'true' }}
     runs-on: ubuntu-latest
@@ -145,10 +185,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    # Each test starts its own Server and Engine beside Chromium, so shards rather than workers add parallelism.
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v7
 
@@ -160,7 +201,7 @@ jobs:
       - name: End-to-end tests (web)
         run: pnpm test:e2e
         env:
-          ARGO_E2E_SHARD: ${{ matrix.shard }}/3
+          ARGO_E2E_SHARD: ${{ matrix.shard }}/6
 
       # The blob report carries each failure's trace into the merged HTML report.
       - name: Upload the shard's blob report
@@ -244,7 +285,7 @@ jobs:
   ci:
     name: Quality and end-to-end tests
     if: ${{ always() }}
-    needs: [changes, quality, stories, e2e-web, e2e-electron]
+    needs: [changes, quality, engine-tests, stories, e2e-web, e2e-electron]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

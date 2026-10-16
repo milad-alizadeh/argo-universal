@@ -61,5 +61,10 @@ const connect = (): void => {
   }).connect(Writable.toWeb(process.stdout), readStandardInput());
 };
 
-if (process.argv.includes('--interactive-login')) runTerminalLoginMock();
+if (
+  process.argv.includes('--interactive-login') ||
+  process.argv.includes('--auth-pattern') ||
+  process.argv.includes('--auth-fail')
+)
+  runTerminalLoginMock();
 else connect();

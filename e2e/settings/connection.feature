@@ -1,4 +1,5 @@
 Feature: Connection to the Server
+  @smoke
   Scenario: The Connection follows the running Server
     Given a wide Frame
     When I view the Connection

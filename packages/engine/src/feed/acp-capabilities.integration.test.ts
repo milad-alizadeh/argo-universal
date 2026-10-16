@@ -2,7 +2,7 @@ import type { InitializeRequest } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 
-it('Session connections advertise implemented extensions without URL Elicitation', async () => {
+it('Session connections advertise terminal auth and implemented extensions without URL Elicitation', async () => {
   const received = Promise.withResolvers<InitializeRequest>();
 
   const host = await startAcpEngine({
@@ -22,11 +22,15 @@ it('Session connections advertise implemented extensions without URL Elicitation
   expect(initialization).toMatchObject({
     protocolVersion: 1,
     clientCapabilities: {
+      auth: { terminal: true },
       session: { notices: {}, compaction: {} },
       elicitation: { form: {} },
     },
   });
   expect(initialization.clientCapabilities?.elicitation).not.toHaveProperty(
     'url',
+  );
+  expect(initialization.clientCapabilities).not.toHaveProperty(
+    '_meta.terminal-auth',
   );
 });

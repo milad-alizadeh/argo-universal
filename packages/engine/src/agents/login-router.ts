@@ -1,7 +1,7 @@
 import {
   AgentLoginTerminalRead,
   AgentLoginTerminalWrite,
-  AgentLoginTerminalFrame,
+  AgentAuthTerminalFrame,
   AgentLoginAnswer,
   AgentLoginChoose,
   AgentLoginOperation,
@@ -40,7 +40,7 @@ const createChooseRouter = routerFactory((deps: LoginRouterDeps) =>
   router({
     loginTerminal: publicProcedure
       .input(AgentLoginTerminalRead)
-      .output(AgentLoginTerminalFrame)
+      .output(AgentAuthTerminalFrame)
       .query(({ input }) => deps.agentLogins.readTerminal(input)),
     inputLoginTerminal: mutation(deps)
       .input(AgentLoginTerminalWrite)

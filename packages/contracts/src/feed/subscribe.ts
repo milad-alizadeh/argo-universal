@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { feedRowColumns, sessionColumns } from '../columns';
+import { SessionOpenError } from '../sessions/new';
 import { SessionSnapshot } from '../sessions/snapshot';
 import { FeedAppend, FeedPatch } from './change';
 import { SessionUpdate } from './session-update';
@@ -61,6 +62,7 @@ const FeedReset = z.strictObject({
 const FeedClosed = z.strictObject({
   type: z.literal('closed'),
   failure: z.string().nullable(),
+  openError: SessionOpenError.optional(),
 });
 
 // One value that the `feed.subscribe` subscription sends.
