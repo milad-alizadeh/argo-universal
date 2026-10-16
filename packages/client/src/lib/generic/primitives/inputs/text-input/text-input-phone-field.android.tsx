@@ -5,7 +5,7 @@ import {
   Text,
   useNativeState,
 } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
+import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { codeFace } from '#primitives/display/native-text';
 import type { FieldProps } from '#primitives/fields/field';
@@ -39,9 +39,7 @@ export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
 function FieldSlots(props: PhoneFieldProps): React.JSX.Element {
   return (
     <>
-      <OutlinedTextField.Label>
-        <Text>{requiredLabel(props)}</Text>
-      </OutlinedTextField.Label>
+      <Label {...props} />
       <Placeholder text={props.placeholder} />
       <SupportingText text={supportingLine(props)} />
       <Progress {...props} />
@@ -57,7 +55,7 @@ function fieldBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
     enabled: !props.disabled,
     isError: isInvalid(props),
     singleLine: true,
-    modifiers: fullWidth,
+    modifiers: fieldModifiers(props),
     textStyle: codeFace(props.mono).textStyle,
     keyboardOptions: {
       capitalization: 'none',
@@ -65,6 +63,26 @@ function fieldBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
       keyboardType: props.numeric ? 'decimal' : 'text',
     },
   };
+}
+
+// A field without a label keeps the plain outline; its placeholder says what to type.
+function Label(props: PhoneFieldProps): React.JSX.Element | null {
+  if (props.labelHidden) return null;
+
+  return (
+    <OutlinedTextField.Label>
+      <Text>{requiredLabel(props)}</Text>
+    </OutlinedTextField.Label>
+  );
+}
+
+// Without the label slot, TalkBack still hears the field's name.
+function fieldModifiers(
+  props: PhoneFieldProps,
+): OutlinedTextFieldProps['modifiers'] {
+  if (!props.labelHidden) return fullWidth;
+
+  return [...fullWidth, semantics({ contentDescription: props.label })];
 }
 
 function Placeholder(props: { text?: string }): React.JSX.Element | null {

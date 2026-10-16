@@ -3,6 +3,7 @@ import {
   appFixtureAgentIds,
 } from '@repo/mocks/agent/app-fixtures';
 import { z } from 'zod';
+import { signInScenarios } from './sign-in-agents';
 
 const Availability = z.enum(['not installed', 'not signed in']);
 
@@ -96,6 +97,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
     desktopConfiguration(steps),
+    signInConfiguration(steps),
   );
 }
 
@@ -157,4 +159,13 @@ function desktopConfiguration(steps: string[]): AppFixtureAgents {
   )
     ? { [agentId(1)]: { scenario: 'permission' } }
     : {};
+}
+
+function signInConfiguration(steps: string[]): AppFixtureAgents {
+  return Object.fromEntries(
+    signInScenarios(steps).map(([ordinal, scenario]) => [
+      agentId(ordinal),
+      { scenario },
+    ]),
+  );
 }

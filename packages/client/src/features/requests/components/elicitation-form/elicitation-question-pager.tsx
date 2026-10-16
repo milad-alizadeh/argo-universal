@@ -30,13 +30,10 @@ const pages = {
 const pagerIconRole = Platform.OS === 'android' ? 'body' : 'secondary';
 
 export function QuestionPager({ model }: ModelProps): ReactElement {
-  const wide = useContentWide();
-
   return (
     <View className="flex-row items-center shrink-0">
       <PagerButton model={model} direction="previous" />
       <PagerButton model={model} direction="next" />
-      {wide && <DismissButton model={model} />}
     </View>
   );
 }
@@ -73,18 +70,4 @@ function pageProps({
     disabled: model.inactive || page.atEnd(model),
     onPress: (): void => model.navigate(model.index + page.step),
   };
-}
-
-function DismissButton({ model }: ModelProps): ReactElement {
-  return (
-    <IconButton
-      icon="close"
-      variant="ghost"
-      accessibilityLabel="Dismiss"
-      disabled={model.inactive}
-      className="w-6 h-7 sm:w-6 sm:h-7"
-      iconClassName="text-muted-foreground"
-      onPress={() => model.props.onAnswer({ action: 'cancel' })}
-    />
-  );
 }

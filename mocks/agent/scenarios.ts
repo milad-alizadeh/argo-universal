@@ -14,6 +14,7 @@ import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { shellScenarios } from './shell-scenarios.ts';
+import { signInScenarios } from './sign-in-scenarios.ts';
 import { subagentScenarios } from './subagent-scenarios.ts';
 import { terminalLogin } from './terminal-login.ts';
 
@@ -69,6 +70,7 @@ export const scenarios = {
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),
   'ignores-cancel': scenario([{ type: 'hold' }]),
   ...exitScenarios,
+  ...signInScenarios([reply]),
   'exit-with-stderr': {
     ...scenario([agentExit]),
     resumedSteps: [reply],

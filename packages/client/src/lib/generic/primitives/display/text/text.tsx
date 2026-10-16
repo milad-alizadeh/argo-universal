@@ -1,4 +1,3 @@
-import { Slot } from '@rn-primitives/slot';
 import type { ReactElement } from 'react';
 import * as React from 'react';
 import { Dimensions, PixelRatio, Platform, Text as RNText } from 'react-native';
@@ -49,25 +48,23 @@ function subscribeFontScale(onChange: () => void): () => void {
   return () => subscription.remove();
 }
 
-function useNativeTextKey(asChild?: boolean): number | undefined {
+function useNativeTextKey(): number | undefined {
   const fontScale = React.useSyncExternalStore(
     subscribeFontScale,
     () => PixelRatio.getFontScale(),
     () => 1,
   );
 
-  return asChild || Platform.OS === 'web' ? undefined : fontScale;
+  return Platform.OS === 'web' ? undefined : fontScale;
 }
 
 function Text(options: TextProps): ReactElement {
-  const { className, asChild, role, tone, accessibilityRole, ...props } =
-    options;
+  const { className, role, tone, accessibilityRole, ...props } = options;
 
-  const key = useNativeTextKey(asChild);
+  const key = useNativeTextKey();
   const textClass = React.useContext(TextClassContext);
-  const Component = asChild ? Slot : RNText;
 
-  return React.createElement(Component, {
+  return React.createElement(RNText, {
     key,
     className: textClassName({ role, tone, className }, textClass),
     role: accessibilityRole,

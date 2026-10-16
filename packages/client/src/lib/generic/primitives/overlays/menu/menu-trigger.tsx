@@ -4,6 +4,7 @@ import { cn } from '#lib/generic/utils';
 import { buttonInteractionProps } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
+import { usePressRipple } from '#primitives/native/material-palette';
 import type { MenuTriggerProps } from './menu-props';
 
 // What the overlay it opens passes in: its press, hover and ARIA handlers and its ref.
@@ -26,10 +27,7 @@ const triggerKeys = [
   'testID',
 ] as const;
 
-// Android's own ripple, as VirtualListItem draws it; its colour is the platform's.
-const ripple = { borderless: false };
-
-// iOS takes the pressed tint, as the kit's other drawn rows do; Android's Pressable draws the ripple.
+// iOS takes the pressed tint, as the kit's other drawn rows do; Android's Pressable draws the ripple in that tint.
 const iosPressedTint = Platform.OS === 'ios' ? 'active:bg-pressed' : undefined;
 
 /*
@@ -46,20 +44,20 @@ const iconOnlyClassName = 'w-11 android:w-12 web:w-7 web:px-0 justify-center';
 
 export function MenuTrigger(props: TriggerProps): ReactElement {
   return (
-    <Pressable {...triggerPressableProps(props)}>
+    <Pressable {...useTriggerPressableProps(props)}>
       <TriggerLeading {...props} />
       <TriggerText {...props} />
     </Pressable>
   );
 }
 
-function triggerPressableProps(
+function useTriggerPressableProps(
   props: TriggerProps,
 ): ComponentProps<typeof Pressable> {
   return {
     ...overlayHandlers(props),
     ...buttonInteractionProps({ disabled: props.disabled }),
-    android_ripple: ripple,
+    android_ripple: usePressRipple(),
     accessibilityLabel: props.accessibilityLabel ?? props.label,
     testID: props.testID,
     className: triggerClass(props),

@@ -1,6 +1,7 @@
 import type {
   AgentContext,
   CreateTerminalRequest,
+  TerminalOutputResponse,
   CreateElicitationRequest,
   InitializeResponse,
   RequestPermissionRequest,
@@ -31,6 +32,7 @@ export type ScriptedStep =
       request: Omit<CreateTerminalRequest, 'sessionId'>;
       toolCallId: string;
       completion: 'leave-running' | 'wait-for-exit' | 'kill';
+      outputs?: TerminalOutputResponse[];
     }
   | { type: 'update'; update: SessionUpdate; sessionId?: string }
   | {
@@ -81,6 +83,8 @@ export type ScriptedScenario = {
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];
   resumedSteps?: readonly ScriptedStep[];
+  // In App E2E, an Agent process started again after this scenario's process failed plays this one.
+  relaunched?: ScriptedScenario;
   responses?: ScriptedResponses;
   notifications?: ScriptedNotifications;
   sessionIds?: readonly string[];

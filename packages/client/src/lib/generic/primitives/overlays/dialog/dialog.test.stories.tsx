@@ -19,7 +19,7 @@ const meta = {
   render: (): React.JSX.Element => (
     <Dialog>
       {/* A Pressable forwards its ref, which the dialog needs to hand focus back. */}
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Pressable role="button">
           <Text>Rename</Text>
         </Pressable>

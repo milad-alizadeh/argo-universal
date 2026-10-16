@@ -42,6 +42,17 @@ export const TurnsOn: Story = {
   },
 };
 
+// The ARIA switch pattern: Space toggles a focused switch.
+export const TurnsOnWithSpace: Story = {
+  play: async ({ canvas, userEvent, args }) => {
+    const control = canvas.getByRole('switch', { name: accessibilityLabel });
+    control.focus();
+    await userEvent.keyboard(' ');
+    await expect(args.onValueChange).toHaveBeenCalledTimes(1);
+    await expect(control).toBeChecked();
+  },
+};
+
 export const Disabled: Story = {
   args: { disabled: true },
   play: async ({ canvas, args }) => {

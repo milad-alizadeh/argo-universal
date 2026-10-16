@@ -8,7 +8,7 @@ export { type SessionData } from './session-data';
 
 export { type SessionActorRef, sessionMachine } from './session-machine';
 
-export { createSessionSnapshotWatcher } from './list/session-snapshot-observer';
+export { createSessionSnapshotWatcher } from './snapshot';
 
 export { createSessionReader } from './session-record';
 
@@ -30,7 +30,7 @@ export {
   TurnUpdateJob,
 } from './session-storage';
 
-export { shellRouter } from './shells/router';
+export { createShellRouter } from './shells/router';
 
 export {
   type SessionConnections,
@@ -40,3 +40,5 @@ export {
 export { recoverArchivedCheckouts } from './archive/archive-operations';
 
 export { findSessionFeed } from './session-system';
+
+export { recoverShells } from './shells/recovery';

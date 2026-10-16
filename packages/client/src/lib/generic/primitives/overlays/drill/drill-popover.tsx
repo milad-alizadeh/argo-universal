@@ -24,9 +24,7 @@ export function DrillPopover(props: Props): ReactElement {
 
   return (
     <Popover open={open} onOpenChange={setOpen} openOnHover={props.row}>
-      <PopoverTrigger asChild disabled={props.disabled}>
-        {props.trigger}
-      </PopoverTrigger>
+      <PopoverTrigger disabled={props.disabled}>{props.trigger}</PopoverTrigger>
       <DrillContent {...props} close={() => setOpen(false)} />
     </Popover>
   );

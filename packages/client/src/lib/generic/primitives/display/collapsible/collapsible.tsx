@@ -1,58 +1,81 @@
-import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
-import { useState, type ReactElement } from 'react';
+import * as RadixCollapsible from '@radix-ui/react-collapsible';
+import {
+  type ComponentProps,
+  createContext,
+  type ReactElement,
+  useContext,
+} from 'react';
+import { Pressable, View } from 'react-native';
+import { type OpenState, useOpenState } from '#primitives/overlays/open-state';
 import { CollapsibleContent } from './collapsible-content';
 import {
   CollapsibleLayoutSyncContext,
   OpenContext,
 } from './collapsible-context';
-import { Header } from './collapsible-header';
-import type {
-  CollapsibleHeaderProps,
-  CollapsibleProps,
-} from './collapsible-props';
+import { createCollapsibleHeader } from './collapsible-header';
+import type { CollapsibleProps } from './collapsible-props';
 
-interface OpenState {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+/*
+ * The web's collapsible, on Radix Collapsible (`@radix-ui/react-collapsible`): Root `open`/`onOpenChange`/
+ * `disabled` wires the trigger's `aria-expanded` and `aria-controls` to the content's region.
+ */
+const ToggleContext = createContext<OpenState & { disabled: boolean }>({
+  open: false,
+  disabled: false,
+  onOpenChange: () => {},
+});
 
-function useOpenState(props: CollapsibleProps): OpenState {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(
-    props.defaultOpen ?? false,
-  );
-
-  return {
-    open: props.open ?? uncontrolledOpen,
-    onOpenChange: (nextOpen) => {
-      if (props.open === undefined) setUncontrolledOpen(nextOpen);
-      props.onOpenChange?.(nextOpen);
-    },
-  };
-}
-
-function rootProps({
+function viewProps({
   open: _open,
   defaultOpen: _defaultOpen,
   onOpenChange: _onOpenChange,
-  ...props
-}: CollapsibleProps): CollapsibleProps {
-  return props;
+  disabled: _disabled,
+  ...view
+}: CollapsibleProps): ComponentProps<typeof View> {
+  return view;
 }
 
-function Collapsible(options: CollapsibleProps): ReactElement {
-  const { children, ...props } = rootProps(options);
-  const state = useOpenState(options);
+function Collapsible(props: CollapsibleProps): ReactElement {
+  const state = useOpenState(props);
+  const disabled = Boolean(props.disabled);
 
   return (
     <OpenContext.Provider value={state.open}>
-      <CollapsiblePrimitive.Root {...props} {...state}>
-        {children}
-      </CollapsiblePrimitive.Root>
+      <ToggleContext value={{ ...state, disabled }}>
+        <RadixCollapsible.Root {...state} disabled={disabled}>
+          <View {...viewProps(props)} />
+        </RadixCollapsible.Root>
+      </ToggleContext>
     </OpenContext.Provider>
   );
 }
 
-const CollapsibleTrigger = CollapsiblePrimitive.Trigger;
+type TriggerProps = Omit<ComponentProps<typeof Pressable>, 'role'>;
+
+// React Native Web's Pressable keeps Radix's click from reaching the root, so the press toggles it.
+function CollapsibleTrigger(props: TriggerProps): ReactElement {
+  const behaviour = useTriggerBehaviour(props);
+
+  return (
+    <RadixCollapsible.Trigger disabled={!!behaviour.disabled} asChild>
+      <Pressable role="button" {...props} {...behaviour} />
+    </RadixCollapsible.Trigger>
+  );
+}
+
+function useTriggerBehaviour(
+  props: TriggerProps,
+): Pick<TriggerProps, 'disabled' | 'onPress'> {
+  const toggle = useContext(ToggleContext);
+
+  return {
+    disabled: toggle.disabled || Boolean(props.disabled),
+    onPress: (event) => {
+      props.onPress?.(event);
+      toggle.onOpenChange(!toggle.open);
+    },
+  };
+}
 
 export {
   Collapsible,
@@ -63,6 +86,4 @@ export {
 
 export { useCollapsibleHovered } from './collapsible-header';
 
-export function CollapsibleHeader(props: CollapsibleHeaderProps): ReactElement {
-  return <Header {...props} trigger={CollapsibleTrigger} />;
-}
+export const CollapsibleHeader = createCollapsibleHeader(CollapsibleTrigger);

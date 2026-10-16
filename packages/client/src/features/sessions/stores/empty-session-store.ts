@@ -1,5 +1,11 @@
 import type { SessionNewInput } from '@repo/contracts';
-import { sessionOpenErrorMessage } from '../components/failure-messages';
+import type { OpenAgain } from '../types/new-session-attempt';
+import {
+  failedOpen,
+  openingAgain,
+  retriedLocal,
+  settledOpen,
+} from '../utils/new-session-attempt';
 import {
   type EmptySessionChoices,
   type EmptySessionConfiguration,
@@ -18,13 +24,17 @@ export class EmptySessionStore {
   private readonly keeper = new LocalSessionKeeper({
     ports: (): EmptySessionPorts => this.ports,
     changed: (): void => this.reconcile(),
+    // A retried open keeps its failure on show until it settles.
     opening: (): void => {
-      this.error = undefined;
+      if (this.outcome.attempt.status !== 'retrying')
+        this.outcome = settledOpen;
     },
-    // A Send queued while the open runs stays queued until Retry or Authenticate opens it; one that reopened it gets its prompt back.
+    opened: (): void => {
+      this.outcome = settledOpen;
+    },
+    // A Send stays queued through a failed open until Retry or a sign-in opens it.
     failed: (cause): void => {
-      if (this.sendReopened) this.fail(cause);
-      else this.error = sessionOpenErrorMessage(cause);
+      this.outcome = failedOpen(cause);
     },
   });
   private readonly handOff = new FirstPromptHandOff({
@@ -42,8 +52,7 @@ export class EmptySessionStore {
     initial: [],
   };
   private pending: FirstPrompt | undefined;
-  private error: string | undefined;
-  private sendReopened = false;
+  private outcome = settledOpen;
   private stopped = false;
   private readonly listeners = new Set<() => void>();
   private state: EmptySessionState = this.currentState();
@@ -86,10 +95,10 @@ export class EmptySessionStore {
     this.deliver(prompt);
   }
 
-  // A failed open tries again, as after the Connection reopens.
-  public retry(): void {
-    this.keeper.retry();
-    this.reconcile();
+  // A failed open tries again for its checkout: on Retry, a finished sign-in, or the Connection reopening.
+  public openAgain(cause: OpenAgain): void {
+    if (this.input?.checkout.type === 'worktree') this.createAgain(cause);
+    else this.reopenLocal();
   }
 
   public feedShowsPrompt(): void {
@@ -112,21 +121,24 @@ export class EmptySessionStore {
     if (this.handOff.phase === 'choosing') this.keeper.closeEmpty();
   }
 
-  // A New worktree is created at Send; Send opens a Local Session that failed to open again.
+  // Only a Send creates a New worktree. Retry sends the current draft; the Connection reopening sends nothing, so the failed attempt and its Retry stay until the user acts.
+  private createAgain(cause: OpenAgain): void {
+    if (cause.by === 'user') cause.sendDraft();
+  }
+
+  private reopenLocal(): void {
+    this.outcome = retriedLocal(this.outcome, this.keeper.retry());
+    this.reconcile();
+  }
+
+  // A New worktree is created at Send; on a Local checkout whose open failed, the prompt waits for Retry or a sign-in.
   private deliver(prompt: FirstPrompt): void {
     const input = this.input;
 
     if (input?.checkout.type === 'worktree') {
-      this.error = undefined;
+      this.outcome = openingAgain(this.outcome);
       this.handOff.create(input, this.configuration.initial, prompt);
-    } else this.reopenFor();
-  }
-
-  // Send after a failed open opens it again for the prompt.
-  private reopenFor(): void {
-    this.sendReopened = this.error !== undefined;
-    this.error = undefined;
-    this.retry();
+    } else this.reconcile();
   }
 
   private reconcile(): void {
@@ -152,14 +164,13 @@ export class EmptySessionStore {
   }
 
   private fail(cause: unknown): void {
-    this.sendReopened = false;
-    this.error = sessionOpenErrorMessage(cause);
+    this.outcome = failedOpen(cause);
     this.pending = undefined;
   }
 
   private currentState(): EmptySessionState {
     return {
-      error: this.error,
+      ...this.outcome,
       pendingPrompt: this.pending !== undefined,
       openSessionId: this.handOff.sessionId ?? this.keeper.readingId(),
       opening: this.handOff.phase === 'choosing' && this.keeper.isOpening(),

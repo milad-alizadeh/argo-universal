@@ -1,6 +1,13 @@
-import { type Href, router, useNavigation, usePathname } from 'expo-router';
+import {
+  type Href,
+  router,
+  useIsFocused,
+  useNavigation,
+  usePathname,
+} from 'expo-router';
+import { usePreventRemove } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { createContext, type ReactNode, use, useEffect } from 'react';
+import { createContext, type ReactNode, use } from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { newSessionId } from './new-session';
 import { isPage, sectionOf } from './sections';
@@ -91,23 +98,20 @@ export type LeaveGuard = (
 
 const noLeaveGuard: LeaveGuard = () => null;
 
-// The router's beforeRemove holds the page, and carries on when told to.
+// The router holds both native and JS removal, then dispatches the held action when allowed.
 const useRouterLeaveGuard: LeaveGuard = (active, onBlocked) => {
   const navigation = useNavigation();
 
-  useEffect(
-    () =>
-      navigation.addListener('beforeRemove', (event) => {
-        if (!active) return;
-        event.preventDefault();
-        onBlocked(() => navigation.dispatch(event.data.action));
-      }),
-    [navigation, active, onBlocked],
-  );
+  usePreventRemove(active, ({ data }) => {
+    onBlocked(() => navigation.dispatch(data.action));
+  });
 };
 
 // Without the app's router, as in a story, nothing holds a page.
 const LeaveGuardContext = createContext<LeaveGuard>(noLeaveGuard);
+
+// Without the app's router, as in a story, every screen counts as focused.
+const ScreenFocusContext = createContext<() => boolean>(() => true);
 
 export interface NavigationProviderProps {
   children: ReactNode;
@@ -120,7 +124,11 @@ export function NavigationProvider({
   children,
   leaveGuard = useRouterLeaveGuard,
 }: NavigationProviderProps): React.JSX.Element {
-  return <LeaveGuardContext value={leaveGuard}>{children}</LeaveGuardContext>;
+  return (
+    <ScreenFocusContext value={useIsFocused}>
+      <LeaveGuardContext value={leaveGuard}>{children}</LeaveGuardContext>
+    </ScreenFocusContext>
+  );
 }
 
 export function useLeaveGuard(
@@ -128,4 +136,9 @@ export function useLeaveGuard(
   onBlocked: (proceed: () => void) => void,
 ): void {
   use(LeaveGuardContext)(active, onBlocked);
+}
+
+// Read at the consuming screen, whose navigator retains it when another section opens.
+export function useScreenFocused(): boolean {
+  return use(ScreenFocusContext)();
 }

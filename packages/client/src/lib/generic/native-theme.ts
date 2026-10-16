@@ -13,6 +13,7 @@ const colorTokens = [
   ['primaryForeground', '--color-primary-foreground'],
   ['border', '--color-border'],
   ['selected', '--color-selected'],
+  ['pressed', '--color-pressed'],
   ['danger', '--color-danger'],
   ['warning', '--color-warning'],
 ] as const;

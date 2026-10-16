@@ -1,6 +1,7 @@
 import {
   type SessionCheckout,
   SessionInfo,
+  SessionRecord,
   SessionSnapshot,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
@@ -9,7 +10,9 @@ import { isSessionBranch } from '@repo/git';
 import { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
 import { eq, getTableColumns, sql } from 'drizzle-orm';
-import type { infer as Infer } from 'zod';
+import { ZodError, type infer as Infer } from 'zod';
+import type { WriterActorRef } from '../storage';
+import { readQueuedSessionRows, type RowSources } from './session-storage';
 
 // JSON is decoded per row at the reader boundary, after SQLite has returned the bounded result.
 export const storedSessionColumns = {
@@ -66,13 +69,26 @@ export function toSessionCheckout(row: {
   };
 }
 
+type SessionFieldsRow = Pick<
+  SessionRecord,
+  | 'id'
+  | 'projectId'
+  | 'title'
+  | 'archivedAt'
+  | 'titleSource'
+  | 'agent'
+  | 'parentSessionId'
+  | 'epoch'
+  | 'maxRevision'
+  | 'checkoutPath'
+  | 'checkoutBranch'
+>;
+
 export function createSessionReader(
   database: Database,
 ): (sessionId: string) => SessionSnapshotFields {
-  const rejections = createRejectionCounter('sessions');
-
-  return (sessionId: string): SessionSnapshotFields => {
-    const stored = database
+  return createFieldsReader((sessionId): SessionFieldsRow | undefined =>
+    database
       .select({
         projectId: session.projectId,
         title: session.title,
@@ -88,26 +104,87 @@ export function createSessionReader(
       })
       .from(session)
       .where(eq(session.id, sessionId))
-      .get();
+      .get(),
+  );
+}
+
+// The Session row as the Writer will leave it: the stored row with the queued Session jobs replayed over it.
+export function readSessionRow(
+  sources: RowSources,
+  sessionId: string,
+): SessionRecord | undefined {
+  const stored = sources.database
+    .select(storedSessionColumns)
+    .from(session)
+    .where(eq(session.id, sessionId))
+    .get();
+
+  return readQueuedSessionRows(sources.writer).session(
+    stored && SessionRecord.parse(decodeStoredSession(stored)),
+    sessionId,
+  );
+}
+
+// The same fields as `createSessionReader`, read through the Writer's queue as a Session snapshot shows them.
+export function createQueuedSessionReader(sources: {
+  database: Database;
+  findWriter: () => WriterActorRef | undefined;
+}): (sessionId: string) => SessionSnapshotFields {
+  return createFieldsReader((sessionId): SessionFieldsRow | undefined =>
+    readSessionRow(
+      { database: sources.database, writer: sources.findWriter() },
+      sessionId,
+    ),
+  );
+}
+
+const unrecognisedSession = (): TRPCError =>
+  new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'Unrecognised Session row',
+  });
+
+// A missing row is NOT_FOUND; a row that fails its shape is reported and refused.
+function createFieldsReader(
+  readRow: (sessionId: string) => SessionFieldsRow | undefined,
+): (sessionId: string) => SessionSnapshotFields {
+  const rejections = createRejectionCounter('sessions');
+
+  const readKnownRow = (sessionId: string): SessionFieldsRow | undefined => {
+    try {
+      return readRow(sessionId);
+    } catch (error) {
+      if (!(error instanceof ZodError || error instanceof SyntaxError))
+        throw error;
+      rejections.report('rejected database row', error);
+      throw unrecognisedSession();
+    }
+  };
+
+  return (sessionId: string): SessionSnapshotFields => {
+    const stored = readKnownRow(sessionId);
 
     if (!stored)
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: `No Session ${sessionId}`,
       });
-    const { id, checkoutPath, checkoutBranch, ...otherColumns } = stored;
 
     const parsed = sessionSnapshotFields.safeParse({
-      ...otherColumns,
-      checkout: toSessionCheckout({ id, checkoutPath, checkoutBranch }),
+      projectId: stored.projectId,
+      title: stored.title,
+      archivedAt: stored.archivedAt,
+      titleSource: stored.titleSource,
+      agent: stored.agent,
+      parentSessionId: stored.parentSessionId,
+      epoch: stored.epoch,
+      maxRevision: stored.maxRevision,
+      checkout: toSessionCheckout(stored),
     });
 
     if (!parsed.success) {
       rejections.report('rejected database row', parsed.error);
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Unrecognised Session row',
-      });
+      throw unrecognisedSession();
     }
 
     return parsed.data;

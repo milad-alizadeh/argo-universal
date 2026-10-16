@@ -2,14 +2,20 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
+import {
+  nextWorkRequest,
+  nextWorkValues,
+} from '../../../../../mocks/elicitation-questions';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import {
+  configurationRequest,
+  configurationValues,
   elicitationProps,
   elicitationMock,
   elicitationMocks,
   elicitationRequest,
-  fieldsRequest,
-  fieldsValues,
+  functionNameRequest,
+  refactorRequest,
 } from '../request.mocks';
 import {
   ElicitationForm,
@@ -57,11 +63,30 @@ const answeredState = {
   reason: 'Already answered on another device',
 } as const;
 
-const fieldsProps = elicitationProps({
-  request: fieldsRequest,
-  values: fieldsValues,
-  source: 'linear',
-});
+const examples: { label: string; props: ElicitationFormProps }[] = [
+  {
+    label: 'Single choice',
+    props: elicitationProps({ request: refactorRequest }),
+  },
+  {
+    label: 'Multiple choice',
+    props: elicitationProps({
+      request: nextWorkRequest,
+      values: nextWorkValues,
+    }),
+  },
+  {
+    label: 'Text field',
+    props: elicitationProps({ request: functionNameRequest }),
+  },
+  {
+    label: 'Form fields and validation',
+    props: elicitationProps({
+      request: configurationRequest,
+      values: configurationValues,
+    }),
+  },
+];
 
 const outcomes: { label: string; answer: ElicitationAnswer }[] = [
   {
@@ -92,12 +117,14 @@ function ElicitationGallery(args: GalleryArgs): React.JSX.Element {
 function FormVariations(args: GalleryArgs): React.JSX.Element {
   return (
     <>
-      <Variation label="Choice">
+      <Variation label="Recorded choice">
         <ElicitationForm {...choiceProps(args)} />
       </Variation>
-      <Variation label="Form fields and validation">
-        <ElicitationForm {...fieldsProps} />
-      </Variation>
+      {examples.map(({ label, props }) => (
+        <Variation key={label} label={label}>
+          <ElicitationForm {...props} />
+        </Variation>
+      ))}
     </>
   );
 }

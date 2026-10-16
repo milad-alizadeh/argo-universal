@@ -2,6 +2,7 @@ import { Button, Menu, Toggle } from '@expo/ui/swift-ui';
 import {
   type ModifierConfig,
   accessibilityHint,
+  accessibilityLabel,
   buttonStyle,
   controlSize,
   disabled,
@@ -50,9 +51,17 @@ function splitModifiers(split: NativeSplit): ModifierConfig[] {
     menuStyle('button'),
     buttonStyle(split.primary ? 'borderedProminent' : 'bordered'),
     ...splitControlSize(split),
+    ...actingName(split),
     accessibilityHint(split.menuLabel),
     disabled(!split.enabled),
   ];
+}
+
+// The split is one control, so the acting button's spoken name names it.
+function actingName(split: NativeSplit): ModifierConfig[] {
+  const name = split.acting.accessibilityLabel;
+
+  return name ? [accessibilityLabel(name)] : [];
 }
 
 // As the kit Button: the compact `xs` split is SwiftUI's small control; every other split keeps the stock size.

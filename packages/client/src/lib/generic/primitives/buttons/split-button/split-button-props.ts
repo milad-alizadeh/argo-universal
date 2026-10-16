@@ -44,6 +44,8 @@ export type SplitMenuProps<Value extends string = string> =
 export type SplitButtonProps<Value extends string = string> =
   SplitMenuProps<Value> & {
     label: string;
+    // The acting button's spoken name when its label says too little, such as a sign-in method's description.
+    accessibilityLabel?: string;
     icon?: IconName;
     onPress?: () => void;
   };

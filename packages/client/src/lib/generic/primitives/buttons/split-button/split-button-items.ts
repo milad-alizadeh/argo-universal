@@ -7,7 +7,7 @@ import type { SplitButtonProps, SplitMenuItems } from './split-button-props';
 // Everything a phone's native split draws, read from SplitButton's props; the menu rows are the kit Menu's.
 export interface NativeSplit {
   // The primary action: the acting button's name and press.
-  acting: Pick<SplitButtonProps, 'label' | 'onPress'>;
+  acting: Pick<SplitButtonProps, 'label' | 'accessibilityLabel' | 'onPress'>;
   items: NativeMenuItem[];
   menuLabel: string;
   primary: boolean;
@@ -19,7 +19,7 @@ export function nativeSplit<Value extends string>(
   props: SplitButtonProps<Value>,
 ): NativeSplit {
   return {
-    acting: { label: props.label, onPress: props.onPress },
+    acting: actingOf(props),
     items: nativeMenuItems(menuRows(props)),
     menuLabel: props.menuLabel,
     primary: props.primary === true,
@@ -28,6 +28,16 @@ export function nativeSplit<Value extends string>(
     size: props.size,
   };
 }
+
+const actingOf = ({
+  label,
+  accessibilityLabel,
+  onPress,
+}: NativeSplit['acting']): NativeSplit['acting'] => ({
+  label,
+  accessibilityLabel,
+  onPress,
+});
 
 // Only what the chevron offers, not the split's own look.
 export function menuRows<Value extends string>(

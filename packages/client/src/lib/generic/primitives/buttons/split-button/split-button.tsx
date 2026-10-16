@@ -1,11 +1,6 @@
 import type * as React from 'react';
-import {
-  type ComponentProps,
-  type ReactElement,
-  type ReactNode,
-  useState,
-} from 'react';
-import { type LayoutChangeEvent, View } from 'react-native';
+import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
+import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { DrawnButton } from '#primitives/buttons/button';
 import { ButtonGroup } from '#primitives/buttons/button-group';
@@ -27,12 +22,18 @@ type GroupLook = Pick<SplitMenuProps, 'size' | 'primary' | 'disabled'>;
 // What the acting half reads.
 type ActingLook = Pick<
   SplitButtonProps,
-  'label' | 'icon' | 'onPress' | 'disabled' | 'size' | 'primary' | 'narrow'
+  | 'label'
+  | 'accessibilityLabel'
+  | 'icon'
+  | 'onPress'
+  | 'disabled'
+  | 'size'
+  | 'primary'
+  | 'narrow'
 >;
 
 // ButtonGroup joins its items by passing each a className.
 type JoinedMenuProps<Value extends string> = SplitMenuProps<Value> & {
-  height?: number;
   className?: string;
 };
 
@@ -40,12 +41,10 @@ type JoinedMenuProps<Value extends string> = SplitMenuProps<Value> & {
 export function SplitButton<Value extends string>(
   props: SplitButtonProps<Value>,
 ): React.JSX.Element {
-  const [height, onLayout] = useGroupHeight();
-
   return (
-    <ButtonGroup className={groupClassName(props)} onLayout={onLayout}>
+    <ButtonGroup className={groupClassName(props)}>
       {leadingItems(props)}
-      <SplitMenu {...props} height={height} />
+      <SplitMenu {...props} />
     </ButtonGroup>
   );
 }
@@ -54,10 +53,7 @@ export function SplitButton<Value extends string>(
 function groupClassName(props: GroupLook): string | undefined {
   if (props.size !== 'xs') return undefined;
 
-  return cn(
-    'rounded-md web:rounded-control web:shadow-control',
-    props.disabled && 'opacity-35',
-  );
+  return cn('rounded-md web:shadow-control', props.disabled && 'opacity-35');
 }
 
 // The acting button, and the compact split's divider after a filled one.
@@ -76,6 +72,7 @@ function leadingItems(props: ActingLook): ReactElement[] {
 function actingProps(props: ActingLook): DrawnButtonProps {
   return {
     label: props.label,
+    accessibilityLabel: props.accessibilityLabel,
     icon: props.icon,
     onPress: props.onPress,
     disabled: props.disabled,
@@ -106,26 +103,15 @@ const divider = (
   </View>
 );
 
-// The group's laid-out height, which the narrow chevron matches.
-function useGroupHeight(): [
-  number | undefined,
-  (event: LayoutChangeEvent) => void,
-] {
-  const [height, setHeight] = useState<number>();
-
-  return [height, ({ nativeEvent }) => setHeight(nativeEvent.layout.height)];
-}
-
-function SplitMenu<Value extends string>({
-  height,
-  ...props
-}: JoinedMenuProps<Value>): ReactNode {
+function SplitMenu<Value extends string>(
+  props: JoinedMenuProps<Value>,
+): ReactNode {
   return (
     <Menu
       {...menuRows(props)}
       disabled={props.disabled}
       accessibilityLabel={props.menuLabel}
-      trigger={chevron({ ...props, height: props.narrow ? height : undefined })}
+      trigger={chevron(props)}
     />
   );
 }

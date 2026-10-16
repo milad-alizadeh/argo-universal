@@ -1,9 +1,9 @@
-import { SessionOpenFailure } from '@repo/contracts';
 import type { FeedSubscribeOutput, SessionSnapshot } from '@repo/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTRPC } from '#features/connection';
+import { closedFeedError } from '../utils/closed-feed-error';
 import { mergeHistoryPages } from '../view/feed-history';
 import {
   applySubscriptionEvent,
@@ -169,11 +169,3 @@ export function useSessionFeed(sessionId: string | undefined): SessionFeed {
     loadOlder: history.loadOlder,
   };
 }
-
-const closedFeedError = (
-  event: Extract<FeedSubscribeOutput, { type: 'closed' }>,
-): Error | null => {
-  if (event.openError) return new SessionOpenFailure(event.openError);
-
-  return event.failure === null ? null : new Error(event.failure);
-};

@@ -20,6 +20,8 @@ export interface SessionLayoutProps {
   // Full pane width, so it scrolls from anywhere in the pane; its rows sit in SessionColumns.
   feed: ReactNode;
   composer: ReactNode;
+  // Under the Composer at full pane width, such as a sign-in terminal; a phone presents it as a sheet.
+  panel?: ReactNode;
 }
 
 // One Session in one container on one surface: the header at the top, the Composer pinned to the bottom, and the Feed filling and scrolling between them.
@@ -33,21 +35,32 @@ export function SessionLayout(props: SessionLayoutProps): React.JSX.Element {
 
 const overlapComposerStyle = { marginTop: -composerOverlap };
 
+// Wide, the Frame already paints this surface, with the glow behind the glass reaching under the pane, so the container lets it show.
+const overlapSurface = cn(sessionSurface, 'wide:bg-transparent');
+
+const bottomEdge = ['bottom'] as const;
+
 // The Composer overlaps the Feed's end, where the Feed fades out.
 function OverlapComposerLayout(props: SessionLayoutProps): React.JSX.Element {
   return (
     <Screen
       testID="session-layout"
-      edges={['bottom']}
-      // Wide, the Frame already paints this surface, with the glow behind the glass reaching under the pane, so the container lets it show.
-      className={cn(sessionSurface, 'wide:bg-transparent')}
+      edges={bottomEdge}
+      className={overlapSurface}
     >
       {props.header}
-      <KeyboardAvoidingContent>
-        <View className="relative min-h-0 flex-1">{props.feed}</View>
-        <OverlapComposer>{props.composer}</OverlapComposer>
-      </KeyboardAvoidingContent>
+      <OverlapContent {...props} />
     </Screen>
+  );
+}
+
+function OverlapContent(props: SessionLayoutProps): React.JSX.Element {
+  return (
+    <KeyboardAvoidingContent>
+      <View className="relative min-h-0 flex-1">{props.feed}</View>
+      <OverlapComposer>{props.composer}</OverlapComposer>
+      {props.panel}
+    </KeyboardAvoidingContent>
   );
 }
 
@@ -66,6 +79,7 @@ function GlassComposerLayout(props: SessionLayoutProps): React.JSX.Element {
       {props.header}
       <KeyboardAvoidingContent>
         <GlassComposerStage feed={props.feed} composer={props.composer} />
+        {props.panel}
       </KeyboardAvoidingContent>
     </Screen>
   );

@@ -13,6 +13,8 @@ import {
   SessionListUpdate,
   SessionNewInput,
   SessionNewOutput,
+  SessionOpenInput,
+  SessionOpenOutput,
   SessionPromptInput,
   SessionPromptOutput,
   SessionSetConfigOptionInput,
@@ -29,7 +31,6 @@ import {
 } from '../rpc';
 import { createArchiveRouter } from './archive/archive-router';
 import { createSessionList } from './list/session-list';
-import { createSubagentsReader } from './list/subagents-reader';
 import type { SessionRouterDeps } from './router-deps';
 import {
   answerSessionElicitation,
@@ -38,8 +39,10 @@ import {
 import { cancelSession, closeSession } from './session-closure';
 import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
+import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
-import { shellSessionRouter } from './shells/router';
+import { createShellSessionRouter } from './shells/router';
+import { createSubagentsReader } from './subagents';
 import { unimplementedSessionRouter } from './unimplemented-router';
 
 type SessionList = ReturnType<typeof createSessionList>;
@@ -89,6 +92,10 @@ const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
       .input(SessionPromptInput)
       .output(SessionPromptOutput)
       .mutation(({ input }) => promptSession(deps, input)),
+    open: publicProcedure
+      .input(SessionOpenInput)
+      .output(SessionOpenOutput)
+      .mutation(({ input }) => openSession(deps, input)),
   }),
 );
 
@@ -156,6 +163,6 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createAnswerRouter(deps),
     createSubagentsRouter(deps),
     unimplementedSessionRouter,
-    shellSessionRouter,
+    createShellSessionRouter(deps),
   );
 });

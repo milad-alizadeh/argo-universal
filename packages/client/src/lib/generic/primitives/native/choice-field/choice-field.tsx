@@ -1,4 +1,5 @@
 import { Column, Row, Spacer } from '@expo/ui';
+import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
 import type * as React from 'react';
 import { Platform } from 'react-native';
@@ -13,6 +14,9 @@ type FieldProps = {
 } & {
   children: React.ReactElement;
 };
+
+// The column spans the field, so its label and value start at its edge, even inside a button.
+const materialColumn = { spacing: 4, modifiers: [fillMaxWidth()] };
 
 const fieldPadding = { paddingHorizontal: 16, paddingVertical: 12 };
 
@@ -41,7 +45,7 @@ function LabelledField(props: FieldProps): React.JSX.Element {
   const label = <FieldLabel {...props} />;
 
   if (Platform.OS !== 'ios')
-    return createElement(Column, { spacing: 4 }, label, props.children);
+    return createElement(Column, materialColumn, label, props.children);
 
   return createElement(
     Row,
