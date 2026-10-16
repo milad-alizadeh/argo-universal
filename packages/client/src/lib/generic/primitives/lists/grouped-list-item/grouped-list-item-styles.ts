@@ -92,9 +92,9 @@ function sizeClasses(props: GroupedListItemProps): string | undefined {
   return props.size === 'sm' ? smallClasses(props) : undefined;
 }
 
-// A small row's subtitle keeps its line under the title, padded as any subtitled row.
+// A small row's subtitle keeps its line under the title, padded as any subtitled row; a switch fits its 36 too.
 const smallClasses = ({ subtitle }: GroupedListItemProps): string =>
-  cn('wide:min-h-9', !subtitle && 'wide:py-2');
+  cn('wide:min-h-9', !subtitle && 'wide:py-1.5');
 
 // A wide window draws its rows' parts 8 apart, but a sidebar's and a large row's keep 12.
 export const contentGap = (

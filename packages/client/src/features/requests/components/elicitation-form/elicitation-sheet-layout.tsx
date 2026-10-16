@@ -12,6 +12,7 @@ import {
   ElicitationBody,
   type ElicitationView,
 } from './elicitation-body';
+import { elicitationDetent } from './elicitation-detent';
 import type { ElicitationFormProps } from './elicitation-form-props';
 
 type ViewProps = { view: ElicitationView };
@@ -35,6 +36,7 @@ export function ElicitationSheetLayout({ view }: ViewProps): ReactElement {
       label={view.props.request.message}
       footer={<SheetFooter view={view} />}
       {...sheetLayout}
+      initialDetent={elicitationDetent(view.props.request)}
       {...useSheetDismissal(view.props)}
     >
       <SheetBody view={view} />
