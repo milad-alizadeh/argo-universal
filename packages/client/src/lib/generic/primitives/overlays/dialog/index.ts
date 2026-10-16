@@ -16,5 +16,3 @@ export {
   type DialogContentProps,
   type DialogRegionProps,
 } from './dialog-props';
-
-export { DialogRoot } from './dialog-root';

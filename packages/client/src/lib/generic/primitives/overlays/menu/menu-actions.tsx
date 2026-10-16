@@ -14,7 +14,8 @@ import {
 export function MenuActions(props: ActionMenuProps): React.JSX.Element {
   return (
     <TextClassContext.Provider value="text-foreground">
-      <RadixMenu.Content align={props.align ?? 'end'} loop>
+      {/* Radix's popper wrapper copies the content's z-index, so the content keeps it above other overlays. */}
+      <RadixMenu.Content align={props.align ?? 'end'} loop className="z-50">
         <View className={actionContentClassName}>
           {props.loading ? <MenuLoadingRow /> : props.actions.map(actionItem)}
         </View>

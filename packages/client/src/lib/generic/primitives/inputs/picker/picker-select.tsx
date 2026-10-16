@@ -54,7 +54,7 @@ function TriggerChevron({
   );
 }
 
-// Radix names the trigger a combobox; Argo's Picker is read as a button, as before. A touch opens it at once.
+// Radix names the trigger a combobox; Argo's Picker is read as a button, as before.
 function SelectTrigger(props: TriggerProps): React.JSX.Element {
   return (
     <RadixSelect.Trigger asChild disabled={props.disabled}>
@@ -80,7 +80,8 @@ function useTriggerProps(props: TriggerProps): TriggerWebProps {
     'aria-invalid': props['aria-invalid'],
     'aria-describedby': props['aria-describedby'],
     className: selectTriggerClassName(props),
-    onTouchStart: () => onOpenChange(true),
+    // React Native Web's press handling replaces Radix's click, which opens the select after a touch.
+    onPress: () => onOpenChange(true),
   };
 }
 

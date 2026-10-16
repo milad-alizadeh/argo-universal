@@ -39,7 +39,7 @@ function useToggle(props: CollapsibleProps): Toggle & { open: boolean } {
   };
 }
 
-function viewOf({
+function viewProps({
   open: _open,
   defaultOpen: _defaultOpen,
   onOpenChange: _onOpenChange,
@@ -55,7 +55,7 @@ function Collapsible(props: CollapsibleProps): ReactElement {
   return (
     <OpenContext.Provider value={open}>
       <ToggleContext value={toggle}>
-        <View {...viewOf(props)} />
+        <View {...viewProps(props)} />
       </ToggleContext>
     </OpenContext.Provider>
   );

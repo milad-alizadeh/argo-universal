@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { startSession } from './live-session';
+import { returnToSessions } from './navigation';
 import { agentModelLabel } from './new-session';
 
 const feed = (page: Page): Locator => page.getByTestId('feed-scroll');
@@ -34,8 +35,8 @@ Then(
   },
 );
 
-When(
-  'I leave an open Agent and model for Settings',
+Given(
+  'I left an open Agent and model for Settings',
   async ({ page }): Promise<void> => {
     await page.getByRole('button', { name: agentModelLabel }).click();
     await expect(
@@ -43,6 +44,14 @@ When(
     ).toBeVisible();
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/accounts$/);
+  },
+);
+
+When(
+  'I return to the Session {string}',
+  async ({ page }, title: string): Promise<void> => {
+    await returnToSessions(page);
+    await openSession(page, title);
   },
 );
 

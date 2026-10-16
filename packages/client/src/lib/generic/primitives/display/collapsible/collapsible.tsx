@@ -25,7 +25,7 @@ const ToggleContext = createContext<OpenState & { disabled: boolean }>({
   onOpenChange: () => {},
 });
 
-function viewOf({
+function viewProps({
   open: _open,
   defaultOpen: _defaultOpen,
   onOpenChange: _onOpenChange,
@@ -43,7 +43,7 @@ function Collapsible(props: CollapsibleProps): ReactElement {
     <OpenContext.Provider value={state.open}>
       <ToggleContext value={{ ...state, disabled }}>
         <RadixCollapsible.Root {...state} disabled={disabled}>
-          <View {...viewOf(props)} />
+          <View {...viewProps(props)} />
         </RadixCollapsible.Root>
       </ToggleContext>
     </OpenContext.Provider>

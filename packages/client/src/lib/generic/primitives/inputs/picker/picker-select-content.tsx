@@ -17,7 +17,13 @@ type ContentProps = {
 // Picker's options open below their trigger, lined up with its start edge, as a popper.
 const position = 'popper';
 
-const placement = { position, align: 'start', sideOffset: 0 } as const;
+// Radix's popper wrapper copies the content's z-index, so the content keeps it above other overlays.
+const placement = {
+  position,
+  align: 'start',
+  sideOffset: 0,
+  className: 'z-50',
+} as const;
 
 const scrollClassName = 'flex cursor-default items-center justify-center py-1';
 

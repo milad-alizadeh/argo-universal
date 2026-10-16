@@ -2,11 +2,11 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
 import {
+  Dialog,
   DialogDescriptionText,
   DialogFrame,
   DialogOverlay,
   DialogPortal,
-  DialogRoot,
   DialogTitleText,
 } from '#primitives/overlays/dialog';
 import {
@@ -23,13 +23,13 @@ const contentClassName =
 // The web draws an alert as a centred dialog at every width, never as a sheet.
 export function Alert(props: AlertProps): React.JSX.Element {
   return (
-    <DialogRoot open={props.open} onOpenChange={ignoreCloseWhileBusy(props)}>
+    <Dialog open={props.open} onOpenChange={ignoreCloseWhileBusy(props)}>
       <DialogPortal>
         <DialogOverlay>
           <AlertCard {...props} />
         </DialogOverlay>
       </DialogPortal>
-    </DialogRoot>
+    </Dialog>
   );
 }
 

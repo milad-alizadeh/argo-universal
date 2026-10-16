@@ -1,11 +1,12 @@
 import { type ReactElement, type ReactNode, useEffect, useId } from 'react';
 import { BackHandler, Text, View } from 'react-native';
-import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
+import { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import { motionDuration } from '#lib/generic/motion';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
 import { triggerChild } from '#primitives/overlays/open-state';
 import { Portal } from '#primitives/overlays/portal';
 import { DialogContext, useDialogState } from './dialog-context';
+import { dialogExiting } from './dialog-motion';
 import type {
   DialogBackdropProps,
   DialogFrameProps,
@@ -53,17 +54,13 @@ const entering = FadeIn.duration(motionDuration.enter).reduceMotion(
   ReduceMotion.System,
 );
 
-const exiting = FadeOut.duration(motionDuration.exit).reduceMotion(
-  ReduceMotion.System,
-);
-
 export function DialogBackdrop(props: DialogBackdropProps): ReactElement {
   return (
     <NativeOnlyAnimatedView
       as="Pressable"
       accessible={false}
       entering={entering}
-      exiting={exiting}
+      exiting={dialogExiting}
       className={props.className}
       onPress={props.onPress}
     >

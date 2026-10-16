@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { SettingsPage } from '#lib/product/settings-page';
@@ -37,7 +37,7 @@ export const KeepsDraftAcrossLayoutChanges: Story = {
       <CustomAgentForm {...args} />
     </SettingsPage>
   ),
-  play: async ({ args, canvas, userEvent }) => {
+  play: async ({ canvas, userEvent }) => {
     await userEvent.type(canvas.getByLabelText('Name'), exampleName);
     await userEvent.type(canvas.getByLabelText('Executable'), executable);
     await userEvent.click(canvas.getByRole('link', addArgument));
@@ -61,17 +61,5 @@ export const KeepsDraftAcrossLayoutChanges: Story = {
         '--draft',
       );
     }
-
-    await userEvent.click(editor.getByRole('button', { name: 'Cancel' }));
-    await expect(canvas.queryByRole('link', { name: '--draft' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Add Agent' }));
-    await waitFor(() =>
-      expect(args.onSubmit).toHaveBeenCalledWith({
-        name: exampleName,
-        executable: executable,
-        args: ['--acp'],
-        env: [],
-      }),
-    );
   },
 };

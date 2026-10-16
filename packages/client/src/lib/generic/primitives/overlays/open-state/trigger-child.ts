@@ -15,7 +15,7 @@ export type TriggerElement =
 
 type Handler<Event> = ((event: Event) => void) | null | undefined;
 
-function both<Event>(
+function chained<Event>(
   own: Handler<Event>,
   added: Handler<Event>,
 ): Handler<Event> {
@@ -27,7 +27,7 @@ function both<Event>(
   };
 }
 
-function defined(attributes: TriggerAttributes): TriggerAttributes {
+function presentAttributes(attributes: TriggerAttributes): TriggerAttributes {
   return {
     ...(attributes.role && { role: attributes.role }),
     ...(attributes.disabled != null && { disabled: attributes.disabled }),
@@ -45,10 +45,10 @@ export function triggerChild(
   const own = child.props;
 
   return cloneElement(child, {
-    ...defined(attributes),
-    ...defined(own),
-    onPress: both(own.onPress, handlers.onPress),
-    onHoverIn: both(own.onHoverIn, handlers.onHoverIn),
-    onHoverOut: both(own.onHoverOut, handlers.onHoverOut),
+    ...presentAttributes(attributes),
+    ...presentAttributes(own),
+    onPress: chained(own.onPress, handlers.onPress),
+    onHoverIn: chained(own.onHoverIn, handlers.onHoverIn),
+    onHoverOut: chained(own.onHoverOut, handlers.onHoverOut),
   });
 }

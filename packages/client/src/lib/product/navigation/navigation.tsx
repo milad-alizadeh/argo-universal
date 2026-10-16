@@ -110,23 +110,22 @@ const useRouterLeaveGuard: LeaveGuard = (active, onBlocked) => {
 // Without the app's router, as in a story, nothing holds a page.
 const LeaveGuardContext = createContext<LeaveGuard>(noLeaveGuard);
 
+// Without the app's router, as in a story, every screen counts as focused.
 const ScreenFocusContext = createContext<() => boolean>(() => true);
 
 export interface NavigationProviderProps {
   children: ReactNode;
   // The router's own, unless a story holds the page itself.
   leaveGuard?: LeaveGuard;
-  screenFocus?: () => boolean;
 }
 
 // The app's pages hold their removal through the router.
 export function NavigationProvider({
   children,
   leaveGuard = useRouterLeaveGuard,
-  screenFocus = useIsFocused,
 }: NavigationProviderProps): React.JSX.Element {
   return (
-    <ScreenFocusContext value={screenFocus}>
+    <ScreenFocusContext value={useIsFocused}>
       <LeaveGuardContext value={leaveGuard}>{children}</LeaveGuardContext>
     </ScreenFocusContext>
   );

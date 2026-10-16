@@ -26,7 +26,7 @@ const SelectContext = createContext<SelectState>({
   onOpenChange: () => {},
 });
 
-// The trigger opens the select on a touch, before Radix's own click would.
+// The trigger opens the select on a press, which Radix's own click cannot see.
 export function useSelectState(): SelectState {
   return useContext(SelectContext);
 }

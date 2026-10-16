@@ -1,6 +1,11 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import {
+  type GestureResponderEvent,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 import { triggerChild } from '#primitives/overlays/open-state';
 import { useDialogState } from './dialog-context';
 import type {
@@ -42,10 +47,20 @@ export function DialogPortal(props: { children: ReactNode }): ReactElement {
   return <RadixDialog.Portal>{props.children}</RadixDialog.Portal>;
 }
 
+// A press inside the content bubbles up to the backdrop, so only a press on the bare backdrop counts.
+function isBackdropPress(event: GestureResponderEvent): boolean {
+  return event.target === event.currentTarget && !event.isDefaultPrevented();
+}
+
 export function DialogBackdrop(props: DialogBackdropProps): ReactElement {
   return (
     <RadixDialog.Overlay>
-      <Pressable className={props.className} onPress={props.onPress}>
+      <Pressable
+        className={props.className}
+        onPress={(event) => {
+          if (isBackdropPress(event)) props.onPress?.(event);
+        }}
+      >
         {props.children}
       </Pressable>
     </RadixDialog.Overlay>
