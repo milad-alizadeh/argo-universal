@@ -37,6 +37,7 @@ import {
   type QueuedSessionRows,
   readQueuedSessionRows,
 } from '../session-storage';
+import { readShellCounts } from '../shells/reader';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import { latestTurnOf, toSessionInfo } from './session-info';
 import type {
@@ -456,6 +457,7 @@ function readSessionInformation(
   });
 
   const result = toSessionInfo({
+    shells: readShellCounts(database, row.id),
     row,
     turns,
     message: updates.findLast(

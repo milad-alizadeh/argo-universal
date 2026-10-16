@@ -5,6 +5,7 @@ import type {
 } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
 import type { feedMachine } from '../../feed';
+import { toShell } from '../acp/shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
 import type { sessionMachine } from '../session-machine';
 import { toLiveHeader } from './live-header';
@@ -39,7 +40,7 @@ export function toSessionSnapshot(
     SessionSnapshot,
     'agent' | 'title' | 'titleSource' | 'checkout'
   > &
-    Partial<Pick<SessionSnapshot, 'subagents'>>,
+    Partial<Pick<SessionSnapshot, 'subagents' | 'shells'>>,
 ): SessionSnapshot {
   const context = session?.context ?? {
     activeTurnId: null,
@@ -84,7 +85,14 @@ export function toSessionSnapshot(
       context.heldConfig,
     ),
     changes: noChanges,
-    shells: [],
+    shells: session
+      ? session.context.shells.map((record) =>
+          toShell(record, {
+            now: session.context.input.now(),
+            terminalAvailable: session.context.shellRuntime.canStop(record.id),
+          }),
+        )
+      : (storedSession.shells ?? []),
     subagents: storedSession.subagents ?? [],
     maxRevision: feed.context.maxRevision,
     epoch: feed.context.epoch,

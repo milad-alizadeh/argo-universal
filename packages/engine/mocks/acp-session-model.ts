@@ -147,6 +147,21 @@ export const createAcpSessionModel = (
 
   const events = [
     {
+      type: 'agent.shellChanged',
+      shell: {
+        id: 'model-shell',
+        sessionId: initial.context.sessionId,
+        toolCallId: 'model-tool',
+        command: 'fixture',
+        cwd: '/fixture',
+        status: 'running',
+        exitCode: null,
+        startedAt: 0,
+        endedAt: null,
+        outputBlobId: null,
+      },
+    },
+    {
       type: updateEvent,
       notification: {
         sessionId: lease.sessionId,

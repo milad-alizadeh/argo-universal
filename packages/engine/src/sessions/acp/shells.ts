@@ -1,5 +1,6 @@
 import type {
   CreateTerminalRequest,
+  SessionNotification,
   ToolCallContent,
   TerminalExitStatus,
 } from '@agentclientprotocol/sdk';
@@ -53,3 +54,19 @@ export const toShell = (
   durationMs: (shell.endedAt ?? observation.now) - shell.startedAt,
   canStop: shell.status === 'running' && observation.terminalAvailable,
 });
+
+export const terminalReferences = (
+  update: SessionNotification['update'],
+): { toolCallId: string; terminalId: string }[] => {
+  if (!('toolCallId' in update)) return [];
+
+  return terminalIds(update.content ?? []).map((terminalId) => ({
+    toolCallId: update.toolCallId,
+    terminalId,
+  }));
+};
+
+const terminalIds = (content: ToolCallContent[]): string[] =>
+  content.flatMap((entry) =>
+    entry.type === 'terminal' ? [entry.terminalId] : [],
+  );

@@ -1,5 +1,6 @@
 import type {
   ContentBlock,
+  ShellRecord,
   ContextUsage,
   PendingElicitation,
   PendingPermission,
@@ -62,6 +63,7 @@ import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
 } from './acp/prompt-types';
+import { ShellRuntime } from './acp/shell-runtime';
 import {
   routeSubagentUpdate,
   flushSubagentFeeds,
@@ -105,6 +107,7 @@ import {
   TurnInsertJob,
   TurnUpdateJob,
 } from './session-storage';
+import { readShellRecords } from './shells/reader';
 import { crashedSubagentTurns } from './subagents/crash';
 
 const setConfigEvent = 'session.setConfigOption';
@@ -208,7 +211,8 @@ type SessionEvent =
   | SessionCommand
   | AcpLifetimeEvent
   | { type: typeof storageFailingEvent }
-  | { type: 'session.shutdown' };
+  | { type: 'session.shutdown' }
+  | { type: 'agent.shellChanged'; shell: ShellRecord };
 
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
@@ -241,6 +245,8 @@ export interface SessionContext extends SessionData {
   > | null;
   feedEnded: boolean;
   subagentFeeds: SubagentFeeds;
+  shells: ShellRecord[];
+  shellRuntime: ShellRuntime;
   // The database writer refused this Turn's Feed rows, so the Turn is cancelled and ends with a storage error.
   storageFailedTurn: boolean;
 }
@@ -440,7 +446,9 @@ const sessionSetup = setup({
       },
     ),
     closeAcp: fromPromise<void, AcpOperationInput>(async ({ input }) => {
-      await input.context.acpLifetime.close();
+      await input.context.acpLifetime.close(
+        input.context.archiveRequested ? 'stopped' : 'lost',
+      );
       await publishActiveTurnContent(input);
     }),
     createCheckout: fromPromise<SessionData, NewSessionInput>(
@@ -1203,51 +1211,84 @@ const archiveOperationOutcome = {
 
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
-  context: ({ input }): SessionContext => ({
-    input,
-    archiveRequested: input.archive ?? false,
-    sessionId: input.sessionId,
-    projectId: input.kind === 'new' ? input.projectId : '',
-    agent: input.kind === 'new' ? input.agent : '',
-    vendorSessionId: null,
-    checkout: { path: '', branch: null },
-    configValues: [],
-    epoch: 0,
-    maxRevision: 0,
-    activityAt: 0,
-    nextPosition: 0,
-    kept: false,
-    undisclosedInterruptedTurnId: null,
-    activeTurnId: null,
-    activeTurnStartedAt: null,
-    usage: null,
-    permissionQueue: [],
-    elicitationQueue: [],
-    configOptions: [],
-    rejectedMessages: 0,
-    failure: null,
-    openError: null,
-    stored: input.kind === 'existing',
-    sessionInsertCommitted: null,
-    acpLifetime: new AcpSessionLifetime(input.acp, input.createId),
-    acpLease: null,
-    pendingSubmission: null,
-    feedEnded: false,
-    subagentFeeds: { children: new Map(), pendingMessages: [] },
-    acpPrompt: null,
-    acpResponseReaders: createAcpResponseReaders(
-      createRejectionCounter(`ACP Session ${input.sessionId}`),
-    ),
-    acpConfigurationRejections: createRejectionCounter(
-      `ACP configuration ${input.sessionId}`,
-    ),
-    acpTurnOutcome: null,
-    turnEnding: { kind: 'completion' },
-    configQueue: [],
-    heldConfig: [],
-    applyingConfig: null,
-    storageFailedTurn: false,
-  }),
+  context: ({ input, self }): SessionContext => {
+    const shellRuntime = new ShellRuntime({
+      sessionId: input.sessionId,
+      home: input.runtimeDirectory,
+      writer: (): WriterActorRef | undefined =>
+        findMachineActor(self.system, databaseWriterId, writerMachine),
+      now: input.now,
+      createId: input.createId,
+      changed: (shell): void =>
+        self.send({ type: 'agent.shellChanged', shell }),
+      failed: (error): void => {
+        console.error('Shell storage failed', error);
+        self.send({ type: storageFailingEvent });
+      },
+    });
+
+    return {
+      input,
+      archiveRequested: input.archive ?? false,
+      sessionId: input.sessionId,
+      projectId: input.kind === 'new' ? input.projectId : '',
+      agent: input.kind === 'new' ? input.agent : '',
+      vendorSessionId: null,
+      checkout: { path: '', branch: null },
+      configValues: [],
+      epoch: 0,
+      maxRevision: 0,
+      activityAt: 0,
+      nextPosition: 0,
+      kept: false,
+      undisclosedInterruptedTurnId: null,
+      activeTurnId: null,
+      activeTurnStartedAt: null,
+      usage: null,
+      permissionQueue: [],
+      elicitationQueue: [],
+      configOptions: [],
+      rejectedMessages: 0,
+      failure: null,
+      openError: null,
+      stored: input.kind === 'existing',
+      sessionInsertCommitted: null,
+      acpLifetime: new AcpSessionLifetime(
+        input.acp,
+        input.createId,
+        shellRuntime,
+      ),
+      shellRuntime,
+      shells: readShellRecords(input.database, input.sessionId),
+      acpLease: null,
+      pendingSubmission: null,
+      feedEnded: false,
+      subagentFeeds: { children: new Map(), pendingMessages: [] },
+      acpPrompt: null,
+      acpResponseReaders: createAcpResponseReaders(
+        createRejectionCounter(`ACP Session ${input.sessionId}`),
+      ),
+      acpConfigurationRejections: createRejectionCounter(
+        `ACP configuration ${input.sessionId}`,
+      ),
+      acpTurnOutcome: null,
+      turnEnding: { kind: 'completion' },
+      configQueue: [],
+      heldConfig: [],
+      applyingConfig: null,
+      storageFailedTurn: false,
+    };
+  },
+  on: {
+    'agent.shellChanged': {
+      actions: assign(({ context, event }) => ({
+        shells: [
+          ...context.shells.filter((shell) => shell.id !== event.shell.id),
+          event.shell,
+        ],
+      })),
+    },
+  },
   output: ({ context }): Pick<SessionContext, 'failure'> => ({
     failure: context.failure,
   }),

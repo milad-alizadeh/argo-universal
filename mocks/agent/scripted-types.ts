@@ -1,6 +1,7 @@
 import type {
   AgentContext,
   CreateTerminalRequest,
+  TerminalOutputResponse,
   CreateElicitationRequest,
   InitializeResponse,
   RequestPermissionRequest,
@@ -31,6 +32,7 @@ export type ScriptedStep =
       request: Omit<CreateTerminalRequest, 'sessionId'>;
       toolCallId: string;
       completion: 'leave-running' | 'wait-for-exit' | 'kill';
+      outputs?: TerminalOutputResponse[];
     }
   | { type: 'update'; update: SessionUpdate; sessionId?: string }
   | {

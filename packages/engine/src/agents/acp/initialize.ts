@@ -7,7 +7,6 @@ import type { createAcpResponseReaders } from './response-readers';
 
 type Readers = ReturnType<typeof createAcpResponseReaders>;
 
-// Every Agent connection advertises terminal auth and form Elicitation only.
 const clientCapabilities: ClientCapabilities = {
   auth: { terminal: true },
   session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
@@ -35,7 +34,8 @@ const negotiate = async (
 export const negotiateAcpInitialize = (
   agent: ClientContext,
   readers: Readers,
-): Promise<InitializeResponse> => negotiate(agent, readers, clientCapabilities);
+): Promise<InitializeResponse> =>
+  negotiate(agent, readers, { ...clientCapabilities, terminal: true });
 
 // The old login stack keeps its own capabilities until T6 deletes it.
 export const negotiateLoginInitialize = (
