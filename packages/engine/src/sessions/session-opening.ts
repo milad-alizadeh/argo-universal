@@ -144,7 +144,7 @@ function openStoredSession(
   return requireOpenSessionActor(deps.sessions, sessionId);
 }
 
-function readWritableSession(
+export function readWritableSession(
   readSession: SessionRouterDeps['readSession'],
   sessionId: string,
 ): ReturnType<SessionRouterDeps['readSession']> {

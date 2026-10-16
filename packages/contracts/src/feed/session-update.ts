@@ -52,6 +52,18 @@ export const UserMessage = z.strictObject({
   ...message,
 });
 
+export const SessionMessage = z.strictObject({
+  ...envelope,
+  sessionUpdate: kind('session_message'),
+  messageId: z.string(),
+  content: z.array(ContentBlock),
+  _meta: createFeedMetadataSchema(
+    z.strictObject({ senderSessionId: z.string() }),
+  ),
+});
+
+export type SessionMessage = z.infer<typeof SessionMessage>;
+
 export type UserMessage = z.infer<typeof UserMessage>;
 
 export const AgentMessage = z.strictObject({
@@ -198,6 +210,7 @@ export type TaskUpdate = z.infer<typeof TaskUpdate>;
 // One Feed row. An unknown `sessionUpdate` kind or an unknown key fails to parse.
 export const SessionUpdate = z.discriminatedUnion('sessionUpdate', [
   UserMessage,
+  SessionMessage,
   AgentMessage,
   AgentThought,
   ToolCallUpdate,

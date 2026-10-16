@@ -7,6 +7,7 @@ import {
   validateSessionCommandAdmission,
 } from './session-command';
 import type { SessionActorRef } from './session-machine';
+import { readWritableSession } from './session-opening';
 import { requireLiveSessionActor } from './session-system';
 
 const isClosing = (actor: SessionActorRef): boolean => {
@@ -20,10 +21,20 @@ const isClosing = (actor: SessionActorRef): boolean => {
 };
 
 export const closeSession = async (
-  deps: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
+  deps: Pick<
+    SessionRouterDeps,
+    'sessions' | 'readSession' | 'sessionCommandSignal'
+  >,
   sessionId: string,
 ): Promise<SessionCloseOutput> => {
   validateSessionCommandAdmission(deps);
+
+  if (deps.readSession(sessionId).parentSessionId !== null)
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: 'A Subagent is read-only',
+    });
+
   const actor = requireLiveSessionActor(deps.sessions.system, sessionId);
 
   if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });
@@ -44,10 +55,14 @@ export const closeSession = async (
 };
 
 export const cancelSession = (
-  deps: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
+  deps: Pick<
+    SessionRouterDeps,
+    'sessions' | 'readSession' | 'sessionCommandSignal'
+  >,
   sessionId: string,
 ): SessionCancelOutput => {
   validateSessionCommandAdmission(deps);
+  readWritableSession(deps.readSession, sessionId);
   sendSessionCommand(requireLiveSessionActor(deps.sessions.system, sessionId), {
     type: 'session.cancel',
   });

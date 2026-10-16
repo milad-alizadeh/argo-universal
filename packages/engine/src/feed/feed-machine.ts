@@ -41,6 +41,7 @@ export interface FeedInput extends Pick<
   'epoch' | 'maxRevision'
 > {
   sessionId: string;
+  rows?: Record<string, SessionUpdate>;
   now: () => number;
   createId: () => string;
   activityAt?: number;
@@ -234,7 +235,7 @@ export const feedMachine = setup({
     ...input,
     activityAt: input.activityAt ?? 0,
     lastSettledTurnId: null,
-    rows: {},
+    rows: input.rows ?? {},
     changedRowIds: [],
     streamEvents: [],
     rejectedChanges: 0,
