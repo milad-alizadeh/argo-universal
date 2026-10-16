@@ -23,7 +23,6 @@ export type AcpSessionOpening =
 export type AcpSessionDestination = {
   registrationFinished?: Promise<void>;
   terminalRequests?: TerminalRequests;
-  closeShells?: () => Promise<void>;
   update: (notification: SessionNotification) => undefined;
   failed: (cause: unknown) => void;
   requestPermission: ClientRequestHandlersByMethod['session/request_permission'];

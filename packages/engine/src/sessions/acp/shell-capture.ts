@@ -34,8 +34,8 @@ export class ShellCapture {
   public constructor(private readonly input: ShellCaptureInput) {
     this.startedAt = input.now();
   }
-  public append(text: string): Promise<void> {
-    this.enqueue(() => appendShellOutput(this.input.path, text));
+  public append(chunk: Buffer): Promise<void> {
+    this.enqueue(() => appendShellOutput(this.input.path, chunk));
 
     return this.pending;
   }

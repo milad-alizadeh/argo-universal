@@ -145,8 +145,13 @@ export class ShellRuntime {
   }
   public async close(status: 'lost' | 'stopped'): Promise<void> {
     this.closed = true;
-    await Promise.all(
+
+    const closed = await Promise.allSettled(
       [...this.terminals.values()].map((terminal) => terminal.close(status)),
     );
+
+    const failure = closed.find((result) => result.status === 'rejected');
+
+    if (failure) throw failure.reason;
   }
 }

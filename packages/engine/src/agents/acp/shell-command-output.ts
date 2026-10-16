@@ -5,20 +5,20 @@ import type { ShellCommandInput } from './shell-command';
 
 const captureSink = (output: ShellCommandInput['output']): Writable =>
   new Writable({
-    decodeStrings: false,
-    write: (text: string, _encoding, callback): void => {
+    write: (chunk: Buffer, _encoding, callback): void => {
       Promise.resolve()
-        .then(() => output(text))
+        .then(() => output(chunk))
         .then(() => callback(), callback);
     },
   });
 
+// Stored as produced; stdout and stderr may interleave inside a character.
 export const captureShellCommandOutput = async (
   child: ShellChild,
   output: ShellCommandInput['output'],
 ): Promise<void> => {
   await Promise.all([
-    pipeline(child.stdout.setEncoding('utf8'), captureSink(output)),
-    pipeline(child.stderr.setEncoding('utf8'), captureSink(output)),
+    pipeline(child.stdout, captureSink(output)),
+    pipeline(child.stderr, captureSink(output)),
   ]);
 };

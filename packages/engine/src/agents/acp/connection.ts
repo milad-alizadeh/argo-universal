@@ -485,10 +485,7 @@ export class AcpConnection {
     id: string,
     session: AgentSession,
   ): Promise<void> {
-    await Promise.all([
-      this.closeProtocolSession(id),
-      session.destination.closeShells?.(),
-    ]);
+    await this.closeProtocolSession(id);
     session.controller.abort();
     await Promise.allSettled(session.pending);
   }

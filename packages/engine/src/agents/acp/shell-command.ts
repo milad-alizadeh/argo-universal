@@ -22,7 +22,7 @@ export type ShellCommandInput = {
   launch: AgentLaunch;
   cwd: string;
   home: string;
-  output: (text: string) => void | Promise<void>;
+  output: (chunk: Buffer) => void | Promise<void>;
 };
 
 const ShellMessage = z.discriminatedUnion('type', [

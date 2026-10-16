@@ -35,7 +35,7 @@ export class ShellTerminal {
     await createShellOutput(this.input.path);
     this.command = await launchShellCommand({
       ...this.input,
-      output: (text) => this.capture.append(text),
+      output: (chunk) => this.capture.append(chunk),
     });
     void this.command.exited
       .then((exit) => this.exited(exit))

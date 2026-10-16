@@ -34,8 +34,8 @@ await launchShellCommand({
       "const {spawn}=require('node:child_process');const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'inherit'});console.log('command:'+child.pid+':'+process.ppid);setInterval(()=>{},1000)",
     ],
   },
-  output: (text): void => {
-    const match = text.match(/command:(\d+):(\d+)/);
+  output: (chunk): void => {
+    const match = chunk.toString().match(/command:(\d+):(\d+)/);
 
     if (match) void recordPids(Number(match[1]), Number(match[2]));
   },

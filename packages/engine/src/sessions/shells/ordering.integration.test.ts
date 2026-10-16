@@ -47,9 +47,9 @@ it('never commits an ended Shell Blob ahead of already queued output appends', a
     },
   });
 
-  void capture.append('first\n');
+  void capture.append(Buffer.from('first\n'));
   capture.associate('fixture-tool');
-  void capture.append('last\n');
+  void capture.append(Buffer.from('last\n'));
   await capture.end('exited', { exitCode: 0 });
   subscription.unsubscribe();
   expect(failures).toEqual([]);

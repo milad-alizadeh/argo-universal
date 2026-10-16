@@ -36,7 +36,6 @@ export class AcpSessionLifetime {
   private closing: Promise<void> | undefined;
   private lease: AcpSessionLease | undefined;
   private attached = false;
-  private shellCloseStatus: 'lost' | 'stopped' = 'lost';
   private readonly requests: AcpSessionRequests;
   public constructor(
     private readonly dependencies: AcpSessionDependencies | undefined,
@@ -72,11 +71,7 @@ export class AcpSessionLifetime {
     destination: AcpSessionDestination,
   ): AcpSessionDestination {
     return this.shells
-      ? withShellDestination({
-          destination,
-          shells: this.shells,
-          closeStatus: () => this.shellCloseStatus,
-        })
+      ? withShellDestination(destination, this.shells)
       : destination;
   }
   public finishRegistration(): void {
@@ -131,18 +126,22 @@ export class AcpSessionLifetime {
   }
   public cancelRequests = (): void => this.requests.cancelAll();
   public close(status: 'lost' | 'stopped' = 'lost'): Promise<void> {
-    this.prepareClose(status);
     this.finishRegistration();
     this.requests.cancelAll();
     this.controller.abort();
-    this.closing ??= this.closeOwned();
+    this.closing ??= this.closeOwned(status);
 
     return this.closing;
   }
-  private prepareClose(status: 'lost' | 'stopped'): void {
-    if (!this.closing) this.shellCloseStatus = status;
+  // Shells end first: an Agent waiting on one may not answer session/close.
+  private async closeOwned(status: 'lost' | 'stopped'): Promise<void> {
+    try {
+      await this.shells?.close(status);
+    } finally {
+      await this.closeLease();
+    }
   }
-  private async closeOwned(): Promise<void> {
+  private async closeLease(): Promise<void> {
     try {
       await this.closeOpening();
     } catch (error) {
