@@ -72,6 +72,10 @@ import { hasConfigurationCapacity } from './admission/config-admission';
 import { isReplayedHistory } from './admission/update-admission';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { currentModel, toConfigValues } from './configuration/config-choices';
+import {
+  withHeldConfiguration,
+  type HeldConfigChoice,
+} from './configuration/held-configuration';
 import { validateConfigChoice } from './session-admission';
 import {
   createSessionCheckout,
@@ -215,6 +219,7 @@ export interface SessionContext extends SessionData {
   acpTurnOutcome: EndTurnParameters | null;
   turnEnding: FeedTurnEnding;
   configQueue: Extract<SessionCommand, { type: typeof setConfigEvent }>[];
+  heldConfig: HeldConfigChoice[];
   applyingConfig: Extract<
     SessionCommand,
     { type: typeof setConfigEvent }
@@ -432,6 +437,36 @@ const sessionSetup = setup({
 
       return { configQueue: [...context.configQueue, event] };
     }),
+    holdAcpConfig: assign(({ context, event }) => {
+      assertEvent(event, setConfigEvent);
+
+      const heldConfig = [
+        ...context.heldConfig.filter(
+          ({ configId }) => configId !== event.configId,
+        ),
+        { configId: event.configId, value: event.value },
+      ];
+
+      event.applied?.resolve(
+        withHeldConfiguration(context.configOptions, heldConfig),
+      );
+
+      return { heldConfig };
+    }),
+    releaseHeldConfig: assign(
+      ({ context }): Pick<SessionContext, 'configQueue' | 'heldConfig'> => ({
+        configQueue: [
+          ...context.configQueue,
+          ...context.heldConfig.map(
+            (choice): SessionContext['configQueue'][number] => ({
+              type: setConfigEvent,
+              ...choice,
+            }),
+          ),
+        ],
+        heldConfig: [],
+      }),
+    ),
     takeAcpConfig: assign(({ context }) => ({
       applyingConfig: context.configQueue[0] ?? null,
       configQueue: context.configQueue.slice(1),
@@ -471,7 +506,7 @@ const sessionSetup = setup({
 
       for (const config of context.configQueue) config.applied?.reject(error);
 
-      return { configQueue: [], applyingConfig: null };
+      return { configQueue: [], heldConfig: [], applyingConfig: null };
     }),
     rememberAcpUsage: assign(
       ({ context, event }): Pick<SessionContext, 'usage'> => {
@@ -523,10 +558,7 @@ const sessionSetup = setup({
 
         return {
           acpPrompt: prompt,
-          pendingSubmission: context.pendingSubmission && {
-            ...context.pendingSubmission,
-            committed: undefined,
-          },
+          pendingSubmission: null,
         };
       },
     ),
@@ -890,8 +922,16 @@ const sessionSetup = setup({
         event.notification.update.sessionUpdate,
       ),
     hasAcpConfig: ({ context }) => context.configQueue.length > 0,
+    hasSubmission: ({ context }) => context.pendingSubmission !== null,
+    holdsAcpConfig: or([
+      stateIn({ open: { acp: 'activeTurn' } }),
+      stateIn({ open: { acp: 'publishing' } }),
+      ({ context }): boolean => context.heldConfig.length > 0,
+    ]),
     hasConfigurationCapacity: ({ context }): boolean =>
-      hasConfigurationCapacity(context.configQueue.length),
+      hasConfigurationCapacity(
+        context.configQueue.length + context.heldConfig.length,
+      ),
     acceptsAcpConfig: and([
       'hasConfigurationCapacity',
       or([
@@ -961,10 +1001,14 @@ const acpTurnOutcome = ({
 }): EndTurnParameters => context.acpTurnOutcome ?? { stopReason: 'error' };
 
 const toPromptTurn = ({
-  event,
+  context,
 }: {
-  event: Extract<SessionCommand, { type: 'session.prompt' }>;
-}): StartTurnParameters => ({ turnId: event.turnId, content: event.content });
+  context: SessionContext;
+}): StartTurnParameters => {
+  if (!context.pendingSubmission) throw new Error('No Session submission');
+
+  return context.pendingSubmission;
+};
 
 const discardsSession = { type: 'closesBy', params: 'discard' } as const;
 
@@ -1028,6 +1072,7 @@ export const sessionMachine = sessionSetup.createMachine({
     acpTurnOutcome: null,
     turnEnding: { kind: 'completion' },
     configQueue: [],
+    heldConfig: [],
     applyingConfig: null,
     storageFailedTurn: false,
   }),
@@ -1165,10 +1210,13 @@ export const sessionMachine = sessionSetup.createMachine({
               },
               { actions: 'forwardAcpUpdate' },
             ],
-            [setConfigEvent]: {
-              guard: 'acceptsAcpConfig',
-              actions: 'queueAcpConfig',
-            },
+            [setConfigEvent]: [
+              {
+                guard: and(['acceptsAcpConfig', 'holdsAcpConfig']),
+                actions: 'holdAcpConfig',
+              },
+              { guard: 'acceptsAcpConfig', actions: 'queueAcpConfig' },
+            ],
             [acpPermissionEvent]: { actions: 'refuseAcpRequest' },
             [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
             [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },
@@ -1215,16 +1263,15 @@ export const sessionMachine = sessionSetup.createMachine({
               },
             },
             idle: {
-              always: { guard: 'hasAcpConfig', target: configuringState },
+              always: [
+                { guard: 'hasAcpConfig', target: configuringState },
+                { guard: 'hasSubmission', target: 'committing' },
+              ],
               on: {
                 'acp.failed': { target: 'closing', actions: 'recordCrash' },
                 'session.close': { target: 'closing' },
                 'session.prompt': {
-                  target: 'committing',
-                  actions: [
-                    'rememberSubmission',
-                    { type: 'persistTurn', params: toPromptTurn },
-                  ],
+                  actions: ['rememberSubmission', 'releaseHeldConfig'],
                 },
               },
             },
@@ -1247,14 +1294,25 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
                 onError: {
                   target: 'idle',
-                  actions: {
-                    type: 'rejectAcpConfig',
-                    params: ({ event }) => ({ error: event.error }),
-                  },
+                  actions: [
+                    {
+                      type: 'rejectAcpConfig',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
+                    {
+                      type: 'rejectSubmission',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
+                  ],
                 },
               },
             },
             committing: {
+              entry: { type: 'persistTurn', params: toPromptTurn },
               invoke: {
                 id: 'commitPrompt',
                 src: 'commitPrompt',
@@ -1448,7 +1506,9 @@ export const sessionMachine = sessionSetup.createMachine({
                           target: 'waiting',
                           actions: {
                             type: 'rememberFailure',
-                            params: ({ event }) => ({ error: event.error }),
+                            params: ({ event }): FailureParameters => ({
+                              error: event.error,
+                            }),
                           },
                         },
                       },
@@ -1493,7 +1553,9 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'closing',
                   actions: {
                     type: 'rememberFailure',
-                    params: ({ event }) => ({ error: event.error }),
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
                   },
                 },
               },
