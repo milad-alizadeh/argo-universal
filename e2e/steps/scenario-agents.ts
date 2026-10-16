@@ -102,6 +102,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
 const signInSteps = [
   [/^(?:Given|And) Agent (\d+) needs sign-in$/, 'sign-in-required'],
   [/^(?:Given|And) Agent (\d+) offers two sign-in methods$/, 'sign-in-methods'],
+  [/^(?:Given|And) Agent (\d+) holds its sign-in$/, 'sign-in-held'],
   [
     /^(?:Given|And) Agent (\d+) signs in through a terminal$/,
     'terminal-sign-in-required',

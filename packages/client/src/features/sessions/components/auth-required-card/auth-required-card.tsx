@@ -1,6 +1,6 @@
+import { authRequiredMessage } from '@repo/contracts';
 import type * as React from 'react';
-import { Button } from '#primitives/buttons/button';
-import { Callout } from '#primitives/display/callout';
+import { Callout, CalloutButton } from '#primitives/display/callout';
 
 export interface AuthRequiredCardProps {
   // The Agent's own words when its Turn ended with `auth_required`.
@@ -16,21 +16,10 @@ export function AuthRequiredCard(
     <Callout
       tone="danger"
       title="Authentication Required"
-      description={props.description ?? 'Authentication required'}
-      actions={<AuthenticateButton {...props} />}
-    />
-  );
-}
-
-function AuthenticateButton({
-  onAuthenticate,
-}: Pick<AuthRequiredCardProps, 'onAuthenticate'>): React.JSX.Element {
-  return (
-    <Button
-      size="sm"
-      fullWidth="narrow"
-      label="Authenticate"
-      onPress={onAuthenticate}
+      description={props.description ?? authRequiredMessage}
+      actions={
+        <CalloutButton label="Authenticate" onPress={props.onAuthenticate} />
+      }
     />
   );
 }

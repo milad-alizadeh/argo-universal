@@ -1,4 +1,8 @@
-import { RequestError, type AuthMethod } from '@agentclientprotocol/sdk';
+import {
+  RequestError,
+  type AuthMethod,
+  type ErrorResponse,
+} from '@agentclientprotocol/sdk';
 import { acpConfiguration } from './acp-configuration.ts';
 import { agentExit } from './process-exit-scenarios.ts';
 import {
@@ -31,7 +35,7 @@ const signedOut = (): Pick<ScriptedScenario, 'authentication'> => ({
   authentication: { credentials: { signedIn: false } },
 });
 
-const authRequired = {
+const authRequired: ErrorResponse = {
   code: RequestError.authRequired().code,
   message: 'Your subscription sign-in expired.',
 };
@@ -63,6 +67,12 @@ const terminalSignInRequired = (steps: Steps): ScriptedScenario => ({
   initialize: terminalLogin.initialize,
 });
 
+// Signing in holds until Cancel drops this Agent process; the next one holds again.
+const signInHeld = (steps: Steps): ScriptedScenario => ({
+  ...signInRequired(steps),
+  responses: { authenticate: [{ steps: [{ type: 'hold' }] }] },
+});
+
 // The first prompt ends `auth_required`; the next one answers.
 const turnAuthRequired = (steps: Steps): ScriptedScenario => ({
   ...base(steps),
@@ -70,15 +80,17 @@ const turnAuthRequired = (steps: Steps): ScriptedScenario => ({
   responses: { 'session/prompt': [{ steps: [], error: authRequired }, {}] },
 });
 
-// Exits while opening its first Session; once it has, App E2E relaunches it as `reply` (scripted-agent-process.ts).
+// Exits while opening its first Session; the Agent started again after that exit opens Sessions.
 const openExitOnce = (steps: Steps): ScriptedScenario => ({
   ...base(steps),
   responses: { 'session/new': [{ steps: [agentExit] }] },
+  relaunched: base(steps),
 });
 
 type SignInScenarioName =
   | 'sign-in-required'
   | 'sign-in-methods'
+  | 'sign-in-held'
   | 'terminal-sign-in-required'
   | 'turn-auth-required'
   | 'open-exit-once';
@@ -89,6 +101,7 @@ export const signInScenarios = (
 ): Record<SignInScenarioName, ScriptedScenario> => ({
   'sign-in-required': signInRequired(steps),
   'sign-in-methods': signInMethods(steps),
+  'sign-in-held': signInHeld(steps),
   'terminal-sign-in-required': terminalSignInRequired(steps),
   'turn-auth-required': turnAuthRequired(steps),
   'open-exit-once': openExitOnce(steps),

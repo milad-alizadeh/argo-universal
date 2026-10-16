@@ -7,6 +7,7 @@ import type {
 } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { vi } from 'vitest';
+import { openFailure } from '../components/failure-messages.mocks';
 import { EmptySessionStore } from './empty-session-store';
 import type { EmptySessionPorts } from './empty-session-types';
 
@@ -35,10 +36,8 @@ export const options: SessionConfigOption[] =
 
 export const failure = new Error('The Agent did not start');
 
-// A rejected `session.new` whose Agent needs sign-in, as the tRPC client carries it.
-export const authRequired = Object.assign(new Error('Session closed'), {
-  data: { openError: { type: 'auth-required' } },
-});
+// A rejected `session.new` whose Agent needs sign-in.
+export const authRequired = openFailure({ type: 'auth-required' });
 
 export const promptOutput: SessionPromptOutput = { messageId: 'message-1' };
 

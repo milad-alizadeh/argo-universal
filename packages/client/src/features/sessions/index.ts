@@ -125,7 +125,6 @@ export {
 export {
   SessionCallout,
   type SessionCalloutProps,
-  signInCallout,
 } from './components/session-callout/session-callout';
 
 export {
@@ -143,3 +142,13 @@ export {
   type SessionProblem,
   sessionProblem,
 } from './state/session-problem';
+
+export {
+  type OpenAnswers,
+  openCallout,
+  openProblem,
+  type SessionCallouts,
+  signsIn,
+  type TurnAnswers,
+  turnCallout,
+} from './state/session-callouts';

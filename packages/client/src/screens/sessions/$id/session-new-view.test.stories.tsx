@@ -154,6 +154,7 @@ export const FailedStart: Story = {
     await expect(
       shownText(canvas.getByRole('textbox', { name: messageLabel })),
     ).toBe(typedDraft.text);
+    await expect(canvas.getByRole('button', { name: sendLabel })).toBeEnabled();
     await userEvent.click(retry);
     await expect(onRetry).toHaveBeenCalledOnce();
   },

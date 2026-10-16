@@ -1,14 +1,11 @@
-import { SessionOpenFailure, type SessionOpenError } from '@repo/contracts';
+import {
+  authRequiredMessage,
+  SessionOpenFailure,
+  type SessionOpenError,
+} from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { sessionOpenError, sessionOpenErrorMessage } from './failure-messages';
-
-// The fields a tRPC client error carries for a rejected `session.new`.
-const openFailure = (openError: SessionOpenError): Error =>
-  Object.assign(new Error('Session session-1 closed'), {
-    data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500, openError },
-  });
-
-const authRequired = 'Authentication required';
+import { openFailure } from './failure-messages.mocks';
 
 const authRequiredOpen: SessionOpenError = { type: 'auth-required' };
 
@@ -17,7 +14,7 @@ const refused = 'The Agent refused';
 it.each([
   {
     cause: openFailure(authRequiredOpen),
-    message: authRequired,
+    message: authRequiredMessage,
   },
   {
     cause: openFailure({
@@ -28,7 +25,7 @@ it.each([
   },
   {
     cause: new SessionOpenFailure(authRequiredOpen),
-    message: authRequired,
+    message: authRequiredMessage,
   },
   { cause: new Error(refused), message: refused },
 ])('reads $message from an open failure', ({ cause, message }) => {

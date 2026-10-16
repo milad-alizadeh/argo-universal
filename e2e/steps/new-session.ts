@@ -170,13 +170,3 @@ When(
     await page.getByRole('button', { name: 'Send', exact: true }).click();
   },
 );
-
-Then(
-  'New Session says the Agent failed to launch',
-  async ({ page }): Promise<void> => {
-    await expect(
-      page.getByRole('heading', { name: 'Failed to Launch', exact: true }),
-    ).toBeVisible(sessionOpenTimeout);
-    await expect(page).toHaveURL(/\/sessions\/new$/);
-  },
-);

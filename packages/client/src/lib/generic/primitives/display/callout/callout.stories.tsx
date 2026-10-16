@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { Button } from '#primitives/buttons/button';
 import { useWide } from '../../../use-wide/use-wide';
 import { Variation, Variations } from '../../../variations';
 import { Callout } from './callout';
+import { CalloutButton } from './callout-button';
 import type { CalloutProps } from './callout-props';
 
 const stderr = `npm error code E404
@@ -13,7 +13,7 @@ npm error 404 '@zed-industries/codex-acp@0.3.9' is not in this registry.`;
 const info = {
   title: 'No Agents added yet',
   description: 'Click "Add Agent" to get started.',
-  actions: <Button size="sm" fullWidth="narrow" label="Add Agent" />,
+  actions: <CalloutButton label="Add Agent" />,
 } satisfies CalloutProps;
 
 const error = {
@@ -21,15 +21,13 @@ const error = {
   title: 'Failed to Launch',
   description: 'Agent exited with status 1',
   detail: stderr,
-  actions: <Button size="sm" fullWidth="narrow" label="Retry" />,
+  actions: <CalloutButton label="Retry" />,
 } satisfies CalloutProps;
 
 const busy = {
   busy: true,
   title: 'Authenticating to Codex…',
-  actions: (
-    <Button size="sm" fullWidth="narrow" variant="secondary" label="Cancel" />
-  ),
+  actions: <CalloutButton variant="secondary" label="Cancel" />,
 } satisfies CalloutProps;
 
 const examples = { info, error, busy };

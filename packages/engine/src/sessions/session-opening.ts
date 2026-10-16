@@ -13,11 +13,12 @@ import type {
 } from './open-sessions-machine';
 import type { SessionRouterDeps } from './router-deps';
 import {
+  type ReadySessionCommandType,
   rejectSessionCommand,
   rejectOpenSessionsCommand,
   validateSessionCommandAdmission,
 } from './session-command';
-import type { SessionActorRef, SessionCommand } from './session-machine';
+import type { SessionActorRef } from './session-machine';
 import { sessionMachine } from './session-machine';
 import { sessionActorId } from './session-system';
 
@@ -65,7 +66,7 @@ function isInitialSessionStartup(
 
 async function waitForSessionReady(
   sessionActor: SessionActorRef,
-  commandType: SessionCommand['type'],
+  commandType: ReadySessionCommandType,
 ): Promise<SessionActorRef> {
   await waitFor(
     sessionActor,
@@ -85,7 +86,7 @@ async function waitForSessionReady(
 
 function requireReadySession(
   sessionActor: SessionActorRef,
-  commandType: SessionCommand['type'],
+  commandType: ReadySessionCommandType,
 ): SessionActorRef {
   const sessionSnapshot = sessionActor.getSnapshot();
 
@@ -119,7 +120,7 @@ export async function openReadySession(
     'sessions' | 'readSession' | 'sessionCommandSignal'
   >,
   sessionId: string,
-  commandType: SessionCommand['type'] = 'session.prompt',
+  commandType: ReadySessionCommandType = 'session.prompt',
 ): Promise<SessionActorRef> {
   validateSessionCommandAdmission(deps);
 
@@ -142,7 +143,7 @@ export const openSession = async (
   >,
   { sessionId }: SessionOpenInput,
 ): Promise<SessionOpenOutput> => {
-  await openReadySession(deps, sessionId, 'session.setConfigOption');
+  await openReadySession(deps, sessionId, 'session.open');
 
   return {};
 };

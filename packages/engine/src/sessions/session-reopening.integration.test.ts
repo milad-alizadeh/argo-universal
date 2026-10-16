@@ -1,4 +1,6 @@
+import { RequestError } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
+import { startAcpEngine } from '#mocks/acp-engine';
 import { startSessionJourney, newSession } from '#mocks/session-journey';
 
 it('removes a closed Session and resumes its stored Agent identity on the next prompt', async (): Promise<void> => {
@@ -38,4 +40,17 @@ it('opens a stored Session without a Turn, so a Retry never resends one', async 
     { sessionId: 'owned-1', cwd: opening.cwd, mcpServers: [] },
   ]);
   expect(prompts).toHaveLength(1);
+});
+
+it('refuses to open a past Session whose Agent needs sign-in with a typed auth-required error', async (): Promise<void> => {
+  const host = await startAcpEngine({
+    steps: [],
+    responses: {
+      'session/new': [{ error: RequestError.authRequired().toErrorResponse() }],
+    },
+  });
+
+  await expect(
+    host.caller.session.open({ sessionId: 'session-1' }),
+  ).rejects.toMatchObject({ cause: { openError: { type: 'auth-required' } } });
 });

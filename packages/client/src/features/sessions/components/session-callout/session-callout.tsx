@@ -13,33 +13,40 @@ import {
   type LaunchCalloutProps,
 } from '../launch-callout/launch-callout';
 
-// The one callout above a Session's Composer: sign in, a Turn that needs sign-in, an Agent that failed to launch, or its open running again.
-export type SessionCalloutProps =
-  | { kind: 'loading' }
-  | ({ kind: 'authenticate' } & AuthCalloutProps)
-  | ({ kind: 'auth-required' } & AuthRequiredCardProps)
-  | ({ kind: 'launch' } & LaunchCalloutProps);
-
-// The sign-in callout, or Loading… until the Agent's methods arrive.
-export const signInCallout = (
-  auth: AuthCalloutProps | undefined,
-): SessionCalloutProps =>
-  auth ? { kind: 'authenticate', ...auth } : { kind: 'loading' };
-
-type CalloutView = (props: SessionCalloutProps) => React.JSX.Element | null;
-
-const views: Record<SessionCalloutProps['kind'], CalloutView> = {
-  loading: () => <CalloutLoading />,
-  authenticate: (props) =>
-    props.kind === 'authenticate' ? <AuthCallout {...props} /> : null,
-  'auth-required': (props) =>
-    props.kind === 'auth-required' ? <AuthRequiredCard {...props} /> : null,
-  launch: (props) =>
-    props.kind === 'launch' ? <LaunchCallout {...props} /> : null,
+type CalloutKinds = {
+  loading: Record<never, never>;
+  authenticate: AuthCalloutProps;
+  'auth-required': AuthRequiredCardProps;
+  launch: LaunchCalloutProps;
 };
+
+type CalloutKind = keyof CalloutKinds;
+
+type KindProps<Kind extends CalloutKind> = { kind: Kind } & CalloutKinds[Kind];
+
+// The one callout above a Session's Composer: sign in, a Turn that needs sign-in, an Agent that failed to launch, or its open running again.
+export type SessionCalloutProps = {
+  [Kind in CalloutKind]: KindProps<Kind>;
+}[CalloutKind];
+
+// Each kind's view takes that kind's props.
+type CalloutViews = {
+  [Kind in CalloutKind]: (props: KindProps<Kind>) => React.JSX.Element | null;
+};
+
+const views: CalloutViews = {
+  loading: () => <CalloutLoading />,
+  authenticate: (props) => <AuthCallout {...props} />,
+  'auth-required': (props) => <AuthRequiredCard {...props} />,
+  launch: (props) => <LaunchCallout {...props} />,
+};
+
+const viewOf = <Kind extends CalloutKind>(
+  props: KindProps<Kind>,
+): React.JSX.Element | null => views[props.kind](props);
 
 export function SessionCallout(
   props: SessionCalloutProps,
 ): React.JSX.Element | null {
-  return views[props.kind](props);
+  return viewOf(props);
 }

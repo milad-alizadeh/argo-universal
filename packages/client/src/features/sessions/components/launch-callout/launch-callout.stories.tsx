@@ -26,7 +26,7 @@ export default meta;
 
 const failed = <LaunchCallout message={exited} onRetry={() => {}} />;
 
-// A phone presents the callout as a sheet and closes it while Retry runs.
+// A phone presents each state as a sheet, so it shows the one the example control picks.
 function LaunchCalloutGallery(args: GalleryArgs): React.JSX.Element {
   if (!useWide())
     return args.example === 'failed' ? failed : <CalloutLoading />;

@@ -29,6 +29,20 @@ Feature: Agent sign-in and launch callouts
       | wide  |
       | phone |
 
+  Scenario Outline: Cancel stops a sign-in and brings the methods back in a <frame> Frame
+    Given a <frame> Frame
+    And Agent 1 holds its sign-in
+    And a Local New Session with Agent 1
+    When I choose the sign-in method "Sign in"
+    Then the App is authenticating to Agent 1
+    When I cancel the sign-in
+    Then the App asks to authenticate to Agent 1 with "Sign in"
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |
+
   Scenario Outline: A New worktree asks to sign in at Send and keeps the prompt in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 needs sign-in
@@ -68,7 +82,7 @@ Feature: Agent sign-in and launch callouts
     Then the App asks to authenticate to Agent 1 with "Sign in"
     When I choose the sign-in method "Sign in"
     Then the sign-in callout is gone
-    When I send "Fix the flaky login test" in the Session
+    When I send the prompt "Fix the flaky login test"
     Then the Agent replies "The shared fixture completed this Turn."
 
     Examples:
@@ -80,7 +94,8 @@ Feature: Agent sign-in and launch callouts
     Given a <frame> Frame
     And Agent 1 exits while opening its first Session
     And a Local New Session with Agent 1
-    Then the App says the Agent failed to launch: "Agent exited with status 17"
+    Then the App says the Agent failed to launch
+    And the launch failure shows "Agent exited with status 17"
     And the launch failure shows "Agent fixture failed"
     When I press Retry
     Then the launch callout is gone
@@ -92,11 +107,38 @@ Feature: Agent sign-in and launch callouts
       | wide  |
       | phone |
 
-  Scenario: A prompt sent after a failed Local open is delivered once Retry opens it
-    Given a wide Frame
+  Scenario Outline: Retry reopens a past Session whose Agent failed to launch in a <frame> Frame
+    Given a <frame> Frame
+    And Agent 1 refuses to reopen a Session
+    And a New Session with Agent 1
+    And I send the prompt "First prompt"
+    And the Agent replies "The shared fixture completed this Turn."
+    And the Server closes the Session quietly
+    When I reload the App and open the Session "First prompt"
+    And I try to send the prompt "Second prompt"
+    Then the App says the Agent failed to launch
+    When I press Retry
+    Then the launch callout is gone
+    When I send the prompt "Second prompt"
+    Then both submitted prompts have separate completed Turns
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |
+
+  Scenario Outline: A prompt sent after a failed Local open is delivered once Retry opens it in a <frame> Frame
+    Given a <frame> Frame
     And Agent 1 exits while opening its first Session
     And a Local New Session with Agent 1
-    Then the App says the Agent failed to launch: "Agent exited with status 17"
-    When I try to send the prompt "Fix the flaky login test"
-    And I press Retry
+    Then the App says the Agent failed to launch
+    When I put the callout away
+    And I try to send the prompt "Fix the flaky login test"
+    Then the App says the Agent failed to launch
+    When I press Retry
     Then the Agent replies "The shared fixture completed this Turn."
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |

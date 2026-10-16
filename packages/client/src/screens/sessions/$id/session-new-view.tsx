@@ -115,6 +115,13 @@ function PromptComposer(props: ReadySessionNewViewProps): React.JSX.Element {
   return <Composer {...promptComposerProps(props)} />;
 }
 
+// A Send held by a failed open presents a phone's dismissed sheet again.
+const calloutOf = ({
+  callout,
+  opening,
+}: ReadySessionNewViewProps): React.ReactNode =>
+  callout && <SessionCallout key={String(opening)} {...callout} />;
+
 const promptComposerProps = (
   props: ReadySessionNewViewProps,
 ): ComposerProps => ({
@@ -126,7 +133,7 @@ const promptComposerProps = (
   configuration: props.configuration,
   placeholder: 'What should the Agent work on?',
   sendable: props.canOpen,
-  callout: props.callout && <SessionCallout {...props.callout} />,
+  callout: calloutOf(props),
   error: props.attachmentError,
   errorKey: props.attachmentErrorKey,
 });

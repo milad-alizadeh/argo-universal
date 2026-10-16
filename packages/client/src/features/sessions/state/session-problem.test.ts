@@ -60,35 +60,32 @@ it('waits on a running Retry', () => {
   ).toEqual({ type: 'retrying' });
 });
 
-it('shows the latest attempt’s open failure', () => {
-  const retry = {
-    submittedAt: 2,
-    error: launchFailure('retry'),
-    isPending: false,
-  };
-
-  const prompt = {
-    submittedAt: 3,
-    error: launchFailure('prompt'),
-    isPending: false,
-  };
-
-  expect(
-    sessionProblem({
-      ...quiet,
-      feedOpenError: launchFailure('first'),
-      retry,
-      commands: [prompt],
-    }),
-  ).toEqual({ type: 'open', error: { type: 'failed', message: 'prompt' } });
-  expect(
-    sessionProblem({
-      ...quiet,
-      retry,
-      commands: [{ ...prompt, submittedAt: 1 }],
-    }),
-  ).toEqual({ type: 'open', error: { type: 'failed', message: 'retry' } });
+const attempt = (submittedAt: number, message: string): OpenAttempt => ({
+  submittedAt,
+  error: launchFailure(message),
+  isPending: false,
 });
+
+it.each([
+  {
+    latest: 'prompt',
+    retry: attempt(2, 'retry'),
+    prompt: attempt(3, 'prompt'),
+  },
+  { latest: 'retry', retry: attempt(2, 'retry'), prompt: attempt(1, 'prompt') },
+])(
+  'shows the $latest’s open failure when it is the latest attempt',
+  ({ latest, retry, prompt }) => {
+    expect(
+      sessionProblem({
+        ...quiet,
+        feedOpenError: launchFailure('first'),
+        retry,
+        commands: [prompt],
+      }),
+    ).toEqual({ type: 'open', error: { type: 'failed', message: latest } });
+  },
+);
 
 it('leaves a prompt’s other errors to the Composer', () => {
   expect(
@@ -127,29 +124,28 @@ it('shows a Feed closure that came after a Retry opened the Session', () => {
   });
 });
 
-it('asks to sign in after a Turn that ended auth_required', () => {
-  const end = turnEnd('end-1', {
-    error: { code: -32000, message: 'Sign in to Codex' },
-  });
+const signInExpired = turnEnd('end-1', {
+  error: { code: -32000, message: 'Sign in to Codex' },
+});
 
-  expect(sessionProblem({ ...quiet, items: [end] })).toEqual({
+const endTurn = turnEnd('end-2', { stopReason: 'end_turn' });
+
+it('asks to sign in after a Turn that ended auth_required', () => {
+  expect(sessionProblem({ ...quiet, items: [signInExpired] })).toEqual({
     type: 'turn',
     id: 'end-1',
     description: 'Sign in to Codex',
   });
-  expect(
-    sessionProblem({ ...quiet, items: [end], signedInAfter: 'end-1' }),
-  ).toBeUndefined();
-  expect(
-    sessionProblem({
-      ...quiet,
-      items: [turnEnd('end-2', { stopReason: 'end_turn' })],
-    }),
-  ).toBeUndefined();
-  expect(
-    sessionProblem({
-      ...quiet,
-      items: [end, turnEnd('end-2', { stopReason: 'end_turn' })],
-    }),
-  ).toBeUndefined();
+});
+
+it.each([
+  {
+    case: 'a sign-in answered it',
+    items: [signInExpired],
+    signedInAfter: 'end-1',
+  },
+  { case: 'the Turn ended well', items: [endTurn] },
+  { case: 'a later Turn ended well', items: [signInExpired, endTurn] },
+])('asks nothing once $case', ({ items, signedInAfter }) => {
+  expect(sessionProblem({ ...quiet, items, signedInAfter })).toBeUndefined();
 });

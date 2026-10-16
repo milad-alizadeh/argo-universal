@@ -84,7 +84,8 @@ Feature: New Session
     Given a phone Frame
     And Agent <agent> refuses to open a Session
     And a Local New Session with Agent <agent>
-    Then New Session says the Agent failed to launch
+    Then the App says the Agent failed to launch
+    And the launch failure shows "The Agent refused the Session."
 
     Examples:
       | agent |

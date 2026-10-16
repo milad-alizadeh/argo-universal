@@ -26,16 +26,6 @@ Given(
   },
 );
 
-// A Session the Agent refused to reopen offers Retry in place of a send error.
-Then(
-  'the Session says the Agent failed to launch',
-  async ({ page }): Promise<void> => {
-    await expect(
-      page.getByRole('heading', { name: 'Failed to Launch', exact: true }),
-    ).toBeVisible();
-  },
-);
-
 When(
   'I reload the App and open the Session {string}',
   async ({ page }, title: string): Promise<void> => {

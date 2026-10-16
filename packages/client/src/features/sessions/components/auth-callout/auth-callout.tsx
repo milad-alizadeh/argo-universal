@@ -1,9 +1,8 @@
 import type { AgentAuthState } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
-import { Button } from '#primitives/buttons/button';
 import { SplitButton } from '#primitives/buttons/split-button';
-import { Callout } from '#primitives/display/callout';
+import { Callout, CalloutButton } from '#primitives/display/callout';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export type AuthCalloutMethod = Pick<
@@ -66,13 +65,7 @@ function CancelButton({
   onCancel,
 }: Pick<AuthCalloutProps, 'onCancel'>): React.JSX.Element {
   return (
-    <Button
-      size="sm"
-      fullWidth="narrow"
-      variant="secondary"
-      label="Cancel"
-      onPress={onCancel}
-    />
+    <CalloutButton variant="secondary" label="Cancel" onPress={onCancel} />
   );
 }
 
@@ -97,9 +90,7 @@ function MethodButton(props: MethodButtonProps): React.JSX.Element {
   const { method, onAuthenticate } = props;
 
   return (
-    <Button
-      size="sm"
-      fullWidth="narrow"
+    <CalloutButton
       label={method.name}
       accessibilityLabel={method.description ?? method.name}
       onPress={() => onAuthenticate(method.id)}

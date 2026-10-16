@@ -28,6 +28,7 @@ const listedAsAvailable = async (
 for (const fixture of [
   'Agent {int} needs sign-in',
   'Agent {int} offers two sign-in methods',
+  'Agent {int} holds its sign-in',
   'Agent {int} signs in through a terminal',
   'Agent {int} ends its first Turn needing sign-in',
   'Agent {int} exits while opening its first Session',
@@ -71,6 +72,18 @@ When(
     await page.getByRole('button').filter({ hasText: method }).first().click();
   },
 );
+
+Then(
+  'the App is authenticating to Agent {int}',
+  async ({ page, server }, ordinal: number): Promise<void> => {
+    const { label } = await readAgent(page, server.httpUrl, ordinal);
+    await expect(callout(page, `Authenticating to ${label}…`)).toBeVisible();
+  },
+);
+
+When('I cancel the sign-in', async ({ page }): Promise<void> => {
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+});
 
 Then('the sign-in callout is gone', async ({ page }): Promise<void> => {
   await expect(callout(page, /^Authenticat(e|ing) to /)).toHaveCount(
@@ -130,22 +143,12 @@ When('I press Authenticate', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: 'Authenticate', exact: true }).click();
 });
 
-When(
-  'I send {string} in the Session',
-  async ({ page }, prompt: string): Promise<void> => {
-    await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
-    await page.getByRole('button', { name: 'Send', exact: true }).click();
-    await expectMessage(page, '');
-  },
-);
-
 Then(
-  'the App says the Agent failed to launch: {string}',
-  async ({ page }, message: string): Promise<void> => {
+  'the App says the Agent failed to launch',
+  async ({ page }): Promise<void> => {
     await expect(callout(page, 'Failed to Launch')).toBeVisible(
       sessionOpenTimeout,
     );
-    await expect(page.getByText(message, { exact: true })).toBeVisible();
   },
 );
 
@@ -158,6 +161,13 @@ Then(
 
 When('I press Retry', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: retryHint }).click();
+});
+
+// A phone's sheet swipes away; a wide window's tray stays above the Composer.
+When('I put the callout away', async ({ page }): Promise<void> => {
+  if (!onPhone(page)) return;
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
 Then('the launch callout is gone', async ({ page }): Promise<void> => {

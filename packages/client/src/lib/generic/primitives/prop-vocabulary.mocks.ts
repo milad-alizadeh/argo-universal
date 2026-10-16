@@ -53,6 +53,7 @@ export type Primitives = {
   ButtonDataProps: ButtonKit.ButtonDataProps;
   ButtonGroupProps: ButtonGroupKit.ButtonGroupProps;
   ButtonProps: ButtonKit.ButtonProps;
+  CalloutButtonProps: CalloutKit.CalloutButtonProps;
   CalloutProps: CalloutKit.CalloutProps;
   CheckboxIndicatorProps: CheckboxKit.CheckboxIndicatorProps;
   CheckboxProps: CheckboxKit.CheckboxProps;

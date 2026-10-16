@@ -5,13 +5,17 @@ import type { useAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
+  type OpenAnswers,
   type OpenAttempt,
+  openCallout,
   type SessionAuthSubject,
   type SessionCalloutProps,
+  type SessionCallouts,
   type SessionProblem,
   sessionProblem,
-  signInCallout,
-  type TerminalSignInProps,
+  signsIn,
+  type TurnAnswers,
+  turnCallout,
   useSessionAuth,
 } from '#features/sessions';
 import type { SessionCommands } from './use-session-commands';
@@ -25,11 +29,6 @@ export interface SessionCalloutSources {
   feed: SessionFeed;
   commands: Pick<SessionCommands, 'promptSession' | 'setConfigOption'>;
   agents: Agents;
-}
-
-export interface SessionCallouts {
-  callout?: SessionCalloutProps;
-  signInTerminal?: TerminalSignInProps;
 }
 
 const labelOf = (agents: Agents, agent: string): string | undefined =>
@@ -49,21 +48,6 @@ const authSubject = (
         agentName: agentName(snapshot, agents),
       }
     : undefined;
-
-const refusedForSignIn = (problem: SessionProblem | undefined): boolean =>
-  problem?.type === 'open' && problem.error.type === 'auth-required';
-
-const turnSigningIn = (
-  problem: SessionProblem | undefined,
-  authenticating: string | undefined,
-): boolean => problem?.type === 'turn' && problem.id === authenticating;
-
-// The sign-in a problem asks for: a refused open, or the `auth_required` Turn whose Authenticate was pressed.
-const signsIn = (
-  problem: SessionProblem | undefined,
-  authenticating: string | undefined,
-): boolean =>
-  refusedForSignIn(problem) || turnSigningIn(problem, authenticating);
 
 interface OpenProblem {
   problem: SessionProblem | undefined;
@@ -122,61 +106,45 @@ export function useSessionCallout(
   sources: SessionCalloutSources,
 ): SessionCallouts {
   const open = useOpenProblem(sources);
-  const [authenticating, setAuthenticating] = useState<string>();
+  const turn = useTurnSignIn();
 
   const auth = useSessionAuth({
     subject: authSubject(sources.feed.snapshot, sources.agents),
-    active: signsIn(open.problem, authenticating),
-    onSignedIn: afterSignIn(open, () => setAuthenticating(undefined)),
+    active: signsIn(open.problem, turn.authenticating),
+    onSignedIn: afterSignIn(open, turn.done),
   });
 
-  const actions = { auth: auth.callout, authenticating, setAuthenticating };
-  const callout = open.problem && calloutOf(open.problem, open, actions);
+  const answers = { ...turn, signIn: auth.callout, openAgain: open.openAgain };
 
-  return { callout, signInTerminal: auth.terminal };
+  return { callout: calloutOf(open, answers), signInTerminal: auth.terminal };
 }
 
-interface CalloutActions {
-  auth: ReturnType<typeof useSessionAuth>['callout'];
-  authenticating: string | undefined;
-  setAuthenticating: (turnEnd: string) => void;
+interface TurnSignIn extends Omit<TurnAnswers, 'signIn'> {
+  done: () => void;
 }
 
-type Problem<Type extends SessionProblem['type']> = Extract<
-  SessionProblem,
-  { type: Type }
->;
+// The `auth_required` Turn whose Authenticate was pressed, until its sign-in finishes.
+function useTurnSignIn(): TurnSignIn {
+  const [authenticating, onAuthenticate] = useState<string | null>(null);
 
-const openCallout = (
-  { error }: Problem<'open'>,
-  open: OpenProblem,
-  actions: CalloutActions,
-): SessionCalloutProps =>
-  error.type === 'failed'
-    ? { kind: 'launch', message: error.message, onRetry: open.openAgain }
-    : signInCallout(actions.auth);
+  return {
+    authenticating: authenticating ?? undefined,
+    onAuthenticate,
+    done: () => onAuthenticate(null),
+  };
+}
 
-// Authenticate on an `auth_required` Turn's card swaps the card for the sign-in.
-const turnCallout = (
-  problem: Problem<'turn'>,
-  actions: CalloutActions,
-): SessionCalloutProps =>
-  problem.id === actions.authenticating
-    ? signInCallout(actions.auth)
-    : {
-        kind: 'auth-required',
-        description: problem.description,
-        onAuthenticate: () => actions.setAuthenticating(problem.id),
-      };
+type CalloutAnswers = OpenAnswers & TurnAnswers;
 
-function calloutOf(
+const answerOf = (
   problem: SessionProblem,
-  open: OpenProblem,
-  actions: CalloutActions,
-): SessionCalloutProps {
-  if (problem.type === 'retrying') return { kind: 'loading' };
+  answers: CalloutAnswers,
+): SessionCalloutProps =>
+  problem.type === 'turn'
+    ? turnCallout(problem, answers)
+    : openCallout(problem, answers);
 
-  return problem.type === 'open'
-    ? openCallout(problem, open, actions)
-    : turnCallout(problem, actions);
-}
+const calloutOf = (
+  { problem }: OpenProblem,
+  answers: CalloutAnswers,
+): SessionCalloutProps | undefined => problem && answerOf(problem, answers);

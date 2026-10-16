@@ -5,6 +5,7 @@ import {
   sessionOpenErrorMessage,
   type SessionHeaderStatus,
 } from '#features/sessions';
+import type { SessionCallouts } from '#features/sessions';
 import {
   type OpenSession,
   sessionComposerProps,
@@ -13,7 +14,6 @@ import type {
   OpenSessionViewProps,
   SessionDetailViewProps,
 } from './session-detail-view';
-import type { SessionCallouts } from './use-session-callout';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 

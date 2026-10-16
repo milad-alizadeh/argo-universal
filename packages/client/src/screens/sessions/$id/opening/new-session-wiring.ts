@@ -1,6 +1,6 @@
+import type { SessionCallouts } from '#features/sessions';
 import type { Navigate } from '#lib/product/navigation/navigation';
 import type { ReadySessionNewViewProps } from '../session-new-view';
-import type { NewSessionCallout } from './use-new-session-callout';
 import type { NewSessionData } from './use-new-session-data';
 import type { AttachmentDraft, SessionOpening } from './use-session-opening';
 
@@ -14,7 +14,7 @@ export interface NewSessionWiring {
   navigate: Navigate;
   attachmentDraft: AttachmentDraft;
   sessionOpening: SessionOpening;
-  callout: NewSessionCallout;
+  callout: SessionCallouts;
 }
 
 export type ReadyProps<Key extends keyof ReadySessionNewViewProps> = Pick<

@@ -22,6 +22,19 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+// Retry or a sign-in opens it; either runs the store's retry.
+const failOpen = async (): Promise<void> => {
+  h.calls.open.at(-1)?.call.reject(failure);
+  await settle();
+};
+
+const sendAfterFailure = async (): Promise<void> => {
+  h.choose(local('agent-one'));
+  await failOpen();
+  h.store.send(prompt);
+  await settle();
+};
+
 describe('The first prompt on a Local checkout', () => {
   it('delivers a prompt sent while it opens once the open succeeds', async () => {
     h.choose(local('agent-one'));
@@ -35,46 +48,46 @@ describe('The first prompt on a Local checkout', () => {
     expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);
   });
 
-  it('keeps a Send queued through a failed open and delivers it once Retry opens', async () => {
-    h.choose(local('agent-one'));
-    h.store.send(prompt);
-    h.calls.open[0]?.call.reject(failure);
-    await settle();
-    expect(h.store.getState()).toMatchObject({
-      error: { type: 'failed', message: failure.message },
-      pendingPrompt: true,
-    });
-
-    h.store.retry();
-    await h.openLocal('session-1');
-
-    expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);
-  });
-
-  it('holds a Send made after a failed open until Retry or a sign-in opens it', async () => {
-    h.choose(local('agent-one'));
-    h.calls.open[0]?.call.reject(failure);
-    await settle();
-
-    h.store.send(prompt);
-    await settle();
+  it('holds a Send made after a failed open without opening again', async () => {
+    await sendAfterFailure();
 
     expect(h.calls.open).toHaveLength(1);
     expect(h.store.getState()).toMatchObject({
       error: { type: 'failed', message: failure.message },
       pendingPrompt: true,
     });
-
-    h.store.retry();
-    h.calls.open[1]?.call.reject(failure);
-    await settle();
-    expect(h.store.getState()).toMatchObject({ pendingPrompt: true });
-
-    h.store.retry();
-    await h.openLocal('session-1');
-
-    expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);
   });
+
+  it('keeps the Send held through a Retry that fails again', async () => {
+    await sendAfterFailure();
+
+    h.store.retry();
+    await failOpen();
+
+    expect(h.store.getState()).toMatchObject({ pendingPrompt: true });
+  });
+
+  it.each([
+    {
+      when: 'before',
+      arrange: async (): Promise<void> => {
+        h.choose(local('agent-one'));
+        h.store.send(prompt);
+        await failOpen();
+      },
+    },
+    { when: 'after', arrange: sendAfterFailure },
+  ])(
+    'delivers a Send made $when a failed open once Retry opens it',
+    async ({ arrange }) => {
+      await arrange();
+
+      h.store.retry();
+      await h.openLocal('session-1');
+
+      expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);
+    },
+  );
 
   it('hands the prompted Session to its page once the Feed shows the prompt', async () => {
     h.choose(local('agent-one'));
