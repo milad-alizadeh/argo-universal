@@ -61,6 +61,11 @@ import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
 } from './acp/prompt-types';
+import {
+  routeSubagentUpdate,
+  flushSubagentFeeds,
+  type SubagentFeeds,
+} from './acp/subagent-feeds';
 import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
 import { acpContextUsage, acpTurnUsage } from './acp/usage';
 import {
@@ -220,6 +225,7 @@ export interface SessionContext extends SessionData {
     { type: typeof setConfigEvent }
   > | null;
   feedEnded: boolean;
+  subagentFeeds: SubagentFeeds;
   // The database writer refused this Turn's Feed rows, so the Turn is cancelled and ends with a storage error.
   storageFailedTurn: boolean;
 }
@@ -290,7 +296,7 @@ const cancelledPermissions = (
 });
 
 // The Session's one child actor: its Feed, invoked under the id "feed".
-type SessionChildren = { feed: 'feed' };
+type SessionChildren = { feed: 'feed'; [id: `subagent:${string}`]: 'feed' };
 
 const sessionSetup = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
@@ -425,6 +431,44 @@ const sessionSetup = setup({
     feed: feedMachine,
   },
   actions: {
+    routeSubagentUpdate: assign(({ context, event, spawn, self }) => {
+      assertEvent(event, acpUpdateEvent);
+      const parentFeed = self.getSnapshot().children.feed;
+
+      const databaseWriter = findMachineActor(
+        self.system,
+        databaseWriterId,
+        writerMachine,
+      );
+
+      if (!parentFeed || !databaseWriter) return {};
+
+      return {
+        subagentFeeds: routeSubagentUpdate(
+          {
+            parent: context,
+            parentId: context.sessionId,
+            database: context.input.database,
+            now: context.input.now,
+            createId: context.input.createId,
+            writer: databaseWriter,
+            write: (job) => databaseWriter.send({ type: writeFeedEvent, job }),
+            storageFailing: () => self.send({ type: storageFailingEvent }),
+            parentFeed,
+            spawn: (input) =>
+              spawn('feed', {
+                id: `subagent:${input.sessionId}`,
+                systemId: `subagent-feed:${input.sessionId}`,
+                input,
+              }),
+          },
+          context.subagentFeeds,
+          event.notification,
+        ),
+      };
+    }),
+    flushSubagentFeeds: ({ context }) =>
+      flushSubagentFeeds(context.subagentFeeds),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
     queueAcpConfig: assign(({ context, event }) => {
@@ -880,6 +924,11 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    isSubagentUpdate: ({ context, event }) =>
+      event.type === acpUpdateEvent &&
+      (event.notification.update.sessionUpdate === 'subagent_update' ||
+        event.notification.update.sessionUpdate === 'session_message' ||
+        context.subagentFeeds.has(event.notification.sessionId)),
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&
       event.notification.update.sessionUpdate === 'config_option_update',
@@ -1018,6 +1067,7 @@ export const sessionMachine = sessionSetup.createMachine({
     acpLease: null,
     pendingSubmission: null,
     feedEnded: false,
+    subagentFeeds: new Map(),
     acpPrompt: null,
     acpResponseReaders: createAcpResponseReaders(
       createRejectionCounter(`ACP Session ${input.sessionId}`),
@@ -1157,6 +1207,7 @@ export const sessionMachine = sessionSetup.createMachine({
             'session.close': { target: '.closing' },
             'acp.failed': { target: '.closing', actions: 'recordCrash' },
             'acp.update': [
+              { guard: 'isSubagentUpdate', actions: 'routeSubagentUpdate' },
               { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
               {
                 guard: ({ event }): boolean =>
@@ -1558,7 +1609,7 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             flushing: {
               on: { 'session.close': {} },
-              entry: 'flushFeed',
+              entry: ['flushSubagentFeeds', 'flushFeed'],
               after: {
                 feedFlushLimit: {
                   target: closedSessionTarget,

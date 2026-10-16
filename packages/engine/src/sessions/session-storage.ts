@@ -12,7 +12,7 @@ import {
 
 type SessionInsert = {
   session: typeof session.$inferInsert;
-  checkoutChoice: NonNullable<typeof project.$inferInsert.checkoutChoice>;
+  checkoutChoice?: NonNullable<typeof project.$inferInsert.checkoutChoice>;
 };
 
 type SessionRowChange = {
@@ -80,11 +80,13 @@ export class SessionInsertJob implements WriterJob {
 
   public commit(transaction: StorageTransaction): void {
     transaction.insert(session).values(this.insert.session).run();
-    transaction
-      .update(project)
-      .set({ checkoutChoice: this.insert.checkoutChoice })
-      .where(eq(project.id, this.insert.session.projectId))
-      .run();
+
+    if (this.insert.checkoutChoice)
+      transaction
+        .update(project)
+        .set({ checkoutChoice: this.insert.checkoutChoice })
+        .where(eq(project.id, this.insert.session.projectId))
+        .run();
   }
 
   public project(

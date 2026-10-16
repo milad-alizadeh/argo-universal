@@ -36,3 +36,5 @@ export {
   type SessionConnections,
   createSessionConnections,
 } from './session-connection';
+
+export { findSessionFeed } from './session-system';
