@@ -65,11 +65,6 @@ const childDirectories = async (path: string): Promise<string[]> => {
   }
 };
 
-const releaseScopeGroups = async (scope: string): Promise<void> => {
-  for (const directory of await childDirectories(scope))
-    await releaseStagingGroup(directory);
-};
-
 const stagingDirectories = async (registry: string): Promise<string[]> =>
   (
     await Promise.all(
@@ -92,13 +87,8 @@ const registryOperationDirectories = async (
 export const releaseInstallationProcessGroups = async (
   home: string,
 ): Promise<void> => {
-  const agents = join(home, 'agents');
-
-  for (const scope of await childDirectories(agents))
-    await releaseScopeGroups(scope);
-
   for (const directory of await registryOperationDirectories(
-    join(agents, 'registry'),
+    join(home, 'agents', 'registry'),
   ))
     await releaseStagingGroup(directory);
 };

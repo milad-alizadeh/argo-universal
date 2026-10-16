@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { userEvent as browserUserEvent } from 'vitest/browser';
 import { composerUnlistedEffortConfigurations } from '../../../../../mocks/composer-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
@@ -10,6 +11,8 @@ import { ComposerAgentModelControl } from './composer-configuration';
 const configuration = composerUnlistedEffortConfigurations[0];
 
 const agentModelLabel = 'Agent and model';
+
+const modelPickerLabel = 'Select Model';
 
 if (!configuration) throw new Error('Recorded catalog needs a model picker.');
 
@@ -48,7 +51,11 @@ export const EscapeReturnsToConfigure: Story = {
     });
 
     await userEvent.click(model);
-    const picker = await overlay.findByRole('dialog', { name: 'Select Model' });
+
+    const picker = await overlay.findByRole('dialog', {
+      name: modelPickerLabel,
+    });
+
     await expect(configure).toBeVisible();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(picker).not.toBeInTheDocument());
@@ -81,12 +88,44 @@ export const HoverOpensModelPicker: Story = {
     ).not.toBeInTheDocument();
     const model = within(configure).getByRole('button', { name: /^Model,/ });
     await userEvent.hover(model);
-    const picker = await overlay.findByRole('dialog', { name: 'Select Model' });
+
+    const picker = await overlay.findByRole('dialog', {
+      name: modelPickerLabel,
+    });
+
     await userEvent.unhover(model);
     await userEvent.hover(picker);
     await waitFor(() => expect(picker).toBeVisible());
     await expect(configure).toBeVisible();
     await userEvent.keyboard('{Escape}');
+  },
+};
+
+// A real pointer: the browser reports the picker's enter before the row's leave.
+export const PointerMovesIntoPicker: Story = {
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    const overlay = within(document.body);
+    await browserUserEvent.hover(
+      canvas.getByRole('button', { name: agentModelLabel }),
+    );
+
+    const configure = await overlay.findByRole('dialog', {
+      name: agentModelLabel,
+    });
+
+    const model = within(configure).getByRole('button', { name: /^Model,/ });
+    await browserUserEvent.hover(model);
+
+    const picker = await overlay.findByRole('dialog', {
+      name: modelPickerLabel,
+    });
+
+    await browserUserEvent.hover(picker);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await expect(picker).toBeInTheDocument();
+    await expect(configure).toBeInTheDocument();
+    await browserUserEvent.keyboard('{Escape}');
   },
 };
 

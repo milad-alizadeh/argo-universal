@@ -24,8 +24,9 @@ const recordPath = (): string =>
   join(
     folder,
     'agents',
+    'registry',
     'scope',
-    '.install-operation',
+    '.staging-operation',
     '.installer-group.json',
   );
 

@@ -100,6 +100,9 @@ it('refuses commands for a Subagent while keeping its stored Feed readable', asy
       value: 'small',
     }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
+  await expect(
+    caller.session.rename({ sessionId: 'subagent', title: 'Renamed' }),
+  ).rejects.toMatchObject({ code: 'CONFLICT' });
   expect(
     await caller.feed.page({ sessionId: 'subagent', direction: 'tail' }),
   ).toMatchObject({ rows: [] });

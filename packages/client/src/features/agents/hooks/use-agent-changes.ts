@@ -1,4 +1,4 @@
-import type { AgentRemovalInput } from '@repo/contracts';
+import type { RegistryAgentId } from '@repo/contracts';
 import {
   type UseMutationResult,
   useMutation,
@@ -36,7 +36,7 @@ function useInstall(
   );
 }
 
-function useRemove(): UseMutationResult<void, ClientError, AgentRemovalInput> {
+function useRemove(): UseMutationResult<void, ClientError, RegistryAgentId> {
   const onSuccess = useInstalledInvalidation();
 
   return useMutation(useTRPC().agents.remove.mutationOptions({ onSuccess }));

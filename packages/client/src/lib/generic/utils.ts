@@ -26,7 +26,15 @@ const twMerge = extendTailwindMerge<'type-role' | 'type-face'>({
     classGroups: {
       'type-role': [
         {
-          type: ['title', 'heading', 'body', 'secondary', 'row', 'row-detail'],
+          type: [
+            'title',
+            'heading',
+            'body',
+            'secondary',
+            'secondary-code',
+            'row',
+            'row-detail',
+          ],
         },
       ],
       // These roles leave colour to the element, such as a button's variant.

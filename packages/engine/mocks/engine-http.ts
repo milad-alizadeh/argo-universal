@@ -70,8 +70,6 @@ function systemRequestOptions(headers: Record<string, string>): RequestOptions {
 export const readdirSafe = (folder: string): string[] =>
   existsSync(folder) ? readdirSync(folder) : [];
 
-let syncSupervisor: HttpServerOptions['syncSupervisor'];
-
 export const options = (): HttpServerOptions => ({
   createId: randomUUID,
   home,
@@ -81,7 +79,6 @@ export const options = (): HttpServerOptions => ({
   database,
   sessions,
   databaseWriter,
-  syncSupervisor,
   registry: sessions.system.get('registry'),
 });
 
@@ -90,7 +87,6 @@ beforeEach(async (): Promise<void> => {
   database = stored.database;
   removeDatabase = stored.remove;
   const started = await startEngineTestHost({ database });
-  syncSupervisor = started.engine.system.get('syncSupervisor');
   home = started.home;
   port = Number(new URL(started.url).port);
   sessions = started.openSessions;

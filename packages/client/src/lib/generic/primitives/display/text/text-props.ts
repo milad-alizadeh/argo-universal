@@ -8,6 +8,7 @@ export type TextRole =
   | 'heading'
   | 'body'
   | 'secondary'
+  | 'secondary-code'
   | 'control'
   | 'badge'
   | 'code'
