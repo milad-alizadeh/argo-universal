@@ -7,8 +7,9 @@ import { runInstallTool } from '@repo/engine/installation-runtime';
 const folder = join(
   process.env.ARGO_HOME ?? '',
   'agents',
+  'registry',
   'scope',
-  '.install-operation',
+  '.staging-operation',
 );
 
 const script = fileURLToPath(
