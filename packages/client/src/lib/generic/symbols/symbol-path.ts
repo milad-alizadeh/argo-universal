@@ -12,22 +12,16 @@ interface SymbolBox {
 // SF Symbols draw like text: every symbol in a role at the size that makes `circle` fill this share of the role's box.
 export const referenceShare = 0.88;
 
-// `circle` is this wide in 100-point type.
-const referenceSymbolCustomUnits = 117;
-
 function symbolBox(path: SymbolPath): SymbolBox {
   const [, , width = 0, height = 0] = path.viewBox.split(' ').map(Number);
 
   return { width, height };
 }
 
-// The symbol box drawn in an icon box of `pixels`, sized as the system symbols are; a box larger than `circle` shrinks to it.
+// The symbol box fitted to an icon box of `pixels`, as iOS's SymbolView fits a custom symbol, so every platform draws it at one size.
 export function symbolPathSize(path: SymbolPath, pixels: number): SymbolBox {
   const box = symbolBox(path);
-
-  const scale =
-    (pixels * referenceShare) /
-    Math.max(referenceSymbolCustomUnits, box.width, box.height);
+  const scale = pixels / Math.max(box.width, box.height);
 
   return { width: box.width * scale, height: box.height * scale };
 }
