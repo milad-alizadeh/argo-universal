@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import path from 'node:path';
+import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import {
   ownedSupervisorEnvironment,
@@ -61,7 +62,21 @@ export async function prepareDesktopServer(input: {
       },
     );
 
+  if (!input.ownsSupervisor) await waitForSupervisorAddress(home);
+
   return server;
+}
+
+export function waitForSupervisorAddress(
+  home: string,
+): Promise<NonNullable<ReturnType<typeof readServerAddress>>> {
+  return pollServer(
+    async (): Promise<
+      NonNullable<ReturnType<typeof readServerAddress>> | undefined
+    > => readServerAddress(home) ?? undefined,
+    (seconds): string =>
+      `The Supervisor did not publish its address within ${seconds} s`,
+  );
 }
 
 export async function stopExternalSupervisor(

@@ -12,6 +12,7 @@ import {
   prepareDesktopServer,
   stopExternalSupervisor,
   stopOwnedSupervisor,
+  waitForSupervisorAddress,
 } from './electron-server';
 import type { App } from './fixtures';
 import { pollServer, serverFiles } from './own-server';
@@ -85,9 +86,7 @@ export async function useElectronApp(input: {
     electronProcess = electronApp.process();
     const httpUrl = fixtureServer.httpUrl;
     await waitForServer(httpUrl);
-    const address = readServerAddress(home);
-
-    if (!address) throw new Error('The ready Server has no address');
+    const address = await waitForSupervisorAddress(home);
     await use({
       page: await electronApp.firstWindow(),
       httpUrl,
