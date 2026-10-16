@@ -1,5 +1,5 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
-import type { AgentLaunch } from '../src/agents';
+import type { AgentLaunch, DeferredAgentLaunch } from '../src/agents';
 import type {
   AcpOpenInput,
   AcpSessionDestination,
@@ -17,6 +17,14 @@ export const resourceLaunch: AgentLaunch = {
   authContext: 'subscription',
 };
 
+// Resources take a launch whose command resolves only for a new connection.
+export const deferLaunch = (launch: AgentLaunch): DeferredAgentLaunch => ({
+  projectId: launch.projectId,
+  agentId: launch.agentId,
+  version: launch.version,
+  resolve: async () => launch,
+});
+
 export const createResourceDestination = (
   updates: SessionNotification[] = [],
 ): AcpSessionDestination => ({
@@ -31,7 +39,7 @@ export const createResourceDestination = (
 export const createResourceOpening = (
   destination = createResourceDestination(),
 ): AcpOpenInput => ({
-  launch: resourceLaunch,
+  launch: deferLaunch(resourceLaunch),
   opening: {
     method: 'session/new',
     params: { cwd: '/checkout', mcpServers: [] },

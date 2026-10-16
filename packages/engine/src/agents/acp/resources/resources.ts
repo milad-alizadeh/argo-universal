@@ -1,3 +1,4 @@
+import type { DeferredAgentLaunch } from '../..';
 import { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import { awaitAcpOpening } from '../connection/client';
@@ -11,7 +12,6 @@ import {
 } from './resource-entry';
 import { startEntry, withdrawResolving } from './resource-launch';
 import type {
-  AcpLaunch,
   AcpOpenInput,
   AcpResourceInput,
   AcpResources,
@@ -41,7 +41,7 @@ class EngineAcpResources implements AcpResources {
     }
   }
   public async authentication(
-    launch: AcpLaunch,
+    launch: DeferredAgentLaunch,
   ): Promise<ConnectionAuthentication> {
     if (this.stopped) throw new Error('ACP resources are stopped');
 
@@ -60,7 +60,7 @@ class EngineAcpResources implements AcpResources {
   }
   private readonly isStopped = (): boolean => this.stopped;
   // A newer Registry version starts a new connection; Sessions on the older one keep it until they end.
-  private entry(launch: AcpLaunch): Entry {
+  private entry(launch: DeferredAgentLaunch): Entry {
     const key = JSON.stringify([launch.agentId, launch.projectId]);
     const entry = this.entries.get(key);
 
@@ -71,7 +71,7 @@ class EngineAcpResources implements AcpResources {
 
     return this.start(key, launch);
   }
-  private start(key: string, launch: AcpLaunch): Entry {
+  private start(key: string, launch: DeferredAgentLaunch): Entry {
     const connection = this.createConnection(key);
     const connecting = Promise.withResolvers<AcpConnection>();
     const entry = createEntry(launch, connection, connecting.promise);

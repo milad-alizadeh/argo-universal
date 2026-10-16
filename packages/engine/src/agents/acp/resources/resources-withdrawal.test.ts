@@ -8,7 +8,9 @@ import {
   createResourceOpening,
   createResourceDestination,
   createResourceUpdate,
+  deferLaunch,
   resourceInitialization,
+  resourceLaunch,
 } from '#mocks/acp-resource';
 import {
   createScriptedAgentProcess,
@@ -83,7 +85,10 @@ it('different Projects never share initialization', async () => {
   const base = createResourceOpening();
   await Promise.all([
     resources.open(base),
-    resources.open({ ...base, launch: { ...base.launch, projectId: 'other' } }),
+    resources.open({
+      ...base,
+      launch: deferLaunch({ ...resourceLaunch, projectId: 'other' }),
+    }),
   ]);
   expect(peer.processes).toHaveLength(2);
   await resources.shutdown();

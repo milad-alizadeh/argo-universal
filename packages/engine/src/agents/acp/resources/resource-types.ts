@@ -29,9 +29,6 @@ export type AcpSessionDestination = {
   createElicitation: ClientRequestHandlersByMethod['elicitation/create'];
 };
 
-// A ready launch runs as given; a deferred one resolves only when it starts a new connection.
-export type AcpLaunch = AgentLaunch | DeferredAgentLaunch;
-
 export type AcpSessionLease = {
   /** The launch the connection's Agent process runs. */
   launch: AgentLaunch;
@@ -45,7 +42,7 @@ export type AcpSessionLease = {
 };
 
 export type AcpOpenInput = {
-  launch: AcpLaunch;
+  launch: DeferredAgentLaunch;
   opening: AcpSessionOpening;
   destination: AcpSessionDestination;
   signal?: AbortSignal;
@@ -65,7 +62,9 @@ export type AcpResourceInput = {
 };
 
 export type AcpResources = {
-  authentication: (launch: AcpLaunch) => Promise<ConnectionAuthentication>;
+  authentication: (
+    launch: DeferredAgentLaunch,
+  ) => Promise<ConnectionAuthentication>;
   findAuthentication: (
     agent: string,
     projectId: string,

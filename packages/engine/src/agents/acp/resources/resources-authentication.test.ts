@@ -1,6 +1,6 @@
 import { terminalLogin } from '@repo/mocks/agent/terminal-login';
 import { expect, it, vi } from 'vitest';
-import { resourceLaunch } from '#mocks/acp-resource';
+import { deferLaunch, resourceLaunch } from '#mocks/acp-resource';
 import {
   createScriptedAgentProcess,
   requireScriptedProcessAt,
@@ -21,7 +21,8 @@ it.each(['stopping', 'stopped'])(
     });
 
     const resources = createAcpResources({ ...agent, launchLoginTerminal });
-    const authentication = await resources.authentication(resourceLaunch);
+    const launch = deferLaunch(resourceLaunch);
+    const authentication = await resources.authentication(launch);
     const shutdown = resources.shutdown();
     const child = requireScriptedProcessAt(agent.processes);
 

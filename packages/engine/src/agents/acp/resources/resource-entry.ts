@@ -1,6 +1,6 @@
+import type { DeferredAgentLaunch } from '../..';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import type { AcpConnection } from '../connection/connection';
-import type { AcpLaunch } from './resource-types';
 
 export type Entry = {
   agentId: string;
@@ -11,19 +11,18 @@ export type Entry = {
   connection: AcpConnection;
   pending: number;
   dropped: boolean;
-  /** Aborts a deferred launch's download once every opener has withdrawn. */
+  /** Aborts the launch's download once every opener has withdrawn. */
   resolving: AbortController;
 };
 
 export const createEntry = (
-  launch: AcpLaunch,
+  launch: DeferredAgentLaunch,
   connection: AcpConnection,
   connecting: Promise<AcpConnection>,
 ): Entry => ({
   agentId: launch.agentId,
   projectId: launch.projectId,
   version: launch.version,
-  directory: 'resolve' in launch ? undefined : launch.installationDirectory,
   connecting,
   connection,
   pending: 0,

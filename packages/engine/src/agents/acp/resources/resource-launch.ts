@@ -1,14 +1,13 @@
 import type { AgentLaunch, DeferredAgentLaunch } from '../..';
 import type { AcpConnection } from '../connection/connection';
 import type { Entry } from './resource-entry';
-import type { AcpLaunch } from './resource-types';
 
 // What the shared resources lend a starting connection; a failed start is forgotten.
 type EntryOwner = { stopped: () => boolean; forget: () => void };
 
 export const startEntry = (
   entry: Entry,
-  launch: AcpLaunch,
+  launch: DeferredAgentLaunch,
   owner: EntryOwner,
 ): Promise<AcpConnection> =>
   connectEntry(entry, launch, owner.stopped).catch((cause: unknown) => {
@@ -16,18 +15,15 @@ export const startEntry = (
     throw cause instanceof Error ? cause : new Error(String(cause));
   });
 
-// A ready launch starts at once; only a new connection resolves a deferred one.
+// Only a new connection resolves the launch's command.
 const connectEntry = (
   entry: Entry,
-  launch: AcpLaunch,
+  launch: DeferredAgentLaunch,
   stopped: () => boolean,
-): Promise<AcpConnection> => {
-  if (!('resolve' in launch)) return entry.connection.start(launch);
-
-  return resolveEntry(entry, launch, stopped).then((resolved) =>
+): Promise<AcpConnection> =>
+  resolveEntry(entry, launch, stopped).then((resolved) =>
     entry.connection.start(resolved),
   );
-};
 
 // The connection owns the launch's folder before its download reservation goes.
 const resolveEntry = async (

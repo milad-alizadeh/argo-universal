@@ -4,6 +4,8 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import {
   createResourceDestination,
   createResourceOpening,
+  deferLaunch,
+  resourceLaunch,
 } from '#mocks/acp-resource';
 import { createAcpResources } from '../index';
 
@@ -19,12 +21,12 @@ it('the production launch port owns a real stdio process and observes its final 
 
   const lease = await resources.open({
     ...base,
-    launch: {
-      ...base.launch,
+    launch: deferLaunch({
+      ...resourceLaunch,
       ...scriptedAgentCommand('reply'),
       cwd: process.cwd(),
       env: { ARGO_LAUNCH_VALUE: 'captured' },
-    },
+    }),
   });
 
   expect(lease.initialization.protocolVersion).toBe(1);
@@ -47,11 +49,11 @@ it.each([1, 4, 8])(
     onTestFinished(() => resources.shutdown());
     const base = createResourceOpening();
 
-    const launch = {
-      ...base.launch,
+    const launch = deferLaunch({
+      ...resourceLaunch,
       ...scriptedAgentCommand('reply'),
       cwd: process.cwd(),
-    };
+    });
 
     const updates = Array.from(
       { length: count },
@@ -113,11 +115,11 @@ it('a real Agent exit reports its status and final stderr block', async () => {
 
   const lease = await resources.open({
     ...base,
-    launch: {
-      ...base.launch,
+    launch: deferLaunch({
+      ...resourceLaunch,
       ...scriptedAgentCommand('exit-with-stderr'),
       cwd: process.cwd(),
-    },
+    }),
   });
 
   const prompt = lease.agent.request('session/prompt', {
