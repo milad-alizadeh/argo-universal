@@ -58,7 +58,8 @@ export function useFeedHistory(
   const loadOlder = useCallback(async (): Promise<void> => {
     if (!hasNextPage || isFetchingNextPage) return;
     const window = { epoch, startCursor };
-    let result = await fetchNextPage();
+    // Two start-reached signals can land before a render updates the guard; the second must join the page in flight, not cancel and refetch it.
+    let result = await fetchNextPage({ cancelRefetch: false });
 
     while (
       result.isSuccess &&
