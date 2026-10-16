@@ -27,6 +27,9 @@ function MeterFill({ percent, warning }: MeterProps): JSX.Element {
   );
 }
 
+// The track and the smart-zone tick tint the foreground, so they show on a card, on the page surface and in dark mode alike.
+const trackClassName = 'h-1.5 rounded-full bg-foreground/10 overflow-hidden';
+
 export function Meter(props: MeterProps): JSX.Element {
   const { percent, warning = false, className } = props;
 
@@ -36,7 +39,7 @@ export function Meter(props: MeterProps): JSX.Element {
       aria-valuemin={0}
       aria-valuemax={fullPercent}
       aria-valuenow={percent}
-      className={cn('h-1.5 rounded-full bg-muted overflow-hidden', className)}
+      className={cn(trackClassName, className)}
     >
       <MeterFill percent={percent} warning={warning} />
       {warning && <SmartZoneBoundary />}
@@ -47,7 +50,7 @@ export function Meter(props: MeterProps): JSX.Element {
 function SmartZoneBoundary(): JSX.Element {
   return (
     <View
-      className="absolute top-0 bottom-0 w-0.5 bg-card"
+      className="absolute top-0 bottom-0 w-0.5 bg-foreground/30"
       style={{ left: `${smartZonePercent}%` }}
     />
   );
