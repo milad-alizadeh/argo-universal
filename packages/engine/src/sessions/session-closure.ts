@@ -15,7 +15,8 @@ const isClosing = (actor: SessionActorRef): boolean => {
 
   return (
     snapshot.matches({ open: { acp: 'closing' } }) ||
-    snapshot.matches({ open: { acp: 'flushing' } })
+    snapshot.matches({ open: { acp: 'flushing' } }) ||
+    snapshot.matches('archived')
   );
 };
 
@@ -27,7 +28,13 @@ export const closeSession = async (
   sessionId: string,
 ): Promise<SessionCloseOutput> => {
   validateSessionCommandAdmission(deps);
-  readWritableSession(deps.readSession, sessionId);
+
+  if (deps.readSession(sessionId).parentSessionId !== null)
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: 'A Subagent is read-only',
+    });
+
   const actor = requireLiveSessionActor(deps.sessions.system, sessionId);
 
   if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });

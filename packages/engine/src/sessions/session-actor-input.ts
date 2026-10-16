@@ -10,7 +10,7 @@ import type { SessionMachineInput } from './session-machine';
 
 type OpenSession = Extract<
   OpenSessionsCommand,
-  { type: 'sessions.create' | 'sessions.open' }
+  { type: 'sessions.create' | 'sessions.open' | 'sessions.archive' }
 >;
 
 type SessionSource = { context: OpenSessionsInput; event: OpenSession };
@@ -51,5 +51,5 @@ export const createSessionActorInput = ({
   sessionId: event.sessionId,
   ...(event.type === 'sessions.create'
     ? createSessionCreationInput(event)
-    : { kind: 'existing' }),
+    : { kind: 'existing', archive: event.type === 'sessions.archive' }),
 });
