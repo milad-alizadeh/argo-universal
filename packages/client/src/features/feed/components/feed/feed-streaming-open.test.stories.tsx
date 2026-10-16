@@ -7,6 +7,7 @@ import {
   expandedAttribute,
   feedScrollId,
   scrolledToEnd,
+  settleWait,
 } from './feed-reader.mocks';
 import { longRows, streamedRow } from './feed.mocks';
 import { feedArgs, PagedFeed, sendRow } from './paged-feed.mocks';
@@ -67,12 +68,12 @@ export const KeepsFollowingEndWhenRowOpensAsRowsStream: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.phone);
     const scroll = await canvas.findByTestId(feedScrollId);
-    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
     const row = lowestClosedRowInView(scroll);
     row.click();
     await streamRows();
     await expect(row).toHaveAttribute(expandedAttribute, 'true');
-    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
     await expect(
       canvas.queryByRole('button', { name: /Jump to latest/ }),
     ).toBeNull();
