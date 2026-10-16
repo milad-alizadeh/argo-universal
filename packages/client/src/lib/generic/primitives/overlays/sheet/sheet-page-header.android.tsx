@@ -4,8 +4,8 @@ import {
   fillMaxWidth,
   height,
   semantics,
-  size,
   weight,
+  size,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { backLabel } from './sheet-page-label';
@@ -39,7 +39,7 @@ const headerModifiers = [fillMaxWidth(), height(headerSize)];
 // Material's section title, as the Settings sections use: a sheet page is a section, not a screen. Centred, as Android apps title their sheets.
 const titleStyle = { typography: 'titleMedium', textAlign: 'center' } as const;
 
-// An empty back-button-sized slot, so the title stays centred whether or not Back leads; size(), as Android's width() rejects a number (modifiers/index.d.ts takes one, the native record wants an Int).
+// An empty back-button-sized slot, so the title stays centred whether or not Back leads.
 function Slot(): ReactElement {
   return <Spacer modifiers={[size(headerSize, headerSize)]} />;
 }
