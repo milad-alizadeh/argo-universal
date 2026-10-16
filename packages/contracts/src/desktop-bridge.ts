@@ -1,6 +1,7 @@
 export interface DesktopBridge {
   serverUrl: string | null;
   window: {
+    show(): void;
     minimize(): void;
     maximize(): void;
     close(): void;

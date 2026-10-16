@@ -33,6 +33,7 @@
     "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
+    "@trpc/client": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "@types/ws": "catalog:",

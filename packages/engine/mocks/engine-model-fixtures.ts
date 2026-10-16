@@ -38,12 +38,19 @@ export const createPromiseMock = <TOutput, TInput>(
 
 // The closeHttpServer mock stands in for `close()`, so the handle itself is never called.
 export const mockHttpServer: HttpServer = {
+  get notifications(): never {
+    return expect.unreachable(
+      'Structural model does not deliver notifications',
+    );
+  },
   createCaller: (): never =>
     expect.unreachable('Structural model does not call procedures'),
   close: (): never =>
     expect.unreachable('The machine closes through closeHttpServer'),
   closeSetup: async (): Promise<void> => {},
 };
+
+Object.defineProperty(mockHttpServer, 'notifications', { enumerable: false });
 
 export const input = {
   now: (): number => Date.now(),

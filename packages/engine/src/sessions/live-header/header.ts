@@ -2,19 +2,16 @@ import {
   isToolCallRunning,
   type LiveHeader,
   type LiveHeaderSource,
-  type PendingElicitation,
-  type PendingPermission,
   type SessionUpdate,
   type ToolCallUpdate,
 } from '@repo/contracts';
+import { type InputRequestQueues, pendingInputRequest } from '../pending-input';
 import { thoughtTitle } from './thought';
 import { toolKindLabel } from './tool';
 
-export interface LiveHeaderInput {
+export interface LiveHeaderInput extends InputRequestQueues {
   activeTurnId: string | null;
   activeTurnStartedAt: number | null;
-  permissionQueue: readonly PendingPermission[];
-  elicitationQueue: readonly PendingElicitation[];
   pendingPlanProposal?: { planId: string; content: string } | null;
 }
 
@@ -35,12 +32,15 @@ function requestLabel(session: LiveHeaderInput): HeaderLabel | null {
   return text ? { text, source: { type: 'request' } } : null;
 }
 
+const requestTexts = {
+  permission: 'Awaiting approval',
+  elicitation: 'Waiting for your answer',
+} as const;
+
 function requestText(session: LiveHeaderInput): string | null {
-  if (session.permissionQueue.length) return 'Awaiting approval';
+  const pending = pendingInputRequest(session);
 
-  if (session.elicitationQueue.length) return 'Waiting for your answer';
-
-  return planText(session);
+  return pending ? requestTexts[pending.kind] : planText(session);
 }
 
 function planText(session: LiveHeaderInput): string | null {

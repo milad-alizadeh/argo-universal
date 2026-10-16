@@ -20,6 +20,7 @@ import {
   registryMachine,
 } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
+import type { NotificationOptions } from '../notifications';
 import {
   type OpenSessionsInput,
   openSessionsMachine,
@@ -82,6 +83,7 @@ export interface EngineInput extends Pick<
   fetchAgents?: FetchAgents;
   installationPorts?: InstallPorts;
   caffeinate?: Caffeinate;
+  notificationOptions?: NotificationOptions;
 }
 
 export interface EngineContext extends EngineInput {
