@@ -136,6 +136,10 @@ _Avoid_: Vendor session, upstream session, Agent connection, process
 The public ACP Registry of Agents that Argo can run, and the copy the Server keeps for use offline.
 _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), catalog (for the upstream list)
 
+**Installed Agent**:
+A Registry Agent the user installed on a Server, stored in `agent_servers` and downloaded on first launch.
+_Avoid_: Saved Agent, configured Agent, catalog
+
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, `error`, or `auth_required`.
 _Avoid_: Exit status, finish reason, interrupted (as a Stop reason)
