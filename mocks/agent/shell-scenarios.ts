@@ -71,3 +71,14 @@ export const orphanedShellStep = {
     ],
   },
 } satisfies ScriptedStep;
+
+export const escapedShellStep = {
+  ...runningShellStep,
+  request: {
+    command: 'node',
+    args: [
+      '-e',
+      "const { spawn } = require('child_process'); const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'inherit', detached: true }); console.log('descendant:' + child.pid); setInterval(() => {}, 1000)",
+    ],
+  },
+} satisfies ScriptedStep;

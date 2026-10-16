@@ -6,7 +6,10 @@ import { z } from 'zod';
 import type { AgentLaunch } from '../agent-launch';
 import type { Serializable } from './process';
 import type { ShellChild } from './process';
-import { captureShellCommandOutput } from './shell-command-output';
+import {
+  captureShellCommandOutput,
+  endShellCommandOutput,
+} from './shell-command-output';
 import { releaseShellGroup } from './shell-process-group';
 import { recordShellGroup, removeShellRecord } from './shell-record';
 import { shellLaunchMessage, sendShellLaunch, shellPid } from './shell-start';
@@ -50,7 +53,7 @@ class OwnedShellCommand implements ShellCommand {
     child.once('spawn', () => this.spawned.resolve());
     child.once('error', (error) => this.spawned.reject(error));
     child.on('message', this.message);
-    child.once('close', this.closed);
+    child.once('exit', this.closed);
     void this.started.promise.catch(() => {});
     void this.exited.catch(() => {});
     void output.catch(() => this.kill());
@@ -124,7 +127,7 @@ class OwnedShellCommand implements ShellCommand {
   }
   private async finish(fallback: TerminalExitStatus): Promise<void> {
     await this.release();
-    await this.output;
+    await endShellCommandOutput(this.child, this.output);
     this.result.resolve(this.status ?? fallback);
   }
 }
