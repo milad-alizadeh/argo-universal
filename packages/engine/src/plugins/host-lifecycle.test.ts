@@ -12,9 +12,10 @@ type HostSnapshot = SnapshotFrom<typeof hostLifecycleMachine>;
 
 const exited = { type: 'host.exited', reason: 'SIGKILL' } as const;
 
-const events = [exited, { type: 'host.close' }] satisfies GraphEventFromLogic<
-  typeof hostLifecycleMachine
->[];
+const events: GraphEventFromLogic<typeof hostLifecycleMachine>[] = [
+  exited,
+  { type: 'host.close' },
+];
 
 const input = {
   now: (): number => 0,
