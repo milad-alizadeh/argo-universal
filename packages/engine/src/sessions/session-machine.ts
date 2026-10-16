@@ -1018,6 +1018,21 @@ const acpReleaseTransitions = [
   { target: 'flushing', actions: cancelledTurn },
 ] as const;
 
+const archiveOperationOutcome = {
+  onDone: { target: 'closed' },
+  onError: {
+    target: 'closed',
+    actions: {
+      type: 'rememberFailure',
+      params: ({
+        event,
+      }: {
+        event: { error: unknown };
+      }): FailureParameters => ({ error: event.error }),
+    },
+  },
+} as const;
+
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
   context: ({ input }): SessionContext => ({
@@ -1700,14 +1715,7 @@ export const sessionMachine = sessionSetup.createMachine({
             writerMachine,
           ),
         }),
-        onDone: { target: 'closed' },
-        onError: {
-          target: 'closed',
-          actions: {
-            type: 'rememberFailure',
-            params: ({ event }): FailureParameters => ({ error: event.error }),
-          },
-        },
+        ...archiveOperationOutcome,
       },
     },
     removingCheckout: {
@@ -1715,14 +1723,7 @@ export const sessionMachine = sessionSetup.createMachine({
         id: 'removeCheckout',
         src: 'removeCheckout',
         input: ({ context }) => context,
-        onDone: { target: 'closed' },
-        onError: {
-          target: 'closed',
-          actions: {
-            type: 'rememberFailure',
-            params: ({ event }): FailureParameters => ({ error: event.error }),
-          },
-        },
+        ...archiveOperationOutcome,
       },
     },
     closed: { type: 'final' },
