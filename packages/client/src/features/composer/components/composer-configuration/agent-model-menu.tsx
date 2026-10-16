@@ -9,6 +9,9 @@ import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 import { ModelPicker } from './model-picker';
 
+// Paper: the desktop popover's title and the phone sheet's page title.
+export const configureTitle = 'Configure';
+
 interface MenuProps {
   configuration: ComposerConfigurationProps;
 }
@@ -26,7 +29,7 @@ export function AgentModelMenu(props: ContentsProps): React.JSX.Element {
 function ConfigurationContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 bg-content web:wide:bg-card">
-      {props.wide ? <PopoverTitle>Configure</PopoverTitle> : null}
+      {props.wide ? <PopoverTitle>{configureTitle}</PopoverTitle> : null}
       <ConfigurationFields {...props} />
     </View>
   );

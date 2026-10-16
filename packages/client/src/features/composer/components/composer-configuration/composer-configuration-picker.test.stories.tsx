@@ -1,30 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
-import { composerUnlistedEffortConfigurations } from '../../../../../mocks/composer-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ComposerAgentModelControl } from './composer-configuration';
-
-const configuration = composerUnlistedEffortConfigurations[0];
-
-const agentModelLabel = 'Agent and model';
-
-const modelPickerLabel = 'Select Model';
-
-if (!configuration) throw new Error('Recorded catalog needs a model picker.');
+import {
+  agentModelLabel,
+  configuration,
+  modelPickerLabel,
+  pickerStoryMeta,
+} from './picker-story-fixtures';
 
 const meta = {
+  ...pickerStoryMeta,
   title: 'Tests/ComposerConfigurationPicker',
-  component: ComposerAgentModelControl,
-  args: { configuration, disabled: false },
-  render: (args): React.JSX.Element => (
-    <View className="p-4">
-      <ComposerAgentModelControl {...args} />
-    </View>
-  ),
 } satisfies Meta<typeof ComposerAgentModelControl>;
 
 export default meta;

@@ -50,12 +50,12 @@ function DrillContent(props: ContentProps): ReactElement {
   return createElement(
     PopoverContent,
     placement(props),
-    <ContentBody {...props} />,
+    <Choices {...props} />,
   );
 }
 
 // Paper: a row's choices open beside the menu under their own title.
-function ContentBody(props: ContentProps): ReactElement {
+function Choices(props: ContentProps): ReactElement {
   if (!props.row) return <>{props.children(props.close)}</>;
 
   return (
@@ -68,8 +68,12 @@ function ContentBody(props: ContentProps): ReactElement {
 
 const fieldOffset = 4;
 
-// The menu's 16px inset, less the 12px gap Paper leaves between menu and choices.
-const drillOffset = -4;
+// A row ends 5px inside its menu (the list's 4px padding and the popover's 1px border); Paper leaves 12px beyond the menu.
+const menuInset = 5;
+
+const menuGap = 12;
+
+const drillOffset = menuInset + menuGap;
 
 // A field's choices match the field's width; a row's are Paper's 284px panel.
 const placements = {
