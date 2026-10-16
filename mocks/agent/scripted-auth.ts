@@ -1,4 +1,3 @@
-import { existsSync, writeFileSync } from 'node:fs';
 import { RequestError, type AgentApp } from '@agentclientprotocol/sdk';
 import type { Script } from './scripted-handlers.ts';
 import type { ScriptedScenario } from './scripted-scenario.ts';
@@ -15,7 +14,7 @@ export const serveOtherMethods = (
       const response = await authenticate(context, {});
 
       if (scenario.authentication)
-        writeFileSync(scenario.authentication.credentials, 'signed-in');
+        scenario.authentication.credentials.signedIn = true;
 
       return response;
     })
@@ -25,9 +24,6 @@ export const serveOtherMethods = (
 export const requireScriptedAuthentication = (
   scenario: ScriptedScenario,
 ): void => {
-  if (
-    scenario.authentication &&
-    !existsSync(scenario.authentication.credentials)
-  )
+  if (scenario.authentication && !scenario.authentication.credentials.signedIn)
     throw RequestError.authRequired();
 };
