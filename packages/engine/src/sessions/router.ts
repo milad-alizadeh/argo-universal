@@ -27,6 +27,7 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../rpc';
+import { createArchiveRouter } from './archive/archive-router';
 import { createSessionList } from './list/session-list';
 import { createSubagentsReader } from './list/subagents-reader';
 import type { SessionRouterDeps } from './router-deps';
@@ -149,6 +150,7 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createCountsRouter(sessionList),
     createStartRouter(deps),
     createStopRouter(deps),
+    createArchiveRouter(deps),
     createConfigurationRouter(deps),
     createAnswerRouter(deps),
     createSubagentsRouter(deps),

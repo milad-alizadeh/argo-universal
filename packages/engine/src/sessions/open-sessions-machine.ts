@@ -34,7 +34,7 @@ interface OpenSessionsContext extends OpenSessionsInput {
 export type OpenSessionsCommand =
   | ({ type: 'sessions.create'; sessionId: string } & SessionCreationInput)
   | {
-      type: 'sessions.open';
+      type: 'sessions.open' | 'sessions.archive';
       sessionId: string;
       agent: string;
     }
@@ -68,7 +68,11 @@ export const openSessionsMachine = setup({
   actions: {
     openSession: assign(
       ({ context, event, spawn }): Partial<OpenSessionsContext> => {
-        assertEvent(event, [createSessionEvent, 'sessions.open']);
+        assertEvent(event, [
+          createSessionEvent,
+          'sessions.open',
+          'sessions.archive',
+        ]);
 
         if (context.sessions[event.sessionId]) return {};
 
@@ -113,7 +117,8 @@ export const openSessionsMachine = setup({
       if (
         session &&
         snapshot.can({ type: closeSessionEvent }) &&
-        !snapshot.matches({ open: { acp: 'closing' } })
+        !snapshot.matches({ open: { acp: 'closing' } }) &&
+        !snapshot.matches({ open: { acp: 'archiving' } })
       )
         enqueue.sendTo(session, { type: closeSessionEvent });
     }),
@@ -157,6 +162,7 @@ export const openSessionsMachine = setup({
           guard: 'isRegisteredAgent',
           actions: 'openSession',
         },
+        'sessions.archive': { actions: 'openSession' },
         'sessions.open': { guard: 'isRegisteredAgent', actions: 'openSession' },
         'sessions.stopAll': { target: 'stopping' },
       },

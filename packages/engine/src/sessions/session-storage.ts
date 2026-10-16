@@ -9,6 +9,7 @@ import {
   type WriterActorRef,
   type WriterJob,
 } from '../storage';
+import { SessionArchiveJob } from './archive/archive-storage';
 
 type SessionInsert = {
   session: typeof session.$inferInsert;
@@ -267,7 +268,8 @@ const projectSessionJob = (
   if (
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
-    job instanceof SessionDeleteJob
+    job instanceof SessionDeleteJob ||
+    job instanceof SessionArchiveJob
   )
     return job.project(current, sessionId);
 
@@ -334,6 +336,7 @@ export const changedSessionIds = (job: WriterJob): string[] => {
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
     job instanceof SessionDeleteJob ||
+    job instanceof SessionArchiveJob ||
     job instanceof TurnInsertJob
   )
     return job.changedSessionIds();

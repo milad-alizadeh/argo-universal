@@ -28,6 +28,11 @@ const canApplyLifecycleEvent = (
       'xstate.after.checkoutLimit.session.creating': 'creating',
       'xstate.done.actor.loadSession': 'loading',
       'xstate.error.actor.loadSession': 'loading',
+      'xstate.done.actor.removeCheckout': 'removingCheckout',
+      'xstate.error.actor.removeCheckout': 'removingCheckout',
+      'xstate.done.actor.undoArchive': 'undoingArchive',
+      'xstate.error.actor.undoArchive': 'undoingArchive',
+      'xstate.after.checkoutRemovalDelay.session.archived': 'archived',
       'xstate.done.actor.discardSession': 'discarding',
       'xstate.error.actor.discardSession': 'discarding',
     } as const),
@@ -39,6 +44,8 @@ const canApplyLifecycleEvent = (
 
   const invoking = new Map(
     Object.entries({
+      'xstate.done.actor.saveArchive': 'archiving',
+      'xstate.error.actor.saveArchive': 'archiving',
       'xstate.done.actor.openAcp': 'opening',
       'xstate.error.actor.openAcp': 'opening',
       'xstate.done.actor.configureAcp': 'configuring',
@@ -66,6 +73,8 @@ const canApplyLifecycleEvent = (
   if (event.type === closeEvent) return snapshot.can({ type: closeEvent });
 
   if (
+    event.type === 'session.archive' ||
+    event.type === 'session.unarchive' ||
     event.type === 'session.prompt' ||
     event.type === 'session.cancel' ||
     event.type === 'session.setConfigOption' ||
@@ -163,6 +172,39 @@ export const createAcpSessionModel = (
       actorId: 'discardSession',
       error: new Error('Discard failed'),
     },
+    { type: 'session.archive' },
+    { type: 'session.unarchive' },
+    {
+      type: 'xstate.done.actor.saveArchive',
+      actorId: 'saveArchive',
+      output: undefined,
+    },
+    {
+      type: 'xstate.error.actor.saveArchive',
+      actorId: 'saveArchive',
+      error: new Error('archive failed'),
+    },
+    {
+      type: 'xstate.done.actor.undoArchive',
+      actorId: 'undoArchive',
+      output: undefined,
+    },
+    {
+      type: 'xstate.error.actor.undoArchive',
+      actorId: 'undoArchive',
+      error: new Error('Undo failed'),
+    },
+    {
+      type: 'xstate.done.actor.removeCheckout',
+      actorId: 'removeCheckout',
+      output: undefined,
+    },
+    {
+      type: 'xstate.error.actor.removeCheckout',
+      actorId: 'removeCheckout',
+      error: new Error('removal failed'),
+    },
+    { type: 'xstate.after.checkoutRemovalDelay.session.archived' },
     { type: 'session.cancel' },
     {
       type: 'xstate.done.actor.cancelAcp',
@@ -341,6 +383,7 @@ export const createAcpSessionModel = (
         failure: snapshot.context.failure !== null,
         stored: snapshot.context.stored,
         kept: snapshot.context.kept,
+        archiveRequested: snapshot.context.archiveRequested,
         feedEnded: snapshot.context.feedEnded,
         via:
           event &&

@@ -50,3 +50,5 @@ export {
 } from './turn-settlement';
 
 export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';
+
+export { settleArchivedChild } from './archive-settlement';

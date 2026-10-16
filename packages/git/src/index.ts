@@ -295,3 +295,25 @@ export async function discardCheckout(
   )
     await run(['-C', projectPath, 'branch', '-D', checkout.branch], signal);
 }
+
+// Archive keeps the branch, and Git's actual main Checkout is always protected.
+export async function removeCheckout(
+  projectPath: string,
+  checkout: Checkout,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (!existsSync(checkout.path)) return;
+
+  const { stdout } = await run(
+    ['-C', projectPath, 'worktree', 'list', '--porcelain', '-z'],
+    signal,
+  );
+
+  const main = readMainCheckout(stdout);
+
+  if ((await realpath(main.path)) === (await realpath(checkout.path))) return;
+  await run(
+    ['-C', projectPath, 'worktree', 'remove', '--force', checkout.path],
+    signal,
+  );
+}

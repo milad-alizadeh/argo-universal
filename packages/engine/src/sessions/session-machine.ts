@@ -70,6 +70,10 @@ import {
 } from './admission/answer-admission';
 import { hasConfigurationCapacity } from './admission/config-admission';
 import { isReplayedHistory } from './admission/update-admission';
+import {
+  saveSessionArchive,
+  removeSessionCheckout,
+} from './archive/archive-operations';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { currentModel, toConfigValues } from './configuration/config-choices';
 import { validateConfigChoice } from './session-admission';
@@ -95,7 +99,7 @@ const storageFailingEvent = 'session.storageFailing';
 
 const rejectedMessageEvent = 'agent.messageRejected';
 
-const closedSessionTarget = '#session.closed';
+const closedSessionTarget = '#session.finishing';
 
 const discardingSessionTarget = '#session.discarding';
 
@@ -161,6 +165,7 @@ export type SessionMachineInput = SessionInput & {
   now: () => number;
   createId: () => string;
   acp: AcpSessionDependencies;
+  archive?: boolean;
 };
 
 export type SessionCommand =
@@ -183,6 +188,8 @@ export type SessionCommand =
       value: string | boolean;
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
     }
+  | { type: 'session.archive' }
+  | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
   | { type: 'session.close' };
 
@@ -193,6 +200,7 @@ type SessionEvent =
 
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
+  archiveRequested: boolean;
   activeTurnId: string | null;
   // When the running Turn started, in epoch milliseconds.
   activeTurnStartedAt: number | null;
@@ -302,6 +310,17 @@ const sessionSetup = setup({
     output: {} as Pick<SessionContext, 'failure'>,
   },
   actors: {
+    saveArchive: fromPromise<
+      void,
+      { context: SessionContext; writer: WriterActorRef | undefined }
+    >(({ input }) => saveSessionArchive(input.context, input.writer)),
+    undoArchive: fromPromise<
+      void,
+      { context: SessionContext; writer: WriterActorRef | undefined }
+    >(({ input }) => saveSessionArchive(input.context, input.writer, null)),
+    removeCheckout: fromPromise<void, SessionContext>(({ input, signal }) =>
+      removeSessionCheckout(input.input.database, input, signal),
+    ),
     cancelAcp: fromPromise<void, SessionContext>(({ input }) => {
       if (!input.acpLease) throw new Error('No active ACP Session');
 
@@ -425,6 +444,7 @@ const sessionSetup = setup({
     feed: feedMachine,
   },
   actions: {
+    requestArchive: assign({ archiveRequested: true, failure: null }),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
     queueAcpConfig: assign(({ context, event }) => {
@@ -880,6 +900,15 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    isArchiving: ({ context }) => context.archiveRequested,
+    canArchive: and([
+      ({ context }): boolean => context.kept && context.activeTurnId === null,
+      or([
+        stateIn({ open: { acp: 'idle' } }),
+        stateIn({ open: { acp: 'configuring' } }),
+        stateIn({ open: { acp: { activeTurn: 'cancelling' } } }),
+      ]),
+    ]),
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&
       event.notification.update.sessionUpdate === 'config_option_update',
@@ -921,6 +950,7 @@ const sessionSetup = setup({
   },
   delays: {
     checkoutLimit,
+    checkoutRemovalDelay: 5_000,
     feedFlushLimit: 5_000,
   },
 });
@@ -991,6 +1021,7 @@ export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
   context: ({ input }): SessionContext => ({
     input,
+    archiveRequested: input.archive ?? false,
     sessionId: input.sessionId,
     projectId: input.kind === 'new' ? input.projectId : '',
     agent: input.kind === 'new' ? input.agent : '',
@@ -1113,7 +1144,7 @@ export const sessionMachine = sessionSetup.createMachine({
             }),
         }),
         onDone: [
-          { guard: 'agentAlreadyDrained', target: 'closed' },
+          { guard: 'agentAlreadyDrained', target: 'finishing' },
           {
             target: '.acp.closing',
             actions: 'rememberFeedEnded',
@@ -1122,7 +1153,7 @@ export const sessionMachine = sessionSetup.createMachine({
         onError: [
           {
             guard: 'agentAlreadyDrained',
-            target: 'closed',
+            target: 'finishing',
             actions: {
               type: 'rememberFailure',
               params: ({ event }): FailureParameters => ({
@@ -1152,8 +1183,13 @@ export const sessionMachine = sessionSetup.createMachine({
             src: 'acpSubscription',
             input: ({ context }): AcpSessionLifetime => context.acpLifetime,
           },
-          initial: 'opening',
+          initial: 'entering',
           on: {
+            'session.archive': {
+              guard: 'canArchive',
+              target: '.archiving',
+              actions: 'requestArchive',
+            },
             'session.close': { target: '.closing' },
             'acp.failed': { target: '.closing', actions: 'recordCrash' },
             'acp.update': [
@@ -1181,6 +1217,43 @@ export const sessionMachine = sessionSetup.createMachine({
             },
           },
           states: {
+            entering: {
+              always: [
+                { guard: 'isArchiving', target: 'archiving' },
+                { target: 'opening' },
+              ],
+            },
+            archiving: {
+              on: {
+                'session.close': {},
+                'acp.failed': { actions: 'recordCrash' },
+              },
+              invoke: {
+                id: 'saveArchive',
+                src: 'saveArchive',
+                input: ({ context, self }) => ({
+                  context,
+                  writer: findMachineActor(
+                    self.system,
+                    databaseWriterId,
+                    writerMachine,
+                  ),
+                }),
+                onDone: { target: 'closing' },
+                onError: {
+                  target: 'closing',
+                  actions: [
+                    assign({ archiveRequested: false }),
+                    {
+                      type: 'rememberFailure',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
+                  ],
+                },
+              },
+            },
             opening: {
               invoke: {
                 id: 'openAcp',
@@ -1249,7 +1322,9 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'idle',
                   actions: {
                     type: 'rejectAcpConfig',
-                    params: ({ event }) => ({ error: event.error }),
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
                   },
                 },
               },
@@ -1448,7 +1523,9 @@ export const sessionMachine = sessionSetup.createMachine({
                           target: 'waiting',
                           actions: {
                             type: 'rememberFailure',
-                            params: ({ event }) => ({ error: event.error }),
+                            params: ({ event }): FailureParameters => ({
+                              error: event.error,
+                            }),
                           },
                         },
                       },
@@ -1493,7 +1570,9 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'closing',
                   actions: {
                     type: 'rememberFailure',
-                    params: ({ event }) => ({ error: event.error }),
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
                   },
                 },
               },
@@ -1592,6 +1671,56 @@ export const sessionMachine = sessionSetup.createMachine({
         }),
         onDone: { target: 'closed' },
         onError: { target: 'closed', actions: 'addDiscardFailure' },
+      },
+    },
+    finishing: {
+      always: [
+        { guard: 'isArchiving', target: 'archived' },
+        { target: 'closed' },
+      ],
+    },
+    archived: {
+      after: { checkoutRemovalDelay: { target: 'removingCheckout' } },
+      on: {
+        'session.unarchive': { target: 'undoingArchive' },
+        'session.close': { target: 'closed' },
+      },
+    },
+    undoingArchive: {
+      invoke: {
+        id: 'undoArchive',
+        src: 'undoArchive',
+        input: ({ context, self }) => ({
+          context,
+          writer: findMachineActor(
+            self.system,
+            databaseWriterId,
+            writerMachine,
+          ),
+        }),
+        onDone: { target: 'closed' },
+        onError: {
+          target: 'closed',
+          actions: {
+            type: 'rememberFailure',
+            params: ({ event }): FailureParameters => ({ error: event.error }),
+          },
+        },
+      },
+    },
+    removingCheckout: {
+      invoke: {
+        id: 'removeCheckout',
+        src: 'removeCheckout',
+        input: ({ context }) => context,
+        onDone: { target: 'closed' },
+        onError: {
+          target: 'closed',
+          actions: {
+            type: 'rememberFailure',
+            params: ({ event }): FailureParameters => ({ error: event.error }),
+          },
+        },
       },
     },
     closed: { type: 'final' },
