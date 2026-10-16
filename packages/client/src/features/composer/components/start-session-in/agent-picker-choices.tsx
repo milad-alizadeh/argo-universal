@@ -40,13 +40,7 @@ type ScrollableChoicesProps = AgentChoiceProps &
   Pick<React.ComponentProps<typeof ScrollFadeList>, 'maxHeight'>;
 
 function WebChoices(props: ScrollableChoicesProps): React.JSX.Element {
-  return (
-    <View className="px-4 wide:px-0">
-      <GroupedListSection>
-        <ChoicesList {...props} />
-      </GroupedListSection>
-    </View>
-  );
+  return <ChoicesList {...props} />;
 }
 
 function ChoicesList(props: ScrollableChoicesProps): React.JSX.Element {
@@ -54,11 +48,11 @@ function ChoicesList(props: ScrollableChoicesProps): React.JSX.Element {
     <ScrollFadeList
       data={props.agents}
       maxHeight={props.maxHeight}
-      surfaceClassName="bg-content"
+      contentContainerStyle={{ gap: 2 }}
       testID="new-session-agents-scroll"
       keyExtractor={({ id }) => id}
       renderItem={({ item }) => <AgentChoice agent={item} choices={props} />}
-      ListFooterComponent={<AddAgents {...props} />}
+      ListFooterComponent={<WebAddAgents {...props} />}
     />
   );
 }
@@ -88,6 +82,7 @@ function AgentChoice({ agent, choices }: RowProps): React.JSX.Element {
       leading={
         <RegistryIcon uri={agent.icon} agentName={agent.name} role="row" />
       }
+      size={Platform.OS === 'web' ? 'sm' : undefined}
     />
   );
 }
@@ -112,5 +107,18 @@ function AddAgents(props: AgentChoiceProps): React.JSX.Element {
       accessibilityRole="button"
       onPress={() => props.close(props.onAddAgents)}
     />
+  );
+}
+
+function WebAddAgents(props: AgentChoiceProps): React.JSX.Element {
+  return (
+    <View className="pt-1_5">
+      <GroupedListItem
+        label="Add Agents"
+        icon="add"
+        accessibilityRole="button"
+        onPress={() => props.close(props.onAddAgents)}
+      />
+    </View>
   );
 }

@@ -14,6 +14,8 @@ export interface SessionFeed {
   loadingOlder: boolean;
   loadOlder: FeedHistory['loadOlder'];
   view: FeedView | null;
+  // The newest Feed revision held, which the reader has seen when the Feed's end is on screen.
+  revision: number;
   liveToolCall: ToolCallUpdate | undefined;
   snapshot: SessionSnapshot | null;
   ready: boolean;

@@ -1,7 +1,9 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { PluginFailures } from './failures';
 import { HostConnection } from './host-connection';
+import type { PluginServices } from './plugin-services';
 import { RuntimePlugin } from './runtime-plugin';
+import type { PluginReply } from './runtime-protocol';
 import {
   notStarted,
   type PluginEntry,
@@ -22,9 +24,14 @@ export class PluginRuntime {
   private hostError: string | null = null;
   private closed = false;
 
-  constructor(private readonly log: (line: string) => void) {
+  constructor(
+    private readonly log: (line: string) => void,
+    private readonly services: PluginServices,
+  ) {
     this.host = new HostConnection({
       log,
+      call: (message): Promise<PluginReply> =>
+        this.services.handle(message.pluginId, message.request),
       status: (message): void => this.update(message),
       crash: (message): void => this.crashed(message),
     });
@@ -76,9 +83,10 @@ export class PluginRuntime {
       [...this.plugins.values()].map((plugin) => plugin.close()),
     );
     await this.host.close();
+    this.services.close();
   }
 
-  private update(message: Exclude<HostMessage, { type: 'ready' }>): void {
+  private update(message: Extract<HostMessage, { type: 'status' }>): void {
     this.plugins.get(message.pluginId)?.update(
       {
         state: message.state,

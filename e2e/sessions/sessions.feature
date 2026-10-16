@@ -1,8 +1,10 @@
 Feature: Live Sessions list
-  Scenario: A completed Turn marks its Session unread
+  Scenario: Seeing a Session's Feed on one page clears its Unread on another
     Given a wide Frame
-    When I start a Session named "Check the live list"
+    When a Turn ends while I am away from the Session "Check the live list"
     Then the Sessions list shows the unread Session with one attention badge
+    When I see the end of the Session "Check the live list"'s Feed on another page
+    Then the first page shows the Session "Check the live list" seen with no attention badge
 
   Scenario Outline: Search matches Session titles without case sensitivity
     Given a Session named "Check the live list"
