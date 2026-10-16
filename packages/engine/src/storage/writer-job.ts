@@ -50,3 +50,40 @@ export function describeLostJobs(jobs: readonly WriterJob[]): string {
 // Queue time is shared by reads and writes, including retries of the same job.
 export const stampWriterJob = (job: WriterJob, now: number): WriterJob =>
   job.stamp?.(now) ?? job;
+
+// Keeps dependent writes in one queued job, even when the Writer starts a batch immediately.
+export class AtomicWriterJob implements WriterJob {
+  public constructor(private readonly jobs: readonly WriterJob[]) {}
+
+  public unpack(): WriterJob[] {
+    return unpackWriterJobs(this.jobs);
+  }
+
+  public get refusable(): true | undefined {
+    return this.jobs.every((job) => job.refusable === true) ? true : undefined;
+  }
+
+  public describe(): string {
+    return this.jobs.map((job) => job.describe()).join('; ');
+  }
+
+  public stamp(now: number): AtomicWriterJob {
+    return new AtomicWriterJob(
+      this.jobs.map((job) => stampWriterJob(job, now)),
+    );
+  }
+
+  public async writeFiles(blobsFolder: string | undefined): Promise<void> {
+    await writeJobFiles(blobsFolder, this.jobs);
+  }
+
+  public commit(transaction: StorageTransaction): void {
+    for (const job of this.jobs) job.commit(transaction);
+  }
+}
+
+// Readers and announcements expose the module-owned jobs inside an atomic write.
+export const unpackWriterJobs = (jobs: readonly WriterJob[]): WriterJob[] =>
+  jobs.flatMap((job) =>
+    job instanceof AtomicWriterJob ? job.unpack() : [job],
+  );

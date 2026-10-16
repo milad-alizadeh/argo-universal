@@ -1,5 +1,5 @@
 import type { SessionUpdate } from '@repo/contracts';
-import type { WriterEvent } from '../storage';
+import { AtomicWriterJob, type WriterJob, type WriterEvent } from '../storage';
 import type { FeedContext, FeedEvent, FeedInternalEvent } from './feed-machine';
 import { outputBlobsOf, promptBlobIds } from './feed-row';
 import { FeedRowsJob } from './feed-storage';
@@ -29,7 +29,7 @@ export const createRowsWriteRequest = ({
   return {
     committed: 'committed' in event ? event.committed : undefined,
     refused: context.storageFailing,
-    job: createRowsJob(context, rows),
+    job: withCompanionJob(createRowsJob(context, rows), event),
   };
 };
 
@@ -45,3 +45,11 @@ const createRowsJob = (
     blobIds: promptBlobIds(rows),
     blobs: outputBlobsOf(rows, context.outputBlobs),
   });
+
+const withCompanionJob = (
+  job: FeedRowsJob,
+  event: FeedEvent | FeedInternalEvent,
+): WriterJob =>
+  'commitWith' in event && event.commitWith
+    ? new AtomicWriterJob([job, event.commitWith])
+    : job;

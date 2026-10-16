@@ -661,37 +661,40 @@ const sessionSetup = setup({
         const params = context.storageFailedTurn ? storageFailedTurn : ended;
         const endedAt = context.input.now();
 
-        if (context.activeTurnId && !context.feedEnded)
-          enqueue.sendTo('feed', {
-            type: 'feed.completeTurn',
-            turnId: context.activeTurnId,
-            ending: {
-              kind: 'completion',
-              turnEnd: {
-                stopReason: params.stopReason,
-                error: params.error ?? null,
-                durationMs: Math.max(
-                  0,
-                  endedAt - (context.activeTurnStartedAt ?? endedAt),
-                ),
-              },
+        if (context.activeTurnId) {
+          const job = new TurnUpdateJob({
+            id: context.activeTurnId,
+            set: {
+              status: 'ended',
+              stopReason: params.stopReason,
+              endedAt,
+              usage: params.usage ?? null,
+              error: params.error ?? null,
             },
           });
 
-        if (context.activeTurnId)
-          enqueue.sendTo(writer, {
-            type: writeFeedEvent,
-            job: new TurnUpdateJob({
-              id: context.activeTurnId,
-              set: {
-                status: 'ended',
-                stopReason: params.stopReason,
-                endedAt,
-                usage: params.usage ?? null,
-                error: params.error ?? null,
+          if (context.feedEnded) {
+            enqueue.sendTo(writer, { type: writeFeedEvent, job });
+          } else {
+            enqueue.sendTo('feed', {
+              type: 'feed.completeTurn',
+              turnId: context.activeTurnId,
+              commitWith: job,
+              ending: {
+                kind: 'completion',
+                turnEnd: {
+                  stopReason: params.stopReason,
+                  error: params.error ?? null,
+                  durationMs: Math.max(
+                    0,
+                    endedAt - (context.activeTurnStartedAt ?? endedAt),
+                  ),
+                },
               },
-            }),
-          });
+            });
+          }
+        }
+
         enqueue.assign({
           activeTurnId: null,
           activeTurnStartedAt: null,

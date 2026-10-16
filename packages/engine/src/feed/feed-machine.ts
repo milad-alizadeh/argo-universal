@@ -10,7 +10,12 @@ import {
   setup,
 } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
-import { databaseWriterId, type WriterCommit, writerMachine } from '../storage';
+import {
+  databaseWriterId,
+  type WriterCommit,
+  type WriterJob,
+  writerMachine,
+} from '../storage';
 import { prepareAcpFeedApplication } from './acp/application';
 import type { MessageStreams } from './acp/message-identity';
 import type { AcpSessionNotification as SessionNotification } from './acp/session-notification';
@@ -96,6 +101,7 @@ export type FeedEvent =
       type: 'feed.completeTurn';
       turnId: string;
       ending?: FeedTurnEnding;
+      commitWith?: WriterJob;
       published?: FeedPublication;
     }
   | SessionRowEvent
@@ -105,6 +111,7 @@ export type FeedEvent =
 type FeedChangeApplied = {
   type: 'feed.changeApplied';
   settled: boolean;
+  commitWith?: WriterJob;
   committed?: WriterCommit;
 };
 
