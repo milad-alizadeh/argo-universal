@@ -9,13 +9,14 @@ import {
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { useErrorToast } from '#primitives/overlays/toast';
 import { finishedSignIn } from '../state/session-auth';
 import type {
   AuthCalloutProps,
   SessionCalloutProps,
   TerminalSignInProps,
 } from '../types/session-callout';
+import { signInReadToast } from '../utils/session-toasts';
 import {
   inputOf,
   type SignInActions,
@@ -70,7 +71,7 @@ const loading: SessionAuth = {
 export function useSessionAuth(options: SessionAuthOptions): SessionAuth {
   const subject = followedSubject(options);
   const state = useAuthState(subject);
-  useErrorToast(unreadableToast(state.error));
+  useErrorToast(signInReadToast(state.error));
   useFollowSignIn({ subject, onSignedIn: options.onSignedIn });
   const actions = useSignInActions(subject);
 
@@ -86,20 +87,17 @@ const authOf = (
 
 type AuthStateQuery = UseQueryResult<AgentAuthState, unknown>;
 
+// A failed read keeps Loading…, as a failed load does: the toast says why, and the read runs again when the Connection reopens or the window regains focus.
 function useAuthState(subject: Subject | SkipToken): AuthStateQuery {
   const trpc = useTRPC();
 
-  return useQuery(trpc.agents.authState.queryOptions(subject));
+  return useQuery(
+    trpc.agents.authState.queryOptions(subject, {
+      refetchOnReconnect: true,
+      refetchOnWindowFocus: true,
+    }),
+  );
 }
-
-const errorMessage = (cause: unknown): string =>
-  cause instanceof Error ? cause.message : String(cause);
-
-// Methods that can't be read keep Loading…, as a failed load does: the toast says why, and the read runs again when the Connection reopens.
-const unreadableToast = (cause: unknown): ErrorToast | undefined =>
-  cause
-    ? { title: "Couldn't check sign-in", message: errorMessage(cause) }
-    : undefined;
 
 function signIn(
   subject: SessionAuthSubject,

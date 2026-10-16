@@ -1,10 +1,18 @@
 import type { SessionOpenError } from '@repo/contracts';
 
 // New Session's open: fine, failed, or opening again with the failure still on show until it settles.
-export type OpenAttempt =
+export type NewSessionAttempt =
   | { status: 'idle' }
   | { status: 'failed'; error: SessionOpenError }
   | { status: 'retrying'; error: SessionOpenError };
+
+// How New Session's open went: the Agent's failure, for the callout, or a dropped Connection, for a toast.
+export interface NewSessionOutcome {
+  // The Agent's sign-in or launch failure, which the callout answers. Retry or a second Send opens again; the failure stays until it settles.
+  attempt: NewSessionAttempt;
+  // The error of an open the Connection dropped: a toast says why, and the Connection reopening opens again.
+  connectionError: unknown;
+}
 
 // What asked New Session to open again.
 export type OpenAgain =

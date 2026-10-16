@@ -1,6 +1,6 @@
 import type { SessionOpenError } from '@repo/contracts';
 import { describe, expect, it, vi } from 'vitest';
-import type { OpenAttempt } from '../types/open-attempt';
+import type { NewSessionAttempt } from '../types/new-session-attempt';
 import type { SessionCalloutProps } from '../types/session-callout';
 import {
   type OpenProblem,
@@ -35,7 +35,7 @@ const turn = {
 } as const;
 
 describe('openProblem', () => {
-  it.each<[string, OpenAttempt, OpenProblem | undefined]>([
+  it.each<[string, NewSessionAttempt, OpenProblem | undefined]>([
     ['nothing while the open is fine', { status: 'idle' }, undefined],
     ['the failure', { status: 'failed', error: signInError }, refused],
     [

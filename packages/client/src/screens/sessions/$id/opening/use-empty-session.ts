@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useResubscribeOnReconnect } from '#features/connection';
 import {
+  droppedConnectionToast,
   type EmptySessionChoices,
   type EmptySessionState,
   EmptySessionStore,
-  useUnreachedOpenToast,
+  failedToOpen,
 } from '#features/sessions';
+import { useErrorToast } from '#primitives/overlays/toast';
 import { useEmptySessionPorts } from './empty-session-adapters';
 
 export interface EmptySession extends EmptySessionState {
@@ -45,9 +47,6 @@ function useChooseInStore(
   }, [store, choiceKey, connected]);
 }
 
-const failed = ({ attempt, unreached }: EmptySessionState): boolean =>
-  attempt.status !== 'idle' || unreached !== undefined;
-
 // New Session's real, empty Session for the current choices; leaving without sending closes it.
 export function useEmptySession(
   choices: EmptySessionChoices,
@@ -56,9 +55,9 @@ export function useEmptySession(
   const store = useStore(clearDraft);
   useChooseInStore(store, choices);
   const state = useSyncExternalStore(store.subscribe, store.getState);
-  useUnreachedOpenToast(state.unreached);
+  useErrorToast(droppedConnectionToast({ opens: [state.connectionError] }));
   useResubscribeOnReconnect({
-    status: failed(state) ? 'error' : 'idle',
+    status: failedToOpen(state) ? 'error' : 'idle',
     reset: () => store.openAgain({ by: 'connection' }),
   });
 

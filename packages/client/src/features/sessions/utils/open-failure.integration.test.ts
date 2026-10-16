@@ -2,7 +2,8 @@ import { startEngineTestHost } from '@repo/engine/mocks';
 import type { AppRouter } from '@repo/engine/router';
 import * as trpc from '@trpc/client';
 import { afterEach, expect, it } from 'vitest';
-import { decodeOpenFailure, unreachedOpenToast } from './open-failure';
+import { connectionDropped, openErrorOf } from './open-failure';
+import { droppedConnectionToast } from './session-toasts';
 
 const closers: (() => void)[] = [];
 
@@ -59,8 +60,9 @@ async function droppedSubscriptionError(): Promise<DroppedError> {
 it('reads a dropped Connection as no open failure, which a toast reports', async () => {
   const error = await droppedSubscriptionError();
 
-  expect(decodeOpenFailure(error)).toBeUndefined();
-  expect(unreachedOpenToast(error)).toMatchObject({
-    title: "Couldn't open the Session",
-  });
+  expect(connectionDropped(error)).toBe(true);
+  expect(openErrorOf(error)).toBeUndefined();
+  expect(
+    droppedConnectionToast({ opens: [], feed: error, opened: true }),
+  ).toMatchObject({ title: 'Connection lost' });
 });

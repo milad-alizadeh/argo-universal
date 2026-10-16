@@ -108,6 +108,42 @@ Feature: Agent sign-in and launch callouts
       | wide  |
       | phone |
 
+  Scenario Outline: A Turn's card stays cleared when its Session page opens again in a <frame> Frame
+    Given a <frame> Frame
+    And Agent 1 ends its first Turn needing sign-in
+    And a Local New Session with Agent 1
+    When I send the prompt "Fix the flaky login test"
+    Then the Session says authentication is required: "Your subscription sign-in expired."
+    When I press Authenticate
+    And I choose the sign-in method "Sign in"
+    Then the sign-in callout is gone
+    When I leave the Session "Fix the flaky login test" and open it again
+    Then the sign-in callout is gone
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |
+
+  Scenario Outline: A Turn's sign-in clears its card after the Session page opens again mid-sign-in in a <frame> Frame
+    Given a <frame> Frame
+    And Agent 1 ends its first Turn needing a terminal sign-in
+    And a Local New Session with Agent 1
+    When I send the prompt "Fix the flaky login test"
+    Then the Session says authentication is required: "Your subscription sign-in expired."
+    When I press Authenticate
+    And I choose the sign-in method "Terminal sign-in"
+    Then the sign-in terminal "Terminal sign-in" is open
+    When I leave the Session "Fix the flaky login test" and open it again
+    Then the sign-in terminal "Terminal sign-in" is open
+    When I press Return in the sign-in terminal
+    Then the sign-in callout is gone
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |
+
   Scenario Outline: An Agent that fails to launch says why, and Retry opens it in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 exits while opening its first Session
@@ -124,6 +160,19 @@ Feature: Agent sign-in and launch callouts
       | frame |
       | wide  |
       | phone |
+
+  # A phone's launch sheet covers the Message box, so the draft changes in a wide Frame.
+  Scenario: Retry creates a New worktree with the draft as it is at Retry
+    Given a wide Frame
+    And Agent 1 exits while opening its first Session
+    And a New Session with Agent 1
+    When I try to send the prompt "First draft"
+    Then the App says the Agent failed to launch
+    And the Message box still holds "First draft"
+    When I change the draft to "Fix the flaky login test"
+    And I press Retry
+    Then the Agent replies "The shared fixture completed this Turn."
+    And the Feed shows "Fix the flaky login test" instead of "First draft"
 
   Scenario Outline: Retry reopens a past Session whose Agent failed to launch in a <frame> Frame
     Given a <frame> Frame
@@ -153,7 +202,7 @@ Feature: Agent sign-in and launch callouts
     And I send the prompt "First prompt"
     And the Agent replies "The shared fixture completed this Turn."
     When the Connection drops and stays down
-    Then the App says it couldn't open the Session
+    Then the App says the Connection was lost
     And the App shows no launch failure
     When the Connection comes back
     And I send the prompt "Second prompt"

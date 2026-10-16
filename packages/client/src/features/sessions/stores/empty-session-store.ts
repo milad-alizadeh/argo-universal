@@ -1,17 +1,19 @@
 import type { SessionNewInput } from '@repo/contracts';
-import type { OpenAgain } from '../types/open-attempt';
+import type { OpenAgain } from '../types/new-session-attempt';
+import {
+  failedOpen,
+  openingAgain,
+  retriedLocal,
+  settledOpen,
+} from '../utils/new-session-attempt';
 import {
   type EmptySessionChoices,
   type EmptySessionConfiguration,
   type EmptySessionPorts,
   type EmptySessionState,
-  failedOpen,
   type FirstPrompt,
   type LiveOptions,
-  type OpenOutcome,
-  openingAgain,
   sameEmptySessionState,
-  settledOpen,
 } from './empty-session-types';
 import { FirstPromptHandOff } from './first-prompt-hand-off';
 import { LocalSessionKeeper } from './local-empty-session';
@@ -50,7 +52,7 @@ export class EmptySessionStore {
     initial: [],
   };
   private pending: FirstPrompt | undefined;
-  private outcome: OpenOutcome = settledOpen;
+  private outcome = settledOpen;
   private stopped = false;
   private readonly listeners = new Set<() => void>();
   private state: EmptySessionState = this.currentState();
@@ -124,9 +126,8 @@ export class EmptySessionStore {
     if (cause.by === 'user') cause.sendDraft();
   }
 
-  // A Local Session whose open failed opens again; with none failed, the attempt stays as it is.
   private reopenLocal(): void {
-    if (this.keeper.retry()) this.outcome = openingAgain(this.outcome);
+    this.outcome = retriedLocal(this.outcome, this.keeper.retry());
     this.reconcile();
   }
 

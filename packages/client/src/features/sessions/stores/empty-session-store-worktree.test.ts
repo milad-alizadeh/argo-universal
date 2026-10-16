@@ -9,7 +9,7 @@ import {
   prompt,
   settle,
   worktree,
-} from './empty-session-store.mocks';
+} from '../../../../mocks/sessions/empty-session-store.mocks';
 
 let h: EmptySessionHarness;
 

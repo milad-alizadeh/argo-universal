@@ -18,6 +18,13 @@ Given(
   },
 );
 
+When(
+  'I change the draft to {string}',
+  async ({ page }, draft: string): Promise<void> => {
+    await writeDraft(page, draft);
+  },
+);
+
 Given(
   'this draft in New Session:',
   async ({ page }, draft: string): Promise<void> => {

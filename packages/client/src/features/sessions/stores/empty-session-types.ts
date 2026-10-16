@@ -8,34 +8,7 @@ import type {
 } from '@repo/contracts';
 import type { SavedChoices } from '#lib/product/session-configuration';
 import type { ConfigurationPicks } from '../state/session-option-choices';
-import type { OpenAttempt } from '../types/open-attempt';
-import { decodeOpenFailure } from '../utils/open-failure';
-
-// How the open went: the Agent's failure, for the callout, or a failure short of the Agent, for a toast.
-export type OpenOutcome = Pick<EmptySessionState, 'attempt' | 'unreached'>;
-
-export const settledOpen: OpenOutcome = {
-  attempt: { status: 'idle' },
-  unreached: undefined,
-};
-
-// Opening again keeps the Agent's failure on show until the open settles; a toast's failure is done with.
-export const openingAgain = ({ attempt }: OpenOutcome): OpenOutcome => ({
-  attempt:
-    attempt.status === 'idle'
-      ? attempt
-      : { status: 'retrying', error: attempt.error },
-  unreached: undefined,
-});
-
-// The Agent's refusal fails the attempt; any other failure, such as a dropped Connection, leaves it idle for a toast.
-export const failedOpen = (cause: unknown): OpenOutcome => {
-  const error = decodeOpenFailure(cause);
-
-  return error
-    ? { attempt: { status: 'failed', error }, unreached: undefined }
-    : { attempt: settledOpen.attempt, unreached: cause };
-};
+import type { NewSessionOutcome } from '../types/new-session-attempt';
 
 export type FirstPrompt = SessionNewInput['prompt'];
 
@@ -63,11 +36,7 @@ export const choiceDebounceMs = 300;
 // A Feed that never shows the prompt hands the Session on after this long anyway.
 export const promptShowTimeoutMs = 3_000;
 
-export interface EmptySessionState {
-  // The Agent's sign-in or launch failure, which the callout answers. Retry or a second Send opens again; the failure stays until it settles.
-  attempt: OpenAttempt;
-  // A failure short of the Agent, such as a dropped Connection: a toast says why, and the Connection reopening opens again.
-  unreached: unknown;
+export interface EmptySessionState extends NewSessionOutcome {
   pendingPrompt: boolean;
   // The Session the page reads options and the first prompt from, until it hands it on.
   openSessionId: string | undefined;
@@ -78,7 +47,7 @@ export interface EmptySessionState {
 
 const stateFields = [
   'attempt',
-  'unreached',
+  'connectionError',
   'pendingPrompt',
   'openSessionId',
   'opening',

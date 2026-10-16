@@ -43,11 +43,11 @@ Then('the launch callout is gone', async ({ page }): Promise<void> => {
   );
 });
 
-// A dropped Connection is a failed load: a toast says so, and no launch callout claims the Agent failed.
+// A dropped Connection under an open Session: a toast says so, and no launch callout claims the Agent failed.
 Then(
-  "the App says it couldn't open the Session",
+  'the App says the Connection was lost',
   async ({ page }): Promise<void> => {
-    await expect(toast(page, "Couldn't open the Session")).toBeVisible(
+    await expect(toast(page, 'Connection lost')).toBeVisible(
       sessionOpenTimeout,
     );
   },

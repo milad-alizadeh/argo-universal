@@ -10,7 +10,7 @@ import {
   promptOutput,
   settle,
   worktree,
-} from './empty-session-store.mocks';
+} from '../../../../mocks/sessions/empty-session-store.mocks';
 
 // Written out so the store cannot grade itself.
 const promptShowTimeoutMs = 3_000;

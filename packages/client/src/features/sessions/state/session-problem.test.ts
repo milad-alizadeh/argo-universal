@@ -1,7 +1,10 @@
 import { type Notice, SessionOpenFailure, type TurnEnd } from '@repo/contracts';
-import { TRPCClientError } from '@trpc/client';
 import { expect, it } from 'vitest';
 import type { FeedViewItem } from '#features/feed';
+import {
+  dropped,
+  serverError,
+} from '../../../../mocks/sessions/open-failure.mocks';
 import { type OpenAttempt, sessionProblem } from './session-problem';
 
 const idle: OpenAttempt = { submittedAt: 0, error: null, isPending: false };
@@ -31,8 +34,10 @@ const turnEnd = (id: string, end: Partial<TurnEnd>): FeedViewItem => {
 
 const agentExited = 'Agent exited';
 
-// The error a tRPC call or subscription gets when its WebSocket closes under it.
-const dropped = TRPCClientError.from(new Error('WebSocket closed'));
+const launchFailed = (message: string): ReturnType<typeof sessionProblem> => ({
+  type: 'open',
+  error: { type: 'failed', message },
+});
 
 const quiet = { feedOpenError: null, retry: idle, commands: [], items: [] };
 
@@ -48,6 +53,20 @@ it('shows the open the Feed closed on', () => {
 it('asks nothing when the Feed drops with the Connection', () => {
   expect(sessionProblem({ ...quiet, feedOpenError: dropped })).toBeUndefined();
 });
+
+const failedRetry = { submittedAt: 2, error: serverError, isPending: false };
+
+it.each([
+  { case: 'the Feed closes', sources: { feedOpenError: serverError } },
+  { case: 'a Retry fails', sources: { retry: failedRetry } },
+])(
+  'shows a Server error as a launch failure when $case with no open failure',
+  ({ sources }) => {
+    expect(sessionProblem({ ...quiet, ...sources })).toEqual(
+      launchFailed(serverError.message),
+    );
+  },
+);
 
 it('waits on a running Retry', () => {
   expect(
@@ -82,7 +101,7 @@ it.each([
         retry,
         commands: [prompt],
       }),
-    ).toEqual({ type: 'open', error: { type: 'failed', message: latest } });
+    ).toEqual(launchFailed(latest));
   },
 );
 
@@ -93,7 +112,7 @@ it('keeps the Feed’s closure when a Retry drops with the Connection', () => {
       feedOpenError: launchFailure('first'),
       retry: { submittedAt: 2, error: dropped, isPending: false },
     }),
-  ).toEqual({ type: 'open', error: { type: 'failed', message: 'first' } });
+  ).toEqual(launchFailed('first'));
 });
 
 it('leaves a prompt’s other errors to the Composer', () => {
@@ -127,10 +146,7 @@ it('shows a Feed closure that came after a Retry opened the Session', () => {
       feedOpenError: launchFailure(agentExited),
       retry: { submittedAt: 2, error: null, isPending: false },
     }),
-  ).toEqual({
-    type: 'open',
-    error: { type: 'failed', message: agentExited },
-  });
+  ).toEqual(launchFailed(agentExited));
 });
 
 const signInExpired = turnEnd('end-1', {

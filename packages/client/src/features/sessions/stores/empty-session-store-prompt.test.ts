@@ -9,7 +9,7 @@ import {
   prompt,
   promptOutput,
   settle,
-} from './empty-session-store.mocks';
+} from '../../../../mocks/sessions/empty-session-store.mocks';
 
 let h: EmptySessionHarness;
 

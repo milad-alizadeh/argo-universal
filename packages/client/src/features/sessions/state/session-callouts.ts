@@ -1,4 +1,4 @@
-import type { OpenAttempt } from '../types/open-attempt';
+import type { NewSessionAttempt } from '../types/new-session-attempt';
 import type { SessionCalloutProps } from '../types/session-callout';
 import type { SessionProblem } from './session-problem';
 
@@ -13,7 +13,7 @@ export type OpenProblem = Problem<'retrying' | 'open'>;
 export const openProblem = ({
   attempt,
 }: {
-  attempt: OpenAttempt;
+  attempt: NewSessionAttempt;
 }): OpenProblem | undefined => {
   if (attempt.status === 'retrying') return { type: 'retrying' };
 

@@ -3,14 +3,18 @@ import {
   SessionOpenFailure,
   type SessionOpenError,
 } from '@repo/contracts';
-import { TRPCClientError } from '@trpc/client';
 import { expect, it } from 'vitest';
 import {
+  dropped,
+  openFailure,
+  serverError,
+} from '../../../../mocks/sessions/open-failure.mocks';
+import {
+  connectionDropped,
   decodeOpenFailure,
+  openErrorOf,
   openFailureText,
-  unreachedOpenToast,
 } from './open-failure';
-import { openFailure, serverError } from './open-failure.mocks';
 
 const authRequiredOpen: SessionOpenError = { type: 'auth-required' };
 
@@ -20,9 +24,6 @@ const launchFailure: SessionOpenError = {
 };
 
 const refused = 'The Agent refused';
-
-// The error a tRPC call gets when its WebSocket closes under it.
-const dropped = TRPCClientError.from(new Error('WebSocket closed'));
 
 it.each([
   { case: 'a refused tRPC open', cause: openFailure(authRequiredOpen) },
@@ -51,30 +52,56 @@ it.each([
 });
 
 it.each([
+  { case: 'a call with no answer from the Server', cause: dropped, is: true },
+  { case: 'a Server error', cause: serverError, is: false },
+  { case: 'a refused open', cause: openFailure(launchFailure), is: false },
+  { case: 'an error outside tRPC', cause: new Error(refused), is: false },
+  { case: 'no error', cause: null, is: false },
+])('tells whether the Connection dropped $case', ({ cause, is }) => {
+  expect(connectionDropped(cause)).toBe(is);
+});
+
+it.each([
+  {
+    case: 'the sign-in a refused open asks for',
+    cause: openFailure(authRequiredOpen),
+    error: authRequiredOpen,
+  },
+  {
+    case: 'the launch failure a refused open carries',
+    cause: openFailure(launchFailure),
+    error: launchFailure,
+  },
+  {
+    case: 'a Server error with no open failure as a launch failure',
+    cause: serverError,
+    error: { type: 'failed', message: serverError.message },
+  },
+  {
+    case: 'any other error as a launch failure',
+    cause: new Error(refused),
+    error: { type: 'failed', message: refused },
+  },
+])('shows $case', ({ cause, error }) => {
+  expect(openErrorOf(cause)).toEqual(error);
+});
+
+it.each([
+  { case: 'a dropped Connection', cause: dropped },
+  { case: 'no error', cause: null },
+])('leaves $case to the toast', ({ cause }) => {
+  expect(openErrorOf(cause)).toBeUndefined();
+});
+
+it.each([
   { cause: openFailure(authRequiredOpen), text: authRequiredMessage },
   { cause: openFailure(launchFailure), text: launchFailure.message },
   {
     cause: new SessionOpenFailure(authRequiredOpen),
     text: authRequiredMessage,
   },
-  { cause: new Error(refused), text: undefined },
-])('reads $text from an open failure', ({ cause, text }) => {
+  { cause: new Error(refused), text: refused },
+  { cause: dropped, text: undefined },
+])('reads $text from a failed open', ({ cause, text }) => {
   expect(openFailureText(cause)).toBe(text);
-});
-
-it.each([
-  { case: 'a dropped Connection', cause: dropped, message: 'WebSocket closed' },
-  { case: 'any other error', cause: new Error(refused), message: refused },
-])('toasts $case as a failed open', ({ cause, message }) => {
-  expect(unreachedOpenToast(cause)).toEqual({
-    title: "Couldn't open the Session",
-    message,
-  });
-});
-
-it.each([
-  { case: 'a refused open', cause: openFailure(launchFailure) },
-  { case: 'no error', cause: null },
-])('leaves $case to the callout', ({ cause }) => {
-  expect(unreachedOpenToast(cause)).toBeUndefined();
 });

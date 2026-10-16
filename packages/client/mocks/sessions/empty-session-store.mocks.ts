@@ -7,9 +7,9 @@ import type {
 } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { type Mock, vi } from 'vitest';
-import { openFailure } from '../utils/open-failure.mocks';
-import { EmptySessionStore } from './empty-session-store';
-import type { EmptySessionPorts } from './empty-session-types';
+import { EmptySessionStore } from '../../src/features/sessions/stores/empty-session-store';
+import type { EmptySessionPorts } from '../../src/features/sessions/stores/empty-session-types';
+import { openFailure } from './open-failure.mocks';
 
 // Written out so the store cannot grade itself.
 export const choiceDebounceMs = 300;
@@ -41,9 +41,6 @@ export const failure = openFailure({
   type: 'failed',
   message: launchFailureMessage,
 });
-
-// A call that never reached the Agent: the Connection dropped under it.
-export const dropped = new Error('WebSocket closed');
 
 // A rejected `session.new` whose Agent needs sign-in.
 export const authRequired = openFailure({ type: 'auth-required' });

@@ -36,7 +36,9 @@ export {
   sessionOpenFailedTitle,
 } from './utils/open-failure';
 
-export { useUnreachedOpenToast } from './hooks/use-unreached-open-toast';
+export { droppedConnectionToast } from './utils/session-toasts';
+
+export { failedToOpen } from './utils/new-session-attempt';
 
 export { canOpenSession } from './state/open-session';
 
@@ -155,4 +157,4 @@ export {
   pastSessionSignIn,
 } from './utils/session-sign-in';
 
-export { useAnsweredTurn } from './hooks/use-answered-turn';
+export { useTurnSignIn } from './hooks/use-turn-sign-in';

@@ -1,11 +1,11 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
 import type { useAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
   type AfterSignIn,
+  droppedConnectionToast,
   type OpenAttempt,
   type PastSessionAnswers,
   type PastSessionSignIn,
@@ -16,10 +16,10 @@ import {
   type SessionCallouts,
   type SessionProblem,
   sessionProblem,
-  useAnsweredTurn,
   useSessionAuth,
-  useUnreachedOpenToast,
+  useTurnSignIn,
 } from '#features/sessions';
+import { useErrorToast } from '#primitives/overlays/toast';
 import type { SessionCommands } from './use-session-commands';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
@@ -56,7 +56,7 @@ interface Retry {
   openAgain: () => void;
 }
 
-// Retry opens the Session again without a Turn; one that never reaches the Agent says why in a toast.
+// Retry opens the Session again without a Turn.
 function useRetry(sessionId: string, feed: SessionFeed): Retry {
   const trpc = useTRPC();
 
@@ -64,41 +64,24 @@ function useRetry(sessionId: string, feed: SessionFeed): Retry {
     trpc.session.open.mutationOptions({ onSuccess: () => feed.retryOpen() }),
   );
 
-  useUnreachedOpenToast(retry.error);
-
   return { attempt: retry, openAgain: () => retry.mutate({ sessionId }) };
 }
 
-interface TurnSignIn {
-  // The `auth_required` Turn end whose Authenticate was pressed, until its sign-in finishes.
-  authenticating: string | undefined;
-  onAuthenticate: (turnEnd: string) => void;
-  done: () => void;
-}
-
-function useTurnSignIn(): TurnSignIn {
-  const [authenticating, onAuthenticate] = useState<string | null>(null);
-
-  return {
-    authenticating: authenticating ?? undefined,
-    onAuthenticate,
-    done: () => onAuthenticate(null),
-  };
-}
+type TurnSignIn = ReturnType<typeof useTurnSignIn>;
 
 interface SignInEffects {
-  answerTurn: (turnEnd: string) => void;
   openAgain: () => void;
-  done: () => void;
+  finish: TurnSignIn['finish'];
 }
 
 // Runs what the rule says a finished sign-in does.
 const runAfterSignIn =
   (afterSignIn: AfterSignIn, effects: SignInEffects) => (): void => {
-    if (afterSignIn.type === 'answer-turn')
-      effects.answerTurn(afterSignIn.turnEnd);
-    else effects.openAgain();
-    effects.done();
+    if (afterSignIn.type === 'answer-turn') effects.finish(afterSignIn.turnEnd);
+    else {
+      effects.openAgain();
+      effects.finish();
+    }
   };
 
 interface SessionSignIn {
@@ -112,10 +95,25 @@ interface OpenProblem {
   openAgain: () => void;
 }
 
-// What the Session's open or last Turn asks for.
+// One toast when the Connection drops, whether under the Feed, a Retry or both.
+const useDroppedConnectionToast = (
+  retry: OpenAttempt,
+  feed: SessionFeed,
+): void =>
+  useErrorToast(
+    droppedConnectionToast({
+      opens: [retry.error],
+      feed: feed.openError,
+      opened: feed.snapshot !== null,
+    }),
+  );
+
+// What the Session's open or last Turn asks for; a dropped Connection shows one toast instead.
 function useOpenProblem(sources: SessionCalloutSources): OpenProblem {
   const { sessionId, feed, commands } = sources;
   const { attempt, openAgain } = useRetry(sessionId, feed);
+
+  useDroppedConnectionToast(attempt, feed);
 
   const problem = sessionProblem({
     feedOpenError: feed.openError,
@@ -127,15 +125,14 @@ function useOpenProblem(sources: SessionCalloutSources): OpenProblem {
   return { problem, openAgain };
 }
 
-// The sign-in rule over that problem, with the Turn a sign-in answered kept across remounts.
+// The sign-in rule over that problem, with the Turn's sign-in kept across remounts.
 function useSessionSignIn(sources: SessionCalloutSources): SessionSignIn {
   const { problem, openAgain } = useOpenProblem(sources);
-  const { answeredTurn, answerTurn } = useAnsweredTurn(sources.sessionId);
-  const turn = useTurnSignIn();
-  const { authenticating } = turn;
+  const turn = useTurnSignIn(sources.sessionId);
+  const { answeredTurn, authenticating, finish } = turn;
   const signIn = pastSessionSignIn({ problem, answeredTurn, authenticating });
 
-  return { signIn, turn, effects: { answerTurn, openAgain, done: turn.done } };
+  return { signIn, turn, effects: { openAgain, finish } };
 }
 
 const answersOf = (

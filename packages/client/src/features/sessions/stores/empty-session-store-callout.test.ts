@@ -9,7 +9,7 @@ import {
   prompt,
   settle,
   worktree,
-} from './empty-session-store.mocks';
+} from '../../../../mocks/sessions/empty-session-store.mocks';
 
 let h: EmptySessionHarness;
 
@@ -69,6 +69,23 @@ describe('Retry after a failed Local open', () => {
     await h.openLocal('session-1');
 
     expect(h.store.getState().attempt).toEqual({ status: 'idle' });
+  });
+
+  // As before the attempt became one value: a second Retry finds no failed open, so the failure shows again with its Retry.
+  it('shows the failure again when a second Retry finds nothing to open', async () => {
+    h.choose(local('agent-one'));
+    h.calls.open[0]?.call.reject(failure);
+    await settle();
+
+    h.retry();
+    h.retry();
+    await settle();
+
+    expect(h.calls.open).toHaveLength(2);
+    expect(h.store.getState().attempt).toEqual({
+      status: 'failed',
+      error: { type: 'failed', message: launchFailureMessage },
+    });
   });
 
   it('shows the new failure when the open fails again', async () => {
