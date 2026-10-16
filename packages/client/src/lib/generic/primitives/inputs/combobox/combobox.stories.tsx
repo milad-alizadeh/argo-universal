@@ -12,7 +12,9 @@ const options = [
   {
     value: 'argo',
     label: 'argo-universal',
-    supporting: '~/Developer/argo-universal',
+    // A worktree's long path shows how a path shortens before the selected check.
+    supporting:
+      '~/Developer/worktrees/argo-universal/jovial-pelican/argo-universal',
     code: true,
     icon: 'folder',
   },
