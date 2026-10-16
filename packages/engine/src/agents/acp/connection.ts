@@ -29,6 +29,7 @@ import type {
   AcpSessionLease,
 } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
+import { SubagentRoutes } from './subagent-routing';
 
 type AgentSession = {
   destination: AcpSessionDestination;
@@ -121,6 +122,7 @@ const elicitationSessionId = (
 
 export class AcpConnection {
   private readonly agentSessions = new Map<string, AgentSession>();
+  private readonly subagents = new SubagentRoutes(this.agentSessions);
   private readonly registrations = new Map<
     JsonRpcId,
     Registration | undefined
@@ -207,7 +209,16 @@ export class AcpConnection {
       .catch((cause: unknown) => this.fail(asError(cause)));
   }
   private readonly update = (notification: SessionNotification): undefined => {
-    this.find(notification.sessionId)?.destination.update(notification);
+    const owner = this.subagents.owner(notification.sessionId);
+
+    if (!owner) {
+      this.find(notification.sessionId);
+
+      return;
+    }
+
+    if (this.subagents.associate(notification, owner))
+      owner.destination.update(notification);
   };
   private readonly permission: Permission = (context) =>
     this.respond({
@@ -489,6 +500,7 @@ export class AcpConnection {
     session.controller.abort();
 
     if (this.agentSessions.get(id) === session) this.agentSessions.delete(id);
+    this.subagents.release(session);
     session.released.resolve();
     this.hooks.idle();
   }

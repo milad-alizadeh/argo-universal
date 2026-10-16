@@ -1,6 +1,6 @@
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { PluginManifest } from '@repo/contracts';
+import { PluginManifest } from '@repo/contracts/plugins';
 import { gtr, ltr, satisfies, valid, validRange } from 'semver';
 
 // A Server version no range written for a real Argo release reaches; a range it satisfies has no upper bound.

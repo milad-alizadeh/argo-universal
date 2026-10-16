@@ -7,9 +7,10 @@ import {
 } from '../agents';
 import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
-import type { FeedDeps } from '../feed';
+import { type FeedDeps } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
 import type { PluginsDeps } from '../plugins';
+import { findSessionFeed } from '../sessions';
 import {
   createSessionConnections,
   createSessionReader,
@@ -54,8 +55,7 @@ export function createFeedSources(input: FeedSourcesInput): FeedSources {
   return {
     ...input,
     findSession,
-    findFeed: (sessionId) =>
-      findSession(sessionId)?.getSnapshot().children.feed,
+    findFeed: (sessionId) => findSessionFeed(input.sessions.system, sessionId),
     findWriter: () =>
       findMachineActor(input.sessions.system, databaseWriterId, writerMachine),
   };

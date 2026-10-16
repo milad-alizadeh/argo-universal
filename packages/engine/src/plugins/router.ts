@@ -1,4 +1,4 @@
-import { PluginList } from '@repo/contracts';
+import { PluginList } from '@repo/contracts/plugins';
 import { publicProcedure, router, routerFactory } from '../rpc';
 import { discoverPlugins, type PluginsDeps } from './loader';
 

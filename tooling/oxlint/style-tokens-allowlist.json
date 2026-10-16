@@ -11,10 +11,6 @@
         "packages/client/src/features/requests/components/elicitation-form/elicitation-question-header.tsx",
         // 1 arbitrary, 3 colour
         "packages/client/src/features/requests/components/elicitation-form/elicitation-question-options.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/requests/components/permission-request/permission-request.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/requests/components/request-card/request-heading.tsx",
         // 1 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/buttons/button/button-content-styles.ts",
         // 1 arbitrary
