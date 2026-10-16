@@ -8,6 +8,7 @@ import { readProjectPath } from '../projects';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SessionRouterDeps } from './router-deps';
 import {
+  requireInstalledAgent,
   submitSessionPrompt,
   validateSessionCommandAdmission,
 } from './session-command';
@@ -90,10 +91,17 @@ async function waitForSessionInsertCommitted(
 export async function createSession(
   deps: Pick<
     SessionRouterDeps,
-    'database' | 'sessions' | 'createId' | 'sessionCommandSignal'
+    | 'database'
+    | 'sessions'
+    | 'createId'
+    | 'sessionCommandSignal'
+    | 'installedAgents'
   >,
   newSession: SessionNewInput,
 ): Promise<SessionNewOutput> {
+  // The open Sessions machine checks again as the last word (ADR-0003); this check gives the typed failure.
+  requireInstalledAgent(deps.installedAgents, newSession.agent);
+
   const projectPath = await requireCheckoutProjectPath(
     deps.database,
     newSession,

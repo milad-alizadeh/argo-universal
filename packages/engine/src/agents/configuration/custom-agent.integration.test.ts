@@ -103,7 +103,7 @@ it('a disabled custom Agent keeps its record and history but admits no new Sessi
       configOptions: [],
       prompt: [],
     }),
-  ).rejects.toThrow('cannot accept sessions.create');
+  ).rejects.toThrow(`Agent "${agentId}" is not installed.`);
   const configured = await host.caller.agents.configured();
   expect(configured).toContainEqual(
     expect.objectContaining({ id: agentId, enabled: false }),

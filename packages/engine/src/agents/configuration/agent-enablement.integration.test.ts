@@ -2,8 +2,6 @@ import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { startCustomAgentEngine } from '#mocks/custom-agent';
 
-const admissionRefusal = 'cannot accept sessions.create';
-
 const [registryAgent] = fixtureAgents;
 
 if (!registryAgent)
@@ -32,5 +30,5 @@ it('an unsaved Registry identity admits no new Session', async () => {
       configOptions: [],
       prompt: [],
     }),
-  ).rejects.toThrow(admissionRefusal);
+  ).rejects.toThrow(`Agent "${registryAgent.agent}" is not installed.`);
 });
