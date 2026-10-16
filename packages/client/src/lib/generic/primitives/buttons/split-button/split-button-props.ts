@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react';
 import type { MenuAction } from '#primitives/overlays/menu';
+import type { IconName } from '../../../symbols/icon-names';
 
 export interface SplitButtonOption<Value extends string> {
   value: Value;
@@ -27,7 +27,7 @@ export type SplitMenuItems<Value extends string = string> =
   | SplitButtonOptions<Value>
   | SplitButtonActions;
 
-// What SplitButton passes to its chevron's menu; ButtonGroup sets className on it.
+// What SplitButton passes to its chevron's menu.
 export type SplitMenuProps<Value extends string = string> =
   SplitMenuItems<Value> & {
     menuLabel: string;
@@ -38,20 +38,12 @@ export type SplitMenuProps<Value extends string = string> =
     narrow?: boolean;
     // `xs` is the compact header split: a divider between filled halves, and the group dims as one.
     size?: 'sm' | 'xs';
-    className?: string;
   };
 
-// The acting button's props SplitButton reads. Phones draw it natively from its label (or text children) and press.
-export interface SplitActionProps {
-  className?: string;
-  label?: string;
-  children?: unknown;
-  onPress?: () => void;
-  disabled?: boolean;
-}
-
+// The button that acts, drawn by the split itself: Argo's button on the web, the native split's primary half on phones.
 export type SplitButtonProps<Value extends string = string> =
   SplitMenuProps<Value> & {
-    // The button that acts; it passes className on to its Button.
-    children: ReactElement<SplitActionProps>;
+    label: string;
+    icon?: IconName;
+    onPress?: () => void;
   };

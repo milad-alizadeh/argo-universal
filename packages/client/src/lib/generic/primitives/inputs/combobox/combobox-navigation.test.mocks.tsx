@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { Button } from '#primitives/buttons/button';
+import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Combobox } from './combobox';
 
@@ -34,7 +35,7 @@ export function Choice(): React.JSX.Element {
         changed(next);
       }}
       onBlur={blurred}
-      trigger={<Button custom label={`Fruit: ${value}`} />}
+      trigger={<MenuTrigger label={`Fruit: ${value}`} />}
     />
   );
 }
@@ -61,7 +62,7 @@ export function Form({
           />
         )
       }
-      trigger={<Button custom label="Settings" />}
+      trigger={<MenuTrigger label="Settings" />}
     >
       <Sheet.Page name="settings" title="Settings">
         <Choice />

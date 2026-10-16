@@ -1,5 +1,3 @@
-import type { ComponentProps, ReactElement } from 'react';
-import type { Pressable } from 'react-native';
 import type { IconName } from '../../../symbols/icon-names';
 
 export type ButtonVariant =
@@ -14,9 +12,6 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export interface ButtonDataProps {
   label: string;
-  children?: never;
-  className?: never;
-  style?: never;
   icon?: IconName;
   variant?: ButtonVariant;
   // The danger tone draws the button in red.
@@ -32,23 +27,7 @@ export interface ButtonDataProps {
 }
 
 // The system button on phones; Argo draws it on the web.
-export type SystemButtonProps = ButtonDataProps & { custom?: false };
+export type ButtonProps = ButtonDataProps;
 
-export type ContentButtonProps = Omit<ButtonDataProps, 'className' | 'style'> &
-  Pick<
-    ComponentProps<typeof Pressable>,
-    'className' | 'style' | 'ref' | 'onHoverIn' | 'onHoverOut'
-  > & {
-    // Argo draws it on every platform, so the caller can lay it out and add leading and trailing content.
-    custom: true;
-    labelClassName?: string;
-    labelNumberOfLines?: number;
-    leading?: ReactElement;
-    trailing?: ReactElement;
-    id?: string;
-    'aria-haspopup'?: 'dialog';
-    'aria-expanded'?: boolean;
-    'aria-controls'?: string;
-  };
-
-export type ButtonProps = SystemButtonProps | ContentButtonProps;
+// The button Argo draws. `className` is for the kit only, such as ButtonGroup joining a split's corners; Button never takes it.
+export type DrawnButtonProps = ButtonProps & { className?: string };
