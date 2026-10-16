@@ -1,4 +1,3 @@
-import { Slot } from '@rn-primitives/slot';
 import { cva } from 'class-variance-authority';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
@@ -47,13 +46,12 @@ const badgeTextVariants = cva('type-badge', {
 });
 
 function Badge(options: BadgeProps): ReactElement {
-  const { className, variant, tone, asChild, ...props } = options;
-  const Component = asChild ? Slot : View;
+  const { className, variant, tone, ...props } = options;
   const textClass = cn(badgeTextVariants({ variant, tone }));
 
   return (
     <TextClassContext.Provider value={textClass}>
-      <Component
+      <View
         className={cn(badgeVariants({ variant, tone }), className)}
         {...props}
       />

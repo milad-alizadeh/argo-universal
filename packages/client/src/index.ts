@@ -1,5 +1,3 @@
-import type {} from './lib/generic/reusables-compatibility';
-
 export type { DesktopBridge } from '@repo/contracts';
 
 export { useConnection } from '#features/connection';
@@ -89,7 +87,7 @@ export { withoutNewSession } from './lib/product/navigation/new-session';
 
 export { AppProviders } from './app-providers';
 
-export { PortalHost } from '#primitives/overlays/portal';
+export { PortalProvider } from '#primitives/overlays/portal';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 

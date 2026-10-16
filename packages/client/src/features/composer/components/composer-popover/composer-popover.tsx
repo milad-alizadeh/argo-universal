@@ -57,7 +57,7 @@ export function ComposerPopover(
 function WidePopover(props: OverlayProps): React.JSX.Element {
   return (
     <Popover openOnHover style={props.layout} onOpenChange={props.onOpenChange}>
-      <PopoverTrigger asChild disabled={props.trigger.props.disabled}>
+      <PopoverTrigger disabled={props.trigger.props.disabled}>
         {props.trigger}
       </PopoverTrigger>
       <WideContent {...props} />

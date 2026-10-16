@@ -1,49 +1,35 @@
-import * as SelectPrimitive from '@rn-primitives/select';
+import * as RadixSelect from '@radix-ui/react-select';
 import type * as React from 'react';
-import { cn } from '#lib/generic/utils';
+import { Pressable, Text, View } from 'react-native';
 import { Icon, IconSlot } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import type { IconName } from '../../../symbols/icon-names';
 import { useWide } from '../../../use-wide/use-wide';
 import { SelectContent } from './picker-select-content';
+import { Select, SelectValue, useSelectState } from './picker-select-root';
 import {
   type SelectVariant,
   selectItemClassName,
   selectTriggerClassName,
 } from './picker-select-styles';
 
-// Picker's web drawing: the @rn-primitives Select, which runs on web only (ADR-0020).
-const Select = SelectPrimitive.Root;
-
-type TriggerProps = React.ComponentProps<typeof SelectPrimitive.Trigger> & {
+type TriggerProps = {
+  className?: string;
   children?: React.ReactNode;
   size?: 'default' | 'sm';
   variant?: SelectVariant;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+  'aria-invalid'?: boolean;
+  'aria-describedby'?: string;
 };
 
-type ValueProps = React.ComponentProps<typeof SelectPrimitive.Value> & {
+type ItemProps = {
+  value: string;
+  label: string;
+  disabled?: boolean;
   className?: string;
 };
-
-type ItemProps = Omit<
-  React.ComponentProps<typeof SelectPrimitive.Item>,
-  'children'
->;
-
-function SelectValue({ className, ...props }: ValueProps): React.JSX.Element {
-  const { value } = SelectPrimitive.useRootContext();
-
-  return (
-    <SelectPrimitive.Value
-      className={cn(
-        'type-body line-clamp-1 flex flex-row items-center gap-2',
-        !value && 'text-muted-foreground',
-        className,
-      )}
-      {...props}
-    />
-  );
-}
 
 // A plain picker on a phone row reads like a navigation row (Paper 2V85).
 function chevronName(
@@ -68,43 +54,61 @@ function TriggerChevron({
   );
 }
 
-function SelectTrigger(triggerProps: TriggerProps): React.JSX.Element {
-  const { className, children, size, variant, ...props } = triggerProps;
-
-  const triggerStyle = selectTriggerClassName({
-    className,
-    size,
-    variant,
-    disabled: props.disabled,
-  });
-
+// Radix names the trigger a combobox; Argo's Picker is read as a button, as before. A touch opens it at once.
+function SelectTrigger(props: TriggerProps): React.JSX.Element {
   return (
-    <SelectPrimitive.Trigger className={triggerStyle} {...props}>
-      {children}
-      <TriggerChevron variant={variant} />
-    </SelectPrimitive.Trigger>
+    <RadixSelect.Trigger asChild disabled={props.disabled}>
+      <Pressable {...useTriggerProps(props)}>
+        {props.children}
+        <TriggerChevron variant={props.variant} />
+      </Pressable>
+    </RadixSelect.Trigger>
   );
+}
+
+// React Native's types leave out these ARIA attributes, which React Native Web draws.
+type TriggerWebProps = React.ComponentProps<typeof Pressable> &
+  Pick<TriggerProps, 'aria-invalid' | 'aria-describedby'>;
+
+function useTriggerProps(props: TriggerProps): TriggerWebProps {
+  const { onOpenChange } = useSelectState();
+
+  return {
+    role: 'button',
+    disabled: props.disabled,
+    accessibilityLabel: props.accessibilityLabel,
+    'aria-invalid': props['aria-invalid'],
+    'aria-describedby': props['aria-describedby'],
+    className: selectTriggerClassName(props),
+    onTouchStart: () => onOpenChange(true),
+  };
 }
 
 function ItemIndicator(): React.JSX.Element {
   return (
     <IconSlot role="control" className="absolute right-2">
-      <SelectPrimitive.ItemIndicator>
-        <SelectedCheck className="text-muted-foreground shrink-0" />
-      </SelectPrimitive.ItemIndicator>
+      <RadixSelect.ItemIndicator asChild>
+        <View>
+          <SelectedCheck className="text-muted-foreground shrink-0" />
+        </View>
+      </RadixSelect.ItemIndicator>
     </IconSlot>
   );
 }
 
 function SelectItem({ className, ...props }: ItemProps): React.JSX.Element {
   return (
-    <SelectPrimitive.Item
+    <RadixSelect.Item
+      value={props.value}
+      textValue={props.label}
+      disabled={props.disabled}
       className={selectItemClassName({ className, disabled: props.disabled })}
-      {...props}
     >
       <ItemIndicator />
-      <SelectPrimitive.ItemText className="type-body select-none" />
-    </SelectPrimitive.Item>
+      <RadixSelect.ItemText asChild>
+        <Text className="type-body select-none">{props.label}</Text>
+      </RadixSelect.ItemText>
+    </RadixSelect.Item>
   );
 }
 

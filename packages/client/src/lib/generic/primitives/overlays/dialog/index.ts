@@ -2,6 +2,15 @@ export { Dialog, DialogContent, DialogTitle } from './dialog';
 
 export { DialogOverlay } from './dialog-overlay';
 
+// The web Alert draws its centred card from the dialog's own parts.
+export {
+  DialogDescriptionText,
+  DialogFrame,
+  DialogPortal,
+  DialogRoot,
+  DialogTitleText,
+} from './dialog-parts';
+
 export { DialogRegion } from './dialog-region';
 
 export {

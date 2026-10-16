@@ -1,9 +1,10 @@
-import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
+import * as RadixCollapsible from '@radix-ui/react-collapsible';
 import { type ComponentType, type ReactElement, useContext } from 'react';
 import { View } from 'react-native';
 import { CollapsibleLayoutSyncContext } from './collapsible-context';
 import { LayoutSyncedContent } from './collapsible-layout-content';
 import type { CollapsibleContentProps as ContentProps } from './collapsible-props';
+import { useStateData } from './collapsible-state-data';
 
 const webContentMotion =
   'overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up motion-reduce:animate-none';
@@ -12,12 +13,15 @@ const webContentMotion =
 function WebContent({
   className,
   children,
+  forceMount,
   ...props
 }: ContentProps): ReactElement {
   return (
-    <CollapsiblePrimitive.Content {...props} className={webContentMotion}>
-      <View className={className}>{children}</View>
-    </CollapsiblePrimitive.Content>
+    <RadixCollapsible.Content forceMount={forceMount} asChild>
+      <View {...props} {...useStateData()} className={webContentMotion}>
+        <View className={className}>{children}</View>
+      </View>
+    </RadixCollapsible.Content>
   );
 }
 

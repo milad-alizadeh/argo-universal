@@ -36,6 +36,7 @@ import type * as AlertKit from '#primitives/overlays/alert';
 import type * as DialogKit from '#primitives/overlays/dialog';
 import type * as DrillKit from '#primitives/overlays/drill';
 import type * as MenuKit from '#primitives/overlays/menu';
+import type * as OpenStateKit from '#primitives/overlays/open-state';
 import type * as PopoverKit from '#primitives/overlays/popover';
 import type * as SheetKit from '#primitives/overlays/sheet';
 import type * as ToastKit from '#primitives/overlays/toast';
@@ -88,6 +89,8 @@ export type Primitives = {
   MenuTriggerProps: MenuKit.MenuTriggerProps;
   NativeMenuItem: MenuKit.NativeMenuItem;
   NativeTextProps: NativeTextKit.NativeTextProps;
+  OpenState: OpenStateKit.OpenState;
+  OpenStateProps: OpenStateKit.OpenStateProps;
   PickerProps: PickerKit.PickerProps<string>;
   PopoverContentProps: PopoverKit.PopoverContentProps;
   PopoverProps: PopoverKit.PopoverProps;
@@ -124,5 +127,7 @@ export type Aliases = {
   NativeTextRole: NativeTextKit.NativeTextRole;
   TextRole: TextKit.TextRole;
   Tone: TextKit.Tone;
+  TriggerElement: OpenStateKit.TriggerElement;
+  TriggerHandlers: OpenStateKit.TriggerHandlers;
   VirtualListPosition: VirtualListItemKit.VirtualListPosition;
 };

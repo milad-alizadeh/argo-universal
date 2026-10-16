@@ -194,6 +194,9 @@ catalogs:
     '@gorhom/bottom-sheet':
       specifier: 5.2.14
       version: 5.2.14
+    '@gorhom/portal':
+      specifier: 1.0.14
+      version: 1.0.14
     '@legendapp/list':
       specifier: 3.6.0
       version: 3.6.0
@@ -230,9 +233,21 @@ catalogs:
     '@playwright/test':
       specifier: 1.63.0
       version: 1.63.0
+    '@radix-ui/react-collapsible':
+      specifier: 1.1.20
+      version: 1.1.20
+    '@radix-ui/react-dialog':
+      specifier: 1.1.23
+      version: 1.1.23
+    '@radix-ui/react-dropdown-menu':
+      specifier: 2.1.24
+      version: 2.1.24
     '@radix-ui/react-popover':
       specifier: 1.1.23
       version: 1.1.23
+    '@radix-ui/react-select':
+      specifier: 2.3.7
+      version: 2.3.7
     '@react-native-async-storage/async-storage':
       specifier: 2.2.0
       version: 2.2.0
@@ -242,30 +257,6 @@ catalogs:
     '@react-native-community/slider':
       specifier: 5.2.0
       version: 5.2.0
-    '@rn-primitives/collapsible':
-      specifier: 1.5.2
-      version: 1.5.2
-    '@rn-primitives/dialog':
-      specifier: 1.5.2
-      version: 1.5.2
-    '@rn-primitives/dropdown-menu':
-      specifier: 1.5.2
-      version: 1.5.2
-    '@rn-primitives/popover':
-      specifier: 1.5.2
-      version: 1.5.2
-    '@rn-primitives/portal':
-      specifier: 1.5.2
-      version: 1.5.2
-    '@rn-primitives/select':
-      specifier: 1.5.2
-      version: 1.5.2
-    '@rn-primitives/slot':
-      specifier: 1.5.2
-      version: 1.5.2
-    '@rn-primitives/switch':
-      specifier: 1.5.2
-      version: 1.5.2
     '@storybook/addon-docs':
       specifier: 10.6.1
       version: 10.6.1
@@ -809,9 +800,6 @@ importers:
       '@repo/uniwind':
         specifier: workspace:*
         version: link:../../tooling/uniwind
-      '@rn-primitives/portal':
-        specifier: 'catalog:'
-        version: 1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
       '@storybook/addon-ondevice-actions':
         specifier: 'catalog:'
         version: 10.6.0(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))
@@ -1009,6 +997,9 @@ importers:
       '@expo/ui':
         specifier: 'catalog:'
         version: 57.0.22(patch_hash=d4a8af09cdbb6ab8db4158ddac1a1e1d51e4b6562aabd46a8e38746f6fb0cf43)(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(expo@57.0.26)(react-dom@19.2.3(react@19.2.3))(react-native-worklets@0.10.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(supports-color@8.1.1))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+      '@gorhom/portal':
+        specifier: 'catalog:'
+        version: 1.0.14(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
       '@legendapp/list':
         specifier: 'catalog:'
         version: 3.6.0(react-dom@19.2.3(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
@@ -1033,39 +1024,27 @@ importers:
       '@lexical/selection':
         specifier: 'catalog:'
         version: 0.52.0(typescript@7.0.2)
+      '@radix-ui/react-collapsible':
+        specifier: 'catalog:'
+        version: 1.1.20(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@radix-ui/react-dialog':
+        specifier: 'catalog:'
+        version: 1.1.23(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@radix-ui/react-dropdown-menu':
+        specifier: 'catalog:'
+        version: 2.1.24(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-popover':
         specifier: 'catalog:'
         version: 1.1.23(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@radix-ui/react-select':
+        specifier: 'catalog:'
+        version: 2.3.7(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@react-native-async-storage/async-storage':
         specifier: 'catalog:'
         version: 2.2.0(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))
       '@repo/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@rn-primitives/collapsible':
-        specifier: 'catalog:'
-        version: 1.5.2(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/dialog':
-        specifier: 'catalog:'
-        version: 1.5.2(@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/dropdown-menu':
-        specifier: 'catalog:'
-        version: 1.5.2(@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/popover':
-        specifier: 'catalog:'
-        version: 1.5.2(@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/portal':
-        specifier: 'catalog:'
-        version: 1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
-      '@rn-primitives/select':
-        specifier: 'catalog:'
-        version: 1.5.2(@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/slot':
-        specifier: 'catalog:'
-        version: 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/switch':
-        specifier: 'catalog:'
-        version: 1.5.2(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
       '@tanstack/query-async-storage-persister':
         specifier: 'catalog:'
         version: 5.104.1
@@ -4050,19 +4029,6 @@ packages:
       '@types/react':
         optional: true
 
-  '@radix-ui/react-switch@1.3.7':
-    resolution: {integrity: sha512-48tB/4dn2UVLBCYhTu9AuR63IHl73l/qLbLgxd86noTUor4/K4LFDAcYjK+isP5313qxaFpjPVogE7+Y0/V3Kw==}
-    peerDependencies:
-      '@types/react': '*'
-      '@types/react-dom': '*'
-      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      '@types/react-dom':
-        optional: true
-
   '@radix-ui/react-tabs@1.1.21':
     resolution: {integrity: sha512-UKxJlZid7FVtsk/WTxj4i4uSEgj2Au+KBbS7SQyTlzMhhn+86Cz3tISZdTa87bfEfcuvZezf2ZsxD4xuEKtkog==}
     peerDependencies:
@@ -4282,142 +4248,6 @@ packages:
       react-native: 0.86.3
     peerDependenciesMeta:
       '@types/react':
-        optional: true
-
-  '@rn-primitives/collapsible@1.5.2':
-    resolution: {integrity: sha512-3DZMwwAsCRqGdTL+D0mFQPuXmZaio0phlo5qNmoZFtxIOp51K343B07+JU6rcQWgSBKn7RTpkviCTJN2gAP3EQ==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/dialog@1.5.2':
-    resolution: {integrity: sha512-FNrpYIULeZpFY5VFIaaU2EH1VxF52B4AfNlqic9eAKG74JAtRSoew/IMJOnsH4ujR/AA4I+9JZGZ35adFuc7DA==}
-    peerDependencies:
-      '@rn-primitives/portal': '*'
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/dropdown-menu@1.5.2':
-    resolution: {integrity: sha512-uFb4nsRM8ifWNJCyOYERUtzZtdrzEwVcFAH1qoHdsMuNE2m/kz2Qf8zZpSl+FFekuPcZjXbwC/REUYNGIW/XHw==}
-    peerDependencies:
-      '@rn-primitives/portal': '*'
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/hooks@1.5.2':
-    resolution: {integrity: sha512-7XUVqR/nS309Fpltd19GflRTUPE/bYwZnOh/ofEDw7UMMelfI5CIgc70BXfZPHAkrjG9/tU3JAZl0KWSrWLJCQ==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/popover@1.5.2':
-    resolution: {integrity: sha512-eA4oYy96fV67/wiT+5h6BAFAQglV8i+z1LY0vKW7psoXiwca7TrDTAMrEiu2uUagJNwb9drscIQUoPq9Qz94Aw==}
-    peerDependencies:
-      '@rn-primitives/portal': '*'
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/portal@1.5.2':
-    resolution: {integrity: sha512-cJeuL5pac/48z0t49XxdEKC/vzk4aXz2N1uK5w9A6sH/b/yhhx9c7Q9tbGDZWC+9cRYV4kb0YpspXsNBfkTO7A==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/select@1.5.2':
-    resolution: {integrity: sha512-39+5CeuPB0700pwIjboLj37eB+nhAREZgP+czd0pkFEknOOWXaVgKexiT88Q4piKZQ50BjDfvbOMP9mfJN1r/w==}
-    peerDependencies:
-      '@rn-primitives/portal': '*'
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/slot@1.5.2':
-    resolution: {integrity: sha512-TGSMB8hMALrcI6d5logiS8/0YzPRUQvsHghaF7FAuia+MF84WZS96Jvm959W4sDEP26AiDJtuQfCkTHOv0oxbw==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/switch@1.5.2':
-    resolution: {integrity: sha512-0VOYYl670I84345wXuNT3NbG6jOvRWw2YNGEe/qhlIENj0LpdBs7SJebVWdnzPI3HIrESa0uOEhTB3i0/0EsXw==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/types@1.5.2':
-    resolution: {integrity: sha512-qoJOeCGBvQCTyEdKl4CL5MHwTLA2P3Lr6EzuJAxQcc/dUL0ev7IDtsAxHpoLraDD2kZdIkqnFtNsasr2iH25ZQ==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
-        optional: true
-
-  '@rn-primitives/utils@1.5.2':
-    resolution: {integrity: sha512-pNt1hemLFnzYwz7V8s+owMo2KG/oKDO++OuscgWz9hcUhn5CVGpgJ9HEnpAAcm406QPorxKlqL/vUDcQj7H8ww==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native:
-        optional: true
-      react-native-web:
         optional: true
 
   '@rolldown/binding-android-arm-eabi@1.2.12':
@@ -9165,24 +8995,6 @@ packages:
   zod@4.6.5:
     resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
-  zustand@5.0.15:
-    resolution: {integrity: sha512-MpSEjRiBkA9crSYeOUH32rJC7SVqAbm0Fqcqge/bUi2PPoLcBWKOsG+C8mevmpr8TwXHBVkChbbJiyvkE+i/3A==}
-    engines: {node: '>=12.20.0'}
-    peerDependencies:
-      '@types/react': '>=18.0.0'
-      immer: '>=9.0.6'
-      react: '>=18.0.0'
-      use-sync-external-store: '>=1.2.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      immer:
-        optional: true
-      react:
-        optional: true
-      use-sync-external-store:
-        optional: true
-
 snapshots:
 
   '@adobe/css-tools@4.5.0': {}
@@ -11750,20 +11562,6 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.18
 
-  '@radix-ui/react-switch@1.3.7(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@radix-ui/primitive': 1.1.7
-      '@radix-ui/react-compose-refs': 1.1.5(@types/react@19.2.18)(react@19.2.3)
-      '@radix-ui/react-context': 1.2.2(@types/react@19.2.18)(react@19.2.3)
-      '@radix-ui/react-primitive': 2.1.10(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@radix-ui/react-use-controllable-state': 1.2.6(@types/react@19.2.18)(react@19.2.3)
-      '@radix-ui/react-use-size': 1.1.4(@types/react@19.2.18)(react@19.2.3)
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-    optionalDependencies:
-      '@types/react': 19.2.18
-      '@types/react-dom': 19.2.3(@types/react@19.2.18)
-
   '@radix-ui/react-tabs@1.1.21(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@radix-ui/primitive': 1.1.7
@@ -12025,141 +11823,6 @@ snapshots:
       react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
     optionalDependencies:
       '@types/react': 19.2.18
-
-  '@rn-primitives/collapsible@1.5.2(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      '@radix-ui/react-collapsible': 1.1.20(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@rn-primitives/hooks': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/slot': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/types': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-      - react-dom
-
-  '@rn-primitives/dialog@1.5.2(@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      '@radix-ui/react-dialog': 1.1.23(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@rn-primitives/hooks': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/portal': 1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
-      '@rn-primitives/slot': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/types': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-      - react-dom
-
-  '@rn-primitives/dropdown-menu@1.5.2(@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      '@radix-ui/react-dropdown-menu': 2.1.24(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@rn-primitives/hooks': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/portal': 1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
-      '@rn-primitives/slot': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/types': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/utils': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-      - react-dom
-
-  '@rn-primitives/hooks@1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      '@rn-primitives/types': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-
-  '@rn-primitives/popover@1.5.2(@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      '@radix-ui/react-popover': 1.1.23(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@rn-primitives/hooks': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/portal': 1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
-      '@rn-primitives/slot': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/types': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-      - react-dom
-
-  '@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))':
-    dependencies:
-      react: 19.2.3
-      zustand: 5.0.15(@types/react@19.2.18)(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - immer
-      - use-sync-external-store
-
-  '@rn-primitives/select@1.5.2(@rn-primitives/portal@1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)))(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      '@radix-ui/react-select': 2.3.7(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@rn-primitives/hooks': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/portal': 1.5.2(@types/react@19.2.18)(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3))
-      '@rn-primitives/slot': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/types': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-      - react-dom
-
-  '@rn-primitives/slot@1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-
-  '@rn-primitives/switch@1.5.2(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      '@radix-ui/react-switch': 1.3.7(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@rn-primitives/slot': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      '@rn-primitives/types': 1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-      - react-dom
-
-  '@rn-primitives/types@1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-
-  '@rn-primitives/utils@1.5.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-    optionalDependencies:
-      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
-      react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
   '@rolldown/binding-android-arm-eabi@1.2.12':
     optional: true
@@ -17082,9 +16745,3 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.6.5: {}
-
-  zustand@5.0.15(@types/react@19.2.18)(react@19.2.3)(use-sync-external-store@1.7.0(react@19.2.3)):
-    optionalDependencies:
-      '@types/react': 19.2.18
-      react: 19.2.3
-      use-sync-external-store: 1.7.0(react@19.2.3)

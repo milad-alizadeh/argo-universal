@@ -1,18 +1,29 @@
-import * as DialogPrimitive from '@rn-primitives/dialog';
-import * as React from 'react';
+import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/buttons/button';
 import type { ButtonDataProps } from '#primitives/buttons/button';
 import { useWide } from '../../../use-wide/use-wide';
 import { DialogBody } from './dialog-body';
+import { useDialogState } from './dialog-context';
 import { DialogOverlay } from './dialog-overlay';
-import type { DialogContentProps as ContentProps } from './dialog-props';
+import {
+  DialogDescriptionText,
+  DialogPortal,
+  DialogRoot,
+  DialogTitleText,
+  DialogTrigger,
+} from './dialog-parts';
+import type {
+  DialogContentProps as ContentProps,
+  DialogProps,
+  DialogTextProps,
+} from './dialog-props';
 import { DialogSheet } from './dialog-sheet';
 
-const Dialog = DialogPrimitive.Root;
-
-const DialogTrigger = DialogPrimitive.Trigger;
+function Dialog(props: DialogProps): React.JSX.Element {
+  return <DialogRoot {...props} />;
+}
 
 // A wide window centres the dialog; a narrow one, phone or web, raises the same content as a bottom sheet.
 function DialogContent(props: ContentProps): React.JSX.Element {
@@ -33,11 +44,11 @@ function DialogContent(props: ContentProps): React.JSX.Element {
 
 function CentredDialog(props: ContentProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Portal>
+    <DialogPortal>
       <DialogOverlay dismissible={props.dismissible}>
         <DialogBody {...props} />
       </DialogOverlay>
-    </DialogPrimitive.Portal>
+    </DialogPortal>
   );
 }
 
@@ -66,7 +77,7 @@ function DialogFooter({ className, ...props }: ViewProps): React.JSX.Element {
 function DialogCancel(
   props: Omit<ButtonDataProps, 'onPress' | 'variant' | 'fullWidth'>,
 ): React.JSX.Element {
-  const { onOpenChange } = DialogPrimitive.useRootContext();
+  const { onOpenChange } = useDialogState();
 
   return (
     <Button
@@ -78,29 +89,19 @@ function DialogCancel(
   );
 }
 
-function DialogTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>): React.JSX.Element {
+function DialogTitle(props: DialogTextProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Title
-      className={cn('type-heading', className)}
-      {...props}
-    />
+    <DialogTitleText className={cn('type-heading', props.className)}>
+      {props.children}
+    </DialogTitleText>
   );
 }
 
-function DialogDescription({
-  className,
-  ...props
-}: React.ComponentProps<
-  typeof DialogPrimitive.Description
->): React.JSX.Element {
+function DialogDescription(props: DialogTextProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Description
-      className={cn('type-secondary', className)}
-      {...props}
-    />
+    <DialogDescriptionText className={cn('type-secondary', props.className)}>
+      {props.children}
+    </DialogDescriptionText>
   );
 }
 

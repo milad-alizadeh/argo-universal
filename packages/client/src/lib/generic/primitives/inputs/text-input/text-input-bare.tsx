@@ -48,7 +48,6 @@ export function BareTextInput({
   variant: _variant,
   className,
   tone,
-  placeholderClassName: _placeholderClassName,
   ...props
 }: BareTextInputProps): ReactElement {
   const look = inputClassName({ className, tone, ...props });

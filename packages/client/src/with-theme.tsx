@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Uniwind } from 'uniwind';
-import { PortalHost } from '#primitives/overlays/portal';
+import { PortalProvider } from '#primitives/overlays/portal';
 import { dismissToasts, Toaster } from '#primitives/overlays/toast';
 import { BlobUrlContext } from './features/connection/trpc/blob-url';
 import { cn } from './lib/generic/utils';
@@ -38,13 +38,14 @@ interface PreviewProps {
 
 type LayoutProps = Pick<PreviewProps, 'Story' | 'padding'>;
 
-function ReusablesPreview(props: PreviewProps): React.JSX.Element {
+function ArgoPreview(props: PreviewProps): React.JSX.Element {
   usePreviewTheme(props.mode, props.storyId);
 
   return (
     <PreviewProviders>
-      <PreviewLayout {...props} />
-      {props.standalone && <PortalHost />}
+      <PortalProvider shouldAddRootHost={props.standalone}>
+        <PreviewLayout {...props} />
+      </PortalProvider>
       {props.standalone && <Toaster key={props.storyId} />}
     </PreviewProviders>
   );
@@ -120,12 +121,12 @@ function NativeCentredLayout(props: LayoutProps): React.JSX.Element {
 const CentredLayout =
   Platform.OS === 'web' ? WebCentredLayout : NativeCentredLayout;
 
-export function withReusablesPreview(
+export function withArgoPreview(
   Story: ComponentType,
   context: PreviewContext,
 ): React.JSX.Element {
   return (
-    <ReusablesPreview
+    <ArgoPreview
       Story={Story}
       storyId={context.id}
       mode={context.globals.mode === 'dark' ? 'dark' : 'light'}
