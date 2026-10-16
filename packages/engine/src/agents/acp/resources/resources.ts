@@ -58,13 +58,14 @@ class EngineAcpResources implements AcpResources {
     return entry ? entryAuthentication(entry, this.isStopped) : undefined;
   }
   private readonly isStopped = (): boolean => this.stopped;
+  // A newer Registry version starts a new connection; Sessions on the older one keep it until they end.
   private entry(launch: AgentLaunch): Entry {
     const key = JSON.stringify([launch.agentId, launch.projectId]);
     const entry = this.entries.get(key);
 
     if (entry) {
       if (entry.version === launch.version) return entry;
-      this.retire(key, entry);
+      this.drop(key, entry);
     }
 
     return this.start(key, launch);
@@ -116,6 +117,11 @@ class EngineAcpResources implements AcpResources {
     if (entry.dropped && !entryInUse(entry))
       this.stopConnection(entry.connection);
   }
+  private drop(key: string, entry: Entry): void {
+    this.entries.delete(key);
+    entry.dropped = true;
+    this.retireIdle(entry);
+  }
   private retire(key: string, entry: Entry): void {
     this.entries.delete(key);
     this.stopConnection(entry.connection);
@@ -134,11 +140,7 @@ class EngineAcpResources implements AcpResources {
   };
   public dropAgentConnections = (agentId: string): void => {
     for (const [key, entry] of this.entries)
-      if (entry.agentId === agentId) {
-        this.entries.delete(key);
-        entry.dropped = true;
-        this.retireIdle(entry);
-      }
+      if (entry.agentId === agentId) this.drop(key, entry);
   };
   public isDirectoryInUse = (directory: string): boolean =>
     [...this.connections].some((entry) => entry.directory === directory);

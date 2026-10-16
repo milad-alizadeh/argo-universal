@@ -77,6 +77,20 @@ it.each([false, true])(
   },
 );
 
+it('keeps a running Session on its connection when a newer Registry version opens', async () => {
+  const peer = createScriptedAgentProcess({ steps: [] });
+  const resources = createAcpResources(peer);
+  onTestFinished(() => resources.shutdown());
+  const base = createResourceOpening();
+  const running = await resources.open(base);
+  const older = requireScriptedProcessAt(peer.processes);
+  await resources.open({ ...base, launch: { ...base.launch, version: '2' } });
+  expect(peer.processes).toHaveLength(2);
+  expect(older.terminations).toBe(0);
+  await running.close();
+  await vi.waitFor(() => expect(older.terminations).toBe(1));
+});
+
 it('shutdown owns an Agent whose launch completes after stopping begins', async () => {
   const launch = Promise.withResolvers<void>();
   const peer = createScriptedAgentProcess({ steps: [] });
