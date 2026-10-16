@@ -79,12 +79,12 @@ A Slot placed around a core component, such as a Tool call in the Feed. A Plugin
 _Avoid_: Override, component override
 
 **Capability**:
-Something a Plugin's manifest says it needs beyond reading the Project, such as running `gh` or reaching `api.github.com`. A Plugin can do nothing it hasn't declared.
+Something a Plugin's manifest says it needs, such as running `gh` or reaching `api.github.com`. Without any, a Plugin's calls to the machine can only read Projects and use the Plugin's own data.
 _Avoid_: Permission (that is the Agent's Permission request), scope, entitlement
 
 **Grant**:
 A Capability the user, or Argo for a first-party Plugin, has allowed. The user can remove a single Grant.
-_Avoid_: Consent, approval
+_Avoid_: Approval, permission
 
 **Tracker**:
 A source of Issues inside the Issue tracker Plugin, such as GitHub Issues or Linear. Each Project chooses one.
