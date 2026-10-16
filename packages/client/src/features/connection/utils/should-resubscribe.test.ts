@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ConnectionState } from './connection';
+import type { ConnectionState } from '../stores/connection';
 import { shouldResubscribe } from './should-resubscribe';
 
 const down: ConnectionState[] = ['reconnecting', 'offline'];

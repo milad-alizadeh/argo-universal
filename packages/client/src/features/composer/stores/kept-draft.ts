@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { DraftKey } from './draft-key';
+import type { DraftKey } from '../utils/draft-key';
 
 export interface KeptDrafts {
   load: (key: DraftKey) => Promise<string>;

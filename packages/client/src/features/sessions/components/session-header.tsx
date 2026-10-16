@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { PageHeader } from '#lib/product/page-header';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
-import { defaultMergeMethod, type MergeMethod } from '../state/merge-method';
+import { defaultMergeMethod, type MergeMethod } from '../stores/merge-method';
 import {
   SessionHeaderActions,
   type SessionHeaderActionsProps,

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SessionHeaderProps } from '../components/session-header-props';
-import { mergeMethodQuery, rememberMergeMethod } from '../state/merge-method';
+import { mergeMethodQuery, rememberMergeMethod } from '../stores/merge-method';
 
 export type MergeMethodChoice = Pick<
   SessionHeaderProps,

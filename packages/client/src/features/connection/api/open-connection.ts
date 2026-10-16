@@ -1,8 +1,5 @@
-import { type Connection, createConnection } from '../state/connection';
-import {
-  createTRPCClient,
-  type ServerClient,
-} from '../trpc/create-trpc-client';
+import { type Connection, createConnection } from '../stores/connection';
+import { createTRPCClient, type ServerClient } from './trpc/create-trpc-client';
 
 export interface OpenConnection {
   client: ServerClient['client'];

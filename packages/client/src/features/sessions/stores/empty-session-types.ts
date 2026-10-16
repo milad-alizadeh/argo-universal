@@ -8,8 +8,8 @@ import type {
 } from '@repo/contracts';
 import type { ConnectionState } from '#features/connection';
 import type { SavedChoices } from '#lib/product/session-configuration';
-import type { ConfigurationPicks } from '../state/session-option-choices';
 import type { NewSessionOutcome } from '../types/new-session-attempt';
+import type { ConfigurationPicks } from '../utils/session-option-choices';
 
 export type FirstPrompt = SessionNewInput['prompt'];
 
