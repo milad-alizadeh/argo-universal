@@ -11,6 +11,7 @@ import { z } from 'zod';
 import {
   prepareDesktopServer,
   stopExternalSupervisor,
+  stopOwnedSupervisor,
 } from './electron-server';
 import type { App } from './fixtures';
 import { pollServer, serverFiles } from './own-server';
