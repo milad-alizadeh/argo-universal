@@ -26,7 +26,6 @@
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
     "json-schema-to-typescript": "catalog:",
-    "ts-json-schema-generator": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
