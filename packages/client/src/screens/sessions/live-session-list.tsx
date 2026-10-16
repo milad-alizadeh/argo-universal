@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import { type InstalledAgents, useInstalledAgents } from '#features/agents';
+import {
+  type InstalledAgents,
+  loadedAgents,
+  useInstalledAgents,
+} from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
 import {
   liveUpdatesStopped,
@@ -52,7 +56,7 @@ function useSessionListLookups(): SessionListLookups {
 
   return {
     projects: projects.data ?? [],
-    agents: agents.status === 'loaded' ? agents.agents : [],
+    agents: loadedAgents(agents),
     progress: [queryProgress(projects), agentsProgress(agents)],
   };
 }

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import {
   type InstalledAgents,
+  loadedAgents,
   useRegistryAgents,
   useRememberedAgent,
 } from '#features/agents';
@@ -12,7 +13,7 @@ import { OnboardingView } from './onboarding-view';
 
 // The step has no loading look, so it stays open until the Server lists an Installed Agent.
 const installedStep = (installed: InstalledAgents): AgentStep =>
-  agentStep(installed.status === 'loaded' ? installed.agents : []);
+  agentStep(loadedAgents(installed));
 
 function useOnboarding(): OnboardingViewProps {
   // An Agent installed here becomes New Session's Agent.

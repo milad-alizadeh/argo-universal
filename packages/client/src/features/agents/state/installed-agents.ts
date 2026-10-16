@@ -20,6 +20,10 @@ export const installedAgents = (query: {
   return query.isError ? { status: 'failed' } : { status: 'loading' };
 };
 
+// The Installed Agents to offer; none until they load.
+export const loadedAgents = (agents: InstalledAgents): AgentServer[] =>
+  agents.status === 'loaded' ? agents.agents : [];
+
 export type RegistryLoad =
   | { status: 'loading' }
   | { status: 'failed' }

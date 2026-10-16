@@ -1,5 +1,5 @@
 import type { Plan, SessionSnapshot } from '@repo/contracts';
-import type { InstalledAgents } from '#features/agents';
+import { type InstalledAgents, loadedAgents } from '#features/agents';
 import type {
   ComposerConfigurationProps,
   ComposerProps,
@@ -84,7 +84,7 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
   const { snapshot, agents } = open;
 
   return {
-    agents: agents.status === 'loaded' ? agents.agents : [],
+    agents: loadedAgents(agents),
     agent: snapshot.agent,
     configOptions: snapshot.configOptions,
     onConfigChange: open.commands.changeConfig,

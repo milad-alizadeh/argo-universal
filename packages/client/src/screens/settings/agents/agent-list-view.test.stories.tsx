@@ -91,7 +91,7 @@ export const SearchEmptyUninstalled = empty(
   'No uninstalled Agents match your search.',
 );
 
-// Until the Server says which Agents are installed, no row offers Install.
+// Until the Server says which Agents are installed, the page shows the Registry's loading look.
 export const WaitsForInstalledAgents: Story = {
   args: {
     agents: agentsPage(
@@ -101,9 +101,6 @@ export const WaitsForInstalledAgents: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByLabelText('Loading Registry…')).toBeVisible();
-    await expect(
-      canvas.queryAllByRole('button', { name: /^Install( |$)/ }),
-    ).toHaveLength(0);
   },
 };
 

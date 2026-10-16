@@ -14,7 +14,7 @@ export {
 } from './components/agent-list-item/agent-list-item';
 
 export {
-  installedAgents,
+  loadedAgents,
   type InstalledAgents,
   type RegistryLoad,
 } from './state/installed-agents';

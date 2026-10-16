@@ -5,10 +5,10 @@ import { fn } from 'storybook/test';
 import {
   type AgentRows,
   agentsPage,
-  installedAgents as installedOf,
   type RegistryLoad,
 } from '#features/agents';
 import { mockHeader } from '../../../../mocks/screen-header-mock';
+import { loaded } from '../../../features/agents/state/installed-agents.mocks';
 import type { AgentListViewProps } from './agent-list-view';
 import { agentsHeader } from './agents-phone-header';
 
@@ -52,8 +52,7 @@ export const longCatalog: AgentsRegistryOutput = {
 export const pageRows = (
   installed: AgentServer[] = installedAgents,
   registry: RegistryLoad = { status: 'loaded', registry: catalog },
-): AgentRows =>
-  agentsPage(installedOf({ data: installed, isError: false }), registry);
+): AgentRows => agentsPage(loaded(...installed), registry);
 
 export const agentListArgs = (): AgentListViewProps => ({
   agents: pageRows(),

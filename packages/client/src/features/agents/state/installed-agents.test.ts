@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { installedAgents, registryLoad } from './installed-agents';
-import { amp, registryOf, zed, zedEntry } from './installed-agents.mocks';
+import {
+  installedAgents,
+  loadedAgents,
+  registryLoad,
+} from './installed-agents';
+import {
+  amp,
+  loaded,
+  registryOf,
+  zed,
+  zedEntry,
+} from './installed-agents.mocks';
 
 describe('installedAgents', () => {
   it.each([
@@ -31,6 +41,19 @@ describe('installedAgents', () => {
     },
   ])('$case', ({ query, expected }) => {
     expect(installedAgents(query)).toEqual(expected);
+  });
+});
+
+describe('loadedAgents', () => {
+  it.each([
+    { case: 'lists none while they load', agents: { status: 'loading' } },
+    { case: 'lists none when they fail', agents: { status: 'failed' } },
+  ] as const)('$case', ({ agents }) => {
+    expect(loadedAgents(agents)).toEqual([]);
+  });
+
+  it('lists the loaded Installed Agents', () => {
+    expect(loadedAgents(loaded(zed, amp))).toEqual([amp, zed]);
   });
 });
 

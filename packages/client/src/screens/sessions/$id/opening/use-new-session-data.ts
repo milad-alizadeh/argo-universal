@@ -9,6 +9,7 @@ import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import {
   type InstalledAgents,
+  loadedAgents,
   useInstalledAgents,
   useRememberedAgent,
 } from '#features/agents';
@@ -59,30 +60,30 @@ function useSessionChoices(
 ): ChosenSessionChoices {
   const [chosen, setChosen] = useState<ChosenSettings>({ projectId });
 
-  const remembered = { ...chosen, agent: useChosenAgent(chosen.agent) };
+  const rememberedAgent = useRememberChosenAgent(chosen.agent);
   const branches = useProjectBranches(listed.projects, chosen.projectId);
 
   const choices = toSessionChoices({
     ...listed,
-    chosen: remembered,
+    chosen,
+    rememberedAgent,
     branches,
   });
 
   return { choices, setChosen };
 }
 
-function useChosenAgent(chosen: string | undefined): string | undefined {
+// Remembers the chosen Agent on this device; returns the remembered one.
+function useRememberChosenAgent(
+  chosen: string | undefined,
+): string | undefined {
   const { agent, select } = useRememberedAgent();
   useEffect(() => {
     if (chosen) select(chosen);
   }, [chosen, select]);
 
-  return chosen ?? agent;
+  return agent;
 }
-
-// New Session offers no Agent until the Server lists its Installed Agents.
-const listedAgents = (agents: InstalledAgents): readonly AgentServer[] =>
-  agents.status === 'loaded' ? agents.agents : [];
 
 type ListedData = Pick<NewSessionData, 'projects' | 'agents'> & {
   listed: ListedChoices;
@@ -94,7 +95,7 @@ function useListedData(): ListedData {
 
   const listed = {
     projects: projects.data ?? [],
-    agents: listedAgents(agents),
+    agents: loadedAgents(agents),
   };
 
   return { projects, agents, listed };

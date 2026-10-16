@@ -13,9 +13,11 @@ export interface ChosenSettings {
 
 export interface SessionChoiceInput {
   projects: readonly ProjectInfo[];
-  // The Installed Agents, in name order.
+  // The Installed Agents, in any order.
   agents: readonly AgentServer[];
   chosen: ChosenSettings;
+  // The Agent this device last opened a Session with.
+  rememberedAgent?: string;
   // The chosen main Project's branches; undefined until they load.
   branches: ProjectsBranchesOutput | undefined;
 }
@@ -41,12 +43,23 @@ export const chooseProject = (
 ): ProjectInfo | undefined =>
   projects.find((entry) => entry.id === chosen) ?? projects[0];
 
-// The chosen Agent while it is installed, else the first by name.
-const chooseAgent = (
+const firstByName = (agents: readonly AgentServer[]): AgentServer | undefined =>
+  [...agents].sort((a, b) => a.name.localeCompare(b.name))[0];
+
+const installed = (
   agents: readonly AgentServer[],
-  chosen: string | undefined,
-): AgentServer | undefined =>
-  agents.find((entry) => entry.id === chosen) ?? agents[0];
+  id: string | undefined,
+): AgentServer | undefined => agents.find((entry) => entry.id === id);
+
+// The chosen Agent, else the remembered one, while installed; else the first by name.
+const chooseAgent = ({
+  agents,
+  chosen,
+  rememberedAgent,
+}: SessionChoiceInput): AgentServer | undefined =>
+  installed(agents, chosen.agent) ??
+  installed(agents, rememberedAgent) ??
+  firstByName(agents);
 
 type Checkout = Pick<
   SessionChoices,
@@ -86,7 +99,7 @@ export function toSessionChoices(input: SessionChoiceInput): SessionChoices {
 
   return {
     project,
-    agent: chooseAgent(input.agents, input.chosen.agent),
+    agent: chooseAgent(input),
     ...checkoutOf(project, input),
   };
 }

@@ -90,12 +90,16 @@ export interface RegistryAgents extends AgentChanges {
   retry: () => void;
 }
 
-type RegistryRows = Pick<RegistryAgents, 'installed' | 'page' | 'featured'>;
+// What useRegistryAgents shows, apart from its actions.
+type RegistryAgentsData = Pick<
+  RegistryAgents,
+  'installed' | 'page' | 'featured'
+>;
 
-const registryRows = (
+const registryAgentsData = (
   installed: InstalledAgents,
   registry: RegistryLoad,
-): RegistryRows => ({
+): RegistryAgentsData => ({
   installed,
   page: agentsPage(installed, registry),
   featured: featuredAgents(installed, registry),
@@ -117,7 +121,7 @@ export function useRegistryAgents(
   };
 
   return {
-    ...registryRows(installedAgents(query), registry.load),
+    ...registryAgentsData(installedAgents(query), registry.load),
     ...useAgentChanges(onInstalled),
     retry,
   };

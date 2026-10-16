@@ -2,6 +2,7 @@ import { newSessionCatalogs } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { chooseAnotherProject, toSessionChoices } from './session-choices';
 import {
+  firstAgent,
   input,
   mainProject,
   projectBaseBranch,
@@ -51,6 +52,41 @@ describe('toSessionChoices', () => {
     );
 
     expect(choices.agent?.id).toBe(secondAgent.id);
+  });
+
+  it('starts on the first Agent by name, whatever order the Server lists them in', () => {
+    const choices = toSessionChoices(
+      input({ agents: [secondAgent, firstAgent] }),
+    );
+
+    expect(choices.agent?.id).toBe(firstAgent.id);
+  });
+
+  it('opens the remembered Agent when the reader has not chosen one', () => {
+    const choices = toSessionChoices(
+      input({ rememberedAgent: secondAgent.id }),
+    );
+
+    expect(choices.agent?.id).toBe(secondAgent.id);
+  });
+
+  it('opens the chosen Agent over the remembered one', () => {
+    const choices = toSessionChoices(
+      input({
+        chosen: { agent: firstAgent.id },
+        rememberedAgent: secondAgent.id,
+      }),
+    );
+
+    expect(choices.agent?.id).toBe(firstAgent.id);
+  });
+
+  it('falls back to the first Agent by name when the remembered one is gone', () => {
+    const choices = toSessionChoices(
+      input({ agents: [secondAgent, firstAgent], rememberedAgent: 'removed' }),
+    );
+
+    expect(choices.agent?.id).toBe(firstAgent.id);
   });
 
   it.each([

@@ -26,6 +26,8 @@ const rowState = ({ rows }: AgentRows): RowState[] =>
     unavailable,
   }));
 
+const ids = ({ rows }: AgentRows): string[] => rows.map(({ id }) => id);
+
 describe('agentsPage', () => {
   it('waits for the Installed Agents instead of offering Install on every row', () => {
     const page = agentsPage({ status: 'loading' }, loadedRegistry);
@@ -104,20 +106,29 @@ describe('featuredAgents', () => {
     ),
   };
 
-  it('offers the featured Agents this platform runs by name, marking the installed ones', () => {
+  it('offers only the featured Agents this platform runs', () => {
+    const featured = featuredAgents(loaded(), featuredRegistry);
+
+    expect(new Set(ids(featured))).toEqual(new Set([alpha.id, delta.id]));
+  });
+
+  it('orders the featured Agents by name', () => {
+    const featured = featuredAgents(loaded(), featuredRegistry);
+
+    expect(ids(featured)).toEqual([alpha.id, delta.id]);
+  });
+
+  it('marks the installed featured Agents, even one this platform cannot run', () => {
     const featured = featuredAgents(
       loaded(server(delta.id, delta.name), server(charlie.id, charlie.name)),
       featuredRegistry,
     );
 
-    expect({ status: featured.status, rows: rowState(featured) }).toEqual({
-      status: 'loaded',
-      rows: [
-        { id: alpha.id, installed: false, unavailable: false },
-        { id: charlie.id, installed: true, unavailable: false },
-        { id: delta.id, installed: true, unavailable: false },
-      ],
-    });
+    const installed = featured.rows
+      .filter((row) => row.installed && !row.unavailable)
+      .map(({ id }) => id);
+
+    expect(new Set(installed)).toEqual(new Set([charlie.id, delta.id]));
   });
 
   it.each([

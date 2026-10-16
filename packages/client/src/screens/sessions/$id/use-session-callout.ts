@@ -1,6 +1,6 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
-import type { InstalledAgents } from '#features/agents';
+import { type InstalledAgents, loadedAgents } from '#features/agents';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
@@ -38,9 +38,7 @@ export interface SessionCalloutSources {
 }
 
 const labelOf = (agents: InstalledAgents, agent: string): string | undefined =>
-  agents.status === 'loaded'
-    ? agents.agents.find((entry) => entry.id === agent)?.name
-    : undefined;
+  loadedAgents(agents).find((entry) => entry.id === agent)?.name;
 
 const agentName = (
   snapshot: SessionSnapshot,
