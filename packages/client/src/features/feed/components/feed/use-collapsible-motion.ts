@@ -1,14 +1,11 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import {
   type Dispatch,
-  type RefObject,
   type SetStateAction,
   useCallback,
   useState,
 } from 'react';
-import { holdRowTop } from './keep-place';
-
-type ListRef = RefObject<LegendListRef | null>;
+import { holdRowTop, type ListRef, releaseRowTop } from './keep-place';
 
 /*
  * Streaming rows grow at the end, so the Feed follows rows as they measure. The end clearance is the
@@ -28,23 +25,25 @@ const oneFewer = (count: number): number => count - 1;
 // A frame later, once the list has the final size: Legend checks the end only on scroll, so check it first, or the stale answer follows to the end.
 const settleNextFrame = (
   list: ListRef,
+  itemKey: string,
   setMoving: Dispatch<SetStateAction<number>>,
 ): number =>
   requestAnimationFrame(() => {
     list.current?.reportContentInset();
+    releaseRowTop(list, itemKey);
     setMoving(oneFewer);
   });
 
 // While any collapsible is opening or closing, the Feed holds still.
 function useMovingCollapsibles(
   list: ListRef,
-): [number, (started: boolean) => void] {
+): [number, CollapsibleMotion['onMotionChange']] {
   const [moving, setMoving] = useState(0);
 
   const onMotionChange = useCallback(
-    (started: boolean) => {
+    (itemKey: string, started: boolean) => {
       if (started) setMoving(oneMore);
-      else settleNextFrame(list, setMoving);
+      else settleNextFrame(list, itemKey, setMoving);
     },
     [list],
   );
@@ -65,17 +64,14 @@ function setGrownSize(
 
 // An opening row keeps its header where it was while it grows below.
 function growItem(list: ListRef, itemKey: string, height: number): void {
-  const ref = list.current;
+  if (height > 0) holdRowTop(list, itemKey);
 
-  if (!ref) return;
-
-  if (height > 0) holdRowTop(list, ref.getState(), itemKey);
-  setGrownSize(ref, itemKey, height);
+  if (list.current) setGrownSize(list.current, itemKey, height);
 }
 
 export interface CollapsibleMotion {
   maintainScrollAtEnd: typeof followEnd | typeof holdEnd;
-  onMotionChange: (moving: boolean) => void;
+  onMotionChange: (itemKey: string, moving: boolean) => void;
   onGrow: (itemKey: string, height: number) => void;
 }
 

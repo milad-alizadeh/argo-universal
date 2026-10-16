@@ -1,14 +1,11 @@
 import type * as React from 'react';
-import { type ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { cn } from '#lib/generic/utils';
-import {
-  ScrollFadeList,
-  useScrollFadeEndGap,
-} from '#lib/product/scroll-fade/scroll-fade-list';
+import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
@@ -36,18 +33,12 @@ const phoneContentStyle = {
 // Flat search results start right under the open search, as Material's search results do.
 const searchResultsContentStyle = { ...phoneContentStyle, paddingTop: 0 };
 
-// The last row rests the scroll fade's small end gap above the bottom, its fade lying in that gap.
-function useContentStyle(
-  flat: boolean,
-): typeof contentStyle & { paddingBottom: number } {
+function useContentStyle(flat: boolean): typeof contentStyle {
   const wide = useWide();
-  const paddingBottom = useScrollFadeEndGap();
-  let style = phoneContentStyle;
 
-  if (wide) style = contentStyle;
-  else if (flat) style = searchResultsContentStyle;
+  if (wide) return contentStyle;
 
-  return useMemo(() => ({ ...style, paddingBottom }), [style, paddingBottom]);
+  return flat ? searchResultsContentStyle : phoneContentStyle;
 }
 
 function entryKey(entry: SessionsListEntry): string {

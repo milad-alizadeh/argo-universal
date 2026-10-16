@@ -9,10 +9,7 @@ import {
   groupedListPadding,
 } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import {
-  ScrollFadeList,
-  useScrollFadeEndGap,
-} from '../scroll-fade/scroll-fade-list';
+import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
 import { CardRow } from './card-row';
 import {
   type FieldListEntry,
@@ -110,16 +107,14 @@ const endPaddingKeys = [
   'paddingHorizontal',
 ] as const;
 
-// GroupedList's gutters, in the numbers Legend List lays its items out with; the last card rests the scroll fade's small end gap above the bottom.
+// GroupedList's gutters, in the numbers Legend List lays its items out with; the scroll fade adds the end gap.
 function useGroupPadding(): ViewStyle {
   const padding = useResolveClassNames(groupedListPadding);
-  const endGap = useScrollFadeEndGap();
 
   return {
     paddingLeft: firstLength(padding, startPaddingKeys),
     paddingRight: firstLength(padding, endPaddingKeys),
     paddingTop: pixels(padding.paddingTop),
-    paddingBottom: endGap,
   };
 }
 

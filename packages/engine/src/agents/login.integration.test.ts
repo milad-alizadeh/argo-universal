@@ -101,10 +101,10 @@ it('keeps exact browser ownership after the initiating App disconnects, then ope
     .poll(async () => (await host.caller.agents.login(operation)).status)
     .toBe('ready');
   expect(host.agent.processes[0]?.terminations).toBe(1);
-  await verifySessionAdmission(host, operation);
+  await verifyLoginBesideSession(host, operation);
 });
 
-const verifySessionAdmission = async (
+const verifyLoginBesideSession = async (
   host: Awaited<ReturnType<typeof startAcpEngine>>,
   operation: AgentLoginOperation,
 ): Promise<void> => {
@@ -125,7 +125,7 @@ const verifySessionAdmission = async (
           })
         ).status,
     )
-    .toBe('in-use');
+    .toBe('choose-method');
   expect(host.agent.processes[1]?.terminations).toBe(0);
   await host.caller.session.close({ sessionId });
 };

@@ -95,3 +95,8 @@ export { newSessionBesideSearch } from './components/sessions-header';
 export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';
 
 export { createCoalescedRefetch } from './state/coalesced-refetch';
+
+export {
+  type MergeMethodChoice,
+  useMergeMethod,
+} from './hooks/use-merge-method';

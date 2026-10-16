@@ -35,14 +35,14 @@ it('Engine owns shared empty Sessions across App disconnection and waits for obs
   expect(
     host.database.$client
       .prepare('SELECT agent FROM session WHERE id = ?')
-      .get(second.sessionId)?.agent,
-  ).toBe('mock');
+      .get(second.sessionId),
+  ).toBeUndefined();
   process.exited.resolve();
   await waitFor(host.engine, (snapshot) => snapshot.status === 'done');
   expect(host.engine.getSnapshot().output).toEqual({ exitCode: 0 });
 });
 
-it('a failed Session close reports failure and Engine shutdown waits for its process exit', async () => {
+it('a failed Session close releases without killing the process, and Engine shutdown observes exit', async () => {
   const closes: object[] = [];
 
   const host = await startAcpEngine({
@@ -54,16 +54,12 @@ it('a failed Session close reports failure and Engine shutdown waits for its pro
   });
 
   const created = await host.caller.session.new(emptySessionInput);
-  await expect(host.caller.session.close(created)).rejects.toThrow(
-    'Internal error',
-  );
-  await expect(host.caller.session.close(created)).rejects.toThrow(
-    'Internal error',
-  );
+  await expect(host.caller.session.close(created)).resolves.toEqual({});
   expect(closes).toHaveLength(1);
   const process = requireScriptedProcessAt(host.agent.processes);
-  expect(process.terminations).toBe(1);
+  expect(process.terminations).toBe(0);
   host.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  await vi.waitFor(() => expect(process.terminations).toBe(1));
   expect(host.engine.getSnapshot().status).toBe('active');
   process.exited.resolve();
   await waitFor(host.engine, (snapshot) => snapshot.status === 'done');

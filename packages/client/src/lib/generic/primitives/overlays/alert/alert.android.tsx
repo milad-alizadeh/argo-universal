@@ -1,14 +1,19 @@
 // Stock Compose AlertDialog: Expo UI has no universal alert; iOS uses SwiftUI's alert.
-import { RNHostView } from '@expo/ui';
-import { AlertDialog, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
+import {
+  AlertDialog,
+  CircularProgressIndicator,
+  Row,
+  Text,
+  TextButton,
+} from '@expo/ui/jetpack-compose';
+import { semantics, size } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { NativeText } from '#primitives/display/native-text';
-import { Spinner } from '#primitives/display/spinner';
 import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
-  alertDismissal,
+  ignoreCloseWhileBusy,
   isAlertActionEnabled,
   type AlertAction,
   type AlertProps,
@@ -29,7 +34,7 @@ function OpenAlert(props: AlertProps): React.JSX.Element {
   return (
     <AlertDialog
       colors={useDialogColors()}
-      onDismissRequest={() => alertDismissal(props)(false)}
+      onDismissRequest={() => ignoreCloseWhileBusy(props)(false)}
     >
       <AlertTitle title={props.title} />
       <AlertMessage message={props.message} />
@@ -115,7 +120,7 @@ function AlertButton(props: AlertButtonProps): React.JSX.Element {
   );
 }
 
-// The answer's tone as TextButton's content colour; a disabled one takes Material's disabled treatment, the foreground at 38%, not its tone.
+// The answer's tone; a disabled answer takes Material's 38% foreground instead.
 function useButtonColors(
   action: AlertAction,
 ): React.ComponentProps<typeof TextButton>['colors'] {
@@ -139,19 +144,25 @@ function AlertButtonLabel({
   );
 }
 
-// The spinner runs in its answer's own tone.
+// Material's button icon size, ButtonDefaults.IconSize.
+const spinnerSize = 18;
+
+// A running answer is disabled, so its spinner takes the label's disabled colour.
 function AlertButtonSpinner({
   action,
 }: Pick<AlertButtonProps, 'action'>): React.JSX.Element | null {
+  const colors = useNativeTheme().colors;
+
   if (!action.loading) return null;
 
   return (
-    <RNHostView matchContents>
-      <Spinner
-        accessibilityLabel={action.label}
-        tone={action.tone === 'danger' ? 'danger' : 'accent'}
-      />
-    </RNHostView>
+    <CircularProgressIndicator
+      color={colors.disabledContent}
+      modifiers={[
+        size(spinnerSize, spinnerSize),
+        semantics({ contentDescription: action.label }),
+      ]}
+    />
   );
 }
 

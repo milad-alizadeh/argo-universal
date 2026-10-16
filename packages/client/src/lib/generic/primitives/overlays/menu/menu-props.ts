@@ -80,15 +80,23 @@ export function isActionMenu<Value extends string>(
   return props.actions !== undefined;
 }
 
+// What a choice menu's rows come from: its options with the chosen value, or its groups.
+export type MenuChoiceRows<Value extends string = string> =
+  | Pick<
+      ChoiceMenuProps<Value>,
+      'value' | 'options' | 'onValueChange' | 'groups'
+    >
+  | Pick<GroupedChoiceMenuProps, 'groups'>;
+
 function isGroupedMenu<Value extends string>(
-  props: MenuProps<Value>,
-): props is GroupedChoiceMenuProps {
+  props: MenuChoiceRows<Value>,
+): props is Pick<GroupedChoiceMenuProps, 'groups'> {
   return props.groups !== undefined;
 }
 
 // A choice menu's groups: a plain choice menu is one group with no heading.
 export function menuChoiceGroups<Value extends string>(
-  props: ChoiceMenuProps<Value> | GroupedChoiceMenuProps,
+  props: MenuChoiceRows<Value>,
 ): readonly MenuChoiceGroup[] {
   if (isGroupedMenu(props)) return props.groups;
 

@@ -6,8 +6,7 @@ import { Pressable } from '#primitives/pressable';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { Menu } from './menu';
-
-const loadingLabel = 'Loading options…';
+import { type MenuOption, menuLoadingLabel } from './menu-props';
 
 interface StatesProps {
   kind: 'choice' | 'action';
@@ -15,10 +14,10 @@ interface StatesProps {
   onChoose: (value: string) => void;
 }
 
-const answers = [
+const answers: readonly MenuOption<string>[] = [
   { value: 'default', label: 'Default' },
   { value: 'full', label: 'Full access', disabled: true },
-] as const;
+];
 
 const trigger = (
   <Pressable role="button" className={contentActionClass({})}>
@@ -47,7 +46,7 @@ function States({ kind, loading, onChoose }: StatesProps): React.JSX.Element {
       loading={loading}
       actions={answers.map((answer) => ({
         label: answer.label,
-        disabled: 'disabled' in answer ? answer.disabled : undefined,
+        disabled: answer.disabled,
         onPress: () => onChoose(answer.value),
       }))}
     />
@@ -111,12 +110,12 @@ function loadingMenu(kind: StatesProps['kind']): Story {
       );
 
       const progress = await page.findByRole('menuitem', {
-        name: loadingLabel,
+        name: menuLoadingLabel,
       });
 
       await expect(progress).toHaveAttribute('aria-busy', 'true');
       await expect(
-        page.getByRole('progressbar', { name: loadingLabel }),
+        page.getByRole('progressbar', { name: menuLoadingLabel }),
       ).toBeInTheDocument();
       await expect(
         page.queryByRole(itemRole(kind), { name: 'Default' }),

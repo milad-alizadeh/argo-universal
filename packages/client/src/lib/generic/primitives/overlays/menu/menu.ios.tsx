@@ -8,10 +8,10 @@ import { useNativeTheme } from '#lib/generic/native-theme';
 import {
   type NativeMenuItem,
   type NativeMenuSection,
-  NativeMenuTrigger,
   nativeMenuItems,
   nativeMenuSections,
-} from './menu-phone-parts';
+} from './menu-native-items';
+import { NativeMenuTrigger } from './menu-phone-parts';
 import type { MenuProps } from './menu-props';
 
 // Expo UI's MenuView drop-in, a SwiftUI Menu; Android draws Compose's DropdownMenu instead.

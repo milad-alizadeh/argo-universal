@@ -99,8 +99,19 @@
   },
   "overrides": [
     {
+      // #717 keeps the connection in one file; the owner approved this length exception on 2026-10-15.
+      "files": ["packages/engine/src/agents/acp/connection.ts"],
+      "rules": { "max-lines": "off" }
+    },
+    {
+      // Unknown ACP identities must be logged at warn (#717).
+      "files": ["packages/engine/src/agents/acp/connection.ts"],
+      "rules": { "no-console": ["error", { "allow": ["error", "warn"] }] }
+    },
+    {
       // `shape` is @expo/ui Compose's own prop name on Surface and Button; the rule allows member reads but not package prop keys.
       "files": [
+        "packages/client/src/lib/generic/primitives/buttons/split-button/split-button-look.android.ts",
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-dialog.android.tsx",
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-row.android.tsx",
         "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item.android.tsx"
@@ -193,9 +204,9 @@
       "rules": { "argo/style-tokens": "off" }
     },
     {
-      // Vendor names and vendor types belong in the adapter folders (ADR-0015).
-      "files": ["packages/engine/src/agents/assets/**"],
-      "rules": { "argo/vendor-name": "off", "argo/json-parse-cast": "off" }
+      // Only the vendor module names Registry vendors (ADR-0004, #717).
+      "files": ["packages/engine/src/agents/vendor.ts"],
+      "rules": { "argo/vendor-name": "off" }
     },
     {
       // The rule names the vendors it keeps out.
@@ -2009,6 +2020,7 @@
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/agents/acp/process.ts",
+        "packages/engine/src/agents/launch/shell-env.ts",
         "packages/engine/src/agents/install/processes/process.ts",
         "packages/engine/src/agents/install/processes/process-cleanup.ts",
         "packages/engine/src/agents/install/processes/process-wrapper.ts",

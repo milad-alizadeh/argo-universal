@@ -2,14 +2,18 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { useInspector } from '#lib/product/inspector';
 import { IconButton } from '#primitives/buttons/icon-button';
-import { type MergeMethod, MergePrButton } from './merge-pr-button';
+import type { MergeMethod } from '../state/merge-method';
+import { MergePrButton, type MergePrButtonProps } from './merge-pr-button';
 import type { SessionHeaderProps } from './session-header-props';
 import type { SessionPullRequest } from './session-pull-request';
 
-interface SessionHeaderActionsProps {
+export type SessionHeaderActionsProps = Pick<
+  MergePrButtonProps,
+  'method' | 'onMethodChange'
+> & {
   shown: SessionPullRequest | undefined;
   onMerge: SessionHeaderProps['onMerge'];
-}
+};
 
 function mergeShown({
   shown,
@@ -23,12 +27,13 @@ function mergeShown({
 function ShownMergeButton(
   props: SessionHeaderActionsProps,
 ): React.JSX.Element | null {
-  const { shown } = props;
+  const { shown, method, onMethodChange } = props;
 
   if (!shown) return null;
 
   return (
     <MergePrButton
+      {...{ method, onMethodChange }}
       mergeable={shown.mergeable}
       onMerge={mergeShown({ ...props, shown })}
     />

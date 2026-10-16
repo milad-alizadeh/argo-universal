@@ -1,7 +1,6 @@
 import type * as React from 'react';
-import { countBadge } from '#lib/generic/badge-count';
 import { contentActionClass } from '#primitives/buttons/button';
-import { Badge } from '#primitives/display/badge';
+import { CountBadge } from '#primitives/display/count-badge';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { Pressable } from '#primitives/pressable';
@@ -46,28 +45,9 @@ function DrawerItemContent(props: DrawerItemProps): React.JSX.Element {
       <Text role="body" className={labelClass}>
         {label}
       </Text>
-      <CountBadge {...props} />
+      <CountBadge badge={props.badge} />
     </>
   );
 }
-
-// Apple has no drawer, so iOS draws Argo's row, its count in the danger-red capsule as on the web.
-function CountBadge(
-  props: Pick<DrawerItemProps, 'badge' | 'badgeLabel'>,
-): React.ReactElement | null {
-  const badge = countBadge(props.badge, props.badgeLabel);
-
-  if (!badge) return null;
-
-  return (
-    <Badge className={countBadgeClass} accessibilityLabel={badge.label}>
-      <Text role="badge" className="text-primary-foreground">
-        {badge.text}
-      </Text>
-    </Badge>
-  );
-}
-
-const countBadgeClass = 'h-5.5 min-w-5.5 border-0 bg-danger px-1.5';
 
 DrawerItem satisfies React.ComponentType<DrawerItemProps>;

@@ -15,10 +15,8 @@ type AcpResponses = Pick<
   | 'initialize'
   | 'authenticate'
   | 'session/new'
-  | 'session/load'
   | 'session/resume'
   | 'session/close'
-  | 'session/set_mode'
   | 'session/set_config_option'
   | 'session/prompt'
 >;
@@ -74,17 +72,11 @@ const schemas = {
   ),
   newSession:
     compileAcpResponseSchema<AcpResponses['session/new']>('NewSessionResponse'),
-  load: compileAcpResponseSchema<AcpResponses['session/load']>(
-    'LoadSessionResponse',
-  ),
   resume: compileAcpResponseSchema<AcpResponses['session/resume']>(
     'ResumeSessionResponse',
   ),
   close: compileAcpResponseSchema<AcpResponses['session/close']>(
     'CloseSessionResponse',
-  ),
-  mode: compileAcpResponseSchema<AcpResponses['session/set_mode']>(
-    'SetSessionModeResponse',
   ),
   config: compileAcpResponseSchema<AcpResponses['session/set_config_option']>(
     'SetSessionConfigOptionResponse',
@@ -102,10 +94,8 @@ const createSessionResponseReaders = (
   rejectionReporter: RejectionReporter,
 ): SessionResponseReaders => ({
   'session/new': schemas.newSession.reader(rejectionReporter),
-  'session/load': schemas.load.reader(rejectionReporter),
   'session/resume': schemas.resume.reader(rejectionReporter),
   'session/close': schemas.close.reader(rejectionReporter),
-  'session/set_mode': schemas.mode.reader(rejectionReporter),
   'session/set_config_option': schemas.config.reader(rejectionReporter),
   'session/prompt': schemas.prompt.reader(rejectionReporter),
 });

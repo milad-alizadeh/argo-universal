@@ -77,7 +77,11 @@ const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
     list: publicProcedure
       .input(AgentsListInput)
       .output(AgentsListOutput)
-      .query(() => configuredAgentList(deps)),
+      .query(({ input }) => {
+        if (input?.refresh) deps.invalidateIdleAgents?.();
+
+        return configuredAgentList(deps);
+      }),
   }),
 );
 

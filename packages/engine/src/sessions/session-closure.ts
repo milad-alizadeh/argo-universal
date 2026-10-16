@@ -14,7 +14,6 @@ const isClosing = (actor: SessionActorRef): boolean => {
 
   return (
     snapshot.matches({ open: { acp: 'closing' } }) ||
-    snapshot.matches({ open: { acp: 'retainingCleanup' } }) ||
     snapshot.matches({ open: { acp: 'flushing' } })
   );
 };
@@ -30,9 +29,7 @@ export const closeSession = async (
 
   const outcome = await waitFor(
     actor,
-    (snapshot) =>
-      snapshot.status !== 'active' ||
-      snapshot.matches({ open: { acp: 'retainingCleanup' } }),
+    (snapshot) => snapshot.status !== 'active',
     { timeout: Infinity },
   );
 
