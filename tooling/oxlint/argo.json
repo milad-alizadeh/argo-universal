@@ -99,6 +99,11 @@
   },
   "overrides": [
     {
+      // ADR-0027: this worker-only loader evaluates first-party Plugin modules in a context without Node globals.
+      "files": ["packages/engine/src/plugins/worker-modules.ts"],
+      "rules": { "sonarjs/code-eval": "off" }
+    },
+    {
       // #717 keeps the connection in one file; the owner approved this length exception on 2026-10-15.
       "files": ["packages/engine/src/agents/acp/connection.ts"],
       "rules": { "max-lines": "off" }
@@ -2019,6 +2024,7 @@
         "apps/server/src/supervisor/engine-process.ts",
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
+        "packages/engine/src/plugins/host-connection.ts",
         "packages/engine/src/agents/acp/process.ts",
         "packages/engine/src/agents/launch/shell-env.ts",
         "packages/engine/src/agents/install/processes/process.ts",

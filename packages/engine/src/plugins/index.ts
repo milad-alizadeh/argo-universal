@@ -1,3 +1,5 @@
 export { createPluginsRouter } from './router';
 
-export type { PluginsDeps } from './loader';
+export { PluginRuntime } from './runtime';
+
+export type { PluginServiceDeps as PluginsDeps } from './service';

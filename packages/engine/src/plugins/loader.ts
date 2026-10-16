@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
 import { z } from 'zod';
 import { readManifest } from './manifest';
+import { notStarted } from './runtime-protocol';
 
 export interface PluginsDeps {
   // The Server's runtime directory, `ARGO_HOME` or `~/.argo` (`resolveRuntimeDirectory`); user Plugins sit in its `plugins/`.
@@ -13,7 +14,12 @@ export interface PluginsDeps {
   firstPartyPluginsDirectory?: string;
 }
 
-type Discovery = { firstParty: boolean; version: string; result: PluginList };
+type Discovery = {
+  firstParty: boolean;
+  version: string;
+  result: PluginList;
+  locations: Map<string, string>;
+};
 
 // A Plugin sits directly in a root or in one collection folder below it, such as `plugins/examples/hello`.
 const maxDepth = 2;
@@ -24,11 +30,19 @@ const maxDepth = 2;
  * come before collections, folders sort by name, and each manifest keeps its nav order. A later
  * Plugin with an id already listed is reported, so a user Plugin never replaces a first-party one.
  */
-export async function discoverPlugins(deps: PluginsDeps): Promise<PluginList> {
+export async function discoverPlugins(
+  deps: PluginsDeps,
+  locations = new Map<string, string>(),
+): Promise<PluginList> {
   const result: PluginList = { plugins: [], errors: [] };
 
   for (const { directory, firstParty } of pluginRoots(deps))
-    await scan(directory, { firstParty, version: deps.version, result });
+    await scan(directory, {
+      firstParty,
+      version: deps.version,
+      result,
+      locations,
+    });
 
   return result;
 }
@@ -134,6 +148,7 @@ async function admit(directory: string, discovery: Discovery): Promise<void> {
     const manifest = await readManifest(directory, discovery.version);
 
     addManifest(manifest, discovery);
+    discovery.locations.set(manifest.id, directory);
   } catch (error) {
     reportError(directory, ThrownError.parse(error), discovery.result);
   }
@@ -156,5 +171,5 @@ function addManifest(
 ): void {
   if (result.plugins.some((plugin) => plugin.manifest.id === manifest.id))
     throw new Error(`Duplicate Plugin id: ${manifest.id}`);
-  result.plugins.push({ manifest, firstParty, enabled: true });
+  result.plugins.push({ manifest, firstParty, enabled: true, ...notStarted });
 }
