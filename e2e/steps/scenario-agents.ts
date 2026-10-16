@@ -2,6 +2,7 @@ import {
   type AppFixtureAgents,
   appFixtureAgentIds,
 } from '@repo/mocks/agent/app-fixtures';
+import { agentScenarioSteps, agentStep } from './agent-steps';
 import { signInScenarios } from './sign-in-agents';
 
 export function agentId(ordinal: number): string {
@@ -76,23 +77,20 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
 }
 
 const namedScenarioSteps = [
-  [/^(?:Given|And) Agent (\d+) supplies a long Feed history$/, 'feed-history'],
-  [/^(?:Given|And) Agent (\d+) asks for an Elicitation$/, 'elicitation'],
+  [agentStep('supplies a long Feed history'), 'feed-history'],
+  [agentStep('asks for an Elicitation'), 'elicitation'],
   [
-    /^(?:Given|And) Agent (\d+) names its Session after a question$/,
+    agentStep('names its Session after a question'),
     'agent-title-after-question',
   ],
 ] as const;
 
 function namedScenarioConfiguration(steps: string[]): AppFixtureAgents {
   return Object.fromEntries(
-    namedScenarioSteps.flatMap(([pattern, scenario]) => {
-      const chosen = steps
-        .map((step) => pattern.exec(step))
-        .find((match) => match !== null);
-
-      return chosen ? [[agentId(Number(chosen[1])), { scenario }]] : [];
-    }),
+    agentScenarioSteps(namedScenarioSteps, steps).map(([ordinal, scenario]) => [
+      agentId(ordinal),
+      { scenario },
+    ]),
   );
 }
 

@@ -1,26 +1,15 @@
 import type { Page } from '@playwright/test';
+import { sharedReply } from '@repo/mocks/agent/scenarios';
 import { agentTitle } from '@repo/mocks/agent/title-scenarios';
 import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { submitElicitationTitle } from './elicitation';
 import { Given, When, Then } from './fixtures';
-import { openWidePage, reloadApp } from './frame';
+import { openWidePage, reloadApp, wide } from './frame';
 import { sessionRow, startSession } from './live-session';
 
 // The question holds the Turn; the Agent sends its title only once it is answered.
 Given('Agent {int} names its Session after a question', expectListedAgent);
-
-// The answer itself does not matter: the Agent's title is fixed in its scenario.
-When("I answer the Agent's question", async ({ page }): Promise<void> => {
-  await submitElicitationTitle(page, 'Any answer');
-});
-
-Given(
-  'I start a Session with the prompt {string}',
-  async ({ page }, prompt: string): Promise<void> => {
-    await startSession(page, prompt);
-  },
-);
 
 async function expectTitled(page: Page, title: string): Promise<void> {
   await expect(sessionRow(page, title)).toBeVisible();
@@ -28,6 +17,21 @@ async function expectTitled(page: Page, title: string): Promise<void> {
     page.getByRole('heading', { name: title, exact: true }),
   ).toBeVisible();
 }
+
+// Until the question is answered, the first prompt line is the Session's title.
+Given(
+  "a Session titled {string} waits on the Agent's question",
+  async ({ page }, prompt: string): Promise<void> => {
+    await page.setViewportSize(wide);
+    await startSession(page, prompt);
+    await expectTitled(page, prompt);
+  },
+);
+
+// The answer itself does not matter: the Agent's title is fixed in its scenario.
+When("I answer the Agent's question", async ({ page }): Promise<void> => {
+  await submitElicitationTitle(page, 'Any answer');
+});
 
 Then(
   'the Session is titled {string} in the list and its header',
@@ -72,13 +76,13 @@ When(
 );
 
 // A reload reads the saved list, so a late Agent title cannot hide behind a list that has not refreshed yet.
-When('I reload the App', async ({ page }): Promise<void> => {
-  await reloadApp(page);
-});
-
 Then(
-  "the Sessions list shows {string} and not the Agent's title",
+  'the saved Session keeps the title {string} once the Turn ends',
   async ({ page }, title: string): Promise<void> => {
+    await expect(
+      page.getByTestId('feed-scroll').getByText(sharedReply, { exact: true }),
+    ).toBeVisible();
+    await reloadApp(page);
     await expect(sessionRow(page, title)).toBeVisible();
     await expect(sessionRow(page, agentTitle)).toHaveCount(0);
   },

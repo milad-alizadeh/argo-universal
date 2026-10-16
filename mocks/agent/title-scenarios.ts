@@ -18,12 +18,12 @@ const titled = (steps: ScriptedStep[]): ScriptedScenario => ({
   steps,
 });
 
-// The question holds the Turn, so an App sees the first prompt line as the title before the Agent's title replaces it.
 export const titleScenarios = (
   reply: ScriptedStep,
   question: ScriptedStep,
 ): TitleScenarios => ({
   'agent-title': titled([titleUpdate(agentTitle), reply]),
+  // The question holds the Turn, so an App sees the first prompt line as the title before the Agent's title replaces it.
   'agent-title-after-question': titled([
     question,
     titleUpdate(agentTitle),
