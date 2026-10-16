@@ -1,14 +1,14 @@
 export { AgentProcessExitError } from './process';
 
-export { releaseLoginTerminalGroups } from './terminal-record';
+export { releaseLoginTerminalGroups } from './login-terminal/terminal-record';
 
-export { checkAgentLaunch, createAgentChecker } from './agent-check';
+export { checkAgentLaunch, createAgentChecker } from './connection/agent-check';
 
-export { createLoginAgentOpener } from './terminal-login-agent';
+export { createLoginAgentOpener } from './login/terminal-login-agent';
 
-export { createAcpResources } from './resources';
+export { createAcpResources } from './resources/resources';
 
-export { createAcpResponseReaders } from './response-readers';
+export { createAcpResponseReaders } from './connection/response-readers';
 
 export type {
   AcpResources,
@@ -18,14 +18,14 @@ export type {
   AcpOpenInput,
   AcpResourceInput,
   AcpProcess,
-} from './resource-types';
+} from './resources/resource-types';
 
 export { launchShellCommand } from './process';
 
-export type { ShellCommand } from './shell-command';
+export type { ShellCommand } from './shell-commands/shell-command';
 
-export type { TerminalRequests } from './terminal-requests';
+export type { TerminalRequests } from './shell-commands/terminal-requests';
 
-export { awaitAcpOpening } from './client';
+export { awaitAcpOpening } from './connection/client';
 
-export { releaseShellGroups } from './shell-record';
+export { releaseShellGroups } from './shell-commands/shell-record';

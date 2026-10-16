@@ -54,23 +54,26 @@ import {
   type AcpLifetimeEvent,
   type AcpSessionDependencies,
 } from './acp/acp-lifetime';
-import type { ElicitationAnswerContent } from './acp/elicitation-types';
 import {
   promptFailureOutcome,
   type AcpTurnOutcome,
-} from './acp/prompt-outcome';
+} from './acp/prompts/prompt-outcome';
 import type {
   AcpPromptRequest as PromptRequest,
   AcpPromptResponse as PromptResponse,
-} from './acp/prompt-types';
-import { ShellRuntime } from './acp/shell-runtime';
+} from './acp/prompts/prompt-types';
+import {
+  commitLocalPrompt,
+  type LocalSubmission,
+} from './acp/prompts/submission';
+import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
+import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
+import { ShellRuntime } from './acp/shells/shell-runtime';
 import {
   routeSubagentUpdate,
   flushSubagentFeeds,
   type SubagentFeeds,
-} from './acp/subagent-feeds';
-import { commitLocalPrompt, type LocalSubmission } from './acp/submission';
-import { acpContextUsage, acpTurnUsage } from './acp/usage';
+} from './acp/subagents/subagent-feeds';
 import {
   admitsPermissionAnswer,
   answeredRequest,

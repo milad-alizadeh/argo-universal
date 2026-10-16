@@ -5,7 +5,7 @@ import type {
 } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
 import type { feedMachine } from '../../feed';
-import { toShell } from '../acp/shells';
+import { toShell } from '../acp/shells/shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
 import type { sessionMachine } from '../session-machine';
 import { toLiveHeader } from './live-header';

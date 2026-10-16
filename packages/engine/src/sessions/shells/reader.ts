@@ -2,7 +2,7 @@ import { ShellRecord, type Shell } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { shell } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
-import { toShell } from '../acp/shells';
+import { toShell } from '../acp/shells/shells';
 
 export const readShellRecords = (
   database: Database,

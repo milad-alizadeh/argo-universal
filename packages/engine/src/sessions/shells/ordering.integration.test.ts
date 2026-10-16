@@ -5,7 +5,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { collectShellOutput } from '#mocks/shell-output';
-import { ShellCapture } from '../acp/shell-capture';
+import { ShellCapture } from '../acp/shells/shell-capture';
 import { createShellOutput, shellOutputPath } from './files';
 
 const shellId = 'ordered-shell';

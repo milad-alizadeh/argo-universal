@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import type { LocalSubmission } from './acp/submission';
+import type { LocalSubmission } from './acp/prompts/submission';
 import type {
   OpenSessionsActorRef,
   OpenSessionsCommand,

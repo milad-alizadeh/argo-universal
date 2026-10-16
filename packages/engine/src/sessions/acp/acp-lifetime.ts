@@ -11,9 +11,9 @@ import {
   type AcpLifetimeEvent,
 } from './acp-session-destination';
 import { selectSessionOpening } from './acp-session-opening';
-import { AcpSessionRequests } from './acp-session-requests';
-import { withShellDestination } from './shell-destination';
-import type { ShellRuntime } from './shell-runtime';
+import { AcpSessionRequests } from './requests/acp-session-requests';
+import { withShellDestination } from './shells/shell-destination';
+import type { ShellRuntime } from './shells/shell-runtime';
 
 export type { AcpLifetimeEvent } from './acp-session-destination';
 
