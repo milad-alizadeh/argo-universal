@@ -98,6 +98,7 @@ export const test = base.extend<
       userDataDirectory: testInfo.outputPath('user-data'),
       mockAgents,
       ownsSupervisor: $tags.includes('@owned-supervisor'),
+      usesSupervisor: $tags.includes('@supervisor'),
       use,
     });
   },

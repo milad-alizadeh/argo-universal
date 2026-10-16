@@ -9,11 +9,11 @@ import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { z } from 'zod';
 import {
-  ownedSupervisorEnvironment,
-  prepareOwnedSupervisor,
-} from './desktop/owned-supervisor';
+  prepareDesktopServer,
+  stopExternalSupervisor,
+} from './electron-server';
 import type { App } from './fixtures';
-import { pollServer, serverFiles, startOwnServer } from './own-server';
+import { pollServer, serverFiles } from './own-server';
 
 const desktopDirectory = path.resolve(import.meta.dirname, '../apps/desktop');
 
@@ -42,33 +42,24 @@ export async function useElectronApp(input: {
   userDataDirectory: string;
   mockAgents: AppFixtureAgents;
   ownsSupervisor: boolean;
+  usesSupervisor: boolean;
   use: (app: App) => Promise<void>;
 }): Promise<void> {
   const { directory, userDataDirectory, mockAgents, ownsSupervisor, use } =
     input;
 
-  const fixtureServer = await startOwnServer(directory, mockAgents);
-  const home = path.join(directory, 'server-home');
-
   const {
-    ARGO_EXPO_WEB_URL: _webDevelopmentUrl,
-    ELECTRON_RUN_AS_NODE: _runAsNode,
-    ...environment
-  } = process.env;
-
-  const launchDirectory = ownsSupervisor
-    ? await prepareOwnedSupervisor(directory)
-    : desktopDirectory;
-
-  if (ownsSupervisor) await fixtureServer.stop();
-
-  const supervisorEnvironment = ownsSupervisor
-    ? ownedSupervisorEnvironment({
-        directory,
-        server: fixtureServer,
-        agents: mockAgents,
-      })
-    : undefined;
+    fixtureServer,
+    home,
+    launchDirectory,
+    environment,
+    externalSupervisor,
+  } = await prepareDesktopServer({
+    directory,
+    agents: mockAgents,
+    ownsSupervisor,
+    usesSupervisor: input.usesSupervisor,
+  });
 
   let electronApp: ElectronApplication | undefined;
   let electronProcess: ChildProcess | undefined;
@@ -80,7 +71,6 @@ export async function useElectronApp(input: {
       // `env` replaces the whole environment; without ARGO_EXPO_WEB_URL the window loads the web export over app://.
       env: {
         ...environment,
-        ...supervisorEnvironment,
         ARGO_HOME: home,
         // Its own app data, so parallel launches each get the single-instance lock.
         ARGO_USER_DATA_DIRECTORY: userDataDirectory,
@@ -118,7 +108,8 @@ export async function useElectronApp(input: {
     } finally {
       const leftover = readServerAddress(home);
 
-      if (ownsSupervisor && leftover) process.kill(leftover.pid, 'SIGTERM');
+      if (ownsSupervisor && leftover) await stopOwnedSupervisor(leftover.pid);
+      await stopExternalSupervisor(externalSupervisor);
       await fixtureServer.stop();
     }
   }

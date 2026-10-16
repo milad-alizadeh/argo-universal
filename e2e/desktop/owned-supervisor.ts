@@ -8,9 +8,9 @@ import { serverFiles, type startOwnServer } from '../own-server';
 const repositoryRoot = path.resolve(import.meta.dirname, '../..');
 
 // Only startup wiring differs: Electron launches the real Supervisor, which launches the fixture Engine.
-export async function prepareOwnedSupervisor(
+export async function prepareSupervisorRuntime(
   directory: string,
-): Promise<string> {
+): Promise<{ app: string; server: string }> {
   const runtime = path.join(directory, 'desktop-runtime');
   const app = path.join(runtime, 'app');
   const server = path.join(runtime, 'server');
@@ -20,7 +20,7 @@ export async function prepareOwnedSupervisor(
   await linkRuntime(runtime, server);
   await writeServerEntry(server);
 
-  return app;
+  return { app, server };
 }
 
 async function writeServerEntry(server: string): Promise<void> {

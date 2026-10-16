@@ -1,3 +1,4 @@
+import type { APIRequestContext } from '@playwright/test';
 import { readServerAddress } from '@repo/engine/server-runtime';
 import { z } from 'zod';
 import { answerQuitDialog, requestQuit } from '../desktop/native-dialog';
@@ -77,6 +78,12 @@ When('I quit the desktop App', async ({ app }): Promise<void> => {
   await closed;
 });
 
+const SessionStates = z.object({
+  result: z.object({
+    data: z.object({ sessions: z.array(z.object({ status: z.string() })) }),
+  }),
+});
+
 Then(
   'the desktop Supervisor is {string}',
   async ({ app, request }, state: string): Promise<void> => {
@@ -91,24 +98,24 @@ Then(
       return;
     }
 
-    const address = readServerAddress(home);
-    expect(address).not.toBeNull();
-    expect(address?.pid).toBe(supervisorPid);
-    const response = await request.get(
-      `${app.httpUrl}/trpc/session.list?input=${encodeURIComponent(JSON.stringify({ archived: false }))}`,
-    );
-    expect(response.ok()).toBe(true);
-    const result = z
-      .object({
-        result: z.object({
-          data: z.object({
-            sessions: z.array(z.object({ status: z.string() })),
-          }),
-        }),
-      })
-      .parse(await response.json());
-    expect(
-      result.result.data.sessions.map((session) => session.status),
-    ).toEqual(['needs_input']);
+    await expectRunningSession(app, request);
   },
 );
+
+async function expectRunningSession(
+  app: App,
+  request: APIRequestContext,
+): Promise<void> {
+  const { home, supervisorPid } = desktop(app);
+  expect(readServerAddress(home)?.pid).toBe(supervisorPid);
+
+  const response = await request.get(
+    `${app.httpUrl}/trpc/session.list?input=${encodeURIComponent(JSON.stringify({ archived: false }))}`,
+  );
+
+  expect(response.ok()).toBe(true);
+  const result = SessionStates.parse(await response.json());
+  expect(result.result.data.sessions.map((session) => session.status)).toEqual([
+    'needs_input',
+  ]);
+}
