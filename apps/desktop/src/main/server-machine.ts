@@ -16,6 +16,7 @@ import {
   signalSupervisor,
   spawnSupervisor,
 } from './server-process';
+import { type CountsReport, watchSessionCounts } from './session-counts';
 
 const failedConnectionTarget = '#serverConnection.failed';
 
@@ -38,7 +39,9 @@ type ServerLogParameters = { line: string };
 
 type AddressParameters = { address: ServerAddress | null };
 
-export type ServerInput = SupervisorPaths;
+export interface ServerInput extends SupervisorPaths {
+  askToKeepSessions: (running: number) => Promise<boolean>;
+}
 
 interface ServerContext extends ServerInput {
   address: ServerAddress | null;
@@ -47,6 +50,7 @@ interface ServerContext extends ServerInput {
   // When this app spawned `ownedPid`, so a stale server.json that names a reused pid does not count.
   spawnedAt: number | null;
   failure: string | null;
+  running: number;
 }
 
 type SupervisorReport =
@@ -55,10 +59,12 @@ type SupervisorReport =
 
 type ServerEvent =
   | SupervisorReport
+  | CountsReport
   | { type: 'server.retry' }
   | { type: 'app.quit' };
 
 type ServerEmitted =
+  | { type: 'badge.changed'; attention: number }
   | { type: 'server.ready'; address: ServerAddress }
   | { type: 'server.failed'; failure: string | null };
 
@@ -81,6 +87,7 @@ const millisecondsPerSecond = 1000;
 const serverInput = ({ context }: { context: ServerContext }): ServerInput => ({
   home: context.home,
   serverDirectory: context.serverDirectory,
+  askToKeepSessions: context.askToKeepSessions,
 });
 
 // Only states that the `ownsSupervisor` guard leads to call this.
@@ -99,6 +106,11 @@ const serverSetup = setup({
     emitted: {} as ServerEmitted,
   },
   actors: {
+    watchCounts: watchSessionCounts,
+    askQuit: fromPromise<
+      boolean,
+      { running: number; ask: ServerInput['askToKeepSessions'] }
+    >(({ input }): Promise<boolean> => input.ask(input.running)),
     // The Supervisor in server.json, if its pid is alive; of any version until release packaging checks it.
     readAddress: fromPromise<ServerAddress | null, ServerInput>(
       async ({ input }): Promise<ServerAddress | null> =>
@@ -145,6 +157,8 @@ const serverSetup = setup({
       Date.parse(params.address.startedAt) >= context.spawnedAt,
     stillRunning: (_, params: RunningParameters): boolean => params.running,
     ownsSupervisor: ({ context }): boolean => context.ownedPid !== null,
+    ownsRunningSessions: ({ context }): boolean =>
+      context.ownedPid !== null && context.running > 0,
   },
   delays: {
     pollDelay: pollDelayMs,
@@ -240,6 +254,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
     ownedPid: null,
     spawnedAt: null,
     failure: null,
+    running: 0,
   }),
   initial: 'locating',
   on: {
@@ -335,7 +350,65 @@ export const serverConnectionMachine = serverSetup.createMachine({
     rechecking: readingAddress(failedConnectionTarget),
     // Stops the Supervisor that did not answer, so a Retry begins from nothing.
     abandoning: waitingForSupervisorExit(failedConnectionTarget),
-    ready: { entry: 'announceReady' },
+    ready: {
+      entry: 'announceReady',
+      invoke: {
+        src: 'watchCounts',
+        input: ({ context }): ServerAddress => {
+          if (!context.address) throw new Error('The Server has no address');
+
+          return context.address;
+        },
+      },
+      initial: 'active',
+      on: {
+        'counts.changed': {
+          actions: [
+            assign({ running: ({ event }): number => event.counts.running }),
+            enqueueActions(({ event, enqueue }): void => {
+              enqueue.emit({
+                type: 'badge.changed',
+                attention: event.counts.attention,
+              });
+            }),
+          ],
+        },
+        'counts.disconnected': {
+          actions: [
+            assign({ running: 0 }),
+            enqueueActions(({ enqueue }): void => {
+              enqueue.emit({ type: 'badge.changed', attention: 0 });
+            }),
+          ],
+        },
+      },
+      states: {
+        active: {
+          on: {
+            'app.quit': { guard: 'ownsRunningSessions', target: 'confirming' },
+          },
+        },
+        confirming: {
+          invoke: {
+            id: 'askQuit',
+            src: 'askQuit',
+            input: ({ context }) => ({
+              running: context.running,
+              ask: context.askToKeepSessions,
+            }),
+            onDone: [
+              {
+                guard: ({ event }): boolean => event.output,
+                target: '#serverConnection.stopped',
+              },
+              { target: '#serverConnection.stopping' },
+            ],
+            onError: { target: 'active' },
+          },
+          on: { 'app.quit': { actions: [] } },
+        },
+      },
+    },
     failed: {
       entry: 'announceFailure',
       on: {

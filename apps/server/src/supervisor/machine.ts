@@ -21,6 +21,7 @@ export interface SupervisorInput {
   version: string;
   startedAt: string;
   watch: boolean;
+  engineEntry?: string;
 }
 
 interface SupervisorContext extends SupervisorInput {
@@ -119,6 +120,7 @@ export const supervisorMachine = setup({
         id: 'engine',
         input: ({ context }): InputFrom<typeof engineProcess> => ({
           watch: context.watch,
+          entry: context.engineEntry,
         }),
       }),
       after: { readyTimeout: { target: 'backingOff' } },
