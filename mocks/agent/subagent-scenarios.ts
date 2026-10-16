@@ -1,4 +1,5 @@
 import type { SessionUpdate } from '@agentclientprotocol/sdk';
+import { acpConfiguration } from './acp-configuration.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 
 export const subagentSessionId = 'subagent-review';
@@ -78,3 +79,18 @@ export const subagentMoreWork: ScriptedScenario = {
     ],
   },
 };
+
+export const subagentScenarios = {
+  'subagent-foreground': {
+    configOptions: acpConfiguration,
+    ...foregroundSubagent,
+  },
+  'subagent-background': {
+    configOptions: acpConfiguration,
+    ...backgroundSubagent,
+  },
+  'subagent-more-work': {
+    configOptions: acpConfiguration,
+    ...subagentMoreWork,
+  },
+} satisfies Record<string, ScriptedScenario>;
