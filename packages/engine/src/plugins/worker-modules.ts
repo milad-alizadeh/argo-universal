@@ -4,8 +4,10 @@ import {
   createContext,
   runInContext,
   SourceTextModule,
+  SyntheticModule,
   type Module,
 } from 'node:vm';
+import { bundleKit } from './kit/bundle.ts';
 import { requirePluginFile } from './plugin-files.ts';
 import type { PluginEntry } from './runtime-protocol.ts';
 import { argoSource, type ArgoBridge } from './worker-argo.ts';
@@ -17,9 +19,9 @@ import { argoSource, type ArgoBridge } from './worker-argo.ts';
 export async function registerPlugin(
   entry: PluginEntry,
   bridge: ArgoBridge,
-): Promise<void> {
-  const context = pluginContext(bridge);
-  const modules = new PluginModules(entry, context);
+): Promise<PluginInbox> {
+  const { context, inbox, kit } = pluginContext(bridge, await bundleKit());
+  const modules = new PluginModules(entry, context, kit);
 
   const bootstrap = registrationModule(context);
 
@@ -29,19 +31,57 @@ export async function registerPlugin(
       : modules.link(specifier, referencing),
   );
   await bootstrap.evaluate();
+
+  return inbox;
 }
 
-// `argoSource` builds the frozen `argo` inside the context and removes the bridge from it.
-function pluginContext(bridge: ArgoBridge): ReturnType<typeof createContext> {
+// How the worker reaches a Plugin's pages: a JSON string in, nothing out.
+export type PluginInbox = (json: string) => void;
+
+interface KitModules {
+  kit: Record<string, unknown>;
+  jsxRuntime: Record<string, unknown>;
+}
+
+interface PluginContext {
+  context: ReturnType<typeof createContext>;
+  inbox: PluginInbox;
+  kit: KitModules;
+}
+
+// The kit runs first, with microtask timers for its scheduler; `argoSource` then builds the frozen `argo` from it and removes the bridge.
+function pluginContext(bridge: ArgoBridge, kitSource: string): PluginContext {
   const context = createContext(
     { __argoBridge: bridge },
     { codeGeneration: { strings: false, wasm: false } },
   );
 
+  runInContext(kitPrelude, context);
+  runInContext(kitSource, context);
   runInContext(`globalThis.argo = ${argoSource}`, context);
 
-  return context;
+  const inbox = runInContext('globalThis.__argoInbox', context) as PluginInbox;
+  const exported = runInContext(
+    'globalThis.__argoKitExports',
+    context,
+  ) as { exports: Record<string, unknown>; jsxRuntime: Record<string, unknown> };
+  runInContext(
+    'delete globalThis.__argoInbox; delete globalThis.__argoKitExports',
+    context,
+  );
+
+  return {
+    context,
+    inbox,
+    kit: { kit: exported.exports, jsxRuntime: exported.jsxRuntime },
+  };
 }
+
+const kitPrelude = `
+  globalThis.setTimeout = (callback) => { Promise.resolve().then(callback); return 0; };
+  globalThis.clearTimeout = () => {};
+  globalThis.console = { log() {}, info() {}, warn() {}, error() {}, debug() {} };
+`;
 
 const registrationModule = (
   context: ReturnType<typeof createContext>,
@@ -56,14 +96,31 @@ class PluginModules {
 
   private readonly entry: PluginEntry;
   private readonly context: ReturnType<typeof createContext>;
+  private readonly kit: KitModules;
 
-  constructor(entry: PluginEntry, context: ReturnType<typeof createContext>) {
+  constructor(
+    entry: PluginEntry,
+    context: ReturnType<typeof createContext>,
+    kit: KitModules,
+  ) {
     this.entry = entry;
     this.context = context;
+    this.kit = kit;
   }
 
   entryModule(): Promise<SourceTextModule> {
     return this.load(resolve(this.entry.directory, this.entry.main));
+  }
+
+  private synthetic(values: Record<string, unknown>): SyntheticModule {
+    return new SyntheticModule(
+      Object.keys(values),
+      function (this: SyntheticModule) {
+        for (const [name, value] of Object.entries(values))
+          this.setExport(name, value);
+      },
+      { context: this.context },
+    );
   }
 
   private load(path: string): Promise<SourceTextModule> {
@@ -95,13 +152,20 @@ class PluginModules {
   async link(
     specifier: string,
     referencing: Module,
-  ): Promise<SourceTextModule> {
+  ): Promise<Module> {
+    if (specifier === kitSpecifier) return this.synthetic(this.kit.kit);
+
+    if (specifier === `${kitSpecifier}/jsx-runtime`)
+      return this.synthetic(this.kit.jsxRuntime);
+
     if (!specifier.startsWith('./') && !specifier.startsWith('../'))
       throw new Error(`Plugin imports must be built or relative: ${specifier}`);
 
     return this.load(resolve(dirname(referencing.identifier), specifier));
   }
 }
+
+const kitSpecifier = '@argo/plugin-kit';
 
 function builtModuleSource(source: string, path: string): string {
   if (!path.endsWith('.cjs')) return source;

@@ -7,6 +7,9 @@ import type {
 } from './runtime-protocol';
 import type { PluginStorage } from './storage';
 
+// Pages are the runtime's own; every other call is answered here.
+export type StateRequest = Exclude<PluginRequest, { api: 'view' }>;
+
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
   private readonly storage: PluginStorage;
@@ -17,7 +20,10 @@ export class PluginServices {
     this.keychain = keychain;
   }
 
-  async handle(pluginId: string, request: PluginRequest): Promise<PluginReply> {
+  async handle(
+    pluginId: string,
+    request: StateRequest,
+  ): Promise<PluginReply> {
     try {
       return { ok: true, value: await this.perform(pluginId, request) };
     } catch (error) {
@@ -34,7 +40,7 @@ export class PluginServices {
 
   private async perform(
     pluginId: string,
-    request: PluginRequest,
+    request: StateRequest,
   ): Promise<PluginValue> {
     if (request.api === 'storage')
       return this.storage.execute(pluginId, request.queries);

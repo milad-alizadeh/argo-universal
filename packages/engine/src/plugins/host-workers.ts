@@ -6,6 +6,7 @@ import {
   WorkerMessage,
   type HostMessage,
   type PluginEntry,
+  type HostEvent,
   type HostReply,
   type WorkerCall,
 } from './runtime-protocol.ts';
@@ -36,6 +37,10 @@ export class HostWorkers {
 
     if (record?.generation === generation)
       record.worker.postMessage({ type: 'reply', id, reply });
+  }
+
+  event({ pluginId, event }: HostEvent): void {
+    this.workers.get(pluginId)?.worker.postMessage({ type: 'event', event });
   }
 
   activate(entry: PluginEntry): void {

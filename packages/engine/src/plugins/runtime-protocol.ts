@@ -1,4 +1,5 @@
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
+import { ViewMessage } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
@@ -45,6 +46,11 @@ export type SecretCall = z.infer<typeof SecretCall>;
 export const PluginRequest = z.discriminatedUnion('api', [
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
+  z.object({
+    api: z.literal('view'),
+    path: z.string(),
+    message: ViewMessage,
+  }),
 ]);
 
 export type PluginRequest = z.infer<typeof PluginRequest>;
@@ -62,9 +68,28 @@ export const PluginReply = z.discriminatedUnion('ok', [
 
 export type PluginReply = z.infer<typeof PluginReply>;
 
+// What the Server asks a running Plugin's pages to do.
+export const PluginEvent = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('open'), path: z.string() }),
+  z.object({ type: z.literal('close'), path: z.string() }),
+  z.object({
+    type: z.literal('dispatch'),
+    path: z.string(),
+    eventId: z.string(),
+    payload: z.unknown().optional(),
+  }),
+]);
+
+export type PluginEvent = z.infer<typeof PluginEvent>;
+
 export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
+  z.object({
+    type: z.literal('event'),
+    pluginId: z.string(),
+    event: PluginEvent,
+  }),
   z.object({
     type: z.literal('reply'),
     pluginId: z.string(),
@@ -75,6 +100,8 @@ export const HostCommand = z.discriminatedUnion('type', [
 ]);
 
 export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
+
+export type HostEvent = Extract<z.infer<typeof HostCommand>, { type: 'event' }>;
 
 export const HostMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready') }),
@@ -112,7 +139,16 @@ export const WorkerReply = z.object({
 
 export type WorkerReply = z.infer<typeof WorkerReply>;
 
-export const WorkerCommand = z.union([z.literal('ping'), WorkerReply]);
+export const WorkerEvent = z.object({
+  type: z.literal('event'),
+  event: PluginEvent,
+});
+
+export const WorkerCommand = z.union([
+  z.literal('ping'),
+  WorkerReply,
+  WorkerEvent,
+]);
 
 export const notStarted: PluginStatus = {
   state: 'not-started',
