@@ -30,7 +30,7 @@ Feature: Desktop Session notifications
     And one desktop notification for "Ask for issue details" says "Needs your input"
     When I click the desktop notification from Settings
     Then the desktop notification opens its Session in the foreground
-    When I submit the Elicitation title "Notification opens the Session"
+    When I decline the desktop Elicitation
     Then the Agent replies "The shared fixture completed this Turn."
     And there is no additional desktop notification
 

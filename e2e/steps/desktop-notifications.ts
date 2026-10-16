@@ -1,14 +1,14 @@
 import type { ElectronApplication } from '@playwright/test';
-import { z } from 'zod';
 import { installNotificationStub } from '../desktop/notification-api.test.mocks';
+import {
+  BackgroundState,
+  backgroundWindow,
+  windowState,
+} from '../desktop/window-state';
 import { type App, expect } from '../fixtures';
 import { sessionId } from './feed';
 import { Given, When, Then } from './fixtures';
 import { expectMessage, messageLabel, sessionOpenTimeout } from './new-session';
-
-const BackgroundState = z.enum(['hidden', 'minimized', 'unfocused']);
-
-type BackgroundState = z.infer<typeof BackgroundState>;
 
 function desktopApplication(app: App): ElectronApplication {
   if (!app.desktop)
@@ -48,58 +48,6 @@ When(
       });
   },
 );
-
-async function backgroundWindow(
-  application: ElectronApplication,
-  state: BackgroundState,
-): Promise<void> {
-  await showDesktopWindow(application);
-  await expect
-    .poll(() => windowState(application))
-    .toMatchObject({ focused: true });
-  await setBackgroundState(application, state);
-}
-
-async function setBackgroundState(
-  application: ElectronApplication,
-  state: BackgroundState,
-): Promise<void> {
-  await application.evaluate(({ BrowserWindow }, next): void => {
-    const window = BrowserWindow.getAllWindows()[0];
-
-    if (!window) throw new Error('Expected the App window');
-    const actions = {
-      hidden: 'hide',
-      minimized: 'minimize',
-      unfocused: 'blur',
-    } as const;
-    window[actions[next]]();
-  }, state);
-}
-
-async function showDesktopWindow(
-  application: ElectronApplication,
-): Promise<void> {
-  await application.evaluate(({ BrowserWindow }): void => {
-    BrowserWindow.getAllWindows()[0]?.show();
-  });
-}
-
-function windowState(
-  application: ElectronApplication,
-): Promise<{ focused: boolean; visible: boolean; minimized: boolean }> {
-  return application.evaluate(({ BrowserWindow }) => {
-    const window = BrowserWindow.getAllWindows()[0];
-
-    if (!window) throw new Error('Expected the App window');
-
-    return {
-      focused: window.isFocused(),
-      visible: window.isVisible(),
-      minimized: window.isMinimized(),
-    };
-  });
-}
 
 Then(
   'one desktop notification for {string} says {string}',
@@ -183,3 +131,10 @@ When(
     ).toHaveCount(0);
   },
 );
+
+When('I decline the desktop Elicitation', async ({ page }): Promise<void> => {
+  await page
+    .getByRole('region', { name: 'Elicitation questions' })
+    .getByRole('button', { name: 'Decline', exact: true })
+    .click();
+});
