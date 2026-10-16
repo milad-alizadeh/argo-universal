@@ -1,5 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { LayoutAnimation, Platform } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
 import {
   flatEntries,
   listEntries,
@@ -28,19 +27,6 @@ export function useCollapsedProjects(): CollapsedProjects {
   }, []);
 
   return { collapsed, toggleProject };
-}
-
-// On native, rows that move, appear or leave animate into place.
-export function useAnimateReorder(entries: SessionsListEntry[]): void {
-  const entryOrder = entries.map((entry) => entry.id).join('|');
-  const previousOrder = useRef(entryOrder);
-  useLayoutEffect(() => {
-    if (previousOrder.current !== entryOrder && Platform.OS !== 'web') {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    }
-
-    previousOrder.current = entryOrder;
-  }, [entryOrder]);
 }
 
 type EntriesInput = Pick<

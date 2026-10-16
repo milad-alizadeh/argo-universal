@@ -2,58 +2,32 @@ import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import type { AgentsListOutput } from '@repo/contracts';
 import type * as React from 'react';
 import { useCallback, useMemo } from 'react';
-import { virtualListPosition } from '#primitives/lists/virtual-list-item';
 import type { SessionsLayout } from '../../state/sessions-layout';
-import { showsSessionAge } from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
-import { sessionAge, useAgeFrom } from './session-age';
 import {
   type CollapsedProjects,
-  useAnimateReorder,
   useCollapsedProjects,
   useListEntries,
 } from './sessions-list-entries-state';
 import type { SessionsListProps } from './sessions-list-props';
+import { useAnimateReorder } from './sessions-list-reorder';
+import {
+  type SessionRowContext,
+  sessionRowProps,
+  useSessionRowContext,
+} from './sessions-list-row-context';
 import {
   NoSessionsYet,
   ProjectListHeading,
   type ProjectListHeadingProps,
   SessionListRow,
-  type SessionListRowProps,
 } from './sessions-list-rows';
-
-interface SessionRowContext {
-  agentLogos: Map<string, string>;
-  layout?: SessionsLayout;
-  selectedSessionId?: string;
-  // When rows show how long ago they were active, the time that counts from.
-  ageFrom?: number;
-  onSelect: (id: string) => void;
-}
 
 type HeadingContext = Pick<
   ProjectListHeadingProps,
   'onNewSession' | 'onProjectSettings'
 > &
   CollapsedProjects;
-
-function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
-  return useMemo(
-    () => new Map(agents.map((agent) => [agent.agent, agent.logo])),
-    [agents],
-  );
-}
-
-function useSessionRowContext(props: SessionsListProps): SessionRowContext {
-  const { agents, layout, selectedSessionId, onSelect } = props;
-  const agentLogos = useAgentLogos(agents);
-  const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
-
-  return useMemo(
-    () => ({ agentLogos, layout, selectedSessionId, ageFrom, onSelect }),
-    [agentLogos, layout, selectedSessionId, ageFrom, onSelect],
-  );
-}
 
 function useHeadingContext(
   { onNewSession, onProjectSettings }: SessionsListProps,
@@ -63,21 +37,6 @@ function useHeadingContext(
     () => ({ collapsed, toggleProject, onNewSession, onProjectSettings }),
     [collapsed, toggleProject, onNewSession, onProjectSettings],
   );
-}
-
-function sessionRowProps(
-  item: Extract<SessionsListEntry, { kind: 'session' }>,
-  context: SessionRowContext,
-): SessionListRowProps {
-  return {
-    session: item.session,
-    logo: context.agentLogos.get(item.session.agent) ?? '',
-    selected: context.selectedSessionId === item.id,
-    trailing: sessionAge(item.session, context.ageFrom),
-    layout: context.layout,
-    position: virtualListPosition(item.first, item.last),
-    onSelect: context.onSelect,
-  };
 }
 
 function projectHeading(
@@ -111,7 +70,9 @@ function renderEntry(
 
 const noEntries: SessionsListEntry[] = [];
 
-interface ListRows {
+export interface ListRows {
+  // Whether the list is moving rows now.
+  animating: boolean;
   data: SessionsListEntry[];
   extraData: {
     agents: AgentsListOutput;
@@ -137,8 +98,9 @@ function useExtraData(
 function useRenderItem(
   props: SessionsListProps,
   collapsedProjects: CollapsedProjects,
+  animating: boolean,
 ): ListRows['renderItem'] {
-  const sessionContext = useSessionRowContext(props);
+  const sessionContext = useSessionRowContext(props, animating);
   const headingContext = useHeadingContext(props, collapsedProjects);
 
   return useCallback(
@@ -151,11 +113,12 @@ function useRenderItem(
 export function useListRows(props: SessionsListProps): ListRows {
   const collapsedProjects = useCollapsedProjects();
   const entries = useListEntries(props, collapsedProjects.collapsed);
-  useAnimateReorder(entries);
+  const animating = useAnimateReorder(entries);
 
   return {
+    animating,
     data: props.placeholder ? noEntries : entries,
     extraData: useExtraData(props, collapsedProjects.collapsed),
-    renderItem: useRenderItem(props, collapsedProjects),
+    renderItem: useRenderItem(props, collapsedProjects, animating),
   };
 }
