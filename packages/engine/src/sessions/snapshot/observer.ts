@@ -44,6 +44,7 @@ class SessionSnapshotObserver implements Subscription {
     this.feed = new SnapshotFeed(options, sessionId, {
       changed: (): void => this.changed(),
       error: (error): void => this.reject(error),
+      sessionIds: (): readonly string[] => this.publication.sessionIds(),
     });
     this.publication = new SnapshotPublication(options, sessionId, listener);
   }

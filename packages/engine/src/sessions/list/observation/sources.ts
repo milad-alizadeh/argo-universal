@@ -1,8 +1,8 @@
 import type { Subscription } from 'xstate';
 import type { FeedActorRef } from '../../../feed';
 import type { SessionActorRef } from '../../session-machine';
+import { onWriterChange, type WriterChange } from '../../writer-changes';
 import type { SessionListEvent, SessionListMachineInput } from './machine';
-import { onWriterChange, type WriterChange } from './writer-changes';
 
 export class SessionListSources {
   private readonly feeds = new Map<FeedActorRef, Subscription>();

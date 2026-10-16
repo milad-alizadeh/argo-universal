@@ -1,6 +1,6 @@
 import type { Subscription } from 'xstate';
-import type { WriterActorRef, WriterJob } from '../../../storage';
-import { changedSessionIds, changedTurnIds } from '../../session-storage';
+import type { WriterActorRef, WriterJob } from '../storage';
+import { changedSessionIds, changedTurnIds } from './session-storage';
 
 export type WriterChange = { sessionIds: string[]; turnIds: string[] };
 

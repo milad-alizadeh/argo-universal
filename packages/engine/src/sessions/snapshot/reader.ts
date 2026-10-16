@@ -2,7 +2,7 @@ import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import type { FeedDeps } from '../../feed';
 import { createLiveHeaderRowsReader } from '../live-header';
 import type { SessionActorRef } from '../session-machine';
-import { createSessionReader } from '../session-record';
+import { createQueuedSessionReader } from '../session-record';
 import { storedShells } from '../shells/reader';
 import { createSubagentsReader } from '../subagents';
 import {
@@ -11,7 +11,7 @@ import {
   type StoredSnapshot,
 } from './snapshot';
 
-type SnapshotStored = ReturnType<ReturnType<typeof createSessionReader>>;
+type SnapshotStored = ReturnType<ReturnType<typeof createQueuedSessionReader>>;
 
 type SnapshotDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
 
@@ -27,13 +27,13 @@ interface SnapshotRead {
 }
 
 export class SessionSnapshotReader {
-  private readonly readSession: ReturnType<typeof createSessionReader>;
+  private readonly readSession: ReturnType<typeof createQueuedSessionReader>;
   private readonly readSubagents: ReturnType<typeof createSubagentsReader>;
   private readonly readRows: ReturnType<typeof createLiveHeaderRowsReader>;
 
   public constructor(private readonly deps: SnapshotDeps) {
     this.readSubagents = createSubagentsReader(deps);
-    this.readSession = createSessionReader(deps.database);
+    this.readSession = createQueuedSessionReader(deps);
     this.readRows = createLiveHeaderRowsReader(deps);
   }
 

@@ -4,27 +4,16 @@ import type {
   SubagentUpdate,
   Turn,
 } from '@repo/contracts';
-import { latestTurnOf } from '../turns';
 
 type ChildSession = Pick<SessionRecord, 'id' | 'parentSessionId' | 'title'>;
 
-export function toSubagents(
-  children: readonly ChildSession[],
-  turns: readonly Turn[],
-  updates: readonly SubagentUpdate[],
-): Subagent[] {
-  return children.flatMap((child): Subagent[] =>
-    projectChild(child, turns, updates),
-  );
-}
-
-function projectChild(
+// A child Session with its latest Turn; a Session without a parent is no Subagent.
+export function toSubagent(
   child: ChildSession,
-  turns: readonly Turn[],
+  latest: Turn | undefined,
   updates: readonly SubagentUpdate[],
 ): Subagent[] {
   if (child.parentSessionId === null) return [];
-  const latest = latestTurnOf(turns, child.id);
 
   return [
     {

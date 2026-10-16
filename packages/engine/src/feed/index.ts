@@ -19,6 +19,8 @@ export {
 
 export type { FeedDeps } from './feed';
 
+export { readFeedRows } from './merged-rows';
+
 export {
   FeedRowsJob,
   projectQueuedFeedSession,

@@ -1,6 +1,7 @@
 import { SessionRecord, Turn } from '@repo/contracts';
+import type { Database } from '@repo/db';
 import { project, session, turn } from '@repo/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import type { SQLiteUpdateSetSource } from 'drizzle-orm/sqlite-core';
 import { projectQueuedFeedSession, queuedFeedSessionId } from '../feed';
 import {
@@ -11,6 +12,7 @@ import {
 } from '../storage';
 import { SessionArchiveJob } from './archive/archive-storage';
 import { ShellWriteJob } from './shells/storage';
+import { decodeStoredTurn, latestTurnOf, storedTurnColumns } from './turns';
 
 type SessionInsert = {
   session: typeof session.$inferInsert;
@@ -260,11 +262,19 @@ export class TurnUpdateJob implements WriterJob {
       .run();
   }
 
+  // An undefined column is left as it is, as the commit leaves it.
   public project(turns: Map<string, Turn>): void {
     const row = turns.get(this.change.id);
 
+    const set = Object.entries(this.change.set).filter(
+      ([, value]): boolean => value !== undefined,
+    );
+
     if (row)
-      turns.set(this.change.id, Turn.parse({ ...row, ...this.change.set }));
+      turns.set(
+        this.change.id,
+        Turn.parse({ ...row, ...Object.fromEntries(set) }),
+      );
   }
 
   public turnId(): string {
@@ -342,6 +352,29 @@ export type { QueuedSessionRows };
 export const readQueuedSessionRows = (
   writer: WriterActorRef | undefined,
 ): QueuedSessionRows => new QueuedSessionRows(readQueuedJobs(writer));
+
+// Where a read finds rows: committed in the database, or queued in the Writer.
+export type RowSources = {
+  database: Database;
+  writer: WriterActorRef | undefined;
+};
+
+// A Session's latest Turn as the Writer will leave it: the stored latest Turn with the queued Turn jobs replayed over it.
+export function readLatestTurn(
+  { database, writer }: RowSources,
+  sessionId: string,
+): Turn | undefined {
+  const stored = database
+    .select(storedTurnColumns)
+    .from(turn)
+    .where(eq(turn.sessionId, sessionId))
+    .orderBy(desc(turn.startedAt), desc(turn.id))
+    .limit(1)
+    .all()
+    .map(decodeStoredTurn);
+
+  return latestTurnOf(readQueuedSessionRows(writer).turns(stored), sessionId);
+}
 
 export const changedSessionIds = (job: WriterJob): string[] => {
   if (

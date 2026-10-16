@@ -7,10 +7,10 @@ import {
 } from 'xstate';
 import type { WriterActorRef } from '../../../storage';
 import type { OpenSessionsActorRef } from '../../open-sessions-machine';
+import type { WriterChange } from '../../writer-changes';
 import type { SessionListState } from '../state';
 import { refreshSessionList } from './cache';
 import { SessionListSources } from './sources';
-import type { WriterChange } from './writer-changes';
 
 const listFailedEvent = 'list.failed';
 

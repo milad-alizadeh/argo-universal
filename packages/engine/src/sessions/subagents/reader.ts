@@ -1,28 +1,23 @@
 import {
-  SessionRecord,
   Subagent,
+  type SessionRecord,
   type SessionUpdate,
   type SubagentUpdate,
-  type Turn,
 } from '@repo/contracts';
-import type { Database } from '@repo/db';
-import { session, feedRow, turn } from '@repo/db/schema';
+import { feedRow } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import {
-  hydrateStoredFeedRow,
-  newestRows,
-  readQueuedFeed,
+  readFeedRows,
   storedFeedColumns,
   type FeedDeps,
   type FeedRowWrite,
 } from '../../feed';
-import { decodeStoredTurn, storedTurnColumns } from '../turns';
-import { toSubagents } from './subagents';
+import { readLatestTurn, type RowSources } from '../session-storage';
+import { readChildSessions, type ChildSessionRead } from './children';
+import { toSubagent } from './subagents';
 
 type SubagentDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
-
-type ChildRow = Pick<SessionRecord, 'id' | 'parentSessionId' | 'title'>;
 
 export function createSubagentsReader(
   deps: SubagentDeps,
@@ -37,31 +32,30 @@ class SubagentsReader {
   public constructor(private readonly deps: SubagentDeps) {}
 
   public read(sessionId: string): Subagent[] {
-    const children = this.deps.database
-      .select({
-        id: session.id,
-        parentSessionId: session.parentSessionId,
-        title: session.title,
-      })
-      .from(session)
-      .where(eq(session.parentSessionId, sessionId))
-      .all();
+    const sources = {
+      database: this.deps.database,
+      writer: this.deps.findWriter(),
+    };
+
+    const children = readChildSessions(sources, sessionId);
 
     if (children.length === 0) return [];
     const updates = this.updates(sessionId);
 
-    return children.flatMap((row): Subagent[] => this.child(row, updates));
+    return children.flatMap((read): Subagent[] =>
+      this.child(sources, read, updates),
+    );
   }
 
-  private child(row: ChildRow, updates: SubagentUpdate[]): Subagent[] {
+  private child(
+    sources: RowSources,
+    read: ChildSessionRead,
+    updates: SubagentUpdate[],
+  ): Subagent[] {
     try {
-      const child = childSession.parse(row);
+      const child = read();
 
-      return toSubagents(
-        [child],
-        readLatestTurn(this.deps.database, child.id),
-        updates,
-      ).map((value): Subagent => Subagent.parse(value));
+      return child ? readSubagent(sources, child, updates) : [];
     } catch (error) {
       this.rejections.report('rejected Subagent shape', error);
 
@@ -70,20 +64,18 @@ class SubagentsReader {
   }
 
   private updates(sessionId: string): SubagentUpdate[] {
-    const stored = this.storedUpdates(sessionId);
-    const queued = readQueuedFeed(this.deps.findWriter(), sessionId).rows;
+    const { rows, rejected } = readFeedRows(this.deps, sessionId, {
+      stored: this.storedUpdates(sessionId),
+      keep: isSubagentUpdate,
+    });
 
-    const live =
-      this.deps.findFeed(sessionId)?.getSnapshot().context.rows ?? {};
+    for (const error of rejected)
+      this.rejections.report('rejected Subagent shape', error);
 
-    return [
-      ...newestRows([...stored, ...queued, ...Object.values(live)]).values(),
-    ].filter(
-      (row): row is SubagentUpdate => row.sessionUpdate === 'subagent_update',
-    );
+    return rows;
   }
 
-  private storedUpdates(sessionId: string): SessionUpdate[] {
+  private storedUpdates(sessionId: string): FeedRowWrite[] {
     return this.deps.database
       .select(storedFeedColumns)
       .from(feedRow)
@@ -93,34 +85,19 @@ class SubagentsReader {
           eq(feedRow.sessionUpdate, 'subagent_update'),
         ),
       )
-      .all()
-      .flatMap((row): SessionUpdate[] => this.hydrate(sessionId, row));
-  }
-
-  private hydrate(sessionId: string, row: FeedRowWrite): SessionUpdate[] {
-    try {
-      return [hydrateStoredFeedRow(sessionId, row)];
-    } catch (error) {
-      this.rejections.report('rejected Subagent shape', error);
-
-      return [];
-    }
+      .all();
   }
 }
 
-const childSession = SessionRecord.pick({
-  id: true,
-  parentSessionId: true,
-  title: true,
-});
-
-function readLatestTurn(database: Database, sessionId: string): Turn[] {
-  return database
-    .select(storedTurnColumns)
-    .from(turn)
-    .where(eq(turn.sessionId, sessionId))
-    .orderBy(desc(turn.startedAt), desc(turn.id))
-    .limit(1)
-    .all()
-    .map(decodeStoredTurn);
+function readSubagent(
+  sources: RowSources,
+  child: SessionRecord,
+  updates: SubagentUpdate[],
+): Subagent[] {
+  return toSubagent(child, readLatestTurn(sources, child.id), updates).map(
+    (value): Subagent => Subagent.parse(value),
+  );
 }
+
+const isSubagentUpdate = (row: SessionUpdate): row is SubagentUpdate =>
+  row.sessionUpdate === 'subagent_update';
