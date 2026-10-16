@@ -6,9 +6,9 @@ export interface DesktopBridge {
     close(): void;
   };
   symbols?: {
-    render(request: {
+    render: (request: {
       name: string;
       pointSize: number;
-    }): Promise<string | null>;
+    }) => Promise<string | null>;
   };
 }
