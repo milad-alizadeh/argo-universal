@@ -4,12 +4,13 @@ import {
   heldModeSteps,
   smallModelUpdate,
 } from './acp-configuration.ts';
-import { contextUsageFixtures } from './context-usage.ts';
+import { contextUsageScenarios } from './context-usage.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
   feedWorkSteps,
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
+import { notificationScenarios } from './notification-scenarios.ts';
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
@@ -54,6 +55,7 @@ const scenario = (steps: ScriptedStep[]): ScriptedScenario => ({
 // Shared named scenarios; tests reuse them instead of scripting their own peer.
 export const scenarios = {
   reply: scenario([reply]),
+  ...notificationScenarios,
   ...shellScenarios,
   ...subagentScenarios,
   'feed-history': scenario(feedHistorySteps),
@@ -126,18 +128,7 @@ export const scenarios = {
     },
     reply,
   ]),
-  'usage-low': scenario([
-    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.low }),
-    reply,
-  ]),
-  'usage-high': scenario([
-    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.high }),
-    reply,
-  ]),
-  'usage-full': scenario([
-    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.full }),
-    reply,
-  ]),
+  ...contextUsageScenarios(reply),
   'held-mode': scenario(heldModeSteps),
   configuration: scenario([update(smallModelUpdate), reply]),
   'write-pressure': scenario([

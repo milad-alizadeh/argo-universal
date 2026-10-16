@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import type { Pressable, View } from 'react-native';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 import { isModifiedClick } from './web-row-link';
 
 export function interactionProps(
-  item: GroupedListItemProps,
+  item: ResolvedItemProps,
   press: () => void,
 ): ReturnType<typeof triggerProps> &
   ReturnType<typeof switchKeyboardProps> & { disabled: boolean | undefined } {
@@ -16,7 +16,7 @@ export function interactionProps(
 }
 
 export function linkProps(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
 ): React.ComponentProps<typeof Pressable> & { href?: string } {
   return {
     role: props.accessibilityRole ?? 'link',
@@ -26,7 +26,7 @@ export function linkProps(
 }
 
 function rowPress(
-  onPress: GroupedListItemProps['onPress'],
+  onPress: ResolvedItemProps['onPress'],
 ): React.ComponentProps<typeof Pressable>['onPress'] {
   return (event) => {
     if (isModifiedClick(event)) return;
@@ -36,7 +36,7 @@ function rowPress(
 }
 
 export function selectionProps(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
 ): Pick<
   React.ComponentProps<typeof View>,
   'accessibilityState' | 'aria-checked'
@@ -50,11 +50,11 @@ export function selectionProps(
   };
 }
 
-function currentPage(props: GroupedListItemProps): 'page' | undefined {
+function currentPage(props: ResolvedItemProps): 'page' | undefined {
   return !props.accessibilityRole && props.selected ? 'page' : undefined;
 }
 
-function triggerProps(props: GroupedListItemProps): React.ComponentProps<
+function triggerProps(props: ResolvedItemProps): React.ComponentProps<
   typeof Pressable
 > & {
   'aria-haspopup'?: 'dialog';
@@ -71,12 +71,12 @@ function triggerProps(props: GroupedListItemProps): React.ComponentProps<
 }
 
 function hoverProps(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
 ): Pick<React.ComponentProps<typeof Pressable>, 'onHoverIn' | 'onHoverOut'> {
   return { onHoverIn: props.onHoverIn, onHoverOut: props.onHoverOut };
 }
 
-function rowHref(props: GroupedListItemProps): string | undefined {
+function rowHref(props: ResolvedItemProps): string | undefined {
   return props.accessibilityRole ? undefined : (props.href ?? '#');
 }
 
@@ -87,7 +87,7 @@ interface SwitchKeyboardProps {
 
 // React Native Web handles Space for buttons only; a switch row owns the same activation.
 function switchKeyboardProps(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
   press: () => void,
 ): SwitchKeyboardProps {
   if (props.accessibilityRole !== 'switch') return {};

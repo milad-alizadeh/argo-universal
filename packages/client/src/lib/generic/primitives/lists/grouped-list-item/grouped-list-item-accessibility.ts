@@ -9,21 +9,21 @@ import {
 import { Platform } from 'react-native';
 import {
   groupedListItemName,
-  type GroupedListItemProps,
+  type ResolvedItemProps,
 } from './grouped-list-item-props';
 
 type Modifiers = NonNullable<ColumnProps['modifiers']>;
 
-type RowSlots = Pick<GroupedListItemProps, 'accessory' | 'detail' | 'control'>;
+type RowSlots = Pick<ResolvedItemProps, 'accessory' | 'detail' | 'control'>;
 
 export type RowTextAccessibilityProps = RowSlots &
-  Pick<GroupedListItemProps, 'accessibilityLabel' | 'onPress'>;
+  Pick<ResolvedItemProps, 'accessibilityLabel' | 'onPress'>;
 
 function hasRowControls(props: RowSlots): boolean {
   return !!props.accessory || !!props.detail || !!props.control;
 }
 
-function rowAccessibilityModifiers(props: GroupedListItemProps): Modifiers {
+function rowAccessibilityModifiers(props: ResolvedItemProps): Modifiers {
   if (Platform.OS !== 'ios') return androidAccessibility(props);
 
   return [
@@ -35,21 +35,21 @@ function rowAccessibilityModifiers(props: GroupedListItemProps): Modifiers {
 
 // Ordinary Buttons already group their children; Slots must keep their own focus and actions.
 function rowElement(
-  props: RowSlots & Pick<GroupedListItemProps, 'onPress'>,
+  props: RowSlots & Pick<ResolvedItemProps, 'onPress'>,
 ): Modifiers {
   if (hasRowControls(props)) return [accessibilityElement('contain')];
 
   return props.onPress ? [] : [accessibilityElement('ignore')];
 }
 
-function rowLabel(props: GroupedListItemProps): Modifiers {
+function rowLabel(props: ResolvedItemProps): Modifiers {
   if (hasRowControls(props) && !namedGroup(props)) return [];
 
   return [accessibilityLabel(groupedListItemName(props))];
 }
 
 // Compose's Column does not supply selected/disabled row state.
-function androidAccessibility(props: GroupedListItemProps): Modifiers {
+function androidAccessibility(props: ResolvedItemProps): Modifiers {
   const name = hasRowControls(props)
     ? props.accessibilityLabel
     : groupedListItemName(props);
@@ -77,7 +77,7 @@ export function rowValueAccessibility(
 }
 
 function androidStates(
-  props: Pick<GroupedListItemProps, 'selected' | 'disabled'>,
+  props: Pick<ResolvedItemProps, 'selected' | 'disabled'>,
 ): (string | undefined)[] {
   return [
     props.selected ? 'Selected' : undefined,
@@ -90,7 +90,7 @@ function namedGroup(props: RowTextAccessibilityProps): boolean {
 }
 
 function hasGroupName(
-  props: Pick<GroupedListItemProps, 'accessibilityLabel' | 'onPress'>,
+  props: Pick<ResolvedItemProps, 'accessibilityLabel' | 'onPress'>,
 ): boolean {
   if (props.accessibilityLabel) return true;
 
@@ -107,16 +107,14 @@ function androidHidden(shouldHide: boolean, props: RowSlots): Modifiers {
   return shouldHide || !hasRowControls(props) ? [clearSemantics()] : [];
 }
 
-export function rowContainerAccessibility(
-  props: GroupedListItemProps,
-): Modifiers {
+export function rowContainerAccessibility(props: ResolvedItemProps): Modifiers {
   if (Platform.OS === 'ios' && rowHasHeadlineAction(props))
     return [accessibilityElement('contain')];
 
   return rowAccessibilityModifiers(props);
 }
 
-export function rowActionAccessibility(props: GroupedListItemProps): Modifiers {
+export function rowActionAccessibility(props: ResolvedItemProps): Modifiers {
   return [
     accessibilityLabel(groupedListItemName(props)),
     ...(props.selected ? [accessibilityAddTraits(['isSelected'])] : []),
@@ -128,13 +126,13 @@ export function rowDisclosureAccessibility(): Modifiers {
 }
 
 export function rowHasHeadlineAction(
-  props: RowSlots & Pick<GroupedListItemProps, 'onPress'>,
+  props: RowSlots & Pick<ResolvedItemProps, 'onPress'>,
 ): boolean {
   return !!props.onPress && hasRowControls(props);
 }
 
 export function rowUsesStockButton(
-  props: RowSlots & Pick<GroupedListItemProps, 'onPress'>,
+  props: RowSlots & Pick<ResolvedItemProps, 'onPress'>,
 ): boolean {
   return Platform.OS === 'ios' && !!props.onPress && !hasRowControls(props);
 }

@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import {
   GroupedListItem,
   type GroupedListItemProps,
@@ -14,20 +13,18 @@ import {
 import { AgentFooter } from './agent-links';
 
 export function AgentListItem(props: AgentCardProps): React.JSX.Element {
-  const wide = useWide();
-
   return (
     <GroupedListItem
-      {...cardContent(props.agent, wide)}
-      accessory={<AgentButton {...props} wide={wide} />}
+      {...cardContent(props.agent)}
+      accessory={{
+        compact: <AgentButton {...props} wide={false} />,
+        wide: <AgentButton {...props} wide />,
+      }}
     />
   );
 }
 
-const cardContent = (
-  agent: AgentRowEntry,
-  wide: boolean,
-): GroupedListItemProps => ({
+const cardContent = (agent: AgentRowEntry): GroupedListItemProps => ({
   label: agent.name,
   labelDetail: `v${agent.version}`,
   variant: 'card',
@@ -36,7 +33,7 @@ const cardContent = (
     numberOfLines: 2,
   },
   leading: cardLogo(agent),
-  footer: wide ? <AgentFooter agent={agent} /> : undefined,
+  footer: { compact: undefined, wide: <AgentFooter agent={agent} /> },
 });
 
 const cardLogo = (agent: AgentRowEntry): React.JSX.Element => (

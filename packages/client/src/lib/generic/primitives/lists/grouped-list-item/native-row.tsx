@@ -9,7 +9,7 @@ import type { IconName } from '../../../symbols/icon-names';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
 import {
-  type GroupedListItemProps,
+  type ResolvedItemProps,
   groupedListItemStatus,
 } from './grouped-list-item-props';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
@@ -20,7 +20,7 @@ function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
 
 type RowImageProps = {
   image: ReactElement;
-  variant?: GroupedListItemProps['variant'];
+  variant?: ResolvedItemProps['variant'];
 };
 
 // An image, such as an Agent's logo, centred in the native row's icon slot.
@@ -38,11 +38,11 @@ export function NativeRowImage({
 }
 
 const imageRole = (
-  variant: GroupedListItemProps['variant'],
+  variant: ResolvedItemProps['variant'],
 ): 'identity' | 'row' => (variant === 'card' ? 'identity' : 'row');
 
 function NativeRowDot(
-  props: Pick<GroupedListItemProps, 'needsAttention' | 'status'>,
+  props: Pick<ResolvedItemProps, 'needsAttention' | 'status'>,
 ): React.JSX.Element | null {
   const status = groupedListItemStatus(props);
 
@@ -57,7 +57,7 @@ function NativeRowDot(
 
 function NativeRowAccessory({
   accessory,
-}: Pick<GroupedListItemProps, 'accessory'>): React.JSX.Element | null {
+}: Pick<ResolvedItemProps, 'accessory'>): React.JSX.Element | null {
   if (!accessory) return null;
 
   return (
@@ -69,7 +69,7 @@ function NativeRowAccessory({
 
 export function NativeRowStatus(
   props: Pick<
-    GroupedListItemProps,
+    ResolvedItemProps,
     'needsAttention' | 'status' | 'accessory' | 'control'
   >,
 ): React.JSX.Element {
@@ -90,7 +90,7 @@ function NativeRowGlyph({
 }: {
   icon?: IconName;
   leading?: ReactElement;
-  variant?: GroupedListItemProps['variant'];
+  variant?: ResolvedItemProps['variant'];
 }): React.JSX.Element | null {
   if (leading) return <NativeRowImage image={leading} variant={variant} />;
 
@@ -99,7 +99,7 @@ function NativeRowGlyph({
 
 // The row's icon or image, or a spinner in the icon's slot while the row loads.
 export function NativeRowLeading(
-  props: Pick<GroupedListItemProps, 'icon' | 'loading' | 'leading' | 'variant'>,
+  props: Pick<ResolvedItemProps, 'icon' | 'loading' | 'leading' | 'variant'>,
 ): React.JSX.Element | null {
   if (props.loading) return <NativeRowSpinner />;
 
@@ -120,7 +120,7 @@ function NativeRowSpinner(): React.JSX.Element {
 // The row's detail control under it, such as an effort slider; the List's row insets pad it.
 export function NativeRowDetail({
   detail,
-}: Pick<GroupedListItemProps, 'detail'>): React.JSX.Element | null {
+}: Pick<ResolvedItemProps, 'detail'>): React.JSX.Element | null {
   if (!detail) return null;
 
   return (

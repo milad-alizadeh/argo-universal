@@ -36,6 +36,7 @@ type EngineConnections = {
   database: Database;
   openSessions: OpenSessionsActorRef;
   databaseWriter: ActorRefFrom<typeof writerMachine>;
+  notifications: HttpServer['notifications'];
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
 };
@@ -119,6 +120,7 @@ function readEngineTestHost(engine: EngineActor): EngineConnections {
     database,
     openSessions,
     databaseWriter,
+    notifications: server.notifications,
     createCaller: server.createCaller,
     caller: server.createCaller(),
   };

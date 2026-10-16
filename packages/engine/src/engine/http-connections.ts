@@ -1,6 +1,7 @@
 import type { Server } from 'node:http';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer, type VerifyClientCallbackAsync } from 'ws';
+import { createRpcContext } from '../rpc';
 import type { RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
 
@@ -31,6 +32,7 @@ export function connectWebSockets(
   const handler = applyWSSHandler({
     wss: webSocketServer,
     router,
+    createContext: ({ req }) => createRpcContext(req.socket),
     keepAlive: { enabled: true, pingMs: 30_000, pongWaitMs: 5000 },
   });
 

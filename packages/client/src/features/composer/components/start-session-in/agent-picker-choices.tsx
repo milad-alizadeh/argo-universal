@@ -2,7 +2,6 @@ import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { RegistryIcon } from '#features/agents';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { GroupedList } from '#primitives/lists/grouped-list';
@@ -22,8 +21,7 @@ const maximumHeight = 320;
 const screenFraction = 0.6;
 
 export function AgentChoices(props: AgentChoiceProps): React.JSX.Element {
-  const wide = useWide(),
-    { height } = useWindowDimensions();
+  const { height } = useWindowDimensions();
 
   const agents = [...props.agents].sort((a, b) => a.name.localeCompare(b.name));
 
@@ -34,14 +32,15 @@ export function AgentChoices(props: AgentChoiceProps): React.JSX.Element {
     <WebChoices
       {...props}
       agents={agents}
-      maxHeight={wide ? maximumHeight : height * screenFraction}
+      maxHeight={{ compact: height * screenFraction, wide: maximumHeight }}
     />
   );
 }
 
-function WebChoices(
-  props: AgentChoiceProps & { maxHeight: number },
-): React.JSX.Element {
+type ScrollableChoicesProps = AgentChoiceProps &
+  Pick<React.ComponentProps<typeof ScrollFadeList>, 'maxHeight'>;
+
+function WebChoices(props: ScrollableChoicesProps): React.JSX.Element {
   return (
     <View className="px-4 wide:px-0">
       <GroupedListSection>
@@ -51,9 +50,7 @@ function WebChoices(
   );
 }
 
-function ChoicesList(
-  props: AgentChoiceProps & { maxHeight: number },
-): React.JSX.Element {
+function ChoicesList(props: ScrollableChoicesProps): React.JSX.Element {
   return (
     <ScrollFadeList
       data={props.agents}

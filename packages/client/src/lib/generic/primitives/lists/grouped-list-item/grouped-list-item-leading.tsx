@@ -4,10 +4,10 @@ import { Icon, IconSlot, IconSpinner } from '#primitives/display/icon';
 import { useOverlayList } from '#primitives/fields/field-layout';
 import type { IconRole } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 
 type LeadingProps = Pick<
-  GroupedListItemProps,
+  ResolvedItemProps,
   'icon' | 'loading' | 'leading' | 'size' | 'variant'
 > & {
   className: string;
@@ -41,7 +41,7 @@ function RowGlyph({
 }
 
 // An image sits centred in the row icon's slot, or on a large row's 40 tile.
-type LeadingSlotProps = Pick<GroupedListItemProps, 'size' | 'variant'> & {
+type LeadingSlotProps = Pick<ResolvedItemProps, 'size' | 'variant'> & {
   children: React.ReactNode;
 };
 
@@ -63,7 +63,7 @@ function LeadingSlot({
 }
 
 const leadingSlotProps = (
-  variant: GroupedListItemProps['variant'],
+  variant: ResolvedItemProps['variant'],
   role: IconRole,
 ): Pick<React.ComponentProps<typeof IconSlot>, 'role' | 'className'> => ({
   role: variant === 'card' ? 'identity' : role,
@@ -79,7 +79,7 @@ function useLeadingRole(): IconRole {
 function RowIcon({
   icon,
   className,
-}: Required<Pick<GroupedListItemProps, 'icon'>> & {
+}: Required<Pick<ResolvedItemProps, 'icon'>> & {
   className: string;
 }): React.JSX.Element {
   return (

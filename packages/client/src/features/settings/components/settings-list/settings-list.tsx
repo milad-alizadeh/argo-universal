@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { EmptyList } from '#features/sessions';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { settingsRows } from './settings-list-data';
 import type { SettingsListProps } from './settings-list-props';
 import { SettingsRowItem } from './settings-list-rows';
@@ -11,21 +11,40 @@ export type { SettingsListProps } from './settings-list-props';
 
 // One list of the pages, without group headings, narrowed by the search: a grouped card on a phone, the sidebar in a wide window.
 export function SettingsList(props: SettingsListProps): React.JSX.Element {
-  const wide = useWide();
-  const rows = settingsRows(props, wide);
+  return (
+    <SizeClass
+      compact={<SettingsRows {...props} sidebar={false} />}
+      wide={<SettingsRows {...props} sidebar />}
+    />
+  );
+}
+
+type SettingsRowsProps = SettingsListProps & { sidebar: boolean };
+
+function SettingsRows(props: SettingsRowsProps): React.JSX.Element {
+  const rows = settingsRows(props, props.sidebar);
 
   if (rows.length === 0) return <NoMatchingSettings query={props.query} />;
 
   return (
-    <GroupedList variant={wide ? 'sidebar' : 'grouped'}>
-      <GroupedListSection>
-        {rows.map((row) => (
-          <SettingsRowItem key={row.label} row={row} {...selectionOf(props)} />
-        ))}
-      </GroupedListSection>
+    <GroupedList variant={props.sidebar ? 'sidebar' : 'grouped'}>
+      <GroupedListSection>{rowItems(rows, props)}</GroupedListSection>
     </GroupedList>
   );
 }
+
+const rowItems = (
+  rows: ReturnType<typeof settingsRows>,
+  props: SettingsRowsProps,
+): React.JSX.Element[] =>
+  rows.map((row) => (
+    <SettingsRowItem
+      key={row.label}
+      row={row}
+      selectable={props.sidebar}
+      {...selectionOf(props)}
+    />
+  ));
 
 const selectionOf = ({
   selectedPath,

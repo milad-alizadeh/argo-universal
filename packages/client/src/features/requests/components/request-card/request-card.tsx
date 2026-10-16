@@ -1,15 +1,11 @@
 import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import {
-  ContentWidthProvider,
-  useContentWide,
-} from '#lib/product/content-layout';
+import { useContentWide } from '#lib/product/content-layout';
 import { Text } from '#primitives/display/text';
-import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';
+import { SheetWhenCompact } from './request-sheet';
 
 export { RequestAction } from './request-action';
 
@@ -38,23 +34,30 @@ export interface RequestCardProps extends Pick<
 }
 
 export function RequestCard(props: RequestCardProps): ReactNode {
-  const wide = useContentWide();
-  const windowWide = useWide();
+  const nativeID = useCardKeyboard(props);
+  const container = <RequestContainer {...props} nativeID={nativeID} />;
 
-  const nativeID = useRequestKeyboard({
+  if (!presentsSheet(props)) return container;
+
+  return (
+    <SheetWhenCompact {...props} container={container}>
+      <RequestBody {...props} />
+      <RequestError error={props.error} />
+    </SheetWhenCompact>
+  );
+}
+
+function useCardKeyboard(props: RequestCardProps): string {
+  return useRequestKeyboard({
     inactive: props.state.kind !== 'open',
-    wide,
+    wide: useContentWide(),
     onEnter: props.onEnter,
     onEscape: props.onEscape,
   });
-
-  if (presentsSheet(props, windowWide)) return <RequestSheet {...props} />;
-
-  return <RequestContainer {...props} nativeID={nativeID} />;
 }
 
-function presentsSheet(props: RequestCardProps, wide: boolean): boolean {
-  return !!props.sheetLabel && !wide && props.appearance !== 'embedded';
+function presentsSheet(props: RequestCardProps): boolean {
+  return !!props.sheetLabel && props.appearance !== 'embedded';
 }
 
 function RequestContainer(
@@ -121,45 +124,5 @@ export function RequestError({
         {error}
       </Text>
     )
-  );
-}
-
-// The app opens the sheet and only an answer closes it.
-const requestSheet = {
-  open: true,
-  onOpenChange: (): void => {},
-  dismissible: false,
-  detents: ['medium', 'large'],
-} as const satisfies Partial<SheetProps>;
-
-// The sheet's one page carries the request's title, as the native navigation title on iOS and Material's title row on Android.
-function RequestSheet(props: RequestCardProps): ReactNode {
-  return (
-    <Sheet
-      {...requestSheet}
-      label={props.sheetLabel}
-      footer={<SheetFooter {...props} />}
-    >
-      <Sheet.Page name="request" title={props.sheetLabel}>
-        <SheetContents {...props} />
-      </Sheet.Page>
-    </Sheet>
-  );
-}
-
-function SheetContents(props: RequestCardProps): ReactNode {
-  return (
-    <ContentWidthProvider wide={false}>
-      <RequestBody {...props} />
-      <RequestError error={props.error} />
-    </ContentWidthProvider>
-  );
-}
-
-function SheetFooter(props: RequestCardProps): ReactNode {
-  return (
-    <ContentWidthProvider wide={false}>
-      <RequestFooter {...props} />
-    </ContentWidthProvider>
   );
 }

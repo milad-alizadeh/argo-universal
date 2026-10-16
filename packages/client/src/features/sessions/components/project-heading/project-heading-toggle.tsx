@@ -21,22 +21,21 @@ function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {
 interface ProjectNameProps {
   name: string;
   collapsed: boolean;
-  wide: boolean;
 }
 
+// A phone's Project heads its Sessions; a wide sidebar names it as body text.
 const nameText = {
   selectable: false,
   numberOfLines: 1,
   className: 'select-none min-w-0 flex-1',
+  role: { compact: 'heading', wide: 'body' },
 } as const;
 
 function ProjectName(props: ProjectNameProps): React.JSX.Element {
   return (
     <TextClassContext.Provider value={undefined}>
       <FolderIcon collapsed={props.collapsed} />
-      <Text {...nameText} role={props.wide ? 'body' : 'heading'}>
-        {props.name}
-      </Text>
+      <Text {...nameText}>{props.name}</Text>
     </TextClassContext.Provider>
   );
 }

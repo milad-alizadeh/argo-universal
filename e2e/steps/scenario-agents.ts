@@ -69,6 +69,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     feedHistoryConfiguration(steps),
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
+    notificationConfiguration(steps),
     desktopConfiguration(steps),
     signInConfiguration(steps),
   );
@@ -131,6 +132,14 @@ function desktopConfiguration(steps: string[]): AppFixtureAgents {
     step.endsWith('I start a desktop Session that keeps running'),
   )
     ? { [agentId(1)]: { scenario: 'permission' } }
+    : {};
+}
+
+function notificationConfiguration(steps: string[]): AppFixtureAgents {
+  return steps.some((step) =>
+    /^(?:Given|And) Agent 1 asks successive questions$/.test(step),
+  )
+    ? { [agentId(1)]: { scenario: 'successive-input' } }
     : {};
 }
 

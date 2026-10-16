@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import {
   type AgentsHeaderProps,
   agentsTitle,
@@ -11,16 +11,14 @@ import {
 export function AgentsPhoneHeader(
   props: AgentsHeaderProps,
 ): React.JSX.Element | null {
-  if (useWide()) return null;
-
   return (
-    <>
+    <SizeClass only="compact">
       <ScreenHeader title={agentsTitle} />
       <PhoneSearchBar
         headerButton
         placeholder={searchLabel}
         onSearch={props.onSearch}
       />
-    </>
+    </SizeClass>
   );
 }

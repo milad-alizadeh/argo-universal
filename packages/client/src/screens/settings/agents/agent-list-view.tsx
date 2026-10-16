@@ -3,11 +3,11 @@ import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { type AgentsFilter, type CatalogLoad } from '#features/agents';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import {
   SettingsPage,
   type SettingsPageSearch,
 } from '#lib/product/settings-page';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import {
   AgentsFilterPills,
   type AgentsHeaderProps,
@@ -70,9 +70,11 @@ const pageSearch = (props: AgentsSearchProps): SettingsPageSearch => ({
 });
 
 function PhoneFilters(props: AgentsFilterProps): React.JSX.Element | null {
-  return useWide() ? null : (
-    <View className="z-10 shrink-0 px-4 py-3">
-      <AgentsFilterPills {...props} />
-    </View>
+  return (
+    <SizeClass only="compact">
+      <View className="z-10 shrink-0 px-4 py-3">
+        <AgentsFilterPills {...props} />
+      </View>
+    </SizeClass>
   );
 }

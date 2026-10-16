@@ -18,6 +18,7 @@ import { applicationMenu } from './application-menu';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
 import { handleSymbolImages } from './symbol-images';
+import { handleWindowShow } from './window-show';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
 const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
@@ -84,6 +85,8 @@ const createWindow = (url: string): void => {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    // Below 600 is a phone's width, the compact size class (ADR-0026).
+    minWidth: 600,
     show: !runsInBackground,
     // On macOS the traffic lights sit in the rail's window-controls row on the glass, with no title bar above.
     ...(process.platform === 'darwin' && {
@@ -127,6 +130,8 @@ for (const action of ['minimize', 'maximize', 'close'] as const) {
     else window.maximize();
   });
 }
+
+handleWindowShow(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 

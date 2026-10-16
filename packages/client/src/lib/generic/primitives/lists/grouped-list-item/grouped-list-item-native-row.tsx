@@ -12,7 +12,7 @@ import { NativeSymbol } from '../../../symbols/native-symbol';
 import { rowDisclosureAccessibility } from './grouped-list-item-accessibility';
 import { RowTrailing } from './grouped-list-item-native-fields';
 import { RowHeadline } from './grouped-list-item-native-headline';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 import { hasDisclosure } from './grouped-list-item-styles';
 import { NativeRowStatus } from './native-row';
 
@@ -27,7 +27,7 @@ const rowSpacing = ios ? undefined : gutter;
 
 const cardSpacing = 12;
 
-const contentSpacing = (props: GroupedListItemProps): number | undefined =>
+const contentSpacing = (props: ResolvedItemProps): number | undefined =>
   props.variant === 'card' ? cardSpacing : rowSpacing;
 
 const androidRowHeight = 56;
@@ -41,7 +41,7 @@ const reflowFontScale = 1.5;
 const reflowSpacing = 8;
 
 // Status and controls stay beside the chevron even when the label and value reflow.
-export function RowContent(props: GroupedListItemProps): React.JSX.Element {
+export function RowContent(props: ResolvedItemProps): React.JSX.Element {
   const modifiers = useContentModifiers();
 
   return (
@@ -88,7 +88,7 @@ function flatRowModifiers(sidebar: boolean): Modifiers {
 }
 
 // At a large system text size, the value wraps under the title on iOS.
-function RowFields(props: GroupedListItemProps): React.JSX.Element {
+function RowFields(props: ResolvedItemProps): React.JSX.Element {
   const { fontScale } = useWindowDimensions();
 
   const fields = (
@@ -105,7 +105,7 @@ function RowFields(props: GroupedListItemProps): React.JSX.Element {
   );
 }
 
-const reflows = (fontScale: number, props: GroupedListItemProps): boolean =>
+const reflows = (fontScale: number, props: ResolvedItemProps): boolean =>
   ios && fontScale >= reflowFontScale && props.value !== undefined;
 
 function ReflowedFields({

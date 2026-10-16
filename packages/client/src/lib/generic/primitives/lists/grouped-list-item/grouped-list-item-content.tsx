@@ -8,7 +8,7 @@ import { GroupedListItemDetail } from './grouped-list-item-detail';
 import { Disclosure } from './grouped-list-item-disclosure';
 import { GroupedListItemLeading } from './grouped-list-item-leading';
 import {
-  type GroupedListItemProps,
+  type ResolvedItemProps,
   groupedListItemStatus,
 } from './grouped-list-item-props';
 import {
@@ -20,7 +20,7 @@ import {
 import { StatusDot } from './status-dot';
 
 export function GroupedListItemBody(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
 ): React.JSX.Element {
   if (!props.detail) return <GroupedListItemContent {...props} />;
 
@@ -31,9 +31,7 @@ export function GroupedListItemBody(
   );
 }
 
-function GroupedListItemContent(
-  props: GroupedListItemProps,
-): React.JSX.Element {
+function GroupedListItemContent(props: ResolvedItemProps): React.JSX.Element {
   const sidebar = useWideSidebarList();
   const emphasis = rowEmphasis(props, sidebar);
 
@@ -47,7 +45,7 @@ function GroupedListItemContent(
   );
 }
 
-function contentClasses(props: GroupedListItemProps, sidebar: boolean): string {
+function contentClasses(props: ResolvedItemProps, sidebar: boolean): string {
   return cn(
     'flex-1 flex-row items-center gap-3',
     contentGap(sidebar, props.size),
@@ -63,12 +61,13 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
       loading={props.loading}
       leading={props.leading}
       size={props.size}
+      variant={props.variant}
       className={props.emphasis}
     />
   );
 }
 
-function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
+function GroupedListItemTitle(props: ResolvedItemProps): React.JSX.Element {
   const title = <RowTitleLabel {...props} />;
 
   if (!props.subtitle) return title;
@@ -84,7 +83,7 @@ function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
 
 function GroupedListItemSubtitle({
   subtitle,
-}: Required<Pick<GroupedListItemProps, 'subtitle'>>): React.JSX.Element {
+}: Required<Pick<ResolvedItemProps, 'subtitle'>>): React.JSX.Element {
   return (
     <Text
       aria-hidden
@@ -97,7 +96,7 @@ function GroupedListItemSubtitle({
   );
 }
 
-type TrailingProps = GroupedListItemProps & { emphasis: string };
+type TrailingProps = ResolvedItemProps & { emphasis: string };
 
 function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
   const sidebar = useWideSidebarList();
@@ -130,7 +129,7 @@ function RowSelection(props: TrailingProps): React.JSX.Element | null {
 function RowValue({
   value,
   className,
-}: Pick<GroupedListItemProps, 'value'> & {
+}: Pick<ResolvedItemProps, 'value'> & {
   className: string;
 }): React.JSX.Element | null {
   if (value === undefined) return null;
@@ -142,7 +141,7 @@ function RowValue({
   );
 }
 
-function RowTitleLabel(props: GroupedListItemProps): React.JSX.Element {
+function RowTitleLabel(props: ResolvedItemProps): React.JSX.Element {
   return (
     <Text aria-hidden role="body" className={titleClasses(props)}>
       {props.label}

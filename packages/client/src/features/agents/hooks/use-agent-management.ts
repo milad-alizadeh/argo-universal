@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useTRPC, type ClientError } from '#features/connection';
+import { errorToast } from '#lib/generic/error-toast';
 import { useErrorToast } from '#primitives/overlays/toast';
 
 export type AgentManagement = {
@@ -49,11 +50,7 @@ export function useAgentManagement(
 ): AgentManagement {
   const { install, remove } = useAgentMutations(onInstalled);
   const failure = install.error ?? remove.error;
-  useErrorToast(
-    failure
-      ? { title: 'Could not change Agent', message: failure.message }
-      : undefined,
-  );
+  useErrorToast(errorToast('Could not change Agent', failure));
 
   return {
     install: (id) => install.mutate({ id }),

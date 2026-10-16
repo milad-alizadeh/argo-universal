@@ -198,6 +198,10 @@ _Avoid_: Approval, prompt
 A question from the Agent that asks the user for information.
 _Avoid_: User question, ask
 
+**Input request**:
+A Permission request or Elicitation that waits for the user's answer. A Session's pending Input request is its oldest Permission request, else its oldest Elicitation.
+_Avoid_: Prompt, pending action
+
 **Compaction**:
 A point where the Agent condensed the Session history so that the Session can continue.
 _Avoid_: Summarisation, context reset
@@ -213,6 +217,10 @@ _Avoid_: Status line, spinner text
 **Notice**:
 A short message about the Session that is not from the Agent's conversation, such as a retry or a hook result.
 _Avoid_: Notification, system message
+
+**Notification**:
+An alert that tells the person a Session needs input or a Turn ended, outside that Session's Feed.
+_Avoid_: Notice, Feed entry
 
 ## UI
 

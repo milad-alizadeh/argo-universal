@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { IconName } from '../../../symbols/icon-names';
+import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 
 // One action in a menu: choosing it runs it and closes the menu.
 export interface MenuAction {
@@ -45,8 +46,11 @@ export interface MenuTriggerProps {
 
 interface MenuBaseProps {
   accessibilityLabel: string;
-  // The element the menu opens from, such as a MenuTrigger, or text the menu draws as its inline trigger: a muted label and a down chevron.
-  trigger: ReactElement | string;
+  /*
+   * The element the menu opens from, such as a MenuTrigger, or text the menu draws as its inline trigger: a muted label and a down chevron.
+   * One per size class where they differ, such as a phone's header item and a wide window's icon button.
+   */
+  trigger: SizeClassValue<ReactElement | string>;
   disabled?: boolean;
   // Which edge of the trigger the web menu lines up with; native menus place themselves.
   align?: 'start' | 'end';

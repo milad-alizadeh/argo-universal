@@ -114,7 +114,9 @@ export const KeyboardSelection: Story = {
     option(canvas, fixBug).focus();
     await userEvent.keyboard('{Enter}');
     await expect(option(canvas, fixBug)).toHaveAttribute(pressed, 'true');
-    await expect(canvas.getByText('1 of 3', { exact: false })).toBeVisible();
+    await expect(
+      canvas.getByText('Choose one · 1 of 3', { exact: false }),
+    ).toBeVisible();
     await expect(args.onAnswer).not.toHaveBeenCalled();
     await userEvent.keyboard('{Escape}');
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });

@@ -31,7 +31,7 @@ function ScopeSplit(props: ScopeSplitProps): React.JSX.Element {
   return (
     <SplitButton
       primary
-      narrow={props.narrow}
+      fullWidth={props.narrow}
       menuLabel={menuLabel}
       options={scopes}
       value={scope}

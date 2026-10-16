@@ -6,6 +6,7 @@ import type {
   SessionNewOutput,
   SessionPromptOutput,
 } from '@repo/contracts';
+import type { ConnectionState } from '#features/connection';
 import type { SavedChoices } from '#lib/product/session-configuration';
 import type { ConfigurationPicks } from '../state/session-option-choices';
 import type { NewSessionOutcome } from '../types/new-session-attempt';
@@ -28,6 +29,8 @@ export interface EmptySessionPorts {
   handOff: (sessionId: string) => void;
   // Composer clears the kept Project draft before the Session page takes over.
   clearDraft: () => void;
+  // The Connection's state as it is now, which tells a dropped open from a failed one.
+  connectionState: () => ConnectionState;
 }
 
 // An Agent change settles for this long before the Empty Session reopens for it.

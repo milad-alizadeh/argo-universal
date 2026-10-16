@@ -1,19 +1,14 @@
-// A Session's sign-in for an `auth_required` Turn: the Turn end whose Authenticate was pressed, and the one a sign-in answered.
-export interface TurnSignIn {
-  // Authenticate was pressed on this Turn end's card; its sign-in has not finished.
-  authenticating?: string;
-  // A finished sign-in answered this Turn end, so its card stays cleared.
-  answered?: string;
-}
+import type { Connection } from '#features/connection';
+import type { TurnSignIn } from '../types/turn-sign-in';
 
-const none: TurnSignIn = {};
+const none: TurnSignIn = { authenticating: undefined, answered: undefined };
 
 const sameSignIn = (a: TurnSignIn, b: TurnSignIn): boolean =>
   a.authenticating === b.authenticating && a.answered === b.answered;
 
 /*
- * Each Session's Turn sign-in, for the App's life, so a Session page that mounts again keeps
- * a cleared card cleared and still follows a sign-in Authenticate started.
+ * Each Session's Turn sign-in on one Server, so a Session page that mounts again keeps a
+ * cleared card cleared and still follows a sign-in Authenticate started.
  */
 export class TurnSignIns {
   private readonly sessions = new Map<string, TurnSignIn>();
@@ -35,13 +30,12 @@ export class TurnSignIns {
 
   // The sign-in finished: an answered Turn's card stays cleared.
   public finish(sessionId: string, answered?: string): void {
-    const next: TurnSignIn = {
-      ...this.of(sessionId),
-      authenticating: undefined,
-    };
+    const current = this.of(sessionId);
 
-    if (answered !== undefined) next.answered = answered;
-    this.set(sessionId, next);
+    this.set(sessionId, {
+      authenticating: undefined,
+      answered: answered ?? current.answered,
+    });
   }
 
   // Readers hear only of a change.
@@ -53,5 +47,12 @@ export class TurnSignIns {
   }
 }
 
-// The App's one record: a Session page reads it on every mount.
-export const turnSignIns = new TurnSignIns();
+// One record per Connection, as the App opens one Connection per Server, so Storybook's and tests' separate Apps never share one.
+const records = new WeakMap<Connection, TurnSignIns>();
+
+export const turnSignInsOf = (connection: Connection): TurnSignIns => {
+  const record = records.get(connection) ?? new TurnSignIns();
+  records.set(connection, record);
+
+  return record;
+};

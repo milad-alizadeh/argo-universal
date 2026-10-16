@@ -87,6 +87,8 @@ export { AppProviders } from './app-providers';
 
 export { PortalProvider } from '#primitives/overlays/portal';
 
+export { useNotifications } from './features/notifications';
+
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
 export {

@@ -5,14 +5,14 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
 import type { NativeTextProps } from '#primitives/display/native-text';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 
 type Modifiers = NonNullable<NativeTextProps['modifiers']>;
 
 export type RowTone =
   | 'primary'
   | 'secondary'
-  | NonNullable<GroupedListItemProps['tone']>;
+  | NonNullable<ResolvedItemProps['tone']>;
 
 const ios = Platform.OS === 'ios';
 
