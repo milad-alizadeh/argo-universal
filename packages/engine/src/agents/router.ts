@@ -7,6 +7,7 @@ import {
 import type { ActorRefFrom } from 'xstate';
 import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
 import type { OpenSessionsActorRef } from '../sessions';
+import { createAuthRouter } from './auth/router';
 import { watchCommittedCatalogChanges } from './catalog-changes';
 import { readAgentCatalog } from './catalog-sql';
 import type { ConfigurationDeps } from './configuration/configuration-commands';
@@ -99,6 +100,7 @@ export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
     createListRouter(deps),
     createRegistryRouter(deps),
     createLoginRouter(deps),
+    createAuthRouter(deps),
   ),
 );
 

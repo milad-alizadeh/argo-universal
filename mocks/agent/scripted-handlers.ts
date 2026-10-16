@@ -4,6 +4,10 @@ import type {
   SessionConfigOption,
   CancelNotification,
 } from '@agentclientprotocol/sdk';
+import {
+  serveOtherMethods,
+  requireScriptedAuthentication,
+} from './scripted-auth.ts';
 import { initializeScriptedAgent } from './scripted-initialize.ts';
 import { ScriptedMethodPlayer } from './scripted-method-player.ts';
 import type { ScriptedNotifications } from './scripted-responses.ts';
@@ -37,11 +41,13 @@ const serveInitialization = (
 
 const serveNewSession = (
   app: AgentApp,
-  { sessions, player, nextId }: Pick<Script, 'sessions' | 'player' | 'nextId'>,
+  script: Pick<Script, 'sessions' | 'player' | 'nextId' | 'scenario'>,
 ): AgentApp => {
+  const { sessions, player, nextId, scenario } = script;
   const newSession = player.respond('session/new');
 
   return app.onRequest('session/new', (context) => {
+    requireScriptedAuthentication(scenario);
     const sessionId = nextId();
 
     return newSession(context, {
@@ -118,18 +124,6 @@ const serveCancellation = (
     observeCancellation(notification, params);
     sessions.cancel(params.sessionId);
   });
-
-const serveOtherMethods = (
-  app: AgentApp,
-  { player }: Pick<Script, 'player'>,
-): AgentApp => {
-  const authenticate = player.respond('authenticate');
-  const mode = player.respond('session/set_mode');
-
-  return app
-    .onRequest('authenticate', (context) => authenticate(context, {}))
-    .onRequest('session/set_mode', (context) => mode(context, {}));
-};
 
 const observeCancellation = (
   notification: ScriptedNotifications['session/cancel'],

@@ -64,3 +64,5 @@ export {
 export { getCommand } from './launch/get-command';
 
 export type { CommandInput, RegistryCommand } from './launch/types';
+
+export { isAuthRequired, sessionOpenError } from './acp/open-error';

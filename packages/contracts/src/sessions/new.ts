@@ -52,3 +52,24 @@ export const SessionNewOutput = z.strictObject({
 });
 
 export type SessionNewOutput = z.infer<typeof SessionNewOutput>;
+
+export const SessionOpenError = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('auth-required') }),
+  z.strictObject({ type: z.literal('failed'), message: z.string() }),
+]);
+
+export type SessionOpenError = z.infer<typeof SessionOpenError>;
+
+export const SessionOpenFailureResponse = z.object({
+  data: z.object({ openError: SessionOpenError }),
+});
+
+export class SessionOpenFailure extends Error {
+  public constructor(public readonly openError: SessionOpenError) {
+    super(
+      openError.type === 'auth-required'
+        ? 'Authentication required'
+        : openError.message,
+    );
+  }
+}

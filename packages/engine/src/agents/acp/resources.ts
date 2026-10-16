@@ -1,8 +1,11 @@
 import type { AgentLaunch } from '..';
+import type { ConnectionAuthentication } from '../auth/authenticate';
 import { awaitAcpOpening } from './client';
 import { AcpConnection } from './connection';
 import {
   createEntry,
+  entryAuthentication,
+  pendingAuthentication,
   entryInUse,
   isIdleEntryOf,
   type Entry,
@@ -26,31 +29,42 @@ class EngineAcpResources implements AcpResources {
     entry.pending += 1;
 
     try {
-      return await this.openConnected(entry, input);
+      const connection = await awaitAcpOpening(entry.connecting, input.signal);
+
+      return await connection.open(input);
     } finally {
       entry.pending -= 1;
       this.retireIdle(entry);
     }
   }
-  private async openConnected(
-    entry: Entry,
-    input: AcpOpenInput,
-  ): Promise<AcpSessionLease> {
-    const connection = await awaitAcpOpening(entry.connecting, input.signal);
+  public async authentication(
+    launch: AgentLaunch,
+  ): Promise<ConnectionAuthentication> {
+    if (this.stopped) throw new Error('ACP resources are stopped');
+    const found = this.findAuthentication(launch.agentId, launch.projectId);
 
-    return connection.open(input);
+    if (found) return found;
+
+    return entryAuthentication(this.entry(launch));
+  }
+  public findAuthentication(
+    agent: string,
+    projectId: string,
+  ): Promise<ConnectionAuthentication> | undefined {
+    const entry =
+      pendingAuthentication(this.connections, agent, projectId) ??
+      this.entries.get(JSON.stringify([agent, projectId]));
+
+    return entry ? entryAuthentication(entry) : undefined;
   }
   private entry(launch: AgentLaunch): Entry {
     const key = JSON.stringify([launch.agentId, launch.projectId]);
     const entry = this.entries.get(key);
 
-    if (entry) return this.reuse(key, entry, launch);
-
-    return this.start(key, launch);
-  }
-  private reuse(key: string, entry: Entry, launch: AgentLaunch): Entry {
-    if (entry.version === launch.version) return entry;
-    this.retire(key, entry);
+    if (entry) {
+      if (entry.version === launch.version) return entry;
+      this.retire(key, entry);
+    }
 
     return this.start(key, launch);
   }

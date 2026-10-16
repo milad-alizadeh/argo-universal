@@ -62,6 +62,7 @@ export type ScriptedStep =
   | { type: 'raw'; frame: string };
 
 export type ScriptedScenario = {
+  authentication?: { required: boolean };
   initialize?: InitializeResponse;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];

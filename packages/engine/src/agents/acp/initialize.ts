@@ -3,7 +3,6 @@ import type {
   ElicitationCapabilities,
   InitializeRequest,
   InitializeResponse,
-  ClientCapabilities,
 } from '@agentclientprotocol/sdk';
 import type { createAcpResponseReaders } from './response-readers';
 
@@ -12,17 +11,16 @@ type InitializeCapabilities = {
   terminalAuth?: boolean;
 };
 
-const terminalCapability = (
+const terminalAuth = (
   capabilities: InitializeCapabilities | undefined,
-): Pick<ClientCapabilities, 'auth'> =>
-  capabilities?.terminalAuth ? { auth: { terminal: true } } : {};
+): boolean => capabilities?.terminalAuth ?? true;
 
 const initializeRequest = (
   capabilities?: InitializeCapabilities,
 ): InitializeRequest => ({
   protocolVersion: 1,
   clientCapabilities: {
-    ...terminalCapability(capabilities),
+    auth: { terminal: terminalAuth(capabilities) },
     session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
     elicitation: { form: {}, ...capabilities?.elicitation },
   },

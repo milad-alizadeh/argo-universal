@@ -8,6 +8,7 @@ import type {
   TurnError,
   TurnUsage,
 } from '@repo/contracts';
+import type { SessionOpenError } from '@repo/contracts';
 import { countRejection } from '@repo/machine-log';
 import { createRejectionCounter } from '@repo/machine-log';
 import {
@@ -28,6 +29,7 @@ import {
 import { AgentProcessExitError } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
+import { isAuthRequired, sessionOpenError } from '../agents';
 import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import {
   messageRejectedEvent,
@@ -200,6 +202,7 @@ export interface SessionContext extends SessionData {
   configOptions: SessionConfigOption[];
   rejectedMessages: number;
   failure: string | null;
+  openError: SessionOpenError | null;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
   sessionInsertCommitted: Promise<'committed' | 'retrying' | 'failed'> | null;
@@ -582,8 +585,12 @@ const sessionSetup = setup({
     })),
     rememberStorageFailure: assign({ storageFailedTurn: true }),
     rememberFailure: assign(
-      (_, params: FailureParameters): Pick<SessionContext, 'failure'> => ({
+      (
+        _,
+        params: FailureParameters,
+      ): Pick<SessionContext, 'failure' | 'openError'> => ({
         failure: String(params.error),
+        openError: sessionOpenError(params.error),
       }),
     ),
     addDiscardFailure: assign(
@@ -934,6 +941,17 @@ const sessionEntryOutcome = {
   },
 } as const;
 
+const promptFailureReason = (
+  context: SessionContext,
+  cause: unknown,
+): StopReason => {
+  if (context.turnEnding.kind === 'cancel') return 'cancelled';
+
+  context.acpLease?.authentication?.recordRequired(cause);
+
+  return isAuthRequired(cause) ? 'auth_required' : 'error';
+};
+
 const acpTurnOutcome = ({
   context,
 }: {
@@ -991,6 +1009,7 @@ export const sessionMachine = sessionSetup.createMachine({
     configOptions: [],
     rejectedMessages: 0,
     failure: null,
+    openError: null,
     stored: input.kind === 'existing',
     sessionInsertCommitted: null,
     acpLifetime: new AcpSessionLifetime(input.acp, input.createId),
@@ -1320,11 +1339,8 @@ export const sessionMachine = sessionSetup.createMachine({
                     },
                     {
                       type: 'rememberAcpOutcome',
-                      params: ({ context }): EndTurnParameters => ({
-                        stopReason:
-                          context.turnEnding.kind === 'cancel'
-                            ? 'cancelled'
-                            : 'error',
+                      params: ({ context, event }): EndTurnParameters => ({
+                        stopReason: promptFailureReason(context, event.error),
                       }),
                     },
                   ],
