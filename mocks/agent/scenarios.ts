@@ -1,5 +1,6 @@
 import type { SessionUpdate } from '@agentclientprotocol/sdk';
-import { acpConfiguration } from './acp-configuration.ts';
+import { acpConfiguration, heldModeSteps } from './acp-configuration.ts';
+import { contextUsageFixtures } from './context-usage.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
   feedWorkSteps,
@@ -113,6 +114,19 @@ export const scenarios = {
     },
     reply,
   ]),
+  'usage-low': scenario([
+    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.low }),
+    reply,
+  ]),
+  'usage-high': scenario([
+    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.high }),
+    reply,
+  ]),
+  'usage-full': scenario([
+    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.full }),
+    reply,
+  ]),
+  'held-mode': scenario(heldModeSteps),
   configuration: scenario([
     update({
       sessionUpdate: 'config_option_update',
