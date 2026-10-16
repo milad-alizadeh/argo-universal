@@ -21,7 +21,7 @@ type OptionRowProps = Omit<OptionRowsProps, 'options' | 'selected'> & {
   checked: boolean;
 };
 
-// Each choice is a row of the section, its description under its title.
+// Each choice is a row of the section, its description under its title; a wide card draws compact rows.
 export function OptionRows(props: OptionRowsProps): ReactElement {
   return (
     <>
@@ -44,15 +44,25 @@ function OptionRow(props: OptionRowProps): ReactElement {
     <GroupedListItem
       label={option.title}
       subtitle={optionSubtitle(option)}
-      accessibilityRole="button"
-      selected={checked}
-      disclosure={false}
-      disabled={props.disabled}
+      size="sm"
+      {...optionRowProps(props)}
       onPress={() => props.onToggle(option.const, !checked)}
       {...optionMark(props.multiple, checked)}
     />
   );
 }
+
+const optionRowProps = (
+  props: OptionRowProps,
+): Pick<
+  GroupedListItemProps,
+  'accessibilityRole' | 'selected' | 'disclosure' | 'disabled'
+> => ({
+  accessibilityRole: 'button',
+  selected: props.checked,
+  disclosure: false,
+  disabled: props.disabled,
+});
 
 const optionSubtitle = (
   option: ElicitationEnumOption,

@@ -85,9 +85,16 @@ function controlClasses(
   );
 }
 
-// A large row pads 16 all round at every width.
-const sizeClasses = ({ size }: GroupedListItemProps): string | undefined =>
-  size === 'lg' ? 'py-4 wide:py-4' : undefined;
+// A large row pads 16 all round at every width; a small one is 36 tall on a wide window.
+function sizeClasses(props: GroupedListItemProps): string | undefined {
+  if (props.size === 'lg') return 'py-4 wide:py-4';
+
+  return props.size === 'sm' ? smallClasses(props) : undefined;
+}
+
+// A small row's subtitle keeps its line under the title, padded as any subtitled row; a switch fits its 36 too.
+const smallClasses = ({ subtitle }: GroupedListItemProps): string =>
+  cn('wide:min-h-9', !subtitle && 'wide:py-1.5');
 
 // A wide window draws its rows' parts 8 apart, but a sidebar's and a large row's keep 12.
 export const contentGap = (

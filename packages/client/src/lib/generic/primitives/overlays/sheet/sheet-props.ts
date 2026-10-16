@@ -17,6 +17,12 @@ export interface SheetProps {
   label?: string;
   // Without detents the sheet is as tall as its content.
   detents?: SheetDetent[];
+  /*
+   * The detent the sheet opens at, one of `detents`; the person may still drag it to another.
+   * iOS: SwiftUI's detent selection. Android: 'large' opens a half-open sheet fully expanded.
+   * Web: ignored, as the drawer rests only at its content's height or the full window.
+   */
+  initialDetent?: SheetDetent;
   // False while the content holds unsaved input: a swipe, the backdrop, Escape or Back leave the sheet open.
   dismissible?: boolean;
   // Native only: the content owns scrolling and fills the sheet, as a native GroupedList or a long list does.

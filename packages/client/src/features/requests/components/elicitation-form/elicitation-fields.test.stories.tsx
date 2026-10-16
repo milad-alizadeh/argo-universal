@@ -17,6 +17,9 @@ export default meta;
 
 const validPort = { ...configurationValues, port: '8080' };
 
+// Only a question card says what to choose; a form's fields need no hint.
+const choiceHint = /^Choose one/;
+
 function formFields(width: number): Story {
   return {
     args: {
@@ -29,6 +32,7 @@ function formFields(width: number): Story {
         canvas.getByText('Enter a whole number from 1024 to 65535.'),
       ).toBeVisible();
       await expect(canvas.getByText('Fix Port to submit')).toBeVisible();
+      await expect(canvas.queryByText(choiceHint)).not.toBeInTheDocument();
       await expect(
         canvas.getByRole('button', { name: 'Submit' }),
       ).toBeDisabled();
@@ -66,6 +70,7 @@ function textField(width: number): Story {
       const name = canvas.getByRole('textbox', { name: 'Function name' });
       await expect(name).toHaveValue('processData');
       await expect(canvas.queryByText('Function name')).not.toBeInTheDocument();
+      await expect(canvas.queryByText(choiceHint)).not.toBeInTheDocument();
       await userEvent.clear(name);
       await userEvent.type(name, 'parseConfig');
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
