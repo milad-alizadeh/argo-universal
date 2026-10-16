@@ -1,37 +1,41 @@
 import * as WebPopover from '@radix-ui/react-popover';
-import * as PopoverPrimitive from '@rn-primitives/popover';
 import * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/display/text';
+import { useOpenState } from '#primitives/overlays/open-state';
+import { PopoverContext, usePopoverState } from './popover-context';
 import { HoverProvider, PopoverHover } from './popover-hover';
 import { hoverContentProps } from './popover-hover-focus';
 import type {
   PopoverContentProps as ContentProps,
   PopoverProps,
 } from './popover-props';
-import { Popover as PopoverRoot } from './popover-root';
 
 export { PopoverTrigger } from './popover-trigger';
 
 export { PopoverHoverGroup } from './popover-hover';
 
-export function Popover({
-  openOnHover,
-  children,
-  ...props
-}: PopoverProps): React.JSX.Element {
+export { usePopoverClose } from './popover-context';
+
+/*
+ * The web's popover, on Radix Popover (`@radix-ui/react-popover`): Root `open`/`onOpenChange`, Trigger,
+ * Portal and Content `side`/`align`/`sideOffset`/`onOpenAutoFocus`/`onCloseAutoFocus`.
+ */
+export function Popover(props: PopoverProps): React.JSX.Element {
+  const state = useOpenState(props);
+
   return (
-    <PopoverRoot {...props}>
-      <HoverProvider enabled={openOnHover}>{children}</HoverProvider>
-    </PopoverRoot>
+    <PopoverContext.Provider value={state}>
+      <WebPopover.Root open={state.open} onOpenChange={state.onOpenChange}>
+        <View className={props.className} style={props.style}>
+          <HoverProvider enabled={props.openOnHover}>
+            {props.children}
+          </HoverProvider>
+        </View>
+      </WebPopover.Root>
+    </PopoverContext.Provider>
   );
-}
-
-export function usePopoverClose(): () => void {
-  const { onOpenChange } = PopoverPrimitive.useRootContext();
-
-  return React.useCallback(() => onOpenChange(false), [onOpenChange]);
 }
 
 const contentClassName =
@@ -48,7 +52,7 @@ function contentPlacement({
 type BodyProps = ContentProps & { ref?: React.Ref<HTMLDivElement> };
 
 function PopoverBody({ ref, ...props }: BodyProps): React.JSX.Element {
-  const { open } = PopoverPrimitive.useRootContext();
+  const { open } = usePopoverState();
   const hover = React.useContext(PopoverHover);
 
   return (
@@ -68,11 +72,7 @@ function webContentProps(
   return {
     ...contentPlacement(props),
     side: props.side,
-    alignOffset: props.alignOffset,
-    avoidCollisions: props.avoidCollisions,
     'aria-label': props.accessibilityLabel,
-    onCloseAutoFocus: props.onClosed ?? props.onCloseAutoFocus,
-    ...contentInteractions(props),
   };
 }
 
@@ -92,10 +92,7 @@ function PopoverSurface(
   );
 }
 
-function PopoverContent({
-  portalHost: _portalHost,
-  ...props
-}: ContentProps): React.JSX.Element {
+function PopoverContent(props: ContentProps): React.JSX.Element {
   return (
     <WebPopover.Portal>
       <PopoverBody {...props} />
@@ -104,17 +101,6 @@ function PopoverContent({
 }
 
 export { PopoverContent };
-
-function contentInteractions(
-  props: ContentProps,
-): React.ComponentProps<typeof WebPopover.Content> {
-  return {
-    onOpenAutoFocus: props.onOpenAutoFocus,
-    onEscapeKeyDown: props.onEscapeKeyDown,
-    onInteractOutside: props.onInteractOutside,
-    onPointerDownOutside: props.onPointerDownOutside,
-  };
-}
 
 Popover satisfies React.ComponentType<PopoverProps>;
 

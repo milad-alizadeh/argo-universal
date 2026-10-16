@@ -1,1 +1,1 @@
-export { Portal, PortalHost } from './portal';
+export { Portal, PortalHost, PortalProvider } from './portal';

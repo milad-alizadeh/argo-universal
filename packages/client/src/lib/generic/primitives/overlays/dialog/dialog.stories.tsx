@@ -19,7 +19,7 @@ import {
 function DialogPreview(): React.JSX.Element {
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      <DialogTrigger>
         <Pressable
           role="button"
           className={contentActionClass({ variant: 'outline' })}

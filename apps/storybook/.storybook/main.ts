@@ -16,11 +16,13 @@ function getAbsolutePath(value: string): string {
 
 const PREBUNDLED_DEPENDENCIES = [
   'react-native-svg',
-  '@repo/client > @rn-primitives/popover',
-  '@repo/client > @rn-primitives/dialog',
+  '@repo/client > @radix-ui/react-popover',
+  '@repo/client > @radix-ui/react-dialog',
   '@repo/client > react-native > invariant',
-  '@repo/client > @rn-primitives/collapsible',
-  '@repo/client > @rn-primitives/select',
+  '@repo/client > @radix-ui/react-collapsible',
+  '@repo/client > @radix-ui/react-select',
+  '@repo/client > @radix-ui/react-dropdown-menu',
+  '@repo/client > @gorhom/portal',
   '@repo/client > @tanstack/react-form',
   '@repo/client > ajv',
   '@repo/client > ajv-formats',

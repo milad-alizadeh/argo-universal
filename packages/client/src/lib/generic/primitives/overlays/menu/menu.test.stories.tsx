@@ -79,7 +79,7 @@ function keyboardSelection(width: number): Story {
       await expect(
         page.getByRole('menuitemradio', { name: askLabel }),
       ).toHaveFocus();
-      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard(' ');
       await expect(args.onValueChange).toHaveBeenCalledTimes(1);
       await expect(args.onValueChange).toHaveBeenCalledWith('ask');
       await waitFor(() =>
@@ -101,7 +101,8 @@ function keyboardSelection(width: number): Story {
           page.getByRole('menuitemradio', { name: 'Full access' }),
         ).toHaveFocus(),
       );
-      await userEvent.keyboard(' ');
+      // Radix reads Space during type-ahead as part of the search, so Enter chooses here.
+      await userEvent.keyboard('{Enter}');
       await expect(args.onValueChange).toHaveBeenCalledTimes(2);
       await expect(args.onValueChange).toHaveBeenLastCalledWith('full');
       await waitFor(() => expect(trigger).toHaveFocus());

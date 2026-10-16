@@ -8,9 +8,8 @@ import { Portal, PortalHost } from './portal';
 
 const meta = {
   title: 'Design System/Primitives/Portal',
-  component: PortalHost,
   render: (): React.JSX.Element => <PortalPreview />,
-} satisfies Meta<typeof PortalHost>;
+} satisfies Meta;
 
 export default meta;
 

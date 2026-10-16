@@ -56,21 +56,21 @@ function PickerLabel(
 function PickerControl<Value extends string>(
   props: FrameProps<Value>,
 ): React.JSX.Element {
-  return createElement(
-    Select,
-    selectProps(props),
-    <PickerTrigger {...props} />,
-    <PickerContent {...props} />,
+  return (
+    <Select {...selectProps(props)}>
+      <PickerTrigger {...props} />
+      <PickerContent {...props} />
+    </Select>
   );
 }
 
 function selectProps<Value extends string>(
   props: PickerProps<Value>,
-): React.ComponentProps<typeof Select> {
+): Omit<React.ComponentProps<typeof Select>, 'children'> {
   return {
-    value: pickerOption(props),
+    value: pickerOption(props)?.value,
     disabled: props.disabled,
-    onValueChange: (next) => choosePickerOption(props, next?.value),
+    onValueChange: (next) => choosePickerOption(props, next),
     onOpenChange: (open) => {
       if (!open) props.onBlur?.();
     },

@@ -4,6 +4,7 @@ import { Button } from '#primitives/buttons/button';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogTitle,
 } from '#primitives/overlays/dialog';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
@@ -90,10 +91,10 @@ export const removalOf = (
 function EntrySheetActions(props: EntrySheetProps): React.JSX.Element {
   return (
     <View className="gap-3">
-      <View className="flex-row justify-end gap-2">
+      <DialogFooter>
         {useShowsCancel(props.dirty) && <CancelEntry onClose={props.onClose} />}
         <Button fullWidth="narrow" onPress={props.onSave} label={'Save'} />
-      </View>
+      </DialogFooter>
       {props.onRemove && <RemoveEntry {...props} />}
     </View>
   );
@@ -109,7 +110,14 @@ function useShowsCancel(dirty: boolean): boolean {
 function CancelEntry({
   onClose,
 }: Pick<EntrySheetProps, 'onClose'>): React.JSX.Element {
-  return <Button variant="outline" onPress={onClose} label={'Cancel'} />;
+  return (
+    <Button
+      variant="outline"
+      fullWidth="narrow"
+      onPress={onClose}
+      label={'Cancel'}
+    />
+  );
 }
 
 function RemoveEntry({
