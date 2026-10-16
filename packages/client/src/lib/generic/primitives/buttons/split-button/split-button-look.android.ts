@@ -3,9 +3,6 @@ import {
   type ButtonProps,
   Shape,
 } from '@expo/ui/jetpack-compose';
-import type { NativeTheme } from '#lib/generic/native-theme';
-
-type NativeColors = NativeTheme['colors'];
 
 export type HalfSide = 'leading' | 'trailing';
 
@@ -14,21 +11,9 @@ const outerCorner = 20;
 
 const innerCorner = 4;
 
-// Paper owns the colours: a primary split fills with the primary token, otherwise the muted one.
-function halfColors(colors: NativeColors, primary: boolean): ButtonColors {
-  if (!primary)
-    return { containerColor: colors.muted, contentColor: colors.foreground };
-
-  return {
-    containerColor: colors.primary,
-    contentColor: colors.primaryForeground,
-  };
-}
-
 // One half's colours and rounded corners, passed through the stock button's own props.
 export function halfLook(
-  colors: NativeColors,
-  primary: boolean,
+  colors: ButtonColors,
   side: HalfSide,
 ): Pick<ButtonProps, 'colors' | 'shape'> {
   const [start, end] =
@@ -37,7 +22,7 @@ export function halfLook(
       : [innerCorner, outerCorner];
 
   return {
-    colors: halfColors(colors, primary),
+    colors,
     shape: roundedSidesOutline(start, end),
   };
 }

@@ -1,7 +1,3 @@
-import {
-  Picker as UniversalPicker,
-  type PickerProps as UniversalPickerProps,
-} from '@expo/ui';
 import { type ComponentType, createElement, useState } from 'react';
 import { View } from 'react-native';
 import {
@@ -11,6 +7,11 @@ import {
 import { ChoiceField, ChoiceHost } from '#primitives/native/choice-field';
 import { PickerDrillIn, drillInLimit } from './picker-drill-in';
 import { menuTag, messageTag, placeholderTag } from './picker-menu-tags';
+import { PickerNativeMenu } from './picker-native-menu';
+import type {
+  PickerMenuItem,
+  PickerMenuProps,
+} from './picker-native-menu-props';
 import type { PickerProps } from './picker-props';
 import {
   choosePickerOption,
@@ -19,14 +20,11 @@ import {
   pickerValue,
 } from './picker-selection';
 
-type MenuItem = { label: string; value: string };
+type MenuChoice = Pick<PickerMenuProps, 'selectedValue' | 'onValueChange'> & {
+  key: number;
+};
 
-type MenuChoice = Pick<
-  UniversalPickerProps<string>,
-  'selectedValue' | 'onValueChange'
-> & { key: number };
-
-// Expo UI's universal Picker: a SwiftUI menu Picker on iOS, a Material exposed dropdown on Android.
+// A SwiftUI menu Picker on iOS, a Material exposed dropdown on Android.
 export function Picker<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
@@ -57,12 +55,15 @@ function PickerControl<Value extends string>(
 function PickerMenu<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
-  return createElement(
-    UniversalPicker<string>,
-    { ...useMenuChoice(props), enabled: !props.disabled },
-    menuItems(props).map((item) => (
-      <UniversalPicker.Item key={item.value} {...item} />
-    )),
+  const { key, ...choice } = useMenuChoice(props);
+
+  return (
+    <PickerNativeMenu
+      key={key}
+      {...choice}
+      enabled={!props.disabled}
+      items={menuItems(props)}
+    />
   );
 }
 
@@ -93,7 +94,7 @@ function menuSelection<Value extends string>(
 // Universal items cannot be disabled, so the menu leaves out disabled options and shows a load message as an item that does nothing.
 function menuItems<Value extends string>(
   props: PickerProps<Value>,
-): MenuItem[] {
+): PickerMenuItem[] {
   const message = pickerOptionsMessage(props);
   const current = { label: pickerValue(props), value: menuSelection(props) };
 

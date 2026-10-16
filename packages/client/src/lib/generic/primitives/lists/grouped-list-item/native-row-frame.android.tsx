@@ -1,8 +1,8 @@
 import { Column, ListItem } from '@expo/ui';
 import * as Material from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { useSidebarList } from '#primitives/fields/field-layout';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { NativeRowFrameProps } from './native-row-frame-props';
 import { NativeRowFrame as FlatRow } from './native-row-frame.tsx';
 
@@ -16,7 +16,7 @@ export function NativeRowFrame(props: NativeRowFrameProps): ReactElement {
 function MaterialRow(props: NativeRowFrameProps): ReactElement {
   return (
     <ListItem
-      colors={useRowColors()}
+      colors={useMaterialPalette().listItemColors}
       onPress={props.item.disabled ? undefined : props.item.onPress}
       modifiers={frameModifiers(props)}
     >
@@ -25,18 +25,6 @@ function MaterialRow(props: NativeRowFrameProps): ReactElement {
       </Column>
     </ListItem>
   );
-}
-
-function useRowColors(): React.ComponentProps<typeof ListItem>['colors'] {
-  const colors = useNativeTheme().colors;
-
-  return {
-    containerColor: colors.card,
-    contentColor: colors.foreground,
-    leadingContentColor: colors.foreground,
-    trailingContentColor: colors.mutedForeground,
-    supportingContentColor: colors.mutedForeground,
-  };
 }
 
 function frameModifiers(

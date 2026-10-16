@@ -8,7 +8,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
 import { ItemLeadingIcon } from './menu-item-icon.android';
 import type { NativeMenuItem } from './menu-native-items';
@@ -50,7 +50,7 @@ function SectionDivider(): React.JSX.Element {
   return (
     <HorizontalDivider
       thickness={1}
-      color={useNativeTheme().colors.border}
+      color={useMaterialPalette().roles.outlineVariant}
       modifiers={dividerModifiers}
     />
   );
@@ -66,7 +66,7 @@ function MenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
   return (
     <DropdownMenuItem
       enabled={!item.disabled}
-      elementColors={useItemColors()}
+      elementColors={useMaterialPalette().menuItemColors}
       onClick={() => onChoose(item)}
     >
       <ItemLeadingIcon icon={item.icon} />
@@ -87,22 +87,6 @@ function ItemCheck(props: { checked?: boolean }): React.JSX.Element | null {
       <Icon source={Check} />
     </DropdownMenuItem.TrailingIcon>
   );
-}
-
-// The foreground for text and the check, muted while disabled or loading; the leading icon stays muted, as Material's onSurfaceVariant draws it. Text and Icon inherit them as the content colour.
-function useItemColors(): React.ComponentProps<
-  typeof DropdownMenuItem
->['elementColors'] {
-  const colors = useNativeTheme().colors;
-
-  return {
-    textColor: colors.foreground,
-    disabledTextColor: colors.mutedForeground,
-    leadingIconColor: colors.mutedForeground,
-    disabledLeadingIconColor: colors.mutedForeground,
-    trailingIconColor: colors.foreground,
-    disabledTrailingIconColor: colors.mutedForeground,
-  };
 }
 
 MenuDropdownItems satisfies React.ComponentType<MenuDropdownItemsProps>;

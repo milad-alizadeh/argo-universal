@@ -1,6 +1,6 @@
 import { FilterChip, Text } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { useCSSVariable } from 'uniwind';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import { ControlHost } from '#primitives/native/native-control';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { filterPillFor } from './filter-pill-phone';
@@ -13,8 +13,7 @@ function PhoneChip(props: FilterPillProps): React.JSX.Element {
       <FilterChip
         selected={props.selected}
         onClick={props.onPress}
-        colors={useChipColors()}
-        border={useChipBorder(props.selected)}
+        {...useChipLook(props.selected)}
       >
         <ChipContent {...props} />
       </FilterChip>
@@ -22,25 +21,16 @@ function PhoneChip(props: FilterPillProps): React.JSX.Element {
   );
 }
 
-// The web pill's colours: the selected fill and foreground label when on, the muted label when off.
-function useChipColors(): NonNullable<
-  React.ComponentProps<typeof FilterChip>['colors']
-> {
-  return {
-    labelColor: String(useCSSVariable('--color-muted-foreground')),
-    selectedContainerColor: String(useCSSVariable('--color-selected')),
-    selectedLabelColor: String(useCSSVariable('--color-foreground')),
-  };
-}
-
 // The outline shows only while off; on, it takes the selected fill.
-function useChipBorder(
+function useChipLook(
   selected: boolean,
-): NonNullable<React.ComponentProps<typeof FilterChip>['border']> {
-  const outline = String(useCSSVariable('--color-border'));
-  const fill = String(useCSSVariable('--color-selected'));
+): Pick<React.ComponentProps<typeof FilterChip>, 'colors' | 'border'> {
+  const { chipColors, roles } = useMaterialPalette();
 
-  return { color: selected ? fill : outline };
+  return {
+    colors: chipColors,
+    border: { color: selected ? roles.selected : roles.outlineVariant },
+  };
 }
 
 // TalkBack reads the visible label, so the chip sets no description of its own.
