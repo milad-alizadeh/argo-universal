@@ -12,13 +12,13 @@ import {
   type AgentRows,
   agentsPage,
   featuredAgents,
-} from '../state/agent-rows';
+} from '../utils/agent-rows';
 import {
   type InstalledAgents,
   installedAgents,
   type RegistryLoad,
   registryLoad,
-} from '../state/installed-agents';
+} from '../utils/installed-agents';
 import {
   type AgentChanges,
   useAgentChanges,

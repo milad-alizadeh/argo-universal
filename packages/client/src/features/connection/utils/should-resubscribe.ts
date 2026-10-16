@@ -1,4 +1,4 @@
-import type { ConnectionState } from './connection';
+import type { ConnectionState } from '../stores/connection';
 
 // A failed subscription restarts once, on the step where the Connection reopens.
 export function shouldResubscribe(

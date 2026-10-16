@@ -13,7 +13,7 @@ import {
   server,
   zed,
   zedEntry,
-} from './installed-agents.mocks';
+} from './installed-agents.mocks.ts';
 
 const loadedRegistry: RegistryLoad = { status: 'loaded', registry };
 

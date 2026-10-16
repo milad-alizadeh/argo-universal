@@ -1,7 +1,7 @@
 import { errorToast } from '#lib/generic/error-toast';
 import type { ErrorToast } from '#primitives/overlays/toast';
-import type { SessionProblemSources } from '../state/session-problem';
 import { sessionOpenFailedTitle } from './open-failure';
+import type { SessionProblemSources } from './session-problem';
 
 // One drop shows one toast, however many of the Session's calls it ended.
 const droppedKey = 'connection-dropped';

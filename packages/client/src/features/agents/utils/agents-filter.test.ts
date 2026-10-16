@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { agentsPage } from './agent-rows';
 import { filterAgents } from './agents-filter';
-import { amp, bolt, loaded, registry, zed } from './installed-agents.mocks';
+import { amp, bolt, loaded, registry, zed } from './installed-agents.mocks.ts';
 
 describe('filterAgents', () => {
   it.each([

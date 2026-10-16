@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AppProviders } from './app-providers';
-import { useTRPCClient } from './features/connection/trpc/context';
+import { useTRPCClient } from './features/connection/api/trpc/context';
 import {
   currentReport,
   recordScreenState,

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { Connection } from '../state/connection';
+import type { Connection } from './connection';
 
 export const ConnectionContext = createContext<Connection | null>(null);
 

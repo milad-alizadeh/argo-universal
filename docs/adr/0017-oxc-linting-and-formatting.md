@@ -47,6 +47,9 @@ Only the existing `complexity`, `max-lines` and `max-lines-per-function` rules s
 
 ## Client feature folders
 
+Spec 0014 #710 replaces the feature state folders with `utils/`, `stores/`, `api/` and `types/`.
+The Connection keeps its tRPC client in `api/trpc/`. These folders use the full lint rules and inherit no waivers.
+
 Spec 0011 #437 moves the client source, with behaviour unchanged, into `features/` and `lib/{product,generic}` (ADR-0016 item 9). The folders below are under `packages/client/src/` unless a full path is shown. Owner approval of these rows is pending in the pull request. Each new folder keeps the historical waiver identity of the old folders listed for it:
 
 | New folder entry | Original folder entries |
@@ -54,11 +57,8 @@ Spec 0011 #437 moves the client source, with behaviour unchanged, into `features
 | `packages/client/src/*` | `trpc/*` |
 | `features/composer/components/*` | `components/*` |
 | `features/composer/hooks/*` | `components/*`, `screens/*` |
-| `features/composer/state/*` | `screens/*` |
 | `features/connection/components/*` | `components/*` |
 | `features/connection/screens/*` | `screens/*` |
-| `features/connection/state/*` | `connection/*` |
-| `features/connection/trpc/*` | `trpc/*` |
 | `features/feed/components/*` | `components/*` |
 | `features/feed/hooks/*` | `feed/*` |
 | `features/feed/view/*` | `feed/*` |

@@ -18,16 +18,16 @@ export {
 export {
   type SessionsFilter,
   useSessionsFilter,
-} from './state/sessions-filter';
+} from './stores/sessions-filter';
 
 export {
   type SessionsLayout,
   sessionsLayoutChoices,
-} from './state/sessions-layout';
+} from './stores/sessions-layout';
 
-export { type StartingFeed } from './state/starting-feed';
+export { type StartingFeed } from './utils/starting-feed';
 
-export { startingFeed } from './state/starting-feed';
+export { startingFeed } from './utils/starting-feed';
 
 export {
   decodeOpenFailure,
@@ -42,12 +42,12 @@ export { useConnectionDropped } from './hooks/use-connection-dropped';
 
 export { opensOnReconnect } from './utils/new-session-attempt';
 
-export { canOpenSession } from './state/open-session';
+export { canOpenSession } from './utils/open-session';
 
 export {
   type ChosenSettings,
   chooseAnotherProject,
-} from './state/session-choices';
+} from './utils/session-choices';
 
 export { useSessionConfigChange } from './hooks/use-session-config-change';
 
@@ -65,7 +65,7 @@ export {
   chosenOptions,
   type ConfigurationPicks,
   initialConfigOptions,
-} from './state/session-option-choices';
+} from './utils/session-option-choices';
 
 export {
   sessionOptionsKey,
@@ -78,13 +78,13 @@ export {
   chooseProject,
   type SessionChoices,
   toSessionChoices,
-} from './state/session-choices';
+} from './utils/session-choices';
 
-export { toNewSessionInput } from './state/open-session';
+export { toNewSessionInput } from './utils/open-session';
 
-export { composerStatus } from './state/composer-status';
+export { composerStatus } from './utils/composer-status';
 
-export { toSendError } from './state/send-error';
+export { toSendError } from './utils/send-error';
 
 export { useSessionElicitation } from './hooks/use-session-elicitation';
 
@@ -100,14 +100,14 @@ export { type SessionConfigChange } from './hooks/use-session-config-change';
 export {
   chooseFirstSession,
   type FirstSessionChoice,
-} from './state/first-session';
+} from './utils/first-session';
 
-export { liveUpdatesStopped } from './state/live-updates-stopped';
+export { liveUpdatesStopped } from './utils/live-updates-stopped';
 
 export {
   type QueryProgress,
   sessionsLoadState,
-} from './state/sessions-load-state';
+} from './utils/sessions-load-state';
 
 export { SessionsList } from './components/sessions-list/sessions-list';
 
@@ -120,13 +120,13 @@ export { type SessionsListProps } from './components/sessions-list/sessions-list
 
 export { SessionsLoading } from './components/sessions-loading/sessions-loading';
 
-export { type SessionsLoadState } from './state/sessions-load-state';
+export { type SessionsLoadState } from './utils/sessions-load-state';
 
 export { newSessionBesideSearch } from './components/sessions-header';
 
 export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';
 
-export { createCoalescedRefetch } from './state/coalesced-refetch';
+export { createCoalescedRefetch } from './api/coalesced-refetch';
 
 export {
   type MergeMethodChoice,
@@ -153,9 +153,9 @@ export {
   type SessionProblem,
   type SessionProblemSources,
   sessionProblem,
-} from './state/session-problem';
+} from './utils/session-problem';
 
-export { openCallout, openProblem, signsIn } from './state/session-callouts';
+export { openCallout, openProblem, signsIn } from './utils/session-callouts';
 
 export {
   type AfterSignIn,

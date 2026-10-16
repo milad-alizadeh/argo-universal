@@ -1,6 +1,6 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type FakeLink, fakeLink } from './connection.mocks';
+import { type FakeLink, fakeLink } from './connection.mocks.ts';
 
 let link: FakeLink;
 

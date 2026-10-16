@@ -1,6 +1,6 @@
 import type { SessionOpenError } from '@repo/contracts';
 import type { FeedViewItem } from '#features/feed';
-import { decodeOpenFailure, openErrorOf } from '../utils/open-failure';
+import { decodeOpenFailure, openErrorOf } from './open-failure';
 
 // A command or Retry that may have opened the Session; `submittedAt` is 0 until it runs.
 export interface OpenAttempt {

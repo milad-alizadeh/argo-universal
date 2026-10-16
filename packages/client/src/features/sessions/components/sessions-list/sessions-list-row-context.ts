@@ -1,7 +1,7 @@
 import type { AgentServer } from '@repo/contracts';
 import { useMemo } from 'react';
 import { virtualListPosition } from '#primitives/lists/virtual-list-item';
-import type { SessionsLayout } from '../../state/sessions-layout';
+import type { SessionsLayout } from '../../stores/sessions-layout';
 import { showsSessionAge } from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { sessionAge, useAgeFrom } from './session-age';

@@ -7,7 +7,7 @@ import {
   type Section,
   type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
-import { sectionAttentionCount } from '../../state/attention-badge';
+import { sectionAttentionCount } from '../../utils/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
 
 interface DesktopRailProps {

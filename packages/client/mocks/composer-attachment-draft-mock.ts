@@ -3,8 +3,8 @@ import {
   attachmentDraftReducer,
   emptyAttachmentDraft,
   type PickedAttachment,
-} from '../src/features/composer/state/attachment-draft';
-import { draftKey } from '../src/features/composer/state/draft-key';
+} from '../src/features/composer/utils/attachment-draft';
+import { draftKey } from '../src/features/composer/utils/draft-key';
 
 export const image = (id: string): ComposerAttachment => ({
   id,

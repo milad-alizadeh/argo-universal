@@ -7,7 +7,7 @@ import { contentActionClass } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { Pressable } from '#primitives/pressable';
-import { completedSteps } from '../../state/status';
+import { completedSteps } from '../../utils/status';
 import { chipClassName, unselectableTextClassName } from './status-surface';
 
 interface PlanTriggerProps {

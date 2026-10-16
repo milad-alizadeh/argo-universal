@@ -8,7 +8,7 @@ import {
   projectBaseBranch,
   secondAgent,
   worktreeProject,
-} from './session-choices.mocks';
+} from './session-choices.mocks.ts';
 
 describe('toSessionChoices', () => {
   it('starts on the first Project and the first saved Agent', () => {
