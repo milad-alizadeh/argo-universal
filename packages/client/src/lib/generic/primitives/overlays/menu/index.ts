@@ -2,9 +2,12 @@ export { Menu } from './menu';
 
 export { ContextMenu } from './context-menu';
 
+export { contextMenuGroup } from './context-menu-group';
+
 export {
   type ContextMenuItem,
   type ContextMenuProps,
+  type ContextMenuTriggerProps,
 } from './context-menu-props';
 
 export { MenuTrigger } from './menu-trigger';
