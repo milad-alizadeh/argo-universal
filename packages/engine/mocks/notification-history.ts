@@ -10,19 +10,17 @@ export function seedNotificationHistory(database: Database): void {
   database.update(session).set({ activityAt: 1000, createdAt: 1 }).run();
   insertEndedTurn(database);
 
-  for (let index = 0; index < 50; index += 1)
-    insertHistorySession(database, index);
+  insertSession(database, {
+    id: movingSessionId,
+    activityAt: 1,
+    createdAt: 1,
+  });
+  insertEndedTurn(database, movingSessionId);
 
   database
     .insert(feedRow)
     .values({ sessionId: movingSessionId, ...toFeedRowWrite(ending) })
     .run();
-}
-
-function insertHistorySession(database: Database, index: number): void {
-  const id = `history-${String(index).padStart(2, '0')}`;
-  insertSession(database, { id, activityAt: index + 1, createdAt: 1 });
-  insertEndedTurn(database, id);
 }
 
 const ending: Notice = {
