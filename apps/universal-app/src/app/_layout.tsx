@@ -2,7 +2,7 @@ import {
   AppProviders,
   PortalHost,
   NavigationProvider,
-  type RenderSymbolImage,
+  type DesktopBridge,
   SymbolImagesProvider,
   Toaster,
   useConnection,
@@ -39,12 +39,7 @@ if (__DEV__ && Platform.OS !== 'web') {
 declare global {
   interface Window {
     // Set by the desktop preload script.
-    argo?: {
-      serverUrl: string | null;
-      window: { minimize(): void; maximize(): void; close(): void };
-      // Only on macOS, where the desktop app draws SF Symbols.
-      symbols?: { render: RenderSymbolImage };
-    };
+    argo?: DesktopBridge;
   }
 }
 
