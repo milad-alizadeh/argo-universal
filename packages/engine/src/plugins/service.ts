@@ -1,6 +1,6 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { PluginList } from '@repo/contracts/plugins';
+import type { PluginCapability, PluginList } from '@repo/contracts/plugins';
 import type {
   PluginFailure,
   PluginStatus,
@@ -37,6 +37,7 @@ export class PluginService {
       entry: { pluginId, directory, main: plugin.manifest.main },
       dev: plugin.firstParty || (await markedDev(directory)),
       name: plugin.manifest.name,
+      capabilities: grantedCapabilities(plugin),
     });
   }
 
@@ -94,3 +95,10 @@ const markedDev = (directory: string): Promise<boolean> =>
     (marker) => marker.isFile(),
     () => false,
   );
+
+// Only first-party Plugins load, and they are granted what they declare with no prompt (ADR-0030).
+const grantedCapabilities = ({
+  firstParty,
+  manifest,
+}: PluginDescriptor): readonly PluginCapability[] =>
+  firstParty ? (manifest.capabilities ?? []) : [];

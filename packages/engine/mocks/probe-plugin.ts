@@ -1,31 +1,118 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { lookup } from 'node:dns';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import type { RequestListener } from 'node:http';
+import { createServer } from 'node:https';
+import type { LookupFunction } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { onTestFinished } from 'vitest';
+import type { PluginCapability } from '@repo/contracts/plugins';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
+import { onTestFinished, vi } from 'vitest';
+import { z } from 'zod';
+import type { PluginNetwork } from '../src/plugins';
 import { createRuntimePlugins } from './runtime-plugins';
 
 export const outFile = 'out.json';
 
 export async function scratch(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), 'argo-plugin-argo-'));
+  const directory = await realpath(
+    await mkdtemp(join(tmpdir(), 'argo-plugin-argo-')),
+  );
 
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
 
   return directory;
 }
 
+type Probe = { home: string; entry: string; code: string; data: string };
+
 // A Plugin is a fixture whose source the test writes, so each scenario names the paths it touches.
 export async function installed(
   source: string,
-  options: { dev?: boolean } = {},
-): Promise<{ home: string; entry: string }> {
+  options: { dev?: boolean; capabilities?: PluginCapability[] } = {},
+): Promise<Probe> {
   const home = await createRuntimePlugins([
     { id: 'probe', fixture: 'healthy', ...options },
   ]);
 
-  const entry = join(home, 'shipped/probe/index.mjs');
+  const code = join(home, 'shipped/probe');
+  const entry = join(code, 'index.mjs');
+  const data = join(await realpath(home), 'plugin-data/probe');
 
-  await writeFile(entry, source);
+  await writeFile(
+    entry,
+    source.replaceAll('$DATA', data).replaceAll('$CODE', code),
+  );
 
-  return { home, entry };
+  return { home, entry, code, data };
+}
+
+/*
+ * A probe that makes each named call, then writes every value or error to its data folder.
+ * `$DATA` and `$CODE` in a call stand for the probe's data and code folders.
+ */
+export const probeSource = (calls: Record<string, string>): string => `
+  export async function register(argo) {
+    const results = {};
+    const calls = { ${Object.entries(calls)
+      .map(([name, call]) => `${JSON.stringify(name)}: () => ${call}`)
+      .join(',\n')} };
+    for (const [name, call] of Object.entries(calls))
+      results[name] = await call().then((value) => ({ value: value ?? null }), (error) => ({ error: error.message }));
+    await argo.fs.write('$DATA/${outFile}', JSON.stringify(results));
+  }`;
+
+// The Engine registers the Project at ARGO_PROJECT_PATH when it starts.
+export async function registeredProject(): Promise<string> {
+  const project = await scratch();
+  await initTestRepository(project);
+  vi.stubEnv('ARGO_PROJECT_PATH', project);
+  onTestFinished(() => {
+    vi.unstubAllEnvs();
+  });
+
+  return project;
+}
+
+// Each call's value or error, as the probe recorded it.
+const ProbeResult = z.record(
+  z.string(),
+  z.union([z.object({ value: z.json() }), z.object({ error: z.string() })]),
+);
+
+type ProbeResult = z.infer<typeof ProbeResult>;
+
+// What the probe wrote to its data folder, the one place it may write.
+export const probeResult = async (data: string): Promise<ProbeResult> =>
+  ProbeResult.parse(JSON.parse(await readFile(join(data, outFile), 'utf8')));
+
+const tls = async (file: string): Promise<string> =>
+  readFile(new URL(`./tls/${file}`, import.meta.url), 'utf8');
+
+// A self-signed certificate for localhost, 127.0.0.1 and api.fixture.test, trusted only by tests.
+export async function fixtureNetwork(): Promise<PluginNetwork> {
+  return { ca: await tls('cert.pem'), lookup: fixtureLookup };
+}
+
+// `api.fixture.test` is a name, not declared as loopback, that resolves to loopback: what DNS rebinding does.
+const fixtureLookup: LookupFunction = (hostname, options, callback) =>
+  hostname === 'api.fixture.test'
+    ? lookup('127.0.0.1', options, callback)
+    : lookup(hostname, options, callback);
+
+export async function httpsServer(listener: RequestListener): Promise<number> {
+  const server = createServer(
+    { key: await tls('key.pem'), cert: await tls('cert.pem') },
+    listener,
+  );
+
+  await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
+  onTestFinished(() => void server.close());
+
+  const address = server.address();
+
+  if (address === null || typeof address === 'string')
+    throw new Error('Server is not listening on a port');
+
+  return address.port;
 }

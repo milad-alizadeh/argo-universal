@@ -1,3 +1,5 @@
+const processExec = 'process:exec';
+
 // Malformed manifest data, supplied through real Plugin folders to the Engine journey.
 export const rejectedManifests = [
   { folder: 'missing-id', patch: { id: undefined }, reason: 'id' },
@@ -95,7 +97,7 @@ export const rejectedManifests = [
   { folder: 'unknown-field', patch: { unknown: true }, reason: 'unknown' },
   ...(
     [
-      ['raw-ip-host', '192.168.1.10'],
+      ['raw-ip-host', '127.0.0.2'],
       ['raw-ipv6-host', '[::1]'],
       ['localhost-host', 'localhost'],
       ['localhost-port-host', 'localhost:8080'],
@@ -130,7 +132,7 @@ export const rejectedManifests = [
     folder,
     patch: {
       capabilities: [
-        { kind: 'process:exec', command: 'gh', args: ['**'], env: [name] },
+        { kind: processExec, command: 'gh', args: ['**'], env: [name] },
       ],
     },
     reason: `${name} is never allowed`,
@@ -138,16 +140,14 @@ export const rejectedManifests = [
   {
     folder: 'relative-command',
     patch: {
-      capabilities: [{ kind: 'process:exec', command: './gh', args: [] }],
+      capabilities: [{ kind: processExec, command: './gh', args: [] }],
     },
     reason: 'command must be',
   },
   {
     folder: 'inner-wildcard',
     patch: {
-      capabilities: [
-        { kind: 'process:exec', command: 'gh', args: ['--repo=*'] },
-      ],
+      capabilities: [{ kind: processExec, command: 'gh', args: ['--repo=*'] }],
     },
     reason: 'args pattern',
   },
@@ -155,7 +155,7 @@ export const rejectedManifests = [
     folder: 'rest-not-last',
     patch: {
       capabilities: [
-        { kind: 'process:exec', command: 'gh', args: ['**', 'list'] },
+        { kind: processExec, command: 'gh', args: ['**', 'list'] },
       ],
     },
     reason: '** must be the last',

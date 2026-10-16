@@ -9,5 +9,30 @@
     "sfFilled": "ticket.fill",
     "material": "confirmation_number"
   },
-  "contributes": { "nav": [{ "id": "issues", "title": "Issues", "path": "/" }] }
+  "contributes": {
+    "nav": [{ "id": "issues", "title": "Issues", "path": "/" }]
+  },
+  "capabilities": [
+    { "kind": "process:exec", "command": "gh", "args": ["auth", "status"] },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "list", "**"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "view", "**"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "close", "**"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "reopen", "**"]
+    }
+  ]
 }

@@ -7,8 +7,10 @@ import { Notifications, type NotificationOptions } from '../notifications';
 import {
   createPluginRuntime,
   type Keychain,
+  type PluginNetwork,
   type PluginRuntime,
 } from '../plugins';
+import { readProjectPaths } from '../projects';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
@@ -30,6 +32,7 @@ export interface HttpServerOptions {
   version: string;
   firstPartyPluginsDirectory?: string;
   keychain?: Keychain;
+  pluginNetwork?: PluginNetwork;
   startedAt: string;
   database: Database;
   sessions: OpenSessionsActorRef;
@@ -108,7 +111,11 @@ function prepareHttpSetup(
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
-    pluginRuntime: createPluginRuntime(options.home, options.keychain),
+    pluginRuntime: createPluginRuntime(options.home, {
+      keychain: options.keychain,
+      network: options.pluginNetwork,
+      projects: async () => readProjectPaths(options.database),
+    }),
   };
 }
 

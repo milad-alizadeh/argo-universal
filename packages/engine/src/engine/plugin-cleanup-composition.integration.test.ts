@@ -1,11 +1,17 @@
 import { appendFile, readFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
 import { join } from 'node:path';
-import { expect, it, onTestFinished } from 'vitest';
+import type { PluginCapability } from '@repo/contracts/plugins';
+import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { installed, scratch } from '#mocks/probe-plugin';
+import { fixtureNetwork, httpsServer, installed } from '#mocks/probe-plugin';
 
 const pollOptions = { timeout: 30_000 };
+
+// A shell is Full access (ADR-0030); these probes declare one to start children that outlive a call.
+const commands: PluginCapability[] = [
+  { kind: 'process:exec', command: 'sh', args: ['-c', '*'] },
+  { kind: 'process:exec', command: 'sleep', args: ['*'] },
+];
 
 const alive = (pid: number): boolean => {
   try {
@@ -17,18 +23,20 @@ const alive = (pid: number): boolean => {
   }
 };
 
-// Starts a child that records its pid, waits for the record, then runs `after`.
-const spawning = (pidFile: string, after: string): string => `
+// Starts a child that records its pid in the data folder, waits for the record, then runs `after`.
+const spawning = (after: string): string => `
   export async function register(argo) {
-    await argo.process.spawn(['sh', '-c', 'echo $$ > ${pidFile}; exec sleep 60']);
+    await argo.process.spawn(['sh', '-c', 'echo $$ > $DATA/pid; exec sleep 60']);
     for (let i = 0; i < 100; i++) {
-      if (await argo.fs.read(${JSON.stringify(pidFile)}).then((t) => t.trim(), () => '')) break;
+      if (await argo.fs.read('$DATA/pid').then((t) => t.trim(), () => '')) break;
       await argo.process.run(['sleep', '0.05']);
     }
     ${after}
   }`;
 
-const childPid = async (pidFile: string): Promise<number> => {
+const childPid = async (data: string): Promise<number> => {
+  const pidFile = join(data, 'pid');
+
   await expect
     .poll(() => readFile(pidFile, 'utf8').catch(() => ''), pollOptions)
     .not.toBe('');
@@ -37,10 +45,9 @@ const childPid = async (pidFile: string): Promise<number> => {
 };
 
 it('kills a Plugin child process when the Plugin crashes', async () => {
-  const pidFile = join(await scratch(), 'pid');
-
-  const { home } = await installed(
-    spawning(pidFile, "throw new Error('crash after spawn');"),
+  const { home, data } = await installed(
+    spawning("throw new Error('crash after spawn');"),
+    { capabilities: commands },
   );
 
   const { caller } = await startEngineTestHost({ home });
@@ -49,23 +56,22 @@ it('kills a Plugin child process when the Plugin crashes', async () => {
     state: 'crashed',
   });
 
-  const pid = await childPid(pidFile);
+  const pid = await childPid(data);
 
   await expect.poll(() => alive(pid), pollOptions).toBe(false);
 });
 
 it('kills a Plugin child process when the Plugin reloads', async () => {
-  const pidFile = join(await scratch(), 'pid');
-
-  const { home, entry } = await installed(spawning(pidFile, ''), {
+  const { home, entry, data } = await installed(spawning(''), {
     dev: true,
+    capabilities: commands,
   });
 
   const { caller } = await startEngineTestHost({ home });
 
   await caller.plugins.activate({ pluginId: 'probe' });
 
-  const pid = await childPid(pidFile);
+  const pid = await childPid(data);
 
   expect(alive(pid)).toBe(true);
   await appendFile(entry, '\n// reload\n');
@@ -73,20 +79,18 @@ it('kills a Plugin child process when the Plugin reloads', async () => {
 });
 
 it('kills a command the Plugin is still running when the Plugin reloads', async () => {
-  const pidFile = join(await scratch(), 'pid');
-
-  const { home, entry } = await installed(
+  const { home, entry, data } = await installed(
     `export async function register(argo) {
-      await argo.process.run(['sh', '-c', 'echo $$ > ${pidFile}; exec sleep 60'], { timeoutMs: 60000 });
+      await argo.process.run(['sh', '-c', 'echo $$ > $DATA/pid; exec sleep 60'], { timeoutMs: 60000 });
     }`,
-    { dev: true },
+    { dev: true, capabilities: commands },
   );
 
   const { caller } = await startEngineTestHost({ home });
 
   void caller.plugins.activate({ pluginId: 'probe' });
 
-  const pid = await childPid(pidFile);
+  const pid = await childPid(data);
 
   expect(alive(pid)).toBe(true);
   await appendFile(entry, '\n// reload\n');
@@ -94,51 +98,60 @@ it('kills a command the Plugin is still running when the Plugin reloads', async 
 });
 
 it('kills a descendant of a Plugin child process when the Plugin crashes', async () => {
-  const pidFile = join(await scratch(), 'pid');
-
-  const { home } = await installed(`
+  const { home, data } = await installed(
+    `
     export async function register(argo) {
-      await argo.process.spawn(['sh', '-c', 'sleep 60 & echo $! > ${pidFile}; wait']);
+      await argo.process.spawn(['sh', '-c', 'sleep 60 & echo $! > $DATA/pid; wait']);
       for (let i = 0; i < 100; i++) {
-        if (await argo.fs.read(${JSON.stringify(pidFile)}).then((t) => t.trim(), () => '')) break;
+        if (await argo.fs.read('$DATA/pid').then((t) => t.trim(), () => '')) break;
         await argo.process.run(['sleep', '0.05']);
       }
       throw new Error('crash after spawn');
-    }`);
+    }`,
+    { capabilities: commands },
+  );
 
   const { caller } = await startEngineTestHost({ home });
 
   await caller.plugins.activate({ pluginId: 'probe' });
 
-  const pid = await childPid(pidFile);
+  const pid = await childPid(data);
 
   await expect.poll(() => alive(pid), pollOptions).toBe(false);
 });
 
 it('aborts a Plugin request that is still waiting when the Plugin reloads', async () => {
+  let received = false;
   let closed = false;
 
-  const server = createServer((request) => {
+  const port = await httpsServer((request) => {
+    received = true;
     request.socket.on('close', () => {
       closed = true;
     });
   });
 
-  await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
-  onTestFinished(() => void server.close());
-
-  const address = server.address();
-  const port = typeof address === 'object' && address ? address.port : 0;
-
   const { home, entry } = await installed(
-    `export async function register(argo) { await argo.fetch('http://127.0.0.1:${port}/'); }`,
-    { dev: true },
+    `export async function register(argo) { await argo.fetch('https://localhost:${port}/'); }`,
+    {
+      dev: true,
+      capabilities: [
+        {
+          kind: 'fetch',
+          host: `localhost:${port}`,
+          reason: 'The fixture server',
+        },
+      ],
+    },
   );
 
-  const { caller } = await startEngineTestHost({ home });
+  const { caller } = await startEngineTestHost({
+    home,
+    pluginNetwork: await fixtureNetwork(),
+  });
 
   void caller.plugins.activate({ pluginId: 'probe' });
-  await expect.poll(() => server.listening && !closed, pollOptions).toBe(true);
+  await expect.poll(() => received && !closed, pollOptions).toBe(true);
   await appendFile(entry, '\n// reload\n');
   await expect.poll(() => closed, pollOptions).toBe(true);
 });

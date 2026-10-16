@@ -151,3 +151,11 @@ export function readProjects(
       ),
   );
 }
+
+// Every registered Project's folder: what any Plugin may read (ADR-0030).
+export const readProjectPaths = (database: Database): string[] =>
+  database
+    .select({ path: project.path })
+    .from(project)
+    .all()
+    .map(({ path }) => path);

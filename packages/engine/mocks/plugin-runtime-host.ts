@@ -11,7 +11,10 @@ export function startPluginRuntime(home: string): PluginRuntime {
 
   const runtime = new PluginRuntime(
     log,
-    new PluginServices(new PluginStorage(home), new MemoryKeychain(), log),
+    new PluginServices(new PluginStorage(home), new MemoryKeychain(), {
+      log,
+      projects: async (): Promise<string[]> => [],
+    }),
   );
 
   onTestFinished(() => runtime.close());

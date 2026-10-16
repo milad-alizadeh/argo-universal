@@ -30,7 +30,7 @@ export const isRefusedVariable = (name: string): boolean =>
 
 const VariableName = z
   .string()
-  .regex(/^[A-Za-z_][A-Za-z0-9_]*$/, 'env names must be variable names')
+  .regex(/^[A-Za-z_]\w*$/, 'env names must be variable names')
   .refine((name) => !isRefusedVariable(name), {
     error: ({ input }) => `${String(input)} is never allowed`,
   });
@@ -64,33 +64,30 @@ export type ProcessCapability = z.infer<typeof ProcessCapability>;
 const ipv4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 
 // Hosts that reach this Mac or anywhere at all; each needs a `reason` the consent screen shows.
-export const isSpecialHost = (host: string): boolean => {
-  const name = hostnameOf(host);
+const specialHostnames: ((name: string) => boolean)[] = [
+  (name) => name === '*' || name === 'localhost',
+  (name) => name.startsWith('['),
+  (name) => ipv4.test(name),
+  (name) => name.endsWith('.localhost'),
+];
 
-  return (
-    name === '*' ||
-    name.startsWith('[') ||
-    ipv4.test(name) ||
-    name === 'localhost' ||
-    name.endsWith('.localhost')
-  );
-};
+export const isSpecialHost = (host: string): boolean =>
+  specialHostnames.some((special) => special(hostnameOf(host)));
 
 export const hostnameOf = (host: string): string =>
   host.startsWith('[')
     ? host.slice(0, host.indexOf(']') + 1)
-    : host.split(':')[0]!;
+    : (host.split(':').at(0) ?? host);
+
+const parsesTo = (host: string): boolean =>
+  URL.canParse(`https://${host}`) && new URL(`https://${host}`).host === host;
 
 // A host is written as the URL parser normalises it, so what is declared is exactly what a call is compared with.
-const normalHost = (host: string): boolean => {
-  if (host === '*') return true;
+const normalHost = (host: string): boolean =>
+  host === '*' || (parsesTo(host) && !/[/@?#]/.test(host));
 
-  try {
-    return new URL(`https://${host}`).host === host && !/[/@?#]/.test(host);
-  } catch {
-    return false;
-  }
-};
+// The host a failing capability names, for its message.
+const HostOf = z.object({ host: z.string() }).catch({ host: 'This host' });
 
 const FetchCapability = z
   .strictObject({
@@ -103,8 +100,7 @@ const FetchCapability = z
   .refine(
     (capability) => capability.reason || !isSpecialHost(capability.host),
     {
-      error: ({ input }) =>
-        `${String((input as { host?: unknown }).host)} needs a reason`,
+      error: ({ input }) => `${HostOf.parse(input).host} needs a reason`,
     },
   );
 

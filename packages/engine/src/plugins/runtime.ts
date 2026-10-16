@@ -1,3 +1,4 @@
+import type { PluginCapability } from '@repo/contracts/plugins';
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { PluginFailures } from './failures';
 import { HostConnection } from './host-connection';
@@ -16,6 +17,8 @@ type PluginLocation = {
   entry: Omit<PluginEntry, 'generation'>;
   dev: boolean;
   name?: string;
+  // The manifest's declared Capabilities; without them the Plugin is granted nothing.
+  capabilities?: readonly PluginCapability[];
 };
 
 export class PluginRuntime {
@@ -72,6 +75,8 @@ export class PluginRuntime {
   activate(location: PluginLocation): Promise<PluginStatus> {
     if (this.closed) throw new Error('Plugin runtime is closed');
     const { pluginId } = location.entry;
+
+    this.grant(location);
     let plugin = this.plugins.get(pluginId);
 
     if (!plugin) {
@@ -80,6 +85,13 @@ export class PluginRuntime {
     }
 
     return plugin.activate();
+  }
+
+  private grant({ entry, capabilities = [] }: PluginLocation): void {
+    this.services.grant(entry.pluginId, {
+      capabilities,
+      codeFolder: entry.directory,
+    });
   }
 
   private createPlugin(location: PluginLocation): RuntimePlugin {
