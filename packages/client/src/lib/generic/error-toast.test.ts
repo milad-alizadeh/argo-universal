@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { errorToast } from './error-toast';
 
-const title = "Couldn't check sign-in";
+const title = 'Could not change Agent';
 
 const message = 'Server error';
 

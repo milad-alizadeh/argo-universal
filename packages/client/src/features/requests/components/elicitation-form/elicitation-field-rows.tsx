@@ -117,10 +117,11 @@ function SwitchRow(props: ElicitationFieldProps): ReactElement {
   );
 }
 
-// GroupedListItem reports `checked` as the switch's aria-checked on the web.
+// GroupedListItem reports `checked` as the switch's aria-checked on the web; a wide card draws it compact, as its choices.
 function webSwitchRow(props: ElicitationFieldProps): GroupedListItemProps {
   return {
     label: fieldLabel(props),
+    size: 'sm',
     accessibilityRole: 'switch',
     checked: props.value === true,
     disabled: props.inactive,

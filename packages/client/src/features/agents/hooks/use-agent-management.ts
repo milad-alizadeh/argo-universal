@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTRPC, type ClientError } from '#features/connection';
+import { errorToast } from '#lib/generic/error-toast';
 import { useErrorToast } from '#primitives/overlays/toast';
 import type { AgentManagement } from '../state/agent-management-types';
 import { useConfiguredAgents } from './use-configured-agents';
@@ -93,11 +94,7 @@ function useRemovedCustom(
 }
 
 function useEnablementFailure(error: ClientError | null): void {
-  useErrorToast(
-    error
-      ? { title: 'Could not change Agent', message: error.message }
-      : undefined,
-  );
+  useErrorToast(errorToast('Could not change Agent', error));
 }
 
 const removalComplete =

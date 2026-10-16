@@ -23,6 +23,7 @@ const symbols: DesktopBridge['symbols'] =
 const argo = {
   serverUrl,
   window: {
+    show: (): void => ipcRenderer.send('window:show'),
     minimize: (): void => ipcRenderer.send('window:minimize'),
     maximize: (): void => ipcRenderer.send('window:maximize'),
     close: (): void => ipcRenderer.send('window:close'),

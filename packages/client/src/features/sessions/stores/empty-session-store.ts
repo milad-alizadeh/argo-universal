@@ -34,7 +34,7 @@ export class EmptySessionStore {
     },
     // A Send stays queued through a failed open until Retry or a sign-in opens it.
     failed: (cause): void => {
-      this.outcome = failedOpen(cause);
+      this.outcome = failedOpen(cause, this.ports.connectionState());
     },
   });
   private readonly handOff = new FirstPromptHandOff({
@@ -164,7 +164,7 @@ export class EmptySessionStore {
   }
 
   private fail(cause: unknown): void {
-    this.outcome = failedOpen(cause);
+    this.outcome = failedOpen(cause, this.ports.connectionState());
     this.pending = undefined;
   }
 

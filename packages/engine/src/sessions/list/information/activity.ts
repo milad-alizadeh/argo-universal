@@ -1,4 +1,8 @@
 import type { SessionStatus, TextContent, Turn } from '@repo/contracts';
+import {
+  type PendingInputRequest,
+  pendingInputRequest,
+} from '../../pending-input';
 import { latestTurnOf } from '../../turns';
 import type { SessionInfoInput } from './information';
 import { deriveSessionStatus } from './status';
@@ -26,25 +30,21 @@ export class SessionInfoActivity {
   }
 
   public activity(): string {
-    if (this.needsInput()) return this.permissionTitle();
+    const pending = this.pending();
+
+    if (pending) return requestText(pending);
 
     if (this.running()) return this.runningText();
 
     return messagePreview(this.input);
   }
 
-  private permissionTitle(): string {
-    const permission = this.input.live && this.input.live.permissionQueue[0];
-
-    return permission ? permission.title : 'Waiting for your answer';
+  private pending(): PendingInputRequest | null {
+    return this.input.live ? pendingInputRequest(this.input.live) : null;
   }
 
   private needsInput(): boolean {
-    if (!this.input.live) return false;
-
-    return Boolean(
-      this.input.live.permissionQueue[0] || this.input.live.elicitationQueue[0],
-    );
+    return this.pending() !== null;
   }
 
   private failure(): string | null {
@@ -56,6 +56,12 @@ export class SessionInfoActivity {
   private runningText(): string {
     return this.input.liveHeader?.text ?? 'Working';
   }
+}
+
+function requestText(pending: PendingInputRequest): string {
+  return pending.kind === 'permission'
+    ? pending.request.title
+    : 'Waiting for your answer';
 }
 
 function interrupted(turn: Turn | undefined): boolean {

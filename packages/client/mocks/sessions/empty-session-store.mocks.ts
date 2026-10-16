@@ -7,6 +7,7 @@ import type {
 } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { type Mock, vi } from 'vitest';
+import type { ConnectionState } from '../../src/features/connection';
 import { EmptySessionStore } from '../../src/features/sessions/stores/empty-session-store';
 import type { EmptySessionPorts } from '../../src/features/sessions/stores/empty-session-types';
 import { openFailure } from './open-failure.mocks';
@@ -61,6 +62,8 @@ export interface Calls {
   }[];
   handOff: string[];
   clearDraft: number;
+  // The Connection's state, which the test drops and reopens.
+  connection: ConnectionState;
 }
 
 // A call the test settles, recorded as it is made.
@@ -95,6 +98,7 @@ const fakePorts = (calls: Calls): EmptySessionPorts => ({
   clearDraft: () => {
     calls.clearDraft += 1;
   },
+  connectionState: () => calls.connection,
 });
 
 export const settle = async (): Promise<void> => {
@@ -111,6 +115,8 @@ export interface EmptySessionHarness {
   sendDraft: Mock<() => void>;
   // Retry, or a finished sign-in.
   retry: () => void;
+  // The Connection goes down, so a call failing with no answer is a drop.
+  drop: () => void;
   // The Connection reopens.
   reconnect: () => void;
 }
@@ -122,6 +128,7 @@ const noCalls = (): Calls => ({
   prompt: [],
   handOff: [],
   clearDraft: 0,
+  connection: 'open',
 });
 
 // The latest Local Session opens and its Feed reads its options, with no saved choices or picks.
@@ -139,16 +146,29 @@ async function openLocal(
   await settle();
 }
 
-// Retry with a spy for the screen's draft send, and the Connection reopening.
-function openAgainCauses(
+// The Connection dropping, and reopening to open the Empty Session again.
+const connectionCauses = (
+  calls: Calls,
   store: EmptySessionStore,
-): Pick<EmptySessionHarness, 'sendDraft' | 'retry' | 'reconnect'> {
+): Pick<EmptySessionHarness, 'drop' | 'reconnect'> => ({
+  drop: () => {
+    calls.connection = 'reconnecting';
+  },
+  reconnect: () => {
+    calls.connection = 'open';
+    store.openAgain({ by: 'connection' });
+  },
+});
+
+// Retry with a spy for the screen's draft send.
+function retryCause(
+  store: EmptySessionStore,
+): Pick<EmptySessionHarness, 'sendDraft' | 'retry'> {
   const sendDraft = vi.fn<() => void>();
 
   return {
     sendDraft,
     retry: () => store.openAgain({ by: 'user', sendDraft }),
-    reconnect: () => store.openAgain({ by: 'connection' }),
   };
 }
 
@@ -164,6 +184,7 @@ export function emptySessionHarness(): EmptySessionHarness {
     store,
     choose: (input) => store.choose({ input, connected: true }),
     openLocal: (sessionId) => openLocal(calls, store, sessionId),
-    ...openAgainCauses(store),
+    ...retryCause(store),
+    ...connectionCauses(calls, store),
   };
 }

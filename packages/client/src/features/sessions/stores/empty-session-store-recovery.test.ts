@@ -46,6 +46,24 @@ describe('A Local first prompt that goes wrong', () => {
     });
   });
 
+  // The open did not fail, so Retry finds nothing to open again and the failure stays on show.
+  it('keeps the failure through a Retry, opening nothing', async () => {
+    h.choose(local('agent-one'));
+    h.store.send(prompt);
+    await h.openLocal('session-1');
+    h.calls.prompt[0]?.call.reject(failure);
+    await settle();
+
+    h.retry();
+    await settle();
+
+    expect(h.calls.open).toHaveLength(1);
+    expect(h.store.getState().attempt).toEqual({
+      status: 'failed',
+      error: { type: 'failed', message: launchFailureMessage },
+    });
+  });
+
   it('hands the Session on when its Feed never shows the prompt', async () => {
     h.choose(local('agent-one'));
     h.store.send(prompt);

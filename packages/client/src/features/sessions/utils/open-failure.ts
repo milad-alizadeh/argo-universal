@@ -5,6 +5,7 @@ import {
   sessionOpenErrorText,
 } from '@repo/contracts';
 import { TRPCClientError } from '@trpc/client';
+import type { ConnectionState } from '#features/connection';
 import { errorMessage } from '#lib/generic/error-toast';
 
 // The same failure reads the same on every Sessions page.
@@ -27,24 +28,33 @@ export function decodeOpenFailure(
   return parsed.success ? parsed.data.data.openError : undefined;
 }
 
-// A call the Connection dropped: tRPC gave up on it with no answer from the Server, as when its WebSocket closed.
-export const connectionDropped = (cause: unknown): boolean =>
+// tRPC gave up on the call with no answer from the Server.
+const unanswered = (cause: unknown): boolean =>
   cause instanceof TRPCClientError && cause.shape === undefined;
 
-const shownFailure = (cause: unknown): SessionOpenError =>
-  decodeOpenFailure(cause) ?? { type: 'failed', message: errorMessage(cause) };
+/*
+ * The Connection dropped the call: it was down when the call failed with no answer. A call
+ * that fails with no answer while the Connection is up failed, and shows Failed to Launch.
+ */
+export const connectionDropped = (
+  cause: unknown,
+  connection: ConnectionState,
+): boolean => connection !== 'open' && unanswered(cause);
 
 /*
  * What a failed open shows (ADR-0004): the sign-in or launch failure it carries, and any other
- * error as Failed to Launch with Retry. A dropped Connection, or no error, shows none: a toast says why.
+ * error as Failed to Launch with Retry. No error shows none. Callers leave out an open the
+ * Connection dropped: a toast says why.
  */
 export function openErrorOf(cause: unknown): SessionOpenError | undefined {
-  if (!cause || connectionDropped(cause)) return undefined;
+  if (!cause) return undefined;
 
-  return shownFailure(cause);
+  return (
+    decodeOpenFailure(cause) ?? { type: 'failed', message: errorMessage(cause) }
+  );
 }
 
-// The words of a failed open, where no callout draws it; undefined for a dropped Connection.
+// The words of a failed open, where no callout draws it.
 export function openFailureText(cause: unknown): string | undefined {
   const failure = openErrorOf(cause);
 
