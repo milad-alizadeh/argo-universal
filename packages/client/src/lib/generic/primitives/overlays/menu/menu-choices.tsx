@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import { useIconBox } from '../../../symbols/icon-role';
+import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
 import {
   type ChoiceMenuProps,
@@ -11,7 +12,7 @@ import {
   type MenuChoiceGroup,
   menuChoiceGroups,
 } from './menu-props';
-import { focusTracking, MenuRadioItem } from './menu-radio-item';
+import { MenuRadioItem } from './menu-radio-item';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -39,7 +40,7 @@ export function MenuChoiceContent<Value extends string>(
     <RadixMenu.Content
       align={props.align ?? 'end'}
       loop
-      {...focusTracking(props.focus)}
+      {...contentFocus(props.focus)}
     >
       <View className="w-65 overflow-hidden bg-card rounded-2xl p-1 shadow-card dark:border dark:border-border">
         {props.loading ? <MenuLoadingRow /> : <MenuChoices {...props} />}
