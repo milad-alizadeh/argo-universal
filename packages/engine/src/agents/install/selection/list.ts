@@ -1,10 +1,10 @@
 import type { AgentInfo, ConfiguredAgent, AgentCheck } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { readAgentCatalog } from '../../catalog-sql';
 import type { ConfigurationDeps } from '../../configuration/configuration-commands';
 import { readConfiguredAgents } from '../../configuration/configuration-sql';
 import * as readiness from '../../configuration/custom-agent-list';
 import { resolveInstalledAgentLaunch } from './launch';
+import { withRegistryMetadata } from './registry-metadata';
 import * as installed from './selection';
 import { readInstallSelection } from './selection';
 
@@ -137,23 +137,6 @@ const configuredRegistry = (database: Database): ConfiguredAgent[] =>
       !agent.configuration.removed && agent.configuration.source === 'registry',
   );
 
-const withAvailableVersions = (
-  database: Database,
-  agents: AgentInfo[],
-): AgentInfo[] => {
-  const catalog = new Map(
-    readAgentCatalog(database).agents.map(({ id, entry }) => [
-      id,
-      entry.version,
-    ]),
-  );
-
-  return agents.map((info) => ({
-    ...info,
-    availableVersion: catalog.get(info.agent),
-  }));
-};
-
 export const listInstalledAgents = async (
   database: Database,
   home: string,
@@ -167,5 +150,5 @@ export const listInstalledAgents = async (
     ),
   );
 
-  return withAvailableVersions(database, listed.flat());
+  return withRegistryMetadata(database, listed.flat());
 };
