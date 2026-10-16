@@ -4,7 +4,7 @@ import { ListTitle } from '#lib/product/list-title';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { SearchField } from '#primitives/inputs/search-field';
-import type { SessionsFilter } from '../state/sessions-filter';
+import type { SessionsFilter } from '../stores/sessions-filter';
 import { SessionsFilterMenu } from './sessions-filter-menu/sessions-filter-menu';
 
 // On iOS a phone's New Session sits beside the search bar, where it replaces the floating button.

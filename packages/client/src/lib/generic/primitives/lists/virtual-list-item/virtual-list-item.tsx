@@ -47,6 +47,17 @@ function itemPlace(props: VirtualListItemProps): ItemPlace {
   };
 }
 
+const pressHandlers = ({
+  onPress,
+  onLongPress,
+}: VirtualListItemProps): Pick<
+  VirtualListItemProps,
+  'onPress' | 'onLongPress'
+> => ({
+  onPress,
+  onLongPress,
+});
+
 // Android's ripple, clipped by the row's corners, in the pressed tint.
 function usePressProps(
   props: VirtualListItemProps,
@@ -57,7 +68,7 @@ function usePressProps(
     accessibilityState: { selected },
     'aria-pressed': selected,
     android_ripple: usePressRipple(),
-    onPress: props.onPress,
+    ...pressHandlers(props),
     role: 'button',
     testID: props.testID,
     className: rowClasses,

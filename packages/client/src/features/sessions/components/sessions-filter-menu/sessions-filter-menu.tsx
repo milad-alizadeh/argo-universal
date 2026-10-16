@@ -6,7 +6,7 @@ import {
   isSessionsLayout,
   type SessionsLayout,
   sessionsLayoutChoices,
-} from '../../state/sessions-layout';
+} from '../../stores/sessions-layout';
 
 export const sessionsFilterChoices = [
   { value: 'active', label: 'Active', icon: 'active-sessions' },

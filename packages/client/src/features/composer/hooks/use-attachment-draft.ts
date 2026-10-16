@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { type Dispatch, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
 import type { ComposerDraft } from '../components/composer/composer';
+import { keptDrafts } from '../stores/kept-draft';
 import {
   type AttachmentDraftEvent,
   type AttachmentError,
@@ -11,10 +12,9 @@ import {
   type PickedAttachment,
   toAttachmentError,
   toUploadForms,
-} from '../state/attachment-draft';
-import { type DraftKey, type DraftOwner, draftKey } from '../state/draft-key';
-import { draftPrompt } from '../state/draft-prompt';
-import { keptDrafts } from '../state/kept-draft';
+} from '../utils/attachment-draft';
+import { type DraftKey, type DraftOwner, draftKey } from '../utils/draft-key';
+import { draftPrompt } from '../utils/draft-prompt';
 import { droppedFiles, pickFiles, pickImages } from './pick-attachments';
 import type { DroppedFiles } from './use-file-drop';
 import { useKeptDraft } from './use-kept-draft';

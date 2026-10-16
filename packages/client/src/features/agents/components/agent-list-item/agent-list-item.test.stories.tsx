@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, spyOn, waitFor } from 'storybook/test';
-import type { AgentRowEntry } from '../../state/agent-rows';
+import type { AgentRowEntry } from '../../utils/agent-rows';
 import {
   base64Icon,
   encodedIcon,

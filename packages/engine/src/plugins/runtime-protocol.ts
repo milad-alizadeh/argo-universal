@@ -1,7 +1,22 @@
+import {
+  FetchCall,
+  FsCall,
+  ProcessCall,
+} from '@repo/contracts/plugins/argo-calls';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
+import { PluginEvent, ViewMessage } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
+
+export type { PluginEvent } from '@repo/contracts/plugins/wire';
+
+export {
+  FetchCall,
+  FsCall,
+  ProcessCall,
+  ProcessCommand,
+} from '@repo/contracts/plugins/argo-calls';
 
 export const StorageQuery = z.object({
   sql: z.string(),
@@ -42,53 +57,17 @@ export const SecretCall = z.discriminatedUnion('action', [
 
 export type SecretCall = z.infer<typeof SecretCall>;
 
-export const FsCall = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('read'), path: z.string() }),
-  z.object({
-    action: z.literal('write'),
-    path: z.string(),
-    content: z.string(),
-  }),
-  z.object({ action: z.literal('list'), path: z.string() }),
-  z.object({ action: z.literal('stat'), path: z.string() }),
-]);
-
-export type FsCall = z.infer<typeof FsCall>;
-
-// A command is its argv; there is no shell to interpret it.
-export const ProcessCommand = z.object({
-  argv: z.array(z.string()).min(1),
-  cwd: z.string().optional(),
-  timeoutMs: z.number().int().positive().optional(),
-  input: z.string().optional(),
-});
-
-export type ProcessCommand = z.infer<typeof ProcessCommand>;
-
-export const ProcessCall = z.discriminatedUnion('action', [
-  ProcessCommand.extend({ action: z.literal('run') }),
-  ProcessCommand.extend({ action: z.literal('spawn') }),
-  z.object({ action: z.literal('wait'), id: z.string() }),
-  z.object({ action: z.literal('kill'), id: z.string() }),
-]);
-
-export type ProcessCall = z.infer<typeof ProcessCall>;
-
-export const FetchCall = z.object({
-  url: z.string(),
-  method: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
-  body: z.string().optional(),
-});
-
-export type FetchCall = z.infer<typeof FetchCall>;
-
 export const PluginRequest = z.discriminatedUnion('api', [
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
   z.object({ api: z.literal('fs'), call: FsCall }),
   z.object({ api: z.literal('process'), call: ProcessCall }),
   z.object({ api: z.literal('fetch'), call: FetchCall }),
+  z.object({
+    api: z.literal('view'),
+    path: z.string(),
+    message: ViewMessage,
+  }),
 ]);
 
 export type PluginRequest = z.infer<typeof PluginRequest>;
@@ -111,6 +90,11 @@ export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
   z.object({
+    type: z.literal('event'),
+    pluginId: z.string(),
+    event: PluginEvent,
+  }),
+  z.object({
     type: z.literal('reply'),
     pluginId: z.string(),
     generation: z.number(),
@@ -119,7 +103,11 @@ export const HostCommand = z.discriminatedUnion('type', [
   }),
 ]);
 
+export type HostCommand = z.infer<typeof HostCommand>;
+
 export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
+
+export type HostEvent = Extract<z.infer<typeof HostCommand>, { type: 'event' }>;
 
 export const HostMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready') }),
@@ -157,7 +145,16 @@ export const WorkerReply = z.object({
 
 export type WorkerReply = z.infer<typeof WorkerReply>;
 
-export const WorkerCommand = z.union([z.literal('ping'), WorkerReply]);
+const WorkerEvent = z.object({
+  type: z.literal('event'),
+  event: PluginEvent,
+});
+
+export const WorkerCommand = z.union([
+  z.literal('ping'),
+  WorkerReply,
+  WorkerEvent,
+]);
 
 export const notStarted: PluginStatus = {
   state: 'not-started',
@@ -173,3 +170,5 @@ export const running: PluginStatus = {
 
 export const runtimeError = (cause: unknown): string =>
   cause instanceof Error ? cause.message : String(cause);
+
+export type WorkerCommand = z.infer<typeof WorkerCommand>;

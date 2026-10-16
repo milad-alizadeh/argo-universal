@@ -4,7 +4,7 @@ import { Platform, View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
-import { completedSteps, fullPercent } from '../../state/status';
+import { completedSteps, fullPercent } from '../../utils/status';
 import { PlanSteps } from './plan-steps';
 import { Meter } from './status-meter';
 

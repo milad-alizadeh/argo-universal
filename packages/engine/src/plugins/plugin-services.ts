@@ -13,6 +13,9 @@ import type { PluginStorage } from './storage';
 
 type Held = { generation: number; resources: PluginResources };
 
+// Pages are the runtime's own; every other call is answered here.
+export type StateRequest = Exclude<PluginRequest, { api: 'view' }>;
+
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
   private readonly storage: PluginStorage;
@@ -33,7 +36,7 @@ export class PluginServices {
   async handle(
     pluginId: string,
     generation: number,
-    request: PluginRequest,
+    request: StateRequest,
   ): Promise<PluginReply> {
     try {
       const value = await this.attempt(pluginId, generation, request);
@@ -59,7 +62,7 @@ export class PluginServices {
   private async attempt(
     pluginId: string,
     generation: number,
-    request: PluginRequest,
+    request: StateRequest,
   ): Promise<PluginValue> {
     this.log(`Plugin ${pluginId}: ${describeCall(request)}`);
     const resources = this.resources(pluginId, generation);
@@ -87,7 +90,7 @@ export class PluginServices {
   private async perform(
     pluginId: string,
     resources: PluginResources,
-    request: PluginRequest,
+    request: StateRequest,
   ): Promise<PluginValue> {
     if (request.api === 'storage')
       return this.storage.execute(pluginId, request.queries);
@@ -113,7 +116,7 @@ export class PluginServices {
   }
 }
 
-type MachineRequest = Exclude<PluginRequest, { api: 'storage' | 'secrets' }>;
+type MachineRequest = Exclude<StateRequest, { api: 'storage' | 'secrets' }>;
 
 function machineCall(
   resources: PluginResources,
@@ -127,7 +130,7 @@ function machineCall(
 }
 
 // The log names the call and where it points, never a secret value or a file's content.
-function describeCall(request: PluginRequest): string {
+function describeCall(request: StateRequest): string {
   if (request.api === 'storage')
     return `argo.storage ${request.queries.length}`;
 

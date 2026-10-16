@@ -20,7 +20,7 @@ import {
   attachmentSelectionFailureMessage,
   emptyAttachmentDraft,
   toAttachmentError,
-} from '../../state/attachment-draft';
+} from '../../utils/attachment-draft';
 
 const keptText = 'Keep editing.';
 

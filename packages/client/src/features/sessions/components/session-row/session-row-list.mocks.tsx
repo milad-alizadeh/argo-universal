@@ -7,7 +7,7 @@ import {
   type VirtualListPosition,
 } from '#primitives/lists/virtual-list-item';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
-import type { SessionsLayout } from '../../state/sessions-layout';
+import type { SessionsLayout } from '../../stores/sessions-layout';
 import { SessionRow, type SessionRowProps } from './session-row';
 import { showsSessionAge } from './session-row-props';
 

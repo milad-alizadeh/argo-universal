@@ -61,6 +61,10 @@ export const argoBridge =
 export const argoSource = `(() => {
   const bridge = globalThis.__argoBridge;
   delete globalThis.__argoBridge;
+  const kit = globalThis.__argoKit.createKit((path, message) => call({ api: 'view', path, message }).then(() => {}));
+  delete globalThis.__argoKit;
+  globalThis.__argoInbox = kit.inbox;
+  globalThis.__argoKitExports = { exports: kit.exports, jsxRuntime: kit.jsxRuntime };
   const call = async (request) => {
     try {
       return JSON.parse(await bridge(JSON.stringify(request)));
@@ -104,5 +108,6 @@ export const argoSource = `(() => {
       set: async (account, value) => { await secret({ action: 'set', account, value }); },
       delete: async (account) => { await secret({ action: 'delete', account }); },
     }),
+    pages: Object.freeze({ register: kit.registerPage }),
   });
 })()`;

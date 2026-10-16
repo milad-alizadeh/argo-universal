@@ -219,7 +219,7 @@
     },
     {
       // #721 requires these four featured Registry ids for presentation only.
-      "files": ["packages/client/src/features/agents/state/featured-ids.ts"],
+      "files": ["packages/client/src/features/agents/utils/featured-ids.ts"],
       "rules": { "argo/vendor-name": "off" }
     },
     {
@@ -533,15 +533,15 @@
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "name": "../trpc/context",
+                "name": "../api/trpc/context",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "name": "../trpc/create-trpc-client",
+                "name": "../api/trpc/create-trpc-client",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "name": "../state/context",
+                "name": "../stores/connection-context",
                 "importNames": [
                   "useConnection",
                   "useConnectionState",
@@ -655,15 +655,15 @@
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "name": "../../trpc/context",
+                "name": "../../api/trpc/context",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "name": "../../trpc/create-trpc-client",
+                "name": "../../api/trpc/create-trpc-client",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
-                "name": "../../state/context",
+                "name": "../../stores/connection-context",
                 "importNames": [
                   "useConnection",
                   "useConnectionState",
@@ -759,8 +759,7 @@
     {
       // The Connection, its tRPC client and the Feed view sit below components and screens (A2).
       "files": [
-        "packages/client/src/features/connection/state/**",
-        "packages/client/src/features/connection/trpc/**",
+        "packages/client/src/features/connection/{stores,utils,api,types}/**",
         "packages/client/src/features/feed/hooks/**",
         "packages/client/src/features/feed/view/**"
       ],
@@ -791,6 +790,51 @@
               },
               {
                 "regex": "^\\.\\./\\.\\./[^.]",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$|^(\\.\\./)+size-class$",
+                "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // The Connection, its tRPC client and the Feed view sit below components and screens (A2).
+      "files": ["packages/client/src/features/connection/api/trpc/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^#lib/generic/primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^\\.\\.?/(.*/)?primitives/",
+                "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
+              },
+              {
+                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./(components|screens)(/|$)",
+                "message": "The Connection, its tRPC client and the Feed view never import components or screens (A2)."
+              },
+              {
+                "regex": "^#features/[^/]+/",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./\\.\\./[^.]",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {

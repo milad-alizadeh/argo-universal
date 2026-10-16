@@ -3,7 +3,7 @@ import {
   GroupedListItem,
   type GroupedListItemProps,
 } from '#primitives/lists/grouped-list-item';
-import type { AgentRowEntry } from '../../state/agent-rows';
+import type { AgentRowEntry } from '../../utils/agent-rows';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import {
   AgentButton,
