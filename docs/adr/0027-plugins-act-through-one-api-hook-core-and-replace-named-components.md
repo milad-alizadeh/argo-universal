@@ -1,6 +1,6 @@
 # Plugins act through one API, hook core behaviour and replace named components
 
-This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md) (owner, 2026-10-16, Spec 0016 #725). ADR-0025 lets Plugins use Node directly, fill declared Slots and nothing else, and leaves Plugin authoring by Agents out of scope. Claude Code's plugins, which change Claude's own app through function hooks, show a model that is safer for the Server and lets Plugins change behaviour as well as add UI. The owner's rule still holds: copy it, don't invent. Everything below starts as proposed API, as ADR-0025 says, and becomes stable once the Issue tracker and Atlas both use it.
+This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md) (owner, 2026-10-16, Spec 0016 #725). ADR-0025 lets Plugins use Node directly, fill declared Slots and nothing else, and leaves Plugin authoring by Agents out of scope. Claude Code's plugins, which change Claude's own app through function hooks, show a model that is safer for the Server and lets Plugins change behaviour as well as add UI. The owner's rule still holds: copy it, don't invent. [ADR-0030](0030-plugins-get-only-the-capabilities-their-manifest-declares.md) (owner, 2026-10-16) amends this: the Server checks every `argo` call against the Capabilities the manifest declares. Everything below starts as proposed API, as ADR-0025 says, and becomes stable once the Issue tracker and Atlas both use it.
 
 ## Decision
 
