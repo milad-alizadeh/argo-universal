@@ -75,7 +75,6 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
   );
 }
 
-// Steps that hand one Agent a named scenario.
 const namedScenarioSteps = [
   [/^(?:Given|And) Agent (\d+) supplies a long Feed history$/, 'feed-history'],
   [/^(?:Given|And) Agent (\d+) asks for an Elicitation$/, 'elicitation'],
@@ -87,9 +86,9 @@ const namedScenarioSteps = [
 
 function namedScenarioConfiguration(steps: string[]): AppFixtureAgents {
   return Object.fromEntries(
-    namedScenarioSteps.flatMap(([step, scenario]) => {
+    namedScenarioSteps.flatMap(([pattern, scenario]) => {
       const chosen = steps
-        .map((text) => step.exec(text))
+        .map((step) => pattern.exec(step))
         .find((match) => match !== null);
 
       return chosen ? [[agentId(Number(chosen[1])), { scenario }]] : [];

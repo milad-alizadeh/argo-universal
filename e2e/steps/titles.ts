@@ -1,23 +1,21 @@
 import type { Page } from '@playwright/test';
 import { agentTitle } from '@repo/mocks/agent/title-scenarios';
 import { expect } from '../fixtures';
-import { readAgent } from './agents';
+import { expectListedAgent } from './agents';
+import { submitElicitationTitle } from './elicitation';
 import { Given, When, Then } from './fixtures';
-import { wide } from './frame';
+import { openWidePage } from './frame';
 import { sessionRow, startSession } from './live-session';
-import { agentId } from './scenario-agents';
 
-// The scenario itself comes from scenario-agents.ts: the Agent asks an Elicitation, then sends its title.
+// The question holds the Turn; the Agent sends its title only once it is answered.
+Given('Agent {int} names its Session after a question', expectListedAgent);
+
+// The answer itself does not matter: the Agent's title is fixed in its scenario.
+When("I answer the Agent's question", async ({ page }): Promise<void> => {
+  await submitElicitationTitle(page, 'Any answer');
+});
+
 Given(
-  'Agent {int} names its Session after a question',
-  async ({ page, server }, ordinal: number): Promise<void> => {
-    expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-      id: agentId(ordinal),
-    });
-  },
-);
-
-When(
   'I start a Session with the prompt {string}',
   async ({ page }, prompt: string): Promise<void> => {
     await startSession(page, prompt);
@@ -63,15 +61,19 @@ async function renameSession(
   await dialog.getByLabel('Title', { exact: true }).fill(renamed);
   await dialog.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(dialog).toHaveCount(0);
+  await expect(sessionRow(page, renamed)).toBeVisible();
 }
 
 When(
   'I rename the Session {string} to {string} on another page',
   async ({ app }, title: string, renamed: string): Promise<void> => {
-    if (!app.openPage) throw new Error('This scenario needs the web App');
-    const other = await app.openPage();
-    await other.setViewportSize(wide);
-    await other.goto('/');
-    await renameSession(other, title, renamed);
+    await renameSession(await openWidePage(app), title, renamed);
+  },
+);
+
+Then(
+  "no Session is titled with the Agent's title",
+  async ({ page }): Promise<void> => {
+    await expect(sessionRow(page, agentTitle)).toHaveCount(0);
   },
 );

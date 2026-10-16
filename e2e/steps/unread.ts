@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { type App, expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { phone, wide } from './frame';
+import { openWidePage, phone, wide } from './frame';
 import { expectRunningCommand, restartEngine } from './live-feed';
 import {
   attentionLabel,
@@ -50,10 +50,7 @@ Given(
 When(
   "I see the end of the Session {string}'s Feed on another page",
   async ({ app }, title: string): Promise<void> => {
-    if (!app.openPage) throw new Error('This scenario needs the web App');
-    const other = await app.openPage();
-    await other.setViewportSize(wide);
-    await other.goto('/');
+    const other = await openWidePage(app);
     await sessionWithStatus(other, title, 'Unread').click();
     await expect(
       other.getByTestId('feed-scroll').getByText(title, { exact: true }),

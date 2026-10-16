@@ -19,7 +19,6 @@ export const sessionWithStatus = (
 const escapeRegExp = (text: string): string =>
   text.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// A Session's row in the list, named by its title, whatever its status.
 export const sessionRow = (page: Page, title: string): Locator =>
   page.getByRole('button', { name: new RegExp(`^${escapeRegExp(title)}, `) });
 
