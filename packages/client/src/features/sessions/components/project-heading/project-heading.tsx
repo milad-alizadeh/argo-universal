@@ -1,7 +1,10 @@
 import type * as React from 'react';
 import { memo } from 'react';
+import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import { Pressable } from '#primitives/pressable';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { ProjectActions } from './project-heading-actions';
+import { ProjectHeadingMenu } from './project-heading-menu';
 import { ProjectToggle } from './project-heading-toggle';
 
 export interface ProjectHeadingProps {
@@ -17,13 +20,29 @@ export interface ProjectHeadingProps {
 const rowClassName =
   'group mb-0.5 min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-xl pr-1 web:wide:hover:bg-muted web:wide:focus-within:bg-muted';
 
-export const ProjectHeading = memo(function ProjectHeading(
-  props: ProjectHeadingProps,
+// Only a wide window's heading draws ⋯ and +, and has no right-click menu; elsewhere its long press opens the same actions.
+function ProjectHeadingRow(
+  props: ProjectHeadingProps & ContextMenuTriggerProps,
 ): React.JSX.Element {
   return (
     <Pressable accessible={false} className={rowClassName}>
       <ProjectToggle {...props} />
-      <ProjectActions {...props} />
+      <SizeClass only="wide">
+        <ProjectActions {...props} />
+      </SizeClass>
     </Pressable>
+  );
+}
+
+export const ProjectHeading = memo(function ProjectHeading(
+  props: ProjectHeadingProps,
+): React.JSX.Element {
+  const row = <ProjectHeadingRow {...props} />;
+
+  return (
+    <SizeClass
+      compact={<ProjectHeadingMenu {...props}>{row}</ProjectHeadingMenu>}
+      wide={row}
+    />
   );
 });

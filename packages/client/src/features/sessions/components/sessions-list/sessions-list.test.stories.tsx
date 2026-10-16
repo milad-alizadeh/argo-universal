@@ -1,10 +1,12 @@
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
 import { memoizedRows } from '../../../../../mocks/sessions-list/memoized-rows.test.mocks';
+import { phoneProjectMenu } from '../../../../../mocks/sessions-list/phone-project-menu.test.mocks';
 import {
   exampleProjectName,
   meta as sessionsListMeta,
@@ -27,7 +29,9 @@ export const MemoizedRows: Story = {
   name: 'Controlled selection and activity',
 };
 
+// A wide window's heading keeps ⋯ and +, shown on hover or focus.
 export const ProjectActions: Story = {
+  beforeEach: () => settleViewport(layoutWidths.wide),
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
@@ -64,6 +68,8 @@ export const ProjectActions: Story = {
     await expect(heading).toHaveAttribute(expandedAttribute, 'false');
   },
 };
+
+export const PhoneProjectMenu = phoneProjectMenu;
 
 export const FlatSearchResults: Story = {
   args: { query: 'a', flat: true },

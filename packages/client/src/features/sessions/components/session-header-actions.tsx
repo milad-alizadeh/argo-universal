@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { useInspector } from '#lib/product/inspector';
 import { IconButton } from '#primitives/buttons/icon-button';
-import type { MergeMethod } from '../state/merge-method';
+import type { MergeMethod } from '../stores/merge-method';
 import { MergePrButton, type MergePrButtonProps } from './merge-pr-button';
 import type { SessionHeaderProps } from './session-header-props';
 import type { SessionPullRequest } from './session-pull-request';

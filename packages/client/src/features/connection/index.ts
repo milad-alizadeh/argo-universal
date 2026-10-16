@@ -1,4 +1,4 @@
-export type { Connection, ConnectionState } from './state/connection';
+export type { Connection, ConnectionState } from './stores/connection';
 
 export {
   useConnectionState,
@@ -13,7 +13,7 @@ export {
   BlobUrlContext,
   createServerBlobUrl,
   useBlobUrl,
-} from './trpc/blob-url';
+} from './api/trpc/blob-url';
 
 export {
   type ClientError,
@@ -22,7 +22,7 @@ export {
   TRPCProvider,
   useTRPC,
   useTRPCClient,
-} from './trpc/context';
+} from './api/trpc/context';
 
 export { formatServerClock, formatServerStart } from './components/server-time';
 

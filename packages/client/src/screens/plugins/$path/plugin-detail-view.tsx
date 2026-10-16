@@ -1,23 +1,22 @@
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { PluginTree } from '../../../lib/product/plugin-registry';
 
 export interface PluginDetailViewProps {
-  name: string;
+  // The page the Plugin draws; blank until the Server's first snapshot arrives.
+  root: WireNode | null;
+  onEvent: (eventId: string) => void;
 }
 
-// Foundations / PluginPage: a manifest's name, before Plugin code can draw its page.
+// Foundations / PluginPage: a Plugin's page, drawn by the App's registry.
 export function PluginDetailView({
-  name,
+  root,
+  onEvent,
 }: PluginDetailViewProps): React.JSX.Element {
   return (
-    <View
-      testID="plugin-page"
-      className="flex-1 items-center justify-center bg-content p-6"
-    >
-      <Text role="heading" accessibilityRole="heading" aria-level={1}>
-        {name}
-      </Text>
+    <View testID="plugin-page" className="flex-1 bg-content p-6">
+      {root && <PluginTree root={root} onEvent={onEvent} />}
     </View>
   );
 }

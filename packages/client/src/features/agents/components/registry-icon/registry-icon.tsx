@@ -24,7 +24,7 @@ type IconSource =
 
 type ImageProps = Pick<
   XmlProps,
-  'width' | 'height' | 'accessibilityRole' | 'accessibilityLabel'
+  'width' | 'height' | 'color' | 'accessibilityRole' | 'accessibilityLabel'
 >;
 
 export function RegistryIcon({
@@ -64,24 +64,30 @@ function WebImage(
 }
 
 function RegistryImage(props: LoadedIconProps): React.JSX.Element {
-  const source = useRegistrySource(props.uri);
-  const image = imageProps(props.agentName, useIconPixels(props.role));
+  const color = useForegroundColor();
+  const { uri } = props;
+  const source = useMemo(() => decodeSource(uri, color), [uri, color]);
+  const image = imageProps(props.agentName, useIconPixels(props.role), color);
 
   return renderIcon(source, image, <UnavailableIcon {...props} />);
 }
 
-// A vendored logo paints with currentColor, which would be black; it takes the foreground, so it reads on a dark surface.
-function useRegistrySource(uri: string): IconSource {
+// A registry logo paints with currentColor, which would be black; it takes the foreground, so it reads on a dark surface. A fetched SVG takes it as `color`, an inline one written in.
+function useForegroundColor(): string | undefined {
   const resolved = useResolveClassNames('text-foreground').color;
-  const color = typeof resolved === 'string' ? resolved : undefined;
 
-  return useMemo(() => decodeRegistryIconSource(uri, color), [uri, color]);
+  return typeof resolved === 'string' ? resolved : undefined;
 }
 
-function imageProps(agentName: string, pixels: number): ImageProps {
+function imageProps(
+  agentName: string,
+  pixels: number,
+  color: string | undefined,
+): ImageProps {
   return {
     width: pixels,
     height: pixels,
+    color,
     accessibilityRole: 'image',
     accessibilityLabel: `${agentName} icon`,
   };
@@ -101,10 +107,7 @@ function renderIcon(
   );
 }
 
-function decodeRegistryIconSource(
-  iconUri: string,
-  color: string | undefined,
-): IconSource {
+function decodeSource(iconUri: string, color: string | undefined): IconSource {
   try {
     const xml = decodeInlineSvgDataUri(iconUri, color);
 

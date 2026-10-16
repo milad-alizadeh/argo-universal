@@ -314,6 +314,9 @@ catalogs:
     '@types/react-dom':
       specifier: 19.2.3
       version: 19.2.3
+    '@types/react-reconciler':
+      specifier: 0.33.0
+      version: 0.33.0
     '@types/semver':
       specifier: 7.7.1
       version: 7.7.1
@@ -497,6 +500,9 @@ catalogs:
     react-native-worklets:
       specifier: 0.10.1
       version: 0.10.1
+    react-reconciler:
+      specifier: 0.33.0
+      version: 0.33.0
     rolldown:
       specifier: 1.2.12
       version: 1.2.12
@@ -1208,6 +1214,9 @@ importers:
       vaul:
         specifier: 'catalog:'
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
     devDependencies:
       '@lexical/headless':
         specifier: 'catalog:'
@@ -1352,6 +1361,12 @@ importers:
       node-pty:
         specifier: 'catalog:'
         version: 1.1.0(patch_hash=7d1011d673c499bcb613735c649b2e5ae78dc6430f35dd2d18f077fa6a7f5e01)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.3
+      react-reconciler:
+        specifier: 'catalog:'
+        version: 0.33.0(react@19.2.3)
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -1383,6 +1398,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
+      '@types/react-reconciler':
+        specifier: 'catalog:'
+        version: 0.33.0(@types/react@19.2.18)
       '@types/semver':
         specifier: 'catalog:'
         version: 7.7.1
@@ -4951,6 +4972,11 @@ packages:
 
   '@types/react-reconciler@0.28.9':
     resolution: {integrity: sha512-HHM3nxyUZ3zAylX8ZEyrDNd2XZOnQ0D5XfunJF5FLQnZbHHYq4UWvW1QfelQNXv1ICNkwYhfxjwfnqivYB6bFg==}
+    peerDependencies:
+      '@types/react': '*'
+
+  '@types/react-reconciler@0.33.0':
+    resolution: {integrity: sha512-HZOXsKT0tGI9LlUw2LuedXsVeB88wFa536vVL0M6vE8zN63nI+sSr1ByxmPToP5K5bukaVscyeCJcF9guVNJ1g==}
     peerDependencies:
       '@types/react': '*'
 
@@ -12630,6 +12656,10 @@ snapshots:
       '@types/react': 19.2.18
 
   '@types/react-reconciler@0.28.9(@types/react@19.2.18)':
+    dependencies:
+      '@types/react': 19.2.18
+
+  '@types/react-reconciler@0.33.0(@types/react@19.2.18)':
     dependencies:
       '@types/react': 19.2.18
 

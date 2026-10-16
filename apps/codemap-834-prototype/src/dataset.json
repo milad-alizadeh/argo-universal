@@ -6763,120 +6763,120 @@
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/attachment-draft-owner.test.ts",
-      "path": "packages/client/src/features/composer/state/attachment-draft-owner.test.ts",
+      "id": "packages/client/src/features/composer/utils/attachment-draft-owner.test.ts",
+      "path": "packages/client/src/features/composer/utils/attachment-draft-owner.test.ts",
       "area": 132,
       "height": 3,
       "branches": 3,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/attachment-draft-upload.test.ts",
-      "path": "packages/client/src/features/composer/state/attachment-draft-upload.test.ts",
+      "id": "packages/client/src/features/composer/utils/attachment-draft-upload.test.ts",
+      "path": "packages/client/src/features/composer/utils/attachment-draft-upload.test.ts",
       "area": 79,
       "height": 3,
       "branches": 5,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/attachment-draft.test.ts",
-      "path": "packages/client/src/features/composer/state/attachment-draft.test.ts",
+      "id": "packages/client/src/features/composer/utils/attachment-draft.test.ts",
+      "path": "packages/client/src/features/composer/utils/attachment-draft.test.ts",
       "area": 116,
       "height": 4,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/attachment-draft.ts",
-      "path": "packages/client/src/features/composer/state/attachment-draft.ts",
+      "id": "packages/client/src/features/composer/utils/attachment-draft.ts",
+      "path": "packages/client/src/features/composer/utils/attachment-draft.ts",
       "area": 176,
       "height": 4,
       "branches": 6,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/configuration-preference-storage.ts",
-      "path": "packages/client/src/features/composer/state/configuration-preference-storage.ts",
+      "id": "packages/client/src/features/composer/stores/configuration-preference-storage.ts",
+      "path": "packages/client/src/features/composer/stores/configuration-preference-storage.ts",
       "area": 105,
       "height": 4,
       "branches": 3,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/draft-key.test.ts",
-      "path": "packages/client/src/features/composer/state/draft-key.test.ts",
+      "id": "packages/client/src/features/composer/utils/draft-key.test.ts",
+      "path": "packages/client/src/features/composer/utils/draft-key.test.ts",
       "area": 20,
       "height": 1,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/draft-key.ts",
-      "path": "packages/client/src/features/composer/state/draft-key.ts",
+      "id": "packages/client/src/features/composer/utils/draft-key.ts",
+      "path": "packages/client/src/features/composer/utils/draft-key.ts",
       "area": 14,
       "height": 1,
       "branches": 1,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/draft-prompt.test.ts",
-      "path": "packages/client/src/features/composer/state/draft-prompt.test.ts",
+      "id": "packages/client/src/features/composer/utils/draft-prompt.test.ts",
+      "path": "packages/client/src/features/composer/utils/draft-prompt.test.ts",
       "area": 49,
       "height": 3,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/draft-prompt.ts",
-      "path": "packages/client/src/features/composer/state/draft-prompt.ts",
+      "id": "packages/client/src/features/composer/utils/draft-prompt.ts",
+      "path": "packages/client/src/features/composer/utils/draft-prompt.ts",
       "area": 37,
       "height": 2,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/kept-draft.test.ts",
-      "path": "packages/client/src/features/composer/state/kept-draft.test.ts",
+      "id": "packages/client/src/features/composer/stores/kept-draft.test.ts",
+      "path": "packages/client/src/features/composer/stores/kept-draft.test.ts",
       "area": 55,
       "height": 2,
       "branches": 1,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/kept-draft.ts",
-      "path": "packages/client/src/features/composer/state/kept-draft.ts",
+      "id": "packages/client/src/features/composer/stores/kept-draft.ts",
+      "path": "packages/client/src/features/composer/stores/kept-draft.ts",
       "area": 41,
       "height": 3,
       "branches": 4,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/session-configuration-preferences.test.ts",
-      "path": "packages/client/src/features/composer/state/session-configuration-preferences.test.ts",
+      "id": "packages/client/src/features/composer/stores/session-configuration-preferences.test.ts",
+      "path": "packages/client/src/features/composer/stores/session-configuration-preferences.test.ts",
       "area": 127,
       "height": 6,
       "branches": 5,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/session-configuration-preferences.ts",
-      "path": "packages/client/src/features/composer/state/session-configuration-preferences.ts",
+      "id": "packages/client/src/features/composer/stores/session-configuration-preferences.ts",
+      "path": "packages/client/src/features/composer/stores/session-configuration-preferences.ts",
       "area": 13,
       "height": 7,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/session-configuration-storage.test.ts",
-      "path": "packages/client/src/features/composer/state/session-configuration-storage.test.ts",
+      "id": "packages/client/src/features/composer/stores/session-configuration-storage.test.ts",
+      "path": "packages/client/src/features/composer/stores/session-configuration-storage.test.ts",
       "area": 76,
       "height": 3,
       "branches": 4,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/composer/state/status.ts",
-      "path": "packages/client/src/features/composer/state/status.ts",
+      "id": "packages/client/src/features/composer/utils/status.ts",
+      "path": "packages/client/src/features/composer/utils/status.ts",
       "area": 53,
       "height": 3,
       "branches": 0,
@@ -7019,48 +7019,48 @@
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/connection/state/should-resubscribe.test.ts",
-      "path": "packages/client/src/features/connection/state/should-resubscribe.test.ts",
+      "id": "packages/client/src/features/connection/utils/should-resubscribe.test.ts",
+      "path": "packages/client/src/features/connection/utils/should-resubscribe.test.ts",
       "area": 34,
       "height": 1,
       "branches": 2,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/connection/state/should-resubscribe.ts",
-      "path": "packages/client/src/features/connection/state/should-resubscribe.ts",
+      "id": "packages/client/src/features/connection/utils/should-resubscribe.ts",
+      "path": "packages/client/src/features/connection/utils/should-resubscribe.ts",
       "area": 13,
       "height": 1,
       "branches": 2,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/connection/trpc/blob-url.ts",
-      "path": "packages/client/src/features/connection/trpc/blob-url.ts",
+      "id": "packages/client/src/features/connection/api/trpc/blob-url.ts",
+      "path": "packages/client/src/features/connection/api/trpc/blob-url.ts",
       "area": 22,
       "height": 3,
       "branches": 1,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/connection/trpc/context.ts",
-      "path": "packages/client/src/features/connection/trpc/context.ts",
+      "id": "packages/client/src/features/connection/api/trpc/context.ts",
+      "path": "packages/client/src/features/connection/api/trpc/context.ts",
       "area": 28,
       "height": 2,
       "branches": 1,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/connection/trpc/create-trpc-client.integration.test.ts",
-      "path": "packages/client/src/features/connection/trpc/create-trpc-client.integration.test.ts",
+      "id": "packages/client/src/features/connection/api/trpc/create-trpc-client.integration.test.ts",
+      "path": "packages/client/src/features/connection/api/trpc/create-trpc-client.integration.test.ts",
       "area": 123,
       "height": 3,
       "branches": 4,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/connection/trpc/create-trpc-client.ts",
-      "path": "packages/client/src/features/connection/trpc/create-trpc-client.ts",
+      "id": "packages/client/src/features/connection/api/trpc/create-trpc-client.ts",
+      "path": "packages/client/src/features/connection/api/trpc/create-trpc-client.ts",
       "area": 61,
       "height": 3,
       "branches": 0,
@@ -8611,16 +8611,16 @@
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/frame/state/attention-badge.test.ts",
-      "path": "packages/client/src/features/frame/state/attention-badge.test.ts",
+      "id": "packages/client/src/features/frame/utils/attention-badge.test.ts",
+      "path": "packages/client/src/features/frame/utils/attention-badge.test.ts",
       "area": 21,
       "height": 4,
       "branches": 1,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/frame/state/attention-badge.ts",
-      "path": "packages/client/src/features/frame/state/attention-badge.ts",
+      "id": "packages/client/src/features/frame/utils/attention-badge.ts",
+      "path": "packages/client/src/features/frame/utils/attention-badge.ts",
       "area": 22,
       "height": 6,
       "branches": 1,
@@ -9555,32 +9555,32 @@
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/coalesced-refetch.test.ts",
-      "path": "packages/client/src/features/sessions/state/coalesced-refetch.test.ts",
+      "id": "packages/client/src/features/sessions/api/coalesced-refetch.test.ts",
+      "path": "packages/client/src/features/sessions/api/coalesced-refetch.test.ts",
       "area": 64,
       "height": 2,
       "branches": 4,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/coalesced-refetch.ts",
-      "path": "packages/client/src/features/sessions/state/coalesced-refetch.ts",
+      "id": "packages/client/src/features/sessions/api/coalesced-refetch.ts",
+      "path": "packages/client/src/features/sessions/api/coalesced-refetch.ts",
       "area": 31,
       "height": 2,
       "branches": 2,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/composer-status.test.ts",
-      "path": "packages/client/src/features/sessions/state/composer-status.test.ts",
+      "id": "packages/client/src/features/sessions/utils/composer-status.test.ts",
+      "path": "packages/client/src/features/sessions/utils/composer-status.test.ts",
       "area": 78,
       "height": 3,
       "branches": 12,
       "tone": "warning"
     },
     {
-      "id": "packages/client/src/features/sessions/state/composer-status.ts",
-      "path": "packages/client/src/features/sessions/state/composer-status.ts",
+      "id": "packages/client/src/features/sessions/utils/composer-status.ts",
+      "path": "packages/client/src/features/sessions/utils/composer-status.ts",
       "area": 27,
       "height": 3,
       "branches": 3,
@@ -9611,160 +9611,160 @@
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/first-session.test.ts",
-      "path": "packages/client/src/features/sessions/state/first-session.test.ts",
+      "id": "packages/client/src/features/sessions/utils/first-session.test.ts",
+      "path": "packages/client/src/features/sessions/utils/first-session.test.ts",
       "area": 48,
       "height": 1,
       "branches": 7,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/first-session.ts",
-      "path": "packages/client/src/features/sessions/state/first-session.ts",
+      "id": "packages/client/src/features/sessions/utils/first-session.ts",
+      "path": "packages/client/src/features/sessions/utils/first-session.ts",
       "area": 23,
       "height": 3,
       "branches": 6,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/live-updates-stopped.test.ts",
-      "path": "packages/client/src/features/sessions/state/live-updates-stopped.test.ts",
+      "id": "packages/client/src/features/sessions/utils/live-updates-stopped.test.ts",
+      "path": "packages/client/src/features/sessions/utils/live-updates-stopped.test.ts",
       "area": 24,
       "height": 1,
       "branches": 2,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/live-updates-stopped.ts",
-      "path": "packages/client/src/features/sessions/state/live-updates-stopped.ts",
+      "id": "packages/client/src/features/sessions/utils/live-updates-stopped.ts",
+      "path": "packages/client/src/features/sessions/utils/live-updates-stopped.ts",
       "area": 10,
       "height": 1,
       "branches": 2,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/merge-method.test.ts",
-      "path": "packages/client/src/features/sessions/state/merge-method.test.ts",
+      "id": "packages/client/src/features/sessions/stores/merge-method.test.ts",
+      "path": "packages/client/src/features/sessions/stores/merge-method.test.ts",
       "area": 27,
       "height": 1,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/merge-method.ts",
-      "path": "packages/client/src/features/sessions/state/merge-method.ts",
+      "id": "packages/client/src/features/sessions/stores/merge-method.ts",
+      "path": "packages/client/src/features/sessions/stores/merge-method.ts",
       "area": 57,
       "height": 1,
       "branches": 3,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/open-session.test.ts",
-      "path": "packages/client/src/features/sessions/state/open-session.test.ts",
+      "id": "packages/client/src/features/sessions/utils/open-session.test.ts",
+      "path": "packages/client/src/features/sessions/utils/open-session.test.ts",
       "area": 91,
       "height": 4,
       "branches": 10,
       "tone": "warning"
     },
     {
-      "id": "packages/client/src/features/sessions/state/open-session.ts",
-      "path": "packages/client/src/features/sessions/state/open-session.ts",
+      "id": "packages/client/src/features/sessions/utils/open-session.ts",
+      "path": "packages/client/src/features/sessions/utils/open-session.ts",
       "area": 62,
       "height": 4,
       "branches": 6,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/send-error.test.ts",
-      "path": "packages/client/src/features/sessions/state/send-error.test.ts",
+      "id": "packages/client/src/features/sessions/utils/send-error.test.ts",
+      "path": "packages/client/src/features/sessions/utils/send-error.test.ts",
       "area": 46,
       "height": 4,
       "branches": 6,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/send-error.ts",
-      "path": "packages/client/src/features/sessions/state/send-error.ts",
+      "id": "packages/client/src/features/sessions/utils/send-error.ts",
+      "path": "packages/client/src/features/sessions/utils/send-error.ts",
       "area": 42,
       "height": 4,
       "branches": 1,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/session-choices.mocks.ts",
-      "path": "packages/client/src/features/sessions/state/session-choices.mocks.ts",
+      "id": "packages/client/src/features/sessions/utils/session-choices.mocks.ts",
+      "path": "packages/client/src/features/sessions/utils/session-choices.mocks.ts",
       "area": 52,
       "height": 2,
       "branches": 2,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/session-choices.test.ts",
-      "path": "packages/client/src/features/sessions/state/session-choices.test.ts",
+      "id": "packages/client/src/features/sessions/utils/session-choices.test.ts",
+      "path": "packages/client/src/features/sessions/utils/session-choices.test.ts",
       "area": 105,
       "height": 2,
       "branches": 4,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/session-choices.ts",
-      "path": "packages/client/src/features/sessions/state/session-choices.ts",
+      "id": "packages/client/src/features/sessions/utils/session-choices.ts",
+      "path": "packages/client/src/features/sessions/utils/session-choices.ts",
       "area": 93,
       "height": 2,
       "branches": 9,
       "tone": "warning"
     },
     {
-      "id": "packages/client/src/features/sessions/state/sessions-filter.ts",
-      "path": "packages/client/src/features/sessions/state/sessions-filter.ts",
+      "id": "packages/client/src/features/sessions/stores/sessions-filter.ts",
+      "path": "packages/client/src/features/sessions/stores/sessions-filter.ts",
       "area": 28,
       "height": 3,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/sessions-layout.test.ts",
-      "path": "packages/client/src/features/sessions/state/sessions-layout.test.ts",
+      "id": "packages/client/src/features/sessions/stores/sessions-layout.test.ts",
+      "path": "packages/client/src/features/sessions/stores/sessions-layout.test.ts",
       "area": 47,
       "height": 1,
       "branches": 3,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/sessions-layout.ts",
-      "path": "packages/client/src/features/sessions/state/sessions-layout.ts",
+      "id": "packages/client/src/features/sessions/stores/sessions-layout.ts",
+      "path": "packages/client/src/features/sessions/stores/sessions-layout.ts",
       "area": 88,
       "height": 2,
       "branches": 4,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/sessions-load-state.test.ts",
-      "path": "packages/client/src/features/sessions/state/sessions-load-state.test.ts",
+      "id": "packages/client/src/features/sessions/utils/sessions-load-state.test.ts",
+      "path": "packages/client/src/features/sessions/utils/sessions-load-state.test.ts",
       "area": 27,
       "height": 2,
       "branches": 3,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/sessions-load-state.ts",
-      "path": "packages/client/src/features/sessions/state/sessions-load-state.ts",
+      "id": "packages/client/src/features/sessions/utils/sessions-load-state.ts",
+      "path": "packages/client/src/features/sessions/utils/sessions-load-state.ts",
       "area": 20,
       "height": 2,
       "branches": 4,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/starting-feed.test.ts",
-      "path": "packages/client/src/features/sessions/state/starting-feed.test.ts",
+      "id": "packages/client/src/features/sessions/utils/starting-feed.test.ts",
+      "path": "packages/client/src/features/sessions/utils/starting-feed.test.ts",
       "area": 78,
       "height": 3,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/sessions/state/starting-feed.ts",
-      "path": "packages/client/src/features/sessions/state/starting-feed.ts",
+      "id": "packages/client/src/features/sessions/utils/starting-feed.ts",
+      "path": "packages/client/src/features/sessions/utils/starting-feed.ts",
       "area": 78,
       "height": 3,
       "branches": 1,
@@ -9907,16 +9907,16 @@
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/settings/state/home-path.test.ts",
-      "path": "packages/client/src/features/settings/state/home-path.test.ts",
+      "id": "packages/client/src/features/settings/utils/home-path.test.ts",
+      "path": "packages/client/src/features/settings/utils/home-path.test.ts",
       "area": 21,
       "height": 1,
       "branches": 0,
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/settings/state/home-path.ts",
-      "path": "packages/client/src/features/settings/state/home-path.ts",
+      "id": "packages/client/src/features/settings/utils/home-path.ts",
+      "path": "packages/client/src/features/settings/utils/home-path.ts",
       "area": 5,
       "height": 1,
       "branches": 0,
@@ -9939,16 +9939,16 @@
       "tone": "border"
     },
     {
-      "id": "packages/client/src/features/setup/state/onboarding.test.ts",
-      "path": "packages/client/src/features/setup/state/onboarding.test.ts",
+      "id": "packages/client/src/features/setup/utils/onboarding.test.ts",
+      "path": "packages/client/src/features/setup/utils/onboarding.test.ts",
       "area": 101,
       "height": 2,
       "branches": 18,
       "tone": "warning"
     },
     {
-      "id": "packages/client/src/features/setup/state/onboarding.ts",
-      "path": "packages/client/src/features/setup/state/onboarding.ts",
+      "id": "packages/client/src/features/setup/utils/onboarding.ts",
+      "path": "packages/client/src/features/setup/utils/onboarding.ts",
       "area": 62,
       "height": 1,
       "branches": 4,

@@ -1,0 +1,73 @@
+import * as React from 'react';
+import type { ElementProps } from './element-props';
+
+const rejected = ['className', 'style'];
+
+// The kit components that take their visible text as children.
+const textual = new Set(['Text', 'Button']);
+
+function labelOf(children: React.ReactNode): string {
+  return [children]
+    .flat()
+    .filter((part) => typeof part === 'string' || typeof part === 'number')
+    .join('');
+}
+
+function rejectStyling(type: string, props: ElementProps): void {
+  const name = rejected.find((candidate) => candidate in props);
+
+  if (name)
+    throw new Error(`${type}: ${name} is not allowed on Plugin components`);
+}
+
+// Element props such as `leading` become children of a `#slot` node, which the wire carries as a named slot.
+function slotsOf(props: ElementProps): React.ReactElement[] {
+  return Object.entries(props).flatMap(([name, value]) =>
+    React.isValidElement(value)
+      ? [React.createElement('#slot', { argoKey: name }, value)]
+      : [],
+  );
+}
+
+const plainOf = (props: ElementProps): ElementProps =>
+  Object.fromEntries(
+    Object.entries(props).filter(([, value]) => !React.isValidElement(value)),
+  );
+
+function labelProp(type: string, children: React.ReactNode): ElementProps {
+  return textual.has(type) && children !== undefined
+    ? { label: labelOf(children) }
+    : {};
+}
+
+function prepare(
+  type: string,
+  props: ElementProps,
+  key: string | undefined,
+): ElementProps {
+  rejectStyling(type, props);
+  const { children, ...rest } = props;
+  const slots = slotsOf(rest);
+
+  return {
+    ...plainOf(rest),
+    ...labelProp(type, children),
+    argoKey: key,
+    children: textual.has(type) ? slots : [children, slots].flat(),
+  };
+}
+
+function create(
+  type: React.ElementType,
+  props: ElementProps,
+  key: string | undefined,
+): React.ReactElement {
+  if (typeof type !== 'string')
+    return React.createElement(type, { ...props, key });
+
+  return React.createElement(type, prepare(type, props, key));
+}
+
+export const jsx = create;
+
+export const jsxs = create;

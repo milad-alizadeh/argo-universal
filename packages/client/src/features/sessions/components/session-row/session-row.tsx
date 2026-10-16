@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { contentActionClass } from '#primitives/buttons/button';
 import { Text, TextClassContext } from '#primitives/display/text';
+import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import { Pressable } from '#primitives/pressable';
 import { CompactSessionRow } from './session-row-compact';
 import { SessionMark } from './session-row-mark';
@@ -34,8 +35,11 @@ function regularRowClass(selected: boolean): string {
   });
 }
 
+// The row's press, and the long press its context menu hands it on Android.
+type SessionRowPressProps = SessionRowProps & ContextMenuTriggerProps;
+
 function sessionRowPressProps(
-  props: SessionRowProps,
+  props: SessionRowPressProps,
   selected: boolean,
 ): React.ComponentProps<typeof Pressable> & { 'aria-pressed': boolean } {
   const { session, onSelect } = props;
@@ -45,6 +49,7 @@ function sessionRowPressProps(
     accessibilityState: { selected },
     'aria-pressed': selected,
     onPress: () => onSelect(session.sessionId),
+    onLongPress: props.onLongPress,
     role: 'button',
     className: regularRowClass(selected),
   };
@@ -111,7 +116,7 @@ function RegularRowParts(
   );
 }
 
-function RegularRow(props: SessionRowProps): React.JSX.Element {
+function RegularRow(props: SessionRowPressProps): React.JSX.Element {
   const selected = props.selected ?? false;
 
   return (
@@ -123,7 +128,7 @@ function RegularRow(props: SessionRowProps): React.JSX.Element {
   );
 }
 
-function SessionRowLayout(props: SessionRowProps): React.JSX.Element {
+function SessionRowLayout(props: SessionRowPressProps): React.JSX.Element {
   if (props.layout === 'compact') return <CompactSessionRow {...props} />;
 
   return <RegularRow {...props} />;
