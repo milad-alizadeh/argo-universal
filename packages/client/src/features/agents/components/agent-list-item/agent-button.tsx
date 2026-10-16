@@ -1,7 +1,10 @@
 import type * as React from 'react';
+import { Platform, View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { Button } from '#primitives/buttons/button';
 import { IconButton } from '#primitives/buttons/icon-button';
+import { Icon } from '#primitives/display/icon';
+import { Text } from '#primitives/display/text';
 import type { AgentRowEntry } from '../../state/agent-list';
 
 export type AgentActions = {
@@ -11,30 +14,59 @@ export type AgentActions = {
 
 export type AgentCardProps = AgentActions & { agent: AgentRowEntry };
 
-type State = 'install' | 'remove' | 'unavailable';
+type State = 'install' | 'remove';
 
 const actions: Record<
   State,
-  { label: string; icon: IconName; tone?: 'danger'; disabled?: boolean }
+  { label: string; icon: IconName; tone?: 'danger' }
 > = {
   install: { label: 'Install', icon: 'add' },
   remove: { label: 'Remove', icon: 'delete', tone: 'danger' },
-  unavailable: { label: 'Unavailable', icon: 'unavailable', disabled: true },
 };
 
-const stateOf = (agent: AgentRowEntry): State => {
-  if (agent.installed) return 'remove';
-
-  return agent.unavailable ? 'unavailable' : 'install';
-};
+const stateOf = (agent: AgentRowEntry): State =>
+  agent.installed ? 'remove' : 'install';
 
 type ButtonProps = AgentCardProps & { wide: boolean };
 
 export function AgentButton(props: ButtonProps): React.JSX.Element {
+  return (
+    <View className="w-11 items-center android:w-12 wide:w-27.25 wide:items-end">
+      {accessory(props)}
+    </View>
+  );
+}
+
+const isUnavailable = (agent: AgentRowEntry): boolean =>
+  agent.unavailable && !agent.installed;
+
+function accessory(props: ButtonProps): React.JSX.Element {
+  if (isUnavailable(props.agent)) return <Unavailable wide={props.wide} />;
+
   return props.wide ? (
     <DesktopAgentButton {...props} />
   ) : (
     <PhoneAgentButton {...props} />
+  );
+}
+
+function Unavailable({ wide }: { wide: boolean }): React.JSX.Element {
+  return wide ? (
+    <Text role="body" tone="muted">
+      Unavailable
+    </Text>
+  ) : (
+    <UnavailableIcon />
+  );
+}
+
+const unavailableRole = Platform.OS === 'android' ? 'row' : 'action';
+
+function UnavailableIcon(): React.JSX.Element {
+  return (
+    <View accessible accessibilityLabel="Not supported on this platform">
+      <Icon name="unavailable" role={unavailableRole} tone="muted" />
+    </View>
   );
 }
 
@@ -49,17 +81,11 @@ function DesktopAgentButton(props: AgentCardProps): React.JSX.Element {
     <Button
       label={action.label}
       tone={action.tone}
-      disabled={action.disabled}
       variant={state === 'remove' ? 'ghost' : 'default'}
       onPress={() => onPress(props)}
     />
   );
 }
-
-const phoneLabel = (props: AgentCardProps): string =>
-  stateOf(props.agent) === 'unavailable'
-    ? 'Not supported on this platform'
-    : `${actions[stateOf(props.agent)].label} ${props.agent.name}`;
 
 function PhoneAgentButton(props: AgentCardProps): React.JSX.Element {
   const action = actions[stateOf(props.agent)];
@@ -68,8 +94,7 @@ function PhoneAgentButton(props: AgentCardProps): React.JSX.Element {
     <IconButton
       icon={action.icon}
       tone={action.tone}
-      disabled={action.disabled}
-      accessibilityLabel={phoneLabel(props)}
+      accessibilityLabel={`${action.label} ${props.agent.name}`}
       variant="ghost"
       onPress={() => onPress(props)}
     />

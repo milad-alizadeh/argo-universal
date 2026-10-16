@@ -1,5 +1,5 @@
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
-import { expect, within } from 'storybook/test';
+import { expect, within, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { idleSession } from '../../src/screens/sessions/$id/session-detail-view.mocks';
@@ -30,11 +30,13 @@ export function configuration(agentIndex: 0 | 1): Story {
       await userEvent.click(
         canvas.getByRole('button', { name: 'Agent and model' }),
       );
-      await expect(
-        within(document.body).getByRole('group', {
-          name: `Agent, ${agent.name}`,
-        }),
-      ).toBeVisible();
+      await waitFor(() =>
+        expect(
+          within(document.body).getByRole('group', {
+            name: `Agent, ${agent.name}`,
+          }),
+        ).toBeVisible(),
+      );
       await expect(
         within(document.body).queryByRole('button', { name: /Select .*Agent/ }),
       ).not.toBeInTheDocument();

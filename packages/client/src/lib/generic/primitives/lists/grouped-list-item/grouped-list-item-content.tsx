@@ -51,7 +51,7 @@ function contentClasses(props: GroupedListItemProps, sidebar: boolean): string {
   return cn(
     'flex-1 flex-row items-center gap-3',
     contentGap(sidebar, props.size),
-    props.alignment === 'top' && 'items-start',
+    props.variant === 'card' && 'items-start wide:gap-3',
     props.disabled && 'opacity-65',
   );
 }
@@ -74,7 +74,7 @@ function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
   if (!props.subtitle) return title;
 
   return (
-    <View className="min-w-0 flex-1">
+    <View className={cn('min-w-0 flex-1', props.variant === 'card' && 'gap-1')}>
       {title}
       <GroupedListItemSubtitle subtitle={props.subtitle} />
       {props.footer}

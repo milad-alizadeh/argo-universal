@@ -2,6 +2,7 @@ import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 import { expectMessage, messageLabel } from './new-session';
+import { agentId } from './scenario-agents';
 
 const trayLabel = 'Elicitation questions';
 
@@ -9,7 +10,7 @@ Given(
   'Agent {int} asks for an Elicitation',
   async ({ page, server }, ordinal: number): Promise<void> => {
     expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-      availability: 'available',
+      id: agentId(ordinal),
     });
   },
 );

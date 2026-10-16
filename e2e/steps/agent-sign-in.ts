@@ -4,6 +4,7 @@ import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { expectMessage, messageLabel, sessionOpenTimeout } from './new-session';
+import { agentId } from './scenario-agents';
 
 const menuLabel = 'Authentication options';
 
@@ -13,13 +14,13 @@ const signInTerminal = 'Agent sign-in terminal';
 export const callout = (page: Page, title: string | RegExp): Locator =>
   page.getByRole('heading', { name: title, exact: typeof title === 'string' });
 
-// The fixture itself comes from scenario-agents.ts; sign-in and launch trouble show only once a Session opens, so the Agent is listed as available.
-const listedAsAvailable = async (
+// The fixture itself comes from scenario-agents.ts; sign-in and launch trouble show only once a Session opens, so the Agent is listed as saved.
+const listedAsSaved = async (
   { page, server }: { page: Page; server: { httpUrl: string } },
   ordinal: number,
 ): Promise<void> => {
   expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-    availability: 'available',
+    id: agentId(ordinal),
   });
 };
 
@@ -32,7 +33,7 @@ for (const fixture of [
   'Agent {int} ends its first Turn needing a terminal sign-in',
   'Agent {int} exits while opening its first Session',
 ])
-  Given(fixture, listedAsAvailable);
+  Given(fixture, listedAsSaved);
 
 Then(
   'the App asks to authenticate to Agent {int} with {string}',

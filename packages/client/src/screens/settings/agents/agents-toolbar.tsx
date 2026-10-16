@@ -27,7 +27,7 @@ export const agentsFilterChoices = [
 
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
   return (
-    <View className="min-h-10 flex-row items-center gap-1">
+    <View className="flex-row items-center gap-1">
       {agentsFilterChoices.map(({ value, label }) => (
         <FilterPill
           key={value}

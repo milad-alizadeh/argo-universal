@@ -16,7 +16,11 @@ export function AgentsPhoneHeader(
   return (
     <>
       <ScreenHeader title={agentsTitle} />
-      <PhoneSearchBar placeholder={searchLabel} onSearch={props.onSearch} />
+      <PhoneSearchBar
+        headerButton
+        placeholder={searchLabel}
+        onSearch={props.onSearch}
+      />
     </>
   );
 }

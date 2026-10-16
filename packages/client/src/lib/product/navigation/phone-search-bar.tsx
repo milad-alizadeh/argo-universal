@@ -1,8 +1,9 @@
 import { Stack } from 'expo-router';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { type ComponentRef, type ReactNode, useRef } from 'react';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { useWide } from '#lib/generic/use-wide/use-wide';
+import { toolbarIcon } from './toolbar-icon';
 
 // iOS 26 docks the search bar at the bottom.
 const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass;
@@ -10,6 +11,7 @@ const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass;
 interface PhoneSearchBarProps {
   placeholder: string;
   onSearch: (search: string) => void;
+  headerButton?: boolean;
   // A stock item beside the docked bar on iOS 26, in its own bubble, such as New Session.
   dockedAction?: ReactNode;
 }
@@ -22,11 +24,14 @@ interface PhoneSearchBarProps {
 export function PhoneSearchBar(
   props: PhoneSearchBarProps,
 ): React.JSX.Element | null {
+  const ref = useRef<ComponentRef<typeof Stack.SearchBar>>(null);
+
   if (useWide()) return null;
 
   return (
     <>
-      {searchBar(props)}
+      {headerSearchButton(props, ref)}
+      {searchBar(props, ref)}
       {bottomSearch ? bottomToolbar(props.dockedAction) : null}
     </>
   );
@@ -40,18 +45,36 @@ const searchBarPlacement = {
 } as const;
 
 // Closing or cancelling the search bar clears the query.
-function searchBar({
-  placeholder,
-  onSearch,
-}: PhoneSearchBarProps): React.JSX.Element {
+function searchBar(
+  { placeholder, onSearch }: PhoneSearchBarProps,
+  ref: React.RefObject<ComponentRef<typeof Stack.SearchBar> | null>,
+): React.JSX.Element {
   return (
     <Stack.SearchBar
+      ref={ref}
       placeholder={placeholder}
       {...searchBarPlacement}
       onChangeText={(event) => onSearch(event.nativeEvent.text)}
       onCancelButtonPress={() => onSearch('')}
       onClose={() => onSearch('')}
     />
+  );
+}
+
+function headerSearchButton(
+  props: PhoneSearchBarProps,
+  ref: React.RefObject<ComponentRef<typeof Stack.SearchBar> | null>,
+): React.JSX.Element | null {
+  if (process.env.EXPO_OS !== 'ios' || !props.headerButton) return null;
+
+  return (
+    <Stack.Toolbar placement="right">
+      <Stack.Toolbar.Button
+        icon={toolbarIcon('search')}
+        accessibilityLabel={props.placeholder}
+        onPress={() => ref.current?.focus()}
+      />
+    </Stack.Toolbar>
   );
 }
 

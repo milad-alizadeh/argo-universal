@@ -120,8 +120,11 @@ export const Unavailable: Story = {
   args: { agent: { ...agent, unavailable: true } },
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('button', { name: 'Unavailable' }),
-    ).toBeDisabled();
+      canvas.queryByRole('button', { name: 'Unavailable' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.getByText('Unavailable', { exact: true }),
+    ).toBeVisible();
     await expect(
       canvas.getByText(/Not supported on this platform/),
     ).toBeVisible();

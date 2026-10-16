@@ -137,11 +137,14 @@ function useEntryRenderer(
 
 function useSectionGap(density: FieldListProps['gap']): number {
   // The web resolves the gap class to rowGap; native resolves it to gap.
-  const { rowGap, gap } = useResolveClassNames(groupedListGap);
+  const normal = useResolveClassNames(groupedListGap);
   const small = useResolveClassNames('gap-2');
 
-  return pixels(density === 'sm' ? small.gap : (rowGap ?? gap));
+  return resolvedGap(density === 'sm' ? small : normal);
 }
+
+const resolvedGap = (style: ViewStyle): number =>
+  pixels(style.rowGap ?? style.gap);
 
 // A title or footer is GroupedListSection's own, with an empty card where the rows would be.
 function EntryContent(props: {

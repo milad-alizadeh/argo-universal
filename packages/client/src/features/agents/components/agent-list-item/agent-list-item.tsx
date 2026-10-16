@@ -30,14 +30,18 @@ const cardContent = (
 ): GroupedListItemProps => ({
   label: agent.name,
   labelDetail: `v${agent.version}`,
-  alignment: 'top',
+  variant: 'card',
   subtitle: {
     text: agent.description,
     numberOfLines: 2,
   },
-  leading: <RegistryIcon uri={agent.icon} agentName={agent.name} role="row" />,
+  leading: cardLogo(agent),
   footer: wide ? <AgentFooter agent={agent} /> : undefined,
 });
+
+const cardLogo = (agent: AgentRowEntry): React.JSX.Element => (
+  <RegistryIcon uri={agent.icon} agentName={agent.name} role="identity" />
+);
 
 export const agentRows = (
   agents: readonly AgentRowEntry[],

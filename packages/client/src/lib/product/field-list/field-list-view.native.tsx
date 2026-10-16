@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedList } from '#primitives/lists/grouped-list';
+import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import {
   type FieldListProps,
@@ -32,6 +33,9 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
 function NativeGroupedListSection(props: {
   section: FieldListSection;
 }): React.JSX.Element {
+  if (props.section.plain)
+    return <GroupedListContent>{props.section.rows}</GroupedListContent>;
+
   return (
     <GroupedListSection
       title={props.section.title}

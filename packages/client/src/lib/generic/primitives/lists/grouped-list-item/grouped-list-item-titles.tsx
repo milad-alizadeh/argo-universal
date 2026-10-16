@@ -11,10 +11,12 @@ import { rowColor } from './grouped-list-item-text';
 // On Android the titles take the row's spare width, so the value and status trail them on the same line; iOS's Label does that itself.
 const titleModifiers = Platform.OS === 'ios' ? undefined : [weight(1)];
 
+const cardTitleGap = 4;
+
 export function RowTitles(props: GroupedListItemProps): React.JSX.Element {
   return (
     <Column
-      spacing={0}
+      spacing={props.variant === 'card' ? cardTitleGap : 0}
       modifiers={[
         ...(titleModifiers ?? []),
         ...rowHeadlineAccessibility(props),

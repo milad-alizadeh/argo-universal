@@ -26,7 +26,8 @@ Then(
     ).toBeVisible();
     await openSessionsSection(page);
     await openNewSession(page);
-    await checkPicker(page);
+    await checkPickerAndReturn(page);
+
     await browseAgents(page);
   },
 );
@@ -62,10 +63,11 @@ async function openSessionsSection(
       .click();
     await page.getByRole('button', { name: 'Open navigation' }).click();
   }
+
   await page.getByRole('button', { name: 'Sessions', exact: true }).click();
 }
 
-async function checkPicker(
+async function checkPickerAndReturn(
   page: Parameters<typeof openNewSession>[0],
 ): Promise<void> {
   await page.getByRole('button', { name: 'Select Agent', exact: true }).click();
@@ -73,4 +75,7 @@ async function checkPicker(
     page.getByRole('button', { name: exampleName, exact: true }),
   ).toBeVisible();
   await page.keyboard.press('Escape');
+
+  if (onPhone(page))
+    await page.getByRole('link', { name: 'Sessions, back' }).click();
 }

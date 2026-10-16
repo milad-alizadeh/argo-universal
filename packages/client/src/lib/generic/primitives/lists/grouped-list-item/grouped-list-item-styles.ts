@@ -86,8 +86,8 @@ function controlClasses(
 }
 
 // A large row pads 16 all round at every width.
-const sizeClasses = ({ size }: GroupedListItemProps): string | undefined =>
-  size === 'lg' ? 'py-4 wide:py-4' : undefined;
+const sizeClasses = ({ size, variant }: GroupedListItemProps): string =>
+  cn(size === 'lg' && 'py-4 wide:py-4', variant === 'card' && 'py-3 wide:py-3');
 
 // A wide window draws its rows' parts 8 apart, but a sidebar's and a large row's keep 12.
 export const contentGap = (

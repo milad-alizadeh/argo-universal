@@ -26,7 +26,7 @@ type AgentLinkProps = { agent: AgentRowEntry };
 
 export function AgentFooter({ agent }: AgentLinkProps): React.JSX.Element {
   return (
-    <View>
+    <View className="gap-1">
       {agent.unavailable && (
         <Text role="secondary" tone="muted">
           Not supported on this platform
@@ -39,7 +39,7 @@ export function AgentFooter({ agent }: AgentLinkProps): React.JSX.Element {
 
 function AgentLinks({ agent }: { agent: AgentRowEntry }): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-2">
+    <View className="relative -left-2 flex-row items-center gap-2">
       {linksOf(agent).map((link) => (
         <AgentLink key={link.label} link={link} />
       ))}

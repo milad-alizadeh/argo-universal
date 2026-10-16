@@ -1,6 +1,7 @@
 import AddIcon from '@expo/material-symbols/add.xml';
 import EditSquare from '@expo/material-symbols/edit_square.xml';
 import FilterList from '@expo/material-symbols/filter_list.xml';
+import Search from '@expo/material-symbols/search.xml';
 import Tune from '@expo/material-symbols/tune.xml';
 import type { ImageSourcePropType } from 'react-native';
 import { iconSymbols } from '#lib/generic/symbols/icon-names';
@@ -8,6 +9,7 @@ import { iconSymbols } from '#lib/generic/symbols/icon-names';
 // The Material drawings a native header toolbar shows on Android: Stack.Toolbar takes an image there, so each icon it uses is bundled here. iOS takes the SF name from the shared icon table.
 const materialImages = {
   add: AddIcon,
+  search: Search,
   'filter-list': FilterList,
   filters: Tune,
   'new-session': EditSquare,

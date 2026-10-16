@@ -7,7 +7,6 @@ export interface GroupedListItemProps {
   value?: string;
   labelDetail?: string;
   footer?: ReactElement;
-  alignment?: 'top';
   /*
    * A second line under the title, such as a folder's path; code draws it in the mono face.
    * numberOfLines caps it, ending in an ellipsis, such as an Agent's description in a list.
@@ -62,6 +61,8 @@ export interface GroupedListItemProps {
   tone?: 'danger' | 'accent' | 'muted';
   // A row that stands alone as a card, such as an Agent's identity: a 40 tile leads it and it pads 16 all round.
   size?: 'lg';
+  // A card with a brand mark, top-aligned actions and spaced title and description.
+  variant?: 'card';
 }
 
 // The status's label, unless the value already says it.

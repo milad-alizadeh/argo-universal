@@ -36,11 +36,17 @@ Then(
 );
 
 Then('Python Agent is unavailable on this platform', async ({ page }) => {
+  const card = agentCard(page, 'Python Agent');
   await expect(
-    agentCard(page, 'Python Agent').getByRole('button', {
-      name: onPhone(page) ? 'Not supported on this platform' : 'Unavailable',
+    card.getByRole('button', {
+      name: /^(Unavailable|Install|Remove)( Python Agent)?$/,
     }),
-  ).toBeDisabled();
+  ).toHaveCount(0);
+  await expect(
+    onPhone(page)
+      ? card.getByLabel('Not supported on this platform', { exact: true })
+      : card.getByText('Unavailable', { exact: true }),
+  ).toBeVisible();
 });
 
 When('I search the catalog for {string}', async ({ page }, search: string) => {

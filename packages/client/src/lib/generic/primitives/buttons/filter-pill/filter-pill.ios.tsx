@@ -12,7 +12,7 @@ import {
 // A phone's filter is SwiftUI's own Toggle in `.toggleStyle(.button)`: the system draws it highlighted while on.
 function PhonePill(props: FilterPillProps): React.JSX.Element {
   return (
-    <ControlHost matchContents style={{ alignSelf: 'flex-start' }}>
+    <ControlHost matchContents>
       <Toggle
         label={filterPillLabel(props)}
         isOn={props.selected}

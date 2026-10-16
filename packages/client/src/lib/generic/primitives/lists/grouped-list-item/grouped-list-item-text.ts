@@ -20,22 +20,14 @@ const ios = Platform.OS === 'ios';
  * iOS's system label colours, as a Form's button would tint its whole label; an accent row takes that tint.
  * Android's NativeText and ListItem take colours through their public APIs.
  */
-const swiftColors = {
+const swiftColors: Partial<Record<RowTone, 'primary' | 'secondary'>> = {
   primary: 'primary',
   secondary: 'secondary',
   muted: 'secondary',
-} as const;
-
-const swiftColor = (tone: RowTone): 'primary' | 'secondary' | undefined => {
-  if (!ios) return undefined;
-
-  return tone in swiftColors
-    ? swiftColors[tone as keyof typeof swiftColors]
-    : undefined;
 };
 
 export function rowColor(tone: RowTone): Modifiers {
-  const color = swiftColor(tone);
+  const color = ios ? swiftColors[tone] : undefined;
 
   return color === undefined ? [] : [foregroundStyle(color)];
 }

@@ -49,6 +49,7 @@ const catalogSections = (props: CatalogProps): FieldListSection[] => {
 };
 
 const registrySection = (props: CatalogProps): FieldListSection => ({
+  plain: true,
   rows: [
     <RegistryState
       key="registry"
@@ -61,6 +62,7 @@ const registrySection = (props: CatalogProps): FieldListSection => ({
 });
 
 const emptySection = (props: CatalogProps): FieldListSection => ({
+  plain: true,
   rows: [
     <RegistryState
       key="empty"

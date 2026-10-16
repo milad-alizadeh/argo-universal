@@ -1,5 +1,6 @@
 import type { AgentServer, AgentsRegistryOutput } from '@repo/contracts';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { Platform } from 'react-native';
 import { fn } from 'storybook/test';
 import { mockHeader } from '../../../../mocks/screen-header-mock';
 import type { AgentListViewProps } from './agent-list-view';
@@ -47,5 +48,5 @@ export const agentListArgs = (): AgentListViewProps => ({
   onInstall: fn(),
   onRemove: fn(),
   onRetry: fn(),
-  renderHeader: mockHeader(agentsHeader),
+  renderHeader: Platform.OS === 'web' ? mockHeader(agentsHeader) : undefined,
 });

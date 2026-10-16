@@ -8,7 +8,7 @@ import type { GroupedListItemProps } from './grouped-list-item-props';
 
 type LeadingProps = Pick<
   GroupedListItemProps,
-  'icon' | 'loading' | 'leading' | 'size'
+  'icon' | 'loading' | 'leading' | 'size' | 'variant'
 > & {
   className: string;
 };
@@ -27,20 +27,29 @@ function RowGlyph({
   icon,
   leading,
   size,
+  variant,
   className,
 }: Omit<LeadingProps, 'loading'>): React.JSX.Element | null {
-  if (leading) return <LeadingSlot size={size}>{leading}</LeadingSlot>;
+  if (leading)
+    return (
+      <LeadingSlot size={size} variant={variant}>
+        {leading}
+      </LeadingSlot>
+    );
 
   return icon ? <RowIcon icon={icon} className={className} /> : null;
 }
 
 // An image sits centred in the row icon's slot, or on a large row's 40 tile.
+type LeadingSlotProps = Pick<GroupedListItemProps, 'size' | 'variant'> & {
+  children: React.ReactNode;
+};
+
 function LeadingSlot({
   size,
+  variant,
   children,
-}: Pick<GroupedListItemProps, 'size'> & {
-  children: React.ReactNode;
-}): React.JSX.Element {
+}: LeadingSlotProps): React.JSX.Element {
   const role = useLeadingRole();
 
   if (size === 'lg')
@@ -50,8 +59,17 @@ function LeadingSlot({
       </View>
     );
 
-  return <IconSlot role={role}>{children}</IconSlot>;
+  return <IconSlot {...leadingSlotProps(variant, role)}>{children}</IconSlot>;
 }
+
+const leadingSlotProps = (
+  variant: GroupedListItemProps['variant'],
+  role: IconRole,
+): Pick<React.ComponentProps<typeof IconSlot>, 'role' | 'className'> => ({
+  role: variant === 'card' ? 'identity' : role,
+  className:
+    variant === 'card' ? 'relative web:top-px wide:-top-0.5' : undefined,
+});
 
 // A popover's compact row leads with a Body-sized slot, as Paper's menu rows do; a list row keeps the row icon's.
 function useLeadingRole(): IconRole {

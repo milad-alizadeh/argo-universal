@@ -71,7 +71,7 @@ const pageSearch = (props: AgentsSearchProps): SettingsPageSearch => ({
 
 function PhoneFilters(props: AgentsFilterProps): React.JSX.Element | null {
   return useWide() ? null : (
-    <View className="px-4 py-3">
+    <View className="z-10 shrink-0 px-4 py-3">
       <AgentsFilterPills {...props} />
     </View>
   );

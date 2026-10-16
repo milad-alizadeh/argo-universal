@@ -1,7 +1,7 @@
 import type { ViewStyle } from 'react-native';
 import { useWide } from '../use-wide/use-wide';
 
-type IconPixels = 12 | 14 | 16 | 20 | 24;
+type IconPixels = 12 | 14 | 16 | 20 | 22 | 24;
 
 // Where an icon sits decides its size. Text is a step larger on the phone, so an icon beside text steps up with it.
 const iconRoles = {
@@ -17,6 +17,8 @@ const iconRoles = {
   mark: { wide: 14, phone: 14 },
   // A list row's leading icon.
   row: { wide: 20, phone: 24 },
+  // An Agent card's brand mark, aligned with its name.
+  identity: { wide: 24, phone: 22 },
   // A header or floating action.
   action: { wide: 20, phone: 20 },
   // Top-level navigation.
