@@ -37,6 +37,7 @@ export function decodeStoredSession(row: typeof session.$inferSelect): Omit<
 }
 
 const sessionSnapshotFields = SessionInfo.pick({
+  projectId: true,
   title: true,
   archivedAt: true,
   titleSource: true,
@@ -73,6 +74,7 @@ export function createSessionReader(
   return (sessionId: string): SessionSnapshotFields => {
     const stored = database
       .select({
+        projectId: session.projectId,
         title: session.title,
         archivedAt: session.archivedAt,
         titleSource: session.titleSource,

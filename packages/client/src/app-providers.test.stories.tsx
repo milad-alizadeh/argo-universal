@@ -39,7 +39,7 @@ export const GivesScreensAnOpenConnectionUnderStrictMode: Story = {
       ),
     ).toBeVisible();
     await expect(canvas.getByText(oneOpenConnection)).toBeVisible();
-    // StrictMode repeats the subscription; the first Connection closes before its machine allows a WebSocket.
+    // StrictMode repeats the subscription; the first Connection closes before it allows a WebSocket.
     await expect(canvas.getByText('Screen subscriptions: 2')).toBeVisible();
     await expect(canvas.getByText('Closed Connections: 0')).toBeVisible();
   },

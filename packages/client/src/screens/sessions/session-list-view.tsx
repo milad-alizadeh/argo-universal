@@ -85,7 +85,7 @@ function SessionsContent(props: SessionListViewProps): React.JSX.Element {
   // A failed first load keeps the loading rows: the toast says why, and the queries retry when the Connection reopens.
   const loading = props.loadState !== 'ready';
 
-  if (wide && loading) return <SessionsLoading />;
+  if (wide && loading) return <SessionsLoading layout={props.layout} />;
 
   return <SessionsListContent {...props} wide={wide} loading={loading} />;
 }

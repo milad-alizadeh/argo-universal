@@ -54,6 +54,8 @@ export function savedChoicesQuery(agent: string): SavedChoicesQuery {
     queryKey: ['session-configuration-preferences', agent] as const,
     queryFn: () => load(agent).catch(loadFailed),
     staleTime: Infinity,
+    // This Device's storage answers while the Server is unreachable.
+    networkMode: 'always',
   });
 }
 

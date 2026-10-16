@@ -1,15 +1,12 @@
 import { useMemo, useState } from 'react';
 import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
 import {
+  type EmptySessionStore,
   toNewSessionInput,
   type StartingFeed,
   startingFeed,
 } from '#features/sessions';
-import {
-  type EmptySession,
-  type EmptySessionActor,
-  useEmptySession,
-} from './use-empty-session';
+import { type EmptySession, useEmptySession } from './use-empty-session';
 import type { NewSessionData } from './use-new-session-data';
 
 export type AttachmentDraft = ReturnType<typeof useAttachmentDraft>;
@@ -30,7 +27,7 @@ export interface SessionOpening {
 
 interface FirstPromptSend {
   attachmentDraft: AttachmentDraft;
-  actor: EmptySessionActor;
+  store: EmptySessionStore;
   sent: SentFirstPrompt;
 }
 
@@ -61,13 +58,13 @@ const isSending = (
 
 // Uploads the draft's images, then queues the draft as the first prompt until the Session is ready.
 async function sendFirstPrompt(
-  { attachmentDraft, actor, sent }: FirstPromptSend,
+  { attachmentDraft, store, sent }: FirstPromptSend,
   draft: ComposerDraft,
 ): Promise<void> {
   sent.show(draft);
   const prompt = await attachmentDraft.uploadDraftAsPrompt(draft);
 
-  if (prompt?.length) actor.send({ type: 'send', prompt });
+  if (prompt?.length) store.send(prompt);
   else sent.clear();
 }
 
@@ -77,7 +74,7 @@ function useFirstPrompt(
 ): Omit<SessionOpening, 'session'> {
   const sending = isSending(attachmentDraft, session);
   const sent = useSentFirstPrompt(sending);
-  const send = { attachmentDraft, actor: session.actor, sent };
+  const send = { attachmentDraft, store: session.store, sent };
 
   return {
     sending,
@@ -86,15 +83,14 @@ function useFirstPrompt(
   };
 }
 
-// New Session's empty Session, opened for the reader's choices, and the first prompt it takes.
+// New Session's Empty Session, opened for the reader's choices, and the first prompt it takes.
 export function useSessionOpening(
   attachmentDraft: AttachmentDraft,
   data: NewSessionData,
   connected: boolean,
 ): SessionOpening {
   const session = useEmptySession(
-    toNewSessionInput(data.choices),
-    connected,
+    { input: toNewSessionInput(data.choices), connected },
     attachmentDraft.clearDraft,
   );
 

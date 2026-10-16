@@ -104,7 +104,7 @@ function ForegroundSignal(): null {
   const connection = useConnection();
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') connection.send({ type: 'app.foreground' });
+      if (state === 'active') connection.foreground();
     });
 
     return (): void => subscription.remove();

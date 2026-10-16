@@ -6,7 +6,11 @@ import {
   useResubscribeOnReconnect,
 } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
-import { useMergeMethod, useSessionElicitation } from '#features/sessions';
+import {
+  useCacheSessionOptions,
+  useMergeMethod,
+  useSessionElicitation,
+} from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
@@ -107,6 +111,7 @@ function useSessionViewProps(sessionId: string): SessionDetailViewProps {
 
   const surroundings = useSessionSurroundings(sessionId, feed);
   useRetryOpenOnReconnect(feed);
+  useCacheSessionOptions(feed.snapshot);
 
   return toSessionViewProps({ sessionId, feed, commands, ...surroundings });
 }

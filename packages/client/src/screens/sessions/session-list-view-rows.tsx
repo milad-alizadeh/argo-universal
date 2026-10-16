@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import {
+  type SessionsLayout,
   SessionsList,
   type SessionsListProps,
   SessionsLoading,
@@ -50,11 +51,13 @@ function listActions(props: SessionListViewProps): ListActions {
 }
 
 // The list insets it below a transparent header, as it does the rows.
-const insetLoading = (
-  <View className="-mx-4 wide:mx-0">
-    <SessionsLoading />
-  </View>
-);
+function insetLoading(layout?: SessionsLayout): React.JSX.Element {
+  return (
+    <View className="-mx-4 wide:mx-0">
+      <SessionsLoading layout={layout} />
+    </View>
+  );
+}
 
 interface SessionsListContentProps extends SessionListViewProps {
   wide: boolean;
@@ -68,7 +71,7 @@ export function SessionsListContent(
     <SessionsList
       {...listData(props)}
       {...listActions(props)}
-      placeholder={props.loading ? insetLoading : undefined}
+      placeholder={props.loading ? insetLoading(props.layout) : undefined}
     />
   );
 }

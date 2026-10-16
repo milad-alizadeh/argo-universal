@@ -1,12 +1,13 @@
+export type { Connection, ConnectionState } from './state/connection';
+
 export {
-  ConnectionContext,
-  type ConnectionState,
-  useConnection,
   useConnectionState,
   useResubscribeOnReconnect,
-} from './state/context';
+} from './hooks/use-connection-state';
 
-export { openConnection } from './state/open-connection';
+export { ConnectionContext, useConnection } from './stores/connection-context';
+
+export { openConnection } from './api/open-connection';
 
 export {
   BlobUrlContext,

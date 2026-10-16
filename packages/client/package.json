@@ -45,12 +45,13 @@
     "@rn-primitives/select": "catalog:",
     "@rn-primitives/slot": "catalog:",
     "@rn-primitives/switch": "catalog:",
+    "@tanstack/query-async-storage-persister": "catalog:",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
+    "@tanstack/react-query-persist-client": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
-    "@xstate/react": "catalog:",
     "@xterm/addon-fit": "catalog:",
     "@xterm/xterm": "catalog:",
     "ajv": "catalog:",
@@ -79,8 +80,7 @@
     "react-native-svg": "catalog:",
     "tailwind-merge": "catalog:",
     "uniwind": "catalog:",
-    "vaul": "catalog:",
-    "xstate": "catalog:"
+    "vaul": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:",
