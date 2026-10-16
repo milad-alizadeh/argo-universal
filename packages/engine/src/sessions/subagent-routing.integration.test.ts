@@ -8,6 +8,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const backgroundScenario = 'subagent-background';
+
 const missingSubagent = 'No Subagent was persisted';
 
 it.each(
@@ -263,13 +264,16 @@ it('streams new child content while the parent Turn is idle', async () => {
   const { host, sessionId } = await openAcpFeedSession(
     scenarios[backgroundScenario],
   );
+
   const [child] = await host.caller.session.subagents({ sessionId });
 
   if (!child) throw new Error(missingSubagent);
+
   const stream = await host.caller.feed.subscribe({
     sessionId: child.sessionId,
     after: null,
   });
+
   const iterator = stream[Symbol.asyncIterator]();
   let initial = await iterator.next();
 
@@ -289,18 +293,16 @@ it('streams new child content while the parent Turn is idle', async () => {
     'unused',
   );
 
-  for await (const event of iterator)
-    if (
-      event.type === 'row.upsert' &&
-      event.row.sessionUpdate === 'agent_message' &&
-      event.row.messageId === 'later'
-    ) {
-      expect(event.row.content).toEqual([
-        { type: 'text', text: 'Still reviewing' },
-      ]);
+  let next = await iterator.next();
 
-      return;
-    }
-
-  throw new Error('No live child update');
+  while (
+    next.value?.type !== 'row.upsert' ||
+    next.value.row.sessionUpdate !== 'agent_message' ||
+    next.value.row.messageId !== 'later'
+  )
+    next = await iterator.next();
+  expect(next.value.row.content).toEqual([
+    { type: 'text', text: 'Still reviewing' },
+  ]);
+  await iterator.return?.();
 });

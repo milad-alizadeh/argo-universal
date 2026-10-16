@@ -3,7 +3,11 @@ import { SessionRowUpdateJob } from '../session-storage';
 import { openChildFeed, type ChildFeed } from '../subagents/child-feed';
 import type { SubagentRouting } from '../subagents/routing-types';
 import { updateSubagentWork } from '../subagents/work';
-import { deliverSubagentMessage, isSubagentMessage, type MessageRouting } from './subagent-messages';
+import {
+  deliverSubagentMessage,
+  isSubagentMessage,
+  type MessageRouting,
+} from './subagent-messages';
 import { associationEvent } from './subagent-rows';
 import { subagentWorkState } from './subagent-work';
 
