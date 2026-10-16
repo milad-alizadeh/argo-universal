@@ -7,11 +7,8 @@ import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
 } from '../../storage';
-import {
-  appendShellOutput,
-  readShellOutput,
-  shellOutputBlob,
-} from '../shells/files';
+import { appendShellOutput } from '../shells/files';
+import { shellOutputBlob, type ShellOutputBlob } from '../shells/output-blob';
 import { ShellWriteJob } from '../shells/storage';
 import { shellFromTerminal } from './shells';
 
@@ -95,11 +92,11 @@ export class ShellCapture {
     );
     this.input.changed(this.record);
   }
-  private async endedOutput(): Promise<Buffer | undefined> {
+  private async endedOutput(): Promise<ShellOutputBlob | undefined> {
     if (!this.record || this.record.status === 'running') return;
 
-    const output = await readShellOutput(this.input.path);
-    this.record = { ...this.record, outputBlobId: shellOutputBlob(output).id };
+    const output = await shellOutputBlob(this.input.path);
+    this.record = { ...this.record, outputBlobId: output.metadata.id };
 
     return output;
   }

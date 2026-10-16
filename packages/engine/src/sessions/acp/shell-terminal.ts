@@ -8,15 +8,11 @@ import {
   type ShellCommand,
   awaitAcpOpening,
 } from '../../agents';
-import {
-  createShellOutput,
-  readShellOutput,
-  removeShellOutput,
-} from '../shells/files';
+import { createShellOutput, removeShellOutput } from '../shells/files';
 import { ShellCapture, type ShellCaptureInput } from './shell-capture';
-import { terminalOutputPreview } from './shell-output-preview';
+import { readShellPreview } from './shell-preview-file';
 
-type TerminalInput = ShellCaptureInput & { launch: AgentLaunch };
+type TerminalInput = ShellCaptureInput & { launch: AgentLaunch; home: string };
 
 export class ShellTerminal {
   private command?: ShellCommand;
@@ -91,10 +87,12 @@ export class ShellTerminal {
   public async output(): Promise<TerminalOutputResponse> {
     this.requireAvailable();
     await this.capture.drain();
-    const bytes = await readShellOutput(this.input.path);
 
     return {
-      ...terminalOutputPreview(bytes, this.input.request.outputByteLimit),
+      ...(await readShellPreview(
+        this.input.path,
+        this.input.request.outputByteLimit,
+      )),
       exitStatus: this.exit,
     };
   }

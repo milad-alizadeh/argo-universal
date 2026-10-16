@@ -88,6 +88,7 @@ export class ShellRuntime {
   ): ShellTerminal {
     return new ShellTerminal({
       ...this.captureInput(id, request),
+      home: this.input.home,
       launch: this.requireLaunch(),
     });
   }

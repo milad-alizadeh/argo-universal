@@ -100,3 +100,47 @@ it('rejects output and Stop for a Shell belonging to another Session', async () 
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   await host.caller.session.close(created);
 });
+
+it.each(['\uFEFFdone', '\uFEFF'])(
+  'preserves BOM output %j and completes with an exact byte cursor',
+  async (text) => {
+    const host = await startAcpEngine({
+      steps: [
+        {
+          ...streamingShellStep,
+          request: {
+            command: 'node',
+            args: ['-e', `process.stdout.write(${JSON.stringify(text)})`],
+          },
+          completion: 'wait-for-exit',
+        },
+      ],
+    });
+
+    const created = await host.caller.session.new({
+      ...emptySessionInput,
+      prompt: [{ type: 'text', text: 'Run' }],
+    });
+
+    const snapshot = await waitForAcpSnapshot(
+      host,
+      created.sessionId,
+      (value) => value.state === 'idle' && value.shells[0]?.status === 'exited',
+    );
+
+    assert(snapshot.shells[0]);
+    const scope = { ...created, shellId: snapshot.shells[0].id };
+
+    const chunks = await collectShellOutput(
+      await host.caller.shell.output(scope),
+    );
+
+    const after = Buffer.byteLength(text);
+    expect(chunks).toEqual([{ text, after, status: 'exited' }]);
+    expect(
+      await collectShellOutput(
+        await host.caller.shell.output({ ...scope, after }),
+      ),
+    ).toEqual([{ text: '', after, status: 'exited' }]);
+  },
+);

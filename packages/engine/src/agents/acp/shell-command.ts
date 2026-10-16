@@ -2,11 +2,13 @@ import type {
   CreateTerminalRequest,
   TerminalExitStatus,
 } from '@agentclientprotocol/sdk';
+import { z } from 'zod';
 import type { AgentLaunch } from '../agent-launch';
-import { agentEnvironment } from '../launch/agent-environment';
-import type { AcpChild } from './process';
-import { exitDrainMs } from './process-output';
-import { terminateShellTree } from './shell-process-tree';
+import type { Serializable } from './process';
+import type { ShellChild } from './process';
+import { releaseShellGroup } from './shell-process-group';
+import { recordShellGroup, removeShellRecord } from './shell-record';
+import { shellLaunchMessage, sendShellLaunch, shellPid } from './shell-start';
 
 export type ShellCommand = {
   exited: Promise<TerminalExitStatus>;
@@ -18,87 +20,113 @@ export type ShellCommandInput = {
   request: CreateTerminalRequest;
   launch: AgentLaunch;
   cwd: string;
+  home: string;
   output: (text: string) => void;
 };
 
-export const observeShellCommand = async (
-  child: AcpChild,
-  output: (text: string) => void,
-): Promise<ShellCommand> => {
-  pipeShellOutput(child, output);
-  const exited = observeShellExit(child);
-  await waitForShellStart(child);
+const ShellMessage = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('started') }),
+  z.object({ type: z.literal('failed'), message: z.string() }),
+  z.object({
+    type: z.literal('exited'),
+    exitCode: z.number().nullable(),
+    signal: z.string().nullable(),
+  }),
+]);
 
-  return {
-    exited,
-    kill: shellKiller(child),
-    isRunning: () => !shellHasExited(child),
+class OwnedShellCommand implements ShellCommand {
+  private readonly result = Promise.withResolvers<TerminalExitStatus>();
+  private readonly started = Promise.withResolvers<void>();
+  private readonly spawned = Promise.withResolvers<void>();
+  private status?: TerminalExitStatus;
+  private closing?: Promise<void>;
+  private record?: string;
+  public readonly exited = this.result.promise;
+  public constructor(private readonly child: ShellChild) {
+    child.once('spawn', () => this.spawned.resolve());
+    child.once('error', (error) => this.spawned.reject(error));
+    child.on('message', this.message);
+    child.once('close', (exitCode, signal) => {
+      this.started.reject(
+        new Error('Shell wrapper exited before command startup'),
+      );
+      void this.finish({ exitCode, signal }).catch(this.result.reject);
+    });
+    void this.started.promise.catch(() => {});
+    void this.exited.catch(() => {});
+  }
+  public async launch(
+    input: ShellCommandInput,
+    options: { token: string; env: NodeJS.ProcessEnv },
+  ): Promise<this> {
+    await this.spawned.promise;
+
+    try {
+      await this.recordOwner(input.home, options.token);
+      await sendShellLaunch(this.child, shellLaunchMessage(input, options.env));
+      await this.started.promise;
+
+      return this;
+    } catch (error) {
+      await this.release();
+      throw error;
+    }
+  }
+  private async recordOwner(home: string, token: string): Promise<void> {
+    this.record = await recordShellGroup(home, {
+      pid: shellPid(this.child),
+      token,
+    });
+  }
+  private message = (message: Serializable): void => {
+    const parsed = ShellMessage.safeParse(message);
+
+    if (parsed.success) {
+      this.acceptMessage(parsed.data);
+    } else {
+      this.started.reject(new Error('Invalid Shell wrapper message'));
+      this.kill();
+    }
   };
-};
+  private acceptMessage(message: z.infer<typeof ShellMessage>): void {
+    if (message.type === 'started') return this.started.resolve();
 
-const observeShellExit = (child: AcpChild): Promise<TerminalExitStatus> => {
-  const exited = Promise.withResolvers<TerminalExitStatus>();
-  child.once('close', (exitCode, signal) =>
-    exited.resolve({ exitCode, signal }),
-  );
-  child.once('exit', (exitCode, signal) =>
-    drainShellOutput(child, () => exited.resolve({ exitCode, signal })),
-  );
+    if (message.type === 'failed')
+      return this.started.reject(new Error(message.message));
+    this.status = { exitCode: message.exitCode, signal: message.signal };
+    this.kill();
+  }
+  public isRunning = (): boolean => !this.status && !this.closing;
+  public kill = (): boolean => {
+    if (this.closing) return false;
+    void this.release().catch(this.result.reject);
 
-  return exited.promise;
-};
+    return true;
+  };
+  private release(): Promise<void> {
+    this.closing ??= this.releaseOwnedGroup();
 
-const pipeShellOutput = (
-  child: AcpChild,
-  output: (text: string) => void,
-): void => {
-  child.stdin.end();
-  child.stdout.setEncoding('utf8').on('data', output);
-  child.stderr.setEncoding('utf8').on('data', output);
-};
+    return this.closing;
+  }
+  private async releaseOwnedGroup(): Promise<void> {
+    if (this.child.pid) await releaseShellGroup(this.child.pid);
 
-export const shellCommandEnvironment = async (
+    if (this.record) await removeShellRecord(this.record);
+  }
+  private async finish(fallback: TerminalExitStatus): Promise<void> {
+    await this.release();
+    this.result.resolve(this.status ?? fallback);
+  }
+}
+
+export const observeShellCommand = (
+  child: ShellChild,
   input: ShellCommandInput,
-): Promise<NodeJS.ProcessEnv> => {
-  const env = await agentEnvironment(input.launch);
+  options: { token: string; env: NodeJS.ProcessEnv },
+): Promise<ShellCommand> => {
+  child.stdin.end();
+  child.stdout.setEncoding('utf8').on('data', input.output);
+  child.stderr.setEncoding('utf8').on('data', input.output);
 
-  for (const { name, value } of input.request.env ?? []) env[name] = value;
-
-  return env;
-};
-
-const shellKiller =
-  (child: AcpChild): ShellCommand['kill'] =>
-  () => {
-    if (shellHasExited(child)) return false;
-
-    return killRunningShell(child);
-  };
-
-const drainShellOutput = (child: AcpChild, drained: () => void): void => {
-  const timer = setTimeout(() => {
-    child.stdout.destroy();
-    child.stderr.destroy();
-    drained();
-  }, exitDrainMs);
-
-  child.once('close', () => clearTimeout(timer));
-};
-
-const shellHasExited = (child: AcpChild): boolean =>
-  child.exitCode !== null || child.signalCode !== null;
-
-const killRunningShell = (child: AcpChild): boolean => {
-  if (!child.pid) return false;
-  terminateShellTree(child.pid);
-
-  return true;
-};
-
-const waitForShellStart = (child: AcpChild): Promise<void> => {
-  const started = Promise.withResolvers<void>();
-  child.once('spawn', () => started.resolve());
-  child.once('error', (error) => started.reject(error));
-
-  return started.promise;
+  return new OwnedShellCommand(child).launch(input, options);
 };

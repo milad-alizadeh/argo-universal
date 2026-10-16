@@ -1,14 +1,13 @@
 import { ShellRecord } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { shell } from '@repo/db/schema';
-import { writeBlobFile } from '../../feed';
 import {
   clearShellOutputs,
-  readRecoveredOutput,
+  ensureRecoveredOutput,
   removeShellOutput,
-  shellOutputBlob,
   shellOutputPath,
 } from './files';
+import { shellOutputBlob } from './output-blob';
 import { ShellWriteJob } from './storage';
 
 export async function recoverShells(input: {
@@ -35,14 +34,11 @@ async function recoverRunningShell(
   record: ShellRecord,
   path: string,
 ): Promise<void> {
-  const bytes = await readRecoveredOutput(path);
-  const metadata = shellOutputBlob(bytes);
-  await writeBlobFile(input.blobsFolder, metadata.id, bytes);
-
-  const lost = lostShell(record, metadata.id);
-  input.database.transaction((transaction) =>
-    new ShellWriteJob(lost, bytes).commit(transaction),
-  );
+  await ensureRecoveredOutput(path);
+  const output = await shellOutputBlob(path);
+  const job = new ShellWriteJob(lostShell(record, output.metadata.id), output);
+  await job.writeFiles(input.blobsFolder);
+  input.database.transaction((transaction) => job.commit(transaction));
 }
 
 const lostShell = (record: ShellRecord, outputBlobId: string): ShellRecord => ({

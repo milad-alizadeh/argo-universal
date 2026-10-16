@@ -59,7 +59,9 @@ class ShellOutputStream implements AsyncIterableIterator<ShellOutput> {
       this.after,
     );
 
-    const text = new TextDecoder().decode(bytes, { stream: true });
+    const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(bytes, {
+      stream: true,
+    });
 
     if (!this.shouldPublish(record, text)) return;
     this.after += Buffer.byteLength(text);

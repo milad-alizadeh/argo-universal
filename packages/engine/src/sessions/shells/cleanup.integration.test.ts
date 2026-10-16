@@ -1,4 +1,8 @@
-import { descendantShellStep } from '@repo/mocks/agent/shell-scenarios';
+import {
+  descendantShellStep,
+  orphanedShellStep,
+  runningShellStep,
+} from '@repo/mocks/agent/shell-scenarios';
 import { expect, it, assert } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
@@ -83,3 +87,50 @@ const finishShell = async (
 
   await actions[action]();
 };
+
+it('reaps descendants after their launcher exits without affecting another Shell', async () => {
+  const host = await startAcpEngine({
+    steps: [orphanedShellStep, runningShellStep],
+  });
+
+  const created = await host.caller.session.new({
+    ...emptySessionInput,
+    prompt: [{ type: 'text', text: 'Run' }],
+  });
+
+  const snapshot = await waitForAcpSnapshot(
+    host,
+    created.sessionId,
+    (value) => value.state === 'idle' && value.shells.length === 2,
+  );
+
+  const finished = snapshot.shells.find((shell) => shell.status === 'exited');
+  const sibling = snapshot.shells.find((shell) => shell.status === 'running');
+  assert(finished && sibling);
+
+  const pid = await descendantPid(
+    await host.caller.shell.output({ ...created, shellId: finished.id }),
+  );
+
+  expect(processIsRunning(pid)).toBe(false);
+  expect(finished).toMatchObject({ exitCode: 0, canStop: false });
+  expect(sibling.canStop).toBe(true);
+  await host.caller.session.close(created);
+  const shells = await host.caller.session.shells(created);
+
+  expect(shells).toHaveLength(2);
+  expect(shells).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: finished.id,
+        status: 'exited',
+        canStop: false,
+      }),
+      expect.objectContaining({
+        id: sibling.id,
+        status: 'lost',
+        canStop: false,
+      }),
+    ]),
+  );
+});

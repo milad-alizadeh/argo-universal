@@ -1,13 +1,12 @@
 import type { ShellRecord } from '@repo/contracts';
 import { blob, blobRef, shell } from '@repo/db/schema';
-import { writeBlobFile } from '../../feed';
 import type { StorageTransaction, WriterJob } from '../../storage';
-import { shellOutputBlob } from './files';
+import { writeShellBlob, type ShellOutputBlob } from './output-blob';
 
 export class ShellWriteJob implements WriterJob {
   public constructor(
     private readonly record: ShellRecord,
-    private readonly output?: Buffer,
+    private readonly output?: ShellOutputBlob,
   ) {}
   public changedSessionIds(): string[] {
     return [this.record.sessionId];
@@ -18,11 +17,7 @@ export class ShellWriteJob implements WriterJob {
   public async writeFiles(folder: string | undefined): Promise<void> {
     if (!this.output) return;
 
-    await writeBlobFile(
-      requireBlobFolder(folder),
-      shellOutputBlob(this.output).id,
-      this.output,
-    );
+    await writeShellBlob(requireBlobFolder(folder), this.output);
   }
   public commit(transaction: StorageTransaction): void {
     if (this.output) this.storeBlob(transaction, this.output);
@@ -35,8 +30,11 @@ export class ShellWriteJob implements WriterJob {
       })
       .run();
   }
-  private storeBlob(transaction: StorageTransaction, output: Buffer): void {
-    const metadata = shellOutputBlob(output);
+  private storeBlob(
+    transaction: StorageTransaction,
+    output: ShellOutputBlob,
+  ): void {
+    const metadata = output.metadata;
     transaction.insert(blob).values(metadata).onConflictDoNothing().run();
     transaction
       .insert(blobRef)

@@ -1,5 +1,5 @@
 import type { Database } from '@repo/db';
-import { releaseLoginTerminalGroups } from '../agents';
+import { releaseLoginTerminalGroups, releaseShellGroups } from '../agents';
 import { reconcileInterruptedInstallations } from '../agents';
 import {
   attachmentsFolderIn,
@@ -21,6 +21,7 @@ export type RecoveryInput = {
 export async function recoverEngineAfterRestart(
   input: RecoveryInput,
 ): Promise<void> {
+  await releaseShellGroups(input.home);
   await recoverShells(input);
   recoverAfterRestart(input.database);
   await recoverArchivedCheckouts(input.database);
