@@ -14,6 +14,13 @@ export function openChange(props: PresentationProps): (open: boolean) => void {
   };
 }
 
+// A sheet with pages keeps a steady height as they change; one that rests only at its full height fills the window.
+export function sheetHeightClass(props: PresentationProps): string | false {
+  if (props.detents?.join() === 'large') return 'sheet-full';
+
+  return props.stack.pages.length > 0 && 'sheet-paged';
+}
+
 // The web sheet's content, in a drawer or a popover: its pages, then the footer under them.
 export function SheetPanel(
   props: PresentationProps & { hideRootTitle?: boolean },

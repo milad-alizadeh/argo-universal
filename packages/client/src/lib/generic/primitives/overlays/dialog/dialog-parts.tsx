@@ -72,6 +72,8 @@ export function DialogFrame(props: DialogFrameProps): ReactElement {
     <RadixDialog.Content
       onCloseAutoFocus={props.onCloseAutoFocus}
       onEscapeKeyDown={props.onEscapeKeyDown}
+      // The backdrop's own press decides, so a dialog holding input stays open.
+      onPointerDownOutside={(event) => event.preventDefault()}
     >
       <View
         className={props.className}
