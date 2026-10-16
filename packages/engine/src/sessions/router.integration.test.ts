@@ -37,16 +37,6 @@ type SessionCaller = Awaited<ReturnType<typeof startAcpEngine>>['caller'];
 
 it.each([
   {
-    procedure: 'rename',
-    call: async (caller: SessionCaller): Promise<void> => {
-      await caller.session.rename({
-        sessionId: 'session-1',
-        title: 'New title',
-      });
-    },
-    message: 'Session rename is not implemented yet',
-  },
-  {
     procedure: 'answerPlanProposal',
     call: async (caller: SessionCaller): Promise<void> => {
       await caller.session.answerPlanProposal({

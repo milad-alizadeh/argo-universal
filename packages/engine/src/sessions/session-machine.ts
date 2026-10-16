@@ -108,6 +108,7 @@ import {
 } from './session-data';
 import {
   SessionRowUpdateJob,
+  SessionTitleJob,
   TurnInsertJob,
   TurnUpdateJob,
 } from './session-storage';
@@ -641,6 +642,23 @@ const sessionSetup = setup({
         };
       },
     ),
+    applyAcpTitle: enqueueActions(({ context, event, enqueue }) => {
+      assertEvent(event, acpUpdateEvent);
+      const update = event.notification.update;
+
+      if (update.sessionUpdate !== 'session_info_update') return;
+      const title = update.title?.trim();
+
+      if (!title) return;
+      enqueue.sendTo(writer, {
+        type: writeFeedEvent,
+        job: new SessionTitleJob({
+          id: context.sessionId,
+          title,
+          titleSource: 'agent',
+        }),
+      });
+    }),
     forwardAcpUpdate: sendTo(
       'feed',
       ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
@@ -1079,6 +1097,9 @@ const sessionSetup = setup({
     isConfigUpdate: ({ event }): boolean =>
       event.type === acpUpdateEvent &&
       event.notification.update.sessionUpdate === 'config_option_update',
+    isTitleUpdate: ({ event }): boolean =>
+      event.type === acpUpdateEvent &&
+      event.notification.update.sessionUpdate === 'session_info_update',
     isReplayedHistory: ({ context, event }): boolean =>
       event.type === acpUpdateEvent &&
       isReplayedHistory(
@@ -1432,6 +1453,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   event.notification.update.sessionUpdate === 'usage_update',
                 actions: 'rememberAcpUsage',
               },
+              { guard: 'isTitleUpdate', actions: 'applyAcpTitle' },
               { actions: 'forwardAcpUpdate' },
             ],
             [setConfigEvent]: [
@@ -1749,6 +1771,7 @@ export const sessionMachine = sessionSetup.createMachine({
                         actions: 'routeSubagentUpdate',
                       },
                       { guard: 'isConfigUpdate', actions: 'applyAcpConfig' },
+                      { guard: 'isTitleUpdate', actions: 'applyAcpTitle' },
                       {},
                     ],
                     'session.cancel': {},

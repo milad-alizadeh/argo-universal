@@ -2,7 +2,7 @@
 
 `createScriptedAgent(scenario)` uses the official ACP SDK. Engine tests use it over in-memory streams. App E2E and process tests launch the same Agent over stdio.
 
-`scenarios.ts` contains the shared reply, image, cancellation, refused Session, Permission request, Elicitation, configuration and write-pressure scenarios. Reuse a named scenario before adding inline scenario data.
+`scenarios.ts` contains the shared reply, image, cancellation, refused Session, Permission request, Elicitation, configuration, Agent title and write-pressure scenarios. Reuse a named scenario before adding inline scenario data.
 
 ## Scenario data
 

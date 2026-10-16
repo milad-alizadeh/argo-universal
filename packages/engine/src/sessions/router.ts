@@ -17,6 +17,8 @@ import {
   SessionOpenOutput,
   SessionPromptInput,
   SessionPromptOutput,
+  SessionRenameInput,
+  SessionRenameOutput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
   SessionSubagentsInput,
@@ -41,6 +43,7 @@ import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
+import { renameSession } from './session-rename';
 import { createShellSessionRouter } from './shells/router';
 import { createSubagentsReader } from './subagents';
 import { unimplementedSessionRouter } from './unimplemented-router';
@@ -121,6 +124,15 @@ const createConfigurationRouter = routerFactory((deps: SessionRouterDeps) =>
   }),
 );
 
+const createRenameRouter = routerFactory((deps: SessionRouterDeps) =>
+  router({
+    rename: publicProcedure
+      .input(SessionRenameInput)
+      .output(SessionRenameOutput)
+      .mutation(({ input }) => renameSession(deps, input)),
+  }),
+);
+
 const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
   router({
     answerPermission: publicProcedure
@@ -160,6 +172,7 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createStopRouter(deps),
     createArchiveRouter(deps),
     createConfigurationRouter(deps),
+    createRenameRouter(deps),
     createAnswerRouter(deps),
     createSubagentsRouter(deps),
     unimplementedSessionRouter,
