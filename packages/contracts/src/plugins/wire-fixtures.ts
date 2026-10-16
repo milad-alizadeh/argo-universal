@@ -36,10 +36,12 @@ const helloTree = (taps: number): WireNode =>
   ]);
 
 // What `plugins/examples/hello` draws: the Engine journey expects the reconciler to produce it, and the registry stories render it.
+export const helloRoot: WireNode = helloTree(0);
+
 export const helloSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,
-  root: helloTree(0),
+  root: helloRoot,
 };
 
 // What one tap on "Tap me" changes.
@@ -58,25 +60,27 @@ export const helloTapPatch: ViewMessage = {
 export const helloTappedRoot: WireNode = helloTree(1);
 
 // A newer Plugin's component the App does not know: a leaf is dropped, a container shows "Update Argo to see this".
+export const unknownNodesRoot: WireNode = withChildren(node('Column', '0'), [
+  node('Text', '0', { label: 'Before' }),
+  node('Sparkline', '1', { unit: 'ms' }),
+  withChildren(node('Carousel', '2'), [node('Text', '0', { label: 'Inside' })]),
+  node('Text', '3', { label: 'After' }),
+]);
+
 export const unknownNodesSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,
-  root: withChildren(node('Column', '0'), [
-    node('Text', '0', { label: 'Before' }),
-    node('Sparkline', '1', { unit: 'ms' }),
-    withChildren(node('Carousel', '2'), [
-      node('Text', '0', { label: 'Inside' }),
-    ]),
-    node('Text', '3', { label: 'After' }),
-  ]),
+  root: unknownNodesRoot,
 };
 
 // Props the node's schema refuses leave that node out and keep its siblings.
+export const invalidPropsRoot: WireNode = withChildren(node('Column', '0'), [
+  node('Text', '0', { label: 42 }),
+  node('Text', '1', { label: 'Still here' }),
+]);
+
 export const invalidPropsSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,
-  root: withChildren(node('Column', '0'), [
-    node('Text', '0', { label: 42 }),
-    node('Text', '1', { label: 'Still here' }),
-  ]),
+  root: invalidPropsRoot,
 };

@@ -1,21 +1,14 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
-  helloSnapshot,
+  helloRoot,
   helloTapEventId,
-  invalidPropsSnapshot,
-  unknownNodesSnapshot,
+  invalidPropsRoot,
+  unknownNodesRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
-
-const rootOf = (message: typeof helloSnapshot): WireNode => {
-  if (message.type !== 'snapshot') throw new Error('Fixture is a snapshot');
-
-  return message.root;
-};
 
 const meta = { title: 'Tests/Plugin registry' } satisfies Meta;
 
@@ -24,7 +17,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Tap: Story = {
-  render: () => <PluginTree root={rootOf(helloSnapshot)} onEvent={onEvent} />,
+  render: () => <PluginTree root={helloRoot} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.getByText('Hello from a Plugin')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Tap me' }));
@@ -34,9 +27,7 @@ export const Tap: Story = {
 };
 
 export const UnknownNodes: Story = {
-  render: () => (
-    <PluginTree root={rootOf(unknownNodesSnapshot)} onEvent={onEvent} />
-  ),
+  render: () => <PluginTree root={unknownNodesRoot} onEvent={onEvent} />,
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Before')).toBeVisible();
     await expect(canvas.getByText('After')).toBeVisible();
@@ -47,9 +38,7 @@ export const UnknownNodes: Story = {
 };
 
 export const InvalidProps: Story = {
-  render: () => (
-    <PluginTree root={rootOf(invalidPropsSnapshot)} onEvent={onEvent} />
-  ),
+  render: () => <PluginTree root={invalidPropsRoot} onEvent={onEvent} />,
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Still here')).toBeVisible();
     await expect(canvas.queryByText('42')).toBeNull();
