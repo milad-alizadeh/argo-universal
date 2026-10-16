@@ -6,7 +6,7 @@ import type { AttachmentDraft, SessionOpening } from './use-session-opening';
 export interface NewSessionWiring {
   configuration?: Pick<
     ReadySessionNewViewProps['configuration'],
-    'configOptions' | 'onConfigChange'
+    'configOptions' | 'onConfigChange' | 'opening'
   >;
   data: NewSessionData;
   connected: boolean;

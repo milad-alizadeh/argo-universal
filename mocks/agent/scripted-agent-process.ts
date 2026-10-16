@@ -1,8 +1,15 @@
 import { appendFileSync } from 'node:fs';
 import { Writable } from 'node:stream';
+import type {
+  AgentRequestMethod,
+  AgentRequestParamsByMethod,
+} from '@agentclientprotocol/sdk';
 import { isScenarioName, scenarios } from './scenarios.ts';
 import { createScriptedAgent } from './scripted-agent.ts';
-import type { ScriptedResponses } from './scripted-responses.ts';
+import type {
+  ScriptedResponse,
+  ScriptedResponses,
+} from './scripted-responses.ts';
 import {
   scriptedInitialization,
   type ScriptedScenario,
@@ -18,27 +25,47 @@ const scenario: ScriptedScenario = scenarios[name];
 
 const requestLog = process.env.ARGO_E2E_REQUEST_LOG;
 
-// App E2E reads which Sessions the Agent was asked to close.
-const loggedCloses = (log: string): ScriptedResponses => ({
-  ...scenario.responses,
-  'session/close': [
-    {
-      requests: {
-        push: (params): void => {
-          appendFileSync(
-            log,
-            `${JSON.stringify({ method: 'session/close', params })}\n`,
-          );
-        },
-      },
-    },
-  ],
+// Appends each request to the App E2E's request log, then hands it to the response's own requests.
+const logged = <Method extends AgentRequestMethod>(
+  log: string,
+  method: Method,
+  own: ScriptedResponse<Method>['requests'],
+): Required<ScriptedResponse<Method>>['requests'] => ({
+  push: (params: AgentRequestParamsByMethod[Method]): void => {
+    appendFileSync(log, `${JSON.stringify({ method, params })}\n`);
+    own?.push(params);
+  },
 });
 
-const selected: ScriptedScenario =
-  requestLog && !scenario.responses?.['session/close']
-    ? { ...scenario, responses: loggedCloses(requestLog) }
-    : scenario;
+// Each of a scenario's responses for the method, or one answered by default, also logs its request.
+const loggedResponses = <Method extends AgentRequestMethod>(
+  log: string,
+  method: Method,
+  responses: readonly ScriptedResponse<Method>[] = [{}],
+): ScriptedResponse<Method>[] =>
+  responses.map((response) => ({
+    ...response,
+    requests: logged(log, method, response.requests),
+  }));
+
+// App E2E reads which Sessions the Agent was asked to open and close; a scenario's own script for either still answers.
+const loggedRequests = (log: string): ScriptedResponses => ({
+  ...scenario.responses,
+  'session/new': loggedResponses(
+    log,
+    'session/new',
+    scenario.responses?.['session/new'],
+  ),
+  'session/close': loggedResponses(
+    log,
+    'session/close',
+    scenario.responses?.['session/close'],
+  ),
+});
+
+const selected: ScriptedScenario = requestLog
+  ? { ...scenario, responses: loggedRequests(requestLog) }
+  : scenario;
 
 const initialization = selected.initialize ?? scriptedInitialization;
 
