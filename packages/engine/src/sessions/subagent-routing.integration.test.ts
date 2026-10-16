@@ -328,6 +328,7 @@ async function backgroundParent(
 ): Promise<Awaited<ReturnType<typeof openAcpFeedSession>>> {
   const gate = Promise.withResolvers<void>();
   onTestFinished(() => gate.resolve());
+
   const host = await startAcpEngine({
     ...scenarios[backgroundScenario],
     responses: {
@@ -336,10 +337,12 @@ async function backgroundParent(
       ],
     },
   });
+
   const { sessionId } = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'Start background work' }],
   });
+
   await waitForAcpSnapshot(
     host,
     sessionId,
