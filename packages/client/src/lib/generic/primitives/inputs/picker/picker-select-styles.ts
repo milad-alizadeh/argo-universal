@@ -1,13 +1,13 @@
 import { cn } from '#lib/generic/utils';
 
 const triggerClassName =
-  'border-border dark:bg-border/30 dark:active:bg-pressed bg-card flex h-10 flex-row items-center justify-between gap-2 rounded-control border px-3 py-2 shadow-control sm:h-9 web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger web:dark:hover:bg-hover web:w-fit web:whitespace-nowrap web:type-body web:outline-none web:transition-[color,box-shadow] web:focus-visible:ring-3 web:disabled:cursor-not-allowed web:[&_svg]:pointer-events-none web:[&_svg]:shrink-0';
+  'border-border dark:bg-border/30 dark:active:bg-pressed bg-card flex h-10 flex-row items-center justify-between gap-2 rounded-control border px-3 py-2 shadow-control sm:h-9 web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40 web:aria-invalid:border-danger web:dark:hover:bg-hover web:w-fit web:whitespace-nowrap web:type-body web:outline-none web:transition web:focus-visible:ring-3 web:disabled:cursor-not-allowed web:**:pointer-events-none';
 
 const plainTriggerClassName =
   'flex h-8 flex-row items-center gap-1.5 rounded-control pl-2 web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:w-fit web:whitespace-nowrap web:outline-none web:disabled:cursor-not-allowed';
 
 const itemClassName =
-  'active:bg-pressed group relative flex w-full flex-row items-center gap-2 rounded-xl py-2 pl-2 pr-8 sm:py-1.5 web:focus:bg-hover web:*:[span]:last:flex web:*:[span]:last:items-center web:*:[span]:last:gap-2 web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:[&_svg]:pointer-events-none';
+  'active:bg-pressed group relative flex w-full flex-row items-center gap-2 rounded-xl py-2 pl-2 pr-8 sm:py-1.5 web:focus:bg-hover web:*:last:flex web:*:last:items-center web:*:last:gap-2 web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:**:pointer-events-none';
 
 type TriggerStyle = {
   className?: string;
@@ -86,6 +86,6 @@ export function selectViewportClassName(
   return cn(
     'p-1',
     position === 'popper' &&
-      'w-full web:h-[var(--radix-select-trigger-height)] web:min-w-[var(--radix-select-trigger-width)]',
+      'w-full web:h-(--radix-select-trigger-height) web:min-w-(--radix-select-trigger-width)',
   );
 }

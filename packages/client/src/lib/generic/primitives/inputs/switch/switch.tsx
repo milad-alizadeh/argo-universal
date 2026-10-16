@@ -26,7 +26,7 @@ function switchClass(props: SwitchProps): string {
     props.size === 'sm'
       ? 'h-4 w-6.5 p-0.5 border-0'
       : 'h-5.5 w-9 p-0.5 border-0',
-    'web:focus-visible:border-focus web:focus-visible:ring-focus/50 peer web:inline-flex web:outline-none web:transition-all web:focus-visible:ring-[3px] web:disabled:cursor-not-allowed',
+    'web:focus-visible:border-focus web:focus-visible:ring-focus/50 peer web:inline-flex web:outline-none web:transition-all web:focus-visible:ring-3 web:disabled:cursor-not-allowed',
     switchStateClass(props),
   );
 }
