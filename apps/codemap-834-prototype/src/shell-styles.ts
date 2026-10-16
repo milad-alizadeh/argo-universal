@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import type { Label, Palette } from './model';
+import type { Insets, Label } from './map-labels';
+import type { Palette } from './model';
 
 export function button(palette: Palette): CSSProperties {
   return {
@@ -55,7 +56,7 @@ export function labelCard(label: Label, palette: Palette): CSSProperties {
     position: 'absolute',
     left: label.x,
     top: label.y,
-    maxWidth: 200,
+    maxWidth: label.maxWidth,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     background: palette.card,
@@ -63,6 +64,9 @@ export function labelCard(label: Label, palette: Palette): CSSProperties {
     padding: '1px 5px',
   };
 }
+
+/** Pixels the overlay plates reserve over the map: the view toggle above, the measure plate below. */
+export const labelInsets: Insets = { top: 55, right: 0, bottom: 170, left: 0 };
 
 export const overlay: CSSProperties = {
   position: 'absolute',

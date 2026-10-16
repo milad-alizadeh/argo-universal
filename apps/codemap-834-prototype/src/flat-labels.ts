@@ -1,55 +1,33 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import type { FlatContext } from './flat-context';
-import type { FlatViewport } from './flat-viewport';
-import { cullLabels, type Label, type Tile } from './model';
+import type { FlatTransform } from './flat-viewport';
+import { placeLabels, type LabelAnchors } from './map-labels';
+import type { Tile } from './model';
 
 const minimumWidth = 100;
 
 const minimumHeight = 24;
 
-function readable(tile: Tile, viewport: FlatViewport): boolean {
-  const corner = viewport.toScreen({ x: tile.x, y: tile.y });
-
-  const opposite = viewport.toScreen({
-    x: tile.x + tile.w,
-    y: tile.y + tile.h,
-  });
-
-  return (
-    opposite.x - corner.x > minimumWidth &&
-    opposite.y - corner.y > minimumHeight
-  );
+function readable(tile: Tile, scale: number): boolean {
+  return tile.w * scale > minimumWidth && tile.h * scale > minimumHeight;
 }
 
-function label(tile: Tile, viewport: FlatViewport): Label {
+/** Flat anchor rule: a label sits on its tile's top-left corner when the tile is big enough to read. */
+export function tileCorners({ x, y, scale }: FlatTransform): LabelAnchors {
   return {
-    id: tile.id,
-    text: tile.path.split('/').pop() ?? tile.path,
-    ...viewport.toScreen({ x: tile.x, y: tile.y }),
+    anchor: (tile) =>
+      readable(tile, scale)
+        ? { x: x + tile.x * scale, y: y + tile.y * scale }
+        : undefined,
+    exposed: () => true,
   };
 }
 
-function labels(
-  tiles: Tile[],
-  ctx: Pick<FlatContext, 'viewport' | 'size'>,
-): Label[] {
-  const candidates = tiles.flatMap((tile) =>
-    readable(tile, ctx.viewport) ? [label(tile, ctx.viewport)] : [],
-  );
-
-  return cullLabels(candidates, ctx.size.width, ctx.size.height);
-}
-
 export function useFlatLabels(ctx: FlatContext): void {
-  const { tiles, viewport, frame, onLabels } = ctx;
+  const { tiles, viewport, frame, insets, onLabels } = ctx;
 
-  const ordered = useMemo(
-    () => [...tiles].sort((a, b) => b.area - a.area),
-    [tiles],
-  );
-
-  useEffect(
-    () => onLabels(labels(ordered, { viewport, size: frame.size })),
-    [ordered, viewport, frame, onLabels],
-  );
+  useEffect(() => {
+    const anchors = tileCorners(viewport.transform());
+    onLabels(placeLabels(tiles, anchors, { size: frame.size, insets }));
+  }, [tiles, viewport, frame, insets, onLabels]);
 }

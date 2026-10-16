@@ -5,17 +5,17 @@ import {
   ready,
   selected as recordSelection,
 } from './evidence';
+import type { Label } from './map-labels';
 import {
   getFiles,
   layout,
-  type Label,
   type MapProps,
   type RendererInfo,
   type View,
 } from './model';
 import { runCamera, type CameraAction, type Viewport } from './viewport';
 
-export interface PrototypeState extends Omit<MapProps, 'palette'> {
+export interface PrototypeState extends Omit<MapProps, 'palette' | 'insets'> {
   files: ReturnType<typeof getFiles>;
   count: number;
   view: View;

@@ -1,10 +1,9 @@
 import type { RefObject } from 'react';
 import dataset from './dataset.json';
+import type { Insets, Label } from './map-labels';
 import type { Viewport } from './viewport';
 
 export { layout, mapExtent } from './treemap';
-
-export { cullLabels } from './labels';
 
 export interface FileEntry {
   id: string;
@@ -41,13 +40,6 @@ export interface Palette {
   muted: string;
 }
 
-export interface Label {
-  id: string;
-  text: string;
-  x: number;
-  y: number;
-}
-
 export type View = '3d' | 'flat';
 
 export interface RendererInfo {
@@ -73,6 +65,8 @@ export interface MapProps {
   selected?: string;
   /** The one camera handle; whichever view is mounted fills it. */
   viewportRef: RefObject<Viewport | null>;
+  /** Viewport pixels the shell's overlay plates cover; labels stay out of them. */
+  insets: Insets;
   onSelect: (id: string) => void;
   onLabels: (labels: Label[]) => void;
   onReady: (info: RendererInfo) => void;

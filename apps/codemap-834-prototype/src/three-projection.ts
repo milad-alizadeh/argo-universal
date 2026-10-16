@@ -45,10 +45,6 @@ function vector(point: Vec3): Vector3 {
   return new Vector3(point.x, point.y, point.z);
 }
 
-export function worldPoint(point: MapPoint): Vector3 {
-  return new Vector3(point.x, point.elevation ?? 0, point.y);
-}
-
 function basis(pose: CameraPose): Basis {
   const origin = vector(pose.position);
   const forward = vector(pose.target).sub(origin).normalize();
@@ -73,22 +69,46 @@ function insideClip(depth: number): boolean {
   return depth >= clipRange.near && depth <= clipRange.far;
 }
 
-export function projectPoint(
-  pose: CameraPose,
-  point: MapPoint,
-): ScreenPoint | undefined {
-  const frame = basis(pose);
-  const offset = worldPoint(point).sub(frame.origin);
-  const depth = offset.dot(frame.forward);
+function dot(a: Vec3, b: Vec3): number {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+interface Lens extends Basis {
+  focal: number;
+  size: Size;
+}
+
+function project(lens: Lens, point: MapPoint): ScreenPoint | undefined {
+  const offset = {
+    x: point.x - lens.origin.x,
+    y: (point.elevation ?? 0) - lens.origin.y,
+    z: point.y - lens.origin.z,
+  };
+
+  const depth = dot(offset, lens.forward);
 
   if (!insideClip(depth)) return;
-  const scale = focalPixels(pose) / depth;
+  const scale = lens.focal / depth;
 
   return {
-    x: pose.size.width / halves + offset.dot(frame.right) * scale,
-    y: pose.size.height / halves - offset.dot(frame.up) * scale,
+    x: lens.size.width / halves + dot(offset, lens.right) * scale,
+    y: lens.size.height / halves - dot(offset, lens.up) * scale,
   };
 }
+
+/** Projects map points through one pose; derive it once per frame when projecting many points. */
+export function projector(
+  pose: CameraPose,
+): (point: MapPoint) => ScreenPoint | undefined {
+  const lens = { ...basis(pose), focal: focalPixels(pose), size: pose.size };
+
+  return (point) => project(lens, point);
+}
+
+export const projectPoint = (
+  pose: CameraPose,
+  point: MapPoint,
+): ScreenPoint | undefined => projector(pose)(point);
 
 export function screenRay(pose: CameraPose, point: ScreenPoint): Ray {
   const frame = basis(pose);

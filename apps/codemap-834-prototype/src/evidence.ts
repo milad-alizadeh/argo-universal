@@ -1,5 +1,6 @@
 import { panDuration } from './frame-sample';
-import type { Label, PanResult, RendererInfo, View } from './model';
+import type { Label } from './map-labels';
+import type { PanResult, RendererInfo, View } from './model';
 
 interface Evidence {
   threeImportMs?: number;

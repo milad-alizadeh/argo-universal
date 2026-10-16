@@ -1,11 +1,13 @@
 import { Text } from '@repo/client/text';
 import { Suspense, type JSX } from 'react';
-import type { Label, Palette } from './model';
+import type { Label } from './map-labels';
+import type { Palette } from './model';
 import type { PrototypeState } from './prototype-state';
 import { FlatLoader, ThreeMap } from './renderer-loader.web';
 import { CameraControls, ViewToggle } from './shell-controls';
 import {
   labelCard,
+  labelInsets,
   map,
   overlay,
   measurePlate,
@@ -78,9 +80,11 @@ function Selection({ state, palette }: Props): JSX.Element | null {
 }
 
 function Renderer({ state, palette }: Props): JSX.Element {
-  if (state.view === '3d') return <ThreeMap {...state} palette={palette} />;
+  const props = { ...state, palette, insets: labelInsets };
 
-  return <FlatLoader {...state} palette={palette} />;
+  if (state.view === '3d') return <ThreeMap {...props} />;
+
+  return <FlatLoader {...props} />;
 }
 
 export function MapArea(props: Props): JSX.Element {

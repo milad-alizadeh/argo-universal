@@ -8,19 +8,28 @@ import {
 } from '@shopify/react-native-skia';
 import { useEffect, useRef, type JSX, type RefObject } from 'react';
 import type { FlatContext } from './flat-context';
+import type { FlatFrame, FlatViewport } from './flat-viewport';
 
 export interface FlatDrawing {
   ctx: FlatContext;
   picture: SkPicture;
 }
 
-function paint(surface: SkSurface, { ctx, picture }: FlatDrawing): void {
+/** Everything a draw reads; the raster redraws only when one of these changes. */
+interface Raster {
+  picture: SkPicture;
+  viewport: FlatViewport;
+  frame: FlatFrame;
+  background: string;
+}
+
+function paint(surface: SkSurface, raster: Raster): void {
   const canvas = surface.getCanvas();
-  const { x, y, scale } = ctx.viewport.transform();
-  canvas.clear(Skia.Color(ctx.palette.card));
+  const { x, y, scale } = raster.viewport.transform();
+  canvas.clear(Skia.Color(raster.background));
   canvas.translate(x, y);
   canvas.scale(scale, scale);
-  canvas.drawPicture(picture);
+  canvas.drawPicture(raster.picture);
   surface.flush();
 }
 
@@ -52,42 +61,47 @@ function copy(surface: SkSurface, canvas: HTMLCanvasElement): void {
   }
 }
 
-function draw(canvas: HTMLCanvasElement, drawing: FlatDrawing): void {
-  canvas.width = Math.round(drawing.ctx.size.width);
-  canvas.height = Math.round(drawing.ctx.size.height);
+function draw(canvas: HTMLCanvasElement, raster: Raster): void {
+  canvas.width = Math.round(raster.frame.size.width);
+  canvas.height = Math.round(raster.frame.size.height);
   const surface = Skia.Surface.Make(canvas.width, canvas.height);
 
   if (!surface) throw new Error('Skia could not create a CPU surface');
 
   try {
-    paint(surface, drawing);
+    paint(surface, raster);
     copy(surface, canvas);
   } finally {
     surface.dispose();
   }
 }
 
-function report(ctx: FlatContext): void {
-  ctx.onReady({
-    engine: 'Skia / CanvasKit CPU',
-    files: ctx.tiles.length,
-    dpr: 1,
-  });
+function report(onReady: FlatContext['onReady'], files: number): void {
+  onReady({ engine: 'Skia / CanvasKit CPU', files, dpr: 1 });
 }
 
-function useRaster(
-  drawing: FlatDrawing,
-  ref: RefObject<HTMLCanvasElement | null>,
-): void {
+function rasterOf({ ctx, picture }: FlatDrawing): Raster {
+  const { viewport, frame, palette } = ctx;
+
+  return { picture, viewport, frame, background: palette.card };
+}
+
+type CanvasRef = RefObject<HTMLCanvasElement | null>;
+
+function useRaster(drawing: FlatDrawing, ref: CanvasRef): void {
   const reported = useRef(false);
+  const { picture, viewport, frame, background } = rasterOf(drawing);
+  const { onReady, tiles } = drawing.ctx;
+  const files = tiles.length;
+
   useEffect(() => {
     if (!ref.current) return;
-    draw(ref.current, drawing);
+    draw(ref.current, { picture, viewport, frame, background });
 
     if (reported.current) return;
     reported.current = true;
-    report(drawing.ctx);
-  }, [drawing, ref]);
+    report(onReady, files);
+  }, [picture, viewport, frame, background, onReady, files, ref]);
 }
 
 export function FlatRaster(props: FlatDrawing): JSX.Element {
