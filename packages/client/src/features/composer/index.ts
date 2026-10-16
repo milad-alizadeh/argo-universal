@@ -15,7 +15,7 @@ export { StartSessionIn } from './components/start-session-in/start-session-in';
 
 export { useAttachmentDraft } from './hooks/use-attachment-draft';
 
-export type { AttachmentError } from './state/attachment-draft';
+export type { AttachmentError } from './utils/attachment-draft';
 
 export {
   type ConfigurationChange,
@@ -24,7 +24,7 @@ export {
   rememberSessionConfiguration,
   type SavedChoices,
   savedChoicesQuery,
-} from './state/session-configuration-preferences';
+} from './stores/session-configuration-preferences';
 
 export {
   configurationChoices,

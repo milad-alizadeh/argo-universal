@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { smartZonePercent } from '../../state/status';
+import { smartZonePercent } from '../../utils/status';
 import {
   successBackgroundClassName,
   warningBackgroundClassName,

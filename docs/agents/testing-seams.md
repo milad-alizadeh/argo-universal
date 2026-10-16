@@ -42,6 +42,9 @@ Every XState machine has model-based tests from `xstate/graph` that walk all of 
 
 ## Fixtures and boundary code
 
+Feature modules use `utils/` for pure functions, `stores/` for client contexts and preferences, `api/` for Server calls, and `types/` for shared types.
+Tests and colocated mocks stay beside their modules when these modules move. Test seams and behaviour stay the same.
+
 A fixture is data: input, response, update, file content, initial row or expected result. A mock supplies external behaviour, such as delivering those responses, holding a reply or closing a connection. A bootstrap starts and cleans up real code. These roles need no separate folders or new framework. Test assets live outside `src/`, in `mocks/`, `e2e/<flow>/` and `tools/`; call them mocks.
 
 Prefer a fixture and a direct public call. Reuse an existing boundary implementation before adding another. Keep helpers local until actual reuse earns extraction under F3/A2. A wrapper earns its place through required context, realistic layout or shared setup; a feature-specific component that only prepares fixtures and forwards props becomes explicit setup beside the actual component's story.

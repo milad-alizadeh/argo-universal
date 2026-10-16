@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { contextZone, fullPercent, smartZonePercent } from '../../state/status';
+import { contextZone, fullPercent, smartZonePercent } from '../../utils/status';
 
 export const successBackgroundClassName = 'bg-success';
 

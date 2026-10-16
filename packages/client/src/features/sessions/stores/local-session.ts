@@ -3,7 +3,7 @@ import {
   changeKey,
   chosenOptions,
   nextConfigChange,
-} from '../state/session-option-choices';
+} from '../utils/session-option-choices';
 import {
   type EmptySessionConfiguration,
   type EmptySessionPorts,

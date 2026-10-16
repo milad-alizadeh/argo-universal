@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { contentActionClass } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text, TextClassContext } from '#primitives/display/text';
+import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import { Pressable } from '#primitives/pressable';
 
 function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {
@@ -46,7 +47,7 @@ const toggleClassName = contentActionClass({
     'web:h-full web:sm:h-full min-w-0 flex-1 justify-start gap-1.5 pl-2.5 pr-2 py-1 wide:gap-3 wide:pl-4 hover:bg-transparent dark:hover:bg-transparent',
 });
 
-interface ProjectToggleProps extends ProjectNameProps {
+interface ProjectToggleProps extends ProjectNameProps, ContextMenuTriggerProps {
   onToggle: () => void;
 }
 
@@ -72,6 +73,7 @@ export function ProjectToggle(props: ProjectToggleProps): React.JSX.Element {
     <Pressable
       {...toggleAccessibility(props)}
       onPress={props.onToggle}
+      onLongPress={props.onLongPress}
       role="button"
       className={toggleClassName}
     >

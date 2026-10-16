@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { SessionsHeader } from '../../src/features/sessions/components/sessions-header';
-import { useSessionsFilter } from '../../src/features/sessions/state/sessions-filter';
+import { useSessionsFilter } from '../../src/features/sessions/stores/sessions-filter';
 import { useWide } from '../../src/lib/generic/use-wide/use-wide';
 import { SessionListView } from '../../src/screens/sessions/session-list-view';
 import { loadedSessionListView } from '../../src/screens/sessions/session-list-view.mocks';

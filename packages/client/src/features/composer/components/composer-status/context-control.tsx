@@ -1,8 +1,8 @@
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import type { ComposerContext } from '../../state/status';
-import { compactNumber, contextPercent } from '../../state/status';
+import type { ComposerContext } from '../../utils/status';
+import { compactNumber, contextPercent } from '../../utils/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ContextContent } from './context-content';
 import { ContextRing } from './context-ring';

@@ -15,5 +15,7 @@ export interface VirtualListItemProps {
   selected?: boolean;
   accessibilityLabel?: string;
   onPress: () => void;
+  // A long press, such as a phone's context menu opening on the row.
+  onLongPress?: () => void;
   testID?: string;
 }

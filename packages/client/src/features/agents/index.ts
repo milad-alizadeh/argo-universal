@@ -18,20 +18,20 @@ export {
   loadedAgents,
   type InstalledAgents,
   type RegistryLoad,
-} from './state/installed-agents';
+} from './utils/installed-agents';
 
 export {
   agentsPage,
   type AgentRowEntry,
   type AgentRows,
   type RowsLoad,
-} from './state/agent-rows';
+} from './utils/agent-rows';
 
 export {
   filterAgents,
   agentsEmptyLabel,
   type AgentsFilter,
-} from './state/agents-filter';
+} from './utils/agents-filter';
 
 export { AgentLoginTerminal } from './components/agent-login-terminal/agent-login-terminal';
 

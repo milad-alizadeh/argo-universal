@@ -62,8 +62,12 @@ export function nativeMenuSections<Value extends string>(
 export function nativeMenuItems<Value extends string>(
   rows: MenuRows<Value>,
 ): NativeMenuItem[] {
-  return nativeMenuSections(rows).flatMap(sectionItems);
+  return dividedItems(nativeMenuSections(rows));
 }
+
+// Sections as Android's flat list: each later section's first row marked as divided.
+export const dividedItems = (sections: NativeMenuSection[]): NativeMenuItem[] =>
+  sections.flatMap(sectionItems);
 
 function sectionItems(
   section: NativeMenuSection,
