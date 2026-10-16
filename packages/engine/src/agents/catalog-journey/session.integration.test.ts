@@ -50,6 +50,7 @@ it.each(['accepted', 'rejected'] as const)(
     expect(savedFeed).toEqual([
       expect.objectContaining({ session_update: 'user_message' }),
       expect.objectContaining({ session_update: 'agent_message' }),
+      expect.objectContaining({ session_update: 'notice' }),
     ]);
     response.resolve(
       JSON.stringify(
@@ -74,7 +75,7 @@ it.each(['accepted', 'rejected'] as const)(
           direction: 'tail',
         })
       ).rows,
-    ).toHaveLength(2);
+    ).toHaveLength(3);
     await host.caller.session.close({ sessionId });
   },
 );

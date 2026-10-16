@@ -19,6 +19,7 @@ export const stopReasons = [
   'refusal',
   'cancelled',
   'error',
+  'auth_required',
 ] as const;
 
 export const sessionTitleSources = ['user', 'agent', 'prompt'] as const;

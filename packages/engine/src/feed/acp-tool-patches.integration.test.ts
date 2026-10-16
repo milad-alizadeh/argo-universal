@@ -60,6 +60,10 @@ it.each(['agent-1', 'agent-2'])(
         position: 1,
         revision: 4,
       },
+      {
+        sessionUpdate: 'notice',
+        _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
+      },
     ]);
     expect(page.rows[1]?.turnId).toBe(page.rows[0]?.turnId);
   },
@@ -87,6 +91,10 @@ it('a first partial tool update shows supplied information without inventing a c
       rawOutput: { error: 'Missing' },
       content: [],
       position: 1,
+    },
+    {
+      sessionUpdate: 'notice',
+      _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
     },
   ]);
 });

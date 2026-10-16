@@ -8,32 +8,45 @@ const userMessage = 'user_message';
 
 const agentMessage = 'agent_message';
 
+const turnEndNotice = 'notice';
+
 const fixtureReply = 'The shared fixture completed this Turn.';
 
 const feedScroll = 'feed-scroll';
 
 const firstPromptText = 'First prompt';
 
-const promptRowKinds = [userMessage, agentMessage, userMessage, agentMessage];
+const turnRowKinds = [
+  userMessage,
+  agentMessage,
+  turnEndNotice,
+  userMessage,
+  agentMessage,
+  turnEndNotice,
+];
 
 const expectSeparatePromptTurns = (rows: FeedRows): void => {
-  expect(rows.map((row) => row.sessionUpdate)).toEqual(promptRowKinds);
+  expect(rows.map((row) => row.sessionUpdate)).toEqual(turnRowKinds);
   expect(rows.map((row) => row.state)).toEqual(
-    promptRowKinds.map(() => 'settled'),
+    turnRowKinds.map(() => 'settled'),
   );
   expect(rows[0]?.content).toEqual([{ type: 'text', text: firstPromptText }]);
-  expect(rows[2]?.content).toEqual([{ type: 'text', text: 'Second prompt' }]);
-  expectTurnPairs(rows.map((row) => row.turnId));
+  expect(rows[3]?.content).toEqual([{ type: 'text', text: 'Second prompt' }]);
+  expectSeparateTurnIds(rows.map((row) => row.turnId));
 };
 
-const expectTurnPairs = ([
+const expectSeparateTurnIds = ([
   firstPrompt,
   firstReply,
+  firstEnd,
   secondPrompt,
   secondReply,
+  secondEnd,
 ]: string[]): void => {
   expect(firstPrompt).toBe(firstReply);
+  expect(firstPrompt).toBe(firstEnd);
   expect(secondPrompt).toBe(secondReply);
+  expect(secondPrompt).toBe(secondEnd);
   expect(firstPrompt).not.toBe(secondPrompt);
 };
 

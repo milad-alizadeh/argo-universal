@@ -133,7 +133,7 @@ The public ACP Registry that lists the Agents that Argo can run; Argo's Agent ca
 _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), catalog (for the upstream list)
 
 **Stop reason**:
-Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, or `error`.
+Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, `error`, or `auth_required`.
 _Avoid_: Exit status, finish reason, interrupted (as a Stop reason)
 
 **Settled**:

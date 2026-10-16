@@ -43,6 +43,10 @@ it('Compaction chunks remain live until completion and an omitted terminal summa
       ],
       _meta: { acp: { scope: 'initial' } },
     },
+    {
+      sessionUpdate: 'notice',
+      _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
+    },
   ]);
 });
 
@@ -130,6 +134,10 @@ it('SDK-valid future Notice severity and Compaction status remain explicit with 
       sessionUpdate: 'compaction_update',
       status: 'future-status',
       state: 'settled',
+    },
+    {
+      sessionUpdate: 'notice',
+      _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
     },
   ]);
   expect(errors).toHaveBeenCalledTimes(2);
