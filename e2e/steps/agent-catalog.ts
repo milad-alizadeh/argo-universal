@@ -50,8 +50,14 @@ Then('Python Agent is unavailable on this platform', async ({ page }) => {
 });
 
 When('I search the catalog for {string}', async ({ page }, search: string) => {
-  await page.getByRole('button', { name: 'Search Agents' }).click();
-  await page.getByRole('textbox', { name: 'Search Agents' }).fill(search);
+  const options = { name: 'Search Agents' };
+
+  if (onPhone(page)) {
+    await page.getByRole('button', options).click();
+    await page.getByRole('textbox', options).fill(search);
+  } else {
+    await page.getByRole('searchbox', options).fill(search);
+  }
 });
 
 Then('only Python Agent is shown in the catalog', async ({ page }) => {

@@ -1,20 +1,38 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Text } from '#primitives/display/text';
+import { useSizeClass } from '../src/lib/generic/use-size-class/use-size-class';
 import { HeaderItems } from '../src/lib/product/header-button';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
 
 // Stands in for the stack's header in stories, laid out as the web's JS header draws it (getDefaultHeaderHeight, headerTitleAlign 'left'): one 64pt line of left item, left-aligned title and right items. As ScreenHeader, a wide window has none.
-export function ScreenHeaderMock({
+export function ScreenHeaderMock(
+  props: ScreenHeaderProps,
+): React.JSX.Element | null {
+  const sizeClass = useSizeClass();
+
+  if (headerHidden(props, sizeClass)) return null;
+
+  return <HeaderMockBody {...props} />;
+}
+
+function headerHidden(
+  props: ScreenHeaderProps,
+  sizeClass: ReturnType<typeof useSizeClass>,
+): boolean {
+  return (
+    sizeClass === 'wide' ||
+    (props.hideFrom === 'medium' && sizeClass === 'medium')
+  );
+}
+
+function HeaderMockBody({
   title,
   left,
   right,
   search,
-}: ScreenHeaderProps): React.JSX.Element | null {
-  if (useWide()) return null;
-
+}: ScreenHeaderProps): React.JSX.Element {
   return (
     <View className="h-16 flex-row items-center gap-4 bg-content px-4">
       {left ? <View className="flex-row">{left}</View> : null}
