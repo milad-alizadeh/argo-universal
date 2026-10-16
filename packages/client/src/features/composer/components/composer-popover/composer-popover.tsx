@@ -100,9 +100,25 @@ function CompactPopover(props: OverlayProps): React.JSX.Element {
       contentScrolls={props.listContent}
       detents={props.listContent ? ['medium', 'large'] : undefined}
     >
-      <CompactContent {...props} />
+      {nativePage(props) ? rootPage(props) : <CompactContent {...props} />}
     </Sheet>
   );
+}
+
+// A call, not a component: Sheet reads the page declaration from its direct children.
+function rootPage(props: OverlayProps): React.JSX.Element {
+  return (
+    <Sheet.Page name="root" title={props.label}>
+      <View className={compactClassName(props)}>
+        {props.children(props.close)}
+      </View>
+    </Sheet.Page>
+  );
+}
+
+// A native sheet's first page takes the kit's page header: its title, and no Back.
+function nativePage(props: ComposerPopoverProps): boolean {
+  return !!props.pageHeader && Platform.OS !== 'web';
 }
 
 function CompactContent(props: OverlayProps): React.JSX.Element {

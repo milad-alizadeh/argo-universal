@@ -59,7 +59,7 @@ const featuredEntries = (env: Record<string, string>): ACPAgent[] =>
   ['github-copilot-cli', 'cursor'].map((id) =>
     scriptedEntry({
       id,
-      name: id === 'cursor' ? 'Cursor' : 'GitHub Copilot',
+      name: id === 'cursor' ? 'Cursor' : 'Copilot',
       scenario: 'reply',
       env,
     }),
