@@ -20,7 +20,7 @@ function createWebSocketClient(
   beforeConnect: () => Promise<void>,
 ): ServerClient['webSocketClient'] {
   return trpc.createWSClient({
-    // `beforeConnect` waits out the retry delay, so the Connection machine can cut it short.
+    // `beforeConnect` waits out the retry delay, so foreground and Try again can cut it short.
     url: async () => {
       await beforeConnect();
 

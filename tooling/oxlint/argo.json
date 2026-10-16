@@ -165,8 +165,12 @@
       }
     },
     {
-      // ADR-0016 (2): `setup({ types: {} as … })` has no cast-free form in XState v5, and a statechart reads as one file.
-      "files": ["**/*machine.ts"],
+      // ADR-0016 (2): `setup({ types: {} as … })` has no cast-free form in XState v5, and a statechart reads as one file. Only the Server and the desktop app run machines (ADR-0003).
+      "files": [
+        "apps/desktop/src/**/*machine.ts",
+        "apps/server/src/**/*machine.ts",
+        "packages/engine/src/**/*machine.ts"
+      ],
       "rules": {
         "typescript/consistent-type-assertions": "off",
         "max-lines": [
@@ -238,7 +242,12 @@
     },
     {
       // xstate/graph model tests assert per path, so a branch around expect is how they read the path.
-      "files": ["**/*machine.test.ts", "**/*machine.integration.test.ts"],
+      "files": [
+        "apps/desktop/src/**/*machine.test.ts",
+        "apps/server/src/**/*machine.integration.test.ts",
+        "packages/engine/src/**/*machine.test.ts",
+        "packages/engine/src/**/*machine.integration.test.ts"
+      ],
       "rules": { "vitest/no-conditional-expect": "off" }
     },
     {

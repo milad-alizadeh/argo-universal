@@ -89,7 +89,7 @@ One conversation with one Agent, with an Argo id and the Agent's own session id.
 _Avoid_: Chat, thread, conversation
 
 **Empty Session**:
-A Session that New Session opened and no prompt has reached yet. It is not listed, and closing it discards it with its worktree and branch.
+A Session that New Session opened in the Project's main checkout and no prompt has reached yet. It is not listed, and leaving New Session discards it.
 _Avoid_: Draft Session, pending Session
 
 **Subagent**:

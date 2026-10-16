@@ -36,7 +36,7 @@ export function toSessionSnapshot(
   },
   storedSession: Pick<
     SessionSnapshot,
-    'agent' | 'title' | 'titleSource' | 'checkout'
+    'projectId' | 'agent' | 'title' | 'titleSource' | 'checkout'
   > &
     Partial<Pick<SessionSnapshot, 'subagents'>>,
 ): SessionSnapshot {
@@ -66,6 +66,7 @@ export function toSessionSnapshot(
   }
 
   return {
+    projectId: storedSession.projectId,
     agent: storedSession.agent,
     title: storedSession.title,
     titleSource: storedSession.titleSource,
