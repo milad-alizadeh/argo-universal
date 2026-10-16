@@ -29,7 +29,7 @@ import {
 } from '../rpc';
 import { createArchiveRouter } from './archive/archive-router';
 import { createSessionList } from './list/session-list';
-import { createSubagentsReader } from './list/subagents-reader';
+import { createSubagentsReader } from './list/subagents';
 import type { SessionRouterDeps } from './router-deps';
 import {
   answerSessionElicitation,

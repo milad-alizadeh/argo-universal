@@ -16,10 +16,10 @@ import type { OpenSessionsActorRef } from '../open-sessions-machine';
 import {
   selectSessionChanges,
   selectSessionCounts,
-} from './session-list-changes';
-import { SessionListObserver } from './session-list-observer';
+  SessionListObserver,
+} from './observation';
+import { createSessionListReader } from './reader';
 import { sessionListPage } from './session-list-page';
-import { createSessionListReader } from './session-list-reader';
 
 interface SessionList {
   list: (input: SessionListInput) => Promise<SessionListOutput>;

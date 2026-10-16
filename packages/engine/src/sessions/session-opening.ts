@@ -2,7 +2,7 @@ import { SessionOpenFailure } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
-import { isSessionReady } from './list/session-snapshot';
+import { isSessionReady } from './list/snapshot';
 import type {
   OpenSessionsActorRef,
   OpenSessionsCommand,

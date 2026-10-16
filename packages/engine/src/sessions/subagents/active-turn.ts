@@ -1,7 +1,7 @@
 import { Turn } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
 import { desc, eq } from 'drizzle-orm';
-import { latestTurnOf } from '../list/session-info';
+import { latestTurnOf } from '../list/turns';
 import { readQueuedSessionRows } from '../session-storage';
 import type { SubagentRouting } from './routing-types';
 
