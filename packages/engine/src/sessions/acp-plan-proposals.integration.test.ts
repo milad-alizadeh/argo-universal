@@ -103,7 +103,7 @@ const readPlanToolCall = async (
   ).rows.find(
     (row) =>
       row.sessionUpdate === 'tool_call_update' &&
-      row.toolCallId === 'exit-plan',
+      row.toolCallId === 'leave-plan-mode',
   );
 
 describe.each(appFixtureAgentIds)('%s Plan proposals', (agent) => {

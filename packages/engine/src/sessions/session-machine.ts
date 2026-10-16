@@ -6,7 +6,10 @@ import type {
   PendingPermission,
   SessionConfigOption,
 } from '@repo/contracts';
-import type { SessionOpenError } from '@repo/contracts';
+import type {
+  SessionAnswerPlanProposalInput,
+  SessionOpenError,
+} from '@repo/contracts';
 import { countRejection } from '@repo/machine-log';
 import { createRejectionCounter } from '@repo/machine-log';
 import {
@@ -68,7 +71,7 @@ import {
 } from './acp/prompts/submission';
 import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
-import type { PlanApproval } from './acp/requests/plan-approval';
+import type { HeldPlanProposal } from './acp/requests/plan-proposal';
 import { ShellRuntime } from './acp/shells/shell-runtime';
 import {
   routeSubagentUpdate,
@@ -207,8 +210,8 @@ export type SessionCommand =
     }
   | {
       type: typeof answerPlanEvent;
-      planId: PlanApproval['requestId'];
-      decision: 'approve' | 'keep_planning';
+      planId: HeldPlanProposal['requestId'];
+      decision: PlanProposalDecision;
       feedback?: string;
     }
   | {
@@ -239,7 +242,7 @@ export interface SessionContext extends SessionData {
   usage: ContextUsage | null;
   permissionQueue: PendingPermission[];
   elicitationQueue: PendingElicitation[];
-  planProposal: PlanApproval | null;
+  planProposal: HeldPlanProposal | null;
   configOptions: SessionConfigOption[];
   rejectedMessages: number;
   failure: string | null;
@@ -333,15 +336,30 @@ const cancelledPermissions = (
   toolCallIds: requests.map((request) => request.toolCallId),
 });
 
-const planProposalOf = (context: SessionContext): PlanApproval => {
+type PlanProposalDecision = SessionAnswerPlanProposalInput['decision'];
+
+const planProposalOf = (context: SessionContext): HeldPlanProposal => {
   if (!context.planProposal) throw new Error('No Plan proposal to answer');
 
   return context.planProposal;
 };
 
+// The Tool call shows the option its Permission request was answered with.
+const selectedPermission = (
+  context: SessionContext,
+  toolCallId: string,
+  option: PendingPermission['options'][number],
+): FeedEvent => ({
+  type: permissionSelectedEvent,
+  turnId: context.activeTurnId,
+  acpSessionId: context.acpLease?.sessionId ?? '',
+  toolCallId,
+  option,
+});
+
 const planOption = (
-  proposal: PlanApproval,
-  decision: 'approve' | 'keep_planning',
+  proposal: HeldPlanProposal,
+  decision: PlanProposalDecision,
 ): PendingPermission['options'][number] =>
   decision === 'approve' ? proposal.approve : proposal.keepPlanning;
 
@@ -942,10 +960,10 @@ const sessionSetup = setup({
       const isOther = (request: { requestId: string }): boolean =>
         request.requestId !== event.requestId;
 
-      const planProposal =
-        context.planProposal && isOther(context.planProposal)
-          ? context.planProposal
-          : null;
+      const withdrawnPlan =
+        context.planProposal?.requestId === event.requestId
+          ? [context.planProposal]
+          : [];
 
       enqueue.sendTo(
         'feed',
@@ -953,15 +971,13 @@ const sessionSetup = setup({
           ...context.permissionQueue.filter(
             (request): boolean => !isOther(request),
           ),
-          ...(context.planProposal && !planProposal
-            ? [context.planProposal]
-            : []),
+          ...withdrawnPlan,
         ]),
       );
       enqueue.assign({
         permissionQueue: context.permissionQueue.filter(isOther),
         elicitationQueue: context.elicitationQueue.filter(isOther),
-        planProposal,
+        planProposal: withdrawnPlan.length > 0 ? null : context.planProposal,
       });
     }),
     publishPermissionOutcome: sendTo(
@@ -976,13 +992,7 @@ const sessionSetup = setup({
 
         if (option === null) return cancelledPermissions(context, [request]);
 
-        return {
-          type: permissionSelectedEvent,
-          turnId: context.activeTurnId,
-          acpSessionId: context.acpLease?.sessionId ?? '',
-          toolCallId: request.toolCallId,
-          option,
-        };
+        return selectedPermission(context, request.toolCallId, option);
       },
     ),
     answerAcpPermission: ({ context, event }): void => {
@@ -994,13 +1004,11 @@ const sessionSetup = setup({
       assertEvent(event, answerPlanEvent);
       const proposal = planProposalOf(context);
 
-      return {
-        type: permissionSelectedEvent,
-        turnId: context.activeTurnId,
-        acpSessionId: context.acpLease?.sessionId ?? '',
-        toolCallId: proposal.toolCallId,
-        option: planOption(proposal, event.decision),
-      };
+      return selectedPermission(
+        context,
+        proposal.toolCallId,
+        planOption(proposal, event.decision),
+      );
     }),
     answerAcpPlan: ({ context, event }): void => {
       assertEvent(event, answerPlanEvent);
@@ -1825,7 +1833,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 [acpPlanEvent]: [
                   { guard: 'hasPlanProposal', actions: 'refuseAcpRequest' },
                   {
-                    target: '.awaitingPlanApproval',
+                    target: '.awaitingPlanProposal',
                     actions: 'rememberPlanProposal',
                   },
                 ],
@@ -1876,13 +1884,13 @@ export const sessionMachine = sessionSetup.createMachine({
                     { guard: 'hasElicitation', target: 'awaitingElicitation' },
                     {
                       guard: 'hasPlanProposal',
-                      target: 'awaitingPlanApproval',
+                      target: 'awaitingPlanProposal',
                     },
                   ],
                 },
                 awaitingPermission: {},
                 awaitingElicitation: {},
-                awaitingPlanApproval: {},
+                awaitingPlanProposal: {},
                 cancelling: {
                   on: {
                     // The parent Turn ended; Subagents still own their active Turns.

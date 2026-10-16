@@ -2,9 +2,9 @@ import type { LiveHeader, SessionUpdate, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import type { WriterActorRef } from '../../storage';
 import {
-  type PlanApproval,
+  type HeldPlanProposal,
   toPendingPlanProposal,
-} from '../acp/requests/plan-approval';
+} from '../acp/requests/plan-proposal';
 import { toLiveHeader, type LiveHeaderInput } from './header';
 import { createLiveHeaderRowsReader } from './rows';
 
@@ -13,7 +13,7 @@ type ActiveTurn = Pick<LiveHeaderInput, 'activeTurnId' | 'activeTurnStartedAt'>;
 // The part of a Session actor's context the Live header reads.
 export type LiveSession = ActiveTurn &
   Pick<LiveHeaderInput, 'permissionQueue' | 'elicitationQueue'> & {
-    planProposal: PlanApproval | null;
+    planProposal: HeldPlanProposal | null;
   };
 
 export type LiveHeaderRead = {

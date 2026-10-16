@@ -1,5 +1,5 @@
 import type { ChangesSummary, SessionSnapshot } from '@repo/contracts';
-import { toPendingPlanProposal } from '../acp/requests/plan-approval';
+import { toPendingPlanProposal } from '../acp/requests/plan-proposal';
 import { toShell } from '../acp/shells/shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
 import { snapshotState, type SessionState } from './state';

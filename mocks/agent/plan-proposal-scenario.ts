@@ -6,8 +6,8 @@ import type { ScriptedStep } from './scripted-scenario.ts';
 
 export const proposedPlan = '1. Read README.md\n2. Fix the typo in its title';
 
-const exitPlan = {
-  toolCallId: 'exit-plan',
+const leavePlanMode = {
+  toolCallId: 'leave-plan-mode',
   title: 'Approve Plan',
   kind: 'switch_mode',
   rawInput: { plan: proposedPlan },
@@ -38,7 +38,7 @@ export const planProposalOptions = {
 
 const proposing: ScriptedStep = {
   type: 'update',
-  update: { sessionUpdate: 'tool_call', ...exitPlan, status: 'pending' },
+  update: { sessionUpdate: 'tool_call', ...leavePlanMode, status: 'pending' },
 };
 
 // A plan-mode Turn ending in a Plan proposal: a Permission request to leave plan mode carrying the plan.
@@ -49,7 +49,7 @@ export const planProposalSteps = (
   {
     type: 'permission',
     request: {
-      toolCall: exitPlan,
+      toolCall: leavePlanMode,
       options: Object.values(planProposalOptions),
     },
     ...(responses && { responses }),

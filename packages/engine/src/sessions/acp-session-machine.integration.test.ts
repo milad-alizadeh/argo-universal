@@ -116,7 +116,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       expect(
         states.some((state) =>
           state.matches({
-            open: { acp: { activeTurn: 'awaitingPlanApproval' } },
+            open: { acp: { activeTurn: 'awaitingPlanProposal' } },
           }),
         ),
       ).toBe(true);

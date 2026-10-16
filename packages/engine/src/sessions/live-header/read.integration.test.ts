@@ -114,7 +114,7 @@ it('reads Plan ready for a Plan proposal on the Session actor while a Turn runs'
     activeTurnStartedAt: 70,
     planProposal: {
       requestId: 'plan-1',
-      toolCallId: 'exit-plan',
+      toolCallId: 'leave-plan-mode',
       content: 'A proposal',
       approve: { optionId: 'allow', name: 'Approve', kind: 'allow_once' },
       keepPlanning: { optionId: 'reject', name: 'Keep', kind: 'reject_once' },

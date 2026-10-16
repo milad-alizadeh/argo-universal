@@ -73,7 +73,7 @@ export const rules: {
         ...live,
         planProposal: {
           requestId: 'plan-1',
-          toolCallId: 'exit-plan',
+          toolCallId: 'leave-plan-mode',
           content: 'Fix the typo',
           approve: { optionId: 'allow', name: 'Approve', kind: 'allow_once' },
           keepPlanning: {

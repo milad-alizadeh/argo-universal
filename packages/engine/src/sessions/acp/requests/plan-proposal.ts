@@ -11,7 +11,7 @@ import {
 } from './acp-request-intake';
 
 // A Plan proposal held open for the App. ACP has no Plan proposal, so it arrives as a Permission request to leave plan mode carrying the written plan, as Claude's ExitPlanMode sends it (#58); `requestId` is the Plan proposal's `planId`.
-export type PlanApproval = {
+export type HeldPlanProposal = {
   requestId: string;
   toolCallId: string;
   content: string;
@@ -54,7 +54,7 @@ const planOf = (toolCall: ToolCall): string =>
 
 const choicesOf = (
   options: RequestPermissionRequest['options'],
-): Pick<PlanApproval, 'approve' | 'keepPlanning'> | undefined => {
+): Pick<HeldPlanProposal, 'approve' | 'keepPlanning'> | undefined => {
   const approve = optionOfKind(options, 'allow_once');
   const keepPlanning = optionOfKind(options, 'reject_once');
 
@@ -62,10 +62,10 @@ const choicesOf = (
 };
 
 // The Plan proposal a Permission request makes, or null when it is an ordinary Permission request.
-export const toPlanApproval = (
+export const toHeldPlanProposal = (
   requestId: string,
   { toolCall, options }: RequestPermissionRequest,
-): PlanApproval | null => {
+): HeldPlanProposal | null => {
   const content = planOf(toolCall);
   const choices = choicesOf(options);
 
@@ -75,16 +75,16 @@ export const toPlanApproval = (
 };
 
 export const toPendingPlanProposal = (
-  approval: PlanApproval | null,
+  proposal: HeldPlanProposal | null,
 ): PendingPlanProposal | null =>
-  approval && { planId: approval.requestId, content: approval.content };
+  proposal && { planId: proposal.requestId, content: proposal.content };
 
 // A Permission request, presented as a Plan proposal when it carries one.
 export const toPermissionIntake = (
   requestId: string,
   params: RequestPermissionRequest,
-): AcpRequestIntake<PendingPermission | PlanApproval> => {
-  const plan = toPlanApproval(requestId, params);
+): AcpRequestIntake<PendingPermission | HeldPlanProposal> => {
+  const plan = toHeldPlanProposal(requestId, params);
 
   return plan
     ? { type: 'presented', request: plan }

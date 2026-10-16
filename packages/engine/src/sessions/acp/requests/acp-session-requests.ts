@@ -8,12 +8,12 @@ import {
   toPendingElicitation,
   type AcpRequestIntake,
 } from './acp-request-intake';
-import { type PlanApproval, toPermissionIntake } from './plan-approval';
+import { type HeldPlanProposal, toPermissionIntake } from './plan-proposal';
 
 export type AcpRequestEvent =
   | { type: 'acp.permissionRequested'; request: PendingPermission }
   | { type: 'acp.elicitationRequested'; request: PendingElicitation }
-  | { type: 'acp.planProposed'; request: PlanApproval }
+  | { type: 'acp.planProposed'; request: HeldPlanProposal }
   // The Agent withdrew the request, or its ACP lifetime ended.
   | { type: 'acp.requestWithdrawn'; requestId: string }
   | { type: 'agent.messageRejected'; reason: string };
@@ -21,7 +21,7 @@ export type AcpRequestEvent =
 type Send = (event: AcpRequestEvent) => void;
 
 const presentPermission = (
-  request: PendingPermission | PlanApproval,
+  request: PendingPermission | HeldPlanProposal,
 ): AcpRequestEvent =>
   'approve' in request
     ? { type: 'acp.planProposed', request }

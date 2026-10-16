@@ -1,44 +1,32 @@
 import type { RequestPermissionRequest } from '@agentclientprotocol/sdk';
+import { planProposalOptions } from '@repo/mocks/agent/plan-proposal-scenario';
 import { describe, expect, it } from 'vitest';
-import { toPlanApproval } from './plan-approval';
+import { toHeldPlanProposal } from './plan-proposal';
 
 const plan = '1. Read the README\n2. Fix the typo';
 
-// The options Claude's ExitPlanMode offers over ACP.
-const exitPlanOptions: RequestPermissionRequest['options'] = [
-  {
-    optionId: 'exit-plan-accept-edits',
-    name: 'Yes, auto-accept edits',
-    kind: 'allow_always',
-  },
-  {
-    optionId: 'exit-plan-default',
-    name: 'Yes, manually approve edits',
-    kind: 'allow_once',
-  },
-  { optionId: 'reject', name: 'No, keep planning', kind: 'reject_once' },
-];
+const options = Object.values(planProposalOptions);
 
-const exitPlan = (
+const leavePlanMode = (
   toolCall: Partial<RequestPermissionRequest['toolCall']>,
-  options = exitPlanOptions,
+  offered = options,
 ): RequestPermissionRequest => ({
   sessionId: 'acp-1',
   toolCall: {
-    toolCallId: 'exit-plan',
+    toolCallId: 'leave-plan-mode',
     title: 'Approve Plan',
     kind: 'switch_mode',
     ...toolCall,
   },
-  options,
+  options: offered,
 });
 
-const approval = {
+const proposal = {
   requestId: 'request-1',
-  toolCallId: 'exit-plan',
+  toolCallId: 'leave-plan-mode',
   content: plan,
-  approve: exitPlanOptions[1],
-  keepPlanning: exitPlanOptions[2],
+  approve: planProposalOptions.approve,
+  keepPlanning: planProposalOptions.keepPlanning,
 };
 
 describe('a Permission request to leave plan mode', (): void => {
@@ -51,7 +39,9 @@ describe('a Permission request to leave plan mode', (): void => {
   ] satisfies [string, Partial<RequestPermissionRequest['toolCall']>][])(
     'is a Plan proposal with the plan from %s',
     (_, toolCall): void => {
-      expect(toPlanApproval('request-1', exitPlan(toolCall))).toEqual(approval);
+      expect(toHeldPlanProposal('request-1', leavePlanMode(toolCall))).toEqual(
+        proposal,
+      );
     },
   );
 
@@ -61,7 +51,9 @@ describe('a Permission request to leave plan mode', (): void => {
   ] satisfies [string, Partial<RequestPermissionRequest['toolCall']>][])(
     'stays a Permission request when it %s',
     (_, toolCall): void => {
-      expect(toPlanApproval('request-1', exitPlan(toolCall))).toBeNull();
+      expect(
+        toHeldPlanProposal('request-1', leavePlanMode(toolCall)),
+      ).toBeNull();
     },
   );
 
@@ -71,10 +63,13 @@ describe('a Permission request to leave plan mode', (): void => {
   ] as const)(
     'stays a Permission request without an option to %s',
     (_, kept): void => {
-      const options = exitPlanOptions.filter((option) => option.kind === kept);
+      const remaining = options.filter((option) => option.kind === kept);
 
       expect(
-        toPlanApproval('request-1', exitPlan({ rawInput: { plan } }, options)),
+        toHeldPlanProposal(
+          'request-1',
+          leavePlanMode({ rawInput: { plan } }, remaining),
+        ),
       ).toBeNull();
     },
   );
