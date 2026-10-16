@@ -20,7 +20,6 @@ const waiverConfig = 'tooling/oxlint/not-yet-cleared.json';
 const waiverConfigs = [
   waiverConfig,
   'tooling/oxlint/kit-styling-allowlist.json',
-  'tooling/oxlint/style-tokens-allowlist.json',
 ] as const;
 
 function measuringConfig(root: string, dropped: readonly string[]): string {

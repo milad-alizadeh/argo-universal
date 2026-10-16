@@ -17,8 +17,8 @@ const disabledInputClass =
 
 const platformInputClass = cn(
   'web:rounded-control',
-  'web:placeholder:text-muted-foreground web:selection:bg-primary web:selection:text-primary-foreground web:outline-none web:transition-[color,box-shadow]',
-  'web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:focus-visible:ring-[3px]',
+  'web:placeholder:text-muted-foreground web:selection:bg-primary web:selection:text-primary-foreground web:outline-none web:transition',
+  'web:focus-visible:border-focus web:focus-visible:ring-focus/50 web:focus-visible:ring-3',
   'web:aria-invalid:ring-danger/20 web:dark:aria-invalid:ring-danger/40',
   'native:placeholder:text-muted-foreground/50',
 );

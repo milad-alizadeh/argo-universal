@@ -29,7 +29,7 @@ const drawerItemClass = (selected: boolean): string =>
   contentActionClass({
     variant: 'ghost',
     className: cn(
-      'h-12 sm:h-12 justify-start gap-1.5 rounded-lg px-3 has-[>[data-icon]]:px-3',
+      'h-12 sm:h-12 justify-start gap-1.5 rounded-lg px-3',
       selected && 'bg-selected',
     ),
   });

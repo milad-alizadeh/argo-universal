@@ -203,7 +203,7 @@
       "rules": { "argo/kit-styling": "off" }
     },
     {
-      // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values, no raw colours (native colour props included) and no Tailwind palette colour classes. style-tokens-allowlist.json holds the files not yet tokenised.
+      // Styles come from tokens in tooling/uniwind/theme.css: no arbitrary Tailwind values, no raw colours (native colour props included) and no Tailwind palette colour classes.
       "files": ["packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
       "rules": { "argo/style-tokens": "error" }
     },
@@ -2033,6 +2033,7 @@
         "apps/server/src/supervisor/engine-process.ts",
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
+        "packages/engine/src/engine/caffeinate.ts",
         "packages/engine/src/plugins/host-connection.ts",
         "packages/engine/src/agents/acp/process.ts",
         "packages/engine/src/agents/launch/shell-env.ts",

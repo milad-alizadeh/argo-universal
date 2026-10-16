@@ -230,3 +230,73 @@
 [data-radix-popper-content-wrapper]:has(.popover-content) {
   z-index: 50 !important;
 }
+
+/* The web Slider's range input. Tailwind has no variant for a range input's
+   thumb and track, so they are styled here. The input's own track is hidden
+   and .slider-track draws it, filled to the value's --slider-progress. */
+.slider-range::-webkit-slider-runnable-track {
+  height: var(--spacing-1);
+  background: transparent;
+}
+.slider-range::-webkit-slider-thumb {
+  appearance: none;
+  margin-top: calc(var(--spacing-1_5) * -1);
+  width: var(--spacing-4);
+  height: var(--spacing-4);
+  border: 1px solid var(--color-primary);
+  border-radius: 9999px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-control);
+  transition-property: scale, box-shadow;
+  transition-duration: 100ms;
+  transition-timing-function: var(--default-transition-timing-function);
+}
+@media (hover: hover) {
+  .slider-range:enabled:hover::-webkit-slider-thumb {
+    scale: 1.1;
+  }
+}
+.slider-range:enabled:active::-webkit-slider-thumb {
+  scale: 1.15;
+  box-shadow: 0 0 0 6px
+    color-mix(in oklab, var(--color-primary) 18%, transparent);
+}
+.slider-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-focus) 50%, transparent);
+}
+.slider-range::-moz-range-track {
+  background: transparent;
+}
+.slider-range::-moz-range-progress {
+  background: transparent;
+}
+.slider-range::-moz-range-thumb {
+  width: var(--spacing-4);
+  height: var(--spacing-4);
+  border: 1px solid var(--color-primary);
+  border-radius: 9999px;
+  background: var(--color-card);
+}
+.slider-range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-focus) 50%, transparent);
+}
+/* With no value yet, the thumb waits for the first press. A selector list
+   naming another engine's pseudo-element would drop the whole rule. */
+.slider-range-unset::-webkit-slider-thumb {
+  opacity: 0;
+}
+.slider-range-unset::-moz-range-thumb {
+  opacity: 0;
+}
+.slider-track {
+  background: linear-gradient(
+    to right,
+    var(--color-primary) var(--slider-progress),
+    var(--color-border) var(--slider-progress)
+  );
+}
+
+/* Burnt's web toast draws its done icon itself; the Toaster's icon slot is danger-coloured for errors. */
+[data-burnt-icon="check"] {
+  color: var(--color-success);
+}

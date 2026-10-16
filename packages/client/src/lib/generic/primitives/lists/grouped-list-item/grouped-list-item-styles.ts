@@ -22,7 +22,7 @@ export function rowClasses(
   place: RowPlace = {},
 ): string {
   return cn(
-    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-card wide:min-h-11 web:select-none web:[&_*]:select-none',
+    'relative min-h-13 flex-row items-center gap-3 px-4 py-3 bg-card wide:min-h-11 web:select-none web:**:select-none',
     controlClasses(props),
     sizeClasses(props),
     stateClasses(props, sidebar),
