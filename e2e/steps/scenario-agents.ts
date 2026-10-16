@@ -71,6 +71,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     exitConfiguration(steps),
     notificationConfiguration(steps),
     desktopConfiguration(steps),
+    unreadConfiguration(steps),
     signInConfiguration(steps),
   );
 }
@@ -128,10 +129,23 @@ function exitConfiguration(steps: string[]): AppFixtureAgents {
 }
 
 function desktopConfiguration(steps: string[]): AppFixtureAgents {
-  return steps.some((step) =>
-    step.endsWith('I start a desktop Session that keeps running'),
+  return steps.some(
+    (step) =>
+      step.endsWith('I start a desktop Session that keeps running') ||
+      step.endsWith('that waits for input'),
   )
     ? { [agentId(1)]: { scenario: 'permission' } }
+    : {};
+}
+
+// A Turn left running for the Engine restart to end: Agent 1 holds an unfinished command.
+function unreadConfiguration(steps: string[]): AppFixtureAgents {
+  return steps.some((step) =>
+    /^(?:Given|When|And) (?:a Turn ends while I am away from the Session |an unread Session in a phone Frame$)/.test(
+      step,
+    ),
+  )
+    ? { [agentId(1)]: { scenario: 'feed-interrupted' } }
     : {};
 }
 

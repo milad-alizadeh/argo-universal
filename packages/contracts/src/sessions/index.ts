@@ -20,6 +20,8 @@ export * from './list';
 
 export * from './list-updates';
 
+export * from './mark-seen';
+
 export * from './new';
 
 export * from './prompt';

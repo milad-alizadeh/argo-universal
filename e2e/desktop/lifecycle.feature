@@ -3,9 +3,9 @@ Feature: Desktop attention and quit
   Scenario Outline: The Dock follows Session attention without a renderer
     Given a wide Frame
     Then the Dock badge is ""
-    When I start a Session named "Desktop attention"
+    When I start a Session named "Desktop attention" that waits for input
     Then the Dock badge is "1"
-    When I start a Session named "More desktop attention"
+    When I start a Session named "More desktop attention" that waits for input
     Then the Dock badge is "2"
     When I close the desktop window
     Then the Dock badge is "2"
