@@ -14,11 +14,7 @@ import {
   type ShellCommandInput,
   type ShellCommand,
 } from './shell-command';
-import {
-  shellEnvironment,
-  shellLaunchMessage,
-  requireShellPipe,
-} from './shell-start';
+import { shellEnvironment, requireShellPipe } from './shell-start';
 import { shellWrapper } from './shell-wrapper';
 
 export { AgentProcessExitError, exitDrainMs } from './process-output';
@@ -114,8 +110,8 @@ const spawnShellCommand = (
   token: string,
 ): ShellChild => {
   const child = spawn(process.execPath, ['-e', shellWrapper, '--', token], {
-    cwd: shellLaunchMessage(input, {}).cwd,
-    env: {},
+    cwd: input.request.cwd ?? input.cwd,
+    env: { NODE_ENV: process.env.NODE_ENV },
     detached: true,
     stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
   });
