@@ -72,9 +72,12 @@ function pagerPages(
   ));
 }
 
-// Paged content keeps one sizing mode while Material owns the medium and large resting heights.
+/*
+ * A root page alone is as tall as its content, so a footer under it stays in view; once a second
+ * page is in the stack, the pages keep one sizing mode while Material owns the medium and large heights.
+ */
 function fillsHeight(props: PagesProps): boolean {
-  return props.stack.pages.length > 0 || props.detents?.join() === 'large';
+  return props.stack.pages.length > 1 || props.detents?.join() === 'large';
 }
 
 function sheetModifiers(fill: boolean): ModifierConfig[] {

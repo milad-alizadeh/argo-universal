@@ -5,8 +5,9 @@ import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext, toneClass } from '#primitives/display/text';
 import { appleSymbol } from '../../../symbols/apple-symbol';
-import { type IconName, iconSymbols } from '../../../symbols/icon-names';
+import { iconSymbols } from '../../../symbols/icon-names';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import {
   SymbolGlyph,
   type SymbolGlyphProps,
@@ -33,10 +34,14 @@ const TintedSymbol =
 
 const glyphScale = Platform.OS === 'android' ? materialGlyphScale : 1;
 
+type GlyphNames = Pick<SymbolGlyphProps, 'sf' | 'material' | 'filled'>;
+
+// A pair from outside the App's map draws outlined: Argo's filled Material font holds only Argo's own icons (ADR-0019).
 function symbolGlyph(
-  name: IconName,
+  name: IconSymbol,
   filled: boolean | undefined,
-): Pick<SymbolGlyphProps, 'sf' | 'material' | 'filled'> {
+): GlyphNames {
+  if (typeof name !== 'string') return { ...name, filled: false };
   const symbol: SymbolSource = iconSymbols[name];
   const sf = appleSymbol(symbol, filled);
 
@@ -46,6 +51,9 @@ function symbolGlyph(
     filled: sf !== symbol.sf || sf.endsWith('.fill'),
   };
 }
+
+const iconTestId = (name: IconSymbol): string =>
+  `icon-${typeof name === 'string' ? name : name.material}`;
 
 function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
   return cn(
@@ -67,7 +75,7 @@ export function Icon(props: IconProps): React.JSX.Element {
       pixels={useIconPixels(props.role)}
       glyphScale={glyphScale}
       weight={props.weight}
-      testID={props.testID ?? `icon-${props.name}`}
+      testID={props.testID ?? iconTestId(props.name)}
     />
   );
 }

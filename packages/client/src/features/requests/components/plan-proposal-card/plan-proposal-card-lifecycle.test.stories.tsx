@@ -47,7 +47,9 @@ function submitting(width: number, index: number): Story {
         canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeDisabled();
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
-      await expect(canvas.getByText('Approve this plan?')).toBeVisible();
+      await expect(
+        canvas.getByRole('heading', { name: 'Approve this plan?' }),
+      ).toBeVisible();
       await userEvent.keyboard('{Enter}');
       await expect(args.onAnswer).not.toHaveBeenCalled();
     },
