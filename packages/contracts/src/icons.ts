@@ -1,8 +1,10 @@
 // Argo's icon vocabulary, shared by the App's symbol map and Plugin manifests; the App's map must name exactly these.
 import { z } from 'zod';
+import { gitIconNames } from './git-icons';
 import { listViewIconNames } from './list-view-icons';
 
 const iconNames = [
+  ...gitIconNames,
   ...listViewIconNames,
   'activity',
   'add',
@@ -18,7 +20,6 @@ const iconNames = [
   'atlas',
   'attach',
   'bold',
-  'branch',
   'camera',
   'cancelled',
   'changed-files',
@@ -41,7 +42,6 @@ const iconNames = [
   'cycle',
   'delete',
   'diagram',
-  'diff',
   'directory',
   'domains',
   'edit',
@@ -83,7 +83,6 @@ const iconNames = [
   'measure-area',
   'measure-height',
   'menu',
-  'merged',
   'message',
   'milestone',
   'mode',
@@ -99,7 +98,6 @@ const iconNames = [
   'plan-mode',
   'plug',
   'private',
-  'pull-request',
   'question',
   'question-bubble',
   'quote',
