@@ -1,6 +1,4 @@
 import {
-  SessionAnswerPlanProposalInput,
-  SessionAnswerPlanProposalOutput,
   SessionChangesInput,
   SessionChangesOutput,
   SessionDiffInput,
@@ -17,14 +15,6 @@ function rejectUnimplementedProcedure(
 
 // The Session procedures the App already names, before the Engine answers them.
 export const unimplementedSessionRouter = router({
-  answerPlanProposal: publicProcedure
-    .input(SessionAnswerPlanProposalInput)
-    .output(SessionAnswerPlanProposalOutput)
-    .mutation((): never =>
-      rejectUnimplementedProcedure(
-        'Plan proposal answers are not implemented yet',
-      ),
-    ),
   changes: publicProcedure
     .input(SessionChangesInput)
     .output(SessionChangesOutput)

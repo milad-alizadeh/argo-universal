@@ -8,6 +8,8 @@ export { type SessionData } from './session-data';
 
 export { type SessionActorRef, sessionMachine } from './session-machine';
 
+export type { PlanApproval } from './acp/requests/plan-approval';
+
 export {
   type InputRequestQueues,
   type PendingInputRequest,

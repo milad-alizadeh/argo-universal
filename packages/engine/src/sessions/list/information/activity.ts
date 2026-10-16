@@ -44,7 +44,7 @@ export class SessionInfoActivity {
   }
 
   private needsInput(): boolean {
-    return this.pending() !== null;
+    return this.pending() !== null || Boolean(this.input.live?.planProposal);
   }
 
   private failure(): string | null {

@@ -66,6 +66,40 @@ export const rules: {
     },
   },
   {
+    rule: 'a Plan proposal needs input while its Turn runs',
+    input: {
+      ...idle,
+      live: {
+        ...live,
+        planProposal: {
+          requestId: 'plan-1',
+          toolCallId: 'exit-plan',
+          content: 'Fix the typo',
+          approve: { optionId: 'allow', name: 'Approve', kind: 'allow_once' },
+          keepPlanning: {
+            optionId: 'reject',
+            name: 'Keep planning',
+            kind: 'reject_once',
+          },
+        },
+      },
+      liveHeader: {
+        text: 'Plan ready',
+        source: { type: 'request' },
+        startedAt: 50,
+      },
+      activeTurnId: 'turn-1',
+    },
+    expected: {
+      information: {
+        ...information,
+        status: 'needs_input',
+        activity: 'Plan ready',
+      },
+      running: true,
+    },
+  },
+  {
     rule: 'running follows the active Turn over a stale stored Turn',
     input: { ...idle, live: { ...live, activeTurnId: null }, turns: [turn] },
     expected: { information, running: false },

@@ -3,6 +3,8 @@ import type {
   SessionAnswerElicitationOutput,
   SessionAnswerPermissionInput,
   SessionAnswerPermissionOutput,
+  SessionAnswerPlanProposalInput,
+  SessionAnswerPlanProposalOutput,
 } from '@repo/contracts';
 import { findMachineActor } from '../lib/machine-actor';
 import type { SessionRouterDeps } from './router-deps';
@@ -10,6 +12,7 @@ import {
   acceptedElicitationContent,
   validateElicitationAnswer,
   validatePermissionAnswer,
+  validatePlanProposalAnswer,
 } from './session-admission';
 import {
   sendSessionCommand,
@@ -65,6 +68,22 @@ export const answerSessionElicitation = (
     requestId: input.requestId,
     action: input.action,
     content: acceptedElicitationContent(sessionActor, input),
+  });
+
+  return {};
+};
+
+export const answerSessionPlanProposal = (
+  deps: AnswerDeps,
+  input: SessionAnswerPlanProposalInput,
+): SessionAnswerPlanProposalOutput => {
+  const sessionActor = findAnsweredSession(deps, input.sessionId);
+  validatePlanProposalAnswer(sessionActor, input);
+  sendSessionCommand(sessionActor, {
+    type: 'session.answerPlanProposal',
+    planId: input.planId,
+    decision: input.decision,
+    feedback: input.feedback,
   });
 
   return {};

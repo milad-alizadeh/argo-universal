@@ -42,6 +42,7 @@ export const live = {
   activeTurnStartedAt: 50,
   permissionQueue: [],
   elicitationQueue: [],
+  planProposal: null,
   failure: null,
 };
 

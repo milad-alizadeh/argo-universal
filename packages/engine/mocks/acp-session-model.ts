@@ -17,6 +17,10 @@ const updateEvent = 'acp.update';
 
 const modelRequest = 'model-request';
 
+const modelPlan = 'model-plan';
+
+const answerPlanEvent = 'session.answerPlanProposal';
+
 const canApplyLifecycleEvent = (
   snapshot: AcpModelSnapshot,
   event: AcpModelEvent,
@@ -81,7 +85,8 @@ const canApplyLifecycleEvent = (
     event.type === 'session.setConfigOption' ||
     event.type === 'session.storageFailing' ||
     event.type === 'session.answerPermission' ||
-    event.type === 'session.answerElicitation'
+    event.type === 'session.answerElicitation' ||
+    event.type === answerPlanEvent
   )
     return snapshot.can(event);
 
@@ -353,7 +358,33 @@ export const createAcpSessionModel = (
       requestId: modelRequest,
       action: 'decline',
     },
+    {
+      type: 'acp.planProposed',
+      request: {
+        requestId: modelPlan,
+        toolCallId: 'model-plan-tool',
+        content: 'Model plan',
+        approve: { optionId: 'model-approve', name: 'Yes', kind: 'allow_once' },
+        keepPlanning: {
+          optionId: 'model-keep-planning',
+          name: 'No, keep planning',
+          kind: 'reject_once',
+        },
+      },
+    },
+    {
+      type: answerPlanEvent,
+      planId: modelPlan,
+      decision: 'approve',
+    },
+    {
+      type: answerPlanEvent,
+      planId: modelPlan,
+      decision: 'keep_planning',
+      feedback: 'Model feedback',
+    },
     { type: 'acp.requestWithdrawn', requestId: modelRequest },
+    { type: 'acp.requestWithdrawn', requestId: modelPlan },
     { type: 'agent.messageRejected', reason: 'Malformed model question' },
     { type: 'session.storageFailing' },
     { type: closeEvent },
@@ -400,7 +431,7 @@ export const createAcpSessionModel = (
   const options = {
     fromState,
     events,
-    limit: 10_000,
+    limit: 20_000,
     serializeEvent: acpModelEventKey,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
       snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),

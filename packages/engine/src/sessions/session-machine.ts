@@ -68,6 +68,7 @@ import {
 } from './acp/prompts/submission';
 import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
+import type { PlanApproval } from './acp/requests/plan-approval';
 import { ShellRuntime } from './acp/shells/shell-runtime';
 import {
   routeSubagentUpdate,
@@ -135,6 +136,10 @@ const acpRequestWithdrawnEvent = 'acp.requestWithdrawn';
 
 const answerElicitationEvent = 'session.answerElicitation';
 
+const acpPlanEvent = 'acp.planProposed';
+
+const answerPlanEvent = 'session.answerPlanProposal';
+
 const writeFeedEvent = 'writer.write';
 
 const configuringState = 'configuring';
@@ -201,6 +206,12 @@ export type SessionCommand =
       content?: ElicitationAnswerContent;
     }
   | {
+      type: typeof answerPlanEvent;
+      planId: PlanApproval['requestId'];
+      decision: 'approve' | 'keep_planning';
+      feedback?: string;
+    }
+  | {
       type: typeof setConfigEvent;
       configId: string;
       value: string | boolean;
@@ -228,6 +239,7 @@ export interface SessionContext extends SessionData {
   usage: ContextUsage | null;
   permissionQueue: PendingPermission[];
   elicitationQueue: PendingElicitation[];
+  planProposal: PlanApproval | null;
   configOptions: SessionConfigOption[];
   rejectedMessages: number;
   failure: string | null;
@@ -313,13 +325,25 @@ const headPermission = (context: SessionContext): PendingPermission => {
 // Each cancelled Permission request shows its outcome on its Tool call.
 const cancelledPermissions = (
   context: SessionContext,
-  requests: readonly PendingPermission[],
+  requests: readonly Pick<PendingPermission, 'toolCallId'>[],
 ): Extract<FeedEvent, { type: 'feed.permissionsCancelled' }> => ({
   type: permissionsCancelledEvent,
   turnId: context.activeTurnId,
   acpSessionId: context.acpLease?.sessionId ?? '',
   toolCallIds: requests.map((request) => request.toolCallId),
 });
+
+const planProposalOf = (context: SessionContext): PlanApproval => {
+  if (!context.planProposal) throw new Error('No Plan proposal to answer');
+
+  return context.planProposal;
+};
+
+const planOption = (
+  proposal: PlanApproval,
+  decision: 'approve' | 'keep_planning',
+): PendingPermission['options'][number] =>
+  decision === 'approve' ? proposal.approve : proposal.keepPlanning;
 
 // The Session's one child actor: its Feed, invoked under the id "feed".
 type SessionChildren = { feed: 'feed'; [id: `subagent:${string}`]: 'feed' };
@@ -873,6 +897,7 @@ const sessionSetup = setup({
           activeTurnStartedAt: null,
           permissionQueue: [],
           elicitationQueue: [],
+          planProposal: null,
           storageFailedTurn: false,
         });
       },
@@ -895,8 +920,19 @@ const sessionSetup = setup({
         };
       },
     ),
+    rememberPlanProposal: assign(
+      ({ event }): Pick<SessionContext, 'planProposal'> => {
+        assertEvent(event, acpPlanEvent);
+
+        return { planProposal: event.request };
+      },
+    ),
     refuseAcpRequest: ({ context, event }): void => {
-      assertEvent(event, [acpPermissionEvent, acpElicitationEvent]);
+      assertEvent(event, [
+        acpPermissionEvent,
+        acpElicitationEvent,
+        acpPlanEvent,
+      ]);
       context.acpLifetime.cancelRequest(event.request.requestId);
     },
     // The Agent withdrew a request: its Tool call shows the cancellation.
@@ -906,18 +942,26 @@ const sessionSetup = setup({
       const isOther = (request: { requestId: string }): boolean =>
         request.requestId !== event.requestId;
 
+      const planProposal =
+        context.planProposal && isOther(context.planProposal)
+          ? context.planProposal
+          : null;
+
       enqueue.sendTo(
         'feed',
-        cancelledPermissions(
-          context,
-          context.permissionQueue.filter(
+        cancelledPermissions(context, [
+          ...context.permissionQueue.filter(
             (request): boolean => !isOther(request),
           ),
-        ),
+          ...(context.planProposal && !planProposal
+            ? [context.planProposal]
+            : []),
+        ]),
       );
       enqueue.assign({
         permissionQueue: context.permissionQueue.filter(isOther),
         elicitationQueue: context.elicitationQueue.filter(isOther),
+        planProposal,
       });
     }),
     publishPermissionOutcome: sendTo(
@@ -945,6 +989,49 @@ const sessionSetup = setup({
       assertEvent(event, answerPermissionEvent);
       context.acpLifetime.answerPermission(event.requestId, event.optionId);
     },
+    // The Plan proposal's Tool call shows the option the answer chose.
+    publishPlanOutcome: sendTo('feed', ({ context, event }): FeedEvent => {
+      assertEvent(event, answerPlanEvent);
+      const proposal = planProposalOf(context);
+
+      return {
+        type: permissionSelectedEvent,
+        turnId: context.activeTurnId,
+        acpSessionId: context.acpLease?.sessionId ?? '',
+        toolCallId: proposal.toolCallId,
+        option: planOption(proposal, event.decision),
+      };
+    }),
+    answerAcpPlan: ({ context, event }): void => {
+      assertEvent(event, answerPlanEvent);
+      const proposal = planProposalOf(context);
+      context.acpLifetime.answerPermission(
+        proposal.requestId,
+        planOption(proposal, event.decision).optionId,
+      );
+    },
+    // Keep planning's feedback is the next prompt, sent once this Turn ends (ADR 0012: a person typed it).
+    settlePlanProposal: assign(
+      ({
+        context,
+        event,
+      }): Pick<SessionContext, 'planProposal' | 'pendingSubmission'> => {
+        assertEvent(event, answerPlanEvent);
+
+        return {
+          planProposal: null,
+          pendingSubmission:
+            event.decision === 'keep_planning' && event.feedback
+              ? {
+                  turnId: context.input.createId(),
+                  content: [{ type: 'text', text: event.feedback }],
+                }
+              : context.pendingSubmission,
+        };
+      },
+    ),
+    // A stopped Turn sends no Keep planning feedback.
+    dropPlanFeedback: assign({ pendingSubmission: null }),
     answerAcpElicitation: ({ context, event }): void => {
       assertEvent(event, answerElicitationEvent);
       context.acpLifetime.answerElicitation(
@@ -993,11 +1080,15 @@ const sessionSetup = setup({
             toolCallIds: [
               ...pending,
               ...context.permissionQueue.map((request) => request.toolCallId),
+              ...(context.planProposal
+                ? [context.planProposal.toolCallId]
+                : []),
             ],
           },
         },
         permissionQueue: [],
         elicitationQueue: [],
+        planProposal: null,
       });
     }),
     recordCrash: enqueueActions(
@@ -1139,6 +1230,10 @@ const sessionSetup = setup({
       pendingInputRequest(context)?.kind === 'permission',
     hasElicitation: ({ context }): boolean =>
       pendingInputRequest(context)?.kind === 'elicitation',
+    hasPlanProposal: ({ context }): boolean => context.planProposal !== null,
+    isPendingPlanProposal: ({ context, event }): boolean =>
+      event.type === answerPlanEvent &&
+      context.planProposal?.requestId === event.planId,
     isPendingElicitation: ({ context, event }): boolean =>
       event.type === answerElicitationEvent &&
       answeredRequest(context.elicitationQueue, event.requestId) !== undefined,
@@ -1273,6 +1368,7 @@ export const sessionMachine = sessionSetup.createMachine({
       usage: null,
       permissionQueue: [],
       elicitationQueue: [],
+      planProposal: null,
       configOptions: [],
       rejectedMessages: 0,
       failure: null,
@@ -1465,6 +1561,7 @@ export const sessionMachine = sessionSetup.createMachine({
             ],
             [acpPermissionEvent]: { actions: 'refuseAcpRequest' },
             [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
+            [acpPlanEvent]: { actions: 'refuseAcpRequest' },
             [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },
             [rejectedMessageEvent]: {
               actions: [
@@ -1709,6 +1806,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 'session.cancel': {
                   target: '.cancelling',
                   actions: [
+                    'dropPlanFeedback',
                     'rememberCancellation',
                     'cancelAcpRequests',
                     'publishCancellation',
@@ -1722,6 +1820,23 @@ export const sessionMachine = sessionSetup.createMachine({
                 [acpElicitationEvent]: {
                   target: '.awaitingElicitation',
                   actions: 'queueElicitation',
+                },
+                // Claude proposes one plan at a time; a second is refused.
+                [acpPlanEvent]: [
+                  { guard: 'hasPlanProposal', actions: 'refuseAcpRequest' },
+                  {
+                    target: '.awaitingPlanApproval',
+                    actions: 'rememberPlanProposal',
+                  },
+                ],
+                [answerPlanEvent]: {
+                  guard: 'isPendingPlanProposal',
+                  target: '.working',
+                  actions: [
+                    'publishPlanOutcome',
+                    'answerAcpPlan',
+                    'settlePlanProposal',
+                  ],
                 },
                 [acpRequestWithdrawnEvent]: {
                   target: '.working',
@@ -1744,6 +1859,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 [storageFailingEvent]: {
                   target: '.cancelling',
                   actions: [
+                    'dropPlanFeedback',
                     'rememberStorageFailure',
                     'rememberCancellation',
                     'cancelAcpRequests',
@@ -1758,10 +1874,15 @@ export const sessionMachine = sessionSetup.createMachine({
                   always: [
                     { guard: 'hasPermission', target: 'awaitingPermission' },
                     { guard: 'hasElicitation', target: 'awaitingElicitation' },
+                    {
+                      guard: 'hasPlanProposal',
+                      target: 'awaitingPlanApproval',
+                    },
                   ],
                 },
                 awaitingPermission: {},
                 awaitingElicitation: {},
+                awaitingPlanApproval: {},
                 cancelling: {
                   on: {
                     // The parent Turn ended; Subagents still own their active Turns.
@@ -1780,6 +1901,7 @@ export const sessionMachine = sessionSetup.createMachine({
                     },
                     [acpPermissionEvent]: { actions: 'refuseAcpRequest' },
                     [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
+                    [acpPlanEvent]: { actions: 'refuseAcpRequest' },
                     [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },
                   },
                   initial: 'sending',

@@ -23,6 +23,7 @@ const idleSession: LiveSession = {
   activeTurnStartedAt: null,
   permissionQueue: [],
   elicitationQueue: [],
+  planProposal: null,
 };
 
 const readingFirst = (startedAt: number): LiveHeader => ({
@@ -106,12 +107,18 @@ it('reads the latest Turn only without a Session actor', (): void => {
   expect(latestTurn).toEqual(['no Session actor']);
 });
 
-it('ignores a Plan proposal on the Session actor while a Turn runs', (): void => {
-  const live = {
+it('reads Plan ready for a Plan proposal on the Session actor while a Turn runs', (): void => {
+  const live: LiveSession = {
     ...idleSession,
     activeTurnId: 'turn-1',
     activeTurnStartedAt: 70,
-    pendingPlanProposal: { planId: 'plan-1', content: 'A proposal' },
+    planProposal: {
+      requestId: 'plan-1',
+      toolCallId: 'exit-plan',
+      content: 'A proposal',
+      approve: { optionId: 'allow', name: 'Approve', kind: 'allow_once' },
+      keepPlanning: { optionId: 'reject', name: 'Keep', kind: 'reject_once' },
+    },
   };
 
   expect(
@@ -122,5 +129,9 @@ it('ignores a Plan proposal on the Session actor while a Turn runs', (): void =>
       memoryRows: {},
       writer: undefined,
     }).header,
-  ).toEqual(readingFirst(70));
+  ).toEqual({
+    text: 'Plan ready',
+    source: { type: 'request' },
+    startedAt: 70,
+  });
 });

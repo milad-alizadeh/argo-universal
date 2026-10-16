@@ -6,18 +6,26 @@ import type { PendingElicitation, PendingPermission } from '@repo/contracts';
 import type { AcpSessionDestination } from '../../../agents';
 import {
   toPendingElicitation,
-  toPendingPermission,
   type AcpRequestIntake,
 } from './acp-request-intake';
+import { type PlanApproval, toPermissionIntake } from './plan-approval';
 
 export type AcpRequestEvent =
   | { type: 'acp.permissionRequested'; request: PendingPermission }
   | { type: 'acp.elicitationRequested'; request: PendingElicitation }
+  | { type: 'acp.planProposed'; request: PlanApproval }
   // The Agent withdrew the request, or its ACP lifetime ended.
   | { type: 'acp.requestWithdrawn'; requestId: string }
   | { type: 'agent.messageRejected'; reason: string };
 
 type Send = (event: AcpRequestEvent) => void;
+
+const presentPermission = (
+  request: PendingPermission | PlanApproval,
+): AcpRequestEvent =>
+  'approve' in request
+    ? { type: 'acp.planProposed', request }
+    : { type: 'acp.permissionRequested', request };
 
 type Waiting = {
   requestId: string;
@@ -87,9 +95,9 @@ export class AcpSessionRequests {
       this.present({
         send,
         signal,
-        intake: toPendingPermission(this.createId(), params),
+        intake: toPermissionIntake(this.createId(), params),
         pending: this.permissions,
-        presented: (request) => ({ type: 'acp.permissionRequested', request }),
+        presented: presentPermission,
       });
   }
   public createElicitation(

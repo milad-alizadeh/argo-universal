@@ -3,6 +3,7 @@ import type {
   PendingElicitation,
   SessionAnswerPermissionInput,
   SessionAnswerElicitationInput,
+  SessionAnswerPlanProposalInput,
   SessionSetConfigOptionInput,
   SessionConfigOption,
 } from '@repo/contracts';
@@ -45,6 +46,28 @@ export function validatePermissionAnswer(
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'The Agent does not support Permission feedback',
+    });
+}
+
+export function validatePlanProposalAnswer(
+  sessionActor: SessionActorRef | undefined,
+  answer: SessionAnswerPlanProposalInput,
+): asserts sessionActor is SessionActorRef {
+  const proposal = sessionActor?.getSnapshot().context.planProposal;
+
+  if (proposal?.requestId !== answer.planId)
+    throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
+
+  if (answer.decision === 'keep_planning' && !answer.feedback.trim())
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Keep planning needs feedback',
+    });
+
+  if (answer.decision === 'approve' && answer.feedback)
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'The Agent does not support Plan approval feedback',
     });
 }
 
