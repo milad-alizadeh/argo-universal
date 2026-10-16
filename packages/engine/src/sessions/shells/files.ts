@@ -20,8 +20,8 @@ export const createShellOutput = async (path: string): Promise<void> => {
   await writeFile(path, '');
 };
 
-export const appendShellOutput = (path: string, text: string): Promise<void> =>
-  appendFile(path, text);
+export const appendShellOutput = (path: string, chunk: Buffer): Promise<void> =>
+  appendFile(path, chunk);
 
 export const removeShellOutput = (path: string): Promise<void> =>
   rm(path, { force: true });

@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { CloseSessionRequest } from '@agentclientprotocol/sdk';
 import { shell } from '@repo/db/schema';
 import {
   shellScenarios,
@@ -100,4 +101,33 @@ it('keeps Shells running beyond their Turn and stops only the selected Shell', a
     host.caller.session.stopShell({ ...created, shellId: selected }),
   ).rejects.toMatchObject({ code: 'CONFLICT' });
   await host.caller.session.close(created);
+});
+
+it('records its Shells before asking the Agent to close the Session, past the close deadline', async () => {
+  const received = Promise.withResolvers<CloseSessionRequest>();
+
+  const host = await startAcpEngine({
+    steps: [runningShellStep],
+    closeTimeoutMs: 1,
+    responses: { 'session/close': [{ received, steps: [{ type: 'hold' }] }] },
+  });
+
+  const created = await host.caller.session.new({
+    ...emptySessionInput,
+    prompt: [{ type: 'text', text: 'Run' }],
+  });
+
+  await waitForAcpSnapshot(
+    host,
+    created.sessionId,
+    (value) => value.state === 'idle' && value.shells.length === 1,
+  );
+  const closing = host.caller.session.close(created);
+  await received.promise;
+
+  expect(host.database.select().from(shell).get()).toMatchObject({
+    status: 'lost',
+    outputBlobId: expect.any(String),
+  });
+  await expect(closing).resolves.toEqual({});
 });

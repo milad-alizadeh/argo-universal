@@ -8,14 +8,17 @@ import type { Readable, Writable } from 'node:stream';
 import type { AgentLaunch } from '..';
 import { agentEnvironment } from '../launch/agent-environment';
 import { ProcessOutput, exitDrainMs } from './process-output';
-import type { AcpProcess } from './resource-types';
+import type { AcpProcess } from './resources/resource-types';
 import {
   observeShellCommand,
   type ShellCommandInput,
   type ShellCommand,
-} from './shell-command';
-import { shellEnvironment, requireShellPipe } from './shell-start';
-import { shellWrapper } from './shell-wrapper';
+} from './shell-commands/shell-command';
+import {
+  shellEnvironment,
+  requireShellPipe,
+} from './shell-commands/shell-start';
+import { shellWrapper } from './shell-commands/shell-wrapper';
 
 export { AgentProcessExitError, exitDrainMs } from './process-output';
 

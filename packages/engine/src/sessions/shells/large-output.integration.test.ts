@@ -6,8 +6,8 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { startEngineTestHost } from '#mocks/engine';
 import { collectShellOutput } from '#mocks/shell-output';
-import { ShellCapture } from '../acp/shell-capture';
-import { readShellPreview } from '../acp/shell-preview-file';
+import { ShellCapture } from '../acp/shells/shell-capture';
+import { readShellPreview } from '../acp/shells/shell-preview-file';
 import { createShellOutput, shellOutputPath } from './files';
 
 const largeBytes = 2_147_483_649;

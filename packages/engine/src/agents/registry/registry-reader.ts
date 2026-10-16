@@ -7,7 +7,10 @@ import { createRejectionCounter } from '@repo/machine-log';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { z } from 'zod';
-import { type CompiledSchema, compileSchema } from '../acp/schema-reader';
+import {
+  type CompiledSchema,
+  compileSchema,
+} from '../acp/connection/schema-reader';
 
 type RegistryRejections = ReturnType<typeof createRejectionCounter>;
 
