@@ -29,7 +29,6 @@ import {
 } from '../rpc';
 import { createArchiveRouter } from './archive/archive-router';
 import { createSessionList } from './list/session-list';
-import { createSubagentsReader } from './list/subagents-reader';
 import type { SessionRouterDeps } from './router-deps';
 import {
   answerSessionElicitation,
@@ -40,6 +39,7 @@ import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
 import { promptSession } from './session-prompt';
 import { createShellSessionRouter } from './shells/router';
+import { createSubagentsReader } from './subagents';
 import { unimplementedSessionRouter } from './unimplemented-router';
 
 type SessionList = ReturnType<typeof createSessionList>;

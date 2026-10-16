@@ -2,7 +2,6 @@ import { SessionOpenFailure } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
-import { isSessionReady } from './list/session-snapshot';
 import type {
   OpenSessionsActorRef,
   OpenSessionsCommand,
@@ -163,4 +162,15 @@ export function readWritableSession(
     });
 
   return sessionRecord;
+}
+
+function isSessionReady(
+  session: ReturnType<SessionActorRef['getSnapshot']>,
+): boolean {
+  return (
+    session.matches({ open: 'acp' }) &&
+    !(['opening', 'closing', 'flushing'] as const).some((state) =>
+      session.matches({ open: { acp: state } }),
+    )
+  );
 }

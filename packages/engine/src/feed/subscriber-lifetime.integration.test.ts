@@ -70,6 +70,7 @@ it('rejects a Feed stream when stored Session hydration fails', async (): Promis
   await updates.next();
   database.$client.exec("UPDATE session SET title_source = 'unrecognised'");
   applyFeedChange(createOpenMessageChange('snapshot-rejection'));
+  await vi.advanceTimersByTimeAsync(60);
   await expect(updates.next()).rejects.toMatchObject({
     code: 'INTERNAL_SERVER_ERROR',
     message: 'Unrecognised Session row',
