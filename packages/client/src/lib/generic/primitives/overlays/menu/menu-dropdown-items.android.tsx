@@ -10,6 +10,7 @@ import { padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
+import { ItemLeadingIcon } from './menu-item-icon.android';
 import type { NativeMenuItem } from './menu-native-items';
 
 // The rows of a Compose DropdownMenu, shared by the Menu and the SplitButton's chevron.
@@ -68,6 +69,7 @@ function MenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
       elementColors={useItemColors()}
       onClick={() => onChoose(item)}
     >
+      <ItemLeadingIcon icon={item.icon} />
       <DropdownMenuItem.Text>
         <Text>{item.title}</Text>
       </DropdownMenuItem.Text>
@@ -87,7 +89,7 @@ function ItemCheck(props: { checked?: boolean }): React.JSX.Element | null {
   );
 }
 
-// The foreground for text and the check, muted while disabled or loading; Text and Icon inherit them as the content colour.
+// The foreground for text and the check, muted while disabled or loading; the leading icon stays muted, as Material's onSurfaceVariant draws it. Text and Icon inherit them as the content colour.
 function useItemColors(): React.ComponentProps<
   typeof DropdownMenuItem
 >['elementColors'] {
@@ -96,6 +98,8 @@ function useItemColors(): React.ComponentProps<
   return {
     textColor: colors.foreground,
     disabledTextColor: colors.mutedForeground,
+    leadingIconColor: colors.mutedForeground,
+    disabledLeadingIconColor: colors.mutedForeground,
     trailingIconColor: colors.foreground,
     disabledTrailingIconColor: colors.mutedForeground,
   };

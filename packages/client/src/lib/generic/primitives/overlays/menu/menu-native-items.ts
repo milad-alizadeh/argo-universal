@@ -1,3 +1,4 @@
+import type { IconName } from '../../../symbols/icon-names';
 import {
   type ActionMenuProps,
   type MenuChoiceGroup,
@@ -18,6 +19,7 @@ export interface NativeMenuItem {
   choose: () => void;
   // True on the first row of a later section: Android's flat list sets it apart with a divider.
   divided?: boolean;
+  icon?: IconName;
 }
 
 // A run of a system menu's rows, set apart from the run before it; iOS heads it with its title.
@@ -106,6 +108,7 @@ function choiceItems(
     title: choice.label,
     checked: choice.value === group.value,
     disabled: Boolean(choice.disabled),
+    icon: choice.icon,
     choose: choice.disabled ? nothing : () => group.onValueChange(choice.value),
   }));
 }

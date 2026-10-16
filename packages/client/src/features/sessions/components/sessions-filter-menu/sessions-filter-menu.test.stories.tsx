@@ -76,3 +76,25 @@ export const ChoosesCompact: Story = {
       await expect(onArchivedChange).not.toHaveBeenCalled();
     }),
 };
+
+const optionIcons = {
+  Active: 'active-sessions',
+  Archived: 'archived-sessions',
+  Regular: 'layout-regular',
+  Compact: 'layout-compact',
+} as const;
+
+// Each option leads with its own icon.
+export const ShowsOptionIcons: Story = {
+  play: async ({ canvas, userEvent }) =>
+    eachLayout(async () => {
+      await userEvent.click(canvas.getByRole('button', trigger));
+
+      for (const [name, icon] of Object.entries(optionIcons)) {
+        const row = menu().getByRole('menuitemradio', { name });
+        await expect(within(row).getByTestId(`icon-${icon}`)).toBeVisible();
+      }
+
+      await userEvent.keyboard('{Escape}');
+    }),
+};
