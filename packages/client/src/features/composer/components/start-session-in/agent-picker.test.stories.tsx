@@ -39,7 +39,7 @@ function selectAgent(width: number): Story {
 
 function addAgents(width: number): Story {
   return {
-    args: { agents: [], agent: '' },
+    args: { agents: [], agent: undefined },
     beforeEach: (): Promise<void> => settleViewport(width),
     play: async ({ canvas, userEvent, args }) => {
       await expect(

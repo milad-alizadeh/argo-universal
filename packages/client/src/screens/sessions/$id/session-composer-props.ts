@@ -80,12 +80,18 @@ const checkoutProps = (
   path: checkout.path,
 });
 
+// The Session's Agent among the Installed Agents, found once for the Composer.
+const sessionAgent = ({
+  snapshot,
+  agents,
+}: OpenSession): ComposerConfigurationProps['agent'] =>
+  loadedAgents(agents).find(({ id }) => id === snapshot.agent);
+
 function configurationProps(open: OpenSession): ComposerConfigurationProps {
-  const { snapshot, agents } = open;
+  const { snapshot } = open;
 
   return {
-    agents: loadedAgents(agents),
-    agent: snapshot.agent,
+    agent: sessionAgent(open),
     configOptions: snapshot.configOptions,
     onConfigChange: open.commands.changeConfig,
     turnRunning: isTurnRunning(snapshot),

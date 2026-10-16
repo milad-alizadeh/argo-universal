@@ -70,8 +70,7 @@ export function ConfiguredComposer({
         onSend: fn(),
         onAttachImages: fn(),
         configuration: {
-          agents: [agent],
-          agent: agent.id,
+          agent,
           configOptions,
           onConfigChange: (configId, value) =>
             setConfigOptions((options) =>

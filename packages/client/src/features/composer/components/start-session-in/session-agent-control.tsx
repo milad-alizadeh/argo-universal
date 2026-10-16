@@ -30,12 +30,10 @@ function AgentPicker(props: StartSessionInProps): React.JSX.Element {
 }
 
 function agentTrigger(props: StartSessionInProps): React.JSX.Element {
-  const current = props.agents.find(({ id }) => id === props.agent);
-
   return (
     <MenuTrigger
       icon="agent"
-      label={current?.name ?? 'Select Agent'}
+      label={props.agent?.name ?? 'Select Agent'}
       accessibilityLabel="Select Agent"
       disabled={props.disabled}
     />

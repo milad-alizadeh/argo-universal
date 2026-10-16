@@ -23,8 +23,7 @@ export function responsiveLayout(width: number, agentIndex: number): Story {
   return {
     args: {
       configuration: {
-        agents: [catalog.agent],
-        agent: catalog.agent.id,
+        agent: catalog.agent,
         configOptions: recordedSessionOptions(catalog.agent.id),
         onConfigChange: fn(),
         checkout: {

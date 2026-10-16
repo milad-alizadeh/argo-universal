@@ -1,12 +1,10 @@
 import type { AgentServer, SessionConfigOption } from '@repo/contracts';
 
 export interface ComposerConfigurationProps {
-  agents: AgentServer[];
-  agent: string;
+  // The Session's Agent, found once by whoever builds these props; undefined while it is not installed.
+  agent?: AgentServer;
   configOptions: SessionConfigOption[];
   onConfigChange: (configId: string, value: string | boolean) => void;
-  onAgentChange?: (agent: string) => void;
-  onAddAgents?: () => void;
   turnRunning?: boolean;
   // True while New Session's Session opens and takes this device's last choices.
   opening?: boolean;

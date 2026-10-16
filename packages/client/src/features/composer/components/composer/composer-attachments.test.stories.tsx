@@ -1,4 +1,4 @@
-import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
+import { recordedSessionOptions } from '@repo/mocks/app';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
@@ -73,8 +73,7 @@ export const AttachmentInNarrowContent: Story = {
 export const EnvelopeWithInspectorOpen: Story = {
   args: {
     configuration: {
-      agents: newSessionCatalogs.bothAvailable,
-      agent: firstAgent.id,
+      agent: firstAgent,
       configOptions: recordedSessionOptions(firstAgent.id),
       onConfigChange: fn(),
       checkout: {

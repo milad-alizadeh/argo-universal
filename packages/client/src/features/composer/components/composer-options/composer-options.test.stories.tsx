@@ -36,8 +36,7 @@ function longSettings(width: number, agentIndex: number): Story {
     args: {
       disabled: false,
       configuration: {
-        agents: [agent],
-        agent: agent.id,
+        agent,
         configOptions: composerLongSettingsOptions,
         onConfigChange,
         checkout: { branch: 'main', newWorktree: false },
@@ -96,8 +95,7 @@ function keyboardSettings(width: number): Story {
     args: {
       disabled: false,
       configuration: {
-        agents: [agent],
-        agent: agent.id,
+        agent,
         configOptions: composerSettingsOptions,
         onConfigChange,
         checkout: { branch: 'main', newWorktree: false },

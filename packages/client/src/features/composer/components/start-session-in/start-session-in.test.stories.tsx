@@ -61,7 +61,7 @@ const meta = {
   render: (args): React.JSX.Element => <ChoosingProject {...args} />,
   args: {
     agents: newSessionCatalogs.bothAvailable,
-    agent: newSessionCatalogs.bothAvailable[0]?.id ?? '',
+    agent: newSessionCatalogs.bothAvailable[0],
     onAgentChange: fn(),
     onAddAgents: fn(),
     serverName: serverInfo.name,

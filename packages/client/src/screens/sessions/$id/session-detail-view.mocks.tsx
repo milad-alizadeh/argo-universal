@@ -93,8 +93,7 @@ function recordedConfiguration(
   const catalogAgent = catalogAgentOf(mock);
 
   return {
-    agents: newSessionCatalogs.bothAvailable,
-    agent: catalogAgent.id,
+    agent: catalogAgent,
     configOptions: recordedSessionOptions(catalogAgent.id),
     onConfigChange: fn(),
     turnRunning: snapshot.state !== 'idle',

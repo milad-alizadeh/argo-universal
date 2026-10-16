@@ -1,4 +1,4 @@
-import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
+import { recordedSessionOptions } from '@repo/mocks/app';
 import type * as React from 'react';
 import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
@@ -37,7 +37,7 @@ function HeldConfiguration({ configuration }: HeldProps): React.JSX.Element {
 
 function useHeldConfiguration(configuration: Configuration): Configuration {
   const [configOptions, setConfigOptions] = useState(
-    recordedSessionOptions(configuration.agent),
+    recordedSessionOptions(configuration.agent?.id ?? ''),
   );
 
   return {
@@ -85,8 +85,7 @@ function heldConfigurationArgs({
   onConfigChange,
 }: HeldScenario): Configuration {
   return {
-    agents: newSessionCatalogs.bothAvailable,
-    agent: recorded.agent.id,
+    agent: recorded.agent,
     configOptions: recordedSessionOptions(recorded.agent.id),
     onConfigChange,
     turnRunning: true,

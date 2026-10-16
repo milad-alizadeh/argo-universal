@@ -19,7 +19,7 @@ export function configuration(agentIndex: 0 | 1): Story {
           ...idleSession.composer,
           configuration: {
             ...idleConfiguration(),
-            agent: agent.id,
+            agent,
             configOptions: recordedSessionOptions(agent.id),
           },
         },

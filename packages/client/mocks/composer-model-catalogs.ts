@@ -1,7 +1,6 @@
 import type { AgentServer, SessionConfigOption } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import type { ComposerProps } from '../src/features/composer/components/composer/composer';
-import { composerLongAgentCatalog } from './composer-agent-catalogs';
 
 function firstAvailableAgent(): AgentServer {
   const agent = newSessionCatalogs.bothAvailable[0];
@@ -35,12 +34,11 @@ export const composerLongModelList = Array.from({ length: 24 }, (_, index) => ({
   _meta: undefined,
 }));
 
-// More Agents and models than the desktop menu shows at once, so both lists scroll.
+// More models than the desktop menu shows at once, so the list scrolls.
 export const composerLongListConfiguration: NonNullable<
   ComposerProps['configuration']
 > = {
-  agents: [longModelAgent, ...composerLongAgentCatalog],
-  agent: longModelAgent.id,
+  agent: longModelAgent,
   configOptions: recordedSessionOptions(longModelAgent.id).map((option) =>
     option.configId === longModelOption.configId && option.type === 'select'
       ? {
@@ -50,7 +48,6 @@ export const composerLongListConfiguration: NonNullable<
         }
       : option,
   ),
-  onAgentChange: () => {},
   onConfigChange: () => {},
   checkout: { branch: 'main', newWorktree: false },
 };
@@ -62,8 +59,7 @@ export function composerFastModeConfiguration(
   on: boolean,
 ): NonNullable<ComposerProps['configuration']> {
   return {
-    agents: newSessionCatalogs.bothAvailable,
-    agent: fastModeAgent.id,
+    agent: fastModeAgent,
     configOptions: [
       ...recordedSessionOptions(fastModeAgent.id),
       fastModeOption(on),

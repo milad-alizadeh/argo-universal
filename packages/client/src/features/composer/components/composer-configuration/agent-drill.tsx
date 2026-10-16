@@ -1,3 +1,4 @@
+import type { AgentServer } from '@repo/contracts';
 import type { ReactElement } from 'react';
 import {
   GroupedListItem,
@@ -12,18 +13,12 @@ export function AgentDrill(props: Props): ReactElement {
   return <GroupedListItem {...agentRow(props)} />;
 }
 
-const agentRow = ({ configuration, wide }: Props): GroupedListItemProps => {
-  const agent = configuration.agents.find(
-    ({ id }) => id === configuration.agent,
-  );
+const agentRow = ({ configuration, wide }: Props): GroupedListItemProps => ({
+  label: 'Agent',
+  value: agentName(configuration.agent),
+  valueLeading: (
+    <AgentIcon agent={configuration.agent} role={wide ? 'control' : 'row'} />
+  ),
+});
 
-  return {
-    label: 'Agent',
-    value: selectedName(configuration),
-    valueLeading: <AgentIcon agent={agent} role={wide ? 'control' : 'row'} />,
-  };
-};
-
-const selectedName = (configuration: ComposerConfigurationProps): string =>
-  configuration.agents.find(({ id }) => id === configuration.agent)?.name ??
-  configuration.agent;
+const agentName = (agent?: AgentServer): string => agent?.name ?? '';

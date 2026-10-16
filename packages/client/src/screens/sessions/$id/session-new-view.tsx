@@ -1,4 +1,4 @@
-import type { ProjectInfo } from '@repo/contracts';
+import type { AgentServer, ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -31,6 +31,10 @@ export interface ReadySessionNewViewProps {
   projects: ProjectInfo[];
   projectId: string;
   onProjectChange: (projectId: string) => void;
+  // The Installed Agents to choose from, in name order; the chosen one is the configuration's Agent.
+  agents: AgentServer[];
+  onAgentChange: (agent: string) => void;
+  onAddAgents: () => void;
   // The chosen Agent, its model and effort, and the checkout.
   configuration: ComposerConfigurationProps;
   // The first prompt; sending it opens the Session.
@@ -149,10 +153,10 @@ function ReadySessionNewView(
 const startInProps = (
   props: ReadySessionNewViewProps,
 ): React.ComponentProps<typeof StartSessionIn> => ({
-  agents: props.configuration.agents,
+  agents: props.agents,
   agent: props.configuration.agent,
-  onAgentChange: props.configuration.onAgentChange ?? (() => {}),
-  onAddAgents: props.configuration.onAddAgents ?? (() => {}),
+  onAgentChange: props.onAgentChange,
+  onAddAgents: props.onAddAgents,
   serverName: props.serverName,
   serverConnected: props.connected,
   projects: props.projects,

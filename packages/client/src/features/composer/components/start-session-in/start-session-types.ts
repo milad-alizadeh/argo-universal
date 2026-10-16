@@ -2,8 +2,9 @@ import type { AgentServer, ProjectInfo } from '@repo/contracts';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 export interface StartSessionInProps {
+  // The Installed Agents to choose from, in name order, and the chosen one.
   agents: AgentServer[];
-  agent: string;
+  agent?: AgentServer;
   onAgentChange: (id: string) => void;
   onAddAgents: () => void;
   serverName: string;

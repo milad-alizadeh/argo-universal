@@ -22,15 +22,11 @@ const screenFraction = 0.6;
 export function AgentChoices(props: AgentChoiceProps): React.JSX.Element {
   const { height } = useWindowDimensions();
 
-  const agents = [...props.agents].sort((a, b) => a.name.localeCompare(b.name));
-
-  if (Platform.OS !== 'web')
-    return <NativeChoices {...props} agents={agents} />;
+  if (Platform.OS !== 'web') return <NativeChoices {...props} />;
 
   return (
     <WebChoices
       {...props}
-      agents={agents}
       maxHeight={{ compact: height * screenFraction, wide: maximumHeight }}
     />
   );
@@ -99,7 +95,7 @@ const choiceProps = (
   label: agent.name,
   accessibilityRole: 'button',
   disclosure: false,
-  selected: props.agent === agent.id,
+  selected: props.agent?.id === agent.id,
   choice: true,
   onPress: () => props.close(() => props.onAgentChange(agent.id)),
 });
