@@ -53,6 +53,7 @@ The token palette comes from the existing `useNativeTheme` helper.
 The browser resolves its colour strings to RGB for both renderers.
 Lights also use theme tokens. No renderer supplies a default colour.
 Labels use kit `Text` and screen-space culling, capped at 32.
+3D labels omit roof anchors hidden behind nearer buildings.
 An accessible file selector returns the same file ID as a canvas press.
 The native entry renders nothing. Phones do not import either renderer.
 

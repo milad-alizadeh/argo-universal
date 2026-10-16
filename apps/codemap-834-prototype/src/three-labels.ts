@@ -9,6 +9,14 @@ import {
 import { cullLabels } from './model';
 import type { ThreeContext } from './three-context';
 import { projectLabels } from './three-labels-project';
+import {
+  createRoofVisibility,
+  type RoofVisibility,
+} from './three-roof-visibility';
+
+interface LabelContext extends ThreeContext {
+  isRoofVisible: RoofVisibility;
+}
 
 interface LabelState {
   dirty: boolean;
@@ -26,7 +34,7 @@ function defer(ctx: ThreeContext, state: LabelState, delay: number): void {
   }, delay);
 }
 
-function frame(ctx: ThreeContext, state: LabelState): void {
+function frame(ctx: LabelContext, state: LabelState): void {
   if (!state.dirty) return;
   const now = performance.now();
   const remaining = labelInterval - (now - state.last);
@@ -88,5 +96,13 @@ function useLabelEvents(ctx: ThreeContext): RefObject<LabelState> {
 export function useThreeLabels(ctx: ThreeContext): void {
   const state = useLabelEvents(ctx);
   const ordered = useOrderedTiles(ctx.tiles);
-  useFrame(() => frame({ ...ctx, tiles: ordered }, state.current));
+
+  const isRoofVisible = useMemo(
+    () => createRoofVisibility(ctx.tiles, ctx.camera),
+    [ctx.tiles, ctx.camera],
+  );
+
+  useFrame(() =>
+    frame({ ...ctx, tiles: ordered, isRoofVisible }, state.current),
+  );
 }
