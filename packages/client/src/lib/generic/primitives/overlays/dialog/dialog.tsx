@@ -30,7 +30,7 @@ function Dialog(props: DialogProps): React.JSX.Element {
   return <DialogRoot {...props} />;
 }
 
-// From the medium size class up the dialog is centred; a compact window, phone or web, raises the same content as a bottom sheet.
+// The web centres the dialog from the medium size class up; a compact web window, and a phone or tablet at any width, raises the same content as a sheet.
 function DialogContent(props: ContentProps): React.JSX.Element {
   const presentation = useDialogPresentation();
 
@@ -46,7 +46,6 @@ function NarrowDialog({
   return (
     <DialogSheet
       open={presentation.sheetOpen}
-      onClosed={presentation.onSheetClosed}
       label={props.accessibilityLabel}
       dismissible={props.dismissible}
     >

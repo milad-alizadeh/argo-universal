@@ -1,5 +1,3 @@
-export {
-  CentredOverlayScope,
-  useCentresOverlays,
-  useInCentredOverlay,
-} from './centred-overlay';
+export { useCentresOverlays } from './centres-overlays';
+
+export { CentredOverlayScope, useInCentredOverlay } from './centred-overlay';

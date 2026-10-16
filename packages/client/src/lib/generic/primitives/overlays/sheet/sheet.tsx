@@ -4,13 +4,13 @@ import { Drawer } from 'vaul';
 import { cn } from '#lib/generic/utils';
 import { useCentresOverlays } from '#primitives/overlays/centred-overlay';
 import { useWide } from '../../../use-wide/use-wide';
+import { ModalSheet } from './sheet-modal';
 import {
   SheetLink,
   SheetNavigationProvider,
   SheetPage,
   useSheetStack,
 } from './sheet-pages';
-import { ModalSheet } from './sheet-modal';
 import {
   openChange,
   SheetPanel,
@@ -27,26 +27,32 @@ import type { SheetProps } from './sheet-props';
  */
 function SheetRoot(props: SheetProps): ReactElement {
   const stack = useSheetStack(props);
-  const Presentation = usePresentation(props);
 
   return (
     <SheetNavigationProvider value={stack.navigation}>
       <View style={props.style} className="min-w-0 shrink">
-        <Presentation {...props} stack={stack} />
+        <SheetPresentation {...props} stack={stack} />
       </View>
     </SheetNavigationProvider>
   );
 }
 
-function usePresentation(
-  props: SheetProps,
-): (props: PresentationProps) => ReactElement {
+function SheetPresentation(props: PresentationProps): ReactElement {
+  if (!useLifted(props)) return <DrawerSheet {...props} />;
+
+  return props.trigger ? (
+    <PopoverSheet {...props} />
+  ) : (
+    <ModalSheet {...props} />
+  );
+}
+
+// Whether the sheet leaves the bottom edge: a popover on its trigger when wide, a modal from medium up without one.
+function useLifted(props: SheetProps): boolean {
   const wide = useWide();
   const centred = useCentresOverlays();
 
-  if (props.trigger) return wide ? PopoverSheet : DrawerSheet;
-
-  return centred ? ModalSheet : DrawerSheet;
+  return props.trigger ? wide : centred;
 }
 
 function DrawerSheet(props: PresentationProps): ReactElement {

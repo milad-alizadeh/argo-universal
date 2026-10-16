@@ -67,14 +67,18 @@ export function DialogBackdrop(props: DialogBackdropProps): ReactElement {
   );
 }
 
+// The backdrop's own press decides, so a dialog holding input stays open.
+const contentHandlers = (
+  props: DialogFrameProps,
+): RadixDialog.DialogContentProps => ({
+  onCloseAutoFocus: props.onCloseAutoFocus,
+  onEscapeKeyDown: props.onEscapeKeyDown,
+  onPointerDownOutside: (event) => event.preventDefault(),
+});
+
 export function DialogFrame(props: DialogFrameProps): ReactElement {
   return (
-    <RadixDialog.Content
-      onCloseAutoFocus={props.onCloseAutoFocus}
-      onEscapeKeyDown={props.onEscapeKeyDown}
-      // The backdrop's own press decides, so a dialog holding input stays open.
-      onPointerDownOutside={(event) => event.preventDefault()}
-    >
+    <RadixDialog.Content {...contentHandlers(props)}>
       <View
         className={props.className}
         accessibilityLabel={props.accessibilityLabel}

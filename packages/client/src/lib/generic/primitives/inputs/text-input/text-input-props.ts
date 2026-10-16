@@ -22,6 +22,12 @@ export interface TextFieldProps {
   disabled?: boolean;
   // The value is being checked, such as a path being resolved: a spinner trails the field.
   loading?: boolean;
+  // The field takes focus as it appears, such as a dialog's one field.
+  focusOnOpen?: boolean;
+  // Taking focus selects the whole value, so typing replaces it.
+  selectOnFocus?: boolean;
+  // Return, Enter or the keyboard's Done key submits the field's form.
+  onSubmit?: () => void;
 }
 
 // What a field's spinner needs: the field's label to speak, and whether it checks the value now.

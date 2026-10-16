@@ -20,6 +20,8 @@ export type DialogContentProps = {
   // False while the content holds unsaved input: only its own actions close it.
   dismissible?: boolean;
   showClose?: boolean;
+  // A centred dialog's width: `sm` for a short form of one or two fields, such as a rename.
+  size?: 'sm' | 'md';
   onCloseAutoFocus?: (event: Event) => void;
   children: ReactNode;
 };
@@ -40,7 +42,6 @@ export interface DialogRegionProps {
 
 export type DialogSheetProps = {
   open?: boolean;
-  onClosed?: () => void;
   label?: string;
   dismissible?: boolean;
   children: ReactNode;
@@ -64,13 +65,7 @@ export type DialogBackdropProps = Pick<PressableProps, 'onPress'> & {
   children: ReactNode;
 };
 
-export type DialogWindowProps = {
-  children: ReactNode;
-  dismissible?: boolean;
-};
-
 export interface DialogPresentation {
   centred: boolean;
   sheetOpen: boolean;
-  onSheetClosed?: () => void;
 }

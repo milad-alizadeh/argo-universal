@@ -5,7 +5,6 @@ import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-
 import { useDialogState } from './dialog-context';
 import { dialogExiting } from './dialog-motion';
 import { DialogBackdrop } from './dialog-parts';
-import { DialogWindow } from './dialog-window';
 
 type OverlayProps = { children?: React.ReactNode; dismissible?: boolean };
 
@@ -29,15 +28,13 @@ export function DialogOverlay(props: OverlayProps): React.JSX.Element {
   const onPress = useBackdropPress(props.dismissible);
 
   return (
-    <DialogWindow dismissible={props.dismissible}>
-      <DialogBackdrop className={overlayClassName} onPress={onPress}>
-        <NativeOnlyAnimatedView
-          entering={contentEntering}
-          exiting={dialogExiting}
-        >
-          {props.children}
-        </NativeOnlyAnimatedView>
-      </DialogBackdrop>
-    </DialogWindow>
+    <DialogBackdrop className={overlayClassName} onPress={onPress}>
+      <NativeOnlyAnimatedView
+        entering={contentEntering}
+        exiting={dialogExiting}
+      >
+        {props.children}
+      </NativeOnlyAnimatedView>
+    </DialogBackdrop>
   );
 }

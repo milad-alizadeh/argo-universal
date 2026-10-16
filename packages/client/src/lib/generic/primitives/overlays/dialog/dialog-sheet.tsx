@@ -11,7 +11,6 @@ export function DialogSheet(props: DialogSheetProps): React.JSX.Element {
     <Sheet
       open={props.open ?? open}
       onOpenChange={onOpenChange}
-      onClosed={props.onClosed}
       label={props.label}
       dismissible={props.dismissible}
     >

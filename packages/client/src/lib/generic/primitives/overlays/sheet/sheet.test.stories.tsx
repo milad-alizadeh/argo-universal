@@ -110,6 +110,7 @@ export const TriggerlessModalKeepsInput: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Answer' }));
     await body.findByRole('dialog', answerSheet);
     const backdrop = document.elementFromPoint(4, 4);
+
     if (!backdrop) throw new Error('Nothing is drawn at the window corner.');
     await userEvent.click(backdrop);
     await userEvent.keyboard('{Escape}');
