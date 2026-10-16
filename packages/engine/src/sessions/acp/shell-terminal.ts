@@ -67,9 +67,9 @@ export class ShellTerminal {
   public kill(): void {
     this.requireAvailable();
 
-    if (this.exit) return;
+    if (!this.command) return;
 
-    this.stopped ||= this.command?.kill() ?? false;
+    this.stopped = this.stopped || this.command.kill();
   }
   private isAvailable(): boolean {
     return !this.released && !this.ending;
