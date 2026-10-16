@@ -41,26 +41,38 @@ function frame(ctx: LabelContext, state: Placing): void {
   if (key === state.placedFor || !due(ctx, state, now)) return;
   state.placedFor = key;
   state.last = now;
-  const screen = { size: pose.size, insets: ctx.overlay.insets };
+  const screen = { size: pose.size, insets: ctx.overlay.insets.current() };
   ctx.overlay.showLabels(
     placeLabels(ctx.tiles, roofCentres(ctx.tiles, pose), screen),
   );
 }
 
+/** Stops a pending placement when the view unmounts. */
+function useCancel(state: RefObject<Placing>): void {
+  useEffect(() => {
+    const placing = state.current;
+
+    return (): void => clearTimeout(placing.timer);
+  }, [state]);
+}
+
+/** New tiles or new bands place the labels again in the next frame. */
 function usePlacing(ctx: ThreeContext): RefObject<Placing> {
   const state = useRef<Placing>({ placedFor: '', last: 0 });
   const { tiles, overlay, invalidate } = ctx;
 
   useLayoutEffect(() => {
-    state.current.placedFor = '';
-    invalidate();
+    const replace = (): void => {
+      state.current.placedFor = '';
+      invalidate();
+    };
+
+    replace();
+
+    return overlay.insets.subscribe(replace);
   }, [tiles, overlay, invalidate]);
 
-  useEffect(() => {
-    const placing = state.current;
-
-    return (): void => clearTimeout(placing.timer);
-  }, []);
+  useCancel(state);
 
   return state;
 }

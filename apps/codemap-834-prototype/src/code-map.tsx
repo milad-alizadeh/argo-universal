@@ -25,6 +25,7 @@ import {
   type View,
 } from './model';
 import { usePalette } from './palette';
+import { usePlateInsets } from './plate-measure';
 import { FlatLoader, ThreeMap } from './renderer-loader.web';
 
 export interface CodeMapProps {
@@ -98,13 +99,19 @@ function useRenderer(props: DrawnProps): RendererProps {
   return { tiles, palette, selected: selectedId, onSelect, overlay };
 }
 
+/**
+ * Labels stay clear of the plates over the map. A plate is any element the page lays beside the
+ * Code Map in its parent, plus the Code Map's own camera plate; it measures them all itself.
+ */
 function Drawn(props: DrawnProps): JSX.Element {
-  const { label, view } = props;
+  const { label, view, map } = props;
   const renderer = useRenderer(props);
   const loading = `Measuring ${label}`;
+  const root = useRef<HTMLDivElement>(null);
+  usePlateInsets(root, map.cover);
 
   return (
-    <div style={fill} role="group" aria-label={label}>
+    <div ref={root} style={fill} role="group" aria-label={label}>
       <Renderer {...renderer} view={view} loading={loading} />
       <Overlay {...props} onSelect={renderer.onSelect} />
     </div>

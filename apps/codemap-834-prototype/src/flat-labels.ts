@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { FlatContext } from './flat-context';
 import type { FlatTransform } from './flat-viewport';
 import { placeLabels, type LabelAnchors } from './map-labels';
@@ -26,10 +26,12 @@ export function tileCorners({ x, y, scale }: FlatTransform): LabelAnchors {
 
 export function useFlatLabels(ctx: FlatContext): void {
   const { tiles, viewport, frame, overlay } = ctx;
+  const { subscribe, current } = overlay.insets;
+  const insets = useSyncExternalStore(subscribe, current);
 
   useEffect(() => {
     const anchors = tileCorners(viewport.transform());
-    const screen = { size: frame.size, insets: overlay.insets };
+    const screen = { size: frame.size, insets };
     overlay.showLabels(placeLabels(tiles, anchors, screen));
-  }, [tiles, viewport, frame, overlay]);
+  }, [tiles, viewport, frame, overlay, insets]);
 }

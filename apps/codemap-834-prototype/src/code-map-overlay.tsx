@@ -1,7 +1,8 @@
 import { Text } from '@repo/client/text';
 import { useSyncExternalStore, type JSX, type RefObject } from 'react';
+import type { Feed } from './feed';
 import type { Label } from './map-labels';
-import type { CodeMapOverlay, LabelFeed } from './map-overlay';
+import type { CodeMapOverlay } from './map-overlay';
 import { button, cameraPlate, hidden, labelCard, overlay } from './map-styles';
 import type { CodeMapFile, Palette } from './model';
 import { runCamera, type CameraAction, type Viewport } from './viewport';
@@ -18,7 +19,7 @@ function LabelCard(props: { label: Label; palette: Palette }): JSX.Element {
 
 /** Kit text over the canvas; only this layer re-renders when the labels move. */
 function LabelLayer(props: {
-  labels: LabelFeed;
+  labels: Feed<Label[]>;
   palette: Palette;
 }): JSX.Element {
   const { labels, palette } = props;
@@ -62,7 +63,7 @@ function CameraButton(props: CameraButtonProps): JSX.Element {
 
 function CameraControls(props: CameraProps): JSX.Element {
   return (
-    <div style={cameraPlate(props.palette)}>
+    <div style={cameraPlate(props.palette)} data-plate>
       {actions.map((action) => (
         <CameraButton key={action.action} {...props} {...action} />
       ))}

@@ -1,11 +1,15 @@
 import { describe, expect, it, vi, type Mock } from 'vitest';
-import type { Label } from './map-labels';
+import type { Insets, Label } from './map-labels';
 import { createMapOverlay, type CodeMapOverlay } from './map-overlay';
 import type { RendererInfo } from './model';
 
 function label(id: string, x = 10): Label {
   return { id, text: `${id}.ts`, x, y: 80, maxWidth: 200 };
 }
+
+const open: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+const bands: Insets = { ...open, top: 55, bottom: 170 };
 
 const info: RendererInfo = { engine: 'Skia / CanvasKit CPU', files: 2, dpr: 1 };
 
@@ -84,5 +88,26 @@ describe('Code Map overlay', () => {
     expect(map.observer.drawn).toHaveBeenCalledTimes(1);
     expect(map.observer.drawn).toHaveBeenCalledWith(info);
     expect(later).not.toHaveBeenCalled();
+  });
+
+  it('starts with no bands covered', () => {
+    expect(overlay().overlay.insets.current()).toEqual(open);
+  });
+
+  it('gives the renderer the bands Code Map measured', () => {
+    const map = overlay();
+    map.cover(bands);
+
+    expect(map.overlay.insets.current()).toEqual(bands);
+  });
+
+  it('tells the renderer only when the measured bands change', () => {
+    const map = overlay();
+    const listener = vi.fn<() => void>();
+    map.overlay.insets.subscribe(listener);
+    map.cover(bands);
+    map.cover({ ...bands });
+
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });
