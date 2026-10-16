@@ -17,6 +17,7 @@
     "@repo/typescript": "workspace:*",
     "@repo/universal-app": "workspace:*",
     "@types/node": "catalog:",
+    "esbuild": "catalog:",
     "node-pty": "catalog:",
     "playwright-bdd": "catalog:",
     "rolldown": "catalog:",

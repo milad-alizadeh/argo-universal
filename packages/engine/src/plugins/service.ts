@@ -1,7 +1,10 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
-import type { PluginStatus } from '@repo/contracts/plugins/runtime';
+import type {
+  PluginFailure,
+  PluginStatus,
+} from '@repo/contracts/plugins/runtime';
 import { discoverPlugins, type PluginsDeps } from './loader';
 import type { PluginRuntime } from './runtime';
 
@@ -29,7 +32,12 @@ export class PluginService {
     return runtime.activate({
       entry: { pluginId, directory, main: plugin.manifest.main },
       dev: plugin.firstParty || (await markedDev(directory)),
+      name: plugin.manifest.name,
     });
+  }
+
+  public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
+    return requireRuntime(this.deps).watchFailures(signal);
   }
 }
 

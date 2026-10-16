@@ -89,6 +89,8 @@ export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
+export { PluginErrorToasts } from './screens/plugins/plugin-error-toasts';
+
 export {
   pluginAt,
   pluginPath,
