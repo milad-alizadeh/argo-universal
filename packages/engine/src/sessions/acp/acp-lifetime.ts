@@ -5,7 +5,7 @@ import type {
   AcpSessionLease,
 } from '../../agents';
 import type { DeferredAgentLaunch, InstalledAgents } from '../../agents';
-import { requireInstalledAgent } from '../session-command';
+import { requireInstalledAgent } from '../../agents';
 import type { SessionData } from '../session-data';
 import {
   createLifetimeDestination,

@@ -16,7 +16,6 @@ export type CommandInput = {
   isDirectoryInUse: (directory: string) => boolean;
 };
 
-
 export type EntryInput = CommandInput & { entry: ACPAgent };
 
 export type RegistryCommand = {

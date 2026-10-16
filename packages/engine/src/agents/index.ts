@@ -36,7 +36,7 @@ export { readAcpUsage } from './acp/connection/response-readers';
 
 export {
   createInstalledAgents,
-  notInstalledError,
+  requireInstalledAgent,
   type InstalledAgent,
   type InstalledAgents,
 } from './servers/installed-agents';

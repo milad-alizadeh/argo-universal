@@ -3,12 +3,12 @@ import { SessionOpenFailure } from '@repo/contracts';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
+import { requireInstalledAgent } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import { readProjectPath } from '../projects';
 import { databaseWriterId, writerMachine } from '../storage';
 import type { SessionRouterDeps } from './router-deps';
 import {
-  requireInstalledAgent,
   submitSessionPrompt,
   validateSessionCommandAdmission,
 } from './session-command';

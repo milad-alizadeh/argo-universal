@@ -60,15 +60,25 @@ export const createInstalledAgents = (
     launchInstalledAgent(input, { agent, projectId, signal }),
 });
 
-// The one error for an Agent that is not installed: New Session, Send and sign-in all show its open failure.
-export const notInstalledError = (
-  answer: Extract<InstalledAgentAnswer, { installed: false }>,
-): TRPCError =>
-  new TRPCError({
-    code: 'PRECONDITION_FAILED',
-    message: answer.message,
-    cause: new SessionOpenFailure({ type: 'failed', message: answer.message }),
-  });
+// New Session, Send, open, Retry and sign-in admit only an Installed Agent, and all show this one open failure otherwise.
+export const requireInstalledAgent = (
+  installedAgents: Pick<InstalledAgents, 'installedAgent'>,
+  id: string,
+): InstalledAgent => {
+  const answer = installedAgents.installedAgent(id);
+
+  if (!answer.installed)
+    throw new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message: answer.message,
+      cause: new SessionOpenFailure({
+        type: 'failed',
+        message: answer.message,
+      }),
+    });
+
+  return answer.agent;
+};
 
 type LaunchSubject = {
   agent: InstalledAgent;

@@ -1,8 +1,8 @@
 import type { SessionPromptInput, SessionPromptOutput } from '@repo/contracts';
+import { requireInstalledAgent } from '../agents';
 import { userMessageId } from '../feed';
 import type { SessionRouterDeps } from './router-deps';
 import {
-  requireInstalledAgent,
   submitSessionPrompt,
   validateSessionCommandAdmission,
 } from './session-command';
