@@ -10,6 +10,7 @@ import {
   terminalStartup,
   isolateTerminalHome,
 } from '#mocks/auth-terminal';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 isolateTerminalHome();
 
@@ -84,6 +85,26 @@ it('reading, writing or cancelling the sign-in terminal never starts an Agent', 
   await host.caller.agents.cancelAuthenticate(subject);
   expect(host.agent.processes).toHaveLength(0);
 });
+
+it(
+  'reading or writing the sign-in terminal after the Agent is lost never launches a replacement',
+  terminalStartup,
+  async () => {
+    const host = await startTerminalAuth({ args: ['--interactive-login'] });
+    const result = host.caller.agents.authenticate({ ...subject, methodId });
+    await awaitPrompt(host);
+    const agent = requireScriptedProcessAt(host.agent.processes);
+    agent.exited.resolve();
+    agent.connection.close();
+    expect(await result).toMatchObject({ status: 'failed' });
+    expect(await readTerminal(host)).toMatchObject({ closed: true });
+    await host.caller.agents.authTerminalInput({
+      ...subject,
+      input: { type: 'write', text: '\r' },
+    });
+    expect(host.agent.processes).toHaveLength(1);
+  },
+);
 
 it.each(['Login successful', 'Type your message'])(
   'claude-login succeeds on %s and kills the still-running PTY',

@@ -58,16 +58,21 @@ const existingAuthentication = async (
     .findAuthentication(subject.agent, subject.projectId)
     ?.catch(() => null) ?? null;
 
+const requireAdmission = (deps: AgentsRouterDeps): void =>
+  deps.sessionCommandSignal?.throwIfAborted();
+
 export const authenticate = async (
   deps: AgentsRouterDeps,
   input: AgentAuthenticateInput,
 ): Promise<AgentAuthenticateOutput> => {
-  deps.sessionCommandSignal?.throwIfAborted();
+  requireAdmission(deps);
 
   try {
-    return await (
-      await authentication(deps, input)
-    ).authenticate(input.methodId);
+    const found = await authentication(deps, input);
+    // Shutdown may have begun while the connection was found or launched.
+    requireAdmission(deps);
+
+    return await found.authenticate(input.methodId);
   } catch (cause) {
     return authenticationFailed(cause);
   }
