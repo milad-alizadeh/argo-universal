@@ -94,7 +94,7 @@ function RadioIndicator(): React.JSX.Element {
     <IconSlot role="body">
       <RadixMenu.ItemIndicator asChild>
         <View>
-          <SelectedCheck role="body" className="text-foreground" />
+          <SelectedCheck className="text-foreground" />
         </View>
       </RadixMenu.ItemIndicator>
     </IconSlot>
