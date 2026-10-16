@@ -6,19 +6,17 @@ interface NotificationRecord {
 }
 
 declare global {
-  interface Window {
-    notificationProbe: {
-      records: NotificationRecord[];
-      click: () => void;
-    };
-  }
+  var notificationProbe: {
+    records: NotificationRecord[];
+    click: () => void;
+  };
 }
 
 export function installNotificationStub(): void {
   const records: NotificationRecord[] = [];
   const clicks: (() => void)[] = [];
 
-  window.notificationProbe = {
+  globalThis.notificationProbe = {
     records,
     click: (): void => clicks.at(-1)?.(),
   };
@@ -28,7 +26,10 @@ export function installNotificationStub(): void {
     public onclick: (() => void) | null = null;
     private record: NotificationRecord;
 
-    public constructor(title: string, options: NotificationOptions) {
+    public constructor(
+      title: string,
+      options: Partial<Pick<NotificationRecord, 'body' | 'tag'>>,
+    ) {
       this.record = {
         title,
         body: options.body,
@@ -44,5 +45,7 @@ export function installNotificationStub(): void {
     }
   }
 
-  Object.defineProperty(window, 'Notification', { value: NotificationStub });
+  Object.defineProperty(globalThis, 'Notification', {
+    value: NotificationStub,
+  });
 }

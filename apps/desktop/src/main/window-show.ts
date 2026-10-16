@@ -1,7 +1,8 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 
 function showWindow(window: BrowserWindow): void {
   if (window.isMinimized()) window.restore();
+  app.focus({ steal: true });
   window.show();
   window.focus();
 }

@@ -16,7 +16,6 @@ import {
   type PhoneDrawerContentProps,
 } from '../components/phone-drawer-content/phone-drawer-content';
 import { useAttentionCount } from '../hooks/use-attention-count';
-import { useDesktopNotifications } from '../notifications/use-desktop-notifications';
 import {
   ScaffoldFrame,
   ScaffoldPage,
@@ -108,7 +107,6 @@ export interface FrameProps {
 
 // The App's Frame around the navigator of sections, at every Size class.
 export function Frame({ frame, children }: FrameProps): React.JSX.Element {
-  useDesktopNotifications();
   return (
     <SectionListsContext value={frame.lists}>
       <InspectorProvider value={frame.inspector}>

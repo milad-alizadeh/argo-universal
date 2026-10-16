@@ -14,8 +14,11 @@ export const supportsDesktopNotifications = (): boolean =>
   hasDesktopWindow(globalThis.window?.argo) &&
   typeof Notification !== 'undefined';
 
+const hasFocusedWindow = (): boolean =>
+  document.visibilityState === 'visible' && document.hasFocus();
+
 const canDeliver = (): boolean =>
-  !document.hasFocus() && Notification.permission !== 'denied';
+  !hasFocusedWindow() && Notification.permission !== 'denied';
 
 const createNativeNotification = (notice: SessionNotification): Notification =>
   new Notification(notice.session.title ?? 'Session', {

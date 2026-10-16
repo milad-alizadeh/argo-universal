@@ -4,10 +4,11 @@ Feature: Desktop Session notifications
     Given a wide Frame
     And the desktop Notification API is recorded
     And a New Session with Agent <agent>
-    When I leave the desktop window "<state>"
-    And I send the prompt "Check the notification"
+    When I prepare the desktop prompt "Check the notification"
+    And I leave the desktop window "<state>"
+    And I send the prepared desktop prompt without activating the window
     Then the Agent replies "The shared fixture completed this Turn."
-    And one desktop notification says "Turn ended"
+    And one desktop notification for "Check the notification" says "Turn ended"
     When I click the desktop notification from Settings
     Then the desktop notification opens its Session in the foreground
 
@@ -15,16 +16,18 @@ Feature: Desktop Session notifications
       | agent | state     |
       | 1     | hidden    |
       | 2     | minimized |
+      | 1     | unfocused |
 
   Scenario: An input request notifies and answering in the foreground stays quiet
     Given a wide Frame
     And the desktop Notification API is recorded
     And Agent 1 asks for an Elicitation
     And a New Session with Agent 1
-    When I leave the desktop window "hidden"
-    And I send the prompt "Ask for issue details"
+    When I prepare the desktop prompt "Ask for issue details"
+    And I leave the desktop window "hidden"
+    And I send the prepared desktop prompt without activating the window
     Then the Elicitation "A few details for the new issue" opens over the Composer
-    And one desktop notification says "Needs your input"
+    And one desktop notification for "Ask for issue details" says "Needs your input"
     When I click the desktop notification from Settings
     Then the desktop notification opens its Session in the foreground
     When I submit the Elicitation title "Notification opens the Session"
@@ -36,7 +39,20 @@ Feature: Desktop Session notifications
     And the desktop Notification API is recorded
     And Agent 1 exits mid-Turn with stderr
     And a New Session with Agent 1
-    When I leave the desktop window "hidden"
-    And I send the prompt "Crash in the background"
+    When I prepare the desktop prompt "Crash in the background"
+    And I leave the desktop window "hidden"
+    And I send the prepared desktop prompt without activating the window
     Then the Feed shows the Agent exit status and stderr
-    And one desktop notification says "Turn ended"
+    And one desktop notification for "Crash in the background" says "Turn ended"
+
+  Scenario: Cancelling a Turn notifies once in the background
+    Given a wide Frame
+    And the desktop Notification API is recorded
+    And Agent 1 supplies an unfinished command
+    And a New Session with Agent 1
+    When I prepare the desktop prompt "Run the checks"
+    And I leave the desktop window "hidden"
+    And I send the prepared desktop prompt without activating the window
+    And the command is running in the Feed
+    And I stop the desktop Turn without activating the window
+    Then one desktop notification for "Run the checks" says "Turn ended"

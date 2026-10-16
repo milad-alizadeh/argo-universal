@@ -91,6 +91,8 @@ export { AppProviders } from './app-providers';
 
 export { PortalHost } from '#primitives/overlays/portal';
 
+export { useDesktopNotifications } from './features/frame/notifications/use-desktop-notifications';
+
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
 export {

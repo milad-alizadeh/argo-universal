@@ -1,52 +1,61 @@
-import type {
-  SessionInfo,
-  SessionListUpdate,
-  SessionStatus,
-} from '@repo/contracts';
-import { sessionNotificationBody } from './session-notification';
+import type { FeedPageOutput, SessionInfo } from '@repo/contracts';
+import {
+  baselinePosition,
+  endedTurn,
+  type NotificationBaseline,
+} from './notification-feed';
 
 export interface SessionNotification {
   session: SessionInfo;
   body: string;
 }
 
-interface SessionNotifications {
-  receive: (update: SessionListUpdate) => SessionNotification | null;
-  reset: () => void;
+const isExcluded = (session: SessionInfo): boolean =>
+  session.archivedAt !== null || session.parentSessionId !== null;
+
+function newTurnEnds(
+  page: FeedPageOutput,
+  previous: NotificationBaseline | undefined,
+): number {
+  if (previous && previous.epoch !== page.epoch) return 0;
+
+  return page.rows.filter(
+    (row) => row.position > baselinePosition(previous) && endedTurn(row),
+  ).length;
 }
 
-export function createSessionNotifications(): SessionNotifications {
-  const previous = new Map<string, SessionStatus>();
-
-  return {
-    receive: (update) => receiveUpdate(previous, update),
-    reset: () => previous.clear(),
-  };
-}
-
-function receiveUpdate(
-  previous: Map<string, SessionStatus>,
-  update: SessionListUpdate,
-): SessionNotification | null {
-  if (update.type === 'removed') {
-    previous.delete(update.sessionId);
-
-    return null;
-  }
-
-  return notificationForSession(previous, update.session);
-}
-
-function notificationForSession(
-  previous: Map<string, SessionStatus>,
+export function sessionNotifications(
+  previous: NotificationBaseline | undefined,
   session: SessionInfo,
-): SessionNotification | null {
-  const body = sessionNotificationBody(
-    previous.get(session.sessionId),
-    session,
+  page: FeedPageOutput,
+): SessionNotification[] {
+  if (isExcluded(session)) return [];
+
+  const endings = Array.from(
+    { length: newTurnEnds(page, previous) },
+    (): SessionNotification => ({ session, body: 'Turn ended' }),
   );
 
-  previous.set(session.sessionId, session.status);
+  if (needsInput(previous, session))
+    endings.push({ session, body: 'Needs your input' });
 
-  return body ? { session, body } : null;
+  return endings;
 }
+
+function needsInput(
+  previous: NotificationBaseline | undefined,
+  session: SessionInfo,
+): boolean {
+  if (session.status !== 'needs_input') return false;
+
+  return previous?.session.status !== 'needs_input';
+}
+
+export const notificationBaseline = (
+  session: SessionInfo,
+  page: FeedPageOutput,
+): NotificationBaseline => ({
+  session,
+  epoch: page.epoch,
+  position: page.rows.at(-1)?.position ?? -1,
+});
