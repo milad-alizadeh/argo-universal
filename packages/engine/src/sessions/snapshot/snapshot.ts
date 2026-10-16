@@ -1,16 +1,12 @@
-import type {
-  ChangesSummary,
-  SessionSnapshot,
-  SessionUpdate,
-} from '@repo/contracts';
+import type { ChangesSummary, SessionSnapshot } from '@repo/contracts';
 import { toShell } from '../acp/shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
-import { toLiveHeader } from '../live-header';
 import { snapshotState, type SessionState } from './state';
 
-export type FeedSnapshot = Pick<SessionSnapshot, 'epoch' | 'maxRevision'> & {
-  rows: Record<string, SessionUpdate>;
-};
+export type FeedSnapshot = Pick<
+  SessionSnapshot,
+  'epoch' | 'maxRevision' | 'liveHeader'
+>;
 
 export type StoredSnapshot = Pick<
   SessionSnapshot,
@@ -26,7 +22,6 @@ export type StoredSnapshot = Pick<
 type SessionDisplayContext = Pick<
   SessionState['context'],
   | 'activeTurnId'
-  | 'activeTurnStartedAt'
   | 'usage'
   | 'permissionQueue'
   | 'elicitationQueue'
@@ -56,13 +51,10 @@ type SessionFields = Pick<
   | 'configOptions'
 >;
 
-type FeedFields = Pick<SessionSnapshot, 'liveHeader' | 'maxRevision' | 'epoch'>;
-
 const noChanges: ChangesSummary = { files: 0, additions: 0, deletions: 0 };
 
 const idleContext: SessionDisplayContext = {
   activeTurnId: null,
-  activeTurnStartedAt: null,
   usage: null,
   permissionQueue: [],
   elicitationQueue: [],
@@ -78,7 +70,9 @@ export function toSessionSnapshot(
   return {
     ...storedFields(stored),
     ...sessionFields(session),
-    ...feedFields(session, feed),
+    liveHeader: feed.liveHeader,
+    maxRevision: feed.maxRevision,
+    epoch: feed.epoch,
     shells: session ? liveShells(session) : stored.shells,
   };
 }
@@ -109,17 +103,6 @@ function sessionFields(session: SessionState | null): SessionFields {
       context.configOptions,
       context.heldConfig,
     ),
-  };
-}
-
-function feedFields(
-  session: SessionState | null,
-  feed: FeedSnapshot,
-): FeedFields {
-  return {
-    liveHeader: toLiveHeader(displayContext(session), Object.values(feed.rows)),
-    maxRevision: feed.maxRevision,
-    epoch: feed.epoch,
   };
 }
 

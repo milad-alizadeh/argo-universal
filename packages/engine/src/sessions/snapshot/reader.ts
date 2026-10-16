@@ -1,8 +1,9 @@
-import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
+import type { SessionSnapshot, SessionUpdate, Turn } from '@repo/contracts';
 import type { FeedDeps } from '../../feed';
-import { createLiveHeaderRowsReader } from '../live-header';
+import { createLiveHeaderReader } from '../live-header';
 import type { SessionActorRef } from '../session-machine';
 import { createQueuedSessionReader } from '../session-record';
+import { readLatestTurn } from '../session-storage';
 import { storedShells } from '../shells/reader';
 import { createSubagentsReader } from '../subagents';
 import {
@@ -29,12 +30,12 @@ interface SnapshotRead {
 export class SessionSnapshotReader {
   private readonly readSession: ReturnType<typeof createQueuedSessionReader>;
   private readonly readSubagents: ReturnType<typeof createSubagentsReader>;
-  private readonly readRows: ReturnType<typeof createLiveHeaderRowsReader>;
+  private readonly readHeader: ReturnType<typeof createLiveHeaderReader>;
 
   public constructor(private readonly deps: SnapshotDeps) {
     this.readSubagents = createSubagentsReader(deps);
     this.readSession = createQueuedSessionReader(deps);
-    this.readRows = createLiveHeaderRowsReader(deps);
+    this.readHeader = createLiveHeaderReader(deps);
   }
 
   public read(
@@ -81,7 +82,7 @@ export class SessionSnapshotReader {
     session: SessionState,
     feed: FeedState,
   ): FeedSnapshot {
-    return { ...feed, rows: this.headerRows(sessionId, session, feed) };
+    return { ...feed, liveHeader: this.liveHeader(sessionId, session, feed) };
   }
 
   private feedContext(sessionId: string, stored: FeedState): FeedState {
@@ -90,17 +91,24 @@ export class SessionSnapshotReader {
     return actor ? actor.getSnapshot().context : stored;
   }
 
-  private headerRows(
+  private liveHeader(
     sessionId: string,
     session: SessionState,
     feed: FeedState,
-  ): Record<string, SessionUpdate> {
-    return this.readRows({
-      writer: this.deps.findWriter(),
+  ): FeedSnapshot['liveHeader'] {
+    return this.readHeader({
       sessionId,
-      turnId: session ? session.context.activeTurnId : null,
-      rows: feed.rows ?? {},
-    }).rows;
+      live: session ? session.context : null,
+      latestTurn: (): Turn | undefined => this.latestTurn(sessionId),
+      memoryRows: feed.rows ?? {},
+      writer: this.deps.findWriter(),
+    }).header;
+  }
+
+  private latestTurn(sessionId: string): Turn | undefined {
+    const { database, findWriter } = this.deps;
+
+    return readLatestTurn({ database, writer: findWriter() }, sessionId);
   }
 }
 

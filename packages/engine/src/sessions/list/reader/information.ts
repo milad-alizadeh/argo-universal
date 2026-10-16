@@ -1,4 +1,5 @@
 import {
+  type LiveHeader,
   SessionInfo,
   type SessionRecord,
   type SessionUpdate,
@@ -35,7 +36,7 @@ class SessionInformationRead {
   public read(): SessionListState[number] | undefined {
     const changes = this.changes();
     const header = this.header();
-    const result = this.project(changes, Object.values(header.rows));
+    const result = this.project(changes, header.header);
 
     const listed = rejectedActivity(changes, header.rejected)
       ? { ...result.information, activity: '', plan: null }
@@ -54,7 +55,7 @@ class SessionInformationRead {
     return [
       ...readStoredActivity(this.input, row.id),
       ...readQueuedFeed(writer, row.id).rows,
-      ...Object.values(this.feed()?.rows ?? {}),
+      ...Object.values(this.memoryRows()),
     ];
   }
 
@@ -68,39 +69,34 @@ class SessionInformationRead {
     return this.live?.children.feed?.getSnapshot().context;
   }
 
-  private header(): ReturnType<ListReadInput['readLiveHeaderRows']> {
-    return this.input.readLiveHeaderRows({
-      writer: this.input.writer,
-      sessionId: this.input.row.id,
-      turnId: this.activeTurnId(),
-      rows: this.feed()?.rows ?? {},
+  private header(): ReturnType<ListReadInput['readLiveHeader']> {
+    const { row, turns, writer } = this.input;
+
+    return this.input.readLiveHeader({
+      sessionId: row.id,
+      live: this.liveInput().live,
+      latestTurn: (): Turn | undefined => latestTurnOf(turns, row.id),
+      memoryRows: this.memoryRows(),
+      writer,
     });
   }
 
-  private activeTurnId(): string | null {
-    return this.live?.context.activeTurnId ?? this.storedTurnId();
-  }
-
-  private storedTurnId(): string | null {
-    const latest = latestTurnOf(this.input.turns, this.input.row.id);
-
-    if (this.live) return null;
-
-    return runningTurnId(latest);
+  private memoryRows(): Record<string, SessionUpdate> {
+    return this.feed()?.rows ?? {};
   }
 
   private project(
     changes: (SessionUpdate | undefined)[],
-    liveHeaderRows: SessionUpdate[],
+    liveHeader: LiveHeader | null,
   ): SessionListState[number] {
     const updates = activityUpdates(changes);
 
-    return toSessionInfo(this.projectionInput(updates, liveHeaderRows));
+    return toSessionInfo(this.projectionInput(updates, liveHeader));
   }
 
   private projectionInput(
     updates: SessionUpdate[],
-    liveHeaderRows: SessionUpdate[],
+    liveHeader: LiveHeader | null,
   ): SessionInfoInput {
     return {
       shells: this.input.shellCounts.get(this.input.row.id),
@@ -109,7 +105,7 @@ class SessionInformationRead {
       message: lastMessage(updates),
       plan: selectPlanRowWithLatestContent(updates),
       ...this.liveInput(),
-      liveHeaderRows,
+      liveHeader,
       children: this.children(),
     };
   }
@@ -152,8 +148,4 @@ function rejectedActivity(
   headerRejected: boolean,
 ): boolean {
   return changes.includes(undefined) || headerRejected;
-}
-
-function runningTurnId(latest: Turn | undefined): string | null {
-  return latest?.status === 'running' ? latest.id : null;
 }

@@ -1,12 +1,12 @@
 import type {
   AgentMessage,
+  LiveHeader,
   PlanUpdate,
   SessionRecord,
   SessionInfo,
-  SessionUpdate,
   Turn,
 } from '@repo/contracts';
-import { type LiveHeaderInput } from '../../live-header';
+import { type LiveSession } from '../../live-header';
 import { toSessionCheckout } from '../../session-record';
 import type { SessionListState } from '../state';
 import { SessionInfoActivity } from './activity';
@@ -16,9 +16,9 @@ export interface SessionInfoInput {
   turns: readonly Turn[];
   message: AgentMessage | undefined;
   plan: PlanUpdate | undefined;
-  live: (LiveHeaderInput & { failure: string | null }) | null;
+  live: (LiveSession & { failure: string | null }) | null;
   feed: { maxRevision: number; activityAt: number } | null;
-  liveHeaderRows: readonly SessionUpdate[];
+  liveHeader: LiveHeader | null;
   children: readonly SessionRecord[];
   shells?: SessionInfo['shells'];
 }

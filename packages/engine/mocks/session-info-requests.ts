@@ -43,19 +43,11 @@ export const rules: {
     input: {
       ...idle,
       live,
-      liveHeaderRows: [
-        {
-          id: 'thought-1',
-          sessionId: 'session-1',
-          turnId: 'turn-1',
-          position: 1,
-          revision: 1,
-          state: 'open',
-          sessionUpdate: 'agent_thought',
-          messageId: 'thought-1',
-          content: [{ type: 'text', text: '**Checking the tests**\nDetails' }],
-        },
-      ],
+      liveHeader: {
+        text: 'Checking the tests',
+        source: { type: 'thought' },
+        startedAt: 50,
+      },
     },
     expected: {
       information: {

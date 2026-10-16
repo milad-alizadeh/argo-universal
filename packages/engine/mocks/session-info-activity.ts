@@ -1,4 +1,4 @@
-import { idle, live, turn, information } from './session-info';
+import { idle, turn, information } from './session-info';
 import type { SessionInfoFixture } from './session-info-case';
 
 export const rules: {
@@ -7,37 +7,15 @@ export const rules: {
   expected: unknown;
 }[] = [
   {
-    rule: 'list activity ignores a Plan proposal while a Turn runs',
-    input: {
-      ...idle,
-      live: {
-        ...live,
-        pendingPlanProposal: { planId: 'plan-1', content: 'A proposal' },
-      },
-    },
-    expected: {
-      information: { ...information, status: 'running', activity: 'Working' },
-      running: true,
-    },
-  },
-  {
-    rule: 'stored running Turn supplies the Live header without a Session actor',
+    rule: 'a stored running Turn without a Session actor shows the Live header',
     input: {
       ...idle,
       turns: [turn],
-      liveHeaderRows: [
-        {
-          id: 'thought-1',
-          sessionId: 'session-1',
-          turnId: 'turn-1',
-          position: 1,
-          revision: 1,
-          state: 'open',
-          sessionUpdate: 'agent_thought',
-          messageId: 'thought-1',
-          content: [{ type: 'text', text: '**Checking the tests**' }],
-        },
-      ],
+      liveHeader: {
+        text: 'Checking the tests',
+        source: { type: 'thought' },
+        startedAt: 50,
+      },
     },
     expected: {
       information: {

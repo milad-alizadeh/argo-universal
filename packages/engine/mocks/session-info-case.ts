@@ -1,8 +1,8 @@
 import type {
   AgentMessage,
+  LiveHeader,
   PlanUpdate,
   SessionRecord,
-  SessionUpdate,
   Turn,
   PendingPermission,
   PendingElicitation,
@@ -14,7 +14,6 @@ type LiveSession = {
   permissionQueue: readonly PendingPermission[];
   elicitationQueue: readonly PendingElicitation[];
   failure: string | null;
-  pendingPlanProposal?: { planId: string; content: string } | null;
 };
 
 export interface SessionInfoFixture {
@@ -24,6 +23,6 @@ export interface SessionInfoFixture {
   plan: PlanUpdate | undefined;
   live: LiveSession | null;
   feed: { maxRevision: number; activityAt: number } | null;
-  liveHeaderRows: readonly SessionUpdate[];
+  liveHeader: LiveHeader | null;
   children: readonly SessionRecord[];
 }

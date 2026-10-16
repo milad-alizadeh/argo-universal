@@ -1,6 +1,6 @@
 import type { SessionRecord, SessionInfo } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
-import { createLiveHeaderRowsReader } from '../../live-header';
+import { createLiveHeaderReader } from '../../live-header';
 import { readQueuedSessionRows } from '../../session-storage';
 import { latestTurnOf } from '../../turns';
 import type { WriterChange } from '../observation';
@@ -37,9 +37,9 @@ export function createSessionListReader(
 class ListReader {
   private readonly parents = new SessionListParents();
   private readonly rejections = createRejectionCounter('sessions');
-  private readonly readHeader: ReturnType<typeof createLiveHeaderRowsReader>;
+  private readonly readHeader: ReturnType<typeof createLiveHeaderReader>;
   public constructor(private readonly options: ListReaderOptions) {
-    this.readHeader = createLiveHeaderRowsReader(options);
+    this.readHeader = createLiveHeaderReader(options);
   }
 
   public read(sessionIds: readonly string[] | undefined): SessionListState {
@@ -83,7 +83,7 @@ class ListReader {
       writer: this.options.writer(),
       validate: <Value>(read: () => Value): Value | undefined =>
         this.validate(read),
-      readLiveHeaderRows: this.readHeader,
+      readLiveHeader: this.readHeader,
       rejectedSessions: new Set<string>(),
       shellCounts: new Map<string, SessionInfo['shells']>(),
     };

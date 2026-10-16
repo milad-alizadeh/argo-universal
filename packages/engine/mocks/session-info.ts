@@ -32,7 +32,7 @@ export const idle: SessionInfoFixture = {
   plan: undefined,
   live: null,
   feed: null,
-  liveHeaderRows: [],
+  liveHeader: null,
   children: [],
 };
 

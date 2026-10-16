@@ -1,10 +1,4 @@
-import type {
-  LiveHeader,
-  SessionStatus,
-  TextContent,
-  Turn,
-} from '@repo/contracts';
-import { toLiveHeader, type LiveHeaderInput } from '../../live-header';
+import type { SessionStatus, TextContent, Turn } from '@repo/contracts';
 import { latestTurnOf } from '../../turns';
 import type { SessionInfoInput } from './information';
 import { deriveSessionStatus } from './status';
@@ -55,37 +49,6 @@ export class SessionInfoActivity {
     );
   }
 
-  private header(): LiveHeader | null {
-    return toLiveHeader(this.headerInput(), this.input.liveHeaderRows);
-  }
-
-  private headerInput(): LiveHeaderInput {
-    return {
-      activeTurnId: this.activeTurnId(),
-      activeTurnStartedAt: this.activeTurnStartedAt(),
-      ...this.queues(),
-    };
-  }
-
-  private activeTurnId(): string | null {
-    return this.input.live?.activeTurnId ?? this.storedTurnId();
-  }
-
-  private storedTurnId(): string | null {
-    if (!this.running()) return null;
-
-    return this.latest ? this.latest.id : null;
-  }
-
-  private activeTurnStartedAt(): number | null {
-    return this.input.live?.activeTurnStartedAt ?? this.storedTurnStartedAt();
-  }
-
-  private storedTurnStartedAt(): number | null {
-    if (!this.running()) return null;
-
-    return this.latest ? this.latest.startedAt : null;
-  }
   private failure(): string | null {
     return this.input.live?.failure ?? this.input.row.failure;
   }
@@ -93,18 +56,7 @@ export class SessionInfoActivity {
     return this.input.feed?.maxRevision ?? 0;
   }
   private runningText(): string {
-    return this.header()?.text ?? 'Working';
-  }
-  private queues(): Pick<
-    LiveHeaderInput,
-    'permissionQueue' | 'elicitationQueue'
-  > {
-    const live = this.input.live;
-
-    return {
-      permissionQueue: live ? live.permissionQueue : [],
-      elicitationQueue: live ? live.elicitationQueue : [],
-    };
+    return this.input.liveHeader?.text ?? 'Working';
   }
 }
 

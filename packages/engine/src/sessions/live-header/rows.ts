@@ -93,6 +93,7 @@ class HeaderRowsRead {
   }
 }
 
+// The Feed actor's copy wins unread: a live Feed actor is its Session's only row producer, so this equals "the higher revision wins" (ADR-0007).
 function unseenRows(
   candidates: (FeedRowWrite | SessionUpdate)[],
   rows: Record<string, SessionUpdate>,
