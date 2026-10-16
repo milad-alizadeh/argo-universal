@@ -49,6 +49,17 @@ export default meta;
 
 export const Overview: StoryObj<typeof meta> = { name: 'ElicitationSheet' };
 
+// A message too long for a title wraps in the body; the sheet's title stays the source.
+export const LongMessage: StoryObj<typeof meta> = {
+  args: {
+    request: {
+      ...sheetRequest,
+      message:
+        'Before I file this in Linear, confirm the title, pick the team that owns reconnect drafts, and say whether to notify them',
+    },
+  },
+};
+
 function InteractiveSheet(props: ElicitationFormProps): ReactElement {
   const [open, setOpen] = useState(true);
 

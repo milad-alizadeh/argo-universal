@@ -32,7 +32,7 @@ type SectionProps = ModelProps & {
 export function ElicitationSheetFields({ model }: ModelProps): ReactElement {
   return (
     <View className="flex-1">
-      <View className="px-5 pt-4">
+      <View className="px-4 pt-4">
         <ElicitationHeading
           source={model.props.source}
           message={model.props.request.message}
