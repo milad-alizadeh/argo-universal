@@ -1,11 +1,25 @@
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { When, Then } from './fixtures';
 import { agentId, type Unavailable } from './scenario-agents';
 
-const setupSteps = {
-  'not installed': { status: 'Not installed', setup: 'Install' },
-  'not signed in': { status: 'Not signed in', setup: 'Sign in' },
+const statuses = {
+  'not installed': 'Not installed',
+  'not signed in': 'Not signed in',
+};
+
+const agentChoice = async (
+  page: Page,
+  httpUrl: string,
+  ordinal: number,
+): Promise<{ label: string; choice: Locator }> => {
+  const { label } = await readAgent(page, httpUrl, ordinal);
+
+  return {
+    label,
+    choice: page.getByRole('button', { name: `Select ${label}` }),
+  };
 };
 
 Then(
@@ -15,13 +29,29 @@ Then(
     ordinal: number,
     state: Unavailable,
   ): Promise<void> => {
-    const { label } = await readAgent(page, server.httpUrl, ordinal);
-    const choice = page.getByRole('button', { name: `Select ${label}` });
-    await expect(choice).toContainText(setupSteps[state].status);
+    const { label, choice } = await agentChoice(page, server.httpUrl, ordinal);
+    await expect(choice).toContainText(statuses[state]);
     await expect(choice).toBeDisabled();
     await expect(
       page.getByRole('button', { name: `Set up ${label}` }),
-    ).toHaveText(setupSteps[state].setup);
+    ).toHaveText('Sign in');
+  },
+);
+
+// An Agent that is not installed is installed from Settings, so New Session offers no step.
+Then(
+  'Agent {int} shows {string} without a setup step',
+  async (
+    { page, server },
+    ordinal: number,
+    state: Unavailable,
+  ): Promise<void> => {
+    const { label, choice } = await agentChoice(page, server.httpUrl, ordinal);
+    await expect(choice).toContainText(statuses[state]);
+    await expect(choice).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: `Set up ${label}` }),
+    ).toHaveCount(0);
   },
 );
 

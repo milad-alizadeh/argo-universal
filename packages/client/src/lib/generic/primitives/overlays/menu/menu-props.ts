@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import type { IconName } from '../../../symbols/icon-names';
 
 // One action in a menu: choosing it runs it and closes the menu.
 export interface MenuAction {
@@ -17,6 +18,8 @@ export interface MenuOption<Value extends string> {
   value: Value;
   label: string;
   disabled?: boolean;
+  // Drawn before the label; on iOS the system puts it after its own check.
+  icon?: IconName;
 }
 
 interface MenuBaseProps {

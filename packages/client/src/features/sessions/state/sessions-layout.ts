@@ -9,8 +9,8 @@ import {
 } from '@tanstack/react-query';
 
 export const sessionsLayoutChoices = [
-  { value: 'regular', label: 'Regular' },
-  { value: 'compact', label: 'Compact' },
+  { value: 'regular', label: 'Regular', icon: 'layout-regular' },
+  { value: 'compact', label: 'Compact', icon: 'layout-compact' },
 ] as const;
 
 // Regular rows show the activity, metadata and Plan bar; Compact rows show one line each.

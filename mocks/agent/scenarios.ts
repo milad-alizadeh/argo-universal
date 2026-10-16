@@ -1,10 +1,12 @@
 import type { SessionUpdate } from '@agentclientprotocol/sdk';
-import { acpConfiguration } from './acp-configuration.ts';
+import { acpConfiguration, heldModeSteps } from './acp-configuration.ts';
+import { contextUsageFixtures } from './context-usage.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
   feedWorkSteps,
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
+import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { terminalLogin } from './terminal-login.ts';
@@ -58,8 +60,9 @@ export const scenarios = {
   file: scenario([message(fileReply)]),
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),
   'ignores-cancel': scenario([{ type: 'hold' }]),
+  ...exitScenarios,
   'exit-with-stderr': {
-    ...scenario([{ type: 'exit', code: 17, stderr: 'Agent fixture failed\n' }]),
+    ...scenario([agentExit]),
     resumedSteps: [reply],
   },
   'refuse-session': {
@@ -113,6 +116,19 @@ export const scenarios = {
     },
     reply,
   ]),
+  'usage-low': scenario([
+    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.low }),
+    reply,
+  ]),
+  'usage-high': scenario([
+    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.high }),
+    reply,
+  ]),
+  'usage-full': scenario([
+    update({ sessionUpdate: 'usage_update', ...contextUsageFixtures.full }),
+    reply,
+  ]),
+  'held-mode': scenario(heldModeSteps),
   configuration: scenario([
     update({
       sessionUpdate: 'config_option_update',

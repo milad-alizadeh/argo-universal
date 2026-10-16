@@ -127,10 +127,20 @@ class SessionSnapshotObserver implements Subscription {
   private closed(): void {
     if (this.hasStopped) return;
     this.hasStopped = true;
-    this.listener.next?.({
+    this.listener.next?.(this.closedEvent());
+  }
+
+  private closedEvent(): Extract<FeedSubscribeOutput, { type: 'closed' }> {
+    const event: Extract<FeedSubscribeOutput, { type: 'closed' }> = {
       type: 'closed',
       failure: this.failure(),
-    });
+    };
+
+    const openError = this.session?.getSnapshot().context.openError;
+
+    if (openError) event.openError = openError;
+
+    return event;
   }
 
   private failure(): Extract<

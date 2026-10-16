@@ -3,7 +3,6 @@ import {
   type ModalBottomSheetRef,
 } from '@expo/ui/jetpack-compose';
 import {
-  cloneElement,
   useCallback,
   useEffect,
   useRef,
@@ -25,6 +24,7 @@ import {
 import type { SheetProps } from './sheet-props';
 import { SheetPages } from './sheet-stack.android';
 import { sheetDetents } from './sheet-state';
+import { SheetTrigger } from './sheet-trigger';
 
 type SheetRef = RefObject<ModalBottomSheetRef | null>;
 
@@ -46,14 +46,6 @@ function SheetRoot(props: SheetProps): ReactElement {
       </View>
     </SheetNavigationProvider>
   );
-}
-
-function SheetTrigger(props: SheetProps): ReactElement | null {
-  if (!props.trigger) return null;
-
-  return cloneElement(props.trigger, {
-    onPress: () => props.onOpenChange(true),
-  });
 }
 
 function SheetPresentation({

@@ -13,7 +13,7 @@ const flexibleContentClassName = 'flex-1 min-h-0';
 
 const cardClassName = 'bg-card rounded-xl shadow-control';
 
-const proposalHeightClassName = 'max-h-plan-proposal';
+const proposalHeightClassName = 'max-h-70';
 
 const proposalLabel = 'Plan proposal document';
 

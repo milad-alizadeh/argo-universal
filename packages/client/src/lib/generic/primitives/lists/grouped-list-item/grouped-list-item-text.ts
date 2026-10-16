@@ -1,4 +1,8 @@
-import { font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import {
+  font,
+  foregroundStyle,
+  truncationMode,
+} from '@expo/ui/swift-ui/modifiers';
 import { Platform } from 'react-native';
 import type { NativeTextProps } from '#primitives/display/native-text';
 import type { GroupedListItemProps } from './grouped-list-item-props';
@@ -32,3 +36,6 @@ export function rowColor(tone: RowTone): Modifiers {
 export const subtitleModifiers: Modifiers = ios
   ? [font({ textStyle: 'subheadline' }), ...rowColor('secondary')]
   : [];
+
+// A path keeps its start and its last folder, as Finder shortens a long name in the middle; Compose's Text only ellipsizes the end.
+export const codeTruncation: Modifiers = ios ? [truncationMode('middle')] : [];

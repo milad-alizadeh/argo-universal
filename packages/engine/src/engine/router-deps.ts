@@ -4,7 +4,6 @@ import {
   createAgentChecker,
   checkAgentLaunch,
   type AcpResourceInput,
-  type AcpResources,
 } from '../agents';
 import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
@@ -12,6 +11,7 @@ import type { FeedDeps } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
 import type { PluginsDeps } from '../plugins';
 import {
+  createSessionConnections,
   createSessionReader,
   createSessionSnapshotWatcher,
   type OpenSessionsActorRef,
@@ -68,7 +68,8 @@ type EngineSupplied =
   | 'checkAgentLaunch'
   | 'agentLogins'
   | 'installations'
-  | 'dropAgentConnections';
+  | 'dropAgentConnections'
+  | 'sessionConnections';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
@@ -95,13 +96,14 @@ export function createAppRouterDeps(
 
 function bindInstallations(
   installations: AgentInstallations,
-  input: AppRouterInput & Pick<AppRouterDeps, 'agentLogins'>,
+  input: AppRouterInput &
+    Pick<AppRouterDeps, 'agentLogins' | 'invalidateAgent'>,
 ): void {
   installations.bind({
     ...input,
     createId: input.createId ?? randomUUID,
     checkAgentLaunch,
-    invalidateAgent: acpResources(input).invalidateAgent,
+    invalidateAgent: input.invalidateAgent,
     isInUse: (agentId) =>
       input.agentLogins.isBusy(agentId) ||
       sessionsUseAgent(input.sessions, agentId),
@@ -116,19 +118,23 @@ type AgentSetup = Pick<
   | 'invalidateAgent'
   | 'invalidateIdleAgents'
   | 'dropAgentConnections'
+  | 'sessionConnections'
 >;
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
   const installations = input.installations ?? createInstallations(input.home);
 
+  const sessionConnections = createSessionConnections(input.sessions);
+
   const { invalidateAgent, invalidateIdleAgents, dropAgentConnections } =
-    acpResources(input);
+    sessionConnections.acpResources();
 
   return {
     installations,
     invalidateAgent,
     invalidateIdleAgents,
     dropAgentConnections,
+    sessionConnections,
     agentLogins: resolveAgentLogins(input, installations),
     createId: input.createId ?? randomUUID,
   };
@@ -162,10 +168,6 @@ function sessionsUseAgent(
       return !agent || agent === agentId;
     })
   );
-}
-
-function acpResources(input: AppRouterInput): AcpResources {
-  return input.sessions.getSnapshot().context.acpResources;
 }
 
 function createInstallations(home: string | undefined): AgentInstallations {

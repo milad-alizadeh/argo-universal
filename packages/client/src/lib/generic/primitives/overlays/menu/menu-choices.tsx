@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
+import { useIconBox } from '../../../symbols/icon-role';
 import { MenuLoadingRow } from './menu-loading';
 import {
   type ChoiceMenuProps,
@@ -77,7 +78,10 @@ function MenuChoiceGroupRows(
   return (
     <>
       {props.first ? null : <View className="h-2.25" />}
-      <MenuGroupHeading label={props.group.label} />
+      <MenuGroupHeading
+        label={props.group.label}
+        inset={props.group.options.some((choice) => choice.icon)}
+      />
       <MenuChoiceRadios {...props} />
     </>
   );
@@ -99,14 +103,24 @@ function MenuChoiceRadios({
   );
 }
 
-function MenuGroupHeading(props: { label?: string }): React.JSX.Element | null {
+// With icons, the heading keeps the rows' empty icon slot, so it lines up with the labels after it.
+function MenuGroupHeading(props: {
+  label?: string;
+  inset: boolean;
+}): React.JSX.Element | null {
   if (!props.label) return null;
 
   return (
-    <View className="px-3 pb-1 pt-1.5">
+    <View className="flex-row gap-3 px-3 pb-1 pt-1.5">
+      {props.inset ? <IconSlotWidth /> : null}
       <Text role="secondary" className="select-none">
         {props.label}
       </Text>
     </View>
   );
+}
+
+// The width of the rows' leading icon slot, with no height, so the heading stays as tall as its text.
+function IconSlotWidth(): React.JSX.Element {
+  return <View style={{ width: useIconBox('row').width }} />;
 }

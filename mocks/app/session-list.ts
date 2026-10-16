@@ -148,6 +148,10 @@ export const activeSessions: SessionListOutput = {
 };
 
 export const archivedSessions: SessionListOutput = {
-  sessions: [sessionRows.archived],
+  sessions: agentsList.map(({ agent }): SessionInfo => ({
+    ...sessionRows.archived,
+    agent,
+    sessionId: `${agent}:${sessionRows.archived.sessionId}`,
+  })),
   nextCursor: null,
 };

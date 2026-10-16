@@ -1,8 +1,9 @@
+import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/buttons/button';
+import { Combobox, type ComboboxOption } from '#primitives/inputs/combobox';
 import { ComposerPopover } from '../composer-popover/composer-popover';
-import { ProjectPicker } from './project-picker';
 import { SessionControlDisclosure } from './session-control-disclosure';
 import type { StartSessionLayout } from './start-session-types';
 
@@ -79,10 +80,23 @@ function projectContents(
   close: () => void,
 ): React.JSX.Element {
   return (
-    <ProjectPicker
-      projects={layout.props.projects}
-      projectId={layout.props.projectId}
-      onSelect={(id) => selectProject(layout, close, id)}
+    <Combobox.Content
+      label="Projects"
+      value={layout.props.projectId}
+      searchPlaceholder="Find a Project…"
+      emptyLabel="No Project matches."
+      options={projectOptions(layout.props.projects)}
+      onValueChange={(id) => selectProject(layout, close, id)}
     />
   );
+}
+
+function projectOptions(projects: ProjectInfo[]): ComboboxOption<string>[] {
+  return projects.map((project) => ({
+    value: project.id,
+    label: project.name,
+    supporting: project.path,
+    code: true,
+    icon: 'folder',
+  }));
 }
