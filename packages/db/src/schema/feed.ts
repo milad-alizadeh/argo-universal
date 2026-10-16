@@ -13,6 +13,7 @@ import { timestamp } from './timestamp';
 
 export const sessionUpdateKinds = [
   'user_message',
+  'session_message',
   'agent_message',
   'agent_thought',
   'tool_call_update',

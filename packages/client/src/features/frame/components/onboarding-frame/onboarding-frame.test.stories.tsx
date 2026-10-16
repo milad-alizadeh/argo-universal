@@ -15,7 +15,7 @@ const meta = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
   render: (args): React.JSX.Element => (
     // The story's own window, so the page can be measured against it.
-    <View testID="window" className="h-[600px] w-full">
+    <View testID="window" className="h-150 w-full">
       <OnboardingFrame {...args}>
         <Text>Onboarding</Text>
       </OnboardingFrame>

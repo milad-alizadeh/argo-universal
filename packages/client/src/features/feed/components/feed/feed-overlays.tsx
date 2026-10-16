@@ -15,7 +15,7 @@ const jumpToLatestClassName =
   'size-8 items-center justify-center rounded-full border border-border bg-card shadow-raised active:opacity-70';
 
 const newRowsDot = (
-  <View className="absolute -top-px -right-px size-[9px] rounded-full border-2 border-card bg-info" />
+  <View className="absolute -top-px -right-px size-2.25 rounded-full border-2 border-card bg-info" />
 );
 
 const jumpToLatestMotion = {

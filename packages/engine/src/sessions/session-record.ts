@@ -38,6 +38,7 @@ export function decodeStoredSession(row: typeof session.$inferSelect): Omit<
 
 const sessionSnapshotFields = SessionInfo.pick({
   title: true,
+  archivedAt: true,
   titleSource: true,
   agent: true,
   parentSessionId: true,
@@ -73,6 +74,7 @@ export function createSessionReader(
     const stored = database
       .select({
         title: session.title,
+        archivedAt: session.archivedAt,
         titleSource: session.titleSource,
         agent: session.agent,
         parentSessionId: session.parentSessionId,

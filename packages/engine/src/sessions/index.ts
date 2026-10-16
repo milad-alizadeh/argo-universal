@@ -36,3 +36,7 @@ export {
   type SessionConnections,
   createSessionConnections,
 } from './session-connection';
+
+export { recoverArchivedCheckouts } from './archive/archive-operations';
+
+export { findSessionFeed } from './session-system';

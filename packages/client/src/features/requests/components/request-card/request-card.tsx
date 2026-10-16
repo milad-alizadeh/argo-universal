@@ -6,7 +6,7 @@ import {
   useContentWide,
 } from '#lib/product/content-layout';
 import { Text } from '#primitives/display/text';
-import { Sheet } from '#primitives/overlays/sheet';
+import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';
@@ -122,17 +122,25 @@ function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
   );
 }
 
+// The app opens the sheet and only an answer closes it.
+const requestSheet = {
+  open: true,
+  onOpenChange: (): void => {},
+  dismissible: false,
+  detents: ['medium', 'large'],
+} as const satisfies Partial<SheetProps>;
+
+// The sheet's one page carries the request's title, as the native navigation title on iOS and Material's title row on Android.
 function RequestSheet(props: RequestCardProps): ReactNode {
   return (
     <Sheet
-      open
-      onOpenChange={() => {}}
-      dismissible={false}
-      detents={['medium', 'large']}
+      {...requestSheet}
       label={props.sheetLabel}
       footer={<SheetFooter {...props} />}
     >
-      <SheetContents {...props} />
+      <Sheet.Page name="request" title={props.sheetLabel}>
+        <SheetContents {...props} />
+      </Sheet.Page>
     </Sheet>
   );
 }

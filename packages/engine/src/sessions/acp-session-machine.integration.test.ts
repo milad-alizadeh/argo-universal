@@ -32,6 +32,10 @@ const expectAcpState = (
   }
 };
 
+const pathStates = (
+  path: ReturnType<typeof createAcpSessionModel>['paths'][number],
+): AcpModelSnapshot[] => path.steps.map((step) => step.state);
+
 describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
   const sessionInput = { ...emptySessionInput, agent: agentId };
   it.each(['new', 'existing', 'opened'] as const)(
@@ -89,6 +93,8 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
           eventKey: acpModelEventKey,
         }),
       ).toEqual([]);
+      const states = paths.flatMap(pathStates);
+      expect(states.some((state) => state.matches('archived'))).toBe(true);
       expect(paths.length).toBeGreaterThan(0);
       await host.caller.session.close(created);
     },

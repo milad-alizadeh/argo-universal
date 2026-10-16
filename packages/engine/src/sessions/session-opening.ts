@@ -144,11 +144,17 @@ function openStoredSession(
   return requireOpenSessionActor(deps.sessions, sessionId);
 }
 
-function readWritableSession(
+export function readWritableSession(
   readSession: SessionRouterDeps['readSession'],
   sessionId: string,
 ): ReturnType<SessionRouterDeps['readSession']> {
   const sessionRecord = readSession(sessionId);
+
+  if (sessionRecord.archivedAt !== null)
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: 'An archived Session is read-only',
+    });
 
   if (sessionRecord.parentSessionId !== null)
     throw new TRPCError({
