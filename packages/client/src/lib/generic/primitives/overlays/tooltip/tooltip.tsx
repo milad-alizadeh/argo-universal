@@ -1,14 +1,16 @@
-import { cloneElement, type ReactElement, useContext, useState } from 'react';
+import { cloneElement, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
-import type { TriggerElement } from '#primitives/overlays/open-state';
+import type {
+  TriggerElement,
+  TriggerHandlers,
+} from '#primitives/overlays/open-state';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
   usePopoverClose,
 } from '#primitives/overlays/popover';
-import { PopoverHover } from '../popover/popover-hover';
 
 type TooltipProps = { label: string; children: TriggerElement };
 
@@ -29,35 +31,68 @@ export function Tooltip(props: TooltipProps): ReactElement {
   );
 }
 
-function TooltipTrigger({
-  children,
-  onDismiss,
-  onPointerLeave,
-}: {
+type TooltipTriggerProps = {
   children: TriggerElement;
   onDismiss: () => void;
   onPointerLeave: () => void;
-}): ReactElement {
-  const close = usePopoverClose();
-  const hover = useContext(PopoverHover);
-  if (!children) return <PopoverTrigger>{children}</PopoverTrigger>;
+};
+
+function TooltipTrigger(props: TooltipTriggerProps): ReactElement {
+  const actions = useTooltipTriggerActions(
+    props.onDismiss,
+    props.onPointerLeave,
+  );
 
   return (
     <PopoverTrigger>
-      {cloneElement(children, {
-        onPress: (event) => {
-          children.props.onPress?.(event);
-          hover?.dismiss();
-          onDismiss();
-          setTimeout(close, 0);
-        },
-        onHoverOut: (event) => {
-          children.props.onHoverOut?.(event);
-          onPointerLeave();
-        },
-      })}
+      {props.children && tooltipTriggerElement(props.children, actions)}
     </PopoverTrigger>
   );
+}
+
+type TooltipTriggerActions = {
+  onDismiss: () => void;
+  onPointerLeave: () => void;
+  close: () => void;
+};
+
+function useTooltipTriggerActions(
+  onDismiss: () => void,
+  onPointerLeave: () => void,
+): TooltipTriggerActions {
+  return { onDismiss, onPointerLeave, close: usePopoverClose() };
+}
+
+function tooltipTriggerElement(
+  children: Exclude<TriggerElement, undefined>,
+  actions: TooltipTriggerActions,
+): Exclude<TriggerElement, undefined> {
+  return cloneElement(children, {
+    onPress: handlePress(children, actions.onDismiss, actions.close),
+    onHoverOut: handleHoverOut(children, actions.onPointerLeave),
+  });
+}
+
+function handlePress(
+  children: TriggerElement,
+  onDismiss: () => void,
+  close: () => void,
+): NonNullable<TriggerHandlers['onPress']> {
+  return (event) => {
+    children?.props.onPress?.(event);
+    onDismiss();
+    setTimeout(close, 0);
+  };
+}
+
+function handleHoverOut(
+  children: TriggerElement,
+  onPointerLeave: () => void,
+): NonNullable<TriggerHandlers['onHoverOut']> {
+  return (event) => {
+    children?.props.onHoverOut?.(event);
+    onPointerLeave();
+  };
 }
 
 const preventFocus = (event: Event): void => event.preventDefault();

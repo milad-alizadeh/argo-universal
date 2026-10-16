@@ -2,8 +2,7 @@ import * as React from 'react';
 import type { OpenState } from '#primitives/overlays/open-state';
 import { usePopoverState } from './popover-context';
 import { HoverGroup, closeSiblings, register } from './popover-hover-group';
-
-const closeGraceMs = 50;
+import { type HoverTimer, useHoverTimer } from './popover-hover-timer';
 
 /*
  * The parts the pointer can rest on: the trigger, the content, or a nested popover's own parts.
@@ -16,25 +15,15 @@ export interface Hover {
   enter: (part: HoverPart) => void;
   leave: (part: HoverPart) => void;
   promote: () => void;
-  dismiss: () => void;
   isPointer: () => boolean;
-}
-
-interface Timer {
-  close: () => void;
-  cancel: () => void;
-  schedule: () => void;
 }
 
 type Intent = ReturnType<typeof useHoverIntent>;
 
 interface HoverIntent {
   isPointer: () => boolean;
-  isSuppressed: () => boolean;
   mark: () => void;
   promote: () => void;
-  suppress: () => void;
-  clearSuppression: () => void;
 }
 
 type Root = OpenState;
@@ -43,7 +32,7 @@ interface HoverEnvironment {
   id: string;
   parent?: Hover;
   group?: Set<() => void>;
-  timer: Timer;
+  timer: HoverTimer;
   intent: Intent;
   hovered: Set<HoverPart>;
 }
@@ -91,52 +80,21 @@ function forget(
 
 function useHoverIntent(): HoverIntent {
   const pointer = React.useRef(false);
-  const suppressed = React.useRef(false);
 
   return {
     isPointer: () => pointer.current,
-    isSuppressed: () => suppressed.current,
     mark: () => {
       pointer.current = true;
     },
     promote: () => {
       pointer.current = false;
     },
-    suppress: () => {
-      pointer.current = false;
-      suppressed.current = true;
-    },
-    clearSuppression: () => {
-      suppressed.current = false;
-    },
   };
-}
-
-function useHoverTimer(onOpenChange: (open: boolean) => void): Timer {
-  const pending = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancel = React.useCallback(() => cancelPending(pending.current), []);
-  const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
-  React.useEffect(() => cancel, [cancel]);
-
-  const schedule = (): void => {
-    cancel();
-    pending.current = setTimeout(close, closeGraceMs);
-  };
-
-  return { close, cancel, schedule };
-}
-
-function cancelPending(pending: ReturnType<typeof setTimeout> | null): void {
-  if (pending) clearTimeout(pending);
 }
 
 function hoverActions(context: Root, environment: HoverEnvironment): Hover {
   return {
     isPointer: environment.intent.isPointer,
-    dismiss: () => {
-      environment.intent.suppress();
-      environment.timer.cancel();
-    },
     promote: () => {
       environment.intent.promote();
       environment.timer.cancel();
@@ -151,7 +109,6 @@ function enter(
   environment: HoverEnvironment,
   part: HoverPart,
 ): void {
-  if (environment.intent.isSuppressed()) return;
   environment.timer.cancel();
   markHovered(environment, part);
   openFromHover(context, environment);
@@ -170,15 +127,8 @@ function openFromHover(context: Root, environment: HoverEnvironment): void {
 }
 
 function leave(environment: HoverEnvironment, part: HoverPart): void {
-  if (environment.intent.isSuppressed()) {
-    environment.intent.clearSuppression();
-    if (leftLastPart(environment.hovered, part)) {
-      environment.parent?.leave(environment.id);
-    }
-
-    return;
-  }
   if (!leftLastPart(environment.hovered, part)) return;
+
   environment.parent?.leave(environment.id);
   scheduleClose(environment);
 }
