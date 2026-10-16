@@ -27,15 +27,11 @@ function joinButton(item: Item, index: number, count: number): ReactElement {
 }
 
 // Joins buttons edge to edge: no gap, and no corner radius where two meet.
-function ButtonGroup({
-  children,
-  className,
-  onLayout,
-}: ButtonGroupProps): ReactElement {
+function ButtonGroup({ children, className }: ButtonGroupProps): ReactElement {
   const items = Children.toArray(children).filter(isItem);
 
   return (
-    <View className={cn('flex-row', className)} onLayout={onLayout}>
+    <View className={cn('flex-row', className)}>
       {items.map((item, index) => joinButton(item, index, items.length))}
     </View>
   );
