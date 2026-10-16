@@ -2,7 +2,6 @@ import type { LiveHeader, Turn } from '@repo/contracts';
 import { feedRow } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
-import { heldPlanProposal } from '#mocks/held-plan-proposal';
 import { tool } from '#mocks/live-header-tool';
 import { toFeedRowWrite } from '../../feed';
 import { createLiveHeaderReader, type LiveSession } from './read';
@@ -24,7 +23,6 @@ const idleSession: LiveSession = {
   activeTurnStartedAt: null,
   permissionQueue: [],
   elicitationQueue: [],
-  planProposal: null,
 };
 
 const readingFirst = (startedAt: number): LiveHeader => ({
@@ -108,12 +106,12 @@ it('reads the latest Turn only without a Session actor', (): void => {
   expect(latestTurn).toEqual(['no Session actor']);
 });
 
-it('reads Plan ready for a Plan proposal on the Session actor while a Turn runs', (): void => {
-  const live: LiveSession = {
+it('ignores a Plan proposal on the Session actor while a Turn runs', (): void => {
+  const live = {
     ...idleSession,
     activeTurnId: 'turn-1',
     activeTurnStartedAt: 70,
-    planProposal: heldPlanProposal('plan-1'),
+    pendingPlanProposal: { planId: 'plan-1', content: 'A proposal' },
   };
 
   expect(
@@ -124,9 +122,5 @@ it('reads Plan ready for a Plan proposal on the Session actor while a Turn runs'
       memoryRows: {},
       writer: undefined,
     }).header,
-  ).toEqual({
-    text: 'Plan ready',
-    source: { type: 'request' },
-    startedAt: 70,
-  });
+  ).toEqual(readingFirst(70));
 });

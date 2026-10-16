@@ -7,14 +7,12 @@ import type {
   PendingPermission,
   PendingElicitation,
 } from '@repo/contracts';
-import type { HeldPlanProposal } from '../src/sessions';
 
 type LiveSession = {
   activeTurnId: string | null;
   activeTurnStartedAt: number | null;
   permissionQueue: readonly PendingPermission[];
   elicitationQueue: readonly PendingElicitation[];
-  planProposal: HeldPlanProposal | null;
   failure: string | null;
 };
 

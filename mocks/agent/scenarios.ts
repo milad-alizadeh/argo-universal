@@ -11,7 +11,6 @@ import {
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
 import { notificationScenarios } from './notification-scenarios.ts';
-import { planProposalSteps } from './plan-proposal-scenario.ts';
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { shellScenarios } from './shell-scenarios.ts';
@@ -112,7 +111,6 @@ export const scenarios = {
     }),
     reply,
   ]),
-  'plan-proposal': scenario([...planProposalSteps(), reply]),
   elicitation: scenario([
     {
       type: 'elicitation',

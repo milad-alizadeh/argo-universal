@@ -3,8 +3,6 @@ import {
   SessionAnswerElicitationOutput,
   SessionAnswerPermissionInput,
   SessionAnswerPermissionOutput,
-  SessionAnswerPlanProposalInput,
-  SessionAnswerPlanProposalOutput,
   SessionCancelInput,
   SessionCancelOutput,
   SessionCloseInput,
@@ -41,7 +39,6 @@ import type { SessionRouterDeps } from './router-deps';
 import {
   answerSessionElicitation,
   answerSessionPermission,
-  answerSessionPlanProposal,
 } from './session-answers';
 import { cancelSession, closeSession } from './session-closure';
 import { configureSession } from './session-configuration';
@@ -158,10 +155,6 @@ const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
       .input(SessionAnswerElicitationInput)
       .output(SessionAnswerElicitationOutput)
       .mutation(({ input }) => answerSessionElicitation(deps, input)),
-    answerPlanProposal: publicProcedure
-      .input(SessionAnswerPlanProposalInput)
-      .output(SessionAnswerPlanProposalOutput)
-      .mutation(({ input }) => answerSessionPlanProposal(deps, input)),
   }),
 );
 

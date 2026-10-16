@@ -23,15 +23,14 @@ const parsed = <Request>(
     ? { type: 'presented', request: result.data }
     : { type: 'rejected', reason: z.prettifyError(result.error) };
 
-export const toPermissionOption = ({
-  optionId,
-  name,
-  kind,
-}: RequestPermissionRequest['options'][number]): PermissionOption => ({
-  optionId,
-  name,
-  kind,
-});
+const toPermissionOptions = (
+  options: RequestPermissionRequest['options'],
+): PermissionOption[] =>
+  options.map(({ optionId, name, kind }): PermissionOption => ({
+    optionId,
+    name,
+    kind,
+  }));
 
 // ACP `session/request_permission`, presented with the Agent's exact options.
 export const toPendingPermission = (
@@ -43,7 +42,7 @@ export const toPendingPermission = (
       requestId,
       toolCallId: toolCall.toolCallId,
       title: toolCall.title ?? toolCall.name ?? toolCall.toolCallId,
-      options: options.map(toPermissionOption),
+      options: toPermissionOptions(options),
     }),
   );
 

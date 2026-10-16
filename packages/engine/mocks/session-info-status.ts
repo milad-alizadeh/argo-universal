@@ -1,4 +1,3 @@
-import { heldPlanProposal } from './held-plan-proposal';
 import { stored, idle, live, turn, information } from './session-info';
 import type { SessionInfoFixture } from './session-info-case';
 
@@ -64,30 +63,6 @@ export const rules: {
         activity: 'Waiting for your answer',
       },
       running: false,
-    },
-  },
-  {
-    rule: 'a Plan proposal needs input while its Turn runs',
-    input: {
-      ...idle,
-      live: {
-        ...live,
-        planProposal: heldPlanProposal('plan-1'),
-      },
-      liveHeader: {
-        text: 'Plan ready',
-        source: { type: 'request' },
-        startedAt: 50,
-      },
-      activeTurnId: 'turn-1',
-    },
-    expected: {
-      information: {
-        ...information,
-        status: 'needs_input',
-        activity: 'Plan ready',
-      },
-      running: true,
     },
   },
   {

@@ -51,6 +51,21 @@ const exactOptions: RequestPermissionRequest['options'] = [
   { optionId: reject, name: 'Reject', kind: 'reject_once' },
 ];
 
+// The options claude-agent-acp offers for ExitPlanMode.
+const exitPlanOptions: RequestPermissionRequest['options'] = [
+  {
+    optionId: 'exit-plan-accept-edits',
+    name: 'Yes, auto-accept edits',
+    kind: 'allow_always',
+  },
+  {
+    optionId: 'exit-plan-default',
+    name: 'Yes, manually approve edits',
+    kind: 'allow_once',
+  },
+  { optionId: 'reject', name: 'No, keep planning', kind: 'reject_once' },
+];
+
 const issueSchema = {
   type: 'object',
   properties: {
@@ -260,6 +275,42 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
       title: editToolTitle,
       options: exactOptions,
     });
+  });
+
+  // As in Zed: Claude's ExitPlanMode is an ordinary Permission request; its Tool call carries the plan and every option stays.
+  it('presents a request to leave plan mode as a Permission request with all its options', async () => {
+    const outcomes: Outcomes = [];
+    const plan = '1. Read README.md\n2. Fix the typo';
+
+    const toolCall = {
+      toolCallId: 'leave-plan-mode',
+      title: 'Approve Plan',
+      kind: 'switch_mode',
+      rawInput: { plan },
+      content: [{ type: 'content', content: { type: 'text', text: plan } }],
+    } satisfies RequestPermissionRequest['toolCall'];
+
+    const { host, sessionId } = await startSession(agent, [
+      { type: 'update', update: { sessionUpdate: 'tool_call', ...toolCall } },
+      {
+        type: 'permission',
+        request: { toolCall, options: exitPlanOptions },
+        responses: outcomes,
+      },
+    ]);
+
+    const pending = await waitForPermission(host, sessionId);
+
+    expect(pending.options).toEqual(exitPlanOptions);
+    await host.caller.session.answerPermission({
+      sessionId,
+      requestId: pending.requestId,
+      optionId: 'reject',
+    });
+    await waitForAcpSessionIdle(host, sessionId);
+    expect(outcomes).toEqual([
+      { outcome: { outcome: 'selected', optionId: 'reject' } },
+    ]);
   });
 
   it('settles only the answered request with its exact option while the prompt still runs', async () => {

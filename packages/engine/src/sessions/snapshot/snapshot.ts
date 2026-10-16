@@ -1,5 +1,4 @@
 import type { ChangesSummary, SessionSnapshot } from '@repo/contracts';
-import { shownPlanProposal } from '../acp/requests/plan-proposal';
 import { toShell } from '../acp/shells/shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
 import { snapshotState, type SessionState } from './state';
@@ -26,7 +25,6 @@ type SessionDisplayContext = Pick<
   | 'usage'
   | 'permissionQueue'
   | 'elicitationQueue'
-  | 'planProposal'
   | 'configOptions'
   | 'heldConfig'
 >;
@@ -57,7 +55,6 @@ const idleContext: SessionDisplayContext = {
   usage: null,
   permissionQueue: [],
   elicitationQueue: [],
-  planProposal: null,
   configOptions: [],
   heldConfig: [],
 };
@@ -108,7 +105,7 @@ function sessionFields(session: SessionState | null): SessionFields {
     usage: context.usage,
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.elicitationQueue[0] ?? null,
-    pendingPlanProposal: shownPlanProposal(context),
+    pendingPlanProposal: null,
     configOptions: withHeldConfiguration(
       context.configOptions,
       context.heldConfig,

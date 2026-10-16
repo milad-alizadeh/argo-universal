@@ -32,22 +32,6 @@ const expectAcpState = (
   }
 };
 
-type ModelStep = ReturnType<
-  typeof createAcpSessionModel
->['paths'][number]['steps'][number];
-
-// Approve answers the Agent alone and drops earlier feedback; Keep planning's feedback waits as the next prompt.
-const expectPlanAnswer = ({ event, state }: ModelStep): void => {
-  if (event.type !== 'session.answerPlanProposal') return;
-
-  expect(state.context.planProposal).toBeNull();
-  expect(state.context.pendingSubmission?.content.at(-1) ?? null).toEqual(
-    event.decision === 'keep_planning'
-      ? { type: 'text', text: event.feedback }
-      : null,
-  );
-};
-
 const pathStates = (
   path: ReturnType<typeof createAcpSessionModel>['paths'][number],
 ): AcpModelSnapshot[] => path.steps.map((step) => step.state);
@@ -97,8 +81,6 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
             });
           }
 
-          expectPlanAnswer(step);
-
           if (step.event.type === feedFlushDelayEvent)
             expect(step.state.context.failure).not.toBeNull();
         }
@@ -113,13 +95,6 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       ).toEqual([]);
       const states = paths.flatMap(pathStates);
       expect(states.some((state) => state.matches('archived'))).toBe(true);
-      expect(
-        states.some((state) =>
-          state.matches({
-            open: { acp: { activeTurn: 'awaitingPlanProposal' } },
-          }),
-        ),
-      ).toBe(true);
       expect(paths.length).toBeGreaterThan(0);
       await host.caller.session.close(created);
     },

@@ -23,8 +23,7 @@ function activeState(session: SessionState): SessionSnapshot['state'] {
 function needsAction(session: SessionState): boolean {
   return (
     session.matches({ open: { acp: { activeTurn: 'awaitingPermission' } } }) ||
-    session.matches({ open: { acp: { activeTurn: 'awaitingElicitation' } } }) ||
-    session.matches({ open: { acp: { activeTurn: 'awaitingPlanProposal' } } })
+    session.matches({ open: { acp: { activeTurn: 'awaitingElicitation' } } })
   );
 }
 

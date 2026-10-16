@@ -8,7 +8,6 @@ import {
 } from 'xstate/graph';
 import type { AcpSessionLease } from '../src/agents';
 import { sessionMachine } from '../src/sessions';
-import { heldPlanProposal } from './held-plan-proposal';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
 
@@ -17,10 +16,6 @@ const closeEvent = 'session.close';
 const updateEvent = 'acp.update';
 
 const modelRequest = 'model-request';
-
-const modelPlan = 'model-plan';
-
-const answerPlanEvent = 'session.answerPlanProposal';
 
 const canApplyLifecycleEvent = (
   snapshot: AcpModelSnapshot,
@@ -86,8 +81,7 @@ const canApplyLifecycleEvent = (
     event.type === 'session.setConfigOption' ||
     event.type === 'session.storageFailing' ||
     event.type === 'session.answerPermission' ||
-    event.type === 'session.answerElicitation' ||
-    event.type === answerPlanEvent
+    event.type === 'session.answerElicitation'
   )
     return snapshot.can(event);
 
@@ -359,25 +353,7 @@ export const createAcpSessionModel = (
       requestId: modelRequest,
       action: 'decline',
     },
-    {
-      type: 'acp.planProposed',
-      request: heldPlanProposal(modelPlan),
-    },
-    {
-      type: answerPlanEvent,
-      sessionId: 'model-session',
-      planId: modelPlan,
-      decision: 'approve',
-    },
-    {
-      type: answerPlanEvent,
-      sessionId: 'model-session',
-      planId: modelPlan,
-      decision: 'keep_planning',
-      feedback: 'Model feedback',
-    },
     { type: 'acp.requestWithdrawn', requestId: modelRequest },
-    { type: 'acp.requestWithdrawn', requestId: modelPlan },
     { type: 'agent.messageRejected', reason: 'Malformed model question' },
     { type: 'session.storageFailing' },
     { type: closeEvent },
@@ -424,7 +400,7 @@ export const createAcpSessionModel = (
   const options = {
     fromState,
     events,
-    limit: 20_000,
+    limit: 10_000,
     serializeEvent: acpModelEventKey,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
       snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),

@@ -1,10 +1,6 @@
 import type { LiveHeader, SessionUpdate, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import type { WriterActorRef } from '../../storage';
-import {
-  type HeldPlanProposal,
-  shownPlanProposal,
-} from '../acp/requests/plan-proposal';
 import { toLiveHeader, type LiveHeaderInput } from './header';
 import { createLiveHeaderRowsReader } from './rows';
 
@@ -12,9 +8,7 @@ type ActiveTurn = Pick<LiveHeaderInput, 'activeTurnId' | 'activeTurnStartedAt'>;
 
 // The part of a Session actor's context the Live header reads.
 export type LiveSession = ActiveTurn &
-  Pick<LiveHeaderInput, 'permissionQueue' | 'elicitationQueue'> & {
-    planProposal: HeldPlanProposal | null;
-  };
+  Pick<LiveHeaderInput, 'permissionQueue' | 'elicitationQueue'>;
 
 export type LiveHeaderRead = {
   sessionId: string;
@@ -82,14 +76,10 @@ function headerSession({ live, latestTurn }: LiveHeaderRead): LiveHeaderInput {
 
 function requests(
   live: LiveSession,
-): Pick<
-  LiveHeaderInput,
-  'permissionQueue' | 'elicitationQueue' | 'pendingPlanProposal'
-> {
+): Pick<LiveHeaderInput, 'permissionQueue' | 'elicitationQueue'> {
   return {
     permissionQueue: live.permissionQueue,
     elicitationQueue: live.elicitationQueue,
-    pendingPlanProposal: shownPlanProposal(live),
   };
 }
 
