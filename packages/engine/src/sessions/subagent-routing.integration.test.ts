@@ -273,6 +273,26 @@ it('retains delegated message patches and chunks with the reported child Turn ou
   expect(
     page.rows.filter((row) => row.sessionUpdate === 'session_message'),
   ).toHaveLength(1);
+
+  const parentPage = await host.caller.feed.page({
+    sessionId,
+    direction: 'tail',
+  });
+
+  // Patches and chunks of the parent's outgoing message revise one prompt.
+  expect(
+    parentPage.rows.flatMap((row) =>
+      row.sessionUpdate === 'subagent_update' &&
+      row._meta?.argo?.action === 'message'
+        ? [row._meta.argo.prompt]
+        : [],
+    ),
+  ).toEqual([
+    [
+      { type: 'text', text: 'Revised' },
+      { type: 'text', text: ' instruction' },
+    ],
+  ]);
 });
 
 it.each(['idle', 'cancelled'] as const)(

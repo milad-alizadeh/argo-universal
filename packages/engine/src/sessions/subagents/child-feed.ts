@@ -59,22 +59,30 @@ function storedIdentity(
   };
 }
 
+// `spawned` says the Subagent is new rather than stored before a restart or resume.
+export type OpenedChildFeed = { child: ChildFeed; spawned: boolean };
+
+const childFeed = (
+  input: SubagentRouting,
+  identity: FeedIdentity,
+): ChildFeed => ({
+  sessionId: identity.sessionId,
+  parentId: input.parentId,
+  feed: input.spawn(childFeedInput(input, identity)),
+  turnId: activeChildTurn(input, identity.sessionId),
+});
+
 export function openChildFeed(
   input: SubagentRouting,
   vendorId: string,
-): ChildFeed {
+): OpenedChildFeed {
   const stored = storedChild(input, vendorId);
   const identity = storedIdentity(stored, input.createId);
   const { sessionId } = identity;
 
   if (!stored) input.write(childInsert(input, { sessionId, vendorId }));
 
-  return {
-    sessionId,
-    parentId: input.parentId,
-    feed: input.spawn(childFeedInput(input, identity)),
-    turnId: activeChildTurn(input, sessionId),
-  };
+  return { child: childFeed(input, identity), spawned: !stored };
 }
 
 const parentFields = (

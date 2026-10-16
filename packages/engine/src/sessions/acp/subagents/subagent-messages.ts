@@ -1,5 +1,6 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type {
+  ContentBlock,
   SessionMessage,
   SessionUpdate,
   FeedUpdate,
@@ -7,16 +8,17 @@ import type {
 import { mapSupportedContentBlock } from '../../../feed';
 import type { ChildFeed } from '../../subagents/child-feed';
 import type { SubagentRouting } from '../../subagents/routing-types';
+import {
+  type Message,
+  type MessageRouting,
+  previousResult,
+  previousResultContent,
+  replier,
+  sendMessageAction,
+} from './subagent-actions';
 import { messageMetadata } from './subagent-sender';
 
-type Message = Extract<
-  SessionNotification['update'],
-  { sessionUpdate: 'session_message' | 'session_message_chunk' }
->;
-
-type MessageRouting = SubagentRouting & {
-  children: ReadonlyMap<string, ChildFeed>;
-};
+export type { MessageRouting } from './subagent-actions';
 
 const messageId = (input: SubagentRouting, update: Message): string =>
   JSON.stringify(['session_message', input.parentId, update.messageId]);
@@ -32,13 +34,13 @@ function previousMessage(
 }
 
 function recipient(
-  input: SubagentRouting,
-  children: ReadonlyMap<string, ChildFeed>,
+  input: MessageRouting,
   update: Message,
 ): ChildFeed | undefined {
-  if (update.recipientSessionId) return children.get(update.recipientSessionId);
+  if (update.recipientSessionId)
+    return input.children.get(update.recipientSessionId);
 
-  return [...children.values()].find(
+  return [...input.children.values()].find(
     (child) => previousMessage(child, messageId(input, update)) !== undefined,
   );
 }
@@ -48,28 +50,21 @@ const asSessionMessage = (
 ): SessionMessage | undefined =>
   row?.sessionUpdate === 'session_message' ? row : undefined;
 
-const previousContent = (
-  previous: SessionMessage | undefined,
-): SessionMessage['content'] => previous?.content ?? [];
-
 function replaceContent(
   update: Extract<Message, { sessionUpdate: 'session_message' }>,
-  previous: SessionMessage | undefined,
-): SessionMessage['content'] {
-  if (update.content === undefined) return previousContent(previous);
+  previous: ContentBlock[],
+): ContentBlock[] {
+  if (update.content === undefined) return previous;
 
   return (update.content ?? []).map(mapSupportedContentBlock);
 }
 
 function messageContent(
   update: Message,
-  previous: SessionMessage | undefined,
-): SessionMessage['content'] {
+  previous: ContentBlock[] = [],
+): ContentBlock[] {
   if (update.sessionUpdate === 'session_message_chunk')
-    return [
-      ...previousContent(previous),
-      mapSupportedContentBlock(update.content),
-    ];
+    return [...previous, mapSupportedContentBlock(update.content)];
 
   return replaceContent(update, previous);
 }
@@ -84,7 +79,7 @@ function messageRow(
   input: MessageRouting,
   child: ChildFeed,
   update: Message,
-): FeedUpdate {
+): Extract<FeedUpdate, { sessionUpdate: 'session_message' }> {
   const previous = previousMessage(child, messageId(input, update));
 
   return {
@@ -92,26 +87,56 @@ function messageRow(
     messageId: update.messageId,
     sessionUpdate: 'session_message',
     state: 'settled',
-    content: messageContent(update, previous),
+    content: messageContent(update, previous?.content),
     _meta: messageMetadata(input, update, previous),
   };
 }
 
-export function deliverSubagentMessage(
-  input: SubagentRouting,
-  children: ReadonlyMap<string, ChildFeed>,
-  update: Message,
-): boolean {
-  const child = recipient(input, children, update);
+// The parent's outgoing message to its own child is that child's prompt.
+function deliverPrompt(input: MessageRouting, update: Message): boolean {
+  const child = recipient(input, update);
 
   if (!child) return false;
 
-  const change = {
-    type: 'upsert' as const,
-    update: messageRow({ ...input, children }, child, update),
-  };
+  const row = messageRow(input, child, update);
+  const prompt = row.content;
 
-  child.feed.send({ type: 'feed.change', turnId: child.turnId, change });
+  child.feed.send({
+    type: 'feed.change',
+    turnId: child.turnId,
+    change: { type: 'upsert', update: row },
+  });
+
+  if (isOutgoing(input, child, row))
+    sendMessageAction(input, child, { ...update, field: { prompt } });
 
   return true;
 }
+
+const senderOf = (row: Pick<SessionMessage, '_meta'>): string | undefined =>
+  row._meta?.argo?.senderSessionId;
+
+const isOutgoing = (
+  input: MessageRouting,
+  child: ChildFeed,
+  row: Pick<SessionMessage, '_meta'>,
+): boolean =>
+  child.parentId === input.parentId && senderOf(row) === input.parentId;
+
+function deliverResult(input: MessageRouting, update: Message): boolean {
+  const child = replier(input, update);
+
+  if (!child) return false;
+
+  const previous = previousResult(input, update.messageId);
+  const result = messageContent(update, previousResultContent(previous));
+
+  sendMessageAction(input, child, { ...update, field: { result } });
+
+  return true;
+}
+
+export const deliverSubagentMessage = (
+  input: MessageRouting,
+  update: Message,
+): boolean => deliverResult(input, update) || deliverPrompt(input, update);

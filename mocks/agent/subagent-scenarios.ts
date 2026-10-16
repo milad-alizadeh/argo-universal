@@ -4,6 +4,11 @@ import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 
 export const subagentSessionId = 'subagent-review';
 
+// The parent's ACP id, so the child can address its explicit reply to it.
+const subagentParentSessionId = 'subagent-parent';
+
+const sessionIds = [subagentParentSessionId];
+
 const state = (
   value: 'running' | 'idle' | 'requires_action',
 ): ScriptedStep => ({
@@ -39,7 +44,20 @@ const delegation = (messageId: string, text: string): ScriptedStep => ({
   },
 });
 
+// The parent transcript's view of the child's explicit reply (ACP subagents RFD).
+const reply = (text: string): ScriptedStep => ({
+  type: 'update',
+  update: {
+    sessionUpdate: 'session_message',
+    messageId: 'review-reply',
+    senderSessionId: subagentSessionId,
+    recipientSessionId: subagentParentSessionId,
+    content: [{ type: 'text', text }],
+  },
+});
+
 export const foregroundSubagent: ScriptedScenario = {
+  sessionIds,
   steps: [
     delegation('review', 'Review the change.'),
     state('running'),
@@ -47,6 +65,7 @@ export const foregroundSubagent: ScriptedScenario = {
     state('requires_action'),
     state('running'),
     childMessage('The review is complete.'),
+    reply('The change looks correct.'),
     state('idle'),
     message('The Subagent finished its review.'),
   ],
@@ -63,6 +82,7 @@ export const backgroundSubagent: ScriptedScenario = {
 };
 
 export const subagentMoreWork: ScriptedScenario = {
+  sessionIds,
   steps: [],
   responses: {
     'session/prompt': [

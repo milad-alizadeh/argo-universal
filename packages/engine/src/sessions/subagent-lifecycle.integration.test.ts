@@ -73,6 +73,18 @@ it('finishes the original child Turn when its resumed parent receives an idle ou
   });
 
   expect(page.rows.every((row) => row.state === 'settled')).toBe(true);
+
+  // The resumed parent's update names a stored child, so it spawns nothing new.
+  const parentPage = await host.caller.feed.page({
+    sessionId,
+    direction: 'tail',
+  });
+
+  expect(
+    parentPage.rows.flatMap((row) =>
+      row.sessionUpdate === 'subagent_update' ? [row._meta?.argo?.action] : [],
+    ),
+  ).toEqual(['spawn', 'message', undefined]);
 });
 
 it.each(appFixtureAgentIds)(
