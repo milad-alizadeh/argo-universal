@@ -29,7 +29,7 @@ import {
 import { AgentProcessExitError } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
-import { isAuthRequired, sessionOpenError } from '../agents';
+import { sessionOpenError } from '../agents';
 import { attachmentsFolderIn, blobsFolderIn } from '../blob';
 import {
   messageRejectedEvent,
@@ -954,15 +954,6 @@ const sessionEntryOutcome = {
   },
 } as const;
 
-const promptFailureReason = (
-  context: SessionContext,
-  cause: unknown,
-): StopReason => {
-  if (context.turnEnding.kind === 'cancel') return 'cancelled';
-
-  return isAuthRequired(cause) ? 'auth_required' : 'error';
-};
-
 const acpTurnOutcome = ({
   context,
 }: {
@@ -1356,8 +1347,11 @@ export const sessionMachine = sessionSetup.createMachine({
                     },
                     {
                       type: 'rememberAcpOutcome',
-                      params: ({ context, event }): EndTurnParameters => ({
-                        stopReason: promptFailureReason(context, event.error),
+                      params: ({ context }): EndTurnParameters => ({
+                        stopReason:
+                          context.turnEnding.kind === 'cancel'
+                            ? 'cancelled'
+                            : 'error',
                       }),
                     },
                   ],

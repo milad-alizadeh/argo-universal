@@ -1,13 +1,17 @@
 import type {
+  AgentAuthChange,
   AgentAuthenticateOutput,
   AgentAuthState,
   AgentLoginTerminalInput,
   AgentAuthTerminalFrame,
 } from '@repo/contracts';
-import type { AuthenticationMethod } from '../acp/auth-methods';
-import { authenticationDescription } from '../acp/open-error';
+import {
+  publicAuthenticationMethod,
+  type AuthenticationMethod,
+} from '../acp/auth-methods';
+import { authenticationDescription, isAuthRequired } from '../acp/open-error';
 import type { AgentLaunch, LaunchLoginTerminal } from '../agent-launch';
-import { AuthTerminal } from './terminal-auth';
+import { AuthTerminal, terminalMethodLaunch } from './terminal-auth';
 
 type AuthenticationInput = {
   launch: AgentLaunch;
@@ -15,6 +19,7 @@ type AuthenticationInput = {
   authenticate: (methodId: string) => Promise<void>;
   drop: () => void;
   settled: () => void;
+  changed: (change: AgentAuthChange) => void;
   launchTerminal?: LaunchLoginTerminal;
 };
 
@@ -32,29 +37,16 @@ export const authenticationFailed = (
   message: cause instanceof Error ? cause.message : String(cause),
 });
 
-const publicMethod = (
-  method: AuthenticationMethod,
-): AgentAuthState['methods'][number] => {
-  const result: AgentAuthState['methods'][number] = {
-    id: method.id,
-    name: method.name,
-    type: method.type,
-  };
-
-  if (method.description !== undefined) result.description = method.description;
-
-  return result;
-};
-
 export class ConnectionAuthentication {
   private pending?: Attempt;
+  private outcome: AgentAuthenticateOutput | null = null;
   private description?: string;
   private terminal?: AuthTerminal;
   private closed = false;
   public constructor(private readonly input: AuthenticationInput) {}
   public state(): AgentAuthState {
     const state: AgentAuthState = {
-      methods: this.input.methods.map(publicMethod),
+      methods: this.input.methods.map(publicAuthenticationMethod),
       pending: this.pending ? { methodId: this.pending.methodId } : null,
     };
 
@@ -62,8 +54,14 @@ export class ConnectionAuthentication {
 
     return state;
   }
+  // An open or a prompt failed with ACP `auth_required`: every App watching this Agent and Project can offer sign-in.
   public recordRequired(cause: unknown): void {
+    if (!isAuthRequired(cause)) return;
     this.description = authenticationDescription(cause);
+    this.publish();
+  }
+  private publish(): void {
+    this.input.changed({ ...this.state(), outcome: this.outcome });
   }
   public authenticate(methodId: string): Promise<AgentAuthenticateOutput> {
     return this.pending?.promise ?? this.begin(methodId);
@@ -91,14 +89,22 @@ export class ConnectionAuthentication {
     const promise = this.run(method, controller.signal)
       .then<AgentAuthenticateOutput>(() => ({ status: 'ok' }))
       .catch(authenticationFailed)
-      .finally(() => {
-        this.pending = undefined;
-        this.input.settled();
+      .then((outcome) => {
+        this.settle(outcome);
+
+        return outcome;
       });
 
     this.rememberAttempt(method, controller, promise);
+    this.publish();
 
     return promise;
+  }
+  private settle(outcome: AgentAuthenticateOutput): void {
+    this.pending = undefined;
+    this.outcome = outcome;
+    this.publish();
+    this.input.settled();
   }
   private rememberAttempt(
     method: AuthenticationMethod,
@@ -126,13 +132,11 @@ export class ConnectionAuthentication {
   ): Promise<void> {
     this.terminal = new AuthTerminal(this.input.launchTerminal);
 
-    const launch = {
-      ...this.input.launch,
-      args: [...this.input.launch.args, ...(method.args ?? [])],
-      env: { ...this.input.launch.env, ...method.env },
-    };
-
-    return this.terminal.run({ launch, methodId: method.id, signal });
+    return this.terminal.run({
+      launch: terminalMethodLaunch(this.input.launch, method),
+      methodId: method.id,
+      signal,
+    });
   }
   public async cancel(drop = true): Promise<void> {
     const pending = this.pending;

@@ -4,12 +4,20 @@ const environment = new Map<string, Readonly<Record<string, string>>>([
   ['claude-acp', { ANTHROPIC_API_KEY: '' }],
 ]);
 
+// Terminal sign-in output that means success before the program exits, by Agent then method (Zed `conversation_view.rs`).
+const terminalSuccess = new Map<
+  string,
+  Readonly<Record<string, readonly string[]>>
+>([
+  ['claude-acp', { 'claude-login': ['Login successful', 'Type your message'] }],
+]);
+
 export const vendorEnvironment = (
   launch: Pick<AgentLaunch, 'registryId'>,
 ): Readonly<Record<string, string>> =>
   launch.registryId ? (environment.get(launch.registryId) ?? {}) : {};
 
-export const terminalAuthSuccessPatterns = (
+export const terminalSuccessPatterns = (
+  launch: Pick<AgentLaunch, 'agentId'>,
   methodId: string,
-): readonly string[] =>
-  methodId === 'claude-login' ? ['Login successful', 'Type your message'] : [];
+): readonly string[] => terminalSuccess.get(launch.agentId)?.[methodId] ?? [];

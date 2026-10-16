@@ -1,7 +1,7 @@
 import type {
   AgentLoginSnapshot,
   AgentLoginAnswer,
-  AgentLoginTerminalFrame,
+  AgentAuthTerminalFrame,
   AgentLoginTerminalInput,
 } from '@repo/contracts';
 import { createActor } from 'xstate';
@@ -89,7 +89,7 @@ export class LoginOperation {
       throw new Error('Login method was not advertised');
     this.actor.send({ type: 'choose', methodId });
   }
-  public readTerminal(cursor: number): AgentLoginTerminalFrame {
+  public readTerminal(cursor: number): AgentAuthTerminalFrame {
     if (!this.isTerminalRunning()) return { cursor, output: '', closed: true };
 
     return this.resources.readTerminal(cursor);

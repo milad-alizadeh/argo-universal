@@ -10,6 +10,7 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '..';
+import type { AuthChanges } from '../auth/auth-changes';
 import { ConnectionAuthentication } from '../auth/authenticate';
 import { authenticationMethods } from './auth-methods';
 import { createAgentClient, awaitAcpOpening } from './client';
@@ -38,6 +39,13 @@ type AgentSession = {
 };
 
 type Registration = { opening: AcpOpenInput; session: AgentSession };
+
+// What the shared resources hear from one connection.
+type ConnectionHooks = {
+  forget: () => void;
+  idle: () => void;
+  authChanges: AuthChanges;
+};
 
 type OpeningResponse = Extract<AnyMessage, { result: unknown }>;
 
@@ -129,8 +137,7 @@ export class AcpConnection {
   private authentication?: ConnectionAuthentication;
   public constructor(
     private readonly input: AcpResourceInput,
-    private readonly forget: () => void,
-    private readonly idle: () => void,
+    private readonly hooks: ConnectionHooks,
   ) {}
   public async start(launch: AgentLaunch): Promise<this> {
     this.launching = (this.input.launchProcess ?? launchAcpProcess)(launch);
@@ -155,9 +162,14 @@ export class AcpConnection {
       launch,
       methods: authenticationMethods(this.requireReady().initialization),
       authenticate: (methodId): Promise<void> => this.authenticate(methodId),
-      drop: this.forget,
-      settled: this.idle,
-      launchTerminal: this.input.launchAuthTerminal,
+      drop: this.hooks.forget,
+      settled: this.hooks.idle,
+      changed: (change): void =>
+        this.hooks.authChanges.publish(
+          { agent: launch.agentId, projectId: launch.projectId },
+          change,
+        ),
+      launchTerminal: this.input.launchLoginTerminal,
     });
   }
   private async authenticate(methodId: string): Promise<void> {
@@ -298,7 +310,7 @@ export class AcpConnection {
     this.registrations.delete(message.id);
 
     const registered = this.registerKnown(registration, message);
-    this.idle();
+    this.hooks.idle();
 
     return registered;
   }
@@ -478,12 +490,12 @@ export class AcpConnection {
 
     if (this.agentSessions.get(id) === session) this.agentSessions.delete(id);
     session.released.resolve();
-    this.idle();
+    this.hooks.idle();
   }
   private fail(error: Error): void {
     if (this.failure) return;
     this.failure = error;
-    this.forget();
+    this.hooks.forget();
 
     for (const [id, session] of this.agentSessions) {
       session.destination.failed(error);

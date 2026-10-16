@@ -1,4 +1,4 @@
-import type { AgentLoginTerminalFrame } from '@repo/contracts';
+import type { AgentAuthTerminalFrame } from '@repo/contracts';
 
 export const terminalOutput = {
   cursor: 103,
@@ -10,4 +10,4 @@ export const terminalIdle = { cursor: terminalOutput.cursor, output: '' };
 
 export const readTerminalFrame = async (
   cursor: number,
-): Promise<AgentLoginTerminalFrame> => (cursor ? terminalIdle : terminalOutput);
+): Promise<AgentAuthTerminalFrame> => (cursor ? terminalIdle : terminalOutput);

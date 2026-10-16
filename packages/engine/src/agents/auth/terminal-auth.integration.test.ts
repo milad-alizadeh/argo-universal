@@ -1,3 +1,4 @@
+import { fixtureRegistryIds } from '@repo/mocks/agent/app-fixtures';
 import { terminalLogin } from '@repo/mocks/agent/terminal-login';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
@@ -106,23 +107,30 @@ it(
   },
 );
 
+// The vendor table keys these patterns by Agent id; the first fixture Registry id is the one it lists.
+const claudeAgent = String(fixtureRegistryIds[0]);
+
 it.each(['Login successful', 'Type your message'])(
   'claude-login succeeds on %s and kills the still-running PTY',
   terminalStartup,
   async (pattern) => {
-    const host = await startTerminalAuth({
-      id: 'claude-login',
-      args: ['--auth-pattern', pattern],
-      env: { ARGO_AUTH_VALUE: 'method-env' },
-    });
+    const host = await startTerminalAuth(
+      {
+        id: 'claude-login',
+        args: ['--auth-pattern', pattern],
+        env: { ARGO_AUTH_VALUE: 'method-env' },
+      },
+      claudeAgent,
+    );
 
     expect(
       await host.caller.agents.authenticate({
         ...subject,
+        agent: claudeAgent,
         methodId: 'claude-login',
       }),
     ).toEqual({ status: 'ok' });
-    expect(await readTerminal(host)).toMatchObject({
+    expect(await readTerminal(host, claudeAgent)).toMatchObject({
       closed: true,
       output: expect.stringContaining('method-env'),
     });

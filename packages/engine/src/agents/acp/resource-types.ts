@@ -12,6 +12,7 @@ import type {
 } from '@agentclientprotocol/sdk';
 import type { AgentLaunch } from '..';
 import type { LaunchLoginTerminal } from '..';
+import type { AuthChanges } from '../auth/auth-changes';
 import type { ConnectionAuthentication } from '../auth/authenticate';
 
 export type AcpSessionOpening =
@@ -52,7 +53,6 @@ export type AcpProcess = {
 
 export type AcpResourceInput = {
   launchLoginTerminal?: LaunchLoginTerminal;
-  launchAuthTerminal?: LaunchLoginTerminal;
   launchProcess?: (launch: AgentLaunch) => Promise<AcpProcess>;
   closeTimeoutMs?: number;
 };
@@ -63,6 +63,7 @@ export type AcpResources = {
     agent: string,
     projectId: string,
   ) => Promise<ConnectionAuthentication> | undefined;
+  authChanges: Pick<AuthChanges, 'watch'>;
   invalidateAgent: (agentId: string) => void;
   dropAgentConnections: (agentId: string) => void;
   isDirectoryInUse: (directory: string) => boolean;

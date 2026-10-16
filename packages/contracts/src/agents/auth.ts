@@ -33,6 +33,13 @@ export const AgentAuthenticateOutput = z.discriminatedUnion('status', [
 
 export type AgentAuthenticateOutput = z.infer<typeof AgentAuthenticateOutput>;
 
+// One `agents.authChanges` value: the shared sign-in state and the last attempt's outcome, if any.
+export const AgentAuthChange = AgentAuthState.extend({
+  outcome: AgentAuthenticateOutput.nullable(),
+});
+
+export type AgentAuthChange = z.infer<typeof AgentAuthChange>;
+
 export const AgentAuthTerminalRead = AgentAuthSubject.extend({
   cursor: z.number().int().min(0).max(loginTerminalOutputLimit),
 });

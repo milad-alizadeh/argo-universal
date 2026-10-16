@@ -1,6 +1,6 @@
 import { RequestError, type NewSessionRequest } from '@agentclientprotocol/sdk';
 import { protocolSessionLogin } from '@repo/mocks/agent/protocol-login';
-import { expect, it } from 'vitest';
+import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { agentCredentials } from '#mocks/agent-credentials';
@@ -35,7 +35,7 @@ it('an auth-required New worktree open at Send stores no Turn and discards the C
   expect(git('branch', '--list', 'argo/*')).toBe('');
 });
 
-it('a mid-Turn auth_required ends its Turn with auth_required', async () => {
+it('a mid-Turn auth_required ends its Turn error and tells watching Apps sign-in is required', async () => {
   const host = await startAcpEngine({
     steps: [],
     responses: {
@@ -46,6 +46,16 @@ it('a mid-Turn auth_required ends its Turn with auth_required', async () => {
   });
 
   const session = await host.caller.session.new(emptySessionInput);
+  const watching = new AbortController();
+  onTestFinished(() => watching.abort());
+
+  const changes = (
+    await host
+      .createCaller({ signal: watching.signal })
+      .agents.authChanges({ agent: 'mock', projectId: 'project-1' })
+  )[Symbol.asyncIterator]();
+
+  const required = changes.next();
   await host.caller.session.prompt({
     ...session,
     prompt: [{ type: 'text', text: 'Start' }],
@@ -55,7 +65,12 @@ it('a mid-Turn auth_required ends its Turn with auth_required', async () => {
     host.database.$client
       .prepare('SELECT status, stop_reason FROM turn WHERE session_id = ?')
       .get(session.sessionId),
-  ).toEqual({ status: 'ended', stop_reason: 'auth_required' });
+  ).toEqual({ status: 'ended', stop_reason: 'error' });
+  expect((await required).value).toEqual({
+    methods: [],
+    pending: null,
+    outcome: null,
+  });
 });
 
 it('a past Session reports a typed auth-required failure through its Feed subscription', async () => {

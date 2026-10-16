@@ -38,6 +38,20 @@ const stateRouter = routerFactory((deps: AgentsRouterDeps) =>
   }),
 );
 
+const changesRouter = routerFactory((deps: AgentsRouterDeps) =>
+  router({
+    authChanges: publicProcedure
+      .input(AgentAuthSubject)
+      .subscription(({ input, signal }) => {
+        if (!signal) throw new Error('Auth subscription signal is missing');
+
+        return deps.sessionConnections
+          .acpResources()
+          .authChanges.watch(input, signal);
+      }),
+  }),
+);
+
 const terminalRouter = routerFactory((deps: AgentsRouterDeps) =>
   router({
     authTerminal: publicProcedure
@@ -51,5 +65,5 @@ const terminalRouter = routerFactory((deps: AgentsRouterDeps) =>
 );
 
 export const createAuthRouter = routerFactory((deps: AgentsRouterDeps) =>
-  mergeRouters(stateRouter(deps), terminalRouter(deps)),
+  mergeRouters(stateRouter(deps), changesRouter(deps), terminalRouter(deps)),
 );

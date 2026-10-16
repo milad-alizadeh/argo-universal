@@ -1,4 +1,5 @@
 import type { AgentLaunch } from '..';
+import { AuthChanges } from '../auth/auth-changes';
 import type { ConnectionAuthentication } from '../auth/authenticate';
 import { awaitAcpOpening } from './client';
 import { AcpConnection } from './connection';
@@ -21,6 +22,7 @@ class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, Entry>();
   private stopped = false;
   private readonly connections = new Set<Entry>();
+  public readonly authChanges = new AuthChanges();
   public constructor(private readonly input: AcpResourceInput) {}
   public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
     if (this.stopped) throw new Error('ACP resources are stopped');
@@ -68,17 +70,14 @@ class EngineAcpResources implements AcpResources {
     return this.start(key, launch);
   }
   private start(key: string, launch: AgentLaunch): Entry {
-    const connection = new AcpConnection(
-      this.input,
-      () => this.forget(key, connection),
-      () => this.connectionIdle(connection),
-    );
+    const connection: AcpConnection = new AcpConnection(this.input, {
+      forget: () => this.forget(key, connection),
+      idle: () => this.connectionIdle(connection),
+      authChanges: this.authChanges,
+    });
 
-    const entry = createEntry(
-      launch,
-      connection,
-      this.connect(key, connection, launch),
-    );
+    const connecting = this.connect(key, connection, launch);
+    const entry = createEntry(launch, connection, connecting);
 
     this.entries.set(key, entry);
     this.connections.add(entry);

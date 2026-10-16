@@ -60,3 +60,10 @@ export const authenticationMethods = (
   initialization: InitializeResponse,
 ): AuthenticationMethod[] =>
   (initialization.authMethods ?? []).flatMap(readMethod);
+
+// The method as every App sees it, without the terminal invocation.
+export const publicAuthenticationMethod = ({
+  args: _args,
+  env: _env,
+  ...method
+}: AuthenticationMethod): AgentAuthState['methods'][number] => method;

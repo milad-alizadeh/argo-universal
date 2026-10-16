@@ -28,28 +28,34 @@ export type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 // An Engine whose scripted Agent offers one terminal method, after an open has started the Agent.
 export const startTerminalAuth = async (
   method: Partial<AuthMethodTerminal>,
+  agent = subject.agent,
 ): Promise<Host> => {
-  const host = await startAcpEngine({
-    ...terminalLogin,
-    responses: {},
-    steps: [],
-    initialize: {
-      ...terminalLogin.initialize,
-      authMethods: [
-        { type: 'terminal', id: methodId, name: 'Sign in', ...method },
-      ],
+  const host = await startAcpEngine(
+    {
+      ...terminalLogin,
+      responses: {},
+      steps: [],
+      initialize: {
+        ...terminalLogin.initialize,
+        authMethods: [
+          { type: 'terminal', id: methodId, name: 'Sign in', ...method },
+        ],
+      },
     },
-  });
+    undefined,
+    agent,
+  );
 
-  await host.caller.session.new(emptySessionInput);
+  await host.caller.session.new({ ...emptySessionInput, agent });
 
   return host;
 };
 
 export const readTerminal = (
   host: Host,
+  agent = subject.agent,
 ): ReturnType<Host['caller']['agents']['authTerminal']> =>
-  host.caller.agents.authTerminal({ ...subject, cursor: 0 });
+  host.caller.agents.authTerminal({ ...subject, agent, cursor: 0 });
 
 // Waits for the interactive prompt; returns the pid the program printed, if any.
 export const awaitPrompt = async (host: Host): Promise<number> => {

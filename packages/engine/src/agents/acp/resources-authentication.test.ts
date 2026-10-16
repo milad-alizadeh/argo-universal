@@ -24,7 +24,7 @@ it('authentication reservation stays a pass-through while the legacy login stack
 it.each(['stopping', 'stopped'])(
   'an authentication held while resources are %s cannot start a sign-in terminal',
   async (phase) => {
-    const launchAuthTerminal = vi.fn<LaunchLoginTerminal>();
+    const launchLoginTerminal = vi.fn<LaunchLoginTerminal>();
 
     const agent = createScriptedAgentProcess({
       ...terminalLogin,
@@ -33,7 +33,7 @@ it.each(['stopping', 'stopped'])(
       autoExit: false,
     });
 
-    const resources = createAcpResources({ ...agent, launchAuthTerminal });
+    const resources = createAcpResources({ ...agent, launchLoginTerminal });
     const authentication = await resources.authentication(resourceLaunch);
     const shutdown = resources.shutdown();
     const child = requireScriptedProcessAt(agent.processes);
@@ -47,7 +47,7 @@ it.each(['stopping', 'stopped'])(
       await authentication.authenticate('interactive-subscription'),
     ).toEqual({ status: 'failed', message: 'The Agent has stopped' });
     expect(authentication.state().pending).toBeNull();
-    expect(launchAuthTerminal).not.toHaveBeenCalled();
+    expect(launchLoginTerminal).not.toHaveBeenCalled();
     child.exited.resolve();
     await shutdown;
   },

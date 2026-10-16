@@ -3,19 +3,30 @@ import {
   type AgentAuthTerminalFrame,
   type AgentLoginTerminalInput,
 } from '@repo/contracts';
+import type { AuthenticationMethod } from '../acp/auth-methods';
 import { launchLoginTerminal } from '../acp/terminal-process';
 import type {
   AgentLaunch,
   LaunchLoginTerminal,
   LoginTerminalProcess,
 } from '../agent-launch';
-import { terminalAuthSuccessPatterns } from '../vendor';
+import { terminalSuccessPatterns } from '../vendor';
 
 type TerminalRun = {
   launch: AgentLaunch;
   methodId: string;
   signal: AbortSignal;
 };
+
+// The full get-command with the method's args appended and its env on top.
+export const terminalMethodLaunch = (
+  launch: AgentLaunch,
+  method: Pick<AuthenticationMethod, 'args' | 'env'>,
+): AgentLaunch => ({
+  ...launch,
+  args: [...launch.args, ...(method.args ?? [])],
+  env: { ...launch.env, ...method.env },
+});
 
 type TerminalResult = 'matched' | { exitCode: number; signal?: number };
 
@@ -25,6 +36,7 @@ export class AuthTerminal {
   private output = '';
   private child?: LoginTerminalProcess;
   private closed = false;
+  private finishing = false;
   private exitCode?: number;
   private timer?: ReturnType<typeof setInterval>;
   private readonly overflow = Promise.withResolvers<never>();
@@ -42,12 +54,20 @@ export class AuthTerminal {
       );
       await this.wait(input);
     } finally {
+      this.finishing = true;
       clearInterval(this.timer);
       await this.child?.close();
       this.closed = true;
     }
   }
-  // ADR-0016 finite budgets: the same cap as the login terminal.
+  public active(): boolean {
+    return !!this.child && !this.finishing;
+  }
+  // Releases the program even when its caller stopped waiting for it.
+  public async close(): Promise<void> {
+    await this.child?.close();
+  }
+  // ADR-0016 finite budgets: output is capped at the frame limit.
   private append(text: string): void {
     if (this.output.length + text.length > loginTerminalOutputLimit) {
       this.overflow.reject(
@@ -59,7 +79,9 @@ export class AuthTerminal {
 
     this.output += text;
   }
-  private async wait({ methodId, signal }: TerminalRun): Promise<void> {
+  private async wait(run: TerminalRun): Promise<void> {
+    const { signal } = run;
+
     const abort = (): void => {
       void this.child?.close().catch(() => {});
     };
@@ -68,32 +90,30 @@ export class AuthTerminal {
 
     try {
       signal.throwIfAborted();
-      this.finish(await this.settle(methodId, signal));
+      this.finish(await this.settle(run));
     } finally {
       signal.removeEventListener('abort', abort);
     }
   }
   // A cancelled attempt reports the cancellation, not the closed terminal it caused.
-  private async settle(
-    methodId: string,
-    signal: AbortSignal,
-  ): Promise<TerminalResult> {
+  private async settle(run: TerminalRun): Promise<TerminalResult> {
     try {
-      return await this.waitForResult(methodId);
+      return await this.waitForResult(run);
     } finally {
-      signal.throwIfAborted();
+      run.signal.throwIfAborted();
     }
   }
-  private waitForResult(methodId: string): Promise<TerminalResult> {
+  private waitForResult({
+    launch,
+    methodId,
+  }: TerminalRun): Promise<TerminalResult> {
     return Promise.race([
       this.requireChild().exited,
-      this.matchOutput(methodId),
+      this.matchOutput(terminalSuccessPatterns(launch, methodId)),
       this.overflow.promise,
     ]);
   }
-  private matchOutput(methodId: string): Promise<'matched'> {
-    const patterns = terminalAuthSuccessPatterns(methodId);
-
+  private matchOutput(patterns: readonly string[]): Promise<'matched'> {
     return new Promise((resolve) => {
       if (patterns.length)
         this.timer = setInterval(() => {
