@@ -28,14 +28,30 @@ export function rowClasses(
     stateClasses(props, sidebar),
     cornerClasses(place.corners),
     edgeClasses(props, sidebar, place),
-    overlayClasses(place.overlay),
+    overlayClasses(props, place.overlay),
   );
 }
 
-const overlayClasses = (overlay: boolean | undefined): string | undefined =>
+// A row with a control below, such as Effort, pads 8 all round like its neighbours.
+const overlayClasses = (
+  props: Pick<GroupedListItemProps, 'detail'>,
+  overlay: boolean | undefined,
+): string | undefined =>
   overlay
-    ? 'bg-card rounded-xl min-h-9 wide:min-h-9 px-2 py-2 web:hover:bg-hover web:active:bg-pressed'
+    ? cn(
+        'bg-card rounded-xl min-h-9 wide:min-h-9 px-2 py-2 web:hover:bg-hover web:active:bg-pressed',
+        props.detail && 'wide:py-2',
+      )
     : undefined;
+
+// Paper's popover drill rows put their value below the label; other rows, such as Effort, keep it trailing.
+export const stacksValue = (
+  props: Pick<
+    GroupedListItemProps,
+    'value' | 'onPress' | 'tone' | 'disclosure'
+  >,
+  overlay: boolean,
+): boolean => overlay && props.value !== undefined && hasDisclosure(props);
 
 // A sidebar row has no separator, and neither has the row that ends its section.
 function edgeClasses(

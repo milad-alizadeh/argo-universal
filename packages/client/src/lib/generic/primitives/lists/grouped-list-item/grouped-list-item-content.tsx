@@ -7,6 +7,7 @@ import {
 } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
+import { GroupedListItemDetail } from './grouped-list-item-detail';
 import { Disclosure } from './grouped-list-item-disclosure';
 import { GroupedListItemLeading } from './grouped-list-item-leading';
 import {
@@ -17,6 +18,7 @@ import {
   contentGap,
   hasDisclosure,
   rowEmphasis,
+  stacksValue,
   titleClasses,
 } from './grouped-list-item-styles';
 import { OverlayRowTitle } from './overlay-row-title';
@@ -28,12 +30,9 @@ export function GroupedListItemBody(
   if (!props.detail) return <GroupedListItemContent {...props} />;
 
   return (
-    <View className="flex-1">
-      <View className="min-h-13 wide:min-h-11 flex-row items-center px-4 py-3">
-        <GroupedListItemContent {...props} />
-      </View>
-      <View className="px-4 pb-3">{props.detail}</View>
-    </View>
+    <GroupedListItemDetail detail={props.detail}>
+      <GroupedListItemContent {...props} />
+    </GroupedListItemDetail>
   );
 }
 
@@ -76,7 +75,7 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
 function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
   const overlay = useOverlayList();
 
-  return overlay && props.value !== undefined ? (
+  return stacksValue(props, overlay) ? (
     <OverlayRowTitle {...props} />
   ) : (
     <PlainRowTitle {...props} />
@@ -135,7 +134,7 @@ function RowSelection(props: TrailingProps): React.JSX.Element | null {
   const sidebar = useWideSidebarList();
   const overlay = useOverlayList();
 
-  if (overlay) return null;
+  if (stacksValue(props, overlay)) return null;
 
   return (
     <>
