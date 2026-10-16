@@ -1,0 +1,80 @@
+import type { SessionUpdate } from '@agentclientprotocol/sdk';
+import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
+
+export const subagentSessionId = 'subagent-review';
+
+const state = (
+  value: 'running' | 'idle' | 'requires_action',
+): ScriptedStep => ({
+  type: 'update',
+  update: {
+    sessionUpdate: 'subagent_update',
+    sessionId: subagentSessionId,
+    title: 'Review the change',
+    state: { state: value },
+  } satisfies SessionUpdate,
+});
+
+const message = (text: string): Extract<ScriptedStep, { type: 'update' }> => ({
+  type: 'update',
+  update: {
+    sessionUpdate: 'agent_message_chunk',
+    content: { type: 'text', text },
+  },
+});
+
+const childMessage = (text: string): ScriptedStep => ({
+  ...message(text),
+  sessionId: subagentSessionId,
+});
+
+const delegation = (messageId: string, text: string): ScriptedStep => ({
+  type: 'update',
+  update: {
+    sessionUpdate: 'session_message',
+    messageId,
+    recipientSessionId: subagentSessionId,
+    content: [{ type: 'text', text }],
+  },
+});
+
+export const foregroundSubagent: ScriptedScenario = {
+  steps: [
+    delegation('review', 'Review the change.'),
+    state('running'),
+    childMessage('I am reviewing the change.'),
+    state('requires_action'),
+    state('running'),
+    childMessage('The review is complete.'),
+    state('idle'),
+    message('The Subagent finished its review.'),
+  ],
+};
+
+// The parent completes its Turn while the Subagent still runs.
+export const backgroundSubagent: ScriptedScenario = {
+  steps: [
+    delegation('review', 'Review the change in the background.'),
+    state('running'),
+    childMessage('The background review has started.'),
+    message('The Subagent is reviewing in the background.'),
+  ],
+};
+
+export const subagentMoreWork: ScriptedScenario = {
+  steps: [],
+  responses: {
+    'session/prompt': [
+      { steps: foregroundSubagent.steps },
+      {
+        steps: [
+          delegation('follow-up', 'Review the follow-up change.'),
+          state('running'),
+          childMessage('The follow-up review is complete.'),
+          state('idle'),
+          message('The same Subagent finished the follow-up.'),
+        ],
+      },
+    ],
+  },
+};
