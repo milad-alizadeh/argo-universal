@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { OpenState } from '#primitives/overlays/open-state';
 import { usePopoverState } from './popover-context';
 
-const closeGraceMs = 200;
+const closeGraceMs = 50;
 
 export interface Hover {
   enter: () => void;
