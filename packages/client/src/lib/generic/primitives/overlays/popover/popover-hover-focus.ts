@@ -12,8 +12,8 @@ export function hoverContentProps(
   props: FocusProps,
 ): React.ComponentProps<typeof WebPopover.Content> {
   return {
-    onPointerEnter: hover?.enter,
-    onPointerLeave: hover?.leave,
+    onPointerEnter: hover && (() => hover.enter('content')),
+    onPointerLeave: hover && (() => hover.leave('content')),
     ...hoverFocus(hover, props),
   };
 }

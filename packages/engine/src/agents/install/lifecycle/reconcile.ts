@@ -29,11 +29,7 @@ export const reconcileInterruptedInstallations = async (
   home: string,
 ): Promise<void> => {
   await releaseInstallationProcessGroups(home);
-  const root = join(home, 'agents');
-
-  for (const scope of await readFolders(root))
-    await cleanScope(join(root, scope), ['.install-']);
-  await cleanRegistry(join(root, 'registry'));
+  await cleanRegistry(join(home, 'agents', 'registry'));
 };
 
 const cleanRegistry = async (root: string): Promise<void> => {

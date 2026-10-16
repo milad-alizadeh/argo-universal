@@ -13,8 +13,6 @@ import {
 import { removeInstallerRecord } from './process-record';
 import { readInstallerExitCode, spawnInstallWrapper } from './process-wrapper';
 
-export { InstallCleanupError } from './process-cleanup';
-
 const diagnosticLimit = 8192;
 
 const missingToolExitCode = 127;

@@ -59,7 +59,10 @@ function hoverTrigger(
 ): TriggerHandlers {
   if (disabled || !hover) return {};
 
-  return { onHoverIn: hover.enter, onHoverOut: hover.leave };
+  return {
+    onHoverIn: () => hover.enter('trigger'),
+    onHoverOut: () => hover.leave('trigger'),
+  };
 }
 
 PopoverTrigger satisfies ComponentType<TriggerProps>;

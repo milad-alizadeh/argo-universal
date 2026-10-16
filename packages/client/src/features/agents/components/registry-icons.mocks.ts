@@ -1,14 +1,13 @@
-import type { AgentsCatalogOutput } from '@repo/contracts';
+import type { AgentsRegistryOutput } from '@repo/contracts';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 
 const entry = publishedRegistry.agents[0];
 
 if (!entry?.icon) throw new Error('Registry mock needs an encoded SVG icon');
 
-export const iconAgent: AgentsCatalogOutput['agents'][number] = {
-  id: entry.id,
+export const iconAgent: AgentsRegistryOutput['agents'][number] = {
   entry,
-  support: { kind: 'npx', recipe: { package: 'example-agent@1.2.3' } },
+  support: 'npx',
 };
 
 export const encodedIcon = entry.icon;

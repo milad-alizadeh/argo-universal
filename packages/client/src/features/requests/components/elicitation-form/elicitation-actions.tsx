@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { Button, type ButtonProps } from '#primitives/buttons/button';
 
@@ -46,11 +47,12 @@ function submitProps(
   };
 }
 
+// Skip is a text button wide and on iOS (SwiftUI's borderless style); Android and narrow web outline it.
 function skipProps(props: ElicitationActionsProps, wide: boolean): ButtonProps {
   return {
     ...actionProps(wide),
     label: 'Skip',
-    variant: wide ? 'ghost' : 'outline',
+    variant: wide || Platform.OS === 'ios' ? 'ghost' : 'outline',
     disabled: props.inactive,
     onPress: props.onSkip,
   };

@@ -13,7 +13,14 @@ const installerRecordFile = '.installer-group.json';
 
 it('restart retains staging rather than signaling a reused process group', async () => {
   const home = await mkdtemp(join(tmpdir(), 'argo-installer-record-'));
-  const staging = join(home, 'agents', 'scope', '.install-operation');
+
+  const staging = join(
+    home,
+    'agents',
+    'registry',
+    'scope',
+    '.staging-operation',
+  );
 
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
     detached: true,
@@ -97,10 +104,7 @@ it.each([
   },
 );
 
-it.each([
-  ['agents', 'archive-hash', 'package', 'sub'],
-  ['agents', 'registry', 'fixture', 'v_1.2.3'],
-])(
+it.each([['agents', 'registry', 'fixture', 'v_1.2.3']])(
   'restart ignores an ownership record inside installed content at %s/%s/%s/%s',
   async (...segments) => {
     const home = await mkdtemp(join(tmpdir(), 'argo-installed-content-'));

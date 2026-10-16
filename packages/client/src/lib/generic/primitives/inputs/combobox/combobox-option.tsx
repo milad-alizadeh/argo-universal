@@ -15,14 +15,21 @@ export function ComboboxOptionRow<Value extends string>(
   return (
     <button {...buttonProps(props)}>
       <SelectionMark selected={props.option.value === props.value} />
-      {props.option.icon && (
-        <View className={firstLine}>
-          <Icon name={props.option.icon} role="body" aria-hidden />
-        </View>
-      )}
+      <OptionIcon icon={props.option.icon} />
       <OptionText option={props.option} />
     </button>
   );
+}
+
+// A folder or file glyph beside the label, muted as Paper draws it.
+function OptionIcon({
+  icon,
+}: Pick<ComboboxOption<string>, 'icon'>): ReactElement | null {
+  return icon ? (
+    <View className={firstLine}>
+      <Icon name={icon} role="body" tone="muted" aria-hidden />
+    </View>
+  ) : null;
 }
 
 // Paper's popover rows: the check and icon slots are as tall as the label's first line, so a path below never moves them.
@@ -84,7 +91,7 @@ function Supporting({
   option: ComboboxOption<string>;
 }): ReactElement | null {
   return option.supporting ? (
-    <Text role={option.code ? 'code' : 'secondary'} numberOfLines={1}>
+    <Text role={option.code ? 'secondary-code' : 'secondary'} numberOfLines={1}>
       {option.supporting}
     </Text>
   ) : null;

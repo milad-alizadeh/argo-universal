@@ -2,8 +2,6 @@ export { AgentProcessExitError } from './process';
 
 export { releaseLoginTerminalGroups } from './login-terminal/terminal-record';
 
-export { checkAgentLaunch, createAgentChecker } from './connection/agent-check';
-
 export { createAcpResources } from './resources/resources';
 
 export { createAcpResponseReaders } from './connection/response-readers';
