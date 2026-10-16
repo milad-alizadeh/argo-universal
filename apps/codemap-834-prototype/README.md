@@ -49,12 +49,15 @@ The App copies those pixels to a 2D canvas at DPR 1.
 Picking, labels, tokens and camera transforms use the same data and rules.
 The CPU surface and image are disposed after each completed copy.
 CPU readiness is reported only after pixels reach the visible canvas.
+3D readiness is reported from the first frame R3F draws.
 The token palette comes from the existing `useNativeTheme` helper.
 The browser resolves its colour strings to RGB for both renderers.
 Lights also use theme tokens. No renderer supplies a default colour.
 Labels use kit `Text` and screen-space culling, capped at 32.
 3D labels omit roof anchors hidden behind nearer buildings.
 An accessible file selector returns the same file ID as a canvas press.
+`CodeMap` (`src/code-map.tsx`) takes only ADR-0028's `label`, `view`, `files`, `selectedId` and `onSelect`; it owns the renderer, camera controls, labels, palette, readiness and file list.
+It reports readiness, labels and selection to the measurement record in `src/evidence.ts`, never through props.
 The native entry renders nothing. Phones do not import either renderer.
 
 ## Collect evidence
@@ -78,7 +81,7 @@ The reported FPS is submitted-frame cadence during a moving camera or Skia trans
 It is not a GPU completion timer or a guarantee of physical display refresh.
 The collector records the renderer string and Electron GPU feature status.
 Scenario-ready timing starts before context creation or Electron launch and stops before the one-second settling delay.
-The in-page mount timer starts at prototype-module evaluation and ends at the renderer-ready callback.
+The in-page mount timer starts at prototype-module evaluation and ends when the mounted view's first frame is drawn.
 `electron-no-gpu` calls `app.disableHardwareAcceleration()` before `ready`.
 The full desktop mode uses Electron’s `--disable-gpu` switch and records GPU feature status.
 Neither mode forces a software renderer or changes CSP.

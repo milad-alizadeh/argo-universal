@@ -9,11 +9,11 @@ import {
   type FlatFrame,
   type FlatViewport,
 } from './flat-viewport';
-import { mapExtent, type MapProps } from './model';
+import { mapExtent, type RendererProps } from './model';
 import type { Size } from './viewport';
 import { useViewportHandle } from './viewport-handle';
 
-export interface FlatContext extends MapProps {
+export interface FlatContext extends RendererProps {
   host: RefObject<HTMLDivElement | null>;
   viewport: FlatViewport;
   /** Changes whenever the view moves or resizes, so effects that draw depend on it. */
@@ -42,7 +42,7 @@ function observe(
   return () => observer.disconnect();
 }
 
-function useFlatViewport(tiles: MapProps['tiles']): FlatViewport {
+function useFlatViewport(tiles: RendererProps['tiles']): FlatViewport {
   return useMemo(
     () => createFlatViewport({ tiles, extent: mapExtent }, initialSize),
     [tiles],
@@ -50,12 +50,12 @@ function useFlatViewport(tiles: MapProps['tiles']): FlatViewport {
 }
 
 export function useFlatContext(
-  props: MapProps,
+  props: RendererProps,
   host: RefObject<HTMLDivElement | null>,
 ): FlatContext {
   const viewport = useFlatViewport(props.tiles);
   useEffect(() => observe(host.current, viewport), [host, viewport]);
-  useViewportHandle(props.viewportRef, viewport);
+  useViewportHandle(props.overlay.viewport, viewport);
   const frame = useSyncExternalStore(viewport.subscribe, viewport.frame);
 
   return { ...props, host, viewport, frame, size: frame.size };

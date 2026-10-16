@@ -1,4 +1,4 @@
-import { useRef, type JSX, type RefObject } from 'react';
+import { memo, useRef, type JSX, type RefObject } from 'react';
 import { useFlatContext } from './flat-context';
 import { useFlatLabels } from './flat-labels';
 import { useFlatPan } from './flat-pan';
@@ -6,10 +6,10 @@ import { useFlatPicture } from './flat-picture';
 import { useFlatPointer } from './flat-pointer';
 import { FlatRaster, type FlatDrawing } from './flat-raster';
 import { useFlatWheel } from './flat-wheel';
-import type { MapProps } from './model';
+import type { RendererProps } from './model';
 
 function useDrawing(
-  props: MapProps,
+  props: RendererProps,
   host: RefObject<HTMLDivElement | null>,
 ): FlatDrawing {
   const ctx = useFlatContext(props, host);
@@ -22,7 +22,7 @@ function useDrawing(
   return { ctx, picture };
 }
 
-export default function FlatMap(props: MapProps): JSX.Element {
+function FlatMap(props: RendererProps): JSX.Element {
   const host = useRef<HTMLDivElement | null>(null);
   const drawing = useDrawing(props, host);
 
@@ -35,3 +35,5 @@ export default function FlatMap(props: MapProps): JSX.Element {
     </div>
   );
 }
+
+export default memo(FlatMap);

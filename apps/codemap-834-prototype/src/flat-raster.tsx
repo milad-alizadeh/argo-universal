@@ -9,6 +9,7 @@ import {
 import { useEffect, useRef, type JSX, type RefObject } from 'react';
 import type { FlatContext } from './flat-context';
 import type { FlatFrame, FlatViewport } from './flat-viewport';
+import type { RendererInfo } from './model';
 
 export interface FlatDrawing {
   ctx: FlatContext;
@@ -76,8 +77,8 @@ function draw(canvas: HTMLCanvasElement, raster: Raster): void {
   }
 }
 
-function report(onReady: FlatContext['onReady'], files: number): void {
-  onReady({ engine: 'Skia / CanvasKit CPU', files, dpr: 1 });
+function information(files: number): () => RendererInfo {
+  return () => ({ engine: 'Skia / CanvasKit CPU', files, dpr: 1 });
 }
 
 function rasterOf({ ctx, picture }: FlatDrawing): Raster {
@@ -88,20 +89,17 @@ function rasterOf({ ctx, picture }: FlatDrawing): Raster {
 
 type CanvasRef = RefObject<HTMLCanvasElement | null>;
 
+/** Readiness follows the first copy that reaches the visible canvas. */
 function useRaster(drawing: FlatDrawing, ref: CanvasRef): void {
-  const reported = useRef(false);
   const { picture, viewport, frame, background } = rasterOf(drawing);
-  const { onReady, tiles } = drawing.ctx;
+  const { overlay, tiles } = drawing.ctx;
   const files = tiles.length;
 
   useEffect(() => {
     if (!ref.current) return;
     draw(ref.current, { picture, viewport, frame, background });
-
-    if (reported.current) return;
-    reported.current = true;
-    report(onReady, files);
-  }, [picture, viewport, frame, background, onReady, files, ref]);
+    overlay.drawn(information(files));
+  }, [picture, viewport, frame, background, overlay, files, ref]);
 }
 
 export function FlatRaster(props: FlatDrawing): JSX.Element {

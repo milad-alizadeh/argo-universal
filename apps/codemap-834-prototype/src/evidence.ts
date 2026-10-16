@@ -1,17 +1,11 @@
+import { useSyncExternalStore } from 'react';
+import {
+  observeEvidence,
+  type Evidence,
+  type EvidenceObserver,
+} from './evidence-store';
 import { panDuration } from './frame-sample';
-import type { Label } from './map-labels';
-import type { PanResult, RendererInfo, View } from './model';
-
-interface Evidence {
-  threeImportMs?: number;
-  ready?: boolean;
-  view?: View;
-  mountMs?: number;
-  info?: RendererInfo;
-  selectedId?: string;
-  labels?: number;
-  pan: (duration?: number) => Promise<PanResult>;
-}
+import type { PanResult } from './model';
 
 declare global {
   interface Window {
@@ -31,34 +25,17 @@ function pan(duration = panDuration): Promise<PanResult> {
   return handler(duration);
 }
 
-if (typeof window !== 'undefined') window.__codemap834 = { pan };
+const record: Evidence = { pan };
 
-export function ready(view: View, info: RendererInfo): RendererInfo {
-  Object.assign(window.__codemap834, {
-    ready: true,
-    view,
-    info,
-    mountMs: performance.now() - mountStart,
-  });
+if (typeof window !== 'undefined') window.__codemap834 = record;
 
-  return info;
-}
+/** The measurement record the collector reads; the Code Map reports into it. */
+export const evidence: EvidenceObserver = observeEvidence(
+  record,
+  () => performance.now() - mountStart,
+);
 
-export function selected(id: string): string {
-  window.__codemap834.selectedId = id;
-
-  return id;
-}
-
-export function labels(next: Label[]): Label[] {
-  window.__codemap834.labels = next.length;
-
-  return next;
-}
-
-export function pending(view: View): void {
-  window.__codemap834.ready = false;
-  const url = new URL(location.href);
-  url.searchParams.set('view', view);
-  history.replaceState(null, '', url);
+/** Reads one value of the measurement record and re-renders only when it changes. */
+export function useEvidence<Value>(read: (record: Evidence) => Value): Value {
+  return useSyncExternalStore(evidence.subscribe, () => read(record));
 }

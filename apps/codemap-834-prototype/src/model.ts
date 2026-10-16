@@ -1,20 +1,24 @@
-import type { RefObject } from 'react';
 import dataset from './dataset.json';
-import type { Insets, Label } from './map-labels';
-import type { Viewport } from './viewport';
+import type { MapOverlay } from './map-overlay';
 
 export { layout, mapExtent } from './treemap';
 
-export interface FileEntry {
+/** One file as ADR-0028's `CodeMap` takes it; folders come from the paths. */
+export interface CodeMapFile {
   id: string;
   path: string;
   area: number;
-  height: number;
-  branches: number;
+  height?: number;
   tone: string;
 }
 
-export interface Tile extends FileEntry {
+/** A snapshot file; `branches` is the measure its tone came from. */
+export interface FileEntry extends CodeMapFile {
+  height: number;
+  branches: number;
+}
+
+export interface Tile extends CodeMapFile {
   x: number;
   y: number;
   w: number;
@@ -59,17 +63,13 @@ export interface PanResult {
   triangles?: number;
 }
 
-export interface MapProps {
+/** What the Code Map hands its mounted renderer; every prop is stable between selections. */
+export interface RendererProps {
   tiles: Tile[];
   palette: Palette;
   selected?: string;
-  /** The one camera handle; whichever view is mounted fills it. */
-  viewportRef: RefObject<Viewport | null>;
-  /** Viewport pixels the shell's overlay plates cover; labels stay out of them. */
-  insets: Insets;
   onSelect: (id: string) => void;
-  onLabels: (labels: Label[]) => void;
-  onReady: (info: RendererInfo) => void;
+  overlay: MapOverlay;
 }
 
 export const source = dataset;
@@ -95,7 +95,7 @@ export function getFiles(count: number): FileEntry[] {
   return Array.from({ length: count }, (_, index) => replica(index));
 }
 
-export function tileColor(tile: FileEntry, palette: Palette): string {
+export function tileColor(tile: CodeMapFile, palette: Palette): string {
   if (tile.tone === 'danger') return palette.danger;
 
   if (tile.tone === 'warning') return palette.warning;

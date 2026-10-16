@@ -1,9 +1,9 @@
-import type { FileEntry } from './model';
+import type { CodeMapFile } from './model';
 
 export interface Folder {
   weight: number;
   children: Map<string, Folder>;
-  file?: FileEntry;
+  file?: CodeMapFile;
 }
 
 function childFolder(parent: Folder, name: string): Folder {
@@ -16,7 +16,7 @@ function childFolder(parent: Folder, name: string): Folder {
   return child;
 }
 
-function insertFile(root: Folder, file: FileEntry): void {
+function insertFile(root: Folder, file: CodeMapFile): void {
   let node = root;
   node.weight += file.area;
 
@@ -28,7 +28,7 @@ function insertFile(root: Folder, file: FileEntry): void {
   node.file = file;
 }
 
-export function folders(files: FileEntry[]): Folder[] {
+export function folders(files: CodeMapFile[]): Folder[] {
   const root: Folder = { weight: 0, children: new Map() };
 
   for (const file of files) insertFile(root, file);

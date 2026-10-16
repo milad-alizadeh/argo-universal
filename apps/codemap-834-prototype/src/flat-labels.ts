@@ -24,10 +24,11 @@ export function tileCorners({ x, y, scale }: FlatTransform): LabelAnchors {
 }
 
 export function useFlatLabels(ctx: FlatContext): void {
-  const { tiles, viewport, frame, insets, onLabels } = ctx;
+  const { tiles, viewport, frame, overlay } = ctx;
 
   useEffect(() => {
     const anchors = tileCorners(viewport.transform());
-    onLabels(placeLabels(tiles, anchors, { size: frame.size, insets }));
-  }, [tiles, viewport, frame, insets, onLabels]);
+    const screen = { size: frame.size, insets: overlay.insets };
+    overlay.showLabels(placeLabels(tiles, anchors, screen));
+  }, [tiles, viewport, frame, overlay]);
 }

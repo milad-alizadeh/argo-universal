@@ -1,7 +1,14 @@
 import { Canvas, type CanvasProps } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, type JSX, type RefObject } from 'react';
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  type JSX,
+  type RefObject,
+} from 'react';
 import type { InstancedMesh } from 'three';
-import { mapExtent, type MapProps } from './model';
+import { mapExtent, type RendererProps } from './model';
 import { usePointerPick } from './pointer-pick';
 import { useThreeContext, type ThreeContext } from './three-context';
 import { useInstances } from './three-instances';
@@ -107,7 +114,7 @@ function useScene(
   useEffect(() => (): void => ctx.controls.dispose(), [ctx.controls]);
 }
 
-function Scene(props: MapProps): JSX.Element {
+function Scene(props: RendererProps): JSX.Element {
   const ctx = useThreeContext(props);
   const mesh = useRef<InstancedMesh | null>(null);
   useScene(ctx, mesh);
@@ -115,10 +122,12 @@ function Scene(props: MapProps): JSX.Element {
   return <Drawing ctx={ctx} mesh={mesh} />;
 }
 
-export default function ThreeMap(props: MapProps): JSX.Element {
+function ThreeMap(props: RendererProps): JSX.Element {
   return (
     <Canvas {...canvasOptions}>
       <Scene {...props} />
     </Canvas>
   );
 }
+
+export default memo(ThreeMap);

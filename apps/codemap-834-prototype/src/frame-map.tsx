@@ -1,48 +1,14 @@
 import { Text } from '@repo/client/text';
-import { Suspense, type JSX } from 'react';
-import type { Label } from './map-labels';
+import type { JSX } from 'react';
+import { CodeMap } from './code-map';
+import { map, measurePlate, selectionPlate } from './frame-styles';
+import { ViewToggle } from './frame-toggle';
 import type { Palette } from './model';
 import type { PrototypeState } from './prototype-state';
-import { FlatLoader, ThreeMap } from './renderer-loader.web';
-import { CameraControls, ViewToggle } from './shell-controls';
-import {
-  labelCard,
-  labelInsets,
-  map,
-  overlay,
-  measurePlate,
-  selectionPlate,
-} from './shell-styles';
 
 interface Props {
   state: PrototypeState;
   palette: Palette;
-}
-
-function LabelCard({
-  label,
-  palette,
-}: {
-  label: Label;
-  palette: Palette;
-}): JSX.Element {
-  return (
-    <div style={labelCard(label, palette)}>
-      <Text role="secondary" numberOfLines={1}>
-        {label.text}
-      </Text>
-    </div>
-  );
-}
-
-function Labels({ state, palette }: Props): JSX.Element {
-  return (
-    <div style={overlay} aria-hidden="true">
-      {state.labels.map((label) => (
-        <LabelCard key={label.id} label={label} palette={palette} />
-      ))}
-    </div>
-  );
 }
 
 function Scale({ palette }: { palette: Palette }): JSX.Element {
@@ -70,33 +36,36 @@ function Measures({ state, palette }: Props): JSX.Element {
 }
 
 function Selection({ state, palette }: Props): JSX.Element | null {
-  if (!state.selected) return null;
+  if (!state.selectedId) return null;
 
   return (
     <div style={selectionPlate(palette)}>
-      <Text>{state.selected}</Text>
+      <Text>{state.selectedId}</Text>
     </div>
   );
 }
 
-function Renderer({ state, palette }: Props): JSX.Element {
-  const props = { ...state, palette, insets: labelInsets };
+function ProjectMap({ state }: { state: PrototypeState }): JSX.Element {
+  const { view, files, selectedId, onSelect } = state;
 
-  if (state.view === '3d') return <ThreeMap {...props} />;
-
-  return <FlatLoader {...props} />;
+  return (
+    <CodeMap
+      label="argo-universal"
+      view={view}
+      files={files}
+      selectedId={selectedId}
+      onSelect={onSelect}
+    />
+  );
 }
 
+/** The Frame around the Code Map: its view toggle, legend and selected file sit over the map. */
 export function MapArea(props: Props): JSX.Element {
   return (
     <div style={map(props.palette)}>
-      <Suspense fallback={<Text>Measuring argo-universal</Text>}>
-        <Renderer {...props} />
-      </Suspense>
       <ViewToggle {...props} />
-      <Labels {...props} />
+      <ProjectMap state={props.state} />
       <Measures {...props} />
-      <CameraControls {...props} />
       <Selection {...props} />
     </div>
   );

@@ -2,7 +2,7 @@ import { useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo } from 'react';
 import { PerspectiveCamera, type Camera, type WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { mapExtent, type MapProps } from './model';
+import { mapExtent, type RendererProps } from './model';
 import { createThreeViewport, type ThreeViewport } from './three-viewport';
 import { useViewportHandle } from './viewport-handle';
 
@@ -10,7 +10,7 @@ const polarAngleFraction = 0.49;
 
 const maximumPolarAngle = Math.PI * polarAngleFraction;
 
-export interface ThreeContext extends MapProps {
+export interface ThreeContext extends RendererProps {
   camera: PerspectiveCamera;
   gl: WebGLRenderer;
   controls: OrbitControls;
@@ -38,7 +38,10 @@ function createControls(
 
 type Rig = Pick<ThreeContext, 'camera' | 'controls' | 'invalidate' | 'size'>;
 
-function useCreateViewport(tiles: MapProps['tiles'], rig: Rig): ThreeViewport {
+function useCreateViewport(
+  tiles: RendererProps['tiles'],
+  rig: Rig,
+): ThreeViewport {
   const { camera, controls, invalidate } = rig;
 
   return useMemo(
@@ -51,18 +54,18 @@ function useCreateViewport(tiles: MapProps['tiles'], rig: Rig): ThreeViewport {
   );
 }
 
-function useViewport(props: MapProps, rig: Rig): ThreeViewport {
+function useViewport(props: RendererProps, rig: Rig): ThreeViewport {
   const viewport = useCreateViewport(props.tiles, rig);
   const { size } = rig;
   useLayoutEffect(() => viewport.resize(size), [viewport, size]);
   // A newly mounted view starts at fit.
   useLayoutEffect(() => viewport.fit(), [viewport]);
-  useViewportHandle(props.viewportRef, viewport);
+  useViewportHandle(props.overlay.viewport, viewport);
 
   return viewport;
 }
 
-export function useThreeContext(props: MapProps): ThreeContext {
+export function useThreeContext(props: RendererProps): ThreeContext {
   const three = useThree();
   const { gl, invalidate, size } = three;
   const camera = perspective(three.camera);

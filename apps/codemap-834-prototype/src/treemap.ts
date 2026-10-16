@@ -1,4 +1,4 @@
-import type { Bounds, FileEntry, Tile } from './model';
+import type { Bounds, CodeMapFile, Tile } from './model';
 import { folders, type Folder } from './treemap-folder';
 import { partition } from './treemap-partition';
 
@@ -19,7 +19,7 @@ const minimumElevation = 0.2;
 
 const elevationScale = 0.7;
 
-function fileTile(file: FileEntry, bounds: Bounds): Tile {
+function fileTile(file: CodeMapFile, bounds: Bounds): Tile {
   const gap = Math.min(gapLimit, bounds.w / gapDivisor, bounds.h / gapDivisor);
 
   return {
@@ -27,7 +27,7 @@ function fileTile(file: FileEntry, bounds: Bounds): Tile {
     ...bounds,
     w: bounds.w - gap,
     h: bounds.h - gap,
-    elevation: minimumElevation + Math.sqrt(file.height) * elevationScale,
+    elevation: minimumElevation + Math.sqrt(file.height ?? 0) * elevationScale,
   };
 }
 
@@ -78,7 +78,7 @@ function split(nodes: Folder[], bounds: Bounds, tiles: Tile[]): void {
   splitParts(partition(nodes, bounds), tiles);
 }
 
-export function layout(files: FileEntry[]): Tile[] {
+export function layout(files: CodeMapFile[]): Tile[] {
   const tiles: Tile[] = [];
   split(folders(files), mapExtent, tiles);
 

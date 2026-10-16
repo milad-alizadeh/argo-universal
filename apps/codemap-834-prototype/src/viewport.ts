@@ -1,6 +1,6 @@
 /*
  * One camera interface for both CodeMap views. The flat view fills it with an orthographic adapter,
- * the 3D view with a perspective adapter over three.js. The shell only ever calls this interface.
+ * the 3D view with a perspective adapter over three.js. The Code Map's controls only call this interface.
  */
 
 export type CameraAction = 'fit' | 'in' | 'out';
