@@ -3,124 +3,61 @@ import {
   FramePage,
   type FrameParts,
   FrameSidebar,
-  frameSidebarWidth,
-  type Section,
   SectionDrawer,
   sectionOf,
   sectionOrder,
-  type SizeClass,
   useFrame,
+  usePluginSections,
+  coreNavigationSections,
+  type PluginSection,
   usePhoneDrawerWidth,
   useSectionLists,
   useSizeClass,
 } from '@repo/client';
 import { usePathname } from 'expo-router';
-import {
-  Drawer,
-  type DrawerContentComponentProps,
-  type DrawerNavigationOptions,
-  useDrawerStatus,
-} from 'expo-router/drawer';
-import { CommonActions, DrawerActions } from 'expo-router/react-navigation';
+import { Drawer, useDrawerStatus } from 'expo-router/drawer';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
-import { Platform } from 'react-native';
-import { useResolveClassNames } from 'uniwind';
-import { drawerScreenOptions } from './section-stack';
+import { useDrawerOptions, frameSizeClass } from './frame-drawer-options';
+import {
+  usePickSection,
+  type DrawerContent,
+  type PickSection,
+} from './frame-navigation';
+import { frameDrawerOptions } from './plugin-drawer';
 
-// ADR-0026: the drawer sits in front of the pages until the medium layout is built, and beside them on a wide window.
-const drawerTypes = {
-  compact: 'front',
-  medium: 'front',
-  wide: 'permanent',
-} as const satisfies Record<SizeClass, DrawerNavigationOptions['drawerType']>;
-
-// The Frame lays out a medium window as a compact one until the medium layout is built.
-const frameSizeClass = (wide: boolean): SizeClass =>
-  wide ? 'wide' : 'compact';
-
-// The web's themed page shows through the drawer; a resolved colour there misses the theme.
-const drawerSurface = Platform.OS !== 'web';
-
-type DrawerContent = Pick<DrawerContentComponentProps, 'state' | 'navigation'>;
-
-function useNarrowOptions(): DrawerNavigationOptions {
-  const surface = useResolveClassNames('bg-content');
-
-  return {
-    drawerStyle: [
-      drawerSurface ? surface : undefined,
-      { width: usePhoneDrawerWidth() },
-    ],
-    headerShadowVisible: false,
-  };
+interface NarrowContentProps {
+  drawer: DrawerContent;
+  frame: FrameParts;
+  pick: PickSection;
 }
 
-// The rail and the list stay beside the pages, on the window's own surface; the glass sidebar draws its own edge.
-function wideOptions(frame: FrameParts): DrawerNavigationOptions {
-  return {
-    drawerStyle: {
-      width: frameSidebarWidth(frame),
-      backgroundColor: 'transparent',
-      borderRightWidth: 0,
-    },
-    sceneStyle: { backgroundColor: 'transparent' },
-  };
-}
-
-function useDrawerOptions(
-  sizeClass: SizeClass,
-  frame: FrameParts,
-): DrawerNavigationOptions {
-  const narrow = useNarrowOptions();
-
-  return {
-    ...(sizeClass === 'wide' ? wideOptions(frame) : narrow),
-    drawerType: drawerTypes[sizeClass],
-    // A hidden section keeps its stack but skips renders.
-    freezeOnBlur: true,
-  };
-}
-
-// As the stock drawer list does: the shown section's row closes the drawer; another's opens its route with the pages it had.
-function pickSection(
-  { state, navigation }: DrawerContent,
-  section: Section,
-): void {
-  const picked = state.routes.findIndex((route) => route.name === section);
-  const route = state.routes[picked];
-
-  if (!route) return;
-
-  navigation.dispatch({
-    ...(picked === state.index
-      ? DrawerActions.closeDrawer()
-      : CommonActions.navigate(route)),
-    target: state.key,
-  });
-}
-
-function NarrowDrawerContent(drawer: DrawerContent): React.JSX.Element {
+function NarrowDrawerContent({
+  drawer,
+  frame,
+  pick,
+}: NarrowContentProps): React.JSX.Element {
   return (
     <SectionDrawer
-      selectedSection={sectionOf(drawer.state.routes[drawer.state.index]?.name)}
+      selectedSection={frame.section}
+      items={frame.items}
       open={useDrawerStatus() === 'open'}
       width={usePhoneDrawerWidth()}
-      onSectionChange={(section) => pickSection(drawer, section)}
+      onSectionChange={(section) => pick(drawer, section)}
     />
   );
 }
 
 // `drawerContent` is called as a function on each render (DrawerContentComponentProps), so it closes over the Frame's parts.
-const contentAt = (wide: boolean, frame: FrameParts) =>
+const contentAt = (wide: boolean, frame: FrameParts, pick: PickSection) =>
   function SectionsContent(drawer: DrawerContent): React.JSX.Element {
     return wide ? (
       <FrameSidebar
         frame={frame}
-        onSectionChange={(section) => pickSection(drawer, section)}
+        onSectionChange={(section) => pick(drawer, section)}
       />
     ) : (
-      <NarrowDrawerContent {...drawer} />
+      <NarrowDrawerContent drawer={drawer} frame={frame} pick={pick} />
     );
   };
 
@@ -134,37 +71,88 @@ const inPage =
 interface SectionsProps {
   wide: boolean;
   frame: FrameParts;
+  plugins: readonly PluginSection[];
 }
 
-function SectionsDrawer({ wide, frame }: SectionsProps): React.JSX.Element {
-  const options = drawerScreenOptions(wide, frame.lists);
+function SectionsDrawer({
+  wide,
+  frame,
+  plugins,
+}: SectionsProps): React.JSX.Element {
+  const options = frameDrawerOptions(wide, {
+    lists: frame.lists,
+    plugins,
+    path: usePathname(),
+  });
 
-  return (
-    <Drawer
-      screenOptions={useDrawerOptions(useSizeClass(), frame)}
-      screenLayout={inPage(frame)}
-      drawerContent={contentAt(wide, frame)}
-    >
-      {sectionOrder.map((section) => (
-        <Drawer.Screen key={section} name={section} options={options} />
-      ))}
-    </Drawer>
-  );
+  const pick = usePickSection(plugins, frame.section);
+  const props = useSectionsDrawerProps(wide, frame, pick);
+
+  return <Drawer {...props}>{sectionScreens(options)}</Drawer>;
+}
+
+function sectionScreens(
+  options: ReturnType<typeof frameDrawerOptions>,
+): React.ReactNode {
+  return [...sectionOrder, 'plugins'].map((name) => (
+    <Drawer.Screen
+      key={name}
+      name={name}
+      options={options}
+      dangerouslySingular={pluginRouteId}
+    />
+  ));
+}
+
+function useSectionsDrawerProps(
+  wide: boolean,
+  frame: FrameParts,
+  pick: PickSection,
+): Pick<
+  ComponentProps<typeof Drawer>,
+  'screenOptions' | 'screenLayout' | 'drawerContent'
+> {
+  return {
+    screenOptions: useDrawerOptions(useSizeClass(), frame),
+    screenLayout: inPage(frame),
+    drawerContent: contentAt(wide, frame, pick),
+  };
+}
+
+interface PluginRouteParams {
+  pluginSection?: string;
+  params?: { path?: string[] };
+}
+
+const pluginRouteId = (
+  _name: string,
+  params: PluginRouteParams,
+): string | undefined => pluginSectionId(params);
+
+function pluginSectionId({
+  pluginSection,
+  params,
+}: PluginRouteParams): string | undefined {
+  const path = params?.path;
+
+  return path ? sectionOf(`plugins/${path.join('/')}`) : pluginSection;
 }
 
 // One drawer of sections at every width, so a width change keeps each section's pages; each section hands the Frame its list, and the Frame is told which section the path shows.
 export function FrameNavigator(): React.JSX.Element {
   const wide = useSizeClass() === 'wide';
+  const plugins = usePluginSections();
 
   const frame = useFrame({
     sizeClass: frameSizeClass(wide),
     section: sectionOf(usePathname()),
     lists: useSectionLists(),
+    items: [...coreNavigationSections, ...plugins],
   });
 
   return (
     <Frame frame={frame}>
-      <SectionsDrawer wide={wide} frame={frame} />
+      <SectionsDrawer wide={wide} frame={frame} plugins={plugins} />
     </Frame>
   );
 }

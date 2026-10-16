@@ -8,8 +8,8 @@ import {
 } from '#primitives/lists/drawer-item';
 import {
   type Section,
-  sectionOrder,
-  sections,
+  coreNavigationSections,
+  type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
 import {
   attentionBadge,
@@ -18,6 +18,7 @@ import {
 import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
 
 interface DrawerNavigation {
+  items?: readonly NavigationSection[];
   selectedSection: Section;
   // The Sessions that need input or are Unread, for the Sessions row's badge.
   attentionCount: number;
@@ -31,9 +32,9 @@ export interface PhoneDrawerContentProps extends DrawerNavigation {
 }
 
 function sectionItem(
-  section: Section,
+  section: NavigationSection,
 ): Pick<DrawerItemProps, 'label' | 'icon'> {
-  const { title, icon } = sections[section];
+  const { title, icon } = section;
 
   return { label: title, icon };
 }
@@ -41,15 +42,15 @@ function sectionItem(
 function SectionButton({
   section,
   ...navigation
-}: DrawerNavigation & { section: Section }): React.JSX.Element {
-  const count = sectionAttentionCount(section, navigation.attentionCount);
+}: DrawerNavigation & { section: NavigationSection }): React.JSX.Element {
+  const count = sectionAttentionCount(section.id, navigation.attentionCount);
 
   return (
     <DrawerItem
       {...sectionItem(section)}
-      selected={navigation.selectedSection === section}
+      selected={navigation.selectedSection === section.id}
       badge={attentionBadge(count)}
-      onPress={() => navigation.onSectionChange(section)}
+      onPress={() => navigation.onSectionChange(section.id)}
     />
   );
 }
@@ -68,8 +69,8 @@ function DrawerTitle(): React.JSX.Element {
 function SectionButtons(navigation: DrawerNavigation): React.JSX.Element {
   return (
     <View className="flex-1 gap-1">
-      {sectionOrder.map((section) => (
-        <SectionButton key={section} section={section} {...navigation} />
+      {(navigation.items ?? coreNavigationSections).map((section) => (
+        <SectionButton key={section.id} section={section} {...navigation} />
       ))}
     </View>
   );

@@ -1,14 +1,15 @@
 import type * as React from 'react';
-import { createContext, type ReactNode, use } from 'react';
+import type { ReactNode } from 'react';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
-import { HeaderButton } from '#lib/product/header-button';
 import {
   type InspectorControl,
   InspectorProvider,
 } from '#lib/product/inspector';
-import type { FirstPage } from '#lib/product/navigation/navigation';
-import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
-import type { Section } from '../../../lib/product/navigation/sections';
+import {
+  isCoreSection,
+  type Section,
+  type NavigationSection,
+} from '../../../lib/product/navigation/sections';
 import { FrameRail } from '../components/frame-rail/frame-rail';
 import {
   PhoneDrawerContent,
@@ -26,42 +27,22 @@ import {
 } from '../scaffold/scaffold';
 import { LiveConnectionBanner } from './connection-banner';
 import { useFrameState } from './frame-state';
+import { SectionListsContext, type SectionLists } from './section-lists';
 
 export { useFrameState } from './frame-state';
 
-// What a section hands the Frame: its list, and what goes with it.
-export interface SectionList {
-  // The list's own part of the sidebar's header row.
-  header: ReactNode;
-  list: ReactNode;
-  // The header over the list when the list is the section's root page, as Android's drawer header and the web's JS header draw it.
-  rootHeader: ScreenHeaderProps;
-  // The root page's own stock header items and search bar (`Stack.Toolbar`, `Stack.SearchBar`), which iOS shows instead of `rootHeader`'s.
-  rootToolbar?: ReactNode;
-  /*
-   * The page a window with the list beside it opens at the section's root, or undefined while
-   * it is still being chosen; without one, the root keeps its own page. Called as a hook.
-   */
-  useFirstPage?: () => FirstPage | undefined;
-}
-
-export type SectionLists = Record<Section, SectionList>;
-
-const SectionListsContext = createContext<SectionLists | null>(null);
-
-export function useSectionList(section: Section): SectionList {
-  const lists = use(SectionListsContext);
-
-  if (!lists) throw new Error('Render inside a Frame.');
-
-  return lists[section];
-}
+export {
+  useSectionList,
+  type SectionList,
+  type SectionLists,
+} from './section-lists';
 
 export interface FrameOptions {
   sizeClass: SizeClass;
   // The section the navigator shows.
   section: Section;
   lists: SectionLists;
+  items?: readonly NavigationSection[];
 }
 
 // What the Frame and its sidebar and pages are drawn from, which the navigator holds and hands to each.
@@ -71,22 +52,39 @@ export interface FrameParts {
   inspector: InspectorControl;
   section: Section;
   lists: SectionLists;
+  items?: readonly NavigationSection[];
 }
 
 type FrameScaffoldState = ReturnType<typeof useFrameState>['scaffold'];
 
 // The Scaffold's props: the Frame's sidebar and Inspector state around the shown section's list, with the live Connection banner.
-const frameScaffold = (
+function frameScaffold(
   state: FrameScaffoldState,
-  { sizeClass, section, lists }: FrameOptions,
-): ScaffoldProps => ({
-  ...state,
-  sizeClass,
-  sidebar: null,
-  listHeader: lists[section].header,
-  list: lists[section].list,
-  banner: <LiveConnectionBanner />,
-});
+  options: FrameOptions,
+): ScaffoldProps {
+  return {
+    ...state,
+    ...sectionScaffold(options),
+    sizeClass: options.sizeClass,
+    sidebar: null,
+    banner: <LiveConnectionBanner />,
+  };
+}
+
+type SectionScaffold = Pick<ScaffoldProps, 'listHeader' | 'list'> &
+  Partial<Pick<ScaffoldProps, 'sidebarShown' | 'inspectorState'>>;
+
+function sectionScaffold({ section, lists }: FrameOptions): SectionScaffold {
+  if (!isCoreSection(section))
+    return {
+      listHeader: null,
+      list: null,
+      sidebarShown: false,
+      inspectorState: 'closed',
+    };
+
+  return { listHeader: lists[section].header, list: lists[section].list };
+}
 
 // What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
 export function useFrame(options: FrameOptions): FrameParts {
@@ -97,6 +95,7 @@ export function useFrame(options: FrameOptions): FrameParts {
     inspector,
     section: options.section,
     lists: options.lists,
+    items: options.items,
   };
 }
 
@@ -132,6 +131,8 @@ function LiveRail({
   return (
     <FrameRail
       selectedSection={frame.section}
+      items={frame.items}
+      hasSidebar={isCoreSection(frame.section)}
       attentionCount={useAttentionCount()}
       {...{ sidebarShown, onSidebarShownChange, onSectionChange }}
     />
@@ -175,23 +176,4 @@ export function SectionDrawer(props: SectionDrawerProps): React.JSX.Element {
   return <PhoneDrawerContent {...props} attentionCount={useAttentionCount()} />;
 }
 
-// Whether any Session needs attention, which ☰ marks with a dot or badge on a narrow section root.
-export const useNeedsAttention = (): boolean => useAttentionCount() > 0;
-
-interface SectionMenuButtonProps {
-  onOpen: () => void;
-}
-
-// ☰ at the leading edge of the web's narrow section root header, with a dot while Sessions need attention; native headers declare a stock item instead.
-export function SectionMenuButton({
-  onOpen,
-}: SectionMenuButtonProps): React.JSX.Element {
-  return (
-    <HeaderButton
-      icon="menu"
-      accessibilityLabel="Open navigation"
-      dot={useNeedsAttention() ? 'attention' : undefined}
-      onPress={onOpen}
-    />
-  );
-}
+export { SectionMenuButton, useNeedsAttention } from './section-menu-button';

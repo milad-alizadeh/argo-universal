@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { ListTitle } from '../../../lib/product/list-title';
 import {
   type Section,
+  isCoreSection,
   sections,
 } from '../../../lib/product/navigation/sections';
 import { FrameRail } from '../components/frame-rail/frame-rail';
@@ -106,7 +107,7 @@ type MockPanes = Pick<
 // A stand-in rail, list, page and Inspector for the open section.
 function mockPanes(props: ScaffoldMockProps, state: ScaffoldState): MockPanes {
   const section = props.selectedSection ?? 'sessions';
-  const { title } = sections[section];
+  const { title } = sections[mockSection(section)];
 
   return {
     sidebar: <MockRail {...props} {...state} section={section} />,
@@ -129,3 +130,6 @@ export function ScaffoldMock(props: ScaffoldMockProps): React.JSX.Element {
     </View>
   );
 }
+
+const mockSection = (section: Section): 'sessions' | 'settings' =>
+  isCoreSection(section) ? section : 'sessions';

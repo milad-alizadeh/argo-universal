@@ -91,6 +91,7 @@ type ServerSource = {
     | 'loginCleanupTimeoutMs'
     | 'home'
     | 'port'
+    | 'firstPartyPluginsDirectory'
     | 'version'
     | 'startedAt'
     | 'database'
@@ -101,6 +102,7 @@ type ServerSource = {
 type ServerInput = (source: ServerSource) => HttpServerOptions;
 
 export const serverInput: ServerInput = ({ context, self }) => ({
+  firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
   createId: context.createId,
   installations: context.installations,
   sessions: requireOpenSessions(self.system),

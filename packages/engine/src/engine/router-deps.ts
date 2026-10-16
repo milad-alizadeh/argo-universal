@@ -10,6 +10,7 @@ import { AgentInstallations, type AgentsRouterDeps } from '../agents';
 import type { BlobUploadDeps } from '../blob';
 import type { FeedDeps } from '../feed';
 import { findMachineActor } from '../lib/machine-actor';
+import type { PluginsDeps } from '../plugins';
 import {
   createSessionReader,
   createSessionSnapshotWatcher,
@@ -27,7 +28,8 @@ export type AppRouterDeps = SessionRouterDeps &
   AgentsRouterDeps &
   BlobUploadDeps &
   SystemDeps &
-  FeedDeps;
+  FeedDeps &
+  PluginsDeps;
 
 type FeedSourcesInput = { database: Database; sessions: OpenSessionsActorRef };
 
