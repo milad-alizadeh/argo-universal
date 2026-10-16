@@ -5,17 +5,14 @@ import {
   type TextContent,
   type LiveHeader,
   type LiveHeaderSource,
-  type PendingElicitation,
-  type PendingPermission,
   type SessionUpdate,
   type ToolCallUpdate,
 } from '@repo/contracts';
+import { type InputRequestQueues, pendingInputRequest } from '../pending-input';
 
-export interface LiveHeaderInput {
+export interface LiveHeaderInput extends InputRequestQueues {
   activeTurnId: string | null;
   activeTurnStartedAt: number | null;
-  permissionQueue: readonly PendingPermission[];
-  elicitationQueue: readonly PendingElicitation[];
   pendingPlanProposal?: { planId: string; content: string } | null;
 }
 
@@ -83,11 +80,15 @@ export function toLiveHeader(
 
   const request = { type: 'request' } as const;
 
-  if (session.permissionQueue.length)
-    return header('Awaiting approval', request);
+  const pending = pendingInputRequest(session);
 
-  if (session.elicitationQueue.length)
-    return header('Waiting for your answer', request);
+  if (pending)
+    return header(
+      pending.kind === 'permission'
+        ? 'Awaiting approval'
+        : 'Waiting for your answer',
+      request,
+    );
 
   if (session.pendingPlanProposal) return header('Plan ready', request);
 

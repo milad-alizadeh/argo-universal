@@ -190,6 +190,10 @@ _Avoid_: Approval, prompt
 A question from the Agent that asks the user for information.
 _Avoid_: User question, ask
 
+**Input request**:
+A Permission request or Elicitation that waits for the user's answer. A Session's pending Input request is its oldest Permission request, else its oldest Elicitation.
+_Avoid_: Prompt, pending action
+
 **Compaction**:
 A point where the Agent condensed the Session history so that the Session can continue.
 _Avoid_: Summarisation, context reset

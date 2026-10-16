@@ -2,12 +2,15 @@ import type {
   AgentMessage,
   TextContent,
   LiveHeader,
-  PendingPermission,
   PlanUpdate,
   SessionRecord,
   SessionUpdate,
   Turn,
 } from '@repo/contracts';
+import {
+  type PendingInputRequest,
+  pendingInputRequest,
+} from '../pending-input';
 import { toSessionCheckout } from '../session-record';
 import { type LiveHeaderInput, toLiveHeader } from './live-header';
 import type { SessionListState } from './session-list-machine';
@@ -34,9 +37,7 @@ export function toSessionInfo(
     ? live.activeTurnId !== null
     : latestTurn?.status === 'running';
 
-  const needsInput = Boolean(
-    live?.permissionQueue[0] || live?.elicitationQueue[0],
-  );
+  const pending = live ? pendingInputRequest(live) : null;
 
   const header = toLiveHeader(
     {
@@ -63,7 +64,7 @@ export function toSessionInfo(
       title: row.title,
       titleSource: row.titleSource,
       status: deriveSessionStatus({
-        needsInput,
+        needsInput: pending !== null,
         running,
         failure: live?.failure ?? row.failure,
         latestTurnFailed: latestTurn?.stopReason === 'error',
@@ -72,10 +73,9 @@ export function toSessionInfo(
         seenRevision: row.seenRevision,
       }),
       activity: activityOf({
-        needsInput,
+        pending,
         running,
         header,
-        permission: live?.permissionQueue[0],
         message: input.message,
       }),
       activityAt:
@@ -122,14 +122,14 @@ export function latestTurnOf(
 }
 
 function activityOf(input: {
-  needsInput: boolean;
+  pending: PendingInputRequest | null;
   running: boolean;
   header: LiveHeader | null;
-  permission: PendingPermission | undefined;
   message: AgentMessage | undefined;
 }): string {
-  if (input.needsInput)
-    return input.permission?.title ?? 'Waiting for your answer';
+  if (input.pending?.kind === 'permission') return input.pending.request.title;
+
+  if (input.pending) return 'Waiting for your answer';
 
   if (input.running) return input.header?.text ?? 'Working';
 

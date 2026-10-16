@@ -1,4 +1,4 @@
-import type { SessionActorRef } from '../sessions';
+import { pendingInputRequest, type SessionActorRef } from '../sessions';
 import type { NotificationFact } from './facts';
 
 export type InputNotification = Omit<
@@ -9,26 +9,17 @@ export type InputNotification = Omit<
 export function pendingNotificationInput(
   session: SessionActorRef,
 ): InputNotification | null {
-  const { permissionQueue, elicitationQueue, activeTurnId } =
-    session.getSnapshot().context;
+  const { context } = session.getSnapshot();
+  const pending = pendingInputRequest(context);
 
-  const permission = permissionQueue[0];
-
-  if (permission)
-    return inputRequest('permission', permission.requestId, activeTurnId);
-  const elicitation = elicitationQueue[0];
-
-  return elicitation
-    ? inputRequest('elicitation', elicitation.requestId, activeTurnId)
+  return pending
+    ? {
+        kind: 'input_requested',
+        requestKind: pending.kind,
+        requestId: pending.requestId,
+        turnId: context.activeTurnId,
+      }
     : null;
-}
-
-function inputRequest(
-  requestKind: InputNotification['requestKind'],
-  requestId: string,
-  turnId: string | null,
-): InputNotification {
-  return { kind: 'input_requested', requestKind, requestId, turnId };
 }
 
 export const inputRequestId = (

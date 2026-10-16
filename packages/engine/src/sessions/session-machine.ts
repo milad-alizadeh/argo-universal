@@ -89,6 +89,7 @@ import {
   withHeldConfiguration,
   withoutHeldChoice,
 } from './configuration/held-configuration';
+import { pendingInputRequest } from './pending-input';
 import { validateConfigChoice } from './session-admission';
 import {
   createSessionCheckout,
@@ -1102,9 +1103,10 @@ const sessionSetup = setup({
     isPermissionHead: ({ context, event }): boolean =>
       event.type === answerPermissionEvent &&
       admitsPermissionAnswer(context.permissionQueue, event),
-    hasPermission: ({ context }): boolean => context.permissionQueue.length > 0,
+    hasPermission: ({ context }): boolean =>
+      pendingInputRequest(context)?.kind === 'permission',
     hasElicitation: ({ context }): boolean =>
-      context.elicitationQueue.length > 0,
+      pendingInputRequest(context)?.kind === 'elicitation',
     isPendingElicitation: ({ context, event }): boolean =>
       event.type === answerElicitationEvent &&
       answeredRequest(context.elicitationQueue, event.requestId) !== undefined,
