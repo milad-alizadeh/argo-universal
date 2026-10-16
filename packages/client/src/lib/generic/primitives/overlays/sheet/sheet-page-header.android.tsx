@@ -1,11 +1,11 @@
 import ArrowBack from '@expo/material-symbols/arrow_back.xml';
-import { Icon, IconButton, Row, Text } from '@expo/ui/jetpack-compose';
+import { Icon, IconButton, Row, Spacer, Text } from '@expo/ui/jetpack-compose';
 import {
-  type ModifierConfig,
   fillMaxWidth,
-  padding,
+  height,
   semantics,
   weight,
+  size,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { backLabel } from './sheet-page-label';
@@ -21,29 +21,27 @@ export function PageHeader(props: HeaderProps): ReactElement | null {
   if (!showHeader(props)) return null;
 
   return (
-    <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
-      {!props.root && <BackButton stack={props.stack} />}
-      <Text
-        maxLines={1}
-        style={titleStyle}
-        modifiers={titleModifiers(props.root)}
-      >
+    <Row verticalAlignment="center" modifiers={headerModifiers}>
+      {props.root ? <Slot /> : <BackButton stack={props.stack} />}
+      <Text maxLines={1} style={titleStyle} modifiers={[weight(1)]}>
         {props.title}
       </Text>
+      <Slot />
     </Row>
   );
 }
 
-// Material's top app bar title.
-const titleStyle = { typography: 'titleLarge' } as const;
+// The back button's 48 dp: a root page's title sits where a pushed page's does.
+const headerSize = 48;
 
-// The list's 16 dp gutter, so a root page's title lines up with the rows under it; on a pushed page the back button leads instead.
-const titleInset = 16;
+const headerModifiers = [fillMaxWidth(), height(headerSize)];
 
-function titleModifiers(root: boolean): ModifierConfig[] {
-  return root
-    ? [weight(1), padding(titleInset, 0, titleInset, 0)]
-    : [weight(1)];
+// Material's section title, as the Settings sections use: a sheet page is a section, not a screen. Centred, as Android apps title their sheets.
+const titleStyle = { typography: 'titleMedium', textAlign: 'center' } as const;
+
+// An empty back-button-sized slot, so the title stays centred whether or not Back leads.
+function Slot(): ReactElement {
+  return <Spacer modifiers={[size(headerSize, headerSize)]} />;
 }
 
 // Material's standard icon button with the Material Symbols back arrow, drawn by Compose so the press reaches the button.

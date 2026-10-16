@@ -15,6 +15,12 @@ import { Sheet } from '#primitives/overlays/sheet';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useAfterClose } from '../../hooks/use-after-close';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
+import {
+  compactClassName,
+  type OverlayProps,
+  rootPage,
+  sheetProps,
+} from './composer-popover-page';
 import type { ComposerPopoverProps } from './popover-types';
 
 type PanelProps = Pick<ComposerPopoverProps, 'children'> & {
@@ -33,12 +39,6 @@ function PopoverPanel({ children, disabled, close }: PanelProps): ReactNode {
     dismiss();
   });
 }
-
-type OverlayProps = ComposerPopoverProps &
-  ReturnType<typeof useAfterClose> & {
-    open: boolean;
-    layout: ReturnType<typeof useResolveClassNames>;
-  };
 
 export function ComposerPopover(
   props: ComposerPopoverProps,
@@ -106,11 +106,12 @@ function CompactPopover(props: OverlayProps): React.JSX.Element {
       contentScrolls={props.listContent}
       detents={props.listContent ? ['medium', 'large'] : undefined}
     >
-      <CompactContent {...props} />
+      {Platform.OS === 'web' ? <CompactContent {...props} /> : rootPage(props)}
     </Sheet>
   );
 }
 
+// A narrow web window centres the label over the content.
 function CompactContent(props: OverlayProps): React.JSX.Element {
   const className = compactClassName(props);
 
@@ -140,24 +141,4 @@ function panelProps(props: OverlayProps): PanelProps {
     close: props.close,
     children: props.children,
   };
-}
-
-function sheetProps(
-  props: OverlayProps,
-): Pick<
-  React.ComponentProps<typeof Sheet>,
-  'style' | 'open' | 'onOpenChange' | 'onClosed' | 'trigger' | 'label'
-> {
-  return {
-    style: props.layout,
-    open: props.open,
-    onOpenChange: props.onOpenChange,
-    onClosed: props.closed,
-    trigger: props.trigger,
-    label: props.label,
-  };
-}
-
-function compactClassName(props: ComposerPopoverProps): string | undefined {
-  return props.listContent && Platform.OS !== 'web' ? 'flex-1' : undefined;
 }

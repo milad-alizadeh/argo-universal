@@ -62,7 +62,7 @@ function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
 
   return (
     <PopoverHoverGroup>
-      <GroupedListSection footer={notice}>
+      <GroupedListSection title="Model" footer={notice}>
         <ConfigurationDrillRows {...props} />
       </GroupedListSection>
     </PopoverHoverGroup>
@@ -84,7 +84,10 @@ function ConfigurationTuning({
   if (!hasTuning(configuration)) return null;
 
   return (
-    <GroupedListSection footer={configurationNotice(configuration)}>
+    <GroupedListSection
+      title="Response"
+      footer={configurationNotice(configuration)}
+    >
       <SwitchOptions configuration={configuration} />
       <EffortControl configuration={configuration} />
     </GroupedListSection>

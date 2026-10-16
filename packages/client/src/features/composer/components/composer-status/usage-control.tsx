@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Icon } from '#primitives/display/icon';
 import type { ComposerStatusProps, UsageLimit } from '../../utils/status';
@@ -46,14 +46,21 @@ function UsageLimitRow({ limit }: { limit: UsageLimit }): JSX.Element {
   );
 }
 
+function UsageHeading(): JSX.Element {
+  return (
+    <View className="px-4 gap-1 pb-3">
+      <StatusText role={'heading'} className="select-none">
+        Usage
+      </StatusText>
+    </View>
+  );
+}
+
+// A phone's sheet page header already reads "Usage".
 function UsageContent({ usage }: Pick<UsageProps, 'usage'>): JSX.Element {
   return (
     <View className="pt-1 wide:pt-3">
-      <View className="px-4 gap-1 pb-3">
-        <StatusText role={'heading'} className="select-none">
-          Usage
-        </StatusText>
-      </View>
+      {Platform.OS === 'web' && <UsageHeading />}
       {usage.limits.map((limit) => (
         <UsageLimitRow key={limit.label} limit={limit} />
       ))}
