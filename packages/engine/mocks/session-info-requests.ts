@@ -11,6 +11,7 @@ export const rules: {
     rule: 'needs input uses the first Permission request before running work',
     input: {
       ...idle,
+      activeTurnId: 'turn-1',
       live: {
         ...live,
         permissionQueue: [
@@ -43,6 +44,7 @@ export const rules: {
     input: {
       ...idle,
       live,
+      activeTurnId: 'turn-1',
       liveHeader: {
         text: 'Checking the tests',
         source: { type: 'thought' },
@@ -60,7 +62,7 @@ export const rules: {
   },
   {
     rule: 'running without a Live header falls back to Working',
-    input: { ...idle, turns: [turn] },
+    input: { ...idle, turns: [turn], activeTurnId: 'turn-1' },
     expected: {
       information: { ...information, status: 'running', activity: 'Working' },
       running: true,

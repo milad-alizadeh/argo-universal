@@ -23,13 +23,17 @@ export type LiveHeaderRead = {
 
 type LiveHeaderResult = {
   header: LiveHeader | null;
+  // The Turn the Live header follows, or null when none is running.
+  activeTurnId: string | null;
   // A stored row the Live header needed failed its shape.
   rejected: boolean;
 };
 
+type HeaderRows = ReturnType<ReturnType<typeof createLiveHeaderRowsReader>>;
+
 const noTurn: ActiveTurn = { activeTurnId: null, activeTurnStartedAt: null };
 
-// One Live header for the Session list and the Session snapshot: the Session actor's active Turn, else the latest Turn while it runs.
+// One active Turn and Live header for the Session list and the Session snapshot: the Session actor's active Turn, else the latest Turn while it runs.
 export function createLiveHeaderReader(deps: {
   database: Database;
 }): (input: LiveHeaderRead) => LiveHeaderResult {
@@ -38,14 +42,25 @@ export function createLiveHeaderReader(deps: {
   return (input): LiveHeaderResult => {
     const session = headerSession(input);
 
-    const { rows, rejected } = readRows({
+    const rows = readRows({
       writer: input.writer,
       sessionId: input.sessionId,
       turnId: session.activeTurnId,
       rows: input.memoryRows,
     });
 
-    return { header: toLiveHeader(session, Object.values(rows)), rejected };
+    return headerResult(session, rows);
+  };
+}
+
+function headerResult(
+  session: LiveHeaderInput,
+  { rows, rejected }: HeaderRows,
+): LiveHeaderResult {
+  return {
+    header: toLiveHeader(session, Object.values(rows)),
+    activeTurnId: session.activeTurnId,
+    rejected,
   };
 }
 

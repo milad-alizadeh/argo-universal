@@ -3,9 +3,10 @@ import { toShell } from '../acp/shells/shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
 import { snapshotState, type SessionState } from './state';
 
+// The Live header reader's active Turn and Live header, with the Feed's revision.
 export type FeedSnapshot = Pick<
   SessionSnapshot,
-  'epoch' | 'maxRevision' | 'liveHeader'
+  'epoch' | 'maxRevision' | 'liveHeader' | 'activeTurnId'
 >;
 
 export type StoredSnapshot = Pick<
@@ -21,7 +22,6 @@ export type StoredSnapshot = Pick<
 
 type SessionDisplayContext = Pick<
   SessionState['context'],
-  | 'activeTurnId'
   | 'usage'
   | 'permissionQueue'
   | 'elicitationQueue'
@@ -42,8 +42,6 @@ type StoredFields = Pick<
 
 type SessionFields = Pick<
   SessionSnapshot,
-  | 'state'
-  | 'activeTurnId'
   | 'usage'
   | 'pendingPermission'
   | 'pendingElicitation'
@@ -54,7 +52,6 @@ type SessionFields = Pick<
 const noChanges: ChangesSummary = { files: 0, additions: 0, deletions: 0 };
 
 const idleContext: SessionDisplayContext = {
-  activeTurnId: null,
   usage: null,
   permissionQueue: [],
   elicitationQueue: [],
@@ -70,7 +67,7 @@ export function toSessionSnapshot(
   return {
     ...storedFields(stored),
     ...sessionFields(session),
-    liveHeader: feed.liveHeader,
+    ...activeTurnFields(session, feed),
     maxRevision: feed.maxRevision,
     epoch: feed.epoch,
     shells: session ? liveShells(session) : stored.shells,
@@ -89,12 +86,22 @@ function storedFields(stored: StoredSnapshot): StoredFields {
   };
 }
 
+// The Live header and the active Turn it follows, which also runs a Session without a Session actor.
+function activeTurnFields(
+  session: SessionState | null,
+  feed: FeedSnapshot,
+): Pick<SessionSnapshot, 'state' | 'activeTurnId' | 'liveHeader'> {
+  return {
+    state: snapshotState(session, feed.activeTurnId),
+    activeTurnId: feed.activeTurnId,
+    liveHeader: feed.liveHeader,
+  };
+}
+
 function sessionFields(session: SessionState | null): SessionFields {
   const context = displayContext(session);
 
   return {
-    state: snapshotState(session),
-    activeTurnId: context.activeTurnId,
     usage: context.usage,
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.elicitationQueue[0] ?? null,

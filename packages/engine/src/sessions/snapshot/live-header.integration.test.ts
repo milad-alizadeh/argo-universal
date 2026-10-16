@@ -72,7 +72,7 @@ it.each([
   },
   { source: 'queued', start: queueRunningTurn },
 ])(
-  'shows the Live header of a Subagent whose $source Turn is running',
+  'shows a Subagent whose $source Turn is running as running, with its Live header',
   async ({ start }): Promise<void> => {
     const host = startSnapshotHost();
     insertSession(host.database, { id: 'child', parentSessionId: 'session-1' });
@@ -81,11 +81,15 @@ it.each([
     const { snapshots, errors } = host.watch('child');
 
     expect(errors).toEqual([]);
-    expect(snapshots.at(-1)?.liveHeader).toEqual(checkingTests);
+    expect(snapshots.at(-1)).toMatchObject({
+      state: 'running',
+      activeTurnId: 'child-turn',
+      liveHeader: checkingTests,
+    });
   },
 );
 
-it('shows no Live header for a Subagent whose latest Turn ended', (): void => {
+it('shows a Subagent whose latest Turn ended as idle, with no Live header', (): void => {
   const host = startSnapshotHost();
   insertSession(host.database, { id: 'child', parentSessionId: 'session-1' });
   storeRunningTurn(host, 'child');
@@ -101,7 +105,11 @@ it('shows no Live header for a Subagent whose latest Turn ended', (): void => {
     })
     .run();
 
-  expect(host.watch('child').snapshots.at(-1)?.liveHeader).toBeNull();
+  expect(host.watch('child').snapshots.at(-1)).toMatchObject({
+    state: 'idle',
+    activeTurnId: null,
+    liveHeader: null,
+  });
 });
 
 it('gives the list and the snapshot the same Live header for a running root Session without a Session actor', (): void => {
