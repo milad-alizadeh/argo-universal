@@ -14,6 +14,7 @@ type LiveSession = {
   permissionQueue: readonly PendingPermission[];
   elicitationQueue: readonly PendingElicitation[];
   failure: string | null;
+  pendingPlanProposal?: { planId: string; content: string } | null;
 };
 
 export interface SessionInfoFixture {

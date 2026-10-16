@@ -1,4 +1,4 @@
-import { idle, turn, information } from './session-info';
+import { idle, live, turn, information } from './session-info';
 import type { SessionInfoFixture } from './session-info-case';
 
 export const rules: {
@@ -6,6 +6,20 @@ export const rules: {
   input: SessionInfoFixture;
   expected: unknown;
 }[] = [
+  {
+    rule: 'list activity ignores a Plan proposal while a Turn runs',
+    input: {
+      ...idle,
+      live: {
+        ...live,
+        pendingPlanProposal: { planId: 'plan-1', content: 'A proposal' },
+      },
+    },
+    expected: {
+      information: { ...information, status: 'running', activity: 'Working' },
+      running: true,
+    },
+  },
   {
     rule: 'stored running Turn supplies the Live header without a Session actor',
     input: {

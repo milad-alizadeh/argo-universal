@@ -99,7 +99,12 @@ export class SessionInfoActivity {
     LiveHeaderInput,
     'permissionQueue' | 'elicitationQueue'
   > {
-    return this.input.live ?? { permissionQueue: [], elicitationQueue: [] };
+    const live = this.input.live;
+
+    return {
+      permissionQueue: live ? live.permissionQueue : [],
+      elicitationQueue: live ? live.elicitationQueue : [],
+    };
   }
 }
 
