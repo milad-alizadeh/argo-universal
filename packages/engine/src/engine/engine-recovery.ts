@@ -6,7 +6,11 @@ import {
   removeOrphanAttachments,
   removeUnusedBlobs,
 } from '../blob';
-import { recoverAfterRestart, recoverArchivedCheckouts } from '../sessions';
+import {
+  recoverAfterRestart,
+  recoverArchivedCheckouts,
+  recoverShells,
+} from '../sessions';
 
 export type RecoveryInput = {
   database: Database;
@@ -17,6 +21,7 @@ export type RecoveryInput = {
 export async function recoverEngineAfterRestart(
   input: RecoveryInput,
 ): Promise<void> {
+  await recoverShells(input);
   recoverAfterRestart(input.database);
   await recoverArchivedCheckouts(input.database);
   await reconcileInterruptedInstallations(input.home);

@@ -1,4 +1,4 @@
-import type { SessionRecord } from '@repo/contracts';
+import type { SessionRecord, SessionInfo } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { readQueuedSessionRows } from '../session-storage';
 import type { ListReadInput, ListReaderOptions } from './list-read-input';
@@ -87,6 +87,7 @@ class ListReader {
         this.validate(read),
       readLiveHeaderRows: this.readHeader,
       rejectedSessions: new Set<string>(),
+      shellCounts: new Map<string, SessionInfo['shells']>(),
     };
   }
 

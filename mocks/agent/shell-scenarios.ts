@@ -1,7 +1,6 @@
 import { acpConfiguration } from './acp-configuration.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-types.ts';
 
-// These commands run only when #89 supplies the real Server terminal service.
 export const runningShellStep = {
   type: 'terminal',
   toolCallId: 'background-command',
@@ -37,3 +36,27 @@ export const shellScenarios = {
   'shell-exited': shellScenario(exitedShellStep),
   'shell-stopped': shellScenario(stoppedShellStep),
 } satisfies Record<string, ScriptedScenario>;
+
+export const streamingShellStep = {
+  type: 'terminal',
+  toolCallId: 'streaming-command',
+  request: {
+    command: 'node',
+    args: [
+      '-e',
+      "const fs = require('fs'); console.log('α ready'); const timer = setInterval(() => { if (!fs.existsSync(process.env.ARGO_SHELL_GATE)) return; clearInterval(timer); console.error('ω done'); }, 10)",
+    ],
+  },
+  completion: 'leave-running',
+} satisfies ScriptedStep;
+
+export const descendantShellStep = {
+  ...runningShellStep,
+  request: {
+    command: 'node',
+    args: [
+      '-e',
+      "const { spawn } = require('child_process'); const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'inherit' }); console.log('descendant:' + child.pid); setInterval(() => {}, 1000)",
+    ],
+  },
+} satisfies ScriptedStep;

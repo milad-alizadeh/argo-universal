@@ -38,3 +38,34 @@ export const processGroupMembers = (group: number): ProcessGroupMember[] =>
     .filter(
       (member) => member.group === group && !member.state.startsWith('Z'),
     );
+
+type ProcessParent = { pid: number; parent: number };
+
+const parseParent = (line: string): ProcessParent => {
+  const [pid, parent] = line.trim().split(/\s+/);
+
+  return { pid: Number(pid), parent: Number(parent) };
+};
+
+const processParents = (): ProcessParent[] =>
+  execFileSync('/bin/ps', ['-A', '-o', 'pid=,ppid='], { encoding: 'utf8' })
+    .trim()
+    .split('\n')
+    .map(parseParent);
+
+export const processDescendants = (root: number): number[] => {
+  const parents = processParents();
+  const descendants: number[] = [];
+  const pending = [root];
+
+  for (const parent of pending) {
+    const children = parents.flatMap((member) =>
+      member.parent === parent ? [member.pid] : [],
+    );
+
+    descendants.push(...children);
+    pending.push(...children);
+  }
+
+  return descendants;
+};

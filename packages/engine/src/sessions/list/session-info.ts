@@ -2,6 +2,7 @@ import type {
   AgentMessage,
   PlanUpdate,
   SessionRecord,
+  SessionInfo,
   SessionUpdate,
   Turn,
 } from '@repo/contracts';
@@ -19,6 +20,7 @@ export interface SessionInfoInput {
   feed: { maxRevision: number; activityAt: number } | null;
   liveHeaderRows: readonly SessionUpdate[];
   children: readonly SessionRecord[];
+  shells?: SessionInfo['shells'];
 }
 
 export function toSessionInfo(
@@ -134,7 +136,7 @@ function sessionDetails(
   return {
     plan: planSummary(input.plan),
     subagents: subagentCounts(input),
-    shells: { total: 0, running: 0 },
+    shells: input.shells ?? { total: 0, running: 0 },
     archivedAt: input.row.archivedAt,
     pullRequest: null,
   };

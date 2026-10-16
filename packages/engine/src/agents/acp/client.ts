@@ -7,9 +7,14 @@ import {
 } from '@agentclientprotocol/sdk';
 import type { AuthStatusUpdateNotification } from '@repo/contracts';
 import { authStatusNotification, createAuthStatusReader } from './auth-status';
+import {
+  acceptTerminalRequests,
+  type TerminalRequests,
+} from './terminal-requests';
 
 type AgentClientInput = {
   stream: Stream;
+  terminalRequests?: TerminalRequests;
   acceptSessionUpdate: (notification: SessionNotification) => undefined;
   requestPermission: ClientRequestHandlersByMethod['session/request_permission'];
   createElicitation: ClientRequestHandlersByMethod['elicitation/create'];
@@ -18,7 +23,7 @@ type AgentClientInput = {
 };
 
 export const createAgentClient = (input: AgentClientInput): ClientConnection =>
-  client()
+  acceptTerminalRequests(client(), input.terminalRequests)
     .onNotification('session/update', ({ params }) =>
       input.acceptSessionUpdate(params),
     )

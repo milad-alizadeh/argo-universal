@@ -12,6 +12,8 @@ import {
 } from './acp-session-destination';
 import { selectSessionOpening } from './acp-session-opening';
 import { AcpSessionRequests } from './acp-session-requests';
+import { withShellDestination } from './shell-destination';
+import type { ShellRuntime } from './shell-runtime';
 
 export type { AcpLifetimeEvent } from './acp-session-destination';
 
@@ -34,10 +36,12 @@ export class AcpSessionLifetime {
   private closing: Promise<void> | undefined;
   private lease: AcpSessionLease | undefined;
   private attached = false;
+  private shellCloseStatus: 'lost' | 'stopped' = 'lost';
   private readonly requests: AcpSessionRequests;
   public constructor(
     private readonly dependencies: AcpSessionDependencies | undefined,
     createId: () => string,
+    private readonly shells?: ShellRuntime,
   ) {
     this.requests = new AcpSessionRequests(createId);
   }
@@ -53,12 +57,27 @@ export class AcpSessionLifetime {
   private createSessionDestination(
     sendBack: SendLifetimeEvent,
   ): AcpSessionDestination {
-    return {
+    const destination = {
       ...createLifetimeDestination(this.requests, (event) => {
         if (this.attached) sendBack(event);
       }),
-      registrationFinished: this.registration.promise,
     };
+
+    return this.attachShells({
+      ...destination,
+      registrationFinished: this.registration.promise,
+    });
+  }
+  private attachShells(
+    destination: AcpSessionDestination,
+  ): AcpSessionDestination {
+    return this.shells
+      ? withShellDestination({
+          destination,
+          shells: this.shells,
+          closeStatus: () => this.shellCloseStatus,
+        })
+      : destination;
   }
   public finishRegistration(): void {
     this.registration.resolve();
@@ -73,6 +92,7 @@ export class AcpSessionLifetime {
     const dependencies = this.requireDependencies();
     const destination = this.createSessionDestination(await this.bound.promise);
     const launch = await this.resolveSessionAgentLaunch(session, dependencies);
+    this.shells?.configure(session, launch);
     this.lease = await dependencies.resources.open({
       launch,
       opening: selectSessionOpening(session),
@@ -110,13 +130,17 @@ export class AcpSessionLifetime {
     this.requests.cancel(requestId);
   }
   public cancelRequests = (): void => this.requests.cancelAll();
-  public close(): Promise<void> {
+  public close(status: 'lost' | 'stopped' = 'lost'): Promise<void> {
+    this.prepareClose(status);
     this.finishRegistration();
     this.requests.cancelAll();
     this.controller.abort();
     this.closing ??= this.closeOwned();
 
     return this.closing;
+  }
+  private prepareClose(status: 'lost' | 'stopped'): void {
+    if (!this.closing) this.shellCloseStatus = status;
   }
   private async closeOwned(): Promise<void> {
     try {

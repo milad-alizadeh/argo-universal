@@ -30,6 +30,7 @@ import type {
 } from './resource-types';
 import { createAcpResponseReaders } from './response-readers';
 import { SubagentRoutes } from './subagent-routing';
+import { routeTerminalRequests } from './terminal-requests';
 
 type AgentSession = {
   destination: AcpSessionDestination;
@@ -187,6 +188,9 @@ export class AcpConnection {
       acceptSessionUpdate: this.update,
       requestPermission: this.permission,
       createElicitation: this.elicitation,
+      terminalRequests: routeTerminalRequests(
+        (id) => this.find(id)?.destination.terminalRequests,
+      ),
     });
   }
   private observeExit(process: AcpProcess, connection: ClientConnection): void {
@@ -481,14 +485,18 @@ export class AcpConnection {
     id: string,
     session: AgentSession,
   ): Promise<void> {
-    if (this.supportsClose())
-      this.readers['session/close'].parse(
-        await this.connection?.agent.request('session/close', {
-          sessionId: id,
-        }),
-      );
+    await Promise.all([
+      this.closeProtocolSession(id),
+      session.destination.closeShells?.(),
+    ]);
     session.controller.abort();
     await Promise.allSettled(session.pending);
+  }
+  private async closeProtocolSession(id: string): Promise<void> {
+    if (!this.supportsClose()) return;
+    this.readers['session/close'].parse(
+      await this.connection?.agent.request('session/close', { sessionId: id }),
+    );
   }
   private supportsClose(): boolean {
     return (

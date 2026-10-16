@@ -106,6 +106,7 @@ class SessionInformationRead {
     liveHeaderRows: SessionUpdate[],
   ): SessionInfoInput {
     return {
+      shells: this.input.shellCounts.get(this.input.row.id),
       row: this.input.row,
       turns: this.input.turns,
       message: lastMessage(updates),

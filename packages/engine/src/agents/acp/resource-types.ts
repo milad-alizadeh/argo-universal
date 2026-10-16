@@ -14,6 +14,7 @@ import type { AgentLaunch } from '..';
 import type { LaunchLoginTerminal } from '..';
 import type { AuthChanges } from '../auth/auth-changes';
 import type { ConnectionAuthentication } from '../auth/authenticate';
+import type { TerminalRequests } from './terminal-requests';
 
 export type AcpSessionOpening =
   | { method: 'session/new'; params: NewSessionRequest }
@@ -21,6 +22,8 @@ export type AcpSessionOpening =
 
 export type AcpSessionDestination = {
   registrationFinished?: Promise<void>;
+  terminalRequests?: TerminalRequests;
+  closeShells?: () => Promise<void>;
   update: (notification: SessionNotification) => undefined;
   failed: (cause: unknown) => void;
   requestPermission: ClientRequestHandlersByMethod['session/request_permission'];

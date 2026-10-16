@@ -1,12 +1,21 @@
 import { SessionRecord } from '@repo/contracts';
-import { session } from '@repo/db/schema';
-import { inArray, or, type SQL } from 'drizzle-orm';
+import { session, shell } from '@repo/db/schema';
+import { inArray, or, sql, type SQL } from 'drizzle-orm';
 import { storedSessionColumns, decodeStoredSession } from '../session-record';
 import {
   readQueuedSessionRows,
   type QueuedSessionRows,
 } from '../session-storage';
 import type { ListReadInput } from './list-read-input';
+
+const shellCountColumns = {
+  shellTotal: sql<number>`(select count(*) from ${shell} where ${shell.sessionId} = ${session.id})`,
+  shellRunning: sql<number>`(select count(*) from ${shell} where ${shell.sessionId} = ${session.id} and ${shell.status} = 'running')`,
+};
+type StoredSession = typeof session.$inferSelect & {
+  shellTotal: number;
+  shellRunning: number;
+};
 
 export function readListSessions(
   input: ListReadInput,
@@ -15,6 +24,7 @@ export function readListSessions(
   const projection = readQueuedSessionRows(input.writer);
 
   const stored = storedSessions(input, sessionIds);
+  rememberShellCounts(input, stored);
 
   const rows = new Map(
     stored.map((row): [string, typeof row] => [row.id, row]),
@@ -30,9 +40,9 @@ export function readListSessions(
 function storedSessions(
   input: ListReadInput,
   sessionIds: readonly string[] | undefined,
-): (typeof session.$inferSelect)[] {
+): StoredSession[] {
   return input.database
-    .select(storedSessionColumns)
+    .select({ ...storedSessionColumns, ...shellCountColumns })
     .from(session)
     .where(sessionFilter(sessionIds))
     .all();
@@ -67,4 +77,15 @@ function sessionFilter(ids: readonly string[] | undefined): SQL | undefined {
   return ids
     ? or(inArray(session.id, ids), inArray(session.parentSessionId, ids))
     : undefined;
+}
+
+function rememberShellCounts(
+  input: ListReadInput,
+  stored: StoredSession[],
+): void {
+  for (const row of stored)
+    input.shellCounts.set(row.id, {
+      total: row.shellTotal,
+      running: row.shellRunning,
+    });
 }

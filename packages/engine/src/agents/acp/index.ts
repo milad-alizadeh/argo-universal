@@ -19,3 +19,11 @@ export type {
   AcpResourceInput,
   AcpProcess,
 } from './resource-types';
+
+export { launchShellCommand } from './process';
+
+export type { ShellCommand } from './shell-command';
+
+export type { TerminalRequests } from './terminal-requests';
+
+export { awaitAcpOpening } from './client';

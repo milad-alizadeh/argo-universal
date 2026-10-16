@@ -10,6 +10,7 @@ import {
   type WriterJob,
 } from '../storage';
 import { SessionArchiveJob } from './archive/archive-storage';
+import { ShellWriteJob } from './shells/storage';
 
 type SessionInsert = {
   session: typeof session.$inferInsert;
@@ -348,6 +349,7 @@ export const changedSessionIds = (job: WriterJob): string[] => {
     job instanceof SessionRowUpdateJob ||
     job instanceof SessionDeleteJob ||
     job instanceof SessionArchiveJob ||
+    job instanceof ShellWriteJob ||
     job instanceof TurnInsertJob
   )
     return job.changedSessionIds();
