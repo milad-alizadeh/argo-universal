@@ -1,6 +1,5 @@
 import type { ACPAgentRegistry } from '@repo/contracts';
 import { publishedRegistry } from './catalog';
-
 import identities from './identities.json';
 
 export const registryIdentities = identities;
