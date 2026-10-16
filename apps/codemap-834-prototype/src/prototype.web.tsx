@@ -201,6 +201,7 @@ export default function CodeMap834Prototype() {
               }}
               aria-pressed={mode === view}
               onClick={() => {
+                if (mode === view) return;
                 window.__codemap834.ready = false;
                 setLabels([]);
                 setView(mode);

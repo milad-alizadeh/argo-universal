@@ -32,6 +32,9 @@ function Scene({
 }: MapProps) {
   const { camera, gl, invalidate, size } = useThree();
   const mesh = useRef<InstancedMesh>(null);
+  const lastLabels = useRef(0);
+  const labelsDirty = useRef(true);
+  const labelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const controls = useMemo(
     () => new OrbitControls(camera, gl.domElement),
     [camera, gl],
@@ -52,13 +55,22 @@ function Scene({
   useEffect(() => {
     controls.enableDamping = false;
     controls.maxPolarAngle = Math.PI * 0.49;
-    const changed = () => invalidate();
+    const changed = () => {
+      labelsDirty.current = true;
+      invalidate();
+    };
     controls.addEventListener('change', changed);
     return () => {
       controls.removeEventListener('change', changed);
       controls.dispose();
+      if (labelTimer.current !== null) clearTimeout(labelTimer.current);
+      labelTimer.current = null;
     };
   }, [controls, invalidate]);
+  useLayoutEffect(() => {
+    labelsDirty.current = true;
+    invalidate();
+  }, [tiles, size.width, size.height, invalidate]);
   useLayoutEffect(() => {
     const object = new Object3D();
     for (const [i, tile] of tiles.entries()) {
@@ -126,7 +138,6 @@ function Scene({
     controls.update();
     invalidate();
   }, [command, camera, controls, invalidate]);
-  const lastLabels = useRef(0);
   useFrame(() => {
     const now = performance.now();
     const run = sample.current;
@@ -153,7 +164,17 @@ function Scene({
         sample.current = null;
       } else invalidate();
     }
-    if (now - lastLabels.current < 100) return;
+    if (!labelsDirty.current) return;
+    const remaining = 100 - (now - lastLabels.current);
+    if (remaining > 0) {
+      if (labelTimer.current === null)
+        labelTimer.current = setTimeout(() => {
+          labelTimer.current = null;
+          invalidate();
+        }, remaining);
+      return;
+    }
+    labelsDirty.current = false;
     lastLabels.current = now;
     const candidates = [];
     for (const tile of ordered) {
