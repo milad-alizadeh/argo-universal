@@ -21,3 +21,13 @@ export const Subagent = z.strictObject({
 });
 
 export type Subagent = z.infer<typeof Subagent>;
+
+export const SessionSubagentsInput = z.strictObject({
+  sessionId: sessionColumns.shape.id,
+});
+
+export type SessionSubagentsInput = z.infer<typeof SessionSubagentsInput>;
+
+export const SessionSubagentsOutput = z.array(Subagent);
+
+export type SessionSubagentsOutput = z.infer<typeof SessionSubagentsOutput>;

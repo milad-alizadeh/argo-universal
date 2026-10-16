@@ -3,7 +3,7 @@ import {
   Subagent,
   type SessionUpdate,
   type SubagentUpdate,
-  Turn,
+  type Turn,
 } from '@repo/contracts';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { createRejectionCounter } from '@repo/machine-log';
@@ -15,6 +15,7 @@ import {
   storedFeedColumns,
   type FeedDeps,
 } from '../../feed';
+import { decodeStoredTurn } from './stored-turn';
 import { toSubagents } from './subagents';
 
 type SubagentDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
@@ -80,13 +81,7 @@ function readLatestTurn(deps: SubagentDeps, sessionId: string): Turn[] {
     .orderBy(desc(turn.startedAt), desc(turn.id))
     .limit(1)
     .all()
-    .map((row): Turn =>
-      Turn.parse({
-        ...row,
-        usage: row.usage === null ? null : JSON.parse(String(row.usage)),
-        error: row.error === null ? null : JSON.parse(String(row.error)),
-      }),
-    );
+    .map(decodeStoredTurn);
 }
 
 function readSubagentUpdates(

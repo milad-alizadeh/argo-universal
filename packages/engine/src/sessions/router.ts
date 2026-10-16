@@ -17,6 +17,8 @@ import {
   SessionPromptOutput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
+  SessionSubagentsInput,
+  SessionSubagentsOutput,
 } from '@repo/contracts';
 import {
   mergeRouters,
@@ -26,6 +28,7 @@ import {
   zAsyncIterable,
 } from '../rpc';
 import { createSessionList } from './list/session-list';
+import { createSubagentsReader } from './list/subagents-reader';
 import type { SessionRouterDeps } from './router-deps';
 import {
   answerSessionElicitation,
@@ -122,6 +125,21 @@ const createAnswerRouter = routerFactory((deps: SessionRouterDeps) =>
   }),
 );
 
+const createSubagentsRouter = routerFactory((deps: SessionRouterDeps) => {
+  const readSubagents = createSubagentsReader(deps);
+
+  return router({
+    subagents: publicProcedure
+      .input(SessionSubagentsInput)
+      .output(SessionSubagentsOutput)
+      .query(({ input }): SessionSubagentsOutput => {
+        deps.readSession(input.sessionId);
+
+        return readSubagents(input.sessionId);
+      }),
+  });
+});
+
 export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
   const sessionList = createSessionList(deps);
 
@@ -133,6 +151,7 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createStopRouter(deps),
     createConfigurationRouter(deps),
     createAnswerRouter(deps),
+    createSubagentsRouter(deps),
     unimplementedSessionRouter,
   );
 });

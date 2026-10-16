@@ -48,6 +48,10 @@ export class ScriptedMethodPlayer {
   private readonly scenario: ScriptedScenario;
   private readonly sessions: ScriptedSessions;
   private readonly wire: ScriptedWire;
+  private readonly responsePositions = new Map<
+    AgentRequestMethod,
+    Map<string, number>
+  >();
   public constructor(input: {
     scenario: ScriptedScenario;
     sessions: ScriptedSessions;
@@ -60,7 +64,10 @@ export class ScriptedMethodPlayer {
   public respond<Method extends AgentRequestMethod>(
     method: Method,
   ): MethodResponder<Method> {
-    const next = responseSequence<Method>(this.scenario.responses?.[method]);
+    const next = responseSequence<Method>(
+      this.scenario.responses?.[method],
+      this.positionsFor(method),
+    );
 
     return (context, fallback) =>
       this.playMethod({
@@ -69,6 +76,14 @@ export class ScriptedMethodPlayer {
         context,
         fallback,
       });
+  }
+  private positionsFor(method: AgentRequestMethod): Map<string, number> {
+    const positions =
+      this.responsePositions.get(method) ?? new Map<string, number>();
+
+    this.responsePositions.set(method, positions);
+
+    return positions;
   }
   private async playMethod<Method extends AgentRequestMethod>({
     method,

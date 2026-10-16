@@ -4,27 +4,34 @@ import { expect, it, onTestFinished } from 'vitest';
 import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
-it.each([
-  {
-    name: 'subagent-foreground',
-    prompts: 1,
-    states: ['running', 'requires_action', 'running', 'idle'],
-  },
-  { name: 'subagent-background', prompts: 1, states: ['running'] },
-  {
-    name: 'subagent-more-work',
-    prompts: 2,
-    states: [
-      'running',
-      'requires_action',
-      'running',
-      'idle',
-      'running',
-      'idle',
-    ],
-  },
-] as const)(
-  'delivers $name over the official SDK with stable Subagent identity',
+it.each(
+  (
+    [
+      {
+        name: 'subagent-foreground',
+        prompts: 1,
+        states: ['running', 'requires_action', 'running', 'idle'],
+      },
+      { name: 'subagent-background', prompts: 1, states: ['running'] },
+      {
+        name: 'subagent-more-work',
+        prompts: 2,
+        states: [
+          'running',
+          'requires_action',
+          'running',
+          'idle',
+          'running',
+          'idle',
+        ],
+      },
+    ] as const
+  ).flatMap((scenario) => [
+    { ...scenario, instance: 'first' },
+    { ...scenario, instance: 'second' },
+  ]),
+)(
+  'delivers $name independently for the $instance Agent instance',
   async ({ name, prompts, states }): Promise<void> => {
     const peer = createScriptedAgentWire(scenarios[name]);
     const accepted: SessionNotification[] = [];

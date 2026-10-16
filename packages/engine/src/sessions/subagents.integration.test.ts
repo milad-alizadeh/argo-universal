@@ -51,6 +51,9 @@ it('reads Subagents with only their latest Turn metrics through the stored Feed 
       tokens: 10,
     },
   ]);
+  expect(
+    await host.caller.session.subagents({ sessionId: 'session-1' }),
+  ).toEqual(snapshot.subagents);
   expect(host.agent.processes).toHaveLength(0);
 });
 
@@ -170,4 +173,12 @@ it('rejects a malformed child Turn without hiding a healthy Subagent', async ():
 
   expect(snapshot.subagents).toMatchObject([{ sessionId: 'child' }]);
   expect(snapshot.subagents).toHaveLength(1);
+});
+
+it('rejects Subagent queries for an unknown parent Session', async (): Promise<void> => {
+  const { caller } = await startAcpEngine();
+
+  await expect(
+    caller.session.subagents({ sessionId: 'missing' }),
+  ).rejects.toMatchObject({ code: 'NOT_FOUND' });
 });
