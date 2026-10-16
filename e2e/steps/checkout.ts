@@ -1,18 +1,13 @@
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { openNewSession } from './new-session';
+import { chooseLocalCheckout, openNewSession } from './new-session';
 
 Given('a New Session', async ({ page }): Promise<void> => {
   await openNewSession(page);
 });
 
 When('I choose the local Checkout', async ({ page }): Promise<void> => {
-  const checkout = page.getByRole('button', { name: 'Checkout' });
-  await expect(checkout).toContainText('New worktree');
-  await expect(checkout).not.toContainText('main');
-  await checkout.click();
-  await page.getByRole('button', { name: 'Local' }).click();
-  await expect(checkout).toHaveText(/Local/);
+  await chooseLocalCheckout(page);
 });
 
 Then(

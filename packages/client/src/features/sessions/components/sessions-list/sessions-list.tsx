@@ -7,7 +7,7 @@ import { useWide } from '#lib/generic/use-wide/use-wide';
 import { cn } from '#lib/generic/utils';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import type { SessionsListEntry } from '../sessions-list-entries';
-import { useListRows } from './sessions-list-entry-rows';
+import { type ListRows, useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
 import { EmptySessionsList } from './sessions-list-rows';
 import { useScrolling } from './sessions-list-scrolling';
@@ -74,17 +74,17 @@ const sessionsFade = {
   surfaceClassName: fadeSurface,
 } as const;
 
-function surfaceClassName(scrolling: boolean): string {
+function surfaceClassName(glide: boolean): string {
   return cn(
     'relative flex-1 overflow-hidden bg-content wide:bg-transparent web:select-none web:**:select-none!',
-    // Rows glide to their measured places at rest; while scrolling they snap, so reused rows never slide across the list.
-    !scrolling &&
+    // Rows glide to their new places only while the list reorders, never on first load, a tab switch or a scroll.
+    glide &&
       'web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200',
   );
 }
 
 interface SessionsListSurfaceProps {
-  scrolling: boolean;
+  glide: boolean;
   children: ReactNode;
 }
 
@@ -92,7 +92,7 @@ function SessionsListSurface(
   props: SessionsListSurfaceProps,
 ): React.JSX.Element {
   return (
-    <View className={surfaceClassName(props.scrolling)} style={fillStyle}>
+    <View className={surfaceClassName(props.glide)} style={fillStyle}>
       {props.children}
     </View>
   );
@@ -113,12 +113,12 @@ function listChrome(props: SessionsListProps): ListChrome {
 }
 
 interface SessionsLegendListProps extends SessionsListProps {
+  rows: ListRows;
   onScroll: () => void;
 }
 
 function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
   const contentContainerStyle = useContentStyle(props.flat ?? false);
-  const rows = useListRows(props);
 
   return (
     <ScrollFadeList
@@ -127,18 +127,31 @@ function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
       contentContainerStyle={contentContainerStyle}
       onEndReached={props.onEndReached}
       onScroll={props.onScroll}
-      {...rows}
+      {...listRows(props.rows)}
       {...listChrome(props)}
     />
   );
 }
 
+// The rows' data without the flag that only the surface reads.
+function listRows({
+  animating: _animating,
+  ...rows
+}: ListRows): Omit<ListRows, 'animating'> {
+  return rows;
+}
+
 export function SessionsList(props: SessionsListProps): React.JSX.Element {
   const scrolling = useScrolling();
+  const rows = useListRows(props);
 
   return (
-    <SessionsListSurface scrolling={scrolling.scrolling}>
-      <SessionsLegendList {...props} onScroll={scrolling.onScroll} />
+    <SessionsListSurface glide={rows.animating && !scrolling.scrolling}>
+      <SessionsLegendList
+        {...props}
+        rows={rows}
+        onScroll={scrolling.onScroll}
+      />
     </SessionsListSurface>
   );
 }
