@@ -43,7 +43,7 @@ function OptionsFrame({ model, children }: FrameProps): ReactElement {
 
 function optionsClassName(wide: boolean): string {
   return cn(
-    'rounded-xl android:rounded-[16px] p-1 gap-0.5 bg-muted',
+    'rounded-xl android:rounded-2xl p-1 gap-0.5 bg-muted',
     wide &&
       'bg-card web:shadow-control dark:shadow-none dark:border dark:border-border',
   );

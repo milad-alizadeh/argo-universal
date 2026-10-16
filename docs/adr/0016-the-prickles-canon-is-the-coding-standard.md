@@ -56,7 +56,6 @@ Where the canon cannot apply as written, these are the recorded applications (ow
    During additive Spec 0014 #718, the new Registry cache logs rejected values without saving rejection totals. The existing catalog sync keeps its durable totals. T6 removes the old catalog path and ends this temporary exception (owner, 2026-10-15).
 
 13. **Kit-styling allowlist.** The shrinking allowlist in `tooling/oxlint/kit-styling-allowlist.json` is an accepted exception to "debt lists go" (owner, 2026-10-14, Spec 0015 #724). It names the files that still pass `className`, `style` or a `*ClassName` slot to kit components, which [ADR-0020](0020-argo-owns-its-primitives.md) bans outside `lib/generic`. `tools/check-rule-allowlists.mts` keeps it honest: once the list is on main it only shrinks, and a file with no findings must leave it.
-14. **Style-tokens allowlist.** `tooling/oxlint/style-tokens-allowlist.json` is a second accepted exception of the same kind (owner, 2026-10-14, Spec 0015 #724). `argo/style-tokens` bans arbitrary Tailwind values, raw colours and Tailwind palette colour classes (`text-white`, `bg-neutral-100`, with any variant) in `packages/` and `apps/`: only Argo colour tokens from `tooling/uniwind/theme.css` are allowed. The list names the files on main that still break the rule. The exception is temporary: the same check keeps the list shrinking, and it must reach zero, at which point the file and this point are deleted.
 
 Enforcement lands through a spec issue, folder by folder, so CI stays green.
 

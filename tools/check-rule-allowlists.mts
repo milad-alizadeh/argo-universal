@@ -14,10 +14,6 @@ const allowlists = [
     path: 'tooling/oxlint/kit-styling-allowlist.json',
     rule: 'argo/kit-styling',
   },
-  {
-    path: 'tooling/oxlint/style-tokens-allowlist.json',
-    rule: 'argo/style-tokens',
-  },
 ] as const;
 
 type Allowlist = (typeof allowlists)[number];
