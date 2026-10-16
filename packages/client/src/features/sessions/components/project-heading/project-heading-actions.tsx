@@ -56,7 +56,7 @@ function actionButtons({
   ];
 }
 
-// A phone always shows ⋯ and +; a wide web window shows them on hover or keyboard focus, never after a click leaves focus behind.
+// A wide web window shows ⋯ and + on hover or keyboard focus, never after a click leaves focus behind.
 const actionsClassName = 'flex-row items-center gap-0.5';
 
 // ⋯ opens the Project's settings and + adds to it; both wait for hover or focus on a wide window.

@@ -1,6 +1,10 @@
 import type * as React from 'react';
 import { Text } from '#primitives/display/text';
-import { VirtualListItem } from '#primitives/lists/virtual-list-item';
+import {
+  VirtualListItem,
+  type VirtualListItemProps,
+} from '#primitives/lists/virtual-list-item';
+import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import {
   PullRequestIcon,
   pullRequestStatusLabels,
@@ -32,20 +36,29 @@ function compactLabel(props: SessionRowProps): string {
   return `${label}, ${pullRequestStatusLabels[pullRequest.status]} PR`;
 }
 
+// The row opens its Session; Android's context menu hands it its long press.
+type CompactRowProps = SessionRowProps & ContextMenuTriggerProps;
+
+const compactPresses = (
+  props: CompactRowProps,
+): Pick<VirtualListItemProps, 'onPress' | 'onLongPress'> => ({
+  onPress: () => props.onSelect(props.session.sessionId),
+  onLongPress: props.onLongPress,
+});
+
 // Compact: one line, a row of its Project's grouped list on a phone.
-export function CompactSessionRow(props: SessionRowProps): React.JSX.Element {
-  const { session, onSelect } = props;
+export function CompactSessionRow(props: CompactRowProps): React.JSX.Element {
   const selected = props.selected ?? false;
 
   return (
     <VirtualListItem
-      title={session.title}
+      {...compactPresses(props)}
+      title={props.session.title}
       accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} selected={selected} />}
       trailing={<CompactTrailing {...props} />}
       position={props.position}
       selected={selected}
-      onPress={() => onSelect(session.sessionId)}
     />
   );
 }
