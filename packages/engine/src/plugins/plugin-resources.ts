@@ -1,5 +1,10 @@
 import { mkdir, open, readdir, stat, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import {
+  argoFetchLimitBytes,
+  argoLimitBytes,
+  argoTimeoutMs,
+} from './plugin-limits.ts';
 import { PluginProcesses } from './plugin-processes.ts';
 import type {
   FetchCall,
@@ -7,12 +12,6 @@ import type {
   PluginValue,
   ProcessCall,
 } from './runtime-protocol.ts';
-
-export const fsReadLimitBytes = 1_048_576;
-
-export const fetchBodyLimitBytes = 5_242_880;
-
-export const fetchTimeoutMs = 30_000;
 
 /*
  * What one Plugin's `argo` calls hold open on the Server: child processes, timers and requests.
@@ -47,7 +46,7 @@ export class PluginResources {
   async fetch(call: FetchCall): Promise<PluginValue> {
     this.assertOpen();
     const request = new AbortController();
-    const timer = setTimeout(() => request.abort(), fetchTimeoutMs);
+    const timer = setTimeout(() => request.abort(), argoTimeoutMs);
 
     const done = this.hold(() => {
       clearTimeout(timer);
@@ -96,24 +95,26 @@ async function requestOnce(
 }
 
 async function write(path: string, content: string): Promise<null> {
+  if (Buffer.byteLength(content) > argoLimitBytes)
+    throw new Error(`Content is over the ${argoLimitBytes} byte write limit`);
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, content);
 
   return null;
 }
 
+// Reads at most one byte past the cap, so a file that grows or reports no size cannot slip over it.
 async function readCapped(path: string): Promise<string> {
   const handle = await open(path, 'r');
 
   try {
-    const { size } = await handle.stat();
+    const buffer = Buffer.alloc(argoLimitBytes + 1);
+    const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
 
-    if (size > fsReadLimitBytes)
-      throw new Error(
-        `File is ${size} bytes, over the ${fsReadLimitBytes} byte read limit`,
-      );
+    if (bytesRead > argoLimitBytes)
+      throw new Error(`File is over the ${argoLimitBytes} byte read limit`);
 
-    return await handle.readFile('utf8');
+    return buffer.toString('utf8', 0, bytesRead);
   } finally {
     await handle.close();
   }
@@ -138,16 +139,35 @@ async function describe(path: string): Promise<PluginValue> {
   };
 }
 
+type Body = { text: string; truncated: boolean };
+
+// Reads the body as a stream and stops at the cap, so a huge response is never held whole.
 async function describeResponse(response: Response): Promise<PluginValue> {
-  const text = await response.text();
-  const truncated = Buffer.byteLength(text) > fetchBodyLimitBytes;
+  const { text, truncated } = await readBody(response);
 
   return {
     ok: response.ok,
     status: response.status,
     statusText: response.statusText,
     headers: Object.fromEntries(response.headers),
-    body: truncated ? text.slice(0, fetchBodyLimitBytes) : text,
+    body: text,
     truncated,
   };
 }
+
+async function readBody(response: Response): Promise<Body> {
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+
+  for await (const chunk of response.body ?? []) {
+    chunks.push(chunk.subarray(0, Math.max(argoFetchLimitBytes - size, 0)));
+    size += chunk.length;
+  }
+
+  return finished(chunks, size);
+}
+
+const finished = (chunks: Uint8Array[], size: number): Body => ({
+  text: Buffer.concat(chunks).toString('utf8'),
+  truncated: size > argoFetchLimitBytes,
+});

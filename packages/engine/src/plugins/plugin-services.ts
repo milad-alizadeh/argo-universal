@@ -40,6 +40,8 @@ export class PluginServices {
 
       return { ok: true, value };
     } catch (error) {
+      this.log(`Plugin ${pluginId}: argo call failed: ${runtimeError(error)}`);
+
       return { ok: false, error: runtimeError(error) };
     }
   }

@@ -1,10 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { argoLimitBytes, argoTimeoutMs } from './plugin-limits.ts';
 import type { ProcessCall, ProcessCommand } from './runtime-protocol.ts';
-
-export const processOutputLimitBytes = 1_048_576;
-
-export const processTimeoutMs = 30_000;
 
 export type ProcessResult = {
   exitCode: number | null;
@@ -28,7 +25,7 @@ export class PluginProcesses {
   private readonly timers = new Set<Timer>();
 
   async handle(call: ProcessCall): Promise<ProcessResult | string | null> {
-    if (call.action === 'run') return this.start(call).done;
+    if (call.action === 'run') return this.start(call, argoTimeoutMs).done;
 
     if (call.action === 'spawn') return this.spawned(call);
 
@@ -44,7 +41,7 @@ export class PluginProcesses {
   }
 
   release(): void {
-    for (const { child } of this.running.values()) child.kill('SIGKILL');
+    for (const { child } of this.running.values()) killGroup(child);
 
     for (const timer of this.timers) clearTimeout(timer);
     this.running.clear();
@@ -52,7 +49,7 @@ export class PluginProcesses {
   }
 
   private spawned(command: ProcessCommand): string {
-    const running = this.start(command);
+    const running = this.start(command, null);
     const id = randomUUID();
     this.running.set(id, running);
 
@@ -62,29 +59,36 @@ export class PluginProcesses {
     return id;
   }
 
-  private start(command: ProcessCommand): Running {
+  private start(command: ProcessCommand, fallback: number | null): Running {
     const [file = '', ...args] = command.argv;
-    const child = spawn(file, args, { cwd: command.cwd, shell: false });
+
+    const child = spawn(file, args, {
+      cwd: command.cwd,
+      shell: false,
+      detached: true,
+    });
+
     const run: Run = { timedOut: false, truncated: false };
-    this.timeout(child, run, command.timeoutMs);
+    this.timeout(child, run, command.timeoutMs ?? fallback);
     child.stdin.on('error', () => {});
     child.stdin.end(command.input);
 
     return { child, done: this.finish(child, run) };
   }
 
-  private timeout(child: ChildProcess, run: Run, ms = processTimeoutMs): Timer {
+  // A spawned process lives until it exits, is killed or is released; only a given timeout ends it sooner.
+  private timeout(child: ChildProcess, run: Run, ms: number | null): void {
+    if (ms === null) return;
+
     const timer = setTimeout(() => {
       run.timedOut = true;
-      child.kill('SIGKILL');
+      killGroup(child);
     }, ms);
 
     this.timers.add(timer);
 
     for (const event of ['close', 'error'])
       child.once(event, () => this.clear(timer));
-
-    return timer;
   }
 
   private finish(child: ChildProcess, run: Run): Promise<ProcessResult> {
@@ -105,8 +109,19 @@ export class PluginProcesses {
   }
 }
 
+// The child leads its own process group, so its descendants die with it.
+function killGroup({ pid }: ChildProcess): void {
+  if (pid === undefined) return;
+
+  try {
+    process.kill(-pid, 'SIGKILL');
+  } catch {
+    // Already gone.
+  }
+}
+
 function kill(running: Running): null {
-  running.child.kill('SIGKILL');
+  killGroup(running.child);
 
   return null;
 }
@@ -116,7 +131,7 @@ function capture(stream: NodeJS.ReadableStream | null, run: Run): () => string {
   let size = 0;
 
   stream?.on('data', (chunk: Buffer) => {
-    const room = Math.max(processOutputLimitBytes - size, 0);
+    const room = Math.max(argoLimitBytes - size, 0);
 
     if (chunk.length > room) run.truncated = true;
     chunks.push(chunk.subarray(0, room));

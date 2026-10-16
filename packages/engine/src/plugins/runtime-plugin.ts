@@ -74,6 +74,7 @@ export class RuntimePlugin {
 
   async close(): Promise<void> {
     this.closed = true;
+    this.input.release();
     this.answer?.({
       state: 'crashed',
       hanging: false,
