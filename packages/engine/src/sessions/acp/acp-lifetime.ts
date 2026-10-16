@@ -4,16 +4,14 @@ import type {
   AcpSessionDestination,
   AcpSessionLease,
 } from '../../agents';
-import type { AgentLaunch, ResolveAgentLaunch } from '../../agents';
+import type { DeferredAgentLaunch, InstalledAgents } from '../../agents';
+import { requireInstalledAgent } from '../../agents';
 import type { SessionData } from '../session-data';
 import {
   createLifetimeDestination,
   type AcpLifetimeEvent,
 } from './acp-session-destination';
-import {
-  selectSessionOpening,
-  resolveSessionAgentLaunch,
-} from './acp-session-opening';
+import { selectSessionOpening } from './acp-session-opening';
 import { AcpSessionRequests } from './requests/acp-session-requests';
 import { withShellDestination } from './shells/shell-destination';
 import type { ShellRuntime } from './shells/shell-runtime';
@@ -22,8 +20,7 @@ export type { AcpLifetimeEvent } from './acp-session-destination';
 
 export type AcpSessionDependencies = {
   resources: AcpResources;
-  resolveLaunch: ResolveAgentLaunch;
-  projectPath: (id: string) => string;
+  installedAgents: InstalledAgents;
 };
 
 const isWithdrawn = (cause: unknown): boolean =>
@@ -89,24 +86,26 @@ export class AcpSessionLifetime {
   private async openOwned(session: SessionData): Promise<AcpSessionLease> {
     const destination = this.createSessionDestination(await this.bound.promise);
 
-    const launch = await resolveSessionAgentLaunch(
-      session,
-      this.requireDependencies(),
+    const launch = await this.launchAgent(session);
+    this.lease = await this.openLease(session, launch, destination);
+    // Shells run with the connection's launch; Agent messages wait for registration, which follows this open.
+    this.shells?.configure(session, this.lease.launch);
+
+    return this.lease;
+  }
+  // Open and Retry launch only an Installed Agent; one removed since shows Send's error.
+  private launchAgent(session: SessionData): Promise<DeferredAgentLaunch> {
+    const { installedAgents } = this.requireDependencies();
+
+    return installedAgents.launch(
+      requireInstalledAgent(installedAgents, session.agent),
+      session.projectId,
       this.controller.signal,
     );
-
-    try {
-      this.shells?.configure(session, launch);
-      this.lease = await this.openLease(session, launch, destination);
-
-      return this.lease;
-    } finally {
-      launch.release?.();
-    }
   }
   private openLease(
     session: SessionData,
-    launch: AgentLaunch,
+    launch: DeferredAgentLaunch,
     destination: AcpSessionDestination,
   ): Promise<AcpSessionLease> {
     return this.requireDependencies().resources.open({

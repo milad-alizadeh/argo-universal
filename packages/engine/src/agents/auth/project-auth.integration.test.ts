@@ -74,9 +74,13 @@ it('sessionId picks its live connection after its saved connection entry was dro
   await host.caller.agents.addRegistry({ id: 'mock' });
   const session = await host.caller.session.new(emptySessionInput);
   await host.caller.agents.remove({ id: 'mock' });
-  await expect(host.caller.agents.authState(subject)).rejects.toThrow(
-    'is not installed',
-  );
+  await expect(host.caller.agents.authState(subject)).rejects.toMatchObject({
+    code: 'PRECONDITION_FAILED',
+    message: 'Agent "mock" is not installed.',
+    cause: {
+      openError: { type: 'failed', message: 'Agent "mock" is not installed.' },
+    },
+  });
   expect(host.agent.processes).toHaveLength(1);
   expect(
     await host.caller.agents.authenticate({

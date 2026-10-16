@@ -7,8 +7,7 @@ import {
   type OutputFrom,
   setup,
 } from 'xstate';
-import type { AcpResources, RegistryActor, InstallPorts } from '../agents';
-import { admitsNewSession } from './agent-admission';
+import type { AcpResources, InstalledAgents } from '../agents';
 import { createSessionActorInput } from './session-actor-input';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
@@ -32,8 +31,7 @@ export interface OpenSessionsInput {
   now: () => number;
   createId: () => string;
   acpResources: AcpResources;
-  registry?: RegistryActor;
-  installationPorts?: InstallPorts;
+  installedAgents: InstalledAgents;
 }
 
 interface OpenSessionsContext extends OpenSessionsInput {
@@ -135,7 +133,7 @@ export const openSessionsMachine = setup({
   guards: {
     isRegisteredAgent: ({ context, event }): boolean => {
       if (event.type === createSessionEvent)
-        return admitsNewSession(context, event.agent);
+        return context.installedAgents.installedAgent(event.agent).installed;
 
       return event.type === 'sessions.open';
     },

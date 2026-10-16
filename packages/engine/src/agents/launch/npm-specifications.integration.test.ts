@@ -28,7 +28,9 @@ it.each([
       installationPorts.runTool,
     );
 
-    const directory = `${host.home}/agents/registry/npx/${entry.id}`;
+    const directory = expect.stringMatching(
+      new RegExp(`^${host.home}/agents/registry/npx/${entry.id}/v_1\\.2\\.3_`),
+    );
 
     await getCommand({
       database: host.database,

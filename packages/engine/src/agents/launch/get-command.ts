@@ -1,18 +1,19 @@
 import type { ACPAgent } from '@repo/contracts';
 import { readRegistryCache, registrySupport } from '../registry/registry-cache';
 import { requestRegistry } from '../registry/registry-machine';
-import { readAgentServerEnv } from '../servers/agent-servers-sql';
 import { vendorEnvironment } from '../vendor';
 import { binaryCommand } from './binary';
-import { defaultInstallPorts } from './default-ports';
 import { npmCommand } from './npm';
 import type { CommandInput, RegistryCommand } from './types';
 
-export const getCommand = async (
-  input: CommandInput,
-): Promise<RegistryCommand> => {
+type EntryLookup = Pick<
+  CommandInput,
+  'database' | 'registry' | 'id' | 'signal'
+>;
+
+const failed = async <Result>(work: () => Promise<Result>): Promise<Result> => {
   try {
-    return await resolveCommand(input);
+    return await work();
   } catch (cause) {
     throw new Error(
       `failed ${cause instanceof Error ? cause.message : String(cause)}`,
@@ -21,10 +22,25 @@ export const getCommand = async (
   }
 };
 
-const registryEntry = (input: CommandInput): ACPAgent | undefined =>
+export const getCommand = (input: CommandInput): Promise<RegistryCommand> =>
+  failed(async () => entryCommand(input, await requireEntry(input)));
+
+// The Agent's current Registry entry: its version, without downloading anything.
+export const getRegistryEntry = (input: EntryLookup): Promise<ACPAgent> =>
+  failed(() => requireEntry(input));
+
+// The command that runs `entry`: downloads or installs it, and holds its folder until `release`.
+export const getEntryCommand = (
+  input: CommandInput,
+  entry: ACPAgent,
+): Promise<RegistryCommand> => failed(() => entryCommand(input, entry));
+
+const registryEntry = (input: EntryLookup): ACPAgent | undefined =>
   readRegistryCache(input.database)?.agents.find(({ id }) => id === input.id);
 
-const requireEntry = async (input: CommandInput): Promise<ACPAgent> => {
+const requireEntry = async (input: EntryLookup): Promise<ACPAgent> => {
+  input.signal.throwIfAborted();
+
   if (registryEntry(input)) input.registry.send({ type: 'STALE' });
   else await requestRegistry(input.registry, 'STALE');
   const entry = registryEntry(input);
@@ -35,19 +51,13 @@ const requireEntry = async (input: CommandInput): Promise<ACPAgent> => {
   return entry;
 };
 
-const resolveCommand = async (
+const entryCommand = async (
   input: CommandInput,
+  entry: ACPAgent,
 ): Promise<RegistryCommand> => {
   input.signal.throwIfAborted();
-  const entry = await requireEntry(input);
-  const command = await distributionCommand(input, entry);
 
-  try {
-    return withEnvironment(input, command);
-  } catch (error) {
-    command.release();
-    throw error;
-  }
+  return withEnvironment(input, await distributionCommand(input, entry));
 };
 
 const isAvailable = (entry: ACPAgent | undefined): entry is ACPAgent =>
@@ -61,7 +71,6 @@ const withEnvironment = (
   env: {
     ...command.env,
     ...vendorEnvironment({ registryId: input.id }),
-    ...readAgentServerEnv(input.database, input.id),
   },
 });
 
@@ -69,7 +78,7 @@ const distributionCommand = (
   input: CommandInput,
   entry: ACPAgent,
 ): Promise<RegistryCommand> => {
-  const launch = { ...input, entry, ports: input.ports ?? defaultInstallPorts };
+  const launch = { ...input, entry };
 
   return registrySupport(entry) === 'binary'
     ? binaryCommand(launch)

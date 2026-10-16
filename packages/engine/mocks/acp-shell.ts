@@ -5,7 +5,11 @@ import { fixtureRegistryIds } from '@repo/mocks/agent/app-fixtures';
 import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { onTestFinished, vi } from 'vitest';
 import { createAcpResources, type AcpSessionLease } from '../src/agents';
-import { createResourceOpening } from './acp-resource';
+import {
+  createResourceOpening,
+  deferLaunch,
+  resourceLaunch,
+} from './acp-resource';
 
 export const openLoginShellAgent = async (): Promise<{
   lease: AcpSessionLease;
@@ -18,12 +22,12 @@ export const openLoginShellAgent = async (): Promise<{
 
   const lease = await resources.open({
     ...base,
-    launch: {
-      ...base.launch,
+    launch: deferLaunch({
+      ...resourceLaunch,
       registryId: fixtureRegistryIds[0],
       ...scriptedAgentCommand('reply'),
       cwd: directory,
-    },
+    }),
   });
 
   return { lease, bin };

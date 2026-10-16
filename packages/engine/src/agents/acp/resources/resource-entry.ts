@@ -1,4 +1,4 @@
-import type { AgentLaunch } from '../..';
+import type { DeferredAgentLaunch } from '../..';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import type { AcpConnection } from '../connection/connection';
 
@@ -11,21 +11,22 @@ export type Entry = {
   connection: AcpConnection;
   pending: number;
   dropped: boolean;
+  resolving: AbortController;
 };
 
 export const createEntry = (
-  launch: AgentLaunch,
+  launch: DeferredAgentLaunch,
   connection: AcpConnection,
   connecting: Promise<AcpConnection>,
 ): Entry => ({
   agentId: launch.agentId,
   projectId: launch.projectId,
   version: launch.version,
-  directory: launch.installationDirectory,
   connecting,
   connection,
   pending: 0,
   dropped: false,
+  resolving: new AbortController(),
 });
 
 export const entryInUse = (entry: Entry): boolean =>

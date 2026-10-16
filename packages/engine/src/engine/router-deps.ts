@@ -33,7 +33,8 @@ type EngineSupplied =
   | keyof FeedDeps
   | 'createId'
   | 'dropAgentConnections'
-  | 'sessionConnections';
+  | 'sessionConnections'
+  | 'installedAgents';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
@@ -58,7 +59,7 @@ export function createAppRouterDeps(
 
 type AgentSetup = Pick<
   AppRouterDeps,
-  'createId' | 'dropAgentConnections' | 'sessionConnections'
+  'createId' | 'dropAgentConnections' | 'sessionConnections' | 'installedAgents'
 >;
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
@@ -69,6 +70,7 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
   return {
     dropAgentConnections,
     sessionConnections,
+    installedAgents: input.sessions.getSnapshot().context.installedAgents,
     createId: input.createId ?? randomUUID,
   };
 }

@@ -10,7 +10,7 @@ import type {
   SessionNotification,
   Stream,
 } from '@agentclientprotocol/sdk';
-import type { AgentLaunch } from '../..';
+import type { AgentLaunch, DeferredAgentLaunch } from '../..';
 import type { LaunchLoginTerminal } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
@@ -30,6 +30,7 @@ export type AcpSessionDestination = {
 };
 
 export type AcpSessionLease = {
+  launch: AgentLaunch;
   authentication?: ConnectionAuthentication;
   agent: ClientContext;
   sessionId: SessionId;
@@ -40,7 +41,7 @@ export type AcpSessionLease = {
 };
 
 export type AcpOpenInput = {
-  launch: AgentLaunch;
+  launch: DeferredAgentLaunch;
   opening: AcpSessionOpening;
   destination: AcpSessionDestination;
   signal?: AbortSignal;
@@ -60,7 +61,9 @@ export type AcpResourceInput = {
 };
 
 export type AcpResources = {
-  authentication: (launch: AgentLaunch) => Promise<ConnectionAuthentication>;
+  authentication: (
+    launch: DeferredAgentLaunch,
+  ) => Promise<ConnectionAuthentication>;
   findAuthentication: (
     agent: string,
     projectId: string,

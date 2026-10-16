@@ -1,4 +1,4 @@
-import type { AgentLaunch } from '../..';
+import type { DeferredAgentLaunch } from '../..';
 import { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import { awaitAcpOpening } from '../connection/client';
@@ -10,6 +10,7 @@ import {
   entryInUse,
   type Entry,
 } from './resource-entry';
+import { startEntry, withdrawResolving } from './resource-launch';
 import type {
   AcpOpenInput,
   AcpResourceInput,
@@ -35,11 +36,12 @@ class EngineAcpResources implements AcpResources {
       return await connection.open(input);
     } finally {
       entry.pending -= 1;
+      withdrawResolving(entry, input.signal);
       this.retireIdle(entry);
     }
   }
   public async authentication(
-    launch: AgentLaunch,
+    launch: DeferredAgentLaunch,
   ): Promise<ConnectionAuthentication> {
     if (this.stopped) throw new Error('ACP resources are stopped');
 
@@ -57,41 +59,39 @@ class EngineAcpResources implements AcpResources {
     return entry ? entryAuthentication(entry, this.isStopped) : undefined;
   }
   private readonly isStopped = (): boolean => this.stopped;
-  private entry(launch: AgentLaunch): Entry {
+  // A newer Registry version starts a new connection; Sessions on the older one keep it until they end.
+  private entry(launch: DeferredAgentLaunch): Entry {
     const key = JSON.stringify([launch.agentId, launch.projectId]);
     const entry = this.entries.get(key);
 
     if (entry) {
       if (entry.version === launch.version) return entry;
-      this.retire(key, entry);
+      this.drop(key, entry);
     }
 
     return this.start(key, launch);
   }
-  private start(key: string, launch: AgentLaunch): Entry {
+  private start(key: string, launch: DeferredAgentLaunch): Entry {
+    const connection = this.createConnection(key);
+    const connecting = Promise.withResolvers<AcpConnection>();
+    const entry = createEntry(launch, connection, connecting.promise);
+    const forget = (): void => this.forget(key, connection);
+    connecting.resolve(
+      startEntry(entry, launch, { stopped: this.isStopped, forget }),
+    );
+    this.entries.set(key, entry);
+    this.connections.add(entry);
+
+    return entry;
+  }
+  private createConnection(key: string): AcpConnection {
     const connection: AcpConnection = new AcpConnection(this.input, {
       forget: () => this.forget(key, connection),
       idle: () => this.connectionIdle(connection),
       authChanges: this.authChanges,
     });
 
-    const connecting = this.connect(key, connection, launch);
-    const entry = createEntry(launch, connection, connecting);
-
-    this.entries.set(key, entry);
-    this.connections.add(entry);
-
-    return entry;
-  }
-  private connect(
-    key: string,
-    connection: AcpConnection,
-    launch: AgentLaunch,
-  ): Promise<AcpConnection> {
-    return connection.start(launch).catch((cause: unknown) => {
-      this.forget(key, connection);
-      throw cause instanceof Error ? cause : new Error(String(cause));
-    });
+    return connection;
   }
   private forget(key: string, connection: AcpConnection): void {
     if (this.entries.get(key)?.connection === connection)
@@ -115,23 +115,22 @@ class EngineAcpResources implements AcpResources {
     if (entry.dropped && !entryInUse(entry))
       this.stopConnection(entry.connection);
   }
-  private retire(key: string, entry: Entry): void {
+  private drop(key: string, entry: Entry): void {
     this.entries.delete(key);
-    this.stopConnection(entry.connection);
+    entry.dropped = true;
+    this.retireIdle(entry);
   }
   public dropAgentConnections = (agentId: string): void => {
     for (const [key, entry] of this.entries)
-      if (entry.agentId === agentId) {
-        this.entries.delete(key);
-        entry.dropped = true;
-        this.retireIdle(entry);
-      }
+      if (entry.agentId === agentId) this.drop(key, entry);
   };
   public isDirectoryInUse = (directory: string): boolean =>
     [...this.connections].some((entry) => entry.directory === directory);
   public async shutdown(): Promise<void> {
     this.stopped = true;
     const entries = [...this.connections];
+
+    for (const entry of entries) entry.resolving.abort();
     this.connections.clear();
     this.entries.clear();
     await Promise.allSettled(

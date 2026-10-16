@@ -6,11 +6,14 @@ export { type AgentsRouterDeps, createAgentsRouter } from './router';
 
 export type {
   AgentLaunch,
-  ResolveAgentLaunch,
+  DeferredAgentLaunch,
+  LoginTerminalProcess,
   LaunchLoginTerminal,
 } from './agent-launch';
 
 export type { FetchAgents } from './registry/fetch-agents';
+
+export { defaultInstallPorts } from './launch/default-ports';
 
 export type { InstallPorts } from './launch/ports';
 
@@ -24,8 +27,11 @@ export { sessionOpenError } from './acp/open-error';
 
 export { readAcpUsage } from './acp/connection/response-readers';
 
-export { resolveSavedAgentLaunch } from './launch/saved-launch';
-
-export { hasAgentServer } from './servers/agent-servers-sql';
+export {
+  createInstalledAgents,
+  requireInstalledAgent,
+  type InstalledAgent,
+  type InstalledAgents,
+} from './servers/installed-agents';
 
 export { ShellProcessRecord } from './acp/shell-commands/shell-process-record';

@@ -5,11 +5,12 @@ import {
   createRegistryRouter,
   type RegistryDeps,
 } from './registry/registry-router';
+import type { InstalledAgents } from './servers/installed-agents';
 
 export type AgentsRouterDeps = RegistryDeps & {
   sessions: OpenSessionsActorRef;
   sessionConnections: SessionConnections;
-  home?: string;
+  installedAgents: InstalledAgents;
   sessionCommandSignal?: AbortSignal;
 };
 

@@ -110,6 +110,8 @@ const shareInstall = async (): Promise<SharedInstall> => {
   const first = getCommand({ ...input, signal: starter });
   const second = getCommand({ ...input, signal: joiner });
   const installSignal = await held.started;
+  // The joiner probes Node only once the install started, so its next abort listener is the one that joins it.
+  joined.mockClear();
   await vi.waitFor(() =>
     expect(joined).toHaveBeenCalledWith('abort', expect.any(Function), {
       once: true,

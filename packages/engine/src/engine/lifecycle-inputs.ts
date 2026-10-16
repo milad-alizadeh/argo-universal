@@ -1,5 +1,10 @@
 import { writeLog } from '@repo/machine-log';
 import type { AnyActorRef, InputFrom } from 'xstate';
+import {
+  createInstalledAgents,
+  defaultInstallPorts,
+  type InstalledAgents,
+} from '../agents';
 import { blobsFolderIn } from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
 import {
@@ -49,6 +54,21 @@ type SessionsSource = {
   >;
 };
 
+// Built once for the Engine's life; the HTTP router reads it from the open Sessions.
+const installedAgentsInput = ({
+  context,
+  self,
+}: SessionsSource & {
+  self: Pick<AnyActorRef, 'system'>;
+}): InstalledAgents =>
+  createInstalledAgents({
+    database: openDatabaseOf(context),
+    home: context.home,
+    registry: requireRegistry(self.system),
+    resources: context.acpResources,
+    ports: context.installationPorts ?? defaultInstallPorts,
+  });
+
 export const sessionsInput = ({
   context,
   self,
@@ -60,8 +80,7 @@ export const sessionsInput = ({
   now: context.now,
   createId: context.createId,
   acpResources: context.acpResources,
-  registry: requireRegistry(self.system),
-  installationPorts: context.installationPorts,
+  installedAgents: installedAgentsInput({ context, self }),
 });
 
 export { serverInput } from './server-input';

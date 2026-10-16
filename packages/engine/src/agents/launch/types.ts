@@ -10,15 +10,13 @@ export type CommandInput = {
   id: string;
   shellEnv: Readonly<Record<string, string>>;
   signal: AbortSignal;
-  ports?: InstallPorts;
+  ports: InstallPorts;
   bundledNode?: string;
   bundledNpm?: string;
   isDirectoryInUse: (directory: string) => boolean;
 };
 
-export type PortedInput = CommandInput & { ports: InstallPorts };
-
-export type EntryInput = PortedInput & { entry: ACPAgent };
+export type EntryInput = CommandInput & { entry: ACPAgent };
 
 export type RegistryCommand = {
   /** Release after a connection owns directory, or when abandoning this command. Aborting the input also releases it. */

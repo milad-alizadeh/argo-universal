@@ -3,8 +3,7 @@ import { mkdir, mkdtemp, rename, rm, chmod } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type { BinaryTarget } from '@repo/contracts';
 import { resolveRegistryServerPlatform } from '../registry/platform';
-import { pruneVersions, versionFolder } from './binary-cache';
-import { reserveBinary, serializeBinary } from './binary-reservations';
+import { binarySource, serializeBinary } from './binary-cache';
 import { githubDigest } from './github-digest';
 import { extractBinaryFiles } from './materialization/archive';
 import {
@@ -13,13 +12,14 @@ import {
 } from './materialization/files';
 import { executableMode } from './materialization/limits';
 import { resolveNode } from './node';
-import type {
-  CommandInput,
-  EntryInput as LaunchInput,
-  RegistryCommand,
-} from './types';
+import type { CommandInput, EntryInput, RegistryCommand } from './types';
+import {
+  pruneVersions,
+  reserveVersion,
+  versionFolder,
+} from './version-folders';
 
-type BinaryInput = LaunchInput & {
+type BinaryInput = EntryInput & {
   target: BinaryTarget;
   directory: string;
 };
@@ -31,7 +31,7 @@ const validateCommand = (cmd: string): void => {
     throw new Error('Registry command must be ./relative without .., or node');
 };
 
-const binaryInput = (input: LaunchInput): BinaryInput => {
+const binaryInput = (input: EntryInput): BinaryInput => {
   const target =
     input.entry.distribution.binary?.[resolveRegistryServerPlatform()];
 
@@ -40,17 +40,17 @@ const binaryInput = (input: LaunchInput): BinaryInput => {
 
   const directory = join(
     baseDirectory(input),
-    versionFolder(input.entry, target),
+    versionFolder(input.entry.version, binarySource(target)),
   );
 
   return { ...input, target, directory };
 };
 
 export const binaryCommand = async (
-  input: LaunchInput,
+  input: EntryInput,
 ): Promise<RegistryCommand> => {
   const binary = binaryInput(input);
-  const release = reserveBinary(binary.directory, input.signal);
+  const release = reserveVersion(binary.directory, input.signal);
 
   try {
     return await serializeBinary(baseDirectory(input), async () => ({

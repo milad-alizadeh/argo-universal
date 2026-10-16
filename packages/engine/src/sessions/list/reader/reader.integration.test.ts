@@ -3,6 +3,7 @@ import { turn } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor } from 'xstate';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
+import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createAcpResources } from '../../../agents';
 import { openSessionsMachine } from '../../open-sessions-machine';
 import { createSessionList } from '../session-list';
@@ -33,6 +34,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
       ),
     )
     .run();
+  const installedAgents = unlaunchedInstalledAgents(database, directory);
   const counted = countDatabaseReads(database);
 
   const sessions = createActor(openSessionsMachine, {
@@ -42,6 +44,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
+      installedAgents,
     },
   });
 
@@ -61,6 +64,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
 it('rejects a malformed cursor before reading Session rows', async (): Promise<void> => {
   const { database, directory, remove } = openTestDatabase();
   onTestFinished(remove);
+  const installedAgents = unlaunchedInstalledAgents(database, directory);
   const counted = countDatabaseReads(database);
 
   const sessions = createActor(openSessionsMachine, {
@@ -70,6 +74,7 @@ it('rejects a malformed cursor before reading Session rows', async (): Promise<v
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
+      installedAgents,
     },
   });
 

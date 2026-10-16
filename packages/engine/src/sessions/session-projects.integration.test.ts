@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { startSessionJourney, newSession } from '#mocks/session-journey';
 
-it('refuses a New Session for an unknown Project, base branch or Agent', async (): Promise<void> => {
+it('refuses a New Session for an unknown Project, base branch or an Agent that is not installed', async (): Promise<void> => {
   const { caller } = await startSessionJourney();
   await expect(
     caller.session.new({ ...newSession, projectId: 'missing' }),
@@ -14,7 +14,16 @@ it('refuses a New Session for an unknown Project, base branch or Agent', async (
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
   await expect(
     caller.session.new({ ...newSession, agent: 'unregistered' }),
-  ).rejects.toMatchObject({ code: 'CONFLICT' });
+  ).rejects.toMatchObject({
+    code: 'PRECONDITION_FAILED',
+    message: 'Agent "unregistered" is not installed.',
+    cause: {
+      openError: {
+        type: 'failed',
+        message: 'Agent "unregistered" is not installed.',
+      },
+    },
+  });
 });
 
 it('lists local branches with the current one, and null when HEAD is detached', async (): Promise<void> => {

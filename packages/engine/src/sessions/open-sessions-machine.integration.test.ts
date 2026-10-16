@@ -8,9 +8,9 @@ import {
   type SnapshotFrom,
 } from 'xstate';
 import { TestModel } from 'xstate/graph';
-import { resourceLaunch } from '#mocks/acp-resource';
 import { seedAgentFixtures } from '#mocks/agent-fixtures';
 import { openTestDatabase } from '#mocks/database';
+import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createOpenSessionsModelMachine } from '#mocks/open-sessions';
 import { createAcpResources } from '../agents';
 import type { OpenSessionsInput } from './open-sessions-machine';
@@ -32,6 +32,7 @@ const input: OpenSessionsInput = {
   database,
   runtimeDirectory,
   acpResources: createAcpResources(),
+  installedAgents: unlaunchedInstalledAgents(database, runtimeDirectory),
 };
 
 // Two ids exercise duplicate opens, removal with another Session left, and the last Session stopping.
@@ -73,8 +74,7 @@ const events: OpenSessionsEvent[] = [
           runtimeDirectory,
           acp: {
             resources: input.acpResources,
-            resolveLaunch: async () => resourceLaunch,
-            projectPath: () => '/project',
+            installedAgents: input.installedAgents,
           },
           sessionId,
         },

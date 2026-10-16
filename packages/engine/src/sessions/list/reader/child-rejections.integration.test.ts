@@ -8,6 +8,7 @@ import {
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
+import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createAcpResources } from '../../../agents';
 import { openSessionsMachine } from '../../open-sessions-machine';
 import { createSessionListReader } from './reader';
@@ -57,6 +58,7 @@ it('excludes only the Subagent with a malformed latest Turn from its healthy par
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
+      installedAgents: unlaunchedInstalledAgents(database, directory),
     },
   });
 

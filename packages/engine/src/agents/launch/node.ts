@@ -2,7 +2,7 @@ import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { delimiter, dirname, join } from 'node:path';
 import { probeNode } from './node-probe';
-import type { PortedInput as NodeInput } from './types';
+import type { CommandInput as NodeInput } from './types';
 
 export type NodeRuntime = {
   node: string;

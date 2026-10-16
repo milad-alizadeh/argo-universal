@@ -13,12 +13,18 @@ export type AgentLaunch = {
   release?: () => void;
 };
 
-export type ResolveAgentLaunch = (input: {
-  agent: string;
+/*
+ * What ACP resources are handed to open or sign in an Installed Agent: its
+ * command is resolved only to start a new connection. Resources reuse a
+ * connection of the same `version` and release the resolved launch once that
+ * connection owns its folder.
+ */
+export type DeferredAgentLaunch = {
   projectId: string;
-  projectPath: string;
-  signal?: AbortSignal;
-}) => Promise<AgentLaunch>;
+  agentId: string;
+  version: string;
+  resolve: (signal: AbortSignal) => Promise<AgentLaunch>;
+};
 
 export type LoginTerminalProcess = {
   exited: Promise<{ exitCode: number; signal?: number }>;

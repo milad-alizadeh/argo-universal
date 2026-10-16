@@ -54,6 +54,7 @@ type OpeningResponse = Extract<AnyMessage, { result: unknown }>;
 type Ready = {
   connection: ClientConnection;
   initialization: InitializeResponse;
+  launch: AgentLaunch;
 };
 
 const openingMethods = new Set(['session/new', 'session/resume']);
@@ -133,7 +134,7 @@ export class AcpConnection {
     createRejectionCounter('ACP responses'),
   );
   private connection: ClientConnection | undefined;
-  private initialization: InitializeResponse | undefined;
+  private initialized: Omit<Ready, 'connection'> | undefined;
   private launching: Promise<AcpProcess> | undefined;
   private failure: Error | undefined;
   private stopping: Promise<void> | undefined;
@@ -147,11 +148,13 @@ export class AcpConnection {
     const process = await this.launching;
     this.connection = this.connect(process.stream);
     this.observeExit(process, this.connection);
-    this.initialization = await negotiateAcpInitialize(
+
+    const initialization = await negotiateAcpInitialize(
       this.connection.agent,
       this.readers,
     ).catch((cause: unknown) => this.rejectOpening(cause));
 
+    this.initialized = { initialization, launch };
     this.prepareAuthentication(launch);
 
     return this;
@@ -424,26 +427,30 @@ export class AcpConnection {
     return !!sessionCapabilities(this.requireReady().initialization)?.resume;
   }
   private requireReady(): Ready {
-    if (!this.connection || !this.initialization)
+    if (!this.connection || !this.initialized)
       throw new Error('ACP connection is unavailable');
 
-    return { connection: this.connection, initialization: this.initialization };
+    return { connection: this.connection, ...this.initialized };
   }
   private async lease(opening: LeaseOpening): Promise<AcpSessionLease> {
     await this.releaseAbandoned(opening);
     this.requireRegistered(opening);
-    const { connection, initialization } = this.requireReady();
-    let closing: Promise<void> | undefined;
+    const { connection, initialization, launch } = this.requireReady();
 
     return {
       ...opening.opened,
+      launch,
       authentication: this.authentication,
       agent: connection.agent,
       initialization,
-      close: () =>
-        (closing ??= this.close(opening.opened.sessionId, opening.session)),
+      close: this.leaseClose(opening),
       released: opening.session.released.promise,
     };
+  }
+  private leaseClose({ opened, session }: LeaseOpening): () => Promise<void> {
+    let closing: Promise<void> | undefined;
+
+    return () => (closing ??= this.close(opened.sessionId, session));
   }
   private requireRegistered(opening: LeaseOpening): void {
     if (this.failure) throw this.failure;

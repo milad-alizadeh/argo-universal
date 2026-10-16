@@ -2,7 +2,11 @@ import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { expect, it, vi } from 'vitest';
-import { createResourceOpening } from '#mocks/acp-resource';
+import {
+  createResourceOpening,
+  deferLaunch,
+  resourceLaunch,
+} from '#mocks/acp-resource';
 import { startEngineTestHost } from '#mocks/engine';
 import { installEntry, installationPorts } from '#mocks/installation';
 import type { AcpResources, AcpSessionLease } from '../index';
@@ -41,11 +45,11 @@ const upgradeWhileLeased = async (): Promise<Upgrade> => {
 
   const first = await getCommand(input);
   const opening = createResourceOpening();
-  opening.launch = {
-    ...opening.launch,
+  opening.launch = deferLaunch({
+    ...resourceLaunch,
     agentId: entry.id,
     installationDirectory: first.directory,
-  };
+  });
   const lease = await resources.open(opening);
   first.release();
   resources.dropAgentConnections(entry.id);

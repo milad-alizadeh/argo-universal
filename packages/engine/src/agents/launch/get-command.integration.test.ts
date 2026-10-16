@@ -111,7 +111,7 @@ it('reuses a published binary for a later command', async () => {
 });
 
 it.each(kinds)(
-  'merges shell, distribution, vendor and saved env for %s',
+  'merges shell, distribution and vendor env for %s',
   async (kind) => {
     const entry = { ...installEntry(kind), id: String(fixtureRegistryIds[0]) };
 
@@ -130,10 +130,6 @@ it.each(kinds)(
     });
 
     await host.caller.agents.refreshRegistry();
-    await host.caller.agents.addRegistry({ id: entry.id });
-    host.database.$client
-      .prepare('UPDATE agent_servers SET env = ? WHERE id = ?')
-      .run(JSON.stringify({ VALUE: 'saved' }), entry.id);
 
     const input = {
       database: host.database,
@@ -148,15 +144,11 @@ it.each(kinds)(
     };
 
     expect((await getCommand(input)).env).toMatchObject({
-      VALUE: 'saved',
+      VALUE: 'distribution',
       ANTHROPIC_API_KEY: '',
       DISTRIBUTION: 'kept',
       SHELL_ONLY: 'kept',
     });
-    host.database.$client
-      .prepare('UPDATE agent_servers SET env = ? WHERE id = ?')
-      .run(JSON.stringify({ ANTHROPIC_API_KEY: 'saved' }), entry.id);
-    expect((await getCommand(input)).env.ANTHROPIC_API_KEY).toBe('saved');
   },
 );
 
