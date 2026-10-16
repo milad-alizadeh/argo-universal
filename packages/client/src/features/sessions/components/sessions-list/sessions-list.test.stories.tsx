@@ -34,7 +34,8 @@ export const ProjectActions: Story = {
     });
 
     await waitFor(() => expect(heading).toBeVisible());
-    await userEvent.hover(heading);
+    // The test browser has no real pointer, so focus inside the heading stands in for hover.
+    heading.focus();
 
     const settings = canvas.getByRole('button', {
       name: 'Project settings for Example Project',
