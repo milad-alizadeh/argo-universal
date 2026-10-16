@@ -15,7 +15,7 @@ export type FieldSection = {
   entries: ElicitationEntry[];
   // A section of choices is headed by its field, as its rows are the choices.
   title?: string;
-  // Only fields to type in: Android stacks them as bare Material fields.
+  // Only fields to type in, kept out of any rows' card.
   textFields: boolean;
 };
 
@@ -25,10 +25,13 @@ function fieldKind(entry: ElicitationEntry): FieldKind {
   return elicitationChoices(entry.property) ? 'choices' : 'text';
 }
 
-// Android never sets a field to type in among rows, so a change of kind starts its section there.
-const splitsKinds = Platform.OS === 'android';
+// iOS gives each field to type in a section of its own, so it reads as an inset field.
+const separateTextFields = Platform.OS === 'ios';
 
-// A field's description is its section's footer, so the section ends there; choices stand alone.
+const standsAlone = (kind: FieldKind): boolean =>
+  kind === 'choices' || (separateTextFields && kind === 'text');
+
+// A field's description is its section's footer, so the section ends there; fields never share rows' cards.
 function startsSection(
   entry: ElicitationEntry,
   previous: ElicitationEntry | undefined,
@@ -44,7 +47,7 @@ function kindsSplit(
 ): boolean {
   const kinds = [fieldKind(entry), fieldKind(previous)];
 
-  return kinds.includes('choices') || (splitsKinds && kinds[0] !== kinds[1]);
+  return kinds[0] !== kinds[1] || kinds.some(standsAlone);
 }
 
 // The fields as grouped sections: they run on in one until a field has a footer or holds choices.

@@ -59,19 +59,18 @@ const optionSubtitle = (
 ): GroupedListItemProps['subtitle'] =>
   option.description ? { text: option.description } : undefined;
 
-// iOS ticks a chosen row, as a Settings checklist does; the web ticks a single choice.
-const ticksChoice = (multiple: boolean): boolean =>
-  Platform.OS === 'ios' || (Platform.OS === 'web' && !multiple);
-
-// Android, and the web's multi-select, lead each row with a checkbox or radio button.
+/*
+ * iOS and the web tick a chosen row, as a Settings checklist does. Android trails each row with
+ * Material's checkbox or radio button.
+ */
 function optionMark(
   multiple: boolean,
   checked: boolean,
-): Pick<GroupedListItemProps, 'leading' | 'accessory'> {
-  if (ticksChoice(multiple)) return { accessory: checkMark(checked) };
+): Pick<GroupedListItemProps, 'accessory'> {
+  if (Platform.OS !== 'android') return { accessory: checkMark(checked) };
 
   return {
-    leading: <OptionIndicator multiple={multiple} checked={checked} />,
+    accessory: <OptionIndicator multiple={multiple} checked={checked} />,
   };
 }
 

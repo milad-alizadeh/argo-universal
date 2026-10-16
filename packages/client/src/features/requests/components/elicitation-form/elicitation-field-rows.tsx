@@ -11,6 +11,7 @@ import { toggledChoice } from './elicitation-answers';
 import { OptionRows } from './elicitation-option-rows';
 import { elicitationChoices, numericProperty } from './elicitation-property';
 import type { ElicitationValue } from './elicitation-schema';
+import { textFieldVariant } from './elicitation-text-fields';
 
 export type ElicitationFieldProps = {
   name: string;
@@ -31,8 +32,8 @@ export const fieldLabel = (
 ): string => props.property.title ?? props.name;
 
 /*
- * One schema property as rows of its section: a switch row for a boolean, an option row for each
- * choice, and a field to type in for text or a number.
+ * One schema property: a switch row for a boolean, an option row for each choice, and a field to
+ * type in, never a row, for text or a number.
  */
 export function FieldRows(props: ElicitationFieldProps): ReactElement {
   if (props.property.type === 'boolean') return <SwitchRow {...props} />;
@@ -44,7 +45,7 @@ export function FieldRows(props: ElicitationFieldProps): ReactElement {
 
 function textProps(props: ElicitationFieldProps): TextInputProps {
   return {
-    variant: 'row',
+    variant: textFieldVariant,
     label: fieldLabel(props),
     labelHidden: props.lone,
     required: props.required,

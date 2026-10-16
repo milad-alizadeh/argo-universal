@@ -40,7 +40,10 @@ export const TextField: Story = {
 };
 
 export const FormFields: Story = {
-  args: { request: configurationRequest },
+  args: {
+    request: configurationRequest,
+    initialValues: { name: 'argo-server' },
+  },
 };
 
 function InteractiveSheet(props: ElicitationFormProps): ReactElement {

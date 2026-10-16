@@ -9,10 +9,11 @@ import {
   useSectionFooter,
   type FieldSection,
 } from './elicitation-sections';
+import { TextFields } from './elicitation-text-fields';
 
 type ModelProps = { model: ElicitationModel };
 
-// The form's fields on one page, as rows of grouped sections.
+// The form's fields on one page: rows in grouped sections, and fields to type in apart from them.
 export function ElicitationFields({ model }: ModelProps): ReactElement {
   return (
     <ElicitationList>
@@ -32,14 +33,13 @@ function FieldsSection({
   section,
 }: ModelProps & { section: FieldSection }): ReactElement {
   const footer = useSectionFooter({ model, entries: section.entries });
+  const rows = <SectionRows model={model} section={section} />;
+
+  if (section.textFields) return <TextFields {...footer}>{rows}</TextFields>;
 
   return (
-    <GroupedListSection
-      title={section.title}
-      textFields={section.textFields}
-      {...footer}
-    >
-      <SectionRows model={model} section={section} />
+    <GroupedListSection title={section.title} {...footer}>
+      {rows}
     </GroupedListSection>
   );
 }
