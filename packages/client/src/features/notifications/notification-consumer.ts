@@ -2,9 +2,16 @@ import type {
   NotificationStreamEvent,
   NotificationEvent,
 } from '@repo/contracts';
-import type { useTRPCClient } from '#features/connection';
 
-type NotificationClient = ReturnType<typeof useTRPCClient>;
+// The two Server calls the consumer makes; the tRPC client satisfies it.
+export interface NotificationClient {
+  notifications: {
+    attention: {
+      mutate: (input: { sessionId: string | null }) => Promise<boolean>;
+    };
+    acknowledge: { mutate: (input: { id: string }) => Promise<boolean> };
+  };
+}
 
 type Deliver = (notification: NotificationEvent) => boolean;
 
