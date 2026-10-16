@@ -32,6 +32,7 @@ export async function saveSessionArchive(
   await writeDatabaseJobAndWaitForCommit(
     writer,
     new SessionArchiveJob(archivedSessionIds(context), archivedAt),
+    true,
   );
 }
 
@@ -48,20 +49,40 @@ export async function removeSessionCheckout(
   );
 }
 
-// Startup owns only cleanup: an old archive never reopens an Agent or its Undo window.
-export async function recoverArchivedCheckouts(
-  database: Database,
-): Promise<void> {
-  const rows = database
-    .select()
-    .from(session)
-    .where(and(isNotNull(session.archivedAt), isNull(session.parentSessionId)))
-    .all();
+type ArchivedCheckout = Pick<
+  typeof session.$inferSelect,
+  'id' | 'projectId' | 'checkoutPath' | 'checkoutBranch'
+>;
 
-  for (const row of rows)
+async function recoverArchivedCheckout(
+  database: Database,
+  row: ArchivedCheckout,
+): Promise<void> {
+  try {
     await removeSessionCheckout(database, {
       projectId: row.projectId,
       sessionId: row.id,
       checkout: { path: row.checkoutPath, branch: row.checkoutBranch },
     });
+  } catch (error) {
+    console.error(`Session ${row.id}: archive cleanup deferred`, error);
+  }
+}
+
+// Startup owns only cleanup: an old archive never reopens an Agent or its Undo window.
+export async function recoverArchivedCheckouts(
+  database: Database,
+): Promise<void> {
+  const rows = database
+    .select({
+      id: session.id,
+      projectId: session.projectId,
+      checkoutPath: session.checkoutPath,
+      checkoutBranch: session.checkoutBranch,
+    })
+    .from(session)
+    .where(and(isNotNull(session.archivedAt), isNull(session.parentSessionId)))
+    .all();
+
+  for (const row of rows) await recoverArchivedCheckout(database, row);
 }

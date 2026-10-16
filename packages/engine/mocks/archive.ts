@@ -35,3 +35,22 @@ export async function promptedArchiveSession(
 
   return { ...created, path: row.checkoutPath };
 }
+
+// SQLite rejects this operation until the test removes the trigger; the Writer stays real.
+export function pauseArchiveWrite(
+  database: Host['database'],
+  predicate: 'IS NULL' | 'IS NOT NULL',
+): Promise<void> {
+  const rejected = Promise.withResolvers<void>();
+  database.$client.function('record_archive_failure', () => {
+    rejected.resolve();
+
+    return 0;
+  });
+  database.$client
+    .exec(`CREATE TRIGGER pause_archive BEFORE UPDATE OF archived_at ON session
+    WHEN NEW.archived_at ${predicate} BEGIN
+    SELECT record_archive_failure(); SELECT RAISE(ABORT, 'archive storage unavailable'); END`);
+
+  return rejected.promise;
+}
