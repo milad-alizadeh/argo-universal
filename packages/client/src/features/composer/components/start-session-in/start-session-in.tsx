@@ -19,8 +19,8 @@ export function StartSessionIn(props: StartSessionInProps): React.JSX.Element {
         connected={props.serverConnected}
       />
       <SessionProjectControl props={props} wide={wide} />
-      <SessionAgentControl props={props} wide={wide} />
       {!wide && <SessionCheckoutControl {...props} />}
+      <SessionAgentControl props={props} wide={wide} />
     </View>
   );
 }

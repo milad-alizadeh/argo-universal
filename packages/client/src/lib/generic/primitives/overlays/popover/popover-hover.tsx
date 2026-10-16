@@ -1,20 +1,21 @@
 import * as React from 'react';
 import type { OpenState } from '#primitives/overlays/open-state';
 import { usePopoverState } from './popover-context';
+import { HoverGroup, closeSiblings, register } from './popover-hover-group';
+import { type HoverTimer, useHoverTimer } from './popover-hover-timer';
 
-const closeGraceMs = 200;
+/*
+ * The parts the pointer can rest on: the trigger, the content, or a nested popover's own parts.
+ * A browser reports the content's enter before the trigger's leave, so the popover closes only once
+ * the pointer has left every part, whatever order their events arrive in.
+ */
+export type HoverPart = 'trigger' | 'content' | (string & {});
 
 export interface Hover {
-  enter: () => void;
-  leave: () => void;
+  enter: (part: HoverPart) => void;
+  leave: (part: HoverPart) => void;
   promote: () => void;
   isPointer: () => boolean;
-}
-
-interface Timer {
-  close: () => void;
-  cancel: () => void;
-  schedule: () => void;
 }
 
 type Intent = ReturnType<typeof useHoverIntent>;
@@ -28,25 +29,15 @@ interface HoverIntent {
 type Root = OpenState;
 
 interface HoverEnvironment {
+  id: string;
   parent?: Hover;
   group?: Set<() => void>;
-  timer: Timer;
+  timer: HoverTimer;
   intent: Intent;
+  hovered: Set<HoverPart>;
 }
 
 export const PopoverHover = React.createContext<Hover | undefined>(undefined);
-
-const HoverGroup = React.createContext<Set<() => void> | undefined>(undefined);
-
-export function PopoverHoverGroup({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  const [members] = React.useState(() => new Set<() => void>());
-
-  return <HoverGroup value={members}>{children}</HoverGroup>;
-}
 
 export function HoverProvider({
   enabled,
@@ -68,9 +59,23 @@ function useHover(): Hover {
   const group = React.useContext(HoverGroup);
   const intent = useHoverIntent();
   const timer = useHoverTimer(context.onOpenChange);
+  const id = React.useId();
+  const [hovered] = React.useState(() => new Set<HoverPart>());
   React.useEffect(() => register(group, timer.close), [group, timer.close]);
+  React.useEffect(() => {
+    if (!context.open) forget({ id, parent, hovered });
+  }, [context.open, id, parent, hovered]);
 
-  return hoverActions(context, { parent, group, intent, timer });
+  return hoverActions(context, { id, parent, group, intent, timer, hovered });
+}
+
+// A closed popover holds no pointer: its parts unmount without reporting a leave.
+function forget(
+  environment: Pick<HoverEnvironment, 'id' | 'parent' | 'hovered'>,
+): void {
+  if (environment.hovered.size === 0) return;
+  environment.hovered.clear();
+  environment.parent?.leave(environment.id);
 }
 
 function useHoverIntent(): HoverIntent {
@@ -87,24 +92,6 @@ function useHoverIntent(): HoverIntent {
   };
 }
 
-function useHoverTimer(onOpenChange: (open: boolean) => void): Timer {
-  const pending = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancel = React.useCallback(() => cancelPending(pending.current), []);
-  const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
-  React.useEffect(() => cancel, [cancel]);
-
-  const schedule = (): void => {
-    cancel();
-    pending.current = setTimeout(close, closeGraceMs);
-  };
-
-  return { close, cancel, schedule };
-}
-
-function cancelPending(pending: ReturnType<typeof setTimeout> | null): void {
-  if (pending) clearTimeout(pending);
-}
-
 function hoverActions(context: Root, environment: HoverEnvironment): Hover {
   return {
     isPointer: environment.intent.isPointer,
@@ -112,42 +99,43 @@ function hoverActions(context: Root, environment: HoverEnvironment): Hover {
       environment.intent.promote();
       environment.timer.cancel();
     },
-    enter: () => enter(context, environment),
-    leave: () => leave(environment),
+    enter: (part) => enter(context, environment, part),
+    leave: (part) => leave(environment, part),
   };
 }
 
-function enter(context: Root, environment: HoverEnvironment): void {
+function enter(
+  context: Root,
+  environment: HoverEnvironment,
+  part: HoverPart,
+): void {
   environment.timer.cancel();
-  environment.parent?.enter();
+  markHovered(environment, part);
+  openFromHover(context, environment);
+}
 
+// The parent hears of this popover once, when its first part is hovered.
+function markHovered(environment: HoverEnvironment, part: HoverPart): void {
+  if (environment.hovered.size === 0) environment.parent?.enter(environment.id);
+  environment.hovered.add(part);
+}
+
+function openFromHover(context: Root, environment: HoverEnvironment): void {
   if (!context.open) environment.intent.mark();
   closeSiblings(environment.group, environment.timer.close);
   context.onOpenChange(true);
 }
 
-function leave(environment: HoverEnvironment): void {
-  if (!environment.intent.isPointer()) return;
-  environment.parent?.leave();
-  environment.timer.schedule();
+function leave(environment: HoverEnvironment, part: HoverPart): void {
+  if (!leftLastPart(environment.hovered, part)) return;
+
+  environment.parent?.leave(environment.id);
+  scheduleClose(environment);
 }
 
-function closeSiblings(
-  group: Set<() => void> | undefined,
-  current: () => void,
-): void {
-  group?.forEach((close) => {
-    if (close !== current) close();
-  });
-}
+const leftLastPart = (hovered: Set<HoverPart>, part: HoverPart): boolean =>
+  hovered.delete(part) && hovered.size === 0;
 
-function register(
-  group: Set<() => void> | undefined,
-  close: () => void,
-): () => void {
-  group?.add(close);
-
-  return () => {
-    group?.delete(close);
-  };
+function scheduleClose(environment: HoverEnvironment): void {
+  if (environment.intent.isPointer()) environment.timer.schedule();
 }

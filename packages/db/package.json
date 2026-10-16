@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/database.ts",
-    "./schema": "./src/schema.ts"
+    "./schema": "./src/schema.ts",
+    "./plugin-database": "./src/plugin-database.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

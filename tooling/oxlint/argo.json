@@ -451,11 +451,7 @@
               },
               {
                 "name": "#features/agents",
-                "importNames": [
-                  "useAgents",
-                  "useAgentCatalog",
-                  "useCustomAgents"
-                ],
+                "importNames": ["useAgents", "useAgentCatalog"],
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
@@ -565,11 +561,7 @@
               },
               {
                 "name": "#features/agents",
-                "importNames": [
-                  "useAgents",
-                  "useAgentCatalog",
-                  "useCustomAgents"
-                ],
+                "importNames": ["useAgents", "useAgentCatalog"],
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
@@ -593,10 +585,6 @@
               },
               {
                 "name": "../hooks/use-agents",
-                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
-              },
-              {
-                "name": "../hooks/use-custom-agents",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
@@ -695,11 +683,7 @@
               },
               {
                 "name": "#features/agents",
-                "importNames": [
-                  "useAgents",
-                  "useAgentCatalog",
-                  "useCustomAgents"
-                ],
+                "importNames": ["useAgents", "useAgentCatalog"],
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
@@ -723,10 +707,6 @@
               },
               {
                 "name": "../../hooks/use-agents",
-                "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
-              },
-              {
-                "name": "../../hooks/use-custom-agents",
                 "message": "Components and stories take props only: the screen calls data hooks (ADR-0021)."
               },
               {
@@ -2130,6 +2110,7 @@
         "packages/engine/src/system/info.ts",
         "packages/engine/src/engine/caffeinate.ts",
         "packages/engine/src/plugins/host-connection.ts",
+        "packages/engine/src/plugins/keychain.ts",
         "packages/engine/src/agents/acp/process.ts",
         "packages/engine/src/agents/launch/shell-env.ts",
         "packages/engine/src/agents/install/processes/process.ts",

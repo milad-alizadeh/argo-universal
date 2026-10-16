@@ -33,7 +33,9 @@ export function Meter(props: MeterProps): JSX.Element {
   return (
     <View
       role="progressbar"
-      accessibilityValue={{ min: 0, max: fullPercent, now: percent }}
+      aria-valuemin={0}
+      aria-valuemax={fullPercent}
+      aria-valuenow={percent}
       className={cn('h-1.5 rounded-full bg-muted overflow-hidden', className)}
     >
       <MeterFill percent={percent} warning={warning} />

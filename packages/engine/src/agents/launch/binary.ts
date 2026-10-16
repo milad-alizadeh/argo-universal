@@ -9,7 +9,7 @@ import {
   installationPath,
 } from '../install/materialization/files';
 import { InstallCleanupError } from '../install/processes/process-cleanup';
-import { resolveRegistryServerPlatform } from '../records';
+import { resolveRegistryServerPlatform } from '../registry/platform';
 import { binarySource, pruneVersions, versionFolder } from './binary-cache';
 import { reserveVersion, serializeBinary } from './binary-reservations';
 import { githubDigest } from './github-digest';
@@ -115,7 +115,7 @@ const extractionRecipe = async (
 
   const cmd = rawCommand(input.target);
 
-  return { ...input.target, kind: 'binary', args: [], env: {}, cmd, sha256 };
+  return { ...input.target, cmd, sha256 };
 };
 
 const rawCommand = (target: BinaryTarget): string =>

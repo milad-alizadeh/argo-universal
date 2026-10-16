@@ -81,15 +81,21 @@ function WidePopover(props: OverlayProps): React.JSX.Element {
 function WideContent(props: OverlayProps): React.JSX.Element {
   return (
     <PopoverContent
-      side="top"
       align="start"
       accessibilityLabel={props.label}
       onClosed={props.closed}
       style={{ width: popoverWidth(props) }}
-      className="composer-popover bg-card rounded-2xl border border-border p-0 overflow-hidden"
+      className={wideContentClassName(props)}
     >
       <PopoverPanel {...panelProps(props)} />
     </PopoverContent>
+  );
+}
+
+function wideContentClassName(props: OverlayProps): string {
+  return (
+    props.contentClassName ??
+    'composer-popover bg-card rounded-2xl border border-border p-0 overflow-hidden'
   );
 }
 

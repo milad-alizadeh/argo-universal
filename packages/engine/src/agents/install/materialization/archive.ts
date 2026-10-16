@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { chmod, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { unzipSync } from 'fflate';
@@ -11,9 +11,8 @@ import {
   extractedLimit,
 } from './archive-budget';
 import { installationPath } from './files';
-import type { InstallRecipe } from './recipe';
 
-type BinaryRecipe = Extract<InstallRecipe, { kind: 'binary' }>;
+type BinaryRecipe = { archive: string; sha256?: string; cmd: string };
 
 export type BinaryInput = {
   directory: string;
@@ -142,15 +141,6 @@ export const extractBinaryFiles = async (
   input.signal.throwIfAborted();
 
   return input.recipe.cmd;
-};
-
-export const materializeBinary = async (
-  input: BinaryInput,
-): Promise<string> => {
-  const cmd = await extractBinaryFiles(input);
-  await chmod(installationPath(input.directory, cmd), executableMode);
-
-  return cmd;
 };
 
 const extractFile = (input: BinaryInput, extension: string): Promise<void> =>

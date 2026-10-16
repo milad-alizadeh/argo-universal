@@ -1,12 +1,6 @@
 import type { Database } from '@repo/db';
 import { writeLog } from '@repo/machine-log';
-import {
-  fromPromise,
-  sendTo,
-  setup,
-  type ActorRefFrom,
-  type AnyActorRef,
-} from 'xstate';
+import { fromPromise, sendTo, setup, type AnyActorRef } from 'xstate';
 import {
   createAcpResources,
   type AcpResources,
@@ -14,13 +8,12 @@ import {
 } from '../agents';
 import {
   type FetchAgents,
-  AgentInstallations,
   type InstallPorts,
-  syncSupervisorMachine,
   registryMachine,
 } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import type { NotificationOptions } from '../notifications';
+import type { Keychain } from '../plugins';
 import {
   type OpenSessionsInput,
   openSessionsMachine,
@@ -57,8 +50,6 @@ export type EngineOutput = { exitCode: number };
 
 export type CloseHttpServerInput = { server: HttpServer | null };
 
-type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
-
 // `openingDatabase` sets the database before `recovering` and `live` run.
 export function openDatabaseOf(context: {
   database: Database | null;
@@ -76,6 +67,7 @@ export interface EngineInput extends Pick<
   port: number;
   version: string;
   firstPartyPluginsDirectory?: string;
+  keychain?: Keychain;
   startedAt: string;
   acp?: AcpResourceInput;
   loginTimeoutMs?: number;
@@ -91,7 +83,6 @@ export interface EngineContext extends EngineInput {
   server: HttpServer | null;
   failure: string | null;
   acpResources: AcpResources;
-  installations: AgentInstallations;
   commandAdmission: AbortController;
 }
 
@@ -123,7 +114,6 @@ export const engineSetup = setup({
     recoverAfterRestart: fromPromise<void, RecoveryInput>(
       ({ input }): Promise<void> => recoverEngineAfterRestart(input),
     ),
-    syncSupervisor: syncSupervisorMachine,
     registry: registryMachine,
     databaseWriter: writerMachine,
     sessions: openSessionsMachine,
@@ -145,7 +135,6 @@ export const engineSetup = setup({
   actions: {
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
-    stopSync: sendTo('syncSupervisor', { type: 'sync.stop' }),
     stopRegistry: sendTo('registry', { type: 'STOP' }),
     closeCommandAdmission: ({ context }): void =>
       context.commandAdmission.abort(),
@@ -188,16 +177,6 @@ export function requireDatabaseWriter(
   return actor;
 }
 
-export function requireSyncSupervisor(
-  system: AnyActorRef['system'],
-): SyncSupervisorActor {
-  const actor = system.get('syncSupervisor');
-
-  if (!actor) throw new Error('Sync supervisor is not running');
-
-  return actor;
-}
-
 export const stoppingLog = ({
   event,
 }: {
@@ -210,6 +189,5 @@ export const createEngineContext = (input: EngineInput): EngineContext => ({
   server: null,
   failure: null,
   acpResources: createAcpResources(input.acp),
-  installations: new AgentInstallations(input.home, input.installationPorts),
   commandAdmission: new AbortController(),
 });

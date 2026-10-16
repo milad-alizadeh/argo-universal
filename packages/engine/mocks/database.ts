@@ -3,9 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { StatementSync } from 'node:sqlite';
 import { type Database, openDatabase } from '@repo/db';
-import { agents, project, session, turn } from '@repo/db/schema';
-import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
-import { notInArray } from 'drizzle-orm';
+import { project, session, turn } from '@repo/db/schema';
 import { onTestFinished, vi } from 'vitest';
 
 interface TestDatabase {
@@ -141,20 +139,4 @@ function recordRead(
   if (fromSession) metrics.sessionReads += 1;
   metrics.rows += rows;
   metrics.largestRead = Math.max(metrics.largestRead, rows);
-}
-
-// Agent rows other than the required Agent identities every database starts with.
-export function readAddedAgentRows(
-  database: Database,
-): (typeof agents.$inferSelect)[] {
-  return database
-    .select()
-    .from(agents)
-    .where(
-      notInArray(agents.id, [
-        'mock',
-        ...fixtureAgents.map(({ agent }) => agent),
-      ]),
-    )
-    .all();
 }

@@ -18,6 +18,7 @@ import { shellScenarios } from './shell-scenarios.ts';
 import { signInScenarios } from './sign-in-scenarios.ts';
 import { subagentScenarios } from './subagent-scenarios.ts';
 import { terminalLogin } from './terminal-login.ts';
+import { titleScenarios } from './title-scenarios.ts';
 
 export const sharedReply = 'The shared fixture completed this Turn.';
 
@@ -129,6 +130,7 @@ export const scenarios = {
     reply,
   ]),
   ...contextUsageScenarios(reply),
+  ...titleScenarios(reply),
   'held-mode': scenario(heldModeSteps),
   configuration: scenario([update(smallModelUpdate), reply]),
   'write-pressure': scenario([

@@ -1,4 +1,8 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import {
+  identityRegistry,
+  registryIdentities,
+} from '@repo/mocks/registry/identities';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 
@@ -29,20 +33,34 @@ it('lists Registry entries with their launch support', async () => {
   });
 });
 
-it('saves a Registry Agent without installing it', async () => {
-  const host = await startPublishedHost();
-  expect(await host.caller.agents.servers()).toEqual([]);
-  await host.caller.agents.addRegistry({ id: exampleAgentId });
-  expect(await host.caller.agents.servers()).toEqual([
-    {
-      id: exampleAgentId,
-      name: 'Example Agent',
-      icon: publishedRegistry.agents[0]?.icon,
-      version: publishedRegistry.agents[0]?.version,
-      env: {},
-    },
-  ]);
-});
+it.each(registryIdentities)(
+  'saves $name using its Registry id and name without downloading it',
+  async ({ id, name }) => {
+    const host = await startEngineTestHost({
+      fixtureAgents: [],
+      fetchAgents: async () => JSON.stringify(identityRegistry),
+    });
+
+    await host.caller.agents.refreshRegistry();
+    expect(await host.caller.agents.servers()).toEqual([]);
+    await host.caller.agents.addRegistry({ id });
+    expect(await host.caller.agents.servers()).toEqual([
+      {
+        id,
+        name,
+        version: '1.2.3',
+        icon: identityRegistry.agents[0]?.icon,
+        env: {},
+      },
+    ]);
+    expect((await host.caller.agents.registry()).agents).toContainEqual({
+      entry: expect.objectContaining({ id, name }),
+      support: 'npx',
+    });
+    await host.caller.agents.remove({ id });
+    expect(await host.caller.agents.servers()).toEqual([]);
+  },
+);
 
 it('hides a saved Agent once the Registry drops it', async () => {
   let entries = publishedRegistry.agents;

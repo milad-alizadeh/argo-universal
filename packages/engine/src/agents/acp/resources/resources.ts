@@ -7,7 +7,6 @@ import {
   entryAuthentication,
   pendingAuthentication,
   entryInUse,
-  isIdleEntryOf,
   type Entry,
 } from './resource-entry';
 import { startEntry, withdrawResolving } from './resource-launch';
@@ -125,25 +124,12 @@ class EngineAcpResources implements AcpResources {
     this.entries.delete(key);
     this.stopConnection(entry.connection);
   }
-  public isAgentInUse = (id: string): boolean =>
-    [...this.connections].some(
-      (entry) => entry.agentId === id && entryInUse(entry),
-    );
-  public invalidateAgent = (agentId: string): void => {
-    for (const [key, entry] of this.entries)
-      if (entry.agentId === agentId) this.retire(key, entry);
-  };
-  public invalidateIdleAgents = (agentId?: string): void => {
-    for (const [key, entry] of this.entries)
-      if (isIdleEntryOf(entry, agentId)) this.retire(key, entry);
-  };
   public dropAgentConnections = (agentId: string): void => {
     for (const [key, entry] of this.entries)
       if (entry.agentId === agentId) this.drop(key, entry);
   };
   public isDirectoryInUse = (directory: string): boolean =>
     [...this.connections].some((entry) => entry.directory === directory);
-  public reserveAuthentication = (): (() => void) => () => {};
   public async shutdown(): Promise<void> {
     this.stopped = true;
     const entries = [...this.connections];
