@@ -1,5 +1,5 @@
 import type { ChangesSummary, SessionSnapshot } from '@repo/contracts';
-import { toPendingPlanProposal } from '../acp/requests/plan-proposal';
+import { shownPlanProposal } from '../acp/requests/plan-proposal';
 import { toShell } from '../acp/shells/shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
 import { snapshotState, type SessionState } from './state';
@@ -108,7 +108,7 @@ function sessionFields(session: SessionState | null): SessionFields {
     usage: context.usage,
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.elicitationQueue[0] ?? null,
-    pendingPlanProposal: toPendingPlanProposal(context.planProposal),
+    pendingPlanProposal: shownPlanProposal(context),
     configOptions: withHeldConfiguration(
       context.configOptions,
       context.heldConfig,

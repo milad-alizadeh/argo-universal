@@ -36,14 +36,14 @@ type ModelStep = ReturnType<
   typeof createAcpSessionModel
 >['paths'][number]['steps'][number];
 
-// Approve answers the Agent alone; Keep planning's feedback waits as the next prompt.
+// Approve answers the Agent alone and drops earlier feedback; Keep planning's feedback waits as the next prompt.
 const expectPlanAnswer = ({ event, state }: ModelStep): void => {
   if (event.type !== 'session.answerPlanProposal') return;
 
   expect(state.context.planProposal).toBeNull();
-  expect(state.context.pendingSubmission?.content ?? null).toEqual(
+  expect(state.context.pendingSubmission?.content.at(-1) ?? null).toEqual(
     event.decision === 'keep_planning'
-      ? [{ type: 'text', text: event.feedback }]
+      ? { type: 'text', text: event.feedback }
       : null,
   );
 };

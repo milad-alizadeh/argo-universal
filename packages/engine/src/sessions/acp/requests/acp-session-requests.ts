@@ -2,30 +2,25 @@ import type {
   CreateElicitationResponse,
   RequestPermissionResponse,
 } from '@agentclientprotocol/sdk';
-import type { PendingElicitation, PendingPermission } from '@repo/contracts';
+import type { PendingElicitation } from '@repo/contracts';
 import type { AcpSessionDestination } from '../../../agents';
 import {
   toPendingElicitation,
   type AcpRequestIntake,
 } from './acp-request-intake';
-import { type HeldPlanProposal, toPermissionIntake } from './plan-proposal';
+import {
+  type PermissionPresentation,
+  toPermissionIntake,
+} from './plan-proposal';
 
 export type AcpRequestEvent =
-  | { type: 'acp.permissionRequested'; request: PendingPermission }
+  | PermissionPresentation
   | { type: 'acp.elicitationRequested'; request: PendingElicitation }
-  | { type: 'acp.planProposed'; request: HeldPlanProposal }
   // The Agent withdrew the request, or its ACP lifetime ended.
   | { type: 'acp.requestWithdrawn'; requestId: string }
   | { type: 'agent.messageRejected'; reason: string };
 
 type Send = (event: AcpRequestEvent) => void;
-
-const presentPermission = (
-  request: PendingPermission | HeldPlanProposal,
-): AcpRequestEvent =>
-  'approve' in request
-    ? { type: 'acp.planProposed', request }
-    : { type: 'acp.permissionRequested', request };
 
 type Waiting = {
   requestId: string;
@@ -34,6 +29,7 @@ type Waiting = {
 };
 
 type PresentInput<Request, Response> = {
+  requestId: string;
   send: Send;
   signal: AbortSignal;
   intake: AcpRequestIntake<Request>;
@@ -91,35 +87,42 @@ export class AcpSessionRequests {
   public requestPermission(
     send: Send,
   ): AcpSessionDestination['requestPermission'] {
-    return ({ params, signal }) =>
-      this.present({
+    return ({ params, signal }) => {
+      const requestId = this.createId();
+
+      return this.present({
+        requestId,
         send,
         signal,
-        intake: toPermissionIntake(this.createId(), params),
+        intake: toPermissionIntake(requestId, params),
         pending: this.permissions,
-        presented: presentPermission,
+        presented: (presentation) => presentation,
       });
+    };
   }
   public createElicitation(
     send: Send,
   ): AcpSessionDestination['createElicitation'] {
-    return ({ params, signal }) =>
-      this.present({
+    return ({ params, signal }) => {
+      const requestId = this.createId();
+
+      return this.present({
+        requestId,
         send,
         signal,
-        intake: toPendingElicitation(this.createId(), params),
+        intake: toPendingElicitation(requestId, params),
         pending: this.elicitations,
         presented: (request) => ({ type: 'acp.elicitationRequested', request }),
       });
+    };
   }
-  private present<Request extends { requestId: string }, Response>(
+  private present<Request, Response>(
     input: PresentInput<Request, Response>,
   ): Promise<Response> {
-    const { intake, pending, send } = input;
+    const { intake, pending, send, requestId } = input;
 
     if (intake.type !== 'presented' || input.signal.aborted)
       return this.refuse(intake, input);
-    const { requestId } = intake.request;
 
     const response = pending.wait({
       requestId,

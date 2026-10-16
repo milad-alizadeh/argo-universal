@@ -8,9 +8,11 @@ import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import {
   planProposalOptions,
   planProposalSteps,
+  planToolCallId,
   proposedPlan,
 } from '@repo/mocks/agent/plan-proposal-scenario';
-import { describe, expect, it } from 'vitest';
+import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
+import { describe, expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 
@@ -32,9 +34,14 @@ const feedback = 'Also update the changelog';
 
 const planPrompt = [{ type: 'text' as const, text: 'Plan the typo fix' }];
 
-// Each prompt plays the next response: first the Plan proposal, then a reply.
+const proposeAndReply = (
+  answers: RequestPermissionResponse[],
+): ScriptedStep[] => [...planProposalSteps({ responses: answers }), reply];
+
+// Each prompt plays the next response: first the planning Turn, then a reply.
 const startPlanningSession = async (
   agent: string,
+  planningTurn = proposeAndReply,
 ): Promise<{
   host: AcpEngine;
   sessionId: string;
@@ -50,7 +57,7 @@ const startPlanningSession = async (
       steps: [reply],
       responses: {
         'session/prompt': [
-          { steps: [...planProposalSteps(answers), reply], requests: prompts },
+          { steps: planningTurn(answers), requests: prompts },
           { steps: [reply], requests: prompts },
         ],
       },
@@ -84,6 +91,16 @@ const waitForPlanProposal = async (
   return snapshot.pendingPlanProposal;
 };
 
+const cancelled = { outcome: { outcome: 'cancelled' } };
+
+const editToolCall = { toolCallId: 'tool-a', title: 'Edit README.md' };
+
+const allowEdit = {
+  optionId: 'allow-edit',
+  name: 'Allow',
+  kind: 'allow_once',
+} as const;
+
 const readUserMessages = async (
   host: AcpEngine,
   sessionId: string,
@@ -103,7 +120,7 @@ const readPlanToolCall = async (
   ).rows.find(
     (row) =>
       row.sessionUpdate === 'tool_call_update' &&
-      row.toolCallId === 'leave-plan-mode',
+      row.toolCallId === planToolCallId,
   );
 
 describe.each(appFixtureAgentIds)('%s Plan proposals', (agent) => {
@@ -161,6 +178,13 @@ describe.each(appFixtureAgentIds)('%s Plan proposals', (agent) => {
     ]);
     expect(prompts).toHaveLength(1);
     expect(await readUserMessages(host, sessionId)).toEqual([planPrompt]);
+    await expect(
+      host.caller.session.answerPlanProposal({
+        sessionId,
+        planId,
+        decision: 'approve',
+      }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
     expect(await readPlanToolCall(host, sessionId)).toMatchObject({
       _meta: {
         argo: {
@@ -255,5 +279,139 @@ describe.each(appFixtureAgentIds)('%s Plan proposals', (agent) => {
       }),
     ).rejects.toMatchObject({ code: 'CONFLICT' });
     expect(prompts).toHaveLength(1);
+  });
+
+  it('the Agent withdrawing the plan request cancels the Plan proposal', async () => {
+    const withdraw = new AbortController();
+
+    const { host, sessionId } = await startPlanningSession(agent, () => [
+      ...planProposalSteps({ signal: withdraw.signal, detached: true }),
+      { type: 'hold' },
+    ]);
+
+    const { planId } = await waitForPlanProposal(host, sessionId);
+    withdraw.abort();
+
+    await waitForAcpSnapshot(
+      host,
+      sessionId,
+      (snapshot) =>
+        snapshot.pendingPlanProposal === null && snapshot.state === 'running',
+    );
+    await expect(
+      host.caller.session.answerPlanProposal({
+        sessionId,
+        planId,
+        decision: 'approve',
+      }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+    // Closing flushes the Feed rows a held Turn keeps in memory.
+    await host.caller.session.close({ sessionId });
+    expect(await readPlanToolCall(host, sessionId)).toMatchObject({
+      _meta: { argo: { permissionOutcome: { outcome: 'cancelled' } } },
+    });
+  });
+
+  it('closing the Session cancels its Plan proposal', async () => {
+    const { host, sessionId, answers } = await startPlanningSession(
+      agent,
+      (responses) => [
+        ...planProposalSteps({ responses, detached: true }),
+        { type: 'hold' },
+      ],
+    );
+
+    await waitForPlanProposal(host, sessionId);
+    await host.caller.session.close({ sessionId });
+
+    await vi.waitFor(() => expect(answers).toEqual([cancelled]));
+    expect(await readPlanToolCall(host, sessionId)).toMatchObject({
+      _meta: { argo: { permissionOutcome: { outcome: 'cancelled' } } },
+    });
+  });
+
+  it('refuses a second Plan proposal while one is held', async () => {
+    const second: RequestPermissionResponse[] = [];
+
+    const { host, sessionId, answers } = await startPlanningSession(
+      agent,
+      (responses) => [
+        ...planProposalSteps({ responses, detached: true }),
+        ...planProposalSteps({ responses: second }),
+        { type: 'hold' },
+      ],
+    );
+
+    await vi.waitFor(() => expect(second).toEqual([cancelled]));
+
+    expect(await waitForPlanProposal(host, sessionId)).toMatchObject({
+      content: proposedPlan,
+    });
+    expect(answers).toEqual([]);
+  });
+
+  it('shows a Plan proposal only after the Permission request ahead of it', async () => {
+    const { host, sessionId } = await startPlanningSession(agent, () => [
+      {
+        type: 'permission',
+        request: { toolCall: editToolCall, options: [allowEdit] },
+        detached: true,
+      },
+      ...planProposalSteps({ detached: true }),
+      { type: 'hold' },
+    ]);
+
+    const waiting = await waitForAcpSnapshot(
+      host,
+      sessionId,
+      (snapshot) => snapshot.pendingPermission !== null,
+    );
+
+    expect(waiting.pendingPlanProposal).toBeNull();
+    await host.caller.session.answerPermission({
+      sessionId,
+      requestId: waiting.pendingPermission?.requestId ?? '',
+      optionId: allowEdit.optionId,
+    });
+    expect(await waitForPlanProposal(host, sessionId)).toMatchObject({
+      content: proposedPlan,
+    });
+  });
+
+  it('Approve after an earlier Keep planning in the same Turn drops its feedback', async () => {
+    const { host, sessionId, prompts } = await startPlanningSession(
+      agent,
+      (responses) => [
+        ...planProposalSteps({ responses }),
+        ...planProposalSteps({ responses }),
+        reply,
+      ],
+    );
+
+    const first = await waitForPlanProposal(host, sessionId);
+    await host.caller.session.answerPlanProposal({
+      sessionId,
+      planId: first.planId,
+      decision: 'keep_planning',
+      feedback,
+    });
+
+    const revised = await waitForAcpSnapshot(
+      host,
+      sessionId,
+      (snapshot) =>
+        snapshot.pendingPlanProposal !== null &&
+        snapshot.pendingPlanProposal.planId !== first.planId,
+    );
+
+    await host.caller.session.answerPlanProposal({
+      sessionId,
+      planId: revised.pendingPlanProposal?.planId ?? '',
+      decision: 'approve',
+    });
+    await waitForAcpSessionIdle(host, sessionId);
+
+    expect(prompts).toHaveLength(1);
+    expect(await readUserMessages(host, sessionId)).toEqual([planPrompt]);
   });
 });

@@ -81,9 +81,7 @@ export const answerSessionPlanProposal = (
   validatePlanProposalAnswer(sessionActor, input);
   sendSessionCommand(sessionActor, {
     type: 'session.answerPlanProposal',
-    planId: input.planId,
-    decision: input.decision,
-    feedback: input.feedback,
+    ...input,
   });
 
   return {};

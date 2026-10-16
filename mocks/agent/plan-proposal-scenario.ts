@@ -1,18 +1,20 @@
 import type {
-  RequestPermissionRequest,
-  RequestPermissionResponse,
+  PermissionOption,
+  ToolCallUpdate,
 } from '@agentclientprotocol/sdk';
 import type { ScriptedStep } from './scripted-scenario.ts';
 
 export const proposedPlan = '1. Read README.md\n2. Fix the typo in its title';
 
+export const planToolCallId = 'leave-plan-mode';
+
 const leavePlanMode = {
-  toolCallId: 'leave-plan-mode',
+  toolCallId: planToolCallId,
   title: 'Approve Plan',
   kind: 'switch_mode',
   rawInput: { plan: proposedPlan },
   content: [{ type: 'content', content: { type: 'text', text: proposedPlan } }],
-} satisfies RequestPermissionRequest['toolCall'];
+} satisfies ToolCallUpdate;
 
 // The options Claude's ExitPlanMode offers over ACP.
 export const planProposalOptions = {
@@ -31,19 +33,18 @@ export const planProposalOptions = {
     name: 'No, keep planning',
     kind: 'reject_once',
   },
-} as const satisfies Record<
-  string,
-  RequestPermissionRequest['options'][number]
->;
+} as const satisfies Record<string, PermissionOption>;
 
 const proposing: ScriptedStep = {
   type: 'update',
   update: { sessionUpdate: 'tool_call', ...leavePlanMode, status: 'pending' },
 };
 
+type PlanRequestStep = Extract<ScriptedStep, { type: 'permission' }>;
+
 // A plan-mode Turn ending in a Plan proposal: a Permission request to leave plan mode carrying the plan.
 export const planProposalSteps = (
-  responses?: RequestPermissionResponse[],
+  step: Pick<PlanRequestStep, 'responses' | 'detached' | 'signal'> = {},
 ): ScriptedStep[] => [
   proposing,
   {
@@ -52,6 +53,6 @@ export const planProposalSteps = (
       toolCall: leavePlanMode,
       options: Object.values(planProposalOptions),
     },
-    ...(responses && { responses }),
+    ...step,
   },
 ];

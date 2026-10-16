@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import type { WriterActorRef } from '../../storage';
 import {
   type HeldPlanProposal,
-  toPendingPlanProposal,
+  shownPlanProposal,
 } from '../acp/requests/plan-proposal';
 import { toLiveHeader, type LiveHeaderInput } from './header';
 import { createLiveHeaderRowsReader } from './rows';
@@ -89,7 +89,7 @@ function requests(
   return {
     permissionQueue: live.permissionQueue,
     elicitationQueue: live.elicitationQueue,
-    pendingPlanProposal: toPendingPlanProposal(live.planProposal),
+    pendingPlanProposal: shownPlanProposal(live),
   };
 }
 

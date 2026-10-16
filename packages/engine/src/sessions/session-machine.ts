@@ -208,12 +208,8 @@ export type SessionCommand =
       action: 'accept' | 'decline' | 'cancel';
       content?: ElicitationAnswerContent;
     }
-  | {
-      type: typeof answerPlanEvent;
-      planId: HeldPlanProposal['requestId'];
-      decision: PlanProposalDecision;
-      feedback?: string;
-    }
+  // The App's answer as sent, split by decision so Keep planning always carries feedback.
+  | ({ type: typeof answerPlanEvent } & SessionAnswerPlanProposalInput)
   | {
       type: typeof setConfigEvent;
       configId: string;
@@ -334,6 +330,18 @@ const cancelledPermissions = (
   turnId: context.activeTurnId,
   acpSessionId: context.acpLease?.sessionId ?? '',
   toolCallIds: requests.map((request) => request.toolCallId),
+});
+
+// Keep planning feedback waits for the Turn to end; a later Keep planning in the same Turn adds to it, and Approve drops it as answered.
+const withPlanFeedback = (
+  context: SessionContext,
+  feedback: string,
+): LocalSubmission => ({
+  turnId: context.pendingSubmission?.turnId ?? context.input.createId(),
+  content: [
+    ...(context.pendingSubmission?.content ?? []),
+    { type: 'text', text: feedback },
+  ],
 });
 
 type PlanProposalDecision = SessionAnswerPlanProposalInput['decision'];
@@ -1029,17 +1037,14 @@ const sessionSetup = setup({
         return {
           planProposal: null,
           pendingSubmission:
-            event.decision === 'keep_planning' && event.feedback
-              ? {
-                  turnId: context.input.createId(),
-                  content: [{ type: 'text', text: event.feedback }],
-                }
-              : context.pendingSubmission,
+            event.decision === 'keep_planning'
+              ? withPlanFeedback(context, event.feedback)
+              : null,
         };
       },
     ),
-    // A stopped Turn sends no Keep planning feedback.
-    dropPlanFeedback: assign({ pendingSubmission: null }),
+    // Only Keep planning feedback waits during a Turn; a stopped Turn sends none.
+    dropPendingSubmission: assign({ pendingSubmission: null }),
     answerAcpElicitation: ({ context, event }): void => {
       assertEvent(event, answerElicitationEvent);
       context.acpLifetime.answerElicitation(
@@ -1814,7 +1819,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 'session.cancel': {
                   target: '.cancelling',
                   actions: [
-                    'dropPlanFeedback',
+                    'dropPendingSubmission',
                     'rememberCancellation',
                     'cancelAcpRequests',
                     'publishCancellation',
@@ -1867,7 +1872,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 [storageFailingEvent]: {
                   target: '.cancelling',
                   actions: [
-                    'dropPlanFeedback',
+                    'dropPendingSubmission',
                     'rememberStorageFailure',
                     'rememberCancellation',
                     'cancelAcpRequests',

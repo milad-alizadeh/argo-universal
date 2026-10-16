@@ -1,11 +1,12 @@
 import type { RequestPermissionRequest } from '@agentclientprotocol/sdk';
 import { planProposalOptions } from '@repo/mocks/agent/plan-proposal-scenario';
 import { describe, expect, it } from 'vitest';
-import { toHeldPlanProposal } from './plan-proposal';
+import { toHeldPlanProposal, toPermissionIntake } from './plan-proposal';
 
 const plan = '1. Read the README\n2. Fix the typo';
 
-const options = Object.values(planProposalOptions);
+const options: RequestPermissionRequest['options'] =
+  Object.values(planProposalOptions);
 
 const leavePlanMode = (
   toolCall: Partial<RequestPermissionRequest['toolCall']>,
@@ -73,4 +74,29 @@ describe('a Permission request to leave plan mode', (): void => {
       ).toBeNull();
     },
   );
+
+  it('takes the plan from its raw input over its displayed content', (): void => {
+    expect(
+      toHeldPlanProposal(
+        'request-1',
+        leavePlanMode({
+          rawInput: { plan },
+          content: [
+            { type: 'content', content: { type: 'text', text: 'Shown plan' } },
+          ],
+        }),
+      ),
+    ).toMatchObject({ content: plan });
+  });
+
+  it('is rejected when Approve and Keep planning share an option id', (): void => {
+    const shared = options.map((option) => ({ ...option, optionId: 'same' }));
+
+    expect(
+      toPermissionIntake(
+        'request-1',
+        leavePlanMode({ rawInput: { plan } }, shared),
+      ),
+    ).toMatchObject({ type: 'rejected' });
+  });
 });

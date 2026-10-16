@@ -2,6 +2,7 @@ import type { LiveHeader, Turn } from '@repo/contracts';
 import { feedRow } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
+import { heldPlanProposal } from '#mocks/held-plan-proposal';
 import { tool } from '#mocks/live-header-tool';
 import { toFeedRowWrite } from '../../feed';
 import { createLiveHeaderReader, type LiveSession } from './read';
@@ -112,13 +113,7 @@ it('reads Plan ready for a Plan proposal on the Session actor while a Turn runs'
     ...idleSession,
     activeTurnId: 'turn-1',
     activeTurnStartedAt: 70,
-    planProposal: {
-      requestId: 'plan-1',
-      toolCallId: 'leave-plan-mode',
-      content: 'A proposal',
-      approve: { optionId: 'allow', name: 'Approve', kind: 'allow_once' },
-      keepPlanning: { optionId: 'reject', name: 'Keep', kind: 'reject_once' },
-    },
+    planProposal: heldPlanProposal('plan-1'),
   };
 
   expect(

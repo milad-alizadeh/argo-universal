@@ -1,3 +1,4 @@
+import { heldPlanProposal } from './held-plan-proposal';
 import { stored, idle, live, turn, information } from './session-info';
 import type { SessionInfoFixture } from './session-info-case';
 
@@ -71,17 +72,7 @@ export const rules: {
       ...idle,
       live: {
         ...live,
-        planProposal: {
-          requestId: 'plan-1',
-          toolCallId: 'leave-plan-mode',
-          content: 'Fix the typo',
-          approve: { optionId: 'allow', name: 'Approve', kind: 'allow_once' },
-          keepPlanning: {
-            optionId: 'reject',
-            name: 'Keep planning',
-            kind: 'reject_once',
-          },
-        },
+        planProposal: heldPlanProposal('plan-1'),
       },
       liveHeader: {
         text: 'Plan ready',

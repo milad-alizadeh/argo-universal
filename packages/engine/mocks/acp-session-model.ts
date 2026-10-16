@@ -8,6 +8,7 @@ import {
 } from 'xstate/graph';
 import type { AcpSessionLease } from '../src/agents';
 import { sessionMachine } from '../src/sessions';
+import { heldPlanProposal } from './held-plan-proposal';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
 
@@ -360,25 +361,17 @@ export const createAcpSessionModel = (
     },
     {
       type: 'acp.planProposed',
-      request: {
-        requestId: modelPlan,
-        toolCallId: 'model-plan-tool',
-        content: 'Model plan',
-        approve: { optionId: 'model-approve', name: 'Yes', kind: 'allow_once' },
-        keepPlanning: {
-          optionId: 'model-keep-planning',
-          name: 'No, keep planning',
-          kind: 'reject_once',
-        },
-      },
+      request: heldPlanProposal(modelPlan),
     },
     {
       type: answerPlanEvent,
+      sessionId: 'model-session',
       planId: modelPlan,
       decision: 'approve',
     },
     {
       type: answerPlanEvent,
+      sessionId: 'model-session',
       planId: modelPlan,
       decision: 'keep_planning',
       feedback: 'Model feedback',

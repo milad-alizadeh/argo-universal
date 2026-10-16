@@ -8,6 +8,7 @@ import { z } from 'zod';
 import {
   type AcpRequestIntake,
   toPendingPermission,
+  toPermissionOption,
 } from './acp-request-intake';
 
 // A Plan proposal held open for the App. ACP has no Plan proposal, so it arrives as a Permission request to leave plan mode carrying the written plan, as Claude's ExitPlanMode sends it (#58); `requestId` is the Plan proposal's `planId`.
@@ -43,7 +44,7 @@ const optionOfKind = (
 ): PermissionOption | undefined => {
   const option = options.find((candidate) => candidate.kind === kind);
 
-  return option && { optionId: option.optionId, name: option.name, kind };
+  return option && toPermissionOption(option);
 };
 
 // Only a switch out of plan mode carries a plan; Claude puts it in `rawInput`, other Agents may only display it.
@@ -74,19 +75,45 @@ export const toHeldPlanProposal = (
     : null;
 };
 
-export const toPendingPlanProposal = (
+const toPendingPlanProposal = (
   proposal: HeldPlanProposal | null,
 ): PendingPlanProposal | null =>
   proposal && { planId: proposal.requestId, content: proposal.content };
 
-// A Permission request, presented as a Plan proposal when it carries one.
+type HeldRequests = {
+  permissionQueue: readonly unknown[];
+  elicitationQueue: readonly unknown[];
+  planProposal: HeldPlanProposal | null;
+};
+
+// The App shows one request card at a time; a Plan proposal waits behind a Permission request or Elicitation.
+export const shownPlanProposal = ({
+  permissionQueue,
+  elicitationQueue,
+  planProposal,
+}: HeldRequests): PendingPlanProposal | null =>
+  permissionQueue.length + elicitationQueue.length > 0
+    ? null
+    : toPendingPlanProposal(planProposal);
+
+export type PermissionPresentation =
+  | { type: 'acp.permissionRequested'; request: PendingPermission }
+  | { type: 'acp.planProposed'; request: HeldPlanProposal };
+
+// A Permission request, presented as a Plan proposal when it carries one; both must pass the Permission request checks.
 export const toPermissionIntake = (
   requestId: string,
   params: RequestPermissionRequest,
-): AcpRequestIntake<PendingPermission | HeldPlanProposal> => {
+): AcpRequestIntake<PermissionPresentation> => {
+  const intake = toPendingPermission(requestId, params);
+
+  if (intake.type !== 'presented') return intake;
   const plan = toHeldPlanProposal(requestId, params);
 
-  return plan
-    ? { type: 'presented', request: plan }
-    : toPendingPermission(requestId, params);
+  return {
+    type: 'presented',
+    request: plan
+      ? { type: 'acp.planProposed', request: plan }
+      : { type: 'acp.permissionRequested', request: intake.request },
+  };
 };
