@@ -1,5 +1,5 @@
+import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
-import { PluginEvent } from '../plugin-event';
 import { jsx, jsxs } from './jsx-runtime';
 import { mountPages, type Pages, type ViewSender } from './pages';
 

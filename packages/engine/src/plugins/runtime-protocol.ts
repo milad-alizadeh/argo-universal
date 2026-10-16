@@ -1,9 +1,10 @@
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
-import { ViewMessage } from '@repo/contracts/plugins/wire';
+import { PluginEvent, ViewMessage } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
-import { PluginEvent } from './plugin-event.ts';
 
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
+
+export type { PluginEvent } from '@repo/contracts/plugins/wire';
 
 export const StorageQuery = z.object({
   sql: z.string(),
@@ -68,8 +69,6 @@ export const PluginReply = z.discriminatedUnion('ok', [
 ]);
 
 export type PluginReply = z.infer<typeof PluginReply>;
-
-export { PluginEvent } from './plugin-event.ts';
 
 export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),

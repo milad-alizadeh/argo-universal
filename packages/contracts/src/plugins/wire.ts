@@ -142,3 +142,17 @@ const applyOp = (root: WireNode, op: PatchOp): WireNode =>
 export function applyPatch(root: WireNode, ops: readonly PatchOp[]): WireNode {
   return ops.reduce(applyOp, root);
 }
+
+// What the Server asks a running Plugin's pages to do.
+export const PluginEvent = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('open'), path: z.string() }),
+  z.object({ type: z.literal('close'), path: z.string() }),
+  z.object({
+    type: z.literal('dispatch'),
+    path: z.string(),
+    eventId: z.string(),
+    payload: WireJson.optional(),
+  }),
+]);
+
+export type PluginEvent = z.infer<typeof PluginEvent>;

@@ -1,7 +1,10 @@
-import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import type {
+  PluginEvent,
+  ViewMessage,
+  WireNode,
+} from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
-import { PluginEvent } from '../plugin-event';
 import { diff } from './diff';
 import { reportFailure } from './host-config';
 import { mount, type Mounted } from './reconciler';
