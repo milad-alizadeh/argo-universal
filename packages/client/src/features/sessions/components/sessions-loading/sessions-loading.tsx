@@ -87,7 +87,8 @@ export function SessionsLoading(): React.JSX.Element {
       role="status"
       accessibilityLabel="Loading Sessions"
       // Matches the list's content padding and the rest rows, 8 apart, so nothing shifts when Sessions load.
-      className="gap-2 px-4 pt-5 wide:px-0 wide:pt-1.5"
+      // Wide, this view sits outside the list, so it adds the list column's inset itself: 8 from the left, 14 from the right.
+      className="gap-2 px-4 pt-5 wide:pl-2 wide:pr-3.5 wide:pt-1.5"
     >
       <SkeletonProjectHeading />
       {skeletonRowWidths.map((widths, index) => (
