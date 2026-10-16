@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { argoLimitBytes, argoTimeoutMs } from './plugin-limits.ts';
-import type { ProcessCall, ProcessCommand } from './runtime-protocol.ts';
+import { argoLimitBytes, argoTimeoutMs } from './plugin-limits';
+import type { ProcessCall, ProcessCommand } from './runtime-protocol';
 
 export type ProcessResult = {
   exitCode: number | null;

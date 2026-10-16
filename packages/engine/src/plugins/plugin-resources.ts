@@ -4,14 +4,14 @@ import {
   argoFetchLimitBytes,
   argoLimitBytes,
   argoTimeoutMs,
-} from './plugin-limits.ts';
-import { PluginProcesses } from './plugin-processes.ts';
+} from './plugin-limits';
+import { PluginProcesses } from './plugin-processes';
 import type {
   FetchCall,
   FsCall,
   PluginValue,
   ProcessCall,
-} from './runtime-protocol.ts';
+} from './runtime-protocol';
 
 /*
  * What one Plugin's `argo` calls hold open on the Server: child processes, timers and requests.
