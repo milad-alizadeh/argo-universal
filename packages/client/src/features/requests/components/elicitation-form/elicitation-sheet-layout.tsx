@@ -12,16 +12,27 @@ import {
   ElicitationBody,
   type ElicitationView,
 } from './elicitation-body';
-import { elicitationDetent } from './elicitation-detent';
 import type { ElicitationFormProps } from './elicitation-form-props';
 
 type ViewProps = { view: ElicitationView };
 
-// iOS's grouped Form scrolls the rows and fills the sheet at the system heights; elsewhere the sheet fits them.
-type SheetLayout = Pick<SheetProps, 'detents' | 'contentScrolls'>;
+/*
+ * iOS's grouped Form scrolls the rows and fills the sheet at the system heights; elsewhere the sheet fits them.
+ * iOS opens large: under the heading and the footer's two buttons, medium leaves room for about one
+ * option and the custom answer, and SwiftUI grows a sheet only on the first upward scroll, so no
+ * answer may wait below medium. The person may still drag the sheet down to medium.
+ */
+type SheetLayout = Pick<
+  SheetProps,
+  'detents' | 'initialDetent' | 'contentScrolls'
+>;
 
 const sheetLayout: SheetLayout = Platform.select<SheetLayout>({
-  ios: { detents: ['medium', 'large'], contentScrolls: true },
+  ios: {
+    detents: ['medium', 'large'],
+    initialDetent: 'large',
+    contentScrolls: true,
+  },
   android: { contentScrolls: true },
   default: {},
 });
@@ -36,7 +47,6 @@ export function ElicitationSheetLayout({ view }: ViewProps): ReactElement {
       label={view.props.request.message}
       footer={<SheetFooter view={view} />}
       {...sheetLayout}
-      initialDetent={elicitationDetent(view.props.request)}
       {...useSheetDismissal(view.props)}
     >
       <SheetBody view={view} />
