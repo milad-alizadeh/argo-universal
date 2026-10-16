@@ -44,7 +44,9 @@ function Options<Value extends string>(
 
 function optionsProps(label: string): React.ComponentProps<'div'> {
   return {
-    className: 'max-h-80 overflow-y-auto px-4 pb-4 wide:p-0',
+    // Wide, rows keep the 2px gap the other desktop popovers use, so hovered and selected tiles never touch.
+    className:
+      'max-h-80 overflow-y-auto px-4 pb-4 wide:flex wide:flex-col wide:gap-0.5 wide:p-0',
     role: 'radiogroup',
     'aria-label': label,
   };

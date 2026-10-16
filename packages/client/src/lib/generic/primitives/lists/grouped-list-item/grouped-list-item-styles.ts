@@ -1,5 +1,6 @@
 import { toneClass } from '#primitives/display/text';
 import { cn } from '../../../utils';
+import { rowLane } from './grouped-list-item-lane';
 import type { ResolvedItemProps } from './grouped-list-item-props';
 
 interface Corners {
@@ -99,12 +100,6 @@ function sizeClasses(props: ResolvedItemProps): string | undefined {
 const smallClasses = ({ subtitle }: ResolvedItemProps): string =>
   cn('wide:min-h-9', !subtitle && 'wide:py-1.5');
 
-// A wide window draws its rows' parts 8 apart, but a sidebar's and a large row's keep 12.
-export const contentGap = (
-  sidebar: boolean,
-  size: ResolvedItemProps['size'],
-): string | undefined => (sidebar || size === 'lg' ? undefined : 'wide:gap-2');
-
 // A loading row pads to Paper's 56, its spinner in a 20 slot; a pressable row shades on hover.
 function stateClasses(props: ResolvedItemProps, sidebar: boolean): string {
   return cn(props.loading && 'py-4', props.onPress && pressClasses(sidebar));
@@ -168,8 +163,8 @@ function separatorClasses(props: ResolvedItemProps, place: RowPlace): string {
   return cn(
     'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border wide:web:after:bg-border/40',
     hiddenSeparator(place),
-    // Inset to the text: the 16 gutter, the icon slot (24 phone, 20 wide) and the 12 gap.
-    hasLeadingSlot(props) && 'web:after:left-13 wide:web:after:left-12',
+    // A row with a leading slot insets its line to where its text starts.
+    hasLeadingSlot(props) && rowLane(props, false).textInset,
   );
 }
 
