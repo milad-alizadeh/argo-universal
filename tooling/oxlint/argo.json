@@ -219,7 +219,10 @@
     },
     {
       // #721 requires these four featured Registry ids for presentation only.
-      "files": ["packages/client/src/features/setup/state/featured-agents.ts"],
+      "files": [
+        "packages/client/src/features/setup/state/featured-agents.ts",
+        "packages/client/src/features/agents/state/featured-ids.ts"
+      ],
       "rules": { "argo/vendor-name": "off" }
     },
     {
