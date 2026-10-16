@@ -10,8 +10,8 @@ import {
 } from '../../state/sessions-layout';
 
 export const sessionsFilterChoices = [
-  { value: 'active', label: 'Active' },
-  { value: 'archived', label: 'Archived' },
+  { value: 'active', label: 'Active', icon: 'active-sessions' },
+  { value: 'archived', label: 'Archived', icon: 'archived-sessions' },
 ] as const;
 
 export const sessionsLayoutLabel = 'Layout';

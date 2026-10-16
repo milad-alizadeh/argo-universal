@@ -2,9 +2,10 @@ import * as MenuPrimitive from '@rn-primitives/dropdown-menu';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { IconSlot } from '#primitives/display/icon';
+import { Icon, IconSlot } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
 import { Text } from '#primitives/display/text';
+import type { IconName } from '../../../symbols/icon-names';
 import type { KeyboardFocus } from './menu-choices';
 import type { MenuOption } from './menu-props';
 import { actionItemTextClassName, choiceRowClassName } from './menu-styles';
@@ -28,7 +29,7 @@ export function MenuRadioItem(props: MenuRadioItemProps): React.JSX.Element {
       onKeyDown={radioKeyDown(focus.onKeyboardFocusChange)}
       className={radioItemClassName(focus.keyboardFocus)}
     >
-      <MenuRadioContent label={choice.label} />
+      <MenuRadioContent label={choice.label} icon={choice.icon} />
     </MenuPrimitive.RadioItem>
   );
 }
@@ -53,9 +54,13 @@ function radioItemClassName(keyboardFocus: boolean): string {
   );
 }
 
-function MenuRadioContent(props: { label: string }): React.JSX.Element {
+function MenuRadioContent(props: {
+  label: string;
+  icon?: IconName;
+}): React.JSX.Element {
   return (
     <>
+      <RadioIcon icon={props.icon} />
       <RadioLabel label={props.label} />
       <RadioIndicator />
     </>
@@ -78,6 +83,17 @@ function RadioIndicator(): React.JSX.Element {
       <MenuPrimitive.ItemIndicator>
         <SelectedCheck role="body" className="text-foreground" />
       </MenuPrimitive.ItemIndicator>
+    </IconSlot>
+  );
+}
+
+// The option's icon leads the row: a Body-size glyph in a list row's leading slot.
+function RadioIcon(props: { icon?: IconName }): React.JSX.Element | null {
+  if (!props.icon) return null;
+
+  return (
+    <IconSlot role="row">
+      <Icon name={props.icon} role="body" />
     </IconSlot>
   );
 }

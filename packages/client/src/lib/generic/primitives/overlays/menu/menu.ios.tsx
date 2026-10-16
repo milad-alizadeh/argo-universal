@@ -5,6 +5,8 @@ import {
 } from '@expo/ui/community/menu';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
+import { isCustomSymbol } from '../../../symbols/custom-symbols';
+import { type IconName, iconSymbols } from '../../../symbols/icon-names';
 import {
   type NativeMenuItem,
   type NativeMenuSection,
@@ -71,7 +73,19 @@ function menuAction(item: NativeMenuItem): NativeMenuAction {
     title: item.title,
     ...checkState(item.checked),
     ...disabledAttributes(item.disabled),
+    ...itemImage(item.icon),
   };
+}
+
+// MenuAction.image: an SF Symbol name, which the system draws after the title. It takes system names only, so Argo's custom symbols draw none.
+function itemImage(
+  icon: IconName | undefined,
+): Pick<NativeMenuAction, 'image'> {
+  if (!icon) return {};
+
+  const { sf } = iconSymbols[icon];
+
+  return isCustomSymbol(sf) ? {} : { image: sf };
 }
 
 // MenuAction.state: 'on' draws the system check; a row that never carries it has no state.

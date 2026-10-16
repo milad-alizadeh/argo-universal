@@ -3,13 +3,13 @@ import type { ComponentProps } from 'react';
 import type * as React from 'react';
 import {
   type SessionsFilter,
-  type SessionsLayout,
   searchSessionsLabel,
   sessionsFilterChoices,
   sessionsLayoutChoices,
   sessionsLayoutLabel,
 } from '#features/sessions';
 import { hasLiquidGlass } from '#lib/generic/native-header';
+import { iconSymbols } from '#lib/generic/symbols/icon-names';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import { toolbarIcon } from '../../lib/product/navigation/toolbar-icon';
@@ -58,13 +58,16 @@ const filterMenuItem = {
   separateBackground: true,
 };
 
-// Active or Archived, then the Layout section's Regular or Compact; each checked on the current one.
+// Active or Archived, then the Layout section's Regular or Compact; each checked on the current one. MenuAction.icon takes the option's SF Symbol, which UIMenu draws after the title, the check before it.
 function filterMenu(filter: SessionsFilter): React.JSX.Element {
   return (
     <Stack.Toolbar.Menu {...filterMenuItem}>
-      {sessionsFilterChoices.map(({ value, label }) => (
-        <Stack.Toolbar.MenuAction key={value} {...choiceState(value, filter)}>
-          {label}
+      {sessionsFilterChoices.map((choice) => (
+        <Stack.Toolbar.MenuAction
+          key={choice.value}
+          {...choiceState(choice, filter)}
+        >
+          {choice.label}
         </Stack.Toolbar.MenuAction>
       ))}
       {layoutMenu(filter)}
@@ -76,9 +79,12 @@ function filterMenu(filter: SessionsFilter): React.JSX.Element {
 function layoutMenu(filter: SessionsFilter): React.JSX.Element {
   return (
     <Stack.Toolbar.Menu inline title={sessionsLayoutLabel}>
-      {sessionsLayoutChoices.map(({ value, label }) => (
-        <Stack.Toolbar.MenuAction key={value} {...layoutState(value, filter)}>
-          {label}
+      {sessionsLayoutChoices.map((choice) => (
+        <Stack.Toolbar.MenuAction
+          key={choice.value}
+          {...layoutState(choice, filter)}
+        >
+          {choice.label}
         </Stack.Toolbar.MenuAction>
       ))}
     </Stack.Toolbar.Menu>
@@ -89,18 +95,25 @@ type StackToolbarMenuActionProps = ComponentProps<
   typeof Stack.Toolbar.MenuAction
 >;
 
+type ChoiceState = Pick<
+  StackToolbarMenuActionProps,
+  'icon' | 'isOn' | 'onPress'
+>;
+
 const choiceState = (
-  value: (typeof sessionsFilterChoices)[number]['value'],
+  { value, icon }: (typeof sessionsFilterChoices)[number],
   { archived, onArchivedChange }: SessionsFilter,
-): Pick<StackToolbarMenuActionProps, 'isOn' | 'onPress'> => ({
+): ChoiceState => ({
+  icon: iconSymbols[icon].sf,
   isOn: (value === 'archived') === archived,
   onPress: () => onArchivedChange(value === 'archived'),
 });
 
 const layoutState = (
-  value: SessionsLayout,
+  { value, icon }: (typeof sessionsLayoutChoices)[number],
   { layout, onLayoutChange }: SessionsFilter,
-): Pick<StackToolbarMenuActionProps, 'isOn' | 'onPress'> => ({
+): ChoiceState => ({
+  icon: iconSymbols[icon].sf,
   isOn: value === layout,
   onPress: () => onLayoutChange(value),
 });

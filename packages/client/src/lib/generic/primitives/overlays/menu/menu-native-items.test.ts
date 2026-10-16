@@ -70,6 +70,22 @@ describe('a system menu', () => {
     expect(onLayoutChange).toHaveBeenCalledWith('regular');
   });
 
+  it('carries each option’s icon to its row', () => {
+    const items = nativeMenuItems({
+      options: [
+        { value: 'regular', label: 'Regular', icon: 'layout-regular' },
+        { value: 'compact', label: 'Compact' },
+      ],
+      value: 'regular',
+      onValueChange: vi.fn<(value: string) => void>(),
+    });
+
+    expect(items.map((item) => item.icon)).toStrictEqual([
+      'layout-regular',
+      undefined,
+    ]);
+  });
+
   it('lists actions as they are, running the one chosen', () => {
     const squash = vi.fn<() => void>();
 
