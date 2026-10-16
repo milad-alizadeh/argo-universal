@@ -45,7 +45,7 @@ export const LongListsReachableInPhoneSheet: Story = {
   },
 };
 
-export const ShortListsHaveNoFadesWide: Story = {
+export const ShortModelListFitsWide: Story = {
   args: { configuration: shortConfiguration },
   play: async (context) => {
     await openConfiguration(context, layoutWidths.wide);

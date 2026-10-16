@@ -9,7 +9,7 @@ import { heldConfiguration } from '../../../../../mocks/composer-configuration/h
 import {
   LongListsReachableWide as longListsWide,
   LongListsReachableInPhoneSheet as longListsPhone,
-  ShortListsHaveNoFadesWide as shortListsWide,
+  ShortModelListFitsWide as shortModelListWide,
 } from '../../../../../mocks/composer-configuration/long-lists';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { ComposerAgentModelControl } from './composer-configuration';
@@ -19,7 +19,7 @@ export const LongListsReachableWide = longListsWide;
 
 export const LongListsReachableInPhoneSheet = longListsPhone;
 
-export const ShortListsHaveNoFadesWide = shortListsWide;
+export const ShortModelListFitsWide = shortModelListWide;
 
 export const FastModeSwitchPhone = fastModePhone;
 
