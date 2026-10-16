@@ -1,18 +1,37 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import {
+  spawn,
+  type ChildProcess,
+  type ChildProcessWithoutNullStreams,
+} from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import type { Readable, Writable } from 'node:stream';
 import type { AgentLaunch } from '..';
 import { agentEnvironment } from '../launch/agent-environment';
 import { ProcessOutput, exitDrainMs } from './process-output';
 import type { AcpProcess } from './resource-types';
 import {
   observeShellCommand,
-  shellCommandEnvironment,
   type ShellCommandInput,
   type ShellCommand,
 } from './shell-command';
+import {
+  shellEnvironment,
+  shellLaunchMessage,
+  requireShellPipe,
+} from './shell-start';
+import { shellWrapper } from './shell-wrapper';
 
 export { AgentProcessExitError, exitDrainMs } from './process-output';
 
 export type AcpChild = ChildProcessWithoutNullStreams;
+
+export type { Serializable } from 'node:child_process';
+
+export type ShellChild = ChildProcess & {
+  stdin: Writable;
+  stdout: Readable;
+  stderr: Readable;
+};
 
 const quote = (argument: string): string =>
   `'${argument.replaceAll("'", "'\\''")}'`;
@@ -78,19 +97,40 @@ export const rejectClosedOpening = async (
 
 export const launchShellCommand = async (
   input: ShellCommandInput,
-): Promise<ShellCommand> =>
-  observeShellCommand(
-    spawnShellCommand(input, await shellCommandEnvironment(input)),
-    input.output,
-  );
+): Promise<ShellCommand> => {
+  if (process.platform === 'win32')
+    throw new Error('Shell process groups are unavailable');
+  const token = randomUUID();
+  const env = await shellEnvironment(input);
+
+  return observeShellCommand(spawnShellCommand(input, token), input, {
+    token,
+    env,
+  });
+};
 
 const spawnShellCommand = (
   input: ShellCommandInput,
-  env: NodeJS.ProcessEnv,
-): ChildProcessWithoutNullStreams =>
-  spawn(input.request.command, input.request.args ?? [], {
-    cwd: input.request.cwd ?? input.cwd,
-    env,
-    detached: false,
-    stdio: 'pipe',
+  token: string,
+): ShellChild => {
+  const child = spawn(process.execPath, ['-e', shellWrapper, '--', token], {
+    cwd: shellLaunchMessage(input, {}).cwd,
+    env: {},
+    detached: true,
+    stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
   });
+
+  return withShellPipes(child);
+};
+
+const withShellPipes = (child: ReturnType<typeof spawn>): ShellChild => {
+  requireShellPipe(child.stdin);
+  requireShellPipe(child.stdout);
+  requireShellPipe(child.stderr);
+
+  return Object.assign(child, {
+    stdin: child.stdin,
+    stdout: child.stdout,
+    stderr: child.stderr,
+  });
+};

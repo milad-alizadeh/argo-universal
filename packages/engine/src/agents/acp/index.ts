@@ -27,3 +27,5 @@ export type { ShellCommand } from './shell-command';
 export type { TerminalRequests } from './terminal-requests';
 
 export { awaitAcpOpening } from './client';
+
+export { releaseShellGroups } from './shell-record';

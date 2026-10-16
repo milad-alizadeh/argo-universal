@@ -7,9 +7,22 @@ import { createActor, setup } from 'xstate';
 import { z } from 'zod';
 import { engineProcess } from './engine-process';
 
-const entry = fileURLToPath(
-  new URL('../../mocks/terminal-engine.ts', import.meta.url),
-);
+const owners = [
+  {
+    kind: 'login PTY',
+    entry: fileURLToPath(
+      new URL('../../mocks/terminal-engine.ts', import.meta.url),
+    ),
+    folderName: 'login-terminals',
+  },
+  {
+    kind: 'Shell',
+    entry: fileURLToPath(
+      new URL('../../mocks/shell-engine.ts', import.meta.url),
+    ),
+    folderName: 'shell-processes',
+  },
+];
 
 const isAlive = (pid: number): boolean => {
   try {
@@ -21,13 +34,15 @@ const isAlive = (pid: number): boolean => {
   }
 };
 
-it.each([
-  'abrupt Engine exit',
-  'Supervisor force-stop',
-  'stopped terminal wrapper',
-])(
-  'releases the real login PTY after %s',
-  async (mode) => {
+it.each(
+  owners.flatMap((owner) =>
+    ['abrupt Engine exit', 'Supervisor force-stop', 'stopped wrapper'].map(
+      (mode) => ({ ...owner, mode }),
+    ),
+  ),
+)(
+  'releases the real $kind after $mode',
+  async ({ entry, folderName, mode }) => {
     const folder = await mkdtemp(join(tmpdir(), 'argo-terminal-supervisor-'));
     vi.stubEnv('ARGO_HOME', folder);
     vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
@@ -67,13 +82,12 @@ it.each([
       .toContain('engine.ready');
 
     const pids = z
-      .object({ engine: z.number(), terminal: z.number(), wrapper: z.number() })
+      .object({ engine: z.number(), command: z.number(), wrapper: z.number() })
       .parse(JSON.parse(await readFile(join(folder, 'pids.json'), 'utf8')));
 
-    owned.push(pids.terminal, pids.wrapper);
+    owned.push(pids.command, pids.wrapper);
 
-    if (mode === 'stopped terminal wrapper')
-      process.kill(pids.wrapper, 'SIGSTOP');
+    if (mode === 'stopped wrapper') process.kill(pids.wrapper, 'SIGSTOP');
 
     if (mode !== 'Supervisor force-stop') process.kill(pids.engine, 'SIGKILL');
     const engine = actor.getSnapshot().children['engine'];
@@ -83,8 +97,8 @@ it.each([
     await expect
       .poll(() => events, { timeout: 10000 })
       .toContain('engine.exited');
-    expect([pids.terminal, pids.wrapper].map(isAlive)).toEqual([false, false]);
-    expect(await readdir(join(folder, 'login-terminals'))).toEqual([]);
+    expect([pids.command, pids.wrapper].map(isAlive)).toEqual([false, false]);
+    expect(await readdir(join(folder, folderName))).toEqual([]);
   },
   30000,
 );
