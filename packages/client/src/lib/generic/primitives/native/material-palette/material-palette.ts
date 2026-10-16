@@ -60,5 +60,6 @@ function surfaceControls(
     menuItemColors: surfaces.menuItemColors(roles),
     chipColors: surfaces.chipColors(roles),
     listItemColors: surfaces.listItemColors(roles),
+    ripple: surfaces.ripple(roles),
   };
 }
