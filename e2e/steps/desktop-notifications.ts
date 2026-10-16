@@ -67,7 +67,10 @@ When(
     const application = desktopApplication(app);
     const background = await windowState(application);
     expect(background.focused).toBe(false);
-    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    // A hidden or minimized window paints no frames on Linux, so Playwright's stable check never ends; dispatch the click as the other background steps do.
+    await page
+      .getByRole('button', { name: 'Settings', exact: true })
+      .evaluate((button) => button.click());
     await expect(page).toHaveURL(/\/settings\//);
     await expect.poll(() => windowState(application)).toEqual(background);
     await page.evaluate(() => globalThis.notificationProbe.click());
