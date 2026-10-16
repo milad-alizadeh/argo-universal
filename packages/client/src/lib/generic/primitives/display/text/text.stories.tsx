@@ -3,6 +3,7 @@ const roles = [
   'heading',
   'body',
   'secondary',
+  'secondary-code',
   'control',
   'badge',
   'code',

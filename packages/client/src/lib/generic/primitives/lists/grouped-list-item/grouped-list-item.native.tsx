@@ -14,6 +14,7 @@ import {
   rowUsesStockButton,
   rowContainerAccessibility,
 } from './grouped-list-item-accessibility';
+import { isAndroid, trailingChoiceMark } from './grouped-list-item-choice';
 import { RowContent } from './grouped-list-item-native-row';
 import {
   type GroupedListItemProps,
@@ -35,7 +36,11 @@ export function GroupedListItem(
 
   if (sizeClass === 'wide') return <WebGroupedListItem {...props} />;
 
-  return <NativeRow {...resolvedItem(props, sizeClass)} />;
+  return (
+    <NativeRow
+      {...trailingChoiceMark(resolvedItem(props, sizeClass), isAndroid)}
+    />
+  );
 }
 
 function NativeRow(props: ResolvedItemProps): React.JSX.Element {
