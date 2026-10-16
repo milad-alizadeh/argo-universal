@@ -43,6 +43,7 @@
     "./compose": "./src/engine/compose.ts",
     "./router": "./src/engine/router.ts",
     "./mocks": "./mocks/engine.ts",
+    "./mocks/acp-engine": "./mocks/acp-engine.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
     "./installation-runtime": "./src/agents/installation-runtime.ts",

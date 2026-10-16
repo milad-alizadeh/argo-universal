@@ -5,7 +5,7 @@ import type { SessionNotification } from './session-notifications';
 
 interface InputWatch {
   session: SessionInfo;
-  subscription: { unsubscribe: () => void };
+  subscription?: { unsubscribe: () => void };
 }
 
 export class NotificationInputObserver {
@@ -32,21 +32,31 @@ export class NotificationInputObserver {
   }
 
   private subscribe(session: SessionInfo): void {
-    const subscription = this.client.feed.subscribe.subscribe(
+    const watch: InputWatch = { session };
+    this.watches.set(session.sessionId, watch);
+    watch.subscription = this.client.feed.subscribe.subscribe(
       { sessionId: session.sessionId, after: null },
       {
-        onData: (event) => this.receive(session.sessionId, event),
-        onError: () => this.unsubscribe(session.sessionId),
+        onData: (event) => this.receive(watch, event),
+        onError: () => this.finish(watch),
+        onComplete: () => this.finish(watch),
       },
     );
-
-    this.watches.set(session.sessionId, { session, subscription });
   }
 
-  private receive(sessionId: string, event: FeedSubscribeOutput): void {
+  private receive(watch: InputWatch, event: FeedSubscribeOutput): void {
+    if (event.type === 'closed') return this.finish(watch);
+
     if (event.type !== 'snapshot') return;
+    this.receiveSnapshot(watch.session.sessionId, event.snapshot);
+  }
+
+  private receiveSnapshot(
+    sessionId: string,
+    snapshot: Extract<FeedSubscribeOutput, { type: 'snapshot' }>['snapshot'],
+  ): void {
     const previous = this.requestIds.get(sessionId);
-    const next = pendingInputId(event.snapshot);
+    const next = pendingInputId(snapshot);
     this.requestIds.set(sessionId, next);
 
     if (inputRequestChanged(previous, next)) this.notify(sessionId);
@@ -60,8 +70,17 @@ export class NotificationInputObserver {
   }
 
   private unsubscribe(sessionId: string): void {
-    this.watches.get(sessionId)?.subscription.unsubscribe();
+    const watch = this.watches.get(sessionId);
+
+    if (watch) this.finish(watch);
+  }
+
+  private finish(watch: InputWatch): void {
+    const sessionId = watch.session.sessionId;
+
+    if (this.watches.get(sessionId) !== watch) return;
     this.watches.delete(sessionId);
+    watch.subscription?.unsubscribe();
   }
 
   public reset(sessionId: string): void {

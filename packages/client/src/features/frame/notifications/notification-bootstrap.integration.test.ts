@@ -4,72 +4,80 @@ import {
   seedNotificationHistory,
   movingSessionId,
 } from '@repo/engine/mocks';
-import type { AppRouter } from '@repo/engine/router';
-import {
-  createTRPCClient,
-  createWSClient,
-  loggerLink,
-  wsLink,
-} from '@trpc/client';
 import { expect, it, onTestFinished } from 'vitest';
-import { readNotificationBaselines } from './notification-feed';
+import { openNotificationTransport } from '../../../../mocks/notification-transport';
+import {
+  readNotificationBaselines,
+  type NotificationClient,
+} from './notification-feed';
 import { NotificationReader } from './notification-reader';
 import type { SessionNotification } from './session-notifications';
 
-it('keeps all startup baselines when an existing Session becomes active between pages', async () => {
-  const host = await startEngineTestHost();
-  seedNotificationHistory(host.database);
-  const firstPage = Promise.withResolvers<void>();
-  const socket = createWSClient({ url: host.url.replace('http:', 'ws:') });
+it.each([
+  {
+    change: 'activity',
+    prepare: async (): Promise<void> => {},
+    activate: async (client: NotificationClient): Promise<void> => {
+      await client.session.prompt.mutate({
+        sessionId: movingSessionId,
+        prompt: [{ type: 'text', text: 'Become active during startup' }],
+      });
+    },
+  },
+  {
+    change: 'unarchive',
+    prepare: async (client: NotificationClient): Promise<void> => {
+      await client.session.archive.mutate({ sessionId: movingSessionId });
+    },
+    activate: async (client: NotificationClient): Promise<void> => {
+      await client.session.unarchive.mutate({ sessionId: movingSessionId });
+    },
+  },
+])(
+  'keeps all startup baselines across $change between pages',
+  async ({ prepare, activate }) => {
+    const host = await startEngineTestHost();
+    seedNotificationHistory(host.database);
+    const firstPage = Promise.withResolvers<void>();
 
-  const client = createTRPCClient<AppRouter>({
-    links: [
-      loggerLink({
-        logger: (event) => {
-          if (event.direction === 'down' && event.path === 'session.list')
-            firstPage.resolve();
-        },
-      }),
-      wsLink({ client: socket }),
-    ],
-  });
+    const client = openNotificationTransport(host.url, (event) => {
+      if (event.path === 'session.list') firstPage.resolve();
+    });
 
-  onTestFinished(() => socket.close());
-  const reading = readNotificationBaselines(client);
-  await firstPage.promise;
-  await client.session.prompt.mutate({
-    sessionId: movingSessionId,
-    prompt: [{ type: 'text', text: 'Become active during startup' }],
-  });
-  const baseline = await reading;
-  expect(baseline).toHaveLength(51);
-  expect(
-    baseline.some((entry) => entry.session.sessionId === movingSessionId),
-  ).toBe(true);
-  const notices: SessionNotification[] = [];
+    await prepare(client);
+    const reading = readNotificationBaselines(client);
+    await firstPage.promise;
+    await activate(client);
+    const baseline = await reading;
+    expect(baseline).toHaveLength(51);
+    expect(
+      baseline.some((entry) => entry.session.sessionId === movingSessionId),
+    ).toBe(true);
+    const notices: SessionNotification[] = [];
 
-  const reader = new NotificationReader(client, baseline, (notice) =>
-    notices.push(notice),
-  );
+    const reader = new NotificationReader(client, baseline, (notice) =>
+      notices.push(notice),
+    );
 
-  reader.setActive(true);
+    reader.setActive(true);
 
-  const updates = client.session.listUpdates.subscribe(undefined, {
-    onData: (update) => reader.receive(update),
-  });
+    const updates = client.session.listUpdates.subscribe(undefined, {
+      onData: (update) => reader.receive(update),
+    });
 
-  onTestFinished(() => {
-    reader.setActive(false);
-    updates.unsubscribe();
-  });
-  await client.session.prompt.mutate({
-    sessionId: movingSessionId,
-    prompt: [{ type: 'text', text: 'A later Turn still notifies' }],
-  });
-  await expect
-    .poll(() => notices.map((notice) => notice.body))
-    .toEqual(['Turn ended']);
-});
+    onTestFinished(() => {
+      reader.setActive(false);
+      updates.unsubscribe();
+    });
+    await client.session.prompt.mutate({
+      sessionId: movingSessionId,
+      prompt: [{ type: 'text', text: 'A later Turn still notifies' }],
+    });
+    await expect
+      .poll(() => notices.map((notice) => notice.body))
+      .toEqual(['Turn ended']);
+  },
+);
 
 it.each<{
   order: SessionListInput['order'];
@@ -82,13 +90,7 @@ it.each<{
   async ({ order, other }) => {
     const host = await startEngineTestHost();
     seedNotificationHistory(host.database);
-    const socket = createWSClient({ url: host.url.replace('http:', 'ws:') });
-
-    const client = createTRPCClient<AppRouter>({
-      links: [wsLink({ client: socket })],
-    });
-
-    onTestFinished(() => socket.close());
+    const client = openNotificationTransport(host.url);
 
     const first = await client.session.list.query({
       archived: false,

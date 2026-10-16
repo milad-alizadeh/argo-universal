@@ -44,9 +44,16 @@ function matchingRows(
 function matchesInput(row: SessionInfo, input: SessionListInput): boolean {
   return (
     matchesProject(row, input) &&
-    (row.archivedAt !== null) === input.archived &&
+    matchesArchive(row, input.archived) &&
     matchesQuery(row, input.query)
   );
+}
+
+function matchesArchive(
+  row: SessionInfo,
+  archived: SessionListInput['archived'],
+): boolean {
+  return archived === 'all' || (row.archivedAt !== null) === archived;
 }
 
 function matchesProject(row: SessionInfo, input: SessionListInput): boolean {

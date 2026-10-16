@@ -53,15 +53,15 @@ export async function readBaseline(
   session: SessionInfo,
   signal?: AbortSignal,
 ): Promise<NotificationBaseline> {
+  if (session.archivedAt !== null)
+    return { session, epoch: 0, position: -1, inputId: null };
   const page = await readBaselinePage(client, session.sessionId, signal);
-
-  const inputId = await readNotificationInput(client, session, signal);
 
   return {
     session,
-    inputId,
+    inputId: await readNotificationInput(client, session, signal),
     epoch: page.epoch,
-    position: page.rows.at(-1)?.position ?? -1,
+    position: lastPosition(page),
   };
 }
 
@@ -165,7 +165,10 @@ async function readSessionPage(
   signal: AbortSignal | undefined,
 ): Promise<SessionListOutput> {
   return client.session.list.query(
-    { archived: false, order: 'created', cursor },
+    { archived: 'all', order: 'created', cursor },
     { signal },
   );
 }
+
+const lastPosition = (page: FeedPageOutput): number =>
+  page.rows.at(-1)?.position ?? -1;

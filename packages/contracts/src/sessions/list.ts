@@ -5,7 +5,7 @@ import { CheckoutChoice } from './new';
 // Input of `session.list`, after ACP `ListSessionsRequest`, filtered by Project instead of `cwd`.
 export const SessionListInput = z.strictObject({
   projectId: sessionColumns.shape.projectId.optional(),
-  archived: z.boolean(),
+  archived: z.union([z.boolean(), z.literal('all')]),
   query: z.string().optional(),
   order: z.enum(['activity', 'created']).optional(),
   cursor: z.string().optional(),

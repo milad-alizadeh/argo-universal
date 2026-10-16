@@ -33,6 +33,9 @@ export class NotificationReader {
     private readonly deliver: (notice: SessionNotification) => void,
   ) {
     this.input = new NotificationInputObserver(client, deliver);
+
+    for (const entry of baseline)
+      if (isExcluded(entry.session)) this.exclude(entry.session.sessionId);
     this.baselines = new Map(
       baseline.map((entry) => [entry.session.sessionId, entry]),
     );
@@ -136,6 +139,8 @@ export class NotificationReader {
     const baseline = await readBaseline(this.client, session);
     this.baselines.set(session.sessionId, baseline);
     this.rebase.delete(session.sessionId);
+
+    if (this.canPublish(session)) this.observeInput(session, baseline);
   }
 
   private publish(
