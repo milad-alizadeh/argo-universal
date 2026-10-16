@@ -15,7 +15,7 @@ export function CountBadge(props: CountBadgeProps): React.JSX.Element | null {
       accessibilityLabel={badge.label}
       className="h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1"
     >
-      <Text role="badge" className="text-primary-foreground">
+      <Text role="badge" selectable={false} className="text-primary-foreground">
         {badge.text}
       </Text>
     </View>

@@ -1,4 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from 'react';
 import { initializeLoginOwner } from '#features/agents';
@@ -6,8 +7,12 @@ import { ConnectionContext } from '#features/connection';
 import { openConnection } from '#features/connection';
 import { BlobUrlContext, createServerBlobUrl } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
+import { sessionOptionsKey } from '#features/sessions';
+import { queryPersistOptions } from './lib/product/query-persister';
 
 initializeLoginOwner();
+
+const persistOptions = queryPersistOptions(sessionOptionsKey);
 
 export interface AppProvidersProps {
   serverUrl: string;
@@ -21,7 +26,7 @@ export function AppProviders(
   props: AppProvidersProps,
 ): React.JSX.Element | null {
   const [queryClient] = useState(() => new QueryClient());
-  const connection = useConnection(props.serverUrl, queryClient);
+  const connection = useServerConnection(props.serverUrl);
 
   if (!connection) return null;
 
@@ -42,19 +47,39 @@ interface ConnectionProvidersProps extends ServerProvidersProps {
   queryClient: QueryClient;
 }
 
+interface PersistedQueriesProps {
+  queryClient: QueryClient;
+  children: React.ReactNode;
+}
+
+// Only the Session options cache outlives the App (see persistOptions).
+function PersistedQueries({
+  queryClient,
+  children,
+}: PersistedQueriesProps): React.JSX.Element {
+  return (
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={persistOptions}
+    >
+      {children}
+    </PersistQueryClientProvider>
+  );
+}
+
 function ConnectionProviders({
   queryClient,
   ...props
 }: ConnectionProvidersProps): React.JSX.Element {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistedQueries queryClient={queryClient}>
       <TRPCProvider
         trpcClient={props.connection.client}
         queryClient={queryClient}
       >
         <ServerProviders {...props} />
       </TRPCProvider>
-    </QueryClientProvider>
+    </PersistedQueries>
   );
 }
 
@@ -78,14 +103,8 @@ function emptyConnection(): null {
   return null;
 }
 
-function useConnection(
-  serverUrl: string,
-  queryClient: QueryClient,
-): Connection | null {
-  const store = useMemo(
-    () => new ConnectionStore(serverUrl, queryClient),
-    [serverUrl, queryClient],
-  );
+function useServerConnection(serverUrl: string): Connection | null {
+  const store = useMemo(() => new ConnectionStore(serverUrl), [serverUrl]);
 
   return useSyncExternalStore(
     store.subscribe,
@@ -97,17 +116,15 @@ function useConnection(
 class ConnectionStore {
   private opened: Connection | null = null;
   private readonly serverUrl: string;
-  private readonly queryClient: QueryClient;
 
-  public constructor(serverUrl: string, queryClient: QueryClient) {
+  public constructor(serverUrl: string) {
     this.serverUrl = serverUrl;
-    this.queryClient = queryClient;
   }
 
   public readonly getSnapshot = (): Connection | null => this.opened;
 
   public readonly subscribe = (changed: () => void): (() => void) => {
-    const connection = openConnection(this.serverUrl, this.queryClient);
+    const connection = openConnection(this.serverUrl);
     this.opened = connection;
     changed();
 

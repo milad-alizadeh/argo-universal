@@ -4,7 +4,6 @@ import { contentActionClass } from '#primitives/buttons/button';
 import { Icon } from '#primitives/display/icon';
 import { Text, TextClassContext } from '#primitives/display/text';
 import { Pressable } from '#primitives/pressable';
-import type { InteractionEvents } from './project-heading';
 
 function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {
   return (
@@ -50,7 +49,6 @@ const toggleClassName = contentActionClass({
 
 interface ProjectToggleProps extends ProjectNameProps {
   onToggle: () => void;
-  events: InteractionEvents;
 }
 
 interface ToggleAccessibility {
@@ -75,7 +73,6 @@ export function ProjectToggle(props: ProjectToggleProps): React.JSX.Element {
     <Pressable
       {...toggleAccessibility(props)}
       onPress={props.onToggle}
-      {...props.events}
       role="button"
       className={toggleClassName}
     >

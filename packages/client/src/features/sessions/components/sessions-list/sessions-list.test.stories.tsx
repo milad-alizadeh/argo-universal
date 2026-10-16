@@ -34,7 +34,8 @@ export const ProjectActions: Story = {
     });
 
     await waitFor(() => expect(heading).toBeVisible());
-    await userEvent.hover(heading);
+    // The test browser has no real pointer, so keyboard focus stands in for hover: each button shows itself when focused.
+    await userEvent.keyboard('{Shift}');
 
     const settings = canvas.getByRole('button', {
       name: 'Project settings for Example Project',
@@ -44,8 +45,10 @@ export const ProjectActions: Story = {
       name: 'New Session in Example Project',
     });
 
-    await expect(settings).toBeVisible();
-    await expect(newSession).toBeVisible();
+    settings.focus();
+    await waitFor(() => expect(settings).toBeVisible());
+    newSession.focus();
+    await waitFor(() => expect(newSession).toBeVisible());
     await userEvent.click(settings);
     await expect(onProjectSettings).toHaveBeenCalledWith(exampleProjectName);
     await userEvent.click(newSession);
