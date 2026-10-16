@@ -28,13 +28,16 @@ const ThemedCircle = withUniwind(Circle, {
   },
 });
 
+const remainingPercent = (percent: number): number =>
+  Math.max(0, Math.min(fullPercent, fullPercent - percent));
+
 function RemainingContextArc({ percent }: { percent: number }): JSX.Element {
   const strokeClassName =
     contextZone(percent) === 'smart'
       ? successBackgroundClassName
       : warningBackgroundClassName;
 
-  const strokeDasharray = `${(circumference * Math.max(0, Math.min(fullPercent, fullPercent - percent))) / fullPercent} ${circumference}`;
+  const strokeDasharray = `${(circumference * remainingPercent(percent)) / fullPercent} ${circumference}`;
 
   const arcProps = {
     strokeClassName,
@@ -52,7 +55,10 @@ export function ContextRing({ percent }: { percent: number }): JSX.Element {
       <View className="h-full w-full">
         <Svg width="100%" height="100%" viewBox="0 0 14 14">
           <ThemedCircle {...circleProps} strokeClassName="bg-border" />
-          <RemainingContextArc percent={percent} />
+          {/* A zero-length dash with a round cap still paints a dot, so a full window draws no arc. */}
+          {remainingPercent(percent) > 0 && (
+            <RemainingContextArc percent={percent} />
+          )}
         </Svg>
       </View>
     </IconSlot>

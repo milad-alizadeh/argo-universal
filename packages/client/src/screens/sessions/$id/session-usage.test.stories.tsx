@@ -66,15 +66,19 @@ const full: ContextLevel = {
   zone: 'Dumb zone',
 };
 
-const contextRing = (width: number, level: ContextLevel): Story => ({
+const contextRing = (
+  width: number,
+  level: ContextLevel,
+  inlineTokens: boolean,
+): Story => ({
   render: renderUsage(level.usage),
   play: async ({ canvas, userEvent }) => {
     await settleViewport(width);
     const trigger = canvas.getByRole('button', { name: contextLabel });
-    const inlineTokens = within(trigger).getByText(level.used);
-
-    if (width === layoutWidths.wide) await expect(inlineTokens).toBeVisible();
-    else await expect(inlineTokens).not.toBeVisible();
+    const inline = within(trigger).getByText(level.used);
+    await (inlineTokens
+      ? expect(inline).toBeVisible()
+      : expect(inline).not.toBeVisible());
 
     await userEvent.click(trigger);
     const panel = within(await within(document.body).findByRole('dialog'));
@@ -94,7 +98,7 @@ const contextRing = (width: number, level: ContextLevel): Story => ({
   },
 });
 
-const hidden = (width: number, usage: ContextUsage | undefined): Story => ({
+const hidden = (width: number, usage?: ContextUsage): Story => ({
   render: renderUsage(usage),
   play: async ({ canvas }) => {
     await settleViewport(width);
@@ -105,17 +109,17 @@ const hidden = (width: number, usage: ContextUsage | undefined): Story => ({
   },
 });
 
-export const LowDesktop = contextRing(layoutWidths.wide, low);
+export const LowDesktop = contextRing(layoutWidths.wide, low, true);
 
-export const LowPhone = contextRing(layoutWidths.phone, low);
+export const LowPhone = contextRing(layoutWidths.phone, low, false);
 
-export const HighDesktop = contextRing(layoutWidths.wide, high);
+export const HighDesktop = contextRing(layoutWidths.wide, high, true);
 
-export const HighPhone = contextRing(layoutWidths.phone, high);
+export const HighPhone = contextRing(layoutWidths.phone, high, false);
 
-export const FullDesktop = contextRing(layoutWidths.wide, full);
+export const FullDesktop = contextRing(layoutWidths.wide, full, true);
 
-export const FullPhone = contextRing(layoutWidths.phone, full);
+export const FullPhone = contextRing(layoutWidths.phone, full, false);
 
 export const PartialDesktop = hidden(layoutWidths.wide, {
   ...low.usage,
@@ -127,6 +131,6 @@ export const PartialPhone = hidden(layoutWidths.phone, {
   scope: 'model-call',
 });
 
-export const MissingDesktop = hidden(layoutWidths.wide, undefined);
+export const MissingDesktop = hidden(layoutWidths.wide);
 
-export const MissingPhone = hidden(layoutWidths.phone, undefined);
+export const MissingPhone = hidden(layoutWidths.phone);
