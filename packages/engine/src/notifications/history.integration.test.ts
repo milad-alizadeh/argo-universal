@@ -1,3 +1,4 @@
+import { turn } from '@repo/db/schema';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
@@ -78,5 +79,48 @@ it('reconnects after Engine restart with stable Server identity and no historica
   });
   await expect.poll(() => app.notifications).toHaveLength(2);
   expect(app.notifications[1]?.id).not.toBe(firstId);
+  await restarted.stop();
+});
+
+const interruptedTurnId = 'interrupted-turn';
+
+it('does not notify for a Turn ending that startup recovery writes', async () => {
+  const host = await startEngineTestHost();
+  const app = connectNotificationApp(host.url);
+  const original = await app.ready;
+  host.database
+    .insert(turn)
+    .values({
+      id: interruptedTurnId,
+      sessionId: 'session-1',
+      status: 'running',
+    })
+    .run();
+  await host.stop();
+
+  const restarted = await startEngineTestHost({
+    home: host.home,
+    port: Number(new URL(host.url).port),
+  });
+
+  const tail = await restarted.caller.feed.page({
+    sessionId: 'session-1',
+    direction: 'tail',
+  });
+
+  expect(tail.rows).toContainEqual(
+    expect.objectContaining({
+      turnId: interruptedTurnId,
+      _meta: { argo: { turnEnd: expect.anything() } },
+    }),
+  );
+  await expect.poll(() => app.handshakes, { timeout: 3000 }).toHaveLength(2);
+  expect(app.handshakes[1]?.serverId).toBe(original.serverId);
+  await app.client.session.prompt.mutate({
+    sessionId: 'session-1',
+    prompt: [{ type: 'text', text: 'After recovery' }],
+  });
+  await expect.poll(() => app.notifications).toHaveLength(1);
+  expect(app.notifications[0]?.turnId).not.toBe(interruptedTurnId);
   await restarted.stop();
 });
