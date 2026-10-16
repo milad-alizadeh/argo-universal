@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { RegistryIcon } from '#features/agents';
+import { type AgentRowEntry, RegistryIcon } from '#features/agents';
 import type { StepMark } from '#features/setup';
 import { Button } from '#primitives/buttons/button';
 import { SelectedCheck } from '#primitives/display/selected-check';
@@ -24,21 +24,27 @@ export function AgentStepView(
 }
 
 function AgentTiles(props: OnboardingViewProps): React.JSX.Element {
-  if (props.catalog.status !== 'loaded')
-    return (
-      <RegistryState status={props.catalog.status} onRetry={props.onRetry} />
-    );
+  const { status, rows } = props.featured;
+
+  if (status !== 'loaded')
+    return <RegistryState status={status} onRetry={props.onRetry} />;
 
   return (
     <View className="w-full flex-row flex-wrap gap-3">
-      {props.featured.map((entry) => tile(entry, props))}
+      {rows.map((entry) => tile(entry, props))}
     </View>
   );
 }
 
+const tile = (
+  entry: AgentRowEntry,
+  props: OnboardingViewProps,
+): React.JSX.Element => (
+  <AgentTile key={entry.id} entry={entry} onInstall={props.onInstallAgent} />
+);
+
 type TileProps = {
-  entry: OnboardingViewProps['featured'][number];
-  installed: boolean;
+  entry: AgentRowEntry;
   onInstall: (id: string) => void;
 };
 
@@ -55,7 +61,7 @@ function AgentTile(props: TileProps): React.JSX.Element {
 }
 
 function TileAction(props: TileProps): React.JSX.Element {
-  return props.installed ? (
+  return props.entry.installed ? (
     <SelectedCheck />
   ) : (
     <Button
@@ -66,15 +72,3 @@ function TileAction(props: TileProps): React.JSX.Element {
     />
   );
 }
-
-const tile = (
-  entry: TileProps['entry'],
-  props: OnboardingViewProps,
-): React.JSX.Element => (
-  <AgentTile
-    key={entry.id}
-    entry={entry}
-    installed={props.installed.includes(entry.id)}
-    onInstall={props.onInstallAgent}
-  />
-);

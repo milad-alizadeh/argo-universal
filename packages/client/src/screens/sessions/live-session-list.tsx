@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
+import { type InstalledAgents, useInstalledAgents } from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
 import {
   liveUpdatesStopped,
@@ -38,16 +39,21 @@ const queryProgress = (query: {
   isPending: boolean;
 }): QueryProgress => ({ failed: query.isError, pending: query.isPending });
 
-// The Projects and Agents each Session row is drawn with.
+const agentsProgress = ({ status }: InstalledAgents): QueryProgress => ({
+  failed: status === 'failed',
+  pending: status === 'loading',
+});
+
+// The Projects and Installed Agents each Session row is drawn with.
 function useSessionListLookups(): SessionListLookups {
   const trpc = useTRPC();
   const projects = useQuery(trpc.projects.list.queryOptions());
-  const agents = useQuery(trpc.agents.servers.queryOptions());
+  const agents = useInstalledAgents();
 
   return {
     projects: projects.data ?? [],
-    agents: agents.data ?? [],
-    progress: [queryProgress(projects), queryProgress(agents)],
+    agents: agents.status === 'loaded' ? agents.agents : [],
+    progress: [queryProgress(projects), agentsProgress(agents)],
   };
 }
 

@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { OnboardingView } from './onboarding-view';
-import { onboardingArgs, githubSteps } from './onboarding-view.mocks';
+import {
+  featuredTile,
+  onboardingArgs,
+  githubSteps,
+} from './onboarding-view.mocks';
 
 const meta = {
   title: 'Screens/Onboarding/Set up Argo',
@@ -16,14 +20,16 @@ type Story = StoryObj<typeof meta>;
 export const Onboarding: Story = {};
 
 export const NotInstalled: Story = {
-  args: { agent: { status: 'not-installed' }, installed: [] },
+  args: { agent: { status: 'not-installed' }, featured: featuredTile(false) },
 };
 
 export const LoadingRegistry: Story = {
-  args: { catalog: { status: 'loading' } },
+  args: { featured: { status: 'loading', rows: [] } },
 };
 
-export const RegistryError: Story = { args: { catalog: { status: 'failed' } } };
+export const RegistryError: Story = {
+  args: { featured: { status: 'failed', rows: [] } },
+};
 
 // What the App shows today: no GitHub sign-in or Add Project flow yet, so their buttons are disabled.
 export const FirstRun: Story = {

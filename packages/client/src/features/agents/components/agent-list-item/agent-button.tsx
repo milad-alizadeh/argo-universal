@@ -5,7 +5,7 @@ import { Button } from '#primitives/buttons/button';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import type { AgentRowEntry } from '../../state/agent-list';
+import type { AgentRowEntry } from '../../state/agent-rows';
 
 export type AgentActions = {
   onInstall: (id: string) => void;
@@ -37,11 +37,8 @@ export function AgentButton(props: ButtonProps): React.JSX.Element {
   );
 }
 
-const isUnavailable = (agent: AgentRowEntry): boolean =>
-  agent.unavailable && !agent.installed;
-
 function accessory(props: ButtonProps): React.JSX.Element {
-  if (isUnavailable(props.agent)) return <Unavailable wide={props.wide} />;
+  if (props.agent.unavailable) return <Unavailable wide={props.wide} />;
 
   return props.wide ? (
     <DesktopAgentButton {...props} />

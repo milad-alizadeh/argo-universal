@@ -1,5 +1,5 @@
 import type { Plan, SessionSnapshot } from '@repo/contracts';
-import type { useAgents } from '#features/agents';
+import type { InstalledAgents } from '#features/agents';
 import type {
   ComposerConfigurationProps,
   ComposerProps,
@@ -24,7 +24,7 @@ export interface OpenSession {
   snapshot: SessionSnapshot;
   view: NonNullable<SessionFeed['view']>;
   commands: SessionCommands;
-  agents: ReturnType<typeof useAgents>;
+  agents: InstalledAgents;
   navigate: Navigate;
   imageUrl: ReturnType<typeof useBlobUrl>;
   connected: boolean;
@@ -84,7 +84,7 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
   const { snapshot, agents } = open;
 
   return {
-    agents: agents.data ?? [],
+    agents: agents.status === 'loaded' ? agents.agents : [],
     agent: snapshot.agent,
     configOptions: snapshot.configOptions,
     onConfigChange: open.commands.changeConfig,

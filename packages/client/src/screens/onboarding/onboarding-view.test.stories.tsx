@@ -4,6 +4,7 @@ import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { OnboardingView } from './onboarding-view';
 import {
+  featuredTile,
   onboardingArgs,
   githubButtons,
   githubSteps,
@@ -60,7 +61,7 @@ const pressCalls = (
 export const AddProjectAddsOne = pressCalls(addProject, 'onAddProject');
 
 export const InstallsFeaturedAgent: Story = {
-  args: { agent: noAgent, installed: [] },
+  args: { agent: noAgent, featured: featuredTile(false) },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(
       canvas.getByRole('button', { name: 'Install Example Agent' }),
@@ -70,7 +71,7 @@ export const InstallsFeaturedAgent: Story = {
 };
 
 export const RetriesRegistry: Story = {
-  args: { catalog: { status: 'failed' } },
+  args: { featured: { status: 'failed', rows: [] } },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.onRetry).toHaveBeenCalledOnce();

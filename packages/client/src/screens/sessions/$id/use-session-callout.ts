@@ -1,6 +1,6 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
-import type { useAgents } from '#features/agents';
+import type { InstalledAgents } from '#features/agents';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
@@ -28,26 +28,28 @@ import type { SessionCommands } from './use-session-commands';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
-type Agents = ReturnType<typeof useAgents>;
-
 export interface SessionCalloutSources {
   sessionId: string;
   feed: SessionFeed;
   // The Connection dropped the Feed's open, so a toast says why instead of a callout.
   feedDropped: boolean;
   commands: Pick<SessionCommands, 'promptSession' | 'setConfigOption'>;
-  agents: Agents;
+  agents: InstalledAgents;
 }
 
-const labelOf = (agents: Agents, agent: string): string | undefined =>
-  agents.data?.find((entry) => entry.id === agent)?.name;
+const labelOf = (agents: InstalledAgents, agent: string): string | undefined =>
+  agents.status === 'loaded'
+    ? agents.agents.find((entry) => entry.id === agent)?.name
+    : undefined;
 
-const agentName = (snapshot: SessionSnapshot, agents: Agents): string =>
-  labelOf(agents, snapshot.agent) ?? snapshot.agent;
+const agentName = (
+  snapshot: SessionSnapshot,
+  agents: InstalledAgents,
+): string => labelOf(agents, snapshot.agent) ?? snapshot.agent;
 
 const authSubject = (
   snapshot: SessionSnapshot | null,
-  agents: Agents,
+  agents: InstalledAgents,
 ): SessionAuthSubject | undefined =>
   snapshot
     ? {

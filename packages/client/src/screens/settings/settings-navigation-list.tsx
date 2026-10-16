@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useAgents, useInstalledAgents } from '#features/agents';
+import { useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
 import {
   SettingsList,
@@ -24,11 +24,10 @@ type ServerCounts = Pick<SettingsListProps, 'projectCount' | 'agentCount'>;
  */
 function useServerCounts(): ServerCounts {
   const agents = useInstalledAgents();
-  const agentsKnown = useAgents().data !== undefined;
 
   return {
     projectCount: useProjects().data?.length,
-    agentCount: agentsKnown ? agents.length : undefined,
+    agentCount: agents.status === 'loaded' ? agents.agents.length : undefined,
   };
 }
 

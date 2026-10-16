@@ -1,8 +1,7 @@
-import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import { type AgentsFilter, type CatalogLoad } from '#features/agents';
+import { type AgentRows, type AgentsFilter } from '#features/agents';
 import {
   SettingsPage,
   type SettingsPageSearch,
@@ -19,8 +18,7 @@ import {
 import { AgentCatalog } from './catalog';
 
 export type AgentListViewProps = {
-  catalog: CatalogLoad;
-  installed: AgentServer[];
+  agents: AgentRows;
   onInstall: (id: string) => void;
   onRemove: (id: string) => void;
   onRetry: () => void;
