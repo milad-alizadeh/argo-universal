@@ -12,6 +12,7 @@ const colorTokens = [
   ['primary', '--color-primary'],
   ['primaryForeground', '--color-primary-foreground'],
   ['border', '--color-border'],
+  ['selected', '--color-selected'],
   ['danger', '--color-danger'],
 ] as const;
 
@@ -19,11 +20,11 @@ const tokenNames = colorTokens.map(([, name]) => name);
 
 type TokenRole = (typeof colorTokens)[number][0];
 
-// Material's disabled content (38%) and container (12%) over the foreground.
-type DisabledRole = 'disabledContent' | 'disabledContainer';
+// Material's disabled content (38%) and container (12%), and the sheet scrim (32%), over the foreground.
+type DerivedRole = 'disabledContent' | 'disabledContainer' | 'scrim';
 
 // A colour is missing only while Uniwind has not resolved its token.
-type NativeColors = Partial<Record<TokenRole | DisabledRole, string>>;
+type NativeColors = Partial<Record<TokenRole | DerivedRole, string>>;
 
 export interface NativeTheme {
   colorScheme: 'light' | 'dark';
@@ -34,15 +35,25 @@ export interface NativeTheme {
 export function useNativeTheme(): NativeTheme {
   const { theme } = useUniwind();
   const tokens = useCSSVariable(tokenNames);
-  const disabledContent = usePrimitiveColor('text-foreground/38');
-  const disabledContainer = usePrimitiveColor('text-foreground/12');
+  const derived = useDerivedColors();
 
   const colors = useMemo(
-    () => ({ ...tokenColors(tokens), disabledContent, disabledContainer }),
-    [tokens, disabledContent, disabledContainer],
+    () => ({ ...tokenColors(tokens), ...derived }),
+    [tokens, derived],
   );
 
   return { colorScheme: theme === 'dark' ? 'dark' : 'light', colors };
+}
+
+function useDerivedColors(): Partial<Record<DerivedRole, string>> {
+  const disabledContent = usePrimitiveColor('text-foreground/38');
+  const disabledContainer = usePrimitiveColor('text-foreground/12');
+  const scrim = usePrimitiveColor('text-foreground/32');
+
+  return useMemo(
+    () => ({ disabledContent, disabledContainer, scrim }),
+    [disabledContent, disabledContainer, scrim],
+  );
 }
 
 function tokenColors(

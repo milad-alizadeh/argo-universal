@@ -2,14 +2,17 @@
 import { Slider as MaterialSlider } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import { ControlHost } from '#primitives/native/native-control';
 import type { SliderProps } from './slider-props';
 
 export function Slider(props: SliderProps): ReactElement {
   return (
     <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <MaterialSlider {...controlProps(props)} colors={useSliderColors()} />
+      <MaterialSlider
+        {...controlProps(props)}
+        colors={useMaterialPalette().sliderColors}
+      />
     </ControlHost>
   );
 }
@@ -68,20 +71,6 @@ function selectedStep(props: SliderProps, value: number): number {
     Math.round((value - props.minimumValue) / props.step) * props.step +
     props.minimumValue
   );
-}
-
-function useSliderColors(): React.ComponentProps<
-  typeof MaterialSlider
->['colors'] {
-  const colors = useNativeTheme().colors;
-
-  return {
-    thumbColor: colors.primary,
-    activeTrackColor: colors.primary,
-    inactiveTrackColor: colors.border,
-    activeTickColor: colors.primaryForeground,
-    inactiveTickColor: colors.primary,
-  };
 }
 
 export type { SliderProps } from './slider-props';

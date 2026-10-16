@@ -1,8 +1,9 @@
-import { Button as UniversalButton, RNHostView, Row } from '@expo/ui';
+import { RNHostView, Row } from '@expo/ui';
 import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { NativeText, useDangerColor } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
+import { NativeButton } from '#primitives/native/native-button';
 import { ButtonAdornment } from './button-adornment';
 import { ContentButton } from './button-content';
 import { withNarrowLayout } from './button-layout';
@@ -43,12 +44,12 @@ function NativeControl(props: SystemButtonProps): ReactElement {
 
   // A text-only button hands its label to Expo, which draws it; only decoration or an Android danger label needs a row.
   if (!needsRow(props, variant, dangerColor))
-    return <UniversalButton {...common} label={props.label} />;
+    return <NativeButton {...common} label={props.label} />;
 
   return (
-    <UniversalButton {...common}>
+    <NativeButton {...common}>
       <ButtonRow {...props} {...rowColors(variant, dangerColor)} />
-    </UniversalButton>
+    </NativeButton>
   );
 }
 
@@ -56,7 +57,7 @@ function nativeControlProps(
   props: SystemButtonProps,
   variant: UniversalButtonVariant,
   dangerColor: string | undefined,
-): Omit<ComponentProps<typeof UniversalButton>, 'children' | 'label'> {
+): Omit<ComponentProps<typeof NativeButton>, 'children' | 'label'> {
   return {
     variant,
     onPress: props.onPress,
@@ -86,7 +87,7 @@ function rowColors(
   };
 }
 
-// Compose takes no button colours through Expo UI, so Android reddens only the label of an unfilled button.
+// The kit's Android button colours carry no tone, so Android reddens only the label of an unfilled button.
 function androidDangerLabel(
   variant: UniversalButtonVariant,
   dangerColor: string | undefined,

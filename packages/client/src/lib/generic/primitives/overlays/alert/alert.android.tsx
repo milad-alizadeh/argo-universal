@@ -8,9 +8,9 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { semantics, size } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import {
   alertActionPress,
   ignoreCloseWhileBusy,
@@ -33,7 +33,7 @@ export function Alert(props: AlertProps): React.JSX.Element | null {
 function OpenAlert(props: AlertProps): React.JSX.Element {
   return (
     <AlertDialog
-      colors={useDialogColors()}
+      colors={useMaterialPalette().dialogColors}
       onDismissRequest={() => ignoreCloseWhileBusy(props)(false)}
     >
       <AlertTitle title={props.title} />
@@ -42,17 +42,6 @@ function OpenAlert(props: AlertProps): React.JSX.Element {
       <AlertCancel actions={props.actions} onOpenChange={props.onOpenChange} />
     </AlertDialog>
   );
-}
-
-// The card surface, the foreground title and the muted message, through AlertDialog's colors prop.
-function useDialogColors(): React.ComponentProps<typeof AlertDialog>['colors'] {
-  const colors = useNativeTheme().colors;
-
-  return {
-    containerColor: colors.card,
-    titleContentColor: colors.foreground,
-    textContentColor: colors.mutedForeground,
-  };
 }
 
 function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
@@ -112,7 +101,7 @@ function AlertButton(props: AlertButtonProps): React.JSX.Element {
   return (
     <TextButton
       enabled={isAlertActionEnabled(props.action, props.actions)}
-      colors={useButtonColors(props.action)}
+      colors={useAnswerColors(props.action)}
       onClick={alertActionPress(props.action, props.onOpenChange)}
     >
       <AlertButtonLabel action={props.action} />
@@ -121,15 +110,14 @@ function AlertButton(props: AlertButtonProps): React.JSX.Element {
 }
 
 // The answer's tone; a disabled answer takes Material's 38% foreground instead.
-function useButtonColors(
+function useAnswerColors(
   action: AlertAction,
 ): React.ComponentProps<typeof TextButton>['colors'] {
-  const colors = useNativeTheme().colors;
+  const palette = useMaterialPalette();
 
-  return {
-    contentColor: action.tone === 'danger' ? colors.danger : colors.accent,
-    disabledContentColor: colors.disabledContent,
-  };
+  return action.tone === 'danger'
+    ? palette.dialogDangerColors
+    : palette.dialogAnswerColors;
 }
 
 // The label takes its colour from the TextButton around it.
@@ -151,13 +139,13 @@ const spinnerSize = 18;
 function AlertButtonSpinner({
   action,
 }: Pick<AlertButtonProps, 'action'>): React.JSX.Element | null {
-  const colors = useNativeTheme().colors;
+  const color = useMaterialPalette().roles.disabledContent;
 
   if (!action.loading) return null;
 
   return (
     <CircularProgressIndicator
-      color={colors.disabledContent}
+      color={color}
       modifiers={[
         size(spinnerSize, spinnerSize),
         semantics({ contentDescription: action.label }),

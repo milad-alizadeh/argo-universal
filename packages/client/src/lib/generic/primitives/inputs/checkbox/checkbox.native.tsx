@@ -1,4 +1,3 @@
-import { Checkbox as UniversalCheckbox } from '@expo/ui';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import { accessibilityHint, onTapGesture } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps, ComponentType } from 'react';
@@ -7,6 +6,7 @@ import { cn } from '#lib/generic/utils';
 import { Host } from '#primitives/native/host';
 import { CheckboxAccessibility } from './checkbox-accessibility';
 import { AppleRadioRow, type CheckboxRowProps } from './checkbox-apple-row';
+import { CheckboxBox } from './checkbox-box';
 import { CheckboxMark } from './checkbox-mark';
 import { MaterialRadioRow } from './checkbox-material-row';
 import type { CheckboxIndicatorProps, CheckboxProps } from './checkbox-props';
@@ -34,7 +34,7 @@ function CheckboxControl(props: CheckboxRowProps): React.JSX.Element {
 
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <UniversalCheckbox
+      <CheckboxBox
         label={props.label}
         value={props.value}
         disabled={props.disabled}
@@ -69,7 +69,7 @@ function surfaceClass(props: CheckboxProps): string {
 // SwiftUI's stock Toggle needs a label tap action; Android's separate mark needs the field name.
 function checkboxModifiers(
   props: CheckboxRowProps,
-): ComponentProps<typeof UniversalCheckbox>['modifiers'] {
+): ComponentProps<typeof CheckboxBox>['modifiers'] {
   const description = props.state.description;
   const name = [props.label, description].filter(Boolean).join('. ');
 

@@ -1,5 +1,6 @@
 import {
   Button,
+  type ButtonColors,
   DropdownMenu,
   FilledTonalButton,
   Row,
@@ -11,8 +12,8 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
-import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
+import { useMaterialPalette } from '#primitives/native/material-palette';
 import { MenuDropdownItems } from '#primitives/overlays/menu';
 import { ChevronIcon } from './split-button-icons.android';
 import { type NativeSplit, nativeSplit } from './split-button-items';
@@ -67,11 +68,11 @@ function SplitRow(split: NativeSplit): React.JSX.Element {
 
 // The kit Menu's Compose DropdownMenu and rows, on the card surface, opened from the stock chevron button.
 function MenuHalf({ menu, ...split }: MenuHalfProps): React.JSX.Element {
-  const { colors } = useNativeTheme();
+  const { roles } = useMaterialPalette();
 
   return (
     <DropdownMenu
-      color={colors.card}
+      color={roles.surfaceContainer}
       expanded={menu.open}
       onDismissRequest={menu.close}
     >
@@ -112,11 +113,17 @@ function Half({
   ...rest
 }: HalfProps): React.JSX.Element {
   const Stock = primary ? Button : FilledTonalButton;
-  const { colors } = useNativeTheme();
+  const look = halfLook(useHalfColors(primary), side);
 
   return (
-    <Stock {...halfLook(colors, primary, side)} {...rest}>
+    <Stock {...look} {...rest}>
       {children}
     </Stock>
   );
+}
+
+function useHalfColors(primary: boolean): ButtonColors {
+  const palette = useMaterialPalette();
+
+  return primary ? palette.filledButtonColors : palette.tonalButtonColors;
 }
