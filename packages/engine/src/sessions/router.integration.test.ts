@@ -51,6 +51,34 @@ it.each([
     message: 'Session Undo is not implemented yet',
   },
   {
+    procedure: 'shells',
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.session.shells({ sessionId: 'session-1' });
+    },
+    message: 'Shell runtime is not implemented yet',
+  },
+  {
+    procedure: 'stopShell',
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.session.stopShell({
+        sessionId: 'session-1',
+        shellId: 'terminal-1',
+      });
+    },
+    message: 'Shell runtime is not implemented yet',
+  },
+  {
+    procedure: 'shell.output',
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.shell.output({
+        sessionId: 'session-1',
+        shellId: 'terminal-1',
+        after: 0,
+      });
+    },
+    message: 'Shell runtime is not implemented yet',
+  },
+  {
     procedure: 'rename',
     call: async (caller: SessionCaller): Promise<void> => {
       await caller.session.rename({

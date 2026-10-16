@@ -78,6 +78,7 @@ export function toSessionSnapshot(
     pendingPlanProposal: null,
     configOptions: context.configOptions,
     changes: noChanges,
+    shells: [],
     maxRevision: feed.context.maxRevision,
     epoch: feed.context.epoch,
   };

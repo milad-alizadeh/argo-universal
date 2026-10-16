@@ -29,3 +29,5 @@ export {
   TurnInsertJob,
   TurnUpdateJob,
 } from './session-storage';
+
+export { shellRouter } from './shells/router';

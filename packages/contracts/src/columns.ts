@@ -7,6 +7,7 @@ import {
   feedRow,
   project,
   session,
+  shell,
   turn,
 } from '@repo/db/schema';
 import { createSelectSchema } from 'drizzle-orm/zod';
@@ -29,3 +30,5 @@ export const syncJobsColumns = createSelectSchema(syncJobs);
 export const agentServerColumns = createSelectSchema(agentServers);
 
 export const registryCacheColumns = createSelectSchema(registryCache);
+
+export const shellColumns = createSelectSchema(shell);

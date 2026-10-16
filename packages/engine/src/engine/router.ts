@@ -3,7 +3,7 @@ import { createBlobRouter } from '../blob';
 import { createFeedRouter } from '../feed';
 import { createProjectsRouter } from '../projects';
 import { router, routerFactory } from '../rpc';
-import { createSessionRouter } from '../sessions';
+import { createSessionRouter, shellRouter } from '../sessions';
 import { createSystemRouter } from '../system';
 import type { AppRouterDeps } from './router-deps';
 
@@ -16,6 +16,7 @@ export const createAppRouter = routerFactory((deps: AppRouterDeps) =>
     system: createSystemRouter(deps),
     feed: createFeedRouter(deps),
     session: createSessionRouter(deps),
+    shell: shellRouter,
   }),
 );
 
