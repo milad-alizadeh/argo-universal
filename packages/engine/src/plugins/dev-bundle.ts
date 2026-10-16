@@ -19,6 +19,10 @@ const devBuildOptions: BuildOptions = {
   write: false,
   format: 'esm',
   platform: 'neutral',
+  external: ['@argo/plugin-kit', '@argo/plugin-kit/*'],
+  jsx: 'automatic',
+  jsxImportSource: '@argo/plugin-kit',
+  loader: { '.js': 'jsx' },
   logLevel: 'silent',
 };
 

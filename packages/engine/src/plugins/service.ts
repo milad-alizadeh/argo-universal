@@ -5,6 +5,10 @@ import type {
   PluginFailure,
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
+import type {
+  PluginDispatchInput,
+  ViewMessage,
+} from '@repo/contracts/plugins/wire';
 import { discoverPlugins, type PluginsDeps } from './loader';
 import type { PluginRuntime } from './runtime';
 
@@ -34,6 +38,22 @@ export class PluginService {
       dev: plugin.firstParty || (await markedDev(directory)),
       name: plugin.manifest.name,
     });
+  }
+
+  async dispatch(input: PluginDispatchInput): Promise<void> {
+    requireRuntime(this.deps).views.dispatch(input);
+  }
+
+  async *view(
+    { pluginId, path }: { pluginId: string; path: string },
+    signal: AbortSignal,
+  ): AsyncGenerator<ViewMessage> {
+    const status = await this.activate(pluginId);
+
+    if (status.state !== 'running')
+      throw new Error(status.error ?? `Plugin ${pluginId} is not running`);
+
+    yield* requireRuntime(this.deps).views.watch(pluginId, path, signal);
   }
 
   public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
