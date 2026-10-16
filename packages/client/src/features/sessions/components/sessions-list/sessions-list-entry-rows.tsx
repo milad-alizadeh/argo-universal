@@ -7,8 +7,8 @@ import type { SessionsListEntry } from '../sessions-list-entries';
 import {
   type CollapsedProjects,
   useCollapsedProjects,
-  useListEntries,
-} from './sessions-list-entries-state';
+} from './sessions-list-collapsed';
+import { useListEntries } from './sessions-list-entries-state';
 import type { SessionsListProps } from './sessions-list-props';
 import { useAnimateReorder } from './sessions-list-reorder';
 import {
@@ -31,24 +31,30 @@ type HeadingContext = Pick<
 
 function useHeadingContext(
   { onNewSession, onProjectSettings }: SessionsListProps,
-  { collapsed, toggleProject }: CollapsedProjects,
+  { collapsed, closing, toggleProject }: CollapsedProjects,
 ): HeadingContext {
   return useMemo(
-    () => ({ collapsed, toggleProject, onNewSession, onProjectSettings }),
-    [collapsed, toggleProject, onNewSession, onProjectSettings],
+    () => ({
+      collapsed,
+      closing,
+      toggleProject,
+      onNewSession,
+      onProjectSettings,
+    }),
+    [collapsed, closing, toggleProject, onNewSession, onProjectSettings],
   );
 }
 
 function projectHeading(
   item: Extract<SessionsListEntry, { kind: 'project' }>,
-  { collapsed, toggleProject, ...actions }: HeadingContext,
+  { collapsed, closing, toggleProject, ...actions }: HeadingContext,
 ): React.JSX.Element {
   return (
     <ProjectListHeading
       id={item.id}
       projectId={item.projectId}
       name={item.name}
-      collapsed={collapsed.has(item.id)}
+      collapsed={collapsed.has(item.id) || closing.has(item.id)}
       onToggle={toggleProject}
       {...actions}
     />
@@ -77,6 +83,7 @@ export interface ListRows {
   extraData: {
     agents: AgentsListOutput;
     collapsed: ReadonlySet<string>;
+    closing: ReadonlySet<string>;
     selectedSessionId?: string;
     layout?: SessionsLayout;
   };
@@ -87,11 +94,11 @@ export interface ListRows {
 
 function useExtraData(
   { agents, selectedSessionId, layout }: SessionsListProps,
-  collapsed: ReadonlySet<string>,
+  { collapsed, closing }: CollapsedProjects,
 ): ListRows['extraData'] {
   return useMemo(
-    () => ({ agents, collapsed, selectedSessionId, layout }),
-    [agents, collapsed, selectedSessionId, layout],
+    () => ({ agents, collapsed, closing, selectedSessionId, layout }),
+    [agents, collapsed, closing, selectedSessionId, layout],
   );
 }
 
@@ -100,7 +107,8 @@ function useRenderItem(
   collapsedProjects: CollapsedProjects,
   animating: boolean,
 ): ListRows['renderItem'] {
-  const sessionContext = useSessionRowContext(props, animating);
+  const { closing } = collapsedProjects;
+  const sessionContext = useSessionRowContext(props, animating, closing);
   const headingContext = useHeadingContext(props, collapsedProjects);
 
   return useCallback(
@@ -118,7 +126,7 @@ export function useListRows(props: SessionsListProps): ListRows {
   return {
     animating,
     data: props.placeholder ? noEntries : entries,
-    extraData: useExtraData(props, collapsedProjects.collapsed),
+    extraData: useExtraData(props, collapsedProjects),
     renderItem: useRenderItem(props, collapsedProjects, animating),
   };
 }

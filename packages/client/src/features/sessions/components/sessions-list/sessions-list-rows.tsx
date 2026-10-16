@@ -8,7 +8,7 @@ import {
   type ProjectHeadingProps,
 } from '../project-heading/project-heading';
 import { SessionRow, type SessionRowProps } from '../session-row/session-row';
-import { rowFade } from './sessions-list-row-fade';
+import { rowClassName, rowFade } from './sessions-list-row-motion';
 
 export function NoSessionsYet(): React.JSX.Element {
   return (
@@ -102,18 +102,21 @@ export type SessionListRowProps = Pick<
 > & {
   // Fades the row in as it mounts.
   animate?: boolean;
+  // Fades the row out before its Project collapses.
+  closing?: boolean;
 };
 
 // Each row is held in a container of its own, so the space between rows is the container's: Regular rows sit 8 apart; Compact rows sit 2 apart wide, and a phone's grouped rows space themselves.
 export const SessionListRow = memo(function SessionListRow({
   animate,
+  closing,
   ...props
 }: SessionListRowProps) {
   return (
     <Animated.View
       testID="session-row-surface"
       {...rowFade(animate)}
-      className={props.layout === 'compact' ? 'wide:pb-0.5' : 'pb-2'}
+      className={rowClassName(props.layout, closing)}
     >
       <SessionRow {...props} />
     </Animated.View>

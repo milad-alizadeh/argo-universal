@@ -16,6 +16,8 @@ export interface SessionRowContext {
   ageFrom?: number;
   // Rows that mount while the list reorders fade in.
   animating: boolean;
+  // Projects whose rows are fading out.
+  closing: ReadonlySet<string>;
   onSelect: (id: string) => void;
 }
 
@@ -28,7 +30,7 @@ function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
 
 function useSessionRowInputs(
   props: SessionsListProps,
-): Omit<SessionRowContext, 'animating'> {
+): Omit<SessionRowContext, 'animating' | 'closing'> {
   const { layout, selectedSessionId, onSelect } = props;
   const agentLogos = useAgentLogos(props.agents);
   const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
@@ -39,14 +41,25 @@ function useSessionRowInputs(
 export function useSessionRowContext(
   props: SessionsListProps,
   animating: boolean,
+  closing: ReadonlySet<string>,
 ): SessionRowContext {
   const inputs = useSessionRowInputs(props);
 
   return useMemo(
-    () => ({ ...inputs, animating }),
+    () => ({ ...inputs, animating, closing }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [...Object.values(inputs), animating],
+    [...Object.values(inputs), animating, closing],
   );
+}
+
+function rowMotion(
+  projectId: string,
+  context: SessionRowContext,
+): Pick<SessionListRowProps, 'animate' | 'closing'> {
+  return {
+    animate: context.animating,
+    closing: context.closing.has(`project:${projectId}`),
+  };
 }
 
 export function sessionRowProps(
@@ -59,7 +72,7 @@ export function sessionRowProps(
     selected: context.selectedSessionId === item.id,
     trailing: sessionAge(item.session, context.ageFrom),
     layout: context.layout,
-    animate: context.animating,
+    ...rowMotion(item.session.projectId, context),
     position: virtualListPosition(item.first, item.last),
     onSelect: context.onSelect,
   };

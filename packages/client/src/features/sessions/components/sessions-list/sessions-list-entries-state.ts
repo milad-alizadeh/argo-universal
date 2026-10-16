@@ -1,33 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   flatEntries,
   listEntries,
   type SessionsListEntry,
 } from '../sessions-list-entries';
 import type { SessionsListProps } from './sessions-list-props';
-
-export interface CollapsedProjects {
-  collapsed: ReadonlySet<string>;
-  toggleProject: (id: string) => void;
-}
-
-// Which Project headings are collapsed, and the toggle for one.
-export function useCollapsedProjects(): CollapsedProjects {
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-
-  const toggleProject = useCallback((id: string) => {
-    setCollapsed((current) => {
-      const next = new Set(current);
-
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-
-      return next;
-    });
-  }, []);
-
-  return { collapsed, toggleProject };
-}
 
 type EntriesInput = Pick<
   SessionsListProps,
