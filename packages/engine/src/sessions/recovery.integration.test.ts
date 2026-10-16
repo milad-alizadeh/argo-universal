@@ -49,6 +49,8 @@ const cancelledToolId = 'cancelled-tool';
 
 const invalidMessageId = 'invalid-message';
 
+const futurePayloadId = 'future-payload';
+
 const settledCompletedToolId = 'settled-completed-tool';
 
 const settledRunningToolId = 'settled-running-tool';
@@ -555,7 +557,7 @@ describe('Engine restart recovery', (): void => {
       rows: [
         {
           ...toolRow({
-            id: 'future-payload',
+            id: futurePayloadId,
             position: 0,
             revision: 4,
             status: 'in_progress',
@@ -606,7 +608,7 @@ describe('Engine restart recovery', (): void => {
         { id: 'later-message', revision: 13, state: 'settled' },
         { id: 'unscoped-message', revision: 14, state: 'settled' },
         { id: `${runningTurnId}:end`, revision: 15, state: 'settled' },
-        { id: 'future-payload', revision: 5, state: 'settled' },
+        { id: futurePayloadId, revision: 5, state: 'settled' },
       ]);
       expect(repaired.rows[1]?.payload).toEqual({
         messageId: invalidMessageId,
@@ -614,7 +616,7 @@ describe('Engine restart recovery', (): void => {
       });
       expect(repaired.rows[2]?.payload).toMatchObject({ status: 'cancelled' });
       expect(
-        repaired.rows.find((row) => row.id === 'future-payload'),
+        repaired.rows.find((row) => row.id === futurePayloadId),
       ).toMatchObject({
         payloadVersion: 2,
         payload: { status: 'in_progress', rawInput: { path: editedFilePath } },
