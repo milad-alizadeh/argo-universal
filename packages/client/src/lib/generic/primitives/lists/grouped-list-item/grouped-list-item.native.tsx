@@ -9,13 +9,17 @@ import {
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
-import { useWide } from '../../../use-wide/use-wide';
+import { useSizeClass } from '../../../use-size-class/use-size-class';
 import {
   rowUsesStockButton,
   rowContainerAccessibility,
 } from './grouped-list-item-accessibility';
 import { RowContent } from './grouped-list-item-native-row';
-import { type GroupedListItemProps } from './grouped-list-item-props';
+import {
+  type GroupedListItemProps,
+  type ResolvedItemProps,
+  resolvedItem,
+} from './grouped-list-item-props';
 import { GroupedListItem as WebGroupedListItem } from './grouped-list-item.tsx';
 import { NativeRowDetail } from './native-row';
 import { NativeRowFrame } from './native-row-frame';
@@ -27,12 +31,14 @@ const ios = Platform.OS === 'ios';
 export function GroupedListItem(
   props: GroupedListItemProps,
 ): React.JSX.Element {
-  if (useWide()) return <WebGroupedListItem {...props} />;
+  const sizeClass = useSizeClass();
 
-  return <NativeRow {...props} />;
+  if (sizeClass === 'wide') return <WebGroupedListItem {...props} />;
+
+  return <NativeRow {...resolvedItem(props, sizeClass)} />;
 }
 
-function NativeRow(props: GroupedListItemProps): React.JSX.Element {
+function NativeRow(props: ResolvedItemProps): React.JSX.Element {
   const modifiers = rowModifiers(props, useSidebarList());
 
   return rowUsesStockButton(props) && props.onPress ? (
@@ -47,7 +53,7 @@ function NativeRow(props: GroupedListItemProps): React.JSX.Element {
 }
 
 interface RowProps {
-  item: GroupedListItemProps;
+  item: ResolvedItemProps;
   modifiers: Modifiers;
 }
 
@@ -60,7 +66,7 @@ function ColumnRow({ item, modifiers }: RowProps): React.JSX.Element {
   );
 }
 
-function RowParts(props: GroupedListItemProps): React.JSX.Element {
+function RowParts(props: ResolvedItemProps): React.JSX.Element {
   return (
     <>
       <RowContent {...props} />
@@ -87,10 +93,7 @@ function PressableRow(props: PressableRowProps): React.JSX.Element {
   );
 }
 
-function rowModifiers(
-  props: GroupedListItemProps,
-  sidebar: boolean,
-): Modifiers {
+function rowModifiers(props: ResolvedItemProps, sidebar: boolean): Modifiers {
   if (!ios) return [fillMaxWidth(), ...rowContainerAccessibility(props)];
 
   return [

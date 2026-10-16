@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '../../../utils';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 
 const tones = {
   success: 'bg-success',
@@ -18,7 +18,7 @@ export const hiddenFromAccessibility = {
 
 export function StatusDot({
   status,
-}: Pick<GroupedListItemProps, 'status'>): React.JSX.Element | null {
+}: Pick<ResolvedItemProps, 'status'>): React.JSX.Element | null {
   if (!status) return null;
 
   return (

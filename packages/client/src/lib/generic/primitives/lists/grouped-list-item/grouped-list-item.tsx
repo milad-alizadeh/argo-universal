@@ -5,6 +5,7 @@ import {
   useOverlayList,
   useSidebarList,
 } from '#primitives/fields/field-layout';
+import { useSizeClass } from '../../../use-size-class/use-size-class';
 import { GroupedListItemBody } from './grouped-list-item-content';
 import {
   GroupedListItemCorners,
@@ -13,7 +14,10 @@ import {
 } from './grouped-list-item-position';
 import {
   type GroupedListItemProps,
+  type ResolvedItemProps,
   groupedListItemName,
+  isPlainItem,
+  resolvedItem,
 } from './grouped-list-item-props';
 import { type RowPlace, rowClasses } from './grouped-list-item-styles';
 import {
@@ -23,6 +27,16 @@ import {
 } from './grouped-list-item-web-props';
 
 export function GroupedListItem(props: GroupedListItemProps): JSX.Element {
+  if (isPlainItem(props)) return <DrawnItem {...props} />;
+
+  return <SizedItem {...props} />;
+}
+
+function SizedItem(props: GroupedListItemProps): JSX.Element {
+  return <DrawnItem {...resolvedItem(props, useSizeClass())} />;
+}
+
+function DrawnItem(props: ResolvedItemProps): JSX.Element {
   const rowProps = useRowProps(props);
   const item = useHoverLink(props);
 
@@ -50,7 +64,7 @@ function useRowPlace(): RowPlace {
 }
 
 // A list's neighbours learn of this row's hover and press, beside the caller's own handlers.
-function useHoverLink(props: GroupedListItemProps): GroupedListItemProps {
+function useHoverLink(props: ResolvedItemProps): ResolvedItemProps {
   const hover = useContext(GroupedListItemHover);
 
   if (!hover) return props;
@@ -68,7 +82,7 @@ function useHoverLink(props: GroupedListItemProps): GroupedListItemProps {
   };
 }
 
-function useRowProps(props: GroupedListItemProps): ReturnType<
+function useRowProps(props: ResolvedItemProps): ReturnType<
   typeof selectionProps
 > & {
   accessibilityLabel: string;
@@ -84,7 +98,7 @@ function useRowProps(props: GroupedListItemProps): ReturnType<
 }
 
 interface PressableRowProps extends React.ComponentProps<typeof View> {
-  item: GroupedListItemProps;
+  item: ResolvedItemProps;
   press: () => void;
 }
 

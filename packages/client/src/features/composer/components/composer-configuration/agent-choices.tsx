@@ -16,25 +16,19 @@ const screenFraction = 0.6;
 
 // A phone lists the Agents natively; a wide window and the web scroll a list.
 export function AgentChoices(props: AgentChoicesProps): React.JSX.Element {
+  if (Platform.OS === 'web') return <AgentList {...props} />;
+
   return (
     <>
       <SizeClass only="wide">
-        <AgentList {...props} wide />
+        <AgentList {...props} />
       </SizeClass>
       <SizeClass only="compact">
-        <CompactAgentChoices {...props} />
+        <NativeAgentChoices {...props} />
       </SizeClass>
     </>
   );
 }
-
-function CompactAgentChoices(props: AgentChoicesProps): React.JSX.Element {
-  if (Platform.OS === 'web') return <AgentList {...props} wide={false} />;
-
-  return <NativeAgentChoices {...props} />;
-}
-
-type AgentListProps = AgentChoicesProps & { wide: boolean };
 
 function NativeAgentChoices(props: AgentChoicesProps): React.JSX.Element {
   return (
@@ -48,7 +42,7 @@ function NativeAgentChoices(props: AgentChoicesProps): React.JSX.Element {
   );
 }
 
-function AgentList(props: AgentListProps): React.JSX.Element {
+function AgentList(props: AgentChoicesProps): React.JSX.Element {
   const listProps = useAgentList(props);
 
   return (
@@ -60,10 +54,9 @@ function AgentList(props: AgentListProps): React.JSX.Element {
   );
 }
 
-function useAgentList({
-  wide,
-  ...props
-}: AgentListProps): React.ComponentProps<typeof ScrollFadeList<AgentInfo>> {
+function useAgentList(
+  props: AgentChoicesProps,
+): React.ComponentProps<typeof ScrollFadeList<AgentInfo>> {
   const { height } = useWindowDimensions();
 
   const current = props.configuration.agents.findIndex(
@@ -72,7 +65,7 @@ function useAgentList({
 
   return {
     ...agentListProps(props),
-    maxHeight: wide ? maximumHeight : height * screenFraction,
+    maxHeight: { compact: height * screenFraction, wide: maximumHeight },
     initialScrollIndex: current > 0 ? current : undefined,
   };
 }

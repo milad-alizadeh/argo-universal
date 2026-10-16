@@ -1,12 +1,7 @@
 import type * as React from 'react';
 import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import { IconButton } from '#primitives/buttons/icon-button';
-import {
-  Menu,
-  type MenuChoiceGroup,
-  type MenuProps,
-} from '#primitives/overlays/menu';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
+import { Menu, type MenuChoiceGroup } from '#primitives/overlays/menu';
 import {
   isSessionsLayout,
   type SessionsLayout,
@@ -82,25 +77,13 @@ export function SessionsFilterMenu(
   props: SessionsFilterMenuProps,
 ): React.JSX.Element {
   return (
-    <>
-      <SizeClass only="wide">
-        <FilterMenu {...props} trigger={wideFilterTrigger} />
-      </SizeClass>
-      <SizeClass only="compact">
-        <FilterMenu {...props} trigger={phoneFilterTrigger(props.archived)} />
-      </SizeClass>
-    </>
-  );
-}
-
-function FilterMenu(
-  props: SessionsFilterMenuProps & Pick<MenuProps, 'trigger'>,
-): React.JSX.Element {
-  return (
     <Menu
       accessibilityLabel="Filter Sessions"
       groups={filterGroups(props)}
-      trigger={props.trigger}
+      trigger={{
+        compact: phoneFilterTrigger(props.archived),
+        wide: wideFilterTrigger,
+      }}
     />
   );
 }

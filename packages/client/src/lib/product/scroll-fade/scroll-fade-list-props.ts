@@ -17,8 +17,8 @@ export type ScrollFadeListProps<T> = Omit<
     contentContainerStyle?: SizeClassValue<
       LegendListProps<T>['contentContainerStyle']
     >;
-    // Grows with its content up to this height, then scrolls; without it the list fills its parent.
-    maxHeight?: number;
+    // Grows with its content up to this height, then scrolls; without it the list fills its parent. One per size class where they differ.
+    maxHeight?: SizeClassValue<number>;
   };
 
 // The list with its content inset resolved for the window's size class.

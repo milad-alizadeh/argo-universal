@@ -5,7 +5,6 @@ import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -73,14 +72,14 @@ const missingFolder: GroupedListItemProps['status'] = {
 
 type ProjectDetail = Pick<GroupedListItemProps, 'value' | 'status'>;
 
-const missingFolderDetail = (wide: boolean): ProjectDetail => ({
-  value: wide ? folderNotFound : undefined,
+const missingFolderDetail: ProjectDetail = {
+  value: { compact: undefined, wide: folderNotFound },
   status: missingFolder,
-});
+};
 
 // Where the Project's remote is, or that its folder is gone: a phone shows only the dot, which the row's name still says.
-function projectDetail(project: ProjectInfo, wide: boolean): ProjectDetail {
-  if (!project.folderExists) return missingFolderDetail(wide);
+function projectDetail(project: ProjectInfo): ProjectDetail {
+  if (!project.folderExists) return missingFolderDetail;
 
   return { value: project.remoteHost ?? 'No remote' };
 }
@@ -90,28 +89,13 @@ type ProjectRowProps = {
   onOpen: (name: string) => void;
 };
 
-function ProjectRow(props: ProjectRowProps): React.JSX.Element {
-  return (
-    <>
-      <SizeClass only="wide">
-        <ProjectRowItem {...props} wide />
-      </SizeClass>
-      <SizeClass only="compact">
-        <ProjectRowItem {...props} wide={false} />
-      </SizeClass>
-    </>
-  );
-}
-
 // One line at every width: the folder path sits only on the Project's own page.
-function ProjectRowItem(
-  props: ProjectRowProps & { wide: boolean },
-): React.JSX.Element {
+function ProjectRow(props: ProjectRowProps): React.JSX.Element {
   return (
     <GroupedListItem
       icon="folder"
       label={props.project.name}
-      {...projectDetail(props.project, props.wide)}
+      {...projectDetail(props.project)}
       onPress={() => props.onOpen(props.project.name)}
     />
   );

@@ -13,6 +13,7 @@ import {
   useState,
 } from 'react';
 import { Platform } from 'react-native';
+import { useSizeClassValue } from '../../generic/use-size-class/use-size-class-value';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import {
   type ScrollFadeListProps,
@@ -90,11 +91,12 @@ interface FrameSize {
   style?: { height: number };
 }
 
-// As tall as the content, up to the cap; with no cap the frame fills its parent.
+// As tall as the content, up to the window's size class's cap; with no cap the frame fills its parent.
 function useFrameSize(
   list: RefObject<LegendListRef | null>,
-  maxHeight: number | undefined,
+  cap: ScrollFadeListProps<unknown>['maxHeight'],
 ): FrameSize {
+  const maxHeight = useSizeClassValue(cap);
   const length = useContentLength(list, maxHeight !== undefined);
 
   if (maxHeight === undefined) return { className: 'min-h-0 flex-1' };

@@ -80,30 +80,38 @@ export function SessionListView(
   return <SessionsLayout {...props} />;
 }
 
-// While loading, a wide sidebar shows the loading rows alone; a phone shows them in the list, under its header, so its list stays mounted.
+/*
+ * While loading, a wide sidebar shows the loading rows alone; a phone shows them in the list, under its header.
+ * The list stays mounted throughout, hidden on a wide window until it has loaded.
+ */
 function SessionsContent(props: SessionListViewProps): React.JSX.Element {
   // A failed first load keeps the loading rows: the toast says why, and the queries retry when the Connection reopens.
   const loading = props.loadState !== 'ready';
 
   return (
     <>
-      <SizeClass only="wide">
-        <WideSessionsContent {...props} loading={loading} />
-      </SizeClass>
-      <SizeClass only="compact">
+      {loading && <WideLoading layout={props.layout} />}
+      <View
+        className={loading ? 'flex-1 wide:hidden' : 'flex-1'}
+        style={fillStyle}
+      >
         <SessionsListContent {...props} loading={loading} />
-      </SizeClass>
+      </View>
     </>
   );
 }
 
-function WideSessionsContent(
-  props: SessionListViewProps & { loading: boolean },
+function WideLoading(
+  props: Pick<SessionListViewProps, 'layout'>,
 ): React.JSX.Element {
-  if (props.loading) return <SessionsLoading layout={props.layout} />;
-
-  return <SessionsListContent {...props} loading={false} />;
+  return (
+    <SizeClass only="wide">
+      <SessionsLoading layout={props.layout} />
+    </SizeClass>
+  );
 }
+
+const fillStyle = { minHeight: 0 };
 
 // Wide, New Session sits in the header row; on an iOS phone, beside the search bar.
 function NewSessionControl({
@@ -137,7 +145,7 @@ function SessionsLayout(props: SessionListViewProps): React.JSX.Element {
     <Screen
       edges={['bottom']}
       className="relative flex-1 bg-content wide:bg-transparent"
-      style={{ minHeight: 0 }}
+      style={fillStyle}
     >
       <SessionsContent {...props} />
       <NewSessionControl onNewSession={props.onNewSession} />

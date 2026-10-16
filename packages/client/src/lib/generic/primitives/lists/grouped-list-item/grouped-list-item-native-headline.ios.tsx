@@ -7,7 +7,7 @@ import {
   rowHasHeadlineAction,
   rowActionAccessibility,
 } from './grouped-list-item-accessibility';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 import { hasLeadingSlot } from './grouped-list-item-styles';
 import { RowTitles } from './grouped-list-item-titles';
 import { NativeRowLeading } from './native-row';
@@ -16,7 +16,7 @@ import { NativeRowLeading } from './native-row';
  * The row's icon and titles as one Label: the List sizes the icon to the title's text style, starts
  * every title at one edge whatever each glyph's width, and starts the separator under the title.
  */
-export function RowHeadline(props: GroupedListItemProps): React.JSX.Element {
+export function RowHeadline(props: ResolvedItemProps): React.JSX.Element {
   const label = <HeadlineLabel {...props} />;
 
   if (!rowHasHeadlineAction(props)) return label;
@@ -31,7 +31,7 @@ export function RowHeadline(props: GroupedListItemProps): React.JSX.Element {
   );
 }
 
-function HeadlineLabel(props: GroupedListItemProps): React.JSX.Element {
+function HeadlineLabel(props: ResolvedItemProps): React.JSX.Element {
   return (
     <Label
       icon={hasLeadingSlot(props) ? <NativeRowLeading {...props} /> : undefined}

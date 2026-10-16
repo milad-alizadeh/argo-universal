@@ -11,7 +11,6 @@ import { mutedTextClassName } from './status-surface';
 
 interface StepProps {
   entry: PlanEntry;
-  wide: boolean;
 }
 
 const spinnerProps = {
@@ -33,30 +32,34 @@ function StepIndicator({ entry }: { entry: PlanEntry }): JSX.Element {
   return <IdleStepIndicator completed={entry.status === 'completed'} />;
 }
 
-function isStepMuted({ entry, wide }: StepProps): boolean {
-  return entry.status === 'completed' || (!wide && entry.status === 'pending');
-}
+// Done steps are muted; a phone mutes the pending ones too, as a wide window draws them at full strength.
+const stepTextClassName: Record<PlanEntry['status'], string | undefined> = {
+  completed: mutedTextClassName,
+  pending: `${mutedTextClassName} wide:text-foreground`,
+  in_progress: undefined,
+  cancelled: undefined,
+};
 
-function StepText({ entry, wide }: StepProps): JSX.Element {
-  const muted = isStepMuted({ entry, wide });
-
+function StepText({ entry }: StepProps): JSX.Element {
   return (
     <Text
       selectable={false}
       role="body"
-      className={cn('select-none flex-1 min-w-0', muted && mutedTextClassName)}
+      className={cn(
+        'select-none flex-1 min-w-0',
+        stepTextClassName[entry.status],
+      )}
     >
       {entry.content}
     </Text>
   );
 }
 
-function PlanStep({ entry, wide }: StepProps): JSX.Element {
-  const active = wide && entry.status === 'in_progress';
-
+// A wide window marks the running step with a tint.
+function PlanStep({ entry }: StepProps): JSX.Element {
   const className = cn(
     'flex-row items-start px-4 wide:pl-1 wide:pr-0.5 py-2 gap-2.5 wide:gap-1.5',
-    active && 'rounded-md bg-foreground/5',
+    entry.status === 'in_progress' && 'wide:rounded-md wide:bg-foreground/5',
   );
 
   return (
@@ -64,22 +67,21 @@ function PlanStep({ entry, wide }: StepProps): JSX.Element {
       <View className="h-6 wide:h-5 shrink-0 justify-center">
         <StepIndicator entry={entry} />
       </View>
-      <StepText entry={entry} wide={wide} />
+      <StepText entry={entry} />
     </View>
   );
 }
 
 interface StepsListProps {
   entries: PlanEntry[];
-  wide: boolean;
 }
 
-function StepsList({ entries, wide }: StepsListProps): JSX.Element {
+function StepsList({ entries }: StepsListProps): JSX.Element {
   return (
-    <View className={wide ? 'px-1 pb-2' : 'pb-1'}>
+    <View className="pb-1 wide:px-1 wide:pb-2">
       {withOccurrenceKeys(entries, (entry) => entry.content).map(
         ({ item: entry, key }) => (
-          <PlanStep key={key} entry={entry} wide={wide} />
+          <PlanStep key={key} entry={entry} />
         ),
       )}
     </View>
@@ -87,17 +89,17 @@ function StepsList({ entries, wide }: StepsListProps): JSX.Element {
 }
 
 // A wide popover scrolls a long plan within its height; a phone's sheet scrolls itself.
-export function PlanSteps({ entries }: { entries: PlanEntry[] }): JSX.Element {
+export function PlanSteps({ entries }: StepsListProps): JSX.Element {
+  const steps = <StepsList entries={entries} />;
+
   return (
     <>
       <SizeClass only="wide">
         <ScrollView style={{ maxHeight: maximumPlanStepsHeight }}>
-          <StepsList entries={entries} wide />
+          {steps}
         </ScrollView>
       </SizeClass>
-      <SizeClass only="compact">
-        <StepsList entries={entries} wide={false} />
-      </SizeClass>
+      <SizeClass only="compact">{steps}</SizeClass>
     </>
   );
 }

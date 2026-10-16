@@ -42,32 +42,27 @@ function PlanCompletion({ entries }: PlanEntriesProps): JSX.Element {
   );
 }
 
-function PlanPopoverHeading({
-  entries,
-  windowWide,
-}: {
-  entries: PlanEntry[];
-  windowWide: boolean;
-}): JSX.Element {
+function PlanPopoverHeading({ entries }: PlanEntriesProps): JSX.Element {
   return (
     <View className="px-4 py-3 gap-1.5">
       <PlanHeading />
-      {windowWide && <PlanCompletion entries={entries} />}
+      <SizeClass only="wide">
+        <PlanCompletion entries={entries} />
+      </SizeClass>
     </View>
   );
 }
 
-// A wide window heads the steps with the plan's progress; a narrow web window with its title alone.
+// A wide window heads the steps with the plan's progress; a narrow web window with its title alone, as a phone's sheet carries its own.
 export function PlanPopoverContent({ entries }: PlanEntriesProps): JSX.Element {
+  const heading = <PlanPopoverHeading entries={entries} />;
+
   return (
     <View>
-      <SizeClass only="wide">
-        <PlanPopoverHeading entries={entries} windowWide />
-      </SizeClass>
-      {Platform.OS === 'web' && (
-        <SizeClass only="compact">
-          <PlanPopoverHeading entries={entries} windowWide={false} />
-        </SizeClass>
+      {Platform.OS === 'web' ? (
+        heading
+      ) : (
+        <SizeClass only="wide">{heading}</SizeClass>
       )}
       <PlanSteps entries={entries} />
     </View>

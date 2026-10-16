@@ -6,7 +6,6 @@ import {
 } from '#features/agents';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { AgentAction } from './agent-detail-actions';
 import { AgentLinks } from './agent-links';
 
@@ -42,26 +41,10 @@ function VersionRow(props: AgentDetailViewProps): React.JSX.Element | null {
   if (!props.agent.version) return null;
 
   return (
-    <>
-      <SizeClass only="wide">
-        <VersionItem {...props} wide />
-      </SizeClass>
-      <SizeClass only="compact">
-        <VersionItem {...props} wide={false} />
-      </SizeClass>
-    </>
-  );
-}
-
-function VersionItem({
-  wide,
-  ...props
-}: AgentDetailViewProps & { wide: boolean }): React.JSX.Element {
-  return (
     <GroupedListItem
       label="Version"
       value={`v${props.agent.version}`}
-      accessory={versionAccessory(props, wide)}
+      accessory={{ compact: undefined, wide: versionAccessory(props) }}
     />
   );
 }
@@ -77,9 +60,8 @@ function AboutRow(props: {
 
 const versionAccessory = (
   props: AgentDetailViewProps,
-  wide: boolean,
 ): React.JSX.Element | undefined =>
-  wide && showsUpdate(props) ? <AgentAction {...props} /> : undefined;
+  showsUpdate(props) ? <AgentAction {...props} /> : undefined;
 
 const showsUpdate = (props: AgentDetailViewProps): boolean =>
   props.agent.status === 'update' || openUpdate(props.installation);
