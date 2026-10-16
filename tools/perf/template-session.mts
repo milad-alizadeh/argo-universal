@@ -1,6 +1,4 @@
 import {
-  AgentsListInput,
-  AgentsListOutput,
   ProjectsListOutput,
   SessionListInput,
   SessionListOutput,
@@ -24,9 +22,9 @@ const procedures = {
     output: ProjectsListOutput,
   },
   agents: {
-    path: 'agents.list',
-    input: AgentsListInput,
-    output: AgentsListOutput,
+    path: 'agents.servers',
+    input: z.object({}),
+    output: z.array(z.object({ id: z.string() })),
   },
   sessions: {
     path: 'session.list',
@@ -98,11 +96,11 @@ async function firstProjectId(httpUrl: string): Promise<string> {
 
 async function availableAgent(httpUrl: string): Promise<string> {
   const agents = await query(httpUrl, procedures.agents);
-  const agent = agents.find((entry) => entry.availability === 'available');
+  const agent = agents[0];
 
   if (!agent) throw new Error('The fixture Server has no available Agent');
 
-  return agent.agent;
+  return agent.id;
 }
 
 async function settled(httpUrl: string): Promise<true | undefined> {

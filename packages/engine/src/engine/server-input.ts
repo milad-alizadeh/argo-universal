@@ -1,6 +1,6 @@
 import type { AnyActorRef } from 'xstate';
-import type { RegistryActor } from '../agents';
 import type { HttpServerOptions } from './http-server';
+import { requireRegistry } from './registry-input';
 import {
   openDatabaseOf,
   requireDatabaseWriter,
@@ -63,11 +63,3 @@ function serverConfiguration(
     notificationOptions: context.notificationOptions,
   };
 }
-
-const requireRegistry = (system: AnyActorRef['system']): RegistryActor => {
-  const actor = system.get('registry');
-
-  if (!actor) throw new Error('Registry is not running');
-
-  return actor;
-};

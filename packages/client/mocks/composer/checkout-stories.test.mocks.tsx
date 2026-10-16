@@ -1,4 +1,4 @@
-import { type AgentInfo } from '@repo/contracts';
+import { type AgentServer } from '@repo/contracts';
 import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
 import {
@@ -14,13 +14,13 @@ import {
 } from './composer-test-contract.test.mocks';
 import { firstAgent } from './recorded-catalog.test.mocks';
 
-export function phoneStatusControls(agent: Pick<AgentInfo, 'agent'>): Story {
+export function phoneStatusControls(agent: Pick<AgentServer, 'id'>): Story {
   return {
     args: {
       configuration: {
         agents: newSessionCatalogs.bothAvailable,
-        agent: agent.agent,
-        configOptions: recordedSessionOptions(agent.agent),
+        agent: agent.id,
+        configOptions: recordedSessionOptions(agent.id),
         onConfigChange: fn(),
         checkout: {
           branch: 'main',
@@ -55,8 +55,8 @@ export function createdCheckoutIsReadOnly(width: number): Story {
     args: {
       configuration: {
         agents: newSessionCatalogs.bothAvailable,
-        agent: firstAgent.agent,
-        configOptions: recordedSessionOptions(firstAgent.agent),
+        agent: firstAgent.id,
+        configOptions: recordedSessionOptions(firstAgent.id),
         onConfigChange: fn(),
         checkout: {
           branch: 'main',

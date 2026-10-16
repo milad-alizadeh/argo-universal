@@ -1,5 +1,5 @@
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
-import type { AgentsListOutput } from '@repo/contracts';
+import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { useCallback, useMemo } from 'react';
 import type { SessionsLayout } from '../../state/sessions-layout';
@@ -81,7 +81,7 @@ export interface ListRows {
   animating: boolean;
   data: SessionsListEntry[];
   extraData: {
-    agents: AgentsListOutput;
+    agents: AgentServer[];
     collapsed: ReadonlySet<string>;
     closing: ReadonlySet<string>;
     selectedSessionId?: string;

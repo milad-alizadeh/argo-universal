@@ -1,4 +1,4 @@
-import type { AgentsListOutput, ProjectsListOutput } from '@repo/contracts';
+import type { AgentServer, ProjectsListOutput } from '@repo/contracts';
 import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -23,7 +23,7 @@ export interface SessionListViewProps {
   loadMoreFailed: boolean;
   isFetchingNextPage: boolean;
   projects: ProjectsListOutput;
-  agents: AgentsListOutput;
+  agents: AgentServer[];
   sessions: SessionInfo[];
   query: string;
   // The phone's header search and a wide window's title row set it.

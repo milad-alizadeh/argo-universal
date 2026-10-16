@@ -1,6 +1,6 @@
 import { writeLog } from '@repo/machine-log';
 import type { AnyActorRef, InputFrom } from 'xstate';
-import type { RegistryInput, SyncSupervisorInput } from '../agents';
+import type { SyncSupervisorInput } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
 import {
@@ -11,13 +11,12 @@ import {
 import type { writerMachine } from '../storage';
 import type { CloseAcpResourcesInput } from './agent-cleanup';
 import type { RecoveryInput } from './engine-recovery';
+import { requireRegistry } from './registry-input';
 import {
   openDatabaseOf,
   requireDatabaseWriter,
   type EngineContext,
 } from './setup.machine';
-
-export { serverInput } from './server-input';
 
 export const recoveryInput = ({
   context,
@@ -60,43 +59,40 @@ export const syncInput = ({
 type SessionsSource = {
   context: Pick<
     EngineContext,
-    'database' | 'home' | 'now' | 'createId' | 'acpResources' | 'installations'
+    | 'database'
+    | 'home'
+    | 'now'
+    | 'createId'
+    | 'acpResources'
+    | 'installationPorts'
   >;
 };
 
 export const sessionsInput = ({
   context,
-}: SessionsSource): OpenSessionsInput => ({
+  self,
+}: SessionsSource & {
+  self: Pick<AnyActorRef, 'system'>;
+}): OpenSessionsInput => ({
   database: openDatabaseOf(context),
   runtimeDirectory: context.home,
   now: context.now,
   createId: context.createId,
   acpResources: context.acpResources,
-  isAgentSetupBusy: (agentId) => context.installations.isBusy(agentId),
+  registry: requireRegistry(self.system),
+  installationPorts: context.installationPorts,
 });
+
+export { serverInput } from './server-input';
 
 export const cleanupInput = ({
   context,
   self,
 }: {
-  context: Pick<EngineContext, 'acpResources' | 'server' | 'installations'>;
+  context: Pick<EngineContext, 'acpResources' | 'installations'>;
   self: Pick<AnyActorRef, 'system'>;
 }): CloseAcpResourcesInput => ({
   resources: context.acpResources,
-  server: context.server,
   installations: context.installations,
   sessions: findMachineActor(self.system, openSessionsId, openSessionsMachine),
-});
-
-export const registryInput = ({
-  context,
-  self,
-}: {
-  context: Pick<EngineContext, 'database' | 'fetchAgents' | 'now'>;
-  self: Pick<AnyActorRef, 'system'>;
-}): RegistryInput => ({
-  database: openDatabaseOf(context),
-  writer: requireDatabaseWriter(self.system),
-  fetchAgents: context.fetchAgents,
-  now: context.now,
 });

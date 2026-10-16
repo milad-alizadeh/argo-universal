@@ -25,13 +25,16 @@ export function rowClasses(
   return cn(
     'relative min-h-13 flex-row items-center gap-3 px-4 py-3 bg-card wide:min-h-11 web:select-none web:**:select-none',
     controlClasses(props),
-    sizeClasses(props),
+    rowSizeClasses(props),
     stateClasses(props, sidebar),
     cornerClasses(place.corners),
     edgeClasses(props, sidebar, place),
     overlayClasses(props, place.overlay),
   );
 }
+
+const rowSizeClasses = (props: ResolvedItemProps): string =>
+  cn(sizeClasses(props), props.variant === 'card' && 'py-3 wide:py-3');
 
 // A row with a control below, such as Effort, pads 8 all round like its neighbours.
 const overlayClasses = (

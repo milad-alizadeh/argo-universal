@@ -74,7 +74,7 @@ export function preservesComposer(
   return {
     args: {
       ...composerProps({
-        initialAgent: catalog.agent,
+        initialAgent: catalog.id,
         sessionStarted: true,
         running: true,
         draft: { text: keptDraft, attachments: [] },

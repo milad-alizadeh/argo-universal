@@ -1,6 +1,6 @@
 # Argo
 
-Argo is a cockpit for coding agents. It runs Claude and Codex Sessions on your machine and shows them on desktop, web, and phone.
+Argo is a cockpit for coding agents. It runs Sessions with any Agent from the ACP Registry and shows them on desktop, web, and phone.
 
 ## Places and processes
 
@@ -133,7 +133,7 @@ The Agent's own live session behind a Session, identified by the Agent's session
 _Avoid_: Vendor session, upstream session, Agent connection, process
 
 **Registry**:
-The public ACP Registry that lists the Agents that Argo can run; Argo's Agent catalog is synced from it.
+The public ACP Registry of Agents that Argo can run, and the copy the Server keeps for use offline.
 _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), catalog (for the upstream list)
 
 **Stop reason**:

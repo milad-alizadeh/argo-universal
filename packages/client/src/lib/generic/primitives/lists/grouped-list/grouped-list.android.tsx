@@ -9,6 +9,7 @@ import { useWide } from '#lib/generic/use-wide/use-wide';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
 import type { GroupedListProps } from './grouped-list-props';
+import { compactGroupedListGap } from './grouped-list-spacing';
 import { GroupedList as WebGroupedList } from './grouped-list.tsx';
 
 const gutter = 16;
@@ -71,7 +72,11 @@ function SectionsColumn(props: GroupedListProps): React.JSX.Element {
   const style = useColumnPadding(props.variant);
 
   return (
-    <Column spacing={sectionGap} style={style} modifiers={[fillMaxWidth()]}>
+    <Column
+      spacing={props.gap === 'sm' ? compactGroupedListGap : sectionGap}
+      style={style}
+      modifiers={[fillMaxWidth()]}
+    >
       {props.children}
     </Column>
   );

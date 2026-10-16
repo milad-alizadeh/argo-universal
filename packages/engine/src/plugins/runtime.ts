@@ -1,3 +1,5 @@
+import type { PluginFailure } from '@repo/contracts/plugins/runtime';
+import { PluginFailures } from './failures';
 import { HostConnection } from './host-connection';
 import { RuntimePlugin } from './runtime-plugin';
 import {
@@ -7,9 +9,14 @@ import {
   type HostMessage,
 } from './runtime-protocol';
 
-type PluginLocation = { entry: Omit<PluginEntry, 'generation'>; dev: boolean };
+type PluginLocation = {
+  entry: Omit<PluginEntry, 'generation'>;
+  dev: boolean;
+  name?: string;
+};
 
 export class PluginRuntime {
+  private readonly failures = new PluginFailures();
   private readonly plugins = new Map<string, RuntimePlugin>();
   private readonly host: HostConnection;
   private hostError: string | null = null;
@@ -31,25 +38,40 @@ export class PluginRuntime {
     return this.hostError;
   }
 
+  public watchFailures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
+    return this.failures.watch(signal);
+  }
+
   activate(location: PluginLocation): Promise<PluginStatus> {
     if (this.closed) throw new Error('Plugin runtime is closed');
     const { pluginId } = location.entry;
     let plugin = this.plugins.get(pluginId);
 
     if (!plugin) {
-      plugin = new RuntimePlugin({
-        ...location,
-        host: this.host,
-        log: this.log,
-      });
+      plugin = this.createPlugin(location);
       this.plugins.set(pluginId, plugin);
     }
 
     return plugin.activate();
   }
 
+  private createPlugin(location: PluginLocation): RuntimePlugin {
+    const identity = {
+      pluginId: location.entry.pluginId,
+      name: location.name ?? location.entry.pluginId,
+    };
+
+    return new RuntimePlugin({
+      ...location,
+      host: this.host,
+      log: this.log,
+      changed: (status): void => this.failures.update(identity, status),
+    });
+  }
+
   async close(): Promise<void> {
     this.closed = true;
+    this.failures.close();
     await Promise.all(
       [...this.plugins.values()].map((plugin) => plugin.close()),
     );

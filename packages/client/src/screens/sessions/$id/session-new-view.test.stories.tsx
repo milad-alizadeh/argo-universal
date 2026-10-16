@@ -28,8 +28,6 @@ const messageLabel = 'Message';
 
 const failedStartMessage = 'Agent exited with status 1';
 
-const setupStepText = 'Run `claude login` on the Server, then check again.';
-
 const projectLabel = `Project: ${exampleProject.name}`;
 
 const meta = { ...sessionNewViewTestMeta, title: 'Tests/SessionNewView' };
@@ -86,23 +84,6 @@ export const Reconnecting: Story = {
         await canvas.findByRole('img', { name: 'Reconnecting' }),
       ).toBeVisible();
       await expect(canvas.getByText('Reconnecting…')).toBeVisible();
-      await expect(
-        canvas.getByRole('button', { name: sendLabel }),
-      ).toBeDisabled();
-    }),
-};
-
-export const NeedsSetup: Story = {
-  args: readyArgs({
-    canOpen: false,
-    draft: typedDraft,
-    setupStep: setupStepText,
-  }),
-  play: async ({ canvas }) =>
-    eachLayout(async () => {
-      await expect(await canvas.findByRole('alert')).toHaveTextContent(
-        setupStepText,
-      );
       await expect(
         canvas.getByRole('button', { name: sendLabel }),
       ).toBeDisabled();

@@ -73,7 +73,7 @@ async function seedSessions(
   count: number,
 ): Promise<void> {
   const projectId = await firstProjectId(page, httpUrl);
-  const { agent } = await readAgent(page, httpUrl, 1);
+  const { id: agent } = await readAgent(page, httpUrl, 1);
 
   for (let index = 1; index <= count; index += 1)
     await startSession(page, httpUrl, {

@@ -27,8 +27,8 @@ export function stopPrecedence(
       onStop: fn(),
       configuration: {
         agents: newSessionCatalogs.bothAvailable,
-        agent: catalog.agent.agent,
-        configOptions: recordedSessionOptions(catalog.agent.agent),
+        agent: catalog.agent.id,
+        configOptions: recordedSessionOptions(catalog.agent.id),
         onConfigChange: fn(),
         checkout: { branch: 'main', newWorktree: false },
         turnRunning: true,

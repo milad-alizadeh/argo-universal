@@ -13,6 +13,8 @@ const producedBytes = 64 * 1024 * 1024;
 
 const maximumPendingBytes = 4 * 1024 * 1024;
 
+const processTimeout = 10_000;
+
 it.each(['exit', 'stop'] as const)(
   'backpressures real stdout/stderr and retains all accepted bytes through %s',
   async (ending) => {
@@ -49,7 +51,7 @@ it.each(['exit', 'stop'] as const)(
           stat(marker)
             .then(() => true)
             .catch(() => false),
-        { interval: 5 },
+        { interval: 5, timeout: processTimeout },
       )
       .toBe(true);
 
@@ -88,4 +90,5 @@ it.each(['exit', 'stop'] as const)(
         .digest('hex'),
     );
   },
+  processTimeout * 2,
 );

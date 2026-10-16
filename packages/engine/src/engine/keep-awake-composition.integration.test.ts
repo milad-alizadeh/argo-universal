@@ -137,7 +137,6 @@ it('stopping the Engine actor releases an owned assertion even before graceful S
   expect(release).toHaveBeenCalledOnce();
   // Abrupt actor stop skips Engine shutdown; finish real resources for this test.
   await host.engine.getSnapshot().context.server?.close();
-  await host.engine.getSnapshot().context.server?.closeSetup();
   await host.engine.getSnapshot().context.acpResources.shutdown();
   await host.engine.getSnapshot().context.installations.shutdown();
   host.database.$client.close();

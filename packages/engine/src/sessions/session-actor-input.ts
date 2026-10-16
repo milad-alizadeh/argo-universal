@@ -1,4 +1,4 @@
-import { resolveInstalledAgentLaunch } from '../agents';
+import { resolveSavedAgentLaunch } from '../agents';
 import { readProjectPath } from '../projects';
 import type { AcpSessionDependencies } from './acp/acp-lifetime';
 import type {
@@ -19,10 +19,13 @@ const createAcpSessionDependencies = (
   context: OpenSessionsInput,
 ): AcpSessionDependencies => ({
   resources: context.acpResources,
-  resolveLaunch: resolveInstalledAgentLaunch(
-    context.database,
-    context.runtimeDirectory,
-  ),
+  resolveLaunch: resolveSavedAgentLaunch({
+    database: context.database,
+    home: context.runtimeDirectory,
+    registry: context.registry,
+    resources: context.acpResources,
+    ports: context.installationPorts,
+  }),
   projectPath: (id) => readProjectPath(context.database, id),
 });
 

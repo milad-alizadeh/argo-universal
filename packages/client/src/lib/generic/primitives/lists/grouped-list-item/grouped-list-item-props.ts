@@ -12,6 +12,8 @@ import {
 export interface ResolvedItemProps {
   label: string;
   value?: string;
+  labelDetail?: string;
+  footer?: ReactElement;
   /*
    * A second line under the title, such as a folder's path; code draws it in the mono face.
    * numberOfLines caps it, ending in an ellipsis, such as an Agent's description in a list.
@@ -53,8 +55,7 @@ export interface ResolvedItemProps {
   selected?: boolean;
   /*
    * The row is one choice of a set, such as an Agent in its picker, and `selected` draws the
-   * platform's mark: a leading check in a desktop popover, a trailing check in a list, and
-   * Material's radio button on an Android phone.
+   * platform's mark: a trailing check, or Material's radio button on an Android phone.
    */
   choice?: boolean;
   needsAttention?: boolean;
@@ -75,32 +76,36 @@ export interface ResolvedItemProps {
    * sm: a compact row on a wide window, 36 tall, such as an Elicitation's choice in the Composer's tray.
    */
   size?: 'sm' | 'lg';
+  // A card with a brand mark, top-aligned actions and spaced title and description.
+  variant?: 'card';
 }
 
 // A row as callers give it: its value and accessory may differ by size class, such as a value only a wide row has room for.
 export interface GroupedListItemProps extends Omit<
   ResolvedItemProps,
-  'value' | 'accessory'
+  'value' | 'accessory' | 'footer'
 > {
   value?: SizeClassValue<string | undefined>;
   accessory?: SizeClassValue<ReactElement | undefined>;
+  footer?: SizeClassValue<ReactElement | undefined>;
 }
 
 // Whether the row is the same at every size class, so it need not follow the window.
 export function isPlainItem(
   props: GroupedListItemProps,
 ): props is ResolvedItemProps {
-  return !isPerSizeClass(props.value) && !isPerSizeClass(props.accessory);
+  return ![props.value, props.accessory, props.footer].some(isPerSizeClass);
 }
 
 export function resolvedItem(
-  { value, accessory, ...props }: GroupedListItemProps,
+  { value, accessory, footer, ...props }: GroupedListItemProps,
   sizeClass: SizeClass,
 ): ResolvedItemProps {
   return {
     ...props,
     value: sizeClassValue(value, sizeClass),
     accessory: sizeClassValue(accessory, sizeClass),
+    footer: sizeClassValue(footer, sizeClass),
   };
 }
 
@@ -114,7 +119,13 @@ function distinctStatus(props: ResolvedItemProps): string | undefined {
 export function groupedListItemName(props: ResolvedItemProps): string {
   if (props.accessibilityLabel) return props.accessibilityLabel;
 
-  return [props.label, props.subtitle?.text, props.value, distinctStatus(props)]
+  return [
+    props.label,
+    props.labelDetail,
+    props.subtitle?.text,
+    props.value,
+    distinctStatus(props),
+  ]
     .filter(Boolean)
     .join(', ');
 }

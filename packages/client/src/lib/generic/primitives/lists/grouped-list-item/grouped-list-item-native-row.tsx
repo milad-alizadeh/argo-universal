@@ -25,6 +25,11 @@ const gutter = 16;
 // SwiftUI spaces a row's parts itself; Material spaces a list item's slots by 16.
 const rowSpacing = ios ? undefined : gutter;
 
+const cardSpacing = 12;
+
+const contentSpacing = (props: ResolvedItemProps): number | undefined =>
+  props.variant === 'card' ? cardSpacing : rowSpacing;
+
 const androidRowHeight = 56;
 
 const androidRowPadding = 8;
@@ -41,8 +46,8 @@ export function RowContent(props: ResolvedItemProps): React.JSX.Element {
 
   return (
     <Row
-      alignment="center"
-      spacing={rowSpacing}
+      alignment={props.variant === 'card' ? 'start' : 'center'}
+      spacing={contentSpacing(props)}
       style={{ opacity: props.disabled ? disabledOpacity : 1 }}
       modifiers={modifiers}
     >

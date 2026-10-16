@@ -16,10 +16,10 @@ import {
   type TerminalSignInProps,
   serverSilentMessage,
 } from '#features/sessions';
+import { useContentWide } from '#lib/product/content-layout';
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
-import { Text } from '#primitives/display/text';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { composerDraftProps } from './new-session-draft';
 import { NewSessionFeed } from './new-session-feed';
@@ -46,9 +46,10 @@ export interface ReadySessionNewViewProps {
   opening: boolean;
   // The sent first prompt and Working, drawn in the Feed while the Session opens.
   starting?: StartingFeed;
-  // Why the chosen Agent can't start a Session, and how to set it up.
-  setupStep?: string;
-  // An attachment that couldn't be selected or uploaded.
+  /*
+   * Why the chosen Agent can't start a Session, and how to set it up.
+   * An attachment that couldn't be selected or uploaded.
+   */
   attachmentError?: string;
   attachmentErrorKey?: string;
   // Sign in or Retry after the Session failed to open; the Feed and Composer stay.
@@ -84,30 +85,8 @@ export function SessionNewView(props: SessionNewViewProps): React.JSX.Element {
 function NewSessionStartIn(props: ReadySessionNewViewProps): React.JSX.Element {
   return (
     <View className="w-full items-center pb-2">
-      <StartSessionIn
-        serverName={props.serverName}
-        serverConnected={props.connected}
-        projects={props.projects}
-        projectId={props.projectId}
-        onProjectChange={props.onProjectChange}
-        checkout={props.configuration.checkout}
-        disabled={props.opening}
-      />
+      <StartSessionIn {...startInProps(props)} />
     </View>
-  );
-}
-
-function SetupStepAlert({
-  setupStep,
-}: {
-  setupStep?: string;
-}): React.ReactNode {
-  if (setupStep === undefined) return null;
-
-  return (
-    <Text accessibilityRole="alert" className="w-full px-4 pb-2 text-danger">
-      {setupStep}
-    </Text>
   );
 }
 
@@ -141,11 +120,12 @@ const promptComposerProps = (
 function NewSessionComposer(
   props: ReadySessionNewViewProps,
 ): React.JSX.Element {
+  const wide = useContentWide();
+
   return (
     <>
       {/* A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off. */}
-      {!props.starting && <NewSessionStartIn {...props} />}
-      <SetupStepAlert setupStep={props.setupStep} />
+      {!wide && !props.starting && <NewSessionStartIn {...props} />}
       <PromptComposer {...props} />
     </>
   );
@@ -157,11 +137,36 @@ function ReadySessionNewView(
   return (
     <SessionLayout
       header={newSessionHeader}
-      feed={<NewSessionFeed starting={props.starting} />}
+      feed={<NewSessionContent {...props} />}
       composer={<NewSessionComposer {...props} />}
       panel={
         props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />
       }
+    />
+  );
+}
+
+const startInProps = (
+  props: ReadySessionNewViewProps,
+): React.ComponentProps<typeof StartSessionIn> => ({
+  agents: props.configuration.agents,
+  agent: props.configuration.agent,
+  onAgentChange: props.configuration.onAgentChange ?? (() => {}),
+  onAddAgents: props.configuration.onAddAgents ?? (() => {}),
+  serverName: props.serverName,
+  serverConnected: props.connected,
+  projects: props.projects,
+  projectId: props.projectId,
+  onProjectChange: props.onProjectChange,
+  checkout: props.configuration.checkout,
+  disabled: props.opening,
+});
+
+function NewSessionContent(props: ReadySessionNewViewProps): React.JSX.Element {
+  return (
+    <NewSessionFeed
+      starting={props.starting}
+      context={<NewSessionStartIn {...props} />}
     />
   );
 }

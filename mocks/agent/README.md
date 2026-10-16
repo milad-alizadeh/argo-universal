@@ -2,7 +2,7 @@
 
 `createScriptedAgent(scenario)` uses the official ACP SDK. Engine tests use it over in-memory streams. App E2E and process tests launch the same Agent over stdio.
 
-`scenarios.ts` contains the shared reply, image, cancellation, refused Session, Permission request, Elicitation, configuration and write-pressure scenarios. Reuse a named scenario before adding inline scenario data.
+`scenarios.ts` contains the shared reply, image, cancellation, refused Session, Permission request, Elicitation, configuration, Agent title and write-pressure scenarios. Reuse a named scenario before adding inline scenario data.
 
 ## Scenario data
 
@@ -23,9 +23,9 @@ Steps can send updates, request Permission or Elicitation, wait for cancellation
 
 `createScriptedAgentProcess` in the Engine mocks exposes the Agent through the ACP process port. Tests can observe launch requests, termination and process exit. The wire controller delivers raw frames through the same Agent for malformed-frame and coalesced-frame schedules.
 
-`createAgentMetadata` supplies identity fixture data. Test bootstraps seed saved command definitions; production code performs admission, resolution and ACP checks. There is no native fixture adapter.
+`createAgentMetadata` supplies identity fixture data. Test bootstraps seed `agent_servers` Registry rows; production code performs admission, resolution and launch. There is no native fixture adapter.
 
-App fixtures retain registered identities, metadata and availability. Their options select a scenario. The Engine, App, tRPC, Session, Feed, Writer, SQLite and Git remain real.
+App fixtures use the Registry ids `claude-acp` and `codex-acp`. Their options choose a scenario and whether the Agent starts installed. The Registry serves the scripted Agent as a compressed binary. The download port supplies files, timing and failures. The Engine, App, tRPC, Session, Feed, Writer, SQLite and Git remain real.
 
 Structural machine tests use symbolic actor results to walk transitions. These graph tests do not replace public integration journeys.
 

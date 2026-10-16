@@ -1,4 +1,8 @@
-import { newSessionProjects, serverInfo } from '@repo/mocks/app';
+import {
+  newSessionCatalogs,
+  newSessionProjects,
+  serverInfo,
+} from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -56,6 +60,10 @@ const meta = {
   component: StartSessionIn,
   render: (args): React.JSX.Element => <ChoosingProject {...args} />,
   args: {
+    agents: newSessionCatalogs.bothAvailable,
+    agent: newSessionCatalogs.bothAvailable[0]?.id ?? '',
+    onAgentChange: fn(),
+    onAddAgents: fn(),
     serverName: serverInfo.name,
     serverConnected: true,
     projects: newSessionProjects,

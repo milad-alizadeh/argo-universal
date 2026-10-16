@@ -5,15 +5,8 @@ import { query } from './server-query';
 
 const AgentsList = z.array(
   z.object({
-    availability: z.enum([
-      'available',
-      'not_installed',
-      'not_signed_in',
-      'unavailable',
-    ]),
-    agent: z.string(),
-    label: z.string(),
-    installStep: z.string().optional(),
+    id: z.string(),
+    name: z.string(),
   }),
 );
 
@@ -26,7 +19,7 @@ export function readAgents(
   return query({
     page,
     httpUrl,
-    procedure: 'agents.list',
+    procedure: 'agents.servers',
     input: {},
     output: AgentsList,
   });
@@ -40,7 +33,7 @@ export async function readAgent(
   const id = agentId(ordinal);
 
   const found = (await readAgents(page, httpUrl)).find(
-    (entry): boolean => entry.agent === id,
+    (entry): boolean => entry.id === id,
   );
 
   if (!found) throw new Error(`The Server has no Agent ${id}`);

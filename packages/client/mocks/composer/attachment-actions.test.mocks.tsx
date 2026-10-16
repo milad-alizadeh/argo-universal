@@ -40,7 +40,9 @@ export function withImages(width: number): Story {
           imageComposer({ ...props, draft: { text: '', attachments: [] } }),
         );
         await waitFor(() =>
-          expect(canvas.queryByRole('img')).not.toBeInTheDocument(),
+          expect(
+            canvas.queryByRole('img', { name: 'screenshot.png' }),
+          ).not.toBeInTheDocument(),
         );
         await expect(
           canvas.getByRole('button', { name: 'Send' }),

@@ -1,26 +1,50 @@
+import type { ACPAgent, ACPAgentRegistry } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import type { AgentIdentity } from '@repo/mocks/agent';
-import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 
-// Initial saved commands are fixture data; all admission and launch behavior is real.
+export const fixtureRegistry = (
+  identities: readonly AgentIdentity[],
+): ACPAgentRegistry => ({
+  version: '1.0.0',
+  extensions: [],
+  agents: identities.map(registryEntry),
+});
+
+const registryEntry = (identity: AgentIdentity): ACPAgent => ({
+  id: identity.agent,
+  name: identity.label,
+  version: '1.0.0',
+  license_url: 'https://example.org/license',
+  icon: identity.logo
+    ? `data:image/svg+xml,${encodeURIComponent(identity.logo)}`
+    : undefined,
+  description: 'Scripted ACP Agent',
+  distribution: {
+    binary: {
+      [`${process.platform}-${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}`]:
+        {
+          archive: 'https://example.org/agent',
+          cmd: './agent',
+        },
+    },
+  },
+});
+
+// Fixture data at the Registry boundary; production code admits and launches saved rows.
 export const seedAgentFixtures = (
   database: Database,
   identities: readonly AgentIdentity[],
 ): void => {
   const insert = database.$client.prepare(
-    'insert into agents (id, enabled, configuration) values (?, 1, ?) on conflict(id) do update set configuration = excluded.configuration',
+    'INSERT OR IGNORE INTO agent_servers (id) VALUES (?)',
   );
 
-  for (const identity of identities)
-    insert.run(
-      identity.agent,
-      JSON.stringify({
-        source: 'custom',
-        definition: {
-          name: identity.label,
-          ...scriptedAgentCommand('reply'),
-          env: [],
-        },
-      }),
-    );
+  for (const identity of identities) insert.run(identity.agent);
+
+  if (identities.length === 0) return;
+  database.$client
+    .prepare(
+      'INSERT INTO registry_cache (id, json, fetched_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET json = excluded.json, fetched_at = excluded.fetched_at',
+    )
+    .run(JSON.stringify(fixtureRegistry(identities)), Date.now());
 };

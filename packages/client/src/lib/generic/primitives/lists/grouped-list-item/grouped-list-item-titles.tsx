@@ -1,4 +1,4 @@
-import { Column } from '@expo/ui';
+import { Column, Row } from '@expo/ui';
 import { weight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
@@ -11,16 +11,18 @@ import { rowColor } from './grouped-list-item-text';
 // On Android the titles take the row's spare width, so the value and status trail them on the same line; iOS's Label does that itself.
 const titleModifiers = Platform.OS === 'ios' ? undefined : [weight(1)];
 
+const cardTitleGap = 4;
+
 export function RowTitles(props: ResolvedItemProps): React.JSX.Element {
   return (
     <Column
-      spacing={0}
+      spacing={props.variant === 'card' ? cardTitleGap : 0}
       modifiers={[
         ...(titleModifiers ?? []),
         ...rowHeadlineAccessibility(props),
       ]}
     >
-      <RowTitle {...props} />
+      <RowTitleLine {...props} />
       <RowSubtitle subtitle={props.subtitle} />
     </Column>
   );
@@ -37,5 +39,18 @@ function RowTitle(props: ResolvedItemProps): React.JSX.Element {
     >
       {props.label}
     </NativeText>
+  );
+}
+
+function RowTitleLine(props: ResolvedItemProps): React.JSX.Element {
+  return (
+    <Row spacing={4} alignment="center">
+      <RowTitle {...props} />
+      {props.labelDetail && (
+        <NativeText tone="muted" modifiers={rowColor('secondary')}>
+          {props.labelDetail}
+        </NativeText>
+      )}
+    </Row>
   );
 }

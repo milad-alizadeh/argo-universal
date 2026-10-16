@@ -9,6 +9,7 @@ import {
   useFrame,
   pluginPath,
   usePluginSections,
+  PluginErrorToasts,
   coreNavigationSections,
   type PluginSection,
   usePhoneDrawerWidth,
@@ -138,11 +139,11 @@ export function FrameNavigator(): React.JSX.Element {
   useNotifications(usePathname());
   const wide = useSizeClass() === 'wide';
   const plugins = usePluginSections();
-
   const frame = useNavigationFrame(wide, plugins);
 
   return (
     <Frame frame={frame}>
+      <PluginErrorToasts />
       <SectionsDrawer wide={wide} frame={frame} plugins={plugins} />
     </Frame>
   );

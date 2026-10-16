@@ -1,37 +1,29 @@
 import type { ReactElement } from 'react';
-import { Drill, type DrillProps } from '#primitives/overlays/drill';
-import { AgentChoices } from './agent-choices';
+import {
+  GroupedListItem,
+  type GroupedListItemProps,
+} from '#primitives/lists/grouped-list-item';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 
-interface AgentDrillProps {
-  configuration: ComposerConfigurationProps;
-  wide: boolean;
+type Props = { configuration: ComposerConfigurationProps; wide: boolean };
+
+export function AgentDrill(props: Props): ReactElement {
+  return <GroupedListItem {...agentRow(props)} />;
 }
 
-// The Agent row keeps its own choices: each Agent draws its registry icon and status, which Combobox options do not carry.
-export function AgentDrill(props: AgentDrillProps): ReactElement {
-  return (
-    <Drill {...agentRow(props)} title="Select Agent" contentScrolls>
-      {(close) => (
-        <AgentChoices configuration={props.configuration} onSelect={close} />
-      )}
-    </Drill>
-  );
-}
-
-function agentRow(
-  props: AgentDrillProps,
-): Pick<DrillProps, 'label' | 'value' | 'valueLeading'> {
-  const agent = props.configuration.agents.find(
-    (entry) => entry.agent === props.configuration.agent,
+const agentRow = ({ configuration, wide }: Props): GroupedListItemProps => {
+  const agent = configuration.agents.find(
+    ({ id }) => id === configuration.agent,
   );
 
   return {
     label: 'Agent',
-    value: agent?.label,
-    valueLeading: (
-      <AgentIcon agent={agent} role={props.wide ? 'control' : 'row'} />
-    ),
+    value: selectedName(configuration),
+    valueLeading: <AgentIcon agent={agent} role={wide ? 'control' : 'row'} />,
   };
-}
+};
+
+const selectedName = (configuration: ComposerConfigurationProps): string =>
+  configuration.agents.find(({ id }) => id === configuration.agent)?.name ??
+  configuration.agent;

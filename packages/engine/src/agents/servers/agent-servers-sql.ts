@@ -97,3 +97,15 @@ const parseServerRow = (
 
   return parsed.data;
 };
+
+export const hasAgentServer = (database: Database, id: string): boolean =>
+  database
+    .select({ id: agentServers.id })
+    .from(agentServers)
+    .where(eq(agentServers.id, id))
+    .get() !== undefined;
+
+export const requireAgentServer = (database: Database, id: string): void => {
+  if (!hasAgentServer(database, id))
+    throw new Error(`Agent "${id}" is not installed.`);
+};

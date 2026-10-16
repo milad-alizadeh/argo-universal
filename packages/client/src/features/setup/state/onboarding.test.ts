@@ -7,9 +7,9 @@ import {
   stepMarks,
 } from './onboarding';
 
-const signedIn: AgentStep = { status: 'done', agentName: 'Claude' };
+const signedIn: AgentStep = { status: 'done' };
 
-const noAgent: AgentStep = { status: 'not-found', checking: false };
+const noAgent: AgentStep = { status: 'not-installed' };
 
 const connected: GitHubStep = { status: 'signed-in', login: 'octocat' };
 
@@ -56,45 +56,10 @@ describe('stepMarks', () => {
 });
 
 describe('agentStep', () => {
-  const claude = { name: 'Claude' };
-  it.each<{
-    case: string;
-    agents: { name: string }[] | undefined;
-    checkingAgain: boolean;
-    expected: AgentStep | undefined;
-  }>([
-    {
-      case: 'is done with the first Agent that runs Sessions',
-      agents: [{ name: 'Codex' }, claude],
-      checkingAgain: false,
-      expected: { status: 'done', agentName: 'Codex' },
-    },
-    {
-      case: 'finds no Agent when none runs Sessions',
-      agents: [],
-      checkingAgain: false,
-      expected: noAgent,
-    },
-    {
-      // Saying no Agent was found before the list arrives would be wrong.
-      case: 'waits while the Agents are still loading',
-      agents: undefined,
-      checkingAgain: false,
-      expected: undefined,
-    },
-    {
-      case: 'is checking while the Server looks again',
-      agents: [],
-      checkingAgain: true,
-      expected: { status: 'not-found', checking: true },
-    },
-    {
-      case: 'stays done while the Server looks again',
-      agents: [claude],
-      checkingAgain: true,
-      expected: { status: 'done', agentName: 'Claude' },
-    },
-  ])('$case', ({ agents, checkingAgain, expected }) => {
-    expect(agentStep(agents, checkingAgain)).toEqual(expected);
+  it.each([
+    { agents: [], status: 'not-installed' },
+    { agents: [{ id: 'saved-agent' }], status: 'done' },
+  ])('is $status for saved choices', ({ agents, status }) => {
+    expect(agentStep(agents)).toEqual({ status });
   });
 });

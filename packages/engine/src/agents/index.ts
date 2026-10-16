@@ -1,15 +1,5 @@
 export * from './acp';
 
-export {
-  loginMachine,
-  type LoginMachineInput,
-  type LoginEvent,
-} from './login-machine';
-
-export { createAgentLogins } from './login';
-
-export { AgentLoginInUseError } from './login-error';
-
 export { reportsModelCallContext, promptUsageScope } from './usage-scope';
 
 export { type AgentsRouterDeps, createAgentsRouter } from './router';
@@ -24,11 +14,6 @@ export type {
   AgentLaunchSubject,
   CheckAgentLaunch,
   ResolveAgentLaunch,
-  LoginAgentRequest,
-  LoginAgentOutcome,
-  LoginAgentCallbacks,
-  LoginAgentConnection,
-  OpenLoginAgent,
   LoginTerminalProcess,
   LaunchLoginTerminal,
 } from './agent-launch';
@@ -67,3 +52,10 @@ export type { CommandInput, RegistryCommand } from './launch/types';
 export { sessionOpenError } from './acp/open-error';
 
 export { readAcpUsage } from './acp/connection/response-readers';
+
+export { resolveSavedAgentLaunch } from './launch/saved-launch';
+
+export {
+  hasAgentServer,
+  requireAgentServer,
+} from './servers/agent-servers-sql';

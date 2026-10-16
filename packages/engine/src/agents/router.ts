@@ -16,8 +16,6 @@ import { listCustomAgents } from './configuration/custom-agent-list';
 import type { AgentInstallations } from './install/lifecycle/operations';
 import { createInstallRouter } from './install/router';
 import { listInstalledAgents } from './install/selection/list';
-import type { AgentLogins } from './login';
-import { createLoginRouter } from './login-router';
 import {
   createRegistryRouter,
   type RegistryDeps,
@@ -38,7 +36,6 @@ export type AgentsRouterDeps = RegistryDeps &
     sessions: OpenSessionsActorRef;
     sessionConnections: SessionConnections;
     installations: AgentInstallations;
-    agentLogins: AgentLogins;
     home?: string;
   };
 
@@ -100,7 +97,6 @@ export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
     createCatalogSyncRouter(deps),
     createListRouter(deps),
     createRegistryRouter(deps),
-    createLoginRouter(deps),
     createAuthRouter(deps),
   ),
 );

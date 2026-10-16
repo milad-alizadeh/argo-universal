@@ -14,7 +14,6 @@ export interface SettingsListProps {
   // Opens a page by its path.
   onSelect: (href: SettingsHref) => void;
   projectsNeedAttention?: boolean;
-  agentsNeedAttention?: boolean;
   accountState?: string;
   connectionState?: string;
   deviceCount?: number;

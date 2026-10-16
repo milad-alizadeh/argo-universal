@@ -27,12 +27,6 @@ export const sessionHref = (id: string): Href => ({
   params: { id },
 });
 
-// An Agent's page in Settings.
-export const agentHref = (agent: string): Href => ({
-  pathname: '/settings/agents/[agent]',
-  params: { agent },
-});
-
 // A Project's page in Settings.
 export const projectHref = (name: string): Href => ({
   pathname: '/settings/projects/[name]',

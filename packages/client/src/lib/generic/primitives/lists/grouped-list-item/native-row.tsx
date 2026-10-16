@@ -18,20 +18,28 @@ function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
   return <NativeSymbol name={icon} role="row" />;
 }
 
+type RowImageProps = {
+  image: ReactElement;
+  variant?: ResolvedItemProps['variant'];
+};
+
 // An image, such as an Agent's logo, centred in the native row's icon slot.
 export function NativeRowImage({
   image,
-}: {
-  image: ReactElement;
-}): React.JSX.Element {
+  variant,
+}: RowImageProps): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <IconSlot role="row" {...hiddenFromAccessibility}>
+      <IconSlot role={imageRole(variant)} {...hiddenFromAccessibility}>
         {image}
       </IconSlot>
     </RNHostView>
   );
 }
+
+const imageRole = (
+  variant: ResolvedItemProps['variant'],
+): 'identity' | 'row' => (variant === 'card' ? 'identity' : 'row');
 
 function NativeRowDot(
   props: Pick<ResolvedItemProps, 'needsAttention' | 'status'>,
@@ -78,18 +86,20 @@ export function NativeRowStatus(
 function NativeRowGlyph({
   icon,
   leading,
+  variant,
 }: {
   icon?: IconName;
   leading?: ReactElement;
+  variant?: ResolvedItemProps['variant'];
 }): React.JSX.Element | null {
-  if (leading) return <NativeRowImage image={leading} />;
+  if (leading) return <NativeRowImage image={leading} variant={variant} />;
 
   return icon ? <NativeRowIcon icon={icon} /> : null;
 }
 
 // The row's icon or image, or a spinner in the icon's slot while the row loads.
 export function NativeRowLeading(
-  props: Pick<ResolvedItemProps, 'icon' | 'loading' | 'leading'>,
+  props: Pick<ResolvedItemProps, 'icon' | 'loading' | 'leading' | 'variant'>,
 ): React.JSX.Element | null {
   if (props.loading) return <NativeRowSpinner />;
 

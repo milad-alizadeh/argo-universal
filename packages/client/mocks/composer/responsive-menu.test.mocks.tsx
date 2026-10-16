@@ -1,4 +1,4 @@
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { wideBreakpoint } from '../../src/lib/generic/each-layout';
 import type { PlayContext } from './composer-story-context.test.mocks';
 import {
@@ -6,12 +6,7 @@ import {
   chooseModelLabel,
   subagentCountLabel,
 } from './composer-test-contract.test.mocks';
-import {
-  expectPhoneFooter,
-  expectWideFooter,
-  expectHeldAgentList,
-  expectWideAgentMenu,
-} from './work-status.test.mocks';
+import { expectPhoneFooter, expectWideFooter } from './work-status.test.mocks';
 
 export function composerCard(input: HTMLElement): Element {
   const card = input.parentElement?.parentElement;
@@ -57,39 +52,32 @@ export async function browseResponsiveMenu({
   userEvent,
   width,
 }: Pick<PlayContext, 'userEvent'> & { width: number }): Promise<void> {
-  if (width < wideBreakpoint()) {
-    const chooseAgent = await within(document.body).findByRole('button', {
-      name: chooseAgentLabel,
-    });
+  const overlay = within(document.body);
+  await waitFor(() =>
+    expect(
+      overlay.getByRole('group', { name: chooseAgentLabel }),
+    ).toBeVisible(),
+  );
+  await expect(
+    overlay.queryByRole('button', { name: chooseAgentLabel }),
+  ).not.toBeInTheDocument();
+  await userEvent.click(
+    await overlay.findByRole('button', { name: chooseModelLabel }),
+  );
 
-    await expect(chooseAgent).toBeEnabled();
-    await userEvent.click(chooseAgent);
-    await expectHeldAgentList();
+  if (width < wideBreakpoint()) {
     await userEvent.click(
-      await within(document.body).findByRole('button', {
-        name: 'Back to Configure',
-      }),
-    );
-    await userEvent.click(
-      await within(document.body).findByRole('button', {
-        name: chooseModelLabel,
-      }),
-    );
-    await userEvent.click(
-      await within(document.body).findByRole('button', {
-        name: 'Back to Configure',
-      }),
+      await overlay.findByRole('button', { name: 'Back to Configure' }),
     );
     await expect(
-      await within(document.body).findByRole('slider', { name: 'Effort' }),
+      await overlay.findByRole('slider', { name: 'Effort' }),
     ).toBeVisible();
   } else {
-    await userEvent.click(
-      await within(document.body).findByRole('button', {
-        name: chooseAgentLabel,
-      }),
+    await waitFor(() =>
+      expect(
+        overlay.getByRole('dialog', { name: 'Select Model' }),
+      ).toBeVisible(),
     );
-    await expectWideAgentMenu();
     await userEvent.keyboard('{Escape}');
   }
 }

@@ -27,14 +27,14 @@ Given(
   },
 );
 
-async function dropConnection(page: Page): Promise<void> {
+export async function dropConnection(page: Page): Promise<void> {
   const routes = connections.get(page) ?? [];
   connections.set(page, []);
   await Promise.all(routes.map((route) => route.close()));
 }
 
 // The App opens a new WebSocket once it notices.
-async function awaitReconnection(page: Page): Promise<void> {
+export async function awaitReconnection(page: Page): Promise<void> {
   await expect
     .poll(() => connections.get(page)?.length ?? 0, { timeout: 15_000 })
     .toBeGreaterThan(0);

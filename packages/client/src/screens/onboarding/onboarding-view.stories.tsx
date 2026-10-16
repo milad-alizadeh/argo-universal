@@ -15,15 +15,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Onboarding: Story = {};
 
-// Step 1 holds the primary action; Add Project waits with an outline button.
-export const NoAgentFound: Story = {
-  args: { agent: { status: 'not-found', checking: false } },
+export const NotInstalled: Story = {
+  args: { agent: { status: 'not-installed' }, installed: [] },
 };
 
-// Check again pressed: the button waits while the Server looks again.
-export const CheckingAgain: Story = {
-  args: { agent: { status: 'not-found', checking: true } },
+export const LoadingRegistry: Story = {
+  args: { catalog: { status: 'loading' } },
 };
+
+export const RegistryError: Story = { args: { catalog: { status: 'failed' } } };
 
 // What the App shows today: no GitHub sign-in or Add Project flow yet, so their buttons are disabled.
 export const FirstRun: Story = {

@@ -14,9 +14,9 @@ const authSubject = ({
 }: NewSessionData): SessionAuthSubject | undefined =>
   choices.agent && choices.project
     ? {
-        agent: choices.agent.agent,
+        agent: choices.agent.id,
         projectId: choices.project.id,
-        agentName: choices.agent.label,
+        agentName: choices.agent.name,
       }
     : undefined;
 

@@ -13,7 +13,7 @@ import {
   decodeOpenFailure,
   toSendError,
 } from '#features/sessions';
-import { agentHref, type Navigate } from '#lib/product/navigation/navigation';
+import { type Navigate } from '#lib/product/navigation/navigation';
 import type { SessionCommands } from './use-session-commands';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
@@ -81,15 +81,13 @@ const checkoutProps = (
 });
 
 function configurationProps(open: OpenSession): ComposerConfigurationProps {
-  const { snapshot, agents, navigate } = open;
+  const { snapshot, agents } = open;
 
   return {
     agents: agents.data ?? [],
     agent: snapshot.agent,
     configOptions: snapshot.configOptions,
     onConfigChange: open.commands.changeConfig,
-    onAgentSetup: (setup) => navigate(agentHref(setup)),
-    onAgentRetry: agents.retry,
     turnRunning: isTurnRunning(snapshot),
     checkout: checkoutProps(snapshot.checkout),
   };

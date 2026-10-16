@@ -5,14 +5,7 @@
   "overrides": [
     {
       "files": [
-        "packages/client/src/screens/settings/agents/$agent/agent-detail-view.tsx",
-        "packages/client/src/screens/settings/agents/$agent/agent-links.tsx",
-        "packages/client/src/features/agents/components/agent-list-item/agent-list-item.tsx",
-        "packages/client/src/features/agents/components/agent-login-sheet/agent-login-sheet.tsx",
         "packages/client/src/features/agents/components/agent-logo/agent-logo.tsx",
-        "packages/client/src/features/agents/components/agent-management/agent-removal.tsx",
-        "packages/client/src/screens/settings/agents/agents-toolbar.tsx",
-        "packages/client/src/screens/settings/agents/$agent/custom-agent-detail-view.tsx",
         "packages/client/src/features/agents/components/custom-agent-form/custom-agent-form.tsx",
         "packages/client/src/features/agents/components/entry-sheet/entry-sheet-input.android.tsx",
         "packages/client/src/features/agents/components/form-field.tsx",
@@ -61,7 +54,6 @@
         "packages/client/src/features/sessions/components/project-heading/project-heading.tsx",
         "packages/client/src/features/sessions/components/pull-request-checks.tsx",
         "packages/client/src/features/sessions/components/session-header-actions.tsx",
-        "packages/client/src/screens/sessions/$id/session-new-view.tsx",
         "packages/client/src/features/sessions/components/session-header-meta.tsx",
         "packages/client/src/features/sessions/components/session-pull-request.tsx",
         "packages/client/src/features/sessions/components/session-row/session-row-metadata.tsx",

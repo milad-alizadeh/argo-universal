@@ -23,7 +23,9 @@ export function AgentLogo(props: AgentLogoProps): React.JSX.Element {
 
   if (!logo.startsWith('<'))
     return (
-      <RegistryIcon uri={logo} agentName={props.label} role={props.role} />
+      <View testID={props.testID} className="h-full w-full">
+        <RegistryIcon uri={logo} agentName={props.label} role={props.role} />
+      </View>
     );
 
   return <InlineLogo {...props} logo={logo} />;

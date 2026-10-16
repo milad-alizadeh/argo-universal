@@ -25,12 +25,16 @@ interface IconDrawing {
   adornment: ComponentProps<typeof ButtonAdornment>;
 }
 
-export function IconButton({ badge, ...props }: IconButtonProps): ReactElement {
+export function IconButton({
+  badge,
+  tone,
+  ...props
+}: IconButtonProps): ReactElement {
   const drawing = iconDrawing(props);
 
   return (
     <Pressable {...drawing.pressable}>
-      <ButtonAdornment {...drawing.adornment} />
+      <ButtonAdornment {...withTone(drawing.adornment, tone)} />
       {badge}
     </Pressable>
   );
@@ -127,3 +131,13 @@ function iconTextClass(
 }
 
 export type { IconButtonProps } from './icon-button-props';
+
+function withTone(
+  adornment: IconDrawing['adornment'],
+  tone: IconButtonProps['tone'],
+): IconDrawing['adornment'] {
+  return {
+    ...adornment,
+    textClass: cn(adornment.textClass, tone === 'danger' && 'text-danger'),
+  };
+}

@@ -32,8 +32,6 @@ export { AccountListScreen } from './screens/settings/accounts/account-list-scre
 
 export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
 
-export { AgentDetailScreen } from './screens/settings/agents/$agent/agent-detail-screen';
-
 export { CustomAgentNewScreen } from './screens/settings/agents/new/custom-agent-new-screen';
 
 export { AppearanceDetailScreen } from './screens/settings/appearance/appearance-detail-screen';
@@ -88,6 +86,8 @@ export { PortalProvider } from '#primitives/overlays/portal';
 export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
+
+export { PluginErrorToasts } from './screens/plugins/plugin-error-toasts';
 
 export {
   pluginAt,

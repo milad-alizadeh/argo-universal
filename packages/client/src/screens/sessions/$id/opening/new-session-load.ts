@@ -1,10 +1,10 @@
-import type { AgentInfo, ProjectInfo } from '@repo/contracts';
+import type { AgentServer, ProjectInfo } from '@repo/contracts';
 import type { NewSessionData } from './use-new-session-data';
 
 export interface LoadedNewSession {
   serverName: string;
   projects: ProjectInfo[];
-  agents: AgentInfo[];
+  agents: AgentServer[];
 }
 
 export const hasFailedToLoad = ({

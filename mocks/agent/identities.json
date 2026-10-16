@@ -1,11 +1,11 @@
 [
   {
-    "agent": "claude",
+    "agent": "claude-acp",
     "label": "Claude",
     "logo": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
   },
   {
-    "agent": "codex",
+    "agent": "codex-acp",
     "label": "Codex",
     "logo": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
   }

@@ -8,7 +8,7 @@ Session invokes one callback subscription across opening, Turns and awaited clos
 
 One connection module per Agent and Project shares its startup promise, as Zed's AgentConnectionStore does. Failed startup is forgotten. A connection stays until Agent removal or save, process exit, a newer Registry version, Retry, or Engine shutdown. There is no idle stop. Close sends optional `session/close`, then drains under the five-second deadline. On failure, it logs and releases without killing the process. A process exit closes its Sessions; the next Send resumes them. There is no automatic reopen or crash budget (owner, 2026-10-15, #717).
 
-Availability comes from saved registry/custom configurations and current ACP checks. The SQLite selection pins a release; registry refresh does not upgrade it. Removed and disabled configurations preserve existing Session history. Subscription credentials stay upstream. Sign-in uses advertised ACP protocol or terminal methods through the Agents setup operations.
+Saved Registry rows determine which Agents can start Sessions. Install saves the choice; the Agent downloads on first launch; Remove deletes the choice. New connections use the Registry's current version. Open Sessions keep their connection. A removed Agent's past Sessions retain their Feed; Send shows `Agent "{id}" is not installed.` Sign-in follows advertised ACP methods through `agents/auth/` (Spec 0014 #721, owner, 2026-10-16).
 
 The owner authorized #359 implementation while keeping missing live upstream checks as explicit #360 gates. Scripted tests establish Argo behavior. They do not establish authenticated billing, upstream cleanup isolation, descendant containment or resource savings.
 
@@ -18,25 +18,14 @@ The owner authorized #359 implementation while keeping missing live upstream che
 - A separate Agent lifecycle machine: rejected. Session already owns Turn admission and recovery.
 - A command facade over the SDK: rejected. Session calls the official SDK role directly.
 
-Spec 0009 #363 extends Agents with one Engine-owned installation operation per Agent definition. Its promise holds ownership until materialization and cleanup finish. Session admission rejects that Agent while setup owns it, and live or opening Sessions prevent replacement. Configuration mutations reserve setup ownership until their Writer commit completes. Failed Writer attempts retain the reservation and selected files while the Writer retries.
-
-A successful operation saves the selected upstream Registry record and exact distribution provenance in the existing Agent configuration. SQLite remains the only writable authority. Immutable managed directories contain the verified launch files. Registry refresh cannot change this selection. Session launch resolves those files through the existing shared ACP resource path. Installation status checks actual files and never infers sign-in readiness from installation success.
-
-Managed installation currently supports POSIX Servers only. Windows requests return an unsupported-platform explanation before materialization; Windows support needs observed descendant cleanup before ownership is released.
-
-Each external installer starts behind a Node launch gate. Its process group and unique wrapper token are recorded and synced in staging before the gate opens. The wrapper keeps its group-leader identity through tool completion and SIGTERM; owned IPC carries the tool result until the parent observes group release. Engine IPC closure stops that group. The Supervisor releases recorded installer groups before reporting Engine cleanup complete, and startup observes those groups before deleting interrupted staging. A changed or unobservable group identity retains the record and blocks recovery. This preserves ownership across abrupt Engine exit and force-stop, including a wrapper that cannot handle IPC closure.
+Spec 0014 #721 replaces the installation operation used by Apps. Session launch resolves `agent_servers` through the shared Registry get-command path. A download reservation remains held until ACP owns the installation directory, or opening fails. Cancelling a Session also cancels its pending download. The external download and npm ports supply files, timing and failures.
 
 ```mermaid
 flowchart TD
-    App[App: installation confirmation and progress] --> Router[Agents tRPC procedures]
-    Router --> Setup[Engine-owned Agent installation]
-    Registry[Validated Registry cache] --> Setup
-    Setup --> Tools[External download and package tools]
-    Tools --> Files[Verified managed launch files]
-    Setup --> Writer[Shared Writer]
-    Writer --> SQLite[(SQLite Agent configuration)]
-    SQLite --> Launch[Configured Agent launch]
-    Files --> Launch
-    Launch --> ACP[Shared ACP resources]
-    Setup --> Admission[Session and configuration admission]
+    App[App: Install or Remove] --> Writer[Shared Writer]
+    Writer --> SQLite[(SQLite agent_servers)]
+    SQLite --> Launch[Saved Agent launch]
+    Registry[Validated Registry cache] --> Launch
+    Launch --> Files[Download on first launch]
+    Files --> ACP[Shared ACP resources]
 ```

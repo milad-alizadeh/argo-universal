@@ -1,6 +1,5 @@
-import type { AgentInfo } from '@repo/contracts';
+import type { AgentServer } from '@repo/contracts';
 import { type ChosenSettings, chooseAnotherProject } from '#features/sessions';
-import { agentHref } from '#lib/product/navigation/navigation';
 import type {
   SessionNewViewProps,
   ReadySessionNewViewProps,
@@ -43,22 +42,18 @@ const checkoutProps = ({
 
 const agentChoiceProps = (
   wiring: NewSessionWiring,
-): Pick<
-  ConfigurationProps,
-  'onAgentChange' | 'onAgentSetup' | 'onAgentRetry'
-> => ({
+): Pick<ConfigurationProps, 'onAgentChange' | 'onAddAgents'> => ({
   onAgentChange: (agent) =>
     rechoose(wiring, (current) => ({ ...current, agent })),
-  onAgentSetup: (setup) => wiring.navigate(agentHref(setup)),
-  onAgentRetry: wiring.data.agents.retry,
+  onAddAgents: () => wiring.navigate('/settings/agents'),
 });
 
 const configurationProps = (
-  agents: AgentInfo[],
+  agents: AgentServer[],
   wiring: NewSessionWiring,
 ): ConfigurationProps => ({
   agents,
-  agent: wiring.data.choices.agent?.agent ?? '',
+  agent: wiring.data.choices.agent?.id ?? '',
   configOptions: [],
   onConfigChange: ignoreConfigChange,
   ...wiring.configuration,
@@ -66,25 +61,16 @@ const configurationProps = (
   checkout: checkoutProps(wiring.data),
 });
 
-const setupStepOf = (agent: AgentInfo | undefined): string | undefined =>
-  agent && agent.availability !== 'available' ? agent.installStep : undefined;
-
 type NoticeProps = ReadyProps<
-  | 'attachmentError'
-  | 'attachmentErrorKey'
-  | 'setupStep'
-  | 'callout'
-  | 'signInTerminal'
+  'attachmentError' | 'attachmentErrorKey' | 'callout' | 'signInTerminal'
 >;
 
 const noticeProps = ({
-  data,
   attachmentDraft,
   callout,
 }: NewSessionWiring): NoticeProps => ({
   attachmentError: attachmentDraft.attachmentError?.message,
   attachmentErrorKey: attachmentDraft.attachmentError?.key,
-  setupStep: setupStepOf(data.choices.agent),
   ...callout,
 });
 

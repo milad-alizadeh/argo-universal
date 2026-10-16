@@ -4,7 +4,6 @@ import { Text } from '#primitives/display/text';
 import { useWideSidebarList } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
-import { LeadingChoiceMark, useChoicePlace } from './grouped-list-item-choice';
 import { GroupedListItemDetail } from './grouped-list-item-detail';
 import { Disclosure } from './grouped-list-item-disclosure';
 import { rowLane } from './grouped-list-item-lane';
@@ -35,43 +34,22 @@ export function GroupedListItemBody(
 function GroupedListItemContent(props: ResolvedItemProps): React.JSX.Element {
   const sidebar = useWideSidebarList();
   const emphasis = rowEmphasis(props, sidebar);
-  const choice = useChoicePlace(props);
 
   // The row's name already carries its text; only an accessory, such as a picker, stays reachable.
   return (
     <View className={contentClasses(props, sidebar)}>
-      {choice.leading && <LeadingChoiceMark selected={props.selected} />}
-      <GroupedListItemLeadingSlot {...choice.item} emphasis={emphasis} />
-      <GroupedListItemTitle {...choice.item} />
-      <GroupedListItemEnding {...choice.item} emphasis={emphasis} />
+      <GroupedListItemLeadingSlot {...props} emphasis={emphasis} />
+      <GroupedListItemTitle {...props} />
+      <GroupedListItemTrailing {...props} emphasis={emphasis} />
     </View>
   );
-}
-
-// A row with nothing at its end draws no end, so a fitted popover ends at its longest label.
-function GroupedListItemEnding(props: TrailingProps): React.JSX.Element | null {
-  const sidebar = useWideSidebarList();
-
-  return hasTrailing(props, sidebar) ? (
-    <GroupedListItemTrailing {...props} />
-  ) : null;
-}
-
-function hasTrailing(props: ResolvedItemProps, sidebar: boolean): boolean {
-  return [
-    props.value !== undefined,
-    props.valueLeading,
-    groupedListItemStatus(props),
-    props.accessory,
-    props.control,
-    hasDisclosure(props) && !sidebar,
-  ].some(Boolean);
 }
 
 function contentClasses(props: ResolvedItemProps, sidebar: boolean): string {
   return cn(
     'flex-1 flex-row items-center',
     rowLane(props, sidebar).gap,
+    props.variant === 'card' && 'items-start',
     props.disabled && 'opacity-65',
   );
 }
@@ -83,24 +61,22 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
       loading={props.loading}
       leading={props.leading}
       size={props.size}
+      variant={props.variant}
       className={props.emphasis}
     />
   );
 }
 
 function GroupedListItemTitle(props: ResolvedItemProps): React.JSX.Element {
-  const title = (
-    <Text aria-hidden role="body" className={titleClasses(props)}>
-      {props.label}
-    </Text>
-  );
+  const title = <RowTitleLabel {...props} />;
 
   if (!props.subtitle) return title;
 
   return (
-    <View className="min-w-0 flex-1">
+    <View className={cn('min-w-0 flex-1', props.variant === 'card' && 'gap-1')}>
       {title}
       <GroupedListItemSubtitle subtitle={props.subtitle} />
+      {props.footer}
     </View>
   );
 }
@@ -160,6 +136,20 @@ function RowValue({
   return (
     <Text aria-hidden role="body" className={cn('shrink', className)}>
       {value}
+    </Text>
+  );
+}
+
+function RowTitleLabel(props: ResolvedItemProps): React.JSX.Element {
+  return (
+    <Text aria-hidden role="body" className={titleClasses(props)}>
+      {props.label}
+      {props.labelDetail && (
+        <Text role="secondary" tone="muted">
+          {' '}
+          {props.labelDetail}
+        </Text>
+      )}
     </Text>
   );
 }

@@ -6,7 +6,7 @@ import {
   customAgentFormDescription,
   useCustomAgentMutations,
 } from '#features/agents';
-import { agentHref, useNavigate } from '#lib/product/navigation/navigation';
+import { useNavigate } from '#lib/product/navigation/navigation';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { SettingsPage } from '#lib/product/settings-page';
 
@@ -20,7 +20,7 @@ function useRegisterAgent(): CustomAgentFormProps['onSubmit'] {
     const result = await register(definition);
 
     if (result.status === 'ready')
-      navigate(agentHref(result.agentId), { replace: true });
+      navigate('/settings/agents', { replace: true });
 
     return result;
   };
