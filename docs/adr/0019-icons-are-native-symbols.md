@@ -34,7 +34,7 @@ Paper designs may use SF Symbols exported as SVG as mockups only; they never rea
 
 ## Git icons
 
-Git icons are the one exception to native symbols (owner, 2026-10-16). Neither SF Symbols nor Material Symbols has a full set for branches and pull request states, and mixing the nearest names drew a different, incomplete set on each platform. So branch, pull request, every PR state (open, draft, merged, closed, conflict), Merge PR, Changes and repository come from one licensed set, Tabler Icons v3.49.0 (MIT, © Paweł Kuna), drawn from the same paths on every platform. They take priority over SF Symbols, Material Symbols and any other set; no other set is mixed in. Tabler has no repository icon, so `repository` draws its `book-2` (owner, 2026-10-16).
+Git icons are the one exception to native symbols (owner, 2026-10-16). Neither SF Symbols nor Material Symbols has a full set for branches and pull request states, and mixing the nearest names drew a different, incomplete set on each platform. Branch, pull request, every PR state (open, draft, merged, closed, conflict), Merge PR and Changes use Tabler Icons v3.49.0 (MIT, © Paweł Kuna), drawn from the same paths on every platform. Repository uses GitHub's Octicons mark (MIT), also drawn from the same path on every platform (owner decision, 2026-10-16). These icons take priority over SF Symbols, Material Symbols and any other set. The source SVGs and licences are committed in `packages/client/src/lib/generic/symbols/assets/tabler`.
 
 - The source SVGs and Tabler's licence are committed in `packages/client/src/lib/generic/symbols/assets/tabler`. The Swift package `tools/sf-symbols/tabler-symbols` outlines their 2-point strokes and unions them with Core Graphics, so every platform gets filled paths, and writes `tabler-symbol-paths.json` in the custom symbols' units and box.
 - iOS: `with-custom-symbols` writes them into the asset catalog with the other custom symbols, and `SymbolView` draws them.
@@ -47,5 +47,5 @@ Git icons are the one exception to native symbols (owner, 2026-10-16). Neither S
 
 - Keep Phosphor: one look everywhere, but foreign on both phone platforms.
 - Ship SF Symbol SVGs to the web: ruled out by Apple's licence.
-- Git icons from GitHub's Octicons on Apple platforms and the nearest Material names elsewhere: replaced by Tabler, one set on every platform (owner, 2026-10-16).
+- GitHub's Octicons mark for the repository icon: selected by the owner (2026-10-16), alongside Tabler icons for the remaining git actions.
 - A Swift helper on macOS: not needed, since Electron draws SF Symbols itself.

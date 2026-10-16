@@ -1,14 +1,9 @@
-export { useAgents } from './hooks/use-agents';
-
-export { useInstalledAgents } from './hooks/use-installed-agents';
-
 export {
-  useAgentCatalog,
+  useInstalledAgents,
+  useRegistryAgents,
   registryError,
-  type CatalogLoad,
-} from './hooks/use-agent-catalog';
-
-export { useAgentManagement } from './hooks/use-agent-management';
+  installedError,
+} from './hooks/use-installed-agents';
 
 export { AgentLogo } from './components/agent-logo/agent-logo';
 
@@ -20,12 +15,23 @@ export {
 } from './components/agent-list-item/agent-list-item';
 
 export {
-  agentList,
+  loadedAgents,
+  type InstalledAgents,
+  type RegistryLoad,
+} from './state/installed-agents';
+
+export {
+  agentsPage,
+  type AgentRowEntry,
+  type AgentRows,
+  type RowsLoad,
+} from './state/agent-rows';
+
+export {
   filterAgents,
   agentsEmptyLabel,
-  type AgentRowEntry,
   type AgentsFilter,
-} from './state/agent-list';
+} from './state/agents-filter';
 
 export { AgentLoginTerminal } from './components/agent-login-terminal/agent-login-terminal';
 

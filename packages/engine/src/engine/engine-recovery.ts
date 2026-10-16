@@ -1,6 +1,5 @@
 import type { Database } from '@repo/db';
-import { releaseLoginTerminalGroups, releaseShellGroups } from '../agents';
-import { reconcileInterruptedInstallations } from '../agents';
+import { releaseShellGroups } from '../agents';
 import {
   attachmentsFolderIn,
   removeOrphanAttachments,
@@ -25,8 +24,6 @@ export async function recoverEngineAfterRestart(
   await recoverShells(input);
   recoverAfterRestart(input.database);
   await recoverArchivedCheckouts(input.database);
-  await reconcileInterruptedInstallations(input.home);
-  await releaseLoginTerminalGroups(input.home);
   await removeUnusedBlobs(input);
   await removeOrphanAttachments({
     database: input.database,

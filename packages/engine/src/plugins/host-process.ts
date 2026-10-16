@@ -7,6 +7,7 @@ process.on('message', (value) => {
   const command = HostCommand.parse(value);
 
   if (command.type === 'activate') workers.activate(command);
+  else if (command.type === 'reply') workers.reply(command);
   else workers.stop(command.pluginId);
 });
 

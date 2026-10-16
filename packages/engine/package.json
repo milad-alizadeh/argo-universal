@@ -46,8 +46,6 @@
     "./mocks": "./mocks/engine.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
-    "./installation-runtime": "./src/agents/installation-runtime.ts",
-    "./login-terminal-runtime": "./src/agents/acp/login-terminal/terminal-runtime.ts",
     "./shell-runtime": "./src/agents/shell-runtime.ts"
   }
 }

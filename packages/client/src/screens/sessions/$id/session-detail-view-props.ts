@@ -83,6 +83,7 @@ const sessionFeedProps = (open: OpenSession): FeedProps => ({
   onStartReached: () => void open.feed.loadOlder(),
   imageUrl: open.imageUrl,
   checkoutBranch: open.snapshot.checkout.branch ?? undefined,
+  onAtEndChange: open.onAtEndChange,
 });
 
 const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({

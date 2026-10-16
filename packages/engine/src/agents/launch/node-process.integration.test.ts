@@ -1,12 +1,11 @@
-import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { defaultInstallPorts } from '../install/default-ports';
+import { defaultInstallPorts } from './default-ports';
 import { resolveNode } from './node';
 
-it('concurrent Node probes own separate recoverable directories and remove them after exit', async () => {
+it('concurrent Node probes use separate directories and remove them after exit', async () => {
   const host = await startEngineTestHost();
 
   const input = {
@@ -27,7 +26,6 @@ it('concurrent Node probes own separate recoverable directories and remove them 
   expect(results.map((result) => result.status)).toEqual(
     Array(4).fill('fulfilled'),
   );
-  expect(existsSync(join(host.home, '.installer-group.json'))).toBe(false);
   expect(
     await readdir(join(host.home, 'agents', 'registry', '.probes')),
   ).toEqual([]);

@@ -101,6 +101,7 @@ const feedModuleRouterInput = (
   signal: AbortSignal,
 ): AppRouterInput => ({
   database: host.database,
+  home: host.home,
   sessions: host.openSessions,
   databaseWriter: host.databaseWriter,
   notifications: host.notifications,
@@ -108,7 +109,6 @@ const feedModuleRouterInput = (
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
   sessionCommandSignal: signal,
-  syncSupervisor: host.engine.system.get('syncSupervisor'),
   registry: host.engine.system.get('registry'),
 });
 

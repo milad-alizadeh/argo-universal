@@ -1,14 +1,11 @@
 import { mkdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import type { ACPAgent } from '@repo/contracts';
-import { checkInstallationFile } from '../install/materialization/files';
-import { requireExactPackageVersion } from '../install/materialization/package-version';
-import {
-  npmInstallArgs,
-  readNpmExecutable,
-} from '../install/materialization/packages';
-import type { InstallToolInput } from '../install/ports';
+import { checkInstallationFile } from './materialization/files';
+import { requireExactPackageVersion } from './materialization/package-version';
+import { npmInstallArgs, readNpmExecutable } from './materialization/packages';
 import { resolveNode, type NodeRuntime } from './node';
+import type { InstallToolInput } from './ports';
 import { singleFlight } from './single-flight';
 import type { EntryInput as NpmInput, RegistryCommand } from './types';
 
@@ -111,10 +108,7 @@ const distributionArgs = (input: NpmInput): string[] =>
 
 const boundedSpecification = (name: string, pkg: string): string => {
   try {
-    const version = requireExactPackageVersion(
-      pkg.slice(name.length + 1),
-      'npx',
-    );
+    const version = requireExactPackageVersion(pkg.slice(name.length + 1));
 
     return `${name}@0.0.0 - ${version}`;
   } catch {

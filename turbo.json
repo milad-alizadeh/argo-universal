@@ -51,7 +51,7 @@
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       // A CI shard's blob report replays from the cache too, so the merged HTML report stays whole.
       "outputs": ["playwright-report/**", "blob-report/**"],
-      "env": ["ARGO_E2E_SHARD"],
+      "env": ["ARGO_E2E_SHARD", "ARGO_E2E_FOCUS"],
       "passThroughEnv": ["PLAYWRIGHT_*"]
     },
     "test:electron": {

@@ -1,5 +1,5 @@
 import type { Plan, SessionSnapshot } from '@repo/contracts';
-import type { useAgents } from '#features/agents';
+import { type InstalledAgents, loadedAgents } from '#features/agents';
 import type {
   ComposerConfigurationProps,
   ComposerProps,
@@ -24,12 +24,14 @@ export interface OpenSession {
   snapshot: SessionSnapshot;
   view: NonNullable<SessionFeed['view']>;
   commands: SessionCommands;
-  agents: ReturnType<typeof useAgents>;
+  agents: InstalledAgents;
   navigate: Navigate;
   imageUrl: ReturnType<typeof useBlobUrl>;
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
   mergeMethod: MergeMethodChoice;
+  // The Feed's end came on screen or left it.
+  onAtEndChange: (atEnd: boolean) => void;
 }
 
 type DraftProps = Pick<
@@ -84,7 +86,7 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
   const { snapshot, agents } = open;
 
   return {
-    agents: agents.data ?? [],
+    agents: loadedAgents(agents),
     agent: snapshot.agent,
     configOptions: snapshot.configOptions,
     onConfigChange: open.commands.changeConfig,

@@ -1,45 +1,35 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import {
-  useAgentCatalog,
-  useAgentManagement,
-  useInstalledAgents,
+  type InstalledAgents,
+  loadedAgents,
+  useRegistryAgents,
   useRememberedAgent,
-  type CatalogLoad,
 } from '#features/agents';
 import { useTRPC } from '#features/connection';
-import { agentStep, featuredAgents } from '#features/setup';
+import { type AgentStep, agentStep } from '#features/setup';
 import type { OnboardingViewProps } from './onboarding-props';
 import { OnboardingView } from './onboarding-view';
 
-const featured = (load: CatalogLoad): OnboardingViewProps['featured'] =>
-  load.status === 'loaded' ? featuredAgents(load.catalog) : [];
+// The step has no loading look, so it stays open until the Server lists an Installed Agent.
+const installedStep = (installed: InstalledAgents): AgentStep =>
+  agentStep(loadedAgents(installed));
 
 function useOnboarding(): OnboardingViewProps {
-  const catalog = useAgentCatalog(),
-    installed = useInstalledAgents();
-
-  const management = useAgentManagement(useRememberedAgent().select);
+  // An Agent installed here becomes New Session's Agent.
+  const agents = useRegistryAgents(useRememberedAgent().select);
   const serverName = useQuery(useTRPC().system.info.queryOptions()).data?.name;
 
   return {
     serverName,
-    ...installedStep(installed),
+    agent: installedStep(agents.installed),
     github: { status: 'not-connected' },
-    featured: featured(catalog.load),
-    catalog: catalog.load,
-    onInstallAgent: management.install,
-    onRetry: catalog.retry,
+    featured: agents.featured,
+    onInstallAgent: agents.install,
+    onRetry: agents.retry,
   };
 }
 
 export function OnboardingScreen(): React.JSX.Element {
   return <OnboardingView {...useOnboarding()} />;
 }
-
-const installedStep = (
-  installed: ReturnType<typeof useInstalledAgents>,
-): Pick<OnboardingViewProps, 'agent' | 'installed'> => ({
-  agent: agentStep(installed),
-  installed: installed.map(({ id }) => id),
-});

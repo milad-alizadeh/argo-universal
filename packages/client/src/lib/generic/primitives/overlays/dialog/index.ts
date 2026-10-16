@@ -1,4 +1,11 @@
-export { Dialog, DialogContent, DialogFooter, DialogTitle } from './dialog';
+export {
+  Dialog,
+  DialogCancel,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+} from './dialog';
 
 export { DialogOverlay } from './dialog-overlay';
 

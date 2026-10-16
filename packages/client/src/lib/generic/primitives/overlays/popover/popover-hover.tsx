@@ -2,8 +2,7 @@ import * as React from 'react';
 import type { OpenState } from '#primitives/overlays/open-state';
 import { usePopoverState } from './popover-context';
 import { HoverGroup, closeSiblings, register } from './popover-hover-group';
-
-const closeGraceMs = 50;
+import { type HoverTimer, useHoverTimer } from './popover-hover-timer';
 
 /*
  * The parts the pointer can rest on: the trigger, the content, or a nested popover's own parts.
@@ -17,12 +16,6 @@ export interface Hover {
   leave: (part: HoverPart) => void;
   promote: () => void;
   isPointer: () => boolean;
-}
-
-interface Timer {
-  close: () => void;
-  cancel: () => void;
-  schedule: () => void;
 }
 
 type Intent = ReturnType<typeof useHoverIntent>;
@@ -39,7 +32,7 @@ interface HoverEnvironment {
   id: string;
   parent?: Hover;
   group?: Set<() => void>;
-  timer: Timer;
+  timer: HoverTimer;
   intent: Intent;
   hovered: Set<HoverPart>;
 }
@@ -99,24 +92,6 @@ function useHoverIntent(): HoverIntent {
   };
 }
 
-function useHoverTimer(onOpenChange: (open: boolean) => void): Timer {
-  const pending = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancel = React.useCallback(() => cancelPending(pending.current), []);
-  const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
-  React.useEffect(() => cancel, [cancel]);
-
-  const schedule = (): void => {
-    cancel();
-    pending.current = setTimeout(close, closeGraceMs);
-  };
-
-  return { close, cancel, schedule };
-}
-
-function cancelPending(pending: ReturnType<typeof setTimeout> | null): void {
-  if (pending) clearTimeout(pending);
-}
-
 function hoverActions(context: Root, environment: HoverEnvironment): Hover {
   return {
     isPointer: environment.intent.isPointer,
@@ -153,6 +128,7 @@ function openFromHover(context: Root, environment: HoverEnvironment): void {
 
 function leave(environment: HoverEnvironment, part: HoverPart): void {
   if (!leftLastPart(environment.hovered, part)) return;
+
   environment.parent?.leave(environment.id);
   scheduleClose(environment);
 }

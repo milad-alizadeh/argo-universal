@@ -1,5 +1,5 @@
-import type { Locator } from '@playwright/test';
-import { expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
+import { type App, expect } from '../fixtures';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 
@@ -42,7 +42,8 @@ Then(
   },
 );
 
-When('the command is running in the Feed', async ({ page }): Promise<void> => {
+// The unfinished command's Turn is running, its Stop shown.
+export async function expectRunningCommand(page: Page): Promise<void> {
   await expect(
     page
       .getByTestId(feedScroll)
@@ -51,9 +52,17 @@ When('the command is running in the Feed', async ({ page }): Promise<void> => {
   await expect(
     page.getByRole('button', { name: 'Stop', exact: true }),
   ).toBeVisible();
+}
+
+When('the command is running in the Feed', async ({ page }): Promise<void> => {
+  await expectRunningCommand(page);
 });
 
-When('the Engine restarts', async ({ app, page }): Promise<void> => {
+// Restarts the Engine once the page shows it is gone.
+export async function restartEngine(
+  app: Pick<App, 'restartEngine'>,
+  page: Page,
+): Promise<void> {
   await app.restartEngine(async () => {
     await expect(
       // Each page in a section's stack has its banner; the shown page's is the visible one.
@@ -63,6 +72,10 @@ When('the Engine restarts', async ({ app, page }): Promise<void> => {
         .first(),
     ).toBeVisible();
   });
+}
+
+When('the Engine restarts', async ({ app, page }): Promise<void> => {
+  await restartEngine(app, page);
   await expect(page.getByTestId(feedScroll)).toBeVisible({ timeout: 30_000 });
 });
 

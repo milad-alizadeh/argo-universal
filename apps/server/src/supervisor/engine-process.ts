@@ -1,8 +1,6 @@
 import { fork, type Serializable } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { releaseInstallationProcessGroups } from '@repo/engine/installation-runtime';
 import { EngineMessage } from '@repo/engine/ipc';
-import { releaseLoginTerminalGroups } from '@repo/engine/login-terminal-runtime';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { releaseShellGroups } from '@repo/engine/shell-runtime';
 import { createRejectionCounter } from '@repo/machine-log';
@@ -35,8 +33,6 @@ const releaseEngineGroups = async (
   if ((await releaseProcessGroup(pid)) !== 'released') return 'unresolved';
 
   try {
-    await releaseInstallationProcessGroups(home);
-    await releaseLoginTerminalGroups(home);
     await releaseShellGroups(home);
 
     return 'released';

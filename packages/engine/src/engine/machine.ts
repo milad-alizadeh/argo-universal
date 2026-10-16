@@ -9,7 +9,6 @@ import type { KeepAwakeInput } from './keep-awake';
 import {
   recoveryInput,
   writerInput,
-  syncInput,
   sessionsInput,
   serverInput,
   cleanupInput,
@@ -92,12 +91,6 @@ export const engineMachine = engineSetup.createMachine({
           input: registryInput,
         },
         {
-          id: 'syncSupervisor',
-          systemId: 'syncSupervisor',
-          src: 'syncSupervisor',
-          input: syncInput,
-        },
-        {
           id: 'sessions',
           systemId: openSessionsId,
           src: 'sessions',
@@ -166,7 +159,7 @@ export const engineMachine = engineSetup.createMachine({
           },
         },
         stopping: {
-          entry: ['closeCommandAdmission', 'stopSync', 'stopRegistry'],
+          entry: ['closeCommandAdmission', 'stopRegistry'],
           initial: 'closingHttp',
           on: { 'engine.stop': {} },
           states: {

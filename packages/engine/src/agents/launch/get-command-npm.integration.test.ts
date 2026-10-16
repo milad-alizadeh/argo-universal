@@ -3,8 +3,8 @@ import { chmod } from 'node:fs/promises';
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { installEntry, installationPorts } from '#mocks/installation';
-import type { InstallPorts } from '../install/ports';
 import { getCommand } from './get-command';
+import type { InstallPorts } from './ports';
 import type { CommandInput } from './types';
 
 const isInstall = (tool: Parameters<InstallPorts['runTool']>[0]): boolean =>

@@ -1,7 +1,5 @@
 import type { ACPAgent } from '@repo/contracts';
-import { expect } from 'vitest';
 import type { InstallPorts } from '../src/agents';
-import { startEngineTestHost } from './engine';
 
 export { installationExecutable } from '@repo/mocks/registry/installation';
 
@@ -19,10 +17,10 @@ export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
     kind === 'binary'
       ? {
           binary: {
-            [process.platform === 'win32'
-              ? 'windows-x86_64'
-              : `${process.platform}-${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}`]:
-              { archive: 'https://example.org/agent', cmd: './agent' },
+            [fixturePlatform()]: {
+              archive: 'https://example.org/agent',
+              cmd: './agent',
+            },
           },
         }
       : {
@@ -37,28 +35,10 @@ export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
 
 export const installationPorts: InstallPorts = createInstallationPorts();
 
-export const startInstallEngine = async (
-  entry = installEntry('npx'),
-  ports = installationPorts,
-): Promise<
-  Awaited<ReturnType<typeof startEngineTestHost>> & { agentId: string }
-> => {
-  const host = await startEngineTestHost({
-    installationPorts: ports,
-    fetchAgents: async () =>
-      JSON.stringify({ version: '1.0.0', agents: [entry] }),
-  });
+const fixturePlatform = (): string =>
+  process.platform === 'win32'
+    ? 'windows-x86_64'
+    : `${process.platform}-${fixtureArchitecture()}`;
 
-  await host.caller.agents.syncCatalog();
-  await expect
-    .poll(async () => (await host.caller.agents.catalog()).syncStatus)
-    .toBe('idle');
-
-  const agent = (await host.caller.agents.catalog()).agents.find(
-    (row) => row.entry.id === entry.id,
-  );
-
-  if (!agent) throw new Error('Catalog did not contain installation fixture');
-
-  return { ...host, agentId: agent.id };
-};
+const fixtureArchitecture = (): string =>
+  process.arch === 'arm64' ? 'aarch64' : 'x86_64';

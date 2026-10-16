@@ -11,7 +11,6 @@ it('Session connections advertise terminal auth and implemented extensions witho
       protocolVersion: 1,
       agentCapabilities: {
         sessionCapabilities: { close: {} },
-        _meta: { authStatus: {} },
       },
     },
     responses: { initialize: [{ received }] },

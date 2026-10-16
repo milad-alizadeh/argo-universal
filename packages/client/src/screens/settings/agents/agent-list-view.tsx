@@ -1,26 +1,21 @@
-import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import { type AgentsFilter, type CatalogLoad } from '#features/agents';
-import {
-  SettingsPage,
-  type SettingsPageSearch,
-} from '#lib/product/settings-page';
+import { type AgentRows, type AgentsFilter } from '#features/agents';
+import { SettingsPage } from '#lib/product/settings-page';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import {
   AgentsFilterPills,
+  AgentsToolbar,
   type AgentsHeaderProps,
   type AgentsFilterProps,
   type AgentsSearchProps,
   agentsTitle,
-  searchLabel,
 } from './agents-toolbar';
 import { AgentCatalog } from './catalog';
 
 export type AgentListViewProps = {
-  catalog: CatalogLoad;
-  installed: AgentServer[];
+  agents: AgentRows;
   onInstall: (id: string) => void;
   onRemove: (id: string) => void;
   onRetry: () => void;
@@ -54,8 +49,8 @@ function AgentsPage(props: ListProps): React.JSX.Element {
   return (
     <SettingsPage
       title={agentsTitle}
-      search={pageSearch(props)}
-      toolbar={<AgentsFilterPills {...props} />}
+      headerFrom="medium"
+      toolbar={<AgentsToolbar {...props} />}
     >
       <PhoneFilters {...props} />
       <AgentCatalog {...props} />
@@ -63,18 +58,16 @@ function AgentsPage(props: ListProps): React.JSX.Element {
   );
 }
 
-const pageSearch = (props: AgentsSearchProps): SettingsPageSearch => ({
-  label: searchLabel,
-  value: props.search,
-  onChangeText: props.onSearch,
-});
-
 function PhoneFilters(props: AgentsFilterProps): React.JSX.Element | null {
   return (
-    <SizeClass only="compact">
-      <View className="z-10 shrink-0 px-4 py-3">
-        <AgentsFilterPills {...props} />
-      </View>
-    </SizeClass>
+    <SizeClass
+      compact={
+        <View className="z-10 shrink-0 px-4 py-3">
+          <AgentsFilterPills {...props} />
+        </View>
+      }
+      medium={null}
+      wide={null}
+    />
   );
 }

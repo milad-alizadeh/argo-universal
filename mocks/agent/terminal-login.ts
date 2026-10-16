@@ -1,5 +1,5 @@
 import type { AuthMethodTerminal } from '@agentclientprotocol/sdk';
-import { protocolLogin } from './protocol-login.ts';
+import { scriptedInitialization } from './scripted-scenario.ts';
 
 const terminalMethod: AuthMethodTerminal & { type: 'terminal' } = {
   type: 'terminal',
@@ -9,8 +9,7 @@ const terminalMethod: AuthMethodTerminal & { type: 'terminal' } = {
 };
 
 export const terminalLogin = {
-  ...protocolLogin,
-  initialize: { ...protocolLogin.initialize, authMethods: [terminalMethod] },
+  initialize: { ...scriptedInitialization, authMethods: [terminalMethod] },
 };
 
 export const runTerminalLoginMock = (): void => {

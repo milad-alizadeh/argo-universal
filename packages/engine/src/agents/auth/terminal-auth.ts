@@ -1,15 +1,15 @@
 import {
-  loginTerminalOutputLimit,
+  authTerminalOutputLimit,
   type AgentAuthTerminalFrame,
-  type AgentLoginTerminalInput,
+  type AgentAuthTerminalInput,
 } from '@repo/contracts';
-import { launchLoginTerminal } from '../acp/login-terminal/terminal-process';
 import type {
   AgentLaunch,
   LaunchLoginTerminal,
   LoginTerminalProcess,
 } from '../agent-launch';
 import { terminalSuccessPatterns } from '../vendor';
+import { launchLoginTerminal } from './terminal-process';
 import {
   applyTerminalInput,
   type TerminalResult,
@@ -66,7 +66,7 @@ export class AuthTerminal {
   }
   // ADR-0016 finite budgets: output is capped at the frame limit.
   private append(text: string): void {
-    if (this.output.length + text.length > loginTerminalOutputLimit) {
+    if (this.output.length + text.length > authTerminalOutputLimit) {
       this.overflow.reject(
         new Error('The sign-in terminal exceeded its output limit.'),
       );
@@ -142,7 +142,7 @@ export class AuthTerminal {
     return frame;
   }
   // The App's terminal shows once the sign-in is pending: input sent while the program starts reaches it once it has.
-  public input(input: AgentLoginTerminalInput): void {
+  public input(input: AgentAuthTerminalInput): void {
     if (this.child || this.closed)
       applyTerminalInput(this.requireChild(), input);
     else

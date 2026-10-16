@@ -7,6 +7,7 @@ import { Text, TextClassContext } from '#primitives/display/text';
 import { Pressable } from '#primitives/pressable';
 import { CompactSessionRow } from './session-row-compact';
 import { SessionMark } from './session-row-mark';
+import { SessionRowMenu } from './session-row-menu';
 import {
   SessionRowMetadata,
   type SessionRowMetadataProps,
@@ -122,8 +123,16 @@ function RegularRow(props: SessionRowProps): React.JSX.Element {
   );
 }
 
-export const SessionRow = memo(function SessionRow(props: SessionRowProps) {
+function SessionRowLayout(props: SessionRowProps): React.JSX.Element {
   if (props.layout === 'compact') return <CompactSessionRow {...props} />;
 
   return <RegularRow {...props} />;
+}
+
+export const SessionRow = memo(function SessionRow(props: SessionRowProps) {
+  return (
+    <SessionRowMenu {...props}>
+      <SessionRowLayout {...props} />
+    </SessionRowMenu>
+  );
 });

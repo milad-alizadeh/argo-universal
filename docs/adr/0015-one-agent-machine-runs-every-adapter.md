@@ -1,6 +1,6 @@
 # Session owns one ACP session lease, and Engine owns shared transport
 
-Spec 0009 #359 completes the ACP-only composition (owner, 2026-10-13). All Agent code lives under `packages/engine/src/agents`. Its private `acp/` group owns SDK transport, initialization, shared connection reuse, authentication and process cleanup. The public Agents interface exposes resource acquisition, configuration, setup and launch types. Other domains do not import its private files.
+Spec 0009 #359 completes the ACP-only composition (owner, 2026-10-13). All Agent code lives under `packages/engine/src/agents`. Its private `acp/` group owns SDK transport, initialization, shared connection reuse, authentication and process cleanup. The public Agents interface exposes resource acquisition, Registry choices, authentication and launch types. Other domains do not import its private files.
 
 Engine constructs the resource owner. Each Session owns one ACP session lease, its Checkout, configuration, pending questions and Turn lifecycle. It calls the official SDK directly. There is no native adapter registry, Agent command facade or replacement Agent event protocol. Agents never imports Session or Feed implementation details.
 
@@ -18,7 +18,7 @@ The owner authorized #359 implementation while keeping missing live upstream che
 - A separate Agent lifecycle machine: rejected. Session already owns Turn admission and recovery.
 - A command facade over the SDK: rejected. Session calls the official SDK role directly.
 
-Spec 0014 #721 replaces the installation operation used by Apps. Session launch resolves `agent_servers` through the shared Registry get-command path. A download reservation remains held until ACP owns the installation directory, or opening fails. Cancelling a Session also cancels its pending download. The external download and npm ports supply files, timing and failures.
+Spec 0014 #722 removes the old installer, catalog sync and sign-in lifecycle. Archive, download and npm helpers live under `agents/launch/`. Tools share the Engine process group. Sign-in uses a direct pseudoterminal, with no durable process records. Session launch resolves `agent_servers` through the shared Registry get-command path. A download reservation remains held until ACP owns the installation directory, or opening fails. Cancelling a Session also cancels its pending download. The external download and npm ports supply files, timing and failures.
 
 ```mermaid
 flowchart TD
@@ -28,4 +28,6 @@ flowchart TD
     Registry[Validated Registry cache] --> Launch
     Launch --> Files[Download on first launch]
     Files --> ACP[Shared ACP resources]
+    ACP --> Auth[Advertised ACP authentication methods]
+    Auth --> Terminal[Sign-in pseudoterminal]
 ```

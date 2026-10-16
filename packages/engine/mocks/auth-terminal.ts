@@ -1,9 +1,6 @@
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import type { AuthMethodTerminal } from '@agentclientprotocol/sdk';
 import { terminalLogin } from '@repo/mocks/agent/terminal-login';
-import { beforeEach, expect, onTestFinished, vi } from 'vitest';
+import { expect } from 'vitest';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 
 export const subject = { agent: 'mock', projectId: 'project-1' };
@@ -11,17 +8,6 @@ export const subject = { agent: 'mock', projectId: 'project-1' };
 export const methodId = 'interactive-subscription';
 
 export const terminalStartup = { timeout: 15_000 };
-
-// Real sign-in terminals record their process groups under ARGO_HOME.
-export const isolateTerminalHome = (): void =>
-  beforeEach(async () => {
-    const home = await mkdtemp(join(tmpdir(), 'argo-auth-terminal-'));
-    vi.stubEnv('ARGO_HOME', home);
-    onTestFinished(async () => {
-      await rm(home, { recursive: true, force: true });
-      vi.unstubAllEnvs();
-    });
-  });
 
 export type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 

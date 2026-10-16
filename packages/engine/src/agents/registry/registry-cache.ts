@@ -8,7 +8,7 @@ import type { Database } from '@repo/db';
 import { registryCache } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
-import { resolveRegistryServerPlatform } from '../records';
+import { resolveRegistryServerPlatform } from './platform';
 import { createRegistryReader } from './registry-reader';
 
 export const readRegistryCache = (

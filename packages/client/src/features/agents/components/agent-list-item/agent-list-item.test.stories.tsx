@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, spyOn, waitFor } from 'storybook/test';
-import type { AgentRowEntry } from '../../state/agent-list';
+import type { AgentRowEntry } from '../../state/agent-rows';
 import {
   base64Icon,
   encodedIcon,
@@ -11,7 +11,7 @@ import {
 import { AgentListItem } from './agent-list-item';
 
 const agent: AgentRowEntry = {
-  id: iconAgent.id,
+  id: iconAgent.entry.id,
   name: iconAgent.entry.name,
   description: iconAgent.entry.description,
   icon: iconAgent.entry.icon,

@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useAgents } from '#features/agents';
+import { useInstalledAgents } from '#features/agents';
 import {
   useBlobUrl,
   useConnectionState,
@@ -25,6 +25,7 @@ import {
   toSessionViewProps,
 } from './session-detail-view-props';
 import { SessionNewScreen } from './session-new-screen';
+import { useMarkSeen } from './use-mark-seen';
 import { useSessionCallout } from './use-session-callout';
 import {
   type SessionCommands,
@@ -89,7 +90,8 @@ type SessionSurroundings =
   | 'imageUrl'
   | 'connected'
   | 'elicitation'
-  | 'mergeMethod';
+  | 'mergeMethod'
+  | 'onAtEndChange';
 
 function useSessionSurroundings(
   sessionId: string,
@@ -97,11 +99,12 @@ function useSessionSurroundings(
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     elicitation: useFeedElicitation(sessionId, feed),
-    agents: useAgents(),
+    agents: useInstalledAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
     mergeMethod: useMergeMethod(),
+    onAtEndChange: useMarkSeen(sessionId, feed.revision),
   };
 }
 

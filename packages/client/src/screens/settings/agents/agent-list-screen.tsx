@@ -1,23 +1,17 @@
 import type * as React from 'react';
-import {
-  useAgentCatalog,
-  useInstalledAgents,
-  useAgentManagement,
-} from '#features/agents';
+import { useRegistryAgents } from '#features/agents';
 import { AgentListView } from './agent-list-view';
 import { AgentsPhoneHeader } from './agents-phone-header';
 
 export function AgentListScreen(): React.JSX.Element {
-  const catalog = useAgentCatalog();
-  const management = useAgentManagement();
+  const agents = useRegistryAgents();
 
   return (
     <AgentListView
-      catalog={catalog.load}
-      installed={useInstalledAgents()}
-      onInstall={management.install}
-      onRemove={management.remove}
-      onRetry={catalog.retry}
+      agents={agents.page}
+      onInstall={agents.install}
+      onRemove={agents.remove}
+      onRetry={agents.retry}
       renderHeader={(header) => <AgentsPhoneHeader {...header} />}
     />
   );

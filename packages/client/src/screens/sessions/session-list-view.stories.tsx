@@ -12,6 +12,7 @@ const meta = {
   args: {
     ...loadedSessionListView,
     onSelect: action('select Session'),
+    onRename: action('rename Session'),
     onNewSession: action('new Session'),
     onNewSessionInProject: action('new Session in Project'),
     onProjectSettings: action('Project settings'),

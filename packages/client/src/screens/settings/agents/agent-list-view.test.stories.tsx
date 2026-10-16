@@ -1,10 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import type { AgentsFilter } from '#features/agents';
+import { type AgentsFilter, agentsPage } from '#features/agents';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { AgentListView } from './agent-list-view';
-import { agentListArgs, emptyCatalog } from './agent-list-view.mocks';
+import {
+  agentListArgs,
+  catalog,
+  emptyCatalog,
+  pageRows,
+} from './agent-list-view.mocks';
 
 const meta = {
   title: 'Tests/Agents page',
@@ -48,8 +53,7 @@ export const FiltersPhone = filtering(layoutWidths.phone);
 function empty(filter: AgentsFilter, search: string, expected: string): Story {
   return {
     args: {
-      installed: [],
-      catalog: { status: 'loaded', catalog: emptyCatalog },
+      agents: pageRows([], { status: 'loaded', registry: emptyCatalog }),
       initialFilter: filter,
       initialSearch: search,
     },
@@ -87,8 +91,35 @@ export const SearchEmptyUninstalled = empty(
   'No uninstalled Agents match your search.',
 );
 
+// Until the Server says which Agents are installed, the page shows the Registry's loading look.
+export const WaitsForInstalledAgents: Story = {
+  args: {
+    agents: agentsPage(
+      { status: 'loading' },
+      { status: 'loaded', registry: catalog },
+    ),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText('Loading Registry…')).toBeVisible();
+  },
+};
+
+export const NamesInstalledAgentsFailure: Story = {
+  args: {
+    agents: agentsPage(
+      { status: 'failed' },
+      { status: 'loaded', registry: catalog },
+    ),
+  },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText('Failed to load installed Agents.'),
+    ).toBeVisible();
+  },
+};
+
 export const Retry: Story = {
-  args: { catalog: { status: 'failed' } },
+  args: { agents: pageRows(undefined, { status: 'failed' }) },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.onRetry).toHaveBeenCalledOnce();

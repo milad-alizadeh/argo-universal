@@ -1,4 +1,4 @@
-@electron-only @smoke
+@electron-only @smoke @needs-focus
 Feature: Desktop Session notifications
   Scenario: Failed native delivery retries without acknowledging success
     Given a wide Frame

@@ -24,7 +24,8 @@ function selectAgent(width: number): Story {
         second = args.agents[1];
 
       if (!first || !second) throw new Error('Picker fixture needs two Agents');
-      await userEvent.click(canvas.getByRole('button', { name: pickerLabel }));
+      const trigger = canvas.getByRole('button', { name: pickerLabel });
+      await userEvent.click(trigger);
       const overlay = within(document.body);
       await expect(
         overlay.getByRole('button', { name: first.name }),
@@ -33,6 +34,13 @@ function selectAgent(width: number): Story {
       await waitFor(() =>
         expect(args.onAgentChange).toHaveBeenCalledWith(second.id),
       );
+      await waitFor(() => expect(trigger).toHaveFocus());
+      await userEvent.click(trigger);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() =>
+        expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
+      );
+      await expect(trigger).toHaveFocus();
     },
   };
 }

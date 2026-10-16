@@ -4,40 +4,15 @@ export { reportsModelCallContext, promptUsageScope } from './usage-scope';
 
 export { type AgentsRouterDeps, createAgentsRouter } from './router';
 
-export {
-  isAgentDisabled,
-  readCustomDefinition,
-} from './configuration/configuration-sql';
-
 export type {
   AgentLaunch,
-  AgentLaunchSubject,
-  CheckAgentLaunch,
   ResolveAgentLaunch,
-  LoginTerminalProcess,
   LaunchLoginTerminal,
 } from './agent-launch';
 
-export { type FetchAgents } from './registry/fetch-agents';
+export type { FetchAgents } from './registry/fetch-agents';
 
-export { AgentCatalogReplaceJob } from './agent-storage';
-
-export {
-  syncSupervisorMachine,
-  type SyncSupervisorInput,
-} from './sync-supervisor-machine';
-
-export { AgentInstallations } from './install/lifecycle/operations';
-
-export type { InstallPorts } from './install/ports';
-
-export { readInstallSelection } from './install/selection/selection';
-
-export { resolveInstalledAgentLaunch } from './install/selection/launch';
-
-export { reconcileInterruptedInstallations } from './install/lifecycle/reconcile';
-
-export type { InstallToolInput } from './install/ports';
+export type { InstallPorts } from './launch/ports';
 
 export {
   registryMachine,
@@ -45,17 +20,12 @@ export {
   type RegistryInput,
 } from './registry/registry-machine';
 
-export { getCommand } from './launch/get-command';
-
-export type { CommandInput, RegistryCommand } from './launch/types';
-
 export { sessionOpenError } from './acp/open-error';
 
 export { readAcpUsage } from './acp/connection/response-readers';
 
 export { resolveSavedAgentLaunch } from './launch/saved-launch';
 
-export {
-  hasAgentServer,
-  requireAgentServer,
-} from './servers/agent-servers-sql';
+export { hasAgentServer } from './servers/agent-servers-sql';
+
+export { ShellProcessRecord } from './acp/shell-commands/shell-process-record';

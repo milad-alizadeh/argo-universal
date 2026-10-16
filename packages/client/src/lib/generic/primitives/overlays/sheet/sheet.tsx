@@ -2,36 +2,57 @@ import { cloneElement, type ReactElement, type Ref } from 'react';
 import { View } from 'react-native';
 import { Drawer } from 'vaul';
 import { cn } from '#lib/generic/utils';
+import { useCentresOverlays } from '#primitives/overlays/centred-overlay';
 import { useWide } from '../../../use-wide/use-wide';
+import { ModalSheet } from './sheet-modal';
 import {
   SheetLink,
   SheetNavigationProvider,
   SheetPage,
   useSheetStack,
 } from './sheet-pages';
-import { openChange, SheetPanel, type PresentationProps } from './sheet-panel';
+import {
+  openChange,
+  SheetPanel,
+  sheetHeightClass,
+  type PresentationProps,
+} from './sheet-panel';
 import { PopoverSheet } from './sheet-popover';
 import type { SheetProps } from './sheet-props';
 
 /*
- * A narrow window raises the sheet from the bottom edge as a drawer; a wide one opens it as a
- * popover on its trigger. A sheet with no trigger, which the app opens itself, stays a drawer.
+ * A compact window raises the sheet from the bottom edge as a drawer; a wide one opens it as a
+ * popover on its trigger. A sheet with no trigger, which the app opens itself, centres as a modal
+ * from the medium size class up.
  */
 function SheetRoot(props: SheetProps): ReactElement {
   const stack = useSheetStack(props);
-  const popover = useWide() && !!props.trigger;
 
   return (
     <SheetNavigationProvider value={stack.navigation}>
       <View style={props.style} className="min-w-0 shrink">
-        {popover ? (
-          <PopoverSheet {...props} stack={stack} />
-        ) : (
-          <DrawerSheet {...props} stack={stack} />
-        )}
+        <SheetPresentation {...props} stack={stack} />
       </View>
     </SheetNavigationProvider>
   );
+}
+
+function SheetPresentation(props: PresentationProps): ReactElement {
+  if (!useLifted(props)) return <DrawerSheet {...props} />;
+
+  return props.trigger ? (
+    <PopoverSheet {...props} />
+  ) : (
+    <ModalSheet {...props} />
+  );
+}
+
+// Whether the sheet leaves the bottom edge: a popover on its trigger when wide, a modal from medium up without one.
+function useLifted(props: SheetProps): boolean {
+  const wide = useWide();
+  const centred = useCentresOverlays();
+
+  return props.trigger ? wide : centred;
 }
 
 function DrawerSheet(props: PresentationProps): ReactElement {
@@ -104,13 +125,8 @@ function drawerProps(props: PresentationProps): DrawerProps {
 function drawerClass(props: PresentationProps): string {
   return cn(
     'sheet overflow-hidden fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-content pb-6 shadow-card outline-none dark:border dark:border-border',
-    props.stack.pages.length > 0 && 'sheet-paged',
-    fullHeight(props.detents) && 'sheet-full',
+    sheetHeightClass(props),
   );
-}
-
-function fullHeight(detents: SheetProps['detents']): boolean {
-  return detents?.join() === 'large';
 }
 
 // The drawer's own trigger, as the kit popover's: Radix records it to take focus back on close; the press opens the sheet.

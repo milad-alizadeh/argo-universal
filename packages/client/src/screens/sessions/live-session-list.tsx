@@ -1,9 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
+import {
+  type InstalledAgents,
+  loadedAgents,
+  useInstalledAgents,
+} from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
 import {
   liveUpdatesStopped,
   type QueryProgress,
+  RenameSessionDialog,
   type SessionsLayout,
   sessionsLoadState,
 } from '#features/sessions';
@@ -17,6 +23,7 @@ import {
   SessionListView,
   type SessionListViewProps,
 } from './session-list-view';
+import { useRenameSession } from './use-rename-session';
 import { useSessionListUpdates } from './use-session-list-updates';
 import { useSessionPages } from './use-session-pages';
 
@@ -38,16 +45,21 @@ const queryProgress = (query: {
   isPending: boolean;
 }): QueryProgress => ({ failed: query.isError, pending: query.isPending });
 
-// The Projects and Agents each Session row is drawn with.
+const agentsProgress = ({ status }: InstalledAgents): QueryProgress => ({
+  failed: status === 'failed',
+  pending: status === 'loading',
+});
+
+// The Projects and Installed Agents each Session row is drawn with.
 function useSessionListLookups(): SessionListLookups {
   const trpc = useTRPC();
   const projects = useQuery(trpc.projects.list.queryOptions());
-  const agents = useQuery(trpc.agents.servers.queryOptions());
+  const agents = useInstalledAgents();
 
   return {
     projects: projects.data ?? [],
-    agents: agents.data ?? [],
-    progress: [queryProgress(projects), queryProgress(agents)],
+    agents: loadedAgents(agents),
+    progress: [queryProgress(projects), agentsProgress(agents)],
   };
 }
 
@@ -93,9 +105,17 @@ function useSessionsViewProps(
   };
 }
 
-// The Sessions list: its queries and live updates, passed to the view as props.
+// The Sessions list: its queries and live updates, passed to the view as props, and the dialog that renames a row's Session.
 export function LiveSessionList(
   props: LiveSessionListProps,
 ): React.JSX.Element {
-  return <SessionListView {...useSessionsViewProps(props)} />;
+  const view = useSessionsViewProps(props);
+  const rename = useRenameSession(view.sessions);
+
+  return (
+    <>
+      <SessionListView {...view} onRename={rename.onRename} />
+      <RenameSessionDialog {...rename.dialog} />
+    </>
+  );
 }

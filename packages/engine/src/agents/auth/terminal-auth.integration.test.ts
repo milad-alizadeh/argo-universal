@@ -9,11 +9,8 @@ import {
   startTerminalAuth,
   subject,
   terminalStartup,
-  isolateTerminalHome,
 } from '#mocks/auth-terminal';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
-
-isolateTerminalHome();
 
 it(
   'shares a real sign-in PTY across callers, accepts input and succeeds on exit 0',
