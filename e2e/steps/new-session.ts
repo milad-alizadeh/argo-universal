@@ -1,6 +1,5 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { closeAgentMenus } from './agent-menus';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 import { onPhone, openAppOnce, reloadApp } from './frame';
@@ -59,23 +58,11 @@ export async function chooseLocalCheckout(page: Page): Promise<void> {
 }
 
 export async function chooseAgent(page: Page, label: string): Promise<void> {
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await page.getByRole('button', { name: /^Agent,/ }).click();
-  await page.getByRole('button', { name: `Select ${label}` }).click();
-  await closeAgentMenus(page, agentModelLabel);
-  await expectAgentSelection(page, label);
-}
-
-async function expectAgentSelection(page: Page, label: string): Promise<void> {
-  await page.getByRole('button', { name: agentModelLabel }).click();
-  await expect(page.getByRole('button', { name: /^Agent,/ })).toContainText(
-    label,
-  );
-  await page.getByRole('button', { name: /^Agent,/ }).click();
+  await page.getByRole('button', { name: 'Select Agent', exact: true }).click();
+  await page.getByRole('button', { name: label, exact: true }).click();
   await expect(
-    page.getByRole('button', { name: `Select ${label}` }),
-  ).toHaveAttribute('aria-pressed', 'true');
-  await closeAgentMenus(page, agentModelLabel);
+    page.getByRole('button', { name: 'Select Agent', exact: true }),
+  ).toContainText(label);
 }
 
 async function startWithAgent(
@@ -83,7 +70,7 @@ async function startWithAgent(
   httpUrl: string,
   ordinal: number,
 ): Promise<void> {
-  const { label } = await readAgent(page, httpUrl, ordinal);
+  const { name: label } = await readAgent(page, httpUrl, ordinal);
   await openNewSession(page);
   await chooseAgent(page, label);
   await waitForEmptySession(page);
@@ -158,7 +145,7 @@ Given(
   async ({ page, server }, ordinal: number): Promise<void> => {
     // The refusal shows only when a Session opens or reopens, so the Agent is listed as available.
     expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-      availability: 'available',
+      id: expect.any(String),
     });
   },
 );
@@ -170,3 +157,5 @@ When(
     await page.getByRole('button', { name: 'Send', exact: true }).click();
   },
 );
+
+When('I open a New Session', async ({ page }) => openNewSession(page));

@@ -37,7 +37,7 @@ for (const fixture of [
 Then(
   'the App asks to authenticate to Agent {int} with {string}',
   async ({ page, server }, ordinal: number, method: string): Promise<void> => {
-    const { label } = await readAgent(page, server.httpUrl, ordinal);
+    const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await expect(callout(page, `Authenticate to ${label}`)).toBeVisible(
       sessionOpenTimeout,
     );
@@ -82,7 +82,7 @@ When(
 Then(
   'the App is authenticating to Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    const { label } = await readAgent(page, server.httpUrl, ordinal);
+    const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await expect(callout(page, `Authenticating to ${label}…`)).toBeVisible();
   },
 );
@@ -149,4 +149,11 @@ Then(
 
 When('I press Authenticate', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: 'Authenticate', exact: true }).click();
+});
+
+When('I press Return in the sign-in terminal', async ({ page }) => {
+  const terminal = page.getByRole('region', { name: 'Agent sign-in terminal' });
+  await terminal.click();
+  await terminal.getByRole('textbox').focus();
+  await page.keyboard.press('Enter');
 });

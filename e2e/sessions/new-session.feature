@@ -146,38 +146,32 @@ Feature: New Session
     And I send the prompt "Tidy the README"
     Then the next New Session remembers the local Checkout
 
-  Scenario Outline: New Session explains why every Agent is <state>
-    Given a phone Frame
-    And every Agent is "<state>"
+
+  Scenario Outline: Zero installed Agents keep the draft when Add Agents opens Settings
+    Given a <layout> Frame
+    And no Agents are installed
     When I open a New Session
-    Then New Session shows the first Agent's setup step
-    And New Session cannot send a prompt
+    Then the Agent picker offers only Add Agents and Send is disabled
+    When I type "Keep this draft" and open Add Agents
+    Then the Agents page is open
+    When I return to New Session
+    Then the Message box still holds "Keep this draft"
 
     Examples:
-      | state         |
-      | not installed |
-      | not signed in |
+      | layout |
+      | wide   |
+      | phone  |
 
-  Scenario Outline: Agent <agent> requires sign-in
-    Given a phone Frame
-    And Agent <agent> is "not signed in"
-    When I view the Agent choices in New Session
-    Then Agent <agent> shows "not signed in" instead of accepting a prompt
-    When I set up Agent <agent>
-    Then the Settings show Agent <agent>
-
-    Examples:
-      | agent |
-      | 1     |
-      | 2     |
-
-  Scenario Outline: Agent <agent> is not installed and offers no setup step
-    Given a phone Frame
-    And Agent <agent> is "not installed"
-    When I view the Agent choices in New Session
-    Then Agent <agent> shows "not installed" without a setup step
+  Scenario Outline: A first launch waits for the download and then shows options
+    Given a <layout> Frame
+    And the Agent download is held
+    When I open a New Session
+    And I choose the local Checkout
+    Then the first launch shows Loading
+    When the Agent download finishes
+    Then the Composer shows Agent options
 
     Examples:
-      | agent |
-      | 1     |
-      | 2     |
+      | layout |
+      | wide   |
+      | phone  |

@@ -75,7 +75,7 @@ Given(
   'Agent {int} supplies a long Feed history',
   async ({ page, server }, ordinal: number): Promise<void> => {
     expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-      availability: 'available',
+      id: expect.any(String),
     });
   },
 );

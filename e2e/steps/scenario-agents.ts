@@ -2,12 +2,7 @@ import {
   type AppFixtureAgents,
   appFixtureAgentIds,
 } from '@repo/mocks/agent/app-fixtures';
-import { z } from 'zod';
 import { signInScenarios } from './sign-in-agents';
-
-const Availability = z.enum(['not installed', 'not signed in']);
-
-export type Unavailable = z.infer<typeof Availability>;
 
 export function agentId(ordinal: number): string {
   const id = appFixtureAgentIds[ordinal - 1];
@@ -17,40 +12,18 @@ export function agentId(ordinal: number): string {
   return id;
 }
 
-export function availabilityValue(
-  state: Unavailable,
-): 'not_installed' | 'not_signed_in' {
-  return state === 'not installed' ? 'not_installed' : 'not_signed_in';
-}
-
-function unavailableAgents(ordinal: string, state: string): AppFixtureAgents {
-  const availability = availabilityValue(Availability.parse(state));
-
-  const ids =
-    ordinal === 'every' ? appFixtureAgentIds : [agentId(Number(ordinal))];
-
-  return Object.fromEntries(
-    ids.map((id): [string, { availability: typeof availability }] => [
-      id,
-      { availability },
-    ]),
-  );
-}
-
-function unavailableConfiguration(match: RegExpExecArray): AppFixtureAgents {
-  return unavailableAgents(match[1] ?? 'every', match[2] ?? '');
-}
-
 function configurationForStep(step: string): AppFixtureAgents {
-  const unavailable =
-    /^(?:Given|And) (?:Agent (\d+)|(?:every) Agent) is "([^"]+)"$/.exec(step);
-
-  if (unavailable) return unavailableConfiguration(unavailable);
-
   const refusing =
     /^(?:Given|And) Agent (\d+) refuses to (open|reopen) a Session$/.exec(step);
 
-  return refusing ? refusingConfiguration(refusing) : {};
+  if (refusing) return refusingConfiguration(refusing);
+
+  if (/^(?:Given|And) no Agents are installed$/.test(step))
+    return Object.fromEntries(
+      appFixtureAgentIds.map((id) => [id, { installed: false }]),
+    );
+
+  return {};
 }
 
 function refusingConfiguration(match: RegExpExecArray): AppFixtureAgents {

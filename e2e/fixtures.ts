@@ -73,7 +73,11 @@ export const test = base.extend<
 
     if (appTarget === 'web') {
       const serverDirectory = testInfo.outputPath(ownServerDirectory);
-      const server = await startOwnServer(serverDirectory, mockAgents);
+
+      const server = await startOwnServer(serverDirectory, mockAgents, {
+        noProjects: $tags.includes('@without-projects'),
+        registryOffline: $tags.includes('@registry-offline'),
+      });
 
       try {
         const page = await context.newPage();

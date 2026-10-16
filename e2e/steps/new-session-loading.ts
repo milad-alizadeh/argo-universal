@@ -13,7 +13,7 @@ import {
 Given(
   'a Local New Session with Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    const { label } = await readAgent(page, server.httpUrl, ordinal);
+    const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await openNewSession(page);
     await chooseAgent(page, label);
     await chooseLocalCheckout(page);

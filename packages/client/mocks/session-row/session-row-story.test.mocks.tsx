@@ -10,7 +10,7 @@ export const meta = {
   component: SessionRow,
   args: {
     session: sessionRows.running,
-    logo: agentsList[0]?.logo ?? '',
+    logo: agentsList[0]?.icon ?? '',
     onSelect: fn(),
   },
 } satisfies Meta<typeof SessionRow>;
@@ -80,7 +80,7 @@ const states = [
 
 const parityRowNames = agentsList.flatMap((agent) =>
   states.map(
-    ([name, label]) => `${agent.label}: ${sessionRows[name].title}, ${label}`,
+    ([name, label]) => `${agent.name}: ${sessionRows[name].title}, ${label}`,
   ),
 );
 
@@ -94,11 +94,11 @@ export const statusParity: Story = {
           return (
             <SessionRow
               {...args}
-              key={`${agent.agent}:${name}`}
-              logo={agent.logo}
+              key={`${agent.id}:${name}`}
+              logo={agent.icon ?? ''}
               session={{
                 ...session,
-                title: `${agent.label}: ${session.title}`,
+                title: `${agent.name}: ${session.title}`,
               }}
             />
           );
