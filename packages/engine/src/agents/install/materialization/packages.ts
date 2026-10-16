@@ -2,19 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { z } from 'zod';
 import { jsonCodec } from '../../../lib/json-codec';
-import type { InstallPorts, InstallToolInput } from '../ports';
 import { rejectInstallMetadata } from './metadata-rejections';
-import type { InstallRecipe } from './recipe';
-import { installUv } from './uv-packages';
-
-type PackageRecipe = Exclude<InstallRecipe, { kind: 'binary' }>;
-
-export type PackageInput = {
-  directory: string;
-  recipe: PackageRecipe;
-  signal: AbortSignal;
-  ports: InstallPorts;
-};
 
 const PackageMetadata = z.object({
   name: z.string(),
@@ -23,17 +11,6 @@ const PackageMetadata = z.object({
 });
 
 const PackageJson = jsonCodec(PackageMetadata);
-
-const toolInput = (
-  input: PackageInput,
-  executable: string,
-  args: readonly string[],
-): InstallToolInput => ({
-  executable,
-  args,
-  cwd: input.directory,
-  signal: input.signal,
-});
 
 const unambiguousNpmBin = (
   bins: Record<string, string>,
@@ -75,21 +52,6 @@ const readPackageMetadata = async (
   }
 };
 
-const npmExecutable = async ({
-  directory,
-  recipe,
-}: PackageInput): Promise<string> => {
-  const folder = join('node_modules', recipe.name),
-    metadata = await readPackageMetadata(join(directory, folder));
-
-  if (metadata.name !== recipe.name || metadata.version !== recipe.version)
-    throw rejectInstallMetadata(
-      'Installed npm package does not match the selected release',
-    );
-
-  return join(folder, selectedBin(metadata.bin, recipe.name));
-};
-
 export const npmInstallArgs = (
   directory: string,
   specification: string,
@@ -103,22 +65,6 @@ export const npmInstallArgs = (
   '--',
   specification,
 ];
-
-const installNpm = async (input: PackageInput): Promise<string> => {
-  await input.ports.runTool(toolInput(input, 'node', ['--version']));
-  await input.ports.runTool(
-    toolInput(
-      input,
-      'npm',
-      npmInstallArgs(input.directory, input.recipe.package),
-    ),
-  );
-
-  return npmExecutable(input);
-};
-
-export const materializePackage = (input: PackageInput): Promise<string> =>
-  input.recipe.kind === 'npx' ? installNpm(input) : installUv(input);
 
 export const readNpmExecutable = async (
   directory: string,

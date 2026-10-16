@@ -1,8 +1,5 @@
 // Choices keep the system checkmark on iOS and Material's radio button on Android.
 import { createElement, type ReactElement } from 'react';
-import { Platform } from 'react-native';
-import { SelectedCheck } from '#primitives/display/selected-check';
-import { RadioMark } from '#primitives/inputs/checkbox';
 import {
   GroupedListItem,
   type GroupedListItemProps,
@@ -25,18 +22,8 @@ export function ComboboxOptionRow<Value extends string>(
 
 function selectionProps<Value extends string>(
   props: OptionProps<Value>,
-): Pick<GroupedListItemProps, 'selected' | 'control' | 'accessory'> {
-  const selected = props.option.value === props.value;
-
-  if (Platform.OS === 'android')
-    return {
-      selected,
-      control: (
-        <RadioMark selected={selected} disabled={props.option.disabled} />
-      ),
-    };
-
-  return { selected, accessory: selected ? <SelectedCheck /> : undefined };
+): Pick<GroupedListItemProps, 'selected' | 'choice'> {
+  return { selected: props.option.value === props.value, choice: true };
 }
 
 function rowProps<Value extends string>({

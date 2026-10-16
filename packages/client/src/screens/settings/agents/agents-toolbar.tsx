@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { type AgentsFilter } from '#features/agents';
 import { FilterPill } from '#primitives/buttons/filter-pill';
+import { SearchFieldInput } from '#primitives/inputs/search-field';
 
 export interface AgentsFilterProps {
   filter: AgentsFilter;
@@ -36,6 +37,21 @@ export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
           onPress={() => props.onFilter(value)}
         />
       ))}
+    </View>
+  );
+}
+
+export function AgentsToolbar(
+  props: AgentsFilterProps & AgentsSearchProps,
+): React.JSX.Element {
+  return (
+    <View className="flex-row items-center justify-between gap-4">
+      <AgentsFilterPills {...props} />
+      <SearchFieldInput
+        label={searchLabel}
+        value={props.search}
+        onChangeText={props.onSearch}
+      />
     </View>
   );
 }

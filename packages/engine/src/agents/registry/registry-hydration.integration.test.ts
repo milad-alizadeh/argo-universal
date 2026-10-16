@@ -14,3 +14,10 @@ it('rejects malformed saved Agent row columns rather than silently hiding the Ag
     'Stored saved Agent row is malformed',
   );
 });
+
+it('rejects a second Registry cache row at the storage boundary', async () => {
+  const host = await startEngineTestHost();
+  expect(() =>
+    host.database.$client.exec('INSERT INTO registry_cache (id) VALUES (2)'),
+  ).toThrow('CHECK constraint failed');
+});

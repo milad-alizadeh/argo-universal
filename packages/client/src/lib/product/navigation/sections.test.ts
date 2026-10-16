@@ -12,7 +12,6 @@ const sectionCases: [string | undefined, string][] = [
   ['/settings', 'settings'],
   ['/settings/accounts', 'settings'],
   ['/settings/projects/example-project', 'settings'],
-  ['/settings/agents/new', 'settings'],
   ['settings', 'settings'],
   ['/', 'sessions'],
   ['index', 'sessions'],

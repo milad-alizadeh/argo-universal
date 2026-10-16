@@ -1,7 +1,7 @@
 import { SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { project, session, turn } from '@repo/db/schema';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { SQLiteUpdateSetSource } from 'drizzle-orm/sqlite-core';
 import { projectQueuedFeedSession, queuedFeedSessionId } from '../feed';
 import {
@@ -182,6 +182,55 @@ export class SessionRowUpdateJob implements WriterJob {
   }
 }
 
+type SessionTitleChange = {
+  id: string;
+  title: string;
+  titleSource: Exclude<SessionRecord['titleSource'], 'prompt'>;
+};
+
+// A user title outranks every later Agent title; the check runs in the commit, so a queued Agent title cannot replace a rename.
+export class SessionTitleJob implements WriterJob {
+  public constructor(private readonly change: SessionTitleChange) {}
+
+  public describe(): string {
+    return `title Session ${this.change.id} from ${this.change.titleSource}`;
+  }
+
+  public commit(transaction: StorageTransaction): void {
+    const { id, title, titleSource } = this.change;
+
+    transaction
+      .update(session)
+      .set({ title, titleSource })
+      .where(
+        titleSource === 'user'
+          ? eq(session.id, id)
+          : and(eq(session.id, id), ne(session.titleSource, 'user')),
+      )
+      .run();
+  }
+
+  public project(
+    current: SessionRecord | undefined,
+    sessionId: string,
+  ): SessionRecord | undefined {
+    if (!current || this.change.id !== sessionId) return current;
+
+    if (this.change.titleSource === 'agent' && current.titleSource === 'user')
+      return current;
+
+    return {
+      ...current,
+      title: this.change.title,
+      titleSource: this.change.titleSource,
+    };
+  }
+
+  public changedSessionIds(): string[] {
+    return [this.change.id];
+  }
+}
+
 // Removes a Session no prompt reached; its Turns, Feed rows and Blobs go with it.
 export class SessionDeleteJob implements WriterJob {
   public constructor(private readonly sessionId: string) {}
@@ -296,6 +345,7 @@ const projectSessionJob = (
   if (
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
+    job instanceof SessionTitleJob ||
     job instanceof SessionDeleteJob ||
     job instanceof SessionArchiveJob ||
     job instanceof SessionSeenJob
@@ -410,6 +460,7 @@ export const changedSessionIds = (job: WriterJob): string[] => {
   if (
     job instanceof SessionInsertJob ||
     job instanceof SessionRowUpdateJob ||
+    job instanceof SessionTitleJob ||
     job instanceof SessionDeleteJob ||
     job instanceof SessionArchiveJob ||
     job instanceof SessionSeenJob ||

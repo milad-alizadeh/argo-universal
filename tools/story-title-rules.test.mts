@@ -40,10 +40,6 @@ describe('a story title', (): void => {
       'Tests/AgentsList',
     ],
     [
-      `${src}/features/agents/components/custom-agent-form/custom-agent-form.stories.tsx`,
-      'Screens/Settings/Add custom Agent',
-    ],
-    [
       `${src}/features/agents/components/agent-list-view/agents-list.test.stories.tsx`,
       'Tests/AgentsList',
     ],

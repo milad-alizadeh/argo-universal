@@ -25,7 +25,7 @@ export function ComboboxSearch(props: ComboboxSearchProps): React.JSX.Element {
 const containerClasses = (className: string | undefined): string =>
   cn(
     'h-12 flex-row items-center gap-3 rounded-full bg-card px-4',
-    'wide:h-8 wide:gap-2 wide:rounded-control wide:bg-muted wide:px-2.5',
+    'wide:h-8 wide:gap-2 wide:bg-muted wide:px-2.5',
     className,
   );
 

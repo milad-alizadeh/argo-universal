@@ -7,7 +7,7 @@ import type { IconRoleValue } from '../../../../lib/generic/symbols/icon-role';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 
 interface AgentLogoProps {
-  // SVG markup, the registry's icon URI, or nothing for a custom Agent.
+  // SVG markup, the registry's icon URI, or an empty string for an Agent without a logo.
   logo: string;
   label: string;
   role: IconRoleValue;

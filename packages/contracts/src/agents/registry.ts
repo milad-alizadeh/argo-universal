@@ -6,6 +6,10 @@ export interface AgentsRegistryOutput {
   error: string | null;
 }
 
-export type { BinaryTarget } from './upstream/registry.gen';
+export type {
+  ACPAgent,
+  ACPAgentRegistry,
+  BinaryTarget,
+} from './upstream/registry.gen';
 
 export const RegistryCacheRecord = registryCacheColumns;

@@ -7,8 +7,18 @@ import { cn } from '../../../utils';
 import type { ComboboxProps } from './combobox-props';
 import { comboboxValue } from './combobox-value';
 
+// Radix's Trigger hands its child the anchor ref and popup state; dropping the ref leaves the popover unplaced.
+type Anchor = Pick<
+  React.ComponentProps<typeof Pressable>,
+  'ref' | 'aria-expanded'
+> & {
+  'aria-haspopup'?: 'dialog';
+  'aria-controls'?: string;
+};
+
 type Props<Value extends string> = ComboboxProps<Value> &
-  FieldDescription & { onPress?: () => void };
+  FieldDescription &
+  Anchor & { onPress?: () => void };
 
 export function ComboboxTrigger<Value extends string>(
   props: Props<Value>,
@@ -23,12 +33,17 @@ export function ComboboxTrigger<Value extends string>(
   );
 }
 
-type Attributes = React.ComponentProps<typeof Pressable> & {
-  'aria-describedby'?: string;
-};
+type Attributes = React.ComponentProps<typeof Pressable> &
+  Anchor & {
+    'aria-describedby'?: string;
+  };
 
 function triggerProps<Value extends string>(props: Props<Value>): Attributes {
   return {
+    ref: props.ref,
+    'aria-haspopup': props['aria-haspopup'],
+    'aria-expanded': props['aria-expanded'],
+    'aria-controls': props['aria-controls'],
     role: 'button',
     accessibilityLabel: props.label,
     disabled: props.disabled,

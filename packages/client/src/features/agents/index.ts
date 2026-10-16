@@ -27,24 +27,6 @@ export {
   type AgentsFilter,
 } from './state/agent-list';
 
-export { type SubmitCustomAgent } from './hooks/use-custom-agent-form';
-
-export {
-  useAgentCheck,
-  useCustomAgentMutations,
-  useCustomAgents,
-} from './hooks/use-custom-agents';
-
-export {
-  CustomAgentForm,
-  type CustomAgentFormProps,
-  customAgentFormDescription,
-} from './components/custom-agent-form/custom-agent-form';
-
-export { LaunchSections } from './components/custom-agent-launch';
-
-export { sectionFooter } from './components/form-field';
-
 export { AgentLoginTerminal } from './components/agent-login-terminal/agent-login-terminal';
 
 export { type LoginTerminalProps } from './components/agent-login-terminal/terminal-props';

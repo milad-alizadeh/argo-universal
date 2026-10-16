@@ -60,12 +60,24 @@ const fieldOffset = 4;
 
 const drillOffset = -16;
 
+// A field's choices match the field's width; a row's fit their longest label.
+const placements = {
+  row: {
+    side: 'right',
+    sideOffset: drillOffset,
+    className: 'w-fit min-w-32 max-w-80 overflow-hidden p-0',
+  },
+  field: {
+    side: 'bottom',
+    sideOffset: fieldOffset,
+    className: 'w-80 overflow-hidden p-0',
+  },
+} as const satisfies Record<string, PopoverContentProps>;
+
 function placement(props: Props): PopoverContentProps {
   return {
-    side: props.row ? 'right' : 'bottom',
+    ...placements[props.row ? 'row' : 'field'],
     align: 'start',
-    sideOffset: props.row ? drillOffset : fieldOffset,
     accessibilityLabel: props.title,
-    className: 'w-80 overflow-hidden p-0',
   };
 }
