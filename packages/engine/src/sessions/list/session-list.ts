@@ -1,5 +1,6 @@
 import type {
   SessionCounts,
+  SessionInfo,
   SessionListInput,
   SessionListOutput,
   SessionListUpdate,
@@ -48,7 +49,7 @@ function createObserver(options: ListOptions): SessionListObserver {
 function listProcedures(observer: SessionListObserver): SessionList {
   return {
     list: async (input): Promise<SessionListOutput> =>
-      sessionListPage(input, informationRows(observer)),
+      sessionListPage(input, (): SessionInfo[] => informationRows(observer)),
     listUpdates: (signal): AsyncIterable<SessionListUpdate> =>
       observer.watch(signal, selectSessionChanges()),
     counts: (signal): AsyncIterable<SessionCounts> =>

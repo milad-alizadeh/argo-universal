@@ -18,11 +18,11 @@ const pageSize = 50;
 
 export function sessionListPage(
   input: SessionListInput,
-  rows: SessionInfo[],
+  readRows: () => SessionInfo[],
 ): SessionListOutput {
   const cursor = parseCursor(input.cursor);
 
-  const matching = rows
+  const matching = readRows()
     .filter(
       (row): boolean => matchesInput(row, input) && beforeCursor(row, cursor),
     )
