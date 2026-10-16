@@ -37,7 +37,13 @@ it('migrates Shell ids scoped to a Session and rejects duplicates within that Se
       .insert(shell)
       .values({ ...values, sessionId: 'session-1' })
       .run(),
-  ).toThrow('UNIQUE constraint failed: shell.session_id, shell.id');
+  ).toThrow(
+    expect.objectContaining({
+      cause: expect.objectContaining({
+        message: 'UNIQUE constraint failed: shell.session_id, shell.id',
+      }),
+    }),
+  );
 });
 
 it('deleting a Session cascades only its Shells', () => {
