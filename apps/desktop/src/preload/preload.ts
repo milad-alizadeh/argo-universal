@@ -12,14 +12,10 @@ const serverUrl =
     ?.slice(serverUrlPrefix.length) ?? null;
 
 // Only macOS has SF Symbols to draw; elsewhere the page falls back to Material Symbols.
-const symbols =
+const symbols: DesktopBridge['symbols'] =
   process.platform === 'darwin'
     ? {
-        render: (request: {
-          name: string;
-          pointSize: number;
-        }): Promise<string | null> =>
-          ipcRenderer.invoke('symbol:render', request),
+        render: (request) => ipcRenderer.invoke('symbol:render', request),
       }
     : undefined;
 
