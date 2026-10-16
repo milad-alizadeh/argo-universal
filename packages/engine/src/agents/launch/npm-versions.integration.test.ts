@@ -1,16 +1,23 @@
 import { existsSync } from 'node:fs';
 import { expect, it } from 'vitest';
+import {
+  createResourceOpening,
+  deferLaunch,
+  resourceLaunch,
+} from '#mocks/acp-resource';
 import { startEngineTestHost } from '#mocks/engine';
 import { installEntry, installationPorts } from '#mocks/installation';
+import type { AcpResources } from '../index';
 import type { InstallPorts } from '../install/ports';
 import { getCommand } from './get-command';
-import type { CommandInput } from './types';
+import type { CommandInput, RegistryCommand } from './types';
 
 const isInstall = (tool: Parameters<InstallPorts['runTool']>[0]): boolean =>
   tool.args[0] === 'install';
 
 type NpmVersions = {
   input: CommandInput;
+  resources: AcpResources;
   installs: string[];
   publish: (version: string) => Promise<void>;
 };
@@ -25,8 +32,11 @@ const startNpmVersions = async (): Promise<NpmVersions> => {
       JSON.stringify({ version: '1.0.0', agents: [entry] }),
   });
 
+  const resources = host.engine.getSnapshot().context.acpResources;
+
   return {
     installs,
+    resources,
     input: {
       database: host.database,
       registry: host.engine.system.get('registry'),
@@ -42,7 +52,7 @@ const startNpmVersions = async (): Promise<NpmVersions> => {
         },
       },
       signal: new AbortController().signal,
-      isDirectoryInUse: () => false,
+      isDirectoryInUse: resources.isDirectoryInUse,
     },
     publish: async (version) => {
       entry = {
@@ -55,21 +65,40 @@ const startNpmVersions = async (): Promise<NpmVersions> => {
   };
 };
 
-it.each([true, false])(
-  'installs a newer npm version beside the older one, kept only while a connection uses it (in use: %s)',
-  async (inUse) => {
+// A live connection on the older version, whose entry was dropped so the next open starts a new one.
+const holdConnection = async (
+  versions: NpmVersions,
+  older: RegistryCommand,
+): Promise<void> => {
+  await versions.resources.open({
+    ...createResourceOpening(),
+    launch: deferLaunch({
+      ...resourceLaunch,
+      agentId: versions.input.id,
+      installationDirectory: older.directory,
+    }),
+  });
+  versions.resources.dropAgentConnections(versions.input.id);
+};
+
+it.each([
+  { held: true, olderKept: true },
+  { held: false, olderKept: false },
+])(
+  'installs a newer npm version beside the older one, kept only while a connection uses it (held: $held)',
+  async ({ held, olderKept }) => {
     const versions = await startNpmVersions();
     const older = await getCommand(versions.input);
+
+    if (held) await holdConnection(versions, older);
     older.release();
     await versions.publish('1.2.4');
 
-    const newer = await getCommand({
-      ...versions.input,
-      isDirectoryInUse: (directory) => inUse && directory === older.directory,
-    });
+    const newer = await getCommand(versions.input);
+    newer.release();
 
     expect(newer.directory).not.toBe(older.directory);
     expect(versions.installs).toEqual([older.directory, newer.directory]);
-    expect(existsSync(older.args[0] ?? '')).toBe(inUse);
+    expect(existsSync(older.args[0] ?? '')).toBe(olderKept);
   },
 );
