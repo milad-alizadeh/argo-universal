@@ -77,7 +77,7 @@ function menuAction(item: NativeMenuItem): NativeMenuAction {
   };
 }
 
-// MenuAction.image: an SF Symbol name, which the system draws after the title. It takes system names only, so Argo's custom symbols draw none.
+// MenuAction.image: an SF Symbol name, which the system draws before the title, after its check. It takes system names only, so Argo's custom symbols draw none.
 function itemImage(
   icon: IconName | undefined,
 ): Pick<NativeMenuAction, 'image'> {

@@ -58,7 +58,7 @@ const filterMenuItem = {
   separateBackground: true,
 };
 
-// Active or Archived, then the Layout section's Regular or Compact; each checked on the current one. MenuAction.icon takes the option's SF Symbol, which UIMenu draws after the title, the check before it.
+// Active or Archived, then the Layout section's Regular or Compact; each checked on the current one. MenuAction.icon takes the option's SF Symbol, which UIMenu draws before the title, after the check.
 function filterMenu(filter: SessionsFilter): React.JSX.Element {
   return (
     <Stack.Toolbar.Menu {...filterMenuItem}>

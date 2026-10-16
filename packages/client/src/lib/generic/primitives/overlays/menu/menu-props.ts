@@ -18,7 +18,7 @@ export interface MenuOption<Value extends string> {
   value: Value;
   label: string;
   disabled?: boolean;
-  // Drawn before the label on web and Android, after it on iOS, where the system draws the check first.
+  // Drawn before the label; on iOS the system puts it after its own check.
   icon?: IconName;
 }
 
