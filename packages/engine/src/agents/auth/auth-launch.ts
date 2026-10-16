@@ -27,8 +27,7 @@ const registryCommand = async (
     id: subject.agent,
     shellEnv: await projectEnvironment(deps, subject.projectId),
     signal: deps.sessionCommandSignal ?? new AbortController().signal,
-    isDirectoryInUse:
-      deps.sessions.getSnapshot().context.acpResources.isDirectoryInUse,
+    isDirectoryInUse: deps.sessionConnections.acpResources().isDirectoryInUse,
   });
 
 const projectEnvironment = async (
@@ -62,10 +61,8 @@ const registryAuthentication = async (
   const cwd = readProjectPath(deps.database, subject.projectId);
   const launch = commandLaunch(command, subject, cwd);
 
-  const resources = deps.sessions.getSnapshot().context.acpResources;
-
   try {
-    return await resources.authentication(launch);
+    return await deps.sessionConnections.acpResources().authentication(launch);
   } finally {
     command.release();
   }
@@ -92,7 +89,5 @@ export const authenticationLaunch = async (
 
   const launch = await installedLaunch(deps, subject);
 
-  return deps.sessions
-    .getSnapshot()
-    .context.acpResources.authentication(launch);
+  return deps.sessionConnections.acpResources().authentication(launch);
 };

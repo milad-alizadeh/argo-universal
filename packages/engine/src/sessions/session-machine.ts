@@ -585,6 +585,11 @@ const sessionSetup = setup({
     })),
     rememberStorageFailure: assign({ storageFailedTurn: true }),
     rememberFailure: assign(
+      (_, params: FailureParameters): Pick<SessionContext, 'failure'> => ({
+        failure: String(params.error),
+      }),
+    ),
+    rememberOpenFailure: assign(
       (
         _,
         params: FailureParameters,
@@ -593,6 +598,14 @@ const sessionSetup = setup({
         openError: sessionOpenError(params.error),
       }),
     ),
+    recordPromptAuthentication: (
+      { context },
+      params: FailureParameters,
+    ): void => {
+      if (context.turnEnding.kind === 'cancel') return;
+
+      context.acpLease?.authentication?.recordRequired(params.error);
+    },
     addDiscardFailure: assign(
       ({ context, event }): Pick<SessionContext, 'failure'> => ({
         failure: `${context.failure}\nThe Session was not discarded: ${String('error' in event ? event.error : event)}`,
@@ -929,7 +942,7 @@ const sessionEntryOutcome = {
   onError: {
     target: 'closed',
     actions: {
-      type: 'rememberFailure',
+      type: 'rememberOpenFailure',
       params: ({
         event,
       }: {
@@ -946,8 +959,6 @@ const promptFailureReason = (
   cause: unknown,
 ): StopReason => {
   if (context.turnEnding.kind === 'cancel') return 'cancelled';
-
-  context.acpLease?.authentication?.recordRequired(cause);
 
   return isAuthRequired(cause) ? 'auth_required' : 'error';
 };
@@ -1042,7 +1053,7 @@ export const sessionMachine = sessionSetup.createMachine({
         checkoutLimit: {
           target: 'closed',
           actions: {
-            type: 'rememberFailure',
+            type: 'rememberOpenFailure',
             params: {
               error: `Checkout creation exceeded checkoutLimit (${checkoutLimit} ms). Retry the Session.`,
             },
@@ -1200,7 +1211,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 onError: {
                   target: 'closing',
                   actions: {
-                    type: 'rememberFailure',
+                    type: 'rememberOpenFailure',
                     params: ({ event }): FailureParameters => ({
                       error: event.error,
                     }),
@@ -1333,6 +1344,12 @@ export const sessionMachine = sessionSetup.createMachine({
                   actions: [
                     {
                       type: 'rememberPromptFailure',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
+                    {
+                      type: 'recordPromptAuthentication',
                       params: ({ event }): FailureParameters => ({
                         error: event.error,
                       }),

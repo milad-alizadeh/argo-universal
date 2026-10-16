@@ -1,11 +1,7 @@
 import {
-  SessionOpenError,
-  SessionOpenFailure,
   SessionOpenFailureResponse,
+  sessionOpenErrorText,
 } from '@repo/contracts';
-
-const typedOpenErrorMessage = (error: SessionOpenError): string =>
-  error.type === 'auth-required' ? 'Authentication required' : error.message;
 
 // The same failure reads the same on every Sessions page.
 export const serverSilentMessage =
@@ -13,12 +9,11 @@ export const serverSilentMessage =
 
 export const sessionOpenFailedTitle = "Couldn't open the Session";
 
+// A Feed closure arrives as a SessionOpenFailure, whose message is the text.
 export const sessionOpenErrorMessage = (cause: unknown): string => {
-  if (cause instanceof SessionOpenFailure)
-    return typedOpenErrorMessage(cause.openError);
   const parsed = SessionOpenFailureResponse.safeParse(cause);
 
-  if (parsed.success) return typedOpenErrorMessage(parsed.data.data.openError);
+  if (parsed.success) return sessionOpenErrorText(parsed.data.data.openError);
 
   return errorMessage(cause);
 };

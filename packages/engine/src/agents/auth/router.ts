@@ -18,6 +18,8 @@ import {
   authentication,
   authenticate,
   cancelAuthentication,
+  readAuthTerminal,
+  writeAuthTerminal,
 } from './auth-connection';
 
 const stateRouter = routerFactory((deps: AgentsRouterDeps) =>
@@ -41,14 +43,10 @@ const terminalRouter = routerFactory((deps: AgentsRouterDeps) =>
     authTerminal: publicProcedure
       .input(AgentAuthTerminalRead)
       .output(AgentAuthTerminalFrame)
-      .query(async ({ input }) =>
-        (await authentication(deps, input)).readTerminal(input.cursor),
-      ),
+      .query(({ input }) => readAuthTerminal(deps, input, input.cursor)),
     authTerminalInput: publicProcedure
       .input(AgentAuthTerminalWrite)
-      .mutation(async ({ input }) =>
-        (await authentication(deps, input)).inputTerminal(input.input),
-      ),
+      .mutation(({ input }) => writeAuthTerminal(deps, input, input.input)),
   }),
 );
 

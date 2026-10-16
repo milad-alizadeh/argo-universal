@@ -1,38 +1,29 @@
 import type {
+  ClientCapabilities,
   ClientContext,
-  ElicitationCapabilities,
-  InitializeRequest,
   InitializeResponse,
 } from '@agentclientprotocol/sdk';
 import type { createAcpResponseReaders } from './response-readers';
 
-type InitializeCapabilities = {
-  elicitation?: Pick<ElicitationCapabilities, 'url'>;
-  terminalAuth?: boolean;
+type Readers = ReturnType<typeof createAcpResponseReaders>;
+
+// Every Agent connection advertises terminal auth and form Elicitation only.
+const clientCapabilities: ClientCapabilities = {
+  auth: { terminal: true },
+  session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
+  elicitation: { form: {} },
 };
 
-const terminalAuth = (
-  capabilities: InitializeCapabilities | undefined,
-): boolean => capabilities?.terminalAuth ?? true;
-
-const initializeRequest = (
-  capabilities?: InitializeCapabilities,
-): InitializeRequest => ({
-  protocolVersion: 1,
-  clientCapabilities: {
-    auth: { terminal: terminalAuth(capabilities) },
-    session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
-    elicitation: { form: {}, ...capabilities?.elicitation },
-  },
-});
-
-export const negotiateAcpInitialize = async (
+const negotiate = async (
   agent: ClientContext,
-  readers: ReturnType<typeof createAcpResponseReaders>,
-  capabilities?: InitializeCapabilities,
+  readers: Readers,
+  capabilities: ClientCapabilities,
 ): Promise<InitializeResponse> => {
   const response = readers.initialize.parse(
-    await agent.request<unknown>('initialize', initializeRequest(capabilities)),
+    await agent.request<unknown>('initialize', {
+      protocolVersion: 1,
+      clientCapabilities: capabilities,
+    }),
   );
 
   if (response.protocolVersion < 1)
@@ -40,3 +31,20 @@ export const negotiateAcpInitialize = async (
 
   return response;
 };
+
+export const negotiateAcpInitialize = (
+  agent: ClientContext,
+  readers: Readers,
+): Promise<InitializeResponse> => negotiate(agent, readers, clientCapabilities);
+
+// The old login stack keeps its own capabilities until T6 deletes it.
+export const negotiateLoginInitialize = (
+  agent: ClientContext,
+  readers: Readers,
+  terminalAuth: boolean | undefined,
+): Promise<InitializeResponse> =>
+  negotiate(agent, readers, {
+    ...clientCapabilities,
+    auth: terminalAuth ? { terminal: true } : {},
+    elicitation: { form: {}, url: {} },
+  });

@@ -1,20 +1,23 @@
-import type {
-  AgentAuthTerminalFrame,
-  AgentLoginTerminalInput,
+import {
+  loginTerminalOutputLimit,
+  type AgentAuthTerminalFrame,
+  type AgentLoginTerminalInput,
 } from '@repo/contracts';
+import { launchLoginTerminal } from '../acp/terminal-process';
 import type {
   AgentLaunch,
   LaunchLoginTerminal,
   LoginTerminalProcess,
 } from '../agent-launch';
 import { terminalAuthSuccessPatterns } from '../vendor';
-import { launchAuthTerminal } from './pty';
 
 type TerminalRun = {
   launch: AgentLaunch;
   methodId: string;
   signal: AbortSignal;
 };
+
+type TerminalResult = 'matched' | { exitCode: number; signal?: number };
 
 const patternPollMs = 1000;
 
@@ -24,16 +27,19 @@ export class AuthTerminal {
   private closed = false;
   private exitCode?: number;
   private timer?: ReturnType<typeof setInterval>;
+  private readonly overflow = Promise.withResolvers<never>();
   public constructor(
-    private readonly launcher: LaunchLoginTerminal = launchAuthTerminal,
-  ) {}
+    private readonly launcher: LaunchLoginTerminal = launchLoginTerminal,
+  ) {
+    void this.overflow.promise.catch(() => {});
+  }
   public async run(input: TerminalRun): Promise<void> {
     input.signal.throwIfAborted();
 
     try {
-      this.child = await this.launcher(input.launch, (text) => {
-        this.output += text;
-      });
+      this.child = await this.launcher(input.launch, (text) =>
+        this.append(text),
+      );
       await this.wait(input);
     } finally {
       clearInterval(this.timer);
@@ -41,30 +47,48 @@ export class AuthTerminal {
       this.closed = true;
     }
   }
+  // ADR-0016 finite budgets: the same cap as the login terminal.
+  private append(text: string): void {
+    if (this.output.length + text.length > loginTerminalOutputLimit) {
+      this.overflow.reject(
+        new Error('The sign-in terminal exceeded its output limit.'),
+      );
+
+      return;
+    }
+
+    this.output += text;
+  }
   private async wait({ methodId, signal }: TerminalRun): Promise<void> {
     const abort = (): void => {
-      void this.child?.close();
+      void this.child?.close().catch(() => {});
     };
 
     signal.addEventListener('abort', abort, { once: true });
 
     try {
       signal.throwIfAborted();
-
-      const result = await this.waitForResult(methodId);
-
-      signal.throwIfAborted();
-      this.finish(result);
+      this.finish(await this.settle(methodId, signal));
     } finally {
       signal.removeEventListener('abort', abort);
     }
   }
-  private waitForResult(
+  // A cancelled attempt reports the cancellation, not the closed terminal it caused.
+  private async settle(
     methodId: string,
-  ): Promise<'matched' | { exitCode: number; signal?: number }> {
+    signal: AbortSignal,
+  ): Promise<TerminalResult> {
+    try {
+      return await this.waitForResult(methodId);
+    } finally {
+      signal.throwIfAborted();
+    }
+  }
+  private waitForResult(methodId: string): Promise<TerminalResult> {
     return Promise.race([
       this.requireChild().exited,
       this.matchOutput(methodId),
+      this.overflow.promise,
     ]);
   }
   private matchOutput(methodId: string): Promise<'matched'> {
@@ -78,9 +102,7 @@ export class AuthTerminal {
         }, patternPollMs);
     });
   }
-  private finish(
-    result: 'matched' | { exitCode: number; signal?: number },
-  ): void {
+  private finish(result: TerminalResult): void {
     if (result === 'matched') return;
     this.exitCode = result.exitCode;
 

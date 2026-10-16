@@ -5,16 +5,22 @@ import { protocolSessionLogin } from '@repo/mocks/agent/protocol-login';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { agentCredentials } from '#mocks/agent-credentials';
+import { seedProject } from '../../projects';
 
 it('one authenticate lets an open waiting in a second Project succeed', async () => {
-  const host = await startAcpEngine(protocolSessionLogin());
+  const host = await startAcpEngine(protocolSessionLogin(agentCredentials()));
   const directory = mkdtempSync(join(tmpdir(), 'argo-auth-project-'));
   onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
   await initTestRepository(directory);
-  host.database.$client
-    .prepare('INSERT INTO project (id, name, path) VALUES (?, ?, ?)')
-    .run('project-2', 'Second', directory);
-  const second = { ...emptySessionInput, projectId: 'project-2' };
+  await seedProject(host.database, directory);
+
+  const secondProject = (await host.caller.projects.list()).find(
+    (project) => project.id !== emptySessionInput.projectId,
+  );
+
+  if (!secondProject) throw new Error('The second Project is missing');
+  const second = { ...emptySessionInput, projectId: secondProject.id };
   await expect(host.caller.session.new(emptySessionInput)).rejects.toThrow(
     'Authentication required',
   );
@@ -33,10 +39,9 @@ it('one authenticate lets an open waiting in a second Project succeed', async ()
 });
 
 it('sessionId picks its live connection after its saved connection entry was dropped', async () => {
-  const host = await startAcpEngine({
-    ...protocolSessionLogin(),
-    authentication: { required: false },
-  });
+  const host = await startAcpEngine(
+    protocolSessionLogin(agentCredentials({ signedIn: true })),
+  );
 
   await host.caller.agents.addRegistry({ id: 'mock' });
   const session = await host.caller.session.new(emptySessionInput);

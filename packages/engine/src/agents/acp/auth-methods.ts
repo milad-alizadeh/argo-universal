@@ -4,29 +4,21 @@ import type {
   InitializeResponse,
 } from '@agentclientprotocol/sdk';
 import type { AgentAuthState } from '@repo/contracts';
+import { createRejectionCounter } from '@repo/machine-log';
 
 export type AuthenticationMethod = AgentAuthState['methods'][number] &
   Pick<AuthMethodTerminal, 'args' | 'env'>;
 
-const methodType = (method: AuthMethod): string => {
-  const type: unknown = 'type' in method ? method.type : 'agent';
+const rejections = createRejectionCounter('ACP auth methods');
 
-  return typeof type === 'string' ? type : 'unsupported';
-};
-
-const supported = (method: AuthMethod): boolean =>
-  methodType(method) === 'agent' || methodType(method) === 'terminal';
-
-const isTerminal = (
+const describeMethod = (
   method: AuthMethod,
-): method is AuthMethodTerminal & { type: 'terminal' } =>
-  methodType(method) === 'terminal';
-
-const describeMethod = (method: AuthMethod): AuthenticationMethod => {
+  type: AuthenticationMethod['type'],
+): AuthenticationMethod => {
   const result: AuthenticationMethod = {
     id: method.id,
     name: method.name,
-    type: 'agent',
+    type,
   };
 
   if (method.description != null) result.description = method.description;
@@ -34,23 +26,37 @@ const describeMethod = (method: AuthMethod): AuthenticationMethod => {
   return result;
 };
 
-const terminalInvocation = (
-  method: AuthMethodTerminal,
-): Pick<AuthenticationMethod, 'args' | 'env'> => ({
+const terminalMethod = (method: AuthMethodTerminal): AuthenticationMethod => ({
+  ...describeMethod(method, 'terminal'),
   args: method.args ?? [],
   env: method.env ?? {},
 });
 
-const readMethod = (method: AuthMethod): AuthenticationMethod => {
-  const result = describeMethod(method);
+const ignoredMethod = (method: AuthMethod, type: string): [] => {
+  rejections.report(`Ignored auth method ${method.id} of type ${type}`);
 
-  if (isTerminal(method))
-    return { ...result, type: 'terminal', ...terminalInvocation(method) };
-
-  return result;
+  return [];
 };
+
+// The protocol's `type` discriminator is open while the SDK union is closed: a typed method may still be `agent` or a kind Zed ignores.
+const readTypedMethod = (
+  method: AuthMethodTerminal,
+  type: string,
+): AuthenticationMethod[] => {
+  if (type === 'terminal') return [terminalMethod(method)];
+
+  return type === 'agent'
+    ? [describeMethod(method, 'agent')]
+    : ignoredMethod(method, type);
+};
+
+// No `type` means agent; Zed keeps agent and terminal methods in the Agent's order.
+const readMethod = (method: AuthMethod): AuthenticationMethod[] =>
+  'type' in method
+    ? readTypedMethod(method, method.type)
+    : [describeMethod(method, 'agent')];
 
 export const authenticationMethods = (
   initialization: InitializeResponse,
 ): AuthenticationMethod[] =>
-  (initialization.authMethods ?? []).filter(supported).map(readMethod);
+  (initialization.authMethods ?? []).flatMap(readMethod);

@@ -146,8 +146,9 @@ export class AcpConnection {
 
     return this;
   }
+  // A stopping connection hands out no authentication, so nothing starts after shutdown.
   public getAuthentication(): ConnectionAuthentication | undefined {
-    return this.authentication;
+    return this.stopping ? undefined : this.authentication;
   }
   private prepareAuthentication(launch: AgentLaunch): void {
     this.authentication = new ConnectionAuthentication({
@@ -511,7 +512,7 @@ export class AcpConnection {
     return this.stopping;
   }
   private cancelAuthentication(): Promise<void> | undefined {
-    return this.authentication?.cancel(false);
+    return this.authentication?.close();
   }
   private async stop(): Promise<void> {
     const cancellation = this.cancelAuthentication();

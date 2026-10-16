@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AgentLoginTerminalInput } from './login';
+import { AgentLoginTerminalInput, loginTerminalOutputLimit } from './login';
 
 export const AgentAuthSubject = z.strictObject({
   agent: z.string().min(1),
@@ -34,12 +34,12 @@ export const AgentAuthenticateOutput = z.discriminatedUnion('status', [
 export type AgentAuthenticateOutput = z.infer<typeof AgentAuthenticateOutput>;
 
 export const AgentAuthTerminalRead = AgentAuthSubject.extend({
-  cursor: z.number().int().nonnegative(),
+  cursor: z.number().int().min(0).max(loginTerminalOutputLimit),
 });
 
 export const AgentAuthTerminalFrame = z.strictObject({
-  cursor: z.number().int().nonnegative(),
-  output: z.string(),
+  cursor: z.number().int().min(0).max(loginTerminalOutputLimit),
+  output: z.string().max(loginTerminalOutputLimit),
   closed: z.boolean().optional(),
   exitCode: z.number().int().optional(),
 });

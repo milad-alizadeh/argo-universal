@@ -79,10 +79,10 @@ export const signedOutProtocolLogin = {
   },
 } satisfies Pick<ScriptedScenario, 'initialize' | 'responses'>;
 
-export const protocolSessionLogin = (): ScriptedScenario =>
+export const protocolSessionLogin = (credentials: string): ScriptedScenario =>
   ({
     steps: [],
-    authentication: { required: true },
+    authentication: { credentials },
     initialize: {
       ...scriptedInitialization,
       authMethods: [{ id: 'login', name: 'Sign in' }],

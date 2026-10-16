@@ -13,7 +13,7 @@ import type {
 import { ResourceCleanupError } from '../../lib/resource-cleanup-error';
 import { AcpAuthenticationStatus } from './auth-status';
 import { createAgentClient } from './client';
-import { negotiateAcpInitialize } from './initialize';
+import { negotiateLoginInitialize } from './initialize';
 import { closeLoginProcess } from './login-cleanup';
 import { loginElicitation } from './login-elicitation';
 import { loginMethods } from './login-methods';
@@ -66,10 +66,10 @@ export class AcpLoginConnection {
     if (input.callbacks.signal.aborted) this.abort();
   }
   public async initialize(): Promise<LoginAgentConnection> {
-    this.initialization = await negotiateAcpInitialize(
+    this.initialization = await negotiateLoginInitialize(
       this.connection.agent,
       this.readers,
-      { elicitation: { url: {} }, terminalAuth: this.input.terminalSupported },
+      this.input.terminalSupported,
     );
     this.methods = this.offeredMethods();
 

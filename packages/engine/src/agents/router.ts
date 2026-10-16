@@ -6,7 +6,7 @@ import {
 } from '@repo/contracts';
 import type { ActorRefFrom } from 'xstate';
 import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
-import type { OpenSessionsActorRef } from '../sessions';
+import type { OpenSessionsActorRef, SessionConnections } from '../sessions';
 import { createAuthRouter } from './auth/router';
 import { watchCommittedCatalogChanges } from './catalog-changes';
 import { readAgentCatalog } from './catalog-sql';
@@ -36,6 +36,7 @@ export type AgentsRouterDeps = RegistryDeps &
   ConfigurationDeps &
   CatalogDeps & {
     sessions: OpenSessionsActorRef;
+    sessionConnections: SessionConnections;
     installations: AgentInstallations;
     agentLogins: AgentLogins;
     home?: string;

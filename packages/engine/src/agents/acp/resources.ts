@@ -41,11 +41,9 @@ class EngineAcpResources implements AcpResources {
     launch: AgentLaunch,
   ): Promise<ConnectionAuthentication> {
     if (this.stopped) throw new Error('ACP resources are stopped');
-    const found = this.findAuthentication(launch.agentId, launch.projectId);
 
-    if (found) return found;
-
-    return entryAuthentication(this.entry(launch));
+    return await (this.findAuthentication(launch.agentId, launch.projectId) ??
+      entryAuthentication(this.entry(launch), this.isStopped));
   }
   public findAuthentication(
     agent: string,
@@ -55,8 +53,9 @@ class EngineAcpResources implements AcpResources {
       pendingAuthentication(this.connections, agent, projectId) ??
       this.entries.get(JSON.stringify([agent, projectId]));
 
-    return entry ? entryAuthentication(entry) : undefined;
+    return entry ? entryAuthentication(entry, this.isStopped) : undefined;
   }
+  private readonly isStopped = (): boolean => this.stopped;
   private entry(launch: AgentLaunch): Entry {
     const key = JSON.stringify([launch.agentId, launch.projectId]);
     const entry = this.entries.get(key);

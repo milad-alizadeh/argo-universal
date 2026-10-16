@@ -62,7 +62,11 @@ export type ScriptedStep =
   | { type: 'raw'; frame: string };
 
 export type ScriptedScenario = {
-  authentication?: { required: boolean };
+  /*
+   * The Agent's sign-in, stored on disk like a real Agent's: every process
+   * with this path shares it. `session/new` needs auth until the file exists.
+   */
+  authentication?: { credentials: string };
   initialize?: InitializeResponse;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];

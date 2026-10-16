@@ -50,6 +50,7 @@ export class ConnectionAuthentication {
   private pending?: Attempt;
   private description?: string;
   private terminal?: AuthTerminal;
+  private closed = false;
   public constructor(private readonly input: AuthenticationInput) {}
   public state(): AgentAuthState {
     const state: AgentAuthState = {
@@ -65,7 +66,11 @@ export class ConnectionAuthentication {
     this.description = authenticationDescription(cause);
   }
   public authenticate(methodId: string): Promise<AgentAuthenticateOutput> {
-    if (this.pending) return this.pending.promise;
+    return this.pending?.promise ?? this.begin(methodId);
+  }
+  private begin(methodId: string): Promise<AgentAuthenticateOutput> {
+    if (this.closed)
+      return Promise.resolve(authenticationFailed('The Agent has stopped'));
 
     const method = this.input.methods.find(
       (candidate) => candidate.id === methodId,
@@ -136,6 +141,12 @@ export class ConnectionAuthentication {
     pending.controller.abort(new Error('Sign-in cancelled'));
     this.dropProtocol(pending, drop);
     await pending.promise;
+  }
+  // The connection is stopping: no attempt starts after this, and a running one is cancelled.
+  public close(): Promise<void> {
+    this.closed = true;
+
+    return this.cancel(false);
   }
   private dropProtocol(pending: Attempt, drop: boolean): void {
     if (!pending.terminal && drop) this.input.drop();

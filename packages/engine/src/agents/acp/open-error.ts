@@ -2,7 +2,7 @@ import { RequestError } from '@agentclientprotocol/sdk';
 import type { SessionOpenError } from '@repo/contracts';
 import { AgentProcessExitError } from './process';
 
-export const isAuthRequired = (cause: unknown): boolean =>
+export const isAuthRequired = (cause: unknown): cause is RequestError =>
   cause instanceof RequestError &&
   cause.code === RequestError.authRequired().code;
 
@@ -12,9 +12,21 @@ export const sessionOpenError = (cause: unknown): SessionOpenError => {
   return { type: 'failed', message: failureMessage(cause) };
 };
 
+/*
+ * Zed's `trailing_stderr`: the stderr lines since the Agent's last message,
+ * without empty lines. The process buffer already restarts at each message.
+ */
+const lastStderrBlock = (stderr: string): string =>
+  stderr
+    .split(/\r?\n/)
+    .filter((line) => line !== '')
+    .join('\n');
+
 const failureMessage = (cause: unknown): string => {
   if (cause instanceof AgentProcessExitError)
-    return [cause.message, cause.stderr].filter(Boolean).join('\n');
+    return [cause.message, lastStderrBlock(cause.stderr)]
+      .filter(Boolean)
+      .join('\n');
 
   return cause instanceof Error ? cause.message : String(cause);
 };
@@ -22,7 +34,7 @@ const failureMessage = (cause: unknown): string => {
 export const authenticationDescription = (
   cause: unknown,
 ): string | undefined => {
-  if (!(cause instanceof RequestError) || !isAuthRequired(cause)) return;
+  if (!isAuthRequired(cause)) return;
 
   return descriptionOf(cause);
 };

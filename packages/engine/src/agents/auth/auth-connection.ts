@@ -2,9 +2,9 @@ import type {
   AgentAuthenticateInput,
   AgentAuthenticateOutput,
   AgentAuthSubject,
+  AgentAuthTerminalFrame,
+  AgentLoginTerminalInput,
 } from '@repo/contracts';
-import type { SessionActorRef } from '../../sessions';
-import type { AcpResources } from '../acp/resource-types';
 import type { AgentsRouterDeps } from '../router';
 import { authenticationLaunch } from './auth-launch';
 import {
@@ -14,60 +14,49 @@ import {
 
 type Subject = AgentAuthSubject & { sessionId?: string };
 
-const resourcesOf = (deps: AgentsRouterDeps): AcpResources =>
-  deps.sessions.getSnapshot().context.acpResources;
-
 const missingConnection = 'Session connection is unavailable';
 
-type LiveSession = ReturnType<SessionActorRef['getSnapshot']>['context'];
-
-const readSession = (
-  deps: AgentsRouterDeps,
-  sessionId: string,
-): LiveSession => {
-  const actor = deps.sessions.getSnapshot().context.sessions[sessionId];
-
-  if (!actor) throw new Error(missingConnection);
-
-  return actor.getSnapshot().context;
+const closedTerminal: AgentAuthTerminalFrame = {
+  cursor: 0,
+  output: '',
+  closed: true,
 };
 
-const sameSubject = (session: LiveSession, subject: Subject): boolean =>
-  session.agent === subject.agent && session.projectId === subject.projectId;
-
-const requireAuthentication = (
-  connection: ConnectionAuthentication | undefined,
-): ConnectionAuthentication => {
-  if (!connection) throw new Error(missingConnection);
-
-  return connection;
-};
-
-const sessionAuthentication = (
+const requireSessionAuthentication = (
   deps: AgentsRouterDeps,
   subject: Subject,
   sessionId: string,
 ): ConnectionAuthentication => {
-  const session = readSession(deps, sessionId);
+  const found = deps.sessionConnections.authentication(sessionId, subject);
 
-  if (!sameSubject(session, subject)) throw new Error(missingConnection);
+  if (!found) throw new Error(missingConnection);
 
-  return requireAuthentication(session.acpLease?.authentication);
+  return found;
 };
 
+// Reading the sign-in state may start the Agent, since its methods come from `initialize`.
 export const authentication = async (
   deps: AgentsRouterDeps,
   subject: Subject,
 ): Promise<ConnectionAuthentication> => {
   if (subject.sessionId)
-    return sessionAuthentication(deps, subject, subject.sessionId);
-  const resources = resourcesOf(deps);
-  const found = resources.findAuthentication(subject.agent, subject.projectId);
+    return requireSessionAuthentication(deps, subject, subject.sessionId);
 
-  if (found) return found;
-
-  return authenticationLaunch(deps, subject);
+  return (
+    (await existingAuthentication(deps, subject)) ??
+    authenticationLaunch(deps, subject)
+  );
 };
+
+// The connection already running for this Agent and Project; never launches one.
+const existingAuthentication = async (
+  deps: AgentsRouterDeps,
+  subject: AgentAuthSubject,
+): Promise<ConnectionAuthentication | null> =>
+  deps.sessionConnections
+    .acpResources()
+    .findAuthentication(subject.agent, subject.projectId)
+    ?.catch(() => null) ?? null;
 
 export const authenticate = async (
   deps: AgentsRouterDeps,
@@ -88,10 +77,21 @@ export const cancelAuthentication = async (
   deps: AgentsRouterDeps,
   subject: AgentAuthSubject,
 ): Promise<void> => {
-  const found = resourcesOf(deps).findAuthentication(
-    subject.agent,
-    subject.projectId,
-  );
+  await (await existingAuthentication(deps, subject))?.cancel();
+};
 
-  await (await found)?.cancel();
+export const readAuthTerminal = async (
+  deps: AgentsRouterDeps,
+  subject: AgentAuthSubject,
+  cursor: number,
+): Promise<AgentAuthTerminalFrame> =>
+  (await existingAuthentication(deps, subject))?.readTerminal(cursor) ??
+  closedTerminal;
+
+export const writeAuthTerminal = async (
+  deps: AgentsRouterDeps,
+  subject: AgentAuthSubject,
+  input: AgentLoginTerminalInput,
+): Promise<void> => {
+  (await existingAuthentication(deps, subject))?.inputTerminal(input);
 };

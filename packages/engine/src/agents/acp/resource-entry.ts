@@ -37,12 +37,14 @@ export const isIdleEntryOf = (
 ): boolean =>
   (agentId ?? entry.agentId) === entry.agentId && !entryInUse(entry);
 
+// Shutdown can land while the connection is still starting, so `stopped` is read again once it resolves.
 export const entryAuthentication = async (
   entry: Entry,
+  stopped: () => boolean,
 ): Promise<ConnectionAuthentication> => {
-  const connection = await entry.connecting;
+  const authentication = (await entry.connecting).getAuthentication();
 
-  const authentication = connection.getAuthentication();
+  if (stopped()) throw new Error('ACP resources are stopped');
 
   if (!authentication) throw new Error('Authentication is unavailable');
 

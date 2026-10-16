@@ -60,16 +60,19 @@ export const SessionOpenError = z.discriminatedUnion('type', [
 
 export type SessionOpenError = z.infer<typeof SessionOpenError>;
 
+// Reads a tRPC client error, which carries more fields than this; not strict.
 export const SessionOpenFailureResponse = z.object({
   data: z.object({ openError: SessionOpenError }),
 });
 
+// Today's toast text for a typed open error, until T4b draws each one.
+export const sessionOpenErrorText = (openError: SessionOpenError): string =>
+  openError.type === 'auth-required'
+    ? 'Authentication required'
+    : openError.message;
+
 export class SessionOpenFailure extends Error {
   public constructor(public readonly openError: SessionOpenError) {
-    super(
-      openError.type === 'auth-required'
-        ? 'Authentication required'
-        : openError.message,
-    );
+    super(sessionOpenErrorText(openError));
   }
 }

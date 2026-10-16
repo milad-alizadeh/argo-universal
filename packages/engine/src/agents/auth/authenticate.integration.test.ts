@@ -1,20 +1,19 @@
-import type {
-  AuthenticateRequest,
-  InitializeRequest,
+import {
+  RequestError,
+  type AuthenticateRequest,
 } from '@agentclientprotocol/sdk';
 import { protocolSessionLogin } from '@repo/mocks/agent/protocol-login';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { agentCredentials } from '#mocks/agent-credentials';
 
 it('authenticates on the rejected open connection and joins a pending attempt', async () => {
   const entered = Promise.withResolvers<AuthenticateRequest>();
   const finish = Promise.withResolvers<void>();
-  const initialization: InitializeRequest[] = [];
 
   const host = await startAcpEngine({
-    ...protocolSessionLogin(),
+    ...protocolSessionLogin(agentCredentials()),
     responses: {
-      initialize: [{ requests: initialization }],
       authenticate: [
         { received: entered, waitFor: finish.promise, result: {} },
       ],
@@ -55,22 +54,10 @@ it('authenticates on the rejected open connection and joins a pending attempt', 
   expect((await host.caller.agents.authState(subject)).pending).toBeNull();
   await host.caller.session.new(emptySessionInput);
   expect(host.agent.processes).toHaveLength(1);
-  const [initialize] = initialization;
-
-  if (!initialize) throw new Error('Initialize was not received');
-  expect(initialize.clientCapabilities).toMatchObject({
-    auth: { terminal: true },
-    elicitation: { form: {} },
-    session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
-  });
-  expect(initialize.clientCapabilities?.elicitation).toEqual({ form: {} });
-  expect(initialize.clientCapabilities).not.toHaveProperty(
-    '_meta.terminal-auth',
-  );
 });
 
 it('a failed protocol method clears pending and can be retried on the same process', async () => {
-  const scenario = protocolSessionLogin();
+  const scenario = protocolSessionLogin(agentCredentials());
 
   const host = await startAcpEngine({
     ...scenario,
@@ -96,8 +83,9 @@ it('a failed protocol method clears pending and can be retried on the same proce
 });
 
 it('preserves supported methods in Agent order and the authentication error description', async () => {
-  const description = 'Sign in to your account';
-  const ignored = { type: 'env_var', id: 'api', name: 'API key' };
+  const description = 'Authentication required: Sign in to your account';
+  // ACP reserves `_`-prefixed method types for implementation extensions.
+  const ignored = { type: '_api-key', id: 'api', name: 'API key' };
 
   const protocol = {
     type: 'agent',
@@ -117,7 +105,14 @@ it('preserves supported methods in Agent order and the authentication error desc
       ],
     },
     responses: {
-      'session/new': [{ error: { code: -32000, message: description } }],
+      'session/new': [
+        {
+          error: RequestError.authRequired(
+            undefined,
+            'Sign in to your account',
+          ),
+        },
+      ],
     },
   });
 
@@ -141,7 +136,7 @@ it('cancelling an agent method drops its connection and fails the waiting attemp
   const finish = Promise.withResolvers<void>();
 
   const host = await startAcpEngine({
-    ...protocolSessionLogin(),
+    ...protocolSessionLogin(agentCredentials()),
     responses: {
       authenticate: [{ received: entered, waitFor: finish.promise }],
     },

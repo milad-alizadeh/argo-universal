@@ -3,6 +3,7 @@ import { protocolSessionLogin } from '@repo/mocks/agent/protocol-login';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { agentCredentials } from '#mocks/agent-credentials';
 import { sessionJourneyGit } from '#mocks/session-journey';
 
 const storedSessionId = 'session-1';
@@ -10,7 +11,7 @@ const storedSessionId = 'session-1';
 const authRequiredError = { type: 'auth-required' } as const;
 
 it('an auth-required New worktree open at Send stores no Turn and discards the Checkout', async () => {
-  const host = await startAcpEngine(protocolSessionLogin());
+  const host = await startAcpEngine(protocolSessionLogin(agentCredentials()));
   const [project] = await host.caller.projects.list();
 
   if (!project) throw new Error('Project is missing');
@@ -109,7 +110,7 @@ it('a past Session reports a typed auth-required failure through its Feed subscr
 });
 
 it('typed open failures survive HTTP serialization for an App', async () => {
-  const host = await startAcpEngine(protocolSessionLogin());
+  const host = await startAcpEngine(protocolSessionLogin(agentCredentials()));
 
   const response = await fetch(`${host.url}/trpc/session.new`, {
     method: 'POST',
