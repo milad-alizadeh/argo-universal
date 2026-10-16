@@ -4,7 +4,6 @@ import type { DOMProps } from 'expo/dom';
 import '@xterm/xterm/css/xterm.css';
 import { createElement, type RefObject, type CSSProperties } from 'react';
 import {
-  defaultTerminalAppearance,
   terminalKeyboardHeight,
   type TerminalAppearance,
 } from './terminal-appearance';
@@ -56,7 +55,7 @@ function useTerminalPanel(props: Props): TerminalContentProps {
     panel: {
       viewport,
       height: keyboardViewportHeight(accessory, props.height),
-      background: terminalBackground(props.appearance),
+      background: props.appearance?.background,
     },
     controls: { ...keys, appearance: props.appearance },
     showKeys: showAccessory(accessory, props.enabled),
@@ -79,7 +78,7 @@ function TerminalContent({
 type ViewportProps = {
   viewport: RefObject<HTMLDivElement | null>;
   height: number;
-  background: string;
+  background: string | undefined;
 };
 
 function TerminalViewport({
@@ -104,13 +103,9 @@ const showAccessory = (keyboard: boolean, enabled: boolean): boolean =>
 const keyboardViewportHeight = (keyboard: boolean, height: number): number =>
   keyboard ? terminalKeyboardHeight : height;
 
-const terminalBackground = (
-  appearance: TerminalAppearance | undefined,
-): string => appearance?.background ?? defaultTerminalAppearance.background;
-
 const terminalViewportStyle = (
   height: number,
-  background: string,
+  background: string | undefined,
 ): CSSProperties => ({
   ...viewportStyle,
   height,

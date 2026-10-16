@@ -13,10 +13,7 @@ import type { BlockTokenProps } from './markdown-tokens';
 type Cells = Tokens.TableCell[];
 
 function cellClassName(column: number): string {
-  return cn(
-    'px-3 py-1.5',
-    column === 0 ? 'w-[180px] shrink-0' : 'min-w-[180px] flex-1',
-  );
+  return cn('px-3 py-1.5', column === 0 ? 'w-45 shrink-0' : 'min-w-45 flex-1');
 }
 
 interface CellProps {

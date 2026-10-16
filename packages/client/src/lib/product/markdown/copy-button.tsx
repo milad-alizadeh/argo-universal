@@ -20,7 +20,7 @@ export const codeBlockGroup = 'group/code-block';
 // Hidden where a pointer hovers, until the code block is hovered or the button has focus; shown while it reports a copy.
 const hoverRevealClassName = (copied: boolean): string =>
   cn(
-    !copied && 'web:[@media(hover:hover)]:opacity-0',
+    !copied && 'web:pointer-fine:opacity-0',
     'web:group-hover/code-block:opacity-100 web:focus-visible:opacity-100',
   );
 
@@ -42,7 +42,7 @@ function useCopy(): [boolean, (value: string) => void] {
 
 // A bare glyph in a code block's header: no fill, border or touch minimum.
 const copyChrome =
-  'size-[22px] sm:size-[22px] rounded-sm border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 active:bg-transparent web:hover:bg-transparent';
+  'size-5.5 sm:size-5.5 rounded-sm border-0 min-h-0 min-w-0 android:min-h-0 android:min-w-0 active:bg-transparent web:hover:bg-transparent';
 
 function buttonClassName(props: CopyButtonProps, copied: boolean): string {
   return cn(

@@ -5,42 +5,6 @@
   "overrides": [
     {
       "files": [
-        // 1 arbitrary
-        "packages/client/mocks/new-session-view/new-session-checkout.test.mocks.tsx",
-        // 1 arbitrary
-        "packages/client/mocks/settings/settings-list-story.test.mocks.tsx",
-        // 3 colour
-        "packages/client/src/features/agents/components/agent-login-terminal/terminal-appearance.ts",
-        // 2 colour
-        "packages/client/src/features/agents/components/agent-login-terminal/terminal-keys.tsx",
-        // 2 arbitrary
-        "packages/client/src/features/composer/components/composer-attachment-card/composer-attachment-card.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/composer/components/composer-status/context-content.tsx",
-        // 2 arbitrary
-        "packages/client/src/features/composer/components/composer-status/status-control-trigger.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/composer/components/composer-status/work-chips.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/composer/components/start-session-in/server-location.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/feed/components/diff-view/diff-file-header.tsx",
-        // 2 arbitrary
-        "packages/client/src/features/feed/components/feed-image.tsx",
-        // 1 arbitrary, 1 colour
-        "packages/client/src/features/feed/components/feed/feed-overlays.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/feed/components/user-message/reference-chips.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/feed/components/user-message/user-message-bubble.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/frame/components/onboarding-frame/onboarding-frame.stories.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/frame/components/onboarding-frame/onboarding-frame.test.stories.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/frame/scaffold/scaffold-chrome.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/frame/scaffold/scaffold-test.mocks.tsx",
         // 2 arbitrary, 2 colour
         "packages/client/src/features/requests/components/elicitation-form/elicitation-custom-answer.tsx",
         // 4 arbitrary, 5 colour
@@ -51,14 +15,6 @@
         "packages/client/src/features/requests/components/permission-request/permission-request.tsx",
         // 1 arbitrary
         "packages/client/src/features/requests/components/request-card/request-heading.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/sessions/components/project-heading/project-heading-actions.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/sessions/components/session-header-meta.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/sessions/components/sessions-list/sessions-list.tsx",
-        // 1 arbitrary
-        "packages/client/src/features/settings/components/settings-list/settings-list-status.test.stories.tsx",
         // 1 arbitrary, 1 palette
         "packages/client/src/lib/generic/primitives/buttons/button/button-content-styles.ts",
         // 1 arbitrary
@@ -99,31 +55,7 @@
         // 1 arbitrary
         "packages/client/src/lib/generic/primitives/overlays/dialog/dialog.stories.tsx",
         // 1 arbitrary
-        "packages/client/src/lib/generic/primitives/overlays/toast/toaster.tsx",
-        // 1 arbitrary
-        "packages/client/src/lib/generic/symbols/symbol-glyph/symbol-glyph.web.tsx",
-        // 2 arbitrary
-        "packages/client/src/lib/product/header-button.tsx",
-        // 2 arbitrary
-        "packages/client/src/lib/product/markdown/block-tokens.tsx",
-        // 1 arbitrary
-        "packages/client/src/lib/product/markdown/caret.tsx",
-        // 3 arbitrary
-        "packages/client/src/lib/product/markdown/copy-button.tsx",
-        // 2 arbitrary
-        "packages/client/src/lib/product/markdown/prose.tsx",
-        // 1 arbitrary
-        "packages/client/src/lib/product/markdown/resource-heading.tsx",
-        // 2 arbitrary
-        "packages/client/src/lib/product/markdown/table-token.tsx",
-        // 1 arbitrary
-        "packages/client/src/lib/product/settings-page.tsx",
-        // 2 palette
-        "packages/client/src/screens/onboarding/setup-step.tsx",
-        // 1 arbitrary
-        "packages/client/src/screens/sessions/session-list-view.tsx",
-        // 1 arbitrary
-        "packages/client/src/screens/settings/agents/$agent/agent-detail-view.tsx"
+        "packages/client/src/lib/generic/primitives/overlays/toast/toaster.tsx"
       ],
       "rules": { "argo/style-tokens": "off" }
     }

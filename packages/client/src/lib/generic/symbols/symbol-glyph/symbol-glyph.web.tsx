@@ -65,7 +65,7 @@ export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
       data-icon
       data-testid={props.testID}
       aria-hidden
-      className={cn(props.colorClassName, '[&>div]:text-inherit!')}
+      className={cn(props.colorClassName, '*:text-inherit!')}
       style={{ ...glyphBox, width: props.pixels, height: props.pixels }}
     >
       <GlyphDrawing {...props} />

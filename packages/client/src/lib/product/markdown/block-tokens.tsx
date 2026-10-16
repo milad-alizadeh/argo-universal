@@ -68,7 +68,7 @@ function listItems(
 
 const markerVariantClassNames: Record<MarkdownVariantName, string> = {
   feed: markdownBlockClassNames.listMarker,
-  proposal: 'ios:text-[17px] ios:leading-[22px]',
+  proposal: 'ios:text-row ios:leading-row',
   summary: markdownBlockClassNames.listMarker,
 };
 
