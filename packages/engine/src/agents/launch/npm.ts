@@ -8,11 +8,14 @@ import {
   readNpmExecutable,
 } from '../install/materialization/packages';
 import type { InstallToolInput } from '../install/ports';
-import { pruneVersions, versionFolder } from './binary-cache';
-import { reserveVersion } from './binary-reservations';
 import { resolveNode, type NodeRuntime } from './node';
 import { singleFlight } from './single-flight';
 import type { EntryInput as NpmInput, RegistryCommand } from './types';
+import {
+  pruneVersions,
+  reserveVersion,
+  versionFolder,
+} from './version-folders';
 
 type NpmPackage = { name: string; specification: string };
 

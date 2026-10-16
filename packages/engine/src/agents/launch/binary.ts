@@ -10,8 +10,7 @@ import {
 } from '../install/materialization/files';
 import { InstallCleanupError } from '../install/processes/process-cleanup';
 import { resolveRegistryServerPlatform } from '../registry/platform';
-import { binarySource, pruneVersions, versionFolder } from './binary-cache';
-import { reserveVersion, serializeBinary } from './binary-reservations';
+import { binarySource, serializeBinary } from './binary-cache';
 import { githubDigest } from './github-digest';
 import { resolveNode } from './node';
 import type {
@@ -19,6 +18,11 @@ import type {
   EntryInput as LaunchInput,
   RegistryCommand,
 } from './types';
+import {
+  pruneVersions,
+  reserveVersion,
+  versionFolder,
+} from './version-folders';
 
 type BinaryInput = LaunchInput & {
   target: BinaryTarget;
