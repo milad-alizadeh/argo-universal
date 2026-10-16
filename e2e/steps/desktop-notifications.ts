@@ -136,7 +136,7 @@ When(
 When('I decline the desktop Elicitation', async ({ page }): Promise<void> => {
   await page
     .getByRole('region', { name: 'Elicitation questions' })
-    .getByRole('button', { name: 'Decline', exact: true })
+    .getByRole('button', { name: 'Skip', exact: true })
     .click();
 });
 
@@ -147,7 +147,7 @@ When(
   async ({ page }): Promise<void> => {
     await page
       .getByRole('region', { name: 'Elicitation questions' })
-      .getByRole('button', { name: 'Decline', exact: true })
+      .getByRole('button', { name: 'Skip', exact: true })
       .evaluate((button) => button.click());
   },
 );
