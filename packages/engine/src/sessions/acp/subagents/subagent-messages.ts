@@ -11,8 +11,7 @@ import type { SubagentRouting } from '../../subagents/routing-types';
 import {
   type AcpSessionMessage,
   type MessageRouting,
-  previousResult,
-  replier,
+  replyOf,
   sendMessageAction,
 } from './subagent-actions';
 import { messageMetadata } from './subagent-sender';
@@ -76,7 +75,7 @@ function messageRow(
   input: MessageRouting,
   child: ChildFeed,
   update: AcpSessionMessage,
-): Extract<FeedUpdate, { sessionUpdate: 'session_message' }> {
+): DeliveredMessage {
   const previous = previousMessage(child, messageId(input, update));
 
   return {
@@ -89,7 +88,34 @@ function messageRow(
   };
 }
 
+type DeliveredMessage = Extract<
+  FeedUpdate,
+  { sessionUpdate: 'session_message' }
+>;
+
+const senderOf = (row: DeliveredMessage): string | undefined =>
+  row._meta?.argo?.senderSessionId;
+
+const isOutgoing = (
+  input: MessageRouting,
+  child: ChildFeed,
+  row: DeliveredMessage,
+): boolean =>
+  child.parentId === input.parentId && senderOf(row) === input.parentId;
+
 // The parent's outgoing message to its own child is that child's prompt.
+function recordPrompt(
+  input: MessageRouting,
+  child: ChildFeed,
+  row: DeliveredMessage,
+): void {
+  if (!isOutgoing(input, child, row)) return;
+  sendMessageAction(input, child, {
+    messageId: row.messageId,
+    field: { prompt: row.content },
+  });
+}
+
 function deliverPrompt(
   input: MessageRouting,
   update: AcpSessionMessage,
@@ -99,48 +125,34 @@ function deliverPrompt(
   if (!child) return false;
 
   const row = messageRow(input, child, update);
-  const prompt = row.content;
 
   child.feed.send({
     type: 'feed.change',
     turnId: child.turnId,
     change: { type: 'upsert', update: row },
   });
-
-  if (isOutgoing(input, child, row))
-    sendMessageAction(input, child, update.messageId, { prompt });
+  recordPrompt(input, child, row);
 
   return true;
 }
-
-const senderOf = (row: Pick<SessionMessage, '_meta'>): string | undefined =>
-  row._meta?.argo?.senderSessionId;
-
-const isOutgoing = (
-  input: MessageRouting,
-  child: ChildFeed,
-  row: Pick<SessionMessage, '_meta'>,
-): boolean =>
-  child.parentId === input.parentId && senderOf(row) === input.parentId;
 
 function deliverResult(
   input: MessageRouting,
   update: AcpSessionMessage,
 ): boolean {
-  const previous = previousResult(input, update.messageId);
-  const child = replier(input, update, previous);
+  const reply = replyOf(input, update);
 
-  if (!child) return false;
+  if (!reply) return false;
 
-  const result = messageContent(update, previous?._meta?.argo?.result);
-
-  sendMessageAction(input, child, update.messageId, { result });
+  sendMessageAction(input, reply.child, {
+    messageId: update.messageId,
+    field: { result: messageContent(update, reply.previous) },
+  });
 
   return true;
 }
 
-// A result comes first: a child's reply on the parent transcript also names the
-// parent as recipient, which `deliverPrompt` would otherwise misread as a prompt.
+// A result routes first: a child's reply also names a recipient, which `deliverPrompt` would misread.
 export const deliverSubagentMessage = (
   input: MessageRouting,
   update: AcpSessionMessage,

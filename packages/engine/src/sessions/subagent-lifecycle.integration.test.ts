@@ -1,3 +1,4 @@
+import type { Subagent } from '@repo/contracts';
 import { session, turn } from '@repo/db/schema';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
@@ -14,7 +15,11 @@ import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 const missingChild = 'No Subagent was persisted';
 
 // The background parent closes and resumes; its new Turn reports the stored child idle.
-async function resumeBackgroundParent() {
+type ResumedParent = Awaited<ReturnType<typeof openAcpFeedSession>> & {
+  child: Subagent;
+};
+
+async function resumeBackgroundParent(): Promise<ResumedParent> {
   const background = scenarios['subagent-background'];
 
   const { host, sessionId } = await openAcpFeedSession({
