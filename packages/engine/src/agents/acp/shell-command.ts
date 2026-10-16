@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { AgentLaunch } from '../agent-launch';
 import type { Serializable } from './process';
 import type { ShellChild } from './process';
+import { captureShellCommandOutput } from './shell-command-output';
 import { releaseShellGroup } from './shell-process-group';
 import { recordShellGroup, removeShellRecord } from './shell-record';
 import { shellLaunchMessage, sendShellLaunch, shellPid } from './shell-start';
@@ -21,7 +22,7 @@ export type ShellCommandInput = {
   launch: AgentLaunch;
   cwd: string;
   home: string;
-  output: (text: string) => void;
+  output: (text: string) => void | Promise<void>;
 };
 
 const ShellMessage = z.discriminatedUnion('type', [
@@ -42,19 +43,27 @@ class OwnedShellCommand implements ShellCommand {
   private closing?: Promise<void>;
   private record?: string;
   public readonly exited = this.result.promise;
-  public constructor(private readonly child: ShellChild) {
+  public constructor(
+    private readonly child: ShellChild,
+    private readonly output: Promise<void>,
+  ) {
     child.once('spawn', () => this.spawned.resolve());
     child.once('error', (error) => this.spawned.reject(error));
     child.on('message', this.message);
-    child.once('close', (exitCode, signal) => {
-      this.started.reject(
-        new Error('Shell wrapper exited before command startup'),
-      );
-      void this.finish({ exitCode, signal }).catch(this.result.reject);
-    });
+    child.once('close', this.closed);
     void this.started.promise.catch(() => {});
     void this.exited.catch(() => {});
+    void output.catch(() => this.kill());
   }
+  private closed = (
+    exitCode: number | null,
+    signal: NodeJS.Signals | null,
+  ): void => {
+    this.started.reject(
+      new Error('Shell wrapper exited before command startup'),
+    );
+    void this.finish({ exitCode, signal }).catch(this.result.reject);
+  };
   public async launch(
     input: ShellCommandInput,
     options: { token: string; env: NodeJS.ProcessEnv },
@@ -115,6 +124,7 @@ class OwnedShellCommand implements ShellCommand {
   }
   private async finish(fallback: TerminalExitStatus): Promise<void> {
     await this.release();
+    await this.output;
     this.result.resolve(this.status ?? fallback);
   }
 }
@@ -125,8 +135,7 @@ export const observeShellCommand = (
   options: { token: string; env: NodeJS.ProcessEnv },
 ): Promise<ShellCommand> => {
   child.stdin.end();
-  child.stdout.setEncoding('utf8').on('data', input.output);
-  child.stderr.setEncoding('utf8').on('data', input.output);
+  const output = captureShellCommandOutput(child, input.output);
 
-  return new OwnedShellCommand(child).launch(input, options);
+  return new OwnedShellCommand(child, output).launch(input, options);
 };

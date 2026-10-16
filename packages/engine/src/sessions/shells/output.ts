@@ -5,6 +5,7 @@ import type {
   ShellRecord,
 } from '@repo/contracts';
 import { readOutput, type OutputStorage } from './output-reader';
+import { decodeShellOutput, type DecodedOutput } from './output-text';
 
 const outputReadInterval = 60;
 
@@ -59,18 +60,30 @@ class ShellOutputStream implements AsyncIterableIterator<ShellOutput> {
       this.after,
     );
 
-    const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(bytes, {
-      stream: true,
-    });
+    const chunk = decodeShellOutput(
+      bytes,
+      hasEnded(record, this.after + bytes.length, total),
+    );
 
-    if (!this.shouldPublish(record, text)) return;
-    this.after += Buffer.byteLength(text);
+    if (!this.shouldPublish(record, chunk.text)) return;
+
+    return this.publish(record, chunk, total);
+  }
+  private publish(
+    record: ShellRecord,
+    chunk: DecodedOutput,
+    total: number,
+  ): ShellOutput {
+    this.after += chunk.consumed;
     this.initial = false;
-    this.done = record.status !== 'running' && this.after === total;
+    this.done = hasEnded(record, this.after, total);
 
-    return { text, after: this.after, status: record.status };
+    return { text: chunk.text, after: this.after, status: record.status };
   }
   private shouldPublish(record: ShellRecord, text: string): boolean {
     return this.initial || text.length > 0 || record.status !== 'running';
   }
 }
+
+const hasEnded = (record: ShellRecord, after: number, total: number): boolean =>
+  record.status !== 'running' && after === total;
