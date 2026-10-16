@@ -3,12 +3,9 @@ import type {
   PluginReply,
   PluginRequest,
   PluginValue,
+  SecretCall,
 } from './runtime-protocol';
 import type { PluginStorage } from './storage';
-
-type SecretResult = string | null | void;
-
-type SecretsRequest = Extract<PluginRequest, { api: 'secrets' }>;
 
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
@@ -42,24 +39,21 @@ export class PluginServices {
     if (request.api === 'storage')
       return this.storage.execute(pluginId, request.queries);
 
-    return this.secrets(pluginId, request);
+    return this.secrets(pluginId, request.call);
   }
 
-  private secrets(
+  private async secrets(
     pluginId: string,
-    { action, account, value }: SecretsRequest,
+    call: SecretCall,
   ): Promise<PluginValue> {
     const service = pluginKeychainService(pluginId);
 
-    const actions: Record<
-      SecretsRequest['action'],
-      () => Promise<SecretResult>
-    > = {
-      get: () => this.keychain.get(service, account),
-      set: () => this.keychain.set(service, account, value),
-      delete: () => this.keychain.delete(service, account),
-    };
+    if (call.action === 'get') return this.keychain.get(service, call.account);
 
-    return actions[action]().then((result) => result ?? null);
+    await (call.action === 'set'
+      ? this.keychain.set(service, call.account, call.value)
+      : this.keychain.delete(service, call.account));
+
+    return null;
   }
 }

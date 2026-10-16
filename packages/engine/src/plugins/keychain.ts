@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
-const run = promisify(execFile);
+const execFileAsync = promisify(execFile);
 
 export interface Keychain {
   get(service: string, account: string): Promise<string | null>;
@@ -16,7 +16,7 @@ const notFound = (error: Error): boolean =>
 
 // A missing item is an answer, not a failure.
 function security(args: string[]): Promise<string | null> {
-  return run('security', args).then(
+  return execFileAsync('security', args).then(
     ({ stdout }) => stdout,
     (error: Error): null => {
       if (notFound(error)) return null;

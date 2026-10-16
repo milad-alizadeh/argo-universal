@@ -32,12 +32,13 @@ const idPattern = /^[A-Za-z0-9][\w.-]*$/;
 export class PluginStorage {
   private readonly databases = new Map<string, DatabaseSync>();
   private readonly home: string;
+  private closed = false;
 
   constructor(home: string) {
     this.home = home;
   }
 
-  fileOf(pluginId: string): string {
+  private fileOf(pluginId: string): string {
     if (!idPattern.test(pluginId) || pluginId.includes('..'))
       throw new Error(`Invalid Plugin id: ${pluginId}`);
 
@@ -46,10 +47,11 @@ export class PluginStorage {
 
   // Drizzle's sqlite-proxy migrator sends its statements as one batch, so a batch is one transaction.
   execute(pluginId: string, queries: StorageQuery[]): StorageResult[] {
+    if (this.closed) throw new Error('Plugin storage is closed');
     const database = this.open(pluginId);
 
     return inTransaction(database, () =>
-      queries.map((query) => run(database, query)),
+      queries.map((query) => runQuery(database, query)),
     );
   }
 
@@ -68,6 +70,8 @@ export class PluginStorage {
   }
 
   close(): void {
+    this.closed = true;
+
     for (const database of this.databases.values()) database.close();
     this.databases.clear();
   }
@@ -113,11 +117,11 @@ const runners: Record<
 
     return { rows: rowOf(statement.get(...params)) };
   },
-  all: (statement, params) => allRows(statement, params),
-  values: (statement, params) => allRows(statement, params),
+  all: allRows,
+  values: allRows,
 };
 
-function run(database: DatabaseSync, query: StorageQuery): StorageResult {
+function runQuery(database: DatabaseSync, query: StorageQuery): StorageResult {
   return runners[query.method](database.prepare(query.sql), query.params);
 }
 

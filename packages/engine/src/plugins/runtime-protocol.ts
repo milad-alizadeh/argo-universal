@@ -16,14 +16,21 @@ export const PluginEntry = z.object({
 
 export type PluginEntry = z.infer<typeof PluginEntry>;
 
-export const PluginRequest = z.discriminatedUnion('api', [
-  z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
+export const SecretCall = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('get'), account: z.string() }),
   z.object({
-    api: z.literal('secrets'),
-    action: z.enum(['get', 'set', 'delete']),
+    action: z.literal('set'),
     account: z.string(),
     value: z.string(),
   }),
+  z.object({ action: z.literal('delete'), account: z.string() }),
+]);
+
+export type SecretCall = z.infer<typeof SecretCall>;
+
+export const PluginRequest = z.discriminatedUnion('api', [
+  z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
+  z.object({ api: z.literal('secrets'), call: SecretCall }),
 ]);
 
 export type PluginRequest = z.infer<typeof PluginRequest>;
@@ -47,10 +54,13 @@ export const HostCommand = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('reply'),
     pluginId: z.string(),
+    generation: z.number(),
     id: z.number(),
     reply: PluginReply,
   }),
 ]);
+
+export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
 
 export const HostMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready') }),
@@ -62,6 +72,7 @@ export const HostMessage = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('call'),
     pluginId: z.string(),
+    generation: z.number(),
     id: z.number(),
     request: PluginRequest,
   }),

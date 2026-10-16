@@ -108,11 +108,12 @@ export class HostConnection {
   private async answerCall(
     message: Extract<HostMessage, { type: 'call' }>,
   ): Promise<void> {
+    const { pluginId, generation, id } = message;
     const reply = await this.callbacks.call(message);
 
     if (this.child?.connected)
       this.child.send(
-        { type: 'reply', pluginId: message.pluginId, id: message.id, reply },
+        { type: 'reply', pluginId, generation, id, reply },
         this.sendError,
       );
   }

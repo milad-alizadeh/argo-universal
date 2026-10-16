@@ -1,11 +1,9 @@
-import { z } from 'zod';
-import type {
+import {
   PluginRequest,
-  PluginValue,
-  WorkerCall,
-  WorkerReply,
+  type PluginValue,
+  type WorkerCall,
+  type WorkerReply,
 } from './runtime-protocol.ts';
-import { StorageResult, type StorageQuery } from './storage.ts';
 
 type Pending = {
   resolve: (value: PluginValue) => void;
@@ -22,13 +20,13 @@ export class WorkerCalls {
     this.send = send;
   }
 
-  call<T>(request: PluginRequest, schema: z.ZodType<T>): Promise<T> {
+  call(request: PluginRequest): Promise<PluginValue> {
     const id = this.next++;
 
-    return new Promise<PluginValue>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
       this.send({ type: 'call', id, request });
-    }).then((value) => schema.parse(value));
+    });
   }
 
   settle(message: WorkerReply): void {
@@ -44,56 +42,42 @@ function settleWith(pending: Pending, { reply }: WorkerReply): void {
   else pending.reject(new Error(reply.error));
 }
 
-export interface Argo {
-  storage: {
-    execute(query: StorageQuery): Promise<StorageResult>;
-    batch(queries: StorageQuery[]): Promise<StorageResult[]>;
+export type ArgoBridge = (json: string) => Promise<string>;
+
+/*
+ * The only host function a Plugin's context ever holds, and the context never sees it:
+ * it takes and returns JSON strings, so no object, promise or error from this realm
+ * reaches Plugin code (and with it no path to this realm's `Function`). `argoSource`
+ * wraps it inside the context, then removes it.
+ */
+export const argoBridge =
+  (calls: WorkerCalls): ArgoBridge =>
+  async (json) => {
+    const value = await calls.call(PluginRequest.parse(JSON.parse(json)));
+
+    return JSON.stringify(value ?? null);
   };
-  secrets: {
-    get(account: string): Promise<string | null>;
-    set(account: string, value: string): Promise<void>;
-    delete(account: string): Promise<void>;
+
+export const argoSource = `(() => {
+  const bridge = globalThis.__argoBridge;
+  delete globalThis.__argoBridge;
+  const call = async (request) => {
+    try {
+      return JSON.parse(await bridge(JSON.stringify(request)));
+    } catch (error) {
+      throw new Error(String(error && error.message));
+    }
   };
-}
-
-const storageResults = z.array(StorageResult);
-
-const storageApi = (calls: WorkerCalls): Argo['storage'] => ({
-  batch: (queries) => calls.call({ api: 'storage', queries }, storageResults),
-  execute: async (query) => {
-    const [result] = await calls.call(
-      { api: 'storage', queries: [query] },
-      storageResults,
-    );
-
-    if (!result) throw new Error('Storage returned no result');
-
-    return result;
-  },
-});
-
-type SecretCall = Extract<PluginRequest, { api: 'secrets' }>;
-
-const secretCall = (
-  calls: WorkerCalls,
-  request: Omit<SecretCall, 'api' | 'value'> & { value?: string },
-): Promise<string | null | undefined> =>
-  calls.call({ api: 'secrets', value: '', ...request }, z.string().nullish());
-
-const secretsApi = (calls: WorkerCalls): Argo['secrets'] => ({
-  get: async (account) =>
-    (await secretCall(calls, { action: 'get', account })) ?? null,
-  set: async (account, value) => {
-    await secretCall(calls, { action: 'set', account, value });
-  },
-  delete: async (account) => {
-    await secretCall(calls, { action: 'delete', account });
-  },
-});
-
-// The frozen `argo` object is a Plugin's only way out of its worker.
-export const createArgo = (calls: WorkerCalls): Readonly<Argo> =>
-  Object.freeze({
-    storage: Object.freeze(storageApi(calls)),
-    secrets: Object.freeze(secretsApi(calls)),
+  const secret = async (call_) => (await call({ api: 'secrets', call: call_ })) ?? null;
+  return Object.freeze({
+    storage: Object.freeze({
+      batch: (queries) => call({ api: 'storage', queries }),
+      execute: async (query) => (await call({ api: 'storage', queries: [query] }))[0],
+    }),
+    secrets: Object.freeze({
+      get: (account) => secret({ action: 'get', account }),
+      set: async (account, value) => { await secret({ action: 'set', account, value }); },
+      delete: async (account) => { await secret({ action: 'delete', account }); },
+    }),
   });
+})()`;

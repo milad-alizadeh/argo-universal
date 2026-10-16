@@ -1,6 +1,6 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import { PluginEntry, WorkerCommand } from './runtime-protocol.ts';
-import { createArgo, WorkerCalls } from './worker-argo.ts';
+import { argoBridge, WorkerCalls } from './worker-argo.ts';
 import { registerPlugin } from './worker-modules.ts';
 
 const calls = new WorkerCalls((message) => parentPort?.postMessage(message));
@@ -16,6 +16,6 @@ parentPort?.on('message', (message) => {
   else calls.settle(command);
 });
 
-await registerPlugin(PluginEntry.parse(workerData), createArgo(calls));
+await registerPlugin(PluginEntry.parse(workerData), argoBridge(calls));
 
 parentPort?.postMessage('ready');

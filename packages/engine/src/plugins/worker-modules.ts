@@ -1,19 +1,24 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { createContext, SourceTextModule, type Module } from 'node:vm';
+import {
+  createContext,
+  runInContext,
+  SourceTextModule,
+  type Module,
+} from 'node:vm';
 import { requirePluginFile } from './plugin-files.ts';
 import type { PluginEntry } from './runtime-protocol.ts';
-import type { Argo } from './worker-argo.ts';
+import { argoSource, type ArgoBridge } from './worker-argo.ts';
 
 /*
- * The context deliberately has no Node globals; the frozen `argo` object is its only host function. This is a
+ * The context deliberately has no Node globals; the frozen `argo` object, built inside the context, is its only way out. This is a
  * first-party execution boundary, not a security boundary for untrusted code.
  */
 export async function registerPlugin(
   entry: PluginEntry,
-  argo: Readonly<Argo>,
+  bridge: ArgoBridge,
 ): Promise<void> {
-  const context = pluginContext(argo);
+  const context = pluginContext(bridge);
   const modules = new PluginModules(entry, context);
 
   const bootstrap = registrationModule(context);
@@ -26,10 +31,17 @@ export async function registerPlugin(
   await bootstrap.evaluate();
 }
 
-const pluginContext = (
-  argo: Readonly<Argo>,
-): ReturnType<typeof createContext> =>
-  createContext({ argo }, { codeGeneration: { strings: false, wasm: false } });
+// `argoSource` builds the frozen `argo` inside the context and removes the bridge from it.
+function pluginContext(bridge: ArgoBridge): ReturnType<typeof createContext> {
+  const context = createContext(
+    { __argoBridge: bridge },
+    { codeGeneration: { strings: false, wasm: false } },
+  );
+
+  runInContext(`globalThis.argo = ${argoSource}`, context);
+
+  return context;
+}
 
 const registrationModule = (
   context: ReturnType<typeof createContext>,

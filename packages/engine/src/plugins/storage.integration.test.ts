@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -70,17 +71,20 @@ it('runs a Plugin Drizzle schema, migrations and queries on its own file', async
   ).toEqual([{ id: 1, title: taskTitle }]);
 });
 
-it('attaches a Plugin file read-only to the Server database and creates nothing for a Plugin that never stored', async () => {
+it('attaches a Plugin file read-only to the Server database', async () => {
   const { home, storage } = await startStorage();
   storage.execute('weather', [
     { sql: 'create table cache (value text)', params: [], method: runMethod },
-    { sql: 'insert into cache values (?)', params: ['sunny'], method: 'run' },
+    {
+      sql: 'insert into cache values (?)',
+      params: ['sunny'],
+      method: runMethod,
+    },
   ]);
 
   const server = openDatabase(join(home, 'argo.db')).$client;
   onTestFinished(() => server.close());
 
-  expect(storage.attachReadOnly(server, 'never-stored', 'idle')).toBe(false);
   expect(storage.attachReadOnly(server, 'weather', 'weather')).toBe(true);
   expect(server.prepare('select value from weather.cache').all()).toEqual([
     { value: 'sunny' },
@@ -90,7 +94,16 @@ it('attaches a Plugin file read-only to the Server database and creates nothing 
   );
 });
 
-it('rolls a failed batch back and rejects a Plugin id that would leave the plugin-data folder', async () => {
+it('attaches nothing, and creates no file, for a Plugin that never stored', async () => {
+  const { home, storage } = await startStorage();
+  const server = openDatabase(join(home, 'argo.db')).$client;
+  onTestFinished(() => server.close());
+
+  expect(storage.attachReadOnly(server, 'never-stored', 'idle')).toBe(false);
+  expect(existsSync(join(home, 'plugin-data'))).toBe(false);
+});
+
+it('rolls a failed batch back', async () => {
   const { storage } = await startStorage();
   storage.execute(pluginId, [
     { sql: 'create table t (x integer)', params: [], method: runMethod },
@@ -107,5 +120,10 @@ it('rolls a failed batch back and rejects a Plugin id that would leave the plugi
       { sql: 'select count(*) from t', params: [], method: 'get' },
     ]),
   ).toEqual([{ rows: [0] }]);
-  expect(() => storage.fileOf('../escape')).toThrow('Invalid Plugin id');
+});
+
+it('rejects a Plugin id that would leave the plugin-data folder', async () => {
+  const { storage } = await startStorage();
+
+  expect(() => storage.execute('../escape', [])).toThrow('Invalid Plugin id');
 });

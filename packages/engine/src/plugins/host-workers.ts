@@ -1,5 +1,4 @@
 import { Worker } from 'node:worker_threads';
-import type { z } from 'zod';
 import {
   pluginAnswerLimitMs,
   running,
@@ -7,7 +6,8 @@ import {
   WorkerMessage,
   type HostMessage,
   type PluginEntry,
-  type PluginReply,
+  type HostReply,
+  type WorkerCall,
 } from './runtime-protocol.ts';
 
 const heapLimitMb = 64;
@@ -30,10 +30,12 @@ export class HostWorkers {
     this.report = report;
   }
 
-  reply(pluginId: string, id: number, reply: PluginReply): void {
-    this.workers
-      .get(pluginId)
-      ?.worker.postMessage({ type: 'reply', id, reply });
+  // A reply belongs to the worker generation that asked; a reloaded worker never receives it.
+  reply({ pluginId, generation, id, reply }: HostReply): void {
+    const record = this.workers.get(pluginId);
+
+    if (record?.generation === generation)
+      record.worker.postMessage({ type: 'reply', id, reply });
   }
 
   activate(entry: PluginEntry): void {
@@ -75,7 +77,7 @@ export class HostWorkers {
   private listen(pluginId: string, record: WorkerRecord): void {
     record.worker.on('message', (message) => {
       if (this.workers.get(pluginId) === record)
-        this.received(pluginId, WorkerMessage.parse(message));
+        this.parsed(pluginId, record, WorkerMessage.safeParse(message));
     });
     record.worker.on('error', (error) =>
       this.workerCrashed(pluginId, record, runtimeError(error)),
@@ -93,18 +95,29 @@ export class HostWorkers {
     if (this.workers.get(pluginId) === record) this.crash(pluginId, error);
   }
 
-  private received(
+  // Plugin-controlled data never throws in the host: an invalid message crashes that Plugin alone.
+  private parsed(
     pluginId: string,
-    message: z.infer<typeof WorkerMessage>,
+    record: WorkerRecord,
+    parsed: ReturnType<typeof WorkerMessage.safeParse>,
   ): void {
-    if (typeof message === 'string') this.answer(pluginId, message);
-    else
-      this.report({
-        type: 'call',
-        pluginId,
-        id: message.id,
-        request: message.request,
-      });
+    if (!parsed.success) this.crash(pluginId, 'Plugin sent an invalid message');
+    else if (typeof parsed.data === 'string')
+      this.answer(pluginId, parsed.data);
+    else this.call(pluginId, record, parsed.data);
+  }
+
+  // A Plugin waiting on the Server is alive, so a slow call must not count as a hang while it starts.
+  private call(pluginId: string, record: WorkerRecord, call: WorkerCall): void {
+    if (record.heartbeat === null) this.arm(pluginId, record);
+
+    this.report({
+      type: 'call',
+      pluginId,
+      generation: record.generation,
+      id: call.id,
+      request: call.request,
+    });
   }
 
   private answer(pluginId: string, answer: 'ready' | 'pong'): void {
@@ -134,11 +147,16 @@ export class HostWorkers {
     );
   }
 
-  private ping(pluginId: string, record: WorkerRecord): void {
+  private arm(pluginId: string, record: WorkerRecord): void {
+    clearTimeout(record.deadline);
     record.deadline = setTimeout(
       () => this.hang(pluginId),
       pluginAnswerLimitMs,
     );
+  }
+
+  private ping(pluginId: string, record: WorkerRecord): void {
+    this.arm(pluginId, record);
     record.worker.postMessage('ping');
   }
 

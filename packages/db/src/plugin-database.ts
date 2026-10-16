@@ -1,6 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { pathToFileURL } from 'node:url';
 
 const aliasPattern = /^[A-Za-z_]\w*$/;
 
@@ -24,6 +25,6 @@ export function attachReadOnly(
 ): void {
   if (!aliasPattern.test(alias))
     throw new Error(`Invalid attach alias: ${alias}`);
-  const uri = `file:${encodeURI(filePath).replaceAll('?', '%3F')}?mode=ro`;
+  const uri = `${pathToFileURL(filePath).href}?mode=ro`;
   target.prepare(`ATTACH DATABASE ? AS ${alias}`).run(uri);
 }
