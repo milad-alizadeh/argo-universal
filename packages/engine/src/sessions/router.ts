@@ -38,6 +38,7 @@ import { cancelSession, closeSession } from './session-closure';
 import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
 import { promptSession } from './session-prompt';
+import { shellSessionRouter } from './shells/router';
 import { unimplementedSessionRouter } from './unimplemented-router';
 
 type SessionList = ReturnType<typeof createSessionList>;
@@ -153,5 +154,6 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createAnswerRouter(deps),
     createSubagentsRouter(deps),
     unimplementedSessionRouter,
+    shellSessionRouter,
   );
 });

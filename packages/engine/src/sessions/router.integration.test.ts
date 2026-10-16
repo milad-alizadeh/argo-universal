@@ -35,6 +35,8 @@ it('rejects an unsupported Session paging direction', async (): Promise<void> =>
 
 type SessionCaller = Awaited<ReturnType<typeof startAcpEngine>>['caller'];
 
+const shellUnavailable = 'Shell runtime is not implemented yet';
+
 it.each([
   {
     procedure: 'archive',
@@ -49,6 +51,34 @@ it.each([
       await caller.session.unarchive({ sessionId: 'session-1' });
     },
     message: 'Session Undo is not implemented yet',
+  },
+  {
+    procedure: 'shells',
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.session.shells({ sessionId: 'session-1' });
+    },
+    message: shellUnavailable,
+  },
+  {
+    procedure: 'stopShell',
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.session.stopShell({
+        sessionId: 'session-1',
+        shellId: 'terminal-1',
+      });
+    },
+    message: shellUnavailable,
+  },
+  {
+    procedure: 'shell.output',
+    call: async (caller: SessionCaller): Promise<void> => {
+      await caller.shell.output({
+        sessionId: 'session-1',
+        shellId: 'terminal-1',
+        after: 0,
+      });
+    },
+    message: shellUnavailable,
   },
   {
     procedure: 'rename',
