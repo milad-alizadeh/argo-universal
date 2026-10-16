@@ -13,6 +13,7 @@ export interface ChosenSettings {
 
 export interface SessionChoiceInput {
   projects: readonly ProjectInfo[];
+  // The Installed Agents, in name order.
   agents: readonly AgentServer[];
   chosen: ChosenSettings;
   // The chosen main Project's branches; undefined until they load.
@@ -40,12 +41,12 @@ export const chooseProject = (
 ): ProjectInfo | undefined =>
   projects.find((entry) => entry.id === chosen) ?? projects[0];
 
+// The chosen Agent while it is installed, else the first by name.
 const chooseAgent = (
   agents: readonly AgentServer[],
   chosen: string | undefined,
 ): AgentServer | undefined =>
-  agents.find((entry) => entry.id === chosen) ??
-  [...agents].sort((a, b) => a.name.localeCompare(b.name))[0];
+  agents.find((entry) => entry.id === chosen) ?? agents[0];
 
 type Checkout = Pick<
   SessionChoices,
