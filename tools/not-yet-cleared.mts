@@ -63,7 +63,7 @@ function check(result: Evaluation): number {
 
 type TreeEvaluation = { current: string; result: Evaluation };
 
-function evaluateTree(): TreeEvaluation {
+function evaluateTree(report: string): TreeEvaluation {
   const current = readFileSync(join(root, waiverPath), 'utf8');
   const baseline = baselineWaivers();
   const growth = growthProblems(readWaivers(current), readWaivers(baseline));
@@ -73,7 +73,7 @@ function evaluateTree(): TreeEvaluation {
   const result = evaluateWaivers({
     current,
     baseline,
-    report: measureFindings(root),
+    report,
   });
 
   return { current, result };
@@ -98,19 +98,31 @@ function assertMode(
     throw new Error('Usage: node tools/not-yet-cleared.mts <check|prune>');
 }
 
-function run(mode: string | undefined): number {
+function run(mode: string | undefined, report: () => string): number {
   assertMode(mode);
-  const { current, result } = evaluateTree();
+  const { current, result } = evaluateTree(report());
   printSummary(result);
 
   return mode === 'check' ? check(result) : prune(current, result);
 }
 
-try {
-  process.exitCode = run(process.argv[2]);
-} catch (error) {
-  console.error(
-    `not-yet-cleared: rejected input (1): ${error instanceof Error ? error.message : String(error)}`,
-  );
-  process.exitCode = 1;
+function guarded(action: () => number): number {
+  try {
+    return action();
+  } catch (error) {
+    console.error(
+      `not-yet-cleared: rejected input (1): ${error instanceof Error ? error.message : String(error)}`,
+    );
+
+    return 1;
+  }
 }
+
+// Checks the waivers against a report that tools/check-lint-waivers.mts shares with the allowlist check.
+export const checkNotYetCleared = (report: string): number =>
+  guarded((): number => run('check', (): string => report));
+
+if (import.meta.main)
+  process.exitCode = guarded((): number =>
+    run(process.argv[2], (): string => measureFindings(root)),
+  );

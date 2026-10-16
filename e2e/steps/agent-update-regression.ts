@@ -4,6 +4,7 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect } from '../fixtures';
 import { browseAgents } from './agent-catalog';
 import { When, Then } from './fixtures';
+import { reloadApp } from './frame';
 import { mutate } from './server-query';
 
 const versionThree: typeof publishedRegistry = {
@@ -68,7 +69,7 @@ When(
   /^the App (stays|reloads) during the accepted update$/,
   async ({ page }, recovery: string): Promise<void> => {
     if (recovery === 'stays') return;
-    await page.goto('/');
+    await reloadApp(page);
     await browseAgents(page);
     await page.getByRole('link', { name: /^Example Agent,/ }).click();
   },
