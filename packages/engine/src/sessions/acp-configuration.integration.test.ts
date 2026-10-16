@@ -6,15 +6,22 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { session } from '@repo/db/schema';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
-import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
+import {
+  appFixtureAgentIds,
+  fixtureAgents,
+} from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const configuredSessionId = 'configured-session';
+
+const unavailableModel = 'Model unavailable';
+
+const cancellationPrompt = 'Wait for cancellation';
 
 it.each(fixtureAgents.map(({ agent }) => agent))(
   '%s names an empty Session from its first prompt and keeps that title on later prompts',
@@ -317,7 +324,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         sessionIds: [configuredSessionId],
         responses: {
           'session/set_config_option': [
-            { error: { code: -32602, message: 'Model unavailable' } },
+            { error: { code: -32602, message: unavailableModel } },
           ],
         },
       },
@@ -333,7 +340,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         type: 'id',
         value: 'small',
       }),
-    ).rejects.toThrow('Model unavailable');
+    ).rejects.toThrow(unavailableModel);
 
     const feed = (
       await host.caller.feed.subscribe({ ...created, after: null })
@@ -386,7 +393,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     const created = await host.caller.session.new(sessionInput);
     await host.caller.session.prompt({
       ...created,
-      prompt: [{ type: 'text', text: 'Wait for cancellation' }],
+      prompt: [{ type: 'text', text: cancellationPrompt }],
     });
     await prompted.promise;
 
@@ -399,11 +406,24 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
 
     await host.caller.session.cancel(created);
     await setting;
+    await waitForAcpSessionIdle(host, created.sessionId);
     expect(commands).toMatchObject([
-      { prompt: [{ text: 'Wait for cancellation' }] },
+      { prompt: [{ text: cancellationPrompt }] },
       { sessionId: configuredSessionId },
-      { configId: 'mode' },
     ]);
+    expect(commands).toHaveLength(2);
+    await host.caller.session.prompt({
+      ...created,
+      prompt: [{ type: 'text', text: 'Continue with held mode' }],
+    });
+    await expect
+      .poll(() => commands)
+      .toMatchObject([
+        { prompt: [{ text: cancellationPrompt }] },
+        { sessionId: configuredSessionId },
+        { configId: 'mode', value: 'plan' },
+        { prompt: [{ text: 'Continue with held mode' }] },
+      ]);
   },
 );
 
@@ -792,5 +812,59 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       },
       { configId: 'fast', currentValue: false },
     ]);
+  },
+);
+
+it.each(appFixtureAgentIds)(
+  '%s rejects the next prompt when the Agent refuses a held choice before any new Turn is stored',
+  async (agent) => {
+    const finish = Promise.withResolvers<void>();
+    const prompted = Promise.withResolvers<PromptRequest>();
+    const prompts: PromptRequest[] = [];
+
+    const host = await startAcpEngine(
+      {
+        configOptions: acpConfiguration,
+        steps: [],
+        responses: {
+          'session/prompt': [
+            { received: prompted, requests: prompts, waitFor: finish.promise },
+          ],
+          'session/set_config_option': [
+            { error: { code: -32602, message: unavailableModel } },
+          ],
+        },
+      },
+      undefined,
+      agent,
+    );
+
+    const created = await host.caller.session.new({
+      ...emptySessionInput,
+      agent,
+      prompt: [{ type: 'text', text: 'First' }],
+    });
+
+    await prompted.promise;
+    await host.caller.session.setConfigOption({
+      ...created,
+      configId: 'model',
+      type: 'id',
+      value: 'small',
+    });
+    finish.resolve();
+    await waitForAcpSessionIdle(host, created.sessionId);
+    await expect(
+      host.caller.session.prompt({
+        ...created,
+        prompt: [{ type: 'text', text: 'Next' }],
+      }),
+    ).rejects.toThrow(unavailableModel);
+    expect(prompts).toHaveLength(1);
+    expect(
+      host.database.$client
+        .prepare('SELECT status FROM turn WHERE session_id = ?')
+        .all(created.sessionId),
+    ).toEqual([{ status: 'ended' }]);
   },
 );

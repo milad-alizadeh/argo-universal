@@ -116,7 +116,10 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       turns: readTurns(host, sessionId),
     }).toMatchObject({
       cancels: [{ sessionId: 'owned-1' }],
-      rows: [{ kind: 'user_message', sameTurn: true }],
+      rows: [
+        { kind: 'user_message', sameTurn: true },
+        { kind: 'notice', sameTurn: true },
+      ],
       turns: [{ status: 'ended', stopReason: 'cancelled' }],
     });
   });

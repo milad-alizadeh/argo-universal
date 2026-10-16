@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { Button } from '#primitives/buttons/button';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { SplitButton } from './split-button';
@@ -40,9 +39,9 @@ function ScopeSplit(props: ScopeSplitProps): React.JSX.Element {
         setScope(next);
         props.onValueChange(next);
       }}
-    >
-      <Button custom label="Allow" onPress={props.onAllow} />
-    </SplitButton>
+      label="Allow"
+      onPress={props.onAllow}
+    />
   );
 }
 

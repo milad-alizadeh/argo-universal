@@ -20,7 +20,7 @@ const restoreFeedWritesAndAwaitCommit = async (
           .get(),
       { timeout: 10000 },
     )
-    .toEqual({ count: 1 });
+    .toEqual({ count: 2 });
 };
 
 describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
@@ -158,7 +158,15 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       host.database.$client
         .prepare('SELECT COUNT(*) AS count FROM feed_row')
         .get(),
-    ).toEqual({ count: 0 });
+    ).toEqual({ count: 1 });
+    expect(
+      (await host.caller.feed.page({ ...created, direction: 'tail' })).rows,
+    ).toMatchObject([
+      {
+        sessionUpdate: 'notice',
+        _meta: { argo: { turnEnd: { stopReason: 'error' } } },
+      },
+    ]);
   });
 
   it('a new explicit submission succeeds after a rejected commit and does not inherit its closure failure', async () => {

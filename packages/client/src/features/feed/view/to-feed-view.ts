@@ -6,6 +6,7 @@ import {
 import type { FeedView, FeedViewItem } from './feed-view';
 import { isGroupRow, startsNewTurn } from './grouping-rules';
 import { OpenGroup } from './open-group';
+import { turnEndItem } from './turn-end-item';
 
 function appendRow(
   row: SessionUpdate,
@@ -13,7 +14,22 @@ function appendRow(
   items: FeedViewItem[],
 ): void {
   if (row.sessionUpdate === 'plan_update') return;
+  const end = turnEndItem(row);
 
+  if (end) {
+    items.push(...group.flush(), end);
+
+    return;
+  }
+
+  appendContentRow(row, group, items);
+}
+
+function appendContentRow(
+  row: SessionUpdate,
+  group: OpenGroup,
+  items: FeedViewItem[],
+): void {
   if (isGroupRow(row)) return group.add(row);
   items.push(...group.flush(), { type: 'row', row });
 }

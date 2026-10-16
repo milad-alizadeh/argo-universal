@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { Pressable } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { Button } from '#primitives/buttons/button';
 import { Text } from '#primitives/display/text';
@@ -17,9 +18,11 @@ const meta = {
   title: 'Tests/Dialog',
   render: (): React.JSX.Element => (
     <Dialog>
-      {/* A content button forwards its ref, which the dialog needs to hand focus back. */}
+      {/* A Pressable forwards its ref, which the dialog needs to hand focus back. */}
       <DialogTrigger asChild>
-        <Button custom label="Rename" />
+        <Pressable role="button">
+          <Text>Rename</Text>
+        </Pressable>
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>Rename the Project</DialogTitle>

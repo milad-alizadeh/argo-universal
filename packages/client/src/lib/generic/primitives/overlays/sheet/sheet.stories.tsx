@@ -6,6 +6,7 @@ import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { MenuTrigger } from '#primitives/overlays/menu';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Sheet } from './sheet';
 import { useSheet } from './sheet-pages';
@@ -69,7 +70,7 @@ export function ExampleSheet(props: ExampleProps): ReactElement {
       {...props}
       open={open}
       onOpenChange={setOpen}
-      trigger={<Button custom label={props.label} variant="outline" />}
+      trigger={<MenuTrigger label={props.label} />}
     >
       <Choices />
     </Sheet>
@@ -106,7 +107,7 @@ export function PagedSheet(): ReactElement {
       onOpenChange={setOpen}
       label="Settings"
       contentScrolls
-      trigger={<Button custom label="Settings" variant="outline" />}
+      trigger={<MenuTrigger label="Settings" />}
     >
       {fruitPages(fruit, setFruit)}
     </Sheet>

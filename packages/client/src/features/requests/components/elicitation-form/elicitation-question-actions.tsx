@@ -1,10 +1,7 @@
 import type { ReactElement } from 'react';
-import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import { Button, type ButtonProps } from '#primitives/buttons/button';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
-
-type ActionProps = Extract<ButtonProps, { custom: true }>;
 
 export function QuestionActions({
   model,
@@ -25,37 +22,33 @@ export function QuestionActions({
 function actionOrder(
   model: QuestionModel,
   wide: boolean,
-): [ActionProps, ActionProps] {
+): [ButtonProps, ButtonProps] {
   const submit = submitProps(model, wide);
   const skip = skipProps(model, wide);
 
   return wide ? [skip, submit] : [submit, skip];
 }
 
-function actionProps(
-  wide: boolean,
-): Pick<ActionProps, 'custom' | 'size' | 'fullWidth'> {
-  return { custom: true, size: 'sm', fullWidth: !wide };
+function actionProps(wide: boolean): Pick<ButtonProps, 'size' | 'fullWidth'> {
+  return { size: 'sm', fullWidth: !wide };
 }
 
-function submitProps(model: QuestionModel, wide: boolean): ActionProps {
+function submitProps(model: QuestionModel, wide: boolean): ButtonProps {
   return {
     ...actionProps(wide),
     label: actionLabel(model),
     disabled: model.inactive || !model.canAdvance,
     loading: model.props.state.kind === 'submitting',
     onPress: model.advance,
-    className: cn('android:min-h-12', wide && 'px-3.5'),
   };
 }
 
-function skipProps(model: QuestionModel, wide: boolean): ActionProps {
+function skipProps(model: QuestionModel, wide: boolean): ButtonProps {
   return {
     ...actionProps(wide),
     label: 'Skip',
     variant: wide ? 'ghost' : 'outline',
     disabled: model.inactive,
-    className: 'android:min-h-12 android:border-muted-foreground',
     onPress: model.skip,
   };
 }

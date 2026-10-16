@@ -5,6 +5,8 @@ import { createRejectionCounter } from '@repo/machine-log';
 import { and, eq, or, sql, type SQL } from 'drizzle-orm';
 import {
   advanceRecoveredSession,
+  recoverTurnEnd,
+  restartTurnError,
   recoverStoredFeedRow,
   storedFeedColumns,
 } from '../feed';
@@ -17,19 +19,23 @@ export function recoverAfterRestart(database: Database): void {
   )}) else 0 end`;
 
   database.transaction((transaction): void => {
-    transaction
+    const endedAt = Date.now();
+
+    const ended = transaction
       .update(turn)
       .set({
         status: 'ended',
         stopReason: 'error',
-        error: {
-          code: 'interrupted',
-          message: 'The Server stopped during the Turn',
-        },
-        endedAt: Date.now(),
+        error: restartTurnError,
+        endedAt,
       })
       .where(eq(turn.status, 'running'))
-      .run();
+      .returning({
+        id: turn.id,
+        sessionId: turn.sessionId,
+        startedAt: turn.startedAt,
+      })
+      .all();
 
     const rows = transaction
       .select({ row: storedFeedColumns, maxRevision: session.maxRevision })
@@ -63,5 +69,16 @@ export function recoverAfterRestart(database: Database): void {
 
     for (const [sessionId, maxRevision] of revisions)
       advanceRecoveredSession(transaction, sessionId, maxRevision);
+
+    for (const row of ended)
+      recoverTurnEnd(transaction, {
+        sessionId: row.sessionId,
+        turnId: row.id,
+        end: {
+          stopReason: 'error',
+          error: restartTurnError,
+          durationMs: Math.max(0, endedAt - row.startedAt),
+        },
+      });
   });
 }

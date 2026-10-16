@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { Button } from '#primitives/buttons/button';
 import { Combobox } from '#primitives/inputs/combobox';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Drill } from './drill';
 
@@ -23,7 +23,7 @@ const options = ['Apple', 'Banana', 'Cherry'].map((label) => ({
 const presentation = {
   label: 'Configure',
   contentScrolls: true,
-  trigger: <Button custom label="Configure" />,
+  trigger: <MenuTrigger label="Configure" />,
 };
 
 function Configure(): ReactElement {

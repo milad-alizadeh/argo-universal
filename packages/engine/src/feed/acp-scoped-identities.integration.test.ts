@@ -62,11 +62,12 @@ it.each(['agent-1', 'agent-2'])(
         'tool_call_update',
         'plan_update',
         'compaction_update',
+        'notice',
       ]),
     );
     expect(
       new Set(pages.flatMap((page) => page.rows.map((row) => row.id))).size,
-    ).toBe(10);
+    ).toBe(12);
     expect(
       pages[0]?.rows.every((row) => row.sessionId === first.sessionId),
     ).toBe(true);

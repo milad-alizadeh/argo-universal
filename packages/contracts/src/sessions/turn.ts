@@ -36,3 +36,12 @@ export const Turn = z.strictObject({
 });
 
 export type Turn = z.infer<typeof Turn>;
+
+// App-visible ending; duration is elapsed milliseconds, including time awaiting input.
+export const TurnEnd = z.strictObject({
+  stopReason: turnColumns.shape.stopReason.unwrap(),
+  error: TurnError.nullable(),
+  durationMs: z.number(),
+});
+
+export type TurnEnd = z.infer<typeof TurnEnd>;

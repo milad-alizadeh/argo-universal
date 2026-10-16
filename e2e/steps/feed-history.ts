@@ -64,9 +64,11 @@ async function nextTurnIsStored(page: Page, httpUrl: string): Promise<boolean> {
     hasText(row, 'Continue after paging history'),
   );
 
-  if (!prompt?.turnId) return false;
+  const turnId = prompt?.turnId;
 
-  return endsTurn(rows.at(-1), prompt.turnId);
+  if (!turnId) return false;
+
+  return rows.some((row) => endsTurn(row, turnId));
 }
 
 Given(

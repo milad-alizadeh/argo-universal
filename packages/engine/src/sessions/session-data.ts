@@ -53,6 +53,7 @@ export interface SessionData {
   checkout: Checkout;
   // The values the Agent connects with: the `session.new` choices, then whatever the Agent last reported.
   configValues: InitialConfigOption[];
+  heldConfig: InitialConfigOption[];
   epoch: number;
   maxRevision: number;
   activityAt: number;
@@ -86,6 +87,7 @@ export async function createSessionCheckout(
     vendorSessionId: null,
     checkout,
     configValues: input.configOptions,
+    heldConfig: [],
     epoch: 0,
     maxRevision: 0,
     activityAt: Date.now(),
@@ -113,6 +115,7 @@ export function toSessionInsert(
       checkoutPath: data.checkout.path,
       checkoutBranch: data.checkout.branch,
       configValues: data.configValues,
+      heldConfig: data.heldConfig,
       projectionVersion: 1,
       activityAt: data.activityAt,
     },
@@ -231,6 +234,7 @@ export async function loadSession(
     vendorSessionId: row.vendorSessionId,
     checkout: { path: row.checkoutPath, branch: row.checkoutBranch },
     configValues: storedConfigValues.parse(row.configValues),
+    heldConfig: storedConfigValues.parse(row.heldConfig),
     epoch: row.epoch,
     maxRevision: row.maxRevision,
     activityAt: row.activityAt,

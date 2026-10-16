@@ -43,7 +43,9 @@ export const HashOpensTheMatchingReferences: Story = {
     const field = canvas.getByRole('textbox', { name: label });
     await userEvent.type(field, 'See #comp');
 
-    const menu = await screen.findByRole('listbox');
+    const menu = await screen.findByRole('group', {
+      name: 'Issues and pull requests',
+    });
 
     await expect(menu).toBeVisible();
     await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
@@ -85,7 +87,9 @@ export const HashAndASpaceStaysText: Story = {
       expect(args.onChangeText).toHaveBeenLastCalledWith('# Notes'),
     );
     await waitFor(() =>
-      expect(screen.queryByRole('listbox')).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole('group', { name: 'Issues and pull requests' }),
+      ).not.toBeInTheDocument(),
     );
   },
 };

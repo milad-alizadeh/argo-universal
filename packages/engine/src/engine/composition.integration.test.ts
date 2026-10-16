@@ -76,6 +76,7 @@ it.each(fixtureAgents)(
     ).toEqual([
       { id: messageId },
       { id: '["agent_message","owned-1",["upstream","reply"]]' },
+      { id: expect.stringMatching(/:end$/) },
     ]);
   },
 );

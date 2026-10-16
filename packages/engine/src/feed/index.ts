@@ -56,6 +56,10 @@ export {
 
 export { advanceRecoveredSession, recoverStoredFeedRow } from './feed-recovery';
 
+export { recoverTurnEnd } from './turn-end-recovery';
+
+export { restartTurnError } from './turn-end';
+
 export { settleArchivedChild } from './archive-settlement';
 
 export { mapSupportedContentBlock } from './acp/content';
