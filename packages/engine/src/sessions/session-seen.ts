@@ -12,7 +12,7 @@ import {
 } from '../storage';
 import type { SessionRouterDeps } from './router-deps';
 
-// Raises a Session's seen revision; an older revision, such as from a slower App, never lowers it.
+// Raises a Session's seen revision; an older revision, such as from a slower App, never lowers it. It is not capped at the stored `maxRevision`: an App shows live rows before the Writer stores them.
 export class SessionSeenJob implements WriterJob {
   public constructor(private readonly seen: SessionMarkSeenInput) {}
 

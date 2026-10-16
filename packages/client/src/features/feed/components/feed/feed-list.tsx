@@ -26,19 +26,12 @@ export interface FeedListProps {
   onAtEndChange?: (atEnd: boolean) => void;
 }
 
-interface FeedBodyProps extends Omit<FeedScrollProps, 'atEnd'> {
-  newestKeyWhenLeftEnd: string | null;
-}
-
-function FeedBody({
-  newestKeyWhenLeftEnd,
-  ...scroll
-}: FeedBodyProps): React.JSX.Element {
+function FeedBody(scroll: FeedScrollProps): React.JSX.Element {
   const feedGrowth = useFeedGrowth(scroll.list);
 
   return (
     <FeedGrowthContext.Provider value={feedGrowth}>
-      <FeedScroll {...scroll} atEnd={newestKeyWhenLeftEnd === null} />
+      <FeedScroll {...scroll} />
     </FeedGrowthContext.Provider>
   );
 }
@@ -46,7 +39,7 @@ function FeedBody({
 export function FeedList(props: FeedListProps): React.JSX.Element {
   const list = useRef<LegendListRef>(null);
   const position = useFeedScrollPosition(list, props);
-  useReportsAtEnd(position.newestKeyWhenLeftEnd === null, props.onAtEndChange);
+  useReportsAtEnd(position.atEnd, props.onAtEndChange);
   const shared = { list, ...props, ...position };
 
   return (

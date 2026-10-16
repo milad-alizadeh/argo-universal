@@ -8,6 +8,14 @@ export const liveTitle = 'Check the live list';
 
 export const attentionLabel = '1 Session needs attention';
 
+// A Session's row in the list, named by its title and status.
+export const sessionWithStatus = (
+  page: Page,
+  title: string,
+  status: string,
+): Locator =>
+  page.getByRole('button', { name: `${title}, ${status}`, exact: true });
+
 export function liveSessionRow(page: Page): Locator {
   return page.getByRole('button', { name: new RegExp(`^${liveTitle}, `) });
 }
@@ -25,9 +33,7 @@ When(
     ).toBeVisible();
     await expect(page.getByTestId(wideFrame)).toBeVisible();
     await startSession(page, title);
-    await expect(
-      page.getByRole('button', { name: `${title}, Needs input`, exact: true }),
-    ).toBeVisible();
+    await expect(sessionWithStatus(page, title, 'Needs input')).toBeVisible();
   },
 );
 
@@ -37,9 +43,7 @@ Given(
     await page.setViewportSize(wide);
     await startSession(page, title);
     // Its Turn ended while the reader watched the end of its Feed.
-    await expect(
-      page.getByRole('button', { name: `${title}, Idle`, exact: true }),
-    ).toBeVisible();
+    await expect(sessionWithStatus(page, title, 'Idle')).toBeVisible();
   },
 );
 
@@ -47,9 +51,7 @@ Then(
   'the Sessions list shows the unread Session with one attention badge',
   async ({ page }): Promise<void> => {
     await expect(liveSessionRow(page)).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: `${liveTitle}, Unread`, exact: true }),
-    ).toBeVisible();
+    await expect(sessionWithStatus(page, liveTitle, 'Unread')).toBeVisible();
     await expect(page.getByLabel(attentionLabel, { exact: true })).toHaveText(
       '1',
     );

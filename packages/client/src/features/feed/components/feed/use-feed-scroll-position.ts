@@ -82,7 +82,17 @@ export function useReportsAtEnd(
 export interface FeedScrollPosition {
   initialIndex: number;
   newestKeyWhenLeftEnd: string | null;
+  atEnd: boolean;
 }
+
+const positionAt = (
+  initialIndex: number,
+  newestKeyWhenLeftEnd: string | null,
+): FeedScrollPosition => ({
+  initialIndex,
+  newestKeyWhenLeftEnd,
+  atEnd: newestKeyWhenLeftEnd === null,
+});
 
 // Where the reader is in the Feed: where it opened, and whether they left the end.
 export function useFeedScrollPosition(
@@ -95,7 +105,6 @@ export function useFeedScrollPosition(
 ): FeedScrollPosition {
   const initialIndex = useOpensAtEnd(list, entries.length - 1);
   useRequestsOlderNearTop(list, keyOf(entries[0]), onStartReached);
-  const newestKeyWhenLeftEnd = useNewestKeyWhenLeftEnd(list, newestKey);
 
-  return { initialIndex, newestKeyWhenLeftEnd };
+  return positionAt(initialIndex, useNewestKeyWhenLeftEnd(list, newestKey));
 }

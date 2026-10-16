@@ -1,19 +1,14 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { type App, expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { phone, wide } from './frame';
 import { expectRunningCommand, restartEngine } from './live-feed';
-import { attentionLabel, liveTitle, startSession } from './live-session';
-
-// The pages each scenario opened besides its first, as other devices.
-const otherPages = new WeakMap<Page, Page>();
-
-const sessionWithStatus = (
-  page: Page,
-  title: string,
-  status: string,
-): Locator =>
-  page.getByRole('button', { name: `${title}, ${status}`, exact: true });
+import {
+  attentionLabel,
+  liveTitle,
+  sessionWithStatus,
+  startSession,
+} from './live-session';
 
 /*
  * A Session is Unread only when nobody saw the end of its Feed, so the reader
@@ -54,10 +49,9 @@ Given(
 
 When(
   "I see the end of the Session {string}'s Feed on another page",
-  async ({ app, page }, title: string): Promise<void> => {
+  async ({ app }, title: string): Promise<void> => {
     if (!app.openPage) throw new Error('This scenario needs the web App');
     const other = await app.openPage();
-    otherPages.set(page, other);
     await other.setViewportSize(wide);
     await other.goto('/');
     await sessionWithStatus(other, title, 'Unread').click();
@@ -74,6 +68,5 @@ Then(
     await expect(page.getByLabel(attentionLabel, { exact: true })).toHaveCount(
       0,
     );
-    await otherPages.get(page)?.close();
   },
 );
