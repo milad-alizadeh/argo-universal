@@ -25,6 +25,7 @@ import { type Feed, type FeedStreamEvent } from './feed-change';
 import { prepareTurnSettlement } from './feed-turn-settlement';
 import {
   createRowsWriteRequest,
+  rejectUnavailableWriter,
   type WriterJobParameters,
 } from './feed-write-request';
 import type { FeedPublication } from './publication';
@@ -124,10 +125,6 @@ export type FeedInternalEvent =
   | { type: 'feed.publish'; published?: FeedPublication };
 
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
-
-const rejectUnavailableWriter = (params: WriterJobParameters): void => {
-  params.committed?.reject(new Error('Database Writer is unavailable'));
-};
 
 const writeRows = [
   { type: 'sendToWriter', params: createRowsWriteRequest },

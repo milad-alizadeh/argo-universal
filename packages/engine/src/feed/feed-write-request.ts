@@ -9,6 +9,10 @@ export type WriterJobParameters = Pick<
   'job' | 'committed' | 'refused'
 >;
 
+export const rejectUnavailableWriter = (params: WriterJobParameters): void => {
+  params.committed?.reject(new Error('Database Writer is unavailable'));
+};
+
 const changedRows = (context: FeedContext): SessionUpdate[] =>
   context.changedRowIds.flatMap((id) => {
     const row = context.rows[id];
