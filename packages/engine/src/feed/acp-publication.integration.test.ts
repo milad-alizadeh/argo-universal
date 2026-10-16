@@ -84,10 +84,11 @@ it('all wire-earlier content precedes idle and text appends keep the actual bloc
     'plan_update',
     'notice',
     'compaction_update',
+    'notice',
   ]);
   expect(
     (await host.caller.feed.page({ ...created, direction: 'tail' })).rows,
-  ).toHaveLength(6);
+  ).toHaveLength(7);
   await closeStream(stream);
 });
 

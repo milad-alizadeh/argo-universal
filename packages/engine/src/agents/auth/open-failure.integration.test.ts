@@ -35,7 +35,7 @@ it('an auth-required New worktree open at Send stores no Turn and discards the C
   expect(git('branch', '--list', 'argo/*')).toBe('');
 });
 
-it('a mid-Turn auth_required ends its Turn error and tells watching Apps sign-in is required', async () => {
+it('a mid-Turn auth_required ends its Turn auth_required and tells watching Apps sign-in is required', async () => {
   const host = await startAcpEngine({
     steps: [],
     responses: {
@@ -65,7 +65,20 @@ it('a mid-Turn auth_required ends its Turn error and tells watching Apps sign-in
     host.database.$client
       .prepare('SELECT status, stop_reason FROM turn WHERE session_id = ?')
       .get(session.sessionId),
-  ).toEqual({ status: 'ended', stop_reason: 'error' });
+  ).toEqual({ status: 'ended', stop_reason: 'auth_required' });
+  const page = await host.caller.feed.page({ ...session, direction: 'tail' });
+  expect(page.rows.at(-1)).toMatchObject({
+    sessionUpdate: 'notice',
+    _meta: {
+      argo: {
+        turnEnd: {
+          stopReason: 'auth_required',
+          error: { code: RequestError.authRequired().code },
+          durationMs: expect.any(Number),
+        },
+      },
+    },
+  });
   expect((await required).value).toEqual({
     methods: [],
     pending: null,

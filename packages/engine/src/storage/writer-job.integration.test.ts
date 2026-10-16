@@ -1,9 +1,9 @@
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { SqlJob } from '#mocks/storage-job';
-import { writeJobs } from './writer-job';
+import { AtomicWriterJob, type WriterJob, writeJobs } from './writer-job';
 
 let database: Database;
 
@@ -22,18 +22,26 @@ beforeEach((): void => {
 
 afterEach((): void => removeDatabase());
 
-it('commits the jobs in the order they arrive', (): void => {
-  writeJobs(database, [setTitle('first'), setTitle('second')]);
+describe.each([
+  { name: 'batch', wrap: (jobs: WriterJob[]): WriterJob[] => jobs },
+  {
+    name: 'atomic job',
+    wrap: (jobs: WriterJob[]): WriterJob[] => [new AtomicWriterJob(jobs)],
+  },
+])('$name', ({ wrap }) => {
+  it('commits the jobs in the order they arrive', (): void => {
+    writeJobs(database, wrap([setTitle('first'), setTitle('second')]));
 
-  expect(selectTitle()).toEqual({ title: 'second' });
-});
+    expect(selectTitle()).toEqual({ title: 'second' });
+  });
 
-it('commits nothing when one job fails', (): void => {
-  const jobs = [
-    setTitle('saved'),
-    new SqlJob({ statement: 'INSERT INTO no_such_table VALUES (1)' }),
-  ];
+  it('commits nothing when one job fails', (): void => {
+    const jobs = [
+      setTitle('saved'),
+      new SqlJob({ statement: 'INSERT INTO no_such_table VALUES (1)' }),
+    ];
 
-  expect(() => writeJobs(database, jobs)).toThrow('Failed query');
-  expect(selectTitle()).toEqual({ title: '' });
+    expect(() => writeJobs(database, wrap(jobs))).toThrow('Failed query');
+    expect(selectTitle()).toEqual({ title: '' });
+  });
 });

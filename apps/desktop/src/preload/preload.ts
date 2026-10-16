@@ -1,3 +1,4 @@
+import type { DesktopBridge } from '@repo/contracts';
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { contextBridge, ipcRenderer } from 'electron';
@@ -11,19 +12,15 @@ const serverUrl =
     ?.slice(serverUrlPrefix.length) ?? null;
 
 // Only macOS has SF Symbols to draw; elsewhere the page falls back to Material Symbols.
-const symbols =
+const symbols: DesktopBridge['symbols'] =
   process.platform === 'darwin'
     ? {
-        render: (request: {
-          name: string;
-          pointSize: number;
-        }): Promise<string | null> =>
-          ipcRenderer.invoke('symbol:render', request),
+        render: (request) => ipcRenderer.invoke('symbol:render', request),
       }
     : undefined;
 
 // The renderer gets the Server address, window controls and system symbols, nothing else (ADR 0002).
-contextBridge.exposeInMainWorld('argo', {
+const argo = {
   serverUrl,
   window: {
     minimize: (): void => ipcRenderer.send('window:minimize'),
@@ -31,4 +28,6 @@ contextBridge.exposeInMainWorld('argo', {
     close: (): void => ipcRenderer.send('window:close'),
   },
   symbols,
-});
+} satisfies DesktopBridge;
+
+contextBridge.exposeInMainWorld('argo', argo);

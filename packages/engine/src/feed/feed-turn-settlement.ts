@@ -45,7 +45,11 @@ const settlementEvents = (
   const events: FeedInternalEvent[] = [];
 
   if (result.events.length > 0)
-    events.push({ type: 'feed.changeApplied', settled: true });
+    events.push({
+      type: 'feed.changeApplied',
+      settled: true,
+      commitWith: event.commitWith,
+    });
   events.push({ type: 'feed.publish', published: event.published });
 
   return events;

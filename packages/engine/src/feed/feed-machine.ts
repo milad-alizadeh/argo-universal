@@ -10,7 +10,12 @@ import {
   setup,
 } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
-import { databaseWriterId, type WriterCommit, writerMachine } from '../storage';
+import {
+  databaseWriterId,
+  type WriterCommit,
+  type WriterJob,
+  writerMachine,
+} from '../storage';
 import { prepareAcpFeedApplication } from './acp/application';
 import type { MessageStreams } from './acp/message-identity';
 import type { AcpSessionNotification as SessionNotification } from './acp/session-notification';
@@ -20,6 +25,7 @@ import { type Feed, type FeedStreamEvent } from './feed-change';
 import { prepareTurnSettlement } from './feed-turn-settlement';
 import {
   createRowsWriteRequest,
+  rejectUnavailableWriter,
   type WriterJobParameters,
 } from './feed-write-request';
 import type { FeedPublication } from './publication';
@@ -97,6 +103,7 @@ export type FeedEvent =
       type: 'feed.completeTurn';
       turnId: string;
       ending?: FeedTurnEnding;
+      commitWith?: WriterJob;
       published?: FeedPublication;
     }
   | SessionRowEvent
@@ -106,6 +113,7 @@ export type FeedEvent =
 type FeedChangeApplied = {
   type: 'feed.changeApplied';
   settled: boolean;
+  commitWith?: WriterJob;
   committed?: WriterCommit;
 };
 
@@ -117,10 +125,6 @@ export type FeedInternalEvent =
   | { type: 'feed.publish'; published?: FeedPublication };
 
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
-
-const rejectUnavailableWriter = (params: WriterJobParameters): void => {
-  params.committed?.reject(new Error('Database Writer is unavailable'));
-};
 
 const writeRows = [
   { type: 'sendToWriter', params: createRowsWriteRequest },

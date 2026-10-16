@@ -1,6 +1,7 @@
 import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
 import { feedRowColumns, shellColumns } from '../columns';
+import { TurnEnd } from '../sessions/turn';
 import { BlobRef, ContentBlock } from './content-block';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
@@ -180,6 +181,7 @@ export const Notice = z.strictObject({
   description: z.string().optional(),
   _meta: createFeedMetadataSchema(
     z.strictObject({
+      turnEnd: TurnEnd.optional(),
       retry: z
         .strictObject({
           attempt: z.int(),

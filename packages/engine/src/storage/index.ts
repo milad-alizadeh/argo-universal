@@ -5,6 +5,7 @@ export { readQueuedJobs, type WriterActorRef } from './queued-jobs';
 export type { WriterCommit } from './writer-commit';
 
 export {
+  AtomicWriterJob,
   type StorageTransaction,
   type WriterJob,
   writeJobs,

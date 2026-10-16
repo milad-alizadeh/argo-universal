@@ -18,6 +18,7 @@ const stored = SessionRecord.parse({
   checkoutBranch: 'main',
   vendorRef: null,
   configValues: [],
+  heldConfig: [],
   epoch: 0,
   projectionVersion: 1,
   maxRevision: 0,
