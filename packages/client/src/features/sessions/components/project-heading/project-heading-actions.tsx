@@ -4,9 +4,13 @@ import type { IconName } from '#lib/generic/symbols/icon-names';
 import { IconButton } from '#primitives/buttons/icon-button';
 import type { ProjectHeadingProps } from './project-heading';
 
+// Each button reveals itself on row hover or its own keyboard focus; a click that leaves focus behind does not hold it.
+const revealClassName =
+  'web:wide:opacity-0 web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100';
+
 const actionAppearance = {
   variant: 'ghost',
-  className: 'size-6 sm:size-6 rounded-sm p-0',
+  className: `size-6 sm:size-6 rounded-sm p-0 ${revealClassName}`,
   iconClassName: 'text-foreground',
   size: 'sm',
 } as const;
@@ -52,9 +56,8 @@ function actionButtons({
   ];
 }
 
-// A phone always shows ⋯ and +; a wide web window shows them on hover or focus.
-const actionsClassName =
-  'flex-row items-center gap-0.5 web:wide:opacity-0 web:wide:group-hover:opacity-100 web:wide:group-focus-within:opacity-100';
+// A phone always shows ⋯ and +; a wide web window shows them on hover or keyboard focus, never after a click leaves focus behind.
+const actionsClassName = 'flex-row items-center gap-0.5';
 
 // ⋯ opens the Project's settings and + adds to it; both wait for hover or focus on a wide window.
 export function ProjectActions(props: ProjectActionsProps): React.JSX.Element {

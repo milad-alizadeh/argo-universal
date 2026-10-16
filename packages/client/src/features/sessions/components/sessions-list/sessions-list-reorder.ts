@@ -12,7 +12,9 @@ function useOrderChanged(entries: SessionsListEntry[]): boolean {
 
   if (seenOrder !== entryOrder) {
     setSeenOrder(entryOrder);
-    setChanged(true);
+
+    // The list filling after an empty first render is the load, not a reorder.
+    if (seenOrder !== '') setChanged(true);
   }
 
   useLayoutEffect(() => {

@@ -159,7 +159,7 @@ function separatorClasses(
   place: RowPlace,
 ): string {
   return cn(
-    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border/40',
+    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border wide:web:after:bg-border/40',
     hiddenSeparator(place),
     // Inset to the text: the 16 gutter, the icon slot (24 phone, 20 wide) and the 12 gap.
     hasLeadingSlot(props) && 'web:after:left-13 wide:web:after:left-12',
