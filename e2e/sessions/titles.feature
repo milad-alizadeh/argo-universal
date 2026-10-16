@@ -22,4 +22,5 @@ Feature: Session titles
     And I answer the Agent's question
     Then the Agent replies "The shared fixture completed this Turn."
     And the Session is titled "Ship the release notes" in the list and its header
-    And no Session is titled with the Agent's title
+    When I reload the App
+    Then the Sessions list shows "Ship the release notes" and not the Agent's title

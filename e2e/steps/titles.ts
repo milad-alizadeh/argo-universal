@@ -4,7 +4,7 @@ import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { submitElicitationTitle } from './elicitation';
 import { Given, When, Then } from './fixtures';
-import { openWidePage } from './frame';
+import { openWidePage, reloadApp } from './frame';
 import { sessionRow, startSession } from './live-session';
 
 // The question holds the Turn; the Agent sends its title only once it is answered.
@@ -71,9 +71,15 @@ When(
   },
 );
 
+// A reload reads the saved list, so a late Agent title cannot hide behind a list that has not refreshed yet.
+When('I reload the App', async ({ page }): Promise<void> => {
+  await reloadApp(page);
+});
+
 Then(
-  "no Session is titled with the Agent's title",
-  async ({ page }): Promise<void> => {
+  "the Sessions list shows {string} and not the Agent's title",
+  async ({ page }, title: string): Promise<void> => {
+    await expect(sessionRow(page, title)).toBeVisible();
     await expect(sessionRow(page, agentTitle)).toHaveCount(0);
   },
 );
