@@ -49,7 +49,7 @@ function AddAgent(): React.JSX.Element {
       size="xs"
       variant="ghost"
       iconClassName="text-muted-foreground"
-      accessibilityLabel="Add custom Agent"
+      accessibilityLabel="Add item"
     />
   );
 }

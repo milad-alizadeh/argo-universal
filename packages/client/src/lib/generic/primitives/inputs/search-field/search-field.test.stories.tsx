@@ -20,7 +20,7 @@ export const PutsSearchLast: Story = {
     const buttons = canvas.getAllByRole('button');
     await expect(
       buttons.map((button) => button.getAttribute('aria-label')),
-    ).toEqual(['Add custom Agent', label]);
+    ).toEqual(['Add item', label]);
   },
 };
 
@@ -34,7 +34,7 @@ function opensFocusesAndClears(width: number): Story {
       await waitFor(() => expect(field).toHaveFocus());
       // The field covers the whole row, so the other actions leave the accessibility tree.
       await expect(
-        canvas.queryByRole('button', { name: 'Add custom Agent' }),
+        canvas.queryByRole('button', { name: 'Add item' }),
       ).toBeNull();
       await userEvent.type(field, 'review');
       await userEvent.click(

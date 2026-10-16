@@ -20,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 export const Searches: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(
-      canvas.queryByRole('button', { name: 'Add custom Agent' }),
+      canvas.queryByRole('button', { name: 'Add item' }),
     ).not.toBeInTheDocument();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Search Agents' }),
