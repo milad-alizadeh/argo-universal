@@ -46,6 +46,7 @@ type FrameProps = Omit<React.ComponentProps<typeof DialogFrame>, 'children'>;
 
 function frameProps({
   className,
+  size,
   dismissible,
   accessibilityLabel,
   onCloseAutoFocus,
@@ -53,7 +54,7 @@ function frameProps({
   return {
     accessibilityLabel,
     onCloseAutoFocus,
-    className: cn(contentClassName, className),
+    className: cn(contentClassName, size === 'sm' && 'sm:max-w-100', className),
     onEscapeKeyDown: keepOpen(dismissible),
   };
 }

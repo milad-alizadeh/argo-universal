@@ -64,6 +64,8 @@ export type Primitives = {
   ComboboxContentProps: ComboboxKit.ComboboxContentProps<string>;
   ComboboxOption: ComboboxKit.ComboboxOption<string>;
   ComboboxProps: ComboboxKit.ComboboxProps<string>;
+  ContextMenuItem: MenuKit.ContextMenuItem;
+  ContextMenuProps: MenuKit.ContextMenuProps;
   CountBadgeProps: CountBadgeKit.CountBadgeProps;
   DialogContentProps: DialogKit.DialogContentProps;
   DialogRegionProps: DialogKit.DialogRegionProps;

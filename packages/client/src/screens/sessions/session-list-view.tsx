@@ -33,6 +33,8 @@ export interface SessionListViewProps {
   layout?: SessionsLayout;
   selectedSessionId?: string;
   onSelect: (sessionId: string) => void;
+  // Desktop and the web: a row's double-click or context menu asks to rename its Session.
+  onRename?: (sessionId: string) => void;
   onNewSession: () => void;
   onNewSessionInProject: (projectId: string) => void;
   onProjectSettings: (projectName: string) => void;

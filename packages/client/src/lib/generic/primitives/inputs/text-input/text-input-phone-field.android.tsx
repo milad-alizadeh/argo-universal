@@ -19,15 +19,11 @@ import { isInvalid, type PhoneFieldProps } from './text-input-props';
 const fullWidth = [fillMaxWidth()];
 
 export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
-  const text = useNativeState(props.value);
-  const { onChangeText, onFocusChanged } = useFieldText(text, props);
-
   return (
     <OutlinedTextField
-      value={text}
-      onValueChange={onChangeText}
-      onFocusChanged={onFocusChanged}
+      {...useFieldValue(props)}
       {...fieldBehaviour(props)}
+      {...entryBehaviour(props)}
       colors={useMaterialPalette().outlinedFieldColors}
     >
       <FieldSlots {...props} />
@@ -50,6 +46,33 @@ function FieldSlots(props: PhoneFieldProps): React.JSX.Element {
 const supportingLine = (props: PhoneFieldProps): string | undefined =>
   errorMessage(props.errors ?? []) ?? props.hint;
 
+// Compose has no select-on-focus: a field that selects its value opens with all of it selected, the caret otherwise at its end.
+type FieldSelection = { start: number; end: number };
+
+function openingSelection(props: PhoneFieldProps): FieldSelection {
+  const end = props.value.length;
+
+  return { start: props.selectOnFocus ? 0 : end, end };
+}
+
+type FieldValue = Pick<
+  OutlinedTextFieldProps,
+  'value' | 'selection' | 'onValueChange' | 'onFocusChanged'
+>;
+
+function useFieldValue(props: PhoneFieldProps): FieldValue {
+  const text = useNativeState(props.value);
+  const { onChangeText, onFocusChanged } = useFieldText(text, props);
+  const selection = useNativeState(openingSelection(props));
+
+  return {
+    value: text,
+    selection,
+    onValueChange: onChangeText,
+    onFocusChanged,
+  };
+}
+
 function fieldBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
   return {
     enabled: !props.disabled,
@@ -57,11 +80,26 @@ function fieldBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
     singleLine: true,
     modifiers: fieldModifiers(props),
     textStyle: codeFace(props.mono).textStyle,
-    keyboardOptions: {
-      capitalization: 'none',
-      autoCorrectEnabled: false,
-      keyboardType: props.numeric ? 'decimal' : 'text',
-    },
+  };
+}
+
+// Focus as the field appears, and a field that submits its form shows Done on the keyboard's action key.
+function entryBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
+  return {
+    autoFocus: props.focusOnOpen,
+    keyboardOptions: keyboardOptions(props),
+    keyboardActions: props.onSubmit && { onDone: props.onSubmit },
+  };
+}
+
+function keyboardOptions(
+  props: PhoneFieldProps,
+): OutlinedTextFieldProps['keyboardOptions'] {
+  return {
+    capitalization: 'none',
+    autoCorrectEnabled: false,
+    keyboardType: props.numeric ? 'decimal' : 'text',
+    imeAction: props.onSubmit ? 'done' : 'default',
   };
 }
 
