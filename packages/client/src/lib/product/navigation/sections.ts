@@ -1,4 +1,5 @@
 import type { IconName } from '#lib/generic/symbols/icon-names';
+import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
 
 // Each section's title and icon, top to bottom in the rail and the drawer. A section's key is also its route: `/sessions` and the drawer screen `sessions`.
 export const sections = {
@@ -21,7 +22,7 @@ export const pluginSectionId = (
 export interface NavigationSection {
   id: Section;
   title: string;
-  icon: IconName;
+  icon: IconSymbol;
 }
 
 export const isCoreSection = (name: string | undefined): name is CoreSection =>

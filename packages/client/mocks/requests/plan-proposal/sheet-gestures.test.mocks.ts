@@ -1,7 +1,8 @@
 import { expect } from 'storybook/test';
-import type {
-  Canvas,
-  PlayContext,
+import {
+  approvePlanQuestion,
+  type Canvas,
+  type PlayContext,
 } from './plan-proposal-story-context.test.mocks';
 
 export async function checkProtectedSheet(
@@ -10,6 +11,6 @@ export async function checkProtectedSheet(
 ): Promise<void> {
   await userEvent.keyboard('{Escape}');
   await expect(
-    canvas.getByRole('dialog', { name: 'Plan proposal' }),
+    canvas.getByRole('dialog', { name: approvePlanQuestion }),
   ).toBeVisible();
 }
