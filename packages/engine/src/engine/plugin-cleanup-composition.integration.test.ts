@@ -72,6 +72,27 @@ it('kills a Plugin child process when the Plugin reloads', async () => {
   await expect.poll(() => alive(pid), pollOptions).toBe(false);
 });
 
+it('kills a command the Plugin is still running when the Plugin reloads', async () => {
+  const pidFile = join(await scratch(), 'pid');
+
+  const { home, entry } = await installed(
+    `export async function register(argo) {
+      await argo.process.run(['sh', '-c', 'echo $$ > ${pidFile}; exec sleep 60'], { timeoutMs: 60000 });
+    }`,
+    { dev: true },
+  );
+
+  const { caller } = await startEngineTestHost({ home });
+
+  void caller.plugins.activate({ pluginId: 'probe' });
+
+  const pid = await childPid(pidFile);
+
+  expect(alive(pid)).toBe(true);
+  await appendFile(entry, '\n// reload\n');
+  await expect.poll(() => alive(pid), pollOptions).toBe(false);
+});
+
 it('kills a descendant of a Plugin child process when the Plugin crashes', async () => {
   const pidFile = join(await scratch(), 'pid');
 

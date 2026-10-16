@@ -22,6 +22,7 @@ type Timer = ReturnType<typeof setTimeout>;
 // A Plugin's commands: run by argv with no shell, output capped, killed at the timeout and when released.
 export class PluginProcesses {
   private readonly running = new Map<string, Running>();
+  private readonly live = new Set<ChildProcess>();
   private readonly timers = new Set<Timer>();
 
   async handle(call: ProcessCall): Promise<ProcessResult | string | null> {
@@ -41,10 +42,11 @@ export class PluginProcesses {
   }
 
   release(): void {
-    for (const { child } of this.running.values()) killGroup(child);
+    for (const child of this.live) killGroup(child);
 
     for (const timer of this.timers) clearTimeout(timer);
     this.running.clear();
+    this.live.clear();
     this.timers.clear();
   }
 
@@ -69,11 +71,18 @@ export class PluginProcesses {
     });
 
     const run: Run = { timedOut: false, truncated: false };
+    this.track(child);
     this.timeout(child, run, command.timeoutMs ?? fallback);
     child.stdin.on('error', () => {});
     child.stdin.end(command.input);
 
     return { child, done: this.finish(child, run) };
+  }
+
+  // Every child, run or spawned, stays known until it exits, so `release` can kill it.
+  private track(child: ChildProcess): void {
+    this.live.add(child);
+    child.once('close', () => this.live.delete(child));
   }
 
   // A spawned process lives until it exits, is killed or is released; only a given timeout ends it sooner.
