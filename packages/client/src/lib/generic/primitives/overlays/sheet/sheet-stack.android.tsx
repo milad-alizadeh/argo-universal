@@ -40,17 +40,19 @@ function StackPages(props: PagesProps & { fill: boolean }): ReactElement {
   usePageScroll(ref, props.stack.path.length, pager.ready);
 
   return (
-    <HorizontalPager ref={ref} {...pagerProps(pager)}>
+    <HorizontalPager ref={ref} {...pagerProps(pager, props.fill)}>
       {pagerPages(props, pager)}
     </HorizontalPager>
   );
 }
 
+// The pager sizes like its pages, so a lone root page is not centred in a full-height pager.
 function pagerProps(
   pager: SheetPager,
+  fill: boolean,
 ): Omit<React.ComponentProps<typeof HorizontalPager>, 'children'> {
   return {
-    modifiers: sheetModifiers(true),
+    modifiers: sheetModifiers(fill),
     userScrollEnabled: false,
     beyondViewportPageCount: 1,
     onSettledPageChange: pager.settled,
