@@ -28,8 +28,8 @@ export * from './rename';
 
 export * from './set-config-option';
 
+export * from './shells';
+
 export * from './snapshot';
 
 export * from './turn';
-
-export * from './shells';
