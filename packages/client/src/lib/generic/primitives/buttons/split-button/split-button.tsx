@@ -61,10 +61,7 @@ export function SplitButton<Value extends string>(
 function groupClassName(props: GroupLook): string | undefined {
   if (props.size !== 'xs') return undefined;
 
-  return cn(
-    'rounded-md web:rounded-control web:shadow-control',
-    props.disabled && 'opacity-35',
-  );
+  return cn('rounded-md web:shadow-control', props.disabled && 'opacity-35');
 }
 
 // The acting button, and the compact split's divider after a filled one.

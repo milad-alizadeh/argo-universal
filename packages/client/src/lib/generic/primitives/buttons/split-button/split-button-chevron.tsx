@@ -14,7 +14,7 @@ const chevronFits = {
     size: 'sm',
     iconRole: 'secondary',
     wide: 'h-8 w-7 px-0 sm:h-8',
-    narrow: 'h-11 w-11 rounded-lg web:rounded-control px-0 sm:h-11',
+    narrow: 'h-11 w-11 px-0 sm:h-11',
   },
   // The group dims as one, so the chevron does not dim a second time.
   xs: {
@@ -42,9 +42,21 @@ export function chevron(props: ChevronProps): React.JSX.Element {
       {...chevronTone(props)}
       accessibilityLabel={props.menuLabel}
       disabled={props.disabled}
-      className={cn(props.narrow ? fit.narrow : fit.wide, props.className)}
+      className={chevronClassName(props, fit)}
       style={heightStyle(props.height)}
     />
+  );
+}
+
+// The button's corners, not IconButton's; the group then squares the joined side.
+function chevronClassName(
+  props: ChevronProps,
+  fit: (typeof chevronFits)[keyof typeof chevronFits],
+): string {
+  return cn(
+    'web:rounded-md',
+    props.narrow ? fit.narrow : fit.wide,
+    props.className,
   );
 }
 

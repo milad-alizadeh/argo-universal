@@ -19,8 +19,9 @@ function joinButton(item: Item, index: number, count: number): ReactElement {
   return cloneElement(item, {
     className: cn(
       item.props.className,
-      index > 0 && 'rounded-l-none',
-      index < count - 1 && 'rounded-r-none',
+      // The web: forms beat an item's own web: radius, such as IconButton's.
+      index > 0 && 'rounded-l-none web:rounded-l-none',
+      index < count - 1 && 'rounded-r-none web:rounded-r-none',
     ),
   });
 }
