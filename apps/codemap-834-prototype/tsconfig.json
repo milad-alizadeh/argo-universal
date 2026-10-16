@@ -1,0 +1,10 @@
+{
+  "extends": "../universal-app/tsconfig.json",
+  "compilerOptions": { "paths": { "@/*": ["../universal-app/src/*"] } },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../universal-app/src/uniwind-types.d.ts",
+    "../../packages/client/src/lib/generic/view-inert.d.ts"
+  ]
+}
