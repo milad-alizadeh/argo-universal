@@ -59,6 +59,7 @@ export default defineConfig<AppOptions & ServerOptions>({
     // The Expo web export in Chromium, against each test's own Server; scenarios set their own Frame, so phone width is proven here too (Spec 0011).
     {
       name: 'web',
+      grepInvert: /@electron-only/,
       use: { ...devices['Desktop Chrome'], appTarget: 'web' },
     },
     // The desktop App in production mode connects to its fixture Engine; it runs the smoke scenarios only (ADR 0011).
