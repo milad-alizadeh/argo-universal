@@ -4,6 +4,7 @@ import {
   type SessionOpenError,
 } from '@repo/contracts';
 import { expect, it } from 'vitest';
+import type { ConnectionState } from '#features/connection';
 import {
   dropped,
   openFailure,
@@ -24,6 +25,8 @@ const launchFailure: SessionOpenError = {
 };
 
 const refused = 'The Agent refused';
+
+const noAnswer = 'a call with no answer';
 
 it.each([
   { case: 'a refused tRPC open', cause: openFailure(authRequiredOpen) },
@@ -51,15 +54,36 @@ it.each([
   expect(decodeOpenFailure(cause)).toBeUndefined();
 });
 
-it.each([
-  { case: 'a call with no answer from the Server', cause: dropped, is: true },
-  { case: 'a Server error', cause: serverError, is: false },
-  { case: 'a refused open', cause: openFailure(launchFailure), is: false },
-  { case: 'an error outside tRPC', cause: new Error(refused), is: false },
-  { case: 'no error', cause: null, is: false },
-])('tells whether the Connection dropped $case', ({ cause, is }) => {
-  expect(connectionDropped(cause)).toBe(is);
-});
+it.each<{ case: string; cause: unknown; connection: ConnectionState }>([
+  { case: noAnswer, cause: dropped, connection: 'reconnecting' },
+  { case: noAnswer, cause: dropped, connection: 'offline' },
+])(
+  'reads $case while the Connection is $connection as dropped',
+  ({ cause, connection }) => {
+    expect(connectionDropped(cause, connection)).toBe(true);
+  },
+);
+
+it.each<{ case: string; cause: unknown; connection: ConnectionState }>([
+  { case: noAnswer, cause: dropped, connection: 'open' },
+  { case: 'a Server error', cause: serverError, connection: 'reconnecting' },
+  {
+    case: 'a refused open',
+    cause: openFailure(launchFailure),
+    connection: 'reconnecting',
+  },
+  {
+    case: 'an error outside tRPC',
+    cause: new Error(refused),
+    connection: 'reconnecting',
+  },
+  { case: 'no error', cause: null, connection: 'reconnecting' },
+])(
+  'reads $case while the Connection is $connection as no drop',
+  ({ cause, connection }) => {
+    expect(connectionDropped(cause, connection)).toBe(false);
+  },
+);
 
 it.each([
   {
@@ -78,6 +102,11 @@ it.each([
     error: { type: 'failed', message: serverError.message },
   },
   {
+    case: 'a call with no answer as a launch failure',
+    cause: dropped,
+    error: { type: 'failed', message: dropped.message },
+  },
+  {
     case: 'any other error as a launch failure',
     cause: new Error(refused),
     error: { type: 'failed', message: refused },
@@ -86,11 +115,8 @@ it.each([
   expect(openErrorOf(cause)).toEqual(error);
 });
 
-it.each([
-  { case: 'a dropped Connection', cause: dropped },
-  { case: 'no error', cause: null },
-])('leaves $case to the toast', ({ cause }) => {
-  expect(openErrorOf(cause)).toBeUndefined();
+it('shows nothing for no error', () => {
+  expect(openErrorOf(null)).toBeUndefined();
 });
 
 it.each([
@@ -101,7 +127,7 @@ it.each([
     text: authRequiredMessage,
   },
   { cause: new Error(refused), text: refused },
-  { cause: dropped, text: undefined },
+  { cause: null, text: undefined },
 ])('reads $text from a failed open', ({ cause, text }) => {
   expect(openFailureText(cause)).toBe(text);
 });

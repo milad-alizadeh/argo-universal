@@ -3,7 +3,7 @@ import { callout } from './agent-sign-in';
 import { When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { sessionOpenTimeout } from './new-session';
-import { toast } from './toasts';
+import { shownToasts } from './toasts';
 
 const retryHint = 'Try to restart the Agent';
 
@@ -43,16 +43,24 @@ Then('the launch callout is gone', async ({ page }): Promise<void> => {
   );
 });
 
-// A dropped Connection under an open Session: a toast says so, and no launch callout claims the Agent failed.
-Then(
-  'the App says the Connection was lost',
-  async ({ page }): Promise<void> => {
-    await expect(toast(page, 'Connection lost')).toBeVisible(
-      sessionOpenTimeout,
-    );
-  },
-);
+/*
+ * A dropped Connection under an open Session: the banner says so, and no launch callout claims
+ * the Agent failed. Each page in a section's stack has its banner; the shown page's is the visible one.
+ */
+Then('the App says it is reconnecting', async ({ page }): Promise<void> => {
+  await expect(
+    page
+      .getByText('Reconnecting…', { exact: true })
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible(sessionOpenTimeout);
+});
 
 Then('the App shows no launch failure', async ({ page }): Promise<void> => {
   await expect(callout(page, launchFailureTitle)).toHaveCount(0);
+});
+
+// The banner already says the Connection dropped; no toast repeats it.
+Then('the App shows no toast', async ({ page }): Promise<void> => {
+  await expect(shownToasts(page)).toHaveCount(0);
 });

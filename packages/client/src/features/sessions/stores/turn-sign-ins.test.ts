@@ -1,5 +1,6 @@
 import { expect, it, vi } from 'vitest';
-import { TurnSignIns } from './turn-sign-ins';
+import type { Connection } from '#features/connection';
+import { TurnSignIns, turnSignInsOf } from './turn-sign-ins';
 
 it('keeps the answered Turn for a Session page that mounts again', () => {
   const signIns = new TurnSignIns();
@@ -36,7 +37,10 @@ it('keeps each Session’s Turn sign-in apart', () => {
   signIns.authenticate('session-1', 'end-1');
   signIns.finish('session-1', 'end-1');
 
-  expect(signIns.of('session-2')).toEqual({});
+  expect(signIns.of('session-2')).toEqual({
+    authenticating: undefined,
+    answered: undefined,
+  });
 });
 
 it('tells its readers when Authenticate is pressed and when a sign-in answers a Turn', () => {
@@ -58,4 +62,25 @@ it('gives a reader the same record until it changes', () => {
   signIns.authenticate('session-1', 'end-1');
 
   expect(signIns.of('session-1')).toBe(read);
+});
+
+// A Server's Connection, by identity only.
+const serverConnection = (): Connection => ({
+  state: () => 'open',
+  subscribe: () => () => {},
+  nextAttempt: () => Promise.resolve(),
+  watch: () => {},
+  foreground: () => {},
+  retry: () => {},
+  stop: () => {},
+});
+
+it('keeps one record for each Server’s Connection', () => {
+  const server = serverConnection();
+  turnSignInsOf(server).finish('session-1', 'end-1');
+
+  expect(turnSignInsOf(server).of('session-1').answered).toBe('end-1');
+  expect(
+    turnSignInsOf(serverConnection()).of('session-1').answered,
+  ).toBeUndefined();
 });

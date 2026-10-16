@@ -1,27 +1,25 @@
 import { useSyncExternalStore } from 'react';
-import { turnSignIns } from '../stores/turn-sign-ins';
+import { useConnection } from '#features/connection';
+import { turnSignInsOf } from '../stores/turn-sign-ins';
+import type { TurnSignIn } from '../types/turn-sign-in';
 
-export interface TurnSignInRecord {
-  // The `auth_required` Turn end a sign-in answered in this Session.
-  answeredTurn: string | undefined;
-  // The `auth_required` Turn end whose Authenticate was pressed, until its sign-in finishes.
-  authenticating: string | undefined;
+export interface TurnSignInRecord extends TurnSignIn {
   onAuthenticate: (turnEnd: string) => void;
   // The sign-in finished; it answered this Turn end, when it was a Turn's.
-  finish: (answeredTurn?: string) => void;
+  finish: (answered?: string) => void;
 }
 
-// The Session's Turn sign-in, kept across the Session page's mounts.
+// The Session's Turn sign-in on this Server, kept across the Session page's mounts.
 export function useTurnSignIn(sessionId: string): TurnSignInRecord {
-  const { answered, authenticating } = useSyncExternalStore(
-    turnSignIns.subscribe,
-    () => turnSignIns.of(sessionId),
+  const record = turnSignInsOf(useConnection());
+
+  const signIn = useSyncExternalStore(record.subscribe, () =>
+    record.of(sessionId),
   );
 
   return {
-    answeredTurn: answered,
-    authenticating,
-    onAuthenticate: (turnEnd) => turnSignIns.authenticate(sessionId, turnEnd),
-    finish: (answeredTurn) => turnSignIns.finish(sessionId, answeredTurn),
+    ...signIn,
+    onAuthenticate: (turnEnd) => record.authenticate(sessionId, turnEnd),
+    finish: (answered) => record.finish(sessionId, answered),
   };
 }

@@ -36,9 +36,11 @@ export {
   sessionOpenFailedTitle,
 } from './utils/open-failure';
 
-export { droppedConnectionToast } from './utils/session-toasts';
+export { droppedOpenToast, pastSessionDropToast } from './utils/session-toasts';
 
-export { failedToOpen } from './utils/new-session-attempt';
+export { useConnectionDropped } from './hooks/use-connection-dropped';
+
+export { opensOnReconnect } from './utils/new-session-attempt';
 
 export { canOpenSession } from './state/open-session';
 
@@ -144,6 +146,7 @@ export {
 export {
   type OpenAttempt,
   type SessionProblem,
+  type SessionProblemSources,
   sessionProblem,
 } from './state/session-problem';
 
@@ -155,6 +158,8 @@ export {
   type PastSessionSignIn,
   pastSessionCallout,
   pastSessionSignIn,
+  runAfterSignIn,
+  type SignInEffects,
 } from './utils/session-sign-in';
 
-export { useTurnSignIn } from './hooks/use-turn-sign-in';
+export { type TurnSignInRecord, useTurnSignIn } from './hooks/use-turn-sign-in';

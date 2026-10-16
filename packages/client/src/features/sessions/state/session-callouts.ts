@@ -1,5 +1,6 @@
 import type { NewSessionAttempt } from '../types/new-session-attempt';
 import type { SessionCalloutProps } from '../types/session-callout';
+import type { TurnSignIn } from '../types/turn-sign-in';
 import type { SessionProblem } from './session-problem';
 
 type Problem<Type extends SessionProblem['type']> = Extract<
@@ -40,10 +41,8 @@ export const openCallout = (
     : signIn;
 };
 
-export interface TurnAnswers {
+export interface TurnAnswers extends Pick<TurnSignIn, 'authenticating'> {
   signIn: SessionCalloutProps;
-  // The `auth_required` Turn end whose Authenticate was pressed.
-  authenticating: string | undefined;
   onAuthenticate: (turnEnd: string) => void;
 }
 

@@ -28,7 +28,7 @@ const laterExpired: SessionProblem = { type: 'turn', id: 'end-2' };
 
 const quiet: PastSessionSignInSources = {
   problem: undefined,
-  answeredTurn: undefined,
+  answered: undefined,
   authenticating: undefined,
 };
 
@@ -67,19 +67,19 @@ describe('pastSessionSignIn', () => {
     },
     {
       case: 'a remounted page keeps the answered Turn cleared',
-      sources: { problem: expired, answeredTurn: 'end-1' },
+      sources: { problem: expired, answered: 'end-1' },
       problem: undefined,
       follows: false,
     },
     {
       case: 'a later Turn that needs sign-in shows its own card',
-      sources: { problem: laterExpired, answeredTurn: 'end-1' },
+      sources: { problem: laterExpired, answered: 'end-1' },
       problem: laterExpired,
       follows: false,
     },
     {
       case: 'an answered Turn leaves a refused open on show',
-      sources: { problem: refused, answeredTurn: 'end-1' },
+      sources: { problem: refused, answered: 'end-1' },
       problem: refused,
       follows: true,
     },
@@ -140,7 +140,7 @@ describe('pastSessionCallout with a cold auth cache', () => {
     },
     {
       case: 'nothing for a Turn a sign-in answered before the remount',
-      sources: { problem: expired, answeredTurn: 'end-1' },
+      sources: { problem: expired, answered: 'end-1' },
       kind: undefined,
     },
   ])('shows $case', ({ sources, kind }) => {

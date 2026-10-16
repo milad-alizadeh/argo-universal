@@ -8,8 +8,11 @@ import {
   local,
   prompt,
   settle,
-  worktree,
 } from '../../../../mocks/sessions/empty-session-store.mocks';
+import {
+  dropped,
+  serverError,
+} from '../../../../mocks/sessions/open-failure.mocks';
 
 let h: EmptySessionHarness;
 
@@ -23,13 +26,6 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const failCreate = async (): Promise<void> => {
-  h.choose(worktree);
-  h.store.send(prompt);
-  h.calls.open[0]?.call.reject(failure);
-  await settle();
-};
-
 describe('A Local open that needs sign-in', () => {
   it('says so, for the sign-in callout', async () => {
     h.choose(local('agent-one'));
@@ -40,6 +36,38 @@ describe('A Local open that needs sign-in', () => {
       status: 'failed',
       error: { type: 'auth-required' },
     });
+  });
+});
+
+// Only a dropped Connection goes to the toast: the first prompt keeps Retry for any other failure.
+describe('A Local open the Server failed with no open failure', () => {
+  it.each([
+    { case: 'a Server error', cause: serverError },
+    { case: 'no answer while the Connection is up', cause: dropped },
+  ])('fails to launch, with Retry, on $case', async ({ cause }) => {
+    h.choose(local('agent-one'));
+    h.calls.open[0]?.call.reject(cause);
+    await settle();
+
+    expect(h.store.getState()).toMatchObject({
+      attempt: {
+        status: 'failed',
+        error: { type: 'failed', message: cause.message },
+      },
+      connectionError: undefined,
+    });
+  });
+
+  it('delivers a prompt sent meanwhile once Retry opens it', async () => {
+    h.choose(local('agent-one'));
+    h.calls.open[0]?.call.reject(serverError);
+    await settle();
+    h.store.send(prompt);
+
+    h.retry();
+    await h.openLocal('session-1');
+
+    expect(h.calls.prompt.map(({ input }) => input)).toEqual(['session-1']);
   });
 });
 
@@ -116,43 +144,6 @@ describe('The Connection reopening after a failed Local open', () => {
     expect(h.calls.open).toHaveLength(2);
     expect(h.store.getState().attempt).toEqual({
       status: 'retrying',
-      error: { type: 'failed', message: launchFailureMessage },
-    });
-  });
-});
-
-describe('A New worktree that failed to open', () => {
-  it('keeps the failure while a second Send creates it again', async () => {
-    await failCreate();
-
-    h.store.send(prompt);
-
-    expect(h.calls.open).toHaveLength(2);
-    expect(h.store.getState().attempt).toEqual({
-      status: 'retrying',
-      error: { type: 'failed', message: launchFailureMessage },
-    });
-  });
-
-  it('sends the current draft again on Retry', async () => {
-    await failCreate();
-
-    h.retry();
-
-    expect(h.sendDraft).toHaveBeenCalledOnce();
-  });
-
-  // Only a Send creates a New worktree, so the Connection reopening sends nothing and leaves Retry on show.
-  it('keeps the failed attempt when the Connection reopens, with nothing to open', async () => {
-    await failCreate();
-
-    h.reconnect();
-    await settle();
-
-    expect(h.calls.open).toHaveLength(1);
-    expect(h.sendDraft).not.toHaveBeenCalled();
-    expect(h.store.getState().attempt).toEqual({
-      status: 'failed',
       error: { type: 'failed', message: launchFailureMessage },
     });
   });
