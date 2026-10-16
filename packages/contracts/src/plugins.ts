@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IconName } from './icons.gen';
+import { IconName } from './icons';
 
 const PluginIdentifier = z.string().regex(/^[a-z][a-z0-9-]*$/);
 

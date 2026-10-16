@@ -1236,9 +1236,6 @@ importers:
       json-schema-to-typescript:
         specifier: 'catalog:'
         version: 16.0.0
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.12
       ts-json-schema-generator:
         specifier: 'catalog:'
         version: 2.9.0

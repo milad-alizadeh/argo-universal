@@ -10,6 +10,6 @@ export * from './sessions';
 
 export * from './system';
 
-export { IconName } from './icons.gen';
+export { IconName } from './icons';
 
 export * from './plugins';

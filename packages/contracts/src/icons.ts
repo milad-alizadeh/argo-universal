@@ -1,7 +1,7 @@
-// Generated from the canonical iconSymbols map by tools/icons.mts.
+// Argo's icon vocabulary, shared by the App's symbol map and Plugin manifests; the App's map must name exactly these.
 import { z } from 'zod';
 
-export const IconName = z.enum([
+const iconNames = [
   'activity',
   'add',
   'agent',
@@ -144,6 +144,8 @@ export const IconName = z.enum([
   'web',
   'zoom-in',
   'zoom-out',
-]);
+] as const;
+
+export const IconName = z.enum(iconNames);
 
 export type IconName = z.infer<typeof IconName>;
