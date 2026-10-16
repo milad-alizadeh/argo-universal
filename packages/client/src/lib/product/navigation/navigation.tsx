@@ -1,4 +1,10 @@
-import { type Href, router, useNavigation, usePathname } from 'expo-router';
+import {
+  type Href,
+  router,
+  useIsFocused,
+  useNavigation,
+  usePathname,
+} from 'expo-router';
 import type * as React from 'react';
 import { createContext, type ReactNode, use, useEffect } from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
@@ -109,18 +115,26 @@ const useRouterLeaveGuard: LeaveGuard = (active, onBlocked) => {
 // Without the app's router, as in a story, nothing holds a page.
 const LeaveGuardContext = createContext<LeaveGuard>(noLeaveGuard);
 
+const ScreenFocusContext = createContext<() => boolean>(() => true);
+
 export interface NavigationProviderProps {
   children: ReactNode;
   // The router's own, unless a story holds the page itself.
   leaveGuard?: LeaveGuard;
+  screenFocus?: () => boolean;
 }
 
 // The app's pages hold their removal through the router.
 export function NavigationProvider({
   children,
   leaveGuard = useRouterLeaveGuard,
+  screenFocus = useIsFocused,
 }: NavigationProviderProps): React.JSX.Element {
-  return <LeaveGuardContext value={leaveGuard}>{children}</LeaveGuardContext>;
+  return (
+    <ScreenFocusContext value={screenFocus}>
+      <LeaveGuardContext value={leaveGuard}>{children}</LeaveGuardContext>
+    </ScreenFocusContext>
+  );
 }
 
 export function useLeaveGuard(
@@ -128,4 +142,9 @@ export function useLeaveGuard(
   onBlocked: (proceed: () => void) => void,
 ): void {
   use(LeaveGuardContext)(active, onBlocked);
+}
+
+// Read at the consuming screen, whose navigator retains it when another section opens.
+export function useScreenFocused(): boolean {
+  return use(ScreenFocusContext)();
 }

@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
@@ -14,6 +14,7 @@ import {
 import { Sheet } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { useAfterClose } from '../../hooks/use-after-close';
+import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import type { ComposerPopoverProps } from './popover-types';
 
 type PanelProps = Pick<ComposerPopoverProps, 'children'> & {
@@ -44,9 +45,8 @@ export function ComposerPopover(
 ): React.JSX.Element {
   const wide = useWide();
   const layout = useResolveClassNames(popoverClassName(props));
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useComposerOverlay(props.trigger.props.disabled);
   const after = useAfterClose(setOpen);
-  closeDisabled(props, open, setOpen);
 
   // A desktop window opens a popover; a narrow window and a phone or iPad, whose Sheet is native, a sheet.
   const Overlay = wide && Platform.OS === 'web' ? WidePopover : CompactPopover;
@@ -56,7 +56,12 @@ export function ComposerPopover(
 
 function WidePopover(props: OverlayProps): React.JSX.Element {
   return (
-    <Popover openOnHover style={props.layout} onOpenChange={props.onOpenChange}>
+    <Popover
+      open={props.open}
+      openOnHover
+      style={props.layout}
+      onOpenChange={props.onOpenChange}
+    >
       <PopoverTrigger disabled={props.trigger.props.disabled}>
         {props.trigger}
       </PopoverTrigger>
@@ -113,14 +118,6 @@ function popoverWidth(props: ComposerPopoverProps): number {
   const defaultWidth = 320;
 
   return props.width ?? defaultWidth;
-}
-
-function closeDisabled(
-  props: ComposerPopoverProps,
-  open: boolean,
-  setOpen: (open: boolean) => void,
-): void {
-  if (props.trigger.props.disabled && open) setOpen(false);
 }
 
 function panelProps(props: OverlayProps): PanelProps {

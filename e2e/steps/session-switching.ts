@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { startSession } from './live-session';
+import { agentModelLabel } from './new-session';
 
 const feed = (page: Page): Locator => page.getByTestId('feed-scroll');
 
@@ -32,3 +33,21 @@ Then(
     await expect(feed(page)).not.toContainText(hidden);
   },
 );
+
+When(
+  'I leave an open Agent and model for Settings',
+  async ({ page }): Promise<void> => {
+    await page.getByRole('button', { name: agentModelLabel }).click();
+    await expect(
+      page.getByRole('dialog', { name: agentModelLabel }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(page).toHaveURL(/\/settings\/accounts$/);
+  },
+);
+
+Then('no Agent and model overlay is shown', async ({ page }): Promise<void> => {
+  await expect(page.getByRole('dialog', { name: agentModelLabel })).toHaveCount(
+    0,
+  );
+});
