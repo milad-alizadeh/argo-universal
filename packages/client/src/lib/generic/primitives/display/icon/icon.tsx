@@ -5,14 +5,12 @@ import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext, toneClass } from '#primitives/display/text';
 import { appleSymbol } from '../../../symbols/apple-symbol';
-import { iconSymbols } from '../../../symbols/icon-names';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
-import type { IconSymbol } from '../../../symbols/icon-symbol';
+import { type ResolvedIcon, resolveIcon } from '../../../symbols/icon-symbol';
 import {
   SymbolGlyph,
   type SymbolGlyphProps,
 } from '../../../symbols/symbol-glyph/symbol-glyph';
-import type { SymbolSource } from '../../../symbols/symbol-source';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
@@ -33,24 +31,18 @@ const glyphScale = Platform.OS === 'android' ? materialGlyphScale : 1;
 
 type GlyphNames = Pick<SymbolGlyphProps, 'sf' | 'material' | 'filled'>;
 
-// A pair from outside the App's map draws outlined: Argo's filled Material font holds only Argo's own icons (ADR-0019).
 function symbolGlyph(
-  name: IconSymbol,
+  { symbol, materialFill }: ResolvedIcon,
   filled: boolean | undefined,
 ): GlyphNames {
-  if (typeof name !== 'string') return { ...name, filled: false };
-  const symbol: SymbolSource = iconSymbols[name];
   const sf = appleSymbol(symbol, filled);
 
   return {
     sf,
     material: symbol.material,
-    filled: sf !== symbol.sf || sf.endsWith('.fill'),
+    filled: materialFill && (sf !== symbol.sf || sf.endsWith('.fill')),
   };
 }
-
-const iconTestId = (name: IconSymbol): string =>
-  `icon-${typeof name === 'string' ? name : name.material}`;
 
 function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
   return cn(
@@ -63,16 +55,17 @@ function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
 
 export function Icon(props: IconProps): React.JSX.Element {
   const colorClassName = useIconColor(props);
+  const icon = resolveIcon(props.name);
 
   return (
     <TintedSymbol
-      {...symbolGlyph(props.name, props.filled)}
+      {...symbolGlyph(icon, props.filled)}
       className={colorClassName}
       colorClassName={colorClassName}
       pixels={useIconPixels(props.role)}
       glyphScale={glyphScale}
       weight={props.weight}
-      testID={props.testID ?? iconTestId(props.name)}
+      testID={props.testID ?? `icon-${icon.key}`}
     />
   );
 }

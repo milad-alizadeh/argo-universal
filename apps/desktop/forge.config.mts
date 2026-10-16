@@ -6,6 +6,8 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    // Argo runs on macOS 15 and later, the oldest system with SF Symbols 6.0 (ADR-0029).
+    extendInfo: { LSMinimumSystemVersion: '15.0' },
   },
   rebuildConfig: {},
   // Release packaging is out of scope for now, so the generated makers are removed.

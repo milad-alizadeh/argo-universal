@@ -10,7 +10,7 @@ Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-1
 | Electron on Windows and Linux | Material Symbols | as on web |
 | Electron on macOS | SF Symbols | macOS, at runtime |
 
-One map, `packages/client/src/lib/generic/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" role="control" />`; colour comes from the text class.
+One map, `packages/client/src/lib/generic/symbols/icon-names.ts`, gives each Argo icon name its SF and Material name, typed against `expo-symbols`, so a wrong name fails the type-check. Screens write `<Icon name="close" role="control" />`; colour comes from the text class. The one exception is a Plugin's icon (owner, 2026-10-16, [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md)): a Plugin names its own SF and Material symbols, so `Icon` also takes an `{ sf, sfFilled?, material }` pair that bypasses the map. Screens never write a pair; only Plugin navigation passes one.
 
 ## Icon roles
 
@@ -26,7 +26,7 @@ Where SF Symbols has no symbol for an Argo icon, Argo draws a custom SF Symbol (
 - Electron on macOS: the page masks the path itself; no IPC is needed, since the art is Argo's own and its licence allows shipping it.
 - Android, web, Windows and Linux: the Material name, as for every icon.
 
-A filled icon uses the platform's filled variant (owner correction, 2026-10-11). Apple drawings select the mapped SF filled name. Android and web pass a bundled Material Symbols filled font to `expo-symbols`; it has the same weight and optical size as Expo's outlined font. The font is subset to Argo's icon map and retains Google's Apache licence. No SF paths are shipped as a Material fallback. The Icon component owns this choice and isolates glyph weight from surrounding text.
+A filled icon uses the platform's filled variant (owner correction, 2026-10-11). Apple drawings select the mapped SF filled name. Android and web pass a bundled Material Symbols filled font to `expo-symbols`; it has the same weight and optical size as Expo's outlined font. The font is subset to Argo's icon map and retains Google's Apache licence. A Plugin icon's Material glyph therefore never draws filled. No SF paths are shipped as a Material fallback. The Icon component owns this choice and isolates glyph weight from surrounding text.
 
 Paper designs may use SF Symbols exported as SVG as mockups only; they never reach the code.
 
