@@ -22,19 +22,26 @@ export function rowClasses(
   place: RowPlace = {},
 ): string {
   return cn(
-    'relative min-h-[52px] flex-row items-center gap-3 px-4 py-3 bg-card wide:min-h-11 web:select-none web:[&_*]:select-none',
+    'relative min-h-13 flex-row items-center gap-3 px-4 py-3 bg-card wide:min-h-11 web:select-none web:**:select-none',
     controlClasses(props),
     sizeClasses(props),
     stateClasses(props, sidebar),
     cornerClasses(place.corners),
     edgeClasses(props, sidebar, place),
-    overlayClasses(place.overlay),
+    overlayClasses(props, place.overlay),
   );
 }
 
-const overlayClasses = (overlay: boolean | undefined): string | undefined =>
+// A row with a control below, such as Effort, pads 8 all round like its neighbours.
+const overlayClasses = (
+  props: Pick<GroupedListItemProps, 'detail'>,
+  overlay: boolean | undefined,
+): string | undefined =>
   overlay
-    ? 'bg-card rounded-xl min-h-9 wide:min-h-9 px-2 py-2 web:hover:bg-hover web:active:bg-pressed'
+    ? cn(
+        'bg-card rounded-xl min-h-9 wide:min-h-9 px-2 py-2 web:hover:bg-hover web:active:bg-pressed',
+        props.detail && 'wide:py-2',
+      )
     : undefined;
 
 // A sidebar row has no separator, and neither has the row that ends its section.
@@ -152,7 +159,7 @@ function separatorClasses(
   place: RowPlace,
 ): string {
   return cn(
-    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border/40',
+    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border wide:web:after:bg-border/40',
     hiddenSeparator(place),
     // Inset to the text: the 16 gutter, the icon slot (24 phone, 20 wide) and the 12 gap.
     hasLeadingSlot(props) && 'web:after:left-13 wide:web:after:left-12',

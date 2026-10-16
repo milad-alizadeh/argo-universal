@@ -4,7 +4,10 @@ import { createActor } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
 import { supervisorMachine } from './machine';
 
-export function startSupervisor(options: { watch: boolean }): void {
+export function startSupervisor(options: {
+  watch: boolean;
+  engineEntry?: string;
+}): void {
   const home = resolveRuntimeDirectory();
 
   const log = (line: string): void =>
@@ -17,6 +20,7 @@ export function startSupervisor(options: { watch: boolean }): void {
       version: packageJson.version,
       startedAt: new Date().toISOString(),
       watch: options.watch,
+      engineEntry: options.engineEntry,
     },
   });
 

@@ -5,6 +5,7 @@ import { databaseWriterId } from '../storage';
 import type { OpenDatabaseInput } from './engine-database';
 import { type HttpServer } from './http-server';
 import type { EngineMessage } from './ipc';
+import type { KeepAwakeInput } from './keep-awake';
 import {
   recoveryInput,
   writerInput,
@@ -101,6 +102,11 @@ export const engineMachine = engineSetup.createMachine({
           systemId: openSessionsId,
           src: 'sessions',
           input: sessionsInput,
+        },
+        {
+          id: 'caffeinate',
+          src: 'caffeinate',
+          input: ({ context }): KeepAwakeInput => context,
         },
       ],
       initial: 'listening',

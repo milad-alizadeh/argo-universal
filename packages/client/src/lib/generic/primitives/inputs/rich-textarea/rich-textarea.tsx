@@ -44,7 +44,7 @@ type MessageFieldProps = Pick<
 
 const editableClassName = cn(
   plainFieldClassName,
-  'max-h-[10lh] overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
+  'max-h-50 overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
 );
 
 function MessageEditable({

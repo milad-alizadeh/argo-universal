@@ -1,12 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
-import {
-  useOverlayList,
-  useWideSidebarList,
-} from '#primitives/fields/field-layout';
+import { useWideSidebarList } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
+import { GroupedListItemDetail } from './grouped-list-item-detail';
 import { Disclosure } from './grouped-list-item-disclosure';
 import { GroupedListItemLeading } from './grouped-list-item-leading';
 import {
@@ -19,7 +17,6 @@ import {
   rowEmphasis,
   titleClasses,
 } from './grouped-list-item-styles';
-import { OverlayRowTitle } from './overlay-row-title';
 import { StatusDot } from './status-dot';
 
 export function GroupedListItemBody(
@@ -28,12 +25,9 @@ export function GroupedListItemBody(
   if (!props.detail) return <GroupedListItemContent {...props} />;
 
   return (
-    <View className="flex-1">
-      <View className="min-h-13 wide:min-h-11 flex-row items-center px-4 py-3">
-        <GroupedListItemContent {...props} />
-      </View>
-      <View className="px-4 pb-3">{props.detail}</View>
-    </View>
+    <GroupedListItemDetail detail={props.detail}>
+      <GroupedListItemContent {...props} />
+    </GroupedListItemDetail>
   );
 }
 
@@ -74,16 +68,6 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
 }
 
 function GroupedListItemTitle(props: GroupedListItemProps): React.JSX.Element {
-  const overlay = useOverlayList();
-
-  return overlay && props.value !== undefined ? (
-    <OverlayRowTitle {...props} />
-  ) : (
-    <PlainRowTitle {...props} />
-  );
-}
-
-function PlainRowTitle(props: GroupedListItemProps): React.JSX.Element {
   const title = (
     <Text aria-hidden role="body" className={titleClasses(props)}>
       {props.label}
@@ -121,7 +105,7 @@ function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
   const sidebar = useWideSidebarList();
 
   return (
-    <View className="max-w-[55%] flex-row items-center gap-2 wide:gap-3">
+    <View className="max-w-11/20 flex-row items-center gap-2 wide:gap-3">
       <RowSelection {...props} />
       <StatusDot status={groupedListItemStatus(props)} />
       <GroupedListItemAccessory>{props.accessory}</GroupedListItemAccessory>
@@ -133,9 +117,6 @@ function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
 
 function RowSelection(props: TrailingProps): React.JSX.Element | null {
   const sidebar = useWideSidebarList();
-  const overlay = useOverlayList();
-
-  if (overlay) return null;
 
   return (
     <>

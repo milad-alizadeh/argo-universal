@@ -35,6 +35,12 @@ const supervisorExitedEvent = 'server.exited';
 
 const retryServerEvent = 'server.retry';
 
+const countsChangedEvent = 'counts.changed';
+
+const quitDoneEvent = 'xstate.done.actor.askQuit';
+
+const quitErrorEvent = 'xstate.error.actor.askQuit';
+
 // Numbers written out so the model cannot grade itself.
 const pollDelayMs = 200;
 
@@ -95,6 +101,17 @@ let checkRunningCalls: PendingCall<CheckRunningInput, boolean>[];
 
 let spawnCalls: SpawnCall[];
 
+let quitCalls: PendingCall<
+  { running: number; ask: ServerInput['askToKeepSessions'] },
+  boolean
+>[];
+
+let badges: number[];
+
+const expectBadge = (attention: number): void => {
+  expect(badges.at(-1)).toBe(attention);
+};
+
 let signalledPids: (number | null)[];
 
 let readyAddresses: ServerAddress[];
@@ -105,6 +122,8 @@ let server: Actor<typeof machine>;
 
 const machine = serverConnectionMachine.provide({
   actors: {
+    watchCounts: fromCallback(() => {}),
+    askQuit: createPromiseMock(() => quitCalls),
     readAddress: createPromiseMock(
       (): PendingCall<ServerInput, ServerAddress | null>[] => readAddressCalls,
     ),
@@ -132,7 +151,11 @@ const machine = serverConnectionMachine.provide({
 
 type ServerSnapshot = SnapshotFrom<typeof machine>;
 
-const input: ServerInput = { home: '/unused', serverDirectory: '/unused' };
+const input: ServerInput = {
+  home: '/unused',
+  serverDirectory: '/unused',
+  askToKeepSessions: async () => false,
+};
 
 const startServerMachine = (): typeof server => {
   server = createActor(machine, { input });
@@ -141,6 +164,9 @@ const startServerMachine = (): typeof server => {
   });
   server.on('server.failed', ({ failure }): void => {
     failures.push(failure);
+  });
+  server.on('badge.changed', ({ attention }): void => {
+    badges.push(attention);
   });
   server.start();
 
@@ -175,6 +201,8 @@ beforeEach((): void => {
   readAddressCalls = [];
   checkRunningCalls = [];
   spawnCalls = [];
+  quitCalls = [];
+  badges = [];
   signalledPids = [];
   readyAddresses = [];
   failures = [];
@@ -218,6 +246,17 @@ describe('server connection model', (): void => {
     { type: supervisorExitedEvent, reason: exitReason },
     { type: retryServerEvent },
     { type: 'app.quit' },
+    { type: countsChangedEvent, counts: { running: 2, attention: 1 } },
+    { type: countsChangedEvent, counts: { running: 0, attention: 0 } },
+    { type: countsChangedEvent, counts: { running: 0, attention: 3 } },
+    { type: 'counts.disconnected' },
+    { type: quitDoneEvent, actorId: 'askQuit', output: true },
+    { type: quitDoneEvent, actorId: 'askQuit', output: false },
+    {
+      type: quitErrorEvent,
+      actorId: 'askQuit',
+      error: readError,
+    },
     {
       type: 'xstate.after.pollDelay.serverConnection.starting.answering.waiting',
     },
@@ -258,6 +297,9 @@ describe('server connection model', (): void => {
     event: ServerEvent,
   ): boolean => {
     switch (event.type) {
+      case quitDoneEvent:
+      case quitErrorEvent:
+        return snapshot.matches({ ready: 'confirming' });
       case readAddressDoneEvent:
       case readAddressErrorEvent:
         return (
@@ -298,6 +340,7 @@ describe('server connection model', (): void => {
     address: number | null;
     ownedPid: ServerSnapshot['context']['ownedPid'];
     failure: boolean;
+    running: number;
   };
 
   const vertex = (snapshot: ServerSnapshot): Vertex => ({
@@ -305,6 +348,7 @@ describe('server connection model', (): void => {
     address: snapshot.context.address?.pid ?? null,
     ownedPid: snapshot.context.ownedPid,
     failure: snapshot.context.failure !== null,
+    running: snapshot.context.running,
   });
 
   const options = {
@@ -376,6 +420,23 @@ describe('server connection model', (): void => {
       'server.exited': reportExited,
       'server.retry': (): void => server.send({ type: retryServerEvent }),
       'app.quit': (): void => server.send({ type: 'app.quit' }),
+      [countsChangedEvent]: ({ event }): void => {
+        if (event.type !== countsChangedEvent)
+          throw new Error('Expected counts');
+        server.send(event);
+        expectBadge(event.counts.attention);
+      },
+      'counts.disconnected': (): void => {
+        server.send({ type: 'counts.disconnected' });
+        expectBadge(0);
+      },
+      [quitDoneEvent]: async ({ event }): Promise<void> => {
+        if (event.type !== quitDoneEvent)
+          throw new Error('Expected quit answer');
+        await settle(() => latest(quitCalls).resolve(event.output));
+      },
+      [quitErrorEvent]: (): Promise<void> =>
+        settle(() => latest(quitCalls).reject(readError)),
       ...Object.fromEntries(
         types.flatMap(
           (type): [string, EventExecutor<ServerSnapshot, ServerEvent>][] =>
@@ -392,6 +453,8 @@ describe('server connection model', (): void => {
       expect(actual.status).toBe(snapshot.status);
       expect(actual.context.address).toEqual(snapshot.context.address);
       expect(actual.context.ownedPid).toBe(snapshot.context.ownedPid);
+      expect(actual.context.running).toBe(snapshot.context.running);
+
       expect(actual.context.failure === null).toBe(
         snapshot.context.failure === null,
       );
@@ -426,7 +489,15 @@ describe('server connection model', (): void => {
   };
 
   const shortestPaths = terminalPaths(getShortestPaths(machine, options));
-  const simplePaths = terminalPaths(getSimplePaths(machine, simplePathOptions));
+
+  const simplePaths = terminalPaths(
+    getSimplePaths(machine, {
+      ...simplePathOptions,
+      filterEvents: (snapshot: ServerSnapshot, event: ServerEvent): boolean =>
+        simplePathOptions.filterEvents(snapshot, event) &&
+        !event.type.startsWith('counts.'),
+    }),
+  );
 
   const title = (path: StatePath<ServerSnapshot, ServerEvent>): string =>
     path.steps
@@ -443,7 +514,7 @@ describe('server connection model', (): void => {
 
         if (value === staleAddress) return `${name} (stale pid 200)`;
 
-        return `${name} (${value === null ? 'none' : `pid ${value.pid}`})`;
+        return `${name} (${value == null ? 'none' : `pid ${value.pid}`})`;
       })
       .join(' → ');
 
@@ -505,7 +576,7 @@ describe('server connection', (): void => {
     await spawnSupervisor();
     await vi.advanceTimersByTimeAsync(pollDelayMs);
     await settle((): void => latest(readAddressCalls).resolve(startedAddress));
-    expect(value()).toBe('ready');
+    expect(value()).toEqual({ ready: 'active' });
   };
 
   // Reaches `failed` with the spawned Supervisor still owned, as when it ignores SIGTERM.
@@ -543,7 +614,7 @@ describe('server connection', (): void => {
     expect(readAddressCalls).toHaveLength(4);
     await settle((): void => latest(readAddressCalls).resolve(startedAddress));
 
-    expect(value()).toBe('ready');
+    expect(value()).toEqual({ ready: 'active' });
     expect(readyAddresses).toEqual([startedAddress]);
   });
 
@@ -564,7 +635,7 @@ describe('server connection', (): void => {
     reportExited();
     await settle((): void => latest(readAddressCalls).resolve(runningAddress));
 
-    expect(value()).toBe('ready');
+    expect(value()).toEqual({ ready: 'active' });
     expect(context()).toEqual(
       expect.objectContaining({ ownedPid: null, failure: null }),
     );

@@ -3,6 +3,7 @@ import {
   appFixtureAgentIds,
 } from '@repo/mocks/agent/app-fixtures';
 import { z } from 'zod';
+import { signInScenarios } from './sign-in-agents';
 
 const Availability = z.enum(['not installed', 'not signed in']);
 
@@ -95,38 +96,8 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     feedHistoryConfiguration(steps),
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
+    desktopConfiguration(steps),
     signInConfiguration(steps),
-  );
-}
-
-// A sign-in fixture step names its Agent by ordinal.
-const agentStep = (text: string): RegExp =>
-  new RegExp(`^(?:Given|And) Agent (\\d+) ${text}$`);
-
-const signInSteps = [
-  [agentStep('needs sign-in'), 'sign-in-required'],
-  [agentStep('offers two sign-in methods'), 'sign-in-methods'],
-  [agentStep('holds its sign-in'), 'sign-in-held'],
-  [agentStep('signs in through a terminal'), 'terminal-sign-in-required'],
-  [agentStep('ends its first Turn needing sign-in'), 'turn-auth-required'],
-  [
-    agentStep('ends its first Turn needing a terminal sign-in'),
-    'turn-terminal-sign-in',
-  ],
-  [agentStep('exits while opening its first Session'), 'open-exit-once'],
-] as const;
-
-// Sign-in and launch fixtures for the callouts above the Composer.
-function signInConfiguration(steps: string[]): AppFixtureAgents {
-  return Object.assign(
-    {},
-    ...steps.flatMap((step) =>
-      signInSteps.flatMap(([pattern, scenario]) => {
-        const match = pattern.exec(step);
-
-        return match ? [{ [agentId(Number(match[1]))]: { scenario } }] : [];
-      }),
-    ),
   );
 }
 
@@ -180,4 +151,21 @@ function exitConfiguration(steps: string[]): AppFixtureAgents {
   )
     ? { [agentId(1)]: { scenario: 'exit-with-stderr' } }
     : {};
+}
+
+function desktopConfiguration(steps: string[]): AppFixtureAgents {
+  return steps.some((step) =>
+    step.endsWith('I start a desktop Session that keeps running'),
+  )
+    ? { [agentId(1)]: { scenario: 'permission' } }
+    : {};
+}
+
+function signInConfiguration(steps: string[]): AppFixtureAgents {
+  return Object.fromEntries(
+    signInScenarios(steps).map(([ordinal, scenario]) => [
+      agentId(ordinal),
+      { scenario },
+    ]),
+  );
 }
