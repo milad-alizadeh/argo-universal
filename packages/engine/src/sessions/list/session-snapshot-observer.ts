@@ -3,16 +3,18 @@ import type { Observer, Subscription } from 'xstate';
 import type { FeedDeps } from '../../feed';
 import type { OpenSessionsActorRef } from '../open-sessions-machine';
 import type { SessionActorRef } from '../session-machine';
-import { SessionSnapshotReader } from './session-snapshot-reader';
+import { SnapshotFeed } from './snapshot-feed';
+import { SnapshotPublication } from './snapshot-publication';
 
-const feedReadInterval = 60;
-
-type SnapshotEvent = Extract<
+export type SnapshotEvent = Extract<
   FeedSubscribeOutput,
   { type: 'snapshot' | 'closed' }
 >;
 
-type WatchOptions = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'> & {
+export type WatchOptions = Pick<
+  FeedDeps,
+  'database' | 'findFeed' | 'findWriter'
+> & {
   findSession: (sessionId: string) => SessionActorRef | undefined;
   sessions?: OpenSessionsActorRef;
 };
@@ -27,18 +29,12 @@ export function createSessionSnapshotWatcher(
 
 class SessionSnapshotObserver implements Subscription {
   private session: SessionActorRef | undefined;
-  private feed: ReturnType<FeedDeps['findFeed']>;
   private sessionListener: Subscription | undefined;
-  private feedListener: Subscription | undefined;
   private hasStopped = false;
-  private serialized = '';
-  private sources: readonly unknown[] = [];
-  private feedVersion = 0;
-  private feedThrottle: ReturnType<typeof setTimeout> | undefined;
-  private feedDirty = false;
+  private readonly feed: SnapshotFeed;
+  private readonly publication: SnapshotPublication;
   private openSessionsListener: Subscription | undefined;
   private registeredSessions: Record<string, SessionActorRef> | undefined;
-  private readonly reader: SessionSnapshotReader;
 
   public constructor(
     private readonly options: WatchOptions,
@@ -46,7 +42,11 @@ class SessionSnapshotObserver implements Subscription {
     private readonly listener: Observer<SnapshotEvent>,
   ) {
     this.session = options.findSession(sessionId);
-    this.reader = new SessionSnapshotReader(options);
+    this.feed = new SnapshotFeed(options, sessionId, {
+      changed: (): void => this.changed(),
+      error: (error): void => this.reject(error),
+    });
+    this.publication = new SnapshotPublication(options, sessionId, listener);
   }
 
   public start(): Subscription {
@@ -59,9 +59,8 @@ class SessionSnapshotObserver implements Subscription {
 
   public unsubscribe(): void {
     this.sessionListener?.unsubscribe();
-    this.unwatchFeed();
+    this.feed.unsubscribe();
     this.openSessionsListener?.unsubscribe();
-    clearTimeout(this.feedThrottle);
   }
 
   private watchSession(): void {
@@ -158,100 +157,24 @@ class SessionSnapshotObserver implements Subscription {
     this.listener.error?.(cause);
   }
 
+  private publish(): void {
+    if (this.publication.publish(this.session, this.feed.sources()))
+      this.closed();
+  }
+
+  private canPublish(): boolean {
+    return !this.hasStopped && !this.finishCurrent();
+  }
+
   private changed(): void {
-    if (this.hasStopped || this.finishCurrent()) return;
+    if (!this.canPublish()) return;
 
     try {
-      this.watchFeed();
+      this.feed.watch();
+
       this.publish();
     } catch (error) {
       this.reject(error);
     }
-  }
-
-  private watchFeed(): void {
-    const feed = this.options.findFeed(this.sessionId);
-
-    if (!feed) return;
-
-    if (feed === this.feed) return;
-    this.unwatchFeed();
-    this.feed = feed;
-    this.feedListener = feed.subscribe({
-      next: (): void => this.feedChanged(),
-      error: (error): void => this.reject(error),
-    });
-  }
-
-  // A Feed change is read at once, then at most once per Feed batch window, so a burst of Agent updates is not read once per update.
-  private feedChanged(): void {
-    if (this.feedThrottle) {
-      this.feedDirty = true;
-
-      return;
-    }
-
-    this.feedVersion += 1;
-    this.feedThrottle = setTimeout(
-      (): void => this.feedWindowEnded(),
-      feedReadInterval,
-    );
-    this.changed();
-  }
-
-  private feedWindowEnded(): void {
-    this.feedThrottle = undefined;
-
-    if (!this.feedDirty) return;
-    this.feedDirty = false;
-    this.feedChanged();
-  }
-
-  private unwatchFeed(): void {
-    this.feedListener?.unsubscribe();
-  }
-
-  // What a snapshot is read from; an unchanged source list skips the read.
-  private readSources(): readonly unknown[] {
-    const session = this.session?.getSnapshot();
-
-    return [
-      this.session,
-      session?.status,
-      session?.value,
-      session?.context,
-      this.feed,
-      this.feedVersion,
-    ];
-  }
-
-  private sourcesChanged(): boolean {
-    const sources = this.readSources();
-
-    const changed = sources.some(
-      (source, index) => source !== this.sources[index],
-    );
-
-    this.sources = sources;
-
-    return changed;
-  }
-
-  private publish(): void {
-    if (!this.sourcesChanged()) return;
-    const result = this.reader.read(this.sessionId, this.session);
-    const serialized = JSON.stringify(result.snapshot);
-
-    if (serialized === this.serialized) return;
-    this.serialized = serialized;
-    this.publishSnapshot(result.snapshot);
-
-    if (result.isClosed) this.closed();
-  }
-
-  private publishSnapshot(
-    snapshot: Extract<SnapshotEvent, { type: 'snapshot' }>['snapshot'],
-  ): void {
-    this.listener.next?.({ type: 'snapshot', snapshot });
   }
 }

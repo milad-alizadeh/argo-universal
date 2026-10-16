@@ -1,8 +1,5 @@
-import type { ToolCallTerminal } from '@repo/contracts';
 import {
   isToolCallRunning,
-  knownCommandActions,
-  type TextContent,
   type LiveHeader,
   type LiveHeaderSource,
   type PendingElicitation,
@@ -10,6 +7,8 @@ import {
   type SessionUpdate,
   type ToolCallUpdate,
 } from '@repo/contracts';
+import { thoughtTitle } from './live-header-thought';
+import { toolKindLabel } from './live-header-tool';
 
 export interface LiveHeaderInput {
   activeTurnId: string | null;
@@ -19,135 +18,113 @@ export interface LiveHeaderInput {
   pendingPlanProposal?: { planId: string; content: string } | null;
 }
 
-function toolKindLabel(tool: ToolCallUpdate): string | null {
-  const path =
-    tool.locations?.[0]?.path ??
-    tool.content.flatMap((block): string[] =>
-      block.type === 'diff'
-        ? block.changes.map((change): string => change.path)
-        : [],
-    )[0];
-
-  switch (tool.kind) {
-    case 'execute': {
-      const action = knownCommandActions(tool)[0];
-
-      if (action?.type === 'read')
-        return action.path ? `Reading ${action.path}` : 'Reading files';
-
-      if (action?.type === 'search')
-        return action.query
-          ? `Searching for ${action.query}`
-          : 'Searching files';
-
-      if (action?.type === 'list')
-        return action.path ? `Listing ${action.path}` : 'Listing files';
-
-      const terminal = tool.content.find(
-        (block): block is ToolCallTerminal => block.type === 'terminal',
-      );
-
-      return terminal?.command
-        ? `Running ${terminal.command}`
-        : 'Running command';
-    }
-
-    case 'read':
-      return path ? `Reading ${path}` : 'Reading files';
-    case 'edit':
-      return path ? `Editing ${path}` : 'Editing files';
-    case 'delete':
-      return path ? `Deleting ${path}` : 'Deleting files';
-    case 'move':
-      return path ? `Moving ${path}` : 'Moving files';
-    case 'think':
-      return 'Thinking';
-    case 'switch_mode':
-      return 'Switching mode';
-    case 'search':
-    case 'fetch':
-    case 'other':
-      return null;
-  }
-}
+type HeaderLabel = { text: string; source: LiveHeaderSource };
 
 export function toLiveHeader(
   session: LiveHeaderInput,
   rows: readonly SessionUpdate[],
 ): LiveHeader | null {
-  const header = (text: string, source: LiveHeaderSource): LiveHeader => ({
-    text,
-    source,
-    startedAt: session.activeTurnStartedAt,
-  });
+  const label = requestLabel(session) ?? turnLabel(session, rows);
 
-  const request = { type: 'request' } as const;
+  return label && { ...label, startedAt: session.activeTurnStartedAt };
+}
 
-  if (session.permissionQueue.length)
-    return header('Awaiting approval', request);
+function requestLabel(session: LiveHeaderInput): HeaderLabel | null {
+  const text = requestText(session);
 
-  if (session.elicitationQueue.length)
-    return header('Waiting for your answer', request);
+  return text ? { text, source: { type: 'request' } } : null;
+}
 
-  if (session.pendingPlanProposal) return header('Plan ready', request);
+function requestText(session: LiveHeaderInput): string | null {
+  if (session.permissionQueue.length) return 'Awaiting approval';
 
+  if (session.elicitationQueue.length) return 'Waiting for your answer';
+
+  return planText(session);
+}
+
+function planText(session: LiveHeaderInput): string | null {
+  return session.pendingPlanProposal ? 'Plan ready' : null;
+}
+
+function turnLabel(
+  session: LiveHeaderInput,
+  rows: readonly SessionUpdate[],
+): HeaderLabel | null {
   if (session.activeTurnId === null) return null;
 
   const current = rows
     .filter((row): boolean => row.turnId === session.activeTurnId)
     .toSorted((first, second): number => first.revision - second.revision);
 
-  const latest = current.at(-1);
+  return retryLabel(current.at(-1)) ?? activityLabel(current);
+}
 
-  const retry =
-    latest?.sessionUpdate === 'notice' ? latest._meta?.argo?.retry : undefined;
+function retryLabel(latest: SessionUpdate | undefined): HeaderLabel | null {
+  const retry = retryOf(latest);
 
-  if (retry)
-    return header(`Retrying (${retry.attempt} of ${retry.maxAttempts})`, {
-      type: 'retry',
-    });
+  return retry
+    ? {
+        text: `Retrying (${retry.attempt} of ${retry.maxAttempts})`,
+        source: { type: 'retry' },
+      }
+    : null;
+}
 
-  const thought = current
-    .filter(
-      (
-        row,
-      ): row is Extract<SessionUpdate, { sessionUpdate: 'agent_thought' }> =>
-        row.sessionUpdate === 'agent_thought',
-    )
-    .toSorted((first, second): number => first.position - second.position)
-    .at(-1);
+function activityLabel(current: readonly SessionUpdate[]): HeaderLabel {
+  const title = thoughtTitle(current);
 
-  const thoughtText =
-    thought?.content
-      .filter((block): block is TextContent => block.type === 'text')
-      .map((block): string => block.text)
-      .join('\n') ?? '';
+  return title
+    ? { text: title, source: { type: 'thought' } }
+    : toolLabel(current);
+}
 
-  const title = [...thoughtText.matchAll(/^\s*\*\*([^\n]+?)\*\*\s*$/gm)]
-    .at(-1)?.[1]
-    ?.trim();
-
-  if (title) return header(title, { type: 'thought' });
-
+function toolLabel(current: readonly SessionUpdate[]): HeaderLabel {
   const tool = current
     .filter(
-      (
-        row,
-      ): row is Extract<SessionUpdate, { sessionUpdate: 'tool_call_update' }> =>
+      (row): row is ToolCallUpdate =>
         row.sessionUpdate === 'tool_call_update' && isToolCallRunning(row),
     )
     .toSorted((first, second): number => first.position - second.position)
     .at(-1);
 
-  if (!tool) return header('Working', { type: 'working' });
-
-  const text =
-    tool._meta?.argo?.description?.trim() ||
-    toolKindLabel(tool) ||
-    tool.title.trim() ||
-    tool.name?.trim();
+  const text = tool && toolText(tool);
 
   return text
-    ? header(text, { type: 'tool_call', toolCallId: tool.toolCallId })
-    : header('Working', { type: 'working' });
+    ? { text, source: { type: 'tool_call', toolCallId: tool.toolCallId } }
+    : { text: 'Working', source: { type: 'working' } };
+}
+
+function toolText(tool: ToolCallUpdate): string | undefined | null {
+  const description = toolDescription(tool);
+
+  return description?.trim() || fallbackToolText(tool);
+}
+
+function fallbackToolText(tool: ToolCallUpdate): string | undefined | null {
+  return toolKindLabel(tool) || toolName(tool);
+}
+
+function retryOf(
+  latest: SessionUpdate | undefined,
+): ReturnType<typeof noticeRetry> {
+  return latest?.sessionUpdate === 'notice' ? noticeRetry(latest) : undefined;
+}
+
+function noticeRetry(
+  notice: Extract<SessionUpdate, { sessionUpdate: 'notice' }>,
+): NonNullable<
+  NonNullable<
+    Extract<SessionUpdate, { sessionUpdate: 'notice' }>['_meta']
+  >['argo']
+>['retry'] {
+  return notice._meta?.argo?.retry;
+}
+
+function toolDescription(tool: ToolCallUpdate): string | undefined {
+  return tool._meta?.argo?.description;
+}
+
+function toolName(tool: ToolCallUpdate): string | undefined {
+  return tool.title.trim() || tool.name?.trim();
 }

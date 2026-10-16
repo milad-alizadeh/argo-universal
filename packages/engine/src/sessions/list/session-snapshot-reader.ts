@@ -10,6 +10,10 @@ type SnapshotDeps = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>;
 
 type SessionState = ReturnType<SessionActorRef['getSnapshot']> | null;
 
+type FeedSnapshot = {
+  context: FeedState & { rows: Record<string, SessionUpdate> };
+};
+
 type FeedState = Pick<SessionSnapshot, 'epoch' | 'maxRevision'> & {
   rows?: Record<string, SessionUpdate>;
 };
@@ -36,16 +40,29 @@ export class SessionSnapshotReader {
   ): SnapshotRead {
     const session = currentSession(actor);
     const stored = this.readSession(sessionId);
-    const feed = this.feedContext(sessionId, stored);
-    const rows = this.headerRows(sessionId, session, feed);
-    const feedSnapshot = { context: { ...feed, rows } };
+
+    const feedSnapshot = this.feedSnapshot(
+      sessionId,
+      session,
+      this.feedContext(sessionId, stored),
+    );
 
     return {
       snapshot: toSessionSnapshot(session, feedSnapshot, {
         ...stored,
         subagents: this.readSubagents(sessionId),
       }),
-      isClosed: !actor && stored.parentSessionId === null,
+      isClosed: closedSession(actor, stored.parentSessionId),
+    };
+  }
+
+  private feedSnapshot(
+    sessionId: string,
+    session: SessionState,
+    feed: FeedState,
+  ): FeedSnapshot {
+    return {
+      context: { ...feed, rows: this.headerRows(sessionId, session, feed) },
     };
   }
 
@@ -71,4 +88,11 @@ export class SessionSnapshotReader {
 
 function currentSession(actor: SessionActorRef | undefined): SessionState {
   return actor ? actor.getSnapshot() : null;
+}
+
+function closedSession(
+  actor: SessionActorRef | undefined,
+  parentSessionId: string | null,
+): boolean {
+  return !actor && parentSessionId === null;
 }

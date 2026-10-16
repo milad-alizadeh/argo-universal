@@ -13,37 +13,82 @@ export function toSubagents(
   turns: readonly Turn[],
   updates: readonly SubagentUpdate[],
 ): Subagent[] {
-  return children.flatMap((child): Subagent[] => {
-    if (child.parentSessionId === null) return [];
-    const latest = latestTurnOf(turns, child.id);
+  return children.flatMap((child): Subagent[] =>
+    projectChild(child, turns, updates),
+  );
+}
 
-    const state = updates
-      .filter((update): boolean => update.subagentSessionId === child.id)
-      .toSorted((first, second): number => second.position - first.position)
-      .find(
-        (update): boolean => update.subagentState !== undefined,
-      )?.subagentState;
+function projectChild(
+  child: ChildSession,
+  turns: readonly Turn[],
+  updates: readonly SubagentUpdate[],
+): Subagent[] {
+  if (child.parentSessionId === null) return [];
+  const latest = latestTurnOf(turns, child.id);
 
-    return [
-      {
-        sessionId: child.id,
-        parentSessionId: child.parentSessionId,
-        toolCallId: null,
-        title: child.title,
-        role: null,
-        model: latest?.model ?? null,
-        state: subagentState(latest, state),
-        stopReason: latest?.stopReason ?? null,
-        startedAt: latest?.startedAt ?? null,
-        endedAt: latest?.endedAt ?? null,
-        durationMs:
-          latest?.endedAt === null || latest === undefined
-            ? null
-            : latest.endedAt - latest.startedAt,
-        tokens: latest?.usage?.totalTokens ?? null,
-      },
-    ];
-  });
+  return [
+    {
+      ...childIdentity(child, child.parentSessionId),
+      ...turnDetails(latest),
+      state: subagentState(latest, updateState(child.id, updates)),
+    },
+  ];
+}
+
+function updateState(
+  id: string,
+  updates: readonly SubagentUpdate[],
+): SubagentUpdate['subagentState'] {
+  return updates
+    .filter((update): boolean => update.subagentSessionId === id)
+    .toSorted((first, second): number => second.position - first.position)
+    .find((update): boolean => update.subagentState !== undefined)
+    ?.subagentState;
+}
+
+type TurnDetails = Pick<
+  Subagent,
+  'model' | 'stopReason' | 'startedAt' | 'endedAt' | 'durationMs' | 'tokens'
+>;
+
+function turnDetails(latest: Turn | undefined): TurnDetails {
+  return latest
+    ? knownTurnDetails(latest)
+    : {
+        model: null,
+        stopReason: null,
+        startedAt: null,
+        endedAt: null,
+        durationMs: null,
+        tokens: null,
+      };
+}
+
+function knownTurnDetails(latest: Turn): ReturnType<typeof turnDetails> {
+  return {
+    model: latest.model,
+    stopReason: latest.stopReason,
+    startedAt: latest.startedAt,
+    endedAt: latest.endedAt,
+    durationMs: durationMs(latest),
+    tokens: latest.usage?.totalTokens ?? null,
+  };
+}
+
+function childIdentity(
+  child: ChildSession,
+  parentSessionId: string,
+): Pick<
+  Subagent,
+  'sessionId' | 'parentSessionId' | 'toolCallId' | 'title' | 'role'
+> {
+  return {
+    sessionId: child.id,
+    parentSessionId,
+    toolCallId: null,
+    title: child.title,
+    role: null,
+  };
 }
 
 function subagentState(
@@ -60,3 +105,7 @@ const interruptedChild = (latest: Turn | undefined): boolean =>
 
 const childTurnState = (latest: Turn | undefined): Subagent['state'] =>
   latest?.status === 'running' ? 'running' : 'idle';
+
+function durationMs(latest: Turn): number | null {
+  return latest.endedAt === null ? null : latest.endedAt - latest.startedAt;
+}

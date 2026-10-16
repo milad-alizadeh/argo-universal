@@ -15,13 +15,18 @@ export function deriveSessionStatus(input: SessionStatusInput): SessionStatus {
 
   if (input.running) return 'running';
 
-  if (
+  return settledStatus(input);
+}
+
+function settledStatus(input: SessionStatusInput): SessionStatus {
+  if (hasFailure(input)) return 'failed';
+
+  return input.maxRevision > input.seenRevision ? 'unread' : 'idle';
+}
+
+function hasFailure(input: SessionStatusInput): boolean {
+  return (
     input.failure !== null ||
     (input.latestTurnFailed && !input.latestTurnInterrupted)
-  )
-    return 'failed';
-
-  if (input.maxRevision > input.seenRevision) return 'unread';
-
-  return 'idle';
+  );
 }

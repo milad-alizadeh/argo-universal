@@ -1,4 +1,5 @@
 import { Turn } from '@repo/contracts';
+import { z } from 'zod';
 
 // SQLite JSON columns reach readers as raw text; queued Turns are already typed.
 export function decodeStoredTurn(
@@ -6,7 +7,7 @@ export function decodeStoredTurn(
 ): Turn {
   return Turn.parse({
     ...row,
-    error: row.error === null ? null : JSON.parse(String(row.error)),
-    usage: row.usage === null ? null : JSON.parse(String(row.usage)),
+    error: row.error === null ? null : JSON.parse(z.string().parse(row.error)),
+    usage: row.usage === null ? null : JSON.parse(z.string().parse(row.usage)),
   });
 }

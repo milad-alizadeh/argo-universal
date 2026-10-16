@@ -1,483 +1,160 @@
-import type { SessionUpdate } from '@repo/contracts';
-import {
-  SessionInfo,
-  SessionRecord,
-  Turn,
-  selectPlanRowWithLatestContent,
-} from '@repo/contracts';
-import type { Database } from '@repo/db';
-import { feedRow, session, turn } from '@repo/db/schema';
+import type { SessionRecord } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
-import {
-  and,
-  desc,
-  eq,
-  getTableColumns,
-  inArray,
-  notInArray,
-  or,
-  sql,
-  type SQL,
-} from 'drizzle-orm';
-import {
-  alias,
-  type SQLiteAsyncSelectBase,
-  type SQLiteSelectWithout,
-} from 'drizzle-orm/sqlite-core';
-import {
-  hydrateStoredFeedRow,
-  newestRows,
-  storedFeedColumns,
-} from '../../feed';
-import { readQueuedFeed } from '../../feed';
-import type { WriterActorRef } from '../../storage';
-import type { OpenSessionsActorRef } from '../open-sessions-machine';
-import { decodeStoredSession, storedSessionColumns } from '../session-record';
-import {
-  type QueuedSessionRows,
-  readQueuedSessionRows,
-} from '../session-storage';
+import { readQueuedSessionRows } from '../session-storage';
+import type { ListReadInput, ListReaderOptions } from './list-read-input';
+import { readListTurns } from './list-turn-rows';
 import { createLiveHeaderRowsReader } from './live-header-rows';
-import { latestTurnOf, toSessionInfo } from './session-info';
+import { latestTurnOf } from './session-info';
+import { readSessionInformation } from './session-information-reader';
 import type {
   SessionListMachineInput,
   SessionListState,
 } from './session-list-machine';
-import { decodeStoredTurn } from './stored-turn';
+import { SessionListParents } from './session-list-parents';
+import { readTurnSessionIds } from './session-list-turn-owner';
 import type { WriterChange } from './writer-changes';
 
-const storedTurnColumns = {
-  ...getTableColumns(turn),
-  error: sql<unknown>`${turn.error}`,
-  usage: sql<unknown>`${turn.usage}`,
+type FamilyTurns = {
+  children: SessionRecord[];
+  turns: Parameters<typeof latestTurnOf>[0];
 };
 
-type ChildTurnIdsQuery = SQLiteSelectWithout<
-  SQLiteAsyncSelectBase<
-    'session',
-    'sync',
-    ReturnType<Database['run']>,
-    { id: SQL<string> },
-    'partial'
-  >,
-  false,
-  'where'
->;
-
-interface ListReadInput {
-  database: Database;
-  writer: WriterActorRef | undefined;
-  readLiveHeaderRows: ReturnType<typeof createLiveHeaderRowsReader>;
-  validate<Value>(read: () => Value): Value | undefined;
-  rejectedSessions: Set<string>;
-}
-
-// Reads list rows and finds the Sessions a Writer change touches.
 type SessionListReader = Pick<
   SessionListMachineInput,
   'readRows' | 'sessionIdsForChanges' | 'relatedSessionIds'
 >;
 
-export function createSessionListReader(options: {
-  database: Database;
-  sessions: OpenSessionsActorRef;
-  writer: () => WriterActorRef | undefined;
-}): SessionListReader {
-  const { database, sessions, writer } = options;
-  const readLiveHeaderRows = createLiveHeaderRowsReader({ database });
-  const rejections = createRejectionCounter('sessions');
+export function createSessionListReader(
+  options: ListReaderOptions,
+): SessionListReader {
+  const reader = new ListReader(options);
 
-  const validate = <Value>(read: () => Value): Value | undefined => {
-    try {
-      return read();
-    } catch (error) {
-      rejections.report('rejected list shape', error);
-
-      return undefined;
-    }
+  return {
+    readRows: (ids): SessionListState => reader.read(ids),
+    relatedSessionIds: (ids): string[] => reader.related(ids),
+    sessionIdsForChanges: (change): string[] => reader.changed(change),
   };
+}
 
-  const parents = new Map<string, string | null>();
+class ListReader {
+  private readonly parents = new SessionListParents();
+  private readonly rejections = createRejectionCounter('sessions');
+  private readonly readHeader: ReturnType<typeof createLiveHeaderRowsReader>;
+  public constructor(private readonly options: ListReaderOptions) {
+    this.readHeader = createLiveHeaderRowsReader(options);
+  }
 
-  const readRows = (sessionIds?: readonly string[]): SessionListState => {
-    const input = {
-      database,
-      writer: writer(),
-      validate,
-      readLiveHeaderRows,
-      rejectedSessions: new Set<string>(),
-    };
-
-    if (!sessionIds) parents.clear();
-    const ids = sessionIds && new Set(sessionIds);
-
-    if (ids)
-      for (const id of ids) {
-        const parent = parents.get(id);
-
-        if (parent) ids.add(parent);
-      }
-
-    let rows = readListSessions(input, ids && [...ids]);
-    const addedParents = new Set<string>();
-
-    for (const row of rows) {
-      parents.set(row.id, row.parentSessionId);
-
-      if (
-        ids?.has(row.id) &&
-        row.parentSessionId &&
-        !ids.has(row.parentSessionId)
-      )
-        addedParents.add(row.parentSessionId);
-    }
-
-    if (addedParents.size) {
-      for (const id of addedParents) ids?.add(id);
-      rows = [
-        ...new Map(
-          [...rows, ...readListSessions(input, [...addedParents])].map(
-            (row): [string, SessionRecord] => [row.id, row],
-          ),
-        ).values(),
-      ];
-    }
+  public read(sessionIds: readonly string[] | undefined): SessionListState {
+    const input = this.readInput();
+    const { rows, ids } = this.parents.readFamily(input, sessionIds);
 
     return rows
       .filter(
         (row): boolean =>
-          row.parentSessionId === null && (!ids || ids.has(row.id)),
+          row.parentSessionId === null && includesId(ids, row.id),
       )
-      .flatMap((row): SessionListState => {
-        const children = rows.filter(
-          (child): boolean => child.parentSessionId === row.id,
-        );
+      .flatMap((row): SessionListState => this.information(input, row, rows));
+  }
 
-        const turns = readListTurns(
-          input,
-          row.id,
-          children.map((child): string => child.id),
-        );
+  public related(ids: readonly string[]): string[] {
+    return this.parents.related(ids);
+  }
 
-        if (input.rejectedSessions.has(row.id)) return [];
+  public changed(change: WriterChange): string[] {
+    return [
+      ...new Set([
+        ...change.sessionIds,
+        ...change.turnIds.flatMap((id): string[] => this.turnOwner(id)),
+      ]),
+    ];
+  }
 
-        // A Session appears once its first Turn starts; until then it is a New Session.
-        if (!latestTurnOf(turns, row.id)) return [];
+  private turnOwner(turnId: string): string[] {
+    return readTurnSessionIds({
+      ...this.options,
+      projection: readQueuedSessionRows(this.options.writer()),
+      turnId,
+      validate: <Value>(read: () => Value): Value | undefined =>
+        this.validate(read),
+    });
+  }
 
-        const result = readSessionInformation({
-          ...input,
-          sessions,
-          turns,
-          rows: children.filter(
-            (child): boolean => !input.rejectedSessions.has(child.id),
-          ),
-          row,
-        });
+  private readInput(): ListReadInput {
+    return {
+      database: this.options.database,
+      writer: this.options.writer(),
+      validate: <Value>(read: () => Value): Value | undefined =>
+        this.validate(read),
+      readLiveHeaderRows: this.readHeader,
+      rejectedSessions: new Set<string>(),
+    };
+  }
 
-        return result ? [result] : [];
-      });
-  };
+  private validate<Value>(read: () => Value): Value | undefined {
+    try {
+      return read();
+    } catch (error) {
+      this.rejections.report('rejected list shape', error);
 
-  const sessionIdsForChanges = (change: WriterChange): string[] => [
-    ...new Set([
-      ...change.sessionIds,
-      ...change.turnIds.flatMap((turnId) =>
-        readTurnSessionIds({
-          database,
-          sessions,
-          projection: readQueuedSessionRows(writer()),
-          turnId,
-          validate,
-        }),
-      ),
-    ]),
-  ];
-
-  const relatedSessionIds = (sessionIds: readonly string[]): string[] => {
-    const ids = new Set(sessionIds);
-
-    for (const id of ids) {
-      const parent = parents.get(id);
-
-      if (parent) ids.add(parent);
+      return undefined;
     }
+  }
 
-    return [...ids];
-  };
-
-  return { readRows, sessionIdsForChanges, relatedSessionIds };
-}
-
-function readTurnSessionIds(input: {
-  database: Database;
-  sessions: OpenSessionsActorRef;
-  projection: QueuedSessionRows;
-  turnId: string;
-  validate: ListReadInput['validate'];
-}): string[] {
-  const pendingSessionId = input.projection.turnSessionId(input.turnId);
-
-  if (pendingSessionId) return [pendingSessionId];
-
-  const live = Object.values(
-    input.sessions.getSnapshot().context.sessions,
-  ).find(
-    (actor): boolean =>
-      actor.getSnapshot().context.activeTurnId === input.turnId,
-  );
-
-  if (live) return [live.getSnapshot().context.sessionId];
-
-  const stored = input.database
-    .select({ sessionId: turn.sessionId })
-    .from(turn)
-    .where(eq(turn.id, input.turnId))
-    .get();
-
-  const id =
-    stored &&
-    input.validate((): string =>
-      SessionRecord.shape.id.parse(stored.sessionId),
+  private information(
+    input: ListReadInput,
+    row: SessionRecord,
+    rows: SessionRecord[],
+  ): SessionListState {
+    const children = rows.filter(
+      (child): boolean => child.parentSessionId === row.id,
     );
 
-  return id ? [id] : [];
-}
+    const turns = familyTurns(input, row.id, children);
 
-function readListSessions(
-  input: ListReadInput,
-  sessionIds?: readonly string[],
-): SessionRecord[] {
-  const projection = readQueuedSessionRows(input.writer);
+    if (!visibleSession(input, row.id, turns)) return [];
 
-  const stored = input.database
-    .select(storedSessionColumns)
-    .from(session)
-    .where(
-      sessionIds
-        ? or(
-            inArray(session.id, sessionIds),
-            inArray(session.parentSessionId, sessionIds),
-          )
-        : undefined,
-    )
-    .all();
+    const result = this.project(input, row, { children, turns });
 
-  const rows = new Map(
-    stored.map((row): [string, typeof row] => [row.id, row]),
-  );
+    return result ? [result] : [];
+  }
 
-  const ids = new Set([...rows.keys(), ...projection.sessionIds(sessionIds)]);
-
-  return [...ids].flatMap((id): SessionRecord[] => {
-    const row = input.validate((): ReturnType<typeof projection.session> => {
-      const stored = rows.get(id);
-
-      return projection.session(
-        stored && SessionRecord.parse(decodeStoredSession(stored)),
-        id,
-      );
+  private project(
+    input: ListReadInput,
+    row: SessionRecord,
+    { children, turns }: FamilyTurns,
+  ): SessionListState[number] | undefined {
+    return readSessionInformation({
+      ...input,
+      actor: this.options.sessions.getSnapshot().context.sessions[row.id],
+      turns,
+      rows: children.filter(
+        (child): boolean => !input.rejectedSessions.has(child.id),
+      ),
+      row,
     });
-
-    return row ? [row] : [];
-  });
+  }
 }
 
-function readListTurns(
+function includesId(ids: Set<string> | undefined, id: string): boolean {
+  return !ids || ids.has(id);
+}
+
+function visibleSession(
+  input: ListReadInput,
+  id: string,
+  turns: Parameters<typeof latestTurnOf>[0],
+): boolean {
+  return !input.rejectedSessions.has(id) && Boolean(latestTurnOf(turns, id));
+}
+
+function familyTurns(
   input: ListReadInput,
   sessionId: string,
-  children: string[],
-): Turn[] {
-  const projection = readQueuedSessionRows(input.writer);
-  const updates = projection.changedTurnIds();
-  const unchanged = updates.length ? notInArray(turn.id, updates) : undefined;
-
-  const runningIds = readChildTurnIds({
-    database: input.database,
-    updates,
-    children,
-    running: true,
-  });
-
-  const latestIds = readChildTurnIds({
-    database: input.database,
-    updates,
-    children,
-    running: false,
-  });
-
-  const rows = [
-    ...input.database
-      .select(storedTurnColumns)
-      .from(turn)
-      .where(and(eq(turn.sessionId, sessionId), unchanged))
-      .orderBy(desc(turn.startedAt), desc(turn.id))
-      .limit(1)
-      .all(),
-    ...(children.length
-      ? input.database
-          .select(storedTurnColumns)
-          .from(turn)
-          .where(or(inArray(turn.id, runningIds), inArray(turn.id, latestIds)))
-          .all()
-      : []),
-    ...(updates.length
-      ? input.database
-          .select(storedTurnColumns)
-          .from(turn)
-          .where(
-            and(
-              inArray(turn.sessionId, [sessionId, ...children]),
-              inArray(turn.id, updates),
-            ),
-          )
-          .all()
-      : []),
-  ];
-
-  const ids = new Set([sessionId, ...children]);
-
-  const parseTurn = (
-    row: typeof turn.$inferSelect | Turn,
-    stored = false,
-  ): Turn[] => {
-    const parsed = input.validate((): Turn =>
-      stored ? decodeStoredTurn(row) : Turn.parse(row),
-    );
-
-    if (!parsed) input.rejectedSessions.add(row.sessionId);
-
-    return parsed ? [parsed] : [];
-  };
-
-  return projection
-    .turns(rows.flatMap((row): Turn[] => parseTurn(row, true)))
-    .filter((row): boolean => ids.has(row.sessionId))
-    .flatMap((row): Turn[] => parseTurn(row));
-}
-
-function readChildTurnIds(input: {
-  database: Database;
-  updates: string[];
-  children: string[];
-  running: boolean;
-}): ChildTurnIdsQuery {
-  const candidate = alias(turn, 'candidate_turn');
-
-  const latest = input.database
-    .select({ id: candidate.id })
-    .from(candidate)
-    .where(
-      and(
-        eq(candidate.sessionId, session.id),
-        input.running ? eq(candidate.status, 'running') : undefined,
-        input.updates.length
-          ? notInArray(candidate.id, input.updates)
-          : undefined,
-      ),
-    )
-    .orderBy(desc(candidate.startedAt), desc(candidate.id))
-    .limit(1);
-
-  return input.database
-    .select({ id: sql<string>`(${latest})` })
-    .from(session)
-    .where(inArray(session.id, input.children));
-}
-
-function readSessionInformation(
-  input: ListReadInput & {
-    sessions: OpenSessionsActorRef;
-    row: SessionRecord;
-    rows: readonly SessionRecord[];
-    turns: readonly Turn[];
-  },
-): SessionListState[number] | undefined {
-  const {
-    database,
-    writer,
-    validate,
-    readLiveHeaderRows,
-    sessions,
-    row,
-    rows,
-    turns,
-  } = input;
-
-  const actor = sessions.getSnapshot().context.sessions[row.id];
-  const live = actor?.getSnapshot();
-  const feed = live?.children.feed;
-  const feedContext = feed?.getSnapshot().context;
-
-  const changes = [
-    ...(['agent_message', 'plan_update'] as const).flatMap(
-      (kind): (SessionUpdate | undefined)[] =>
-        database
-          .select(storedFeedColumns)
-          .from(feedRow)
-          .where(
-            and(eq(feedRow.sessionId, row.id), eq(feedRow.sessionUpdate, kind)),
-          )
-          .orderBy(
-            desc(
-              kind === 'plan_update'
-                ? sql`coalesce(json_extract(${feedRow.payload}, '$._meta.argo.contentRevision'), ${feedRow.revision})`
-                : feedRow.position,
-            ),
-          )
-          .limit(1)
-          .all()
-          .map((stored): SessionUpdate | undefined =>
-            validate((): SessionUpdate => hydrateStoredFeedRow(row.id, stored)),
-          ),
-    ),
-    ...readQueuedFeed(writer, row.id).rows,
-    ...Object.values(feedContext?.rows ?? {}),
-  ];
-
-  const rejected = changes.includes(undefined);
-
-  const updates = [
-    ...newestRows(
-      changes.filter((row): row is SessionUpdate => row !== undefined),
-    ).values(),
-  ].sort((first, second): number => first.position - second.position);
-
-  const latestTurn = latestTurnOf(turns, row.id);
-
-  const activeTurnId =
-    live?.context.activeTurnId ??
-    (!live && latestTurn?.status === 'running' ? latestTurn.id : null);
-
-  const header = readLiveHeaderRows({
-    writer,
-    sessionId: row.id,
-    turnId: activeTurnId,
-    rows: feedContext?.rows ?? {},
-  });
-
-  const result = toSessionInfo({
-    row,
-    turns,
-    message: updates.findLast(
-      (
-        update,
-      ): update is Extract<SessionUpdate, { sessionUpdate: 'agent_message' }> =>
-        update.sessionUpdate === 'agent_message',
-    ),
-    plan: selectPlanRowWithLatestContent(updates),
-    live: live?.context ?? null,
-    feed: feedContext ?? null,
-    liveHeaderRows: Object.values(header.rows),
-    children: rows.filter((child): boolean => child.parentSessionId === row.id),
-  });
-
-  // A rejected row or live header leaves the Session without its activity and Plan.
-  const listed =
-    rejected || header.rejected
-      ? { ...result.information, activity: '', plan: null }
-      : result.information;
-
-  const information = validate((): SessionInfo => SessionInfo.parse(listed));
-
-  return information ? { information, running: result.running } : undefined;
+  children: SessionRecord[],
+): Parameters<typeof latestTurnOf>[0] {
+  return readListTurns(
+    input,
+    sessionId,
+    children.map((child): string => child.id),
+  );
 }

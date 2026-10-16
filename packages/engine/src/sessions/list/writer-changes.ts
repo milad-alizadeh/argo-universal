@@ -14,16 +14,24 @@ export const onWriterChange = (
   writer: WriterActorRef,
   listener: (change: WriterChange) => void,
 ): Subscription => {
-  const subscriptions = (['writer.queued', 'writer.committed'] as const).map(
-    (type) =>
-      writer.on(type, ({ jobs }): void =>
-        listener(describeWriterChanges(jobs)),
-      ),
-  );
+  const subscriptions = writerSubscriptions(writer, listener);
 
   return {
     unsubscribe: (): void => {
-      for (const subscription of subscriptions) subscription.unsubscribe();
+      unsubscribeAll(subscriptions);
     },
   };
 };
+
+function unsubscribeAll(subscriptions: Subscription[]): void {
+  for (const subscription of subscriptions) subscription.unsubscribe();
+}
+
+function writerSubscriptions(
+  writer: WriterActorRef,
+  listener: (change: WriterChange) => void,
+): Subscription[] {
+  return (['writer.queued', 'writer.committed'] as const).map((type) =>
+    writer.on(type, ({ jobs }): void => listener(describeWriterChanges(jobs))),
+  );
+}
