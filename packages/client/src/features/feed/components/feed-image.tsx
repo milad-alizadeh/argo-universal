@@ -103,7 +103,7 @@ interface ThumbnailProps extends ImageSourceProps {
 }
 
 const thumbnailClassName =
-  'h-[84px] w-[120px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted';
+  'h-21 w-30 shrink-0 overflow-hidden rounded-lg border border-border bg-muted';
 
 function thumbnailLabel(image: ImageContent): string {
   const label = imageLabel(image);

@@ -72,7 +72,7 @@ function SettingsPageTop({
   ...props
 }: SettingsPageProps & { column: SettingsColumn }): React.JSX.Element {
   return (
-    <View className="w-full self-center pt-[53px] pb-6" style={column}>
+    <View className="w-full self-center pt-13 pb-6" style={column}>
       <SettingsPageHeader {...props} />
     </View>
   );

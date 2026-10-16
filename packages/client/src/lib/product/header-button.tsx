@@ -39,7 +39,7 @@ const headerButtonFits = {
   slot: {
     hitSlop: undefined,
     size: 'size-11 sm:size-11',
-    dotPlace: 'top-2.5 right-[9px]',
+    dotPlace: 'top-2.5 right-2.25',
   },
 } satisfies Record<string, HeaderButtonFit>;
 
@@ -95,7 +95,7 @@ function HeaderButtonDot(props: {
     <View
       testID="header-button-dot"
       className={cn(
-        'absolute size-1.75 rounded-full border-[1.5px] border-card',
+        'absolute size-1.75 rounded-full border-2 border-card',
         props.color,
         props.place,
       )}

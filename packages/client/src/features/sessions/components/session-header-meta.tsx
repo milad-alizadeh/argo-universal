@@ -123,7 +123,7 @@ function PullRequestMeta(
 function TitleLine({ title }: { title: string }): React.JSX.Element {
   return (
     // A long title stops at two thirds of the row, well clear of the actions.
-    <View className="max-w-[66%]">
+    <View className="max-w-2/3">
       <Text
         accessibilityRole="heading"
         aria-level={2}

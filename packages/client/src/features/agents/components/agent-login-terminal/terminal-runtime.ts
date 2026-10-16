@@ -1,7 +1,6 @@
 import type { AgentLoginTerminalInput } from '@repo/contracts';
 import type { FitAddon } from '@xterm/addon-fit';
 import type { Terminal } from '@xterm/xterm';
-import { defaultTerminalAppearance } from './terminal-appearance';
 import { terminalInputChunks } from './terminal-input';
 import type { LoginTerminalProps } from './terminal-props';
 
@@ -105,7 +104,9 @@ export class TerminalRuntime {
     if (this.enabled()) this.resize();
   }
   private updateTheme(): void {
-    const colors = this.input.props().appearance ?? defaultTerminalAppearance;
+    const colors = this.input.props().appearance;
+
+    if (!colors) return;
     this.input.terminal.options.theme = {
       background: colors.background,
       foreground: colors.foreground,

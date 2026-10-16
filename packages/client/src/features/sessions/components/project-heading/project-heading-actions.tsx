@@ -7,7 +7,7 @@ import type { InteractionEvents, ProjectHeadingProps } from './project-heading';
 
 const actionAppearance = {
   variant: 'ghost',
-  className: 'size-6 sm:size-6 rounded-sm p-0 web:has-[>[data-icon]]:px-0',
+  className: 'size-6 sm:size-6 rounded-sm p-0',
   iconClassName: 'text-foreground',
   size: 'sm',
 } as const;

@@ -8,6 +8,7 @@
     "./auth-status-schema": "./src/agents/upstream/auth-status-schema.gen.json",
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",
+    "./plugins/runtime": "./src/plugins/runtime.ts",
     "./plugins/sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
     "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts"
   },

@@ -16,8 +16,7 @@ export interface FileHeaderProps {
 
 const toggleClassName = contentActionClass({
   variant: 'link',
-  className:
-    'h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5 has-[>[data-icon]]:px-0',
+  className: 'h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5',
 });
 
 // Isolates the folder so the right-to-left web layout, which keeps its end in view, cannot reorder it.
