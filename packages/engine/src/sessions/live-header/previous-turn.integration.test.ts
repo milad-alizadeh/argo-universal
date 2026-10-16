@@ -3,7 +3,7 @@ import { feedRow } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
 import { tool } from '#mocks/live-header-tool';
-import { toFeedRowWrite } from '../../../feed';
+import { toFeedRowWrite } from '../../feed';
 import { createLiveHeaderRowsReader } from './rows';
 
 it('excludes the newest thought when it belongs to an earlier Turn', (): void => {

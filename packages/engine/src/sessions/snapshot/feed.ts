@@ -1,5 +1,5 @@
 import type { Subscription, Observer } from 'xstate';
-import type { FeedDeps } from '../../../feed';
+import type { FeedDeps } from '../../feed';
 
 type FeedInput = Pick<FeedDeps, 'findFeed'>;
 

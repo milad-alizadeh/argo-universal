@@ -1,5 +1,5 @@
 import type { Observer } from 'xstate';
-import type { SessionActorRef } from '../../session-machine';
+import type { SessionActorRef } from '../session-machine';
 import type { SnapshotEvent, WatchOptions } from './observer';
 import { SessionSnapshotReader } from './reader';
 

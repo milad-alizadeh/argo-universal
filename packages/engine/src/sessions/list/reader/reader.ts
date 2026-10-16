@@ -1,10 +1,10 @@
 import type { SessionRecord, SessionInfo } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
+import { createLiveHeaderRowsReader } from '../../live-header';
 import { readQueuedSessionRows } from '../../session-storage';
-import { createLiveHeaderRowsReader } from '../live-header';
+import { latestTurnOf } from '../../turns';
 import type { WriterChange } from '../observation';
 import type { SessionListState } from '../state';
-import { latestTurnOf } from '../turns';
 import { readSessionInformation } from './information';
 import type { ListReadInput, ListReaderOptions } from './input';
 import { SessionListParents } from './parents';

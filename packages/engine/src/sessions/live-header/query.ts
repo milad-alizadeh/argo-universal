@@ -3,7 +3,7 @@ import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, gt, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
-import { storedFeedColumns, type FeedRowWrite } from '../../../feed';
+import { storedFeedColumns, type FeedRowWrite } from '../../feed';
 
 type HeaderQuery = { database: Database; sessionId: string; turnId: string };
 

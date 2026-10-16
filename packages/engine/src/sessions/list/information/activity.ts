@@ -4,8 +4,8 @@ import type {
   TextContent,
   Turn,
 } from '@repo/contracts';
-import { toLiveHeader, type LiveHeaderInput } from '../live-header';
-import { latestTurnOf } from '../turns';
+import { toLiveHeader, type LiveHeaderInput } from '../../live-header';
+import { latestTurnOf } from '../../turns';
 import type { SessionInfoInput } from './information';
 import { deriveSessionStatus } from './status';
 

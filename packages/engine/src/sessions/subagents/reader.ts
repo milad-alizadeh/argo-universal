@@ -14,7 +14,7 @@ import {
   storedFeedColumns,
   type FeedDeps,
   type FeedRowWrite,
-} from '../../../feed';
+} from '../../feed';
 import { toSubagents } from './subagents';
 import { readLatestTurn } from './turn-reader';
 

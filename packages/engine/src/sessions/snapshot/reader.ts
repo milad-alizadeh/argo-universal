@@ -1,9 +1,9 @@
 import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
-import type { FeedDeps } from '../../../feed';
-import type { SessionActorRef } from '../../session-machine';
-import { createSessionReader } from '../../session-record';
-import { storedShells } from '../../shells/reader';
+import type { FeedDeps } from '../../feed';
 import { createLiveHeaderRowsReader } from '../live-header';
+import type { SessionActorRef } from '../session-machine';
+import { createSessionReader } from '../session-record';
+import { storedShells } from '../shells/reader';
 import { createSubagentsReader } from '../subagents';
 import { toSessionSnapshot } from './snapshot';
 import type { StoredSnapshot } from './types';

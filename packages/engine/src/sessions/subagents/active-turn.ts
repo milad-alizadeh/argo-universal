@@ -1,8 +1,8 @@
 import { Turn } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
 import { desc, eq } from 'drizzle-orm';
-import { latestTurnOf } from '../list/turns';
 import { readQueuedSessionRows } from '../session-storage';
+import { latestTurnOf } from '../turns';
 import type { SubagentRouting } from './routing-types';
 
 const latestStoredTurn = (input: SubagentRouting, sessionId: string): Turn[] =>

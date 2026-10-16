@@ -1,18 +1,9 @@
 import type { ChangesSummary, SessionSnapshot } from '@repo/contracts';
-import { toShell } from '../../acp/shells';
+import { toShell } from '../acp/shells';
 import { feedSnapshotFields, sessionSnapshotFields } from './fields';
 import type { SessionState, SnapshotFeed, StoredSnapshot } from './types';
 
 const noChanges: ChangesSummary = { files: 0, additions: 0, deletions: 0 };
-
-export function isSessionReady(session: SessionState): boolean {
-  return (
-    session.matches({ open: 'acp' }) &&
-    !(['opening', 'closing', 'flushing'] as const).some((state) =>
-      session.matches({ open: { acp: state } }),
-    )
-  );
-}
 
 export function toSessionSnapshot(
   session: SessionState | null,

@@ -3,7 +3,7 @@ import { feedRow } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
 import { tool } from '#mocks/live-header-tool';
-import { toFeedRowWrite } from '../../../feed';
+import { toFeedRowWrite } from '../../feed';
 import { createLiveHeaderRowsReader } from './rows';
 
 it('reads a 500-row Turn with three bounded seeks after many settled Tool calls', (): void => {

@@ -6,8 +6,8 @@ import {
   newestRows,
   type FeedRowWrite,
   readQueuedFeed,
-} from '../../../feed';
-import type { WriterActorRef } from '../../../storage';
+} from '../../feed';
+import type { WriterActorRef } from '../../storage';
 import { readStoredHeaderRows } from './query';
 
 type HeaderReadInput = {

@@ -8,7 +8,7 @@ export { type SessionData } from './session-data';
 
 export { type SessionActorRef, sessionMachine } from './session-machine';
 
-export { createSessionSnapshotWatcher } from './list/snapshot';
+export { createSessionSnapshotWatcher } from './snapshot';
 
 export { createSessionReader } from './session-record';
 

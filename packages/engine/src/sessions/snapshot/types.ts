@@ -1,7 +1,7 @@
 import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
-import type { feedMachine } from '../../../feed';
-import type { sessionMachine } from '../../session-machine';
+import type { feedMachine } from '../../feed';
+import type { sessionMachine } from '../session-machine';
 
 export type SessionState = SnapshotFrom<typeof sessionMachine>;
 

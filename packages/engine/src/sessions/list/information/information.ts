@@ -6,8 +6,8 @@ import type {
   SessionUpdate,
   Turn,
 } from '@repo/contracts';
+import { type LiveHeaderInput } from '../../live-header';
 import { toSessionCheckout } from '../../session-record';
-import { type LiveHeaderInput } from '../live-header';
 import type { SessionListState } from '../state';
 import { SessionInfoActivity } from './activity';
 

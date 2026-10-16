@@ -3,8 +3,8 @@ import { expect, it, onTestFinished } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { tool } from '#mocks/live-header-tool';
-import { FeedRowsJob, toFeedRowWrite } from '../../../feed';
-import { writerMachine } from '../../../storage';
+import { FeedRowsJob, toFeedRowWrite } from '../../feed';
+import { writerMachine } from '../../storage';
 import { toLiveHeader } from './header';
 import { createLiveHeaderRowsReader } from './rows';
 

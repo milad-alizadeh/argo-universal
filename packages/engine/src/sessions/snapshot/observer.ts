@@ -1,8 +1,8 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import type { Observer, Subscription } from 'xstate';
-import type { FeedDeps } from '../../../feed';
-import type { OpenSessionsActorRef } from '../../open-sessions-machine';
-import type { SessionActorRef } from '../../session-machine';
+import type { FeedDeps } from '../../feed';
+import type { OpenSessionsActorRef } from '../open-sessions-machine';
+import type { SessionActorRef } from '../session-machine';
 import { SnapshotFeed } from './feed';
 import { SnapshotPublication } from './publication';
 

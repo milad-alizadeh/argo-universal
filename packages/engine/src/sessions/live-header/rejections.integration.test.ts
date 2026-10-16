@@ -4,7 +4,7 @@ import { sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
 import { tool } from '#mocks/live-header-tool';
-import { toFeedRowWrite } from '../../../feed';
+import { toFeedRowWrite } from '../../feed';
 import { createLiveHeaderRowsReader } from './rows';
 
 it('reads only the newest malformed Tool call while retaining all running calls', (): void => {

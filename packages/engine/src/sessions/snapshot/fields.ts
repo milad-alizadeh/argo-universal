@@ -1,5 +1,5 @@
 import type { SessionSnapshot } from '@repo/contracts';
-import { withHeldConfiguration } from '../../configuration/held-configuration';
+import { withHeldConfiguration } from '../configuration/held-configuration';
 import { toLiveHeader } from '../live-header';
 import { snapshotState } from './state';
 import type {
