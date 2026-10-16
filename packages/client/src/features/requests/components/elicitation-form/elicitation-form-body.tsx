@@ -9,20 +9,32 @@ import {
 } from './elicitation-field';
 import type { ElicitationValue } from './elicitation-schema';
 
-// In a phone's sheet the sheet's own title is the message, so only the source stays.
+// The line naming who asks; a phone's sheet shows it as its title.
+export const sourceLabel = (source?: string): string | undefined =>
+  source ? `${source} asks` : undefined;
+
+// In a phone's sheet the sheet's own title is the source, so only the message stays, wrapping to any length.
 export function ElicitationHeading(props: {
   source?: string;
   message: string;
-}): ReactElement | null {
-  if (useOptionalSheet()) return <ElicitationSource source={props.source} />;
+}): ReactElement {
+  const heading = <ElicitationMessage message={props.message} />;
+
+  if (useOptionalSheet()) return heading;
 
   return (
     <View className="gap-1">
       <ElicitationSource source={props.source} />
-      <Text role="heading" accessibilityRole="heading" aria-level={2}>
-        {props.message}
-      </Text>
+      {heading}
     </View>
+  );
+}
+
+function ElicitationMessage({ message }: { message: string }): ReactElement {
+  return (
+    <Text role="heading" accessibilityRole="heading" aria-level={2}>
+      {message}
+    </Text>
   );
 }
 
@@ -31,7 +43,9 @@ function ElicitationSource({
 }: {
   source?: string;
 }): ReactElement | null {
-  return source ? <Text role="secondary">{source} asks</Text> : null;
+  const label = sourceLabel(source);
+
+  return label ? <Text role="secondary">{label}</Text> : null;
 }
 
 export function ElicitationFields({

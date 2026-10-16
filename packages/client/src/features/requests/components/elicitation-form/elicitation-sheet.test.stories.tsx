@@ -111,7 +111,7 @@ export const RetainFieldAnswersAcrossTrayTransition: Story = {
   },
 };
 
-// The sheet's title is the message, so the body names only the source.
+// The sheet's title is the source, so it never truncates; the message heads the body once.
 export const MessageShownOnce: Story = {
   args: { request: fieldsRequest, source: 'linear' },
   play: async () => {
@@ -119,7 +119,10 @@ export const MessageShownOnce: Story = {
     await expect(
       sheet.getAllByRole('heading', { name: fieldsRequest.message }),
     ).toHaveLength(1);
-    await expect(sheet.getByText('linear asks')).toBeVisible();
+    await expect(
+      sheet.getAllByRole('heading', { name: 'linear asks' }),
+    ).toHaveLength(1);
+    await expect(sheet.getAllByText('linear asks')).toHaveLength(1);
   },
 };
 

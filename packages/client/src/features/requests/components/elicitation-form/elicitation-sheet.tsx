@@ -11,6 +11,7 @@ import {
   ElicitationFieldForm,
   type ElicitationFormProps,
 } from './elicitation-form';
+import { sourceLabel } from './elicitation-form-body';
 import { ElicitationQuestionBody } from './elicitation-question-form';
 import {
   elicitationQuestions,
@@ -45,7 +46,7 @@ function FieldSheet(props: ElicitationFormProps): ReactElement {
   return (
     <ElicitationSurface
       {...props}
-      title={props.request.message}
+      title={sourceLabel(props.source)}
       footer={<ElicitationSheetFooter model={model} />}
       contentScrolls={sheetFieldsScroll}
     >

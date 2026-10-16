@@ -1,9 +1,11 @@
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import {
   ElicitationFormField,
+  ElicitationHeading,
   type ElicitationEntry,
 } from './elicitation-form-body';
 import { ElicitationRows } from './elicitation-rows';
@@ -25,31 +27,33 @@ type SectionProps = ModelProps & {
 
 /*
  * iOS sets the fields as Settings rows in inset-grouped sections, one primitive for every row.
- * The source heads the first section, as the line above the fields does elsewhere.
+ * The message heads them, as the sheet's title names only the source.
  */
 export function ElicitationSheetFields({ model }: ModelProps): ReactElement {
-  return <GroupedList>{sectionsOf(model)}</GroupedList>;
+  return (
+    <View className="flex-1">
+      <View className="px-5 pt-4">
+        <ElicitationHeading
+          source={model.props.source}
+          message={model.props.request.message}
+        />
+      </View>
+      <GroupedList>{sectionsOf(model)}</GroupedList>
+    </View>
+  );
 }
 
+// A section of several choices is headed by its field's name.
 function sectionsOf(model: ElicitationModel): ReactElement[] {
-  const source = model.props.source && `${model.props.source} asks`;
-
-  return fieldSections(model.schema.fields).map((entries, index) => (
+  return fieldSections(model.schema.fields).map((entries) => (
     <FieldSection
       key={entries[0]?.key}
       model={model}
       entries={entries}
-      title={sectionTitle(entries, index === 0 ? source : undefined)}
+      title={choicesTitle(entries)}
     />
   ));
 }
-
-// The first section is headed by the source; a section of several choices also by its field's name.
-const sectionTitle = (
-  entries: readonly ElicitationEntry[],
-  source: string | undefined,
-): string | undefined =>
-  [source, choicesTitle(entries)].filter(Boolean).join(' · ') || undefined;
 
 function FieldSection(props: SectionProps): ReactElement {
   return (
