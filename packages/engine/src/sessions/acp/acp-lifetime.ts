@@ -11,7 +11,9 @@ import {
   type AcpLifetimeEvent,
 } from './acp-session-destination';
 import { selectSessionOpening } from './acp-session-opening';
-import { AcpSessionRequests } from './acp-session-requests';
+import { AcpSessionRequests } from './requests/acp-session-requests';
+import { withShellDestination } from './shells/shell-destination';
+import type { ShellRuntime } from './shells/shell-runtime';
 
 export type { AcpLifetimeEvent } from './acp-session-destination';
 
@@ -38,6 +40,7 @@ export class AcpSessionLifetime {
   public constructor(
     private readonly dependencies: AcpSessionDependencies | undefined,
     createId: () => string,
+    private readonly shells?: ShellRuntime,
   ) {
     this.requests = new AcpSessionRequests(createId);
   }
@@ -53,12 +56,23 @@ export class AcpSessionLifetime {
   private createSessionDestination(
     sendBack: SendLifetimeEvent,
   ): AcpSessionDestination {
-    return {
+    const destination = {
       ...createLifetimeDestination(this.requests, (event) => {
         if (this.attached) sendBack(event);
       }),
-      registrationFinished: this.registration.promise,
     };
+
+    return this.attachShells({
+      ...destination,
+      registrationFinished: this.registration.promise,
+    });
+  }
+  private attachShells(
+    destination: AcpSessionDestination,
+  ): AcpSessionDestination {
+    return this.shells
+      ? withShellDestination(destination, this.shells)
+      : destination;
   }
   public finishRegistration(): void {
     this.registration.resolve();
@@ -73,6 +87,7 @@ export class AcpSessionLifetime {
     const dependencies = this.requireDependencies();
     const destination = this.createSessionDestination(await this.bound.promise);
     const launch = await this.resolveSessionAgentLaunch(session, dependencies);
+    this.shells?.configure(session, launch);
     this.lease = await dependencies.resources.open({
       launch,
       opening: selectSessionOpening(session),
@@ -110,15 +125,23 @@ export class AcpSessionLifetime {
     this.requests.cancel(requestId);
   }
   public cancelRequests = (): void => this.requests.cancelAll();
-  public close(): Promise<void> {
+  public close(status: 'lost' | 'stopped' = 'lost'): Promise<void> {
     this.finishRegistration();
     this.requests.cancelAll();
     this.controller.abort();
-    this.closing ??= this.closeOwned();
+    this.closing ??= this.closeOwned(status);
 
     return this.closing;
   }
-  private async closeOwned(): Promise<void> {
+  // Shells end first: an Agent waiting on one may not answer session/close.
+  private async closeOwned(status: 'lost' | 'stopped'): Promise<void> {
+    try {
+      await this.shells?.close(status);
+    } finally {
+      await this.closeLease();
+    }
+  }
+  private async closeLease(): Promise<void> {
     try {
       await this.closeOpening();
     } catch (error) {

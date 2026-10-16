@@ -2,6 +2,7 @@ import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import type { FeedDeps } from '../../feed';
 import type { SessionActorRef } from '../session-machine';
 import { createSessionReader } from '../session-record';
+import { storedShells } from '../shells/reader';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import { toSessionSnapshot } from './session-snapshot';
 import { createSubagentsReader } from './subagents-reader';
@@ -44,6 +45,7 @@ export class SessionSnapshotReader {
       snapshot: toSessionSnapshot(session, feedSnapshot, {
         ...stored,
         subagents: this.readSubagents(sessionId),
+        shells: storedShells(this.deps.database, sessionId),
       }),
       isClosed: !actor && stored.parentSessionId === null,
     };

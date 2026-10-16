@@ -10,7 +10,7 @@ import { TRPCError } from '@trpc/server';
 import type {
   ElicitationAnswerContent,
   ElicitationAnswerValue,
-} from './acp/elicitation-types';
+} from './acp/requests/elicitation-types';
 import { answeredRequest, chosenOption } from './admission/answer-admission';
 import { isOfferedConfigChoice } from './admission/config-admission';
 import type { SessionActorRef } from './session-machine';
