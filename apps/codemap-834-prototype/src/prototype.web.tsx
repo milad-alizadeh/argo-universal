@@ -87,6 +87,7 @@ export default function CodeMap834Prototype() {
       !colors.foreground ||
       !colors.border ||
       !colors.mutedForeground ||
+      !colors.warning ||
       !colors.danger ||
       !colors.muted ||
       typeof document === 'undefined'
@@ -100,6 +101,7 @@ export default function CodeMap834Prototype() {
           'foreground',
           'border',
           'mutedForeground',
+          'warning',
           'danger',
           'muted',
         ].map((key) => [key, rgb(colors[key as keyof typeof colors]!)]),
@@ -110,6 +112,7 @@ export default function CodeMap834Prototype() {
     colors.foreground,
     colors.border,
     colors.mutedForeground,
+    colors.warning,
     colors.danger,
     colors.muted,
     colorScheme,
@@ -254,14 +257,12 @@ export default function CodeMap834Prototype() {
           {view === '3d' && <div>Height　 Recent commits</div>}
           <div>Colour　 Lexical branches</div>
           <div style={{ display: 'flex', gap: 3 }}>
-            {[palette.border, palette.mutedForeground, palette.danger].map(
-              (color) => (
-                <span
-                  key={color}
-                  style={{ height: 5, background: color, flex: 1 }}
-                />
-              ),
-            )}
+            {[palette.border, palette.warning, palette.danger].map((color) => (
+              <span
+                key={color}
+                style={{ height: 5, background: color, flex: 1 }}
+              />
+            ))}
           </div>
           <div style={{ fontSize: 12, color: palette.mutedForeground }}>
             Up to 8　　 9–19　　 20 and up

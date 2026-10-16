@@ -36,8 +36,7 @@ for (const path of run(['ls-files', '-z']).split('\0').filter(Boolean)) {
     area,
     height: commits.get(path) ?? 0,
     branches,
-    tone:
-      branches >= 20 ? 'danger' : branches >= 9 ? 'mutedForeground' : 'border',
+    tone: branches >= 20 ? 'danger' : branches >= 9 ? 'warning' : 'border',
   });
 }
 files.sort((a, b) => a.path.localeCompare(b.path));

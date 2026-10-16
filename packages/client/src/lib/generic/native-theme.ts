@@ -14,6 +14,7 @@ const colorTokens = [
   ['border', '--color-border'],
   ['selected', '--color-selected'],
   ['danger', '--color-danger'],
+  ['warning', '--color-warning'],
 ] as const;
 
 const tokenNames = colorTokens.map(([, name]) => name);

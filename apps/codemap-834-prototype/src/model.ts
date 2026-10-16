@@ -108,6 +108,7 @@ export interface Palette {
   foreground: string;
   border: string;
   mutedForeground: string;
+  warning: string;
   danger: string;
   muted: string;
 }

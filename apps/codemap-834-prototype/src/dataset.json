@@ -40,7 +40,7 @@
       "area": 92,
       "height": 3,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/codebase-design/agents/openai.yaml",
@@ -64,7 +64,7 @@
       "area": 45,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/codebase-design/SKILL.md",
@@ -96,7 +96,7 @@
       "area": 139,
       "height": 1,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/domain-modeling/ADR-FORMAT.md",
@@ -136,7 +136,7 @@
       "area": 108,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/drizzle-hints/SKILL.md",
@@ -144,7 +144,7 @@
       "area": 182,
       "height": 1,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/drizzle-migrations/SKILL.md",
@@ -152,7 +152,7 @@
       "area": 89,
       "height": 1,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/drizzle-output-modes/SKILL.md",
@@ -192,7 +192,7 @@
       "area": 183,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/expo-overview/agents/openai.yaml",
@@ -208,7 +208,7 @@
       "area": 116,
       "height": 1,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/expo-router/agents/openai.yaml",
@@ -232,7 +232,7 @@
       "area": 230,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/expo-router/references/search.md",
@@ -248,7 +248,7 @@
       "area": 434,
       "height": 1,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/expo-router/references/toolbar-and-headers.md",
@@ -272,7 +272,7 @@
       "area": 241,
       "height": 1,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/expo-ui/agents/openai.yaml",
@@ -328,7 +328,7 @@
       "area": 102,
       "height": 1,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/grill-me/agents/openai.yaml",
@@ -448,7 +448,7 @@
       "area": 72,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/links/references/link-options.md",
@@ -456,7 +456,7 @@
       "area": 249,
       "height": 1,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/links/SKILL.md",
@@ -504,7 +504,7 @@
       "area": 246,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/playwright-cli/references/session-management.md",
@@ -544,7 +544,7 @@
       "area": 217,
       "height": 1,
       "branches": 19,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/playwright-cli/SKILL.md",
@@ -552,7 +552,7 @@
       "area": 490,
       "height": 1,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/playwright-trace/SKILL.md",
@@ -576,7 +576,7 @@
       "area": 313,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/pnpm/references/best-practices-migration.md",
@@ -584,7 +584,7 @@
       "area": 329,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/pnpm/references/best-practices-performance.md",
@@ -608,7 +608,7 @@
       "area": 203,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/pnpm/references/core-store.md",
@@ -640,7 +640,7 @@
       "area": 198,
       "height": 1,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/pnpm/references/features-config-dependencies.md",
@@ -656,7 +656,7 @@
       "area": 144,
       "height": 1,
       "branches": 17,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/pnpm/references/features-hooks.md",
@@ -664,7 +664,7 @@
       "area": 196,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/pnpm/references/features-multi-ecosystem.md",
@@ -768,7 +768,7 @@
       "area": 68,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/prototype/SKILL.md",
@@ -784,7 +784,7 @@
       "area": 113,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/react-query-setup/SKILL.md",
@@ -888,7 +888,7 @@
       "area": 117,
       "height": 1,
       "branches": 18,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/setup-matt-pocock-skills/triage-labels.md",
@@ -960,7 +960,7 @@
       "area": 407,
       "height": 1,
       "branches": 19,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/tdd/agents/openai.yaml",
@@ -1032,7 +1032,7 @@
       "area": 33,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/teach/SKILL.md",
@@ -1040,7 +1040,7 @@
       "area": 141,
       "height": 1,
       "branches": 18,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/thermo-nuclear-review/SKILL.md",
@@ -1048,7 +1048,7 @@
       "area": 52,
       "height": 1,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/to-questionnaire/agents/openai.yaml",
@@ -1104,7 +1104,7 @@
       "area": 208,
       "height": 1,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/triage/agents/openai.yaml",
@@ -1120,7 +1120,7 @@
       "area": 106,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/triage/SKILL.md",
@@ -1160,7 +1160,7 @@
       "area": 326,
       "height": 1,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/uniwind/references/integrations.md",
@@ -1168,7 +1168,7 @@
       "area": 76,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/uniwind/references/pro.md",
@@ -1176,7 +1176,7 @@
       "area": 355,
       "height": 1,
       "branches": 17,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/uniwind/references/setup.md",
@@ -1192,7 +1192,7 @@
       "area": 238,
       "height": 1,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/uniwind/references/theming.md",
@@ -1200,7 +1200,7 @@
       "area": 332,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/uniwind/references/troubleshooting.md",
@@ -1264,7 +1264,7 @@
       "area": 291,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/vitest/references/core-cli.md",
@@ -1296,7 +1296,7 @@
       "area": 312,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/vitest/references/core-hooks.md",
@@ -1312,7 +1312,7 @@
       "area": 268,
       "height": 1,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/vitest/references/features-benchmarking.md",
@@ -1360,7 +1360,7 @@
       "area": 335,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/vitest/references/features-reporters.md",
@@ -1368,7 +1368,7 @@
       "area": 111,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/vitest/references/features-snapshots.md",
@@ -1384,7 +1384,7 @@
       "area": 124,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/vitest/SKILL.md",
@@ -1424,7 +1424,7 @@
       "area": 129,
       "height": 1,
       "branches": 19,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/wizard/agents/openai.yaml",
@@ -1472,7 +1472,7 @@
       "area": 82,
       "height": 1,
       "branches": 19,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/writing-react-native-storybook-stories/references/controls.md",
@@ -1488,7 +1488,7 @@
       "area": 297,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/xstate-v5/evals/evals.json",
@@ -1496,7 +1496,7 @@
       "area": 91,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/xstate-v5/evals/extract_and_typecheck.py",
@@ -1512,7 +1512,7 @@
       "area": 85,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/xstate-v5/references/adapters.md",
@@ -1528,7 +1528,7 @@
       "area": 259,
       "height": 1,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/xstate-v5/references/examples.md",
@@ -1536,7 +1536,7 @@
       "area": 474,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": ".agents/skills/xstate-v5/references/observables-and-inspection.md",
@@ -1688,7 +1688,7 @@
       "area": 160,
       "height": 2,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "apps/desktop/scripts/wait-for-dev-servers.integration.test.ts",
@@ -1704,7 +1704,7 @@
       "area": 89,
       "height": 10,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "apps/desktop/src/main/app-protocol.ts",
@@ -1760,7 +1760,7 @@
       "area": 361,
       "height": 8,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "apps/desktop/src/main/server-process.integration.test.ts",
@@ -1776,7 +1776,7 @@
       "area": 84,
       "height": 9,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "apps/desktop/src/main/symbol-images.ts",
@@ -1920,7 +1920,7 @@
       "area": 130,
       "height": 8,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "apps/server/src/supervisor/index.ts",
@@ -1976,7 +1976,7 @@
       "area": 87,
       "height": 2,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "apps/server/src/supervisor/terminal-process.integration.test.ts",
@@ -2648,7 +2648,7 @@
       "area": 23,
       "height": 5,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/adr/0008-a-session-owns-its-checkout.md",
@@ -2792,7 +2792,7 @@
       "area": 34,
       "height": 6,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/adr/0026-the-ui-kit-names-its-tokens-by-role.md",
@@ -2856,7 +2856,7 @@
       "area": 110,
       "height": 28,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/agents/prickles/prickles-ai.md",
@@ -2872,7 +2872,7 @@
       "area": 114,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/agents/prickles/prickles-foundations.md",
@@ -2880,7 +2880,7 @@
       "area": 74,
       "height": 1,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/agents/prickles/prickles-patterns.md",
@@ -2896,7 +2896,7 @@
       "area": 74,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/agents/prickles/prickles-style.md",
@@ -2912,7 +2912,7 @@
       "area": 84,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/agents/prickles/prickles-tooling.md",
@@ -2944,7 +2944,7 @@
       "area": 27,
       "height": 11,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/agents/testing-seams.md",
@@ -2952,7 +2952,7 @@
       "area": 75,
       "height": 5,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/agents/triage-labels.md",
@@ -2992,7 +2992,7 @@
       "area": 121,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/research/reports/Plugin system patterns to copy.md",
@@ -3000,7 +3000,7 @@
       "area": 85,
       "height": 1,
       "branches": 17,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/research/reports/Runtime UI plugins for native apps.md",
@@ -3136,7 +3136,7 @@
       "area": 71,
       "height": 3,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "docs/research/storybook-web.md",
@@ -3464,7 +3464,7 @@
       "area": 90,
       "height": 3,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "e2e/steps/agent-installation.ts",
@@ -3624,7 +3624,7 @@
       "area": 175,
       "height": 4,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "e2e/steps/feed-history-scroll.ts",
@@ -4080,7 +4080,7 @@
       "area": 165,
       "height": 3,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "mocks/agent/scripted-scenario.test-d.ts",
@@ -4112,7 +4112,7 @@
       "area": 114,
       "height": 4,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "mocks/agent/scripted-terminal.ts",
@@ -4336,7 +4336,7 @@
       "area": 115,
       "height": 4,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "mocks/registry/port.ts",
@@ -4376,7 +4376,7 @@
       "area": 42,
       "height": 16,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/LICENSE.react-native-reusables",
@@ -4560,7 +4560,7 @@
       "area": 148,
       "height": 12,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/mocks/composer-model-catalogs.ts",
@@ -4616,7 +4616,7 @@
       "area": 118,
       "height": 3,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/mocks/composer/checkout-stories.test.mocks.tsx",
@@ -5368,7 +5368,7 @@
       "area": 144,
       "height": 6,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/agents/components/agent-login-sheet/agent-login.mocks.ts",
@@ -5384,7 +5384,7 @@
       "area": 149,
       "height": 3,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/agents/components/agent-login-sheet/login-copy.ts",
@@ -5472,7 +5472,7 @@
       "area": 122,
       "height": 3,
       "branches": 18,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/agents/components/agent-login-terminal/terminal.mocks.ts",
@@ -6000,7 +6000,7 @@
       "area": 84,
       "height": 3,
       "branches": 17,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/agents/state/agent-install-types.ts",
@@ -6080,7 +6080,7 @@
       "area": 161,
       "height": 7,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/composer/components/composer-configuration/agent-choices.tsx",
@@ -6112,7 +6112,7 @@
       "area": 134,
       "height": 9,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/composer/components/composer-configuration/agent-model-menu.tsx",
@@ -6216,7 +6216,7 @@
       "area": 153,
       "height": 4,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/composer/components/composer-configuration/mode-choices.tsx",
@@ -6488,7 +6488,7 @@
       "area": 68,
       "height": 3,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/composer/components/composer/composer-configuration.test.stories.tsx",
@@ -6600,7 +6600,7 @@
       "area": 169,
       "height": 3,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/composer/components/composer/composer-types.ts",
@@ -6736,7 +6736,7 @@
       "area": 149,
       "height": 3,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/composer/hooks/use-after-close.ts",
@@ -6752,7 +6752,7 @@
       "area": 178,
       "height": 4,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/composer/hooks/use-file-drop.ts",
@@ -6768,7 +6768,7 @@
       "area": 52,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/composer/hooks/use-kept-draft.ts",
@@ -7400,7 +7400,7 @@
       "area": 162,
       "height": 5,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/components/feed-notice/feed-notice.stories.tsx",
@@ -7432,7 +7432,7 @@
       "area": 154,
       "height": 4,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/components/feed/feed-entry.ts",
@@ -7480,7 +7480,7 @@
       "area": 199,
       "height": 4,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/components/feed/feed-row.tsx",
@@ -7568,7 +7568,7 @@
       "area": 77,
       "height": 4,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/components/feed/use-feed-scroll-position.ts",
@@ -7752,7 +7752,7 @@
       "area": 145,
       "height": 3,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/components/tool-output.tsx",
@@ -7840,7 +7840,7 @@
       "area": 86,
       "height": 3,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/hooks/use-feed-sync-point.ts",
@@ -7864,7 +7864,7 @@
       "area": 180,
       "height": 7,
       "branches": 19,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/hooks/use-tool-call-duration.ts",
@@ -7904,7 +7904,7 @@
       "area": 62,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/view/feed-paging.test.ts",
@@ -7936,7 +7936,7 @@
       "area": 163,
       "height": 4,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/view/feed-state.ts",
@@ -8000,7 +8000,7 @@
       "area": 84,
       "height": 2,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/view/keep-unchanged-items.test.ts",
@@ -8016,7 +8016,7 @@
       "area": 130,
       "height": 4,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/view/live-tool-call.test.ts",
@@ -8040,7 +8040,7 @@
       "area": 164,
       "height": 2,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/view/shown-live-header.test.ts",
@@ -8144,7 +8144,7 @@
       "area": 107,
       "height": 3,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/feed/view/turn-end-item.ts",
@@ -8584,7 +8584,7 @@
       "area": 151,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/frame/scaffold/scaffold-sidebar.tsx",
@@ -8968,7 +8968,7 @@
       "area": 193,
       "height": 2,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/requests/components/plan-proposal-card/plan-proposal-actions.tsx",
@@ -9152,7 +9152,7 @@
       "area": 155,
       "height": 2,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/requests/hooks/use-request-keyboard.ts",
@@ -9168,7 +9168,7 @@
       "area": 108,
       "height": 3,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/requests/index.ts",
@@ -9624,7 +9624,7 @@
       "area": 78,
       "height": 3,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/sessions/state/composer-status.ts",
@@ -9712,7 +9712,7 @@
       "area": 91,
       "height": 4,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/sessions/state/open-session.ts",
@@ -9760,7 +9760,7 @@
       "area": 93,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/sessions/state/sessions-filter.ts",
@@ -9992,7 +9992,7 @@
       "area": 101,
       "height": 2,
       "branches": 18,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/features/setup/state/onboarding.ts",
@@ -10608,7 +10608,7 @@
       "area": 143,
       "height": 2,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/display/collapsible/collapsible-native.test.stories.tsx",
@@ -11216,7 +11216,7 @@
       "area": 125,
       "height": 8,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/inputs/checkbox/index.ts",
@@ -11232,7 +11232,7 @@
       "area": 138,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/inputs/combobox/combobox-navigation.test.mocks.tsx",
@@ -11440,7 +11440,7 @@
       "area": 92,
       "height": 5,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/inputs/picker/picker-select.tsx",
@@ -11768,7 +11768,7 @@
       "area": 146,
       "height": 3,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/rich-textarea-line-markers.ts",
@@ -11776,7 +11776,7 @@
       "area": 145,
       "height": 1,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/rich-textarea-link-editing.ts",
@@ -11784,7 +11784,7 @@
       "area": 117,
       "height": 2,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/rich-textarea-link-plugins.tsx",
@@ -11848,7 +11848,7 @@
       "area": 131,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/rich-textarea-placement.ts",
@@ -11896,7 +11896,7 @@
       "area": 123,
       "height": 1,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/inputs/rich-textarea/web/rich-textarea-restore.test.ts",
@@ -12408,7 +12408,7 @@
       "area": 141,
       "height": 3,
       "branches": 19,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item-accessory.test.stories.tsx",
@@ -12536,7 +12536,7 @@
       "area": 178,
       "height": 4,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item-subtitle.tsx",
@@ -12568,7 +12568,7 @@
       "area": 123,
       "height": 2,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item.native.tsx",
@@ -13576,7 +13576,7 @@
       "area": 179,
       "height": 2,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/generic/primitives/overlays/sheet/sheet-pager.android.ts",
@@ -14336,7 +14336,7 @@
       "area": 94,
       "height": 3,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/product/field-list/card-row.tsx",
@@ -14656,7 +14656,7 @@
       "area": 132,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/lib/product/navigation/new-session.test.ts",
@@ -15304,7 +15304,7 @@
       "area": 171,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/screens/sessions/$id/session-detail-view.stories.tsx",
@@ -15560,7 +15560,7 @@
       "area": 146,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/screens/settings/agents/$agent/agent-detail.mocks.ts",
@@ -15656,7 +15656,7 @@
       "area": 110,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/screens/settings/agents/agent-list-screen.tsx",
@@ -15984,7 +15984,7 @@
       "area": 158,
       "height": 3,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/client/src/with-theme.tsx",
@@ -16944,7 +16944,7 @@
       "area": 419,
       "height": 15,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/mocks/acp-shell.ts",
@@ -17016,7 +17016,7 @@
       "area": 174,
       "height": 6,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/mocks/custom-agent.ts",
@@ -17136,7 +17136,7 @@
       "area": 162,
       "height": 10,
       "branches": 18,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/mocks/feed-change-accepted.ts",
@@ -17576,7 +17576,7 @@
       "area": 189,
       "height": 6,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/mocks/scripted-engine.ts",
@@ -17768,7 +17768,7 @@
       "area": 167,
       "height": 3,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/acp/login-cleanup.ts",
@@ -17784,7 +17784,7 @@
       "area": 118,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/acp/login-identity.test.ts",
@@ -18016,7 +18016,7 @@
       "area": 124,
       "height": 3,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/acp/terminal-control-message.ts",
@@ -18040,7 +18040,7 @@
       "area": 128,
       "height": 3,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/acp/terminal-process-group.ts",
@@ -18048,7 +18048,7 @@
       "area": 45,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/acp/terminal-process.integration.test.ts",
@@ -18072,7 +18072,7 @@
       "area": 109,
       "height": 3,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/acp/terminal-recovery.integration.test.ts",
@@ -18200,7 +18200,7 @@
       "area": 103,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/auth/auth-launch.ts",
@@ -18224,7 +18224,7 @@
       "area": 168,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/auth/open-failure.integration.test.ts",
@@ -18280,7 +18280,7 @@
       "area": 170,
       "height": 1,
       "branches": 17,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/catalog-changes.ts",
@@ -18480,7 +18480,7 @@
       "area": 163,
       "height": 3,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/configuration/custom-launch.ts",
@@ -18664,7 +18664,7 @@
       "area": 89,
       "height": 4,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/install/lifecycle/execution.ts",
@@ -18696,7 +18696,7 @@
       "area": 162,
       "height": 4,
       "branches": 17,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/install/lifecycle/readiness.ts",
@@ -18808,7 +18808,7 @@
       "area": 168,
       "height": 2,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/install/ports.ts",
@@ -18832,7 +18832,7 @@
       "area": 60,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/install/processes/process-group.ts",
@@ -18872,7 +18872,7 @@
       "area": 165,
       "height": 2,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/install/processes/reconcile-processes.ts",
@@ -18880,7 +18880,7 @@
       "area": 105,
       "height": 4,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/install/router.ts",
@@ -19000,7 +19000,7 @@
       "area": 178,
       "height": 1,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/launch/get-command-failure.integration.test.ts",
@@ -19016,7 +19016,7 @@
       "area": 149,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/launch/get-command.integration.test.ts",
@@ -19024,7 +19024,7 @@
       "area": 172,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/launch/get-command.ts",
@@ -19064,7 +19064,7 @@
       "area": 109,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/launch/npm-specifications.integration.test.ts",
@@ -19144,7 +19144,7 @@
       "area": 124,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/login-machine.ts",
@@ -19168,7 +19168,7 @@
       "area": 161,
       "height": 4,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/login-progress.ts",
@@ -19184,7 +19184,7 @@
       "area": 136,
       "height": 4,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/login-router.ts",
@@ -19232,7 +19232,7 @@
       "area": 178,
       "height": 4,
       "branches": 18,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/records.ts",
@@ -19368,7 +19368,7 @@
       "area": 263,
       "height": 3,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/usage-scope.ts",
@@ -19424,7 +19424,7 @@
       "area": 137,
       "height": 2,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/blob/cleanup.integration.test.ts",
@@ -19784,7 +19784,7 @@
       "area": 99,
       "height": 5,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/engine/request-origins.integration.test.ts",
@@ -20048,7 +20048,7 @@
       "area": 177,
       "height": 3,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/acp/assembly.ts",
@@ -20072,7 +20072,7 @@
       "area": 168,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/acp/content-dispatch.test.ts",
@@ -20088,7 +20088,7 @@
       "area": 88,
       "height": 2,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/acp/content.ts",
@@ -20096,7 +20096,7 @@
       "area": 165,
       "height": 2,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/acp/identity.ts",
@@ -20120,7 +20120,7 @@
       "area": 137,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/acp/notices.ts",
@@ -20176,7 +20176,7 @@
       "area": 92,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/acp/tool-output.ts",
@@ -20184,7 +20184,7 @@
       "area": 167,
       "height": 2,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/acp/tools.ts",
@@ -20264,7 +20264,7 @@
       "area": 101,
       "height": 3,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/feed-change-accept.ts",
@@ -20280,7 +20280,7 @@
       "area": 172,
       "height": 2,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/feed-change.test.ts",
@@ -20328,7 +20328,7 @@
       "area": 336,
       "height": 8,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/feed-page.ts",
@@ -20368,7 +20368,7 @@
       "area": 126,
       "height": 4,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/feed-rows-job.ts",
@@ -20376,7 +20376,7 @@
       "area": 136,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/feed-storage.integration.test.ts",
@@ -20728,7 +20728,7 @@
       "area": 105,
       "height": 3,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/feed/unaddressed-plan.ts",
@@ -20840,7 +20840,7 @@
       "area": 150,
       "height": 3,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/plugins/host-lifecycle.machine.ts",
@@ -20896,7 +20896,7 @@
       "area": 176,
       "height": 3,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/plugins/manifest.ts",
@@ -20904,7 +20904,7 @@
       "area": 68,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/plugins/plugin-files.ts",
@@ -20928,7 +20928,7 @@
       "area": 137,
       "height": 1,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/plugins/runtime-protocol.ts",
@@ -21104,7 +21104,7 @@
       "area": 134,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/acp-prompt.integration.test.ts",
@@ -21128,7 +21128,7 @@
       "area": 720,
       "height": 3,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/acp-session-machine.integration.test.ts",
@@ -21136,7 +21136,7 @@
       "area": 104,
       "height": 7,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/acp-settlement.integration.test.ts",
@@ -21296,7 +21296,7 @@
       "area": 147,
       "height": 1,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/acp/subagent-messages.ts",
@@ -21608,7 +21608,7 @@
       "area": 144,
       "height": 3,
       "branches": 19,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/list/session-list-machine.integration.test.ts",
@@ -21616,7 +21616,7 @@
       "area": 218,
       "height": 3,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/list/session-list-machine.ts",
@@ -21656,7 +21656,7 @@
       "area": 258,
       "height": 5,
       "branches": 18,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/list/session-snapshot-reader.ts",
@@ -21672,7 +21672,7 @@
       "area": 93,
       "height": 8,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/list/session-status.test.ts",
@@ -21712,7 +21712,7 @@
       "area": 63,
       "height": 2,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/list/writer-changes.ts",
@@ -21728,7 +21728,7 @@
       "area": 198,
       "height": 4,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/open-sessions-machine.ts",
@@ -21736,7 +21736,7 @@
       "area": 188,
       "height": 6,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/open-sessions-system.ts",
@@ -21752,7 +21752,7 @@
       "area": 710,
       "height": 5,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/recovery.ts",
@@ -21808,7 +21808,7 @@
       "area": 122,
       "height": 4,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/session-answers.ts",
@@ -21864,7 +21864,7 @@
       "area": 153,
       "height": 5,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/session-data.integration.test.ts",
@@ -21880,7 +21880,7 @@
       "area": 249,
       "height": 5,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/session-image.integration.test.ts",
@@ -21904,7 +21904,7 @@
       "area": 388,
       "height": 6,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/session-machine.ts",
@@ -21920,7 +21920,7 @@
       "area": 167,
       "height": 7,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/session-projects.integration.test.ts",
@@ -22048,7 +22048,7 @@
       "area": 358,
       "height": 1,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "packages/engine/src/sessions/subagent-subscription.integration.test.ts",
@@ -22496,7 +22496,7 @@
       "area": 60,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/anti-slop/effect/shared/tagged-values.ts",
@@ -22536,7 +22536,7 @@
       "area": 81,
       "height": 1,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/anti-slop/rules/no-conditional-empty-object-spread.ts",
@@ -22600,7 +22600,7 @@
       "area": 86,
       "height": 1,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/anti-slop/rules/no-shape-in-symbol-names.ts",
@@ -22624,7 +22624,7 @@
       "area": 90,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/anti-slop/rules/no-unknown-type-aliases.ts",
@@ -22664,7 +22664,7 @@
       "area": 142,
       "height": 1,
       "branches": 19,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/anti-slop/shared/array-method.ts",
@@ -22688,7 +22688,7 @@
       "area": 59,
       "height": 1,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/anti-slop/shared/lexical-type-parameters.ts",
@@ -22704,7 +22704,7 @@
       "area": 29,
       "height": 1,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/anti-slop/shared/scope.ts",
@@ -22744,7 +22744,7 @@
       "area": 53,
       "height": 1,
       "branches": 9,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/anti-slop/vendor/eslint-stylistic/padding-line-between-statements.ts",
@@ -22776,7 +22776,7 @@
       "area": 2159,
       "height": 38,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/kit-styling-allowlist.json",
@@ -22824,7 +22824,7 @@
       "area": 76,
       "height": 4,
       "branches": 14,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/plugin/child-process.ts",
@@ -22888,7 +22888,7 @@
       "area": 99,
       "height": 3,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/plugin/index.ts",
@@ -22920,7 +22920,7 @@
       "area": 95,
       "height": 1,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/plugin/lexical-zone.test.ts",
@@ -23008,7 +23008,7 @@
       "area": 57,
       "height": 3,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/plugin/unit-test-io.test.ts",
@@ -23024,7 +23024,7 @@
       "area": 69,
       "height": 2,
       "branches": 13,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/plugin/vendor-name.ts",
@@ -23040,7 +23040,7 @@
       "area": 447,
       "height": 3,
       "branches": 15,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tooling/oxlint/style-tokens-allowlist.json",
@@ -23200,7 +23200,7 @@
       "area": 148,
       "height": 2,
       "branches": 10,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tools/agent-hooks.integration.test.ts",
@@ -23392,7 +23392,7 @@
       "area": 129,
       "height": 2,
       "branches": 11,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tools/not-yet-cleared/relocations.mts",
@@ -23520,7 +23520,7 @@
       "area": 210,
       "height": 1,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tools/record-user-messages.mts",
@@ -23568,7 +23568,7 @@
       "area": 116,
       "height": 1,
       "branches": 16,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tools/sf-symbols/tabler-symbols/Package.swift",
@@ -23648,7 +23648,7 @@
       "area": 102,
       "height": 2,
       "branches": 12,
-      "tone": "mutedForeground"
+      "tone": "warning"
     },
     {
       "id": "tools/test-suffix-rules.test.mts",
