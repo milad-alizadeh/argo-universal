@@ -50,6 +50,7 @@ Feature: New Session
       | 1     | wide  |
       | 2     | wide  |
 
+  @smoke
   Scenario Outline: Successive prompts share one ACP Session with Agent <agent>
     Given a phone Frame
     And a New Session with Agent <agent>

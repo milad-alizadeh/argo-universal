@@ -1,7 +1,8 @@
 @web-only
 Feature: Feed history pagination
-  Scenario Outline: Read stored history and receive another live Turn
-    Given Agent <agent> supplies a long Feed history
+  Scenario Outline: Read stored history and receive another live Turn with Agent <agent> in a <frame> Frame
+    Given a <frame> Frame
+    And Agent <agent> supplies a long Feed history
     And a New Session with Agent <agent>
     When I send the prompt "Build a long history"
     And I reopen the stored long Feed
@@ -13,12 +14,15 @@ Feature: Feed history pagination
     Then the Feed shows the new live Turn after its stored history
 
     Examples:
-      | agent |
-      | 1     |
-      | 2     |
+      | agent | frame |
+      | 1     | wide  |
+      | 1     | phone |
+      | 2     | wide  |
+      | 2     | phone |
 
-  Scenario Outline: Read older history while a reconnect refresh is pending
-    Given Agent <agent> supplies a long Feed history
+  Scenario Outline: Read older history while a reconnect refresh is pending with Agent <agent> in a <frame> Frame
+    Given a <frame> Frame
+    And Agent <agent> supplies a long Feed history
     And the Feed history refresh can be delayed
     And a New Session with Agent <agent>
     When I send the prompt "Build a long history"
@@ -30,6 +34,8 @@ Feature: Feed history pagination
     Then the oldest history message loads before the refresh finishes
 
     Examples:
-      | agent |
-      | 1     |
-      | 2     |
+      | agent | frame |
+      | 1     | wide  |
+      | 1     | phone |
+      | 2     | wide  |
+      | 2     | phone |

@@ -3,11 +3,8 @@
   --color-scrim: var(--color-black);
   /* The centred content column: Feed, Composer and request cards. */
   --container-column: 800px;
-  --spacing-plan-proposal: 280px;
-  --spacing-session-name: 34px;
   /* A phone screen's side padding, the same on every screen and platform. */
   --spacing-gutter: 20px;
-  /* A list's inset, as its rows pad their content 10px more for the highlight. */
   /* Size classes: compact below medium, medium below wide (useSizeClass). */
   --breakpoint-medium: 600px;
   --breakpoint-wide: 1100px;

@@ -1,12 +1,16 @@
 import {
   SessionAnswerPlanProposalInput,
   SessionAnswerPlanProposalOutput,
+  SessionArchiveInput,
+  SessionArchiveOutput,
   SessionChangesInput,
   SessionChangesOutput,
   SessionDiffInput,
   SessionDiffOutput,
   SessionRenameInput,
   SessionRenameOutput,
+  SessionUnarchiveInput,
+  SessionUnarchiveOutput,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { publicProcedure, router } from '../rpc';
@@ -19,6 +23,18 @@ function rejectUnimplementedProcedure(
 
 // The Session procedures the App already names, before the Engine answers them.
 export const unimplementedSessionRouter = router({
+  archive: publicProcedure
+    .input(SessionArchiveInput)
+    .output(SessionArchiveOutput)
+    .mutation((): never =>
+      rejectUnimplementedProcedure('Session archive is not implemented yet'),
+    ),
+  unarchive: publicProcedure
+    .input(SessionUnarchiveInput)
+    .output(SessionUnarchiveOutput)
+    .mutation((): never =>
+      rejectUnimplementedProcedure('Session Undo is not implemented yet'),
+    ),
   rename: publicProcedure
     .input(SessionRenameInput)
     .output(SessionRenameOutput)
