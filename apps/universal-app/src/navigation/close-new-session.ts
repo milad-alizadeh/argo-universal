@@ -1,4 +1,5 @@
-import { useWide, withoutNewSession } from '@repo/client';
+import { withoutNewSession } from '@repo/client';
+import { useSizeClass } from '@repo/client/size-class';
 import type { Stack } from 'expo-router';
 import {
   CommonActions,
@@ -40,4 +41,4 @@ const closeWhenSectionHidden: PageListeners = ({ navigation }) => ({
 
 // The listeners for a Session's page at this width.
 export const useNewSessionListeners = (): PageListeners =>
-  useWide() ? closeWhenSectionHidden : noListeners;
+  useSizeClass() === 'wide' ? closeWhenSectionHidden : noListeners;

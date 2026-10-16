@@ -1083,8 +1083,56 @@
       }
     },
     {
+      // ADR-0026: apps read the size class only in the App's navigator, which lays out the Frame per size class. Only the last matching override's options apply, so the app blocks below repeat this path.
+      "files": ["apps/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@repo/client/size-class",
+                "message": "Only the kit and the App's navigator (apps/universal-app/src/navigation) read the size class: use a size-class prop or <SizeClass> (ADR-0026)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // D3: the App never imports server-side packages.
       "files": ["apps/universal-app/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@repo/client/size-class",
+                "message": "Only the kit and the App's navigator (apps/universal-app/src/navigation) read the size class: use a size-class prop or <SizeClass> (ADR-0026)."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/client",
+                  "!@repo/client/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**",
+                  "!@repo/vitest",
+                  "!@repo/vitest/**"
+                ],
+                "message": "The App imports client and uniwind, never server-side packages."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // The App's navigator is kit under ADR-0026: D3 without the size-class ban.
+      "files": ["apps/universal-app/src/navigation/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -2021,6 +2069,12 @@
         "no-restricted-imports": [
           "error",
           {
+            "paths": [
+              {
+                "name": "@repo/client/size-class",
+                "message": "Only the kit and the App's navigator (apps/universal-app/src/navigation) read the size class: use a size-class prop or <SizeClass> (ADR-0026)."
+              }
+            ],
             "patterns": [
               {
                 "group": [

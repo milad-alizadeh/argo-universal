@@ -6,8 +6,8 @@ import {
   type CoreSection,
   type SectionList,
   useSectionList,
-  useWide,
 } from '@repo/client';
+import { useSizeClass } from '@repo/client/size-class';
 import {
   type NativeStackNavigationOptions,
   Stack,
@@ -85,7 +85,7 @@ function UnderHeaderBanner({ overHeader }: BannerProps): React.JSX.Element {
 
 // A narrow page's Connection banner floats under its header; a wide window's sits over the panes.
 function NarrowBanner(props: BannerProps): React.JSX.Element | null {
-  return useWide() ? null : <UnderHeaderBanner {...props} />;
+  return useSizeClass() === 'wide' ? null : <UnderHeaderBanner {...props} />;
 }
 
 // The page keeps its place in the tree at both widths.
@@ -106,7 +106,7 @@ function useSectionOptions(
   header: ScreenHeaderProps,
   root: boolean,
 ): SectionOptions {
-  const wide = useWide();
+  const wide = useSizeClass() === 'wide';
 
   if (wide) return { screenOptions: wideOptions, rootOptions: {} };
 

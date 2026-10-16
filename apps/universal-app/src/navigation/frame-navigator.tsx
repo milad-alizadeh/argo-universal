@@ -13,9 +13,9 @@ import {
   type PluginSection,
   usePhoneDrawerWidth,
   useSectionLists,
-  useSizeClass,
   useNotifications,
 } from '@repo/client';
+import { useSizeClass } from '@repo/client/size-class';
 import { usePathname } from 'expo-router';
 import { Drawer, useDrawerStatus } from 'expo-router/drawer';
 import type * as React from 'react';

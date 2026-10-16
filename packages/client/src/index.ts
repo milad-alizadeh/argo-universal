@@ -57,10 +57,6 @@ export {
 
 export { iconSymbols } from './lib/generic/symbols/icon-names';
 
-export { useWide } from './lib/generic/use-wide/use-wide';
-
-export { useSizeClass } from './lib/generic/use-size-class/use-size-class';
-
 export type { SizeClass } from './lib/generic/use-size-class/size-class';
 
 export { Text } from '#primitives/display/text';
