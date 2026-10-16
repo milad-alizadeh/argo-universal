@@ -111,6 +111,11 @@ export {
 
 export { SessionsList } from './components/sessions-list/sessions-list';
 
+export {
+  RenameSessionDialog,
+  type RenameSessionDialogProps,
+} from './components/rename-session-dialog/rename-session-dialog';
+
 export { type SessionsListProps } from './components/sessions-list/sessions-list-props';
 
 export { SessionsLoading } from './components/sessions-loading/sessions-loading';

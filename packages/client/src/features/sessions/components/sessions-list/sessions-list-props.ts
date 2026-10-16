@@ -18,6 +18,9 @@ export interface SessionsListProps {
   layout?: SessionsLayout;
   selectedSessionId?: string;
   onSelect: (id: string) => void;
+  // Desktop and the web: renaming from a row's double-click or context menu.
+  onRename?: (id: string) => void;
+  onArchive?: (id: string) => void;
   onEndReached: () => void;
   onNewSession?: (projectId: string) => void;
   onProjectSettings?: (projectName: string) => void;

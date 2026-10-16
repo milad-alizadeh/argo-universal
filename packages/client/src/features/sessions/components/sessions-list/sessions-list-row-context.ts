@@ -19,6 +19,8 @@ export interface SessionRowContext {
   // Projects whose rows are fading out.
   closing: ReadonlySet<string>;
   onSelect: (id: string) => void;
+  onRename?: (id: string) => void;
+  onArchive?: (id: string) => void;
 }
 
 function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
@@ -30,14 +32,35 @@ function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
 
 type RowInputs = Omit<SessionRowContext, 'animating' | 'closing'>;
 
-function useRowInputs(props: SessionsListProps): RowInputs {
-  const { layout, selectedSessionId, onSelect } = props;
-  const agentLogos = useAgentLogos(props.agents);
-  const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
+type RowActions = Pick<
+  SessionRowContext,
+  'onSelect' | 'onRename' | 'onArchive'
+>;
+
+const rowActions = ({
+  onSelect,
+  onRename,
+  onArchive,
+}: RowActions): RowActions => ({ onSelect, onRename, onArchive });
+
+function useRowActions(props: SessionsListProps): RowActions {
+  const { onSelect, onRename, onArchive } = props;
 
   return useMemo(
-    () => ({ agentLogos, layout, selectedSessionId, ageFrom, onSelect }),
-    [agentLogos, layout, selectedSessionId, ageFrom, onSelect],
+    () => rowActions({ onSelect, onRename, onArchive }),
+    [onSelect, onRename, onArchive],
+  );
+}
+
+function useRowInputs(props: SessionsListProps): RowInputs {
+  const { layout, selectedSessionId } = props;
+  const agentLogos = useAgentLogos(props.agents);
+  const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
+  const actions = useRowActions(props);
+
+  return useMemo(
+    () => ({ agentLogos, layout, selectedSessionId, ageFrom, ...actions }),
+    [agentLogos, layout, selectedSessionId, ageFrom, actions],
   );
 }
 
@@ -76,6 +99,6 @@ export function sessionRowProps(
     layout: context.layout,
     ...rowMotion(item.session.projectId, context),
     position: virtualListPosition(item.first, item.last),
-    onSelect: context.onSelect,
+    ...rowActions(context),
   };
 }
