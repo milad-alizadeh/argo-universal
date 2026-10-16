@@ -11,7 +11,7 @@ export interface ContextMenuItem {
 
 // The menu a right-click opens on an element, such as a Session row's Rename and Archive.
 export interface ContextMenuProps {
-  // Runs of actions; each later run sits after a separator.
+  // Runs of actions. The web draws them as one list; a phone's system menu may part them.
   groups: readonly (readonly ContextMenuItem[])[];
   // A double-click on the element runs its main edit, such as renaming a row; phones have none.
   onDoubleClick?: () => void;

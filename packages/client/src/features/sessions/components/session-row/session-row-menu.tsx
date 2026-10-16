@@ -23,7 +23,7 @@ const renameSession = (props: SessionRowProps): (() => void) | undefined =>
 const archiveSession = (props: SessionRowProps): (() => void) | undefined =>
   props.onArchive && ((): void => props.onArchive?.(props.session.sessionId));
 
-// Rename, then Archive after a separator, each only when the list offers it.
+// Rename, then Archive, each only when the list offers it; a phone's system menu parts the two.
 export function sessionMenuGroups(props: SessionRowProps): ContextMenuItem[][] {
   if (props.session.archivedAt !== null) return [];
 

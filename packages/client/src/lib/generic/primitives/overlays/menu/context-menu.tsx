@@ -13,7 +13,7 @@ import {
 
 /*
  * The web's context menu, on Radix Context Menu (`@radix-ui/react-context-menu`): Root, Trigger `asChild`,
- * Portal, Content `loop`/`onCloseAutoFocus`, Item `onSelect`/`disabled` and Separator. A right-click, the
+ * Portal, Content `loop`/`onCloseAutoFocus`, and Item `onSelect`/`disabled`. A right-click, the
  * context-menu key, Shift+F10 or a long touch opens it at the pointer; it draws the action menu's rows.
  */
 export function ContextMenu(props: ContextMenuProps): ReactElement {
@@ -95,31 +95,13 @@ function ContextMenuContent(props: ContentProps): ReactElement {
   );
 }
 
+// The web draws its groups as one run of rows, with no separator between them.
 const menuRows = (props: ContentProps): ReactElement[] =>
-  props.groups.flatMap((group, index) => groupRows(group, index, props.chosen));
-
-// A group's rows, after a separator when it follows another group.
-function groupRows(
-  group: readonly ContextMenuItem[],
-  index: number,
-  chosen: ChosenAction,
-): ReactElement[] {
-  const rows = group.map((item) => (
-    <ContextMenuRow key={item.label} item={item} chosen={chosen} />
-  ));
-
-  if (index === 0) return rows;
-
-  return [<GroupSeparator key={`separator.${index}`} />, ...rows];
-}
-
-function GroupSeparator(): ReactElement {
-  return (
-    <RadixContextMenu.Separator asChild>
-      <View className="mx-2 my-0.5 h-px bg-border" />
-    </RadixContextMenu.Separator>
-  );
-}
+  props.groups
+    .flat()
+    .map((item) => (
+      <ContextMenuRow key={item.label} item={item} chosen={props.chosen} />
+    ));
 
 type RowProps = { item: ContextMenuItem; chosen: ChosenAction };
 

@@ -24,5 +24,5 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A right-click opens the menu at the pointer: each group after the first sits after a separator.
+// A right-click opens the menu at the pointer, its actions in one list.
 export const RenameAndArchive: Story = { name: 'ContextMenu' };

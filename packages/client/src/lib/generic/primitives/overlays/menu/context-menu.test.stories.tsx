@@ -48,14 +48,14 @@ async function opensWide(): Promise<void> {
   await settleViewport(layoutWidths.wide);
 }
 
-// A right-click opens the menu with its groups apart; choosing an action runs it and closes the menu.
+// A right-click opens the menu with its actions in one list, no separator; choosing an action runs it and closes the menu.
 export const RightClickRunsAnAction: Story = {
   beforeEach: opensWide,
   play: async ({ canvas, userEvent }) => {
     await rightClick(userEvent, canvas.getByText(rowTitle));
     const menu = within(await body.findByRole('menu'));
     await expect(menu.getAllByRole('menuitem')).toHaveLength(2);
-    await expect(menu.getByRole('separator')).toBeInTheDocument();
+    await expect(menu.queryByRole('separator')).toBeNull();
     await userEvent.click(menu.getByRole('menuitem', { name: 'Rename' }));
     await expect(onRename).toHaveBeenCalledOnce();
     await expect(onArchive).not.toHaveBeenCalled();

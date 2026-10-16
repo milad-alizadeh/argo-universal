@@ -44,7 +44,7 @@ function atWidth(layout: Layout): () => Promise<void> {
   };
 }
 
-// A right-click opens Rename, then Archive after a separator; Rename asks to rename this Session.
+// A right-click opens Rename, then Archive; Rename asks to rename this Session.
 function rightClickRenamesAt(layout: Layout): Story {
   return {
     beforeEach: atWidth(layout),
