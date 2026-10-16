@@ -1,24 +1,21 @@
 import { createHash } from 'node:crypto';
 import { readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { ACPAgent, BinaryTarget } from '@repo/contracts';
-import { isBinaryReserved } from './binary-reservations';
+import type { BinaryTarget } from '@repo/contracts';
+import { isVersionReserved } from './binary-reservations';
 
 const hashLength = 16;
 
 const hash = (value: string): string =>
   createHash('sha256').update(value).digest('hex').slice(0, hashLength);
 
-export const versionFolder = (
-  entry: ACPAgent,
-  target: BinaryTarget,
-): string => {
-  const checksum = target.sha256
-    ? `\0sha256:${target.sha256.toLowerCase()}`
-    : '';
+// One folder per Registry version and download source, so a new version never rewrites files a running Agent uses.
+export const versionFolder = (version: string, source: string): string =>
+  `v_${version.replaceAll(/[^a-zA-Z0-9._-]/g, '-')}_${hash(version)}_${hash(source)}`;
 
-  return `v_${entry.version.replaceAll(/[^a-zA-Z0-9._-]/g, '-')}_${hash(entry.version)}_${hash(target.archive + checksum)}`;
-};
+export const binarySource = (target: BinaryTarget): string =>
+  target.archive +
+  (target.sha256 ? `\0sha256:${target.sha256.toLowerCase()}` : '');
 
 export const pruneVersions = async (input: {
   base: string;
@@ -49,4 +46,4 @@ const pruneVersion = async (
 const protectedVersion = (
   directory: string,
   inUse: (directory: string) => boolean,
-): boolean => isBinaryReserved(directory) || inUse(directory);
+): boolean => isVersionReserved(directory) || inUse(directory);

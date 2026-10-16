@@ -110,8 +110,9 @@ const shareInstall = async (): Promise<SharedInstall> => {
   const first = getCommand({ ...input, signal: starter });
   const second = getCommand({ ...input, signal: joiner });
   const installSignal = await held.started;
+  // The joiner listens once for its version reservation, then once more when it joins the install.
   await vi.waitFor(() =>
-    expect(joined).toHaveBeenCalledWith('abort', expect.any(Function), {
+    expect(joined).toHaveBeenNthCalledWith(2, 'abort', expect.any(Function), {
       once: true,
     }),
   );

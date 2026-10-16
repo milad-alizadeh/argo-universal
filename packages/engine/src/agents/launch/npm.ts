@@ -8,6 +8,8 @@ import {
   readNpmExecutable,
 } from '../install/materialization/packages';
 import type { InstallToolInput } from '../install/ports';
+import { pruneVersions, versionFolder } from './binary-cache';
+import { reserveVersion } from './binary-reservations';
 import { resolveNode, type NodeRuntime } from './node';
 import { singleFlight } from './single-flight';
 import type { EntryInput as NpmInput, RegistryCommand } from './types';
@@ -28,8 +30,28 @@ const npmPackage = (input: NpmInput): NpmPackage => {
   return { name, specification: boundedSpecification(name, pkg) };
 };
 
+// Each Registry version installs into its own folder; older folders go once no connection uses them.
 export const npmCommand = async (input: NpmInput): Promise<RegistryCommand> => {
-  const directory = join(input.home, 'agents', 'registry', 'npx', input.id);
+  const base = join(input.home, 'agents', 'registry', 'npx', input.id);
+  const source = distribution(input).package;
+  const directory = join(base, versionFolder(input.entry.version, source));
+  const release = reserveVersion(directory, input.signal);
+
+  try {
+    const resolved = await installVersion(input, directory);
+    await pruneVersions({ ...input, base, directory });
+
+    return { ...command(resolved), release };
+  } catch (error) {
+    release();
+    throw error;
+  }
+};
+
+const installVersion = async (
+  input: NpmInput,
+  directory: string,
+): Promise<ResolvedNpm> => {
   const runtime = await resolveNode(input);
   const pkg = npmPackage(input);
   await installOnce({
@@ -40,7 +62,7 @@ export const npmCommand = async (input: NpmInput): Promise<RegistryCommand> => {
   });
   const executable = await installedExecutable(directory, pkg.name);
 
-  return command({ input, runtime, directory, executable });
+  return { input, runtime, directory, executable };
 };
 
 const installedExecutable = async (
@@ -64,8 +86,7 @@ const command = ({
   runtime,
   directory,
   executable,
-}: ResolvedNpm): RegistryCommand => ({
-  release: () => {},
+}: ResolvedNpm): Omit<RegistryCommand, 'release'> => ({
   executable: runtime.node,
   args: [executable, ...distributionArgs(input)],
   env: { ...runtime.env, ...distribution(input).env },

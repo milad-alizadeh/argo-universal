@@ -27,7 +27,7 @@ const releaseOnAbort = (
   return release;
 };
 
-export const reserveBinary = (
+export const reserveVersion = (
   directory: string,
   signal: AbortSignal,
 ): (() => void) => {
@@ -37,7 +37,7 @@ export const reserveBinary = (
   return releaseOnAbort(directory, signal);
 };
 
-export const isBinaryReserved = (directory: string): boolean =>
+export const isVersionReserved = (directory: string): boolean =>
   reservations.has(directory);
 
 const settled = (): void => {};

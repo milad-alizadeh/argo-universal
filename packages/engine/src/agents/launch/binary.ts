@@ -10,8 +10,8 @@ import {
 } from '../install/materialization/files';
 import { InstallCleanupError } from '../install/processes/process-cleanup';
 import { resolveRegistryServerPlatform } from '../records';
-import { pruneVersions, versionFolder } from './binary-cache';
-import { reserveBinary, serializeBinary } from './binary-reservations';
+import { binarySource, pruneVersions, versionFolder } from './binary-cache';
+import { reserveVersion, serializeBinary } from './binary-reservations';
 import { githubDigest } from './github-digest';
 import { resolveNode } from './node';
 import type {
@@ -41,7 +41,7 @@ const binaryInput = (input: LaunchInput): BinaryInput => {
 
   const directory = join(
     baseDirectory(input),
-    versionFolder(input.entry, target),
+    versionFolder(input.entry.version, binarySource(target)),
   );
 
   return { ...input, target, directory };
@@ -51,7 +51,7 @@ export const binaryCommand = async (
   input: LaunchInput,
 ): Promise<RegistryCommand> => {
   const binary = binaryInput(input);
-  const release = reserveBinary(binary.directory, input.signal);
+  const release = reserveVersion(binary.directory, input.signal);
 
   try {
     return await serializeBinary(baseDirectory(input), async () => ({
