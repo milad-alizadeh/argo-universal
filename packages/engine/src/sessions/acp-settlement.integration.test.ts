@@ -188,6 +188,13 @@ describe.each(appFixtureAgentIds)('%s Turn settlement', (agent) => {
           },
         },
       });
+      const duration = host.database.$client
+        .prepare(
+          'SELECT ended_at - started_at AS durationMs FROM turn WHERE session_id = ?',
+        )
+        .get(created.sessionId);
+      expect(duration).toEqual({ durationMs: expect.any(Number) });
+      expect(marker).toMatchObject({ _meta: { argo: { turnEnd: duration } } });
       expect(events).toContainEqual(
         expect.objectContaining({
           type: 'row.upsert',
