@@ -63,7 +63,7 @@ export class RuntimePlugin {
   }
 
   hostCrashed(message: string): void {
-    if (!this.activation) return;
+    if (this.status.state !== 'running' && !this.answer) return;
     this.received({ state: 'crashed', hanging: false, error: message });
     this.activation = null;
   }
