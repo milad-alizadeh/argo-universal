@@ -3,6 +3,7 @@ import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
+  type SessionsLayout,
   type SessionsLoadState,
   serverSilentMessage,
   newSessionBesideSearch,
@@ -28,6 +29,8 @@ export interface SessionListViewProps {
   // The phone's header search and a wide window's title row set it.
   onQueryChange: (query: string) => void;
   archived: boolean;
+  // Regular rows, or Compact one-line rows; Regular when unset.
+  layout?: SessionsLayout;
   selectedSessionId?: string;
   onSelect: (sessionId: string) => void;
   onNewSession: () => void;

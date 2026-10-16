@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
+import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { SessionsHeader } from '../../src/features/sessions/components/sessions-header';
 import { useSessionsFilter } from '../../src/features/sessions/state/sessions-filter';
@@ -20,23 +22,33 @@ const spies = {
   onQueryChange: fn(),
 };
 
+type ListViewArgs = React.ComponentProps<typeof SessionListView>;
+
+function ListWithHeader(args: ListViewArgs): React.JSX.Element {
+  const wide = useWide();
+  const filter = useSessionsFilter();
+
+  return (
+    <>
+      {wide && <SessionsHeader {...filter} onNewSession={args.onNewSession} />}
+      <SessionListView {...args} />
+    </>
+  );
+}
+
 export const meta = {
   title: 'Tests/SessionListView',
   component: SessionListView,
   parameters: { screenPreview: true },
   args: { ...loadedSessionListView, ...spies },
-  // Wide, New Session sits in the sidebar's header row above the list.
+  // Wide, New Session sits in the sidebar's header row above the list; the layout choice loads through its own query client.
   render: function WithHeader(args): React.JSX.Element {
-    const wide = useWide();
-    const filter = useSessionsFilter();
+    const [client] = useState(() => new QueryClient());
 
     return (
-      <>
-        {wide && (
-          <SessionsHeader {...filter} onNewSession={args.onNewSession} />
-        )}
-        <SessionListView {...args} />
-      </>
+      <QueryClientProvider client={client}>
+        <ListWithHeader {...args} />
+      </QueryClientProvider>
     );
   },
   beforeEach: (): void => {

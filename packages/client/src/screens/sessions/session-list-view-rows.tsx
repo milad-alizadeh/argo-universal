@@ -14,6 +14,7 @@ type ListData = Pick<
   | 'sessions'
   | 'query'
   | 'archived'
+  | 'layout'
   | 'flat'
   | 'selectedSessionId'
 >;
@@ -28,6 +29,7 @@ function listData(props: SessionListViewProps): ListData {
     sessions: props.sessions,
     query: props.query,
     archived: props.archived,
+    layout: props.layout,
     flat: searchListsFlat && props.query !== '',
     selectedSessionId: props.selectedSessionId,
   };
@@ -49,7 +51,7 @@ function listActions(props: SessionListViewProps): ListActions {
 
 // The list insets it below a transparent header, as it does the rows.
 const insetLoading = (
-  <View className="-mx-2">
+  <View className="-mx-4 wide:mx-0">
     <SessionsLoading />
   </View>
 );

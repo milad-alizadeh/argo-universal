@@ -12,12 +12,18 @@ export {
 export {
   type SessionsFilterMenuProps,
   sessionsFilterChoices,
+  sessionsLayoutLabel,
 } from './components/sessions-filter-menu/sessions-filter-menu';
 
 export {
   type SessionsFilter,
   useSessionsFilter,
 } from './state/sessions-filter';
+
+export {
+  type SessionsLayout,
+  sessionsLayoutChoices,
+} from './state/sessions-layout';
 
 export { type StartingFeed } from './state/starting-feed';
 

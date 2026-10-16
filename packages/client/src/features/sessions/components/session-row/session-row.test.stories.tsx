@@ -71,7 +71,9 @@ export const PlanAndSubagents: Story = {
       await expect(
         canvas.getByLabelText('Plan: 2 of 5 complete'),
       ).toBeVisible();
-      await expect(canvas.getByText('2/5')).toBeVisible();
+      // A running Plan sweeps; a Regular row's Plan is a bar, with no step count.
+      await expect(canvas.getByTestId('session-plan-sweep')).toBeVisible();
+      await expect(canvas.queryByText('2/5')).not.toBeInTheDocument();
       await expect(
         canvas.getByLabelText('Subagents: 3, 2 running'),
       ).toBeVisible();
@@ -106,7 +108,8 @@ export const FinishedSubagents: Story = {
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      await expect(canvas.getByText('5/5')).toBeVisible();
+      // A finished Plan leaves no bar.
+      await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(
         canvas.getByLabelText('Subagents: 3, 0 running'),
       ).toBeVisible();

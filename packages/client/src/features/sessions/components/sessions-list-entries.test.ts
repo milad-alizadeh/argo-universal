@@ -47,6 +47,23 @@ describe('listEntries', () => {
     ]);
   });
 
+  it("marks the first and last of each Project's Sessions", () => {
+    const places = listEntries({
+      projects,
+      sessions: [older, newer, { ...tiedEarlierId, projectId: 'project-2' }],
+      collapsed: new Set(),
+      hideEmptyProjects: false,
+    }).flatMap((entry) =>
+      entry.kind === 'session' ? [[entry.id, entry.first, entry.last]] : [],
+    );
+
+    expect(places).toEqual([
+      [newer.sessionId, true, false],
+      [older.sessionId, false, true],
+      [tiedEarlierId.sessionId, true, true],
+    ]);
+  });
+
   it('shows only the heading of a collapsed Project', () => {
     expect(
       entryIds({

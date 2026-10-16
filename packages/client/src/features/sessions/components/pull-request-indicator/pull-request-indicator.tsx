@@ -28,9 +28,10 @@ export interface PullRequestIndicatorProps {
   status: PullRequestStatus;
 }
 
-function PullRequestIcon({
+// The PR's glyph in its state colour, sized beside Secondary text.
+export function PullRequestIcon({
   status,
-}: PullRequestIndicatorProps): React.JSX.Element {
+}: Pick<PullRequestIndicatorProps, 'status'>): React.JSX.Element {
   const appearance = pullRequestAppearance[status];
 
   return (
@@ -55,7 +56,7 @@ export function PullRequestIndicator(
   return (
     <View
       accessibilityLabel={`${props.status} PR #${props.number}`}
-      className="flex-row items-center gap-1"
+      className="flex-row items-center gap-1.5"
     >
       <PullRequestIcon {...props} />
       <PullRequestNumber {...props} />

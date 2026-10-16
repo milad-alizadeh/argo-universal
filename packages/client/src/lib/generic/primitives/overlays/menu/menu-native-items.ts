@@ -1,7 +1,9 @@
 import {
   type ActionMenuProps,
-  type ChoiceMenuProps,
+  type MenuChoiceGroup,
+  type MenuChoiceRows,
   type MenuProps,
+  menuChoiceGroups,
   menuLoadingLabel,
 } from './menu-props';
 
@@ -14,32 +16,62 @@ export interface NativeMenuItem {
   disabled: boolean;
   // Runs the row; a disabled row does nothing even if the system reports it chosen.
   choose: () => void;
+  // True on the first row of a later section: Android's flat list sets it apart with a divider.
+  divided?: boolean;
 }
 
-// What a menu lists: its options with the chosen value, or its actions, and whether they are still loading.
+// A run of a system menu's rows, set apart from the run before it; iOS heads it with its title.
+export interface NativeMenuSection {
+  title?: string;
+  items: NativeMenuItem[];
+}
+
+// What a menu lists: its options with the chosen value, its groups, or its actions, and whether they are still loading.
 export type MenuRows<Value extends string = string> = (
-  | ChoiceRows<Value>
+  | (MenuChoiceRows<Value> & { actions?: never })
   | Pick<ActionMenuProps, 'actions'>
 ) &
   Pick<MenuProps<Value>, 'loading'>;
-
-type ChoiceRows<Value extends string> = Pick<
-  ChoiceMenuProps<Value>,
-  'options' | 'value' | 'onValueChange' | 'actions'
->;
 
 const listsActions = <Value extends string>(
   rows: MenuRows<Value>,
 ): rows is Pick<ActionMenuProps, 'actions'> => rows.actions !== undefined;
 
+export function nativeMenuSections<Value extends string>(
+  rows: MenuRows<Value>,
+): NativeMenuSection[] {
+  if (rows.loading) return [{ items: [loadingItem] }];
+
+  if (listsActions(rows)) return [{ items: rows.actions.map(actionItem) }];
+
+  const groups = menuChoiceGroups(rows);
+
+  // A row's id is its value; with several groups, the group's place keeps their values apart.
+  const prefix = (index: number): string =>
+    groups.length > 1 ? `${index}.` : '';
+
+  return groups.map((group, index) => ({
+    title: group.label,
+    items: choiceItems(group, prefix(index)),
+  }));
+}
+
+// The sections' rows in one list, each later section's first row marked as divided.
 export function nativeMenuItems<Value extends string>(
   rows: MenuRows<Value>,
 ): NativeMenuItem[] {
-  if (rows.loading) return [loadingItem];
+  return nativeMenuSections(rows).flatMap(sectionItems);
+}
 
-  if (listsActions(rows)) return rows.actions.map(actionItem);
+function sectionItems(
+  section: NativeMenuSection,
+  index: number,
+): NativeMenuItem[] {
+  const [first, ...rest] = section.items;
 
-  return choiceItems(rows);
+  if (index === 0 || !first) return section.items;
+
+  return [{ ...first, divided: true }, ...rest];
 }
 
 const nothing = (): void => undefined;
@@ -65,14 +97,15 @@ function actionItem(
   };
 }
 
-function choiceItems<Value extends string>(
-  props: ChoiceRows<Value>,
+function choiceItems(
+  group: MenuChoiceGroup,
+  idPrefix: string,
 ): NativeMenuItem[] {
-  return props.options.map((choice) => ({
-    id: choice.value,
+  return group.options.map((choice) => ({
+    id: `${idPrefix}${choice.value}`,
     title: choice.label,
-    checked: choice.value === props.value,
+    checked: choice.value === group.value,
     disabled: Boolean(choice.disabled),
-    choose: choice.disabled ? nothing : () => props.onValueChange(choice.value),
+    choose: choice.disabled ? nothing : () => group.onValueChange(choice.value),
   }));
 }

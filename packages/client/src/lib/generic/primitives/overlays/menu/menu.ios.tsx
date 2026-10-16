@@ -5,7 +5,12 @@ import {
 } from '@expo/ui/community/menu';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { type NativeMenuItem, nativeMenuItems } from './menu-native-items';
+import {
+  type NativeMenuItem,
+  type NativeMenuSection,
+  nativeMenuItems,
+  nativeMenuSections,
+} from './menu-native-items';
 import { NativeMenuTrigger } from './menu-phone-parts';
 import type { MenuProps } from './menu-props';
 
@@ -33,11 +38,26 @@ type MenuViewActions = Pick<
 function menuViewActions<Value extends string>(
   props: MenuProps<Value>,
 ): MenuViewActions {
+  const sections = nativeMenuSections(props);
   const items = nativeMenuItems(props);
 
   return {
-    actions: items.map(menuAction),
+    actions:
+      sections.length > 1 ? sections.map(sectionAction) : items.map(menuAction),
     onPressAction: (event) => runAction(items, event),
+  };
+}
+
+// MenuAction.displayInline draws `subactions` as a SwiftUI Section, its title as the Section's header; an empty title draws none.
+function sectionAction(
+  section: NativeMenuSection,
+  index: number,
+): NativeMenuAction {
+  return {
+    id: `argo.menu.section.${index}`,
+    title: section.title ?? '',
+    displayInline: true,
+    subactions: section.items.map(menuAction),
   };
 }
 

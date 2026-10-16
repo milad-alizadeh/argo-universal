@@ -80,6 +80,15 @@
   --text-nav-action: 17px;
   --leading-nav-action: var(--leading-5_5);
   --font-weight-nav-action: var(--font-weight-normal);
+  /* A grouped row Argo draws, as the stock rows set it: Material's bodyLarge
+     title (16/24, +0.5) and bodyMedium detail (14/20, +0.25); iOS steps both
+     to its Body (17/22). The wide step is Body and Secondary. */
+  --text-row: var(--text-base);
+  --leading-row: var(--leading-6);
+  --tracking-row: 0px;
+  --text-row-detail: var(--text-sm);
+  --leading-row-detail: var(--leading-5);
+  --tracking-row-detail: 0px;
   --radius: 10px;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -92,6 +101,13 @@
   --blur-glass: 28px;
   /* Sheets, dialogs and alerts on a wide window. */
   --radius-sheet: 28px;
+  /* A phone's grouped card: iOS's inset-grouped section (26) and Material's
+     card (20), as the stock lists draw them; a Session card and the Compact
+     plate take it. */
+  --radius-grouped: 20px;
+  /* The corners a grouped row keeps inside its card: square on iOS, where
+     the rows share one plate, and Material's 4 between its row tiles. */
+  --radius-grouped-inner: 0px;
   --spacing-frame-bar: 64px;
   /* The rail, the sidebar control bar and the Inspector bar on a wide window. */
   --spacing-frame-rail: 72px;
@@ -99,7 +115,6 @@
   --spacing-frame-list: 312px;
   --spacing-frame-inspector: 352px;
   --spacing-frame-inset: 8px;
-  --spacing-session-plan: 40px;
   /* Shadow colours (6%, 8% and 14% black) for every light drop shadow; the
      glass highlights and dark-mode edges keep their own. Hex, because
      Uniwind's native box-shadow parser adds px to the bare numbers in
@@ -115,10 +130,18 @@
       --font-sans: System;
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
+      --radius-grouped: 26px;
+      --text-row: 17px;
+      --leading-row: var(--leading-5_5);
+      --text-row-detail: 17px;
+      --leading-row-detail: var(--leading-5_5);
     }
     @variant android {
       --font-sans: sans-serif;
       --font-mono: monospace;
+      --radius-grouped-inner: 4px;
+      --tracking-row: 0.5px;
+      --tracking-row-detail: 0.25px;
     }
     @variant light {
       /* Every colour is a Tailwind palette shade: the nearest one, measured in OKLab. */
@@ -161,6 +184,10 @@
       --color-hover: color-mix(in oklab, var(--color-black) 2%, transparent);
       --color-selected: color-mix(in oklab, var(--color-black) 3%, transparent);
       --color-pressed: color-mix(in oklab, var(--color-black) 4%, transparent);
+      /* A 1px edge that gives a bare surface its shape: a Session row, the
+         rail's separator. Hex, as the shadow colours are, so the inset shadow
+         that draws it parses on native too. */
+      --color-hairline: #0000000d;
       /* The shadow scale. Control: buttons, fields and small cards on a
          surface. Card: desktop popovers, menus and toasts. Raised: phone
          popovers, menus and floating buttons. */
@@ -178,6 +205,10 @@
       --shadow-tray:
         0 0 0 1px var(--color-shadow-subtle),
         0 12px 32px var(--color-shadow-subtle);
+      /* Hairline: a bare row's 1px edge. Inset: a selected row or tile pressed
+         a little into its surface. */
+      --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
+      --shadow-inset: inset 0 1px 2px var(--color-shadow-subtle);
     }
     @variant dark {
       --color-foreground: var(--color-neutral-50);
@@ -214,6 +245,9 @@
       --color-hover: color-mix(in oklab, var(--color-white) 4%, transparent);
       --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
       --color-pressed: color-mix(in oklab, var(--color-white) 8%, transparent);
+      /* Light's 5% black doubled to 10% white, as the tints double (2/3/4 to
+         4/6/8): a light edge needs more to show on a dark ground. */
+      --color-hairline: #ffffff1a;
       --shadow-control: 0 1px 2px var(--color-shadow-subtle);
       /* Light's shadows, plus a 1px bezel: a dark shadow on a dark ground cannot show the edge. */
       --shadow-card:
@@ -224,6 +258,8 @@
       --shadow-glass:
         inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
       --shadow-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
+      --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
+      --shadow-inset: inset 0 1px 2px var(--color-shadow-subtle);
     }
   }
 }
@@ -305,6 +341,35 @@
   font-weight: var(--font-weight-nav-action);
 }
 
+/* A grouped row's title and its trailing detail, at each platform's stock size. */
+@utility type-row {
+  font-size: var(--text-row);
+  line-height: var(--leading-row);
+  letter-spacing: var(--tracking-row);
+  font-weight: var(--font-weight-body);
+  color: var(--color-foreground);
+
+  @variant wide {
+    font-size: var(--text-body-wide);
+    line-height: var(--leading-body-wide);
+    letter-spacing: 0px;
+  }
+}
+
+@utility type-row-detail {
+  font-size: var(--text-row-detail);
+  line-height: var(--leading-row-detail);
+  letter-spacing: var(--tracking-row-detail);
+  font-weight: var(--font-weight-secondary);
+  color: var(--color-muted-foreground);
+
+  @variant wide {
+    font-size: var(--text-secondary-wide);
+    line-height: var(--leading-secondary-wide);
+    letter-spacing: 0px;
+  }
+}
+
 /* Shadows that change between light and dark. Tailwind's own shadow-* utility
    inlines the value at build time, so Uniwind could not switch it; these read
    the variable each theme sets. */
@@ -326,4 +391,12 @@
 
 @utility shadow-tray {
   box-shadow: var(--shadow-tray);
+}
+
+@utility shadow-hairline {
+  box-shadow: var(--shadow-hairline);
+}
+
+@utility shadow-inset {
+  box-shadow: var(--shadow-inset);
 }
