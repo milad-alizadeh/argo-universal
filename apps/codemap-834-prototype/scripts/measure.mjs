@@ -21,6 +21,9 @@ mkdirSync(directory, { recursive: true });
 const mode = process.argv[2] ?? 'web';
 const fullDesktop = mode.startsWith('desktop');
 const counts = process.env.CODEMAP_SMOKE ? [0] : [5000, 20000];
+const views = ['3d', 'flat'].includes(process.argv[3])
+  ? [process.argv[3]]
+  : ['3d', 'flat'];
 const results = [];
 let browser, app;
 if (mode === 'web')
@@ -34,7 +37,7 @@ else if (!fullDesktop) {
     output: { file: `${directory}/harness.cjs`, format: 'cjs' },
   });
 }
-for (const view of ['3d', 'flat'])
+for (const view of views)
   for (const count of counts) {
     const start = performance.now();
     let context, page;

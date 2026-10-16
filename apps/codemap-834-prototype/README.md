@@ -76,7 +76,8 @@ The Electron harness imports the unchanged production `app://` handler.
 It does not start the Server or prove the complete desktop App lifecycle.
 A protocol-harness result cannot close the full desktop App criterion.
 The `desktop` modes instead launch the unchanged App with its real Server and preload.
-Each launch uses its own `ARGO_HOME` and App data directory.
+Each launch uses its own `ARGO_HOME`, App data directory, and free Server port.
+Append `3d` or `flat` to the collector command to measure one renderer.
 `build-desktop.mjs` compiles the existing entry points without changing their source.
 It copies the export into the local ignored `dist` directory expected by the App.
 The PR body and the #834 comment hold measurements, screenshots, and the verdict.
