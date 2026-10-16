@@ -99,7 +99,7 @@ function availableAgent(): string {
   return newSessionCatalogs.bothAvailable[0]?.id ?? '';
 }
 
-// The mock's Installed Agent with that id; a Feed recording's Agent is not one.
+// The mock's Installed Agent with that id; stories pass a recording's Agent through installedAgentOf.
 function installedAgent(id: string): AgentServer | undefined {
   return newSessionCatalogs.bothAvailable.find((entry) => entry.id === id);
 }

@@ -1,7 +1,10 @@
 import type { ComponentProps } from 'react';
 import type { Composer } from '../src/features/composer/components/composer/composer';
 import { recordedAcpContent } from '../src/lib/product/acp-feed-content.mocks';
-import type { MockAgent } from '../src/lib/product/feed-message.mocks';
+import {
+  installedAgentOf,
+  type MockAgent,
+} from '../src/lib/product/feed-message.mocks';
 import { composerProps } from './composer-mock';
 import { longWrittenPlan } from './feed-paper';
 import { opensWrittenPlan } from './written-plan-open-checks';
@@ -38,7 +41,10 @@ export function openingWrittenPlan(
 ): WrittenPlanStory {
   return {
     args: {
-      ...composerProps({ ...defaults, initialAgent: scenario.agent }),
+      ...composerProps({
+        ...defaults,
+        initialAgent: installedAgentOf(scenario.agent).id,
+      }),
       writtenPlan: recordedWrittenPlan(scenario),
     },
     play: (context) => opensWrittenPlan(scenario, context),
@@ -51,7 +57,10 @@ export function readingLongWrittenPlan(
 ): WrittenPlanStory {
   return {
     args: {
-      ...composerProps({ ...defaults, initialAgent: agent }),
+      ...composerProps({
+        ...defaults,
+        initialAgent: installedAgentOf(agent).id,
+      }),
       writtenPlan: longWrittenPlan,
     },
     play: (context) => readsLongWrittenPlan(width, context),

@@ -1,11 +1,13 @@
 import type {
   AgentMessage,
+  AgentServer,
   BlobRef,
   SessionUpdate,
   UserMessage,
 } from '@repo/contracts';
 import {
   type FeedMock,
+  newSessionCatalogs,
   recordedFeedMocks,
   recordedStreamingMessages,
   recordedUserMessages,
@@ -16,6 +18,17 @@ export const redSquareDataUrl =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';
 
 export type MockAgent = 'agent-1' | 'agent-2';
+
+// Each recording's Agent among the mock Installed Agents: agent-1 is the first, agent-2 the second.
+export function installedAgentOf(agent: string): AgentServer {
+  const installed = newSessionCatalogs.bothAvailable.at(
+    agent === 'agent-1' ? 0 : 1,
+  );
+
+  if (!installed) throw new Error(`No Installed Agent for ${agent}`);
+
+  return installed;
+}
 
 // Serves recorded images the way the Server's `/blobs/:id` would.
 export function recordedImageUrl(blob: BlobRef): typeof redSquareDataUrl | '' {
