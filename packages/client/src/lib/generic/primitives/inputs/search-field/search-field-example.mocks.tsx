@@ -28,7 +28,7 @@ function SearchRow(props: SearchRowProps): React.JSX.Element {
         label="Search Agents"
         {...props}
         title={<AgentsTitle />}
-        actions={<AddAgent />}
+        actions={<AddAction />}
       />
     </View>
   );
@@ -42,7 +42,7 @@ function AgentsTitle(): React.JSX.Element {
   );
 }
 
-function AddAgent(): React.JSX.Element {
+function AddAction(): React.JSX.Element {
   return (
     <IconButton
       icon="add"
