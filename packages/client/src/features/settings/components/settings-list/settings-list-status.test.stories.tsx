@@ -71,15 +71,11 @@ function unavailable(status: Unavailable, width: number): Story {
 
       await expect(connection).toHaveFocus();
       await userEvent.keyboard('{Enter}');
-      await expect(onSelect).toHaveBeenLastCalledWith({
-        to: 'settings-connection',
-      });
+      await expect(onSelect).toHaveBeenLastCalledWith('/settings/connection');
       await userEvent.click(
         canvas.getByRole('link', { name: 'Appearance, System' }),
       );
-      await expect(onSelect).toHaveBeenLastCalledWith({
-        to: 'settings-appearance',
-      });
+      await expect(onSelect).toHaveBeenLastCalledWith('/settings/appearance');
       await expect(canvas.queryByText('Loading Server settings…')).toBeNull();
       await expect(
         canvas.queryByText('Server unavailable. Open Connection to reconnect.'),

@@ -17,6 +17,8 @@ const textRoles = {
   code: 'type-code',
   'nav-title': 'type-nav-title',
   'nav-action': 'type-nav-action',
+  row: 'type-row',
+  'row-detail': 'type-row-detail',
 } as const satisfies Record<TextRole, string>;
 
 export function useTextStyle(

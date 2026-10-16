@@ -22,12 +22,14 @@ Each role has a light and a dark value.
 
 ## States
 
-Every interactive component draws the same five states from shared tokens: `hover` (today `accent`), `pressed`, `selected` (a flat tint, today `selected`), `focus` (today `ring`) and `disabled`.
+Every interactive component draws the same five states from shared tokens: `hover`, `pressed`, `selected` (flat tints), `focus` (today `ring`) and `disabled`.
+
+Owner amendment, 2026-10-15: interaction fills have separate `hover`, `selected` and `pressed` tokens. In light mode they use black at 2%, 3% and 4%; dark mode uses white at 4%, 6% and 8%. Hover also marks the focused menu option. Quiet field fills stay `muted`, and outlines stay `border`. Native controls retain their platform state drawings through public APIs. Destructive actions keep their danger tint.
 
 ## Shape, surfaces and density
 
-- **Shape:** `sm`, `md`, `lg`, `xl`, `2xl`, `full`. `2xl` is the card radius.
-- **Surfaces:** `card`, `tray` (the Composer envelope), `glass`, `glass-card`, `overlay` (popovers, menus and sheets) and `composer`, named from today's shadows. iOS 26 draws `glass` with system Liquid Glass, Android uses tonal surfaces, and shadows draw on web and desktop only.
+- **Shape:** `sm`, `md`, `lg`, `xl`, `2xl`, `full`, plus `control` and `sheet`. On web and desktop, `control` (the `lg` radius) rounds buttons and inputs, `xl` rounds menu and popover rows, `2xl` is the card, popover and menu radius, `full` rounds pills, and `sheet` rounds sheets. Phones keep their stock shapes.
+- **Surfaces:** `card` (the Composer and request cards too), `tray` (the Composer envelope), `glass` and `overlay` (popovers and menus), named from their shadows. iOS 26 draws `glass` with system Liquid Glass, Android uses tonal surfaces, and shadows draw on web and desktop only.
 - **Density:** `default` and `compact`.
 
 ## Size classes

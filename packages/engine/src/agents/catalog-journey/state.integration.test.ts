@@ -16,7 +16,7 @@ it('keeps the last completed error visible while a retry is pending', async () =
     .mockRejectedValueOnce(new Error(offlineMessage))
     .mockImplementation(() => response.promise);
 
-  const host = await startEngineTestHost({ fetchAgents });
+  const host = await startEngineTestHost({ fetchAgents, storedRegistry: true });
   await host.caller.agents.syncCatalog();
   await expect
     .poll(async () => (await host.caller.agents.catalog()).syncStatus)
@@ -65,7 +65,11 @@ it.each([
       throw new RegistryHttpError(status);
     });
 
-    const host = await startEngineTestHost({ fetchAgents });
+    const host = await startEngineTestHost({
+      fetchAgents,
+      storedRegistry: true,
+    });
+
     vi.useFakeTimers();
     await host.caller.agents.syncCatalog();
     await vi.advanceTimersByTimeAsync(3000);
@@ -85,6 +89,7 @@ it('records a successful empty catalog and retains that accepted result through 
   let offline = false;
 
   const { caller } = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents: async () => {
       if (offline) throw new Error('Registry is offline');
 

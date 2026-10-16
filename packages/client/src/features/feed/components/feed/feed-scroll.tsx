@@ -7,18 +7,19 @@ import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { type FeedEntry, entryKey, entryType } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
+import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
 
-// Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web.
-const phoneContentStyle = { paddingTop: 16 };
+// Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web. No bottom padding: FeedEnd holds the end space.
+const phoneContentStyle = { paddingTop: 16, paddingBottom: 0 };
 
-const wideContentStyle = { paddingTop: 24 };
+const wideContentStyle = { paddingTop: 24, paddingBottom: 0 };
 
 // Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd(): React.JSX.Element {
@@ -101,6 +102,8 @@ export interface FeedScrollProps extends EntryDrawing {
   entries: FeedEntry[];
   initialIndex: number;
   onStartReached: () => void;
+  // Older rows are paging in above.
+  loadingOlder: boolean;
   // Whether the reader is at the Feed's end, where its bottom fade is shallower.
   atEnd: boolean;
 }
@@ -113,6 +116,7 @@ type FeedListProps = Pick<
   | 'initialScrollIndex'
   | 'maintainScrollAtEnd'
   | 'onStartReached'
+  | 'ListHeaderComponent'
 >;
 
 function useFeedListProps(
@@ -129,6 +133,7 @@ function useFeedListProps(
     // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
     maintainScrollAtEnd,
     onStartReached: props.onStartReached,
+    ListHeaderComponent: <LoadingEarlier loading={props.loadingOlder} />,
   };
 }
 

@@ -54,12 +54,20 @@ const createInstalledLaunch = async (
     input.selection,
   );
 
-  const launch = launchForDefinition(input, definition);
-  const version = installedVersion(input.selection);
-  const configured = readConfiguredAgent(input.database, input.agentId);
-
-  return overrideLaunch({ ...launch, version }, configured);
+  return overrideLaunch(
+    installedLaunch(input, definition),
+    readConfiguredAgent(input.database, input.agentId),
+  );
 };
+
+const installedLaunch = (
+  input: InstalledLaunch,
+  definition: CustomAgentDefinition,
+): AgentLaunch => ({
+  ...launchForDefinition(input, definition),
+  version: installedVersion(input.selection),
+  registryId: input.selection.entry.id,
+});
 
 const selectLaunch = (
   source: { database: Database; home: string },

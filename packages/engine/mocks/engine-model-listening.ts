@@ -25,6 +25,7 @@ function listeningInput(
     sessions: expect.anything(),
     databaseWriter: expect.anything(),
     syncSupervisor: expect.anything(),
+    registry: expect.anything(),
     commandAdmission: expect.any(AbortController),
     ...defaultAgentOptions,
   };

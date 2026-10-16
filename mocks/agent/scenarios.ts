@@ -57,6 +57,11 @@ export const scenarios = {
   image: scenario([message(imageReply)]),
   file: scenario([message(fileReply)]),
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),
+  'ignores-cancel': scenario([{ type: 'hold' }]),
+  'exit-with-stderr': {
+    ...scenario([{ type: 'exit', code: 17, stderr: 'Agent fixture failed\n' }]),
+    resumedSteps: [reply],
+  },
   'refuse-session': {
     ...scenario([reply]),
     responses: { 'session/new': [{ error: 'The Agent refused the Session.' }] },

@@ -1,6 +1,11 @@
 import { type Visitor, defineRule } from '@oxlint/plugins';
 
-const vendorNames = new Set<unknown>(['claude', 'codex']);
+const vendorNames = new Set<unknown>([
+  'claude',
+  'codex',
+  'claude-acp',
+  'codex-acp',
+]);
 
 type VendorNameVisitor = { Literal: NonNullable<Visitor['Literal']> };
 
@@ -9,7 +14,7 @@ export const vendorName = defineRule({
     type: 'problem',
     messages: {
       vendorName:
-        'A vendor name appears only inside the Agents domain (ADR-0004). Branch on negotiated ACP capabilities.',
+        'A vendor name appears only inside the vendor module (ADR-0004). Branch on negotiated ACP capabilities.',
     },
   },
   create: (context): VendorNameVisitor => ({

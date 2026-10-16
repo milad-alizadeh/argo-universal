@@ -11,7 +11,7 @@ type Option = SessionConfigOption;
 
 type Change = ComposerConfigurationProps['onConfigChange'];
 
-import { settingSection } from './option-section';
+import { SettingSection } from './option-section';
 
 const maximumHeight = 320;
 
@@ -34,14 +34,16 @@ export function OptionsContents(props: ContentsProps): React.JSX.Element {
 
 function NativeContents(props: ContentsProps): React.JSX.Element {
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-content">
       <GroupedList>{optionSections(props)}</GroupedList>
     </View>
   );
 }
 
 function optionSections({ options, onChange }: ContentsProps): React.ReactNode {
-  return options.map((option) => settingSection({ option, onChange }));
+  return options.map((option) => (
+    <SettingSection key={option.configId} option={option} onChange={onChange} />
+  ));
 }
 
 function sectionRows(option: Option): number {
@@ -70,7 +72,9 @@ function OptionsList({ options, onChange }: ContentsProps): React.JSX.Element {
       {...listTestIdProps('composer-settings-scroll')}
       data={options}
       keyExtractor={(option) => option.configId}
-      renderItem={({ item }) => settingSection({ option: item, onChange })}
+      renderItem={({ item }) => (
+        <SettingSection option={item} onChange={onChange} />
+      )}
     />
   );
 }

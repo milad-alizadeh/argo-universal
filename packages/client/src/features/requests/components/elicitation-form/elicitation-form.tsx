@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import {
   useElicitationForm,
   type ElicitationModel,
@@ -80,12 +81,15 @@ function FormBody({ model }: { model: ElicitationModel }): ReactElement {
   );
 }
 
+const contentClassName = (inactive: boolean): string =>
+  cn(
+    'gap-4 px-4 pt-4',
+    inactive ? 'pointer-events-none' : 'pointer-events-auto',
+  );
+
 function FormContent({ model }: { model: ElicitationModel }): ReactElement {
   return (
-    <View
-      pointerEvents={model.inactive ? 'none' : 'auto'}
-      className="gap-4 px-4 pt-4"
-    >
+    <View className={contentClassName(model.inactive)}>
       <ElicitationHeading
         source={model.props.source}
         message={model.props.request.message}

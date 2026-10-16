@@ -8,17 +8,13 @@ const story = /\.stories\.tsx$/;
 
 const feature = /^features\/([^/]+)\//;
 
-// A feature's components group under its own name; frame draws the Shell.
-const featureGroups = new Map([['frame', 'Shell']]);
+// A feature's components group under its own name.
 
 const pascal = (name: string): string =>
   name
     .split('-')
     .map((part): string => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
-
-const groupOf = (name: string): string =>
-  featureGroups.get(name) ?? pascal(name);
 
 // Only a view, a page or a file in `screens/` may draw a screen; ADR-0021 gives the custom Agent form the screen's stories.
 const screenStory =
@@ -29,7 +25,7 @@ const screenGroups = (path: string): string[] =>
 
 const featureGroup = (path: string): string[] => [
   ...screenGroups(path),
-  `${groupOf(feature.exec(path)?.[1] ?? '')}/`,
+  `${pascal(feature.exec(path)?.[1] ?? '')}/`,
 ];
 
 // The first rule whose test matches the path gives its allowed groups.
@@ -54,6 +50,8 @@ const rules: readonly {
     groups: () => ['Shared/'],
   },
   { test: (path) => feature.test(path), groups: featureGroup },
+  // A route's own folder in screens/ draws that page (#761).
+  { test: (path) => path.startsWith('screens/'), groups: () => ['Screens/'] },
 ];
 
 // A story outside every rule's folder would start a new top-level group, so it has none.

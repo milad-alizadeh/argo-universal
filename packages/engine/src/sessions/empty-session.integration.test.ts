@@ -54,7 +54,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
     expect(
       await host.caller.session.close({ sessionId: created.sessionId }),
     ).toEqual({});
-    expect(host.agent.processes[0]?.terminations).toBe(1);
+    expect(host.agent.processes[0]?.terminations).toBe(0);
   },
 );
 

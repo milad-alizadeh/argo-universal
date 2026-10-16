@@ -99,7 +99,7 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
 
   if (!resumedFirst.value) throw new Error('No resumed Feed event');
   const nextEvents: FeedSubscribeOutput[] = [resumedFirst.value];
-  await requireScriptedProcessAt(scriptedAgent.processes, 1).play(
+  await requireScriptedProcessAt(scriptedAgent.processes).play(
     feedScenario([
       {
         sessionUpdate: 'agent_message_chunk',

@@ -1,7 +1,6 @@
 import { Host as ExpoHost, type UniversalHostProps } from '@expo/ui';
 import type * as React from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { HostPalette } from './host-palette';
 
 export type HostProps = Omit<
   UniversalHostProps,
@@ -11,7 +10,7 @@ export type HostProps = Omit<
   ignoreSafeArea?: 'all';
 };
 
-// A native Host in Argo's Appearance. Android builds its Material palette from the accent token, then takes Argo's surfaces; iOS tints with the accent.
+// The Host supplies Appearance and the accent; primitives map colours through public component APIs.
 export function Host({ children, ...props }: HostProps): React.JSX.Element {
   const theme = useNativeTheme();
 
@@ -21,7 +20,7 @@ export function Host({ children, ...props }: HostProps): React.JSX.Element {
       colorScheme={theme.colorScheme}
       seedColor={theme.colors.accent}
     >
-      <HostPalette>{children}</HostPalette>
+      {children}
     </ExpoHost>
   );
 }

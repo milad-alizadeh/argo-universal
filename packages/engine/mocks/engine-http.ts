@@ -82,6 +82,7 @@ export const options = (): HttpServerOptions => ({
   sessions,
   databaseWriter,
   syncSupervisor,
+  registry: sessions.system.get('registry'),
 });
 
 beforeEach(async (): Promise<void> => {

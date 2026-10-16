@@ -1,21 +1,24 @@
 import { Button, Column, type ColumnProps } from '@expo/ui';
-import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
+import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import {
-  accessibilityAddTraits,
   buttonStyle,
   disabled,
+  listRowBackground,
+  listRowSeparator,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
+import { useSidebarList } from '#primitives/fields/field-layout';
 import { useWide } from '../../../use-wide/use-wide';
-import { rowAccessibilityModifiers } from './grouped-list-item-accessibility';
-import { RowContent } from './grouped-list-item-native-row';
 import {
-  type GroupedListItemProps,
-  groupedListItemName,
-} from './grouped-list-item-props';
+  rowUsesStockButton,
+  rowContainerAccessibility,
+} from './grouped-list-item-accessibility';
+import { RowContent } from './grouped-list-item-native-row';
+import { type GroupedListItemProps } from './grouped-list-item-props';
 import { GroupedListItem as WebGroupedListItem } from './grouped-list-item.tsx';
 import { NativeRowDetail } from './native-row';
+import { NativeRowFrame } from './native-row-frame';
 
 type Modifiers = NonNullable<ColumnProps['modifiers']>;
 
@@ -30,9 +33,9 @@ export function GroupedListItem(
 }
 
 function NativeRow(props: GroupedListItemProps): React.JSX.Element {
-  const modifiers = rowModifiers(props);
+  const modifiers = rowModifiers(props, useSidebarList());
 
-  return ios && props.onPress ? (
+  return rowUsesStockButton(props) && props.onPress ? (
     <PressableRow press={props.onPress} modifiers={modifiers}>
       <Column spacing={0}>
         <RowParts {...props} />
@@ -48,17 +51,12 @@ interface RowProps {
   modifiers: Modifiers;
 }
 
-// Android's Section already sets each row in Material's list item, so the row presses itself.
+// The platform frame supplies a stock ListItem on Android and leaves SwiftUI's Form in charge on iOS.
 function ColumnRow({ item, modifiers }: RowProps): React.JSX.Element {
   return (
-    <Column
-      spacing={0}
-      onPress={item.onPress}
-      disabled={item.disabled}
-      modifiers={modifiers}
-    >
+    <NativeRowFrame item={item} modifiers={modifiers}>
       <RowParts {...item} />
-    </Column>
+    </NativeRowFrame>
   );
 }
 
@@ -82,35 +80,26 @@ function PressableRow(props: PressableRowProps): React.JSX.Element {
   return (
     <Button
       onPress={props.press}
-      modifiers={[
-        buttonStyle('automatic'),
-        ...props.modifiers,
-        accessibilityAddTraits(['isButton']),
-      ]}
+      modifiers={[buttonStyle('automatic'), ...props.modifiers]}
     >
       {props.children}
     </Button>
   );
 }
 
-// A grouped row keeps the stock Form's fill, insets and separator.
-function rowModifiers(props: GroupedListItemProps): Modifiers {
-  if (!ios) return [fillMaxWidth(), ...rowSemantics(props)];
+function rowModifiers(
+  props: GroupedListItemProps,
+  sidebar: boolean,
+): Modifiers {
+  if (!ios) return [fillMaxWidth(), ...rowContainerAccessibility(props)];
 
-  return [...rowAccessibilityModifiers(props), disabled(!!props.disabled)];
-}
-
-function rowName(props: GroupedListItemProps): string {
-  const name = groupedListItemName(props);
-
-  return props.selected ? `${name}, Selected` : name;
-}
-
-// TalkBack reads the row as one name, unless a control in it needs its own focus.
-function rowSemantics(props: GroupedListItemProps): Modifiers {
-  if (props.control || props.detail) return [];
-
-  return [semantics({ contentDescription: rowName(props) })];
+  return [
+    ...(sidebar
+      ? [listRowBackground('transparent'), listRowSeparator('hidden')]
+      : []),
+    ...rowContainerAccessibility(props),
+    disabled(!!props.disabled),
+  ];
 }
 
 GroupedListItem satisfies React.ComponentType<GroupedListItemProps>;

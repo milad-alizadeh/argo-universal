@@ -1,4 +1,4 @@
-// What the wide window's `/` shows: a Session id, or null for New Session.
+// The page a wide window's `/sessions` opens: a Session id, or null for New Session.
 export type FirstSessionChoice = string | null;
 
 const isListed = (

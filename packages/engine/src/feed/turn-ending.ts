@@ -11,11 +11,10 @@ export type TurnEndingNotice =
   | {
       kind: 'agent_crash';
       occurredAt: number;
-      crashCount: number;
+      title: string;
       description?: string;
     }
-  | { kind: 'interruption' }
-  | { kind: 'cancel_timeout' };
+  | { kind: 'interruption' };
 
 export type TurnEndingEvent =
   | {
@@ -50,8 +49,8 @@ const crashNotice = (
   ending: Extract<TurnEndingNotice, { kind: 'agent_crash' }>,
 ): NoticeFields => {
   const fields: NoticeFields = {
-    id: `${sessionId}:crash:${ending.occurredAt}:${ending.crashCount}`,
-    title: 'The Agent stopped unexpectedly',
+    id: `${sessionId}:crash:${ending.occurredAt}:${ending.title}`,
+    title: ending.title,
   };
 
   if (ending.description !== undefined) fields.description = ending.description;
@@ -73,12 +72,7 @@ const endingNoticeFields = (
 ): NoticeFields => {
   if (ending.kind === 'agent_crash') return crashNotice(sessionId, ending);
 
-  if (ending.kind === 'interruption') return interruptionNotice(turnId);
-
-  return {
-    id: `${turnId}:cancel-timeout`,
-    title: 'The Agent did not stop after cancellation',
-  };
+  return interruptionNotice(turnId);
 };
 
 export const turnEndingNotice = (

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
+import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
 import {
   type CustomAgentFormApi,
@@ -15,7 +16,10 @@ import {
   ArgumentSheet,
   type Editing as ArgumentEditing,
 } from './argument-sheet';
-import { FormSections } from './custom-agent-form-list';
+import { CustomAgentArguments } from './custom-agent-arguments';
+import { CustomAgentEnvironment } from './custom-agent-environment';
+import { FormActions } from './custom-agent-form-actions';
+import { ProgramSection } from './custom-agent-form-sections';
 import { DiscardGuard } from './discard-guard';
 import {
   type Editing as VariableEditing,
@@ -57,13 +61,13 @@ export function CustomAgentForm(
 ): React.JSX.Element {
   const state = useFormState(props);
   const sheets = useEntrySheets();
-  const failure = checkFailure(state.failure);
 
   return (
     <>
-      <FormSections {...props} {...sheets} {...state} failure={failure} />
+      <FormSections {...props} {...sheets} {...state} />
       <DiscardGuard form={state.form} />
-      <EntryEditors form={state.form} {...sheets} />
+      <ArgumentEditor form={state.form} {...sheets} />
+      <VariableEditor form={state.form} {...sheets} />
     </>
   );
 }
@@ -82,18 +86,26 @@ function useFormState(props: CustomAgentFormProps): FormState {
   return { form, disabled: checking, failure: checking ? null : failure };
 }
 
+type SectionsProps = CustomAgentFormProps & Sheets & FormState;
+
 type EditorProps = Sheets & { form: CustomAgentFormApi };
 
-// The editors open over the group, outside its native form.
-function EntryEditors(props: EditorProps): React.JSX.Element {
+function FormSections(props: SectionsProps): React.JSX.Element {
+  const part = { form: props.form, disabled: props.disabled };
+
   return (
-    <>
-      <ArgumentEditor {...props} />
-      <VariableEditor {...props} />
-    </>
+    <GroupedList>
+      {props.leading}
+      <ProgramSection {...part} />
+      <CustomAgentArguments {...part} onEdit={props.onArgument} />
+      <CustomAgentEnvironment {...part} onEdit={props.onVariable} />
+      <CheckFailure failure={props.failure} />
+      <FormActions {...props} />
+    </GroupedList>
   );
 }
 
+// The editors open over the group, outside its native form.
 function ArgumentEditor(props: EditorProps): React.JSX.Element | null {
   if (!props.argument) return null;
 
@@ -118,11 +130,15 @@ function VariableEditor(props: EditorProps): React.JSX.Element | null {
   );
 }
 
-function checkFailure(failure: string | null): React.JSX.Element | null {
+function CheckFailure({
+  failure,
+}: {
+  failure: string | null;
+}): React.JSX.Element | null {
   if (!failure) return null;
 
   return (
-    <GroupedListContent key="failure">
+    <GroupedListContent>
       <FailureBox failure={failure} />
     </GroupedListContent>
   );

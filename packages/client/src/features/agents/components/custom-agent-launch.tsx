@@ -7,24 +7,23 @@ import { keyedRows } from './keyed-rows';
 
 type DefinitionProps = { definition: CustomAgentDefinition };
 
-/*
- * The launch values read-only, in the edit form's sections, then the row that opens the form.
- * GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
- */
-export function launchSections(
+// The launch values read-only, in the edit form's sections, then the row that opens the form.
+export function LaunchSections(
   props: DefinitionProps & { onEdit: () => void },
-): React.JSX.Element[] {
-  return [
-    programValues(props),
-    argumentValues(props),
-    variableValues(props),
-    editSection(props.onEdit),
-  ];
+): React.JSX.Element {
+  return (
+    <>
+      <ProgramValues definition={props.definition} />
+      <ArgumentValues definition={props.definition} />
+      <VariableValues definition={props.definition} />
+      <EditSection onPress={props.onEdit} />
+    </>
+  );
 }
 
-function editSection(onPress: () => void): React.JSX.Element {
+function EditSection({ onPress }: { onPress: () => void }): React.JSX.Element {
   return (
-    <GroupedListSection key="edit">
+    <GroupedListSection>
       <GroupedListItem
         icon="edit"
         tone="accent"
@@ -35,9 +34,9 @@ function editSection(onPress: () => void): React.JSX.Element {
   );
 }
 
-function programValues({ definition }: DefinitionProps): React.JSX.Element {
+function ProgramValues({ definition }: DefinitionProps): React.JSX.Element {
   return (
-    <GroupedListSection key="program" title="Program">
+    <GroupedListSection title="Program">
       <GroupedListItem label="Name" value={definition.name} />
       <GroupedListItem
         label="Executable"
@@ -47,11 +46,11 @@ function programValues({ definition }: DefinitionProps): React.JSX.Element {
   );
 }
 
-function argumentValues({ definition }: DefinitionProps): React.JSX.Element {
+function ArgumentValues({ definition }: DefinitionProps): React.JSX.Element {
   const rows = keyedRows(definition.args);
 
   return (
-    <GroupedListSection key="arguments" title="Arguments">
+    <GroupedListSection title="Arguments">
       {rows.length === 0 ? (
         <None />
       ) : (
@@ -63,11 +62,11 @@ function argumentValues({ definition }: DefinitionProps): React.JSX.Element {
   );
 }
 
-function variableValues({ definition }: DefinitionProps): React.JSX.Element {
+function VariableValues({ definition }: DefinitionProps): React.JSX.Element {
   const rows = keyedRows(definition.env);
 
   return (
-    <GroupedListSection key="environment" title="Environment variables">
+    <GroupedListSection title="Environment variables">
       {rows.length === 0 ? (
         <None />
       ) : (

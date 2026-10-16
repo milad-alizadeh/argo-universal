@@ -1,12 +1,6 @@
 import {
   AppProviders,
   PortalHost,
-  FormSheetProvider,
-  GroupedPageContext,
-  type LeaveGuard,
-  type Navigate,
-  type NativeSheets,
-  NativeSheetsProvider,
   NavigationProvider,
   type RenderSymbolImage,
   SymbolImagesProvider,
@@ -15,7 +9,7 @@ import {
 } from '@repo/client';
 import '../../global.css';
 import { registerDevMenuItems } from 'expo-dev-client';
-import { router, Stack, useNavigation } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
 import type * as React from 'react';
@@ -25,9 +19,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
-import { formSheetRoutes } from '@/navigation/form-sheet';
-import { useGroupedPage } from '@/navigation/grouped-page';
-import { hrefFor, paramsOf } from '@/navigation/routes';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -65,49 +56,6 @@ const serverUrl =
 
 const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 
-// Phones present Composer menus as native sheets; the Agent and model one has its own stack.
-const nativeSheets: NativeSheets | undefined =
-  Platform.OS === 'web'
-    ? undefined
-    : {
-        agentModel: () => router.push('/agent-model'),
-      };
-
-// iOS opens this tall until its first page has measured itself.
-const sheetStartHeight = 0.4;
-
-const sheetOptions = {
-  presentation: 'formSheet' as const,
-  sheetAllowedDetents:
-    Platform.OS === 'android'
-      ? ('fitToContents' as const)
-      : [sheetStartHeight, 1],
-  sheetGrabberVisible: true,
-};
-
-// The page asks to hold its own removal; the router's beforeRemove lets it, and carries on when told to.
-const useLeaveGuard: LeaveGuard = (active, onBlocked) => {
-  const navigation = useNavigation();
-  useEffect(
-    () =>
-      navigation.addListener('beforeRemove', (event) => {
-        if (!active) return;
-        event.preventDefault();
-        onBlocked(() => navigation.dispatch(event.data.action));
-      }),
-    [navigation, active, onBlocked],
-  );
-};
-
-// Screens in @repo/client navigate through this.
-const navigate: Navigate = (destination, options) =>
-  options?.inPlace
-    ? router.setParams(paramsOf(destination))
-    : moveFor(options)(hrefFor(destination));
-
-const moveFor = (options: Parameters<Navigate>[1]): typeof router.navigate =>
-  options?.replace ? router.replace : router.navigate;
-
 export default function RootLayout(): React.JSX.Element {
   return (
     // The phone drawer's gestures need this root.
@@ -140,25 +88,17 @@ function ThemedApp(): React.JSX.Element {
 
 function RootNavigator(): React.JSX.Element {
   return (
-    <NavigationProvider navigate={navigate} leaveGuard={useLeaveGuard}>
-      <NativeSheetsProvider value={nativeSheets}>
-        <FormSheetProvider routes={formSheetRoutes}>
-          <GroupedPageContext value={useGroupedPage}>
-            <RootStack />
-          </GroupedPageContext>
-        </FormSheetProvider>
-      </NativeSheetsProvider>
+    <NavigationProvider>
+      <RootStack />
     </NavigationProvider>
   );
 }
 
-// Storybook stays outside the shell.
+// Storybook stays outside the Frame.
 function RootStack(): React.JSX.Element {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(shell)" />
-      <Stack.Screen name="agent-model" options={sheetOptions} />
-      <Stack.Screen name="form-sheet" options={sheetOptions} />
+      <Stack.Screen name="(frame)" />
       <Stack.Screen name="(dev)/storybook" />
     </Stack>
   );

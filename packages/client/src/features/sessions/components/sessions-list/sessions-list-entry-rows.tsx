@@ -2,7 +2,11 @@ import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import type { AgentsListOutput } from '@repo/contracts';
 import type * as React from 'react';
 import { useCallback, useMemo } from 'react';
+import { virtualListPosition } from '#primitives/lists/virtual-list-item';
+import type { SessionsLayout } from '../../state/sessions-layout';
+import { showsSessionAge } from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
+import { sessionAge, useAgeFrom } from './session-age';
 import {
   type CollapsedProjects,
   useAnimateReorder,
@@ -15,11 +19,15 @@ import {
   ProjectListHeading,
   type ProjectListHeadingProps,
   SessionListRow,
+  type SessionListRowProps,
 } from './sessions-list-rows';
 
 interface SessionRowContext {
   agentLogos: Map<string, string>;
+  layout?: SessionsLayout;
   selectedSessionId?: string;
+  // When rows show how long ago they were active, the time that counts from.
+  ageFrom?: number;
   onSelect: (id: string) => void;
 }
 
@@ -29,19 +37,21 @@ type HeadingContext = Pick<
 > &
   CollapsedProjects;
 
-function useSessionRowContext({
-  agents,
-  selectedSessionId,
-  onSelect,
-}: SessionsListProps): SessionRowContext {
-  const agentLogos = useMemo(
+function useAgentLogos(agents: AgentsListOutput): Map<string, string> {
+  return useMemo(
     () => new Map(agents.map((agent) => [agent.agent, agent.logo])),
     [agents],
   );
+}
+
+function useSessionRowContext(props: SessionsListProps): SessionRowContext {
+  const { agents, layout, selectedSessionId, onSelect } = props;
+  const agentLogos = useAgentLogos(agents);
+  const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
 
   return useMemo(
-    () => ({ agentLogos, selectedSessionId, onSelect }),
-    [agentLogos, selectedSessionId, onSelect],
+    () => ({ agentLogos, layout, selectedSessionId, ageFrom, onSelect }),
+    [agentLogos, layout, selectedSessionId, ageFrom, onSelect],
   );
 }
 
@@ -55,18 +65,19 @@ function useHeadingContext(
   );
 }
 
-function sessionRow(
+function sessionRowProps(
   item: Extract<SessionsListEntry, { kind: 'session' }>,
-  { agentLogos, selectedSessionId, onSelect }: SessionRowContext,
-): React.JSX.Element {
-  return (
-    <SessionListRow
-      session={item.session}
-      logo={agentLogos.get(item.session.agent) ?? ''}
-      selected={selectedSessionId === item.id}
-      onSelect={onSelect}
-    />
-  );
+  context: SessionRowContext,
+): SessionListRowProps {
+  return {
+    session: item.session,
+    logo: context.agentLogos.get(item.session.agent) ?? '',
+    selected: context.selectedSessionId === item.id,
+    trailing: sessionAge(item.session, context.ageFrom),
+    layout: context.layout,
+    position: virtualListPosition(item.first, item.last),
+    onSelect: context.onSelect,
+  };
 }
 
 function projectHeading(
@@ -92,7 +103,8 @@ function renderEntry(
 ): React.JSX.Element {
   if (item.kind === 'empty') return <NoSessionsYet />;
 
-  if (item.kind === 'session') return sessionRow(item, sessionContext);
+  if (item.kind === 'session')
+    return <SessionListRow {...sessionRowProps(item, sessionContext)} />;
 
   return projectHeading(item, headingContext);
 }
@@ -105,6 +117,7 @@ interface ListRows {
     agents: AgentsListOutput;
     collapsed: ReadonlySet<string>;
     selectedSessionId?: string;
+    layout?: SessionsLayout;
   };
   renderItem: (
     props: LegendListRenderItemProps<SessionsListEntry>,
@@ -112,12 +125,12 @@ interface ListRows {
 }
 
 function useExtraData(
-  { agents, selectedSessionId }: SessionsListProps,
+  { agents, selectedSessionId, layout }: SessionsListProps,
   collapsed: ReadonlySet<string>,
 ): ListRows['extraData'] {
   return useMemo(
-    () => ({ agents, collapsed, selectedSessionId }),
-    [agents, collapsed, selectedSessionId],
+    () => ({ agents, collapsed, selectedSessionId, layout }),
+    [agents, collapsed, selectedSessionId, layout],
   );
 }
 

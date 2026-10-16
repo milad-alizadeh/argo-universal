@@ -1,13 +1,23 @@
 import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
-import {
-  type PlayContext,
-  recorder,
-  type Story,
-} from './settings-list-story.test.mocks';
+import type { PlayContext, Story } from './settings-list-story.test.mocks';
 
 type Pointer = Pick<PlayContext, 'canvas' | 'userEvent'>;
+
+type OnSelect = PlayContext['args']['onSelect'];
+
+// The list opened exactly these paths, in order, after the first `from` it opened.
+async function expectOpened(
+  onSelect: OnSelect,
+  hrefs: readonly string[],
+  from = 0,
+): Promise<void> {
+  await expect(onSelect).toHaveBeenCalledTimes(from + hrefs.length);
+
+  for (const [index, href] of hrefs.entries())
+    await expect(onSelect).toHaveBeenNthCalledWith(from + index + 1, href);
+}
 
 // A phone leaves out Devices and Notifications.
 const phonePages = [
@@ -63,34 +73,36 @@ async function clickEveryWidthsPages({
   }
 }
 
-async function clickWidePages({ canvas, userEvent }: Pointer): Promise<void> {
+async function clickWidePages({
+  canvas,
+  userEvent,
+  args,
+}: Pointer & Pick<PlayContext, 'args'>): Promise<void> {
   await userEvent.click(canvas.getByRole('link', { name: /^Devices(?:,|$)/ }));
   await userEvent.click(
     canvas.getByRole('link', { name: /^Notifications(?:,|$)/ }),
   );
-  await expect(recorder.destinations.slice(-2)).toEqual([
-    { to: 'settings-devices' },
-    { to: 'settings-notifications' },
-  ]);
+  await expectOpened(
+    args.onSelect,
+    ['/settings/devices', '/settings/notifications'],
+    phonePages.length,
+  );
 }
 
 export function allPagesNavigate(width: number): Story {
   return {
-    play: async ({ canvas, userEvent }) => {
+    play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await expect(recorder.destinations).toEqual([]);
+      await expectOpened(args.onSelect, []);
       await expectOneFlatList(canvas, width);
       await clickEveryWidthsPages({ canvas, userEvent });
-      await expect(recorder.destinations).toEqual([
-        { to: 'settings-projects' },
-        { to: 'settings-agents' },
-        { to: 'settings-accounts' },
-        { to: 'settings-connection' },
-        { to: 'settings-appearance' },
-      ]);
+      await expectOpened(
+        args.onSelect,
+        phonePages.map((name) => `/settings/${name.toLowerCase()}`),
+      );
 
       if (width === layoutWidths.phone) return;
-      await clickWidePages({ canvas, userEvent });
+      await clickWidePages({ canvas, userEvent, args });
     },
   };
 }
@@ -115,8 +127,9 @@ export function searchSaysWhenNothingMatches(width: number): Story {
     args: { query: 'mistral' },
     play: async ({ canvas }) => {
       await settleViewport(width);
+      await expect(canvas.getByText('No matching settings')).toBeVisible();
       await expect(
-        canvas.getByRole('group', { name: 'No settings match.' }),
+        canvas.getByText('No Settings page has "mistral" in its name.'),
       ).toBeVisible();
       await expect(canvas.queryByRole('link')).toBeNull();
     },

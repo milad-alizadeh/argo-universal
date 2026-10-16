@@ -5,6 +5,7 @@ import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
 import type { AgentLaunchSubject, CheckAgentLaunch } from '..';
 import { ResourceCleanupError } from '../../lib/resource-cleanup-error';
+import { millisecondsPerSecond } from '../../lib/time';
 import { AcpAuthenticationStatus } from './auth-status';
 import { createAgentClient } from './client';
 import { negotiateAcpInitialize } from './initialize';
@@ -16,8 +17,6 @@ import { createAcpResponseReaders } from './response-readers';
 const answerTimeoutSeconds = 15;
 
 const exitGraceMs = 1000;
-
-const millisecondsPerSecond = 1000;
 
 // An unreferenced timer, so a pending check never keeps the process alive.
 const after = (milliseconds: number): Promise<'timeout'> =>
@@ -78,12 +77,38 @@ const spawnFailures = new Map([
 // Node spawn errors carry a string `code`; every other thrown value has none.
 const spawnErrorSchema = z.object({ code: z.string() });
 
+// The login shell `exec`s the program, so a missing or unrunnable one is the shell's own exit status.
+const commandNotFound = 127;
+
+const commandNotExecutable = 126;
+
+const shellFailures = new Map([
+  [commandNotFound, spawnFailures.get('ENOENT')],
+  [commandNotExecutable, spawnFailures.get('EACCES')],
+]);
+
+const shellExitSchema = z.object({ code: z.number() });
+
+const spawnFailure = (cause: unknown): string | undefined => {
+  const spawnError = spawnErrorSchema.safeParse(cause);
+
+  return spawnError.success
+    ? spawnFailures.get(spawnError.data.code)
+    : undefined;
+};
+
+const shellFailure = (process: AcpProcess): string | undefined => {
+  const exit = shellExitSchema.safeParse(process.exitError?.());
+
+  return exit.success ? shellFailures.get(exit.data.code) : undefined;
+};
+
 const describeSpawnFailure = (
   cause: unknown,
+  process: AcpProcess,
   { launch }: AgentLaunchSubject,
 ): string | undefined => {
-  const spawnError = spawnErrorSchema.safeParse(cause);
-  const failure = spawnError.success && spawnFailures.get(spawnError.data.code);
+  const failure = spawnFailure(cause) ?? shellFailure(process);
 
   return failure ? `${launch.executable} ${failure}` : undefined;
 };
@@ -102,12 +127,12 @@ const describeFailure = async (
   process: AcpProcess,
   subject: AgentLaunchSubject,
 ): Promise<string> => {
-  const spawnFailure = describeSpawnFailure(cause, subject);
+  const exited = await hasExited(process);
+  const spawnFailure = describeSpawnFailure(cause, process, subject);
 
   if (spawnFailure) return spawnFailure;
 
-  if (await hasExited(process))
-    return `${subject.name} exited before answering ACP initialize.`;
+  if (exited) return `${subject.name} exited before answering ACP initialize.`;
 
   return `${subject.name} failed ACP initialize: ${describeError(cause)}`;
 };

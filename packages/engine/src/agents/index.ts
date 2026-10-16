@@ -54,3 +54,13 @@ export { resolveInstalledAgentLaunch } from './install/selection/launch';
 export { reconcileInterruptedInstallations } from './install/lifecycle/reconcile';
 
 export type { InstallToolInput } from './install/ports';
+
+export {
+  registryMachine,
+  type RegistryActor,
+  type RegistryInput,
+} from './registry/registry-machine';
+
+export { getCommand } from './launch/get-command';
+
+export type { CommandInput, RegistryCommand } from './launch/types';

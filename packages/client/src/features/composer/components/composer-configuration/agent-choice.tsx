@@ -36,12 +36,13 @@ interface AgentChoiceProps {
   onSelect: () => void;
 }
 
-// The Agent's row and, when it is not available, the row that sets it up: a section takes each child as one row, so these are elements, not one component.
-export function agentChoiceRows(props: AgentChoiceProps): React.JSX.Element[] {
-  const action = agentAvailabilityAction(props);
-  const row = <AgentSelectionRow key={props.agent.agent} {...props} />;
-
-  return action ? [row, action] : [row];
+export function AgentChoice(props: AgentChoiceProps): React.JSX.Element {
+  return (
+    <>
+      <AgentSelectionRow {...props} />
+      <AgentAvailabilityAction {...props} />
+    </>
+  );
 }
 
 function AgentSelectionRow(props: AgentChoiceProps): React.JSX.Element {
@@ -85,18 +86,7 @@ function agentRowContent(
   };
 }
 
-const accentAction = (
-  onPress: () => void,
-): Pick<
-  React.ComponentProps<typeof GroupedListItem>,
-  'accessibilityRole' | 'tone' | 'onPress'
-> => ({
-  accessibilityRole: 'button',
-  tone: 'accent',
-  onPress,
-});
-
-function agentAvailabilityAction(
+function AgentAvailabilityAction(
   props: AgentChoiceProps,
 ): React.JSX.Element | null {
   if (props.agent.availability === 'available') return null;
@@ -106,9 +96,10 @@ function agentAvailabilityAction(
 
   return (
     <GroupedListItem
-      key={`${props.agent.agent}-action`}
       {...agentActionContent(props.agent)}
-      {...accentAction(action)}
+      accessibilityRole="button"
+      tone="accent"
+      onPress={action}
     />
   );
 }

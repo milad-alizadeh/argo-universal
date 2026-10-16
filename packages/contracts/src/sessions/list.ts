@@ -59,7 +59,6 @@ export const SessionInfo = z.strictObject({
   subagents: SessionWorkCount,
   shells: SessionWorkCount,
   archivedAt: sessionColumns.shape.archivedAt,
-  issue: z.null(),
   pullRequest: z.null(),
 });
 

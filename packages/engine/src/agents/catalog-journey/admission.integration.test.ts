@@ -14,6 +14,7 @@ it('accepts and coalesces repeated and concurrent requests before the upstream f
   let requests = 0;
 
   const host = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents: async () => {
       requests += 1;
 
@@ -56,6 +57,7 @@ it('accepts and coalesces repeated and concurrent requests before the upstream f
 
 it('keeps sync admission pending while Session writes retry, then commits both through the same Writer', async () => {
   const { caller, database, databaseWriter } = await startEngineTestHost({
+    storedRegistry: true,
     fetchAgents: async () => JSON.stringify(publishedRegistry),
   });
 
@@ -115,6 +117,7 @@ it.each(['pending', 'running'] as const)(
     );
 
     const host = await startEngineTestHost({
+      storedRegistry: true,
       database: stored.database,
       fetchAgents,
     });

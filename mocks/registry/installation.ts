@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { basename } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { z } from 'zod';
 import {
@@ -27,6 +28,7 @@ type InstallationMockOptions = {
   packageName?: string;
   scenarioPath?: string;
   version?: string;
+  bytes?: Uint8Array;
 };
 
 const pollMilliseconds = 50;
@@ -39,7 +41,7 @@ const readScenario = async (
     : { outcome: 'success', released: true };
 
 async function awaitInstallerRelease(
-  input: ToolInput,
+  input: Pick<ToolInput, 'signal'>,
   path?: string,
 ): Promise<void> {
   while (!(await readScenario(path)).released)
@@ -51,7 +53,7 @@ async function awaitInstallerRelease(
 }
 
 const isInstall = (input: ToolInput): boolean =>
-  input.executable === 'npm' ||
+  basename(input.executable) === 'npm' ||
   (input.executable === 'uv' && input.args[0] === 'pip');
 
 const requireRuntime = async (path?: string): Promise<void> => {
@@ -67,7 +69,10 @@ async function runTool(
   await requireRuntime(options.scenarioPath);
   await prepareEnvironment(input);
 
-  if (!isInstall(input)) return 'Runtime available';
+  if (!isInstall(input))
+    return basename(input.executable) === 'node'
+      ? 'v24.0.0'
+      : 'Runtime available';
   await awaitInstallerRelease(input, options.scenarioPath);
   await installSelectedPackage(input, options);
 
@@ -92,9 +97,9 @@ export const createInstallationPorts = (
 ): InstallationPorts => ({
   runTool: (input) => runTool(input, options),
   download: async (_, signal) => {
-    signal.throwIfAborted();
+    await awaitInstallerRelease({ signal }, options.scenarioPath);
 
-    return installationExecutable;
+    return options.bytes ?? installationExecutable;
   },
 });
 

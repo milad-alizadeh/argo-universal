@@ -51,11 +51,11 @@ export function SessionLogo(props: SessionLogoProps): React.JSX.Element {
   const logoStyle = useLogoRotation(props.status);
 
   return (
-    <Animated.View style={[useIconBox('mark'), logoStyle]}>
+    <Animated.View style={[useIconBox('body'), logoStyle]}>
       <AgentLogo
         logo={props.logo}
         label="Agent"
-        role="mark"
+        role="body"
         testID="session-logo"
       />
     </Animated.View>

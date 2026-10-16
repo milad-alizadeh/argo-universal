@@ -170,7 +170,7 @@ it('retains only the Codex latest sample without calling it a whole-Turn total',
   });
 });
 
-it('scopes context received before opening completes using the negotiated Agent identity', async () => {
+it('drops context for an unknown identity before the session/new response', async () => {
   const host = await startAcpEngine({
     initialize: initialization(codexName, '2.1.1'),
     steps: [],
@@ -196,11 +196,7 @@ it('scopes context received before opening completes using the negotiated Agent 
     () => true,
   );
 
-  expect(snapshot.usage).toEqual({
-    used: 34_000,
-    size: 200_000,
-    scope: modelCallScope,
-  });
+  expect(snapshot.usage).toBeNull();
 });
 
 it.each<[string, string, ContextUsage]>([

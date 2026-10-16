@@ -46,7 +46,6 @@ export function metadata(width: number): Story {
               {...args}
               key={status}
               session={{ ...args.session, title: `${status} metadata` }}
-              issue={{ number: 128 }}
               pullRequest={{ number: 45, status }}
             />
           ),
@@ -60,7 +59,7 @@ export function metadata(width: number): Story {
         await expect(canvas.getByLabelText(`${status} PR #45`)).toBeVisible();
       }
 
-      await expect(canvas.getAllByLabelText('Issue #128')).toHaveLength(5);
+      await expect(canvas.queryByLabelText(/^Issue #/)).not.toBeInTheDocument();
       await expect(args.onSelect).not.toHaveBeenCalled();
       await userEvent.click(
         canvas.getByRole('button', { name: 'open metadata, Running' }),

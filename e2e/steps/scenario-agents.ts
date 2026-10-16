@@ -94,6 +94,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     elicitationConfiguration(steps),
     feedHistoryConfiguration(steps),
     liveFeedConfiguration(steps),
+    exitConfiguration(steps),
   );
 }
 
@@ -138,5 +139,13 @@ function liveFeedConfiguration(steps: string[]): AppFixtureAgents {
               : 'feed-interrupted',
         },
       }
+    : {};
+}
+
+function exitConfiguration(steps: string[]): AppFixtureAgents {
+  return steps.some((step) =>
+    /^(?:Given|And) Agent 1 exits mid-Turn with stderr$/.test(step),
+  )
+    ? { [agentId(1)]: { scenario: 'exit-with-stderr' } }
     : {};
 }

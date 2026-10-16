@@ -12,9 +12,6 @@ export interface GlassSurfaceProps {
 // The glass panel behind the rail and the sidebar list; on native it follows the panel's animated layout.
 export function GlassSurface(_props: GlassSurfaceProps): React.JSX.Element {
   return (
-    <View
-      pointerEvents="none"
-      className="absolute inset-0 rounded-2xl bg-glass shadow-glass"
-    />
+    <View className="pointer-events-none absolute inset-0 rounded-2xl bg-glass shadow-glass" />
   );
 }

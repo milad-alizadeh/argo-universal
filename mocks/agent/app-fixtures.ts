@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import identities from './identities.json' with { type: 'json' };
+import registryIds from './registry-identities.json' with { type: 'json' };
+
+export const fixtureRegistryIds = registryIds;
+
 import { type AgentIdentity } from './metadata';
 import { isScenarioName, type ScenarioName } from './scenarios';
 

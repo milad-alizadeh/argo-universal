@@ -103,9 +103,19 @@ export const SheetReturnsFocus: Story = returnsFocusAt('phone');
 
 export const DialogReturnsFocus: Story = returnsFocusAt('wide');
 
+// The drawer reads page coordinates, which a synthetic pointer event has only when it is given them.
 interface PointerCoords {
   clientX: number;
   clientY: number;
+  pageX: number;
+  pageY: number;
+}
+
+// vaul ignores drags for its first 500 ms open, while the drawer rises; nothing on the page shows when that ends.
+const dragLockMs = 500;
+
+function dragLockEnds(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, dragLockMs + 100));
 }
 
 // Dragging the phone sheet down far enough closes it; a short drag lets it settle back open.
@@ -115,19 +125,22 @@ function swipesDown(distance: number, staysOpen: boolean): Story {
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', rename));
       const dialog = await body.findByRole('dialog', dialogName);
-      const title = within(dialog).getByText(dialogName.name);
-      const { left, top } = title.getBoundingClientRect();
+      await dragLockEnds();
+      // Start in the empty top edge of the semantic dialog surface, above its selectable title.
+      const { left, top, width } = dialog.getBoundingClientRect();
 
       const at = (y: number): PointerCoords => ({
-        clientX: left + 4,
+        clientX: left + width / 2,
         clientY: top + 4 + y,
+        pageX: left + width / 2 + window.scrollX,
+        pageY: top + 4 + y + window.scrollY,
       });
 
       await userEvent.pointer([
-        { keys: '[MouseLeft>]', target: title, coords: at(0) },
-        { target: title, coords: at(distance / 2) },
-        { target: title, coords: at(distance) },
-        { keys: '[/MouseLeft]', target: title, coords: at(distance) },
+        { keys: '[MouseLeft>]', target: dialog, coords: at(0) },
+        { target: dialog, coords: at(distance / 2) },
+        { target: dialog, coords: at(distance) },
+        { keys: '[/MouseLeft]', target: dialog, coords: at(distance) },
       ]);
       await waitFor(() =>
         expect(body.queryByRole('dialog', dialogName) !== null).toBe(staysOpen),

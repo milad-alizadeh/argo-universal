@@ -19,11 +19,8 @@ interface SwitchProps extends TuningProps {
   option: BooleanOption;
 }
 
-// A section takes each of its children as one row, so the rows come from functions, not components that may render none or several.
-export function effortRow(
-  configuration: ComposerConfigurationProps,
-): React.JSX.Element | null {
-  const effort = currentEffort(configuration);
+export function EffortControl(props: TuningProps): React.JSX.Element | null {
+  const effort = currentEffort(props.configuration);
 
   if (!effort.option || !effort.selected) return null;
 
@@ -31,7 +28,7 @@ export function effortRow(
     <GroupedListItem
       label="Effort"
       value={effort.selected.name}
-      detail={<EffortSlider configuration={configuration} effort={effort} />}
+      detail={<EffortSlider {...props} effort={effort} />}
     />
   );
 }
@@ -65,16 +62,14 @@ function selectEffort(
     configuration.onConfigChange(effort.option.configId, choice.value);
 }
 
-export function switchRows(
-  configuration: ComposerConfigurationProps,
-): React.JSX.Element[] {
-  return switches(configuration).map((option) => (
-    <ConfigurationSwitch
-      key={option.configId}
-      configuration={configuration}
-      option={option}
-    />
-  ));
+export function SwitchOptions(props: TuningProps): React.JSX.Element {
+  return (
+    <>
+      {switches(props.configuration).map((option) => (
+        <ConfigurationSwitch key={option.configId} {...props} option={option} />
+      ))}
+    </>
+  );
 }
 
 function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {
@@ -139,7 +134,7 @@ function DecorativeSwitch({
 }): React.JSX.Element {
   return (
     <View
-      pointerEvents="none"
+      className="pointer-events-none"
       aria-hidden
       importantForAccessibility="no-hide-descendants"
     >

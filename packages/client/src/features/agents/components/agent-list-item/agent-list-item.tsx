@@ -13,7 +13,7 @@ type AgentListItemProps = {
   onOpen: (agentId: string) => void;
 };
 
-// One Agent: its logo, name and one-line description, then its status; details open on its page.
+// One Agent: its logo, name and up to two lines of description, then its status dot; the status reads on its page.
 export function AgentListItem({
   agent,
   onOpen,
@@ -21,7 +21,7 @@ export function AgentListItem({
   return (
     <GroupedListItem
       label={agent.name}
-      subtitle={agent.description ? { text: agent.description } : undefined}
+      subtitle={descriptionLine(agent)}
       leading={<AgentGlyph agent={agent} />}
       {...statusProps(agent)}
       onPress={() => onOpen(agent.id)}
@@ -29,17 +29,24 @@ export function AgentListItem({
   );
 }
 
-// The status reads as the row's value; Ready and Update available add a dot.
+// A long description stops after two lines, ending in an ellipsis.
+const descriptionLine = ({
+  description,
+}: AgentRowEntry): React.ComponentProps<typeof GroupedListItem>['subtitle'] =>
+  description ? { text: description, numberOfLines: 2 } : undefined;
+
+// Only the dot shows the status; its label names the row for assistive technology, and the Agent's page spells it out.
 function statusProps({
   status,
 }: AgentRowEntry): Pick<
   React.ComponentProps<typeof GroupedListItem>,
-  'value' | 'status'
+  'status'
 > {
-  const label = agentStatusLabels[status];
   const tone = statusTone(status);
 
-  return { value: label, status: tone ? { tone, label } : undefined };
+  return {
+    status: tone ? { tone, label: agentStatusLabels[status] } : undefined,
+  };
 }
 
 // One row per Agent, for a FieldList section.

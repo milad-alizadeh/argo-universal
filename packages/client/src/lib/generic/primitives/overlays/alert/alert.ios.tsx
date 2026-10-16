@@ -5,10 +5,13 @@ import {
   ConfirmationDialog,
   Text,
 } from '@expo/ui/swift-ui';
+import { disabled } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Host } from '#primitives/native/host';
 import {
   alertActionPress,
+  isAlertActionEnabled,
+  isAlertBusy,
   isDestructiveAlert,
   type AlertAction,
   type AlertProps,
@@ -38,10 +41,11 @@ interface AlertPresentation {
   onIsPresentedChange: (open: boolean) => void;
 }
 
+// A running answer hides the alert: SwiftUI closes it on any press and draws no progress, so the screen shows it.
 function alertPresentation(props: AlertProps): AlertPresentation {
   return {
     title: props.title,
-    isPresented: props.open,
+    isPresented: props.open && !isAlertBusy(props.actions),
     onIsPresentedChange: props.onOpenChange,
   };
 }
@@ -116,6 +120,7 @@ function AlertActions(props: AlertActionsProps): React.JSX.Element {
           label={action.label}
           role={actionRole(action, props.explicitCancel)}
           onPress={alertActionPress(action, props.onOpenChange)}
+          modifiers={[disabled(!isAlertActionEnabled(action, props.actions))]}
         />
       ))}
     </>

@@ -113,8 +113,7 @@ export const openSessionsMachine = setup({
       if (
         session &&
         snapshot.can({ type: closeSessionEvent }) &&
-        !snapshot.matches({ open: { acp: 'closing' } }) &&
-        !snapshot.matches({ open: { acp: 'retainingCleanup' } })
+        !snapshot.matches({ open: { acp: 'closing' } })
       )
         enqueue.sendTo(session, { type: closeSessionEvent });
     }),

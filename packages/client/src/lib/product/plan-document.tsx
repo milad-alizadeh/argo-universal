@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { FeedMarkdown } from './markdown/feed-markdown';
 import {
-  PlanBottomFade,
   PlanScrollThumb,
   PlanScrollView,
   type ScrolledPlanStyle,
@@ -12,9 +11,9 @@ import {
 
 const flexibleContentClassName = 'flex-1 min-h-0';
 
-const cardClassName = 'bg-card rounded-xl shadow-xs';
+const cardClassName = 'bg-card rounded-xl shadow-control';
 
-const proposalScrollClassName = 'max-h-plan-proposal grow-0';
+const proposalHeightClassName = 'max-h-plan-proposal';
 
 const proposalLabel = 'Plan proposal document';
 
@@ -22,12 +21,13 @@ const proposalTestID = 'plan-proposal-scroll';
 
 const scrolledPlanStyles = {
   proposal: {
-    frame: cn('max-h-plan-proposal', cardClassName),
-    scroll: proposalScrollClassName,
+    frame: cn(proposalHeightClassName, cardClassName),
+    scroll: proposalHeightClassName,
     content: 'px-3.5 py-3',
     testID: proposalTestID,
     label: proposalLabel,
     fades: true,
+    fitContent: true,
   },
   expanded: {
     frame: cn(flexibleContentClassName, cardClassName),
@@ -36,14 +36,16 @@ const scrolledPlanStyles = {
     testID: proposalTestID,
     label: proposalLabel,
     fades: false,
+    fitContent: false,
   },
   tray: {
-    frame: 'max-h-plan-proposal',
-    scroll: proposalScrollClassName,
+    frame: proposalHeightClassName,
+    scroll: proposalHeightClassName,
     content: 'px-4 pt-2 pb-4',
     testID: undefined,
     label: 'Written plan document',
     fades: false,
+    fitContent: true,
   },
 } satisfies Record<string, ScrolledPlanStyle>;
 
@@ -78,7 +80,6 @@ function ScrolledPlan(props: {
       <PlanScrollView style={props.style} handlers={handlers}>
         {props.children}
       </PlanScrollView>
-      {props.style.fades && <PlanBottomFade metrics={metrics} />}
       <PlanScrollThumb metrics={metrics} />
     </View>
   );

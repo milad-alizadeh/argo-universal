@@ -19,13 +19,14 @@ import {
 import {
   runTurn,
   type ScriptedScenario,
+  type ScriptedStep,
   type ScriptedTurn,
 } from './scripted-scenario.ts';
 import { ScriptedSessions } from './scripted-sessions.ts';
 
 const promptMethod = 'session/prompt';
 
-export type ScriptedWire = Pick<ScriptedTurn, 'writeRaw' | 'closed'>;
+export type ScriptedWire = Pick<ScriptedTurn, 'writeRaw' | 'closed' | 'exit'>;
 
 type MethodContext<Method extends AgentRequestMethod> = AgentRequestContext<
   AgentRequestParamsByMethod[Method]
@@ -109,11 +110,16 @@ export class ScriptedMethodPlayer {
       ...this.wire,
     };
   }
+  private promptSteps(sessionId: string): readonly ScriptedStep[] {
+    return this.sessions.wasResumed(sessionId)
+      ? (this.scenario.resumedSteps ?? this.scenario.steps)
+      : this.scenario.steps;
+  }
   public async prompt(
     context: AgentRequestContext<AgentRequestParamsByMethod['session/prompt']>,
   ): Promise<AgentRequestResponsesByMethod['session/prompt']> {
     return runTurn(
-      this.scenario.steps,
+      this.promptSteps(context.params.sessionId),
       this.turn(context, context.params.sessionId),
     );
   }

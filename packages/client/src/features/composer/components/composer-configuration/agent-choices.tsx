@@ -7,7 +7,7 @@ import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItemEnd } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-import { agentChoiceRows } from './agent-choice';
+import { AgentChoice } from './agent-choice';
 import type { ConfigurationChoicesProps as AgentChoicesProps } from './configuration-types';
 
 const maximumHeight = 320;
@@ -24,11 +24,11 @@ export function AgentChoices(props: AgentChoicesProps): React.JSX.Element {
 
 function NativeAgentChoices(props: AgentChoicesProps): React.JSX.Element {
   return (
-    <GroupedList>
+    <GroupedList onContentHeightChange={props.onContentHeightChange}>
       <GroupedListSection>
-        {props.configuration.agents.flatMap((agent) =>
-          agentChoiceRows({ ...props, agent }),
-        )}
+        {props.configuration.agents.map((agent) => (
+          <AgentChoice key={agent.agent} agent={agent} {...props} />
+        ))}
       </GroupedListSection>
     </GroupedList>
   );
@@ -65,6 +65,7 @@ function useAgentList(
 
 const agentListPresentation = {
   ...listTestIdProps('composer-agents-scroll'),
+  surfaceClassName: 'bg-content',
   estimatedItemSize: 52,
 };
 
@@ -103,7 +104,9 @@ function AgentListRow({
 }: AgentChoicesProps & { agent: AgentInfo; last: boolean }): React.JSX.Element {
   return (
     <GroupedListItemEnd value={last}>
-      <View>{agentChoiceRows({ ...props, agent })}</View>
+      <View>
+        <AgentChoice agent={agent} {...props} />
+      </View>
     </GroupedListItemEnd>
   );
 }

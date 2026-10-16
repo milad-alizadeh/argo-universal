@@ -18,6 +18,10 @@ import { listInstalledAgents } from './install/selection/list';
 import type { AgentLogins } from './login';
 import { createLoginRouter } from './login-router';
 import {
+  createRegistryRouter,
+  type RegistryDeps,
+} from './registry/registry-router';
+import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,
 } from './sync-supervisor-machine';
@@ -27,7 +31,8 @@ type CatalogDeps = Pick<ConfigurationDeps, 'database' | 'databaseWriter'> & {
   sessionCommandSignal?: AbortSignal;
 };
 
-export type AgentsRouterDeps = ConfigurationDeps &
+export type AgentsRouterDeps = RegistryDeps &
+  ConfigurationDeps &
   CatalogDeps & {
     sessions: OpenSessionsActorRef;
     installations: AgentInstallations;
@@ -77,17 +82,22 @@ const createListRouter = routerFactory((deps: AgentsRouterDeps) =>
     list: publicProcedure
       .input(AgentsListInput)
       .output(AgentsListOutput)
-      .query(() => configuredAgentList(deps)),
+      .query(({ input }) => {
+        if (input?.refresh) deps.invalidateIdleAgents?.();
+
+        return configuredAgentList(deps);
+      }),
   }),
 );
 
 export const createAgentsRouter = routerFactory((deps: AgentsRouterDeps) =>
   mergeRouters(
     createConfigurationRouter(ownedConfiguration(deps)),
-    createInstallRouter(deps.installations),
+    createInstallRouter({ installations: deps.installations, registry: deps }),
     createCatalogRouter(deps),
     createCatalogSyncRouter(deps),
     createListRouter(deps),
+    createRegistryRouter(deps),
     createLoginRouter(deps),
   ),
 );

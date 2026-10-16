@@ -1,9 +1,12 @@
 import { writeLog } from '@repo/machine-log';
 import type { AnyActorRef, InputFrom } from 'xstate';
-import type { SyncSupervisorInput } from '../agents';
+import type {
+  RegistryActor,
+  RegistryInput,
+  SyncSupervisorInput,
+} from '../agents';
 import { blobsFolderIn } from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
-import { discoveryCacheId } from '../sessions';
 import {
   openSessionsId,
   openSessionsMachine,
@@ -103,6 +106,7 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   sessions: requireOpenSessions(self.system),
   databaseWriter: requireDatabaseWriter(self.system),
   syncSupervisor: requireSyncSupervisor(self.system),
+  registry: requireRegistry(self.system),
   commandAdmission: context.commandAdmission,
   acp: context.acp,
   loginTimeoutMs: context.loginTimeoutMs,
@@ -135,9 +139,23 @@ function serverIdentity(
   };
 }
 
-export const discoveryInvocation = {
-  id: discoveryCacheId,
-  systemId: discoveryCacheId,
-  src: 'discovery' as const,
-  input: sessionsInput,
+export const registryInput = ({
+  context,
+  self,
+}: {
+  context: Pick<EngineContext, 'database' | 'fetchAgents' | 'now'>;
+  self: Pick<AnyActorRef, 'system'>;
+}): RegistryInput => ({
+  database: openDatabaseOf(context),
+  writer: requireDatabaseWriter(self.system),
+  fetchAgents: context.fetchAgents,
+  now: context.now,
+});
+
+const requireRegistry = (system: AnyActorRef['system']): RegistryActor => {
+  const actor = system.get('registry');
+
+  if (!actor) throw new Error('Registry is not running');
+
+  return actor;
 };

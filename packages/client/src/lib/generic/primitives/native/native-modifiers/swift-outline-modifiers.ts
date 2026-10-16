@@ -6,8 +6,3 @@ type SwiftModifier = SwiftModifiers.ModifierConfig;
 export function rectangularHitArea(): SwiftModifier {
   return SwiftModifiers.contentShape(SwiftModifiers.shapes.rectangle());
 }
-
-// Draws a bordered button fully rounded, as a pill.
-export function capsuleButtonBorder(): SwiftModifier {
-  return SwiftModifiers.buttonBorderShape('capsule');
-}

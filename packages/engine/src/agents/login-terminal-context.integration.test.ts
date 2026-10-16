@@ -10,7 +10,7 @@ import {
 import { customAgentDefinition } from '#mocks/custom-agent';
 import { createLoginTerminalMock } from '#mocks/login-terminal';
 
-it('reserves the advertised terminal environment before touching credentials used by another Session', async () => {
+it('passes through the legacy authentication reservation and preserves the advertised terminal environment', async () => {
   const terminal = createLoginTerminalMock();
 
   const host = await startAcpEngine({
@@ -66,7 +66,7 @@ it('reserves the advertised terminal environment before touching credentials use
   });
   await expect
     .poll(async () => (await host.caller.agents.login(identity)).status)
-    .toBe('in-use');
+    .toBe('authenticating');
   expect(terminal.writes).toEqual([]);
   await host.caller.session.close(session);
 }, 15_000);

@@ -59,7 +59,7 @@ export const WaitingForDataDark: Story = {
 
 export const ChildSelectionAndAttention: Story = {
   args: {
-    selectedDestination: { to: 'settings-project', name: 'example-project' },
+    selectedPath: '/settings/projects/example-project',
     projectsNeedAttention: true,
     agentsNeedAttention: true,
   },

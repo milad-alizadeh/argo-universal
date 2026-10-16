@@ -21,22 +21,22 @@ import type {
 
 export function ComposerToolbar(layout: ToolbarLayout): React.JSX.Element {
   return (
-    <View
-      pointerEvents="box-none"
-      className="flex-row items-center justify-between gap-2 pl-2 wide:pl-3.75 pr-2.5 pb-2.5"
-    >
+    <View className="pointer-events-box-none flex-row items-center justify-between gap-2 pl-2 wide:pl-3.75 pr-2.5 pb-2.5">
       <ComposerLeftControls {...layout} />
       <ComposerRightControls {...layout} />
     </View>
   );
 }
 
+const leftControlsClassName = (inactive: boolean): string =>
+  cn(
+    'min-w-0 flex-1 flex-row items-center gap-1',
+    inactive ? 'pointer-events-none' : 'pointer-events-box-none',
+  );
+
 function ComposerLeftControls(layout: LeftControlsLayout): React.JSX.Element {
   return (
-    <View
-      pointerEvents={layout.configurationInactive ? 'none' : 'box-none'}
-      className="min-w-0 flex-1 flex-row items-center gap-1"
-    >
+    <View className={leftControlsClassName(layout.configurationInactive)}>
       <ComposerAttachMenu {...layout} />
       <ComposerAgentControl {...layout} />
       <ComposerPhoneStatus {...layout} />
@@ -70,7 +70,7 @@ function ComposerPhoneStatus({
 
 function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
-    <View pointerEvents="box-none" className="flex-row items-center gap-2.5">
+    <View className="pointer-events-box-none flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
       <ComposerSendButton {...layout} />
     </View>

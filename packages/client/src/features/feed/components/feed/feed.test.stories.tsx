@@ -8,16 +8,19 @@ import {
   feedScrollId,
   fullyInViewport,
   markSettledMiddleOfView,
+  readBackToSplitGroup,
   scrollAwayWait,
   scrolledToEnd,
   scrollToTop,
   scrollUp,
+  openedRow,
   settledTopOf,
 } from './feed-reader.mocks';
 import {
   longRows,
   oldestMessage,
   splitGroupRows,
+  splitGroupLastStep,
   splitGroupStepInTail,
 } from './feed.mocks';
 import { feedArgs, PagedFeed, sendOlderPage } from './paged-feed.mocks';
@@ -98,21 +101,20 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
     <PagedFeed {...args} rows={splitGroupRows} holdOlderPages />
   ),
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
-    const scroll = await canvas.findByTestId(feedScrollId);
-    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
-    await scrollToTop(scroll);
+    const { header } = await readBackToSplitGroup(canvas);
     await expect(
       canvas.getByRole('progressbar', { name: earlierFeedLoadingLabel }),
     ).toBeVisible();
     // The reader opens the group and reads one of its commands.
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Ran 10 commands' }),
-    );
+    await userEvent.click(header);
 
     const step = (): HTMLElement =>
       canvas.getByRole('button', { name: splitGroupStepInTail });
 
+    // The group has opened down to its last command before the older rows arrive.
+    await openedRow(header, () =>
+      canvas.getByRole('button', { name: splitGroupLastStep }),
+    );
     const top = await settledTopOf(step);
     sendOlderPage();
     // The group gains its first ten commands above, stays open, and the command being read stays where it was.

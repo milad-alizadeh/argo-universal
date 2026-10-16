@@ -1,10 +1,12 @@
 import type { AgentLaunch } from '..';
+import { awaitAcpOpening } from './client';
+import { AcpConnection } from './connection';
 import {
-  authenticationContextKey,
-  ResourceInUseError,
-} from '../../lib/authentication-context';
-import { CheckoutReleases } from './checkout-releases';
-import { AcpResourceEntry } from './resource-entry';
+  createEntry,
+  entryInUse,
+  isIdleEntryOf,
+  type Entry,
+} from './resource-entry';
 import type {
   AcpOpenInput,
   AcpResourceInput,
@@ -12,119 +14,130 @@ import type {
   AcpSessionLease,
 } from './resource-types';
 
-const compareEnvironmentKeys = (
-  [left]: [string, string],
-  [right]: [string, string],
-): number => {
-  if (left === right) return 0;
-
-  return left < right ? -1 : 1;
-};
-
-const captureLaunch = (launch: AgentLaunch): AgentLaunch => ({
-  projectId: launch.projectId,
-  agentId: launch.agentId,
-  executable: launch.executable,
-  version: launch.version,
-  args: [...launch.args],
-  cwd: launch.cwd,
-  env: Object.fromEntries(
-    Object.entries(launch.env).sort(compareEnvironmentKeys),
-  ),
-  authContext: launch.authContext,
-});
-
-const createLaunchReuseKey = (launch: AgentLaunch): string =>
-  JSON.stringify(launch);
-
 class EngineAcpResources implements AcpResources {
-  private readonly entries = new Map<string, AcpResourceEntry>();
-  private readonly retired = new Set<AcpResourceEntry>();
-  private readonly authentication = new Map<string, symbol>();
-  private readonly contexts = new Map<AcpResourceEntry, string>();
-  private readonly agents = new Map<AcpResourceEntry, string>();
-  private readonly checkoutReleases: CheckoutReleases;
+  private readonly entries = new Map<string, Entry>();
   private stopped = false;
-  public constructor(private readonly input: AcpResourceInput) {
-    this.checkoutReleases = new CheckoutReleases(input.releaseTimeoutMs);
+  private readonly connections = new Set<Entry>();
+  public constructor(private readonly input: AcpResourceInput) {}
+  public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
+    if (this.stopped) throw new Error('ACP resources are stopped');
+    input.signal?.throwIfAborted();
+    const entry = this.entry(input.launch);
+    entry.pending += 1;
+
+    try {
+      return await this.openConnected(entry, input);
+    } finally {
+      entry.pending -= 1;
+      this.retireIdle(entry);
+    }
   }
-  public open = (opening: AcpOpenInput): Promise<AcpSessionLease> => {
-    if (this.stopped)
-      return Promise.reject(new Error('ACP resources are stopped'));
-    const launch = captureLaunch(opening.launch);
+  private async openConnected(
+    entry: Entry,
+    input: AcpOpenInput,
+  ): Promise<AcpSessionLease> {
+    const connection = await awaitAcpOpening(entry.connecting, input.signal);
 
-    if (this.authentication.has(authenticationContextKey(launch)))
-      return Promise.reject(new Error('Agent sign-in is in progress'));
+    return connection.open(input);
+  }
+  private entry(launch: AgentLaunch): Entry {
+    const key = JSON.stringify([launch.agentId, launch.projectId]);
+    const entry = this.entries.get(key);
 
-    return this.getOrStartResource(launch).open({ ...opening, launch }, () =>
-      this.checkoutReleases.confirm(opening.opening.params.cwd),
+    if (entry) return this.reuse(key, entry, launch);
+
+    return this.start(key, launch);
+  }
+  private reuse(key: string, entry: Entry, launch: AgentLaunch): Entry {
+    if (entry.version === launch.version) return entry;
+    this.retire(key, entry);
+
+    return this.start(key, launch);
+  }
+  private start(key: string, launch: AgentLaunch): Entry {
+    const connection = new AcpConnection(
+      this.input,
+      () => this.forget(key, connection),
+      () => this.connectionIdle(connection),
     );
-  };
-  private getOrStartResource(launch: AgentLaunch): AcpResourceEntry {
-    const key = createLaunchReuseKey(launch);
-    const existing = this.entries.get(key);
 
-    if (existing) return existing;
-
-    const entry = new AcpResourceEntry(this.input, launch, (checkouts) =>
-      this.retireFailedGeneration(key, entry, checkouts),
+    const entry = createEntry(
+      launch,
+      connection,
+      this.connect(key, connection, launch),
     );
 
     this.entries.set(key, entry);
-    this.rememberLaunch(entry, launch);
-    void entry
-      .closed()
-      .then(() => this.forget(key, entry))
-      .catch(() => {});
+    this.connections.add(entry);
 
     return entry;
   }
-  private rememberLaunch(entry: AcpResourceEntry, launch: AgentLaunch): void {
-    this.contexts.set(entry, authenticationContextKey(launch));
-    this.agents.set(entry, launch.agentId);
-  }
-  private retireFailedGeneration(
+  private connect(
     key: string,
-    entry: AcpResourceEntry,
-    checkouts: readonly string[],
-  ): void {
-    if (this.entries.get(key) === entry) this.entries.delete(key);
-    this.retired.add(entry);
-    this.checkoutReleases.retain(checkouts, entry.closed());
+    connection: AcpConnection,
+    launch: AgentLaunch,
+  ): Promise<AcpConnection> {
+    return connection.start(launch).catch((cause: unknown) => {
+      this.forget(key, connection);
+      throw cause instanceof Error ? cause : new Error(String(cause));
+    });
   }
-  // A replacement may already hold the key of a generation that exits later.
-  private forget(key: string, entry: AcpResourceEntry): void {
-    if (this.entries.get(key) === entry) this.entries.delete(key);
-    this.retired.delete(entry);
-    this.contexts.delete(entry);
-    this.agents.delete(entry);
+  private forget(key: string, connection: AcpConnection): void {
+    if (this.entries.get(key)?.connection === connection)
+      this.entries.delete(key);
+    this.stopConnection(connection);
   }
-  public isAgentInUse = (agentId: string): boolean =>
-    [...this.agents.values()].includes(agentId);
-  public reserveAuthentication = (launch: AgentLaunch): (() => void) => {
-    if (this.stopped) throw new Error('ACP resources are stopped');
-    const key = authenticationContextKey(launch);
-
-    if (this.isAuthenticationContextInUse(key)) throw new ResourceInUseError();
-    const reservation = Symbol();
-    this.authentication.set(key, reservation);
-
-    return (): void => {
-      if (this.authentication.get(key) === reservation)
-        this.authentication.delete(key);
-    };
-  };
-  private isAuthenticationContextInUse(key: string): boolean {
-    return (
-      this.authentication.has(key) || [...this.contexts.values()].includes(key)
+  private stopConnection(connection: AcpConnection): void {
+    void connection
+      .shutdown()
+      .then(() => {
+        for (const entry of this.connections)
+          if (entry.connection === connection) this.connections.delete(entry);
+      })
+      .catch(console.error);
+  }
+  private connectionIdle(connection: AcpConnection): void {
+    for (const entry of this.connections)
+      if (entry.connection === connection) this.retireIdle(entry);
+  }
+  private retireIdle(entry: Entry): void {
+    if (entry.dropped && !entryInUse(entry))
+      this.stopConnection(entry.connection);
+  }
+  private retire(key: string, entry: Entry): void {
+    this.entries.delete(key);
+    this.stopConnection(entry.connection);
+  }
+  public isAgentInUse = (id: string): boolean =>
+    [...this.connections].some(
+      (entry) => entry.agentId === id && entryInUse(entry),
     );
-  }
+  public invalidateAgent = (agentId: string): void => {
+    for (const [key, entry] of this.entries)
+      if (entry.agentId === agentId) this.retire(key, entry);
+  };
+  public invalidateIdleAgents = (agentId?: string): void => {
+    for (const [key, entry] of this.entries)
+      if (isIdleEntryOf(entry, agentId)) this.retire(key, entry);
+  };
+  public dropAgentConnections = (agentId: string): void => {
+    for (const [key, entry] of this.entries)
+      if (entry.agentId === agentId) {
+        this.entries.delete(key);
+        entry.dropped = true;
+        this.retireIdle(entry);
+      }
+  };
+  public isDirectoryInUse = (directory: string): boolean =>
+    [...this.connections].some((entry) => entry.directory === directory);
+  public reserveAuthentication = (): (() => void) => () => {};
   public async shutdown(): Promise<void> {
     this.stopped = true;
-    await Promise.all(
-      [...this.entries.values(), ...this.retired].map((entry) =>
-        entry.shutdown(),
-      ),
+    const entries = [...this.connections];
+    this.connections.clear();
+    this.entries.clear();
+    await Promise.allSettled(
+      entries.map((entry) => entry.connection.shutdown()),
     );
   }
 }

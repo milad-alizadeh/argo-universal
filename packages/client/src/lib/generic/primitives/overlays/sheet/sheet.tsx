@@ -1,0 +1,134 @@
+import { cloneElement, type ReactElement, type Ref } from 'react';
+import { View } from 'react-native';
+import { Drawer } from 'vaul';
+import { cn } from '#lib/generic/utils';
+import { useWide } from '../../../use-wide/use-wide';
+import {
+  SheetLink,
+  SheetNavigationProvider,
+  SheetPage,
+  useSheetStack,
+} from './sheet-pages';
+import { openChange, SheetPanel, type PresentationProps } from './sheet-panel';
+import { PopoverSheet } from './sheet-popover';
+import type { SheetProps } from './sheet-props';
+
+/*
+ * A narrow window raises the sheet from the bottom edge as a drawer; a wide one opens it as a
+ * popover on its trigger. A sheet with no trigger, which the app opens itself, stays a drawer.
+ */
+function SheetRoot(props: SheetProps): ReactElement {
+  const stack = useSheetStack(props);
+  const popover = useWide() && !!props.trigger;
+
+  return (
+    <SheetNavigationProvider value={stack.navigation}>
+      <View style={props.style} className="min-w-0 shrink">
+        {popover ? (
+          <PopoverSheet {...props} stack={stack} />
+        ) : (
+          <DrawerSheet {...props} stack={stack} />
+        )}
+      </View>
+    </SheetNavigationProvider>
+  );
+}
+
+function DrawerSheet(props: PresentationProps): ReactElement {
+  return (
+    <Drawer.Root {...drawerProps(props)}>
+      <SheetTrigger {...props} />
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-scrim/20" />
+        <DrawerContent {...props} />
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+
+// The portal's presence measures the content through this ref to wait for its closing slide.
+function DrawerContent({
+  ref,
+  ...props
+}: PresentationProps & { ref?: Ref<HTMLDivElement> }): ReactElement {
+  return (
+    <Drawer.Content
+      ref={ref}
+      aria-describedby={undefined}
+      // Radix calls it once the closed drawer has left the tree, after its slide.
+      onCloseAutoFocus={props.stack.reports.closed}
+      className={drawerClass(props)}
+    >
+      <DrawerInner {...props} />
+    </Drawer.Content>
+  );
+}
+
+function DrawerInner(props: PresentationProps): ReactElement {
+  return (
+    <>
+      <SheetLabel label={props.label} />
+      <Drawer.Handle />
+      <SheetPanel {...props} />
+    </>
+  );
+}
+
+// Names the drawer; without a label, a title inside the content, such as a dialog's, names it instead.
+function SheetLabel(props: { label?: string }): ReactElement | null {
+  if (!props.label) return null;
+
+  // A span, not a heading: the page draws its own heading, and the label only names the drawer.
+  return (
+    <Drawer.Title asChild>
+      <span className="sr-only">{props.label}</span>
+    </Drawer.Title>
+  );
+}
+
+interface DrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  dismissible: boolean;
+}
+
+function drawerProps(props: PresentationProps): DrawerProps {
+  return {
+    open: props.open,
+    onOpenChange: openChange(props),
+    dismissible: props.dismissible !== false,
+  };
+}
+
+// A sheet that rests only at its full height fills the window; any other is as tall as its content.
+function drawerClass(props: PresentationProps): string {
+  return cn(
+    'sheet overflow-hidden fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-content pb-6 shadow-card outline-none dark:border dark:border-border',
+    props.stack.pages.length > 0 && 'sheet-paged',
+    fullHeight(props.detents) && 'sheet-full',
+  );
+}
+
+function fullHeight(detents: SheetProps['detents']): boolean {
+  return detents?.join() === 'large';
+}
+
+// The drawer's own trigger, as the kit popover's: Radix records it to take focus back on close; the press opens the sheet.
+function SheetTrigger(props: TriggerProps): ReactElement | null {
+  if (!props.trigger) return null;
+
+  return (
+    <Drawer.Trigger asChild disabled={!!props.trigger.props.disabled}>
+      {cloneElement(props.trigger, {
+        onPress: () => props.onOpenChange(true),
+      })}
+    </Drawer.Trigger>
+  );
+}
+
+type TriggerProps = Pick<SheetProps, 'trigger' | 'onOpenChange'>;
+
+export const Sheet = Object.assign(SheetRoot, {
+  Page: SheetPage,
+  Link: SheetLink,
+});

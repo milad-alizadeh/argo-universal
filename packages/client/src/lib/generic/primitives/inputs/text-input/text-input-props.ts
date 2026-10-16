@@ -20,7 +20,15 @@ export interface TextFieldProps {
   // Code, such as a path or a command, draws in the mono face.
   mono?: boolean;
   disabled?: boolean;
+  // The value is being checked, such as a path being resolved: a spinner trails the field.
+  loading?: boolean;
 }
+
+// What a field's spinner needs: the field's label to speak, and whether it checks the value now.
+export type FieldProgressProps = Pick<TextFieldProps, 'label' | 'loading'>;
+
+// What the field's spinner says while it checks the value.
+export const fieldLoadingLabel = (label: string): string => `Checking ${label}`;
 
 // A row inside a GroupedListSection: the label leading, the field taking the rest of the row.
 export type RowTextInputProps = TextFieldProps & { variant: 'row' };
@@ -38,12 +46,17 @@ export type BareTextInputProps = NativeTextInputProps &
     variant: 'bare';
     // `muted` is the compact borderless box inside a popover, such as the link editor's.
     tone?: 'neutral' | 'muted';
+    // React Native has no invalid state of its own, so the box draws it from this on every platform.
+    'aria-invalid'?: boolean;
   };
 
 export type TextInputProps =
   | StandaloneTextInputProps
   | RowTextInputProps
   | BareTextInputProps;
+
+export type PhoneFieldProps = TextFieldProps &
+  Pick<StandaloneTextInputProps, 'required' | 'numeric'>;
 
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
   (props.errors?.length ?? 0) > 0;

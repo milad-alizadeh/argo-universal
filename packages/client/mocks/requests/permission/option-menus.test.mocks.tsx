@@ -45,18 +45,3 @@ export async function pickFromMenu(
     ).not.toBeInTheDocument(),
   );
 }
-
-export async function pickFromSheet(
-  userEvent: ClickEvent,
-  label: string,
-  option: string,
-): Promise<void> {
-  const overlay = within(document.body);
-  const sheet = within(await overlay.findByRole('dialog', { name: label }));
-  await userEvent.click(sheet.getByRole('button', { name: option }));
-  await waitFor(() =>
-    expect(
-      overlay.queryByRole('dialog', { name: label }),
-    ).not.toBeInTheDocument(),
-  );
-}

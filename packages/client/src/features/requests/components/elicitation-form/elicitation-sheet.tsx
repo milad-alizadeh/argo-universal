@@ -1,7 +1,7 @@
 import { useRef, useEffect, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { BottomSheet } from '#primitives/overlays/bottom-sheet';
+import { Sheet } from '#primitives/overlays/sheet';
 import { useElicitationForm } from '../../hooks/use-elicitation-form';
 import { useElicitationQuestions } from '../../hooks/use-elicitation-questions';
 import {
@@ -53,8 +53,6 @@ function QuestionSheet(
 
 type SurfaceProps = ElicitationFormProps & { children: ReactNode };
 
-const formSheet = { open: true, fit: true, variant: 'form' } as const;
-
 function ElicitationSurface(props: SurfaceProps): ReactElement {
   const wide = useContentWide();
   const sheet = useSheetDismissal(props);
@@ -62,9 +60,11 @@ function ElicitationSurface(props: SurfaceProps): ReactElement {
   if (wide) return <ElicitationTray>{props.children}</ElicitationTray>;
 
   return (
-    <BottomSheet {...formSheet} label={props.request.message} {...sheet}>
-      {props.children}
-    </BottomSheet>
+    <Sheet open label={props.request.message} {...sheet}>
+      <Sheet.Page name="form" title={props.request.message}>
+        {props.children}
+      </Sheet.Page>
+    </Sheet>
   );
 }
 
@@ -104,7 +104,7 @@ function ElicitationTray({ children }: { children: ReactNode }): ReactElement {
     <View
       role="region"
       aria-label="Elicitation questions"
-      className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass-tray web:backdrop-blur-glass web:backdrop-saturate-110"
+      className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-tray web:backdrop-blur-glass web:backdrop-saturate-110"
     >
       {children}
     </View>

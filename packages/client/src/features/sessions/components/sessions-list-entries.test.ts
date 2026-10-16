@@ -1,6 +1,10 @@
 import { projectsList, sessionRows } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
-import { listEntries, type ListEntriesInput } from './sessions-list-entries';
+import {
+  flatEntries,
+  listEntries,
+  type ListEntriesInput,
+} from './sessions-list-entries';
 
 const firstProjectEntryId = 'project:project-1';
 
@@ -43,6 +47,23 @@ describe('listEntries', () => {
     ]);
   });
 
+  it("marks the first and last of each Project's Sessions", () => {
+    const places = listEntries({
+      projects,
+      sessions: [older, newer, { ...tiedEarlierId, projectId: 'project-2' }],
+      collapsed: new Set(),
+      hideEmptyProjects: false,
+    }).flatMap((entry) =>
+      entry.kind === 'session' ? [[entry.id, entry.first, entry.last]] : [],
+    );
+
+    expect(places).toEqual([
+      [newer.sessionId, true, false],
+      [older.sessionId, false, true],
+      [tiedEarlierId.sessionId, true, true],
+    ]);
+  });
+
   it('shows only the heading of a collapsed Project', () => {
     expect(
       entryIds({
@@ -74,5 +95,29 @@ describe('listEntries', () => {
         hideEmptyProjects: false,
       }),
     ).toEqual([secondProjectEntryId, newer.sessionId]);
+  });
+});
+
+describe('flatEntries', () => {
+  it('lists Sessions across Projects with no headings, newest activity first, ties by id', () => {
+    expect(
+      flatEntries({
+        projects,
+        sessions: [
+          older,
+          { ...newer, projectId: otherProject.id },
+          tiedEarlierId,
+        ],
+      }).map((entry) => entry.id),
+    ).toEqual([tiedEarlierId.sessionId, newer.sessionId, older.sessionId]);
+  });
+
+  it('leaves out Sessions of a Project it does not list', () => {
+    expect(
+      flatEntries({
+        projects: [otherProject],
+        sessions: [older, { ...newer, projectId: otherProject.id }],
+      }).map((entry) => entry.id),
+    ).toEqual([newer.sessionId]);
   });
 });

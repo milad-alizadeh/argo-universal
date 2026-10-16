@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { memo, useCallback } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import {
   ProjectHeading,
@@ -36,16 +35,45 @@ function emptyListTitle({
   return 'No Projects yet';
 }
 
-function NoMatchingSession({
+function noMatchingSession({
   query,
   archived,
-}: EmptySessionsListProps): React.JSX.Element | null {
-  if (!query) return null;
+}: EmptySessionsListProps): string | undefined {
+  if (!query) return undefined;
+
+  return `No ${archived ? 'Archived' : 'Active'} Session has "${query}" in its title.`;
+}
+
+export interface EmptyListProps {
+  title: string;
+  // Why the list is empty, such as which search found nothing.
+  message?: string;
+}
+
+function EmptyListMessage({
+  message,
+}: Pick<EmptyListProps, 'message'>): React.JSX.Element | null {
+  if (!message) return null;
 
   return (
     <Text role="secondary" className="text-center">
-      No {archived ? 'Archived' : 'Active'} Session has "{query}" in its title.
+      {message}
     </Text>
+  );
+}
+
+// What a list shows in place of rows it does not have: a heading, and a line on why. Settings' search shows it too.
+export function EmptyList({
+  title,
+  message,
+}: EmptyListProps): React.JSX.Element {
+  return (
+    <View className="items-center gap-1 px-4 py-8">
+      <Text role={'heading'} className="text-center">
+        {title}
+      </Text>
+      <EmptyListMessage message={message} />
+    </View>
   );
 }
 
@@ -53,25 +81,32 @@ export function EmptySessionsList(
   props: EmptySessionsListProps,
 ): React.JSX.Element {
   return (
-    <View className="items-center gap-1 px-4 py-8">
-      <Text role={'heading'} className="text-center">
-        {emptyListTitle(props)}
-      </Text>
-      <NoMatchingSession {...props} />
-    </View>
+    <EmptyList
+      title={emptyListTitle(props)}
+      message={noMatchingSession(props)}
+    />
   );
 }
 
+export type SessionListRowProps = Pick<
+  SessionRowProps,
+  | 'session'
+  | 'logo'
+  | 'selected'
+  | 'trailing'
+  | 'layout'
+  | 'position'
+  | 'onSelect'
+>;
+
+// Each row is held in a container of its own, so the space between rows is the container's: Regular rows sit 8 apart; Compact rows sit 2 apart wide, and a phone's grouped rows space themselves.
 export const SessionListRow = memo(function SessionListRow(
-  props: Pick<SessionRowProps, 'session' | 'logo' | 'selected' | 'onSelect'>,
+  props: SessionListRowProps,
 ) {
   return (
     <View
       testID="session-row-surface"
-      className={cn(
-        'overflow-hidden bg-content wide:bg-transparent wide:pb-px',
-        props.selected && 'bg-hover wide:bg-transparent',
-      )}
+      className={props.layout === 'compact' ? 'wide:pb-0.5' : 'pb-2'}
     >
       <SessionRow {...props} />
     </View>

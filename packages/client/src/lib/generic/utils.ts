@@ -9,8 +9,26 @@ import { extendTailwindMerge } from 'tailwind-merge';
  */
 const twMerge = extendTailwindMerge<'type-role' | 'type-face'>({
   extend: {
+    // Argo's own radius tokens, so `rounded-control` replaces `rounded-md`.
+    theme: {
+      radius: ['control', 'sheet', 'grouped', 'grouped-inner'],
+      // Argo's shadow scale, so `shadow-raised` replaces `shadow-card`.
+      shadow: [
+        'control',
+        'card',
+        'raised',
+        'glass',
+        'tray',
+        'hairline',
+        'inset',
+      ],
+    },
     classGroups: {
-      'type-role': [{ type: ['title', 'heading', 'body', 'secondary'] }],
+      'type-role': [
+        {
+          type: ['title', 'heading', 'body', 'secondary', 'row', 'row-detail'],
+        },
+      ],
       // These roles leave colour to the element, such as a button's variant.
       'type-face': [
         {

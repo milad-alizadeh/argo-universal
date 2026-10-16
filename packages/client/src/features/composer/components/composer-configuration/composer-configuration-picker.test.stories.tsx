@@ -76,7 +76,7 @@ export const HoverReplacesAdjacentPicker: Story = {
     const picker = await overlay.findByRole('dialog', { name: 'Select Agent' });
     await userEvent.unhover(agent);
     await userEvent.hover(picker);
-    await expect(picker).toBeVisible();
+    await waitFor(() => expect(picker).toBeVisible());
     await userEvent.hover(model);
     await overlay.findByRole('dialog', { name: 'Select Model' });
     await waitFor(() => expect(picker).not.toBeInTheDocument());

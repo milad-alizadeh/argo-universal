@@ -108,6 +108,7 @@ const feedModuleRouterInput = (
   startedAt: '2026-10-03T00:00:00.000Z',
   sessionCommandSignal: signal,
   syncSupervisor: host.engine.system.get('syncSupervisor'),
+  registry: host.engine.system.get('registry'),
 });
 
 // The router reads the module's own feed actor for session-1.

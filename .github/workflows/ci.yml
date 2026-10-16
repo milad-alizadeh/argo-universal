@@ -1,5 +1,5 @@
-# Quality and web e2e on every push, and on a pull request when its changes need them; Electron e2e on main and release/*.
-# The jobs run in parallel and the web e2e suite is split into shards, so a run takes as long as its slowest job.
+# Quality, story tests and web e2e on every push, and on a pull request when its changes need them; Electron e2e on main and release/*.
+# The jobs run in parallel and the story and web e2e suites are split into shards, so a run takes as long as its slowest job.
 name: CI
 
 on:
@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       quality: ${{ steps.choose.outputs.quality }}
+      stories: ${{ steps.choose.outputs.stories }}
       e2e-web: ${{ steps.choose.outputs.e2e-web }}
     steps:
       # The choice compares with the pull request's base commit; blob:none fetches the history without file contents.
@@ -46,6 +47,7 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           quality=true
+          stories=true
           e2e=true
           if [ -n "$BASE" ]; then
             files=$(git diff --name-only "$BASE...HEAD")
@@ -58,13 +60,16 @@ jobs:
 
             # Turbo cannot see root files, .github/ or patches/. turbo.json gives every package a no-op test:web, so only @repo/e2e's counts.
             outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' || true)
+            stories=false
+            if [ -n "$outside" ] || affected --tasks test:stories; then stories=true; fi
             e2e=false
             if [ -n "$outside" ] || affected --tasks test:web --packages @repo/e2e; then e2e=true; fi
           fi
 
           echo "quality=$quality" >> "$GITHUB_OUTPUT"
+          echo "stories=$stories" >> "$GITHUB_OUTPUT"
           echo "e2e-web=$e2e" >> "$GITHUB_OUTPUT"
-          echo "Quality runs: $quality. Web e2e runs: $e2e."
+          echo "Quality runs: $quality. Story tests run: $stories. Web e2e runs: $e2e."
 
   quality:
     name: Quality
@@ -84,8 +89,10 @@ jobs:
       - name: Fetch main for the waiver merge base
         run: git fetch origin main:refs/remotes/origin/main
 
+      # Only the story tests open a browser, and they run in the stories job.
       - uses: ./.github/actions/setup
         with:
+          playwright: none
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Quality
@@ -93,14 +100,38 @@ jobs:
           # Each test runner uses the available cores; overlapping runners distort timing budgets.
           TURBO_CONCURRENCY: 1
           VITEST_MAX_WORKERS: 1
-        run: pnpm quality
+        run: pnpm quality:checks
+
+  # The story tests alone take minutes, so they run beside Quality in shards; each shard's one runner keeps the config's maxWorkers.
+  stories:
+    name: Story tests (${{ matrix.shard }}/3)
+    needs: changes
+    if: ${{ needs.changes.outputs.stories == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      - name: Story tests
+        run: pnpm exec turbo run test:stories -- --shard=${{ matrix.shard }}/3
 
       # apps/storybook/vitest.setup.ts saves a failed story's screenshot in __screenshots__/failures beside its test file.
       - name: Upload the story failure screenshots
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
         with:
-          name: story-failure-screenshots
+          name: story-failure-screenshots-${{ matrix.shard }}
           path: "**/__screenshots__/"
           if-no-files-found: ignore
           retention-days: 30
@@ -213,7 +244,7 @@ jobs:
   ci:
     name: Quality and end-to-end tests
     if: ${{ always() }}
-    needs: [changes, quality, e2e-web, e2e-electron]
+    needs: [changes, quality, stories, e2e-web, e2e-electron]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

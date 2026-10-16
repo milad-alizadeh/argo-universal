@@ -7,25 +7,23 @@ import { Badge } from '#primitives/display/badge';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 import {
-  IssueIndicator,
-  type IssueIndicatorProps,
-} from '../issue-indicator/issue-indicator';
-import {
   PullRequestIndicator,
   type PullRequestIndicatorProps,
 } from '../pull-request-indicator/pull-request-indicator';
-import { PlanProgress } from './session-row-plan';
 
 export interface SessionRowMetadataProps {
   session: SessionInfo;
   selected: boolean;
   subagentsFailed?: boolean;
-  issue?: IssueIndicatorProps;
   pullRequest?: PullRequestIndicatorProps;
 }
 
+// A status dot's ring takes the colour under it: the card a phone row is, or the selected row's page on a wide window.
 export function markSurface(selected: boolean): string {
-  return selected ? 'border-hover bg-hover' : 'border-content bg-content';
+  return cn(
+    'border-card bg-card',
+    selected && 'wide:border-content wide:bg-content',
+  );
 }
 
 function subagentsStatus({
@@ -61,7 +59,7 @@ function SubagentsCount(props: SessionRowMetadataProps): React.JSX.Element {
   return (
     <View
       accessibilityLabel={`Subagents: ${subagents.total}, ${subagents.running} running`}
-      className="shrink-0 flex-row items-center gap-1"
+      className="shrink-0 flex-row items-center gap-1.5"
     >
       <View className="relative">
         <Icon role="secondary" name="agent" className="text-muted-foreground" />
@@ -96,14 +94,6 @@ function IndicatorSlot({
   );
 }
 
-function planContent({
-  session: { plan },
-}: SessionRowMetadataProps): React.JSX.Element | undefined {
-  if (!plan || plan.total <= 0) return undefined;
-
-  return <PlanProgress key="plan" plan={plan} />;
-}
-
 function subagentsContent(
   props: SessionRowMetadataProps,
 ): React.JSX.Element | undefined {
@@ -120,18 +110,6 @@ function archivedContent({
   return <ArchivedBadge key="archived" />;
 }
 
-function issueContent({
-  issue,
-}: SessionRowMetadataProps): React.JSX.Element | undefined {
-  if (!issue) return undefined;
-
-  return (
-    <IndicatorSlot key="issue" testID="session-issue-slot">
-      <IssueIndicator {...issue} />
-    </IndicatorSlot>
-  );
-}
-
 function pullRequestContent({
   pullRequest,
 }: SessionRowMetadataProps): React.JSX.Element | undefined {
@@ -145,10 +123,8 @@ function pullRequestContent({
 }
 
 const metadataContents = [
-  planContent,
   subagentsContent,
   archivedContent,
-  issueContent,
   pullRequestContent,
 ];
 

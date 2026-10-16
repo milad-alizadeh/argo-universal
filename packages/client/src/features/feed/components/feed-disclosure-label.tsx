@@ -4,8 +4,6 @@ import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import { ShimmerText } from './shimmer-text';
 
-export const foregroundTextClassName = 'text-foreground';
-
 const regexSpecialCharacters = /[.*+?^${}()|[\]\\]/g;
 
 export interface FeedDisclosureLabelProps {
@@ -32,8 +30,9 @@ function monoPart(
   key: string,
   paths: readonly string[],
 ): ReactNode {
+  // No line height of its own: a taller mono line box would push the label off the icons' centre line.
   return paths.includes(part) ? (
-    <Text key={key} role="code">
+    <Text key={key} role="code" className="leading-none">
       {part}
     </Text>
   ) : (
@@ -58,9 +57,9 @@ function withMonoPaths(title: string, paths: readonly string[]): ReactNode[] {
 const disclosureTitle = (label: string, trailing?: string): string =>
   trailing ? `${label} ${trailing}` : label;
 
+// The colour comes from the Collapsible header, muted until hovered.
 const plainLabelClassName = (props: FeedDisclosureLabelProps): string =>
-  cn('min-w-0 shrink text-muted-foreground', {
-    [foregroundTextClassName]: props.hovered,
+  cn('min-w-0 shrink', {
     'text-warning': props.awaitingApproval,
     'line-through': props.denied,
   });
@@ -72,7 +71,6 @@ function PlainLabel(
     <Text
       numberOfLines={1}
       selectable={false}
-      role="body"
       className={plainLabelClassName(props)}
     >
       {withMonoPaths(props.title, props.paths ?? [])}
@@ -89,7 +87,7 @@ export function FeedDisclosureLabel(
     <ShimmerText
       text={title}
       emphasized={props.hovered}
-      className="min-w-0 shrink type-body"
+      className="min-w-0 shrink type-body text-foreground"
     />
   ) : (
     <PlainLabel {...props} title={title} />

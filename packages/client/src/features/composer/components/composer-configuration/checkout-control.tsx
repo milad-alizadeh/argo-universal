@@ -27,21 +27,24 @@ export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-content">
       <GroupedList fit>
-        <GroupedListSection>{checkoutChoices(props)}</GroupedListSection>
+        <CheckoutChoices {...props} />
       </GroupedList>
     </View>
   );
 }
 
-// A section takes each child as one row, so the rows are returned as elements, not one component.
-function checkoutChoices(props: ContentsProps): React.JSX.Element[] {
-  return [false, true].map((newWorktree) => (
-    <CheckoutChoice
-      key={String(newWorktree)}
-      {...props}
-      newWorktree={newWorktree}
-    />
-  ));
+function CheckoutChoices(props: ContentsProps): React.JSX.Element {
+  return (
+    <GroupedListSection>
+      {[false, true].map((newWorktree) => (
+        <CheckoutChoice
+          key={String(newWorktree)}
+          {...props}
+          newWorktree={newWorktree}
+        />
+      ))}
+    </GroupedListSection>
+  );
 }
 
 function CheckoutChoice(props: ChoiceProps): React.JSX.Element {

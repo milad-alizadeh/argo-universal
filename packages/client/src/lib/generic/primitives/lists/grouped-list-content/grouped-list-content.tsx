@@ -9,12 +9,4 @@ export function GroupedListContent({
   return <View>{children}</View>;
 }
 
-// The content as GroupedList's native list takes it; the web renders the component as it is.
-export function contentSection(
-  props: GroupedListContentProps,
-  key?: React.Key,
-): React.JSX.Element {
-  return <GroupedListContent key={key} {...props} />;
-}
-
 GroupedListContent satisfies React.ComponentType<GroupedListContentProps>;

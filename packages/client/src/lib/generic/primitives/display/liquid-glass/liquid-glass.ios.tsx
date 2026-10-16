@@ -8,7 +8,7 @@ import { FallbackSurface } from './liquid-glass-fallback';
 import type { LiquidGlassProps } from './liquid-glass-props';
 
 const cornerClassName = {
-  card: 'rounded-surface',
+  card: 'rounded-sheet',
   capsule: 'rounded-full',
 } as const;
 

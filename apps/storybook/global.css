@@ -8,7 +8,7 @@
 @source "../../packages/client/src";
 
 body {
-  background-color: var(--color-background);
+  background-color: var(--color-card);
   color: var(--color-foreground);
 }
 

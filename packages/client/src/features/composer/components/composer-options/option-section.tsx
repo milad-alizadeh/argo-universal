@@ -78,7 +78,7 @@ function webSwitchRow(props: BooleanProps): GroupedListItemProps {
 function SwitchAccessory(props: BooleanProps): React.JSX.Element {
   return (
     <View
-      pointerEvents="none"
+      className="pointer-events-none"
       aria-hidden
       importantForAccessibility="no-hide-descendants"
     >
@@ -87,32 +87,18 @@ function SwitchAccessory(props: BooleanProps): React.JSX.Element {
   );
 }
 
-function booleanSection(props: BooleanProps): React.JSX.Element {
-  return (
-    <GroupedListSection key={props.option.configId}>
-      <BooleanSetting {...props} />
-    </GroupedListSection>
-  );
-}
-
-// GroupedList takes each section as a direct child, so this is called rather than rendered.
-export function settingSection({
+export function SettingSection({
   option,
   onChange,
 }: SettingProps): React.JSX.Element {
-  if (option.type === 'boolean') return booleanSection({ option, onChange });
+  if (option.type === 'boolean')
+    return (
+      <GroupedListSection>
+        <BooleanSetting option={option} onChange={onChange} />
+      </GroupedListSection>
+    );
 
-  return (
-    <GroupedListSection key={option.configId} title={option.name}>
-      {selectSettings({ option, onChange })}
-    </GroupedListSection>
-  );
-}
-
-function selectSettings(props: SelectProps): React.JSX.Element[] {
-  return configurationChoices(props.option).map((choice) => (
-    <SelectSetting key={choice.value} {...props} choice={choice} />
-  ));
+  return <SelectSection option={option} onChange={onChange} />;
 }
 
 type SelectOption = Extract<Option, { type: 'select' }>;
@@ -124,6 +110,16 @@ interface SelectProps {
 
 interface SelectChoiceProps extends SelectProps {
   choice: ReturnType<typeof configurationChoices>[number];
+}
+
+function SelectSection(props: SelectProps): React.JSX.Element {
+  return (
+    <GroupedListSection title={props.option.name}>
+      {configurationChoices(props.option).map((choice) => (
+        <SelectSetting key={choice.value} {...props} choice={choice} />
+      ))}
+    </GroupedListSection>
+  );
 }
 
 function SelectSetting({

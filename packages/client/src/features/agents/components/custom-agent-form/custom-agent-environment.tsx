@@ -1,5 +1,4 @@
 import type { EnvironmentVariable } from '@repo/contracts';
-import { useStore } from '@tanstack/react-form';
 import type * as React from 'react';
 import {
   errorMessage,
@@ -14,59 +13,50 @@ import { type Editing, newVariable } from './variable-sheet';
 
 type SectionProps = FormPartProps & { onEdit: (editing: Editing) => void };
 
-type Environment = { env: EnvironmentVariable[]; errors: FieldErrors };
-
-type ValuesProps = SectionProps & Environment;
+type FieldProps = SectionProps & {
+  field: {
+    state: {
+      value: EnvironmentVariable[];
+      meta: { errors: FieldErrors };
+    };
+  };
+};
 
 const environmentHint =
   'Stored on the Server in plain text. Not for API keys or other secrets; sign in through the Agent instead.';
 
-export function useEnvironment(form: FormPartProps['form']): Environment {
-  const env = useStore(form.store, (state) => state.values.env);
-
-  const errors = useStore(
-    form.store,
-    (state) => state.fieldMeta.env?.errors ?? noErrors,
+export function CustomAgentEnvironment(props: SectionProps): React.JSX.Element {
+  return (
+    <props.form.Field name="env" mode="array">
+      {(field) => <EnvironmentSection {...props} field={field} />}
+    </props.form.Field>
   );
-
-  return { env, errors };
 }
 
-const noErrors: FieldErrors = [];
-
 const environmentFooter = ({
-  errors,
-}: ValuesProps): ReturnType<typeof sectionFooter> =>
-  sectionFooter(errorMessage(errors), environmentHint);
+  field,
+}: FieldProps): ReturnType<typeof sectionFooter> =>
+  sectionFooter(errorMessage(field.state.meta.errors), environmentHint);
 
-/*
- * One row per variable; each opens its editor, and the last row adds one. A list error replaces the hint.
- * GroupedList takes its sections, and each section its rows, as direct children, so this is called rather than rendered.
- */
-export function environmentSection(props: ValuesProps): React.JSX.Element {
+// One row per variable; each opens its editor, and the last row adds one. A list error replaces the hint.
+function EnvironmentSection(props: FieldProps): React.JSX.Element {
   return (
     <GroupedListSection
       title="Environment variables"
       {...environmentFooter(props)}
     >
-      {variableRows(props)}
-      {addVariableRow(props)}
+      <VariableRows {...props} />
+      <AddEntryRow
+        label="Add environment variable"
+        disabled={props.disabled}
+        onPress={() => props.onEdit(newVariable)}
+      />
     </GroupedListSection>
   );
 }
 
-function addVariableRow(props: ValuesProps): React.JSX.Element {
-  return (
-    <AddEntryRow
-      label="Add environment variable"
-      disabled={props.disabled}
-      onPress={() => props.onEdit(newVariable)}
-    />
-  );
-}
-
-function variableRows(props: ValuesProps): React.JSX.Element[] {
-  return keyedRows(props.env).map(({ key, index, value }) => (
+function VariableRows(props: FieldProps): React.JSX.Element[] {
+  return keyedRows(props.field.state.value).map(({ key, index, value }) => (
     <VariableRow
       key={key}
       variable={value}

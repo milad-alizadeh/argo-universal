@@ -1,11 +1,11 @@
-import type { ReactElement } from 'react';
+import type { BadgeCount } from '../../../badge-count';
 import type { IconName } from '../../../symbols/icon-names';
 
 export interface DrawerItemProps {
   label: string;
   icon: IconName;
   selected: boolean;
-  // A count that needs attention, drawn by the caller, and what a screen reader says for it.
-  badge?: { element: ReactElement; label: string };
+  // A count that needs attention: none at zero, and over 99 it shows 99+.
+  badge?: BadgeCount;
   onPress: () => void;
 }

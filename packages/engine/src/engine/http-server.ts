@@ -2,7 +2,11 @@ import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
 import { type AcpResourceInput } from '../agents';
-import type { AgentInstallations, syncSupervisorMachine } from '../agents';
+import type {
+  AgentInstallations,
+  RegistryActor,
+  syncSupervisorMachine,
+} from '../agents';
 import { blobsFolderIn } from '../blob';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
@@ -19,6 +23,7 @@ import { createAppRouterDeps } from './router-deps';
 
 export interface HttpServerOptions {
   home: string;
+  registry: RegistryActor;
   installations?: AgentInstallations;
   createId: () => string;
   port: number;

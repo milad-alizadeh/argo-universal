@@ -20,8 +20,8 @@ export function isSessionReady(
 ): boolean {
   return (
     session.matches({ open: 'acp' }) &&
-    !(['opening', 'closing', 'retainingCleanup', 'flushing'] as const).some(
-      (state) => session.matches({ open: { acp: state } }),
+    !(['opening', 'closing', 'flushing'] as const).some((state) =>
+      session.matches({ open: { acp: state } }),
     )
   );
 }
@@ -57,9 +57,9 @@ export function toSessionSnapshot(
     state = 'requires_action';
   } else if (
     session?.matches({ open: { acp: 'committing' } }) ||
-    session?.matches({ open: { acp: 'activeTurn' } }) ||
-    session?.matches({ open: { acp: 'publishing' } }) ||
-    session?.matches({ open: { acp: 'replacing' } })
+    (session?.matches({ open: { acp: 'activeTurn' } }) &&
+      !session.matches({ open: { acp: { activeTurn: 'cancelling' } } })) ||
+    session?.matches({ open: { acp: 'publishing' } })
   ) {
     state = 'running';
   }

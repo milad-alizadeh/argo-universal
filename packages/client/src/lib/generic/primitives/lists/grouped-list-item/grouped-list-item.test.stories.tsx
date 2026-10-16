@@ -71,7 +71,7 @@ export const KeyboardAndAccessibleNames: Story = {
   },
 };
 
-// A status the value already says is named once; the description joins the name.
+// The dot names its status without drawing the status label as a value.
 export const DescriptionAndStatus: Story = {
   render: (): React.JSX.Element => (
     <GroupedList>
@@ -79,15 +79,10 @@ export const DescriptionAndStatus: Story = {
         <GroupedListItem
           label="Codex"
           subtitle={{ text: 'Coding assistant' }}
-          value="Update available"
           status={{ tone: 'warning', label: 'Update available' }}
           onPress={onPress}
         />
-        <GroupedListItem
-          label="goose"
-          value="Not installed"
-          onPress={onPress}
-        />
+        <GroupedListItem label="goose" onPress={onPress} />
       </GroupedListSection>
     </GroupedList>
   ),
@@ -97,9 +92,11 @@ export const DescriptionAndStatus: Story = {
         name: 'Codex, Coding assistant, Update available',
       }),
     ).toBeVisible();
+    await expect(canvas.getByRole('link', { name: 'goose' })).toBeVisible();
     await expect(
-      canvas.getByRole('link', { name: 'goose, Not installed' }),
-    ).toBeVisible();
+      canvas.queryByText('Update available'),
+    ).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Not installed')).not.toBeInTheDocument();
   },
 };
 

@@ -1,5 +1,6 @@
 // Android only: its drawer item is Material's pill, while iOS draws the drawer row in React Native as the web does.
-import { RNHostView, Row, Text } from '@expo/ui';
+import { RNHostView, Row } from '@expo/ui';
+import { Badge, Text } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
   fillMaxWidth,
@@ -11,9 +12,10 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { type CountBadge, countBadge } from '#lib/generic/badge-count';
 import { Icon, IconSlot } from '#primitives/display/icon';
+import { NativeText } from '#primitives/display/native-text';
 import { Host } from '#primitives/native/host';
-import { useUniversalTextStyle } from '#primitives/native/native-typography';
 import type { IconName } from '../../../symbols/icon-names';
 import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
@@ -37,16 +39,18 @@ export function DrawerItem(props: DrawerItemProps): React.JSX.Element {
 
 // A selectable tab row, so TalkBack says which destination is the current one.
 function DrawerItemRow(props: DrawerItemProps): React.JSX.Element {
+  const badge = countBadge(props.badge);
+
   return (
     <Row
       alignment="center"
       spacing={iconGap}
       style={usePillStyle(props.selected)}
-      modifiers={tabModifiers(props)}
+      modifiers={tabModifiers(props, badge)}
     >
       <DrawerItemIcon {...props} />
       <DrawerItemLabel {...props} />
-      <NativeBadge badge={props.badge} />
+      {badge && <NativeBadge badge={badge} />}
     </Row>
   );
 }
@@ -65,12 +69,10 @@ function usePillStyle(
 }
 
 // The press ripple fills the pill, so the padding comes after the selectable.
-function tabModifiers({
-  label,
-  selected,
-  badge,
-  onPress,
-}: DrawerItemProps): ModifierConfig[] {
+function tabModifiers(
+  { label, selected, onPress }: DrawerItemProps,
+  badge: CountBadge | undefined,
+): ModifierConfig[] {
   const description = [label, badge?.label].filter(Boolean).join(', ');
 
   return [
@@ -114,22 +116,22 @@ function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
 
 function DrawerItemLabel({ label }: DrawerItemProps): React.JSX.Element {
   return (
-    <Text
-      textStyle={useUniversalTextStyle('control')}
-      numberOfLines={1}
-      modifiers={[weight(1)]}
-    >
+    <NativeText role="control" numberOfLines={1} modifiers={[weight(1)]}>
       {label}
-    </Text>
+    </NativeText>
   );
 }
 
-function NativeBadge({
-  badge,
-}: Pick<DrawerItemProps, 'badge'>): React.JSX.Element | null {
-  if (!badge) return null;
+// Material's Badge in Argo's danger red; TalkBack reads it with the row.
+function NativeBadge({ badge }: { badge: CountBadge }): React.JSX.Element {
+  const container = String(useCSSVariable('--color-danger'));
+  const content = String(useCSSVariable('--color-primary-foreground'));
 
-  return <RNHostView matchContents>{badge.element}</RNHostView>;
+  return (
+    <Badge containerColor={container} contentColor={content}>
+      <Text>{badge.text}</Text>
+    </Badge>
+  );
 }
 
 DrawerItem satisfies React.ComponentType<DrawerItemProps>;
