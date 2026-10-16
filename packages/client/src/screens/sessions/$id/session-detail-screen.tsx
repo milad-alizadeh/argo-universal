@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useAgents } from '#features/agents';
+import { useInstalledAgents } from '#features/agents';
 import {
   useBlobUrl,
   useConnectionState,
@@ -99,7 +99,7 @@ function useSessionSurroundings(
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     elicitation: useFeedElicitation(sessionId, feed),
-    agents: useAgents(),
+    agents: useInstalledAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',

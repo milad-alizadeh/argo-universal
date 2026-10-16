@@ -4,7 +4,7 @@ import type { IconName } from '#lib/generic/symbols/icon-names';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Text } from '#primitives/display/text';
 import { Tooltip } from '#primitives/overlays/tooltip';
-import type { AgentRowEntry } from '../../state/agent-list';
+import type { AgentRowEntry } from '../../state/agent-rows';
 
 type Link = { url?: string; label: string; icon: IconName };
 

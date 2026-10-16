@@ -12,7 +12,7 @@ export const hasFailedToLoad = ({
   projects,
   agents,
 }: NewSessionData): boolean =>
-  serverInfo.isError || projects.isError || agents.isError;
+  serverInfo.isError || projects.isError || agents.status === 'failed';
 
 const loadedServer = ({
   serverInfo,
@@ -29,5 +29,7 @@ export const loadedNewSession = (
 ): LoadedNewSession | undefined => {
   const server = loadedServer(data);
 
-  return server && data.agents.data && { ...server, agents: data.agents.data };
+  if (!server || data.agents.status !== 'loaded') return undefined;
+
+  return { ...server, agents: data.agents.agents };
 };

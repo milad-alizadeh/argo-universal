@@ -1,5 +1,6 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { fn } from 'storybook/test';
+import type { AgentRows } from '#features/agents';
 import { type GitHubStep } from '#features/setup';
 import type { OnboardingViewProps } from './onboarding-props';
 
@@ -17,13 +18,31 @@ export const githubSteps = {
   expired: { status: 'expired', login: githubLogin },
 } satisfies Record<string, GitHubStep>;
 
+const [example] = publishedRegistry.agents;
+
+if (!example) throw new Error('Registry fixture needs an Agent');
+
+// Get started's one featured tile, installed or not.
+export const featuredTile = (installed: boolean): AgentRows => ({
+  status: 'loaded',
+  rows: [
+    {
+      id: example.id,
+      name: example.name,
+      version: example.version,
+      description: example.description,
+      icon: example.icon,
+      installed,
+      unavailable: false,
+    },
+  ],
+});
+
 // The designed Onboarding: an Agent and GitHub done, Add a Project next, and every action wired.
 export const onboardingArgs = (): OnboardingViewProps => ({
   serverName,
   agent: { status: 'done' },
-  catalog: { status: 'loaded', catalog: { error: null, agents: [] } },
-  featured: publishedRegistry.agents.slice(0, 1),
-  installed: ['example-agent'],
+  featured: featuredTile(true),
   onInstallAgent: fn(),
   onRetry: fn(),
   github: githubSteps.signedIn,

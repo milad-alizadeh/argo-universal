@@ -2,7 +2,13 @@ import type { AgentServer, AgentsRegistryOutput } from '@repo/contracts';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { Platform } from 'react-native';
 import { fn } from 'storybook/test';
+import {
+  type AgentRows,
+  agentsPage,
+  type RegistryLoad,
+} from '#features/agents';
 import { mockHeader } from '../../../../mocks/screen-header-mock';
+import { loaded } from '../../../features/agents/state/installed-agents.mocks';
 import type { AgentListViewProps } from './agent-list-view';
 import { agentsHeader } from './agents-phone-header';
 
@@ -42,9 +48,14 @@ export const longCatalog: AgentsRegistryOutput = {
   })),
 };
 
+// The page's rows for the Server's Installed Agents and a Registry load, through the real rules.
+export const pageRows = (
+  installed: AgentServer[] = installedAgents,
+  registry: RegistryLoad = { status: 'loaded', registry: catalog },
+): AgentRows => agentsPage(loaded(...installed), registry);
+
 export const agentListArgs = (): AgentListViewProps => ({
-  catalog: { status: 'loaded', catalog },
-  installed: installedAgents,
+  agents: pageRows(),
   onInstall: fn(),
   onRemove: fn(),
   onRetry: fn(),

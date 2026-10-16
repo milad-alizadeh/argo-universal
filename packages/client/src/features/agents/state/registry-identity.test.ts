@@ -3,7 +3,8 @@ import {
   registryIdentities,
 } from '@repo/mocks/registry/identities';
 import { expect, it } from 'vitest';
-import { agentList } from './agent-list';
+import { agentsPage } from './agent-rows';
+import { loaded, registryOf, server } from './installed-agents.mocks';
 
 it.each(registryIdentities)(
   'uses Registry id and name for $name even when the saved name differs',
@@ -12,15 +13,12 @@ it.each(registryIdentities)(
 
     if (!entry) throw new Error('Registry identity fixture is missing');
 
-    expect(
-      agentList(
-        [{ id, name: 'Outdated saved name', version: 'older', env: {} }],
-        {
-          agents: [{ entry, support: 'npx' }],
-          error: null,
-        },
-      ),
-    ).toEqual([
+    const page = agentsPage(loaded(server(id, 'Outdated saved name')), {
+      status: 'loaded',
+      registry: registryOf({ entry, support: 'npx' }),
+    });
+
+    expect(page.rows).toEqual([
       expect.objectContaining({
         id,
         name,

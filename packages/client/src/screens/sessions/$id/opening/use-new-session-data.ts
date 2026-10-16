@@ -7,7 +7,12 @@ import type {
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
-import { useAgents, useRememberedAgent } from '#features/agents';
+import {
+  type InstalledAgents,
+  loadedAgents,
+  useInstalledAgents,
+  useRememberedAgent,
+} from '#features/agents';
 import { useTRPC } from '#features/connection';
 import {
   type ChosenSettings,
@@ -19,7 +24,7 @@ import {
 export interface NewSessionData {
   serverInfo: UseQueryResult<SystemInfo, unknown>;
   projects: UseQueryResult<ProjectInfo[], unknown>;
-  agents: ReturnType<typeof useAgents>;
+  agents: InstalledAgents;
   setChosen: React.Dispatch<React.SetStateAction<ChosenSettings>>;
   choices: SessionChoices;
 }
@@ -55,40 +60,54 @@ function useSessionChoices(
 ): ChosenSessionChoices {
   const [chosen, setChosen] = useState<ChosenSettings>({ projectId });
 
-  const remembered = { ...chosen, agent: useChosenAgent(chosen.agent) };
+  const rememberedAgent = useRememberChosenAgent(chosen.agent);
   const branches = useProjectBranches(listed.projects, chosen.projectId);
 
   const choices = toSessionChoices({
     ...listed,
-    chosen: remembered,
+    chosen,
+    rememberedAgent,
     branches,
   });
 
   return { choices, setChosen };
 }
 
-function useChosenAgent(chosen: string | undefined): string | undefined {
+// Remembers the chosen Agent on this device; returns the remembered one.
+function useRememberChosenAgent(
+  chosen: string | undefined,
+): string | undefined {
   const { agent, select } = useRememberedAgent();
   useEffect(() => {
     if (chosen) select(chosen);
   }, [chosen, select]);
 
-  return chosen ?? agent;
+  return agent;
+}
+
+type ListedData = Pick<NewSessionData, 'projects' | 'agents'> & {
+  listed: ListedChoices;
+};
+
+function useListedData(): ListedData {
+  const projects = useQuery(useTRPC().projects.list.queryOptions());
+  const agents = useInstalledAgents();
+
+  const listed = {
+    projects: projects.data ?? [],
+    agents: loadedAgents(agents),
+  };
+
+  return { projects, agents, listed };
 }
 
 // The Server's Projects and Agents with the reader's choices over their defaults.
 export function useNewSessionData(
   projectId: string | undefined,
 ): NewSessionData {
-  const trpc = useTRPC();
-  const serverInfo = useQuery(trpc.system.info.queryOptions());
-  const projects = useQuery(trpc.projects.list.queryOptions());
-  const agents = useAgents();
-
-  const { choices, setChosen } = useSessionChoices(
-    { projects: projects.data ?? [], agents: agents.data ?? [] },
-    projectId,
-  );
+  const serverInfo = useQuery(useTRPC().system.info.queryOptions());
+  const { projects, agents, listed } = useListedData();
+  const { choices, setChosen } = useSessionChoices(listed, projectId);
 
   return { serverInfo, projects, agents, setChosen, choices };
 }
