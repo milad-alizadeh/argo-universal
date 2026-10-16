@@ -1,6 +1,7 @@
 import type { ViewProps } from 'react-native';
 import { expectTypeOf } from 'vitest';
 import type { IconRole } from '../symbols/icon-role';
+import type { SizeClassValue } from '../use-size-class/size-class-value';
 import type { Aliases, Primitives } from './prop-vocabulary.mocks';
 
 /*
@@ -51,11 +52,13 @@ type OffVocabularyTones = {
   [Name in keyof Primitives]: Exclude<Values<Primitives[Name], 'tone'>, Tone>;
 };
 
-// `role` names typography or an icon's placement; ARIA is `accessibilityRole`. React Native's own `role` passes through.
+// `role` names typography or an icon's placement, alone or one per size class; ARIA is `accessibilityRole`. React Native's own `role` passes through.
 type OwnRoles = {
   [Name in keyof Primitives]: Exclude<
     Values<Primitives[Name], 'role'>,
-    Aliases['TextRole'] | IconRole | NonNullable<ViewProps['role']>
+    | SizeClassValue<Aliases['TextRole']>
+    | SizeClassValue<IconRole>
+    | NonNullable<ViewProps['role']>
   >;
 };
 

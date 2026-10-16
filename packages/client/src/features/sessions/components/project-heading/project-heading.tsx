@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { memo } from 'react';
 import { Pressable } from '#primitives/pressable';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { ProjectActions } from './project-heading-actions';
 import { ProjectToggle } from './project-heading-toggle';
 
@@ -21,11 +20,9 @@ const rowClassName =
 export const ProjectHeading = memo(function ProjectHeading(
   props: ProjectHeadingProps,
 ): React.JSX.Element {
-  const wide = useWide();
-
   return (
     <Pressable accessible={false} className={rowClassName}>
-      <ProjectToggle {...props} wide={wide} />
+      <ProjectToggle {...props} />
       <ProjectActions {...props} />
     </Pressable>
   );

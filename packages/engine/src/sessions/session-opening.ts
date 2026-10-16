@@ -6,6 +6,7 @@ import {
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
+import { existingSessionRefusal } from './agent-admission';
 import type {
   OpenSessionsActorRef,
   OpenSessionsCommand,
@@ -28,8 +29,27 @@ export function sendCheckedOpenSessionsCommand(
   const openSessionsSnapshot = openSessions.getSnapshot();
 
   if (!openSessionsSnapshot.can(openSessionsCommand))
-    rejectOpenSessionsCommand(openSessions, openSessionsCommand.type);
+    rejectRefusedCommand(openSessions, openSessionsCommand);
   openSessions.send(openSessionsCommand);
+}
+
+function rejectRefusedCommand(
+  openSessions: OpenSessionsActorRef,
+  openSessionsCommand: OpenSessionsCommand,
+): never {
+  const openSessionsSnapshot = openSessions.getSnapshot();
+
+  const refusal =
+    openSessionsCommand.type === 'sessions.open' &&
+    openSessionsSnapshot.matches('running')
+      ? existingSessionRefusal(
+          openSessionsSnapshot.context,
+          openSessionsCommand.agent,
+        )
+      : undefined;
+
+  if (refusal) throw new TRPCError({ code: 'CONFLICT', message: refusal });
+  rejectOpenSessionsCommand(openSessions, openSessionsCommand.type);
 }
 
 export function requireOpenSessionActor(

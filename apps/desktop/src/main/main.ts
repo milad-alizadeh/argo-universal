@@ -85,6 +85,8 @@ const createWindow = (url: string): void => {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    // Below 600 is a phone's width, the compact size class (ADR-0026).
+    minWidth: 600,
     show: !runsInBackground,
     // On macOS the traffic lights sit in the rail's window-controls row on the glass, with no title bar above.
     ...(process.platform === 'darwin' && {

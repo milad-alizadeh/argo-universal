@@ -5,7 +5,7 @@ import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { Icon } from '#primitives/display/icon';
 import {
-  type IconRole,
+  type IconRoleValue,
   useIconBox,
   useIconPixels,
 } from '../../../../lib/generic/symbols/icon-role';
@@ -14,7 +14,7 @@ import { cssSafeUri } from './css-safe-uri';
 interface RegistryIconProps {
   uri: string | undefined;
   agentName: string;
-  role: IconRole;
+  role: IconRoleValue;
 }
 
 type IconSource =

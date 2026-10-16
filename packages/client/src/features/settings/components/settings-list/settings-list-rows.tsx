@@ -1,22 +1,20 @@
 import type * as React from 'react';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import type { SettingsListProps, SettingsRow } from './settings-list-props';
 
 type Selection = Pick<SettingsListProps, 'selectedPath' | 'onSelect'>;
 
-// One row each, straight in the section: Android's Section gives each child it finds its own Material row.
+// One row each, straight in the section; only the sidebar shows the page that is open: Android's Section gives each child it finds its own Material row.
 export function SettingsRowItem({
   row,
+  selectable,
   selectedPath,
   onSelect,
-}: Selection & { row: SettingsRow }): React.JSX.Element {
-  const wide = useWide();
-
+}: Selection & { row: SettingsRow; selectable: boolean }): React.JSX.Element {
   return (
     <GroupedListItem
       {...row}
-      selected={wide && selectedRow(row.href, selectedPath)}
+      selected={selectable && selectedRow(row.href, selectedPath)}
       onPress={() => onSelect(row.href)}
     />
   );

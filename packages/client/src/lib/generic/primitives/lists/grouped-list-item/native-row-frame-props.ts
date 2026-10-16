@@ -1,9 +1,9 @@
 import type { ColumnProps } from '@expo/ui';
 import type { ReactNode } from 'react';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 
 export interface NativeRowFrameProps {
-  item: GroupedListItemProps;
+  item: ResolvedItemProps;
   modifiers: NonNullable<ColumnProps['modifiers']>;
   children: ReactNode;
 }

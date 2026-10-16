@@ -3,14 +3,14 @@ import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { Icon } from '#primitives/display/icon';
-import type { IconRole } from '../../../../lib/generic/symbols/icon-role';
+import type { IconRoleValue } from '../../../../lib/generic/symbols/icon-role';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 
 interface AgentLogoProps {
   // SVG markup, the registry's icon URI, or nothing for a custom Agent.
   logo: string;
   label: string;
-  role: IconRole;
+  role: IconRoleValue;
   testID?: string;
 }
 

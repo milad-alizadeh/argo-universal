@@ -23,3 +23,12 @@ export const admitsNewSession = (
   isKnownAgent(context, agent) && !isAgentDisabled(context.database, agent);
 
 export const admitsExistingSession = isKnownAgent;
+
+// Spec 0014's wording for a past Session whose Agent is gone; an Agent mid-setup keeps the generic refusal.
+export const existingSessionRefusal = (
+  context: AdmissionContext,
+  agent: string,
+): string | undefined =>
+  isKnownAgent(context, agent) || context.isAgentSetupBusy?.(agent)
+    ? undefined
+    : `Agent "${agent}" is not installed.`;

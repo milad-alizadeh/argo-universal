@@ -62,6 +62,12 @@ it('custom unregister preserves the external executable and stored Session, Turn
   await expect(host.caller.session.new(input)).rejects.toThrow(
     'cannot accept sessions.create',
   );
+  await expect(
+    host.caller.session.prompt({
+      ...created,
+      prompt: [{ type: 'text', text: 'Send again' }],
+    }),
+  ).rejects.toThrow(`Agent "${registration.agentId}" is not installed.`);
   await host.stop();
   const restarted = await startEngineTestHost({ home: host.home });
   expect(

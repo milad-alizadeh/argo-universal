@@ -1,4 +1,4 @@
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 
 /*
  * A row's lane: the gap between its parts, and where its text starts, which is the 16 gutter, the
@@ -26,7 +26,7 @@ const rowLanes = {
 } as const satisfies Record<string, RowLane>;
 
 export function rowLane(
-  props: Pick<GroupedListItemProps, 'size' | 'leading' | 'loading'>,
+  props: Pick<ResolvedItemProps, 'size' | 'leading' | 'loading'>,
   sidebar: boolean,
 ): RowLane {
   if (props.size === 'lg') return largeLane(props);
@@ -36,6 +36,6 @@ export function rowLane(
 
 // A loading row's spinner sits in the row icon's slot, not on the tile.
 const largeLane = (
-  props: Pick<GroupedListItemProps, 'leading' | 'loading'>,
+  props: Pick<ResolvedItemProps, 'leading' | 'loading'>,
 ): RowLane =>
   props.leading && !props.loading ? rowLanes.tile : rowLanes.loose;

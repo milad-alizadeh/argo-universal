@@ -3,7 +3,7 @@ import type {
   SessionAnswerPlanProposalInput,
 } from '@repo/contracts';
 import type * as React from 'react';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { PlanProposalExpansion } from '../plan-proposal-expansion/plan-proposal-expansion';
 import { RequestCard, type RequestState } from '../request-card/request-card';
 import { PlanProposalActions } from './plan-proposal-actions';
@@ -39,18 +39,39 @@ export function PlanProposalCard(
 
 function ProposalInteraction(props: PlanProposalCardProps): React.JSX.Element {
   const interaction = usePlanProposal(props);
-  const wide = useWide();
   const panel = <ProposalPanel {...props} interaction={interaction} />;
 
-  if (!wide || !interaction.expanded) return panel;
+  if (!interaction.expanded) return panel;
 
   return (
-    <PlanProposalExpansion
+    <ExpandedProposal
+      panel={panel}
       bottomInset={props.bottomInset}
       onCollapse={() => interaction.setExpanded(false)}
-    >
-      {panel}
-    </PlanProposalExpansion>
+    />
+  );
+}
+
+interface ExpandedProposalProps {
+  panel: React.JSX.Element;
+  bottomInset?: number;
+  onCollapse: () => void;
+}
+
+// Expanded, a wide window lifts the plan over the Feed; a phone's sheet already holds it.
+function ExpandedProposal(props: ExpandedProposalProps): React.JSX.Element {
+  return (
+    <SizeClass
+      compact={props.panel}
+      wide={
+        <PlanProposalExpansion
+          bottomInset={props.bottomInset}
+          onCollapse={props.onCollapse}
+        >
+          {props.panel}
+        </PlanProposalExpansion>
+      }
+    />
   );
 }
 

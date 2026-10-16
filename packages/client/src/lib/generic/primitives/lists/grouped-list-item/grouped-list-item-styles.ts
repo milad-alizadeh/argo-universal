@@ -1,7 +1,7 @@
 import { toneClass } from '#primitives/display/text';
 import { cn } from '../../../utils';
 import { rowLane } from './grouped-list-item-lane';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 
 interface Corners {
   first: boolean;
@@ -18,7 +18,7 @@ export interface RowPlace {
 }
 
 export function rowClasses(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
   sidebar: boolean,
   place: RowPlace = {},
 ): string {
@@ -35,7 +35,7 @@ export function rowClasses(
 
 // A row with a control below, such as Effort, pads 8 all round like its neighbours.
 const overlayClasses = (
-  props: Pick<GroupedListItemProps, 'detail'>,
+  props: Pick<ResolvedItemProps, 'detail'>,
   overlay: boolean | undefined,
 ): string | undefined =>
   overlay
@@ -47,7 +47,7 @@ const overlayClasses = (
 
 // A sidebar row has no separator, and neither has the row that ends its section.
 function edgeClasses(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
   sidebar: boolean,
   place: RowPlace,
 ): string | undefined {
@@ -59,7 +59,7 @@ function edgeClasses(
 }
 
 function sectionEdge(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
   place: RowPlace,
 ): string | undefined {
   return place.endsSection === true
@@ -78,7 +78,7 @@ const bottomCorners = (corners: Corners | undefined): string | undefined =>
   corners?.last ? 'rounded-b-2xl' : undefined;
 
 function controlClasses(
-  props: Pick<GroupedListItemProps, 'subtitle' | 'detail'>,
+  props: Pick<ResolvedItemProps, 'subtitle' | 'detail'>,
 ): string {
   return cn(
     props.subtitle && 'wide:min-h-12.5 wide:py-1.5',
@@ -87,18 +87,18 @@ function controlClasses(
 }
 
 // A large row pads 16 all round at every width; a small one is 36 tall on a wide window.
-function sizeClasses(props: GroupedListItemProps): string | undefined {
+function sizeClasses(props: ResolvedItemProps): string | undefined {
   if (props.size === 'lg') return 'py-4 wide:py-4';
 
   return props.size === 'sm' ? smallClasses(props) : undefined;
 }
 
 // A small row's subtitle keeps its line under the title, padded as any subtitled row; a switch fits its 36 too.
-const smallClasses = ({ subtitle }: GroupedListItemProps): string =>
+const smallClasses = ({ subtitle }: ResolvedItemProps): string =>
   cn('wide:min-h-9', !subtitle && 'wide:py-1.5');
 
 // A loading row pads to Paper's 56, its spinner in a 20 slot; a pressable row shades on hover.
-function stateClasses(props: GroupedListItemProps, sidebar: boolean): string {
+function stateClasses(props: ResolvedItemProps, sidebar: boolean): string {
   return cn(props.loading && 'py-4', props.onPress && pressClasses(sidebar));
 }
 
@@ -113,7 +113,7 @@ const pressClasses = (sidebar: boolean): string =>
 const hoverClasses =
   'web:hover:bg-hover web:active:bg-pressed web:hover:after:absolute web:active:after:absolute web:hover:after:bg-inherit web:active:after:bg-inherit';
 
-function sidebarClasses(props: GroupedListItemProps): string {
+function sidebarClasses(props: ResolvedItemProps): string {
   return cn(
     'rounded-xl',
     // Hover is a lighter tint than selected; a selected row keeps its tint.
@@ -124,7 +124,7 @@ function sidebarClasses(props: GroupedListItemProps): string {
 }
 
 export function rowEmphasis(
-  props: GroupedListItemProps,
+  props: ResolvedItemProps,
   sidebar: boolean,
 ): string {
   return props.tone === 'accent'
@@ -132,7 +132,7 @@ export function rowEmphasis(
     : plainEmphasis(props, sidebar);
 }
 
-function plainEmphasis(props: GroupedListItemProps, sidebar: boolean): string {
+function plainEmphasis(props: ResolvedItemProps, sidebar: boolean): string {
   return sidebar && !props.selected
     ? 'text-muted-foreground'
     : 'text-foreground';
@@ -156,10 +156,7 @@ const besideShadedRow =
   'web:[&:has(+:is(a,[role=button],[role=switch]):hover)]:after:hidden web:[&:has(+:is(a,[role=button],[role=switch]):active)]:after:hidden';
 
 // 1px on every web width: Chrome drops a 0.5px line on a phone-width page, even at 3x.
-function separatorClasses(
-  props: GroupedListItemProps,
-  place: RowPlace,
-): string {
+function separatorClasses(props: ResolvedItemProps, place: RowPlace): string {
   return cn(
     'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border wide:web:after:bg-border/40',
     hiddenSeparator(place),
@@ -170,17 +167,17 @@ function separatorClasses(
 
 // An action row, such as "Add argument", acts in place, so it has no chevron.
 export const hasDisclosure = (
-  props: Pick<GroupedListItemProps, 'onPress' | 'tone' | 'disclosure'>,
+  props: Pick<ResolvedItemProps, 'onPress' | 'tone' | 'disclosure'>,
 ): boolean => props.disclosure ?? (!!props.onPress && props.tone !== 'accent');
 
 export function hasLeadingSlot(
-  props: Pick<GroupedListItemProps, 'icon' | 'loading' | 'leading'>,
+  props: Pick<ResolvedItemProps, 'icon' | 'loading' | 'leading'>,
 ): boolean {
   return !!props.icon || !!props.loading || !!props.leading;
 }
 
 export function titleClasses(
-  props: Pick<GroupedListItemProps, 'tone' | 'code'>,
+  props: Pick<ResolvedItemProps, 'tone' | 'code'>,
 ): string {
   return cn('min-w-0 flex-1', props.code && 'type-code', toneClass(props.tone));
 }

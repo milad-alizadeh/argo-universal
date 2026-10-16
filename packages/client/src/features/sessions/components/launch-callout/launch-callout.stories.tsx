@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import { CalloutLoading, LaunchCallout } from './launch-callout';
 
@@ -28,17 +28,21 @@ const failed = <LaunchCallout message={exited} onRetry={() => {}} />;
 
 // A phone presents each state as a sheet, so it shows the one the example control picks.
 function LaunchCalloutGallery(args: GalleryArgs): React.JSX.Element {
-  if (!useWide())
-    return args.example === 'failed' ? failed : <CalloutLoading />;
-
   return (
-    <Variations>
-      <Variation label={examples.failed}>{failed}</Variation>
-      <Variation label={examples.retrying}>
-        <CalloutLoading />
-      </Variation>
-    </Variations>
+    <SizeClass
+      compact={args.example === 'failed' ? failed : <CalloutLoading />}
+      wide={gallery}
+    />
   );
 }
+
+const gallery = (
+  <Variations>
+    <Variation label={examples.failed}>{failed}</Variation>
+    <Variation label={examples.retrying}>
+      <CalloutLoading />
+    </Variation>
+  </Variations>
+);
 
 export const Overview: StoryObj<typeof meta> = { name: 'LaunchCallout' };

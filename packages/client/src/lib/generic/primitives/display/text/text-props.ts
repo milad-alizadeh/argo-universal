@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import type { Text as RNText } from 'react-native';
+import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { Tone } from './text-tone';
 
 export type TextRole =
@@ -20,7 +21,8 @@ export type TextProps = Omit<
   'role' | 'accessibilityRole'
 > &
   React.RefAttributes<RNText> & {
-    role?: TextRole;
+    // One role, or one per size class when the text's place changes with the window.
+    role?: SizeClassValue<TextRole>;
     tone?: Tone;
     // What the text is to assistive technology, such as a heading or an alert.
     accessibilityRole?: React.ComponentProps<typeof RNText>['role'];

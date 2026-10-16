@@ -3,15 +3,15 @@ import {
   NativeText,
   type NativeTextProps,
 } from '#primitives/display/native-text';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 import { codeTruncation, subtitleModifiers } from './grouped-list-item-text';
 
-type Subtitle = NonNullable<GroupedListItemProps['subtitle']>;
+type Subtitle = NonNullable<ResolvedItemProps['subtitle']>;
 
 // Prose reflows under the title, such as an Agent's setup explanation; code, such as a path, keeps one line and shortens before the row's trailing accessory.
 export function RowSubtitle({
   subtitle,
-}: Pick<GroupedListItemProps, 'subtitle'>): React.JSX.Element | null {
+}: Pick<ResolvedItemProps, 'subtitle'>): React.JSX.Element | null {
   return subtitle ? (
     <NativeText
       role="secondary"

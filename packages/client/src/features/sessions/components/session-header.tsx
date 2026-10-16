@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { PageHeader } from '#lib/product/page-header';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { defaultMergeMethod, type MergeMethod } from '../state/merge-method';
 import {
   SessionHeaderActions,
@@ -77,15 +77,14 @@ function WideSessionHeader({
 }
 
 // A phone gets the native stack's own header, which the Session's screen names: the plain title and its back button; the Session's actions come back as they are wired. Wide draws its PageHeader with a one-line title, the meta line (status, one PR, its checks) and the actions.
-export function SessionHeader(
-  props: SessionHeaderProps,
-): React.JSX.Element | null {
-  const wide = useWide();
+export function SessionHeader(props: SessionHeaderProps): React.JSX.Element {
   const state = useWideHeaderState(props);
 
-  if (!wide) return null;
-
-  return <WideSessionHeader {...props} {...state} />;
+  return (
+    <SizeClass only="wide">
+      <WideSessionHeader {...props} {...state} />
+    </SizeClass>
+  );
 }
 
 type WideHeaderState = Pick<

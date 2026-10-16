@@ -5,9 +5,14 @@ import { cn } from '#lib/generic/utils';
 import { DrawnButton } from '#primitives/buttons/button';
 import { ButtonGroup } from '#primitives/buttons/button-group';
 import { Menu } from '#primitives/overlays/menu';
+import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import { chevron } from './split-button-chevron';
 import { menuRows } from './split-button-items';
-import type { SplitButtonProps, SplitMenuProps } from './split-button-props';
+import type {
+  ResolvedSplitProps,
+  SplitButtonProps,
+  SplitMenuProps,
+} from './split-button-props';
 
 export type {
   SplitButtonOption,
@@ -21,7 +26,7 @@ type GroupLook = Pick<SplitMenuProps, 'size' | 'primary' | 'disabled'>;
 
 // What the acting half reads.
 type ActingLook = Pick<
-  SplitButtonProps,
+  ResolvedSplitProps,
   | 'label'
   | 'accessibilityLabel'
   | 'icon'
@@ -38,15 +43,28 @@ type JoinedMenuProps<Value extends string> = SplitMenuProps<Value> & {
 };
 
 // A button with a chevron that picks what it does or opens actions of its own, from Argo's menu; phones draw it natively.
-export function SplitButton<Value extends string>(
-  props: SplitButtonProps<Value>,
-): React.JSX.Element {
+export function SplitButton<Value extends string>({
+  fullWidth,
+  ...options
+}: SplitButtonProps<Value>): React.JSX.Element {
+  const props: ResolvedSplitProps<Value> = {
+    ...options,
+    narrow: useNarrowLayout(fullWidth),
+  };
+
   return (
     <ButtonGroup className={groupClassName(props)}>
       {leadingItems(props)}
       <SplitMenu {...props} />
     </ButtonGroup>
   );
+}
+
+// Full width always, or "narrow" on a compact window only, as Button's fullWidth.
+function useNarrowLayout(fullWidth: SplitButtonProps['fullWidth']): boolean {
+  const compact = useSizeClassValue({ compact: true, wide: false });
+
+  return fullWidth === true || (fullWidth === 'narrow' && compact);
 }
 
 // The compact split dims as one group, so its halves do not dim a second time.

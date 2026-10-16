@@ -2,11 +2,11 @@ import type { AgentInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { AgentLogo } from '#features/agents';
 import { IconSlot } from '#primitives/display/icon';
-import type { IconRole } from '../../../../lib/generic/symbols/icon-role';
+import type { IconRoleValue } from '../../../../lib/generic/symbols/icon-role';
 
 interface AgentIconProps {
   agent?: AgentInfo;
-  role?: IconRole;
+  role?: IconRoleValue;
 }
 
 export function AgentIcon({

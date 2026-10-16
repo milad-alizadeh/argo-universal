@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { SplitButton } from '#primitives/buttons/split-button';
 import { Callout, CalloutButton } from '#primitives/display/callout';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type {
   AuthCalloutMethod,
   AuthCalloutProps,
@@ -11,16 +11,18 @@ import type {
 const chooseMethodHint = 'Choose one of the following authentication options:';
 
 // Zed's sign-in callout: one action per method, the first the accent; while one runs, every Device can cancel it.
-export function AuthCallout(props: AuthCalloutProps): React.JSX.Element | null {
-  const wide = useWide();
-
+export function AuthCallout(props: AuthCalloutProps): React.JSX.Element {
   if (!props.pending) return <MethodsCallout {...props} />;
 
-  return terminalTakesPlace(props, wide) ? null : <PendingCallout {...props} />;
-}
+  const pending = <PendingCallout {...props} />;
 
-const terminalTakesPlace = (props: AuthCalloutProps, wide: boolean): boolean =>
-  Boolean(props.terminal) && !wide;
+  // On a phone the terminal's sheet takes the pending callout's place.
+  return props.terminal ? (
+    <SizeClass only="wide">{pending}</SizeClass>
+  ) : (
+    pending
+  );
+}
 
 function MethodsCallout(props: AuthCalloutProps): React.JSX.Element {
   return (
@@ -100,7 +102,7 @@ function MethodSplit(props: MethodSplitProps): React.JSX.Element {
     <SplitButton
       {...splitDefaults}
       {...chosenNames(props.methods, chosenId)}
-      narrow={!useWide()}
+      fullWidth="narrow"
       options={methodOptions(props.methods)}
       value={chosenId}
       onValueChange={setChosenId}
