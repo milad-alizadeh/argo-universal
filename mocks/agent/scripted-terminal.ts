@@ -1,9 +1,10 @@
-import type { SessionUpdate } from '@agentclientprotocol/sdk';
+import type {
+  KillTerminalRequest,
+  SessionUpdate,
+} from '@agentclientprotocol/sdk';
 import type { ScriptedStep, ScriptedTurn } from './scripted-types.ts';
 
 type TerminalStep = Extract<ScriptedStep, { type: 'terminal' }>;
-
-type TerminalScope = { sessionId: string; terminalId: string };
 
 export const runTerminal = async (
   step: TerminalStep,
@@ -36,7 +37,7 @@ const terminalUpdate = (
 
 const completeTerminal = async (
   completion: TerminalStep['completion'],
-  scope: TerminalScope,
+  scope: KillTerminalRequest,
   turn: ScriptedTurn,
 ): Promise<void> => {
   if (completion === 'leave-running') return;

@@ -3,20 +3,21 @@ import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished } from 'vitest';
 import { insertSession, openTestDatabase } from '#mocks/database';
 
-it('migrates Shells with Session-scoped ids and cascades only the deleted Session', () => {
+const values = {
+  id: 'terminal-1',
+  toolCallId: 'tool-1',
+  command: 'node',
+  cwd: '/project',
+  status: 'running',
+  startedAt: 100,
+} as const;
+
+const databaseWithShells = (): ReturnType<
+  typeof openTestDatabase
+>['database'] => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   insertSession(database, { id: 'session-2' });
-
-  const values = {
-    id: 'terminal-1',
-    toolCallId: 'tool-1',
-    command: 'node',
-    cwd: '/project',
-    status: 'running',
-    startedAt: 100,
-  } as const;
-
   database
     .insert(shell)
     .values([
@@ -24,12 +25,23 @@ it('migrates Shells with Session-scoped ids and cascades only the deleted Sessio
       { ...values, sessionId: 'session-2' },
     ])
     .run();
+
+  return database;
+};
+
+it('migrates Shell ids scoped to a Session and rejects duplicates within that Session', () => {
+  const database = databaseWithShells();
+  expect(database.select().from(shell).all()).toHaveLength(2);
   expect(() =>
     database
       .insert(shell)
       .values({ ...values, sessionId: 'session-1' })
       .run(),
   ).toThrow('UNIQUE constraint failed: shell.session_id, shell.id');
+});
+
+it('deleting a Session cascades only its Shells', () => {
+  const database = databaseWithShells();
   database.delete(session).where(eq(session.id, 'session-1')).run();
   expect(database.select().from(shell).all()).toMatchObject([
     {
