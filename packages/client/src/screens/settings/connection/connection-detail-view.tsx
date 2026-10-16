@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { formatServerClock, formatServerStart } from '#features/connection';
+import { errorToast } from '#lib/generic/error-toast';
 import { SettingsPage } from '#lib/product/settings-page';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
@@ -54,12 +55,10 @@ function ServerList({ server }: { server: ServerDetails }): React.JSX.Element {
 // A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
 function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
   useErrorToast(
-    server.status === 'error'
-      ? {
-          title: "Could not load the Server's details",
-          message: server.message,
-        }
-      : undefined,
+    errorToast(
+      "Could not load the Server's details",
+      server.status === 'error' ? server.message : undefined,
+    ),
   );
 
   if (server.status !== 'loaded') {
