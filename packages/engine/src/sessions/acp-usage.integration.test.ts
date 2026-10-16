@@ -21,7 +21,6 @@ const initialization = (name: string, version: string): InitializeResponse => ({
   protocolVersion: 1,
   agentInfo: { name, version },
   agentCapabilities: {
-    _meta: { authStatus: {} },
     sessionCapabilities: { close: {} },
   },
 });

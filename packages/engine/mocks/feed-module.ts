@@ -101,6 +101,7 @@ const feedModuleRouterInput = (
   signal: AbortSignal,
 ): AppRouterInput => ({
   database: host.database,
+  home: host.home,
   sessions: host.openSessions,
   databaseWriter: host.databaseWriter,
   notifications: host.notifications,

@@ -9,13 +9,6 @@ import { engineProcess } from './engine-process';
 
 const owners = [
   {
-    kind: 'login PTY',
-    entry: fileURLToPath(
-      new URL('../../mocks/terminal-engine.ts', import.meta.url),
-    ),
-    folderName: 'login-terminals',
-  },
-  {
     kind: 'Shell',
     entry: fileURLToPath(
       new URL('../../mocks/shell-engine.ts', import.meta.url),
@@ -43,7 +36,7 @@ it.each(
 )(
   'releases the real $kind after $mode',
   async ({ entry, folderName, mode }) => {
-    const folder = await mkdtemp(join(tmpdir(), 'argo-terminal-supervisor-'));
+    const folder = await mkdtemp(join(tmpdir(), 'argo-shell-supervisor-'));
     vi.stubEnv('ARGO_HOME', folder);
     vi.stubEnv('ARGO_FIXTURE_PIDFILE', join(folder, 'pids.json'));
     const events: string[] = [];

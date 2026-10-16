@@ -8,7 +8,6 @@ import {
   serveOtherMethods,
   requireScriptedAuthentication,
 } from './scripted-auth.ts';
-import { initializeScriptedAgent } from './scripted-initialize.ts';
 import { ScriptedMethodPlayer } from './scripted-method-player.ts';
 import type { ScriptedNotifications } from './scripted-responses.ts';
 import {
@@ -31,11 +30,7 @@ const serveInitialization = (
   const initialize = player.respond('initialize');
 
   return app.onRequest('initialize', (context) =>
-    initializeScriptedAgent(
-      context,
-      initialize,
-      scenario.initialize ?? scriptedInitialization,
-    ),
+    initialize(context, scenario.initialize ?? scriptedInitialization),
   );
 };
 

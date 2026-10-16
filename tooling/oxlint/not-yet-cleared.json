@@ -11,7 +11,7 @@
     // stylistic/multiline-comment-style
     { "files": ["apps/desktop/src/preload/*"], "rules": { "stylistic/multiline-comment-style": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, sonarjs/no-nested-conditional, sonarjs/no-os-command-from-path, typescript/consistent-type-assertions, typescript/explicit-function-return-type
-    { "files": ["packages/engine/mocks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-nested-conditional": "off", "sonarjs/no-os-command-from-path": "off" } },
+    { "files": ["packages/engine/mocks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-os-command-from-path": "off" } },
     // complexity, max-lines, max-lines-per-function, max-params, max-statements, prefer-const, sonarjs/no-duplicate-string, sonarjs/no-os-command-from-path, sonarjs/no-unused-vars, typescript/await-thenable, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/no-meaningless-void-operator, vitest/expect-expect, vitest/no-conditional-expect, vitest/require-to-throw-message, vitest/valid-expect
     // complexity, max-lines-per-function, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type, vitest/require-mock-type-parameters
     { "files": ["packages/engine/src/agents/*"], "rules": { "complexity": "off" } },

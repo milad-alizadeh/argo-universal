@@ -34,6 +34,4 @@ const listenerIdentity = {
 
 const defaultAgentOptions = {
   acp: undefined,
-  loginTimeoutMs: undefined,
-  loginCleanupTimeoutMs: undefined,
 };

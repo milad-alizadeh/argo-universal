@@ -2,7 +2,6 @@ import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { z } from 'zod';
 import { jsonCodec } from '../../../lib/json-codec';
-import { rejectInstallMetadata } from './metadata-rejections';
 
 const PackageMetadata = z.object({
   name: z.string(),
@@ -31,9 +30,7 @@ const selectedBin = (
   const command = unambiguousNpmBin(bin, name);
 
   if (!command)
-    throw rejectInstallMetadata(
-      'Installed npm package has no unambiguous launch file',
-    );
+    throw new Error('Installed npm package has no unambiguous launch file');
 
   return command;
 };
@@ -46,9 +43,7 @@ const readPackageMetadata = async (
       await readFile(join(directory, 'package.json'), 'utf8'),
     );
   } catch {
-    throw rejectInstallMetadata(
-      'Installed npm package metadata is malformed or missing',
-    );
+    throw new Error('Installed npm package metadata is malformed or missing');
   }
 };
 
@@ -74,7 +69,7 @@ export const readNpmExecutable = async (
   const metadata = await readPackageMetadata(folder);
 
   if (metadata.name !== name)
-    throw rejectInstallMetadata('Installed npm package name does not match');
+    throw new Error('Installed npm package name does not match');
 
   return join(folder, selectedBin(metadata.bin, name));
 };

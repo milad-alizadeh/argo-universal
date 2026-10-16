@@ -1,4 +1,4 @@
-import type { AgentLoginTerminalInput } from '@repo/contracts';
+import type { AgentAuthTerminalInput } from '@repo/contracts';
 import type { FitAddon } from '@xterm/addon-fit';
 import type { Terminal } from '@xterm/xterm';
 import { terminalInputChunks } from './terminal-input';
@@ -51,7 +51,7 @@ export class TerminalRuntime {
   private live(): boolean {
     return !this.stopped && !this.blocked;
   }
-  private enqueue(input: AgentLoginTerminalInput): void {
+  private enqueue(input: AgentAuthTerminalInput): void {
     if (!this.enabled()) return;
     this.queue = this.queue
       .then(() => this.deliver(input))
@@ -61,7 +61,7 @@ export class TerminalRuntime {
         ),
       );
   }
-  private async deliver(input: AgentLoginTerminalInput): Promise<void> {
+  private async deliver(input: AgentAuthTerminalInput): Promise<void> {
     if (this.enabled()) await this.input.props().onInput(input);
   }
   private resize(): void {

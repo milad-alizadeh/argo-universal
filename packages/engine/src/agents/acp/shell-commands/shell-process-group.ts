@@ -1,6 +1,6 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { z } from 'zod';
-import { processGroupMembers } from '../../../lib/process-group-members';
+import { processGroupMembers } from './shell-group-members';
 
 const releaseLimitMs = 1000;
 

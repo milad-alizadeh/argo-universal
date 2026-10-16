@@ -3,8 +3,9 @@ import { installationPath } from './files';
 
 export const executableMode = 0o755;
 
-export const extractedLimit = 536_870_912,
-  entryLimit = 10_000;
+export const extractedLimit = 536_870_912;
+
+const entryLimit = 10_000;
 
 export class ArchiveBudget {
   private size = 0;

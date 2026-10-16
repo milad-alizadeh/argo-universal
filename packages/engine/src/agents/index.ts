@@ -7,17 +7,12 @@ export { type AgentsRouterDeps, createAgentsRouter } from './router';
 export type {
   AgentLaunch,
   ResolveAgentLaunch,
-  LoginTerminalProcess,
   LaunchLoginTerminal,
 } from './agent-launch';
 
-export { type FetchAgents } from './registry/fetch-agents';
+export type { FetchAgents } from './registry/fetch-agents';
 
-export type { InstallPorts } from './install/ports';
-
-export { reconcileInterruptedInstallations } from './install/lifecycle/reconcile';
-
-export type { InstallToolInput } from './install/ports';
+export type { InstallPorts } from './launch/ports';
 
 export {
   registryMachine,
@@ -25,17 +20,12 @@ export {
   type RegistryInput,
 } from './registry/registry-machine';
 
-export { getCommand } from './launch/get-command';
-
-export type { CommandInput, RegistryCommand } from './launch/types';
-
 export { sessionOpenError } from './acp/open-error';
 
 export { readAcpUsage } from './acp/connection/response-readers';
 
 export { resolveSavedAgentLaunch } from './launch/saved-launch';
 
-export {
-  hasAgentServer,
-  requireAgentServer,
-} from './servers/agent-servers-sql';
+export { hasAgentServer } from './servers/agent-servers-sql';
+
+export { ShellProcessRecord } from './acp/shell-commands/shell-process-record';

@@ -3,26 +3,26 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { jsonCodec } from '../../../lib/json-codec';
 import {
-  OwnedProcessRecord,
-  writeOwnedProcessRecord,
-} from '../../../lib/owned-process-record';
-import {
   processGroupMembers,
   type ProcessGroupMember,
-} from '../../../lib/process-group-members';
+} from './shell-group-members';
 import { releaseShellGroup } from './shell-process-group';
+import {
+  ShellProcessRecord,
+  writeShellProcessRecord,
+} from './shell-process-record';
 
 const folderIn = (home: string): string => join(home, 'shell-processes');
 
-const StoredRecord = jsonCodec(OwnedProcessRecord);
+const StoredRecord = jsonCodec(ShellProcessRecord);
 
 export const recordShellGroup = async (
   home: string,
-  record: OwnedProcessRecord,
+  record: ShellProcessRecord,
 ): Promise<string> => {
   await mkdir(folderIn(home), { recursive: true, mode: 0o700 });
   const path = join(folderIn(home), `${record.token}.json`);
-  await writeOwnedProcessRecord(path, record);
+  await writeShellProcessRecord(path, record);
 
   return path;
 };
@@ -46,7 +46,7 @@ const isRecord = (name: string): boolean =>
 
 const requireOwner = (
   members: ProcessGroupMember[],
-  record: OwnedProcessRecord,
+  record: ShellProcessRecord,
 ): void => {
   const owner = members.find((member) => member.pid === record.pid);
 

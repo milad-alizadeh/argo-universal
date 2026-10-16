@@ -1,11 +1,11 @@
 import type { Database } from '@repo/db';
 import type { AcpResources } from '../acp';
 import type { AgentLaunch, ResolveAgentLaunch } from '../agent-launch';
-import type { InstallPorts } from '../install/ports';
 import type { RegistryActor } from '../registry/registry-machine';
 import { requireAgentServer } from '../servers/agent-servers-sql';
 import { definedEnvironment } from './agent-environment';
 import { getCommand } from './get-command';
+import type { InstallPorts } from './ports';
 import { shellEnvironment } from './shell-env';
 
 type SavedLaunchSource = {

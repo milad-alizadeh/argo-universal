@@ -26,8 +26,8 @@
       "entry": ["src/engine/main.ts", "mocks/e2e-engine.ts"]
     },
     "packages/engine": {
-      // macOS supplies the computer-name command.
-      "ignoreBinaries": ["scutil"],
+      // The OS supplies computer-name lookup and bzip2 archive compression.
+      "ignoreBinaries": ["scutil", "bzip2"],
       // `tools/record-user-messages.mts` runs this recorder by path.
       "entry": ["mocks/user-message-recording.ts"]
     },

@@ -12,7 +12,6 @@ import {
 } from './feed-work-scenario.ts';
 import { notificationScenarios } from './notification-scenarios.ts';
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
-import { protocolLogin, signedOutProtocolLogin } from './protocol-login.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { shellScenarios } from './shell-scenarios.ts';
 import { signInScenarios } from './sign-in-scenarios.ts';
@@ -66,8 +65,6 @@ export const scenarios = {
   ]),
   'feed-interrupted': scenario([...unfinishedFeedWorkSteps, { type: 'hold' }]),
   'terminal-login': { ...scenario([reply]), ...terminalLogin },
-  'protocol-login': { ...scenario([reply]), ...protocolLogin },
-  'signed-out': { ...scenario([reply]), ...signedOutProtocolLogin },
   image: scenario([message(imageReply)]),
   file: scenario([message(fileReply)]),
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),

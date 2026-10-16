@@ -36,8 +36,6 @@ export interface HttpServerOptions {
   databaseWriter: WriterActorRef;
   commandAdmission?: AbortController;
   acp?: AcpResourceInput;
-  loginTimeoutMs?: number;
-  loginCleanupTimeoutMs?: number;
   notificationOptions?: NotificationOptions;
 }
 

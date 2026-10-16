@@ -1851,22 +1851,6 @@
       "tone": "border"
     },
     {
-      "id": "apps/server/mocks/installing-engine.ts",
-      "path": "apps/server/mocks/installing-engine.ts",
-      "area": 66,
-      "height": 2,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
-      "id": "apps/server/mocks/terminal-engine.ts",
-      "path": "apps/server/mocks/terminal-engine.ts",
-      "area": 36,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
       "id": "apps/server/package.json",
       "path": "apps/server/package.json",
       "area": 29,
@@ -1931,14 +1915,6 @@
       "tone": "border"
     },
     {
-      "id": "apps/server/src/supervisor/installation-process.integration.test.ts",
-      "path": "apps/server/src/supervisor/installation-process.integration.test.ts",
-      "area": 133,
-      "height": 2,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
       "id": "apps/server/src/supervisor/machine.integration.test.ts",
       "path": "apps/server/src/supervisor/machine.integration.test.ts",
       "area": 527,
@@ -1977,14 +1953,6 @@
       "height": 2,
       "branches": 14,
       "tone": "warning"
-    },
-    {
-      "id": "apps/server/src/supervisor/terminal-process.integration.test.ts",
-      "path": "apps/server/src/supervisor/terminal-process.integration.test.ts",
-      "area": 91,
-      "height": 3,
-      "branches": 6,
-      "tone": "border"
     },
     {
       "id": "apps/server/tsconfig.json",
@@ -4035,14 +4003,6 @@
       "tone": "border"
     },
     {
-      "id": "mocks/agent/scripted-initialize.ts",
-      "path": "mocks/agent/scripted-initialize.ts",
-      "area": 29,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
       "id": "mocks/agent/scripted-method-player.ts",
       "path": "mocks/agent/scripted-method-player.ts",
       "area": 150,
@@ -5848,14 +5808,6 @@
       "area": 37,
       "height": 4,
       "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/client/src/features/agents/hooks/use-configured-agents.ts",
-      "path": "packages/client/src/features/agents/hooks/use-configured-agents.ts",
-      "area": 39,
-      "height": 2,
-      "branches": 0,
       "tone": "border"
     },
     {
@@ -16035,58 +15987,10 @@
       "tone": "border"
     },
     {
-      "id": "packages/contracts/src/agents/catalog.ts",
-      "path": "packages/contracts/src/agents/catalog.ts",
-      "area": 49,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/contracts/src/agents/configuration.test.ts",
-      "path": "packages/contracts/src/agents/configuration.test.ts",
-      "area": 92,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/contracts/src/agents/configuration.ts",
-      "path": "packages/contracts/src/agents/configuration.ts",
-      "area": 147,
-      "height": 5,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
       "id": "packages/contracts/src/agents/index.ts",
       "path": "packages/contracts/src/agents/index.ts",
       "area": 21,
       "height": 8,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/contracts/src/agents/installation.ts",
-      "path": "packages/contracts/src/agents/installation.ts",
-      "area": 49,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/contracts/src/agents/list.ts",
-      "path": "packages/contracts/src/agents/list.ts",
-      "area": 35,
-      "height": 5,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/contracts/src/agents/login.ts",
-      "path": "packages/contracts/src/agents/login.ts",
-      "area": 95,
-      "height": 4,
       "branches": 0,
       "tone": "border"
     },
@@ -16112,22 +16016,6 @@
       "area": 199,
       "height": 1,
       "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/contracts/src/agents/upstream/auth-status-schema.gen.json",
-      "path": "packages/contracts/src/agents/upstream/auth-status-schema.gen.json",
-      "area": 67,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/contracts/src/agents/upstream/auth-status.gen.ts",
-      "path": "packages/contracts/src/agents/upstream/auth-status.gen.ts",
-      "area": 28,
-      "height": 1,
-      "branches": 0,
       "tone": "border"
     },
     {
@@ -16571,14 +16459,6 @@
       "tone": "border"
     },
     {
-      "id": "packages/contracts/tools/generate-auth-status.ts",
-      "path": "packages/contracts/tools/generate-auth-status.ts",
-      "area": 52,
-      "height": 2,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
       "id": "packages/contracts/tools/registry/generate.mts",
       "path": "packages/contracts/tools/registry/generate.mts",
       "area": 98,
@@ -16835,14 +16715,6 @@
       "tone": "border"
     },
     {
-      "id": "packages/db/src/schema/agents.ts",
-      "path": "packages/db/src/schema/agents.ts",
-      "area": 17,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
       "id": "packages/db/src/schema/blob.ts",
       "path": "packages/db/src/schema/blob.ts",
       "area": 36,
@@ -16886,14 +16758,6 @@
       "id": "packages/db/src/schema/shells.ts",
       "path": "packages/db/src/schema/shells.ts",
       "area": 33,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/db/src/schema/sync-jobs.ts",
-      "path": "packages/db/src/schema/sync-jobs.ts",
-      "area": 17,
       "height": 1,
       "branches": 0,
       "tone": "border"
@@ -16971,30 +16835,6 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/mocks/agent-login.ts",
-      "path": "packages/engine/mocks/agent-login.ts",
-      "area": 72,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/mocks/agents/login-model.ts",
-      "path": "packages/engine/mocks/agents/login-model.ts",
-      "area": 132,
-      "height": 2,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/mocks/archive-installation.ts",
-      "path": "packages/engine/mocks/archive-installation.ts",
-      "area": 36,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
       "id": "packages/engine/mocks/archive.ts",
       "path": "packages/engine/mocks/archive.ts",
       "area": 57,
@@ -17008,22 +16848,6 @@
       "area": 68,
       "height": 1,
       "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/mocks/catalog-supervisor-model.ts",
-      "path": "packages/engine/mocks/catalog-supervisor-model.ts",
-      "area": 174,
-      "height": 6,
-      "branches": 14,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/mocks/custom-agent.ts",
-      "path": "packages/engine/mocks/custom-agent.ts",
-      "area": 55,
-      "height": 6,
-      "branches": 0,
       "tone": "border"
     },
     {
@@ -17291,22 +17115,6 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/mocks/installation-lifetime.mjs",
-      "path": "packages/engine/mocks/installation-lifetime.mjs",
-      "area": 20,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/mocks/installation-storage.ts",
-      "path": "packages/engine/mocks/installation-storage.ts",
-      "area": 28,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
       "id": "packages/engine/mocks/installation.ts",
       "path": "packages/engine/mocks/installation.ts",
       "area": 65,
@@ -17360,30 +17168,6 @@
       "area": 126,
       "height": 3,
       "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/mocks/login-terminal.mjs",
-      "path": "packages/engine/mocks/login-terminal.mjs",
-      "area": 29,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/mocks/login-terminal.ts",
-      "path": "packages/engine/mocks/login-terminal.ts",
-      "area": 42,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/mocks/npm-native-installation.ts",
-      "path": "packages/engine/mocks/npm-native-installation.ts",
-      "area": 31,
-      "height": 2,
-      "branches": 1,
       "tone": "border"
     },
     {
@@ -17523,22 +17307,6 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/mocks/probe-gate.mjs",
-      "path": "packages/engine/mocks/probe-gate.mjs",
-      "area": 12,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/mocks/probe-lifetime.mjs",
-      "path": "packages/engine/mocks/probe-lifetime.mjs",
-      "area": 7,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
       "id": "packages/engine/mocks/procedure-request.ts",
       "path": "packages/engine/mocks/procedure-request.ts",
       "area": 36,
@@ -17635,14 +17403,6 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/src/agents/acp/agent-check.ts",
-      "path": "packages/engine/src/agents/acp/agent-check.ts",
-      "area": 172,
-      "height": 4,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
       "id": "packages/engine/src/agents/acp/auth-methods.ts",
       "path": "packages/engine/src/agents/acp/auth-methods.ts",
       "area": 70,
@@ -17651,99 +17411,11 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/src/agents/acp/auth-status.ts",
-      "path": "packages/engine/src/agents/acp/auth-status.ts",
-      "area": 90,
-      "height": 4,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/client-cancellation.test.ts",
-      "path": "packages/engine/src/agents/acp/client-cancellation.test.ts",
-      "area": 103,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/client-elicitation.test.ts",
-      "path": "packages/engine/src/agents/acp/client-elicitation.test.ts",
-      "area": 69,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/client-framing.test.ts",
-      "path": "packages/engine/src/agents/acp/client-framing.test.ts",
-      "area": 32,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/client-requests.test.ts",
-      "path": "packages/engine/src/agents/acp/client-requests.test.ts",
-      "area": 135,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/client-validation.test.ts",
-      "path": "packages/engine/src/agents/acp/client-validation.test.ts",
-      "area": 167,
-      "height": 3,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/client.test.ts",
-      "path": "packages/engine/src/agents/acp/client.test.ts",
-      "area": 171,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/client.ts",
-      "path": "packages/engine/src/agents/acp/client.ts",
-      "area": 48,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/connection.ts",
-      "path": "packages/engine/src/agents/acp/connection.ts",
-      "area": 560,
-      "height": 4,
-      "branches": 47,
-      "tone": "danger"
-    },
-    {
       "id": "packages/engine/src/agents/acp/index.ts",
       "path": "packages/engine/src/agents/acp/index.ts",
       "area": 22,
       "height": 3,
       "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/initialize-response-schema.ts",
-      "path": "packages/engine/src/agents/acp/initialize-response-schema.ts",
-      "area": 19,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/initialize.ts",
-      "path": "packages/engine/src/agents/acp/initialize.ts",
-      "area": 51,
-      "height": 4,
-      "branches": 1,
       "tone": "border"
     },
     {
@@ -17755,83 +17427,11 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/src/agents/acp/login-agent.test.ts",
-      "path": "packages/engine/src/agents/acp/login-agent.test.ts",
-      "area": 104,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/login-agent.ts",
-      "path": "packages/engine/src/agents/acp/login-agent.ts",
-      "area": 167,
-      "height": 3,
-      "branches": 10,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/login-cleanup.ts",
-      "path": "packages/engine/src/agents/acp/login-cleanup.ts",
-      "area": 26,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/login-elicitation.ts",
-      "path": "packages/engine/src/agents/acp/login-elicitation.ts",
-      "area": 118,
-      "height": 2,
-      "branches": 9,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/login-identity.test.ts",
-      "path": "packages/engine/src/agents/acp/login-identity.test.ts",
-      "area": 167,
-      "height": 2,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/login-readiness.test.ts",
-      "path": "packages/engine/src/agents/acp/login-readiness.test.ts",
-      "area": 112,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/login-terminal.test.ts",
-      "path": "packages/engine/src/agents/acp/login-terminal.test.ts",
-      "area": 73,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/login-wire.ts",
-      "path": "packages/engine/src/agents/acp/login-wire.ts",
-      "area": 42,
-      "height": 2,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
       "id": "packages/engine/src/agents/acp/open-error.ts",
       "path": "packages/engine/src/agents/acp/open-error.ts",
       "area": 46,
       "height": 1,
       "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/open-session.ts",
-      "path": "packages/engine/src/agents/acp/open-session.ts",
-      "area": 63,
-      "height": 3,
-      "branches": 3,
       "tone": "border"
     },
     {
@@ -17843,346 +17443,10 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/src/agents/acp/protocol-login-agent.ts",
-      "path": "packages/engine/src/agents/acp/protocol-login-agent.ts",
-      "area": 21,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resource-entry.ts",
-      "path": "packages/engine/src/agents/acp/resource-entry.ts",
-      "area": 66,
-      "height": 6,
-      "branches": 8,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resource-types.ts",
-      "path": "packages/engine/src/agents/acp/resource-types.ts",
-      "area": 76,
-      "height": 6,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources-authentication.test.ts",
-      "path": "packages/engine/src/agents/acp/resources-authentication.test.ts",
-      "area": 55,
-      "height": 4,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources-invalidation.test.ts",
-      "path": "packages/engine/src/agents/acp/resources-invalidation.test.ts",
-      "area": 33,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources-lifetime.test.ts",
-      "path": "packages/engine/src/agents/acp/resources-lifetime.test.ts",
-      "area": 155,
-      "height": 1,
-      "branches": 6,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources-openings.test.ts",
-      "path": "packages/engine/src/agents/acp/resources-openings.test.ts",
-      "area": 127,
-      "height": 1,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources-process.integration.test.ts",
-      "path": "packages/engine/src/agents/acp/resources-process.integration.test.ts",
-      "area": 135,
-      "height": 3,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources-scripted.test.ts",
-      "path": "packages/engine/src/agents/acp/resources-scripted.test.ts",
-      "area": 152,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources-subagents.test.ts",
-      "path": "packages/engine/src/agents/acp/resources-subagents.test.ts",
-      "area": 91,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources-withdrawal.test.ts",
-      "path": "packages/engine/src/agents/acp/resources-withdrawal.test.ts",
-      "area": 155,
-      "height": 3,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources.test.ts",
-      "path": "packages/engine/src/agents/acp/resources.test.ts",
-      "area": 157,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/resources.ts",
-      "path": "packages/engine/src/agents/acp/resources.ts",
-      "area": 160,
-      "height": 5,
-      "branches": 22,
-      "tone": "danger"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/response-readers-scripted.test.ts",
-      "path": "packages/engine/src/agents/acp/response-readers-scripted.test.ts",
-      "area": 48,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/response-readers.test.ts",
-      "path": "packages/engine/src/agents/acp/response-readers.test.ts",
-      "area": 52,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/response-readers.ts",
-      "path": "packages/engine/src/agents/acp/response-readers.ts",
-      "area": 122,
-      "height": 5,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/schema-reader.ts",
-      "path": "packages/engine/src/agents/acp/schema-reader.ts",
-      "area": 61,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/subagent-routing.ts",
-      "path": "packages/engine/src/agents/acp/subagent-routing.ts",
-      "area": 44,
-      "height": 1,
-      "branches": 8,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/subagent-scenarios.test.ts",
-      "path": "packages/engine/src/agents/acp/subagent-scenarios.test.ts",
-      "area": 76,
-      "height": 1,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/subscription-status.ts",
-      "path": "packages/engine/src/agents/acp/subscription-status.ts",
-      "area": 57,
-      "height": 3,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-channel-path.ts",
-      "path": "packages/engine/src/agents/acp/terminal-channel-path.ts",
-      "area": 20,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-channel.ts",
-      "path": "packages/engine/src/agents/acp/terminal-channel.ts",
-      "area": 124,
-      "height": 3,
-      "branches": 11,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-control-message.ts",
-      "path": "packages/engine/src/agents/acp/terminal-control-message.ts",
-      "area": 22,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-control-reader.ts",
-      "path": "packages/engine/src/agents/acp/terminal-control-reader.ts",
-      "area": 47,
-      "height": 3,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-login-agent.ts",
-      "path": "packages/engine/src/agents/acp/terminal-login-agent.ts",
-      "area": 128,
-      "height": 3,
-      "branches": 9,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-process-group.ts",
-      "path": "packages/engine/src/agents/acp/terminal-process-group.ts",
-      "area": 45,
-      "height": 2,
-      "branches": 9,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-process.integration.test.ts",
-      "path": "packages/engine/src/agents/acp/terminal-process.integration.test.ts",
-      "area": 146,
-      "height": 3,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-process.ts",
-      "path": "packages/engine/src/agents/acp/terminal-process.ts",
-      "area": 132,
-      "height": 2,
-      "branches": 6,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-record.ts",
-      "path": "packages/engine/src/agents/acp/terminal-record.ts",
-      "area": 109,
-      "height": 3,
-      "branches": 13,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-recovery.integration.test.ts",
-      "path": "packages/engine/src/agents/acp/terminal-recovery.integration.test.ts",
-      "area": 74,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-runtime.ts",
-      "path": "packages/engine/src/agents/acp/terminal-runtime.ts",
-      "area": 4,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/acp/terminal-wrapper.mjs",
-      "path": "packages/engine/src/agents/acp/terminal-wrapper.mjs",
-      "area": 49,
-      "height": 2,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
       "id": "packages/engine/src/agents/agent-launch.ts",
       "path": "packages/engine/src/agents/agent-launch.ts",
       "area": 77,
       "height": 7,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/agent-storage.ts",
-      "path": "packages/engine/src/agents/agent-storage.ts",
-      "area": 137,
-      "height": 2,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/claude/claude-code-ivory.svg",
-      "path": "packages/engine/src/agents/assets/claude/claude-code-ivory.svg",
-      "area": 28,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/claude/claude-code-slate.svg",
-      "path": "packages/engine/src/agents/assets/claude/claude-code-slate.svg",
-      "area": 28,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/claude/claude-spark.svg",
-      "path": "packages/engine/src/agents/assets/claude/claude-spark.svg",
-      "area": 4,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/claude/registry.svg",
-      "path": "packages/engine/src/agents/assets/claude/registry.svg",
-      "area": 4,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/claude/sources.json",
-      "path": "packages/engine/src/agents/assets/claude/sources.json",
-      "area": 30,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/codex/openai-blossom-black.svg",
-      "path": "packages/engine/src/agents/assets/codex/openai-blossom-black.svg",
-      "area": 16,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/codex/openai-blossom-white.svg",
-      "path": "packages/engine/src/agents/assets/codex/openai-blossom-white.svg",
-      "area": 16,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/codex/registry.svg",
-      "path": "packages/engine/src/agents/assets/codex/registry.svg",
-      "area": 4,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/assets/codex/sources.json",
-      "path": "packages/engine/src/agents/assets/codex/sources.json",
-      "area": 26,
-      "height": 1,
       "branches": 0,
       "tone": "border"
     },
@@ -18283,666 +17547,10 @@
       "tone": "warning"
     },
     {
-      "id": "packages/engine/src/agents/catalog-changes.ts",
-      "path": "packages/engine/src/agents/catalog-changes.ts",
-      "area": 71,
-      "height": 2,
-      "branches": 5,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-ingress.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-ingress.integration.test.ts",
-      "area": 73,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-journey/admission.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-journey/admission.integration.test.ts",
-      "area": 135,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-journey/session.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-journey/session.integration.test.ts",
-      "area": 82,
-      "height": 3,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-journey/shutdown.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-journey/shutdown.integration.test.ts",
-      "area": 174,
-      "height": 3,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-journey/state.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-journey/state.integration.test.ts",
-      "area": 123,
-      "height": 3,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-router.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-router.integration.test.ts",
-      "area": 113,
-      "height": 5,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-sql.ts",
-      "path": "packages/engine/src/agents/catalog-sql.ts",
-      "area": 130,
-      "height": 3,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-storage.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-storage.integration.test.ts",
-      "area": 138,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-sync-machine.ts",
-      "path": "packages/engine/src/agents/catalog-sync-machine.ts",
-      "area": 74,
-      "height": 3,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-sync-supervisor-machine.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-sync-supervisor-machine.integration.test.ts",
-      "area": 44,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-sync.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-sync.integration.test.ts",
-      "area": 149,
-      "height": 5,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/catalog-transport.integration.test.ts",
-      "path": "packages/engine/src/agents/catalog-transport.integration.test.ts",
-      "area": 160,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/agent-enablement.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/agent-enablement.integration.test.ts",
-      "area": 99,
-      "height": 4,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/agent-removal.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/agent-removal.integration.test.ts",
-      "area": 109,
-      "height": 4,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/configuration-bootstrap.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/configuration-bootstrap.integration.test.ts",
-      "area": 117,
-      "height": 6,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/configuration-commands.ts",
-      "path": "packages/engine/src/agents/configuration/configuration-commands.ts",
-      "area": 168,
-      "height": 6,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/configuration-router.ts",
-      "path": "packages/engine/src/agents/configuration/configuration-router.ts",
-      "area": 62,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/configuration-sql.ts",
-      "path": "packages/engine/src/agents/configuration/configuration-sql.ts",
-      "area": 76,
-      "height": 4,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-agent-authentication.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/custom-agent-authentication.integration.test.ts",
-      "area": 34,
-      "height": 3,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-agent-list.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/custom-agent-list.integration.test.ts",
-      "area": 74,
-      "height": 3,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-agent-list.ts",
-      "path": "packages/engine/src/agents/configuration/custom-agent-list.ts",
-      "area": 94,
-      "height": 6,
-      "branches": 6,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-agent.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/custom-agent.integration.test.ts",
-      "area": 153,
-      "height": 4,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-check.ts",
-      "path": "packages/engine/src/agents/configuration/custom-check.ts",
-      "area": 72,
-      "height": 3,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-cleanup.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/custom-cleanup.integration.test.ts",
-      "area": 163,
-      "height": 3,
-      "branches": 11,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-launch.ts",
-      "path": "packages/engine/src/agents/configuration/custom-launch.ts",
-      "area": 50,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-readiness-admission.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/custom-readiness-admission.integration.test.ts",
-      "area": 94,
-      "height": 4,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/configuration/custom-readiness.integration.test.ts",
-      "path": "packages/engine/src/agents/configuration/custom-readiness.integration.test.ts",
-      "area": 158,
-      "height": 4,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
       "id": "packages/engine/src/agents/index.ts",
       "path": "packages/engine/src/agents/index.ts",
       "area": 70,
       "height": 10,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-archives.integration.test.ts",
-      "path": "packages/engine/src/agents/install-archives.integration.test.ts",
-      "area": 105,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-configuration.integration.test.ts",
-      "path": "packages/engine/src/agents/install-configuration.integration.test.ts",
-      "area": 88,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-control-files.integration.test.ts",
-      "path": "packages/engine/src/agents/install-control-files.integration.test.ts",
-      "area": 20,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-files.integration.test.ts",
-      "path": "packages/engine/src/agents/install-files.integration.test.ts",
-      "area": 173,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-login.integration.test.ts",
-      "path": "packages/engine/src/agents/install-login.integration.test.ts",
-      "area": 96,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-native-package.integration.test.ts",
-      "path": "packages/engine/src/agents/install-native-package.integration.test.ts",
-      "area": 36,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-ownership.integration.test.ts",
-      "path": "packages/engine/src/agents/install-ownership.integration.test.ts",
-      "area": 154,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-process.integration.test.ts",
-      "path": "packages/engine/src/agents/install-process.integration.test.ts",
-      "area": 144,
-      "height": 3,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-readiness.integration.test.ts",
-      "path": "packages/engine/src/agents/install-readiness.integration.test.ts",
-      "area": 97,
-      "height": 2,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-recipes.test.ts",
-      "path": "packages/engine/src/agents/install-recipes.test.ts",
-      "area": 94,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-reconciliation.integration.test.ts",
-      "path": "packages/engine/src/agents/install-reconciliation.integration.test.ts",
-      "area": 69,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-recovery-process.integration.test.ts",
-      "path": "packages/engine/src/agents/install-recovery-process.integration.test.ts",
-      "area": 120,
-      "height": 3,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-removal.integration.test.ts",
-      "path": "packages/engine/src/agents/install-removal.integration.test.ts",
-      "area": 90,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-session.integration.test.ts",
-      "path": "packages/engine/src/agents/install-session.integration.test.ts",
-      "area": 90,
-      "height": 3,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-storage.integration.test.ts",
-      "path": "packages/engine/src/agents/install-storage.integration.test.ts",
-      "area": 76,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install-update.integration.test.ts",
-      "path": "packages/engine/src/agents/install-update.integration.test.ts",
-      "area": 93,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install.integration.test.ts",
-      "path": "packages/engine/src/agents/install.integration.test.ts",
-      "area": 88,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/default-ports.ts",
-      "path": "packages/engine/src/agents/install/default-ports.ts",
-      "area": 9,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/configuration-reservations.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/configuration-reservations.ts",
-      "area": 89,
-      "height": 4,
-      "branches": 9,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/execution.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/execution.ts",
-      "area": 113,
-      "height": 4,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/operation-results.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/operation-results.ts",
-      "area": 79,
-      "height": 4,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/operation-types.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/operation-types.ts",
-      "area": 14,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/operations.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/operations.ts",
-      "area": 162,
-      "height": 4,
-      "branches": 17,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/readiness.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/readiness.ts",
-      "area": 30,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/reconcile.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/reconcile.ts",
-      "area": 43,
-      "height": 3,
-      "branches": 8,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/removal.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/removal.ts",
-      "area": 78,
-      "height": 3,
-      "branches": 8,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/lifecycle/settlement.ts",
-      "path": "packages/engine/src/agents/install/lifecycle/settlement.ts",
-      "area": 43,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/archive-budget.ts",
-      "path": "packages/engine/src/agents/install/materialization/archive-budget.ts",
-      "area": 39,
-      "height": 2,
-      "branches": 5,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/archive.ts",
-      "path": "packages/engine/src/agents/install/materialization/archive.ts",
-      "area": 164,
-      "height": 3,
-      "branches": 8,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/download.ts",
-      "path": "packages/engine/src/agents/install/materialization/download.ts",
-      "area": 49,
-      "height": 2,
-      "branches": 5,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/files.ts",
-      "path": "packages/engine/src/agents/install/materialization/files.ts",
-      "area": 48,
-      "height": 3,
-      "branches": 6,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/materialize.ts",
-      "path": "packages/engine/src/agents/install/materialization/materialize.ts",
-      "area": 163,
-      "height": 2,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/metadata-rejections.ts",
-      "path": "packages/engine/src/agents/install/materialization/metadata-rejections.ts",
-      "area": 10,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/package-version.ts",
-      "path": "packages/engine/src/agents/install/materialization/package-version.ts",
-      "area": 36,
-      "height": 2,
-      "branches": 5,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/packages.ts",
-      "path": "packages/engine/src/agents/install/materialization/packages.ts",
-      "area": 135,
-      "height": 4,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/recipe.ts",
-      "path": "packages/engine/src/agents/install/materialization/recipe.ts",
-      "area": 82,
-      "height": 2,
-      "branches": 6,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/materialization/uv-packages.ts",
-      "path": "packages/engine/src/agents/install/materialization/uv-packages.ts",
-      "area": 168,
-      "height": 2,
-      "branches": 12,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/install/ports.ts",
-      "path": "packages/engine/src/agents/install/ports.ts",
-      "area": 15,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/processes/cleanup-error.ts",
-      "path": "packages/engine/src/agents/install/processes/cleanup-error.ts",
-      "area": 2,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/processes/process-cleanup.ts",
-      "path": "packages/engine/src/agents/install/processes/process-cleanup.ts",
-      "area": 60,
-      "height": 2,
-      "branches": 9,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/install/processes/process-group.ts",
-      "path": "packages/engine/src/agents/install/processes/process-group.ts",
-      "area": 21,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/processes/process-output.ts",
-      "path": "packages/engine/src/agents/install/processes/process-output.ts",
-      "area": 43,
-      "height": 2,
-      "branches": 5,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/processes/process-record.ts",
-      "path": "packages/engine/src/agents/install/processes/process-record.ts",
-      "area": 26,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/processes/process-wrapper.ts",
-      "path": "packages/engine/src/agents/install/processes/process-wrapper.ts",
-      "area": 88,
-      "height": 2,
-      "branches": 6,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/processes/process.ts",
-      "path": "packages/engine/src/agents/install/processes/process.ts",
-      "area": 165,
-      "height": 2,
-      "branches": 16,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/install/processes/reconcile-processes.ts",
-      "path": "packages/engine/src/agents/install/processes/reconcile-processes.ts",
-      "area": 105,
-      "height": 4,
-      "branches": 13,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/install/router.ts",
-      "path": "packages/engine/src/agents/install/router.ts",
-      "area": 80,
-      "height": 4,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/selection/installed-command.ts",
-      "path": "packages/engine/src/agents/install/selection/installed-command.ts",
-      "area": 39,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/selection/launch.ts",
-      "path": "packages/engine/src/agents/install/selection/launch.ts",
-      "area": 92,
-      "height": 3,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/selection/list.ts",
-      "path": "packages/engine/src/agents/install/selection/list.ts",
-      "area": 172,
-      "height": 5,
-      "branches": 7,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/selection/saved-configuration.ts",
-      "path": "packages/engine/src/agents/install/selection/saved-configuration.ts",
-      "area": 65,
-      "height": 3,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/selection/selection.ts",
-      "path": "packages/engine/src/agents/install/selection/selection.ts",
-      "area": 96,
-      "height": 3,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/install/selection/status.ts",
-      "path": "packages/engine/src/agents/install/selection/status.ts",
-      "area": 36,
-      "height": 2,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/installation-runtime.ts",
-      "path": "packages/engine/src/agents/installation-runtime.ts",
-      "area": 4,
-      "height": 2,
       "branches": 0,
       "tone": "border"
     },
@@ -19107,134 +17715,6 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/src/agents/login-browser.ts",
-      "path": "packages/engine/src/agents/login-browser.ts",
-      "area": 67,
-      "height": 2,
-      "branches": 6,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-cleanup.integration.test.ts",
-      "path": "packages/engine/src/agents/login-cleanup.integration.test.ts",
-      "area": 114,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-deadline.ts",
-      "path": "packages/engine/src/agents/login-deadline.ts",
-      "area": 10,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-error.ts",
-      "path": "packages/engine/src/agents/login-error.ts",
-      "area": 2,
-      "height": 1,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-machine.test.ts",
-      "path": "packages/engine/src/agents/login-machine.test.ts",
-      "area": 124,
-      "height": 2,
-      "branches": 9,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/login-machine.ts",
-      "path": "packages/engine/src/agents/login-machine.ts",
-      "area": 241,
-      "height": 3,
-      "branches": 5,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-mutation.integration.test.ts",
-      "path": "packages/engine/src/agents/login-mutation.integration.test.ts",
-      "area": 39,
-      "height": 4,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-operation.ts",
-      "path": "packages/engine/src/agents/login-operation.ts",
-      "area": 161,
-      "height": 4,
-      "branches": 12,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/login-progress.ts",
-      "path": "packages/engine/src/agents/login-progress.ts",
-      "area": 19,
-      "height": 1,
-      "branches": 3,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-resources.ts",
-      "path": "packages/engine/src/agents/login-resources.ts",
-      "area": 136,
-      "height": 4,
-      "branches": 9,
-      "tone": "warning"
-    },
-    {
-      "id": "packages/engine/src/agents/login-router.ts",
-      "path": "packages/engine/src/agents/login-router.ts",
-      "area": 75,
-      "height": 4,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-terminal-cleanup.integration.test.ts",
-      "path": "packages/engine/src/agents/login-terminal-cleanup.integration.test.ts",
-      "area": 72,
-      "height": 3,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-terminal-context.integration.test.ts",
-      "path": "packages/engine/src/agents/login-terminal-context.integration.test.ts",
-      "area": 73,
-      "height": 3,
-      "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login-terminal.integration.test.ts",
-      "path": "packages/engine/src/agents/login-terminal.integration.test.ts",
-      "area": 134,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login.integration.test.ts",
-      "path": "packages/engine/src/agents/login.integration.test.ts",
-      "area": 132,
-      "height": 3,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/login.ts",
-      "path": "packages/engine/src/agents/login.ts",
-      "area": 178,
-      "height": 4,
-      "branches": 18,
-      "tone": "warning"
-    },
-    {
       "id": "packages/engine/src/agents/records.ts",
       "path": "packages/engine/src/agents/records.ts",
       "area": 128,
@@ -19361,14 +17841,6 @@
       "height": 1,
       "branches": 0,
       "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/agents/sync-supervisor-machine.ts",
-      "path": "packages/engine/src/agents/sync-supervisor-machine.ts",
-      "area": 263,
-      "height": 3,
-      "branches": 11,
-      "tone": "warning"
     },
     {
       "id": "packages/engine/src/agents/usage-scope.ts",
@@ -20739,14 +19211,6 @@
       "tone": "border"
     },
     {
-      "id": "packages/engine/src/lib/authentication-context.ts",
-      "path": "packages/engine/src/lib/authentication-context.ts",
-      "area": 27,
-      "height": 2,
-      "branches": 1,
-      "tone": "border"
-    },
-    {
       "id": "packages/engine/src/lib/json-codec.test.ts",
       "path": "packages/engine/src/lib/json-codec.test.ts",
       "area": 24,
@@ -20776,30 +19240,6 @@
       "area": 29,
       "height": 3,
       "branches": 2,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/lib/owned-process-record.ts",
-      "path": "packages/engine/src/lib/owned-process-record.ts",
-      "area": 41,
-      "height": 2,
-      "branches": 0,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/lib/process-group-members.ts",
-      "path": "packages/engine/src/lib/process-group-members.ts",
-      "area": 41,
-      "height": 2,
-      "branches": 4,
-      "tone": "border"
-    },
-    {
-      "id": "packages/engine/src/lib/resource-cleanup-error.ts",
-      "path": "packages/engine/src/lib/resource-cleanup-error.ts",
-      "area": 12,
-      "height": 1,
-      "branches": 0,
       "tone": "border"
     },
     {

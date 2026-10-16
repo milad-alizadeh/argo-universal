@@ -5,12 +5,8 @@ import { gunzipSync } from 'node:zlib';
 import { unzipSync } from 'fflate';
 import { extract, list } from 'tar';
 import type { InstallPorts } from '../ports';
-import {
-  ArchiveBudget,
-  executableMode,
-  extractedLimit,
-} from './archive-budget';
 import { installationPath } from './files';
+import { ArchiveBudget, executableMode, extractedLimit } from './limits';
 
 type BinaryRecipe = { archive: string; sha256?: string; cmd: string };
 
