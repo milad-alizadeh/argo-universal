@@ -4,6 +4,6 @@
   "version": "0.0.1",
   "engines": { "argo": ">=0.0.0 <1.0.0" },
   "main": "index.js",
-  "icon": "issue",
+  "icon": { "sf": "ticket", "material": "confirmation_number" },
   "contributes": { "nav": [{ "id": "issues", "title": "Issues", "path": "/" }] }
 }

@@ -1,4 +1,4 @@
-import type { PluginList } from '@repo/contracts';
+import type { PluginList } from '@repo/contracts/plugins';
 import { useQuery } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import {
@@ -7,6 +7,7 @@ import {
   pluginSectionId,
   sectionOf,
 } from '../../lib/product/navigation/sections';
+import { pluginSymbol } from './plugin-symbol';
 
 export interface PluginSection extends NavigationSection {
   id: PluginSectionId;
@@ -84,7 +85,7 @@ function pluginSection(manifest: Manifest, nav: NavItem): PluginSection {
     pluginId: manifest.id,
     name: manifest.name,
     title: nav.title,
-    icon: manifest.icon,
+    icon: pluginSymbol(manifest.icon),
     rootPath: pluginPath(segments),
     segments,
   };

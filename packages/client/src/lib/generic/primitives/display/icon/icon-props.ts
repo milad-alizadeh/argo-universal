@@ -1,11 +1,11 @@
 import type { ActivityIndicatorProps, ViewProps } from 'react-native';
 import type { Tone } from '#primitives/display/text';
-import type { IconName } from '../../../symbols/icon-names';
 import type { IconRole } from '../../../symbols/icon-role';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { SymbolGlyphProps } from '../../../symbols/symbol-glyph/symbol-glyph';
 
 export interface IconProps {
-  name: IconName;
+  name: IconSymbol;
   role: IconRole;
   // Selects the platform's filled variant where the icon has one.
   filled?: boolean;
