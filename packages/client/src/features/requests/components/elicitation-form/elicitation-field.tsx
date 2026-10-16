@@ -31,7 +31,7 @@ export function ElicitationField(props: ElicitationFieldProps): ReactElement {
   return <TextInput {...textProps(props)} />;
 }
 
-function fieldProps(
+export function fieldProps(
   props: ElicitationFieldProps,
 ): Pick<
   StandaloneTextInputProps,
@@ -46,10 +46,12 @@ function fieldProps(
   };
 }
 
-const shownErrors = (props: ElicitationFieldProps): string[] =>
+export const shownErrors = (props: ElicitationFieldProps): string[] =>
   props.showError && props.error ? [props.error] : [];
 
-function textProps(props: ElicitationFieldProps): StandaloneTextInputProps {
+export function textProps(
+  props: ElicitationFieldProps,
+): StandaloneTextInputProps {
   return {
     ...fieldProps(props),
     required: props.required,
@@ -76,7 +78,7 @@ function ChoiceField(props: ElicitationFieldProps): ReactElement {
   return <PickerField {...props} />;
 }
 
-const longChoiceLimit = 7;
+export const longChoiceLimit = 7;
 
 function PickerField(props: ElicitationFieldProps): ReactElement {
   const choice = pickerProps(props);
@@ -88,7 +90,7 @@ function PickerField(props: ElicitationFieldProps): ReactElement {
   );
 }
 
-function pickerProps(props: ElicitationFieldProps): PickerProps<string> {
+export function pickerProps(props: ElicitationFieldProps): PickerProps<string> {
   const options = elicitationChoices(props.property) ?? [];
 
   return {

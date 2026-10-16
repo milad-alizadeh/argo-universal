@@ -30,15 +30,16 @@ export type FieldProgressProps = Pick<TextFieldProps, 'label' | 'loading'>;
 // What the field's spinner says while it checks the value.
 export const fieldLoadingLabel = (label: string): string => `Checking ${label}`;
 
+// What either labelled variant may ask of its entry: a starred label, a numeric keyboard.
+type EntryProps = { required?: boolean; numeric?: boolean };
+
 // A row inside a GroupedListSection: the label leading, the field taking the rest of the row.
-export type RowTextInputProps = TextFieldProps & { variant: 'row' };
+export type RowTextInputProps = TextFieldProps &
+  EntryProps & { variant: 'row' };
 
 // A field on its own, outside a GroupedListSection, with its label above it and its footer under it.
-export type StandaloneTextInputProps = TextFieldProps & {
-  variant?: 'standalone';
-  required?: boolean;
-  numeric?: boolean;
-};
+export type StandaloneTextInputProps = TextFieldProps &
+  EntryProps & { variant?: 'standalone' };
 
 // The bare box with no label or footer, for a caller that lays out its own label.
 export type BareTextInputProps = NativeTextInputProps &
@@ -55,8 +56,7 @@ export type TextInputProps =
   | RowTextInputProps
   | BareTextInputProps;
 
-export type PhoneFieldProps = TextFieldProps &
-  Pick<StandaloneTextInputProps, 'required' | 'numeric'>;
+export type PhoneFieldProps = TextFieldProps & EntryProps;
 
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
   (props.errors?.length ?? 0) > 0;

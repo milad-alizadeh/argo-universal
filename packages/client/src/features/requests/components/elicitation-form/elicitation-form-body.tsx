@@ -42,15 +42,19 @@ export function ElicitationFields({
   return (
     <View className="gap-4">
       {model.schema.fields.map((entry) => (
-        <FormField key={entry.key} model={model} entry={entry} />
+        <ElicitationFormField key={entry.key} model={model} entry={entry}>
+          {(field) => <ElicitationField {...field} />}
+        </ElicitationFormField>
       ))}
     </View>
   );
 }
 
+export type ElicitationEntry = ElicitationModel['schema']['fields'][number];
+
 type FormFieldProps = {
   model: ElicitationModel;
-  entry: ElicitationModel['schema']['fields'][number];
+  entry: ElicitationEntry;
 };
 
 type FieldBinding = {
@@ -62,31 +66,34 @@ type FieldBinding = {
   handleBlur: () => void;
 };
 
-function FormField({ model, entry }: FormFieldProps): ReactElement {
-  const Field = model.form.Field;
+// One schema property bound to the form; the caller draws it, as a stacked field or a grouped row.
+export function ElicitationFormField(
+  props: FormFieldProps & {
+    children: (field: ElicitationFieldProps) => ReactElement;
+  },
+): ReactElement {
+  const Field = props.model.form.Field;
 
   return (
-    <Field name={entry.key}>
-      {(field) => <BoundField model={model} entry={entry} field={field} />}
+    <Field name={props.entry.key}>
+      {(field) => props.children(boundProps({ ...props, field }))}
     </Field>
   );
 }
 
-function BoundField(
+function boundProps(
   props: FormFieldProps & { field: FieldBinding },
-): ReactElement {
+): ElicitationFieldProps {
   const { model, entry, field } = props;
 
-  return (
-    <ElicitationField
-      name={entry.name}
-      property={entry.property}
-      required={entry.required}
-      {...bindingProps(field)}
-      showError={field.state.meta.isTouched || hasInitialValue(props)}
-      inactive={model.inactive}
-    />
-  );
+  return {
+    name: entry.name,
+    property: entry.property,
+    required: entry.required,
+    ...bindingProps(field),
+    showError: field.state.meta.isTouched || hasInitialValue(props),
+    inactive: model.inactive,
+  };
 }
 
 function bindingProps(
@@ -100,7 +107,8 @@ function bindingProps(
   };
 }
 
-function hasInitialValue({ model, entry }: FormFieldProps): boolean {
+// A value the person did not type, such as the Agent's own, is checked from the start.
+export function hasInitialValue({ model, entry }: FormFieldProps): boolean {
   return (
     model.props.initialValues?.[entry.name] !== undefined ||
     entry.property.default !== undefined

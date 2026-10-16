@@ -1,8 +1,11 @@
 import { useRef, useEffect, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { Sheet } from '#primitives/overlays/sheet';
-import { useElicitationForm } from '../../hooks/use-elicitation-form';
+import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
+import {
+  useElicitationForm,
+  type ElicitationModel,
+} from '../../hooks/use-elicitation-form';
 import { useElicitationQuestions } from '../../hooks/use-elicitation-questions';
 import {
   ElicitationFieldForm,
@@ -13,6 +16,11 @@ import {
   elicitationQuestions,
   type ElicitationQuestion,
 } from './elicitation-questions';
+import {
+  ElicitationSheetFields,
+  sheetFieldsScroll,
+} from './elicitation-sheet-fields';
+import { ElicitationSheetFooter } from './elicitation-sheet-footer';
 
 export function ElicitationSheet(props: ElicitationFormProps): ReactElement {
   const questions = elicitationQuestions(props.request);
@@ -32,8 +40,27 @@ export function ElicitationSheet(props: ElicitationFormProps): ReactElement {
 function FieldSheet(props: ElicitationFormProps): ReactElement {
   const model = useElicitationForm(props);
 
+  if (useContentWide()) return <FieldTray {...props} model={model} />;
+
   return (
-    <ElicitationSurface {...props} title={props.request.message}>
+    <ElicitationSurface
+      {...props}
+      title={props.request.message}
+      footer={<ElicitationSheetFooter model={model} />}
+      contentScrolls={sheetFieldsScroll}
+    >
+      <ElicitationSheetFields model={model} />
+    </ElicitationSurface>
+  );
+}
+
+// The wide tray keeps the card with its actions; a sheet pins them in its footer.
+function FieldTray({
+  model,
+  ...props
+}: ElicitationFormProps & { model: ElicitationModel }): ReactElement {
+  return (
+    <ElicitationSurface {...props}>
       <ElicitationFieldForm model={model} />
     </ElicitationSurface>
   );
@@ -52,10 +79,11 @@ function QuestionSheet(
 }
 
 // A title names the sheet's one page; without one the content's own heading leads, as each question's does.
-type SurfaceProps = ElicitationFormProps & {
-  title?: string;
-  children: ReactNode;
-};
+type SurfaceProps = ElicitationFormProps &
+  Pick<SheetProps, 'footer' | 'contentScrolls'> & {
+    title?: string;
+    children: ReactNode;
+  };
 
 function ElicitationSurface(props: SurfaceProps): ReactElement {
   const wide = useContentWide();
@@ -64,11 +92,24 @@ function ElicitationSurface(props: SurfaceProps): ReactElement {
   if (wide) return <ElicitationTray>{props.children}</ElicitationTray>;
 
   return (
-    <Sheet open label={props.request.message} {...sheet}>
+    <Sheet
+      open
+      label={props.request.message}
+      {...sheetLayout(props)}
+      {...sheet}
+    >
       {sheetContent(props)}
     </Sheet>
   );
 }
+
+const sheetLayout = ({
+  footer,
+  contentScrolls,
+}: SurfaceProps): Pick<SheetProps, 'footer' | 'contentScrolls'> => ({
+  footer,
+  contentScrolls,
+});
 
 // Sheet finds its pages among its direct children, so this returns the page itself rather than a component.
 function sheetContent({

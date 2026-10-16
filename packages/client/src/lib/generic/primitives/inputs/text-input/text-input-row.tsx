@@ -5,11 +5,12 @@ import { useFooterDescription } from '#primitives/fields/field-description';
 import { rowClasses } from '#primitives/lists/grouped-list-item';
 import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
-import { isInvalid, type TextFieldProps } from './text-input-props';
+import { requiredLabel } from './text-input-label';
+import { isInvalid, type PhoneFieldProps } from './text-input-props';
 import { FieldSpinner } from './text-input-spinner';
 
 // A section row: the label, then the field filling the rest; the row shows the focus ring.
-export function RowTextInput(props: TextFieldProps): React.JSX.Element {
+export function RowTextInput(props: PhoneFieldProps): React.JSX.Element {
   return (
     <View
       className={cn(
@@ -24,7 +25,7 @@ export function RowTextInput(props: TextFieldProps): React.JSX.Element {
   );
 }
 
-function RowLabel(props: TextFieldProps): React.JSX.Element {
+function RowLabel(props: PhoneFieldProps): React.JSX.Element {
   return (
     <Text
       aria-hidden
@@ -35,12 +36,12 @@ function RowLabel(props: TextFieldProps): React.JSX.Element {
         isInvalid(props) && 'text-danger',
       )}
     >
-      {props.label}
+      {requiredLabel(props)}
     </Text>
   );
 }
 
-function RowInput(props: TextFieldProps): React.JSX.Element {
+function RowInput(props: PhoneFieldProps): React.JSX.Element {
   const accessibility = useInputAccessibility(props);
 
   return (
@@ -61,7 +62,7 @@ interface InputAccessibility {
   'aria-describedby': ReturnType<typeof useFooterDescription>;
 }
 
-function useInputAccessibility(props: TextFieldProps): InputAccessibility {
+function useInputAccessibility(props: PhoneFieldProps): InputAccessibility {
   return {
     accessibilityLabel: props.label,
     'aria-invalid': isInvalid(props),
@@ -72,22 +73,23 @@ function useInputAccessibility(props: TextFieldProps): InputAccessibility {
   };
 }
 
-function inputBehaviour(props: TextFieldProps): InputProps {
+function inputBehaviour(props: PhoneFieldProps): InputProps {
   return {
     value: props.value,
     placeholder: props.placeholder,
     onChangeText: props.onChangeText,
     onBlur: props.onBlur,
     editable: !props.disabled,
+    keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
     autoCapitalize: 'none',
     autoCorrect: false,
   };
 }
 
-const inputClasses = (mono: TextFieldProps['mono']): string =>
+const inputClasses = (mono: PhoneFieldProps['mono']): string =>
   cn(
     mono ? 'type-code' : 'type-body',
     'h-6 flex-1 rounded-none web:rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:h-6 web:focus-visible:ring-0 dark:bg-transparent',
   );
 
-RowTextInput satisfies React.ComponentType<TextFieldProps>;
+RowTextInput satisfies React.ComponentType<PhoneFieldProps>;
