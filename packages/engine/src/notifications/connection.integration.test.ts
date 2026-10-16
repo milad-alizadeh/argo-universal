@@ -14,7 +14,7 @@ it('rejects attention without a live WebSocket Connection', async () => {
   ).toBe('PRECONDITION_FAILED');
 });
 
-it('uses actual Connection identity and refuses a supplied replacement', async () => {
+it('refuses a supplied connection id', async () => {
   const host = await startEngineTestHost();
   const app = connectNotificationApp(host.url);
   await app.ready;

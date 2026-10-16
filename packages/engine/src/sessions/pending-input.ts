@@ -7,8 +7,8 @@ export interface InputRequestQueues {
 }
 
 export type PendingInputRequest =
-  | { kind: 'permission'; requestId: string; request: PendingPermission }
-  | { kind: 'elicitation'; requestId: string; request: PendingElicitation };
+  | { kind: 'permission'; request: PendingPermission }
+  | { kind: 'elicitation'; request: PendingElicitation };
 
 // The one Input request the Session waits on: the oldest Permission request, else the oldest Elicitation.
 export function pendingInputRequest(
@@ -16,19 +16,8 @@ export function pendingInputRequest(
 ): PendingInputRequest | null {
   const [permission] = queues.permissionQueue;
 
-  if (permission)
-    return {
-      kind: 'permission',
-      requestId: permission.requestId,
-      request: permission,
-    };
+  if (permission) return { kind: 'permission', request: permission };
   const [elicitation] = queues.elicitationQueue;
 
-  return elicitation
-    ? {
-        kind: 'elicitation',
-        requestId: elicitation.requestId,
-        request: elicitation,
-      }
-    : null;
+  return elicitation ? { kind: 'elicitation', request: elicitation } : null;
 }

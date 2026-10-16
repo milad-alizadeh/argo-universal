@@ -2,15 +2,15 @@ import type {
   NotificationStreamEvent,
   NotificationEvent,
 } from '@repo/contracts';
+import type { AppRouter } from '@repo/engine/router';
+import type { TRPCClient } from '@trpc/client';
 
 // The two Server calls the consumer makes; the tRPC client satisfies it.
 export interface NotificationClient {
-  notifications: {
-    attention: {
-      mutate: (input: { sessionId: string | null }) => Promise<boolean>;
-    };
-    acknowledge: { mutate: (input: { id: string }) => Promise<boolean> };
-  };
+  notifications: Pick<
+    TRPCClient<AppRouter>['notifications'],
+    'attention' | 'acknowledge'
+  >;
 }
 
 type Deliver = (notification: NotificationEvent) => boolean;

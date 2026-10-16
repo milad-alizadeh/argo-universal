@@ -51,7 +51,7 @@ it('does not infer events from populated history or archive restoration', async 
   expect(app.notifications[0]?.id).not.toContain('first-turn');
 });
 
-it('reconnects after Engine restart with stable Server identity and no historical replay', async () => {
+it('reconnects to a restarted Engine as the same Server without replaying history', async () => {
   const host = await startEngineTestHost();
   const app = connectNotificationApp(host.url);
   const original = await app.ready;

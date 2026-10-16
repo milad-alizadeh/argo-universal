@@ -31,19 +31,19 @@ it.each([
     claim: 'the oldest Permission request',
     permissionQueue: [permission('p-1'), permission('p-2')],
     elicitationQueue: [],
-    expected: { kind: 'permission', requestId: 'p-1' },
+    expected: { kind: 'permission', request: { requestId: 'p-1' } },
   },
   {
     claim: 'the oldest Elicitation',
     permissionQueue: [],
     elicitationQueue: [elicitation('e-1'), elicitation('e-2')],
-    expected: { kind: 'elicitation', requestId: 'e-1' },
+    expected: { kind: 'elicitation', request: { requestId: 'e-1' } },
   },
   {
     claim: 'a Permission request before an older Elicitation',
     permissionQueue: [permission('p-1')],
     elicitationQueue: [elicitation('e-1')],
-    expected: { kind: 'permission', requestId: 'p-1' },
+    expected: { kind: 'permission', request: { requestId: 'p-1' } },
   },
 ])(
   'answers $claim',
@@ -59,5 +59,5 @@ it('carries the full Permission request for its title', (): void => {
 
   expect(
     pendingInputRequest({ permissionQueue: [request], elicitationQueue: [] }),
-  ).toEqual({ kind: 'permission', requestId: 'p-1', request });
+  ).toEqual({ kind: 'permission', request });
 });
