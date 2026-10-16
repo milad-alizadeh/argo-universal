@@ -3,7 +3,6 @@ import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/buttons/button';
 import type { ButtonDataProps } from '#primitives/buttons/button';
-import { useWide } from '../../../use-wide/use-wide';
 import { DialogBody } from './dialog-body';
 import { useDialogState } from './dialog-context';
 import { DialogOverlay } from './dialog-overlay';
@@ -13,9 +12,11 @@ import {
   DialogTitleText,
   DialogTrigger,
 } from './dialog-parts';
+import { useDialogPresentation } from './dialog-presentation';
 import type {
   DialogContentProps as ContentProps,
   DialogProps,
+  DialogPresentation,
   DialogTextProps,
 } from './dialog-props';
 import { DialogRoot } from './dialog-root';
@@ -27,18 +28,37 @@ function Dialog(props: DialogProps): React.JSX.Element {
 
 // A wide window centres the dialog; a narrow one, phone or web, raises the same content as a bottom sheet.
 function DialogContent(props: ContentProps): React.JSX.Element {
-  if (useWide()) return <CentredDialog {...props} />;
+  const presentation = useDialogPresentation();
 
+  if (presentation.wide) return <CentredDialog {...props} />;
+
+  return <NarrowDialog {...props} presentation={presentation} />;
+}
+
+function NarrowDialog({
+  presentation,
+  ...props
+}: ContentProps & { presentation: DialogPresentation }): React.JSX.Element {
   return (
     <DialogSheet
+      open={presentation.sheetOpen}
+      onClosed={presentation.onSheetClosed}
       label={props.accessibilityLabel}
       dismissible={props.dismissible}
     >
-      {/* Paper's iOS sheet pads its content 16 on every side; Android's drag handle zone already sets the top. */}
-      <View className={cn('gap-6 px-4 ios:py-4', props.className)}>
-        {props.children}
-      </View>
+      <NarrowDialogBody {...props} />
     </DialogSheet>
+  );
+}
+
+// Paper's iOS sheet pads its content on every side; Android's drag handle zone sets the top.
+function NarrowDialogBody(
+  props: Pick<ContentProps, 'className' | 'children'>,
+): React.JSX.Element {
+  return (
+    <View className={cn('gap-6 px-4 ios:py-4', props.className)}>
+      {props.children}
+    </View>
   );
 }
 

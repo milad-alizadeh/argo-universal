@@ -39,6 +39,8 @@ export interface DialogRegionProps {
 }
 
 export type DialogSheetProps = {
+  open?: boolean;
+  onClosed?: () => void;
   label?: string;
   dismissible?: boolean;
   children: ReactNode;
@@ -66,3 +68,9 @@ export type DialogWindowProps = {
   children: ReactNode;
   dismissible?: boolean;
 };
+
+export interface DialogPresentation {
+  wide: boolean;
+  sheetOpen: boolean;
+  onSheetClosed?: () => void;
+}
