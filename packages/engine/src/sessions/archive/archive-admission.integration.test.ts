@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { setTimeout } from 'node:timers/promises';
 import type {
   CloseSessionRequest,
   PromptRequest,
@@ -36,6 +37,29 @@ it('refuses archive while a Turn runs', async () => {
   expect(
     (await host.caller.session.list({ archived: false })).sessions,
   ).toMatchObject([{ sessionId: created.sessionId, archivedAt: null }]);
+});
+
+it('accepts archive after immediate Stop even when the old ACP prompt has not answered', async () => {
+  const received = Promise.withResolvers<PromptRequest>();
+
+  const host = await startAcpEngine({
+    steps: [],
+    closeTimeoutMs: 50,
+    responses: {
+      'session/prompt': [{ received, steps: [{ type: 'hold' }] }],
+    },
+  });
+
+  const created = await host.caller.session.new(emptySessionInput);
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Run' }],
+  });
+  await received.promise;
+  await host.caller.session.cancel(created);
+  await expect(host.caller.session.archive(created)).resolves.toEqual({});
+  await expect(host.caller.session.unarchive(created)).resolves.toEqual({});
+  expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(0);
 });
 
 it.each([
@@ -100,12 +124,7 @@ it('never removes the main Checkout during normal archive or restart, even when 
     .where(eq(session.id, created.sessionId))
     .run();
   await host.caller.session.archive({ sessionId: created.sessionId });
-  await expect
-    .poll(
-      () => host.openSessions.getSnapshot().context.sessions[created.sessionId],
-      { timeout: 7000 },
-    )
-    .toBeUndefined();
+  await setTimeout(5100);
   expect(existsSync(created.path)).toBe(true);
   await expect(
     host.caller.session.unarchive({ sessionId: created.sessionId }),

@@ -196,7 +196,8 @@ export type SessionCommand =
 type SessionEvent =
   | SessionCommand
   | AcpLifetimeEvent
-  | { type: typeof storageFailingEvent };
+  | { type: typeof storageFailingEvent }
+  | { type: 'session.shutdown' };
 
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
@@ -1683,7 +1684,8 @@ export const sessionMachine = sessionSetup.createMachine({
       after: { checkoutRemovalDelay: { target: 'removingCheckout' } },
       on: {
         'session.unarchive': { target: 'undoingArchive' },
-        'session.close': { target: 'closed' },
+        'session.close': {},
+        'session.shutdown': { target: 'closed' },
       },
     },
     undoingArchive: {

@@ -5,6 +5,7 @@ import type { ResumeSessionRequest } from '@agentclientprotocol/sdk';
 import { listBranches, sessionBranch } from '@repo/git';
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { promptedArchiveSession, archiveProjectPath } from '#mocks/archive';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
@@ -28,20 +29,25 @@ describe('Session archive through the composed Engine', () => {
         host.caller.session.prompt({ sessionId: created.sessionId, prompt }),
       ).rejects.toMatchObject({ code: 'CONFLICT' });
 
+      const closing = host.caller.session
+        .close({ sessionId: created.sessionId })
+        .then(
+          () => 'closed',
+          () => 'rejected',
+        );
+
       await setTimeout(4500);
       expect(existsSync(created.path)).toBe(true);
 
       if (action === 'undo')
         await host.caller.session.unarchive({ sessionId: created.sessionId });
-      await expect
-        .poll(
-          () =>
-            host.openSessions.getSnapshot().context.sessions[created.sessionId],
-          { timeout: 7000 },
-        )
-        .toBeUndefined();
+      expect(await closing).toBe('closed');
       await setTimeout(Math.max(0, 5100 - (Date.now() - started)));
       expect(existsSync(created.path)).toBe(action === 'undo');
+      expect(
+        (await host.caller.session.list({ archived: action === 'remove' }))
+          .sessions,
+      ).toMatchObject([{ sessionId: created.sessionId }]);
       const projectPath = archiveProjectPath(host);
       expect((await listBranches(projectPath)).branches).toContain(
         sessionBranch(created.sessionId),
@@ -52,6 +58,14 @@ describe('Session archive through the composed Engine', () => {
       expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(
         0,
       );
+
+      if (action === 'undo') {
+        await host.caller.session.prompt({
+          sessionId: created.sessionId,
+          prompt,
+        });
+        await waitForAcpSessionIdle(host, created.sessionId);
+      }
     },
     15000,
   );

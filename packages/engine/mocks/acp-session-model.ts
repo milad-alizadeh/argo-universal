@@ -75,6 +75,7 @@ const canApplyLifecycleEvent = (
   if (
     event.type === 'session.archive' ||
     event.type === 'session.unarchive' ||
+    event.type === 'session.shutdown' ||
     event.type === 'session.prompt' ||
     event.type === 'session.cancel' ||
     event.type === 'session.setConfigOption' ||
@@ -174,6 +175,7 @@ export const createAcpSessionModel = (
     },
     { type: 'session.archive' },
     { type: 'session.unarchive' },
+    { type: 'session.shutdown' },
     {
       type: 'xstate.done.actor.saveArchive',
       actorId: 'saveArchive',

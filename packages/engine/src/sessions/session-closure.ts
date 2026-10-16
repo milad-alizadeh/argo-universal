@@ -14,7 +14,8 @@ const isClosing = (actor: SessionActorRef): boolean => {
 
   return (
     snapshot.matches({ open: { acp: 'closing' } }) ||
-    snapshot.matches({ open: { acp: 'flushing' } })
+    snapshot.matches({ open: { acp: 'flushing' } }) ||
+    snapshot.matches('archived')
   );
 };
 
