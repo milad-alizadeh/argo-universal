@@ -9,7 +9,7 @@ import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { AgentIcon } from './agent-icon';
-import { AgentModelMenu, configureTitle } from './agent-model-menu';
+import { AgentModelMenu } from './agent-model-menu';
 import { AgentModelTrailing } from './agent-model-trailing';
 import { useCommitEffortFallback } from './configuration-effects';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -93,7 +93,7 @@ function configurePage(
   configuration: ComposerConfigurationProps,
 ): React.JSX.Element {
   return (
-    <Sheet.Page name="configure" title={configureTitle}>
+    <Sheet.Page name="configure" title="Configure">
       <AgentModelMenu configuration={configuration} wide={false} />
     </Sheet.Page>
   );
