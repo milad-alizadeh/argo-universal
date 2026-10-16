@@ -1,32 +1,17 @@
-import type {
-  AgentServer,
-  SessionSnapshot,
-  SessionUpdate,
-} from '@repo/contracts';
+import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import {
   type FeedMock,
-  newSessionCatalogs,
   recordedFeedMocks,
   recordedSessionOptions,
 } from '@repo/mocks/app';
 import { fn } from 'storybook/test';
 import { findLiveToolCall, toFeedView } from '#features/feed';
 import {
+  installedAgentOf,
   recordedFeedMock,
   recordedImageUrl,
 } from '../../../lib/product/feed-message.mocks';
 import type { OpenSessionViewProps } from './session-detail-view';
-
-// Each recording's Agent in the catalog: agent-1 is the first entry, agent-2 the second.
-function catalogAgentOf(mock: FeedMock): AgentServer {
-  const agent = newSessionCatalogs.bothAvailable.at(
-    mock.agent === 'agent-1' ? 0 : 1,
-  );
-
-  if (!agent) throw new Error(`No catalog Agent for ${mock.agent}`);
-
-  return agent;
-}
 
 const editAndCommand = recordedFeedMock('agent-1', 'edit-and-command');
 
@@ -90,12 +75,11 @@ function recordedConfiguration(
   mock: FeedMock,
   snapshot: SessionSnapshot,
 ): RecordedConfiguration {
-  const catalogAgent = catalogAgentOf(mock);
+  const agent = installedAgentOf(mock.agent);
 
   return {
-    agents: newSessionCatalogs.bothAvailable,
-    agent: catalogAgent.id,
-    configOptions: recordedSessionOptions(catalogAgent.id),
+    agent,
+    configOptions: recordedSessionOptions(agent.id),
     onConfigChange: fn(),
     turnRunning: snapshot.state !== 'idle',
     checkout: recordedCheckout(snapshot),

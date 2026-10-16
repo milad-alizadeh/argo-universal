@@ -1,4 +1,4 @@
-import { newSessionCatalogs, recordedSessionOptions } from '@repo/mocks/app';
+import { recordedSessionOptions } from '@repo/mocks/app';
 import { expect, fn } from 'storybook/test';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { oversizedComposerImage } from '../composer-mock';
@@ -26,8 +26,7 @@ export function stopPrecedence(
       sendable: false,
       onStop: fn(),
       configuration: {
-        agents: newSessionCatalogs.bothAvailable,
-        agent: catalog.agent.id,
+        agent: catalog.agent,
         configOptions: recordedSessionOptions(catalog.agent.id),
         onConfigChange: fn(),
         checkout: { branch: 'main', newWorktree: false },

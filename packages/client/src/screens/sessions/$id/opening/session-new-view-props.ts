@@ -41,23 +41,21 @@ const checkoutProps = ({
 });
 
 const agentChoiceProps = (
+  agents: AgentServer[],
   wiring: NewSessionWiring,
-): Pick<ConfigurationProps, 'onAgentChange' | 'onAddAgents'> => ({
+): ReadyProps<'agents' | 'onAgentChange' | 'onAddAgents'> => ({
+  agents,
   onAgentChange: (agent) =>
     rechoose(wiring, (current) => ({ ...current, agent })),
   onAddAgents: () => wiring.navigate('/settings/agents'),
 });
 
-const configurationProps = (
-  agents: AgentServer[],
-  wiring: NewSessionWiring,
-): ConfigurationProps => ({
-  agents,
-  agent: wiring.data.choices.agent?.id ?? '',
+// The chosen Agent is the one New Session's choices already found among the Installed Agents.
+const configurationProps = (wiring: NewSessionWiring): ConfigurationProps => ({
+  agent: wiring.data.choices.agent,
   configOptions: [],
   onConfigChange: ignoreConfigChange,
   ...wiring.configuration,
-  ...agentChoiceProps(wiring),
   checkout: checkoutProps(wiring.data),
 });
 
@@ -82,7 +80,8 @@ const readyProps = (
   connected: wiring.connected,
   projects,
   ...projectProps(wiring),
-  configuration: configurationProps(agents, wiring),
+  ...agentChoiceProps(agents, wiring),
+  configuration: configurationProps(wiring),
   ...draftProps(wiring),
   ...openingProps(wiring),
   ...noticeProps(wiring),

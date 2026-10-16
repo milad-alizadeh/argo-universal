@@ -19,10 +19,7 @@ export {
   composerPlanDone,
 } from './composer-attachments';
 
-export {
-  composerLongAgentCatalog,
-  composerUnlistedEffortConfigurations,
-} from './composer-agent-catalogs';
+export { composerUnlistedEffortConfigurations } from './composer-agent-catalogs';
 
 export {
   composerLongModelList,
@@ -90,10 +87,10 @@ function defaultConfiguration(
   const agent = props.initialAgent ?? availableAgent();
 
   return {
-    agents: newSessionCatalogs.bothAvailable,
-    agent,
+    agent: installedAgent(agent),
     configOptions: recordedOptions(agent),
-    ...configurationControls(props),
+    turnRunning: props.running ?? false,
+    onConfigChange: (): void => {},
     checkout: checkout(props.sessionStarted),
   };
 }
@@ -102,17 +99,12 @@ function availableAgent(): string {
   return newSessionCatalogs.bothAvailable[0]?.id ?? '';
 }
 
-type Configuration = NonNullable<ComposerProps['configuration']>;
-
-function configurationControls(
-  props: Pick<ComposerMockProps, 'running' | 'sessionStarted'>,
-): Pick<Configuration, 'turnRunning' | 'onAgentChange' | 'onConfigChange'> {
-  return {
-    turnRunning: props.running ?? false,
-    onAgentChange: props.sessionStarted ? undefined : (): void => {},
-    onConfigChange: (): void => {},
-  };
+// The mock's Installed Agent with that id; stories pass a recording's Agent through installedAgentOf.
+function installedAgent(id: string): AgentServer | undefined {
+  return newSessionCatalogs.bothAvailable.find((entry) => entry.id === id);
 }
+
+type Configuration = NonNullable<ComposerProps['configuration']>;
 
 function checkout(
   sessionStarted: boolean | undefined,

@@ -87,10 +87,10 @@ export const ZeroAgents: Story = {
       state: 'ready',
       ...readyNewSession,
       canOpen: false,
+      agents: [],
       configuration: {
         ...readyNewSession.configuration,
-        agents: [],
-        agent: '',
+        agent: undefined,
         configOptions: [],
       },
     },

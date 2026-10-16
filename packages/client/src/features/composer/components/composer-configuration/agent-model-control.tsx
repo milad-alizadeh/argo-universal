@@ -1,4 +1,3 @@
-import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
@@ -13,7 +12,12 @@ import { AgentModelMenu } from './agent-model-menu';
 import { AgentModelTrailing } from './agent-model-trailing';
 import { useCommitEffortFallback } from './configuration-effects';
 import type { ComposerConfigurationProps } from './configuration-types';
-import { selectedChoice, selection, modelName } from './configuration-values';
+import {
+  agentName,
+  selectedChoice,
+  selection,
+  modelName,
+} from './configuration-values';
 
 interface ControlProps {
   configuration: ComposerConfigurationProps;
@@ -21,7 +25,6 @@ interface ControlProps {
 }
 
 interface TriggerProps extends ControlProps {
-  agent?: AgentServer;
   wide: boolean;
 }
 
@@ -30,14 +33,14 @@ const agentModelMenuWidth = 320;
 export function ComposerAgentModelControl(
   props: ControlProps,
 ): React.JSX.Element | null {
-  const agent = selectedAgent(props.configuration);
   const wide = useContentWide();
 
   useCommitEffortFallback(props.configuration);
 
-  if (!selection(props.configuration, 'model') && !agent) return null;
+  if (!selection(props.configuration, 'model') && !props.configuration.agent)
+    return null;
 
-  return <AgentModelOverlay {...props} agent={agent} wide={wide} />;
+  return <AgentModelOverlay {...props} wide={wide} />;
 }
 
 // Desktop opens the menu as a popover; everything else opens the Sheet.
@@ -120,25 +123,18 @@ function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   if (props.configuration.opening)
     return <Spinner accessibilityLabel="Opening the Session" />;
 
-  return props.wide ? <AgentIcon agent={props.agent} /> : undefined;
+  return props.wide ? (
+    <AgentIcon agent={props.configuration.agent} />
+  ) : undefined;
 }
 
-function agentLabel(agent?: AgentServer): string {
-  return agent?.name || '';
-}
-
-function selectedAgent(
-  configuration: ComposerConfigurationProps,
-): AgentServer | undefined {
-  return configuration.agents.find((entry) => entry.id === configuration.agent);
-}
-
-function triggerLabel(props: TriggerProps): string {
-  if (optionsAreOpening(props.configuration)) return 'Loading…';
+// Unlike Configure's Agent row, the trigger shows no id for an Agent that is not installed.
+function triggerLabel({ configuration }: TriggerProps): string {
+  if (optionsAreOpening(configuration)) return 'Loading…';
 
   return (
-    modelName(selectedChoice(props.configuration, 'model')) ||
-    agentLabel(props.agent)
+    modelName(selectedChoice(configuration, 'model')) ||
+    agentName(configuration.agent)
   );
 }
 

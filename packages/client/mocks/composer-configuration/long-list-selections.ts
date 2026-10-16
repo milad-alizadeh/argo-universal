@@ -1,11 +1,7 @@
 import { expect, waitFor, within } from 'storybook/test';
-import { agentsScrollId, chooseAgentLabel, type PlayContext } from './common';
-import { lastLongModel, lastLongAgent } from './long-list-cases';
-import {
-  expectScrollsUnderFades,
-  lastVisible,
-  expectRowInsideScroll,
-} from './scroll-reachability';
+import type { PlayContext } from './common';
+import { lastLongModel } from './long-list-cases';
+import { lastVisible, expectRowInsideScroll } from './scroll-reachability';
 
 export async function selectLastDesktopModel(
   context: PlayContext,
@@ -67,21 +63,6 @@ async function selectLongModel(
   );
 }
 
-export async function selectLastAgent({
-  userEvent,
-  args,
-}: PlayContext): Promise<void> {
-  await expectScrollsUnderFades(
-    await openAgentChoices(userEvent),
-    findLastAgent,
-  );
-  await clickUntil({ userEvent, row: findLastAgent }, () =>
-    expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(
-      lastLongAgent.id,
-    ),
-  );
-}
-
 // Clicks the row found fresh each try, as a virtualized list can swap the node under a click.
 async function clickUntil(
   {
@@ -93,23 +74,6 @@ async function clickUntil(
   await waitFor(async () => {
     await userEvent.click(await row());
     await called();
-  });
-}
-
-async function openAgentChoices(
-  userEvent: PlayContext['userEvent'],
-): Promise<HTMLElement> {
-  const overlay = within(document.body);
-  await userEvent.click(
-    await overlay.findByRole('button', { name: chooseAgentLabel }),
-  );
-
-  return overlay.findByTestId(agentsScrollId);
-}
-
-function findLastAgent(): Promise<HTMLElement> {
-  return within(document.body).findByRole('button', {
-    name: `Select ${lastLongAgent.name}`,
   });
 }
 

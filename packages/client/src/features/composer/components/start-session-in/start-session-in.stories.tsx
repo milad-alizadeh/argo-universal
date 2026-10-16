@@ -12,7 +12,7 @@ const meta = {
   component: StartSessionIn,
   args: {
     agents: newSessionCatalogs.bothAvailable,
-    agent: newSessionCatalogs.bothAvailable[0]?.id ?? '',
+    agent: newSessionCatalogs.bothAvailable[0],
     onAgentChange: fn(),
     onAddAgents: fn(),
     serverName: serverInfo.name,
@@ -30,4 +30,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Agents: Story = {};
 
-export const ZeroAgents: Story = { args: { agents: [], agent: '' } };
+export const ZeroAgents: Story = { args: { agents: [], agent: undefined } };
