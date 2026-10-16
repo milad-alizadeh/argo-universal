@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useSizeClass } from '#lib/generic/use-size-class/use-size-class';
 import { Text } from '#primitives/display/text';
+import { useSizeClass } from '../src/lib/generic/use-size-class/use-size-class';
 import { HeaderItems } from '../src/lib/product/header-button';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';

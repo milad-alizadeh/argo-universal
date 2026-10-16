@@ -3,7 +3,6 @@ import { type ReactNode, use, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
-import { useSizeClass } from '#lib/generic/use-size-class/use-size-class';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import {
@@ -11,6 +10,7 @@ import {
   type PageTitleRowProps,
   type PageTitleSearch,
 } from '../generic/page-title-row/page-title-row';
+import { useSizeClass } from '../generic/use-size-class/use-size-class';
 
 export type SettingsPageSearch = PageTitleSearch;
 

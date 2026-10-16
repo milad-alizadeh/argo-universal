@@ -2,8 +2,8 @@ import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Platform } from 'react-native';
-import { useSizeClass } from '#lib/generic/use-size-class/use-size-class';
 import { HeaderItems } from '#lib/product/header-button';
+import { useSizeClass } from '../../generic/use-size-class/use-size-class';
 import {
   type HeaderSearch,
   HeaderSearchRow,
