@@ -1,19 +1,21 @@
 import { Canvas, type CanvasProps } from '@react-three/fiber';
-import type { ThreeEvent } from '@react-three/fiber';
-import { useEffect, useRef, type JSX, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, type JSX, type RefObject } from 'react';
 import type { InstancedMesh } from 'three';
-import type { MapProps } from './model';
-import { fitPosition, useThreeCommand } from './three-camera';
+import { mapExtent, type MapProps } from './model';
+import { usePointerPick } from './pointer-pick';
 import { useThreeContext, type ThreeContext } from './three-context';
 import { useInstances } from './three-instances';
 import { useThreeLabels } from './three-labels';
 import { useThreePan } from './three-pan';
+import { clipRange, fieldOfView, fitCamera } from './three-projection';
 import { useThreeReady } from './three-ready';
+
+const fit = fitCamera(mapExtent).position;
 
 const canvasOptions: CanvasProps = {
   dpr: 1,
   frameloop: 'demand',
-  camera: { position: fitPosition, fov: 42, near: 0.1, far: 1000 },
+  camera: { position: [fit.x, fit.y, fit.z], fov: fieldOfView, ...clipRange },
   gl: { antialias: true },
 };
 
@@ -23,7 +25,11 @@ const floorRotation: [number, number, number] = [-Math.PI / halves, 0, 0];
 
 const floorClearance = 0.1;
 
-const floorPosition: [number, number, number] = [0, -floorClearance, 0];
+const floorPosition: [number, number, number] = [
+  mapExtent.x + mapExtent.w / halves,
+  -floorClearance,
+  mapExtent.y + mapExtent.h / halves,
+];
 
 const lightOffset = { x: 30, y: 100, z: 60 };
 
@@ -33,21 +39,13 @@ const lightPosition: [number, number, number] = [
   lightOffset.z,
 ];
 
-const floorDimensions = { width: 101, height: 81 };
+/** World units the floor extends past the map extent. */
+const floorMargin = 1;
 
 const floorSize: [number, number] = [
-  floorDimensions.width,
-  floorDimensions.height,
+  mapExtent.w + floorMargin,
+  mapExtent.h + floorMargin,
 ];
-
-function select(event: ThreeEvent<MouseEvent>, ctx: ThreeContext): void {
-  event.stopPropagation();
-
-  if (event.instanceId === undefined) return;
-  const tile = ctx.tiles.at(event.instanceId);
-
-  if (tile) ctx.onSelect(tile.id);
-}
 
 function Floor({ ctx }: { ctx: ThreeContext }): JSX.Element {
   return (
@@ -64,14 +62,8 @@ interface DrawingProps {
 }
 
 function Buildings({ ctx, mesh }: DrawingProps): JSX.Element {
-  const onClick = (event: ThreeEvent<MouseEvent>): void => select(event, ctx);
-
   return (
-    <instancedMesh
-      ref={mesh}
-      args={[undefined, undefined, ctx.tiles.length]}
-      onClick={onClick}
-    >
+    <instancedMesh ref={mesh} args={[undefined, undefined, ctx.tiles.length]}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color={ctx.palette.light} roughness={1} />
     </instancedMesh>
@@ -106,8 +98,9 @@ function useScene(
   ctx: ThreeContext,
   mesh: RefObject<InstancedMesh | null>,
 ): void {
+  const canvas = useMemo(() => ({ current: ctx.gl.domElement }), [ctx.gl]);
   useInstances(ctx, mesh);
-  useThreeCommand(ctx);
+  usePointerPick(canvas, ctx.viewport, ctx.onSelect);
   useThreePan(ctx);
   useThreeLabels(ctx);
   useThreeReady(ctx);

@@ -1,7 +1,8 @@
-import { Vector3 } from 'three';
-import type { Camera } from 'three';
 import type { Label, Tile } from './model';
+import { projectPoint, worldPoint, type CameraPose } from './three-projection';
 import type { RoofVisibility } from './three-roof-visibility';
+import type { ThreeViewport } from './three-viewport';
+import type { MapPoint, ScreenPoint } from './viewport';
 
 const halves = 2;
 
@@ -10,47 +11,45 @@ const minimumWidth = 38;
 const maximumCandidates = 150;
 
 interface Projection {
-  camera: Camera;
-  size: { width: number; height: number };
+  pose: CameraPose;
   isRoofVisible: RoofVisibility;
 }
 
-function point(tile: Tile, fraction: number): Vector3 {
-  return new Vector3(
-    tile.x + tile.w * fraction,
-    tile.elevation,
-    tile.y + tile.h / halves,
-  );
-}
-
-function insideDepth(point: Vector3): boolean {
-  return point.z >= -1 && point.z <= 1;
+function roof(tile: Tile, fraction: number): MapPoint {
+  return {
+    x: tile.x + tile.w * fraction,
+    y: tile.y + tile.h / halves,
+    elevation: tile.elevation,
+  };
 }
 
 function fileName(tile: Tile): string {
   return tile.path.split('/').pop() ?? tile.path;
 }
 
-function eligible(center: Vector3, edge: Vector3, width: number): boolean {
+function wideEnough(
+  center: ScreenPoint,
+  edge: ScreenPoint | undefined,
+): boolean {
   return (
-    insideDepth(center) && Math.abs(center.x - edge.x) * width >= minimumWidth
+    edge !== undefined && Math.abs(center.x - edge.x) * halves >= minimumWidth
   );
 }
 
+function anchor(tile: Tile, pose: CameraPose): ScreenPoint | undefined {
+  const center = projectPoint(pose, roof(tile, 1 / halves));
+
+  return center && wideEnough(center, projectPoint(pose, roof(tile, 1)))
+    ? center
+    : undefined;
+}
+
 function label(tile: Tile, ctx: Projection): Label | undefined {
-  const center = point(tile, 1 / halves).project(ctx.camera);
-  const edge = point(tile, 1).project(ctx.camera);
+  const center = anchor(tile, ctx.pose);
 
-  if (!eligible(center, edge, ctx.size.width)) return;
+  if (!center || !ctx.isRoofVisible(worldPoint(roof(tile, 1 / halves)))) return;
 
-  if (!ctx.isRoofVisible(point(tile, 1 / halves))) return;
-
-  return {
-    id: tile.id,
-    text: fileName(tile),
-    x: ((center.x + 1) * ctx.size.width) / halves,
-    y: ((1 - center.y) * ctx.size.height) / halves,
-  };
+  return { id: tile.id, text: fileName(tile), x: center.x, y: center.y };
 }
 
 function addCandidate(
@@ -65,9 +64,18 @@ function addCandidate(
   return candidates.length >= maximumCandidates;
 }
 
-export function projectLabels(tiles: Tile[], ctx: Projection): Label[] {
-  // R3F projects labels before rendering refreshes the camera's world matrix.
-  ctx.camera.updateMatrixWorld();
+interface LabelSource {
+  viewport: Pick<ThreeViewport, 'pose'>;
+  isRoofVisible: RoofVisibility;
+}
+
+/** Projects roof labels from the viewport's plain camera pose, so no camera matrix can be stale. */
+export function projectLabels(tiles: Tile[], source: LabelSource): Label[] {
+  const ctx = {
+    pose: source.viewport.pose(),
+    isRoofVisible: source.isRoofVisible,
+  };
+
   const candidates: Label[] = [];
 
   for (const tile of tiles) {

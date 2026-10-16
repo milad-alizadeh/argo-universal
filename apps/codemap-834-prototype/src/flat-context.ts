@@ -1,65 +1,37 @@
 import {
   useEffect,
-  useImperativeHandle,
-  useState,
-  type Dispatch,
+  useMemo,
+  useSyncExternalStore,
   type RefObject,
-  type SetStateAction,
 } from 'react';
-import type { CameraAction, MapProps } from './model';
-
-export interface FlatCamera {
-  x: number;
-  y: number;
-  zoom: number;
-}
-
-export interface Size {
-  width: number;
-  height: number;
-}
-
-export type SetCamera = Dispatch<SetStateAction<FlatCamera>>;
+import {
+  createFlatViewport,
+  type FlatFrame,
+  type FlatViewport,
+} from './flat-viewport';
+import { mapExtent, type MapProps } from './model';
+import type { Size } from './viewport';
+import { useViewportHandle } from './viewport-handle';
 
 export interface FlatContext extends MapProps {
   host: RefObject<HTMLDivElement | null>;
+  viewport: FlatViewport;
+  /** Changes whenever the view moves or resizes, so effects that draw depend on it. */
+  frame: FlatFrame;
   size: Size;
-  camera: FlatCamera;
-  setCamera: SetCamera;
-  scale: number;
 }
 
-const zoomIn = 1.25;
-
-const zoomOut = 0.8;
-
-const mapWidth = 115;
-
-const mapHeight = 100;
-
-const fitCamera: FlatCamera = { x: 0, y: 0, zoom: 1 };
-
-export function cameraCommand(
-  current: FlatCamera,
-  action: CameraAction,
-): FlatCamera {
-  if (action === 'fit') return fitCamera;
-
-  return {
-    ...current,
-    zoom: current.zoom * (action === 'in' ? zoomIn : zoomOut),
-  };
-}
+const initialSize: Size = { width: 1000, height: 700 };
 
 function observe(
   host: HTMLDivElement | null,
-  setSize: Dispatch<SetStateAction<Size>>,
+  viewport: FlatViewport,
 ): (() => void) | undefined {
   if (!host) return;
 
   const observer = new ResizeObserver(([entry]) => {
     if (entry)
-      setSize({
+      viewport.resize({
         width: entry.contentRect.width,
         height: entry.contentRect.height,
       });
@@ -70,21 +42,10 @@ function observe(
   return () => observer.disconnect();
 }
 
-function useSize(host: RefObject<HTMLDivElement | null>): Size {
-  const [size, setSize] = useState<Size>({ width: 1000, height: 700 });
-  useEffect(() => observe(host.current, setSize), [host]);
-
-  return size;
-}
-
-function useCommands(ref: MapProps['cameraRef'], setCamera: SetCamera): void {
-  useImperativeHandle(
-    ref,
-    () => ({
-      run: (action): void =>
-        setCamera((current) => cameraCommand(current, action)),
-    }),
-    [setCamera],
+function useFlatViewport(tiles: MapProps['tiles']): FlatViewport {
+  return useMemo(
+    () => createFlatViewport({ tiles, extent: mapExtent }, initialSize),
+    [tiles],
   );
 }
 
@@ -92,14 +53,10 @@ export function useFlatContext(
   props: MapProps,
   host: RefObject<HTMLDivElement | null>,
 ): FlatContext {
-  const size = useSize(host);
+  const viewport = useFlatViewport(props.tiles);
+  useEffect(() => observe(host.current, viewport), [host, viewport]);
+  useViewportHandle(props.viewportRef, viewport);
+  const frame = useSyncExternalStore(viewport.subscribe, viewport.frame);
 
-  const [camera, setCamera] = useState(() =>
-    cameraCommand(fitCamera, props.command.action),
-  );
-
-  useCommands(props.cameraRef, setCamera);
-  const scale = Math.min(size.width / mapWidth, size.height / mapHeight);
-
-  return { ...props, host, size, camera, setCamera, scale };
+  return { ...props, host, viewport, frame, size: frame.size };
 }

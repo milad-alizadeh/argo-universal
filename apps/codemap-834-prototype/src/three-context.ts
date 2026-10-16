@@ -1,19 +1,28 @@
 import { useThree } from '@react-three/fiber';
-import { useMemo } from 'react';
-import type { Camera, WebGLRenderer } from 'three';
+import { useLayoutEffect, useMemo } from 'react';
+import { PerspectiveCamera, type Camera, type WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { MapProps } from './model';
+import { mapExtent, type MapProps } from './model';
+import { createThreeViewport, type ThreeViewport } from './three-viewport';
+import { useViewportHandle } from './viewport-handle';
 
 const polarAngleFraction = 0.49;
 
 const maximumPolarAngle = Math.PI * polarAngleFraction;
 
 export interface ThreeContext extends MapProps {
-  camera: Camera;
+  camera: PerspectiveCamera;
   gl: WebGLRenderer;
   controls: OrbitControls;
+  viewport: ThreeViewport;
   invalidate: () => void;
   size: { width: number; height: number };
+}
+
+function perspective(camera: Camera): PerspectiveCamera {
+  if (camera instanceof PerspectiveCamera) return camera;
+
+  throw new Error('The 3D CodeMap requires a perspective camera');
 }
 
 function createControls(
@@ -27,13 +36,43 @@ function createControls(
   return controls;
 }
 
+type Rig = Pick<ThreeContext, 'camera' | 'controls' | 'invalidate' | 'size'>;
+
+function useCreateViewport(tiles: MapProps['tiles'], rig: Rig): ThreeViewport {
+  const { camera, controls, invalidate } = rig;
+
+  return useMemo(
+    () =>
+      createThreeViewport(
+        { tiles, extent: mapExtent },
+        { camera, controls, invalidate },
+      ),
+    [tiles, camera, controls, invalidate],
+  );
+}
+
+function useViewport(props: MapProps, rig: Rig): ThreeViewport {
+  const viewport = useCreateViewport(props.tiles, rig);
+  const { size } = rig;
+  useLayoutEffect(() => viewport.resize(size), [viewport, size]);
+  // A newly mounted view starts at fit.
+  useLayoutEffect(() => viewport.fit(), [viewport]);
+  useViewportHandle(props.viewportRef, viewport);
+
+  return viewport;
+}
+
 export function useThreeContext(props: MapProps): ThreeContext {
-  const { camera, gl, invalidate, size } = useThree();
+  const three = useThree();
+  const { gl, invalidate, size } = three;
+  const camera = perspective(three.camera);
 
   const controls = useMemo(
     () => createControls(camera, gl.domElement),
     [camera, gl],
   );
 
-  return { ...props, camera, gl, controls, invalidate, size };
+  const viewport = useViewport(props, { camera, controls, invalidate, size });
+
+  return { ...props, camera, gl, controls, viewport, invalidate, size };
 }

@@ -1,113 +1,57 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect } from 'react';
 import type { FlatContext } from './flat-context';
-import type { Tile } from './model';
+import type { FlatViewport } from './flat-viewport';
+import { listen, usePointerPick, type PointerListener } from './pointer-pick';
+import type { ScreenPoint } from './viewport';
+
+interface PanTarget {
+  element: HTMLDivElement;
+  viewport: FlatViewport;
+}
 
 interface Drag {
-  x: number;
-  y: number;
-  startX: number;
-  startY: number;
+  target: PanTarget;
+  last: ScreenPoint | null;
 }
 
-type PointerContext = FlatContext & { element: HTMLDivElement };
-
-const clickDistance = 5;
-
-const halves = 2;
-
-function click(event: PointerEvent, drag: Drag | null): boolean {
-  if (!drag) return false;
-
-  return (
-    Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < clickDistance
-  );
+function press(drag: Drag, event: PointerEvent): void {
+  drag.target.element.setPointerCapture(event.pointerId);
+  drag.last = { x: event.clientX, y: event.clientY };
 }
 
-function horizontal(tile: Tile, x: number): boolean {
-  return x >= tile.x && x <= tile.x + tile.w;
+function move(drag: Drag, event: PointerEvent): void {
+  if (!drag.last) return;
+  const { x, y } = drag.last;
+  drag.target.viewport.pan({ x: event.clientX - x, y: event.clientY - y });
+  drag.last = { x: event.clientX, y: event.clientY };
 }
 
-function vertical(tile: Tile, y: number): boolean {
-  return y >= tile.y && y <= tile.y + tile.h;
+function end(drag: Drag): void {
+  drag.last = null;
 }
 
-function contains(tile: Tile, point: { x: number; y: number }): boolean {
-  return horizontal(tile, point.x) && vertical(tile, point.y);
+function dragging(target: PanTarget): PointerListener[] {
+  const drag: Drag = { target, last: null };
+
+  return [
+    ['pointerdown', (event): void => press(drag, event)],
+    ['pointermove', (event): void => move(drag, event)],
+    ['pointerup', (): void => end(drag)],
+  ];
 }
 
-function pick(event: PointerEvent, ctx: PointerContext): void {
-  const bounds = ctx.element.getBoundingClientRect();
-  const scale = ctx.scale * ctx.camera.zoom;
-
-  const x =
-    (event.clientX - bounds.left - ctx.size.width / halves - ctx.camera.x) /
-    scale;
-
-  const y =
-    (event.clientY - bounds.top - ctx.size.height / halves - ctx.camera.y) /
-    scale;
-
-  const tile = ctx.tiles.findLast((candidate) => contains(candidate, { x, y }));
-
-  if (tile) ctx.onSelect(tile.id);
-}
-
-function begin(event: PointerEvent, ctx: PointerContext): Drag {
-  ctx.element.setPointerCapture(event.pointerId);
-
-  return {
-    x: event.clientX,
-    y: event.clientY,
-    startX: ctx.camera.x,
-    startY: ctx.camera.y,
-  };
-}
-
-function move(
-  event: PointerEvent,
-  drag: Drag | null,
-  ctx: PointerContext,
-): void {
-  if (!drag) return;
-  ctx.setCamera((camera) => ({
-    ...camera,
-    x: drag.startX + event.clientX - drag.x,
-    y: drag.startY + event.clientY - drag.y,
-  }));
-}
-
-function release(
-  event: PointerEvent,
-  ctx: PointerContext,
-  drag: RefObject<Drag | null>,
-): void {
-  if (click(event, drag.current)) pick(event, ctx);
-  drag.current = null;
-}
-
-function attach(ctx: PointerContext, drag: RefObject<Drag | null>): () => void {
-  const down = (event: PointerEvent): void => {
-    drag.current = begin(event, ctx);
-  };
-
-  const moving = (event: PointerEvent): void => move(event, drag.current, ctx);
-  const up = (event: PointerEvent): void => release(event, ctx, drag);
-  ctx.element.addEventListener('pointerdown', down);
-  ctx.element.addEventListener('pointermove', moving);
-  ctx.element.addEventListener('pointerup', up);
-
-  return (): void => {
-    ctx.element.removeEventListener('pointerdown', down);
-    ctx.element.removeEventListener('pointermove', moving);
-    ctx.element.removeEventListener('pointerup', up);
-  };
-}
-
-export function useFlatPointer(ctx: FlatContext): void {
-  const drag = useRef<Drag | null>(null);
+/** Drag pans the flat view; a press without a drag selects the file under it. */
+export function useFlatPointer({
+  host,
+  viewport,
+  onSelect,
+}: FlatContext): void {
+  usePointerPick(host, viewport, onSelect);
   useEffect(() => {
-    const element = ctx.host.current;
+    const element = host.current;
 
-    return element ? attach({ ...ctx, element }, drag) : undefined;
-  }, [ctx]);
+    return element
+      ? listen(element, dragging({ element, viewport }))
+      : undefined;
+  }, [host, viewport]);
 }

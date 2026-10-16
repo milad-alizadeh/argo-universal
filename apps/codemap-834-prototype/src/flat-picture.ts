@@ -6,9 +6,19 @@ import {
 } from '@shopify/react-native-skia';
 import { useMemo } from 'react';
 import type { FlatContext } from './flat-context';
-import { tileColor, type Tile } from './model';
+import { mapExtent, tileColor, type Bounds, type Tile } from './model';
 
-const recordingBounds = { x: -51, y: -41, w: 102, h: 82 };
+/** World units recorded beyond the extent on every side. */
+const recordingMargin = 1;
+
+const sides = 2;
+
+const recordingBounds: Bounds = {
+  x: mapExtent.x - recordingMargin,
+  y: mapExtent.y - recordingMargin,
+  w: mapExtent.w + recordingMargin * sides,
+  h: mapExtent.h + recordingMargin * sides,
+};
 
 type PictureContext = Pick<FlatContext, 'tiles' | 'palette' | 'selected'>;
 

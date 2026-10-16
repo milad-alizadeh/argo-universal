@@ -1,6 +1,5 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef, type RefObject } from 'react';
-import { Vector3 } from 'three';
 import {
   startSample,
   sampleFrame,
@@ -10,20 +9,17 @@ import {
 import type { PanResult } from './model';
 import type { ThreeContext } from './three-context';
 
-type PanContext = Pick<
-  ThreeContext,
-  'camera' | 'gl' | 'controls' | 'invalidate'
->;
+type PanContext = Pick<ThreeContext, 'gl' | 'viewport' | 'invalidate'>;
 
 interface Run extends FrameSample {
   done: (result: PanResult) => void;
-  camera: Vector3;
-  target: Vector3;
+  offset: number;
 }
 
 const wavePeriod = 1200;
 
-const panDistance = 18;
+/** Screen pixels; about 18 world units at the fit distance. */
+const panDistance = 90;
 
 const metric =
   'R3F submitted render cadence while camera pans; not GPU completion';
@@ -34,26 +30,15 @@ function startPan(
   duration: number,
 ): Promise<PanResult> {
   return new Promise((done) => {
-    run.current = {
-      ...startSample(duration),
-      done,
-      camera: ctx.camera.position.clone(),
-      target: ctx.controls.target.clone(),
-    };
+    run.current = { ...startSample(duration), done, offset: 0 };
     ctx.invalidate();
   });
 }
 
 function moveCamera(ctx: PanContext, run: Run, elapsed: number): void {
-  const offset = new Vector3(
-    Math.sin(elapsed / wavePeriod) * panDistance,
-    0,
-    0,
-  );
-
-  ctx.camera.position.copy(run.camera).add(offset);
-  ctx.controls.target.copy(run.target).add(offset);
-  ctx.controls.update();
+  const offset = Math.sin(elapsed / wavePeriod) * panDistance;
+  ctx.viewport.pan({ x: offset - run.offset, y: 0 });
+  run.offset = offset;
 }
 
 function finish(ctx: PanContext, run: Run): void {
@@ -88,10 +73,10 @@ function attach(ctx: PanContext, ref: RefObject<Run | null>): () => void {
 
 export function useThreePan(ctx: PanContext): void {
   const run = useRef<Run | null>(null);
-  const { camera, gl, controls, invalidate } = ctx;
+  const { gl, viewport, invalidate } = ctx;
   useEffect(
-    () => attach({ camera, gl, controls, invalidate }, run),
-    [camera, gl, controls, invalidate],
+    () => attach({ gl, viewport, invalidate }, run),
+    [gl, viewport, invalidate],
   );
   useFrame(() => frame(ctx, run));
 }

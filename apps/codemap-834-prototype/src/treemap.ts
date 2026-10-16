@@ -2,7 +2,8 @@ import type { Bounds, FileEntry, Tile } from './model';
 import { folders, type Folder } from './treemap-folder';
 import { partition } from './treemap-partition';
 
-const mapBounds: Bounds = { x: -50, y: -40, w: 100, h: 80 };
+/** The world extent every tile lies inside; renderers, cameras and floors derive from it. */
+export const mapExtent: Bounds = { x: -50, y: -40, w: 100, h: 80 };
 
 const gapLimit = 0.13;
 
@@ -79,7 +80,7 @@ function split(nodes: Folder[], bounds: Bounds, tiles: Tile[]): void {
 
 export function layout(files: FileEntry[]): Tile[] {
   const tiles: Tile[] = [];
-  split(folders(files), mapBounds, tiles);
+  split(folders(files), mapExtent, tiles);
 
   return tiles;
 }

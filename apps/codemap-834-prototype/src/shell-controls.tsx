@@ -1,7 +1,8 @@
 import type { JSX, CSSProperties } from 'react';
-import type { CameraAction, Palette, View } from './model';
+import type { Palette, View } from './model';
 import type { PrototypeState } from './prototype-state';
 import { button, cameraPlate, togglePlate } from './shell-styles';
+import type { CameraAction } from './viewport';
 
 interface ControlProps {
   state: PrototypeState;

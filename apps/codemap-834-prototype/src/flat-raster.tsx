@@ -14,17 +14,12 @@ export interface FlatDrawing {
   picture: SkPicture;
 }
 
-const halves = 2;
-
 function paint(surface: SkSurface, { ctx, picture }: FlatDrawing): void {
   const canvas = surface.getCanvas();
+  const { x, y, scale } = ctx.viewport.transform();
   canvas.clear(Skia.Color(ctx.palette.card));
-  canvas.translate(
-    ctx.size.width / halves + ctx.camera.x,
-    ctx.size.height / halves + ctx.camera.y,
-  );
-  const zoom = ctx.scale * ctx.camera.zoom;
-  canvas.scale(zoom, zoom);
+  canvas.translate(x, y);
+  canvas.scale(scale, scale);
   canvas.drawPicture(picture);
   surface.flush();
 }

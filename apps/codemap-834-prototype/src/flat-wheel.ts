@@ -1,31 +1,18 @@
 import { useEffect } from 'react';
-import type { FlatCamera, FlatContext, SetCamera } from './flat-context';
-
-const minimumZoom = 0.2;
-
-const maximumZoom = 12;
+import type { FlatContext } from './flat-context';
+import type { FlatViewport } from './flat-viewport';
 
 const wheelSensitivity = 0.001;
 
-function zoom(camera: FlatCamera, delta: number): FlatCamera {
-  return {
-    ...camera,
-    zoom: Math.max(
-      minimumZoom,
-      Math.min(maximumZoom, camera.zoom * Math.exp(-delta * wheelSensitivity)),
-    ),
-  };
-}
-
 function attach(
   host: HTMLDivElement | null,
-  setCamera: SetCamera,
+  viewport: FlatViewport,
 ): (() => void) | undefined {
   if (!host) return;
 
   const handler = (event: WheelEvent): void => {
     event.preventDefault();
-    setCamera((camera) => zoom(camera, event.deltaY));
+    viewport.zoom(Math.exp(-event.deltaY * wheelSensitivity));
   };
 
   host.addEventListener('wheel', handler, { passive: false });
@@ -33,6 +20,6 @@ function attach(
   return () => host.removeEventListener('wheel', handler);
 }
 
-export function useFlatWheel({ host, setCamera }: FlatContext): void {
-  useEffect(() => attach(host.current, setCamera), [host, setCamera]);
+export function useFlatWheel({ host, viewport }: FlatContext): void {
+  useEffect(() => attach(host.current, viewport), [host, viewport]);
 }

@@ -8,14 +8,12 @@ import {
 import {
   getFiles,
   layout,
-  type CameraAction,
-  type CameraCommand,
-  type FlatCameraControls,
   type Label,
   type MapProps,
   type RendererInfo,
   type View,
 } from './model';
+import { runCamera, type CameraAction, type Viewport } from './viewport';
 
 export interface PrototypeState extends Omit<MapProps, 'palette'> {
   files: ReturnType<typeof getFiles>;
@@ -88,25 +86,15 @@ function useReadiness(view: View): Pick<PrototypeState, 'info' | 'onReady'> {
   return { info, onReady };
 }
 
-type CameraState = Pick<PrototypeState, 'cameraRef' | 'command' | 'onCamera'>;
-
-const initialCommand: CameraCommand = { action: 'fit', key: 0 };
-
-function useCamera(view: View): CameraState {
-  const [command, setCommand] = useState<CameraCommand>(initialCommand);
-
-  const cameraRef = useRef<FlatCameraControls | null>(null);
+function useCamera(): Pick<PrototypeState, 'viewportRef' | 'onCamera'> {
+  const viewportRef = useRef<Viewport | null>(null);
 
   const onCamera = useCallback(
-    (action: CameraAction) => {
-      setCommand((previous) => ({ action, key: previous.key + 1 }));
-
-      if (view === 'flat') cameraRef.current?.run(action);
-    },
-    [view],
+    (action: CameraAction) => runCamera(viewportRef.current, action),
+    [],
   );
 
-  return { command, cameraRef, onCamera };
+  return { viewportRef, onCamera };
 }
 
 function useView(
@@ -139,6 +127,6 @@ export function usePrototypeState(): PrototypeState {
     ...views,
     ...selection,
     ...useReadiness(views.view),
-    ...useCamera(views.view),
+    ...useCamera(),
   };
 }

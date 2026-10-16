@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import type { FlatCamera, FlatContext, SetCamera } from './flat-context';
+import type { FlatContext } from './flat-context';
+import type { FlatViewport } from './flat-viewport';
 import {
   sampleFrame,
   sampleResult,
@@ -9,13 +10,12 @@ import {
 import type { PanResult } from './model';
 
 interface Context {
-  camera: RefObject<FlatCamera>;
+  viewport: FlatViewport;
   frameId: RefObject<number>;
-  setCamera: SetCamera;
 }
 
 interface Run extends FrameSample {
-  initial: FlatCamera;
+  offset: number;
   done: (result: PanResult) => void;
 }
 
@@ -28,10 +28,9 @@ const metric =
 
 function advance(ctx: Context, run: Run, now: number): void {
   const elapsed = sampleFrame(run, now);
-  ctx.setCamera({
-    ...run.initial,
-    x: run.initial.x + Math.sin(elapsed / wavePeriod) * panDistance,
-  });
+  const offset = Math.sin(elapsed / wavePeriod) * panDistance;
+  ctx.viewport.pan({ x: offset - run.offset, y: 0 });
+  run.offset = offset;
 
   if (elapsed < run.duration)
     ctx.frameId.current = requestAnimationFrame((next) =>
@@ -42,7 +41,7 @@ function advance(ctx: Context, run: Run, now: number): void {
 
 function start(ctx: Context, duration: number): Promise<PanResult> {
   return new Promise((done) => {
-    const run = { ...startSample(duration), initial: ctx.camera.current, done };
+    const run = { ...startSample(duration), offset: 0, done };
     ctx.frameId.current = requestAnimationFrame((now) =>
       advance(ctx, run, now),
     );
@@ -58,11 +57,7 @@ function attach(ctx: Context): () => void {
   };
 }
 
-export function useFlatPan({ camera, setCamera }: FlatContext): void {
-  const current = useRef(camera);
+export function useFlatPan({ viewport }: FlatContext): void {
   const frameId = useRef(0);
-  useEffect(() => {
-    current.current = camera;
-  }, [camera]);
-  useEffect(() => attach({ camera: current, frameId, setCamera }), [setCamera]);
+  useEffect(() => attach({ viewport, frameId }), [viewport]);
 }

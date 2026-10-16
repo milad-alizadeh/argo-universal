@@ -7,7 +7,8 @@
     "prepare-map": "node ../../tools/codemap-834/generate-dataset.mjs && node scripts/copy-wasm.mjs",
     "web": "pnpm prepare-map && pnpm --filter @repo/universal-app exec expo start --web --port 8340",
     "export-web": "pnpm prepare-map && pnpm --filter @repo/universal-app exec expo export --platform web --output-dir dist-codemap-834 --max-workers 2",
-    "check-types": "pnpm --filter @repo/universal-app exec tsc --noEmit -p ../codemap-834-prototype/tsconfig.json"
+    "check-types": "pnpm --filter @repo/universal-app exec tsc --noEmit -p ../codemap-834-prototype/tsconfig.json",
+    "test": "vitest run"
   },
   "dependencies": {
     "@react-three/fiber": "9.8.2",
@@ -20,9 +21,11 @@
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
+    "@repo/vitest": "workspace:*",
     "@types/react": "catalog:",
     "@types/three": "0.186.0",
     "electron": "catalog:",
-    "rolldown": "catalog:"
+    "rolldown": "catalog:",
+    "vitest": "catalog:"
   }
 }

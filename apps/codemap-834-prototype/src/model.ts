@@ -1,7 +1,8 @@
 import type { RefObject } from 'react';
 import dataset from './dataset.json';
+import type { Viewport } from './viewport';
 
-export { layout } from './treemap';
+export { layout, mapExtent } from './treemap';
 
 export { cullLabels } from './labels';
 
@@ -49,17 +50,6 @@ export interface Label {
 
 export type View = '3d' | 'flat';
 
-export type CameraAction = 'fit' | 'in' | 'out';
-
-export interface CameraCommand {
-  action: CameraAction;
-  key: number;
-}
-
-export interface FlatCameraControls {
-  run: (action: CameraAction) => void;
-}
-
 export interface RendererInfo {
   engine: string;
   dpr: number;
@@ -81,8 +71,8 @@ export interface MapProps {
   tiles: Tile[];
   palette: Palette;
   selected?: string;
-  command: CameraCommand;
-  cameraRef: RefObject<FlatCameraControls | null>;
+  /** The one camera handle; whichever view is mounted fills it. */
+  viewportRef: RefObject<Viewport | null>;
   onSelect: (id: string) => void;
   onLabels: (labels: Label[]) => void;
   onReady: (info: RendererInfo) => void;
