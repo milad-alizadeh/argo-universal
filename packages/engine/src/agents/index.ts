@@ -53,9 +53,9 @@ export { sessionOpenError } from './acp/open-error';
 
 export { readAcpUsage } from './acp/connection/response-readers';
 
-export { resolveSavedAgentLaunch } from './launch/saved-launch';
-
 export {
-  hasAgentServer,
-  requireAgentServer,
-} from './servers/agent-servers-sql';
+  createInstalledAgents,
+  notInstalledError,
+  type InstalledAgent,
+  type InstalledAgents,
+} from './servers/installed-agents';

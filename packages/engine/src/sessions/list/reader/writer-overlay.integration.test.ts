@@ -8,6 +8,7 @@ import {
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
+import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { writerTurnCases } from '#mocks/session-list-writer-cases';
 import { createAcpResources } from '../../../agents';
 import { writerMachine } from '../../../storage';
@@ -47,6 +48,7 @@ it.each(writerTurnCases)(
         database,
         runtimeDirectory: directory,
         acpResources: createAcpResources(),
+        installedAgents: unlaunchedInstalledAgents(database, directory),
       },
     });
 

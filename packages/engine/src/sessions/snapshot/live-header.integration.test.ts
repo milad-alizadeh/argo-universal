@@ -4,6 +4,7 @@ import { feedRow, turn } from '@repo/db/schema';
 import { expect, it } from 'vitest';
 import { createActor } from 'xstate';
 import { insertSession } from '#mocks/database';
+import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { startSnapshotHost } from '#mocks/session-snapshot';
 import { createAcpResources } from '../../agents';
 import { FeedRowsJob, toFeedRowWrite } from '../../feed';
@@ -123,6 +124,7 @@ it('gives the list and the snapshot the same Live header for a running root Sess
       database: host.database,
       runtimeDirectory: host.directory,
       acpResources: createAcpResources(),
+      installedAgents: unlaunchedInstalledAgents(host.database, host.directory),
     },
   });
 

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
+import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createAcpResources } from '../../../agents';
 import { writerMachine } from '../../../storage';
 import { openSessionsMachine } from '../../open-sessions-machine';
@@ -32,6 +33,7 @@ it('rejects a malformed stored Session before a pending patch can replace its in
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
+      installedAgents: unlaunchedInstalledAgents(database, directory),
     },
   });
 

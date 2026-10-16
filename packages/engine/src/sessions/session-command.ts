@@ -1,4 +1,9 @@
 import { TRPCError } from '@trpc/server';
+import {
+  notInstalledError,
+  type InstalledAgent,
+  type InstalledAgents,
+} from '../agents';
 import type { LocalSubmission } from './acp/prompts/submission';
 import type {
   OpenSessionsActorRef,
@@ -45,6 +50,18 @@ export function rejectSessionCommand(
     message:
       context.failure === null ? refusal : `${refusal}: ${context.failure}`,
   });
+}
+
+// New Session, Send, open and Retry admit only an Installed Agent.
+export function requireInstalledAgent(
+  installedAgents: InstalledAgents,
+  agent: string,
+): InstalledAgent {
+  const answer = installedAgents.installedAgent(agent);
+
+  if (!answer.installed) throw notInstalledError(answer);
+
+  return answer.agent;
 }
 
 export function validateSessionCommandAdmission(

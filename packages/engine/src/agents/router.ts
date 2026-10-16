@@ -20,6 +20,7 @@ import {
   createRegistryRouter,
   type RegistryDeps,
 } from './registry/registry-router';
+import type { InstalledAgents } from './servers/installed-agents';
 import {
   requestAgentCatalogSync,
   type syncSupervisorMachine,
@@ -36,6 +37,7 @@ export type AgentsRouterDeps = RegistryDeps &
     sessions: OpenSessionsActorRef;
     sessionConnections: SessionConnections;
     installations: AgentInstallations;
+    installedAgents: InstalledAgents;
     home?: string;
   };
 

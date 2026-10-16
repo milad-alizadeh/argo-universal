@@ -40,7 +40,8 @@ type EngineSupplied =
   | 'checkAgentLaunch'
   | 'installations'
   | 'dropAgentConnections'
-  | 'sessionConnections';
+  | 'sessionConnections'
+  | 'installedAgents';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
@@ -85,6 +86,7 @@ type AgentSetup = Pick<
   | 'invalidateIdleAgents'
   | 'dropAgentConnections'
   | 'sessionConnections'
+  | 'installedAgents'
 >;
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
@@ -100,6 +102,7 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
     invalidateIdleAgents,
     dropAgentConnections,
     sessionConnections,
+    installedAgents: input.sessions.getSnapshot().context.installedAgents,
     createId: input.createId ?? randomUUID,
   };
 }

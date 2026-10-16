@@ -3,6 +3,7 @@ import { createActor } from 'xstate';
 import { createAcpResources } from '../src/agents';
 import { openSessionsMachine } from '../src/sessions';
 import { openTestDatabase } from './database';
+import { unlaunchedInstalledAgents } from './installed-agents';
 
 type ListInput = {
   sessions: ReturnType<typeof createActor<typeof openSessionsMachine>>;
@@ -43,6 +44,10 @@ function modelSessions(
       database: runtime.database,
       runtimeDirectory: runtime.directory,
       acpResources: createAcpResources(),
+      installedAgents: unlaunchedInstalledAgents(
+        runtime.database,
+        runtime.directory,
+      ),
     },
   });
 }

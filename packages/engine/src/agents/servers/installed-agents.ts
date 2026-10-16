@@ -1,0 +1,118 @@
+import {
+  SessionOpenFailure,
+  type AgentServerEnvironment,
+} from '@repo/contracts';
+import type { Database } from '@repo/db';
+import { TRPCError } from '@trpc/server';
+import { readProjectPath } from '../../projects';
+import type { AcpResources } from '../acp';
+import type { AgentLaunch } from '../agent-launch';
+import type { InstallPorts } from '../install/ports';
+import { definedEnvironment } from '../launch/agent-environment';
+import { getCommand } from '../launch/get-command';
+import { shellEnvironment } from '../launch/shell-env';
+import type { CommandInput, RegistryCommand } from '../launch/types';
+import type { RegistryActor } from '../registry/registry-machine';
+import { readAgentServer } from './agent-servers-sql';
+
+// A Registry Agent the user installed on this Server: its agent_servers row.
+export type InstalledAgent = { id: string; env: AgentServerEnvironment };
+
+export type InstalledAgentAnswer =
+  | { installed: true; agent: InstalledAgent }
+  | { installed: false; message: string };
+
+/*
+ * Which Agents can start Sessions on this Server, and how one starts.
+ * The caller decides what an Agent that is not installed means;
+ * `launch` downloads the Agent on first launch and makes no ACP call.
+ */
+export type InstalledAgents = {
+  installedAgent: (id: string) => InstalledAgentAnswer;
+  launch: (
+    agent: InstalledAgent,
+    projectId: string,
+    signal: AbortSignal,
+  ) => Promise<AgentLaunch>;
+};
+
+export type InstalledAgentsInput = {
+  database: Database;
+  home: string;
+  registry: RegistryActor;
+  resources: Pick<AcpResources, 'isDirectoryInUse'>;
+  ports?: InstallPorts;
+};
+
+export const createInstalledAgents = (
+  input: InstalledAgentsInput,
+): InstalledAgents => ({
+  installedAgent: (id) => {
+    const agent = readAgentServer(input.database, id);
+
+    return agent
+      ? { installed: true, agent }
+      : { installed: false, message: `Agent "${id}" is not installed.` };
+  },
+  launch: (agent, projectId, signal) =>
+    launchInstalledAgent(input, { agent, projectId, signal }),
+});
+
+// The one error for an Agent that is not installed: New Session, Send and sign-in all show its open failure.
+export const notInstalledError = (
+  answer: Extract<InstalledAgentAnswer, { installed: false }>,
+): TRPCError =>
+  new TRPCError({
+    code: 'PRECONDITION_FAILED',
+    message: answer.message,
+    cause: new SessionOpenFailure({ type: 'failed', message: answer.message }),
+  });
+
+type LaunchSubject = {
+  agent: InstalledAgent;
+  projectId: string;
+  signal: AbortSignal;
+};
+
+// The Project's main Checkout is the Agent's folder and the source of its login-shell env (ADR-0004).
+const launchInstalledAgent = async (
+  input: InstalledAgentsInput,
+  subject: LaunchSubject,
+): Promise<AgentLaunch> => {
+  const cwd = readProjectPath(input.database, subject.projectId);
+  const command = await getCommand(await commandInput(input, subject, cwd));
+
+  return { ...agentLaunch(command, subject), cwd };
+};
+
+const commandInput = async (
+  input: InstalledAgentsInput,
+  { agent, signal }: LaunchSubject,
+  cwd: string,
+): Promise<CommandInput> => ({
+  database: input.database,
+  registry: input.registry,
+  home: input.home,
+  id: agent.id,
+  ports: input.ports,
+  shellEnv: definedEnvironment(await shellEnvironment(cwd)),
+  signal,
+  isDirectoryInUse: input.resources.isDirectoryInUse,
+});
+
+// The row's env goes last, over the Registry distribution's and the vendor module's.
+const agentLaunch = (
+  command: RegistryCommand,
+  { agent, projectId }: LaunchSubject,
+): Omit<AgentLaunch, 'cwd'> => ({
+  executable: command.executable,
+  args: command.args,
+  version: command.version,
+  release: command.release,
+  env: { ...command.env, ...agent.env },
+  installationDirectory: command.directory,
+  agentId: agent.id,
+  registryId: agent.id,
+  projectId,
+  authContext: 'local',
+});

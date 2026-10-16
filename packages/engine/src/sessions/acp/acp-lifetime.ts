@@ -4,16 +4,14 @@ import type {
   AcpSessionDestination,
   AcpSessionLease,
 } from '../../agents';
-import type { AgentLaunch, ResolveAgentLaunch } from '../../agents';
+import type { AgentLaunch, InstalledAgents } from '../../agents';
+import { requireInstalledAgent } from '../session-command';
 import type { SessionData } from '../session-data';
 import {
   createLifetimeDestination,
   type AcpLifetimeEvent,
 } from './acp-session-destination';
-import {
-  selectSessionOpening,
-  resolveSessionAgentLaunch,
-} from './acp-session-opening';
+import { selectSessionOpening } from './acp-session-opening';
 import { AcpSessionRequests } from './requests/acp-session-requests';
 import { withShellDestination } from './shells/shell-destination';
 import type { ShellRuntime } from './shells/shell-runtime';
@@ -22,8 +20,7 @@ export type { AcpLifetimeEvent } from './acp-session-destination';
 
 export type AcpSessionDependencies = {
   resources: AcpResources;
-  resolveLaunch: ResolveAgentLaunch;
-  projectPath: (id: string) => string;
+  installedAgents: InstalledAgents;
 };
 
 const isWithdrawn = (cause: unknown): boolean =>
@@ -89,11 +86,7 @@ export class AcpSessionLifetime {
   private async openOwned(session: SessionData): Promise<AcpSessionLease> {
     const destination = this.createSessionDestination(await this.bound.promise);
 
-    const launch = await resolveSessionAgentLaunch(
-      session,
-      this.requireDependencies(),
-      this.controller.signal,
-    );
+    const launch = await this.launchAgent(session);
 
     try {
       this.shells?.configure(session, launch);
@@ -103,6 +96,16 @@ export class AcpSessionLifetime {
     } finally {
       launch.release?.();
     }
+  }
+  // Open and Retry launch only an Installed Agent; one removed since shows Send's error.
+  private launchAgent(session: SessionData): Promise<AgentLaunch> {
+    const { installedAgents } = this.requireDependencies();
+
+    return installedAgents.launch(
+      requireInstalledAgent(installedAgents, session.agent),
+      session.projectId,
+      this.controller.signal,
+    );
   }
   private openLease(
     session: SessionData,

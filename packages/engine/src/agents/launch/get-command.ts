@@ -2,7 +2,6 @@ import type { ACPAgent } from '@repo/contracts';
 import { defaultInstallPorts } from '../install/default-ports';
 import { readRegistryCache, registrySupport } from '../registry/registry-cache';
 import { requestRegistry } from '../registry/registry-machine';
-import { readAgentServerEnv } from '../servers/agent-servers-sql';
 import { vendorEnvironment } from '../vendor';
 import { binaryCommand } from './binary';
 import { npmCommand } from './npm';
@@ -40,14 +39,8 @@ const resolveCommand = async (
 ): Promise<RegistryCommand> => {
   input.signal.throwIfAborted();
   const entry = await requireEntry(input);
-  const command = await distributionCommand(input, entry);
 
-  try {
-    return withEnvironment(input, command);
-  } catch (error) {
-    command.release();
-    throw error;
-  }
+  return withEnvironment(input, await distributionCommand(input, entry));
 };
 
 const isAvailable = (entry: ACPAgent | undefined): entry is ACPAgent =>
@@ -61,7 +54,6 @@ const withEnvironment = (
   env: {
     ...command.env,
     ...vendorEnvironment({ registryId: input.id }),
-    ...readAgentServerEnv(input.database, input.id),
   },
 });
 

@@ -1,15 +1,14 @@
 import type { AgentAuthSubject } from '@repo/contracts';
-import { readProjectPath } from '../../projects';
 import type { AgentLaunch } from '../agent-launch';
-import { resolveSavedAgentLaunch } from '../launch/saved-launch';
 import type { AgentsRouterDeps } from '../router';
+import { notInstalledError } from '../servers/installed-agents';
 import type { ConnectionAuthentication } from './authenticate';
 
 export const authenticationLaunch = async (
   deps: AgentsRouterDeps,
   subject: AgentAuthSubject,
 ): Promise<ConnectionAuthentication> => {
-  const launch = await savedLaunch(deps, subject);
+  const launch = await installedLaunch(deps, subject);
 
   try {
     return await deps.sessionConnections.acpResources().authentication(launch);
@@ -18,26 +17,17 @@ export const authenticationLaunch = async (
   }
 };
 
-const savedLaunch = (
+const installedLaunch = (
   deps: AgentsRouterDeps,
   subject: AgentAuthSubject,
 ): Promise<AgentLaunch> => {
-  if (!deps.home) throw new Error('Server storage is unavailable');
+  const answer = deps.installedAgents.installedAgent(subject.agent);
 
-  return resolveSavedAgentLaunch({
-    database: deps.database,
-    registry: deps.registry,
-    home: deps.home,
-    resources: deps.sessionConnections.acpResources(),
-    ports: deps.sessions.getSnapshot().context.installationPorts,
-  })(launchSubject(deps, subject));
+  if (!answer.installed) throw notInstalledError(answer);
+
+  return deps.installedAgents.launch(
+    answer.agent,
+    subject.projectId,
+    deps.sessionCommandSignal ?? new AbortController().signal,
+  );
 };
-
-const launchSubject = (
-  deps: AgentsRouterDeps,
-  subject: AgentAuthSubject,
-): Parameters<ReturnType<typeof resolveSavedAgentLaunch>>[0] => ({
-  ...subject,
-  projectPath: readProjectPath(deps.database, subject.projectId),
-  signal: deps.sessionCommandSignal,
-});

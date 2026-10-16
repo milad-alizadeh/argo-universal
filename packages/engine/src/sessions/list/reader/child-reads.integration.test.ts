@@ -8,6 +8,7 @@ import {
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
+import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createAcpResources } from '../../../agents';
 import { openSessionsMachine } from '../../open-sessions-machine';
 import { createSessionListReader } from './reader';
@@ -37,6 +38,7 @@ it('reads the existence of a running Subagent Turn without fetching its history'
       ),
     )
     .run();
+  const installedAgents = unlaunchedInstalledAgents(database, directory);
   const counted = countDatabaseReads(database);
 
   const sessions = createActor(openSessionsMachine, {
@@ -46,6 +48,7 @@ it('reads the existence of a running Subagent Turn without fetching its history'
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
+      installedAgents,
     },
   });
 

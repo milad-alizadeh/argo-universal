@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm';
 import type { StorageTransaction, WriterJob } from '../../storage';
 import { readRegistryCache, registrySupport } from '../registry/registry-cache';
 import { createRegistryReader } from '../registry/registry-reader';
+import type { InstalledAgent } from './installed-agents';
 
 export const readAgentServers = (database: Database): AgentServer[] => {
   const entries = readRegistryCache(database)?.agents ?? [];
@@ -19,21 +20,6 @@ export const readAgentServers = (database: Database): AgentServer[] => {
     .from(agentServers)
     .all()
     .flatMap((row) => hydrateServer(parseServerRow(row), entries));
-};
-
-export const readAgentServerEnv = (
-  database: Database,
-  id: string,
-): AgentServerEnvironment => {
-  const row = database
-    .select()
-    .from(agentServers)
-    .where(eq(agentServers.id, id))
-    .get();
-
-  return row
-    ? AgentServerEnvironment.parse(JSON.parse(parseServerRow(row).env))
-    : {};
 };
 
 export class AgentServerChangeJob implements WriterJob {
@@ -98,14 +84,21 @@ const parseServerRow = (
   return parsed.data;
 };
 
-export const hasAgentServer = (database: Database, id: string): boolean =>
-  database
-    .select({ id: agentServers.id })
+// The agent_servers row of an Installed Agent, or undefined when the user has not installed it.
+export const readAgentServer = (
+  database: Database,
+  id: string,
+): InstalledAgent | undefined => {
+  const row = database
+    .select()
     .from(agentServers)
     .where(eq(agentServers.id, id))
-    .get() !== undefined;
+    .get();
 
-export const requireAgentServer = (database: Database, id: string): void => {
-  if (!hasAgentServer(database, id))
-    throw new Error(`Agent "${id}" is not installed.`);
+  return row && serverRow(parseServerRow(row));
 };
+
+const serverRow = (row: typeof agentServers.$inferSelect): InstalledAgent => ({
+  id: row.id,
+  env: AgentServerEnvironment.parse(JSON.parse(row.env)),
+});
