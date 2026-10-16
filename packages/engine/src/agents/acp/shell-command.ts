@@ -6,10 +6,12 @@ import type { AgentLaunch } from '../agent-launch';
 import { agentEnvironment } from '../launch/agent-environment';
 import type { AcpChild } from './process';
 import { exitDrainMs } from './process-output';
+import { terminateShellTree } from './shell-process-tree';
 
 export type ShellCommand = {
   exited: Promise<TerminalExitStatus>;
-  kill: () => void;
+  kill: () => boolean;
+  isRunning: () => boolean;
 };
 
 export type ShellCommandInput = {
@@ -33,6 +35,7 @@ export const observeShellCommand = async (
   return {
     exited,
     kill: shellKiller(child),
+    isRunning: () => !shellHasExited(child),
   };
 };
 
@@ -70,7 +73,9 @@ export const shellCommandEnvironment = async (
 const shellKiller =
   (child: AcpChild): ShellCommand['kill'] =>
   () => {
-    child.kill('SIGKILL');
+    if (shellHasExited(child)) return;
+
+    if (child.pid) terminateShellTree(child.pid);
   };
 
 const drainShellOutput = (child: AcpChild, drained: () => void): void => {
@@ -81,4 +86,14 @@ const drainShellOutput = (child: AcpChild, drained: () => void): void => {
   }, exitDrainMs);
 
   child.once('close', () => clearTimeout(timer));
+};
+
+const shellHasExited = (child: AcpChild): boolean =>
+  child.exitCode !== null || child.signalCode !== null;
+
+const killRunningShell = (child: AcpChild): boolean => {
+  if (!child.pid) return false;
+  terminateShellTree(child.pid);
+
+  return true;
 };

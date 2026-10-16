@@ -60,19 +60,22 @@ export class ShellTerminal {
     return this.stopped ? 'stopped' : 'exited';
   }
   public canStop(): boolean {
-    return !this.released && !this.exit && !this.ending;
+    if (!this.command) return false;
+
+    return this.isAvailable() && this.command.isRunning();
   }
   public kill(): void {
     this.requireAvailable();
 
     if (this.exit) return;
 
-    this.stopped = true;
-    this.command?.kill();
+    this.stopped ||= this.command?.kill() ?? false;
+  }
+  private isAvailable(): boolean {
+    return !this.released && !this.ending;
   }
   private requireAvailable(): void {
-    if (this.released || this.ending)
-      throw new Error('ACP terminal is unavailable');
+    if (!this.isAvailable()) throw new Error('ACP terminal is unavailable');
   }
   public async wait(signal?: AbortSignal): Promise<TerminalExitStatus> {
     this.requireAvailable();

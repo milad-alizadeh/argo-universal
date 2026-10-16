@@ -49,3 +49,14 @@ export const streamingShellStep = {
   },
   completion: 'leave-running',
 } satisfies ScriptedStep;
+
+export const descendantShellStep = {
+  ...runningShellStep,
+  request: {
+    command: 'node',
+    args: [
+      '-e',
+      "const { spawn } = require('child_process'); const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'inherit' }); console.log('descendant:' + child.pid); setInterval(() => {}, 1000)",
+    ],
+  },
+} satisfies ScriptedStep;

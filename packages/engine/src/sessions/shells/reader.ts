@@ -1,4 +1,4 @@
-import { ShellRecord, type Shell, type SessionInfo } from '@repo/contracts';
+import { ShellRecord, type Shell } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { shell } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
@@ -34,14 +34,3 @@ export const storedShells = (database: Database, sessionId: string): Shell[] =>
   readShellRecords(database, sessionId).map((record) =>
     toShell(record, { now: Date.now(), terminalAvailable: false }),
   );
-
-export const readShellCounts = (
-  database: Database,
-  sessionId: string,
-): SessionInfo['shells'] => {
-  const records = readShellRecords(database, sessionId);
-  return {
-    total: records.length,
-    running: records.filter((record) => record.status === 'running').length,
-  };
-};

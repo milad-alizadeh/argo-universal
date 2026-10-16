@@ -59,12 +59,16 @@ export class ShellCapture {
     status: ShellRecord['status'],
     exit: TerminalExitStatus,
   ): Promise<void> {
-    this.ending ??= {
+    const ending = {
       status,
       exitCode: exit.exitCode ?? null,
       endedAt: this.input.now(),
     };
-    this.enqueue(() => this.save());
+
+    this.enqueue(async () => {
+      this.ending ??= ending;
+      await this.save();
+    });
 
     return this.pending;
   }
