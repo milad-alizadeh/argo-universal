@@ -1,0 +1,121 @@
+import type { BuildContext } from 'esbuild';
+import { watchPlugin } from './dev-bundle';
+import type { HostConnection } from './host-connection';
+import {
+  notStarted,
+  runtimeError,
+  type PluginEntry,
+  type PluginStatus,
+} from './runtime-protocol';
+
+type PluginInput = {
+  entry: Omit<PluginEntry, 'generation'>;
+  dev: boolean;
+  host: HostConnection;
+  log: (line: string) => void;
+};
+
+export class RuntimePlugin {
+  status = notStarted;
+  private activation: Promise<PluginStatus> | null = null;
+  private answer: ((status: PluginStatus) => void) | null = null;
+  private build: Promise<BuildContext> | null = null;
+  private closed = false;
+  private source: string | undefined;
+  private generation = 0;
+
+  constructor(private readonly input: PluginInput) {}
+
+  activate(): Promise<PluginStatus> {
+    if (this.activation) return this.activation;
+    const pending = this.awaitActivation();
+
+    if (this.input.dev) this.bundle();
+    else this.load();
+
+    return pending;
+  }
+
+  private awaitActivation(): Promise<PluginStatus> {
+    const pending = Promise.withResolvers<PluginStatus>();
+    this.activation = pending.promise;
+    this.answer = pending.resolve;
+
+    return pending.promise;
+  }
+
+  update(status: PluginStatus, generation: number): void {
+    if (generation !== this.generation) return;
+    this.received(status);
+  }
+
+  private received(status: PluginStatus): void {
+    this.status = status;
+    this.answer?.(status);
+    this.answer = null;
+    this.activation = Promise.resolve(status);
+
+    if (status.error)
+      this.input.log(`Plugin ${this.input.entry.pluginId}: ${status.error}`);
+  }
+
+  hostCrashed(message: string): void {
+    if (!this.activation) return;
+    this.received({ state: 'crashed', hanging: false, error: message });
+    this.activation = null;
+  }
+
+  async close(): Promise<void> {
+    this.closed = true;
+    this.answer?.({
+      state: 'crashed',
+      hanging: false,
+      error: 'Plugin runtime closed',
+    });
+    await this.build?.then(
+      (build) => build.dispose(),
+      () => {},
+    );
+  }
+
+  private bundle(): void {
+    if (this.build) return this.load();
+    this.build = watchPlugin(this.input.entry, {
+      loaded: (source) => this.reloaded(source),
+      failed: (error) => this.fail(error),
+    });
+    void this.build.catch((cause: unknown) => this.fail(runtimeError(cause)));
+  }
+
+  private reloaded(source: string): void {
+    if (this.closed) return;
+    this.source = source;
+    this.status = notStarted;
+
+    if (!this.answer) void this.awaitActivation();
+    this.input.host.stop(this.input.entry.pluginId);
+    this.load();
+  }
+
+  private load(): void {
+    if (this.closed) return;
+
+    try {
+      this.generation += 1;
+      this.input.host.activate({
+        ...this.input.entry,
+        source: this.source,
+        generation: this.generation,
+      });
+    } catch (error) {
+      this.fail(runtimeError(error));
+    }
+  }
+
+  private fail(error: string): void {
+    if (this.closed) return;
+    this.generation += 1;
+    this.input.host.stop(this.input.entry.pluginId);
+    this.received({ state: 'crashed', hanging: false, error });
+  }
+}
