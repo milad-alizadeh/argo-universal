@@ -72,9 +72,9 @@ function RadioLabel(props: { label: string }): React.JSX.Element {
 
 function RadioIndicator(): React.JSX.Element {
   return (
-    <IconSlot role="control">
+    <IconSlot role="body">
       <MenuPrimitive.ItemIndicator>
-        <SelectedCheck className="text-foreground" />
+        <SelectedCheck role="body" className="text-foreground" />
       </MenuPrimitive.ItemIndicator>
     </IconSlot>
   );
