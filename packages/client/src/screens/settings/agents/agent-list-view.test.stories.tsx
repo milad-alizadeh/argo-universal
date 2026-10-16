@@ -104,6 +104,20 @@ export const WaitsForInstalledAgents: Story = {
   },
 };
 
+export const NamesInstalledAgentsFailure: Story = {
+  args: {
+    agents: agentsPage(
+      { status: 'failed' },
+      { status: 'loaded', registry: catalog },
+    ),
+  },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText('Failed to load installed Agents.'),
+    ).toBeVisible();
+  },
+};
+
 export const Retry: Story = {
   args: { agents: pageRows(undefined, { status: 'failed' }) },
   play: async ({ args, canvas, userEvent }) => {

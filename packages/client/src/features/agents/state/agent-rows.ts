@@ -26,11 +26,13 @@ export type AgentRowEntry = Pick<
   unavailable: boolean;
 };
 
+// Where the rows stand: a failure names the load that failed, so the surface can say which.
+export type RowsLoad =
+  | { status: 'loading' | 'loaded' }
+  | { status: 'failed'; failed: 'installed' | 'registry' };
+
 // Rows while either load is still going or has failed, which the surface shows with its loading or failed state.
-export interface AgentRows {
-  status: 'loading' | 'failed' | 'loaded';
-  rows: AgentRowEntry[];
-}
+export type AgentRows = RowsLoad & { rows: AgentRowEntry[] };
 
 type RegistryEntry = AgentsRegistryOutput['agents'][number];
 
@@ -74,14 +76,21 @@ const installedRow = (agent: AgentServer): AgentRowEntry => ({
 const installedFirst = (rows: AgentRowEntry[]): AgentRowEntry[] =>
   rows.sort((a, b) => Number(b.installed) - Number(a.installed));
 
-const combinedStatus = (
-  ...loads: (InstalledAgents | RegistryLoad)[]
-): AgentRows['status'] => {
-  if (loads.some(({ status }) => status === 'failed')) return 'failed';
+const loadNames = ['installed', 'registry'] as const;
 
-  return loads.some(({ status }) => status === 'loading')
-    ? 'loading'
-    : 'loaded';
+// The Installed Agents' failure wins: without them the surface has nothing to show.
+const combinedLoad = (
+  installed: InstalledAgents,
+  registry: RegistryLoad,
+): RowsLoad => {
+  const loads = { installed, registry };
+  const failed = loadNames.find((name) => loads[name].status === 'failed');
+
+  if (failed) return { status: 'failed', failed };
+
+  return loadNames.some((name) => loads[name].status === 'loading')
+    ? { status: 'loading' }
+    : { status: 'loaded' };
 };
 
 const pageRows = (
@@ -100,7 +109,7 @@ export const agentsPage = (
   installed: InstalledAgents,
   registry: RegistryLoad,
 ): AgentRows => ({
-  status: combinedStatus(installed, registry),
+  ...combinedLoad(installed, registry),
   rows: pageRows(installed, registry),
 });
 
@@ -114,12 +123,12 @@ export const featuredAgents = (
   installed: InstalledAgents,
   registry: RegistryLoad,
 ): AgentRows => {
-  const status = combinedStatus(installed, registry);
+  const load = combinedLoad(installed, registry);
 
   if (installed.status !== 'loaded' || registry.status !== 'loaded')
-    return { status, rows: [] };
+    return { ...load, rows: [] };
 
   const rows = registryRows(installed.agents, registry.registry);
 
-  return { status, rows: rows.filter(isFeatured) };
+  return { ...load, rows: rows.filter(isFeatured) };
 };

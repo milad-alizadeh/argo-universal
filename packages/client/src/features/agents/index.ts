@@ -2,6 +2,7 @@ export {
   useInstalledAgents,
   useRegistryAgents,
   registryError,
+  installedError,
 } from './hooks/use-installed-agents';
 
 export { AgentLogo } from './components/agent-logo/agent-logo';
@@ -23,6 +24,7 @@ export {
   agentsPage,
   type AgentRowEntry,
   type AgentRows,
+  type RowsLoad,
 } from './state/agent-rows';
 
 export {

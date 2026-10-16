@@ -24,10 +24,10 @@ export function AgentStepView(
 }
 
 function AgentTiles(props: OnboardingViewProps): React.JSX.Element {
-  const { status, rows } = props.featured;
+  const { rows, ...load } = props.featured;
 
-  if (status !== 'loaded')
-    return <RegistryState status={status} onRetry={props.onRetry} />;
+  if (load.status !== 'loaded')
+    return <RegistryState load={load} onRetry={props.onRetry} />;
 
   return (
     <View className="w-full flex-row flex-wrap gap-3">

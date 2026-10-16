@@ -71,7 +71,7 @@ export const InstallsFeaturedAgent: Story = {
 };
 
 export const RetriesRegistry: Story = {
-  args: { featured: { status: 'failed', rows: [] } },
+  args: { featured: { status: 'failed', failed: 'registry', rows: [] } },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.onRetry).toHaveBeenCalledOnce();

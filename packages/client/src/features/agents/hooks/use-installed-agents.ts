@@ -28,6 +28,8 @@ import {
 export const registryError =
   'Failed to load the Agent Registry. Please check your connection and try again.';
 
+export const installedError = 'Failed to load installed Agents.';
+
 function useInstalledQuery(): UseQueryResult<AgentServer[], ClientError> {
   return useQuery(useTRPC().agents.servers.queryOptions());
 }

@@ -79,8 +79,22 @@ describe('agentsPage', () => {
   it('fails with no rows when the Installed Agents fail to load', () => {
     expect(agentsPage({ status: 'failed' }, loadedRegistry)).toEqual({
       status: 'failed',
+      failed: 'installed',
       rows: [],
     });
+  });
+
+  it('names the Registry when only the Registry fails to load', () => {
+    expect(agentsPage(loaded(zed), { status: 'failed' })).toMatchObject({
+      status: 'failed',
+      failed: 'registry',
+    });
+  });
+
+  it('names the Installed Agents when both fail to load', () => {
+    expect(
+      agentsPage({ status: 'failed' }, { status: 'failed' }),
+    ).toMatchObject({ status: 'failed', failed: 'installed' });
   });
 });
 
@@ -146,7 +160,10 @@ describe('featuredAgents', () => {
   }[])(
     'has no tiles while the Installed Agents are $installed.status and the Registry is $registry.status',
     ({ installed, registry: load, status }) => {
-      expect(featuredAgents(installed, load)).toEqual({ status, rows: [] });
+      expect(featuredAgents(installed, load)).toMatchObject({
+        status,
+        rows: [],
+      });
     },
   );
 });
