@@ -77,6 +77,10 @@ export class HostConnection {
       this.callbacks.log(`Plugin host started: ${child.pid}`),
     );
     child.on('message', (value) => this.receive(HostMessage.safeParse(value)));
+    this.logOutput(child);
+  }
+
+  private logOutput(child: ChildProcess): void {
     child.on('error', (error) =>
       this.callbacks.log(`Plugin host error: ${error.message}`),
     );

@@ -4,13 +4,10 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext, toneClass } from '#primitives/display/text';
-import { appleSymbol } from '../../../symbols/apple-symbol';
+import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
 import { type ResolvedIcon, resolveIcon } from '../../../symbols/icon-symbol';
-import {
-  SymbolGlyph,
-  type SymbolGlyphProps,
-} from '../../../symbols/symbol-glyph/symbol-glyph';
+import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
@@ -29,20 +26,10 @@ const TintedSymbol =
 
 const glyphScale = Platform.OS === 'android' ? materialGlyphScale : 1;
 
-type GlyphNames = Pick<SymbolGlyphProps, 'sf' | 'material' | 'filled'>;
-
-function symbolGlyph(
+const iconDrawing = (
   { symbol, materialFill }: ResolvedIcon,
   filled: boolean | undefined,
-): GlyphNames {
-  const sf = appleSymbol(symbol, filled);
-
-  return {
-    sf,
-    material: symbol.material,
-    filled: materialFill && (sf !== symbol.sf || sf.endsWith('.fill')),
-  };
-}
+): DrawnSymbol => drawnSymbol(symbol, filled, materialFill);
 
 function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
   return cn(
@@ -59,7 +46,7 @@ export function Icon(props: IconProps): React.JSX.Element {
 
   return (
     <TintedSymbol
-      {...symbolGlyph(icon, props.filled)}
+      symbol={iconDrawing(icon, props.filled)}
       className={colorClassName}
       colorClassName={colorClassName}
       pixels={useIconPixels(props.role)}
