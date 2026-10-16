@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { PopoverHoverGroup } from '#primitives/overlays/popover';
+import { PopoverHoverGroup, PopoverTitle } from '#primitives/overlays/popover';
 import { AgentDrill } from './agent-drill';
 import { EffortControl, SwitchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -26,6 +26,7 @@ export function AgentModelMenu(props: ContentsProps): React.JSX.Element {
 function ConfigurationContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 bg-content web:wide:bg-card">
+      {props.wide ? <PopoverTitle>Configure</PopoverTitle> : null}
       <ConfigurationFields {...props} />
     </View>
   );

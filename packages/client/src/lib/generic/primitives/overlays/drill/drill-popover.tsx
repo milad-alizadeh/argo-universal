@@ -7,9 +7,11 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react';
+import { View } from 'react-native';
 import {
   Popover,
   PopoverContent,
+  PopoverTitle,
   PopoverTrigger,
   type PopoverContentProps,
 } from '#primitives/overlays/popover';
@@ -52,20 +54,29 @@ function DrillContent(props: ContentProps): ReactElement {
   );
 }
 
+// Paper: a row's choices open beside the menu under their own title.
 function ContentBody(props: ContentProps): ReactElement {
-  return <>{props.children(props.close)}</>;
+  if (!props.row) return <>{props.children(props.close)}</>;
+
+  return (
+    <View>
+      <PopoverTitle>{props.title}</PopoverTitle>
+      {props.children(props.close)}
+    </View>
+  );
 }
 
 const fieldOffset = 4;
 
-const drillOffset = -16;
+// The menu's 16px inset, less the 12px gap Paper leaves between menu and choices.
+const drillOffset = -4;
 
-// A field's choices match the field's width; a row's fit their longest label.
+// A field's choices match the field's width; a row's are Paper's 284px panel.
 const placements = {
   row: {
     side: 'right',
     sideOffset: drillOffset,
-    className: 'w-fit min-w-32 max-w-80 overflow-hidden p-0',
+    className: 'w-71 overflow-hidden p-0',
   },
   field: {
     side: 'bottom',
