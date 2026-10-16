@@ -24,7 +24,7 @@ export type MessageRouting = SubagentRouting & {
 // Only the parent's outgoing `prompt` is a `message` action; a child's explicit `result` carries no action (#930).
 type MessageField = { prompt: ContentBlock[] } | { result: ContentBlock[] };
 
-export type MessageAction = { messageId: string; field: MessageField };
+type MessageAction = { messageId: string; field: MessageField };
 
 // One row per message in the parent transcript, so its patches and chunks revise it.
 const actionId = (input: SubagentRouting, messageId: string): string =>
@@ -129,7 +129,7 @@ const replier = (
   previous ? childById(input, previous) : explicitReplier(input, update);
 
 // `previous` is the result so far, which a chunk extends and a patch may keep.
-export type Reply = { child: ChildFeed; previous: ContentBlock[] | undefined };
+type Reply = { child: ChildFeed; previous: ContentBlock[] | undefined };
 
 export function replyOf(
   input: MessageRouting,
