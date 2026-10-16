@@ -39,12 +39,18 @@ export type ScriptedNotifications = {
   };
 };
 
+const sequencePositions = new WeakMap<object, Map<string, number>>();
+
 export const responseSequence = <Method extends AgentRequestMethod>(
   responses: readonly ScriptedResponse<Method>[] = [],
-  positions = new Map<string, number>(),
 ): ((
   params: AgentRequestParamsByMethod[Method],
 ) => ScriptedResponse<Method> | undefined) => {
+  const positions =
+    sequencePositions.get(responses) ?? new Map<string, number>();
+
+  sequencePositions.set(responses, positions);
+
   return (params) => selectResponse({ responses, positions, params });
 };
 
