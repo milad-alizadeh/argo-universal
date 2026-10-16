@@ -1,11 +1,12 @@
 import type { materialSymbolNames } from '@repo/contracts/plugins/material-symbol-names';
 import type { sfSymbolNames } from '@repo/contracts/plugins/sf-symbol-names';
-import type { AndroidSymbol, SFSymbol } from 'expo-symbols';
+import type { AndroidSymbol } from 'expo-symbols';
+import type { SFSymbols4_1 } from 'sf-symbols-typescript';
 
-// Plain assignability both ways: vitest's toEqualTypeOf takes minutes on unions of thousands of names.
+// vitest's toEqualTypeOf takes minutes on unions of thousands of names, so this checks plain assignability both ways.
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
-// Plugin manifests are checked against exactly the names expo-symbols draws; regenerate the lists after an expo-symbols bump.
-true satisfies Same<(typeof sfSymbolNames)[number], SFSymbol>;
+// The lists must stay what expo-symbols draws on the oldest supported systems; regenerate them after an expo-symbols bump.
+true satisfies Same<(typeof sfSymbolNames)[number], SFSymbols4_1>;
 
 true satisfies Same<(typeof materialSymbolNames)[number], AndroidSymbol>;

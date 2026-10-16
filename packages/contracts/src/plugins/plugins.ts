@@ -4,23 +4,32 @@ import { sfSymbolNames } from './sf-symbol-names.gen';
 
 const PluginIdentifier = z.string().regex(/^[a-z][a-z0-9-]*$/);
 
-// The error names the input, never the whole list.
+// Zod's default enum error would print every name in the list.
 const notIn =
   (catalogue: string) =>
   ({ input }: { input: unknown }): string =>
     `${String(input)} is not in ${catalogue}`;
 
-// Official SF Symbols and Material Symbols names, one or both, for the platforms the Plugin targets (ADR-0025).
+const sfSymbol = z.enum(sfSymbolNames, { error: notIn('SF Symbols 4.1') });
+
+const materialSymbol = z.enum(materialSymbolNames, {
+  error: notIn('Material Symbols'),
+});
+
+// A Plugin targets iOS and macOS, Android and the web, or both, so either name may be missing (ADR-0025).
 export const PluginIcon = z
   .strictObject({
-    sf: z.enum(sfSymbolNames, { error: notIn('SF Symbols') }).optional(),
-    material: z
-      .enum(materialSymbolNames, { error: notIn('Material Symbols') })
-      .optional(),
+    sf: sfSymbol.optional(),
+    sfFilled: sfSymbol.optional(),
+    material: materialSymbol.optional(),
   })
   .refine(
     (icon) => icon.sf !== undefined || icon.material !== undefined,
     'icon needs an sf or a material name',
+  )
+  .refine(
+    (icon) => icon.sfFilled === undefined || icon.sf !== undefined,
+    'icon.sfFilled needs an sf name',
   );
 
 export type PluginIcon = z.infer<typeof PluginIcon>;
