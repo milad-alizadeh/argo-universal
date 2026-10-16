@@ -20,11 +20,6 @@ import { scriptedEngineInput } from './scripted-engine';
 // A module's test drives the Engine through here: modules never import engine/.
 export { engineMachine } from '../src/engine/machine';
 
-export {
-  movingSessionId,
-  seedNotificationHistory,
-} from './notification-history';
-
 export type { EngineMessage } from '../src/engine/ipc';
 
 export type EngineTestOptions = Partial<EngineInput> & {
@@ -40,6 +35,7 @@ type EngineConnections = {
   database: Database;
   openSessions: OpenSessionsActorRef;
   databaseWriter: ActorRefFrom<typeof writerMachine>;
+  notifications: HttpServer['notifications'];
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
 };
@@ -117,6 +113,7 @@ function readEngineTestHost(engine: EngineActor): EngineConnections {
     database,
     openSessions,
     databaseWriter,
+    notifications: server.notifications,
     createCaller: server.createCaller,
     caller: server.createCaller(),
   };
