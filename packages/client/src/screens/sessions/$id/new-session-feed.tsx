@@ -18,10 +18,10 @@ function NewSessionHeading({
 
   return (
     <View className="flex-1 justify-center pb-10">
-      <SessionColumn className="px-4">
+      <SessionColumn className="items-center px-4">
         <NewSessionTitle />
+        {context}
       </SessionColumn>
-      {context}
     </View>
   );
 }
@@ -51,12 +51,7 @@ export function NewSessionFeed({
 
 function NewSessionTitle(): React.JSX.Element {
   return (
-    <Text
-      role="title"
-      accessibilityRole="heading"
-      aria-level={1}
-      className="text-center"
-    >
+    <Text role="title" accessibilityRole="heading" aria-level={1}>
       What should we work on?
     </Text>
   );
