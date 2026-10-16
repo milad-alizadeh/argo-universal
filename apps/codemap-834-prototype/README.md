@@ -111,7 +111,7 @@ Every other directive stays unchanged; JavaScript `unsafe-eval` remains forbidde
 The chart branch has an overlapping uncommitted change. Coalesce the identical CSP edit during integration.
 Normal desktop flat and GPU-disabled flat now use CanvasKit without a CSP bypass.
 3D still requires WebGL. A proposed Flat fallback is awaiting owner design approval in Atlas Explorations.
-The deferred renderer imports still await the ADR-0017/ADR-0028 policy decision.
+ADR-0017 records the owner's exception for the two deferred renderer imports.
 
 Links and trace steps are not implemented or benchmarked.
 File-only results cannot validate ADR-0028's 50,000-link or 200-step caps.
