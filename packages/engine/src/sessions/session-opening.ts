@@ -1,4 +1,8 @@
-import { SessionOpenFailure } from '@repo/contracts';
+import {
+  SessionOpenFailure,
+  type SessionOpenInput,
+  type SessionOpenOutput,
+} from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
@@ -8,11 +12,12 @@ import type {
 } from './open-sessions-machine';
 import type { SessionRouterDeps } from './router-deps';
 import {
+  type ReadySessionCommandType,
   rejectSessionCommand,
   rejectOpenSessionsCommand,
   validateSessionCommandAdmission,
 } from './session-command';
-import type { SessionActorRef, SessionCommand } from './session-machine';
+import type { SessionActorRef } from './session-machine';
 import { sessionMachine } from './session-machine';
 import { sessionActorId } from './session-system';
 
@@ -60,7 +65,7 @@ function isInitialSessionStartup(
 
 async function waitForSessionReady(
   sessionActor: SessionActorRef,
-  commandType: SessionCommand['type'],
+  commandType: ReadySessionCommandType,
 ): Promise<SessionActorRef> {
   await waitFor(
     sessionActor,
@@ -80,7 +85,7 @@ async function waitForSessionReady(
 
 function requireReadySession(
   sessionActor: SessionActorRef,
-  commandType: SessionCommand['type'],
+  commandType: ReadySessionCommandType,
 ): SessionActorRef {
   const sessionSnapshot = sessionActor.getSnapshot();
 
@@ -114,7 +119,7 @@ export async function openReadySession(
     'sessions' | 'readSession' | 'sessionCommandSignal'
   >,
   sessionId: string,
-  commandType: SessionCommand['type'] = 'session.prompt',
+  commandType: ReadySessionCommandType = 'session.prompt',
 ): Promise<SessionActorRef> {
   validateSessionCommandAdmission(deps);
 
@@ -128,6 +133,19 @@ export async function openReadySession(
 
   return waitForSessionReady(openStoredSession(deps, sessionId), commandType);
 }
+
+// Opens a Session, or waits for its open, without a Turn: Retry after a failed open never resends one.
+export const openSession = async (
+  deps: Pick<
+    SessionRouterDeps,
+    'sessions' | 'readSession' | 'sessionCommandSignal'
+  >,
+  { sessionId }: SessionOpenInput,
+): Promise<SessionOpenOutput> => {
+  await openReadySession(deps, sessionId, 'session.open');
+
+  return {};
+};
 
 function openStoredSession(
   deps: Pick<SessionRouterDeps, 'sessions' | 'readSession'>,

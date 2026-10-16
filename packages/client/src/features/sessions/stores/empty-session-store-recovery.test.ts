@@ -3,13 +3,14 @@ import {
   type EmptySessionHarness,
   emptySessionHarness,
   failure,
+  launchFailureMessage,
   local,
   options,
   prompt,
   promptOutput,
   settle,
   worktree,
-} from './empty-session-store.mocks';
+} from '../../../../mocks/sessions/empty-session-store.mocks';
 
 // Written out so the store cannot grade itself.
 const promptShowTimeoutMs = 3_000;
@@ -36,7 +37,10 @@ describe('A Local first prompt that goes wrong', () => {
     await settle();
 
     expect(h.store.getState()).toMatchObject({
-      error: failure.message,
+      attempt: {
+        status: 'failed',
+        error: { type: 'failed', message: launchFailureMessage },
+      },
       pendingPrompt: false,
       handedOff: false,
     });

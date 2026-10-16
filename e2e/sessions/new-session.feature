@@ -80,14 +80,12 @@ Feature: New Session
       | 1     | release notes file | Summarise these release notes.          | The release notes list one change. |
       | 2     | release notes file | Summarise these release notes.          | The release notes list one change. |
 
-  Scenario Outline: A refused Session keeps the first prompt with Agent <agent>
+  Scenario Outline: A refused Local Session says the Agent failed to launch with Agent <agent>
     Given a phone Frame
     And Agent <agent> refuses to open a Session
     And a Local New Session with Agent <agent>
-    Then New Session says the Session couldn't open
-    When I try to send the prompt "Fix the flaky login test"
-    Then New Session says the Session couldn't open
-    And the Composer keeps the prompt "Fix the flaky login test"
+    Then the App says the Agent failed to launch
+    And the launch failure shows "The Agent refused the Session."
 
     Examples:
       | agent |

@@ -10,6 +10,7 @@ import type { ElicitationFormProps } from '#features/requests';
 import {
   type MergeMethodChoice,
   composerStatus,
+  decodeOpenFailure,
   toSendError,
 } from '#features/sessions';
 import { agentHref, type Navigate } from '#lib/product/navigation/navigation';
@@ -55,13 +56,17 @@ const isSending = (open: OpenSession): boolean =>
 const writtenPlan = (plan: Plan | null): ComposerProps['writtenPlan'] =>
   plan && plan.type !== 'items' ? plan : undefined;
 
+// A refused open is the callout's to show, not the Composer's.
+const commandError = <Failure>(error: Failure | null): Failure | null =>
+  decodeOpenFailure(error) ? null : error;
+
 const sendError = (
   commands: SessionCommands,
 ): Pick<ComposerProps, 'error' | 'errorKey'> => {
   const failure = toSendError({
     attachment: commands.attachmentError,
-    prompt: commands.promptSession.error,
-    configuration: commands.setConfigOption.error,
+    prompt: commandError(commands.promptSession.error),
+    configuration: commandError(commands.setConfigOption.error),
   });
 
   return { error: failure?.message, errorKey: failure?.key };

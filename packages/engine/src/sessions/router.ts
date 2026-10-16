@@ -13,6 +13,8 @@ import {
   SessionListUpdate,
   SessionNewInput,
   SessionNewOutput,
+  SessionOpenInput,
+  SessionOpenOutput,
   SessionPromptInput,
   SessionPromptOutput,
   SessionSetConfigOptionInput,
@@ -37,6 +39,7 @@ import {
 import { cancelSession, closeSession } from './session-closure';
 import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
+import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
 import { createShellSessionRouter } from './shells/router';
 import { createSubagentsReader } from './subagents';
@@ -89,6 +92,10 @@ const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
       .input(SessionPromptInput)
       .output(SessionPromptOutput)
       .mutation(({ input }) => promptSession(deps, input)),
+    open: publicProcedure
+      .input(SessionOpenInput)
+      .output(SessionOpenOutput)
+      .mutation(({ input }) => openSession(deps, input)),
   }),
 );
 

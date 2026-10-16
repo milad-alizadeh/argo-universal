@@ -5,6 +5,7 @@ import {
   agentUnavailable,
   configuration,
 } from '../../../../mocks/session-view/session-view-agent.test.mocks';
+import { authenticationRequired } from '../../../../mocks/session-view/session-view-callout.test.mocks';
 import {
   failedWithoutReason,
   failedWithReason,
@@ -170,3 +171,5 @@ export const FeedReflowsAfterThePaneCollapses =
   feedReflowsAfterThePaneCollapses;
 
 export const LastRowRestsAboveTheComposer = lastRowRestsAboveTheComposer;
+
+export const AuthenticationRequired = authenticationRequired;

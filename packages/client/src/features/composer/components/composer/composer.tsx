@@ -55,17 +55,20 @@ function ComposerRequest(layout: ComposerLayout): React.JSX.Element | null {
 function composerRequestContent({
   props,
   controlsHeight,
-}: ComposerLayout): React.JSX.Element | null {
+}: ComposerLayout): React.ReactNode {
   if (props.planProposal)
     return (
       <PlanProposalCard {...props.planProposal} bottomInset={controlsHeight} />
     );
 
-  return props.permissionRequest ? (
-    <PermissionRequest {...props.permissionRequest} />
-  ) : null;
+  if (props.permissionRequest)
+    return <PermissionRequest {...props.permissionRequest} />;
+
+  return props.callout;
 }
 
 function hasComposerRequest({ props }: ComposerLayout): boolean {
-  return Boolean(props.planProposal || props.permissionRequest);
+  return Boolean(
+    props.planProposal || props.permissionRequest || props.callout,
+  );
 }

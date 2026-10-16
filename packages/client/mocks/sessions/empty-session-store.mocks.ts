@@ -6,9 +6,10 @@ import type {
   SessionPromptOutput,
 } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
-import { vi } from 'vitest';
-import { EmptySessionStore } from './empty-session-store';
-import type { EmptySessionPorts } from './empty-session-types';
+import { type Mock, vi } from 'vitest';
+import { EmptySessionStore } from '../../src/features/sessions/stores/empty-session-store';
+import type { EmptySessionPorts } from '../../src/features/sessions/stores/empty-session-types';
+import { openFailure } from './open-failure.mocks';
 
 // Written out so the store cannot grade itself.
 export const choiceDebounceMs = 300;
@@ -33,7 +34,16 @@ export const prompt = [
 export const options: SessionConfigOption[] =
   recordedSessionOptions('agent-one');
 
-export const failure = new Error('The Agent did not start');
+export const launchFailureMessage = 'The Agent did not start';
+
+// A rejected `session.new` whose Agent failed to launch.
+export const failure = openFailure({
+  type: 'failed',
+  message: launchFailureMessage,
+});
+
+// A rejected `session.new` whose Agent needs sign-in.
+export const authRequired = openFailure({ type: 'auth-required' });
 
 export const promptOutput: SessionPromptOutput = { messageId: 'message-1' };
 
@@ -97,6 +107,12 @@ export interface EmptySessionHarness {
   choose: (input?: SessionNewInput) => void;
   // The Local Session opens and its Feed reads its options.
   openLocal: (sessionId: string) => Promise<void>;
+  // The screen's send of the Composer's current draft, which Retry asks for on a New worktree.
+  sendDraft: Mock<() => void>;
+  // Retry, or a finished sign-in.
+  retry: () => void;
+  // The Connection reopens.
+  reconnect: () => void;
 }
 
 const noCalls = (): Calls => ({
@@ -123,6 +139,19 @@ async function openLocal(
   await settle();
 }
 
+// Retry with a spy for the screen's draft send, and the Connection reopening.
+function openAgainCauses(
+  store: EmptySessionStore,
+): Pick<EmptySessionHarness, 'sendDraft' | 'retry' | 'reconnect'> {
+  const sendDraft = vi.fn<() => void>();
+
+  return {
+    sendDraft,
+    retry: () => store.openAgain({ by: 'user', sendDraft }),
+    reconnect: () => store.openAgain({ by: 'connection' }),
+  };
+}
+
 // A started store over fake Server calls the test settles one by one.
 export function emptySessionHarness(): EmptySessionHarness {
   const calls = noCalls();
@@ -135,5 +164,6 @@ export function emptySessionHarness(): EmptySessionHarness {
     store,
     choose: (input) => store.choose({ input, connected: true }),
     openLocal: (sessionId) => openLocal(calls, store, sessionId),
+    ...openAgainCauses(store),
   };
 }

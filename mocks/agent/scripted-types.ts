@@ -83,6 +83,8 @@ export type ScriptedScenario = {
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];
   resumedSteps?: readonly ScriptedStep[];
+  // In App E2E, an Agent process started again after this scenario's process failed plays this one.
+  relaunched?: ScriptedScenario;
   responses?: ScriptedResponses;
   notifications?: ScriptedNotifications;
   sessionIds?: readonly string[];

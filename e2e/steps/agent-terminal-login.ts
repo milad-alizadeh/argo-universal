@@ -47,8 +47,13 @@ Then(
 When(
   'I press Return in the sign-in terminal',
   async ({ page }): Promise<void> => {
-    await page.getByRole('region', { name: 'Agent sign-in terminal' }).click();
-    await page.getByRole('textbox').focus();
+    const terminal = page.getByRole('region', {
+      name: 'Agent sign-in terminal',
+    });
+
+    await terminal.click();
+    // A Session page also has its Message box.
+    await terminal.getByRole('textbox').focus();
     await page.keyboard.press('Enter');
   },
 );

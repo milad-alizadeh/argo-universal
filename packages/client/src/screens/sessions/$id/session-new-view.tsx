@@ -9,9 +9,12 @@ import {
   StartSessionIn,
 } from '#features/composer';
 import {
+  SessionCallout,
+  type SessionCalloutProps,
   type StartingFeed,
+  TerminalSignIn,
+  type TerminalSignInProps,
   serverSilentMessage,
-  sessionOpenFailedTitle,
 } from '#features/sessions';
 import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
@@ -48,7 +51,10 @@ export interface ReadySessionNewViewProps {
   // An attachment that couldn't be selected or uploaded.
   attachmentError?: string;
   attachmentErrorKey?: string;
-  openError?: string;
+  // Sign in or Retry after the Session failed to open; the Feed and Composer stay.
+  callout?: SessionCalloutProps;
+  // A terminal sign-in method's panel or sheet.
+  signInTerminal?: TerminalSignInProps;
 }
 
 export type SessionNewViewProps =
@@ -60,11 +66,6 @@ const loadFailed: ErrorToast = {
   title: "Couldn't load New Session",
   message: serverSilentMessage,
 };
-
-const openFailed = (message: string): ErrorToast => ({
-  title: sessionOpenFailedTitle,
-  message,
-});
 
 // The header stays empty until the first prompt starts the Session and gives it a title.
 const newSessionHeader = <PageHeader title={null} />;
@@ -78,12 +79,6 @@ export function SessionNewView(props: SessionNewViewProps): React.JSX.Element {
     return <Screen edges={['bottom']}>{newSessionHeader}</Screen>;
 
   return <ReadySessionNewView {...props} />;
-}
-
-function openFailure(props: ReadySessionNewViewProps): ErrorToast | undefined {
-  return props.openError === undefined
-    ? undefined
-    : openFailed(props.openError);
 }
 
 function NewSessionStartIn(props: ReadySessionNewViewProps): React.JSX.Element {
@@ -120,6 +115,13 @@ function PromptComposer(props: ReadySessionNewViewProps): React.JSX.Element {
   return <Composer {...promptComposerProps(props)} />;
 }
 
+// A Send held by a failed open presents a phone's dismissed sheet again.
+const calloutOf = ({
+  callout,
+  opening,
+}: ReadySessionNewViewProps): React.ReactNode =>
+  callout && <SessionCallout key={String(opening)} {...callout} />;
+
 const promptComposerProps = (
   props: ReadySessionNewViewProps,
 ): ComposerProps => ({
@@ -131,6 +133,7 @@ const promptComposerProps = (
   configuration: props.configuration,
   placeholder: 'What should the Agent work on?',
   sendable: props.canOpen,
+  callout: calloutOf(props),
   error: props.attachmentError,
   errorKey: props.attachmentErrorKey,
 });
@@ -151,13 +154,14 @@ function NewSessionComposer(
 function ReadySessionNewView(
   props: ReadySessionNewViewProps,
 ): React.JSX.Element {
-  useErrorToast(openFailure(props));
-
   return (
     <SessionLayout
       header={newSessionHeader}
       feed={<NewSessionFeed starting={props.starting} />}
       composer={<NewSessionComposer {...props} />}
+      panel={
+        props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />
+      }
     />
   );
 }
