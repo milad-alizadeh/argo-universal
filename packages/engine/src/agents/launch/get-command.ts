@@ -1,5 +1,4 @@
 import type { ACPAgent } from '@repo/contracts';
-import { defaultInstallPorts } from '../install/default-ports';
 import { readRegistryCache, registrySupport } from '../registry/registry-cache';
 import { requestRegistry } from '../registry/registry-machine';
 import { vendorEnvironment } from '../vendor';
@@ -79,7 +78,7 @@ const distributionCommand = (
   input: CommandInput,
   entry: ACPAgent,
 ): Promise<RegistryCommand> => {
-  const launch = { ...input, entry, ports: input.ports ?? defaultInstallPorts };
+  const launch = { ...input, entry };
 
   return registrySupport(entry) === 'binary'
     ? binaryCommand(launch)

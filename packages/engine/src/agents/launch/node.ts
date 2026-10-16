@@ -3,7 +3,7 @@ import { access } from 'node:fs/promises';
 import { delimiter, dirname, join } from 'node:path';
 import { InstallCleanupError } from '../install/processes/process-cleanup';
 import { probeNode } from './node-probe';
-import type { PortedInput as NodeInput } from './types';
+import type { CommandInput as NodeInput } from './types';
 
 export type NodeRuntime = {
   node: string;

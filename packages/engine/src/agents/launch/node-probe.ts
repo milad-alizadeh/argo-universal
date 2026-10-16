@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { InstallPorts, InstallToolInput } from '../install/ports';
 import { InstallCleanupError } from '../install/processes/process-cleanup';
-import type { PortedInput as ProbeInput } from './types';
+import type { CommandInput as ProbeInput } from './types';
 
 export const probeNode = async (
   input: ProbeInput,

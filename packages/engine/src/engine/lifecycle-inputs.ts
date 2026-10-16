@@ -1,6 +1,10 @@
 import { writeLog } from '@repo/machine-log';
 import type { AnyActorRef, InputFrom } from 'xstate';
-import { createInstalledAgents, type InstalledAgents } from '../agents';
+import {
+  createInstalledAgents,
+  defaultInstallPorts,
+  type InstalledAgents,
+} from '../agents';
 import { blobsFolderIn } from '../blob';
 import { findMachineActor } from '../lib/machine-actor';
 import {
@@ -62,7 +66,7 @@ const installedAgentsInput = ({
     home: context.home,
     registry: requireRegistry(self.system),
     resources: context.acpResources,
-    ports: context.installationPorts,
+    ports: context.installationPorts ?? defaultInstallPorts,
   });
 
 export const sessionsInput = ({

@@ -14,6 +14,7 @@ import {
 } from '../src/agents';
 import { writerMachine } from '../src/storage';
 import { openTestDatabase } from './database';
+import { installationPorts } from './installation';
 import { type EngineTestOptions, startEngineTestHost } from './engine';
 import { createScriptedAgentProcess } from './scripted-agent';
 
@@ -31,6 +32,7 @@ export const unlaunchedInstalledAgents = (
     database,
     home,
     resources: createAcpResources(),
+    ports: installationPorts,
     registry: createActor(registryMachine, {
       input: {
         database,
@@ -44,7 +46,6 @@ export const unlaunchedInstalledAgents = (
 
 type EngineHost = Awaited<ReturnType<typeof startEngineTestHost>>;
 
-// The Engine's own Installed Agents module.
 export const installedAgentsOf = (host: EngineHost): InstalledAgents =>
   host.openSessions.getSnapshot().context.installedAgents;
 

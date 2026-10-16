@@ -43,7 +43,7 @@ export type InstalledAgentsInput = {
   home: string;
   registry: RegistryActor;
   resources: Pick<AcpResources, 'isDirectoryInUse'>;
-  ports?: InstallPorts;
+  ports: InstallPorts;
 };
 
 export const createInstalledAgents = (

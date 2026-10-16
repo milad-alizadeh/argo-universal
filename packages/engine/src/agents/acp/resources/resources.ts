@@ -120,10 +120,6 @@ class EngineAcpResources implements AcpResources {
     entry.dropped = true;
     this.retireIdle(entry);
   }
-  private retire(key: string, entry: Entry): void {
-    this.entries.delete(key);
-    this.stopConnection(entry.connection);
-  }
   public dropAgentConnections = (agentId: string): void => {
     for (const [key, entry] of this.entries)
       if (entry.agentId === agentId) this.drop(key, entry);

@@ -11,7 +11,6 @@ export type AgentsRouterDeps = RegistryDeps & {
   sessions: OpenSessionsActorRef;
   sessionConnections: SessionConnections;
   installedAgents: InstalledAgents;
-  home?: string;
   sessionCommandSignal?: AbortSignal;
 };
 
