@@ -10,7 +10,7 @@ An App runs on the Server Device or on a paired Device. Only the Server Device m
 - choosing the relay or Tailscale for Remote access;
 - keeping the Server running after the desktop app quits (the later setting in ADR-0003).
 
-Everything else works on every Device: Projects, Agents (custom Agents, install and remove included), Accounts and Sessions. This amends ADR-0002's "the phone, the web app, and the desktop app must have the same abilities" for this list only. A lost phone must not be able to unpair the owner's other Devices or turn off Remote access, and a Device away from home that turned off Remote access would cut off its own Connection.
+Everything else works on every Device: Projects, Agents (install and remove included), Accounts and Sessions. This amends ADR-0002's "the phone, the web app, and the desktop app must have the same abilities" for this list only. A lost phone must not be able to unpair the owner's other Devices or turn off Remote access, and a Device away from home that turned off Remote access would cut off its own Connection.
 
 **The Server says where each Connection comes from.** For each Connection, the Server tells the App whether it is on the Server Device and which Device it comes from. The App uses that answer and never guesses from window width, platform or Electron. The Server checks the list above itself, from a per-Connection tRPC context; hiding a row in the App is not the check.
 

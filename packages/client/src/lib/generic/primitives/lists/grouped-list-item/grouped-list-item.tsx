@@ -6,6 +6,7 @@ import {
   useSidebarList,
 } from '#primitives/fields/field-layout';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
+import { trailingChoiceMark } from './grouped-list-item-choice';
 import { GroupedListItemBody } from './grouped-list-item-content';
 import {
   GroupedListItemCorners,
@@ -27,13 +28,16 @@ import {
 } from './grouped-list-item-web-props';
 
 export function GroupedListItem(props: GroupedListItemProps): JSX.Element {
-  if (isPlainItem(props)) return <DrawnItem {...props} />;
+  if (isPlainItem(props))
+    return <DrawnItem {...trailingChoiceMark(props, false)} />;
 
   return <SizedItem {...props} />;
 }
 
 function SizedItem(props: GroupedListItemProps): JSX.Element {
-  return <DrawnItem {...resolvedItem(props, useSizeClass())} />;
+  const item = resolvedItem(props, useSizeClass());
+
+  return <DrawnItem {...trailingChoiceMark(item, false)} />;
 }
 
 function DrawnItem(props: ResolvedItemProps): JSX.Element {

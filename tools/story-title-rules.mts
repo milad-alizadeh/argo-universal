@@ -16,9 +16,8 @@ const pascal = (name: string): string =>
     .map((part): string => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
 
-// Only a view, a page or a file in `screens/` may draw a screen; ADR-0021 gives the custom Agent form the screen's stories.
-const screenStory =
-  /(?:-view|-page)\.stories\.tsx$|\/screens\/|^features\/agents\/components\/custom-agent-form\/custom-agent-form\.stories\.tsx$/;
+// Only a view, a page or a file in `screens/` may draw a screen.
+const screenStory = /(?:-view|-page)\.stories\.tsx$|\/screens\//;
 
 const screenGroups = (path: string): string[] =>
   screenStory.test(path) ? ['Screens/'] : [];

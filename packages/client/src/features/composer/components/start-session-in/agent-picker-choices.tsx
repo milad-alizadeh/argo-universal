@@ -3,7 +3,6 @@ import type * as React from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { RegistryIcon } from '#features/agents';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import {
   GroupedListItem,
@@ -101,7 +100,7 @@ const choiceProps = (
   accessibilityRole: 'button',
   disclosure: false,
   selected: props.agent === agent.id,
-  accessory: props.agent === agent.id ? <SelectedCheck /> : undefined,
+  choice: true,
   onPress: () => props.close(() => props.onAgentChange(agent.id)),
 });
 

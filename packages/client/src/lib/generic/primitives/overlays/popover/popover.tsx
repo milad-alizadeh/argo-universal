@@ -14,7 +14,7 @@ import type {
 
 export { PopoverTrigger } from './popover-trigger';
 
-export { PopoverHoverGroup } from './popover-hover';
+export { PopoverHoverGroup } from './popover-hover-group';
 
 export { usePopoverClose } from './popover-context';
 

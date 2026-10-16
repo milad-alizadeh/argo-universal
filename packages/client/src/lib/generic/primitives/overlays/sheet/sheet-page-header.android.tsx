@@ -23,12 +23,19 @@ export function PageHeader(props: HeaderProps): ReactElement | null {
   return (
     <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
       {!props.root && <BackButton stack={props.stack} />}
-      <Text maxLines={1} modifiers={titleModifiers(props.root)}>
+      <Text
+        maxLines={1}
+        style={titleStyle}
+        modifiers={titleModifiers(props.root)}
+      >
         {props.title}
       </Text>
     </Row>
   );
 }
+
+// Material's top app bar title.
+const titleStyle = { typography: 'titleLarge' } as const;
 
 // The list's 16 dp gutter, so a root page's title lines up with the rows under it; on a pushed page the back button leads instead.
 const titleInset = 16;
