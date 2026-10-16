@@ -65,8 +65,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     {},
     ...steps.map(configurationForStep),
     attachmentConfiguration(steps),
-    elicitationConfiguration(steps),
-    feedHistoryConfiguration(steps),
+    namedScenarioConfiguration(steps),
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
     notificationConfiguration(steps),
@@ -76,28 +75,23 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
   );
 }
 
-function feedHistoryConfiguration(steps: string[]): AppFixtureAgents {
-  const chosen = steps
-    .map((step) =>
-      /^(?:Given|And) Agent (\d+) supplies a long Feed history$/.exec(step),
-    )
-    .find((match) => match !== null);
+// Steps that hand one Agent a named scenario.
+const namedScenarioSteps = [
+  [/^(?:Given|And) Agent (\d+) supplies a long Feed history$/, 'feed-history'],
+  [/^(?:Given|And) Agent (\d+) asks for an Elicitation$/, 'elicitation'],
+  [/^(?:Given|And) Agent (\d+) names its Session$/, 'agent-title'],
+] as const;
 
-  return chosen
-    ? { [agentId(Number(chosen[1]))]: { scenario: 'feed-history' } }
-    : {};
-}
+function namedScenarioConfiguration(steps: string[]): AppFixtureAgents {
+  return Object.fromEntries(
+    namedScenarioSteps.flatMap(([step, scenario]) => {
+      const chosen = steps
+        .map((text) => step.exec(text))
+        .find((match) => match !== null);
 
-function elicitationConfiguration(steps: string[]): AppFixtureAgents {
-  const chosen = steps
-    .map((step) =>
-      /^(?:Given|And) Agent (\d+) asks for an Elicitation$/.exec(step),
-    )
-    .find((match) => match !== null);
-
-  return chosen
-    ? { [agentId(Number(chosen[1]))]: { scenario: 'elicitation' } }
-    : {};
+      return chosen ? [[agentId(Number(chosen[1])), { scenario }]] : [];
+    }),
+  );
 }
 
 const liveFeedStep =
