@@ -7,7 +7,6 @@ export {
   DialogDescriptionText,
   DialogFrame,
   DialogPortal,
-  DialogRoot,
   DialogTitleText,
 } from './dialog-parts';
 
@@ -17,3 +16,5 @@ export {
   type DialogContentProps,
   type DialogRegionProps,
 } from './dialog-props';
+
+export { DialogRoot } from './dialog-root';

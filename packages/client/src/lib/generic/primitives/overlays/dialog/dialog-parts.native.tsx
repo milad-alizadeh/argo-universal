@@ -3,7 +3,7 @@ import { BackHandler, Text, View } from 'react-native';
 import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { motionDuration } from '#lib/generic/motion';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
-import { triggerChild, useOpenState } from '#primitives/overlays/open-state';
+import { triggerChild } from '#primitives/overlays/open-state';
 import { Portal } from '#primitives/overlays/portal';
 import { DialogContext, useDialogState } from './dialog-context';
 import type {
@@ -15,15 +15,11 @@ import type {
 } from './dialog-props';
 
 // The phone's dialog parts, drawn with React Native views; only a wide window centres a dialog with them.
-export function DialogRoot(props: DialogRootProps): ReactElement {
-  const state = useOpenState(props);
-
+export function DialogRootView(props: DialogRootProps): ReactElement {
   return (
-    <DialogContext.Provider value={state}>
-      <View className={props.className} style={props.style}>
-        {props.children}
-      </View>
-    </DialogContext.Provider>
+    <View className={props.className} style={props.style}>
+      {props.children}
+    </View>
   );
 }
 

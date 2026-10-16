@@ -12,11 +12,8 @@ import {
   CollapsibleLayoutSyncContext,
   OpenContext,
 } from './collapsible-context';
-import { Header } from './collapsible-header';
-import type {
-  CollapsibleHeaderProps,
-  CollapsibleProps,
-} from './collapsible-props';
+import { createCollapsibleHeader } from './collapsible-header';
+import type { CollapsibleProps } from './collapsible-props';
 
 /*
  * The web's collapsible, on Radix Collapsible (`@radix-ui/react-collapsible`): Root `open`/`onOpenChange`/
@@ -89,6 +86,4 @@ export {
 
 export { useCollapsibleHovered } from './collapsible-header';
 
-export function CollapsibleHeader(props: CollapsibleHeaderProps): ReactElement {
-  return <Header {...props} trigger={CollapsibleTrigger} />;
-}
+export const CollapsibleHeader = createCollapsibleHeader(CollapsibleTrigger);

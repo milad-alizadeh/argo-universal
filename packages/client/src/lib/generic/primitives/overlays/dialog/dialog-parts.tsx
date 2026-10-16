@@ -1,8 +1,8 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { triggerChild, useOpenState } from '#primitives/overlays/open-state';
-import { DialogContext, useDialogState } from './dialog-context';
+import { triggerChild } from '#primitives/overlays/open-state';
+import { useDialogState } from './dialog-context';
 import type {
   DialogBackdropProps,
   DialogFrameProps,
@@ -16,17 +16,15 @@ import type {
  * Portal, Overlay, Content `onCloseAutoFocus`/`onEscapeKeyDown`, Title and Description. Radix keeps focus
  * inside, closes on Escape and hands focus back to the trigger; React Native views draw every part.
  */
-export function DialogRoot(props: DialogRootProps): ReactElement {
-  const state = useOpenState(props);
+export function DialogRootView(props: DialogRootProps): ReactElement {
+  const state = useDialogState();
 
   return (
-    <DialogContext.Provider value={state}>
-      <RadixDialog.Root open={state.open} onOpenChange={state.onOpenChange}>
-        <View className={props.className} style={props.style}>
-          {props.children}
-        </View>
-      </RadixDialog.Root>
-    </DialogContext.Provider>
+    <RadixDialog.Root open={state.open} onOpenChange={state.onOpenChange}>
+      <View className={props.className} style={props.style}>
+        {props.children}
+      </View>
+    </RadixDialog.Root>
   );
 }
 

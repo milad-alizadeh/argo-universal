@@ -4,10 +4,10 @@ import { Portal } from '#primitives/overlays/portal';
 import {
   DialogDescriptionText,
   DialogFrame,
-  DialogRoot,
   DialogTitleText,
 } from './dialog-parts';
 import type { DialogRegionProps as RegionProps } from './dialog-props';
+import { DialogRoot } from './dialog-root';
 
 const regionInset = 24;
 

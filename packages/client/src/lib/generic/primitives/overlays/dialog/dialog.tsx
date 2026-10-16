@@ -10,7 +10,6 @@ import { DialogOverlay } from './dialog-overlay';
 import {
   DialogDescriptionText,
   DialogPortal,
-  DialogRoot,
   DialogTitleText,
   DialogTrigger,
 } from './dialog-parts';
@@ -19,6 +18,7 @@ import type {
   DialogProps,
   DialogTextProps,
 } from './dialog-props';
+import { DialogRoot } from './dialog-root';
 import { DialogSheet } from './dialog-sheet';
 
 function Dialog(props: DialogProps): React.JSX.Element {
