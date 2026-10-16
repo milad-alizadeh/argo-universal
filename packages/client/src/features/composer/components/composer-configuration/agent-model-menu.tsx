@@ -3,7 +3,6 @@ import { Platform, View } from 'react-native';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 import { AgentDrill } from './agent-drill';
 import { EffortControl, SwitchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -15,16 +14,13 @@ interface MenuProps {
 }
 
 interface ContentsProps extends MenuProps {
+  // The desktop popover's menu, rather than a sheet's page.
   wide: boolean;
 }
 
 // Configure's settings: on a desktop the Agent and Model rows open popovers beside the menu; elsewhere they push the sheet's pages.
-export function AgentModelMenu(props: MenuProps): React.JSX.Element {
-  return <ConfigurationContents {...props} wide={isDesktopMenu(useWide())} />;
-}
-
-export function isDesktopMenu(wide: boolean): boolean {
-  return wide && Platform.OS === 'web';
+export function AgentModelMenu(props: ContentsProps): React.JSX.Element {
+  return <ConfigurationContents {...props} />;
 }
 
 function ConfigurationContents(props: ContentsProps): React.JSX.Element {

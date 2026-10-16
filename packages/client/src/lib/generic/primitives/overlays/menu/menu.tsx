@@ -8,7 +8,7 @@ import {
   useKeyboardFocus,
 } from './menu-choices';
 import { type MenuProps, isActionMenu } from './menu-props';
-import { menuTriggerElement } from './menu-text-trigger';
+import { useMenuTriggerElement } from './menu-text-trigger';
 
 export type { MenuAction, MenuProps } from './menu-props';
 
@@ -49,7 +49,7 @@ function MenuTrigger<Value extends string>(
       onKeyDown={() => props.focus.onKeyboardFocusChange(true)}
       onPointerDown={() => props.focus.onKeyboardFocusChange(false)}
     >
-      {menuTriggerElement(props.trigger)}
+      {useMenuTriggerElement(props.trigger)}
     </RadixMenu.Trigger>
   );
 }

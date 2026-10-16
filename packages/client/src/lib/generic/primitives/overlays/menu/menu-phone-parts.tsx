@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { type MenuProps, menuValueLabel } from './menu-props';
-import { menuTriggerElement } from './menu-text-trigger';
+import { useMenuTriggerElement } from './menu-text-trigger';
 
 /*
  * The trigger the iOS and Android system menus open from; their rows come from menu-native-items.
@@ -12,7 +12,7 @@ export function NativeMenuTrigger<Value extends string>(
 ): React.JSX.Element {
   return (
     <View accessible {...triggerAccessibility(props)} pointerEvents="none">
-      {menuTriggerElement(props.trigger)}
+      {useMenuTriggerElement(props.trigger)}
     </View>
   );
 }

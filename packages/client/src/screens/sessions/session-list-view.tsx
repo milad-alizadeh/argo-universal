@@ -9,9 +9,9 @@ import {
   newSessionBesideSearch,
   SessionsLoading,
 } from '#features/sessions';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Screen } from '#lib/product/screen/screen';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { SizeClass } from '../../lib/generic/size-class/size-class';
 import { FloatingActionButton } from './floating-action-button';
 import { SessionsListContent } from './session-list-view-rows';
 
@@ -80,24 +80,55 @@ export function SessionListView(
   return <SessionsLayout {...props} />;
 }
 
+/*
+ * While loading, a wide sidebar shows the loading rows alone; a phone shows them in the list, under its header.
+ * The list stays mounted throughout, hidden on a wide window until it has loaded.
+ */
 function SessionsContent(props: SessionListViewProps): React.JSX.Element {
-  const wide = useWide();
   // A failed first load keeps the loading rows: the toast says why, and the queries retry when the Connection reopens.
   const loading = props.loadState !== 'ready';
 
-  if (wide && loading) return <SessionsLoading layout={props.layout} />;
-
-  return <SessionsListContent {...props} wide={wide} loading={loading} />;
+  return (
+    <>
+      {loading && <WideLoading layout={props.layout} />}
+      <View
+        className={loading ? 'flex-1 wide:hidden' : 'flex-1'}
+        style={fillStyle}
+      >
+        <SessionsListContent {...props} loading={loading} />
+      </View>
+    </>
+  );
 }
+
+function WideLoading(
+  props: Pick<SessionListViewProps, 'layout'>,
+): React.JSX.Element {
+  return (
+    <SizeClass only="wide">
+      <SessionsLoading layout={props.layout} />
+    </SizeClass>
+  );
+}
+
+const fillStyle = { minHeight: 0 };
 
 // Wide, New Session sits in the header row; on an iOS phone, beside the search bar.
 function NewSessionControl({
   onNewSession,
 }: Pick<SessionListViewProps, 'onNewSession'>): React.JSX.Element | null {
-  const wide = useWide();
+  if (newSessionBesideSearch) return null;
 
-  if (wide || newSessionBesideSearch) return null;
+  return (
+    <SizeClass only="compact">
+      <NewSessionButton onNewSession={onNewSession} />
+    </SizeClass>
+  );
+}
 
+function NewSessionButton({
+  onNewSession,
+}: Pick<SessionListViewProps, 'onNewSession'>): React.JSX.Element {
   return (
     <View className="absolute bottom-10.5 right-5">
       <FloatingActionButton
@@ -114,7 +145,7 @@ function SessionsLayout(props: SessionListViewProps): React.JSX.Element {
     <Screen
       edges={['bottom']}
       className="relative flex-1 bg-content wide:bg-transparent"
-      style={{ minHeight: 0 }}
+      style={fillStyle}
     >
       <SessionsContent {...props} />
       <NewSessionControl onNewSession={props.onNewSession} />

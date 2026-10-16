@@ -9,7 +9,7 @@ import {
   PlanProposalPreview,
   shortPlanProposal,
 } from '../../../../../mocks/plan-proposal-mock';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { Variation, Variations } from '../../../../lib/generic/variations';
 import { PlanProposalCard } from './plan-proposal-card';
 
@@ -89,7 +89,12 @@ const galleryVariations: GalleryVariation[] = [
 export const Overview: Story = {
   name: 'PlanProposalCard',
   render: function ProposalGallery(args): React.JSX.Element {
-    return useWide() ? <WideGallery {...args} /> : <PhoneGallery {...args} />;
+    return (
+      <SizeClass
+        compact={<PhoneGallery {...args} />}
+        wide={<WideGallery {...args} />}
+      />
+    );
   },
 };
 

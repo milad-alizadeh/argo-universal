@@ -13,9 +13,15 @@ import {
   useState,
 } from 'react';
 import { Platform } from 'react-native';
+import { useSizeClassValue } from '../../generic/use-size-class/use-size-class-value';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
-import type { ScrollFadeOptions } from './scroll-fade-options';
+import {
+  type ScrollFadeListProps,
+  useSizeClassListProps,
+} from './scroll-fade-list-props';
 import { type ScrollFade, useScrollFade } from './scroll-fade-props';
+
+export type { ScrollFadeListProps } from './scroll-fade-list-props';
 
 const listDefaults = {
   style: { position: 'absolute', inset: 0 },
@@ -48,13 +54,6 @@ function webListProps<P extends NativeOnlyListProps>({
 const platformListProps = <P extends NativeOnlyListProps>(
   props: P,
 ): P | WebListProps<P> => (Platform.OS === 'web' ? webListProps(props) : props);
-
-export type ScrollFadeListProps<T> = LegendListProps<T> &
-  ScrollFadeOptions & {
-    ref?: Ref<LegendListRef>;
-    // Grows with its content up to this height, then scrolls; without it the list fills its parent.
-    maxHeight?: number;
-  };
 
 const sizeSignals = ['totalSize', 'headerSize', 'footerSize'] as const;
 
@@ -92,11 +91,12 @@ interface FrameSize {
   style?: { height: number };
 }
 
-// As tall as the content, up to the cap; with no cap the frame fills its parent.
+// As tall as the content, up to the window's size class's cap; with no cap the frame fills its parent.
 function useFrameSize(
   list: RefObject<LegendListRef | null>,
-  maxHeight: number | undefined,
+  cap: ScrollFadeListProps<unknown>['maxHeight'],
 ): FrameSize {
+  const maxHeight = useSizeClassValue(cap);
   const length = useContentLength(list, maxHeight !== undefined);
 
   if (maxHeight === undefined) return { className: 'min-h-0 flex-1' };
@@ -133,16 +133,13 @@ function useFadingList<T>({
   refScrollView,
   ...props
 }: Omit<ScrollFadeListProps<T>, 'ref' | 'maxHeight'>): FadingList<T> {
-  const { frame, scroll, attachScrollView } = useScrollFade(props);
-  const scrollRef = useBothRefs(attachScrollView, refScrollView);
+  const fade = useScrollFade(useSizeClassListProps(props));
+  const scrollRef = useBothRefs(fade.attachScrollView, refScrollView);
+  const scroll = { ...fade.scroll, refScrollView: scrollRef };
 
   return {
-    frame,
-    list: platformListProps({
-      ...listDefaults,
-      ...scroll,
-      refScrollView: scrollRef,
-    }),
+    frame: fade.frame,
+    list: platformListProps({ ...listDefaults, ...scroll }),
   };
 }
 

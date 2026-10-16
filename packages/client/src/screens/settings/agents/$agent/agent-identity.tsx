@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import type { ReactElement } from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 
 export interface AgentIdentityProps {
   logo: ReactElement;
@@ -12,15 +12,13 @@ export interface AgentIdentityProps {
 }
 
 // A wide window's first card on an Agent page, under a header that names the Agent alone; a phone opens on its centred summary instead.
-export function AgentIdentity(
-  props: AgentIdentityProps,
-): React.JSX.Element | null {
-  if (!useWide()) return null;
-
+export function AgentIdentity(props: AgentIdentityProps): React.JSX.Element {
   return (
-    <GroupedListSection>
-      <IdentityRow {...props} />
-    </GroupedListSection>
+    <SizeClass only="wide">
+      <GroupedListSection>
+        <IdentityRow {...props} />
+      </GroupedListSection>
+    </SizeClass>
   );
 }
 

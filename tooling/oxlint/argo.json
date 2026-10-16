@@ -309,6 +309,10 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
+              },
+              {
                 "group": ["@repo/client", "@repo/client/**"],
                 "message": "Client modules never import the client barrel (A2)."
               }
@@ -344,6 +348,10 @@
               {
                 "regex": "^\\.\\./[^.]",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
                 "group": ["@repo/client", "@repo/client/**"],
@@ -387,6 +395,10 @@
               {
                 "regex": "^(\\.\\./)+features/[^.]*$",
                 "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9); only its .mocks files are imported directly."
+              },
+              {
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
                 "group": ["@repo/client", "@repo/client/**"],
@@ -481,6 +493,10 @@
               {
                 "regex": "^(\\.\\./)+features/[^.]*$",
                 "message": "Screens import a feature only through its index.ts, #features/<name> (ADR-0016 item 9); only its .mocks files are imported directly."
+              },
+              {
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
                 "group": ["@repo/client", "@repo/client/**"],
@@ -613,6 +629,10 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
+              },
+              {
                 "group": ["@repo/client", "@repo/client/**"],
                 "message": "Client modules never import the client barrel (A2)."
               }
@@ -739,6 +759,10 @@
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
               },
               {
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
+              },
+              {
                 "group": ["@repo/client", "@repo/client/**"],
                 "message": "Client modules never import the client barrel (A2)."
               }
@@ -783,6 +807,10 @@
               {
                 "regex": "^\\.\\./\\.\\./[^.]",
                 "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "(^|/)use-(wide|size-class)/use-(wide|size-class)(-value)?$",
+                "message": "Only the kit reads the size class: use a size-class prop or <SizeClass only> (ADR-0026)."
               },
               {
                 "group": ["@repo/client", "@repo/client/**"],

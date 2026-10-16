@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { HeaderButton, headerFilterIcon } from '#lib/product/header-button';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Menu, type MenuChoiceGroup } from '#primitives/overlays/menu';
@@ -77,13 +76,14 @@ const filterGroups = (props: SessionsFilterMenuProps): MenuChoiceGroup[] => [
 export function SessionsFilterMenu(
   props: SessionsFilterMenuProps,
 ): React.JSX.Element {
-  const wide = useWide();
-
   return (
     <Menu
       accessibilityLabel="Filter Sessions"
       groups={filterGroups(props)}
-      trigger={wide ? wideFilterTrigger : phoneFilterTrigger(props.archived)}
+      trigger={{
+        compact: phoneFilterTrigger(props.archived),
+        wide: wideFilterTrigger,
+      }}
     />
   );
 }

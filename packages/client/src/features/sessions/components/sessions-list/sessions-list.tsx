@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 import { listTestIdProps } from '#lib/generic/list-test-id';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import { useWide } from '#lib/generic/use-wide/use-wide';
+import type { SizeClassValues } from '#lib/generic/use-size-class/size-class-value';
 import { cn } from '#lib/generic/utils';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import type { SessionsListEntry } from '../sessions-list-entries';
@@ -33,13 +33,10 @@ const phoneContentStyle = {
 // Flat search results start right under the open search, as Material's search results do.
 const searchResultsContentStyle = { ...phoneContentStyle, paddingTop: 0 };
 
-function useContentStyle(flat: boolean): typeof contentStyle {
-  const wide = useWide();
-
-  if (wide) return contentStyle;
-
-  return flat ? searchResultsContentStyle : phoneContentStyle;
-}
+const contentStyles = (flat: boolean): SizeClassValues<ViewStyle> => ({
+  compact: flat ? searchResultsContentStyle : phoneContentStyle,
+  wide: contentStyle,
+});
 
 function entryKey(entry: SessionsListEntry): string {
   return entry.id;
@@ -118,7 +115,7 @@ interface SessionsLegendListProps extends SessionsListProps {
 }
 
 function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
-  const contentContainerStyle = useContentStyle(props.flat ?? false);
+  const contentContainerStyle = contentStyles(props.flat ?? false);
 
   return (
     <ScrollFadeList

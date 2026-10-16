@@ -2,6 +2,7 @@ import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
+import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import type { MenuProps } from './menu-props';
 
 // The menu's trigger passes its press handlers and ref through these props.
@@ -10,10 +11,12 @@ type MenuTextTriggerProps = Omit<
   'children' | 'className' | 'role'
 > & { label: string };
 
-// The element a menu opens from: the caller's own, or the inline text trigger for a text label.
-export function menuTriggerElement(
-  trigger: MenuProps['trigger'],
+// The element a menu opens from, picked for the window's size class: the caller's own, or the inline text trigger for a text label.
+export function useMenuTriggerElement(
+  options: MenuProps['trigger'],
 ): ReactElement {
+  const trigger = useSizeClassValue(options);
+
   return typeof trigger === 'string' ? (
     <MenuTextTrigger label={trigger} />
   ) : (

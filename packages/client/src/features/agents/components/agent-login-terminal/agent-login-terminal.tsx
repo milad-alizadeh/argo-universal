@@ -1,7 +1,7 @@
 import type { DOMProps } from 'expo/dom';
 import { createElement, useEffect, useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
-import { useWide } from '../../../../lib/generic/use-wide/use-wide';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { terminalKeyboardHeight } from './terminal-appearance';
 import type { LoginTerminalProps } from './terminal-props';
 import TerminalRenderer from './terminal-renderer';
@@ -13,10 +13,22 @@ const phoneHeight = 240;
 
 const accessoryHeight = 62;
 
+// A wide window gives the terminal a desktop height; a phone's shrinks while the keyboard is up. One terminal keeps its session across a resize.
 export function AgentLoginTerminal(
   props: LoginTerminalProps,
 ): React.JSX.Element {
-  const wide = useWide();
+  return (
+    <SizeClass
+      compact={<SizedTerminal {...props} wide={false} />}
+      wide={<SizedTerminal {...props} wide />}
+    />
+  );
+}
+
+function SizedTerminal({
+  wide,
+  ...props
+}: LoginTerminalProps & { wide: boolean }): React.JSX.Element {
   const keyboardOpen = useTerminalKeyboard();
   const height = viewportHeight(wide, keyboardOpen);
   const accessory = !wide && keyboardOpen;

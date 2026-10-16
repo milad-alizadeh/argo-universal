@@ -16,7 +16,6 @@ import {
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
@@ -87,37 +86,16 @@ function QuestionSheet({
 }
 
 function SessionComposer(props: OpenSessionViewProps): React.JSX.Element {
-  const wide = useWide();
-
   return (
     // As wide as the Feed: the SessionColumn around it sets the width.
     <View className="w-full items-center">
       <QuestionSheet elicitation={props.elicitation} />
       <Composer
         {...composerUnderQuestion(props.composer, props.elicitation)}
-        configuration={composerConfiguration(props.composer, wide)}
         callout={props.callout && <SessionCallout {...props.callout} />}
       />
     </View>
   );
-}
-
-function composerConfiguration(
-  composer: ComposerProps,
-  wide: boolean,
-): ComposerProps['configuration'] {
-  const { configuration } = composer;
-
-  if (!configuration) return configuration;
-
-  return {
-    ...configuration,
-    // A phone draws no checkout row above the Composer.
-    checkout: {
-      ...configuration.checkout,
-      path: wide ? configuration.checkout.path : undefined,
-    },
-  };
 }
 
 function composerUnderQuestion(

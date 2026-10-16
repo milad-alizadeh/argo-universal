@@ -10,12 +10,12 @@ import {
   AgentManagementFailure,
   RegistryIcon,
 } from '#features/agents';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { SettingsPage } from '#lib/product/settings-page';
 import { Badge } from '#primitives/display/badge';
 import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { AgentAction, RemoveAgent } from './agent-detail-actions';
 import {
   AboutSection,
@@ -105,20 +105,20 @@ function AgentSections(props: AgentDetailViewProps): React.JSX.Element {
 }
 
 // A phone's native header shows only the name, so Paper's hero opens the page: icon tile, chip, description, action.
-function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element | null {
+function PhoneSummary(props: AgentDetailViewProps): React.JSX.Element {
   const { agent } = props;
 
-  if (useWide()) return null;
-
   return (
-    <GroupedListContent>
-      <View className="items-center gap-3">
-        <PhoneIconTile {...props} />
-        <AgentStatusChip agent={agent} />
-        <PhoneDescription description={agent.description} />
-        <AgentAction {...props} fullWidth="narrow" />
-      </View>
-    </GroupedListContent>
+    <SizeClass only="compact">
+      <GroupedListContent>
+        <View className="items-center gap-3">
+          <PhoneIconTile {...props} />
+          <AgentStatusChip agent={agent} />
+          <PhoneDescription description={agent.description} />
+          <AgentAction {...props} fullWidth="narrow" />
+        </View>
+      </GroupedListContent>
+    </SizeClass>
   );
 }
 

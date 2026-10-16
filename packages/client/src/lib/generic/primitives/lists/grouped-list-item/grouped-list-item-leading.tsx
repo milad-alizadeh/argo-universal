@@ -4,10 +4,10 @@ import { Icon, IconSlot, IconSpinner } from '#primitives/display/icon';
 import { useOverlayList } from '#primitives/fields/field-layout';
 import type { IconRole } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';
-import type { GroupedListItemProps } from './grouped-list-item-props';
+import type { ResolvedItemProps } from './grouped-list-item-props';
 
 type LeadingProps = Pick<
-  GroupedListItemProps,
+  ResolvedItemProps,
   'icon' | 'loading' | 'leading' | 'size'
 > & {
   className: string;
@@ -38,7 +38,7 @@ function RowGlyph({
 function LeadingSlot({
   size,
   children,
-}: Pick<GroupedListItemProps, 'size'> & {
+}: Pick<ResolvedItemProps, 'size'> & {
   children: React.ReactNode;
 }): React.JSX.Element {
   const role = useLeadingRole();
@@ -61,7 +61,7 @@ function useLeadingRole(): IconRole {
 function RowIcon({
   icon,
   className,
-}: Required<Pick<GroupedListItemProps, 'icon'>> & {
+}: Required<Pick<ResolvedItemProps, 'icon'>> & {
   className: string;
 }): React.JSX.Element {
   return (
