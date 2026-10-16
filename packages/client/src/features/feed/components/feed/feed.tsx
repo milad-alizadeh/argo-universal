@@ -11,6 +11,7 @@ import type { FeedViewItem } from '../../view/feed-view';
 import { isDrawnFeedItem } from '../feed-item';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
+import { useReportsAtEnd } from './use-feed-scroll-position';
 
 export interface FeedProps {
   items: readonly FeedViewItem[];
@@ -26,6 +27,8 @@ export interface FeedProps {
   checkoutBranch?: string;
   // Fixes the live header's clock, for stories and tests.
   now?: number;
+  // Whether the reader can see the Feed's end; an empty Feed always shows it.
+  onAtEndChange?: (atEnd: boolean) => void;
 }
 
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
@@ -41,6 +44,19 @@ function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
       )}
     </View>
   );
+}
+
+// An empty Feed's end is always on screen.
+function EmptyFeedAtEnd({
+  onAtEndChange,
+  ...props
+}: {
+  branch?: string;
+  onAtEndChange?: FeedProps['onAtEndChange'];
+}): React.JSX.Element {
+  useReportsAtEnd(true, onAtEndChange);
+
+  return <EmptyFeed {...props} />;
 }
 
 function useFeedEntries({
@@ -65,7 +81,13 @@ export function Feed({
 }: FeedProps): React.JSX.Element {
   const feed = useFeedEntries(props);
 
-  if (!feed.entries.length) return <EmptyFeed branch={checkoutBranch} />;
+  if (!feed.entries.length)
+    return (
+      <EmptyFeedAtEnd
+        branch={checkoutBranch}
+        onAtEndChange={props.onAtEndChange}
+      />
+    );
 
   return <FeedList {...props} {...feed} />;
 }

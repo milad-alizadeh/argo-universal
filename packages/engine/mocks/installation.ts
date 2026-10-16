@@ -17,10 +17,10 @@ export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
     kind === 'binary'
       ? {
           binary: {
-            [process.platform === 'win32'
-              ? 'windows-x86_64'
-              : `${process.platform}-${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}`]:
-              { archive: 'https://example.org/agent', cmd: './agent' },
+            [fixturePlatform()]: {
+              archive: 'https://example.org/agent',
+              cmd: './agent',
+            },
           },
         }
       : {
@@ -34,3 +34,11 @@ export const installEntry = (kind: 'binary' | 'npx' | 'uvx'): ACPAgent => ({
 });
 
 export const installationPorts: InstallPorts = createInstallationPorts();
+
+const fixturePlatform = (): string =>
+  process.platform === 'win32'
+    ? 'windows-x86_64'
+    : `${process.platform}-${fixtureArchitecture()}`;
+
+const fixtureArchitecture = (): string =>
+  process.arch === 'arm64' ? 'aarch64' : 'x86_64';

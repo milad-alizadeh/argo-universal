@@ -52,7 +52,22 @@ function fieldBehaviour(props: PhoneFieldProps): TextInputProps {
     keyboardType: props.numeric ? 'numbers-and-punctuation' : undefined,
     // Beside a label the value trails the row; alone, the entry leads it as the row's title would.
     textAlign: props.labelHidden ? 'left' : 'right',
+    ...entryBehaviour(props),
   };
+}
+
+// Focus as the field appears, and a field that submits its form shows Done on the keyboard's return key.
+function entryBehaviour(props: PhoneFieldProps): TextInputProps {
+  const focus = {
+    autoFocus: props.focusOnOpen,
+    selectTextOnFocus: props.selectOnFocus,
+  };
+
+  const submit = props.onSubmit;
+
+  if (!submit) return focus;
+
+  return { ...focus, onSubmitEditing: () => submit(), returnKeyType: 'done' };
 }
 
 export const PhoneFieldWithFooter = Field;

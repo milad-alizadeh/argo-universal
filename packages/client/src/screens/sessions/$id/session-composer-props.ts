@@ -30,6 +30,8 @@ export interface OpenSession {
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
   mergeMethod: MergeMethodChoice;
+  // The Feed's end came on screen or left it.
+  onAtEndChange: (atEnd: boolean) => void;
 }
 
 type DraftProps = Pick<

@@ -3,9 +3,9 @@ Feature: Desktop attention and quit
   Scenario Outline: The Dock follows Session attention without a renderer
     Given a wide Frame
     Then the Dock badge is ""
-    When I start a Session named "Desktop attention"
+    When I start a Session named "Desktop attention" that waits for input
     Then the Dock badge is "1"
-    When I start a Session named "More desktop attention"
+    When I start a Session named "More desktop attention" that waits for input
     Then the Dock badge is "2"
     When I close the desktop window
     Then the Dock badge is "2"
@@ -16,7 +16,7 @@ Feature: Desktop attention and quit
       | platform |
       | macOS    |
 
-  @supervisor @owned-supervisor
+  @supervisor @owned-supervisor @needs-focus
   Scenario Outline: Quitting an App that started its Supervisor
     Given a wide Frame
     And I start a desktop Session that keeps running

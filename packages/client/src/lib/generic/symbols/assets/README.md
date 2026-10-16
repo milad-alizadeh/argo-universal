@@ -12,7 +12,7 @@ Metro imports the font as an asset ID; Vite imports its URL. `expo-symbols` pass
 
 # Tabler git icons
 
-`tabler/` holds the source SVGs of the git icons, unchanged from Tabler Icons v3.49.0's outline set (github.com/tabler/tabler-icons, `icons/outline` at tag `v3.49.0`), and `tabler/LICENSE`, Tabler's MIT licence (ADR-0019). `book-2.svg` draws `repository`, since Tabler has no repository icon.
+`tabler/` holds the source SVGs of the git icons, unchanged from Tabler Icons v3.49.0's outline set (github.com/tabler/tabler-icons, `icons/outline` at tag `v3.49.0`), and `tabler/LICENSE`, Tabler's MIT licence (ADR-0019). `brand-github.svg` is GitHub's Octicons `mark-github-16.svg` from `github.com/primer/octicons` at tag `v19.15.5`, under the MIT licence in `tabler/OCTICONS-LICENSE`. It draws `repository`.
 
 Tabler draws 2-point strokes on a 24-point grid; the asset catalog and the masks need filled shapes. The Swift package `tools/sf-symbols/tabler-symbols` outlines each icon's strokes with round caps and joins, unions them with Core Graphics, and places them in the custom symbols' 137.5-unit box. It needs macOS 14 or later, for `CGPath.normalized(using:)`, and the Swift toolchain from Xcode. To regenerate, from the repository root:
 

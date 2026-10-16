@@ -4,7 +4,11 @@ import {
   hostLifecycleMachine,
   hostBudgetExhausted,
 } from './host-lifecycle.machine';
-import { HostMessage, type PluginEntry } from './runtime-protocol';
+import {
+  HostMessage,
+  type PluginEntry,
+  type PluginReply,
+} from './runtime-protocol';
 
 const closeLimitMs = 1000;
 
@@ -12,8 +16,11 @@ const hostStartupLimitMs = 10_000;
 
 type HostCallbacks = {
   log: (line: string) => void;
-  status: (message: Exclude<HostMessage, { type: 'ready' }>) => void;
+  status: (message: Extract<HostMessage, { type: 'status' }>) => void;
   crash: (message: string) => void;
+  call: (
+    message: Extract<HostMessage, { type: 'call' }>,
+  ) => Promise<PluginReply>;
 };
 
 export class HostConnection {
@@ -95,6 +102,20 @@ export class HostConnection {
 
   private message(message: HostMessage): void {
     if (message.type === 'status') this.callbacks.status(message);
+    else if (message.type === 'call') void this.answerCall(message);
+  }
+
+  private async answerCall(
+    message: Extract<HostMessage, { type: 'call' }>,
+  ): Promise<void> {
+    const { pluginId, generation, id } = message;
+    const reply = await this.callbacks.call(message);
+
+    if (this.child?.connected)
+      this.child.send(
+        { type: 'reply', pluginId, generation, id, reply },
+        this.sendError,
+      );
   }
 
   private exited(child: ChildProcess, reason: string): void {

@@ -3,7 +3,7 @@ import type {
   AgentAuthenticateOutput,
   AgentAuthSubject,
   AgentAuthTerminalFrame,
-  AgentLoginTerminalInput,
+  AgentAuthTerminalInput,
 } from '@repo/contracts';
 import type { AgentsRouterDeps } from '../router';
 import { authenticationLaunch } from './auth-launch';
@@ -96,7 +96,7 @@ export const readAuthTerminal = async (
 export const writeAuthTerminal = async (
   deps: AgentsRouterDeps,
   subject: AgentAuthSubject,
-  input: AgentLoginTerminalInput,
+  input: AgentAuthTerminalInput,
 ): Promise<void> => {
   (await existingAuthentication(deps, subject))?.inputTerminal(input);
 };

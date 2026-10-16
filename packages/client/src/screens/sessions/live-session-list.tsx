@@ -9,6 +9,7 @@ import { useConnectionState, useTRPC } from '#features/connection';
 import {
   liveUpdatesStopped,
   type QueryProgress,
+  RenameSessionDialog,
   type SessionsLayout,
   sessionsLoadState,
 } from '#features/sessions';
@@ -22,6 +23,7 @@ import {
   SessionListView,
   type SessionListViewProps,
 } from './session-list-view';
+import { useRenameSession } from './use-rename-session';
 import { useSessionListUpdates } from './use-session-list-updates';
 import { useSessionPages } from './use-session-pages';
 
@@ -103,9 +105,17 @@ function useSessionsViewProps(
   };
 }
 
-// The Sessions list: its queries and live updates, passed to the view as props.
+// The Sessions list: its queries and live updates, passed to the view as props, and the dialog that renames a row's Session.
 export function LiveSessionList(
   props: LiveSessionListProps,
 ): React.JSX.Element {
-  return <SessionListView {...useSessionsViewProps(props)} />;
+  const view = useSessionsViewProps(props);
+  const rename = useRenameSession(view.sessions);
+
+  return (
+    <>
+      <SessionListView {...view} onRename={rename.onRename} />
+      <RenameSessionDialog {...rename.dialog} />
+    </>
+  );
 }

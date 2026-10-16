@@ -11,6 +11,8 @@ import {
   SessionListInput,
   SessionListOutput,
   SessionListUpdate,
+  SessionMarkSeenInput,
+  SessionMarkSeenOutput,
   SessionNewInput,
   SessionNewOutput,
   SessionOpenInput,
@@ -44,6 +46,7 @@ import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
 import { renameSession } from './session-rename';
+import { markSessionSeen } from './session-seen';
 import { createShellSessionRouter } from './shells/router';
 import { createSubagentsReader } from './subagents';
 import { unimplementedSessionRouter } from './unimplemented-router';
@@ -82,6 +85,15 @@ const createCountsRouter = routerFactory((sessionList: SessionList) =>
       }): AsyncGenerator<SessionCounts, void> {
         yield* sessionList.counts(signal);
       }),
+  }),
+);
+
+const createSeenRouter = routerFactory((deps: SessionRouterDeps) =>
+  router({
+    markSeen: publicProcedure
+      .input(SessionMarkSeenInput)
+      .output(SessionMarkSeenOutput)
+      .mutation(({ input }) => markSessionSeen(deps, input)),
   }),
 );
 
@@ -168,6 +180,7 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createListRouter(sessionList),
     createListUpdatesRouter(sessionList),
     createCountsRouter(sessionList),
+    createSeenRouter(deps),
     createStartRouter(deps),
     createStopRouter(deps),
     createArchiveRouter(deps),

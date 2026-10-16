@@ -25,6 +25,7 @@ import {
   toSessionViewProps,
 } from './session-detail-view-props';
 import { SessionNewScreen } from './session-new-screen';
+import { useMarkSeen } from './use-mark-seen';
 import { useSessionCallout } from './use-session-callout';
 import {
   type SessionCommands,
@@ -89,7 +90,8 @@ type SessionSurroundings =
   | 'imageUrl'
   | 'connected'
   | 'elicitation'
-  | 'mergeMethod';
+  | 'mergeMethod'
+  | 'onAtEndChange';
 
 function useSessionSurroundings(
   sessionId: string,
@@ -102,6 +104,7 @@ function useSessionSurroundings(
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
     mergeMethod: useMergeMethod(),
+    onAtEndChange: useMarkSeen(sessionId, feed.revision),
   };
 }
 

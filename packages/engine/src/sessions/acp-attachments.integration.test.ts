@@ -49,7 +49,6 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         initialize: {
           protocolVersion: 1,
           agentCapabilities: {
-            _meta: { authStatus: {} },
             promptCapabilities: { embeddedContext: true },
             sessionCapabilities: { close: {} },
           },
@@ -172,7 +171,6 @@ const promptWithUpload = async (
     initialize: {
       protocolVersion: 1,
       agentCapabilities: {
-        _meta: { authStatus: {} },
         promptCapabilities: { embeddedContext },
         sessionCapabilities: { close: {} },
       },

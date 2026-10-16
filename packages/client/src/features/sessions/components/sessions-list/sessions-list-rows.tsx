@@ -99,6 +99,8 @@ export type SessionListRowProps = Pick<
   | 'layout'
   | 'position'
   | 'onSelect'
+  | 'onRename'
+  | 'onArchive'
 > & {
   // Fades the row in as it mounts.
   animate?: boolean;

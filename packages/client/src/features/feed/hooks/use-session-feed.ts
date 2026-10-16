@@ -153,6 +153,7 @@ export function useSessionFeed(sessionId: string | undefined): SessionFeed {
 
   return {
     view,
+    revision: feed.revision,
     liveToolCall: findLiveToolCall(feed.rows, snapshot),
     snapshot,
     // The first page and the snapshot have both arrived.

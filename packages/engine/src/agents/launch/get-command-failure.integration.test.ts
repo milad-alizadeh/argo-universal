@@ -1,11 +1,7 @@
-import { zipSync } from 'fflate';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import {
-  installEntry,
-  installationExecutable,
-  installationPorts,
-} from '#mocks/installation';
+import { installEntry, installationPorts } from '#mocks/installation';
+import { binaryRejections } from '#mocks/launch-archives';
 import { getCommand } from './get-command';
 
 it.each(['missing', 'uvx'] as const)(
@@ -110,29 +106,7 @@ it('rejects Node below 22 when neither shell nor bundled runtime can launch an n
   ).rejects.toThrow('failed Node.js 22 or newer is required');
 });
 
-it.each([
-  {
-    failure: 'invalid command',
-    cmd: '../escape',
-    suffix: '',
-    bytes: installationExecutable,
-    message: 'Registry command must be',
-  },
-  {
-    failure: 'unsupported archive',
-    cmd: './agent',
-    suffix: '.tar.xz',
-    bytes: installationExecutable,
-    message: 'Unsupported Agent archive format',
-  },
-  {
-    failure: 'missing file',
-    cmd: './agent',
-    suffix: '.zip',
-    bytes: zipSync({ wrong: new Uint8Array() }),
-    message: 'ENOENT',
-  },
-])(
+it.each(binaryRejections)(
   'rejects $failure before publishing a usable binary',
   async ({ cmd, suffix, bytes, message }) => {
     const entry = installEntry('binary');
@@ -149,7 +123,7 @@ it.each([
 
     const ports = {
       ...installationPorts,
-      download: async (): Promise<Uint8Array> => bytes,
+      download: bytes,
     };
 
     await expect(

@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { RegistryIcon } from '#features/agents';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { AgentChoices } from './agent-picker-choices';
@@ -22,6 +23,8 @@ function AgentPicker(props: StartSessionInProps): React.JSX.Element {
     <ComposerPopover
       listContent
       label="Select Agent"
+      width={260}
+      contentClassName="composer-popover bg-card rounded-2xl border-0 p-2 gap-2 overflow-hidden"
       trigger={agentTrigger(props)}
     >
       {(close) => <AgentChoices {...props} close={close} />}
@@ -30,12 +33,32 @@ function AgentPicker(props: StartSessionInProps): React.JSX.Element {
 }
 
 function agentTrigger(props: StartSessionInProps): React.JSX.Element {
+  return <MenuTrigger {...agentTriggerProps(props.agent, props.disabled)} />;
+}
+
+function agentTriggerProps(
+  current: StartSessionInProps['agent'],
+  disabled: boolean | undefined,
+): React.ComponentProps<typeof MenuTrigger> {
+  return {
+    icon: agentIcon(current),
+    leading: selectedAgentIcon(current),
+    label: current?.name ?? 'Select Agent',
+    accessibilityLabel: 'Select Agent',
+    disabled,
+  };
+}
+
+function agentIcon(current: StartSessionInProps['agent']): 'agent' | undefined {
+  return current ? undefined : 'agent';
+}
+
+function selectedAgentIcon(
+  current: StartSessionInProps['agent'],
+): React.JSX.Element | undefined {
+  if (!current) return undefined;
+
   return (
-    <MenuTrigger
-      icon="agent"
-      label={props.agent?.name ?? 'Select Agent'}
-      accessibilityLabel="Select Agent"
-      disabled={props.disabled}
-    />
+    <RegistryIcon uri={current.icon} agentName={current.name} role="control" />
   );
 }

@@ -83,6 +83,9 @@ function inputBehaviour(props: PhoneFieldProps): InputProps {
     keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
     autoCapitalize: 'none',
     autoCorrect: false,
+    autoFocus: props.focusOnOpen,
+    selectTextOnFocus: props.selectOnFocus,
+    onSubmitEditing: props.onSubmit,
   };
 }
 

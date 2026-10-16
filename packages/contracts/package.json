@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./auth-status-schema": "./src/agents/upstream/auth-status-schema.gen.json",
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",
     "./plugins/runtime": "./src/plugins/runtime.ts",
@@ -27,7 +26,6 @@
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
     "json-schema-to-typescript": "catalog:",
-    "ts-json-schema-generator": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
