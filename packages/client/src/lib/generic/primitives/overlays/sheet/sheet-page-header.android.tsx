@@ -3,6 +3,7 @@ import { Icon, IconButton, Row, Text } from '@expo/ui/jetpack-compose';
 import {
   type ModifierConfig,
   fillMaxWidth,
+  height,
   padding,
   semantics,
   weight,
@@ -21,7 +22,7 @@ export function PageHeader(props: HeaderProps): ReactElement | null {
   if (!showHeader(props)) return null;
 
   return (
-    <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
+    <Row verticalAlignment="center" modifiers={headerModifiers}>
       {!props.root && <BackButton stack={props.stack} />}
       <Text
         maxLines={1}
@@ -33,6 +34,11 @@ export function PageHeader(props: HeaderProps): ReactElement | null {
     </Row>
   );
 }
+
+// The back button's 48 dp: a root page's title sits where a pushed page's does.
+const headerHeight = 48;
+
+const headerModifiers = [fillMaxWidth(), height(headerHeight)];
 
 // Material's top app bar title.
 const titleStyle = { typography: 'titleLarge' } as const;
