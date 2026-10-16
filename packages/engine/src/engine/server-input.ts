@@ -14,8 +14,6 @@ type ServerSource = {
     | 'createId'
     | 'commandAdmission'
     | 'acp'
-    | 'loginTimeoutMs'
-    | 'loginCleanupTimeoutMs'
     | 'notificationOptions'
     | 'home'
     | 'port'
@@ -37,8 +35,6 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   registry: requireRegistry(self.system),
   commandAdmission: context.commandAdmission,
   acp: context.acp,
-  loginTimeoutMs: context.loginTimeoutMs,
-  loginCleanupTimeoutMs: context.loginCleanupTimeoutMs,
   ...serverConfiguration(context),
   database: openDatabaseOf(context),
 });

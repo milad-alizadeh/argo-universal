@@ -130,7 +130,6 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
         initialize: {
           protocolVersion: 1,
           agentCapabilities: {
-            _meta: { authStatus: {} },
             sessionCapabilities: { close: {}, resume: {} },
           },
         },

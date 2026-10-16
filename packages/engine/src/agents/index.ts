@@ -11,25 +11,17 @@ export type {
   LaunchLoginTerminal,
 } from './agent-launch';
 
-export { type FetchAgents } from './registry/fetch-agents';
+export type { FetchAgents } from './registry/fetch-agents';
 
-export { defaultInstallPorts } from './install/default-ports';
+export { defaultInstallPorts } from './launch/default-ports';
 
-export type { InstallPorts } from './install/ports';
-
-export { reconcileInterruptedInstallations } from './install/lifecycle/reconcile';
-
-export type { InstallToolInput } from './install/ports';
+export type { InstallPorts } from './launch/ports';
 
 export {
   registryMachine,
   type RegistryActor,
   type RegistryInput,
 } from './registry/registry-machine';
-
-export { getCommand } from './launch/get-command';
-
-export type { CommandInput, RegistryCommand } from './launch/types';
 
 export { sessionOpenError } from './acp/open-error';
 
@@ -41,3 +33,5 @@ export {
   type InstalledAgent,
   type InstalledAgents,
 } from './servers/installed-agents';
+
+export { ShellProcessRecord } from './acp/shell-commands/shell-process-record';

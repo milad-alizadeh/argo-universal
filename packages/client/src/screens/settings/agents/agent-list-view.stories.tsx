@@ -4,6 +4,7 @@ import {
   agentListArgs,
   emptyCatalog,
   longCatalog,
+  pageRows,
 } from './agent-list-view.mocks';
 
 const notInstalled = 'not-installed';
@@ -31,24 +32,24 @@ export const Installed: Story = { args: { initialFilter: 'installed' } };
 
 export const NotInstalled: Story = { args: { initialFilter: notInstalled } };
 
-export const Loading: Story = { args: { catalog: { status: 'loading' } } };
-
-export const RegistryError: Story = { args: { catalog: { status: 'failed' } } };
-
-export const Empty: Story = {
-  args: { catalog: { status: 'loaded', catalog: emptyCatalog }, installed: [] },
+export const Loading: Story = {
+  args: { agents: pageRows(undefined, { status: 'loading' }) },
 };
 
+export const RegistryError: Story = {
+  args: { agents: pageRows(undefined, { status: 'failed' }) },
+};
+
+const noAgents = pageRows([], { status: 'loaded', registry: emptyCatalog });
+
+export const Empty: Story = { args: { agents: noAgents } };
+
 export const EmptyInstalled: Story = {
-  args: { initialFilter: 'installed', installed: [] },
+  args: { initialFilter: 'installed', agents: pageRows([]) },
 };
 
 export const EmptyNotInstalled: Story = {
-  args: {
-    initialFilter: notInstalled,
-    catalog: { status: 'loaded', catalog: emptyCatalog },
-    installed: [],
-  },
+  args: { initialFilter: notInstalled, agents: noAgents },
 };
 
 export const SearchEmpty: Story = { args: { initialSearch: unmatchedSearch } };
@@ -62,5 +63,7 @@ export const SearchEmptyNotInstalled: Story = {
 };
 
 export const LongRegistry: Story = {
-  args: { catalog: { status: 'loaded', catalog: longCatalog }, installed: [] },
+  args: {
+    agents: pageRows([], { status: 'loaded', registry: longCatalog }),
+  },
 };

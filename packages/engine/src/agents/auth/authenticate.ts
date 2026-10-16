@@ -2,7 +2,7 @@ import type {
   AgentAuthChange,
   AgentAuthenticateOutput,
   AgentAuthState,
-  AgentLoginTerminalInput,
+  AgentAuthTerminalInput,
   AgentAuthTerminalFrame,
 } from '@repo/contracts';
 import {
@@ -161,7 +161,7 @@ export class ConnectionAuthentication {
       this.terminal?.read(cursor) ?? { cursor: 0, output: '', closed: true }
     );
   }
-  public inputTerminal(input: AgentLoginTerminalInput): void {
+  public inputTerminal(input: AgentAuthTerminalInput): void {
     if (!this.terminal) throw new Error('Sign-in terminal is not running');
     this.terminal.input(input);
   }

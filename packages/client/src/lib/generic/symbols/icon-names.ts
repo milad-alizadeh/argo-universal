@@ -101,7 +101,7 @@ export const iconSymbols = {
   plug: { sf: 'powerplug', material: 'power' },
   private: { sf: 'lock', material: 'lock' },
   read: { sf: 'book', material: 'menu_book' },
-  rename: { sf: 'character.cursor.ibeam', material: 'edit_note' },
+  rename: { sf: 'pencil', material: 'edit' },
   reorder: { sf: 'arrow.up.arrow.down', material: 'drag_indicator' },
   reply: { sf: 'arrowshape.turn.up.left', material: 'reply' },
   resource: { sf: 'square.dashed', material: 'select' },

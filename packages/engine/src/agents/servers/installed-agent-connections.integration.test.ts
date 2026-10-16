@@ -13,7 +13,7 @@ import {
   type ScriptedProcess,
 } from '#mocks/scripted-agent';
 import type { AcpSessionLease } from '../acp';
-import type { InstallPorts } from '../install/ports';
+import type { InstallPorts } from '../launch/ports';
 
 type ConnectionHost = {
   open: (signal?: AbortSignal) => Promise<AcpSessionLease>;

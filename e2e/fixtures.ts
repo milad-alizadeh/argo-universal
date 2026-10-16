@@ -43,6 +43,8 @@ export type App = {
   projectPath: string;
   requestLogPath: string;
   restartEngine: (whileStopped: () => Promise<void>) => Promise<void>;
+  // Another page of the web App on the same Server, as a second device.
+  openPage?: () => Promise<Page>;
   desktop?: {
     application: ElectronApplication;
     home: string;
@@ -89,6 +91,12 @@ export const test = base.extend<
           installationPath: server.installationPath,
           ...serverFiles(serverDirectory),
           restartEngine: server.restart,
+          openPage: async (): Promise<Page> => {
+            const other = await context.newPage();
+            await pointAppAtServer(other, server.serverUrl);
+
+            return other;
+          },
         });
       } finally {
         await server.stop();

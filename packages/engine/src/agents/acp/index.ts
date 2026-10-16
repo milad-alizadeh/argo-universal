@@ -1,7 +1,5 @@
 export { AgentProcessExitError } from './process';
 
-export { releaseLoginTerminalGroups } from './login-terminal/terminal-record';
-
 export { createAcpResources } from './resources/resources';
 
 export { createAcpResponseReaders } from './connection/response-readers';

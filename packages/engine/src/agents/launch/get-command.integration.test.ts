@@ -3,8 +3,8 @@ import { fixtureRegistryIds } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { installEntry, installationPorts } from '#mocks/installation';
-import type { InstallPorts } from '../install/ports';
 import { getCommand } from './get-command';
+import type { InstallPorts } from './ports';
 import type { CommandInput } from './types';
 
 const kinds = ['binary', 'npx'] as const;

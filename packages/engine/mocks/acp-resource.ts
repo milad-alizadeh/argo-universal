@@ -1,10 +1,6 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { AgentLaunch, DeferredAgentLaunch } from '../src/agents';
-import type {
-  AcpOpenInput,
-  AcpSessionDestination,
-  AcpSessionLease,
-} from '../src/agents';
+import type { AcpOpenInput, AcpSessionDestination } from '../src/agents';
 
 export const resourceLaunch: AgentLaunch = {
   projectId: 'project',
@@ -52,7 +48,6 @@ export const resourceInitialization = {
   agentCapabilities: {
     loadSession: true,
     sessionCapabilities: { close: {}, resume: {} },
-    _meta: { authStatus: {} },
   },
 };
 
@@ -65,21 +60,3 @@ export const createResourceUpdate = (
     content: { type: 'text', text: sessionId },
   },
 });
-
-interface AcpReleaseObservation {
-  state: { settled: boolean };
-  promise: Promise<void>;
-}
-
-export const observeAcpRelease = (
-  lease: AcpSessionLease,
-): AcpReleaseObservation => {
-  const state = { settled: false };
-
-  return {
-    state,
-    promise: lease.released.then(() => {
-      state.settled = true;
-    }),
-  };
-};

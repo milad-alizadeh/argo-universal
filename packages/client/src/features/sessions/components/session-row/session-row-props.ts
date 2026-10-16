@@ -17,6 +17,10 @@ export interface SessionRowProps {
   // A Compact row's place among its Project's Sessions, which a phone draws as one grouped list section.
   position?: VirtualListPosition;
   onSelect: (sessionId: string) => void;
+  // Desktop and the web: a double-click, or Rename in the row's context menu, starts renaming the Session.
+  onRename?: (sessionId: string) => void;
+  // Archive in the row's context menu.
+  onArchive?: (sessionId: string) => void;
 }
 
 export const sessionRowLabel = (session: SessionInfo): string =>

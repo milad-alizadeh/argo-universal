@@ -42,8 +42,8 @@ type Layout = keyof typeof layoutWidths;
 
 const dialogName = { name: 'Rename the Project' };
 
-// A phone raises a sheet that the backdrop, a swipe or Escape closes, so it has no close button; a wide window centres a dialog with one.
-const closeButtonsAt: Record<Layout, number> = { phone: 0, tablet: 0, wide: 1 };
+// A phone raises a sheet that the backdrop, a swipe or Escape closes, so it has no close button; from medium up a centred dialog has one.
+const closeButtonsAt: Record<Layout, number> = { phone: 0, tablet: 1, wide: 1 };
 
 const body = within(document.body);
 
@@ -67,6 +67,8 @@ function opensAt(layout: Layout): Story {
 }
 
 export const SheetOnPhone: Story = opensAt('phone');
+
+export const CentredOnTablet: Story = opensAt('tablet');
 
 export const CentredOnDesktop: Story = opensAt('wide');
 
@@ -177,3 +179,5 @@ function cancelsAt(layout: Layout): Story {
 export const SheetClosesOnCancel: Story = cancelsAt('phone');
 
 export const DialogClosesOnCancel: Story = cancelsAt('wide');
+
+export const TabletDialogClosesOnCancel: Story = cancelsAt('tablet');

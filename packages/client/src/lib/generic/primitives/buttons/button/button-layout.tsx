@@ -1,4 +1,5 @@
 import type { ComponentType, ReactElement } from 'react';
+import { useInCentredOverlay } from '#primitives/overlays/centred-overlay';
 import { useWide } from '../../../use-wide/use-wide';
 import type { ButtonProps, ButtonSize, ButtonVariant } from './button-props';
 
@@ -27,8 +28,12 @@ function narrowLayout<Props extends ButtonProps>(props: Props): Props {
   };
 }
 
+// A centred dialog or sheet keeps the wide layout on a medium window too.
 function useWidthLayout<Props extends ButtonProps>(props: Props): Props {
-  if (useWide()) return { ...props, fullWidth: props.fullWidth === true };
+  const wide = useWide();
+  const centred = useInCentredOverlay();
+
+  if (wide || centred) return { ...props, fullWidth: props.fullWidth === true };
 
   return phoneLayout(props);
 }

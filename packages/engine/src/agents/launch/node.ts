@@ -1,7 +1,6 @@
 import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { delimiter, dirname, join } from 'node:path';
-import { InstallCleanupError } from '../install/processes/process-cleanup';
 import { probeNode } from './node-probe';
 import type { CommandInput as NodeInput } from './types';
 
@@ -23,8 +22,7 @@ const usableNode = async (
     return (
       Number(version.trim().replace(/^v/, '').split('.')[0]) >= minimumMajor
     );
-  } catch (error) {
-    if (error instanceof InstallCleanupError) throw error;
+  } catch {
     input.signal.throwIfAborted();
 
     return false;

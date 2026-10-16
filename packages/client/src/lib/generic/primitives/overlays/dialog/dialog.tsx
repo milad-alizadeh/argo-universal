@@ -3,6 +3,10 @@ import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Button } from '#primitives/buttons/button';
 import type { ButtonDataProps } from '#primitives/buttons/button';
+import {
+  CentredOverlayScope,
+  useInCentredOverlay,
+} from '#primitives/overlays/centred-overlay';
 import { DialogBody } from './dialog-body';
 import { useDialogState } from './dialog-context';
 import { DialogOverlay } from './dialog-overlay';
@@ -26,11 +30,11 @@ function Dialog(props: DialogProps): React.JSX.Element {
   return <DialogRoot {...props} />;
 }
 
-// A wide window centres the dialog; a narrow one, phone or web, raises the same content as a bottom sheet.
+// The web centres the dialog from the medium size class up; a compact web window, and a phone or tablet at any width, raises the same content as a sheet.
 function DialogContent(props: ContentProps): React.JSX.Element {
   const presentation = useDialogPresentation();
 
-  if (presentation.wide) return <CentredDialog {...props} />;
+  if (presentation.centred) return <CentredDialog {...props} />;
 
   return <NarrowDialog {...props} presentation={presentation} />;
 }
@@ -42,7 +46,6 @@ function NarrowDialog({
   return (
     <DialogSheet
       open={presentation.sheetOpen}
-      onClosed={presentation.onSheetClosed}
       label={props.accessibilityLabel}
       dismissible={props.dismissible}
     >
@@ -66,7 +69,9 @@ function CentredDialog(props: ContentProps): React.JSX.Element {
   return (
     <DialogPortal>
       <DialogOverlay dismissible={props.dismissible}>
-        <DialogBody {...props} />
+        <DialogBody {...props}>
+          <CentredOverlayScope>{props.children}</CentredOverlayScope>
+        </DialogBody>
       </DialogOverlay>
     </DialogPortal>
   );
@@ -81,11 +86,15 @@ function DialogHeader({ className, ...props }: ViewProps): React.JSX.Element {
   );
 }
 
+// A centred dialog lines its actions up at the trailing edge; a sheet stacks them, the main action on top.
 function DialogFooter({ className, ...props }: ViewProps): React.JSX.Element {
+  const centred = useInCentredOverlay();
+
   return (
     <View
       className={cn(
-        'flex flex-col-reverse gap-2 wide:flex-row wide:justify-end',
+        'flex gap-2',
+        centred ? 'flex-row justify-end' : 'flex-col-reverse',
         className,
       )}
       {...props}

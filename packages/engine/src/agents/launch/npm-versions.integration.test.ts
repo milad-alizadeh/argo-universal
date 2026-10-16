@@ -8,8 +8,8 @@ import {
 import { startEngineTestHost } from '#mocks/engine';
 import { installEntry, installationPorts } from '#mocks/installation';
 import type { AcpResources } from '../index';
-import type { InstallPorts } from '../install/ports';
 import { getCommand } from './get-command';
+import type { InstallPorts } from './ports';
 import type { CommandInput, RegistryCommand } from './types';
 
 const isInstall = (tool: Parameters<InstallPorts['runTool']>[0]): boolean =>

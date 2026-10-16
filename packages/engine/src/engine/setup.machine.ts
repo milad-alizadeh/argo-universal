@@ -70,8 +70,6 @@ export interface EngineInput extends Pick<
   keychain?: Keychain;
   startedAt: string;
   acp?: AcpResourceInput;
-  loginTimeoutMs?: number;
-  loginCleanupTimeoutMs?: number;
   fetchAgents?: FetchAgents;
   installationPorts?: InstallPorts;
   caffeinate?: Caffeinate;

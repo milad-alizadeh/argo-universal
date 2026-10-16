@@ -2,9 +2,9 @@ import type * as React from 'react';
 import { Icon } from '#primitives/display/icon';
 import type { SelectedCheckProps } from './selected-check-props';
 
+// A row's trailing check sits beside its label, so it takes the size of an icon beside Body text.
 export function SelectedCheck({
   className,
-  role = 'mark',
 }: SelectedCheckProps): React.JSX.Element {
-  return <Icon name="check" role={role} className={className} />;
+  return <Icon name="check" role="body" className={className} />;
 }

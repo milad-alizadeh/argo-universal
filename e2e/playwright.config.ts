@@ -27,6 +27,9 @@ const repositoryRoot = path.resolve(import.meta.dirname, '..');
 // A free port per run, so runs in several worktrees never meet; workers inherit it from the runner, which loads this file first.
 process.env.ARGO_E2E_WEB_PORT ??= String(await findFreePort());
 
+// These scenarios take real OS focus (app.focus, native dialogs), so a local run skips them; CI, or ARGO_E2E_FOCUS=1, runs them.
+const takesFocus = !!process.env.CI || process.env.ARGO_E2E_FOCUS === '1';
+
 const webPort = process.env.ARGO_E2E_WEB_PORT;
 
 const webUrl = `http://127.0.0.1:${webPort}`;
@@ -66,7 +69,7 @@ export default defineConfig<AppOptions & ServerOptions>({
     {
       name: 'electron',
       grep: /@smoke/,
-      grepInvert: /@web-only/,
+      grepInvert: takesFocus ? /@web-only/ : /@web-only|@needs-focus/,
       use: { appTarget: 'electron' },
     },
   ],

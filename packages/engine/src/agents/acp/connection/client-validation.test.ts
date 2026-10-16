@@ -31,16 +31,6 @@ it.each([
     diagnostics: ['Error handling notification'],
   },
   {
-    label: 'malformed authentication status',
-    method: '_auth/status_update',
-    params: { authStatus: 42 },
-    diagnostics: [
-      expect.stringMatching(/Rejected authentication status/),
-      'Error handling notification',
-    ],
-    authRejections: 1,
-  },
-  {
     label: 'unknown notification',
     method: 'future/update',
     params: { anything: 'allowed' },
@@ -48,9 +38,8 @@ it.each([
   },
 ])(
   'keeps $label outside the typed Session ingress with one SDK diagnostic at most',
-  async ({ method, params, diagnostics, authRejections = 0 }) => {
+  async ({ method, params, diagnostics }) => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const rejectAuthStatus = vi.fn<() => void>();
 
     const peer = createScriptedAgentWire({
       steps: [],
@@ -65,8 +54,6 @@ it.each([
       acceptSessionUpdate: (notification) => {
         accepted.push(notification);
       },
-      acceptAuthStatus: (notification) => accepted.push(notification),
-      rejectAuthStatus,
     });
 
     const barrier = connection.agent.request('session/new', {
@@ -85,7 +72,6 @@ it.each([
     await expect
       .poll(() => log.mock.calls.map(([line]) => line))
       .toEqual(diagnostics);
-    expect(rejectAuthStatus).toHaveBeenCalledTimes(authRejections);
     connection.close();
     await connection.closed;
   },

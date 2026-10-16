@@ -42,7 +42,7 @@ const loginEnvironment = (directory: string): void => {
 
 type LoginProject = { directory: string; bin: string };
 
-export const loginProject = (): LoginProject => {
+const loginProject = (): LoginProject => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-shell-env-'));
   onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
   const bin = join(directory, 'bin');

@@ -2,16 +2,15 @@ import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rename, rm, chmod } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type { BinaryTarget } from '@repo/contracts';
-import { extractBinaryFiles } from '../install/materialization/archive';
-import { executableMode } from '../install/materialization/archive-budget';
-import {
-  checkInstallationFile,
-  installationPath,
-} from '../install/materialization/files';
-import { InstallCleanupError } from '../install/processes/process-cleanup';
 import { resolveRegistryServerPlatform } from '../registry/platform';
 import { binarySource, serializeBinary } from './binary-cache';
 import { githubDigest } from './github-digest';
+import { extractBinaryFiles } from './materialization/archive';
+import {
+  checkInstallationFile,
+  installationPath,
+} from './materialization/files';
+import { executableMode } from './materialization/limits';
 import { resolveNode } from './node';
 import type { CommandInput, EntryInput, RegistryCommand } from './types';
 import {
@@ -95,7 +94,7 @@ const materialize = async (input: BinaryInput): Promise<void> => {
     await extract(input, staging);
     await rename(staging, input.directory);
   } catch (error) {
-    await cleanStaging(staging, error instanceof InstallCleanupError);
+    await rm(staging, { recursive: true, force: true });
     throw error;
   }
 };
@@ -168,10 +167,3 @@ const resolvedBinary = (
   directory: input.directory,
   version: input.entry.version,
 });
-
-const cleanStaging = async (
-  directory: string,
-  cleanupUncertain: boolean,
-): Promise<void> => {
-  if (!cleanupUncertain) await rm(directory, { recursive: true, force: true });
-};

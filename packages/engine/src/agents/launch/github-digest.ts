@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { InstallPorts } from '../install/ports';
+import type { InstallPorts } from './ports';
 
 const Release = z.object({
   assets: z.array(

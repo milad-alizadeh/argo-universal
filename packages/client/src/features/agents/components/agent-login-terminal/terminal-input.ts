@@ -1,4 +1,4 @@
-import { loginTerminalInputLimit } from '@repo/contracts';
+import { authTerminalInputLimit } from '@repo/contracts';
 
 const controlOffset = 64;
 
@@ -15,7 +15,7 @@ export function* terminalInputChunks(text: string): Generator<string> {
   let chunk = '';
 
   for (const character of text) {
-    if (chunk.length + character.length > loginTerminalInputLimit) {
+    if (chunk.length + character.length > authTerminalInputLimit) {
       yield chunk;
       chunk = '';
     }

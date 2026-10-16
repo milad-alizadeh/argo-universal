@@ -1,4 +1,4 @@
-import type { AgentLoginTerminalInput } from '@repo/contracts';
+import type { AgentAuthTerminalInput } from '@repo/contracts';
 import type { AuthenticationMethod } from '../acp/auth-methods';
 import type { AgentLaunch, LoginTerminalProcess } from '../agent-launch';
 
@@ -6,7 +6,7 @@ export type TerminalResult = 'matched' | { exitCode: number; signal?: number };
 
 export const applyTerminalInput = (
   child: LoginTerminalProcess,
-  input: AgentLoginTerminalInput,
+  input: AgentAuthTerminalInput,
 ): void => {
   switch (input.type) {
     case 'write':

@@ -1,7 +1,7 @@
 import type { ACPAgent } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import type { InstallPorts } from '../install/ports';
 import type { RegistryActor } from '../registry/registry-machine';
+import type { InstallPorts } from './ports';
 
 export type CommandInput = {
   database: Database;

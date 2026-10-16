@@ -6,12 +6,9 @@ import {
   startTerminalAuth,
   subject,
   terminalStartup,
-  isolateTerminalHome,
 } from '#mocks/auth-terminal';
 
 const ignoresHangup = ['--interactive-login', '--ignore-hangup'];
-
-isolateTerminalHome();
 
 const isRunning = (pid: number): boolean => {
   try {
