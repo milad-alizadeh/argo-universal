@@ -1,11 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { contentActionClass } from '#primitives/buttons/button';
 import { Text } from '#primitives/display/text';
-import { Pressable } from '#primitives/pressable';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Menu, type MenuAction } from './menu';
+import { MenuTrigger } from './menu-trigger';
 
 const choices = [
   { value: 'default', label: 'Default' },
@@ -52,18 +51,7 @@ function renderPermissionsTrigger(
   disabled: boolean,
   label: string | undefined,
 ): React.JSX.Element {
-  return (
-    <Pressable role="button" disabled={disabled} className={triggerClassName()}>
-      <Text>{label}</Text>
-    </Pressable>
-  );
-}
-
-function triggerClassName(): string {
-  return contentActionClass({
-    variant: 'ghost',
-    className: 'android:h-auto android:min-h-10',
-  });
+  return <MenuTrigger label={label ?? ''} icon="rules" disabled={disabled} />;
 }
 
 const ranges = ['Today', 'This week', 'This month'];

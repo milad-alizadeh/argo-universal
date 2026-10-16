@@ -5,7 +5,7 @@ import { useContentWide } from '#lib/product/content-layout';
 import {
   SplitButton,
   type SplitButtonOption,
-  type SplitMenuProps,
+  type SplitButtonProps,
 } from '#primitives/buttons/split-button';
 import { RequestAction } from '../request-card/request-card';
 import type { PermissionChoices } from './permission-choices';
@@ -33,7 +33,7 @@ type LedGroupProps = Omit<PermissionActionsProps, 'choices' | 'leads'> & {
 type OptionActionProps = Pick<
   PermissionActionsProps,
   'main' | 'disabled' | 'label' | 'onChoose'
-> & { option: PermissionOption; className?: string };
+> & { option: PermissionOption };
 
 const menuLabels = { allow: 'Allow options', reject: 'Reject options' };
 
@@ -77,32 +77,33 @@ function OptionGroup({ group, ...props }: GroupProps): ReactNode {
 }
 
 function OptionSplitButton(group: LedGroupProps): ReactNode {
-  const wide = useContentWide();
-
-  return (
-    <SplitButton {...splitChoices(group)} narrow={!wide}>
-      <OptionAction
-        {...group}
-        option={group.lead}
-        className={wide ? undefined : 'flex-1'}
-      />
-    </SplitButton>
-  );
+  return <SplitButton {...splitChoices(group)} narrow={!useContentWide()} />;
 }
 
-// The group in SplitButton's terms: option ids as values, the lead as the chosen one.
+// The group in SplitButton's terms: the lead's name and press, option ids as values, the lead as the chosen one.
 function splitChoices({
   options,
   lead,
   ...props
-}: LedGroupProps): SplitMenuProps<string> {
+}: LedGroupProps): SplitButtonProps<string> {
   return {
+    ...leadAction({ ...props, lead }),
     options: options.map(asChoice),
     value: lead.optionId,
     onValueChange: (optionId) => pickById(options, optionId, props.onPick),
     menuLabel: props.menuLabel,
     primary: lead === props.main,
     disabled: props.disabled,
+  };
+}
+
+// The acting half: the lead's name, and choosing it.
+function leadAction(
+  group: Pick<LedGroupProps, 'lead' | 'label' | 'onChoose'>,
+): Pick<SplitButtonProps, 'label' | 'onPress'> {
+  return {
+    label: group.label(group.lead),
+    onPress: () => group.onChoose(group.lead),
   };
 }
 
@@ -121,7 +122,6 @@ function OptionAction({ option, ...props }: OptionActionProps): ReactNode {
     <RequestAction
       primary={option === props.main}
       disabled={props.disabled}
-      className={props.className}
       onPress={() => props.onChoose(option)}
     >
       {props.label(option)}

@@ -2,16 +2,12 @@ import {
   type NativeMenuItem,
   nativeMenuItems,
 } from '#primitives/overlays/menu';
-import {
-  type ActingButton,
-  actingButton,
-  splitEnabled,
-} from './split-button-acting';
 import type { SplitButtonProps, SplitMenuItems } from './split-button-props';
 
 // Everything a phone's native split draws, read from SplitButton's props; the menu rows are the kit Menu's.
 export interface NativeSplit {
-  acting: ActingButton;
+  // The primary action: the acting button's name and press.
+  acting: Pick<SplitButtonProps, 'label' | 'onPress'>;
   items: NativeMenuItem[];
   menuLabel: string;
   primary: boolean;
@@ -19,18 +15,16 @@ export interface NativeSplit {
   size?: SplitButtonProps['size'];
 }
 
-export function nativeSplit<Value extends string>({
-  children,
-  ...props
-}: SplitButtonProps<Value>): NativeSplit {
-  const acting = actingButton(children.props);
-
+export function nativeSplit<Value extends string>(
+  props: SplitButtonProps<Value>,
+): NativeSplit {
   return {
-    acting,
+    acting: { label: props.label, onPress: props.onPress },
     items: nativeMenuItems(menuRows(props)),
     menuLabel: props.menuLabel,
     primary: props.primary === true,
-    enabled: splitEnabled(props, acting),
+    // The native split is one control, on or off as a whole.
+    enabled: !props.disabled,
     size: props.size,
   };
 }

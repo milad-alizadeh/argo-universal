@@ -18,12 +18,12 @@ interface TrailingProps {
   wide: boolean;
 }
 
+// What sits between the model and the trigger's chevron: the effort, wide, and whether fast mode is on.
 export function AgentModelTrailing(props: TrailingProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-1.5">
       <EffortLabel {...props} />
       <FastModeIndicator configuration={props.configuration} />
-      <AgentModelChevron wide={props.wide} />
     </View>
   );
 }
@@ -37,20 +37,6 @@ function FastModeIndicator({
 
   return fastOn ? (
     <Icon role="control" name="fast-mode" filled testID="fast-mode-on" />
-  ) : null;
-}
-
-function AgentModelChevron({
-  wide,
-}: {
-  wide: boolean;
-}): React.JSX.Element | null {
-  return wide ? (
-    <Icon
-      name="chevron-down"
-      role="control"
-      className="text-muted-foreground"
-    />
   ) : null;
 }
 
@@ -73,7 +59,7 @@ function CurrentEffortLabel({
   const selected = currentEffort(configuration).selected;
 
   return selected ? (
-    <Text role="control" className="text-muted-foreground">
+    <Text role="row" tone="muted" numberOfLines={1}>
       {selected.name}
     </Text>
   ) : null;

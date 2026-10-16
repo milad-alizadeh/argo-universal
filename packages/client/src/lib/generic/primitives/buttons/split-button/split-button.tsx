@@ -1,12 +1,13 @@
 import type * as React from 'react';
 import {
+  type ComponentProps,
   type ReactElement,
   type ReactNode,
-  cloneElement,
   useState,
 } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { DrawnButton } from '#primitives/buttons/button';
 import { ButtonGroup } from '#primitives/buttons/button-group';
 import { Menu } from '#primitives/overlays/menu';
 import { chevron } from './split-button-chevron';
@@ -19,23 +20,31 @@ export type {
   SplitMenuProps,
 } from './split-button-props';
 
-type GroupLook = Pick<
-  SplitMenuProps,
-  'size' | 'primary' | 'disabled' | 'className'
+type DrawnButtonProps = ComponentProps<typeof DrawnButton>;
+
+type GroupLook = Pick<SplitMenuProps, 'size' | 'primary' | 'disabled'>;
+
+// What the acting half reads.
+type ActingLook = Pick<
+  SplitButtonProps,
+  'label' | 'icon' | 'onPress' | 'disabled' | 'size' | 'primary' | 'narrow'
 >;
 
-type ActingButton = SplitButtonProps['children'];
+// ButtonGroup joins its items by passing each a className.
+type JoinedMenuProps<Value extends string> = SplitMenuProps<Value> & {
+  height?: number;
+  className?: string;
+};
 
 // A button with a chevron that picks what it does or opens actions of its own, from Argo's menu; phones draw it natively.
-export function SplitButton<Value extends string>({
-  children,
-  ...props
-}: SplitButtonProps<Value>): React.JSX.Element {
+export function SplitButton<Value extends string>(
+  props: SplitButtonProps<Value>,
+): React.JSX.Element {
   const [height, onLayout] = useGroupHeight();
 
   return (
     <ButtonGroup className={groupClassName(props)} onLayout={onLayout}>
-      {leadingItems(children, props)}
+      {leadingItems(props)}
       <SplitMenu {...props} height={height} />
     </ButtonGroup>
   );
@@ -43,30 +52,51 @@ export function SplitButton<Value extends string>({
 
 // The compact split dims as one group, so its halves do not dim a second time.
 function groupClassName(props: GroupLook): string | undefined {
-  if (props.size !== 'xs') return props.className;
+  if (props.size !== 'xs') return undefined;
 
   return cn(
     'rounded-md web:rounded-control web:shadow-control',
     props.disabled && 'opacity-35',
-    props.className,
   );
 }
 
 // The acting button, and the compact split's divider after a filled one.
-function leadingItems(
-  button: ActingButton,
-  props: GroupLook,
-): ActingButton | ReactElement[] {
-  if (props.size !== 'xs') return button;
+function leadingItems(props: ActingLook): ReactElement[] {
+  const button = <DrawnButton key="button" {...actingProps(props)} />;
 
-  return props.primary ? [undimmed(button), divider] : [undimmed(button)];
+  if (props.size === 'xs' && props.primary) return [button, divider];
+
+  return [button];
 }
 
-function undimmed(button: ActingButton): ReactElement {
-  return cloneElement(button, {
-    key: 'button',
-    className: cn(button.props.className, 'opacity-100'),
-  });
+/*
+ * The acting half: filled beside a primary chevron, otherwise a text button that gains an edge when narrow,
+ * where it fills the row beside its chevron. The compact split's group carries the shadow and the dimming.
+ */
+function actingProps(props: ActingLook): DrawnButtonProps {
+  return {
+    label: props.label,
+    icon: props.icon,
+    onPress: props.onPress,
+    disabled: props.disabled,
+    variant: actingVariant(props),
+    size: props.size === 'xs' ? 'xs' : 'sm',
+    className: actingClassName(props),
+  };
+}
+
+function actingVariant(
+  props: Pick<SplitMenuProps, 'primary' | 'narrow'>,
+): DrawnButtonProps['variant'] {
+  if (props.primary) return 'default';
+
+  return props.narrow ? 'outline' : 'ghost';
+}
+
+function actingClassName(props: GroupLook & { narrow?: boolean }): string {
+  if (props.size === 'xs') return 'web:shadow-none opacity-100';
+
+  return props.narrow ? 'flex-1' : '';
 }
 
 // Spans the group's height, which grows to the touch size on phones, with its line centred.
@@ -89,7 +119,7 @@ function useGroupHeight(): [
 function SplitMenu<Value extends string>({
   height,
   ...props
-}: SplitMenuProps<Value> & { height?: number }): ReactNode {
+}: JoinedMenuProps<Value>): ReactNode {
   return (
     <Menu
       {...menuRows(props)}

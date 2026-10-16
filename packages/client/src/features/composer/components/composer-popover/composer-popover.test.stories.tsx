@@ -40,11 +40,7 @@ function transitions(width: number): StoryObj<typeof meta> {
         </Pressable>
       ),
       children: (close) => (
-        <Button
-          onPress={() => close(afterClose)}
-          label={'Choose setting'}
-          custom
-        />
+        <Button onPress={() => close(afterClose)} label={'Choose setting'} />
       ),
     },
     beforeEach: () => {

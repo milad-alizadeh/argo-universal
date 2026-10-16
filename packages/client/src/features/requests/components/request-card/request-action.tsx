@@ -3,7 +3,6 @@ import { Button, type ButtonProps } from '#primitives/buttons/button';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
 
 export interface RequestActionProps {
-  className?: string;
   disabled?: boolean;
   onPress: () => void;
   accessibilityLabel?: string;
@@ -21,12 +20,7 @@ export function RequestAction({
   const wide = useWide();
 
   return (
-    <Button
-      {...props}
-      {...requestLayout(primary, wide)}
-      custom
-      label={children}
-    />
+    <Button {...props} {...requestLayout(primary, wide)} label={children} />
   );
 }
 
