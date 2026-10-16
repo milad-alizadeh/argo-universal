@@ -6,13 +6,13 @@ import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
 import { GroupedListItemDetail } from './grouped-list-item-detail';
 import { Disclosure } from './grouped-list-item-disclosure';
+import { rowLane } from './grouped-list-item-lane';
 import { GroupedListItemLeading } from './grouped-list-item-leading';
 import {
   type ResolvedItemProps,
   groupedListItemStatus,
 } from './grouped-list-item-props';
 import {
-  contentGap,
   hasDisclosure,
   rowEmphasis,
   titleClasses,
@@ -47,8 +47,8 @@ function GroupedListItemContent(props: ResolvedItemProps): React.JSX.Element {
 
 function contentClasses(props: ResolvedItemProps, sidebar: boolean): string {
   return cn(
-    'flex-1 flex-row items-center gap-3',
-    contentGap(sidebar, props.size),
+    'flex-1 flex-row items-center',
+    rowLane(props, sidebar).gap,
     props.disabled && 'opacity-65',
   );
 }
