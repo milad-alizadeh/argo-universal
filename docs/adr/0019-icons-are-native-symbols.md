@@ -34,7 +34,7 @@ Paper designs may use SF Symbols exported as SVG as mockups only; they never rea
 
 Git icons are the one exception to native symbols (owner, 2026-10-16). Neither SF Symbols nor Material Symbols has a full set for branches and pull request states, and mixing the nearest names drew a different, incomplete set on each platform. So branch, pull request, every PR state (open, draft, merged, closed, conflict), Merge PR and Changes come from one licensed set, Tabler Icons v3.49.0 (MIT, © Paweł Kuna), drawn from the same paths on every platform. They take priority over SF Symbols, Material Symbols and any other set; no other set is mixed in.
 
-- The source SVGs and Tabler's licence are committed in `packages/client/src/lib/generic/symbols/assets/tabler`. `tools/sf-symbols/tabler-symbols.swift` outlines their 2-point strokes and unions them with Core Graphics, so every platform gets filled paths, and writes `tabler-symbol-paths.json` in the custom symbols' units and box.
+- The source SVGs and Tabler's licence are committed in `packages/client/src/lib/generic/symbols/assets/tabler`. The Swift package `tools/sf-symbols/tabler-symbols` outlines their 2-point strokes and unions them with Core Graphics, so every platform gets filled paths, and writes `tabler-symbol-paths.json` in the custom symbols' units and box.
 - iOS: `with-custom-symbols` writes them into the asset catalog with the other custom symbols, and `SymbolView` draws them.
 - Electron on macOS and web, Windows and Linux: the page masks the path, as for the other custom symbols.
 - Android: `react-native-svg` draws the path, filled with the icon's colour.
