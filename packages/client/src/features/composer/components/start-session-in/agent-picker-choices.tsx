@@ -1,11 +1,9 @@
 import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
-import { Platform, Pressable, View, useWindowDimensions } from 'react-native';
+import { Platform, View, useWindowDimensions } from 'react-native';
 import { RegistryIcon } from '#features/agents';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
-import { Icon } from '#primitives/display/icon';
 import { SelectedCheck } from '#primitives/display/selected-check';
-import { Text } from '#primitives/display/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import {
   GroupedListItem,
@@ -54,7 +52,7 @@ function ChoicesList(props: ScrollableChoicesProps): React.JSX.Element {
       contentContainerStyle={{ gap: 2 }}
       testID="new-session-agents-scroll"
       keyExtractor={({ id }) => id}
-      renderItem={({ item }) => <WebAgentChoice agent={item} choices={props} />}
+      renderItem={({ item }) => <AgentChoice agent={item} choices={props} />}
       ListFooterComponent={<WebAddAgents {...props} />}
     />
   );
@@ -85,26 +83,8 @@ function AgentChoice({ agent, choices }: RowProps): React.JSX.Element {
       leading={
         <RegistryIcon uri={agent.icon} agentName={agent.name} role="row" />
       }
+      size={Platform.OS === 'web' ? 'sm' : undefined}
     />
-  );
-}
-
-function WebAgentChoice({ agent, choices }: RowProps): React.JSX.Element {
-  const selected = choices.agent === agent.id;
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      className="min-h-9 flex-row items-center gap-3 rounded-xl px-2 web:cursor-default web:select-none web:outline-none web:hover:bg-hover web:focus:bg-hover web:active:bg-pressed"
-      onPress={() => choices.close(() => choices.onAgentChange(agent.id))}
-    >
-      <RegistryIcon uri={agent.icon} agentName={agent.name} role="row" />
-      <Text role="body" numberOfLines={1} className="min-w-0 flex-1">
-        {agent.name}
-      </Text>
-      {selected ? <SelectedCheck role="mark" /> : <View className="size-4" />}
-    </Pressable>
   );
 }
 
@@ -134,14 +114,12 @@ function AddAgents(props: AgentChoiceProps): React.JSX.Element {
 function WebAddAgents(props: AgentChoiceProps): React.JSX.Element {
   return (
     <View className="pt-1_5">
-      <Pressable
+      <GroupedListItem
+        label="Add Agents"
+        icon="add"
         accessibilityRole="button"
-        className="min-h-9 flex-row items-center gap-3 rounded-xl px-2 web:cursor-default web:select-none web:outline-none web:hover:bg-hover web:focus:bg-hover web:active:bg-pressed"
         onPress={() => props.close(props.onAddAgents)}
-      >
-        <Icon name="add" role="row" />
-        <Text role="body">Add Agents</Text>
-      </Pressable>
+      />
     </View>
   );
 }

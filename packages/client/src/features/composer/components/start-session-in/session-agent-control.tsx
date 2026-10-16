@@ -36,21 +36,34 @@ function AgentPicker(props: StartSessionInProps): React.JSX.Element {
 function agentTrigger(props: StartSessionInProps): React.JSX.Element {
   const current = props.agents.find(({ id }) => id === props.agent);
 
+  return <MenuTrigger {...agentTriggerProps(current, props.disabled)} />;
+}
+
+function agentTriggerProps(
+  current: StartSessionInProps['agents'][number] | undefined,
+  disabled: boolean | undefined,
+): React.ComponentProps<typeof MenuTrigger> {
+  return {
+    icon: agentIcon(current),
+    leading: selectedAgentIcon(current),
+    label: current?.name ?? 'Select Agent',
+    accessibilityLabel: 'Select Agent',
+    disabled,
+  };
+}
+
+function agentIcon(
+  current: StartSessionInProps['agents'][number] | undefined,
+): 'agent' | undefined {
+  return current ? undefined : 'agent';
+}
+
+function selectedAgentIcon(
+  current: StartSessionInProps['agents'][number] | undefined,
+): React.JSX.Element | undefined {
+  if (!current) return undefined;
+
   return (
-    <MenuTrigger
-      icon={current ? undefined : 'agent'}
-      leading={
-        current ? (
-          <RegistryIcon
-            uri={current.icon}
-            agentName={current.name}
-            role="control"
-          />
-        ) : undefined
-      }
-      label={current?.name ?? 'Select Agent'}
-      accessibilityLabel="Select Agent"
-      disabled={props.disabled}
-    />
+    <RegistryIcon uri={current.icon} agentName={current.name} role="control" />
   );
 }
