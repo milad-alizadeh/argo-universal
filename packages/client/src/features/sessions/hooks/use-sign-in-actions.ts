@@ -2,7 +2,7 @@ import type { AgentAuthenticateOutput, AgentAuthState } from '@repo/contracts';
 import { skipToken, type SkipToken, useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTRPC, useTRPCClient } from '#features/connection';
-import type { TerminalSignInProps } from '../components/terminal-sign-in/terminal-sign-in';
+import type { TerminalSignInProps } from '../types/session-callout';
 
 export interface SignInSubject {
   agent: string;

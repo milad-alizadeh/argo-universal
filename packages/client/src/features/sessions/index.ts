@@ -122,15 +122,15 @@ export {
   useMergeMethod,
 } from './hooks/use-merge-method';
 
-export {
-  SessionCallout,
-  type SessionCalloutProps,
-} from './components/session-callout/session-callout';
+export { SessionCallout } from './components/session-callout/session-callout';
 
-export {
-  TerminalSignIn,
-  type TerminalSignInProps,
-} from './components/terminal-sign-in/terminal-sign-in';
+export { TerminalSignIn } from './components/terminal-sign-in/terminal-sign-in';
+
+export type {
+  SessionCalloutProps,
+  SessionCallouts,
+  TerminalSignInProps,
+} from './types/session-callout';
 
 export {
   type SessionAuthSubject,
@@ -143,12 +143,14 @@ export {
   sessionProblem,
 } from './state/session-problem';
 
+export { openCallout, openProblem, signsIn } from './state/session-callouts';
+
 export {
-  type OpenAnswers,
-  openCallout,
-  openProblem,
-  type SessionCallouts,
-  signsIn,
-  type TurnAnswers,
-  turnCallout,
-} from './state/session-callouts';
+  type AfterSignIn,
+  type PastSessionAnswers,
+  type PastSessionSignIn,
+  pastSessionCallout,
+  pastSessionSignIn,
+} from './utils/session-sign-in';
+
+export { useAnsweredTurn } from './hooks/use-answered-turn';

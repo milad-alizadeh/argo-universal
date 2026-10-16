@@ -1,30 +1,12 @@
-import type { AgentAuthState } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
 import { SplitButton } from '#primitives/buttons/split-button';
 import { Callout, CalloutButton } from '#primitives/display/callout';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-
-export type AuthCalloutMethod = Pick<
-  AgentAuthState['methods'][number],
-  'id' | 'name' | 'description'
->;
-
-export interface AuthCalloutProps {
-  agentName: string;
-  // Agent and terminal methods, in the Agent's order.
-  methods: readonly AuthCalloutMethod[];
-  // The Agent's own words from `auth_required`, shown when there is one method.
-  message?: string;
-  // Why this Device's last attempt failed, until the next one starts.
-  failure?: string;
-  // A sign-in is running, from this Device or another.
-  pending: boolean;
-  // The running method is a terminal: on a phone its sheet takes the callout's place.
-  terminal?: boolean;
-  onAuthenticate: (methodId: string) => void;
-  onCancel: () => void;
-}
+import type {
+  AuthCalloutMethod,
+  AuthCalloutProps,
+} from '../../types/session-callout';
 
 const chooseMethodHint = 'Choose one of the following authentication options:';
 

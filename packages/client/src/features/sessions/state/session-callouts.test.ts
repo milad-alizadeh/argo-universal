@@ -1,6 +1,6 @@
 import type { SessionOpenError } from '@repo/contracts';
 import { describe, expect, it, vi } from 'vitest';
-import type { SessionCalloutProps } from '../components/session-callout/session-callout';
+import type { SessionCalloutProps } from '../types/session-callout';
 import {
   type OpenProblem,
   openCallout,

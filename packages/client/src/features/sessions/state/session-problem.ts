@@ -19,8 +19,6 @@ export interface SessionProblemSources {
   // Prompts and setting changes, which open a past Session on the way.
   commands: OpenAttempt[];
   items: FeedViewItem[] | undefined;
-  // The `auth_required` Turn end a sign-in has since answered.
-  signedInAfter?: string;
 }
 
 export type SessionProblem =
@@ -79,17 +77,13 @@ const turnProblem = (end: TurnEnd): SessionProblem => ({
   description: end.end.error?.message,
 });
 
-// The Feed's last item, when it is a Turn that ended `auth_required` and no sign-in has answered it.
+// The Feed's last item, when it is a Turn that ended `auth_required`.
 function authRequiredTurn({
   items,
-  signedInAfter,
 }: SessionProblemSources): SessionProblem | undefined {
   const last = lastItem(items);
 
-  if (!endsAuthRequired(last) || last.row.id === signedInAfter)
-    return undefined;
-
-  return turnProblem(last);
+  return endsAuthRequired(last) ? turnProblem(last) : undefined;
 }
 
 // What a past Session's callout answers: a running Retry, a failed open, or a Turn that needs sign-in.

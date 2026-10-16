@@ -9,11 +9,13 @@ import {
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import type { AuthCalloutProps } from '../components/auth-callout/auth-callout';
 import { sessionOpenErrorMessage } from '../components/failure-messages';
-import type { SessionCalloutProps } from '../components/session-callout/session-callout';
-import type { TerminalSignInProps } from '../components/terminal-sign-in/terminal-sign-in';
 import { finishedSignIn } from '../state/session-auth';
+import type {
+  AuthCalloutProps,
+  SessionCalloutProps,
+  TerminalSignInProps,
+} from '../types/session-callout';
 import {
   inputOf,
   type SignInActions,

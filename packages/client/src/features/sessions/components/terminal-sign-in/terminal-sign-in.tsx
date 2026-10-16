@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { AgentLoginTerminal, type LoginTerminalProps } from '#features/agents';
+import { AgentLoginTerminal } from '#features/agents';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Text } from '#primitives/display/text';
 import {
@@ -9,14 +9,7 @@ import {
   type SheetProps,
 } from '#primitives/overlays/sheet';
 import { useWide } from '../../../../lib/generic/use-wide/use-wide';
-
-export interface TerminalSignInProps {
-  // The sign-in method's name.
-  title: string;
-  terminal: Omit<LoginTerminalProps, 'enabled'>;
-  // Closing before the command exits means the sign-in failed.
-  onClose: () => void;
-}
+import type { TerminalSignInProps } from '../../types/session-callout';
 
 // A terminal sign-in method runs the Agent's login command on the Server: a panel under the Composer on a wide window, a sheet on a phone.
 export function TerminalSignIn(props: TerminalSignInProps): React.JSX.Element {

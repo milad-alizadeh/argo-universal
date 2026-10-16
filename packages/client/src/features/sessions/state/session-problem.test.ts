@@ -139,13 +139,8 @@ it('asks to sign in after a Turn that ended auth_required', () => {
 });
 
 it.each([
-  {
-    case: 'a sign-in answered it',
-    items: [signInExpired],
-    signedInAfter: 'end-1',
-  },
   { case: 'the Turn ended well', items: [endTurn] },
   { case: 'a later Turn ended well', items: [signInExpired, endTurn] },
-])('asks nothing once $case', ({ items, signedInAfter }) => {
-  expect(sessionProblem({ ...quiet, items, signedInAfter })).toBeUndefined();
+])('asks nothing once $case', ({ items }) => {
+  expect(sessionProblem({ ...quiet, items })).toBeUndefined();
 });

@@ -5,17 +5,18 @@ import type { useAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
-  type OpenAnswers,
+  type AfterSignIn,
   type OpenAttempt,
-  openCallout,
+  type PastSessionAnswers,
+  type PastSessionSignIn,
+  pastSessionCallout,
+  pastSessionSignIn,
   type SessionAuthSubject,
   type SessionCalloutProps,
   type SessionCallouts,
   type SessionProblem,
   sessionProblem,
-  signsIn,
-  type TurnAnswers,
-  turnCallout,
+  useAnsweredTurn,
   useSessionAuth,
 } from '#features/sessions';
 import type { SessionCommands } from './use-session-commands';
@@ -49,12 +50,6 @@ const authSubject = (
       }
     : undefined;
 
-interface OpenProblem {
-  problem: SessionProblem | undefined;
-  openAgain: () => void;
-  answerTurn: (turnEnd: string) => void;
-}
-
 interface Retry {
   attempt: OpenAttempt;
   openAgain: () => void;
@@ -71,59 +66,13 @@ function useRetry(sessionId: string, feed: SessionFeed): Retry {
   return { attempt: retry, openAgain: () => retry.mutate({ sessionId }) };
 }
 
-// What the Session's open or last Turn asks for.
-function useOpenProblem(sources: SessionCalloutSources): OpenProblem {
-  const { sessionId, feed, commands } = sources;
-  const [signedInAfter, answerTurn] = useState<string>();
-  const { attempt, openAgain } = useRetry(sessionId, feed);
-
-  const problem = sessionProblem({
-    feedOpenError: feed.openError,
-    retry: attempt,
-    commands: [commands.promptSession, commands.setConfigOption],
-    items: feed.view?.items,
-    signedInAfter,
-  });
-
-  return { problem, answerTurn, openAgain };
-}
-
-// A sign-in after an `auth_required` Turn clears its card; after a refused open, the open runs again.
-const afterSignIn =
-  ({ problem, openAgain, answerTurn }: OpenProblem, done: () => void) =>
-  (): void => {
-    if (problem?.type === 'turn') answerTurn(problem.id);
-    else openAgain();
-    done();
-  };
-
-/*
- * A past Session's sign-in and launch callouts. Retry, or a sign-in after a refused open,
- * runs the Session's open again without a Turn; a sign-in after an `auth_required` Turn
- * only clears the card, and the user resends.
- */
-export function useSessionCallout(
-  sources: SessionCalloutSources,
-): SessionCallouts {
-  const open = useOpenProblem(sources);
-  const turn = useTurnSignIn();
-
-  const auth = useSessionAuth({
-    subject: authSubject(sources.feed.snapshot, sources.agents),
-    active: signsIn(open.problem, turn.authenticating),
-    onSignedIn: afterSignIn(open, turn.done),
-  });
-
-  const answers = { ...turn, signIn: auth.callout, openAgain: open.openAgain };
-
-  return { callout: calloutOf(open, answers), signInTerminal: auth.terminal };
-}
-
-interface TurnSignIn extends Omit<TurnAnswers, 'signIn'> {
+interface TurnSignIn {
+  // The `auth_required` Turn end whose Authenticate was pressed, until its sign-in finishes.
+  authenticating: string | undefined;
+  onAuthenticate: (turnEnd: string) => void;
   done: () => void;
 }
 
-// The `auth_required` Turn whose Authenticate was pressed, until its sign-in finishes.
 function useTurnSignIn(): TurnSignIn {
   const [authenticating, onAuthenticate] = useState<string | null>(null);
 
@@ -134,17 +83,87 @@ function useTurnSignIn(): TurnSignIn {
   };
 }
 
-type CalloutAnswers = OpenAnswers & TurnAnswers;
+interface SignInEffects {
+  answerTurn: (turnEnd: string) => void;
+  openAgain: () => void;
+  done: () => void;
+}
 
-const answerOf = (
-  problem: SessionProblem,
-  answers: CalloutAnswers,
-): SessionCalloutProps =>
-  problem.type === 'turn'
-    ? turnCallout(problem, answers)
-    : openCallout(problem, answers);
+// Runs what the rule says a finished sign-in does.
+const runAfterSignIn =
+  (afterSignIn: AfterSignIn, effects: SignInEffects) => (): void => {
+    if (afterSignIn.type === 'answer-turn')
+      effects.answerTurn(afterSignIn.turnEnd);
+    else effects.openAgain();
+    effects.done();
+  };
 
-const calloutOf = (
-  { problem }: OpenProblem,
-  answers: CalloutAnswers,
-): SessionCalloutProps | undefined => problem && answerOf(problem, answers);
+interface SessionSignIn {
+  signIn: PastSessionSignIn;
+  turn: TurnSignIn;
+  effects: SignInEffects;
+}
+
+interface OpenProblem {
+  problem: SessionProblem | undefined;
+  openAgain: () => void;
+}
+
+// What the Session's open or last Turn asks for.
+function useOpenProblem(sources: SessionCalloutSources): OpenProblem {
+  const { sessionId, feed, commands } = sources;
+  const { attempt, openAgain } = useRetry(sessionId, feed);
+
+  const problem = sessionProblem({
+    feedOpenError: feed.openError,
+    retry: attempt,
+    commands: [commands.promptSession, commands.setConfigOption],
+    items: feed.view?.items,
+  });
+
+  return { problem, openAgain };
+}
+
+// The sign-in rule over that problem, with the Turn a sign-in answered kept across remounts.
+function useSessionSignIn(sources: SessionCalloutSources): SessionSignIn {
+  const { problem, openAgain } = useOpenProblem(sources);
+  const { answeredTurn, answerTurn } = useAnsweredTurn(sources.sessionId);
+  const turn = useTurnSignIn();
+  const { authenticating } = turn;
+  const signIn = pastSessionSignIn({ problem, answeredTurn, authenticating });
+
+  return { signIn, turn, effects: { answerTurn, openAgain, done: turn.done } };
+}
+
+const answersOf = (
+  signIn: SessionCalloutProps,
+  { turn, effects }: SessionSignIn,
+): PastSessionAnswers => ({
+  signIn,
+  openAgain: effects.openAgain,
+  authenticating: turn.authenticating,
+  onAuthenticate: turn.onAuthenticate,
+});
+
+/*
+ * A past Session's sign-in and launch callouts. Retry, or a sign-in after a refused open,
+ * runs the Session's open again without a Turn; a sign-in after an `auth_required` Turn
+ * only clears the card, and the user resends.
+ */
+export function useSessionCallout(
+  sources: SessionCalloutSources,
+): SessionCallouts {
+  const sessionSignIn = useSessionSignIn(sources);
+  const { signIn, effects } = sessionSignIn;
+
+  const auth = useSessionAuth({
+    subject: authSubject(sources.feed.snapshot, sources.agents),
+    active: signIn.follows,
+    onSignedIn: runAfterSignIn(signIn.afterSignIn, effects),
+  });
+
+  return {
+    callout: pastSessionCallout(signIn, answersOf(auth.callout, sessionSignIn)),
+    signInTerminal: auth.terminal,
+  };
+}

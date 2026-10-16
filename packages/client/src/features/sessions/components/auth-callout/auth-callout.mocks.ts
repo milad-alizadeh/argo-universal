@@ -1,4 +1,7 @@
-import type { AuthCalloutMethod, AuthCalloutProps } from './auth-callout';
+import type {
+  AuthCalloutMethod,
+  AuthCalloutProps,
+} from '../../types/session-callout';
 
 const chatGpt: AuthCalloutMethod = {
   id: 'chatgpt',

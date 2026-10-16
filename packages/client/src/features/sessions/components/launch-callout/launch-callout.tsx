@@ -1,11 +1,6 @@
 import type * as React from 'react';
 import { Callout, CalloutButton } from '#primitives/display/callout';
-
-export interface LaunchCalloutProps {
-  // How the Agent stopped, then the last stderr block; or the error text alone.
-  message: string;
-  onRetry: () => void;
-}
+import type { LaunchCalloutProps } from '../../types/session-callout';
 
 const retryHint = 'Try to restart the Agent';
 

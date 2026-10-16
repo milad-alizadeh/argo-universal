@@ -1,13 +1,6 @@
 import type { SessionOpenError } from '@repo/contracts';
-import type { SessionCalloutProps } from '../components/session-callout/session-callout';
-import type { TerminalSignInProps } from '../components/terminal-sign-in/terminal-sign-in';
+import type { SessionCalloutProps } from '../types/session-callout';
 import type { SessionProblem } from './session-problem';
-
-// What a Session page draws for sign-in and launch trouble: the callout above the Composer, and a terminal method's panel or sheet.
-export interface SessionCallouts {
-  callout?: SessionCalloutProps;
-  signInTerminal?: TerminalSignInProps;
-}
 
 type Problem<Type extends SessionProblem['type']> = Extract<
   SessionProblem,
