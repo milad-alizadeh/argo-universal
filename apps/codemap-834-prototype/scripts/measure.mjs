@@ -57,7 +57,7 @@ for (const view of views)
         CODEMAP_NO_GPU: mode.endsWith('no-gpu') ? '1' : '0',
         ARGO_HOME: `${directory}/argo-home-${mode}-${view}-${count}`,
         ARGO_USER_DATA_DIRECTORY: `${directory}/argo-profile-${mode}-${view}-${count}`,
-        ARGO_BACKGROUND: '0',
+        ARGO_BACKGROUND: '1',
         ARGO_SERVER_PORT: await unusedPort(),
       };
       delete env.ELECTRON_RUN_AS_NODE;
@@ -73,6 +73,11 @@ for (const view of views)
         env,
       });
       page = await app.firstWindow();
+      await app.evaluate(({ BrowserWindow }) => {
+        const window = BrowserWindow.getAllWindows()[0];
+        window.show();
+        window.focus();
+      });
     }
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
@@ -83,6 +88,7 @@ for (const view of views)
       await page.goto(`http://127.0.0.1:8340/codemap-834-prototype${query}`);
     else if (fullDesktop)
       await page.goto(`app://app/codemap-834-prototype${query}`);
+    await page.bringToFront();
     try {
       await page.waitForFunction(
         () => window.__codemap834?.ready,
@@ -102,8 +108,26 @@ for (const view of views)
         },
       }));
       const samples = [];
-      for (let i = 0; i < (process.env.CODEMAP_SMOKE ? 1 : 3); i++)
-        samples.push(await page.evaluate(() => window.__codemap834.pan(6000)));
+      for (let i = 0; i < (process.env.CODEMAP_SMOKE ? 1 : 3); i++) {
+        await page.bringToFront();
+        let timeout;
+        try {
+          samples.push(
+            await Promise.race([
+              page.evaluate(() => window.__codemap834.pan(6000)),
+              new Promise((_, reject) => {
+                timeout = setTimeout(
+                  () =>
+                    reject(new Error('Pan sample stalled beyond 10 seconds')),
+                  10000,
+                );
+              }),
+            ]),
+          );
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
       await page.getByRole('button', { name: 'Fit', exact: true }).click();
       await page.waitForTimeout(200);
       await page.screenshot({
@@ -138,6 +162,7 @@ for (const view of views)
         count,
         scenarioReadyMs,
         ...evidence,
+        desktopBackgroundThrottling: fullDesktop ? false : undefined,
         selected,
         samples,
         errors,

@@ -77,6 +77,9 @@ It does not start the Server or prove the complete desktop App lifecycle.
 A protocol-harness result cannot close the full desktop App criterion.
 The `desktop` modes instead launch the unchanged App with its real Server and preload.
 Each launch uses its own `ARGO_HOME`, App data directory, and free Server port.
+Desktop collection uses the existing `ARGO_BACKGROUND=1` setting to disable background timer throttling.
+The collector then shows and focuses the App window.
+Each pan sample has a ten-second timeout to expose a stalled timer.
 Append `3d` or `flat` to the collector command to measure one renderer.
 `build-desktop.mjs` compiles the existing entry points without changing their source.
 It copies the export into the local ignored `dist` directory expected by the App.
