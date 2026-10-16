@@ -1,5 +1,6 @@
 import type {
   FeedPageOutput,
+  SessionListOutput,
   SessionInfo,
   SessionUpdate,
   Notice,
@@ -25,10 +26,7 @@ export async function readNotificationBaselines(
   let cursor: string | undefined;
 
   do {
-    const page = await client.session.list.query(
-      { archived: false, cursor },
-      { signal },
-    );
+    const page = await readSessionPage(client, cursor, signal);
 
     baselines.push(...(await readBaselinesPage(client, page.sessions, signal)));
     cursor = page.nextCursor ?? undefined;
@@ -160,3 +158,11 @@ async function readBaselinePage(
 export const baselineInputId = (
   baseline: NotificationBaseline | undefined,
 ): string | null => baseline?.inputId ?? null;
+
+async function readSessionPage(
+  client: NotificationClient,
+  cursor: string | undefined,
+  signal: AbortSignal | undefined,
+): Promise<SessionListOutput> {
+  return client.session.list.query({ archived: false, cursor }, { signal });
+}
