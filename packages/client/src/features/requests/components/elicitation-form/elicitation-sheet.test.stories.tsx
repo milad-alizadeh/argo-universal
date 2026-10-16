@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
+import { questionsRequest } from '../../../../../mocks/elicitation-questions';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
   elicitationProps,
@@ -107,5 +108,30 @@ export const RetainFieldAnswersAcrossTrayTransition: Story = {
         notify: true,
       },
     });
+  },
+};
+
+// The sheet's title is the message, so the body names only the source.
+export const MessageShownOnce: Story = {
+  args: { request: fieldsRequest, source: 'linear' },
+  play: async () => {
+    const sheet = within(await within(document.body).findByRole('dialog'));
+    await expect(
+      sheet.getAllByRole('heading', { name: fieldsRequest.message }),
+    ).toHaveLength(1);
+    await expect(sheet.getByText('linear asks')).toBeVisible();
+  },
+};
+
+// Each question heads its own page, so the sheet adds no title repeating the message.
+export const QuestionShownOnce: Story = {
+  args: { request: questionsRequest },
+  play: async ({ userEvent }) => {
+    const sheet = within(await within(document.body).findByRole('dialog'));
+    await userEvent.click(sheet.getByRole('button', { name: 'Next question' }));
+    await expect(sheet.getByText('2 of 3', { exact: false })).toBeVisible();
+    await expect(
+      sheet.getAllByRole('heading', { name: questionsRequest.message }),
+    ).toHaveLength(1);
   },
 };

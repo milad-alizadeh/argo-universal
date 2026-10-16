@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
+import { useOptionalSheet } from '#primitives/overlays/sheet';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import {
   ElicitationField,
@@ -8,18 +9,29 @@ import {
 } from './elicitation-field';
 import type { ElicitationValue } from './elicitation-schema';
 
+// In a phone's sheet the sheet's own title is the message, so only the source stays.
 export function ElicitationHeading(props: {
   source?: string;
   message: string;
-}): ReactElement {
+}): ReactElement | null {
+  if (useOptionalSheet()) return <ElicitationSource source={props.source} />;
+
   return (
     <View className="gap-1">
-      {props.source && <Text role="secondary">{props.source} asks</Text>}
-      <Text role="heading" aria-level={2}>
+      <ElicitationSource source={props.source} />
+      <Text role="heading" accessibilityRole="heading" aria-level={2}>
         {props.message}
       </Text>
     </View>
   );
+}
+
+function ElicitationSource({
+  source,
+}: {
+  source?: string;
+}): ReactElement | null {
+  return source ? <Text role="secondary">{source} asks</Text> : null;
 }
 
 export function ElicitationFields({

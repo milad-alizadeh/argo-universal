@@ -29,6 +29,7 @@ function QuestionTitle({ title }: { title: string }): ReactElement {
       <QuestionIcon />
       <Text
         role="heading"
+        accessibilityRole="heading"
         aria-level={2}
         className="min-w-0 flex-1 ios:text-[17px] ios:leading-[22px] android:text-[18px] android:leading-6 android:font-medium text-foreground"
       >

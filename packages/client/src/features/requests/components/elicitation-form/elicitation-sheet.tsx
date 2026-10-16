@@ -33,7 +33,7 @@ function FieldSheet(props: ElicitationFormProps): ReactElement {
   const model = useElicitationForm(props);
 
   return (
-    <ElicitationSurface {...props}>
+    <ElicitationSurface {...props} title={props.request.message}>
       <ElicitationFieldForm model={model} />
     </ElicitationSurface>
   );
@@ -51,7 +51,11 @@ function QuestionSheet(
   );
 }
 
-type SurfaceProps = ElicitationFormProps & { children: ReactNode };
+// A title names the sheet's one page; without one the content's own heading leads, as each question's does.
+type SurfaceProps = ElicitationFormProps & {
+  title?: string;
+  children: ReactNode;
+};
 
 function ElicitationSurface(props: SurfaceProps): ReactElement {
   const wide = useContentWide();
@@ -61,10 +65,22 @@ function ElicitationSurface(props: SurfaceProps): ReactElement {
 
   return (
     <Sheet open label={props.request.message} {...sheet}>
-      <Sheet.Page name="form" title={props.request.message}>
-        {props.children}
-      </Sheet.Page>
+      {sheetContent(props)}
     </Sheet>
+  );
+}
+
+// Sheet finds its pages among its direct children, so this returns the page itself rather than a component.
+function sheetContent({
+  title,
+  children,
+}: Pick<SurfaceProps, 'title' | 'children'>): ReactNode {
+  if (!title) return children;
+
+  return (
+    <Sheet.Page name="form" title={title}>
+      {children}
+    </Sheet.Page>
   );
 }
 
