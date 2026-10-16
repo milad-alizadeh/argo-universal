@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./custom-symbol-paths.json": "./src/lib/generic/symbols/custom-symbol-paths.json",
+    "./tabler-symbol-paths.json": "./src/lib/generic/symbols/tabler-symbol-paths.json",
     "./storybook": "./src/preview-config.ts"
   },
   "imports": {

@@ -3,14 +3,12 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
 
-const pullRequest = 'pull-request';
-
 export const pullRequestAppearance = {
-  open: { icon: pullRequest, tone: 'success' },
-  draft: { icon: pullRequest, tone: 'muted' },
-  merged: { icon: 'merged', tone: 'done' },
-  conflict: { icon: pullRequest, tone: 'warning' },
-  closed: { icon: pullRequest, tone: 'danger' },
+  open: { icon: 'pr-open', tone: 'success' },
+  draft: { icon: 'pr-draft', tone: 'muted' },
+  merged: { icon: 'pr-merged', tone: 'done' },
+  conflict: { icon: 'pr-conflict', tone: 'warning' },
+  closed: { icon: 'pr-closed', tone: 'danger' },
 } as const;
 
 export const pullRequestStatusLabels = {
