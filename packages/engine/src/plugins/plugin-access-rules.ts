@@ -87,19 +87,24 @@ export function allowLinks(
     throw new CapabilityRefusal(`${shown} has other hard links`);
 }
 
+// A path's real path, or null when it, or a folder on the way, is missing.
+export const realOrMissing = (path: string): Promise<string | null> =>
+  realpath(path).catch((error: NodeJS.ErrnoException): null => {
+    if (missingCodes.has(String(error.code))) return null;
+
+    throw error;
+  });
+
 // The real path of the deepest part that exists, plus the rest: parts that don't exist yet hold no symlink.
 export async function resolveReal(path: string): Promise<string> {
-  return realpath(path).catch(
-    async (error: NodeJS.ErrnoException): Promise<string> => {
-      if (!resolvable(error, path)) throw error;
+  const real = await realOrMissing(path);
 
-      return join(await resolveReal(dirname(path)), basename(path));
-    },
-  );
+  if (real !== null) return real;
+
+  if (dirname(path) === path) throw new Error(`${path} does not exist`);
+
+  return join(await resolveReal(dirname(path)), basename(path));
 }
-
-const resolvable = (error: NodeJS.ErrnoException, path: string): boolean =>
-  missingCodes.has(String(error.code)) && dirname(path) !== path;
 
 /*
  * `*` takes exactly one argument and a trailing `**` the rest; every other pattern is one exact

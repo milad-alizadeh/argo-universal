@@ -1,9 +1,10 @@
 import { mkdir, realpath } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
-import type {
-  FetchCapability,
-  PluginCapability,
-  ProcessCapability,
+import {
+  isSpecialHost,
+  type FetchCapability,
+  type PluginCapability,
+  type ProcessCapability,
 } from '@repo/contracts/plugins';
 import { CapabilityRefusal } from './capability-refusal';
 import {
@@ -12,6 +13,7 @@ import {
   allowWrite,
   argsMatch,
   childEnvironment,
+  realOrMissing,
   resolveReal,
   type Roots,
   type Subject,
@@ -19,14 +21,17 @@ import {
 import { allowLiteral } from './plugin-addresses';
 import type { ProcessCommand } from './runtime-protocol';
 
-export type PluginGrant = {
-  capabilities: readonly PluginCapability[];
-  // The Plugin's code folder, which `argo.fs` never writes; null for a Plugin never activated.
-  codeFolder: string | null;
+// What the Server holds for an activated Plugin: its Grants, and its code folder, which `argo.fs` never writes.
+export type ActivatedPlugin = {
+  grants: readonly PluginCapability[];
+  codeFolder: string;
 };
 
 export type AccessScope = {
-  grant: PluginGrant;
+  // The Capabilities allowed to the Plugin; empty for a Plugin never activated.
+  grants: readonly PluginCapability[];
+  // null for a Plugin never activated.
+  codeFolder: string | null;
   // `<home>/plugin-data/<id>/`, the only folder a Plugin writes (ADR-0030).
   dataFolder: string;
   // The registered Projects' folders, which any Plugin may read.
@@ -41,7 +46,7 @@ export type CheckedCommand = ProcessCommand & {
   env: Record<string, string>;
 };
 
-// A fetch hop the Capabilities allow; `private` is true only for a host declared with a reason.
+// A fetch hop the Capabilities allow; `private` is true only for a raw address or `localhost` declared with a reason.
 export type HostRule = { private: boolean };
 
 /*
@@ -100,10 +105,7 @@ export class PluginAccess {
     const capabilities = this.fetchCapabilities();
     const exact = capabilities.find(({ host }) => host === url.host);
 
-    // Only a host named with a reason may reach a loopback or private address; `*` never does.
-    const rule = exact
-      ? { private: Boolean(exact.reason) }
-      : anyHost(capabilities, url);
+    const rule = exact ? exactHost(exact) : anyHost(capabilities, url);
 
     allowLiteral(url, rule);
 
@@ -145,31 +147,37 @@ export class PluginAccess {
   private async roots(): Promise<Roots> {
     const [data, code, projects] = await Promise.all([
       resolveReal(this.scope.dataFolder),
-      this.scope.grant.codeFolder === null
+      this.scope.codeFolder === null
         ? null
-        : realOrNull(this.scope.grant.codeFolder),
-      this.scope.projects().then((paths) => Promise.all(paths.map(realOrNull))),
+        : realOrMissing(this.scope.codeFolder),
+      this.scope
+        .projects()
+        .then((paths) => Promise.all(paths.map(realOrMissing))),
     ]);
 
     return { data, code, projects: projects.filter((path) => path !== null) };
   }
 
   private processCapabilities(): ProcessCapability[] {
-    return this.scope.grant.capabilities.filter(
+    return this.scope.grants.filter(
       (capability) => capability.kind === 'process:exec',
     );
   }
 
   private fetchCapabilities(): FetchCapability[] {
-    return this.scope.grant.capabilities.filter(
+    return this.scope.grants.filter(
       (capability) => capability.kind === 'fetch',
     );
   }
 }
 
-// A folder that is gone holds nothing to allow.
-const realOrNull = (path: string): Promise<string | null> =>
-  realpath(path).catch(() => null);
+/*
+ * Only a raw address, `localhost` or `*.localhost`, declared with a reason, may reach a loopback or
+ * private address. A named host never does, so its DNS answer can't rebind it onto this Mac.
+ */
+const exactHost = ({ host, reason }: FetchCapability): HostRule => ({
+  private: Boolean(reason) && isSpecialHost(host),
+});
 
 function anyHost(capabilities: FetchCapability[], url: URL): HostRule {
   if (capabilities.some(({ host }) => host === '*')) return { private: false };

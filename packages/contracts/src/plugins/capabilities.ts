@@ -2,8 +2,9 @@ import { z } from 'zod';
 
 /*
  * What a Plugin's manifest declares it needs from the machine (ADR-0030). The Server checks every
- * `argo.process` and `argo.fetch` call against these; reading Projects and the Plugin's own data
- * folder needs none.
+ * `argo.fs`, `argo.process` and `argo.fetch` call: `argo.fs` reaches only the registered Projects,
+ * read-only, and the Plugin's own data folder, which need no Capability; `argo.process` and
+ * `argo.fetch` reach only what these declare.
  */
 
 // Variables that load code or name a program bypass any command allowlist, so no Plugin may set them (ADR-0030).
@@ -75,7 +76,7 @@ const specialHostnames: ((name: string) => boolean)[] = [
   (name) => name.endsWith('.localhost'),
 ];
 
-const isSpecialHost = (host: string): boolean =>
+export const isSpecialHost = (host: string): boolean =>
   specialHostnames.some((special) => special(hostnameOf(host)));
 
 const hostnameOf = (host: string): string =>

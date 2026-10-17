@@ -25,7 +25,6 @@ it.each(['../private.json', './linked.json'])(
     expect(
       await runtime.activate({
         entry: { pluginId: 'dev', directory, main: 'index.mjs' },
-        dev: true,
       }),
     ).toMatchObject({
       state: 'crashed',
@@ -51,7 +50,6 @@ it('loads imports within the Plugin folder while preserving a failed rebuild acr
 
   const location = {
     entry: { pluginId: 'dev', directory, main: 'index.mjs' },
-    dev: true,
   };
 
   expect(await runtime.activate(location)).toMatchObject({ state: 'running' });

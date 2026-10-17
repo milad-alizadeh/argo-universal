@@ -2,7 +2,6 @@ import type { Stats } from 'node:fs';
 import { constants } from 'node:fs';
 import {
   mkdir,
-  open,
   readdir,
   realpath,
   stat,
@@ -11,11 +10,17 @@ import {
 import { dirname } from 'node:path';
 import { CapabilityRefusal } from './capability-refusal';
 import type { FileAccess, PluginAccess } from './plugin-access';
+import { realOrMissing } from './plugin-access-rules';
+import {
+  openExisting,
+  openFlags,
+  openForWrite,
+  removeCreated,
+  sameNode,
+  type OpenFile,
+} from './plugin-file-open';
 import { argoLimitBytes } from './plugin-limits';
 import type { FsCall, PluginValue } from './runtime-protocol';
-
-// Never follow a final symlink, and never block on a FIFO.
-const openFlags = constants.O_NOFOLLOW | constants.O_NONBLOCK;
 
 // A checked path, the access it was checked for, and the checker to ask again once it is open.
 type Opening = { access: PluginAccess; path: string; kind: FileAccess };
@@ -39,9 +44,9 @@ export async function fsCall(
 
   if (call.action === 'write') return write(opening, call.content);
 
-  return opened(opening, openFlags | constants.O_RDONLY, (file) =>
-    inspect(call.action, file),
-  );
+  const file = await openExisting(path, openFlags | constants.O_RDONLY);
+
+  return checked(opening, file, (opened) => inspect(call.action, opened));
 }
 
 // Only a write may create a file; it truncates after the check, so a refused write changes nothing.
@@ -51,9 +56,9 @@ async function write(opening: Opening, content: string): Promise<null> {
   await opening.access.makeDataFolder();
   await makeParents(opening, dirname(opening.path));
 
-  const flags = openFlags | constants.O_WRONLY | constants.O_CREAT;
+  const file = await openForWrite(opening.path);
 
-  return opened(opening, flags, async ({ handle }) => {
+  return checked(opening, file, async ({ handle }) => {
     await handle.truncate(0);
     await handle.writeFile(content);
 
@@ -92,37 +97,36 @@ async function existingFolder(
   return true;
 }
 
-const realOrMissing = (path: string): Promise<string | null> =>
-  realpath(path).catch((error: NodeJS.ErrnoException): null => {
-    if (error.code === 'ENOENT') return null;
-
-    throw error;
-  });
-
-async function opened<T>(
+// Runs on the opened file once it is checked again; a refused file this call created is removed.
+async function checked<T>(
   opening: Opening,
-  flags: number,
-  run: (file: Opened) => Promise<T>,
+  file: OpenFile,
+  run: (opened: Opened) => Promise<T>,
 ): Promise<T> {
-  const handle = await openChecked(opening.path, flags);
-
   try {
-    const info = await handle.stat();
+    const info = await file.handle.stat();
 
-    await sameFile(opening, info);
+    await recheck(opening, file, info);
 
-    return await run({ handle, info, path: opening.path });
+    return await run({ handle: file.handle, info, path: opening.path });
   } finally {
-    await handle.close();
+    await file.handle.close();
   }
 }
 
-const openChecked = (path: string, flags: number): Promise<FileHandle> =>
-  open(path, flags).catch((error: NodeJS.ErrnoException): never => {
-    throw error.code === 'ELOOP'
-      ? new CapabilityRefusal(`${path} became a symlink`)
-      : error;
-  });
+async function recheck(
+  opening: Opening,
+  file: OpenFile,
+  info: Stats,
+): Promise<void> {
+  try {
+    await sameFile(opening, info);
+  } catch (error) {
+    if (file.created) await removeCreated(opening.path, file.handle);
+
+    throw error;
+  }
+}
 
 // The opened file must still be the one at the checked path, and that path must still be allowed.
 async function sameFile(
@@ -139,9 +143,6 @@ async function sameFile(
 
 // A folder's link count is its entries; only a file's says whether another name reaches it.
 const linksOf = (info: Stats): number => (info.isFile() ? info.nlink : 1);
-
-const sameNode = (left: Stats, right: Stats): boolean =>
-  left.ino === right.ino && left.dev === right.dev;
 
 function inspect(
   action: Exclude<FsCall['action'], 'write'>,

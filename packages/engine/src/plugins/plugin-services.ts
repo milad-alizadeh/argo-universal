@@ -1,5 +1,9 @@
 import { pluginKeychainService, type Keychain } from './keychain';
-import { PluginAccess, type PluginGrant } from './plugin-access';
+import {
+  PluginAccess,
+  type AccessScope,
+  type ActivatedPlugin,
+} from './plugin-access';
 import {
   describeCall,
   failureLine,
@@ -15,6 +19,12 @@ import type { PluginStorage } from './storage';
 
 type Held = { generation: number; resources: PluginResources };
 
+// Nothing is granted to a Plugin whose worker isn't loaded.
+const notActivated: Pick<AccessScope, 'grants' | 'codeFolder'> = {
+  grants: [],
+  codeFolder: null,
+};
+
 // Where the Server logs Plugin calls, which Projects Plugins may read, and the Server's network settings.
 export type PluginServiceOptions = {
   log: (line: string) => void;
@@ -22,13 +32,10 @@ export type PluginServiceOptions = {
   network?: PluginNetwork;
 };
 
-// Nothing is granted to a Plugin that was never activated with its manifest's Capabilities.
-const noGrant: PluginGrant = { capabilities: [], codeFolder: null };
-
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
   private readonly held = new Map<string, Held>();
-  private readonly grants = new Map<string, PluginGrant>();
+  private readonly activated = new Map<string, ActivatedPlugin>();
 
   constructor(
     private readonly storage: PluginStorage,
@@ -36,9 +43,9 @@ export class PluginServices {
     private readonly options: PluginServiceOptions,
   ) {}
 
-  // A first-party Plugin's declared Capabilities, granted at activation with no prompt (ADR-0030).
-  grant(pluginId: string, grant: PluginGrant): void {
-    this.grants.set(pluginId, grant);
+  // A first-party Plugin's declared Capabilities, granted as its worker loads with no prompt (ADR-0030).
+  activate(pluginId: string, plugin: ActivatedPlugin): void {
+    this.activated.set(pluginId, plugin);
   }
 
   async handle(
@@ -57,13 +64,15 @@ export class PluginServices {
     }
   }
 
-  // Reload, turning off and a crash end the Plugin's child processes, timers and requests.
+  // Reload, turning off and a crash end the Plugin's child processes, timers and requests, and its Grants.
   release(pluginId: string): void {
     this.held.get(pluginId)?.resources.release();
+    this.activated.delete(pluginId);
   }
 
   close(): void {
     for (const { resources } of this.held.values()) resources.release();
+    this.activated.clear();
     this.storage.close();
   }
 
@@ -101,8 +110,11 @@ export class PluginServices {
   }
 
   private access(pluginId: string): PluginAccess {
+    const { grants, codeFolder } = this.activated.get(pluginId) ?? notActivated;
+
     return new PluginAccess({
-      grant: this.grants.get(pluginId) ?? noGrant,
+      grants,
+      codeFolder,
       dataFolder: this.storage.folderOf(pluginId),
       projects: this.options.projects,
     });

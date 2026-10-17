@@ -27,7 +27,8 @@ async function folders(): Promise<Folders> {
   await writeFile(join(outside, 'a.txt'), secret);
 
   const access = new PluginAccess({
-    grant: { capabilities: [], codeFolder: null },
+    grants: [],
+    codeFolder: null,
     dataFolder: data,
     projects: async (): Promise<string[]> => [],
   });
@@ -95,4 +96,30 @@ it('names the path asked for, never where its symlink leads', async () => {
 
   expect(refused).toContain(link);
   expect(refused).not.toContain(outside);
+});
+
+it('leaves no empty file behind when the file it created is refused once open', async () => {
+  const data = join(await scratch(), 'plugin-data/probe');
+  const file = join(data, 'new.txt');
+
+  await mkdir(data, { recursive: true });
+
+  // A Project registered at the new file's path: refused only once the open has created it.
+  const access = new PluginAccess({
+    grants: [],
+    codeFolder: null,
+    dataFolder: data,
+    projects: async (): Promise<string[]> => [file],
+  });
+
+  const path = await access.checkPath(file, 'write');
+
+  await expect(
+    fsCall(access, { action: 'write', path, content: 'x' }, path),
+  ).rejects.toThrow(
+    new CapabilityRefusal(
+      `${path} is in a Project; argo.fs never writes to a Project`,
+    ),
+  );
+  expect(existsSync(file)).toBe(false);
 });

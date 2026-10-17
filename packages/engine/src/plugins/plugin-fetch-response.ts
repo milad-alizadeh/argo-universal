@@ -107,13 +107,14 @@ export async function responseValue(
 async function readCapped(response: IncomingMessage): Promise<Received> {
   const received: Received = { chunks: [], size: 0 };
 
-  for await (const chunk of response) if (!kept(received, chunk)) break;
+  for await (const chunk of response)
+    if (!appendUnderCap(received, chunk)) break;
 
   return received;
 }
 
 // Keeps what fits under the cap; false once the body is past it.
-function kept(received: Received, chunk: Buffer): boolean {
+function appendUnderCap(received: Received, chunk: Buffer): boolean {
   received.chunks.push(
     chunk.subarray(0, Math.max(argoFetchLimitBytes - received.size, 0)),
   );

@@ -33,8 +33,6 @@ export class PluginService {
 
     return runtime.activate({
       entry: { pluginId, directory, main: plugin.manifest.main },
-      // Only first-party Plugins load (the loader refuses the rest), and they run from source.
-      dev: plugin.firstParty,
       name: plugin.manifest.name,
       // Granted at load with no prompt (ADR-0030).
       capabilities: plugin.manifest.capabilities ?? [],

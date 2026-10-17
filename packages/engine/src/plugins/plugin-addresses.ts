@@ -42,27 +42,33 @@ export function checkedLookup(
     lookup(hostname, { ...options, all: true }, (error, found, family) => {
       if (error) return callback(error, '', 0);
 
-      screen({ rule, hostname, options, callback }, addressList(found, family));
+      answerAllowed(
+        { rule, hostname, options, callback },
+        addressList(found, family),
+      );
     });
   };
 }
 
 // One lookup the socket asked for, and the rule its addresses are held to.
-type Asked = {
+type PendingLookup = {
   rule: HostRule;
   hostname: string;
   options: LookupOptions;
   callback: LookupCallback;
 };
 
-function screen(asked: Asked, addresses: LookupAddress[]): void {
-  const refused = refusedAddress(asked.rule, addresses);
+function answerAllowed(
+  pending: PendingLookup,
+  addresses: LookupAddress[],
+): void {
+  const refused = refusedAddress(pending.rule, addresses);
 
-  if (!refused) return answer(asked, addresses);
+  if (!refused) return answer(pending, addresses);
 
-  asked.callback(
+  pending.callback(
     new CapabilityRefusal(
-      `${asked.hostname} resolves to private address ${refused.address}`,
+      `${pending.hostname} resolves to private address ${refused.address}`,
     ),
     '',
     0,
@@ -85,7 +91,7 @@ const refusedAddress = (
 
 // Answers in the shape the caller asked for: every address, or the first.
 function answer(
-  { callback, options }: Asked,
+  { callback, options }: PendingLookup,
   addresses: LookupAddress[],
 ): void {
   const [first] = addresses;

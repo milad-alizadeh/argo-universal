@@ -76,32 +76,47 @@ it.each([
     name: 'a name that resolves to loopback under * with a reason',
     url: (port: number): string => `https://rebind.fixture.test:${port}/`,
     reason: privateAddress,
-    extra: [anywhere],
+    extra: (): PluginCapability[] => [anywhere],
+  },
+  {
+    name: 'a named host with a reason that resolves to loopback',
+    url: (port: number): string => `https://rebind.fixture.test:${port}/`,
+    reason: privateAddress,
+    extra: (port: number): PluginCapability[] => [
+      {
+        kind: 'fetch',
+        host: `rebind.fixture.test:${port}`,
+        reason: 'A named host, never this Mac',
+      },
+    ],
   },
   {
     name: 'a raw loopback address under *',
     url: (port: number): string => `https://127.0.0.1:${port}/`,
     reason: privateAddress,
-    extra: [anywhere],
+    extra: (): PluginCapability[] => [anywhere],
   },
-])('refuses $name and logs it once', async ({ url, reason, extra = [] }) => {
-  const port = await serving();
+])(
+  'refuses $name and logs it once',
+  async ({ url, reason, extra = (): PluginCapability[] => [] }) => {
+    const port = await serving();
 
-  const { results, log } = await runProbe({
-    calls: { refused: `argo.fetch(${JSON.stringify(url(port))})` },
-    capabilities: [
-      localhost(port),
-      { kind: 'fetch', host: `api.fixture.test:${port}` },
-      ...extra,
-    ],
-    network: true,
-  });
+    const { results, log } = await runProbe({
+      calls: { refused: `argo.fetch(${JSON.stringify(url(port))})` },
+      capabilities: [
+        localhost(port),
+        { kind: 'fetch', host: `api.fixture.test:${port}` },
+        ...extra(port),
+      ],
+      network: true,
+    });
 
-  expect(results).toEqual({ refused: refusal(reason) });
-  expect(refusedLines(log)).toEqual([
-    expect.stringContaining('Plugin probe: refused argo.fetch GET'),
-  ]);
-});
+    expect(results).toEqual({ refused: refusal(reason) });
+    expect(refusedLines(log)).toEqual([
+      expect.stringContaining('Plugin probe: refused argo.fetch GET'),
+    ]);
+  },
+);
 
 it('refuses a Host header that would reach another site on the same address, logging it once', async () => {
   const port = await serving();
