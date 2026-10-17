@@ -16,21 +16,35 @@ import {
 } from './scripted-scenario.ts';
 import { ScriptedSessions } from './scripted-sessions.ts';
 
+// How the Agent's process exits, and when App E2E releases its held steps.
+type ScriptedProcess = Pick<ScriptedWire, 'exit' | 'released'>;
+
 type ConnectedScript = { connection: AgentConnection; wire: ScriptedWire };
+
+const exitProcess: ScriptedWire['exit'] = (code, stderr) =>
+  new Promise(() => {
+    process.stderr.write(stderr, () => process.exit(code));
+  });
+
+// Only a process launched by App E2E is ever released.
+const scriptedProcess = (hooks: Partial<ScriptedProcess>): ScriptedProcess => ({
+  exit: hooks.exit ?? exitProcess,
+  released: hooks.released ?? new Promise(() => {}),
+});
 
 class ScriptedAgent {
   private readonly scenario: ScriptedScenario;
   private readonly nextSessionId: () => string;
-  private readonly exit: ScriptedWire['exit'];
+  private readonly hooks: ScriptedProcess;
   private connected: ConnectedScript | undefined;
   private opened = 0;
   public constructor(
     scenario: ScriptedScenario,
     nextSessionId: () => string,
-    exit: ScriptedWire['exit'],
+    hooks: Partial<ScriptedProcess>,
   ) {
     this.scenario = scenario;
-    this.exit = exit;
+    this.hooks = scriptedProcess(hooks);
     this.nextSessionId = nextSessionId;
   }
   private nextId(): string {
@@ -71,7 +85,7 @@ class ScriptedAgent {
     writeRaw: ScriptedWire['writeRaw'],
     closed: Promise<void>,
   ): ScriptedWire {
-    return { writeRaw, closed, exit: this.exit };
+    return { writeRaw, closed, ...this.hooks };
   }
   private requireConnection(): ConnectedScript {
     if (!this.connected) throw new Error('Scripted Agent is not connected');
@@ -99,12 +113,9 @@ class ScriptedAgent {
 export const createScriptedAgent = (
   scenario: ScriptedScenario,
   nextSessionId = (): string => `${process.pid}:${crypto.randomUUID()}`,
-  exit: ScriptedWire['exit'] = (code, stderr) =>
-    new Promise(() => {
-      process.stderr.write(stderr, () => process.exit(code));
-    }),
+  hooks: Partial<ScriptedProcess> = {},
 ): Pick<ScriptedAgent, 'connect' | 'play' | 'sendRaw'> => {
-  const scripted = new ScriptedAgent(scenario, nextSessionId, exit);
+  const scripted = new ScriptedAgent(scenario, nextSessionId, hooks);
 
   return {
     connect: (output, input) => scripted.connect(output, input),

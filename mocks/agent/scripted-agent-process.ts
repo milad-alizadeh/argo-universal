@@ -1,15 +1,9 @@
 import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 import { Writable } from 'node:stream';
-import type {
-  AgentRequestMethod,
-  AgentRequestParamsByMethod,
-} from '@agentclientprotocol/sdk';
+import { z } from 'zod';
+import { type LoggedMessage, releaseMarker } from './request-log.ts';
 import { isScenarioName, scenarios } from './scenarios.ts';
 import { createScriptedAgent } from './scripted-agent.ts';
-import type {
-  ScriptedResponse,
-  ScriptedResponses,
-} from './scripted-responses.ts';
 import {
   scriptedInitialization,
   type ScriptedScenario,
@@ -38,67 +32,105 @@ if (named.relaunched && exitedMarker)
     if (code !== 0) writeFileSync(exitedMarker, '');
   });
 
-// Appends each request to the App E2E's request log, then hands it to the response's own requests.
-const logged = <Method extends AgentRequestMethod>(
-  log: string,
-  method: Method,
-  own: ScriptedResponse<Method>['requests'],
-): Required<ScriptedResponse<Method>>['requests'] => ({
-  push: (params: AgentRequestParamsByMethod[Method]): void => {
-    appendFileSync(log, `${JSON.stringify({ method, params })}\n`);
-    own?.push(params);
-  },
+const initialization = scenario.initialize ?? scriptedInitialization;
+
+const log = (message: LoggedMessage): void => {
+  if (requestLog) appendFileSync(requestLog, `${JSON.stringify(message)}\n`);
+};
+
+// One NDJSON frame on the Agent's stdio, as far as the request log needs it.
+const Frame = z.object({
+  method: z.string().optional(),
+  id: z.union([z.string(), z.number(), z.null()]).optional(),
+  params: z.unknown().optional(),
 });
 
-// Each of a scenario's responses for the method, or one answered by default, also logs its request.
-const loggedResponses = <Method extends AgentRequestMethod>(
-  log: string,
-  method: Method,
-  responses: readonly ScriptedResponse<Method>[] = [{}],
-): ScriptedResponse<Method>[] =>
-  responses.map((response) => ({
-    ...response,
-    requests: logged(log, method, response.requests),
-  }));
+type Frame = z.infer<typeof Frame>;
 
-// App E2E reads which Sessions the Agent was asked to open and close; a scenario's own script for either still answers.
-const loggedRequests = (log: string): ScriptedResponses => ({
-  ...scenario.responses,
-  'session/new': loggedResponses(
-    log,
-    'session/new',
-    scenario.responses?.['session/new'],
-  ),
-  'session/close': loggedResponses(
-    log,
-    'session/close',
-    scenario.responses?.['session/close'],
-  ),
+// App E2E reads every request and notification the Agent received, and each answer it sent, in order.
+const logFrames = (
+  record: (frame: Frame) => void,
+): ((chunk: Uint8Array) => void) => {
+  const decoder = new TextDecoder();
+  let pending = '';
+
+  return (chunk) => {
+    const lines = (pending + decoder.decode(chunk, { stream: true })).split(
+      '\n',
+    );
+
+    pending = lines.pop() ?? '';
+
+    for (const line of lines.filter(Boolean))
+      record(Frame.parse(JSON.parse(line)));
+  };
+};
+
+const received = logFrames(({ method, id, params }) => {
+  if (method) log({ method, id, params });
 });
 
-const selected: ScriptedScenario = requestLog
-  ? { ...scenario, responses: loggedRequests(requestLog) }
-  : scenario;
-
-const initialization = selected.initialize ?? scriptedInitialization;
+const answered = logFrames(({ method, id }) => {
+  if (!method && id !== undefined) log({ answered: id });
+});
 
 const readStandardInput = (): ReadableStream<Uint8Array> =>
   new ReadableStream({
     start: (controller): void => {
-      process.stdin.on('data', (chunk: Buffer) => controller.enqueue(chunk));
+      process.stdin.on('data', (chunk: Buffer) => {
+        received(chunk);
+        controller.enqueue(chunk);
+      });
       process.stdin.on('end', () => controller.close());
     },
   });
 
-const connect = (): void => {
-  createScriptedAgent({
-    ...selected,
-    // Process ownership tests read the environment the launcher handed over.
-    initialize: {
-      ...initialization,
-      _meta: { ...initialization._meta, environment: { ...process.env } },
+const standardOutput = (): WritableStream<Uint8Array> => {
+  const writer = Writable.toWeb(process.stdout).getWriter();
+
+  return new WritableStream({
+    write: (chunk): Promise<void> => {
+      answered(chunk);
+
+      return writer.write(chunk);
     },
-  }).connect(Writable.toWeb(process.stdout), readStandardInput());
+    close: () => writer.close(),
+    abort: (reason) => writer.abort(reason),
+  });
+};
+
+const releasePoll = 25;
+
+// Resolves once App E2E writes the release marker beside its request log.
+const released = (): Promise<void> => {
+  const marker = requestLog && releaseMarker(requestLog);
+
+  if (!marker) return new Promise(() => {});
+
+  return new Promise((resolve) => {
+    const poll = setInterval(() => {
+      if (!existsSync(marker)) return;
+      clearInterval(poll);
+      resolve();
+    }, releasePoll);
+
+    poll.unref();
+  });
+};
+
+const connect = (): void => {
+  createScriptedAgent(
+    {
+      ...scenario,
+      // Process ownership tests read the environment the launcher handed over.
+      initialize: {
+        ...initialization,
+        _meta: { ...initialization._meta, environment: { ...process.env } },
+      },
+    },
+    undefined,
+    { released: released() },
+  ).connect(standardOutput(), readStandardInput());
 };
 
 if (

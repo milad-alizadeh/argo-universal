@@ -26,7 +26,10 @@ import { ScriptedSessions } from './scripted-sessions.ts';
 
 const promptMethod = 'session/prompt';
 
-export type ScriptedWire = Pick<ScriptedTurn, 'writeRaw' | 'closed' | 'exit'>;
+export type ScriptedWire = Pick<
+  ScriptedTurn,
+  'writeRaw' | 'closed' | 'released' | 'exit'
+>;
 
 type MethodContext<Method extends AgentRequestMethod> = AgentRequestContext<
   AgentRequestParamsByMethod[Method]

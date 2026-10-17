@@ -92,14 +92,27 @@ async function reopenConfiguration(page: Page): Promise<void> {
   await page.getByRole('button', { name: agentModelLabel }).click();
 }
 
+// Leaves the configuration open on the chosen model.
+async function chooseModel(page: Page, model: string): Promise<void> {
+  await page.getByRole('button', { name: agentModelLabel }).click();
+  await page.getByRole('button', { name: chooseModelLabel }).click();
+  await page.getByRole('radio', { name: model, exact: true }).click();
+  await reopenConfiguration(page);
+  await expectModel(page, model);
+}
+
+When(
+  'I choose model {string}',
+  async ({ page }, model: string): Promise<void> => {
+    await chooseModel(page, model);
+    await page.keyboard.press('Escape');
+  },
+);
+
 When(
   'I choose model {string} and effort {string}',
   async ({ page }, model: string, effort: string): Promise<void> => {
-    await page.getByRole('button', { name: agentModelLabel }).click();
-    await page.getByRole('button', { name: chooseModelLabel }).click();
-    await page.getByRole('radio', { name: model, exact: true }).click();
-    await reopenConfiguration(page);
-    await expectModel(page, model);
+    await chooseModel(page, model);
     await chooseEffort(page, effort);
     await reopenConfiguration(page);
     await expectEffort(page, effort);

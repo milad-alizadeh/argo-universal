@@ -15,7 +15,7 @@
 
 Response records inherit the prompt steps unless they supply their own steps. Held responses can use a promise or a `waitFor` gate. A `rawResult` bypasses response encoding for rejection tests.
 
-Steps can send updates, request Permission or Elicitation, wait for cancellation, hold until closure, fail, or write raw frames. Gates control timing. Parallel steps send concurrent questions. A response array records answers without a custom request handler.
+Steps can send updates, request Permission or Elicitation, wait for cancellation, hold until closure or release, fail, or write raw frames. Gates control timing. Parallel steps send concurrent questions. A response array records answers without a custom request handler.
 
 `permission-scenario.ts`, `response-scenarios.ts`, `update-scenarios.ts` and `feed-scenarios.ts` contain shared typed scenario facts.
 
@@ -24,6 +24,8 @@ Steps can send updates, request Permission or Elicitation, wait for cancellation
 `createScriptedAgentProcess` in the Engine mocks exposes the Agent through the ACP process port. Tests can observe launch requests, termination and process exit. The wire controller delivers raw frames through the same Agent for malformed-frame and coalesced-frame schedules.
 
 `createAgentMetadata` supplies identity fixture data. Test bootstraps seed `agent_servers` Registry rows; production code performs admission, resolution and launch. There is no native fixture adapter.
+
+App E2E launches append every ACP request and notification the Agent receives, and each answer it sends, to the request log in the test's Server directory. Writing the release marker beside that log (`request-log.ts`) releases every `wait-for-release` step, so a test decides when a held prompt answers.
 
 App fixtures use the Registry ids `claude-acp` and `codex-acp`. Their options choose a scenario and whether the Agent starts installed. The Registry serves the scripted Agent as a compressed binary. The download port supplies files, timing and failures. The Engine, App, tRPC, Session, Feed, Writer, SQLite and Git remain real.
 

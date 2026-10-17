@@ -82,6 +82,13 @@ export const scenarios = {
   file: scenario([message(fileReply)]),
   'cancel-wait': scenario([{ type: 'wait-for-cancel' }]),
   'ignores-cancel': scenario([{ type: 'hold' }]),
+  // Holds its first prompt through Stop until App E2E releases it, then replies to each next prompt.
+  'held-until-released': {
+    ...scenario([reply]),
+    responses: {
+      'session/prompt': [{ steps: [{ type: 'wait-for-release' }] }, {}],
+    },
+  },
   ...exitScenarios,
   ...signInScenarios([reply]),
   'exit-with-stderr': {
