@@ -1,6 +1,8 @@
 import { type ComponentProps, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { SessionsHeader } from '../src/features/sessions/components/sessions-header';
+import type { SessionsStatus } from '../src/features/sessions/stores/sessions-view';
+import { showsUnderStatus } from '../src/features/sessions/utils/sessions-list-input';
 import {
   SessionListView,
   type SessionListViewProps,
@@ -14,9 +16,8 @@ export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
       <PreviewHeader {...props} />
       <SessionListView
         {...args}
+        view={props.view}
         query={props.query}
-        archived={props.archived}
-        layout={props.layout}
         sessions={props.sessions}
       />
     </View>
@@ -24,32 +25,27 @@ export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
 }
 
 type PreviewProps = SessionListViewProps &
-  Pick<
-    ComponentProps<typeof SessionsHeader>,
-    'onArchivedChange' | 'layout' | 'onLayoutChange'
-  >;
+  Pick<ComponentProps<typeof SessionsHeader>, 'view' | 'onViewChange'>;
 
-function usePreviewLayout(
+function usePreviewView(
   args: SessionListViewProps,
-): Pick<PreviewProps, 'layout' | 'onLayoutChange'> {
-  const [layout, setLayout] = useState(args.layout ?? 'regular');
+): Pick<PreviewProps, 'view' | 'onViewChange'> {
+  const [view, setView] = useState(args.view);
 
-  return { layout, onLayoutChange: setLayout };
+  return { view, onViewChange: setView };
 }
 
 function usePreviewSessions(args: SessionListViewProps): PreviewProps {
   const [query, setQuery] = useState(args.query);
-  const [archived, setArchived] = useState(args.archived);
-  const sessions = matchingSessions(args.sessions, query, archived);
+  const view = usePreviewView(args);
+  const sessions = matchingSessions(args.sessions, query, view.view.status);
 
   return {
     ...args,
-    ...usePreviewLayout(args),
+    ...view,
     query,
-    archived,
     sessions,
     onQueryChange: setQuery,
-    onArchivedChange: setArchived,
   };
 }
 
@@ -66,11 +62,11 @@ function PreviewHeader(
 function matchingSessions(
   sessions: SessionListViewProps['sessions'],
   query: string,
-  archived: boolean,
+  status: SessionsStatus,
 ): SessionListViewProps['sessions'] {
   return sessions.filter(
     (session) =>
-      (session.archivedAt !== null) === archived &&
+      showsUnderStatus(status, session.archivedAt) &&
       session.title.toLowerCase().includes(query.toLowerCase()),
   );
 }

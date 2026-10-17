@@ -73,7 +73,7 @@ describe('a system menu', () => {
   it('carries each option’s icon to its row', () => {
     const items = nativeMenuItems({
       options: [
-        { value: 'regular', label: 'Regular', icon: 'layout-regular' },
+        { value: 'regular', label: 'Regular', icon: 'flat-view' },
         { value: 'compact', label: 'Compact' },
       ],
       value: 'regular',
@@ -81,9 +81,64 @@ describe('a system menu', () => {
     });
 
     expect(items.map((item) => item.icon)).toStrictEqual([
-      'layout-regular',
+      'flat-view',
       undefined,
     ]);
+  });
+
+  it('lists a grouped menu’s actions in a final section, running the one chosen and greying a disabled one', () => {
+    const reset = vi.fn<() => void>();
+
+    const menu = {
+      groups: [
+        { value: 'once', options: scopes, onValueChange: vi.fn<() => void>() },
+      ],
+      trailingActions: [
+        { label: 'Reset to default', onPress: reset },
+        { label: 'Clear', onPress: vi.fn<() => void>(), disabled: true },
+      ],
+    };
+
+    const items = nativeMenuItems(menu);
+
+    items[2]?.choose();
+
+    expect(nativeMenuSections(menu)).toHaveLength(2);
+    expect(
+      items.map(({ title, checked, disabled, divided }) => ({
+        title,
+        checked,
+        disabled,
+        divided,
+      })),
+    ).toStrictEqual([
+      {
+        title: scopes[0].label,
+        checked: true,
+        disabled: false,
+        divided: undefined,
+      },
+      {
+        title: scopes[1].label,
+        checked: false,
+        disabled: false,
+        divided: undefined,
+      },
+      {
+        title: 'Reset to default',
+        checked: undefined,
+        disabled: false,
+        divided: true,
+      },
+      {
+        title: 'Clear',
+        checked: undefined,
+        disabled: true,
+        divided: undefined,
+      },
+    ]);
+    expect(new Set(items.map((item) => item.id)).size).toBe(items.length);
+    expect(reset).toHaveBeenCalledTimes(1);
   });
 
   it('lists actions as they are, running the one chosen', () => {

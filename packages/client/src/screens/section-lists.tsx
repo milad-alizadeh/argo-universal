@@ -3,11 +3,11 @@ import type * as React from 'react';
 import { useState } from 'react';
 import type { SectionList, SectionLists } from '#features/frame';
 import {
-  type SessionsFilter,
+  type SessionsViewState,
   SessionsHeader,
   sessionsHeaderItems,
   sessionsHeaderSearch,
-  useSessionsFilter,
+  useSessionsViewState,
 } from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
 import {
@@ -35,7 +35,7 @@ function shownSessionId(path: string): string | undefined {
 
 // `/sessions`: the Sessions the filter shows; with the list beside the pages, the root opens the first active Session, or New Session when there is none.
 function sessionsList(
-  sessions: SessionsFilter,
+  sessions: SessionsViewState,
   path: string,
   onNewSession: () => void,
 ): SectionList {
@@ -51,16 +51,16 @@ function sessionsList(
 }
 
 const sessionsRootHeader = (
-  sessions: SessionsFilter,
+  sessions: SessionsViewState,
 ): SectionList['rootHeader'] => ({
   title: sections.sessions.title,
   right: sessionsHeaderItems(sessions),
   search: sessionsHeaderSearch(sessions),
 });
 
-// iOS's stock items for the Sessions root: the filter, New Session and the search bar.
+// iOS's stock items for the Sessions root: the view menu, New Session and the search bar.
 const sessionsRootToolbar = (
-  sessions: SessionsFilter,
+  sessions: SessionsViewState,
   onNewSession: () => void,
 ): React.JSX.Element => (
   <SessionsRootToolbar {...sessions} onNewSession={onNewSession} />
@@ -112,14 +112,14 @@ function settingsList(
 }
 
 /*
- * Each section's list, its header and its root header, with the Sessions filter and the
+ * Each section's list, its header and its root header, with the Sessions view and the
  * Settings search held once for the Frame: the sidebar's list, a root page's list and its
  * header share them, so a width change keeps them.
  */
 export function useSectionLists(): SectionLists {
   const path = usePathname();
   const navigate = useNavigate();
-  const sessions = useSessionsFilter();
+  const sessions = useSessionsViewState();
   const [query, onQueryChange] = useState('');
 
   return {

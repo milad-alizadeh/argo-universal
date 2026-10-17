@@ -26,7 +26,7 @@ interface HeaderButtonFit {
   size: string;
   // A narrower item keeps the square's height; a style width overrides the class on every platform.
   style?: { width: number };
-  dotPlace: string;
+  dot: HeaderButtonDotProps['on'];
 }
 
 const headerButtonFits = {
@@ -34,14 +34,21 @@ const headerButtonFits = {
     hitSlop: { left: 6, right: 6 },
     size: 'size-11 sm:size-11',
     style: { width: 32 },
-    dotPlace: 'top-2.5 right-1',
+    dot: 'paired',
   },
   slot: {
     hitSlop: undefined,
     size: 'size-11 sm:size-11',
-    dotPlace: 'top-2.5 right-2.25',
+    dot: 'lone',
   },
 } satisfies Record<string, HeaderButtonFit>;
+
+// Where the dot sits over the icon of each button that carries one.
+const dotPlaces = {
+  paired: 'top-2.5 right-1',
+  lone: 'top-2.5 right-2.25',
+  small: 'top-1 right-1',
+} as const;
 
 const dotColors = {
   attention: 'bg-warning',
@@ -84,21 +91,51 @@ function headerDot(
 ): React.JSX.Element | undefined {
   if (!dot) return undefined;
 
-  return <HeaderButtonDot color={dotColors[dot]} place={fit.dotPlace} />;
+  return <HeaderButtonDot dot={dot} on={fit.dot} />;
 }
 
-function HeaderButtonDot(props: {
-  color: string;
-  place: string;
-}): React.JSX.Element {
+interface HeaderButtonDotProps {
+  dot: NonNullable<HeaderButtonProps['dot']>;
+  // The button it sits on: a paired or lone header item, or a wide window's small icon button.
+  on: keyof typeof dotPlaces;
+}
+
+// The dot a header button draws, also for a wide window's small icon button that carries the same state.
+function HeaderButtonDot(props: HeaderButtonDotProps): React.JSX.Element {
   return (
     <View
       testID="header-button-dot"
       className={cn(
         'absolute size-1.75 rounded-full border-2 border-card',
-        props.color,
-        props.place,
+        dotColors[props.dot],
+        dotPlaces[props.on],
       )}
+    />
+  );
+}
+
+interface ListHeaderButtonProps extends Pick<
+  IconButtonProps,
+  'ref' | 'accessibilityState' | 'onPress'
+> {
+  icon: IconName;
+  accessibilityLabel: string;
+  dot?: HeaderButtonProps['dot'];
+}
+
+// A wide window's list header action, such as the Sessions view menu's trigger: a small ghost button with a muted icon and a header button's dot.
+export function ListHeaderButton({
+  dot,
+  ...buttonProps
+}: ListHeaderButtonProps): React.JSX.Element {
+  return (
+    <IconButton
+      {...buttonProps}
+      variant="ghost"
+      className="size-7 sm:size-7"
+      iconRole="action"
+      iconClassName="text-muted-foreground"
+      badge={dot && <HeaderButtonDot dot={dot} on="small" />}
     />
   );
 }

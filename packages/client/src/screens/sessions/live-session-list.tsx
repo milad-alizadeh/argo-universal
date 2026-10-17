@@ -10,7 +10,7 @@ import {
   liveUpdatesStopped,
   type QueryProgress,
   RenameSessionDialog,
-  type SessionsLayout,
+  type SessionsView,
   sessionsLoadState,
 } from '#features/sessions';
 import {
@@ -30,8 +30,8 @@ import { useSessionPages } from './use-session-pages';
 export interface LiveSessionListProps {
   query: string;
   onQueryChange: (query: string) => void;
-  archived: boolean;
-  layout: SessionsLayout;
+  // How the list orders, groups, filters and lays out its rows.
+  view: SessionsView;
   // The open Session, which the wide sidebar marks.
   selectedSessionId?: string;
 }
@@ -109,12 +109,12 @@ function useSessionsViewProps(
 export function LiveSessionList(
   props: LiveSessionListProps,
 ): React.JSX.Element {
-  const view = useSessionsViewProps(props);
-  const rename = useRenameSession(view.sessions);
+  const listView = useSessionsViewProps(props);
+  const rename = useRenameSession(listView.sessions);
 
   return (
     <>
-      <SessionListView {...view} onRename={rename.onRename} />
+      <SessionListView {...listView} onRename={rename.onRename} />
       <RenameSessionDialog {...rename.dialog} />
     </>
   );

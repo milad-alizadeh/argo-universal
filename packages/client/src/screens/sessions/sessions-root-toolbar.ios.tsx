@@ -2,45 +2,45 @@ import { Stack } from 'expo-router';
 import type { ComponentProps } from 'react';
 import type * as React from 'react';
 import {
-  type SessionsFilter,
+  resetSessionsView,
+  type SessionsViewGroup,
+  type SessionsViewState,
   searchSessionsLabel,
-  sessionsFilterChoices,
-  sessionsLayoutChoices,
-  sessionsLayoutLabel,
+  sessionsViewGroups,
 } from '#features/sessions';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import { iconSymbols } from '#lib/generic/symbols/icon-names';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
+import type { MenuAction } from '#primitives/overlays/menu';
 import { toolbarIcon } from '../../lib/product/navigation/toolbar-icon';
 
-export interface SessionsRootToolbarProps extends SessionsFilter {
+export interface SessionsRootToolbarProps extends SessionsViewState {
   onNewSession: () => void;
 }
 
 /*
- * The Sessions root's stock header items, as the Stack Toolbar guide builds them: the filter menu, then New Session,
+ * The Sessions root's stock header items, as the Stack Toolbar guide builds them: the view menu, then New Session,
  * each in its own bubble, and the stack's search bar. iOS 26 docks New Session beside the search bar instead.
  */
 export function SessionsRootToolbar({
   onNewSession,
-  ...filter
+  ...viewState
 }: SessionsRootToolbarProps): React.JSX.Element {
   const newSession = newSessionButton(onNewSession);
 
   return (
     <>
       <Stack.Toolbar placement="right">
-        {filterMenu(filter)}
+        {viewMenu(viewState)}
         {hasLiquidGlass ? null : newSession}
       </Stack.Toolbar>
-      {searchBar(filter, newSession)}
+      {searchBar(viewState, newSession)}
     </>
   );
 }
 
 function searchBar(
-  { onQueryChange }: SessionsFilter,
+  { onQueryChange }: SessionsViewState,
   newSession: React.JSX.Element,
 ): React.JSX.Element {
   return (
@@ -52,39 +52,42 @@ function searchBar(
   );
 }
 
-const filterMenuItem = {
+const viewMenuItem = {
   icon: toolbarIcon(headerFilterIcon),
   accessibilityLabel: 'Filter Sessions',
   separateBackground: true,
 };
 
-// Active or Archived, then the Layout section's Regular or Compact; each checked on the current one. MenuAction.icon takes the option's SF Symbol, which UIMenu draws before the title, after the check.
-function filterMenu(filter: SessionsFilter): React.JSX.Element {
+/*
+ * Each of the view's groups as an inline section, its heading the section's title, then Reset to default in a last section.
+ * No option has an icon, as in Paper: UIMenu draws each title after its check.
+ */
+function viewMenu({
+  view,
+  onViewChange,
+}: SessionsViewState): React.JSX.Element {
   return (
-    <Stack.Toolbar.Menu {...filterMenuItem}>
-      {sessionsFilterChoices.map((choice) => (
-        <Stack.Toolbar.MenuAction
-          key={choice.value}
-          {...choiceState(choice, filter)}
-        >
-          {choice.label}
-        </Stack.Toolbar.MenuAction>
-      ))}
-      {layoutMenu(filter)}
+    <Stack.Toolbar.Menu {...viewMenuItem}>
+      {sessionsViewGroups(view, onViewChange).map(viewSection)}
+      {resetSection(resetSessionsView(view, onViewChange))}
     </Stack.Toolbar.Menu>
   );
 }
 
+type ViewOption = SessionsViewGroup['options'][number];
+
 // An inline menu is a UIMenu section: a divider above it and its title as the heading.
-function layoutMenu(filter: SessionsFilter): React.JSX.Element {
+function viewSection(group: SessionsViewGroup): React.JSX.Element {
+  const options: readonly ViewOption[] = group.options;
+
   return (
-    <Stack.Toolbar.Menu inline title={sessionsLayoutLabel}>
-      {sessionsLayoutChoices.map((choice) => (
+    <Stack.Toolbar.Menu key={group.label} inline title={group.label}>
+      {options.map((option) => (
         <Stack.Toolbar.MenuAction
-          key={choice.value}
-          {...layoutState(choice, filter)}
+          key={option.value}
+          {...optionState(group, option)}
         >
-          {choice.label}
+          {option.label}
         </Stack.Toolbar.MenuAction>
       ))}
     </Stack.Toolbar.Menu>
@@ -95,28 +98,29 @@ type StackToolbarMenuActionProps = ComponentProps<
   typeof Stack.Toolbar.MenuAction
 >;
 
-type ChoiceState = Pick<
-  StackToolbarMenuActionProps,
-  'icon' | 'isOn' | 'onPress'
->;
+type OptionState = Pick<StackToolbarMenuActionProps, 'isOn' | 'onPress'>;
 
-const choiceState = (
-  { value, icon }: (typeof sessionsFilterChoices)[number],
-  { archived, onArchivedChange }: SessionsFilter,
-): ChoiceState => ({
-  icon: iconSymbols[icon].sf,
-  isOn: (value === 'archived') === archived,
-  onPress: () => onArchivedChange(value === 'archived'),
+const optionState = (
+  group: SessionsViewGroup,
+  option: ViewOption,
+): OptionState => ({
+  isOn: group.value === option.value,
+  onPress: () => group.onValueChange(option.value),
 });
 
-const layoutState = (
-  { value, icon }: (typeof sessionsLayoutChoices)[number],
-  { layout, onLayoutChange }: SessionsFilter,
-): ChoiceState => ({
-  icon: iconSymbols[icon].sf,
-  isOn: value === layout,
-  onPress: () => onLayoutChange(value),
-});
+// MenuAction.disabled greys Reset while the view is the default.
+function resetSection(reset: MenuAction): React.JSX.Element {
+  return (
+    <Stack.Toolbar.Menu inline>
+      <Stack.Toolbar.MenuAction
+        disabled={reset.disabled}
+        onPress={reset.onPress}
+      >
+        {reset.label}
+      </Stack.Toolbar.MenuAction>
+    </Stack.Toolbar.Menu>
+  );
+}
 
 function newSessionButton(onPress: () => void): React.JSX.Element {
   return (

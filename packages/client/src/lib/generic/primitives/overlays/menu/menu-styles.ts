@@ -3,6 +3,9 @@ import { cn } from '#lib/generic/utils';
 // Rows keep a gap, as Android's grouped rows do, so hovered, pressed and checked tiles never touch.
 export const menuRowsClassName = 'gap-0.5';
 
+// The space that sets a choice menu's later group, or its actions, apart from the rows before.
+export const menuGroupSpaceClassName = 'h-2.25';
+
 // An action menu's web drawing, as the Session header's menus drew it before Menu took actions.
 export const actionContentClassName = cn(
   'bg-card border-border min-w-32 overflow-hidden rounded-2xl web:shadow-card border p-1 shadow-raised',

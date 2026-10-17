@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../../../lib/generic/variations';
-import type { SessionsLayout } from '../../stores/sessions-layout';
+import type { SessionsLayout } from '../../stores/sessions-view';
 import { SessionRow, type SessionRowProps } from './session-row';
 import {
   SessionRowListMock,
