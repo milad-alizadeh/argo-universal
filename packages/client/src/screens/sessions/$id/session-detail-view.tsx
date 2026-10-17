@@ -17,7 +17,9 @@ import {
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
+import { cn } from '#lib/generic/utils';
 import { Screen } from '#lib/product/screen/screen';
+import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 
@@ -100,9 +102,11 @@ function QuestionSheet({
 }
 
 function SessionComposer(props: OpenSessionViewProps): React.JSX.Element {
+  const filled = useSessionFill().filled;
+
   return (
     // As wide as the Feed: the SessionColumn around it sets the width.
-    <View className="w-full items-center">
+    <View className={cn('w-full items-center', filled && filledClass)}>
       <QuestionSheet elicitation={props.elicitation} />
       <Composer
         {...composerUnderQuestion(props.composer, props.elicitation)}
