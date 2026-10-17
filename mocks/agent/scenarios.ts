@@ -41,6 +41,19 @@ const update = (value: SessionUpdate): ScriptedStep => ({
 
 const reply = message(sharedReply);
 
+const issueDetails: ScriptedStep = {
+  type: 'elicitation',
+  request: {
+    mode: 'form',
+    message: 'A few details for the new issue',
+    requestedSchema: {
+      type: 'object',
+      properties: { title: { type: 'string', title: 'Title' } },
+      required: ['title'],
+    },
+  },
+};
+
 const editReadme = { toolCallId: 'edit-readme', title: 'Edit README.md' };
 
 const writePressureTools = 32;
@@ -112,24 +125,10 @@ export const scenarios = {
     }),
     reply,
   ]),
-  elicitation: scenario([
-    {
-      type: 'elicitation',
-      request: {
-        mode: 'form',
-        message: 'A few details for the new issue',
-        requestedSchema: {
-          type: 'object',
-          properties: { title: { type: 'string', title: 'Title' } },
-          required: ['title'],
-        },
-      },
-    },
-    reply,
-  ]),
+  elicitation: scenario([issueDetails, reply]),
   ...planModeScenarios(reply),
   ...contextUsageScenarios(reply),
-  ...titleScenarios(reply),
+  ...titleScenarios(reply, issueDetails),
   'held-mode': scenario(heldModeSteps),
   configuration: scenario([update(smallModelUpdate), reply]),
   'write-pressure': scenario([

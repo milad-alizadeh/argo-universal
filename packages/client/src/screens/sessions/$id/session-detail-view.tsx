@@ -7,6 +7,7 @@ import {
   type ElicitationFormProps,
 } from '#features/requests';
 import {
+  ArchivedBanner,
   serverSilentMessage,
   SessionCallout,
   type SessionCalloutProps,
@@ -31,6 +32,8 @@ export interface OpenSessionViewProps {
   signInTerminal?: TerminalSignInProps;
   // Drawn as iOS's long-press preview above a Session's menu: the Feed alone, with nothing to type into.
   preview?: boolean;
+  // An archived Session reads only: a banner takes the Composer's place.
+  archived?: boolean;
 }
 
 export type SessionDetailViewProps =
@@ -69,12 +72,21 @@ function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
     <SessionLayout
       header={<SessionHeader {...props.header} />}
       feed={<Feed {...props.feed} />}
-      composer={props.preview ? null : <SessionComposer {...props} />}
+      composer={sessionBottom(props)}
       panel={
         props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />
       }
     />
   );
+}
+
+// The bottom slot: nothing in a preview, the banner for an archived Session, else the Composer.
+function sessionBottom(props: OpenSessionViewProps): React.ReactNode {
+  if (props.preview) return null;
+
+  if (props.archived) return <ArchivedBanner />;
+
+  return <SessionComposer {...props} />;
 }
 
 function QuestionSheet({

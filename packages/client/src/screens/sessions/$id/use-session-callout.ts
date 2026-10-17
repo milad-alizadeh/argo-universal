@@ -95,6 +95,16 @@ function useRetryOnReconnect(
   });
 }
 
+const isArchived = ({ snapshot }: SessionFeed): boolean =>
+  snapshot !== null && snapshot.archivedAt !== null;
+
+// An archived Session reads only, so neither its open nor its last Turn asks for anything.
+const shownProblem = (
+  feed: SessionFeed,
+  sources: SessionProblemSources,
+): SessionProblem | undefined =>
+  isArchived(feed) ? undefined : sessionProblem(sources);
+
 // What the Session's open or last Turn asks for; an open the Connection dropped shows one toast instead.
 function useOpenProblem(sources: SessionCalloutSources): RetriableProblem {
   const { sessionId, feed, commands } = sources;
@@ -112,7 +122,7 @@ function useOpenProblem(sources: SessionCalloutSources): RetriableProblem {
   useErrorToast(pastSessionDropToast(problemSources, feed.snapshot !== null));
   useRetryOnReconnect(problemSources, openAgain);
 
-  return { problem: sessionProblem(problemSources), openAgain };
+  return { problem: shownProblem(feed, problemSources), openAgain };
 }
 
 // The sign-in rule over that problem, with the Turn's sign-in kept across remounts.

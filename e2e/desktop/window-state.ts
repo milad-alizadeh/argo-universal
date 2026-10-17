@@ -32,7 +32,7 @@ export async function backgroundWindow(
 // The App's own foreground test (use-foreground.web.ts); its notifications follow this, not the native window flags.
 export function appForeground(page: Page): Promise<boolean> {
   return page.evaluate<boolean>(
-    "document.visibilityState === 'visible' && document.hasFocus()",
+    "document.visibilityState === 'visible' && document.hasFocus() && !window.argo?.window.isMinimized()",
   );
 }
 

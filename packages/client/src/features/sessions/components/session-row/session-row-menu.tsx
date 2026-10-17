@@ -4,8 +4,8 @@ import {
   ContextMenu,
   type ContextMenuItem,
   type ContextMenuTriggerProps,
-  contextMenuGroup,
 } from '#primitives/overlays/menu';
+import { sessionMenuItems } from '../session-menu-items';
 import type { SessionRowProps } from './session-row-props';
 
 type SessionRowMenuProps = SessionRowProps & {
@@ -36,12 +36,16 @@ const renameSession = (props: SessionRowProps): (() => void) | undefined =>
 const archiveSession = (props: SessionRowProps): (() => void) | undefined =>
   props.onArchive && ((): void => props.onArchive?.(props.session.sessionId));
 
-// Rename, then Archive, each only when the list offers it; a phone's system menu parts the two.
+// Rename, then Archive, in one group: no separator between them, as in the header's menu.
 export function sessionMenuGroups(props: SessionRowProps): ContextMenuItem[][] {
-  if (props.session.archivedAt !== null) return [];
+  const { session } = props;
 
-  return [
-    contextMenuGroup('Rename', 'rename', renameSession(props)),
-    contextMenuGroup('Archive', 'archive', archiveSession(props)),
-  ].filter((group) => group.length > 0);
+  const items = sessionMenuItems({
+    archived: session.archivedAt !== null,
+    status: session.status,
+    onRename: renameSession(props),
+    onArchive: archiveSession(props),
+  });
+
+  return items.length > 0 ? [items] : [];
 }

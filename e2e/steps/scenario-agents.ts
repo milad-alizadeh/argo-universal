@@ -2,6 +2,7 @@ import {
   type AppFixtureAgents,
   appFixtureAgentIds,
 } from '@repo/mocks/agent/app-fixtures';
+import { agentScenarioSteps, agentStep } from './agent-steps';
 import { signInScenarios } from './sign-in-agents';
 
 export function agentId(ordinal: number): string {
@@ -60,36 +61,37 @@ function attachmentConfiguration(steps: string[]): AppFixtureAgents {
   return scenario && agent ? { [agent]: { scenario } } : {};
 }
 
-// A step that gives one Agent a shared named scenario.
-const namedScenarioSteps = [
-  [/^(?:Given|And) Agent (\d+) supplies a long Feed history$/, 'feed-history'],
-  [/^(?:Given|And) Agent (\d+) asks for an Elicitation$/, 'elicitation'],
-  [/^(?:Given|And) Agent (\d+) asks to leave plan mode$/, 'leave-plan-mode'],
-] as const;
-
-function namedConfiguration(
-  steps: string[],
-  [step, scenario]: (typeof namedScenarioSteps)[number],
-): AppFixtureAgents {
-  const chosen = steps
-    .map((text) => step.exec(text))
-    .find((match) => match !== null);
-
-  return chosen ? { [agentId(Number(chosen[1]))]: { scenario } } : {};
-}
-
 export function scenarioAgents(steps: string[]): AppFixtureAgents {
   return Object.assign(
     {},
     ...steps.map(configurationForStep),
     attachmentConfiguration(steps),
-    ...namedScenarioSteps.map((named) => namedConfiguration(steps, named)),
+    namedScenarioConfiguration(steps),
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
     notificationConfiguration(steps),
     desktopConfiguration(steps),
     unreadConfiguration(steps),
     signInConfiguration(steps),
+  );
+}
+
+const namedScenarioSteps = [
+  [agentStep('supplies a long Feed history'), 'feed-history'],
+  [agentStep('asks for an Elicitation'), 'elicitation'],
+  [agentStep('asks to leave plan mode'), 'leave-plan-mode'],
+  [
+    agentStep('names its Session after a question'),
+    'agent-title-after-question',
+  ],
+] as const;
+
+function namedScenarioConfiguration(steps: string[]): AppFixtureAgents {
+  return Object.fromEntries(
+    agentScenarioSteps(namedScenarioSteps, steps).map(([ordinal, scenario]) => [
+      agentId(ordinal),
+      { scenario },
+    ]),
   );
 }
 

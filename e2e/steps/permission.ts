@@ -1,10 +1,13 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { When, Then } from './fixtures';
+import { expectListedAgent } from './agents';
+import { Given, When, Then } from './fixtures';
 import { expectComposerAccepts } from './input-requests';
 import { messageLabel } from './new-session';
 
 const composer = (page: Page): Locator => page.getByTestId('composer-column');
+
+Given('Agent {int} asks to leave plan mode', expectListedAgent);
 
 Then(
   'the Permission request {string} opens over the Composer',

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect } from '../fixtures';
+import { type App, expect } from '../fixtures';
 import { Given } from './fixtures';
 
 export const phone = { width: 390, height: 844 };
@@ -49,3 +49,13 @@ Given('a wide Frame', async ({ page }): Promise<void> => {
 Given('a phone Frame', async ({ page }): Promise<void> => {
   await openApp(page, phone);
 });
+
+// Another page on the same Server, opened wide at the App's root; only the web App can open one.
+export async function openWidePage(app: Pick<App, 'openPage'>): Promise<Page> {
+  if (!app.openPage) throw new Error('This scenario needs the web App');
+  const other = await app.openPage();
+  await other.setViewportSize(wide);
+  await other.goto('/');
+
+  return other;
+}

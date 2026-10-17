@@ -22,6 +22,7 @@ import type { CodeMapFile, Palette, RendererProps, View } from './model';
 import { usePalette } from './palette';
 import { usePlateInsets } from './plates/plate-measure';
 import { FlatLoader, ThreeMap } from './renderer-loader.web';
+import { drawnView, supports3d } from './webgl';
 
 export interface CodeMapProps {
   /** Names the map for screen readers and stands in while a renderer loads. */
@@ -113,11 +114,13 @@ function Drawn(props: DrawnProps): JSX.Element {
   );
 }
 
+/** Without WebGL the map draws `flat`, whatever view was asked for. */
 export function CodeMap(props: CodeMapProps): JSX.Element {
+  const view = drawnView(props.view, supports3d());
   const palette = usePalette();
-  const map = useOverlay(props.view);
+  const map = useOverlay(view);
 
   if (!palette) return <Text>{`Measuring ${props.label}`}</Text>;
 
-  return <Drawn {...props} palette={palette} map={map} />;
+  return <Drawn {...props} view={view} palette={palette} map={map} />;
 }

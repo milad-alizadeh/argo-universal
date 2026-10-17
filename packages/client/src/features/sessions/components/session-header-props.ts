@@ -1,5 +1,6 @@
 import type { SessionStatus } from '@repo/contracts';
 import type { MergeMethod } from '../stores/merge-method';
+import type { SessionMenu } from './session-menu-items';
 import type { SessionPullRequest } from './session-pull-request';
 
 export type SessionHeaderStatus = Extract<
@@ -19,6 +20,8 @@ export interface SessionHeaderProps {
   // The merge method this device used last: Merge PR runs it and its menu ticks it. Squash until one is picked.
   mergeMethod?: MergeMethod;
   onMergeMethodChange?: (method: MergeMethod) => void;
+  // Rename and Archive under ⋯, as the Session's row offers them; absent where the page offers neither.
+  menu?: SessionMenu;
   // Fixes the clock, for stories and tests.
   now?: number;
 }

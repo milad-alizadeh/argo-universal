@@ -1,5 +1,3 @@
-import { stat } from 'node:fs/promises';
-import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
 import type {
   PluginFailure,
@@ -35,8 +33,9 @@ export class PluginService {
 
     return runtime.activate({
       entry: { pluginId, directory, main: plugin.manifest.main },
-      dev: plugin.firstParty || (await markedDev(directory)),
       name: plugin.manifest.name,
+      // Granted at load with no prompt (ADR-0030).
+      capabilities: plugin.manifest.capabilities ?? [],
     });
   }
 
@@ -88,9 +87,3 @@ function requireRuntime(deps: PluginServiceDeps): PluginRuntime {
 
   return deps.pluginRuntime;
 }
-
-const markedDev = (directory: string): Promise<boolean> =>
-  stat(join(directory, '.argo-dev')).then(
-    (marker) => marker.isFile(),
-    () => false,
-  );

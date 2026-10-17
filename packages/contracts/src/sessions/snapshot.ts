@@ -171,6 +171,7 @@ export const SessionSnapshot = z.strictObject({
     agent: true,
     title: true,
     titleSource: true,
+    archivedAt: true,
     checkout: true,
   }).shape,
   state: SessionState,

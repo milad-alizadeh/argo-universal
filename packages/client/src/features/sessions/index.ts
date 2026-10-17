@@ -95,6 +95,12 @@ export {
   type SessionHeaderStatus,
 } from './components/session-header';
 
+export { SessionHeaderMenu } from './components/session-header-menu';
+
+export { type SessionMenu } from './components/session-menu-items';
+
+export { SessionMenuToolbar } from './components/session-menu-toolbar';
+
 export { type SessionPullRequest } from './components/session-pull-request';
 
 export { type SessionConfigChange } from './hooks/use-session-config-change';
@@ -170,3 +176,15 @@ export {
 } from './utils/session-sign-in';
 
 export { type TurnSignInRecord, useTurnSignIn } from './hooks/use-turn-sign-in';
+
+export {
+  ArchivedBanner,
+  archivedBannerText,
+} from './components/archive-session/archived-banner';
+
+export {
+  ArchiveSessionAlert,
+  type ArchiveSessionAlertProps,
+} from './components/archive-session/archive-session-alert';
+
+export { archivedToast } from './components/archive-session/archived-toast';

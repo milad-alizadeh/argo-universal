@@ -1,6 +1,10 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import { SessionRowUpdateJob } from '../../session-storage';
-import { openChildFeed, type ChildFeed } from '../../subagents/child-feed';
+import {
+  openChildFeed,
+  type ChildFeed,
+  type OpenedChildFeed,
+} from '../../subagents/child-feed';
 import type { SubagentRouting } from '../../subagents/routing-types';
 import { updateSubagentWork } from '../../subagents/work';
 import { deliverSubagentMessage, isSubagentMessage } from './subagent-messages';
@@ -17,17 +21,29 @@ type Association = Extract<
   { sessionUpdate: 'subagent_update' }
 >;
 
+function openOrKnown(
+  input: SubagentRouting,
+  children: Map<string, ChildFeed>,
+  vendorId: string,
+): OpenedChildFeed {
+  const known = children.get(vendorId);
+
+  return known
+    ? { child: known, spawned: false }
+    : openChildFeed(input, vendorId);
+}
+
 function associate(
   input: SubagentRouting,
   children: Map<string, ChildFeed>,
   vendorId: string,
-): ChildFeed | undefined {
-  const child = children.get(vendorId) ?? openChildFeed(input, vendorId);
+): OpenedChildFeed | undefined {
+  const association = openOrKnown(input, children, vendorId);
 
-  if (child.parentId !== input.parentId) return undefined;
-  children.set(vendorId, child);
+  if (association.child.parentId !== input.parentId) return undefined;
+  children.set(vendorId, association.child);
 
-  return child;
+  return association;
 }
 
 function titleUpdate(
@@ -50,15 +66,18 @@ function updateAssociation(
   children: Map<string, ChildFeed>,
   update: Association,
 ): void {
-  const child = associate(input, children, update.sessionId);
+  const association = associate(input, children, update.sessionId);
 
-  if (!child) return;
+  if (!association) return;
+
+  const { child } = association;
+
   titleUpdate(input, child, update);
   children.set(
     update.sessionId,
     updateSubagentWork(input, child, subagentWorkState(update.state)),
   );
-  input.parentFeed.send(associationEvent(input, child, update));
+  input.parentFeed.send(associationEvent(input, { ...association, update }));
 }
 
 function routeUpdate(
@@ -72,7 +91,10 @@ function routeUpdate(
     return updateAssociation(input, children, update);
 
   if (isSubagentMessage(update))
-    return deliverSubagentMessage(input, children, update);
+    return deliverSubagentMessage(
+      { ...input, children, transcriptId: notification.sessionId },
+      update,
+    );
   deliverChildUpdate(children, notification);
 }
 
@@ -132,8 +154,11 @@ function replayMessage(
   if (!isSubagentMessage(notification.update)) return false;
 
   return deliverSubagentMessage(
-    routingSource(input, children.get(notification.sessionId)),
-    children,
+    {
+      ...routingSource(input, children.get(notification.sessionId)),
+      children,
+      transcriptId: notification.sessionId,
+    },
     notification.update,
   );
 }

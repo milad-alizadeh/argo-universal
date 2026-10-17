@@ -19,6 +19,7 @@ type ServerSource = {
     | 'port'
     | 'firstPartyPluginsDirectory'
     | 'keychain'
+    | 'pluginNetwork'
     | 'version'
     | 'startedAt'
     | 'database'
@@ -48,6 +49,7 @@ type ServerConfiguration = Pick<
   | 'notificationOptions'
   | 'firstPartyPluginsDirectory'
   | 'keychain'
+  | 'pluginNetwork'
 >;
 
 function serverConfiguration(
@@ -61,5 +63,6 @@ function serverConfiguration(
     notificationOptions: context.notificationOptions,
     firstPartyPluginsDirectory: context.firstPartyPluginsDirectory,
     keychain: context.keychain,
+    pluginNetwork: context.pluginNetwork,
   };
 }

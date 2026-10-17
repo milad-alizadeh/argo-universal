@@ -4,43 +4,29 @@ import type {
   SessionUpdate,
   FeedUpdate,
 } from '@repo/contracts';
-import { mapSupportedContentBlock } from '../../../feed';
 import type { ChildFeed } from '../../subagents/child-feed';
-import type { SubagentRouting } from '../../subagents/routing-types';
-import { messageMetadata } from './subagent-sender';
+import {
+  type AcpSessionMessage,
+  type MessageRouting,
+  replyOf,
+  sendMessageAction,
+} from './subagent-actions';
+import { messageContent } from './subagent-content';
+import { messageMetadata } from './subagent-participants';
+import { deliverPrompt } from './subagent-prompts';
 
-type Message = Extract<
-  SessionNotification['update'],
-  { sessionUpdate: 'session_message' | 'session_message_chunk' }
->;
-
-type MessageRouting = SubagentRouting & {
-  children: ReadonlyMap<string, ChildFeed>;
-};
-
-const messageId = (input: SubagentRouting, update: Message): string =>
+// `parentId` names the Session whose transcript reported the message, so ids never match across transcripts.
+const messageId = (input: MessageRouting, update: AcpSessionMessage): string =>
   JSON.stringify(['session_message', input.parentId, update.messageId]);
 
 function previousMessage(
-  child: ChildFeed,
+  input: MessageRouting,
   id: string,
 ): SessionMessage | undefined {
-  const context = child.feed.getSnapshot().context;
+  const context = input.parentFeed.getSnapshot().context;
   const row = context.rows[id] ?? context.findWrittenRow(id);
 
   return asSessionMessage(row);
-}
-
-function recipient(
-  input: SubagentRouting,
-  children: ReadonlyMap<string, ChildFeed>,
-  update: Message,
-): ChildFeed | undefined {
-  if (update.recipientSessionId) return children.get(update.recipientSessionId);
-
-  return [...children.values()].find(
-    (child) => previousMessage(child, messageId(input, update)) !== undefined,
-  );
 }
 
 const asSessionMessage = (
@@ -48,70 +34,104 @@ const asSessionMessage = (
 ): SessionMessage | undefined =>
   row?.sessionUpdate === 'session_message' ? row : undefined;
 
-const previousContent = (
-  previous: SessionMessage | undefined,
-): SessionMessage['content'] => previous?.content ?? [];
-
-function replaceContent(
-  update: Extract<Message, { sessionUpdate: 'session_message' }>,
-  previous: SessionMessage | undefined,
-): SessionMessage['content'] {
-  if (update.content === undefined) return previousContent(previous);
-
-  return (update.content ?? []).map(mapSupportedContentBlock);
-}
-
-function messageContent(
-  update: Message,
-  previous: SessionMessage | undefined,
-): SessionMessage['content'] {
-  if (update.sessionUpdate === 'session_message_chunk')
-    return [
-      ...previousContent(previous),
-      mapSupportedContentBlock(update.content),
-    ];
-
-  return replaceContent(update, previous);
-}
-
 export const isSubagentMessage = (
   update: SessionNotification['update'],
-): update is Message =>
+): update is AcpSessionMessage =>
   update.sessionUpdate === 'session_message' ||
   update.sessionUpdate === 'session_message_chunk';
 
+type DeliveredMessage = Extract<
+  FeedUpdate,
+  { sessionUpdate: 'session_message' }
+>;
+
 function messageRow(
   input: MessageRouting,
-  child: ChildFeed,
-  update: Message,
-): FeedUpdate {
-  const previous = previousMessage(child, messageId(input, update));
+  update: AcpSessionMessage,
+): DeliveredMessage {
+  const id = messageId(input, update);
+  const previous = previousMessage(input, id);
 
   return {
-    id: messageId(input, update),
+    id,
     messageId: update.messageId,
     sessionUpdate: 'session_message',
     state: 'settled',
-    content: messageContent(update, previous),
+    content: messageContent(update, previous?.content),
     _meta: messageMetadata(input, update, previous),
   };
 }
 
-export function deliverSubagentMessage(
-  input: SubagentRouting,
-  children: ReadonlyMap<string, ChildFeed>,
-  update: Message,
+// On a child's transcript the routing's `parentFeed` is that child's Feed.
+function writeChildRow(
+  input: MessageRouting,
+  child: ChildFeed,
+  update: AcpSessionMessage,
+): void {
+  child.feed.send({
+    type: 'feed.change',
+    turnId: child.turnId,
+    change: { type: 'upsert', update: messageRow(input, update) },
+  });
+}
+
+function deliverResult(
+  input: MessageRouting,
+  update: AcpSessionMessage,
 ): boolean {
-  const child = recipient(input, children, update);
+  const reply = replyOf(input, update);
 
-  if (!child) return false;
+  if (!reply) return false;
 
-  const change = {
-    type: 'upsert' as const,
-    update: messageRow({ ...input, children }, child, update),
-  };
-
-  child.feed.send({ type: 'feed.change', turnId: child.turnId, change });
+  sendMessageAction(input, reply.child, {
+    messageId: update.messageId,
+    field: { result: messageContent(update, reply.previous) },
+  });
 
   return true;
+}
+
+// A result routes first: a child's reply also names a recipient, which `deliverPrompt` would misread.
+const deliverAction = (
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean => deliverResult(input, update) || deliverPrompt(input, update);
+
+// A participant the Agent named that is not yet associated may still be, so its message waits for it.
+const awaitsParticipant = (
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean =>
+  [update.recipientSessionId, update.senderSessionId].some(
+    (id) => id != null && id !== input.transcriptId && !input.children.has(id),
+  );
+
+// On the parent's own transcript; a message on a transcript not yet associated waits for it.
+const deliverOnParent = (
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean =>
+  input.transcriptId === input.parent.vendorSessionId &&
+  (deliverAction(input, update) || !awaitsParticipant(input, update));
+
+/**
+ * A `session_message` is a row only in the Feed of the child whose transcript reported it (ACP subagents RFD).
+ * On the parent's transcript it only sets a `subagent_update` prompt or result (#930).
+ * `false` keeps the message until its transcript or a named participant is associated.
+ */
+export function deliverSubagentMessage(
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean {
+  const child = input.children.get(input.transcriptId);
+
+  if (child) {
+    writeChildRow(input, child, update);
+    // The row is the delivery; a prompt or result for the child's own Subagents is extra.
+    deliverAction(input, update);
+
+    return true;
+  }
+
+  return deliverOnParent(input, update);
 }

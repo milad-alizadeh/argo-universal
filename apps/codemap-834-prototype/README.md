@@ -124,7 +124,7 @@ The desktop CSP adds only `wasm-unsafe-eval` to `script-src`, as ADR-0028 specif
 Every other directive stays unchanged; JavaScript `unsafe-eval` remains forbidden.
 The chart branch has an overlapping uncommitted change. Coalesce the identical CSP edit during integration.
 Normal desktop flat and GPU-disabled flat now use CanvasKit without a CSP bypass.
-3D still requires WebGL. A proposed Flat fallback is awaiting owner design approval in Atlas Explorations.
+3D requires WebGL. Without it the Code Map draws Flat and the page disables its 3D button (owner, 2026-10-17).
 ADR-0017 records the owner's exception for the two deferred renderer imports.
 
 Links and trace steps are not implemented or benchmarked.

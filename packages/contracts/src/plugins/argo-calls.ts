@@ -20,6 +20,8 @@ export const ProcessCommand = z.object({
   cwd: z.string().optional(),
   timeoutMs: z.number().int().positive().optional(),
   input: z.string().optional(),
+  // Only variables the matching Capability names; the Server adds PATH, HOME, LANG and TMPDIR.
+  env: z.record(z.string(), z.string()).optional(),
 });
 
 export type ProcessCommand = z.infer<typeof ProcessCommand>;

@@ -15,6 +15,7 @@ export type StoredSnapshot = Pick<
   | 'agent'
   | 'title'
   | 'titleSource'
+  | 'archivedAt'
   | 'checkout'
   | 'subagents'
   | 'shells'
@@ -35,6 +36,7 @@ type StoredFields = Pick<
   | 'agent'
   | 'title'
   | 'titleSource'
+  | 'archivedAt'
   | 'checkout'
   | 'changes'
   | 'subagents'
@@ -76,6 +78,7 @@ function storedFields(stored: StoredSnapshot): StoredFields {
     agent: stored.agent,
     title: stored.title,
     titleSource: stored.titleSource,
+    archivedAt: stored.archivedAt,
     checkout: stored.checkout,
     changes: noChanges,
     subagents: stored.subagents,

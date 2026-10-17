@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/buttons/button';
-import { useErrorToast } from './toast';
+import { showToast, useErrorToast } from './toast';
 
 export const failedOpen = {
   title: 'Could not open the Project',
@@ -26,6 +26,32 @@ export function ErrorToastExample(): React.JSX.Element {
         label="Fail again"
         variant="outline"
         onPress={() => setAttempt((count) => count + 1)}
+      />
+    </View>
+  );
+}
+
+export const archivedWithUndo = { title: 'Session archived', action: 'Undo' };
+
+const showArchived = (onUndo: () => void): void =>
+  showToast({
+    tone: 'success',
+    title: archivedWithUndo.title,
+    action: { label: archivedWithUndo.action, onPress: onUndo },
+  });
+
+// A finished action whose toast offers to take it back, for Toast stories.
+export function ActionToastExample({
+  onUndo,
+}: {
+  onUndo: () => void;
+}): React.JSX.Element {
+  return (
+    <View className="items-start">
+      <Button
+        label="Archive"
+        variant="outline"
+        onPress={() => showArchived(onUndo)}
       />
     </View>
   );

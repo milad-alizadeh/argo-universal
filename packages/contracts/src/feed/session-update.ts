@@ -59,7 +59,10 @@ export const SessionMessage = z.strictObject({
   messageId: z.string(),
   content: z.array(ContentBlock),
   _meta: createFeedMetadataSchema(
-    z.strictObject({ senderSessionId: z.string() }),
+    z.strictObject({
+      senderSessionId: z.string().optional(),
+      recipientSessionId: z.string().optional(),
+    }),
   ),
 });
 
@@ -157,6 +160,11 @@ export const SubagentState = z.enum(['running', 'idle', 'requires_action']);
 
 export type SubagentState = z.infer<typeof SubagentState>;
 
+// ACP has no `wait` or `close`, so neither is an action (#930).
+export const SubagentAction = z.enum(['spawn', 'message']);
+
+export type SubagentAction = z.infer<typeof SubagentAction>;
+
 // ACP's `sessionId` and `state` clash with the envelope's, so both carry a `subagent` prefix.
 export const SubagentUpdate = z.strictObject({
   ...envelope,
@@ -164,7 +172,14 @@ export const SubagentUpdate = z.strictObject({
   subagentSessionId: z.string(),
   title: z.string().optional(),
   subagentState: SubagentState.optional(),
-  _meta: noExtensionMeta,
+  // `prompt` is the parent's outgoing message; `result` only an explicit reply from the child.
+  _meta: createFeedMetadataSchema(
+    z.strictObject({
+      action: SubagentAction.optional(),
+      prompt: z.array(ContentBlock).optional(),
+      result: z.array(ContentBlock).optional(),
+    }),
+  ),
 });
 
 export type SubagentUpdate = z.infer<typeof SubagentUpdate>;

@@ -1,9 +1,10 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 import { reloadApp } from './frame';
+import { sessionRow } from './live-session';
 import { query } from './server-query';
 
 const titlePrefix = 'Long list Session';
@@ -16,8 +17,8 @@ function title(index: number): string {
   return `${titlePrefix} ${String(index).padStart(indexWidth, '0')}`;
 }
 
-function row(page: Page, index: number): ReturnType<Page['getByRole']> {
-  return page.getByRole('button', { name: new RegExp(`^${title(index)}, `) });
+function row(page: Page, index: number): Locator {
+  return sessionRow(page, title(index));
 }
 
 async function firstProjectId(page: Page, httpUrl: string): Promise<string> {

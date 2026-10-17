@@ -1,15 +1,25 @@
+import type { Subagent } from '@repo/contracts';
 import { session, turn } from '@repo/db/schema';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq, inArray } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import {
+  openAcpFeedSession,
+  parentSubagentUpdates,
+  waitForAcpSessionIdle,
+} from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const missingChild = 'No Subagent was persisted';
 
-it('finishes the original child Turn when its resumed parent receives an idle outcome', async () => {
+// The background parent closes and resumes; its new Turn reports the stored child idle.
+type ResumedParent = Awaited<ReturnType<typeof openAcpFeedSession>> & {
+  child: Subagent;
+};
+
+async function resumeBackgroundParent(): Promise<ResumedParent> {
   const background = scenarios['subagent-background'];
 
   const { host, sessionId } = await openAcpFeedSession({
@@ -46,6 +56,13 @@ it('finishes the original child Turn when its resumed parent receives an idle ou
     prompt: [{ type: 'text', text: 'Resume' }],
   });
   await waitForAcpSessionIdle(host, sessionId);
+
+  return { host, sessionId, child };
+}
+
+it('finishes the original child Turn when its resumed parent receives an idle outcome', async () => {
+  const { host, sessionId, child } = await resumeBackgroundParent();
+
   expect(await host.caller.session.subagents({ sessionId })).toMatchObject([
     {
       state: 'idle',
@@ -73,6 +90,16 @@ it('finishes the original child Turn when its resumed parent receives an idle ou
   });
 
   expect(page.rows.every((row) => row.state === 'settled')).toBe(true);
+});
+
+it('records no new spawn when a resumed parent reports its stored child', async () => {
+  const { host, sessionId } = await resumeBackgroundParent();
+
+  expect(
+    (await parentSubagentUpdates(host, sessionId)).map(
+      (row) => row._meta?.argo?.action,
+    ),
+  ).toEqual(['spawn', 'message', undefined]);
 });
 
 it.each(appFixtureAgentIds)(

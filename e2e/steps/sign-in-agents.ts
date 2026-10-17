@@ -1,6 +1,4 @@
-// A sign-in fixture step names its Agent by ordinal.
-const agentStep = (text: string): RegExp =>
-  new RegExp(`^(?:Given|And) Agent (\\d+) ${text}$`);
+import { agentScenarioSteps, agentStep } from './agent-steps';
 
 const signInSteps = [
   [agentStep('needs sign-in'), 'sign-in-required'],
@@ -19,11 +17,5 @@ type SignInScenario = (typeof signInSteps)[number][1];
 
 // Sign-in and launch fixtures for the callouts above the Composer, as Agent ordinal and scenario.
 export function signInScenarios(steps: string[]): [number, SignInScenario][] {
-  return steps.flatMap((step) =>
-    signInSteps.flatMap(([pattern, scenario]): [number, SignInScenario][] => {
-      const match = pattern.exec(step);
-
-      return match ? [[Number(match[1]), scenario]] : [];
-    }),
-  );
+  return agentScenarioSteps(signInSteps, steps);
 }

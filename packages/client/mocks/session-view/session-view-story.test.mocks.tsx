@@ -4,12 +4,12 @@ import {
   type OpenSessionViewProps,
   SessionDetailView,
   type SessionDetailViewProps,
-  sessionPageTitle,
 } from '../../src/screens/sessions/$id/session-detail-view';
 import {
   idleSession,
   runningSession,
 } from '../../src/screens/sessions/$id/session-detail-view.mocks';
+import { sessionScreenHeader } from '../../src/screens/sessions/$id/session-page-header';
 import { ScreenHeaderMock } from '../screen-header-mock';
 
 export const feedScrollTestId = 'feed-scroll';
@@ -21,7 +21,7 @@ export const meta = {
   // A narrow window's header, as the screen sets it.
   render: ({ view }): React.JSX.Element => (
     <>
-      <ScreenHeaderMock title={sessionPageTitle(view)} />
+      <ScreenHeaderMock {...sessionScreenHeader(view)} />
       <SessionDetailView {...view} />
     </>
   ),

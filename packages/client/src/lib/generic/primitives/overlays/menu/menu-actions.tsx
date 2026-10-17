@@ -1,6 +1,7 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { Icon } from '#primitives/display/icon';
 import { Text, TextClassContext } from '#primitives/display/text';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
@@ -51,11 +52,19 @@ function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
         disabled={action.disabled}
         onSelect={action.onPress}
       >
-        <View {...actionRow(action)}>
-          {action.content ?? <Text>{action.label}</Text>}
-        </View>
+        <View {...actionRow(action)}>{actionLabel(action)}</View>
       </RadixMenu.Item>
     </TextClassContext.Provider>
+  );
+}
+
+// The row's icon, as a context menu's rows lead with theirs, then its label.
+function actionLabel(action: MenuAction): React.JSX.Element {
+  return (
+    <>
+      {action.icon && <Icon name={action.icon} role="body" />}
+      {action.content ?? <Text>{action.label}</Text>}
+    </>
   );
 }
 
