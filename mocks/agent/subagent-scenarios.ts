@@ -34,11 +34,25 @@ const childMessage = (text: string): ScriptedStep => ({
   sessionId: subagentSessionId,
 });
 
+// The parent transcript's view of its outgoing message, which sets the Subagent's prompt.
 const delegation = (messageId: string, text: string): ScriptedStep => ({
   type: 'update',
   update: {
     sessionUpdate: 'session_message',
     messageId,
+    recipientSessionId: subagentSessionId,
+    content: [{ type: 'text', text }],
+  },
+});
+
+// The child transcript's own view of the same message, with its own message id (ACP subagents RFD).
+const incoming = (messageId: string, text: string): ScriptedStep => ({
+  type: 'update',
+  sessionId: subagentSessionId,
+  update: {
+    sessionUpdate: 'session_message',
+    messageId: `${messageId}-incoming`,
+    senderSessionId: subagentParentSessionId,
     recipientSessionId: subagentSessionId,
     content: [{ type: 'text', text }],
   },
@@ -56,26 +70,37 @@ const reply = (text: string): ScriptedStep => ({
   },
 });
 
+const foregroundSteps = (view: ScriptedStep[]): ScriptedStep[] => [
+  delegation('review', 'Review the change.'),
+  state('running'),
+  ...view,
+  childMessage('I am reviewing the change.'),
+  state('requires_action'),
+  state('running'),
+  childMessage('The review is complete.'),
+  reply('The change looks correct.'),
+  state('idle'),
+  message('The Subagent finished its review.'),
+];
+
 export const foregroundSubagent: ScriptedScenario = {
   sessionIds,
-  steps: [
-    delegation('review', 'Review the change.'),
-    state('running'),
-    childMessage('I am reviewing the change.'),
-    state('requires_action'),
-    state('running'),
-    childMessage('The review is complete.'),
-    reply('The change looks correct.'),
-    state('idle'),
-    message('The Subagent finished its review.'),
-  ],
+  steps: foregroundSteps([incoming('review', 'Review the change.')]),
+};
+
+// The Agent reports no incoming view, so the child's Feed starts with its own updates.
+export const outgoingOnlySubagent: ScriptedScenario = {
+  sessionIds,
+  steps: foregroundSteps([]),
 };
 
 // The parent completes its Turn while the Subagent still runs.
 export const backgroundSubagent: ScriptedScenario = {
+  sessionIds,
   steps: [
     delegation('review', 'Review the change in the background.'),
     state('running'),
+    incoming('review', 'Review the change in the background.'),
     childMessage('The background review has started.'),
     message('The Subagent is reviewing in the background.'),
   ],
@@ -91,6 +116,7 @@ export const subagentMoreWork: ScriptedScenario = {
         steps: [
           delegation('follow-up', 'Review the follow-up change.'),
           state('running'),
+          incoming('follow-up', 'Review the follow-up change.'),
           childMessage('The follow-up review is complete.'),
           state('idle'),
           message('The same Subagent finished the follow-up.'),
@@ -108,6 +134,10 @@ export const subagentScenarios = {
   'subagent-background': {
     configOptions: acpConfiguration,
     ...backgroundSubagent,
+  },
+  'subagent-outgoing-only': {
+    configOptions: acpConfiguration,
+    ...outgoingOnlySubagent,
   },
   'subagent-more-work': {
     configOptions: acpConfiguration,

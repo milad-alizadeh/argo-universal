@@ -1,7 +1,11 @@
+import type { TextContent } from '@repo/contracts';
 import { session, turn } from '@repo/db/schema';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
-import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
+import type {
+  ScriptedScenario,
+  ScriptedStep,
+} from '@repo/mocks/agent/scripted-scenario';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi, onTestFinished } from 'vitest';
 import { startAcpEngine, emptySessionInput } from '#mocks/acp-engine';
@@ -249,7 +253,7 @@ const revisedDelegation: ScriptedScenario = {
   ],
 };
 
-it('retains delegated message patches and chunks with the reported child Turn outcome', async () => {
+it("keeps the parent's outgoing message, its patches and chunks out of the child Feed", async () => {
   const { host, sessionId } = await openAcpFeedSession(revisedDelegation);
 
   const [child] = await host.caller.session.subagents({ sessionId });
@@ -267,17 +271,189 @@ it('retains delegated message patches and chunks with the reported child Turn ou
     direction: 'tail',
   });
 
-  expect(page.rows[0]).toMatchObject({
-    sessionUpdate: 'session_message',
-    messageId: 'delegation',
-    content: [
-      { type: 'text', text: 'Revised' },
-      { type: 'text', text: ' instruction' },
-    ],
+  expect(page.rows.map((row) => row.sessionUpdate)).toEqual(['agent_message']);
+});
+
+it('starts the child Feed with its own updates when the Agent reports no incoming view', async () => {
+  const { host, sessionId } = await openAcpFeedSession(
+    scenarios['subagent-outgoing-only'],
+  );
+
+  const [child] = await host.caller.session.subagents({ sessionId });
+
+  if (!child) throw new Error(missingSubagent);
+
+  const page = await host.caller.feed.page({
+    sessionId: child.sessionId,
+    direction: 'tail',
   });
+
+  expect(page.rows.map((row) => row.sessionUpdate)).toEqual(['agent_message']);
+});
+
+const text = (value: string): TextContent => ({ type: 'text', text: value });
+
+const childTranscript = (
+  update: Extract<ScriptedStep, { type: 'update' }>['update'],
+  sessionId?: string,
+): ScriptedStep => ({ type: 'update', sessionId, update });
+
+const associated: ScriptedStep = {
+  type: 'update',
+  update: { sessionUpdate: 'subagent_update', sessionId: 'review' },
+};
+
+it.each([
+  {
+    claim: 'revises its incoming message by patch and chunk',
+    steps: [
+      childTranscript(
+        {
+          sessionUpdate: 'session_message',
+          messageId: 'incoming',
+          senderSessionId: 'parent',
+          recipientSessionId: 'review',
+          content: [text('Original')],
+        },
+        'review',
+      ),
+      childTranscript(
+        {
+          sessionUpdate: 'session_message',
+          messageId: 'incoming',
+          content: [text('Revised')],
+        },
+        'review',
+      ),
+      childTranscript(
+        {
+          sessionUpdate: 'session_message',
+          messageId: 'incoming',
+          recipientSessionId: 'review',
+        },
+        'review',
+      ),
+      childTranscript(
+        {
+          sessionUpdate: 'session_message_chunk',
+          messageId: 'incoming',
+          content: text(' instruction'),
+        },
+        'review',
+      ),
+    ],
+    rows: [
+      {
+        messageId: 'incoming',
+        content: [text('Revised'), text(' instruction')],
+        sender: 'parent',
+      },
+    ],
+  },
+  {
+    claim: 'keeps its reply to the parent as a row instead of waiting',
+    steps: [
+      childTranscript(
+        {
+          sessionUpdate: 'session_message',
+          messageId: 'reply',
+          senderSessionId: 'review',
+          recipientSessionId: 'parent',
+          content: [text('Done')],
+        },
+        'review',
+      ),
+    ],
+    rows: [{ messageId: 'reply', content: [text('Done')], sender: 'child' }],
+  },
+  {
+    claim: 'leaves a missing sender missing',
+    steps: [
+      childTranscript(
+        {
+          sessionUpdate: 'session_message',
+          messageId: 'incoming',
+          recipientSessionId: 'review',
+          content: [text('No sender')],
+        },
+        'review',
+      ),
+    ],
+    rows: [
+      {
+        messageId: 'incoming',
+        content: [text('No sender')],
+        sender: undefined,
+      },
+    ],
+  },
+  {
+    claim:
+      'is never selected by a parent message with the same id and no recipient',
+    steps: [
+      childTranscript(
+        {
+          sessionUpdate: 'session_message',
+          messageId: 'shared',
+          senderSessionId: 'parent',
+          content: [text('Child view')],
+        },
+        'review',
+      ),
+      childTranscript({
+        sessionUpdate: 'session_message',
+        messageId: 'shared',
+        content: [text('Parent view')],
+      }),
+      childTranscript({
+        sessionUpdate: 'session_message_chunk',
+        messageId: 'shared',
+        content: text(' chunk'),
+      }),
+    ],
+    rows: [
+      { messageId: 'shared', content: [text('Child view')], sender: 'parent' },
+    ],
+  },
+] as const)("the child's own transcript $claim", async ({ steps, rows }) => {
+  const { host, sessionId } = await openAcpFeedSession({
+    sessionIds: ['parent'],
+    steps: [associated, ...steps],
+  });
+
+  const [child] = await host.caller.session.subagents({ sessionId });
+
+  if (!child) throw new Error(missingSubagent);
+
+  const senders = new Map([
+    ['parent', sessionId],
+    ['child', child.sessionId],
+  ]);
+
+  const page = await host.caller.feed.page({
+    sessionId: child.sessionId,
+    direction: 'tail',
+  });
+
   expect(
-    page.rows.filter((row) => row.sessionUpdate === 'session_message'),
-  ).toHaveLength(1);
+    page.rows.flatMap((row) =>
+      row.sessionUpdate === 'session_message'
+        ? [
+            {
+              messageId: row.messageId,
+              content: row.content,
+              senderSessionId: row._meta?.argo?.senderSessionId,
+            },
+          ]
+        : [],
+    ),
+  ).toEqual(
+    rows.map(({ sender, ...row }) => ({
+      ...row,
+      senderSessionId: sender && senders.get(sender),
+    })),
+  );
+  expect(await parentSubagentUpdates(host, sessionId)).toHaveLength(1);
 });
 
 it("revises one parent prompt from patches and chunks of the parent's outgoing message", async () => {

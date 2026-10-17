@@ -1,44 +1,32 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type {
-  ContentBlock,
   SessionMessage,
   SessionUpdate,
   FeedUpdate,
 } from '@repo/contracts';
-import { mapSupportedContentBlock } from '../../../feed';
 import type { ChildFeed } from '../../subagents/child-feed';
-import type { SubagentRouting } from '../../subagents/routing-types';
 import {
   type AcpSessionMessage,
   type MessageRouting,
   replyOf,
   sendMessageAction,
 } from './subagent-actions';
+import { messageContent } from './subagent-content';
+import { deliverPrompt } from './subagent-prompts';
 import { messageMetadata } from './subagent-sender';
 
-const messageId = (input: SubagentRouting, update: AcpSessionMessage): string =>
+// `parentId` names the Session whose transcript reported the message, so ids never match across transcripts.
+const messageId = (input: MessageRouting, update: AcpSessionMessage): string =>
   JSON.stringify(['session_message', input.parentId, update.messageId]);
 
 function previousMessage(
-  child: ChildFeed,
+  input: MessageRouting,
   id: string,
 ): SessionMessage | undefined {
-  const context = child.feed.getSnapshot().context;
+  const context = input.parentFeed.getSnapshot().context;
   const row = context.rows[id] ?? context.findWrittenRow(id);
 
   return asSessionMessage(row);
-}
-
-function recipient(
-  input: MessageRouting,
-  update: AcpSessionMessage,
-): ChildFeed | undefined {
-  if (update.recipientSessionId)
-    return input.children.get(update.recipientSessionId);
-
-  return [...input.children.values()].find(
-    (child) => previousMessage(child, messageId(input, update)) !== undefined,
-  );
 }
 
 const asSessionMessage = (
@@ -46,40 +34,26 @@ const asSessionMessage = (
 ): SessionMessage | undefined =>
   row?.sessionUpdate === 'session_message' ? row : undefined;
 
-function replaceContent(
-  update: Extract<AcpSessionMessage, { sessionUpdate: 'session_message' }>,
-  previous: ContentBlock[],
-): ContentBlock[] {
-  if (update.content === undefined) return previous;
-
-  return (update.content ?? []).map(mapSupportedContentBlock);
-}
-
-function messageContent(
-  update: AcpSessionMessage,
-  previous: ContentBlock[] = [],
-): ContentBlock[] {
-  if (update.sessionUpdate === 'session_message_chunk')
-    return [...previous, mapSupportedContentBlock(update.content)];
-
-  return replaceContent(update, previous);
-}
-
 export const isSubagentMessage = (
   update: SessionNotification['update'],
 ): update is AcpSessionMessage =>
   update.sessionUpdate === 'session_message' ||
   update.sessionUpdate === 'session_message_chunk';
 
+type DeliveredMessage = Extract<
+  FeedUpdate,
+  { sessionUpdate: 'session_message' }
+>;
+
 function messageRow(
   input: MessageRouting,
-  child: ChildFeed,
   update: AcpSessionMessage,
 ): DeliveredMessage {
-  const previous = previousMessage(child, messageId(input, update));
+  const id = messageId(input, update);
+  const previous = previousMessage(input, id);
 
   return {
-    id: messageId(input, update),
+    id,
     messageId: update.messageId,
     sessionUpdate: 'session_message',
     state: 'settled',
@@ -88,52 +62,17 @@ function messageRow(
   };
 }
 
-type DeliveredMessage = Extract<
-  FeedUpdate,
-  { sessionUpdate: 'session_message' }
->;
-
-const senderOf = (row: DeliveredMessage): string | undefined =>
-  row._meta?.argo?.senderSessionId;
-
-const isOutgoing = (
+// On a child's transcript the routing's `parentFeed` is that child's Feed.
+function writeChildRow(
   input: MessageRouting,
   child: ChildFeed,
-  row: DeliveredMessage,
-): boolean =>
-  child.parentId === input.parentId && senderOf(row) === input.parentId;
-
-// The parent's outgoing message to its own child is that child's prompt.
-function recordPrompt(
-  input: MessageRouting,
-  child: ChildFeed,
-  row: DeliveredMessage,
-): void {
-  if (!isOutgoing(input, child, row)) return;
-  sendMessageAction(input, child, {
-    messageId: row.messageId,
-    field: { prompt: row.content },
-  });
-}
-
-function deliverPrompt(
-  input: MessageRouting,
   update: AcpSessionMessage,
-): boolean {
-  const child = recipient(input, update);
-
-  if (!child) return false;
-
-  const row = messageRow(input, child, update);
-
+): void {
   child.feed.send({
     type: 'feed.change',
     turnId: child.turnId,
-    change: { type: 'upsert', update: row },
+    change: { type: 'upsert', update: messageRow(input, update) },
   });
-  recordPrompt(input, child, row);
-
-  return true;
 }
 
 function deliverResult(
@@ -153,7 +92,30 @@ function deliverResult(
 }
 
 // A result routes first: a child's reply also names a recipient, which `deliverPrompt` would misread.
-export const deliverSubagentMessage = (
+const deliverAction = (
   input: MessageRouting,
   update: AcpSessionMessage,
 ): boolean => deliverResult(input, update) || deliverPrompt(input, update);
+
+/**
+ * A `session_message` is a row only in the Feed of the child whose transcript reported it (ACP subagents RFD).
+ * On the parent's transcript it only sets a `subagent_update` prompt or result (#930).
+ * `false` keeps the message until its transcript or recipient is associated.
+ */
+export function deliverSubagentMessage(
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean {
+  const child = input.children.get(input.transcriptId);
+
+  if (child) {
+    writeChildRow(input, child, update);
+    deliverAction(input, update);
+
+    return true;
+  }
+
+  if (input.transcriptId !== input.parent.vendorSessionId) return false;
+
+  return deliverAction(input, update);
+}
