@@ -2,8 +2,7 @@ import type { RequestMock } from '@repo/mocks/app';
 import { expect, fn, within } from 'storybook/test';
 import {
   allow,
-  denial,
-  denyWithoutMessage,
+  deny,
   responseError,
   submitting,
 } from '../../../../../mocks/requests/permission/answer-flows.test.mocks';
@@ -20,9 +19,9 @@ const meta = { ...permissionTestMeta, title: 'Tests/PermissionRequest' };
 
 export default meta;
 
-export const DenyPhone = denial(390);
+export const DenyPhone = deny(390);
 
-export const DenyWide = denial(1440);
+export const DenyWide = deny(1440);
 
 export const AllowPhone = allow(390);
 
@@ -54,42 +53,10 @@ export const SecondAgentResponseErrorWide = responseError(
   permissionMocks[1],
 );
 
-export const DenyWithoutMessagePhone = denyWithoutMessage(390);
-
-export const DenyWithoutMessageWide = denyWithoutMessage(1440);
-
-export const Keyboard: Story = {
-  args: { feedback: true, denialMessage: 'Use a new branch.' },
-  play: async ({ userEvent, args }) => {
-    const canvas = within(document.body);
-    await settleViewport(1440);
-    await expect(canvas.getByRole('textbox')).toHaveFocus();
-    await userEvent.keyboard('{Escape}');
-    await expect(args.onDenialMessageChange).toHaveBeenCalledWith(undefined);
-    await userEvent.keyboard('{Enter}');
-    await expect(args.onAnswer).toHaveBeenCalledTimes(1);
-    await expect(args.onAnswer).toHaveBeenCalledWith({
-      optionId: 'reject_once',
-      message: 'Use a new branch.',
-    });
-  },
-};
-
-export const OpensDenial: Story = {
-  args: { feedback: true },
-  play: async ({ userEvent, args }) => {
-    const canvas = within(document.body);
-    await settleViewport(1440);
-    await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
-    await expect(args.onDenialMessageChange).toHaveBeenCalledWith('');
-    await expect(args.onAnswer).not.toHaveBeenCalled();
-  },
-};
-
 function conflict(width: number, mock?: RequestMock): Story {
   return {
     args: {
-      ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
+      ...permissionProps({ mock, onAnswer: fn() }),
       state: { kind: 'answered', reason: 'Already answered on another device' },
     },
     play: async ({ args }) => {

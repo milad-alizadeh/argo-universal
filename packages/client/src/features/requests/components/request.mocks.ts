@@ -84,7 +84,6 @@ export function permissionProps({
   return {
     request,
     ...recordedDetails(toolCallUpdate(mock, request.toolCallId)),
-    onDenialMessageChange: () => {},
     onAnswer: () => {},
     state: { kind: 'open' },
     ...props,

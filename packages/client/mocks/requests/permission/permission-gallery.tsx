@@ -40,17 +40,6 @@ export const galleryVariations: { label: string; preview: ReactNode }[] = [
     ),
   },
   {
-    label: 'Deny with a message',
-    preview: (
-      <PermissionPreview
-        {...permissionProps({
-          feedback: true,
-          denialMessage: 'Keep the cache. Run expo start --clear instead.',
-        })}
-      />
-    ),
-  },
-  {
     label: 'Already answered',
     preview: (
       <PermissionPreview

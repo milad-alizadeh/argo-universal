@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/display/text';
 import {
   RequestCard,
@@ -8,7 +7,6 @@ import {
 } from '../request-card/request-card';
 import { RequestHeading } from '../request-card/request-heading';
 import { PermissionActions } from './permission-actions';
-import { DenialActions, DenialField } from './permission-denial';
 import {
   type PermissionAnswers,
   type PermissionAnswersInput,
@@ -23,10 +21,8 @@ export interface PermissionRequestProps extends PermissionAnswersInput {
 
 type Answering = Pick<
   RequestCardProps,
-  'onEnter' | 'onEscape' | 'footerClassName' | 'actions'
+  'onEnter' | 'footerClassName' | 'actions'
 >;
-
-type BodyProps = PermissionRequestProps & { answers: PermissionAnswers };
 
 export function PermissionRequest(props: PermissionRequestProps): ReactNode {
   const answers = usePermissionAnswers(props);
@@ -39,36 +35,28 @@ export function PermissionRequest(props: PermissionRequestProps): ReactNode {
       error={props.error}
       {...answering(answers)}
     >
-      <PermissionBody {...props} answers={answers} />
+      <PermissionBody {...props} />
     </RequestCard>
   );
 }
 
-// Enter, Escape and the footer answer the request.
+// Enter and the footer answer the request.
 function answering(answers: PermissionAnswers): Answering {
   return {
     onEnter: answers.enter,
-    onEscape: answers.escape,
-    footerClassName: cn('justify-end', answers.denying && 'justify-between'),
-    actions: <AnswerActions {...answers} />,
+    footerClassName: 'justify-end',
+    actions: (
+      <PermissionActions
+        {...answers}
+        disabled={answers.inactive}
+        onChoose={answers.choose}
+        onPick={answers.pick}
+      />
+    ),
   };
 }
 
-// While denying, the footer holds Back and Deny in place of the options.
-function AnswerActions(answers: PermissionAnswers): ReactNode {
-  if (answers.denying) return <DenialActions {...answers} />;
-
-  return (
-    <PermissionActions
-      {...answers}
-      disabled={answers.inactive}
-      onChoose={answers.choose}
-      onPick={answers.pick}
-    />
-  );
-}
-
-function PermissionBody({ answers, ...props }: BodyProps): ReactNode {
+function PermissionBody(props: PermissionRequestProps): ReactNode {
   return (
     <View className="gap-4 px-4 pt-1 wide:gap-3 wide:px-0 wide:pt-0">
       <RequestHeading
@@ -77,7 +65,6 @@ function PermissionBody({ answers, ...props }: BodyProps): ReactNode {
         hint={props.reason}
       />
       {props.input && <PermissionInput input={props.input} />}
-      {answers.denying && <DenialField {...props} answers={answers} />}
     </View>
   );
 }

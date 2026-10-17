@@ -89,7 +89,6 @@ export const MainContentUsesAvailableWidth: ScaffoldStory = {
                 request: recordedPermission(permissionMock),
                 state: { kind: 'open' },
                 onAnswer: fn(),
-                onDenialMessageChange: fn(),
               },
             })}
           />

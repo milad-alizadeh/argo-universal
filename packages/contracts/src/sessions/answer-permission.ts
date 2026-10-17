@@ -5,7 +5,6 @@ export const SessionAnswerPermissionInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   requestId: z.string(),
   optionId: z.string(),
-  message: z.string().optional(),
 });
 
 export type SessionAnswerPermissionInput = z.infer<

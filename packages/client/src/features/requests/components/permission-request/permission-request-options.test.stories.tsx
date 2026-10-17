@@ -4,7 +4,7 @@ import {
   enterSendsPicked,
   groupedPhone,
   rejectMenuWide,
-  rejectWithoutFeedback,
+  rejectAnswersAtOnce,
 } from '../../../../../mocks/requests/permission/agent-options.test.mocks';
 import { meta as permissionTestMeta } from '../../../../../mocks/requests/permission/permission-story-context.test.mocks';
 import { permissionMocks } from '../request.mocks';
@@ -33,16 +33,16 @@ export const GroupedPhone = groupedPhone();
 
 export const SecondAgentGroupedPhone = groupedPhone(permissionMocks[1]);
 
-export const RejectWithoutFeedbackPhone = rejectWithoutFeedback(390);
+export const RejectAnswersAtOncePhone = rejectAnswersAtOnce(390);
 
-export const RejectWithoutFeedbackWide = rejectWithoutFeedback(1440);
+export const RejectAnswersAtOnceWide = rejectAnswersAtOnce(1440);
 
-export const SecondAgentRejectWithoutFeedbackPhone = rejectWithoutFeedback(
+export const SecondAgentRejectAnswersAtOncePhone = rejectAnswersAtOnce(
   390,
   permissionMocks[1],
 );
 
-export const SecondAgentRejectWithoutFeedbackWide = rejectWithoutFeedback(
+export const SecondAgentRejectAnswersAtOnceWide = rejectAnswersAtOnce(
   1440,
   permissionMocks[1],
 );

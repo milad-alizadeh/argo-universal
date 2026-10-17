@@ -19,10 +19,7 @@ const alreadyAnswered = 'already answered';
 
 export function validatePermissionAnswer(
   sessionActor: SessionActorRef | undefined,
-  answer: Pick<
-    SessionAnswerPermissionInput,
-    'requestId' | 'optionId' | 'message'
-  >,
+  answer: Pick<SessionAnswerPermissionInput, 'requestId' | 'optionId'>,
 ): asserts sessionActor is SessionActorRef {
   const context = sessionActor?.getSnapshot().context;
 
@@ -39,12 +36,6 @@ export function validatePermissionAnswer(
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'The Agent did not offer that option',
-    });
-
-  if (answer.message)
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'The Agent does not support Permission feedback',
     });
 }
 

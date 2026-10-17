@@ -434,30 +434,6 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     expect(await waitForPermission(host, sessionId)).toEqual(pending);
   });
 
-  it.each([reject, allowOnce])(
-    'feedback with %s is refused as undeliverable and the request stays pending',
-    async (optionId) => {
-      const outcomes: Outcomes = [];
-
-      const { host, sessionId } = await startSession(
-        agent,
-        permissionSteps(outcomes, ['tool-a']),
-      );
-
-      const pending = await waitForPermission(host, sessionId);
-      await expect(
-        host.caller.session.answerPermission({
-          sessionId,
-          requestId: pending.requestId,
-          optionId,
-          message: 'Use the cache instead',
-        }),
-      ).rejects.toThrow('does not support Permission feedback');
-      expect(await waitForPermission(host, sessionId)).toEqual(pending);
-      expect(outcomes).toHaveLength(0);
-    },
-  );
-
   it('a request stays answerable after one App stops watching the Session', async () => {
     const outcomes: Outcomes = [];
 

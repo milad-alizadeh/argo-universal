@@ -50,7 +50,6 @@ export function preservesComposer(
     request,
     state: { kind: 'open' },
     onAnswer,
-    onDenialMessageChange: fn(),
   } satisfies NonNullable<ComposerProps['permissionRequest']>;
 
   const allow = requiredFixture(

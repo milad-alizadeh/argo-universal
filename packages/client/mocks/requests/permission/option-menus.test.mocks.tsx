@@ -27,7 +27,6 @@ export function agentOptionsArgs(
     mock,
     options,
     onAnswer: fn(),
-    onDenialMessageChange: fn(),
   });
 }
 

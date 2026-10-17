@@ -12,10 +12,7 @@ const emptyDraft: ComposerDraft = { text: '', attachments: [] };
 type RequestProps = Pick<ComposerProps, 'permissionRequest'>;
 
 export function RequestComposerPreview(props: RequestProps): ReactElement {
-  const draft = useRequestDraft(props);
-  const permissionRequest = useDenialMessage(props.permissionRequest);
-
-  return <Composer {...draft} permissionRequest={permissionRequest} />;
+  return <Composer {...useRequestDraft(props)} />;
 }
 
 function useRequestDraft(props: RequestProps): ComposerProps {
@@ -31,21 +28,4 @@ function useRequestDraft(props: RequestProps): ComposerProps {
     sessionStarted: true,
     running: true,
   });
-}
-
-function useDenialMessage(
-  request: ComposerProps['permissionRequest'],
-): ComposerProps['permissionRequest'] {
-  const [denialMessage, setDenialMessage] = useState(request?.denialMessage);
-
-  return (
-    request && {
-      ...request,
-      denialMessage,
-      onDenialMessageChange: (message: string | undefined): void => {
-        setDenialMessage(message);
-        request.onDenialMessageChange(message);
-      },
-    }
-  );
 }
