@@ -84,11 +84,11 @@ const logFrames = (
 };
 
 const received = logFrames(({ method, id, params }) => {
-  if (method) log({ method, id, params });
+  if (method) log({ agent: process.pid, method, id, params });
 });
 
 const answered = logFrames(({ method, id }) => {
-  if (!method && id !== undefined) log({ answered: id });
+  if (!method && id !== undefined) log({ agent: process.pid, answered: id });
 });
 
 const readStandardInput = (): ReadableStream<Uint8Array> =>

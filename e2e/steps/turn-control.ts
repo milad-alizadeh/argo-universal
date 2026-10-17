@@ -107,18 +107,23 @@ Then(
     const messages = loggedMessages(app.requestLogPath);
     const { held, next } = promptPair(messages);
 
-    expect(answeredAt(messages, held)).toBeLessThan(receivedAt(messages, next));
+    const heldAnswer = answeredAt(messages, held);
+
+    expect(heldAnswer).toBeGreaterThan(receivedAt(messages, held));
+    expect(heldAnswer).toBeLessThan(receivedAt(messages, next));
   },
 );
 
 const expectModelSwitch = (messages: LoggedMessage[], model: string): void => {
   const { held, next } = promptPair(messages);
 
-  const switches = requestsIn(messages, 'session/set_config_option').filter(
-    (request) =>
-      request.params?.configId === 'model' &&
-      receivedAt(messages, request) > receivedAt(messages, held),
-  );
+  const switches = requestsIn(messages, 'session/set_config_option')
+    .filter((request) => request.agent === held.agent)
+    .filter(
+      (request) =>
+        request.params?.configId === 'model' &&
+        receivedAt(messages, request) > receivedAt(messages, held),
+    );
 
   expect(switches.map((request) => request.params?.value)).toEqual([model]);
 
