@@ -24,7 +24,7 @@ export type MessageRouting = SubagentRouting & {
 // Only the parent's outgoing `prompt` is a `message` action; a child's explicit `result` carries no action (#930).
 type MessageField = { prompt: ContentBlock[] } | { result: ContentBlock[] };
 
-type MessageAction = { messageId: string; field: MessageField };
+export type MessageAction = { messageId: string; field: MessageField };
 
 // One row per message in the parent transcript, so its patches and chunks revise it.
 const actionId = (input: SubagentRouting, messageId: string): string =>
@@ -123,12 +123,12 @@ const childById = (
     (child) => child.sessionId === row.subagentSessionId,
   );
 
-type Prompt = { child: ChildFeed; prompt: ContentBlock[] };
+export type ChildPrompt = { child: ChildFeed; prompt: ContentBlock[] };
 
 const asPrompt = (
   input: MessageRouting,
   row: SubagentUpdate,
-): Prompt | undefined => {
+): ChildPrompt | undefined => {
   const child = childById(input, row);
   const prompt = promptOf(row);
 
@@ -139,7 +139,7 @@ const asPrompt = (
 export function previousPrompt(
   input: MessageRouting,
   messageId: string,
-): Prompt | undefined {
+): ChildPrompt | undefined {
   const row = asSubagentUpdate(
     writtenRow(input.parentFeed, actionId(input, messageId)),
   );

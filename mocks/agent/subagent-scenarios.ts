@@ -70,10 +70,10 @@ const reply = (text: string): ScriptedStep => ({
   },
 });
 
-const foregroundSteps = (view: ScriptedStep[]): ScriptedStep[] => [
+const foregroundSteps = (incomingView: ScriptedStep[]): ScriptedStep[] => [
   delegation('review', 'Review the change.'),
   state('running'),
-  ...view,
+  ...incomingView,
   childMessage('I am reviewing the change.'),
   state('requires_action'),
   state('running'),

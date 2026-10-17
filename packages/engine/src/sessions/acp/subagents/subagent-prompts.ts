@@ -1,6 +1,8 @@
 import type { ChildFeed } from '../../subagents/child-feed';
 import {
   type AcpSessionMessage,
+  type ChildPrompt,
+  type MessageAction,
   type MessageRouting,
   ownChild,
   previousPrompt,
@@ -12,9 +14,9 @@ import { messageContent } from './subagent-content';
 const promptRecipient = (
   input: MessageRouting,
   update: AcpSessionMessage,
+  previous: ChildPrompt | undefined,
 ): ChildFeed | undefined =>
-  previousPrompt(input, update.messageId)?.child ??
-  ownChild(input, update.recipientSessionId);
+  previous?.child ?? ownChild(input, update.recipientSessionId);
 
 // Only the transcript owner's outgoing message is a prompt; another sender's message is not.
 const isOutgoing = (
@@ -24,26 +26,23 @@ const isOutgoing = (
   update.senderSessionId == null ||
   update.senderSessionId === input.transcriptId;
 
-function recordPrompt(
-  input: MessageRouting,
-  child: ChildFeed,
+const promptAction = (
   update: AcpSessionMessage,
-): void {
-  const previous = previousPrompt(input, update.messageId)?.prompt;
-
-  sendMessageAction(input, child, {
-    messageId: update.messageId,
-    field: { prompt: messageContent(update, previous) },
-  });
-}
+  previous: ChildPrompt | undefined,
+): MessageAction => ({
+  messageId: update.messageId,
+  field: { prompt: messageContent(update, previous?.prompt) },
+});
 
 export function deliverPrompt(
   input: MessageRouting,
   update: AcpSessionMessage,
 ): boolean {
-  const child = promptRecipient(input, update);
+  const previous = previousPrompt(input, update.messageId);
+  const child = promptRecipient(input, update, previous);
 
-  if (child && isOutgoing(input, update)) recordPrompt(input, child, update);
+  if (child && isOutgoing(input, update))
+    sendMessageAction(input, child, promptAction(update, previous));
 
   return child !== undefined;
 }

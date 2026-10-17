@@ -20,17 +20,21 @@ const knownSender = (
     ? input.parent.sessionId
     : input.children.get(acpId)?.sessionId;
 
-// Only a sender the Agent supplied; a missing one stays missing.
-function resolveSender(
+const suppliedSender = (
+  input: MessageSender,
+  update: AcpSessionMessage,
+): string | undefined =>
+  update.senderSessionId == null
+    ? undefined
+    : knownSender(input, update.senderSessionId);
+
+// Only a sender the Agent supplied, kept across patches; a missing one stays missing.
+const resolveSender = (
   input: MessageSender,
   update: AcpSessionMessage,
   previous: SessionMessage | undefined,
-): string | undefined {
-  if (update.senderSessionId != null)
-    return knownSender(input, update.senderSessionId);
-
-  return previousSender(previous?._meta);
-}
+): string | undefined =>
+  suppliedSender(input, update) ?? previousSender(previous?._meta);
 
 export function messageMetadata(
   input: MessageSender,

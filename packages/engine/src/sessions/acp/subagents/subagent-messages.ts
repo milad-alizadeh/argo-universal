@@ -97,10 +97,27 @@ const deliverAction = (
   update: AcpSessionMessage,
 ): boolean => deliverResult(input, update) || deliverPrompt(input, update);
 
+// A participant the Agent named that is not yet associated may still be, so its message waits for it.
+const awaitsParticipant = (
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean =>
+  [update.recipientSessionId, update.senderSessionId].some(
+    (id) => id != null && id !== input.transcriptId && !input.children.has(id),
+  );
+
+// On the parent's own transcript; a message on a transcript not yet associated waits for it.
+const deliverOnParent = (
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean =>
+  input.transcriptId === input.parent.vendorSessionId &&
+  (deliverAction(input, update) || !awaitsParticipant(input, update));
+
 /**
  * A `session_message` is a row only in the Feed of the child whose transcript reported it (ACP subagents RFD).
  * On the parent's transcript it only sets a `subagent_update` prompt or result (#930).
- * `false` keeps the message until its transcript or recipient is associated.
+ * `false` keeps the message until its transcript or a named participant is associated.
  */
 export function deliverSubagentMessage(
   input: MessageRouting,
@@ -110,12 +127,11 @@ export function deliverSubagentMessage(
 
   if (child) {
     writeChildRow(input, child, update);
+    // The row is the delivery; a prompt or result for the child's own Subagents is extra.
     deliverAction(input, update);
 
     return true;
   }
 
-  if (input.transcriptId !== input.parent.vendorSessionId) return false;
-
-  return deliverAction(input, update);
+  return deliverOnParent(input, update);
 }
