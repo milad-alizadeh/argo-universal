@@ -24,6 +24,7 @@ export {
   defaultSessionsView,
   type SessionsLayout,
   type SessionsView,
+  useSessionsViewKept,
 } from './stores/sessions-view';
 
 export { sessionsListInput } from './utils/sessions-list-input';

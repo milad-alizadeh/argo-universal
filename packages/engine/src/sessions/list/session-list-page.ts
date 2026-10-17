@@ -21,6 +21,11 @@ const cursorSchema = jsonCodec(placeSchema.extend({ order: SessionListOrder }));
 
 type Cursor = z.infer<typeof cursorSchema>;
 
+// A cursor from before `order` placed a row by its last activity alone, so it pages the activity order.
+const legacyCursorSchema = jsonCodec(
+  z.strictObject({ activityAt: z.int(), sessionId: z.string() }),
+);
+
 const pageSize = 50;
 
 // Each order's time; newest first.
@@ -67,9 +72,21 @@ function parseCursor(
 }
 
 function decodeCursor(cursor: string): Cursor | undefined {
-  return cursorSchema.safeParse(
-    Buffer.from(cursor, 'base64url').toString('utf8'),
-  ).data;
+  const text = Buffer.from(cursor, 'base64url').toString('utf8');
+
+  return cursorSchema.safeParse(text).data ?? legacyCursor(text);
+}
+
+function legacyCursor(text: string): Cursor | undefined {
+  const legacy = legacyCursorSchema.safeParse(text).data;
+
+  return (
+    legacy && {
+      order: 'activity',
+      at: legacy.activityAt,
+      sessionId: legacy.sessionId,
+    }
+  );
 }
 
 function cursorFor(

@@ -27,13 +27,17 @@ describe('what session.list is asked for the view', () => {
     ({ status, archived }) => {
       expect(sessionsListInput({ ...defaults, status }, '')).toStrictEqual({
         archived,
-        order: 'activity',
         query: undefined,
       });
     },
   );
 
-  it('passes the order and the search', () => {
+  // A Server from before `order` rejects the field, so the default order is left for the Server to assume.
+  it('leaves Last activity unsaid', () => {
+    expect(sessionsListInput(defaults, '')).not.toHaveProperty('order');
+  });
+
+  it('passes the Created order and the search', () => {
     expect(sessionsListInput(chosen, 'fix')).toStrictEqual({
       archived: undefined,
       order: 'created',

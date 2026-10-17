@@ -40,17 +40,17 @@ const trigger = { name: 'Filter Sessions' };
 
 const reset = { name: 'Reset to default' };
 
-// Paper's options in order, each group's under its heading, with which are checked at the default and the icon each leads with.
+// Paper's options in order, each group's under its heading, with which are checked at the default.
 const paperOptions = [
   { name: 'Last activity', checked: true },
   { name: 'Created', checked: false },
   { name: 'By project', checked: true },
   { name: 'One list', checked: false },
-  { name: 'Active', checked: true, icon: 'active-sessions' },
-  { name: 'Archived', checked: false, icon: 'archived-sessions' },
-  { name: 'All', checked: false, icon: 'all-sessions' },
-  { name: 'Regular', checked: true, icon: 'layout-regular' },
-  { name: 'Compact', checked: false, icon: 'layout-compact' },
+  { name: 'Active', checked: true },
+  { name: 'Archived', checked: false },
+  { name: 'All', checked: false },
+  { name: 'Regular', checked: true },
+  { name: 'Compact', checked: false },
 ] as const;
 
 const headings = ['Order by', 'Group by', 'Status', 'Layout'];
@@ -172,25 +172,23 @@ export const DotAwayFromDefault = dotShown(
   true,
 );
 
-// Each Status and Layout option leads with its own icon; Order by and Group by have none, as in Paper.
-async function expectOptionIcon(
-  option: (typeof paperOptions)[number],
-): Promise<void> {
-  const icons = within(optionRow(option.name))
+// No option leads with an icon, so every group's labels share one lane, as in Paper.
+async function expectNoOptionIcon(name: string): Promise<void> {
+  const icons = within(optionRow(name))
     .queryAllByTestId(/^icon-/)
     .map((icon) => icon.dataset.testid)
     // The check, which a chosen option carries, is not the option's icon.
     .filter((testId) => testId !== 'icon-check');
 
-  await expect(icons).toEqual('icon' in option ? [`icon-${option.icon}`] : []);
+  await expect(icons).toEqual([]);
 }
 
-export const ShowsOptionIcons: Story = {
+export const ShowsNoOptionIcons: Story = {
   play: async ({ canvas, userEvent }) =>
     eachLayout(async () => {
       await userEvent.click(canvas.getByRole('button', trigger));
 
-      for (const option of paperOptions) await expectOptionIcon(option);
+      for (const { name } of paperOptions) await expectNoOptionIcon(name);
 
       await userEvent.keyboard('{Escape}');
     }),

@@ -9,7 +9,6 @@ import {
   sessionsViewGroups,
 } from '#features/sessions';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import { iconSymbols } from '#lib/generic/symbols/icon-names';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import type { MenuAction } from '#primitives/overlays/menu';
@@ -61,7 +60,7 @@ const viewMenuItem = {
 
 /*
  * Each of the view's groups as an inline section, its heading the section's title, then Reset to default in a last section.
- * MenuAction.icon takes the option's SF Symbol, which UIMenu draws before the title, after the check.
+ * No option has an icon, as in Paper: UIMenu draws each title after its check.
  */
 function viewMenu({
   view,
@@ -99,19 +98,12 @@ type StackToolbarMenuActionProps = ComponentProps<
   typeof Stack.Toolbar.MenuAction
 >;
 
-type OptionState = Pick<
-  StackToolbarMenuActionProps,
-  'icon' | 'isOn' | 'onPress'
->;
-
-const optionIcon = (option: ViewOption): Pick<OptionState, 'icon'> =>
-  'icon' in option ? { icon: iconSymbols[option.icon].sf } : {};
+type OptionState = Pick<StackToolbarMenuActionProps, 'isOn' | 'onPress'>;
 
 const optionState = (
   group: SessionsViewGroup,
   option: ViewOption,
 ): OptionState => ({
-  ...optionIcon(option),
   isOn: group.value === option.value,
   onPress: () => group.onValueChange(option.value),
 });

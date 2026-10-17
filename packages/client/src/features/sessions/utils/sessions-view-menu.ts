@@ -19,7 +19,7 @@ const viewGroups = [
 
 type ViewGroup = (typeof viewGroups)[number];
 
-// A group keeps its options' own types, so a phone's native menu reads each option's icon from the shared table.
+// A group keeps its options' own types, so iOS's toolbar menu lists them as they are.
 export interface SessionsViewGroup extends MenuChoiceGroup {
   options: ViewGroup['options'];
 }

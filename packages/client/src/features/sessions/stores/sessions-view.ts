@@ -23,24 +23,14 @@ export const sessionsGroupChoices = [
 
 // Each status with the `archived` filter `session.list` takes for it; All asks with none, for active and archived Sessions together.
 export const sessionsStatusChoices = [
-  {
-    value: 'active',
-    label: 'Active',
-    icon: 'active-sessions',
-    archived: false,
-  },
-  {
-    value: 'archived',
-    label: 'Archived',
-    icon: 'archived-sessions',
-    archived: true,
-  },
-  { value: 'all', label: 'All', icon: 'all-sessions', archived: undefined },
+  { value: 'active', label: 'Active', archived: false },
+  { value: 'archived', label: 'Archived', archived: true },
+  { value: 'all', label: 'All', archived: undefined },
 ] as const;
 
 export const sessionsLayoutChoices = [
-  { value: 'regular', label: 'Regular', icon: 'layout-regular' },
-  { value: 'compact', label: 'Compact', icon: 'layout-compact' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'compact', label: 'Compact' },
 ] as const;
 
 type ChoiceValue<Choices extends readonly { value: string }[]> =
@@ -194,3 +184,7 @@ export function useSessionsView(): [
 
   return [data, (view) => chooseSessionsView(client, view)];
 }
+
+// Whether the view this Device kept has loaded, so the list asks the Server for it and not for the default first.
+export const useSessionsViewKept = (): boolean =>
+  useQuery(sessionsViewQuery()).isSuccess;

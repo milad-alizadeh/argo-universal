@@ -8,7 +8,11 @@ import {
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { useCallback, useMemo } from 'react';
 import { type ClientError, useTRPC } from '#features/connection';
-import { type QueryProgress, sessionsListInput } from '#features/sessions';
+import {
+  type QueryProgress,
+  sessionsListInput,
+  useSessionsViewKept,
+} from '#features/sessions';
 import type { SessionListViewProps } from './session-list-view';
 
 type SessionsSearch = Pick<SessionListViewProps, 'view' | 'query'>;
@@ -26,15 +30,20 @@ type SessionListQuery = UseInfiniteQueryResult<
   ClientError
 >;
 
-// The Server pages in the view's order, so the pages loaded so far are the newest in it.
+/*
+ * The Server pages in the view's order, so the pages loaded so far are the newest in it.
+ * The list waits, pending behind its skeleton, until the view this Device kept has loaded.
+ */
 function useSessionListQuery({
   view,
   query,
 }: SessionsSearch): SessionListQuery {
   const trpc = useTRPC();
+  const viewKept = useSessionsViewKept();
 
   return useInfiniteQuery(
     trpc.session.list.infiniteQueryOptions(sessionsListInput(view, query), {
+      enabled: viewKept,
       getNextPageParam: (page) => page.nextCursor ?? undefined,
       // Typing a search keeps the last results up instead of flashing the skeleton.
       placeholderData: keepPreviousData,

@@ -92,3 +92,20 @@ it('rejects a cursor from the other order', (): void => {
     ),
   ).toThrow('Invalid Session list cursor');
 });
+
+// A cursor as a Server from before `order` built it, after the activity order's first page.
+const legacyCursor = Buffer.from(
+  JSON.stringify({ activityAt: 51, sessionId: 'session-49' }),
+).toString('base64url');
+
+it('pages the activity order from a cursor from before `order`', (): void => {
+  const next = sessionListPage({ cursor: legacyCursor }, readRows);
+
+  expect(ids(next.sessions)).toEqual([lastCreated]);
+});
+
+it('rejects a cursor from before `order` for the Created order', (): void => {
+  expect(() =>
+    sessionListPage({ order: 'created', cursor: legacyCursor }, readRows),
+  ).toThrow('Invalid Session list cursor');
+});

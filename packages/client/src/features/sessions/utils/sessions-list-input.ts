@@ -19,12 +19,20 @@ export function showsUnderStatus(
   return archived === undefined || (archivedAt !== null) === archived;
 }
 
-// What `session.list` is asked for a view and a search: its status's `archived` filter and its order; an empty search asks for every title.
-export const sessionsListInput = (
+/*
+ * What `session.list` is asked for a view and a search: its status's `archived` filter and its order; an empty search asks for every title.
+ * Last activity is the Server's default order, so it goes unsaid, and a Server from before `order` still answers the default view.
+ */
+export function sessionsListInput(
   view: SessionsView,
   query: string,
-): Pick<SessionListInput, 'archived' | 'order' | 'query'> => ({
-  archived: statusArchived(view.status),
-  order: view.order,
-  query: query || undefined,
-});
+): Pick<SessionListInput, 'archived' | 'order' | 'query'> {
+  const input: Pick<SessionListInput, 'archived' | 'order' | 'query'> = {
+    archived: statusArchived(view.status),
+    query: query || undefined,
+  };
+
+  if (view.order === 'created') input.order = view.order;
+
+  return input;
+}
