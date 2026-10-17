@@ -424,11 +424,12 @@ const sessionSetup = setup({
         if (!input.acpLease || !input.acpPrompt)
           throw new Error('No admitted ACP prompt');
 
+        const lease = input.acpLease;
+
         return input.acpResponseReaders['session/prompt'].parse(
-          await input.acpLease.agent.request<unknown>(
-            'session/prompt',
-            input.acpPrompt,
-          ),
+          await lease.agent
+            .request<unknown>('session/prompt', input.acpPrompt)
+            .catch(lease.rejectRequest),
         );
       },
     ),

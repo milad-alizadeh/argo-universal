@@ -37,6 +37,8 @@ export type AcpSessionLease = {
   initialization: InitializeResponse;
   response: NewSessionResponse | ResumeSessionResponse;
   close: () => Promise<void>;
+  // Rethrows a request's failure once a connection closure behind it has reached the Session.
+  rejectRequest: (cause: unknown) => Promise<never>;
   readonly released: Promise<void>;
 };
 
