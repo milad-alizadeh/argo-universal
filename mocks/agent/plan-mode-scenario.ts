@@ -1,5 +1,6 @@
 import type {
   RequestPermissionRequest,
+  RequestPermissionResponse,
   SessionConfigOption,
   ToolCallUpdate,
 } from '@agentclientprotocol/sdk';
@@ -8,38 +9,41 @@ import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 
 const writtenPlan = '1. Read README.md\n2. Fix the typo';
 
-const withMode = (mode: string): SessionConfigOption[] =>
+export const withMode = (mode: string): SessionConfigOption[] =>
   acpConfiguration.map((option) =>
     option.id === 'mode' && option.type === 'select'
       ? { ...option, currentValue: mode }
       : option,
   );
 
-// As claude-agent-acp sends ExitPlanMode: a switch_mode Tool call whose content is the plan.
-const leavePlanMode = {
+// As claude-agent-acp 0.89 sends ExitPlanMode to an ACP client: a switch_mode Tool call whose content is the plan.
+export const leavePlanMode = {
   toolCallId: 'leave-plan-mode',
-  title: 'Ready to code?',
+  title: 'Approve Plan',
   kind: 'switch_mode',
   rawInput: { plan: writtenPlan },
   content: [{ type: 'content', content: { type: 'text', text: writtenPlan } }],
 } satisfies ToolCallUpdate;
 
-// claude-agent-acp's options for ExitPlanMode.
-const leavePlanModeOptions: RequestPermissionRequest['options'] = [
+// claude-agent-acp 0.89's options for ExitPlanMode when auto and bypass modes are off.
+export const leavePlanModeOptions: RequestPermissionRequest['options'] = [
   {
-    optionId: 'acceptEdits',
-    name: 'Yes, and auto-accept edits',
+    optionId: 'exit-plan-accept-edits',
+    name: 'Yes, auto-accept edits',
     kind: 'allow_always',
   },
   {
-    optionId: 'default',
-    name: 'Yes, and manually approve edits',
+    optionId: 'exit-plan-default',
+    name: 'Yes, manually approve edits',
     kind: 'allow_once',
   },
-  { optionId: 'plan', name: 'No, keep planning', kind: 'reject_once' },
+  { optionId: 'reject', name: 'No, keep planning', kind: 'reject_once' },
 ];
 
-const leavePlanModeSteps: ScriptedStep[] = [
+// The Tool call, then the Permission request; responses records the answer.
+export const askToLeavePlanMode = (
+  responses: RequestPermissionResponse[] = [],
+): ScriptedStep[] => [
   {
     type: 'update',
     update: { sessionUpdate: 'tool_call', ...leavePlanMode, status: 'pending' },
@@ -47,7 +51,13 @@ const leavePlanModeSteps: ScriptedStep[] = [
   {
     type: 'permission',
     request: { toolCall: leavePlanMode, options: leavePlanModeOptions },
+    responses,
   },
+];
+
+// An approved request: the Agent switches to code mode and completes the Tool call.
+export const leavePlanModeSteps: ScriptedStep[] = [
+  ...askToLeavePlanMode(),
   {
     type: 'update',
     update: {

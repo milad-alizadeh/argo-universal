@@ -1,19 +1,9 @@
 import { expect } from '../fixtures';
-import { readAgent } from './agents';
-import { Given, When, Then } from './fixtures';
-import { expectMessage, messageLabel } from './new-session';
-import { agentId } from './scenario-agents';
+import { When, Then } from './fixtures';
+import { expectComposerAccepts } from './input-requests';
+import { messageLabel } from './new-session';
 
 const trayLabel = 'Elicitation questions';
-
-Given(
-  'Agent {int} asks for an Elicitation',
-  async ({ page, server }, ordinal: number): Promise<void> => {
-    expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
-      id: agentId(ordinal),
-    });
-  },
-);
 
 Then(
   'the Elicitation {string} opens over the Composer',
@@ -42,10 +32,6 @@ Then(
   'the Elicitation closes and the Composer accepts {string}',
   async ({ page }, draft: string): Promise<void> => {
     await expect(page.getByRole('region', { name: trayLabel })).toHaveCount(0);
-    await page.getByRole('textbox', { name: messageLabel }).fill(draft);
-    await expectMessage(page, draft);
-    await expect(
-      page.getByRole('button', { name: 'Send', exact: true }),
-    ).toBeEnabled();
+    await expectComposerAccepts(page, draft);
   },
 );

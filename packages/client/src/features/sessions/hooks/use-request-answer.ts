@@ -9,7 +9,7 @@ interface AnswerIdentity {
   requestId: string;
 }
 
-export type AnswerMutation<Answer> = UseMutationResult<
+type AnswerMutation<Answer> = UseMutationResult<
   unknown,
   ClientError,
   AnswerIdentity & Answer
