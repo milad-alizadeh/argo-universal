@@ -8,6 +8,8 @@ const toastClassNames = {
   content: 'flex min-w-0 flex-1 flex-col gap-0.5',
   title: 'type-heading',
   description: 'type-secondary',
+  actionButton:
+    'flex h-5 shrink-0 cursor-pointer items-center type-body font-control text-foreground',
 };
 
 // Web draws toasts here, mounted once at the root.

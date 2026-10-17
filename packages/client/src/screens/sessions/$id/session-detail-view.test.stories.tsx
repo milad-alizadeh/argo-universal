@@ -2,6 +2,7 @@ import { expect, within } from 'storybook/test';
 import { eachLayout, layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { configuration } from '../../../../mocks/session-view/session-view-agent.test.mocks';
+import { archivedIsReadOnly } from '../../../../mocks/session-view/session-view-archived.test.mocks';
 import { authenticationRequired } from '../../../../mocks/session-view/session-view-callout.test.mocks';
 import {
   failedWithoutReason,
@@ -45,12 +46,14 @@ export const RunningTurn: Story = {
           canvas.getByRole('button', { name: 'More' }),
         ).toBeVisible();
       } else {
-        // The native header holds only the plain title: no status, and no Session actions until they are wired.
+        // A narrow header holds the plain title and the Session's ⋯: no status, and no Changes.
         await expect(canvas.queryByText('Running')).toBeNull();
         await expect(
           canvas.queryByRole('button', { name: 'Changes' }),
         ).toBeNull();
-        await expect(canvas.queryByRole('button', { name: 'More' })).toBeNull();
+        await expect(
+          canvas.getByRole('button', { name: 'More' }),
+        ).toBeVisible();
       }
 
       await expect(canvas.getByRole('status')).toHaveTextContent(
@@ -169,3 +172,5 @@ export const LastRowRestsAboveTheComposer = lastRowRestsAboveTheComposer;
 export const AuthenticationRequired = authenticationRequired;
 
 export const PreviewShowsTheFeedAlone = previewShowsTheFeedAlone;
+
+export const ArchivedIsReadOnly = archivedIsReadOnly;

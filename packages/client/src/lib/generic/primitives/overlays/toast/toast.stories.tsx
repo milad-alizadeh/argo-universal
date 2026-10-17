@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { action } from 'storybook/actions';
 import { Variation, Variations as VariationList } from '../../../variations';
-import { ErrorToastExample } from './toast-example.mocks';
+import { ActionToastExample, ErrorToastExample } from './toast-example.mocks';
 
 const meta = { title: 'Design System/Primitives/Toast' } satisfies Meta;
 
@@ -14,6 +15,9 @@ export const Variations: Story = {
     <VariationList>
       <Variation label="Error">
         <ErrorToastExample />
+      </Variation>
+      <Variation label="With action (web)">
+        <ActionToastExample onUndo={action('undo')} />
       </Variation>
     </VariationList>
   ),
