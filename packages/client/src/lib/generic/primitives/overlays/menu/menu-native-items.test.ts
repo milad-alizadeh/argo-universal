@@ -73,7 +73,7 @@ describe('a system menu', () => {
   it('carries each option’s icon to its row', () => {
     const items = nativeMenuItems({
       options: [
-        { value: 'regular', label: 'Regular', icon: 'layout-regular' },
+        { value: 'regular', label: 'Regular', icon: 'flat-view' },
         { value: 'compact', label: 'Compact' },
       ],
       value: 'regular',
@@ -81,7 +81,7 @@ describe('a system menu', () => {
     });
 
     expect(items.map((item) => item.icon)).toStrictEqual([
-      'layout-regular',
+      'flat-view',
       undefined,
     ]);
   });

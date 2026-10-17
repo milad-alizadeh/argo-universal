@@ -18,34 +18,6 @@ export function NoSessionsYet(): React.JSX.Element {
   );
 }
 
-interface EmptySessionsListProps {
-  query: string;
-  archived: boolean;
-}
-
-function emptyListTitle({
-  query,
-  archived,
-}: EmptySessionsListProps):
-  | 'No matching Sessions'
-  | 'No archived Sessions'
-  | 'No Projects yet' {
-  if (query) return 'No matching Sessions';
-
-  if (archived) return 'No archived Sessions';
-
-  return 'No Projects yet';
-}
-
-function noMatchingSession({
-  query,
-  archived,
-}: EmptySessionsListProps): string | undefined {
-  if (!query) return undefined;
-
-  return `No ${archived ? 'Archived' : 'Active'} Session has "${query}" in its title.`;
-}
-
 export interface EmptyListProps {
   title: string;
   // Why the list is empty, such as which search found nothing.
@@ -76,17 +48,6 @@ export function EmptyList({
       </Text>
       <EmptyListMessage message={message} />
     </View>
-  );
-}
-
-export function EmptySessionsList(
-  props: EmptySessionsListProps,
-): React.JSX.Element {
-  return (
-    <EmptyList
-      title={emptyListTitle(props)}
-      message={noMatchingSession(props)}
-    />
   );
 }
 

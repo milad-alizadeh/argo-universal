@@ -1,4 +1,5 @@
 import type { ProjectsListOutput, SessionInfo } from '@repo/contracts';
+import type { SessionsOrder } from '../stores/sessions-view';
 
 export type SessionsListEntry =
   | { kind: 'project'; id: string; projectId: string; name: string }
@@ -17,6 +18,7 @@ export interface ListEntriesInput {
   sessions: SessionInfo[];
   collapsed: ReadonlySet<string>;
   hideEmptyProjects: boolean;
+  order: SessionsOrder;
 }
 
 type ListedProject = ProjectsListOutput[number];
@@ -33,14 +35,26 @@ function groupByProject(sessions: SessionInfo[]): Map<string, SessionInfo[]> {
   return sessionsByProject;
 }
 
-const byNewestActivity = (a: SessionInfo, b: SessionInfo): number =>
-  b.activityAt - a.activityAt || a.sessionId.localeCompare(b.sessionId);
+const orderTimes = {
+  activity: (session: SessionInfo): number => session.activityAt,
+  created: (session: SessionInfo): number => session.createdAt,
+} satisfies Record<SessionsOrder, (session: SessionInfo) => number>;
 
+// Newest first by the order's time, ties by id.
 function newestFirst(
+  order: SessionsOrder,
+): (a: SessionInfo, b: SessionInfo) => number {
+  const time = orderTimes[order];
+
+  return (a, b) => time(b) - time(a) || a.sessionId.localeCompare(b.sessionId);
+}
+
+function projectSessions(
   sessionsByProject: Map<string, SessionInfo[]>,
   projectId: string,
+  order: SessionsOrder,
 ): SessionInfo[] {
-  return [...(sessionsByProject.get(projectId) ?? [])].sort(byNewestActivity);
+  return [...(sessionsByProject.get(projectId) ?? [])].sort(newestFirst(order));
 }
 
 function projectBody(
@@ -86,33 +100,38 @@ function sessionEntry(
   };
 }
 
-// Search results as one list, newest activity first, with no Project headings; only listed Projects' Sessions show.
+// One list, or search results, newest first in the order chosen, with no Project headings; only listed Projects' Sessions show.
 export function flatEntries({
   projects,
   sessions,
-}: Pick<ListEntriesInput, 'projects' | 'sessions'>): SessionsListEntry[] {
+  order,
+}: Pick<
+  ListEntriesInput,
+  'projects' | 'sessions' | 'order'
+>): SessionsListEntry[] {
   const listed = new Set(projects.map((project) => project.id));
 
   return sessions
     .filter((session) => listed.has(session.projectId))
-    .sort(byNewestActivity)
+    .sort(newestFirst(order))
     .map(sessionEntry);
 }
 
-// The Sessions list's rows, in Project order: each Project's heading, then its Sessions or an empty row.
+// The Sessions list's rows, in Project order: each Project's heading, then its Sessions, newest first in the order chosen, or an empty row.
 export function listEntries({
   projects,
   sessions,
   collapsed,
   hideEmptyProjects,
+  order,
 }: ListEntriesInput): SessionsListEntry[] {
   const sessionsByProject = groupByProject(sessions);
 
   return projects.flatMap((project) => {
-    const projectSessions = newestFirst(sessionsByProject, project.id);
+    const listed = projectSessions(sessionsByProject, project.id, order);
 
-    if (hideEmptyProjects && projectSessions.length === 0) return [];
+    if (hideEmptyProjects && listed.length === 0) return [];
 
-    return projectEntries(project, projectSessions, collapsed);
+    return projectEntries(project, listed, collapsed);
   });
 }

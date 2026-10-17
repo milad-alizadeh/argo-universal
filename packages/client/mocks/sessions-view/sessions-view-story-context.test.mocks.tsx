@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { SessionsHeader } from '../../src/features/sessions/components/sessions-header';
-import { useSessionsFilter } from '../../src/features/sessions/stores/sessions-filter';
+import { useSessionsViewState } from '../../src/features/sessions/stores/sessions-view-state';
 import { useWide } from '../../src/lib/generic/use-wide/use-wide';
 import { SessionListView } from '../../src/screens/sessions/session-list-view';
 import { loadedSessionListView } from '../../src/screens/sessions/session-list-view.mocks';
@@ -26,7 +26,7 @@ type ListViewArgs = React.ComponentProps<typeof SessionListView>;
 
 function ListWithHeader(args: ListViewArgs): React.JSX.Element {
   const wide = useWide();
-  const filter = useSessionsFilter();
+  const filter = useSessionsViewState();
 
   return (
     <>

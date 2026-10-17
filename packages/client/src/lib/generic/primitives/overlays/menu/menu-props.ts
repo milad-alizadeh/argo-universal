@@ -84,10 +84,10 @@ export interface MenuChoiceGroup {
 // Several single choices in one menu, such as what a list shows and how it lays its rows out; each group checks its own value.
 export interface GroupedChoiceMenuProps extends MenuBaseProps {
   groups: readonly MenuChoiceGroup[];
+  actions?: never;
   value?: never;
   options?: never;
   onValueChange?: never;
-  actions?: never;
 }
 
 // An action menu: each item runs its own action.
@@ -104,6 +104,7 @@ export type MenuProps<Value extends string = string> =
   | GroupedChoiceMenuProps
   | ActionMenuProps;
 
+// Only an action menu takes `actions`.
 export function isActionMenu<Value extends string>(
   props: MenuProps<Value>,
 ): props is ActionMenuProps {

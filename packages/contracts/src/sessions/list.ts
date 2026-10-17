@@ -2,10 +2,19 @@ import { z } from 'zod';
 import { sessionColumns } from '../columns';
 import { CheckoutChoice } from './new';
 
-// Input of `session.list`, after ACP `ListSessionsRequest`, filtered by Project instead of `cwd`.
+// How `session.list` orders and pages its Sessions, newest first: by `activityAt`, or by `createdAt`.
+export const SessionListOrder = z.enum(['activity', 'created']);
+
+export type SessionListOrder = z.infer<typeof SessionListOrder>;
+
+/*
+ * Input of `session.list`, after ACP `ListSessionsRequest`, filtered by Project instead of `cwd`.
+ * With no `archived`, active and archived Sessions both list; with no `order`, they order by activity.
+ */
 export const SessionListInput = z.strictObject({
   projectId: sessionColumns.shape.projectId.optional(),
-  archived: z.boolean(),
+  archived: z.boolean().optional(),
+  order: SessionListOrder.optional(),
   query: z.string().optional(),
   cursor: z.string().optional(),
   direction: z.literal('forward').optional(),

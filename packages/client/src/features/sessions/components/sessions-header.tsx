@@ -4,15 +4,15 @@ import { ListTitle } from '#lib/product/list-title';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { SearchField } from '#primitives/inputs/search-field';
-import type { SessionsFilter } from '../stores/sessions-filter';
-import { SessionsFilterMenu } from './sessions-filter-menu/sessions-filter-menu';
+import type { SessionsViewState } from '../stores/sessions-view-state';
+import { SessionsViewMenu } from './sessions-view-menu/sessions-view-menu';
 
 // On iOS a phone's New Session sits beside the search bar, where it replaces the floating button.
 export const newSessionBesideSearch = Platform.OS === 'ios';
 
 export const searchSessionsLabel = 'Search Sessions';
 
-export interface SessionsHeaderProps extends SessionsFilter {
+export interface SessionsHeaderProps extends SessionsViewState {
   onNewSession: () => void;
 }
 
@@ -27,11 +27,11 @@ const newSessionAppearance = {
 
 function SessionsHeaderActions({
   onNewSession,
-  ...filter
+  ...viewState
 }: SessionsHeaderProps): React.JSX.Element {
   return (
     <>
-      <SessionsFilterMenu {...filter} />
+      <SessionsViewMenu {...viewState} />
       <IconButton
         {...newSessionAppearance}
         accessibilityLabel="New Session"
@@ -41,7 +41,7 @@ function SessionsHeaderActions({
   );
 }
 
-// The wide window's Sessions list header row: the title, the filter, New Session, and Search last.
+// The wide window's Sessions list header row: the title, the view menu, New Session, and Search last.
 export function SessionsHeader(props: SessionsHeaderProps): React.JSX.Element {
   return (
     <SearchField
@@ -57,14 +57,16 @@ export function SessionsHeader(props: SessionsHeaderProps): React.JSX.Element {
 type HeaderSearch = NonNullable<ScreenHeaderProps['search']>;
 
 // The search in Android's drawer header and the web's JS header; iOS declares its own stock search bar.
-export const sessionsHeaderSearch = (filter: SessionsFilter): HeaderSearch => ({
+export const sessionsHeaderSearch = (
+  viewState: SessionsViewState,
+): HeaderSearch => ({
   placeholder: searchSessionsLabel,
-  onChangeText: filter.onQueryChange,
+  onChangeText: viewState.onQueryChange,
 });
 
-// The trailing items of Android's drawer header and the web's JS header: the filter, with Search after it.
+// The trailing items of Android's drawer header and the web's JS header: the view menu, with Search after it.
 export function sessionsHeaderItems(
-  filter: SessionsFilter,
+  viewState: SessionsViewState,
 ): React.JSX.Element[] {
-  return [<SessionsFilterMenu key="filter" {...filter} />];
+  return [<SessionsViewMenu key="view" {...viewState} />];
 }

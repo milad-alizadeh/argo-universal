@@ -1,7 +1,7 @@
 import type { SessionInfo } from '@repo/contracts';
 import { statusLabels } from '#lib/product/status-indicator/status-indicator';
 import type { VirtualListPosition } from '#primitives/lists/virtual-list-item';
-import type { SessionsLayout } from '../../stores/sessions-layout';
+import type { SessionsLayout } from '../../stores/sessions-view';
 import type { PullRequestIndicatorProps } from '../pull-request-indicator/pull-request-indicator';
 
 export interface SessionRowProps {

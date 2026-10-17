@@ -33,7 +33,7 @@ export function useKeyboardFocus(): KeyboardFocus {
   return { keyboardFocus, onKeyboardFocusChange };
 }
 
-// A choice menu's web drawing: radio rows, the chosen one checked.
+// A choice menu's web drawing: radio rows, the chosen one checked, each later group after a section line.
 export function MenuChoiceContent<Value extends string>(
   props: MenuChoicesProps<Value>,
 ): React.JSX.Element {
@@ -53,15 +53,29 @@ export function MenuChoiceContent<Value extends string>(
 function MenuChoices<Value extends string>({
   focus,
   ...props
-}: MenuChoicesProps<Value>): React.JSX.Element[] {
-  return menuChoiceGroups(props).map((group, index) => (
+}: MenuChoicesProps<Value>): React.JSX.Element {
+  return (
+    <>
+      {menuChoiceGroups(props).map((group, index) =>
+        groupRows(group, index, focus),
+      )}
+    </>
+  );
+}
+
+function groupRows(
+  group: MenuChoiceGroup,
+  index: number,
+  focus: KeyboardFocus,
+): React.JSX.Element {
+  return (
     <MenuChoiceGroupRows
       key={menuGroupKey(group)}
       group={group}
       first={index === 0}
       focus={focus}
     />
-  ));
+  );
 }
 
 // A group is known by its options, which no other group of the menu shares.
@@ -74,19 +88,30 @@ type MenuChoiceGroupRowsProps = {
   focus: KeyboardFocus;
 };
 
-// One group's radio rows; a later group is set apart by space, and its heading when it has one.
+// One group's radio rows; a later group is set apart by a section line, and its heading when it has one.
 function MenuChoiceGroupRows(
   props: MenuChoiceGroupRowsProps,
 ): React.JSX.Element {
   return (
     <>
-      {props.first ? null : <View className="h-2.25" />}
+      {props.first ? null : <MenuGroupSeparator />}
       <MenuGroupHeading
         label={props.group.label}
         inset={props.group.options.some((choice) => choice.icon)}
       />
       <MenuChoiceRadios {...props} />
     </>
+  );
+}
+
+// A hairline with 4px above and below, as iOS menus part their sections; Radix's Separator gives it role="separator", so it is announced and skipped by the keyboard.
+function MenuGroupSeparator(): React.JSX.Element {
+  return (
+    <RadixMenu.Separator asChild>
+      <View className="py-1">
+        <View className="h-px bg-hairline" />
+      </View>
+    </RadixMenu.Separator>
   );
 }
 

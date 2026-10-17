@@ -1,0 +1,108 @@
+import { describe, expect, it } from 'vitest';
+import type { SessionsView } from '../stores/sessions-view';
+import {
+  olderServerView,
+  sessionsListInput,
+  showsUnderStatus,
+} from './sessions-list-input';
+
+const defaults: SessionsView = {
+  order: 'activity',
+  group: 'project',
+  status: 'active',
+  layout: 'regular',
+};
+
+const chosen: SessionsView = {
+  order: 'created',
+  group: 'none',
+  status: 'all',
+  layout: 'compact',
+};
+
+describe('what session.list is asked for the view', () => {
+  it.each([
+    { status: 'active', archived: false },
+    { status: 'archived', archived: true },
+    // All asks with no `archived` filter, for active and archived Sessions together.
+    { status: 'all', archived: undefined },
+  ] as const)(
+    'asks $status with archived $archived',
+    ({ status, archived }) => {
+      expect(sessionsListInput({ ...defaults, status }, '')).toStrictEqual({
+        archived,
+        query: undefined,
+      });
+    },
+  );
+
+  // A Server from before `order` rejects the field, so the default order is left for the Server to assume.
+  it('leaves Last activity unsaid', () => {
+    expect(sessionsListInput(defaults, '')).not.toHaveProperty('order');
+  });
+
+  it('passes the Created order and the search', () => {
+    expect(sessionsListInput(chosen, 'fix')).toStrictEqual({
+      archived: undefined,
+      order: 'created',
+      query: 'fix',
+    });
+  });
+});
+
+describe('which Sessions a status shows', () => {
+  it.each([
+    { status: 'active', archivedAt: null, shows: true },
+    { status: 'active', archivedAt: 1, shows: false },
+    { status: 'archived', archivedAt: null, shows: false },
+    { status: 'archived', archivedAt: 1, shows: true },
+    { status: 'all', archivedAt: null, shows: true },
+    { status: 'all', archivedAt: 1, shows: true },
+  ] as const)(
+    '$status shows a Session archived at $archivedAt: $shows',
+    ({ status, archivedAt, shows }) => {
+      expect(showsUnderStatus(status, archivedAt)).toBe(shows);
+    },
+  );
+});
+
+describe('the view an older Server can list after it refused this one', () => {
+  it.each([
+    {
+      case: 'All falls back to Active',
+      view: { ...chosen, order: 'activity' },
+      fallback: { ...chosen, order: 'activity', status: 'active' },
+    },
+    {
+      case: 'Created falls back to Last activity',
+      view: { ...chosen, status: 'archived' },
+      fallback: { ...chosen, order: 'activity', status: 'archived' },
+    },
+    {
+      case: 'All and Created fall back together',
+      view: chosen,
+      fallback: { ...chosen, order: 'activity', status: 'active' },
+    },
+  ] as const)('$case, keeping the rest of the view', ({ view, fallback }) => {
+    expect(olderServerView(view, 'BAD_REQUEST')).toStrictEqual(fallback);
+  });
+
+  it.each([
+    { status: 'active', order: 'activity' },
+    { status: 'archived', order: 'activity' },
+  ] as const)(
+    'has nothing to fall back to for $status by $order',
+    ({ status, order }) => {
+      expect(
+        olderServerView({ ...chosen, status, order }, 'BAD_REQUEST'),
+      ).toBeUndefined();
+    },
+  );
+
+  it.each(['INTERNAL_SERVER_ERROR', 'TIMEOUT', undefined])(
+    'keeps the view for any other failure (%s)',
+    (code) => {
+      expect(olderServerView(chosen, code)).toBeUndefined();
+    },
+  );
+});

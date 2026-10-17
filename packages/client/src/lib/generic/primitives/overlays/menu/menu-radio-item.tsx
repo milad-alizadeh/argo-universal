@@ -24,7 +24,7 @@ export function MenuRadioItem(props: MenuRadioItemProps): React.JSX.Element {
       {...radioValue(choice)}
       {...focusTracking(focus)}
     >
-      <View className={radioItemClassName(focus.keyboardFocus)}>
+      <View className={choiceItemClassName(focus.keyboardFocus)}>
         <MenuRadioContent label={choice.label} icon={choice.icon} />
       </View>
     </RadixMenu.RadioItem>
@@ -57,7 +57,8 @@ export function focusTracking(focus: KeyboardFocus): FocusTracking {
   };
 }
 
-function radioItemClassName(keyboardFocus: boolean): string {
+// A choice menu's radio row.
+function choiceItemClassName(keyboardFocus: boolean): string {
   return cn(
     choiceRowClassName,
     'cursor-default rounded-xl outline-0 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
