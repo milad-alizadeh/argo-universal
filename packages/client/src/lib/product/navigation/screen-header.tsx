@@ -106,7 +106,7 @@ const stackTitleOptions = ({ title }: ScreenHeaderProps): HeaderOptions => ({
 export const screenHeaderOptions: (header: ScreenHeaderProps) => HeaderOptions =
   Platform.OS === 'web' ? webHeaderOptions : stackTitleOptions;
 
-// A narrow window's page header, which the page sets on its section stack; a wide window's page draws its own title, so there this sets nothing.
+// A compact window's page header, which the page sets on its section stack; a medium or wide window's page draws its own title, so there this sets nothing.
 export function ScreenHeader(
   props: ScreenHeaderProps,
 ): React.JSX.Element | null {
@@ -121,7 +121,7 @@ export function ScreenHeader(
     return <Stack.Screen options={options} />;
   }
 
-  if (sizeClass === 'wide') return null;
+  if (sizeClass !== 'compact') return null;
 
   return <Stack.Screen options={screenHeaderOptions(props)} />;
 }

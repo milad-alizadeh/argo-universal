@@ -30,8 +30,8 @@ interface PluginRootProps {
 // A Plugin page with, at a narrow root on iOS, ☰ as a stock bar button item, as a section root has.
 export function PluginRoot({ path }: PluginRootProps): React.JSX.Element {
   const { root } = usePluginAt(pluginPath(path));
-  const wide = useSizeClass() === 'wide';
-  const narrowRoot = root && !wide;
+  const compact = useSizeClass() === 'compact';
+  const narrowRoot = root && compact;
 
   return (
     <>

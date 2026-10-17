@@ -1,7 +1,9 @@
 import {
   type FirstPage,
   type CoreSection,
+  Placeholder,
   type SectionList,
+  type SizeClass,
   useNeedsAttention,
   useSectionList,
 } from '@repo/client';
@@ -104,14 +106,52 @@ function RootList({ section, narrow }: RootListProps): React.JSX.Element {
   );
 }
 
-// A section's root page: its list under the section's header on a narrow window; on a wide one, where the list sits beside the pages, the section's first page, which the section's list names.
+/*
+ * A section's root page: its list under the section's header on a compact window. Where the list
+ * sits beside the pages, a medium window's empty detail, when the section has one, or else the
+ * section's first page, which the section's list names.
+ */
 export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
-  const { useFirstPage } = useSectionList(section);
-  const wide = useSizeClass() === 'wide';
+  const sizeClass = useSizeClass();
+  const besidePages = useBesidePages(section, sizeClass);
 
-  if (wide && useFirstPage) {
-    return <OpenFirstPage useFirstPage={useFirstPage} />;
-  }
+  if (besidePages) return besidePages;
 
-  return <RootList section={section} narrow={!wide} />;
+  return <RootList section={section} narrow={sizeClass === 'compact'} />;
+}
+
+// What the root shows where the list sits beside the pages, if anything.
+function useBesidePages(
+  section: CoreSection,
+  sizeClass: SizeClass,
+): React.ReactNode {
+  const list = useSectionList(section);
+
+  if (sizeClass === 'compact') return null;
+
+  const empty = emptyDetail(list, sizeClass);
+
+  if (empty) return <EmptyPage {...empty} />;
+
+  return firstPage(list);
+}
+
+// Only a medium window shows an empty detail until a page is picked.
+const emptyDetail = (
+  list: SectionList,
+  sizeClass: SizeClass,
+): SectionList['emptyPage'] =>
+  sizeClass === 'medium' ? list.emptyPage : undefined;
+
+const firstPage = ({ useFirstPage }: SectionList): React.ReactNode =>
+  useFirstPage ? <OpenFirstPage useFirstPage={useFirstPage} /> : null;
+
+type EmptyPageProps = NonNullable<SectionList['emptyPage']>;
+
+function EmptyPage(props: EmptyPageProps): React.JSX.Element {
+  return (
+    <View testID="empty-detail" className="flex-1">
+      <Placeholder {...props} />
+    </View>
+  );
 }

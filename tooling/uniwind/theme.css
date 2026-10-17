@@ -121,6 +121,22 @@
   --color-shadow-strong: #00000024;
 }
 
+/*
+ * `wide:` is the desktop drawing: a wide window everywhere, and on the web and desktop a medium
+ * one too, which lays out like wide with the Inspector as a sheet (ADR-0026, #927). A tablet keeps
+ * its compact drawing at medium until its own medium layout is built. `useWide()` matches it.
+ */
+@custom-variant wide {
+  @media (width >= theme(--breakpoint-wide)) {
+    @slot;
+  }
+  @variant web {
+    @media (width >= theme(--breakpoint-medium)) {
+      @slot;
+    }
+  }
+}
+
 @layer theme {
   :root {
     @variant ios {
@@ -261,7 +277,7 @@
   }
 }
 
-/* Text roles: phone tokens first, the "-wide" tokens from the wide breakpoint. */
+/* Text roles: phone tokens first, the "-wide" tokens with the desktop drawing (`wide:`). */
 @utility type-title {
   font-size: var(--text-title);
   line-height: var(--leading-title);

@@ -40,8 +40,8 @@ const narrowOptions = {
   ...headerTitleOptions,
 } satisfies StackProps['screenOptions'];
 
-// A wide window shows one page beside the list: it draws its own header, and a new page replaces the shown one without a transition.
-const wideOptions = {
+// A medium or wide window shows one page beside the list: it draws its own header, and a new page replaces the shown one without a transition.
+const framedOptions = {
   headerShown: false,
   animation: 'none',
   freezeOnBlur: true,
@@ -83,9 +83,9 @@ function UnderHeaderBanner({ overHeader }: BannerProps): React.JSX.Element {
   );
 }
 
-// A narrow page's Connection banner floats under its header; a wide window's sits over the panes.
+// A compact page's Connection banner floats under its header; a medium or wide window's sits over the panes.
 function NarrowBanner(props: BannerProps): React.JSX.Element | null {
-  return useSizeClass() === 'wide' ? null : <UnderHeaderBanner {...props} />;
+  return useSizeClass() === 'compact' ? <UnderHeaderBanner {...props} /> : null;
 }
 
 // The page keeps its place in the tree at both widths.
@@ -101,14 +101,13 @@ interface SectionOptions {
   rootOptions: NativeStackNavigationOptions;
 }
 
-// The stack's options at this width, and its root's: a narrow root shows the section's header; a wide page draws its own.
+// The stack's options at this width, and its root's: a compact root shows the section's header; a medium or wide page draws its own.
 function useSectionOptions(
   header: ScreenHeaderProps,
   root: boolean,
 ): SectionOptions {
-  const wide = useSizeClass() === 'wide';
-
-  if (wide) return { screenOptions: wideOptions, rootOptions: {} };
+  if (useSizeClass() !== 'compact')
+    return { screenOptions: framedOptions, rootOptions: {} };
 
   return {
     screenOptions: narrowOptions,

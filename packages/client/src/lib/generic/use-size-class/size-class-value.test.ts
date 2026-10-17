@@ -11,16 +11,25 @@ describe('a size-class value', (): void => {
 
   it.each([
     ['compact', 'secondary'],
-    ['medium', 'secondary'],
+    ['medium', 'body'],
     ['wide', 'body'],
   ] as const)(
-    'picks the %s entry, medium following compact',
+    'picks the %s entry, medium following wide',
     (sizeClass, expected): void => {
       expect(
         sizeClassValue({ compact: 'secondary', wide: 'body' }, sizeClass),
       ).toBe(expected);
     },
   );
+
+  it('picks its own medium entry when given one', (): void => {
+    expect(
+      sizeClassValue(
+        { compact: 'secondary', medium: 'heading', wide: 'body' },
+        'medium',
+      ),
+    ).toBe('heading');
+  });
 
   it('keeps a plain object value whole', (): void => {
     const style = { paddingTop: 8 };

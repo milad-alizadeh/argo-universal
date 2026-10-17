@@ -33,7 +33,7 @@ function shownSessionId(path: string): string | undefined {
   return section === 'sessions' && id !== newSessionId ? id : undefined;
 }
 
-// `/sessions`: the Sessions the filter shows; with the list beside the pages, the root opens the first active Session, or New Session when there is none.
+// `/sessions`: the Sessions the filter shows; with the list beside the pages, the root opens the first active Session, or New Session when there is none, and a medium window shows no Session until one is picked.
 function sessionsList(
   sessions: SessionsFilter,
   path: string,
@@ -44,11 +44,29 @@ function sessionsList(
     list: (
       <LiveSessionList {...sessions} selectedSessionId={shownSessionId(path)} />
     ),
+    ...sessionsRoot(sessions, onNewSession),
+  };
+}
+
+function sessionsRoot(
+  sessions: SessionsFilter,
+  onNewSession: () => void,
+): Pick<
+  SectionList,
+  'rootHeader' | 'rootToolbar' | 'useFirstPage' | 'emptyPage'
+> {
+  return {
     rootHeader: sessionsRootHeader(sessions),
     rootToolbar: sessionsRootToolbar(sessions, onNewSession),
     useFirstPage: useFirstSessionPage,
+    emptyPage: noSessionShown,
   };
 }
+
+const noSessionShown = {
+  title: 'Select a Session',
+  description: 'Choose a Session from the list.',
+};
 
 const sessionsRootHeader = (
   sessions: SessionsFilter,

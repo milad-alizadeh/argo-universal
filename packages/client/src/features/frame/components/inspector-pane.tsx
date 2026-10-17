@@ -1,6 +1,7 @@
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { createContext, use, type ReactNode } from 'react';
 import { View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Text } from '#primitives/display/text';
@@ -18,6 +19,9 @@ type InspectorControlsProps = Pick<
   InspectorPaneProps,
   'expanded' | 'onStateChange'
 >;
+
+// True inside the medium window's Inspector sheet, which gives the pane its own surface and height.
+export const InspectorInSheet = createContext(false);
 
 const controlIconClass = 'text-muted-foreground';
 
@@ -69,29 +73,48 @@ function InspectorTitle({ title }: { title: string }): React.JSX.Element {
   );
 }
 
-function InspectorHeader(props: InspectorPaneProps): React.JSX.Element {
+// The sheet rests at one height, so it has no expand button.
+function InspectorHeader(
+  props: InspectorPaneProps & { inSheet: boolean },
+): React.JSX.Element {
   return (
     <View className="mt-frame-inset h-frame-control flex-row items-center gap-1 pl-4 pr-2.5">
       <InspectorTitle title={props.title} />
-      <ExpandButton {...props} />
+      {props.inSheet ? null : <ExpandButton {...props} />}
       <CloseButton {...props} />
     </View>
   );
 }
 
-// The Inspector's page, flush with the window's right edge: its header with expand and close, and its content scrolling and fading under that header, all on one surface.
+/*
+ * The Inspector's page, flush with the window's right edge: its header with expand and close, and
+ * its content scrolling and fading under that header, all on one surface. In the medium window's
+ * sheet it takes the sheet's surface at Paper's height.
+ */
 export function InspectorPane(props: InspectorPaneProps): React.JSX.Element {
+  const inSheet = use(InspectorInSheet);
+  const surface = inSheet ? 'bg-content' : 'bg-muted';
+
   return (
-    <View className="flex-1 bg-muted">
-      <InspectorHeader {...props} />
-      <ScrollFadeView
-        testID="desktop-inspector-scroll"
-        className="overflow-hidden"
-        contentContainerClassName="grow"
-        surfaceClassName="bg-muted"
-      >
-        {props.children}
-      </ScrollFadeView>
+    <View className={cn(inSheet ? 'h-140' : 'flex-1', surface)}>
+      <InspectorHeader {...props} inSheet={inSheet} />
+      <InspectorScroll surface={surface}>{props.children}</InspectorScroll>
     </View>
+  );
+}
+
+function InspectorScroll(props: {
+  surface: string;
+  children: ReactNode;
+}): React.JSX.Element {
+  return (
+    <ScrollFadeView
+      testID="desktop-inspector-scroll"
+      className="overflow-hidden"
+      contentContainerClassName="grow"
+      surfaceClassName={props.surface}
+    >
+      {props.children}
+    </ScrollFadeView>
   );
 }

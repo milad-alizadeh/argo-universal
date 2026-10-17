@@ -47,10 +47,12 @@ function SheetPresentation(props: PresentationProps): ReactElement {
   );
 }
 
-// Whether the sheet leaves the bottom edge: a popover on its trigger when wide, a modal from medium up without one.
+// Whether the sheet leaves the bottom edge: a popover on its trigger when wide, a modal from medium up without one, unless it keeps to the edge.
 function useLifted(props: SheetProps): boolean {
   const wide = useWide();
   const centred = useCentresOverlays();
+
+  if (props.bottomEdge) return false;
 
   return props.trigger ? wide : centred;
 }
@@ -126,6 +128,7 @@ function drawerClass(props: PresentationProps): string {
   return cn(
     'sheet overflow-hidden fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-content pb-6 shadow-card outline-none dark:border dark:border-border',
     sheetHeightClass(props),
+    props.bottomEdge && 'sheet-edge',
   );
 }
 

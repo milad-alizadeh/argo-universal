@@ -1,6 +1,6 @@
 import type { SizeClass } from './size-class';
 
-// Medium follows compact unless a caller supplies its approved medium layout.
+// Medium lays out like wide (rail, list and detail side by side, #927) unless a caller supplies its own medium value.
 export interface SizeClassValues<T> {
   compact: T;
   medium?: T;
@@ -18,7 +18,7 @@ export function isPerSizeClass<T>(
 function pick<T>(values: SizeClassValues<T>, sizeClass: SizeClass): T {
   const resolved: Record<SizeClass, T> = {
     compact: values.compact,
-    medium: values.medium === undefined ? values.compact : values.medium,
+    medium: values.medium === undefined ? values.wide : values.medium,
     wide: values.wide,
   };
 

@@ -17,11 +17,20 @@ function isPhone(): boolean {
 const reaches = (resolved: { display?: unknown }): boolean =>
   resolved.display === 'flex';
 
+/*
+ * A tablet lays a medium window out as compact until its own medium layout is built: Android
+ * has no stock NavigationRail in @expo/ui yet, and the tablet type scale differs (#927).
+ */
+const tabletMedium = (shown: SizeClass): SizeClass =>
+  shown === 'medium' ? 'compact' : shown;
+
 // The breakpoints come from tooling/uniwind/theme.css through Uniwind's own variants.
 export function useSizeClass(): SizeClass {
-  return sizeClass({
-    medium: reaches(useResolveClassNames('hidden medium:flex')),
-    wide: reaches(useResolveClassNames('hidden wide:flex')),
-    phone: isPhone(),
-  });
+  return tabletMedium(
+    sizeClass({
+      medium: reaches(useResolveClassNames('hidden medium:flex')),
+      wide: reaches(useResolveClassNames('hidden wide:flex')),
+      phone: isPhone(),
+    }),
+  );
 }

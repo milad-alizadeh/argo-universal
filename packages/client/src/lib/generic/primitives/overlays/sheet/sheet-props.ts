@@ -23,6 +23,11 @@ export interface SheetProps {
    * Web: ignored, as the drawer rests only at its content's height or the full window.
    */
   initialDetent?: SheetDetent;
+  /*
+   * Web: stays a drawer on the window's bottom edge, as wide as the window, at every Size class,
+   * as the medium window's Inspector does. Native sheets rise from the bottom edge already.
+   */
+  bottomEdge?: boolean;
   // False while the content holds unsaved input: a swipe, the backdrop, Escape or Back leave the sheet open.
   dismissible?: boolean;
   // Native only: the content owns scrolling and fills the sheet, as a native GroupedList or a long list does.
