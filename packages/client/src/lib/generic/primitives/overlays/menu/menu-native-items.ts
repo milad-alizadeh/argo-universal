@@ -120,6 +120,7 @@ function actionItem(
     title: action.label,
     checked: action.selected,
     disabled: Boolean(action.disabled),
+    icon: action.icon,
     choose: action.disabled ? nothing : action.onPress,
   };
 }

@@ -30,6 +30,7 @@ type ListActions = Pick<
   | 'onProjectSettings'
   | 'onSelect'
   | 'onRename'
+  | 'onArchive'
   | 'onEndReached'
 >;
 
@@ -39,6 +40,7 @@ function listActions(props: SessionListViewProps): ListActions {
     onProjectSettings: props.onProjectSettings,
     onSelect: props.onSelect,
     onRename: props.onRename,
+    onArchive: props.onArchive,
     onEndReached: props.onLoadMore,
   };
 }

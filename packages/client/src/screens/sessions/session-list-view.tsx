@@ -34,6 +34,8 @@ export interface SessionListViewProps {
   onSelect: (sessionId: string) => void;
   // Desktop and the web: a row's double-click or context menu asks to rename its Session.
   onRename?: (sessionId: string) => void;
+  // Archive in a row's context menu.
+  onArchive?: (sessionId: string) => void;
   onNewSession: () => void;
   onNewSessionInProject: (projectId: string) => void;
   onProjectSettings: (projectName: string) => void;

@@ -6,6 +6,8 @@ import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 export interface MenuAction {
   label: string;
   onPress: () => void;
+  // Drawn before the label, as a context menu's rows draw theirs.
+  icon?: IconName;
   // The action the trigger shows now, such as the PR a header lists: every menu marks it with a check.
   selected?: boolean;
   // Drawn in place of the label where the menu draws its own rows (web); the label still names the action on native menus.

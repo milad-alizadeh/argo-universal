@@ -23,11 +23,16 @@ export class PluginStorage {
     this.home = home;
   }
 
-  private fileOf(pluginId: string): string {
+  // The Plugin's data folder, the only one its `argo.fs` calls may write (ADR-0030).
+  folderOf(pluginId: string): string {
     if (!idPattern.test(pluginId) || pluginId.includes('..'))
       throw new Error(`Invalid Plugin id: ${pluginId}`);
 
-    return join(this.home, 'plugin-data', pluginId, databaseFile);
+    return join(this.home, 'plugin-data', pluginId);
+  }
+
+  private fileOf(pluginId: string): string {
+    return join(this.folderOf(pluginId), databaseFile);
   }
 
   // Drizzle's sqlite-proxy migrator sends its statements as one batch, so a batch is one transaction.

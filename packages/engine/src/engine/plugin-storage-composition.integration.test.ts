@@ -155,7 +155,7 @@ it('drops a reply that belongs to a reloaded Plugin worker', async () => {
   void caller.plugins.activate({ pluginId: 'echo' });
   await expect.poll(() => keychain.waiting.length, pollOptions).toBe(1);
 
-  await appendFile(join(home, 'plugins/echo/index.mjs'), '\n// reload\n');
+  await appendFile(join(home, 'shipped/echo/index.mjs'), '\n// reload\n');
   await expect.poll(() => keychain.waiting.length, pollOptions).toBe(2);
 
   keychain.waiting[0]?.('stale');

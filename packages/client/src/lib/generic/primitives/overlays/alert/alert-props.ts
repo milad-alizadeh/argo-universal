@@ -22,7 +22,7 @@ interface AnswerAlertAction extends AlertActionBase {
 export type AlertAction = CancelAlertAction | AnswerAlertAction;
 
 /*
- * A short question with a few answers, drawn by the system: a SwiftUI alert or confirmation dialog on iOS,
+ * A short question with a few answers, drawn by the system: a SwiftUI alert on iOS,
  * a Material 3 AlertDialog on Android, a centred dialog on the web. Forms and longer content use Dialog.
  */
 export interface AlertProps {
@@ -63,8 +63,4 @@ export function ignoreCloseWhileBusy(
   return (open) => {
     if (open || !isAlertBusy(props.actions)) props.onOpenChange(open);
   };
-}
-
-export function isDestructiveAlert(actions: readonly AlertAction[]): boolean {
-  return actions.some((action) => action.tone === 'danger');
 }

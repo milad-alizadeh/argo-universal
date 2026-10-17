@@ -18,7 +18,8 @@ const crashingEntry = new URL(
 );
 
 Given('a crashing Plugin is installed', async ({ app }): Promise<void> => {
-  const plugins = join(dirname(app.projectPath), 'server-home/plugins');
+  // The e2e Server's first-party root: only first-party Plugins load (ADR-0030).
+  const plugins = join(dirname(app.projectPath), 'server-home/shipped-plugins');
   await mkdir(plugins, { recursive: true });
   await cp(fixtureDirectory, join(plugins, 'broken'), { recursive: true });
   await cp(crashingEntry, join(plugins, 'broken/index.js'));

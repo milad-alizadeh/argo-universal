@@ -1,36 +1,51 @@
 import { pluginKeychainService, type Keychain } from './keychain';
-import { PluginResources } from './plugin-resources';
 import {
-  runtimeError,
-  type FetchCall,
-  type PluginReply,
-  type PluginRequest,
-  type PluginValue,
-  type ProcessCall,
-  type SecretCall,
-} from './runtime-protocol';
+  PluginAccess,
+  type AccessScope,
+  type ActivatedPlugin,
+} from './plugin-access';
+import {
+  describeCall,
+  failureLine,
+  machineCall,
+  replyError,
+  type MachineContext,
+  type StateRequest,
+} from './plugin-calls';
+import type { PluginNetwork } from './plugin-fetch';
+import { PluginResources } from './plugin-resources';
+import type { PluginReply, PluginValue, SecretCall } from './runtime-protocol';
 import type { PluginStorage } from './storage';
 
 type Held = { generation: number; resources: PluginResources };
 
-// Pages are the runtime's own; every other call is answered here.
-export type StateRequest = Exclude<PluginRequest, { api: 'view' }>;
+// Nothing is granted to a Plugin whose worker isn't loaded.
+const notActivated: Pick<AccessScope, 'grants' | 'codeFolder'> = {
+  grants: [],
+  codeFolder: null,
+};
+
+// Where the Server logs Plugin calls, which Projects Plugins may read, and the Server's network settings.
+export type PluginServiceOptions = {
+  log: (line: string) => void;
+  projects: () => Promise<readonly string[]>;
+  network?: PluginNetwork;
+};
 
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
-  private readonly storage: PluginStorage;
-  private readonly keychain: Keychain;
-  private readonly log: (line: string) => void;
   private readonly held = new Map<string, Held>();
+  private readonly activated = new Map<string, ActivatedPlugin>();
 
   constructor(
-    storage: PluginStorage,
-    keychain: Keychain,
-    log: (line: string) => void,
-  ) {
-    this.storage = storage;
-    this.keychain = keychain;
-    this.log = log;
+    private readonly storage: PluginStorage,
+    private readonly keychain: Keychain,
+    private readonly options: PluginServiceOptions,
+  ) {}
+
+  // A first-party Plugin's declared Capabilities, granted as its worker loads with no prompt (ADR-0030).
+  activate(pluginId: string, plugin: ActivatedPlugin): void {
+    this.activated.set(pluginId, plugin);
   }
 
   async handle(
@@ -43,19 +58,21 @@ export class PluginServices {
 
       return { ok: true, value };
     } catch (error) {
-      this.log(`Plugin ${pluginId}: argo call failed: ${runtimeError(error)}`);
+      this.options.log(failureLine(pluginId, request, error));
 
-      return { ok: false, error: runtimeError(error) };
+      return { ok: false, error: replyError(error) };
     }
   }
 
-  // Reload, turning off and a crash end the Plugin's child processes, timers and requests.
+  // Reload, turning off and a crash end the Plugin's child processes, timers and requests, and its Grants.
   release(pluginId: string): void {
     this.held.get(pluginId)?.resources.release();
+    this.activated.delete(pluginId);
   }
 
   close(): void {
     for (const { resources } of this.held.values()) resources.release();
+    this.activated.clear();
     this.storage.close();
   }
 
@@ -64,10 +81,43 @@ export class PluginServices {
     generation: number,
     request: StateRequest,
   ): Promise<PluginValue> {
-    this.log(`Plugin ${pluginId}: ${describeCall(request)}`);
     const resources = this.resources(pluginId, generation);
 
-    return this.perform(pluginId, resources, request);
+    if (request.api === 'storage' || request.api === 'secrets') {
+      this.logCall(pluginId, request);
+
+      return this.perform(pluginId, request);
+    }
+
+    return machineCall(this.context(pluginId, resources, request), request);
+  }
+
+  private context(
+    pluginId: string,
+    resources: PluginResources,
+    request: StateRequest,
+  ): MachineContext {
+    return {
+      access: this.access(pluginId),
+      resources,
+      network: this.options.network ?? {},
+      allowed: () => this.logCall(pluginId, request),
+    };
+  }
+
+  private logCall(pluginId: string, request: StateRequest): void {
+    this.options.log(`Plugin ${pluginId}: ${describeCall(request)}`);
+  }
+
+  private access(pluginId: string): PluginAccess {
+    const { grants, codeFolder } = this.activated.get(pluginId) ?? notActivated;
+
+    return new PluginAccess({
+      grants,
+      codeFolder,
+      dataFolder: this.storage.folderOf(pluginId),
+      projects: this.options.projects,
+    });
   }
 
   // A later worker generation starts with fresh resources; an earlier one's calls are refused.
@@ -89,15 +139,12 @@ export class PluginServices {
 
   private async perform(
     pluginId: string,
-    resources: PluginResources,
-    request: StateRequest,
+    request: Extract<StateRequest, { api: 'storage' | 'secrets' }>,
   ): Promise<PluginValue> {
     if (request.api === 'storage')
       return this.storage.execute(pluginId, request.queries);
 
-    if (request.api === 'secrets') return this.secrets(pluginId, request.call);
-
-    return machineCall(resources, request);
+    return this.secrets(pluginId, request.call);
   }
 
   private async secrets(
@@ -116,30 +163,6 @@ export class PluginServices {
   }
 }
 
-type MachineRequest = Exclude<StateRequest, { api: 'storage' | 'secrets' }>;
-
-function machineCall(
-  resources: PluginResources,
-  request: MachineRequest,
-): Promise<PluginValue> {
-  if (request.api === 'fs') return resources.fs(request.call);
-
-  if (request.api === 'process') return resources.process(request.call);
-
-  return resources.fetch(request.call);
-}
-
-// The log names the call and where it points, never a secret value or a file's content.
-function describeCall(request: StateRequest): string {
-  if (request.api === 'storage')
-    return `argo.storage ${request.queries.length}`;
-
-  if (request.api === 'secrets')
-    return `argo.secrets.${request.call.action} ${request.call.account}`;
-
-  return describeMachineCall(request);
-}
-
 function supersede(held: Held | undefined, generation: number): void {
   if (!held) return;
 
@@ -147,19 +170,3 @@ function supersede(held: Held | undefined, generation: number): void {
     throw new Error('Plugin worker was replaced');
   held.resources.release();
 }
-
-function describeMachineCall(request: MachineRequest): string {
-  if (request.api === 'fs')
-    return `argo.fs.${request.call.action} ${request.call.path}`;
-
-  if (request.api === 'process')
-    return `argo.process.${request.call.action} ${describeProcess(request.call)}`;
-
-  return describeFetch(request.call);
-}
-
-const describeFetch = ({ method = 'GET', url }: FetchCall): string =>
-  `argo.fetch ${method} ${url}`;
-
-const describeProcess = (call: ProcessCall): string =>
-  'argv' in call ? call.argv.join(' ') : call.id;

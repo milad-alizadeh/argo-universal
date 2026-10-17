@@ -1,14 +1,18 @@
 import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, extname } from 'node:path';
-import { PluginManifest } from '@repo/contracts/plugins';
+import { PluginManifest, type PluginCapability } from '@repo/contracts/plugins';
 import { onTestFinished } from 'vitest';
+
+// Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
+export const shippedFolder = 'shipped';
 
 type FixturePlugin = {
   id: string;
   fixture: string;
   dev?: boolean;
   main?: string;
+  capabilities?: PluginCapability[];
 };
 
 export async function createRuntimePlugins(
@@ -24,11 +28,16 @@ export async function createRuntimePlugins(
 }
 
 async function writePlugin(home: string, plugin: FixturePlugin): Promise<void> {
-  const folder = join(home, 'plugins', plugin.id);
+  const folder = join(home, shippedFolder, plugin.id);
   const main = plugin.main ?? 'index.mjs';
 
   await mkdir(folder, { recursive: true });
-  await writeManifest({ folder, id: plugin.id, main });
+  await writeManifest({
+    folder,
+    id: plugin.id,
+    main,
+    capabilities: plugin.capabilities,
+  });
   await cp(
     new URL(
       `./plugin-runtime/${plugin.fixture}${extname(main)}`,
@@ -37,17 +46,19 @@ async function writePlugin(home: string, plugin: FixturePlugin): Promise<void> {
     join(folder, main),
   );
 
-  if (plugin.dev) await markDev(folder);
+  if (plugin.dev) await addDevSource(folder);
 }
 
 async function writeManifest({
   folder,
   id,
   main,
+  capabilities,
 }: {
   folder: string;
   id: string;
   main: string;
+  capabilities?: PluginCapability[];
 }): Promise<void> {
   const template = PluginManifest.parse(
     JSON.parse(
@@ -60,12 +71,12 @@ async function writeManifest({
 
   await writeFile(
     join(folder, 'plugin.json'),
-    JSON.stringify({ ...template, id, main }),
+    JSON.stringify({ ...template, id, main, capabilities }),
   );
 }
 
-async function markDev(folder: string): Promise<void> {
-  await writeFile(join(folder, '.argo-dev'), '');
+// A dev Plugin's entry imports a TypeScript source the Server bundles.
+async function addDevSource(folder: string): Promise<void> {
   await cp(
     new URL('./plugin-runtime/check.ts', import.meta.url),
     join(folder, 'check.ts'),

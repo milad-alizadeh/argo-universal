@@ -1,6 +1,7 @@
 import { activeSessions } from '@repo/mocks/app';
-import { expect } from 'storybook/test';
-import { eachLayout } from '#lib/generic/each-layout';
+import { expect, fn, screen, within } from 'storybook/test';
+import { eachLayout, layoutWidths } from '#lib/generic/each-layout';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import { allToasts, findToast } from '../../../mocks/find-toast';
 import { navigationCallbacks } from '../../../mocks/sessions-view/sessions-view-navigation.test.mocks';
 import {
@@ -116,3 +117,37 @@ export const NoMatchingSearchWide = noMatchingSearch(1440);
 export const ClosingSearchPhone = closingSearch(390);
 
 export const ClosingSearchWide = closingSearch(1440);
+
+const onArchive = fn();
+
+const foundIdleRow = activeSessions.sessions.find(
+  (session) => session.status === 'idle',
+);
+
+if (!foundIdleRow) throw new Error('Recorded catalog needs an idle Session');
+
+const idleRow = foundIdleRow;
+
+// A row's right-click menu archives its Session through the list.
+function archiveFromARowAt(layout: keyof typeof layoutWidths): Story {
+  return {
+    args: { onArchive },
+    beforeEach: async () => {
+      onArchive.mockClear();
+      await settleViewport(layoutWidths[layout]);
+    },
+    play: async ({ canvas, userEvent }) => {
+      const [title] = await canvas.findAllByText(idleRow.title);
+
+      if (!title) throw new Error('Missing idle row');
+      await userEvent.pointer({ keys: '[MouseRight]', target: title });
+      const menu = within(await screen.findByRole('menu'));
+      await userEvent.click(menu.getByRole('menuitem', { name: 'Archive' }));
+      await expect(onArchive).toHaveBeenCalledWith(idleRow.sessionId);
+    },
+  };
+}
+
+export const ArchiveFromARowOnPhone: Story = archiveFromARowAt('phone');
+
+export const ArchiveFromARowWide: Story = archiveFromARowAt('wide');

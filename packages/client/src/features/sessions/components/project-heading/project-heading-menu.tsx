@@ -29,7 +29,13 @@ export function ProjectHeadingMenu(
 // New Session, then Project settings, each only when the list offers it; a phone's system menu parts the two.
 function projectMenuGroups(props: ProjectHeadingProps): ContextMenuItem[][] {
   return [
-    contextMenuGroup('New Session', 'new-session', props.onAdd),
-    contextMenuGroup('Project settings', 'settings', props.onProjectSettings),
+    contextMenuGroup(
+      { label: 'New Session', icon: 'new-session' },
+      props.onAdd,
+    ),
+    contextMenuGroup(
+      { label: 'Project settings', icon: 'settings' },
+      props.onProjectSettings,
+    ),
   ].filter((group) => group.length > 0);
 }

@@ -33,11 +33,14 @@ function liveStartedAt({ liveHeader }: SessionSnapshot): number | null {
 function recordedHeaderProps(
   snapshot: SessionSnapshot,
 ): OpenSessionViewProps['header'] {
+  const status = snapshot.state === 'idle' ? 'idle' : 'running';
+
   return {
     title: snapshot.title,
-    status: snapshot.state === 'idle' ? 'idle' : 'running',
+    status,
     startedAt: liveStartedAt(snapshot),
     now: runningTurnNow,
+    menu: { archived: false, status, onRename: fn(), onArchive: fn() },
   };
 }
 

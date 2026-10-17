@@ -1,6 +1,7 @@
 import type { BuildContext } from 'esbuild';
 import { watchPlugin } from './dev-bundle';
 import type { HostConnection } from './host-connection';
+import type { ActivatedPlugin } from './plugin-access';
 import {
   notStarted,
   runtimeError,
@@ -10,8 +11,9 @@ import {
 
 type PluginInput = {
   entry: Omit<PluginEntry, 'generation'>;
-  dev: boolean;
   host: HostConnection;
+  // Grants the Plugin its Capabilities as each worker loads; `release` takes them away again.
+  grant: (plugin: ActivatedPlugin) => void;
   release: () => void;
   log: (line: string) => void;
   changed: (status: PluginStatus) => void;
@@ -26,15 +28,22 @@ export class RuntimePlugin {
   private source: string | undefined;
   private buildError: string | null = null;
   private generation = 0;
+  // Nothing is granted until the first activation names the manifest's Capabilities.
+  private granted: ActivatedPlugin;
 
-  constructor(private readonly input: PluginInput) {}
+  constructor(private readonly input: PluginInput) {
+    this.granted = { grants: [], codeFolder: input.entry.directory };
+  }
 
-  activate(): Promise<PluginStatus> {
+  // The latest manifest's Grants apply from the next worker that loads.
+  activate(granted: ActivatedPlugin): Promise<PluginStatus> {
+    this.granted = granted;
+
     if (this.activation) return this.activation;
     const pending = this.awaitActivation();
 
-    if (this.input.dev) this.bundle();
-    else this.load();
+    // Only first-party Plugins load (the loader refuses the rest), and they run from source.
+    this.bundle();
 
     return pending;
   }
@@ -125,6 +134,7 @@ export class RuntimePlugin {
 
     try {
       this.generation += 1;
+      this.input.grant(this.granted);
       this.input.host.activate({
         ...this.input.entry,
         source: this.source,

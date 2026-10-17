@@ -2,12 +2,60 @@
   "id": "issue-tracker",
   "name": "Issue tracker",
   "version": "0.0.1",
-  "engines": { "argo": ">=0.0.0 <1.0.0" },
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
   "main": "index.js",
   "icon": {
     "sf": "ticket",
     "sfFilled": "ticket.fill",
     "material": "confirmation_number"
   },
-  "contributes": { "nav": [{ "id": "issues", "title": "Issues", "path": "/" }] }
+  "contributes": {
+    "nav": [
+      {
+        "id": "issues",
+        "title": "Issues",
+        "path": "/"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["auth", "status"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": [
+        "issue",
+        "list",
+        "--repo",
+        "*",
+        "--state",
+        "*",
+        "--limit",
+        "*",
+        "--json",
+        "*"
+      ]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "view", "*", "--repo", "*", "--json", "*"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "close", "*", "--repo", "*"]
+    },
+    {
+      "kind": "process:exec",
+      "command": "gh",
+      "args": ["issue", "reopen", "*", "--repo", "*"]
+    }
+  ]
 }

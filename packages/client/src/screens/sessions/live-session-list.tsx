@@ -7,6 +7,7 @@ import {
 } from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
 import {
+  ArchiveSessionAlert,
   liveUpdatesStopped,
   type QueryProgress,
   RenameSessionDialog,
@@ -23,6 +24,7 @@ import {
   SessionListView,
   type SessionListViewProps,
 } from './session-list-view';
+import { useArchiveSession } from './use-archive-session';
 import { useRenameSession } from './use-rename-session';
 import { useSessionListUpdates } from './use-session-list-updates';
 import { useSessionPages } from './use-session-pages';
@@ -105,17 +107,20 @@ function useSessionsViewProps(
   };
 }
 
-// The Sessions list: its queries and live updates, passed to the view as props, and the dialog that renames a row's Session.
+// The Sessions list: its queries and live updates, passed to the view as props, the dialog that renames a row's Session, and the phones' alert before archiving one.
 export function LiveSessionList(
   props: LiveSessionListProps,
 ): React.JSX.Element {
   const listView = useSessionsViewProps(props);
   const rename = useRenameSession(listView.sessions);
+  const archive = useArchiveSession();
+  const actions = { onRename: rename.onRename, onArchive: archive.onArchive };
 
   return (
     <>
-      <SessionListView {...listView} onRename={rename.onRename} />
+      <SessionListView {...listView} {...actions} />
       <RenameSessionDialog {...rename.dialog} />
+      <ArchiveSessionAlert {...archive.alert} />
     </>
   );
 }

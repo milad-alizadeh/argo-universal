@@ -13,7 +13,7 @@ import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { rejectedManifests } from '#mocks/plugin-manifests';
 
-it('discovers first-party and user Plugin manifests through the Engine without starting their code', async () => {
+it('lists first-party Plugin manifests without starting their code, and reports user Plugins without loading them', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'argo-plugins-'));
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
   const home = join(directory, 'home');
@@ -43,13 +43,13 @@ it('discovers first-party and user Plugin manifests through the Engine without s
         firstParty: true,
         enabled: true,
       },
+    ],
+    errors: [
       {
-        manifest: { id: 'fixture-hello', icon: { material: 'power' } },
-        firstParty: false,
-        enabled: true,
+        directory: join(home, 'plugins', 'hello'),
+        message: expect.stringContaining('not loaded'),
       },
     ],
-    errors: [],
   });
 });
 
@@ -113,11 +113,11 @@ it('admits Plugins in a root and one collection below it, follows symlinks, and 
 
   await writePlugin(join(shipped, 'shared'), 'shared');
   await writePlugin(join(user, 'shared'), 'shared');
-  await writePlugin(join(user, 'collection', 'nested'), 'nested');
-  await writePlugin(join(user, 'repo', 'packages', 'deep'), 'deep');
-  await writePlugin(join(user, 'top'), 'top');
+  await writePlugin(join(shipped, 'collection', 'nested'), 'nested');
+  await writePlugin(join(shipped, 'repo', 'packages', 'deep'), 'deep');
+  await writePlugin(join(shipped, 'top'), 'top');
   await writePlugin(join(directory, 'elsewhere'), 'linked');
-  await symlink(join(directory, 'elsewhere'), join(user, 'linked'));
+  await symlink(join(directory, 'elsewhere'), join(shipped, 'linked'));
 
   const { caller } = await startEngineTestHost({
     home,
@@ -132,10 +132,10 @@ it('admits Plugins in a root and one collection below it, follows symlinks, and 
       firstParty,
     })),
   ).toEqual([
+    { id: 'linked', firstParty: true },
     { id: 'shared', firstParty: true },
-    { id: 'linked', firstParty: false },
-    { id: 'top', firstParty: false },
-    { id: 'nested', firstParty: false },
+    { id: 'top', firstParty: true },
+    { id: 'nested', firstParty: true },
   ]);
 
   expect(result.errors).toEqual([

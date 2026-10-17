@@ -59,7 +59,10 @@ export const SessionMessage = z.strictObject({
   messageId: z.string(),
   content: z.array(ContentBlock),
   _meta: createFeedMetadataSchema(
-    z.strictObject({ senderSessionId: z.string() }),
+    z.strictObject({
+      senderSessionId: z.string().optional(),
+      recipientSessionId: z.string().optional(),
+    }),
   ),
 });
 

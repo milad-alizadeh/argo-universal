@@ -1,0 +1,53 @@
+import type { SessionStatus } from '@repo/contracts';
+import type { IconName } from '#lib/generic/symbols/icon-names';
+
+// What a Session's menus offer, from its row's right-click or long press, or its page's header.
+export interface SessionMenu {
+  // An archived Session offers neither action.
+  archived: boolean;
+  status: SessionStatus;
+  onRename?: () => void;
+  onArchive?: () => void;
+}
+
+// One action of a Session's menus: the row's context menu and the header's Menu both take it.
+export interface SessionMenuItem {
+  label: string;
+  icon: Extract<IconName, 'rename' | 'archive'>;
+  disabled: boolean;
+  onPress: () => void;
+}
+
+// The Server archives only a Session with no Turn: one running or waiting on an answer refuses it.
+const isTurnActive = (status: SessionStatus): boolean =>
+  status === 'running' || status === 'needs_input';
+
+const renameItem = ({ onRename }: SessionMenu): SessionMenuItem | undefined =>
+  onRename && {
+    label: 'Rename',
+    icon: 'rename',
+    disabled: false,
+    onPress: onRename,
+  };
+
+// While a Turn runs, Archive stays but is disabled.
+const archiveItem = ({
+  status,
+  onArchive,
+}: SessionMenu): SessionMenuItem | undefined =>
+  onArchive && {
+    label: 'Archive',
+    icon: 'archive',
+    disabled: isTurnActive(status),
+    onPress: onArchive,
+  };
+
+const isItem = (item: SessionMenuItem | undefined): item is SessionMenuItem =>
+  item !== undefined;
+
+// Rename, then Archive, each only when the page offers it; an archived Session offers neither.
+export function sessionMenuItems(menu: SessionMenu): SessionMenuItem[] {
+  if (menu.archived) return [];
+
+  return [renameItem(menu), archiveItem(menu)].filter(isItem);
+}

@@ -27,6 +27,11 @@ export const sessionHref = (id: string): Href => ({
   params: { id },
 });
 
+// Back to the Sessions list, as Back from a Session's page goes; a wide window then shows the list with no Session open.
+export function leaveForSessions(): void {
+  router.dismissTo('/sessions');
+}
+
 // A Project's page in Settings.
 export const projectHref = (name: string): Href => ({
   pathname: '/settings/projects/[name]',

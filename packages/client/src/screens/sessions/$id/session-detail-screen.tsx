@@ -14,18 +14,18 @@ import {
   useSessionElicitation,
 } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
-  sessionPageTitle,
 } from './session-detail-view';
 import {
   type SessionDetailViewSources,
   toSessionViewProps,
 } from './session-detail-view-props';
 import { SessionNewScreen } from './session-new-screen';
+import { SessionPageHeader } from './session-page-header';
+import { useSessionPageMenu } from './session-page-menu';
 import { useMarkSeen } from './use-mark-seen';
 import { useSessionCallout } from './use-session-callout';
 import {
@@ -54,18 +54,18 @@ export function SessionDetailScreen({
 // iOS's long-press preview draws the page outside its stack: it takes no header, and a peek does not mark the Session seen.
 function ConnectedSession({
   sessionId,
-}: {
-  sessionId: string;
-}): React.JSX.Element {
+}: Pick<SessionPage, 'sessionId'>): React.JSX.Element {
   const preview = useIsPreview();
-  const props = useSessionViewProps({ sessionId, preview });
+  const opened = useSessionViewProps({ sessionId, preview });
+  const { props, dialogs } = useSessionPageMenu(sessionId, opened);
 
   if (preview) return <SessionDetailView {...previewed(props)} />;
 
   return (
     <>
-      <ScreenHeader title={sessionPageTitle(props)} />
+      <SessionPageHeader {...props} />
       <SessionDetailView {...props} />
+      {dialogs}
     </>
   );
 }

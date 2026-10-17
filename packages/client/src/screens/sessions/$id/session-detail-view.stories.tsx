@@ -107,6 +107,11 @@ export const Disconnected: Story = {
   },
 };
 
+// Archived: the Feed reads as before; a banner takes the Composer's place.
+export const Archived: Story = {
+  args: { view: { state: 'open', ...idleSession, archived: true } },
+};
+
 export const Opening: Story = { args: { view: { state: 'opening' } } };
 
 // The page behind the failure's toast stays blank, whether or not the Server gave a reason.
