@@ -1,6 +1,6 @@
 import { FadeIn } from 'react-native-reanimated';
 import { cn } from '#lib/generic/utils';
-import type { SessionsLayout } from '../../stores/sessions-layout';
+import type { SessionsLayout } from '../../stores/sessions-view';
 
 const fadeInMilliseconds = 200;
 

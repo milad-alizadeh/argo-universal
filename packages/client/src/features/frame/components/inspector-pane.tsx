@@ -82,13 +82,13 @@ function InspectorHeader(props: InspectorPaneProps): React.JSX.Element {
 // The Inspector's page, flush with the window's right edge: its header with expand and close, and its content scrolling and fading under that header, all on one surface.
 export function InspectorPane(props: InspectorPaneProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-muted">
+    <View className="flex-1 bg-tint">
       <InspectorHeader {...props} />
       <ScrollFadeView
         testID="desktop-inspector-scroll"
         className="overflow-hidden"
         contentContainerClassName="grow"
-        surfaceClassName="bg-muted"
+        surfaceClassName="bg-tint"
       >
         {props.children}
       </ScrollFadeView>

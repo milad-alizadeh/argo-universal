@@ -1,18 +1,21 @@
 import type { AgentServer } from '@repo/contracts';
 import { useMemo } from 'react';
 import { virtualListPosition } from '#primitives/lists/virtual-list-item';
-import type { SessionsLayout } from '../../stores/sessions-layout';
+import type { SessionsLayout, SessionsOrder } from '../../stores/sessions-view';
 import { showsSessionAge } from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { sessionAge, useAgeFrom } from './session-age';
+import { listsFlat } from './sessions-list-entries-state';
 import type { SessionsListProps } from './sessions-list-props';
 import type { SessionListRowProps } from './sessions-list-rows';
 
 export interface SessionRowContext {
   agentLogos: Map<string, string>;
-  layout?: SessionsLayout;
+  layout: SessionsLayout;
+  // The list's order, whose time each row's age counts from.
+  order: SessionsOrder;
   selectedSessionId?: string;
-  // When rows show how long ago they were active, the time that counts from.
+  // When rows show their ages, the time those count to.
   ageFrom?: number;
   // Rows that mount while the list reorders fade in.
   animating: boolean;
@@ -52,15 +55,26 @@ function useRowActions(props: SessionsListProps): RowActions {
   );
 }
 
+// The list's order and, while rows show ages, the time they count to.
+function useRowAge(
+  props: SessionsListProps,
+): Pick<SessionRowContext, 'order' | 'ageFrom'> {
+  const { layout, order } = props.view;
+  const ageFrom = useAgeFrom(showsSessionAge(layout, listsFlat(props)));
+
+  return useMemo(() => ({ order, ageFrom }), [order, ageFrom]);
+}
+
 function useRowInputs(props: SessionsListProps): RowInputs {
-  const { layout, selectedSessionId } = props;
+  const { selectedSessionId } = props;
+  const { layout } = props.view;
   const agentLogos = useAgentLogos(props.agents);
-  const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
+  const age = useRowAge(props);
   const actions = useRowActions(props);
 
   return useMemo(
-    () => ({ agentLogos, layout, selectedSessionId, ageFrom, ...actions }),
-    [agentLogos, layout, selectedSessionId, ageFrom, actions],
+    () => ({ agentLogos, layout, selectedSessionId, ...age, ...actions }),
+    [agentLogos, layout, selectedSessionId, age, actions],
   );
 }
 
@@ -95,7 +109,7 @@ export function sessionRowProps(
     session: item.session,
     logo: context.agentLogos.get(item.session.agent) ?? '',
     selected: context.selectedSessionId === item.id,
-    trailing: sessionAge(item.session, context.ageFrom),
+    trailing: sessionAge(item.session, context.ageFrom, context.order),
     layout: context.layout,
     ...rowMotion(item.session.projectId, context),
     position: virtualListPosition(item.first, item.last),

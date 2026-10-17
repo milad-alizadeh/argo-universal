@@ -107,7 +107,10 @@ const waitForCancel = (
   step.until ? Promise.race([turn.cancelled, step.until]) : turn.cancelled;
 
 const runExitStep = (
-  step: Extract<ScriptedStep, { type: 'exit' | 'hold' }>,
+  step: Extract<ScriptedStep, { type: 'exit' | 'hold' | 'wait-for-release' }>,
   turn: ScriptedTurn,
-): Promise<void> =>
-  step.type === 'exit' ? turn.exit(step.code, step.stderr) : turn.closed;
+): Promise<void> => {
+  if (step.type === 'exit') return turn.exit(step.code, step.stderr);
+
+  return step.type === 'hold' ? turn.closed : turn.released;
+};

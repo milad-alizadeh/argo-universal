@@ -1,7 +1,7 @@
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { realpathSync } from 'node:fs';
 import { readSessionCheckouts } from '@repo/mocks/git/test-repository';
-import { z } from 'zod';
 import { expect } from '../fixtures';
+import { type LoggedRequest, requests } from './agent-requests';
 import { readAgent } from './agents';
 import { When, Then } from './fixtures';
 import {
@@ -12,27 +12,8 @@ import {
 
 const checkedAttribute = 'aria-checked';
 
-const LoggedRequest = z.object({
-  method: z.string(),
-  params: z.object({ cwd: z.string().optional() }).optional(),
-});
-
-type LoggedRequest = z.infer<typeof LoggedRequest>;
-
 const argoBranches = async (projectPath: string): Promise<string[]> =>
   (await readSessionCheckouts(projectPath)).branches;
-
-// The Agent's session/new and session/close requests, in order.
-const loggedRequests = (requestLogPath: string): LoggedRequest[] =>
-  existsSync(requestLogPath)
-    ? readFileSync(requestLogPath, 'utf8')
-        .split('\n')
-        .filter(Boolean)
-        .map((line) => LoggedRequest.parse(JSON.parse(line)))
-    : [];
-
-const requests = (requestLogPath: string, method: string): LoggedRequest[] =>
-  loggedRequests(requestLogPath).filter((request) => request.method === method);
 
 export const openRequests = (requestLogPath: string): LoggedRequest[] =>
   requests(requestLogPath, 'session/new');

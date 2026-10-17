@@ -11,6 +11,16 @@ const FeedPage = z.object({
       turnId: z.string(),
       state: z.string(),
       content: z.array(z.record(z.string(), z.unknown())).optional(),
+      // A Turn's ending Notice carries how the Turn stopped.
+      _meta: z
+        .object({
+          argo: z
+            .object({
+              turnEnd: z.object({ stopReason: z.string() }).optional(),
+            })
+            .default({}),
+        })
+        .default({ argo: {} }),
     }),
   ),
 });
