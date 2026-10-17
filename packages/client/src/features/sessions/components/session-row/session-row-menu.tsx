@@ -1,3 +1,4 @@
+import type { SessionInfo } from '@repo/contracts';
 import type { ReactElement } from 'react';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import {
@@ -36,12 +37,18 @@ const renameSession = (props: SessionRowProps): (() => void) | undefined =>
 const archiveSession = (props: SessionRowProps): (() => void) | undefined =>
   props.onArchive && ((): void => props.onArchive?.(props.session.sessionId));
 
-// Rename, then Archive, each only when the list offers it; a phone's system menu parts the two.
+// The Server archives only a Session with no Turn: one running or waiting on an answer refuses it.
+const isTurnActive = (session: SessionInfo): boolean =>
+  session.status === 'running' || session.status === 'needs_input';
+
+// Rename, then Archive, each only when the list offers it; a phone's system menu parts the two. While a Turn runs, Archive stays but is disabled.
 export function sessionMenuGroups(props: SessionRowProps): ContextMenuItem[][] {
   if (props.session.archivedAt !== null) return [];
 
   return [
     contextMenuGroup('Rename', 'rename', renameSession(props)),
-    contextMenuGroup('Archive', 'archive', archiveSession(props)),
+    contextMenuGroup('Archive', 'archive', archiveSession(props)).map(
+      (item) => ({ ...item, disabled: isTurnActive(props.session) }),
+    ),
   ].filter((group) => group.length > 0);
 }

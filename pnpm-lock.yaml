@@ -515,6 +515,9 @@ catalogs:
     sherif:
       specifier: 1.13.0
       version: 1.13.0
+    sonner:
+      specifier: 2.0.8
+      version: 2.0.8
     storybook:
       specifier: 10.6.1
       version: 10.6.1
@@ -1205,6 +1208,9 @@ importers:
       react-native-svg:
         specifier: 'catalog:'
         version: 15.15.4(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+      sonner:
+        specifier: 'catalog:'
+        version: 2.0.8(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tailwind-merge:
         specifier: 'catalog:'
         version: 3.7.0

@@ -1,5 +1,6 @@
 import * as Burnt from 'burnt';
 import { useEffect, useRef } from 'react';
+import { showActionToast } from './toast-action';
 import { toastTitle } from './toast-title';
 
 export interface ErrorToast {
@@ -9,9 +10,17 @@ export interface ErrorToast {
   key?: string;
 }
 
+// A button at the toast's trailing edge, such as Undo; pressing it closes the toast.
+export interface ToastAction {
+  label: string;
+  onPress: () => void;
+}
+
 // A finished action reads as success; a failed load or action as danger.
 export type Toast = ErrorToast & {
   tone: 'success' | 'danger';
+  // The web only: the phones' system toasts cannot hold a button.
+  action?: ToastAction;
 };
 
 type ToastOptions = Parameters<typeof Burnt.toast>[0];
@@ -23,6 +32,16 @@ const tonePresets = {
 
 // iOS and Android draw a native toast; web draws it in the Toaster.
 export function showToast(toast: Toast): void {
+  if (toast.action) {
+    showActionToast(toast, toast.action);
+
+    return;
+  }
+
+  showSystemToast(toast);
+}
+
+export function showSystemToast(toast: Toast): void {
   const options: ToastOptions = {
     ...tonePresets[toast.tone],
     title: toastTitle(toast),

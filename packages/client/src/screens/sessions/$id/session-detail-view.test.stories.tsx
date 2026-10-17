@@ -2,6 +2,7 @@ import { expect, within } from 'storybook/test';
 import { eachLayout, layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { configuration } from '../../../../mocks/session-view/session-view-agent.test.mocks';
+import { archivedIsReadOnly } from '../../../../mocks/session-view/session-view-archived.test.mocks';
 import { authenticationRequired } from '../../../../mocks/session-view/session-view-callout.test.mocks';
 import {
   failedWithoutReason,
@@ -169,3 +170,5 @@ export const LastRowRestsAboveTheComposer = lastRowRestsAboveTheComposer;
 export const AuthenticationRequired = authenticationRequired;
 
 export const PreviewShowsTheFeedAlone = previewShowsTheFeedAlone;
+
+export const ArchivedIsReadOnly = archivedIsReadOnly;
