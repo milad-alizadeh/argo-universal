@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import type { View } from '../code-map';
+import { supports3d, type View } from '../code-map';
 import { getFiles, type FileEntry } from './dataset';
 
 /** What the prototype page holds; the Code Map owns its camera, labels and readiness. */
@@ -8,6 +8,8 @@ export interface PrototypeState {
   /** The stress file count from the URL, or 0 for the real snapshot. */
   count: number;
   view: View;
+  /** False without WebGL: the page then shows only Flat. */
+  can3d: boolean;
   onView: (view: View) => void;
   selectedId?: string;
   onSelect: (id: string) => void;
@@ -29,7 +31,9 @@ function requestedCount(): number {
   return 0;
 }
 
-function initialView(): View {
+function initialView(can3d: boolean): View {
+  if (!can3d) return 'flat';
+
   return new URLSearchParams(search()).get('view') === 'flat' ? 'flat' : '3d';
 }
 
@@ -47,15 +51,16 @@ function useData(): Pick<PrototypeState, 'files' | 'count'> {
   return { files, count };
 }
 
-function useView(): Pick<PrototypeState, 'view' | 'onView'> {
-  const [view, setView] = useState(initialView);
+function useView(): Pick<PrototypeState, 'view' | 'can3d' | 'onView'> {
+  const [can3d] = useState(supports3d);
+  const [view, setView] = useState(() => initialView(can3d));
 
   const onView = useCallback((next: View) => {
     rememberView(next);
     setView(next);
   }, []);
 
-  return { view, onView };
+  return { view, can3d, onView };
 }
 
 function useSelection(): Pick<PrototypeState, 'selectedId' | 'onSelect'> {
