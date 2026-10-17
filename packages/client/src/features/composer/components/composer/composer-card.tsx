@@ -5,7 +5,6 @@ import { RichTextarea } from '#primitives/inputs/rich-textarea';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
   CardLayout,
-  ControlsLayout,
   AttachmentLayout,
   TextLayout,
 } from './composer-card-types';
@@ -114,14 +113,9 @@ function textInputProps({
   };
 }
 
-export function ComposerControls(layout: ControlsLayout): React.JSX.Element {
+export function ComposerControls(layout: CardLayout): React.JSX.Element {
   return (
-    <View
-      className="w-full"
-      onLayout={({ nativeEvent }) =>
-        layout.setControlsHeight(nativeEvent.layout.height)
-      }
-    >
+    <View className="w-full">
       <ComposerCard {...layout} />
       <ComposerBottomTray {...layout} />
     </View>

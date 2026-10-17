@@ -28,10 +28,6 @@ const meta = {
 
 export default meta;
 
-export const ClaudePlanKeepsComposer = preservesComposer(0, 'plan');
+export const ClaudePermissionKeepsComposer = preservesComposer(0);
 
-export const CodexPlanKeepsComposer = preservesComposer(1, 'plan');
-
-export const ClaudePermissionKeepsComposer = preservesComposer(0, 'permission');
-
-export const CodexPermissionKeepsComposer = preservesComposer(1, 'permission');
+export const CodexPermissionKeepsComposer = preservesComposer(1);

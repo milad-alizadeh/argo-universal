@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
 import { useFileDrop } from '../../hooks/use-file-drop';
 import { isConfigurationInactive, isInactive } from './composer-conditions';
@@ -18,7 +18,7 @@ export function useComposerLayout(
 
   return Object.assign(
     { props, composerId, wide, sendState, send },
-    useComposerControls(props),
+    composerActivity(props),
   );
 }
 
@@ -29,15 +29,4 @@ function composerActivity(
     inactive: isInactive(props),
     configurationInactive: isConfigurationInactive(props),
   };
-}
-
-function useComposerControls(
-  props: ComposerProps,
-): Pick<
-  ComposerLayout,
-  'controlsHeight' | 'setControlsHeight' | 'inactive' | 'configurationInactive'
-> {
-  const [controlsHeight, setControlsHeight] = useState(0);
-
-  return { controlsHeight, setControlsHeight, ...composerActivity(props) };
 }

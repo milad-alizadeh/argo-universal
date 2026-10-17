@@ -192,7 +192,6 @@ export type SessionCommand =
       type: 'session.answerPermission';
       requestId: PendingPermission['requestId'];
       optionId: PendingPermission['options'][number]['optionId'] | null;
-      message?: string;
     }
   | {
       type: 'session.answerElicitation';

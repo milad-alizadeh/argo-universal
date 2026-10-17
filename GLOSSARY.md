@@ -186,13 +186,9 @@ _Avoid_: Tool use, function call, command (for the action)
 The Agent's live checklist for a Session. The Agent replaces it whole on each change.
 _Avoid_: Todo list, task list
 
-**Plan proposal**:
-A written plan that the Agent offers and that the user approves or rejects.
-_Avoid_: Plan (for the document), exit-plan
-
 **Written plan**:
 A plan document the Agent keeps without asking for approval, as Markdown text or only as a URI.
-_Avoid_: Plan (for the document), Plan proposal (when nothing is asked)
+_Avoid_: Plan (for the document), Plan proposal
 
 **Attachment**:
 An image or file the user adds to a prompt from their device. The Server stores it as a Blob, and the Agent receives an image as a picture and any other file as the file itself.
@@ -203,8 +199,8 @@ A resource the Agent names in its content by URI, with a name and optionally a d
 _Avoid_: Link, attachment
 
 **Permission request**:
-A question from the Agent to let a Tool call run, with options to allow or reject.
-_Avoid_: Approval, prompt
+A question from the Agent to let a Tool call run, with options to allow or reject. The answer is only the chosen option. An Agent's request to leave plan mode is one: its Tool call carries the plan.
+_Avoid_: Approval, prompt, Plan proposal
 
 **Elicitation**:
 A question from the Agent that asks the user for information.

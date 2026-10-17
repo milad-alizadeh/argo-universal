@@ -79,6 +79,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
 const namedScenarioSteps = [
   [agentStep('supplies a long Feed history'), 'feed-history'],
   [agentStep('asks for an Elicitation'), 'elicitation'],
+  [agentStep('asks to leave plan mode'), 'leave-plan-mode'],
   [agentStep('holds its first Turn until released'), 'held-until-released'],
   [
     agentStep('names its Session after a question'),

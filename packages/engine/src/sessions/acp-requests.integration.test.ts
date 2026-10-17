@@ -13,6 +13,13 @@ import type {
   SessionSnapshot,
 } from '@repo/contracts';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
+import {
+  askToLeavePlanMode,
+  leavePlanMode,
+  leavePlanModeOptions,
+  leavePlanModeSteps,
+  withMode,
+} from '@repo/mocks/agent/plan-mode-scenario';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { describe, expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
@@ -132,6 +139,20 @@ const waitForTurnEnd = (
     sessionId,
     (snapshot) => snapshot.activeTurnId === null,
   );
+
+const answerLeavePlanMode = async (
+  host: AcpEngine,
+  sessionId: string,
+  optionId: string,
+): Promise<void> => {
+  const { requestId } = await waitForPermission(host, sessionId);
+  await host.caller.session.answerPermission({
+    sessionId,
+    requestId,
+    optionId,
+  });
+  await waitForAcpSessionIdle(host, sessionId);
+};
 
 const readNotices = async (
   host: AcpEngine,
@@ -262,6 +283,54 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     });
   });
 
+  // As in Zed: Claude's ExitPlanMode is an ordinary Permission request; its Tool call carries the plan and every option stays.
+  it('presents a request to leave plan mode as a Permission request with all its options', async () => {
+    const { host, sessionId } = await startSession(agent, askToLeavePlanMode());
+
+    expect(await waitForPermission(host, sessionId)).toEqual({
+      requestId: expect.any(String),
+      toolCallId: leavePlanMode.toolCallId,
+      title: leavePlanMode.title,
+      plan: leavePlanMode.rawInput.plan,
+      options: leavePlanModeOptions,
+    });
+  });
+
+  it('sends only the chosen option when the user keeps planning', async () => {
+    const outcomes: Outcomes = [];
+
+    const { host, sessionId } = await startSession(
+      agent,
+      askToLeavePlanMode(outcomes),
+    );
+
+    await answerLeavePlanMode(host, sessionId, 'reject');
+    expect(outcomes).toEqual([
+      { outcome: { outcome: 'selected', optionId: 'reject' } },
+    ]);
+  });
+
+  it('shows code mode once the user approves the plan', async () => {
+    const host = await startAcpEngine(
+      { steps: leavePlanModeSteps, configOptions: withMode('plan') },
+      undefined,
+      agent,
+    );
+
+    const { sessionId } = await host.caller.session.new({
+      ...emptySessionInput,
+      agent,
+    });
+
+    await promptSession(host, sessionId);
+    await answerLeavePlanMode(host, sessionId, 'exit-plan-default');
+    expect(
+      (await waitForTurnEnd(host, sessionId)).configOptions,
+    ).toContainEqual(
+      expect.objectContaining({ configId: 'mode', currentValue: 'code' }),
+    );
+  });
+
   it('settles only the answered request with its exact option while the prompt still runs', async () => {
     const outcomes: Outcomes = [];
 
@@ -382,30 +451,6 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     ).rejects.toThrow('did not offer');
     expect(await waitForPermission(host, sessionId)).toEqual(pending);
   });
-
-  it.each([reject, allowOnce])(
-    'feedback with %s is refused as undeliverable and the request stays pending',
-    async (optionId) => {
-      const outcomes: Outcomes = [];
-
-      const { host, sessionId } = await startSession(
-        agent,
-        permissionSteps(outcomes, ['tool-a']),
-      );
-
-      const pending = await waitForPermission(host, sessionId);
-      await expect(
-        host.caller.session.answerPermission({
-          sessionId,
-          requestId: pending.requestId,
-          optionId,
-          message: 'Use the cache instead',
-        }),
-      ).rejects.toThrow('does not support Permission feedback');
-      expect(await waitForPermission(host, sessionId)).toEqual(pending);
-      expect(outcomes).toHaveLength(0);
-    },
-  );
 
   it('a request stays answerable after one App stops watching the Session', async () => {
     const outcomes: Outcomes = [];

@@ -10,17 +10,10 @@ import {
   permissionChoices,
 } from './permission-choices';
 
-type PermissionAnswer = Pick<
-  SessionAnswerPermissionInput,
-  'optionId' | 'message'
->;
+type PermissionAnswer = Pick<SessionAnswerPermissionInput, 'optionId'>;
 
 export interface PermissionAnswersInput {
   request: PendingPermission;
-  // The Agent reads a message with a rejection; only then does rejecting open the message field.
-  feedback?: boolean;
-  denialMessage?: string;
-  onDenialMessageChange: (message: string | undefined) => void;
   onAnswer: (answer: PermissionAnswer) => void;
   state: RequestState;
 }
@@ -34,37 +27,28 @@ interface PickedLeads {
   main: PermissionOption;
 }
 
-interface DenialFlow {
-  denying: boolean;
-  choose: (option: PermissionOption) => void;
-  deny: () => void;
-  enter: () => void;
-  escape: (() => void) | undefined;
-  back: () => void;
-}
-
-export interface PermissionAnswers extends PickedLeads, DenialFlow {
-  denial: PermissionOption | undefined;
+export interface PermissionAnswers extends PickedLeads {
   inactive: boolean;
   label: (option: PermissionOption) => string;
+  choose: (option: PermissionOption) => void;
+  enter: () => void;
 }
-
-type Send = (answer: PermissionAnswer) => void;
 
 export function usePermissionAnswers(
   props: PermissionAnswersInput,
 ): PermissionAnswers {
   const picks = usePickedLeads(props.request);
   const { chosen, send } = useSend(props);
-  const inactive = props.state.kind !== 'open';
-  const denial = props.feedback ? picks.choices.reject[0] : undefined;
+
+  const choose = (option: PermissionOption): void =>
+    send({ optionId: option.optionId });
 
   return {
     ...picks,
-    denial,
-    inactive,
+    inactive: props.state.kind !== 'open',
     label: sendingLabel(props.state, chosen ?? picks.main.optionId),
-    ...denialFlow({ ...props, denial, inactive, main: picks.main, send }),
+    choose,
+    enter: () => choose(picks.main),
   };
 }
 
@@ -84,7 +68,10 @@ function usePickedLeads(request: PendingPermission): PickedLeads {
   return { choices, leads, pick, main: mainOption(leads) };
 }
 
-type Sending = { chosen: string | undefined; send: Send };
+type Sending = {
+  chosen: string | undefined;
+  send: (answer: PermissionAnswer) => void;
+};
 
 // The option sent for this request, so its button reads Sending….
 function useSend(input: PermissionAnswersInput): Sending {
@@ -101,55 +88,6 @@ function useSend(input: PermissionAnswersInput): Sending {
     sent?.requestId === request.requestId ? sent.optionId : undefined;
 
   return { chosen, send };
-}
-
-type DenialFlowInput = PermissionAnswersInput &
-  Pick<PermissionAnswers, 'denial' | 'inactive' | 'main'> & { send: Send };
-
-type DenialCommands = Pick<DenialFlow, 'choose' | 'deny' | 'back'>;
-
-function denialFlow(input: DenialFlowInput): DenialFlow {
-  const { denial, main } = input;
-  const denying = denial !== undefined && input.denialMessage !== undefined;
-  const { choose, deny, back } = denialCommands(input);
-
-  return {
-    denying,
-    choose,
-    deny,
-    back,
-    enter: () => (denying ? deny() : choose(main)),
-    escape: denial && (() => (denying ? back() : choose(denial))),
-  };
-}
-
-// Choosing the denial opens the message field; Back closes it.
-function denialCommands(input: DenialFlowInput): DenialCommands {
-  const { denial, send, onDenialMessageChange: setDenialMessage } = input;
-
-  return {
-    choose: (option) => {
-      if (option === denial && !input.inactive) setDenialMessage('');
-      else send({ optionId: option.optionId });
-    },
-    deny: () => {
-      if (denial) send(denialAnswer(denial, input.denialMessage));
-    },
-    back: () => setDenialMessage(undefined),
-  };
-}
-
-// The denial, with the message when the user wrote one.
-function denialAnswer(
-  denial: PermissionOption,
-  denialMessage: string | undefined,
-): PermissionAnswer {
-  const message = denialMessage?.trim();
-  const answer: PermissionAnswer = { optionId: denial.optionId };
-
-  if (message) answer.message = message;
-
-  return answer;
 }
 
 const sendingLabel =

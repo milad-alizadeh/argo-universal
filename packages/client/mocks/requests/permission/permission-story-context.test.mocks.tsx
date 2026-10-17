@@ -14,8 +14,6 @@ export const rejectOptions = 'Reject options';
 
 export const alwaysReject = 'Always Reject';
 
-export const denialFeedback = 'Keep the cache.';
-
 export const meta: Meta<typeof PermissionRequest> = {
   title: 'Tests/PermissionRequest',
   component: PermissionRequest,
@@ -25,7 +23,7 @@ export const meta: Meta<typeof PermissionRequest> = {
       <PermissionRequest {...permissionProps(args)} />
     </RequestFrame>
   ),
-  args: { ...permissionProps({}), onAnswer: fn(), onDenialMessageChange: fn() },
+  args: { ...permissionProps({}), onAnswer: fn() },
 };
 
 export type Story = StoryObj<typeof meta>;

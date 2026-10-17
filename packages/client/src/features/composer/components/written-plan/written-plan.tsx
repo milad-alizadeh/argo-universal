@@ -1,9 +1,9 @@
-import { lexer, type Tokens } from 'marked';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { Sheet } from '#primitives/overlays/sheet';
+import { planTitle } from '../../../../lib/product/markdown/plan-title';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
 import { useWrittenPlanEscape } from '../../hooks/use-written-plan-escape';
 import { WrittenPlanContent } from './written-plan-content';
@@ -38,7 +38,7 @@ export function WrittenPlan({
 function writtenPlanTitle(plan: WrittenPlanValue): string {
   if (plan.type === 'file') return resourceName(plan.uri);
 
-  return markdownTitle(plan.content);
+  return planTitle(plan.content, 'Written plan');
 }
 
 function PlanTray(props: PlanPresentation): React.JSX.Element {
@@ -65,14 +65,6 @@ function PlanSheet(props: PlanPresentation): React.JSX.Element {
         layout="sheet"
       />
     </Sheet>
-  );
-}
-
-function markdownTitle(content: string): string {
-  return (
-    lexer(content).find(
-      (token): token is Tokens.Heading => token.type === 'heading',
-    )?.text ?? 'Written plan'
   );
 }
 

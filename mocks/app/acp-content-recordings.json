@@ -18,7 +18,6 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
-      "pendingPlanProposal": null,
       "configOptions": [],
       "changes": {
         "files": 0,
@@ -222,7 +221,6 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
-      "pendingPlanProposal": null,
       "configOptions": [],
       "changes": {
         "files": 0,

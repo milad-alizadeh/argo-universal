@@ -11,7 +11,6 @@ import {
   useCacheSessionOptions,
   useConnectionDropped,
   useMergeMethod,
-  useSessionElicitation,
 } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
@@ -26,6 +25,7 @@ import {
 import { SessionNewScreen } from './session-new-screen';
 import { SessionPageHeader } from './session-page-header';
 import { useSessionPageMenu } from './session-page-menu';
+import { useFeedRequests } from './use-feed-requests';
 import { useMarkSeen } from './use-mark-seen';
 import { useSessionCallout } from './use-session-callout';
 import {
@@ -81,23 +81,13 @@ function useRetryOpenOnReconnect(feed: SessionFeed): void {
   });
 }
 
-function useFeedElicitation(
-  sessionId: string,
-  feed: SessionFeed,
-): SessionDetailViewSources['elicitation'] {
-  return useSessionElicitation({
-    sessionId,
-    request: feed.snapshot?.pendingElicitation,
-    resumeAfterCommand: feed.resumeAfterCommand,
-  });
-}
-
 type SessionSurroundings =
   | 'agents'
   | 'navigate'
   | 'imageUrl'
   | 'connected'
   | 'elicitation'
+  | 'permission'
   | 'mergeMethod'
   | 'onAtEndChange';
 
@@ -106,7 +96,7 @@ function useSessionSurroundings(
   feed: SessionFeed,
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
-    elicitation: useFeedElicitation(sessionId, feed),
+    ...useFeedRequests(sessionId, feed),
     agents: useInstalledAgents(),
     navigate: useNavigate(),
     imageUrl: useBlobUrl(),

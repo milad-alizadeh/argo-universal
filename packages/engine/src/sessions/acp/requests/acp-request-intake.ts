@@ -32,6 +32,29 @@ const toPermissionOptions = (
     kind,
   }));
 
+type PermissionToolCall = RequestPermissionRequest['toolCall'];
+
+type ToolCallContent = NonNullable<PermissionToolCall['content']>[number];
+
+const contentText = (item: ToolCallContent): string[] =>
+  item.type === 'content' && item.content.type === 'text'
+    ? [item.content.text]
+    : [];
+
+const switchModeText = ({ kind, content }: PermissionToolCall): string =>
+  kind === 'switch_mode'
+    ? (content ?? []).flatMap(contentText).join('\n\n')
+    : '';
+
+// A request to leave plan mode carries the plan as its Tool call's text content.
+const planText = (
+  toolCall: PermissionToolCall,
+): Pick<PendingPermission, 'plan'> => {
+  const plan = switchModeText(toolCall);
+
+  return plan ? { plan } : {};
+};
+
 // ACP `session/request_permission`, presented with the Agent's exact options.
 export const toPendingPermission = (
   requestId: string,
@@ -42,6 +65,7 @@ export const toPendingPermission = (
       requestId,
       toolCallId: toolCall.toolCallId,
       title: toolCall.title ?? toolCall.name ?? toolCall.toolCallId,
+      ...planText(toolCall),
       options: toPermissionOptions(options),
     }),
   );

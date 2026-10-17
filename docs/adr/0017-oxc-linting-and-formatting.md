@@ -116,7 +116,7 @@ Spec 421 moves each component, with behaviour unchanged, into its own folder ins
 | `features/connection/components/<component>/*` for connection-banner, connection-detail-view | `features/connection/components/*` |
 | `features/feed/components/<component>/*` for agent-message, command-row, diff-view, edit-row, feed, feed-content, feed-notice, live-header, tool-call-group, tool-call-row, user-message | `features/feed/components/*` |
 | `features/frame/components/<component>/*` for desktop-layout-view, desktop-shell, glass-surface, panel-resize-handle, phone-drawer, phone-section-view, phone-shell, phone-shell-card, shell-backdrop, shell-pane | `features/frame/components/*` |
-| `features/requests/components/<component>/*` for elicitation-form, permission-request, plan-proposal-card, plan-proposal-expansion, request-card | `features/requests/components/*` |
+| `features/requests/components/<component>/*` for elicitation-form, permission-request, request-card | `features/requests/components/*` |
 | `features/sessions/components/<component>/*` for new-session-view, project-heading, pull-request-indicator, session-row, session-view, sessions-list, sessions-loading, sessions-view, sessions-view-menu | `features/sessions/components/*` |
 | `features/settings/components/<component>/*` for placeholder-detail-view, project-detail-view, project-list-view, settings-list | `features/settings/components/*` |
 | `lib/generic/<component>/*` for page-title-row, use-wide | `lib/generic/*` |

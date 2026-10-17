@@ -12,7 +12,6 @@ import { toolKindLabel } from './tool';
 export interface LiveHeaderInput extends InputRequestQueues {
   activeTurnId: string | null;
   activeTurnStartedAt: number | null;
-  pendingPlanProposal?: { planId: string; content: string } | null;
 }
 
 type HeaderLabel = { text: string; source: LiveHeaderSource };
@@ -40,11 +39,7 @@ const requestTexts = {
 function requestText(session: LiveHeaderInput): string | null {
   const pending = pendingInputRequest(session);
 
-  return pending ? requestTexts[pending.kind] : planText(session);
-}
-
-function planText(session: LiveHeaderInput): string | null {
-  return session.pendingPlanProposal ? 'Plan ready' : null;
+  return pending ? requestTexts[pending.kind] : null;
 }
 
 function turnLabel(

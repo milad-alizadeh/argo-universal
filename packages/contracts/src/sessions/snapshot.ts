@@ -43,6 +43,8 @@ export const PendingPermission = z.strictObject({
   requestId: z.string(),
   toolCallId: z.string(),
   title: z.string(),
+  // The plan text when the request asks to leave plan mode (ACP `switch_mode` Tool call content).
+  plan: z.string().optional(),
   options: z
     .array(PermissionOption)
     .min(1)
@@ -144,13 +146,6 @@ export const PendingElicitation = z.strictObject({
 
 export type PendingElicitation = z.infer<typeof PendingElicitation>;
 
-export const PendingPlanProposal = z.strictObject({
-  planId: z.string(),
-  content: z.string(),
-});
-
-export type PendingPlanProposal = z.infer<typeof PendingPlanProposal>;
-
 // Which step of the live header order produced its text.
 export const LiveHeaderSource = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('request') }),
@@ -187,7 +182,6 @@ export const SessionSnapshot = z.strictObject({
   usage: ContextUsage.nullable(),
   pendingPermission: PendingPermission.nullable(),
   pendingElicitation: PendingElicitation.nullable(),
-  pendingPlanProposal: PendingPlanProposal.nullable(),
   configOptions: z.array(SessionConfigOption),
   changes: ChangesSummary,
   shells: z.array(Shell).default([]),

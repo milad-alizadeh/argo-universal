@@ -29,7 +29,7 @@ import { TableToken } from './table-token';
 
 const listGaps: Record<MarkdownVariantName, string> = {
   feed: 'gap-1',
-  proposal: 'gap-2',
+  plan: 'gap-2',
   summary: 'gap-1',
 };
 
@@ -68,7 +68,7 @@ function listItems(
 
 const markerVariantClassNames: Record<MarkdownVariantName, string> = {
   feed: markdownBlockClassNames.listMarker,
-  proposal: 'ios:text-row ios:leading-row',
+  plan: 'ios:text-row ios:leading-row',
   summary: markdownBlockClassNames.listMarker,
 };
 

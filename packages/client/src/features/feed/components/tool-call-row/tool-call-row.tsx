@@ -13,7 +13,6 @@ import { ToolOutput } from '../tool-output';
 export interface ToolCallRowProps {
   row: ToolCallUpdate;
   initialOpen?: boolean;
-  permissionMessage?: string;
   awaitingApproval?: boolean;
 }
 
@@ -62,7 +61,6 @@ export function ToolCallRow(props: ToolCallRowProps): React.JSX.Element {
       running={isToolCallRunning(row)}
       failed={row.status === 'failed'}
       initialOpen={props.initialOpen}
-      permissionMessage={props.permissionMessage}
     >
       <ToolCallRowOutput row={row} />
     </ToolCallDisclosure>

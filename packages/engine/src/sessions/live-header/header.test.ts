@@ -26,21 +26,6 @@ describe.each(liveHeaderMocks)(
         source: { type: 'working' },
         startedAt: 1_000,
       });
-      expect(
-        toLiveHeader(
-          {
-            ...running,
-            activeTurnId: null,
-            activeTurnStartedAt: null,
-            pendingPlanProposal: { planId: 'plan-1', content: 'A plan' },
-          },
-          [],
-        ),
-      ).toEqual({
-        text: 'Plan ready',
-        source: { type: 'request' },
-        startedAt: null,
-      });
     });
     it('puts a Permission request before running work', (): void => {
       expect(
@@ -62,34 +47,21 @@ describe.each(liveHeaderMocks)(
         ),
       ).toBe('Awaiting approval');
     });
-    it.each([
-      {
-        step: 'Elicitation',
-        session: {
-          ...running,
-          elicitationQueue: [
-            {
-              requestId: 'request-1',
-              mode: 'form' as const,
-              message: 'Which file?',
-              requestedSchema: { properties: {} },
-            },
-          ],
-        },
-        expected: 'Waiting for your answer',
-      },
-      {
-        step: 'Plan proposal',
-        session: {
-          ...running,
-          activeTurnId: null,
-          pendingPlanProposal: { planId: 'plan-1', content: 'A plan' },
-        },
-        expected: 'Plan ready',
-      },
-    ])('step 1: $step', ({ session, expected }): void => {
+    it('step 1: Elicitation', (): void => {
+      const session = {
+        ...running,
+        elicitationQueue: [
+          {
+            requestId: 'request-1',
+            mode: 'form' as const,
+            message: 'Which file?',
+            requestedSchema: { properties: {} },
+          },
+        ],
+      };
+
       expect(headerText(toLiveHeader(session, [command, thought, retry]))).toBe(
-        expected,
+        'Waiting for your answer',
       );
     });
     it('step 2: puts a retry before a thought and a Tool call', (): void => {

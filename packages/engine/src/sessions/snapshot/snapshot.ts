@@ -44,11 +44,7 @@ type StoredFields = Pick<
 
 type SessionFields = Pick<
   SessionSnapshot,
-  | 'usage'
-  | 'pendingPermission'
-  | 'pendingElicitation'
-  | 'pendingPlanProposal'
-  | 'configOptions'
+  'usage' | 'pendingPermission' | 'pendingElicitation' | 'configOptions'
 >;
 
 const noChanges: ChangesSummary = { files: 0, additions: 0, deletions: 0 };
@@ -108,7 +104,6 @@ function sessionFields(session: SessionState | null): SessionFields {
     usage: context.usage,
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.elicitationQueue[0] ?? null,
-    pendingPlanProposal: null,
     configOptions: withHeldConfiguration(
       context.configOptions,
       context.heldConfig,

@@ -58,15 +58,6 @@ async function copyPlanUri(
   }
 }
 
-async function readOnlyPlan(body: Body): Promise<void> {
-  await expect(
-    body.queryByRole('button', { name: 'Approve' }),
-  ).not.toBeInTheDocument();
-  await expect(
-    body.queryByRole('button', { name: 'Keep planning' }),
-  ).not.toBeInTheDocument();
-}
-
 async function followUpWhileReading(
   { canvas }: WrittenPlanPlayContext,
   body: Body,
@@ -102,7 +93,6 @@ export async function opensWrittenPlan(
   const body = await openWrittenPlan(scenario.width, context);
   await assertPhoneCloseControl(scenario.width, body);
   await readWrittenPlanForm(scenario, context, body);
-  await readOnlyPlan(body);
 
   if (scenario.width === layoutWidths.wide)
     await followUpWhileReading(context, body);

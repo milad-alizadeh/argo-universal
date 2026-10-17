@@ -9,58 +9,42 @@ import {
   usePlanScroll,
 } from './plan-document-scroll';
 
-const flexibleContentClassName = 'flex-1 min-h-0';
+const trayPlanStyle: ScrolledPlanStyle = {
+  frame: 'max-h-70',
+  scroll: 'max-h-70',
+  content: 'px-4 pt-2 pb-4',
+  label: 'Written plan document',
+};
 
-const cardClassName = 'bg-card rounded-xl shadow-control';
+// A Permission request's plan sits right under its title, as close as one step to the next.
+const requestPlanStyle: ScrolledPlanStyle = {
+  ...trayPlanStyle,
+  content: 'px-4 pb-4',
+};
 
-const proposalHeightClassName = 'max-h-70';
-
-const proposalLabel = 'Plan proposal document';
-
-const proposalTestID = 'plan-proposal-scroll';
+// Full page, it fills what the Session column gives it.
+const fillPlanStyle: ScrolledPlanStyle = {
+  ...requestPlanStyle,
+  frame: 'min-h-0 flex-1',
+  scroll: 'flex-1',
+};
 
 const scrolledPlanStyles = {
-  proposal: {
-    frame: cn(proposalHeightClassName, cardClassName),
-    scroll: proposalHeightClassName,
-    content: 'px-3.5 py-3',
-    testID: proposalTestID,
-    label: proposalLabel,
-    fades: true,
-    fitContent: true,
-  },
-  expanded: {
-    frame: cn(flexibleContentClassName, cardClassName),
-    scroll: flexibleContentClassName,
-    content: 'px-4 pt-2 pb-4',
-    testID: proposalTestID,
-    label: proposalLabel,
-    fades: false,
-    fitContent: false,
-  },
-  tray: {
-    frame: proposalHeightClassName,
-    scroll: proposalHeightClassName,
-    content: 'px-4 pt-2 pb-4',
-    testID: undefined,
-    label: 'Written plan document',
-    fades: false,
-    fitContent: true,
-  },
-} satisfies Record<string, ScrolledPlanStyle>;
+  tray: trayPlanStyle,
+  request: requestPlanStyle,
+  fill: fillPlanStyle,
+} as const;
 
 interface PlanDocumentProps {
   content: string;
-  layout: keyof typeof scrolledPlanStyles | 'sheet' | 'request-sheet';
+  layout: 'sheet' | keyof typeof scrolledPlanStyles;
 }
 
 export function PlanDocument({
   content,
   layout,
 }: PlanDocumentProps): React.JSX.Element {
-  const markdown = <FeedMarkdown text={content} variant="proposal" />;
-
-  if (layout === 'request-sheet') return markdown;
+  const markdown = <FeedMarkdown text={content} variant="plan" />;
 
   if (layout === 'sheet') return <View className="pt-2 pb-4">{markdown}</View>;
 

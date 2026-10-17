@@ -2,7 +2,8 @@ import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { Given, When, Then } from './fixtures';
-import { expectMessage, messageLabel } from './new-session';
+import { expectComposerAccepts } from './input-requests';
+import { messageLabel } from './new-session';
 
 const trayLabel = 'Elicitation questions';
 
@@ -42,10 +43,6 @@ Then(
   'the Elicitation closes and the Composer accepts {string}',
   async ({ page }, draft: string): Promise<void> => {
     await expect(page.getByRole('region', { name: trayLabel })).toHaveCount(0);
-    await page.getByRole('textbox', { name: messageLabel }).fill(draft);
-    await expectMessage(page, draft);
-    await expect(
-      page.getByRole('button', { name: 'Send', exact: true }),
-    ).toBeEnabled();
+    await expectComposerAccepts(page, draft);
   },
 );

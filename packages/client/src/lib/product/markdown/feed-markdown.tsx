@@ -13,7 +13,7 @@ export interface FeedMarkdownProps {
 
 const blockGaps: Record<MarkdownVariantName, string> = {
   feed: 'gap-paragraph wide:gap-paragraph-wide',
-  proposal: 'gap-2',
+  plan: 'gap-2',
   summary: 'gap-paragraph wide:gap-paragraph-wide',
 };
 

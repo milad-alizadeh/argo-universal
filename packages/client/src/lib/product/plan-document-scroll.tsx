@@ -10,18 +10,12 @@ import {
   ScrollFadeView,
   type ScrollFadeViewProps,
 } from './scroll-fade/scroll-fade';
-import type { ScrollFadeOptions } from './scroll-fade/scroll-fade-options';
 
 export interface ScrolledPlanStyle {
   frame: string;
   scroll: string;
   content: string;
-  testID: string | undefined;
   label: string;
-  // A proposal fades out at its bottom while more of it is hidden below.
-  fades: boolean;
-  // Grows with its content up to its max height, rather than filling its frame.
-  fitContent: boolean;
 }
 
 interface PlanScrollMetrics {
@@ -57,16 +51,14 @@ export function usePlanScroll(): PlanScroll {
   };
 }
 
+// The plan grows with its content up to its max height, with no fades.
 const planScrollViewDefaults = {
   role: 'region',
   showsVerticalScrollIndicator: false,
   surfaceClassName: 'bg-card',
+  edges: { top: 'never', bottom: 'never' },
+  fitContent: true,
 } as const;
-
-const fadeEdges = (fades: boolean): ScrollFadeOptions['edges'] => ({
-  top: 'never',
-  bottom: fades ? 'scrolled' : 'never',
-});
 
 interface PlanScrollViewProps {
   style: ScrolledPlanStyle;
@@ -76,18 +68,10 @@ interface PlanScrollViewProps {
 
 type PlanScrollStyle = Pick<
   ScrollFadeViewProps,
-  | 'edges'
-  | 'fitContent'
-  | 'testID'
-  | 'accessibilityLabel'
-  | 'className'
-  | 'contentContainerClassName'
+  'accessibilityLabel' | 'className' | 'contentContainerClassName'
 >;
 
 const scrollViewStyle = (style: ScrolledPlanStyle): PlanScrollStyle => ({
-  edges: fadeEdges(style.fades),
-  fitContent: style.fitContent,
-  testID: style.testID,
   accessibilityLabel: style.label,
   className: style.scroll,
   contentContainerClassName: style.content,

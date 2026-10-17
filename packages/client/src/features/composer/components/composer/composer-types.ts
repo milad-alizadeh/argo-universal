@@ -1,8 +1,5 @@
 import type { ReactNode } from 'react';
-import type {
-  PermissionRequestProps,
-  PlanProposalCardProps,
-} from '#features/requests';
+import type { PermissionRequestProps } from '#features/requests';
 import type { DroppedFiles } from '../../hooks/use-file-drop';
 import type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
@@ -16,7 +13,6 @@ export interface ComposerDraft {
 
 export interface ComposerProps {
   draft: ComposerDraft;
-  planProposal?: PlanProposalCardProps;
   permissionRequest?: PermissionRequestProps;
   // A Session's sign-in or launch callout, in the request's tray; a request takes its place while one is open.
   callout?: ReactNode;
@@ -43,8 +39,6 @@ export interface ComposerProps {
 export interface ComposerLayout {
   props: ComposerProps;
   composerId: string;
-  controlsHeight: number;
-  setControlsHeight: (height: number) => void;
   wide: boolean;
   inactive: boolean;
   configurationInactive: boolean;

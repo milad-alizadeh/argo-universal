@@ -42,20 +42,20 @@ it.each(workMocks)(
       },
     };
 
-    const proposal: PlanUpdate = {
+    const written: PlanUpdate = {
       ...first,
-      id: 'proposal',
+      id: 'written-plan',
       revision: first.revision + 2,
       plan: {
         type: 'markdown',
-        planId: 'proposal',
-        content: '# Proposed work',
+        planId: 'written-plan',
+        content: '# Written work',
       },
     };
 
-    expect(toFeedView([first, source, latest, proposal], snapshot)).toEqual({
+    expect(toFeedView([first, source, latest, written], snapshot)).toEqual({
       items: [{ type: 'tool_call', row: source }],
-      plan: proposal.plan,
+      plan: written.plan,
     });
   },
 );

@@ -118,18 +118,14 @@ export function groupedPhone(mock?: RequestMock): Story {
   };
 }
 
-// Without delivered feedback, rejecting answers at once and offers no message field.
-export function rejectWithoutFeedback(
-  width: number,
-  mock?: RequestMock,
-): Story {
+// Rejecting answers at once: an ACP answer is only the chosen option.
+export function rejectAnswersAtOnce(width: number, mock?: RequestMock): Story {
   return {
     args: agentOptionsArgs(mock),
     play: async ({ userEvent, args }) => {
       const canvas = within(document.body);
       await settleViewport(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Reject' }));
-      await expect(args.onDenialMessageChange).not.toHaveBeenCalled();
       await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
       await expect(args.onAnswer).toHaveBeenCalledWith({ optionId: 'reject' });
     },

@@ -48,7 +48,6 @@ export const answerSessionPermission = (
     type: 'session.answerPermission',
     requestId: input.requestId,
     optionId: input.optionId,
-    message: input.message,
   });
 
   return {};

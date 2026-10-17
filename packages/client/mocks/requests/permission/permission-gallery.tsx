@@ -40,17 +40,6 @@ export const galleryVariations: { label: string; preview: ReactNode }[] = [
     ),
   },
   {
-    label: 'Deny with a message',
-    preview: (
-      <PermissionPreview
-        {...permissionProps({
-          feedback: true,
-          denialMessage: 'Keep the cache. Run expo start --clear instead.',
-        })}
-      />
-    ),
-  },
-  {
     label: 'Already answered',
     preview: (
       <PermissionPreview
@@ -69,15 +58,6 @@ export const galleryVariations: { label: string; preview: ReactNode }[] = [
     preview: <FeedGroups recorded={permissionMock.answered} />,
   },
   { label: 'Denied', preview: <PermissionOutcome outcome={deniedOutcome} /> },
-  {
-    label: 'Denied with a message',
-    preview: (
-      <PermissionOutcome
-        outcome={deniedOutcome}
-        message="Don't force-push, open a new branch instead."
-      />
-    ),
-  },
   {
     label: 'Chose another allow option',
     preview: (

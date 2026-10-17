@@ -42,7 +42,7 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 
    The Engine's source root names its modules (Spec 0011 #451; ACP-only ownership completed under Spec 0009 #359, owner, 2026-10-13): `engine`, `rpc`, `sessions`, `feed`, `agents`, `blob`, `projects`, `system`, `storage` and `lib`, beside `server-runtime`. `agents` owns the Registry cache, saved Agent choices, authentication and lazy launch. Its `agents/acp/` group owns ACP transport and resources after Spec 0009 #359 (owner, 2026-10-13). The Registry reader stays in `agents/registry/`. The Feed and Session translators stay in `feed/acp/` and `sessions/acp/`. Other domains consume the Agents public interface; ACP resources never import Session or Feed code. The machine that holds open Sessions is `openSessionsMachine`.
 
-   The accepted exceptions are `millisecondsPerSecond` defined once per package, and the Composer importing the Plan proposal card from the requests feature for its card swap (Spec 0006, Owner #17).
+   The accepted exception is `millisecondsPerSecond` defined once per package.
 
    oxlint enforces the import direction with `no-restricted-imports` blocks in `tooling/oxlint/argo.json`; add a block when a tier folder is added. Spec 0011 moves the folders and their blocks ticket by ticket, so CI stays green. When to hoist, and whether a name belongs to the product, stay with code review, as A2 and TA1 leave them.
 

@@ -105,22 +105,3 @@ it('reads the latest Turn only without a Session actor', (): void => {
 
   expect(latestTurn).toEqual(['no Session actor']);
 });
-
-it('ignores a Plan proposal on the Session actor while a Turn runs', (): void => {
-  const live = {
-    ...idleSession,
-    activeTurnId: 'turn-1',
-    activeTurnStartedAt: 70,
-    pendingPlanProposal: { planId: 'plan-1', content: 'A proposal' },
-  };
-
-  expect(
-    createLiveHeaderReader({ database: storedTool() })({
-      sessionId: 'session-1',
-      live,
-      latestTurn: (): undefined => undefined,
-      memoryRows: {},
-      writer: undefined,
-    }).header,
-  ).toEqual(readingFirst(70));
-});

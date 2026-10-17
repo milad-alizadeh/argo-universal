@@ -10,6 +10,3 @@ export type TextLayout = Pick<ComposerLayout, 'inactive' | 'send'> & {
 };
 
 export type CardLayout = ToolbarLayout & AttachmentLayout & TextLayout;
-
-export type ControlsLayout = CardLayout &
-  Pick<ComposerLayout, 'setControlsHeight'>;

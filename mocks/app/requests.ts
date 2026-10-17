@@ -1,7 +1,6 @@
 import {
   SessionAnswerElicitationInput,
   SessionAnswerPermissionInput,
-  SessionAnswerPlanProposalInput,
   SessionSnapshot,
   SessionUpdate,
 } from '@repo/contracts';
@@ -16,10 +15,6 @@ const RequestAnswer = z.discriminatedUnion('procedure', [
   z.strictObject({
     procedure: z.literal('answerElicitation'),
     input: SessionAnswerElicitationInput,
-  }),
-  z.strictObject({
-    procedure: z.literal('answerPlanProposal'),
-    input: SessionAnswerPlanProposalInput,
   }),
 ]);
 

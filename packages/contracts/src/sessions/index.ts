@@ -2,8 +2,6 @@ export * from './answer-elicitation';
 
 export * from './answer-permission';
 
-export * from './answer-plan-proposal';
-
 export * from './archive';
 
 export * from './cancel';
@@ -29,6 +27,8 @@ export * from './prompt';
 export * from './record';
 
 export * from './rename';
+
+export * from './save-plan';
 
 export * from './set-config-option';
 
