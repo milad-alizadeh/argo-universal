@@ -58,10 +58,10 @@ type Story = StoryObj<typeof meta>;
 async function openedRoles(
   canvas: ReturnType<typeof within>,
   canvasElement: HTMLElement,
-  click: (element: HTMLElement) => Promise<void>,
+  userEvent: { click: (element: HTMLElement) => Promise<void> },
 ): Promise<(string | null)[]> {
   await settleViewport(layoutWidths.wide);
-  await click(canvas.getByRole('button', { name: 'View' }));
+  await userEvent.click(canvas.getByRole('button', { name: 'View' }));
 
   const menu = await within(canvasElement.ownerDocument.body).findByRole(
     'menu',
@@ -77,13 +77,8 @@ const radio = 'menuitemradio';
 // A section line between each pair of groups, none before the first or after the last.
 export const SeparatesGroups: Story = {
   play: async ({ canvas, canvasElement, userEvent }) => {
-    const roles = await openedRoles(canvas, canvasElement, (element) =>
-      userEvent.click(element),
-    );
+    const roles = await openedRoles(canvas, canvasElement, userEvent);
 
-    await expect(roles.filter((role) => role === 'separator')).toHaveLength(
-      viewGroups.length - 1,
-    );
     await expect(roles).toEqual([
       radio,
       radio,
@@ -102,9 +97,7 @@ export const SeparatesGroups: Story = {
 export const OneGroupNoSeparator: Story = {
   args: { groups: viewGroups.slice(0, 1) },
   play: async ({ canvas, canvasElement, userEvent }) => {
-    const roles = await openedRoles(canvas, canvasElement, (element) =>
-      userEvent.click(element),
-    );
+    const roles = await openedRoles(canvas, canvasElement, userEvent);
 
     await expect(roles).toEqual([radio, radio]);
     await userEvent.keyboard('{Escape}');

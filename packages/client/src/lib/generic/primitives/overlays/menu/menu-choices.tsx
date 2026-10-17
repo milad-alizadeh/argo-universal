@@ -13,11 +13,7 @@ import {
   menuChoiceGroups,
 } from './menu-props';
 import { MenuRadioItem } from './menu-radio-item';
-import {
-  menuGroupLineClassName,
-  menuGroupSeparatorClassName,
-  menuRowsClassName,
-} from './menu-styles';
+import { menuRowsClassName } from './menu-styles';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -108,12 +104,12 @@ function MenuChoiceGroupRows(
   );
 }
 
-// Radix's Separator gives the line role="separator", so it is announced and skipped by the keyboard.
+// A hairline with 4px above and below, as iOS menus part their sections; Radix's Separator gives it role="separator", so it is announced and skipped by the keyboard.
 function MenuGroupSeparator(): React.JSX.Element {
   return (
     <RadixMenu.Separator asChild>
-      <View className={menuGroupSeparatorClassName}>
-        <View className={menuGroupLineClassName} />
+      <View className="py-1">
+        <View className="h-px bg-hairline" />
       </View>
     </RadixMenu.Separator>
   );
