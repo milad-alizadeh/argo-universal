@@ -170,6 +170,7 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
 
 // The parent revises its delegation by patch and chunk, then the child ends its Turn.
 const revisedDelegation: ScriptedScenario = {
+  sessionIds: ['parent'],
   steps: [
     {
       type: 'update',
@@ -193,6 +194,7 @@ const revisedDelegation: ScriptedScenario = {
       update: {
         sessionUpdate: 'session_message',
         messageId: 'delegation',
+        senderSessionId: 'parent',
         recipientSessionId: 'review',
         content: [{ type: 'text', text: 'Original' }],
       },
@@ -249,36 +251,31 @@ const revisedDelegation: ScriptedScenario = {
   ],
 };
 
-it('retains delegated message patches and chunks with the reported child Turn outcome', async () => {
-  const { host, sessionId } = await openAcpFeedSession(revisedDelegation);
+it.each([
+  { claim: 'its patches and chunks', scenario: revisedDelegation },
+  {
+    claim: 'the Agent reports no incoming view',
+    scenario: scenarios['subagent-outgoing-only'],
+  },
+])(
+  "keeps the parent's outgoing message out of the child Feed when $claim",
+  async ({ scenario }) => {
+    const { host, sessionId } = await openAcpFeedSession(scenario);
 
-  const [child] = await host.caller.session.subagents({ sessionId });
+    const [child] = await host.caller.session.subagents({ sessionId });
 
-  if (!child) throw new Error(missingSubagent);
-  expect(await host.caller.session.subagents({ sessionId })).toHaveLength(1);
-  expect(child).toMatchObject({
-    state: 'idle',
-    tokens: 12,
-    stopReason: 'end_turn',
-  });
+    if (!child) throw new Error(missingSubagent);
 
-  const page = await host.caller.feed.page({
-    sessionId: child.sessionId,
-    direction: 'tail',
-  });
+    const page = await host.caller.feed.page({
+      sessionId: child.sessionId,
+      direction: 'tail',
+    });
 
-  expect(page.rows[0]).toMatchObject({
-    sessionUpdate: 'session_message',
-    messageId: 'delegation',
-    content: [
-      { type: 'text', text: 'Revised' },
-      { type: 'text', text: ' instruction' },
-    ],
-  });
-  expect(
-    page.rows.filter((row) => row.sessionUpdate === 'session_message'),
-  ).toHaveLength(1);
-});
+    expect(page.rows.map((row) => row.sessionUpdate)).toEqual([
+      'agent_message',
+    ]);
+  },
+);
 
 it("revises one parent prompt from patches and chunks of the parent's outgoing message", async () => {
   const { host, sessionId } = await openAcpFeedSession(revisedDelegation);

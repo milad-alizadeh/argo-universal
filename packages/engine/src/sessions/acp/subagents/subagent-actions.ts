@@ -24,7 +24,7 @@ export type MessageRouting = SubagentRouting & {
 // Only the parent's outgoing `prompt` is a `message` action; a child's explicit `result` carries no action (#930).
 type MessageField = { prompt: ContentBlock[] } | { result: ContentBlock[] };
 
-type MessageAction = { messageId: string; field: MessageField };
+export type MessageAction = { messageId: string; field: MessageField };
 
 // One row per message in the parent transcript, so its patches and chunks revise it.
 const actionId = (input: SubagentRouting, messageId: string): string =>
@@ -43,6 +43,9 @@ const asSubagentUpdate = (
 
 const resultOf = (row: SubagentUpdate): ContentBlock[] | undefined =>
   row._meta?.argo?.result;
+
+const promptOf = (row: SubagentUpdate): ContentBlock[] | undefined =>
+  row._meta?.argo?.prompt;
 
 function asResultRow(
   row: SessionUpdate | undefined,
@@ -94,7 +97,7 @@ export function sendMessageAction(
 const isOwn = (input: MessageRouting, child: ChildFeed | undefined): boolean =>
   child?.parentId === input.parentId;
 
-function ownChild(
+export function ownChild(
   input: MessageRouting,
   vendorId: string | null | undefined,
 ): ChildFeed | undefined {
@@ -119,6 +122,30 @@ const childById = (
   [...input.children.values()].find(
     (child) => child.sessionId === row.subagentSessionId,
   );
+
+export type ChildPrompt = { child: ChildFeed; prompt: ContentBlock[] };
+
+const asPrompt = (
+  input: MessageRouting,
+  row: SubagentUpdate,
+): ChildPrompt | undefined => {
+  const child = childById(input, row);
+  const prompt = promptOf(row);
+
+  return child && prompt && { child, prompt };
+};
+
+// The prompt this message already set on this transcript, which a patch or chunk revises.
+export function previousPrompt(
+  input: MessageRouting,
+  messageId: string,
+): ChildPrompt | undefined {
+  const row = asSubagentUpdate(
+    writtenRow(input.parentFeed, actionId(input, messageId)),
+  );
+
+  return row && asPrompt(input, row);
+}
 
 // A chunk or patch of a known result names no sender, so its result row names the child.
 const replier = (
