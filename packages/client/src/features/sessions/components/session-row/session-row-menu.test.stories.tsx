@@ -1,3 +1,4 @@
+import type { SessionInfo } from '@repo/contracts';
 import { sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -67,16 +68,52 @@ export const RightClickRenamesOnPhone: Story = rightClickRenamesAt('phone');
 
 export const RightClickRenamesWide: Story = rightClickRenamesAt('wide');
 
+// A Session with no Turn running archives from its menu.
 export const ArchiveFromTheMenu: Story = {
+  args: { session: sessionRows.idle },
   beforeEach: atWidth('wide'),
   play: async ({ canvas, userEvent }) => {
-    await rightClick(userEvent, canvas.getByText(rowTitle));
+    await rightClick(userEvent, canvas.getByText(sessionRows.idle.title));
     const menu = within(await body.findByRole('menu'));
     await userEvent.click(menu.getByRole('menuitem', { name: 'Archive' }));
-    await expect(onArchive).toHaveBeenCalledWith(sessionRows.running.sessionId);
+    await expect(onArchive).toHaveBeenCalledWith(sessionRows.idle.sessionId);
     await expect(onRename).not.toHaveBeenCalled();
   },
 };
+
+// While a Turn runs, or waits on the user's answer, Archive stays in the menu but cannot be chosen; Rename still can.
+function archiveRefusedWhile(session: SessionInfo, layout: Layout): Story {
+  return {
+    args: { session },
+    beforeEach: atWidth(layout),
+    play: async ({ canvas, userEvent }) => {
+      await rightClick(userEvent, canvas.getByText(session.title));
+      const menu = within(await body.findByRole('menu'));
+      const archive = menu.getByRole('menuitem', { name: 'Archive' });
+      await expect(archive).toHaveAttribute('aria-disabled', 'true');
+      await userEvent.click(menu.getByRole('menuitem', { name: 'Rename' }));
+      await expect(onRename).toHaveBeenCalledWith(session.sessionId);
+    },
+  };
+}
+
+export const ArchiveRefusedWhileRunningOnPhone: Story = archiveRefusedWhile(
+  sessionRows.running,
+  'phone',
+);
+
+export const ArchiveRefusedWhileRunningWide: Story = archiveRefusedWhile(
+  sessionRows.running,
+  'wide',
+);
+
+export const ArchiveRefusedWhileNeedingInputOnPhone: Story =
+  archiveRefusedWhile(sessionRows.needsInput, 'phone');
+
+export const ArchiveRefusedWhileNeedingInputWide: Story = archiveRefusedWhile(
+  sessionRows.needsInput,
+  'wide',
+);
 
 // Without Archive, the menu holds Rename alone.
 export const RenameAloneWithoutArchive: Story = {

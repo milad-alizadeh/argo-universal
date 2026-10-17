@@ -1,6 +1,9 @@
 import AddIcon from '@expo/material-symbols/add.xml';
+import Archive from '@expo/material-symbols/archive.xml';
+import Edit from '@expo/material-symbols/edit.xml';
 import EditSquare from '@expo/material-symbols/edit_square.xml';
 import FilterList from '@expo/material-symbols/filter_list.xml';
+import MoreVert from '@expo/material-symbols/more_vert.xml';
 import Search from '@expo/material-symbols/search.xml';
 import Tune from '@expo/material-symbols/tune.xml';
 import type { ImageSourcePropType } from 'react-native';
@@ -13,6 +16,10 @@ const materialImages = {
   'filter-list': FilterList,
   filters: Tune,
   'new-session': EditSquare,
+  // Android's header overflow is the vertical ⋯, where the shared table's `more_horiz` serves in-page buttons.
+  more: MoreVert,
+  rename: Edit,
+  archive: Archive,
 } satisfies Partial<Record<keyof typeof iconSymbols, ImageSourcePropType>>;
 
 export type ToolbarIconName = keyof typeof materialImages;

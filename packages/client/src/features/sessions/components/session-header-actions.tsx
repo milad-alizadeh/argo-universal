@@ -4,7 +4,12 @@ import { useInspector } from '#lib/product/inspector';
 import { IconButton } from '#primitives/buttons/icon-button';
 import type { MergeMethod } from '../stores/merge-method';
 import { MergePrButton, type MergePrButtonProps } from './merge-pr-button';
+import {
+  headerActionAppearance,
+  SessionHeaderMenu,
+} from './session-header-menu';
 import type { SessionHeaderProps } from './session-header-props';
+import type { SessionMenu } from './session-menu-items';
 import type { SessionPullRequest } from './session-pull-request';
 
 export type SessionHeaderActionsProps = Pick<
@@ -13,6 +18,7 @@ export type SessionHeaderActionsProps = Pick<
 > & {
   shown: SessionPullRequest | undefined;
   onMerge: SessionHeaderProps['onMerge'];
+  menu?: SessionMenu;
 };
 
 function mergeShown({
@@ -40,13 +46,6 @@ function ShownMergeButton(
   );
 }
 
-const headerActionAppearance = {
-  variant: 'ghost',
-  size: 'xs',
-  iconRole: 'action',
-  iconClassName: 'text-foreground',
-} as const;
-
 type InspectorToggle = Pick<
   React.ComponentProps<typeof IconButton>,
   'aria-expanded' | 'onPress'
@@ -72,15 +71,6 @@ function ChangesButton(): React.JSX.Element {
   );
 }
 
-// The Session menu gets its actions in a later issue.
-const sessionMenuButton = (
-  <IconButton
-    {...headerActionAppearance}
-    accessibilityLabel="More"
-    icon="more"
-  />
-);
-
 // Merge PR for the shown PR, Changes, and the Session menu.
 export function SessionHeaderActions(
   props: SessionHeaderActionsProps,
@@ -89,7 +79,7 @@ export function SessionHeaderActions(
     <View className="-mt-1 flex-row items-center gap-3">
       <ShownMergeButton {...props} />
       <ChangesButton />
-      {sessionMenuButton}
+      {props.menu && <SessionHeaderMenu menu={props.menu} />}
     </View>
   );
 }

@@ -6,6 +6,7 @@
       "agent": "agent-1",
       "title": "Show the result",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "main",
         "path": "/private/var/folders/_z/yrg3s40d5k5cqgfnmffgq3l80000gn/T/argo-acp-engine-lowXDr",
@@ -209,6 +210,7 @@
       "agent": "agent-2",
       "title": "Show the result",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "main",
         "path": "/private/var/folders/_z/yrg3s40d5k5cqgfnmffgq3l80000gn/T/argo-acp-engine-Fd8mMS",
