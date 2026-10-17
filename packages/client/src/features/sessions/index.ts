@@ -21,13 +21,18 @@ export {
 } from './stores/sessions-view-state';
 
 export {
+  chooseSessionsView,
   defaultSessionsView,
+  isDefaultSessionsView,
   type SessionsLayout,
   type SessionsView,
   useSessionsViewKept,
 } from './stores/sessions-view';
 
-export { sessionsListInput } from './utils/sessions-list-input';
+export {
+  olderServerView,
+  sessionsListInput,
+} from './utils/sessions-list-input';
 
 export { type StartingFeed } from './utils/starting-feed';
 

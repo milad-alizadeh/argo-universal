@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import type { ComponentProps } from 'react';
 import type * as React from 'react';
 import {
+  isDefaultSessionsView,
   resetSessionsView,
   type SessionsViewGroup,
   type SessionsViewState,
@@ -11,6 +12,7 @@ import {
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
+import { toolbarDot } from '#lib/product/navigation/toolbar-dot';
 import type { MenuAction } from '#primitives/overlays/menu';
 import { toolbarIcon } from '../../lib/product/navigation/toolbar-icon';
 
@@ -60,7 +62,7 @@ const viewMenuItem = {
 
 /*
  * Each of the view's groups as an inline section, its heading the section's title, then Reset to default in a last section.
- * No option has an icon, as in Paper: UIMenu draws each title after its check.
+ * No option has an icon, as in Paper: UIMenu draws each title after its check. The button carries a dot while the view is not the default.
  */
 function viewMenu({
   view,
@@ -68,6 +70,7 @@ function viewMenu({
 }: SessionsViewState): React.JSX.Element {
   return (
     <Stack.Toolbar.Menu {...viewMenuItem}>
+      {toolbarDot(!isDefaultSessionsView(view))}
       {sessionsViewGroups(view, onViewChange).map(viewSection)}
       {resetSection(resetSessionsView(view, onViewChange))}
     </Stack.Toolbar.Menu>

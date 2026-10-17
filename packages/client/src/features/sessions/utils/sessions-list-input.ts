@@ -1,5 +1,6 @@
 import type { SessionListInput } from '@repo/contracts';
 import {
+  defaultSessionsView,
   type SessionsStatus,
   type SessionsView,
   sessionsStatusChoices,
@@ -36,3 +37,43 @@ export function sessionsListInput(
 
   return input;
 }
+
+// The choices a Server from before Status All and Order Created does not know, field by field.
+const newerServerChoices: Pick<SessionsView, 'status' | 'order'> = {
+  status: 'all',
+  order: 'created',
+};
+
+type NewerServerField = keyof typeof newerServerChoices;
+
+// A field's default when the view chose what an older Server does not know, else the view's own choice.
+const olderServerChoice = <Field extends NewerServerField>(
+  view: SessionsView,
+  field: Field,
+): SessionsView[Field] =>
+  view[field] === newerServerChoices[field]
+    ? defaultSessionsView[field]
+    : view[field];
+
+/*
+ * The view an older Server can list, when it refused this one: a Server from before Status All and Order Created
+ * answers BAD_REQUEST to a request without `archived` or with `order`, so those fields fall back to Active and Last activity.
+ * Undefined when the refusal is not that, so the list shows its load failure as before.
+ */
+export function olderServerView(
+  view: SessionsView,
+  errorCode: string | undefined,
+): SessionsView | undefined {
+  const older: SessionsView = {
+    ...view,
+    status: olderServerChoice(view, 'status'),
+    order: olderServerChoice(view, 'order'),
+  };
+
+  if (errorCode !== 'BAD_REQUEST' || isSameView(older, view)) return undefined;
+
+  return older;
+}
+
+const isSameView = (older: SessionsView, view: SessionsView): boolean =>
+  older.status === view.status && older.order === view.order;

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { SessionsView } from '../stores/sessions-view';
-import { sessionsListInput, showsUnderStatus } from './sessions-list-input';
+import {
+  olderServerView,
+  sessionsListInput,
+  showsUnderStatus,
+} from './sessions-list-input';
 
 const defaults: SessionsView = {
   order: 'activity',
@@ -58,6 +62,47 @@ describe('which Sessions a status shows', () => {
     '$status shows a Session archived at $archivedAt: $shows',
     ({ status, archivedAt, shows }) => {
       expect(showsUnderStatus(status, archivedAt)).toBe(shows);
+    },
+  );
+});
+
+describe('the view an older Server can list after it refused this one', () => {
+  it.each([
+    {
+      case: 'All falls back to Active',
+      view: { ...chosen, order: 'activity' },
+      fallback: { ...chosen, order: 'activity', status: 'active' },
+    },
+    {
+      case: 'Created falls back to Last activity',
+      view: { ...chosen, status: 'archived' },
+      fallback: { ...chosen, order: 'activity', status: 'archived' },
+    },
+    {
+      case: 'All and Created fall back together',
+      view: chosen,
+      fallback: { ...chosen, order: 'activity', status: 'active' },
+    },
+  ] as const)('$case, keeping the rest of the view', ({ view, fallback }) => {
+    expect(olderServerView(view, 'BAD_REQUEST')).toStrictEqual(fallback);
+  });
+
+  it.each([
+    { status: 'active', order: 'activity' },
+    { status: 'archived', order: 'activity' },
+  ] as const)(
+    'has nothing to fall back to for $status by $order',
+    ({ status, order }) => {
+      expect(
+        olderServerView({ ...chosen, status, order }, 'BAD_REQUEST'),
+      ).toBeUndefined();
+    },
+  );
+
+  it.each(['INTERNAL_SERVER_ERROR', 'TIMEOUT', undefined])(
+    'keeps the view for any other failure (%s)',
+    (code) => {
+      expect(olderServerView(chosen, code)).toBeUndefined();
     },
   );
 });

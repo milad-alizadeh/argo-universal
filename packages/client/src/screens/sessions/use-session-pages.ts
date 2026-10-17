@@ -4,15 +4,20 @@ import {
   keepPreviousData,
   type UseInfiniteQueryResult,
   useInfiniteQuery,
+  useQueryClient,
 } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { type ClientError, useTRPC } from '#features/connection';
 import {
+  chooseSessionsView,
+  olderServerView,
   type QueryProgress,
+  type SessionsView,
   sessionsListInput,
   useSessionsViewKept,
 } from '#features/sessions';
+import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import type { SessionListViewProps } from './session-list-view';
 
 type SessionsSearch = Pick<SessionListViewProps, 'view' | 'query'>;
@@ -76,15 +81,52 @@ function useLoadMore({
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 }
 
+// The tRPC code the first page failed with, if it failed.
+const firstPageFailure = ({
+  error,
+  isLoadingError,
+}: SessionListQuery): string | undefined =>
+  isLoadingError ? error.data?.code : undefined;
+
+const newerServerToast: ErrorToast = {
+  title: 'This view needs a newer Server',
+  message: 'Update the Server to list All or by Created.',
+};
+
+/*
+ * A Server from before Status All and Order Created refuses the view this Device kept, so the list would fail on every launch.
+ * Its first page failing that way puts those fields back to their defaults, which the menu then shows and the list asks for;
+ * the list stays behind its skeleton meanwhile. Returns whether it is falling back.
+ */
+function useOlderServerFallback(
+  view: SessionsView,
+  sessions: SessionListQuery,
+): boolean {
+  const client = useQueryClient();
+  const fallback = olderServerView(view, firstPageFailure(sessions));
+
+  useEffect(() => {
+    if (fallback) chooseSessionsView(client, fallback);
+  }, [client, fallback]);
+
+  useErrorToast(fallback && newerServerToast);
+
+  return fallback !== undefined;
+}
+
 // The Sessions matching a search, a page at a time.
 export function useSessionPages(search: SessionsSearch): SessionPages {
   const sessions = useSessionListQuery(search);
+  const fallingBack = useOlderServerFallback(search.view, sessions);
 
   return {
     sessions: useUniqueSessions(sessions.data),
     loadMoreFailed: sessions.isFetchNextPageError,
     isFetchingNextPage: sessions.isFetchingNextPage,
     onLoadMore: useLoadMore(sessions),
-    progress: { failed: sessions.isLoadingError, pending: sessions.isPending },
+    progress: {
+      failed: sessions.isLoadingError && !fallingBack,
+      pending: sessions.isPending || fallingBack,
+    },
   };
 }
