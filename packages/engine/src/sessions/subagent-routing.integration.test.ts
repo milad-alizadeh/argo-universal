@@ -96,10 +96,6 @@ it.each(
       direction: 'tail',
     });
 
-    expect(page.rows[0]).toMatchObject({
-      sessionUpdate: 'session_message',
-      _meta: { argo: { senderSessionId: sessionId } },
-    });
     expect(page.rows.some((row) => row.sessionUpdate === 'agent_message')).toBe(
       true,
     );
@@ -137,6 +133,30 @@ async function expectLiveChildMessage(
 
   throw new Error('No live Subagent message');
 }
+
+// The background scenario sends only the parent's outgoing view; the foreground one also sends the child's incoming view.
+it.each([
+  { scenario: backgroundScenario, received: false },
+  { scenario: 'subagent-foreground', received: true },
+] as const)(
+  'shows a delegation in the $scenario child Feed only from its own transcript',
+  async ({ scenario, received }) => {
+    const { host, sessionId } = await openAcpFeedSession(scenarios[scenario]);
+
+    const [child] = await host.caller.session.subagents({ sessionId });
+
+    if (!child) throw new Error(missingSubagent);
+
+    const page = await host.caller.feed.page({
+      sessionId: child.sessionId,
+      direction: 'tail',
+    });
+
+    expect(
+      page.rows.some((row) => row.sessionUpdate === 'session_message'),
+    ).toBe(received);
+  },
+);
 
 it('reads the stored Subagent Feed after restart without launching an Agent', async () => {
   const { host, sessionId } = await openAcpFeedSession(
@@ -249,35 +269,12 @@ const revisedDelegation: ScriptedScenario = {
   ],
 };
 
-it('retains delegated message patches and chunks with the reported child Turn outcome', async () => {
+it('records the child Turn outcome its idle state reports', async () => {
   const { host, sessionId } = await openAcpFeedSession(revisedDelegation);
 
-  const [child] = await host.caller.session.subagents({ sessionId });
-
-  if (!child) throw new Error(missingSubagent);
-  expect(await host.caller.session.subagents({ sessionId })).toHaveLength(1);
-  expect(child).toMatchObject({
-    state: 'idle',
-    tokens: 12,
-    stopReason: 'end_turn',
-  });
-
-  const page = await host.caller.feed.page({
-    sessionId: child.sessionId,
-    direction: 'tail',
-  });
-
-  expect(page.rows[0]).toMatchObject({
-    sessionUpdate: 'session_message',
-    messageId: 'delegation',
-    content: [
-      { type: 'text', text: 'Revised' },
-      { type: 'text', text: ' instruction' },
-    ],
-  });
-  expect(
-    page.rows.filter((row) => row.sessionUpdate === 'session_message'),
-  ).toHaveLength(1);
+  expect(await host.caller.session.subagents({ sessionId })).toMatchObject([
+    { state: 'idle', tokens: 12, stopReason: 'end_turn' },
+  ]);
 });
 
 it("revises one parent prompt from patches and chunks of the parent's outgoing message", async () => {

@@ -34,15 +34,37 @@ const childMessage = (text: string): ScriptedStep => ({
   sessionId: subagentSessionId,
 });
 
+// The parent transcript's outgoing view of a delegation (ACP subagents RFD).
 const delegation = (messageId: string, text: string): ScriptedStep => ({
   type: 'update',
   update: {
     sessionUpdate: 'session_message',
     messageId,
+    senderSessionId: subagentParentSessionId,
     recipientSessionId: subagentSessionId,
     content: [{ type: 'text', text }],
   },
 });
+
+// The child transcript's incoming view of the same delegation, with its own message id.
+const received = (messageId: string, text: string): ScriptedStep => ({
+  type: 'update',
+  sessionId: subagentSessionId,
+  update: {
+    sessionUpdate: 'session_message',
+    messageId: `${messageId}-received`,
+    senderSessionId: subagentParentSessionId,
+    recipientSessionId: subagentSessionId,
+    content: [{ type: 'text', text }],
+  },
+});
+
+// The child is announced before any message names it.
+const delegate = (messageId: string, text: string): ScriptedStep[] => [
+  state('running'),
+  delegation(messageId, text),
+  received(messageId, text),
+];
 
 // The parent transcript's view of the child's explicit reply (ACP subagents RFD).
 const reply = (text: string): ScriptedStep => ({
@@ -59,8 +81,7 @@ const reply = (text: string): ScriptedStep => ({
 export const foregroundSubagent: ScriptedScenario = {
   sessionIds,
   steps: [
-    delegation('review', 'Review the change.'),
-    state('running'),
+    ...delegate('review', 'Review the change.'),
     childMessage('I am reviewing the change.'),
     state('requires_action'),
     state('running'),
@@ -71,11 +92,15 @@ export const foregroundSubagent: ScriptedScenario = {
   ],
 };
 
-// The parent completes its Turn while the Subagent still runs.
+/*
+ * The parent completes its Turn while the Subagent still runs.
+ * Only the outgoing view is sent, so the child Feed starts with its own updates.
+ */
 export const backgroundSubagent: ScriptedScenario = {
+  sessionIds,
   steps: [
-    delegation('review', 'Review the change in the background.'),
     state('running'),
+    delegation('review', 'Review the change in the background.'),
     childMessage('The background review has started.'),
     message('The Subagent is reviewing in the background.'),
   ],
@@ -89,8 +114,7 @@ export const subagentMoreWork: ScriptedScenario = {
       { steps: foregroundSubagent.steps },
       {
         steps: [
-          delegation('follow-up', 'Review the follow-up change.'),
-          state('running'),
+          ...delegate('follow-up', 'Review the follow-up change.'),
           childMessage('The follow-up review is complete.'),
           state('idle'),
           message('The same Subagent finished the follow-up.'),

@@ -56,7 +56,7 @@ it.each(['open', 'closed'] as const)(
               type: 'row.upsert',
               row: expect.objectContaining({
                 sessionUpdate: 'session_message',
-                messageId: 'follow-up',
+                messageId: 'follow-up-received',
               }),
             }),
           ]),

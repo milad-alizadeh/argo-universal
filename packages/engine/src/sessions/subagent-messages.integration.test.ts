@@ -120,8 +120,8 @@ it.each([
     prompts: 2,
     actions: [
       ...foregroundActions,
-      { action: 'message', prompt: [text('Review the follow-up change.')] },
       { subagentState: 'running' },
+      { action: 'message', prompt: [text('Review the follow-up change.')] },
       { subagentState: 'idle' },
     ],
   },

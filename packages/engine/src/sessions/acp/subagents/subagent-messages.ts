@@ -1,23 +1,22 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type {
-  ContentBlock,
   SessionMessage,
   SessionUpdate,
   FeedUpdate,
 } from '@repo/contracts';
-import { mapSupportedContentBlock } from '../../../feed';
 import type { ChildFeed } from '../../subagents/child-feed';
-import type { SubagentRouting } from '../../subagents/routing-types';
 import {
   type AcpSessionMessage,
   type MessageRouting,
-  replyOf,
+  messageContent,
   sendMessageAction,
 } from './subagent-actions';
+import { promptOf, replyOf } from './subagent-participants';
 import { messageMetadata } from './subagent-sender';
 
-const messageId = (input: SubagentRouting, update: AcpSessionMessage): string =>
-  JSON.stringify(['session_message', input.parentId, update.messageId]);
+// Message ids are scoped to their transcript (ACP subagents RFD), so a row never matches across Feeds.
+const messageId = (child: ChildFeed, update: AcpSessionMessage): string =>
+  JSON.stringify(['session_message', child.sessionId, update.messageId]);
 
 function previousMessage(
   child: ChildFeed,
@@ -29,41 +28,10 @@ function previousMessage(
   return asSessionMessage(row);
 }
 
-function recipient(
-  input: MessageRouting,
-  update: AcpSessionMessage,
-): ChildFeed | undefined {
-  if (update.recipientSessionId)
-    return input.children.get(update.recipientSessionId);
-
-  return [...input.children.values()].find(
-    (child) => previousMessage(child, messageId(input, update)) !== undefined,
-  );
-}
-
 const asSessionMessage = (
   row: SessionUpdate | undefined,
 ): SessionMessage | undefined =>
   row?.sessionUpdate === 'session_message' ? row : undefined;
-
-function replaceContent(
-  update: Extract<AcpSessionMessage, { sessionUpdate: 'session_message' }>,
-  previous: ContentBlock[],
-): ContentBlock[] {
-  if (update.content === undefined) return previous;
-
-  return (update.content ?? []).map(mapSupportedContentBlock);
-}
-
-function messageContent(
-  update: AcpSessionMessage,
-  previous: ContentBlock[] = [],
-): ContentBlock[] {
-  if (update.sessionUpdate === 'session_message_chunk')
-    return [...previous, mapSupportedContentBlock(update.content)];
-
-  return replaceContent(update, previous);
-}
 
 export const isSubagentMessage = (
   update: SessionNotification['update'],
@@ -71,15 +39,20 @@ export const isSubagentMessage = (
   update.sessionUpdate === 'session_message' ||
   update.sessionUpdate === 'session_message_chunk';
 
+type DeliveredMessage = Extract<
+  FeedUpdate,
+  { sessionUpdate: 'session_message' }
+>;
+
 function messageRow(
   input: MessageRouting,
   child: ChildFeed,
   update: AcpSessionMessage,
 ): DeliveredMessage {
-  const previous = previousMessage(child, messageId(input, update));
+  const previous = previousMessage(child, messageId(child, update));
 
   return {
-    id: messageId(input, update),
+    id: messageId(child, update),
     messageId: update.messageId,
     sessionUpdate: 'session_message',
     state: 'settled',
@@ -88,55 +61,37 @@ function messageRow(
   };
 }
 
-type DeliveredMessage = Extract<
-  FeedUpdate,
-  { sessionUpdate: 'session_message' }
->;
-
-const senderOf = (row: DeliveredMessage): string | undefined =>
-  row._meta?.argo?.senderSessionId;
-
-const isOutgoing = (
+// A Subagent's Feed holds only the messages its own transcript reports; nothing is copied from another view.
+function recordTranscriptMessage(
   input: MessageRouting,
   child: ChildFeed,
-  row: DeliveredMessage,
-): boolean =>
-  child.parentId === input.parentId && senderOf(row) === input.parentId;
-
-// The parent's outgoing message to its own child is that child's prompt.
-function recordPrompt(
-  input: MessageRouting,
-  child: ChildFeed,
-  row: DeliveredMessage,
-): void {
-  if (!isOutgoing(input, child, row)) return;
-  sendMessageAction(input, child, {
-    messageId: row.messageId,
-    field: { prompt: row.content },
-  });
-}
-
-function deliverPrompt(
-  input: MessageRouting,
   update: AcpSessionMessage,
-): boolean {
-  const child = recipient(input, update);
-
-  if (!child) return false;
-
-  const row = messageRow(input, child, update);
-
+): void {
   child.feed.send({
     type: 'feed.change',
     turnId: child.turnId,
-    change: { type: 'upsert', update: row },
+    change: { type: 'upsert', update: messageRow(input, child, update) },
   });
-  recordPrompt(input, child, row);
+}
+
+// This transcript's outgoing message to its own child is that child's prompt.
+function recordPrompt(
+  input: MessageRouting,
+  update: AcpSessionMessage,
+): boolean {
+  const prompt = promptOf(input, update);
+
+  if (!prompt) return false;
+
+  sendMessageAction(input, prompt.child, {
+    messageId: update.messageId,
+    field: { prompt: messageContent(update, prompt.previous) },
+  });
 
   return true;
 }
 
-function deliverResult(
+function recordResult(
   input: MessageRouting,
   update: AcpSessionMessage,
 ): boolean {
@@ -152,8 +107,28 @@ function deliverResult(
   return true;
 }
 
-// A result routes first: a child's reply also names a recipient, which `deliverPrompt` would misread.
-export const deliverSubagentMessage = (
+// A result routes first: a child's reply also names a recipient, which `recordPrompt` would misread.
+function recordAction(input: MessageRouting, update: AcpSessionMessage): void {
+  if (recordResult(input, update)) return;
+  recordPrompt(input, update);
+}
+
+const isRootTranscript = (input: MessageRouting): boolean =>
+  input.transcriptId === input.parent.vendorSessionId;
+
+/*
+ * A message on the root or a known child transcript is delivered now.
+ * One on a transcript no Session owns yet returns false and waits for its announcement.
+ */
+export function deliverSubagentMessage(
   input: MessageRouting,
   update: AcpSessionMessage,
-): boolean => deliverResult(input, update) || deliverPrompt(input, update);
+): boolean {
+  const child = input.children.get(input.transcriptId);
+
+  if (child) recordTranscriptMessage(input, child, update);
+  else if (!isRootTranscript(input)) return false;
+  recordAction(input, update);
+
+  return true;
+}
