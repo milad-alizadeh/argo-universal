@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { MenuAction } from '#primitives/overlays/menu';
 import type { PermissionAnswers } from '../permission-request/use-permission-answers';
 import type { RequestState } from '../request-card/request-card';
 import {
@@ -6,52 +7,53 @@ import {
   buildChoices,
   buildInNewSession,
 } from './plan-build-choices';
+import type { PlanRequestActions } from './plan-request';
 
-interface PlanBuildInput {
+interface PlanBuildInput extends PlanRequestActions {
   requestId: string;
   state: RequestState;
   answers: PermissionAnswers;
-  onBuildInNewSession?: () => void;
 }
 
 export interface PlanBuild {
-  choices: BuildChoice[];
-  // What the Build button sends now; the chevron changes it.
+  // What the Build button sends: the first way to build.
   lead: BuildChoice | undefined;
   label: string;
-  pick: (value: string) => void;
+  // The chevron's rows: every way to build, then Save to workspace; each runs at once.
+  actions: MenuAction[];
   send: () => void;
 }
 
-type Marked = { requestId: string; value: string } | undefined;
+type Sent = { requestId: string; value: string } | undefined;
 
-type Mark = (marked: Marked) => void;
+type Mark = (sent: Sent) => void;
 
-const markedValue = (marked: Marked, requestId: string): string | undefined =>
-  marked?.requestId === requestId ? marked.value : undefined;
-
-// The Build split: its chosen way to build, and sending it. A new Session keeps this one planning and opens with the plan.
+// The Build split: the button builds, the chevron's rows build another way or save the plan.
 export function usePlanBuild(input: PlanBuildInput): PlanBuild {
-  const [picked, setPicked] = useState<Marked>();
-  const [sent, setSent] = useState<Marked>();
+  const [sent, setSent] = useState<Sent>();
   const choices = planChoices(input);
-  const lead = pickedChoice(choices, markedValue(picked, input.requestId));
+  const lead = choices[0];
+
+  const build = (choice: BuildChoice): void =>
+    sendBuild(input, choice, setSent);
 
   return {
-    choices,
     lead,
     label: buildLabel(input, lead ?? noBuild, sent),
-    pick: (value) => setPicked({ requestId: input.requestId, value }),
-    send: () => sendBuild(input, lead, setSent),
+    actions: [...choices.map(buildAction(build)), ...saveAction(input)],
+    send: () => lead && build(lead),
   };
 }
 
-// The chevron's pick, else the first way to build.
-const pickedChoice = (
-  choices: BuildChoice[],
-  pickedValue: string | undefined,
-): BuildChoice | undefined =>
-  choices.find(({ value }) => value === pickedValue) ?? choices[0];
+const buildAction =
+  (build: (choice: BuildChoice) => void) =>
+  (choice: BuildChoice): MenuAction => ({
+    label: choice.label,
+    onPress: () => build(choice),
+  });
+
+const saveAction = ({ onSavePlan }: PlanBuildInput): MenuAction[] =>
+  onSavePlan ? [{ label: 'Save to workspace', onPress: onSavePlan }] : [];
 
 // A new Session is offered only where the Agent lets this Session keep planning.
 const planChoices = ({
@@ -63,37 +65,30 @@ const planChoices = ({
     Boolean(onBuildInNewSession && answers.leads.reject),
   );
 
+const isSending = ({ state, requestId }: PlanBuildInput, sent: Sent): boolean =>
+  state.kind === 'submitting' && sent?.requestId === requestId;
+
+const buildLabel = (
+  input: PlanBuildInput,
+  lead: BuildChoice,
+  sent: Sent,
+): string => (isSending(input, sent) ? 'Sending…' : lead.label);
+
 const noBuild: BuildChoice = { value: '', label: '' };
-
-const isSending = (
-  state: RequestState,
-  lead: BuildChoice,
-  sentValue: string | undefined,
-): boolean => state.kind === 'submitting' && sentValue === lead.value;
-
-function buildLabel(
-  { state, requestId }: PlanBuildInput,
-  lead: BuildChoice,
-  sent: Marked,
-): string {
-  const sentValue = markedValue(sent, requestId);
-
-  return isSending(state, lead, sentValue) ? 'Sending…' : lead.label;
-}
 
 function sendBuild(
   input: PlanBuildInput,
-  lead: BuildChoice | undefined,
+  choice: BuildChoice,
   mark: Mark,
 ): void {
-  if (!lead || input.answers.inactive) return;
-  mark({ requestId: input.requestId, value: lead.value });
-  sendChoice(input, lead);
+  if (input.answers.inactive) return;
+  mark({ requestId: input.requestId, value: choice.value });
+  sendChoice(input, choice);
 }
 
-function sendChoice(input: PlanBuildInput, lead: BuildChoice): void {
-  if (lead === buildInNewSession) buildElsewhere(input);
-  else chooseAllow(input.answers, lead.value);
+function sendChoice(input: PlanBuildInput, choice: BuildChoice): void {
+  if (choice === buildInNewSession) buildElsewhere(input);
+  else chooseAllow(input.answers, choice.value);
 }
 
 // This Session keeps planning; the new one opens with the plan.

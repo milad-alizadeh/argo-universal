@@ -4,16 +4,14 @@ import { PlanDocument } from '#lib/product/plan-document';
 import { IconButton } from '#primitives/buttons/icon-button';
 import { Icon } from '#primitives/display/icon';
 import { Text } from '#primitives/display/text';
-import { Menu } from '#primitives/overlays/menu';
 import {
   type SheetNavigation,
   useOptionalSheet,
 } from '#primitives/overlays/sheet';
 import { Pressable } from '#primitives/pressable';
-import type { PlanRequestActions } from './plan-request';
 import type { PlanView } from './use-plan-view';
 
-interface PlanHeaderProps extends PlanRequestActions {
+interface PlanHeaderProps {
   title: string;
   // The plan under its title, as the card and the sheet's page show it.
   content: string;
@@ -26,8 +24,6 @@ type ViewProps = Pick<PlanHeaderProps, 'view'>;
 // As the Written plan tray's row: small ghost buttons.
 const controlAppearance = { variant: 'ghost', size: 'xs' } as const;
 
-const planMenuLabel = 'Plan actions';
-
 // The Written plan tray's row: the plan's icon and title, then its controls.
 export function PlanHeader(props: PlanHeaderProps): ReactNode {
   return props.wide ? <WideHeader {...props} /> : <PhoneHeader {...props} />;
@@ -37,7 +33,6 @@ function WideHeader(props: PlanHeaderProps): ReactNode {
   return (
     <View className="h-8 flex-row items-center gap-1.5 pl-2">
       <PlanTitle title={props.title} />
-      <PlanMenu onSavePlan={props.onSavePlan} />
       <FullPageButton view={props.view} />
       <ShowPlanButton view={props.view} />
     </View>
@@ -75,11 +70,8 @@ function ShowPlanButton({ view }: ViewProps): ReactNode {
 // In the request's sheet the row opens the plan as the sheet's next page, at full height.
 function PhoneHeader(props: PlanHeaderProps): ReactNode {
   return (
-    <View className="flex-row items-center gap-1 px-4">
-      <View className="min-w-0 flex-1">
-        <PlanPageLink {...props} />
-      </View>
-      <PlanMenu onSavePlan={props.onSavePlan} />
+    <View className="px-4">
+      <PlanPageLink {...props} />
     </View>
   );
 }
@@ -132,27 +124,5 @@ function PlanTitle({ title }: Pick<PlanHeaderProps, 'title'>): ReactNode {
         </Text>
       </View>
     </>
-  );
-}
-
-const planMenuTrigger = (
-  <IconButton
-    {...controlAppearance}
-    accessibilityLabel={planMenuLabel}
-    icon="more"
-  />
-);
-
-// ⋯ holds what Argo does with the plan itself; with nothing to offer it is not drawn.
-function PlanMenu({ onSavePlan }: PlanRequestActions): ReactNode {
-  if (!onSavePlan) return null;
-
-  return (
-    <Menu
-      accessibilityLabel={planMenuLabel}
-      align="end"
-      trigger={planMenuTrigger}
-      actions={[{ label: 'Save to workspace', onPress: onSavePlan }]}
-    />
   );
 }

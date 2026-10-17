@@ -52,7 +52,7 @@ function BuildButton(props: PlanActionsProps): ReactNode {
 
   if (!build.lead) return null;
 
-  if (build.choices.length > 1) return <BuildSplit {...props} />;
+  if (build.actions.length > 1) return <BuildSplit {...props} />;
 
   return (
     <RequestAction primary disabled={answers.inactive} onPress={build.send}>
@@ -61,15 +61,13 @@ function BuildButton(props: PlanActionsProps): ReactNode {
   );
 }
 
-// The chevron picks how to build; the button sends it.
+// The button builds; the chevron builds another way or saves the plan.
 function BuildSplit({ answers, build }: PlanActionsProps): ReactNode {
   return (
     <SplitButton
       label={build.label}
       onPress={build.send}
-      options={build.choices}
-      value={build.lead?.value ?? ''}
-      onValueChange={build.pick}
+      actions={build.actions}
       menuLabel="Build options"
       primary
       disabled={answers.inactive}

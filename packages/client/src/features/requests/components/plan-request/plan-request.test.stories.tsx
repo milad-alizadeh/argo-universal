@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, fn, within } from 'storybook/test';
-import { pickFromMenu } from '../../../../../mocks/requests/permission/option-menus.test.mocks';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { RequestFrame } from '../../../../lib/product/request-frame';
 import { FilledSessionFrame } from '../../../../lib/product/session-fill.mocks';
@@ -32,10 +31,15 @@ type Story = StoryObj<typeof meta>;
 
 const planStep = 'Read README.md';
 
+const buildOptions = 'Build options';
+
 const canvas = (): ReturnType<typeof within> => within(document.body);
 
 const button = (name: string): HTMLElement =>
   canvas().getByRole('button', { name, exact: true });
+
+const menuItem = (name: string): Promise<HTMLElement> =>
+  canvas().findByRole('menuitem', { name });
 
 // Build sends the Agent's manual-approval option, so each edit still asks.
 const builds = (width: number): Story => ({
@@ -69,14 +73,12 @@ export const KeepPlanningPhone = keepsPlanning(390);
 
 export const KeepPlanningWide = keepsPlanning(1440);
 
-// The chevron picks how to build; pressing Build sends it.
+// Each of the chevron's rows runs at once.
 export const BuildAutoAcceptWide: Story = {
   play: async ({ userEvent, args }) => {
     await settleViewport(1440);
-    await userEvent.click(button('Build options'));
-    await pickFromMenu(userEvent, 'Build, auto-accept edits');
-    await expect(args.onAnswer).not.toHaveBeenCalled();
-    await userEvent.click(button('Build, auto-accept edits'));
+    await userEvent.click(button(buildOptions));
+    await userEvent.click(await menuItem('Build, auto-accept edits'));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
     await expect(args.onAnswer).toHaveBeenCalledWith({
       optionId: 'exit-plan-accept-edits',
@@ -88,9 +90,8 @@ export const BuildAutoAcceptWide: Story = {
 export const BuildInNewSessionWide: Story = {
   play: async ({ userEvent, args }) => {
     await settleViewport(1440);
-    await userEvent.click(button('Build options'));
-    await pickFromMenu(userEvent, 'Build in new Session');
-    await userEvent.click(button('Build in new Session'));
+    await userEvent.click(button(buildOptions));
+    await userEvent.click(await menuItem('Build in new Session'));
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
     await expect(args.onAnswer).toHaveBeenCalledWith({
       optionId: 'reject',
@@ -125,10 +126,8 @@ export const ExpandPlanWide: Story = {
 export const SaveToWorkspaceWide: Story = {
   play: async ({ userEvent, args }) => {
     await settleViewport(1440);
-    await userEvent.click(button('Plan actions'));
-    await userEvent.click(
-      await canvas().findByRole('menuitem', { name: 'Save to workspace' }),
-    );
+    await userEvent.click(button(buildOptions));
+    await userEvent.click(await menuItem('Save to workspace'));
     await expect(args.onSavePlan).toHaveBeenCalledTimes(1);
     await expect(args.onAnswer).not.toHaveBeenCalled();
   },
