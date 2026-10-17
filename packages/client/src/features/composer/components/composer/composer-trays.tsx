@@ -32,9 +32,7 @@ export function ComposerTopTray(
 function shownWrittenPlan({
   props,
 }: Pick<WrittenPlanLayout, 'props'>): ComposerProps['writtenPlan'] {
-  return props.planProposal || props.permissionRequest
-    ? undefined
-    : props.writtenPlan;
+  return props.permissionRequest ? undefined : props.writtenPlan;
 }
 
 function hasPlan(layout: Pick<PlanLayout, 'props'>): boolean {
@@ -164,7 +162,5 @@ function hasWork({ props }: Pick<LivePlanLayout, 'props'>): boolean {
 }
 
 function hasRequest({ props }: Pick<PlanLayout, 'props'>): boolean {
-  return Boolean(
-    props.planProposal || props.permissionRequest || props.callout,
-  );
+  return Boolean(props.permissionRequest || props.callout);
 }

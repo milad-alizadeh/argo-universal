@@ -9,7 +9,6 @@ import {
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
 import { composerProps } from '../composer-mock';
-import { planProposalMocks } from '../plan-proposal-mock';
 import { canPointAt } from '../point-hit';
 import { shownText } from '../shown-text';
 
@@ -21,11 +20,11 @@ const permissionMocks = recordedRequestMocks.filter(
   (mock) => mock.recording === 'permission',
 );
 
-export const keptDraft = 'Keep this draft.';
+const keptDraft = 'Keep this draft.';
 
 const addedText = ' Add details.';
 
-export function composerControls(canvas: PlayContext['canvas']): HTMLElement[] {
+function composerControls(canvas: PlayContext['canvas']): HTMLElement[] {
   return [
     canvas.getByRole('textbox', { name: 'Message' }),
     canvas.getByRole('button', { name: 'Attach' }),
@@ -36,14 +35,9 @@ export function composerControls(canvas: PlayContext['canvas']): HTMLElement[] {
 
 export function preservesComposer(
   agentIndex: number,
-  requestKind: 'plan' | 'permission',
 ): Story & { args: ComposerProps } {
   const permission = requiredFixture(permissionMocks[agentIndex]);
   const catalog = requiredFixture(newSessionCatalogs.bothAvailable[agentIndex]);
-
-  const plan = requiredFixture(
-    planProposalMocks.find((mock) => mock.agent === permission.agent),
-  );
 
   const onAnswer = fn();
 
@@ -66,11 +60,6 @@ export function preservesComposer(
     'Recorded Permission needs an Allow option.',
   );
 
-  const expectedAnswer =
-    requestKind === 'plan'
-      ? { planId: plan.proposal.planId, decision: 'approve' }
-      : { optionId: allow.optionId };
-
   return {
     args: {
       ...composerProps({
@@ -83,15 +72,7 @@ export function preservesComposer(
         onSend: fn(),
         onStop: fn(),
       }),
-      ...(requestKind === 'plan'
-        ? {
-            planProposal: {
-              proposal: plan.proposal,
-              state: { kind: 'open' },
-              onAnswer,
-            },
-          }
-        : { permissionRequest }),
+      permissionRequest,
     },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(layoutWidths.wide);
@@ -103,9 +84,7 @@ export function preservesComposer(
         await waitFor(() => expect(canPointAt(control)).toBe(true));
       }
 
-      const answer = canvas.getByRole('button', {
-        name: requestKind === 'plan' ? 'Approve' : allow.name,
-      });
+      const answer = canvas.getByRole('button', { name: allow.name });
 
       await browserUserEvent.click(message);
       await browserUserEvent.keyboard('{End}');
@@ -117,7 +96,7 @@ export function preservesComposer(
       await waitFor(() => expect(canPointAt(answer)).toBe(true));
       await userEvent.click(answer);
       await expect(onAnswer).toHaveBeenCalledTimes(1);
-      await expect(onAnswer).toHaveBeenCalledWith(expectedAnswer);
+      await expect(onAnswer).toHaveBeenCalledWith({ optionId: allow.optionId });
       await expect(shownText(message)).toBe(keptDraft + addedText);
     },
   };
@@ -125,7 +104,7 @@ export function preservesComposer(
 
 function requiredFixture<T>(
   value: T | null | undefined,
-  message = 'Recorded catalog needs both request kinds for each Agent.',
+  message = 'Recorded catalog needs a Permission request for each Agent.',
 ): T {
   if (!value) throw new Error(message);
 

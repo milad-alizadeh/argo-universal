@@ -50,13 +50,7 @@ const componentFolders: [string, string[]][] = [
   ],
   [
     'features/requests/components',
-    [
-      'elicitation-form',
-      'permission-request',
-      'plan-proposal-card',
-      'plan-proposal-expansion',
-      'request-card',
-    ],
+    ['elicitation-form', 'permission-request', 'request-card'],
   ],
   [
     'features/sessions/components',

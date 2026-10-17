@@ -29,17 +29,13 @@ const PlanItems = z.strictObject({
   _meta: createFeedMetadataSchema(z.strictObject({})),
 });
 
-// A Plan proposal: a written plan that the user approves or rejects.
+// A Written plan kept as Markdown text.
 export const PlanMarkdown = z.strictObject({
   type: z.literal('markdown'),
   planId: z.string(),
   content: z.string(),
   _meta: createFeedMetadataSchema(
-    z.strictObject({
-      requestId: z.string().optional(),
-      filePath: z.string().optional(),
-      proposalOutcome: z.enum(['approved', 'kept_planning']).optional(),
-    }),
+    z.strictObject({ filePath: z.string().optional() }),
   ),
 });
 

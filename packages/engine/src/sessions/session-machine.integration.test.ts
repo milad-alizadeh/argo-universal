@@ -250,7 +250,6 @@ it('cancellation settles both question queues while its prompt waits for Agent c
   ).toMatchObject({
     state: 'idle',
     activeTurnId: null,
-    pendingPlanProposal: null,
   });
   completion.resolve();
   await waitForAcpSessionIdle(host, created.sessionId);

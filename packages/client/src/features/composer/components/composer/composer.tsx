@@ -1,7 +1,7 @@
 import { maxBlobUploadMebibytes } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { PermissionRequest, PlanProposalCard } from '#features/requests';
+import { PermissionRequest } from '#features/requests';
 import { useErrorToast } from '#primitives/overlays/toast';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
@@ -52,15 +52,7 @@ function ComposerRequest(layout: ComposerLayout): React.JSX.Element | null {
   );
 }
 
-function composerRequestContent({
-  props,
-  controlsHeight,
-}: ComposerLayout): React.ReactNode {
-  if (props.planProposal)
-    return (
-      <PlanProposalCard {...props.planProposal} bottomInset={controlsHeight} />
-    );
-
+function composerRequestContent({ props }: ComposerLayout): React.ReactNode {
   if (props.permissionRequest)
     return <PermissionRequest {...props.permissionRequest} />;
 
@@ -68,7 +60,5 @@ function composerRequestContent({
 }
 
 function hasComposerRequest({ props }: ComposerLayout): boolean {
-  return Boolean(
-    props.planProposal || props.permissionRequest || props.callout,
-  );
+  return Boolean(props.permissionRequest || props.callout);
 }

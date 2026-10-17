@@ -9,64 +9,27 @@ import {
   usePlanScroll,
 } from './plan-document-scroll';
 
-const flexibleContentClassName = 'flex-1 min-h-0';
-
-const cardClassName = 'bg-card rounded-xl shadow-control';
-
-const proposalHeightClassName = 'max-h-70';
-
-const proposalLabel = 'Plan proposal document';
-
-const proposalTestID = 'plan-proposal-scroll';
-
-const scrolledPlanStyles = {
-  proposal: {
-    frame: cn(proposalHeightClassName, cardClassName),
-    scroll: proposalHeightClassName,
-    content: 'px-3.5 py-3',
-    testID: proposalTestID,
-    label: proposalLabel,
-    fades: true,
-    fitContent: true,
-  },
-  expanded: {
-    frame: cn(flexibleContentClassName, cardClassName),
-    scroll: flexibleContentClassName,
-    content: 'px-4 pt-2 pb-4',
-    testID: proposalTestID,
-    label: proposalLabel,
-    fades: false,
-    fitContent: false,
-  },
-  tray: {
-    frame: proposalHeightClassName,
-    scroll: proposalHeightClassName,
-    content: 'px-4 pt-2 pb-4',
-    testID: undefined,
-    label: 'Written plan document',
-    fades: false,
-    fitContent: true,
-  },
-} satisfies Record<string, ScrolledPlanStyle>;
+const trayPlanStyle: ScrolledPlanStyle = {
+  frame: 'max-h-70',
+  scroll: 'max-h-70',
+  content: 'px-4 pt-2 pb-4',
+  label: 'Written plan document',
+};
 
 interface PlanDocumentProps {
   content: string;
-  layout: keyof typeof scrolledPlanStyles | 'sheet' | 'request-sheet';
+  layout: 'tray' | 'sheet';
 }
 
 export function PlanDocument({
   content,
   layout,
 }: PlanDocumentProps): React.JSX.Element {
-  const markdown = <FeedMarkdown text={content} variant="proposal" />;
-
-  if (layout === 'request-sheet') return markdown;
+  const markdown = <FeedMarkdown text={content} variant="plan" />;
 
   if (layout === 'sheet') return <View className="pt-2 pb-4">{markdown}</View>;
 
-  return (
-    <ScrolledPlan style={scrolledPlanStyles[layout]}>{markdown}</ScrolledPlan>
-  );
+  return <ScrolledPlan style={trayPlanStyle}>{markdown}</ScrolledPlan>;
 }
 
 function ScrolledPlan(props: {

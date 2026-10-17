@@ -144,13 +144,6 @@ export const PendingElicitation = z.strictObject({
 
 export type PendingElicitation = z.infer<typeof PendingElicitation>;
 
-export const PendingPlanProposal = z.strictObject({
-  planId: z.string(),
-  content: z.string(),
-});
-
-export type PendingPlanProposal = z.infer<typeof PendingPlanProposal>;
-
 // Which step of the live header order produced its text.
 export const LiveHeaderSource = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('request') }),
@@ -186,7 +179,6 @@ export const SessionSnapshot = z.strictObject({
   usage: ContextUsage.nullable(),
   pendingPermission: PendingPermission.nullable(),
   pendingElicitation: PendingElicitation.nullable(),
-  pendingPlanProposal: PendingPlanProposal.nullable(),
   configOptions: z.array(SessionConfigOption),
   changes: ChangesSummary,
   shells: z.array(Shell).default([]),

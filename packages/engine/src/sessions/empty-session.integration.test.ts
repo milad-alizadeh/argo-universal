@@ -42,7 +42,6 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
         usage: null,
         pendingPermission: null,
         pendingElicitation: null,
-        pendingPlanProposal: null,
         configOptions: [],
         changes: { files: 0, additions: 0, deletions: 0 },
         epoch: 0,

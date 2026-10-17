@@ -9,7 +9,7 @@ import { composerProps } from './composer-mock';
 
 const emptyDraft: ComposerDraft = { text: '', attachments: [] };
 
-type RequestProps = Pick<ComposerProps, 'permissionRequest' | 'planProposal'>;
+type RequestProps = Pick<ComposerProps, 'permissionRequest'>;
 
 export function RequestComposerPreview(props: RequestProps): ReactElement {
   const draft = useRequestDraft(props);

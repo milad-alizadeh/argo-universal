@@ -9,7 +9,6 @@ type LiveHeaderFixture = {
   activeTurnStartedAt: number | null;
   permissionQueue: readonly PendingPermission[];
   elicitationQueue: readonly PendingElicitation[];
-  pendingPlanProposal: { planId: string; content: string } | null;
 };
 
 export const running: LiveHeaderFixture = {
@@ -17,7 +16,6 @@ export const running: LiveHeaderFixture = {
   activeTurnStartedAt: 1_000,
   permissionQueue: [],
   elicitationQueue: [],
-  pendingPlanProposal: null,
 };
 
 export function headerText(header: LiveHeader | null): string | null {

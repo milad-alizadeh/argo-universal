@@ -1,6 +1,5 @@
 import type { CompactionUpdate, Notice, PlanMarkdown } from '@repo/contracts';
 import { recordedAcpContent } from '../src/lib/product/acp-feed-content.mocks';
-import { longPlanProposal } from './plan-proposal-mock';
 
 export const embeddedResource = {
   name: 'paging.sql',
@@ -63,8 +62,19 @@ export const noticeStates = [
   },
 ] satisfies Notice[];
 
+const writtenPlanSection = `# Plan: create hello.txt
+
+## Context
+Create a file \`hello.txt\` containing the text \`hello\` in the working directory.
+
+## Steps
+1. Write \`hello.txt\` with the content \`hello\`.
+2. Read the file back to check its content.
+
+`;
+
 export const longWrittenPlan: PlanMarkdown = {
   type: 'markdown',
   planId: 'long-written-plan',
-  content: `${longPlanProposal.content}\n\nEnd of the written plan.`,
+  content: `${writtenPlanSection.repeat(4)}End of the written plan.`,
 };

@@ -108,7 +108,6 @@ function composerUnderQuestion(
 
   return {
     ...composer,
-    planProposal: undefined,
     writtenPlan: undefined,
     status: composer.status && { ...composer.status, plan: undefined },
   };
