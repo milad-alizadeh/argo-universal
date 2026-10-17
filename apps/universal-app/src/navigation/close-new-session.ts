@@ -29,7 +29,7 @@ function closeNewSession(navigation: NavigationProp<ParamListBase>): void {
 /*
  * Beside the list, on a medium or wide window, hiding Sessions closes New Session's empty Session, as leaving the
  * section did before sections stayed mounted: the page leaves the section's stack, and the
- * list opens New Session again when Sessions shows. A page swapped out within the shown
+ * list shows its empty detail again when Sessions shows. A page swapped out within the shown
  * section is gone already. A compact window keeps New Session open.
  */
 const closeWhenSectionHidden: PageListeners = ({ navigation }) => ({

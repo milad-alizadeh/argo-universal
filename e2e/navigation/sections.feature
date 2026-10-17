@@ -7,9 +7,9 @@ Feature: Sections
     Then the phone Frame shows the Sessions list
 
   @smoke
-  Scenario: A section opens its first page on a wide Frame
+  Scenario: A wide Frame opens Settings' first page and shows no Session until one is picked
     Given a wide Frame
     When I open Settings
     Then the wide Frame shows Accounts beside the Settings list
     When I return to Sessions
-    Then the wide Frame opens the first Sessions page
+    Then the wide Frame shows no Session beside the Sessions list

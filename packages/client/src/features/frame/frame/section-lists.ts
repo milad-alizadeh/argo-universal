@@ -19,7 +19,7 @@ export interface SectionList {
    * it is still being chosen; without one, the root keeps its own page. Called as a hook.
    */
   useFirstPage?: () => FirstPage | undefined;
-  // What a medium window's detail shows at the section's root, where nothing is selected yet; without it, the root opens the first page as on a wide window.
+  // What the detail beside the list shows at the section's root, where nothing is selected yet; without it, the root opens the first page.
   emptyPage?: PlaceholderProps;
 }
 

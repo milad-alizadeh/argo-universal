@@ -21,7 +21,6 @@ import { newSessionId } from '../lib/product/navigation/new-session';
 import { sections } from '../lib/product/navigation/sections';
 import { LiveSessionList } from './sessions/live-session-list';
 import { SessionsRootToolbar } from './sessions/sessions-root-toolbar';
-import { useFirstSessionPage } from './sessions/use-first-session-page';
 import { SettingsNavigationList } from './settings/settings-navigation-list';
 
 const searchSettings = 'Search Settings';
@@ -33,7 +32,7 @@ function shownSessionId(path: string): string | undefined {
   return section === 'sessions' && id !== newSessionId ? id : undefined;
 }
 
-// `/sessions`: the Sessions the filter shows; with the list beside the pages, the root opens the first active Session, or New Session when there is none, and a medium window shows no Session until one is picked.
+// `/sessions`: the Sessions the filter shows; with the list beside the pages, the root shows no Session until one is picked.
 function sessionsList(
   sessions: SessionsViewState,
   path: string,
@@ -51,14 +50,10 @@ function sessionsList(
 function sessionsRoot(
   sessions: SessionsViewState,
   onNewSession: () => void,
-): Pick<
-  SectionList,
-  'rootHeader' | 'rootToolbar' | 'useFirstPage' | 'emptyPage'
-> {
+): Pick<SectionList, 'rootHeader' | 'rootToolbar' | 'emptyPage'> {
   return {
     rootHeader: sessionsRootHeader(sessions),
     rootToolbar: sessionsRootToolbar(sessions, onNewSession),
-    useFirstPage: useFirstSessionPage,
     emptyPage: noSessionShown,
   };
 }
