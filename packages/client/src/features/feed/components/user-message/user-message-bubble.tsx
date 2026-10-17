@@ -60,7 +60,7 @@ function ShowMore({ onPress }: { onPress: () => void }): React.JSX.Element {
 }
 
 const bubbleClassName =
-  'max-w-7/10 gap-0.5 rounded-2xl bg-muted px-3.5 py-2.5 wide:px-3 wide:py-2';
+  'max-w-7/10 gap-0.5 rounded-2xl bg-tint px-3.5 py-2.5 wide:px-3 wide:py-2';
 
 interface BubbleProps {
   text: string;
