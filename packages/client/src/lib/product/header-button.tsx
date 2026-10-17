@@ -84,11 +84,12 @@ function headerDot(
 ): React.JSX.Element | undefined {
   if (!dot) return undefined;
 
-  return <HeaderButtonDot color={dotColors[dot]} place={fit.dotPlace} />;
+  return <HeaderButtonDot dot={dot} place={fit.dotPlace} />;
 }
 
-function HeaderButtonDot(props: {
-  color: string;
+// The dot a header button draws, for an icon button elsewhere that carries the same state; `place` sets it over the icon.
+export function HeaderButtonDot(props: {
+  dot: NonNullable<HeaderButtonProps['dot']>;
   place: string;
 }): React.JSX.Element {
   return (
@@ -96,7 +97,7 @@ function HeaderButtonDot(props: {
       testID="header-button-dot"
       className={cn(
         'absolute size-1.75 rounded-full border-2 border-card',
-        props.color,
+        dotColors[props.dot],
         props.place,
       )}
     />

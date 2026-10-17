@@ -6,6 +6,10 @@ import { fadedEdges } from '../../../../../mocks/scroll-fade';
 import { firstAndLastRowsReachable } from '../../../../../mocks/sessions-list/first-and-last-rows.test.mocks';
 import { insertSessionWithoutOverlap } from '../../../../../mocks/sessions-list/insert-session.test.mocks';
 import { memoizedRows } from '../../../../../mocks/sessions-list/memoized-rows.test.mocks';
+import {
+  emptyCopy,
+  oneList,
+} from '../../../../../mocks/sessions-list/one-list.test.mocks';
 import { phoneProjectMenu } from '../../../../../mocks/sessions-list/phone-project-menu.test.mocks';
 import {
   exampleProjectName,
@@ -91,6 +95,24 @@ export const FlatSearchResults: Story = {
     ).toBeGreaterThan(0);
   },
 };
+
+export const OneList = oneList;
+
+export const EmptyOneListActive = emptyCopy(
+  { group: 'none' },
+  'No active Sessions',
+);
+
+export const EmptyOneListAll = emptyCopy(
+  { group: 'none', status: 'all' },
+  'No Sessions',
+);
+
+export const SearchMissInAll = emptyCopy(
+  { status: 'all', query: 'xyz' },
+  'No matching Sessions',
+  'No Session has "xyz" in its title.',
+);
 
 export const ProjectActionsDark: Story = {
   ...ProjectActions,

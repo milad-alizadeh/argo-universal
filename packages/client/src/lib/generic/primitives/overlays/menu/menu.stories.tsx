@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Menu, type MenuAction } from './menu';
+import { ViewOptionsMenu } from './menu-groups.mocks';
 import { MenuTrigger } from './menu-trigger';
 
 const choices = [
@@ -108,6 +109,9 @@ export const Variations: Story = {
           <PermissionsMenu {...props} />
         </Variation>
       ))}
+      <Variation label="Groups and an action">
+        <ViewOptionsMenu />
+      </Variation>
       <Variation label="Actions on a text trigger">
         <RangeMenu />
       </Variation>

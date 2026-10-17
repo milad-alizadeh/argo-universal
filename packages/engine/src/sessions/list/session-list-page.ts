@@ -53,9 +53,16 @@ function parseCursor(
 function matchesInput(row: SessionInfo, input: SessionListInput): boolean {
   return (
     matchesProject(row, input) &&
-    (row.archivedAt !== null) === input.archived &&
+    matchesArchived(row, input.archived) &&
     matchesQuery(row, input.query)
   );
+}
+
+function matchesArchived(
+  row: SessionInfo,
+  archived: boolean | undefined,
+): boolean {
+  return archived === undefined || (row.archivedAt !== null) === archived;
 }
 
 function matchesProject(row: SessionInfo, input: SessionListInput): boolean {

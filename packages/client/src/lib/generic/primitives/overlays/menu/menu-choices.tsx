@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import { useIconBox } from '../../../symbols/icon-role';
+import { MenuChoiceActions } from './menu-choice-actions';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
 import {
@@ -11,9 +12,10 @@ import {
   type GroupedChoiceMenuProps,
   type MenuChoiceGroup,
   menuChoiceGroups,
+  trailingMenuActions,
 } from './menu-props';
 import { MenuRadioItem } from './menu-radio-item';
-import { menuRowsClassName } from './menu-styles';
+import { menuGroupSpaceClassName, menuRowsClassName } from './menu-styles';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -33,7 +35,7 @@ export function useKeyboardFocus(): KeyboardFocus {
   return { keyboardFocus, onKeyboardFocusChange };
 }
 
-// A choice menu's web drawing: radio rows, the chosen one checked.
+// A choice menu's web drawing: radio rows, the chosen one checked, then any actions after the groups.
 export function MenuChoiceContent<Value extends string>(
   props: MenuChoicesProps<Value>,
 ): React.JSX.Element {
@@ -53,15 +55,30 @@ export function MenuChoiceContent<Value extends string>(
 function MenuChoices<Value extends string>({
   focus,
   ...props
-}: MenuChoicesProps<Value>): React.JSX.Element[] {
-  return menuChoiceGroups(props).map((group, index) => (
+}: MenuChoicesProps<Value>): React.JSX.Element {
+  return (
+    <>
+      {menuChoiceGroups(props).map((group, index) =>
+        groupRows(group, index, focus),
+      )}
+      <MenuChoiceActions actions={trailingMenuActions(props)} focus={focus} />
+    </>
+  );
+}
+
+function groupRows(
+  group: MenuChoiceGroup,
+  index: number,
+  focus: KeyboardFocus,
+): React.JSX.Element {
+  return (
     <MenuChoiceGroupRows
       key={menuGroupKey(group)}
       group={group}
       first={index === 0}
       focus={focus}
     />
-  ));
+  );
 }
 
 // A group is known by its options, which no other group of the menu shares.
@@ -80,7 +97,7 @@ function MenuChoiceGroupRows(
 ): React.JSX.Element {
   return (
     <>
-      {props.first ? null : <View className="h-2.25" />}
+      {props.first ? null : <View className={menuGroupSpaceClassName} />}
       <MenuGroupHeading
         label={props.group.label}
         inset={props.group.options.some((choice) => choice.icon)}

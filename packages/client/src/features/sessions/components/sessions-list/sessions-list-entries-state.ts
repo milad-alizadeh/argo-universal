@@ -8,29 +8,53 @@ import type { SessionsListProps } from './sessions-list-props';
 
 type EntriesInput = Pick<
   SessionsListProps,
-  'projects' | 'sessions' | 'query' | 'archived' | 'flat'
+  'projects' | 'sessions' | 'query' | 'status' | 'order' | 'group' | 'flat'
 >;
 
+// Search results and One list have no Project headings.
+export const listsFlat = ({
+  flat,
+  group,
+}: Pick<SessionsListProps, 'flat' | 'group'>): boolean =>
+  flat === true || group === 'none';
+
+// A Project with no Sessions keeps its empty row only where new Sessions start: an unsearched Active or All list.
+const hidesEmptyProjects = ({
+  query,
+  status,
+}: Pick<EntriesInput, 'query' | 'status'>): boolean =>
+  !!query || status === 'archived';
+
 function entries(
-  { projects, sessions, query, archived, flat }: EntriesInput,
+  input: EntriesInput,
   collapsed: ReadonlySet<string>,
 ): SessionsListEntry[] {
-  if (flat) return flatEntries({ projects, sessions });
+  const { projects, sessions } = input;
+  const order = input.order ?? 'activity';
+
+  if (listsFlat(input)) return flatEntries({ projects, sessions, order });
 
   return listEntries({
     projects,
     sessions,
     collapsed,
-    hideEmptyProjects: !!query || archived,
+    hideEmptyProjects: hidesEmptyProjects(input),
+    order,
   });
 }
 
 export function useListEntries(
-  { projects, sessions, query, archived, flat = false }: SessionsListProps,
+  props: SessionsListProps,
   collapsed: ReadonlySet<string>,
 ): SessionsListEntry[] {
+  const { projects, sessions, query, status, order, group, flat } = props;
+
   return useMemo(
-    () => entries({ projects, sessions, query, archived, flat }, collapsed),
-    [projects, sessions, query, archived, flat, collapsed],
+    () =>
+      entries(
+        { projects, sessions, query, status, order, group, flat },
+        collapsed,
+      ),
+    [projects, sessions, query, status, order, group, flat, collapsed],
   );
 }

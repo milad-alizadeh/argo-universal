@@ -1,3 +1,4 @@
+import AllInbox from '@expo/material-symbols/all_inbox.xml';
 import Archive from '@expo/material-symbols/archive.xml';
 import Edit from '@expo/material-symbols/edit.xml';
 import EditSquare from '@expo/material-symbols/edit_square.xml';
@@ -14,6 +15,7 @@ import { type IconName, iconSymbols } from '../../../symbols/icon-names';
 
 // Compose's Icon draws a bundled vector drawable, so each Material symbol a menu row shows is imported here; a symbol not listed draws no icon.
 const materialImages: Partial<Record<AndroidSymbol, ImageSourcePropType>> = {
+  all_inbox: AllInbox,
   archive: Archive,
   edit: Edit,
   edit_square: EditSquare,

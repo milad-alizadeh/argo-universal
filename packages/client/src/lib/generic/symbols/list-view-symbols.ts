@@ -3,6 +3,7 @@ import type { SymbolSource } from './symbol-source';
 // What a list shows and how it lays out or groups its rows.
 export const listViewSymbols = {
   'active-sessions': { sf: 'tray', material: 'inbox' },
+  'all-sessions': { sf: 'tray.2', material: 'all_inbox' },
   'archived-sessions': { sf: 'archivebox', material: 'archive' },
   'flat-view': { sf: 'list.bullet', material: 'view_list' },
   'layout-compact': { sf: 'list.bullet', material: 'view_list' },

@@ -3,8 +3,11 @@ import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
+  type SessionsGroup,
   type SessionsLayout,
   type SessionsLoadState,
+  type SessionsOrder,
+  type SessionsStatus,
   serverSilentMessage,
   newSessionBesideSearch,
   SessionsLoading,
@@ -28,7 +31,12 @@ export interface SessionListViewProps {
   query: string;
   // The phone's header search and a wide window's title row set it.
   onQueryChange: (query: string) => void;
-  archived: boolean;
+  // Which Sessions show: Active, Archived or All.
+  status: SessionsStatus;
+  // Last activity or Created, newest first; Last activity when unset.
+  order?: SessionsOrder;
+  // Under Project headings, or One list; By project when unset.
+  group?: SessionsGroup;
   // Regular rows, or Compact one-line rows; Regular when unset.
   layout?: SessionsLayout;
   selectedSessionId?: string;

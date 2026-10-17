@@ -7,9 +7,9 @@ import type { SizeClassValues } from '#lib/generic/use-size-class/size-class-val
 import { cn } from '#lib/generic/utils';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import type { SessionsListEntry } from '../sessions-list-entries';
+import { EmptySessionsList } from './empty-sessions-list';
 import { type ListRows, useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
-import { EmptySessionsList } from './sessions-list-rows';
 import { useScrolling } from './sessions-list-scrolling';
 
 /*
@@ -103,7 +103,11 @@ interface ListChrome {
 function listChrome(props: SessionsListProps): ListChrome {
   return {
     ListEmptyComponent: props.placeholder ?? (
-      <EmptySessionsList query={props.query} archived={props.archived} />
+      <EmptySessionsList
+        query={props.query}
+        status={props.status}
+        group={props.group}
+      />
     ),
     estimatedItemSize: estimatedItemSize[props.layout ?? 'regular'],
   };

@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { sessionColumns } from '../columns';
 import { CheckoutChoice } from './new';
 
-// Input of `session.list`, after ACP `ListSessionsRequest`, filtered by Project instead of `cwd`.
+// Input of `session.list`, after ACP `ListSessionsRequest`, filtered by Project instead of `cwd`; with no `archived`, active and archived Sessions both list.
 export const SessionListInput = z.strictObject({
   projectId: sessionColumns.shape.projectId.optional(),
-  archived: z.boolean(),
+  archived: z.boolean().optional(),
   query: z.string().optional(),
   cursor: z.string().optional(),
   direction: z.literal('forward').optional(),

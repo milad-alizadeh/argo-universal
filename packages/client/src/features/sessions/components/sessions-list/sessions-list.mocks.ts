@@ -10,7 +10,7 @@ export const sessionsListProps = {
   agents: agentsList,
   sessions: activeSessions.sessions,
   query: '',
-  archived: false,
+  status: 'active' as const,
 };
 
 const project = projectsList[0];

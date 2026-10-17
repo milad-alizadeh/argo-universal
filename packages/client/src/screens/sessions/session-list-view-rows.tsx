@@ -14,7 +14,9 @@ type ListData = Pick<
   | 'agents'
   | 'sessions'
   | 'query'
-  | 'archived'
+  | 'status'
+  | 'order'
+  | 'group'
   | 'layout'
   | 'flat'
   | 'selectedSessionId'
@@ -29,7 +31,9 @@ function listData(props: SessionListViewProps): ListData {
     agents: props.agents,
     sessions: props.sessions,
     query: props.query,
-    archived: props.archived,
+    status: props.status,
+    order: props.order,
+    group: props.group,
     layout: props.layout,
     flat: searchListsFlat && props.query !== '',
     selectedSessionId: props.selectedSessionId,

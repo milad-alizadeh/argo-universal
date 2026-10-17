@@ -11,8 +11,8 @@ export {
 
 export {
   type SessionsFilterMenuProps,
-  sessionsFilterChoices,
-  sessionsLayoutLabel,
+  resetSessionsViewLabel,
+  sessionsViewGroups,
 } from './components/sessions-filter-menu/sessions-filter-menu';
 
 export {
@@ -21,9 +21,14 @@ export {
 } from './stores/sessions-filter';
 
 export {
+  defaultSessionsView,
+  isDefaultSessionsView,
+  type SessionsGroup,
   type SessionsLayout,
-  sessionsLayoutChoices,
-} from './stores/sessions-layout';
+  type SessionsOrder,
+  type SessionsStatus,
+  type SessionsView,
+} from './stores/sessions-view';
 
 export { type StartingFeed } from './utils/starting-feed';
 

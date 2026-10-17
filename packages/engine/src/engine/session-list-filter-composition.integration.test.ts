@@ -7,7 +7,7 @@ import {
 import { startEngineTestHost } from '#mocks/engine';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 
-it('lists only top-level Sessions, searches literal titles, filters archives and pages tied activity', async (): Promise<void> => {
+it('lists only top-level Sessions, searches literal titles, filters archives, lists both with no filter and pages tied activity', async (): Promise<void> => {
   const { database, remove } = openTestDatabase({
     title: 'Earlier',
     activityAt: 1,
@@ -67,6 +67,11 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
       (row): string => row.sessionId,
     ),
   ).toEqual(['archived']);
+  expect(
+    (await caller.session.list({ query: 'title' })).sessions
+      .map((row): string => row.sessionId)
+      .slice(0, 2),
+  ).toEqual(['archived', 'page-50']);
   expect(
     (await caller.session.list({ archived: false, projectId: 'missing' }))
       .sessions,

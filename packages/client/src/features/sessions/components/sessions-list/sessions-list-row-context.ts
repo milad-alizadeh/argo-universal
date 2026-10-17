@@ -1,10 +1,11 @@
 import type { AgentServer } from '@repo/contracts';
 import { useMemo } from 'react';
 import { virtualListPosition } from '#primitives/lists/virtual-list-item';
-import type { SessionsLayout } from '../../stores/sessions-layout';
+import type { SessionsLayout } from '../../stores/sessions-view';
 import { showsSessionAge } from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { sessionAge, useAgeFrom } from './session-age';
+import { listsFlat } from './sessions-list-entries-state';
 import type { SessionsListProps } from './sessions-list-props';
 import type { SessionListRowProps } from './sessions-list-rows';
 
@@ -55,7 +56,7 @@ function useRowActions(props: SessionsListProps): RowActions {
 function useRowInputs(props: SessionsListProps): RowInputs {
   const { layout, selectedSessionId } = props;
   const agentLogos = useAgentLogos(props.agents);
-  const ageFrom = useAgeFrom(showsSessionAge(layout, props.flat));
+  const ageFrom = useAgeFrom(showsSessionAge(layout, listsFlat(props)));
   const actions = useRowActions(props);
 
   return useMemo(

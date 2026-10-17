@@ -42,7 +42,10 @@ const states: { label: string; props: Partial<SessionsListProps> }[] = [
   },
   { label: 'No Projects', props: { projects: [] } },
   { label: 'No matching Sessions', props: { query: 'xyz', sessions: [] } },
-  { label: 'No archived Sessions', props: { archived: true, sessions: [] } },
+  {
+    label: 'No archived Sessions',
+    props: { status: 'archived', sessions: [] },
+  },
 ];
 
 // Each frame bounds the virtualized list the way the Sessions screen does.

@@ -11,7 +11,7 @@ import { type ClientError, useTRPC } from '#features/connection';
 import { type QueryProgress } from '#features/sessions';
 import type { SessionListViewProps } from './session-list-view';
 
-type SessionsSearch = Pick<SessionListViewProps, 'archived' | 'query'>;
+type SessionsSearch = Pick<SessionListViewProps, 'status' | 'query'>;
 
 type SessionPages = Pick<
   SessionListViewProps,
@@ -26,15 +26,22 @@ type SessionListQuery = UseInfiniteQueryResult<
   ClientError
 >;
 
+// All asks for active and archived Sessions together, with no `archived` filter.
+const archivedFilter = {
+  active: false,
+  archived: true,
+  all: undefined,
+} as const satisfies Record<SessionsSearch['status'], boolean | undefined>;
+
 function useSessionListQuery({
-  archived,
+  status,
   query,
 }: SessionsSearch): SessionListQuery {
   const trpc = useTRPC();
 
   return useInfiniteQuery(
     trpc.session.list.infiniteQueryOptions(
-      { archived, query: query || undefined },
+      { archived: archivedFilter[status], query: query || undefined },
       {
         getNextPageParam: (page) => page.nextCursor ?? undefined,
         // Typing a search keeps the last results up instead of flashing the skeleton.

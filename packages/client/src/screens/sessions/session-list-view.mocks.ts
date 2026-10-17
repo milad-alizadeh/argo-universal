@@ -11,5 +11,5 @@ export const loadedSessionListView = {
   agents: agentsList,
   sessions: activeSessions.sessions,
   query: '',
-  archived: false,
+  status: 'active',
 } satisfies Partial<SessionListViewProps>;
