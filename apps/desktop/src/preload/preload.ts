@@ -19,7 +19,30 @@ const symbols: DesktopBridge['symbols'] =
       }
     : undefined;
 
-// The renderer gets the Server address, window controls and system symbols, nothing else (ADR 0002).
+// Main reports each minimize and restore; a reload asks for the current state once.
+let minimized = false;
+
+const minimizedListeners = new Set<(minimized: boolean) => void>();
+
+const setMinimized = (next: boolean): void => {
+  if (next === minimized) return;
+
+  minimized = next;
+
+  for (const listener of minimizedListeners) listener(next);
+};
+
+ipcRenderer.on('window:minimized', (_event, next: boolean): void =>
+  setMinimized(next),
+);
+
+ipcRenderer
+  .invoke('window:minimized')
+  .then((next: boolean): void => setMinimized(next))
+  // The Storybook window has no handler; it is never minimized to the App.
+  .catch((): void => undefined);
+
+// The renderer gets the Server address, window controls and state, and system symbols, nothing else (ADR 0002).
 const argo = {
   serverUrl,
   window: {
@@ -27,6 +50,14 @@ const argo = {
     minimize: (): void => ipcRenderer.send('window:minimize'),
     maximize: (): void => ipcRenderer.send('window:maximize'),
     close: (): void => ipcRenderer.send('window:close'),
+    isMinimized: (): boolean => minimized,
+    onMinimizedChange: (listener): (() => void) => {
+      minimizedListeners.add(listener);
+
+      return (): void => {
+        minimizedListeners.delete(listener);
+      };
+    },
   },
   symbols,
 } satisfies DesktopBridge;
