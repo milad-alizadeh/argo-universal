@@ -16,17 +16,28 @@ const trayPlanStyle: ScrolledPlanStyle = {
   label: 'Written plan document',
 };
 
-// A Permission request's plan shown full page: it fills what the Session column gives it.
+// A Permission request's plan sits right under its title, as close as one step to the next.
+const requestPlanStyle: ScrolledPlanStyle = {
+  ...trayPlanStyle,
+  content: 'px-4 pb-4',
+};
+
+// Full page, it fills what the Session column gives it.
 const fillPlanStyle: ScrolledPlanStyle = {
+  ...requestPlanStyle,
   frame: 'min-h-0 flex-1',
   scroll: 'flex-1',
-  content: 'px-4 pt-2 pb-4',
-  label: 'Written plan document',
 };
+
+const scrolledPlanStyles = {
+  tray: trayPlanStyle,
+  request: requestPlanStyle,
+  fill: fillPlanStyle,
+} as const;
 
 interface PlanDocumentProps {
   content: string;
-  layout: 'tray' | 'sheet' | 'fill';
+  layout: 'sheet' | keyof typeof scrolledPlanStyles;
 }
 
 export function PlanDocument({
@@ -38,9 +49,7 @@ export function PlanDocument({
   if (layout === 'sheet') return <View className="pt-2 pb-4">{markdown}</View>;
 
   return (
-    <ScrolledPlan style={layout === 'fill' ? fillPlanStyle : trayPlanStyle}>
-      {markdown}
-    </ScrolledPlan>
+    <ScrolledPlan style={scrolledPlanStyles[layout]}>{markdown}</ScrolledPlan>
   );
 }
 

@@ -109,7 +109,7 @@ function PlanBody(props: PlanBodyProps): ReactNode {
 }
 
 /*
- * Under the header, its text on the header icon's left edge; full page it scrolls in the column's height.
+ * Under the header, its text on the title's left edge; full page it scrolls in the column's height.
  * A phone reads the plan on the sheet's next page instead.
  */
 function PlanText(props: {
@@ -123,7 +123,7 @@ function PlanText(props: {
     <View className={`-mx-1 ${filling}`}>
       <PlanDocument
         content={props.content}
-        layout={props.full ? 'fill' : 'tray'}
+        layout={props.full ? 'fill' : 'request'}
       />
     </View>
   );
