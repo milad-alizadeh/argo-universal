@@ -1,8 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { releaseMarker } from '@repo/mocks/agent/request-log';
+import { MessageId, releaseMarker } from '@repo/mocks/agent/request-log';
 import { z } from 'zod';
-
-const MessageId = z.union([z.string(), z.number(), z.null()]);
 
 const LoggedRequest = z.object({
   method: z.string(),

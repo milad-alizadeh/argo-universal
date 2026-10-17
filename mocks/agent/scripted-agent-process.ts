@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 import { Writable } from 'node:stream';
 import { z } from 'zod';
-import { type LoggedMessage, releaseMarker } from './request-log.ts';
+import { type LoggedMessage, MessageId, releaseMarker } from './request-log.ts';
 import { isScenarioName, scenarios } from './scenarios.ts';
 import { createScriptedAgent } from './scripted-agent.ts';
 import {
@@ -41,16 +41,23 @@ const log = (message: LoggedMessage): void => {
 // One NDJSON frame on the Agent's stdio, as far as the request log needs it.
 const Frame = z.object({
   method: z.string().optional(),
-  id: z.union([z.string(), z.number(), z.null()]).optional(),
+  id: MessageId.optional(),
   params: z.unknown().optional(),
 });
 
 type Frame = z.infer<typeof Frame>;
 
-// App E2E reads every request and notification the Agent received, and each answer it sent, in order.
-const logFrames = (
-  record: (frame: Frame) => void,
-): ((chunk: Uint8Array) => void) => {
+// A malformed frame a scenario writes on purpose is not logged.
+const readFrame = (line: string): Frame | undefined => {
+  try {
+    return Frame.parse(JSON.parse(line));
+  } catch {
+    return undefined;
+  }
+};
+
+// Whole NDJSON lines from a byte stream, keeping a partial last line for the next chunk.
+const lineReader = (): ((chunk: Uint8Array) => string[]) => {
   const decoder = new TextDecoder();
   let pending = '';
 
@@ -61,8 +68,18 @@ const logFrames = (
 
     pending = lines.pop() ?? '';
 
-    for (const line of lines.filter(Boolean))
-      record(Frame.parse(JSON.parse(line)));
+    return lines.filter(Boolean);
+  };
+};
+
+// App E2E reads every request and notification the Agent received, and each answer it sent, in order.
+const logFrames = (
+  record: (frame: Frame) => void,
+): ((chunk: Uint8Array) => void) => {
+  const lines = lineReader();
+
+  return (chunk) => {
+    for (const frame of lines(chunk).map(readFrame)) if (frame) record(frame);
   };
 };
 

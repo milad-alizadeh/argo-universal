@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { sharedReply } from '@repo/mocks/agent/scenarios';
 import { expect } from '../fixtures';
 import {
   type LoggedMessage,
@@ -11,12 +12,11 @@ import {
   requestsIn,
 } from './agent-requests';
 import { expectListedAgent } from './agents';
+import { readFeed } from './feed';
 import { Given, When, Then } from './fixtures';
 import { expectMessage, messageLabel } from './new-session';
 
 const promptMethod = 'session/prompt';
-
-const fixtureReply = 'The shared fixture completed this Turn.';
 
 type PromptPair = { held: LoggedRequest; next: LoggedRequest };
 
@@ -39,10 +39,35 @@ When('I stop the Turn', async ({ page }): Promise<void> => {
   await stopButton(page).click();
 });
 
+const stopReasons = async (page: Page, httpUrl: string): Promise<unknown[]> =>
+  (await readFeed(page, httpUrl)).map(
+    (row) => row._meta.argo.turnEnd?.stopReason,
+  );
+
+const expectStoppedTurn = async (
+  page: Page,
+  httpUrl: string,
+): Promise<void> => {
+  await expect.poll(() => stopReasons(page, httpUrl)).toContain('cancelled');
+};
+
+// The Agent was told to cancel but has not answered the stopped prompt.
+const expectPromptStillHeld = async (requestLogPath: string): Promise<void> => {
+  await expect
+    .poll(() => requests(requestLogPath, 'session/cancel'))
+    .toHaveLength(1);
+
+  const messages = loggedMessages(requestLogPath);
+  const [stopped] = requestsIn(messages, promptMethod);
+
+  expect(stopped && answeredAt(messages, stopped)).toBe(-1);
+};
+
 // The Turn ended at once: the Composer is back while the Agent has not answered the stopped prompt.
 Then(
   'the Composer is ready while the Agent still holds the stopped prompt',
-  async ({ page, app }): Promise<void> => {
+  async ({ page, app, server }): Promise<void> => {
+    await expectStoppedTurn(page, server.httpUrl);
     await expect(stopButton(page)).toHaveCount(0);
     await expect(
       page.getByRole('button', { name: 'Send', exact: true }),
@@ -50,22 +75,7 @@ Then(
     await expect(
       page.getByRole('textbox', { name: messageLabel }),
     ).toBeEditable();
-    await expect
-      .poll(() => requests(app.requestLogPath, 'session/cancel'))
-      .toHaveLength(1);
-
-    const messages = loggedMessages(app.requestLogPath);
-    const [stopped] = requestsIn(messages, promptMethod);
-
-    expect(stopped && answeredAt(messages, stopped)).toBe(-1);
-  },
-);
-
-When(
-  'I send {string} while the Agent holds the stopped prompt',
-  async ({ page }, prompt: string): Promise<void> => {
-    await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
-    await page.getByRole('button', { name: 'Send', exact: true }).click();
+    await expectPromptStillHeld(app.requestLogPath);
   },
 );
 
@@ -89,7 +99,7 @@ Then(
   'the Agent receives the next prompt only after answering the held one',
   async ({ page, app }): Promise<void> => {
     await expect(
-      page.getByTestId('feed-scroll').getByText(fixtureReply, { exact: true }),
+      page.getByTestId('feed-scroll').getByText(sharedReply, { exact: true }),
     ).toBeVisible();
 
     await expectMessage(page, '');
@@ -123,7 +133,7 @@ Then(
   'the Agent switches to model {string} before the next prompt',
   async ({ page, app }, model: string): Promise<void> => {
     await expect(
-      page.getByTestId('feed-scroll').getByText(fixtureReply, { exact: true }),
+      page.getByTestId('feed-scroll').getByText(sharedReply, { exact: true }),
     ).toBeVisible();
 
     expectModelSwitch(loggedMessages(app.requestLogPath), model);

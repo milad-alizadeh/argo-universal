@@ -22,7 +22,7 @@ Feature: Turns
     When I send the prompt "First prompt"
     And I stop the Turn
     Then the Composer is ready while the Agent still holds the stopped prompt
-    When I send "Second prompt" while the Agent holds the stopped prompt
+    When I try to send the prompt "Second prompt"
     Then the Composer holds "Second prompt" until the Agent answers
     When the Agent answers its held prompt
     Then the Agent receives the next prompt only after answering the held one
