@@ -4,6 +4,12 @@ Feature: Session header menu
     When I rename the open Session to "Check the renamed list" from its header
     Then the Session page and its row are titled "Check the renamed list"
 
+  Scenario: Renaming a closed Session from the header shows its new title
+    Given a Session named "Check the live list"
+    And the Server closes the Session quietly
+    When I rename the open Session to "Check the renamed list" from its header
+    Then the Session page and its row are titled "Check the renamed list"
+
   Scenario: Archiving from the header leaves the Session
     Given a Session named "Check the live list"
     When I archive the open Session from its header

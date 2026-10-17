@@ -30,13 +30,23 @@ export interface RenameSession {
 // The Sessions a page can rename: a list's rows, or the one Session a page shows.
 export type RenamableSession = Pick<SessionInfo, 'sessionId' | 'title'>;
 
-// The Session being renamed, and `session.rename`: success closes the dialog and refreshes the list; failure keeps it open and says so.
-export function useRenameSession(sessions: RenamableSession[]): RenameSession {
+// What a successful rename asked for: the Session, and its new title.
+type Renamed = (renamed: SessionRenameInput) => void;
+
+/*
+ * The Session being renamed, and `session.rename`: success closes the dialog, refreshes the list and tells `onRenamed`;
+ * failure keeps it open and says so.
+ */
+export function useRenameSession(
+  sessions: RenamableSession[],
+  onRenamed?: Renamed,
+): RenameSession {
   const [sessionId, setSessionId] = useState<string>();
 
-  const rename = useRenameMutation((renamed) =>
-    setSessionId(closedAfter(renamed)),
-  );
+  const rename = useRenameMutation((renamed) => {
+    setSessionId(closedAfter(renamed.sessionId));
+    onRenamed?.(renamed);
+  });
 
   const onRename = useOpenRename(rename.reset, setSessionId);
 
@@ -83,16 +93,14 @@ function dialogProps(
 const renameError = (rename: RenameMutation): string | undefined =>
   rename.isError ? renameFailedMessage : undefined;
 
-function useRenameMutation(
-  onRenamed: (sessionId: string) => void,
-): RenameMutation {
+function useRenameMutation(onRenamed: Renamed): RenameMutation {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   return useMutation({
     ...trpc.session.rename.mutationOptions(),
     onSuccess: async (_renamed, input) => {
-      onRenamed(input.sessionId);
+      onRenamed(input);
       await queryClient.invalidateQueries(trpc.session.list.pathFilter());
     },
   });

@@ -12,6 +12,7 @@ import {
   useRenameSession,
 } from '../use-rename-session';
 import type { SessionDetailViewProps } from './session-detail-view';
+import { type PageRename, useRenamedTitle } from './use-renamed-title';
 
 type SessionMenuHandlers = Pick<SessionMenu, 'onRename' | 'onArchive'>;
 
@@ -29,13 +30,32 @@ const renamable = (
 ): RenamableSession[] =>
   props.state === 'open' ? [{ sessionId, title: props.header.title }] : [];
 
+interface SessionActions {
+  page: PageRename;
+  rename: RenameSession;
+  archive: ArchiveSession;
+}
+
+// The page under its renamed title, with Rename for it and Archive that leaves it.
+function useSessionActions(
+  sessionId: string,
+  props: SessionDetailViewProps,
+): SessionActions {
+  const page = useRenamedTitle(props);
+
+  return {
+    page,
+    rename: useRenameSession(renamable(sessionId, page.props), page.onRenamed),
+    archive: useArchiveSession(leaveForSessions),
+  };
+}
+
 // Rename and Archive from the header's menu, as the Session's row offers them. Archiving leaves the Session for the list.
 export function useSessionPageMenu(
   sessionId: string,
   props: SessionDetailViewProps,
 ): SessionPageMenu {
-  const rename = useRenameSession(renamable(sessionId, props));
-  const archive = useArchiveSession(leaveForSessions);
+  const { page, rename, archive } = useSessionActions(sessionId, props);
 
   const handlers = {
     onRename: (): void => rename.onRename(sessionId),
@@ -43,7 +63,7 @@ export function useSessionPageMenu(
   };
 
   return {
-    props: withMenuHandlers(props, handlers),
+    props: withMenuHandlers(page.props, handlers),
     dialogs: sessionDialogs(rename, archive),
   };
 }

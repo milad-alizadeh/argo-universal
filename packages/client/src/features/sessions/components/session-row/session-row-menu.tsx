@@ -36,14 +36,16 @@ const renameSession = (props: SessionRowProps): (() => void) | undefined =>
 const archiveSession = (props: SessionRowProps): (() => void) | undefined =>
   props.onArchive && ((): void => props.onArchive?.(props.session.sessionId));
 
-// Rename, then Archive, each in its own group: a phone's system menu parts the two.
+// Rename, then Archive, in one group: no separator between them, as in the header's menu.
 export function sessionMenuGroups(props: SessionRowProps): ContextMenuItem[][] {
   const { session } = props;
 
-  return sessionMenuItems({
+  const items = sessionMenuItems({
     archived: session.archivedAt !== null,
     status: session.status,
     onRename: renameSession(props),
     onArchive: archiveSession(props),
-  }).map((item) => [item]);
+  });
+
+  return items.length > 0 ? [items] : [];
 }
