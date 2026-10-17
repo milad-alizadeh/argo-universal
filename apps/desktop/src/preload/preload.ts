@@ -50,6 +50,8 @@ const argo = {
     minimize: (): void => ipcRenderer.send('window:minimize'),
     maximize: (): void => ipcRenderer.send('window:maximize'),
     close: (): void => ipcRenderer.send('window:close'),
+    setBackgroundColor: (color): void =>
+      ipcRenderer.send('window:background', color),
     isMinimized: (): boolean => minimized,
     onMinimizedChange: (listener): (() => void) => {
       minimizedListeners.add(listener);

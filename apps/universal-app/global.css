@@ -8,3 +8,12 @@
 @source "../../packages/client/src";
 
 @source "../../packages/client/mocks";
+
+/* The page sits on the App's one content surface, so nothing shows through
+   where a screen does not cover it, as on overscroll. */
+@layer base {
+  html,
+  body {
+    background-color: var(--color-content);
+  }
+}
