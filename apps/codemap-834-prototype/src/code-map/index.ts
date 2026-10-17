@@ -9,3 +9,5 @@ export { button, plate } from './map-styles';
 export type { CodeMapFile, Palette, RendererInfo, View } from './model';
 
 export { usePalette } from './palette';
+
+export { supports3d } from './webgl';
