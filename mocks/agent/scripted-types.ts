@@ -50,6 +50,8 @@ export type ScriptedStep =
       signal?: AbortSignal;
     }
   | { type: 'wait-for-cancel'; until?: Promise<void> }
+  // Ignores cancellation: waits until the Agent's process is released.
+  | { type: 'wait-for-release' }
   | {
       type: 'request-elicitation';
       request: Omit<
@@ -97,6 +99,7 @@ export type ScriptedTurn = {
   isCancelled: () => boolean;
   writeRaw: (frame: string) => Promise<void>;
   closed: Promise<void>;
+  released: Promise<void>;
   exit: (code: number, stderr: string) => Promise<void>;
   requestId?: JsonRpcId;
 };

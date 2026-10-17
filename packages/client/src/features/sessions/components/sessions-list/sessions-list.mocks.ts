@@ -4,13 +4,14 @@ import {
   projectsList,
   sessionRows,
 } from '@repo/mocks/app';
+import { defaultSessionsView } from '../../stores/sessions-view';
 
 export const sessionsListProps = {
   projects: projectsList,
   agents: agentsList,
   sessions: activeSessions.sessions,
   query: '',
-  archived: false,
+  view: defaultSessionsView,
 };
 
 const project = projectsList[0];

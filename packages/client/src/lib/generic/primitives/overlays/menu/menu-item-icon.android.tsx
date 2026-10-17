@@ -1,10 +1,7 @@
 import Archive from '@expo/material-symbols/archive.xml';
 import Edit from '@expo/material-symbols/edit.xml';
 import EditSquare from '@expo/material-symbols/edit_square.xml';
-import Inbox from '@expo/material-symbols/inbox.xml';
 import Settings from '@expo/material-symbols/settings.xml';
-import ViewAgenda from '@expo/material-symbols/view_agenda.xml';
-import ViewList from '@expo/material-symbols/view_list.xml';
 import { DropdownMenuItem, Icon } from '@expo/ui/jetpack-compose';
 import type { AndroidSymbol } from 'expo-symbols';
 import type * as React from 'react';
@@ -17,10 +14,7 @@ const materialImages: Partial<Record<AndroidSymbol, ImageSourcePropType>> = {
   archive: Archive,
   edit: Edit,
   edit_square: EditSquare,
-  inbox: Inbox,
   settings: Settings,
-  view_agenda: ViewAgenda,
-  view_list: ViewList,
 };
 
 function materialImage(icon?: IconName): ImageSourcePropType | undefined {

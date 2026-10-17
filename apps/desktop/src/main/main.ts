@@ -18,6 +18,7 @@ import { applicationMenu } from './application-menu';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
 import { handleSymbolImages } from './symbol-images';
+import { handleWindowBackground } from './window-background';
 import {
   handleWindowMinimized,
   reportWindowMinimized,
@@ -140,6 +141,8 @@ for (const action of ['minimize', 'maximize', 'close'] as const) {
 handleWindowShow(windowOrigin);
 
 handleWindowMinimized(windowOrigin);
+
+handleWindowBackground(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 

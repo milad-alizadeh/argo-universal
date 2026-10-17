@@ -36,6 +36,7 @@ describe('listEntries', () => {
         sessions: [older, newer, tiedEarlierId],
         collapsed: new Set(),
         hideEmptyProjects: false,
+        order: 'activity',
       }),
     ).toEqual([
       firstProjectEntryId,
@@ -47,12 +48,34 @@ describe('listEntries', () => {
     ]);
   });
 
+  it("lists each Project's Sessions newest created first when ordered by Created, ties by id", () => {
+    expect(
+      entryIds({
+        projects,
+        sessions: [
+          { ...older, createdAt: 3000 },
+          { ...newer, createdAt: 1000 },
+          { ...tiedEarlierId, createdAt: 1000 },
+        ],
+        collapsed: new Set(),
+        hideEmptyProjects: true,
+        order: 'created',
+      }),
+    ).toEqual([
+      firstProjectEntryId,
+      older.sessionId,
+      tiedEarlierId.sessionId,
+      newer.sessionId,
+    ]);
+  });
+
   it("marks the first and last of each Project's Sessions", () => {
     const places = listEntries({
       projects,
       sessions: [older, newer, { ...tiedEarlierId, projectId: 'project-2' }],
       collapsed: new Set(),
       hideEmptyProjects: false,
+      order: 'activity',
     }).flatMap((entry) =>
       entry.kind === 'session' ? [[entry.id, entry.first, entry.last]] : [],
     );
@@ -71,6 +94,7 @@ describe('listEntries', () => {
         sessions: [older],
         collapsed: new Set([firstProjectEntryId]),
         hideEmptyProjects: false,
+        order: 'activity',
       }),
     ).toEqual([firstProjectEntryId, secondProjectEntryId, 'empty:project-2']);
   });
@@ -82,6 +106,7 @@ describe('listEntries', () => {
         sessions: [older],
         collapsed: new Set(),
         hideEmptyProjects: true,
+        order: 'activity',
       }),
     ).toEqual([firstProjectEntryId, older.sessionId]);
   });
@@ -93,6 +118,7 @@ describe('listEntries', () => {
         sessions: [older, { ...newer, projectId: otherProject.id }],
         collapsed: new Set(),
         hideEmptyProjects: false,
+        order: 'activity',
       }),
     ).toEqual([secondProjectEntryId, newer.sessionId]);
   });
@@ -108,8 +134,23 @@ describe('flatEntries', () => {
           { ...newer, projectId: otherProject.id },
           tiedEarlierId,
         ],
+        order: 'activity',
       }).map((entry) => entry.id),
     ).toEqual([tiedEarlierId.sessionId, newer.sessionId, older.sessionId]);
+  });
+
+  it('lists Sessions across Projects newest created first when ordered by Created', () => {
+    expect(
+      flatEntries({
+        projects,
+        sessions: [
+          { ...older, createdAt: 3000 },
+          { ...newer, projectId: otherProject.id, createdAt: 2000 },
+          { ...tiedEarlierId, createdAt: 1000 },
+        ],
+        order: 'created',
+      }).map((entry) => entry.id),
+    ).toEqual([older.sessionId, newer.sessionId, tiedEarlierId.sessionId]);
   });
 
   it('leaves out Sessions of a Project it does not list', () => {
@@ -117,6 +158,7 @@ describe('flatEntries', () => {
       flatEntries({
         projects: [otherProject],
         sessions: [older, { ...newer, projectId: otherProject.id }],
+        order: 'activity',
       }).map((entry) => entry.id),
     ).toEqual([newer.sessionId]);
   });

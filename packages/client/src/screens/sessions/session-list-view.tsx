@@ -3,8 +3,8 @@ import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
-  type SessionsLayout,
   type SessionsLoadState,
+  type SessionsView,
   serverSilentMessage,
   newSessionBesideSearch,
   SessionsLoading,
@@ -28,9 +28,8 @@ export interface SessionListViewProps {
   query: string;
   // The phone's header search and a wide window's title row set it.
   onQueryChange: (query: string) => void;
-  archived: boolean;
-  // Regular rows, or Compact one-line rows; Regular when unset.
-  layout?: SessionsLayout;
+  // How the list orders, groups, filters and lays out its rows.
+  view: SessionsView;
   selectedSessionId?: string;
   onSelect: (sessionId: string) => void;
   // Desktop and the web: a row's double-click or context menu asks to rename its Session.
@@ -94,7 +93,7 @@ function SessionsContent(props: SessionListViewProps): React.JSX.Element {
 
   return (
     <>
-      {loading && <WideLoading layout={props.layout} />}
+      {loading && <WideLoading layout={props.view.layout} />}
       <View
         className={loading ? 'flex-1 wide:hidden' : 'flex-1'}
         style={fillStyle}
@@ -105,9 +104,7 @@ function SessionsContent(props: SessionListViewProps): React.JSX.Element {
   );
 }
 
-function WideLoading(
-  props: Pick<SessionListViewProps, 'layout'>,
-): React.JSX.Element {
+function WideLoading(props: Pick<SessionsView, 'layout'>): React.JSX.Element {
   return (
     <SizeClass only="wide">
       <SessionsLoading layout={props.layout} />

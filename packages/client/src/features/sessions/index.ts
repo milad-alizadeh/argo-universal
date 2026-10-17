@@ -10,20 +10,28 @@ export {
 } from './components/sessions-header';
 
 export {
-  type SessionsFilterMenuProps,
-  sessionsFilterChoices,
-  sessionsLayoutLabel,
-} from './components/sessions-filter-menu/sessions-filter-menu';
+  type SessionsViewGroup,
+  sessionsViewGroups,
+} from './utils/sessions-view-menu';
 
 export {
-  type SessionsFilter,
-  useSessionsFilter,
-} from './stores/sessions-filter';
+  type SessionsViewState,
+  useSessionsViewState,
+} from './stores/sessions-view-state';
 
 export {
+  chooseSessionsView,
+  defaultSessionsView,
+  isDefaultSessionsView,
   type SessionsLayout,
-  sessionsLayoutChoices,
-} from './stores/sessions-layout';
+  type SessionsView,
+  useSessionsViewKept,
+} from './stores/sessions-view';
+
+export {
+  olderServerView,
+  sessionsListInput,
+} from './utils/sessions-list-input';
 
 export { type StartingFeed } from './utils/starting-feed';
 

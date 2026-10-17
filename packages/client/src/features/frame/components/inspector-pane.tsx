@@ -93,7 +93,7 @@ function InspectorHeader(
  */
 export function InspectorPane(props: InspectorPaneProps): React.JSX.Element {
   const inSheet = use(InspectorInSheet);
-  const surface = inSheet ? 'bg-content' : 'bg-muted';
+  const surface = inSheet ? 'bg-content' : 'bg-tint';
 
   return (
     <View className={cn(inSheet ? 'h-140' : 'flex-1', surface)}>

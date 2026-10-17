@@ -30,14 +30,15 @@ export interface NativeMenuSection {
 
 // What a menu lists: its options with the chosen value, its groups, or its actions, and whether they are still loading.
 export type MenuRows<Value extends string = string> = (
-  | (MenuChoiceRows<Value> & { actions?: never })
+  | MenuChoiceRows<Value>
   | Pick<ActionMenuProps, 'actions'>
 ) &
   Pick<MenuProps<Value>, 'loading'>;
 
 const listsActions = <Value extends string>(
   rows: MenuRows<Value>,
-): rows is Pick<ActionMenuProps, 'actions'> => rows.actions !== undefined;
+): rows is Pick<ActionMenuProps, 'actions'> =>
+  'actions' in rows && rows.actions !== undefined;
 
 export function nativeMenuSections<Value extends string>(
   rows: MenuRows<Value>,
@@ -46,6 +47,12 @@ export function nativeMenuSections<Value extends string>(
 
   if (listsActions(rows)) return [{ items: rows.actions.map(actionItem) }];
 
+  return choiceSections(rows);
+}
+
+function choiceSections<Value extends string>(
+  rows: MenuChoiceRows<Value>,
+): NativeMenuSection[] {
   const groups = menuChoiceGroups(rows);
 
   // A row's id is its value; with several groups, the group's place keeps their values apart.

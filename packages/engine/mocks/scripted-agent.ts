@@ -71,7 +71,7 @@ export const createScriptedAgentWire = (
 ): ScriptedAgentWire => {
   const toAgent = new TransformStream<Uint8Array, Uint8Array>();
   const fromAgent = new TransformStream<Uint8Array, Uint8Array>();
-  const agent = createScriptedAgent(scenario, nextSessionId, exit);
+  const agent = createScriptedAgent(scenario, nextSessionId, exit && { exit });
   const [input, observed] = toAgent.readable.tee();
   const connection = agent.connect(fromAgent.writable, input);
 
