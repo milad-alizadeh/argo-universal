@@ -16,21 +16,37 @@ import {
 } from './scripted-scenario.ts';
 import { ScriptedSessions } from './scripted-sessions.ts';
 
+// How the Agent's process exits, and when App E2E releases its held steps.
+type ScriptedLifecycle = Pick<ScriptedWire, 'exit' | 'released'>;
+
 type ConnectedScript = { connection: AgentConnection; wire: ScriptedWire };
+
+const exitProcess: ScriptedWire['exit'] = (code, stderr) =>
+  new Promise(() => {
+    process.stderr.write(stderr, () => process.exit(code));
+  });
+
+// Only a process launched by App E2E is ever released.
+const scriptedLifecycle = (
+  lifecycle: Partial<ScriptedLifecycle>,
+): ScriptedLifecycle => ({
+  exit: lifecycle.exit ?? exitProcess,
+  released: lifecycle.released ?? new Promise(() => {}),
+});
 
 class ScriptedAgent {
   private readonly scenario: ScriptedScenario;
   private readonly nextSessionId: () => string;
-  private readonly exit: ScriptedWire['exit'];
+  private readonly lifecycle: ScriptedLifecycle;
   private connected: ConnectedScript | undefined;
   private opened = 0;
   public constructor(
     scenario: ScriptedScenario,
     nextSessionId: () => string,
-    exit: ScriptedWire['exit'],
+    lifecycle: Partial<ScriptedLifecycle>,
   ) {
     this.scenario = scenario;
-    this.exit = exit;
+    this.lifecycle = scriptedLifecycle(lifecycle);
     this.nextSessionId = nextSessionId;
   }
   private nextId(): string {
@@ -71,7 +87,7 @@ class ScriptedAgent {
     writeRaw: ScriptedWire['writeRaw'],
     closed: Promise<void>,
   ): ScriptedWire {
-    return { writeRaw, closed, exit: this.exit };
+    return { writeRaw, closed, ...this.lifecycle };
   }
   private requireConnection(): ConnectedScript {
     if (!this.connected) throw new Error('Scripted Agent is not connected');
@@ -99,12 +115,9 @@ class ScriptedAgent {
 export const createScriptedAgent = (
   scenario: ScriptedScenario,
   nextSessionId = (): string => `${process.pid}:${crypto.randomUUID()}`,
-  exit: ScriptedWire['exit'] = (code, stderr) =>
-    new Promise(() => {
-      process.stderr.write(stderr, () => process.exit(code));
-    }),
+  lifecycle: Partial<ScriptedLifecycle> = {},
 ): Pick<ScriptedAgent, 'connect' | 'play' | 'sendRaw'> => {
-  const scripted = new ScriptedAgent(scenario, nextSessionId, exit);
+  const scripted = new ScriptedAgent(scenario, nextSessionId, lifecycle);
 
   return {
     connect: (output, input) => scripted.connect(output, input),
