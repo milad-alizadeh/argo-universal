@@ -11,7 +11,7 @@ import type { SessionListRowProps } from './sessions-list-rows';
 
 export interface SessionRowContext {
   agentLogos: Map<string, string>;
-  layout?: SessionsLayout;
+  layout: SessionsLayout;
   selectedSessionId?: string;
   // When rows show how long ago they were active, the time that counts from.
   ageFrom?: number;
@@ -54,7 +54,8 @@ function useRowActions(props: SessionsListProps): RowActions {
 }
 
 function useRowInputs(props: SessionsListProps): RowInputs {
-  const { layout, selectedSessionId } = props;
+  const { selectedSessionId } = props;
+  const { layout } = props.view;
   const agentLogos = useAgentLogos(props.agents);
   const ageFrom = useAgeFrom(showsSessionAge(layout, listsFlat(props)));
   const actions = useRowActions(props);

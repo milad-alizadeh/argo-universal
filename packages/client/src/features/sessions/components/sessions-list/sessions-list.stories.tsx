@@ -44,7 +44,10 @@ const states: { label: string; props: Partial<SessionsListProps> }[] = [
   { label: 'No matching Sessions', props: { query: 'xyz', sessions: [] } },
   {
     label: 'No archived Sessions',
-    props: { status: 'archived', sessions: [] },
+    props: {
+      view: { ...sessionsListProps.view, status: 'archived' },
+      sessions: [],
+    },
   },
 ];
 

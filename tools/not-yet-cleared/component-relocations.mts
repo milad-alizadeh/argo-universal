@@ -66,10 +66,10 @@ const componentFolders: [string, string[]][] = [
       'pull-request-indicator',
       'session-row',
       'session-view',
-      'sessions-filter-menu',
       'sessions-list',
       'sessions-loading',
       'sessions-view',
+      'sessions-view-menu',
     ],
   ],
   [

@@ -8,6 +8,7 @@ import { cn } from '#lib/generic/utils';
 import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
+import { searchesAsOneList } from './sessions-list-entries-state';
 import { type ListRows, useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
 import { useScrolling } from './sessions-list-scrolling';
@@ -30,11 +31,11 @@ const phoneContentStyle = {
   paddingTop: 20,
 };
 
-// Flat search results start right under the open search, as Material's search results do.
+// Android's search results start right under the open search, as Material's search results do.
 const searchResultsContentStyle = { ...phoneContentStyle, paddingTop: 0 };
 
-const contentStyles = (flat: boolean): SizeClassValues<ViewStyle> => ({
-  compact: flat ? searchResultsContentStyle : phoneContentStyle,
+const contentStyles = (searchResults: boolean): SizeClassValues<ViewStyle> => ({
+  compact: searchResults ? searchResultsContentStyle : phoneContentStyle,
   wide: contentStyle,
 });
 
@@ -103,13 +104,9 @@ interface ListChrome {
 function listChrome(props: SessionsListProps): ListChrome {
   return {
     ListEmptyComponent: props.placeholder ?? (
-      <EmptySessionsList
-        query={props.query}
-        status={props.status}
-        group={props.group}
-      />
+      <EmptySessionsList query={props.query} view={props.view} />
     ),
-    estimatedItemSize: estimatedItemSize[props.layout ?? 'regular'],
+    estimatedItemSize: estimatedItemSize[props.view.layout],
   };
 }
 
@@ -119,7 +116,7 @@ interface SessionsLegendListProps extends SessionsListProps {
 }
 
 function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
-  const contentContainerStyle = contentStyles(props.flat ?? false);
+  const contentContainerStyle = contentStyles(searchesAsOneList(props));
 
   return (
     <ScrollFadeList

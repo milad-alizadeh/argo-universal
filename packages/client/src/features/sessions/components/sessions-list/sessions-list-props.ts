@@ -4,28 +4,15 @@ import type {
   SessionInfo,
 } from '@repo/contracts';
 import type { ReactElement } from 'react';
-import type {
-  SessionsGroup,
-  SessionsLayout,
-  SessionsOrder,
-  SessionsStatus,
-} from '../../stores/sessions-view';
+import type { SessionsView } from '../../stores/sessions-view';
 
 export interface SessionsListProps {
   projects: ProjectsListOutput;
   agents: AgentServer[];
   sessions: SessionInfo[];
   query: string;
-  // Search results as one list with no Project headings, each row showing how long ago it was active.
-  flat?: boolean;
-  // Which Sessions the list holds: Active, Archived or All.
-  status: SessionsStatus;
-  // Last activity or Created, newest first; Last activity when unset.
-  order?: SessionsOrder;
-  // Under Project headings, or One list as flat search results show; By project when unset.
-  group?: SessionsGroup;
-  // Regular rows, or Compact one-line rows; Regular when unset.
-  layout?: SessionsLayout;
+  // How the list orders, groups, filters and lays out its rows.
+  view: SessionsView;
   selectedSessionId?: string;
   onSelect: (id: string) => void;
   // Desktop and the web: renaming from a row's double-click or context menu.

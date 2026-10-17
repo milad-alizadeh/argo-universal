@@ -10,25 +10,23 @@ export {
 } from './components/sessions-header';
 
 export {
-  type SessionsFilterMenuProps,
-  resetSessionsViewLabel,
+  resetSessionsView,
+  type SessionsViewGroup,
   sessionsViewGroups,
-} from './components/sessions-filter-menu/sessions-filter-menu';
+} from './utils/sessions-view-menu';
 
 export {
-  type SessionsFilter,
-  useSessionsFilter,
-} from './stores/sessions-filter';
+  type SessionsViewState,
+  useSessionsViewState,
+} from './stores/sessions-view-state';
 
 export {
   defaultSessionsView,
-  isDefaultSessionsView,
-  type SessionsGroup,
   type SessionsLayout,
-  type SessionsOrder,
-  type SessionsStatus,
   type SessionsView,
 } from './stores/sessions-view';
+
+export { sessionsListInput } from './utils/sessions-list-input';
 
 export { type StartingFeed } from './utils/starting-feed';
 

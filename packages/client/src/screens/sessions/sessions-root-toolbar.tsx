@@ -1,6 +1,6 @@
-import type { SessionsFilter } from '#features/sessions';
+import type { SessionsViewState } from '#features/sessions';
 
-export interface SessionsRootToolbarProps extends SessionsFilter {
+export interface SessionsRootToolbarProps extends SessionsViewState {
   onNewSession: () => void;
 }
 

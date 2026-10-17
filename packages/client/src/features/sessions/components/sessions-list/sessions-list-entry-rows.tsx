@@ -85,7 +85,7 @@ export interface ListRows {
     collapsed: ReadonlySet<string>;
     closing: ReadonlySet<string>;
     selectedSessionId?: string;
-    layout?: SessionsLayout;
+    layout: SessionsLayout;
   };
   renderItem: (
     props: LegendListRenderItemProps<SessionsListEntry>,
@@ -93,9 +93,11 @@ export interface ListRows {
 }
 
 function useExtraData(
-  { agents, selectedSessionId, layout }: SessionsListProps,
+  { agents, selectedSessionId, view }: SessionsListProps,
   { collapsed, closing }: CollapsedProjects,
 ): ListRows['extraData'] {
+  const { layout } = view;
+
   return useMemo(
     () => ({ agents, collapsed, closing, selectedSessionId, layout }),
     [agents, collapsed, closing, selectedSessionId, layout],

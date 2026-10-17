@@ -93,7 +93,7 @@ describe('a system menu', () => {
       groups: [
         { value: 'once', options: scopes, onValueChange: vi.fn<() => void>() },
       ],
-      actions: [
+      trailingActions: [
         { label: 'Reset to default', onPress: reset },
         { label: 'Clear', onPress: vi.fn<() => void>(), disabled: true },
       ],

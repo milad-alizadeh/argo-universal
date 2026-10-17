@@ -89,9 +89,9 @@ function useSessionsNavigation(): Pick<
   };
 }
 
-type ShownSessions = Omit<LiveSessionListProps, 'view'> & SessionsView;
-
-function useSessionsViewProps(props: ShownSessions): SessionListViewProps {
+function useSessionsViewProps(
+  props: LiveSessionListProps,
+): SessionListViewProps {
   const { progress: lookupProgress, ...lookups } = useSessionListLookups();
   const { progress: pageProgress, ...pages } = useSessionPages(props);
 
@@ -109,13 +109,12 @@ function useSessionsViewProps(props: ShownSessions): SessionListViewProps {
 export function LiveSessionList(
   props: LiveSessionListProps,
 ): React.JSX.Element {
-  const { view: shown, ...list } = props;
-  const view = useSessionsViewProps({ ...list, ...shown });
-  const rename = useRenameSession(view.sessions);
+  const listView = useSessionsViewProps(props);
+  const rename = useRenameSession(listView.sessions);
 
   return (
     <>
-      <SessionListView {...view} onRename={rename.onRename} />
+      <SessionListView {...listView} onRename={rename.onRename} />
       <RenameSessionDialog {...rename.dialog} />
     </>
   );

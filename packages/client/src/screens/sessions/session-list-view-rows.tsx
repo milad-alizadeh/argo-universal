@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import {
   type SessionsLayout,
   SessionsList,
@@ -10,20 +10,8 @@ import type { SessionListViewProps } from './session-list-view';
 
 type ListData = Pick<
   SessionsListProps,
-  | 'projects'
-  | 'agents'
-  | 'sessions'
-  | 'query'
-  | 'status'
-  | 'order'
-  | 'group'
-  | 'layout'
-  | 'flat'
-  | 'selectedSessionId'
+  'projects' | 'agents' | 'sessions' | 'query' | 'view' | 'selectedSessionId'
 >;
-
-// Android's full-screen search lists its results flat, as Paper's search does; elsewhere they stay under their Projects.
-const searchListsFlat = Platform.OS === 'android';
 
 function listData(props: SessionListViewProps): ListData {
   return {
@@ -31,11 +19,7 @@ function listData(props: SessionListViewProps): ListData {
     agents: props.agents,
     sessions: props.sessions,
     query: props.query,
-    status: props.status,
-    order: props.order,
-    group: props.group,
-    layout: props.layout,
-    flat: searchListsFlat && props.query !== '',
+    view: props.view,
     selectedSessionId: props.selectedSessionId,
   };
 }
@@ -60,7 +44,7 @@ function listActions(props: SessionListViewProps): ListActions {
 }
 
 // The list insets it below a transparent header, as it does the rows.
-function insetLoading(layout?: SessionsLayout): React.JSX.Element {
+function insetLoading(layout: SessionsLayout): React.JSX.Element {
   return (
     <View className="-mx-4 wide:mx-0">
       <SessionsLoading layout={layout} />
@@ -79,7 +63,7 @@ export function SessionsListContent(
     <SessionsList
       {...listData(props)}
       {...listActions(props)}
-      placeholder={props.loading ? insetLoading(props.layout) : undefined}
+      placeholder={props.loading ? insetLoading(props.view.layout) : undefined}
     />
   );
 }

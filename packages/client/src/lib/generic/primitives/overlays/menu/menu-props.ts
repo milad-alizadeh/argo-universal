@@ -68,6 +68,7 @@ export interface ChoiceMenuProps<Value extends string> extends MenuBaseProps {
   onValueChange: (value: Value) => void;
   actions?: never;
   groups?: never;
+  trailingActions?: never;
 }
 
 // One group of a grouped choice menu: its own single choice, under an optional heading.
@@ -83,7 +84,8 @@ export interface MenuChoiceGroup {
 export interface GroupedChoiceMenuProps extends MenuBaseProps {
   groups: readonly MenuChoiceGroup[];
   // Run after the groups and set apart from them, such as Reset to default; choosing one closes the menu.
-  actions?: readonly MenuAction[];
+  trailingActions?: readonly MenuAction[];
+  actions?: never;
   value?: never;
   options?: never;
   onValueChange?: never;
@@ -96,6 +98,7 @@ export interface ActionMenuProps extends MenuBaseProps {
   options?: never;
   onValueChange?: never;
   groups?: never;
+  trailingActions?: never;
 }
 
 export type MenuProps<Value extends string = string> =
@@ -103,11 +106,11 @@ export type MenuProps<Value extends string = string> =
   | GroupedChoiceMenuProps
   | ActionMenuProps;
 
-// A grouped choice menu's actions trail its groups; only a menu with no groups is an action menu.
+// Only an action menu takes `actions`; a grouped choice menu's run after its groups as `trailingActions`.
 export function isActionMenu<Value extends string>(
   props: MenuProps<Value>,
 ): props is ActionMenuProps {
-  return props.groups === undefined && props.actions !== undefined;
+  return props.actions !== undefined;
 }
 
 // What a choice menu's rows come from: its options with the chosen value, or its groups and the actions after them.
@@ -116,11 +119,11 @@ export type MenuChoiceRows<Value extends string = string> =
       ChoiceMenuProps<Value>,
       'value' | 'options' | 'onValueChange' | 'groups'
     >
-  | Pick<GroupedChoiceMenuProps, 'groups' | 'actions'>;
+  | Pick<GroupedChoiceMenuProps, 'groups' | 'trailingActions'>;
 
 function isGroupedMenu<Value extends string>(
   props: MenuChoiceRows<Value>,
-): props is Pick<GroupedChoiceMenuProps, 'groups' | 'actions'> {
+): props is Pick<GroupedChoiceMenuProps, 'groups' | 'trailingActions'> {
   return props.groups !== undefined;
 }
 
@@ -128,7 +131,7 @@ function isGroupedMenu<Value extends string>(
 export function trailingMenuActions<Value extends string>(
   props: MenuChoiceRows<Value>,
 ): readonly MenuAction[] {
-  return isGroupedMenu(props) ? (props.actions ?? []) : [];
+  return isGroupedMenu(props) ? (props.trailingActions ?? []) : [];
 }
 
 // A choice menu's groups: a plain choice menu is one group with no heading.

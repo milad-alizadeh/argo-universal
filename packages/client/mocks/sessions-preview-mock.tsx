@@ -1,11 +1,8 @@
 import { type ComponentProps, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { SessionsHeader } from '../src/features/sessions/components/sessions-header';
-import {
-  defaultSessionsView,
-  type SessionsStatus,
-  type SessionsView,
-} from '../src/features/sessions/stores/sessions-view';
+import type { SessionsStatus } from '../src/features/sessions/stores/sessions-view';
+import { showsUnderStatus } from '../src/features/sessions/utils/sessions-list-input';
 import {
   SessionListView,
   type SessionListViewProps,
@@ -19,7 +16,7 @@ export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
       <PreviewHeader {...props} />
       <SessionListView
         {...args}
-        {...props.view}
+        view={props.view}
         query={props.query}
         sessions={props.sessions}
       />
@@ -33,26 +30,10 @@ type PreviewProps = SessionListViewProps &
 function usePreviewView(
   args: SessionListViewProps,
 ): Pick<PreviewProps, 'view' | 'onViewChange'> {
-  const [view, setView] = useState<SessionsView>(() => ({
-    ...defaultSessionsView,
-    ...definedFields(args),
-  }));
+  const [view, setView] = useState(args.view);
 
   return { view, onViewChange: setView };
 }
-
-// The view fields the story sets; the others keep their defaults.
-const definedFields = ({
-  order,
-  group,
-  status,
-  layout,
-}: SessionListViewProps): Partial<SessionsView> =>
-  Object.fromEntries(
-    Object.entries({ order, group, status, layout }).filter(
-      ([, value]) => value !== undefined,
-    ),
-  );
 
 function usePreviewSessions(args: SessionListViewProps): PreviewProps {
   const [query, setQuery] = useState(args.query);
@@ -78,12 +59,6 @@ function PreviewHeader(
   );
 }
 
-const showsStatus = (
-  status: SessionsStatus,
-  session: SessionListViewProps['sessions'][number],
-): boolean =>
-  status === 'all' || (session.archivedAt !== null) === (status === 'archived');
-
 function matchingSessions(
   sessions: SessionListViewProps['sessions'],
   query: string,
@@ -91,7 +66,7 @@ function matchingSessions(
 ): SessionListViewProps['sessions'] {
   return sessions.filter(
     (session) =>
-      showsStatus(status, session) &&
+      showsUnderStatus(status, session.archivedAt) &&
       session.title.toLowerCase().includes(query.toLowerCase()),
   );
 }

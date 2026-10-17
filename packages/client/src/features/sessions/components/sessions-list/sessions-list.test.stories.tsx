@@ -75,8 +75,9 @@ export const ProjectActions: Story = {
 
 export const PhoneProjectMenu = phoneProjectMenu;
 
+// One list's search results: no Project headings, each row showing how long ago it was active, as Android's search always lists them.
 export const FlatSearchResults: Story = {
-  args: { query: 'a', flat: true },
+  args: { query: 'a', view: { ...sessionsListProps.view, group: 'none' } },
   play: async ({ canvas }) => {
     const [firstSession] = sessionsListProps.sessions;
 

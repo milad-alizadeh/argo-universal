@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { eachLayout } from '../../../../lib/generic/each-layout';
 import type { SessionsView } from '../../stores/sessions-view';
-import { SessionsFilterMenu } from './sessions-filter-menu';
+import { SessionsViewMenu } from './sessions-view-menu';
 
 const onViewChange = fn();
 
@@ -22,13 +22,13 @@ const changed: SessionsView = {
 };
 
 const meta = {
-  title: 'Tests/SessionsFilterMenu',
-  component: SessionsFilterMenu,
+  title: 'Tests/SessionsViewMenu',
+  component: SessionsViewMenu,
   args: { view: defaults, onViewChange },
   beforeEach: (): void => {
     onViewChange.mockClear();
   },
-} satisfies Meta<typeof SessionsFilterMenu>;
+} satisfies Meta<typeof SessionsViewMenu>;
 
 export default meta;
 
@@ -98,9 +98,14 @@ export const ShowsViewOptions: Story = {
     }),
 };
 
-// Choosing an option changes its own field and leaves the others as they are.
-function chooses(option: string, change: Partial<SessionsView>): Story {
+// Choosing an option, from the default or another view, changes its own field and leaves the others as they are.
+function chooses(
+  option: string,
+  change: Partial<SessionsView>,
+  from: SessionsView = defaults,
+): Story {
   return {
+    args: { view: from },
     play: async ({ canvas, userEvent }) =>
       eachLayout(async () => {
         onViewChange.mockClear();
@@ -110,7 +115,7 @@ function chooses(option: string, change: Partial<SessionsView>): Story {
         );
         await expect(onViewChange).toHaveBeenCalledTimes(1);
         await expect(onViewChange).toHaveBeenCalledWith({
-          ...defaults,
+          ...from,
           ...change,
         });
       }),
@@ -124,6 +129,12 @@ export const ChoosesOneList = chooses('One list', { group: 'none' });
 export const ChoosesArchived = chooses('Archived', { status: 'archived' });
 
 export const ChoosesAll = chooses('All', { status: 'all' });
+
+export const ChoosesActiveFromArchived = chooses(
+  'Active',
+  { status: 'active' },
+  { ...defaults, status: 'archived' },
+);
 
 export const ChoosesCompact = chooses('Compact', { layout: 'compact' });
 

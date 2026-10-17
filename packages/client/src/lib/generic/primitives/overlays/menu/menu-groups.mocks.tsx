@@ -66,7 +66,7 @@ export function ViewOptionsMenu(): React.JSX.Element {
       accessibilityLabel="View options"
       trigger={<MenuTrigger label="View" icon="filters" />}
       groups={viewOptionGroups(view, setView)}
-      actions={[resetAction(view, setView)]}
+      trailingActions={[resetAction(view, setView)]}
     />
   );
 }

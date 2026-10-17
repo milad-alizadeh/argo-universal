@@ -8,10 +8,10 @@ import {
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { useCallback, useMemo } from 'react';
 import { type ClientError, useTRPC } from '#features/connection';
-import { type QueryProgress } from '#features/sessions';
+import { type QueryProgress, sessionsListInput } from '#features/sessions';
 import type { SessionListViewProps } from './session-list-view';
 
-type SessionsSearch = Pick<SessionListViewProps, 'status' | 'query'>;
+type SessionsSearch = Pick<SessionListViewProps, 'view' | 'query'>;
 
 type SessionPages = Pick<
   SessionListViewProps,
@@ -26,28 +26,19 @@ type SessionListQuery = UseInfiniteQueryResult<
   ClientError
 >;
 
-// All asks for active and archived Sessions together, with no `archived` filter.
-const archivedFilter = {
-  active: false,
-  archived: true,
-  all: undefined,
-} as const satisfies Record<SessionsSearch['status'], boolean | undefined>;
-
+// The Server pages in the view's order, so the pages loaded so far are the newest in it.
 function useSessionListQuery({
-  status,
+  view,
   query,
 }: SessionsSearch): SessionListQuery {
   const trpc = useTRPC();
 
   return useInfiniteQuery(
-    trpc.session.list.infiniteQueryOptions(
-      { archived: archivedFilter[status], query: query || undefined },
-      {
-        getNextPageParam: (page) => page.nextCursor ?? undefined,
-        // Typing a search keeps the last results up instead of flashing the skeleton.
-        placeholderData: keepPreviousData,
-      },
-    ),
+    trpc.session.list.infiniteQueryOptions(sessionsListInput(view, query), {
+      getNextPageParam: (page) => page.nextCursor ?? undefined,
+      // Typing a search keeps the last results up instead of flashing the skeleton.
+      placeholderData: keepPreviousData,
+    }),
   );
 }
 

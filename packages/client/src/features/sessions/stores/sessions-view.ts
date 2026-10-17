@@ -21,10 +21,21 @@ export const sessionsGroupChoices = [
   { value: 'none', label: 'One list' },
 ] as const;
 
+// Each status with the `archived` filter `session.list` takes for it; All asks with none, for active and archived Sessions together.
 export const sessionsStatusChoices = [
-  { value: 'active', label: 'Active', icon: 'active-sessions' },
-  { value: 'archived', label: 'Archived', icon: 'archived-sessions' },
-  { value: 'all', label: 'All', icon: 'all-sessions' },
+  {
+    value: 'active',
+    label: 'Active',
+    icon: 'active-sessions',
+    archived: false,
+  },
+  {
+    value: 'archived',
+    label: 'Archived',
+    icon: 'archived-sessions',
+    archived: true,
+  },
+  { value: 'all', label: 'All', icon: 'all-sessions', archived: undefined },
 ] as const;
 
 export const sessionsLayoutChoices = [
@@ -37,7 +48,7 @@ type ChoiceValue<Choices extends readonly { value: string }[]> =
 
 export type SessionsOrder = ChoiceValue<typeof sessionsOrderChoices>;
 
-export type SessionsGroup = ChoiceValue<typeof sessionsGroupChoices>;
+type SessionsGroup = ChoiceValue<typeof sessionsGroupChoices>;
 
 export type SessionsStatus = ChoiceValue<typeof sessionsStatusChoices>;
 

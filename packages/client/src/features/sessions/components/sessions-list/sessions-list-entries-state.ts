@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Platform } from 'react-native';
 import {
   flatEntries,
   listEntries,
@@ -8,29 +9,35 @@ import type { SessionsListProps } from './sessions-list-props';
 
 type EntriesInput = Pick<
   SessionsListProps,
-  'projects' | 'sessions' | 'query' | 'status' | 'order' | 'group' | 'flat'
+  'projects' | 'sessions' | 'query' | 'view'
 >;
 
-// Search results and One list have no Project headings.
-export const listsFlat = ({
-  flat,
-  group,
-}: Pick<SessionsListProps, 'flat' | 'group'>): boolean =>
-  flat === true || group === 'none';
+// Android's full-screen search lists its results as One list, as Paper's search does; elsewhere they stay under their Projects.
+const searchListsFlat = Platform.OS === 'android';
+
+export const searchesAsOneList = ({
+  query,
+}: Pick<SessionsListProps, 'query'>): boolean =>
+  searchListsFlat && query !== '';
+
+// One list, and Android's search results, have no Project headings.
+export const listsFlat = (
+  props: Pick<SessionsListProps, 'query' | 'view'>,
+): boolean => props.view.group === 'none' || searchesAsOneList(props);
 
 // A Project with no Sessions keeps its empty row only where new Sessions start: an unsearched Active or All list.
 const hidesEmptyProjects = ({
   query,
-  status,
-}: Pick<EntriesInput, 'query' | 'status'>): boolean =>
-  !!query || status === 'archived';
+  view,
+}: Pick<EntriesInput, 'query' | 'view'>): boolean =>
+  !!query || view.status === 'archived';
 
 function entries(
   input: EntriesInput,
   collapsed: ReadonlySet<string>,
 ): SessionsListEntry[] {
   const { projects, sessions } = input;
-  const order = input.order ?? 'activity';
+  const { order } = input.view;
 
   if (listsFlat(input)) return flatEntries({ projects, sessions, order });
 
@@ -47,14 +54,10 @@ export function useListEntries(
   props: SessionsListProps,
   collapsed: ReadonlySet<string>,
 ): SessionsListEntry[] {
-  const { projects, sessions, query, status, order, group, flat } = props;
+  const { projects, sessions, query, view } = props;
 
   return useMemo(
-    () =>
-      entries(
-        { projects, sessions, query, status, order, group, flat },
-        collapsed,
-      ),
-    [projects, sessions, query, status, order, group, flat, collapsed],
+    () => entries({ projects, sessions, query, view }, collapsed),
+    [projects, sessions, query, view, collapsed],
   );
 }
