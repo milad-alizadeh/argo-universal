@@ -59,15 +59,6 @@ export const galleryVariations: { label: string; preview: ReactNode }[] = [
   },
   { label: 'Denied', preview: <PermissionOutcome outcome={deniedOutcome} /> },
   {
-    label: 'Denied with a message',
-    preview: (
-      <PermissionOutcome
-        outcome={deniedOutcome}
-        message="Don't force-push, open a new branch instead."
-      />
-    ),
-  },
-  {
     label: 'Chose another allow option',
     preview: (
       <PermissionOutcome

@@ -11,6 +11,7 @@ import {
   unfinishedFeedWorkSteps,
 } from './feed-work-scenario.ts';
 import { notificationScenarios } from './notification-scenarios.ts';
+import { planModeScenarios } from './plan-mode-scenario.ts';
 import { agentExit, exitScenarios } from './process-exit-scenarios.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 import { shellScenarios } from './shell-scenarios.ts';
@@ -126,6 +127,7 @@ export const scenarios = {
     },
     reply,
   ]),
+  ...planModeScenarios(reply),
   ...contextUsageScenarios(reply),
   ...titleScenarios(reply),
   'held-mode': scenario(heldModeSteps),

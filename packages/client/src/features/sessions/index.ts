@@ -88,6 +88,8 @@ export { toSendError } from './utils/send-error';
 
 export { useSessionElicitation } from './hooks/use-session-elicitation';
 
+export { useSessionPermission } from './hooks/use-session-permission';
+
 export {
   type SessionHeaderProps,
   type SessionHeaderStatus,

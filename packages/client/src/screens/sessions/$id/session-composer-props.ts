@@ -6,7 +6,10 @@ import type {
 } from '#features/composer';
 import type { useBlobUrl } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
-import type { ElicitationFormProps } from '#features/requests';
+import type {
+  ElicitationFormProps,
+  PermissionRequestProps,
+} from '#features/requests';
 import {
   type MergeMethodChoice,
   composerStatus,
@@ -29,6 +32,7 @@ export interface OpenSession {
   imageUrl: ReturnType<typeof useBlobUrl>;
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
+  permission: PermissionRequestProps | undefined;
   mergeMethod: MergeMethodChoice;
   // The Feed's end came on screen or left it.
   onAtEndChange: (atEnd: boolean) => void;
@@ -121,6 +125,7 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
     sending: isSending(open),
     sendable: open.connected,
     ...sendError(commands),
+    permissionRequest: open.permission,
     writtenPlan: writtenPlan(view.plan),
     status: composerStatus(view.plan, snapshot.usage ?? undefined),
     configuration: configurationProps(open),

@@ -9,7 +9,6 @@ import { Text } from '#primitives/display/text';
 
 export interface PermissionOutcomeProps {
   outcome: Outcome;
-  message?: string;
 }
 
 type SelectedOutcome = Extract<Outcome, { outcome: 'selected' }>;
@@ -36,12 +35,11 @@ const chosenLabel = (name: string | undefined): string | undefined =>
 
 const outcomeLabels: Record<
   PermissionOptionKind,
-  (name: string | undefined, message: string | undefined) => string | undefined
+  (name: string | undefined) => string | undefined
 > = {
   allow_once: () => 'You allowed this once',
   allow_always: chosenLabel,
-  reject_once: (_name, message) =>
-    message ? `You denied: “${message}”` : 'You denied',
+  reject_once: () => 'You denied',
   reject_always: chosenLabel,
 };
 
@@ -82,12 +80,11 @@ function OutcomeRow({ kind, label }: OutcomeRowProps): React.JSX.Element {
 
 export function PermissionOutcome({
   outcome,
-  message,
 }: PermissionOutcomeProps): React.JSX.Element | null {
   const kind = chosenPermissionKind(outcome);
 
   if (!kind) return null;
-  const label = outcomeLabels[kind](chosenName(outcome), message);
+  const label = outcomeLabels[kind](chosenName(outcome));
 
   if (!label) return null;
 

@@ -9,3 +9,5 @@ export type {
   ElicitationAnswer,
   ElicitationFormProps,
 } from './components/elicitation-form/elicitation-form';
+
+export type { RequestState } from './components/request-card/request-card';

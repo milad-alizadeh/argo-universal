@@ -191,8 +191,8 @@ A resource the Agent names in its content by URI, with a name and optionally a d
 _Avoid_: Link, attachment
 
 **Permission request**:
-A question from the Agent to let a Tool call run, with options to allow or reject.
-_Avoid_: Approval, prompt
+A question from the Agent to let a Tool call run, with options to allow or reject. The answer is only the chosen option. An Agent's request to leave plan mode is one: its Tool call carries the plan.
+_Avoid_: Approval, prompt, Plan proposal
 
 **Elicitation**:
 A question from the Agent that asks the user for information.

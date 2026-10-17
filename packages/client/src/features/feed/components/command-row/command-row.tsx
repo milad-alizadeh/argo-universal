@@ -26,7 +26,6 @@ export interface CommandRowProps {
   row: ToolCallUpdate;
   initialOpen?: boolean;
   now?: number;
-  permissionMessage?: string;
   awaitingApproval?: boolean;
 }
 
@@ -97,7 +96,6 @@ function CommandDisclosure(props: CommandDisclosureProps): React.JSX.Element {
       {...state.disclosure}
       icon="terminal"
       initialOpen={props.initialOpen}
-      permissionMessage={props.permissionMessage}
     >
       <CommandOutput {...props} state={state} />
     </ToolCallDisclosure>

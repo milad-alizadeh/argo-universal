@@ -60,13 +60,30 @@ function attachmentConfiguration(steps: string[]): AppFixtureAgents {
   return scenario && agent ? { [agent]: { scenario } } : {};
 }
 
+// A step that gives one Agent a shared named scenario.
+const namedScenarioSteps = [
+  [/^(?:Given|And) Agent (\d+) supplies a long Feed history$/, 'feed-history'],
+  [/^(?:Given|And) Agent (\d+) asks for an Elicitation$/, 'elicitation'],
+  [/^(?:Given|And) Agent (\d+) asks to leave plan mode$/, 'leave-plan-mode'],
+] as const;
+
+function namedConfiguration(
+  steps: string[],
+  [step, scenario]: (typeof namedScenarioSteps)[number],
+): AppFixtureAgents {
+  const chosen = steps
+    .map((text) => step.exec(text))
+    .find((match) => match !== null);
+
+  return chosen ? { [agentId(Number(chosen[1]))]: { scenario } } : {};
+}
+
 export function scenarioAgents(steps: string[]): AppFixtureAgents {
   return Object.assign(
     {},
     ...steps.map(configurationForStep),
     attachmentConfiguration(steps),
-    elicitationConfiguration(steps),
-    feedHistoryConfiguration(steps),
+    ...namedScenarioSteps.map((named) => namedConfiguration(steps, named)),
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
     notificationConfiguration(steps),
@@ -74,30 +91,6 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     unreadConfiguration(steps),
     signInConfiguration(steps),
   );
-}
-
-function feedHistoryConfiguration(steps: string[]): AppFixtureAgents {
-  const chosen = steps
-    .map((step) =>
-      /^(?:Given|And) Agent (\d+) supplies a long Feed history$/.exec(step),
-    )
-    .find((match) => match !== null);
-
-  return chosen
-    ? { [agentId(Number(chosen[1]))]: { scenario: 'feed-history' } }
-    : {};
-}
-
-function elicitationConfiguration(steps: string[]): AppFixtureAgents {
-  const chosen = steps
-    .map((step) =>
-      /^(?:Given|And) Agent (\d+) asks for an Elicitation$/.exec(step),
-    )
-    .find((match) => match !== null);
-
-  return chosen
-    ? { [agentId(Number(chosen[1]))]: { scenario: 'elicitation' } }
-    : {};
 }
 
 const liveFeedStep =

@@ -11,7 +11,6 @@ import { argoMeta } from './tool-call-meta';
 
 type ToolCallDisclosureProps = Omit<FeedDisclosureProps, 'denied'> & {
   permissionOutcome?: Outcome;
-  permissionMessage?: string;
 };
 
 export function toolCallDisclosureProps(
@@ -34,28 +33,20 @@ const isRejected = (outcome?: Outcome): boolean | undefined =>
 
 function ToolCallPermissionOutcome({
   outcome,
-  message,
 }: {
   outcome?: Outcome;
-  message?: string;
 }): React.JSX.Element | null {
-  return outcome ? (
-    <PermissionOutcome outcome={outcome} message={message} />
-  ) : null;
+  return outcome ? <PermissionOutcome outcome={outcome} /> : null;
 }
 
 export function ToolCallDisclosure({
   permissionOutcome,
-  permissionMessage,
   ...props
 }: ToolCallDisclosureProps): React.JSX.Element {
   return (
     <View className="gap-1">
       <FeedDisclosure {...props} denied={isRejected(permissionOutcome)} />
-      <ToolCallPermissionOutcome
-        outcome={permissionOutcome}
-        message={permissionMessage}
-      />
+      <ToolCallPermissionOutcome outcome={permissionOutcome} />
     </View>
   );
 }
