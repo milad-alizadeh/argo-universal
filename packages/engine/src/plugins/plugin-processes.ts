@@ -1,7 +1,14 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import type { CheckedCommand } from './plugin-access';
 import { argoLimitBytes, argoTimeoutMs } from './plugin-limits';
-import type { ProcessCall, ProcessCommand } from './runtime-protocol';
+import type { ProcessCall } from './runtime-protocol';
+
+// A run or spawn reaches here only after the checker gave it its working directory and environment.
+export type CheckedProcessCall =
+  | Extract<ProcessCall, { action: 'wait' | 'kill' }>
+  | (CheckedCommand & { action: 'run' })
+  | (CheckedCommand & { action: 'spawn' });
 
 export type ProcessResult = {
   exitCode: number | null;
@@ -25,7 +32,9 @@ export class PluginProcesses {
   private readonly live = new Set<ChildProcess>();
   private readonly timers = new Set<Timer>();
 
-  async handle(call: ProcessCall): Promise<ProcessResult | string | null> {
+  async handle(
+    call: CheckedProcessCall,
+  ): Promise<ProcessResult | string | null> {
     if (call.action === 'run') return this.start(call, argoTimeoutMs).done;
 
     if (call.action === 'spawn') return this.spawned(call);
@@ -50,7 +59,7 @@ export class PluginProcesses {
     this.timers.clear();
   }
 
-  private spawned(command: ProcessCommand): string {
+  private spawned(command: CheckedCommand): string {
     const running = this.start(command, null);
     const id = randomUUID();
     this.running.set(id, running);
@@ -61,11 +70,13 @@ export class PluginProcesses {
     return id;
   }
 
-  private start(command: ProcessCommand, fallback: number | null): Running {
+  private start(command: CheckedCommand, fallback: number | null): Running {
     const [file = '', ...args] = command.argv;
 
     const child = spawn(file, args, {
       cwd: command.cwd,
+      // The checked environment is the child's whole environment. A bare object holds it because the app's types say every environment has NODE_ENV, which a Plugin child must not get.
+      env: Object.assign(Object.create(null), command.env),
       shell: false,
       detached: true,
     });

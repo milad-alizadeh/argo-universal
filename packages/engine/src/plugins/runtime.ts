@@ -1,6 +1,8 @@
+import type { PluginCapability } from '@repo/contracts/plugins';
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { PluginFailures } from './failures';
 import { HostConnection } from './host-connection';
+import type { ActivatedPlugin } from './plugin-access';
 import type { PluginServices } from './plugin-services';
 import { RuntimePlugin } from './runtime-plugin';
 import type { PluginReply } from './runtime-protocol';
@@ -14,9 +16,18 @@ import { PluginViews } from './views';
 
 type PluginLocation = {
   entry: Omit<PluginEntry, 'generation'>;
-  dev: boolean;
   name?: string;
+  // The manifest's declared Capabilities; without them the Plugin is granted nothing.
+  capabilities?: readonly PluginCapability[];
 };
+
+const activatedPlugin = ({
+  entry,
+  capabilities = [],
+}: PluginLocation): ActivatedPlugin => ({
+  grants: capabilities,
+  codeFolder: entry.directory,
+});
 
 export class PluginRuntime {
   private readonly failures = new PluginFailures();
@@ -72,6 +83,7 @@ export class PluginRuntime {
   activate(location: PluginLocation): Promise<PluginStatus> {
     if (this.closed) throw new Error('Plugin runtime is closed');
     const { pluginId } = location.entry;
+
     let plugin = this.plugins.get(pluginId);
 
     if (!plugin) {
@@ -79,7 +91,7 @@ export class PluginRuntime {
       this.plugins.set(pluginId, plugin);
     }
 
-    return plugin.activate();
+    return plugin.activate(activatedPlugin(location));
   }
 
   private createPlugin(location: PluginLocation): RuntimePlugin {
@@ -91,6 +103,8 @@ export class PluginRuntime {
     return new RuntimePlugin({
       ...location,
       host: this.host,
+      grant: (plugin): void =>
+        this.services.activate(location.entry.pluginId, plugin),
       release: (): void => this.services.release(location.entry.pluginId),
       log: this.log,
       changed: (status): void => this.failures.update(identity, status),

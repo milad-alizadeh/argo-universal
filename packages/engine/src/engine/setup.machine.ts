@@ -13,7 +13,7 @@ import {
 } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import type { NotificationOptions } from '../notifications';
-import type { Keychain } from '../plugins';
+import type { Keychain, PluginNetwork } from '../plugins';
 import {
   type OpenSessionsInput,
   openSessionsMachine,
@@ -68,6 +68,8 @@ export interface EngineInput extends Pick<
   version: string;
   firstPartyPluginsDirectory?: string;
   keychain?: Keychain;
+  // Tests trust a fixture certificate authority and resolver for Plugin fetches.
+  pluginNetwork?: PluginNetwork;
   startedAt: string;
   acp?: AcpResourceInput;
   fetchAgents?: FetchAgents;

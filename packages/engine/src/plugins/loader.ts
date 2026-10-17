@@ -171,5 +171,11 @@ function addManifest(
 ): void {
   if (result.plugins.some((plugin) => plugin.manifest.id === manifest.id))
     throw new Error(`Duplicate Plugin id: ${manifest.id}`);
+
+  // Third-party Plugins wait for consent and an operating-system boundary (ADR-0030), like Obsidian's Restricted mode.
+  if (!firstParty)
+    throw new Error(
+      'Plugin is not loaded: only Plugins shipped with Argo load until Argo asks for consent',
+    );
   result.plugins.push({ manifest, firstParty, enabled: true, ...notStarted });
 }
