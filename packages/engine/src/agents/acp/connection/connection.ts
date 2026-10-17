@@ -444,8 +444,26 @@ export class AcpConnection {
       agent: connection.agent,
       initialization,
       close: this.leaseClose(opening),
+      rejectRequest: this.leaseRejection(opening.session),
       released: opening.session.released.promise,
     };
+  }
+  /*
+   * The SDK rejects pending requests as soon as the Agent's output closes, before the exit
+   * drain reports why. Waiting for the release, which `fail` gives every Session after its
+   * failure, lets the exit end the Turn instead of the closure.
+   */
+  private leaseRejection(
+    session: AgentSession,
+  ): (cause: unknown) => Promise<never> {
+    return (cause) => this.rejectRequest(session, cause);
+  }
+  private async rejectRequest(
+    session: AgentSession,
+    cause: unknown,
+  ): Promise<never> {
+    if (this.connectionClosed()) await session.released.promise;
+    throw cause;
   }
   private leaseClose({ opened, session }: LeaseOpening): () => Promise<void> {
     let closing: Promise<void> | undefined;
