@@ -5,7 +5,7 @@ import {
   type SubagentUpdate,
 } from '@repo/contracts';
 import { type FeedEvent } from '../../../feed';
-import type { ChildFeed } from '../../subagents/child-feed';
+import type { OpenedChildFeed } from '../../subagents/child-feed';
 import type { SubagentRouting } from '../../subagents/routing-types';
 
 type Association = Extract<
@@ -22,10 +22,15 @@ const stateField = (
 const titleField = (title: string | null | undefined): { title?: string } =>
   title === undefined ? {} : { title: title ?? '' };
 
+type AssociationChange = OpenedChildFeed & { update: Association };
+
+// The first update for a new child is its `spawn` (#930).
+const spawnField = (spawned: boolean): Pick<SubagentUpdate, '_meta'> =>
+  spawned ? { _meta: { argo: { action: 'spawn' } } } : {};
+
 const associationRow = (
   input: SubagentRouting,
-  child: ChildFeed,
-  update: Association,
+  { child, spawned, update }: AssociationChange,
 ): FeedUpdate => ({
   id: input.createId(),
   sessionUpdate: 'subagent_update',
@@ -33,14 +38,14 @@ const associationRow = (
   subagentSessionId: child.sessionId,
   ...titleField(update.title),
   ...stateField(update.state?.state),
+  ...spawnField(spawned),
 });
 
 export const associationEvent = (
   input: SubagentRouting,
-  child: ChildFeed,
-  update: Association,
+  association: AssociationChange,
 ): FeedEvent => ({
   type: 'feed.change',
   turnId: null,
-  change: { type: 'upsert', update: associationRow(input, child, update) },
+  change: { type: 'upsert', update: associationRow(input, association) },
 });
