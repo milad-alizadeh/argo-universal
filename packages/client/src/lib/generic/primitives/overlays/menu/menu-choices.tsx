@@ -33,16 +33,24 @@ export function useKeyboardFocus(): KeyboardFocus {
   return { keyboardFocus, onKeyboardFocusChange };
 }
 
+function choiceContentProps<Value extends string>(
+  props: MenuChoicesProps<Value>,
+): RadixMenu.DropdownMenuContentProps {
+  return {
+    align: props.align ?? 'end',
+    loop: true,
+    className: 'z-50',
+    ...contentFocus(props.focus),
+  };
+}
+
 // A choice menu's web drawing: radio rows, the chosen one checked.
 export function MenuChoiceContent<Value extends string>(
   props: MenuChoicesProps<Value>,
 ): React.JSX.Element {
   return (
-    <RadixMenu.Content
-      align={props.align ?? 'end'}
-      loop
-      {...contentFocus(props.focus)}
-    >
+    // Radix's popper wrapper copies the content's z-index, so the menu opens above a sheet.
+    <RadixMenu.Content {...choiceContentProps(props)}>
       <View className="w-65 overflow-hidden bg-card rounded-2xl p-1 shadow-card dark:border dark:border-border">
         {props.loading ? <MenuLoadingRow /> : <MenuChoices {...props} />}
       </View>

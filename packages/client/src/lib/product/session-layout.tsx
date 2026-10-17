@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -13,6 +13,11 @@ import {
 } from './composer-cover';
 import { KeyboardAvoidingContent, Screen } from './screen/screen';
 import { ComposerColumn, sessionSurface } from './session-column';
+import {
+  filledClass,
+  SessionFillProvider,
+  useSessionFill,
+} from './session-fill';
 
 export interface SessionLayoutProps {
   // Wide, the Session's PageHeader; a phone sets its native header from here.
@@ -54,20 +59,33 @@ function OverlapComposerLayout(props: SessionLayoutProps): React.JSX.Element {
   );
 }
 
+// A filled Composer hides the Feed and takes its height; the Feed stays mounted, so it keeps its place.
 function OverlapContent(props: SessionLayoutProps): React.JSX.Element {
+  const [filled, setFilled] = useState(false);
+  const fill = useMemo(() => ({ filled, setFilled }), [filled]);
+
   return (
-    <KeyboardAvoidingContent>
-      <View className="relative min-h-0 flex-1">{props.feed}</View>
-      <OverlapComposer>{props.composer}</OverlapComposer>
-      {props.panel}
-    </KeyboardAvoidingContent>
+    <SessionFillProvider value={fill}>
+      <KeyboardAvoidingContent>
+        <View className={cn('relative min-h-0 flex-1', filled && 'hidden')}>
+          {props.feed}
+        </View>
+        <OverlapComposer>{props.composer}</OverlapComposer>
+        {props.panel}
+      </KeyboardAvoidingContent>
+    </SessionFillProvider>
   );
 }
 
 function OverlapComposer(props: { children: ReactNode }): React.JSX.Element {
+  const { filled } = useSessionFill();
+
   return (
-    <View className="relative z-10 wide:pb-4" style={overlapComposerStyle}>
-      <ComposerColumn>{props.children}</ComposerColumn>
+    <View
+      className={cn('relative z-10 wide:pb-4', filled && `${filledClass} pt-4`)}
+      style={filled ? undefined : overlapComposerStyle}
+    >
+      <ComposerColumn fill={filled}>{props.children}</ComposerColumn>
     </View>
   );
 }

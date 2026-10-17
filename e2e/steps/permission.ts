@@ -10,7 +10,7 @@ const composer = (page: Page): Locator => page.getByTestId('composer-column');
 Given('Agent {int} asks to leave plan mode', expectListedAgent);
 
 Then(
-  'the Permission request {string} opens over the Composer',
+  'the plan {string} opens over the Composer',
   async ({ page }, title: string): Promise<void> => {
     await expect(
       composer(page).getByText(title, { exact: true }),
@@ -24,6 +24,17 @@ Then(
   },
 );
 
+When('I show the plan', async ({ page }): Promise<void> => {
+  await composer(page).getByRole('button', { name: 'Show plan' }).click();
+});
+
+Then(
+  'the plan reads {string}',
+  async ({ page }, text: string): Promise<void> => {
+    await expect(composer(page).getByText(text, { exact: true })).toBeVisible();
+  },
+);
+
 When(
   'I answer the Permission request with {string}',
   async ({ page }, option: string): Promise<void> => {
@@ -34,7 +45,7 @@ When(
 );
 
 Then(
-  'the Permission request {string} closes and the Composer accepts {string}',
+  'the plan {string} closes and the Composer accepts {string}',
   async ({ page }, title: string, draft: string): Promise<void> => {
     await expect(composer(page).getByText(title, { exact: true })).toHaveCount(
       0,

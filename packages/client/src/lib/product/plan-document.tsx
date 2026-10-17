@@ -16,9 +16,17 @@ const trayPlanStyle: ScrolledPlanStyle = {
   label: 'Written plan document',
 };
 
+// A Permission request's plan shown full page: it fills what the Session column gives it.
+const fillPlanStyle: ScrolledPlanStyle = {
+  frame: 'min-h-0 flex-1',
+  scroll: 'flex-1',
+  content: 'px-4 pt-2 pb-4',
+  label: 'Written plan document',
+};
+
 interface PlanDocumentProps {
   content: string;
-  layout: 'tray' | 'sheet';
+  layout: 'tray' | 'sheet' | 'fill';
 }
 
 export function PlanDocument({
@@ -29,7 +37,11 @@ export function PlanDocument({
 
   if (layout === 'sheet') return <View className="pt-2 pb-4">{markdown}</View>;
 
-  return <ScrolledPlan style={trayPlanStyle}>{markdown}</ScrolledPlan>;
+  return (
+    <ScrolledPlan style={layout === 'fill' ? fillPlanStyle : trayPlanStyle}>
+      {markdown}
+    </ScrolledPlan>
+  );
 }
 
 function ScrolledPlan(props: {

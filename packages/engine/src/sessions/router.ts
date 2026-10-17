@@ -21,6 +21,8 @@ import {
   SessionPromptOutput,
   SessionRenameInput,
   SessionRenameOutput,
+  SessionSavePlanInput,
+  SessionSavePlanOutput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
   SessionSubagentsInput,
@@ -46,6 +48,7 @@ import { createSession } from './session-creation';
 import { openSession } from './session-opening';
 import { promptSession } from './session-prompt';
 import { renameSession } from './session-rename';
+import { saveSessionPlan } from './session-save-plan';
 import { markSessionSeen } from './session-seen';
 import { createShellSessionRouter } from './shells/router';
 import { createSubagentsReader } from './subagents';
@@ -142,6 +145,10 @@ const createRenameRouter = routerFactory((deps: SessionRouterDeps) =>
       .input(SessionRenameInput)
       .output(SessionRenameOutput)
       .mutation(({ input }) => renameSession(deps, input)),
+    savePlan: publicProcedure
+      .input(SessionSavePlanInput)
+      .output(SessionSavePlanOutput)
+      .mutation(({ input }) => saveSessionPlan(deps, input)),
   }),
 );
 

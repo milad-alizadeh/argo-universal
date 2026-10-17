@@ -7,7 +7,9 @@ import type {
 import { acpConfiguration } from './acp-configuration.ts';
 import type { ScriptedScenario, ScriptedStep } from './scripted-scenario.ts';
 
-const writtenPlan = '1. Read README.md\n2. Fix the typo';
+// As Claude writes its plan file: a title heading, then the steps.
+export const writtenPlan =
+  '# Fix the README typo\n\n1. Read README.md\n2. Fix the typo\n';
 
 export const withMode = (mode: string): SessionConfigOption[] =>
   acpConfiguration.map((option) =>

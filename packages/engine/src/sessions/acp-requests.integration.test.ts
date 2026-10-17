@@ -291,6 +291,7 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
       requestId: expect.any(String),
       toolCallId: leavePlanMode.toolCallId,
       title: leavePlanMode.title,
+      plan: leavePlanMode.rawInput.plan,
       options: leavePlanModeOptions,
     });
   });

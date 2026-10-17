@@ -90,6 +90,8 @@ export { useSessionElicitation } from './hooks/use-session-elicitation';
 
 export { useSessionPermission } from './hooks/use-session-permission';
 
+export { useSessionPlanActions } from './hooks/use-session-plan-actions';
+
 export {
   type SessionHeaderProps,
   type SessionHeaderStatus,

@@ -2,6 +2,10 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import {
+  PlanRequest,
+  type PlanRequestActions,
+} from '../plan-request/plan-request';
+import {
   RequestCard,
   type RequestCardProps,
 } from '../request-card/request-card';
@@ -13,7 +17,8 @@ import {
   usePermissionAnswers,
 } from './use-permission-answers';
 
-export interface PermissionRequestProps extends PermissionAnswersInput {
+export interface PermissionRequestProps
+  extends PermissionAnswersInput, PlanRequestActions {
   input?: string;
   reason?: string;
   error?: string;
@@ -24,7 +29,16 @@ type Answering = Pick<
   'onEnter' | 'footerClassName' | 'actions'
 >;
 
+// A request to leave plan mode shows its plan; any other asks to let its Tool call run.
 export function PermissionRequest(props: PermissionRequestProps): ReactNode {
+  const plan = props.request.plan;
+
+  if (plan) return <PlanRequest {...props} plan={plan} />;
+
+  return <ToolPermissionRequest {...props} />;
+}
+
+function ToolPermissionRequest(props: PermissionRequestProps): ReactNode {
   const answers = usePermissionAnswers(props);
 
   return (
