@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/display/text';
 import { useIconBox } from '../../../symbols/icon-role';
-import { MenuChoiceActions } from './menu-choice-actions';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
 import {
@@ -12,10 +11,13 @@ import {
   type GroupedChoiceMenuProps,
   type MenuChoiceGroup,
   menuChoiceGroups,
-  trailingMenuActions,
 } from './menu-props';
 import { MenuRadioItem } from './menu-radio-item';
-import { menuGroupSpaceClassName, menuRowsClassName } from './menu-styles';
+import {
+  menuGroupLineClassName,
+  menuGroupSeparatorClassName,
+  menuRowsClassName,
+} from './menu-styles';
 
 export type KeyboardFocus = {
   keyboardFocus: boolean;
@@ -35,7 +37,7 @@ export function useKeyboardFocus(): KeyboardFocus {
   return { keyboardFocus, onKeyboardFocusChange };
 }
 
-// A choice menu's web drawing: radio rows, the chosen one checked, then any actions after the groups.
+// A choice menu's web drawing: radio rows, the chosen one checked, each later group after a section line.
 export function MenuChoiceContent<Value extends string>(
   props: MenuChoicesProps<Value>,
 ): React.JSX.Element {
@@ -61,7 +63,6 @@ function MenuChoices<Value extends string>({
       {menuChoiceGroups(props).map((group, index) =>
         groupRows(group, index, focus),
       )}
-      <MenuChoiceActions actions={trailingMenuActions(props)} focus={focus} />
     </>
   );
 }
@@ -91,19 +92,30 @@ type MenuChoiceGroupRowsProps = {
   focus: KeyboardFocus;
 };
 
-// One group's radio rows; a later group is set apart by space, and its heading when it has one.
+// One group's radio rows; a later group is set apart by a section line, and its heading when it has one.
 function MenuChoiceGroupRows(
   props: MenuChoiceGroupRowsProps,
 ): React.JSX.Element {
   return (
     <>
-      {props.first ? null : <View className={menuGroupSpaceClassName} />}
+      {props.first ? null : <MenuGroupSeparator />}
       <MenuGroupHeading
         label={props.group.label}
         inset={props.group.options.some((choice) => choice.icon)}
       />
       <MenuChoiceRadios {...props} />
     </>
+  );
+}
+
+// Radix's Separator gives the line role="separator", so it is announced and skipped by the keyboard.
+function MenuGroupSeparator(): React.JSX.Element {
+  return (
+    <RadixMenu.Separator asChild>
+      <View className={menuGroupSeparatorClassName}>
+        <View className={menuGroupLineClassName} />
+      </View>
+    </RadixMenu.Separator>
   );
 }
 

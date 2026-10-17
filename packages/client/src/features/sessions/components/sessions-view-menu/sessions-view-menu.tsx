@@ -9,10 +9,7 @@ import {
   isDefaultSessionsView,
   type SessionsView,
 } from '../../stores/sessions-view';
-import {
-  resetSessionsView,
-  sessionsViewGroups,
-} from '../../utils/sessions-view-menu';
+import { sessionsViewGroups } from '../../utils/sessions-view-menu';
 
 export interface SessionsViewMenuProps {
   view: SessionsView;
@@ -51,7 +48,7 @@ const viewTriggers = (
 });
 
 /*
- * How the Sessions list orders, groups, filters and lays out its rows, then Reset to default.
+ * How the Sessions list orders, groups, filters and lays out its rows.
  * The trigger carries a dot while the view is not the default; on a phone it is a native header item.
  */
 export function SessionsViewMenu({
@@ -62,7 +59,6 @@ export function SessionsViewMenu({
     <Menu
       accessibilityLabel={triggerLabel}
       groups={sessionsViewGroups(view, onViewChange)}
-      trailingActions={[resetSessionsView(view, onViewChange)]}
       trigger={viewTriggers(!isDefaultSessionsView(view))}
     />
   );

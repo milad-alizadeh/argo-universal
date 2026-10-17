@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { Menu, type MenuAction } from './menu';
+import { Menu } from './menu';
 import type { MenuChoiceGroup } from './menu-props';
 import { MenuTrigger } from './menu-trigger';
 
@@ -45,19 +45,7 @@ const viewOptionGroups = (
   },
 ];
 
-// Reset is disabled while both groups are at their defaults.
-const resetAction = (
-  view: ViewOptions,
-  setView: SetViewOptions,
-): MenuAction => ({
-  label: 'Reset to default',
-  disabled:
-    view.sort === defaultViewOptions.sort &&
-    view.density === defaultViewOptions.density,
-  onPress: () => setView(defaultViewOptions),
-});
-
-// Two headed groups, then an action after them.
+// Two headed groups.
 export function ViewOptionsMenu(): React.JSX.Element {
   const [view, setView] = useState(defaultViewOptions);
 
@@ -66,7 +54,6 @@ export function ViewOptionsMenu(): React.JSX.Element {
       accessibilityLabel="View options"
       trigger={<MenuTrigger label="View" icon="filters" />}
       groups={viewOptionGroups(view, setView)}
-      trailingActions={[resetAction(view, setView)]}
     />
   );
 }

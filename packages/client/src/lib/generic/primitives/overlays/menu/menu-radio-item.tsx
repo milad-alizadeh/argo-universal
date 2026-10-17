@@ -57,8 +57,8 @@ export function focusTracking(focus: KeyboardFocus): FocusTracking {
   };
 }
 
-// A choice menu's row, shared by its radio rows and the actions after its groups.
-export function choiceItemClassName(keyboardFocus: boolean): string {
+// A choice menu's radio row.
+function choiceItemClassName(keyboardFocus: boolean): string {
   return cn(
     choiceRowClassName,
     'cursor-default rounded-xl outline-0 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
@@ -80,7 +80,7 @@ function MenuRadioContent(props: {
   );
 }
 
-export function RadioLabel(props: { label: string }): React.JSX.Element {
+function RadioLabel(props: { label: string }): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
       <Text role="body" className={actionItemTextClassName}>

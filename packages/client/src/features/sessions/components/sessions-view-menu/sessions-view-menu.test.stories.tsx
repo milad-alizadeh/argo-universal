@@ -14,13 +14,6 @@ const defaults: SessionsView = {
   layout: 'regular',
 };
 
-const changed: SessionsView = {
-  order: 'created',
-  group: 'none',
-  status: 'all',
-  layout: 'compact',
-};
-
 const meta = {
   title: 'Tests/SessionsViewMenu',
   component: SessionsViewMenu,
@@ -37,8 +30,6 @@ type Story = StoryObj<typeof meta>;
 const menu = (): ReturnType<typeof within> => within(document.body);
 
 const trigger = { name: 'Filter Sessions' };
-
-const reset = { name: 'Reset to default' };
 
 // Paper's options in order, each group's under its heading, with which are checked at the default.
 const paperOptions = [
@@ -64,36 +55,23 @@ async function expectHeadings(): Promise<void> {
 }
 
 // Every option in Paper's order, only the defaults checked.
-async function expectOptions(): Promise<HTMLElement[]> {
+async function expectOptions(): Promise<void> {
   const rows = paperOptions.map(({ name }) => optionRow(name));
 
   await expect(menu().getAllByRole('menuitemradio')).toEqual(rows);
 
   for (const [index, { checked }] of paperOptions.entries())
     await expect(rows[index]).toHaveAttribute('aria-checked', String(checked));
-
-  return rows;
 }
 
-// Reset comes after the last option.
-async function expectResetLast(rows: HTMLElement[]): Promise<HTMLElement> {
-  const resetRow = menu().getByRole('menuitem', reset);
-  const position = rows.at(-1)?.compareDocumentPosition(resetRow) ?? 0;
-
-  await expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-
-  return resetRow;
-}
-
-// The four groups in Paper's order and labels, each default checked, and Reset last, disabled at the default.
+// The four groups in Paper's order and labels, each default checked, and no action after them.
 export const ShowsViewOptions: Story = {
   play: async ({ canvas, userEvent }) =>
     eachLayout(async () => {
       await userEvent.click(canvas.getByRole('button', trigger));
       await expectHeadings();
-      const resetRow = await expectResetLast(await expectOptions());
-
-      await expect(resetRow).toHaveAttribute('aria-disabled', 'true');
+      await expectOptions();
+      await expect(menu().queryAllByRole('menuitem')).toEqual([]);
       await userEvent.keyboard('{Escape}');
     }),
 };
@@ -137,21 +115,6 @@ export const ChoosesActiveFromArchived = chooses(
 );
 
 export const ChoosesCompact = chooses('Compact', { layout: 'compact' });
-
-// Away from the default, Reset restores every field's default.
-export const ResetsToDefault: Story = {
-  args: { view: changed },
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
-      onViewChange.mockClear();
-      await userEvent.click(canvas.getByRole('button', trigger));
-      const resetRow = menu().getByRole('menuitem', reset);
-      await expect(resetRow).not.toHaveAttribute('aria-disabled');
-      await userEvent.click(resetRow);
-      await expect(onViewChange).toHaveBeenCalledTimes(1);
-      await expect(onViewChange).toHaveBeenCalledWith(defaults);
-    }),
-};
 
 // The trigger carries its dot only while the view is not the default.
 function dotShown(view: SessionsView, shown: boolean): Story {

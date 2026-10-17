@@ -6,7 +6,6 @@ import {
   type MenuProps,
   menuChoiceGroups,
   menuLoadingLabel,
-  trailingMenuActions,
 } from './menu-props';
 
 // One row of a system menu, before iOS or Android draws it.
@@ -29,7 +28,7 @@ export interface NativeMenuSection {
   items: NativeMenuItem[];
 }
 
-// What a menu lists: its options with the chosen value, its groups and the actions after them, or its actions, and whether they are still loading.
+// What a menu lists: its options with the chosen value, its groups, or its actions, and whether they are still loading.
 export type MenuRows<Value extends string = string> = (
   | MenuChoiceRows<Value>
   | Pick<ActionMenuProps, 'actions'>
@@ -46,10 +45,9 @@ export function nativeMenuSections<Value extends string>(
 ): NativeMenuSection[] {
   if (rows.loading) return [{ items: [loadingItem] }];
 
-  if (listsActions(rows))
-    return [{ items: rows.actions.map((action) => actionItem(action)) }];
+  if (listsActions(rows)) return [{ items: rows.actions.map(actionItem) }];
 
-  return [...choiceSections(rows), ...trailingSections(rows)];
+  return choiceSections(rows);
 }
 
 function choiceSections<Value extends string>(
@@ -65,17 +63,6 @@ function choiceSections<Value extends string>(
     title: group.label,
     items: choiceItems(group, prefix(index)),
   }));
-}
-
-// A grouped menu's actions make its final section, their ids kept apart from the choices' values.
-function trailingSections<Value extends string>(
-  rows: MenuChoiceRows<Value>,
-): NativeMenuSection[] {
-  const actions = trailingMenuActions(rows);
-
-  if (actions.length === 0) return [];
-
-  return [{ items: actions.map((action) => actionItem(action, 'action.')) }];
 }
 
 // The sections' rows in one list, each later section's first row marked as divided.
@@ -113,10 +100,9 @@ const loadingItem: NativeMenuItem = {
 // An action that can be the selected one carries the check.
 function actionItem(
   action: ActionMenuProps['actions'][number],
-  idPrefix = '',
 ): NativeMenuItem {
   return {
-    id: `${idPrefix}${action.label}`,
+    id: action.label,
     title: action.label,
     checked: action.selected,
     disabled: Boolean(action.disabled),

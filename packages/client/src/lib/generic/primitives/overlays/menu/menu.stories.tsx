@@ -109,7 +109,7 @@ export const Variations: Story = {
           <PermissionsMenu {...props} />
         </Variation>
       ))}
-      <Variation label="Groups and an action">
+      <Variation label="Groups">
         <ViewOptionsMenu />
       </Variation>
       <Variation label="Actions on a text trigger">

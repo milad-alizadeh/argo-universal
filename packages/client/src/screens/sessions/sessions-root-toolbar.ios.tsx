@@ -3,7 +3,6 @@ import type { ComponentProps } from 'react';
 import type * as React from 'react';
 import {
   isDefaultSessionsView,
-  resetSessionsView,
   type SessionsViewGroup,
   type SessionsViewState,
   searchSessionsLabel,
@@ -13,7 +12,6 @@ import { hasLiquidGlass } from '#lib/generic/native-header';
 import { headerFilterIcon } from '#lib/product/header-button';
 import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import { toolbarDot } from '#lib/product/navigation/toolbar-dot';
-import type { MenuAction } from '#primitives/overlays/menu';
 import { toolbarIcon } from '../../lib/product/navigation/toolbar-icon';
 
 export interface SessionsRootToolbarProps extends SessionsViewState {
@@ -61,7 +59,7 @@ const viewMenuItem = {
 };
 
 /*
- * Each of the view's groups as an inline section, its heading the section's title, then Reset to default in a last section.
+ * Each of the view's groups as an inline section, its heading the section's title.
  * No option has an icon, as in Paper: UIMenu draws each title after its check. The button carries a dot while the view is not the default.
  */
 function viewMenu({
@@ -72,7 +70,6 @@ function viewMenu({
     <Stack.Toolbar.Menu {...viewMenuItem}>
       {toolbarDot(!isDefaultSessionsView(view))}
       {sessionsViewGroups(view, onViewChange).map(viewSection)}
-      {resetSection(resetSessionsView(view, onViewChange))}
     </Stack.Toolbar.Menu>
   );
 }
@@ -110,20 +107,6 @@ const optionState = (
   isOn: group.value === option.value,
   onPress: () => group.onValueChange(option.value),
 });
-
-// MenuAction.disabled greys Reset while the view is the default.
-function resetSection(reset: MenuAction): React.JSX.Element {
-  return (
-    <Stack.Toolbar.Menu inline>
-      <Stack.Toolbar.MenuAction
-        disabled={reset.disabled}
-        onPress={reset.onPress}
-      >
-        {reset.label}
-      </Stack.Toolbar.MenuAction>
-    </Stack.Toolbar.Menu>
-  );
-}
 
 function newSessionButton(onPress: () => void): React.JSX.Element {
   return (

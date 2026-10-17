@@ -10,7 +10,6 @@ export {
 } from './components/sessions-header';
 
 export {
-  resetSessionsView,
   type SessionsViewGroup,
   sessionsViewGroups,
 } from './utils/sessions-view-menu';

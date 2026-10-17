@@ -1,7 +1,5 @@
-import type { MenuAction, MenuChoiceGroup } from '#primitives/overlays/menu';
+import type { MenuChoiceGroup } from '#primitives/overlays/menu';
 import {
-  defaultSessionsView,
-  isDefaultSessionsView,
   type SessionsView,
   sessionsGroupChoices,
   sessionsLayoutChoices,
@@ -50,13 +48,3 @@ export const sessionsViewGroups = (
   onViewChange: ChangeView,
 ): SessionsViewGroup[] =>
   viewGroups.map((group) => viewGroup(group, view, onViewChange));
-
-// Restores every field's default; there is nothing to reset while the view is the default.
-export const resetSessionsView = (
-  view: SessionsView,
-  onViewChange: ChangeView,
-): MenuAction => ({
-  label: 'Reset to default',
-  disabled: isDefaultSessionsView(view),
-  onPress: () => onViewChange(defaultSessionsView),
-});

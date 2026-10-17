@@ -3,8 +3,10 @@ import { cn } from '#lib/generic/utils';
 // Rows keep a gap, as Android's grouped rows do, so hovered, pressed and checked tiles never touch.
 export const menuRowsClassName = 'gap-0.5';
 
-// The space that sets a choice menu's later group, or its actions, apart from the rows before.
-export const menuGroupSpaceClassName = 'h-2.25';
+// The section line that sets a choice menu's later group apart, as iOS menus draw it: a full-width hairline in 4px of space above and below.
+export const menuGroupSeparatorClassName = 'py-1';
+
+export const menuGroupLineClassName = 'h-px bg-hairline';
 
 // An action menu's web drawing, as the Session header's menus drew it before Menu took actions.
 export const actionContentClassName = cn(
