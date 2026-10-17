@@ -65,6 +65,7 @@ const loadedFeed = ({ snapshot, view }: SessionFeed): OpenFeed | undefined =>
 const openFeed = (feed: SessionFeed): OpenFeed | undefined =>
   feed.ready ? loadedFeed(feed) : undefined;
 
+// The menu's Rename and Archive come from the page, which also draws the dialogs they open.
 const sessionHeaderProps = ({
   snapshot,
   mergeMethod,
@@ -73,6 +74,10 @@ const sessionHeaderProps = ({
   status: headerStatus[snapshot.state],
   startedAt: snapshot.liveHeader?.startedAt ?? null,
   ...mergeMethod,
+  menu: {
+    archived: snapshot.archivedAt !== null,
+    status: headerStatus[snapshot.state],
+  },
 });
 
 const sessionFeedProps = (open: OpenSession): FeedProps => ({

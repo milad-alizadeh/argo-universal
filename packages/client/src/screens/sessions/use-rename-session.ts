@@ -27,8 +27,11 @@ export interface RenameSession {
   dialog: RenameSessionDialogProps;
 }
 
+// The Sessions a page can rename: a list's rows, or the one Session a page shows.
+export type RenamableSession = Pick<SessionInfo, 'sessionId' | 'title'>;
+
 // The Session being renamed, and `session.rename`: success closes the dialog and refreshes the list; failure keeps it open and says so.
-export function useRenameSession(sessions: SessionInfo[]): RenameSession {
+export function useRenameSession(sessions: RenamableSession[]): RenameSession {
   const [sessionId, setSessionId] = useState<string>();
 
   const rename = useRenameMutation((renamed) =>
@@ -63,7 +66,7 @@ const closedAfter =
     open === renamed ? undefined : open;
 
 function dialogProps(
-  session: SessionInfo | undefined,
+  session: RenamableSession | undefined,
   rename: RenameMutation,
   setSessionId: (id: string | undefined) => void,
 ): RenameSessionDialogProps {

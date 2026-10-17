@@ -46,12 +46,14 @@ export const RunningTurn: Story = {
           canvas.getByRole('button', { name: 'More' }),
         ).toBeVisible();
       } else {
-        // The native header holds only the plain title: no status, and no Session actions until they are wired.
+        // A narrow header holds the plain title and the Session's ⋯: no status, and no Changes.
         await expect(canvas.queryByText('Running')).toBeNull();
         await expect(
           canvas.queryByRole('button', { name: 'Changes' }),
         ).toBeNull();
-        await expect(canvas.queryByRole('button', { name: 'More' })).toBeNull();
+        await expect(
+          canvas.getByRole('button', { name: 'More' }),
+        ).toBeVisible();
       }
 
       await expect(canvas.getByRole('status')).toHaveTextContent(

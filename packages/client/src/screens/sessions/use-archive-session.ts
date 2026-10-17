@@ -19,7 +19,7 @@ const archiveFailedTitle = 'Couldn’t archive the Session';
 const undoFailedTitle = 'Couldn’t restore the Session';
 
 export interface ArchiveSession {
-  // Archive in a row's menu; it keeps one identity, so the rows it reaches stay memoised.
+  // Archive in a row's or header's menu; it keeps one identity, so the rows it reaches stay memoised.
   onArchive: (sessionId: string) => void;
   // The phones' alert; desktop and the web never open it.
   alert: ArchiveSessionAlertProps;
@@ -97,7 +97,7 @@ function useDropRow(): Archive {
  * `session.archive`. The row leaves at once; desktop and the web show the archived toast at once too,
  * whose Undo restores the Session. A refusal brings the row back with the list's next load.
  */
-function useArchive(): Archive {
+function useArchive(onArchived?: () => void): Archive {
   const dropRow = useDropRow();
   const undo = useUndo();
   const archive = useArchiveMutation();
@@ -108,8 +108,9 @@ function useArchive(): Archive {
       archive(input);
 
       if (!archiveAsksFirst) showToast(archivedToast(() => undo(input)));
+      onArchived?.();
     },
-    [dropRow, archive, undo],
+    [dropRow, archive, undo, onArchived],
   );
 }
 
@@ -126,12 +127,13 @@ function useArchiveMutation(): Archive {
 }
 
 /*
- * Archive from a row's menu. Desktop and the web archive at once and show the archived toast with
- * Undo; iOS and Android ask first with the alert, and offer no Undo.
+ * Archive from a row's menu or a Session's header. Desktop and the web archive at once and show the archived toast
+ * with Undo; iOS and Android ask first with the alert, and offer no Undo. `onArchived` runs once the archive is sent,
+ * such as the header's leaving the Session; it keeps one identity.
  */
-export function useArchiveSession(): ArchiveSession {
+export function useArchiveSession(onArchived?: () => void): ArchiveSession {
   const [asking, setAsking] = useState<string>();
-  const archive = useArchive();
+  const archive = useArchive(onArchived);
 
   const onArchive = useCallback(
     (sessionId: string) =>
