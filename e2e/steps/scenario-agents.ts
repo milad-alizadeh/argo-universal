@@ -2,6 +2,7 @@ import {
   type AppFixtureAgents,
   appFixtureAgentIds,
 } from '@repo/mocks/agent/app-fixtures';
+import { agentScenarioSteps, agentStep } from './agent-steps';
 import { signInScenarios } from './sign-in-agents';
 
 export function agentId(ordinal: number): string {
@@ -65,8 +66,7 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
     {},
     ...steps.map(configurationForStep),
     attachmentConfiguration(steps),
-    elicitationConfiguration(steps),
-    feedHistoryConfiguration(steps),
+    namedScenarioConfiguration(steps),
     liveFeedConfiguration(steps),
     exitConfiguration(steps),
     notificationConfiguration(steps),
@@ -76,28 +76,22 @@ export function scenarioAgents(steps: string[]): AppFixtureAgents {
   );
 }
 
-function feedHistoryConfiguration(steps: string[]): AppFixtureAgents {
-  const chosen = steps
-    .map((step) =>
-      /^(?:Given|And) Agent (\d+) supplies a long Feed history$/.exec(step),
-    )
-    .find((match) => match !== null);
+const namedScenarioSteps = [
+  [agentStep('supplies a long Feed history'), 'feed-history'],
+  [agentStep('asks for an Elicitation'), 'elicitation'],
+  [
+    agentStep('names its Session after a question'),
+    'agent-title-after-question',
+  ],
+] as const;
 
-  return chosen
-    ? { [agentId(Number(chosen[1]))]: { scenario: 'feed-history' } }
-    : {};
-}
-
-function elicitationConfiguration(steps: string[]): AppFixtureAgents {
-  const chosen = steps
-    .map((step) =>
-      /^(?:Given|And) Agent (\d+) asks for an Elicitation$/.exec(step),
-    )
-    .find((match) => match !== null);
-
-  return chosen
-    ? { [agentId(Number(chosen[1]))]: { scenario: 'elicitation' } }
-    : {};
+function namedScenarioConfiguration(steps: string[]): AppFixtureAgents {
+  return Object.fromEntries(
+    agentScenarioSteps(namedScenarioSteps, steps).map(([ordinal, scenario]) => [
+      agentId(ordinal),
+      { scenario },
+    ]),
+  );
 }
 
 const liveFeedStep =

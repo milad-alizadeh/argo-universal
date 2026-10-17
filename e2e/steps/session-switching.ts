@@ -2,14 +2,14 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
-import { startSession } from './live-session';
+import { sessionRow, startSession } from './live-session';
 import { returnToSessions } from './navigation';
 import { agentModelLabel } from './new-session';
 
 const feed = (page: Page): Locator => page.getByTestId('feed-scroll');
 
 export async function openSession(page: Page, title: string): Promise<void> {
-  await page.getByRole('button', { name: new RegExp(`^${title}, `) }).click();
+  await sessionRow(page, title).click();
   await expect(feed(page)).toContainText(title);
 }
 

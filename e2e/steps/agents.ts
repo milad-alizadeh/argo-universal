@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { z } from 'zod';
+import { expect } from '../fixtures';
 import { agentId } from './scenario-agents';
 import { query } from './server-query';
 
@@ -39,4 +40,14 @@ export async function readAgent(
   if (!found) throw new Error(`The Server has no Agent ${id}`);
 
   return found;
+}
+
+// A scripted Agent's fixture comes from scenario-agents.ts; its step checks only that the Server lists that Agent.
+export async function expectListedAgent(
+  { page, server }: { page: Page; server: { httpUrl: string } },
+  ordinal: number,
+): Promise<void> {
+  expect(await readAgent(page, server.httpUrl, ordinal)).toMatchObject({
+    id: agentId(ordinal),
+  });
 }

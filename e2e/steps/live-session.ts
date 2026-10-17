@@ -16,8 +16,14 @@ export const sessionWithStatus = (
 ): Locator =>
   page.getByRole('button', { name: `${title}, ${status}`, exact: true });
 
+const escapeRegExp = (text: string): string =>
+  text.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+export const sessionRow = (page: Page, title: string): Locator =>
+  page.getByRole('button', { name: new RegExp(`^${escapeRegExp(title)}, `) });
+
 export function liveSessionRow(page: Page): Locator {
-  return page.getByRole('button', { name: new RegExp(`^${liveTitle}, `) });
+  return sessionRow(page, liveTitle);
 }
 
 export async function startSession(page: Page, title: string): Promise<void> {
