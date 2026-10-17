@@ -24,14 +24,17 @@ type ViewProps = Pick<PlanHeaderProps, 'view'>;
 // As the Written plan tray's row: small ghost buttons.
 const controlAppearance = { variant: 'ghost', size: 'xs' } as const;
 
-// The Written plan tray's row: the plan's icon and title, then its controls.
+/*
+ * The Written plan tray's row: the plan's icon and title, then its controls.
+ * Left, the icon sits on the plan's list markers; right, the chevron's glyph mirrors that inset.
+ */
 export function PlanHeader(props: PlanHeaderProps): ReactNode {
   return props.wide ? <WideHeader {...props} /> : <PhoneHeader {...props} />;
 }
 
 function WideHeader(props: PlanHeaderProps): ReactNode {
   return (
-    <View className="h-8 flex-row items-center gap-1.5 pl-2">
+    <View className="h-8 flex-row items-center gap-1.5 pl-3 pr-1">
       <PlanTitle title={props.title} />
       <FullPageButton view={props.view} />
       <ShowPlanButton view={props.view} />
@@ -62,6 +65,7 @@ function ShowPlanButton({ view }: ViewProps): ReactNode {
       accessibilityLabel={showPlanLabels[`${view.open}`]}
       aria-expanded={view.open}
       icon={view.open ? 'chevron-up' : 'chevron-down'}
+      iconRole="secondary"
       onPress={view.toggleOpen}
     />
   );
@@ -114,15 +118,16 @@ function openPlanPage(
   });
 }
 
+// Icon and gap span the list's indent, so the title starts where the plan's text does.
 function PlanTitle({ title }: Pick<PlanHeaderProps, 'title'>): ReactNode {
   return (
-    <>
+    <View className="min-w-0 flex-1 flex-row items-center gap-2">
       <Icon role="control" name="file-text" tone="muted" />
       <View className="min-w-0 flex-1">
         <Text role="secondary" tone="neutral" numberOfLines={1}>
           {title}
         </Text>
       </View>
-    </>
+    </View>
   );
 }
