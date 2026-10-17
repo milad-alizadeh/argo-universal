@@ -17,8 +17,9 @@ import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { useUniwind } from 'uniwind';
+import { useUniwind, withUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
+import { useWindowBackground } from '@/lib/window-background';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -51,10 +52,12 @@ const serverUrl =
 
 const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 
+const RootView = withUniwind(GestureHandlerRootView);
+
 export default function RootLayout(): React.JSX.Element {
   return (
-    // The phone drawer's gestures need this root.
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    // The phone drawer's gestures need this root; it sits on the content surface, as the window does.
+    <RootView className="flex-1 bg-content">
       {/* Screens follow the keyboard frame by frame through this. */}
       <KeyboardProvider>
         <SymbolImagesProvider render={renderSymbolImage}>
@@ -64,12 +67,13 @@ export default function RootLayout(): React.JSX.Element {
           </AppProviders>
         </SymbolImagesProvider>
       </KeyboardProvider>
-    </GestureHandlerRootView>
+    </RootView>
   );
 }
 
 function ThemedApp(): React.JSX.Element {
   const { theme } = useUniwind();
+  useWindowBackground();
 
   return (
     <ThemeProvider value={useNavigationTheme()}>

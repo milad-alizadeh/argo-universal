@@ -181,6 +181,14 @@
       --color-hover: color-mix(in oklab, var(--color-black) 2%, transparent);
       --color-selected: color-mix(in oklab, var(--color-black) 3%, transparent);
       --color-pressed: color-mix(in oklab, var(--color-black) 4%, transparent);
+      /* A fill that must show on the content surface, which muted matches: a
+         user message, the Inspector pane, an icon button's chip. The pressed
+         step of black, mixed into content so it stays opaque under a scroll fade. */
+      --color-tint: color-mix(
+        in oklab,
+        var(--color-black) 4%,
+        var(--color-content)
+      );
       /* A 1px edge that gives a bare surface its shape: a Session row, the
          rail's separator. Hex, as the shadow colours are, so the inset shadow
          that draws it parses on native too. */
@@ -242,6 +250,11 @@
       --color-hover: color-mix(in oklab, var(--color-white) 4%, transparent);
       --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
       --color-pressed: color-mix(in oklab, var(--color-white) 8%, transparent);
+      --color-tint: color-mix(
+        in oklab,
+        var(--color-white) 8%,
+        var(--color-content)
+      );
       /* Light's 5% black doubled to 10% white, as the tints double (2/3/4 to
          4/6/8): a light edge needs more to show on a dark ground. */
       --color-hairline: #ffffff1a;
