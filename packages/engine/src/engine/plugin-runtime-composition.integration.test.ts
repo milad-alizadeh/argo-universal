@@ -5,7 +5,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
 it.each(['index.mjs', 'index.cjs'])(
-  'lists unstarted Plugins and lazily loads an installed %s entry once',
+  'lists unstarted Plugins, lazily loads a %s entry once and reloads it on change',
   async (main) => {
     const home = await createRuntimePlugins([
       { id: 'healthy', fixture: 'healthy', main },
@@ -30,19 +30,21 @@ it.each(['index.mjs', 'index.cjs'])(
       { state: 'running', hanging: false, error: null },
       { state: 'running', hanging: false, error: null },
     ]);
+    // First-party Plugins are watched, so the broken entry is reloaded and reported.
     await writeFile(
       join(home, 'shipped/healthy', main),
-      'throw Error("installed code is not watched")',
+      'throw Error("Changed entry")',
     );
+    await expect
+      .poll(() => caller.plugins.list())
+      .toMatchObject({
+        plugins: [{ state: 'crashed', error: 'Changed entry' }],
+      });
     expect(
       await caller.plugins.activate({ pluginId: 'healthy' }),
-    ).toMatchObject({
-      state: 'running',
-    });
-    expect((await caller.plugins.list()).plugins).toMatchObject([
-      { state: 'running' },
-    ]);
+    ).toMatchObject({ state: 'crashed', error: 'Changed entry' });
   },
+  20_000,
 );
 
 it.each([
