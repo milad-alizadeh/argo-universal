@@ -18,6 +18,10 @@ import { applicationMenu } from './application-menu';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
 import { handleSymbolImages } from './symbol-images';
+import {
+  handleWindowMinimized,
+  reportWindowMinimized,
+} from './window-minimized';
 import { handleWindowShow } from './window-show';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
@@ -105,6 +109,8 @@ const createWindow = (url: string): void => {
     },
   });
 
+  reportWindowMinimized(mainWindow);
+
   // Keep the window on the App; the development inspector opens separately.
   mainWindow.webContents.on('will-navigate', (event, target): void => {
     if (originOf(target) !== windowOrigin) event.preventDefault();
@@ -132,6 +138,8 @@ for (const action of ['minimize', 'maximize', 'close'] as const) {
 }
 
 handleWindowShow(windowOrigin);
+
+handleWindowMinimized(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 
