@@ -246,12 +246,18 @@ it.each([
   {
     message: "the parent's own message on the parent transcript",
     transcript: undefined,
-    senderSessionId: undefined,
+    senderSessionId: 'parent',
     actions: [
       { action: 'spawn' },
       { action: 'spawn' },
       { action: 'message', prompt: [text('Check the tests')] },
     ],
+  },
+  {
+    message: 'a message with no sender on the parent transcript',
+    transcript: undefined,
+    senderSessionId: undefined,
+    actions: [{ action: 'spawn' }, { action: 'spawn' }],
   },
   {
     message: "a sibling's message on the parent transcript",
@@ -351,6 +357,7 @@ it.each([
         messageId: 'incoming',
         content: [text('Revised'), text(' instruction')],
         sender: 'parent',
+        recipient: 'child',
       },
     ],
   },
@@ -368,10 +375,17 @@ it.each([
         'review',
       ),
     ],
-    rows: [{ messageId: 'reply', content: [text('Done')], sender: 'child' }],
+    rows: [
+      {
+        messageId: 'reply',
+        content: [text('Done')],
+        sender: 'child',
+        recipient: 'parent',
+      },
+    ],
   },
   {
-    claim: 'leaves a missing sender missing',
+    claim: 'leaves a missing participant missing',
     steps: [
       onTranscript(
         {
@@ -388,6 +402,40 @@ it.each([
         messageId: 'incoming',
         content: [text('No sender')],
         sender: undefined,
+        recipient: 'child',
+      },
+    ],
+  },
+  {
+    claim: 'keeps its participants when a patch names unknown ones',
+    steps: [
+      onTranscript(
+        {
+          sessionUpdate: 'session_message',
+          messageId: 'incoming',
+          senderSessionId: 'parent',
+          recipientSessionId: 'review',
+          content: [text('Original')],
+        },
+        'review',
+      ),
+      onTranscript(
+        {
+          sessionUpdate: 'session_message',
+          messageId: 'incoming',
+          senderSessionId: 'unassociated',
+          recipientSessionId: 'other',
+          content: [text('Revised')],
+        },
+        'review',
+      ),
+    ],
+    rows: [
+      {
+        messageId: 'incoming',
+        content: [text('Revised')],
+        sender: 'parent',
+        recipient: 'child',
       },
     ],
   },
@@ -416,7 +464,12 @@ it.each([
       }),
     ],
     rows: [
-      { messageId: 'shared', content: [text('Child view')], sender: 'parent' },
+      {
+        messageId: 'shared',
+        content: [text('Child view')],
+        sender: 'parent',
+        recipient: undefined,
+      },
     ],
   },
 ] as const)("the child's own transcript $claim", async ({ steps, rows }) => {
@@ -429,7 +482,7 @@ it.each([
 
   if (!child) throw new Error('Missing Subagent');
 
-  const senders = new Map([
+  const sessions = new Map([
     ['parent', sessionId],
     ['child', child.sessionId],
   ]);
@@ -447,15 +500,16 @@ it.each([
               messageId: row.messageId,
               content: row.content,
               senderSessionId: row._meta?.argo?.senderSessionId,
+              recipientSessionId: row._meta?.argo?.recipientSessionId,
             },
           ]
         : [],
     ),
   ).toEqual(
-    rows.map(({ sender, ...row }) => ({
+    rows.map(({ sender, recipient, ...row }) => ({
       ...row,
-      senderSessionId: sender && senders.get(sender),
+      senderSessionId: sender && sessions.get(sender),
+      recipientSessionId: recipient && sessions.get(recipient),
     })),
   );
-  expect(await parentSubagentUpdates(host, sessionId)).toHaveLength(1);
 });

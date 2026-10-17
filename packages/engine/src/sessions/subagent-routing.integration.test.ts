@@ -170,6 +170,7 @@ it('reads the stored Subagent Feed after restart without launching an Agent', as
 
 // The parent revises its delegation by patch and chunk, then the child ends its Turn.
 const revisedDelegation: ScriptedScenario = {
+  sessionIds: ['parent'],
   steps: [
     {
       type: 'update',
@@ -193,6 +194,7 @@ const revisedDelegation: ScriptedScenario = {
       update: {
         sessionUpdate: 'session_message',
         messageId: 'delegation',
+        senderSessionId: 'parent',
         recipientSessionId: 'review',
         content: [{ type: 'text', text: 'Original' }],
       },

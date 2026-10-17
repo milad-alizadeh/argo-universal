@@ -18,13 +18,13 @@ const promptRecipient = (
 ): ChildFeed | undefined =>
   previous?.child ?? ownChild(input, update.recipientSessionId);
 
-// Only the transcript owner's outgoing message is a prompt; another sender's message is not.
+// Only a message the transcript owner says it sent is a prompt; its later patches need not repeat the sender.
 const isOutgoing = (
   input: MessageRouting,
   update: AcpSessionMessage,
+  previous: ChildPrompt | undefined,
 ): boolean =>
-  update.senderSessionId == null ||
-  update.senderSessionId === input.transcriptId;
+  previous !== undefined || update.senderSessionId === input.transcriptId;
 
 const promptAction = (
   update: AcpSessionMessage,
@@ -41,7 +41,7 @@ export function deliverPrompt(
   const previous = previousPrompt(input, update.messageId);
   const child = promptRecipient(input, update, previous);
 
-  if (child && isOutgoing(input, update))
+  if (child && isOutgoing(input, update, previous))
     sendMessageAction(input, child, promptAction(update, previous));
 
   return child !== undefined;

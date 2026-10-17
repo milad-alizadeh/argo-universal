@@ -40,6 +40,7 @@ const delegation = (messageId: string, text: string): ScriptedStep => ({
   update: {
     sessionUpdate: 'session_message',
     messageId,
+    senderSessionId: subagentParentSessionId,
     recipientSessionId: subagentSessionId,
     content: [{ type: 'text', text }],
   },

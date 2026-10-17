@@ -12,8 +12,8 @@ import {
   sendMessageAction,
 } from './subagent-actions';
 import { messageContent } from './subagent-content';
+import { messageMetadata } from './subagent-participants';
 import { deliverPrompt } from './subagent-prompts';
-import { messageMetadata } from './subagent-sender';
 
 // `parentId` names the Session whose transcript reported the message, so ids never match across transcripts.
 const messageId = (input: MessageRouting, update: AcpSessionMessage): string =>
