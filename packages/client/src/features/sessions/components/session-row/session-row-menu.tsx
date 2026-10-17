@@ -46,9 +46,14 @@ export function sessionMenuGroups(props: SessionRowProps): ContextMenuItem[][] {
   if (props.session.archivedAt !== null) return [];
 
   return [
-    contextMenuGroup('Rename', 'rename', renameSession(props)),
-    contextMenuGroup('Archive', 'archive', archiveSession(props)).map(
-      (item) => ({ ...item, disabled: isTurnActive(props.session) }),
+    contextMenuGroup({ label: 'Rename', icon: 'rename' }, renameSession(props)),
+    contextMenuGroup(
+      {
+        label: 'Archive',
+        icon: 'archive',
+        disabled: isTurnActive(props.session),
+      },
+      archiveSession(props),
     ),
   ].filter((group) => group.length > 0);
 }

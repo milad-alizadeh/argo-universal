@@ -1,6 +1,4 @@
-import { showSystemToast, type Toast } from './toast';
-
-// The phones' system toasts cannot hold a button, so the toast shows without its action.
-export function showActionToast(toast: Toast): void {
-  showSystemToast(toast);
+// The phones' system toasts cannot hold a button, so a toast with an action shows as a plain one.
+export function showActionToast(): boolean {
+  return false;
 }

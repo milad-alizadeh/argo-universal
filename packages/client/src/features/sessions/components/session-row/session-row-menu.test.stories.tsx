@@ -107,7 +107,10 @@ export const ArchiveRefusedWhileRunningWide: Story = archiveRefusedWhile(
   'wide',
 );
 
-export const ArchiveRefusedWhileNeedingInput: Story = archiveRefusedWhile(
+export const ArchiveRefusedWhileNeedingInputOnPhone: Story =
+  archiveRefusedWhile(sessionRows.needsInput, 'phone');
+
+export const ArchiveRefusedWhileNeedingInputWide: Story = archiveRefusedWhile(
   sessionRows.needsInput,
   'wide',
 );

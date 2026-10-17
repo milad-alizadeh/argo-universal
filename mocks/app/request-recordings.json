@@ -82,6 +82,7 @@
         "agent": "agent-1",
         "title": "Use Write exactly once to create hello.txt containing recording-ready. Then reply done. Do not use other tools.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-1-permission",
@@ -221,6 +222,7 @@
         "agent": "agent-1",
         "title": "Use Write exactly once to create hello.txt containing recording-ready. Then reply done. Do not use other tools.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-1-permission",
@@ -334,6 +336,7 @@
         "agent": "agent-1",
         "title": "Before doing anything, use AskUserQuestion to ask which color I prefer: Blue or Green. Then reply with my choice. Do not use other tools.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-1-elicitation",
@@ -481,6 +484,7 @@
         "agent": "agent-1",
         "title": "Before doing anything, use AskUserQuestion to ask which color I prefer: Blue or Green. Then reply with my choice. Do not use other tools.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-1-elicitation",
@@ -649,6 +653,7 @@
         "agent": "agent-1",
         "title": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After approval, only say ready; do not implement or run commands.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-1-plan-approved",
@@ -824,6 +829,7 @@
         "agent": "agent-1",
         "title": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After approval, only say ready; do not implement or run commands.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-1-plan-approved",
@@ -992,6 +998,7 @@
         "agent": "agent-1",
         "title": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After feedback, acknowledge it in one sentence, without calling any more tools.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-1-plan-kept-planning",
@@ -1184,6 +1191,7 @@
         "agent": "agent-1",
         "title": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After feedback, acknowledge it in one sentence, without calling any more tools.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-1-plan-kept-planning",
@@ -1305,6 +1313,7 @@
         "agent": "agent-2",
         "title": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-2-permission",
@@ -1451,6 +1460,7 @@
         "agent": "agent-2",
         "title": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-2-permission",
@@ -1509,6 +1519,7 @@
         "agent": "agent-2",
         "title": "Use request_user_input to ask which color I prefer, with options Blue and Green. Then acknowledge my choice, without using any other tools.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-2-elicitation",
@@ -1601,6 +1612,7 @@
         "agent": "agent-2",
         "title": "Use request_user_input to ask which color I prefer, with options Blue and Green. Then acknowledge my choice, without using any other tools.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-2-elicitation",
@@ -1672,6 +1684,7 @@
         "agent": "agent-2",
         "title": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-2-plan-approved",
@@ -1755,6 +1768,7 @@
         "agent": "agent-2",
         "title": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-2-plan-approved",
@@ -1826,6 +1840,7 @@
         "agent": "agent-2",
         "title": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-2-plan-kept-planning",
@@ -1926,6 +1941,7 @@
         "agent": "agent-2",
         "title": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block.",
         "titleSource": "prompt",
+        "archivedAt": null,
         "checkout": {
           "type": "worktree",
           "path": "/repo/.argo/worktrees/agent-2-plan-kept-planning",

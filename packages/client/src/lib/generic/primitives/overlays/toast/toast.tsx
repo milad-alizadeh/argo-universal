@@ -32,16 +32,12 @@ const tonePresets = {
 
 // iOS and Android draw a native toast; web draws it in the Toaster.
 export function showToast(toast: Toast): void {
-  if (toast.action) {
-    showActionToast(toast, toast.action);
-
-    return;
-  }
+  if (toast.action && showActionToast(toast, toast.action)) return;
 
   showSystemToast(toast);
 }
 
-export function showSystemToast(toast: Toast): void {
+function showSystemToast(toast: Toast): void {
   const options: ToastOptions = {
     ...tonePresets[toast.tone],
     title: toastTitle(toast),

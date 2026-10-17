@@ -802,6 +802,7 @@
           "agent": "agent-1",
           "title": "Think briefly first. Then: create notes.md holding a two-item todo list, change \"world\" to \"Argo\" in hello.txt with the Edit tool, and run `cat hello.txt && git status --short` with Bash. Finish with one short sentence.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-1-edit-and-command",
@@ -831,6 +832,7 @@
       "agent": "agent-1",
       "title": "Think briefly first. Then: create notes.md holding a two-item todo list, change \"world\" to \"Argo\" in hello.txt with the Edit tool, and run `cat hello.txt && git status --short` with Bash. Finish with one short sentence.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-1-edit-and-command",
@@ -1103,6 +1105,7 @@
           "agent": "agent-1",
           "title": "Run the shell command `sleep 20 && echo done` with the Bash tool, then tell me what it printed.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-1-interrupt",
@@ -1132,6 +1135,7 @@
       "agent": "agent-1",
       "title": "Run the shell command `sleep 20 && echo done` with the Bash tool, then tell me what it printed.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-1-interrupt",
@@ -1297,6 +1301,7 @@
           "agent": "agent-1",
           "title": "compaction",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-1-compaction",
@@ -1326,6 +1331,7 @@
       "agent": "agent-1",
       "title": "compaction",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-1-compaction",
@@ -1549,6 +1555,7 @@
           "agent": "agent-1",
           "title": "Name the dominant color in this image in one word. Do not use tools.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-1-image-prompt",
@@ -1578,6 +1585,7 @@
       "agent": "agent-1",
       "title": "Name the dominant color in this image in one word. Do not use tools.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-1-image-prompt",
@@ -2227,6 +2235,7 @@
           "agent": "agent-1",
           "title": "Without using any tools, explain in markdown why a Feed list re-renders every row when one row changes. Use exactly this shape: a level-2 heading, one short paragraph that mentions `feed.rows` and `revision` as inline code and links to [ADR 0007](https://example.com/adr/0007), a numbered list of three short steps, a tsx code block of two or three lines, a two-column table with a header row and two rows (Row state, Redraws), and one closing sentence. Keep the whole answer under 160 words.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-1-markdown-answer",
@@ -2256,6 +2265,7 @@
       "agent": "agent-1",
       "title": "Without using any tools, explain in markdown why a Feed list re-renders every row when one row changes. Use exactly this shape: a level-2 heading, one short paragraph that mentions `feed.rows` and `revision` as inline code and links to [ADR 0007](https://example.com/adr/0007), a numbered list of three short steps, a tsx code block of two or three lines, a two-column table with a header row and two rows (Row state, Redraws), and one closing sentence. Keep the whole answer under 160 words.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-1-markdown-answer",
@@ -3011,6 +3021,7 @@
           "agent": "agent-2",
           "title": "Use apply_patch to change beta to gamma in app.txt and create notes.md containing hello. Then run cat app.txt notes.md in a shell command. Do not start subagents. Reply done.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-2-edit-and-command",
@@ -3040,6 +3051,7 @@
       "agent": "agent-2",
       "title": "Use apply_patch to change beta to gamma in app.txt and create notes.md containing hello. Then run cat app.txt notes.md in a shell command. Do not start subagents. Reply done.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-2-edit-and-command",
@@ -3490,6 +3502,7 @@
           "agent": "agent-2",
           "title": "Run sleep 30 in a shell command. Do not start subagents. Reply done when it finishes.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-2-interrupt",
@@ -3519,6 +3532,7 @@
       "agent": "agent-2",
       "title": "Run sleep 30 in a shell command. Do not start subagents. Reply done when it finishes.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-2-interrupt",
@@ -3748,6 +3762,7 @@
           "agent": "agent-2",
           "title": "Remember this note: the sample project has a red square, a blue circle, and a green triangle. Reply with OK only.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-2-compaction",
@@ -3777,6 +3792,7 @@
       "agent": "agent-2",
       "title": "Remember this note: the sample project has a red square, a blue circle, and a green triangle. Reply with OK only.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-2-compaction",
@@ -3944,6 +3960,7 @@
           "agent": "agent-2",
           "title": "Name the dominant color in this image in one word. Do not use tools.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-2-image-prompt",
@@ -3973,6 +3990,7 @@
       "agent": "agent-2",
       "title": "Name the dominant color in this image in one word. Do not use tools.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-2-image-prompt",
@@ -5742,6 +5760,7 @@
           "agent": "agent-2",
           "title": "Without using any tools, explain in markdown why a Feed list re-renders every row when one row changes. Use exactly this shape: a level-2 heading, one short paragraph that mentions `feed.rows` and `revision` as inline code and links to [ADR 0007](https://example.com/adr/0007), a numbered list of three short steps, a tsx code block of two or three lines, a two-column table with a header row and two rows (Row state, Redraws), and one closing sentence. Keep the whole answer under 160 words.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-2-markdown-answer",
@@ -5771,6 +5790,7 @@
       "agent": "agent-2",
       "title": "Without using any tools, explain in markdown why a Feed list re-renders every row when one row changes. Use exactly this shape: a level-2 heading, one short paragraph that mentions `feed.rows` and `revision` as inline code and links to [ADR 0007](https://example.com/adr/0007), a numbered list of three short steps, a tsx code block of two or three lines, a two-column table with a header row and two rows (Row state, Redraws), and one closing sentence. Keep the whole answer under 160 words.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-2-markdown-answer",
@@ -6374,6 +6394,7 @@
           "agent": "agent-2",
           "title": "For a UI recording, run exactly two shell commands separately in this empty directory. First: printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n' . Second: printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2 . The second failure is intentional. Do not inspect files or retry. Answer done after both calls.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-2-command-outcomes",
@@ -6403,6 +6424,7 @@
       "agent": "agent-2",
       "title": "For a UI recording, run exactly two shell commands separately in this empty directory. First: printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n' . Second: printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2 . The second failure is intentional. Do not inspect files or retry. Answer done after both calls.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-2-command-outcomes",
@@ -7082,6 +7104,7 @@
           "agent": "agent-2",
           "title": "Use apply_patch to replace every one of the 60 lines in large.txt: change \"old value N\" to \"new value N\" for N=1 through 60. Delete legacy.txt in the same patch. You may read the files but do not use a shell to edit them. Reply done.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-2-edit-states",
@@ -7111,6 +7134,7 @@
       "agent": "agent-2",
       "title": "Use apply_patch to replace every one of the 60 lines in large.txt: change \"old value N\" to \"new value N\" for N=1 through 60. Delete legacy.txt in the same patch. You may read the files but do not use a shell to edit them. Reply done.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-2-edit-states",
@@ -7857,6 +7881,7 @@
           "agent": "agent-2",
           "title": "Use exactly one apply_patch request to update locked/file.txt, replacing the exact line \"old value\" with \"new value\". The directory is read-only to exercise the patch failure path. Do not change permissions, use a shell, or retry. Report the result.",
           "titleSource": "prompt",
+          "archivedAt": null,
           "checkout": {
             "type": "worktree",
             "path": "/repo/.argo/worktrees/agent-2-edit-failure",
@@ -7886,6 +7911,7 @@
       "agent": "agent-2",
       "title": "Use exactly one apply_patch request to update locked/file.txt, replacing the exact line \"old value\" with \"new value\". The directory is read-only to exercise the patch failure path. Do not change permissions, use a shell, or retry. Report the result.",
       "titleSource": "prompt",
+      "archivedAt": null,
       "checkout": {
         "type": "worktree",
         "path": "/repo/.argo/worktrees/agent-2-edit-failure",

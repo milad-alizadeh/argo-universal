@@ -7,9 +7,9 @@ const actionToastMilliseconds = 4000;
 
 /*
  * Burnt's web toast takes no button, so a toast with an action goes to sonner, the library under
- * Burnt's Toaster; the Toaster draws it like every other toast.
+ * Burnt's Toaster; the Toaster draws it like every other toast. Returns whether it drew the toast.
  */
-export function showActionToast(toast: Toast, action: ToastAction): void {
+export function showActionToast(toast: Toast, action: ToastAction): boolean {
   const show = toast.tone === 'success' ? sonner.success : sonner.error;
 
   show(toast.title, {
@@ -18,6 +18,8 @@ export function showActionToast(toast: Toast, action: ToastAction): void {
     action: { label: action.label, onClick: action.onPress },
     duration: actionToastMilliseconds,
   });
+
+  return true;
 }
 
 const toneIcons = { success: 'check', danger: 'close' } as const;

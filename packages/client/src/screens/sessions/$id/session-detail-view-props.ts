@@ -92,6 +92,7 @@ const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   header: sessionHeaderProps(open),
   feed: sessionFeedProps(open),
   composer: sessionComposerProps(open),
+  archived: open.snapshot.archivedAt !== null,
 });
 
 // What the Session view draws for the Feed's progress: failed, still opening, or open.

@@ -21,8 +21,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-type Layout = 'phone' | 'wide';
-
 const body = within(document.body);
 
 async function openAlert(): Promise<ReturnType<typeof within>> {
@@ -31,17 +29,16 @@ async function openAlert(): Promise<ReturnType<typeof within>> {
   );
 }
 
-function atWidth(layout: Layout): () => Promise<void> {
-  return async () => {
-    onArchive.mockClear();
-    onClose.mockClear();
-    await settleViewport(layoutWidths[layout]);
-  };
+// Only phones ask before archiving; the Alert primitive's own tests cover the wide layout.
+async function atPhoneWidth(): Promise<void> {
+  onArchive.mockClear();
+  onClose.mockClear();
+  await settleViewport(layoutWidths.phone);
 }
 
 // The alert says what archiving removes and what it keeps.
 export const SaysWhatArchiveRemoves: Story = {
-  beforeEach: atWidth('wide'),
+  beforeEach: atPhoneWidth,
   play: async () => {
     const alert = await openAlert();
     await waitFor(() =>
@@ -51,39 +48,27 @@ export const SaysWhatArchiveRemoves: Story = {
 };
 
 // Archive archives the Session and closes the alert.
-function archiveAt(layout: Layout): Story {
-  return {
-    beforeEach: atWidth(layout),
-    play: async ({ userEvent }) => {
-      const alert = await openAlert();
-      await userEvent.click(
-        alert.getByRole('button', { name: archiveSessionCopy.archive }),
-      );
-      await expect(onArchive).toHaveBeenCalledTimes(1);
-      await expect(onClose).toHaveBeenCalledTimes(1);
-    },
-  };
-}
-
-export const ArchiveOnPhone: Story = archiveAt('phone');
-
-export const ArchiveWide: Story = archiveAt('wide');
+export const ArchiveArchives: Story = {
+  beforeEach: atPhoneWidth,
+  play: async ({ userEvent }) => {
+    const alert = await openAlert();
+    await userEvent.click(
+      alert.getByRole('button', { name: archiveSessionCopy.archive }),
+    );
+    await expect(onArchive).toHaveBeenCalledTimes(1);
+    await expect(onClose).toHaveBeenCalledTimes(1);
+  },
+};
 
 // Cancel keeps the Session.
-function cancelAt(layout: Layout): Story {
-  return {
-    beforeEach: atWidth(layout),
-    play: async ({ userEvent }) => {
-      const alert = await openAlert();
-      await userEvent.click(
-        alert.getByRole('button', { name: archiveSessionCopy.cancel }),
-      );
-      await expect(onClose).toHaveBeenCalledTimes(1);
-      await expect(onArchive).not.toHaveBeenCalled();
-    },
-  };
-}
-
-export const CancelKeepsOnPhone: Story = cancelAt('phone');
-
-export const CancelKeepsWide: Story = cancelAt('wide');
+export const CancelKeeps: Story = {
+  beforeEach: atPhoneWidth,
+  play: async ({ userEvent }) => {
+    const alert = await openAlert();
+    await userEvent.click(
+      alert.getByRole('button', { name: archiveSessionCopy.cancel }),
+    );
+    await expect(onClose).toHaveBeenCalledTimes(1);
+    await expect(onArchive).not.toHaveBeenCalled();
+  },
+};

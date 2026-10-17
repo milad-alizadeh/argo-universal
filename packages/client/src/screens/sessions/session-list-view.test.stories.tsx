@@ -120,26 +120,34 @@ export const ClosingSearchWide = closingSearch(1440);
 
 const onArchive = fn();
 
-const idleRow = activeSessions.sessions.find(
+const foundIdleRow = activeSessions.sessions.find(
   (session) => session.status === 'idle',
 );
 
-if (!idleRow) throw new Error('Recorded catalog needs an idle Session');
+if (!foundIdleRow) throw new Error('Recorded catalog needs an idle Session');
+
+const idleRow = foundIdleRow;
 
 // A row's right-click menu archives its Session through the list.
-export const ArchiveFromARow: Story = {
-  args: { onArchive },
-  beforeEach: async () => {
-    onArchive.mockClear();
-    await settleViewport(layoutWidths.wide);
-  },
-  play: async ({ canvas, userEvent }) => {
-    const [title] = await canvas.findAllByText(idleRow.title);
+function archiveFromARowAt(layout: keyof typeof layoutWidths): Story {
+  return {
+    args: { onArchive },
+    beforeEach: async () => {
+      onArchive.mockClear();
+      await settleViewport(layoutWidths[layout]);
+    },
+    play: async ({ canvas, userEvent }) => {
+      const [title] = await canvas.findAllByText(idleRow.title);
 
-    if (!title) throw new Error('Missing idle row');
-    await userEvent.pointer({ keys: '[MouseRight]', target: title });
-    const menu = within(await screen.findByRole('menu'));
-    await userEvent.click(menu.getByRole('menuitem', { name: 'Archive' }));
-    await expect(onArchive).toHaveBeenCalledWith(idleRow.sessionId);
-  },
-};
+      if (!title) throw new Error('Missing idle row');
+      await userEvent.pointer({ keys: '[MouseRight]', target: title });
+      const menu = within(await screen.findByRole('menu'));
+      await userEvent.click(menu.getByRole('menuitem', { name: 'Archive' }));
+      await expect(onArchive).toHaveBeenCalledWith(idleRow.sessionId);
+    },
+  };
+}
+
+export const ArchiveFromARowOnPhone: Story = archiveFromARowAt('phone');
+
+export const ArchiveFromARowWide: Story = archiveFromARowAt('wide');
