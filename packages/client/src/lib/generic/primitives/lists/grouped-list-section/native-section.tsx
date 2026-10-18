@@ -4,15 +4,17 @@ import { listRowBackground } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { NativeText } from '#primitives/display/native-text';
+import { usePaneSectionMargin } from '../../../use-size-class/pane-section-margin';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 
 export function NativeSection(props: GroupedListSectionProps): ReactElement {
   const { card } = useNativeTheme().colors;
+  const paneMargin = usePaneSectionMargin();
 
   return (
     <FieldGroup.Section
       title={props.title}
-      modifiers={card ? [listRowBackground(card)] : []}
+      modifiers={[...(card ? [listRowBackground(card)] : []), ...paneMargin]}
     >
       {footerSlot(props)}
       {props.children}

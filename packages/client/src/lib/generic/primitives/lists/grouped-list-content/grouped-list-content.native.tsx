@@ -9,6 +9,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { usePaneSectionMargin } from '../../../use-size-class/pane-section-margin';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListContentProps } from './grouped-list-content-props';
 import { GroupedListContent as WebGroupedListContent } from './grouped-list-content.tsx';
@@ -84,8 +85,12 @@ function BareSection({
 }: {
   children: React.ReactElement;
 }): React.JSX.Element {
+  const paneMargin = usePaneSectionMargin();
+
   return (
-    <FieldGroup.Section modifiers={bareRow}>{children}</FieldGroup.Section>
+    <FieldGroup.Section modifiers={[...bareRow, ...paneMargin]}>
+      {children}
+    </FieldGroup.Section>
   );
 }
 

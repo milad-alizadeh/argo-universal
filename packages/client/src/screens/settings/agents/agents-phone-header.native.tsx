@@ -24,11 +24,5 @@ export function AgentsPhoneHeader(
 }
 
 function AgentsNativeSearch(props: AgentsHeaderProps): React.JSX.Element {
-  return (
-    <PhoneSearchBar
-      headerButton
-      placeholder={searchLabel}
-      onSearch={props.onSearch}
-    />
-  );
+  return <PhoneSearchBar placeholder={searchLabel} onSearch={props.onSearch} />;
 }

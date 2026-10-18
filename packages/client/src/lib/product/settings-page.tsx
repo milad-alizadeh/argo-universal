@@ -10,6 +10,10 @@ import {
   type PageTitleRowProps,
   type PageTitleSearch,
 } from '../generic/page-title-row/page-title-row';
+import {
+  paneLeadingInset,
+  useInIosPane,
+} from '../generic/use-size-class/pane-inset';
 import { useSizeClass } from '../generic/use-size-class/use-size-class';
 
 export type SettingsPageSearch = PageTitleSearch;
@@ -20,6 +24,8 @@ export interface SettingsPageProps extends PageTitleRowProps {
   caption?: string;
   // A row of controls under the title, such as filters.
   toolbar?: ReactNode;
+  // A phone's row of controls under its native header, such as filters.
+  phoneToolbar?: ReactNode;
   children: ReactNode;
 }
 
@@ -71,7 +77,9 @@ export function SettingsPage(props: SettingsPageProps): ReactNode {
     <View className="flex-1 wide:mt-frame-inset">
       {showHeader ? (
         <SettingsPageTop {...props} column={settingsColumn} />
-      ) : null}
+      ) : (
+        <PhoneToolbar>{props.phoneToolbar}</PhoneToolbar>
+      )}
       <SettingsPageBody column={bodyColumn}>{props.children}</SettingsPageBody>
     </View>
   );
@@ -100,6 +108,23 @@ function SettingsPageTop({
       <SettingsPageHeader {...props} />
     </View>
   );
+}
+
+/*
+ * A tablet's pane stacks the stock search bar above the row (#927): the row starts at the bar's leading edge, and its
+ * top gap, with the bar's own bottom margin, matches the gap the list's Form keeps above its first section.
+ */
+const paneToolbarClass = cn('z-10 shrink-0 pr-4 pt-3', paneLeadingInset);
+
+// On iOS the list's Form keeps its own gap above its first section, so the row adds none below.
+const phoneToolbarClass = 'z-10 shrink-0 px-4 py-3 ios:pb-0';
+
+function PhoneToolbar(props: { children: ReactNode }): ReactNode {
+  const toolbarClass = useInIosPane() ? paneToolbarClass : phoneToolbarClass;
+
+  if (!props.children) return null;
+
+  return <View className={toolbarClass}>{props.children}</View>;
 }
 
 function SettingsPageBody(props: {
