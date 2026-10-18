@@ -42,6 +42,7 @@ export const ProgressBar: PluginComponents['ProgressBar'];
 export const Pill: PluginComponents['Pill'];
 
 export const EmptyState: PluginComponents['EmptyState'];
+
 export const Picker: PluginComponents['Picker'];
 
 export const Switch: PluginComponents['Switch'];
