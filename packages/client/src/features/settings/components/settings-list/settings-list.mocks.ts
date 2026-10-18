@@ -1,1 +1,5 @@
-export const settingsListMocks = { projectCount: 1, agentCount: 2 };
+export const settingsListMocks = {
+  projectCount: 1,
+  agentCount: 2,
+  pluginCount: 2,
+};

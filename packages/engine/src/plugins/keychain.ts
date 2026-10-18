@@ -62,3 +62,7 @@ export const macKeychain: Keychain = {
 
 export const pluginKeychainService = (pluginId: string): string =>
   `argo.plugin.${pluginId}`;
+
+// A Plugin's secret settings, apart from the secrets it keeps itself through `argo.secrets`.
+export const pluginSettingsKeychainService = (pluginId: string): string =>
+  `${pluginKeychainService(pluginId)}.settings`;

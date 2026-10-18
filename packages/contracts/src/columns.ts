@@ -3,6 +3,7 @@ import {
   registryCache,
   blob,
   feedRow,
+  pluginState,
   project,
   session,
   shell,
@@ -26,3 +27,5 @@ export const agentServerColumns = createSelectSchema(agentServers);
 export const registryCacheColumns = createSelectSchema(registryCache);
 
 export const shellColumns = createSelectSchema(shell);
+
+export const pluginStateColumns = createSelectSchema(pluginState);

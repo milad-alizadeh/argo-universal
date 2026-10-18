@@ -155,3 +155,19 @@ it('aborts a Plugin request that is still waiting when the Plugin reloads', asyn
   await appendFile(entry, '\n// reload\n');
   await expect.poll(() => closed, pollOptions).toBe(true);
 });
+
+it('kills a Plugin child process when the Plugin is turned off', async () => {
+  const { home, data } = await installed(spawning(''), {
+    capabilities: commands,
+  });
+
+  const { caller } = await startEngineTestHost({ home });
+
+  await caller.plugins.activate({ pluginId: 'probe' });
+
+  const pid = await childPid(data);
+
+  expect(alive(pid)).toBe(true);
+  await caller.plugins.setEnabled({ pluginId: 'probe', enabled: false });
+  await expect.poll(() => alive(pid), pollOptions).toBe(false);
+});

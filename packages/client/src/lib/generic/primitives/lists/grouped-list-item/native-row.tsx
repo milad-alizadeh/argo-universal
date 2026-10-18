@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { IconSlot, IconSpinner } from '#primitives/display/icon';
 import { NativeControl } from '#primitives/native/native-control';
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
 import {
@@ -15,7 +15,7 @@ import {
 import { StackedIcon } from './stacked-row';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
 
-function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
+function NativeRowIcon({ icon }: { icon: IconSymbol }): React.JSX.Element {
   return (
     <StackedIcon>
       <NativeSymbol name={icon} role="row" />
@@ -93,7 +93,7 @@ function NativeRowGlyph({
   leading,
   variant,
 }: {
-  icon?: IconName;
+  icon?: IconSymbol;
   leading?: ReactElement;
   variant?: ResolvedItemProps['variant'];
 }): React.JSX.Element | null {

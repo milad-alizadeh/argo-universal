@@ -40,6 +40,10 @@ export { DeviceListScreen } from './screens/settings/devices/device-list-screen'
 
 export { NotificationsDetailScreen } from './screens/settings/notifications/notifications-detail-screen';
 
+export { PluginListScreen } from './screens/settings/plugins/plugin-list-screen';
+
+export { PluginSettingsDetailScreen } from './screens/settings/plugins/$id/plugin-settings-detail-screen';
+
 export { ProjectListScreen } from './screens/settings/projects/project-list-screen';
 
 export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';

@@ -4,11 +4,15 @@ export { createPluginRuntime } from './create-runtime';
 
 export { HookPort } from './hooks/hook-port';
 
-export type { Keychain } from './keychain';
+export { macKeychain, type Keychain } from './keychain';
+
+export { PluginSettings } from './plugin-settings';
 
 export type { PluginNetwork } from './plugin-fetch';
 
 export { PluginRuntime } from './runtime';
+
+export { pluginManifest } from './located-plugins';
 
 export { PluginService } from './service';
 

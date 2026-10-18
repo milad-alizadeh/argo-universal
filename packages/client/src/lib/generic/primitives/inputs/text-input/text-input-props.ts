@@ -39,8 +39,8 @@ export type FieldProgressProps = Pick<TextFieldProps, 'label' | 'loading'>;
 // What the field's spinner says while it checks the value.
 export const fieldLoadingLabel = (label: string): string => `Checking ${label}`;
 
-// What either labelled variant may ask of its entry: a starred label, a numeric keyboard.
-type EntryProps = { required?: boolean; numeric?: boolean };
+// What either labelled variant may ask of its entry: a starred label, a numeric keyboard, masked entry for a secret.
+type EntryProps = { required?: boolean; numeric?: boolean; secure?: boolean };
 
 /*
  * A field may draw no label, its placeholder or the heading above saying what to type, as a
@@ -79,3 +79,15 @@ export type PhoneFieldProps = TextFieldProps & EntryProps & RowEntryProps;
 // Invalid only when there is a message to show: a form may pass an empty entry while nothing has failed.
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
   errorMessage(props.errors ?? []) !== undefined;
+
+// The web keyboard an entry asks for: numeric, or masked for a secret.
+export const keyboardOf = ({
+  numeric,
+  secure,
+}: EntryProps): Pick<
+  NativeTextInputProps,
+  'keyboardType' | 'secureTextEntry'
+> => ({
+  keyboardType: numeric ? 'numbers-and-punctuation' : 'default',
+  secureTextEntry: secure,
+});

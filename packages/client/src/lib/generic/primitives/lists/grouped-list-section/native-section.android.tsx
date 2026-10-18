@@ -38,7 +38,7 @@ export function NativeSection(props: GroupedListSectionProps): ReactElement {
 }
 
 function SectionRows(props: GroupedListSectionProps): ReactElement {
-  const bare = useSidebarList() || props.textFields;
+  const bare = useSidebarList() || drawsNoCard(props);
 
   return (
     <Column
@@ -49,6 +49,10 @@ function SectionRows(props: GroupedListSectionProps): ReactElement {
     </Column>
   );
 }
+
+// Stacked text fields and card-less content keep their full width, unclipped by a card's corners.
+const drawsNoCard = (props: GroupedListSectionProps): boolean =>
+  Boolean(props.textFields || props.cardless);
 
 function SectionFooter(props: GroupedListSectionProps): ReactElement {
   return (

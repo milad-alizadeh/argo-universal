@@ -4,8 +4,8 @@ import { font, foregroundStyle, imageScale } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { isCustomSymbol } from './custom-symbols';
 import { type DrawnSymbol, drawnSymbol } from './drawn-symbol';
-import { iconSymbols } from './icon-names';
 import { type IconRole, useIconPixels } from './icon-role';
+import { resolveIcon } from './icon-symbol';
 import type { NativeSymbolProps } from './native-symbol-props';
 import { tablerAsset } from './tabler-symbols';
 
@@ -62,7 +62,7 @@ export function NativeSymbol({
 
   return (
     <Image
-      {...imageSource(drawnSymbol(iconSymbols[name], filled))}
+      {...imageSource(drawnSymbol(resolveIcon(name).symbol, filled))}
       size={pixels}
       modifiers={symbolModifiers(role, muted)}
     />

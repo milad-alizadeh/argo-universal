@@ -78,6 +78,7 @@ function fieldBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
     enabled: !props.disabled,
     isError: isInvalid(props),
     singleLine: true,
+    visualTransformation: props.secure ? 'password' : 'none',
     modifiers: fieldModifiers(props),
     textStyle: codeFace(props.mono).textStyle,
   };
@@ -98,9 +99,17 @@ function keyboardOptions(
   return {
     capitalization: 'none',
     autoCorrectEnabled: false,
-    keyboardType: props.numeric ? 'decimal' : 'text',
+    keyboardType: keyboardType(props),
     imeAction: props.onSubmit ? 'done' : 'default',
   };
+}
+
+function keyboardType(
+  props: PhoneFieldProps,
+): NonNullable<OutlinedTextFieldProps['keyboardOptions']>['keyboardType'] {
+  if (props.secure) return 'password';
+
+  return props.numeric ? 'decimal' : 'text';
 }
 
 // A field without a label keeps the plain outline; its placeholder says what to type.

@@ -50,6 +50,7 @@ function fieldBehaviour(props: PhoneFieldProps): TextInputProps {
     autoCapitalize: 'none',
     autoCorrect: false,
     keyboardType: props.numeric ? 'numbers-and-punctuation' : undefined,
+    secureTextEntry: props.secure,
     // Beside a label the value trails the row; alone, the entry leads it as the row's title would.
     textAlign: props.labelHidden ? 'left' : 'right',
     ...entryBehaviour(props),
