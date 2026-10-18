@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { useContext, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import {
   FooterProvider,
@@ -11,6 +11,7 @@ import {
   RowTextInput,
   type TextFieldProps,
 } from '#primitives/inputs/text-input';
+import { ListContext } from '../../../list-context';
 import { ListItemFrame } from './list-item';
 
 export type ListItemTextFieldProps = TextFieldProps & { description?: string };
@@ -19,7 +20,7 @@ export function ListItemTextField(props: ListItemTextFieldProps): ReactElement {
   const field = { ...props, hint: props.description ?? props.hint };
 
   return Platform.OS === 'android' ? (
-    <StandaloneTextInput {...field} />
+    <StackedField {...field} />
   ) : (
     <FieldRow {...field} />
   );
@@ -58,5 +59,16 @@ function FieldEntry(props: TextFieldProps): ReactElement {
       disabled={props.disabled}
       content={<RowTextInput {...props} />}
     />
+  );
+}
+
+function StackedField(props: TextFieldProps): ReactElement {
+  const { position } = useContext(ListContext);
+  const gap = ['first', 'middle'].includes(position) ? 'pb-4' : undefined;
+
+  return (
+    <View className={gap}>
+      <StandaloneTextInput {...props} />
+    </View>
   );
 }

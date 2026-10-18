@@ -7,8 +7,18 @@ import {
 import type { ReactElement } from 'react';
 import { ControlHost } from '#primitives/native/native-control';
 import type { ListItemStepperProps } from './list-item-stepper';
+import { StepperButtons } from './stepper-buttons';
+import { nativeStepperRange } from './stepper-native-range';
 
 export function StepperControl(props: ListItemStepperProps): ReactElement {
+  const range = nativeStepperRange(props);
+
+  if (!range) return <StepperButtons {...props} />;
+
+  return <NativeStepper {...props} {...range} />;
+}
+
+function NativeStepper(props: ListItemStepperProps): ReactElement {
   return (
     <ControlHost matchContents>
       <Stepper

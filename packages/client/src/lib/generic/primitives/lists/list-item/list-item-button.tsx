@@ -17,6 +17,15 @@ export function ListItemButton(props: ListItemButtonProps): ReactElement {
 function DangerAction(props: ListItemButtonProps): ReactElement {
   return (
     <View>
+      <DangerButton {...props} />
+      {props.description ? <ListFooter text={props.description} /> : null}
+    </View>
+  );
+}
+
+function DangerButton(props: ListItemButtonProps): ReactElement {
+  return (
+    <View className="items-center">
       <Button
         label={props.title}
         tone="danger"
@@ -24,7 +33,6 @@ function DangerAction(props: ListItemButtonProps): ReactElement {
         disabled={props.disabled}
         onPress={props.onPress}
       />
-      {props.description ? <ListFooter text={props.description} /> : null}
     </View>
   );
 }

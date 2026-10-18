@@ -26,11 +26,7 @@ export function ListItemLink(props: LinkProps): ReactElement {
       {...props}
       role={linkRole(props)}
       accessibilityLabel={linkLabel(props)}
-      accessory={
-        Platform.OS === 'android' ? null : (
-          <Icon name="chevron-right" role="row" />
-        )
-      }
+      accessory={<LinkAccessory />}
     />
   );
 }
@@ -39,4 +35,10 @@ function linkRole(props: LinkProps): 'button' | 'link' | 'group' {
   if (props.role) return props.role;
 
   return props.accessibilityRole === 'button' ? 'button' : 'link';
+}
+
+function LinkAccessory(): ReactElement | null {
+  return Platform.OS === 'android' ? null : (
+    <Icon name="web-disclosure" role="disclosure" className="text-tertiary" />
+  );
 }

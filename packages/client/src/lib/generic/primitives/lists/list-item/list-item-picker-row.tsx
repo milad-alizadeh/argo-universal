@@ -12,7 +12,9 @@ export function PickerRow(props: ListItemPickerProps): ReactElement {
       {...props}
       role="button"
       value={pickerRowValue(props)}
-      accessory={<Icon name="chevron-up-down" role="row" />}
+      accessory={
+        <Icon name="chevron-up-down" role="chevron" className="text-tertiary" />
+      }
     />
   );
 }

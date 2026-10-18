@@ -1,5 +1,11 @@
-import { Menu, RNHostView, Toggle } from '@expo/ui/swift-ui';
-import { accessibilityLabel, disabled } from '@expo/ui/swift-ui/modifiers';
+import { Menu, Picker, RNHostView, Text } from '@expo/ui/swift-ui';
+import {
+  accessibilityLabel,
+  disabled,
+  pickerStyle,
+  labelsHidden,
+  tag,
+} from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement, ComponentProps } from 'react';
 import { View } from 'react-native';
 import { Host } from '#primitives/native/host';
@@ -32,7 +38,7 @@ function NativeMenu<Value extends string>(
       label={<Trigger size={props.size} />}
       modifiers={menuModifiers(props)}
     >
-      <Options {...props} />
+      <NativePicker {...props} />
     </Menu>
   );
 }
@@ -54,33 +60,41 @@ function menuModifiers(
   ];
 }
 
+function NativePicker<Value extends string>(
+  props: ListItemPickerProps<Value>,
+): ReactElement {
+  return (
+    <Picker
+      label={props.title}
+      selection={props.value}
+      onSelectionChange={props.onValueChange}
+      modifiers={[pickerStyle('inline'), labelsHidden()]}
+    >
+      <Options {...props} />
+    </Picker>
+  );
+}
+
 function Options<Value extends string>(
   props: ListItemPickerProps<Value>,
 ): ReactElement {
   return (
     <>
       {props.options.map((option) => (
-        <Choice key={option.value} {...props} option={option} />
+        <Option key={option.value} {...option} />
       ))}
     </>
   );
 }
 
-type ChoiceProps<Value extends string> = ListItemPickerProps<Value> & {
-  option: ListItemPickerProps<Value>['options'][number];
-};
-
-function Choice<Value extends string>({
-  option,
+function Option({
   value,
-  onValueChange,
-}: ChoiceProps<Value>): ReactElement {
-  return (
-    <Toggle
-      label={option.label}
-      isOn={option.value === value}
-      modifiers={[disabled(!!option.disabled)]}
-      onIsOnChange={() => onValueChange(option.value)}
-    />
-  );
+  label,
+  disabled: isDisabled,
+}: {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}): ReactElement {
+  return <Text modifiers={[tag(value), disabled(!!isDisabled)]}>{label}</Text>;
 }

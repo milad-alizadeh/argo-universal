@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -77,10 +78,17 @@ const missingFolderDetail: ProjectDetail = {
 };
 
 // The Project's remote, or its missing folder, fills the row's value lane.
-function projectDetail(project: ProjectInfo): ProjectDetail {
-  if (!project.folderExists) return missingFolderDetail;
+function projectDetail(project: ProjectInfo, compact?: boolean): ProjectDetail {
+  if (!project.folderExists) return missingDetail(compact);
 
   return { value: project.remoteHost ?? 'No remote' };
+}
+
+function missingDetail(compact?: boolean): ProjectDetail {
+  return {
+    ...missingFolderDetail,
+    value: compact ? undefined : folderNotFound,
+  };
 }
 
 type ProjectRowProps = {
@@ -90,7 +98,18 @@ type ProjectRowProps = {
 
 // One line at every width: the folder path sits only on the Project's own page.
 function ProjectRow(props: ProjectRowProps): React.JSX.Element {
-  const detail = projectDetail(props.project);
+  return (
+    <SizeClass
+      compact={<ProjectLink {...props} compact />}
+      wide={<ProjectLink {...props} />}
+    />
+  );
+}
+
+function ProjectLink(
+  props: ProjectRowProps & { compact?: boolean },
+): React.JSX.Element {
+  const detail = projectDetail(props.project, props.compact);
 
   return (
     <ListItem.Link
