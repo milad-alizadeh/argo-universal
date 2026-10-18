@@ -107,7 +107,7 @@
   --radius-grouped-inner: 0px;
   --spacing-frame-bar: 64px;
   /* The rail, the sidebar control bar and the Inspector bar on a wide window. */
-  --spacing-frame-rail: 72px;
+  --spacing-frame-rail: 80px;
   --spacing-frame-control: 44px;
   --spacing-frame-list: 312px;
   --spacing-frame-inspector: 352px;
