@@ -1,5 +1,5 @@
 import fixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { parseSvg } from './svg-parser';
 import {
   sanitizeSvg,
@@ -13,6 +13,7 @@ describe('sanitizeSvg', () => {
     const result = sanitizeSvg(xml, parseSvg);
 
     expect(result.ok).toBe(true);
+
     if (!result.ok) return;
     expect(result.xml).toContain('<svg');
   });
@@ -35,10 +36,13 @@ describe('sanitizeSvg', () => {
 
   it('accepts the character, element and depth limits at their boundaries', () => {
     const characterBase = '<svg/>';
+
     const atCharacterLimit = `${characterBase}<!--${'x'.repeat(
       svgCharacterLimit - characterBase.length - 7,
     )}-->`;
+
     const atElementLimit = `<svg>${'<g/>'.repeat(svgElementLimit - 1)}</svg>`;
+
     const atDepthLimit = `<svg>${'<g>'.repeat(svgDepthLimit - 1)}${'</g>'.repeat(
       svgDepthLimit - 1,
     )}</svg>`;
@@ -51,6 +55,7 @@ describe('sanitizeSvg', () => {
 
   it('refuses one item beyond each structural limit', () => {
     const tooManyElements = `<svg>${'<g/>'.repeat(svgElementLimit)}</svg>`;
+
     const tooDeep = `<svg>${'<g>'.repeat(svgDepthLimit)}${'</g>'.repeat(
       svgDepthLimit,
     )}</svg>`;
@@ -62,6 +67,16 @@ describe('sanitizeSvg', () => {
     expect(sanitizeSvg(tooDeep, parseSvg).ok).toBe(false);
   });
 
+  it.each([
+    `<svg>${'<g>'.repeat(svgDepthLimit)}${'</g>'.repeat(svgDepthLimit)}</svg>`,
+    `<svg>${'<g/>'.repeat(svgElementLimit)}</svg>`,
+  ])('checks structural limits before parsing', (xml) => {
+    const parse = vi.fn<() => null>(() => null);
+
+    expect(sanitizeSvg(xml, parse).ok).toBe(false);
+    expect(parse).not.toHaveBeenCalled();
+  });
+
   it('refuses non-finite values in SVG paths and transforms', () => {
     expect(sanitizeSvg('<svg><path d="M0 Infinity"/></svg>', parseSvg).ok).toBe(
       false,
@@ -71,6 +86,15 @@ describe('sanitizeSvg', () => {
         '<svg><path transform="translate(Infinity)"/></svg>',
         parseSvg,
       ).ok,
+    ).toBe(false);
+  });
+
+  it('refuses transforms with empty arguments', () => {
+    expect(
+      sanitizeSvg('<svg><path transform="translate()"/></svg>', parseSvg).ok,
+    ).toBe(false);
+    expect(
+      sanitizeSvg('<svg><path transform="translate(,)"/></svg>', parseSvg).ok,
     ).toBe(false);
   });
 

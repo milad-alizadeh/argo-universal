@@ -13,54 +13,121 @@ export interface SanitizedTree {
   containsSvg: boolean;
 }
 
-export function sanitizeTree(root: WireNode): SanitizedTree {
-  const refused: RefusedSvg[] = [];
-  let containsSvg = false;
-  const next = visit(root, [], refused, () => (containsSvg = true));
+interface VisitState {
+  refused: RefusedSvg[];
+  containsSvg: boolean;
+}
 
-  return { root: next ?? emptyTree(), refused, containsSvg };
+export function sanitizeTree(root: WireNode): SanitizedTree {
+  const state: VisitState = { refused: [], containsSvg: false };
+  const next = visit(root, [], state);
+
+  return { root: next ?? emptyTree(), ...state };
 }
 
 function visit(
   node: WireNode,
   path: string[],
-  refused: RefusedSvg[],
-  onSvg: () => void,
+  state: VisitState,
 ): WireNode | null {
-  const nodePath = [...path, `${node.type}#${node.key}`];
-  let props = node.props;
+  const sanitized = sanitizeNode(node, path, state);
 
-  if (node.type === 'Svg') {
-    onSvg();
-    const xml = props.xml;
-    const result =
-      typeof xml === 'string'
-        ? sanitizeSvg(xml, parseSvg)
-        : { ok: false as const, reason: 'xml must be a string' };
+  if (!sanitized) return null;
 
-    if (!result.ok) {
-      refused.push({ node: nodePath.join('/'), reason: result.reason });
-      return null;
-    }
+  return addSanitizedChildren(sanitized, path, state);
+}
 
-    props = { ...props, xml: result.xml };
-  }
+function addSanitizedChildren(
+  node: WireNode,
+  path: string[],
+  state: VisitState,
+): WireNode {
+  const nextPath = nodePath(node, path);
 
-  const children = node.children.flatMap((child) => {
-    const sanitized = visit(child, nodePath, refused, onSvg);
-    return sanitized ? [sanitized] : [];
+  return {
+    ...node,
+    children: sanitizeChildren(node.children, nextPath, state),
+    slots: sanitizeSlots(node.slots, nextPath, state),
+  };
+}
+
+function sanitizeNode(
+  node: WireNode,
+  path: string[],
+  state: VisitState,
+): WireNode | null {
+  if (node.type !== 'Svg') return node;
+
+  state.containsSvg = true;
+
+  return sanitizeSvgNode(node, path, state);
+}
+
+function sanitizeSvgNode(
+  node: WireNode,
+  path: string[],
+  state: VisitState,
+): WireNode | null {
+  const xml = node.props.xml;
+
+  if (typeof xml !== 'string') return refuseInvalidMarkup(node, path, state);
+
+  const result = sanitizeSvg(xml, parseSvg);
+
+  if (!result.ok)
+    return recordRefusal({ node, path, state, reason: result.reason });
+
+  return { ...node, props: { ...node.props, xml: result.xml } };
+}
+
+function refuseInvalidMarkup(
+  node: WireNode,
+  path: string[],
+  state: VisitState,
+): null {
+  return recordRefusal({ node, path, state, reason: 'xml must be a string' });
+}
+
+interface Refusal {
+  node: WireNode;
+  path: string[];
+  state: VisitState;
+  reason: string;
+}
+
+function recordRefusal({ node, path, state, reason }: Refusal): null {
+  state.refused.push({ node: nodePath(node, path).join('/'), reason });
+
+  return null;
+}
+
+function sanitizeChildren(
+  nodes: WireNode[],
+  path: string[],
+  state: VisitState,
+): WireNode[] {
+  return nodes.flatMap((node) => {
+    const child = visit(node, path, state);
+
+    return child ? [child] : [];
   });
-  const slots = Object.fromEntries(
-    Object.entries(node.slots).map(([name, nodes]) => [
+}
+
+function sanitizeSlots(
+  slots: WireNode['slots'],
+  path: string[],
+  state: VisitState,
+): WireNode['slots'] {
+  return Object.fromEntries(
+    Object.entries(slots).map(([name, nodes]) => [
       name,
-      nodes.flatMap((child) => {
-        const sanitized = visit(child, nodePath, refused, onSvg);
-        return sanitized ? [sanitized] : [];
-      }),
+      sanitizeChildren(nodes, path, state),
     ]),
   );
+}
 
-  return { ...node, props, children, slots };
+function nodePath(node: WireNode, path: string[]): string[] {
+  return [...path, `${node.type}#${node.key}`];
 }
 
 function emptyTree(): WireNode {

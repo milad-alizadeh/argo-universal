@@ -48,8 +48,10 @@ export const groupedItemProps = z.object({
   onPress: pressHandler.optional(),
 });
 
+const svgXmlCharacterLimit = 131_072;
+
 export const svgProps = z.object({
-  xml: z.string().max(131_072),
+  xml: z.string().max(svgXmlCharacterLimit),
   label: z.string().min(1),
   tone: z.enum(tones).optional(),
   aspectRatio: z.number().finite().positive().optional(),

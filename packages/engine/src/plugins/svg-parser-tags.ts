@@ -18,6 +18,6 @@ const names = [
 ];
 
 // The Server keeps only parse's XML tree. Its native tag constructors are never instantiated.
-export const tags = Object.fromEntries(
-  names.map((name) => [name, function SvgTag() {}]),
-);
+const SvgTag = (): null => null;
+
+export const tags = Object.fromEntries(names.map((name) => [name, SvgTag]));

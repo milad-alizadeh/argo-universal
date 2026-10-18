@@ -13,6 +13,12 @@ export interface SvgProps {
   onPress?: () => void;
 }
 
+interface ArtworkProps {
+  xml: string;
+  label: string;
+  color: React.ComponentProps<typeof SvgXml>['color'];
+}
+
 // Plugin SVG is already sanitized by the Server. The App only draws its canonical markup.
 export function Svg(props: SvgProps): React.JSX.Element {
   const { color } = useResolveClassNames(toneClass(props.tone));
@@ -21,22 +27,32 @@ export function Svg(props: SvgProps): React.JSX.Element {
   return (
     <Pressable
       accessibilityLabel={props.label}
-      accessibilityRole={props.onPress ? 'button' : 'image'}
+      accessibilityRole={accessibilityRole(props.onPress)}
       accessible
       onPress={props.onPress}
       style={{ width: '100%', aspectRatio: ratio }}
     >
-      <SvgXml
-        accessible={false}
-        xml={props.xml}
-        width="100%"
-        height="100%"
-        color={color}
-        fallback={<Text role="body">{props.label}</Text>}
-        onError={() => {}}
-      />
+      <SvgArtwork xml={props.xml} label={props.label} color={color} />
     </Pressable>
   );
+}
+
+function SvgArtwork({ xml, label, color }: ArtworkProps): React.JSX.Element {
+  return (
+    <SvgXml
+      accessible={false}
+      xml={xml}
+      width="100%"
+      height="100%"
+      color={color}
+      fallback={<Text role="body">{label}</Text>}
+      onError={() => {}}
+    />
+  );
+}
+
+function accessibilityRole(onPress: SvgProps['onPress']): 'button' | 'image' {
+  return onPress ? 'button' : 'image';
 }
 
 function toneClass(tone: Tone | undefined): string {
@@ -55,17 +71,37 @@ function toneClass(tone: Tone | undefined): string {
 }
 
 function viewBoxRatio(xml: string): number | null {
-  const viewBox = /<svg\b[^>]*\bviewBox\s*=\s*["']([^"']+)["']/i.exec(xml)?.[1];
+  const viewBox = /<svg\b[^>]*\bview-?box\s*=\s*["']([^"']+)["']/i.exec(
+    xml,
+  )?.[1];
 
   if (!viewBox) return null;
+
   const values = viewBox
     .trim()
     .split(/[\s,]+/)
     .map(Number);
-  const width = values[2];
-  const height = values[3];
 
-  return width && height && Number.isFinite(width / height)
-    ? width / height
-    : null;
+  return dimensionsRatio(values[2], values[3]);
+}
+
+function dimensionsRatio(
+  width: number | undefined,
+  height: number | undefined,
+): number | null {
+  if (!isDimension(width)) return null;
+
+  if (!isDimension(height)) return null;
+
+  return finiteRatio(width / height);
+}
+
+function finiteRatio(ratio: number): number | null {
+  if (Number.isFinite(ratio)) return ratio;
+
+  return null;
+}
+
+function isDimension(value: number | undefined): value is number {
+  return value !== undefined && value !== 0;
 }

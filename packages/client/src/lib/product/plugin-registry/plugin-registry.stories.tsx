@@ -1,3 +1,4 @@
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { slottedRow } from '@repo/contracts/plugins/wire-fixtures';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
@@ -10,22 +11,35 @@ const meta = {
   parameters: { screenPreview: true },
 } satisfies Meta;
 
+function firstSvgXml(): string {
+  const fixture = svgFixtures.valid[0];
+
+  if (!fixture) throw new Error('Missing valid SVG fixture');
+
+  return fixture.xml;
+}
+
+const svgXml = firstSvgXml();
+
 export default meta;
 
 function SlotPreview(): ReactElement {
   const [count, setCount] = useState(0);
+  const root = rowWithCount(count);
 
-  const root = applyPatch(slottedRow, [
+  return (
+    <PluginTree root={root} onEvent={() => setCount((value) => value + 1)} />
+  );
+}
+
+function rowWithCount(count: number): WireNode {
+  return applyPatch(slottedRow, [
     {
       op: 'setProps',
       key: [{ slot: 'accessories', key: 'count' }],
       props: { label: `Count ${count}` },
     },
   ]);
-
-  return (
-    <PluginTree root={root} onEvent={() => setCount((value) => value + 1)} />
-  );
 }
 
 export const Slots: StoryObj<typeof meta> = {
@@ -33,21 +47,24 @@ export const Slots: StoryObj<typeof meta> = {
 };
 
 export const Svg: StoryObj<typeof meta> = {
-  render: () => (
-    <PluginTree
-      root={{
-        type: 'Svg',
-        key: '0',
-        props: {
-          xml: svgFixtures.valid[0]!.xml,
-          label: 'Service map',
-          tone: 'info',
-          onPress: { $event: 'onPress' },
-        },
-        children: [],
-        slots: {},
-      }}
-      onEvent={() => {}}
-    />
-  ),
+  render: SvgPreview,
 };
+
+function SvgPreview(): ReactElement {
+  return <PluginTree root={svgRoot()} onEvent={() => {}} />;
+}
+
+function svgRoot(): WireNode {
+  return {
+    type: 'Svg',
+    key: '0',
+    props: {
+      xml: svgXml,
+      label: 'Service map',
+      tone: 'info',
+      onPress: { $event: 'onPress' },
+    },
+    children: [],
+    slots: {},
+  };
+}

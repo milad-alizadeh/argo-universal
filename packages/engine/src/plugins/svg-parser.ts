@@ -1,79 +1,98 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname } from 'node:path';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildSync } from 'esbuild';
-import { fetchText } from './svg-parser-fetch';
-import { tags } from './svg-parser-tags';
-import type { SvgAstNode, SvgParser } from './svg-sanitizer';
+import { buildSync, type BuildOptions } from 'esbuild';
+import type { Styles, XmlAST } from 'react-native-svg/lib/typescript/xml';
+import { type SvgAstNode, type SvgParser } from './svg-types';
 
 interface ParserModule {
-  exports: {
-    parse?: (source: string, middleware: (ast: unknown) => unknown) => unknown;
-  };
+  parse: (source: string, middleware: (ast: XmlAST) => XmlAST) => XmlAST | null;
 }
 
-function treeOf(value: unknown): SvgAstNode {
-  if (!value || typeof value !== 'object')
-    throw new Error('malformed SVG parser tree');
-  const node = value as { tag?: unknown; props?: unknown; children?: unknown };
+const buildDefaults: BuildOptions = {
+  bundle: true,
+  external: ['./xmlTags', './utils/fetchData'],
+  platform: 'node',
+  format: 'cjs',
+  target: 'node22',
+  define: { 'process.env.NODE_ENV': '"production"' },
+  logLevel: 'silent',
+};
 
-  if (
-    typeof node.tag !== 'string' ||
-    !node.props ||
-    typeof node.props !== 'object' ||
-    !Array.isArray(node.children)
-  )
-    throw new Error('malformed SVG parser node');
+function treeOf(ast: XmlAST): SvgAstNode {
+  const props: SvgAstNode['props'] = {};
+
+  for (const [name, value] of Object.entries(ast.props)) {
+    if (value !== undefined) props[name] = propValue(value);
+  }
 
   return {
-    tag: node.tag,
-    props: node.props as Record<string, unknown>,
-    children: node.children.map((child) =>
+    tag: ast.tag,
+    props,
+    children: ast.children.map((child) =>
       typeof child === 'string' ? child : treeOf(child),
     ),
   };
 }
 
+function propValue(value: string | number | boolean | Styles): string {
+  if (typeof value !== 'object') return String(value);
+
+  throw new Error('unsupported parsed SVG attribute value');
+}
+
 function parser(): SvgParser {
   const directory = dirname(fileURLToPath(import.meta.url));
-  const bundle = buildSync({
+  const temporaryDirectory = mkdtempSync(join(tmpdir(), 'argo-svg-parser-'));
+  const outputPath = join(temporaryDirectory, 'parser.cjs');
+
+  try {
+    writeParserShims(temporaryDirectory);
+    compileParser(directory, outputPath);
+
+    const runtime: ParserModule = createRequire(import.meta.url)(outputPath);
+
+    return adaptParser(runtime.parse);
+  } finally {
+    rmSync(temporaryDirectory, { recursive: true, force: true });
+  }
+}
+
+function writeParserShims(directory: string): void {
+  mkdirSync(join(directory, 'utils'));
+  writeFileSync(join(directory, 'package.json'), '{"type":"commonjs"}');
+  writeFileSync(join(directory, 'xmlTags.js'), 'exports.tags = {};');
+  writeFileSync(
+    join(directory, 'utils/fetchData.js'),
+    "exports.fetchText = async () => { throw new Error('SVG URL fetching is disabled'); };",
+  );
+}
+
+function compileParser(directory: string, outputPath: string): void {
+  buildSync({ ...buildDefaults, ...parserEntries(directory, outputPath) });
+}
+
+function parserEntries(directory: string, outputPath: string): BuildOptions {
+  return {
     stdin: {
       contents:
         "import { parse } from 'react-native-svg/lib/module/xml.js'; export { parse };",
       resolveDir: directory,
       sourcefile: 'svg-parser-adapter.ts',
     },
-    bundle: true,
-    write: false,
-    platform: 'node',
-    format: 'cjs',
-    target: 'node22',
-    external: ['react', './xmlTags', './utils/fetchData'],
-    define: { 'process.env.NODE_ENV': '"production"' },
-    logLevel: 'silent',
-  });
-  const output = bundle.outputFiles[0];
-
-  if (!output) throw new Error('The react-native-svg parser did not bundle');
-  const runtime: ParserModule = { exports: {} };
-  const nativeRequire = createRequire(import.meta.url);
-  const require = (name: string): unknown => {
-    if (name === './xmlTags') return { tags };
-    if (name === './utils/fetchData') return { fetchText };
-    return nativeRequire(name);
+    outfile: outputPath,
   };
-  const execute = new Function('require', 'module', 'exports', output.text);
+}
 
-  execute(require, runtime, runtime.exports);
-  const parse = runtime.exports.parse;
-
-  if (!parse) throw new Error('react-native-svg does not export parse');
-
+function adaptParser(parse: ParserModule['parse']): SvgParser {
   return (source) => {
     let tree: SvgAstNode | null = null;
 
     parse(source, (ast) => {
       tree = treeOf(ast);
+
       return ast;
     });
 
@@ -85,5 +104,6 @@ let loadedParser: SvgParser | undefined;
 
 export function parseSvg(source: string): SvgAstNode | null {
   loadedParser ??= parser();
+
   return loadedParser(source);
 }

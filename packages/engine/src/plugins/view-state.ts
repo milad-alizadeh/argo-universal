@@ -9,14 +9,6 @@ import { sanitizeTree } from './svg-view';
 import { nextRoot, updateView } from './view-messages';
 import { wireSizeReason } from './wire-size';
 
-// ADR-0027's Replaceable Slot IDs are not published by the current wire contract.
-// Keep the refusal guard ready for those IDs; #833 supports ordinary projectDetails Slots.
-const replaceableSlotIds = new Set([
-  'argo/feed/tool-call/v1',
-  'argo/feed/message/v1',
-  'argo/composer/above/v1',
-]);
-
 type Reception = { log: (line: string) => void; revision: number };
 
 export function receive(
@@ -24,46 +16,76 @@ export function receive(
   message: ViewMessage,
   reception: Reception,
 ): void {
+  handleMessage(view, message, reception);
+}
+
+function handleMessage(
+  view: OpenView,
+  message: ViewMessage,
+  reception: Reception,
+): void {
   if (ignoresPatch(view, message)) return;
   const reason = refusalReason(view, message);
 
-  if (reason) return refuse(view, reason, reception);
+  if (!reason) return acceptMessage(view, message, reception);
 
-  const root = nextRoot(view.root, message);
-
-  if (root) {
-    const sanitized = sanitizeTree(root);
-
-    if (sanitized.refused.length) {
-      for (const item of sanitized.refused)
-        reception.log(
-          `Plugin ${view.pluginId}: refused ${view.opening.path} node ${item.node}: ${item.reason}`,
-        );
-
-      if (isReplaceableSlot(view))
-        return refuse(
-          view,
-          `Svg refused; core draws its own`,
-          reception,
-          false,
-        );
-    }
-
-    view.refused = false;
-    const normalized =
-      sanitized.containsSvg || sanitized.refused.length > 0
-        ? { ...message, type: 'snapshot' as const, root: sanitized.root }
-        : message;
-    updateView(view, normalized, reception.revision);
-    return;
-  }
-
-  view.refused = false;
-  updateView(view, message, reception.revision);
+  refuse(view, reason, reception);
 }
 
-function isReplaceableSlot(view: OpenView): boolean {
-  return replaceableSlotIds.has(view.opening.slot?.slotId ?? '');
+function acceptMessage(
+  view: OpenView,
+  message: ViewMessage,
+  reception: Reception,
+): void {
+  const root = nextRoot(view.root, message);
+
+  if (!root) {
+    view.refused = false;
+
+    return updateView(view, message, reception.revision);
+  }
+
+  receiveTree({ view, message, root, reception });
+}
+
+interface TreeReception {
+  view: OpenView;
+  message: ViewMessage;
+  root: NonNullable<ReturnType<typeof nextRoot>>;
+  reception: Reception;
+}
+
+function receiveTree({ view, message, root, reception }: TreeReception): void {
+  const sanitized = sanitizeTree(root);
+
+  logRefusals(view, sanitized.refused, reception);
+
+  view.refused = false;
+
+  const normalized = normalizedMessage(message, sanitized);
+
+  updateView(view, normalized, reception.revision);
+}
+
+function logRefusals(
+  view: OpenView,
+  refusals: Array<{ node: string; reason: string }>,
+  reception: Reception,
+): void {
+  for (const item of refusals) {
+    reception.log(
+      `Plugin ${view.pluginId}: refused ${view.opening.path} node ${item.node}: ${item.reason}`,
+    );
+  }
+}
+
+function normalizedMessage(
+  message: ViewMessage,
+  sanitized: ReturnType<typeof sanitizeTree>,
+): ViewMessage {
+  if (!sanitized.containsSvg && sanitized.refused.length === 0) return message;
+
+  return { ...message, type: 'snapshot', root: sanitized.root };
 }
 
 function refusalReason(view: OpenView, message: ViewMessage): string | null {
@@ -75,16 +97,17 @@ function refusalReason(view: OpenView, message: ViewMessage): string | null {
   return root ? wireSizeReason(root, pluginPageBytes, 'page') : null;
 }
 
-function refuse(
-  view: OpenView,
-  reason: string,
-  { log, revision }: Reception,
-  logRefusal = true,
-): void {
+function refuse(view: OpenView, reason: string, reception: Reception): void {
+  if (view.refused) return;
+  reception.log(
+    `Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`,
+  );
+  refuseSilently(view, reception.revision);
+}
+
+function refuseSilently(view: OpenView, revision: number): void {
   if (view.refused) return;
   view.refused = true;
-  if (logRefusal)
-    log(`Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`);
   updateView(
     view,
     { type: 'snapshot', revision: 0, root: pluginPageFallback },

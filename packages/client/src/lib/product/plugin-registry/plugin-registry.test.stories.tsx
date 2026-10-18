@@ -17,6 +17,18 @@ import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
 
+const serviceMapLabel = 'Service map';
+
+function firstSvgXml(): string {
+  const fixture = svgFixtures.valid[0];
+
+  if (!fixture) throw new Error('Missing valid SVG fixture');
+
+  return fixture.xml;
+}
+
+const serviceMapXml = firstSvgXml();
+
 function rectAt(rectangles: DOMRect[], index: number): DOMRect {
   const rectangle = rectangles[index];
 
@@ -50,8 +62,8 @@ export const SvgPress: Story = {
         type: 'Svg',
         key: '0',
         props: {
-          xml: svgFixtures.valid[0]!.xml,
-          label: 'Service map',
+          xml: serviceMapXml,
+          label: serviceMapLabel,
           onPress: { $event: 'onPress' },
         },
         children: [],
@@ -61,7 +73,9 @@ export const SvgPress: Story = {
     />
   ),
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Service map' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: serviceMapLabel }),
+    );
     await expect(onEvent).toHaveBeenCalledWith('0', { event: 'onPress' });
   },
 };
@@ -72,7 +86,7 @@ export const SvgFallback: Story = {
       root={{
         type: 'Svg',
         key: '0',
-        props: { xml: '<svg><path></svg>', label: 'Service map' },
+        props: { xml: '<svg><path></svg>', label: serviceMapLabel },
         children: [],
         slots: {},
       }}
@@ -80,7 +94,7 @@ export const SvgFallback: Story = {
     />
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('Service map')).toBeVisible();
+    await expect(canvas.getByText(serviceMapLabel)).toBeVisible();
   },
 };
 

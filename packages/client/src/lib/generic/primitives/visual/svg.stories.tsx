@@ -11,15 +11,25 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const svgXml = firstFixtureXml();
+
+function firstFixtureXml(): string {
+  const fixture = fixtures.valid[0];
+
+  if (!fixture) throw new Error('Missing valid SVG fixture');
+
+  return fixture.xml;
+}
+
 export const Variations: Story = {
   name: 'Svg',
   render: () => (
     <VariationList>
       <Variation label="Info tone">
-        <Svg xml={fixtures.valid[0]!.xml} label="Service map" tone="info" />
+        <Svg xml={svgXml} label="Service map" tone="info" />
       </Variation>
       <Variation label="Drawing unavailable">
-        <Svg xml="<svg><path>" label="Service map" />
+        <Svg xml="<svg><path></svg>" label="Service map" />
       </Variation>
     </VariationList>
   ),
