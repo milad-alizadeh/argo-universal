@@ -52,7 +52,6 @@
         "packages/client/src/features/sessions/components/session-header-actions.tsx",
         "packages/client/src/features/sessions/components/session-header-meta.tsx",
         "packages/client/src/features/sessions/components/session-pull-request.tsx",
-        "packages/client/src/features/sessions/components/session-row/session-row-metadata.tsx",
         "packages/client/src/features/sessions/components/sessions-list/sessions-list-rows.tsx",
         "packages/client/src/features/settings/components/placeholder-detail-view/placeholder-detail-view.tsx",
         "packages/client/src/screens/settings/projects/$name/project-detail-remove.tsx",

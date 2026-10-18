@@ -1,6 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
 import { statusLabels } from '#lib/product/status-indicator/status-indicator';
-import type { VirtualListPosition } from '#primitives/lists/virtual-list-item';
 import type { SessionsLayout } from '../../stores/sessions-view';
 import type { PullRequestIndicatorProps } from '../pull-request-indicator/pull-request-indicator';
 
@@ -14,8 +13,6 @@ export interface SessionRowProps {
   trailing?: string;
   // Regular: the activity, metadata and Plan bar. Compact: one line.
   layout?: SessionsLayout;
-  // A Compact row's place among its Project's Sessions, which a phone draws as one grouped list section.
-  position?: VirtualListPosition;
   onSelect: (sessionId: string) => void;
   // Desktop and the web: a double-click, or Rename in the row's context menu, starts renaming the Session.
   onRename?: (sessionId: string) => void;

@@ -14,16 +14,13 @@ async function navigation(page: Page): Promise<Locator> {
   return page.getByTestId('phone-drawer');
 }
 
-When(
-  'I open the {word} Plugin',
-  async ({ page }, title: string): Promise<void> => {
-    await (
-      await navigation(page)
-    )
-      .getByRole('button', { name: title, exact: true })
-      .click();
-  },
-);
+When('I open the {} Plugin', async ({ page }, title: string): Promise<void> => {
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: title, exact: true })
+    .click();
+});
 
 Then(
   'the Plugin page shows {}',
@@ -79,5 +76,14 @@ Then(
   'the Plugin page text reads {string}',
   async ({ page }, text: string): Promise<void> => {
     await expect(page.getByTestId(pluginPage).getByText(text)).toBeVisible();
+  },
+);
+
+Then(
+  'the Plugin row {string} is selected',
+  async ({ page }, name: string): Promise<void> => {
+    await expect(
+      page.getByTestId(pluginPage).getByRole('button', { name, exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
   },
 );
