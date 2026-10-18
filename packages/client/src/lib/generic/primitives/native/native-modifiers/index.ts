@@ -1,1 +1,1 @@
-export { rectangularHitArea } from './swift-outline-modifiers';
+export { rectangularHitArea, roundedFill } from './swift-outline-modifiers';

@@ -3,15 +3,25 @@ import { View } from 'react-native';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 
-// SwiftUI's grouped Form scrolls the rows itself, filling the height the sheet's detent gives it.
-export function ElicitationList({
-  children,
-}: {
-  children: ReactNode;
-}): ReactElement {
-  const list = <GroupedList fit>{children}</GroupedList>;
+type ListProps = { children: ReactNode };
 
+/*
+ * A phone's sheet fills with SwiftUI's grouped Form, which scrolls the rows at the height the sheet's
+ * detent gives it; the wide Composer's tray and a Feed card fit the rows instead.
+ */
+export function ElicitationList({ children }: ListProps): ReactElement {
   return (
-    <SizeClass compact={<View className="flex-1">{list}</View>} wide={list} />
+    <SizeClass
+      compact={<FilledList>{children}</FilledList>}
+      wide={<GroupedList fit>{children}</GroupedList>}
+    />
+  );
+}
+
+function FilledList({ children }: ListProps): ReactElement {
+  return (
+    <View className="flex-1">
+      <GroupedList>{children}</GroupedList>
+    </View>
   );
 }

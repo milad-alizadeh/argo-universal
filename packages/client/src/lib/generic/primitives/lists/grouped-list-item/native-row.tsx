@@ -12,10 +12,15 @@ import {
   type ResolvedItemProps,
   groupedListItemStatus,
 } from './grouped-list-item-props';
+import { StackedIcon } from './stacked-row';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
 
 function NativeRowIcon({ icon }: { icon: IconSymbol }): React.JSX.Element {
-  return <NativeSymbol name={icon} role="row" />;
+  return (
+    <StackedIcon>
+      <NativeSymbol name={icon} role="row" />
+    </StackedIcon>
+  );
 }
 
 type RowImageProps = {

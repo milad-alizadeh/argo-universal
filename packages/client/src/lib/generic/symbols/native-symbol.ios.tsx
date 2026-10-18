@@ -13,12 +13,16 @@ const mutedStyle = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
 
 /*
  * A list row's icon is a Label's, sized by the row's body text so it scales with Dynamic Type, as
- * stock iOS draws it. Image's `size` is a fixed point size, so it would not scale. A Label draws its
- * icon at the large image scale, so `imageScale('medium')` (SwiftUI's default) brings it back to
- * the body text's size.
+ * stock iOS draws it. Image's `size` is a fixed point size, so it would not scale. A Label in a
+ * Form draws its icon at the large image scale (24pt wide at body size on iOS 26), and so does a row.
  */
 const textSizedRoles: Partial<Record<IconRole, ImageProps['modifiers']>> = {
-  row: [font({ textStyle: 'body' }), imageScale('medium')],
+  row: [font({ textStyle: 'body' }), imageScale('large')],
+  // A row's disclosure chevron, drawn as a stock Form row's NavigationLink draws it.
+  chevron: [
+    font({ textStyle: 'body', weight: 'semibold' }),
+    imageScale('small'),
+  ],
 };
 
 // Argo's custom and Tabler symbols are in the app's asset catalog.
