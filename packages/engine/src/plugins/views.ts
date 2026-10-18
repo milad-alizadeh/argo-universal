@@ -14,7 +14,8 @@ import {
   type OpenView,
   type Opening,
 } from './open-view';
-import { updateView, viewMessages } from './view-messages';
+import { receive } from './view-state';
+import { messages } from './view-stream';
 
 export class PluginViews {
   private revision = 0;
@@ -23,6 +24,7 @@ export class PluginViews {
 
   constructor(
     private readonly send: (pluginId: string, event: PluginEvent) => void,
+    private readonly log: (line: string) => void,
   ) {}
 
   public receive(
@@ -32,7 +34,8 @@ export class PluginViews {
   ): void {
     const view = this.views.get(viewId);
 
-    if (view?.pluginId === pluginId) updateView(view, message, ++this.revision);
+    if (view?.pluginId === pluginId)
+      receive(view, message, { log: this.log, revision: ++this.revision });
   }
 
   public dispatch(
@@ -97,7 +100,7 @@ export class PluginViews {
     const view = this.acquire(pluginId, opening, connection.id);
 
     try {
-      yield* viewMessages(view, connection.signal);
+      yield* messages(view, connection.signal);
     } finally {
       this.release(view);
     }

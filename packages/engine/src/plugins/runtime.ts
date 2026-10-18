@@ -32,8 +32,9 @@ export class PluginRuntime {
     private readonly log: (line: string) => void,
     private readonly services: PluginServices,
   ) {
-    this.views = new PluginViews((pluginId, event) =>
-      this.host.event(pluginId, event),
+    this.views = new PluginViews(
+      (pluginId, event) => this.host.event(pluginId, event),
+      log,
     );
     this.host = new HostConnection(this.callbacks());
     this.hooks = new PluginHooks({

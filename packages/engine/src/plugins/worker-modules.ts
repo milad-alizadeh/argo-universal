@@ -7,6 +7,7 @@ import {
   SyntheticModule,
   type Module,
 } from 'node:vm';
+import { kitPrelude } from './kit-prelude.ts';
 import { bundleKit } from './kit/bundle.ts';
 import type { Kit } from './kit/plugin-kit.ts';
 import { requirePluginFile } from './plugin-files.ts';
@@ -63,7 +64,11 @@ type PluginRealm = ReturnType<typeof createContext>;
 // The kit runs first, with microtask timers for its scheduler; `argoSource` then builds the frozen `argo` from it and removes the bridge.
 function sandbox(bridge: ArgoBridge, kitSource: string): PluginRealm {
   const context = createContext(
-    { __argoBridge: bridge },
+    {
+      __argoBridge: bridge,
+      __argoDelay: (delay: number) =>
+        new Promise<void>((resolve) => setTimeout(resolve, delay)),
+    },
     { codeGeneration: { strings: false, wasm: false } },
   );
 
@@ -90,12 +95,6 @@ function takeKit(context: PluginRealm): TakenKit {
     kit: { kit: exported.exports, jsxRuntime: exported.jsxRuntime },
   };
 }
-
-const kitPrelude = `
-  globalThis.setTimeout = (callback) => { Promise.resolve().then(callback); return 0; };
-  globalThis.clearTimeout = () => {};
-  globalThis.console = { log() {}, info() {}, warn() {}, error() {}, debug() {} };
-`;
 
 const registrationModule = (context: PluginRealm): SourceTextModule =>
   new SourceTextModule(

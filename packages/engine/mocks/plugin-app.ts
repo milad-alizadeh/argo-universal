@@ -1,4 +1,7 @@
-import type { ViewMessage } from '@repo/contracts/plugins/wire';
+import type {
+  ViewMessage,
+  PluginDispatchInput,
+} from '@repo/contracts/plugins/wire';
 import {
   createTRPCClient,
   createWSClient,
@@ -36,4 +39,20 @@ export function connectPluginApp(
   });
 
   return { client, messages, stop: () => subscription.unsubscribe() };
+}
+
+type TapTarget = Pick<PluginDispatchInput, 'pluginId' | 'path' | 'key'>;
+
+export function pluginTap(
+  view: ViewMessage | void,
+  target: TapTarget,
+): PluginDispatchInput {
+  if (!view?.viewId) throw new Error('Expected a view identity');
+
+  return {
+    ...target,
+    viewId: view.viewId,
+    revision: view.revision,
+    event: 'onPress',
+  };
 }

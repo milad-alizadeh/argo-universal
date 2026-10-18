@@ -18,6 +18,7 @@ export type DispatchSender = (
 export interface OpenView {
   viewId: PluginViewId;
   mounted?: Mounted;
+  frame: ReturnType<typeof setTimeout> | undefined;
   tree: WireNode | null;
   revision: number;
   handlers: Handlers;
@@ -46,10 +47,14 @@ async function runCurrentHandler(
   view: OpenView,
   event: Extract<PluginEvent, { type: 'dispatch' }>,
 ): Promise<void> {
-  if (view.revision !== event.revision)
-    throw new Error('Plugin view changed; try again');
+  requireCurrentRevision(view, event.revision);
   const handler = view.handlers.get(JSON.stringify([event.key, event.event]));
 
   if (!handler) throw new Error('Plugin handler is no longer available');
   await handler(event.payload);
+}
+
+function requireCurrentRevision(view: OpenView, revision: number): void {
+  if (view.revision !== revision || view.frame !== undefined)
+    throw new Error('Plugin view changed; try again');
 }

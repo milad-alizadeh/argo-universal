@@ -9,6 +9,7 @@ import type {
 import type { ComponentType, ReactNode } from 'react';
 import { createElement } from 'react';
 import { reportFailure } from './host-config';
+import { schedulePage } from './page-frame';
 import {
   nextMessage,
   runHandler,
@@ -78,13 +79,14 @@ function emptyPage(): WireNode {
 function start(hub: Hub, viewId: PluginViewId, element: ReactNode): void {
   const view: OpenView = {
     viewId,
+    frame: undefined,
     tree: null,
     revision: 0,
     handlers: new Map(),
   };
 
   hub.views.set(viewId, view);
-  view.mounted = mount(element, (container) => committed(hub, view, container));
+  view.mounted = mount(element, (container) => schedule(hub, view, container));
 }
 
 // A viewer that joins late gets the current tree again, as a snapshot.
@@ -125,7 +127,11 @@ function open(hub: Hub, event: Open): void {
 }
 
 function close(hub: Hub, viewId: PluginViewId): void {
-  hub.views.get(viewId)?.mounted?.unmount();
+  const view = hub.views.get(viewId);
+
+  if (!view) return;
+  clearTimeout(view.frame);
+  view.mounted?.unmount();
   hub.views.delete(viewId);
 }
 
@@ -162,4 +168,10 @@ export function mountPages(send: ViewSender, settle: DispatchSender): Pages {
     registerSlot: (slotId, content) => void hub.slots.set(slotId, content),
     receive: (event) => receive(hub, event),
   };
+}
+
+function schedule(hub: Hub, view: OpenView, container: Instance): void {
+  schedulePage(view, () => {
+    if (hub.views.get(view.viewId) === view) committed(hub, view, container);
+  });
 }

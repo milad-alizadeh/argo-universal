@@ -41,9 +41,15 @@ export function createOpenView(
 
 function blankView(): Pick<
   OpenView,
-  'root' | 'revision' | 'workerRevision' | 'watchers'
+  'root' | 'revision' | 'workerRevision' | 'watchers' | 'refused'
 > {
-  return { root: null, revision: 0, workerRevision: null, watchers: 0 };
+  return {
+    root: null,
+    revision: 0,
+    workerRevision: null,
+    watchers: 0,
+    refused: false,
+  };
 }
 
 type DispatchTarget = { viewId: PluginViewId; revision: number };

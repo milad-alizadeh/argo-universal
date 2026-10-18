@@ -1,39 +1,125 @@
 import type { PatchOp, PatchStep, WireNode } from './wire';
 
-function childAt(node: WireNode, step: PatchStep): WireNode {
-  const next =
-    typeof step === 'number' ? node.children[step] : node.slots[step];
-
-  if (!next) throw new Error(`Patch path leaves the tree at ${step}`);
-
-  return next;
+function collection(node: WireNode, slot?: string): WireNode[] {
+  return slot === undefined ? node.children : (node.slots[slot] ?? []);
 }
 
-const change =
-  (op: PatchOp) =>
-  (node: WireNode): WireNode =>
-    op.op === 'props' ? { ...node, props: op.props } : op.node;
+function withCollection(
+  node: WireNode,
+  children: WireNode[],
+  slot?: string,
+): WireNode {
+  if (slot === undefined) return { ...node, children };
+  const slots = { ...node.slots, [slot]: children };
 
-// Rebuilds the nodes along `path`, so the tree it was given is never mutated.
+  if (!children.length) delete slots[slot];
+
+  return { ...node, slots };
+}
+
+function stepParts(step: PatchStep): { key: string; slot?: string } {
+  return typeof step === 'string' ? { key: step } : step;
+}
+
 function update(
   node: WireNode,
   path: readonly PatchStep[],
-  apply: (target: WireNode) => WireNode,
+  apply: (node: WireNode) => WireNode,
 ): WireNode {
   const [step, ...rest] = path;
 
   if (step === undefined) return apply(node);
-  const next = update(childAt(node, step), rest, apply);
+  const { key, slot } = stepParts(step);
+  const { index, child, children } = childAt(collection(node, slot), key);
 
-  return typeof step === 'number'
-    ? { ...node, children: node.children.with(step, next) }
-    : { ...node, slots: { ...node.slots, [step]: next } };
+  return withCollection(
+    node,
+    children.with(index, update(child, rest, apply)),
+    slot,
+  );
 }
 
-const applyOp = (root: WireNode, op: PatchOp): WireNode =>
-  update(root, op.path, change(op));
+function get(node: WireNode, path: readonly PatchStep[]): WireNode {
+  let result = node;
+  update(node, path, (target) => {
+    result = target;
 
-// Applies a patch to a snapshot and returns the new root; the input is left untouched.
+    return target;
+  });
+
+  return result;
+}
+
+function remove(root: WireNode, path: readonly PatchStep[]): WireNode {
+  const last = path.at(-1);
+
+  if (last === undefined) throw new Error('Cannot remove the root');
+  const { key, slot } = stepParts(last);
+
+  return update(root, path.slice(0, -1), (node) =>
+    withCollection(
+      node,
+      collection(node, slot).filter((child) => child.key !== key),
+      slot,
+    ),
+  );
+}
+
+type Insertion = Extract<PatchOp, { op: 'insert' | 'move' }>;
+
+function insert(root: WireNode, op: Insertion, child: WireNode): WireNode {
+  return update(root, op.parent, (node) =>
+    withCollection(
+      node,
+      collection(node, op.slot).toSpliced(op.index, 0, child),
+      op.slot,
+    ),
+  );
+}
+
+type PropertyChange = Extract<PatchOp, { op: 'setProps' }>;
+
+function setProps(node: WireNode, op: PropertyChange): WireNode {
+  const props = { ...node.props, ...op.props };
+
+  for (const name of op.unset ?? []) delete props[name];
+
+  return { ...node, props };
+}
+
+function change(root: WireNode, op: Exclude<PatchOp, Insertion>): WireNode {
+  if (op.op === 'remove') return remove(root, op.key);
+
+  if (op.op === 'replace') return update(root, op.key, () => op.node);
+
+  return update(root, op.key, (node) => setProps(node, op));
+}
+
+function applyOp(root: WireNode, op: PatchOp): WireNode {
+  if (op.op === 'insert') return insert(root, op, op.node);
+
+  if (op.op === 'move')
+    return insert(remove(root, op.key), op, get(root, op.key));
+
+  return change(root, op);
+}
+
+// Applies a patch without mutating the snapshot the App already holds.
 export function applyPatch(root: WireNode, ops: readonly PatchOp[]): WireNode {
   return ops.reduce(applyOp, root);
+}
+
+interface LocatedChild {
+  index: number;
+  child: WireNode;
+  children: WireNode[];
+}
+
+function childAt(children: WireNode[], key: string): LocatedChild {
+  const index = children.findIndex((child) => child.key === key);
+  const child = children[index];
+
+  if (!child) throw new Error('Patch key leaves the tree');
+
+  return { index, child, children };
 }

@@ -1,7 +1,8 @@
-import type {
-  PluginDispatchInput,
+import {
+  type PluginDispatchInput,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
+import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { connectPluginApp } from '#mocks/plugin-app';
@@ -34,12 +35,12 @@ it(
     await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(1);
     await app.client.plugins.dispatch.mutate(tap(app.messages[0], '0/reverse'));
     await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(2);
-    expect(app.messages[1]).toMatchObject({
-      ops: [
-        { op: 'replace', path: [2], node: { key: '0/beta' } },
-        { op: 'replace', path: [3], node: { key: '0/alpha' } },
-      ],
-    });
+    const initial = ViewMessage.options[0].parse(app.messages[0]);
+    const reordered = ViewMessage.options[1].parse(app.messages[1]);
+    expect(
+      applyPatch(initial.root, reordered.ops).children.map((node) => node.key),
+    ).toEqual(['0', 'reverse', 'beta', 'alpha', 'fail', 'waiting']);
+
     await expect(
       app.client.plugins.dispatch.mutate(tap(app.messages[0], '0/alpha')),
     ).rejects.toThrow('Plugin view changed');

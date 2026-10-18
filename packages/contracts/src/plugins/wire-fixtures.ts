@@ -12,16 +12,8 @@ const node = (
 
 const withChildren = (parent: WireNode, children: WireNode[]): WireNode => ({
   ...parent,
-  children: children.map((child) => prefixNode(parent.key, child)),
+  children,
 });
-
-function prefixNode(parent: string, child: WireNode): WireNode {
-  return {
-    ...child,
-    key: `${parent}/${child.key}`,
-    children: child.children.map((node) => prefixNode(parent, node)),
-  };
-}
 
 const helloButtons = (): WireNode =>
   withChildren(node('Row', '2', { gap: 2 }), [
@@ -91,8 +83,8 @@ export const helloTapPatch: ViewMessage = {
   revision: 2,
   ops: [
     {
-      op: 'props',
-      path: [1],
+      op: 'setProps',
+      key: ['1'],
       props: { label: 'Tapped 1 times' },
     },
   ],
@@ -157,5 +149,25 @@ export const helloSlotSnapshot: ViewMessage = {
 export const helloSlotWavePatch: ViewMessage = {
   type: 'patch',
   revision: 2,
-  ops: [{ op: 'props', path: [0], props: { label: 'Waved at argo 1 times' } }],
+  ops: [
+    { op: 'setProps', key: ['0'], props: { label: 'Waved at argo 1 times' } },
+  ],
+};
+
+// Both multi-node Slots and element-array props retain their order and their events.
+export const slottedRow: WireNode = {
+  ...node('GroupedListItem', 'row', { label: 'Slotted row' }),
+  slots: {
+    leading: [
+      node('Text', 'first', { label: 'First' }),
+      node('Text', 'second', { label: 'Second' }),
+    ],
+    accessories: [
+      node('Button', 'button', {
+        label: 'Increment',
+        onPress: { $event: 'onPress' },
+      }),
+      node('Text', 'count', { label: 'Count 0' }),
+    ],
+  },
 };

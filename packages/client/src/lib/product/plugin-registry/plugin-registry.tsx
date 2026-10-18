@@ -1,79 +1,50 @@
-import type { PluginInteraction, WireNode } from '@repo/contracts/plugins/wire';
-import type { Handler } from '@repo/contracts/plugins/wire';
+import type { WireNode } from '@repo/contracts/plugins/wire';
+import {
+  childNodeKey,
+  slotNodeKey,
+} from '@repo/contracts/plugins/wire-node-key';
 import type * as React from 'react';
-import type { z } from 'zod';
+import { View } from 'react-native';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
-import { runAction } from './plugin-registry-actions';
+import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
 import {
   buttonProps,
   layoutProps,
-  stackProps,
   textProps,
+  groupedItemProps,
+  stackProps,
 } from './plugin-registry-schemas';
-import { usePluginUi, type PluginUi } from './use-plugin-ui';
+import {
+  entry,
+  handlerOf,
+  type Entry,
+  type RenderContext,
+  type PluginOnEvent,
+} from './plugin-rendering';
+import { usePluginUi } from './use-plugin-ui';
 
-export type PluginOnEvent = (
-  key: string,
-  interaction: PluginInteraction,
-) => void | Promise<void>;
+export type { PluginOnEvent } from './plugin-rendering';
 
 export interface PluginTreeProps {
   root: WireNode;
   onEvent: PluginOnEvent;
 }
 
-interface RenderContext {
-  onEvent: PluginOnEvent;
-  key: string;
-  ui: PluginUi;
-}
-
-type Props<Schema extends z.ZodType> = z.output<Schema>;
-
-function handlerOf(
-  handler: Handler | undefined,
-  { onEvent, key }: RenderContext,
-): (() => void) | undefined {
-  if (!handler) return undefined;
-
-  return () => {
-    if ('$event' in handler)
-      void Promise.resolve(onEvent(key, { event: 'onPress' })).catch(() => {});
-    else void runAction(handler);
-  };
-}
-
-interface Entry {
-  render: (
-    node: WireNode,
-    context: RenderContext,
-    children: React.ReactNode,
-  ) => React.JSX.Element | null;
-}
-
-// Parses a node's props, and leaves the node out when they do not fit its schema.
-function entry<Schema extends z.ZodType>(
-  schema: Schema,
-  render: (
-    props: Props<Schema>,
-    context: RenderContext,
-    children: React.ReactNode,
-  ) => React.JSX.Element,
-): Entry {
-  return {
-    render: (node, context, children) => {
-      const parsed = schema.safeParse(node.props);
-
-      return parsed.success ? render(parsed.data, context, children) : null;
-    },
-  };
-}
-
-// The first slice of the registry: the wire types the App draws today.
 const registry = new Map(
   Object.entries({
+    GroupedListItem: entry(groupedItemProps, (props, context) => (
+      <StandaloneGroupedListItem
+        {...props}
+        onPress={handlerOf(props.onPress, context)}
+        leading={context.slots.leading}
+        leadingLayout="content"
+        accessory={context.slots.accessories}
+        footer={context.slots.footer}
+        detail={context.slots.detail}
+      />
+    )),
     Text: entry(textProps, ({ label, variant, tone }) => (
       <Text role={variant} tone={tone}>
         {label}
@@ -122,24 +93,66 @@ function RenderNode({
 }: RenderNodeProps): React.JSX.Element | null {
   const known = registry.get(node.type);
 
-  // An unknown leaf is dropped; an unknown container says the App is older than the Plugin.
   if (!known) return isContainer(node) ? <Unsupported /> : null;
+  const children = renderedChildren(node, context);
+  const filled = { ...context, slots: renderedSlots(node, context) };
 
-  const children = node.children.map((child) => (
-    <RenderNode key={child.key} node={child} context={context} />
-  ));
-
-  return known.render(node, { ...context, key: node.key }, children);
+  return known.render(node, filled, children);
 }
 
-// Draws a Plugin page's wire tree with the real kit components.
 export function PluginTree({
   root,
   onEvent,
 }: PluginTreeProps): React.JSX.Element | null {
   const ui = usePluginUi(onEvent);
 
+  const context = {
+    onEvent: ui.send,
+    key: childNodeKey('', root.key),
+    ui,
+    slots: {},
+  };
+
+  return <RenderNode node={root} context={context} />;
+}
+
+function renderedChildren(
+  node: WireNode,
+  context: RenderContext,
+): React.ReactNode {
+  return node.children.map((child) => (
+    <RenderNode
+      key={child.key}
+      node={child}
+      context={{ ...context, key: childNodeKey(context.key, child.key) }}
+    />
+  ));
+}
+
+function renderedSlots(
+  node: WireNode,
+  context: RenderContext,
+): Record<string, React.JSX.Element> {
+  return Object.fromEntries(
+    Object.entries(node.slots).map(([name, children]) => [
+      name,
+      <View key={name}>
+        {children.map((child) => slotNode(context, name, child))}
+      </View>,
+    ]),
+  );
+}
+
+function slotNode(
+  context: RenderContext,
+  name: string,
+  child: WireNode,
+): React.JSX.Element {
   return (
-    <RenderNode node={root} context={{ onEvent: ui.send, key: root.key, ui }} />
+    <RenderNode
+      key={child.key}
+      node={child}
+      context={{ ...context, key: slotNodeKey(context.key, name, child.key) }}
+    />
   );
 }
