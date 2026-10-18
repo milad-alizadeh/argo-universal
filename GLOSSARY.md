@@ -261,8 +261,8 @@ A kit component that arranges a screen's panes for its Size class, such as list 
 _Avoid_: Layout (for a whole screen), template
 
 **Surface**:
-A named background a kit component draws on, such as `card`, `tray`, `glass` or `overlay`, with its fill, radius and depth.
-_Avoid_: Panel, background, layer
+A named background a kit component draws on: `background`, `card`, `muted` or `glass`, with its fill, radius and depth. There is no overlay kind; overlays draw their own.
+_Avoid_: Panel, layer, tray
 
 **Slot**:
 A named place in a kit component that takes another component, such as a row's `leading` or `trailing`. Each Slot names the components it accepts.
