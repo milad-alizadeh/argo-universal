@@ -80,6 +80,9 @@ export class PluginRuntime {
     return this.plugins.get(pluginId)?.status ?? notStarted;
   }
 
+  public readonly openAsset: PluginServices['openAsset'] = (reference) =>
+    this.services.openAsset(reference);
+
   error(): string | null {
     return this.hostError;
   }

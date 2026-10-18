@@ -1,7 +1,6 @@
 import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
-import { type AcpResourceInput } from '../agents';
-import type { RegistryActor } from '../agents';
+import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
 import type { HookPort, Keychain, PluginNetwork } from '../plugins';
@@ -15,7 +14,10 @@ import {
 } from './http-connections';
 import { closePlugins, startPlugins, type PluginSetup } from './plugin-setup';
 import { createRequestGuard } from './request-guard';
-import { createRequestListener } from './request-listener';
+import {
+  createRequestListener,
+  type RequestListenerOptions,
+} from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
 import { createAppRouterDeps } from './router-deps';
 
@@ -59,7 +61,10 @@ export async function startHttpServer(
 ): Promise<HttpServer> {
   const setup = await prepareHttpServer(options);
   const guard = createRequestGuard(options.port);
-  const server = createHttpListener(guard, setup.blobsFolder, setup.appRouter);
+
+  const server = createServer(
+    createRequestListener(listenerOptions(setup, guard)),
+  );
 
   await listenWithPlugins(server, options.port, setup);
 
@@ -130,14 +135,10 @@ type PluginDeps = Pick<HttpSetup, 'pluginRuntime' | 'pluginSettings'> & {
   hooks: HookPort['hooks'];
 };
 
-const pluginDeps = ({
-  pluginRuntime,
-  pluginSettings,
-  hookPort,
-}: HttpSetup): PluginDeps => ({
-  pluginRuntime,
-  pluginSettings,
-  hooks: hookPort.hooks,
+const pluginDeps = (setup: HttpSetup): PluginDeps => ({
+  pluginRuntime: setup.pluginRuntime,
+  pluginSettings: setup.pluginSettings,
+  hooks: setup.hookPort.hooks,
 });
 
 async function listenWithPlugins(
@@ -154,10 +155,14 @@ async function listenWithPlugins(
   }
 }
 
-function createHttpListener(
+function listenerOptions(
+  setup: HttpSetup & { appRouter: AppRouter },
   guard: ReturnType<typeof createRequestGuard>,
-  blobsFolder: string,
-  router: AppRouter,
-): Server {
-  return createServer(createRequestListener({ guard, blobsFolder, router }));
+): RequestListenerOptions {
+  return {
+    guard,
+    blobsFolder: setup.blobsFolder,
+    router: setup.appRouter,
+    readAsset: setup.pluginRuntime.openAsset,
+  };
 }

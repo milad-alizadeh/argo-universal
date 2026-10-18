@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { pluginStateColumns } from '../columns';
+import { PluginIdentifier } from './plugin-identifier';
 
-export const PluginIdentifier = z.string().regex(/^[a-z][a-z0-9-]*$/);
+export { PluginIdentifier } from './plugin-identifier';
 
 const settingField = {
   key: PluginIdentifier,

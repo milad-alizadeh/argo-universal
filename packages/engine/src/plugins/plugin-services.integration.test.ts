@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { MemoryKeychain } from '#mocks/memory-keychain';
 import { scratch } from '#mocks/probe-plugin';
+import { PluginAssets } from './assets';
 import type { StateRequest } from './plugin-calls';
 import { PluginServices } from './plugin-services';
 import { PluginStorage } from './storage';
@@ -16,7 +17,11 @@ it('keeps no Grants for a Plugin once it is released', async () => {
   const services = new PluginServices(
     new PluginStorage(home),
     new MemoryKeychain(),
-    { log: (): void => {}, projects: async (): Promise<string[]> => [] },
+    {
+      assets: new PluginAssets(home),
+      log: (): void => {},
+      projects: async (): Promise<string[]> => [],
+    },
   );
 
   services.activate('probe', {

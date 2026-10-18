@@ -2,7 +2,9 @@ import {
   FetchCall,
   FsCall,
   ProcessCall,
+  ProcessCommand,
 } from '@repo/contracts/plugins/argo-calls';
+import { PluginAssetRequest } from '@repo/contracts/plugins/assets';
 import {
   HookCall,
   HookWaiting,
@@ -17,12 +19,7 @@ export { PluginStatus } from '@repo/contracts/plugins/runtime';
 
 export type { PluginEvent } from '@repo/contracts/plugins/wire';
 
-export {
-  FetchCall,
-  FsCall,
-  ProcessCall,
-  ProcessCommand,
-} from '@repo/contracts/plugins/argo-calls';
+export { FetchCall, FsCall, ProcessCall, ProcessCommand };
 
 export const StorageQuery = z.object({
   sql: z.string(),
@@ -64,6 +61,7 @@ export const SecretCall = z.discriminatedUnion('action', [
 export type SecretCall = z.infer<typeof SecretCall>;
 
 export const PluginRequest = z.discriminatedUnion('api', [
+  PluginAssetRequest,
   z.object({ api: z.literal('hooks'), call: HookCall }),
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),

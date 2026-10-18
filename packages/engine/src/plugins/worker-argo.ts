@@ -105,6 +105,9 @@ export const argoSource = `(() => {
     json: async () => JSON.parse(reply.body),
   });
   return Object.freeze({
+    assets: Object.freeze({
+      resolve: (source) => call({ api: 'assets', source }),
+    }),
     fs: Object.freeze({
       read: (path) => fs({ action: 'read', path }),
       write: async (path, content) => { await fs({ action: 'write', path, content }); },
