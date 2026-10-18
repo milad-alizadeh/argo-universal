@@ -3,6 +3,7 @@ import { PluginCapability } from './capabilities';
 import { materialSymbolNames } from './material-symbol-names.gen';
 import { PluginStatus } from './runtime';
 import { sfSymbolNames } from './sf-symbol-names.gen';
+import { SlotId } from './wire';
 
 const PluginIdentifier = z.string().regex(/^[a-z][a-z0-9-]*$/);
 
@@ -64,6 +65,14 @@ export const PluginManifest = z.strictObject({
         (items) => new Set(items.map((item) => item.id)).size === items.length,
         'Nav ids must be unique',
       ),
+    // The Slots the Plugin fills; core asks only these Plugins for a Slot's content.
+    slots: z
+      .array(SlotId)
+      .refine(
+        (slots) => new Set(slots).size === slots.length,
+        'Slot ids must be unique',
+      )
+      .optional(),
   }),
   capabilities: z.array(PluginCapability).optional(),
 });
