@@ -16,7 +16,7 @@ const withChildren = (parent: WireNode, children: WireNode[]): WireNode => ({
 });
 
 const counterButtons = (key: string): WireNode =>
-  withChildren(node('Row', key, { gap: 2 }), [
+  withChildren(node('Stack', key, { direction: 'row', gap: 2 }), [
     node('Button', '0', {
       label: 'Tap me',
       onPress: { $event: counterTapEvent },
@@ -29,7 +29,7 @@ const counterButtons = (key: string): WireNode =>
   ]);
 
 const counterTree = (taps: number): WireNode =>
-  withChildren(node('Column', '0', { gap: 4 }), [
+  withChildren(node('Stack', '0', { direction: 'column', gap: 4 }), [
     node('Text', '0', { children: 'Counter fixture', role: 'heading' }),
     node('Text', '1', { children: `Tapped ${taps} times` }),
     node('Pill', '2', { text: 'Healthy', tone: 'success' }),
@@ -127,7 +127,7 @@ export const invalidPropsSnapshot: ViewMessage = {
 export const slotCounterWaveEvent = 'onPress';
 
 export const slotCounterTree = (projectId: string, waves: number): WireNode =>
-  withChildren(node('Column', '0', { gap: 2 }), [
+  withChildren(node('Stack', '0', { direction: 'column', gap: 2 }), [
     node('Text', '0', {
       children:
         waves === 0
