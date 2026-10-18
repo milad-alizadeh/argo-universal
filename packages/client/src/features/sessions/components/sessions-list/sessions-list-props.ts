@@ -15,6 +15,7 @@ export interface SessionsListProps {
   view: SessionsView;
   selectedSessionId?: string;
   onSelect: (id: string) => void;
+  onStartSession?: () => void;
   // Desktop and the web: renaming from a row's double-click or context menu.
   onRename?: (id: string) => void;
   onArchive?: (id: string) => void;

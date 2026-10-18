@@ -119,3 +119,9 @@ export {
 export const stackProps = layoutProps.extend({
   direction: z.enum(['row', 'column']).describe('The direction of the layout.'),
 });
+
+export const emptyStateProps = z.object({
+  icon: z.string().optional().describe('Optional native symbol name.'),
+  title: z.string().describe('The empty state heading.'),
+  description: z.string().optional().describe('Optional supporting text.'),
+});

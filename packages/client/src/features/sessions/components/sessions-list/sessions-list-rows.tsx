@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { memo, useCallback } from 'react';
-import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Text } from '#primitives/content/text';
 import {
@@ -15,39 +14,6 @@ export function NoSessionsYet(): React.JSX.Element {
     <Text role="secondary" className="pb-1 pl-8.5 pr-1">
       No Sessions yet.
     </Text>
-  );
-}
-
-export interface EmptyListProps {
-  title: string;
-  // Why the list is empty, such as which search found nothing.
-  message?: string;
-}
-
-function EmptyListMessage({
-  message,
-}: Pick<EmptyListProps, 'message'>): React.JSX.Element | null {
-  if (!message) return null;
-
-  return (
-    <Text role="secondary" className="text-center">
-      {message}
-    </Text>
-  );
-}
-
-// What a list shows in place of rows it does not have: a heading, and a line on why. Settings' search shows it too.
-export function EmptyList({
-  title,
-  message,
-}: EmptyListProps): React.JSX.Element {
-  return (
-    <View className="items-center gap-1 px-4 py-8">
-      <Text role={'heading'} className="text-center">
-        {title}
-      </Text>
-      <EmptyListMessage message={message} />
-    </View>
   );
 }
 

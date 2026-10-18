@@ -22,6 +22,7 @@ export {
   stackProps,
   groupedItemProps,
   svgProps,
+  emptyStateProps,
 } from './kit-props';
 
 export type WirePart = keyof typeof wireParts;

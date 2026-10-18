@@ -57,7 +57,7 @@ export const listWireParts = {
     versions: [contentListProps],
     container: true,
     children: true,
-    slots: { empty: ['Text', 'Stack'] },
+    slots: { empty: ['Text', 'Stack', 'EmptyState'] },
     events: {},
     reference: part(
       'A content list with plain, grouped or card rows.',

@@ -41,5 +41,23 @@ export const runListRoot: WireNode = {
 
 export const emptyRunListRoot: WireNode = {
   ...node('List', 'empty-runs'),
-  slots: { empty: [node('Text', 'empty-label', { children: 'No runs yet' })] },
+  slots: {
+    empty: [
+      {
+        ...node('EmptyState', 'empty-state', {
+          icon: 'issue',
+          title: 'No runs yet',
+          description: 'New CI runs appear here.',
+        }),
+        slots: {
+          action: [
+            node('Button', 'run-workflow', {
+              label: 'Run workflow',
+              onPress: { $event: 'onPress' },
+            }),
+          ],
+        },
+      },
+    ],
+  },
 };

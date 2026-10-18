@@ -2,6 +2,7 @@ import { wireParts, versionsOf } from '@repo/contracts/plugins/kit';
 
 // This App's registry; its renderer table must cover exactly these parts.
 export const pluginParts = {
+  EmptyState: wireParts.EmptyState,
   List: wireParts.List,
   'List.Section': wireParts['List.Section'],
   ListItem: wireParts.ListItem,

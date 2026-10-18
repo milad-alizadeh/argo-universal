@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { EmptyList } from '#features/sessions';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { EmptyState } from '#primitives/status/empty-state';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { settingsRows } from './settings-list-data';
 import type { SettingsListProps } from './settings-list-props';
@@ -62,9 +62,10 @@ function NoMatchingSettings({
   query = '',
 }: Pick<SettingsListProps, 'query'>): React.JSX.Element {
   return (
-    <EmptyList
+    <EmptyState
+      icon="search"
       title="No matching settings"
-      message={`No Settings page has "${query.trim()}" in its name.`}
+      description={`No Settings page has "${query.trim()}" in its name.`}
     />
   );
 }

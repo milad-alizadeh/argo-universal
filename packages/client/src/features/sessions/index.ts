@@ -1,7 +1,5 @@
 export { SessionHeader } from './components/session-header';
 
-export { EmptyList } from './components/sessions-list/sessions-list-rows';
-
 export {
   SessionsHeader,
   searchSessionsLabel,

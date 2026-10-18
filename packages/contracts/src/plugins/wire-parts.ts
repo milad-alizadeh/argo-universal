@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { emptyStateWirePart } from './empty-state-wire-part';
 import {
   buttonProps,
   buttonV1,
@@ -138,6 +139,7 @@ export const wireParts = {
     events: {},
     reference: wirePartReferences.Column,
   },
+  EmptyState: emptyStateWirePart,
   Svg: {
     props: svgProps,
     versions: [svgProps],
