@@ -95,18 +95,28 @@ function usePaddingStep(step: number): number {
   return step === 0 ? 0 : value;
 }
 
+function usePadding(value: ListProps<never>['padding']): number {
+  return usePaddingStep(useSizeClassValue(value ?? 0));
+}
+
 export function useListPadding<Item>(props: ListProps<Item>): {
   paddingHorizontal: number;
   paddingTop: number;
+  paddingBottom?: number;
 } {
-  const paddingHorizontal = usePaddingStep(
-    useSizeClassValue(props.padding ?? 0),
-  );
-
-  const paddingTop = usePaddingStep(useSizeClassValue(props.paddingTop ?? 0));
+  const paddingHorizontal = usePadding(props.padding);
+  const paddingTop = usePadding(props.paddingTop);
+  const bottom = usePadding(props.paddingBottom);
+  const paddingBottom = props.paddingBottom === undefined ? undefined : bottom;
 
   return useMemo(
-    () => ({ paddingHorizontal, paddingTop }),
-    [paddingHorizontal, paddingTop],
+    () => ({ paddingHorizontal, paddingTop, ...bottomPadding(paddingBottom) }),
+    [paddingHorizontal, paddingTop, paddingBottom],
   );
+}
+
+function bottomPadding(paddingBottom: number | undefined): {
+  paddingBottom?: number;
+} {
+  return paddingBottom === undefined ? {} : { paddingBottom };
 }

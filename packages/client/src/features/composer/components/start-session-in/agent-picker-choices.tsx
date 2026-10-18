@@ -1,14 +1,10 @@
 import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
-import { Platform, View, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { RegistryIcon } from '#features/agents';
-import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import {
-  GroupedListItem,
-  type GroupedListItemProps,
-} from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Icon } from '#primitives/content/icon';
+import { List } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import type { StartSessionInProps } from './start-session-types';
 
 export type AgentChoiceProps = StartSessionInProps & {
@@ -19,102 +15,58 @@ const maximumHeight = 320;
 
 const screenFraction = 0.6;
 
+const choicesTestID = 'new-session-agents-scroll';
+
 export function AgentChoices(props: AgentChoiceProps): React.JSX.Element {
   const { height } = useWindowDimensions();
 
-  if (Platform.OS !== 'web') return <NativeChoices {...props} />;
-
   return (
-    <WebChoices
-      {...props}
+    <List
       maxHeight={{ compact: height * screenFraction, wide: maximumHeight }}
-    />
+      testID={choicesTestID}
+    >
+      {agentRows(props)}
+    </List>
   );
 }
 
-type ScrollableChoicesProps = AgentChoiceProps &
-  Pick<React.ComponentProps<typeof ScrollFadeList>, 'maxHeight'>;
-
-function WebChoices(props: ScrollableChoicesProps): React.JSX.Element {
-  return <ChoicesList {...props} />;
-}
-
-function ChoicesList(props: ScrollableChoicesProps): React.JSX.Element {
+function agentRows(props: AgentChoiceProps): React.JSX.Element {
   return (
-    <ScrollFadeList
-      data={props.agents}
-      maxHeight={props.maxHeight}
-      contentContainerStyle={{ gap: 2 }}
-      testID="new-session-agents-scroll"
-      keyExtractor={({ id }) => id}
-      renderItem={({ item }) => <AgentChoice agent={item} choices={props} />}
-      ListFooterComponent={<WebAddAgents {...props} />}
-    />
+    <List.Section selectionMode="single">
+      {props.agents.map((agent) => (
+        <AgentChoice key={agent.id} agent={agent} choices={props} />
+      ))}
+      <ListItem {...addAgentsProps(props)} />
+    </List.Section>
   );
 }
 
-function NativeChoices(props: AgentChoiceProps): React.JSX.Element {
-  return (
-    <GroupedList fit>
-      <GroupedListSection>
-        {props.agents.map((agent) => (
-          <AgentChoice key={agent.id} agent={agent} choices={props} />
-        ))}
-        <AddAgents {...props} />
-      </GroupedListSection>
-    </GroupedList>
-  );
-}
-
-type RowProps = {
-  agent: AgentServer;
-  choices: AgentChoiceProps;
-};
+type RowProps = { agent: AgentServer; choices: AgentChoiceProps };
 
 function AgentChoice({ agent, choices }: RowProps): React.JSX.Element {
   return (
-    <GroupedListItem
-      {...choiceProps(agent, choices)}
+    <ListItem
+      {...agentChoiceProps(agent, choices)}
       leading={
         <RegistryIcon uri={agent.icon} agentName={agent.name} role="row" />
       }
-      size={Platform.OS === 'web' ? 'sm' : undefined}
     />
   );
 }
 
-const choiceProps = (
+const agentChoiceProps = (
   agent: AgentServer,
-  props: AgentChoiceProps,
-): GroupedListItemProps => ({
-  label: agent.name,
-  accessibilityRole: 'button',
-  disclosure: false,
-  selected: props.agent?.id === agent.id,
-  choice: true,
-  onPress: () => props.close(() => props.onAgentChange(agent.id)),
+  choices: AgentChoiceProps,
+): React.ComponentProps<typeof ListItem> => ({
+  title: agent.name,
+  selected: choices.agent?.id === agent.id,
+  onPress: () => choices.close(() => choices.onAgentChange(agent.id)),
 });
 
-function AddAgents(props: AgentChoiceProps): React.JSX.Element {
-  return (
-    <GroupedListItem
-      label="Add Agents"
-      icon="add"
-      accessibilityRole="button"
-      onPress={() => props.close(props.onAddAgents)}
-    />
-  );
-}
-
-function WebAddAgents(props: AgentChoiceProps): React.JSX.Element {
-  return (
-    <View className="pt-1_5">
-      <GroupedListItem
-        label="Add Agents"
-        icon="add"
-        accessibilityRole="button"
-        onPress={() => props.close(props.onAddAgents)}
-      />
-    </View>
-  );
-}
+const addAgentsProps = (
+  props: AgentChoiceProps,
+): React.ComponentProps<typeof ListItem> => ({
+  title: 'Add Agents',
+  leading: <Icon name="add" role="row" />,
+  onPress: () => props.close(props.onAddAgents),
+});

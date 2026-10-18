@@ -14,6 +14,7 @@ export interface ListChild {
   key: string;
   content: ReactNode;
   position: ListPosition;
+  selectionMode?: 'single';
 }
 
 function sectionChild(
@@ -62,7 +63,12 @@ function sectionEntries(
   const props = child.props;
 
   const body =
-    props.isExpanded === false ? [] : childEntries(props.children, key);
+    props.isExpanded === false
+      ? []
+      : childEntries(props.children, key).map((entry) => ({
+          ...entry,
+          selectionMode: props.selectionMode,
+        }));
 
   return [...headerEntries(props, key), ...body, ...footerEntries(props, key)];
 }

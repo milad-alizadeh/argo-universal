@@ -19,7 +19,22 @@ export type ListProps<Item> = Pick<
   | 'maxHeight'
   | 'testID'
   | 'ref'
+  | 'depth'
+  | 'inset'
+  | 'initialScrollIndex'
+  | 'alignItemsAtEnd'
+  | 'maintainScrollAtEnd'
+  | 'maintainScrollAtEndThreshold'
+  | 'maintainVisibleContentPosition'
+  | 'onStartReached'
+  | 'onStartReachedThreshold'
+  | 'drawDistance'
+  | 'keyboardDismissMode'
+  | 'keyboardShouldPersistTaps'
 > & {
+  header?: ReactNode;
+  footer?: ReactNode;
+  paddingBottom?: SizeClassValue<StackGap>;
   appearance?: ListAppearance;
   padding?: SizeClassValue<StackGap>;
   paddingTop?: SizeClassValue<StackGap>;
@@ -32,6 +47,7 @@ export type ListProps<Item> = Pick<
 };
 
 export interface ListSectionProps {
+  selectionMode?: 'single';
   title?: string;
   subtitle?: string;
   leading?: ReactNode;

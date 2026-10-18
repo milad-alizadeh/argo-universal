@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { List } from '#primitives/lists/list';
 import { Pill } from '#primitives/status/pill';
 import { Variation, Variations } from '../../../variations';
-import { ListItem } from './list-item';
+import { ListItem } from './index';
 import type { ListItemProps } from './list-item-props';
 
 const meta = {
@@ -63,6 +64,9 @@ export const Overview: StoryObj<typeof meta> = {
       <Variation label="One, two and three lines; selected, progress, badge and disabled">
         <Anatomy />
       </Variation>
+      <Variation label="Settings link, toggle and single choice">
+        <SettingsRows />
+      </Variation>
     </Variations>
   ),
 };
@@ -87,3 +91,46 @@ export const PaperReference: StoryObj<typeof meta> = {
     </View>
   ),
 };
+
+function SettingsRows(): React.JSX.Element {
+  const [enabled, setEnabled] = useState(false);
+
+  return (
+    <List appearance="grouped" maxHeight={400}>
+      {settingsControls(enabled, setEnabled)}
+      <List.Section selectionMode="single">
+        <ListItem
+          title="Standard"
+          selected
+          onPress={action('choose Standard')}
+        />
+      </List.Section>
+    </List>
+  );
+}
+
+function settingsControls(
+  enabled: boolean,
+  setEnabled: (value: boolean) => void,
+): React.JSX.Element {
+  return (
+    <List.Section>
+      <ListItem.Link
+        title="Project"
+        value="Argo"
+        onPress={action('open Project')}
+      />
+      <ListItem.Toggle
+        title="Fast mode"
+        value={enabled}
+        onValueChange={setEnabled}
+      />
+      <ListItem.Toggle
+        title="Unavailable"
+        value={false}
+        onValueChange={setEnabled}
+        disabled
+      />
+    </List.Section>
+  );
+}

@@ -1,15 +1,10 @@
-import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import type * as React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, View, type ViewStyle } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { listTestIdProps } from '#lib/generic/list-test-id';
-import {
-  groupedListGap,
-  groupedListPadding,
-} from '#primitives/lists/grouped-list';
+import { groupedListGap } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
+import { List } from '#primitives/lists/list';
 import { CardRow } from './card-row';
 import {
   type FieldListEntry,
@@ -28,9 +23,6 @@ export interface FieldListProps {
   gap?: 'sm';
 }
 
-// The Settings page's surface: the phone's page, or the Frame behind a wide window's page.
-const fadeSurface = 'bg-content';
-
 const rowHeightEstimate = 52;
 
 /*
@@ -44,11 +36,10 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
   );
 
   return (
-    <ScrollFadeList
-      {...listTestIdPropsFor(props.testID)}
+    <List
+      testID={props.testID}
       {...fieldListDefaults}
-      contentContainerStyle={useGroupPadding()}
-      data={entries}
+      items={entries}
       renderItem={useEntryRenderer(props.gap)}
     />
   );
@@ -58,75 +49,28 @@ export function FieldList(props: FieldListProps): React.JSX.Element {
 const glassBarsFade = { top: 'never', bottom: 'never' } as const;
 
 const fieldListDefaults = {
-  surfaceClassName: fadeSurface,
   edges: Platform.OS === 'ios' ? glassBarsFade : undefined,
   keyExtractor: fieldListEntryKey,
   getItemType: fieldListEntryKind,
   estimatedItemSize: rowHeightEstimate,
-};
+  padding: { compact: 4, wide: 0 },
+  paddingTop: { compact: 4, wide: 0 },
+} as const;
 
-function listTestIdPropsFor(
-  testID: string | undefined,
-): Partial<ReturnType<typeof listTestIdProps>> {
-  return testID ? listTestIdProps(testID) : {};
-}
-
-type PaddingKey = keyof Pick<
-  ViewStyle,
-  | 'paddingInlineStart'
-  | 'paddingInlineEnd'
-  | 'paddingLeft'
-  | 'paddingRight'
-  | 'paddingHorizontal'
->;
-
-// The web resolves a class to a CSS length such as "16px"; native resolves it to a number.
-type ResolvedLength = ViewStyle['gap'] | Exclude<ViewStyle[PaddingKey], string>;
-
-const pixels = (length: ResolvedLength): number => {
+const pixels = (length: ViewStyle['gap']): number => {
   if (typeof length === 'number') return length;
 
   return typeof length === 'string' ? Number.parseFloat(length) : 0;
 };
 
-const isSet = (value: ResolvedLength): boolean =>
-  value !== undefined && value !== null;
-
-function firstLength(style: ViewStyle, keys: readonly PaddingKey[]): number {
-  return pixels(keys.map((key) => style[key]).find(isSet));
-}
-
-const startPaddingKeys = [
-  'paddingInlineStart',
-  'paddingLeft',
-  'paddingHorizontal',
-] as const;
-
-const endPaddingKeys = [
-  'paddingInlineEnd',
-  'paddingRight',
-  'paddingHorizontal',
-] as const;
-
-// GroupedList's gutters, in the numbers Legend List lays its items out with; the scroll fade adds the end gap.
-function useGroupPadding(): ViewStyle {
-  const padding = useResolveClassNames(groupedListPadding);
-
-  return {
-    paddingLeft: firstLength(padding, startPaddingKeys),
-    paddingRight: firstLength(padding, endPaddingKeys),
-    paddingTop: pixels(padding.paddingTop),
-  };
-}
-
 function useEntryRenderer(
   density: FieldListProps['gap'],
-): (props: LegendListRenderItemProps<FieldListEntry>) => React.JSX.Element {
+): (item: FieldListEntry, index: number) => React.JSX.Element {
   const sectionGap = useSectionGap(density);
   const [store] = useState(createHoverStore);
 
   return useCallback(
-    ({ item, index }: LegendListRenderItemProps<FieldListEntry>) => (
+    (item: FieldListEntry, index: number) => (
       <View style={item.gapAbove ? { paddingTop: sectionGap } : undefined}>
         <EntryContent entry={item} index={index} store={store} />
       </View>

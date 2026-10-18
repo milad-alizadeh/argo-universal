@@ -84,3 +84,19 @@ export const Contents: Story = {
     ).toHaveLength(3);
   },
 };
+
+export const HeaderAndFooterOnEmptyList: Story = {
+  render: () => (
+    <List
+      items={[]}
+      header={<Text>Earlier runs</Text>}
+      footer={<Text>End of runs</Text>}
+      empty={<Text>No runs</Text>}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Earlier runs')).toBeVisible();
+    await expect(canvas.getByText('No runs')).toBeVisible();
+    await expect(canvas.getByText('End of runs')).toBeVisible();
+  },
+};

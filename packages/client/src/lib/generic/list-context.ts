@@ -7,6 +7,7 @@ export type ListPosition = 'only' | 'first' | 'middle' | 'last';
 export const ListContext = createContext<{
   appearance: ListAppearance;
   position: ListPosition;
+  selectionMode?: 'single';
 }>({ appearance: 'plain', position: 'only' });
 
 const positions = {
