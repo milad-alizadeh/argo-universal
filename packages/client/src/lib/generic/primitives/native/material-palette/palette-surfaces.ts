@@ -76,12 +76,13 @@ export function menuItemColors(
   };
 }
 
-// FilterChip `colors` (FilterChipColors): the selection tint and foreground label when on, the muted label when off.
+// FilterChip `colors` (FilterChipColors): primary fill and foreground label when on, muted label when off.
 export function chipColors(roles: MaterialRoles): FilterChipColors {
   return {
     labelColor: roles.onSurfaceVariant,
-    selectedContainerColor: roles.selected,
-    selectedLabelColor: roles.onSurface,
+    selectedContainerColor: roles.primary,
+    selectedLabelColor: roles.onPrimary,
+    selectedLeadingIconColor: roles.onPrimary,
   };
 }
 
