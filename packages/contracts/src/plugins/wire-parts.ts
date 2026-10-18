@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { actionListWireParts } from './action-list-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
 import {
@@ -41,6 +42,7 @@ const contentParts = [
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
   ...listWireParts,
+  ...actionListWireParts,
   ...controlWireParts,
   GroupedListItem: {
     props: groupedItemProps,

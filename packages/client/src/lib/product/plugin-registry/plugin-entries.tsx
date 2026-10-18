@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import { ActionList, Action } from '#primitives/actions/action-list';
 import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
 import { SplitButton } from '#primitives/actions/split-button';
@@ -20,6 +21,9 @@ import { Svg } from '#primitives/visual';
 import type { PluginPart } from './plugin-parts';
 
 export const pluginEntries = {
+  ActionList,
+  'ActionList.Section': ActionList.Section,
+  Action,
   EmptyState,
   Picker,
   Switch,
