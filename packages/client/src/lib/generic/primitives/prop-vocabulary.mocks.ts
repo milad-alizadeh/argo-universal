@@ -118,6 +118,7 @@ export type Primitives = {
   StandaloneTextInputProps: TextInputKit.StandaloneTextInputProps;
   SwitchProps: SwitchKit.SwitchProps;
   TextInputProps: TextInputKit.TextInputProps;
+  TextFieldProps: TextInputKit.TextFieldProps;
   TextProps: TextKit.TextProps;
   TextareaProps: TextareaKit.TextareaProps;
   Toast: ToastKit.Toast;

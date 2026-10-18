@@ -11,7 +11,7 @@ import { ListContext, listPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { flattenedChildren } from './list-child-nodes';
 import type { ListSectionProps } from './list-props';
-import { SectionHeader } from './list-section-parts';
+import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
 export function ListSection(props: ListSectionProps): ReactElement {
   const id = useId();
@@ -26,11 +26,7 @@ export function ListSection(props: ListSectionProps): ReactElement {
 }
 
 function Header(props: ListSectionProps): ReactNode {
-  const hasHeader = [props.title, props.leading, props.onExpandedChange].some(
-    Boolean,
-  );
-
-  return hasHeader ? <SectionHeader {...props} /> : null;
+  return hasSectionHeader(props) ? <SectionHeader {...props} /> : null;
 }
 
 function Rows(props: ListSectionProps): ReactNode {

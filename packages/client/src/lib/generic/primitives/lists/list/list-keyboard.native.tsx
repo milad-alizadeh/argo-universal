@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { FormFocusScope } from '../../../form-focus';
 
 const flexible = { flex: 1 };
 
@@ -14,7 +15,7 @@ export function ListKeyboard({
 }): ReactElement {
   return (
     <KeyboardAvoidingView behavior="padding" style={fit ? fitted : flexible}>
-      {children}
+      <FormFocusScope>{children}</FormFocusScope>
     </KeyboardAvoidingView>
   );
 }

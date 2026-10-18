@@ -66,7 +66,9 @@ it.each(['Switch', 'Picker', 'TextInput', 'ListItem.Toggle'])(
       },
     };
 
-    expect(prepareWireTree(row, { ListItem: 2, [type]: 1 })).toMatchObject({
+    expect(
+      prepareWireTree(row, { Text: 3, ListItem: 3, [type]: 1 }),
+    ).toMatchObject({
       type: 'Text',
       props: { children: 'Update Argo to see this' },
     });

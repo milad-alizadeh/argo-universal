@@ -67,3 +67,19 @@ export const FieldDraftSurvivesEventDelivery: StoryObj<typeof meta> = {
     );
   },
 };
+
+export const LegacyRowPreservesDetailAndFooter: StoryObj<typeof meta> = {
+  args: {
+    root: {
+      ...node('GroupedListItem', 'legacy', { label: 'Legacy setting' }),
+      slots: {
+        detail: [node('Text', 'detail', { children: 'Detail content' })],
+        footer: [node('Text', 'footer', { children: 'Footer content' })],
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Detail content')).toBeVisible();
+    await expect(canvas.getByText('Footer content')).toBeVisible();
+  },
+};

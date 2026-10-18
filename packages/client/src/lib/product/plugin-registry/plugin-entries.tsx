@@ -13,6 +13,8 @@ import {
   stackProps,
   svgProps,
 } from '@repo/contracts/plugins/kit';
+import type { Handler } from '@repo/contracts/plugins/wire';
+import type { ReactNode } from 'react';
 import { Button } from '#primitives/actions/button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
@@ -28,6 +30,7 @@ import {
   handlerOf,
   payloadHandler,
   type Entry,
+  type RenderContext,
 } from './plugin-rendering';
 import { pluginSettingsEntries } from './plugin-settings-entries';
 
@@ -43,13 +46,12 @@ export const pluginEntries = {
     ({ onSelectionChange, ...props }, context, children) => (
       <ListSection
         {...props}
+        selection={
+          context.ui.state.get(context.key)?.selection ?? props.selection
+        }
         leading={context.slots.leading}
         trailing={context.slots.trailing}
-        onSelectionChange={payloadHandler(
-          onSelectionChange,
-          context,
-          (payload: string[]) => ({ event: 'onSelectionChange', payload }),
-        )}
+        onSelectionChange={sectionChange(onSelectionChange, context)}
       >
         {children}
       </ListSection>
@@ -80,7 +82,7 @@ export const pluginEntries = {
       disabled={props.disabled}
       leading={context.slots.leading}
       trailing={context.slots.accessories}
-      meta={context.slots.footer ?? context.slots.detail}
+      meta={legacyMeta(context)}
       onPress={handlerOf(props.onPress, context)}
     />
   )),
@@ -107,3 +109,24 @@ export const pluginEntries = {
     <Svg {...props} onPress={handlerOf(onPress, context)} />
   )),
 } satisfies Record<PluginPart, Entry>;
+
+function legacyMeta({ slots }: RenderContext): ReactNode {
+  if (!slots.detail && !slots.footer) return undefined;
+
+  return (
+    <Stack direction="column">
+      {slots.detail}
+      {slots.footer}
+    </Stack>
+  );
+}
+
+function sectionChange(
+  handler: Handler | undefined,
+  context: RenderContext,
+): ((payload: string[]) => void) | undefined {
+  return payloadHandler(handler, context, (payload: string[]) => ({
+    event: 'onSelectionChange',
+    payload,
+  }));
+}

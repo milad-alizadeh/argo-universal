@@ -132,7 +132,7 @@ export function Trailing(
 
 export function Accessory({ children }: { children?: ReactNode }): ReactNode {
   return children ? (
-    <View className="size-6 wide-type:size-5 shrink-0 items-center justify-center self-center">
+    <View className="h-6 min-w-6 wide-type:h-5 wide-type:min-w-5 shrink-0 items-center justify-center self-center">
       {children}
     </View>
   ) : null;

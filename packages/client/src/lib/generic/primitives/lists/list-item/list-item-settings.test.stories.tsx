@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { settleViewport } from '../../../settle-viewport';
 import { ListItem } from './index';
 import { Settings } from './list-item-settings.stories';
@@ -47,5 +47,39 @@ export const FieldIsEditable: StoryObj<typeof meta> = {
     await userEvent.clear(name);
     await userEvent.type(name, 'Changed');
     await expect(name).toHaveValue('Changed');
+  },
+};
+
+const chooseTheme = fn();
+
+export const PickerKeyboardSelection: StoryObj<typeof meta> = {
+  render: () => (
+    <ListItem.Picker
+      title="Theme"
+      value="system"
+      options={[
+        { value: 'system', label: 'System' },
+        { value: 'light', label: 'Light' },
+      ]}
+      onValueChange={chooseTheme}
+    />
+  ),
+  beforeEach: () => {
+    chooseTheme.mockClear();
+  },
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await settleViewport(1440);
+    await userEvent.tab();
+    await expect(
+      canvas.getByRole('button', { name: 'Theme, System' }),
+    ).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    const page = within(canvasElement.ownerDocument.body);
+    await expect(
+      await page.findByRole('menuitemradio', { name: 'System' }),
+    ).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    await expect(chooseTheme).toHaveBeenCalledWith('light');
+    await expect(chooseTheme).toHaveBeenCalledOnce();
   },
 };

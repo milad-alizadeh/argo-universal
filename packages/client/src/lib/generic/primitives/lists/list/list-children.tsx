@@ -10,7 +10,7 @@ import { ListFooter } from '../../../list-footer';
 import { flattenedChildren } from './list-child-nodes';
 import type { ListSectionProps } from './list-props';
 import { ListSection } from './list-section';
-import { SectionHeader } from './list-section-parts';
+import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
 export interface ListChild extends ListSelection {
   key: string;
@@ -24,17 +24,8 @@ function sectionChild(
   return isValidElement<ListSectionProps>(child) && child.type === ListSection;
 }
 
-function hasHeader(props: ListSectionProps): boolean {
-  return [
-    props.title,
-    props.leading,
-    props.trailing,
-    props.onExpandedChange,
-  ].some(Boolean);
-}
-
 function headerEntries(props: ListSectionProps, key: string): ListChild[] {
-  if (!hasHeader(props)) return [];
+  if (!hasSectionHeader(props)) return [];
 
   return [
     {

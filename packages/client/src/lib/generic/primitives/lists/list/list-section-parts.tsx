@@ -59,3 +59,12 @@ export function SectionHeader(props: HeaderProps): ReactElement {
     </Pressable>
   );
 }
+
+export function hasSectionHeader(props: ListSectionProps): boolean {
+  return [
+    props.title,
+    props.leading,
+    props.trailing,
+    props.onExpandedChange,
+  ].some(Boolean);
+}

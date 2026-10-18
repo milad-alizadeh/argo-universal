@@ -2,10 +2,8 @@ import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -71,20 +69,14 @@ const missingFolder: ListItemProps['badge'] = {
   label: folderNotFound,
 };
 
-type ProjectDetail = Pick<ListItemProps, 'value' | 'badge' | 'trailing'>;
+type ProjectDetail = Pick<ListItemProps, 'value' | 'badge'>;
 
 const missingFolderDetail: ProjectDetail = {
   badge: missingFolder,
-  trailing: (
-    <SizeClass only="wide">
-      <Text role="row" tone="muted">
-        {folderNotFound}
-      </Text>
-    </SizeClass>
-  ),
+  value: folderNotFound,
 };
 
-// Where the Project's remote is, or that its folder is gone: a phone shows only the dot, which the row's name still says.
+// The Project's remote, or its missing folder, fills the row's value lane.
 function projectDetail(project: ProjectInfo): ProjectDetail {
   if (!project.folderExists) return missingFolderDetail;
 
