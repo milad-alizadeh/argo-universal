@@ -1,10 +1,11 @@
 import type { ReactElement, ReactNode, ComponentProps } from 'react';
-import { Pressable } from 'react-native';
+import { Platform, Pressable } from 'react-native';
 import { TextClassContext } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { cn } from '../../../utils';
 import { Accessory, ItemContent, Leading, Trailing } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
+import { RadioPress } from './list-item-radio';
 import { itemPress } from './list-item-styles';
 
 export interface DrawingProps extends ListItemProps {
@@ -33,13 +34,16 @@ const pressHandlers = ({
 
 function rowRole(
   props: DrawingProps,
-): 'button' | 'link' | 'switch' | undefined {
+): 'button' | 'link' | 'switch' | 'radio' | undefined {
   if (props.checked !== undefined) return 'switch';
 
-  if (props.role) return props.role;
-
-  return pressRole(props.onPress);
+  return explicitRole(props) ?? pressRole(props.onPress);
 }
+
+const explicitRole = (
+  props: DrawingProps,
+): DrawingProps['role'] | DrawingProps['accessibilityRole'] =>
+  props.role ?? props.accessibilityRole;
 
 const pressRole = (onPress: ListItemProps['onPress']): 'button' | undefined =>
   onPress ? 'button' : undefined;
@@ -100,15 +104,30 @@ function switchKeyDown(props: DrawingProps): React.KeyboardEventHandler {
   };
 }
 
-export function ItemPress(props: DrawingProps): ReactElement {
+function ItemContentSlots(props: DrawingProps): ReactElement {
   return (
-    <Pressable {...usePressProps(props)}>
-      <TextClassContext value={undefined}>
-        <Leading {...props} />
-        <ItemContent {...props} />
-        <Trailing {...props} />
-        <Accessory>{props.accessory}</Accessory>
-      </TextClassContext>
+    <TextClassContext value={undefined}>
+      <Leading {...props} />
+      <ItemContent {...props} />
+      <Trailing {...props} />
+      <Accessory>{props.accessory}</Accessory>
+    </TextClassContext>
+  );
+}
+
+export function ItemPress(props: DrawingProps): ReactElement {
+  const press = usePressProps(props);
+
+  if (Platform.OS === 'web' && props.accessibilityRole === 'radio')
+    return (
+      <RadioPress row={props}>
+        <ItemContentSlots {...props} />
+      </RadioPress>
+    );
+
+  return (
+    <Pressable {...press}>
+      <ItemContentSlots {...props} />
     </Pressable>
   );
 }

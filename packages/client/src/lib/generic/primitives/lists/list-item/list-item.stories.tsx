@@ -113,24 +113,23 @@ function settingsControls(
   enabled: boolean,
   setEnabled: (value: boolean) => void,
 ): React.JSX.Element {
+  const fast = { ...fastToggle, value: enabled, onValueChange: setEnabled };
+
   return (
     <List.Section>
-      <ListItem.Link
-        title="Project"
-        value="Argo"
-        onPress={action('open Project')}
-      />
-      <ListItem.Toggle
-        title="Fast mode"
-        value={enabled}
-        onValueChange={setEnabled}
-      />
-      <ListItem.Toggle
-        title="Unavailable"
-        value={false}
-        onValueChange={setEnabled}
-        disabled
-      />
+      <ListItem.Link {...projectLink} />
+      <ListItem.Toggle {...fast} />
+      <ListItem.Toggle {...disabledToggle} onValueChange={setEnabled} />
     </List.Section>
   );
 }
+
+const projectLink = {
+  title: 'Project',
+  value: 'Argo',
+  onPress: action('open Project'),
+};
+
+const fastToggle = { title: 'Fast mode' };
+
+const disabledToggle = { title: 'Unavailable', value: false, disabled: true };

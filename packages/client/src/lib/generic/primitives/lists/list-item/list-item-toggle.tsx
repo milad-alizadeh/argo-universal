@@ -37,7 +37,7 @@ export function ListItemToggle(props: ListItemToggleProps): ReactElement {
   return (
     <ListItemFrame
       {...row}
-      checked={Platform.OS === 'web' ? value : undefined}
+      checked={value}
       onPress={() => onValueChange(!value)}
       accessory={<ToggleAccessory {...props} />}
     />

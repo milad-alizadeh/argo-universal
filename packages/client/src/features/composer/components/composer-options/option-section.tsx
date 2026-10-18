@@ -41,31 +41,41 @@ function selectSection(
     <List.Section
       key={option.configId}
       title={option.name}
-      selectionMode="single"
+      {...selectProps(option, onChange)}
     >
-      {choiceRows(option, onChange)}
+      {choiceRows(option)}
     </List.Section>
   );
 }
 
 function choiceRows(
   option: Extract<Option, { type: 'select' }>,
-  onChange: Change,
 ): React.JSX.Element[] {
   return configurationChoices(option).map((choice) => (
-    <ListItem key={choice.value} {...choiceProps(option, choice, onChange)} />
+    <ListItem key={choice.value} {...choiceProps(option, choice)} />
   ));
 }
 
 function choiceProps(
   option: Extract<Option, { type: 'select' }>,
   choice: ReturnType<typeof configurationChoices>[number],
-  onChange: Change,
 ): React.ComponentProps<typeof ListItem> {
   return {
     title: choice.name,
     accessibilityLabel: `${option.name}: ${choice.name}`,
-    selected: option.currentValue === choice.value,
-    onPress: () => onChange(option.configId, choice.value),
+    id: choice.value,
+  };
+}
+
+function selectProps(
+  option: Extract<Option, { type: 'select' }>,
+  onChange: Change,
+): React.ComponentProps<typeof List.Section> {
+  return {
+    selectionMode: 'single',
+    selection: [option.currentValue],
+    onSelectionChange: ([value]) => {
+      if (value !== undefined) onChange(option.configId, value);
+    },
   };
 }

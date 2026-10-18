@@ -1,10 +1,11 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -23,7 +24,7 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
 
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <List appearance="grouped" padding={{ compact: 4, wide: 0 }}>
+      <List fit={false} appearance="grouped" padding={{ compact: 4, wide: 0 }}>
         {projectRows({ ...props, found, searching: query !== '' })}
       </List>
     </View>
@@ -70,15 +71,22 @@ const missingFolder: ListItemProps['badge'] = {
   label: folderNotFound,
 };
 
-type ProjectDetail = Pick<ListItemProps, 'value' | 'badge'>;
+type ProjectDetail = Pick<ListItemProps, 'value' | 'badge' | 'trailing'>;
 
-function missingFolderDetail(wide: boolean): ProjectDetail {
-  return { value: wide ? folderNotFound : undefined, badge: missingFolder };
-}
+const missingFolderDetail: ProjectDetail = {
+  badge: missingFolder,
+  trailing: (
+    <SizeClass only="wide">
+      <Text role="row" tone="muted">
+        {folderNotFound}
+      </Text>
+    </SizeClass>
+  ),
+};
 
 // Where the Project's remote is, or that its folder is gone: a phone shows only the dot, which the row's name still says.
-function projectDetail(project: ProjectInfo, wide: boolean): ProjectDetail {
-  if (!project.folderExists) return missingFolderDetail(wide);
+function projectDetail(project: ProjectInfo): ProjectDetail {
+  if (!project.folderExists) return missingFolderDetail;
 
   return { value: project.remoteHost ?? 'No remote' };
 }
@@ -90,7 +98,7 @@ type ProjectRowProps = {
 
 // One line at every width: the folder path sits only on the Project's own page.
 function ProjectRow(props: ProjectRowProps): React.JSX.Element {
-  const detail = projectDetail(props.project, useWide());
+  const detail = projectDetail(props.project);
 
   return (
     <ListItem.Link

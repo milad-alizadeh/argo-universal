@@ -4,11 +4,18 @@ export type ListAppearance = 'plain' | 'grouped' | 'cards';
 
 export type ListPosition = 'only' | 'first' | 'middle' | 'last';
 
-export const ListContext = createContext<{
-  appearance: ListAppearance;
-  position: ListPosition;
-  selectionMode?: 'single';
-}>({ appearance: 'plain', position: 'only' });
+export interface ListSelection {
+  selectionMode?: 'single' | 'multiple';
+  selection?: readonly string[];
+  onSelectionChange?: (selection: string[]) => void;
+}
+
+export const ListContext = createContext<
+  ListSelection & {
+    appearance: ListAppearance;
+    position: ListPosition;
+  }
+>({ appearance: 'plain', position: 'only' });
 
 const positions = {
   'true-true': 'only',

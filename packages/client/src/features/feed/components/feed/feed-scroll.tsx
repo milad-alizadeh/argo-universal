@@ -58,7 +58,7 @@ const feedListProps = {
   // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
   onStartReachedThreshold: startThreshold,
   drawDistance: 800,
-  footer: <FeedEnd />,
+  endContent: <FeedEnd />,
   ...keyboardProps,
 } satisfies Partial<ListProps<FeedEntry>>;
 

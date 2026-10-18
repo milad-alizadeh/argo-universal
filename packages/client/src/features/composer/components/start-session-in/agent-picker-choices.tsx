@@ -32,7 +32,7 @@ export function AgentChoices(props: AgentChoiceProps): React.JSX.Element {
 
 function agentRows(props: AgentChoiceProps): React.JSX.Element {
   return (
-    <List.Section selectionMode="single">
+    <List.Section {...agentSelection(props)}>
       {props.agents.map((agent) => (
         <AgentChoice key={agent.id} agent={agent} choices={props} />
       ))}
@@ -43,10 +43,10 @@ function agentRows(props: AgentChoiceProps): React.JSX.Element {
 
 type RowProps = { agent: AgentServer; choices: AgentChoiceProps };
 
-function AgentChoice({ agent, choices }: RowProps): React.JSX.Element {
+function AgentChoice({ agent }: RowProps): React.JSX.Element {
   return (
     <ListItem
-      {...agentChoiceProps(agent, choices)}
+      {...agentChoiceProps(agent)}
       leading={
         <RegistryIcon uri={agent.icon} agentName={agent.name} role="row" />
       }
@@ -56,11 +56,9 @@ function AgentChoice({ agent, choices }: RowProps): React.JSX.Element {
 
 const agentChoiceProps = (
   agent: AgentServer,
-  choices: AgentChoiceProps,
 ): React.ComponentProps<typeof ListItem> => ({
   title: agent.name,
-  selected: choices.agent?.id === agent.id,
-  onPress: () => choices.close(() => choices.onAgentChange(agent.id)),
+  id: agent.id,
 });
 
 const addAgentsProps = (
@@ -70,3 +68,15 @@ const addAgentsProps = (
   leading: <Icon name="add" role="row" />,
   onPress: () => props.close(props.onAddAgents),
 });
+
+function agentSelection(
+  props: AgentChoiceProps,
+): React.ComponentProps<typeof List.Section> {
+  return {
+    selectionMode: 'single',
+    selection: props.agent ? [props.agent.id] : [],
+    onSelectionChange: ([id]) => {
+      if (id !== undefined) props.close(() => props.onAgentChange(id));
+    },
+  };
+}

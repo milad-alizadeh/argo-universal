@@ -67,32 +67,57 @@ function ChildRow({
   item: ListChild;
   appearance: ListProps<never>['appearance'];
 }): ReactElement {
-  const context = {
+  return (
+    <ListContext value={childContext(item, appearance)}>
+      {item.content}
+    </ListContext>
+  );
+}
+
+function childContext(
+  item: ListChild,
+  appearance: ListProps<never>['appearance'],
+): React.ContextType<typeof ListContext> {
+  return {
     appearance: appearance ?? 'plain',
     position: item.position,
     selectionMode: item.selectionMode,
+    selection: item.selection,
+    onSelectionChange: item.onSelectionChange,
   };
-
-  return <ListContext value={context}>{item.content}</ListContext>;
 }
 
 function ChildrenList(props: ChildrenOptions): ReactElement {
   const items = useMemo(() => childEntries(props.children), [props.children]);
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
-  const { appearance } = props;
 
   if (items.length === 0) return <ListEmpty {...props} />;
 
   return (
     <DataList
       {...props}
-      maxHeight={props.maxHeight ?? height}
+      maxHeight={childMaxHeight(props, height)}
       items={items}
       keyExtractor={(item) => item.key}
-      renderItem={(item) => <ChildRow item={item} appearance={appearance} />}
+      renderItem={childRenderer(props.appearance)}
     />
   );
+}
+
+function childRenderer(
+  appearance: ListProps<never>['appearance'],
+): (item: ListChild) => ReactElement {
+  return (item) => <ChildRow item={item} appearance={appearance} />;
+}
+
+function childMaxHeight(
+  props: ChildrenOptions,
+  height: number,
+): ListProps<never>['maxHeight'] {
+  if (props.fit === false) return props.maxHeight;
+
+  return props.maxHeight ?? height;
 }
 
 export function List<Item>(props: ListProps<Item>): ReactElement {

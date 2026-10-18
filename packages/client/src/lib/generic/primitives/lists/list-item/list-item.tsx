@@ -1,11 +1,11 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { ListContext } from '../../../list-context';
 import { hasLeading } from './list-item-parts';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import type { ListItemProps } from './list-item-props';
+import { useItemSelection, ChoiceAccessory } from './list-item-selection';
 import { itemSeparator, itemSurface } from './list-item-styles';
 
 const hairline = { height: StyleSheet.hairlineWidth };
@@ -52,16 +52,12 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
 }
 
 export function ListItem(props: ListItemProps): ReactElement {
-  const { selectionMode } = useContext(ListContext);
+  const selected = useItemSelection(props);
 
   return (
     <ListItemFrame
-      {...props}
-      accessory={
-        selectionMode === 'single' && props.selected ? (
-          <Icon name="check" role="row" />
-        ) : undefined
-      }
+      {...selected}
+      accessory={<ChoiceAccessory {...selected} />}
     />
   );
 }

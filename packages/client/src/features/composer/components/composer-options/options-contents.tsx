@@ -33,7 +33,9 @@ export function OptionsContents(props: ContentsProps): React.JSX.Element {
 function NativeContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-content">
-      <List appearance="grouped">{optionSections(props)}</List>
+      <List fit={false} appearance="grouped">
+        {optionSections(props)}
+      </List>
     </View>
   );
 }

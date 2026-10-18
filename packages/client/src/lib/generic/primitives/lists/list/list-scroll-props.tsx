@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { listTestIdProps } from '../../../list-test-id';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { ListProps } from './list-props';
@@ -12,6 +13,8 @@ function scrollEvents<Item>(
     onEndReachedThreshold: props.onEndReachedThreshold,
     contentInsetAdjustmentBehavior: props.contentInsetAdjustmentBehavior,
     estimatedItemSize: props.estimatedItemSize,
+    keyExtractor: props.keyExtractor,
+    getItemType: props.getItemType,
   };
 }
 
@@ -51,7 +54,7 @@ function listContents<Item>(
     keyboardDismissMode: props.keyboardDismissMode,
     keyboardShouldPersistTaps: props.keyboardShouldPersistTaps,
     ListHeaderComponent: listContent(props.header),
-    ListFooterComponent: listContent(props.footer),
+    ListFooterComponent: listContent(props.endContent),
   };
 }
 
@@ -62,11 +65,10 @@ export function scrollProps<Item>(
     ...scrollEvents(props),
     ...streamProps(props),
     ...listContents(props),
-    keyExtractor: props.keyExtractor,
-    getItemType: props.getItemType,
     extraData: props.extraData,
     recycleItems: props.recycleItems ?? false,
 
+    ...accessibilityProps(props),
     ...testProps(props.testID),
     ...scrollBounds(props),
   };
@@ -78,4 +80,19 @@ function Content({ children }: { children: ReactNode }): ReactNode {
 
 function listContent(content: ReactNode): ReactElement | undefined {
   return content == null ? undefined : <Content>{content}</Content>;
+}
+
+function accessibilityProps<Item>(
+  props: ListProps<Item>,
+): Partial<ScrollFadeListProps<Item>> {
+  if (Platform.OS === 'web')
+    return {
+      role: props.accessibilityRole,
+      'aria-label': props.accessibilityLabel,
+    };
+
+  return {
+    accessibilityRole: props.accessibilityRole,
+    accessibilityLabel: props.accessibilityLabel,
+  };
 }
