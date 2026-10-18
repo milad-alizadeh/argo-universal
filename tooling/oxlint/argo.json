@@ -889,7 +889,7 @@
       }
     },
     {
-      // A primitive folder's files reach another primitive only through its index (#primitives/<group>/<name>), never relatively. Repeats the lib/generic patterns.
+      // Primitives use one another through their indexes. Contracts supplies only their shared kit tokens, never domain types.
       "files": ["packages/client/src/lib/generic/primitives/*/*/*"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
@@ -926,7 +926,12 @@
                 "message": "The UI kit cannot import features or product/domain types (A2)."
               },
               {
-                "group": ["@repo/**", "!@repo/uniwind", "!@repo/uniwind/**"],
+                "group": [
+                  "@repo/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**",
+                  "!@repo/contracts/kit-tokens"
+                ],
                 "message": "The UI kit cannot import feature or domain packages (A2)."
               }
             ]

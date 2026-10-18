@@ -1,9 +1,11 @@
+import type { PartVersions } from '@repo/contracts/plugins/kit';
 import {
   PluginDispatchInput,
   PluginSlotInput,
   PluginViewInput,
 } from '@repo/contracts/plugins/wire';
 import { publicProcedure, router, routerFactory } from '../rpc';
+import type { RpcContext } from '../rpc/connection';
 import type { PluginService } from './service';
 
 export function requireSignal(signal: AbortSignal | undefined): AbortSignal {
@@ -15,13 +17,20 @@ export function requireSignal(signal: AbortSignal | undefined): AbortSignal {
 type Subscriber<Input, Output> = (options: {
   input: Input;
   signal: AbortSignal | undefined;
+  ctx: RpcContext;
 }) => AsyncGenerator<Output>;
 
-// A subscription that ends when its signal aborts.
+type Watch<Input, Output> = (
+  input: Input,
+  signal: AbortSignal,
+  parts?: PartVersions,
+) => AsyncGenerator<Output>;
+
 function watched<Input, Output>(
-  watch: (input: Input, signal: AbortSignal) => AsyncGenerator<Output>,
+  watch: Watch<Input, Output>,
 ): Subscriber<Input, Output> {
-  return ({ input, signal }) => watch(input, requireSignal(signal));
+  return ({ input, signal, ctx }) =>
+    watch(input, requireSignal(signal), ctx.connection?.surface?.parts);
 }
 
 // What Apps use to show a Plugin's page or Slot content and to send its taps back.
@@ -29,11 +38,10 @@ export const createPluginViewRouter = routerFactory((plugins: PluginService) =>
   router({
     view: publicProcedure
       .input(PluginViewInput)
-      .subscription(watched((input, signal) => plugins.view(input, signal))),
-    // Project details and later core pages: each declaring Plugin's contribution, streamed like a page.
+      .subscription(watched(plugins.view.bind(plugins))),
     slot: publicProcedure
       .input(PluginSlotInput)
-      .subscription(watched((input, signal) => plugins.slot(input, signal))),
+      .subscription(watched(plugins.slot.bind(plugins))),
     dispatch: publicProcedure
       .input(PluginDispatchInput)
       .mutation(({ input }) => plugins.dispatch(input)),

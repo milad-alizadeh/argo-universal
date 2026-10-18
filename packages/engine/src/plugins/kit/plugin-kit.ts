@@ -1,18 +1,10 @@
+import { wireParts } from '@repo/contracts/plugins/kit';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import { jsx, jsxs } from './jsx-runtime';
 import { mountPages, type Pages, type ViewSender } from './pages';
 
-const components = {
-  Text: 'Text',
-  VirtualList: 'VirtualList',
-  Table: 'Table',
-  GroupedList: 'GroupedList',
-  GroupedListItem: 'GroupedListItem',
-  Button: 'Button',
-  Row: 'Row',
-  Column: 'Column',
-} as const;
+const components = Object.fromEntries(Object.keys(wireParts).map((name) => [name, name]));
 
 const hooks = {
   useState: React.useState,

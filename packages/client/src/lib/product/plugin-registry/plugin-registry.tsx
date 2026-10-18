@@ -14,7 +14,9 @@ import {
   textProps,
   groupedItemProps,
   stackProps,
-} from './plugin-registry-schemas';
+} from '@repo/contracts/plugins/kit';
+import { isWireContainer } from '@repo/contracts/plugins/prepare-tree';
+import type { PluginPart } from './plugin-parts';
 
 export interface PluginTreeProps {
   root: WireNode;
@@ -54,7 +56,7 @@ type RenderEntry<Schema extends z.ZodType> = (
   children: React.ReactNode,
 ) => React.JSX.Element;
 
-// Parses a node's props, and leaves the node out when they do not fit its schema.
+// Shared schemas strip newer optional props; invalid containers keep their fallback.
 function entry<Schema extends z.ZodType>(
   schema: Schema,
   render: RenderEntry<Schema>,
@@ -62,9 +64,9 @@ function entry<Schema extends z.ZodType>(
   return {
     render: (node, context, children) => {
       const parsed = schema.safeParse(node.props);
-      const filled = { ...context, slots: renderedSlots(node, context) };
+      if (!parsed.success) return isWireContainer(node) ? <Unsupported /> : null;
 
-      return parsed.success ? render(parsed.data, filled, children) : null;
+      return render(parsed.data, { ...context, slots: renderedSlots(node, context) }, children);
     },
   };
 }
@@ -83,8 +85,8 @@ const registry = new Map(
         detail={context.slots.detail}
       />
     )),
-    Text: entry(textProps, ({ label, variant, tone }) => (
-      <Text role={variant} tone={tone}>
+    Text: entry(textProps, ({ label, variant, ...props }) => (
+      <Text role={variant} {...props}>
         {label}
       </Text>
     )),
@@ -106,11 +108,8 @@ const registry = new Map(
         {children}
       </Stack>
     )),
-  } satisfies Record<string, Entry>),
+  } satisfies Record<PluginPart, Entry>),
 );
-
-const isContainer = (node: WireNode): boolean =>
-  node.children.length > 0 || Object.keys(node.slots).length > 0;
 
 function Unsupported(): React.JSX.Element {
   return (
@@ -132,7 +131,7 @@ function RenderNode({
   const known = registry.get(node.type);
 
   // An unknown leaf is dropped; an unknown container says the App is older than the Plugin.
-  if (!known) return isContainer(node) ? <Unsupported /> : null;
+  if (!known) return isWireContainer(node) ? <Unsupported /> : null;
 
   const children = node.children.map((child) => (
     <RenderNode key={child.key} node={child} context={context} />

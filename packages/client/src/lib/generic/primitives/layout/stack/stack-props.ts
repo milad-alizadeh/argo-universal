@@ -1,3 +1,4 @@
+import { stackAlignments, type StackGap } from '@repo/contracts/kit-tokens';
 import type { ReactNode } from 'react';
 
 // Static classes, so Uniwind can see every one; the keys are the spacing steps a stack accepts.
@@ -12,14 +13,13 @@ export const stackGapClass = {
   8: 'gap-8',
   10: 'gap-10',
   12: 'gap-12',
-} as const;
+} as const satisfies Record<StackGap, string>;
 
-export type StackGap = keyof typeof stackGapClass;
+export type { StackGap } from '@repo/contracts/kit-tokens';
 
-export const isStackGap = (value: number): value is StackGap =>
-  value in stackGapClass;
+export { isStackGap } from '@repo/contracts/kit-tokens';
 
-export const stackAlignments = ['start', 'center', 'end', 'stretch'] as const;
+export { stackAlignments };
 
 export interface StackProps {
   direction: 'row' | 'column';

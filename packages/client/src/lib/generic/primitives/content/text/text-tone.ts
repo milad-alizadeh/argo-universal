@@ -1,13 +1,6 @@
-// What a colour means: Text and Icon draw each tone in the matching theme colour.
-export type Tone =
-  | 'neutral'
-  | 'muted'
-  | 'accent'
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | 'done';
+import type { tones } from '@repo/contracts/kit-tokens';
+
+export type Tone = (typeof tones)[number];
 
 const toneText = {
   neutral: 'text-foreground',

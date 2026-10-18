@@ -1,14 +1,9 @@
+import type { buttonSizes, buttonVariants } from '@repo/contracts/kit-tokens';
 import type { IconName } from '../../../symbols/icon-names';
 
-export type ButtonVariant =
-  | 'default'
-  | 'outline'
-  | 'secondary'
-  | 'ghost'
-  | 'link';
+export type ButtonVariant = (typeof buttonVariants)[number];
 
-// `xs` is the compact toolbar button of a desktop header.
-export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
+export type ButtonSize = (typeof buttonSizes)[number];
 
 export interface ButtonDataProps {
   label: string;
