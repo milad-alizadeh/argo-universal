@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, spyOn, waitFor } from 'storybook/test';
+import { layoutWidths } from '#lib/generic/each-layout';
+import { settleViewport } from '#lib/generic/settle-viewport';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 import {
   base64Icon,
@@ -101,32 +103,42 @@ export const MalformedUrlXml: Story = iconCase({
   unavailable: true,
 });
 
-export const Installs: Story = {
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Install' }));
-    await expect(args.onInstall).toHaveBeenCalledWith(agent.id);
-  },
-};
+function action(width: number, installed: boolean): Story {
+  return {
+    args: { agent: { ...agent, installed } },
+    play: async ({ args, canvas, userEvent }) => {
+      await settleViewport(width);
+      const label = installed ? 'Remove' : 'Install';
+      await userEvent.click(
+        canvas.getByRole('button', { name: `${label} ${agent.name}` }),
+      );
+      await expect(
+        installed ? args.onRemove : args.onInstall,
+      ).toHaveBeenCalledWith(agent.id);
+    },
+  };
+}
 
-export const Removes: Story = {
-  args: { agent: { ...agent, installed: true } },
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Remove' }));
-    await expect(args.onRemove).toHaveBeenCalledWith(agent.id);
-  },
-};
+export const InstallsPhone = action(layoutWidths.phone, false);
 
-export const Unavailable: Story = {
-  args: { agent: { ...agent, unavailable: true } },
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.queryByRole('button', { name: 'Unavailable' }),
-    ).not.toBeInTheDocument();
-    await expect(
-      canvas.getByText('Unavailable', { exact: true }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByText(/Not supported on this platform/),
-    ).toBeVisible();
-  },
-};
+export const InstallsWide = action(layoutWidths.wide, false);
+
+export const RemovesPhone = action(layoutWidths.phone, true);
+
+export const RemovesWide = action(layoutWidths.wide, true);
+
+function unavailable(width: number): Story {
+  return {
+    args: { agent: { ...agent, unavailable: true } },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.getByLabelText('Not supported on this platform'),
+      ).toBeVisible();
+    },
+  };
+}
+
+export const UnavailablePhone = unavailable(layoutWidths.phone);
+
+export const UnavailableWide = unavailable(layoutWidths.wide);
