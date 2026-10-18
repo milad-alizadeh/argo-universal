@@ -13,7 +13,7 @@ export function ListSection(props: ListSectionProps): ReactNode {
 function headerPress(
   props: HeaderProps,
 ): React.ComponentProps<typeof Pressable> {
-  if (!props.onExpandedChange) return {};
+  if (!props.onExpandedChange) return { tabIndex: -1 };
 
   return {
     role: 'button',

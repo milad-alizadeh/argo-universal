@@ -1,6 +1,6 @@
 import type { StackGap } from '@repo/contracts/kit-tokens';
 import type { ReactNode } from 'react';
-import type { ListAppearance } from '../../../list-context';
+import type { ListAppearance, ListSelection } from '../../../list-context';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 
@@ -19,7 +19,25 @@ export type ListProps<Item> = Pick<
   | 'maxHeight'
   | 'testID'
   | 'ref'
+  | 'depth'
+  | 'inset'
+  | 'initialScrollIndex'
+  | 'alignItemsAtEnd'
+  | 'maintainScrollAtEnd'
+  | 'maintainScrollAtEndThreshold'
+  | 'maintainVisibleContentPosition'
+  | 'onStartReached'
+  | 'onStartReachedThreshold'
+  | 'drawDistance'
+  | 'keyboardDismissMode'
+  | 'keyboardShouldPersistTaps'
 > & {
+  header?: ReactNode;
+  endContent?: ReactNode;
+  paddingBottom?: SizeClassValue<StackGap>;
+  accessibilityRole?: 'list' | 'radiogroup';
+  accessibilityLabel?: string;
+  fit?: boolean;
   appearance?: ListAppearance;
   padding?: SizeClassValue<StackGap>;
   paddingTop?: SizeClassValue<StackGap>;
@@ -31,7 +49,7 @@ export type ListProps<Item> = Pick<
   children?: ReactNode;
 };
 
-export interface ListSectionProps {
+export interface ListSectionProps extends ListSelection {
   title?: string;
   subtitle?: string;
   leading?: ReactNode;

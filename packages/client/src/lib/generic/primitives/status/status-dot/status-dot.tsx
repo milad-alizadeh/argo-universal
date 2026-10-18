@@ -1,8 +1,19 @@
 import type { ReactElement } from 'react';
 import { cn } from '#lib/generic/utils';
-import { toneClass } from '#primitives/content/text';
+import type { Tone } from '#primitives/content/text';
 import { BlinkingDot } from './blinking-dot';
 import type { StatusDotProps } from './status-dot-props';
+
+const toneFill: Record<Tone, string> = {
+  neutral: 'bg-foreground',
+  muted: 'bg-muted-foreground',
+  accent: 'bg-accent',
+  info: 'bg-info',
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-danger',
+  done: 'bg-done',
+};
 
 export function StatusDot(props: StatusDotProps): ReactElement {
   return <BlinkingDot {...blinkingDotProps(props)} />;
@@ -14,7 +25,7 @@ function blinkingDotProps(
   return {
     testID: props.testID,
     accessibilityLabel: props.accessibilityLabel,
-    colorClassName: cn('bg-foreground', toneClass(props.tone)),
+    colorClassName: toneFill[props.tone],
     blinking: props.pulse ?? false,
     className: cn(statusDotSizeClass(props.size), props.className),
   };

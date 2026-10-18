@@ -7,6 +7,8 @@ export type RowBadge =
   | { kind: 'count'; count: number; label?: string };
 
 export interface ListItemProps {
+  id?: string;
+  accessibilityRole?: 'button' | 'radio';
   title: string;
   subtitle?: string;
   leading?: ReactNode;

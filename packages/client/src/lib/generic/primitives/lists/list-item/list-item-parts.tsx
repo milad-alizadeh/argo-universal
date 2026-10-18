@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
-import type { ListItemProps } from './list-item-props';
+import type { ListItemProps, RowBadge } from './list-item-props';
 
 function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
   if (badge === undefined) return null;
@@ -18,15 +18,25 @@ function renderRowBadge(
 ): ReactElement {
   if (typeof badge === 'number') return <CountBadge badge={{ count: badge }} />;
 
-  return badge.kind === 'count' ? (
-    <CountBadge badge={{ count: badge.count, label: badge.label }} />
-  ) : (
-    <StatusDot
-      tone={badge.tone}
-      pulse={badge.pulse}
-      accessibilityLabel={badge.label}
-      className="rounded-full bg-card p-0.5"
-    />
+  if (badge.kind === 'count')
+    return <CountBadge badge={{ count: badge.count, label: badge.label }} />;
+
+  return <RowStatus badge={badge} />;
+}
+
+function RowStatus({
+  badge,
+}: {
+  badge: Extract<RowBadge, { kind: 'status' }>;
+}): ReactElement {
+  return (
+    <View className="rounded-full bg-card p-0.5">
+      <StatusDot
+        tone={badge.tone}
+        pulse={badge.pulse}
+        accessibilityLabel={badge.label}
+      />
+    </View>
   );
 }
 

@@ -84,3 +84,49 @@ export const Contents: Story = {
     ).toHaveLength(3);
   },
 };
+
+export const HeaderAndEndContentOnEmptyList: Story = {
+  render: () => (
+    <List
+      items={[]}
+      header={<Text>Earlier runs</Text>}
+      endContent={<Text>End of runs</Text>}
+      empty={<Text>No runs</Text>}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Earlier runs')).toBeVisible();
+    await expect(canvas.getByText('No runs')).toBeVisible();
+    await expect(canvas.getByText('End of runs')).toBeVisible();
+  },
+};
+
+function MultipleSelection(): React.JSX.Element {
+  const [selection, onSelectionChange] = useState(['web']);
+
+  return (
+    <List>
+      <List.Section
+        selectionMode="multiple"
+        selection={selection}
+        onSelectionChange={onSelectionChange}
+      >
+        <ListItem id="web" title="Web" />
+        <ListItem id="phone" title="Phone" />
+        <ListItem id="locked" title="Locked" disabled />
+      </List.Section>
+      <Text>{selection.join(',')}</Text>
+    </List>
+  );
+}
+
+export const SelectAndDeselectMultiple: Story = {
+  render: () => <MultipleSelection />,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByRole('button', { name: 'Phone' }));
+    await expect(canvas.getByText('web,phone')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Web' }));
+    await expect(canvas.getByText('phone')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Locked' })).toBeDisabled();
+  },
+};

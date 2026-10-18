@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { type MockInstance, expect, spyOn, waitFor } from 'storybook/test';
 import { Text } from '#primitives/content/text';
+import { List } from '#primitives/lists/list';
 import { fadedEdges, fadedInlineEdges } from '../../../../mocks/scroll-fade';
 import { ScrollFadeView } from './scroll-fade';
-import { ScrollFadeList } from './scroll-fade-list';
 import {
   ScrollFadePreview,
   ScrollFadeRowPreview,
@@ -121,11 +121,11 @@ export const ListKeepsNativeOnlyPropsOffTheWeb: Story = {
   },
   render: () => (
     <View style={listFrame}>
-      <ScrollFadeList
+      <List
         {...nativeOnlyProps}
-        data={rows}
+        items={rows}
         keyExtractor={(row) => row}
-        renderItem={({ item }) => <Text>{item}</Text>}
+        renderItem={(item) => <Text>{item}</Text>}
       />
     </View>
   ),
