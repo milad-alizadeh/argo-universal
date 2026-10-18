@@ -125,11 +125,14 @@ function describeProps(schema: z.core.$ZodType): void {
 function contentRules(
   config: ResolvedPartOptions,
 ): Pick<WirePartDefinition, 'children' | 'childParts' | 'slots'> {
-  return {
+  const rules: Pick<WirePartDefinition, 'children' | 'childParts' | 'slots'> = {
     children: config.children,
-    ...(config.childParts ? { childParts: config.childParts } : {}),
     slots: config.slots,
   };
+
+  if (config.childParts) rules.childParts = config.childParts;
+
+  return rules;
 }
 
 function definition(

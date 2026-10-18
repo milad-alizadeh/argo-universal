@@ -7,7 +7,6 @@ import { fields } from './metadata.mocks';
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Metadata',
   component: Metadata,
-  args: fields,
 } satisfies Meta<typeof Metadata>;
 
 export default meta;
