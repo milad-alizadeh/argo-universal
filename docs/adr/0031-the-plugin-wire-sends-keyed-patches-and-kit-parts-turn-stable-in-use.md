@@ -38,7 +38,8 @@ ADR-0025's stability rule also blocks the spec: a kit part turns stable only onc
 - **The schemas live in Contracts.** Every Plugin-tier kit part has one schema in Contracts: its props, Slots and what each Slot accepts, and its events with their payloads.
   - The Server validates each tree before sending it, using ADR-0025's rules for pages and ordinary Slots and ADR-0027's for Replaceable Slots.
   - Plugin JSX types are generated from the schemas, so a wrong prop fails in the author's editor, and `argo plugin validate` (#824) checks trees with them.
-  - A type test keeps Plugin JSX types, schemas and kit props in step.
+  - The schema is the only definition of a part's Plugin-facing props, including each prop's description. The kit component's props type is derived from it: one mapped type in the client turns events into callbacks and Slots into React nodes, and a component adds its kit-only props (such as ListItem's `accessory`) by intersection. Changing a Plugin-facing prop means changing the schema; there is nothing to keep in step. Amended by the owner on 2026-10-18.
+  - Plugin JSX types and the per-part docs are generated from the same schemas. The docs are built, never committed, and CI runs the build.
   - The App keeps only the renderers.
 - **Parts are versioned.** Each App reports a version per part it draws, extending ADR-0027's list of types.
   - For an older App, the Server strips optional props that App's version doesn't know, and lowers a new part to one it does know where the kit names one. For example, `Stack` lowers to `Row` or `Column`.
@@ -63,6 +64,7 @@ ADR-0025's stability rule also blocks the spec: a kit part turns stable only onc
 - **One shared view per page.** Rejected: two Apps would fight over search, selection and drafts, and ADR-0027's per-App surfaces could not differ.
 - **The App fetches images directly.** Rejected: it leaks the user's IP address to the Plugin's host, bypasses ADR-0030's Capabilities, and can't carry the Plugin's credentials.
 - **Schemas stay in the App.** Rejected: the Server could not validate or lower trees, and Plugin authors would have no types.
+- **Kit props declared separately, with a type test keeping them, the schemas and Plugin JSX in step,** as first accepted. Rejected by the owner: two definitions of one part, with a test patching over the gap. Deriving the kit props from the schema leaves one.
 - **Strict schemas without versions.** Rejected: every new optional prop would blank that part on older Apps.
 - **Keep "the Issue tracker and Atlas" for kit parts.** Rejected: most of Spec 0017's parts would stay proposed forever.
 - **A proposed-API opt-in for third-party Plugins,** as VS Code's `enabledApiProposals`. Not now: third-party Plugins don't load until ADR-0030's operating-system boundary exists.

@@ -1,6 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { type AgentsFilter } from '#features/agents';
+import { cn } from '#lib/generic/utils';
+import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import { FilterPill } from '#primitives/inputs/filter-pill';
 import { SearchFieldInput } from '#primitives/inputs/search-field';
 
@@ -26,20 +28,42 @@ export const agentsFilterChoices = [
   { value: 'not-installed', label: 'Not Installed' },
 ] as const;
 
-// The pills wrap onto a second line rather than run past a narrow screen's edge.
-export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
+function AgentsFilterChoices(props: AgentsFilterProps): React.JSX.Element[] {
+  return agentsFilterChoices.map(({ value, label }) => (
+    <FilterPill
+      key={value}
+      label={label}
+      selected={props.filter === value}
+      onPress={() => props.onFilter(value)}
+    />
+  ));
+}
+
+interface PillRowProps extends AgentsFilterProps {
+  contentClassName?: string;
+  className?: string;
+}
+
+// One row that scrolls sideways when the pills run past a narrow screen's edge, fading the edge they pass under.
+function FilterPillRow(props: PillRowProps): React.JSX.Element {
   return (
-    <View className="flex-row flex-wrap items-center gap-1">
-      {agentsFilterChoices.map(({ value, label }) => (
-        <FilterPill
-          key={value}
-          label={label}
-          selected={props.filter === value}
-          onPress={() => props.onFilter(value)}
-        />
-      ))}
-    </View>
+    <ScrollFadeView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className={props.className}
+      contentContainerClassName={cn(
+        'items-center gap-1',
+        props.contentClassName,
+      )}
+    >
+      <AgentsFilterChoices {...props} />
+    </ScrollFadeView>
   );
+}
+
+// A phone's row spans the screen, so the pills scroll out to its edges; the row's padding holds them at the page's margin at rest.
+export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
+  return <FilterPillRow {...props} contentClassName="px-4" />;
 }
 
 export function AgentsToolbar(
@@ -47,7 +71,7 @@ export function AgentsToolbar(
 ): React.JSX.Element {
   return (
     <View className="flex-row items-center justify-between gap-4">
-      <AgentsFilterPills {...props} />
+      <FilterPillRow {...props} className="shrink" />
       <SearchFieldInput
         label={searchLabel}
         value={props.search}

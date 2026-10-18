@@ -22,7 +22,7 @@ export interface SettingsPageProps extends PageTitleRowProps {
   caption?: string;
   // A row of controls under the title, such as filters.
   toolbar?: ReactNode;
-  // A phone's row of controls under its native header, such as filters.
+  // A phone's row of controls under its native header, such as filters. It spans the screen and pads its own sides.
   phoneToolbar?: ReactNode;
   children: ReactNode;
 }
@@ -104,8 +104,8 @@ function SettingsPageTop({
   );
 }
 
-// On iOS the list's Form keeps its own gap above its first section, so the row adds none below.
-const phoneToolbarClass = 'z-10 shrink-0 px-4 py-3 ios:pb-0';
+// On iOS the list's Form keeps its own gap above its first section, so the row adds none below. The row spans the screen and pads its own sides, so a row that scrolls sideways runs to the screen's edges.
+const phoneToolbarClass = 'z-10 shrink-0 py-3 ios:pb-0';
 
 function PhoneToolbar(props: { children: ReactNode }): ReactNode {
   if (!props.children) return null;
