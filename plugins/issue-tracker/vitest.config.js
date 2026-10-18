@@ -1,8 +1,7 @@
-import { defineConfig } from 'vitest/config';
+import { createNodeTestProjects } from '@repo/vitest/node';
+import { defineProject } from 'vitest/config';
 
-export default defineConfig({
-  root: new URL('.', import.meta.url).pathname,
-  test: {
-    include: ['github-tracker.test.js'],
-  },
+export default defineProject({
+  root: import.meta.dirname,
+  test: { projects: createNodeTestProjects() },
 });

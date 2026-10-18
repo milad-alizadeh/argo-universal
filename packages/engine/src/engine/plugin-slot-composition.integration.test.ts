@@ -1,33 +1,34 @@
-import { fileURLToPath } from 'node:url';
 import {
   projectDetailsSlotId,
   type PluginSlotInput,
 } from '@repo/contracts/plugins/wire';
 import {
-  helloSlotSnapshot,
-  helloSlotWavePatch,
+  slotCounterSnapshot,
+  slotCounterWavePatch,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-const examples = fileURLToPath(
-  new URL('../../../../plugins/examples', import.meta.url),
-);
+const slotCounterId = 'slot-counter';
 
 const projectDetails = (projectId: string): PluginSlotInput => ({
   slotId: projectDetailsSlotId,
   context: { projectId },
 });
 
-it('streams hello in Project details as the wire fixtures describe and delivers a tap to its handler', async () => {
-  const home = await createRuntimePlugins([]);
+it('streams the Slot counter fixture in Project details as the wire fixtures describe and delivers a tap to its handler', async () => {
+  const home = await createRuntimePlugins([
+    {
+      id: slotCounterId,
+      fixture: slotCounterId,
+      main: 'index.js',
+      slots: [projectDetailsSlotId],
+    },
+  ]);
 
   const { createCaller } = await startEngineTestHost({
     home,
-    // The Server's own version, which `plugins/examples/hello` supports.
-    version: '0.0.0',
-    firstPartyPluginsDirectory: examples,
   });
 
   const controller = new AbortController();
@@ -40,18 +41,18 @@ it('streams hello in Project details as the wire fixtures describe and delivers 
 
   expect((await messages.next()).value).toEqual({
     type: 'contributors',
-    pluginIds: ['hello'],
+    pluginIds: [slotCounterId],
   });
   const snapshot = (await messages.next()).value;
 
   expect(snapshot).toMatchObject({
     type: 'view',
-    pluginId: 'hello',
-    message: helloSlotSnapshot,
+    pluginId: slotCounterId,
+    message: slotCounterSnapshot,
   });
 
   await app.plugins.dispatch({
-    pluginId: 'hello',
+    pluginId: slotCounterId,
     path: snapshot.path,
     revision: 1,
     viewId: snapshot.message.viewId,
@@ -61,8 +62,8 @@ it('streams hello in Project details as the wire fixtures describe and delivers 
 
   expect((await messages.next()).value).toMatchObject({
     type: 'view',
-    pluginId: 'hello',
-    message: helloSlotWavePatch,
+    pluginId: slotCounterId,
+    message: slotCounterWavePatch,
   });
   controller.abort();
 }, 20_000);

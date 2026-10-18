@@ -1,13 +1,13 @@
 appId: dev.argo.app
-name: A tap on Hello's page reaches the Plugin and redraws the page
+name: A tap on the fixture page reaches the Plugin and redraws the page
 ---
 # Start on the phone Sessions list, connected to a Server that loads the
-# first-party `hello` Plugin.
+# first-party `counter` fixture Plugin.
 # The drawer button is "Open navigation" on iOS and Material's own label on Android.
 - tapOn: "^(Open navigation|Show navigation menu)$"
-- tapOn: "^Hello$"
+- tapOn: "^Counter$"
 # The page is drawn natively from the Plugin's wire tree.
-- assertVisible: "^Hello from a Plugin$"
+- assertVisible: "^Counter fixture$"
 # The count lives in the Plugin on the Server, so another viewer may have tapped already.
 - copyTextFrom: "^Tapped \\d+ times$"
 - evalScript: ${output.expectedCount = 'Tapped ' + (parseInt(maestro.copiedText.split(' ')[1]) + 1) + ' times'}

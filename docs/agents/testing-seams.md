@@ -76,3 +76,17 @@ The scripted Agent and typed fixtures prove Argo's handling of the supplied scen
 For Registry Agent launch under Spec 0014 #721, the external download and npm ports supply only files, timing and failures. App journeys keep tRPC, Engine, SQLite, file materialization and launch real. The Registry fixture serves the scripted Agent as a compressed binary. Holding the download makes the first-launch `Loading…` state observable.
 
 Bootstraps seed `agent_servers` Registry rows. Get started fixtures can begin without Projects; production startup registers their fixture Project on restart. Test steps observe the App and public procedures. The fixtures do not implement selection, admission, persistence or installation status.
+
+## Plugin boundaries
+
+Plugin behaviour belongs in the Plugin's own folder. `@argo/plugin-kit/testing` exports `startPluginTest`. It starts the production loader, Plugin host, worker and Plugin SQLite. Tests observe live trees, find text and dispatch checked events. Slot views receive the production Slot context.
+
+The harness reuses the Engine's in-memory fixture for the external OS Keychain. Tests cannot read or change the user's secrets.
+
+The harness accepts Project identities as fixture inputs to `argo.projects.list`. Its `path` option prepends executable fixture folders for that runtime's external commands. It does not change the test process environment. The Issue tracker uses a fixture `gh` on PATH. Its journeys run with the other package tests in CI.
+
+Engine journeys use fixture Plugins in `packages/engine/mocks/`. Each fixture exercises a core contract: keyed patches, dispatch, Connections, late subscribers, Slots or Capabilities. Shared wire fixtures describe those scenarios.
+
+App E2E loads `e2e/mocks/plugins/`. These scenarios prove navigation, page events, Slot composition and failure handling. Neither layer loads the shipped `plugins/` folder. `plugins/examples/hello` remains a demo. Changes to the demo or the Issue tracker do not change Engine or App expectations.
+
+The harness proves Plugin behaviour through the real runtime and supplied external fixtures. It does not prove App rendering, HTTP transport, GitHub authentication or upstream GitHub compatibility.

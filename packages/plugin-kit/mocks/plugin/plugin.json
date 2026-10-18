@@ -1,0 +1,22 @@
+{
+  "id": "harness-fixture",
+  "name": "Harness fixture",
+  "version": "1.0.0",
+  "engines": {
+    "argo": ">=0.0.0 <2"
+  },
+  "main": "index.js",
+  "icon": {
+    "material": "extension"
+  },
+  "capabilities": [
+    {
+      "kind": "process:exec",
+      "command": "fixture-cli",
+      "args": []
+    }
+  ],
+  "contributes": {
+    "nav": []
+  }
+}
