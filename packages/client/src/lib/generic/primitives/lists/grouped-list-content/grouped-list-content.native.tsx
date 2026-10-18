@@ -17,8 +17,8 @@ import { GroupedListContent as WebGroupedListContent } from './grouped-list-cont
 
 /*
  * A native list sizes a plain React Native view as it likes, so the row hosts it and takes its height.
- * iOS's Form gives the row a section of its own, with no card behind it and no inset; Android's column takes it as is,
- * inside a section when it has a title.
+ * iOS's Form gives the row a section of its own, with no card behind it and no inset, or, under a title, the section's footer;
+ * Android's column takes it as is, inside a section when it has a title.
  */
 export function GroupedListContent(
   props: GroupedListContentProps,
@@ -42,7 +42,11 @@ function TitledRow({
 }): React.JSX.Element {
   if (!title) return children;
 
-  return <GroupedListSection title={title}>{children}</GroupedListSection>;
+  return (
+    <GroupedListSection title={title} cardless>
+      {children}
+    </GroupedListSection>
+  );
 }
 
 // The row spans its list at the content's measured height.
@@ -97,18 +101,28 @@ const bareRow = [
   listRowInsets({ top: 0, bottom: 0, leading: 0, trailing: 0 }),
 ];
 
-function BareSection({
-  children,
-  title,
-}: {
-  children: React.ReactElement;
-  title?: string;
-}): React.JSX.Element {
+type SectionProps = { children: React.ReactElement; title?: string };
+
+function BareSection({ children, title }: SectionProps): React.JSX.Element {
   const paneMargin = usePaneSectionMargin();
 
+  if (title) return <FooterSection title={title}>{children}</FooterSection>;
+
   return (
-    <FieldGroup.Section title={title} modifiers={[...bareRow, ...paneMargin]}>
+    <FieldGroup.Section modifiers={[...bareRow, ...paneMargin]}>
       {children}
+    </FieldGroup.Section>
+  );
+}
+
+/*
+ * A Form row is clipped to its section's rounded corners even with no card, which cut the first letter of text at its
+ * top-left. A footer is not clipped and lines up with the title, as card-less content under a title should.
+ */
+function FooterSection({ children, title }: SectionProps): React.JSX.Element {
+  return (
+    <FieldGroup.Section title={title} modifiers={usePaneSectionMargin()}>
+      <FieldGroup.SectionFooter>{children}</FieldGroup.SectionFooter>
     </FieldGroup.Section>
   );
 }
