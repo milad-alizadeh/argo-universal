@@ -5,12 +5,11 @@
   // check-types depends on this package's own transit, so native/ leaves transit too.
   "tasks": {
     "check-types": { "inputs": ["$TURBO_EXTENDS$", "!native/**"] },
-    // The Server discovers first-party Plugins outside the workspace packages.
     "test:web": {
-      "inputs": ["$TURBO_EXTENDS$", "!native/**", "$TURBO_ROOT$/plugins/**"]
+      "inputs": ["$TURBO_EXTENDS$", "!native/**"]
     },
     "test:electron": {
-      "inputs": ["$TURBO_EXTENDS$", "!native/**", "$TURBO_ROOT$/plugins/**"]
+      "inputs": ["$TURBO_EXTENDS$", "!native/**"]
     },
     "transit": { "inputs": ["$TURBO_EXTENDS$", "!native/**"] }
   }

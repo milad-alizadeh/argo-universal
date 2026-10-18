@@ -1,4 +1,7 @@
-import { helloRoot, runListRoot } from '@repo/contracts/plugins/wire-fixtures';
+import {
+  counterRoot,
+  runListRoot,
+} from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { PluginDetailView } from './plugin-detail-view';
@@ -8,7 +11,7 @@ const meta = {
   component: PluginDetailView,
   parameters: { screenPreview: true },
   args: {
-    root: helloRoot,
+    root: counterRoot,
     onEvent: action('Plugin event'),
   },
 } satisfies Meta<typeof PluginDetailView>;

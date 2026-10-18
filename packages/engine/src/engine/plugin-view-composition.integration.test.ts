@@ -1,47 +1,41 @@
-import { fileURLToPath } from 'node:url';
 import {
-  helloSnapshot,
-  helloTapPatch,
+  counterSnapshot,
+  counterTapPatch,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-const examples = fileURLToPath(
-  new URL('../../../../plugins/examples', import.meta.url),
-);
+const counter = { pluginId: 'counter', path: '/' };
 
-const hello = { pluginId: 'hello', path: '/' };
-
-it('streams the hello page as the wire fixtures describe and delivers a tap to its handler', async () => {
-  const home = await createRuntimePlugins([]);
+it('streams the counter fixture as the wire fixtures describe and delivers a tap to its handler', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'counter', fixture: 'wire-counter', main: 'index.js' },
+  ]);
 
   const { createCaller } = await startEngineTestHost({
     home,
-    // The Server's own version, which `plugins/examples/hello` supports.
-    version: '0.0.0',
-    firstPartyPluginsDirectory: examples,
   });
 
   const controller = new AbortController();
 
   const app = createCaller({ signal: controller.signal });
-  const view = await app.plugins.view(hello);
+  const view = await app.plugins.view(counter);
 
   const messages = view[Symbol.asyncIterator]();
 
   const snapshot = (await messages.next()).value;
-  expect(snapshot).toMatchObject(helloSnapshot);
+  expect(snapshot).toMatchObject(counterSnapshot);
 
   await app.plugins.dispatch({
-    ...hello,
+    ...counter,
     revision: 1,
     viewId: snapshot.viewId,
     key: '0/4/0',
     event: 'onPress',
   });
 
-  expect((await messages.next()).value).toMatchObject(helloTapPatch);
+  expect((await messages.next()).value).toMatchObject(counterTapPatch);
   controller.abort();
 }, 20_000);
 
@@ -51,23 +45,23 @@ it.each([
 ])(
   'gives a late subscriber on a $connection Connection its current page',
   async ({ connection, revision, label }) => {
-    const home = await createRuntimePlugins([]);
+    const home = await createRuntimePlugins([
+      { id: 'counter', fixture: 'wire-counter', main: 'index.js' },
+    ]);
 
     const { createCaller } = await startEngineTestHost({
       home,
-      version: '0.0.0',
-      firstPartyPluginsDirectory: examples,
     });
 
     const first = new AbortController();
     const second = new AbortController();
 
     const app = createCaller({ signal: first.signal });
-    const early = (await app.plugins.view(hello))[Symbol.asyncIterator]();
+    const early = (await app.plugins.view(counter))[Symbol.asyncIterator]();
 
     const snapshot = (await early.next()).value;
     await app.plugins.dispatch({
-      ...hello,
+      ...counter,
       revision: 1,
       viewId: snapshot.viewId,
       key: '0/4/0',
@@ -78,7 +72,7 @@ it.each([
     const lateApp =
       connection === 'same' ? app : createCaller({ signal: second.signal });
 
-    const late = (await lateApp.plugins.view(hello))[Symbol.asyncIterator]();
+    const late = (await lateApp.plugins.view(counter))[Symbol.asyncIterator]();
 
     expect((await late.next()).value).toMatchObject({
       type: 'snapshot',

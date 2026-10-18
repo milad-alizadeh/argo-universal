@@ -3,12 +3,12 @@ Feature: Plugin crash notifications
     Given a crashing Plugin is installed
     And a <size> Frame
     And the App's Connection can be dropped
-    When the crashing Plugin starts alongside Issue tracker
+    When the crashing Plugin starts alongside Counter
     Then an error toast names the crashed Plugin
-    And Issue tracker is still running
+    And Counter is still running
     When the Plugin crash toast dismisses
-    And I open the Issues Plugin
-    Then the Plugin page shows Issue tracker
+    And I open the Counter Plugin
+    Then the Plugin page shows Counter
     And the Plugin crash toast stays dismissed
     When the Connection reconnects to the same Plugin failure
     Then the Plugin crash toast stays dismissed

@@ -1,21 +1,16 @@
-import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-const examples = fileURLToPath(
-  new URL('../../../../plugins/examples', import.meta.url),
-);
+const page = { pluginId: 'list', path: '/lists' };
 
-const page = { pluginId: 'hello', path: '/lists' };
-
-it('expands Hello List items into keyed rows and dispatches selection to the matching row', async () => {
-  const home = await createRuntimePlugins([]);
+it('expands fixture List items into keyed rows and dispatches selection to the matching row', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'list', fixture: 'list-selection', main: 'index.js' },
+  ]);
 
   const { createCaller } = await startEngineTestHost({
     home,
-    version: '0.0.0',
-    firstPartyPluginsDirectory: examples,
   });
 
   const controller = new AbortController();

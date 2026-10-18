@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { probeEntry, settingsProbe } from '#mocks/plugin-settings';
@@ -54,27 +53,23 @@ it('starts a Plugin again once it is turned back on', async () => {
   });
 });
 
-const examples = fileURLToPath(
-  new URL('../../../../plugins/examples', import.meta.url),
-);
-
 it('ends the open pages of a Plugin when it is turned off', async () => {
-  const home = await createRuntimePlugins([]);
+  const home = await createRuntimePlugins([
+    { id: 'counter', fixture: 'wire-counter', main: 'index.js' },
+  ]);
 
   const { caller, createCaller } = await startEngineTestHost({
     home,
-    version: '0.0.0',
-    firstPartyPluginsDirectory: examples,
   });
 
   const view = await createCaller({
     signal: new AbortController().signal,
-  }).plugins.view({ pluginId: 'hello', path: '/' });
+  }).plugins.view({ pluginId: 'counter', path: '/' });
 
   const messages = view[Symbol.asyncIterator]();
 
   await messages.next();
-  await caller.plugins.setEnabled({ pluginId: 'hello', enabled: false });
+  await caller.plugins.setEnabled({ pluginId: 'counter', enabled: false });
 
   await expect(messages.next()).resolves.toMatchObject({ done: true });
 }, 20_000);

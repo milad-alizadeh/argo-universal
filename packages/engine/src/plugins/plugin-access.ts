@@ -36,6 +36,7 @@ export type AccessScope = {
   dataFolder: string;
   // The registered Projects' folders, which any Plugin may read.
   projects: () => Promise<readonly string[]>;
+  environment?: NodeJS.ProcessEnv;
 };
 
 export type FileAccess = 'read' | 'write';
@@ -91,11 +92,22 @@ export class PluginAccess {
         `${command.argv.join(' ')} is not a declared command`,
       );
 
-    return checkedCommand(
-      command,
-      await this.workingDirectory(command.cwd),
-      matching,
-    );
+    return this.checkedCommand(command, matching);
+  }
+
+  private async checkedCommand(
+    command: ProcessCommand,
+    matching: readonly ProcessCapability[],
+  ): Promise<CheckedCommand> {
+    return {
+      ...command,
+      cwd: await this.workingDirectory(command.cwd),
+      env: childEnvironment(
+        command.env ?? {},
+        matching,
+        this.scope.environment,
+      ),
+    };
   }
 
   checkHost(url: URL): HostRule {
@@ -169,18 +181,6 @@ export class PluginAccess {
       (capability) => capability.kind === 'fetch',
     );
   }
-}
-
-function checkedCommand(
-  command: ProcessCommand,
-  cwd: string,
-  matching: readonly ProcessCapability[],
-): CheckedCommand {
-  return {
-    ...command,
-    cwd,
-    env: childEnvironment(command.env ?? {}, matching),
-  };
 }
 
 /*

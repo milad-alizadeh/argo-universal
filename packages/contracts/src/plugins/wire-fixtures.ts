@@ -1,7 +1,7 @@
 import type { ViewMessage, WireNode } from './wire';
 
 // The event name carried by the Tap me button.
-export const helloTapEvent = 'onPress';
+export const counterTapEvent = 'onPress';
 
 // A leaf node; `withChildren` makes it a container.
 const node = (
@@ -15,11 +15,11 @@ const withChildren = (parent: WireNode, children: WireNode[]): WireNode => ({
   children,
 });
 
-const helloButtons = (key: string): WireNode =>
+const counterButtons = (key: string): WireNode =>
   withChildren(node('Row', key, { gap: 2 }), [
     node('Button', '0', {
       label: 'Tap me',
-      onPress: { $event: helloTapEvent },
+      onPress: { $event: counterTapEvent },
     }),
     node('Button', '1', {
       label: 'Say hi',
@@ -28,20 +28,20 @@ const helloButtons = (key: string): WireNode =>
     }),
   ]);
 
-const helloTree = (taps: number): WireNode =>
+const counterTree = (taps: number): WireNode =>
   withChildren(node('Column', '0', { gap: 4 }), [
-    node('Text', '0', { label: 'Hello from a Plugin', variant: 'heading' }),
+    node('Text', '0', { label: 'Counter fixture', variant: 'heading' }),
     node('Text', '1', { label: `Tapped ${taps} times` }),
     node('Pill', '2', { text: 'Healthy', tone: 'success' }),
     node('ListItem', '3', {
       title: 'Waiting jobs',
       badge: { kind: 'count', count: 3, label: '3 queued jobs' },
     }),
-    helloButtons('4'),
+    counterButtons('4'),
   ]);
 
-// What `plugins/examples/hello` draws: the Engine journey expects the reconciler to produce it, and the registry stories render it.
-export const helloRoot: WireNode = helloTree(0);
+// The wire-counter fixture Plugin draws this; registry stories render the same wire contract.
+export const counterRoot: WireNode = counterTree(0);
 
 // Equivalent layouts exercise the new Stack vocabulary and its legacy aliases.
 export const stackRowRoot: WireNode = withChildren(
@@ -76,14 +76,14 @@ export const columnAliasRoot: WireNode = withChildren(
   ],
 );
 
-export const helloSnapshot: ViewMessage = {
+export const counterSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,
-  root: helloRoot,
+  root: counterRoot,
 };
 
 // What one tap on "Tap me" changes.
-export const helloTapPatch: ViewMessage = {
+export const counterTapPatch: ViewMessage = {
   type: 'patch',
   revision: 2,
   ops: [
@@ -95,7 +95,7 @@ export const helloTapPatch: ViewMessage = {
   ],
 };
 
-export const helloTappedRoot: WireNode = helloTree(1);
+export const counterTappedRoot: WireNode = counterTree(1);
 
 // A newer Plugin's component the App does not know: a leaf is dropped, a container shows "Update Argo to see this".
 export const unknownNodesRoot: WireNode = withChildren(node('Column', '0'), [
@@ -124,9 +124,9 @@ export const invalidPropsSnapshot: ViewMessage = {
 };
 
 // The event name carried by the Wave button.
-export const helloSlotWaveEvent = 'onPress';
+export const slotCounterWaveEvent = 'onPress';
 
-export const helloSlotTree = (projectId: string, waves: number): WireNode =>
+export const slotCounterTree = (projectId: string, waves: number): WireNode =>
   withChildren(node('Column', '0', { gap: 2 }), [
     node('Text', '0', {
       label:
@@ -137,21 +137,21 @@ export const helloSlotTree = (projectId: string, waves: number): WireNode =>
     node('Button', '1', {
       label: 'Wave',
       variant: 'outline',
-      onPress: { $event: helloSlotWaveEvent },
+      onPress: { $event: slotCounterWaveEvent },
     }),
   ]);
 
-// What hello draws in Project details for the Project `argo`.
-export const helloSlotRoot: WireNode = helloSlotTree('argo', 0);
+// The slot-counter fixture Plugin in Project details for the Project `argo`.
+export const slotCounterRoot: WireNode = slotCounterTree('argo', 0);
 
-export const helloSlotSnapshot: ViewMessage = {
+export const slotCounterSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,
-  root: helloSlotRoot,
+  root: slotCounterRoot,
 };
 
 // What one tap on "Wave" changes.
-export const helloSlotWavePatch: ViewMessage = {
+export const slotCounterWavePatch: ViewMessage = {
   type: 'patch',
   revision: 2,
   ops: [
