@@ -1,4 +1,8 @@
 import {
+  ReplaceableInput,
+  RenderFailureInput,
+} from '@repo/contracts/plugins/replaceable';
+import {
   PluginDispatchInput,
   PluginSlotInput,
   PluginViewInput,
@@ -69,8 +73,35 @@ const dispatchRouter = routerFactory((plugins: PluginService) =>
   }),
 );
 
+const renderRouter = routerFactory((plugins: PluginService) =>
+  router({
+    render: publicProcedure
+      .input(ReplaceableInput)
+      .subscription(({ input, ctx, signal }) =>
+        plugins.render(input, connectionOf(ctx.connection, signal)),
+      ),
+  }),
+);
+
+const renderFailureRouter = routerFactory((plugins: PluginService) =>
+  router({
+    renderFailed: publicProcedure
+      .input(RenderFailureInput)
+      .mutation(({ input, ctx }) => {
+        plugins.renderFailed(requireConnection(ctx.connection), input);
+
+        return { ok: true as const };
+      }),
+  }),
+);
+
 import { mergeRouters } from '../rpc';
 
 export const createPluginViewRouter = routerFactory((plugins: PluginService) =>
-  mergeRouters(viewsRouter(plugins), dispatchRouter(plugins)),
+  mergeRouters(
+    viewsRouter(plugins),
+    dispatchRouter(plugins),
+    renderRouter(plugins),
+    renderFailureRouter(plugins),
+  ),
 );

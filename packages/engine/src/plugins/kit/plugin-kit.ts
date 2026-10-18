@@ -61,6 +61,11 @@ export interface Kit {
   registerPage: Pages['register'];
   registerSlot: Pages['registerSlot'];
   inbox: (json: string) => void;
+  isElement: typeof React.isValidElement;
+  replacement: (
+    invocation: number,
+    element: React.ReactNode,
+  ) => { treePath: string };
 }
 
 // Bundled by esbuild and run inside a Plugin's context before its code (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
@@ -68,6 +73,8 @@ export function createKit(send: ViewSender, settle: DispatchSender): Kit {
   const pages = mountPages(send, settle);
 
   return {
+    isElement: React.isValidElement,
+    replacement: replacementOf(pages),
     exports: exportsOf,
     jsxRuntime,
     registerPage: pages.register,
@@ -78,3 +85,12 @@ export function createKit(send: ViewSender, settle: DispatchSender): Kit {
 }
 
 Object.assign(globalThis, { __argoKit: { createKit } });
+
+function replacementOf(pages: Pages): Kit['replacement'] {
+  return (invocation, element) => {
+    const treePath = `render:${invocation}`;
+    pages.registerReplacement(treePath, element);
+
+    return { treePath };
+  };
+}

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PluginSurface } from '#plugin-surface';
 
 // The core events a Plugin may hook (ADR-0027). A Plugin names the ones it hooks under `contributes.hooks`.
 export const HookEventName = z.enum([
@@ -7,6 +8,7 @@ export const HookEventName = z.enum([
   'tool.check',
   'turn.complete',
   'process.spawn',
+  'ui.render',
 ]);
 
 export type HookEventName = z.infer<typeof HookEventName>;
@@ -61,6 +63,7 @@ export const HookInvocation = z.object({
   hookId: z.number(),
   name: HookEventName,
   event: JsonObject,
+  surface: PluginSurface.optional(),
 });
 
 export type HookInvocation = z.infer<typeof HookInvocation>;

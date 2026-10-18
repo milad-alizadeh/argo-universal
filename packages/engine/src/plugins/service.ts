@@ -5,6 +5,11 @@ import type {
   PluginSettingValue,
 } from '@repo/contracts/plugins';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
+import {
+  ReplaceableInput,
+  type ReplaceableMessage,
+  type RenderFailureInput,
+} from '@repo/contracts/plugins/replaceable';
 import type {
   PluginFailure,
   PluginStatus,
@@ -23,13 +28,14 @@ import {
   applyStatus,
   locatePlugin,
   locatePlugins,
-  refuseTurnedOff,
   requireRuntime,
   requireSettings,
   type LocatedPlugin,
-  type PluginDescriptor,
   type PluginServiceDeps,
 } from './located-plugins';
+import { startPlugin, startPlugins } from './plugin-activation';
+import { fillsSlot, hooksEvent, rendersSlot } from './plugin-contributions';
+import { renderSlot } from './render-slot';
 import { slotViews } from './slot-views';
 
 export type { PluginServiceDeps } from './located-plugins';
@@ -49,22 +55,7 @@ export class PluginService {
   }
 
   async activate(pluginId: string): Promise<PluginStatus> {
-    return this.start(await locatePlugin(this.deps, pluginId));
-  }
-
-  private start({ plugin, directory }: LocatedPlugin): Promise<PluginStatus> {
-    const runtime = requireRuntime(this.deps);
-    const { manifest } = plugin;
-
-    refuseTurnedOff(this.deps, manifest.id);
-
-    return runtime.activate({
-      entry: { pluginId: manifest.id, directory, main: manifest.main },
-      name: manifest.name,
-      // Granted at load with no prompt (ADR-0030).
-      capabilities: manifest.capabilities ?? [],
-      hooks: manifest.contributes.hooks ?? [],
-    });
+    return startPlugin(this.deps, await locatePlugin(this.deps, pluginId));
   }
 
   // Turning a Plugin off stops its worker and releases what it holds; it starts again when next asked for.
@@ -95,7 +86,7 @@ export class PluginService {
     const declaring = await this.declaring(name, exempt);
 
     return hooks.run(
-      { ...(await this.started(declaring)), exempt },
+      { ...(await startPlugins(this.deps, declaring)), exempt },
       name,
       event,
     );
@@ -107,30 +98,9 @@ export class PluginService {
     exempt: ReadonlySet<string>,
   ): Promise<LocatedPlugin[]> {
     return (await locatePlugins(this.deps)).filter(
-      ({ plugin }) => hooks(plugin, name) && !exempt.has(plugin.manifest.id),
+      ({ plugin }) =>
+        hooksEvent(plugin, name) && !exempt.has(plugin.manifest.id),
     );
-  }
-
-  // A Plugin that fails to start is left out of the chain; the runtime has already reported why.
-  private async started(
-    declaring: readonly LocatedPlugin[],
-  ): Promise<{ running: string[]; stopped: string[] }> {
-    const isRunning = await Promise.all(
-      declaring.map((located) => this.isStarted(located)),
-    );
-
-    const pluginIds = declaring.map(({ plugin }) => plugin.manifest.id);
-
-    return {
-      running: pluginIds.filter((_, index) => isRunning[index]),
-      stopped: pluginIds.filter((_, index) => !isRunning[index]),
-    };
-  }
-
-  private async isStarted(located: LocatedPlugin): Promise<boolean> {
-    const status = await this.start(located).catch(() => null);
-
-    return status?.state === 'running';
   }
 
   async dispatch(
@@ -162,10 +132,10 @@ export class PluginService {
     connection: RpcConnection,
   ): AsyncGenerator<SlotMessage> {
     const declaring = (await locatePlugins(this.deps)).filter(({ plugin }) =>
-      fills(plugin, slot),
+      fillsSlot(plugin, slot),
     );
 
-    const pluginIds = (await this.started(declaring)).running;
+    const pluginIds = (await startPlugins(this.deps, declaring)).running;
 
     yield { type: 'contributors', pluginIds };
     yield* slotViews(
@@ -175,14 +145,29 @@ export class PluginService {
     );
   }
 
+  public async *render(
+    input: ReplaceableInput,
+    connection: RpcConnection,
+  ): AsyncGenerator<ReplaceableMessage> {
+    const declaring = (await locatePlugins(this.deps)).filter(({ plugin }) =>
+      rendersSlot(plugin, input.slotId),
+    );
+
+    yield* renderSlot(
+      requireRuntime(this.deps),
+      { input, plugins: await startPlugins(this.deps, declaring) },
+      connection,
+    );
+  }
+
+  public renderFailed(
+    connection: RpcConnection,
+    input: RenderFailureInput,
+  ): void {
+    requireRuntime(this.deps).views.renderFailed(connection, input);
+  }
+
   public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
     return requireRuntime(this.deps).watchFailures(signal);
   }
 }
-
-const fills = (plugin: PluginDescriptor, slot: PluginSlotInput): boolean =>
-  plugin.enabled &&
-  (plugin.manifest.contributes.slots ?? []).includes(slot.slotId);
-
-const hooks = (plugin: PluginDescriptor, name: HookEventName): boolean =>
-  plugin.enabled && (plugin.manifest.contributes.hooks ?? []).includes(name);

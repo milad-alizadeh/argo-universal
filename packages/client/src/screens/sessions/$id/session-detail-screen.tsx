@@ -14,6 +14,8 @@ import {
 } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
+import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
+import { renderConnectedReplaceableSlot } from '../../plugins/connected-replaceable-slot';
 import {
   SessionDetailView,
   type SessionDetailViewProps,
@@ -46,9 +48,15 @@ export function SessionDetailScreen({
   id,
   projectId,
 }: SessionDetailScreenProps): React.JSX.Element {
-  if (id === newSessionId) return <SessionNewScreen projectId={projectId} />;
-
-  return <ConnectedSession key={id} sessionId={id} />;
+  return (
+    <ReplaceableSlotRenderer value={renderConnectedReplaceableSlot}>
+      {id === newSessionId ? (
+        <SessionNewScreen projectId={projectId} />
+      ) : (
+        <ConnectedSession key={id} sessionId={id} />
+      )}
+    </ReplaceableSlotRenderer>
+  );
 }
 
 // iOS's long-press preview draws the page outside its stack: it takes no header, and a peek does not mark the Session seen.

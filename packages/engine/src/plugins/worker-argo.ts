@@ -64,14 +64,22 @@ export const argoSource = `(() => {
   const kit = globalThis.__argoKit.createKit((viewId, message) => call({ api: 'view', viewId, message }).then(() => {}), (requestId, result) => call({ api: 'dispatchResult', requestId, result }).then(() => {}));
   delete globalThis.__argoKit;
   globalThis.__argoInbox = kit.inbox;
+  const freeze = (value) => {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  };
   const hooks = [];
   globalThis.__argoHooks = (json) => {
-    const { invocation, hookId, name, event } = JSON.parse(json);
+    const { invocation, hookId, name, event, surface } = JSON.parse(json);
     const hookCall = (call_) => call({ api: 'hooks', call: { ...call_, invocation } });
     const next = (rewritten = event) => hookCall({ action: 'next', event: rewritten });
     const settle = (outcome) => hookCall({ action: 'settle', outcome }).catch(() => {});
     Promise.resolve()
-      .then(() => hooks[hookId](Object.freeze({ name }), event, next))
+      .then(() => hooks[hookId](freeze({ name, surface, props: name === 'ui.render' ? event.props : undefined }), name === 'ui.render' ? freeze(event) : event, next))
+      .then((answer) => name === 'ui.render' && kit.isElement(answer) ? kit.replacement(invocation, answer) : answer)
       .then(
         (answer) => settle(answer === undefined ? { ok: true } : { ok: true, answer }),
         (error) => settle({ ok: false, error: String(error && error.message) }),

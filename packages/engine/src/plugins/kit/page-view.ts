@@ -18,6 +18,8 @@ export type DispatchSender = (
 export interface OpenView {
   viewId: PluginViewId;
   mounted?: Mounted;
+  broken?: boolean;
+  replaceable?: boolean;
   frame: ReturnType<typeof setTimeout> | undefined;
   tree: WireNode | null;
   revision: number;

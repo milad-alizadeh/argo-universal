@@ -4,6 +4,7 @@ import type {
   Json,
   JsonObject,
 } from '@repo/contracts/plugins/hook-protocol';
+import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import { replyError } from '../plugin-calls';
 import {
   runtimeError,
@@ -23,6 +24,7 @@ export type HookingPlugins = {
   running: readonly string[];
   stopped: readonly string[];
   exempt: ReadonlySet<string>;
+  surface?: PluginSurface;
 };
 
 // The runtime's side of `argo.on`: what each worker registered, and the chains that run them.
@@ -93,7 +95,7 @@ export class PluginHooks {
 
   // Runs the event through the running Plugins' Hooks, in the order given, then core; a stopped Plugin's guard still refuses.
   public async run(
-    { running, stopped, exempt }: HookingPlugins,
+    { running, stopped, exempt, surface }: HookingPlugins,
     name: HookEventName,
     event: JsonObject,
   ): Promise<Json> {
@@ -102,7 +104,7 @@ export class PluginHooks {
     if (guard) return this.orphanRefusal(guard, name);
     const hooks = this.registry.matching(running, name, event);
 
-    return this.chain.run({ name, hooks, ancestors: exempt }, event);
+    return this.chain.run({ name, hooks, ancestors: exempt, surface }, event);
   }
 
   private orphanRefusal(

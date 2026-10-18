@@ -1,4 +1,4 @@
-import { legacyPartVersions } from '@repo/contracts/plugins/kit';
+import type { RenderFailureInput } from '@repo/contracts/plugins/replaceable';
 import type {
   PluginDispatchInput,
   PluginViewId,
@@ -6,7 +6,7 @@ import type {
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
-import { compatibleView } from './compatible-view';
+import { appView } from './app-view';
 import { PluginDispatches } from './dispatches';
 import {
   createOpenView,
@@ -16,8 +16,8 @@ import {
   type OpenView,
   type Opening,
 } from './open-view';
+import { reportDrawingFailure } from './view-render-failure';
 import { receive } from './view-state';
-import { messages } from './view-stream';
 
 export class PluginViews {
   private revision = 0;
@@ -91,7 +91,10 @@ export class PluginViews {
       (view) => view.pluginId === pluginId,
     );
 
-    for (const view of views) this.retire(view);
+    for (const view of views) {
+      if (view.opening.renderSlot) this.remove(view);
+      else this.retire(view);
+    }
   }
 
   public async *watch(
@@ -104,24 +107,21 @@ export class PluginViews {
     const view = this.acquire(pluginId, reported, connection.id);
 
     try {
-      yield* this.adapt(view, connection);
+      yield* appView(view, connection, this.log);
     } finally {
       this.release(view);
     }
   }
 
-  private adapt(
-    view: OpenView,
+  public discardRender(pluginId: string, path: string): void {
+    this.send(pluginId, { type: 'discardRender', path });
+  }
+
+  public renderFailed(
     connection: RpcConnection,
-  ): AsyncGenerator<ViewMessage> {
-    return compatibleView(
-      messages(view, connection.signal),
-      connection.surface?.parts ?? legacyPartVersions,
-      (reason) =>
-        this.log(
-          `Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`,
-        ),
-    );
+    input: RenderFailureInput,
+  ): void {
+    reportDrawingFailure(this.find(connection.id, input), input, this.log);
   }
 
   private find(

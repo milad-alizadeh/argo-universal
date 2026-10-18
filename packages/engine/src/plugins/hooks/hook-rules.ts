@@ -1,6 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 import { hookEvents, type HookEventName } from '@repo/contracts/plugins';
 import { JsonObject, type Json } from '@repo/contracts/plugins/hook-protocol';
+import {
+  ReplaceableInput,
+  replaceableRewriteSchema,
+} from '@repo/contracts/plugins/replaceable';
 
 type EventRule = {
   // What core answers at the bottom of the chain: a fixed answer, or the event's fields it carries on.
@@ -18,6 +22,12 @@ type EventRule = {
 type HookRules = Record<HookEventName, EventRule>;
 
 const hookRules: HookRules = {
+  'ui.render': {
+    core: { carries: ['slotId', 'props'] },
+    subject: (event) =>
+      typeof event.slotId === 'string' ? event.slotId : undefined,
+    rewritable: ['props'],
+  },
   'session.start': { core: { answer: null }, rewritable: [] },
   'prompt.submit': {
     core: { carries: ['prompt'] },
@@ -44,6 +54,7 @@ const hookRules: HookRules = {
 };
 
 export function coreAnswer(name: HookEventName, event: JsonObject): Json {
+  if (name === 'ui.render') return { input: event };
   const { core } = hookRules[name];
 
   return 'answer' in core ? core.answer : carried(event, core.carries);
@@ -89,7 +100,7 @@ type Rewrite = { name: HookEventName; original: JsonObject; rewrite: Json };
 export function readRewrite({ name, original, rewrite }: Rewrite): JsonObject {
   const event = JsonObject.safeParse(rewrite).data;
 
-  if (!event || !hookEvents[name].event.safeParse(event).success)
+  if (!event || !validRewrite(name, original, event))
     throw new Error(`The rewritten ${name} event has the wrong shape`);
 
   requireFixed(name, original, event);
@@ -113,4 +124,17 @@ function requireFixed(
 
   if (changed.length > 0)
     throw new Error(`A ${name} Hook may not rewrite ${changed.join(', ')}`);
+}
+
+function validRewrite(
+  name: HookEventName,
+  original: JsonObject,
+  event: JsonObject,
+): boolean {
+  const schema =
+    name === 'ui.render'
+      ? replaceableRewriteSchema(ReplaceableInput.parse(original))
+      : hookEvents[name].event;
+
+  return schema.safeParse(event).success;
 }
