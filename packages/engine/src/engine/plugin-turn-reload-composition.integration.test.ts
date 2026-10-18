@@ -13,7 +13,7 @@ const source = (version: string): string => `
     await argo.fs.write(loaded, previous + '${version}\\n');
   }`;
 
-it('keeps a dev Plugin alive during a Turn and loads only its final edit when the Turn ends', async () => {
+it('keeps a dev Plugin alive until all active Turns end and loads only its final edit', async () => {
   const host = await startAcpEngine({
     steps: [{ type: 'wait-for-cancel' }],
     installPlugins: (home) =>
@@ -21,6 +21,7 @@ it('keeps a dev Plugin alive during a Turn and loads only its final edit when th
   });
 
   const { sessionId } = await host.caller.session.new(emptySessionInput);
+  const second = await host.caller.session.new(emptySessionInput);
   await host.caller.plugins.activate({ pluginId: 'dev' });
   const loaded = join(host.home, 'plugin-data/dev/loaded');
   expect(await readFile(loaded, 'utf8')).toBe('initial\n');
@@ -31,6 +32,15 @@ it('keeps a dev Plugin alive during a Turn and loads only its final edit when th
   await waitForAcpSnapshot(
     host,
     sessionId,
+    (snapshot) => snapshot.activeTurnId !== null,
+  );
+  await host.caller.session.prompt({
+    sessionId: second.sessionId,
+    prompt: [{ type: 'text', text: 'Wait too' }],
+  });
+  await waitForAcpSnapshot(
+    host,
+    second.sessionId,
     (snapshot) => snapshot.activeTurnId !== null,
   );
   const entry = join(host.home, shippedFolder, 'dev/index.mjs');
@@ -44,6 +54,13 @@ it('keeps a dev Plugin alive during a Turn and loads only its final edit when th
   await expect.poll(() => deferredBuilds(host.home)).toBe(2);
   expect(await readFile(loaded, 'utf8')).toBe('initial\n');
   await host.caller.session.cancel({ sessionId });
+  await waitForAcpSnapshot(
+    host,
+    sessionId,
+    (snapshot) => snapshot.activeTurnId === null,
+  );
+  expect(await readFile(loaded, 'utf8')).toBe('initial\n');
+  await host.caller.session.cancel({ sessionId: second.sessionId });
   await expect.poll(() => readFile(loaded, 'utf8')).toBe('initial\nfinal\n');
 }, 20_000);
 
