@@ -90,9 +90,9 @@ function Supporting({
 }: {
   option: ComboboxOption<string>;
 }): ReactElement | null {
-  return option.supporting ? (
+  return option.subtitle ? (
     <Text role={option.code ? 'secondary-code' : 'secondary'} numberOfLines={1}>
-      {option.supporting}
+      {option.subtitle}
     </Text>
   ) : null;
 }

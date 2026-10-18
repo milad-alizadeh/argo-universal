@@ -76,7 +76,7 @@ function choiceFilter<Value extends string>(
 }
 
 function matches(option: ComboboxOption<string>, query: string): boolean {
-  return `${option.label} ${option.supporting ?? ''}`
+  return `${option.label} ${option.subtitle ?? ''}`
     .toLocaleLowerCase()
     .includes(query.trim().toLocaleLowerCase());
 }

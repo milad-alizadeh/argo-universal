@@ -83,7 +83,7 @@ function projectOptions(projects: ProjectInfo[]): ComboboxOption<string>[] {
   return projects.map((project) => ({
     value: project.id,
     label: project.name,
-    supporting: project.path,
+    subtitle: project.path,
     code: true,
     icon: 'folder',
   }));

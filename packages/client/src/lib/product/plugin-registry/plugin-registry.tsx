@@ -6,7 +6,12 @@ import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
 import { runAction } from './plugin-registry-actions';
-import { buttonProps, layoutProps, textProps } from './plugin-registry-schemas';
+import {
+  buttonProps,
+  layoutProps,
+  stackProps,
+  textProps,
+} from './plugin-registry-schemas';
 
 export interface PluginTreeProps {
   root: WireNode;
@@ -68,6 +73,11 @@ const registry = new Map(
     )),
     Button: entry(buttonProps, ({ onPress, ...props }, context) => (
       <Button {...props} onPress={handlerOf(onPress, context)} />
+    )),
+    Stack: entry(stackProps, ({ direction, ...props }, _context, children) => (
+      <Stack direction={direction} {...props}>
+        {children}
+      </Stack>
     )),
     Row: entry(layoutProps, (props, _context, children) => (
       <Stack direction="row" {...props}>

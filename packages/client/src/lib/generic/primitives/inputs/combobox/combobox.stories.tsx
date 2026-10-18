@@ -13,7 +13,7 @@ const options = [
     value: 'argo',
     label: 'argo-universal',
     // A worktree's long path shows how a path shortens before the selected check.
-    supporting:
+    subtitle:
       '~/Developer/worktrees/argo-universal/jovial-pelican/argo-universal',
     code: true,
     icon: 'folder',
@@ -21,14 +21,14 @@ const options = [
   {
     value: 'paper',
     label: 'paper-sync',
-    supporting: '~/Developer/paper-sync',
+    subtitle: '~/Developer/paper-sync',
     code: true,
     icon: 'folder',
   },
   {
     value: 'docs',
     label: 'docs-site',
-    supporting: '~/Developer/docs-site',
+    subtitle: '~/Developer/docs-site',
     code: true,
     icon: 'folder',
   },
