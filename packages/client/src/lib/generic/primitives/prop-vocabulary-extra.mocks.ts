@@ -7,6 +7,11 @@ import type * as SvgKit from '#primitives/visual';
 
 export type AdditionalPrimitives = {
   MetadataProps: MetadataKit.MetadataProps;
+  MetadataLabelProps: MetadataKit.MetadataLabelProps;
+  MetadataLinkProps: MetadataKit.MetadataLinkProps;
+  MetadataPillsProps: MetadataKit.MetadataPillsProps;
+  MetadataStatusDotProps: MetadataKit.MetadataStatusDotProps;
+  MetadataAvatarProps: MetadataKit.MetadataAvatarProps;
   KbdProps: KbdKit.KbdProps;
   ActionListProps: ActionListKit.ActionListProps;
   ActionProps: ActionListKit.ActionProps;

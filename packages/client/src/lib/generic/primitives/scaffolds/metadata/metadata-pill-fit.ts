@@ -1,6 +1,6 @@
-import type { MetadataPillsProps } from './metadata-pills';
+import type { PillValuesProps } from './metadata-pills';
 
-type Pill = MetadataPillsProps['pills'][number];
+type Pill = PillValuesProps['pills'][number];
 
 export const pillIdentity = (pill: Pill): string => JSON.stringify(pill);
 

@@ -7,6 +7,7 @@ export interface WirePartDefinition {
   versions: readonly z.ZodType[];
   container: boolean;
   children: boolean;
+  childParts?: readonly string[];
   slots: Record<string, readonly string[]>;
   events: Record<string, z.ZodType>;
   reference: WirePartReference;

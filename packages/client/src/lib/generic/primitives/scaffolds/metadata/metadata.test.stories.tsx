@@ -9,7 +9,7 @@ const meta = {
   title: 'Tests/Metadata',
   component: Metadata,
   args: {
-    rows: [{ title: 'Path', value: { kind: 'text', text: path } }],
+    children: <Metadata.Label title="Path" text={path} />,
   },
 } satisfies Meta<typeof Metadata>;
 
@@ -29,7 +29,7 @@ export const ReadsText: Story = {
 };
 
 export const ReadsMixedValues: Story = {
-  args: { rows: fields },
+  args: fields,
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('group', { name: 'Device, Milad’s MacBook Pro' }),
@@ -45,12 +45,21 @@ export const ReadsMixedValues: Story = {
     ).toBeVisible();
     await expect(canvas.getByText('In progress')).toBeVisible();
     await expect(canvas.getByText('Passed')).toBeVisible();
+    await expect(
+      canvas.getByRole('group', { name: 'Assignee, Milad Alizadeh' }),
+    ).toBeVisible();
+    await expect(canvas.getByText('Milad Alizadeh')).toBeVisible();
+    await expect(
+      canvas.getByRole('group', { name: 'Reviewer, Alex Chen' }),
+    ).toBeVisible();
+    await expect(canvas.getByText('argo-universal')).toBeVisible();
+    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
     await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
   },
 };
 
 export const EmptyHasNoFields: Story = {
-  args: { title: 'Unused heading', rows: [] },
+  args: { title: 'Unused heading', children: [] },
   play: async ({ canvas }) => {
     await expect(canvas.queryByText('Unused heading')).not.toBeInTheDocument();
     await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
@@ -60,9 +69,9 @@ export const EmptyHasNoFields: Story = {
 export const EmptyValuesKeepTheirLabels: Story = {
   args: {
     title: 'Details',
-    rows: [
-      { title: 'Milestone', value: { kind: 'text', text: '' } },
-      { title: 'Labels', value: { kind: 'pills', pills: [] } },
+    children: [
+      <Metadata.Label key="milestone" title="Milestone" text="" />,
+      <Metadata.Pills key="labels" title="Labels" />,
     ],
   },
   play: async ({ canvas }) => {
@@ -74,13 +83,9 @@ export const EmptyValuesKeepTheirLabels: Story = {
 
 export const PreservesSpokenPath: Story = {
   args: {
-    rows: [
-      {
-        title: 'Path',
-        value: { kind: 'text', text: path },
-        accessibilityLabel: path,
-      },
-    ],
+    children: (
+      <Metadata.Label title="Path" text={path} accessibilityLabel={path} />
+    ),
   },
   play: async ({ canvas }) => {
     await expect(

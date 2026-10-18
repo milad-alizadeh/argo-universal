@@ -67,7 +67,7 @@ const defaultOptions = {
   appearance: defaultAppearance,
   accessibility: {},
   previous: [],
-} satisfies Required<Omit<PartOptions, 'container'>>;
+} satisfies Required<Omit<PartOptions, 'container' | 'childParts'>>;
 
 function resolveOptions(
   schema: z.ZodType,
@@ -132,6 +132,7 @@ function definition(
     versions: [...config.previous, schema],
     container: config.container,
     children: config.children,
+    childParts: config.childParts,
     slots: config.slots,
     events: config.events,
     reference: partReference({ summary, schema, config }),

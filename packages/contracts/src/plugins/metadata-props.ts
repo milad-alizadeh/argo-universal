@@ -1,36 +1,49 @@
 import { z } from 'zod';
 import { iconSymbol } from '../kit-symbols/icon-schema';
 import { tones } from '../kit-tokens';
-import { pillProps } from './status-kit-props';
 
-const metadataValue = z.discriminatedUnion('kind', [
-  z.object({
-    kind: z.literal('text'),
-    text: z.string(),
-    icon: iconSymbol.optional(),
-  }),
-  z.object({ kind: z.literal('pills'), pills: z.array(pillProps) }),
-  z.object({
-    kind: z.literal('status'),
-    text: z.string(),
-    tone: z.enum(tones),
-  }),
-]);
+const field = z.object({
+  title: z.string().describe('The field label.'),
+  accessibilityLabel: z
+    .string()
+    .optional()
+    .describe('Override the spoken field name and value.'),
+});
 
 export const metadataProps = z.object({
   title: z.string().optional().describe('Optional section heading.'),
-  rows: z
-    .array(
-      z.object({
-        title: z.string().describe('The field label.'),
-        value: metadataValue.describe(
-          'A text value, Pills, or a labelled StatusDot.',
-        ),
-        accessibilityLabel: z
-          .string()
-          .optional()
-          .describe('Override the spoken field name and value.'),
-      }),
-    )
-    .describe('Read-only fields in their reading order.'),
 });
+
+export const metadataLabelProps = field.extend({
+  text: z.string().describe('The field value.'),
+  icon: iconSymbol.optional(),
+});
+
+export const metadataLinkProps = field.extend({
+  text: z
+    .string()
+    .describe(
+      'The displayed link text; drawn as plain text until kit Link lands.',
+    ),
+  href: z.string().describe('The link destination.'),
+});
+
+export const metadataPillsProps = field;
+
+export const metadataStatusDotProps = field.extend({
+  text: z.string().describe('The status text.'),
+  tone: z.enum(tones),
+});
+
+export const metadataAvatarProps = field.extend({
+  name: z.string().describe('The person’s displayed name.'),
+  src: z.string().optional().describe('Optional avatar image URI.'),
+});
+
+export const metadataChildParts = [
+  'Metadata.Label',
+  'Metadata.Link',
+  'Metadata.Pills',
+  'Metadata.StatusDot',
+  'Metadata.Avatar',
+] as const;

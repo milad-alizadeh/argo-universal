@@ -64,11 +64,16 @@ const allowedContent = (node: WireNode, container: boolean): boolean =>
 
 interface ContentRules {
   children: boolean;
+  childParts?: readonly string[];
   slots: SlotRules;
 }
 
 const validContent = (node: WireNode, rules: ContentRules): boolean =>
-  acceptsSlots(node, rules.slots) && allowedContent(node, rules.children);
+  acceptsSlots(node, rules.slots) &&
+  allowedContent(node, rules.children) &&
+  node.children.every(
+    (child) => rules.childParts?.includes(child.type) ?? true,
+  );
 
 const allowedStructure = (node: WireNode, rules: ContentRules): boolean =>
   !styled(node) && validContent(node, rules);

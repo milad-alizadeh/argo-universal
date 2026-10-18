@@ -610,8 +610,52 @@ export type WireSchemaHints = {
   "Metadata": {
     /** Optional section heading. */
     "title": PropValue<"Metadata", "title">;
-    /** Read-only fields in their reading order. */
-    "rows": PropValue<"Metadata", "rows">;
+  };
+  "Metadata.Label": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Label", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Label", "accessibilityLabel">;
+    /** The field value. */
+    "text": PropValue<"Metadata.Label", "text">;
+    /** icon for this part. */
+    "icon": PropValue<"Metadata.Label", "icon">;
+  };
+  "Metadata.Link": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Link", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Link", "accessibilityLabel">;
+    /** The displayed link text; drawn as plain text until kit Link lands. */
+    "text": PropValue<"Metadata.Link", "text">;
+    /** The link destination. */
+    "href": PropValue<"Metadata.Link", "href">;
+  };
+  "Metadata.Pills": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Pills", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Pills", "accessibilityLabel">;
+  };
+  "Metadata.StatusDot": {
+    /** The field label. */
+    "title": PropValue<"Metadata.StatusDot", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.StatusDot", "accessibilityLabel">;
+    /** The status text. */
+    "text": PropValue<"Metadata.StatusDot", "text">;
+    /** tone for this part. */
+    "tone": PropValue<"Metadata.StatusDot", "tone">;
+  };
+  "Metadata.Avatar": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Avatar", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Avatar", "accessibilityLabel">;
+    /** The person’s displayed name. */
+    "name": PropValue<"Metadata.Avatar", "name">;
+    /** Optional avatar image URI. */
+    "src": PropValue<"Metadata.Avatar", "src">;
   };
   "Page": {
     /** The visible and accessible label. */

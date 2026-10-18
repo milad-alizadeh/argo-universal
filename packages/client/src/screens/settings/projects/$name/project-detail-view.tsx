@@ -7,7 +7,7 @@ import { ActionShortcutScope } from '#primitives/actions/action-list';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { Metadata, type MetadataProps } from '#primitives/scaffolds/metadata';
+import { Metadata } from '#primitives/scaffolds/metadata';
 import { Spinner } from '#primitives/status/spinner';
 import { NewSessionsSection } from './project-detail-new-sessions';
 import { RemoveProject } from './project-detail-remove';
@@ -120,16 +120,14 @@ function FolderSection({
   project,
   otherDevice,
 }: Pick<SectionsProps, 'project' | 'otherDevice'>): React.JSX.Element {
-  const rows: MetadataProps['rows'] = [];
-
-  if (otherDevice)
-    rows.push({ title: 'Device', value: { kind: 'text', text: otherDevice } });
   const path = homePath(project.path);
-  rows.push({
-    title: 'Path',
-    value: { kind: 'text', text: path },
-    accessibilityLabel: path,
-  });
 
-  return <Metadata title="Folder" rows={rows} />;
+  return (
+    <Metadata title="Folder">
+      {otherDevice ? (
+        <Metadata.Label title="Device" text={otherDevice} />
+      ) : null}
+      <Metadata.Label title="Path" text={path} accessibilityLabel={path} />
+    </Metadata>
+  );
 }

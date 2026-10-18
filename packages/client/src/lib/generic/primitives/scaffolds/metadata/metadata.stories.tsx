@@ -7,7 +7,7 @@ import { fields } from './metadata.mocks';
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Metadata',
   component: Metadata,
-  args: { rows: fields },
+  args: fields,
 } satisfies Meta<typeof Metadata>;
 
 export default meta;
@@ -16,10 +16,10 @@ const longPath =
   '~/Developer/argo-universal/packages/client/src/lib/generic/primitives/scaffolds/metadata';
 
 const examples = [
-  { label: 'Read-only fields', rows: fields },
+  { label: 'Read-only fields', props: fields },
   {
     label: 'Long path',
-    rows: [{ title: 'Path', value: { kind: 'text' as const, text: longPath } }],
+    props: { children: <Metadata.Label title="Path" text={longPath} /> },
   },
 ];
 
@@ -27,10 +27,10 @@ export const Overview: StoryObj<typeof meta> = {
   name: 'Metadata',
   render: () => (
     <Variations>
-      {examples.map(({ label, rows }) => (
+      {examples.map(({ label, props }) => (
         <Variation key={label} label={label}>
           <View style={{ width: Platform.OS === 'web' ? 280 : 360 }}>
-            <Metadata rows={rows} />
+            <Metadata {...props} />
           </View>
         </Variation>
       ))}

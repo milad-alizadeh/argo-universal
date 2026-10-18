@@ -3,15 +3,15 @@ import { View } from 'react-native';
 import { Pill } from '#primitives/status/pill';
 import { withOccurrenceKeys } from '../../../occurrence-keys';
 import { pillIdentity } from './metadata-pill-fit';
-import type { MetadataPillsProps } from './metadata-pills';
+import type { PillValuesProps } from './metadata-pills';
 
-type MeasurementsProps = MetadataPillsProps & {
+type MeasurementsProps = PillValuesProps & {
   measure: (key: string, width: number) => void;
 };
 
 type MeasuredPillProps = {
   id: string;
-  pill: MetadataPillsProps['pills'][number];
+  pill: PillValuesProps['pills'][number];
   measure: MeasurementsProps['measure'];
 };
 

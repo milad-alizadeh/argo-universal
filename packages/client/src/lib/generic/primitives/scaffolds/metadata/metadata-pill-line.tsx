@@ -5,10 +5,10 @@ import { Pill } from '#primitives/status/pill';
 import { withOccurrenceKeys } from '../../../occurrence-keys';
 import { fitPills, pillIdentity } from './metadata-pill-fit';
 import { PillMeasurements } from './metadata-pill-measurements';
-import type { MetadataPillsProps } from './metadata-pills';
+import type { PillValuesProps } from './metadata-pills';
 import { usePillMeasurements } from './use-pill-measurements';
 
-type VisibleProps = MetadataPillsProps & { count: number };
+type VisibleProps = PillValuesProps & { count: number };
 
 function visiblePills({ pills, count }: VisibleProps): ReactElement[] {
   return withOccurrenceKeys(pills.slice(0, count), pillIdentity).map(
@@ -31,7 +31,7 @@ function VisiblePills(props: VisibleProps): ReactElement {
 }
 
 // Actual Pill measurements keep overflow correct through font scaling and live prop updates.
-export function MetadataPillLine({ pills }: MetadataPillsProps): ReactElement {
+export function MetadataPillLine({ pills }: PillValuesProps): ReactElement {
   const [available, setAvailable] = useState(0);
   const measurements = usePillMeasurements();
   const gap = useSpacing('--spacing-1');

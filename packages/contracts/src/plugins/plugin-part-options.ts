@@ -6,6 +6,7 @@ export interface PartOptions {
   slots?: Record<string, readonly string[]>;
   events?: Record<string, z.ZodType>;
   children?: boolean;
+  childParts?: readonly string[];
   container?: boolean;
   label?: string;
   appearance?: string;
@@ -13,8 +14,11 @@ export interface PartOptions {
   previous?: readonly z.ZodType[];
 }
 
-export type ResolvedPartOptions = Required<Omit<PartOptions, 'container'>> & {
+export type ResolvedPartOptions = Required<
+  Omit<PartOptions, 'container' | 'childParts'>
+> & {
   container: boolean;
+  childParts?: readonly string[];
 };
 
 type Option<Options, Key extends PropertyKey, Fallback> =
