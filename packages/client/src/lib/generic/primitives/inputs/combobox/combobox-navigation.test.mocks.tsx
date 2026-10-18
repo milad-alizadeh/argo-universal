@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { fn } from 'storybook/test';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Combobox } from './combobox';

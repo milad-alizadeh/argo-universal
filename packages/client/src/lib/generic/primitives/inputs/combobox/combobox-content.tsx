@@ -1,7 +1,7 @@
 import { createElement, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
 import type { ComboboxContentProps, ComboboxOption } from './combobox-props';
 import { ComboboxResults } from './combobox-results';
 import { ComboboxSearch } from './combobox-search';

@@ -3,7 +3,7 @@ import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
-import { IconSlot, IconSpinner } from '#primitives/display/icon';
+import { IconSlot, IconSpinner } from '#primitives/content/icon';
 import { NativeControl } from '#primitives/native/native-control';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeSymbol } from '../../../symbols/native-symbol';

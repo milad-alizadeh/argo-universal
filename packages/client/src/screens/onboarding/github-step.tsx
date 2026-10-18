@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { type GitHubStep, type StepMark } from '#features/setup';
-import { Button } from '#primitives/buttons/button';
-import { Badge, type BadgeTone } from '#primitives/display/badge';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
+import { Badge, type BadgeTone } from '#primitives/status/badge';
 import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep, type SetupStepProps } from './setup-step';
 

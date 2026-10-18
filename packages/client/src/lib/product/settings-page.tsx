@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   PageTitleRow,
   type PageTitleRowProps,

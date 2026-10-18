@@ -1,6 +1,6 @@
 import { RNHostView } from '@expo/ui';
 import type * as React from 'react';
-import { Icon, IconSlot } from '#primitives/display/icon';
+import { Icon, IconSlot } from '#primitives/content/icon';
 import type { NativeSymbolProps } from './native-symbol-props';
 
 const hostedIconSlot = {

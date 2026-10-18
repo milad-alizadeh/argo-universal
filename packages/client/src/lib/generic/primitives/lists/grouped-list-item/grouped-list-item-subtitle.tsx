@@ -2,7 +2,7 @@ import type * as React from 'react';
 import {
   NativeText,
   type NativeTextProps,
-} from '#primitives/display/native-text';
+} from '#primitives/content/native-text';
 import type { ResolvedItemProps } from './grouped-list-item-props';
 import { codeTruncation, subtitleModifiers } from './grouped-list-item-text';
 

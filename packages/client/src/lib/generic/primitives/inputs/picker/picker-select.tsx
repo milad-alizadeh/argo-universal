@@ -1,8 +1,8 @@
 import * as RadixSelect from '@radix-ui/react-select';
 import type * as React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Icon, IconSlot } from '#primitives/display/icon';
-import { SelectedCheck } from '#primitives/display/selected-check';
+import { Icon, IconSlot } from '#primitives/content/icon';
+import { SelectedCheck } from '#primitives/status/selected-check';
 import type { IconName } from '../../../symbols/icon-names';
 import { useWide } from '../../../use-wide/use-wide';
 import { SelectContent } from './picker-select-content';

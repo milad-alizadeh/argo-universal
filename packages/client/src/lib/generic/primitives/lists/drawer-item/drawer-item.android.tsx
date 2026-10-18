@@ -12,8 +12,8 @@ import {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { type CountBadge, countBadge } from '#lib/generic/badge-count';
-import { Icon, IconSlot } from '#primitives/display/icon';
-import { NativeText } from '#primitives/display/native-text';
+import { Icon, IconSlot } from '#primitives/content/icon';
+import { NativeText } from '#primitives/content/native-text';
 import { Host } from '#primitives/native/host';
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { IconSymbol } from '../../../symbols/icon-symbol';

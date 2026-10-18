@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { FadeIn } from 'react-native-reanimated';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { NativeOnlyAnimatedView } from './native-only-animated-view';
 
 function AnimationExample(): React.JSX.Element {
@@ -15,7 +15,7 @@ function AnimationExample(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Design System/Primitives/NativeOnlyAnimatedView',
+  title: 'Design System/Primitives/Native/NativeOnlyAnimatedView',
   tags: ['third-party'],
 } satisfies Meta;
 

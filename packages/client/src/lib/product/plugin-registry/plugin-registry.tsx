@@ -2,9 +2,9 @@ import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Handler } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import type { z } from 'zod';
-import { Button } from '#primitives/buttons/button';
-import { Stack } from '#primitives/display/stack';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
+import { Stack } from '#primitives/layout/stack';
 import { runAction } from './plugin-registry-actions';
 import { buttonProps, layoutProps, textProps } from './plugin-registry-schemas';
 

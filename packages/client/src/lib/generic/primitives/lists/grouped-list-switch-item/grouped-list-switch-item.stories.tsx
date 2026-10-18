@@ -5,7 +5,7 @@ import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { GroupedListSwitchItem } from './grouped-list-switch-item';
 
 const meta = {
-  title: 'Design System/Primitives/GroupedListSwitchItem',
+  title: 'Design System/Primitives/Lists/GroupedListSwitchItem',
   component: GroupedListSwitchItem,
   parameters: { screenPreview: true },
   args: {

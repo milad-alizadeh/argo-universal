@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { useOptionalSheet } from '#primitives/overlays/sheet';
 import type { IconName } from '../../../../lib/generic/symbols/icon-names';
 

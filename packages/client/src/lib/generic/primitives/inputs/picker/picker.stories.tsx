@@ -75,7 +75,7 @@ const examples: { label: string; props: ExampleProps }[] = [
 ];
 
 const meta = {
-  title: 'Design System/Primitives/Picker',
+  title: 'Design System/Primitives/Inputs/Picker',
   parameters: { screenPreview: true },
 } satisfies Meta;
 

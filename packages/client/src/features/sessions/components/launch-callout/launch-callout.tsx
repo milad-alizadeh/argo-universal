@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Callout, CalloutButton } from '#primitives/display/callout';
+import { Callout, CalloutButton } from '#primitives/status/callout';
 import type { LaunchCalloutProps } from '../../types/session-callout';
 
 const retryHint = 'Try to restart the Agent';

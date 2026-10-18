@@ -2,7 +2,7 @@ import type { HeaderOptions } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   SearchField,
   type SearchFieldProps,

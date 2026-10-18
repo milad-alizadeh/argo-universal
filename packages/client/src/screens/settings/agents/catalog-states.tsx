@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { installedError, registryError, type RowsLoad } from '#features/agents';
-import { Button } from '#primitives/buttons/button';
-import { Spinner } from '#primitives/display/spinner';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
+import { Spinner } from '#primitives/status/spinner';
 
 type StateProps = {
   load?: Exclude<RowsLoad, { status: 'loaded' }>;

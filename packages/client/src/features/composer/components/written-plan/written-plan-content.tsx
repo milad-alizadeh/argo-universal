@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { FeedCodeBlock } from '#lib/product/markdown/feed-code-block/feed-code-block';
 import { PlanDocument } from '#lib/product/plan-document';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import type { WrittenPlanValue } from './written-plan-types';
 
 interface ContentProps {

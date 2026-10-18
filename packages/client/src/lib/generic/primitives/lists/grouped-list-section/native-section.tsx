@@ -7,7 +7,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { NativeText } from '#primitives/display/native-text';
+import { NativeText } from '#primitives/content/native-text';
 import { useStackedList } from '#primitives/fields/field-layout';
 import { usePaneSectionMargin } from '../../../use-size-class/pane-section-margin';
 import type { GroupedListSectionProps } from './grouped-list-section-props';

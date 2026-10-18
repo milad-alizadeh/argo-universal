@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';
 import { SheetWhenCompact } from './request-sheet';

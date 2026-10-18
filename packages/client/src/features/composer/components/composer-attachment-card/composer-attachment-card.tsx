@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { Image, View } from 'react-native';
 import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 
 export interface ComposerAttachment {
   id: string;

@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { FeedMarkdown } from '#lib/product/markdown/feed-markdown';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { ClampLeaves } from '../../../../lib/product/markdown/clamp-leaves';
 import {
   useWholeLineClamp,

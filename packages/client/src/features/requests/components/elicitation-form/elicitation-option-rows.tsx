@@ -1,12 +1,12 @@
 import type { ElicitationEnumOption } from '@repo/contracts';
 import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { CheckboxIndicator } from '#primitives/inputs/checkbox';
 import {
   GroupedListItem,
   type GroupedListItemProps,
 } from '#primitives/lists/grouped-list-item';
+import { SelectedCheck } from '#primitives/status/selected-check';
 
 export type OptionRowsProps = {
   options: readonly ElicitationEnumOption[];

@@ -1,9 +1,9 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { buttonInteractionProps } from '#primitives/buttons/button';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { buttonInteractionProps } from '#primitives/actions/button';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
 import type { MenuTriggerProps } from './menu-props';
 

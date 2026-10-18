@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { configurationChoices } from '#lib/product/session-configuration';
-import { Icon } from '#primitives/display/icon';
+import { Icon } from '#primitives/content/icon';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { ConfigurationChoice } from './configuration-choice';

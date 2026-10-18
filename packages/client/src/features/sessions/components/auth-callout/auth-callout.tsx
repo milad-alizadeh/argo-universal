@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { SplitButton } from '#primitives/buttons/split-button';
-import { Callout, CalloutButton } from '#primitives/display/callout';
+import { SplitButton } from '#primitives/actions/split-button';
+import { Callout, CalloutButton } from '#primitives/status/callout';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type {
   AuthCalloutMethod,

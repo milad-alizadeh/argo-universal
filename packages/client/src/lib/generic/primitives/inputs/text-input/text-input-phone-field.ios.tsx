@@ -1,7 +1,7 @@
 import { Row, TextInput, type TextInputProps, useNativeState } from '@expo/ui';
 import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { codeFace, NativeText } from '#primitives/display/native-text';
+import { codeFace, NativeText } from '#primitives/content/native-text';
 import { Field } from '#primitives/fields/field';
 import { useFieldText } from './text-input-field-text';
 import { requiredLabel } from './text-input-label';

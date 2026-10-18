@@ -1,4 +1,4 @@
-import { toneClass } from '#primitives/display/text';
+import { toneClass } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import { rowLane } from './grouped-list-item-lane';
 import type { ResolvedItemProps } from './grouped-list-item-props';

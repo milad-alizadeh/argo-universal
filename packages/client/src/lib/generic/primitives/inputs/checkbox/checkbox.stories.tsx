@@ -16,7 +16,9 @@ function Example(
   });
 }
 
-const meta = { title: 'Design System/Primitives/Checkbox' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Inputs/Checkbox',
+} satisfies Meta;
 
 export default meta;
 

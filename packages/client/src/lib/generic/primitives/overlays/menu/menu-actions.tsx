@@ -1,8 +1,8 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { Text, TextClassContext } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text, TextClassContext } from '#primitives/content/text';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';

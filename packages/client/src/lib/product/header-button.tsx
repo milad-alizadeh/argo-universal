@@ -5,7 +5,7 @@ import { cn } from '#lib/generic/utils';
 import {
   IconButton,
   type IconButtonProps,
-} from '#primitives/buttons/icon-button';
+} from '#primitives/actions/icon-button';
 
 export interface HeaderButtonProps extends Pick<
   IconButtonProps,

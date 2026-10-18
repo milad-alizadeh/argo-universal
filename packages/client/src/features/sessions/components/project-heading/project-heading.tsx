@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { memo } from 'react';
+import { Pressable } from '#primitives/actions/pressable';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
-import { Pressable } from '#primitives/pressable';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { ProjectActions } from './project-heading-actions';
 import { ProjectHeadingMenu } from './project-heading-menu';

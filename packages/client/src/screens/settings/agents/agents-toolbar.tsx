@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { type AgentsFilter } from '#features/agents';
-import { FilterPill } from '#primitives/buttons/filter-pill';
+import { FilterPill } from '#primitives/inputs/filter-pill';
 import { SearchFieldInput } from '#primitives/inputs/search-field';
 
 export interface AgentsFilterProps {

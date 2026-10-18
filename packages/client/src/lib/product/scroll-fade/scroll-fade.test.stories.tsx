@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { type MockInstance, expect, spyOn, waitFor } from 'storybook/test';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { fadedEdges } from '../../../../mocks/scroll-fade';
 import { ScrollFadeView } from './scroll-fade';
 import { ScrollFadeList } from './scroll-fade-list';

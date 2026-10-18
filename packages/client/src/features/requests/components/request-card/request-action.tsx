@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 
 export interface RequestActionProps {
   disabled?: boolean;

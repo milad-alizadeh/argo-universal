@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
@@ -13,7 +13,7 @@ import { useSheet } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
 
 const meta = {
-  title: 'Design System/Primitives/Sheet',
+  title: 'Design System/Primitives/Overlays/Sheet',
 } satisfies Meta;
 
 export default meta;

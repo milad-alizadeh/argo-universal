@@ -34,7 +34,7 @@ const examples: {
 ];
 
 const meta = {
-  title: 'Design System/Primitives/Switch',
+  title: 'Design System/Primitives/Inputs/Switch',
   tags: ['third-party'],
 } satisfies Meta;
 

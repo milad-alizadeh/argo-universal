@@ -34,7 +34,9 @@ const options = [
   },
 ] satisfies React.ComponentProps<typeof Combobox>['options'];
 
-const meta = { title: 'Design System/Primitives/Combobox' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Inputs/Combobox',
+} satisfies Meta;
 
 export default meta;
 

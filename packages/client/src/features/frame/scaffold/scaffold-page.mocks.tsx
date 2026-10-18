@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import {
   IconButton,
   type IconButtonProps,
-} from '#primitives/buttons/icon-button';
-import { Text } from '#primitives/display/text';
+} from '#primitives/actions/icon-button';
+import { Text } from '#primitives/content/text';
 import { Menu } from '#primitives/overlays/menu';
 import { PageHeader } from '../../../lib/product/page-header';
 

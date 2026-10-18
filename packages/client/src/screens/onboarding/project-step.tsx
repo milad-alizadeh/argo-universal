@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { type StepMark } from '#features/setup';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep } from './setup-step';
 

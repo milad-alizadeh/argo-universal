@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   Popover,
   PopoverContent,

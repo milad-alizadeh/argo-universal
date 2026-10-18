@@ -1,6 +1,6 @@
 import { Handler } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
-import { isStackGap, stackAlignments } from '#primitives/display/stack';
+import { isStackGap, stackAlignments } from '#primitives/layout/stack';
 
 const tone = z.enum([
   'neutral',
