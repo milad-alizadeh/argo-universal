@@ -86,9 +86,7 @@ const pluginHeading = (page: Page, name: string): Locator => {
     return page.getByTestId(pluginPage).getByText('Hello from a Plugin');
 
   if (name === 'Issue tracker')
-    return page
-      .getByTestId(pluginPage)
-      .getByRole('heading', { name: 'Issues' });
+    return page.getByTestId(pluginPage).getByText('Issues', { exact: true });
 
   return page.getByTestId(pluginPage);
 };
