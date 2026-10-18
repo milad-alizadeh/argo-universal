@@ -1,16 +1,16 @@
 import type { PartBinding, PartUi } from '@repo/contracts/plugins/kit';
 import type { WireJson } from '@repo/contracts/plugins/wire';
+import {
+  draftValue,
+  pendingDraft,
+  retainedDraft,
+  settleDraft,
+  type ControlDraft,
+} from './plugin-control-draft';
 import type { ControlChange, PluginProps } from './plugin-control-types';
 
-type Draft = {
-  value: WireJson | undefined;
-  source: WireJson | undefined;
-  rollback: WireJson | undefined;
-  pending: boolean;
-};
-
 export class NodeControls {
-  private readonly drafts = new Map<string, Draft>();
+  private readonly drafts = new Map<string, ControlDraft>();
   private readonly pending = new Set<string>();
   private focused = false;
 
@@ -21,12 +21,13 @@ export class NodeControls {
   public hold(binding: PartBinding, source: WireJson | undefined): void {
     const draft = this.drafts.get(binding.prop);
 
-    if (!draft?.pending)
+    if (!(draft && pendingDraft(draft)))
       this.drafts.set(binding.prop, {
         value: this.value(binding, source),
         source,
-        rollback: source,
-        pending: false,
+        baseline: source,
+        previous: undefined,
+        outcome: 'accepted',
       });
     this.focused = true;
   }
@@ -39,11 +40,20 @@ export class NodeControls {
 
     if (!draft) return source;
 
-    return this.keepsDraft(draft, source) ? draft.value : source;
+    return this.keepsDraft(draft, source) ? draftValue(draft) : source;
   }
 
-  private keepsDraft(draft: Draft, source: WireJson | undefined): boolean {
-    if (this.focused || draft.pending) return true;
+  private keepsDraft(
+    draft: ControlDraft,
+    source: WireJson | undefined,
+  ): boolean {
+    if (pendingDraft(draft)) {
+      draft.source = source;
+
+      return true;
+    }
+
+    if (this.focused) return true;
 
     return JSON.stringify(draft.source) === JSON.stringify(source);
   }
@@ -54,7 +64,7 @@ export class NodeControls {
     return blocksWhilePending(change);
   }
 
-  public begin(change: ControlChange): Draft | undefined {
+  public begin(change: ControlChange): ControlDraft | undefined {
     this.pending.add(change.event);
 
     if (!change.binding) return undefined;
@@ -62,15 +72,16 @@ export class NodeControls {
     return this.beginDraft(change.binding, change);
   }
 
-  private beginDraft(binding: PartBinding, change: ControlChange): Draft {
-    const source = change.node.props[binding.prop];
-    const previous = this.drafts.get(binding.prop);
+  private beginDraft(
+    binding: PartBinding,
+    change: ControlChange,
+  ): ControlDraft {
+    const draft = createDraft(this.drafts.get(binding.prop), {
+      value: change.payload,
+      source: change.node.props[binding.prop],
+      baseline: this.value(binding, change.node.props[binding.prop]),
+    });
 
-    const rollback = previous?.pending
-      ? previous.rollback
-      : this.value(binding, source);
-
-    const draft = { value: change.payload, source, rollback, pending: true };
     this.drafts.set(binding.prop, draft);
 
     return draft;
@@ -78,26 +89,13 @@ export class NodeControls {
 
   public finish(
     change: ControlChange,
-    request: Draft | undefined,
+    request: ControlDraft | undefined,
     failed: boolean,
   ): void {
     this.pending.delete(change.event);
 
     if (!change.binding || !request) return;
-    this.settleDraft(change.binding, request, failed);
-  }
-
-  private settleDraft(
-    binding: PartBinding,
-    request: Draft,
-    failed: boolean,
-  ): void {
-    request.pending = false;
-    const current = this.drafts.get(binding.prop);
-
-    if (!current) return;
-
-    settleCurrent(current, request, failed);
+    settleDraft(request, failed);
   }
 
   public pendingProps(ui: Required<PartUi>, props: PluginProps): void {
@@ -121,20 +119,6 @@ function blocksBinding(ui: Required<PartUi>, event: string): boolean {
   );
 }
 
-function settleCurrent(current: Draft, request: Draft, failed: boolean): void {
-  if (current === request) {
-    restoreCurrent(current, failed);
-
-    return;
-  }
-
-  if (!failed) current.rollback = request.value;
-}
-
-function restoreCurrent(draft: Draft, failed: boolean): void {
-  if (failed) draft.value = draft.rollback;
-}
-
 function applyPendingEvent(
   ui: Required<PartUi>,
   event: string,
@@ -143,4 +127,11 @@ function applyPendingEvent(
   const prop = ui.pending[event];
 
   if (prop) props[prop] = true;
+}
+
+function createDraft(
+  previous: ControlDraft | undefined,
+  values: Pick<ControlDraft, 'value' | 'source' | 'baseline'>,
+): ControlDraft {
+  return { ...values, previous: retainedDraft(previous), outcome: 'pending' };
 }

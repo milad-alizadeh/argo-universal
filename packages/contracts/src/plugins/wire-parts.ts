@@ -25,7 +25,7 @@ import { wirePartReferences } from './wire-part-reference';
 
 export type { WirePartDefinition } from './wire-part-definition';
 
-export { listPartNames } from './list-wire-parts';
+export { listPartNames } from './list-expansion';
 
 const contentParts = [
   'Text',

@@ -25,13 +25,13 @@ function parseChange(
   schema: z.ZodType,
   local: LocalControl,
 ): void {
-  const parsed = schema.safeParse(
-    schema instanceof z.ZodUndefined ? undefined : input.payload,
-  );
+  const parsed = schema
+    .pipe(WireJson.optional())
+    .safeParse(schema instanceof z.ZodUndefined ? undefined : input.payload);
 
   if (!parsed.success) return;
 
-  const payload = parsedPayload(parsed.data);
+  const payload = parsed.data;
 
   const binding = bindingFor(input);
   void changeControl({ ...input, payload, binding }, local).catch(() => {});
@@ -101,12 +101,6 @@ function eventProps(
   if (change.payload === undefined) return { event: change.event };
 
   return { event: change.event, payload: change.payload };
-}
-
-function parsedPayload(
-  value: ReturnType<z.ZodType['parse']>,
-): WireJson | undefined {
-  return value === undefined ? undefined : WireJson.parse(value);
 }
 
 export function controlEvent(input: Pick<EventInput, 'path'>): string {

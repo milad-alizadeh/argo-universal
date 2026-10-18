@@ -28,8 +28,10 @@ function focusChanged(
   props: FieldCallbacks,
   blurOnLeave: ReturnType<typeof blurOnFocusLoss>,
 ): FieldText['onFocusChanged'] {
+  const onBlur = props.onBlur ?? ((): void => {});
+
   return (focused) => {
     if (focused) props.onFocus?.();
-    blurOnLeave(focused, props.onBlur ?? (() => {}));
+    blurOnLeave(focused, onBlur);
   };
 }

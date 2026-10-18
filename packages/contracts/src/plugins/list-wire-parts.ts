@@ -156,10 +156,3 @@ export const listWireParts = {
       .reference,
   },
 } as const;
-
-export const listPartNames = [
-  'List',
-  'VirtualList',
-  'Table',
-  'GroupedList',
-] as const;
