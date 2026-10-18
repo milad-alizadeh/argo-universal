@@ -49,6 +49,5 @@ function answerLabel(action: OverlayAction, confirmed: boolean): string {
   return label ?? defaultLabel(confirmed);
 }
 
-function defaultLabel(confirmed: boolean): string {
-  return confirmed ? 'Confirm' : 'Cancel';
-}
+const defaultLabel = (confirmed: boolean): string =>
+  confirmed ? 'Confirm' : 'Cancel';
