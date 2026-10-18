@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # The Plugin wire sends keyed patches, and kit parts turn stable once used
