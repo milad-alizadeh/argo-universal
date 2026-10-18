@@ -1,7 +1,3 @@
----
-status: accepted
----
-
 # List items follow each platform's settings conventions
 
 This amends [ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md) (Spec 0017 #959). ADR-0032 gives every platform the same `ListItem` slots and settings variants, and says the stock iOS and Material rows are the visual reference. Drawing the first `ListItem` master showed that three of its parts copy iOS and have no Android counterpart:

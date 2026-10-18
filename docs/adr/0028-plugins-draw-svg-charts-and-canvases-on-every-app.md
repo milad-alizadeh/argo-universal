@@ -1,7 +1,3 @@
----
-status: accepted
----
-
 # Plugins draw SVG, charts and canvases
 
 This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md) and [ADR-0027](0027-plugins-act-through-one-api-hook-core-and-replace-named-components.md) (owner, 2026-10-16, Spec 0016 #725). The kit cannot draw a diagram, a chart or a visualisation, and Plugins such as Atlas need all three. Claude Code mods have an `Svg` element, but only on Desktop. Argo adds `Svg`, `Chart` and `Canvas` to the kit on iOS, Android, web and desktop. All three start as proposed API, as ADR-0025 says. A council review (platforms, security, library health, fit with Argo's rules) shaped the first version.
