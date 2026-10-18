@@ -43,6 +43,7 @@ const Frame = z.object({
   method: z.string().optional(),
   id: MessageId.optional(),
   params: z.unknown().optional(),
+  result: z.unknown().optional(),
 });
 
 type Frame = z.infer<typeof Frame>;
@@ -72,7 +73,7 @@ const lineReader = (): ((chunk: Uint8Array) => string[]) => {
   };
 };
 
-// App E2E reads every request and notification the Agent received, and each answer it sent, in order.
+// App E2E reads every request, notification and reply the Agent received, and each answer it sent, in order.
 const logFrames = (
   record: (frame: Frame) => void,
 ): ((chunk: Uint8Array) => void) => {
@@ -83,8 +84,9 @@ const logFrames = (
   };
 };
 
-const received = logFrames(({ method, id, params }) => {
+const received = logFrames(({ method, id, params, result }) => {
   if (method) log({ agent: process.pid, method, id, params });
+  else if (id !== undefined) log({ agent: process.pid, replied: id, result });
 });
 
 const answered = logFrames(({ method, id }) => {

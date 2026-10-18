@@ -13,6 +13,22 @@ type FeedRequests = Pick<
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
+type PendingKey = 'pendingElicitation' | 'pendingPermission';
+
+// The Agent's open request of one kind, and the Turn it asks in.
+interface PendingRequest<Key extends PendingKey> {
+  request: NonNullable<SessionFeed['snapshot']>[Key] | undefined;
+  turnId: string | null | undefined;
+}
+
+const pending = <Key extends PendingKey>(
+  feed: SessionFeed,
+  key: Key,
+): PendingRequest<Key> => ({
+  request: feed.snapshot?.[key],
+  turnId: feed.snapshot?.activeTurnId,
+});
+
 // The Agent's open Permission request and Elicitation, each answered through the Server.
 export const useFeedRequests = (
   sessionId: string,
@@ -20,7 +36,7 @@ export const useFeedRequests = (
 ): FeedRequests => ({
   elicitation: useSessionElicitation({
     sessionId,
-    request: feed.snapshot?.pendingElicitation,
+    ...pending(feed, 'pendingElicitation'),
     resumeAfterCommand: feed.resumeAfterCommand,
   }),
   permission: usePermissionWithPlan(sessionId, feed),
@@ -33,7 +49,7 @@ function usePermissionWithPlan(
 ): FeedRequests['permission'] {
   const permission = useSessionPermission({
     sessionId,
-    request: feed.snapshot?.pendingPermission,
+    ...pending(feed, 'pendingPermission'),
     resumeAfterCommand: feed.resumeAfterCommand,
   });
 
