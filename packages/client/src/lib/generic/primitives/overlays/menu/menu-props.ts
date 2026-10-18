@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import type { ActionShortcut } from '#primitives/content/kbd';
 import type { IconName } from '../../../symbols/icon-names';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
@@ -8,7 +9,13 @@ type DerivedMenu<Value extends string = string> = KitProps<'Menu', Value>;
 type Actions = Extract<DerivedMenu, { actions: readonly unknown[] }>;
 
 // Kit-only: custom web row content.
-export type MenuAction = Actions['actions'][number] & { content?: ReactNode };
+export type MenuAction = Actions['actions'][number] & {
+  id?: string;
+  content?: ReactNode;
+  section?: { title?: string };
+  shortcut?: ActionShortcut;
+  tone?: 'danger';
+};
 
 export type MenuOption<Value extends string> = Extract<
   DerivedMenu<Value>,

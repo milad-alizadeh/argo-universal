@@ -27,27 +27,7 @@ export const actionsPartSchemas = {
     ],
   }),
   SplitButton: selectionPartSchemas.SplitButton,
-  ActionList: part(
-    'Actions offered by a page, row, or tile.',
-    z.object({
-      actions: z.array(
-        z.object({
-          label: stringLabel,
-          onPress,
-          shortcut: z.array(z.string()).optional(),
-        }),
-      ),
-    }),
-    {
-      label: 'Each action uses its required label as its accessible name.',
-      accessibility: {
-        keyboard:
-          'Arrow keys move through actions; Enter activates the focused action and Escape closes the menu.',
-        voiceOver:
-          'VoiceOver exposes a menu and announces each action label and its shortcut when one is supplied.',
-        talkBack:
-          'TalkBack exposes a menu and announces each action label and its shortcut when one is supplied.',
-      },
-    },
-  ),
+  ActionList: wireParts.ActionList,
+  'ActionList.Section': wireParts['ActionList.Section'],
+  Action: wireParts.Action,
 };

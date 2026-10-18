@@ -6,6 +6,7 @@ import {
 } from '@repo/contracts/plugins/wire-node-key';
 import type * as React from 'react';
 import { Fragment, cloneElement } from 'react';
+import { ActionShortcutScope } from '#primitives/actions/action-list';
 import { pluginEntries } from './plugin-entries';
 import type { RenderContext, PluginOnEvent } from './plugin-rendering';
 import { Unsupported } from './plugin-unsupported';
@@ -42,16 +43,22 @@ export function PluginTree({
   root,
   onEvent,
 }: PluginTreeProps): React.JSX.Element | null {
+  const context = useRenderContext(root, onEvent);
+
+  return (
+    <ActionShortcutScope>
+      <RenderNode node={root} context={context} />
+    </ActionShortcutScope>
+  );
+}
+
+function useRenderContext(
+  root: WireNode,
+  onEvent: PluginOnEvent,
+): RenderContext {
   const ui = usePluginUi(onEvent);
 
-  const context = {
-    onEvent: ui.send,
-    key: childNodeKey('', root.key),
-    ui,
-    slots: {},
-  };
-
-  return <RenderNode node={root} context={context} />;
+  return { onEvent: ui.send, key: childNodeKey('', root.key), ui, slots: {} };
 }
 
 function renderedChildren(
@@ -75,23 +82,33 @@ function renderedSlots(
   return Object.fromEntries(
     Object.entries(node.slots).map(([name, children]) => [
       name,
-      <Fragment key={name}>
-        {children.map((child) => slotNode(context, name, child))}
-      </Fragment>,
+      slotContent(context, name, children),
     ]),
   );
+}
+
+function slotContent(
+  context: RenderContext,
+  name: string,
+  children: WireNode[],
+): React.JSX.Element {
+  const nodes = children.map((child) => slotNode(context, name, child));
+  const first = nodes.at(0);
+
+  if (nodes.length === 1 && first) return first;
+
+  return <Fragment key={name}>{nodes}</Fragment>;
 }
 
 function slotNode(
   context: RenderContext,
   name: string,
   child: WireNode,
-): React.JSX.Element {
-  return (
-    <RenderNode
-      key={child.key}
-      node={child}
-      context={{ ...context, key: slotNodeKey(context.key, name, child.key) }}
-    />
-  );
+): React.JSX.Element | null {
+  const rendered = RenderNode({
+    node: child,
+    context: { ...context, key: slotNodeKey(context.key, name, child.key) },
+  });
+
+  return rendered ? cloneElement(rendered, { key: child.key }) : null;
 }

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { cn } from '#lib/generic/utils';
+import { ActionShortcutScope } from '#primitives/actions/action-list';
 import { List } from '#primitives/lists/list';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
@@ -62,9 +63,11 @@ function SessionsListSurface(
   props: SessionsListSurfaceProps,
 ): React.JSX.Element {
   return (
-    <View className={surfaceClassName(props.glide)} style={fillStyle}>
-      {props.children}
-    </View>
+    <ActionShortcutScope>
+      <View className={surfaceClassName(props.glide)} style={fillStyle}>
+        {props.children}
+      </View>
+    </ActionShortcutScope>
   );
 }
 

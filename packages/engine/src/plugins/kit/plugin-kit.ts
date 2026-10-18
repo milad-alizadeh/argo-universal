@@ -36,6 +36,10 @@ const exportsOf = {
   ...components,
   ...hooks,
   List,
+  ActionList: Object.assign((props: ElementProps) => jsx('ActionList', props), {
+    Section: 'ActionList.Section',
+  }),
+  ActionListSection: 'ActionList.Section',
   ListSection: 'List.Section',
   Fragment: React.Fragment,
 };

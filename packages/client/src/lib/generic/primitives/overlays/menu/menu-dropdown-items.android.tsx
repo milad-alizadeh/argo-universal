@@ -8,6 +8,11 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
+
+type DropdownMenuItemElementColors = NonNullable<
+  React.ComponentProps<typeof DropdownMenuItem>['elementColors']
+>;
+
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
 import { ItemLeadingIcon } from './menu-item-icon.android';
@@ -66,10 +71,10 @@ function MenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
   return (
     <DropdownMenuItem
       enabled={!item.disabled}
-      elementColors={useMaterialPalette().menuItemColors}
+      elementColors={useItemColors(item)}
       onClick={() => onChoose(item)}
     >
-      <ItemLeadingIcon icon={item.icon} />
+      <ItemLeadingIcon {...item} />
       <DropdownMenuItem.Text>
         <Text>{item.title}</Text>
       </DropdownMenuItem.Text>
@@ -90,3 +95,15 @@ function ItemCheck(props: { checked?: boolean }): React.JSX.Element | null {
 }
 
 MenuDropdownItems satisfies React.ComponentType<MenuDropdownItemsProps>;
+
+function useItemColors(item: NativeMenuItem): DropdownMenuItemElementColors {
+  const palette = useMaterialPalette();
+
+  return item.tone === 'danger'
+    ? {
+        ...palette.menuItemColors,
+        textColor: palette.roles.error,
+        leadingIconColor: palette.roles.error,
+      }
+    : palette.menuItemColors;
+}

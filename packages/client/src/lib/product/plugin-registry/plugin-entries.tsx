@@ -1,4 +1,9 @@
 import {
+  actionListProps,
+  actionProps,
+  actionSectionProps,
+} from '@repo/contracts/plugins/action-list-props';
+import {
   contentListProps,
   listSectionProps,
   listItemProps,
@@ -16,6 +21,7 @@ import {
 } from '@repo/contracts/plugins/kit';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { ActionList, Action } from '#primitives/actions/action-list';
 import { Button } from '#primitives/actions/button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
@@ -31,6 +37,20 @@ import type { PluginPart } from './plugin-parts';
 import { entry, handlerOf, type Entry } from './plugin-rendering';
 
 export const pluginEntries = {
+  ActionList: entry(actionListProps, (props, context, children) => (
+    <ActionList {...props} plugin trigger={context.slots.trigger}>
+      {children}
+    </ActionList>
+  )),
+  'ActionList.Section': entry(
+    actionSectionProps,
+    (props, _context, children) => (
+      <ActionList.Section {...props}>{children}</ActionList.Section>
+    ),
+  ),
+  Action: entry(actionProps, ({ onPress, ...props }, context) => (
+    <Action {...props} onPress={handlerOf(onPress, context) ?? noAction} />
+  )),
   EmptyState: entry(emptyStateProps, (props, context) => (
     <EmptyState {...props} action={context.slots.action} />
   )),
@@ -105,3 +125,5 @@ export const pluginEntries = {
 function contentSlot(slot: ReactElement | undefined): ReactElement | undefined {
   return slot ? <View className="self-start">{slot}</View> : undefined;
 }
+
+function noAction(): void {}

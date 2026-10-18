@@ -151,4 +151,12 @@ export const ProgressBar: PluginComponents['ProgressBar'];
 
 export const Pill: PluginComponents['Pill'];
 
+export const ActionList: PluginComponents['ActionList'] & {
+  Section: PluginComponents['ActionList.Section'];
+};
+
+export const ActionListSection: PluginComponents['ActionList.Section'];
+
+export const Action: PluginComponents['Action'];
+
 export const EmptyState: PluginComponents['EmptyState'];
