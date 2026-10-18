@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { pluginTap } from '#mocks/plugin-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
 it.each([
@@ -14,19 +15,20 @@ it.each([
       { id: 'list', fixture: 'keyed-list' },
     ]);
 
-    const { caller, createCaller } = await startEngineTestHost({ home });
+    const { createCaller } = await startEngineTestHost({ home });
     const controller = new AbortController();
     onTestFinished(() => controller.abort());
     const input = { pluginId: 'list', path };
 
-    const stream = (
-      await createCaller({ signal: controller.signal }).plugins.view(input)
-    )[Symbol.asyncIterator]();
+    const watching = createCaller({ signal: controller.signal });
+    const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
 
     let message = (await stream.next()).value;
 
     for (let index = 0; index < grows; index++) {
-      await caller.plugins.dispatch({ ...input, eventId: '0/grow:onPress' });
+      await watching.plugins.dispatch(
+        pluginTap(message, { ...input, key: '0/grow' }),
+      );
       message = (await stream.next()).value;
     }
 

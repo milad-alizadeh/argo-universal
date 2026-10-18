@@ -1,8 +1,9 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { pluginTap } from '#mocks/plugin-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-const slotEventId = '0#accessories/button:onPress';
+const slotKey = '0#accessories/button';
 
 const listFixture = { id: 'list', fixture: 'keyed-list' };
 
@@ -14,9 +15,8 @@ it('carries every node in fragment and array slots', async () => {
   onTestFinished(() => controller.abort());
   const input = { pluginId: 'list', path: '/slots' };
 
-  const stream = (
-    await createCaller({ signal: controller.signal }).plugins.view(input)
-  )[Symbol.asyncIterator]();
+  const watching = createCaller({ signal: controller.signal });
+  const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
 
   const initial = (await stream.next()).value;
   expect(initial).toMatchObject({
@@ -32,7 +32,7 @@ it('carries every node in fragment and array slots', async () => {
           {
             props: {
               label: 'Increment',
-              onPress: { $event: slotEventId },
+              onPress: { $event: 'onPress' },
             },
           },
           { props: { label: 'Count 0' } },
@@ -66,19 +66,21 @@ it.each([
   'patches $path without turning slots into props',
   async ({ path, ops }) => {
     const home = await createRuntimePlugins([listFixture]);
-    const { caller, createCaller } = await startEngineTestHost({ home });
+    const { createCaller } = await startEngineTestHost({ home });
     const controller = new AbortController();
     onTestFinished(() => controller.abort());
     const input = { pluginId: 'list', path };
 
-    const stream = (
-      await createCaller({ signal: controller.signal }).plugins.view(input)
-    )[Symbol.asyncIterator]();
+    const watching = createCaller({ signal: controller.signal });
+    const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
 
-    await stream.next();
-    await caller.plugins.dispatch({ ...input, eventId: slotEventId });
+    const initial = (await stream.next()).value;
+    await watching.plugins.dispatch(
+      pluginTap(initial, { ...input, key: slotKey }),
+    );
     expect((await stream.next()).value).toEqual({
       type: 'patch',
+      viewId: initial.viewId,
       revision: 2,
       ops,
     });

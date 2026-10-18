@@ -10,12 +10,12 @@ import type {
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
 import {
-  slotPath,
   type PluginDispatchInput,
   type PluginSlotInput,
   type SlotMessage,
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
+import type { RpcConnection } from '../rpc';
 import { callerOf } from './hooks/hook-rules';
 import { discoverPlugins } from './loader';
 import {
@@ -30,7 +30,7 @@ import {
   type PluginDescriptor,
   type PluginServiceDeps,
 } from './located-plugins';
-import { merged } from './streams';
+import { slotViews } from './slot-views';
 
 export type { PluginServiceDeps } from './located-plugins';
 
@@ -133,26 +133,33 @@ export class PluginService {
     return status?.state === 'running';
   }
 
-  async dispatch(input: PluginDispatchInput): Promise<void> {
-    requireRuntime(this.deps).views.dispatch(input);
+  async dispatch(
+    connection: RpcConnection,
+    input: PluginDispatchInput,
+  ): Promise<void> {
+    await requireRuntime(this.deps).views.dispatch(connection, input);
   }
 
   async *view(
     { pluginId, path }: { pluginId: string; path: string },
-    signal: AbortSignal,
+    connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
     const status = await this.activate(pluginId);
 
     if (status.state !== 'running')
       throw new Error(status.error ?? `Plugin ${pluginId} is not running`);
 
-    yield* requireRuntime(this.deps).views.watch(pluginId, { path }, signal);
+    yield* requireRuntime(this.deps).views.watch(
+      pluginId,
+      { path },
+      connection,
+    );
   }
 
   // Every enabled Plugin that declares the Slot fills it; one that fails to start is left out, and its failure is reported like any other.
   async *slot(
     slot: PluginSlotInput,
-    signal: AbortSignal,
+    connection: RpcConnection,
   ): AsyncGenerator<SlotMessage> {
     const declaring = (await locatePlugins(this.deps)).filter(({ plugin }) =>
       fills(plugin, slot),
@@ -161,21 +168,11 @@ export class PluginService {
     const pluginIds = (await this.started(declaring)).running;
 
     yield { type: 'contributors', pluginIds };
-    yield* merged(
-      pluginIds.map((pluginId) => this.contribution(pluginId, slot, signal)),
+    yield* slotViews(
+      requireRuntime(this.deps).views,
+      { pluginIds, slot },
+      connection,
     );
-  }
-
-  private async *contribution(
-    pluginId: string,
-    slot: PluginSlotInput,
-    signal: AbortSignal,
-  ): AsyncGenerator<SlotMessage> {
-    const path = slotPath(slot);
-    const views = requireRuntime(this.deps).views;
-
-    for await (const message of views.watch(pluginId, { path, slot }, signal))
-      yield { type: 'view', pluginId, path, message };
   }
 
   public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {

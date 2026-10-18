@@ -5,7 +5,6 @@ import {
 } from '@repo/contracts/plugins/wire';
 import {
   helloSlotSnapshot,
-  helloSlotWaveEventId,
   helloSlotWavePatch,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { expect, it } from 'vitest';
@@ -24,7 +23,7 @@ const projectDetails = (projectId: string): PluginSlotInput => ({
 it('streams hello in Project details as the wire fixtures describe and delivers a tap to its handler', async () => {
   const home = await createRuntimePlugins([]);
 
-  const { caller, createCaller } = await startEngineTestHost({
+  const { createCaller } = await startEngineTestHost({
     home,
     // The Server's own version, which `plugins/examples/hello` supports.
     version: '0.0.0',
@@ -33,11 +32,11 @@ it('streams hello in Project details as the wire fixtures describe and delivers 
 
   const controller = new AbortController();
 
-  const messages = (
-    await createCaller({ signal: controller.signal }).plugins.slot(
-      projectDetails('argo'),
-    )
-  )[Symbol.asyncIterator]();
+  const app = createCaller({ signal: controller.signal });
+
+  const messages = (await app.plugins.slot(projectDetails('argo')))[
+    Symbol.asyncIterator
+  ]();
 
   expect((await messages.next()).value).toEqual({
     type: 'contributors',
@@ -51,10 +50,13 @@ it('streams hello in Project details as the wire fixtures describe and delivers 
     message: helloSlotSnapshot,
   });
 
-  await caller.plugins.dispatch({
+  await app.plugins.dispatch({
     pluginId: 'hello',
     path: snapshot.path,
-    eventId: helloSlotWaveEventId,
+    revision: 1,
+    viewId: snapshot.message.viewId,
+    key: '0/1',
+    event: 'onPress',
   });
 
   expect((await messages.next()).value).toMatchObject({

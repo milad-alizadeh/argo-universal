@@ -1,4 +1,4 @@
-export { PluginTree } from './plugin-registry';
+export { PluginTree, type PluginOnEvent } from './plugin-registry';
 
 export { PluginSlot, type PluginSlotContribution } from './plugin-slot';
 

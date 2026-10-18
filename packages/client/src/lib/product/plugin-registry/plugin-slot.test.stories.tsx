@@ -1,7 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   helloSlotRoot,
-  helloSlotWaveEventId,
+  helloSlotWaveEvent,
 } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
@@ -63,7 +63,9 @@ export const OneContribution: Story = {
     await expect(sectionTitles(canvas)).toEqual(['Hello']);
     await expect(canvas.getByText('Hello from argo')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Wave' }));
-    await expect(hello.onEvent).toHaveBeenCalledWith(helloSlotWaveEventId);
+    await expect(hello.onEvent).toHaveBeenCalledWith('0/1', {
+      event: helloSlotWaveEvent,
+    });
   },
 };
 

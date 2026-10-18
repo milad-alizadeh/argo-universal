@@ -77,9 +77,9 @@
   --text-nav-action: 17px;
   --leading-nav-action: var(--leading-5_5);
   --font-weight-nav-action: var(--font-weight-normal);
-  /* A grouped row Argo draws, as the stock rows set it: Material's bodyLarge
-     title (16/24, +0.5) and bodyMedium detail (14/20, +0.25); iOS steps both
-     to its Body (17/22). The wide step is Body and Secondary. */
+  /* A row Argo draws: Material's bodyLarge title (16/24, +0.5) and
+     bodyMedium detail (14/20, +0.25). iOS takes the same sizes, without the
+     tracking, so phone type never differs. The wide step is Body and Secondary. */
   --text-row: var(--text-base);
   --leading-row: var(--leading-6);
   --tracking-row: 0px;
@@ -155,10 +155,6 @@
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
       --radius-grouped: 26px;
-      --text-row: 17px;
-      --leading-row: var(--leading-5_5);
-      --text-row-detail: 17px;
-      --leading-row-detail: var(--leading-5_5);
     }
     @variant android {
       --font-sans: sans-serif;
