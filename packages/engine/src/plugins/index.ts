@@ -20,8 +20,6 @@ export { PluginService } from './service';
 
 export type { PluginServiceDeps as PluginsDeps } from './service';
 
-export { validatePlugin } from './validate';
-
 export { readManifest as readPluginManifest } from './manifest';
 
 export { PluginStorage } from './storage';

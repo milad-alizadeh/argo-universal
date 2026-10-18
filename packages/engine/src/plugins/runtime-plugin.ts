@@ -11,7 +11,7 @@ export class RuntimePlugin {
   private answer: ((status: PluginStatus) => void) | null = null;
   private build: Promise<BuildContext> | null = null;
   private closed = false;
-  private source: string | undefined;
+  private source = { text: '', version: '' };
   private buildError: string | null = null;
   private generation = 0;
   private pendingReload = false;
@@ -92,7 +92,7 @@ export class RuntimePlugin {
   private bundle(): void {
     if (this.build) return this.loadBundled();
     this.build = watchPlugin(this.input.entry, {
-      loaded: (source) => this.reloaded(source),
+      loaded: (source, version) => this.reloaded(source, version),
       failed: (error) => this.buildFailed(error),
     });
     void this.build.catch((cause: unknown) =>
@@ -103,7 +103,7 @@ export class RuntimePlugin {
   private loadBundled(): void {
     if (this.buildError) return this.fail(this.buildError);
 
-    if (this.source !== undefined) this.load();
+    if (this.source.version !== '') this.load();
   }
 
   public async flushReload(): Promise<void> {
@@ -128,9 +128,9 @@ export class RuntimePlugin {
     return true;
   }
 
-  private reloaded(source: string): void {
-    if (this.skipReload(source)) return;
-    this.source = source;
+  private reloaded(source: string, version: string): void {
+    if (this.skipReload(version)) return;
+    this.source = { text: source, version };
     this.buildError = null;
     this.status = notStarted;
     this.input.changed(notStarted);
@@ -140,14 +140,14 @@ export class RuntimePlugin {
     this.load();
   }
 
-  private skipReload(source: string): boolean {
+  private skipReload(version: string): boolean {
     if (this.closed || this.defer()) return true;
 
-    return this.unchanged(source);
+    return this.unchanged(version);
   }
 
-  private unchanged(source: string): boolean {
-    return source === this.source && this.buildError === null;
+  private unchanged(version: string): boolean {
+    return version === this.source.version && this.buildError === null;
   }
 
   private stopWorker(): void {
@@ -163,7 +163,7 @@ export class RuntimePlugin {
       this.input.grant(this.granted);
       this.input.host.activate({
         ...this.input.entry,
-        source: this.source,
+        source: this.source.text,
         generation: this.generation,
       });
     } catch (error) {

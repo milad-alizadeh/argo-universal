@@ -8,10 +8,11 @@ import {
   type BuildOptions,
 } from 'esbuild';
 import { pluginFiles } from './dev-files';
+import { DevVersion } from './dev-version';
 import type { PluginEntry } from './runtime-protocol';
 
 type BundleCallbacks = {
-  loaded: (source: string) => void;
+  loaded: (source: string, version: string) => void;
   failed: (error: string) => void;
 };
 
@@ -37,11 +38,8 @@ export async function watchPlugin(
 ): Promise<BuildContext> {
   const build = await context({
     ...devBuildOptions,
-    stdin: {
-      contents: registrationSource(`./${entry.main}`),
-      resolveDir: entry.directory,
-    },
-    plugins: [pluginFiles(entry.directory), reloadPlugin(callbacks)],
+    stdin: entrySource(entry),
+    plugins: watchPlugins(entry.directory, callbacks),
   });
 
   await build.watch();
@@ -49,28 +47,48 @@ export async function watchPlugin(
   return build;
 }
 
+function watchPlugins(directory: string, callbacks: BundleCallbacks): Plugin[] {
+  const version = new DevVersion();
+
+  return [
+    pluginFiles(directory, version.record),
+    reloadPlugin({ callbacks, version }),
+  ];
+}
+
 export const registrationSource = (path: string): string =>
   `export { register } from ${JSON.stringify(path)};`;
 
-const reloadPlugin = (callbacks: BundleCallbacks): Plugin => ({
+type Completion = { callbacks: BundleCallbacks; version: DevVersion };
+
+const reloadPlugin = (completion: Completion): Plugin => ({
   name: 'argo-reload',
-  setup: (api): void => api.onEnd((result) => completed(result, callbacks)),
+  setup: (api): void => {
+    api.onStart(completion.version.reset);
+    api.onEnd((result) => completed(result, completion));
+  },
 });
 
-function completed(result: BuildResult, callbacks: BundleCallbacks): void {
+function completed(result: BuildResult, completion: Completion): void {
   if (result.errors.length) {
-    callbacks.failed(result.errors.map((error) => error.text).join('; '));
+    completion.callbacks.failed(
+      result.errors.map((error) => error.text).join('; '),
+    );
 
     return;
   }
 
-  loaded(result.outputFiles ?? [], callbacks);
+  loaded(result.outputFiles ?? [], completion);
 }
 
-function loaded(files: OutputFile[], callbacks: BundleCallbacks): void {
+function loaded(files: OutputFile[], completion: Completion): void {
   const output = files.at(0);
 
-  if (output) callbacks.loaded(output.text);
+  if (output)
+    completion.callbacks.loaded(
+      output.text,
+      completion.version.value(output.text),
+    );
 }
 
 export async function bundlePlugin(
@@ -80,10 +98,16 @@ export async function bundlePlugin(
     ...devBuildOptions,
     metafile: true,
     absWorkingDir: entry.directory,
-    stdin: {
-      contents: registrationSource(`./${entry.main}`),
-      resolveDir: entry.directory,
-    },
+    stdin: entrySource(entry),
     plugins: [pluginFiles(entry.directory)],
   });
+}
+
+function entrySource(
+  entry: Pick<PluginEntry, 'directory' | 'main'>,
+): BuildOptions['stdin'] {
+  return {
+    contents: registrationSource(`./${entry.main}`),
+    resolveDir: entry.directory,
+  };
 }

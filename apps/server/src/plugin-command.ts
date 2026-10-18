@@ -4,7 +4,8 @@ import {
   type PluginTest,
   type PluginTestCase,
 } from '@argo/plugin-kit/testing';
-import { readPluginManifest, validatePlugin } from '@repo/engine/plugins';
+import { validatePlugin } from '@repo/engine/plugin-validation';
+import { readPluginManifest } from '@repo/engine/plugins';
 import { z } from 'zod';
 import { withinPluginTestBudget } from './plugin-test-budget';
 import { loadPluginTests, pluginTestFiles } from './plugin-test-files';
