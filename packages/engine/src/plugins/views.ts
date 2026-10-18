@@ -99,7 +99,9 @@ export class PluginViews {
     opening: Opening,
     connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
-    const view = this.acquire(pluginId, opening, connection.id);
+    const reported = { ...opening, surface: connection.surface };
+
+    const view = this.acquire(pluginId, reported, connection.id);
 
     try {
       yield* this.adapt(view, connection);

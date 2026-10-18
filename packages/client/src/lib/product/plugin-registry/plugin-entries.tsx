@@ -12,6 +12,7 @@ import {
   groupedItemProps,
   stackProps,
   svgProps,
+  emptyStateProps,
 } from '@repo/contracts/plugins/kit';
 import type { Handler } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
@@ -21,6 +22,7 @@ import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
@@ -36,6 +38,9 @@ import { pluginSettingsEntries } from './plugin-settings-entries';
 
 export const pluginEntries = {
   ...pluginSettingsEntries,
+  EmptyState: entry(emptyStateProps, (props, context) => (
+    <EmptyState {...props} action={context.slots.action} />
+  )),
   List: entry(contentListProps, (props, context, children) => (
     <List {...props} empty={context.slots.empty}>
       {children}

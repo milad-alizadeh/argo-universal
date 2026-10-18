@@ -1,3 +1,8 @@
+export type {
+  PluginRenderContext,
+  PluginSurface,
+} from '@repo/contracts/plugins/kit';
+
 import type {
   KitSchemaProps,
   KitListItem,
@@ -152,3 +157,5 @@ export const Label: PluginComponents['Label'];
 export const ProgressBar: PluginComponents['ProgressBar'];
 
 export const Pill: PluginComponents['Pill'];
+
+export const EmptyState: PluginComponents['EmptyState'];

@@ -64,7 +64,6 @@
         "packages/client/src/lib/product/markdown/feed-code-block/code-block-body.tsx",
         "packages/client/src/lib/product/markdown/resource-heading.tsx",
         "packages/client/src/lib/product/markdown/table-token.tsx",
-        "packages/client/src/lib/product/placeholder.tsx",
         "packages/client/src/lib/product/settings-page.tsx"
       ],
       "rules": { "argo/kit-styling": "off" }

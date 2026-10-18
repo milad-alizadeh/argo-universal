@@ -9,6 +9,7 @@ import {
 } from './list-item-picker-props';
 
 type Size = { width: number; height: number };
+
 type MenuProps<Value extends string> = ListItemPickerProps<Value> & {
   size: Size;
 };
@@ -59,14 +60,27 @@ function Options<Value extends string>(
   return (
     <>
       {props.options.map((option) => (
-        <Toggle
-          key={option.value}
-          label={option.label}
-          isOn={option.value === props.value}
-          modifiers={[disabled(!!option.disabled)]}
-          onIsOnChange={() => props.onValueChange(option.value)}
-        />
+        <Choice key={option.value} {...props} option={option} />
       ))}
     </>
+  );
+}
+
+type ChoiceProps<Value extends string> = ListItemPickerProps<Value> & {
+  option: ListItemPickerProps<Value>['options'][number];
+};
+
+function Choice<Value extends string>({
+  option,
+  value,
+  onValueChange,
+}: ChoiceProps<Value>): ReactElement {
+  return (
+    <Toggle
+      label={option.label}
+      isOn={option.value === value}
+      modifiers={[disabled(!!option.disabled)]}
+      onIsOnChange={() => onValueChange(option.value)}
+    />
   );
 }
