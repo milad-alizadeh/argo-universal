@@ -4,11 +4,25 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSync, type BuildOptions } from 'esbuild';
-import type { Styles, XmlAST } from 'react-native-svg/lib/typescript/xml';
 import { type SvgAstNode, type SvgParser } from './svg-types';
 
+interface ParserStyles {
+  [property: string]: string;
+}
+
+type ParserPropValue = string | number | boolean | ParserStyles;
+
+interface ParserAstNode {
+  tag: string;
+  props: Record<string, ParserPropValue | undefined>;
+  children: Array<string | ParserAstNode>;
+}
+
 interface ParserModule {
-  parse: (source: string, middleware: (ast: XmlAST) => XmlAST) => XmlAST | null;
+  parse: (
+    source: string,
+    middleware: (ast: ParserAstNode) => ParserAstNode,
+  ) => ParserAstNode | null;
 }
 
 const buildDefaults: BuildOptions = {
@@ -21,7 +35,7 @@ const buildDefaults: BuildOptions = {
   logLevel: 'silent',
 };
 
-function treeOf(ast: XmlAST): SvgAstNode {
+function treeOf(ast: ParserAstNode): SvgAstNode {
   const props: SvgAstNode['props'] = {};
 
   for (const [name, value] of Object.entries(ast.props)) {
@@ -37,7 +51,7 @@ function treeOf(ast: XmlAST): SvgAstNode {
   };
 }
 
-function propValue(value: string | number | boolean | Styles): string {
+function propValue(value: ParserPropValue): string {
   if (typeof value !== 'object') return String(value);
 
   throw new Error('unsupported parsed SVG attribute value');

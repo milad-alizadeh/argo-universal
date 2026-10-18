@@ -48,6 +48,7 @@ import type * as PillKit from '#primitives/status/pill';
 import type * as ProgressBarKit from '#primitives/status/progress-bar';
 import type * as SelectedCheckKit from '#primitives/status/selected-check';
 import type * as SpinnerKit from '#primitives/status/spinner';
+import type * as SvgKit from '#primitives/visual';
 
 /*
  * Every type the primitives' index files export, keyed by its exported name. A props-shaped type goes in
@@ -132,6 +133,7 @@ export type Primitives = {
   SplitButtonProps: SplitButtonKit.SplitButtonProps;
   SplitMenuProps: SplitButtonKit.SplitMenuProps;
   StandaloneTextInputProps: TextInputKit.StandaloneTextInputProps;
+  SvgProps: SvgKit.SvgProps;
   SwitchProps: SwitchKit.SwitchProps;
   TextInputProps: TextInputKit.TextInputProps;
   TextProps: TextKit.TextProps;
