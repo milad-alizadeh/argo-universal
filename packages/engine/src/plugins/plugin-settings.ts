@@ -11,6 +11,7 @@ import {
 } from '../storage';
 import { pluginSettingsKeychainService, type Keychain } from './keychain';
 import { readPluginState, PluginStateJob } from './plugin-state';
+import { check, storedEntry, valueOf } from './setting-values';
 
 export type PluginSettingsDeps = {
   database: Database;
@@ -126,53 +127,4 @@ export class PluginSettings {
       ? this.deps.keychain.delete(service, key)
       : this.deps.keychain.set(service, key, value);
   }
-}
-
-type Stored = Record<string, PluginSettingValue>;
-
-type PlainField = Exclude<PluginSettingField, { type: 'secret' }>;
-
-// A toggle with no default is off; a text or picker with none is unset.
-const defaultOf = (field: PlainField): PluginSettingValue | undefined =>
-  field.type === 'toggle' ? (field.default ?? false) : field.default;
-
-const valueOf = (
-  field: PlainField,
-  stored: Stored,
-): PluginSettingValue | undefined => stored[field.key] ?? defaultOf(field);
-
-// A secret's value never leaves the Server, so the App gets only whether it is set.
-function storedEntry(
-  field: PluginSettingField,
-  stored: Stored,
-): [string, PluginSettingValue][] {
-  if (field.type === 'secret') return [];
-
-  const value = valueOf(field, stored);
-
-  return value === undefined ? [] : [[field.key, value]];
-}
-
-function check(field: PluginSettingField, value: PluginSettingValue): void {
-  if (field.type === 'toggle') return checkToggle(field.key, value);
-
-  checkText(field, value);
-}
-
-function checkToggle(key: string, value: PluginSettingValue): void {
-  if (typeof value !== 'boolean') throw new Error(`${key} takes on or off`);
-}
-
-function checkText(field: PluginSettingField, value: PluginSettingValue): void {
-  if (typeof value !== 'string') throw new Error(`${field.key} takes text`);
-
-  if (field.type === 'picker') checkOption(field, value);
-}
-
-function checkOption(
-  field: Extract<PluginSettingField, { type: 'picker' }>,
-  value: string,
-): void {
-  if (!field.options.some((option) => option.value === value))
-    throw new Error(`${value} is not an option of ${field.key}`);
 }

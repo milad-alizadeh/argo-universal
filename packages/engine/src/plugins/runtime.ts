@@ -110,6 +110,7 @@ export class PluginRuntime {
 
     if (!plugin) return;
     this.plugins.delete(pluginId);
+    this.views.end(pluginId);
     await plugin.stop();
   }
 

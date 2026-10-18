@@ -31,6 +31,7 @@ import type * as GroupedListKit from '#primitives/lists/grouped-list';
 import type * as GroupedListContentKit from '#primitives/lists/grouped-list-content';
 import type * as GroupedListItemKit from '#primitives/lists/grouped-list-item';
 import type * as GroupedListSectionKit from '#primitives/lists/grouped-list-section';
+import type * as GroupedListSwitchItemKit from '#primitives/lists/grouped-list-switch-item';
 import type * as VirtualListItemKit from '#primitives/lists/virtual-list-item';
 import type * as HostKit from '#primitives/native/host';
 import type * as AlertKit from '#primitives/overlays/alert';
@@ -81,6 +82,7 @@ export type Primitives = {
   GroupedListItemProps: GroupedListItemKit.GroupedListItemProps;
   GroupedListProps: GroupedListKit.GroupedListProps;
   GroupedListSectionProps: GroupedListSectionKit.GroupedListSectionProps;
+  GroupedListSwitchItemProps: GroupedListSwitchItemKit.GroupedListSwitchItemProps;
   HostProps: HostKit.HostProps;
   IconButtonProps: IconButtonKit.IconButtonProps;
   IconProps: IconKit.IconProps;
