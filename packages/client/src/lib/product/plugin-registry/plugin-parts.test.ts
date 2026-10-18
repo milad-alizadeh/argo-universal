@@ -3,6 +3,7 @@ import { pluginPartVersions } from './plugin-parts';
 
 it('advertises the versions of the parts this App draws', () => {
   expect(pluginPartVersions).toEqual({
+    Page: 1,
     ActionList: 1,
     'ActionList.Section': 1,
     Action: 1,

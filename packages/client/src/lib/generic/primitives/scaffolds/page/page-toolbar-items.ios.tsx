@@ -12,6 +12,7 @@ export function toolbarAction(
   return {
     icon: pageToolbarIcon(action.icon),
     accessibilityLabel: action.label,
+    children: action.label,
     disabled: action.disabled,
     onPress: action.onPress,
   };
@@ -21,11 +22,14 @@ export function toolbarButton(action: DeclaredAction): ReactElement {
   return <Stack.Toolbar.Button key={action.id} {...toolbarAction(action)} />;
 }
 
-export function overflowMenu(actions: DeclaredAction[]): ReactElement | null {
+export function overflowMenu(
+  actions: DeclaredAction[],
+  label: string,
+): ReactElement | null {
   if (!actions.length) return null;
 
   return (
-    <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel="More actions">
+    <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel={label}>
       {actions.map(menuAction)}
     </Stack.Toolbar.Menu>
   );

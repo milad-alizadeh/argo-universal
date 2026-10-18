@@ -120,13 +120,13 @@ function exampleProps(props: Example, state: ExampleState): PageProps {
   const search = props.search
     ? {
         label: 'Search Projects',
-        value: state.query,
-        onChangeText: state.onChangeText,
       }
     : undefined;
 
   return {
     title: 'Projects',
+    value: state.query,
+    onChangeText: state.onChangeText,
     search,
     primaryAction: primaryAction(props.primary, state.setResult),
     actions: exampleHeaderActions(props.actions, state.setResult),

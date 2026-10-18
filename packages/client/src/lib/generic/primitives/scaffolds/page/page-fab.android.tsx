@@ -13,7 +13,7 @@ type FabProps = { action: NonNullable<PageProps['primaryAction']> };
 export function PageFab({ action }: FabProps): ReactElement {
   return (
     <View
-      className="absolute right-4 bottom-safe-offset-4"
+      className="absolute z-20 right-4 bottom-safe-offset-4"
       pointerEvents={action.disabled ? 'none' : 'auto'}
       accessibilityState={{ disabled: action.disabled }}
     >

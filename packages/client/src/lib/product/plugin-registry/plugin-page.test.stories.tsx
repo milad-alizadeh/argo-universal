@@ -43,15 +43,22 @@ export const DispatchAndDraft: Story = {
     ).toHaveValue('regression');
     await waitFor(() =>
       expect(onEvent).toHaveBeenLastCalledWith('page', {
-        event: 'onAction',
-        payload: { path: ['search', 'onChangeText'], value: 'regression' },
+        event: 'onChangeText',
+        payload: 'regression',
       }),
     );
+    await canvas.findByText('Updated Issues');
+    await expect(
+      canvas.getByRole('textbox', { name: searchLabel }),
+    ).toHaveFocus();
+    await expect(
+      canvas.getByRole('textbox', { name: searchLabel }),
+    ).toHaveValue('regression');
     await userEvent.click(canvas.getByRole('button', { name: 'Close search' }));
     await waitFor(() =>
       expect(onEvent).toHaveBeenLastCalledWith('page', {
-        event: 'onAction',
-        payload: { path: ['search', 'onChangeText'], value: '' },
+        event: 'onChangeText',
+        payload: '',
       }),
     );
   },
@@ -66,26 +73,16 @@ function PatchedPage(): React.JSX.Element {
       onEvent={(key, interaction) => {
         onEvent(key, interaction);
 
-        if (
-          interaction.event === 'onAction' &&
-          interaction.payload.path.at(-1) === 'onChangeText'
-        )
-          setTree(serverPatch());
+        if (interaction.event === 'onChangeText')
+          setTree({
+            ...root,
+            props: {
+              ...root.props,
+              value: 'Server replacement',
+              title: 'Updated Issues',
+            },
+          });
       }}
     />
   );
-}
-
-function serverPatch(): WireNode {
-  return {
-    ...root,
-    props: {
-      ...root.props,
-      search: {
-        label: searchLabel,
-        value: 'Server replacement',
-        onChangeText: { $event: 'onChangeText' },
-      },
-    },
-  };
 }

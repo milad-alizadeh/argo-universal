@@ -4,11 +4,7 @@
   "props": {
     "title": "Issues",
     "search": {
-      "label": "Search Issues",
-      "value": "",
-      "onChangeText": {
-        "$event": "onChangeText"
-      }
+      "label": "Search Issues"
     },
     "primaryAction": {
       "label": "New Issue",
@@ -16,6 +12,10 @@
       "onPress": {
         "$event": "onPress"
       }
+    },
+    "value": "",
+    "onChangeText": {
+      "$event": "onChangeText"
     }
   },
   "children": [

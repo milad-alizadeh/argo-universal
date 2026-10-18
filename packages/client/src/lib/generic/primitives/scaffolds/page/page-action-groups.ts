@@ -1,28 +1,4 @@
-import { Children, isValidElement, type ReactNode } from 'react';
-import {
-  ActionList,
-  type ActionListProps,
-} from '#primitives/actions/action-list';
-import {
-  actionGroups,
-  orderedGroups,
-  type DeclaredAction,
-} from '#primitives/actions/action-list';
-
-export function pageActions(node: ReactNode): DeclaredAction[] {
-  return Children.toArray(node).flatMap(declaredActions);
-}
-
-function declaredActions(node: ReactNode): DeclaredAction[] {
-  if (!isValidElement<ActionListProps>(node)) return [];
-
-  if (node.type === ActionList)
-    return orderedGroups(actionGroups(node.props.children)).flatMap(
-      (group) => group.actions,
-    );
-
-  return pageActions(node.props.children);
-}
+import type { DeclaredAction } from '#primitives/actions/action-list';
 
 export function headerActions(
   actions: DeclaredAction[],

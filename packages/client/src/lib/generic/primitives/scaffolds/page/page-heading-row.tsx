@@ -16,7 +16,7 @@ export function HeadingRow(props: PageProps): ReactElement {
     actions: <HeadingActions {...props} />,
   };
 
-  if (props.search) return <SearchHeading {...content} search={props.search} />;
+  if (props.search) return <SearchHeading {...content} page={props} />;
 
   return <PlainHeading {...content} />;
 }
@@ -50,12 +50,12 @@ function PageTitle({ title }: Pick<PageProps, 'title'>): ReactElement {
 }
 
 function SearchHeading(
-  props: HeadingContent & { search: NonNullable<PageProps['search']> },
+  props: HeadingContent & { page: PageProps },
 ): ReactElement {
   return (
     <View className="h-10 flex-row items-center">
       <SearchField
-        {...searchQuery(props.search)}
+        {...searchQuery(props.page)}
         title={props.title}
         actions={props.actions}
       />
@@ -64,12 +64,17 @@ function SearchHeading(
 }
 
 function searchQuery(
-  search: NonNullable<PageProps['search']>,
-): Pick<SearchFieldProps, 'label' | 'value' | 'onChangeText'> {
+  page: PageProps,
+): Pick<
+  SearchFieldProps,
+  'label' | 'value' | 'onChangeText' | 'onFocus' | 'onBlur'
+> {
   return {
-    label: search.label,
-    value: search.value ?? '',
-    onChangeText: search.onChangeText ?? ignoreSearch,
+    label: searchLabel(page),
+    value: searchValue(page),
+    onChangeText: page.onChangeText ?? ignoreSearch,
+    onFocus: page.onFocus,
+    onBlur: page.onBlur,
   };
 }
 
@@ -86,3 +91,11 @@ function primaryButton(
 }
 
 function ignoreSearch(): void {}
+
+function searchLabel(page: PageProps): string {
+  return page.search?.label ?? 'Search';
+}
+
+function searchValue(page: PageProps): string {
+  return page.value ?? '';
+}

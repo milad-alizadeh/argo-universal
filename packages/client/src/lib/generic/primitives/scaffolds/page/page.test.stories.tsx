@@ -40,13 +40,11 @@ function SearchablePage(): React.JSX.Element {
   return (
     <Page
       title="Projects"
-      search={{
-        label: searchLabel,
-        value,
-        onChangeText: (text) => {
-          onChangeText(text);
-          changed(text);
-        },
+      search={{ label: searchLabel }}
+      value={value}
+      onChangeText={(text) => {
+        onChangeText(text);
+        changed(text);
       }}
     >
       <Text>{value || 'All Projects'}</Text>

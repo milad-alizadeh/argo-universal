@@ -12,8 +12,8 @@ export {
 
 export type { ActionShortcut } from './action-shortcuts';
 
-export {
-  actionGroups,
-  orderedGroups,
-  type DeclaredAction,
-} from './action-declarations';
+export { type DeclaredAction } from './action-declarations';
+
+export { ActionListHeaderContext } from './action-header-context';
+
+export type { ActionGroup } from './action-declarations';

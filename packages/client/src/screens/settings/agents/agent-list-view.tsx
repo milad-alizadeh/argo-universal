@@ -55,11 +55,9 @@ function AgentsPage(props: ListProps): React.JSX.Element {
 function pageProps(props: ListProps): PageProps {
   return {
     title: agentsTitle,
-    search: {
-      label: searchLabel,
-      value: props.search,
-      onChangeText: props.onSearch,
-    },
+    search: { label: searchLabel },
+    value: props.search,
+    onChangeText: props.onSearch,
     renderHeader: pageHeader(props),
   };
 }

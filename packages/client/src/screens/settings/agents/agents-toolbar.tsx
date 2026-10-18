@@ -61,5 +61,5 @@ function FilterPillRow(props: PillRowProps): React.JSX.Element {
 
 // A phone's row spans the screen, so the pills scroll out to its edges; the row's padding holds them at the page's margin at rest.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
-  return <FilterPillRow {...props} contentClassName="-mx-2 wide:px-0" />;
+  return <FilterPillRow {...props} contentClassName="wide:px-0" />;
 }

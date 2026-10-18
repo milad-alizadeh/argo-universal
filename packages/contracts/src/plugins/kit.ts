@@ -78,7 +78,3 @@ export function versionsOf(types: readonly string[]): PartVersions {
 export const currentPartVersions = versionsOf(Object.keys(wireParts));
 
 export * from './settings-row-props';
-
-export { pageProps } from './page-wire-part';
-
-export type { WirePartDefinition } from './wire-parts';

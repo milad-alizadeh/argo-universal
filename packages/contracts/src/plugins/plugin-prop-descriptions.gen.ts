@@ -615,6 +615,10 @@ export type WireSchemaHints = {
     "title": PropValue<"Page", "title">;
     /** Native search on phones; expanding header search on web. */
     "search": PropValue<"Page", "search">;
+    /** The search query; drafts stay in the App. */
+    "value": PropValue<"Page", "value">;
+    /** Receive the search query when it changes. */
+    "onChangeText": PropValue<"Page", "onChangeText">;
     /** The main Action: a header button, iOS toolbar item, or Android FAB. */
     "primaryAction": PropValue<"Page", "primaryAction">;
   };

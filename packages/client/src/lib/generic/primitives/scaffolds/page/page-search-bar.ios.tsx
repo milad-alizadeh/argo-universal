@@ -1,38 +1,24 @@
 import { Stack } from 'expo-router';
-import type { ComponentProps, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import type { PageProps } from './page-props';
 import { docksSearch } from './page-search-placement';
 import { toolbarAction } from './page-toolbar-items.ios';
+import { usePageSearchBar } from './use-page-search-bar';
 
-type SearchProps = {
-  search: NonNullable<PageProps['search']>;
-  action: PageProps['primaryAction'];
-};
+const placement = {
+  placement: docksSearch ? 'integrated' : 'stacked',
+  hideNavigationBar: docksSearch,
+  hideWhenScrolling: false,
+  autoCapitalize: 'none',
+} as const;
 
-export function PageSearchBar({ search, action }: SearchProps): ReactElement {
+export function PageSearchBar(props: PageProps): ReactElement {
   return (
     <>
-      <Stack.SearchBar {...searchOptions(search)} />
-      {docksSearch ? bottomToolbar(action) : null}
+      <Stack.SearchBar {...usePageSearchBar(props)} {...placement} />
+      {docksSearch ? bottomToolbar(props.primaryAction) : null}
     </>
   );
-}
-
-function searchOptions(
-  search: SearchProps['search'],
-): ComponentProps<typeof Stack.SearchBar> {
-  const clear = (): void => search.onChangeText?.('');
-
-  return {
-    placeholder: search.label,
-    onChangeText: (event) => search.onChangeText?.(event.nativeEvent.text),
-    onClose: clear,
-    onCancelButtonPress: clear,
-    placement: docksSearch ? 'integrated' : 'stacked',
-    hideNavigationBar: docksSearch,
-    hideWhenScrolling: false,
-    autoCapitalize: 'none',
-  };
 }
 
 function bottomToolbar(action: PageProps['primaryAction']): ReactElement {

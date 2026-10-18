@@ -1,7 +1,10 @@
-import type { ReactElement } from 'react';
+import { use, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
+import { useWide } from '#lib/generic/use-wide/use-wide';
+import { cn } from '#lib/generic/utils';
 import { ActionShortcutScope } from '#primitives/actions/action-list';
+import { PageAccessory } from './page-accessory';
 import { usePageColumn } from './page-column';
 import { PageHeading } from './page-heading';
 import { PageNavigation } from './page-navigation';
@@ -9,11 +12,11 @@ import type { PageProps } from './page-props';
 import { usePageSearch } from './use-page-search';
 
 export function Page(props: PageProps): ReactElement {
-  const search = usePageSearch(props.search);
+  const search = usePageSearch(props);
 
   return (
     <ActionShortcutScope>
-      <PageSurface {...props} search={search} />
+      <PageSurface {...props} {...search} />
     </ActionShortcutScope>
   );
 }
@@ -26,17 +29,41 @@ function PageSurface(props: PageProps): ReactElement {
     >
       <PageNavigation {...props} />
       <PageHeading {...props} />
-      <PageBody>{props.children}</PageBody>
+      <PageBody {...props} />
+      <PageAccessory {...props} />
     </View>
   );
 }
 
-function PageBody({ children }: Pick<PageProps, 'children'>): ReactElement {
-  const column = usePageColumn();
+function PageBody(props: PageProps): ReactElement {
+  const { column, className } = usePageBody(props);
 
   return (
-    <View className="min-h-0 flex-1">
-      <ScrollColumnContext value={column}>{children}</ScrollColumnContext>
+    <View className={className}>
+      <ScrollColumnContext value={column}>{props.children}</ScrollColumnContext>
     </View>
+  );
+}
+
+function usePageBody(props: PageProps): PageBodyStyle {
+  const wide = useWide();
+  const inherited = use(ScrollColumnContext);
+  const column = usePageColumn();
+
+  return {
+    column: wide ? column : inherited,
+    className: bodyClass(props, wide),
+  };
+}
+
+interface PageBodyStyle {
+  column: React.ContextType<typeof ScrollColumnContext>;
+  className: string;
+}
+
+function bodyClass(props: PageProps, wide: boolean): string {
+  return cn(
+    'min-h-0 flex-1',
+    !wide && props.primaryAction && 'android:pb-safe-offset-22',
   );
 }

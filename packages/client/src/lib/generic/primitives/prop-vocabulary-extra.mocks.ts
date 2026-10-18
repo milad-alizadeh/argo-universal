@@ -7,6 +7,7 @@ import type * as SvgKit from '#primitives/visual';
 
 export type AdditionalPrimitives = {
   PageProps: PageProps;
+  ActionGroup: ActionListKit.ActionGroup;
   DeclaredAction: ActionListKit.DeclaredAction;
   KbdProps: KbdKit.KbdProps;
   ActionListProps: ActionListKit.ActionListProps;

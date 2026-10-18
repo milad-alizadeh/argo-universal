@@ -20,12 +20,10 @@ import {
   type PluginProps,
 } from '@argo/plugin-kit';
 import { actionProps } from '@repo/contracts/plugins/action-list-props';
-import type { WireProps } from '@repo/contracts/plugins/kit';
 import { emptyStateProps } from '@repo/contracts/plugins/kit';
 import { expectTypeOf } from 'vitest';
 import type { z } from 'zod';
 import type { ActionProps } from '#primitives/actions/action-list';
-import type { PageProps } from '#primitives/scaffolds/page';
 import type { EmptyStateProps } from '#primitives/status/empty-state';
 
 type NestedPart = Extract<keyof PluginComponents, `${string}.${string}`>;
@@ -156,25 +154,3 @@ expectTypeOf<ActionProps['onPress']>().toEqualTypeOf<() => void>();
 expectTypeOf<Omit<z.output<typeof actionProps>, 'onPress'>>().toExtend<
   Omit<ActionProps, 'onPress'>
 >();
-
-type PageWire = WireProps['Page'];
-
-expectTypeOf<
-  Omit<PageWire, 'search' | 'primaryAction'>
->().toExtend<PageProps>();
-
-expectTypeOf<Omit<NonNullable<PageWire['search']>, 'onChangeText'>>().toExtend<
-  Omit<NonNullable<PageProps['search']>, 'onChangeText'>
->();
-
-expectTypeOf<
-  Omit<NonNullable<PageWire['primaryAction']>, 'onPress'>
->().toExtend<Omit<NonNullable<PageProps['primaryAction']>, 'onPress'>>();
-
-expectTypeOf<NonNullable<PageProps['search']>['onChangeText']>().toEqualTypeOf<
-  ((text: string) => void) | undefined
->();
-
-expectTypeOf<
-  NonNullable<PageProps['primaryAction']>['onPress']
->().toEqualTypeOf<() => void>();

@@ -33,7 +33,9 @@ function pageProps(props: SearchedProps): PageProps {
   return {
     title: projectsTitle,
     primaryAction: addProject,
-    search: pageSearch(props),
+    search: { label: pageSearch(props).label },
+    value: props.search,
+    onChangeText: props.onSearch,
     renderHeader: pageHeader(props),
   };
 }
@@ -49,7 +51,7 @@ function ProjectCaption({ caption }: { caption?: string }): React.ReactNode {
 
   return (
     <PageColumn>
-      <View className="pb-6">
+      <View className="hidden pb-6 wide:flex">
         <Text tone="muted">{caption}</Text>
       </View>
     </PageColumn>

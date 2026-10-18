@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 
 interface PageColumnStyle {
   maxWidth: number;
@@ -11,7 +12,7 @@ interface PageColumnStyle {
 export function usePageColumn(): PageColumnStyle {
   const [width, padding] = useCSSVariable([
     '--container-column',
-    '--spacing-6',
+    useWide() ? '--spacing-6' : '--spacing-4',
   ]).map(tokenNumber);
 
   const inset = padding ?? 0;

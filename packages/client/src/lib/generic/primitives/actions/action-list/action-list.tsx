@@ -7,20 +7,41 @@ import {
   type ActionGroup,
   type DeclaredAction,
 } from './action-declarations';
+import { useHeaderRegistration } from './action-header-context';
 import { ActionListBody } from './action-list-body';
 import type { ActionListProps } from './action-list-props';
 import { useActionShortcuts } from './action-shortcut-scope';
 
 function ActionListRoot(props: ActionListProps): ReactElement | null {
-  const { groups, id, actions } = useDeclaredActions(props);
+  const declared = useDeclaredActions(props);
 
-  if (!actions.length) return props.trigger ?? null;
+  const header = useHeaderRegistration({
+    ...declared,
+    label: props.accessibilityLabel,
+    context: props.variant === 'context',
+  });
 
-  return (
-    <View nativeID={id}>
-      <ActionListBody {...props} groups={hintedGroups(groups, actions)} />
-    </View>
+  return header ? null : (
+    <DeclaredActionsBody props={props} declared={declared} />
   );
+}
+
+function DeclaredActionsBody({
+  props,
+  declared,
+}: {
+  props: ActionListProps;
+  declared: DeclaredActions;
+}): ReactElement | null {
+  if (!declared.actions.length) return props.trigger ?? null;
+
+  const body = (
+    <ActionListBody
+      {...{ ...props, groups: hintedGroups(declared.groups, declared.actions) }}
+    />
+  );
+
+  return <View nativeID={declared.id}>{body}</View>;
 }
 
 interface DeclaredActions {

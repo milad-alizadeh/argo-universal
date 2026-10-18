@@ -1,9 +1,7 @@
 import { NavigationContext } from 'expo-router/react-navigation';
 import { use, type ReactElement } from 'react';
-import { View } from 'react-native';
 import { useWide } from '#lib/generic/use-wide/use-wide';
-import { PageColumn } from './page-column';
-import { HeadingRow } from './page-heading-row';
+import { PageHeadingBody } from './page-heading-body';
 import type { PageProps } from './page-props';
 
 export function PageHeading(props: PageProps): ReactElement | null {
@@ -12,13 +10,7 @@ export function PageHeading(props: PageProps): ReactElement | null {
 
   if (!wide && externalHeader) return null;
 
-  return (
-    <View className="py-6">
-      <PageColumn>
-        <HeadingRow {...props} />
-      </PageColumn>
-    </View>
-  );
+  return <PageHeadingBody {...props} />;
 }
 
 function useExternalHeader(props: PageProps): boolean {

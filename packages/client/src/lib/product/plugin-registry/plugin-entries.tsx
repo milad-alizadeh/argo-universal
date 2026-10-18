@@ -1,4 +1,3 @@
-import { Page } from '#primitives/scaffolds/page';
 import type { ComponentType } from 'react';
 import { ActionList, Action } from '#primitives/actions/action-list';
 import { Button } from '#primitives/actions/button';
@@ -15,6 +14,7 @@ import type { KitProps } from '#primitives/kit-props';
 import { Stack, Row, Column } from '#primitives/layout/stack';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';

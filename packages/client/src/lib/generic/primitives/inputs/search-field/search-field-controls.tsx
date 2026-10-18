@@ -10,6 +10,8 @@ export type LayoutHandler = NonNullable<
 >;
 
 export interface ControlsProps {
+  onFocus?: React.ComponentProps<typeof TextInput>['onFocus'];
+  onBlur?: React.ComponentProps<typeof TextInput>['onBlur'];
   label: string;
   value: string;
   onChangeText: (value: string) => void;
