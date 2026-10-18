@@ -59,7 +59,8 @@ export function RowContent(props: ResolvedItemProps): React.JSX.Element {
 }
 
 /*
- * iOS draws a stock Form row's disclosure chevron; Material's trailing slot holds a 24dp icon.
+ * iOS draws a stock Form row's disclosure chevron; Material's trailing slot holds a 24dp icon (the
+ * `grouped-row` role) at every width.
  * Measured against a stock iOS 26 NavigationLink, its chevron sits 2pt further from the value and
  * 1.5pt further from the trailing edge than a symbol at the row's end.
  */
@@ -72,7 +73,11 @@ function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
 
   return (
     <Row modifiers={[...rowDisclosureAccessibility(), ...disclosureInsets]}>
-      <NativeSymbol name="disclosure" role={ios ? 'chevron' : 'row'} muted />
+      <NativeSymbol
+        name="disclosure"
+        role={ios ? 'chevron' : 'grouped-row'}
+        muted
+      />
     </Row>
   );
 }
