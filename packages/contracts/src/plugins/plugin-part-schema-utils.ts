@@ -127,7 +127,7 @@ function contentRules(
 ): Pick<WirePartDefinition, 'children' | 'childParts' | 'slots'> {
   return {
     children: config.children,
-    childParts: config.childParts,
+    ...(config.childParts ? { childParts: config.childParts } : {}),
     slots: config.slots,
   };
 }
