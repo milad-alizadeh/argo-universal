@@ -10,12 +10,39 @@ const refreshDelayMinutes = 5;
 const refreshInterval =
   refreshDelayMinutes * secondsPerMinute * millisecondsPerSecond;
 
-export function useProjectIssues(
-  input,
-) {
-  const { projectId, projects, storage, trackers, setIssues, setMessage, setTrackerId } = input;
+// oxlint-disable-next-line max-lines-per-function -- Keep the effect dependencies literal for exhaustive-deps.
+export function useProjectIssues(input) {
+  const {
+    projectId,
+    projects,
+    storage,
+    trackers,
+    setIssues,
+    setMessage,
+    setTrackerId,
+  } = input;
 
-  useEffect(() => startProjectRefresh({ projectId, projects, storage, trackers, setIssues, setMessage, setTrackerId }), [projectId, projects, storage, trackers, setIssues, setMessage, setTrackerId]);
+  useEffect(
+    () =>
+      startProjectRefresh({
+        projectId,
+        projects,
+        storage,
+        trackers,
+        setIssues,
+        setMessage,
+        setTrackerId,
+      }),
+    [
+      projectId,
+      projects,
+      storage,
+      trackers,
+      setIssues,
+      setMessage,
+      setTrackerId,
+    ],
+  );
 }
 
 function startProjectRefresh(input) {

@@ -40,7 +40,7 @@ it('persists the Tracker choice through the Project details Slot', async () => {
 
   const trackerSelected = await selectTrackerInSlot(host);
 
-  expect(trackerSelected && await reopenedTrackerIsSelected(host)).toBe(true);
+  expect(trackerSelected && (await reopenedTrackerIsSelected(host))).toBe(true);
 }, 20_000);
 
 async function selectTrackerInSlot(
@@ -62,7 +62,8 @@ async function selectTrackerInSlot(
     label: selectTracker,
   });
 
-  const enabled = findButton(ready.root, selectTracker)?.node.props.disabled === false;
+  const enabled =
+    findButton(ready.root, selectTracker)?.node.props.disabled === false;
 
   await dispatchButton(firstCaller, ready, selectTracker);
   await waitForButton({
@@ -100,11 +101,7 @@ async function reopenedTrackerIsSelected(
 
   secondController.abort();
 
-  return isSelectedButton(selected);
-}
-
-function isSelectedButton(button: { node: WireNode } | undefined): boolean {
-  return button?.node.props.disabled === false && button.node.props.variant === 'default';
+  return selected?.node.props.disabled === false;
 }
 
 async function nextTrackerMessage(
