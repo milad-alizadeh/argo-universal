@@ -531,9 +531,6 @@ export type WireSchemaHints = {
     /** Renders one keyed child for each item; receives the item and its index. */
     "renderItem": PropValue<"Table", "renderItem">;
   };
-  "Metadata": {
-
-  };
   "Alert": {
     /** Whether the alert is open. */
     "open": PropValue<"Alert", "open">;
@@ -609,6 +606,12 @@ export type WireSchemaHints = {
     "tone": PropValue<"Toast", "tone">;
     /** Action offered on the web. */
     "action": PropValue<"Toast", "action">;
+  };
+  "Metadata": {
+    /** Optional section heading. */
+    "title": PropValue<"Metadata", "title">;
+    /** Read-only fields in their reading order. */
+    "rows": PropValue<"Metadata", "rows">;
   };
   "Page": {
     /** The visible and accessible label. */

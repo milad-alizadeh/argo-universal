@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { metadataProps } from '../metadata-props';
 import {
   part,
   handler,
@@ -8,6 +9,10 @@ import {
 } from '../plugin-part-schema-utils';
 
 export const scaffoldsPartSchemas = {
+  Metadata: part(
+    'Read-only label/value fields for a detail view.',
+    metadataProps,
+  ),
   Page: part(
     'A page scaffold with a title, header actions, and optional search.',
     z.object({
