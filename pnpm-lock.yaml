@@ -1312,6 +1312,9 @@ importers:
       json-schema-to-typescript:
         specifier: 'catalog:'
         version: 16.0.0
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

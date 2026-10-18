@@ -7,6 +7,8 @@ import {
   progressBarProps,
   pillProps,
 } from './kit-props';
+import { progressBarAccessibility } from './part-accessibility-metadata';
+import { part } from './plugin-part-schema-utils';
 
 export const listWireParts = {
   List: {
@@ -16,6 +18,13 @@ export const listWireParts = {
     children: true,
     slots: { empty: ['Text', 'Stack'] },
     events: {},
+    reference: part(
+      'A content list with plain, grouped or card rows.',
+      contentListProps,
+      {
+        children: true,
+      },
+    ).reference,
   },
   'List.Section': {
     props: listSectionProps,
@@ -24,6 +33,13 @@ export const listWireParts = {
     children: true,
     slots: { leading: ['Text', 'Label'], trailing: ['Text', 'Label', 'Pill'] },
     events: {},
+    reference: part(
+      'A titled List section with optional subtitle and footer.',
+      listSectionProps,
+      {
+        children: true,
+      },
+    ).reference,
   },
   ListItem: {
     props: listItemProps,
@@ -36,6 +52,15 @@ export const listWireParts = {
       meta: ['Label', 'Pill'],
     },
     events: { onPress: z.undefined() },
+    reference: part(
+      'A slotted list row with up to three text lines.',
+      listItemProps,
+      {
+        container: true,
+        label:
+          'The title and optional value supply the accessible name; accessibilityLabel overrides it.',
+      },
+    ).reference,
   },
   Label: {
     props: labelProps,
@@ -44,6 +69,10 @@ export const listWireParts = {
     children: false,
     slots: {},
     events: {},
+    reference: part('Short text with an icon and semantic tone.', labelProps, {
+      label:
+        'The text supplies the accessible name; accessibilityLabel overrides it.',
+    }).reference,
   },
   ProgressBar: {
     props: progressBarProps,
@@ -52,6 +81,13 @@ export const listWireParts = {
     children: false,
     slots: {},
     events: {},
+    reference: part(
+      'A determinate progress indicator with an optional running sweep.',
+      progressBarProps,
+      {
+        accessibility: progressBarAccessibility,
+      },
+    ).reference,
   },
   Pill: {
     props: pillProps,
@@ -60,5 +96,7 @@ export const listWireParts = {
     children: false,
     slots: {},
     events: {},
+    reference: part('Static short text with a semantic tone.', pillProps)
+      .reference,
   },
 } as const;

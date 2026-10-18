@@ -6,6 +6,7 @@
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "db:generate": "pnpm --filter @repo/db db:generate",
+    "docs:build": "pnpm --filter @repo/contracts generate:plugin-reference",
     "dev": "turbo run dev",
     "dev:storybook": "pnpm --filter @repo/storybook storybook",
     "format": "oxfmt",
