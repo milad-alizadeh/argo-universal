@@ -5,12 +5,8 @@
       "xml": "<svg viewBox=\"0 0 240 96\"><defs><linearGradient id=\"tone\"><stop offset=\"0\" stop-color=\"currentColor\"/><stop offset=\"1\" stop-color=\"currentColor\"/></linearGradient></defs><path d=\"M4 48 H60\" stroke=\"currentColor\"/><rect x=\"60\" y=\"30\" width=\"42\" height=\"36\" fill=\"url(#tone)\"/></svg>"
     },
     {
-      "name": "script-like text in CDATA",
-      "xml": "<svg viewBox=\"0 0 16 16\"><text x=\"0\" y=\"12\"><![CDATA[<script>alert(1)</script>]]></text></svg>"
-    },
-    {
-      "name": "script-like markup in a comment",
-      "xml": "<svg viewBox=\"0 0 16 16\"><!-- <script>alert(1)</script> --><circle cx=\"8\" cy=\"8\" r=\"6\"/></svg>"
+      "name": "plain text in CDATA",
+      "xml": "<svg viewBox=\"0 0 16 16\"><text x=\"0\" y=\"12\"><![CDATA[plain text]]></text></svg>"
     }
   ],
   "refused": [
@@ -63,6 +59,16 @@
       "name": "uppercase script element",
       "reason": "element",
       "xml": "<svg><SCRIPT/></svg>"
+    },
+    {
+      "name": "script tag in CDATA",
+      "reason": "cdata markup",
+      "xml": "<svg><text><![CDATA[<script>alert(1)</script>]]></text></svg>"
+    },
+    {
+      "name": "script tag in comment",
+      "reason": "comment markup",
+      "xml": "<svg><!-- <script>alert(1)</script> --><circle/></svg>"
     },
     {
       "name": "namespaced image element",

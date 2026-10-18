@@ -177,6 +177,8 @@ function scanMarkup(source: string): ScanResult {
       const end = source.indexOf('-->', index + 4);
 
       if (end < 0) throw new Error('malformed XML comment');
+      if (containsTagMarkup(source.slice(index + 4, end)))
+        throw new Error('tag markup in XML comment refused');
       index = end + 3;
       continue;
     }
@@ -185,6 +187,8 @@ function scanMarkup(source: string): ScanResult {
       const end = source.indexOf(']]>', index + 9);
 
       if (end < 0) throw new Error('malformed CDATA section');
+      if (containsTagMarkup(source.slice(index + 9, end)))
+        throw new Error('tag markup in CDATA refused');
       index = end + 3;
       continue;
     }
@@ -235,6 +239,10 @@ function scanMarkup(source: string): ScanResult {
 
   if (depth !== 0) throw new Error('unclosed element');
   return { roots, declarations };
+}
+
+function containsTagMarkup(source: string): boolean {
+  return /<\s*\/?\s*[A-Za-z][A-Za-z0-9_.:-]*(?:\s|\/?>)/.test(source);
 }
 
 function tagEnd(source: string, from: number): number {

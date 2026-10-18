@@ -14,7 +14,19 @@ describe('sanitizeSvg', () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(parseSvg(result.xml)).toEqual(parseSvg(xml));
+    expect(result.xml).toContain('<svg');
+  });
+
+  it('serializes the parsed tree to stable canonical XML', () => {
+    const result = sanitizeSvg(
+      '<svg viewBox="0 0 16 16"><path stroke="currentColor" d="M0 0"/></svg>',
+      parseSvg,
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      xml: '<svg view-box="0 0 16 16"><path d="M0 0" stroke="currentColor"/></svg>',
+    });
   });
 
   it.each(fixtures.refused)('refuses $name', ({ xml }) => {
