@@ -9,6 +9,7 @@
     "./plugins": "./src/plugins/plugins.ts",
     "./plugins/runtime": "./src/plugins/runtime.ts",
     "./plugins/argo-calls": "./src/plugins/argo-calls.ts",
+    "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",
     "./plugins/wire": "./src/plugins/wire.ts",
     "./plugins/wire-fixtures": "./src/plugins/wire-fixtures.ts",
     "./plugins/sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",

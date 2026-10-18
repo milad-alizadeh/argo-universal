@@ -111,9 +111,16 @@ const FetchCapability = z
 
 export type FetchCapability = z.infer<typeof FetchCapability>;
 
+// Hooking `process.spawn` sees every other Plugin's commands, so it is a Capability of its own (ADR-0030).
+const HookCapability = z.strictObject({
+  kind: z.literal('hook'),
+  event: z.literal('process.spawn'),
+});
+
 export const PluginCapability = z.discriminatedUnion('kind', [
   ProcessCapability,
   FetchCapability,
+  HookCapability,
 ]);
 
 export type PluginCapability = z.infer<typeof PluginCapability>;
