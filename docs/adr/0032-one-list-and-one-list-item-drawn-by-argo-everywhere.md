@@ -31,8 +31,8 @@ What the native rows give that Argo's can't match is small:
   The slots never change with the appearance. `layout="grid"`, `direction`, `columns` and the list behaviours of Spec 0017 apply to every appearance.
 - **One row anatomy.** Amended by the owner on 2026-10-18 after a council review of the first Paper master. `ListItem` is the only part that draws a row, in five lanes:
   - `leading`: fixed width, an Icon, Avatar or logo, with `badge` on its top-end corner;
-  - the content lane: `title`, `subtitle` and `meta` (Labels, Pills and StatusDots), filling the row and truncating;
-  - `trailing`: content only, such as a value, a time, a Pill or a StatusDot, end-aligned and as wide as its content, with a fixed gap before the accessory. A value is title-size text, never mono or a code style, paths included;
+  - the content lane: `title`, `subtitle` and `meta` (Labels, Pills, StatusDots and small IconButtons), filling the row and truncating;
+  - `trailing`: content, such as a value, a time, a Pill or a StatusDot, or one call-to-action `Button` outside settings rows (ADR-0033, as amended), end-aligned and as wide as its content, with a fixed gap before the accessory. A value is title-size text, never mono or a code style, paths included;
   - `accessory`: one fixed box for a system indicator, a chevron, check, radio, checkbox, Switch or stepper. Only the kit fills it; authors never do;
   - `progress`: along the bottom edge, under every lane.
 
