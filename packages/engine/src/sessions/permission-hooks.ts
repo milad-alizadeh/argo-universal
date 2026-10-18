@@ -1,15 +1,19 @@
 import type { PendingPermission, PermissionOption } from '@repo/contracts';
 import type { CoreHooks, HookAnswer } from '@repo/contracts/plugins';
-import { fromCallback, type EventObject } from 'xstate';
+import { fromPromise, type AnyActorRef } from 'xstate';
 
 export const permissionHookedEvent = 'session.permissionHooked';
 
-// A `tool.call` Hook's answer for one Permission request; `optionId` null cancels it, as a person may.
+// How a Permission request's `tool.call` Hooks ended: the option they chose, null to cancel as a person may, or no answer to leave it to the person.
 export type PermissionHooked = {
   type: typeof permissionHookedEvent;
   requestId: string;
-  optionId: string | null;
+  answer: { optionId: string | null } | null;
 };
+
+// Each request's Hooks run as their own child, stopped once they answer.
+export const toolCallHooksId = (requestId: string): string =>
+  `toolCallHooks:${requestId}`;
 
 type Decision = HookAnswer<'tool.call'>['decision'];
 
@@ -38,19 +42,22 @@ type PermissionHookInput = {
   hooks: CoreHooks;
   sessionId: string;
   request: PendingPermission;
+  // The Session the answer goes back to.
+  session: Pick<AnyActorRef, 'send'>;
 };
 
-// Runs `tool.call` Hooks on one Permission request; an `ask` leaves it to the person.
-export const toolCallHooks = fromCallback<EventObject, PermissionHookInput>(
-  ({ input: { hooks, sessionId, request }, sendBack }) => {
-    void hooks['tool.call']({ sessionId, request }).then(({ decision }) => {
-      if (decision === 'ask') return;
+// Runs `tool.call` Hooks on one Permission request and reports how they ended.
+export const toolCallHooks = fromPromise<void, PermissionHookInput>(
+  async ({ input: { hooks, sessionId, request, session } }) => {
+    const { decision } = await hooks['tool.call']({ sessionId, request });
 
-      sendBack({
-        type: permissionHookedEvent,
-        requestId: request.requestId,
-        optionId: decidedOption(request, decision),
-      });
+    session.send({
+      type: permissionHookedEvent,
+      requestId: request.requestId,
+      answer:
+        decision === 'ask'
+          ? null
+          : { optionId: decidedOption(request, decision) },
     });
   },
 );

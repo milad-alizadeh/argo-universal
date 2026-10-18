@@ -14,6 +14,8 @@ import type { PluginRuntime } from './runtime';
 
 type PluginDescriptor = PluginList['plugins'][number];
 
+type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
+
 export type PluginServiceDeps = PluginsDeps & {
   pluginRuntime?: PluginRuntime;
 };
@@ -30,41 +32,66 @@ export class PluginService {
   }
 
   async activate(pluginId: string): Promise<PluginStatus> {
-    const { plugin, directory } = await locatePlugin(this.deps, pluginId);
+    return this.start(await locatePlugin(this.deps, pluginId));
+  }
+
+  private start({ plugin, directory }: LocatedPlugin): Promise<PluginStatus> {
     const runtime = requireRuntime(this.deps);
+    const { manifest } = plugin;
 
     return runtime.activate({
-      entry: { pluginId, directory, main: plugin.manifest.main },
-      name: plugin.manifest.name,
+      entry: { pluginId: manifest.id, directory, main: manifest.main },
+      name: manifest.name,
       // Granted at load with no prompt (ADR-0030).
-      capabilities: plugin.manifest.capabilities ?? [],
-      hooks: plugin.manifest.contributes.hooks ?? [],
+      capabilities: manifest.capabilities ?? [],
+      hooks: manifest.contributes.hooks ?? [],
     });
   }
 
   // Starts each Plugin that hooks the event, in load order, then runs their Hooks over core (ADR-0027).
   async runHooks(name: HookEventName, event: JsonObject): Promise<Json> {
-    const pluginIds = await this.hooking(name, callerOf(name, event));
+    const { hooks } = requireRuntime(this.deps);
+    const exempt = hooks.exempt(callerOf(name, event));
 
-    return requireRuntime(this.deps).hooks.run(pluginIds, name, event);
+    const declaring = await this.declaring(name, exempt);
+
+    return hooks.run(
+      { ...(await this.started(declaring)), exempt },
+      name,
+      event,
+    );
   }
 
-  // A Plugin that fails to start is left out; the runtime has already reported why.
-  private async hooking(
+  // One scan finds every Plugin that hooks the event and where it sits.
+  private async declaring(
     name: HookEventName,
-    caller: string | undefined,
-  ): Promise<string[]> {
-    const { plugins } = await discoverPlugins(this.deps);
+    exempt: ReadonlySet<string>,
+  ): Promise<LocatedPlugin[]> {
+    return (await locatePlugins(this.deps)).filter(
+      ({ plugin }) => hooks(plugin, name) && !exempt.has(plugin.manifest.id),
+    );
+  }
 
-    const declaring = plugins
-      .filter((plugin) => hooks(plugin, name) && plugin.manifest.id !== caller)
-      .map((plugin) => plugin.manifest.id);
-
-    const started = await Promise.all(
-      declaring.map((pluginId) => this.activate(pluginId).catch(() => null)),
+  // A Plugin that fails to start is left out of the chain; the runtime has already reported why.
+  private async started(
+    declaring: readonly LocatedPlugin[],
+  ): Promise<{ running: string[]; stopped: string[] }> {
+    const isRunning = await Promise.all(
+      declaring.map((located) => this.isStarted(located)),
     );
 
-    return declaring.filter((_, index) => started[index]?.state === 'running');
+    const pluginIds = declaring.map(({ plugin }) => plugin.manifest.id);
+
+    return {
+      running: pluginIds.filter((_, index) => isRunning[index]),
+      stopped: pluginIds.filter((_, index) => !isRunning[index]),
+    };
+  }
+
+  private async isStarted(located: LocatedPlugin): Promise<boolean> {
+    const status = await this.start(located).catch(() => null);
+
+    return status?.state === 'running';
   }
 
   async dispatch(input: PluginDispatchInput): Promise<void> {
@@ -99,18 +126,28 @@ function applyStatus(result: PluginList, runtime: PluginRuntime): void {
   if (error) result.errors.push({ directory: 'plugin-host', message: error });
 }
 
+async function locatePlugins(deps: PluginsDeps): Promise<LocatedPlugin[]> {
+  const locations = new Map<string, string>();
+  const { plugins } = await discoverPlugins(deps, locations);
+
+  return plugins.flatMap((plugin) => {
+    const directory = locations.get(plugin.manifest.id);
+
+    return directory ? [{ plugin, directory }] : [];
+  });
+}
+
 async function locatePlugin(
   deps: PluginsDeps,
   pluginId: string,
-): Promise<{ plugin: PluginDescriptor; directory: string }> {
-  const locations = new Map<string, string>();
-  const result = await discoverPlugins(deps, locations);
-  const plugin = result.plugins.find((item) => item.manifest.id === pluginId);
-  const directory = locations.get(pluginId);
+): Promise<LocatedPlugin> {
+  const located = (await locatePlugins(deps)).find(
+    ({ plugin }) => plugin.manifest.id === pluginId,
+  );
 
-  if (!plugin || !directory) throw new Error(`Unknown Plugin: ${pluginId}`);
+  if (!located) throw new Error(`Unknown Plugin: ${pluginId}`);
 
-  return { plugin, directory };
+  return located;
 }
 
 function requireRuntime(deps: PluginServiceDeps): PluginRuntime {

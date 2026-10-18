@@ -21,6 +21,7 @@ import {
   setup,
   spawnChild,
   stateIn,
+  stopChild,
   or,
   and,
   type AnyActorRef,
@@ -100,6 +101,7 @@ import { pendingInputRequest } from './pending-input';
 import {
   permissionHookedEvent,
   toolCallHooks,
+  toolCallHooksId,
   type PermissionHooked,
 } from './permission-hooks';
 import { validateConfigChoice } from './session-admission';
@@ -908,13 +910,19 @@ const sessionSetup = setup({
       },
     ),
     hookPermission: spawnChild('toolCallHooks', {
-      input: ({ context, event }): InputFrom<typeof toolCallHooks> => {
+      id: ({ event }): string => {
+        assertEvent(event, acpPermissionEvent);
+
+        return toolCallHooksId(event.request.requestId);
+      },
+      input: ({ context, event, self }): InputFrom<typeof toolCallHooks> => {
         assertEvent(event, acpPermissionEvent);
 
         return {
           hooks: context.input.hooks,
           sessionId: context.sessionId,
           request: event.request,
+          session: self,
         };
       },
     }),
@@ -926,12 +934,21 @@ const sessionSetup = setup({
       }): SessionContext['hookedPermissions'] => {
         assertEvent(event, permissionHookedEvent);
 
-        return context.permissionQueue.some(
-          (request) => request.requestId === event.requestId,
-        )
-          ? { ...context.hookedPermissions, [event.requestId]: event.optionId }
+        return event.answer &&
+          context.permissionQueue.some(
+            (request) => request.requestId === event.requestId,
+          )
+          ? {
+              ...context.hookedPermissions,
+              [event.requestId]: event.answer.optionId,
+            }
           : context.hookedPermissions;
       },
+    }),
+    forgetPermissionHooks: stopChild(({ event }): string => {
+      assertEvent(event, permissionHookedEvent);
+
+      return toolCallHooksId(event.requestId);
     }),
     // A hooked answer settles the first request as a person's answer does, through the Feed.
     answerHookedPermission: enqueueActions(({ context, enqueue }): void => {
@@ -1366,6 +1383,8 @@ export const sessionMachine = sessionSetup.createMachine({
     };
   },
   on: {
+    // Outside a Turn a hooked answer has nothing to settle; its Hooks still end.
+    [permissionHookedEvent]: { actions: 'forgetPermissionHooks' },
     'agent.shellChanged': {
       actions: assign(({ context, event }) => ({
         shells: [
@@ -1781,6 +1800,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
                 [permissionHookedEvent]: {
                   actions: [
+                    'forgetPermissionHooks',
                     'rememberHookedPermission',
                     'answerHookedPermission',
                   ],

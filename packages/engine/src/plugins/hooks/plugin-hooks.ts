@@ -16,6 +16,14 @@ import {
   type HookAllowance,
   type RegisteredHook,
 } from './hook-registry';
+import { guardRefusal } from './hook-rules';
+
+// The Plugins that hook one event: those running, those that failed to start, and those exempt from it.
+export type HookingPlugins = {
+  running: readonly string[];
+  stopped: readonly string[];
+  exempt: ReadonlySet<string>;
+};
 
 // The runtime's side of `argo.on`: what each worker registered, and the chains that run them.
 export class PluginHooks {
@@ -74,14 +82,33 @@ export class PluginHooks {
     this.chain.release(pluginId);
   }
 
-  // Runs the event through these Plugins' Hooks, in the order given, then core.
-  public run(
-    pluginIds: readonly string[],
+  // The Plugins whose Hooks may not see this Plugin's call: itself, and every Plugin whose Hook is waiting on it.
+  public exempt(caller: string | undefined): ReadonlySet<string> {
+    return caller === undefined ? new Set() : this.chain.ancestorsOf(caller);
+  }
+
+  // Runs the event through the running Plugins' Hooks, in the order given, then core; a stopped Plugin's guard still refuses.
+  public async run(
+    { running, stopped, exempt }: HookingPlugins,
     name: HookEventName,
     event: JsonObject,
   ): Promise<Json> {
-    const hooks = this.registry.matching(pluginIds, name, event);
+    const guard = this.registry.orphanedGuard(stopped, name, event);
 
-    return this.chain.run({ name, hooks }, event);
+    if (guard) return this.orphanRefusal(guard, name);
+    const hooks = this.registry.matching(running, name, event);
+
+    return this.chain.run({ name, hooks, ancestors: exempt }, event);
+  }
+
+  private orphanRefusal(
+    { pluginId }: RegisteredHook,
+    name: HookEventName,
+  ): Json {
+    this.log(
+      `Plugin ${pluginId}: guard refused ${name} Hook: the Plugin is not running`,
+    );
+
+    return guardRefusal(name) ?? null;
   }
 }

@@ -60,6 +60,8 @@ const nothingAllowed: HookAllowance = { events: [], grants: [] };
 export class HookRegistry {
   private readonly allowances = new Map<string, HookAllowance>();
   private readonly registered = new Map<string, RegisteredHook[]>();
+  // The guards of a worker that stopped: they keep refusing until the Plugin runs again.
+  private readonly orphaned = new Map<string, RegisteredHook[]>();
 
   public allow(pluginId: string, allowance: HookAllowance): void {
     this.allowances.set(pluginId, allowance);
@@ -74,11 +76,28 @@ export class HookRegistry {
 
     if (refused) throw new CapabilityRefusal(refused.reason(hook));
     this.registered.set(hook.pluginId, [...this.current(hook), hook]);
+    this.orphaned.delete(hook.pluginId);
   }
 
-  // A reloaded, stopped or crashed worker's Hooks go with it.
+  // A reloaded, stopped or crashed worker's Hooks go with it, except its guards.
   public release(pluginId: string): void {
+    const guards = (this.registered.get(pluginId) ?? []).filter(
+      (hook) => hook.guard,
+    );
+
+    if (guards.length > 0) this.orphaned.set(pluginId, guards);
     this.registered.delete(pluginId);
+  }
+
+  // A guard on this event left by one of these Plugins, none of which is running.
+  public orphanedGuard(
+    pluginIds: readonly string[],
+    name: HookEventName,
+    event: JsonObject,
+  ): RegisteredHook | undefined {
+    return pluginIds
+      .flatMap((pluginId) => this.orphaned.get(pluginId) ?? [])
+      .find((hook) => hook.name === name && matches(name, hook.matcher, event));
   }
 
   // The Hooks on this event, in the order of the Plugins given, then of registration.

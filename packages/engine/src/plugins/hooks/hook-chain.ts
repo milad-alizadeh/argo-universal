@@ -20,7 +20,12 @@ export type HookChainInput = {
 // Which worker a `next` or an outcome came from: only the worker running that Hook may send them.
 export type HookCaller = { pluginId: string; generation: number };
 
-type Chain = { name: HookEventName; hooks: readonly RegisteredHook[] };
+// `ancestors` are the Plugins whose Hooks are waiting on this chain: their own calls started it.
+type Chain = {
+  name: HookEventName;
+  hooks: readonly RegisteredHook[];
+  ancestors: ReadonlySet<string>;
+};
 
 // Runs Hooks as a middleware chain over core (ADR-0027), one worker call per Hook.
 export class HookChain {
@@ -49,6 +54,18 @@ export class HookChain {
     this.runningFor(caller, invocation).settle(outcome);
   }
 
+  // A Plugin's call made while its Hooks run belongs to their chains: neither it nor their ancestors may hook it again.
+  public ancestorsOf(pluginId: string): Set<string> {
+    const waiting = [...this.running.values()].filter(
+      (running) => running.hook.pluginId === pluginId,
+    );
+
+    return new Set([
+      pluginId,
+      ...waiting.flatMap(({ ancestors }) => [...ancestors]),
+    ]);
+  }
+
   // A stopped, reloaded or crashed worker's running Hooks fail, so their chains go on.
   public release(pluginId: string): void {
     for (const running of this.running.values())
@@ -56,20 +73,24 @@ export class HookChain {
         running.fail('the Plugin stopped');
   }
 
-  private from({ name, hooks }: Chain, index: number) {
+  private from(chain: Chain, index: number) {
     return async (event: JsonObject): Promise<Json> => {
-      const hook = hooks[index];
+      const hook = chain.hooks[index];
 
-      if (!hook) return coreAnswer(name, event);
-      const rest = this.from({ name, hooks }, index + 1);
+      if (!hook) return coreAnswer(chain.name, event);
+      const rest = this.from(chain, index + 1);
 
-      return this.invoke(hook, { name, event, rest });
+      return this.invoke(hook, { name: chain.name, event, rest }, chain);
     };
   }
 
-  private async invoke(hook: RegisteredHook, step: HookStep): Promise<Json> {
+  private async invoke(
+    hook: RegisteredHook,
+    step: HookStep,
+    chain: Chain,
+  ): Promise<Json> {
     const invocation = this.nextInvocation++;
-    const running = new RunningHook({ hook, step, budgetMs: hookBudgetMs });
+    const running = runningHook(hook, step, chain);
 
     this.running.set(invocation, running);
     this.input.send(hook, invocationOf(invocation, hook, step));
@@ -121,6 +142,13 @@ export class HookChain {
     return running;
   }
 }
+
+const runningHook = (
+  hook: RegisteredHook,
+  step: HookStep,
+  { ancestors }: Chain,
+): RunningHook =>
+  new RunningHook({ hook, step, ancestors, budgetMs: hookBudgetMs });
 
 const invocationOf = (
   invocation: number,

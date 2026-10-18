@@ -9,6 +9,7 @@ import {
   type HostEvent,
   type HostHook,
   type HostReply,
+  type HostWaiting,
   type WorkerCall,
 } from './runtime-protocol.ts';
 
@@ -37,6 +38,13 @@ export class HostWorkers {
     const record = this.workers.get(pluginId);
 
     if (record?.generation === generation) record.worker.postMessage(command);
+  }
+
+  // A starting worker whose call the Server is still answering gets a fresh deadline.
+  waiting({ pluginId }: HostWaiting): void {
+    const record = this.workers.get(pluginId);
+
+    if (record?.heartbeat === null) this.arm(pluginId, record);
   }
 
   event({ pluginId, event }: HostEvent): void {
@@ -113,13 +121,7 @@ export class HostWorkers {
   private call(pluginId: string, record: WorkerRecord, call: WorkerCall): void {
     if (record.heartbeat === null) this.arm(pluginId, record);
 
-    this.report({
-      type: 'call',
-      pluginId,
-      generation: record.generation,
-      id: call.id,
-      request: call.request,
-    });
+    this.report({ ...call, pluginId, generation: record.generation });
   }
 
   private answer(pluginId: string, answer: 'ready' | 'pong'): void {

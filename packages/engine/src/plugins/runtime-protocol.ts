@@ -5,7 +5,9 @@ import {
 } from '@repo/contracts/plugins/argo-calls';
 import {
   HookCall,
-  HookInvocation,
+  HookWaiting,
+  HostHookCommand,
+  WorkerHookCommand,
 } from '@repo/contracts/plugins/hook-protocol';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { PluginEvent, ViewMessage } from '@repo/contracts/plugins/wire';
@@ -94,6 +96,7 @@ export type PluginReply = z.infer<typeof PluginReply>;
 export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
+  HookWaiting,
   z.object({
     type: z.literal('event'),
     pluginId: z.string(),
@@ -106,11 +109,7 @@ export const HostCommand = z.discriminatedUnion('type', [
     id: z.number(),
     reply: PluginReply,
   }),
-  HookInvocation.extend({
-    type: z.literal('hook'),
-    pluginId: z.string(),
-    generation: z.number(),
-  }),
+  HostHookCommand,
 ]);
 
 export type HostCommand = z.infer<typeof HostCommand>;
@@ -120,6 +119,8 @@ export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
 export type HostEvent = Extract<z.infer<typeof HostCommand>, { type: 'event' }>;
 
 export type HostHook = Extract<HostCommand, { type: 'hook' }>;
+
+export type HostWaiting = Extract<HostCommand, { type: 'waiting' }>;
 
 export const HostMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready') }),
@@ -162,13 +163,11 @@ const WorkerEvent = z.object({
   event: PluginEvent,
 });
 
-const WorkerHook = HookInvocation.extend({ type: z.literal('hook') });
-
 export const WorkerCommand = z.union([
   z.literal('ping'),
   WorkerReply,
   WorkerEvent,
-  WorkerHook,
+  WorkerHookCommand,
 ]);
 
 export const notStarted: PluginStatus = {

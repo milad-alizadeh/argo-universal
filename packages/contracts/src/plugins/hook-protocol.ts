@@ -64,3 +64,21 @@ export const HookInvocation = z.object({
 });
 
 export type HookInvocation = z.infer<typeof HookInvocation>;
+
+// The Server is still running Hooks for a call a worker made, so the starting worker isn't hanging.
+export const HookWaiting = z.object({
+  type: z.literal('waiting'),
+  pluginId: z.string(),
+  generation: z.number(),
+});
+
+// A Hook to run, as the Server sends it to the Plugin host and the host passes it to the worker.
+export const HostHookCommand = HookInvocation.extend({
+  type: z.literal('hook'),
+  pluginId: z.string(),
+  generation: z.number(),
+});
+
+export const WorkerHookCommand = HookInvocation.extend({
+  type: z.literal('hook'),
+});

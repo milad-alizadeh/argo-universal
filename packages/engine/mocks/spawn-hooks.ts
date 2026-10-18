@@ -12,7 +12,7 @@ type HookRun = {
   log: string;
 };
 
-const echo: PluginCapability = {
+export const echo: PluginCapability = {
   kind: 'process:exec',
   command: 'echo',
   args: ['**'],
@@ -20,14 +20,20 @@ const echo: PluginCapability = {
 
 const hookSpawn: PluginCapability = { kind: 'hook', event: 'process.spawn' };
 
-// The Plugin whose `argo.process` call the Hooks see: it runs `echo hi` once it loads.
-export const probe: HookPlugin = {
+const echoed = (text: string): string =>
+  `argo.process.run(['echo', '${text}']).then((r) => r.stdout.trim())`;
+
+// The Plugin whose `argo.process` calls the Hooks see: once it loads, it runs `echo hi`, then any later echoes named.
+export const probeEchoing = (...later: string[]): HookPlugin => ({
   id: 'probe',
   source: probeSource({
-    echo: `argo.process.run(['echo', 'hi']).then((r) => r.stdout.trim())`,
+    echo: echoed('hi'),
+    ...Object.fromEntries(later.map((text) => [text, echoed(text)])),
   }),
   capabilities: [echo],
-};
+});
+
+export const probe = probeEchoing();
 
 // A Plugin that hooks `process.spawn` with this hook, registered when it loads.
 export const spawnHook = (
@@ -46,10 +52,13 @@ export const spawnHook = (
 export const appending = (marker: string): string =>
   `(ctx, e, next) => next({ ...e, argv: [...e.argv, '${marker}'] })`;
 
-export async function runWithHooks(plugins: HookPlugin[]): Promise<HookRun> {
+export async function runWithHooks(
+  plugins: HookPlugin[],
+  calling = probe,
+): Promise<HookRun> {
   const home = await createRuntimePlugins([]);
 
-  await writeHookPlugins(home, [probe, ...plugins]);
+  await writeHookPlugins(home, [calling, ...plugins]);
   const { caller } = await startEngineTestHost({ home });
 
   await caller.plugins.activate({ pluginId: 'probe' });

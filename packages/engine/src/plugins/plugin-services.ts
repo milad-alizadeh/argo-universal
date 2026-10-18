@@ -1,5 +1,9 @@
 import type { CoreHooks } from '@repo/contracts/plugins';
-import { HookPort } from './hooks/hook-port';
+import {
+  spawnHooks,
+  type SpawnCaller,
+  type Waiting,
+} from './hooks/spawn-hooks';
 import { pluginKeychainService, type Keychain } from './keychain';
 import {
   PluginAccess,
@@ -33,10 +37,8 @@ export type PluginServiceOptions = {
   projects: () => Promise<readonly string[]>;
   network?: PluginNetwork;
   hooks?: CoreHooks;
+  waiting?: Waiting;
 };
-
-// Without the Server's Hooks, core answers `process.spawn` alone.
-const coreOnly = new HookPort().hooks;
 
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
@@ -95,17 +97,20 @@ export class PluginServices {
       return this.perform(pluginId, request);
     }
 
-    return machineCall(this.context(pluginId, resources, request), request);
+    return machineCall(
+      this.context({ pluginId, generation }, resources, request),
+      request,
+    );
   }
 
   private context(
-    pluginId: string,
+    { pluginId, generation }: SpawnCaller,
     resources: PluginResources,
     request: StateRequest,
   ): MachineContext {
     return {
       pluginId,
-      spawning: (this.options.hooks ?? coreOnly)['process.spawn'],
+      spawning: spawnHooks(this.options, { pluginId, generation }),
       access: this.access(pluginId),
       resources,
       network: this.options.network ?? {},

@@ -1,42 +1,22 @@
-import type { HookEventName, PluginCapability } from '@repo/contracts/plugins';
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { PluginFailures } from './failures';
-import type { HookAllowance } from './hooks/hook-registry';
+import { keepWaiting } from './hooks/keep-waiting';
 import { PluginHooks } from './hooks/plugin-hooks';
 import { HostConnection } from './host-connection';
-import type { ActivatedPlugin } from './plugin-access';
+import {
+  activatedPlugin,
+  hookAllowance,
+  type PluginLocation,
+} from './plugin-location';
 import type { PluginServices } from './plugin-services';
 import { RuntimePlugin } from './runtime-plugin';
 import type { PluginReply } from './runtime-protocol';
 import {
   notStarted,
-  type PluginEntry,
   type PluginStatus,
   type HostMessage,
 } from './runtime-protocol';
 import { PluginViews } from './views';
-
-type PluginLocation = {
-  entry: Omit<PluginEntry, 'generation'>;
-  name?: string;
-  // The manifest's declared Capabilities; without them the Plugin is granted nothing.
-  capabilities?: readonly PluginCapability[];
-  // The core events the manifest says the Plugin hooks.
-  hooks?: readonly HookEventName[];
-};
-
-const activatedPlugin = ({
-  entry,
-  capabilities = [],
-}: PluginLocation): ActivatedPlugin => ({
-  grants: capabilities,
-  codeFolder: entry.directory,
-});
-
-const hookAllowance = ({
-  hooks = [],
-  capabilities = [],
-}: PluginLocation): HookAllowance => ({ events: hooks, grants: capabilities });
 
 export class PluginRuntime {
   private readonly failures = new PluginFailures();
@@ -84,6 +64,13 @@ export class PluginRuntime {
     this.views.receive(pluginId, request.path, request.message);
 
     return { ok: true };
+  }
+
+  waiting(pluginId: string, generation: number): () => void {
+    return keepWaiting((command) => this.host.tell(command), {
+      pluginId,
+      generation,
+    });
   }
 
   status(pluginId: string): PluginStatus {

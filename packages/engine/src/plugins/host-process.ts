@@ -8,9 +8,10 @@ import {
 const workers = new HostWorkers((message) => process.send?.(message));
 
 function lifecycle(
-  command: Extract<HostCommand, { type: 'event' | 'stop' }>,
+  command: Extract<HostCommand, { type: 'event' | 'stop' | 'waiting' }>,
 ): void {
   if (command.type === 'event') workers.event(command);
+  else if (command.type === 'waiting') workers.waiting(command);
   else workers.stop(command.pluginId);
 }
 

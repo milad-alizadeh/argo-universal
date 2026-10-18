@@ -19,20 +19,24 @@ type RunningHookInput = {
   hook: RegisteredHook;
   step: HookStep;
   budgetMs: number;
+  // The Plugins whose Hooks this chain runs inside of.
+  ancestors: ReadonlySet<string>;
 };
 
 // One Hook while it runs in its worker: it may call `next` once, then ends with an outcome.
 export class RunningHook {
   public readonly hook: RegisteredHook;
   public readonly step: HookStep;
+  public readonly ancestors: ReadonlySet<string>;
   private readonly budget: HookBudget;
   private readonly ending = Promise.withResolvers<HookOutcome>();
   private nextAnswer: Promise<Json> | null = null;
   private ended = false;
 
-  public constructor({ hook, step, budgetMs }: RunningHookInput) {
+  public constructor({ hook, step, budgetMs, ancestors }: RunningHookInput) {
     this.hook = hook;
     this.step = step;
+    this.ancestors = ancestors;
     this.budget = new HookBudget(budgetMs, () =>
       this.fail(`missed its ${budgetMs} ms budget`),
     );
