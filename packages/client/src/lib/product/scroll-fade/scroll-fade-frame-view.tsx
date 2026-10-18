@@ -26,11 +26,15 @@ import {
   type ScrollFadeTracking,
   edgeInset,
   edgeMode,
+  fadeEdgesFor,
+  isStartEdge,
   scrollFadeRamp,
 } from './scroll-fade-options';
 
 export interface ScrollFadeFrameProps extends Omit<ScrollFadeOptions, 'depth'> {
   depth: Required<PerEdge<number>>;
+  // Its scroll view scrolls sideways, so its leading and trailing edges fade rather than its top and bottom.
+  horizontal?: boolean;
   // From useScrollFadeTracking, also wired to the scroll view.
   tracking: ScrollFadeTracking;
   className?: string;
@@ -41,8 +45,6 @@ export interface ScrollFadeFrameProps extends Omit<ScrollFadeOptions, 'depth'> {
 
 type FadeOptions = Omit<ScrollFadeFrameProps, 'tracking' | 'children'>;
 
-const fadeEdges: ScrollFadeEdgeName[] = ['top', 'bottom'];
-
 // How much content lies past an edge, from the scroll view's measures.
 function hiddenPast(
   edge: ScrollFadeEdgeName,
@@ -50,7 +52,7 @@ function hiddenPast(
 ): number {
   'worklet';
 
-  if (edge === 'top') return offset.get();
+  if (isStartEdge(edge)) return offset.get();
 
   return viewport.get() > 0 ? content.get() - offset.get() - viewport.get() : 0;
 }
@@ -102,16 +104,17 @@ function EdgeFade({
   return <ScrollFadeGradient {...gradientProps(edge, options)} style={style} />;
 }
 
+// The frame's length along the scroll's axis.
 const measureViewport =
-  (metrics: ScrollFadeMetrics | undefined) =>
-  ({ nativeEvent }: LayoutChangeEvent): void =>
-    metrics?.viewport.set(nativeEvent.layout.height);
+  (metrics: ScrollFadeMetrics | undefined, horizontal: boolean | undefined) =>
+  ({ nativeEvent: { layout } }: LayoutChangeEvent): void =>
+    metrics?.viewport.set(horizontal ? layout.width : layout.height);
 
 function EdgeFades({
   metrics,
   options,
 }: Omit<EdgeFadeProps, 'edge'>): React.JSX.Element[] {
-  return fadeEdges.map((edge) => (
+  return fadeEdgesFor(options.horizontal).map((edge) => (
     <EdgeFade key={edge} edge={edge} metrics={metrics} options={options} />
   ));
 }
@@ -121,7 +124,7 @@ export function ScrollFadeFrame(
   props: ScrollFadeFrameProps,
 ): React.JSX.Element {
   const { tracking, className, style, children, ...options } = props;
-  const onLayout = measureViewport(tracking.metrics);
+  const onLayout = measureViewport(tracking.metrics, options.horizontal);
   const frameClassName = cn('relative', className);
 
   return (
