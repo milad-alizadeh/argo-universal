@@ -5,7 +5,11 @@ import { Field } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { BareTextInput } from './text-input-bare';
 import { requiredLabel } from './text-input-label';
-import { isInvalid, type StandaloneTextInputProps } from './text-input-props';
+import {
+  isInvalid,
+  keyboardOf,
+  type StandaloneTextInputProps,
+} from './text-input-props';
 import { FieldSpinner } from './text-input-spinner';
 
 export function StandaloneTextInput(
@@ -68,7 +72,7 @@ function inputBehaviour(props: StandaloneTextInputProps): InputProps {
     onBlur: props.onBlur,
     placeholder: props.placeholder,
     editable: !props.disabled,
-    keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
+    ...keyboardOf(props),
     autoFocus: props.focusOnOpen,
     selectTextOnFocus: props.selectOnFocus,
     onSubmitEditing: props.onSubmit,

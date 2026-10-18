@@ -1,4 +1,9 @@
-import type { HookEventName, PluginList } from '@repo/contracts/plugins';
+import type {
+  HookEventName,
+  PluginList,
+  PluginSettings as PluginSettingsOutput,
+  PluginSettingValue,
+} from '@repo/contracts/plugins';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import type {
   PluginFailure,
@@ -12,23 +17,31 @@ import {
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import { callerOf } from './hooks/hook-rules';
-import { discoverPlugins, type PluginsDeps } from './loader';
-import type { PluginRuntime } from './runtime';
+import { discoverPlugins } from './loader';
+import {
+  applyEnabled,
+  applyStatus,
+  locatePlugin,
+  locatePlugins,
+  refuseTurnedOff,
+  requireRuntime,
+  requireSettings,
+  type LocatedPlugin,
+  type PluginDescriptor,
+  type PluginServiceDeps,
+} from './located-plugins';
 import { merged } from './streams';
 
-type PluginDescriptor = PluginList['plugins'][number];
-
-type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
-
-export type PluginServiceDeps = PluginsDeps & {
-  pluginRuntime?: PluginRuntime;
-};
+export type { PluginServiceDeps } from './located-plugins';
 
 export class PluginService {
   constructor(private readonly deps: PluginServiceDeps) {}
 
   async list(): Promise<PluginList> {
     const result = await discoverPlugins(this.deps);
+
+    if (this.deps.pluginSettings)
+      applyEnabled(result, this.deps.pluginSettings);
 
     if (this.deps.pluginRuntime) applyStatus(result, this.deps.pluginRuntime);
 
@@ -43,6 +56,8 @@ export class PluginService {
     const runtime = requireRuntime(this.deps);
     const { manifest } = plugin;
 
+    refuseTurnedOff(this.deps, manifest.id);
+
     return runtime.activate({
       entry: { pluginId: manifest.id, directory, main: manifest.main },
       name: manifest.name,
@@ -50,6 +65,26 @@ export class PluginService {
       capabilities: manifest.capabilities ?? [],
       hooks: manifest.contributes.hooks ?? [],
     });
+  }
+
+  // Turning a Plugin off stops its worker and releases what it holds; it starts again when next asked for.
+  async setEnabled(pluginId: string, enabled: boolean): Promise<void> {
+    await locatePlugin(this.deps, pluginId);
+    await requireSettings(this.deps).setEnabled(pluginId, enabled);
+
+    if (!enabled) await this.deps.pluginRuntime?.deactivate(pluginId);
+  }
+
+  settings(pluginId: string): Promise<PluginSettingsOutput> {
+    return requireSettings(this.deps).values(pluginId);
+  }
+
+  setSetting(change: {
+    pluginId: string;
+    key: string;
+    value: PluginSettingValue;
+  }): Promise<void> {
+    return requireSettings(this.deps).change(change);
   }
 
   // Starts each Plugin that hooks the event, in load order, then runs their Hooks over core (ADR-0027).
@@ -154,41 +189,3 @@ const fills = (plugin: PluginDescriptor, slot: PluginSlotInput): boolean =>
 
 const hooks = (plugin: PluginDescriptor, name: HookEventName): boolean =>
   plugin.enabled && (plugin.manifest.contributes.hooks ?? []).includes(name);
-
-function applyStatus(result: PluginList, runtime: PluginRuntime): void {
-  for (const plugin of result.plugins)
-    Object.assign(plugin, runtime.status(plugin.manifest.id));
-  const error = runtime.error();
-
-  if (error) result.errors.push({ directory: 'plugin-host', message: error });
-}
-
-async function locatePlugins(deps: PluginsDeps): Promise<LocatedPlugin[]> {
-  const locations = new Map<string, string>();
-  const { plugins } = await discoverPlugins(deps, locations);
-
-  return plugins.flatMap((plugin) => {
-    const directory = locations.get(plugin.manifest.id);
-
-    return directory ? [{ plugin, directory }] : [];
-  });
-}
-
-async function locatePlugin(
-  deps: PluginsDeps,
-  pluginId: string,
-): Promise<LocatedPlugin> {
-  const located = (await locatePlugins(deps)).find(
-    ({ plugin }) => plugin.manifest.id === pluginId,
-  );
-
-  if (!located) throw new Error(`Unknown Plugin: ${pluginId}`);
-
-  return located;
-}
-
-function requireRuntime(deps: PluginServiceDeps): PluginRuntime {
-  if (!deps.pluginRuntime) throw new Error('Plugin runtime is not running');
-
-  return deps.pluginRuntime;
-}

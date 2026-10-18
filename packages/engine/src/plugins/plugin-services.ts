@@ -4,7 +4,8 @@ import {
   type SpawnCaller,
   type Waiting,
 } from './hooks/spawn-hooks';
-import { pluginKeychainService, type Keychain } from './keychain';
+import { answerKept, isKeptRequest, type Kept } from './kept-calls';
+import type { Keychain } from './keychain';
 import {
   PluginAccess,
   type AccessScope,
@@ -20,7 +21,7 @@ import {
 } from './plugin-calls';
 import type { PluginNetwork } from './plugin-fetch';
 import { PluginResources } from './plugin-resources';
-import type { PluginReply, PluginValue, SecretCall } from './runtime-protocol';
+import type { PluginReply, PluginValue } from './runtime-protocol';
 import type { PluginStorage } from './storage';
 
 type Held = { generation: number; resources: PluginResources };
@@ -36,6 +37,8 @@ export type PluginServiceOptions = {
   log: (line: string) => void;
   projects: () => Promise<readonly string[]>;
   network?: PluginNetwork;
+  // Answers `argo.settings.get` from the Plugin's `contributes.settings` values.
+  settings?: (pluginId: string, key: string) => Promise<PluginValue>;
   hooks?: CoreHooks;
   waiting?: Waiting;
 };
@@ -91,10 +94,10 @@ export class PluginServices {
   ): Promise<PluginValue> {
     const resources = this.resources(pluginId, generation);
 
-    if (request.api === 'storage' || request.api === 'secrets') {
+    if (isKeptRequest(request)) {
       this.logCall(pluginId, request);
 
-      return this.perform(pluginId, request);
+      return answerKept(this.kept(), pluginId, request);
     }
 
     return machineCall(
@@ -116,6 +119,12 @@ export class PluginServices {
       network: this.options.network ?? {},
       allowed: () => this.logCall(pluginId, request),
     };
+  }
+
+  private kept(): Kept {
+    const { storage, keychain } = this;
+
+    return { storage, keychain, settings: this.options.settings };
   }
 
   private logCall(pluginId: string, request: StateRequest): void {
@@ -148,31 +157,6 @@ export class PluginServices {
     this.held.set(pluginId, { generation, resources });
 
     return resources;
-  }
-
-  private async perform(
-    pluginId: string,
-    request: Extract<StateRequest, { api: 'storage' | 'secrets' }>,
-  ): Promise<PluginValue> {
-    if (request.api === 'storage')
-      return this.storage.execute(pluginId, request.queries);
-
-    return this.secrets(pluginId, request.call);
-  }
-
-  private async secrets(
-    pluginId: string,
-    call: SecretCall,
-  ): Promise<PluginValue> {
-    const service = pluginKeychainService(pluginId);
-
-    if (call.action === 'get') return this.keychain.get(service, call.account);
-
-    await (call.action === 'set'
-      ? this.keychain.set(service, call.account, call.value)
-      : this.keychain.delete(service, call.account));
-
-    return null;
   }
 }
 

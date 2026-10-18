@@ -4,6 +4,7 @@ import {
   agentsRow,
   connectionRow,
   devicesRow,
+  pluginsRow,
   projectsRow,
 } from './settings-list-server-rows';
 
@@ -14,6 +15,7 @@ function serverRows(props: SettingsListProps, wide: boolean): SettingsRow[] {
   return [
     projectsRow(props),
     agentsRow(props),
+    pluginsRow(props),
     accountsRow(props),
     connectionRow(props, wide),
     ...wideOnly(wide, devicesRow(props)),

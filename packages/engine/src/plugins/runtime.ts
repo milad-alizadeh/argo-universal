@@ -104,6 +104,16 @@ export class PluginRuntime {
     return plugin.activate(activatedPlugin(location));
   }
 
+  // A Plugin turned off loses its worker and its build; activating it later starts both afresh.
+  async deactivate(pluginId: string): Promise<void> {
+    const plugin = this.plugins.get(pluginId);
+
+    if (!plugin) return;
+    this.plugins.delete(pluginId);
+    this.views.end(pluginId);
+    await plugin.stop();
+  }
+
   private createPlugin(location: PluginLocation): RuntimePlugin {
     const identity = {
       pluginId: location.entry.pluginId,

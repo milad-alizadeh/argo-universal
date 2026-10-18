@@ -81,6 +81,13 @@ export class RuntimePlugin {
     this.activation = null;
   }
 
+  async stop(): Promise<void> {
+    this.generation += 1;
+    this.input.host.stop(this.input.entry.pluginId);
+    this.received(notStarted);
+    await this.close();
+  }
+
   async close(): Promise<void> {
     this.closed = true;
     this.input.release();

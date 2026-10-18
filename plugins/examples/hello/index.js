@@ -1,4 +1,13 @@
-import { Button, Column, Row, Text, useState } from '@argo/plugin-kit';
+import {
+  Button,
+  Column,
+  Row,
+  Text,
+  useEffect,
+  useState,
+} from '@argo/plugin-kit';
+
+let settings;
 
 function Buttons({ onTap }) {
   return (
@@ -15,10 +24,16 @@ function Buttons({ onTap }) {
 
 function HelloPage() {
   const [taps, setTaps] = useState(0);
+  const [greeting, setGreeting] = useState('Hello from a Plugin');
+
+  // Read on each open, so a changed setting shows the next time the page opens.
+  useEffect(() => {
+    void settings.get('greeting').then((value) => value && setGreeting(value));
+  }, []);
 
   return (
     <Column gap={4}>
-      <Text variant="heading">Hello from a Plugin</Text>
+      <Text variant="heading">{greeting}</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <Buttons onTap={() => setTaps(taps + 1)} />
     </Column>
@@ -47,6 +62,7 @@ function ProjectDetails({ context }) {
 }
 
 export function register(argo) {
+  settings = argo.settings;
   argo.pages.register('/', HelloPage);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }

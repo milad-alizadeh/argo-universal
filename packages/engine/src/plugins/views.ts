@@ -56,6 +56,12 @@ export class PluginViews {
     for (const view of this.views.values()) view.events.emit('close');
   }
 
+  // A Plugin turned off ends the pages and Slot contributions Apps watch from it.
+  end(pluginId: string): void {
+    for (const view of this.views.values())
+      if (view.pluginId === pluginId) view.events.emit('close');
+  }
+
   // `opening.slot` is given when the view is a Slot contribution rather than a page.
   async *watch(
     pluginId: string,

@@ -9,6 +9,7 @@ export interface SettingsListProps {
   // Undefined until the Server has answered: the row shows "…", or nothing while disconnected.
   projectCount?: number;
   agentCount?: number;
+  pluginCount?: number;
   // The path of the page shown; a page's own pages keep its row selected.
   selectedPath?: string;
   // Opens a page by its path.

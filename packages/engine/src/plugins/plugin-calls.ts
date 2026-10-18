@@ -136,6 +136,14 @@ export function describeCall(request: StateRequest): string {
   if (request.api === 'secrets')
     return `argo.secrets.${request.call.action} ${request.call.account}`;
 
+  return describeOtherCall(request);
+}
+
+function describeOtherCall(
+  request: Exclude<StateRequest, { api: 'storage' | 'secrets' }>,
+): string {
+  if (request.api === 'settings') return `argo.settings.get ${request.key}`;
+
   return describeMachineCall(request);
 }
 

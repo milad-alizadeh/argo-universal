@@ -2,11 +2,10 @@ import { z } from 'zod';
 import { PluginCapability } from './capabilities';
 import { HookEventName } from './hooks';
 import { materialSymbolNames } from './material-symbol-names.gen';
+import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
 import { sfSymbolNames } from './sf-symbol-names.gen';
 import { SlotId } from './wire';
-
-const PluginIdentifier = z.string().regex(/^[a-z][a-z0-9-]*$/);
 
 // Zod's default enum error would print every name in the list.
 const notIn =
@@ -66,6 +65,7 @@ export const PluginManifest = z.strictObject({
         (items) => new Set(items.map((item) => item.id)).size === items.length,
         'Nav ids must be unique',
       ),
+    settings: PluginSettingsSchema.optional(),
     // The Slots the Plugin fills; core asks only these Plugins for a Slot's content.
     slots: z
       .array(SlotId)
@@ -119,3 +119,13 @@ export {
   type FetchCapability,
   type ProcessCapability,
 } from './capabilities';
+
+export {
+  PluginEnablement,
+  PluginSettingChange,
+  PluginSettingField,
+  PluginSettings,
+  PluginSettingsSchema,
+  PluginSettingValue,
+  PluginStateRecord,
+} from './plugin-settings';

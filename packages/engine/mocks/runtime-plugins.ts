@@ -5,6 +5,7 @@ import {
   PluginManifest,
   type HookEventName,
   type PluginCapability,
+  type PluginSettingField,
 } from '@repo/contracts/plugins';
 import type { SlotId } from '@repo/contracts/plugins/wire';
 import { onTestFinished } from 'vitest';
@@ -18,6 +19,7 @@ type FixturePlugin = {
   dev?: boolean;
   main?: string;
   capabilities?: PluginCapability[];
+  settings?: PluginSettingField[];
   hooks?: HookEventName[];
   // The Slots the manifest declares.
   slots?: SlotId[];
@@ -62,7 +64,11 @@ async function writeManifest({
   capabilities,
   hooks,
   slots,
-}: Pick<FixturePlugin, 'id' | 'capabilities' | 'hooks' | 'slots'> & {
+  settings,
+}: Pick<
+  FixturePlugin,
+  'id' | 'capabilities' | 'hooks' | 'slots' | 'settings'
+> & {
   folder: string;
   main: string;
 }): Promise<void> {
@@ -82,7 +88,7 @@ async function writeManifest({
       id,
       main,
       capabilities,
-      contributes: { ...template.contributes, hooks, slots },
+      contributes: { ...template.contributes, hooks, slots, settings },
     }),
   );
 }
