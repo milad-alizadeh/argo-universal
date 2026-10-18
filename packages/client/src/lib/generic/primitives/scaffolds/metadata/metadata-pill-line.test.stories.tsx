@@ -10,17 +10,31 @@ const meta = {
   component: MetadataPillLine,
   args: { pills: [{ text: 'iOS' }, { text: 'Android' }, { text: 'Web' }] },
 } satisfies Meta<typeof MetadataPillLine>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const RefitsWithoutLosingTheCount: Story = {
   render: function Render(args) {
     const [width, setWidth] = useState(100);
+    const [retinted, setRetinted] = useState(false);
+
     return (
       <>
         <View style={{ width }}>
-          <MetadataPillLine {...args} />
+          <MetadataPillLine
+            pills={
+              retinted
+                ? args.pills.map((pill) => ({ ...pill, tone: 'info' }))
+                : args.pills
+            }
+          />
         </View>
+        <Button
+          label={retinted ? 'Tone updated' : 'Retint'}
+          onPress={() => setRetinted(true)}
+        />
         <Button label="Widen" onPress={() => setWidth(500)} />
       </>
     );
@@ -29,6 +43,11 @@ export const RefitsWithoutLosingTheCount: Story = {
     const line = within(canvas.getByTestId('metadata-visible-pills'));
     await expect(await line.findByText('+2', { exact: true })).toBeVisible();
     await expect(line.getByText('iOS', { exact: true })).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Retint' }));
+    await expect(
+      canvas.getByRole('button', { name: 'Tone updated' }),
+    ).toBeVisible();
+    await expect(await line.findByText('+2', { exact: true })).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Widen' }));
     await expect(
       await line.findByText('Android', { exact: true }),

@@ -89,24 +89,30 @@ function Meta({ children }: { children?: ReactNode }): ReactNode {
   ) : null;
 }
 
-export function ItemContent(
-  props: ListItemProps & { tone?: 'accent' | 'danger' },
-): ReactElement {
+const contentClasses = {
+  above: 'min-w-0 self-stretch gap-0.5',
+  beside: 'min-w-0 max-w-1/2 shrink gap-0.5',
+  default: 'min-w-0 flex-1 gap-0.5',
+};
+
+function ItemTitle(props: ListItemProps): ReactElement {
+  const above = props.labelPlacement === 'above';
+
   return (
-    <View
-      className={
-        props.labelPlacement === 'above'
-          ? 'min-w-0 self-stretch gap-0.5'
-          : 'min-w-0 flex-1 gap-0.5'
-      }
+    <Text
+      role={above ? 'secondary' : 'row'}
+      tone={above ? 'muted' : props.tone}
+      numberOfLines={1}
     >
-      <Text
-        role={props.labelPlacement === 'above' ? 'secondary' : 'row'}
-        tone={props.labelPlacement === 'above' ? 'muted' : props.tone}
-        numberOfLines={1}
-      >
-        {props.title}
-      </Text>
+      {props.title}
+    </Text>
+  );
+}
+
+export function ItemContent(props: ListItemProps): ReactElement {
+  return (
+    <View className={contentClasses[props.labelPlacement ?? 'default']}>
+      <ItemTitle {...props} />
       <Subtitle text={props.subtitle} multiline={!!props.description} />
       <Meta>{props.meta}</Meta>
     </View>
@@ -128,21 +134,19 @@ function trailingContent(
   );
 }
 
+const trailingClasses = {
+  above: 'min-w-0 self-stretch',
+  beside: 'min-w-0 flex-1 flex-row items-center justify-end gap-1',
+  default: 'h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end gap-1',
+};
+
 export function Trailing(
   props: Pick<ListItemProps, 'trailing' | 'value' | 'labelPlacement'>,
 ): ReactNode {
   const content = trailingContent(props);
 
   return content === undefined ? null : (
-    <View
-      className={
-        props.labelPlacement === 'above'
-          ? 'min-w-0 self-stretch'
-          : props.labelPlacement === 'beside'
-            ? 'min-w-0 max-w-3/5 flex-1 flex-row items-center justify-end gap-1'
-            : 'h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end gap-1'
-      }
-    >
+    <View className={trailingClasses[props.labelPlacement ?? 'default']}>
       {content}
     </View>
   );

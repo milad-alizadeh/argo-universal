@@ -3,16 +3,18 @@ import { expect } from 'storybook/test';
 import { Metadata } from './metadata';
 import { fields } from './metadata.mocks';
 
+const path = '~/Developer/argo';
+
 const meta = {
   title: 'Tests/Metadata',
   component: Metadata,
   args: {
-    rows: [
-      { title: 'Path', value: { kind: 'text', text: '~/Developer/argo' } },
-    ],
+    rows: [{ title: 'Path', value: { kind: 'text', text: path } }],
   },
 } satisfies Meta<typeof Metadata>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const ReadsText: Story = {
@@ -21,7 +23,7 @@ export const ReadsText: Story = {
       canvas.getByRole('group', { name: 'Path, ~/Developer/argo' }),
     ).toBeVisible();
     await expect(canvas.getByText('Path')).toBeVisible();
-    await expect(canvas.getByText('~/Developer/argo')).toBeVisible();
+    await expect(canvas.getByText(path)).toBeVisible();
     await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
   },
 };
@@ -75,8 +77,8 @@ export const PreservesSpokenPath: Story = {
     rows: [
       {
         title: 'Path',
-        value: { kind: 'text', text: '~/Developer/argo' },
-        accessibilityLabel: '~/Developer/argo',
+        value: { kind: 'text', text: path },
+        accessibilityLabel: path,
       },
     ],
   },

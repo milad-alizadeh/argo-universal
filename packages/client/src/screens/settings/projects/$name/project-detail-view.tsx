@@ -121,6 +121,7 @@ function FolderSection({
   otherDevice,
 }: Pick<SectionsProps, 'project' | 'otherDevice'>): React.JSX.Element {
   const rows: MetadataProps['rows'] = [];
+
   if (otherDevice)
     rows.push({ title: 'Device', value: { kind: 'text', text: otherDevice } });
   const path = homePath(project.path);
