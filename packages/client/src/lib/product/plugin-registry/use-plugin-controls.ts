@@ -9,12 +9,14 @@ import type {
   PluginControls,
 } from './plugin-rendering';
 
+type Value = [sequence: number, value: WireJson | undefined];
+
 type Field = {
-  value?: WireJson;
+  value: Value;
   source?: WireJson;
   type: string;
   focused: boolean;
-  pending: number;
+  pending: Map<number, WireJson | undefined>;
   event: string;
 };
 
@@ -26,19 +28,15 @@ export function usePluginControls(root: WireNode): PluginControls {
       if (!findWireNode(root, key)) fields.delete(key);
   }, [fields, root]);
 
-  return (input) => {
-    const field = fieldFor(fields, input);
-
-    return propsFor(input, field, update);
-  };
+  return (input) => propsFor(input, fieldFor(fields, input), update);
 }
 
 function fieldFor(fields: Map<string, Field>, input: ControlInput): Field {
   const { node, context } = input;
   const source = input.source.value ?? input.source.selection;
-  const existing = fields.get(context.key);
-  const field = matchingField(existing, node.type, source);
-  syncField(field, source);
+  const field = matchingField(fields.get(context.key), node.type, source);
+
+  if (!field.focused) syncField(field, source);
   fields.set(context.key, field);
 
   return field;
@@ -51,14 +49,15 @@ function matchingField(
 ): Field {
   if (field?.type === type) return field;
 
-  return { type, value: source, source, focused: false, pending: 0, event: '' };
+  const value: Value = [0, source];
+  const pending = new Map<number, WireJson | undefined>();
+
+  return { type, value, source, focused: false, pending, event: '' };
 }
 
 function syncField(field: Field, source?: WireJson): void {
-  if (field.focused) return;
-
-  if (!Object.is(field.source, source))
-    field.value = pendingValue(field, source);
+  if (!Object.is(field.source, source) && !currentRequest(field))
+    field.value = [field.value[0], source];
   field.source = source;
 }
 
@@ -72,7 +71,7 @@ function propsFor(
 
   const prop = localProp(input);
 
-  if (prop) props[prop] = field.value;
+  if (prop) props[prop] = currentValue(field);
 
   if (isPending(input, field))
     Object.assign(props, { disabled: true, loading: true });
@@ -92,40 +91,42 @@ function localProp({ part }: ControlInput): string | undefined {
 
 function changeFor(field: Field, update: () => void): Change {
   return ({ event, value, deliver }) => {
-    const previous = field.value;
-    const next = localEvents.has(event) ? value : previous;
-    field.value = next;
+    const id = Math.max(field.value[0], ...field.pending.keys()) + 1;
+    const next = localEvents.has(event) ? value : currentValue(field);
+    field.pending.set(id, next);
     field.event = event;
-    field.pending += 1;
     update();
     void deliver()
-      .catch(() => {
-        if (Object.is(field.value, next)) field.value = previous;
-      })
-      .finally(settled(field, update));
+      .then(() => accept(field, [id, next]))
+      .catch(() => {})
+      .finally(() => settled(field, id, update));
   };
 }
 
-function settled(field: Field, update: () => void): () => void {
-  return () => {
-    field.pending -= 1;
-    update();
-  };
+function accept(field: Field, value: Value): void {
+  if (value[0] > field.value[0]) field.value = value;
+}
+
+function settled(field: Field, id: number, update: () => void): void {
+  field.pending.delete(id);
+  update();
+}
+
+const currentValue = (field: Field): WireJson | undefined =>
+  (currentRequest(field) ?? field.value)[1];
+
+function currentRequest(field: Field): Value | undefined {
+  const request = [...field.pending].at(-1);
+
+  return request && request[0] > field.value[0] ? request : undefined;
 }
 
 function isPending(input: ControlInput, field: Field): boolean {
-  return field.pending > 0 && blocking(input, field.event);
+  return field.pending.size > 0 && blocking(input, field.event);
 }
 
-function blocking({ part, node }: ControlInput, event: string): boolean {
-  if (node.type === 'ListItem') return false;
-
-  return !throttle(part.events[event]);
-}
-
-function pendingValue(field: Field, source?: WireJson): WireJson | undefined {
-  return field.pending ? field.value : source;
-}
+const blocking = ({ part, node }: ControlInput, event: string): boolean =>
+  node.type !== 'ListItem' && !throttle(part.events[event]);
 
 function focusOf(field: Field, update: () => void, text: boolean): PluginProps {
   if (!text) return {};
