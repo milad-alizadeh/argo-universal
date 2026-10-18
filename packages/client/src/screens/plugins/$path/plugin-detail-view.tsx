@@ -20,7 +20,7 @@ const pageScroll = {
   testID: 'plugin-page',
   className: 'bg-content',
   surfaceClassName: 'bg-content',
-  contentContainerClassName: 'py-6',
+  contentContainerClassName: 'px-6 py-6 wide:px-0',
   contentInsetAdjustmentBehavior: 'automatic',
 } as const;
 
