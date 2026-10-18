@@ -1,27 +1,15 @@
 import * as Burnt from 'burnt';
 import { useEffect, useRef } from 'react';
+import type { KitProps } from '../../kit-props';
 import { showActionToast } from './toast-action';
 import { toastTitle } from './toast-title';
 
-export interface ErrorToast {
-  title: string;
-  message?: string;
-  // Tells a new toast from a repeated one when the text alone cannot.
-  key?: string;
-}
+// Kit-only: identity for suppressing repeated notifications.
+export type Toast = KitProps<'Toast'> & { key?: string };
 
-// A button at the toast's trailing edge, such as Undo; pressing it closes the toast.
-export interface ToastAction {
-  label: string;
-  onPress: () => void;
-}
+export type ErrorToast = Pick<Toast, 'title' | 'message' | 'key'>;
 
-// A finished action reads as success; a failed load or action as danger.
-export type Toast = ErrorToast & {
-  tone: 'success' | 'danger';
-  // The web only: the phones' system toasts cannot hold a button.
-  action?: ToastAction;
-};
+export type ToastAction = NonNullable<Toast['action']>;
 
 type ToastOptions = Parameters<typeof Burnt.toast>[0];
 

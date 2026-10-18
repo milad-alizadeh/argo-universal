@@ -1,27 +1,9 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { Given, When, Then } from './fixtures';
+import { When, Then } from './fixtures';
 import { onPhone, phone, wide } from './frame';
 
-const sectionNames = ['Sessions', 'Settings', 'Issues', 'Hello'];
-
-const run = promisify(execFile);
-
-Given(
-  'the Server Project has a GitHub origin',
-  async ({ app }): Promise<void> => {
-    await run('git', [
-      '-C',
-      app.projectPath,
-      'remote',
-      'add',
-      'origin',
-      'git@github.com:owner/repository.git',
-    ]);
-  },
-);
+const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists'];
 
 // A phone Frame lists sections in the Drawer behind ☰; a wide one in its Rail.
 async function navigation(page: Page): Promise<Locator> {
@@ -64,7 +46,7 @@ Then(
   'the navigation lists core sections before Plugin items',
   async ({ page }): Promise<void> => {
     const items = (await navigation(page)).getByRole('button', {
-      name: /^(Sessions|Settings|Issues|Hello)$/,
+      name: /^(Sessions|Settings|Counter|Lists)$/,
     });
 
     await expect(items).toHaveCount(sectionNames.length);
@@ -77,19 +59,16 @@ Then(
 const pluginPage = 'plugin-page';
 
 const pluginUrl = (name: string): RegExp =>
-  name === 'Hello'
-    ? /\/plugins\/hello\/hello$/
-    : /\/plugins\/issue-tracker\/issues$/;
+  name === 'Counter'
+    ? /\/plugins\/counter\/counter$/
+    : /\/plugins\/lists\/lists\/lists$/;
 
-const pluginHeading = (page: Page, name: string): Locator => {
-  if (name === 'Hello')
-    return page.getByTestId(pluginPage).getByText('Hello from a Plugin');
-
-  if (name === 'Issue tracker')
-    return page.getByTestId(pluginPage).getByText('Issues', { exact: true });
-
-  return page.getByTestId(pluginPage);
-};
+const pluginHeading = (page: Page, name: string): Locator =>
+  page
+    .getByTestId(pluginPage)
+    .getByText(name === 'Counter' ? 'Counter fixture' : 'Deploy web', {
+      exact: true,
+    });
 
 When(
   'I press {string} on the Plugin page',
@@ -112,54 +91,30 @@ When('I open the Server Project', async ({ page }): Promise<void> => {
   await page.getByRole('link', { name: /^project,/ }).click();
 });
 
-When('I choose GitHub Issues', async ({ page }): Promise<void> => {
-  const button = page.getByRole('button', {
-    name: 'Select GitHub Issues',
-    exact: true,
-  });
-
-  await expect(button).toBeEnabled();
-  await button.click();
-});
-
-Then(
-  'the Issues page shows the fixture Issue',
-  async ({ page }): Promise<void> => {
-    await expect(
-      page.getByRole('button', { name: /#42 Fixture issue from GitHub/ }),
-    ).toBeVisible();
-  },
-);
-
-When('I open the fixture Issue', async ({ page }): Promise<void> => {
-  await page
-    .getByRole('button', { name: /#42 Fixture issue from GitHub/ })
-    .click();
-});
-
-Then(
-  'the Issue page shows its description',
-  async ({ page }): Promise<void> => {
-    await expect(
-      page.getByText('This Issue came from the fixture gh executable.'),
-    ).toBeVisible();
-  },
-);
-
-Then('the Issue view fits in the viewport', async ({ page }): Promise<void> => {
-  await expect(
-    page.getByRole('button', { name: 'Back to Issues', exact: true }),
-  ).toBeInViewport();
-  await expect(
-    page.getByRole('button', { name: 'Open in GitHub', exact: true }),
-  ).toBeInViewport();
-});
-
 Then(
   'the Plugin row {string} is selected',
   async ({ page }, name: string): Promise<void> => {
     await expect(
       page.getByTestId(pluginPage).getByRole('button', { name, exact: true }),
     ).toHaveAttribute('aria-pressed', 'true');
+  },
+);
+
+Then(
+  'the Project details show the fixture Plugin Slot',
+  async ({ page }): Promise<void> => {
+    await expect(page.getByText(/^Fixture Slot for /)).toBeVisible();
+  },
+);
+
+Then(
+  'the Plugin detail actions fit in the viewport',
+  async ({ page }): Promise<void> => {
+    await expect(
+      page.getByRole('button', { name: 'Back to counter', exact: true }),
+    ).toBeInViewport();
+    await expect(
+      page.getByRole('button', { name: 'Open documentation', exact: true }),
+    ).toBeInViewport();
   },
 );

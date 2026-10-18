@@ -1,4 +1,4 @@
-import { helloSlotRoot } from '@repo/contracts/plugins/wire-fixtures';
+import { slotCounterRoot } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import {
@@ -42,7 +42,7 @@ export const WithPluginContent: Story = {
           {
             pluginId: 'hello',
             name: 'Hello',
-            root: helloSlotRoot,
+            root: slotCounterRoot,
             onEvent: action('plugin event'),
           },
         ]}

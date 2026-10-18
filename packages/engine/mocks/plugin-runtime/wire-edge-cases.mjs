@@ -7,8 +7,8 @@ function MixedKeys() {
   return jsx('Column', {
     children: [
       jsx('Button', { label: 'Change', onPress: () => setChanged(true) }, '1'),
-      jsx('Text', { label: changed ? 'Changed' : 'Original' }),
-      jsx('Text', { label: 'Reserved-looking key' }, '~1'),
+      jsx('Text', { children: changed ? 'Changed' : 'Original' }),
+      jsx('Text', { children: 'Reserved-looking key' }, '~1'),
     ],
   });
 }
@@ -23,8 +23,8 @@ function ConditionalSlots() {
       null,
       undefined,
       false,
-      visible && jsx('Text', { label: 'Optional' }, 'optional'),
-      jsx('Text', { label: 'Always' }, 'always'),
+      visible && jsx('Text', { children: 'Optional' }, 'optional'),
+      jsx('Text', { children: 'Always' }, 'always'),
     ],
   });
 }

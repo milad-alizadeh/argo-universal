@@ -31,7 +31,7 @@ export const runListRoot: WireNode = {
               }),
               node('Pill', 'environment', { text: 'Production' }),
             ],
-            trailing: [node('Text', 'time', { label: 'now' })],
+            trailing: [node('Text', 'time', { children: 'now' })],
           },
         },
       ],

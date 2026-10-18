@@ -1,0 +1,23 @@
+{
+  "id": "counter",
+  "name": "Counter",
+  "version": "1.0.0",
+  "engines": {
+    "argo": ">=0.0.0 <2"
+  },
+  "main": "index.js",
+  "icon": {
+    "sf": "puzzlepiece",
+    "material": "extension"
+  },
+  "contributes": {
+    "nav": [
+      {
+        "id": "counter",
+        "title": "Counter",
+        "path": "/"
+      }
+    ],
+    "slots": ["argo/project/details/v1"]
+  }
+}

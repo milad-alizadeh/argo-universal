@@ -1,29 +1,19 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { IconName } from '../../../symbols/icon-names';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
+import type { KitProps } from '../../kit-props';
 
-// One action in a menu: choosing it runs it and closes the menu.
-export interface MenuAction {
-  label: string;
-  onPress: () => void;
-  // Drawn before the label, as a context menu's rows draw theirs.
-  icon?: IconName;
-  // The action the trigger shows now, such as the PR a header lists: every menu marks it with a check.
-  selected?: boolean;
-  // Drawn in place of the label where the menu draws its own rows (web); the label still names the action on native menus.
-  content?: ReactNode;
-  // Shown but not chosen, such as an action the current state does not allow.
-  disabled?: boolean;
-}
+type DerivedMenu<Value extends string = string> = KitProps<'Menu', Value>;
 
-// One answer in a choice menu; a disabled one is shown but cannot be chosen.
-export interface MenuOption<Value extends string> {
-  value: Value;
-  label: string;
-  disabled?: boolean;
-  // Drawn before the label; on iOS the system puts it after its own check.
-  icon?: IconName;
-}
+type Actions = Extract<DerivedMenu, { actions: readonly unknown[] }>;
+
+// Kit-only: custom web row content.
+export type MenuAction = Actions['actions'][number] & { content?: ReactNode };
+
+export type MenuOption<Value extends string> = Extract<
+  DerivedMenu<Value>,
+  { options: readonly unknown[] }
+>['options'][number];
 
 /*
  * The labelled trigger a Menu, Picker or Composer overlay opens from: a leading icon, the label and a down chevron.
@@ -46,58 +36,30 @@ export interface MenuTriggerProps {
   testID?: string;
 }
 
-interface MenuBaseProps {
-  accessibilityLabel: string;
-  /*
-   * The element the menu opens from, such as a MenuTrigger, or text the menu draws as its inline trigger: a muted label and a down chevron.
-   * One per size class where they differ, such as a phone's header item and a wide window's icon button.
-   */
-  trigger: SizeClassValue<ReactElement | string>;
-  disabled?: boolean;
-  // Which edge of the trigger the web menu lines up with; native menus place themselves.
-  align?: 'start' | 'end';
-  // The options are on their way: the menu opens to one progress row with nothing to choose.
-  loading?: boolean;
-}
+// Kit-only: the local interactive trigger, optionally by Size class.
+type MenuTrigger = { trigger: SizeClassValue<ReactElement | string> };
 
-// What the progress row says while a menu's options load.
 export const menuLoadingLabel = 'Loading options…';
 
-// A single-choice menu: the chosen value carries a check.
-export interface ChoiceMenuProps<Value extends string> extends MenuBaseProps {
-  value: Value;
-  options: readonly MenuOption<Value>[];
-  onValueChange: (value: Value) => void;
-  actions?: never;
-  groups?: never;
-}
+export type ChoiceMenuProps<Value extends string> = Extract<
+  DerivedMenu<Value>,
+  { options: readonly unknown[] }
+> &
+  MenuTrigger;
 
-// One group of a grouped choice menu: its own single choice, under an optional heading.
-export interface MenuChoiceGroup {
-  // Heads the group; a group with none sits under the one before it, set apart only by space or a divider.
-  label?: string;
-  value: string;
-  options: readonly MenuOption<string>[];
-  onValueChange: (value: string) => void;
-}
+export type MenuChoiceGroup = Extract<
+  DerivedMenu,
+  { groups: readonly unknown[] }
+>['groups'][number];
 
-// Several single choices in one menu, such as what a list shows and how it lays its rows out; each group checks its own value.
-export interface GroupedChoiceMenuProps extends MenuBaseProps {
-  groups: readonly MenuChoiceGroup[];
-  actions?: never;
-  value?: never;
-  options?: never;
-  onValueChange?: never;
-}
+export type GroupedChoiceMenuProps = Extract<
+  DerivedMenu,
+  { groups: readonly unknown[] }
+> &
+  MenuTrigger;
 
-// An action menu: each item runs its own action.
-export interface ActionMenuProps extends MenuBaseProps {
-  actions: readonly MenuAction[];
-  value?: never;
-  options?: never;
-  onValueChange?: never;
-  groups?: never;
-}
+export type ActionMenuProps = Actions &
+  MenuTrigger & { actions: readonly MenuAction[] };
 
 export type MenuProps<Value extends string = string> =
   | ChoiceMenuProps<Value>

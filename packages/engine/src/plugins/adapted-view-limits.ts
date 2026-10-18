@@ -2,7 +2,6 @@ import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import {
   pluginMessageBytes,
   pluginPageBytes,
-  pluginPageFallback,
 } from '@repo/contracts/plugins/wire-limits';
 import { wireSizeReason } from './wire-size';
 
@@ -10,7 +9,10 @@ import { wireSizeReason } from './wire-size';
 export class AdaptedViewLimits {
   private refused = false;
 
-  constructor(private readonly log: (reason: string) => void) {}
+  constructor(
+    private readonly log: (reason: string) => void,
+    private readonly fallback: WireNode,
+  ) {}
 
   accept(root: WireNode, message: ViewMessage): ViewMessage | null {
     const reason =
@@ -32,7 +34,7 @@ export class AdaptedViewLimits {
       type: 'snapshot',
       revision: message.revision,
       viewId: message.viewId,
-      root: pluginPageFallback,
+      root: this.fallback,
     };
   }
 }

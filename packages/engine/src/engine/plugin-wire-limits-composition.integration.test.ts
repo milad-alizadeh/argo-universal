@@ -36,7 +36,7 @@ it.each([
       type: 'snapshot',
       root: {
         type: 'Text',
-        props: { label: 'This Plugin page could not be displayed.' },
+        props: { children: 'This Plugin page could not be displayed.' },
         children: [],
         slots: {},
       },
@@ -72,6 +72,6 @@ it('coalesces a burst of committed effects into the first frame snapshot', async
   expect((await stream.next()).value).toMatchObject({
     type: 'snapshot',
     revision: 1,
-    root: { props: { label: 'Commit 3' } },
+    root: { props: { children: 'Commit 3' } },
   });
 }, 10_000);

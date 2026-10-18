@@ -1,10 +1,11 @@
 import type { ReactElement } from 'react';
 import type { ButtonProps } from '#primitives/actions/button';
+import type { KitProps } from '../../kit-props';
 
-export interface EmptyStateProps {
-  icon?: string;
-  title: string;
-  description?: string;
-  action?: ReactElement<ButtonProps>;
+export type EmptyStateProps = KitProps<
+  'EmptyState',
+  string,
+  ReactElement<ButtonProps>
+> & {
   testID?: string;
-}
+};

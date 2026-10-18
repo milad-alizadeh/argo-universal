@@ -1,6 +1,7 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
 import type { WirePartDefinition } from '../src/plugins/wire-parts';
+import { partObjectSchema } from './plugin-object-schema';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
@@ -11,7 +12,7 @@ const jsonValueDescription = 'JSON value';
 const schemas: Record<string, JsonSchema> = Object.fromEntries(
   Object.entries(pluginPartSchemas).map(([name, part]) => [
     name,
-    z.toJSONSchema(part.props, { unrepresentable: 'any' }),
+    partObjectSchema(part),
   ]),
 );
 
@@ -123,6 +124,8 @@ function schemaTypeCandidates(schema: JsonSchema): (string | undefined)[] {
 }
 
 export function markdownType(schema: JsonSchema): string {
+  if (typeof schema['x-argo-type'] === 'string') return schema['x-argo-type'];
+
   return (
     schemaTypeCandidates(schema).find((candidate) => candidate !== undefined) ??
     jsonValueDescription

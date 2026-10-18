@@ -4,7 +4,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { ComboboxOptionRow } from './combobox-option';
+import { ComboboxChoices } from './combobox-choices';
 import type { ComboboxContentProps } from './combobox-props';
 
 export type ResultsProps<Value extends string> = ComboboxContentProps<Value> & {
@@ -32,24 +32,7 @@ export function ComboboxResults<Value extends string>(
 function Options<Value extends string>(
   props: ResultsProps<Value>,
 ): ReactElement {
-  return createElement(
-    'div',
-    optionsProps(props.label),
-    props.options.map((option) => (
-      <ComboboxOptionRow key={option.value} {...props} option={option} />
-    )),
-    props.message,
-  );
-}
-
-function optionsProps(label: string): React.ComponentProps<'div'> {
-  return {
-    // Wide, rows keep the 2px gap the other desktop popovers use, so hovered and selected tiles never touch.
-    className:
-      'max-h-80 overflow-y-auto px-4 pb-4 wide:flex wide:flex-col wide:gap-0.5 wide:p-0',
-    role: 'radiogroup',
-    'aria-label': label,
-  };
+  return <ComboboxChoices {...props} />;
 }
 
 const directions = new Map([

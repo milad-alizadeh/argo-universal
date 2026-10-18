@@ -1,5 +1,3 @@
-import type { SymbolSource } from './symbol-source';
-
 // Files and folders.
 export const fileSymbols = {
   'changed-files': { sf: 'doc.badge.plus', material: 'note_add' },
@@ -16,4 +14,4 @@ export const fileSymbols = {
   'folder-open': { sf: 'folder.fill', material: 'folder_open' },
   folders: { sf: 'rectangle.stack', material: 'folder_copy' },
   registry: { sf: 'doc.plaintext', material: 'article' },
-} as const satisfies Record<string, SymbolSource>;
+} as const;

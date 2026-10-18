@@ -5,8 +5,11 @@ import type { Prop, Props } from './wire-tree';
 // What React hands the reconciler: a Plugin's props, plus `children` and the `argoKey` the JSX runtime adds.
 export interface ElementProps {
   children?: ReactNode;
-  renderItem?: (item: WireJson) => ReactNode;
-  [name: string]: Prop | ReactNode | ((item: WireJson) => ReactNode);
+  renderItem?: (item: WireJson, index: number) => ReactNode;
+  [name: string]:
+    | Prop
+    | ReactNode
+    | ((item: WireJson, index: number) => ReactNode);
 }
 
 const isProp = (value: ElementProps[string]): value is Prop =>
@@ -30,7 +33,10 @@ export function toProps(type: string, raw: ElementProps): Props {
   return Object.fromEntries(
     Object.entries(raw)
       .filter(([name, value]) => !reserved.has(name) && value !== undefined)
-      .map(([name, value]) => [name, checked(type, name, value)]),
+      .map(([name, value]) => [
+        name === 'argoText' ? 'children' : name,
+        checked(type, name, value),
+      ]),
   );
 }
 

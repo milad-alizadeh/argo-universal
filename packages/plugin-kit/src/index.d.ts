@@ -1,5 +1,9 @@
 import type {
-  WireProps,
+  KitSchemaProps,
+  KitListItem,
+  KitNode,
+} from '@repo/contracts/kit-props';
+import type {
   WirePart,
   wireParts,
   listPartNames,
@@ -28,19 +32,45 @@ type Callback<Payload> = [Payload] extends [undefined]
   ? () => void | Promise<void>
   : (payload: Payload) => void | Promise<void>;
 
-type SchemaProps<Name extends WirePart> = {
-  [
-    Prop in keyof WireProps[Name] as string extends Prop ? never : Prop
-  ]: WireProps[Name][Prop];
-};
+type DeclaredProps<Props> = Props extends object
+  ? {
+      [Prop in keyof Props as string extends Prop ? never : Prop]: Props[Prop];
+    }
+  : Props;
 
-type EventProps<Name extends WirePart> = {
-  [Prop in keyof SchemaProps<Name>]: Prop extends keyof Events<Name>
-    ?
-        | Exclude<SchemaProps<Name>[Prop], WireEvent>
-        | Callback<z.output<Extract<Events<Name>[Prop], z.ZodType>>>
-    : SchemaProps<Name>[Prop];
-};
+type SchemaProps<Name extends WirePart> = DeclaredProps<KitSchemaProps[Name]>;
+
+type ExpansionValue<Value, Item> = Value extends KitListItem
+  ? Item
+  : Value extends KitNode
+    ? ReactNode
+    : Value extends (...args: infer Args) => infer Result
+      ? (
+          ...args: { [Key in keyof Args]: ExpansionValue<Args[Key], Item> }
+        ) => ExpansionValue<Result, Item>
+      : Value extends readonly (infer Element)[]
+        ? readonly ExpansionValue<Element, Item>[]
+        : Value;
+
+type MappedPluginProps<
+  Props,
+  Name extends WirePart,
+  Item,
+> = Props extends object
+  ? {
+      [Prop in keyof Props]: Prop extends keyof Events<Name>
+        ?
+            | Exclude<Props[Prop], WireEvent>
+            | Callback<z.output<Extract<Events<Name>[Prop], z.ZodType>>>
+        : ExpansionValue<Props[Prop], Item>;
+    }
+  : Props;
+
+type EventProps<Name extends WirePart, Item = unknown> = MappedPluginProps<
+  SchemaProps<Name>,
+  Name,
+  Item
+>;
 
 type SlotChild = ReactElement | boolean | null | undefined;
 
@@ -55,26 +85,15 @@ type Children<Name extends WirePart> =
     ? { children?: ReactNode }
     : { children?: never };
 
-type Content<Name extends WirePart> = Name extends 'Text' | 'Button'
-  ? Omit<EventProps<Name>, 'label'> &
-      (
-        | { label: string; children?: never }
-        | { label?: never; children: string | number | (string | number)[] }
-      )
+type Content<Name extends WirePart> = Name extends 'Text'
+  ? EventProps<Name>
   : EventProps<Name> & SlotProps<Name> & Children<Name>;
 
 type ListPart = (typeof listPartNames)[number];
 
-type ListProps<Name extends ListPart, Item> = EventProps<Name> &
+type ListProps<Name extends ListPart, Item> = EventProps<Name, Item> &
   SlotProps<Name> &
-  (
-    | {
-        items: readonly Item[];
-        renderItem: (item: Item) => ReactNode;
-        children?: never;
-      }
-    | { items?: never; renderItem?: never; children?: ReactNode }
-  );
+  Children<Name>;
 
 type ListComponent<Name extends ListPart> = <Item>(
   props: ListProps<Name, Item>,

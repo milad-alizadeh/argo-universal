@@ -1,10 +1,6 @@
-// One filter in a toolbar, with its count; the chosen one is on.
-export interface FilterPillProps {
-  label: string;
-  count?: number;
-  selected: boolean;
-  onPress: () => void;
-}
+import type { KitProps } from '../../kit-props';
+
+export type FilterPillProps = KitProps<'FilterPill'>;
 
 type PillText = Pick<FilterPillProps, 'label' | 'count'>;
 

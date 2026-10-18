@@ -38,9 +38,9 @@ async function writeCompatibleManifest(manifest: string): Promise<void> {
 }
 
 When(
-  'the crashing Plugin starts alongside Issue tracker',
+  'the crashing Plugin starts alongside Counter',
   async ({ page, app }): Promise<void> => {
-    for (const pluginId of ['issue-tracker', 'fixture-hello'])
+    for (const pluginId of ['counter', 'fixture-hello'])
       await mutate({
         page,
         httpUrl: app.httpUrl,
@@ -57,7 +57,7 @@ Then(
   async ({ page }): Promise<void> => {
     await expect(toast(page, title)).toBeVisible();
     await expect(toast(page, 'Fixture Plugin crashed')).toBeVisible();
-    await expect(toast(page, 'Issue tracker stopped')).toHaveCount(0);
+    await expect(toast(page, 'Counter stopped')).toHaveCount(0);
   },
 );
 
@@ -67,7 +67,7 @@ const pluginStates = z.object({
   ),
 });
 
-Then('Issue tracker is still running', async ({ page, app }): Promise<void> => {
+Then('Counter is still running', async ({ page, app }): Promise<void> => {
   const result = await query({
     page,
     httpUrl: app.httpUrl,
@@ -77,7 +77,7 @@ Then('Issue tracker is still running', async ({ page, app }): Promise<void> => {
   });
 
   expect(result.plugins).toContainEqual({
-    manifest: { id: 'issue-tracker' },
+    manifest: { id: 'counter' },
     state: 'running',
   });
 });

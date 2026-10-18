@@ -20,7 +20,7 @@ export function nativeSplit<Value extends string>(
 ): NativeSplit {
   return {
     acting: actingOf(props),
-    items: nativeMenuItems(menuRows(props)),
+    items: nativeMenuItems<Value>(menuRows(props)),
     menuLabel: props.menuLabel,
     primary: props.primary === true,
     // The native split is one control, on or off as a whole.

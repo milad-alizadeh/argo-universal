@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { collapsibleProps } from '../overlay-kit-props';
 import { gridAccessibility } from '../part-accessibility-metadata';
 import {
   part,
@@ -106,13 +107,20 @@ export const layoutPartSchemas = {
   ),
   Collapsible: part(
     'A disclosure container that shows or hides its content.',
-    z.object({
-      label: stringLabel,
-      expanded: z
-        .boolean()
-        .optional()
-        .describe('Whether content is initially expanded.'),
-    }),
-    { slots: { label: ['Text'], content: containerParts } },
+    collapsibleProps,
+    {
+      previous: [
+        z.object({
+          label: stringLabel,
+          expanded: z
+            .boolean()
+            .optional()
+            .describe('Whether content is initially expanded.'),
+        }),
+      ],
+      children: true,
+      events: { onOpenChange: z.boolean() },
+      slots: {},
+    },
   ),
 };

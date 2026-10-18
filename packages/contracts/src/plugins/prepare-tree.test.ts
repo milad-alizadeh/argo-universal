@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { legacyPartVersions, versionsOf } from './kit';
+import { legacyPartVersions } from './kit';
 import { prepareWireTree } from './prepare-tree';
 import type { WireNode } from './wire';
 
@@ -8,7 +8,7 @@ const updateMessage = 'Update Argo to see this';
 const label: WireNode = {
   type: 'Text',
   key: 'label',
-  props: { label: 'Readable', accessibilityLabel: 'Accessible' },
+  props: { children: 'Readable', accessibilityLabel: 'Accessible' },
   children: [],
   slots: {},
 };
@@ -27,11 +27,14 @@ describe('Plugin wire compatibility', () => {
       ...label,
       props: { label: 'Readable' },
     });
-    expect(prepareWireTree(label, { Text: 2 })).toEqual(label);
+    expect(prepareWireTree(label, { Text: 2 })).toEqual({
+      ...label,
+      props: { label: 'Readable', accessibilityLabel: 'Accessible' },
+    });
   });
 
   it('lowers Stack to Row or Column with its key, layout and children', () => {
-    const parts = { ...legacyPartVersions, Text: 2 };
+    const parts = { ...legacyPartVersions, Text: 3 };
 
     expect(prepareWireTree(stack, parts)).toEqual({
       ...stack,
@@ -94,7 +97,7 @@ describe('Plugin wire compatibility', () => {
   );
 
   it('drops malformed and unknown leaves while keeping siblings', () => {
-    const bad = { ...label, props: { label: 42 } };
+    const bad = { ...label, props: { children: true } };
     const unknown = { ...label, type: 'Sparkline' };
 
     expect(
@@ -102,15 +105,11 @@ describe('Plugin wire compatibility', () => {
     ).toEqual([{ ...label, props: { label: 'Readable' } }]);
   });
 
-  it('derives versions only for registered parts and strips unknown optional props', () => {
-    expect(versionsOf(['Text', 'Stack', 'Internal'])).toEqual({
-      Text: 2,
-      Stack: 1,
-    });
+  it('strips unknown optional props', () => {
     expect(
       prepareWireTree(
         { ...label, props: { ...label.props, future: true } },
-        { Text: 2 },
+        { Text: 3 },
       ),
     ).toEqual(label);
   });

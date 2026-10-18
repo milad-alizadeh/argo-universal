@@ -1,8 +1,7 @@
 import { textRoles } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
 import type { Text as RNText } from 'react-native';
-import type { SizeClassValue } from '../../../use-size-class/size-class-value';
-import type { Tone } from './text-tone';
+import type { KitProps } from '../../kit-props';
 
 export { textRoles };
 
@@ -10,12 +9,10 @@ export type TextRole = (typeof textRoles)[number];
 
 export type TextProps = Omit<
   React.ComponentProps<typeof RNText>,
-  'role' | 'accessibilityRole'
+  keyof KitProps<'Text'> | 'accessibilityRole'
 > &
-  React.RefAttributes<RNText> & {
-    // One role, or one per size class when the text's place changes with the window.
-    role?: SizeClassValue<TextRole>;
-    tone?: Tone;
+  React.RefAttributes<RNText> &
+  KitProps<'Text'> & {
     // What the text is to assistive technology, such as a heading or an alert.
     accessibilityRole?: React.ComponentProps<typeof RNText>['role'];
     'aria-level'?: number;

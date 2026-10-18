@@ -6,11 +6,15 @@ import {
   type ReactNode,
   type ReactElement,
 } from 'react';
-import { listPosition, type ListPosition } from '../../../list-context';
+import {
+  listPosition,
+  type ListPosition,
+  type ListSelection,
+} from '../../../list-context';
 import type { ListSectionProps } from './list-props';
 import { ListSection, SectionHeader, SectionFooter } from './list-section';
 
-export interface ListChild {
+export interface ListChild extends ListSelection {
   key: string;
   content: ReactNode;
   position: ListPosition;
@@ -61,10 +65,18 @@ function sectionEntries(
 ): ListChild[] {
   const props = child.props;
 
-  const body =
-    props.isExpanded === false ? [] : childEntries(props.children, key);
+  const body = props.isExpanded === false ? [] : selectedEntries(props, key);
 
   return [...headerEntries(props, key), ...body, ...footerEntries(props, key)];
+}
+
+function selectedEntries(props: ListSectionProps, key: string): ListChild[] {
+  return childEntries(props.children, key).map((entry) => ({
+    ...entry,
+    selectionMode: props.selectionMode,
+    selection: props.selection,
+    onSelectionChange: props.onSelectionChange,
+  }));
 }
 
 function entryKey(child: ReactNode, prefix: string, index: number): string {

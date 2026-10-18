@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { wireParts } from './wire-parts';
+import type { WithPropHints } from '../kit-prop-hints';
+import { pluginPartSchemas } from './plugin-part-schemas';
+import type { WireSchemaHints } from './plugin-prop-descriptions.gen';
+import { wireParts, type WirePartDefinition } from './wire-parts';
+
+export { textForApp } from './text-for-app';
 
 export { wireParts, listPartNames } from './wire-parts';
 
@@ -23,14 +28,17 @@ export {
 export type WirePart = keyof typeof wireParts;
 
 export type WireProps = {
-  [Name in WirePart]: z.output<(typeof wireParts)[Name]['props']>;
+  [Name in WirePart]: WithPropHints<
+    z.output<(typeof wireParts)[Name]['props']>,
+    Name extends keyof WireSchemaHints
+      ? WireSchemaHints[Name]
+      : Record<never, never>
+  >;
 };
 
-const partsByType = new Map(Object.entries(wireParts));
+const partsByType = new Map(Object.entries(pluginPartSchemas));
 
-export function wirePart(
-  type: string,
-): (typeof wireParts)[WirePart] | undefined {
+export function wirePart(type: string): WirePartDefinition | undefined {
   return partsByType.get(type);
 }
 

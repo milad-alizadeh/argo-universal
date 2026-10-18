@@ -1,10 +1,11 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
+import { List } from '#primitives/lists/list';
+import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import type { LoadedProps } from './project-list-props';
 
 type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
@@ -23,9 +24,9 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
 
   return (
     <View className="flex-1 pt-2 wide:pt-0">
-      <GroupedList>
-        <ProjectRows {...props} found={found} searching={query !== ''} />
-      </GroupedList>
+      <List fit={false} appearance="grouped" padding={{ compact: 4, wide: 0 }}>
+        {projectRows({ ...props, found, searching: query !== '' })}
+      </List>
     </View>
   );
 }
@@ -33,48 +34,54 @@ export function LoadedProjects(props: LoadedProps): React.JSX.Element {
 const countTitle = (count: number): string =>
   count === 1 ? '1 Project' : `${count} Projects`;
 
-function ProjectRows(props: FoundProps): React.JSX.Element {
-  if (props.found.length === 0)
-    return <NoProjects searching={props.searching} />;
+function projectRows(props: FoundProps): React.JSX.Element {
+  if (props.found.length === 0) return noProjects(props.searching);
 
-  return <FoundProjects {...props} />;
+  return foundProjects(props);
 }
 
-function NoProjects({ searching }: { searching: boolean }): React.JSX.Element {
+function noProjects(searching: boolean): React.JSX.Element {
   return (
-    <GroupedListSection>
-      <GroupedListItem
-        label={searching ? 'No Project matches.' : 'No Projects yet.'}
+    <List.Section>
+      <ListItem
+        title={searching ? 'No Project matches.' : 'No Projects yet.'}
       />
-    </GroupedListSection>
+    </List.Section>
   );
 }
 
-function FoundProjects({
+function foundProjects({
   found,
   onOpenProject,
 }: FoundProps): React.JSX.Element {
   return (
-    <GroupedListSection title={countTitle(found.length)}>
+    <List.Section title={countTitle(found.length)}>
       {found.map((project) => (
         <ProjectRow key={project.id} project={project} onOpen={onOpenProject} />
       ))}
-    </GroupedListSection>
+    </List.Section>
   );
 }
 
 const folderNotFound = 'Folder not found';
 
-const missingFolder: GroupedListItemProps['status'] = {
+const missingFolder: ListItemProps['badge'] = {
+  kind: 'status',
   tone: 'warning',
   label: folderNotFound,
 };
 
-type ProjectDetail = Pick<GroupedListItemProps, 'value' | 'status'>;
+type ProjectDetail = Pick<ListItemProps, 'value' | 'badge' | 'trailing'>;
 
 const missingFolderDetail: ProjectDetail = {
-  value: { compact: undefined, wide: folderNotFound },
-  status: missingFolder,
+  badge: missingFolder,
+  trailing: (
+    <SizeClass only="wide">
+      <Text role="row" tone="muted">
+        {folderNotFound}
+      </Text>
+    </SizeClass>
+  ),
 };
 
 // Where the Project's remote is, or that its folder is gone: a phone shows only the dot, which the row's name still says.
@@ -91,11 +98,14 @@ type ProjectRowProps = {
 
 // One line at every width: the folder path sits only on the Project's own page.
 function ProjectRow(props: ProjectRowProps): React.JSX.Element {
+  const detail = projectDetail(props.project);
+
   return (
-    <GroupedListItem
-      icon="folder"
-      label={props.project.name}
-      {...projectDetail(props.project)}
+    <ListItem.Link
+      leading={<Icon name="folder" role="row" />}
+      title={props.project.name}
+      {...detail}
+      accessibilityLabel={`${props.project.name}, ${detail.value ?? folderNotFound}`}
       onPress={() => props.onOpen(props.project.name)}
     />
   );

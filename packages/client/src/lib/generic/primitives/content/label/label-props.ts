@@ -1,10 +1,4 @@
-import type { IconProps } from '#primitives/content/icon';
-import type { Tone } from '#primitives/content/text';
+import type { KitProps } from '../../kit-props';
 
-export interface LabelProps {
-  icon: IconProps['name'];
-  text: string;
-  tone?: Tone;
-  accessibilityLabel?: string;
-  testID?: string;
-}
+// Kit-only: test identity.
+export type LabelProps = KitProps<'Label'> & { testID?: string };

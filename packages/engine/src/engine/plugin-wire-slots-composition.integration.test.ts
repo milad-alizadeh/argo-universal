@@ -25,8 +25,8 @@ it('carries every node in fragment and array slots', async () => {
       props: { label: 'Slotted row' },
       slots: {
         leading: [
-          { props: { label: 'First' } },
-          { props: { label: 'Second' } },
+          { props: { children: 'First' } },
+          { props: { children: 'Second' } },
         ],
         accessories: [
           {
@@ -35,7 +35,7 @@ it('carries every node in fragment and array slots', async () => {
               onPress: { $event: 'onPress' },
             },
           },
-          { props: { label: 'Count 0' } },
+          { props: { children: 'Count 0' } },
         ],
       },
     },
@@ -49,7 +49,7 @@ it.each([
       {
         op: 'setProps',
         key: [{ slot: 'accessories', key: 'count' }],
-        props: { label: 'Count 1' },
+        props: { children: 'Count 1' },
       },
     ],
   },

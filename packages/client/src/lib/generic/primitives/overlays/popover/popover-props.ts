@@ -1,16 +1,13 @@
 import type { ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import type {
-  OpenStateProps,
-  TriggerElement,
-} from '#primitives/overlays/open-state';
+import type { TriggerElement } from '#primitives/overlays/open-state';
+import type { KitProps } from '../../kit-props';
 
-export type PopoverProps = OpenStateProps & {
+export type PopoverProps = KitProps<'Popover'> & {
   // Web only: phones have no pointer to hover with, so a press opens it.
   openOnHover?: boolean;
   className?: string;
   style?: StyleProp<ViewStyle>;
-  children: ReactNode;
 };
 
 // The caller's own pressable element, which opens the popover.

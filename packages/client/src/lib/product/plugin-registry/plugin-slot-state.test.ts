@@ -1,15 +1,15 @@
 import {
-  helloSlotRoot,
-  helloSlotSnapshot,
-  helloSlotTree,
-  helloSlotWavePatch,
+  slotCounterRoot,
+  slotCounterSnapshot,
+  slotCounterTree,
+  slotCounterWavePatch,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { describe, expect, it } from 'vitest';
 import { reducePluginSlot } from './plugin-slot-state';
 
 const path = 'slot:argo/project/details/v1:{"projectId":"argo"}';
 
-const view = (pluginId: string, message = helloSlotSnapshot) =>
+const view = (pluginId: string, message = slotCounterSnapshot) =>
   ({ type: 'view', pluginId, path, message }) as const;
 
 describe('reducePluginSlot', () => {
@@ -37,20 +37,24 @@ describe('reducePluginSlot', () => {
     });
 
     const drawn = reducePluginSlot(listed, view('hello'));
-    const patched = reducePluginSlot(drawn, view('hello', helloSlotWavePatch));
+
+    const patched = reducePluginSlot(
+      drawn,
+      view('hello', slotCounterWavePatch),
+    );
 
     expect(drawn).toEqual([
       {
         pluginId: 'hello',
         path,
-        view: { root: helloSlotRoot, revision: 1, viewId: null },
+        view: { root: slotCounterRoot, revision: 1, viewId: null },
       },
     ]);
     expect(patched).toEqual([
       {
         pluginId: 'hello',
         path,
-        view: { root: helloSlotTree('argo', 1), revision: 2, viewId: null },
+        view: { root: slotCounterTree('argo', 1), revision: 2, viewId: null },
       },
     ]);
   });

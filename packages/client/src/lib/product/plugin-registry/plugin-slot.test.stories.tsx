@@ -1,7 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
-  helloSlotRoot,
-  helloSlotWaveEvent,
+  slotCounterRoot,
+  slotCounterWaveEvent,
 } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
@@ -12,7 +12,7 @@ import { PluginSlot, type PluginSlotContribution } from './plugin-slot';
 const trackerRoot: WireNode = {
   type: 'Text',
   key: '0',
-  props: { label: 'No Tracker chosen' },
+  props: { children: 'No Tracker chosen' },
   children: [],
   slots: {},
 };
@@ -20,7 +20,7 @@ const trackerRoot: WireNode = {
 const hello: PluginSlotContribution = {
   pluginId: 'hello',
   name: 'Hello',
-  root: helloSlotRoot,
+  root: slotCounterRoot,
   onEvent: fn(),
 };
 
@@ -64,7 +64,7 @@ export const OneContribution: Story = {
     await expect(canvas.getByText('Hello from argo')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Wave' }));
     await expect(hello.onEvent).toHaveBeenCalledWith('0/1', {
-      event: helloSlotWaveEvent,
+      event: slotCounterWaveEvent,
     });
   },
 };
