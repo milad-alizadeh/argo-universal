@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { actionListWireParts } from './action-list-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
 import {
@@ -19,12 +18,14 @@ import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
 import { listExpansion } from './list-expansion';
 import { listWireParts } from './list-wire-parts';
+import { pressUi } from './part-ui';
+import { textForApp } from './text-for-app';
 import type { WirePartDefinition } from './wire-part-definition';
 import { wirePartReferences } from './wire-part-reference';
 
 export type { WirePartDefinition } from './wire-part-definition';
 
-export { listPartNames } from './list-expansion';
+export { listPartNames } from './list-wire-parts';
 
 const contentParts = [
   'Text',
@@ -40,7 +41,6 @@ const contentParts = [
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
   ...listWireParts,
-  ...actionListWireParts,
   ...controlWireParts,
   GroupedListItem: {
     props: groupedItemProps,
@@ -88,6 +88,7 @@ export const wireParts = {
   },
   Text: {
     props: textProps,
+    appProps: textForApp,
     versions: [
       textProps.transform(legacyTextProps).pipe(textV1),
       textProps.transform(legacyTextProps).pipe(textV2),
@@ -100,6 +101,7 @@ export const wireParts = {
     reference: wirePartReferences.Text,
   },
   Button: {
+    ui: pressUi,
     props: buttonProps,
     versions: [
       buttonProps.transform(legacyButtonProps).pipe(buttonV1),

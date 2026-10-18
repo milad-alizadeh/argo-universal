@@ -60,6 +60,7 @@ function partReference(input: PartReferenceInput): WirePartReference {
 }
 
 const defaultOptions = {
+  ui: {},
   slots: noSlots,
   events: noEvents,
   children: false,
@@ -153,7 +154,9 @@ export function part(
 ): WirePartDefinition {
   describeProps(schema);
 
-  return definition(summary, schema, resolveOptions(schema, options));
+  const config = resolveOptions(schema, options);
+
+  return { ...definition(summary, schema, config), ui: config.ui };
 }
 
 export {

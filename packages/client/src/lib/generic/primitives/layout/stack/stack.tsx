@@ -29,3 +29,11 @@ const classesOf = ({
 export function Stack(props: StackProps): ReactElement {
   return <View className={classesOf(props)}>{props.children}</View>;
 }
+
+export function Row(props: Omit<StackProps, 'direction'>): ReactElement {
+  return <Stack {...props} direction="row" />;
+}
+
+export function Column(props: Omit<StackProps, 'direction'>): ReactElement {
+  return <Stack {...props} direction="column" />;
+}

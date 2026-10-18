@@ -8,6 +8,7 @@ import { requiredLabel } from './text-input-label';
 import {
   isInvalid,
   keyboardOf,
+  focusOf,
   type PhoneFieldProps,
 } from './text-input-props';
 import { FieldSpinner } from './text-input-spinner';
@@ -81,13 +82,11 @@ function inputBehaviour(props: PhoneFieldProps): InputProps {
     value: props.value,
     placeholder: props.placeholder,
     onChangeText: props.onChangeText,
-    onBlur: props.onBlur,
+    ...focusOf(props),
     editable: !props.disabled,
     ...keyboardOf(props),
     autoCapitalize: 'none',
     autoCorrect: false,
-    autoFocus: props.focusOnOpen,
-    selectTextOnFocus: props.selectOnFocus,
     onSubmitEditing: props.onSubmit,
   };
 }

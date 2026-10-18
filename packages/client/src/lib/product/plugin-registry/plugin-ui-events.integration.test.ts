@@ -13,8 +13,8 @@ it.each(['onSearchTextChange', 'onChangeText'] as const)(
     });
 
     onTestFinished(() => events.close());
-    void events.send('search', { event, payload: 'a' });
-    void events.send('search', { event, payload: 'argo' });
+    void events.send('search', { event, payload: 'a' }, 150);
+    void events.send('search', { event, payload: 'argo' }, 150);
     events.setDelivery((_key, interaction) => {
       later.push(interaction);
     });
