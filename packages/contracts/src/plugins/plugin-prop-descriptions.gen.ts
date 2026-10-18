@@ -190,14 +190,12 @@ export type WireSchemaHints = {
     "busy": PropValue<"Callout", "busy">;
   };
   "EmptyState": {
-    /** icon for this part. */
+    /** Optional native symbol name. */
     "icon": PropValue<"EmptyState", "icon">;
-    /** The visible and accessible label. */
+    /** The empty state heading. */
     "title": PropValue<"EmptyState", "title">;
-    /** label for this part. */
+    /** Optional supporting text. */
     "description": PropValue<"EmptyState", "description">;
-    /** action for this part. */
-    "action": PropValue<"EmptyState", "action">;
   };
   "Button": {
     /** The button label. */
