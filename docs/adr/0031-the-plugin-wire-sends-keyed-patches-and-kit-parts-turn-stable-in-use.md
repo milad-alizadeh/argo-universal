@@ -1,7 +1,3 @@
----
-status: proposed
----
-
 # The Plugin wire sends keyed patches, and kit parts turn stable once used
 
 This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.md) and [ADR-0027](0027-plugins-act-through-one-api-hook-core-and-replace-named-components.md), and builds on [ADR-0028](0028-plugins-draw-svg-charts-and-canvases-on-every-app.md) and [ADR-0030](0030-plugins-get-only-the-capabilities-their-manifest-declares.md) (Spec 0017 #959). Spec 0017 opens the whole UI kit to Plugins: lists, grids, tables, forms, media. A council review (Plugin authors, native platforms, wire protocol, design system) found that today's wire cannot carry it:
