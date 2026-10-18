@@ -1,5 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { delimiter } from 'node:path';
+import { shellEnvironment } from '../agents';
 import type { CheckedCommand } from './plugin-access';
 import { argoLimitBytes, argoTimeoutMs } from './plugin-limits';
 import type { ProcessCall } from './runtime-protocol';
@@ -35,9 +37,10 @@ export class PluginProcesses {
   async handle(
     call: CheckedProcessCall,
   ): Promise<ProcessResult | string | null> {
-    if (call.action === 'run') return this.start(call, argoTimeoutMs).done;
+    if (call.action === 'run')
+      return this.start(await withLoginPath(call), argoTimeoutMs).done;
 
-    if (call.action === 'spawn') return this.spawned(call);
+    if (call.action === 'spawn') return this.spawned(await withLoginPath(call));
 
     return this.control(call);
   }
@@ -127,6 +130,23 @@ export class PluginProcesses {
     clearTimeout(timer);
     this.timers.delete(timer);
   }
+}
+
+async function withLoginPath(command: CheckedCommand): Promise<CheckedCommand> {
+  const environment = await shellEnvironment(command.cwd);
+
+  const paths = [
+    ...(command.env.PATH ?? '').split(delimiter),
+    ...(environment.PATH ?? '').split(delimiter),
+  ];
+
+  return {
+    ...command,
+    env: {
+      ...command.env,
+      PATH: [...new Set(paths.filter(Boolean))].join(delimiter),
+    },
+  };
 }
 
 // The child leads its own process group, so its descendants die with it.

@@ -1,8 +1,7 @@
 import type * as React from 'react';
 import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { Badge } from '#primitives/status/badge';
+import { Pill } from '#primitives/status/pill';
 import { GroupedListItem } from './grouped-list-item';
 import { onPress } from './grouped-list-item-press.mocks';
 
@@ -62,11 +61,7 @@ export function LargeRows(): React.JSX.Element {
 }
 
 function ReadyBadge(): React.JSX.Element {
-  return (
-    <Badge tone="success">
-      <Text>Ready</Text>
-    </Badge>
-  );
+  return <Pill tone="success" text="Ready" />;
 }
 
 export function StateRows(): React.JSX.Element {

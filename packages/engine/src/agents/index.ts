@@ -15,6 +15,8 @@ export type { FetchAgents } from './registry/fetch-agents';
 
 export { defaultInstallPorts } from './launch/default-ports';
 
+export { shellEnvironment } from './launch/shell-env';
+
 export type { InstallPorts } from './launch/ports';
 
 export {

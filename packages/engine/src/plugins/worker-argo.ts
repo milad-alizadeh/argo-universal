@@ -125,6 +125,9 @@ export const argoSource = `(() => {
       batch: (queries) => call({ api: 'storage', queries }),
       execute: async (query) => (await call({ api: 'storage', queries: [query] }))[0],
     }),
+    projects: Object.freeze({
+      list: () => call({ api: 'projects', action: 'list' }),
+    }),
     secrets: Object.freeze({
       get: (account) => secret({ action: 'get', account }),
       set: async (account, value) => { await secret({ action: 'set', account, value }); },

@@ -49,7 +49,7 @@ export const layoutProps = z.object({
   align: z.enum(stackAlignments).optional().describe('Cross-axis alignment.'),
 });
 
-export const groupedItemProps = z.object({
+export const groupedItemV1 = z.object({
   label: z.string().describe('The row label and accessible name.'),
   value: z.string().optional().describe('Optional secondary row value.'),
   disabled: z
@@ -68,6 +68,8 @@ export const svgProps = z.object({
   aspectRatio: z.number().finite().positive().optional(),
   onPress: pressHandler.optional(),
 });
+
+export const groupedItemProps = groupedItemV1;
 
 export const listProps = z.object({});
 
@@ -102,13 +104,28 @@ export const labelProps = z.object({
 export const pillProps = z.object({
   text: z.string(),
   tone: z.enum(tones).optional(),
+  color: z.string().optional(),
 });
+
+export const rowBadgeProps = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('status'),
+    tone: z.enum(tones),
+    pulse: z.boolean().optional(),
+    label: z.string().optional(),
+  }),
+  z.object({
+    kind: z.literal('count'),
+    count: z.number().int().nonnegative(),
+    label: z.string().optional(),
+  }),
+]);
 
 export const listItemProps = z.object({
   title: z.string(),
   subtitle: z.string().optional(),
   value: z.string().optional(),
-  badge: z.number().int().nonnegative().optional(),
+  badge: z.union([z.number().int().nonnegative(), rowBadgeProps]).optional(),
   progress: progressBarProps.optional(),
   selected: z.boolean().optional(),
   disabled: z.boolean().optional(),

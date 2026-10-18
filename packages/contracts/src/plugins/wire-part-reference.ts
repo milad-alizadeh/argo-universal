@@ -63,9 +63,20 @@ export const wirePartReferences = {
         'A row with `onPress` exposes link semantics. It reads the label and optional value and reports disabled state.',
     },
     appearance:
-      'The row uses Argo semantic surfaces and text tokens, which adapt to the active color scheme. This schema has no arbitrary color or Image prop.',
+      'The legacy row uses Argo semantic surfaces and text tokens, which adapt to the active color scheme. Use ListItem for Argo-drawn status and count badges.',
     deprecated:
       'Use `ListItem`; this legacy name remains accepted while first-party Plugins migrate.',
+  },
+  Pill: {
+    summary: 'Static short text with a semantic tone or tracker color.',
+    accessibility: {
+      label: 'The required `text` is the spoken name.',
+      keyboard: 'Pill is not focusable and adds no keyboard shortcut.',
+      voiceOver: 'Reads the required `text`.',
+      talkBack: 'Reads the required `text`.',
+    },
+    appearance:
+      '`tone` uses semantic colors that adapt to light and dark appearance. `color` is for tracker labels and is preserved as supplied.',
   },
   VirtualList: {
     ...listContainer(
@@ -129,19 +140,15 @@ export const wirePartReferences = {
     deprecated: 'Use `Stack` with `direction="column"`.',
   },
   Svg: {
-    summary:
-      'A sanitized SVG visual. Use fixed markup; use Canvas for data scenes and interactive drawing.',
+    summary: 'Sanitized SVG artwork. Use Canvas for interactive drawing.',
     accessibility: {
-      label:
-        'The required `label` is the accessible name of the image or button.',
+      label: 'Accessible name for the image or button.',
       keyboard:
-        'Without `onPress`, the image is not focusable. With `onPress`, it exposes button semantics and supports platform activation.',
-      voiceOver:
-        'Without `onPress`, exposes an image and reads its required `label`. With `onPress`, exposes a button and reads its required `label`.',
-      talkBack:
-        'Without `onPress`, exposes an image and reads its required `label`. With `onPress`, exposes a button and reads its required `label`.',
+        'Not focusable as an image; `onPress` enables button activation.',
+      voiceOver: 'Reads the label as an image or button, based on `onPress`.',
+      talkBack: 'Reads the label as an image or button, based on `onPress`.',
     },
     appearance:
-      '`tone` selects an Argo semantic color that adapts to light and dark appearance. The Server sanitizes the SVG markup and rejects unsupported markup and attributes.',
+      '`tone` sets semantic color; Server sanitizes markup and rejects unsupported SVG.',
   },
 } satisfies Record<string, WirePartReference>;

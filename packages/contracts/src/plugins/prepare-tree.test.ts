@@ -115,6 +115,31 @@ describe('Plugin wire compatibility', () => {
     ).toEqual(label);
   });
 
+  it('preserves every named-slot node while lowering its parts for the App', () => {
+    const root: WireNode = {
+      type: 'GroupedListItem',
+      key: 'item',
+      props: { label: 'Slotted' },
+      children: [],
+      slots: { leading: [stack, label] },
+    };
+
+    expect(
+      prepareWireTree(root, { ...legacyPartVersions, GroupedListItem: 1 })
+        .slots,
+    ).toEqual({
+      leading: [
+        {
+          ...stack,
+          type: 'Row',
+          props: { gap: 2 },
+          children: [{ ...label, props: { label: 'Readable' } }],
+        },
+        { ...label, props: { label: 'Readable' } },
+      ],
+    });
+  });
+
   it('refuses undeclared slots and parts outside their closed accepted set', () => {
     const root: WireNode = {
       type: 'GroupedListItem',

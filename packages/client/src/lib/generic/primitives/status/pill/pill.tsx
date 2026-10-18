@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import { Text, type Tone } from '#primitives/content/text';
-import { cn } from '../../../utils';
 import type { PillProps } from './pill-props';
 
 const fills = {
@@ -15,12 +15,56 @@ const fills = {
   done: 'bg-done/10',
 } satisfies Record<Tone, string>;
 
-export function Pill({ text, tone = 'muted' }: PillProps): ReactElement {
+function pillClassName(
+  tone: Tone | undefined,
+  className: string | undefined,
+): string {
+  return cn(
+    'shrink-0 flex-row rounded-full px-2 py-0.5',
+    fills[tone ?? 'muted'],
+    className,
+  );
+}
+
+const PillText = ({
+  text,
+  tone,
+  color,
+}: Pick<PillProps, 'text' | 'tone' | 'color'>): ReactElement => (
+  <Text
+    role="secondary"
+    tone={tone}
+    numberOfLines={1}
+    style={color ? { color } : undefined}
+  >
+    {text}
+  </Text>
+);
+
+function PillView({
+  className,
+  tone,
+  children,
+  ...props
+}: Omit<PillProps, 'text' | 'color'> & {
+  children: ReactElement;
+}): ReactElement {
   return (
-    <View className={cn('shrink-0 rounded-full px-2 py-0.5', fills[tone])}>
-      <Text role="secondary" tone={tone} numberOfLines={1}>
-        {text}
-      </Text>
+    <View {...props} className={pillClassName(tone, className)}>
+      {children}
     </View>
+  );
+}
+
+export function Pill({
+  text,
+  tone = 'muted',
+  color,
+  ...props
+}: PillProps): ReactElement {
+  return (
+    <PillView {...props} tone={tone}>
+      <PillText text={text} tone={tone} color={color} />
+    </PillView>
   );
 }

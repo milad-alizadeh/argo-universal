@@ -93,7 +93,9 @@ function memberNames(source: string, name: string): string[] {
 
 // The names prop-vocabulary.mocks.ts lists in Primitives or Aliases.
 function coveredTypes(source: string): string[] {
-  return ['Primitives', 'Aliases'].flatMap((name) => memberNames(source, name));
+  return ['Primitives', 'Aliases', 'AdditionalPrimitives'].flatMap((name) =>
+    memberNames(source, name),
+  );
 }
 
 it('checks every type the primitives export against the prop vocabulary', () => {
@@ -102,7 +104,9 @@ it('checks every type the primitives export against the prop vocabulary', () => 
   );
 
   const covered = coveredTypes(
-    readFileSync(join(primitives, 'prop-vocabulary.mocks.ts'), 'utf8'),
+    ['prop-vocabulary.mocks.ts', 'prop-vocabulary-extra.mocks.ts']
+      .map((file) => readFileSync(join(primitives, file), 'utf8'))
+      .join('\n'),
   );
 
   expect([...new Set(covered)].sort()).toEqual([...new Set(exported)].sort());

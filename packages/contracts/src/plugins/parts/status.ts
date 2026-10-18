@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pillProps } from '../kit-props';
 import {
   progressBarAccessibility,
   spinnerAccessibility,
@@ -15,11 +16,7 @@ import {
 export const statusPartSchemas = {
   Pill: part(
     'Static short text with a semantic tone or tracker color.',
-    z.object({
-      label: stringLabel,
-      tone,
-      color: z.string().optional().describe('Tracker label color.'),
-    }),
+    pillProps,
     {
       appearance:
         '`tone` uses semantic colors that adapt to light and dark appearance. `color` is for tracker labels and is preserved as supplied.',

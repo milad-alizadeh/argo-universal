@@ -1,4 +1,4 @@
-import type { CoreHooks } from '@repo/contracts/plugins';
+import type { CoreHooks, PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PluginAssets } from './assets';
 import type { Waiting } from './hooks/spawn-hooks';
 import type { PluginNetwork } from './plugin-fetch';
@@ -8,6 +8,7 @@ export type PluginServiceOptions = {
   assets: PluginAssets;
   log: (line: string) => void;
   projects: () => Promise<readonly string[]>;
+  projectInfo: () => Promise<PluginProjectInfo[]>;
   network?: PluginNetwork;
   settings?: (pluginId: string, key: string) => Promise<PluginValue>;
   hooks?: CoreHooks;

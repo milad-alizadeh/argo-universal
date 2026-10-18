@@ -64,10 +64,10 @@ describe('createTRPCClient', () => {
             parts: {
               List: 1,
               'List.Section': 1,
-              ListItem: 1,
+              ListItem: 2,
               Label: 1,
               ProgressBar: 1,
-              Pill: 1,
+              Pill: 2,
               VirtualList: 1,
               GroupedList: 1,
               GroupedListItem: 1,

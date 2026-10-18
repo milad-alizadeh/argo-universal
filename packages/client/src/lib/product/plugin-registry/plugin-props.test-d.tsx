@@ -10,6 +10,7 @@ import {
   Stack,
   Text,
   GroupedListItem,
+  Pill,
   VirtualList,
   Table,
   GroupedList,
@@ -17,17 +18,7 @@ import {
   type PluginComponents,
   type PluginProps,
 } from '@argo/plugin-kit';
-import type { WireProps } from '@repo/contracts/plugins/kit';
 import { expectTypeOf } from 'vitest';
-import type { ButtonProps } from '#primitives/actions/button';
-import type { LabelProps } from '#primitives/content/label';
-import type { TextProps, TextRole } from '#primitives/content/text';
-import type { StackProps } from '#primitives/layout/stack';
-import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
-import type { ListProps, ListSectionProps } from '#primitives/lists/list';
-import type { ListItemProps } from '#primitives/lists/list-item';
-import type { PillProps } from '#primitives/status/pill';
-import type { ProgressBarProps } from '#primitives/status/progress-bar';
 
 type PublicComponents = Omit<PluginComponents, 'List.Section'> & {
   ListSection: PluginComponents['List.Section'];
@@ -39,42 +30,6 @@ expectTypeOf<
 
 expectTypeOf<typeof PluginKit.List.Section>().toEqualTypeOf<
   PluginComponents['List.Section']
->();
-
-expectTypeOf<
-  Omit<Extract<PluginProps['Text'], { label: string }>, 'children'>
->().toEqualTypeOf<WireProps['Text']>();
-
-expectTypeOf<WireProps['Stack']>().toEqualTypeOf<
-  Omit<StackProps, 'children'>
->();
-
-type Flat<Props> = { [Key in keyof Props]: Props[Key] };
-
-expectTypeOf<Flat<PluginProps['Stack']>>().toEqualTypeOf<StackProps>();
-
-expectTypeOf<Flat<PluginProps['Row']>>().toEqualTypeOf<
-  Omit<StackProps, 'direction'>
->();
-
-expectTypeOf<PluginProps['Column']>().toEqualTypeOf<PluginProps['Row']>();
-
-expectTypeOf<WireProps['Text']['variant']>().toEqualTypeOf<
-  TextRole | undefined
->();
-
-expectTypeOf<WireProps['Text']['tone']>().toEqualTypeOf<TextProps['tone']>();
-
-expectTypeOf<WireProps['Text']['accessibilityLabel']>().toEqualTypeOf<
-  TextProps['accessibilityLabel']
->();
-
-expectTypeOf<Omit<WireProps['Button'], 'onPress'>>().toEqualTypeOf<
-  Pick<ButtonProps, 'label' | 'variant' | 'tone' | 'size' | 'disabled'>
->();
-
-expectTypeOf<PluginProps['Button']['onPress']>().toExtend<
-  WireProps['Button']['onPress'] | ButtonProps['onPress']
 >();
 
 <Stack direction="column" gap={2}>
@@ -115,21 +70,7 @@ expectTypeOf<PluginProps['Button']['onPress']>().toExtend<
 // @ts-expect-error DOM styling cannot bypass the Plugin prop schemas.
 <span className="styled" style={{ color: 'red' }} />;
 
-expectTypeOf<Omit<WireProps['GroupedListItem'], 'onPress'>>().toExtend<
-  Pick<GroupedListItemProps, 'label' | 'value' | 'disabled'>
->();
-
-expectTypeOf<NonNullable<PluginProps['GroupedListItem']['leading']>>().toExtend<
-  | React.ReactElement
-  | boolean
-  | readonly (React.ReactElement | boolean | null | undefined)[]
->();
-
-<GroupedListItem
-  label="Slotted"
-  leading={[<Text key="a" label="First" />, <Text key="b" label="Second" />]}
-  onPress={() => {}}
-/>;
+<Pill text="Healthy" tone="success" />;
 
 <VirtualList
   items={[{ id: 'row' }]}
@@ -175,20 +116,6 @@ const optional = Boolean('optional');
 />;
 
 expectTypeOf<PluginProps['VirtualList']>().toHaveProperty('items');
-
-expectTypeOf<WireProps['List']>().toExtend<ListProps<never>>();
-
-expectTypeOf<WireProps['List.Section']>().toExtend<ListSectionProps>();
-
-expectTypeOf<
-  Omit<WireProps['ListItem'], 'onPress'>
->().toExtend<ListItemProps>();
-
-expectTypeOf<WireProps['Label']>().toExtend<LabelProps>();
-
-expectTypeOf<WireProps['ProgressBar']>().toExtend<ProgressBarProps>();
-
-expectTypeOf<WireProps['Pill']>().toExtend<PillProps>();
 
 <List
   empty={<Text label="No runs" />}

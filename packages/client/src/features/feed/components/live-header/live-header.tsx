@@ -22,9 +22,9 @@ import {
 import { fullTurnDegrees } from '#lib/generic/motion';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { useClock } from '#lib/generic/use-clock';
-import { StatusIndicator } from '#lib/product/status-indicator/status-indicator';
 import { Icon, IconSlot } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { StatusDot } from '#primitives/status/status-dot';
 import { ShimmerText } from '../shimmer-text';
 import { toolCallIcon } from '../tool-call-icon';
 import { WorkingMark } from '../working-mark';
@@ -85,9 +85,7 @@ const sourceIcons: Record<
   LiveHeaderSource['type'],
   (toolCall: ToolCallUpdate | undefined) => React.JSX.Element
 > = {
-  request: () => (
-    <StatusIndicator testID="live-header-dot" status="needs_input" />
-  ),
+  request: () => <StatusDot testID="live-header-dot" tone="warning" pulse />,
   retry: () => <RetryIcon />,
   working: () => <WorkingMark />,
   thought: () => mutedIcon('thinking'),

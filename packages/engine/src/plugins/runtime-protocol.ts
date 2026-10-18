@@ -53,6 +53,7 @@ export const PluginRequest = z.discriminatedUnion('api', [
   PluginAssetRequest,
   z.object({ api: z.literal('hooks'), call: HookCall }),
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
+  z.object({ api: z.literal('projects'), action: z.literal('list') }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
   z.object({ api: z.literal('settings'), key: z.string() }),
   z.object({ api: z.literal('fs'), call: FsCall }),

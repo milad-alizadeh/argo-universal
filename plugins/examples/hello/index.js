@@ -6,6 +6,7 @@ import {
   Column,
   Row,
   Text,
+  Pill,
   useEffect,
   useState,
 } from '@argo/plugin-kit';
@@ -38,8 +39,21 @@ function HelloPage() {
     <Column gap={4}>
       <Text variant="heading">{greeting}</Text>
       <Text>{`Tapped ${taps} times`}</Text>
+      <ExampleBadges />
       <Buttons onTap={() => setTaps(taps + 1)} />
     </Column>
+  );
+}
+
+function ExampleBadges() {
+  return (
+    <>
+      <Pill text="Healthy" tone="success" />
+      <ListItem
+        title="Waiting jobs"
+        badge={{ kind: 'count', count: 3, label: '3 queued jobs' }}
+      />
+    </>
   );
 }
 
@@ -49,10 +63,13 @@ const builds = [
 ];
 
 const buildMeta = (
-  <Label
-    text="2/5 jobs"
-    icon={{ sf: 'checkmark.circle', material: 'check_circle' }}
-  />
+  <>
+    <Pill text="Healthy" tone="success" />
+    <Label
+      text="2/5 jobs"
+      icon={{ sf: 'checkmark.circle', material: 'check_circle' }}
+    />
+  </>
 );
 
 function BuildRow({ build, selected, onSelect }) {
@@ -63,6 +80,7 @@ function BuildRow({ build, selected, onSelect }) {
       selected={selected === build.id}
       onPress={() => onSelect(build.id)}
       meta={buildMeta}
+      badge={{ kind: 'count', count: 3, label: '3 queued jobs' }}
       progress={{ value: 0.4, tone: 'success', active: true }}
     />
   );

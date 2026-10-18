@@ -177,7 +177,9 @@ export async function readOriginHost(
   return url === null ? null : readRemoteUrlHost(url);
 }
 
-async function readOriginUrl(projectPath: string): Promise<string | null> {
+export async function readOriginUrl(
+  projectPath: string,
+): Promise<string | null> {
   try {
     const { stdout } = await run([
       '-C',

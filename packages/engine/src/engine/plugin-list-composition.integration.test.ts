@@ -38,7 +38,12 @@ it('expands Hello List items into keyed rows and dispatches selection to the mat
               selected: false,
               progress: { value: 0.4 },
             },
-            slots: { meta: [{ type: 'Label', props: { text: '2/5 jobs' } }] },
+            slots: {
+              meta: [
+                { type: 'Pill', props: { text: 'Healthy', tone: 'success' } },
+                { type: 'Label', props: { text: '2/5 jobs' } },
+              ],
+            },
           },
           {
             type: 'ListItem',

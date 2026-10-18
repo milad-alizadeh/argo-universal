@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { rowBadgeProps } from '../kit-props';
 import {
   part,
   handler,
@@ -84,12 +85,11 @@ export const listsPartSchemas = {
         .optional()
         .describe('Whether this item is selected by its parent List.'),
       badge: z
-        .object({
-          count: z.number().int().nonnegative(),
-          label: z.string().optional(),
-        })
+        .union([z.number().int().nonnegative(), rowBadgeProps])
         .optional()
-        .describe('A count badge with an optional spoken label.'),
+        .describe(
+          'A status dot or count badge drawn over the leading lane’s top-end corner.',
+        ),
     }),
     {
       slots: {

@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { commentProblems } from './comment-rules.mts';
@@ -34,7 +34,10 @@ const requested = process.argv.slice(2);
 
 const files = (requested.length > 0 ? requested : trackedSources())
   .map((file): string => resolve(root, file))
-  .filter((file): boolean => !/\.gen\./.test(file) && !own.has(file))
+  .filter(
+    (file): boolean =>
+      existsSync(file) && !/\.gen\./.test(file) && !own.has(file),
+  )
   .sort();
 
 const problems = files.flatMap(fileProblems);

@@ -236,6 +236,22 @@ _Avoid_: Notice, Feed entry
 Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
 _Avoid_: Design system (for the code), component library
 
+**Pill**:
+A short, static label that shows an Argo status or a Tracker label.
+_Avoid_: Badge, chip
+
+**Row badge**:
+A status dot or count drawn at the top-end corner of a row's leading icon or image.
+_Avoid_: Badge (for a Pill)
+
+**Avatar**:
+A circular image or initials that identifies a person or Agent, with an optional StatusDot.
+_Avoid_: Profile picture
+
+**StatusDot**:
+A small coloured dot that shows an item's state.
+_Avoid_: Status indicator
+
 **Frame**:
 The App's chrome around its pages: the rail, the section sidebar and the panes. It places them with a Scaffold.
 _Avoid_: Shell, app shell, chrome
