@@ -8,13 +8,16 @@ interface DetailLayout {
   detail?: string;
 }
 
-// Paper's popover Effort row keeps the overlay's 8 lane: the title line, then its control 12 below.
+/*
+ * Paper's popover Effort row keeps the overlay's 8 lane: the title line, then its control 12 below.
+ * In a list, the title line is a grouped row's: 54 tall, at the margin M.
+ */
 const detailLayouts: Record<'overlay' | 'list', DetailLayout> = {
   overlay: { row: 'flex-1 gap-3', title: 'flex-row items-center' },
   list: {
     row: 'flex-1',
-    title: 'min-h-13 wide:min-h-11 flex-row items-center px-4 py-3',
-    detail: 'px-4 pb-3',
+    title: 'min-h-13.5 flex-row items-center px-4 py-3 wide:px-5',
+    detail: 'px-4 pb-3 wide:px-5',
   },
 };
 

@@ -56,8 +56,6 @@ export const iconSymbols = {
   unavailable: { sf: 'nosign', material: 'block' },
   delete: { sf: 'trash', material: 'delete' },
   diagram: { sf: 'flowchart', material: 'schema' },
-  // A list row's disclosure: forward in the reading direction, as a stock Form row draws it.
-  disclosure: { sf: 'chevron.forward', material: 'chevron_right' },
   domains: { sf: 'circles.hexagongrid', material: 'workspaces' },
   edit: { sf: 'pencil', material: 'edit' },
   engine: { sf: 'gearshape.2', material: 'manufacturing' },

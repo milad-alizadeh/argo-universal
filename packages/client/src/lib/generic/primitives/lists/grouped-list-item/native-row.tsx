@@ -5,9 +5,11 @@ import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { IconSlot, IconSpinner } from '#primitives/content/icon';
 import { NativeControl } from '#primitives/native/native-control';
+import type { IconRole } from '../../../symbols/icon-role';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
+import { useLeadingRole } from './grouped-list-item-leading-role';
 import {
   type ResolvedItemProps,
   groupedListItemStatus,
@@ -18,7 +20,7 @@ import { hiddenFromAccessibility, StatusDot } from './status-dot';
 function NativeRowIcon({ icon }: { icon: IconSymbol }): React.JSX.Element {
   return (
     <StackedIcon>
-      <NativeSymbol name={icon} role="row" />
+      <NativeSymbol name={icon} role={useLeadingRole()} />
     </StackedIcon>
   );
 }
@@ -35,16 +37,18 @@ export function NativeRowImage({
 }: RowImageProps): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <IconSlot role={imageRole(variant)} {...hiddenFromAccessibility}>
+      <IconSlot role={useImageRole(variant)} {...hiddenFromAccessibility}>
         {image}
       </IconSlot>
     </RNHostView>
   );
 }
 
-const imageRole = (
-  variant: ResolvedItemProps['variant'],
-): 'identity' | 'row' => (variant === 'card' ? 'identity' : 'row');
+function useImageRole(variant: ResolvedItemProps['variant']): IconRole {
+  const role = useLeadingRole();
+
+  return variant === 'card' ? 'identity' : role;
+}
 
 function NativeRowDot(
   props: Pick<ResolvedItemProps, 'needsAttention' | 'status'>,
@@ -115,7 +119,7 @@ export function NativeRowLeading(
 function NativeRowSpinner(): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <IconSlot role="row" {...hiddenFromAccessibility}>
+      <IconSlot role={useLeadingRole()} {...hiddenFromAccessibility}>
         <IconSpinner iconRole="body" colorClassName="accent-foreground" />
       </IconSlot>
     </RNHostView>
