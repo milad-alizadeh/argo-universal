@@ -9,7 +9,11 @@ A semantic surface with fill, radius, depth, and optional press behavior.
 | Prop | Requirement | Type | Description |
 | --- | --- | --- | --- |
 | `kind` | Required | `card`, `tray`, `glass`, `overlay` | Surface treatment. |
+| `fill` | Optional | `content`, `card`, `muted`, `accent`, `overlay` | Semantic fill role. |
+| `radius` | Optional | `sm`, `md`, `lg`, `xl`, `2xl`, `full`, `control`, `sheet` | Semantic shape token. |
+| `depth` | Optional | `card`, `tray`, `glass`, `raised` | Semantic depth token. |
 | `onPress` | Optional | Plugin event object or `toast` action object or `navigate` action object or `openUrl` action object or `copy` action object | Action or Plugin event invoked by onPress. |
+| `actions` | Optional | object[] | Actions available from this surface. |
 
 ## Slots
 
@@ -19,10 +23,10 @@ Accepts child parts in source order.
 
 ## Accessibility
 
-- **Accessible name:** Use the part’s required label prop as its accessible name.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** A semantic surface with fill, radius, depth, and optional press behavior; the container adds no name, and child parts keep their own accessible names.
+- **Keyboard:** A Surface with onPress enters keyboard focus order and activates with Enter or Space; otherwise focus moves through its interactive children.
+- **VoiceOver:** A pressable Surface exposes button semantics and its child content; a static Surface leaves its children as separate elements.
+- **TalkBack:** A pressable Surface exposes button semantics and its child content; a static Surface leaves its children as separate elements.
 
 ## Appearance
 

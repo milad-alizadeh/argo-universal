@@ -19,9 +19,9 @@ Does not accept child nodes on the wire.
 ## Accessibility
 
 - **Accessible name:** The displayed key names are the accessible name.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Keyboard:** Kbd is a static shortcut hint and does not enter the focus order or activate the shortcut.
+- **VoiceOver:** VoiceOver reads the displayed key names as a shortcut hint; it does not activate them.
+- **TalkBack:** TalkBack reads the displayed key names as a shortcut hint; it does not activate them.
 
 ## Appearance
 

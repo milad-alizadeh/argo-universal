@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import {
+  avatarAccessibility,
+  iconAccessibility,
+  kbdAccessibility,
+} from '../part-accessibility-metadata';
+import {
   part,
   stringLabel,
   optionalLabel,
@@ -16,10 +21,12 @@ export const contentPartSchemas = {
       role: z.string().optional().describe('Semantic icon size role.'),
       tone,
       status: z.string().optional().describe('Optional status mark.'),
+      accessibilityLabel: optionalLabel,
     }),
     {
       label:
         'Provide `accessibilityLabel` when the icon conveys information; omit it when decorative.',
+      accessibility: iconAccessibility,
     },
   ),
   Image: part(
@@ -93,7 +100,10 @@ export const contentPartSchemas = {
     z.object({
       keys: z.array(z.string()).min(1).describe('Keys in the shortcut.'),
     }),
-    { label: 'The displayed key names are the accessible name.' },
+    {
+      label: 'The displayed key names are the accessible name.',
+      accessibility: kbdAccessibility,
+    },
   ),
   Avatar: part(
     'An image or initials with a size and optional status mark.',
@@ -104,7 +114,10 @@ export const contentPartSchemas = {
       status: z.string().optional().describe('Optional status mark.'),
       accessibilityLabel: optionalLabel,
     }),
-    { label: 'Set `accessibilityLabel` when identity is not otherwise named.' },
+    {
+      label: 'Set `accessibilityLabel` when identity is not otherwise named.',
+      accessibility: avatarAccessibility,
+    },
   ),
   Markdown: part(
     'Markdown content rendered with Argo typography and link behavior.',

@@ -56,17 +56,23 @@ async function checkFiles(expected: Map<string, string>): Promise<void> {
   process.exitCode = 1;
 }
 
-async function writeFiles(expected: Map<string, string>): Promise<void> {
-  await mkdir(outputDirectory, { recursive: true });
-
-  const expectedPaths = new Set(expected.keys());
-
+async function removeStaleFiles(expectedPaths: Set<string>): Promise<void> {
   for (const path of await existingFiles()) {
     if (!expectedPaths.has(path)) await unlink(path);
   }
+}
 
+async function writeExpectedFiles(
+  expected: Map<string, string>,
+): Promise<void> {
   for (const [path, content] of expected)
     await writeFile(path, content, 'utf8');
+}
+
+async function writeFiles(expected: Map<string, string>): Promise<void> {
+  await mkdir(outputDirectory, { recursive: true });
+  await removeStaleFiles(new Set(expected.keys()));
+  await writeExpectedFiles(expected);
 }
 
 const files = generatedFiles();

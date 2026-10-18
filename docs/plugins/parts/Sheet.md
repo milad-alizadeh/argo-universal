@@ -18,10 +18,10 @@ Accepts child parts in source order.
 
 ## Accessibility
 
-- **Accessible name:** Use the part’s required label prop as its accessible name.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** A sheet overlay opened through an Action; the container adds no name, and child parts keep their own accessible names.
+- **Keyboard:** The container adds no keyboard focus stop; navigation reaches its child controls.
+- **VoiceOver:** Swipe navigation moves between this element and adjacent elements. It exposes native semantics, announces the title prop, and reports no additional state props.
+- **TalkBack:** Linear navigation moves between this element and adjacent elements. It exposes native semantics, announces the title prop, and reports no additional state props.
 
 ## Appearance
 

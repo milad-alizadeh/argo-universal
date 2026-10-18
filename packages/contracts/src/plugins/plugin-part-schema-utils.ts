@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { partAccessibility } from './plugin-part-accessibility';
 import { Action, WireEvent } from './wire';
 import type { WirePartReference } from './wire-part-reference';
 import type { WirePartDefinition } from './wire-parts';
@@ -27,30 +28,38 @@ export const rows = [
   'ProgressBar',
 ] as const;
 
-const defaultLabel =
-  'Use the part’s required label prop as its accessible name.';
-
 const defaultAppearance =
   'Uses Argo semantic tokens, which adapt to light and dark appearance. No arbitrary color or Image prop is declared unless listed below.';
 
-function accessibility(label: string): WirePartReference['accessibility'] {
+interface PartReferenceInput {
+  summary: string;
+  schema: z.ZodObject;
+  config: ResolvedPartOptions;
+}
+
+function partReference(input: PartReferenceInput): WirePartReference {
+  const { summary, schema, config } = input;
+
+  const inferred = partAccessibility({
+    summary,
+    schema,
+    label: config.label,
+    container: config.container,
+  });
+
   return {
-    label,
-    keyboard:
-      'Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.',
-    voiceOver:
-      'VoiceOver reads the accessible name and the control role and state supplied by the part.',
-    talkBack:
-      'TalkBack reads the accessible name and the control role and state supplied by the part.',
+    summary,
+    accessibility: Object.assign(inferred, config.accessibility),
+    appearance: config.appearance,
   };
 }
 
 function reference(
   summary: string,
-  label: string,
-  appearance: string,
+  schema: z.ZodObject,
+  config: ResolvedPartOptions,
 ): WirePartReference {
-  return { summary, accessibility: accessibility(label), appearance };
+  return partReference({ summary, schema, config });
 }
 
 interface PartOptions {
@@ -60,30 +69,47 @@ interface PartOptions {
   container?: boolean;
   label?: string;
   appearance?: string;
+  accessibility?: Partial<WirePartReference['accessibility']>;
 }
 
 const defaultOptions = {
   slots: noSlots,
   events: noEvents,
   children: false,
-  label: defaultLabel,
+  label: '',
   appearance: defaultAppearance,
+  accessibility: {},
 } satisfies Required<Omit<PartOptions, 'container'>>;
 
 type ResolvedPartOptions = Required<Omit<PartOptions, 'container'>> & {
   container: boolean;
 };
 
-function resolveOptions(options: PartOptions): ResolvedPartOptions {
+function resolveOptions(
+  schema: z.ZodObject,
+  options: PartOptions,
+): ResolvedPartOptions {
   const config = Object.assign({}, defaultOptions, options);
-
-  const inferredContainer =
-    config.children || Object.keys(config.slots).length > 0;
 
   return {
     ...config,
-    container: options.container ?? inferredContainer,
+    container: options.container ?? inferContainer(config),
+    events: Object.assign({}, inferredEvents(schema), config.events),
   };
+}
+
+function inferContainer(
+  config: Pick<ResolvedPartOptions, 'children' | 'slots'>,
+): boolean {
+  return config.children || Object.keys(config.slots).length > 0;
+}
+
+function inferredEvents(schema: z.ZodObject): Record<string, z.ZodType> {
+  return Object.fromEntries(
+    Object.keys(schema.shape)
+      .filter((name) => name.startsWith('on'))
+      .map((name) => [name, z.undefined()]),
+  );
 }
 
 function definition(
@@ -98,7 +124,7 @@ function definition(
     children: config.children,
     slots: config.slots,
     events: config.events,
-    reference: reference(summary, config.label, config.appearance),
+    reference: reference(summary, schema, config),
   };
 }
 
@@ -107,7 +133,7 @@ export function part(
   schema: z.ZodObject = z.object({}),
   options: PartOptions = {},
 ): WirePartDefinition {
-  return definition(summary, schema, resolveOptions(options));
+  return definition(summary, schema, resolveOptions(schema, options));
 }
 
 export const stringLabel = z

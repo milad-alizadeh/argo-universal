@@ -20,10 +20,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** Defaults to a localized progress value; set `accessibilityLabel` for context.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** `accessibilityLabel` when supplied.
+- **Keyboard:** ProgressBar adds no keyboard focus stop or shortcut.
+- **VoiceOver:** VoiceOver exposes a progress indicator and announces its value with accessibilityLabel when supplied.
+- **TalkBack:** TalkBack exposes a progress indicator and announces its value with accessibilityLabel when supplied.
 
 ## Appearance
 

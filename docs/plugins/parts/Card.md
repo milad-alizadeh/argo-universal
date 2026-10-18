@@ -24,10 +24,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** Use the part’s required label prop as its accessible name.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** A composed card with fixed media, title, subtitle, body, and action Slots; the container adds no name, and child parts keep their own accessible names.
+- **Keyboard:** A Card with onPress enters keyboard focus order and activates with Enter or Space; otherwise focus moves through its interactive Slots.
+- **VoiceOver:** A pressable Card exposes button semantics and its title; a static Card keeps its media, text, and actions in reading order.
+- **TalkBack:** A pressable Card exposes button semantics and its title; a static Card keeps its media, text, and actions in reading order.
 
 ## Appearance
 

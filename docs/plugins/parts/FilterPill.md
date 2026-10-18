@@ -20,10 +20,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** Use the part’s required label prop as its accessible name.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** the required `label` prop.
+- **Keyboard:** Keyboard focus reaches the button in platform order; Enter or Space activates it. Changes dispatch onPress.
+- **VoiceOver:** Swipe navigation moves between this element and adjacent elements. It exposes button semantics, announces the label prop, and reports selected.
+- **TalkBack:** Linear navigation moves between this element and adjacent elements. It exposes button semantics, announces the label prop, and reports selected.
 
 ## Appearance
 

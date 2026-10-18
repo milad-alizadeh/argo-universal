@@ -21,9 +21,9 @@ Does not accept child nodes on the wire.
 ## Accessibility
 
 - **Accessible name:** Defaults to the localized name “Search”.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Keyboard:** Keyboard focus reaches the Search field in platform order; typing updates its App-owned value and dispatches onChangeText.
+- **VoiceOver:** VoiceOver exposes a search text field, reads the localized Search name, and reports its current value.
+- **TalkBack:** TalkBack exposes a search text field, reads the localized Search name, and reports its current value.
 
 ## Appearance
 
@@ -32,7 +32,7 @@ Does not accept child nodes on the wire.
 
 ## Events
 
-This part defines no events.
+- `onChangeText`: Payload is defined by the event schema.
 
 ## Deprecation and version
 

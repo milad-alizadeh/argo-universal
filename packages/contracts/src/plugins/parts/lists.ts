@@ -25,6 +25,45 @@ const tableProps = z.object({
   onSort: handler('onSort').optional(),
 });
 
+const listProps = z
+  .object({
+    appearance: z.enum(['plain', 'grouped', 'cards']).optional(),
+    pagination: z
+      .object({
+        hasMore: z.boolean(),
+        onLoadMore: handler('onLoadMore').optional(),
+      })
+      .optional(),
+    onRefresh: handler('onRefresh').optional(),
+    selectionMode: z.enum(['single', 'multiple']).optional(),
+    onSelectionChange: handler('onSelectionChange').optional(),
+    onReorder: handler('onReorder').optional(),
+    anchor: z.enum(['start', 'end']).optional(),
+    searchMode: z.enum(['app', 'plugin']).optional(),
+    onSearchTextChange: z
+      .string()
+      .optional()
+      .describe(
+        'Throttled string payload. Available only with searchMode="plugin"; otherwise the App filters using its Connection-owned search text.',
+      ),
+    layout: z.enum(['list', 'grid']).optional(),
+    direction: z.enum(['vertical', 'horizontal']).optional(),
+    columns: z
+      .union([z.number(), z.record(z.string(), z.number()), z.literal('auto')])
+      .optional(),
+    tileSize: z.enum(['sm', 'md', 'lg']).optional(),
+    aspect: z.enum(['square', 'landscape', 'portrait']).optional(),
+    isLoading: z.boolean().optional(),
+  })
+  .refine(
+    ({ searchMode, onSearchTextChange }) =>
+      onSearchTextChange === undefined || searchMode === 'plugin',
+    {
+      message: 'onSearchTextChange requires searchMode="plugin".',
+      path: ['onSearchTextChange'],
+    },
+  );
+
 export const listsPartSchemas = {
   Table: {
     ...wireParts.Table,
@@ -36,34 +75,22 @@ export const listsPartSchemas = {
   },
   List: part(
     'A settings and content list with sections, pagination, refresh, selection, and list or grid layout.',
-    z.object({
-      appearance: z.enum(['plain', 'grouped', 'cards']).optional(),
-      pagination: z
-        .object({
-          hasMore: z.boolean(),
-          onLoadMore: handler('onLoadMore').optional(),
-        })
-        .optional(),
-      onRefresh: handler('onRefresh').optional(),
-      selectionMode: z.enum(['single', 'multiple']).optional(),
-      onSelectionChange: handler('onSelectionChange').optional(),
-      onReorder: handler('onReorder').optional(),
-      anchor: z.enum(['start', 'end']).optional(),
-      searchMode: z.enum(['app', 'plugin']).optional(),
-      layout: z.enum(['list', 'grid']).optional(),
-      direction: z.enum(['vertical', 'horizontal']).optional(),
-      columns: z
-        .union([
-          z.number(),
-          z.record(z.string(), z.number()),
-          z.literal('auto'),
-        ])
-        .optional(),
-      tileSize: z.enum(['sm', 'md', 'lg']).optional(),
-      aspect: z.enum(['square', 'landscape', 'portrait']).optional(),
-      isLoading: z.boolean().optional(),
-    }),
-    { slots: { sections: ['ListSection'], items: ['ListItem'] } },
+    listProps,
+    {
+      slots: {
+        sections: ['ListSection'],
+        items: ['ListItem'],
+        empty: ['EmptyState'],
+      },
+      accessibility: {
+        keyboard:
+          'Keyboard navigation moves through List rows or grid items in platform order. The App owns search text per Connection; plugin mode sends throttled onSearchTextChange events from its search control.',
+        voiceOver:
+          'VoiceOver identifies the List as a collection, reads each ListItem and its selected state, and reaches the EmptyState in the empty Slot when no items remain.',
+        talkBack:
+          'TalkBack identifies the List as a collection, reads each ListItem and its selected state, and reaches the EmptyState in the empty Slot when no items remain.',
+      },
+    },
   ),
   ListSection: part(
     'A titled List section with an optional footer.',
@@ -77,20 +104,24 @@ export const listsPartSchemas = {
         .boolean()
         .optional()
         .describe('Whether this item is selected by its parent List.'),
+      badge: z
+        .object({
+          count: z.number().int().nonnegative(),
+          label: z.string().optional(),
+        })
+        .optional()
+        .describe('A count badge with an optional spoken label.'),
     }),
     {
       slots: {
         media: ['Image', 'Video'],
         leading: containerParts,
         title: ['Text'],
-        trailing: rows,
+        trailing: rows.filter((name) => name !== 'ListItem'),
         subtitle: ['Text'],
         meta: ['Label', 'Pill', 'StatusDot'],
         progress: ['ProgressBar'],
-        badge: ['Pill'],
-        accessories: ['IconButton', 'Checkbox', 'Switch'],
         actions: ['ActionList'],
-        accessory: ['IconButton', 'Checkbox', 'Switch'],
       },
       label:
         'The title Slot supplies the accessible name; interactive accessories retain their own names.',

@@ -22,7 +22,7 @@ Plugin JSX also accepts text-only children in place of `label`; the worker norma
 
 ## Accessibility
 
-- **Accessible name:** The required `label` is the content. Optional `accessibilityLabel` overrides the spoken label.
+- **Accessible name:** the required `label` prop.
 - **Keyboard:** Text is not focusable and adds no keyboard shortcut.
 - **VoiceOver:** Reads `accessibilityLabel` when set; otherwise reads `label`.
 - **TalkBack:** Reads `accessibilityLabel` when set; otherwise reads `label`.

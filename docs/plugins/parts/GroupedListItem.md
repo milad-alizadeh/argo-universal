@@ -26,7 +26,7 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** The required `label` is the spoken name. The optional `value` is secondary text.
+- **Accessible name:** the required `label` prop.
 - **Keyboard:** When `onPress` is set, the row exposes link semantics and Enter activates it on web. Disabled rows cannot activate.
 - **VoiceOver:** A row with `onPress` exposes link semantics. It reads the label and optional value and reports disabled state.
 - **TalkBack:** A row with `onPress` exposes link semantics. It reads the label and optional value and reports disabled state.

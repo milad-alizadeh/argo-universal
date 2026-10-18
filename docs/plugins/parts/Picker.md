@@ -22,10 +22,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** The required `label` names the selection control.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** the required `label` prop.
+- **Keyboard:** Keyboard focus reaches the picker in platform order; platform picker keys change the selected option.
+- **VoiceOver:** Swipe navigation moves between this element and adjacent elements. It exposes picker semantics, announces the label prop, and reports value.
+- **TalkBack:** Linear navigation moves between this element and adjacent elements. It exposes picker semantics, announces the label prop, and reports value.
 
 ## Appearance
 

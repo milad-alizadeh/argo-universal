@@ -1,5 +1,6 @@
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
 import type { WirePartDefinition } from '../src/plugins/wire-parts';
+import { accessibilitySection } from './plugin-reference-accessibility';
 import {
   partDefinition,
   propsSchema,
@@ -67,17 +68,6 @@ function sdkPropNote(part: WirePartDefinition): string {
   return part.reference.sdkProps ? `\n${part.reference.sdkProps}` : '';
 }
 
-function accessibilitySection(part: WirePartDefinition): string {
-  const { accessibility } = part.reference;
-
-  return [
-    `- **Accessible name:** ${accessibility.label}`,
-    `- **Keyboard:** ${accessibility.keyboard}`,
-    `- **VoiceOver:** ${accessibility.voiceOver}`,
-    `- **TalkBack:** ${accessibility.talkBack}`,
-  ].join('\n');
-}
-
 function appearanceSection(name: string, part: WirePartDefinition): string {
   return [
     `- **Dark mode and color:** ${colorRule(name, part)}`,
@@ -109,7 +99,7 @@ function partSections(name: string, part: WirePartDefinition): string[] {
     part.reference.summary,
     propsSection(name),
     slotsSection(name, part),
-    `## Accessibility\n\n${accessibilitySection(part)}`,
+    `## Accessibility\n\n${accessibilitySection(name, part)}`,
     `## Appearance\n\n${appearanceSection(name, part)}`,
     `## Events\n\n${eventNotes(name, part)}`,
     `## Deprecation and version\n\n${releaseSection(name, part)}`,

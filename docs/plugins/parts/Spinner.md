@@ -18,10 +18,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** Defaults to the accessible name “Loading”.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** `accessibilityLabel` when supplied.
+- **Keyboard:** Spinner adds no keyboard focus stop or shortcut.
+- **VoiceOver:** VoiceOver exposes an indeterminate progress indicator and announces Loading, or the supplied accessibilityLabel.
+- **TalkBack:** TalkBack exposes an indeterminate progress indicator and announces Loading, or the supplied accessibilityLabel.
 
 ## Appearance
 

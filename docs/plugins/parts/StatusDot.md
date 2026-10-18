@@ -20,10 +20,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** Provide `accessibilityLabel` when the status mark conveys information.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** `accessibilityLabel` when supplied.
+- **Keyboard:** StatusDot adds no keyboard focus stop; informative status is announced in reading order.
+- **VoiceOver:** VoiceOver skips a decorative StatusDot and announces accessibilityLabel when the mark conveys status.
+- **TalkBack:** TalkBack skips a decorative StatusDot and announces accessibilityLabel when the mark conveys status.
 
 ## Appearance
 

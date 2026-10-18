@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import {
+  progressBarAccessibility,
+  spinnerAccessibility,
+  statusDotAccessibility,
+} from '../part-accessibility-metadata';
+import {
   part,
   stringLabel,
   optionalLabel,
@@ -33,12 +38,16 @@ export const statusPartSchemas = {
     {
       label:
         'Provide `accessibilityLabel` when the status mark conveys information.',
+      accessibility: statusDotAccessibility,
     },
   ),
   Spinner: part(
     'An indeterminate progress indicator.',
     z.object({ accessibilityLabel: optionalLabel }),
-    { label: 'Defaults to the accessible name “Loading”.' },
+    {
+      label: 'Defaults to the accessible name “Loading”.',
+      accessibility: spinnerAccessibility,
+    },
   ),
   ProgressBar: part(
     'A determinate progress indicator with semantic tone.',
@@ -50,6 +59,7 @@ export const statusPartSchemas = {
     {
       label:
         'Defaults to a localized progress value; set `accessibilityLabel` for context.',
+      accessibility: progressBarAccessibility,
     },
   ),
   Callout: part(
@@ -62,6 +72,14 @@ export const statusPartSchemas = {
     {
       slots: { title: ['Text'], description: ['Text'], actions: ['Button'] },
       events: { onPress: z.undefined() },
+      accessibility: {
+        keyboard:
+          'The Callout title and description remain in reading order; keyboard focus reaches its primary action in platform order.',
+        voiceOver:
+          'VoiceOver reads the Callout title and description before announcing its single primary action.',
+        talkBack:
+          'TalkBack reads the Callout title and description before announcing its single primary action.',
+      },
     },
   ),
   EmptyState: part(
@@ -72,6 +90,16 @@ export const statusPartSchemas = {
       description: optionalLabel,
       action: onPress.optional(),
     }),
-    { events: { onPress: z.undefined() } },
+    {
+      events: { onPress: z.undefined() },
+      accessibility: {
+        keyboard:
+          'The EmptyState title and description remain in reading order; keyboard focus reaches its optional action in platform order.',
+        voiceOver:
+          'VoiceOver announces the EmptyState title and description, then the optional action.',
+        talkBack:
+          'TalkBack announces the EmptyState title and description, then the optional action.',
+      },
+    },
   ),
 };

@@ -14,6 +14,7 @@ An actionable control with Argo variants, sizes, and an optional activation hand
 | `size` | Optional | `xs`, `sm`, `md`, `lg` | The button size. |
 | `disabled` | Optional | boolean | Whether activation is disabled. |
 | `onPress` | Optional | Plugin event object or `toast` action object or `navigate` action object or `openUrl` action object or `copy` action object | The action run on activation. |
+| `icon` | Optional | string | Optional native symbol name. |
 
 ## Slots
 
@@ -24,7 +25,7 @@ Plugin JSX also accepts text-only children in place of `label`; the worker norma
 
 ## Accessibility
 
-- **Accessible name:** The required `label` is also the accessible name.
+- **Accessible name:** the required `label` prop.
 - **Keyboard:** Follows the platform button focus order. On web, Enter and Space activate the focused button.
 - **VoiceOver:** Exposes a button, reads its label, and reports the disabled state.
 - **TalkBack:** Exposes a button, reads its label, and reports the disabled state.

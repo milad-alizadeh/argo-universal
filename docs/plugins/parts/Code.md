@@ -20,9 +20,9 @@ Does not accept child nodes on the wire.
 ## Accessibility
 
 - **Accessible name:** The code text is exposed to assistive technology; the copy control has the name “Copy code”.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Keyboard:** This static part adds no keyboard focus stop or shortcut.
+- **VoiceOver:** Swipe navigation moves between this element and adjacent elements. It exposes native semantics, announces its visible content, and reports no additional state props.
+- **TalkBack:** Linear navigation moves between this element and adjacent elements. It exposes native semantics, announces its visible content, and reports no additional state props.
 
 ## Appearance
 

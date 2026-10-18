@@ -22,10 +22,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** Set `accessibilityLabel` when identity is not otherwise named.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** `accessibilityLabel` when supplied.
+- **Keyboard:** Avatar is not keyboard-focusable on its own; a containing control supplies the focus stop.
+- **VoiceOver:** VoiceOver exposes the Avatar as an image and reads accessibilityLabel, or the initials when no label is supplied.
+- **TalkBack:** TalkBack exposes the Avatar as an image and reads accessibilityLabel, or the initials when no label is supplied.
 
 ## Appearance
 

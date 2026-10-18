@@ -19,9 +19,9 @@ Does not accept child nodes on the wire.
 ## Accessibility
 
 - **Accessible name:** Each action uses its required label as its accessible name.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Keyboard:** Arrow keys move through actions; Enter activates the focused action and Escape closes the menu.
+- **VoiceOver:** VoiceOver exposes a menu and announces each action label and its shortcut when one is supplied.
+- **TalkBack:** TalkBack exposes a menu and announces each action label and its shortcut when one is supplied.
 
 ## Appearance
 

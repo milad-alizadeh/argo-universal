@@ -51,13 +51,37 @@ export const layoutPartSchemas = {
       kind: z
         .enum(['card', 'tray', 'glass', 'overlay'])
         .describe('Surface treatment.'),
+      fill: z
+        .enum(['content', 'card', 'muted', 'accent', 'overlay'])
+        .optional()
+        .describe('Semantic fill role.'),
+      radius: z
+        .enum(['sm', 'md', 'lg', 'xl', '2xl', 'full', 'control', 'sheet'])
+        .optional()
+        .describe('Semantic shape token.'),
+      depth: z
+        .enum(['card', 'tray', 'glass', 'raised'])
+        .optional()
+        .describe('Semantic depth token.'),
       onPress: onPress.optional(),
+      actions: z
+        .array(z.object({ label: stringLabel, onPress }))
+        .optional()
+        .describe('Actions available from this surface.'),
     }),
     {
       children: true,
       events: { onPress: z.undefined() },
       appearance:
         'The `kind` selects a semantic surface. `glass` falls back to a plain fill below iOS 26; all fills adapt to light and dark appearance.',
+      accessibility: {
+        keyboard:
+          'A Surface with onPress enters keyboard focus order and activates with Enter or Space; otherwise focus moves through its interactive children.',
+        voiceOver:
+          'A pressable Surface exposes button semantics and its child content; a static Surface leaves its children as separate elements.',
+        talkBack:
+          'A pressable Surface exposes button semantics and its child content; a static Surface leaves its children as separate elements.',
+      },
     },
   ),
   Card: part(
@@ -72,6 +96,14 @@ export const layoutPartSchemas = {
         actions,
       },
       events: { onPress: z.undefined() },
+      accessibility: {
+        keyboard:
+          'A Card with onPress enters keyboard focus order and activates with Enter or Space; otherwise focus moves through its interactive Slots.',
+        voiceOver:
+          'A pressable Card exposes button semantics and its title; a static Card keeps its media, text, and actions in reading order.',
+        talkBack:
+          'A pressable Card exposes button semantics and its title; a static Card keeps its media, text, and actions in reading order.',
+      },
     },
   ),
   ScrollView: part(

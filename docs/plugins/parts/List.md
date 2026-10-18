@@ -16,6 +16,7 @@ A settings and content list with sections, pagination, refresh, selection, and l
 | `onReorder` | Optional | Plugin event object or `toast` action object or `navigate` action object or `openUrl` action object or `copy` action object | Action or Plugin event invoked by onReorder. |
 | `anchor` | Optional | `start`, `end` | No additional description. |
 | `searchMode` | Optional | `app`, `plugin` | No additional description. |
+| `onSearchTextChange` | Optional | string | Throttled string payload. Available only with searchMode="plugin"; otherwise the App filters using its Connection-owned search text. |
 | `layout` | Optional | `list`, `grid` | No additional description. |
 | `direction` | Optional | `vertical`, `horizontal` | No additional description. |
 | `columns` | Optional | number or object or "auto" | No additional description. |
@@ -29,15 +30,16 @@ A settings and content list with sections, pagination, refresh, selection, and l
 | --- | --- |
 | `sections` | `ListSection` |
 | `items` | `ListItem` |
+| `empty` | `EmptyState` |
 
 Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** Use the part’s required label prop as its accessible name.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** A settings and content list with sections, pagination, refresh, selection, and list or grid layout; the container adds no name, and child parts keep their own accessible names.
+- **Keyboard:** Keyboard navigation moves through List rows or grid items in platform order. The App owns search text per Connection; plugin mode sends throttled onSearchTextChange events from its search control.
+- **VoiceOver:** VoiceOver identifies the List as a collection, reads each ListItem and its selected state, and reaches the EmptyState in the empty Slot when no items remain.
+- **TalkBack:** TalkBack identifies the List as a collection, reads each ListItem and its selected state, and reaches the EmptyState in the empty Slot when no items remain.
 
 ## Appearance
 
@@ -46,7 +48,10 @@ Does not accept child nodes on the wire.
 
 ## Events
 
-This part defines no events.
+- `onRefresh`: Action or Plugin event invoked by onRefresh.
+- `onSelectionChange`: Action or Plugin event invoked by onSelectionChange.
+- `onReorder`: Action or Plugin event invoked by onReorder.
+- `onSearchTextChange`: Throttled string payload. Available only with searchMode="plugin"; otherwise the App filters using its Connection-owned search text.
 
 ## Deprecation and version
 

@@ -9,6 +9,7 @@ A slotted list row or grid tile with up to three text lines.
 | Prop | Requirement | Type | Description |
 | --- | --- | --- | --- |
 | `selected` | Optional | boolean | Whether this item is selected by its parent List. |
+| `badge` | Optional | object | A count badge with an optional spoken label. |
 
 ## Slots
 
@@ -17,23 +18,20 @@ A slotted list row or grid tile with up to three text lines.
 | `media` | `Image`, `Video` |
 | `leading` | `Text`, `Button`, `Icon`, `Image`, `Pill`, `Label` |
 | `title` | `Text` |
-| `trailing` | `ListItem`, `Text`, `Label`, `Pill`, `StatusDot`, `ProgressBar` |
+| `trailing` | `Text`, `Label`, `Pill`, `StatusDot`, `ProgressBar` |
 | `subtitle` | `Text` |
 | `meta` | `Label`, `Pill`, `StatusDot` |
 | `progress` | `ProgressBar` |
-| `badge` | `Pill` |
-| `accessories` | `IconButton`, `Checkbox`, `Switch` |
 | `actions` | `ActionList` |
-| `accessory` | `IconButton`, `Checkbox`, `Switch` |
 
 Does not accept child nodes on the wire.
 
 ## Accessibility
 
 - **Accessible name:** The title Slot supplies the accessible name; interactive accessories retain their own names.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Keyboard:** The container adds no keyboard focus stop; navigation reaches its child controls.
+- **VoiceOver:** Swipe navigation moves between this element and adjacent elements. It exposes list item semantics, announces its named child content, and reports selected.
+- **TalkBack:** Linear navigation moves between this element and adjacent elements. It exposes list item semantics, announces its named child content, and reports selected.
 
 ## Appearance
 

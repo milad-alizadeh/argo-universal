@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { searchFieldAccessibility } from '../part-accessibility-metadata';
 import {
   part,
   stringLabel,
@@ -42,7 +43,10 @@ export const inputsPartSchemas = {
       placeholder: optionalLabel,
       onChangeText: z.string().optional(),
     }),
-    { label: 'Defaults to the localized name “Search”.' },
+    {
+      label: 'Defaults to the localized name “Search”.',
+      accessibility: searchFieldAccessibility,
+    },
   ),
   Picker: part(
     'A selection control, including multiple and segmented variants.',

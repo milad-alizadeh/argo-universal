@@ -12,6 +12,7 @@ A native symbol with semantic size, tone, and optional status mark.
 | `role` | Optional | string | Semantic icon size role. |
 | `tone` | Optional | `neutral`, `accent`, `success`, `warning`, `danger` | Argo semantic tone. |
 | `status` | Optional | string | Optional status mark. |
+| `accessibilityLabel` | Optional | string | The visible and accessible label. |
 
 ## Slots
 
@@ -21,10 +22,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** Provide `accessibilityLabel` when the icon conveys information; omit it when decorative.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** `accessibilityLabel` when supplied.
+- **Keyboard:** A decorative Icon adds no focus stop; an informative Icon is announced in reading order with its accessibilityLabel.
+- **VoiceOver:** VoiceOver skips a decorative Icon and announces accessibilityLabel for an informative Icon.
+- **TalkBack:** TalkBack skips a decorative Icon and announces accessibilityLabel for an informative Icon.
 
 ## Appearance
 

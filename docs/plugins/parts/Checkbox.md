@@ -21,10 +21,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** The required `label` names the control and is announced with its checked state.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** the required `label` prop.
+- **Keyboard:** Keyboard focus reaches the checkbox in platform order; Space changes its checked state. Changes dispatch onChange.
+- **VoiceOver:** Swipe navigation moves between this element and adjacent elements. It exposes checkbox semantics, announces the label prop, and reports disabled, checked.
+- **TalkBack:** Linear navigation moves between this element and adjacent elements. It exposes checkbox semantics, announces the label prop, and reports disabled, checked.
 
 ## Appearance
 
@@ -33,7 +33,7 @@ Does not accept child nodes on the wire.
 
 ## Events
 
-This part defines no events.
+- `onChange`: The changed selection state.
 
 ## Deprecation and version
 

@@ -23,10 +23,10 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** The required `label` names the control; assistive technology announces its value and range.
-- **Keyboard:** Interactive controls follow platform focus order and activate with the platform’s standard keys. Non-interactive parts add no focus stop.
-- **VoiceOver:** VoiceOver reads the accessible name and the control role and state supplied by the part.
-- **TalkBack:** TalkBack reads the accessible name and the control role and state supplied by the part.
+- **Accessible name:** the required `label` prop.
+- **Keyboard:** Keyboard focus reaches the slider in platform order; arrow keys adjust its value. Changes dispatch onChange.
+- **VoiceOver:** Swipe navigation moves between this element and adjacent elements. It exposes slider semantics, announces the label prop, and reports value, min, max.
+- **TalkBack:** Linear navigation moves between this element and adjacent elements. It exposes slider semantics, announces the label prop, and reports value, min, max.
 
 ## Appearance
 
@@ -35,7 +35,7 @@ Does not accept child nodes on the wire.
 
 ## Events
 
-This part defines no events.
+- `onChange`: Payload is defined by the event schema.
 
 ## Deprecation and version
 
