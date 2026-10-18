@@ -16,6 +16,9 @@ export function startPluginRuntime(home: string): PluginRuntime {
       log,
       assets: new PluginAssets(home),
       projects: async (): Promise<string[]> => [],
+      trackerProjects: async (): Promise<
+        { id: string; name: string; repository: string | null }[]
+      > => [],
     }),
   );
 

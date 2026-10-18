@@ -21,6 +21,9 @@ it('keeps no Grants for a Plugin once it is released', async () => {
       assets: new PluginAssets(home),
       log: (): void => {},
       projects: async (): Promise<string[]> => [],
+      trackerProjects: async (): Promise<
+        { id: string; name: string; repository: string | null }[]
+      > => [],
     },
   );
 

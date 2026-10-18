@@ -1,16 +1,18 @@
 import { pluginKeychainService, type Keychain } from './keychain';
 import type { StateRequest } from './plugin-calls';
+import type { PluginServiceOptions } from './plugin-service-options';
 import type { PluginValue, SecretCall } from './runtime-protocol';
 import type { PluginStorage } from './storage';
 
 // Calls answered from what the Server keeps for the Plugin, with no capability to check.
 export type KeptRequest = Extract<
   StateRequest,
-  { api: 'storage' | 'secrets' | 'settings' }
+  { api: 'storage' | 'secrets' | 'settings' | 'projects' }
 >;
 
 const keptApis = new Set<StateRequest['api']>([
   'storage',
+  'projects',
   'secrets',
   'settings',
 ]);
@@ -18,34 +20,56 @@ const keptApis = new Set<StateRequest['api']>([
 export const isKeptRequest = (request: StateRequest): request is KeptRequest =>
   keptApis.has(request.api);
 
-// What the Server keeps per Plugin: its storage, its Keychain items, and its `contributes.settings` values.
-export type Kept = {
+export type KeptContext = {
   storage: PluginStorage;
   keychain: Keychain;
-  settings?: (pluginId: string, key: string) => Promise<PluginValue>;
+  options: Pick<PluginServiceOptions, 'settings' | 'trackerProjects'>;
+  pluginId: string;
+  request: KeptRequest;
+  onCall: () => void;
 };
 
-export async function answerKept(
-  kept: Kept,
-  pluginId: string,
-  request: KeptRequest,
-): Promise<PluginValue> {
+// What the Server keeps per Plugin: its storage, its Keychain items, and its `contributes.settings` values.
+export async function answerKept({
+  storage,
+  keychain,
+  options,
+  pluginId,
+  request,
+  onCall,
+}: KeptContext): Promise<PluginValue> {
+  onCall();
+
   if (request.api === 'storage')
-    return kept.storage.execute(pluginId, request.queries);
+    return storage.execute(pluginId, request.queries);
 
-  if (request.api === 'settings') return setting(kept, pluginId, request.key);
+  return answerNonStorageKept({ keychain, options, pluginId, request });
+}
 
-  return secrets(kept.keychain, pluginId, request.call);
+async function answerNonStorageKept({
+  keychain,
+  options,
+  pluginId,
+  request,
+}: Omit<KeptContext, 'storage' | 'onCall'> & {
+  request: Exclude<KeptRequest, { api: 'storage' }>;
+}): Promise<PluginValue> {
+  if (request.api === 'projects') return options.trackerProjects();
+
+  if (request.api === 'settings')
+    return setting(options, pluginId, request.key);
+
+  return secrets(keychain, pluginId, request.call);
 }
 
 async function setting(
-  kept: Kept,
+  options: Pick<PluginServiceOptions, 'settings'>,
   pluginId: string,
   key: string,
 ): Promise<PluginValue> {
-  if (!kept.settings) throw new Error('Plugin settings are not available');
+  if (!options.settings) throw new Error('Plugin settings are not available');
 
-  return kept.settings(pluginId, key);
+  return options.settings(pluginId, key);
 }
 
 async function secrets(

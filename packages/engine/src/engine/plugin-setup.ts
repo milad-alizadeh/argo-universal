@@ -9,7 +9,7 @@ import {
   type Keychain,
   type PluginRuntime,
 } from '../plugins';
-import { readProjectPaths } from '../projects';
+import { readProjectPaths, readTrackerProjects } from '../projects';
 import type { HttpServerOptions } from './http-server';
 
 export type PluginSetup = {
@@ -28,15 +28,14 @@ export function startPlugins(options: HttpServerOptions): PluginSetup {
     keychain,
     network: options.pluginNetwork,
     projects: async () => readProjectPaths(options.database),
+    trackerProjects: async () => readTrackerProjects(options.database),
     hooks: hookPort.hooks,
     settings: async (pluginId, key) => pluginSettings.read(pluginId, key),
   });
 
-  const setup = { pluginRuntime, pluginSettings, hookPort };
+  attachHooks(options, { pluginRuntime, pluginSettings, hookPort });
 
-  attachHooks(options, setup);
-
-  return setup;
+  return { pluginRuntime, pluginSettings, hookPort };
 }
 
 // The runtime and the settings it answers `argo.settings` from share one Keychain.

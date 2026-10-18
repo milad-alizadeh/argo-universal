@@ -40,6 +40,42 @@ it('loads the shipped Issue tracker with its declared Capabilities and starts it
   ).toMatchObject({ state: 'running', error: null });
 });
 
+it('lets a Plugin list Project identities through the logged argo.projects API', async () => {
+  const result = await runProbe({
+    calls: {
+      projects: 'argo.projects.list().then((rows) => JSON.stringify(rows))',
+    },
+  });
+
+  expectProjectList(result.results.projects);
+  expect(result.log).toContain('Plugin probe: argo.projects.list');
+});
+
+function expectProjectList(
+  projects:
+    | Awaited<ReturnType<typeof runProbe>>['results']['projects']
+    | undefined,
+): void {
+  if (!projects) throw new Error('Project list call returned no result');
+
+  if (!('value' in projects)) throw new Error('Project list call failed');
+
+  assertString(projects.value);
+
+  expect(JSON.parse(projects.value)).toEqual([
+    expect.objectContaining({
+      id: expect.any(String),
+      name: expect.any(String),
+      repository: expect.any(String),
+    }),
+  ]);
+}
+
+function assertString(value: unknown): asserts value is string {
+  if (typeof value !== 'string')
+    throw new Error('Project list returned a non-string value');
+}
+
 // A `gh` on PATH that prints its arguments: the external CLI the Issue tracker calls.
 async function fakeGh(): Promise<void> {
   const bin = await scratch();

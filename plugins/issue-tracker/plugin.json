@@ -18,7 +18,8 @@
         "title": "Issues",
         "path": "/"
       }
-    ]
+    ],
+    "slots": ["argo/project/details/v1"]
   },
   "capabilities": [
     {

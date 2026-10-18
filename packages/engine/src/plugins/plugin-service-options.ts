@@ -8,6 +8,9 @@ export type PluginServiceOptions = {
   assets: PluginAssets;
   log: (line: string) => void;
   projects: () => Promise<readonly string[]>;
+  trackerProjects: () => Promise<
+    { id: string; name: string; repository: string | null }[]
+  >;
   network?: PluginNetwork;
   settings?: (pluginId: string, key: string) => Promise<PluginValue>;
   hooks?: CoreHooks;

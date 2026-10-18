@@ -20,6 +20,11 @@ export type StateRequest = Exclude<
   { api: 'view' | 'hooks' | 'dispatchResult' }
 >;
 
+export type UnkeptRequest = Exclude<
+  StateRequest,
+  { api: 'storage' | 'secrets' | 'settings' | 'projects' }
+>;
+
 export type MachineRequest = Extract<
   StateRequest,
   { api: 'fs' | 'process' | 'fetch' }
@@ -136,6 +141,14 @@ export function describeCall(request: StateRequest): string {
   if (request.api === 'storage')
     return `argo.storage ${request.queries.length}`;
 
+  return describeKeptCall(request);
+}
+
+function describeKeptCall(
+  request: Exclude<StateRequest, { api: 'storage' }>,
+): string {
+  if (request.api === 'projects') return 'argo.projects.list';
+
   if (request.api === 'secrets')
     return `argo.secrets.${request.call.action} ${request.call.account}`;
 
@@ -143,7 +156,7 @@ export function describeCall(request: StateRequest): string {
 }
 
 function describeOtherCall(
-  request: Exclude<StateRequest, { api: 'storage' | 'secrets' }>,
+  request: Exclude<StateRequest, { api: 'storage' | 'secrets' | 'projects' }>,
 ): string {
   if (request.api === 'assets') return 'argo.assets.resolve';
 
