@@ -63,7 +63,7 @@ function accessibilityProps(props: DrawingProps): RowPressProps {
     'aria-checked': props.checked,
     'aria-pressed': props.selected,
     'aria-current': currentPage(props),
-    accessible: props.content === undefined,
+    accessible: props.accessible ?? props.content === undefined,
     disabled: props.disabled,
   };
 }

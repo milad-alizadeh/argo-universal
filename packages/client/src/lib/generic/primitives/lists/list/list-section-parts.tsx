@@ -35,7 +35,7 @@ function HeaderLeading(props: HeaderProps): ReactNode {
 function HeaderContent(props: HeaderProps): ReactElement {
   return (
     <View className="min-w-0 flex-1">
-      <Text role="heading" aria-level={2}>
+      <Text role="heading" accessibilityRole="heading" aria-level={2}>
         {props.title}
       </Text>
       {props.subtitle ? (

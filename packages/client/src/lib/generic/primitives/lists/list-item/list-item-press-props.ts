@@ -3,6 +3,7 @@ import type { Pressable } from 'react-native';
 import type { ListItemProps } from './list-item-props';
 
 export interface DrawingProps extends ListItemProps {
+  accessible?: boolean;
   accessory?: ReactNode;
   checked?: boolean;
   content?: ReactNode;

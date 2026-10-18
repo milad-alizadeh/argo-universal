@@ -29,7 +29,10 @@ export function ElicitationFormField(
   const Field = props.model.form.Field;
 
   return (
-    <Field name={props.entry.key}>
+    <Field
+      name={props.entry.key}
+      validators={{ onMount: () => mountedFieldError(props) }}
+    >
       {(field) => props.children(boundProps({ ...props, field }))}
     </Field>
   );
@@ -85,4 +88,14 @@ export function ElicitationValidation(props: {
       Fix {props.labels.join(', ')} to submit
     </Text>
   );
+}
+
+// Virtualized fields can mount after the form's initial validation has run.
+function mountedFieldError({
+  model,
+  entry,
+}: FormFieldProps): string | undefined {
+  return model.schema.validate({ value: model.form.state.values })?.fields[
+    entry.key
+  ];
 }

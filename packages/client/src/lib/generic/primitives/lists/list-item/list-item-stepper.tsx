@@ -11,6 +11,7 @@ export function ListItemStepper(props: ListItemStepperProps): ReactElement {
   return (
     <ListItemFrame
       {...props}
+      accessible={false}
       value={undefined}
       trailing={<StepperValue {...props} />}
     />
