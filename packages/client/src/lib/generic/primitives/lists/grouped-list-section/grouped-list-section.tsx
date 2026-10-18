@@ -35,7 +35,7 @@ function SectionRows(
   const overlay = useOverlayList();
 
   return (
-    <View className={rowsClasses(sidebar, overlay)}>
+    <View className={rowsClasses(sidebar, overlay, props.cardless)}>
       <FooterProvider value={footerOf(props, props.footerId)}>
         {props.children}
       </FooterProvider>
@@ -43,14 +43,22 @@ function SectionRows(
   );
 }
 
-const rowsClasses = (sidebar: boolean, overlay: boolean): string =>
+const rowsClasses = (
+  sidebar: boolean,
+  overlay: boolean,
+  cardless?: boolean,
+): string =>
   cn(
-    'overflow-hidden rounded-2xl',
+    cardClasses(cardless),
     // In a desktop popover, rows keep Android's grouped-row gap so hovered and pressed tiles never touch.
     overlay && 'gap-0.5',
     // Wide, a sidebar list's selected and hovered rows keep a 1px gap from their neighbours.
     sidebar && 'rounded-none bg-transparent wide:gap-px',
   );
+
+// The card's corners clip its rows; content with no card keeps every letter.
+const cardClasses = (cardless?: boolean): string | undefined =>
+  cardless ? undefined : 'overflow-hidden rounded-2xl';
 
 const footerOf = (
   props: GroupedListSectionProps,
