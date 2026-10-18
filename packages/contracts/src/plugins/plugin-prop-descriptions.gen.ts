@@ -531,9 +531,6 @@ export type WireSchemaHints = {
     /** Renders one keyed child for each item; receives the item and its index. */
     "renderItem": PropValue<"Table", "renderItem">;
   };
-  "Metadata": {
-
-  };
   "Alert": {
     /** Whether the alert is open. */
     "open": PropValue<"Alert", "open">;
@@ -609,6 +606,56 @@ export type WireSchemaHints = {
     "tone": PropValue<"Toast", "tone">;
     /** Action offered on the web. */
     "action": PropValue<"Toast", "action">;
+  };
+  "Metadata": {
+    /** Optional section heading. */
+    "title": PropValue<"Metadata", "title">;
+  };
+  "Metadata.Label": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Label", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Label", "accessibilityLabel">;
+    /** The field value. */
+    "text": PropValue<"Metadata.Label", "text">;
+    /** icon for this part. */
+    "icon": PropValue<"Metadata.Label", "icon">;
+  };
+  "Metadata.Link": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Link", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Link", "accessibilityLabel">;
+    /** The displayed link text; drawn as plain text until kit Link lands. */
+    "text": PropValue<"Metadata.Link", "text">;
+    /** The link destination. */
+    "href": PropValue<"Metadata.Link", "href">;
+  };
+  "Metadata.Pills": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Pills", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Pills", "accessibilityLabel">;
+  };
+  "Metadata.StatusDot": {
+    /** The field label. */
+    "title": PropValue<"Metadata.StatusDot", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.StatusDot", "accessibilityLabel">;
+    /** The status text. */
+    "text": PropValue<"Metadata.StatusDot", "text">;
+    /** tone for this part. */
+    "tone": PropValue<"Metadata.StatusDot", "tone">;
+  };
+  "Metadata.Avatar": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Avatar", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Avatar", "accessibilityLabel">;
+    /** The person’s displayed name. */
+    "name": PropValue<"Metadata.Avatar", "name">;
+    /** Optional avatar image URI. */
+    "src": PropValue<"Metadata.Avatar", "src">;
   };
   "Page": {
     /** The single-line page title. */

@@ -16,6 +16,8 @@ const hairline = { height: StyleSheet.hairlineWidth };
 function ItemSeparator(props: ListItemProps): ReactNode {
   const { appearance, position } = useContext(ListContext);
 
+  if (props.labelPlacement === 'above') return null;
+
   const separator = itemSeparator(appearance, position, hasLeading(props));
 
   return separator ? <View className={separator} style={hairline} /> : null;
