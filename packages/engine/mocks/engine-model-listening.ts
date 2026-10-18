@@ -1,5 +1,6 @@
 import { expect } from 'vitest';
 import type { HttpServerOptions } from '../src/engine/http-server';
+import { HookPort } from '../src/plugins';
 import { input } from './engine-model-fixtures';
 import * as model from './engine-model-state';
 
@@ -20,6 +21,7 @@ function listeningInput(): HttpServerOptions {
     databaseWriter: expect.anything(),
     registry: expect.anything(),
     commandAdmission: expect.any(AbortController),
+    hookPort: expect.any(HookPort),
     ...defaultAgentOptions,
   };
 }

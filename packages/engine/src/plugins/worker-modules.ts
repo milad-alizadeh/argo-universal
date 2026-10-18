@@ -20,13 +20,13 @@ import { argoSource, type ArgoBridge } from './worker-argo.ts';
 export async function registerPlugin(
   entry: PluginEntry,
   bridge: ArgoBridge,
-): Promise<PluginInbox> {
+): Promise<PluginInboxes> {
   const context = sandbox(bridge, await bundleKit());
-  const { inbox, kit } = takeKit(context);
+  const { inboxes, kit } = takeKit(context);
 
   await bootstrap(context, new PluginModules(entry, context, kit));
 
-  return inbox;
+  return inboxes;
 }
 
 async function bootstrap(
@@ -43,8 +43,10 @@ async function bootstrap(
   await module.evaluate();
 }
 
-// How the worker reaches a Plugin's pages: a JSON string in, nothing out.
-export type PluginInbox = (json: string) => void;
+// How the worker reaches a Plugin's pages and Hooks: a JSON string in, nothing out.
+type PluginInbox = (json: string) => void;
+
+export type PluginInboxes = { pages: PluginInbox; hooks: PluginInbox };
 
 interface KitModules {
   kit: Kit['exports'];
@@ -52,7 +54,7 @@ interface KitModules {
 }
 
 interface TakenKit {
-  inbox: PluginInbox;
+  inboxes: PluginInboxes;
   kit: KitModules;
 }
 
@@ -72,18 +74,19 @@ function sandbox(bridge: ArgoBridge, kitSource: string): PluginRealm {
   return context;
 }
 
-// What the kit left behind for the worker: the inbox for pages, and the modules `@argo/plugin-kit` serves.
+// What the kit and `argo` left behind for the worker: the inboxes for pages and Hooks, and the modules `@argo/plugin-kit` serves.
 function takeKit(context: PluginRealm): TakenKit {
-  const inbox: PluginInbox = runInContext('globalThis.__argoInbox', context);
+  const pages: PluginInbox = runInContext('globalThis.__argoInbox', context);
+  const hooks: PluginInbox = runInContext('globalThis.__argoHooks', context);
   const exported: Kit = runInContext('globalThis.__argoKitExports', context);
 
   runInContext(
-    'delete globalThis.__argoInbox; delete globalThis.__argoKitExports',
+    'delete globalThis.__argoInbox; delete globalThis.__argoHooks; delete globalThis.__argoKitExports',
     context,
   );
 
   return {
-    inbox,
+    inboxes: { pages, hooks },
     kit: { kit: exported.exports, jsxRuntime: exported.jsxRuntime },
   };
 }

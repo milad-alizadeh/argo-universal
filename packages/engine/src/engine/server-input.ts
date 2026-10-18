@@ -23,6 +23,7 @@ type ServerSource = {
     | 'version'
     | 'startedAt'
     | 'database'
+    | 'hookPort'
   >;
   self: Pick<AnyActorRef, 'system'>;
 };
@@ -36,6 +37,7 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   registry: requireRegistry(self.system),
   commandAdmission: context.commandAdmission,
   acp: context.acp,
+  hookPort: context.hookPort,
   ...serverConfiguration(context),
   database: openDatabaseOf(context),
 });

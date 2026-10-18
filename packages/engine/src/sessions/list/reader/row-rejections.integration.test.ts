@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { createActor, waitFor } from 'xstate';
+import { coreOnlyHooks } from '#mocks/core-hooks';
 import { openTestDatabase } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createAcpResources } from '../../../agents';
@@ -30,6 +31,7 @@ it('rejects a malformed stored Session before a pending patch can replace its in
     input: {
       now: () => 1000,
       createId: randomUUID,
+      hooks: coreOnlyHooks,
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),

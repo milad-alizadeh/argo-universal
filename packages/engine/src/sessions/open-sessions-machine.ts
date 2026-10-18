@@ -1,3 +1,4 @@
+import type { CoreHooks } from '@repo/contracts/plugins';
 import type { Database } from '@repo/db';
 import {
   type ActorRefFrom,
@@ -32,6 +33,8 @@ export interface OpenSessionsInput {
   createId: () => string;
   acpResources: AcpResources;
   installedAgents: InstalledAgents;
+  // Plugin Hooks each Session runs on Permission requests and settled Turns.
+  hooks: CoreHooks;
 }
 
 interface OpenSessionsContext extends OpenSessionsInput {

@@ -1,3 +1,9 @@
+import type { CoreHooks } from '@repo/contracts/plugins';
+import {
+  spawnHooks,
+  type SpawnCaller,
+  type Waiting,
+} from './hooks/spawn-hooks';
 import { pluginKeychainService, type Keychain } from './keychain';
 import {
   PluginAccess,
@@ -25,11 +31,13 @@ const notActivated: Pick<AccessScope, 'grants' | 'codeFolder'> = {
   codeFolder: null,
 };
 
-// Where the Server logs Plugin calls, which Projects Plugins may read, and the Server's network settings.
+// Where the Server logs Plugin calls, which Projects Plugins may read, the Server's network settings, and the `process.spawn` Hooks.
 export type PluginServiceOptions = {
   log: (line: string) => void;
   projects: () => Promise<readonly string[]>;
   network?: PluginNetwork;
+  hooks?: CoreHooks;
+  waiting?: Waiting;
 };
 
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
@@ -89,15 +97,20 @@ export class PluginServices {
       return this.perform(pluginId, request);
     }
 
-    return machineCall(this.context(pluginId, resources, request), request);
+    return machineCall(
+      this.context({ pluginId, generation }, resources, request),
+      request,
+    );
   }
 
   private context(
-    pluginId: string,
+    { pluginId, generation }: SpawnCaller,
     resources: PluginResources,
     request: StateRequest,
   ): MachineContext {
     return {
+      pluginId,
+      spawning: spawnHooks(this.options, { pluginId, generation }),
       access: this.access(pluginId),
       resources,
       network: this.options.network ?? {},

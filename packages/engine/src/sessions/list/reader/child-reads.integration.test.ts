@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { turn } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor } from 'xstate';
+import { coreOnlyHooks } from '#mocks/core-hooks';
 import {
   countDatabaseReads,
   insertEndedTurn,
@@ -45,6 +46,7 @@ it('reads the existence of a running Subagent Turn without fetching its history'
     input: {
       now: (): number => Date.now(),
       createId: randomUUID,
+      hooks: coreOnlyHooks,
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
