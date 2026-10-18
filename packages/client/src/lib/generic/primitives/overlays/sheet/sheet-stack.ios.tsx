@@ -16,7 +16,8 @@ import { SheetContent } from './sheet-content.ios';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 import type { SheetProps } from './sheet-props';
 
-type PagesProps = SheetProps & { stack: SheetStack };
+// A popover sizes to its pages, so they match their content at the popover's width.
+type PagesProps = SheetProps & { stack: SheetStack; popoverWidth?: number };
 
 // The sheet's pages: a NavigationStack that pushes with the system slide and titles each page inline.
 export function SheetPages(props: PagesProps): ReactElement {
@@ -38,7 +39,11 @@ export function SheetPages(props: PagesProps): ReactElement {
 
 function SinglePage(props: PagesProps): ReactElement {
   return (
-    <SheetContent {...props} fill={props.detents !== undefined}>
+    <SheetContent
+      {...props}
+      fill={props.detents !== undefined && !props.popoverWidth}
+      width={props.popoverWidth}
+    >
       {props.children}
     </SheetContent>
   );
@@ -50,7 +55,8 @@ function StackPage(props: PagesProps & { page: SheetPageEntry }): ReactElement {
       <SheetContent
         {...props}
         contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
-        fill
+        fill={!props.popoverWidth}
+        width={props.popoverWidth}
       >
         {props.page.content}
       </SheetContent>

@@ -29,7 +29,10 @@ function pagesAt(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));
       await userEvent.click(await body.findByRole('button', { name: /Fruit/ }));
-      await expect(await body.findByRole('heading', fruitPage)).toBeVisible();
+      // A wide window's popover is still fading in from transparent when the page is pushed.
+      await waitFor(() =>
+        expect(body.getByRole('heading', fruitPage)).toBeVisible(),
+      );
       await userEvent.click(
         body.getByRole('button', { name: 'Back to Settings' }),
       );
