@@ -23,6 +23,8 @@ export interface ResolvedItemProps {
   icon?: IconSymbol;
   // An image in the icon's slot, such as an Agent's logo; it stands in for icon.
   leading?: ReactElement;
+  // Plugin Slots hold arbitrary content rather than an icon-sized image.
+  leadingLayout?: 'icon' | 'content';
   // An image beside the value, such as the selected Agent in Configure.
   valueLeading?: ReactElement;
   accessory?: ReactElement;

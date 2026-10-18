@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { ElementProps } from './element-props';
+import { expandList } from './list-props';
 
 const rejected = ['className', 'style'];
 
@@ -21,17 +22,37 @@ function rejectStyling(type: string, props: ElementProps): void {
 }
 
 // Element props such as `leading` become children of a `#slot` node, which the wire carries as a named slot.
+function isElementArray(
+  name: string,
+  value: ElementProps[string],
+): value is React.ReactNode[] {
+  if (!Array.isArray(value)) return false;
+
+  const elements = value.filter((child) => !isEmptyChild(child));
+
+  return (
+    hasElementMeaning(name, elements.length) &&
+    elements.every(React.isValidElement)
+  );
+}
+
+const isSlotValue = (
+  name: string,
+  value: ElementProps[string],
+): value is React.ReactElement | React.ReactNode[] =>
+  React.isValidElement(value) || isElementArray(name, value);
+
 function slotsOf(props: ElementProps): React.ReactElement[] {
   return Object.entries(props).flatMap(([name, value]) =>
-    React.isValidElement(value)
-      ? [React.createElement('#slot', { argoKey: name }, value)]
+    isSlotValue(name, value)
+      ? [React.createElement('#slot', { argoKey: name, key: name }, value)]
       : [],
   );
 }
 
 const plainOf = (props: ElementProps): ElementProps =>
   Object.fromEntries(
-    Object.entries(props).filter(([, value]) => !React.isValidElement(value)),
+    Object.entries(props).filter(([name, value]) => !isSlotValue(name, value)),
   );
 
 function labelProp(type: string, children: React.ReactNode): ElementProps {
@@ -43,16 +64,16 @@ function labelProp(type: string, children: React.ReactNode): ElementProps {
 function prepare(
   type: string,
   props: ElementProps,
-  key: string | undefined,
+  key: string | number | undefined,
 ): ElementProps {
   rejectStyling(type, props);
-  const { children, ...rest } = props;
+  const { children, ...rest } = expandList(type, props);
   const slots = slotsOf(rest);
 
   return {
     ...plainOf(rest),
     ...labelProp(type, children),
-    argoKey: key,
+    argoKey: key === undefined ? undefined : String(key),
     children: textual.has(type) ? slots : [children, slots].flat(),
   };
 }
@@ -60,14 +81,29 @@ function prepare(
 function create(
   type: React.ElementType,
   props: ElementProps,
-  key: string | undefined,
+  key: string | number | undefined,
 ): React.ReactElement {
   if (typeof type !== 'string')
     return React.createElement(type, { ...props, key });
 
-  return React.createElement(type, prepare(type, props, key));
+  return React.createElement(type, { ...prepare(type, props, key), key });
 }
 
 export const jsx = create;
 
 export const jsxs = create;
+
+// Empty named Slots remain slots; other empty arrays can be ordinary JSON data.
+const hasElementMeaning = (name: string, length: number): boolean =>
+  length > 0 || slotNames.has(name);
+
+const slotNames = new Set([
+  'leading',
+  'media',
+  'accessories',
+  'footer',
+  'detail',
+]);
+
+const isEmptyChild = (value: ElementProps[string]): boolean =>
+  value === null || value === undefined || typeof value === 'boolean';

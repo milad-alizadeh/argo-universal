@@ -1,0 +1,15 @@
+appId: dev.argo.app
+name: Plugin slots render and remain interactive on native
+---
+# Start with the development client connected to this checkout's Metro.
+# Visit another story first so the slot counter starts fresh on repeat runs.
+- openLink: "argo://storybook?STORYBOOK_STORY_ID=screens-plugins-plugin-page--page"
+- assertVisible: "Hello from a Plugin"
+- openLink: "argo://storybook?STORYBOOK_STORY_ID=shared-plugintree--slots"
+- assertVisible: "Slotted row"
+- assertVisible: "First"
+- assertVisible: "Second"
+- assertVisible: "Count 0"
+- tapOn: "Increment"
+- assertVisible: "Count 1"
+- assertNotVisible: "Count 0"

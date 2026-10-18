@@ -1,16 +1,19 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Handler } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
+import { View } from 'react-native';
 import type { z } from 'zod';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
+import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { runAction } from './plugin-registry-actions';
 import {
   buttonProps,
   layoutProps,
-  stackProps,
   textProps,
+  groupedItemProps,
+  stackProps,
 } from './plugin-registry-schemas';
 
 export interface PluginTreeProps {
@@ -45,20 +48,23 @@ interface Entry {
   ) => React.JSX.Element | null;
 }
 
+type RenderEntry<Schema extends z.ZodType> = (
+  props: Props<Schema>,
+  context: RenderContext & { slots: Record<string, React.JSX.Element> },
+  children: React.ReactNode,
+) => React.JSX.Element;
+
 // Parses a node's props, and leaves the node out when they do not fit its schema.
 function entry<Schema extends z.ZodType>(
   schema: Schema,
-  render: (
-    props: Props<Schema>,
-    context: RenderContext,
-    children: React.ReactNode,
-  ) => React.JSX.Element,
+  render: RenderEntry<Schema>,
 ): Entry {
   return {
     render: (node, context, children) => {
       const parsed = schema.safeParse(node.props);
+      const filled = { ...context, slots: renderedSlots(node, context) };
 
-      return parsed.success ? render(parsed.data, context, children) : null;
+      return parsed.success ? render(parsed.data, filled, children) : null;
     },
   };
 }
@@ -66,6 +72,17 @@ function entry<Schema extends z.ZodType>(
 // The first slice of the registry: the wire types the App draws today.
 const registry = new Map(
   Object.entries({
+    GroupedListItem: entry(groupedItemProps, (props, context) => (
+      <StandaloneGroupedListItem
+        {...props}
+        onPress={handlerOf(props.onPress, context)}
+        leading={context.slots.leading}
+        leadingLayout="content"
+        accessory={context.slots.accessories}
+        footer={context.slots.footer}
+        detail={context.slots.detail}
+      />
+    )),
     Text: entry(textProps, ({ label, variant, tone }) => (
       <Text role={variant} tone={tone}>
         {label}
@@ -130,4 +147,20 @@ export function PluginTree({
   onEvent,
 }: PluginTreeProps): React.JSX.Element | null {
   return <RenderNode node={root} context={{ onEvent }} />;
+}
+
+function renderedSlots(
+  node: WireNode,
+  context: RenderContext,
+): Record<string, React.JSX.Element> {
+  return Object.fromEntries(
+    Object.entries(node.slots).map(([name, children]) => [
+      name,
+      <View key={name}>
+        {children.map((child) => (
+          <RenderNode key={child.key} node={child} context={context} />
+        ))}
+      </View>,
+    ]),
+  );
 }

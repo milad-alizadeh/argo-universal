@@ -14,6 +14,7 @@
     "./plugins/argo-calls": "./src/plugins/argo-calls.ts",
     "./plugins/assets": "./src/plugins/assets.ts",
     "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",
+    "./plugins/wire-limits": "./src/plugins/wire-limits.ts",
     "./plugins/wire": "./src/plugins/wire.ts",
     "./plugins/wire-patch": "./src/plugins/wire-patch.ts",
     "./plugins/wire-fixtures": "./src/plugins/wire-fixtures.ts",

@@ -36,6 +36,13 @@ export const layoutProps = z.strictObject({
   align: z.enum(stackAlignments).optional(),
 });
 
+export const groupedItemProps = z.strictObject({
+  label: z.string(),
+  value: z.string().optional(),
+  disabled: z.boolean().optional(),
+  onPress: Handler.optional(),
+});
+
 export const stackProps = layoutProps.extend({
   direction: z.enum(['row', 'column']),
 });

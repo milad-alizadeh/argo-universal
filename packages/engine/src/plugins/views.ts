@@ -1,27 +1,10 @@
-import { EventEmitter, on } from 'node:events';
 import type {
   PluginDispatchInput,
   ViewMessage,
-  WireNode,
 } from '@repo/contracts/plugins/wire';
-import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import type { PluginEvent } from './runtime-protocol';
-
-type Open = Extract<PluginEvent, { type: 'open' }>;
-
-type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
-
-interface OpenView {
-  pluginId: string;
-  path: string;
-  // What mounts the view in the Plugin, again after a restart.
-  opening: Open;
-  root: WireNode | null;
-  // Counted here, not by the worker, so a reloaded Plugin's fresh snapshot is never older than what an App already holds.
-  revision: number;
-  watchers: number;
-  events: ViewEvents;
-}
+import { createView, receive, type Open, type OpenView } from './view-state';
+import { messages } from './view-stream';
 
 /*
  * The pages Apps watch: each Plugin page is mounted while at least one subscription is open,
@@ -32,12 +15,13 @@ export class PluginViews {
 
   constructor(
     private readonly send: (pluginId: string, event: PluginEvent) => void,
+    private readonly log: (line: string) => void,
   ) {}
 
   receive(pluginId: string, path: string, message: ViewMessage): void {
     const view = this.views.get(keyOf(pluginId, path));
 
-    if (view) update(view, message);
+    if (view) receive(view, message, this.log);
   }
 
   dispatch(input: PluginDispatchInput): void {
@@ -105,77 +89,3 @@ export class PluginViews {
 }
 
 const keyOf = (pluginId: string, path: string): string => `${pluginId}:${path}`;
-
-function current(view: OpenView, message: ViewMessage): ViewMessage {
-  if (message.type === 'snapshot')
-    return { type: 'snapshot', revision: view.revision, root: message.root };
-
-  return { type: 'patch', revision: view.revision, ops: message.ops };
-}
-
-function createView(pluginId: string, opening: Open): OpenView {
-  const events: ViewEvents = new EventEmitter();
-
-  events.setMaxListeners(0);
-
-  return {
-    pluginId,
-    path: opening.path,
-    opening,
-    root: null,
-    revision: 0,
-    watchers: 0,
-    events,
-  };
-}
-
-function nextRoot(
-  root: WireNode | null,
-  message: ViewMessage,
-): WireNode | null {
-  if (message.type === 'snapshot') return message.root;
-
-  return root && applyPatch(root, message.ops);
-}
-
-const snapshotOf = (view: OpenView): ViewMessage[] =>
-  view.root
-    ? [{ type: 'snapshot', revision: view.revision, root: view.root }]
-    : [];
-
-// Aborting a subscription ends its stream quietly.
-async function* untilAborted<T>(
-  source: AsyncIterable<T>,
-  signal: AbortSignal,
-): AsyncGenerator<T> {
-  try {
-    yield* source;
-  } catch (error) {
-    if (!signal.aborted) throw error;
-  }
-}
-
-// The stream starts listening before the snapshot is handed out, so no patch falls between the two.
-async function* messages(
-  view: OpenView,
-  signal: AbortSignal,
-): AsyncGenerator<ViewMessage> {
-  const stream = on(view.events, 'message', { signal, close: ['close'] });
-
-  try {
-    yield* snapshotOf(view);
-
-    for await (const [message] of untilAborted(stream, signal)) yield message;
-  } finally {
-    await stream.return?.();
-  }
-}
-
-function update(view: OpenView, message: ViewMessage): void {
-  const root = nextRoot(view.root, message);
-
-  if (!root) return;
-  view.root = root;
-  view.revision += 1;
-  view.events.emit('message', current(view, message));
-}
