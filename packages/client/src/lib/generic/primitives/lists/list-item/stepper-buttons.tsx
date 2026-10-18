@@ -17,7 +17,7 @@ export function StepperButtons(
   );
 }
 
-function stepButton(
+export function stepButton(
   props: ListItemStepperProps,
   direction: number,
 ): ButtonProps {
