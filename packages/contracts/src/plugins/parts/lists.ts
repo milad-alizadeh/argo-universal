@@ -39,7 +39,12 @@ const listProps = z
     onSelectionChange: handler('onSelectionChange').optional(),
     onReorder: handler('onReorder').optional(),
     anchor: z.enum(['start', 'end']).optional(),
-    searchMode: z.enum(['app', 'plugin']).optional(),
+    searchMode: z
+      .enum(['app', 'plugin'])
+      .optional()
+      .describe(
+        'Search text remains App-owned per Connection. In app mode the App filters locally; in plugin mode it sends throttled onSearchTextChange string events.',
+      ),
     onSearchTextChange: z
       .string()
       .optional()
@@ -74,7 +79,7 @@ export const listsPartSchemas = {
     events: { onSelectionChange: z.undefined(), onSort: z.undefined() },
   },
   List: part(
-    'A settings and content list with sections, pagination, refresh, selection, and list or grid layout.',
+    'A settings and content list with sections, pagination, refresh, selection, and list or grid layout. Its `empty` Slot shows an `EmptyState` when no items remain.',
     listProps,
     {
       slots: {

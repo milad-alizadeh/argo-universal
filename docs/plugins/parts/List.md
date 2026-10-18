@@ -2,7 +2,7 @@
 
 # List
 
-A settings and content list with sections, pagination, refresh, selection, and list or grid layout.
+A settings and content list with sections, pagination, refresh, selection, and list or grid layout. Its `empty` Slot shows an `EmptyState` when no items remain.
 
 ## Props
 
@@ -15,7 +15,7 @@ A settings and content list with sections, pagination, refresh, selection, and l
 | `onSelectionChange` | Optional | Plugin event object or `toast` action object or `navigate` action object or `openUrl` action object or `copy` action object | Action or Plugin event invoked by onSelectionChange. |
 | `onReorder` | Optional | Plugin event object or `toast` action object or `navigate` action object or `openUrl` action object or `copy` action object | Action or Plugin event invoked by onReorder. |
 | `anchor` | Optional | `start`, `end` | No additional description. |
-| `searchMode` | Optional | `app`, `plugin` | No additional description. |
+| `searchMode` | Optional | `app`, `plugin` | Search text remains App-owned per Connection. In app mode the App filters locally; in plugin mode it sends throttled onSearchTextChange string events. |
 | `onSearchTextChange` | Optional | string | Throttled string payload. Available only with searchMode="plugin"; otherwise the App filters using its Connection-owned search text. |
 | `layout` | Optional | `list`, `grid` | No additional description. |
 | `direction` | Optional | `vertical`, `horizontal` | No additional description. |
@@ -36,7 +36,7 @@ Does not accept child nodes on the wire.
 
 ## Accessibility
 
-- **Accessible name:** A settings and content list with sections, pagination, refresh, selection, and list or grid layout; the container adds no name, and child parts keep their own accessible names.
+- **Accessible name:** A settings and content list with sections, pagination, refresh, selection, and list or grid layout. Its `empty` Slot shows an `EmptyState` when no items remain; the container adds no name, and child parts keep their own accessible names.
 - **Keyboard:** Keyboard navigation moves through List rows or grid items in platform order. The App owns search text per Connection; plugin mode sends throttled onSearchTextChange events from its search control.
 - **VoiceOver:** VoiceOver identifies the List as a collection, reads each ListItem and its selected state, and reaches the EmptyState in the empty Slot when no items remain.
 - **TalkBack:** TalkBack identifies the List as a collection, reads each ListItem and its selected state, and reaches the EmptyState in the empty Slot when no items remain.
