@@ -176,6 +176,8 @@
          tints. Neutral, as every other grey: the step lighter than neutral-200. */
       --color-muted: var(--color-neutral-100);
       --color-muted-foreground: var(--color-neutral-500);
+      /* A step quieter than muted-foreground: a grouped row's disclosure chevron. */
+      --color-tertiary: var(--color-neutral-400);
       --color-danger: var(--color-red-500);
       /* One step darker than muted, so a border shows on a muted fill. */
       --color-border: var(--color-neutral-300);
@@ -247,6 +249,8 @@
       --color-accent: var(--color-neutral-400);
       --color-muted: var(--color-neutral-800);
       --color-muted-foreground: var(--color-neutral-400);
+      /* iOS's tertiary label on a dark card. */
+      --color-tertiary: var(--color-neutral-600);
       --color-danger: var(--color-red-500);
       /* One step lighter than muted, so a border shows on a muted fill. */
       --color-border: var(--color-neutral-700);

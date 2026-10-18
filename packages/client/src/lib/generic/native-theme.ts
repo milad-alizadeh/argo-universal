@@ -7,6 +7,7 @@ const colorTokens = [
   ['foreground', '--color-foreground'],
   ['muted', '--color-muted'],
   ['mutedForeground', '--color-muted-foreground'],
+  ['tertiary', '--color-tertiary'],
   ['card', '--color-card'],
   ['content', '--color-content'],
   ['primary', '--color-primary'],
