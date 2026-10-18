@@ -10,10 +10,6 @@ import {
   type PageTitleRowProps,
   type PageTitleSearch,
 } from '../generic/page-title-row/page-title-row';
-import {
-  paneLeadingInset,
-  useInIosPane,
-} from '../generic/use-size-class/pane-inset';
 import { useWide } from '../generic/use-wide/use-wide';
 
 export type SettingsPageSearch = PageTitleSearch;
@@ -106,21 +102,13 @@ function SettingsPageTop({
   );
 }
 
-/*
- * A tablet's pane stacks the stock search bar above the row (#927): the row starts at the bar's leading edge, and its
- * top gap, with the bar's own bottom margin, matches the gap the list's Form keeps above its first section.
- */
-const paneToolbarClass = cn('z-10 shrink-0 pr-4 pt-3', paneLeadingInset);
-
 // On iOS the list's Form keeps its own gap above its first section, so the row adds none below.
 const phoneToolbarClass = 'z-10 shrink-0 px-4 py-3 ios:pb-0';
 
 function PhoneToolbar(props: { children: ReactNode }): ReactNode {
-  const toolbarClass = useInIosPane() ? paneToolbarClass : phoneToolbarClass;
-
   if (!props.children) return null;
 
-  return <View className={toolbarClass}>{props.children}</View>;
+  return <View className={phoneToolbarClass}>{props.children}</View>;
 }
 
 function SettingsPageBody(props: {

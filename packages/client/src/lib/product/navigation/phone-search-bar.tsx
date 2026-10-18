@@ -1,12 +1,15 @@
 import { Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { useWide } from '#lib/generic/use-wide/use-wide';
-import { useInCompactScope } from '../../generic/use-size-class/compact-scope';
 
-// iOS 26 docks the search bar at the bottom.
-const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass;
+// An iPad's window is regular width at every size, where iPadOS neither docks the bar nor centres the title beside it.
+const isPad = Platform.OS === 'ios' && Platform.isPad;
+
+// iOS 26 docks the search bar at the bottom of a phone.
+const bottomSearch = process.env.EXPO_OS === 'ios' && hasLiquidGlass && !isPad;
 
 interface PhoneSearchBarProps {
   placeholder: string;
@@ -18,46 +21,28 @@ interface PhoneSearchBarProps {
 /*
  * A phone header's search: the stack's own search bar, and no other Search in the header (#927). iOS 26 docks it at
  * the bottom, in the thumb's reach; earlier iOS stacks it below the header row, since an integrated bar there falls
- * back to inline and squeezes the title. A tablet's pane stacks it. A wide window searches in the page.
+ * back to inline and squeezes the title. An iPad stacks it too. A wide window searches in the page.
  */
 export function PhoneSearchBar(
   props: PhoneSearchBarProps,
 ): React.JSX.Element | null {
-  const inPane = useInCompactScope();
-
   if (useWide()) return null;
 
   return (
     <>
-      <Stack.SearchBar {...searchBarProps(props)} {...placement(inPane)} />
-      {dockedToolbar(inPane, props.dockedAction)}
+      <Stack.SearchBar {...searchBarProps(props)} {...placement} />
+      {bottomSearch ? bottomToolbar(props.dockedAction) : null}
     </>
   );
 }
 
-const searchBarPlacement = {
+// On an iPad the bar sits below the header row and the stock title keeps its centre (#927).
+const placement = {
   autoCapitalize: 'none',
   hideWhenScrolling: false,
-  placement: hasLiquidGlass ? 'integrated' : 'stacked',
-  hideNavigationBar: hasLiquidGlass,
+  placement: bottomSearch ? 'integrated' : 'stacked',
+  hideNavigationBar: bottomSearch,
 } as const;
-
-/*
- * A tablet's pane is regular width, where iPadOS neither docks the bar nor centres the title beside an integrated
- * field, so the bar sits below the header row and the stock title keeps its centre (#927).
- */
-const paneSearchBarPlacement = {
-  ...searchBarPlacement,
-  placement: 'stacked',
-  hideNavigationBar: false,
-} as const;
-
-type SearchBarPlacement =
-  | typeof searchBarPlacement
-  | typeof paneSearchBarPlacement;
-
-const placement = (inPane: boolean): SearchBarPlacement =>
-  inPane ? paneSearchBarPlacement : searchBarPlacement;
 
 type SearchBarProps = Pick<
   React.ComponentProps<typeof Stack.SearchBar>,
@@ -78,13 +63,6 @@ function searchBarProps({
     onClose: clear,
   };
 }
-
-// A tablet's pane stacks the bar instead, since iPadOS ignores a bottom toolbar's search.
-const dockedToolbar = (
-  inPane: boolean,
-  action: ReactNode,
-): React.JSX.Element | null =>
-  bottomSearch && !inPane ? bottomToolbar(action) : null;
 
 // A flexible spacer keeps the action beside the bar in its own bubble rather than inside the field.
 function bottomToolbar(action: ReactNode): React.JSX.Element {

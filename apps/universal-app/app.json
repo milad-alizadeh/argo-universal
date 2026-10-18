@@ -3,7 +3,7 @@
     "name": "Argo",
     "slug": "argo",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "argo",
     "userInterfaceStyle": "automatic",
@@ -12,6 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "dev.argo.app",
       "infoPlist": {
+        "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
         "UISupportedInterfaceOrientations~ipad": [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationPortraitUpsideDown",

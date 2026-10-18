@@ -9,7 +9,6 @@ import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { NativeText } from '#primitives/content/native-text';
 import { useStackedList } from '#primitives/fields/field-layout';
-import { usePaneSectionMargin } from '../../../use-size-class/pane-section-margin';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 import { StackedSection } from './stacked-section';
 
@@ -23,10 +22,7 @@ export function NativeSection(props: GroupedListSectionProps): ReactElement {
 
 function FormSection(props: GroupedListSectionProps): ReactElement {
   return (
-    <FieldGroup.Section
-      title={props.title}
-      modifiers={[...useRowColours(), ...usePaneSectionMargin()]}
-    >
+    <FieldGroup.Section title={props.title} modifiers={useRowColours()}>
       {footerSlot(props)}
       {props.children}
     </FieldGroup.Section>
