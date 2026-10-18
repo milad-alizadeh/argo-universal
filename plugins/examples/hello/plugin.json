@@ -5,5 +5,8 @@
   "engines": { "argo": ">=0.0.0 <1.0.0" },
   "main": "index.js",
   "icon": { "sf": "powerplug", "material": "power" },
-  "contributes": { "nav": [{ "id": "hello", "title": "Hello", "path": "/" }] }
+  "contributes": {
+    "nav": [{ "id": "hello", "title": "Hello", "path": "/" }],
+    "slots": ["argo/project/details/v1"]
+  }
 }

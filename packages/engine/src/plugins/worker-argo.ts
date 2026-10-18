@@ -128,6 +128,7 @@ export const argoSource = `(() => {
       delete: async (account) => { await secret({ action: 'delete', account }); },
     }),
     pages: Object.freeze({ register: kit.registerPage }),
+    slots: Object.freeze({ register: kit.registerSlot }),
     on,
   });
 })()`;
