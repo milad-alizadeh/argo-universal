@@ -88,11 +88,15 @@ function DecorativeTiles(): React.JSX.Element {
   );
 }
 
-const firstTileRotation = { transform: [{ rotate: '-12deg' }] } as const;
+const firstTileRotation = {
+  transform: [{ rotate: '-12deg' }],
+  transformOrigin: '0% 0%',
+} as const;
 
 const secondTilePosition = {
   left: 34,
   transform: [{ rotate: '12deg' }],
+  transformOrigin: '0% 0%',
 } as const;
 
 function IconTile({ icon }: { icon: IconName }): React.JSX.Element {
