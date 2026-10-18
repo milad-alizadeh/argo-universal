@@ -18,6 +18,12 @@ type EventRule = {
 type HookRules = Record<HookEventName, EventRule>;
 
 const hookRules: HookRules = {
+  'ui.render': {
+    core: { carries: ['slotId', 'props'] },
+    subject: (event) =>
+      typeof event.slotId === 'string' ? event.slotId : undefined,
+    rewritable: ['props'],
+  },
   'session.start': { core: { answer: null }, rewritable: [] },
   'prompt.submit': {
     core: { carries: ['prompt'] },
@@ -44,6 +50,7 @@ const hookRules: HookRules = {
 };
 
 export function coreAnswer(name: HookEventName, event: JsonObject): Json {
+  if (name === 'ui.render') return { input: event };
   const { core } = hookRules[name];
 
   return 'answer' in core ? core.answer : carried(event, core.carries);

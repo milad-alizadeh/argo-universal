@@ -149,3 +149,7 @@ export function prepareWireTree(
     }
   );
 }
+
+export function supportsWireNode(node: WireNode, parts: PartVersions): boolean {
+  return Boolean(currentNode(node) && adapted(node, parts));
+}

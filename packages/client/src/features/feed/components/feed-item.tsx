@@ -1,15 +1,14 @@
 import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
-import { memo } from 'react';
+import { memo, Fragment } from 'react';
 import type { FeedActivity, FeedGroup, FeedViewItem } from '../view/feed-view';
-import { AgentMessage } from './agent-message/agent-message';
 import { CommandRow } from './command-row/command-row';
 import { EditRow } from './edit-row/edit-row';
 import { FeedImageUrlContext } from './feed-image';
 import { FeedNotice } from './feed-notice/feed-notice';
+import { renderToolCallSlot, renderMessageSlot } from './replaceable-feed-item';
 import { ToolCallGroup } from './tool-call-group/tool-call-group';
 import { ToolCallRow } from './tool-call-row/tool-call-row';
-import { UserMessage } from './user-message/user-message';
 
 export interface FeedItemProps {
   item: FeedViewItem;
@@ -32,11 +31,18 @@ const isCommand = (row: ToolCall): boolean =>
 const isEdit = (row: ToolCall): boolean =>
   ['edit', 'delete', 'move'].includes(row.kind) && hasContent(row, 'diff');
 
-function toolCallRow(row: ToolCall): React.JSX.Element {
+function coreToolCallRow(row: ToolCall): React.JSX.Element {
   if (isCommand(row)) return <CommandRow row={row} />;
 
   return isEdit(row) ? <EditRow row={row} /> : <ToolCallRow row={row} />;
 }
+
+const toolCallRow = (row: ToolCall): React.JSX.Element =>
+  renderToolCallSlot(row, coreToolCallRow);
+
+const explorationRow = (row: ToolCall): React.JSX.Element => (
+  <ToolCallRow row={row} />
+);
 
 // Thoughts draw nothing in the Feed.
 const toolCallActivityRow = (
@@ -50,9 +56,7 @@ const FeedActivityRow = memo(function FeedActivityRow({
   activity: FeedActivity;
 }) {
   if (activity.type === 'exploration')
-    return activity.toolCalls.map((row) => (
-      <ToolCallRow key={row.id} row={row} />
-    ));
+    return explorationRows(activity.toolCalls);
 
   return activity.type === 'row' ? (
     <FeedNotice row={activity.row} />
@@ -137,14 +141,13 @@ function renderRow(
   row: FeedRowItem,
   imageUrl: ImageUrl,
 ): React.JSX.Element | null {
-  if (row.sessionUpdate === 'user_message')
-    return <UserMessage row={row} imageUrl={imageUrl} />;
+  if (
+    row.sessionUpdate !== 'user_message' &&
+    row.sessionUpdate !== 'agent_message'
+  )
+    return noticeRow(row);
 
-  return row.sessionUpdate === 'agent_message' ? (
-    <AgentMessage row={row} />
-  ) : (
-    noticeRow(row)
-  );
+  return renderMessageSlot(row, imageUrl);
 }
 
 function renderFeedItem(
@@ -158,4 +161,10 @@ function renderFeedItem(
   ) : (
     <FeedActivityRow activity={item} />
   );
+}
+
+function explorationRows(rows: ToolCall[]): React.JSX.Element[] {
+  return rows.map((row) => (
+    <Fragment key={row.id}>{renderToolCallSlot(row, explorationRow)}</Fragment>
+  ));
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ReplaceableSlotId } from '#plugin-replaceable-slot-id';
 import { PluginSurface } from '#plugin-surface';
 import { PluginSlotInput } from '#plugin-wire-slot';
 
@@ -56,6 +57,7 @@ export const PluginEvent = z.union([
     viewId: PluginViewId,
     path: z.string(),
     slot: PluginSlotInput.optional(),
+    renderSlot: ReplaceableSlotId.optional(),
     surface: PluginSurface.optional(),
   }),
   z.object({ type: z.literal('close'), viewId: PluginViewId }),

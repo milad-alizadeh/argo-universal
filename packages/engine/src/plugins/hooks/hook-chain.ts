@@ -5,8 +5,11 @@ import type {
   Json,
   JsonObject,
 } from '@repo/contracts/plugins/hook-protocol';
+import type { PluginSurface } from '@repo/contracts/plugins/kit';
+import { failureLine } from './hook-failure';
 import type { RegisteredHook } from './hook-registry';
 import { coreAnswer, guardRefusal, isAnswer } from './hook-rules';
+import { readRenderAnswer } from './render-answer';
 import { RunningHook, type HookStep } from './running-hook';
 
 // A Hook's own time, as Claude Code allows it; waits on `next` and `argo` calls don't count.
@@ -25,6 +28,7 @@ type Chain = {
   name: HookEventName;
   hooks: readonly RegisteredHook[];
   ancestors: ReadonlySet<string>;
+  surface?: PluginSurface;
 };
 
 // Runs Hooks as a middleware chain over core (ADR-0027), one worker call per Hook.
@@ -87,7 +91,11 @@ export class HookChain {
       if (!hook) return coreAnswer(chain.name, event);
       const rest = this.from(chain, index + 1);
 
-      return this.invoke(hook, { name: chain.name, event, rest }, chain);
+      return this.invoke(
+        hook,
+        { name: chain.name, event, rest, surface: chain.surface },
+        chain,
+      );
     };
   }
 
@@ -126,9 +134,9 @@ export class HookChain {
   }
 
   private async answered(running: RunningHook, answer: Json): Promise<Json> {
-    if (isAnswer(running.step.name, answer)) return answer;
+    const valid = await validatedAnswer(running, answer);
 
-    return this.failed(running, 'answered the wrong shape');
+    return valid ?? this.failed(running, 'answered the wrong shape');
   }
 
   // A failed Hook is skipped, unless it guards: then its event's refusal is the answer.
@@ -160,8 +168,8 @@ const runningHook = (
 const invocationOf = (
   invocation: number,
   { hookId }: RegisteredHook,
-  { name, event }: HookStep,
-): HookInvocation => ({ invocation, hookId, name, event });
+  { name, event, surface }: HookStep,
+): HookInvocation => ({ invocation, hookId, name, event, surface });
 
 const isRunBy = ({ hook }: RunningHook, caller: HookCaller): boolean =>
   hook.pluginId === caller.pluginId && hook.generation === caller.generation;
@@ -173,9 +181,12 @@ const refusalOf = ({ hook, step }: RunningHook): Json | undefined =>
 const skipped = (running: RunningHook): Promise<Json> =>
   running.passedOn() ?? running.step.rest(running.step.event);
 
-const failureLine = (
-  { hook, step }: RunningHook,
-  reason: string,
-  refused: boolean,
-): string =>
-  `Plugin ${hook.pluginId}: ${refused ? 'guard refused' : 'skipped'} ${step.name} Hook: ${reason}`;
+async function validatedAnswer(
+  running: RunningHook,
+  answer: Json,
+): Promise<Json | null> {
+  if (running.step.name === 'ui.render')
+    return readRenderAnswer(running, answer);
+
+  return isAnswer(running.step.name, answer) ? answer : null;
+}

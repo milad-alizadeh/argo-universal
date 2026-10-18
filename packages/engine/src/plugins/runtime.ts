@@ -1,14 +1,16 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { PluginFailures } from './failures';
 import { keepWaiting } from './hooks/keep-waiting';
-import { PluginHooks } from './hooks/plugin-hooks';
+import type { PluginHooks } from './hooks/plugin-hooks';
 import { HostConnection } from './host-connection';
+import { hostHooks } from './host-hooks';
 import {
   activatedPlugin,
   hookAllowance,
   type PluginLocation,
 } from './plugin-location';
 import type { PluginServices } from './plugin-services';
+import { oncePerRenderFallback, renderFallbackLine } from './render-fallback';
 import { answerPluginCall } from './runtime-calls';
 import { RuntimePlugin } from './runtime-plugin';
 import type { PluginReply } from './runtime-protocol';
@@ -32,16 +34,21 @@ export class PluginRuntime {
     private readonly log: (line: string) => void,
     private readonly services: PluginServices,
   ) {
+    this.log = oncePerRenderFallback(log);
     this.views = new PluginViews(
       (pluginId, event) => this.host.event(pluginId, event),
-      log,
+      this.log,
     );
     this.host = new HostConnection(this.callbacks());
-    this.hooks = new PluginHooks({
-      log,
-      send: ({ pluginId, generation }, invocation): void =>
-        this.host.hook({ pluginId, generation, ...invocation }),
-    });
+    this.hooks = hostHooks(this.host, this.log);
+  }
+
+  public renderFallback(
+    pluginId: string,
+    slotId: string,
+    reason: string,
+  ): void {
+    this.log(renderFallbackLine(pluginId, slotId, reason));
   }
 
   private callbacks(): ConstructorParameters<typeof HostConnection>[0] {

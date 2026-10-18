@@ -1,4 +1,4 @@
-import type { ViewMessage } from '@repo/contracts/plugins/wire';
+import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import {
   pluginMessageBytes,
   pluginPageBytes,
@@ -56,6 +56,8 @@ interface TreeReception {
 }
 
 function receiveTree({ view, message, root, reception }: TreeReception): void {
+  if (view.opening.renderSlot)
+    return updateView(view, message, reception.revision);
   const sanitized = sanitizeTree(root);
 
   logRefusals(view, sanitized.refused, reception);
@@ -99,9 +101,11 @@ function refusalReason(view: OpenView, message: ViewMessage): string | null {
 
 function refuse(view: OpenView, reason: string, reception: Reception): void {
   if (view.refused) return;
-  reception.log(
-    `Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`,
-  );
+
+  if (!view.opening.renderSlot)
+    reception.log(
+      `Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`,
+    );
   refuseSilently(view, reception.revision);
 }
 
@@ -110,7 +114,11 @@ function refuseSilently(view: OpenView, revision: number): void {
   view.refused = true;
   updateView(
     view,
-    { type: 'snapshot', revision: 0, root: pluginPageFallback },
+    {
+      type: 'snapshot',
+      revision: 0,
+      root: refusedRoot(view),
+    },
     revision,
   );
   view.workerRevision = null;
@@ -118,3 +126,15 @@ function refuseSilently(view: OpenView, revision: number): void {
 
 const ignoresPatch = (view: OpenView, message: ViewMessage): boolean =>
   view.refused && message.type === 'patch';
+
+function refusedRoot(view: OpenView): WireNode {
+  return view.opening.renderSlot
+    ? {
+        type: '#render-error',
+        key: '0',
+        props: { reason: 'tree exceeds wire limits' },
+        children: [],
+        slots: {},
+      }
+    : pluginPageFallback;
+}

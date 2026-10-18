@@ -1,0 +1,102 @@
+import {
+  messageSlotFixture,
+  replacementTreeFixture,
+  refusedTreeFixture,
+  renderThrowReason,
+} from '@repo/contracts/plugins/replaceable-fixtures';
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
+import { expect, fn } from 'storybook/test';
+import { Text } from '#primitives/content/text';
+import {
+  renderCoreMessage,
+  replacementState,
+  rewrittenMessage,
+} from '../../../../mocks/replaceable-slot';
+import { PluginDrawingBoundary } from './plugin-drawing-boundary';
+import { ReplaceableSlotView } from './replaceable-slot';
+import { coreSlotState, type ReplaceableState } from './replaceable-state';
+
+const meta = { title: 'Tests/Replaceable Slots' } satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const onFallback = fn();
+
+const coreMessageText = 'Core message';
+
+const restOfFeedText = 'Rest of Feed';
+
+const draw = (state: ReplaceableState): React.JSX.Element => (
+  <View>
+    <ReplaceableSlotView
+      input={messageSlotFixture}
+      state={state}
+      renderCore={renderCoreMessage}
+      onEvent={fn()}
+      onFallback={onFallback}
+    />
+    <Text>{restOfFeedText}</Text>
+  </View>
+);
+
+export const PassThrough: Story = {
+  render: () => draw(coreSlotState(messageSlotFixture)),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(coreMessageText)).toBeVisible();
+    await expect(canvas.getByText(restOfFeedText)).toBeVisible();
+  },
+};
+
+export const Rewritten: Story = {
+  render: () => draw(coreSlotState(rewrittenMessage())),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Rewritten message')).toBeVisible();
+    await expect(canvas.queryByText(coreMessageText)).toBeNull();
+  },
+};
+
+export const Replaced: Story = {
+  render: () => draw(replacementState(replacementTreeFixture)),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Plugin replacement')).toBeVisible();
+    await expect(canvas.queryByText(coreMessageText)).toBeNull();
+    await expect(canvas.getByText(restOfFeedText)).toBeVisible();
+  },
+};
+
+export const RefusedWhole: Story = {
+  render: () => draw(replacementState(refusedTreeFixture)),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(coreMessageText)).toBeVisible();
+    await expect(canvas.queryByText('Plugin replacement')).toBeNull();
+    await expect(onFallback).toHaveBeenCalledWith(
+      'App did not report FuturePart',
+    );
+  },
+};
+
+function ThrowingDrawing(): never {
+  throw new Error(renderThrowReason);
+}
+
+export const ThrowStaysLocal: Story = {
+  render: () => (
+    <View>
+      <PluginDrawingBoundary
+        fallback={renderCoreMessage(messageSlotFixture)}
+        onFallback={onFallback}
+      >
+        <ThrowingDrawing />
+      </PluginDrawingBoundary>
+      <Text>{restOfFeedText}</Text>
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(coreMessageText)).toBeVisible();
+    await expect(canvas.getByText(restOfFeedText)).toBeVisible();
+    await expect(onFallback).toHaveBeenCalledWith(renderThrowReason);
+  },
+};
