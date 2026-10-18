@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { iconSymbol } from '../kit-symbols';
+import { iconSymbol } from '../kit-symbols/icon-schema';
 import { tones } from '../kit-tokens';
 import { materialSymbolNames } from './material-symbol-names.gen';
 import { sfSymbolNames } from './sf-symbol-names.gen';

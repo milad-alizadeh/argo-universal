@@ -19,17 +19,13 @@ export const actionsPartSchemas = {
       }),
     ],
   }),
-  ButtonGroup: part(
-    'A horizontal or vertical group of buttons.',
-    buttonGroupProps,
-    {
-      children: true,
-      slots: {},
-      previous: [
-        z.object({ direction: z.enum(['horizontal', 'vertical']).optional() }),
-      ],
-    },
-  ),
+  ButtonGroup: part('A joined group of buttons.', buttonGroupProps, {
+    children: true,
+    slots: {},
+    previous: [
+      z.object({ direction: z.enum(['horizontal', 'vertical']).optional() }),
+    ],
+  }),
   SplitButton: selectionPartSchemas.SplitButton,
   ActionList: part(
     'Actions offered by a page, row, or tile.',

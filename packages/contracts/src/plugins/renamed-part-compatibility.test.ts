@@ -1,6 +1,9 @@
 import { expect, it } from 'vitest';
+import {
+  previousAppFixtures,
+  previousDraftFixtures,
+} from '../../mocks/renamed-part-fixtures';
 import { prepareWireTree } from './prepare-tree';
-import { renamedPartFixtures } from './renamed-part-fixtures';
 import type { WireNode } from './wire';
 
 it.each([
@@ -30,12 +33,31 @@ it.each([
   expect(prepareWireTree(label, { Label: 2 })).toEqual(label);
 });
 
-it.each(renamedPartFixtures)(
+it.each(previousAppFixtures)(
   'lowers $type names and values for the previous App',
   ({ type, props, legacy }) => {
     const node: WireNode = {
       type,
       key: 'part',
+      props,
+      children: [],
+      slots: {},
+    };
+
+    expect(prepareWireTree(node, { [type]: 1 })).toEqual({
+      ...node,
+      props: legacy,
+    });
+    expect(prepareWireTree(node, { [type]: 2 })).toEqual(node);
+  },
+);
+
+it.each(previousDraftFixtures)(
+  'keeps representable $type fields in the prior draft schema',
+  ({ type, props, legacy }) => {
+    const node: WireNode = {
+      type,
+      key: 'draft',
       props,
       children: [],
       slots: {},

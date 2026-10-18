@@ -5,7 +5,7 @@ export const selectionControlV1 = z.object({
   label: stringLabel,
   checked: z.boolean().optional(),
   disabled: z.boolean().optional(),
-  onChange: z.union([z.boolean(), handler('onChange')]).optional(),
+  onChange: z.boolean().optional(),
 });
 
 const binaryControlProps = z.object({
@@ -38,7 +38,7 @@ export const sliderV1 = z.object({
   min: z.number(),
   max: z.number(),
   step: z.number().optional(),
-  onChange: z.union([z.number(), handler('onChange')]).optional(),
+  onChange: z.number().optional(),
 });
 
 export const sliderProps = z.object({

@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import { kitJsonSchema } from '../src/kit-schema-json';
+import type { WirePartDefinition } from '../src/plugins/wire-parts';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
@@ -44,5 +45,18 @@ export function pluginObjectSchema(schema: z.ZodType): JsonSchema {
     ...json,
     properties: propertiesOf(branches),
     required: requiredProperties(branches),
+  };
+}
+
+export function partObjectSchema(part: WirePartDefinition): JsonSchema {
+  const wire = pluginObjectSchema(part.props);
+
+  if (!part.expansion) return wire;
+  const expansion = pluginObjectSchema(part.expansion);
+
+  return {
+    ...wire,
+    properties: { ...wire.properties, ...expansion.properties },
+    required: [wire, expansion].flatMap((schema) => schema.required ?? []),
   };
 }

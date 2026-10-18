@@ -8,17 +8,13 @@ import {
 import { fieldProps } from '../simple-kit-props';
 
 export const formsPartSchemas = {
-  Field: part(
-    'A labeled wrapper around an input with hint and error content.',
-    fieldProps,
-    {
-      previous: [
-        z.object({ label: stringLabel, required: z.boolean().optional() }),
-      ],
-      children: true,
-      slots: {},
-    },
-  ),
+  Field: part('A Field wrapper around its child control.', fieldProps, {
+    previous: [
+      z.object({ label: stringLabel, required: z.boolean().optional() }),
+    ],
+    children: true,
+    slots: {},
+  }),
   FieldLayout: part(
     'A layout for a field label and its control.',
     z.object({ label: optionalLabel }),

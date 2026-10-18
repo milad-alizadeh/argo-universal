@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { iconSymbol, iconRole } from '../kit-symbols';
+import { iconSymbol, iconRole } from '../kit-symbols/icon-schema';
 import { tones } from '../kit-tokens';
 import { handler } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';

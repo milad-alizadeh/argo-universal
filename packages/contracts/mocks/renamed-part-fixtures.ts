@@ -1,6 +1,6 @@
-import type { WireNode } from './wire';
+import type { WireNode } from '../src/plugins/wire';
 
-export const renamedPartFixtures: {
+export const previousDraftFixtures: {
   type: string;
   props: WireNode['props'];
   legacy: WireNode['props'];
@@ -14,7 +14,6 @@ export const renamedPartFixtures: {
     },
     legacy: {
       checked: true,
-      onChange: { $event: 'onChange' },
       label: 'Enabled',
     },
   },
@@ -27,7 +26,6 @@ export const renamedPartFixtures: {
     },
     legacy: {
       checked: false,
-      onChange: { $event: 'onChange' },
       label: 'Remember',
     },
   },
@@ -48,7 +46,6 @@ export const renamedPartFixtures: {
       max: 10,
       step: 1,
       label: 'Effort',
-      onChange: { $event: 'onChange' },
     },
   },
   {
@@ -61,7 +58,22 @@ export const renamedPartFixtures: {
     legacy: {
       placeholder: 'Search jobs',
       value: 'build',
-      onChangeText: { $event: 'onChangeText' },
+    },
+  },
+  {
+    type: 'Picker',
+    props: {
+      label: 'Mode',
+      value: 'fast',
+      options: [{ value: 'fast', label: 'Fast' }],
+      variant: 'row',
+      onValueChange: { $event: 'onValueChange' },
+    },
+    legacy: {
+      label: 'Mode',
+      value: 'fast',
+      options: [{ value: 'fast', label: 'Fast' }],
+      variant: 'menu',
     },
   },
   { type: 'Tooltip', props: { label: 'Save' }, legacy: { text: 'Save' } },
@@ -83,6 +95,9 @@ export const renamedPartFixtures: {
     },
     legacy: { title: 'Settings' },
   },
+];
+
+export const previousAppFixtures: typeof previousDraftFixtures = [
   {
     type: 'Button',
     props: { label: 'Save', loading: true, icon: 'check', fullWidth: true },

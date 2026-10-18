@@ -13,6 +13,7 @@ import {
 } from './kit-props';
 import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
+import { listExpansion } from './list-expansion';
 import { listWireParts } from './list-wire-parts';
 import {
   wirePartReferences,
@@ -21,6 +22,7 @@ import {
 
 export interface WirePartDefinition {
   props: z.ZodType;
+  expansion?: z.ZodType;
   versions: readonly z.ZodType[];
   container: boolean;
   children: boolean;
@@ -65,6 +67,7 @@ export const wireParts = {
   },
   VirtualList: {
     props: listProps,
+    expansion: listExpansion,
     versions: [listProps],
     container: true,
     children: true,
@@ -74,6 +77,7 @@ export const wireParts = {
   },
   Table: {
     props: listProps,
+    expansion: listExpansion,
     versions: [listProps],
     container: true,
     children: true,
@@ -83,6 +87,7 @@ export const wireParts = {
   },
   GroupedList: {
     props: listProps,
+    expansion: listExpansion,
     versions: [listProps],
     container: true,
     children: true,

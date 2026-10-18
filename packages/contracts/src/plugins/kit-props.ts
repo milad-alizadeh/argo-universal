@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { iconName } from '../kit-symbols';
+import { iconName } from '../kit-symbols/icon-schema';
 import {
   buttonSizes,
   buttonVariants,

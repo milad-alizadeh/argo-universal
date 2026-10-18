@@ -9,6 +9,7 @@ import {
   rowBadgeProps,
 } from './kit-props';
 import { legacyLabelProps } from './legacy-label-props';
+import { listExpansion } from './list-expansion';
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { part } from './plugin-part-schema-utils';
 import { labelV1 } from './status-kit-props';
@@ -52,6 +53,7 @@ const pillV1 = pillProps.omit({ color: true });
 export const listWireParts = {
   List: {
     props: contentListProps,
+    expansion: listExpansion,
     versions: [contentListProps],
     container: true,
     children: true,

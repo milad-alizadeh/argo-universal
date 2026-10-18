@@ -18,7 +18,7 @@ export const contentPartSchemas = {
     iconProps,
     {
       label:
-        'Provide `accessibilityLabel` when the icon conveys information; omit it when decorative.',
+        'The surrounding control supplies the accessible name; this symbol is decorative.',
       accessibility: accessibility.iconAccessibility,
       previous: [
         z.object({
@@ -104,7 +104,7 @@ export const contentPartSchemas = {
     'An image or initials with a size and optional status mark.',
     avatarProps,
     {
-      label: 'Set `accessibilityLabel` when identity is not otherwise named.',
+      label: 'The required accessibilityLabel supplies the spoken identity.',
       accessibility: accessibility.avatarAccessibility,
       previous: [
         z.object({

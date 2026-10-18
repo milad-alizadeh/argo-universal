@@ -1,4 +1,3 @@
-import type { KitListProps } from '@repo/contracts/kit-list-props';
 import type { StackGap } from '@repo/contracts/kit-tokens';
 import type { ReactNode } from 'react';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
@@ -6,8 +5,7 @@ import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
 
 // Kit-only: scrolling, padding and section grouping.
-export type ListProps<Item> = KitProps<'List'> &
-  KitListProps<Item, ReactNode> &
+export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
   Pick<
     ScrollFadeListProps<Item>,
     | 'keyExtractor'

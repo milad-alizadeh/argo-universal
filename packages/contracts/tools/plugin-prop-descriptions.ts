@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
-import { pluginObjectSchema } from './plugin-object-schema';
+import { partObjectSchema } from './plugin-object-schema';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
@@ -44,7 +44,7 @@ type PropValue<Name extends string, Prop extends PropertyKey> =
 // Homomorphic mapped types retain these generated JSDoc hints in component editors.
 export function propDescriptions(): string {
   const hints = Object.entries(pluginPartSchemas).map(([name, part]) =>
-    partHints(name, pluginObjectSchema(part.props)),
+    partHints(name, partObjectSchema(part)),
   );
 
   return `${descriptionPreamble}

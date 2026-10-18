@@ -462,6 +462,10 @@ export type WireSchemaHints = {
     "appearance": PropValue<"List", "appearance">;
     /** Whether the list is loading. */
     "isLoading": PropValue<"List", "isLoading">;
+    /** Input items, expanded in the worker; pair with renderItem. */
+    "items": PropValue<"List", "items">;
+    /** Renders one keyed child for each item; receives the item and its index. */
+    "renderItem": PropValue<"List", "renderItem">;
   };
   "List.Section": {
     /** The row or section title. */
@@ -492,7 +496,10 @@ export type WireSchemaHints = {
     "onPress": PropValue<"ListItem", "onPress">;
   };
   "Table": {
-
+    /** Input items, expanded in the worker; pair with renderItem. */
+    "items": PropValue<"Table", "items">;
+    /** Renders one keyed child for each item; receives the item and its index. */
+    "renderItem": PropValue<"Table", "renderItem">;
   };
   "Metadata": {
 
@@ -617,10 +624,16 @@ export type WireSchemaHints = {
     "onPress": PropValue<"GroupedListItem", "onPress">;
   };
   "VirtualList": {
-
+    /** Input items, expanded in the worker; pair with renderItem. */
+    "items": PropValue<"VirtualList", "items">;
+    /** Renders one keyed child for each item; receives the item and its index. */
+    "renderItem": PropValue<"VirtualList", "renderItem">;
   };
   "GroupedList": {
-
+    /** Input items, expanded in the worker; pair with renderItem. */
+    "items": PropValue<"GroupedList", "items">;
+    /** Renders one keyed child for each item; receives the item and its index. */
+    "renderItem": PropValue<"GroupedList", "renderItem">;
   };
   "Text": {
     /** Text content in source order. */

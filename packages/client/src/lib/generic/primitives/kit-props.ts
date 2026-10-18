@@ -5,6 +5,8 @@ import type {
   KitSlots,
   KitHasChildren,
   KitChoiceValue,
+  KitListItem,
+  KitNode,
 } from '@repo/contracts/kit-props';
 import type { ReactNode } from 'react';
 
@@ -21,40 +23,67 @@ type CleanProps<Props> = Props extends object
   : Props;
 
 type SchemaProps<Name extends KitPart> = CleanProps<KitSchemaProps[Name]> &
-  Partial<Record<Exclude<KitSlots<Name>, keyof KitSchemaProps[Name]>, never>> &
+  Partial<Record<Exclude<KitSlots<Name>, keyof KitSchemaProps[Name]>, null>> &
   (KitHasChildren<Name> extends true
     ? { children?: ReactNode }
     : Record<never, never>);
 
-type KitValue<Value, Events, Node, Choice> = Value extends KitChoiceValue
-  ? Choice
-  : Value extends (infer Item)[]
-    ? KitValue<Item, Events, Node, Choice>[]
-    : Value extends readonly (infer Item)[]
-      ? readonly KitValue<Item, Events, Node, Choice>[]
-      : Value extends object
-        ? MappedProps<Value, Events, never, Node, Choice>
-        : Value;
+type KitValue<Value, Events, Node, Choice, Item> = Value extends KitListItem
+  ? Item
+  : Value extends KitNode
+    ? Node
+    : Value extends KitChoiceValue
+      ? Choice
+      : Value extends (...args: infer Args) => infer Result
+        ? (
+            ...args: {
+              [Key in keyof Args]: KitValue<
+                Args[Key],
+                Events,
+                Node,
+                Choice,
+                Item
+              >;
+            }
+          ) => KitValue<Result, Events, Node, Choice, Item>
+        : Value extends (infer Element)[]
+          ? KitValue<Element, Events, Node, Choice, Item>[]
+          : Value extends readonly (infer Element)[]
+            ? readonly KitValue<Element, Events, Node, Choice, Item>[]
+            : Value extends object
+              ? MappedProps<Value, Events, never, Node, Choice, Item>
+              : Value;
 
 // Contracts owns every prop, including events inside action and option data.
-type MappedProps<Props, Events, Slots extends PropertyKey, Node, Choice> = {
-  [Prop in keyof Props]: Prop extends Slots
-    ? Node
-    : Prop extends keyof Events
-      ? [Exclude<Props[Prop], undefined>] extends [never]
-        ? Props[Prop]
-        : Callback<Events[Prop], Choice>
-      : KitValue<Props[Prop], Events, Node, Choice>;
+type MappedProps<
+  Props,
+  Events,
+  Slots extends PropertyKey,
+  Node,
+  Choice,
+  Item,
+> = {
+  [Prop in keyof Props]: [Exclude<Props[Prop], undefined>] extends [never]
+    ? Props[Prop]
+    : Prop extends Slots
+      ? Node
+      : Prop extends keyof Events
+        ? [Exclude<Props[Prop], undefined>] extends [never]
+          ? Props[Prop]
+          : Callback<Events[Prop], Choice>
+        : KitValue<Props[Prop], Events, Node, Choice, Item>;
 };
 
 export type KitProps<
   Name extends KitPart,
   Choice extends string = string,
   Node = ReactNode,
+  Item = unknown,
 > = MappedProps<
   SchemaProps<Name>,
   KitEvents<Name>,
   KitSlots<Name> | (KitHasChildren<Name> extends true ? 'children' : never),
   Node,
-  Choice
+  Choice,
+  Item
 >;

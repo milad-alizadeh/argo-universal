@@ -105,8 +105,8 @@ function ChildRow({
   );
 }
 
-function ChildrenList(props: ChildrenOptions): ReactElement {
-  const items = useMemo(() => childEntries(props.children), [props.children]);
+function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
+  const items = useMemo(() => childEntries(children), [children]);
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
   const { appearance } = props;

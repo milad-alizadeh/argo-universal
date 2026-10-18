@@ -50,25 +50,29 @@ export const statusPartSchemas = {
     },
   ),
   ProgressBar: wireParts.ProgressBar,
-  Callout: part('A title, description, and one primary action.', calloutProps, {
-    events: { onPress: z.undefined() },
-    accessibility: {
-      keyboard:
-        'The Callout title and description remain in reading order; keyboard focus reaches its primary action in platform order.',
-      voiceOver:
-        'VoiceOver reads the Callout title and description before announcing its single primary action.',
-      talkBack:
-        'TalkBack reads the Callout title and description before announcing its single primary action.',
+  Callout: part(
+    'A heading, description, detail, and optional actions.',
+    calloutProps,
+    {
+      events: { onPress: z.undefined() },
+      accessibility: {
+        keyboard:
+          'The Callout title and description remain in reading order; keyboard focus reaches its actions in platform order.',
+        voiceOver:
+          'VoiceOver reads the Callout title and description before announcing its optional actions.',
+        talkBack:
+          'TalkBack reads the Callout title and description before announcing its optional actions.',
+      },
+      previous: [
+        z.object({
+          title: stringLabel,
+          description: optionalLabel,
+          action: onPress.optional(),
+        }),
+      ],
+      slots: { actions: ['Button', 'IconButton'] },
     },
-    previous: [
-      z.object({
-        title: stringLabel,
-        description: optionalLabel,
-        action: onPress.optional(),
-      }),
-    ],
-    slots: { actions: ['Button', 'IconButton'] },
-  }),
+  ),
   EmptyState: part(
     'An icon, title, description, and one action for an empty view.',
     z.object({

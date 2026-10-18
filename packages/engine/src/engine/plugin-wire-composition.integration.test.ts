@@ -109,9 +109,13 @@ function rowsOf(message: ViewMessage | void): WireNode[] {
 const listRows = (root: WireNode): WireNode[] =>
   root.children[2]?.children ?? [];
 
-it.each(['/custom', '/fragment'])(
-  'preserves the key of a %s list row',
-  async (path) => {
+it.each([
+  { path: '/custom', text: 'row' },
+  { path: '/fragment', text: 'row' },
+  { path: '/indexed', text: '0:row' },
+])(
+  'preserves the key and expansion content of a $path list row',
+  async ({ path, text }) => {
     const home = await createRuntimePlugins([listFixture]);
     const { createCaller } = await startEngineTestHost({ home });
     const controller = new AbortController();
@@ -127,7 +131,8 @@ it.each(['/custom', '/fragment'])(
     expect((await stream.next()).value).toMatchObject({
       type: 'snapshot',
       root: {
-        children: [{ type: 'Text', key: 'row', props: { children: 'row' } }],
+        props: {},
+        children: [{ type: 'Text', key: 'row', props: { children: text } }],
       },
     });
   },

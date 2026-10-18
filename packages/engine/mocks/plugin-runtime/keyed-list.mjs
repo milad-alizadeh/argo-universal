@@ -92,6 +92,12 @@ function ListPage() {
 const CustomRow = ({ id }) => row(id);
 
 const pages = {
+  '/indexed': () =>
+    jsx('VirtualList', {
+      items: ['row'],
+      renderItem: (id, index) =>
+        jsx('Text', { children: `${index}:${id}` }, id),
+    }),
   '/custom': () =>
     jsx('VirtualList', {
       items: ['row'],

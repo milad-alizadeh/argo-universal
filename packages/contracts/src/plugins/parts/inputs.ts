@@ -6,7 +6,6 @@ import {
   stringLabel,
   optionalLabel,
   onPress,
-  handler,
 } from '../plugin-part-schema-utils';
 import { searchFieldProps } from '../presentation-kit-props';
 import { filterPillProps } from '../presentation-kit-props';
@@ -24,7 +23,7 @@ import {
 const legacySearchField = z.object({
   value: z.string().optional(),
   placeholder: optionalLabel,
-  onChangeText: z.union([z.string(), handler('onChangeText')]).optional(),
+  onChangeText: z.string().optional(),
 });
 
 export const inputsPartSchemas = {
@@ -42,7 +41,7 @@ export const inputsPartSchemas = {
     events: { onChangeText: z.string() },
   }),
   Textarea: part('A multi-line text input.', textareaProps, {
-    label: 'The required `label` names the input.',
+    label: 'The surrounding Field or control supplies the accessible name.',
     previous: [
       z.object({
         label: stringLabel,
@@ -57,12 +56,13 @@ export const inputsPartSchemas = {
     'Search input for Page headers and Lists.',
     searchFieldProps,
     {
-      label: 'Defaults to the localized name “Search”.',
+      label:
+        'The required label names the search and supplies its placeholder.',
       accessibility: searchFieldAccessibility,
       previous: [
         searchFieldProps
           .transform((props): z.input<typeof legacySearchField> => ({
-            ...props,
+            value: props.value,
             placeholder: props.label,
           }))
           .pipe(legacySearchField),

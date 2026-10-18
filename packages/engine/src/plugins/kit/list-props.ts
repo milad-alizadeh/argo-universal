@@ -22,7 +22,7 @@ function expanded(
 
   return {
     ...props,
-    children: items.map((item) => keyedRow(renderItem(item))),
+    children: items.map((item, index) => keyedRow(renderItem(item, index))),
   };
 }
 
