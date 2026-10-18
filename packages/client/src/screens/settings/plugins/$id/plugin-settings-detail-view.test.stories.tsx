@@ -67,6 +67,7 @@ export const BuildsARowForEachField: Story = {
       'type',
       'password',
     );
+    await expect(canvas.queryByText('Clear Token')).toBeNull();
     await expect(
       canvas.getByRole('switch', { name: 'Show closed pull requests' }),
     ).not.toBeChecked();
@@ -116,6 +117,14 @@ export const ASecretIsNeverShown: Story = {
     await userEvent.tab();
     await expect(args.onSettingChange).toHaveBeenCalledWith('token', 'ghp_new');
     await expect(token).toHaveValue('');
+  },
+};
+
+export const ClearingASavedSecretSendsItEmpty: Story = {
+  args: { plugin: { ...loaded, settings: savedSettingsWithToken } },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByText('Clear Token'));
+    await expect(args.onSettingChange).toHaveBeenCalledWith('token', '');
   },
 };
 

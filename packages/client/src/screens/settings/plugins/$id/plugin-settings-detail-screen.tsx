@@ -3,8 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
 import { useServerPageCaption } from '#features/settings';
+import { errorToast } from '#lib/generic/error-toast';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
+import { useErrorToast } from '#primitives/overlays/toast';
 import {
   type PluginEntry,
   usePluginEnabledChange,
@@ -52,14 +54,31 @@ function usePluginLoad(pluginId: string): PluginLoad & { name?: string } {
   const { plugins } = usePluginEntries();
   const plugin = plugins?.find((entry) => entry.manifest.id === pluginId);
 
-  const settings = useQuery(
-    useTRPC().plugins.settings.queryOptions({ pluginId }),
-  );
+  const settings = useSettingsQuery(pluginId, plugin !== undefined);
 
   return {
     ...toPluginLoad(plugins, plugin, settings.data),
     name: plugin?.manifest.name,
   };
+}
+
+// A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
+function useSettingsQuery(
+  pluginId: string,
+  found: boolean,
+): { data: PluginSettings | undefined } {
+  const settings = useQuery(
+    useTRPC().plugins.settings.queryOptions({ pluginId }),
+  );
+
+  useErrorToast(
+    errorToast(
+      'Could not load the settings',
+      found ? settings.error : undefined,
+    ),
+  );
+
+  return settings;
 }
 
 function usePluginDetail(pluginId: string): PluginSettingsDetailViewProps {
