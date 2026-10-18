@@ -11,19 +11,37 @@ import {
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { part } from './plugin-part-schema-utils';
 
-const listItemV1Base = listItemProps.extend({
-  badge: z.number().int().nonnegative().optional(),
+const listItemV1Props = listItemProps.extend({
+  badge: z.union([z.number().int().nonnegative(), rowBadgeProps]).optional(),
 });
 
-const listItemV1Status = listItemProps
-  .extend({ badge: rowBadgeProps.options[0].optional() })
-  .transform((props) => {
-    delete props.badge;
+function downgradeListItemV1(
+  props: z.infer<typeof listItemV1Props>,
+): z.infer<typeof listItemProps> {
+  const { badge } = props;
 
-    return props;
-  });
+  if (isLegacyBadge(badge)) return props;
 
-const listItemV1 = z.union([listItemV1Status, listItemV1Base]);
+  if (badge.kind === 'count') return { ...props, badge: badge.count };
+
+  return omitBadge(props);
+}
+
+function isLegacyBadge(
+  badge: z.infer<typeof listItemV1Props>['badge'],
+): badge is number | undefined {
+  return typeof badge === 'number' || badge === undefined;
+}
+
+function omitBadge(
+  props: z.infer<typeof listItemV1Props>,
+): z.infer<typeof listItemProps> {
+  delete props.badge;
+
+  return props;
+}
+
+const listItemV1 = listItemV1Props.transform(downgradeListItemV1);
 
 const listItemV2 = listItemProps;
 
