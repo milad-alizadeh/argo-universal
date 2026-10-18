@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Pressable } from 'react-native';
+import { Platform, Pressable } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { Text } from '#primitives/content/text';
@@ -19,21 +19,44 @@ interface ArtworkProps {
   color: React.ComponentProps<typeof SvgXml>['color'];
 }
 
-// Plugin SVG is already sanitized by the Server. The App only draws its canonical markup.
+type AccessibilityProps = Pick<
+  React.ComponentProps<typeof Pressable>,
+  'accessibilityLabel' | 'accessibilityRole' | 'accessible' | 'onPress'
+>;
+
+// Server sanitizes the markup; native rendering resolves currentColor gradient stops to the tone.
 export function Svg(props: SvgProps): React.JSX.Element {
   const { color } = useResolveClassNames(toneClass(props.tone));
   const ratio = props.aspectRatio ?? viewBoxRatio(props.xml) ?? 1;
 
+  return svgPressable(props, color, ratio);
+}
+
+function svgPressable(
+  props: SvgProps,
+  color: ArtworkProps['color'],
+  ratio: number,
+): React.JSX.Element {
   return (
     <Pressable
-      accessibilityLabel={props.label}
-      accessibilityRole={accessibilityRole(props.onPress)}
-      accessible
-      onPress={props.onPress}
+      {...accessibilityProps(props)}
       style={{ width: '100%', aspectRatio: ratio }}
     >
-      <SvgArtwork xml={props.xml} label={props.label} color={color} />
+      {svgArtwork(props, color)}
     </Pressable>
+  );
+}
+
+function svgArtwork(
+  props: SvgProps,
+  color: ArtworkProps['color'],
+): React.JSX.Element {
+  return (
+    <SvgArtwork
+      xml={nativeSvgXml(props.xml, color)}
+      label={props.label}
+      color={color}
+    />
   );
 }
 
@@ -51,8 +74,23 @@ function SvgArtwork({ xml, label, color }: ArtworkProps): React.JSX.Element {
   );
 }
 
-function accessibilityRole(onPress: SvgProps['onPress']): 'button' | 'image' {
-  return onPress ? 'button' : 'image';
+function accessibilityProps(props: SvgProps): AccessibilityProps {
+  return {
+    accessibilityLabel: props.label,
+    accessibilityRole: props.onPress ? ('button' as const) : ('image' as const),
+    accessible: true,
+    onPress: props.onPress,
+  } satisfies AccessibilityProps;
+}
+
+function nativeSvgXml(xml: string, color: ArtworkProps['color']): string {
+  if (Platform.OS === 'web' || typeof color !== 'string') return xml;
+
+  return xml.replaceAll(
+    /(\bstop-?color\s*=\s*)(["'])currentColor\2/gi,
+    (_match, attribute: string, quote: string) =>
+      `${attribute}${quote}${color}${quote}`,
+  );
 }
 
 function toneClass(tone: Tone | undefined): string {

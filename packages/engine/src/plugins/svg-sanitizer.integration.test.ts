@@ -16,6 +16,7 @@ describe('sanitizeSvg', () => {
 
     if (!result.ok) return;
     expect(result.xml).toContain('<svg');
+    expect(parseSvg(result.xml)).toEqual(parseSvg(xml));
   });
 
   it('serializes the parsed tree to stable canonical XML', () => {

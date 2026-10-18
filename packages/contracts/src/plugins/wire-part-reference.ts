@@ -132,10 +132,14 @@ export const wirePartReferences = {
     summary:
       'A sanitized SVG visual. Use fixed markup; use Canvas for data scenes and interactive drawing.',
     accessibility: {
-      label: 'The required `label` is the spoken name of the image.',
-      keyboard: 'The image is not focusable and adds no keyboard shortcut.',
-      voiceOver: 'Exposes an image and reads its required `label`.',
-      talkBack: 'Exposes an image and reads its required `label`.',
+      label:
+        'The required `label` is the accessible name of the image or button.',
+      keyboard:
+        'Without `onPress`, the image is not focusable. With `onPress`, it exposes button semantics and supports platform activation.',
+      voiceOver:
+        'Without `onPress`, exposes an image and reads its required `label`. With `onPress`, exposes a button and reads its required `label`.',
+      talkBack:
+        'Without `onPress`, exposes an image and reads its required `label`. With `onPress`, exposes a button and reads its required `label`.',
     },
     appearance:
       '`tone` selects an Argo semantic color that adapts to light and dark appearance. The Server sanitizes the SVG markup and rejects unsupported markup and attributes.',
