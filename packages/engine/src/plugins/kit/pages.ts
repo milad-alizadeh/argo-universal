@@ -1,13 +1,11 @@
 import type {
   PluginEvent,
   PluginViewId,
-  PluginSlotInput,
   SlotId,
   ViewMessage,
   WireNode,
 } from '@repo/contracts/plugins/wire';
-import type { ComponentType, ReactNode } from 'react';
-import { createElement } from 'react';
+import type { ReactNode } from 'react';
 import { reportFailure } from './host-config';
 import { schedulePage } from './page-frame';
 import {
@@ -17,6 +15,7 @@ import {
   type DispatchSender,
 } from './page-view';
 import { mount } from './reconciler';
+import { elementOf, type Page, type SlotContent } from './view-content';
 import { toWire, type Handlers, type Instance } from './wire-tree';
 
 export type { DispatchSender } from './page-view';
@@ -25,11 +24,6 @@ export type ViewSender = (
   viewId: PluginViewId,
   message: ViewMessage,
 ) => Promise<void>;
-
-type Page = () => ReactNode;
-
-// A Slot's content takes the Slot's context, frozen, as its one prop.
-type SlotContent = ComponentType<{ context: PluginSlotInput['context'] }>;
 
 type Open = Extract<PluginEvent, { type: 'open' }>;
 
@@ -98,24 +92,6 @@ function resend(hub: Hub, view: OpenView): void {
     root: view.tree,
   });
 }
-
-function pageElement(hub: Hub, path: string): ReactNode | null {
-  const page = hub.pages.get(path);
-
-  return page ? createElement(page) : null;
-}
-
-function slotElement(hub: Hub, slot: PluginSlotInput): ReactNode | null {
-  const content = hub.slots.get(slot.slotId);
-
-  return content
-    ? createElement(content, { context: Object.freeze({ ...slot.context }) })
-    : null;
-}
-
-// What the open view draws: a registered page, or the Slot content with its context; none when the Plugin registered neither.
-const elementOf = (hub: Hub, { path, slot }: Open): ReactNode | null =>
-  slot ? slotElement(hub, slot) : pageElement(hub, path);
 
 function open(hub: Hub, event: Open): void {
   const existing = hub.views.get(event.viewId);

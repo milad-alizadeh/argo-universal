@@ -1,6 +1,8 @@
 import { ClockTick } from '@repo/contracts';
+import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import { startEngineTestHost } from '@repo/engine/mocks';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { pluginPartVersions } from '../../../../lib/product/plugin-registry/plugin-parts';
 import { createTRPCClient } from './create-trpc-client';
 
 const binaryMime = 'application/octet-stream';
@@ -61,28 +63,34 @@ describe('createTRPCClient', () => {
         data: {
           pluginSurface: JSON.stringify({
             platform: 'web',
-            parts: {
-              EmptyState: 1,
-              List: 1,
-              'List.Section': 1,
-              ListItem: 2,
-              Label: 2,
-              ProgressBar: 1,
-              Pill: 2,
-              VirtualList: 1,
-              GroupedList: 1,
-              GroupedListItem: 1,
-              Text: 3,
-              Button: 2,
-              Stack: 1,
-              Row: 1,
-              Column: 1,
-              Svg: 1,
-            },
+            parts: pluginPartVersions,
           }),
         },
       }),
     );
+  });
+
+  it('reports an updated surface when the App reconnects', async () => {
+    const server = await startTransportTestServer();
+    const send = vi.spyOn(WebSocket.prototype, 'send');
+    let surface: PluginSurface = { platform: 'ios', parts: { Text: 1 } };
+    const app = createTRPCClient(server.url, undefined, () => surface);
+    closers.push(app.close);
+
+    await app.client.system.info.query();
+    surface = { platform: 'ios', parts: { Text: 3, Button: 2 } };
+    app.webSocketClient.connection?.ws?.close();
+
+    await expect
+      .poll(() => send)
+      .toHaveBeenCalledWith(
+        JSON.stringify({
+          method: 'connectionParams',
+          data: { pluginSurface: JSON.stringify(surface) },
+        }),
+      );
+    expect(await app.client.system.info.query()).toEqual(systemInfo);
+    expect(server.connections()).toBe(2);
   });
 
   it('sends queries and subscriptions over one WebSocket', async () => {
