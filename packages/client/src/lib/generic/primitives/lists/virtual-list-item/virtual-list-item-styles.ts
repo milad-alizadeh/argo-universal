@@ -74,7 +74,7 @@ export function separatorClasses(
 }
 
 export const leadingClasses =
-  'relative size-6 shrink-0 items-center justify-center wide:size-5';
+  'relative size-6 shrink-0 items-center justify-center wide-type:size-5';
 
 // iOS lets the trailing content run past 48; Material keeps it to 48; wide keeps 40.
 export const trailingClasses =

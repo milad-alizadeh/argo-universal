@@ -48,7 +48,7 @@ function ResourceUri({ uri }: { uri: string }): React.JSX.Element {
 
 function ResourceIcon({ uri }: { uri: string }): React.JSX.Element {
   return (
-    <View className="h-6 w-icon-md shrink-0 items-center justify-center wide:h-5">
+    <View className="h-6 w-icon-md shrink-0 items-center justify-center wide-type:h-5">
       <Icon
         role="control"
         name={resourceIcon(uri)}

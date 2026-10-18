@@ -26,7 +26,7 @@ const headerColour = (hovered: boolean): string =>
 // A box one Body line tall, so a glyph centres on the label's line instead of sitting on its baseline.
 function LineSlot({ children }: { children: ReactNode }): ReactElement {
   return (
-    <View className="h-6 shrink-0 items-center justify-center wide:h-5">
+    <View className="h-6 shrink-0 items-center justify-center wide-type:h-5">
       {children}
     </View>
   );

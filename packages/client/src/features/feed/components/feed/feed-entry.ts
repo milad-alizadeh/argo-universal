@@ -60,7 +60,7 @@ function rhythmKind(entry: FeedEntry): RhythmKind {
 // The space between two entries of the same kind; entries of different kinds take the `other` space.
 const spaceBetween: Record<RhythmKind, string> = {
   activity: 'pb-2 wide:pb-1.5',
-  agentMessage: 'pb-paragraph wide:pb-paragraph-wide',
+  agentMessage: 'pb-paragraph wide-type:pb-paragraph-wide',
   other: 'pb-6 wide:pb-5',
 };
 

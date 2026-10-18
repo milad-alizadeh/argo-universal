@@ -9,6 +9,7 @@ import {
 } from '../../../../lib/product/navigation/sections';
 import { sectionAttentionCount } from '../../utils/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
+import { useRailTileStyle } from './rail-tile-style';
 
 interface DesktopRailProps {
   items: readonly NavigationSection[];
@@ -48,6 +49,13 @@ function selectionProps(selected: boolean): TileSelection {
   };
 }
 
+// Android fills the selected tile from the Material palette; the style wins over the class there.
+function useTileSelection(
+  selected: boolean,
+): TileSelection & { style: ReturnType<typeof useRailTileStyle> } {
+  return { ...selectionProps(selected), style: useRailTileStyle(selected) };
+}
+
 function SectionTile(props: SectionButtonProps): React.JSX.Element {
   const { title, icon } = props.section;
 
@@ -60,7 +68,7 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
       variant="ghost"
       accessibilityLabel={title}
       onPress={() => props.onSectionChange(props.section.id)}
-      {...selectionProps(props.selected)}
+      {...useTileSelection(props.selected)}
     />
   );
 }
@@ -131,8 +139,8 @@ export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
       testID="desktop-rail"
       className="relative w-frame-rail shrink-0 items-center pb-2"
     >
-      {/* Electron draws the traffic lights here, and the window drags by it. */}
-      <View className="h-frame-control self-stretch web:[app-region:drag]" />
+      {/* Electron draws the traffic lights here, and the window drags by it; a tablet has no window controls, so its first tile lines up with the list's header. */}
+      <View className="hidden h-frame-control self-stretch web:flex web:[app-region:drag]" />
       <RailSections {...props} />
       {props.hasSidebar ? <SidebarToggle {...props} /> : null}
       <RailEdge sidebarShown={props.sidebarShown} />

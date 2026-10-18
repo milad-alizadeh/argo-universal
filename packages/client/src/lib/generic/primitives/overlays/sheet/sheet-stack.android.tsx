@@ -9,6 +9,7 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { useRef, type ReactElement, type ReactNode } from 'react';
 import { View, useWindowDimensions } from 'react-native';
+import { CompactScope } from '../../../use-size-class/compact-scope';
 import { SheetBody } from './sheet-body';
 import { PageHeader } from './sheet-page-header.android';
 import {
@@ -107,21 +108,34 @@ function StackPage(props: PageProps): ReactElement {
   );
 }
 
-// React Native content in the Compose sheet: as tall as itself, or filling a full-height sheet.
+// React Native content in the Compose sheet: as tall as itself, or filling a full-height sheet; a phone-sized sheet on a tablet too, so compact.
 function PageContent(
   props: PagesProps & { fill: boolean; children: ReactNode },
 ): ReactElement {
-  const { width } = useWindowDimensions();
-
   return (
     <RNHostView
       matchContents={!props.fill}
       modifiers={props.fill ? [fillMaxWidth(), weight(1)] : [fillMaxWidth()]}
     >
-      <View style={{ width }} className={props.fill ? 'flex-1' : undefined}>
-        <SheetBody {...props} />
-      </View>
+      <SheetWideBody {...props} />
     </RNHostView>
+  );
+}
+
+// Material's BottomSheetDefaults.SheetMaxWidth, in dp: a tablet's sheet stops at it and centres.
+const materialSheetMaxWidth = 640;
+
+function SheetWideBody(
+  props: PagesProps & { fill: boolean; children: ReactNode },
+): ReactElement {
+  const width = Math.min(useWindowDimensions().width, materialSheetMaxWidth);
+
+  return (
+    <View style={{ width }} className={props.fill ? 'flex-1' : undefined}>
+      <CompactScope>
+        <SheetBody {...props} />
+      </CompactScope>
+    </View>
   );
 }
 

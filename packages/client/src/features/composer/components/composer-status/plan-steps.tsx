@@ -64,7 +64,7 @@ function PlanStep({ entry }: StepProps): JSX.Element {
 
   return (
     <View className={className}>
-      <View className="h-6 wide:h-5 shrink-0 justify-center">
+      <View className="h-6 wide-type:h-5 shrink-0 justify-center">
         <StepIndicator entry={entry} />
       </View>
       <StepText entry={entry} />

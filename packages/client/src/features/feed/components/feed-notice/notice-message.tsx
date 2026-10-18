@@ -47,12 +47,12 @@ const noticeRowProps = ({
 }: NoticeMessageProps): ViewProps => ({
   role: severity === 'error' ? 'alert' : 'status',
   accessibilityLabel: `${severity}: ${title}`,
-  className: 'min-h-6 flex-row items-start gap-1.5 wide:min-h-5',
+  className: 'min-h-6 flex-row items-start gap-1.5 wide-type:min-h-5',
 });
 
 function NoticeIcon({ icon, color }: Appearance): React.JSX.Element {
   return (
-    <View className="h-6 shrink-0 items-center justify-center wide:h-5">
+    <View className="h-6 shrink-0 items-center justify-center wide-type:h-5">
       <Icon name={icon} role="body" className={color} />
     </View>
   );

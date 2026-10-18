@@ -57,7 +57,7 @@ function OutcomeIcon({
   kind,
 }: Pick<OutcomeRowProps, 'kind'>): React.JSX.Element {
   return (
-    <View className="h-6 shrink-0 justify-center wide:h-5">
+    <View className="h-6 shrink-0 justify-center wide-type:h-5">
       <Icon
         name={allowedKinds.has(kind) ? 'check' : 'close'}
         role="body"
