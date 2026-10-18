@@ -8,7 +8,7 @@ import {
   filterPillSpokenLabel,
 } from './filter-pill-props';
 
-// The web's filter: one toolbar pill with its count; the chosen one sits on the selected fill.
+// The web's filter: one toolbar pill with its count; the chosen one uses the primary fill.
 export function FilterPill(props: FilterPillProps): React.JSX.Element {
   return (
     <Pressable
@@ -27,9 +27,11 @@ export function FilterPill(props: FilterPillProps): React.JSX.Element {
 
 const pillClass = (selected: boolean): string =>
   cn(
-    'h-7 flex-row items-center gap-1.5 rounded-full px-3 web:hover:bg-hover active:bg-pressed',
-    selected && 'bg-selected',
+    'h-7 flex-row items-center gap-1.5 rounded-full px-3',
+    selected
+      ? 'bg-primary active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77'
+      : 'web:hover:bg-hover active:bg-pressed',
   );
 
 const pillTextClass = (selected: boolean): string =>
-  cn(!selected && 'text-muted-foreground');
+  cn(selected ? 'text-primary-foreground' : 'text-muted-foreground');
