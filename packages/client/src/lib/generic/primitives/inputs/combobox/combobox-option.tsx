@@ -33,7 +33,7 @@ function OptionIcon({
 }
 
 // Paper's popover rows: the check and icon slots are as tall as the label's first line, so a path below never moves them.
-const firstLine = 'h-6 shrink-0 items-center justify-center wide:h-5';
+const firstLine = 'h-6 shrink-0 items-center justify-center wide-type:h-5';
 
 function SelectionMark({ selected }: { selected: boolean }): ReactElement {
   return (

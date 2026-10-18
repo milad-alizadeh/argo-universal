@@ -12,9 +12,9 @@ export interface FeedMarkdownProps {
 }
 
 const blockGaps: Record<MarkdownVariantName, string> = {
-  feed: 'gap-paragraph wide:gap-paragraph-wide',
+  feed: 'gap-paragraph wide-type:gap-paragraph-wide',
   plan: 'gap-2',
-  summary: 'gap-paragraph wide:gap-paragraph-wide',
+  summary: 'gap-paragraph wide-type:gap-paragraph-wide',
 };
 
 // Agent markdown drawn with the Feed's own prose, code and table styles.

@@ -97,16 +97,20 @@ function CheckoutPath({
 }: Pick<CheckoutProps, 'checkout'>): React.JSX.Element {
   return (
     <View className="min-w-0 shrink">
-      <Text
-        selectable={false}
-        numberOfLines={1}
-        role={checkout.newWorktree ? 'code' : 'secondary'}
-      >
+      <Text selectable={false} numberOfLines={1} {...pathText(checkout)}>
         {checkoutName(checkout)}
       </Text>
     </View>
   );
 }
+
+// A branch keeps its prefix and its end; the web ignores the mode and cuts the tail.
+const pathText = (
+  checkout: CheckoutProps['checkout'],
+): Pick<React.ComponentProps<typeof Text>, 'ellipsizeMode' | 'role'> =>
+  checkout.newWorktree
+    ? { ellipsizeMode: 'middle', role: 'code' }
+    : { ellipsizeMode: 'tail', role: 'secondary' };
 
 function CheckoutIcon({
   newWorktree,

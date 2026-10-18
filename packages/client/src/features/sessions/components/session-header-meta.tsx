@@ -28,16 +28,17 @@ const statusTextColor = {
 
 type ElapsedTimeProps = Pick<SessionHeaderProps, 'startedAt' | 'now'>;
 
-function ElapsedTime({
-  startedAt,
-  now,
-}: ElapsedTimeProps): React.JSX.Element | null {
+const tabletHidden = 'hidden text-muted-foreground wide-type:flex';
+
+function ElapsedTime(props: ElapsedTimeProps): React.JSX.Element | null {
+  const { startedAt, now } = props;
   const clock = useClock(startedAt !== null, now);
 
   if (startedAt === null) return null;
 
+  // A tablet's larger type leaves the medium window's meta line no room for it (#927).
   return (
-    <Text role="secondary" className="text-muted-foreground">
+    <Text role="secondary" className={tabletHidden}>
       {formatElapsed(clock - startedAt)}
     </Text>
   );

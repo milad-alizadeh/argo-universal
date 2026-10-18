@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
 import { Sheet } from '#primitives/overlays/sheet';
 import { FrameBackdrop } from '../components/frame-backdrop/frame-backdrop';
@@ -71,17 +72,19 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
   );
 }
 
-// A medium window's Inspector: a sheet from the window's bottom edge, which the page's header button opens.
+const openInspector = (scaffold: ScaffoldProps, open: boolean): void =>
+  scaffold.onInspectorStateChange(open ? 'open' : 'closed');
+
+// A medium window's Inspector: a sheet from the window's bottom edge, which the page's header button opens. Its one large detent is what iPadOS shows as a centred form sheet; a sheet sized to its content opens as a page sheet there.
 function InspectorSheet(parts: ScaffoldParts): React.JSX.Element {
   const { scaffold } = parts;
 
   return (
     <Sheet
       open={parts.inspectorSheetOpen}
-      onOpenChange={(open) =>
-        scaffold.onInspectorStateChange(open ? 'open' : 'closed')
-      }
+      onOpenChange={(open) => openInspector(scaffold, open)}
       label="Inspector"
+      detents={['large']}
       bottomEdge
     >
       <InspectorInSheet value>{scaffold.inspector(false)}</InspectorInSheet>
@@ -134,6 +137,13 @@ const frameEdges = (parts: ScaffoldParts): FrameEdges =>
 
 export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
+// A framed tablet's panes start under the status bar; the backdrop still runs behind it. A compact window's pages keep their own header insets, and a desktop window has none.
+function useFrameTop(framed: boolean): ViewStyle {
+  const { top } = useSafeAreaInsets();
+
+  return { paddingTop: framed ? top : 0 };
+}
+
 function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
   const { before, after } = frameEdges(parts);
 
@@ -142,6 +152,7 @@ function FrameRow({ parts, children }: ScaffoldFrameProps): React.JSX.Element {
       // Named for the Size class it lays out, such as `wide-frame`.
       testID={`${parts.scaffold.sizeClass}-frame`}
       className="flex-1 flex-row overflow-hidden bg-content"
+      style={useFrameTop(parts.framed)}
       onLayout={parts.layout.onLayout}
     >
       {before}

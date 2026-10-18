@@ -34,7 +34,8 @@ export function GroupedListItem(
 ): React.JSX.Element {
   const sizeClass = useSizeClass();
 
-  if (sizeClass === 'wide') return <WebGroupedListItem {...props} />;
+  // A medium or wide window draws the list in React Native, as GroupedList does, so no Form holds the row.
+  if (sizeClass !== 'compact') return <WebGroupedListItem {...props} />;
 
   return (
     <NativeRow

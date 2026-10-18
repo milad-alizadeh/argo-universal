@@ -11,7 +11,8 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { Host } from '#primitives/native/host';
-import { useWide } from '../../../use-wide/use-wide';
+import { CompactScope } from '../../../use-size-class/compact-scope';
+import { useSizeClass } from '../../../use-size-class/use-size-class';
 import {
   SheetLink,
   SheetNavigationProvider,
@@ -28,7 +29,8 @@ type PresentationProps = SheetProps & { stack: SheetStack };
 
 /*
  * SwiftUI's sheet, its pages a NavigationStack that pushes with the system slide. A wide iPad
- * opens a sheet that has a trigger as a popover on it instead, holding the same stack.
+ * opens a sheet that has a trigger as a popover on it instead, holding the same stack; a medium
+ * iPad keeps the system sheet (#927).
  */
 function SheetRoot(props: SheetProps): ReactElement {
   const stack = useSheetStack(props);
@@ -53,7 +55,7 @@ type SheetPresentation = {
 };
 
 function usePresentation(props: SheetProps): SheetPresentation {
-  const popover = useWide() && props.trigger !== undefined;
+  const popover = useSizeClass() === 'wide' && props.trigger !== undefined;
 
   return { popover, Presentation: popover ? PopoverSheet : SystemSheet };
 }
@@ -61,6 +63,7 @@ function usePresentation(props: SheetProps): SheetPresentation {
 /*
  * The trigger stays in React Native layout, as on Android, rather than in the sheet's anchor: an
  * anchor is hosted at its content's size, so a field that fills its row had no width to fill.
+ * What a system sheet holds draws as on a phone at every Size class, as Paper's iPad sheets do.
  */
 function SystemSheet(props: PresentationProps): ReactElement {
   return (
@@ -70,10 +73,18 @@ function SystemSheet(props: PresentationProps): ReactElement {
       onDismiss={props.stack.reports.closed}
       fitToContents={detentsOf(props) === undefined}
     >
-      <Group modifiers={useSheetModifiers(props)}>
-        <SheetPages {...props} />
-      </Group>
+      <SystemSheetPages {...props} />
     </BottomSheet>
+  );
+}
+
+function SystemSheetPages(props: PresentationProps): ReactElement {
+  return (
+    <Group modifiers={useSheetModifiers(props)}>
+      <CompactScope>
+        <SheetPages {...props} />
+      </CompactScope>
+    </Group>
   );
 }
 
