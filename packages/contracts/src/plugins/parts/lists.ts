@@ -8,23 +8,6 @@ import {
 } from '../plugin-part-schema-utils';
 import { wireParts } from '../wire-parts';
 
-const tableProps = z.object({
-  columns: z
-    .array(
-      z.object({
-        key: z.string().describe('Column key.'),
-        title: z.string().describe('Column heading.'),
-        align: z.enum(['start', 'center', 'end']).optional(),
-        width: z.string().optional().describe('Width token.'),
-        sortable: z.boolean().optional(),
-      }),
-    )
-    .describe('Column definitions.'),
-  selectionMode: z.enum(['single', 'multiple']).optional(),
-  onSelectionChange: handler('onSelectionChange').optional(),
-  onSort: handler('onSort').optional(),
-});
-
 const listProps = z
   .object({
     appearance: z.enum(['plain', 'grouped', 'cards']).optional(),
@@ -45,12 +28,9 @@ const listProps = z
       .describe(
         'Search text remains App-owned per Connection. In app mode the App filters locally; in plugin mode it sends throttled onSearchTextChange string events.',
       ),
-    onSearchTextChange: z
-      .string()
+    onSearchTextChange: handler('onSearchTextChange')
       .optional()
-      .describe(
-        'Throttled string payload. Available only with searchMode="plugin"; otherwise the App filters using its Connection-owned search text.',
-      ),
+      .describe('Called with throttled search text in Plugin search mode.'),
     layout: z.enum(['list', 'grid']).optional(),
     direction: z.enum(['vertical', 'horizontal']).optional(),
     columns: z
@@ -70,14 +50,7 @@ const listProps = z
   );
 
 export const listsPartSchemas = {
-  Table: {
-    ...wireParts.Table,
-    props: tableProps,
-    versions: [tableProps],
-    children: false,
-    slots: { rows: ['ListItem'] },
-    events: { onSelectionChange: z.undefined(), onSort: z.undefined() },
-  },
+  Table: wireParts.Table,
   List: part(
     'A settings and content list with sections, pagination, refresh, selection, and list or grid layout. Its `empty` Slot shows an `EmptyState` when no items remain.',
     listProps,
@@ -95,6 +68,7 @@ export const listsPartSchemas = {
         talkBack:
           'TalkBack identifies the List as a collection, reads each ListItem and its selected state, and reaches the EmptyState in the empty Slot when no items remain.',
       },
+      events: { onSearchTextChange: z.string() },
     },
   ),
   ListSection: part(

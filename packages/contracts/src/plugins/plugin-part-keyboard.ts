@@ -51,8 +51,6 @@ const knownRoles = [
   [/checkbox/, 'checkbox'],
   [/slider/, 'slider'],
   [/input/, 'text field'],
-  [/menu/, 'menu'],
-  [/dialog/, 'dialog'],
   [/progress/, 'progress indicator'],
   [/chart/, 'chart'],
   [/surface/, 'surface'],

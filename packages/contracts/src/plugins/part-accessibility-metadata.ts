@@ -62,3 +62,39 @@ export const progressBarAccessibility: Partial<Accessibility> = {
   talkBack:
     'TalkBack exposes a progress indicator and announces its value with accessibilityLabel when supplied.',
 };
+
+export const markdownAccessibility: Partial<Accessibility> = {
+  keyboard:
+    'Markdown adds no focus stop; keyboard focus reaches links and other interactive content in document order.',
+  voiceOver:
+    'VoiceOver reads the Markdown in document order and exposes links as separate link controls.',
+  talkBack:
+    'TalkBack reads the Markdown in document order and exposes links as separate link controls.',
+};
+
+export const linkAccessibility: Partial<Accessibility> = {
+  keyboard:
+    'Keyboard focus reaches the Link in platform order; Enter opens its destination.',
+  voiceOver:
+    'VoiceOver exposes a link, reads its label, and opens its destination when activated.',
+  talkBack:
+    'TalkBack exposes a link, reads its label, and opens its destination when activated.',
+};
+
+export const gridAccessibility: Partial<Accessibility> = {
+  keyboard:
+    'Grid is a static layout; keyboard focus moves through interactive children in platform order.',
+  voiceOver:
+    'VoiceOver traverses the Grid children in source order; the layout adds no grid navigation semantics.',
+  talkBack:
+    'TalkBack traverses the Grid children in source order; the layout adds no grid navigation semantics.',
+};
+
+export const dialogAccessibility: Partial<Accessibility> = {
+  keyboard:
+    'Focus remains within the Dialog until it closes; Escape closes it when dismissal is allowed.',
+  voiceOver:
+    'VoiceOver exposes a dialog named by its title and keeps navigation within it until it closes.',
+  talkBack:
+    'TalkBack exposes a dialog named by its title and keeps navigation within it until it closes.',
+};

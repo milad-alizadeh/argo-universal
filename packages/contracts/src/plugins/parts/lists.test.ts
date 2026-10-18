@@ -29,18 +29,25 @@ describe('List part schema', () => {
   });
 
   it('allows search text events only in Plugin search mode', () => {
-    const event = 'text entered by the user';
+    const eventHandler = { $event: 'onSearchTextChange' };
 
     expect(
-      list.props.safeParse({ searchMode: 'plugin', onSearchTextChange: event })
-        .success,
+      list.props.safeParse({
+        searchMode: 'plugin',
+        onSearchTextChange: eventHandler,
+      }).success,
     ).toBe(true);
     expect(
-      list.props.safeParse({ searchMode: 'app', onSearchTextChange: event })
-        .success,
+      list.props.safeParse({
+        searchMode: 'app',
+        onSearchTextChange: eventHandler,
+      }).success,
     ).toBe(false);
-    expect(list.props.safeParse({ onSearchTextChange: event }).success).toBe(
-      false,
-    );
+    expect(
+      list.props.safeParse({ onSearchTextChange: eventHandler }).success,
+    ).toBe(false);
+    expect(
+      list.events.onSearchTextChange?.safeParse('typed text').success,
+    ).toBe(true);
   });
 });

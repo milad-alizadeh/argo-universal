@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { dialogAccessibility } from '../part-accessibility-metadata';
 import {
   part,
   stringLabel,
@@ -19,7 +20,10 @@ export const overlaysPartSchemas = {
   Dialog: part(
     'A form overlay opened through an Action; presented as a sheet on phone.',
     z.object({ title: stringLabel }),
-    { children: true },
+    {
+      children: true,
+      accessibility: dialogAccessibility,
+    },
   ),
   Sheet: part(
     'A sheet overlay opened through an Action.',

@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import {
-  avatarAccessibility,
-  iconAccessibility,
-  kbdAccessibility,
-} from '../part-accessibility-metadata';
+import * as accessibility from '../part-accessibility-metadata';
 import {
   part,
   stringLabel,
@@ -26,7 +22,7 @@ export const contentPartSchemas = {
     {
       label:
         'Provide `accessibilityLabel` when the icon conveys information; omit it when decorative.',
-      accessibility: iconAccessibility,
+      accessibility: accessibility.iconAccessibility,
     },
   ),
   Image: part(
@@ -102,7 +98,7 @@ export const contentPartSchemas = {
     }),
     {
       label: 'The displayed key names are the accessible name.',
-      accessibility: kbdAccessibility,
+      accessibility: accessibility.kbdAccessibility,
     },
   ),
   Avatar: part(
@@ -116,13 +112,16 @@ export const contentPartSchemas = {
     }),
     {
       label: 'Set `accessibilityLabel` when identity is not otherwise named.',
-      accessibility: avatarAccessibility,
+      accessibility: accessibility.avatarAccessibility,
     },
   ),
   Markdown: part(
     'Markdown content rendered with Argo typography and link behavior.',
     z.object({ source: z.string().describe('Markdown source text.') }),
-    { label: 'The rendered content supplies its accessible text.' },
+    {
+      label: 'The rendered content supplies its accessible text.',
+      accessibility: accessibility.markdownAccessibility,
+    },
   ),
   Code: part(
     'A monospaced code block with a copy action.',
@@ -142,6 +141,9 @@ export const contentPartSchemas = {
       href: z.string().describe('URL or Argo route.'),
       onPress: onPress.optional(),
     }),
-    { events: { onPress: z.undefined() } },
+    {
+      events: { onPress: z.undefined() },
+      accessibility: accessibility.linkAccessibility,
+    },
   ),
 };

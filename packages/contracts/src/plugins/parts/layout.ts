@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { stackProps } from '../kit-props';
+import { gridAccessibility } from '../part-accessibility-metadata';
 import {
   part,
   stringLabel,
@@ -9,23 +9,8 @@ import {
 } from '../plugin-part-schema-utils';
 import { wireParts } from '../wire-parts';
 
-const catalogStackProps = stackProps.extend({
-  justify: z
-    .enum(['start', 'center', 'end', 'space-between', 'space-around'])
-    .optional()
-    .describe('Main-axis alignment.'),
-  wrap: z
-    .boolean()
-    .optional()
-    .describe('Whether children wrap to another line.'),
-});
-
 export const layoutPartSchemas = {
-  Stack: {
-    ...wireParts.Stack,
-    props: catalogStackProps,
-    versions: [catalogStackProps],
-  },
+  Stack: wireParts.Stack,
   Spacer: part(
     'Flexible space inside a layout.',
     z.object({
@@ -43,7 +28,10 @@ export const layoutPartSchemas = {
         .describe('Column count, optionally by Size class.'),
       gap: z.number().optional().describe('Spacing token between cells.'),
     }),
-    { children: true },
+    {
+      children: true,
+      accessibility: gridAccessibility,
+    },
   ),
   Surface: part(
     'A semantic surface with fill, radius, depth, and optional press behavior.',

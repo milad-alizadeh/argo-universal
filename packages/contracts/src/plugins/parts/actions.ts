@@ -1,18 +1,9 @@
 import { z } from 'zod';
-import { buttonProps } from '../kit-props';
 import { part, stringLabel, onPress } from '../plugin-part-schema-utils';
 import { wireParts } from '../wire-parts';
 
-const catalogButtonProps = buttonProps.extend({
-  icon: z.string().optional().describe('Optional native symbol name.'),
-});
-
 export const actionsPartSchemas = {
-  Button: {
-    ...wireParts.Button,
-    props: catalogButtonProps,
-    versions: [catalogButtonProps],
-  },
+  Button: wireParts.Button,
   IconButton: part(
     'An icon-only button.',
     z.object({
