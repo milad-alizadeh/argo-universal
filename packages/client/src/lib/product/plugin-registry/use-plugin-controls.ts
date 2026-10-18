@@ -1,70 +1,142 @@
-import type { PartUi } from '@repo/contracts/plugins/kit';
-import type { WireNode } from '@repo/contracts/plugins/wire';
-import {
-  childNodeKey,
-  slotNodeKey,
-} from '@repo/contracts/plugins/wire-node-key';
+import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
+import { findWireNode } from '@repo/contracts/plugins/wire-node-key';
 import { useEffect, useReducer, useState } from 'react';
-import { controlProps } from './plugin-control-props';
-import type { ControlInput, PluginProps } from './plugin-control-types';
-import { NodeControls } from './plugin-node-controls';
+import { throttle } from '../plugin-dispatcher';
+import { eventProps, localEvents, type Change } from './plugin-events';
+import type {
+  ControlInput,
+  PluginProps,
+  PluginControls,
+} from './plugin-rendering';
 
-export type PluginControls = (input: Omit<ControlInput, 'ui'>) => PluginProps;
-
-type StoredControl = { type: string; state: NodeControls };
+type Field = {
+  value?: WireJson;
+  source?: WireJson;
+  type: string;
+  focused: boolean;
+  pending: number;
+  event: string;
+};
 
 export function usePluginControls(root: WireNode): PluginControls {
-  const [controls] = useState(() => new Map<string, StoredControl>());
+  const [fields] = useState(() => new Map<string, Field>());
   const [, update] = useReducer((revision: number) => revision + 1, 0);
+  useEffect(() => {
+    for (const key of fields.keys())
+      if (!findWireNode(root, key)) fields.delete(key);
+  }, [fields, root]);
 
-  useEffect(() => pruneControls(controls, root), [controls, root]);
+  return (input) => {
+    const field = fieldFor(fields, input);
 
-  return (input) =>
-    controlProps(
-      { ...input, ui: resolvedUi(input.part.ui) },
-      { state: nodeState(controls, input), update },
-    );
+    return propsFor(input, field, update);
+  };
 }
 
-function nodeState(
-  controls: Map<string, StoredControl>,
-  input: Omit<ControlInput, 'ui'>,
-): NodeControls {
-  const key = input.context.key;
-  const existing = controls.get(key);
+function fieldFor(fields: Map<string, Field>, input: ControlInput): Field {
+  const { node, context } = input;
+  const source = input.source.value ?? input.source.selection;
+  const existing = fields.get(context.key);
+  const field = matchingField(existing, node.type, source);
+  syncField(field, source);
+  fields.set(context.key, field);
 
-  if (existing?.type === input.node.type) return existing.state;
-  const state = new NodeControls();
-  controls.set(key, { state, type: input.node.type });
-
-  return state;
+  return field;
 }
 
-function pruneControls(
-  controls: Map<string, StoredControl>,
-  root: WireNode,
-): void {
-  const keys = new Set<string>();
-  collectKeys(root, childNodeKey('', root.key), keys);
+function matchingField(
+  field: Field | undefined,
+  type: string,
+  source?: WireJson,
+): Field {
+  if (field?.type === type) return field;
 
-  for (const key of controls.keys()) if (!keys.has(key)) controls.delete(key);
+  return { type, value: source, source, focused: false, pending: 0, event: '' };
 }
 
-function collectKeys(node: WireNode, key: string, keys: Set<string>): void {
-  keys.add(key);
+function syncField(field: Field, source?: WireJson): void {
+  if (field.focused) return;
 
-  for (const child of node.children)
-    collectKeys(child, childNodeKey(key, child.key), keys);
-  collectSlotKeys(node, key, keys);
+  if (!Object.is(field.source, source))
+    field.value = pendingValue(field, source);
+  field.source = source;
 }
 
-function collectSlotKeys(node: WireNode, key: string, keys: Set<string>): void {
-  for (const [slot, children] of Object.entries(node.slots)) {
-    for (const child of children)
-      collectKeys(child, slotNodeKey(key, slot, child.key), keys);
-  }
+function propsFor(
+  input: ControlInput,
+  field: Field,
+  update: () => void,
+): PluginProps {
+  const change = changeFor(field, update);
+  const props = { ...input.node.props, ...eventProps(input, change) };
+
+  const prop = localProp(input);
+
+  if (prop) props[prop] = field.value;
+
+  if (isPending(input, field))
+    Object.assign(props, { disabled: true, loading: true });
+
+  const text = Boolean(input.part.events.onChangeText);
+
+  return Object.assign(props, focusOf(field, update, text));
 }
 
-function resolvedUi(ui: PartUi = {}): Required<PartUi> {
-  return { bindings: [], pending: {}, flush: [], ...ui };
+function localProp({ part }: ControlInput): string | undefined {
+  const event = Object.keys(part.events).find((name) => localEvents.has(name));
+
+  if (!event) return undefined;
+
+  return event === 'onSelectionChange' ? 'selection' : 'value';
+}
+
+function changeFor(field: Field, update: () => void): Change {
+  return ({ event, value, deliver }) => {
+    const previous = field.value;
+    const next = localEvents.has(event) ? value : previous;
+    field.value = next;
+    field.event = event;
+    field.pending += 1;
+    update();
+    void deliver()
+      .catch(() => {
+        if (Object.is(field.value, next)) field.value = previous;
+      })
+      .finally(settled(field, update));
+  };
+}
+
+function settled(field: Field, update: () => void): () => void {
+  return () => {
+    field.pending -= 1;
+    update();
+  };
+}
+
+function isPending(input: ControlInput, field: Field): boolean {
+  return field.pending > 0 && blocking(input, field.event);
+}
+
+function blocking({ part, node }: ControlInput, event: string): boolean {
+  if (node.type === 'ListItem') return false;
+
+  return !throttle(part.events[event]);
+}
+
+function pendingValue(field: Field, source?: WireJson): WireJson | undefined {
+  return field.pending ? field.value : source;
+}
+
+function focusOf(field: Field, update: () => void, text: boolean): PluginProps {
+  if (!text) return {};
+
+  return {
+    onFocus: (): void => {
+      field.focused = true;
+    },
+    onBlur: (): void => {
+      field.focused = false;
+      update();
+    },
+  };
 }

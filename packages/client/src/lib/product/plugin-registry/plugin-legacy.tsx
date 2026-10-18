@@ -1,19 +1,28 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { Stack } from '#primitives/layout/stack';
-import type { PluginProps } from './plugin-control-types';
+import type { PluginProps } from './plugin-rendering';
 
-const aliases = new Map([
-  ['VirtualList', 'plain'],
-  ['GroupedList', 'grouped'],
-]);
+const aliases = new Map(
+  Object.entries({ VirtualList: 'plain', GroupedList: 'grouped' }),
+);
 
-// Legacy aliases lower to List and ListItem while retaining their wire addresses.
+// Legacy wire aliases lower to actual kit components while retaining their event addresses.
 export function legacyNode(node: WireNode): WireNode {
   const appearance = aliases.get(node.type);
 
   if (appearance) return { ...node, type: 'List', props: { appearance } };
 
-  return legacyItem(node);
+  return legacyStack(node);
+}
+
+const directions = new Map(Object.entries({ Row: 'row', Column: 'column' }));
+
+function legacyStack(node: WireNode): WireNode {
+  const direction = directions.get(node.type);
+
+  return direction
+    ? { ...node, type: 'Stack', props: { ...node.props, direction } }
+    : legacyItem(node);
 }
 
 function legacyItem(node: WireNode): WireNode {
@@ -30,11 +39,10 @@ type RenderedSlots = Record<string, React.JSX.Element>;
 export function legacySlots(type: string, slots: RenderedSlots): PluginProps {
   if (type !== 'GroupedListItem') return slots;
 
-  return {
-    leading: slots.leading,
-    trailing: slots.accessories,
-    meta: legacyMeta(slots),
-  };
+  const { leading, accessories: trailing } = slots;
+  const meta = legacyMeta(slots);
+
+  return { leading, trailing, meta };
 }
 
 function legacyMeta(slots: RenderedSlots): React.JSX.Element | undefined {

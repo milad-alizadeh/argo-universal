@@ -1,15 +1,15 @@
-import { Column, Button, Text, useState } from '@argo/plugin-kit';
+import { Stack, Button, Text, useState } from '@argo/plugin-kit';
 import { jsx } from '@argo/plugin-kit/jsx-runtime';
 
 function Page({ argo }) {
   const [value, setValue] = useState('empty');
 
   return (
-    <Column>
+    <Stack direction="column">
       {jsx('Page', { onSearchTextChange: setValue }, 'search')}
       <Button label="Run fixture" onPress={runFixture(argo, setValue)} />
       <Text>{value}</Text>
-    </Column>
+    </Stack>
   );
 }
 

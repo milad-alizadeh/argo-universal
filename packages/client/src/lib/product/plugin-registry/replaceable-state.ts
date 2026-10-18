@@ -24,14 +24,10 @@ export function reduceReplaceable(
 ): ReplaceableState {
   if (message.type === 'core') return coreSlotState(message.input);
 
-  return {
-    ...state,
-    replacement: {
-      pluginId: message.pluginId,
-      path: message.path,
-      view: reducePluginView(previousView(state), message.message),
-    },
-  };
+  const { pluginId, path } = message;
+  const view = reducePluginView(previousView(state), message.message);
+
+  return { ...state, replacement: { pluginId, path, view } };
 }
 
 const previousView = (state: ReplaceableState): PluginViewState =>

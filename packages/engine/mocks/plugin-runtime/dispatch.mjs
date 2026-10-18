@@ -1,4 +1,4 @@
-import { Button, Column, Text, useState, useRef } from '@argo/plugin-kit';
+import { Button, Stack, Text, useState, useRef } from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
 const failure = async () => {
@@ -14,8 +14,9 @@ const choices = (reversed, choose) =>
 
 const WaitButtons = ({ wait, release }) =>
   jsxs(
-    Column,
+    Stack,
     {
+      direction: 'column',
       children: [
         jsx(Button, { label: 'Wait', onPress: wait }, 'wait'),
         jsx(
@@ -53,7 +54,8 @@ const Page = () => {
   const [reversed, reverse] = useState(false);
   const [chosen, choose] = useState('none');
 
-  return jsxs(Column, {
+  return jsxs(Stack, {
+    direction: 'column',
     children: [
       jsx(Text, { children: chosen }),
       reverseButton(reversed, reverse),

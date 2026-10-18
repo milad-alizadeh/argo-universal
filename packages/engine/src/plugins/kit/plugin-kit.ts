@@ -1,4 +1,4 @@
-import { wireParts } from '@repo/contracts/plugins/kit';
+import { pluginPartNames } from '@repo/contracts/plugins/kit';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
@@ -11,7 +11,7 @@ import {
 } from './pages';
 
 const components = Object.fromEntries(
-  Object.keys(wireParts).map((name) => [name, name]),
+  pluginPartNames.map((name) => [name, name]),
 );
 
 const hooks = {
@@ -52,7 +52,6 @@ const exportsOf = {
   ActionList: Object.assign((props: ElementProps) => jsx('ActionList', props), {
     Section: 'ActionList.Section',
   }),
-  ActionListSection: 'ActionList.Section',
   ListSection: 'List.Section',
   Fragment: React.Fragment,
 };

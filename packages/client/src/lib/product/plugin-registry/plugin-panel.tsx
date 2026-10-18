@@ -7,7 +7,7 @@ import {
 } from '#primitives/overlays/dialog';
 import { Sheet, SheetContent } from '#primitives/overlays/sheet';
 import {
-  overlayFinish,
+  answerControl,
   overlayOpenChange,
   type OpenOverlayProps,
 } from './plugin-overlay-types';
@@ -21,31 +21,29 @@ export function PluginPanel(props: OpenOverlayProps): React.JSX.Element {
 }
 
 function DialogPanel(props: OpenOverlayProps): React.JSX.Element {
+  const { title } = props.opened.action;
+  const dismissible = props.actions.pending === null;
+  const content = { accessibilityLabel: title, dismissible };
+
   return (
     <Dialog open onOpenChange={overlayOpenChange(props)}>
-      <DialogPanelContent {...props} />
+      <DialogContent {...content}>
+        <DialogTitle>{title}</DialogTitle>
+        <PanelBody {...props} />
+      </DialogContent>
     </Dialog>
   );
 }
 
-function DialogPanelContent(props: OpenOverlayProps): React.JSX.Element {
-  return (
-    <DialogContent
-      accessibilityLabel={props.opened.action.title}
-      dismissible={props.actions.pending === null}
-    >
-      <DialogTitle>{props.opened.action.title}</DialogTitle>
-      <PanelBody {...props} />
-    </DialogContent>
-  );
-}
-
 function SheetPanel(props: OpenOverlayProps): React.JSX.Element {
-  const action = props.opened.action;
+  const { title } = props.opened.action;
+  const dismissible = props.actions.pending === null;
+  const onOpenChange = overlayOpenChange(props);
+  const control = { open: true, label: title, dismissible, onOpenChange };
 
   return (
-    <Sheet {...sheetPresentation(props)}>
-      <Sheet.Page name="content" title={action.title}>
+    <Sheet {...control}>
+      <Sheet.Page name="content" title={title}>
         <SheetContent>
           <PanelBody {...props} />
         </SheetContent>
@@ -59,51 +57,30 @@ function PanelBody(props: OpenOverlayProps): React.JSX.Element {
     <>
       {props.renderContent(props.opened)}
       <DialogFooter>
-        <CancelButton {...props} />
-        <ConfirmButton {...props} />
+        <AnswerButton {...props} />
+        <AnswerButton {...props} confirmed />
       </DialogFooter>
     </>
   );
 }
 
-function CancelButton(props: OpenOverlayProps): React.JSX.Element {
-  const action = props.opened.action;
+type AnswerButtonProps = OpenOverlayProps & { confirmed?: boolean };
 
-  const control = {
-    label: action.cancelLabel ?? 'Cancel',
-    loading: props.actions.pending === 'onDismiss',
-    disabled: props.actions.pending !== null,
-    onPress: (): void => overlayFinish(props)(false),
-  };
+function AnswerButton(props: AnswerButtonProps): React.JSX.Element | null {
+  const confirmed = Boolean(props.confirmed);
 
-  return <Button {...control} variant="outline" fullWidth="narrow" />;
+  if (!hasAnswer(props)) return null;
+  const { cancel, ...control } = answerControl(props, confirmed);
+
+  return (
+    <Button
+      {...control}
+      variant={cancel ? 'outline' : undefined}
+      fullWidth="narrow"
+    />
+  );
 }
 
-function ConfirmButton(props: OpenOverlayProps): React.JSX.Element | null {
-  const action = props.opened.action;
-
-  if (!action.onConfirm) return null;
-
-  const control = {
-    label: action.confirmLabel ?? 'Confirm',
-    loading: props.actions.pending === 'onConfirm',
-    disabled: props.actions.pending !== null,
-    onPress: (): void => overlayFinish(props)(true),
-  };
-
-  return <Button {...control} fullWidth="narrow" />;
-}
-
-function sheetPresentation(
-  props: OpenOverlayProps,
-): Pick<
-  React.ComponentProps<typeof Sheet>,
-  'open' | 'label' | 'onOpenChange' | 'dismissible'
-> {
-  return {
-    open: true,
-    label: props.opened.action.title,
-    onOpenChange: overlayOpenChange(props),
-    dismissible: props.actions.pending === null,
-  };
+function hasAnswer(props: AnswerButtonProps): boolean {
+  return !props.confirmed || Boolean(props.opened.action.onConfirm);
 }

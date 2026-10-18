@@ -125,7 +125,11 @@ function rowContent(instance: Instance): Instance {
 
   if (instance.children.length === 1) return singleRow(only, instance);
 
-  return { ...instance, type: 'Column' };
+  return {
+    ...instance,
+    type: 'Stack',
+    props: { ...instance.props, direction: 'column' },
+  };
 }
 
 const singleRow = (only: Instance | undefined, fallback: Instance): Instance =>

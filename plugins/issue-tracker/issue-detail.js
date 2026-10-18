@@ -1,4 +1,4 @@
-import { Button, Column, Text } from '@argo/plugin-kit';
+import { Button, Stack, Text } from '@argo/plugin-kit';
 
 const headingRole = 'heading';
 
@@ -6,7 +6,7 @@ export function IssueDetail(props) {
   const { issue } = props;
 
   return (
-    <Column gap={3}>
+    <Stack direction="column" gap={3}>
       <Button label="Back to Issues" variant="outline" onPress={props.onBack} />
       <Text role={headingRole}>{`#${issue.number} ${issue.title}`}</Text>
       <IssueMetadata issue={issue} />
@@ -15,7 +15,7 @@ export function IssueDetail(props) {
         variant="outline"
         onPress={{ action: 'openUrl', url: issue.url }}
       />
-    </Column>
+    </Stack>
   );
 }
 

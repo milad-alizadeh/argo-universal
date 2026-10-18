@@ -1,4 +1,4 @@
-import { Button, Column, Text, useState } from '@argo/plugin-kit';
+import { Button, Stack, Text, useState } from '@argo/plugin-kit';
 
 const greeting = (projectId, waves) =>
   waves === 0
@@ -10,14 +10,14 @@ function ProjectDetails({ context }) {
   const [waves, setWaves] = useState(0);
 
   return (
-    <Column gap={2}>
+    <Stack direction="column" gap={2}>
       <Text>{greeting(context.projectId, waves)}</Text>
       <Button
         label="Wave"
         variant="outline"
         onPress={() => setWaves(waves + 1)}
       />
-    </Column>
+    </Stack>
   );
 }
 
