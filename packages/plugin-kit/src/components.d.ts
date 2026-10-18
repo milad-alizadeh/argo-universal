@@ -52,3 +52,13 @@ export const ActionList: PluginComponents['ActionList'] & {
 export const Action: PluginComponents['Action'];
 
 export const Page: PluginComponents['Page'];
+
+export const Detail: PluginComponents['Detail'];
+
+export const Metadata: PluginComponents['Metadata'] & {
+  Label: PluginComponents['Metadata.Label'];
+  Link: PluginComponents['Metadata.Link'];
+  Pills: PluginComponents['Metadata.Pills'];
+  StatusDot: PluginComponents['Metadata.StatusDot'];
+  Avatar: PluginComponents['Metadata.Avatar'];
+};

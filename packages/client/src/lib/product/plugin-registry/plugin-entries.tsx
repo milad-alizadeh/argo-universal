@@ -14,6 +14,8 @@ import type { KitProps } from '#primitives/kit-props';
 import { Stack } from '#primitives/layout/stack';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { Detail } from '#primitives/scaffolds/detail';
+import { Metadata } from '#primitives/scaffolds/metadata';
 import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
@@ -23,6 +25,13 @@ import type { PluginPart } from './plugin-parts';
 
 export const pluginEntries = {
   Page,
+  Detail,
+  Metadata,
+  'Metadata.Label': Metadata.Label,
+  'Metadata.Link': Metadata.Link,
+  'Metadata.Pills': Metadata.Pills,
+  'Metadata.StatusDot': Metadata.StatusDot,
+  'Metadata.Avatar': Metadata.Avatar,
   ActionList,
   'ActionList.Section': ActionList.Section,
   Action,

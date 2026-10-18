@@ -52,6 +52,13 @@ const exportsOf = {
   ActionList: Object.assign((props: ElementProps) => jsx('ActionList', props), {
     Section: 'ActionList.Section',
   }),
+  Metadata: Object.assign((props: ElementProps) => jsx('Metadata', props), {
+    Label: 'Metadata.Label',
+    Link: 'Metadata.Link',
+    Pills: 'Metadata.Pills',
+    StatusDot: 'Metadata.StatusDot',
+    Avatar: 'Metadata.Avatar',
+  }),
   ListSection: 'List.Section',
   Fragment: React.Fragment,
 };

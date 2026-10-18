@@ -607,6 +607,49 @@ export type WireSchemaHints = {
     /** Action offered on the web. */
     "action": PropValue<"Toast", "action">;
   };
+  "Page": {
+    /** The single-line page title. */
+    "title": PropValue<"Page", "title">;
+    /** Native search on phones; expanding header search on web. */
+    "search": PropValue<"Page", "search">;
+    /** The search query; drafts stay in the App. */
+    "value": PropValue<"Page", "value">;
+    /** Receive the search query when it changes. */
+    "onChangeText": PropValue<"Page", "onChangeText">;
+    /** The main Action: a header button, iOS toolbar item, or Android FAB. */
+    "primaryAction": PropValue<"Page", "primaryAction">;
+  };
+  "ListDetail": {
+
+  };
+  "Inspector": {
+    /** label for this part. */
+    "title": PropValue<"Inspector", "title">;
+  };
+  "Svg": {
+    /** Sanitized SVG markup to draw. */
+    "xml": PropValue<"Svg", "xml">;
+    /** The accessible name of the artwork. */
+    "label": PropValue<"Svg", "label">;
+    /** The semantic artwork color. */
+    "tone": PropValue<"Svg", "tone">;
+    /** The artwork width divided by its height. */
+    "aspectRatio": PropValue<"Svg", "aspectRatio">;
+    /** The action run when the artwork is pressed. */
+    "onPress": PropValue<"Svg", "onPress">;
+  };
+  "Chart": {
+    /** data for this part. */
+    "data": PropValue<"Chart", "data">;
+    /** The visible and accessible label. */
+    "accessibilityLabel": PropValue<"Chart", "accessibilityLabel">;
+  };
+  "Detail": {
+    /** The content as Markdown; drawn as body text until kit Markdown lands. */
+    "markdown": PropValue<"Detail", "markdown">;
+    /** Show the content loading state; the Metadata stays. */
+    "isLoading": PropValue<"Detail", "isLoading">;
+  };
   "Metadata": {
     /** Optional section heading. */
     "title": PropValue<"Metadata", "title">;
@@ -656,47 +699,6 @@ export type WireSchemaHints = {
     "name": PropValue<"Metadata.Avatar", "name">;
     /** Optional avatar image URI. */
     "src": PropValue<"Metadata.Avatar", "src">;
-  };
-  "Page": {
-    /** The single-line page title. */
-    "title": PropValue<"Page", "title">;
-    /** Native search on phones; expanding header search on web. */
-    "search": PropValue<"Page", "search">;
-    /** The search query; drafts stay in the App. */
-    "value": PropValue<"Page", "value">;
-    /** Receive the search query when it changes. */
-    "onChangeText": PropValue<"Page", "onChangeText">;
-    /** The main Action: a header button, iOS toolbar item, or Android FAB. */
-    "primaryAction": PropValue<"Page", "primaryAction">;
-  };
-  "ListDetail": {
-
-  };
-  "Detail": {
-    /** label for this part. */
-    "title": PropValue<"Detail", "title">;
-  };
-  "Inspector": {
-    /** label for this part. */
-    "title": PropValue<"Inspector", "title">;
-  };
-  "Svg": {
-    /** Sanitized SVG markup to draw. */
-    "xml": PropValue<"Svg", "xml">;
-    /** The accessible name of the artwork. */
-    "label": PropValue<"Svg", "label">;
-    /** The semantic artwork color. */
-    "tone": PropValue<"Svg", "tone">;
-    /** The artwork width divided by its height. */
-    "aspectRatio": PropValue<"Svg", "aspectRatio">;
-    /** The action run when the artwork is pressed. */
-    "onPress": PropValue<"Svg", "onPress">;
-  };
-  "Chart": {
-    /** data for this part. */
-    "data": PropValue<"Chart", "data">;
-    /** The visible and accessible label. */
-    "accessibilityLabel": PropValue<"Chart", "accessibilityLabel">;
   };
   "ListItem.Link": {
     /** The row or section title. */
