@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # Plugins draw SVG, charts and canvases
@@ -41,7 +41,7 @@ The first version also added `CodeMap`, the Atlas Code Map as a kit part with a 
 - **The Server checks all three.** `argo plugin validate`, the plugin host and `mount()` in the test kit refuse an `Svg`, `Chart` or `Canvas` that breaks these rules and log one line naming the Plugin, the node and the reason. The plugin host also caps each node's size before sending it. In a Replaceable Slot the whole tree is refused and core draws its own, as ADR-0027 says. In pages and ordinary Slots the node is dropped, as an unknown leaf is in ADR-0025.
 - **Where it lives.** The three components are kit components in `visual/` (Spec 0017 #959). They are drawn by Argo, not Expo UI (ADR-0020).
 
-## Before this is accepted
+## Checks before the parts turn stable
 
 - Done (2026-10-16): a prototype drew line, bar, grouped bar, stacked bar, area, stacked area, scatter, pie and donut charts on web (production export) and in the desktop App over `app://`, with press and touch working. CanvasKit loaded in 76–175 ms cold on localhost, about 1.4 s cold at 20 Mbps, and about 35 ms on desktop; charts were drawn about 0.4–0.65 s after the page mounted. Desktop needed the content security policy change above.
 - Charts must be drawn on a physical iPhone and a physical Android phone, recording pan frame rate, rotation and the release app size added by Skia (Skia's docs say about 6 MB on iOS and 4 MB on Android).
@@ -49,7 +49,7 @@ The first version also added `CodeMap`, the Atlas Code Map as a kit part with a 
 - A `Canvas` prototype draws a heatmap and a flat code map from Plugin JSX on iOS, Android, web and desktop, recording pan frame rate and patch size when one shape changes, and sets the caps.
 - The owner answers the open questions below.
 
-If any check fails, this ADR goes back to the owner instead of switching renderers silently.
+Accepted by the owner on 2026-10-18 with these checks still to run. If any check fails, this ADR goes back to the owner instead of switching renderers silently.
 
 ## Open questions
 
