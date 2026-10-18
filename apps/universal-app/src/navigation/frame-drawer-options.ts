@@ -8,10 +8,10 @@ import type { DrawerNavigationOptions } from 'expo-router/drawer';
 import { Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 
-// ADR-0026: the drawer sits in front of the pages on a compact window, and beside them on a medium or wide one.
+// ADR-0026, amended 2026-10-18: the drawer sits in front of the pages on a compact or medium window, and beside them on a wide one.
 const drawerTypes = {
   compact: 'front',
-  medium: 'permanent',
+  medium: 'front',
   wide: 'permanent',
 } as const satisfies Record<SizeClass, DrawerNavigationOptions['drawerType']>;
 
@@ -49,7 +49,7 @@ export function useDrawerOptions(
   const narrow = useNarrowOptions();
 
   return {
-    ...(sizeClass === 'compact' ? narrow : framedOptions(frame)),
+    ...(sizeClass === 'wide' ? framedOptions(frame) : narrow),
     drawerType: drawerTypes[sizeClass],
     // A hidden section keeps its stack but skips renders.
     freezeOnBlur: true,

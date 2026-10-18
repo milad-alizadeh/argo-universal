@@ -3,11 +3,10 @@ import {
   type CoreSection,
   Placeholder,
   type SectionList,
-  type SizeClass,
   useNeedsAttention,
   useSectionList,
 } from '@repo/client';
-import { useSizeClass } from '@repo/client/size-class';
+import { useWide } from '@repo/client/size-class';
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { Stack, useFocusEffect, useNavigation } from 'expo-router';
 import { CommonActions, DrawerActions } from 'expo-router/react-navigation';
@@ -107,27 +106,24 @@ function RootList({ section, narrow }: RootListProps): React.JSX.Element {
 }
 
 /*
- * A section's root page: its list under the section's header on a compact window. Where the list
+ * A section's root page: its list under the section's header in the phone shell. Where the list
  * sits beside the pages, the section's empty detail until a page is picked, when it has one, or
  * else the section's first page, which the section's list names.
  */
 export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
-  const sizeClass = useSizeClass();
-  const besidePages = useBesidePages(section, sizeClass);
+  const wide = useWide();
+  const besidePages = useBesidePages(section, wide);
 
   if (besidePages) return besidePages;
 
-  return <RootList section={section} narrow={sizeClass === 'compact'} />;
+  return <RootList section={section} narrow={!wide} />;
 }
 
 // What the root shows where the list sits beside the pages, if anything.
-function useBesidePages(
-  section: CoreSection,
-  sizeClass: SizeClass,
-): React.ReactNode {
+function useBesidePages(section: CoreSection, wide: boolean): React.ReactNode {
   const list = useSectionList(section);
 
-  if (sizeClass === 'compact') return null;
+  if (!wide) return null;
 
   if (list.emptyPage) return <EmptyPage {...list.emptyPage} />;
 

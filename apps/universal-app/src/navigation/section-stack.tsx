@@ -6,7 +6,7 @@ import {
   type SectionList,
   useSectionList,
 } from '@repo/client';
-import { useSizeClass } from '@repo/client/size-class';
+import { useWide } from '@repo/client/size-class';
 import {
   type NativeStackNavigationOptions,
   Stack,
@@ -18,7 +18,6 @@ import type { ComponentProps, PropsWithChildren } from 'react';
 import { Platform } from 'react-native';
 import { headerTitleOptions } from './header-title';
 import { pageLayout } from './page-layout';
-import { phonePaneSectionOptions, usePhonePane } from './phone-pane';
 import { drawerDrawsRootHeader } from './section-drawer-options';
 
 type ScreenHeaderProps = SectionList['rootHeader'];
@@ -38,7 +37,7 @@ const narrowOptions = {
   ...headerTitleOptions,
 } satisfies StackProps['screenOptions'];
 
-// A medium or wide window shows one page beside the list: it draws its own header, and a new page replaces the shown one without a transition.
+// A wide window shows one page beside the list: it draws its own header, and a new page replaces the shown one without a transition.
 const framedOptions = {
   headerShown: false,
   animation: 'none',
@@ -71,18 +70,12 @@ interface SectionOptions {
   rootOptions: NativeStackNavigationOptions;
 }
 
-// The stack's options at this width, and its root's: a compact root shows the section's header; a phone pane's pages show theirs; another medium or wide page draws its own.
+// The stack's options at this width, and its root's: the phone shell's root shows the section's header; a wide window's page draws its own.
 function useSectionOptions(
   header: ScreenHeaderProps,
   root: boolean,
-  phonePane: boolean,
 ): SectionOptions {
-  const sizeClass = useSizeClass();
-
-  if (phonePane) return phonePaneSectionOptions(narrowOptions);
-
-  if (sizeClass !== 'compact')
-    return { screenOptions: framedOptions, rootOptions: {} };
+  if (useWide()) return { screenOptions: framedOptions, rootOptions: {} };
 
   return {
     screenOptions: narrowOptions,
@@ -111,10 +104,7 @@ export function SectionStack({
   children,
 }: SectionStackProps): React.JSX.Element {
   return (
-    <PageStack
-      header={useSectionList(section).rootHeader}
-      phonePane={usePhonePane(section)}
-    >
+    <PageStack header={useSectionList(section).rootHeader}>
       {children}
     </PageStack>
   );
@@ -125,23 +115,17 @@ interface PageStackProps extends PropsWithChildren {
   root?: boolean;
   rootName?: string;
   singular?: ComponentProps<typeof Stack.Screen>['dangerouslySingular'];
-  // The pages draw as on a phone in a medium window's pane, under the stock header.
-  phonePane?: boolean;
 }
 
 // Core lists and Plugin pages share stock stack headers, page placement and the Connection banner.
 export function PageStack(props: PageStackProps): React.JSX.Element {
-  const phonePane = props.phonePane === true;
-  const layout = pageLayout(phonePane, props.rootName);
-
   const { screenOptions, rootOptions } = useSectionOptions(
     props.header,
     props.root ?? true,
-    phonePane,
   );
 
   return (
-    <Stack screenOptions={screenOptions} screenLayout={layout}>
+    <Stack screenOptions={screenOptions} screenLayout={pageLayout}>
       <Stack.Screen {...rootScreen(props, rootOptions)} />
       {props.children}
     </Stack>

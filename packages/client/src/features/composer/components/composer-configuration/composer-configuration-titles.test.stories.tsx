@@ -65,3 +65,27 @@ export const ModelPickerShowsItsTitle: Story = {
     );
   },
 };
+
+// Below wide, Configure is a sheet (centred as a modal on the web) whose Model row pushes its choices as a page.
+export const ConfigureIsASheetBelowWide: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.tablet);
+    await userEvent.click(
+      canvas.getByRole('button', { name: agentModelLabel }),
+    );
+
+    const configure = await within(document.body).findByRole('dialog', {
+      name: agentModelLabel,
+    });
+
+    await userEvent.click(
+      await within(configure).findByRole('button', { name: /^Model,/ }),
+    );
+
+    await waitFor(() =>
+      expect(
+        within(configure).getByRole('heading', { name: modelPickerLabel }),
+      ).toBeVisible(),
+    );
+  },
+};

@@ -123,9 +123,13 @@
 .sheet-full {
   height: calc(100dvh - var(--spacing) * 14);
 }
-/* A sheet kept to the bottom edge spans the window, as the medium Inspector does. */
+/* A sheet kept to the bottom edge spans the window, as the phone shell's Inspector does. */
 .sheet-edge {
   max-width: none;
+}
+/* vaul's grab handle takes Paper's neutral-200; vaul's own 70% opacity makes it neutral-200/70. */
+.sheet [data-vaul-handle] {
+  background: var(--color-neutral-200);
 }
 
 /* ScrollFadeFrame: a scroll view's content fades to nothing at each edge with

@@ -67,7 +67,7 @@ const contentAt = (framed: boolean, frame: FrameParts, pick: PickSection) =>
 
 type ScreenLayout = NonNullable<ComponentProps<typeof Drawer>['screenLayout']>;
 
-// Every section's pages sit in the Frame's page pane, which on a compact window fills it.
+// Every section's pages sit in the Frame's page pane, which in the phone shell fills it.
 const inPage =
   (frame: FrameParts): ScreenLayout =>
   ({ children }) => <FramePage frame={frame}>{children}</FramePage>;
@@ -135,11 +135,11 @@ const pluginRouteId = (
 ): string | undefined =>
   params?.path ? sectionOf(pluginPath(params.path)) : pluginSection;
 
-// One drawer of sections at every width, so a width change keeps each section's pages; on a medium or wide window the rail and the list sit beside the pages. Each section hands the Frame its list, and the Frame is told which section the path shows.
+// One drawer of sections at every width, so a width change keeps each section's pages; on a wide window the rail and the list sit beside the pages. Each section hands the Frame its list, and the Frame is told which section the path shows.
 export function FrameNavigator(): React.JSX.Element {
   useNotifications(usePathname());
   const sizeClass = useSizeClass();
-  const framed = sizeClass !== 'compact';
+  const framed = sizeClass === 'wide';
   const plugins = usePluginSections();
   const frame = useNavigationFrame(sizeClass, plugins);
 

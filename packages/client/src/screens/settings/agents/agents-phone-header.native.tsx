@@ -13,12 +13,10 @@ export function AgentsPhoneHeader(
 ): React.JSX.Element | null {
   return (
     <>
-      <ScreenHeader title={agentsTitle} hideFrom="medium" />
-      <SizeClass
-        compact={<AgentsNativeSearch {...props} />}
-        medium={null}
-        wide={null}
-      />
+      <ScreenHeader title={agentsTitle} hideFrom="wide" />
+      <SizeClass only="compact">
+        <AgentsNativeSearch {...props} />
+      </SizeClass>
     </>
   );
 }

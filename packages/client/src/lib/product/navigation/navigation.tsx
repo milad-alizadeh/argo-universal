@@ -3,7 +3,6 @@ import {
   router,
   useIsFocused,
   useNavigation,
-  useNavigationContainerRef,
   usePathname,
 } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
@@ -63,60 +62,18 @@ function swapsPage({ shown, wide }: Place, next: string): boolean {
   return wide && isPage(next) && samePageSection(shown, next);
 }
 
-interface NavigationState {
-  index?: number;
-  routes: readonly { state?: NavigationState }[];
-}
-
-type ContainerRef = ReturnType<typeof useNavigationContainerRef>;
-
-// The route a stack shows: its focused one, or its last before it has an index.
-function shownRoute(
-  state: NavigationState,
-): { state?: NavigationState } | undefined {
-  return state.routes[state.index ?? state.routes.length - 1];
-}
-
-// How many pages the shown section's stack holds, its root included.
-function shownStackDepth(state: NavigationState): number {
-  const nested = shownRoute(state)?.state;
-
-  return nested ? shownStackDepth(nested) : state.routes.length;
-}
-
-function paneStackDepth(container: ContainerRef): number {
-  const root = container.current?.getRootState();
-
-  return root ? shownStackDepth(root) : 0;
-}
-
-// The section's root and the page beside the list.
-const paneDepth = 2;
-
-/*
- * Swaps the shown page. A tablet's medium Settings pane pushes a page drilled into from its first page (#927), so
- * the swap first takes the pane back to that first page.
- */
-function swapPage(href: Href, container: ContainerRef): void {
-  const depth = paneStackDepth(container);
-
-  if (depth > paneDepth) router.dismiss(depth - paneDepth);
-  router.replace(href);
-}
-
-function go(href: Href, swaps: boolean, container: ContainerRef): void {
-  if (swaps) swapPage(href, container);
+function go(href: Href, swaps: boolean): void {
+  if (swaps) router.replace(href);
   else router.navigate(href);
 }
 
 // Opens a page: pushed over the shown one on a narrow window, beside the list on a wide one.
 export function useNavigate(): Navigate {
   const place = { shown: usePathname(), wide: useWide() };
-  const container = useNavigationContainerRef();
 
   return (href, options) => {
     if (options?.replace) router.replace(href);
-    else go(href, swapsPage(place, pathOf(href)), container);
+    else go(href, swapsPage(place, pathOf(href)));
   };
 }
 

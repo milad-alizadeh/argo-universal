@@ -20,7 +20,7 @@ const edgeSwipeOpens = Platform.OS === 'ios';
 const atSectionRoot = (route: RouteProp<ParamListBase>): boolean =>
   (getFocusedRouteNameFromRoute(route) ?? 'index') === 'index';
 
-// A pushed page, and every page of a medium or wide window, keeps its stack's header; its edge swipe goes back.
+// A pushed page, and every page of a wide window, keeps its stack's header; its edge swipe goes back.
 export const stackOwnsHeader = { headerShown: false, swipeEnabled: false };
 
 export function drawerRootOptions(
@@ -33,7 +33,7 @@ export function drawerRootOptions(
   return { ...shown, swipeEnabled: edgeSwipeOpens };
 }
 
-// Each section's options on the Frame's drawer: its header shows only on a compact section root, so no page shows two.
+// Each section's options on the Frame's drawer: its header shows only on the phone shell's section root, so no page shows two.
 export const drawerScreenOptions =
   (framed: boolean, lists: SectionLists) =>
   ({ route }: { route: RouteProp<ParamListBase> }): DrawerNavigationOptions =>
