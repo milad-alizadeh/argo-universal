@@ -1,10 +1,11 @@
 import {
-  legacyPartVersions,
+  currentPartVersions,
   type PartVersions,
 } from '@repo/contracts/plugins/kit';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import { AdaptedViewLimits } from './adapted-view-limits';
 import { diff } from './kit/diff';
 
 function nextRoot(
@@ -31,6 +32,32 @@ function outgoing(
 interface Trees {
   raw: WireNode | null;
   drawn: WireNode | null;
+  limits: AdaptedViewLimits;
+}
+
+function rememberDrawn(
+  trees: Trees,
+  message: ViewMessage,
+  next: WireNode,
+): void {
+  trees.drawn = message.type === 'snapshot' ? message.root : next;
+}
+
+function boundedMessage(
+  trees: Trees,
+  next: WireNode,
+  message: ViewMessage,
+): ViewMessage | null {
+  const before = message.type === 'snapshot' ? null : trees.drawn;
+
+  const result = trees.limits.accept(
+    next,
+    outgoing(before, next, message.revision),
+  );
+
+  if (result) rememberDrawn(trees, result, next);
+
+  return result;
 }
 
 function adapt(
@@ -42,23 +69,28 @@ function adapt(
 
   if (!trees.raw) return null;
 
-  const next = prepareWireTree(trees.raw, parts);
-  const before = message.type === 'snapshot' ? null : trees.drawn;
-  const result = outgoing(before, next, message.revision);
-
-  trees.drawn = next;
-
-  return result;
+  return boundedMessage(trees, prepareWireTree(trees.raw, parts), message);
 }
 
-const emptyTrees = (): Trees => ({ raw: null, drawn: null });
+const emptyTrees = (refuse: (reason: string) => void): Trees => ({
+  raw: null,
+  drawn: null,
+  limits: new AdaptedViewLimits(refuse),
+});
 
-// Diff the adapted trees: positional patches from a Plugin cannot address a pruned App tree.
+interface Adaptation {
+  parts: PartVersions;
+  refuse: (reason: string) => void;
+}
+
+const ignoreRefusal = (): void => {};
+
+// Diff the adapted trees: keyed mutations are recomputed after parts and slots are adapted.
 async function* adaptedMessages(
   source: AsyncIterable<ViewMessage>,
-  parts: PartVersions,
-): AsyncGenerator<ViewMessage> {
-  const trees = emptyTrees();
+  { parts, refuse }: Adaptation,
+): AsyncGenerator<ViewMessage, void> {
+  const trees = emptyTrees(refuse);
 
   for await (const message of source) {
     const next = adapt(trees, message, parts);
@@ -69,7 +101,8 @@ async function* adaptedMessages(
 
 export function compatibleView(
   source: AsyncIterable<ViewMessage>,
-  parts: PartVersions = legacyPartVersions,
-): AsyncGenerator<ViewMessage> {
-  return adaptedMessages(source, parts);
+  parts: PartVersions = currentPartVersions,
+  refuse: (reason: string) => void = ignoreRefusal,
+): AsyncGenerator<ViewMessage, void> {
+  return adaptedMessages(source, { parts, refuse });
 }

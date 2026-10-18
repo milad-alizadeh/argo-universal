@@ -29,10 +29,12 @@ export function recordScreenState(state: string): void {
 }
 
 function buildReport(): ConnectionReport {
+  const serverUrl = sockets.at(-1)?.url;
   const closed = sockets.filter((socket) => socket.isClosed()).length;
 
   return {
-    serverUrl: sockets.at(-1)?.url ?? '',
+    // tRPC's Connection parameters add transport query fields to the socket URL.
+    serverUrl: serverUrl ? new URL(serverUrl).origin : '',
     open: sockets.length - closed,
     closed,
     screenSubscriptions,

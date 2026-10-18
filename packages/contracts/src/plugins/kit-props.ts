@@ -1,0 +1,50 @@
+import { z } from 'zod';
+import {
+  buttonSizes,
+  buttonVariants,
+  stackAlignments,
+  isStackGap,
+  type StackGap,
+  textRoles,
+  tones,
+} from '../kit-tokens';
+import { Handler } from './wire';
+
+export const textV1 = z.object({
+  label: z.string(),
+  variant: z.enum(textRoles).optional(),
+  tone: z.enum(tones).optional(),
+});
+
+export const textProps = textV1.extend({
+  accessibilityLabel: z.string().optional(),
+});
+
+export const buttonProps = z.object({
+  label: z.string(),
+  variant: z.enum(buttonVariants).optional(),
+  tone: z.literal('danger').optional(),
+  size: z.enum(buttonSizes).optional(),
+  disabled: z.boolean().optional(),
+  onPress: Handler.optional(),
+});
+
+export const layoutProps = z.object({
+  gap: z
+    .custom<StackGap>((value) => typeof value === 'number' && isStackGap(value))
+    .optional(),
+  align: z.enum(stackAlignments).optional(),
+});
+
+export const groupedItemProps = z.object({
+  label: z.string(),
+  value: z.string().optional(),
+  disabled: z.boolean().optional(),
+  onPress: Handler.optional(),
+});
+
+export const listProps = z.object({});
+
+export const stackProps = layoutProps.extend({
+  direction: z.enum(['row', 'column']),
+});

@@ -6,6 +6,10 @@ import {
   Row,
   Stack,
   Text,
+  GroupedListItem,
+  VirtualList,
+  Table,
+  GroupedList,
   type PluginComponents,
   type PluginProps,
 } from '@argo/plugin-kit';
@@ -14,6 +18,7 @@ import { expectTypeOf } from 'vitest';
 import type { ButtonProps } from '#primitives/actions/button';
 import type { TextProps, TextRole } from '#primitives/content/text';
 import type { StackProps } from '#primitives/layout/stack';
+import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
 
 expectTypeOf<Pick<typeof PluginKit, WirePart>>().toExtend<PluginComponents>();
 
@@ -83,3 +88,70 @@ expectTypeOf<PluginProps['Button']['onPress']>().toExtend<
 
 // @ts-expect-error onPress has no string payload.
 <Button label="Tap" onPress={(value: string) => value.toUpperCase()} />;
+
+// @ts-expect-error Plugin JSX contains kit components, never HTML elements.
+<div />;
+
+// @ts-expect-error DOM styling cannot bypass the Plugin prop schemas.
+<span className="styled" style={{ color: 'red' }} />;
+
+expectTypeOf<Omit<WireProps['GroupedListItem'], 'onPress'>>().toExtend<
+  Pick<GroupedListItemProps, 'label' | 'value' | 'disabled'>
+>();
+
+expectTypeOf<NonNullable<PluginProps['GroupedListItem']['leading']>>().toExtend<
+  | React.ReactElement
+  | boolean
+  | readonly (React.ReactElement | boolean | null | undefined)[]
+>();
+
+<GroupedListItem
+  label="Slotted"
+  leading={[<Text key="a" label="First" />, <Text key="b" label="Second" />]}
+  onPress={() => {}}
+/>;
+
+<VirtualList
+  items={[{ id: 'row' }]}
+  renderItem={(item) => <Text key={item.id} label={item.id} />}
+/>;
+
+<Table>
+  <Text key="row" label="Row" />
+</Table>;
+
+<GroupedList>
+  <GroupedListItem key="row" label="Row" />
+</GroupedList>;
+
+const listItems = [{ id: 'row' }] as const;
+
+const stringItem = (item: string): React.JSX.Element => <Text label={item} />;
+
+// @ts-expect-error renderItem receives the type of each item.
+<VirtualList items={listItems} renderItem={stringItem} />;
+
+// @ts-expect-error a named slot contains elements, never data objects.
+<GroupedListItem label="Bad slot" leading={{ arbitrary: true }} />;
+
+// @ts-expect-error the part declares its named slots in Contracts.
+<GroupedListItem label="Unknown slot" invented={<Text label="Content" />} />;
+
+const optional = Boolean('optional');
+
+<GroupedListItem
+  label="Conditional"
+  accessories={[
+    optional && <Text key="optional" label="Optional" />,
+    null,
+    undefined,
+    false,
+  ]}
+/>;
+
+<VirtualList
+  items={listItems}
+  renderItem={(item) => <Text key={item.id} label={item.id} />}
+/>;
+
+expectTypeOf<PluginProps['VirtualList']>().toHaveProperty('items');

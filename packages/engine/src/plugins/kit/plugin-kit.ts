@@ -4,7 +4,9 @@ import * as React from 'react';
 import { jsx, jsxs } from './jsx-runtime';
 import { mountPages, type Pages, type ViewSender } from './pages';
 
-const components = Object.fromEntries(Object.keys(wireParts).map((name) => [name, name]));
+const components = Object.fromEntries(
+  Object.keys(wireParts).map((name) => [name, name]),
+);
 
 const hooks = {
   useState: React.useState,

@@ -1,13 +1,3 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
-import type { Handler } from '@repo/contracts/plugins/wire';
-import type * as React from 'react';
-import { View } from 'react-native';
-import type { z } from 'zod';
-import { Button } from '#primitives/actions/button';
-import { Text } from '#primitives/content/text';
-import { Stack } from '#primitives/layout/stack';
-import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
-import { runAction } from './plugin-registry-actions';
 import {
   buttonProps,
   layoutProps,
@@ -16,7 +6,17 @@ import {
   stackProps,
 } from '@repo/contracts/plugins/kit';
 import { isWireContainer } from '@repo/contracts/plugins/prepare-tree';
+import type { WireNode, Handler } from '@repo/contracts/plugins/wire';
+import type * as React from 'react';
+import { View } from 'react-native';
+import type { z } from 'zod';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
+import { Stack } from '#primitives/layout/stack';
+import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
 import type { PluginPart } from './plugin-parts';
+import { runAction } from './plugin-registry-actions';
+import { Unsupported } from './plugin-unsupported';
 
 export interface PluginTreeProps {
   root: WireNode;
@@ -56,18 +56,36 @@ type RenderEntry<Schema extends z.ZodType> = (
   children: React.ReactNode,
 ) => React.JSX.Element;
 
+interface Drawing {
+  node: WireNode;
+  context: RenderContext;
+  children: React.ReactNode;
+}
+
+function draw<Schema extends z.ZodType>(
+  schema: Schema,
+  render: RenderEntry<Schema>,
+  { node, context, children }: Drawing,
+): React.JSX.Element | null {
+  const parsed = schema.safeParse(node.props);
+
+  if (!parsed.success) return isWireContainer(node) ? <Unsupported /> : null;
+
+  return render(
+    parsed.data,
+    { ...context, slots: renderedSlots(node, context) },
+    children,
+  );
+}
+
 // Shared schemas strip newer optional props; invalid containers keep their fallback.
 function entry<Schema extends z.ZodType>(
   schema: Schema,
   render: RenderEntry<Schema>,
 ): Entry {
   return {
-    render: (node, context, children) => {
-      const parsed = schema.safeParse(node.props);
-      if (!parsed.success) return isWireContainer(node) ? <Unsupported /> : null;
-
-      return render(parsed.data, { ...context, slots: renderedSlots(node, context) }, children);
-    },
+    render: (node, context, children) =>
+      draw(schema, render, { node, context, children }),
   };
 }
 
@@ -110,14 +128,6 @@ const registry = new Map(
     )),
   } satisfies Record<PluginPart, Entry>),
 );
-
-function Unsupported(): React.JSX.Element {
-  return (
-    <Text role="secondary" tone="muted">
-      Update Argo to see this
-    </Text>
-  );
-}
 
 interface RenderNodeProps {
   node: WireNode;

@@ -7,6 +7,7 @@ import {
 } from '@repo/contracts/plugins/wire-limits';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import type { PluginEvent } from './runtime-protocol';
+import { wireSizeReason } from './wire-size';
 
 export type Open = Extract<PluginEvent, { type: 'open' }>;
 
@@ -81,22 +82,12 @@ export function receive(
 }
 
 function refusalReason(view: OpenView, message: ViewMessage): string | null {
-  const reason = overLimit(message, pluginMessageBytes, 'message');
+  const reason = wireSizeReason(message, pluginMessageBytes, 'message');
 
   if (reason) return reason;
   const root = nextRoot(view.root, message);
 
-  return root ? overLimit(root, pluginPageBytes, 'page') : null;
-}
-
-function overLimit(
-  value: ViewMessage | WireNode,
-  limit: number,
-  kind: string,
-): string | null {
-  return Buffer.byteLength(JSON.stringify(value), 'utf8') > limit
-    ? `${kind} exceeds ${limit} bytes`
-    : null;
+  return root ? wireSizeReason(root, pluginPageBytes, 'page') : null;
 }
 
 function refuse(

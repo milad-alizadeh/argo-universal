@@ -4,7 +4,6 @@ import {
   type PluginSlotInput,
   type SlotMessage,
 } from '@repo/contracts/plugins/wire';
-import { compatibleView } from './compatible-view';
 import { merged } from './streams';
 import type { PluginViews } from './views';
 
@@ -21,9 +20,10 @@ export async function* contribution(
 ): AsyncGenerator<SlotMessage> {
   const path = slotPath(slot);
 
-  for await (const message of compatibleView(
-    views.watch(pluginId, { path, slot }, signal),
-    parts,
+  for await (const message of views.watch(
+    pluginId,
+    { path, slot, parts },
+    signal,
   ))
     yield { type: 'view', pluginId, path, message };
 }

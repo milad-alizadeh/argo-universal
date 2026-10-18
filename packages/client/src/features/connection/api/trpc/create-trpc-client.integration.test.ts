@@ -61,7 +61,14 @@ describe('createTRPCClient', () => {
         data: {
           pluginSurface: JSON.stringify({
             platform: 'web',
-            parts: { Text: 2, Button: 1, Stack: 1, Row: 1, Column: 1 },
+            parts: {
+              GroupedListItem: 1,
+              Text: 2,
+              Button: 1,
+              Stack: 1,
+              Row: 1,
+              Column: 1,
+            },
           }),
         },
       }),

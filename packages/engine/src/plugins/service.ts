@@ -16,7 +16,6 @@ import {
   type SlotMessage,
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
-import { compatibleView } from './compatible-view';
 import { contributions } from './contribution';
 import { callerOf } from './hooks/hook-rules';
 import { discoverPlugins } from './loader';
@@ -148,9 +147,10 @@ export class PluginService {
     if (status.state !== 'running')
       throw new Error(status.error ?? `Plugin ${pluginId} is not running`);
 
-    yield* compatibleView(
-      requireRuntime(this.deps).views.watch(pluginId, { path }, signal),
-      parts,
+    yield* requireRuntime(this.deps).views.watch(
+      pluginId,
+      { path, parts },
+      signal,
     );
   }
 

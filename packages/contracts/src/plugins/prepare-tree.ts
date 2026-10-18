@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { legacyPartVersions, wirePart, type PartVersions } from './kit';
+import { acceptsSlots, type SlotRules } from './prepare-slots';
 import { WireJson, type WireNode } from './wire';
 
 const jsonProps = z.record(z.string(), WireJson);
@@ -58,18 +59,23 @@ const styled = (node: WireNode): boolean =>
 const allowedContent = (node: WireNode, container: boolean): boolean =>
   container || node.children.length === 0;
 
-const validContent = (node: WireNode, container: boolean): boolean =>
-  !hasSlots(node) && allowedContent(node, container);
+interface ContentRules {
+  children: boolean;
+  slots: SlotRules;
+}
 
-const allowedStructure = (node: WireNode, container: boolean): boolean =>
-  !styled(node) && validContent(node, container);
+const validContent = (node: WireNode, rules: ContentRules): boolean =>
+  acceptsSlots(node, rules.slots) && allowedContent(node, rules.children);
+
+const allowedStructure = (node: WireNode, rules: ContentRules): boolean =>
+  !styled(node) && validContent(node, rules);
 
 function currentNode(node: WireNode): WireNode | null {
   const part = wirePart(node.type);
 
   if (!part) return null;
 
-  if (!allowedStructure(node, part.container)) return null;
+  if (!allowedStructure(node, part)) return null;
 
   return parsedNode(node, part.props);
 }
@@ -93,12 +99,22 @@ function adapted(node: WireNode, parts: PartVersions): WireNode | null {
   return schema ? parsedNode(lowered, schema) : null;
 }
 
-function childrenOf(node: WireNode, parts: PartVersions): WireNode[] {
-  return node.children.flatMap((child) => {
+function prepareNodes(nodes: WireNode[], parts: PartVersions): WireNode[] {
+  return nodes.flatMap((child) => {
     const next = prepare(child, parts);
 
     return next ? [next] : [];
   });
+}
+
+function slotsOf(node: WireNode, parts: PartVersions): WireNode['slots'] {
+  return Object.fromEntries(
+    Object.entries(node.slots).flatMap(([name, children]) => {
+      const prepared = prepareNodes(children, parts);
+
+      return prepared.length ? [[name, prepared]] : [];
+    }),
+  );
 }
 
 function prepare(node: WireNode, parts: PartVersions): WireNode | null {
@@ -109,7 +125,11 @@ function prepare(node: WireNode, parts: PartVersions): WireNode | null {
 
   if (!compatible) return unsupported(node);
 
-  return { ...compatible, children: childrenOf(node, parts), slots: {} };
+  return {
+    ...compatible,
+    children: prepareNodes(node.children, parts),
+    slots: slotsOf(node, parts),
+  };
 }
 
 // Both validation and version adaptation happen before a tree reaches an App.

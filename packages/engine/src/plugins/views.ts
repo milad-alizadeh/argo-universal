@@ -1,7 +1,9 @@
+import type { PartVersions } from '@repo/contracts/plugins/kit';
 import type {
   PluginDispatchInput,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
+import { compatibleView } from './compatible-view';
 import type { PluginEvent } from './runtime-protocol';
 import { createView, receive, type Open, type OpenView } from './view-state';
 import { messages } from './view-stream';
@@ -49,13 +51,15 @@ export class PluginViews {
   // `opening.slot` is given when the view is a Slot contribution rather than a page.
   async *watch(
     pluginId: string,
-    opening: Omit<Open, 'type'>,
+    { parts, ...opening }: Omit<Open, 'type'> & { parts?: PartVersions },
     signal: AbortSignal,
   ): AsyncGenerator<ViewMessage> {
     const view = this.acquire(pluginId, { type: 'open', ...opening });
 
     try {
-      yield* messages(view, signal);
+      yield* compatibleView(messages(view, signal), parts, (reason) =>
+        this.log(`Plugin ${pluginId}: refused ${opening.path}: ${reason}`),
+      );
     } finally {
       this.release(view);
     }

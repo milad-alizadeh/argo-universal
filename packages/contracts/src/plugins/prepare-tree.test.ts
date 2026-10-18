@@ -3,6 +3,8 @@ import { legacyPartVersions, versionsOf } from './kit';
 import { prepareWireTree } from './prepare-tree';
 import type { WireNode } from './wire';
 
+const updateMessage = 'Update Argo to see this';
+
 const label: WireNode = {
   type: 'Text',
   key: 'label',
@@ -50,7 +52,7 @@ describe('Plugin wire compatibility', () => {
     { ...stack, props: { direction: 'row', gap: 7 }, children: [] },
     { ...stack, type: 'FutureContainer' },
     { ...stack, props: { direction: 'row', style: {} } },
-    { ...stack, slots: { media: label } },
+    { ...stack, slots: { media: [label] } },
   ])(
     'replaces an invalid or unsupported container with the update fallback',
     (root) => {
@@ -58,7 +60,7 @@ describe('Plugin wire compatibility', () => {
         type: 'Text',
         key: 'stack',
         props: {
-          label: 'Update Argo to see this',
+          label: updateMessage,
           variant: 'secondary',
           tone: 'muted',
         },
@@ -88,5 +90,52 @@ describe('Plugin wire compatibility', () => {
         { Text: 2 },
       ),
     ).toEqual(label);
+  });
+
+  it('preserves every named-slot node while lowering its parts for the App', () => {
+    const root: WireNode = {
+      type: 'GroupedListItem',
+      key: 'item',
+      props: { label: 'Slotted' },
+      children: [],
+      slots: { leading: [stack, label] },
+    };
+
+    expect(
+      prepareWireTree(root, { ...legacyPartVersions, GroupedListItem: 1 })
+        .slots,
+    ).toEqual({
+      leading: [
+        {
+          ...stack,
+          type: 'Row',
+          props: { gap: 2 },
+          children: [{ ...label, props: { label: 'Readable' } }],
+        },
+        { ...label, props: { label: 'Readable' } },
+      ],
+    });
+  });
+
+  it('refuses undeclared slots and parts outside their closed accepted set', () => {
+    const root: WireNode = {
+      type: 'GroupedListItem',
+      key: 'item',
+      props: { label: 'Invalid' },
+      children: [],
+      slots: { unknown: [label] },
+    };
+
+    const parts = { ...legacyPartVersions, GroupedListItem: 1 };
+
+    expect(prepareWireTree(root, parts).props['label']).toBe(
+      'Update Argo to see this',
+    );
+    expect(
+      prepareWireTree(
+        { ...root, slots: { leading: [{ ...stack, type: 'VirtualList' }] } },
+        parts,
+      ).props['label'],
+    ).toBe(updateMessage);
   });
 });

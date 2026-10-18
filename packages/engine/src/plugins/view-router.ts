@@ -1,4 +1,8 @@
-import type { PartVersions } from '@repo/contracts/plugins/kit';
+import {
+  legacyPartVersions,
+  type PartVersions,
+  type PluginSurface,
+} from '@repo/contracts/plugins/kit';
 import {
   PluginDispatchInput,
   PluginSlotInput,
@@ -26,11 +30,20 @@ type Watch<Input, Output> = (
   parts?: PartVersions,
 ) => AsyncGenerator<Output>;
 
+const reportedParts = (surface: PluginSurface | undefined): PartVersions =>
+  surface ? surface.parts : legacyPartVersions;
+
+function partsOf({ connection }: RpcContext): PartVersions | undefined {
+  if (!connection) return undefined;
+
+  return reportedParts(connection.surface);
+}
+
 function watched<Input, Output>(
   watch: Watch<Input, Output>,
 ): Subscriber<Input, Output> {
   return ({ input, signal, ctx }) =>
-    watch(input, requireSignal(signal), ctx.connection?.surface?.parts);
+    watch(input, requireSignal(signal), partsOf(ctx));
 }
 
 // What Apps use to show a Plugin's page or Slot content and to send its taps back.

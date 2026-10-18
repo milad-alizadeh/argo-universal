@@ -1,3 +1,4 @@
+import { legacyPartVersions } from '@repo/contracts/plugins/kit';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import { expect, it } from 'vitest';
@@ -27,15 +28,15 @@ async function* messages(): AsyncGenerator<ViewMessage> {
   yield {
     type: 'patch',
     revision: 2,
-    ops: [{ op: 'props', path: [1], props: { label: 'After' } }],
+    ops: [{ op: 'setProps', key: ['label'], props: { label: 'After' } }],
   };
   yield {
     type: 'patch',
     revision: 3,
     ops: [
       {
-        op: 'props',
-        path: [1],
+        op: 'setProps',
+        key: ['label'],
         props: { label: 'After', accessibilityLabel: 'New optional prop' },
       },
     ],
@@ -53,7 +54,9 @@ async function collect(
 }
 
 it('rebases patches after lowering and pruning, and advances revisions for stripped props', async () => {
-  const received = await collect(compatibleView(messages()));
+  const received = await collect(
+    compatibleView(messages(), legacyPartVersions),
+  );
 
   expect(received[0]).toEqual({
     type: 'snapshot',
@@ -68,7 +71,14 @@ it('rebases patches after lowering and pruning, and advances revisions for strip
   expect(received[1]).toEqual({
     type: 'patch',
     revision: 2,
-    ops: [{ op: 'props', path: [0], props: { label: 'After' } }],
+    ops: [
+      {
+        op: 'setProps',
+        key: ['label'],
+        props: { label: 'After' },
+        unset: undefined,
+      },
+    ],
   });
   expect(received[2]).toEqual({
     type: 'snapshot',
@@ -91,7 +101,7 @@ async function* changing(): AsyncGenerator<ViewMessage> {
   yield {
     type: 'patch',
     revision: 2,
-    ops: [{ op: 'props', path: [], props: { direction: 'column' } }],
+    ops: [{ op: 'setProps', key: [], props: { direction: 'column' } }],
   };
 }
 
@@ -112,7 +122,9 @@ function patchOf(
 }
 
 it('recovers when an invalid container becomes valid in a patch', async () => {
-  const received = await collect(compatibleView(changing()));
+  const received = await collect(
+    compatibleView(changing(), legacyPartVersions),
+  );
 
   const [first, second] = received;
 
@@ -123,7 +135,7 @@ it('recovers when an invalid container becomes valid in a patch', async () => {
 
   expect(second).toMatchObject({
     type: 'patch',
-    ops: [{ op: 'replace', path: [], node: { type: 'Column' } }],
+    ops: [{ op: 'replace', key: [], node: { type: 'Column' } }],
   });
   const snapshot = snapshotOf(first);
   const patch = patchOf(second);

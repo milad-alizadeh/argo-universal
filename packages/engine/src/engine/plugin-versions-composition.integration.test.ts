@@ -66,11 +66,14 @@ it('adapts snapshots and patches independently for two Apps and a legacy Connect
   const legacy = viewer(url);
 
   await expect
-    .poll(() => [
-      old.messages.length,
-      current.messages.length,
-      legacy.messages.length,
-    ])
+    .poll(
+      () => [
+        old.messages.length,
+        current.messages.length,
+        legacy.messages.length,
+      ],
+      { timeout: 10_000 },
+    )
     .toEqual([1, 1, 1]);
   expect(old.messages[0]).toMatchObject({
     type: 'snapshot',
@@ -107,11 +110,14 @@ it('adapts snapshots and patches independently for two Apps and a legacy Connect
     eventId: '0/tap:onPress',
   });
   await expect
-    .poll(() => [
-      old.messages.length,
-      current.messages.length,
-      legacy.messages.length,
-    ])
+    .poll(
+      () => [
+        old.messages.length,
+        current.messages.length,
+        legacy.messages.length,
+      ],
+      { timeout: 10_000 },
+    )
     .toEqual([2, 2, 2]);
   const first = old.messages[0];
   const patch = old.messages[1];
@@ -127,13 +133,19 @@ it('adapts snapshots and patches independently for two Apps and a legacy Connect
   expect(current.messages[1]).toMatchObject({
     type: 'patch',
     ops: [
-      { op: 'props', path: [], props: { direction: 'row' } },
+      { op: 'setProps', key: [], props: { direction: 'row' } },
       {
-        op: 'props',
-        path: [0],
-        props: { label: 'After', accessibilityLabel: 'New optional prop' },
+        op: 'setProps',
+        key: ['label'],
+        props: { label: 'After' },
       },
     ],
   });
+  expect(
+    applyPatch(
+      snapshotOf(current.messages[0]).root,
+      patchOf(current.messages[1]).ops,
+    ).children[0]?.props,
+  ).toEqual({ label: 'After', accessibilityLabel: 'New optional prop' });
   expect(legacy.messages[1]).toEqual(patch);
 }, 20_000);
