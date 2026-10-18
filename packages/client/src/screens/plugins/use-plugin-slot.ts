@@ -49,12 +49,8 @@ const contribution = (
   pluginId,
   name: nameOf(pluginId),
   root,
-  onEvent: bindPluginDispatch(send, {
-    pluginId,
-    path,
-    revision,
-    viewId,
-  }),
+  viewId,
+  onEvent: bindPluginDispatch(send, { pluginId, path, revision, viewId }),
 });
 
 // Only a contribution with a tree is drawn.

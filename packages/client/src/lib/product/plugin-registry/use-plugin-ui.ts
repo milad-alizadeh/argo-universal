@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer, useState, useCallback } from 'react';
 import type { PluginOnEvent } from './plugin-registry';
 import { PluginUiEvents } from './plugin-ui-events';
 import {
@@ -12,6 +12,7 @@ export interface PluginUi {
   state: PluginUiState;
   change: (change: PluginUiChange) => void;
   send: PluginOnEvent;
+  flush: () => Promise<void>;
 }
 
 function useDelivery(send: PluginOnEvent): PluginUiEvents {
@@ -27,6 +28,7 @@ function useDelivery(send: PluginOnEvent): PluginUiEvents {
 export function usePluginUi(onEvent: PluginOnEvent): PluginUi {
   const [state, change] = useReducer(reducePluginUi, new Map());
   const events = useDelivery(onEvent);
+  const flush = useCallback(() => events.flushPending(), [events]);
 
   const send: PluginOnEvent = (key, interaction) => {
     const value = interactionUi(interaction);
@@ -36,5 +38,5 @@ export function usePluginUi(onEvent: PluginOnEvent): PluginUi {
     return events.send(key, interaction);
   };
 
-  return { state, change, send };
+  return { state, change, send, flush };
 }

@@ -1,3 +1,4 @@
+import { wireParts } from '@repo/contracts/plugins/kit';
 import {
   contentListProps,
   listSectionProps,
@@ -16,7 +17,6 @@ import {
 } from '@repo/contracts/plugins/kit';
 import type { Handler } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
-import { Button } from '#primitives/actions/button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
@@ -26,6 +26,17 @@ import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
+import {
+  PluginButton,
+  PluginIconButton,
+  PluginSplitButton,
+} from './plugin-buttons';
+import {
+  PluginPicker,
+  PluginSlider,
+  PluginTextInput,
+  PluginBinaryControl,
+} from './plugin-inputs';
 import type { PluginPart } from './plugin-parts';
 import {
   entry,
@@ -40,6 +51,27 @@ export const pluginEntries = {
   ...pluginSettingsEntries,
   EmptyState: entry(emptyStateProps, (props, context) => (
     <EmptyState {...props} action={context.slots.action} />
+  )),
+  Picker: entry(wireParts.Picker.props, (props, context) => (
+    <PluginPicker props={props} context={context} />
+  )),
+  Slider: entry(wireParts.Slider.props, (props, context) => (
+    <PluginSlider props={props} context={context} />
+  )),
+  TextInput: entry(wireParts.TextInput.props, (props, context) => (
+    <PluginTextInput props={props} context={context} />
+  )),
+  IconButton: entry(wireParts.IconButton.props, (props, context) => (
+    <PluginIconButton props={props} context={context} />
+  )),
+  SplitButton: entry(wireParts.SplitButton.props, (props, context) => (
+    <PluginSplitButton props={props} context={context} />
+  )),
+  Switch: entry(wireParts.Switch.props, (props, context) => (
+    <PluginBinaryControl type="Switch" props={props} context={context} />
+  )),
+  Checkbox: entry(wireParts.Checkbox.props, (props, context) => (
+    <PluginBinaryControl type="Checkbox" props={props} context={context} />
   )),
   List: entry(contentListProps, (props, context, children) => (
     <List {...props} empty={context.slots.empty}>
@@ -92,8 +124,8 @@ export const pluginEntries = {
     />
   )),
   Text: entry(textForApp, (props) => <Text {...props} />),
-  Button: entry(buttonProps, ({ onPress, ...props }, context) => (
-    <Button {...props} onPress={handlerOf(onPress, context)} />
+  Button: entry(buttonProps, (props, context) => (
+    <PluginButton props={props} context={context} />
   )),
   Stack: entry(stackProps, ({ direction, ...props }, _context, children) => (
     <Stack direction={direction} {...props}>

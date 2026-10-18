@@ -5,11 +5,12 @@ import {
 } from '@repo/contracts/plugins/wire-node-key';
 import { listTypes } from './list-props';
 import { childKeys } from './wire-keys';
+import { wireProps } from './wire-props';
 
 // A handler a Plugin passes as a prop; the wire carries it as an event id.
-type PluginFn = (payload?: WireJson) => void | Promise<void>;
+export type PluginFn = (payload?: WireJson) => void | Promise<void>;
 
-export type Prop = WireJson | PluginFn;
+export type Prop = WireJson | PluginFn | Prop[] | { [key: string]: Prop };
 
 export type Props = Record<string, Prop>;
 
@@ -43,30 +44,6 @@ function checkUniqueKeys(type: string, children: Instance[]): void {
 }
 
 const isSlot = (instance: Instance): boolean => instance.type === slotType;
-
-function wireProp(
-  event: { id: string; name: string },
-  value: Prop,
-  handlers: Handlers,
-): WireJson {
-  if (typeof value !== 'function') return value;
-  handlers.set(event.id, value);
-
-  return { $event: event.name };
-}
-
-function wireProps(
-  props: Props,
-  id: string,
-  handlers: Handlers,
-): WireNode['props'] {
-  return Object.fromEntries(
-    Object.entries(props).map(([name, value]) => [
-      name,
-      wireProp({ id: JSON.stringify([id, name]), name }, value, handlers),
-    ]),
-  );
-}
 
 function slotContent(
   slot: Instance,

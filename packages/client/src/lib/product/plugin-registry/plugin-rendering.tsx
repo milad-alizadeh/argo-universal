@@ -6,8 +6,9 @@ import type {
 } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import type { z } from 'zod';
-import { runAction } from './plugin-registry-actions';
+import { deliverControl } from './plugin-control-state';
 import { Unsupported } from './plugin-unsupported';
+import type { PluginActions } from './use-plugin-actions';
 import type { PluginUi } from './use-plugin-ui';
 
 export type PluginOnEvent = (
@@ -17,23 +18,31 @@ export type PluginOnEvent = (
 
 export interface RenderContext {
   onEvent: PluginOnEvent;
+  dispatch: PluginOnEvent;
   key: string;
   ui: PluginUi;
+  actions: PluginActions;
   slots: Record<string, React.JSX.Element>;
 }
 
 export function handlerOf(
   handler: Handler | undefined,
-  { onEvent, key }: RenderContext,
+  context: RenderContext,
   event: 'onPress' | 'onSubmit' = 'onPress',
 ): (() => void) | undefined {
   if (!handler) return undefined;
 
   return () => {
-    if ('$event' in handler)
-      void Promise.resolve(onEvent(key, { event })).catch(() => {});
-    else void runAction(handler);
+    void invokeHandler(handler, context, { event }).catch(() => {});
   };
+}
+
+async function invokeHandler(
+  handler: Handler,
+  context: RenderContext,
+  interaction: PluginInteraction,
+): Promise<void> {
+  await deliverControl(handler, interaction, context);
 }
 
 export interface Entry {
@@ -73,11 +82,7 @@ export function payloadHandler<Value>(
   if (!handler) return undefined;
 
   return (value) => {
-    if ('$event' in handler)
-      void Promise.resolve(
-        context.onEvent(context.key, interaction(value)),
-      ).catch(() => {});
-    else void runAction(handler);
+    void invokeHandler(handler, context, interaction(value)).catch(() => {});
   };
 }
 
