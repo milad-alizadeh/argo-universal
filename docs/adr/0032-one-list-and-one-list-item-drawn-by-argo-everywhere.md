@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # One List and one ListItem, drawn by Argo everywhere
