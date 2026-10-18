@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # List items follow each platform's settings conventions
