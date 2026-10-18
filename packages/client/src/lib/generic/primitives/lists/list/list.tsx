@@ -1,4 +1,5 @@
 import { useMemo, type ReactElement } from 'react';
+import { useWindowDimensions } from 'react-native';
 import { ListContext } from '../../../list-context';
 import { listTestIdProps } from '../../../list-test-id';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
@@ -106,15 +107,19 @@ function ChildRow({
 
 function ChildrenList(props: ChildrenOptions): ReactElement {
   const items = useMemo(() => childEntries(props.children), [props.children]);
+  // Fixed children can live inside a scrolling page without a bounded flex height.
+  const { height } = useWindowDimensions();
+  const { appearance } = props;
+
+  if (items.length === 0) return <ListEmpty {...props} />;
 
   return (
     <DataList
       {...props}
+      maxHeight={props.maxHeight ?? height}
       items={items}
       keyExtractor={(item) => item.key}
-      renderItem={(item) => (
-        <ChildRow item={item} appearance={props.appearance} />
-      )}
+      renderItem={(item) => <ChildRow item={item} appearance={appearance} />}
     />
   );
 }

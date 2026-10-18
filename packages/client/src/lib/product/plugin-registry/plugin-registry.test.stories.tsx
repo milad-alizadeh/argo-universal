@@ -14,6 +14,7 @@ import {
 import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
+import { PluginDetailView } from '../../../screens/plugins/$path/plugin-detail-view';
 import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
@@ -114,9 +115,9 @@ export const StackAliases: Story = {
   },
 };
 
-export const ListAnatomy: Story = {
+const listAnatomy: Story = {
   parameters: { screenPreview: true },
-  render: () => <PluginTree root={runListRoot} onEvent={onEvent} />,
+  render: () => <PluginDetailView root={runListRoot} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByText('CI runs')).toBeVisible();
     await expect(canvas.getByText('main')).toBeVisible();
@@ -134,9 +135,24 @@ export const ListAnatomy: Story = {
   },
 };
 
+function listPage(type: 'List' | 'VirtualList' | 'GroupedList'): Story {
+  return {
+    ...listAnatomy,
+    render: () => (
+      <PluginDetailView root={{ ...runListRoot, type }} onEvent={onEvent} />
+    ),
+  };
+}
+
+export const ListAnatomy = listPage('List');
+
+export const VirtualListAnatomy = listPage('VirtualList');
+
+export const GroupedListAnatomy = listPage('GroupedList');
+
 export const EmptyList: Story = {
   parameters: { screenPreview: true },
-  render: () => <PluginTree root={emptyRunListRoot} onEvent={onEvent} />,
+  render: () => <PluginDetailView root={emptyRunListRoot} onEvent={onEvent} />,
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('No runs yet')).toBeVisible();
   },

@@ -1,5 +1,5 @@
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
-import { useCallback, useMemo, type ReactElement } from 'react';
+import { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { Spinner } from '#primitives/status/spinner';
 import {
@@ -14,10 +14,12 @@ import type { ListProps } from './list-props';
 export function ListEmpty({
   isLoading,
   empty,
-}: Pick<ListProps<never>, 'isLoading' | 'empty'>): ReactElement {
+}: Pick<ListProps<never>, 'isLoading' | 'empty'>): ReactNode {
+  if (!isLoading) return empty ?? null;
+
   return (
     <View className="items-center py-8">
-      {isLoading ? <Spinner accessibilityLabel="Loading" /> : empty}
+      <Spinner accessibilityLabel="Loading" />
     </View>
   );
 }

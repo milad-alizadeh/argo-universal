@@ -91,12 +91,23 @@ function ItemProgress({
   ) : null;
 }
 
+function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
+  return selected ? (
+    <View
+      pointerEvents="none"
+      aria-hidden
+      className="absolute inset-0 bg-selected"
+    />
+  ) : null;
+}
+
 export function ListItemFrame(props: DrawingProps): ReactElement {
   const { appearance, position } = useContext(ListContext);
 
   return (
     <View className={itemSurface(appearance, position, props.selected)}>
       <ItemPress {...props} />
+      <Selection selected={props.selected} />
       <ItemSeparator {...props} />
       <ItemProgress progress={props.progress} />
     </View>

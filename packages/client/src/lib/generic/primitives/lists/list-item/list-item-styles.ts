@@ -33,7 +33,7 @@ export function itemSurface(
     'relative overflow-hidden',
     appearanceClasses[appearance],
     corners(appearance, position),
-    selected && 'bg-selected web:wide:shadow-inset',
+    selected && 'web:wide:shadow-inset',
   );
 }
 
