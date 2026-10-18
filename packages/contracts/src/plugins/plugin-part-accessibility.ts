@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { partKeyboardBehavior, partRole } from './plugin-part-keyboard';
+import { schemaProperties } from './schema-properties';
 import type { WirePartReference } from './wire-part-reference';
 
 type Accessibility = WirePartReference['accessibility'];
@@ -8,7 +9,7 @@ type Props = z.ZodObject['shape'];
 
 interface AccessibilityInput {
   summary: string;
-  schema: z.ZodObject;
+  schema: z.ZodType;
   label: string;
   container: boolean;
 }
@@ -63,7 +64,7 @@ function defaultLabel(summary: string, container: boolean): string {
 }
 
 export function partAccessibility(input: AccessibilityInput): Accessibility {
-  const properties = input.schema.shape;
+  const properties = schemaProperties(input.schema);
 
   const name = declaredName(properties, input.container);
   const role = partRole(input.summary, properties);

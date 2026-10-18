@@ -1,10 +1,10 @@
 import { useState, useLayoutEffect, Fragment } from '@argo/plugin-kit';
 import { jsx } from '@argo/plugin-kit/jsx-runtime';
 
-const row = (id) => jsx('Text', { label: id }, id);
+const row = (id) => jsx('Text', { children: id }, id);
 
 const largeRow = (_, i) =>
-  jsx('Text', { label: 'x'.repeat(700000) }, String(i));
+  jsx('Text', { children: 'x'.repeat(700000) }, String(i));
 
 function GrowPage() {
   const [count, setCount] = useState(0);
@@ -28,7 +28,7 @@ function CoalescedPage() {
     if (count < 3) setCount(count + 1);
   }, [count]);
 
-  return jsx('Text', { label: `Commit ${count}` });
+  return jsx('Text', { children: `Commit ${count}` });
 }
 
 function accessories(count, setCount) {
@@ -40,7 +40,7 @@ function accessories(count, setCount) {
       { label: 'Increment', onPress: () => setCount((n) => n + 1) },
       'button',
     ),
-    jsx('Text', { label: `Count ${count}` }, 'count'),
+    jsx('Text', { children: `Count ${count}` }, 'count'),
   ];
 }
 
@@ -92,6 +92,12 @@ function ListPage() {
 const CustomRow = ({ id }) => row(id);
 
 const pages = {
+  '/indexed': () =>
+    jsx('VirtualList', {
+      items: ['row'],
+      renderItem: (id, index) =>
+        jsx('Text', { children: `${index}:${id}` }, id),
+    }),
   '/custom': () =>
     jsx('VirtualList', {
       items: ['row'],
@@ -103,7 +109,7 @@ const pages = {
       renderItem: (id) => jsx(Fragment, { children: row(id) }, id),
     }),
   '/': ListPage,
-  '/oversize': () => jsx('Text', { label: '🚀'.repeat(300000) }),
+  '/oversize': () => jsx('Text', { children: '🚀'.repeat(300000) }),
   '/grow': GrowPage,
   '/coalesce': CoalescedPage,
   '/slots': SlottedPage,
@@ -111,7 +117,7 @@ const pages = {
   '/missing': () =>
     jsx('VirtualList', {
       items: ['row'],
-      renderItem: (id) => jsx('Text', { label: id }),
+      renderItem: (id) => jsx('Text', { children: id }),
     }),
   '/duplicate': () =>
     jsx('VirtualList', { items: ['row', 'row'], renderItem: row }),

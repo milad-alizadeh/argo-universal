@@ -1,8 +1,6 @@
 import type { ViewProps } from 'react-native';
-import type { Tone } from '#primitives/content/text';
+import type { KitProps } from '../../kit-props';
 
-export interface PillProps extends Omit<ViewProps, 'children' | 'style'> {
-  text: string;
-  tone?: Tone;
-  color?: string;
-}
+// Kit-only: native view attributes, without free content or styling.
+export type PillProps = KitProps<'Pill'> &
+  Omit<ViewProps, keyof KitProps<'Pill'> | 'children' | 'style'>;

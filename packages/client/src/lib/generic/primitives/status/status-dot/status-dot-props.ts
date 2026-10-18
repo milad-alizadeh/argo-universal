@@ -1,10 +1,7 @@
-import type { Tone } from '#primitives/content/text';
+import type { KitProps } from '../../kit-props';
 
-export interface StatusDotProps {
-  tone: Tone;
-  size?: 'sm' | 'md';
-  pulse?: boolean;
+// Kit-only: drawing classes and test identity.
+export type StatusDotProps = KitProps<'StatusDot'> & {
   className?: string;
   testID?: string;
-  accessibilityLabel?: string;
-}
+};

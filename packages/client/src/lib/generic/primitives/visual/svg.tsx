@@ -4,14 +4,9 @@ import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { Text } from '#primitives/content/text';
 import type { Tone } from '#primitives/content/text';
+import type { KitProps } from '../kit-props';
 
-export interface SvgProps {
-  xml: string;
-  label: string;
-  tone?: Tone;
-  aspectRatio?: number;
-  onPress?: () => void;
-}
+export type SvgProps = KitProps<'Svg'>;
 
 interface ArtworkProps {
   xml: string;

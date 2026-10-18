@@ -7,7 +7,7 @@ import { compatibleView } from './compatible-view';
 const leaf = (key: string, label: string): WireNode => ({
   type: 'Text',
   key,
-  props: { label },
+  props: { children: label },
   children: [],
   slots: {},
 });
@@ -28,7 +28,7 @@ async function* messages(): AsyncGenerator<ViewMessage> {
   yield {
     type: 'patch',
     revision: 2,
-    ops: [{ op: 'setProps', key: ['label'], props: { label: 'After' } }],
+    ops: [{ op: 'setProps', key: ['label'], props: { children: 'After' } }],
   };
   yield {
     type: 'patch',
@@ -37,7 +37,7 @@ async function* messages(): AsyncGenerator<ViewMessage> {
       {
         op: 'setProps',
         key: ['label'],
-        props: { label: 'After', accessibilityLabel: 'New optional prop' },
+        props: { children: 'After', accessibilityLabel: 'New optional prop' },
       },
     ],
   };
@@ -65,7 +65,7 @@ it('rebases patches after lowering and pruning, and advances revisions for strip
       ...root,
       type: 'Column',
       props: {},
-      children: [leaf('label', 'Before')],
+      children: [{ ...leaf('label', 'Before'), props: { label: 'Before' } }],
     },
   });
   expect(received[1]).toEqual({
@@ -87,7 +87,7 @@ it('rebases patches after lowering and pruning, and advances revisions for strip
       ...root,
       type: 'Column',
       props: {},
-      children: [leaf('label', 'After')],
+      children: [{ ...leaf('label', 'After'), props: { label: 'After' } }],
     },
   });
 });
@@ -141,6 +141,6 @@ it('recovers when an invalid container becomes valid in a patch', async () => {
   const patch = patchOf(second);
 
   expect(applyPatch(snapshot.root, patch.ops).children).toEqual([
-    leaf('label', 'Before'),
+    { ...leaf('label', 'Before'), props: { label: 'Before' } },
   ]);
 });

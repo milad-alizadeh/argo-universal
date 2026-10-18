@@ -92,7 +92,7 @@ it('draws only Plugins that declare the Slot, each with a frozen context', async
     pluginId: 'declared',
     message: {
       type: 'snapshot',
-      root: { type: 'Text', props: { label: 'bento frozen' } },
+      root: { type: 'Text', props: { children: 'bento frozen' } },
     },
   });
   controller.abort();

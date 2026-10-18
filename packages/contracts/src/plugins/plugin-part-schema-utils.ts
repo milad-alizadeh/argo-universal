@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { partAccessibility } from './plugin-part-accessibility';
-import { Action, WireEvent } from './wire';
+import type {
+  PartDefinition,
+  PartOptions,
+  ResolvedPartOptions,
+} from './plugin-part-options';
+import { schemaProperties } from './schema-properties';
 import type { WirePartReference } from './wire-part-reference';
 import type { WirePartDefinition } from './wire-parts';
 
@@ -33,7 +38,7 @@ const defaultAppearance =
 
 interface PartReferenceInput {
   summary: string;
-  schema: z.ZodObject;
+  schema: z.ZodType;
   config: ResolvedPartOptions;
 }
 
@@ -54,24 +59,6 @@ function partReference(input: PartReferenceInput): WirePartReference {
   };
 }
 
-function reference(
-  summary: string,
-  schema: z.ZodObject,
-  config: ResolvedPartOptions,
-): WirePartReference {
-  return partReference({ summary, schema, config });
-}
-
-interface PartOptions {
-  slots?: Record<string, readonly string[]>;
-  events?: Record<string, z.ZodType>;
-  children?: boolean;
-  container?: boolean;
-  label?: string;
-  appearance?: string;
-  accessibility?: Partial<WirePartReference['accessibility']>;
-}
-
 const defaultOptions = {
   slots: noSlots,
   events: noEvents,
@@ -79,14 +66,11 @@ const defaultOptions = {
   label: '',
   appearance: defaultAppearance,
   accessibility: {},
+  previous: [],
 } satisfies Required<Omit<PartOptions, 'container'>>;
 
-type ResolvedPartOptions = Required<Omit<PartOptions, 'container'>> & {
-  container: boolean;
-};
-
 function resolveOptions(
-  schema: z.ZodObject,
+  schema: z.ZodType,
   options: PartOptions,
 ): ResolvedPartOptions {
   const config = Object.assign({}, defaultOptions, options);
@@ -104,57 +88,79 @@ function inferContainer(
   return config.children || Object.keys(config.slots).length > 0;
 }
 
-function inferredEvents(schema: z.ZodObject): Record<string, z.ZodType> {
+function inferredEvents(schema: z.ZodType): Record<string, z.ZodType> {
   return Object.fromEntries(
-    Object.keys(schema.shape)
+    Object.keys(schemaProperties(schema))
       .filter((name) => name.startsWith('on'))
       .map((name) => [name, z.undefined()]),
   );
 }
 
+function describeField(name: string, field: z.core.$ZodType): void {
+  const metadata = z.globalRegistry.get(field);
+
+  if (metadata?.description) return;
+
+  z.globalRegistry.add(field, {
+    ...metadata,
+    description: `${name.replaceAll(/([a-z])([A-Z])/g, '$1 $2')} for this part.`,
+  });
+}
+
+function describeFields(fields: z.ZodObject['shape']): void {
+  for (const [name, field] of Object.entries(fields))
+    describeField(name, field);
+}
+
+function describeProps(schema: z.core.$ZodType): void {
+  if (schema instanceof z.ZodUnion) {
+    for (const option of schema.options) describeProps(option);
+
+    return;
+  }
+
+  describeFields(schemaProperties(schema));
+}
+
 function definition(
   summary: string,
-  schema: z.ZodObject,
+  schema: z.ZodType,
   config: ReturnType<typeof resolveOptions>,
 ): WirePartDefinition {
   return {
     props: schema,
-    versions: [schema],
+    versions: [...config.previous, schema],
     container: config.container,
     children: config.children,
     slots: config.slots,
     events: config.events,
-    reference: reference(summary, schema, config),
+    reference: partReference({ summary, schema, config }),
   };
 }
 
+export function part<
+  Schema extends z.ZodType,
+  const Options extends PartOptions = Record<never, never>,
+>(
+  summary: string,
+  schema: Schema,
+  options?: Options,
+): PartDefinition<Schema, Options>;
 export function part(
   summary: string,
-  schema: z.ZodObject = z.object({}),
+  schema: z.ZodType = z.object({}),
   options: PartOptions = {},
 ): WirePartDefinition {
+  describeProps(schema);
+
   return definition(summary, schema, resolveOptions(schema, options));
 }
 
-export const stringLabel = z
-  .string()
-  .describe('The visible and accessible label.');
-
-export const optionalLabel = stringLabel.optional();
-
-export const tone = z
-  .enum(['neutral', 'accent', 'success', 'warning', 'danger'])
-  .optional()
-  .describe('Argo semantic tone.');
-
-export function handler(name: string): z.ZodType {
-  return z
-    .union([WireEvent.extend({ $event: z.literal(name) }), Action])
-    .describe(`Action or Plugin event invoked by ${name}.`);
-}
-
-export const onPress = handler('onPress');
-
-export const imageSource = z
-  .union([z.string().url(), z.object({ asset: z.string() })])
-  .describe('A remote URL or Plugin asset served through the Server.');
+export {
+  stringLabel,
+  optionalLabel,
+  tone,
+  handler,
+  onPress,
+  imageSource,
+} from './plugin-part-props';

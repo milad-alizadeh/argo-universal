@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { schemaProperties } from './schema-properties';
 
 type Props = z.ZodObject['shape'];
 
 interface KeyboardInput {
   summary: string;
-  schema: z.ZodObject;
+  schema: z.ZodType;
   container: boolean;
 }
 
@@ -146,7 +147,7 @@ function keyboardWithoutRole(
 }
 
 export function partKeyboardBehavior(input: KeyboardInput): string {
-  const properties = input.schema.shape;
+  const properties = schemaProperties(input.schema);
   const events = eventsOf(properties);
   const role = partRole(input.summary, properties);
   const roleBehavior = keyboardForRole(role);

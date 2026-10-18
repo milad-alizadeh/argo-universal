@@ -39,7 +39,7 @@ describe('Svg wire part', () => {
     const text: WireNode = {
       type: 'Text',
       key: 'label',
-      props: { label: 'Readable' },
+      props: { children: 'Readable' },
       children: [],
       slots: {},
     };
@@ -67,7 +67,15 @@ describe('Svg wire part', () => {
         Svg: 1,
       }).slots,
     ).toEqual({
-      leading: [{ ...stack, type: 'Row', props: { gap: 2 } }, svg],
+      leading: [
+        {
+          ...stack,
+          type: 'Row',
+          props: { gap: 2 },
+          children: [{ ...text, props: { label: 'Readable' } }],
+        },
+        svg,
+      ],
     });
   });
 });

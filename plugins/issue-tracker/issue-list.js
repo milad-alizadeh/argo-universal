@@ -3,6 +3,8 @@ import { githubError, githubRepositoryFromOrigin } from './github-tracker.js';
 import { loadIssue } from './issue-data.js';
 import { IssueDetail } from './issue-detail.js';
 
+const headingRole = 'heading';
+
 export function IssueList(props) {
   return (
     <Column gap={3}>
@@ -15,7 +17,7 @@ export function IssueList(props) {
 }
 
 function IssueHeading() {
-  return <Text variant="heading">Issues</Text>;
+  return <Text role={headingRole}>Issues</Text>;
 }
 
 function ProjectChoices({ projects, projectId, onIssue }) {
@@ -72,7 +74,7 @@ function IssueGroup({ title, issues, ...props }) {
 
   return (
     <Column gap={2}>
-      <Text variant="heading">{title}</Text>
+      <Text role={headingRole}>{title}</Text>
       <IssueRows issues={visible} title={title} {...props} />
     </Column>
   );

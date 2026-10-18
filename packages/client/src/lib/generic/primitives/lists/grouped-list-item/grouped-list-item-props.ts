@@ -7,13 +7,13 @@ import {
   type SizeClassValue,
   sizeClassValue,
 } from '../../../use-size-class/size-class-value';
+import type { KitProps } from '../../kit-props';
 
 // A row as the kit draws it, with each size-class value already picked.
-export interface ResolvedItemProps {
-  label: string;
-  value?: string;
+type WireItemProps = KitProps<'GroupedListItem', string, ReactElement>;
+
+export interface ResolvedItemProps extends Omit<WireItemProps, 'accessories'> {
   labelDetail?: string;
-  footer?: ReactElement;
   /*
    * A second line under the title, such as a folder's path; code draws it in the mono face.
    * numberOfLines caps it, ending in an ellipsis, such as an Agent's description in a list.
@@ -21,19 +21,20 @@ export interface ResolvedItemProps {
   subtitle?: { text: string; code?: boolean; numberOfLines?: number };
   // An Argo icon, or a Plugin's own SF and Material pair.
   icon?: IconSymbol;
-  // An image in the icon's slot, such as an Agent's logo; it stands in for icon.
-  leading?: ReactElement;
-  // Plugin Slots hold arbitrary content rather than an icon-sized image.
+  /*
+   * An image in the icon's slot, such as an Agent's logo; it stands in for icon.
+   * Plugin Slots hold arbitrary content rather than an icon-sized image.
+   */
   leadingLayout?: 'icon' | 'content';
   // An image beside the value, such as the selected Agent in Configure.
   valueLeading?: ReactElement;
   accessory?: ReactElement;
   // A native control in the row, such as a Switch; it shares the field's native Host.
   control?: ReactElement;
-  // A control below the title and value, such as an effort slider.
-  detail?: ReactElement;
-  onPress?: () => void;
-  // Web only, as phones have no pointer to hover with.
+  /*
+   * A control below the title and value, such as an effort slider.
+   * Web only, as phones have no pointer to hover with.
+   */
   onHoverIn?: ComponentProps<typeof Pressable>['onHoverIn'];
   onHoverOut?: ComponentProps<typeof Pressable>['onHoverOut'];
   /*
@@ -54,7 +55,6 @@ export interface ResolvedItemProps {
   'aria-expanded'?: boolean;
   'aria-controls'?: string;
   href?: string;
-  disabled?: boolean;
   selected?: boolean;
   /*
    * The row is one choice of a set, such as an Agent in its picker, and `selected` draws the
@@ -88,9 +88,9 @@ export interface GroupedListItemProps extends Omit<
   ResolvedItemProps,
   'value' | 'accessory' | 'footer'
 > {
-  value?: SizeClassValue<string | undefined>;
+  value?: SizeClassValue<WireItemProps['value']>;
   accessory?: SizeClassValue<ReactElement | undefined>;
-  footer?: SizeClassValue<ReactElement | undefined>;
+  footer?: SizeClassValue<WireItemProps['footer']>;
 }
 
 // Whether the row is the same at every size class, so it need not follow the window.

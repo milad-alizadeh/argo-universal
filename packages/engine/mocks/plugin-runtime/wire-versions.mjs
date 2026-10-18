@@ -3,7 +3,7 @@ import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
 const invalid = jsx(
   'Row',
-  { gap: 'invalid', children: jsx(Text, { label: 'Hidden' }) },
+  { gap: 'invalid', children: jsx(Text, { children: 'Hidden' }) },
   'invalid',
 );
 
@@ -12,7 +12,7 @@ function content(changed, setChanged) {
     jsx(
       Text,
       {
-        label: changed ? 'After' : 'Before',
+        children: changed ? 'After' : 'Before',
         accessibilityLabel: 'New optional prop',
       },
       'label',

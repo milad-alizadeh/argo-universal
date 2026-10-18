@@ -1,42 +1,19 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { PressableProps, StyleProp, ViewStyle } from 'react-native';
+import type { KitProps } from '../../kit-props';
 
 // The heights a sheet can rest at: SwiftUI's presentation detents, Material's partial and full expansion.
-export type SheetDetent = 'medium' | 'large';
+export type SheetDetent = NonNullable<KitProps<'Sheet'>['detents']>[number];
 
-export interface SheetProps {
-  // The trigger's own layout in the row it sits in.
+// Kit-only: native presentation, trigger, scrolling, footer and close lifecycle.
+export type SheetProps = KitProps<'Sheet'> & {
   style?: StyleProp<ViewStyle>;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  // After the close animation has finished.
   onClosed?: () => void;
-  // Absent when the app opens the sheet itself, as a dialog on a narrow window does.
   trigger?: ReactElement<Pick<PressableProps, 'disabled' | 'onPress'>>;
-  // The sheet's accessible name.
-  label?: string;
-  // Without detents the sheet is as tall as its content.
-  detents?: SheetDetent[];
-  /*
-   * The detent the sheet opens at, one of `detents`; the person may still drag it to another.
-   * iOS: SwiftUI's detent selection. Android: 'large' opens a half-open sheet fully expanded.
-   * Web: ignored, as the drawer rests only at its content's height or the full window.
-   */
-  initialDetent?: SheetDetent;
-  /*
-   * Web: stays a drawer on the window's bottom edge, as wide as the window, at every Size class,
-   * as the medium window's Inspector does. Native sheets rise from the bottom edge already.
-   */
   bottomEdge?: boolean;
-  // False while the content holds unsaved input: a swipe, the backdrop, Escape or Back leave the sheet open.
-  dismissible?: boolean;
-  // Native only: the content owns scrolling and fills the sheet, as a native GroupedList or a long list does.
   contentScrolls?: boolean;
-  // Stays in view under the content, such as a request's actions.
   footer?: ReactNode;
-  // Sheet.Page children make a sheet with pages, the first one its root; anything else is one page.
-  children: ReactNode;
-}
+};
 
 export interface SheetPageProps {
   name: string;

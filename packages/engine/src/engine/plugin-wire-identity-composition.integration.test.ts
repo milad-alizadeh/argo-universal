@@ -23,8 +23,8 @@ it('keeps positional and explicit children distinct through a patch', async () =
     root: {
       children: [
         { key: '1', props: { label: 'Change' } },
-        { key: '~~1', props: { label: 'Original' } },
-        { key: '~1', props: { label: 'Reserved-looking key' } },
+        { key: '~~1', props: { children: 'Original' } },
+        { key: '~1', props: { children: 'Reserved-looking key' } },
       ],
     },
   });
@@ -33,7 +33,7 @@ it('keeps positional and explicit children distinct through a patch', async () =
     type: 'patch',
     viewId: initial.viewId,
     revision: 2,
-    ops: [{ op: 'setProps', key: ['~~1'], props: { label: 'Changed' } }],
+    ops: [{ op: 'setProps', key: ['~~1'], props: { children: 'Changed' } }],
   });
 }, 10_000);
 
@@ -52,7 +52,9 @@ it('ignores empty React children in slot arrays and inserts a conditional node',
   expect(initial).toMatchObject({
     type: 'snapshot',
     root: {
-      slots: { accessories: [{ key: 'always', props: { label: 'Always' } }] },
+      slots: {
+        accessories: [{ key: 'always', props: { children: 'Always' } }],
+      },
     },
   });
   await watching.plugins.dispatch(pluginTap(initial, { ...input, key: '0' }));
@@ -69,7 +71,7 @@ it('ignores empty React children in slot arrays and inserts a conditional node',
         node: {
           type: 'Text',
           key: 'optional',
-          props: { label: 'Optional' },
+          props: { children: 'Optional' },
           children: [],
           slots: {},
         },

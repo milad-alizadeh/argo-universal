@@ -65,6 +65,11 @@ it(
           children: [
             {
               type: 'Text',
+              key: 'page',
+              props: { label: 'Update Argo to see this' },
+            },
+            {
+              type: 'Text',
               key: 'list',
               props: { label: 'Update Argo to see this' },
             },

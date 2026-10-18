@@ -26,7 +26,7 @@ function CounterPage() {
 
   return (
     <Column gap={4}>
-      <Text variant="heading">Counter fixture</Text>
+      <Text role={headingRole}>Counter fixture</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <CounterBadges />
       <Buttons onTap={() => setTaps(taps + 1)} />
@@ -45,6 +45,8 @@ function CounterBadges() {
     </>
   );
 }
+
+const headingRole = 'heading';
 
 export function register(argo) {
   argo.pages.register('/', CounterPage);

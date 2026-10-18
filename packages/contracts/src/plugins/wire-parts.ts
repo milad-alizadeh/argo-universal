@@ -1,30 +1,25 @@
 import { z } from 'zod';
 import {
   buttonProps,
+  buttonV1,
   groupedItemProps,
   layoutProps,
   listProps,
   stackProps,
   textProps,
   textV1,
+  textV2,
   svgProps,
   groupedItemV1,
 } from './kit-props';
+import { legacyButtonProps } from './legacy-button-props';
+import { legacyTextProps } from './legacy-text-props';
+import { listExpansion } from './list-expansion';
 import { listWireParts } from './list-wire-parts';
-import {
-  wirePartReferences,
-  type WirePartReference,
-} from './wire-part-reference';
+import type { WirePartDefinition } from './wire-part-definition';
+import { wirePartReferences } from './wire-part-reference';
 
-export interface WirePartDefinition {
-  props: z.ZodType;
-  versions: readonly z.ZodType[];
-  container: boolean;
-  children: boolean;
-  slots: Record<string, readonly string[]>;
-  events: Record<string, z.ZodType>;
-  reference: WirePartReference;
-}
+export type { WirePartDefinition } from './wire-part-definition';
 
 export const listPartNames = [
   'List',
@@ -63,6 +58,7 @@ export const wireParts = {
   },
   VirtualList: {
     props: listProps,
+    expansion: listExpansion,
     versions: [listProps],
     container: true,
     children: true,
@@ -72,6 +68,7 @@ export const wireParts = {
   },
   Table: {
     props: listProps,
+    expansion: listExpansion,
     versions: [listProps],
     container: true,
     children: true,
@@ -81,6 +78,7 @@ export const wireParts = {
   },
   GroupedList: {
     props: listProps,
+    expansion: listExpansion,
     versions: [listProps],
     container: true,
     children: true,
@@ -90,16 +88,23 @@ export const wireParts = {
   },
   Text: {
     props: textProps,
-    versions: [textV1, textProps],
+    versions: [
+      textProps.transform(legacyTextProps).pipe(textV1),
+      textProps.transform(legacyTextProps).pipe(textV2),
+      textProps,
+    ],
     container: false,
     children: false,
-    slots: {},
+    slots: { children: [] },
     events: {},
     reference: wirePartReferences.Text,
   },
   Button: {
     props: buttonProps,
-    versions: [buttonProps],
+    versions: [
+      buttonProps.transform(legacyButtonProps).pipe(buttonV1),
+      buttonProps,
+    ],
     container: false,
     children: false,
     slots: {},

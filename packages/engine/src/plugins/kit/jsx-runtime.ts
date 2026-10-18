@@ -5,9 +5,9 @@ import { expandList } from './list-props';
 const rejected = ['className', 'style'];
 
 // The kit components that take their visible text as children.
-const textual = new Set(['Text', 'Button']);
+const textual = new Set(['Text']);
 
-function labelOf(children: React.ReactNode): string {
+function textOf(children: React.ReactNode): string {
   return [children]
     .flat()
     .filter((part) => typeof part === 'string' || typeof part === 'number')
@@ -55,9 +55,9 @@ const plainOf = (props: ElementProps): ElementProps =>
     Object.entries(props).filter(([name, value]) => !isSlotValue(name, value)),
   );
 
-function labelProp(type: string, children: React.ReactNode): ElementProps {
+function textProp(type: string, children: React.ReactNode): ElementProps {
   return textual.has(type) && children !== undefined
-    ? { label: labelOf(children) }
+    ? { argoText: textOf(children) }
     : {};
 }
 
@@ -72,7 +72,7 @@ function prepare(
 
   return {
     ...plainOf(rest),
-    ...labelProp(type, children),
+    ...textProp(type, children),
     argoKey: key === undefined ? undefined : String(key),
     children: textual.has(type) ? slots : [children, slots].flat(),
   };

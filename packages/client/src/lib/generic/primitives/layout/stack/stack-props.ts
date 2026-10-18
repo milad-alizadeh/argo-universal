@@ -1,5 +1,5 @@
 import { stackAlignments, type StackGap } from '@repo/contracts/kit-tokens';
-import type { ReactNode } from 'react';
+import type { KitProps } from '../../kit-props';
 
 // Static classes, so Uniwind can see every one; the keys are the spacing steps a stack accepts.
 export const stackGapClass = {
@@ -21,9 +21,4 @@ export { isStackGap } from '@repo/contracts/kit-tokens';
 
 export { stackAlignments };
 
-export interface StackProps {
-  direction: 'row' | 'column';
-  gap?: StackGap;
-  align?: (typeof stackAlignments)[number];
-  children?: ReactNode;
-}
+export type StackProps = KitProps<'Stack'>;

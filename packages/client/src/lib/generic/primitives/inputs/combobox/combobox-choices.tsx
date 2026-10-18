@@ -12,9 +12,14 @@ export function ComboboxChoices<Value extends string>(
   return <List {...listProps(props)}>{choiceSection(props)}</List>;
 }
 
+type ChoiceListProps = Omit<
+  React.ComponentProps<typeof List>,
+  'items' | 'renderItem' | 'children'
+>;
+
 function listProps<Value extends string>(
   props: ResultsProps<Value>,
-): React.ComponentProps<typeof List> {
+): ChoiceListProps {
   const web = Platform.OS === 'web';
 
   return {

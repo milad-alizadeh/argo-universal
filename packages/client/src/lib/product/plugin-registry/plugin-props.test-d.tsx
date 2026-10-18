@@ -35,27 +35,27 @@ expectTypeOf<typeof PluginKit.List.Section>().toEqualTypeOf<
 <Stack direction="column" gap={2}>
   <Row>
     <Column>
-      <Text variant="heading">Hello</Text>
+      <Text role="body">Hello</Text>
     </Column>
   </Row>
   <Button label="Tap" onPress={() => {}} />
   <Svg xml="<svg/>" label="Service map" tone="info" aspectRatio={1.5} />;
 </Stack>;
 
-<Text label="Hello" accessibilityLabel="Greeting" />;
+<Text accessibilityLabel="Greeting">Hello</Text>;
 
-<Button onPress={{ action: 'toast', message: 'Done' }}>Tap</Button>;
+<Button label="Tap" onPress={{ action: 'toast', message: 'Done' }} />;
 
 // @ts-expect-error direction is a closed token enum.
 <Stack direction="diagonal" />;
 
-// @ts-expect-error labels must be strings.
-<Text label={42} />;
+// @ts-expect-error Text children contain text, not arbitrary objects.
+<Text>{{ message: 'wrong' }}</Text>;
 
 // @ts-expect-error style never crosses the Plugin wire.
-<Text label="Styled" style={{ color: 'red' }} />;
+<Text style={{ color: 'red' }}>Styled</Text>;
 
-// @ts-expect-error a Button needs a label or textual children.
+// @ts-expect-error a Button needs its label.
 <Button />;
 
 // @ts-expect-error gaps use the shared spacing tokens.
@@ -74,11 +74,11 @@ expectTypeOf<typeof PluginKit.List.Section>().toEqualTypeOf<
 
 <VirtualList
   items={[{ id: 'row' }]}
-  renderItem={(item) => <Text key={item.id} label={item.id} />}
+  renderItem={(item) => <Text key={item.id}>{item.id}</Text>}
 />;
 
 <Table>
-  <Text key="row" label="Row" />
+  <Text key="row">Row</Text>
 </Table>;
 
 <GroupedList>
@@ -87,7 +87,7 @@ expectTypeOf<typeof PluginKit.List.Section>().toEqualTypeOf<
 
 const listItems = [{ id: 'row' }] as const;
 
-const stringItem = (item: string): React.JSX.Element => <Text label={item} />;
+const stringItem = (item: string): React.JSX.Element => <Text>{item}</Text>;
 
 // @ts-expect-error renderItem receives the type of each item.
 <VirtualList items={listItems} renderItem={stringItem} />;
@@ -96,14 +96,14 @@ const stringItem = (item: string): React.JSX.Element => <Text label={item} />;
 <GroupedListItem label="Bad slot" leading={{ arbitrary: true }} />;
 
 // @ts-expect-error the part declares its named slots in Contracts.
-<GroupedListItem label="Unknown slot" invented={<Text label="Content" />} />;
+<GroupedListItem label="Unknown slot" invented={<Text>Content</Text>} />;
 
 const optional = Boolean('optional');
 
 <GroupedListItem
   label="Conditional"
   accessories={[
-    optional && <Text key="optional" label="Optional" />,
+    optional && <Text key="optional">Optional</Text>,
     null,
     undefined,
     false,
@@ -112,13 +112,21 @@ const optional = Boolean('optional');
 
 <VirtualList
   items={listItems}
-  renderItem={(item) => <Text key={item.id} label={item.id} />}
+  renderItem={(item) => <Text key={item.id}>{item.id}</Text>}
 />;
 
 expectTypeOf<PluginProps['VirtualList']>().toHaveProperty('items');
 
 <List
-  empty={<Text label="No runs" />}
+  empty={<Text>No runs</Text>}
   items={listItems}
   renderItem={(item) => <PluginListItem key={item.id} title={item.id} />}
 />;
+
+// @ts-expect-error Text uses role, with no variant alias.
+<Text variant="heading">Heading</Text>;
+
+// @ts-expect-error Text uses children, with no label alias.
+<Text label="Old content" />;
+
+<Text role={{ compact: 'body', wide: 'heading' }}>Responsive</Text>;

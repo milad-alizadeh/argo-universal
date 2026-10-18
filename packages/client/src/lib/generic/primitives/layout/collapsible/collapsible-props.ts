@@ -1,14 +1,12 @@
 import type { ComponentProps, ReactNode } from 'react';
 import type { View } from 'react-native';
 import type { Tone } from '#primitives/content/text';
-import type { OpenStateProps } from '#primitives/overlays/open-state';
 import type { IconName } from '../../../symbols/icon-names';
+import type { KitProps } from '../../kit-props';
 
-export type CollapsibleProps = ComponentProps<typeof View> &
-  OpenStateProps & {
-    // Its trigger stops toggling it.
-    disabled?: boolean;
-  };
+// Kit-only: native view attributes.
+export type CollapsibleProps = KitProps<'Collapsible'> &
+  Omit<ComponentProps<typeof View>, keyof KitProps<'Collapsible'>>;
 
 export type CollapsibleContentProps = ComponentProps<typeof View> & {
   // Web only: keeps the closed content mounted, for content that animates its own height.

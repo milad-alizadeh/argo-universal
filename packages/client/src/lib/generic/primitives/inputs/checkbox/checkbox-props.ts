@@ -1,17 +1,13 @@
 import type { FieldErrors } from '#primitives/fields/field-errors';
+import type { KitProps } from '../../kit-props';
 
-export interface CheckboxProps {
-  label: string;
-  variant?: 'option';
-  selection?: 'single' | 'multiple';
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-  disabled?: boolean;
+// Kit-only: local form validation, hints and blur handling.
+export type CheckboxProps = KitProps<'Checkbox'> & {
   invalid?: boolean;
   errors?: FieldErrors;
   hint?: string;
   onBlur?: () => void;
-}
+};
 
 export type CheckboxIndicatorProps = Pick<
   CheckboxProps,

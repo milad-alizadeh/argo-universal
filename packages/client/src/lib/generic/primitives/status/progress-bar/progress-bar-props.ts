@@ -1,9 +1,4 @@
-import type { Tone } from '#primitives/content/text';
+import type { KitProps } from '../../kit-props';
 
-export interface ProgressBarProps {
-  value: number;
-  tone?: Tone;
-  active?: boolean;
-  accessibilityLabel?: string;
-  testID?: string;
-}
+// Kit-only: test identity.
+export type ProgressBarProps = KitProps<'ProgressBar'> & { testID?: string };

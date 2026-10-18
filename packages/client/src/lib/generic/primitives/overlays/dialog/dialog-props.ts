@@ -1,11 +1,9 @@
 import type { ReactNode } from 'react';
 import type { PressableProps, StyleProp, ViewStyle } from 'react-native';
-import type { OpenStateProps } from '#primitives/overlays/open-state';
 import type { TriggerElement } from '#primitives/overlays/open-state';
+import type { KitProps } from '../../kit-props';
 
-export type DialogProps = OpenStateProps & {
-  children: ReactNode;
-};
+export type DialogProps = KitProps<'Dialog'>;
 
 // The caller's own pressable element, which opens the dialog.
 export type DialogTriggerProps = {

@@ -24,23 +24,23 @@ export const textRoles = [
   'row-detail',
 ] as const;
 
-const stackGapTokens = {
-  0: true,
-  1: true,
-  2: true,
-  3: true,
-  4: true,
-  5: true,
-  6: true,
-  8: true,
-  10: true,
-  12: true,
+export const stackGaps = {
+  gap0: 0,
+  gap1: 1,
+  gap2: 2,
+  gap3: 3,
+  gap4: 4,
+  gap5: 5,
+  gap6: 6,
+  gap8: 8,
+  gap10: 10,
+  gap12: 12,
 } as const;
 
-export type StackGap = keyof typeof stackGapTokens;
+export type StackGap = (typeof stackGaps)[keyof typeof stackGaps];
 
 export const isStackGap = (value: number): value is StackGap =>
-  Object.hasOwn(stackGapTokens, value);
+  Object.values(stackGaps).some((gap) => gap === value);
 
 export const stackAlignments = ['start', 'center', 'end', 'stretch'] as const;
 

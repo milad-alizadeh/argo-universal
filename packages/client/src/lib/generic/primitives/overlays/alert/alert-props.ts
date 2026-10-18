@@ -1,37 +1,8 @@
-interface AlertActionBase {
-  label: string;
-  onPress?: () => void;
-  // Shown but not pressable, such as an answer the current state does not allow.
-  disabled?: boolean;
-  // Running, such as a removal: the alert shows progress and takes no answer or close. iOS hides it instead.
-  loading?: boolean;
-}
+import type { KitProps } from '../../kit-props';
 
-// A cancel action dismisses. iOS drops the red of a cancel action, so cancel and danger never meet.
-interface CancelAlertAction extends AlertActionBase {
-  cancel: true;
-  tone?: never;
-}
+export type AlertProps = KitProps<'Alert'>;
 
-interface AnswerAlertAction extends AlertActionBase {
-  cancel?: false;
-  // The danger tone draws the action in red.
-  tone?: 'danger';
-}
-
-export type AlertAction = CancelAlertAction | AnswerAlertAction;
-
-/*
- * A short question with a few answers, drawn by the system: a SwiftUI alert on iOS,
- * a Material 3 AlertDialog on Android, a centred dialog on the web. Forms and longer content use Dialog.
- */
-export interface AlertProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  message?: string;
-  actions: readonly AlertAction[];
-}
+export type AlertAction = AlertProps['actions'][number];
 
 // Every answer closes the alert before it runs, so the action may open something else.
 export function alertActionPress(

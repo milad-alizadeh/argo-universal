@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import { pillProps } from '../kit-props';
+import { tones } from '../../kit-tokens';
 import {
-  progressBarAccessibility,
   spinnerAccessibility,
   statusDotAccessibility,
 } from '../part-accessibility-metadata';
@@ -12,20 +11,16 @@ import {
   tone,
   onPress,
 } from '../plugin-part-schema-utils';
+import { calloutProps } from '../presentation-kit-props';
+import { wireParts } from '../wire-parts';
 
 export const statusPartSchemas = {
-  Pill: part(
-    'Static short text with a semantic tone or tracker color.',
-    pillProps,
-    {
-      appearance:
-        '`tone` uses semantic colors that adapt to light and dark appearance. `color` is for tracker labels and is preserved as supplied.',
-    },
-  ),
+  Pill: wireParts.Pill,
   StatusDot: part(
     'A compact semantic status mark with an optional pulse.',
     z.object({
-      tone,
+      tone: z.enum(tones).describe('The Argo semantic status tone.'),
+      size: z.enum(['sm', 'md']).optional().describe('The status mark size.'),
       pulse: z
         .boolean()
         .optional()
@@ -33,6 +28,13 @@ export const statusPartSchemas = {
       accessibilityLabel: optionalLabel,
     }),
     {
+      previous: [
+        z.object({
+          tone,
+          pulse: z.boolean().optional(),
+          accessibilityLabel: optionalLabel,
+        }),
+      ],
       label:
         'Provide `accessibilityLabel` when the status mark conveys information.',
       accessibility: statusDotAccessibility,
@@ -40,43 +42,35 @@ export const statusPartSchemas = {
   ),
   Spinner: part(
     'An indeterminate progress indicator.',
-    z.object({ accessibilityLabel: optionalLabel }),
+    z.object({ accessibilityLabel: stringLabel }),
     {
-      label: 'Defaults to the accessible name “Loading”.',
+      previous: [z.object({ accessibilityLabel: optionalLabel })],
+      label: 'The required accessibilityLabel names the loading work.',
       accessibility: spinnerAccessibility,
     },
   ),
-  ProgressBar: part(
-    'A determinate progress indicator with semantic tone.',
-    z.object({
-      value: z.number().min(0).max(1).describe('Progress from 0 to 1.'),
-      tone,
-      accessibilityLabel: optionalLabel,
-    }),
-    {
-      label:
-        'Defaults to a localized progress value; set `accessibilityLabel` for context.',
-      accessibility: progressBarAccessibility,
-    },
-  ),
+  ProgressBar: wireParts.ProgressBar,
   Callout: part(
-    'A title, description, and one primary action.',
-    z.object({
-      title: stringLabel,
-      description: optionalLabel,
-      action: onPress.optional(),
-    }),
+    'A heading, description, detail, and optional actions.',
+    calloutProps,
     {
-      slots: { title: ['Text'], description: ['Text'], actions: ['Button'] },
       events: { onPress: z.undefined() },
       accessibility: {
         keyboard:
-          'The Callout title and description remain in reading order; keyboard focus reaches its primary action in platform order.',
+          'The Callout title and description remain in reading order; keyboard focus reaches its actions in platform order.',
         voiceOver:
-          'VoiceOver reads the Callout title and description before announcing its single primary action.',
+          'VoiceOver reads the Callout title and description before announcing its optional actions.',
         talkBack:
-          'TalkBack reads the Callout title and description before announcing its single primary action.',
+          'TalkBack reads the Callout title and description before announcing its optional actions.',
       },
+      previous: [
+        z.object({
+          title: stringLabel,
+          description: optionalLabel,
+          action: onPress.optional(),
+        }),
+      ],
+      slots: { actions: ['Button', 'IconButton'] },
     },
   ),
   EmptyState: part(

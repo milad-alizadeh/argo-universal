@@ -1,5 +1,5 @@
 import { legacyPartVersions } from '@repo/contracts/plugins/kit';
-import type { ViewMessage } from '@repo/contracts/plugins/wire';
+import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import {
   createTRPCClient,
@@ -75,7 +75,26 @@ async function change(app: Viewer): Promise<void> {
   });
 }
 
-it('adapts snapshots and patches independently for two Apps and a legacy Connection', async () => {
+async function waitForMessages(apps: Viewer[], count: number): Promise<void> {
+  await expect
+    .poll(() => apps.map((app) => app.messages.length), { timeout: 10_000 })
+    .toEqual(apps.map(() => count));
+}
+
+function firstProps(app: Viewer): WireNode['props'] | undefined {
+  return snapshotOf(app.messages[0]).root.children[0]?.props;
+}
+
+function patchedFirstProps(app: Viewer): WireNode['props'] | undefined {
+  return applyPatch(
+    snapshotOf(app.messages[0]).root,
+    patchOf(app.messages[1]).ops,
+  ).children[0]?.props;
+}
+
+const accessibilityLabel = 'New optional prop';
+
+it('adapts snapshots and patches independently for three App versions and a legacy Connection', async () => {
   const home = await createRuntimePlugins([
     { id: 'versions', fixture: 'wire-versions' },
   ]);
@@ -83,19 +102,12 @@ it('adapts snapshots and patches independently for two Apps and a legacy Connect
   const { url } = await startEngineTestHost({ home });
 
   const old = viewer(url, legacyPartVersions);
-  const current = viewer(url, { ...legacyPartVersions, Stack: 1, Text: 2 });
+  const previous = viewer(url, { ...legacyPartVersions, Stack: 1, Text: 2 });
+  const current = viewer(url, { ...legacyPartVersions, Stack: 1, Text: 3 });
   const legacy = viewer(url);
+  const apps = [old, previous, current, legacy];
 
-  await expect
-    .poll(
-      () => [
-        old.messages.length,
-        current.messages.length,
-        legacy.messages.length,
-      ],
-      { timeout: 10_000 },
-    )
-    .toEqual([1, 1, 1]);
+  await waitForMessages(apps, 1);
   expect(old.messages[0]).toMatchObject({
     type: 'snapshot',
     root: {
@@ -108,42 +120,30 @@ it('adapts snapshots and patches independently for two Apps and a legacy Connect
       ],
     },
   });
-  expect(snapshotOf(old.messages[0]).root.children[0]?.props).toEqual({
+  expect(firstProps(old)).toEqual({
     label: 'Before',
   });
-  expect(current.messages[0]).toMatchObject({
-    type: 'snapshot',
-    root: {
-      type: 'Stack',
-      props: { direction: 'column' },
-      children: [
-        { props: { label: 'Before', accessibilityLabel: 'New optional prop' } },
-        {},
-        {},
-      ],
-    },
+  expect(firstProps(previous)).toEqual({
+    label: 'Before',
+    accessibilityLabel: accessibilityLabel,
+  });
+  expect(snapshotOf(current.messages[0]).root).toMatchObject({
+    type: 'Stack',
+    props: { direction: 'column' },
+  });
+  expect(firstProps(current)).toEqual({
+    children: 'Before',
+    accessibilityLabel,
   });
   expect(snapshotOf(legacy.messages[0]).root).toEqual(
     snapshotOf(old.messages[0]).root,
   );
 
-  await Promise.all([old, current, legacy].map(change));
+  await Promise.all(apps.map(change));
 
-  await expect
-    .poll(
-      () => [
-        old.messages.length,
-        current.messages.length,
-        legacy.messages.length,
-      ],
-      { timeout: 10_000 },
-    )
-    .toEqual([2, 2, 2]);
-  const first = old.messages[0];
-  const patch = old.messages[1];
-
-  const snapshot = snapshotOf(first);
-  const update = patchOf(patch);
+  await waitForMessages(apps, 2);
+  const snapshot = snapshotOf(old.messages[0]);
+  const update = patchOf(old.messages[1]);
 
   expect(applyPatch(snapshot.root, update.ops)).toMatchObject({
     type: 'Row',
@@ -157,15 +157,17 @@ it('adapts snapshots and patches independently for two Apps and a legacy Connect
       {
         op: 'setProps',
         key: ['label'],
-        props: { label: 'After' },
+        props: { children: 'After' },
       },
     ],
   });
-  expect(
-    applyPatch(
-      snapshotOf(current.messages[0]).root,
-      patchOf(current.messages[1]).ops,
-    ).children[0]?.props,
-  ).toEqual({ label: 'After', accessibilityLabel: 'New optional prop' });
+  expect(patchedFirstProps(current)).toEqual({
+    children: 'After',
+    accessibilityLabel,
+  });
+  expect(patchedFirstProps(previous)).toEqual({
+    label: 'After',
+    accessibilityLabel,
+  });
   expect(patchOf(legacy.messages[1]).ops).toEqual(update.ops);
 }, 20_000);

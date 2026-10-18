@@ -1,53 +1,52 @@
-import { describe, expect, it } from 'vitest';
-import { pluginPartSchemas } from '../plugin-part-schemas';
-import { acceptsSlots } from '../prepare-slots';
+import { expect, it } from 'vitest';
+import { prepareWireTree } from '../prepare-tree';
 import type { WireNode } from '../wire';
 
-const list = pluginPartSchemas.List;
+const parts = { List: 1, Text: 3, Button: 1, Stack: 1 };
 
-function node(type: string): WireNode {
-  return { type, key: type, props: {}, children: [], slots: {} };
-}
+const emptyText: WireNode = {
+  type: 'Text',
+  key: 'empty',
+  props: { children: 'No rows' },
+  children: [],
+  slots: {},
+};
 
-describe('List part schema', () => {
-  it('accepts EmptyState in the empty Slot', () => {
-    expect(
-      acceptsSlots(
-        { ...node('List'), slots: { empty: [node('EmptyState')] } },
-        list.slots,
-      ),
-    ).toBe(true);
-  });
+it.each(['Text', 'Stack'])('draws %s content in a List empty Slot', (type) => {
+  const content =
+    type === 'Text'
+      ? emptyText
+      : {
+          ...emptyText,
+          type,
+          props: { direction: 'column' },
+          children: [emptyText],
+        };
 
-  it('rejects parts other than EmptyState in the empty Slot', () => {
-    expect(
-      acceptsSlots(
-        { ...node('List'), slots: { empty: [node('Text')] } },
-        list.slots,
-      ),
-    ).toBe(false);
-  });
+  const list: WireNode = {
+    type: 'List',
+    key: 'list',
+    props: {},
+    children: [],
+    slots: { empty: [content] },
+  };
 
-  it('allows search text events only in Plugin search mode', () => {
-    const eventHandler = { $event: 'onSearchTextChange' };
+  expect(prepareWireTree(list, parts)).toEqual(list);
+});
 
-    expect(
-      list.props.safeParse({
-        searchMode: 'plugin',
-        onSearchTextChange: eventHandler,
-      }).success,
-    ).toBe(true);
-    expect(
-      list.props.safeParse({
-        searchMode: 'app',
-        onSearchTextChange: eventHandler,
-      }).success,
-    ).toBe(false);
-    expect(
-      list.props.safeParse({ onSearchTextChange: eventHandler }).success,
-    ).toBe(false);
-    expect(
-      list.events.onSearchTextChange?.safeParse('typed text').success,
-    ).toBe(true);
+it('refuses a control outside the List empty Slot accepted set', () => {
+  const list: WireNode = {
+    type: 'List',
+    key: 'list',
+    props: {},
+    children: [],
+    slots: {
+      empty: [{ ...emptyText, type: 'Button', props: { label: 'Create' } }],
+    },
+  };
+
+  expect(prepareWireTree(list, parts)).toMatchObject({
+    type: 'Text',
+    props: { children: 'Update Argo to see this' },
   });
 });

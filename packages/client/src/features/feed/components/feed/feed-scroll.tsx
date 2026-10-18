@@ -94,7 +94,7 @@ export interface FeedScrollProps extends EntryDrawing {
 }
 
 type FeedListProps = Pick<
-  ListProps<FeedEntry>,
+  Extract<ListProps<FeedEntry>, { items: readonly FeedEntry[] }>,
   | 'items'
   | 'renderItem'
   | 'initialScrollIndex'

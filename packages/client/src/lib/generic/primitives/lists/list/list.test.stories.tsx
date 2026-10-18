@@ -89,6 +89,7 @@ export const HeaderAndEndContentOnEmptyList: Story = {
   render: () => (
     <List
       items={[]}
+      renderItem={() => null}
       header={<Text>Earlier runs</Text>}
       endContent={<Text>End of runs</Text>}
       empty={<Text>No runs</Text>}

@@ -8,6 +8,8 @@ import {
   useState,
 } from '@argo/plugin-kit';
 
+const headingRole = 'heading';
+
 export function ProjectDetails({ context, storage, trackers }) {
   const props = useProjectTracker(storage, context.projectId);
 
@@ -103,7 +105,7 @@ async function saveProjectTracker({
 }
 
 function TrackerHeading() {
-  return <Text variant="heading">Issue tracker</Text>;
+  return <Text role={headingRole}>Issue tracker</Text>;
 }
 
 function NoneButton({ selection, choose }) {
