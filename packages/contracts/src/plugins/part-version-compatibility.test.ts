@@ -4,6 +4,8 @@ import { prepareWireTree } from './prepare-tree';
 import type { WireNode } from './wire';
 
 describe('Plugin part version compatibility', () => {
+  const title = 'Waiting jobs';
+
   it('derives versions only for registered parts', () => {
     expect(
       versionsOf(['Text', 'Stack', 'GroupedListItem', 'Pill', 'Internal']),
@@ -32,7 +34,7 @@ describe('Plugin part version compatibility', () => {
       type: 'ListItem',
       key: 'item',
       props: {
-        title: 'Waiting jobs',
+        title,
         badge: { kind: 'status', tone: 'success', label: 'Ready' },
       },
       children: [],
@@ -43,7 +45,27 @@ describe('Plugin part version compatibility', () => {
       prepareWireTree(row, { ...legacyPartVersions, ListItem: 1 }),
     ).toEqual({
       ...row,
-      props: { title: 'Waiting jobs' },
+      props: { title },
+    });
+  });
+
+  it('downgrades count badges to the numeric badge supported by ListItem v1', () => {
+    const row: WireNode = {
+      type: 'ListItem',
+      key: 'item',
+      props: {
+        title,
+        badge: { kind: 'count', count: 3, label: '3 waiting jobs' },
+      },
+      children: [],
+      slots: {},
+    };
+
+    expect(
+      prepareWireTree(row, { ...legacyPartVersions, ListItem: 1 }),
+    ).toEqual({
+      ...row,
+      props: { title, badge: 3 },
     });
   });
 });

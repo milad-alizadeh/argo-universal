@@ -20,7 +20,7 @@ function pillClassName(
   className: string | undefined,
 ): string {
   return cn(
-    'shrink-0 flex-row rounded-full px-2 py-0.5',
+    'shrink-0 self-start flex-row rounded-full px-2 py-0.5',
     fills[tone ?? 'muted'],
     className,
   );
