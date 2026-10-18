@@ -58,7 +58,7 @@ jobs:
 
             # Quality's tools never read Markdown, but a check can: mocks/agent/release-notes.md is an e2e fixture.
             quality=false
-            if grep -qv '\.md$' <<< "$files" || grep -q '^docs/plugins/parts/' <<< "$files" || affected --tasks check-types test; then quality=true; fi
+            if grep -qv '\.md$' <<< "$files" || affected --tasks check-types test; then quality=true; fi
 
             # Turbo cannot see root files, .github/ or patches/. turbo.json gives every package a no-op test:web, so only @repo/e2e's counts.
             outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' || true)
@@ -99,9 +99,6 @@ jobs:
         with:
           playwright: none
           turbo-team: ${{ vars.TURBO_TEAM }}
-
-      - name: Check generated Plugin reference
-        run: pnpm --filter @repo/contracts check:plugin-reference
 
       - name: Lint
         run: pnpm quality:lint
