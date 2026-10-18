@@ -3,6 +3,13 @@ import { wireParts, versionsOf } from '@repo/contracts/plugins/kit';
 // This App's registry; its renderer table must cover exactly these parts.
 export const pluginParts = {
   EmptyState: wireParts.EmptyState,
+  Picker: wireParts.Picker,
+  Switch: wireParts.Switch,
+  Checkbox: wireParts.Checkbox,
+  Slider: wireParts.Slider,
+  TextInput: wireParts.TextInput,
+  IconButton: wireParts.IconButton,
+  SplitButton: wireParts.SplitButton,
   List: wireParts.List,
   'ListItem.Link': wireParts['ListItem.Link'],
   'ListItem.Button': wireParts['ListItem.Button'],

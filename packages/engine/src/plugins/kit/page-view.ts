@@ -1,3 +1,4 @@
+import { handlerPath } from '@repo/contracts/plugins/action-handler-path';
 import type {
   PluginEvent,
   PluginViewId,
@@ -50,10 +51,15 @@ async function runCurrentHandler(
   event: Extract<PluginEvent, { type: 'dispatch' }>,
 ): Promise<void> {
   requireCurrentRevision(view, event.revision);
-  const handler = view.handlers.get(JSON.stringify([event.key, event.event]));
+
+  const handler = view.handlers.get(
+    JSON.stringify([event.key, ...handlerPath(event)]),
+  );
 
   if (!handler) throw new Error('Plugin handler is no longer available');
-  await handler(event.payload);
+  await handler(
+    event.event === 'onAction' ? event.payload.value : event.payload,
+  );
 }
 
 function requireCurrentRevision(view: OpenView, revision: number): void {

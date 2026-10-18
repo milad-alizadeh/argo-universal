@@ -23,6 +23,13 @@ export const pluginPartSchemas = {
   ...scaffoldsPartSchemas,
   ...visualPartSchemas,
   ...wireParts,
+  // The kit receives local handlers; a Plugin can leave its draft controls without wire handlers.
+  Picker: inputsPartSchemas.Picker,
+  Switch: inputsPartSchemas.Switch,
+  Checkbox: inputsPartSchemas.Checkbox,
+  Slider: inputsPartSchemas.Slider,
+  TextInput: inputsPartSchemas.TextInput,
+  SplitButton: actionsPartSchemas.SplitButton,
 } satisfies Record<string, WirePartDefinition>;
 
 export type PluginPartName = keyof typeof pluginPartSchemas;

@@ -17,6 +17,7 @@ import {
 import { applicationMenu } from './application-menu';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
+import { handleShareMenu } from './share-menu';
 import { handleSymbolImages } from './symbol-images';
 import { handleWindowBackground } from './window-background';
 import {
@@ -143,6 +144,8 @@ handleWindowShow(windowOrigin);
 handleWindowMinimized(windowOrigin);
 
 handleWindowBackground(windowOrigin);
+
+handleShareMenu(windowOrigin);
 
 if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 

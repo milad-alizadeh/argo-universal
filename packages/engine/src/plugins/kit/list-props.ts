@@ -1,4 +1,5 @@
 import { listPartNames } from '@repo/contracts/plugins/kit';
+import { WireJson } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
 
@@ -22,7 +23,9 @@ function expanded(
 
   return {
     ...props,
-    children: items.map((item, index) => keyedRow(renderItem(item, index))),
+    children: items.map((item, index) =>
+      keyedRow(renderItem(WireJson.parse(item), index)),
+    ),
   };
 }
 

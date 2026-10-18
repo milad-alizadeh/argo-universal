@@ -4,6 +4,13 @@ import { pluginPartVersions } from './plugin-parts';
 it('advertises the versions of the parts this App draws', () => {
   expect(pluginPartVersions).toEqual({
     EmptyState: 1,
+    Picker: 3,
+    Switch: 3,
+    Checkbox: 3,
+    Slider: 3,
+    TextInput: 3,
+    IconButton: 2,
+    SplitButton: 3,
     List: 2,
     'List.Section': 2,
     'ListItem.Link': 1,

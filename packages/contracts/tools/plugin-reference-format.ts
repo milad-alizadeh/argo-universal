@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
-import type { WirePartDefinition } from '../src/plugins/wire-parts';
+import { wireParts, type WirePartDefinition } from '../src/plugins/wire-parts';
 import { partObjectSchema } from './plugin-object-schema';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
@@ -9,15 +9,17 @@ type JsonSchemaNode = z.core.JSONSchema._JSONSchema;
 
 const jsonValueDescription = 'JSON value';
 
+const referenceParts = { ...pluginPartSchemas, ...wireParts };
+
 const schemas: Record<string, JsonSchema> = Object.fromEntries(
-  Object.entries(pluginPartSchemas).map(([name, part]) => [
+  Object.entries(referenceParts).map(([name, part]) => [
     name,
     partObjectSchema(part),
   ]),
 );
 
 export function partDefinition(name: string): WirePartDefinition {
-  const part = Object.entries(pluginPartSchemas).find(
+  const part = Object.entries(referenceParts).find(
     ([partName]) => partName === name,
   )?.[1];
 

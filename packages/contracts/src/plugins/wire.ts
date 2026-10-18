@@ -8,25 +8,9 @@ export {
   slotPath,
 } from '#plugin-wire-slot';
 
-// Plugin pages cross the wire as data (ADR-0025): kit component names and props, never code.
-export type WireJson =
-  | string
-  | number
-  | boolean
-  | null
-  | WireJson[]
-  | { [key: string]: WireJson };
+import { WireJson } from '#plugin-wire-json';
 
-export const WireJson: z.ZodType<WireJson> = z.lazy(() =>
-  z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.null(),
-    z.array(WireJson),
-    z.record(z.string(), WireJson),
-  ]),
-);
+export { WireJson } from '#plugin-wire-json';
 
 export interface WireNode {
   type: string;
@@ -46,10 +30,30 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
   }),
 );
 
-// Function props name their event; dispatch also identifies the node and revision.
-export const WireEvent = z.strictObject({ $event: z.string().min(1) });
+// Nested callbacks retain their original prop path when adaptation removes or reorders content.
+export const WireEvent = z.strictObject({
+  $event: z.string().min(1),
+  $path: z.array(z.string()).optional(),
+});
 
 export type WireEvent = z.infer<typeof WireEvent>;
+
+export const OverlayAction = z
+  .strictObject({
+    action: z.enum(['alert', 'dialog', 'sheet']),
+    title: z.string(),
+    content: WireNode,
+    confirmLabel: z.string().optional(),
+    cancelLabel: z.string().optional(),
+    onConfirm: WireEvent.extend({ $event: z.literal('onConfirm') }).optional(),
+    onDismiss: WireEvent.extend({ $event: z.literal('onDismiss') }).optional(),
+  })
+  .refine(
+    ({ action, content }) => action !== 'alert' || content.type === 'Text',
+    { error: 'Alert content must be a Text wire node.' },
+  );
+
+export type OverlayAction = z.infer<typeof OverlayAction>;
 
 // Built-in Actions run in the App without a round trip to the Server.
 export const Action = z.discriminatedUnion('action', [
@@ -57,6 +61,17 @@ export const Action = z.discriminatedUnion('action', [
   z.strictObject({ action: z.literal('navigate'), path: z.string() }),
   z.strictObject({ action: z.literal('openUrl'), url: z.string() }),
   z.strictObject({ action: z.literal('copy'), text: z.string() }),
+  z.strictObject({
+    action: z.literal('share'),
+    message: z.string(),
+    url: z.string().optional(),
+    title: z.string().optional(),
+  }),
+  z.strictObject({ action: z.literal('pop') }),
+  z.strictObject({
+    action: z.literal('dismiss'),
+  }),
+  OverlayAction,
 ]);
 
 export type Action = z.infer<typeof Action>;

@@ -36,7 +36,9 @@ export type WireProps = {
   >;
 };
 
-const partsByType = new Map(Object.entries(pluginPartSchemas));
+const partsByType = new Map(
+  Object.entries({ ...pluginPartSchemas, ...wireParts }),
+);
 
 export function wirePart(type: string): WirePartDefinition | undefined {
   return partsByType.get(type);

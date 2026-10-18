@@ -1,4 +1,4 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { List } from '#primitives/lists/list';
 import { PluginTree, type PluginOnEvent } from './plugin-registry';
@@ -8,6 +8,7 @@ export interface PluginSlotContribution {
   // The Plugin's name, shown as the section's title.
   name: string;
   root: WireNode;
+  viewId?: PluginViewId | null;
   onEvent: PluginOnEvent;
 }
 
@@ -22,9 +23,9 @@ export function PluginSlot({
 }: PluginSlotProps): React.JSX.Element {
   return (
     <>
-      {contributions.map(({ pluginId, name, root, onEvent }) => (
+      {contributions.map(({ pluginId, name, root, onEvent, viewId }) => (
         <List.Section key={pluginId} title={name}>
-          <PluginTree root={root} onEvent={onEvent} />
+          <PluginTree key={viewId} root={root} onEvent={onEvent} />
         </List.Section>
       ))}
     </>

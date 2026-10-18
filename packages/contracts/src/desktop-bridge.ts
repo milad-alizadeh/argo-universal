@@ -1,5 +1,8 @@
+import type { DesktopShare } from './desktop-share';
+
 export interface DesktopBridge {
   serverUrl: string | null;
+  share?: (content: DesktopShare) => Promise<void>;
   window: {
     show(): void;
     minimize(): void;

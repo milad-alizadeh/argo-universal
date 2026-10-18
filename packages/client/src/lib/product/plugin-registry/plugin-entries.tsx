@@ -6,7 +6,6 @@ import {
   progressBarProps,
   pillProps,
   listProps,
-  buttonProps,
   layoutProps,
   textForApp,
   groupedItemProps,
@@ -16,7 +15,6 @@ import {
 } from '@repo/contracts/plugins/kit';
 import type { Handler } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
-import { Button } from '#primitives/actions/button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
@@ -26,6 +24,7 @@ import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
+import { pluginControlEntries } from './plugin-control-entries';
 import type { PluginPart } from './plugin-parts';
 import {
   entry,
@@ -38,6 +37,7 @@ import { pluginSettingsEntries } from './plugin-settings-entries';
 
 export const pluginEntries = {
   ...pluginSettingsEntries,
+  ...pluginControlEntries,
   EmptyState: entry(emptyStateProps, (props, context) => (
     <EmptyState {...props} action={context.slots.action} />
   )),
@@ -92,9 +92,6 @@ export const pluginEntries = {
     />
   )),
   Text: entry(textForApp, (props) => <Text {...props} />),
-  Button: entry(buttonProps, ({ onPress, ...props }, context) => (
-    <Button {...props} onPress={handlerOf(onPress, context)} />
-  )),
   Stack: entry(stackProps, ({ direction, ...props }, _context, children) => (
     <Stack direction={direction} {...props}>
       {children}
