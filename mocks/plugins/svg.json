@@ -1,0 +1,145 @@
+{
+  "valid": [
+    {
+      "name": "gradient with local references",
+      "xml": "<svg viewBox=\"0 0 240 96\"><defs><linearGradient id=\"tone\"><stop offset=\"0\" stop-color=\"currentColor\"/><stop offset=\"1\" stop-color=\"currentColor\"/></linearGradient></defs><path d=\"M4 48 H60\" stroke=\"currentColor\"/><rect x=\"60\" y=\"30\" width=\"42\" height=\"36\" fill=\"url(#tone)\"/></svg>"
+    },
+    {
+      "name": "plain text in CDATA",
+      "xml": "<svg viewBox=\"0 0 16 16\"><text x=\"0\" y=\"12\"><![CDATA[plain text]]></text></svg>"
+    }
+  ],
+  "refused": [
+    {
+      "name": "image element",
+      "reason": "element",
+      "xml": "<svg><image href=\"#x\"/></svg>"
+    },
+    {
+      "name": "use element",
+      "reason": "element",
+      "xml": "<svg><use href=\"#x\"/></svg>"
+    },
+    {
+      "name": "pattern element",
+      "reason": "element",
+      "xml": "<svg><pattern id=\"x\"/></svg>"
+    },
+    {
+      "name": "mask element",
+      "reason": "element",
+      "xml": "<svg><mask id=\"x\"/></svg>"
+    },
+    {
+      "name": "filter element",
+      "reason": "element",
+      "xml": "<svg><filter id=\"x\"/></svg>"
+    },
+    {
+      "name": "foreignObject element",
+      "reason": "element",
+      "xml": "<svg><foreignObject/></svg>"
+    },
+    {
+      "name": "anchor element",
+      "reason": "element",
+      "xml": "<svg><a href=\"#x\"/></svg>"
+    },
+    {
+      "name": "style element",
+      "reason": "element",
+      "xml": "<svg><style/></svg>"
+    },
+    {
+      "name": "script element",
+      "reason": "element",
+      "xml": "<svg><script/></svg>"
+    },
+    {
+      "name": "uppercase script element",
+      "reason": "element",
+      "xml": "<svg><SCRIPT/></svg>"
+    },
+    {
+      "name": "script tag in CDATA",
+      "reason": "cdata markup",
+      "xml": "<svg><text><![CDATA[<script>alert(1)</script>]]></text></svg>"
+    },
+    {
+      "name": "script tag in comment",
+      "reason": "comment markup",
+      "xml": "<svg><!-- <script>alert(1)</script> --><circle/></svg>"
+    },
+    {
+      "name": "namespaced image element",
+      "reason": "element",
+      "xml": "<svg><svg:image/></svg>"
+    },
+    {
+      "name": "javascript href",
+      "reason": "reference",
+      "xml": "<svg><linearGradient id=\"g\" href=\"javascript:alert(1)\"/></svg>"
+    },
+    {
+      "name": "data href",
+      "reason": "reference",
+      "xml": "<svg><linearGradient id=\"g\" href=\"data:text/html,x\"/></svg>"
+    },
+    {
+      "name": "http href",
+      "reason": "reference",
+      "xml": "<svg><linearGradient id=\"g\" href=\"https://example.com/x\"/></svg>"
+    },
+    {
+      "name": "external url reference",
+      "reason": "reference",
+      "xml": "<svg><path fill=\"url(https://example.com/x)\" d=\"M0 0\"/></svg>"
+    },
+    {
+      "name": "raw fill colour",
+      "reason": "color",
+      "xml": "<svg><path fill=\"#ff0000\" d=\"M0 0\"/></svg>"
+    },
+    {
+      "name": "raw stroke colour",
+      "reason": "color",
+      "xml": "<svg><path stroke=\"red\" d=\"M0 0\"/></svg>"
+    },
+    {
+      "name": "raw stop colour",
+      "reason": "color",
+      "xml": "<svg><linearGradient id=\"g\"><stop stop-color=\"blue\"/></linearGradient></svg>"
+    },
+    {
+      "name": "style attribute",
+      "reason": "attribute",
+      "xml": "<svg style=\"fill:currentColor\"/>"
+    },
+    {
+      "name": "class attribute",
+      "reason": "attribute",
+      "xml": "<svg class=\"unsafe\"/>"
+    },
+    {
+      "name": "event attribute",
+      "reason": "attribute",
+      "xml": "<svg onload=\"alert(1)\"/>"
+    },
+    {
+      "name": "unknown attribute",
+      "reason": "attribute",
+      "xml": "<svg data-x=\"1\"/>"
+    },
+    { "name": "doctype", "reason": "doctype", "xml": "<!DOCTYPE svg><svg/>" },
+    {
+      "name": "entity declaration",
+      "reason": "entity",
+      "xml": "<!DOCTYPE svg [<!ENTITY x SYSTEM \"file:///etc/passwd\">]><svg>&x;</svg>"
+    },
+    {
+      "name": "non-finite number",
+      "reason": "number",
+      "xml": "<svg viewBox=\"0 0 Infinity 16\"/>"
+    }
+  ]
+}

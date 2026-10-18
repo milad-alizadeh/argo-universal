@@ -111,6 +111,8 @@ export const Table: PluginComponents['Table'];
 
 export const GroupedList: PluginComponents['GroupedList'];
 
+export const Svg: PluginComponents['Svg'];
+
 export const List: PluginComponents['List'] & {
   Section: PluginComponents['List.Section'];
 };

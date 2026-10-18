@@ -48,13 +48,7 @@ import type * as PillKit from '#primitives/status/pill';
 import type * as ProgressBarKit from '#primitives/status/progress-bar';
 import type * as SelectedCheckKit from '#primitives/status/selected-check';
 import type * as SpinnerKit from '#primitives/status/spinner';
-import type * as StatusDotKit from '#primitives/status/status-dot';
 
-/*
- * Every type the primitives' index files export, keyed by its exported name. A props-shaped type goes in
- * `Primitives`, a plain alias in `Aliases`. prop-vocabulary.integration.test.ts fails when an export is in
- * neither, so a new primitive cannot skip the checks in prop-vocabulary.test-d.ts.
- */
 export type Primitives = {
   AvatarProps: AvatarKit.AvatarProps;
   ProgressBarProps: ProgressBarKit.ProgressBarProps;
@@ -129,7 +123,6 @@ export type Primitives = {
   SheetProps: SheetKit.SheetProps;
   SliderProps: SliderKit.SliderProps;
   SpinnerProps: SpinnerKit.SpinnerProps;
-  StatusDotProps: StatusDotKit.StatusDotProps;
   SplitButtonOption: SplitButtonKit.SplitButtonOption<string>;
   SplitButtonProps: SplitButtonKit.SplitButtonProps;
   SplitMenuProps: SplitButtonKit.SplitMenuProps;

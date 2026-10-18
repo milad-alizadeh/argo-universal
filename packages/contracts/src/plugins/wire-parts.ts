@@ -7,6 +7,7 @@ import {
   stackProps,
   textProps,
   textV1,
+  svgProps,
   groupedItemV1,
 } from './kit-props';
 import { listWireParts } from './list-wire-parts';
@@ -39,6 +40,7 @@ const contentParts = [
   'Row',
   'Column',
   'GroupedListItem',
+  'Svg',
   'Pill',
 ] as const;
 
@@ -130,5 +132,14 @@ export const wireParts = {
     slots: {},
     events: {},
     reference: wirePartReferences.Column,
+  },
+  Svg: {
+    props: svgProps,
+    versions: [svgProps],
+    container: false,
+    children: false,
+    slots: {},
+    events: { onPress: z.undefined() },
+    reference: wirePartReferences.Svg,
   },
 } as const satisfies Record<string, WirePartDefinition>;
