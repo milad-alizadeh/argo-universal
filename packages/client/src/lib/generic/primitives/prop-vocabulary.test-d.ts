@@ -21,13 +21,44 @@ type Tone =
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
+type SharedPropNames =
+  | 'title'
+  | 'label'
+  | 'subtitle'
+  | 'tone'
+  | 'color'
+  | 'variant'
+  | 'size'
+  | 'media';
+
+type ArrangementPropNames = 'direction' | 'align' | 'gap';
+
+type DomainNouns =
+  | 'agent'
+  | 'checkout'
+  | 'connection'
+  | 'feed'
+  | 'goal'
+  | 'permission'
+  | 'plan'
+  | 'project'
+  | 'registry'
+  | 'request'
+  | 'session'
+  | 'shell'
+  | 'subagent'
+  | 'turn';
+
 // Names the vocabulary replaced: `variant`, `options`, `accessibilityRole`, `tone` and `selected` say these now.
 type Retired =
   | 'appearance'
   | 'choices'
   | 'semanticRole'
   | 'footerTone'
-  | 'aria-pressed';
+  | 'aria-pressed'
+  | 'supporting'
+  | 'supportingText'
+  | 'caption';
 
 // Every key of every member of a union, where `keyof` alone keeps only the shared ones.
 type Keys<Props> = Props extends unknown ? keyof Props : never;
@@ -52,6 +83,10 @@ type OffVocabularyTones = {
   [Name in keyof Primitives]: Exclude<Values<Primitives[Name], 'tone'>, Tone>;
 };
 
+type DomainPropNames = {
+  [Name in keyof Primitives]: Extract<Keys<Primitives[Name]>, DomainNouns>;
+};
+
 // `role` names typography or an icon's placement, alone or one per size class; ARIA is `accessibilityRole`. React Native's own `role` passes through.
 type OwnRoles = {
   [Name in keyof Primitives]: Exclude<
@@ -65,7 +100,7 @@ type OwnRoles = {
 // A type is either checked as props or set aside as an alias, never both.
 expectTypeOf<Extract<keyof Primitives, keyof Aliases>>().toBeNever();
 
-// appearance, choices, semanticRole, footerTone and aria-pressed are retired.
+// Retired vocabulary cannot return as primitive prop names.
 expectTypeOf<RetiredNames>().toEqualTypeOf<Each<never>>();
 
 // Every primitive sizes on one xs–xl scale.
@@ -73,6 +108,40 @@ expectTypeOf<OffScaleSizes>().toEqualTypeOf<Each<never>>();
 
 // Colour meaning comes from one tone set, and Text and Icon draw all of it.
 expectTypeOf<OffVocabularyTones>().toEqualTypeOf<Each<never>>();
+
+// Shared vocabulary names and list arrangement names stay explicit; domain nouns never become kit props.
+expectTypeOf<SharedPropNames>().toEqualTypeOf<
+  | 'title'
+  | 'label'
+  | 'subtitle'
+  | 'tone'
+  | 'color'
+  | 'variant'
+  | 'size'
+  | 'media'
+>();
+
+expectTypeOf<ArrangementPropNames>().toEqualTypeOf<
+  'direction' | 'align' | 'gap'
+>();
+
+expectTypeOf<Primitives['StackProps']['direction']>().toEqualTypeOf<
+  'row' | 'column'
+>();
+
+expectTypeOf<Keys<Primitives['StackProps']>>().toExtend<
+  ArrangementPropNames | 'children'
+>();
+
+expectTypeOf<Primitives['ComboboxOption']['subtitle']>().toEqualTypeOf<
+  string | undefined
+>();
+
+expectTypeOf<
+  Primitives['PickerProps']['options'][number]['subtitle']
+>().toEqualTypeOf<string | undefined>();
+
+expectTypeOf<DomainPropNames>().toEqualTypeOf<Each<never>>();
 
 expectTypeOf<Aliases['Tone']>().toEqualTypeOf<Tone>();
 

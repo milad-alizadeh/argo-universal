@@ -2,22 +2,28 @@ import { Column, RNHostView } from '@expo/ui';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { IconSlot, IconSpinner } from '#primitives/display/icon';
+import { IconSlot, IconSpinner } from '#primitives/content/icon';
 import { NativeControl } from '#primitives/native/native-control';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
+import { useLeadingRole } from './grouped-list-item-leading-role';
 import {
   type ResolvedItemProps,
   groupedListItemStatus,
 } from './grouped-list-item-props';
 import { NativeRowImage } from './native-row-image';
+import { StackedIcon } from './stacked-row';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
 
 export { NativeRowImage } from './native-row-image';
 
 function NativeRowIcon({ icon }: { icon: IconSymbol }): React.JSX.Element {
-  return <NativeSymbol name={icon} role="row" />;
+  return (
+    <StackedIcon>
+      <NativeSymbol name={icon} role={useLeadingRole()} />
+    </StackedIcon>
+  );
 }
 
 function NativeRowDot(
@@ -96,7 +102,7 @@ export function NativeRowLeading(
 function NativeRowSpinner(): React.JSX.Element {
   return (
     <RNHostView matchContents>
-      <IconSlot role="row" {...hiddenFromAccessibility}>
+      <IconSlot role={useLeadingRole()} {...hiddenFromAccessibility}>
         <IconSpinner iconRole="body" colorClassName="accent-foreground" />
       </IconSlot>
     </RNHostView>

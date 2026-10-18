@@ -1,7 +1,8 @@
 import { RNHostView } from '@expo/ui';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { IconSlot } from '#primitives/display/icon';
+import { IconSlot } from '#primitives/content/icon';
+import { useLeadingRole } from './grouped-list-item-leading-role';
 import type { ResolvedItemProps } from './grouped-list-item-props';
 import { hiddenFromAccessibility } from './status-dot';
 
@@ -21,11 +22,13 @@ export function NativeRowImage(props: Props): ReactElement {
 }
 
 function ImageContent({ image, variant, layout }: Props): ReactElement {
+  const role = useLeadingRole();
+
   if (layout === 'content') return <View>{image}</View>;
 
   return (
     <IconSlot
-      role={variant === 'card' ? 'identity' : 'row'}
+      role={variant === 'card' ? 'identity' : role}
       {...hiddenFromAccessibility}
     >
       {image}

@@ -3,7 +3,7 @@ import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { createElement } from 'react';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { NativeText } from '#primitives/display/native-text';
+import { NativeText } from '#primitives/content/native-text';
 import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { Host, type HostProps } from '#primitives/native/host';
 

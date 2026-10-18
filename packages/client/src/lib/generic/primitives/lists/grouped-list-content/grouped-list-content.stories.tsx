@@ -3,15 +3,15 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { Button } from '#primitives/buttons/button';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { GroupedListContent } from './grouped-list-content';
 
 const meta = {
-  title: 'Design System/Primitives/GroupedListContent',
+  title: 'Design System/Primitives/Lists/GroupedListContent',
   args: { children: null },
   component: GroupedListContent,
   parameters: { screenPreview: true },

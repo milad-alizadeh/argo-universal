@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Spinner } from '#primitives/display/spinner';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
+import { Spinner } from '#primitives/status/spinner';
 import { menuLoadingLabel } from './menu-props';
 import { actionItemTextClassName, choiceRowClassName } from './menu-styles';
 

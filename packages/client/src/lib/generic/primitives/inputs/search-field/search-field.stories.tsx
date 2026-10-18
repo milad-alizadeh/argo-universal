@@ -2,7 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { SearchFieldExample } from './search-field-example.mocks';
 
-const meta = { title: 'Design System/Primitives/SearchField' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Inputs/SearchField',
+} satisfies Meta;
 
 export default meta;
 

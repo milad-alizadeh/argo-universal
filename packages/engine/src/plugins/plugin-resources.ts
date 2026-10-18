@@ -1,5 +1,7 @@
+import type { AssetContent } from './asset-content';
+import { readAssetResponse } from './asset-fetch';
 import type { PluginAccess } from './plugin-access';
-import { fetchCall, type FetchContext } from './plugin-fetch';
+import { fetchCall, fetchResponse, type FetchContext } from './plugin-fetch';
 import type { Hop } from './plugin-fetch-response';
 import { fsCall } from './plugin-file-calls';
 import { argoTimeoutMs } from './plugin-limits';
@@ -32,6 +34,15 @@ export class PluginResources {
     return fsCall(access, call, path);
   }
 
+  public asset(
+    hop: Hop,
+    context: Omit<FetchContext, 'signal'>,
+  ): Promise<AssetContent> {
+    return this.request(async (signal) =>
+      readAssetResponse(await fetchResponse(hop, { ...context, signal })),
+    );
+  }
+
   async process(call: CheckedProcessCall): Promise<PluginValue> {
     this.assertOpen();
 
@@ -42,12 +53,18 @@ export class PluginResources {
     hop: Hop,
     context: Omit<FetchContext, 'signal'>,
   ): Promise<PluginValue> {
+    return this.request((signal) => fetchCall(hop, { ...context, signal }));
+  }
+
+  private async request<T>(
+    run: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
     this.assertOpen();
     const request = new AbortController();
     const done = this.timed(request);
 
     try {
-      return await fetchCall(hop, { ...context, signal: request.signal });
+      return await run(request.signal);
     } finally {
       done();
     }

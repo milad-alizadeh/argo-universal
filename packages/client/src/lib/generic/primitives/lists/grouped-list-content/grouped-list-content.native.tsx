@@ -9,26 +9,24 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { useStackedList } from '#primitives/fields/field-layout';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { usePaneSectionMargin } from '../../../use-size-class/pane-section-margin';
-import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListContentProps } from './grouped-list-content-props';
-import { GroupedListContent as WebGroupedListContent } from './grouped-list-content.tsx';
 
 /*
  * A native list sizes a plain React Native view as it likes, so the row hosts it and takes its height.
- * iOS's Form gives the row a section of its own, with no card behind it and no inset, or, under a title, the section's footer;
- * Android's column takes it as is, inside a section when it has a title.
+ * iOS's Form gives the row a section of its own, with no card behind it and no inset, or, under a title,
+ * the section's footer; a stacked list and Android's column take it as is, inside a section when it has a title.
  */
 export function GroupedListContent(
   props: GroupedListContentProps,
 ): React.JSX.Element {
-  if (useWide()) return <WebGroupedListContent {...props} />;
-
+  const stacked = useStackedList();
   const row = <HostedRow>{props.children}</HostedRow>;
+  const formSection = Platform.OS === 'ios' && !stacked;
 
-  if (Platform.OS === 'ios')
-    return <BareSection title={props.title}>{row}</BareSection>;
+  if (formSection) return <BareSection title={props.title}>{row}</BareSection>;
 
   return <TitledRow title={props.title}>{row}</TitledRow>;
 }

@@ -1,9 +1,10 @@
-import type { CoreHooks } from '@repo/contracts/plugins';
-import {
-  spawnHooks,
-  type SpawnCaller,
-  type Waiting,
-} from './hooks/spawn-hooks';
+import type {
+  PluginAssetRef,
+  PluginAssetSource,
+} from '@repo/contracts/plugins/assets';
+import { resolvePluginAsset } from './asset-resolver';
+import type { OpenedAsset } from './assets';
+import { spawnHooks, type SpawnCaller } from './hooks/spawn-hooks';
 import { answerKept, isKeptRequest, type Kept } from './kept-calls';
 import type { Keychain } from './keychain';
 import {
@@ -19,8 +20,8 @@ import {
   type MachineContext,
   type StateRequest,
 } from './plugin-calls';
-import type { PluginNetwork } from './plugin-fetch';
 import { PluginResources } from './plugin-resources';
+import type { PluginServiceOptions } from './plugin-service-options';
 import type { PluginReply, PluginValue } from './runtime-protocol';
 import type { PluginStorage } from './storage';
 
@@ -30,17 +31,6 @@ type Held = { generation: number; resources: PluginResources };
 const notActivated: Pick<AccessScope, 'grants' | 'codeFolder'> = {
   grants: [],
   codeFolder: null,
-};
-
-// Where the Server logs Plugin calls, which Projects Plugins may read, the Server's network settings, and the `process.spawn` Hooks.
-export type PluginServiceOptions = {
-  log: (line: string) => void;
-  projects: () => Promise<readonly string[]>;
-  network?: PluginNetwork;
-  // Answers `argo.settings.get` from the Plugin's `contributes.settings` values.
-  settings?: (pluginId: string, key: string) => Promise<PluginValue>;
-  hooks?: CoreHooks;
-  waiting?: Waiting;
 };
 
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
@@ -56,7 +46,15 @@ export class PluginServices {
 
   // A first-party Plugin's declared Capabilities, granted as its worker loads with no prompt (ADR-0030).
   activate(pluginId: string, plugin: ActivatedPlugin): void {
+    this.held.get(pluginId)?.resources.release();
+    this.held.delete(pluginId);
     this.activated.set(pluginId, plugin);
+  }
+
+  public openAsset(reference: PluginAssetRef): Promise<OpenedAsset | null> {
+    if (!this.activated.has(reference.pluginId)) return Promise.resolve(null);
+
+    return this.options.assets.open(reference);
   }
 
   async handle(
@@ -100,10 +98,33 @@ export class PluginServices {
       return answerKept(this.kept(), pluginId, request);
     }
 
-    return machineCall(
-      this.context({ pluginId, generation }, resources, request),
-      request,
-    );
+    return this.callMachine({ pluginId, generation }, resources, request);
+  }
+
+  private callMachine(
+    caller: SpawnCaller,
+    resources: PluginResources,
+    request: Exclude<StateRequest, { api: 'storage' | 'secrets' | 'settings' }>,
+  ): Promise<PluginValue> {
+    if (request.api === 'assets')
+      return this.resolveAsset(caller.pluginId, request.source, resources);
+
+    return machineCall(this.context(caller, resources, request), request);
+  }
+
+  private resolveAsset(
+    pluginId: string,
+    source: PluginAssetSource,
+    resources: PluginResources,
+  ): Promise<PluginAssetRef> {
+    return resolvePluginAsset(source, {
+      pluginId,
+      resources,
+      access: this.access(pluginId),
+      network: this.options.network ?? {},
+      assets: this.options.assets,
+      activated: () => this.activated.get(pluginId),
+    });
   }
 
   private context(
@@ -149,10 +170,6 @@ export class PluginServices {
     if (held?.generation === generation) return held.resources;
     supersede(held, generation);
 
-    return this.hold(pluginId, generation);
-  }
-
-  private hold(pluginId: string, generation: number): PluginResources {
     const resources = new PluginResources();
     this.held.set(pluginId, { generation, resources });
 

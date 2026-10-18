@@ -2,7 +2,7 @@ import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { useIconBox } from '../../../symbols/icon-role';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';

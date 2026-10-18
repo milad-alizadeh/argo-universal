@@ -10,6 +10,7 @@ import {
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
+import { SizedToContent } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
@@ -109,10 +110,20 @@ function PopoverPages(props: PresentationProps): ReactElement {
     <Group
       modifiers={[interactiveDismissDisabled(props.dismissible === false)]}
     >
-      <SheetPages {...props} />
+      <SizedToContent.Provider value>
+        <CompactScope>
+          <SheetPages {...props} popoverWidth={popoverWidth} />
+        </CompactScope>
+      </SizedToContent.Provider>
     </Group>
   );
 }
+
+/*
+ * UIKit's default popover width (UIViewController.preferredContentSize): a popover has no width of
+ * its own to fill, and its content is compact, as UIKit gives a popover a compact size class.
+ */
+const popoverWidth = 320;
 
 function presentedChange(props: PresentationProps): (open: boolean) => void {
   return (open) => {

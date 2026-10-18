@@ -3,12 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#plugin-identifier": "./src/plugins/plugin-identifier.ts"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",
     "./plugins/runtime": "./src/plugins/runtime.ts",
     "./plugins/argo-calls": "./src/plugins/argo-calls.ts",
+    "./plugins/assets": "./src/plugins/assets.ts",
     "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",
     "./plugins/wire-limits": "./src/plugins/wire-limits.ts",
     "./plugins/wire": "./src/plugins/wire.ts",

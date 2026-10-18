@@ -38,6 +38,39 @@ const helloTree = (taps: number): WireNode =>
 // What `plugins/examples/hello` draws: the Engine journey expects the reconciler to produce it, and the registry stories render it.
 export const helloRoot: WireNode = helloTree(0);
 
+// Equivalent layouts exercise the new Stack vocabulary and its legacy aliases.
+export const stackRowRoot: WireNode = withChildren(
+  node('Stack', '0', { direction: 'row', gap: 2 }),
+  [
+    node('Text', '0', { label: 'First' }),
+    node('Text', '1', { label: 'Second' }),
+  ],
+);
+
+export const rowAliasRoot: WireNode = withChildren(
+  node('Row', '0', { gap: 2 }),
+  [
+    node('Text', '0', { label: 'First' }),
+    node('Text', '1', { label: 'Second' }),
+  ],
+);
+
+export const stackColumnRoot: WireNode = withChildren(
+  node('Stack', '0', { direction: 'column', gap: 2 }),
+  [
+    node('Text', '0', { label: 'First' }),
+    node('Text', '1', { label: 'Second' }),
+  ],
+);
+
+export const columnAliasRoot: WireNode = withChildren(
+  node('Column', '0', { gap: 2 }),
+  [
+    node('Text', '0', { label: 'First' }),
+    node('Text', '1', { label: 'Second' }),
+  ],
+);
+
 export const helloSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,

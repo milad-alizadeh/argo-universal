@@ -1,17 +1,19 @@
 import { writeLog } from '@repo/machine-log';
+import { PluginAssets } from './assets';
 import { macKeychain, type Keychain } from './keychain';
-import { PluginServices, type PluginServiceOptions } from './plugin-services';
+import type { PluginServiceOptions } from './plugin-service-options';
+import { PluginServices } from './plugin-services';
 import { PluginRuntime } from './runtime';
 import { PluginStorage } from './storage';
 
 export type PluginRuntimeOptions = Omit<
   PluginServiceOptions,
-  'log' | 'waiting'
+  'log' | 'waiting' | 'assets'
 > & {
   keychain?: Keychain;
 };
 
-type ServiceOptions = Omit<PluginServiceOptions, 'log'> & {
+type ServiceOptions = Omit<PluginServiceOptions, 'log' | 'assets'> & {
   keychain?: Keychain;
 };
 
@@ -39,4 +41,8 @@ const createServices = (
   log: (line: string) => void,
   { keychain = macKeychain, ...machine }: ServiceOptions,
 ): PluginServices =>
-  new PluginServices(new PluginStorage(home), keychain, { log, ...machine });
+  new PluginServices(new PluginStorage(home), keychain, {
+    log,
+    assets: new PluginAssets(home),
+    ...machine,
+  });

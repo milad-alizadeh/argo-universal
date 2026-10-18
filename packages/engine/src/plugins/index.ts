@@ -10,6 +10,8 @@ export { PluginSettings } from './plugin-settings';
 
 export type { PluginNetwork } from './plugin-fetch';
 
+export type { OpenedAsset } from './assets';
+
 export { PluginRuntime } from './runtime';
 
 export { pluginManifest } from './located-plugins';

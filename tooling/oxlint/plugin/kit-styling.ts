@@ -13,7 +13,7 @@ type Specifier = ESTree.ImportDeclaration['specifiers'][number];
 const isStylePropName = (name: string): boolean =>
   name === 'style' || name === 'className' || name.endsWith('ClassName');
 
-// A relative path that lands in the primitives folder, such as `../../lib/generic/primitives/buttons/button`.
+// A relative path that lands in the primitives folder, such as `../../lib/generic/primitives/actions/button`.
 const isRelativeKitPath = (source: string, filename: string): boolean =>
   source.startsWith('.') &&
   resolve(dirname(filename), source)

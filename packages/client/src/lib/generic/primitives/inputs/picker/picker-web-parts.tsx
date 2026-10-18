@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import type { FieldDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
 import type { PickerOption, PickerProps } from './picker-props';

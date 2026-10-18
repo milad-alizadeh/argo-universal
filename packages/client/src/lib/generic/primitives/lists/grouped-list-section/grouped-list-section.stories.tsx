@@ -8,7 +8,7 @@ import { GroupedListSection } from './grouped-list-section';
 const onPress = action('open list item');
 
 const meta = {
-  title: 'Design System/Primitives/GroupedListSection',
+  title: 'Design System/Primitives/Lists/GroupedListSection',
   args: { children: null },
   component: GroupedListSection,
   parameters: { screenPreview: true },

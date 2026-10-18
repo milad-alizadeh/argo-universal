@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
-import { contentActionClass } from '#primitives/buttons/button';
-import { Text } from '#primitives/display/text';
-import { Pressable } from '#primitives/pressable';
+import { contentActionClass } from '#primitives/actions/button';
+import { Pressable } from '#primitives/actions/pressable';
+import { Text } from '#primitives/content/text';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { Menu } from './menu';

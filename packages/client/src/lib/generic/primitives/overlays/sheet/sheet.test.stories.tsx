@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
-import { Button } from '#primitives/buttons/button';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import { Sheet } from './sheet';
@@ -29,7 +29,10 @@ function pagesAt(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));
       await userEvent.click(await body.findByRole('button', { name: /Fruit/ }));
-      await expect(await body.findByRole('heading', fruitPage)).toBeVisible();
+      // A wide window's popover is still fading in from transparent when the page is pushed.
+      await waitFor(() =>
+        expect(body.getByRole('heading', fruitPage)).toBeVisible(),
+      );
       await userEvent.click(
         body.getByRole('button', { name: 'Back to Settings' }),
       );

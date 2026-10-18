@@ -2,8 +2,8 @@ import * as RadixContextMenu from '@radix-ui/react-context-menu';
 import { type ComponentType, type ReactElement, useRef } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon';
-import { Text, TextClassContext } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text, TextClassContext } from '#primitives/content/text';
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
 import {
   actionItemClassName,

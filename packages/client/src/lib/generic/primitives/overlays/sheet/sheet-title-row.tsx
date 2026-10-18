@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Text } from '#primitives/content/text';
 
 interface TitleRowProps {
   title?: string;

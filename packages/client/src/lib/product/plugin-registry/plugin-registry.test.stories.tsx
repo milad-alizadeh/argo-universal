@@ -4,6 +4,10 @@ import {
   helloTapEventId,
   invalidPropsRoot,
   unknownNodesRoot,
+  stackRowRoot,
+  rowAliasRoot,
+  stackColumnRoot,
+  columnAliasRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -11,6 +15,14 @@ import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
+
+function rectAt(rectangles: DOMRect[], index: number): DOMRect {
+  const rectangle = rectangles[index];
+
+  if (!rectangle) throw new Error(`Missing rectangle at ${index}`);
+
+  return rectangle;
+}
 
 const meta = { title: 'Tests/Plugin registry' } satisfies Meta;
 
@@ -65,5 +77,33 @@ export const RefusedPage: Story = {
       canvas.getByText('This Plugin page could not be displayed.'),
     ).toBeVisible();
     await expect(canvas.queryByRole('button')).toBeNull();
+  },
+};
+
+export const StackAliases: Story = {
+  render: () => (
+    <>
+      <PluginTree root={stackRowRoot} onEvent={onEvent} />
+      <PluginTree root={rowAliasRoot} onEvent={onEvent} />
+      <PluginTree root={stackColumnRoot} onEvent={onEvent} />
+      <PluginTree root={columnAliasRoot} onEvent={onEvent} />
+    </>
+  ),
+  play: async ({ canvas }) => {
+    const first = canvas
+      .getAllByText('First')
+      .map((element) => element.getBoundingClientRect());
+
+    const second = canvas
+      .getAllByText('Second')
+      .map((element) => element.getBoundingClientRect());
+
+    await expect(first).toHaveLength(4);
+    await expect(second).toHaveLength(4);
+    // Stack and Row put children in the same horizontal order; Stack and Column do the same vertically.
+    await expect(rectAt(first, 0).left).toBeLessThan(rectAt(second, 0).left);
+    await expect(rectAt(first, 1).left).toBeLessThan(rectAt(second, 1).left);
+    await expect(rectAt(first, 2).top).toBeLessThan(rectAt(second, 2).top);
+    await expect(rectAt(first, 3).top).toBeLessThan(rectAt(second, 3).top);
   },
 };

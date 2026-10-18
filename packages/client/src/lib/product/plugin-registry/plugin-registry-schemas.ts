@@ -1,6 +1,7 @@
 import { Handler } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
-import { isStackGap, stackAlignments } from '#primitives/display/stack';
+import { textRoles } from '#primitives/content/text';
+import { isStackGap, stackAlignments } from '#primitives/layout/stack';
 
 const tone = z.enum([
   'neutral',
@@ -15,7 +16,7 @@ const tone = z.enum([
 
 export const textProps = z.strictObject({
   label: z.string(),
-  variant: z.enum(['title', 'heading', 'body', 'secondary']).optional(),
+  variant: z.enum(textRoles).optional(),
   tone: tone.optional(),
 });
 
@@ -40,4 +41,8 @@ export const groupedItemProps = z.strictObject({
   value: z.string().optional(),
   disabled: z.boolean().optional(),
   onPress: Handler.optional(),
+});
+
+export const stackProps = layoutProps.extend({
+  direction: z.enum(['row', 'column']),
 });

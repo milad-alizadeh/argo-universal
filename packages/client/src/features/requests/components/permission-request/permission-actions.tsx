@@ -6,7 +6,7 @@ import {
   SplitButton,
   type SplitButtonOption,
   type SplitButtonProps,
-} from '#primitives/buttons/split-button';
+} from '#primitives/actions/split-button';
 import { RequestAction } from '../request-card/request-card';
 import type { PermissionChoices } from './permission-choices';
 

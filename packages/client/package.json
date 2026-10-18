@@ -9,7 +9,7 @@
     "./tabler-symbol-paths.json": "./src/lib/generic/symbols/tabler-symbol-paths.json",
     "./storybook": "./src/preview-config.ts",
     "./native-theme": "./src/lib/generic/native-theme.ts",
-    "./text": "./src/lib/generic/primitives/display/text/index.ts",
+    "./text": "./src/lib/generic/primitives/content/text/index.ts",
     "./size-class": "./src/size-class.ts"
   },
   "imports": {

@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { ListTitle } from '#lib/product/list-title';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
-import { IconButton } from '#primitives/buttons/icon-button';
+import { IconButton } from '#primitives/actions/icon-button';
 import { SearchField } from '#primitives/inputs/search-field';
 import type { SessionsViewState } from '../stores/sessions-view-state';
 import { SessionsViewMenu } from './sessions-view-menu/sessions-view-menu';

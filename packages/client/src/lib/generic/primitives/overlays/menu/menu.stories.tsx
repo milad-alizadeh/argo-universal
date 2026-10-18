@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Menu, type MenuAction } from './menu';
 import { ViewOptionsMenu } from './menu-groups.mocks';
@@ -87,7 +87,7 @@ function rangeActions(
   }));
 }
 
-const meta = { title: 'Design System/Primitives/Menu' } satisfies Meta;
+const meta = { title: 'Design System/Primitives/Overlays/Menu' } satisfies Meta;
 
 export default meta;
 

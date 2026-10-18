@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Pressable, Text } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon';
+import { Icon } from '#primitives/content/icon';
 import { useDialogState } from './dialog-context';
 import { DialogFrame } from './dialog-parts';
 import type { DialogContentProps as ContentProps } from './dialog-props';

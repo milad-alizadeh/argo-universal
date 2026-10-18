@@ -3,7 +3,9 @@ import { action } from 'storybook/actions';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { ActionToastExample, ErrorToastExample } from './toast-example.mocks';
 
-const meta = { title: 'Design System/Primitives/Toast' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Overlays/Toast',
+} satisfies Meta;
 
 export default meta;
 

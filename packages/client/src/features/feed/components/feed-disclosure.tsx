@@ -2,13 +2,13 @@ import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
+import { Text } from '#primitives/content/text';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleHeader,
   useCollapsibleHovered,
-} from '#primitives/display/collapsible';
-import { Text } from '#primitives/display/text';
+} from '#primitives/layout/collapsible';
 import {
   FeedDisclosureLabel,
   type FeedDisclosureLabelProps,

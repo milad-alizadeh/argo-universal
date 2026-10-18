@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Text } from '#primitives/content/text';
 import { SearchField } from './search-field';
 
 // A page title row with one other action, as Agents draws it, for SearchField stories.

@@ -1,8 +1,8 @@
 import type * as React from 'react';
-import { Badge } from '#primitives/display/badge';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Badge } from '#primitives/status/badge';
 import { GroupedListItem } from './grouped-list-item';
 import { onPress } from './grouped-list-item-press.mocks';
 

@@ -3,7 +3,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleHeader,
-} from '#primitives/display/collapsible';
+} from '#primitives/layout/collapsible';
 import type { FileDiff } from '../../view/file-diff';
 import { FileEdit } from './file-edit';
 

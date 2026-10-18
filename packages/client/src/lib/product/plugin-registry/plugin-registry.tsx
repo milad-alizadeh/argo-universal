@@ -3,9 +3,9 @@ import type { Handler } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { z } from 'zod';
-import { Button } from '#primitives/buttons/button';
-import { Stack } from '#primitives/display/stack';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
+import { Stack } from '#primitives/layout/stack';
 import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { runAction } from './plugin-registry-actions';
 import {
@@ -13,6 +13,7 @@ import {
   layoutProps,
   textProps,
   groupedItemProps,
+  stackProps,
 } from './plugin-registry-schemas';
 
 export interface PluginTreeProps {
@@ -89,6 +90,11 @@ const registry = new Map(
     )),
     Button: entry(buttonProps, ({ onPress, ...props }, context) => (
       <Button {...props} onPress={handlerOf(onPress, context)} />
+    )),
+    Stack: entry(stackProps, ({ direction, ...props }, _context, children) => (
+      <Stack direction={direction} {...props}>
+        {children}
+      </Stack>
     )),
     Row: entry(layoutProps, (props, _context, children) => (
       <Stack direction="row" {...props}>

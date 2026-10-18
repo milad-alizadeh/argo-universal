@@ -7,7 +7,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { codeFace } from '#primitives/display/native-text';
+import { codeFace } from '#primitives/content/native-text';
 import type { FieldProps } from '#primitives/fields/field';
 import { errorMessage } from '#primitives/fields/field-errors';
 import { useMaterialPalette } from '#primitives/native/material-palette';

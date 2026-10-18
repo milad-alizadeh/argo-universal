@@ -1,13 +1,15 @@
 import type * as React from 'react';
-import { useWide } from '../../../use-wide/use-wide';
+import { StackedCell } from '#primitives/lists/grouped-list-item';
 import { PhoneField } from './text-input-phone-field';
 import type { PhoneFieldProps } from './text-input-props';
-import { RowTextInput as WideRowTextInput } from './text-input-row.tsx';
 
+// The native field in its list row at every size class; in a stacked list it draws the row's cell.
 export function RowTextInput(props: PhoneFieldProps): React.JSX.Element {
-  if (useWide()) return <WideRowTextInput {...props} />;
-
-  return <PhoneField {...props} />;
+  return (
+    <StackedCell>
+      <PhoneField {...props} />
+    </StackedCell>
+  );
 }
 
 RowTextInput satisfies React.ComponentType<PhoneFieldProps>;

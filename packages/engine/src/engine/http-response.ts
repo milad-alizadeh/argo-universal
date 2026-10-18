@@ -2,6 +2,7 @@ import type { ServerResponse } from 'node:http';
 
 export const httpStatus = {
   ok: 200,
+  notModified: 304,
   forbidden: 403,
   notFound: 404,
   methodNotAllowed: 405,
@@ -29,3 +30,13 @@ export const answerError = (
     }),
   );
 };
+
+export function reportHttpFailure(
+  response: ServerResponse,
+  cause: unknown,
+): void {
+  console.error(`engine: ${String(cause)}`);
+
+  if (response.headersSent) response.destroy();
+  else answerError(response, httpStatus.internalError, 'Internal error');
+}

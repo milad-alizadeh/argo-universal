@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon, IconSlot, IconSpinner } from '#primitives/display/icon';
-import { useOverlayList } from '#primitives/fields/field-layout';
+import { Icon, IconSlot, IconSpinner } from '#primitives/content/icon';
 import type { IconRole } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';
+import { useLeadingRole } from './grouped-list-item-leading-role';
 import type { ResolvedItemProps } from './grouped-list-item-props';
 
 type LeadingProps = Pick<
@@ -65,11 +65,6 @@ const leadingSlotProps = (
   className:
     variant === 'card' ? 'relative web:top-px wide:-top-0.5' : undefined,
 });
-
-// A popover's compact row leads with a Body-sized slot, as Paper's menu rows do; a list row keeps the row icon's.
-function useLeadingRole(): IconRole {
-  return useOverlayList() ? 'body' : 'row';
-}
 
 function RowIcon({
   icon,

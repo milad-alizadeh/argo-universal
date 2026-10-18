@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { PlanDocument } from '#lib/product/plan-document';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Pressable } from '#primitives/actions/pressable';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import {
   type SheetNavigation,
   useOptionalSheet,
 } from '#primitives/overlays/sheet';
-import { Pressable } from '#primitives/pressable';
 import type { PlanView } from './use-plan-view';
 
 interface PlanHeaderProps {

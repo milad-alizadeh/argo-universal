@@ -8,7 +8,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { createElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
-import { NativeText } from '#primitives/display/native-text';
+import { NativeText } from '#primitives/content/native-text';
 import type { FieldDescription } from '#primitives/fields/field-description';
 import { ChoiceField, ChoiceHost } from '#primitives/native/choice-field';
 import { NativeButton } from '#primitives/native/native-button';

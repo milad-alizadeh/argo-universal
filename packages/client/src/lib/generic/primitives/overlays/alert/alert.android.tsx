@@ -8,7 +8,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { semantics, size } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { NativeText } from '#primitives/display/native-text';
+import { NativeText } from '#primitives/content/native-text';
 import { Host } from '#primitives/native/host';
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import {

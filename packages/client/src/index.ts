@@ -61,7 +61,7 @@ export type { SizeClass } from './lib/generic/use-size-class/size-class';
 
 export { Placeholder } from '#lib/product/placeholder';
 
-export { Text } from '#primitives/display/text';
+export { Text } from '#primitives/content/text';
 
 export { Toaster } from '#primitives/overlays/toast';
 

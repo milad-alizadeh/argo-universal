@@ -33,7 +33,7 @@ function rowProps<Value extends string>({
   return {
     label: option.label,
     icon: option.icon,
-    subtitle: supporting(option),
+    subtitle: subtitle(option),
     disabled: option.disabled || disabled,
     disclosure: false,
     accessibilityLabel: option.accessibilityLabel ?? option.label,
@@ -41,10 +41,10 @@ function rowProps<Value extends string>({
   };
 }
 
-function supporting(
+function subtitle(
   option: ComboboxOption<string>,
 ): GroupedListItemProps['subtitle'] {
-  return option.supporting
-    ? { text: option.supporting, code: option.code }
+  return option.subtitle
+    ? { text: option.subtitle, code: option.code }
     : undefined;
 }

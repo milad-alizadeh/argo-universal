@@ -4,7 +4,12 @@ import { View, useWindowDimensions } from 'react-native';
 import { SheetBody } from './sheet-body';
 import type { SheetProps } from './sheet-props';
 
-type ContentProps = SheetProps & { fill: boolean; children: ReactNode };
+type ContentProps = SheetProps & {
+  fill: boolean;
+  // A popover's page width; a fitted sheet's page takes the screen's.
+  width?: number;
+  children: ReactNode;
+};
 
 /*
  * React Native content in the SwiftUI sheet, in RNHostView's two documented modes: matching its
@@ -12,7 +17,7 @@ type ContentProps = SheetProps & { fill: boolean; children: ReactNode };
  * page under detents. A fitted page has no width to measure against, so it takes the screen's.
  */
 export function SheetContent(props: ContentProps): ReactElement {
-  const { width } = useWindowDimensions();
+  const width = usePageWidth(props.width);
 
   return (
     <RNHostView matchContents={!props.fill}>
@@ -24,4 +29,10 @@ export function SheetContent(props: ContentProps): ReactElement {
       </View>
     </RNHostView>
   );
+}
+
+function usePageWidth(popover: number | undefined): number {
+  const screen = useWindowDimensions().width;
+
+  return popover ?? screen;
 }

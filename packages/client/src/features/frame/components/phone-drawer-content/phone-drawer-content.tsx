@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   DrawerItem,
   type DrawerItemProps,

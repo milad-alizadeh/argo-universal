@@ -2,7 +2,7 @@ import { type RowProps, Row } from '@expo/ui';
 import { fixedSize } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { NativeText } from '#primitives/display/native-text';
+import { NativeText } from '#primitives/content/native-text';
 import {
   rowValueAccessibility,
   type RowTextAccessibilityProps,

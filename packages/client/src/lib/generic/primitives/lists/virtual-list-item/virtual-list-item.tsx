@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
 import type {
   VirtualListItemProps,

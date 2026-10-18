@@ -1,12 +1,16 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { useWideSidebarList } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';
 import { GroupedListItemDetail } from './grouped-list-item-detail';
 import { Disclosure } from './grouped-list-item-disclosure';
-import { rowLane } from './grouped-list-item-lane';
+import {
+  type RowLanePlace,
+  rowLane,
+  useRowLanePlace,
+} from './grouped-list-item-lane';
 import { GroupedListItemLeading } from './grouped-list-item-leading';
 import {
   type ResolvedItemProps,
@@ -37,7 +41,7 @@ function GroupedListItemContent(props: ResolvedItemProps): React.JSX.Element {
 
   // The row's name already carries its text; only an accessory, such as a picker, stays reachable.
   return (
-    <View className={contentClasses(props, sidebar)}>
+    <View className={contentClasses(props, useRowLanePlace())}>
       <GroupedListItemLeadingSlot {...props} emphasis={emphasis} />
       <GroupedListItemTitle {...props} />
       <GroupedListItemTrailing {...props} emphasis={emphasis} />
@@ -45,10 +49,10 @@ function GroupedListItemContent(props: ResolvedItemProps): React.JSX.Element {
   );
 }
 
-function contentClasses(props: ResolvedItemProps, sidebar: boolean): string {
+function contentClasses(props: ResolvedItemProps, place: RowLanePlace): string {
   return cn(
     'flex-1 flex-row items-center',
-    rowLane(props, sidebar).gap,
+    rowLane(props, place).gap,
     props.variant === 'card' && 'items-start',
     props.disabled && 'opacity-65',
   );
@@ -98,19 +102,26 @@ function GroupedListItemSubtitle({
 
 type TrailingProps = ResolvedItemProps & { emphasis: string };
 
+// A grouped row's chevron sits 14 after the value, as iOS's does; its box's own air makes up 6 of it.
 function GroupedListItemTrailing(props: TrailingProps): React.JSX.Element {
-  const sidebar = useWideSidebarList();
+  const place = useRowLanePlace();
 
   return (
-    <View className="max-w-11/20 flex-row items-center gap-2 wide:gap-3">
+    <View className={trailingClasses(place)}>
       <RowSelection {...props} />
       <StatusDot status={groupedListItemStatus(props)} />
       <GroupedListItemAccessory>{props.accessory}</GroupedListItemAccessory>
       {props.control}
-      <Disclosure visible={hasDisclosure(props) && !sidebar} />
+      <Disclosure visible={hasDisclosure(props)} place={place} />
     </View>
   );
 }
+
+const trailingClasses = (place: RowLanePlace): string =>
+  cn(
+    'max-w-11/20 flex-row items-center gap-2',
+    place !== 'grouped' && 'wide:gap-3',
+  );
 
 function RowSelection(props: TrailingProps): React.JSX.Element | null {
   const sidebar = useWideSidebarList();

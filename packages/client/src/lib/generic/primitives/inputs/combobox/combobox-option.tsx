@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import type { ComboboxContentProps, ComboboxOption } from './combobox-props';
 
@@ -90,9 +90,9 @@ function Supporting({
 }: {
   option: ComboboxOption<string>;
 }): ReactElement | null {
-  return option.supporting ? (
+  return option.subtitle ? (
     <Text role={option.code ? 'secondary-code' : 'secondary'} numberOfLines={1}>
-      {option.supporting}
+      {option.subtitle}
     </Text>
   ) : null;
 }

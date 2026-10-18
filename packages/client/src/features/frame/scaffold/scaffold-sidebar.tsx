@@ -32,15 +32,26 @@ function SidebarGlass({
   );
 }
 
+// A tablet's rail starts its 48 first tile 16 below the top; the header drops by the same 16 and pads its top by 4, so its 40 content box centres on the tile.
+function SidebarListHeader({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
+  return (
+    <View className="h-frame-control flex-row items-center gap-1 pl-6 pr-3.5 native:mt-4 native:pt-1">
+      {children}
+    </View>
+  );
+}
+
 function SidebarListContent({
   listHeader,
   list,
 }: ScaffoldProps): React.JSX.Element {
   return (
     <>
-      <View className="h-frame-control flex-row items-center gap-1 pl-6 pr-3.5">
-        {listHeader}
-      </View>
+      <SidebarListHeader>{listHeader}</SidebarListHeader>
       <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
         <ScrollColumnContext value={listColumn}>{list}</ScrollColumnContext>
       </View>

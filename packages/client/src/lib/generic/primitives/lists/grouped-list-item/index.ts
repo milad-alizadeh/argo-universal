@@ -14,3 +14,7 @@ export { type GroupedListItemProps } from './grouped-list-item-props';
 export { rowClasses } from './grouped-list-item-styles';
 
 export { StandaloneGroupedListItem } from './standalone-grouped-list-item';
+
+export { StackedCell, StackedIcon } from './stacked-row';
+
+export { StackedGutter, useStackedGutter } from './stacked-gutter';

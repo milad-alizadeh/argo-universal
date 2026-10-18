@@ -2,7 +2,7 @@ import * as WebPopover from '@radix-ui/react-popover';
 import * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { TextClassContext } from '#primitives/display/text';
+import { TextClassContext } from '#primitives/content/text';
 import { useOpenState } from '#primitives/overlays/open-state';
 import { PopoverContext, usePopoverState } from './popover-context';
 import { HoverProvider, PopoverHover } from './popover-hover';

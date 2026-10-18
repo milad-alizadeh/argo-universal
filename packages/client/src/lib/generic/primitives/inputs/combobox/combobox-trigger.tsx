@@ -1,7 +1,7 @@
 import { createElement, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import type { FieldDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
 import type { ComboboxProps } from './combobox-props';

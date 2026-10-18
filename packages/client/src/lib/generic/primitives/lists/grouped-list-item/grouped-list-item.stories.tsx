@@ -5,7 +5,7 @@ import { GroupedRows } from './grouped-list-item-grouped-rows.mocks';
 import { SidebarRows } from './grouped-list-item-sidebar-rows.mocks';
 
 const meta = {
-  title: 'Design System/Primitives/GroupedListItem',
+  title: 'Design System/Primitives/Lists/GroupedListItem',
   args: { label: 'Name' },
   component: GroupedListItem,
   parameters: { screenPreview: true },

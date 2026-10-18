@@ -10,12 +10,12 @@ const changed = fn<(value: string) => void>();
 const searchLabel = 'Search Project';
 
 const options = [
-  { value: 'argo', label: 'Argo', supporting: '~/Developer/argo' },
-  { value: 'paper', label: 'Paper', supporting: '~/Developer/design-sync' },
+  { value: 'argo', label: 'Argo', subtitle: '~/Developer/argo' },
+  { value: 'paper', label: 'Paper', subtitle: '~/Developer/design-sync' },
   {
     value: 'locked',
     label: 'Locked',
-    supporting: 'design-sync',
+    subtitle: 'design-sync',
     disabled: true,
   },
 ];

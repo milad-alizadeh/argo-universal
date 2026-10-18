@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Image, Platform, View } from 'react-native';
 import { SvgUri, SvgXml, type XmlProps } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
-import { Icon } from '#primitives/display/icon';
+import { Icon } from '#primitives/content/icon';
 import {
   type IconRoleValue,
   useIconBox,

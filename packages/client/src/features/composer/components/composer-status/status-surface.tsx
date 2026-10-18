@@ -1,5 +1,5 @@
 import type { ReactNode, JSX } from 'react';
-import { LiquidGlass } from '#primitives/display/liquid-glass';
+import { LiquidGlass } from '#primitives/content/liquid-glass';
 
 export const mutedTextClassName = 'text-muted-foreground';
 

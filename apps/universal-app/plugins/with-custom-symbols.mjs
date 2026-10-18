@@ -103,6 +103,21 @@ function writeSymbolSet(catalog, name, symbol) {
   );
 }
 
+/*
+ * Tabler icons only the web and desktop draw: a grouped row's disclosure, where iOS draws the system
+ * chevron.forward (ADR-0019), so the catalog leaves them out.
+ */
+const webOnlyTablerSymbols = new Set(['custom.chevron-right']);
+
+const appleSymbols = () => ({
+  ...customSymbols,
+  ...Object.fromEntries(
+    Object.entries(tablerSymbols).filter(
+      ([name]) => !webOnlyTablerSymbols.has(name),
+    ),
+  ),
+});
+
 function writeSymbolSets(modConfig) {
   const { platformProjectRoot, projectName } = modConfig.modRequest;
 
@@ -112,9 +127,7 @@ function writeSymbolSets(modConfig) {
     'Images.xcassets',
   );
 
-  const symbols = { ...customSymbols, ...tablerSymbols };
-
-  for (const [name, symbol] of Object.entries(symbols)) {
+  for (const [name, symbol] of Object.entries(appleSymbols())) {
     writeSymbolSet(catalog, name, symbol);
   }
 

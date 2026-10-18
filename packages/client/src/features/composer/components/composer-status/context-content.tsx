@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import type { ComposerContext } from '../../utils/status';
 import { compactNumber, contextZone } from '../../utils/status';
 import { ContextZones } from './context-zones';

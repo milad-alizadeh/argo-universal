@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { type ComponentProps, type RefObject, useRef } from 'react';
 import { TextInput, View } from 'react-native';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Icon } from '#primitives/display/icon';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Icon } from '#primitives/content/icon';
 import type { SearchQueryProps } from './search-field-props';
 
 // Foundations: SearchField / On content, shared by medium and wide list toolbars; it narrows to fit beside other controls.

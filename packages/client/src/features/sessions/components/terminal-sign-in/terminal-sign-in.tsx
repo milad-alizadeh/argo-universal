@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { AgentLoginTerminal } from '#features/agents';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Text } from '#primitives/content/text';
 import {
   Sheet,
   type SheetDetent,

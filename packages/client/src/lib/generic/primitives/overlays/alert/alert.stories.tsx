@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Alert } from './alert';
 import type { AlertProps } from './alert-props';
@@ -80,7 +80,9 @@ function AlertPreview(props: AlertPreviewProps): React.JSX.Element {
   );
 }
 
-const meta = { title: 'Design System/Primitives/Alert' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Overlays/Alert',
+} satisfies Meta;
 
 export default meta;
 

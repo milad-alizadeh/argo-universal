@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { RadioMark } from '#primitives/inputs/checkbox';
+import { SelectedCheck } from '#primitives/status/selected-check';
 import type { ResolvedItemProps } from './grouped-list-item-props';
 
 type Choice = Pick<

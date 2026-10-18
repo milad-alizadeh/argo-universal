@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { TextClassContext } from '#primitives/display/text';
+import { TextClassContext } from '#primitives/content/text';
 import { triggerChild, useOpenState } from '#primitives/overlays/open-state';
 import { Sheet } from '#primitives/overlays/sheet';
 import { PopoverContext, usePopoverState } from './popover-context';
