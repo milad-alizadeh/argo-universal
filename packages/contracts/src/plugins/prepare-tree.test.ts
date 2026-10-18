@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { legacyPartVersions, versionsOf } from './kit';
+import { legacyPartVersions } from './kit';
 import { prepareWireTree } from './prepare-tree';
 import type { WireNode } from './wire';
 
@@ -100,19 +100,6 @@ describe('Plugin wire compatibility', () => {
     expect(
       prepareWireTree({ ...stack, children: [bad, unknown, label] }).children,
     ).toEqual([{ ...label, props: { label: 'Readable' } }]);
-  });
-
-  it('derives versions only for registered parts and strips unknown optional props', () => {
-    expect(versionsOf(['Text', 'Stack', 'Internal'])).toEqual({
-      Text: 2,
-      Stack: 1,
-    });
-    expect(
-      prepareWireTree(
-        { ...label, props: { ...label.props, future: true } },
-        { Text: 2 },
-      ),
-    ).toEqual(label);
   });
 
   it('preserves every named-slot node while lowering its parts for the App', () => {

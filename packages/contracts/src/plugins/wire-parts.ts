@@ -7,6 +7,7 @@ import {
   stackProps,
   textProps,
   textV1,
+  groupedItemV1,
 } from './kit-props';
 import { listWireParts } from './list-wire-parts';
 import {
@@ -38,6 +39,7 @@ const contentParts = [
   'Row',
   'Column',
   'GroupedListItem',
+  'Pill',
 ] as const;
 
 // Append a schema when a part changes; old versions keep their original props.
@@ -45,7 +47,7 @@ export const wireParts = {
   ...listWireParts,
   GroupedListItem: {
     props: groupedItemProps,
-    versions: [groupedItemProps],
+    versions: [groupedItemV1],
     container: true,
     children: false,
     slots: {

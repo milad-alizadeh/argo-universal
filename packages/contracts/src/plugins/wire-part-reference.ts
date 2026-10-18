@@ -63,9 +63,20 @@ export const wirePartReferences = {
         'A row with `onPress` exposes link semantics. It reads the label and optional value and reports disabled state.',
     },
     appearance:
-      'The row uses Argo semantic surfaces and text tokens, which adapt to the active color scheme. This schema has no arbitrary color or Image prop.',
+      'The legacy row uses Argo semantic surfaces and text tokens, which adapt to the active color scheme. Use ListItem for Argo-drawn status and count badges.',
     deprecated:
       'Use `ListItem`; this legacy name remains accepted while first-party Plugins migrate.',
+  },
+  Pill: {
+    summary: 'Static short text with a semantic tone or tracker color.',
+    accessibility: {
+      label: 'The required `text` is the spoken name.',
+      keyboard: 'Pill is not focusable and adds no keyboard shortcut.',
+      voiceOver: 'Reads the required `text`.',
+      talkBack: 'Reads the required `text`.',
+    },
+    appearance:
+      '`tone` uses semantic colors that adapt to light and dark appearance. `color` is for tracker labels and is preserved as supplied.',
   },
   VirtualList: {
     ...listContainer(

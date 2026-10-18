@@ -4,6 +4,7 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext, toneClass } from '#primitives/content/text';
+import { StatusDot } from '#primitives/status/status-dot';
 import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
 import { type ResolvedIcon, resolveIcon } from '../../../symbols/icon-symbol';
@@ -41,6 +42,18 @@ function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
 }
 
 export function Icon(props: IconProps): React.JSX.Element {
+  const glyph = <IconGlyph {...props} />;
+
+  if (!props.status) return glyph;
+
+  return (
+    <IconWithStatus {...props} status={props.status}>
+      {glyph}
+    </IconWithStatus>
+  );
+}
+
+function IconGlyph(props: IconProps): React.JSX.Element {
   const colorClassName = useIconColor(props);
   const icon = resolveIcon(props.name);
 
@@ -55,6 +68,44 @@ export function Icon(props: IconProps): React.JSX.Element {
       testID={props.testID ?? `icon-${icon.key}`}
     />
   );
+}
+
+function IconWithStatus(
+  props: IconProps & {
+    status: NonNullable<IconProps['status']>;
+    children: React.ReactElement;
+  },
+): React.JSX.Element {
+  return (
+    <View style={useIconBox(props.role)} className="relative">
+      {props.children}
+      <IconStatus status={props.status} testID={props.testID} />
+    </View>
+  );
+}
+
+function IconStatus(
+  props: Pick<IconProps, 'status' | 'testID'> & {
+    status: NonNullable<IconProps['status']>;
+  },
+): React.JSX.Element {
+  return (
+    <View className="absolute -right-0.5 -top-0.5 rounded-full border-2 border-card bg-card">
+      <StatusDot {...iconStatusDotProps(props)} />
+    </View>
+  );
+}
+
+function iconStatusDotProps(
+  props: Pick<IconProps, 'status' | 'testID'> & {
+    status: NonNullable<IconProps['status']>;
+  },
+): React.ComponentProps<typeof StatusDot> {
+  return {
+    tone: props.status.tone,
+    pulse: props.status.pulse,
+    testID: props.testID ? `${props.testID}-${props.status.tone}` : undefined,
+  };
 }
 
 export function IconSpinner({

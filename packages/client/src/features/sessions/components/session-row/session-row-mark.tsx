@@ -1,9 +1,10 @@
 import type * as React from 'react';
-import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
-import { StatusIndicator } from '#lib/product/status-indicator/status-indicator';
+import { Avatar } from '#primitives/content/avatar';
+import {
+  sessionStatusDot,
+  sessionStatusLabels,
+} from '../../session-status-dot';
 import { SessionLogo } from './session-row-logo';
-import { markSurface } from './session-row-metadata';
 import type { SessionRowProps } from './session-row-props';
 
 type SessionMarkProps = Pick<SessionRowProps, 'session' | 'logo'> & {
@@ -13,16 +14,34 @@ type SessionMarkProps = Pick<SessionRowProps, 'session' | 'logo'> & {
 // The Agent's logo with the Session's status dot on its corner.
 export function SessionMark(props: SessionMarkProps): React.JSX.Element {
   return (
-    <View className="relative size-6 shrink-0 items-center justify-center wide-type:size-5">
+    <Avatar {...sessionAvatarProps(props)}>
       <SessionLogo logo={props.logo} status={props.session.status} />
-      <StatusIndicator
-        testID="session-status"
-        status={props.session.status}
-        className={cn(
-          'absolute -right-0.5 -top-px web:wide:-top-0.5',
-          markSurface(props.selected),
-        )}
-      />
-    </View>
+    </Avatar>
   );
+}
+
+function sessionAvatarProps(
+  props: SessionMarkProps,
+): React.ComponentProps<typeof Avatar> {
+  const statusLabel = sessionStatusLabels[props.session.status];
+
+  return {
+    initials: 'AG',
+    accessibilityLabel: `Agent, ${statusLabel}`,
+    decorative: true,
+    size: 'sm',
+    status: sessionAvatarStatus(props, statusLabel),
+    testID: 'session-status',
+    statusSurface: props.selected ? 'selected' : 'card',
+  };
+}
+
+function sessionAvatarStatus(
+  props: SessionMarkProps,
+  statusLabel: string,
+): NonNullable<React.ComponentProps<typeof Avatar>['status']> {
+  return {
+    ...sessionStatusDot(props.session.status),
+    accessibilityLabel: statusLabel,
+  };
 }

@@ -146,10 +146,6 @@ expectTypeOf<
 
 expectTypeOf<DomainPropNames>().toEqualTypeOf<Each<never>>();
 
-expectTypeOf<Aliases['Tone']>().toEqualTypeOf<Tone>();
-
-expectTypeOf<Aliases['BadgeTone']>().toExtend<Tone>();
-
 expectTypeOf<Aliases['ButtonSize']>().toExtend<Size>();
 
 expectTypeOf<
@@ -158,6 +154,10 @@ expectTypeOf<
 
 expectTypeOf<
   NonNullable<Primitives['IconProps']['tone']>
+>().toEqualTypeOf<Tone>();
+
+expectTypeOf<
+  NonNullable<Primitives['IconProps']['status']>['tone']
 >().toEqualTypeOf<Tone>();
 
 expectTypeOf<

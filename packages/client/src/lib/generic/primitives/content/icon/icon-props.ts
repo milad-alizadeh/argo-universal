@@ -1,5 +1,6 @@
 import type { ActivityIndicatorProps, ViewProps } from 'react-native';
 import type { Tone } from '#primitives/content/text';
+import type { StatusDotProps } from '#primitives/status/status-dot';
 import type { IconRole, IconRoleValue } from '../../../symbols/icon-role';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { SymbolGlyphProps } from '../../../symbols/symbol-glyph/symbol-glyph-props';
@@ -10,6 +11,7 @@ export interface IconProps {
   // Selects the platform's filled variant where the icon has one.
   filled?: boolean;
   tone?: Tone;
+  status?: Pick<StatusDotProps, 'tone' | 'pulse'>;
   className?: string;
   weight?: SymbolGlyphProps['weight'];
   testID?: string;

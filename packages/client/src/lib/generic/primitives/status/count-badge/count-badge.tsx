@@ -4,7 +4,7 @@ import { Text } from '#primitives/content/text';
 import { countBadge } from '../../../badge-count';
 import type { CountBadgeProps } from './count-badge-props';
 
-// Argo's count capsule in danger red, on Argo-drawn rows and the rail; native rows draw their platform's badge.
+// Argo's count capsule in danger red, used on Argo-drawn rows and in the rail.
 export function CountBadge(props: CountBadgeProps): React.JSX.Element | null {
   const badge = countBadge(props.badge);
 

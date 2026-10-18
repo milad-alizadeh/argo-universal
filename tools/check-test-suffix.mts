@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { suffixProblems, type Sources } from './test-suffix-rules.mts';
@@ -12,7 +12,7 @@ const trackedSources = (): string[] =>
     encoding: 'utf8',
   })
     .split('\n')
-    .filter(Boolean);
+    .filter((file) => file && existsSync(resolve(root, file)));
 
 const files = trackedSources();
 
