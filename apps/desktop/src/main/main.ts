@@ -83,8 +83,8 @@ const server = createActor(serverConnectionMachine, {
   },
 });
 
-// The 12px lights centred in the rail's 44px row: the glass is inset 8, and the row's 52px of lights centres in the 72px rail.
-const trafficLights = { x: 18, y: 24 };
+// The 12px lights centred in the rail's 44px row: the glass is inset 8, and the row's 52px of lights centres in the 80px rail.
+const trafficLights = { x: 22, y: 24 };
 
 const createWindow = (url: string): void => {
   const mainWindow = new BrowserWindow({
