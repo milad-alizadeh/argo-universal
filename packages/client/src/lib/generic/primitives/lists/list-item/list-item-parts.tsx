@@ -43,9 +43,7 @@ function Subtitle({ text }: { text?: string }): ReactNode {
 
 function Meta({ children }: { children?: ReactNode }): ReactNode {
   return children ? (
-    <View className="min-w-0 flex-row items-center gap-3 overflow-hidden pt-1">
-      {children}
-    </View>
+    <View className="min-w-0 flex-row items-center gap-3 pt-1">{children}</View>
   ) : null;
 }
 

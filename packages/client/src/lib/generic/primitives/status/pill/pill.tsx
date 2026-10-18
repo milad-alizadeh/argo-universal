@@ -17,9 +17,7 @@ const fills = {
 
 export function Pill({ text, tone = 'muted' }: PillProps): ReactElement {
   return (
-    <View
-      className={cn('min-w-0 shrink rounded-full px-2 py-0.5', fills[tone])}
-    >
+    <View className={cn('shrink-0 rounded-full px-2 py-0.5', fills[tone])}>
       <Text role="secondary" tone={tone} numberOfLines={1}>
         {text}
       </Text>
