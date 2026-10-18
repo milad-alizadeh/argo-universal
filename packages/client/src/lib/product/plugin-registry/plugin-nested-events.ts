@@ -1,8 +1,4 @@
-import {
-  Handler,
-  type WireJson,
-  type WireNode,
-} from '@repo/contracts/plugins/wire';
+import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
 import type { PluginProp, PluginProps } from './plugin-rendering';
 
 type Bind = (

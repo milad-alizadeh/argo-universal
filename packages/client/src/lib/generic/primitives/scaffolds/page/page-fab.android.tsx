@@ -44,7 +44,7 @@ function FabButton({ action }: FabProps): ReactElement {
 
 function FabIcon({ action }: FabProps): ReactElement {
   return (
-    <RNHostView>
+    <RNHostView matchContents>
       <Icon
         name={action.icon}
         role="action"

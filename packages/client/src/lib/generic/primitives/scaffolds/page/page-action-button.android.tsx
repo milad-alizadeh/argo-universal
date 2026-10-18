@@ -28,7 +28,7 @@ export function PageActionButton({
 
 function ActionIcon({ action }: { action: ActionProps }): ReactElement {
   return (
-    <RNHostView>
+    <RNHostView matchContents>
       <Icon name={action.icon} role="action" />
     </RNHostView>
   );
