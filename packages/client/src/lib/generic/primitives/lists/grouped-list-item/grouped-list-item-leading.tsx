@@ -4,6 +4,7 @@ import { Icon, IconSlot, IconSpinner } from '#primitives/content/icon';
 import { useOverlayList } from '#primitives/fields/field-layout';
 import type { IconRole } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';
+import { type RowLanePlace, useRowLanePlace } from './grouped-list-item-lane';
 import type { ResolvedItemProps } from './grouped-list-item-props';
 
 type LeadingProps = Pick<
@@ -71,9 +72,17 @@ const leadingSlotProps = (
     variant === 'card' ? 'relative web:top-px wide:-top-0.5' : undefined,
 });
 
-// A popover's compact row leads with a Body-sized slot, as Paper's menu rows do; a list row keeps the row icon's.
+// A popover's compact row leads with a Body-sized slot, as Paper's menu rows do; a sidebar row keeps the row icon's, and a grouped row iOS's 24.
+const leadingRoles = {
+  compact: 'row',
+  sidebar: 'row',
+  grouped: 'grouped-row',
+} as const satisfies Record<RowLanePlace, IconRole>;
+
 function useLeadingRole(): IconRole {
-  return useOverlayList() ? 'body' : 'row';
+  const place = useRowLanePlace();
+
+  return useOverlayList() ? 'body' : leadingRoles[place];
 }
 
 function RowIcon({

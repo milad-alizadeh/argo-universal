@@ -1,5 +1,6 @@
 import { toneClass } from '#primitives/content/text';
 import { cn } from '../../../utils';
+import { isGroupedRow, rowFrameClasses } from './grouped-list-item-frame';
 import { rowLane } from './grouped-list-item-lane';
 import type { ResolvedItemProps } from './grouped-list-item-props';
 
@@ -23,8 +24,8 @@ export function rowClasses(
   place: RowPlace = {},
 ): string {
   return cn(
-    'relative min-h-13 flex-row items-center gap-3 px-4 py-3 bg-card wide:min-h-11 web:select-none web:**:select-none',
-    controlClasses(props),
+    'relative flex-row items-center bg-card web:select-none web:**:select-none',
+    rowFrameClasses(props, isGroupedRow(props, sidebar, place.overlay)),
     rowSizeClasses(props),
     stateClasses(props, sidebar),
     cornerClasses(place.corners),
@@ -75,19 +76,10 @@ const cornerClasses = (corners: Corners | undefined): string =>
   cn(topCorners(corners), bottomCorners(corners));
 
 const topCorners = (corners: Corners | undefined): string | undefined =>
-  corners?.first ? 'rounded-t-2xl' : undefined;
+  corners?.first ? 'rounded-t-3xl' : undefined;
 
 const bottomCorners = (corners: Corners | undefined): string | undefined =>
-  corners?.last ? 'rounded-b-2xl' : undefined;
-
-function controlClasses(
-  props: Pick<ResolvedItemProps, 'subtitle' | 'detail'>,
-): string {
-  return cn(
-    props.subtitle && 'wide:min-h-12.5 wide:py-1.5',
-    props.detail && 'px-0 py-0 wide:py-0',
-  );
-}
+  corners?.last ? 'rounded-b-3xl' : undefined;
 
 // A large row pads 16 all round at every width; a small one is 36 tall on a wide window.
 function sizeClasses(props: ResolvedItemProps): string | undefined {
@@ -158,13 +150,22 @@ const hiddenSeparator = (place: RowPlace): string | undefined => {
 const besideShadedRow =
   'web:[&:has(+:is(a,[role=button],[role=switch]):hover)]:after:hidden web:[&:has(+:is(a,[role=button],[role=switch]):active)]:after:hidden';
 
-// 1px on every web width: Chrome drops a 0.5px line on a phone-width page, even at 3x.
+/*
+ * 1px on every web width: Chrome drops a 0.5px line on a phone-width page, even at 3x. A grouped
+ * row's line runs from its text to the margin M in the border colour, as iOS's does; a card's
+ * row keeps its fainter wide line.
+ */
 function separatorClasses(props: ResolvedItemProps, place: RowPlace): string {
+  const grouped = props.variant !== 'card';
+
   return cn(
-    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border wide:web:after:bg-border/40',
+    'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border',
+    grouped
+      ? 'wide:web:after:right-5 wide:web:after:left-5'
+      : 'wide:web:after:bg-border/40',
     hiddenSeparator(place),
     // A row with a leading slot insets its line to where its text starts.
-    hasLeadingSlot(props) && rowLane(props, false).textInset,
+    hasLeadingSlot(props) && rowLane(props, 'grouped').textInset,
   );
 }
 
