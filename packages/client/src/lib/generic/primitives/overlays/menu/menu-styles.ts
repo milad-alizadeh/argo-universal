@@ -20,3 +20,14 @@ export const actionItemTextClassName = 'select-none text-foreground';
 // A choice row's shape, shared by the radio rows and the loading row that stands in for them.
 export const choiceRowClassName =
   'min-h-9 flex-row items-center gap-3 px-3 py-1.5';
+
+export function menuTextClass(tone?: 'danger'): string {
+  return tone === 'danger' ? 'text-danger' : actionItemTextClassName;
+}
+
+export function menuRowClass(tone?: 'danger'): string {
+  return cn(
+    actionItemClassName,
+    tone === 'danger' && 'web:focus:bg-danger/10 active:bg-danger/10',
+  );
+}

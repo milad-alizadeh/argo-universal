@@ -1,6 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
+import { ActionShortcutScope } from '#primitives/actions/action-list';
 import {
   PluginTree,
   type PluginOnEvent,
@@ -27,8 +28,10 @@ export function PluginDetailView({
   onEvent,
 }: PluginDetailViewProps): React.JSX.Element {
   return (
-    <ScrollFadeView {...pageScroll}>
-      {root && <PluginTree root={root} onEvent={onEvent} />}
-    </ScrollFadeView>
+    <ActionShortcutScope>
+      <ScrollFadeView {...pageScroll}>
+        {root && <PluginTree root={root} onEvent={onEvent} />}
+      </ScrollFadeView>
+    </ActionShortcutScope>
   );
 }

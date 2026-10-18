@@ -53,7 +53,8 @@ export function shortcutMatches(
 
   return (
     event.key.toLowerCase() === shortcut.key.toLowerCase() &&
-    modifiers.sort().join('+') === eventModifiers(event).sort().join('+')
+    [...new Set(modifiers)].sort().join('+') ===
+      eventModifiers(event).sort().join('+')
   );
 }
 

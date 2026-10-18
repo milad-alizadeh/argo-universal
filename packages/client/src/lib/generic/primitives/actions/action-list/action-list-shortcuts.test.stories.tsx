@@ -22,7 +22,7 @@ export const ShortcutConflicts: Story = {
         <Action
           label="First"
           icon="add"
-          shortcut={{ modifiers: ['alt'], key: 'i' }}
+          shortcut={{ modifiers: ['alt', 'alt'], key: 'i' }}
           onPress={() => choose('first')}
         />
       </ActionList>
@@ -63,14 +63,14 @@ export const ShortcutConflicts: Story = {
       target: canvas.getByRole('button', { name: 'Second list' }),
     });
     const later = await page.findByRole('menuitem', { name: 'Later' });
-    await expect(later.querySelector('[aria-label]')).toBeNull();
+    await expect(within(later).queryByText('I')).toBeNull();
     await userEvent.keyboard('{Escape}');
     await userEvent.pointer({
       keys: '[MouseRight]',
       target: canvas.getByRole('button', { name: 'Plugin row' }),
     });
     const reserved = await page.findByRole('menuitem', { name: 'Reserved' });
-    await expect(reserved.querySelector('[aria-label]')).toBeNull();
+    await expect(within(reserved).queryByText('↵')).toBeNull();
     await userEvent.keyboard('{Escape}');
   },
 };

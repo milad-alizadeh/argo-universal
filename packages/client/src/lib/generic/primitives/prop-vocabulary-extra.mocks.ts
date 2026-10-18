@@ -1,5 +1,5 @@
-import type * as KbdKit from '#primitives/content/kbd';
 import type * as ActionListKit from '#primitives/actions/action-list';
+import type * as KbdKit from '#primitives/content/kbd';
 import type * as EmptyStateKit from '#primitives/status/empty-state';
 import type * as StatusDotKit from '#primitives/status/status-dot';
 import type * as SvgKit from '#primitives/visual';

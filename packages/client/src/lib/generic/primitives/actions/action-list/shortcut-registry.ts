@@ -76,7 +76,13 @@ function compareElements(
 }
 
 function comparePosition(position: number): number {
-  return position === Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+  const following = Node.DOCUMENT_POSITION_FOLLOWING;
+
+  return [following, following + Node.DOCUMENT_POSITION_CONTAINED_BY].includes(
+    position,
+  )
+    ? -1
+    : 1;
 }
 
 function allocationKey(owner: string, action: string): string {

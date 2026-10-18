@@ -14,7 +14,7 @@ export interface ContextMenuItem {
   shortcut?: ActionShortcut;
 }
 
-// What the menu passes the element it opens on: Android opens on the element's own long press, so the element hands it to its press.
+// Optional long-press handling retained for pressable trigger callers.
 export interface ContextMenuTriggerProps {
   onLongPress?: () => void;
 }

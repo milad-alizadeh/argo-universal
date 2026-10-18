@@ -6,7 +6,6 @@ import {
 } from '@repo/contracts/plugins/wire-node-key';
 import type * as React from 'react';
 import { Fragment, cloneElement } from 'react';
-import { ActionShortcutScope } from '#primitives/actions/action-list';
 import { pluginEntries } from './plugin-entries';
 import type { RenderContext, PluginOnEvent } from './plugin-rendering';
 import { Unsupported } from './plugin-unsupported';
@@ -45,11 +44,7 @@ export function PluginTree({
 }: PluginTreeProps): React.JSX.Element | null {
   const context = useRenderContext(root, onEvent);
 
-  return (
-    <ActionShortcutScope>
-      <RenderNode node={root} context={context} />
-    </ActionShortcutScope>
-  );
+  return <RenderNode node={root} context={context} />;
 }
 
 function useRenderContext(

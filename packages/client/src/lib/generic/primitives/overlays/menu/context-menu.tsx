@@ -7,11 +7,7 @@ import { TextClassContext } from '#primitives/content/text';
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
 import { MenuActionLabel } from './menu-action-label';
 import { MenuSection } from './menu-section';
-import {
-  actionItemClassName,
-  actionItemTextClassName,
-  menuRowsClassName,
-} from './menu-styles';
+import { menuRowClass, menuTextClass, menuRowsClassName } from './menu-styles';
 
 /*
  * The web's context menu, on Radix Context Menu (`@radix-ui/react-context-menu`): Root, Trigger `asChild`,
@@ -105,7 +101,7 @@ function ContextMenuContent(props: ContentProps): ReactElement {
 const menuRows = (props: ContentProps): ReactElement[] =>
   props.groups.map((group, index) => (
     <Fragment key={group.map((item) => item.id ?? item.label).join()}>
-      <MenuSection divided={index > 0} title={props.groupTitles?.[index]} />
+      <MenuSection {...groupHeading(props, index)} />
       {group.map((item) => (
         <ContextMenuRow
           key={item.id ?? item.label}
@@ -120,9 +116,9 @@ type RowProps = { item: ContextMenuItem; chosen: ChosenAction };
 
 function ContextMenuRow({ item, chosen }: RowProps): ReactElement {
   return (
-    <TextClassContext.Provider value={itemTextClass(item)}>
+    <TextClassContext.Provider value={menuTextClass(item.tone)}>
       <RadixContextMenu.Item {...itemProps(item, chosen)}>
-        <View className={contextRowClass(item)}>
+        <View className={menuRowClass(item.tone)}>
           <MenuActionLabel {...item} />
         </View>
       </RadixContextMenu.Item>
@@ -142,13 +138,12 @@ const itemProps = (
 
 ContextMenu satisfies ComponentType<ContextMenuProps>;
 
-function itemTextClass(item: ContextMenuItem): string {
-  return item.tone === 'danger' ? 'text-danger' : actionItemTextClassName;
-}
-
-function contextRowClass(item: ContextMenuItem): string {
-  return cn(
-    actionItemClassName,
-    item.tone === 'danger' && 'web:focus:bg-danger/10 active:bg-danger/10',
-  );
+function groupHeading(
+  props: ContentProps,
+  index: number,
+): Parameters<typeof MenuSection>[0] {
+  return {
+    divided: Boolean(props.groupTitles) && index > 0,
+    title: props.groupTitles?.[index],
+  };
 }

@@ -2,7 +2,6 @@ import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/content/text';
 import { MenuActionLabel } from './menu-action-label';
 import type { KeyboardFocus } from './menu-choices';
@@ -12,8 +11,8 @@ import type { ActionMenuProps, MenuAction } from './menu-props';
 import { MenuSection } from './menu-section';
 import {
   actionContentClassName,
-  actionItemClassName,
-  actionItemTextClassName,
+  menuRowClass,
+  menuTextClass,
 } from './menu-styles';
 
 type MenuActionsProps = ActionMenuProps & { focus: KeyboardFocus };
@@ -56,9 +55,7 @@ function actionItem(action: MenuAction, index: number): React.JSX.Element {
 
 function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
   return (
-    <TextClassContext.Provider
-      value={action.tone === 'danger' ? 'text-danger' : actionItemTextClassName}
-    >
+    <TextClassContext.Provider value={menuTextClass(action.tone)}>
       <RadixMenu.Item {...actionItemProps(action)}>
         <View {...actionRow(action)}>
           <MenuActionLabel {...action} />
@@ -79,10 +76,7 @@ function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
 
 function actionRow(action: MenuAction): React.ComponentProps<typeof View> {
   return {
-    className: cn(
-      actionItemClassName,
-      action.tone === 'danger' && 'web:focus:bg-danger/10 active:bg-danger/10',
-    ),
+    className: menuRowClass(action.tone),
     accessibilityState:
       action.selected === undefined ? undefined : { selected: action.selected },
   };
