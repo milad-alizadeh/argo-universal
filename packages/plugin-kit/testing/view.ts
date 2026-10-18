@@ -26,7 +26,7 @@ export class PluginTestView {
   private failure: Error | null = null;
   private path: string;
 
-  constructor(
+  public constructor(
     private readonly service: PluginService,
     private readonly pluginId: string,
     opening: Opening,
@@ -37,13 +37,13 @@ export class PluginTestView {
     });
   }
 
-  get tree(): WireNode | null {
+  public get tree(): WireNode | null {
     if (this.failure) throw this.failure;
 
     return this.root;
   }
 
-  findText(text: string): ReturnType<typeof findWireNodeEntry> {
+  public findText(text: string): ReturnType<typeof findWireNodeEntry> {
     if (!this.tree) return undefined;
 
     return findWireNodeEntry(this.tree, (node) =>
@@ -51,7 +51,7 @@ export class PluginTestView {
     );
   }
 
-  async dispatch(event: Event): Promise<void> {
+  public async dispatch(event: Event): Promise<void> {
     const latest = this.latest;
 
     if (!latest?.viewId) throw new Error('Plugin view is not ready');
@@ -65,14 +65,14 @@ export class PluginTestView {
     });
   }
 
-  async tap(text: string): Promise<void> {
+  public async tap(text: string): Promise<void> {
     const entry = this.findText(text);
 
     if (!entry) throw new Error(`Plugin control not found: ${text}`);
     await this.dispatch({ key: entry.key, event: 'onPress' });
   }
 
-  close(): void {
+  public close(): void {
     this.controller.abort();
   }
 

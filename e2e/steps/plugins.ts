@@ -106,3 +106,15 @@ Then(
     await expect(page.getByText(/^Fixture Slot for /)).toBeVisible();
   },
 );
+
+Then(
+  'the Plugin detail actions fit in the viewport',
+  async ({ page }): Promise<void> => {
+    await expect(
+      page.getByRole('button', { name: 'Back to counter', exact: true }),
+    ).toBeInViewport();
+    await expect(
+      page.getByRole('button', { name: 'Open documentation', exact: true }),
+    ).toBeInViewport();
+  },
+);

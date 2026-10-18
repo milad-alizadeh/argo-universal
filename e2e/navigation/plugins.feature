@@ -58,3 +58,14 @@ Feature: Plugin navigation
       | frame |
       | wide  |
       | phone |
+
+  Scenario Outline: Plugin detail actions fit on a <frame> Frame
+    Given a <frame> Frame
+    When I open the Counter Plugin
+    And I press "Open details" on the Plugin page
+    Then the Plugin detail actions fit in the viewport
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |

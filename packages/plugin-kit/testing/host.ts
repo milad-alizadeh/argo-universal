@@ -41,7 +41,7 @@ class HostedPlugin implements PluginTest {
   private readonly service: PluginService;
   private readonly views = new Set<PluginTestView>();
 
-  constructor(
+  public constructor(
     private readonly home: string,
     private readonly options: PluginTestOptions,
   ) {
@@ -54,15 +54,15 @@ class HostedPlugin implements PluginTest {
     });
   }
 
-  log(): Promise<string> {
+  public log(): Promise<string> {
     return readFile(join(this.home, 'logs/plugins.log'), 'utf8');
   }
 
-  page(path = '/'): PluginTestView {
+  public page(path = '/'): PluginTestView {
     return this.open(path);
   }
 
-  slot(slot: PluginSlotInput): PluginTestView {
+  public slot(slot: PluginSlotInput): PluginTestView {
     return this.open(slotPath(slot), slot);
   }
 
@@ -77,7 +77,7 @@ class HostedPlugin implements PluginTest {
     return view;
   }
 
-  async close(): Promise<void> {
+  public async close(): Promise<void> {
     for (const view of this.views) view.close();
 
     try {
