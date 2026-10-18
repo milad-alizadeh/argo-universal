@@ -20,6 +20,7 @@ import type * as SwitchKit from '#primitives/inputs/switch';
 import type * as TextInputKit from '#primitives/inputs/text-input';
 import type * as TextareaKit from '#primitives/inputs/textarea';
 import type * as CollapsibleKit from '#primitives/layout/collapsible';
+import type * as StackKit from '#primitives/layout/stack';
 import type * as DrawerItemKit from '#primitives/lists/drawer-item';
 import type * as GroupedListKit from '#primitives/lists/grouped-list';
 import type * as GroupedListContentKit from '#primitives/lists/grouped-list-content';
@@ -106,6 +107,7 @@ export type Primitives = {
   RichTextareaProps: RichTextareaKit.RichTextareaProps;
   RowHover: GroupedListItemKit.RowHover;
   SearchFieldProps: SearchFieldKit.SearchFieldProps;
+  StackProps: StackKit.StackProps;
   SectionFooter: FieldDescriptionKit.SectionFooter;
   SelectedCheckProps: SelectedCheckKit.SelectedCheckProps;
   SheetDestination: SheetKit.SheetDestination;

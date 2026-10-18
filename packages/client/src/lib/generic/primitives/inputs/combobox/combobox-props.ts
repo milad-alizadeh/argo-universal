@@ -6,7 +6,7 @@ export interface ComboboxOption<Value extends string> {
   value: Value;
   label: string;
   accessibilityLabel?: string;
-  supporting?: string;
+  subtitle?: string;
   code?: boolean;
   icon?: IconName;
   disabled?: boolean;

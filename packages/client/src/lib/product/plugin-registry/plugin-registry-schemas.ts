@@ -1,5 +1,6 @@
 import { Handler } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
+import { textRoles } from '#primitives/content/text';
 import { isStackGap, stackAlignments } from '#primitives/layout/stack';
 
 const tone = z.enum([
@@ -15,7 +16,7 @@ const tone = z.enum([
 
 export const textProps = z.strictObject({
   label: z.string(),
-  variant: z.enum(['title', 'heading', 'body', 'secondary']).optional(),
+  variant: z.enum(textRoles).optional(),
   tone: tone.optional(),
 });
 
@@ -33,4 +34,8 @@ export const buttonProps = z.strictObject({
 export const layoutProps = z.strictObject({
   gap: z.number().refine(isStackGap).optional(),
   align: z.enum(stackAlignments).optional(),
+});
+
+export const stackProps = layoutProps.extend({
+  direction: z.enum(['row', 'column']),
 });

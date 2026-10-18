@@ -14,7 +14,7 @@ const options = [
   {
     value: 'medium',
     label: 'Medium',
-    supportingText: 'A balanced amount of reasoning',
+    subtitle: 'A balanced amount of reasoning',
   },
   { value: 'high', label: 'High' },
 ] as const;
@@ -25,7 +25,7 @@ const longOptions = [
     value: 'maximum',
     label:
       'Maximum reasoning for a complex implementation with several linked changes',
-    supportingText: 'Uses more time and more of your plan',
+    subtitle: 'Uses more time and more of your plan',
   },
   { value: 'legacy', label: 'Legacy', disabled: true },
   { value: 'adaptive', label: 'Adaptive' },

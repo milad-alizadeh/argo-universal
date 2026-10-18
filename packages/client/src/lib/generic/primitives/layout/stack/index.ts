@@ -1,3 +1,3 @@
 export { Stack } from './stack';
 
-export { isStackGap, stackAlignments } from './stack-props';
+export { isStackGap, stackAlignments, type StackProps } from './stack-props';

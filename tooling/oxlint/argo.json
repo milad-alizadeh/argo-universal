@@ -919,15 +919,15 @@
               },
               {
                 "regex": "^#(features|lib/product)/",
-                "message": "Generic code imports neither product nor local code (A2)."
+                "message": "The UI kit cannot import features or product/domain types (A2)."
               },
               {
                 "regex": "^(\\.\\./)+(features|product)(/|$)",
-                "message": "Generic code imports neither product nor local code (A2)."
+                "message": "The UI kit cannot import features or product/domain types (A2)."
               },
               {
                 "group": ["@repo/**", "!@repo/uniwind", "!@repo/uniwind/**"],
-                "message": "Generic code imports neither product nor local code (A2)."
+                "message": "The UI kit cannot import feature or domain packages (A2)."
               }
             ]
           }

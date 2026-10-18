@@ -13,7 +13,7 @@ export function PickerDrillIn<Value extends string>(
       {...props}
       options={props.options.map((option) => ({
         ...option,
-        supporting: option.supportingText,
+        subtitle: option.subtitle,
       }))}
     />
   );

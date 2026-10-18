@@ -4,7 +4,7 @@ export type PickerOption<Value extends string> = {
   value: Value;
   label: string;
   disabled?: boolean;
-  supportingText?: string;
+  subtitle?: string;
 };
 
 export type PickerProps<Value extends string> = {

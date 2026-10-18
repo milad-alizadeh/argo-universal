@@ -3,19 +3,22 @@ import type { Text as RNText } from 'react-native';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { Tone } from './text-tone';
 
-export type TextRole =
-  | 'title'
-  | 'heading'
-  | 'body'
-  | 'secondary'
-  | 'secondary-code'
-  | 'control'
-  | 'badge'
-  | 'code'
-  | 'nav-title'
-  | 'nav-action'
-  | 'row'
-  | 'row-detail';
+export const textRoles = [
+  'title',
+  'heading',
+  'body',
+  'secondary',
+  'secondary-code',
+  'control',
+  'badge',
+  'code',
+  'nav-title',
+  'nav-action',
+  'row',
+  'row-detail',
+] as const;
+
+export type TextRole = (typeof textRoles)[number];
 
 export type TextProps = Omit<
   React.ComponentProps<typeof RNText>,
