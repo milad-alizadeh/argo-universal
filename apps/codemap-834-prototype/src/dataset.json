@@ -2779,8 +2779,8 @@
       "tone": "border"
     },
     {
-      "id": "docs/adr/0028-plugins-draw-svg-charts-and-code-maps-on-every-app.md",
-      "path": "docs/adr/0028-plugins-draw-svg-charts-and-code-maps-on-every-app.md",
+      "id": "docs/adr/0028-plugins-draw-svg-charts-and-canvases-on-every-app.md",
+      "path": "docs/adr/0028-plugins-draw-svg-charts-and-canvases-on-every-app.md",
       "area": 70,
       "height": 2,
       "branches": 7,
