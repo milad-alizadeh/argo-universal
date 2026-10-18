@@ -6,9 +6,18 @@ import {
   labelProps,
   progressBarProps,
   pillProps,
+  rowBadgeProps,
 } from './kit-props';
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { part } from './plugin-part-schema-utils';
+
+const listItemV1 = listItemProps.extend({
+  badge: z.number().int().nonnegative().optional(),
+});
+const listItemV2 = listItemV1.extend({
+  badge: z.union([z.number().int().nonnegative(), rowBadgeProps]).optional(),
+});
+const pillV1 = pillProps.omit({ color: true });
 
 export const listWireParts = {
   List: {
@@ -43,7 +52,7 @@ export const listWireParts = {
   },
   ListItem: {
     props: listItemProps,
-    versions: [listItemProps],
+    versions: [listItemV1, listItemV2],
     container: true,
     children: false,
     slots: {
@@ -91,7 +100,7 @@ export const listWireParts = {
   },
   Pill: {
     props: pillProps,
-    versions: [pillProps],
+    versions: [pillV1, pillProps],
     container: false,
     children: false,
     slots: {},

@@ -37,9 +37,12 @@ export const Tap: Story = {
   render: () => <PluginTree root={helloRoot} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.getByText('Hello from a Plugin')).toBeVisible();
+    await expect(canvas.getByText('Healthy')).toBeVisible();
+    await expect(canvas.getByText('Waiting jobs')).toBeVisible();
+    await expect(canvas.getByText('3')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Tap me' }));
     await expect(onEvent).toHaveBeenCalledOnce();
-    await expect(onEvent).toHaveBeenCalledWith('0/2/0', {
+    await expect(onEvent).toHaveBeenCalledWith('0/4/0', {
       event: helloTapEvent,
     });
   },

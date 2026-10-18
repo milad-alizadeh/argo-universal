@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { type GitHubStep, type StepMark } from '#features/setup';
 import { Button } from '#primitives/actions/button';
-import { Text } from '#primitives/content/text';
-import { Badge, type BadgeTone } from '#primitives/status/badge';
+import type { Tone } from '#primitives/content/text';
+import { Pill } from '#primitives/status/pill';
 import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep, type SetupStepProps } from './setup-step';
 
@@ -13,7 +13,7 @@ export type GitHubStepViewProps = Pick<
 > & { mark: StepMark };
 
 interface GitHubContent {
-  chip?: { label: string; tone: BadgeTone };
+  chip?: { label: string; tone: Tone };
   caption: string;
   // The outline button, for the states that start a sign-in.
   connect?: { label: string; accessibilityLabel: string };
@@ -63,11 +63,7 @@ const githubContent = (step: GitHubStep): GitHubContent =>
   githubContents[step.status]('login' in step ? step.login : '');
 
 const chipView = (chip: GitHubContent['chip']): React.ReactNode =>
-  chip && (
-    <Badge tone={chip.tone}>
-      <Text>{chip.label}</Text>
-    </Badge>
-  );
+  chip && <Pill tone={chip.tone} label={chip.label} />;
 
 type OnConnect = GitHubStepViewProps['onConnectGitHub'];
 

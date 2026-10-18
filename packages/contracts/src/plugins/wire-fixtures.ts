@@ -15,8 +15,8 @@ const withChildren = (parent: WireNode, children: WireNode[]): WireNode => ({
   children,
 });
 
-const helloButtons = (): WireNode =>
-  withChildren(node('Row', '2', { gap: 2 }), [
+const helloButtons = (key: string): WireNode =>
+  withChildren(node('Row', key, { gap: 2 }), [
     node('Button', '0', {
       label: 'Tap me',
       onPress: { $event: helloTapEvent },
@@ -32,7 +32,12 @@ const helloTree = (taps: number): WireNode =>
   withChildren(node('Column', '0', { gap: 4 }), [
     node('Text', '0', { label: 'Hello from a Plugin', variant: 'heading' }),
     node('Text', '1', { label: `Tapped ${taps} times` }),
-    helloButtons(),
+    node('Pill', '2', { label: 'Healthy', tone: 'success' }),
+    node('GroupedListItem', '3', {
+      label: 'Waiting jobs',
+      badge: { kind: 'count', count: 3, label: '3 queued jobs' },
+    }),
+    helloButtons('4'),
   ]);
 
 // What `plugins/examples/hello` draws: the Engine journey expects the reconciler to produce it, and the registry stories render it.

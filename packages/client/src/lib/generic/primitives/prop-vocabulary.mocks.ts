@@ -2,6 +2,7 @@ import type * as ButtonKit from '#primitives/actions/button';
 import type * as ButtonGroupKit from '#primitives/actions/button-group';
 import type * as IconButtonKit from '#primitives/actions/icon-button';
 import type * as SplitButtonKit from '#primitives/actions/split-button';
+import type * as AvatarKit from '#primitives/content/avatar';
 import type * as IconKit from '#primitives/content/icon';
 import type * as LabelKit from '#primitives/content/label';
 import type * as LiquidGlassKit from '#primitives/content/liquid-glass';
@@ -40,7 +41,6 @@ import type * as OpenStateKit from '#primitives/overlays/open-state';
 import type * as PopoverKit from '#primitives/overlays/popover';
 import type * as SheetKit from '#primitives/overlays/sheet';
 import type * as ToastKit from '#primitives/overlays/toast';
-import type * as BadgeKit from '#primitives/status/badge';
 import type * as CalloutKit from '#primitives/status/callout';
 import type * as CountBadgeKit from '#primitives/status/count-badge';
 import type * as DisclosureChevronKit from '#primitives/status/disclosure-chevron';
@@ -48,6 +48,7 @@ import type * as PillKit from '#primitives/status/pill';
 import type * as ProgressBarKit from '#primitives/status/progress-bar';
 import type * as SelectedCheckKit from '#primitives/status/selected-check';
 import type * as SpinnerKit from '#primitives/status/spinner';
+import type * as StatusDotKit from '#primitives/status/status-dot';
 
 /*
  * Every type the primitives' index files export, keyed by its exported name. A props-shaped type goes in
@@ -55,6 +56,7 @@ import type * as SpinnerKit from '#primitives/status/spinner';
  * neither, so a new primitive cannot skip the checks in prop-vocabulary.test-d.ts.
  */
 export type Primitives = {
+  AvatarProps: AvatarKit.AvatarProps;
   ProgressBarProps: ProgressBarKit.ProgressBarProps;
   LabelProps: LabelKit.LabelProps;
   PillProps: PillKit.PillProps;
@@ -63,7 +65,6 @@ export type Primitives = {
   ListItemProps: ListItemKit.ListItemProps;
   AlertAction: AlertKit.AlertAction;
   AlertProps: AlertKit.AlertProps;
-  BadgeProps: BadgeKit.BadgeProps;
   ButtonDataProps: ButtonKit.ButtonDataProps;
   ButtonGroupProps: ButtonGroupKit.ButtonGroupProps;
   ButtonProps: ButtonKit.ButtonProps;
@@ -128,6 +129,7 @@ export type Primitives = {
   SheetProps: SheetKit.SheetProps;
   SliderProps: SliderKit.SliderProps;
   SpinnerProps: SpinnerKit.SpinnerProps;
+  StatusDotProps: StatusDotKit.StatusDotProps;
   SplitButtonOption: SplitButtonKit.SplitButtonOption<string>;
   SplitButtonProps: SplitButtonKit.SplitButtonProps;
   SplitMenuProps: SplitButtonKit.SplitMenuProps;
@@ -142,13 +144,13 @@ export type Primitives = {
 
 export type Aliases = {
   ListAppearance: ListKit.ListAppearance;
-  BadgeTone: BadgeKit.BadgeTone;
   ButtonSize: ButtonKit.ButtonSize;
   FieldErrors: FieldErrorsKit.FieldErrors;
   SheetDetent: SheetKit.SheetDetent;
   NativeTextRole: NativeTextKit.NativeTextRole;
   TextRole: TextKit.TextRole;
   Tone: TextKit.Tone;
+  RowBadge: ListItemKit.RowBadge;
   TriggerElement: OpenStateKit.TriggerElement;
   TriggerHandlers: OpenStateKit.TriggerHandlers;
   VirtualListPosition: VirtualListItemKit.VirtualListPosition;

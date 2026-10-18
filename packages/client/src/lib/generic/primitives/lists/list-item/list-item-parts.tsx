@@ -2,14 +2,26 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';
+import { StatusDot } from '#primitives/status/status-dot';
 import type { ListItemProps } from './list-item-props';
 
 function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
   if (badge === undefined) return null;
 
+  const rowBadge = typeof badge === 'number' ? { kind: 'count' as const, count: badge } : badge;
+
   return (
     <View className="absolute -right-1 -top-1">
-      <CountBadge badge={{ count: badge }} />
+      {rowBadge.kind === 'count' ? (
+        <CountBadge badge={{ count: rowBadge.count, label: rowBadge.label }} />
+      ) : (
+        <StatusDot
+          tone={rowBadge.tone}
+          pulse={rowBadge.pulse}
+          accessibilityLabel={rowBadge.label}
+          className="rounded-full bg-card p-0.5"
+        />
+      )}
     </View>
   );
 }
@@ -17,7 +29,10 @@ function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
 export function hasLeading(
   props: Pick<ListItemProps, 'leading' | 'badge'>,
 ): boolean {
-  return [Boolean(props.leading), (props.badge ?? 0) > 0].some(Boolean);
+  const hasBadge = typeof props.badge === 'number'
+    ? props.badge > 0
+    : props.badge !== undefined;
+  return [Boolean(props.leading), hasBadge].some(Boolean);
 }
 
 export function Leading(

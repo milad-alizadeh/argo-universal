@@ -37,7 +37,7 @@ it('streams the hello page as the wire fixtures describe and delivers a tap to i
     ...hello,
     revision: 1,
     viewId: snapshot.viewId,
-    key: '0/2/0',
+    key: '0/4/0',
     event: 'onPress',
   });
 
@@ -70,7 +70,7 @@ it.each([
       ...hello,
       revision: 1,
       viewId: snapshot.viewId,
-      key: '0/2/0',
+      key: '0/4/0',
       event: 'onPress',
     });
     await early.next();
@@ -83,7 +83,21 @@ it.each([
     expect((await late.next()).value).toMatchObject({
       type: 'snapshot',
       revision,
-      root: { children: [{}, { props: { label } }, {}] },
+      root: {
+        children: [
+          { type: 'Text' },
+          { props: { label } },
+          { type: 'Pill', props: { label: 'Healthy', tone: 'success' } },
+          {
+            type: 'GroupedListItem',
+            props: {
+              label: 'Waiting jobs',
+              badge: { kind: 'count', count: 3, label: '3 queued jobs' },
+            },
+          },
+          { type: 'Row' },
+        ],
+      },
     });
     first.abort();
     second.abort();

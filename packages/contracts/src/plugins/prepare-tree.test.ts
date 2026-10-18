@@ -103,9 +103,13 @@ describe('Plugin wire compatibility', () => {
   });
 
   it('derives versions only for registered parts and strips unknown optional props', () => {
-    expect(versionsOf(['Text', 'Stack', 'Internal'])).toEqual({
+    expect(
+      versionsOf(['Text', 'Stack', 'GroupedListItem', 'Pill', 'Internal']),
+    ).toEqual({
       Text: 2,
       Stack: 1,
+      GroupedListItem: 2,
+      Pill: 1,
     });
     expect(
       prepareWireTree(
@@ -113,6 +117,23 @@ describe('Plugin wire compatibility', () => {
         { Text: 2 },
       ),
     ).toEqual(label);
+  });
+
+  it('strips row badges for Apps that only support GroupedListItem v1', () => {
+    const row: WireNode = {
+      type: 'GroupedListItem',
+      key: 'item',
+      props: {
+        label: 'Waiting jobs',
+        badge: { kind: 'count', count: 3, label: '3 queued jobs' },
+      },
+      children: [],
+      slots: {},
+    };
+
+    expect(
+      prepareWireTree(row, { ...legacyPartVersions, GroupedListItem: 1 }),
+    ).toEqual({ ...row, props: { label: 'Waiting jobs' } });
   });
 
   it('preserves every named-slot node while lowering its parts for the App', () => {

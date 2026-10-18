@@ -128,6 +128,23 @@ export function IconExamples(): React.JSX.Element {
         <FilledSymbols />
       </Variation>
       <ColorsExample />
+      <CornerStatusExample />
     </VariationList>
+  );
+}
+
+function CornerStatusExample(): React.JSX.Element {
+  return (
+    <Variation label="Corner status">
+      <View className="flex-row items-center gap-4">
+        <Icon name="agent" role="control" status={{ tone: 'success' }} />
+        <Icon
+          name="agent"
+          role="control"
+          status={{ tone: 'warning', pulse: true }}
+        />
+        <Icon name="agent" role="control" status={{ tone: 'danger' }} />
+      </View>
+    </Variation>
   );
 }

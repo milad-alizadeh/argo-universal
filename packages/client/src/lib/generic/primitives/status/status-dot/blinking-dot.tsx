@@ -22,6 +22,7 @@ export interface BlinkingDotProps {
   blinking?: boolean;
   className?: string;
   testID?: string;
+  accessibilityLabel?: string;
 }
 
 // A status dot that blinks and glows while something is live or waits on you.
@@ -30,16 +31,40 @@ export function BlinkingDot({
   blinking = true,
   className,
   testID,
+  accessibilityLabel,
 }: BlinkingDotProps): React.JSX.Element {
   const style = useBlinkingStyle(colorClassName, blinking);
 
   return (
-    <Animated.View
-      testID={testID}
-      style={style}
-      className={cn('rounded-full', colorClassName, className)}
+    <AnimatedDotView
+      props={{ colorClassName, testID, accessibilityLabel, style, className }}
     />
   );
+}
+
+function AnimatedDotView({
+  props,
+}: {
+  props: BlinkingDotProps & {
+    style: ReturnType<typeof useAnimatedStyle<ViewStyle>>;
+  };
+}): React.JSX.Element {
+  return <Animated.View {...animatedDotProps(props)} />;
+}
+
+function animatedDotProps(
+  props: BlinkingDotProps & {
+    style: ReturnType<typeof useAnimatedStyle<ViewStyle>>;
+  },
+): React.ComponentProps<typeof Animated.View> {
+  return {
+    testID: props.testID,
+    accessible: !!props.accessibilityLabel,
+    accessibilityRole: props.accessibilityLabel ? 'image' : undefined,
+    accessibilityLabel: props.accessibilityLabel,
+    style: props.style,
+    className: cn('rounded-full', props.colorClassName, props.className),
+  };
 }
 
 function useBlinkingStyle(
