@@ -2,7 +2,6 @@ import type * as React from 'react';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import type { ListItemProps } from '#primitives/lists/list-item';
-import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import {
@@ -16,12 +15,7 @@ export function AgentListItem(props: AgentCardProps): React.JSX.Element {
   return (
     <ListItem
       {...cardContent(props.agent)}
-      trailing={
-        <SizeClass
-          compact={<AgentButton {...props} wide={false} />}
-          wide={<AgentButton {...props} wide />}
-        />
-      }
+      trailing={<AgentButton {...props} />}
     />
   );
 }
