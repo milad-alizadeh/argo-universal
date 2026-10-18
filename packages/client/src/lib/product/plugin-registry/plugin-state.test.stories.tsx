@@ -86,14 +86,17 @@ export const AppsKeepSelectionIndependent: Story = {
     </>
   ),
   play: async ({ canvas, userEvent }) => {
-    const [first, second] = canvas.getAllByRole('button', { name: 'Argo' });
+    const rows = canvas.getAllByRole('button', { name: 'Argo' });
+    await expect(rows).toHaveLength(2);
 
-    if (!first || !second) throw new Error('Expected one Argo row per App');
-    for (const [row, payload] of [
-      [first, ['argo']],
-      [second, ['argo']],
-      [first, []],
+    for (const [index, payload] of [
+      [0, ['argo']],
+      [1, ['argo']],
+      [0, []],
     ] as const) {
+      const row = rows[index];
+
+      if (!row) throw new Error('Expected an Argo row in this App');
       await userEvent.click(row);
       await expect(onEvent).toHaveBeenLastCalledWith('choices', {
         event: 'onSelectionChange',

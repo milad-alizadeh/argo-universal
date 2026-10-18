@@ -53,7 +53,7 @@ function renderPrepared(
   const part = wirePart(node.type);
 
   if (!component || !part) return refused(node);
-  const props = context.controls.props({ node, part, context });
+  const props = context.controls({ node, part, context });
 
   Object.assign(props, childProps(node, part, context));
 

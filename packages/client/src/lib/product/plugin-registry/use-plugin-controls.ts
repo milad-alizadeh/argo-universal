@@ -9,9 +9,7 @@ import { controlProps } from './plugin-control-props';
 import type { ControlInput, PluginProps } from './plugin-control-types';
 import { NodeControls } from './plugin-node-controls';
 
-export interface PluginControls {
-  props: (input: Omit<ControlInput, 'ui'>) => PluginProps;
-}
+export type PluginControls = (input: Omit<ControlInput, 'ui'>) => PluginProps;
 
 type StoredControl = { type: string; state: NodeControls };
 
@@ -21,16 +19,11 @@ export function usePluginControls(root: WireNode): PluginControls {
 
   useEffect(() => pruneControls(controls, root), [controls, root]);
 
-  return {
-    props: (input) =>
-      controlProps(
-        { ...input, ui: resolvedUi(input.part.ui) },
-        {
-          state: nodeState(controls, input),
-          update,
-        },
-      ),
-  };
+  return (input) =>
+    controlProps(
+      { ...input, ui: resolvedUi(input.part.ui) },
+      { state: nodeState(controls, input), update },
+    );
 }
 
 function nodeState(
