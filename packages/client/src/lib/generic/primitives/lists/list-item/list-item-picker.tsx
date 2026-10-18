@@ -1,12 +1,8 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
 import { Menu } from '#primitives/overlays/menu';
-import { ListItemFrame } from './list-item';
-import {
-  pickerRowValue,
-  type ListItemPickerProps,
-} from './list-item-picker-props';
+import type { ListItemPickerProps } from './list-item-picker-props';
+import { PickerRow } from './list-item-picker-row';
 
 export type { ListItemPickerProps } from './list-item-picker-props';
 
@@ -17,17 +13,6 @@ export function ListItemPicker<Value extends string>(
     <View role="group" accessibilityLabel={props.title}>
       <PickerMenu {...props} />
     </View>
-  );
-}
-
-function PickerRow(props: ListItemPickerProps): ReactElement {
-  return (
-    <ListItemFrame
-      {...props}
-      role="button"
-      value={pickerRowValue(props)}
-      accessory={<Icon name="chevron-up-down" role="row" />}
-    />
   );
 }
 

@@ -15,11 +15,7 @@ export function Menu<Value extends string>(
   if (props.disabled) return <NativeMenuTrigger {...props} />;
 
   return (
-    <MenuView
-      style={{ width: '100%' }}
-      colorScheme={colorScheme}
-      {...menuViewActions(props)}
-    >
+    <MenuView colorScheme={colorScheme} {...menuViewActions(props)}>
       <NativeMenuTrigger {...props} />
     </MenuView>
   );
