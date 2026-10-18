@@ -38,13 +38,20 @@ export function fitPills(
 
   if (fitsAll(cumulative, measurements.available)) return pills.length;
 
-  return cumulative.findIndex(
-    (used, index) =>
-      used + countWidth(pills.length - index - 1, measurements) >
-      measurements.available,
-  );
+  return firstOverflow(cumulative, measurements);
 }
 
 function fitsAll(cumulative: number[], available: number): boolean {
   return (cumulative.at(-1) ?? 0) <= available;
+}
+
+function firstOverflow(
+  cumulative: number[],
+  measurements: PillMeasurements,
+): number {
+  return cumulative.findIndex(
+    (used, index) =>
+      used + countWidth(cumulative.length - index - 1, measurements) >
+      measurements.available,
+  );
 }
