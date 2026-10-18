@@ -33,10 +33,10 @@ export class PluginUiEvents {
   ): void | Promise<void> {
     if (throttleMs > 0) return this.queue({ key, interaction, throttleMs });
 
-    return this.immediate(key, interaction);
+    return this.dispatch(key, interaction);
   }
 
-  private immediate(
+  public dispatch(
     key: string,
     interaction: PluginInteraction,
   ): void | Promise<void> {

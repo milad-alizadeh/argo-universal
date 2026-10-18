@@ -94,8 +94,7 @@ export class NodeControls {
   ): void {
     this.pending.delete(change.event);
 
-    if (!change.binding || !request) return;
-    settleDraft(request, failed);
+    if (request) settleDraft(request, failed);
   }
 
   public pendingProps(ui: Required<PartUi>, props: PluginProps): void {
@@ -133,5 +132,24 @@ function createDraft(
   previous: ControlDraft | undefined,
   values: Pick<ControlDraft, 'value' | 'source' | 'baseline'>,
 ): ControlDraft {
-  return { ...values, previous: retainedDraft(previous), outcome: 'pending' };
+  return {
+    ...values,
+    previous: matchingDraft(previous, values.baseline),
+    outcome: 'pending',
+  };
+}
+
+function matchingDraft(
+  previous: ControlDraft | undefined,
+  baseline: WireJson | undefined,
+): ControlDraft | undefined {
+  const retained = retainedDraft(previous);
+
+  if (
+    retained &&
+    JSON.stringify(draftValue(retained)) === JSON.stringify(baseline)
+  )
+    return retained;
+
+  return undefined;
 }

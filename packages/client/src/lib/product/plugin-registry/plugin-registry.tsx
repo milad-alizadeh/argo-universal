@@ -1,7 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
 import type * as React from 'react';
-import { Fragment, createElement, useRef, useEffect, useCallback } from 'react';
+import { Fragment, createElement, useEffect } from 'react';
 import { RenderNode } from './plugin-nodes';
 import { PluginOverlay } from './plugin-overlay';
 import { overlayEvents } from './plugin-overlay-events';
@@ -54,32 +54,13 @@ function useRenderContext(
   actions: PluginActions,
 ): RenderContext {
   const ui = usePluginUi(props.onEvent);
-  useActionFlush(actions.registerFlush, ui.flush);
+  useEffect(() => actions.registerFlush(ui.flush), [actions, ui.flush]);
 
   return {
-    dispatch: useCurrentDispatch(props.onEvent),
+    dispatch: ui.dispatch,
     key: childNodeKey('', props.root.key),
     ui,
     actions,
     controls: usePluginControls(props.root),
   };
-}
-
-function useActionFlush(
-  register: PluginActions['registerFlush'],
-  flush: () => Promise<void>,
-): void {
-  useEffect(() => register(flush), [register, flush]);
-}
-
-function useCurrentDispatch(onEvent: PluginOnEvent): PluginOnEvent {
-  const current = useRef(onEvent);
-  useEffect(() => {
-    current.current = onEvent;
-  }, [onEvent]);
-
-  return useCallback(
-    (key, interaction) => current.current(key, interaction),
-    [],
-  );
 }
