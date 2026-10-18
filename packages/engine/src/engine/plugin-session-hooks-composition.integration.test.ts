@@ -16,7 +16,7 @@ import {
 const sessionHooks: HookEventName[] = [
   'session.start',
   'prompt.submit',
-  'tool.call',
+  'tool.check',
   'turn.complete',
 ];
 
@@ -86,7 +86,7 @@ it(
       `${passOn('session.start')}
       await on('prompt.submit', (ctx, e, next) =>
         next({ ...e, prompt: [{ type: 'text', text: '[hooked] ' + e.prompt[0].text }] }));
-      await on('tool.call', '${editPrompt}', () => ({ decision: 'deny' }));
+      await on('tool.check', '${editPrompt}', () => ({ decision: 'deny' }));
       ${passOn('turn.complete')}`,
       journey,
     );
@@ -120,12 +120,12 @@ it(
 );
 
 it(
-  'lets a tool.call Hook allow a Permission request with the Agent’s own option',
+  'lets a tool.check Hook allow a Permission request with the Agent’s own option',
   async () => {
     const journey: Journey = { requests: [], outcomes: [] };
 
     const { host, sessionId } = await startHookedSession(
-      `await on('tool.call', () => ({ decision: 'allow' }));`,
+      `await on('tool.check', () => ({ decision: 'allow' }));`,
       journey,
     );
 
@@ -139,12 +139,12 @@ it(
 );
 
 it(
-  'drops a prompt a prompt.submit Hook drops: no Turn starts and the caller is told',
+  'drops a prompt a prompt.submit Hook drops: no Turn starts and the caller is told why',
   async () => {
     const journey: Journey = { requests: [], outcomes: [] };
 
     const { host, sessionId } = await startHookedSession(
-      `await on('prompt.submit', () => ({ dropped: true }));`,
+      `await on('prompt.submit', () => ({ drop: 'Not today' }));`,
       journey,
     );
 
@@ -153,7 +153,7 @@ it(
         sessionId,
         prompt: [{ type: 'text', text: 'Never sent' }],
       }),
-    ).resolves.toEqual({ messageId: null });
+    ).resolves.toEqual({ messageId: null, drop: 'Not today' });
     expect(journey.requests).toEqual([]);
     expect(
       host.database.$client.prepare('SELECT count(*) AS turns FROM turn').get(),

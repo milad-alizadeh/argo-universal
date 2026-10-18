@@ -83,3 +83,21 @@ it(
   },
   journeyMs,
 );
+
+it(
+  'does not charge a Hook for the time its own argo call takes',
+  async () => {
+    const { results } = await runWithHooks([
+      {
+        ...spawnHook(
+          'patient',
+          `async (ctx, e, next) => { await argo.process.run(['sleep', '10.5']); return next({ ...e, argv: [...e.argv, 'waited'] }); }`,
+        ),
+        capabilities: sleepy('patient').capabilities,
+      },
+    ]);
+
+    expect(results).toEqual({ echo: { value: 'hi waited' } });
+  },
+  journeyMs,
+);

@@ -67,7 +67,7 @@ The Server process that runs Plugin code, each Plugin in its own worker thread w
 _Avoid_: Extension host, sandbox
 
 **Hook**:
-A Plugin function on a core event, such as `prompt.submit` or `tool.call`. Hooks on one event form a chain: each passes the event on, rewrites it, or answers for core.
+A Plugin function on a core event, such as `prompt.submit` or `tool.check`. Hooks on one event form a chain: each passes the event on, rewrites it, or answers for core.
 _Avoid_: Listener, interceptor, middleware
 
 **Slot**:

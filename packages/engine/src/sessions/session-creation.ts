@@ -162,7 +162,7 @@ const submitInitialAcpPrompt = async (
     prompt: input.prompt,
   });
 
-  if ('dropped' in answer) return;
+  if ('drop' in answer) return;
 
   await submitSessionPrompt(session, {
     turnId: input.turnId,

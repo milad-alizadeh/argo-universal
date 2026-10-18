@@ -27,7 +27,7 @@ export const promptSession = async (
   const sessionActor = await openReadySession(deps, sessionId);
   const answer = await deps.hooks['prompt.submit']({ sessionId, prompt });
 
-  if ('dropped' in answer) return { messageId: null };
+  if ('drop' in answer) return { messageId: null, drop: answer.drop };
   const turnId = deps.createId();
   validateSessionCommandAdmission(deps);
   await submitSessionPrompt(sessionActor, { turnId, content: answer.prompt });

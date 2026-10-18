@@ -9,8 +9,8 @@ import type { RegisteredHook } from './hook-registry';
 import { coreAnswer, guardRefusal, isAnswer } from './hook-rules';
 import { RunningHook, type HookStep } from './running-hook';
 
-// Well inside the 3 seconds a starting Plugin has to answer, so a Plugin waiting on a chain never counts as hanging.
-const hookBudgetMs = 1000;
+// A Hook's own time, as Claude Code allows it; waits on `next` and `argo` calls don't count.
+const hookBudgetMs = 10_000;
 
 export type HookChainInput = {
   send: (hook: RegisteredHook, invocation: HookInvocation) => void;
@@ -64,6 +64,13 @@ export class HookChain {
       pluginId,
       ...waiting.flatMap(({ ancestors }) => [...ancestors]),
     ]);
+  }
+
+  // A Plugin's `argo` call may be made by its running Hooks, so none of them is charged for the wait.
+  public whileCalling<T>(pluginId: string, call: Promise<T>): Promise<T> {
+    return [...this.running.values()]
+      .filter((running) => running.hook.pluginId === pluginId)
+      .reduce((work, running) => running.waitingOn(work), call);
   }
 
   // A stopped, reloaded or crashed worker's running Hooks fail, so their chains go on.

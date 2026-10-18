@@ -4,7 +4,7 @@ import { fromPromise, type AnyActorRef } from 'xstate';
 
 export const permissionHookedEvent = 'session.permissionHooked';
 
-// How a Permission request's `tool.call` Hooks ended: the option they chose, null to cancel as a person may, or no answer to leave it to the person.
+// How a Permission request's `tool.check` Hooks ended: the option they chose, null to cancel as a person may, or no answer to leave it to the person.
 export type PermissionHooked = {
   type: typeof permissionHookedEvent;
   requestId: string;
@@ -15,7 +15,7 @@ export type PermissionHooked = {
 export const toolCallHooksId = (requestId: string): string =>
   `toolCallHooks:${requestId}`;
 
-type Decision = HookAnswer<'tool.call'>['decision'];
+type Decision = HookAnswer<'tool.check'>['decision'];
 
 // The Agent's own options carry the answer: a one-time choice first, then a lasting one.
 const optionKinds: Record<
@@ -46,10 +46,10 @@ type PermissionHookInput = {
   session: Pick<AnyActorRef, 'send'>;
 };
 
-// Runs `tool.call` Hooks on one Permission request and reports how they ended.
+// Runs `tool.check` Hooks on one Permission request and reports how they ended.
 export const toolCallHooks = fromPromise<void, PermissionHookInput>(
   async ({ input: { hooks, sessionId, request, session } }) => {
-    const { decision } = await hooks['tool.call']({ sessionId, request });
+    const { decision } = await hooks['tool.check']({ sessionId, request });
 
     session.send({
       type: permissionHookedEvent,

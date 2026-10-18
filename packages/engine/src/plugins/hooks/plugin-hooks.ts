@@ -77,6 +77,10 @@ export class PluginHooks {
     }
   }
 
+  public whileCalling<T>(pluginId: string, call: Promise<T>): Promise<T> {
+    return this.chain.whileCalling(pluginId, call);
+  }
+
   public release(pluginId: string): void {
     this.registry.release(pluginId);
     this.chain.release(pluginId);

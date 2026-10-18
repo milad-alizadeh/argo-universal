@@ -12,6 +12,15 @@ const SessionStart = z.strictObject({
   agent: z.string(),
 });
 
+// Claude Code's limit on a drop reason.
+const dropReasonLimit = 4096;
+
+// Why a Hook dropped a prompt, for the person who sent it; a longer reason is cut, as Claude Code cuts it.
+const DropReason = z
+  .string()
+  .min(1)
+  .transform((reason) => reason.slice(0, dropReasonLimit));
+
 const PromptSubmit = z.strictObject({
   sessionId: z.string(),
   prompt: z.array(ContentBlock).min(1),
@@ -37,7 +46,7 @@ const ProcessSpawn = z.strictObject({
 
 /*
  * What each event's chain resolves to: core's own answer at the bottom, or a hook's.
- * `tool.call`'s `ask` leaves the Permission request to the person, as core does.
+ * `tool.check`'s `ask` leaves the Permission request to the person, as core does.
  */
 export const hookEvents = {
   'session.start': { event: SessionStart, answer: z.null() },
@@ -45,10 +54,10 @@ export const hookEvents = {
     event: PromptSubmit,
     answer: z.union([
       z.strictObject({ prompt: PromptSubmit.shape.prompt }),
-      z.strictObject({ dropped: z.literal(true) }),
+      z.strictObject({ drop: DropReason }),
     ]),
   },
-  'tool.call': {
+  'tool.check': {
     event: ToolCall,
     answer: z.strictObject({ decision: z.enum(['ask', 'allow', 'deny']) }),
   },

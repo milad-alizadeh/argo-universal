@@ -60,7 +60,10 @@ export class PluginRuntime {
       return this.hooks.reply({ pluginId, generation }, request.call);
 
     if (request.api !== 'view')
-      return this.services.handle(pluginId, generation, request);
+      return this.hooks.whileCalling(
+        pluginId,
+        this.services.handle(pluginId, generation, request),
+      );
     this.views.receive(pluginId, request.path, request.message);
 
     return { ok: true };

@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const HookEventName = z.enum([
   'session.start',
   'prompt.submit',
-  'tool.call',
+  'tool.check',
   'turn.complete',
   'process.spawn',
 ]);

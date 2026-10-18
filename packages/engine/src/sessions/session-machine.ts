@@ -239,7 +239,7 @@ export interface SessionContext extends SessionData {
   activeTurnStartedAt: number | null;
   usage: ContextUsage | null;
   permissionQueue: PendingPermission[];
-  // The option a `tool.call` Hook chose for a queued request, by request id; it answers once the request is first in the queue.
+  // The option a `tool.check` Hook chose for a queued request, by request id; it answers once the request is first in the queue.
   hookedPermissions: Record<string, string | null>;
   elicitationQueue: PendingElicitation[];
   configOptions: SessionConfigOption[];

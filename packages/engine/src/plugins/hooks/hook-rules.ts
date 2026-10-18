@@ -21,14 +21,14 @@ const hookRules: HookRules = {
   'session.start': { core: { answer: null }, rewritable: [] },
   'prompt.submit': {
     core: { carries: ['prompt'] },
-    refusal: { dropped: true },
+    refusal: { drop: 'A guard Hook failed' },
     rewritable: ['prompt'],
   },
-  'tool.call': {
+  'tool.check': {
     core: { answer: { decision: 'ask' } },
     refusal: { decision: 'deny' },
     subject: (event) =>
-      hookEvents['tool.call'].event.safeParse(event).data?.request.title,
+      hookEvents['tool.check'].event.safeParse(event).data?.request.title,
     rewritable: [],
   },
   'turn.complete': { core: { answer: null }, rewritable: [] },

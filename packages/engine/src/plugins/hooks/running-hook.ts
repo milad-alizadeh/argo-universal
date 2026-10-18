@@ -57,13 +57,19 @@ export class RunningHook {
     const { name, event: original, rest } = this.step;
     const event = readRewrite({ name, original, rewrite });
 
-    this.budget.pause();
     this.nextAnswer = rest(event);
 
+    return this.waitingOn(this.nextAnswer);
+  }
+
+  // Time the Hook spends waiting on `next` or an `argo` call isn't its own.
+  public async waitingOn<T>(work: Promise<T>): Promise<T> {
+    this.budget.hold();
+
     try {
-      return await this.nextAnswer;
+      return await work;
     } finally {
-      if (!this.ended) this.budget.start();
+      this.budget.release();
     }
   }
 
