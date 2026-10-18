@@ -11,6 +11,7 @@ import {
   Text,
   GroupedListItem,
   Pill,
+  EmptyState,
   VirtualList,
   Table,
   GroupedList,
@@ -18,7 +19,10 @@ import {
   type PluginComponents,
   type PluginProps,
 } from '@argo/plugin-kit';
+import { emptyStateProps } from '@repo/contracts/plugins/kit';
 import { expectTypeOf } from 'vitest';
+import type { z } from 'zod';
+import type { EmptyStateProps } from '#primitives/status/empty-state';
 
 type PublicComponents = Omit<PluginComponents, 'List.Section'> & {
   ListSection: PluginComponents['List.Section'];
@@ -31,6 +35,8 @@ expectTypeOf<
 expectTypeOf<typeof PluginKit.List.Section>().toEqualTypeOf<
   PluginComponents['List.Section']
 >();
+
+expectTypeOf<z.output<typeof emptyStateProps>>().toExtend<EmptyStateProps>();
 
 <Stack direction="column" gap={2}>
   <Row>
@@ -116,6 +122,13 @@ const optional = Boolean('optional');
 />;
 
 expectTypeOf<PluginProps['VirtualList']>().toHaveProperty('items');
+
+<EmptyState
+  icon="sessions"
+  title="No Sessions yet"
+  description="Start a Session"
+  action={<Button label="New Session" onPress={() => {}} />}
+/>;
 
 <List
   empty={<Text label="No runs" />}

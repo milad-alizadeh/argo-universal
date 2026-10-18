@@ -59,7 +59,9 @@ export { iconSymbols } from './lib/generic/symbols/icon-names';
 
 export type { SizeClass } from './lib/generic/use-size-class/size-class';
 
-export { Placeholder } from '#lib/product/placeholder';
+export { EmptyState } from '#primitives/status/empty-state';
+
+export type { EmptyStateProps } from '#primitives/status/empty-state';
 
 export { Text } from '#primitives/content/text';
 

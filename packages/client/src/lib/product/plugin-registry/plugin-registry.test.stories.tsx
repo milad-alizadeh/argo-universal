@@ -156,7 +156,15 @@ export const GroupedListAnatomy = listPage('GroupedList');
 export const EmptyList: Story = {
   parameters: { screenPreview: true },
   render: () => <PluginDetailView root={emptyRunListRoot} onEvent={onEvent} />,
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByText('No runs yet')).toBeVisible();
+  play: async ({ canvas, userEvent }) => {
+    await expect(
+      await canvas.findByRole('heading', { name: 'No runs yet' }),
+    ).toBeVisible();
+    await expect(canvas.getByText('New CI runs appear here.')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Run workflow' }));
+    await expect(onEvent).toHaveBeenCalledWith(
+      'empty-runs#empty/empty-state#action/run-workflow',
+      { event: 'onPress' },
+    );
   },
 };

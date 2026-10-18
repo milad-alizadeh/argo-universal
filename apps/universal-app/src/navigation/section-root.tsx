@@ -1,7 +1,7 @@
 import {
   type FirstPage,
   type CoreSection,
-  Placeholder,
+  EmptyState,
   type SectionList,
   useNeedsAttention,
   useSectionList,
@@ -138,7 +138,7 @@ type EmptyPageProps = NonNullable<SectionList['emptyPage']>;
 function EmptyPage(props: EmptyPageProps): React.JSX.Element {
   return (
     <View testID="empty-detail" className="flex-1">
-      <Placeholder {...props} />
+      <EmptyState {...props} />
     </View>
   );
 }
