@@ -19,7 +19,6 @@ import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
 import { listExpansion } from './list-expansion';
 import { listWireParts } from './list-wire-parts';
-import { pressUi } from './part-ui';
 import { textForApp } from './text-for-app';
 import type { WirePartDefinition } from './wire-part-definition';
 import { wirePartReferences } from './wire-part-reference';
@@ -103,7 +102,6 @@ export const wireParts = {
     reference: wirePartReferences.Text,
   },
   Button: {
-    ui: pressUi,
     props: buttonProps,
     versions: [
       buttonProps.transform(legacyButtonProps).pipe(buttonV1),

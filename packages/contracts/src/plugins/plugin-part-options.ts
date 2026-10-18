@@ -1,10 +1,8 @@
 import type { z } from 'zod';
-import type { PartUi } from './part-ui';
 import type { WirePartReference } from './wire-part-reference';
 import type { WirePartDefinition } from './wire-parts';
 
 export interface PartOptions {
-  ui?: PartUi;
   slots?: Record<string, readonly string[]>;
   events?: Record<string, z.ZodType>;
   children?: boolean;

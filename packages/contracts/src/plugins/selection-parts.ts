@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { valueUi } from './part-ui';
 import { part, stringLabel, onPress } from './plugin-part-schema-utils';
 import {
   pickerSchema,
@@ -38,12 +37,10 @@ function oldPicker(
 
 export const selectionPartSchemas = {
   Picker: part('A selection control.', pickerSchema, {
-    ui: valueUi,
     events,
     previous: [pickerSchema.transform(oldPicker).pipe(legacyPicker)],
   }),
   Combobox: part('A searchable Picker.', comboboxSchema, {
-    ui: valueUi,
     events,
     previous: [
       z.object({
@@ -55,7 +52,6 @@ export const selectionPartSchemas = {
     ],
   }),
   Menu: part('A choice or action menu.', menuSchema, {
-    ui: valueUi,
     events,
     previous: [z.object({})],
   }),
@@ -63,7 +59,6 @@ export const selectionPartSchemas = {
     'A primary action with a secondary action menu.',
     splitButtonSchema,
     {
-      ui: { ...valueUi, pending: { onPress: 'disabled' } },
       events,
       previous: [
         z.object({

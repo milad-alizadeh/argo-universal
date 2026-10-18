@@ -1,11 +1,8 @@
-import {
-  wireParts,
-  versionsOf,
-  type WirePart,
-} from '@repo/contracts/plugins/kit';
+import { wireParts, versionsOf } from '@repo/contracts/plugins/kit';
 
-// Table's legacy wire alias has no App drawing; every other wire part is in the renderer map.
-export type PluginPart = Exclude<WirePart, 'Table'>;
+export type { PluginPart } from '@repo/contracts/plugins/kit';
+
+// Legacy wire aliases lower to kit components; Table remains unsupported.
 
 export const pluginPartVersions = versionsOf(
   Object.keys(wireParts).filter((type) => type !== 'Table'),

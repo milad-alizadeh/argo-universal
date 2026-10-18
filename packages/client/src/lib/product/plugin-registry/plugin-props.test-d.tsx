@@ -5,16 +5,10 @@ import {
   Button,
   List,
   ListItem as PluginListItem,
-  Column,
-  Row,
   Stack,
   Text,
-  GroupedListItem,
   Pill,
   EmptyState,
-  VirtualList,
-  Table,
-  GroupedList,
   Svg,
   type PluginComponents,
   type PluginProps,
@@ -25,12 +19,12 @@ import { expectTypeOf } from 'vitest';
 import type { z } from 'zod';
 import type { ActionProps } from '#primitives/actions/action-list';
 import type { EmptyStateProps } from '#primitives/status/empty-state';
+import type { pluginEntries } from './plugin-entries';
 
 type NestedPart = Extract<keyof PluginComponents, `${string}.${string}`>;
 
 type PublicComponents = Omit<PluginComponents, NestedPart> & {
   ListSection: PluginComponents['List.Section'];
-  ActionListSection: PluginComponents['ActionList.Section'];
 };
 
 expectTypeOf<
@@ -44,11 +38,11 @@ expectTypeOf<typeof PluginKit.List.Section>().toEqualTypeOf<
 expectTypeOf<z.output<typeof emptyStateProps>>().toExtend<EmptyStateProps>();
 
 <Stack direction="column" gap={2}>
-  <Row>
-    <Column>
+  <Stack direction="row">
+    <Stack direction="column">
       <Text role="body">Hello</Text>
-    </Column>
-  </Row>
+    </Stack>
+  </Stack>
   <Button label="Tap" onPress={() => {}} />
   <Svg xml="<svg/>" label="Service map" tone="info" aspectRatio={1.5} />;
 </Stack>;
@@ -70,7 +64,7 @@ expectTypeOf<z.output<typeof emptyStateProps>>().toExtend<EmptyStateProps>();
 <Button />;
 
 // @ts-expect-error gaps use the shared spacing tokens.
-<Row gap={7} />;
+<Stack direction="row" gap={7} />;
 
 // @ts-expect-error onPress has no string payload.
 <Button label="Tap" onPress={(value: string) => value.toUpperCase()} />;
@@ -83,37 +77,37 @@ expectTypeOf<z.output<typeof emptyStateProps>>().toExtend<EmptyStateProps>();
 
 <Pill text="Healthy" tone="success" />;
 
-<VirtualList
+<List
   items={[{ id: 'row' }]}
   renderItem={(item) => <Text key={item.id}>{item.id}</Text>}
 />;
 
-<Table>
+<List>
   <Text key="row">Row</Text>
-</Table>;
+</List>;
 
-<GroupedList>
-  <GroupedListItem key="row" label="Row" />
-</GroupedList>;
+<List appearance="grouped">
+  <PluginListItem key="row" title="Row" />
+</List>;
 
 const listItems = [{ id: 'row' }] as const;
 
 const stringItem = (item: string): React.JSX.Element => <Text>{item}</Text>;
 
 // @ts-expect-error renderItem receives the type of each item.
-<VirtualList items={listItems} renderItem={stringItem} />;
+<List items={listItems} renderItem={stringItem} />;
 
 // @ts-expect-error a named slot contains elements, never data objects.
-<GroupedListItem label="Bad slot" leading={{ arbitrary: true }} />;
+<PluginListItem title="Bad slot" leading={{ arbitrary: true }} />;
 
 // @ts-expect-error the part declares its named slots in Contracts.
-<GroupedListItem label="Unknown slot" invented={<Text>Content</Text>} />;
+<PluginListItem title="Unknown slot" invented={<Text>Content</Text>} />;
 
 const optional = Boolean('optional');
 
-<GroupedListItem
-  label="Conditional"
-  accessories={[
+<PluginListItem
+  title="Conditional"
+  trailing={[
     optional && <Text key="optional">Optional</Text>,
     null,
     undefined,
@@ -121,12 +115,12 @@ const optional = Boolean('optional');
   ]}
 />;
 
-<VirtualList
+<List
   items={listItems}
   renderItem={(item) => <Text key={item.id}>{item.id}</Text>}
 />;
 
-expectTypeOf<PluginProps['VirtualList']>().toHaveProperty('items');
+expectTypeOf<PluginProps['List']>().toHaveProperty('items');
 
 <EmptyState
   icon="sessions"
@@ -153,4 +147,12 @@ expectTypeOf<ActionProps['onPress']>().toEqualTypeOf<() => void>();
 
 expectTypeOf<Omit<z.output<typeof actionProps>, 'onPress'>>().toExtend<
   Omit<ActionProps, 'onPress'>
+>();
+
+expectTypeOf<keyof PluginComponents>().toEqualTypeOf<
+  keyof typeof pluginEntries
+>();
+
+expectTypeOf<typeof PluginKit.ActionList.Section>().toEqualTypeOf<
+  PluginComponents['ActionList.Section']
 >();

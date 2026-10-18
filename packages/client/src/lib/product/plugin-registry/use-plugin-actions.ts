@@ -1,173 +1,124 @@
-import type {
-  ActionTarget,
-  OpenOverlay,
-  Answer,
-  Flush,
-  PluginActions,
-  OverlayView,
-  OverlayState,
-} from './plugin-action-types';
-
-export type {
-  ActionTarget,
-  OpenOverlay,
-  PluginActions,
-} from './plugin-action-types';
-
 import type { Action, OverlayAction } from '@repo/contracts/plugins/wire';
-import { useState } from 'react';
-import { runAction } from './plugin-registry-actions';
+import { useReducer, useState } from 'react';
+import { runAction } from '../plugin-dispatcher';
+import type { PluginOnEvent } from './plugin-rendering';
 
-const initialView: OverlayView = { overlay: null, pending: null };
+export function usePluginActions(inherited?: PluginActions): PluginActions {
+  const [, update] = useReducer((revision: number) => revision + 1, 0);
+  const [state] = useState(() => new Overlays(update));
 
-export function usePluginActions(): PluginActions {
-  const [view, update] = useState(initialView);
-  const [state] = useState(() => overlayState(update));
-
-  return actionsFor(view, state);
+  return (
+    inherited ?? {
+      overlay: state.overlay,
+      pending: state.pending,
+      registerFlush: state.registerFlush,
+      run: state.run,
+      finish: state.finish,
+    }
+  );
 }
 
-function overlayState(update: OverlayState['update']): OverlayState {
-  return {
-    current: null,
-    busy: false,
-    generation: 0,
-    update,
-    flushers: new Set(),
+class Overlays {
+  public overlay: OpenOverlay | null = null;
+  public pending: Answer | null = null;
+  private generation = 0;
+  private readonly flushers = new Set<Flush>();
+  constructor(private readonly update: () => void) {}
+
+  public registerFlush = (flush: Flush): (() => void) => {
+    this.flushers.add(flush);
+
+    return () => {
+      this.flushers.delete(flush);
+    };
   };
-}
 
-function actionsFor(view: OverlayView, state: OverlayState): PluginActions {
-  return {
-    ...view,
-    registerFlush: (flush) => registerFlush(state, flush),
-    finish: (confirmed, id) => finishOverlay(state, confirmed, id),
-    run: (action, target) => run(state, action, target),
+  public run = async (action: Action, target: ActionTarget): Promise<void> => {
+    if ('content' in action) return this.open(action, target);
+
+    if (action.action === 'dismiss') return this.finish(false);
+    await runAction(action);
   };
-}
 
-async function run(
-  state: OverlayState,
-  action: Action,
-  target: ActionTarget,
-): Promise<void> {
-  if ('content' in action) return openOverlay(state, action, target);
+  private async open(
+    action: OverlayAction,
+    target: ActionTarget,
+  ): Promise<void> {
+    if (this.pending)
+      throw new Error('The open overlay is waiting for its handler');
+    await this.finish(false);
+    this.generation += 1;
+    this.overlay = { id: this.generation, action, target };
+    this.update();
+  }
 
-  if (action.action === 'dismiss') return finishOverlay(state, false);
+  public finish = async (confirmed: boolean, id?: number): Promise<void> => {
+    const overlay = this.available(id);
 
-  await runAction(action);
-}
+    if (!overlay) return;
+    this.pending = confirmed ? 'onConfirm' : 'onDismiss';
+    this.update();
 
-async function openOverlay(
-  state: OverlayState,
-  action: OverlayAction,
-  target: ActionTarget,
-): Promise<void> {
-  if (state.busy)
-    throw new Error('The open overlay is waiting for its handler');
-  await finishOverlay(state, false);
-  state.generation += 1;
-  open(state, { id: state.generation, action, target });
-}
+    try {
+      await this.answer(overlay, this.pending);
+      this.overlay = null;
+    } finally {
+      this.closeDismissed(confirmed);
+      this.pending = null;
+      this.update();
+    }
+  };
 
-function open(state: OverlayState, overlay: OpenOverlay | null): void {
-  state.current = overlay;
-  state.update((view) => ({ ...view, overlay }));
-}
+  private closeDismissed(confirmed: boolean): void {
+    if (!confirmed) this.overlay = null;
+  }
 
-function markPending(state: OverlayState, pending: Answer | null): void {
-  state.busy = pending !== null;
-  state.update((view) => ({ ...view, pending }));
-}
+  private available(id?: number): OpenOverlay | null {
+    if (this.pending) return null;
 
-async function finishOverlay(
-  state: OverlayState,
-  confirmed: boolean,
-  id?: number,
-): Promise<void> {
-  const overlay = availableOverlay(state, id);
+    if (id === undefined) return this.overlay;
 
-  if (!overlay) return;
-  const event = confirmed ? 'onConfirm' : 'onDismiss';
-  await settleAnswer(state, overlay, event);
-}
+    return matching(this.overlay, id);
+  }
 
-async function settleAnswer(
-  state: OverlayState,
-  overlay: OpenOverlay,
-  event: Answer,
-): Promise<void> {
-  markPending(state, event);
+  private async answer(overlay: OpenOverlay, event: Answer): Promise<void> {
+    if (event === 'onConfirm')
+      await Promise.all([...this.flushers].map((flush) => flush()));
+    const handler = overlay.action[event];
 
-  try {
-    await sendAndClose(state, overlay, event);
-  } finally {
-    markPending(state, null);
+    if (!handler) return;
+    const { target } = overlay;
+    const path = answerPath(handler, target, event);
+    await target.send(target.key, { event: 'onAction', payload: { path } });
   }
 }
 
-async function sendAndClose(
-  state: OverlayState,
-  overlay: OpenOverlay,
+function matching(overlay: OpenOverlay | null, id: number): OpenOverlay | null {
+  return overlay?.id === id ? overlay : null;
+}
+
+export interface ActionTarget {
+  key: string;
+  path: string[];
+  send: PluginOnEvent;
+}
+
+export interface OpenOverlay {
+  id: number;
+  action: OverlayAction;
+  target: ActionTarget;
+}
+
+export type Answer = 'onConfirm' | 'onDismiss';
+
+export type Flush = () => Promise<void>;
+
+export type PluginActions = Pick<Overlays, keyof Overlays>;
+
+function answerPath(
+  handler: { $path?: string[] },
+  target: ActionTarget,
   event: Answer,
-): Promise<void> {
-  try {
-    await sendAfterEdits(state, overlay, event);
-  } finally {
-    if (event === 'onDismiss') open(state, null);
-  }
-
-  if (event === 'onConfirm') open(state, null);
-}
-
-async function sendAfterEdits(
-  state: OverlayState,
-  overlay: OpenOverlay,
-  event: Answer,
-): Promise<void> {
-  if (event === 'onConfirm')
-    await Promise.all([...state.flushers].map((flush) => flush()));
-  await sendAnswer(overlay, event);
-}
-
-function registerFlush(state: OverlayState, flush: Flush): () => void {
-  state.flushers.add(flush);
-
-  return () => {
-    state.flushers.delete(flush);
-  };
-}
-
-function availableOverlay(
-  state: OverlayState,
-  id?: number,
-): OpenOverlay | null {
-  if (state.busy) return null;
-
-  return matchingOverlay(state.current, id);
-}
-
-function matchingOverlay(
-  overlay: OpenOverlay | null,
-  id?: number,
-): OpenOverlay | null {
-  if (!overlay) return null;
-
-  return matches(overlay, id) ? overlay : null;
-}
-
-function matches(overlay: OpenOverlay, id?: number): boolean {
-  return id === undefined || overlay.id === id;
-}
-
-async function sendAnswer(
-  { action, target }: OpenOverlay,
-  event: Answer,
-): Promise<void> {
-  const handler = action[event];
-
-  if (!handler) return;
-  const path = handler.$path ?? [...target.path, event];
-
-  await target.send(target.key, { event: 'onAction', payload: { path } });
+): string[] {
+  return handler.$path ?? [...target.path, event];
 }

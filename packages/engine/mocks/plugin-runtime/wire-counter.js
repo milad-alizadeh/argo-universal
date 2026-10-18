@@ -1,7 +1,6 @@
 import {
   Button,
-  Column,
-  Row,
+  Stack,
   Text,
   Pill,
   ListItem,
@@ -10,14 +9,14 @@ import {
 
 function Buttons({ onTap }) {
   return (
-    <Row gap={2}>
+    <Stack direction="row" gap={2}>
       <Button label="Tap me" onPress={onTap} />
       <Button
         label="Say hi"
         variant="outline"
         onPress={{ action: 'toast', message: 'Hello from the Plugin' }}
       />
-    </Row>
+    </Stack>
   );
 }
 
@@ -25,12 +24,12 @@ function CounterPage() {
   const [taps, setTaps] = useState(0);
 
   return (
-    <Column gap={4}>
+    <Stack direction="column" gap={4}>
       <Text role={headingRole}>Counter fixture</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <CounterBadges />
       <Buttons onTap={() => setTaps(taps + 1)} />
-    </Column>
+    </Stack>
   );
 }
 

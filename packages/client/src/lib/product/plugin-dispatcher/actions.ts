@@ -3,9 +3,9 @@ import { setStringAsync } from 'expo-clipboard';
 import { router, type Href } from 'expo-router';
 import { Linking } from 'react-native';
 import { showToast } from '#primitives/overlays/toast';
-import { shareContent } from './plugin-share';
+import { shareContent } from './share';
 
-export type AppAction = Exclude<Action, OverlayAction>;
+export type AppAction = Exclude<Action, OverlayAction | { action: 'dismiss' }>;
 
 type External = Extract<Action, { action: 'openUrl' | 'copy' }>;
 
@@ -41,35 +41,17 @@ function runLocal(action: LocalAction): void {
   else openPage(action.path);
 }
 
-async function runDevice(
-  action: DeviceAction,
-  dismiss?: () => void,
-): Promise<void> {
+async function runDevice(action: DeviceAction): Promise<void> {
   if (action.action === 'pop') return router.back();
 
-  if (action.action === 'dismiss') return closeOverlay(dismiss);
-
-  await runSharing(action);
-}
-
-async function runSharing(
-  action: Exclude<DeviceAction, { action: 'pop' | 'dismiss' }>,
-): Promise<void> {
   await (action.action === 'share'
     ? shareContent(action)
     : runExternal(action));
 }
 
 // The built-in Actions run here, in the App, with no round trip to the Server.
-export async function runAction(
-  action: AppAction,
-  dismiss?: () => void,
-): Promise<void> {
+export async function runAction(action: AppAction): Promise<void> {
   if (action.action === 'toast' || action.action === 'navigate')
     runLocal(action);
-  else await runDevice(action, dismiss);
-}
-
-function closeOverlay(dismiss?: () => void): void {
-  dismiss?.();
+  else await runDevice(action);
 }

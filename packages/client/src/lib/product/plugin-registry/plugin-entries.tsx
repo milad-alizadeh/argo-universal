@@ -11,7 +11,7 @@ import { Slider } from '#primitives/inputs/slider';
 import { Switch } from '#primitives/inputs/switch';
 import { TextInput } from '#primitives/inputs/text-input';
 import type { KitProps } from '#primitives/kit-props';
-import { Stack, Row, Column } from '#primitives/layout/stack';
+import { Stack } from '#primitives/layout/stack';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { EmptyState } from '#primitives/status/empty-state';
@@ -47,14 +47,9 @@ export const pluginEntries = {
   Text,
   Button,
   Stack,
-  Row,
-  Column,
   Svg,
 } satisfies {
-  [
-    Name in Exclude<
-      PluginPart,
-      'VirtualList' | 'GroupedList' | 'GroupedListItem'
-    >
-  ]: ComponentType<KitProps<Name, string, React.JSX.Element>>;
+  [Name in PluginPart]: ComponentType<
+    KitProps<Name, string, React.JSX.Element>
+  >;
 };

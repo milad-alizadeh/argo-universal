@@ -35,11 +35,14 @@ export function ReplaceableSlotView(
   props: ReplaceableSlotViewProps,
 ): ReactNode {
   const { onFallback } = props;
-  const root = replacementRoot(props.state);
-  const refused = useTreeRefusal(root, onFallback);
+  const refused = useTreeRefusal(props);
 
   return (
-    <PluginDrawingBoundary {...drawingBoundaryProps(props)}>
+    <PluginDrawingBoundary
+      resetKey={drawingKey(props)}
+      fallback={props.renderCore(props.input)}
+      onFallback={onFallback}
+    >
       {slotDrawing(props, refused)}
     </PluginDrawingBoundary>
   );
@@ -55,11 +58,10 @@ function coreInput(
   return matchingCore(input, parsed);
 }
 
-function useTreeRefusal(
-  root: WireNode | null | undefined,
-  onFallback: (reason: string) => void,
-): boolean {
+function useTreeRefusal(props: ReplaceableSlotViewProps): boolean {
+  const root = replacementRoot(props.state);
   const reason = root ? replacementTreeReason(root, pluginPartVersions) : null;
+  const { onFallback } = props;
   useEffect(() => {
     if (reason) onFallback(reason);
   }, [reason, onFallback]);
@@ -68,11 +70,9 @@ function useTreeRefusal(
 }
 
 function drawingKey({ input, state }: ReplaceableSlotViewProps): string {
-  const view = state.replacement
-    ? JSON.stringify(state.replacement.view.viewId)
-    : 'core';
+  const view = state.replacement ? state.replacement.view.viewId : 'core';
 
-  return `${view}:${JSON.stringify(input)}`;
+  return JSON.stringify([view, input]);
 }
 
 function slotDrawing(
@@ -86,9 +86,9 @@ function slotDrawing(
   return <PluginTree root={root} onEvent={props.onEvent} />;
 }
 
-const replacementRoot = (
-  state: ReplaceableState,
-): WireNode | null | undefined => state.replacement?.view.root;
+function replacementRoot(state: ReplaceableState): WireNode | null | undefined {
+  return state.replacement?.view.root;
+}
 
 function matchingCore(
   input: ReplaceableInput,
@@ -97,15 +97,4 @@ function matchingCore(
   if (!parsed) return input;
 
   return parsed.slotId === input.slotId ? parsed : input;
-}
-
-function drawingBoundaryProps(
-  props: ReplaceableSlotViewProps,
-): React.ComponentProps<typeof PluginDrawingBoundary> {
-  return {
-    resetKey: drawingKey(props),
-    fallback: props.renderCore(props.input),
-    onFallback: props.onFallback,
-    children: null,
-  };
 }
