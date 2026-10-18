@@ -1,12 +1,15 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
-import { PluginTree } from '../../../lib/product/plugin-registry';
+import {
+  PluginTree,
+  type PluginOnEvent,
+} from '../../../lib/product/plugin-registry';
 
 export interface PluginDetailViewProps {
   // The page the Plugin draws; blank until the Server's first snapshot arrives.
   root: WireNode | null;
-  onEvent: (eventId: string) => void;
+  onEvent: PluginOnEvent;
 }
 
 // Under iOS 26's transparent header, the page starts below it and scrolls on under the glass.

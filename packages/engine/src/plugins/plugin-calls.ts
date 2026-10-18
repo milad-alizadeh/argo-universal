@@ -15,7 +15,10 @@ import {
 } from './runtime-protocol';
 
 // Pages and Hooks are the runtime's own; every other call is answered by PluginServices.
-export type StateRequest = Exclude<PluginRequest, { api: 'view' | 'hooks' }>;
+export type StateRequest = Exclude<
+  PluginRequest,
+  { api: 'view' | 'hooks' | 'dispatchResult' }
+>;
 
 export type MachineRequest = Extract<
   StateRequest,

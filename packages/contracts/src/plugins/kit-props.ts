@@ -8,7 +8,12 @@ import {
   textRoles,
   tones,
 } from '../kit-tokens';
-import { Handler } from './wire';
+import { Action, WireEvent } from './wire';
+
+const pressHandler = z.union([
+  WireEvent.extend({ $event: z.literal('onPress') }),
+  Action,
+]);
 
 export const textV1 = z.object({
   label: z.string(),
@@ -26,7 +31,7 @@ export const buttonProps = z.object({
   tone: z.literal('danger').optional(),
   size: z.enum(buttonSizes).optional(),
   disabled: z.boolean().optional(),
-  onPress: Handler.optional(),
+  onPress: pressHandler.optional(),
 });
 
 export const layoutProps = z.object({
@@ -40,7 +45,7 @@ export const groupedItemProps = z.object({
   label: z.string(),
   value: z.string().optional(),
   disabled: z.boolean().optional(),
-  onPress: Handler.optional(),
+  onPress: pressHandler.optional(),
 });
 
 export const listProps = z.object({});

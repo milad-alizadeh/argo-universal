@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#plugin-identifier": "./src/plugins/plugin-identifier.ts"
+    "#plugin-identifier": "./src/plugins/plugin-identifier.ts",
+    "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
+    "#plugin-wire-events": "./src/plugins/wire-events.ts"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -22,7 +24,8 @@
     "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",
     "./plugins/kit": "./src/plugins/kit.ts",
     "./plugins/prepare-tree": "./src/plugins/prepare-tree.ts",
-    "./kit-tokens": "./src/kit-tokens.ts"
+    "./kit-tokens": "./src/kit-tokens.ts",
+    "./plugins/wire-node-key": "./src/plugins/wire-node-key.ts"
   },
   "scripts": {
     "generate:registry": "node tools/registry/generate.mts && json2ts -i src/agents/upstream/registry.published.schema.gen.json -o src/agents/upstream/registry.gen.ts --cwd src/agents/upstream --unknownAny --bannerComment '/* Generated from ACP Registry 33a1a101ef68ab20a97624ac89d4b977eeac0daf schema and publisher literal by json-schema-to-typescript 16.0.0. */'",

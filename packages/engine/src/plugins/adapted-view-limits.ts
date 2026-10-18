@@ -17,17 +17,22 @@ export class AdaptedViewLimits {
       wireSizeReason(root, pluginPageBytes, 'adapted page') ??
       wireSizeReason(message, pluginMessageBytes, 'adapted message');
 
-    if (reason) return this.refuse(reason, message.revision);
+    if (reason) return this.refuse(reason, message);
     this.refused = false;
 
     return message;
   }
 
-  private refuse(reason: string, revision: number): ViewMessage | null {
+  private refuse(reason: string, message: ViewMessage): ViewMessage | null {
     if (this.refused) return null;
     this.refused = true;
     this.log(reason);
 
-    return { type: 'snapshot', revision, root: pluginPageFallback };
+    return {
+      type: 'snapshot',
+      revision: message.revision,
+      viewId: message.viewId,
+      root: pluginPageFallback,
+    };
   }
 }

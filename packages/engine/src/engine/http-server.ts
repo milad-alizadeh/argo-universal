@@ -7,6 +7,7 @@ import type { HookPort, Keychain, PluginNetwork } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
+import { createHttpCaller, type HttpCaller } from './http-callers';
 import {
   admitClose,
   connectWebSockets,
@@ -43,9 +44,7 @@ export interface HttpServerOptions {
 
 export interface HttpServer {
   notifications: Notifications;
-  createCaller: (
-    options?: Parameters<AppRouter['createCaller']>[1],
-  ) => ReturnType<AppRouter['createCaller']>;
+  createCaller: HttpCaller;
   close: () => Promise<void>;
 }
 
@@ -83,7 +82,7 @@ function connectHttpServer(
     close: admitClose(setup.commandAdmission, () =>
       closeHttpServices(setup, closeConnections),
     ),
-    createCaller: (options) => setup.appRouter.createCaller({}, options),
+    createCaller: createHttpCaller(setup),
   };
 }
 

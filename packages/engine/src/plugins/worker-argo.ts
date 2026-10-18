@@ -61,7 +61,7 @@ export const argoBridge =
 export const argoSource = `(() => {
   const bridge = globalThis.__argoBridge;
   delete globalThis.__argoBridge;
-  const kit = globalThis.__argoKit.createKit((path, message) => call({ api: 'view', path, message }).then(() => {}));
+  const kit = globalThis.__argoKit.createKit((viewId, message) => call({ api: 'view', viewId, message }).then(() => {}), (requestId, result) => call({ api: 'dispatchResult', requestId, result }).then(() => {}));
   delete globalThis.__argoKit;
   globalThis.__argoInbox = kit.inbox;
   const hooks = [];

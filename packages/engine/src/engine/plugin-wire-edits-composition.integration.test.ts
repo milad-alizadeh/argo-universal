@@ -1,17 +1,18 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { pluginTap } from '#mocks/plugin-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
 const editsFixture = { id: 'edits', fixture: 'wire-edits' };
 
-const nextEvent = '0/next:onPress';
+const nextKey = '0/next';
 
 it('publishes changed and removed properties', async () => {
   const path = '/props';
 
   const home = await createRuntimePlugins([editsFixture]);
 
-  const { caller, createCaller } = await startEngineTestHost({ home });
+  const { createCaller } = await startEngineTestHost({ home });
   const controller = new AbortController();
 
   onTestFinished(() => controller.abort());
@@ -19,10 +20,13 @@ it('publishes changed and removed properties', async () => {
   const input = { pluginId: 'edits', path };
   const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
 
-  await stream.next();
-  await caller.plugins.dispatch({ ...input, eventId: nextEvent });
+  const initial = (await stream.next()).value;
+  await watching.plugins.dispatch(
+    pluginTap(initial, { ...input, key: nextKey }),
+  );
   expect((await stream.next()).value).toEqual({
     type: 'patch',
+    viewId: initial.viewId,
     revision: 2,
     ops: [
       {
@@ -40,7 +44,7 @@ it('replaces a changed type and retains it for a late viewer', async () => {
 
   const home = await createRuntimePlugins([editsFixture]);
 
-  const { caller, createCaller } = await startEngineTestHost({ home });
+  const { createCaller } = await startEngineTestHost({ home });
   const controller = new AbortController();
 
   onTestFinished(() => controller.abort());
@@ -48,10 +52,13 @@ it('replaces a changed type and retains it for a late viewer', async () => {
   const input = { pluginId: 'edits', path };
   const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
 
-  await stream.next();
-  await caller.plugins.dispatch({ ...input, eventId: nextEvent });
+  const initial = (await stream.next()).value;
+  await watching.plugins.dispatch(
+    pluginTap(initial, { ...input, key: nextKey }),
+  );
   expect((await stream.next()).value).toEqual({
     type: 'patch',
+    viewId: initial.viewId,
     revision: 2,
     ops: [
       {
@@ -85,7 +92,7 @@ it('removes a keyed row', async () => {
 
   const home = await createRuntimePlugins([editsFixture]);
 
-  const { caller, createCaller } = await startEngineTestHost({ home });
+  const { createCaller } = await startEngineTestHost({ home });
   const controller = new AbortController();
 
   onTestFinished(() => controller.abort());
@@ -93,10 +100,13 @@ it('removes a keyed row', async () => {
   const input = { pluginId: 'edits', path };
   const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
 
-  await stream.next();
-  await caller.plugins.dispatch({ ...input, eventId: nextEvent });
+  const initial = (await stream.next()).value;
+  await watching.plugins.dispatch(
+    pluginTap(initial, { ...input, key: nextKey }),
+  );
   expect((await stream.next()).value).toEqual({
     type: 'patch',
+    viewId: initial.viewId,
     revision: 2,
     ops: [{ op: 'remove', key: ['removed'] }],
   });

@@ -20,13 +20,18 @@ function nextRoot(
 function outgoing(
   before: WireNode | null,
   next: WireNode,
-  revision: number,
+  message: ViewMessage,
 ): ViewMessage {
   const ops = before ? diff(before, next) : [];
 
   return ops.length
-    ? { type: 'patch', revision, ops }
-    : { type: 'snapshot', revision, root: next };
+    ? { type: 'patch', revision: message.revision, viewId: message.viewId, ops }
+    : {
+        type: 'snapshot',
+        revision: message.revision,
+        viewId: message.viewId,
+        root: next,
+      };
 }
 
 interface Trees {
@@ -50,10 +55,7 @@ function boundedMessage(
 ): ViewMessage | null {
   const before = message.type === 'snapshot' ? null : trees.drawn;
 
-  const result = trees.limits.accept(
-    next,
-    outgoing(before, next, message.revision),
-  );
+  const result = trees.limits.accept(next, outgoing(before, next, message));
 
   if (result) rememberDrawn(trees, result, next);
 

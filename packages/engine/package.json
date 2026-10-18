@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#mocks/*": "./mocks/*.ts"
+    "#mocks/*": "./mocks/*.ts",
+    "#plugin-storage-protocol": "./src/plugins/storage-protocol.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

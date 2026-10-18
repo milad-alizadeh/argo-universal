@@ -1,14 +1,14 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { GroupedListContent } from '#primitives/lists/grouped-list-content';
-import { PluginTree } from './plugin-registry';
+import { PluginTree, type PluginOnEvent } from './plugin-registry';
 
 export interface PluginSlotContribution {
   pluginId: string;
   // The Plugin's name, shown as the section's title.
   name: string;
   root: WireNode;
-  onEvent: (eventId: string) => void;
+  onEvent: PluginOnEvent;
 }
 
 export interface PluginSlotProps {

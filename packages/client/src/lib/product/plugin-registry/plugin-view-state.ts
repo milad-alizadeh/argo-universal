@@ -1,12 +1,21 @@
-import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import type {
+  ViewMessage,
+  WireNode,
+  PluginViewId,
+} from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 
 export interface PluginViewState {
   root: WireNode | null;
   revision: number;
+  viewId: PluginViewId | null;
 }
 
-export const emptyPluginView: PluginViewState = { root: null, revision: 0 };
+export const emptyPluginView: PluginViewState = {
+  root: null,
+  revision: 0,
+  viewId: null,
+};
 
 type Patch = Extract<ViewMessage, { type: 'patch' }>;
 
@@ -15,6 +24,7 @@ function patched(state: PluginViewState, message: Patch): PluginViewState {
   if (!state.root || message.revision <= state.revision) return state;
 
   return {
+    ...state,
     root: applyPatch(state.root, message.ops),
     revision: message.revision,
   };
@@ -26,7 +36,11 @@ export function reducePluginView(
   message: ViewMessage,
 ): PluginViewState {
   if (message.type === 'snapshot')
-    return { root: message.root, revision: message.revision };
+    return {
+      root: message.root,
+      revision: message.revision,
+      viewId: message.viewId ?? null,
+    };
 
   return patched(state, message);
 }

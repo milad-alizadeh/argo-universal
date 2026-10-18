@@ -5,7 +5,6 @@ import type {
   PluginSettingValue,
 } from '@repo/contracts/plugins';
 import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
-import type { PartVersions } from '@repo/contracts/plugins/kit';
 import type {
   PluginFailure,
   PluginStatus,
@@ -16,7 +15,7 @@ import {
   type SlotMessage,
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
-import { contributions } from './contribution';
+import type { RpcConnection } from '../rpc';
 import { callerOf } from './hooks/hook-rules';
 import { discoverPlugins } from './loader';
 import {
@@ -31,6 +30,7 @@ import {
   type PluginDescriptor,
   type PluginServiceDeps,
 } from './located-plugins';
+import { slotViews } from './slot-views';
 
 export type { PluginServiceDeps } from './located-plugins';
 
@@ -133,14 +133,16 @@ export class PluginService {
     return status?.state === 'running';
   }
 
-  async dispatch(input: PluginDispatchInput): Promise<void> {
-    requireRuntime(this.deps).views.dispatch(input);
+  async dispatch(
+    connection: RpcConnection,
+    input: PluginDispatchInput,
+  ): Promise<void> {
+    await requireRuntime(this.deps).views.dispatch(connection, input);
   }
 
   async *view(
     { pluginId, path }: { pluginId: string; path: string },
-    signal: AbortSignal,
-    parts?: PartVersions,
+    connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
     const status = await this.activate(pluginId);
 
@@ -149,16 +151,15 @@ export class PluginService {
 
     yield* requireRuntime(this.deps).views.watch(
       pluginId,
-      { path, parts },
-      signal,
+      { path },
+      connection,
     );
   }
 
   // Every enabled Plugin that declares the Slot fills it; one that fails to start is left out, and its failure is reported like any other.
   async *slot(
     slot: PluginSlotInput,
-    signal: AbortSignal,
-    parts?: PartVersions,
+    connection: RpcConnection,
   ): AsyncGenerator<SlotMessage> {
     const declaring = (await locatePlugins(this.deps)).filter(({ plugin }) =>
       fills(plugin, slot),
@@ -166,10 +167,11 @@ export class PluginService {
 
     const pluginIds = (await this.started(declaring)).running;
 
-    yield* contributions(
+    yield { type: 'contributors', pluginIds };
+    yield* slotViews(
       requireRuntime(this.deps).views,
-      { pluginIds, slot, parts },
-      signal,
+      { pluginIds, slot },
+      connection,
     );
   }
 

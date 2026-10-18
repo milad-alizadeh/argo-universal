@@ -1,84 +1,161 @@
-import type { PartVersions } from '@repo/contracts/plugins/kit';
+import { legacyPartVersions } from '@repo/contracts/plugins/kit';
 import type {
   PluginDispatchInput,
+  PluginViewId,
+  PluginEvent,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
+import type { RpcConnection } from '../rpc';
 import { compatibleView } from './compatible-view';
-import type { PluginEvent } from './runtime-protocol';
-import { createView, receive, type Open, type OpenView } from './view-state';
+import { PluginDispatches } from './dispatches';
+import {
+  createOpenView,
+  createPluginViewId,
+  currentDispatch,
+  dispatchEvent,
+  type OpenView,
+  type Opening,
+} from './open-view';
+import { receive } from './view-state';
 import { messages } from './view-stream';
 
-/*
- * The pages Apps watch: each Plugin page is mounted while at least one subscription is open,
- * and every watcher gets the current snapshot first, then the patches that follow.
- */
 export class PluginViews {
-  private readonly views = new Map<string, OpenView>();
+  private revision = 0;
+  private readonly views = new Map<PluginViewId, OpenView>();
+  public readonly dispatches = new PluginDispatches();
 
   constructor(
     private readonly send: (pluginId: string, event: PluginEvent) => void,
     private readonly log: (line: string) => void,
   ) {}
 
-  receive(pluginId: string, path: string, message: ViewMessage): void {
-    const view = this.views.get(keyOf(pluginId, path));
-
-    if (view) receive(view, message, this.log);
-  }
-
-  dispatch(input: PluginDispatchInput): void {
-    const { pluginId, path, eventId, payload } = input;
-
-    this.send(pluginId, { type: 'dispatch', path, eventId, payload });
-  }
-
-  // A restarted or reloaded Plugin has lost its mounted pages.
-  reopen(pluginId: string): void {
-    for (const view of this.views.values())
-      if (view.pluginId === pluginId) this.send(pluginId, view.opening);
-  }
-
-  close(): void {
-    for (const view of this.views.values()) view.events.emit('close');
-  }
-
-  // A Plugin turned off ends the pages and Slot contributions Apps watch from it.
-  end(pluginId: string): void {
-    for (const view of this.views.values())
-      if (view.pluginId === pluginId) view.events.emit('close');
-  }
-
-  // `opening.slot` is given when the view is a Slot contribution rather than a page.
-  async *watch(
+  public receive(
     pluginId: string,
-    { parts, ...opening }: Omit<Open, 'type'> & { parts?: PartVersions },
-    signal: AbortSignal,
+    viewId: PluginViewId,
+    message: ViewMessage,
+  ): void {
+    const view = this.views.get(viewId);
+
+    if (view?.pluginId === pluginId)
+      receive(view, message, { log: this.log, revision: ++this.revision });
+  }
+
+  public dispatch(
+    connection: RpcConnection,
+    input: PluginDispatchInput,
+  ): Promise<void> {
+    const event = currentDispatch(this.find(connection.id, input), input);
+
+    const { requestId, answer } = this.dispatches.wait(
+      input.pluginId,
+      event.viewId,
+    );
+
+    this.send(input.pluginId, dispatchEvent(input, { ...event, requestId }));
+
+    return answer;
+  }
+
+  public reopen(pluginId: string): void {
+    const views = [...this.views.values()].filter(
+      (view) => view.pluginId === pluginId,
+    );
+
+    for (const view of views) this.restart(view);
+  }
+
+  private restart(view: OpenView): void {
+    this.retire(view);
+    this.send(view.pluginId, view.opening);
+  }
+
+  private retire(view: OpenView): void {
+    this.dispatches.end(view.opening.viewId);
+    this.views.delete(view.opening.viewId);
+    view.opening = { ...view.opening, viewId: createPluginViewId() };
+    view.workerRevision = null;
+    this.views.set(view.opening.viewId, view);
+  }
+
+  public close(): void {
+    for (const view of this.views.values()) this.remove(view);
+  }
+
+  public end(pluginId: string): void {
+    for (const view of this.views.values())
+      if (view.pluginId === pluginId) this.remove(view);
+  }
+
+  public invalidate(pluginId: string): void {
+    const views = [...this.views.values()].filter(
+      (view) => view.pluginId === pluginId,
+    );
+
+    for (const view of views) this.retire(view);
+  }
+
+  public async *watch(
+    pluginId: string,
+    opening: Opening,
+    connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
-    const view = this.acquire(pluginId, { type: 'open', ...opening });
+    const view = this.acquire(pluginId, opening, connection.id);
 
     try {
-      yield* compatibleView(messages(view, signal), parts, (reason) =>
-        this.log(`Plugin ${pluginId}: refused ${opening.path}: ${reason}`),
-      );
+      yield* this.adapt(view, connection);
     } finally {
       this.release(view);
     }
   }
 
-  private acquire(pluginId: string, opening: Open): OpenView {
-    const key = keyOf(pluginId, opening.path);
-    const view = this.views.get(key) ?? this.open(key, pluginId, opening);
+  private adapt(
+    view: OpenView,
+    connection: RpcConnection,
+  ): AsyncGenerator<ViewMessage> {
+    return compatibleView(
+      messages(view, connection.signal),
+      connection.surface?.parts ?? legacyPartVersions,
+      (reason) =>
+        this.log(
+          `Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`,
+        ),
+    );
+  }
+
+  private find(
+    connectionId: string,
+    input: { pluginId: string; path: string },
+  ): OpenView | undefined {
+    return [...this.views.values()].find(
+      (view) =>
+        view.connectionId === connectionId &&
+        view.pluginId === input.pluginId &&
+        view.opening.path === input.path,
+    );
+  }
+
+  private acquire(
+    pluginId: string,
+    opening: Opening,
+    connectionId: string,
+  ): OpenView {
+    const view =
+      this.find(connectionId, { pluginId, path: opening.path }) ??
+      this.open(pluginId, opening, connectionId);
 
     view.watchers += 1;
 
     return view;
   }
 
-  private open(key: string, pluginId: string, opening: Open): OpenView {
-    const view = createView(pluginId, opening);
-
-    this.views.set(key, view);
-    this.send(pluginId, opening);
+  private open(
+    pluginId: string,
+    opening: Opening,
+    connectionId: string,
+  ): OpenView {
+    const view = createOpenView(pluginId, opening, connectionId);
+    this.views.set(view.opening.viewId, view);
+    this.send(pluginId, view.opening);
 
     return view;
   }
@@ -86,10 +163,13 @@ export class PluginViews {
   private release(view: OpenView): void {
     view.watchers -= 1;
 
-    if (view.watchers > 0) return;
-    this.views.delete(keyOf(view.pluginId, view.path));
-    this.send(view.pluginId, { type: 'close', path: view.path });
+    if (view.watchers === 0) this.remove(view);
+  }
+
+  private remove(view: OpenView): void {
+    if (!this.views.delete(view.opening.viewId)) return;
+    this.dispatches.end(view.opening.viewId);
+    view.events.emit('close');
+    this.send(view.pluginId, { type: 'close', viewId: view.opening.viewId });
   }
 }
-
-const keyOf = (pluginId: string, path: string): string => `${pluginId}:${path}`;

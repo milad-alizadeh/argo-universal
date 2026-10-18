@@ -2,7 +2,12 @@ import { wireParts } from '@repo/contracts/plugins/kit';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import { jsx, jsxs } from './jsx-runtime';
-import { mountPages, type Pages, type ViewSender } from './pages';
+import {
+  mountPages,
+  type Pages,
+  type ViewSender,
+  type DispatchSender,
+} from './pages';
 
 const components = Object.fromEntries(
   Object.keys(wireParts).map((name) => [name, name]),
@@ -35,8 +40,8 @@ export interface Kit {
 }
 
 // Bundled by esbuild and run inside a Plugin's context before its code (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
-export function createKit(send: ViewSender): Kit {
-  const pages = mountPages(send);
+export function createKit(send: ViewSender, settle: DispatchSender): Kit {
+  const pages = mountPages(send, settle);
 
   return {
     exports: exportsOf,

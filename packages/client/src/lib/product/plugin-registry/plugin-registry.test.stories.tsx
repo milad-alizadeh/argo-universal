@@ -1,7 +1,7 @@
 import {
   helloRoot,
+  helloTapEvent,
   slottedRow,
-  helloTapEventId,
   invalidPropsRoot,
   unknownNodesRoot,
   stackRowRoot,
@@ -36,7 +36,9 @@ export const Tap: Story = {
     await expect(canvas.getByText('Hello from a Plugin')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Tap me' }));
     await expect(onEvent).toHaveBeenCalledOnce();
-    await expect(onEvent).toHaveBeenCalledWith(helloTapEventId);
+    await expect(onEvent).toHaveBeenCalledWith('0/2/0', {
+      event: helloTapEvent,
+    });
   },
 };
 
@@ -66,7 +68,9 @@ export const Slots: Story = {
     await expect(canvas.getByText('Second')).toBeVisible();
     await expect(canvas.getByText('Count 0')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Increment' }));
-    await expect(onEvent).toHaveBeenCalledWith('slot:increment');
+    await expect(onEvent).toHaveBeenCalledWith('row#accessories/button', {
+      event: 'onPress',
+    });
   },
 };
 
