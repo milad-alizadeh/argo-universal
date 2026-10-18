@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { Page } from './index';
@@ -64,9 +64,10 @@ export const SearchAndClear: Story = {
     await expect(canvas.getByText('argo')).toBeVisible();
     await expect(changed).toHaveBeenLastCalledWith('argo');
     await userEvent.click(canvas.getByRole('button', { name: 'Close search' }));
-    await expect(
-      canvas.getByRole('heading', { name: 'Projects' }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(canvas.getByRole('heading', { name: 'Projects' })).toBeVisible(),
+    );
+    await expect(canvas.queryByRole('textbox')).toBeNull();
     await expect(canvas.getByText('All Projects')).toBeVisible();
     await expect(changed).toHaveBeenLastCalledWith('');
   },
