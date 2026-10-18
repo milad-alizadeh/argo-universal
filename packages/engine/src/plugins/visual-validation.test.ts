@@ -10,6 +10,7 @@ function node(
   return { type, key: type, props, children, slots: {} };
 }
 
+const group = 'Canvas.Group';
 const rect = 'Canvas.Rect';
 
 const rawColor = '#' + 'fff';
@@ -57,8 +58,8 @@ it('keeps bounded token-based Chart and Canvas data', () => {
   expect(sanitizeTree(root)).toMatchObject({ root, refused: [] });
 });
 
-it('enforces the Canvas shape and nesting caps', () => {
-  const drawing = node('Canvas.Group');
+it('enforces the Canvas shape cap', () => {
+  const drawing = node(group);
 
   const many = Array.from({ length: 20_001 }, (_, index) => ({
     ...drawing,
@@ -66,10 +67,13 @@ it('enforces the Canvas shape and nesting caps', () => {
   }));
 
   expect(refusal(node('Canvas', canvas, many))).toContain('shape cap');
-  let nested = drawing;
+});
+
+it('enforces the Canvas nesting cap', () => {
+  let nested = node(group);
 
   for (let depth = 0; depth < 16; depth += 1)
-    nested = node('Canvas.Group', {}, [nested]);
+    nested = node(group, {}, [nested]);
   expect(refusal(node('Canvas', canvas, [nested]))).toContain('depth cap');
 });
 

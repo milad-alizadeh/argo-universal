@@ -88,9 +88,13 @@ export function requiredPropReason(
 }
 
 function sourceKey(node: JSXOpeningElement): string {
-  const key = propsOf(node).key;
+  const props = propsOf(node);
 
-  return typeof key === 'string' || typeof key === 'number' ? String(key) : '';
+  if (!('key' in props) && node.attributes.some(isKey))
+    return `dynamic:${node.start}`;
+  const key = props.key;
+
+  return keyText(key);
 }
 
 function attributeName(
@@ -99,4 +103,12 @@ function attributeName(
   if (node.type !== 'JSXAttribute') return [];
 
   return node.name.type === 'JSXIdentifier' ? [node.name.name] : [];
+}
+
+function isKey(node: JSXOpeningElement['attributes'][number]): boolean {
+  return attributeName(node).includes('key');
+}
+
+function keyText(key: WireNode['props'][string] | undefined): string {
+  return typeof key === 'string' || typeof key === 'number' ? String(key) : '';
 }

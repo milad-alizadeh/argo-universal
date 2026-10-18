@@ -1,4 +1,4 @@
-import { HookEventName, type PluginManifest } from '@repo/contracts/plugins';
+import { type PluginManifest } from '@repo/contracts/plugins';
 import { SlotId } from '@repo/contracts/plugins/wire';
 import {
   parseSync,
@@ -7,12 +7,14 @@ import {
   type Program,
 } from 'oxc-parser';
 import type { z } from 'zod';
+import { registrationNames, canonicalCall } from './authoring-bindings';
 import {
   sourceDiagnostic,
   type PluginDiagnostic,
   type SourceFile,
 } from './authoring-diagnostics';
 import { firstString, memberPath } from './authoring-expressions';
+import { hookSourceReason } from './authoring-hooks';
 import { visualSourceVisitor } from './authoring-visual';
 
 export type PluginSourceReport = {
@@ -26,6 +28,7 @@ type Inspection = {
   input: SourceFile;
   manifest: PluginManifest;
   report: PluginSourceReport;
+  bindings: Set<string>;
 };
 
 export const emptySourceReport = (): PluginSourceReport => ({
@@ -41,10 +44,11 @@ export function inspectSource(
 ): PluginSourceReport {
   const report = emptySourceReport();
   const program = sourceProgram(input);
+  const bindings = registrationNames(program);
   new Visitor({
     ...visualSourceVisitor(input, report.diagnostics, program),
     CallExpression: (node): void =>
-      inspectCall({ input, manifest, report }, node),
+      inspectCall({ input, manifest, report, bindings }, node),
   }).visit(program);
 
   return report;
@@ -59,7 +63,7 @@ const callInspectors = new Map<
 ]);
 
 function inspectCall(context: Inspection, node: CallExpression): void {
-  const name = memberPath(node.callee);
+  const name = canonicalCall(memberPath(node.callee), context.bindings);
 
   if (!name.startsWith('argo.')) return;
   context.report.calls.push(name);
@@ -74,12 +78,12 @@ type Contribution = {
 };
 
 function inspectHook(context: Inspection, node: CallExpression): void {
-  inspectContribution(context, node, {
-    kind: 'Hook',
-    schema: HookEventName,
-    declared: context.manifest.contributes.hooks ?? [],
-    uses: context.report.hooks,
-  });
+  const name = firstString(node);
+
+  if (name !== undefined) context.report.hooks.push(name);
+  const reason = hookSourceReason(node, context.manifest);
+
+  if (reason) refuse(context, node, reason);
 }
 
 function inspectSlot(context: Inspection, node: CallExpression): void {

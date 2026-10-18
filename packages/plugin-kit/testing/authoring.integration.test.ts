@@ -70,7 +70,7 @@ it('raises a real event through the production Hook chain with isolated storage,
   ).toEqual({ prompt: [{ type: 'text', text: 'Changed: Hello Stored' }] });
 });
 
-it('advances the Plugin worker clock and draws only the chosen App wire types', async () => {
+it('advances the Plugin worker clock', async () => {
   const kit =
     await start(`import { Column, Text, Button, useState } from '@argo/plugin-kit';
     function Page() {
@@ -86,13 +86,21 @@ it('advances the Plugin worker clock and draws only the chosen App wire types', 
   expect((await page.find('waiting')).type).toBe('Text');
   await kit.clock.advance(100);
   expect((await page.find('elapsed')).type).toBe('Text');
+});
+
+it('draws only the chosen App wire types', async () => {
+  const kit =
+    await start(`import { Column, Text, Button } from '@argo/plugin-kit';
+    export function register(argo) { argo.pages.register('/', () => <Column><Text>Visible</Text><Button label="Unsupported" /></Column>); }
+  `);
 
   const limited = await kit.mount({
     page: '/',
     surface: { ...surface, parts: { Column: 1, Text: 3 } },
   });
 
-  expect(limited.findText('Start timer')).toBeUndefined();
+  expect(limited.findText('Visible')).toBeDefined();
+  expect(limited.findText('Unsupported')).toBeUndefined();
 });
 
 it.each([

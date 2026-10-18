@@ -74,15 +74,20 @@ function sanitizeNode(
   path: string[],
   state: VisitState,
 ): WireNode | null {
-  const reason = visualReason(node);
-
-  if (reason) return recordRefusal({ node, path, state, reason });
-
-  if (node.type !== 'Svg') return node;
-
+  if (node.type !== 'Svg') return sanitizeVisualNode(node, path, state);
   state.containsSvg = true;
 
   return sanitizeSvgNode(node, path, state);
+}
+
+function sanitizeVisualNode(
+  node: WireNode,
+  path: string[],
+  state: VisitState,
+): WireNode | null {
+  const reason = visualReason(node);
+
+  return reason ? recordRefusal({ node, path, state, reason }) : node;
 }
 
 function sanitizeSvgNode(
@@ -99,7 +104,7 @@ function sanitizeSvgNode(
   if (!result.ok)
     return recordRefusal({ node, path, state, reason: result.reason });
 
-  return { ...node, props: { ...node.props, xml: result.xml } };
+  return sanitizeVisualNode(withXml(node, result.xml), path, state);
 }
 
 function refuseInvalidMarkup(
@@ -154,4 +159,8 @@ function nodePath(node: WireNode, path: string[]): string[] {
 
 function emptyTree(): WireNode {
   return { type: 'Column', key: '0', props: {}, children: [], slots: {} };
+}
+
+function withXml(node: WireNode, xml: string): WireNode {
+  return { ...node, props: { ...node.props, xml } };
 }

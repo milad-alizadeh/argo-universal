@@ -44,11 +44,14 @@ it('validate reports a bad manifest at the invalid field', async () => {
   });
 }, 30_000);
 
-it('validate reports the hello Plugin contributions and test runs its real worker interaction', async () => {
+it('validate reports the hello Plugin contributions', async () => {
   expect(await run('validate', example)).toMatchObject({
     code: 0,
     output: expect.stringContaining('argo.slots.register'),
   });
+}, 30_000);
+
+it('test runs the hello Plugin worker interaction', async () => {
   expect(await run('test', example)).toMatchObject({
     code: 0,
     output: expect.stringContaining('PASS pressing Tap me'),

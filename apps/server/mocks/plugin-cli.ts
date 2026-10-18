@@ -1,4 +1,4 @@
-import { execFile } from 'node:child_process';
+import { execFile, type ExecFileException } from 'node:child_process';
 import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -38,8 +38,6 @@ export function run(
   });
 }
 
-function errorCode(
-  error: (Error & { code?: string | number }) | null,
-): string | number {
+function errorCode(error: ExecFileException | null): string | number {
   return error ? (error.code ?? 1) : 0;
 }
