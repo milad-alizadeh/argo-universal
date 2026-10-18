@@ -138,7 +138,14 @@ export const List: PluginComponents['List'] & {
 
 export const ListSection: PluginComponents['List.Section'];
 
-export const ListItem: PluginComponents['ListItem'];
+export const ListItem: PluginComponents['ListItem'] & {
+  Link: PluginComponents['ListItem.Link'];
+  Toggle: PluginComponents['ListItem.Toggle'];
+  Picker: PluginComponents['ListItem.Picker'];
+  Stepper: PluginComponents['ListItem.Stepper'];
+  TextField: PluginComponents['ListItem.TextField'];
+  Button: PluginComponents['ListItem.Button'];
+};
 
 export const Label: PluginComponents['Label'];
 

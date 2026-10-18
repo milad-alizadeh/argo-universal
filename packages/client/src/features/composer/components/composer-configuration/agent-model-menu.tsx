@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { PopoverHoverGroup, PopoverTitle } from '#primitives/overlays/popover';
 import { AgentDrill } from './agent-drill';
 import { EffortControl, SwitchOptions } from './configuration-tuning';
@@ -37,10 +37,10 @@ function ConfigurationContents(props: ContentsProps): React.JSX.Element {
 
 function ConfigurationFields(props: ContentsProps): React.JSX.Element {
   return (
-    <GroupedList fit={Platform.OS === 'web' || props.wide}>
+    <List appearance="grouped" fit={Platform.OS === 'web' || props.wide}>
       <ConfigurationDrills {...props} />
       <ConfigurationTuning configuration={props.configuration} />
-    </GroupedList>
+    </List>
   );
 }
 
@@ -66,14 +66,14 @@ function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
 
   return (
     <PopoverHoverGroup>
-      <GroupedListSection title="Model" footer={notice}>
-        <ConfigurationDrillRows {...props} />
-      </GroupedListSection>
+      <ListSection title="Model" footer={notice}>
+        {configurationDrillRows(props)}
+      </ListSection>
     </PopoverHoverGroup>
   );
 }
 
-function ConfigurationDrillRows(props: ContentsProps): React.JSX.Element {
+function configurationDrillRows(props: ContentsProps): React.JSX.Element {
   return (
     <>
       <AgentDrill configuration={props.configuration} wide={props.wide} />
@@ -88,12 +88,9 @@ function ConfigurationTuning({
   if (!hasTuning(configuration)) return null;
 
   return (
-    <GroupedListSection
-      title="Response"
-      footer={configurationNotice(configuration)}
-    >
+    <ListSection title="Response" footer={configurationNotice(configuration)}>
       <SwitchOptions configuration={configuration} />
       <EffortControl configuration={configuration} />
-    </GroupedListSection>
+    </ListSection>
   );
 }

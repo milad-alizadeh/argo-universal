@@ -7,6 +7,7 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { codeFace } from '#primitives/content/native-text';
 import type { FieldProps } from '#primitives/fields/field';
 import { errorMessage } from '#primitives/fields/field-errors';
@@ -89,7 +90,9 @@ function entryBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
   return {
     autoFocus: props.focusOnOpen,
     keyboardOptions: keyboardOptions(props),
-    keyboardActions: props.onSubmit && { onDone: props.onSubmit },
+    keyboardActions: props.onSubmit
+      ? { onDone: props.onSubmit }
+      : { onNext: () => KeyboardController.setFocusTo('next') },
   };
 }
 
@@ -100,7 +103,7 @@ function keyboardOptions(
     capitalization: 'none',
     autoCorrectEnabled: false,
     keyboardType: keyboardType(props),
-    imeAction: props.onSubmit ? 'done' : 'default',
+    imeAction: props.onSubmit ? 'done' : 'next',
   };
 }
 

@@ -4,10 +4,8 @@ import type {
   PluginSettings,
 } from '@repo/contracts/plugins';
 import type * as React from 'react';
-import { Picker } from '#primitives/inputs/picker';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { GroupedListSwitchItem } from '#primitives/lists/grouped-list-switch-item';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { SecretRow, TextRow } from './plugin-text-rows';
 
 export interface SettingFieldRowProps {
@@ -15,11 +13,6 @@ export interface SettingFieldRowProps {
   settings: PluginSettings;
   onChange: (value: PluginSettingValue) => void;
 }
-
-const textTypes: ReadonlySet<PluginSettingField['type']> = new Set([
-  'text',
-  'secret',
-]);
 
 // One schema field as its own section: the kit row its type names, its description the footer.
 export function SettingFieldRow(
@@ -29,12 +22,9 @@ export function SettingFieldRow(
   const Row = fieldRows[field.type];
 
   return (
-    <GroupedListSection
-      footer={field.description}
-      textFields={textTypes.has(field.type)}
-    >
+    <ListSection>
       <Row {...props} />
-    </GroupedListSection>
+    </ListSection>
   );
 }
 
@@ -78,33 +68,26 @@ function SecretFieldRow({
 
 function ToggleFieldRow(props: SettingFieldRowProps): React.JSX.Element {
   return (
-    <GroupedListSwitchItem
-      label={props.field.label}
+    <ListItem.Toggle
+      title={props.field.label}
+      description={props.field.description}
       value={valueOf(props) === true}
       onValueChange={props.onChange}
     />
   );
 }
 
-function PickerFieldRow(props: SettingFieldRowProps): React.JSX.Element {
+function PickerFieldRow({
+  field,
+  ...props
+}: SettingFieldRowProps): React.JSX.Element {
   return (
-    <GroupedListItem
-      label={props.field.label}
-      accessory={<FieldPicker {...props} />}
-    />
-  );
-}
-
-function FieldPicker(props: SettingFieldRowProps): React.JSX.Element {
-  const { field, onChange } = props;
-
-  return (
-    <Picker
-      variant="row"
-      label={field.label}
-      value={textOf(valueOf(props))}
+    <ListItem.Picker
+      title={field.label}
+      description={field.description}
+      value={textOf(valueOf({ field, ...props }))}
       options={field.type === 'picker' ? field.options : []}
-      onValueChange={onChange}
+      onValueChange={props.onChange}
     />
   );
 }

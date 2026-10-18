@@ -4,16 +4,6 @@ import { Icon } from '#primitives/content/icon';
 import { ListItemFrame } from './list-item';
 import type { ListItemProps } from './list-item-props';
 
-function linkContent(props: ListItemProps): ListItemProps {
-  if (Platform.OS !== 'android') return props;
-
-  return {
-    ...props,
-    subtitle: props.value ?? props.subtitle,
-    value: undefined,
-  };
-}
-
 const linkLabel = (props: ListItemProps): string =>
   props.accessibilityLabel ??
   [props.title, props.value].filter(Boolean).join(', ');
@@ -21,10 +11,20 @@ const linkLabel = (props: ListItemProps): string =>
 export function ListItemLink(props: ListItemProps): ReactElement {
   return (
     <ListItemFrame
-      {...linkContent(props)}
-      role="link"
+      {...props}
+      role={linkRole(props)}
       accessibilityLabel={linkLabel(props)}
-      accessory={<Icon name="chevron-right" role="row" />}
+      accessory={
+        Platform.OS === 'android' ? null : (
+          <Icon name="chevron-right" role="row" />
+        )
+      }
     />
   );
+}
+
+function linkRole(props: ListItemProps): 'button' | 'link' | 'group' {
+  if (props.role) return props.role;
+
+  return props.accessibilityRole === 'button' ? 'button' : 'link';
 }

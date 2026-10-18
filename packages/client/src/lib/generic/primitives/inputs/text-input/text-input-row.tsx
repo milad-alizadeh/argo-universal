@@ -2,7 +2,6 @@ import type * as React from 'react';
 import { type TextInputProps, View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { useFooterDescription } from '#primitives/fields/field-description';
-import { rowClasses } from '#primitives/lists/grouped-list-item';
 import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
 import { requiredLabel } from './text-input-label';
@@ -18,7 +17,7 @@ export function RowTextInput(props: PhoneFieldProps): React.JSX.Element {
   return (
     <View
       className={cn(
-        rowClasses({ label: props.label }, false),
+        'min-w-0 flex-1 flex-row items-center gap-4',
         'web:focus-within:outline-2 web:focus-within:outline-focus web:focus-within:-outline-offset-2',
       )}
     >
@@ -96,7 +95,7 @@ function inputBehaviour(props: PhoneFieldProps): InputProps {
 const inputClasses = (mono: PhoneFieldProps['mono']): string =>
   cn(
     mono ? 'type-code' : 'type-body',
-    'h-6 flex-1 rounded-none web:rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:h-6 web:focus-visible:ring-0 dark:bg-transparent',
+    'h-6 wide-type:h-5 flex-1 rounded-none web:rounded-none border-0 bg-transparent px-0 py-0 shadow-none web:focus-visible:ring-0 dark:bg-transparent',
   );
 
 RowTextInput satisfies React.ComponentType<PhoneFieldProps>;

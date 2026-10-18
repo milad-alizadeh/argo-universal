@@ -1,10 +1,8 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { Picker } from '#primitives/inputs/picker';
 import type { PickerProps } from '#primitives/inputs/picker';
-import { Switch } from '#primitives/inputs/switch';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 
 const checkoutOptions = [
   { value: 'worktree', label: 'New worktree' },
@@ -25,27 +23,24 @@ export function NewSessionsSection({
   project,
 }: ProjectProps): React.JSX.Element {
   return (
-    <GroupedListSection title="New Sessions" footer={newSessionsFooter}>
+    <ListSection title="New Sessions">
       <StartInRow choice={project.checkoutChoice} />
       <BaseBranchRow choice={project.checkoutChoice} />
       <ArchiveRow />
-    </GroupedListSection>
+    </ListSection>
   );
 }
 
 // A Picker the Server cannot change yet, in a row titled with its label.
 function PickerRow(props: PickerRowProps): React.JSX.Element {
   return (
-    <GroupedListItem
-      label={props.label}
-      accessory={
-        <Picker
-          variant="row"
-          {...props}
-          onValueChange={ignoreChoice}
-          disabled
-        />
-      }
+    <ListItem.Picker
+      title={props.label}
+      value={props.value}
+      options={props.options}
+      disabled
+      onValueChange={ignoreChoice}
+      description={props.label === 'Start in' ? newSessionsFooter : undefined}
     />
   );
 }
@@ -72,21 +67,11 @@ function ignoreChoice(): void {}
 
 function ArchiveRow(): React.JSX.Element {
   return (
-    <GroupedListItem
-      label="Delete the worktree on archive"
-      accessory={<ArchiveSwitch />}
-    />
-  );
-}
-
-// Archiving keeps a Session's worktree today, and the Server has no setting to change that yet.
-function ArchiveSwitch(): React.JSX.Element {
-  return (
-    <Switch
-      accessibilityLabel="Delete the worktree on archive"
+    <ListItem.Toggle
+      title="Delete the worktree on archive"
       value={false}
-      onValueChange={ignoreChoice}
       disabled
+      onValueChange={ignoreChoice}
     />
   );
 }

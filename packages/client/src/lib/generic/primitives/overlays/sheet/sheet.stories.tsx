@@ -3,9 +3,9 @@ import { useState, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Sheet } from './sheet';
@@ -132,9 +132,9 @@ function fruitPages(
 
 function SingleSection(props: { children: ReactNode }): ReactElement {
   return (
-    <GroupedList fit>
-      <GroupedListSection>{props.children}</GroupedListSection>
-    </GroupedList>
+    <List appearance="grouped" fit>
+      <ListSection>{props.children}</ListSection>
+    </List>
   );
 }
 
@@ -159,8 +159,8 @@ function FruitRow(props: FruitRowProps): ReactElement {
   const sheet = useSheet();
 
   return (
-    <GroupedListItem
-      label={props.fruit}
+    <ListItem
+      title={props.fruit}
       accessibilityRole="button"
       onPress={() => {
         props.onSelect(props.fruit);

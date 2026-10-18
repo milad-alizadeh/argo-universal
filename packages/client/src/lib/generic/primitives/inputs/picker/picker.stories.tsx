@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListContent } from '#primitives/lists/grouped-list-content';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Picker } from './picker';
 import type { PickerProps } from './picker-props';
@@ -90,12 +89,12 @@ export const Variations: Story = {
 
 function PickerVariations(): React.JSX.Element {
   return (
-    <GroupedList>
+    <List appearance="grouped">
       <AccessoryExample />
-      <GroupedListContent>
+      <View>
         <StandaloneVariations />
-      </GroupedListContent>
-    </GroupedList>
+      </View>
+    </List>
   );
 }
 
@@ -113,11 +112,11 @@ function StandaloneVariations(): React.JSX.Element {
 
 function AccessoryExample(): React.JSX.Element {
   return (
-    <GroupedListSection title="GroupedListItem accessory">
-      <GroupedListItem
-        label="Effort"
-        accessory={<PickerExample value="medium" variant="row" />}
+    <ListSection title="ListItem accessory">
+      <ListItem
+        title="Effort"
+        trailing={<PickerExample value="medium" variant="row" />}
       />
-    </GroupedListSection>
+    </ListSection>
   );
 }

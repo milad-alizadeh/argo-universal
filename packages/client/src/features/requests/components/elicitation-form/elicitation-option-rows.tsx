@@ -1,12 +1,7 @@
 import type { ElicitationEnumOption } from '@repo/contracts';
 import type { ReactElement } from 'react';
-import { Platform } from 'react-native';
-import { CheckboxIndicator } from '#primitives/inputs/checkbox';
-import {
-  GroupedListItem,
-  type GroupedListItemProps,
-} from '#primitives/lists/grouped-list-item';
-import { SelectedCheck } from '#primitives/status/selected-check';
+import { List } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 
 export type OptionRowsProps = {
   options: readonly ElicitationEnumOption[];
@@ -16,86 +11,36 @@ export type OptionRowsProps = {
   onToggle: (choice: string, checked: boolean) => void;
 };
 
-type OptionRowProps = Omit<OptionRowsProps, 'options' | 'selected'> & {
-  option: ElicitationEnumOption;
-  checked: boolean;
-};
-
-// Each choice is a row of the section, its description under its title; a wide card draws compact rows.
 export function OptionRows(props: OptionRowsProps): ReactElement {
   return (
-    <>
-      {props.options.map((option) => (
-        <OptionRow
-          key={option.const}
-          {...props}
-          option={option}
-          checked={props.selected.includes(option.const)}
-        />
-      ))}
-    </>
+    <List.Section
+      selectionMode={props.multiple ? 'multiple' : 'single'}
+      selection={props.selected}
+      onSelectionChange={(next) => chooseOption(props, next)}
+    >
+      {optionItems(props)}
+    </List.Section>
   );
 }
 
-function OptionRow(props: OptionRowProps): ReactElement {
-  const { option, checked } = props;
+function chooseOption(props: OptionRowsProps, next: string[]): void {
+  const changed = props.options.find((option) =>
+    props.multiple
+      ? props.selected.includes(option.const) !== next.includes(option.const)
+      : next.includes(option.const),
+  );
 
-  return (
-    <GroupedListItem
-      label={option.title}
-      subtitle={optionSubtitle(option)}
-      size="sm"
-      {...optionRowProps(props)}
-      onPress={() => props.onToggle(option.const, !checked)}
-      {...optionMark(props.multiple, checked)}
+  if (changed) props.onToggle(changed.const, next.includes(changed.const));
+}
+
+function optionItems(props: OptionRowsProps): ReactElement[] {
+  return props.options.map((option) => (
+    <ListItem
+      key={option.const}
+      id={option.const}
+      title={option.title}
+      subtitle={option.description}
+      disabled={props.disabled}
     />
-  );
-}
-
-const optionRowProps = (
-  props: OptionRowProps,
-): Pick<
-  GroupedListItemProps,
-  'accessibilityRole' | 'selected' | 'disclosure' | 'disabled'
-> => ({
-  accessibilityRole: 'button',
-  selected: props.checked,
-  disclosure: false,
-  disabled: props.disabled,
-});
-
-const optionSubtitle = (
-  option: ElicitationEnumOption,
-): GroupedListItemProps['subtitle'] =>
-  option.description ? { text: option.description } : undefined;
-
-/*
- * iOS and the web tick a chosen row, as a Settings checklist does. Android trails each row with
- * Material's checkbox or radio button.
- */
-function optionMark(
-  multiple: boolean,
-  checked: boolean,
-): Pick<GroupedListItemProps, 'accessory'> {
-  if (Platform.OS !== 'android') return { accessory: checkMark(checked) };
-
-  return {
-    accessory: <OptionIndicator multiple={multiple} checked={checked} />,
-  };
-}
-
-const checkMark = (checked: boolean): ReactElement | undefined =>
-  checked ? <SelectedCheck /> : undefined;
-
-function OptionIndicator({
-  multiple,
-  checked,
-}: Pick<OptionRowProps, 'multiple' | 'checked'>): ReactElement {
-  return (
-    <CheckboxIndicator
-      variant="option"
-      selection={multiple ? 'multiple' : 'single'}
-      value={checked}
-    />
-  );
+  ));
 }

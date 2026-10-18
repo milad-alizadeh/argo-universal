@@ -13,36 +13,48 @@ import {
   stackProps,
   svgProps,
 } from '@repo/contracts/plugins/kit';
-import type { ReactElement } from 'react';
-import { View } from 'react-native';
 import { Button } from '#primitives/actions/button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
-import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
 import type { PluginPart } from './plugin-parts';
-import { entry, handlerOf, type Entry } from './plugin-rendering';
+import {
+  entry,
+  handlerOf,
+  payloadHandler,
+  type Entry,
+} from './plugin-rendering';
+import { pluginSettingsEntries } from './plugin-settings-entries';
 
 export const pluginEntries = {
+  ...pluginSettingsEntries,
   List: entry(contentListProps, (props, context, children) => (
     <List {...props} empty={context.slots.empty}>
       {children}
     </List>
   )),
-  'List.Section': entry(listSectionProps, (props, context, children) => (
-    <ListSection
-      {...props}
-      leading={context.slots.leading}
-      trailing={context.slots.trailing}
-    >
-      {children}
-    </ListSection>
-  )),
+  'List.Section': entry(
+    listSectionProps,
+    ({ onSelectionChange, ...props }, context, children) => (
+      <ListSection
+        {...props}
+        leading={context.slots.leading}
+        trailing={context.slots.trailing}
+        onSelectionChange={payloadHandler(
+          onSelectionChange,
+          context,
+          (payload: string[]) => ({ event: 'onSelectionChange', payload }),
+        )}
+      >
+        {children}
+      </ListSection>
+    ),
+  ),
   ListItem: entry(listItemProps, ({ onPress, ...props }, context) => (
     <ListItem
       {...props}
@@ -62,14 +74,14 @@ export const pluginEntries = {
     <List appearance="grouped">{children}</List>
   )),
   GroupedListItem: entry(groupedItemProps, (props, context) => (
-    <StandaloneGroupedListItem
-      {...props}
+    <ListItem
+      title={props.label}
+      value={props.value}
+      disabled={props.disabled}
+      leading={context.slots.leading}
+      trailing={context.slots.accessories}
+      meta={context.slots.footer ?? context.slots.detail}
       onPress={handlerOf(props.onPress, context)}
-      leading={contentSlot(context.slots.leading)}
-      leadingLayout="content"
-      accessory={contentSlot(context.slots.accessories)}
-      footer={context.slots.footer}
-      detail={context.slots.detail}
     />
   )),
   Text: entry(textForApp, (props) => <Text {...props} />),
@@ -95,8 +107,3 @@ export const pluginEntries = {
     <Svg {...props} onPress={handlerOf(onPress, context)} />
   )),
 } satisfies Record<PluginPart, Entry>;
-
-// A native RNHostView measures one hosted View, including every node in the Slot.
-function contentSlot(slot: ReactElement | undefined): ReactElement | undefined {
-  return slot ? <View className="self-start">{slot}</View> : undefined;
-}

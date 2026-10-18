@@ -1,8 +1,8 @@
 import type * as React from 'react';
-import {
-  GroupedListItem,
-  type GroupedListItemProps,
-} from '#primitives/lists/grouped-list-item';
+import { Text } from '#primitives/content/text';
+import { ListItem } from '#primitives/lists/list-item';
+import type { ListItemProps } from '#primitives/lists/list-item';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 import { RegistryIcon } from '../registry-icon/registry-icon';
 import {
@@ -14,26 +14,31 @@ import { AgentFooter } from './agent-links';
 
 export function AgentListItem(props: AgentCardProps): React.JSX.Element {
   return (
-    <GroupedListItem
+    <ListItem
       {...cardContent(props.agent)}
-      accessory={{
-        compact: <AgentButton {...props} wide={false} />,
-        wide: <AgentButton {...props} wide />,
-      }}
+      trailing={
+        <SizeClass
+          compact={<AgentButton {...props} wide={false} />}
+          wide={<AgentButton {...props} wide />}
+        />
+      }
     />
   );
 }
 
-const cardContent = (agent: AgentRowEntry): GroupedListItemProps => ({
-  label: agent.name,
-  labelDetail: `v${agent.version}`,
-  variant: 'card',
-  subtitle: {
-    text: agent.description,
-    numberOfLines: 2,
-  },
+const cardContent = (agent: AgentRowEntry): ListItemProps => ({
+  title: agent.name,
+  accessibilityLabel: `${agent.name}, v${agent.version}, ${agent.description}`,
+  subtitle: agent.description,
   leading: cardLogo(agent),
-  footer: { compact: undefined, wide: <AgentFooter agent={agent} /> },
+  meta: (
+    <>
+      <Text role="secondary" tone="muted">
+        v{agent.version}
+      </Text>
+      <AgentFooter agent={agent} />
+    </>
+  ),
 });
 
 const cardLogo = (agent: AgentRowEntry): React.JSX.Element => (

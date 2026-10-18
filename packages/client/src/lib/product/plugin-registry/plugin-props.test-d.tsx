@@ -20,7 +20,9 @@ import {
 } from '@argo/plugin-kit';
 import { expectTypeOf } from 'vitest';
 
-type PublicComponents = Omit<PluginComponents, 'List.Section'> & {
+type NestedPart = Extract<keyof PluginComponents, `${string}.${string}`>;
+
+type PublicComponents = Omit<PluginComponents, NestedPart> & {
   ListSection: PluginComponents['List.Section'];
 };
 

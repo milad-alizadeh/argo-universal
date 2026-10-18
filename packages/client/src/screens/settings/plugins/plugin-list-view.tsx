@@ -2,10 +2,12 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
 import { SettingsPage } from '#lib/product/settings-page';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Icon } from '#primitives/content/icon';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { Spinner } from '#primitives/status/spinner';
 
 export interface PluginRow {
   pluginId: string;
@@ -31,11 +33,11 @@ export function PluginListView(props: PluginListViewProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
       <SettingsPage title={pluginsTitle} caption={props.caption}>
-        <GroupedList>
-          <GroupedListSection>
+        <List appearance="grouped">
+          <ListSection>
             <PluginRows {...props} />
-          </GroupedListSection>
-        </GroupedList>
+          </ListSection>
+        </List>
       </SettingsPage>
     </View>
   );
@@ -54,7 +56,12 @@ function PluginRows({
   useErrorToast(plugins.status === 'error' ? loadFailed : undefined);
 
   if (plugins.status !== 'loaded')
-    return <GroupedListItem label="Loading Plugins…" loading />;
+    return (
+      <ListItem
+        title="Loading Plugins…"
+        leading={<Spinner accessibilityLabel="Loading" />}
+      />
+    );
 
   return <LoadedPlugins rows={plugins.plugins} onOpenPlugin={onOpenPlugin} />;
 }
@@ -67,7 +74,7 @@ function LoadedPlugins({
   rows,
   onOpenPlugin,
 }: LoadedPluginsProps): React.JSX.Element | React.JSX.Element[] {
-  if (rows.length === 0) return <GroupedListItem label="No Plugins yet." />;
+  if (rows.length === 0) return <ListItem title="No Plugins yet." />;
 
   return rows.map((plugin) => (
     <PluginItem key={plugin.pluginId} plugin={plugin} onOpen={onOpenPlugin} />
@@ -81,9 +88,9 @@ type PluginItemProps = {
 
 function PluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
   return (
-    <GroupedListItem
-      icon={plugin.icon}
-      label={plugin.name}
+    <ListItem
+      leading={<Icon name={plugin.icon} role="row" />}
+      title={plugin.name}
       onPress={() => onOpen(plugin.pluginId)}
     />
   );

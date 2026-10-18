@@ -62,16 +62,22 @@ export function Leading(
   if (!hasLeading(props)) return null;
 
   return (
-    <View className="relative size-6 shrink-0 items-center justify-center wide-type:size-5">
+    <View className="relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center">
       {props.leading}
       <ItemBadge badge={props.badge} />
     </View>
   );
 }
 
-function Subtitle({ text }: { text?: string }): ReactNode {
+type SubtitleProps = { text?: string; multiline?: boolean };
+
+function Subtitle({ text, multiline }: SubtitleProps): ReactNode {
   return text === undefined ? null : (
-    <Text role="row-detail" tone="muted" numberOfLines={1}>
+    <Text
+      role="row-detail"
+      tone="muted"
+      numberOfLines={multiline ? undefined : 1}
+    >
       {text}
     </Text>
   );
@@ -83,13 +89,15 @@ function Meta({ children }: { children?: ReactNode }): ReactNode {
   ) : null;
 }
 
-export function ItemContent(props: ListItemProps): ReactElement {
+export function ItemContent(
+  props: ListItemProps & { tone?: 'accent' | 'danger' },
+): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
-      <Text role="row" numberOfLines={1}>
+      <Text role="row" tone={props.tone} numberOfLines={1}>
         {props.title}
       </Text>
-      <Subtitle text={props.subtitle} />
+      <Subtitle text={props.subtitle} multiline={!!props.description} />
       <Meta>{props.meta}</Meta>
     </View>
   );
@@ -101,9 +109,12 @@ function trailingContent(
   return props.value === undefined ? (
     props.trailing
   ) : (
-    <Text role="row" tone="muted">
-      {props.value}
-    </Text>
+    <View className="flex-row items-center gap-3">
+      <Text role="row" tone="muted">
+        {props.value}
+      </Text>
+      {props.trailing}
+    </View>
   );
 }
 
@@ -113,7 +124,7 @@ export function Trailing(
   const content = trailingContent(props);
 
   return content === undefined ? null : (
-    <View className="shrink-0 flex-row items-start justify-end gap-1">
+    <View className="h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end gap-1">
       {content}
     </View>
   );
@@ -121,7 +132,7 @@ export function Trailing(
 
 export function Accessory({ children }: { children?: ReactNode }): ReactNode {
   return children ? (
-    <View className="size-6 shrink-0 items-center justify-center self-center wide-type:size-5">
+    <View className="size-6 wide-type:size-5 shrink-0 items-center justify-center self-center">
       {children}
     </View>
   ) : null;

@@ -4,8 +4,8 @@ import { createElement } from 'react';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { NativeText } from '#primitives/content/native-text';
-import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { Host, type HostProps } from '#primitives/native/host';
+import { useInListItem } from '../../../list-item-control-context';
 
 type FieldProps = {
   label: string;
@@ -28,14 +28,14 @@ export function ChoiceHost(props: {
 
 // A row's trailing slot has no width to fill, so there the Picker takes its own; elsewhere it spans the field.
 function useHostSize(): Pick<HostProps, 'matchContents' | 'style'> {
-  if (useInGroupedListItem()) return { matchContents: true };
+  if (useInListItem()) return { matchContents: true };
 
   return { matchContents: { vertical: true }, style: { width: '100%' } };
 }
 
-// In a row the GroupedListItem names the Picker, so only a field draws its own label.
+// In a row the ListItem names the Picker, so only a field draws its own label.
 export function ChoiceField(props: FieldProps): React.JSX.Element {
-  const row = useInGroupedListItem() || props.variant === 'row';
+  const row = useInListItem() || props.variant === 'row';
 
   return row ? props.children : <LabelledField {...props} />;
 }

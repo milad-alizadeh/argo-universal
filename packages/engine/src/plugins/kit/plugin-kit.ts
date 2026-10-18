@@ -32,10 +32,23 @@ const List = Object.assign((props: ElementProps) => jsx('List', props), {
   Section: 'List.Section',
 });
 
+const ListItem = Object.assign(
+  (props: ElementProps) => jsx('ListItem', props),
+  {
+    Link: 'ListItem.Link',
+    Toggle: 'ListItem.Toggle',
+    Picker: 'ListItem.Picker',
+    Stepper: 'ListItem.Stepper',
+    TextField: 'ListItem.TextField',
+    Button: 'ListItem.Button',
+  },
+);
+
 const exportsOf = {
   ...components,
   ...hooks,
   List,
+  ListItem,
   ListSection: 'List.Section',
   Fragment: React.Fragment,
 };

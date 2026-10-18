@@ -1,4 +1,5 @@
 import { useContext, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { CheckboxIndicator } from '#primitives/inputs/checkbox';
 import { ListContext, type ListSelection } from '../../../list-context';
 import { ChoiceMark } from './list-item-choice-mark';
@@ -45,9 +46,14 @@ export function useItemSelection(props: ListItemProps): ListItemProps {
 export function ChoiceAccessory(props: ListItemProps): ReactNode {
   const { selectionMode } = useContext(ListContext);
 
-  if (!selectionMode) return null;
+  return selectionMode ? choiceMark(props, selectionMode) : null;
+}
 
-  if (selectionMode === 'multiple')
+function choiceMark(
+  props: ListItemProps,
+  mode: ListSelection['selectionMode'],
+): ReactNode {
+  if (mode === 'multiple' && Platform.OS === 'android')
     return (
       <CheckboxIndicator value={!!props.selected} disabled={props.disabled} />
     );

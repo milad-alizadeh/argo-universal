@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, within } from 'storybook/test';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { ListSection } from '#primitives/lists/list';
 import { settleViewport } from '../../../settle-viewport';
 import { Picker } from './picker';
 
@@ -71,14 +71,14 @@ export const KeyboardTypeahead: Story = {
 
 export const InvalidAnnouncement: Story = {
   render: () => (
-    <GroupedListSection footer="Choose an effort" tone="danger">
+    <ListSection footer="Choose an effort" tone="danger">
       <Picker
         label="Effort"
         options={options}
         errors={[{ message: 'Choose an effort' }]}
         onValueChange={changed}
       />
-    </GroupedListSection>
+    </ListSection>
   ),
   play: async ({ canvas }) => {
     const trigger = canvas.getByRole('button', { name: 'Effort' });
