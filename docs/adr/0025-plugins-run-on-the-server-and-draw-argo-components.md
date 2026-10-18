@@ -19,7 +19,11 @@ Argo is plugin-based (owner, 2026-10-14, the #506 grilling; Spec 0016 #725). Cor
 - **The API is proposed until two Plugins use it.** Every Plugin API and every exposed kit component starts as proposed: only first-party Plugins may use it, and it may change. A piece becomes stable, and is never broken again, once the Issue tracker and Atlas both use it. This copies VS Code's proposed API. ADR-0031 changes this rule for kit parts.
 - **Plugins belong to a Server.** The App shows the Plugins of the Server it is connected to and stores nothing about them.
 - **The Issue tracker is one Plugin with Trackers inside.** GitHub Issues comes first, Linear later. Each Project chooses its Tracker in Project details, and the choice stays on the user's machine, as in IntelliJ's Issue Trackers plugin. The Tracker interface is internal to the Plugin. The GitHub Tracker uses the `gh` CLI's login behind that interface, so an Argo-owned GitHub sign-in can replace it later.
-- **Testing.** App E2E may replace `gh` with a fixture executable on `PATH`, a third external boundary beside ADR-0018's Agent and Registry. The Plugin side is always real: the plugin host, workers, loader and storage run in Engine journeys with fixture Plugin folders.
+- **Each layer tests only what it owns.** Amended by the owner on 2026-10-18.
+  - The Engine tests the plugin host, workers, loader, storage and wire in Engine journeys, with fixture Plugin folders kept beside its tests. No Engine test loads a shipped Plugin or an example Plugin.
+  - Each Plugin tests its own behaviour in its own folder, through a test harness the Plugin kit exports. The harness runs the real plugin host and a worker on the Plugin's folder, and returns the Plugin's tree so a test can find text and fire events. It may replace an executable such as `gh` with a fixture on `PATH`, a third external boundary beside ADR-0018's Agent and Registry. Copied from VS Code's `@vscode/test-electron`, which runs an extension's own tests inside a real extension host.
+  - App E2E tests what the App does with any Plugin: nav entries, pages, Slots and failures, drawn from fixture Plugins. It never walks a Plugin's own journeys.
+  - Dependencies run one way: a Plugin depends on the Plugin kit, and neither the Engine nor the App depends on a Plugin. Changing the Issue tracker or an example Plugin never breaks an Engine or App test.
 
 ## Considered options
 
@@ -30,4 +34,5 @@ Argo is plugin-based (owner, 2026-10-14, the #506 grilling; Spec 0016 #725). Cor
 - **A process per Plugin.** Rejected for now: worker threads give crash isolation with one process to manage.
 - **Issues screens owned by core, with Plugins as data providers.** Rejected: the first Plugin must prove the format others will use.
 - **Argo icon names in the manifest.** Rejected: they cover only the icons Argo itself uses, so a Plugin could not pick the icon it needs.
+- **Testing shipped Plugins in Engine journeys and App E2E,** as first accepted. Rejected by the owner: the Engine and the App became coupled to Plugins they don't own. A demo Pill added to the example Plugin broke the Engine's wire tests, and every Plugin would grow Argo's own suites.
 - **Exposing only a small, stable component catalog.** Rejected: the owner wants the whole kit available. Marking it proposed keeps the freedom to change it.
