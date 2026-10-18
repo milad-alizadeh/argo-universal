@@ -1,3 +1,4 @@
+import { pageWirePart } from './page-wire-part';
 import { z } from 'zod';
 import { actionListWireParts } from './action-list-wire-parts';
 import { controlWireParts } from './control-wire-parts';
@@ -41,6 +42,7 @@ const contentParts = [
 
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
+  Page: pageWirePart,
   ...listWireParts,
   ...actionListWireParts,
   ...controlWireParts,

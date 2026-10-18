@@ -64,3 +64,5 @@ export const ActionList: PluginComponents['ActionList'] & {
 export const ActionListSection: PluginComponents['ActionList.Section'];
 
 export const Action: PluginComponents['Action'];
+
+export const Page: PluginComponents['Page'];

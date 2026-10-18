@@ -2,9 +2,8 @@ import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
-import { useWide } from '../generic/use-wide/use-wide';
-import { cn } from '../generic/utils';
-import { SessionColumn } from './session-column';
+import { useWide } from '../../../use-wide/use-wide';
+import { cn } from '../../../utils';
 
 export interface PageHeaderProps {
   // A plain title, or a block such as the Session's title over its meta line.
@@ -24,14 +23,7 @@ export function PageHeader(props: PageHeaderProps): React.JSX.Element | null {
 
   return (
     <View testID="page-header" className={pageHeaderClass(props.dragRegion)}>
-      <SessionColumn className="flex-row items-start gap-3 pt-3.25">
-        <PageHeaderTitle title={props.title} />
-        {props.actions && (
-          <View className="shrink-0 flex-row items-center gap-1 web:[app-region:no-drag]">
-            {props.actions}
-          </View>
-        )}
-      </SessionColumn>
+      <HeaderColumn {...props} />
     </View>
   );
 }
@@ -63,5 +55,20 @@ function PageHeaderHeading(props: { title: string }): React.JSX.Element {
     >
       {props.title}
     </Text>
+  );
+}
+
+function HeaderColumn(props: PageHeaderProps): React.JSX.Element {
+  return (
+    <View className="w-full px-4 wide:px-6">
+      <View className="w-full max-w-column self-center flex-row items-start gap-3 pt-3.25">
+        <PageHeaderTitle title={props.title} />
+        {props.actions && (
+          <View className="shrink-0 flex-row items-center gap-1 web:[app-region:no-drag]">
+            {props.actions}
+          </View>
+        )}
+      </View>
+    </View>
   );
 }

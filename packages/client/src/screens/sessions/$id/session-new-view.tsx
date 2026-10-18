@@ -17,10 +17,10 @@ import {
   serverSilentMessage,
 } from '#features/sessions';
 import { useContentWide } from '#lib/product/content-layout';
-import { PageHeader } from '#lib/product/page-header';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { PageHeader } from '#primitives/scaffolds/page';
 import { composerDraftProps } from './new-session-draft';
 import { NewSessionFeed } from './new-session-feed';
 

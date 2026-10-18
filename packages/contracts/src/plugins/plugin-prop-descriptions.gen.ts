@@ -611,14 +611,12 @@ export type WireSchemaHints = {
     "action": PropValue<"Toast", "action">;
   };
   "Page": {
-    /** The visible and accessible label. */
+    /** The single-line page title. */
     "title": PropValue<"Page", "title">;
-    /** actions for this part. */
-    "actions": PropValue<"Page", "actions">;
-    /** The Page’s one primary action. */
-    "primaryAction": PropValue<"Page", "primaryAction">;
-    /** search for this part. */
+    /** Native search on phones; expanding header search on web. */
     "search": PropValue<"Page", "search">;
+    /** The main Action: a header button, iOS toolbar item, or Android FAB. */
+    "primaryAction": PropValue<"Page", "primaryAction">;
   };
   "ListDetail": {
 

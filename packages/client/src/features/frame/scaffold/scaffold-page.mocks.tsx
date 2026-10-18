@@ -6,7 +6,7 @@ import {
 } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { Menu } from '#primitives/overlays/menu';
-import { PageHeader } from '../../../lib/product/page-header';
+import { PageHeader } from '#primitives/scaffolds/page';
 
 const moreActionsButton: IconButtonProps = {
   variant: 'ghost',

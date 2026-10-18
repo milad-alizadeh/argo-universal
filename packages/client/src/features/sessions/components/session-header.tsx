@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { PageHeader } from '#lib/product/page-header';
+import { PageHeader } from '#primitives/scaffolds/page';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { defaultMergeMethod, type MergeMethod } from '../stores/merge-method';
 import {

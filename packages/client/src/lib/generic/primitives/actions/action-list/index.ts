@@ -11,3 +11,9 @@ export {
 } from './action-list-props';
 
 export type { ActionShortcut } from './action-shortcuts';
+
+export {
+  actionGroups,
+  orderedGroups,
+  type DeclaredAction,
+} from './action-declarations';

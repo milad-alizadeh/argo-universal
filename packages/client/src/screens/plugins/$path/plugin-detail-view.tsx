@@ -1,7 +1,7 @@
 import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
-import { ActionShortcutScope } from '#primitives/actions/action-list';
+import { Page } from '#primitives/scaffolds/page';
 import {
   PluginTree,
   type PluginOnEvent,
@@ -10,6 +10,7 @@ import {
 export interface PluginDetailViewProps {
   // The page the Plugin draws; blank until the Server's first snapshot arrives.
   root: WireNode | null;
+  title?: string;
   viewId?: PluginViewId | null;
   onEvent: PluginOnEvent;
 }
@@ -19,21 +20,31 @@ const pageScroll = {
   testID: 'plugin-page',
   className: 'bg-content',
   surfaceClassName: 'bg-content',
-  contentContainerClassName: 'p-6',
+  contentContainerClassName: 'py-6',
   contentInsetAdjustmentBehavior: 'automatic',
 } as const;
 
 // Foundations / PluginPage: a Plugin's page, drawn by the App's registry.
-export function PluginDetailView({
-  root,
-  onEvent,
-  viewId,
-}: PluginDetailViewProps): React.JSX.Element {
+export function PluginDetailView(
+  props: PluginDetailViewProps,
+): React.ReactNode {
+  if (ownsPage(props.root)) return <PluginContent {...props} />;
+
   return (
-    <ActionShortcutScope>
+    <Page title={props.title ?? 'Plugin'}>
       <ScrollFadeView {...pageScroll}>
-        {root && <PluginTree key={viewId} root={root} onEvent={onEvent} />}
+        <PluginContent {...props} />
       </ScrollFadeView>
-    </ActionShortcutScope>
+    </Page>
   );
+}
+
+function ownsPage(root: WireNode | null): boolean {
+  return root?.type === 'Page';
+}
+
+function PluginContent(props: PluginDetailViewProps): React.ReactNode {
+  return props.root ? (
+    <PluginTree key={props.viewId} root={props.root} onEvent={props.onEvent} />
+  ) : null;
 }

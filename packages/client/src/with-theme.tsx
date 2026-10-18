@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Uniwind } from 'uniwind';
 import { PortalProvider } from '#primitives/overlays/portal';
 import { dismissToasts, Toaster } from '#primitives/overlays/toast';
+import { PageNavigationEnabled } from '#primitives/scaffolds/page';
 import { BlobUrlContext } from './features/connection/api/trpc/blob-url';
 import { cn } from './lib/generic/utils';
 import { recordedImageUrl } from './lib/product/feed-message.mocks';
@@ -45,7 +46,9 @@ function ArgoPreview(props: PreviewProps): React.JSX.Element {
     <PreviewProviders>
       {/* On a phone, Storybook's own UI nests a bottom sheet's portal provider, which has no root host. */}
       <PortalProvider>
-        <PreviewLayout {...props} />
+        <PageNavigationEnabled value={false}>
+          <PreviewLayout {...props} />
+        </PageNavigationEnabled>
       </PortalProvider>
       {props.standalone && <Toaster key={props.storyId} />}
     </PreviewProviders>

@@ -1,0 +1,57 @@
+{
+  "type": "Page",
+  "key": "page",
+  "props": {
+    "title": "Issues",
+    "search": {
+      "label": "Search Issues",
+      "value": "",
+      "onChangeText": {
+        "$event": "onChangeText"
+      }
+    },
+    "primaryAction": {
+      "label": "New Issue",
+      "icon": "add",
+      "onPress": {
+        "$event": "onPress"
+      }
+    }
+  },
+  "children": [
+    {
+      "type": "Text",
+      "key": "content",
+      "props": {
+        "children": "Open Issues"
+      },
+      "children": [],
+      "slots": {}
+    }
+  ],
+  "slots": {
+    "actions": [
+      {
+        "type": "ActionList",
+        "key": "actions",
+        "props": {},
+        "children": [
+          {
+            "type": "Action",
+            "key": "filters",
+            "props": {
+              "label": "Filters",
+              "icon": "filters",
+              "onPress": {
+                "$event": "onPress"
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ]
+  }
+}

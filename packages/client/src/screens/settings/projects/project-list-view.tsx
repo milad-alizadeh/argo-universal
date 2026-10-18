@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { SettingsPage } from '#lib/product/settings-page';
-import { IconButton } from '#primitives/actions/icon-button';
+import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { Page, PageColumn, type PageProps } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
 import { LoadedProjects } from './project-list-rows';
@@ -17,41 +17,54 @@ export function ProjectListView(
 ): React.JSX.Element {
   const [search, setSearch] = useState(props.initialSearch ?? '');
 
-  return (
-    <View className="flex-1 bg-content wide:bg-transparent">
-      {props.renderHeader?.({ onSearch: setSearch })}
-      <ProjectsPage {...props} search={search} onSearch={setSearch} />
-    </View>
-  );
+  return <ProjectsPage {...props} search={search} onSearch={setSearch} />;
 }
 
 function ProjectsPage(props: SearchedProps): React.JSX.Element {
   return (
-    <SettingsPage
-      title={projectsTitle}
-      caption={props.caption}
-      actions={<AddProject />}
-      search={pageSearch(props)}
-    >
+    <Page {...pageProps(props)}>
+      <ProjectCaption caption={props.caption} />
       <ProjectsBody {...props} />
-    </SettingsPage>
+    </Page>
   );
 }
 
-// The Server cannot add a Project from the App yet.
-function AddProject(): React.JSX.Element {
+function pageProps(props: SearchedProps): PageProps {
+  return {
+    title: projectsTitle,
+    primaryAction: addProject,
+    search: pageSearch(props),
+    renderHeader: pageHeader(props),
+  };
+}
+
+function pageHeader(props: SearchedProps): PageProps['renderHeader'] {
+  const render = props.renderHeader;
+
+  return render ? () => render({ onSearch: props.onSearch }) : undefined;
+}
+
+function ProjectCaption({ caption }: { caption?: string }): React.ReactNode {
+  if (!caption) return null;
+
   return (
-    <IconButton
-      variant="ghost"
-      size="xs"
-      icon="add"
-      iconRole="action"
-      iconClassName="text-muted-foreground"
-      accessibilityLabel="Add Project"
-      disabled
-    />
+    <PageColumn>
+      <View className="pb-6">
+        <Text tone="muted">{caption}</Text>
+      </View>
+    </PageColumn>
   );
 }
+
+const addProject = {
+  label: 'Add Project',
+  icon: 'add',
+  disabled: true,
+  onPress: unavailable,
+} as const;
+
+// The Server cannot add a Project from the App yet.
+function unavailable(): void {}
 
 const loadFailed: ErrorToast = {
   title: 'Could not load Projects',

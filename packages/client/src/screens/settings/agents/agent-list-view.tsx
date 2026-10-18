@@ -2,14 +2,14 @@ import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { type AgentRows, type AgentsFilter } from '#features/agents';
-import { SettingsPage } from '#lib/product/settings-page';
+import { Page, PageColumn, type PageProps } from '#primitives/scaffolds/page';
 import {
   AgentsFilterPills,
-  AgentsToolbar,
   type AgentsHeaderProps,
   type AgentsFilterProps,
   type AgentsSearchProps,
   agentsTitle,
+  searchLabel,
 } from './agents-toolbar';
 import { AgentCatalog } from './catalog';
 
@@ -30,12 +30,7 @@ export function AgentListView(props: AgentListViewProps): React.JSX.Element {
   const [filter, onFilter] = useState(initialFilter(props));
   const list = { ...props, search, onSearch, filter, onFilter };
 
-  return (
-    <View className="flex-1 min-h-0 bg-content wide:bg-transparent">
-      {props.renderHeader?.(list)}
-      <AgentsPage {...list} />
-    </View>
-  );
+  return <AgentsPage {...list} />;
 }
 
 const initialSearch = (props: AgentListViewProps): string =>
@@ -46,13 +41,31 @@ const initialFilter = (props: AgentListViewProps): AgentsFilter =>
 
 function AgentsPage(props: ListProps): React.JSX.Element {
   return (
-    <SettingsPage
-      title={agentsTitle}
-      headerFrom="medium"
-      toolbar={<AgentsToolbar {...props} />}
-      phoneToolbar={<AgentsFilterPills {...props} />}
-    >
+    <Page {...pageProps(props)}>
+      <PageColumn>
+        <View className="pb-3">
+          <AgentsFilterPills {...props} />
+        </View>
+      </PageColumn>
       <AgentCatalog {...props} />
-    </SettingsPage>
+    </Page>
   );
+}
+
+function pageProps(props: ListProps): PageProps {
+  return {
+    title: agentsTitle,
+    search: {
+      label: searchLabel,
+      value: props.search,
+      onChangeText: props.onSearch,
+    },
+    renderHeader: pageHeader(props),
+  };
+}
+
+function pageHeader(props: ListProps): PageProps['renderHeader'] {
+  const render = props.renderHeader;
+
+  return render ? () => render(props) : undefined;
 }
