@@ -416,6 +416,9 @@ catalogs:
     expo-router:
       specifier: ~57.0.24
       version: 57.0.24
+    expo-screen-orientation:
+      specifier: ~57.0.2
+      version: 57.0.3
     expo-splash-screen:
       specifier: ~57.0.9
       version: 57.0.9
@@ -909,6 +912,9 @@ importers:
       expo-router:
         specifier: 'catalog:'
         version: 57.0.24(842a24270c9e051bd08a32e9b22725bc)
+      expo-screen-orientation:
+        specifier: 'catalog:'
+        version: 57.0.3(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))
       expo-splash-screen:
         specifier: 'catalog:'
         version: 57.0.9(expo@57.0.26)(supports-color@8.1.1)(typescript@7.0.2)
@@ -6400,6 +6406,12 @@ packages:
         optional: true
       react-server-dom-webpack:
         optional: true
+
+  expo-screen-orientation@57.0.3:
+    resolution: {integrity: sha512-hKtTKAoinahalc5nzMmGfVtj1NfVj4pFJycJGy/HUzrBlu+1rOnHdGUKgaSKkMhr5Mr9GxAxcuLvuM+oyFNFLA==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
 
   expo-server@57.0.3:
     resolution: {integrity: sha512-aK+LdKzauHSGmsOStZtyxdzv0zWssCkxTw3m4QuOhfDSJsZaMRTd9O41d8ixU/QfELTbaJ0oRNcF7JFV/7O9YQ==}
@@ -14011,6 +14023,11 @@ snapshots:
       - expo-font
       - react-native-worklets
       - supports-color
+
+  expo-screen-orientation@57.0.3(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)):
+    dependencies:
+      expo: 57.0.26(20d7116fd28de8d0bee1b55e844b7a77)
+      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
 
   expo-server@57.0.3: {}
 

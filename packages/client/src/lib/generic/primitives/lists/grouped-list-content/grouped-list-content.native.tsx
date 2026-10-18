@@ -11,7 +11,6 @@ import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { useStackedList } from '#primitives/fields/field-layout';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { usePaneSectionMargin } from '../../../use-size-class/pane-section-margin';
 import type { GroupedListContentProps } from './grouped-list-content-props';
 
 /*
@@ -102,14 +101,10 @@ const bareRow = [
 type SectionProps = { children: React.ReactElement; title?: string };
 
 function BareSection({ children, title }: SectionProps): React.JSX.Element {
-  const paneMargin = usePaneSectionMargin();
-
   if (title) return <FooterSection title={title}>{children}</FooterSection>;
 
   return (
-    <FieldGroup.Section modifiers={[...bareRow, ...paneMargin]}>
-      {children}
-    </FieldGroup.Section>
+    <FieldGroup.Section modifiers={bareRow}>{children}</FieldGroup.Section>
   );
 }
 
@@ -119,7 +114,7 @@ function BareSection({ children, title }: SectionProps): React.JSX.Element {
  */
 function FooterSection({ children, title }: SectionProps): React.JSX.Element {
   return (
-    <FieldGroup.Section title={title} modifiers={usePaneSectionMargin()}>
+    <FieldGroup.Section title={title}>
       <FieldGroup.SectionFooter>{children}</FieldGroup.SectionFooter>
     </FieldGroup.Section>
   );

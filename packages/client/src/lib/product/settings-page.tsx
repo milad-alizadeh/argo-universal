@@ -1,7 +1,9 @@
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactNode, use, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { hasLiquidGlass } from '#lib/generic/native-header';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
@@ -10,10 +12,6 @@ import {
   type PageTitleRowProps,
   type PageTitleSearch,
 } from '../generic/page-title-row/page-title-row';
-import {
-  paneLeadingInset,
-  useInIosPane,
-} from '../generic/use-size-class/pane-inset';
 import { useWide } from '../generic/use-wide/use-wide';
 
 export type SettingsPageSearch = PageTitleSearch;
@@ -106,21 +104,29 @@ function SettingsPageTop({
   );
 }
 
-/*
- * A tablet's pane stacks the stock search bar above the row (#927): the row starts at the bar's leading edge, and its
- * top gap, with the bar's own bottom margin, matches the gap the list's Form keeps above its first section.
- */
-const paneToolbarClass = cn('z-10 shrink-0 pr-4 pt-3', paneLeadingInset);
-
 // On iOS the list's Form keeps its own gap above its first section, so the row adds none below.
 const phoneToolbarClass = 'z-10 shrink-0 px-4 py-3 ios:pb-0';
 
 function PhoneToolbar(props: { children: ReactNode }): ReactNode {
-  const toolbarClass = useInIosPane() ? paneToolbarClass : phoneToolbarClass;
-
   if (!props.children) return null;
 
-  return <View className={toolbarClass}>{props.children}</View>;
+  const toolbar = <View className={phoneToolbarClass}>{props.children}</View>;
+
+  return hasLiquidGlass ? (
+    <UnderGlassHeader>{toolbar}</UnderGlassHeader>
+  ) : (
+    toolbar
+  );
+}
+
+/*
+ * iOS 26's header is transparent and the page starts under it (`headerTransparent` in the section stack), so the row
+ * starts at the header's bottom edge, the height the stack reports (`useHeaderHeight`). A list keeps its own inset.
+ */
+function UnderGlassHeader(props: { children: ReactNode }): React.JSX.Element {
+  const headerHeight = useHeaderHeight();
+
+  return <View style={{ paddingTop: headerHeight }}>{props.children}</View>;
 }
 
 function SettingsPageBody(props: {

@@ -38,6 +38,7 @@
     "expo-image-picker": "catalog:",
     "expo-linking": "catalog:",
     "expo-router": "catalog:",
+    "expo-screen-orientation": "catalog:",
     "expo-splash-screen": "catalog:",
     "expo-status-bar": "catalog:",
     "expo-system-ui": "catalog:",

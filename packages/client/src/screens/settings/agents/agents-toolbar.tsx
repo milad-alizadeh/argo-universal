@@ -26,9 +26,10 @@ export const agentsFilterChoices = [
   { value: 'not-installed', label: 'Not Installed' },
 ] as const;
 
+// The pills wrap onto a second line rather than run past a narrow screen's edge.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
   return (
-    <View className="flex-row items-center gap-1">
+    <View className="flex-row flex-wrap items-center gap-1">
       {agentsFilterChoices.map(({ value, label }) => (
         <FilterPill
           key={value}

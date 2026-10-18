@@ -133,12 +133,18 @@
 }
 
 /*
- * `wide-type:` is the desktop type scale, the text roles' "-wide" tokens: a wide window, as `wide:`.
- * Compact and medium windows keep the phone's type scale.
+ * `wide-type:` is the desktop type scale, the text roles' "-wide" tokens. Text follows the platform,
+ * not the shell: a wide window everywhere, and on the web and desktop a medium one too, though a
+ * medium window takes the phone shell. A tablet keeps the phone's type scale at medium.
  */
 @custom-variant wide-type {
   @media (width >= theme(--breakpoint-wide)) {
     @slot;
+  }
+  @variant web {
+    @media (width >= theme(--breakpoint-medium)) {
+      @slot;
+    }
   }
 }
 

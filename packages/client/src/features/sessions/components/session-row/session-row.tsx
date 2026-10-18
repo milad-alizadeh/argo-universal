@@ -18,18 +18,19 @@ import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 
 export type { SessionRowProps } from './session-row-props';
 
-// Wide, a selected row sits pressed into the glass: the selected tint and an inset shadow, with no hairline.
-const wideSelected = 'wide:bg-selected wide:shadow-inset';
+// Wide on the web and desktop, a selected row sits pressed into the glass: the selected tint and an inset shadow.
+const wideSelected = 'web:wide:bg-selected web:wide:shadow-inset';
 
 /*
- * Regular: a phone card per Session, the grouped card's radius; wide, bare glass with a hairline edge
- * that hover tints. The row clips its Plan bar to its corners.
+ * Regular: a phone card per Session, the grouped card's radius, Paper's "SessionRow (ios)". Wide on the web and
+ * desktop, bare glass with a hairline edge that hover tints. A tablet has no glass, so its rows stay the phone's
+ * cards at every width, with no selected state, as a phone's. The row clips its Plan bar.
  */
 function regularRowClass(selected: boolean): string {
   return contentActionClass({
     variant: 'ghost',
     className: cn(
-      'relative h-auto sm:h-auto w-full items-start justify-start gap-3 overflow-hidden rounded-grouped bg-card px-4 py-3.5 wide:rounded-2xl wide:bg-transparent wide:py-2 wide:shadow-hairline',
+      'relative h-auto sm:h-auto w-full items-start justify-start gap-3 overflow-hidden rounded-grouped bg-card px-4 py-3.5 web:wide:rounded-2xl web:wide:bg-transparent web:wide:py-2 web:wide:shadow-hairline',
       selected && wideSelected,
     ),
   });

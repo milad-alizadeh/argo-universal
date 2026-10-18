@@ -1,6 +1,3 @@
-import type * as React from 'react';
-import { View } from 'react-native';
-
 export interface GlassSurfaceProps {
   // The panel's width now, and its width with the sidebar list shown.
   width: number;
@@ -9,9 +6,10 @@ export interface GlassSurfaceProps {
   animate: boolean;
 }
 
-// The glass panel behind the rail and the sidebar list; on native it follows the panel's animated layout.
-export function GlassSurface(_props: GlassSurfaceProps): React.JSX.Element {
-  return (
-    <View className="pointer-events-none absolute inset-0 rounded-2xl bg-glass shadow-glass" />
-  );
+/*
+ * The glass panel behind the rail and the sidebar list is drawn on the web and desktop only. A tablet's rail and list
+ * sit flat on the window's content surface, as Paper's "Android / Session open" does (#927).
+ */
+export function GlassSurface(_props: GlassSurfaceProps): null {
+  return null;
 }
