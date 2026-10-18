@@ -17,30 +17,28 @@ export const emptyPluginView: PluginViewState = {
   viewId: null,
 };
 
+type Snapshot = Extract<ViewMessage, { type: 'snapshot' }>;
+
 type Patch = Extract<ViewMessage, { type: 'patch' }>;
 
-// A patch older than what the App holds is dropped.
-function patched(state: PluginViewState, message: Patch): PluginViewState {
-  if (!state.root || message.revision <= state.revision) return state;
-
-  return {
-    ...state,
-    root: applyPatch(state.root, message.ops),
-    revision: message.revision,
-  };
-}
-
-// A snapshot always replaces the page (it is also what a reconnect starts with).
 export function reducePluginView(
   state: PluginViewState,
   message: ViewMessage,
 ): PluginViewState {
-  if (message.type === 'snapshot')
-    return {
-      root: message.root,
-      revision: message.revision,
-      viewId: message.viewId ?? null,
-    };
+  return message.type === 'snapshot'
+    ? snapshot(message)
+    : patched(state, message);
+}
 
-  return patched(state, message);
+function snapshot({ root, revision, viewId }: Snapshot): PluginViewState {
+  return { root, revision, viewId: viewId ?? null };
+}
+
+function patched(
+  state: PluginViewState,
+  { revision, ops }: Patch,
+): PluginViewState {
+  if (!state.root || revision <= state.revision) return state;
+
+  return { ...state, root: applyPatch(state.root, ops), revision };
 }

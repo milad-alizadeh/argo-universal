@@ -6,18 +6,6 @@ export const Button: PluginComponents['Button'];
 
 export const Stack: PluginComponents['Stack'];
 
-export const Row: PluginComponents['Row'];
-
-export const Column: PluginComponents['Column'];
-
-export const GroupedListItem: PluginComponents['GroupedListItem'];
-
-export const VirtualList: PluginComponents['VirtualList'];
-
-export const Table: PluginComponents['Table'];
-
-export const GroupedList: PluginComponents['GroupedList'];
-
 export const Svg: PluginComponents['Svg'];
 
 export const List: PluginComponents['List'] & {
@@ -60,8 +48,6 @@ export const SplitButton: PluginComponents['SplitButton'];
 export const ActionList: PluginComponents['ActionList'] & {
   Section: PluginComponents['ActionList.Section'];
 };
-
-export const ActionListSection: PluginComponents['ActionList.Section'];
 
 export const Action: PluginComponents['Action'];
 

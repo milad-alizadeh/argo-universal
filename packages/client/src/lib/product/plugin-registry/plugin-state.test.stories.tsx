@@ -81,8 +81,14 @@ const section: WireNode = {
 export const AppsKeepSelectionIndependent: Story = {
   render: () => (
     <>
-      <PluginTree root={section} onEvent={onEvent} />
-      <PluginTree root={section} onEvent={onEvent} />
+      <PluginTree
+        root={{ ...node('List', 'list', {}), children: [section] }}
+        onEvent={onEvent}
+      />
+      <PluginTree
+        root={{ ...node('List', 'list', {}), children: [section] }}
+        onEvent={onEvent}
+      />
     </>
   ),
   play: async ({ canvas, userEvent }) => {
@@ -98,7 +104,7 @@ export const AppsKeepSelectionIndependent: Story = {
 
       if (!row) throw new Error('Expected an Argo row in this App');
       await userEvent.click(row);
-      await expect(onEvent).toHaveBeenLastCalledWith('choices', {
+      await expect(onEvent).toHaveBeenLastCalledWith('list/choices', {
         event: 'onSelectionChange',
         payload,
       });

@@ -1,6 +1,7 @@
 import type { PluginInteraction } from '@repo/contracts/plugins/wire';
 import { expect, it, onTestFinished } from 'vitest';
-import { PluginUiEvents } from './plugin-ui-events';
+import { z } from 'zod';
+import { PluginDispatcher } from './plugin-dispatcher';
 
 it.each(['onSearchTextChange', 'onChangeText'] as const)(
   'throttles %s and retains the latest typed value with its originating delivery',
@@ -8,13 +9,21 @@ it.each(['onSearchTextChange', 'onChangeText'] as const)(
     const delivered: PluginInteraction[] = [];
     const later: PluginInteraction[] = [];
 
-    const events = new PluginUiEvents((_key, interaction) => {
+    const events = new PluginDispatcher((_key, interaction) => {
       delivered.push(interaction);
     });
 
     onTestFinished(() => events.close());
-    void events.send('search', { event, payload: 'a' }, 150);
-    void events.send('search', { event, payload: 'argo' }, 150);
+    void events.send('search', {
+      event,
+      payload: 'a',
+      schema: z.string().meta({ throttleMs: 150 }),
+    });
+    void events.send('search', {
+      event,
+      payload: 'argo',
+      schema: z.string().meta({ throttleMs: 150 }),
+    });
     events.setDelivery((_key, interaction) => {
       later.push(interaction);
     });
@@ -26,12 +35,13 @@ it.each(['onSearchTextChange', 'onChangeText'] as const)(
 
 it('returns the selection acknowledgement to its caller', async () => {
   const acknowledgement = Promise.withResolvers<void>();
-  const events = new PluginUiEvents(() => acknowledgement.promise);
+  const events = new PluginDispatcher(() => acknowledgement.promise);
   onTestFinished(() => events.close());
 
   const pending = events.send('list', {
     event: 'onSelectionChange',
     payload: ['984'],
+    schema: z.array(z.string()),
   });
 
   expect(pending).toBe(acknowledgement.promise);

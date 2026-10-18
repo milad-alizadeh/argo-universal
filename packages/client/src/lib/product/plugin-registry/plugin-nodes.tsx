@@ -5,20 +5,16 @@ import {
   childNodeKey,
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
-import { Fragment, cloneElement, createElement, type ElementType } from 'react';
+import { Fragment, createElement, type ElementType } from 'react';
 import { z } from 'zod';
-import type { PluginProps } from './plugin-control-types';
+import { Text } from '#primitives/content/text';
 import { pluginEntries } from './plugin-entries';
 import { legacyNode, legacySlots } from './plugin-legacy';
-import type { RenderContext } from './plugin-rendering';
-import { Unsupported } from './plugin-unsupported';
+import type * as Rendering from './plugin-rendering';
 
 const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
 
-interface RenderNodeProps {
-  node: WireNode;
-  context: RenderContext;
-}
+type RenderNodeProps = { node: WireNode; context: Rendering.RenderContext };
 
 export function RenderNode({
   node,
@@ -27,116 +23,93 @@ export function RenderNode({
   const part = wirePart(node.type);
 
   if (!part) return refused(node);
-
   const parsed = parsedProps(node, part);
 
   if (!parsed.success) return refused(node);
+  const source = node.props;
   const prepared = legacyNode({ ...node, props: parsed.data });
+  const input = { node: prepared, part, context, source };
+  const slots = legacySlots(node.type, renderedSlots(node, part, context));
 
-  const slots = legacySlots(
-    node.type,
-    renderedSlots(node, context, part.slots),
-  );
-
-  return renderPrepared({ node: prepared, context }, slots);
-}
-
-function refused(node: WireNode): React.JSX.Element | null {
-  return isWireContainer(node) ? <Unsupported /> : null;
-}
-
-function renderPrepared(
-  { node, context }: RenderNodeProps,
-  slots: PluginProps,
-): React.JSX.Element | null {
-  const component = registry.get(node.type);
-  const part = wirePart(node.type);
-
-  if (!component || !part) return refused(node);
-  const props = context.controls({ node, part, context });
-
-  Object.assign(props, childProps(node, part, context));
-
-  return createElement(component, { ...props, ...slots });
-}
-
-function renderedChildren(
-  node: WireNode,
-  context: RenderContext,
-): React.ReactNode {
-  return node.children.map((child) => {
-    const rendered = RenderNode({
-      node: child,
-      context: { ...context, key: childNodeKey(context.key, child.key) },
-    });
-
-    return rendered ? cloneElement(rendered, { key: child.key }) : null;
-  });
-}
-
-function renderedSlots(
-  node: WireNode,
-  context: RenderContext,
-  declared: Record<string, readonly string[]>,
-): Record<string, React.JSX.Element> {
-  return Object.fromEntries(
-    Object.keys(declared)
-      .filter((name) => node.slots[name])
-      .map((name) => [name, renderSlot(node, name, context)]),
-  );
-}
-
-function renderSlot(
-  node: WireNode,
-  name: string,
-  context: RenderContext,
-): React.JSX.Element {
-  const nodes = (node.slots[name] ?? []).map((child) =>
-    slotNode(context, name, child),
-  );
-
-  return slotContent(nodes, name);
-}
-
-function slotContent(
-  nodes: (React.JSX.Element | null)[],
-  name: string,
-): React.JSX.Element {
-  const first = nodes.at(0);
-
-  if (nodes.length === 1 && first) return first;
-
-  return <Fragment key={name}>{nodes}</Fragment>;
-}
-
-function slotNode(
-  context: RenderContext,
-  name: string,
-  child: WireNode,
-): React.JSX.Element | null {
-  const rendered = RenderNode({
-    node: child,
-    context: { ...context, key: slotNodeKey(context.key, name, child.key) },
-  });
-
-  return rendered ? cloneElement(rendered, { key: child.key }) : null;
+  return renderPrepared(input, slots);
 }
 
 function parsedProps(
   node: WireNode,
   part: WirePartDefinition,
-): ReturnType<
-  ReturnType<typeof z.record<z.ZodString, typeof WireJson>>['safeParse']
-> {
+): z.ZodSafeParseResult<WireNode['props']> {
   return (part.appProps ?? part.props)
     .pipe(z.record(z.string(), WireJson))
     .safeParse(node.props);
 }
 
-function childProps(
+function renderPrepared(
+  input: Rendering.ControlInput,
+  slots: Rendering.PluginProps,
+): React.JSX.Element | null {
+  const { node, part, context } = input;
+  const component = registry.get(node.type);
+
+  if (!component) return refused(node);
+  const props = context.controls(input);
+
+  if (part.children) props.children = renderedChildren(node.children, context);
+
+  return createElement(component, { ...props, ...slots, key: context.key });
+}
+
+function refused(node: WireNode): React.JSX.Element | null {
+  if (!isWireContainer(node)) return null;
+
+  const props = {
+    role: 'secondary',
+    tone: 'muted',
+    children: 'Update Argo to see this',
+  } as const;
+
+  return <Text key={node.key} {...props} />;
+}
+
+function renderedChildren(
+  nodes: WireNode[],
+  context: Rendering.RenderContext,
+  slot?: string,
+): (React.JSX.Element | null)[] {
+  return nodes.map((node) => {
+    const key =
+      slot === undefined
+        ? childNodeKey(context.key, node.key)
+        : slotNodeKey(context.key, slot, node.key);
+
+    return RenderNode({ node, context: { ...context, key } });
+  });
+}
+
+function renderedSlots(
   node: WireNode,
   part: WirePartDefinition,
-  context: RenderContext,
-): { children?: React.ReactNode } {
-  return part.children ? { children: renderedChildren(node, context) } : {};
+  context: Rendering.RenderContext,
+): Record<string, React.JSX.Element> {
+  const slots = Object.keys(part.slots).filter((name) => node.slots[name]);
+
+  return Object.fromEntries(
+    slots.map((name) => {
+      const children = node.slots[name] ?? [];
+
+      const nodes = renderedChildren(children, context, name);
+
+      return [name, slotContent(nodes, name)];
+    }),
+  );
+}
+
+function slotContent(
+  nodes: (React.JSX.Element | null)[],
+  key: string,
+): React.JSX.Element {
+  const first = nodes.at(0);
+
+  if (nodes.length === 1 && first) return first;
+
+  return createElement(Fragment, { key }, nodes);
 }

@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { actionListWireParts } from './action-list-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
-import { groupedItemWirePart } from './grouped-item-wire-part';
 import {
   buttonProps,
   buttonV1,
+  groupedItemProps,
   layoutProps,
   listProps,
   stackProps,
@@ -13,13 +13,13 @@ import {
   textV1,
   textV2,
   svgProps,
+  groupedItemV1,
 } from './kit-props';
 import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
 import { listExpansion } from './list-expansion';
 import { listWireParts } from './list-wire-parts';
 import { pageWirePart } from './page-wire-part';
-import { pressUi } from './part-ui';
 import { textForApp } from './text-for-app';
 import type { WirePartDefinition } from './wire-part-definition';
 import { wirePartReferences } from './wire-part-reference';
@@ -28,13 +28,37 @@ export type { WirePartDefinition } from './wire-part-definition';
 
 export { listPartNames } from './list-expansion';
 
+const contentParts = [
+  'Text',
+  'Button',
+  'Stack',
+  'Row',
+  'Column',
+  'GroupedListItem',
+  'Svg',
+  'Pill',
+] as const;
+
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
   Page: pageWirePart,
   ...listWireParts,
   ...actionListWireParts,
   ...controlWireParts,
-  GroupedListItem: groupedItemWirePart,
+  GroupedListItem: {
+    props: groupedItemProps,
+    versions: [groupedItemV1],
+    container: true,
+    children: false,
+    slots: {
+      leading: contentParts,
+      accessories: contentParts,
+      footer: contentParts,
+      detail: contentParts,
+    },
+    events: { onPress: z.undefined() },
+    reference: wirePartReferences.GroupedListItem,
+  },
   VirtualList: {
     props: listProps,
     expansion: listExpansion,
@@ -80,7 +104,6 @@ export const wireParts = {
     reference: wirePartReferences.Text,
   },
   Button: {
-    ui: pressUi,
     props: buttonProps,
     versions: [
       buttonProps.transform(legacyButtonProps).pipe(buttonV1),

@@ -4,8 +4,6 @@ import { pluginPartSchemas } from './plugin-part-schemas';
 import type { WireSchemaHints } from './plugin-prop-descriptions.gen';
 import { wireParts, type WirePartDefinition } from './wire-parts';
 
-export type { PartBinding, PartUi } from './part-ui';
-
 export { textForApp } from './text-for-app';
 
 export type { WirePartDefinition } from './wire-parts';
@@ -78,3 +76,9 @@ export function versionsOf(types: readonly string[]): PartVersions {
 export const currentPartVersions = versionsOf(Object.keys(wireParts));
 
 export * from './settings-row-props';
+
+export {
+  pluginPartNames,
+  isLegacyWirePart,
+  type PluginPart,
+} from './plugin-part-names';

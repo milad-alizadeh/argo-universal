@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { actionProps } from './action-list-props';
-import { textUi } from './part-ui';
 import { handler, part, stringLabel } from './plugin-part-schema-utils';
 
 export const pageProps = z.object({
@@ -29,9 +28,11 @@ export const pageWirePart = part(
   'A page with a title, header Actions, optional search, and content.',
   pageProps,
   {
-    ui: textUi,
     children: true,
     slots: { actions: ['ActionList'] },
-    events: { onChangeText: z.string(), onPress: z.undefined() },
+    events: {
+      onChangeText: z.string().meta({ throttleMs: 150 }),
+      onPress: z.undefined(),
+    },
   },
 );
