@@ -18,12 +18,13 @@ import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 
 export type { SessionRowProps } from './session-row-props';
 
-// Wide, a selected row takes the selected tint; on the web it sits pressed into the glass, with an inset shadow.
-const wideSelected = 'wide:bg-selected web:wide:shadow-inset';
+// Wide on the web and desktop, a selected row sits pressed into the glass: the selected tint and an inset shadow.
+const wideSelected = 'web:wide:bg-selected web:wide:shadow-inset';
 
 /*
- * Regular: a phone card per Session, the grouped card's radius. Wide on the web and desktop, bare glass with a
- * hairline edge that hover tints; a tablet has no glass, so its rows stay cards. The row clips its Plan bar.
+ * Regular: a phone card per Session, the grouped card's radius, Paper's "SessionRow (ios)". Wide on the web and
+ * desktop, bare glass with a hairline edge that hover tints. A tablet has no glass, so its rows stay the phone's
+ * cards at every width, with no selected state, as a phone's. The row clips its Plan bar.
  */
 function regularRowClass(selected: boolean): string {
   return contentActionClass({

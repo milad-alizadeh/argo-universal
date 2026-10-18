@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 
-// An iPad's window is regular width at every size, where iPadOS neither docks the bar nor centres the title beside it.
+// An iPad's window is regular width at every size, where iPadOS never docks the bar at the bottom.
 const isPad = Platform.OS === 'ios' && Platform.isPad;
 
 // iOS 26 docks the search bar at the bottom of a phone.
@@ -21,7 +21,8 @@ interface PhoneSearchBarProps {
 /*
  * A phone header's search: the stack's own search bar, and no other Search in the header (#927). iOS 26 docks it at
  * the bottom, in the thumb's reach; earlier iOS stacks it below the header row, since an integrated bar there falls
- * back to inline and squeezes the title. An iPad stacks it too. A wide window searches in the page.
+ * back to inline and squeezes the title. An iPad shows it as a search button on the header's trailing edge. A wide
+ * window searches in the page.
  */
 export function PhoneSearchBar(
   props: PhoneSearchBarProps,
@@ -36,13 +37,23 @@ export function PhoneSearchBar(
   );
 }
 
-// On an iPad the bar sits below the header row and the stock title keeps its centre (#927).
+/*
+ * A phone's bar: docked at the bottom on iOS 26, below the header row before it. An iPad's is the header's stock search
+ * button (`integratedButton`, react-native-screens' SearchBarProps.placement), which expands into the field when
+ * tapped; before iOS 26 UIKit draws it inline (#927).
+ */
 const placement = {
   autoCapitalize: 'none',
   hideWhenScrolling: false,
-  placement: bottomSearch ? 'integrated' : 'stacked',
+  placement: searchPlacement(),
   hideNavigationBar: bottomSearch,
 } as const;
+
+function searchPlacement(): 'integratedButton' | 'integrated' | 'stacked' {
+  if (isPad) return 'integratedButton';
+
+  return bottomSearch ? 'integrated' : 'stacked';
+}
 
 type SearchBarProps = Pick<
   React.ComponentProps<typeof Stack.SearchBar>,

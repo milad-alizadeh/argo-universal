@@ -18,11 +18,11 @@ export interface SessionRowMetadataProps {
   pullRequest?: PullRequestIndicatorProps;
 }
 
-// A status dot's ring takes the colour under it: the card a phone row is, or the selected row's page on a wide window.
+// A status dot's ring takes the colour under it: the card a phone or tablet row is, or the selected row's page on a wide web window.
 export function markSurface(selected: boolean): string {
   return cn(
     'border-card bg-card',
-    selected && 'wide:border-content wide:bg-content',
+    selected && 'web:wide:border-content web:wide:bg-content',
   );
 }
 

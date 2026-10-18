@@ -65,7 +65,10 @@ function PlanFill({ fill, status }: PlanFillProps): React.JSX.Element {
 
 // A row's Plan: a thin bar flush with its bottom edge, which the row's corners clip.
 const trackClassName = (status: Status): string =>
-  cn('absolute inset-x-0 bottom-0 h-0.75 wide:h-0.5', barColors[status].track);
+  cn(
+    'absolute inset-x-0 bottom-0 h-0.75 web:wide:h-0.5',
+    barColors[status].track,
+  );
 
 function PlanBar(props: PlanBarProps): React.JSX.Element {
   const fill = usePlanFillWidth(props.plan.done / props.plan.total);

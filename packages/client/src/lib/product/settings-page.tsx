@@ -1,7 +1,9 @@
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactNode, use, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { hasLiquidGlass } from '#lib/generic/native-header';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
@@ -108,7 +110,23 @@ const phoneToolbarClass = 'z-10 shrink-0 px-4 py-3 ios:pb-0';
 function PhoneToolbar(props: { children: ReactNode }): ReactNode {
   if (!props.children) return null;
 
-  return <View className={phoneToolbarClass}>{props.children}</View>;
+  const toolbar = <View className={phoneToolbarClass}>{props.children}</View>;
+
+  return hasLiquidGlass ? (
+    <UnderGlassHeader>{toolbar}</UnderGlassHeader>
+  ) : (
+    toolbar
+  );
+}
+
+/*
+ * iOS 26's header is transparent and the page starts under it (`headerTransparent` in the section stack), so the row
+ * starts at the header's bottom edge, the height the stack reports (`useHeaderHeight`). A list keeps its own inset.
+ */
+function UnderGlassHeader(props: { children: ReactNode }): React.JSX.Element {
+  const headerHeight = useHeaderHeight();
+
+  return <View style={{ paddingTop: headerHeight }}>{props.children}</View>;
 }
 
 function SettingsPageBody(props: {

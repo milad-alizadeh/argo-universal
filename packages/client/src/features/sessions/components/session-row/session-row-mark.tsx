@@ -19,7 +19,7 @@ export function SessionMark(props: SessionMarkProps): React.JSX.Element {
         testID="session-status"
         status={props.session.status}
         className={cn(
-          'absolute -right-0.5 -top-px wide:-top-0.5',
+          'absolute -right-0.5 -top-px web:wide:-top-0.5',
           markSurface(props.selected),
         )}
       />
