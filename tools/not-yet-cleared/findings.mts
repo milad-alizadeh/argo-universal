@@ -12,7 +12,7 @@ export interface Finding {
   rule: string;
 }
 
-function ruleName(code: string): string {
+export function ruleName(code: string): string {
   return code
     .replace(/^eslint\(([^()]+)\)$/, '$1')
     .replace(/^react-hooks\(([^()]+)\)$/, 'react/$1')
