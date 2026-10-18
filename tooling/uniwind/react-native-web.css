@@ -123,6 +123,10 @@
 .sheet-full {
   height: calc(100dvh - var(--spacing) * 14);
 }
+/* A sheet kept to the bottom edge spans the window, as the medium Inspector does. */
+.sheet-edge {
+  max-width: none;
+}
 
 /* ScrollFadeFrame: a scroll view's content fades to nothing at each edge with
    content past it, over whatever lies behind. The scroll view's own scroll

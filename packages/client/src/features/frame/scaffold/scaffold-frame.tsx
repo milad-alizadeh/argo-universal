@@ -2,11 +2,13 @@ import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { View } from 'react-native';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
+import { Sheet } from '#primitives/overlays/sheet';
 import { FrameBackdrop } from '../components/frame-backdrop/frame-backdrop';
 import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
+import { InspectorInSheet } from '../components/inspector-pane';
 import { PaneBanner, WindowDragStrip } from './scaffold-chrome';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
 import {
@@ -19,14 +21,19 @@ import {
 export interface ScaffoldParts extends ScaffoldPartProps {
   // A medium or wide window: the sidebar and the list sit beside the page.
   framed: boolean;
+  // A medium window's Inspector, open in a sheet over the window.
+  inspectorSheetOpen: boolean;
 }
 
 export const isFramed = (sizeClass: SizeClass): boolean =>
   sizeClass !== 'compact';
 
-// ADR-0026: only a wide window has the Inspector's own column; a medium window's Inspector is a sheet, which is not built yet.
+// ADR-0026: only a wide window has the Inspector's own column; a medium window's Inspector is a sheet (#927), so it takes no room beside the page.
 const shownInspector = (props: ScaffoldProps): ScaffoldProps =>
   props.sizeClass === 'wide' ? props : { ...props, inspectorState: 'closed' };
+
+const inspectorSheetOpen = (props: ScaffoldProps): boolean =>
+  props.sizeClass === 'medium' && props.inspectorState !== 'closed';
 
 // The Scaffold's props as it applies them, with its layout: what its frame, sidebar and page are drawn from.
 export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
@@ -36,6 +43,7 @@ export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
     scaffold,
     layout: useScaffoldLayout(scaffold),
     framed: isFramed(props.sizeClass),
+    inspectorSheetOpen: inspectorSheetOpen(props),
   };
 }
 
@@ -63,6 +71,31 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
   );
 }
 
+// A medium window's Inspector: a sheet from the window's bottom edge, which the page's header button opens.
+function InspectorSheet(parts: ScaffoldParts): React.JSX.Element {
+  const { scaffold } = parts;
+
+  return (
+    <Sheet
+      open={parts.inspectorSheetOpen}
+      onOpenChange={(open) =>
+        scaffold.onInspectorStateChange(open ? 'open' : 'closed')
+      }
+      label="Inspector"
+      bottomEdge
+    >
+      <InspectorInSheet value>{scaffold.inspector(false)}</InspectorInSheet>
+    </Sheet>
+  );
+}
+
+function InspectorBeside(parts: ScaffoldParts): React.JSX.Element {
+  if (parts.scaffold.sizeClass === 'wide')
+    return <InspectorColumn {...parts} />;
+
+  return <InspectorSheet {...parts} />;
+}
+
 function Backdrop({ scaffold, layout }: ScaffoldPartProps): React.JSX.Element {
   return (
     <>
@@ -72,13 +105,11 @@ function Backdrop({ scaffold, layout }: ScaffoldPartProps): React.JSX.Element {
   );
 }
 
-// The Inspector beside the page, the resize handles, and the banner over the panes.
+// The Inspector beside the page or in its sheet, the resize handles, and the banner over the panes.
 function Overlays(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
-      {parts.scaffold.sizeClass === 'wide' ? (
-        <InspectorColumn {...parts} />
-      ) : null}
+      <InspectorBeside {...parts} />
       <ScaffoldResizeHandles {...parts} />
       <PaneBanner left={sidebarWidth(parts.layout)}>
         {parts.scaffold.banner}

@@ -15,7 +15,7 @@ import { useSizeClass } from '../generic/use-size-class/use-size-class';
 export type SettingsPageSearch = PageTitleSearch;
 
 export interface SettingsPageProps extends PageTitleRowProps {
-  // Agents has an approved inline header from medium upwards.
+  // Agents keeps the medium window's side padding and toolbar gap on a wide window too.
   headerFrom?: 'medium' | 'wide';
   caption?: string;
   // A row of controls under the title, such as filters.
@@ -51,18 +51,18 @@ function useSettingsColumn(
 function useColumnPaddingToken(from: SettingsPageProps['headerFrom']): string {
   const sizeClass = useSizeClass();
 
-  if (sizeClass === 'medium') return '--spacing-4';
+  if (sizeClass === 'medium') return '--spacing-6';
 
   return from === 'medium' ? '--spacing-6' : '--spacing-8';
 }
 
 /*
- * One Settings page on a wide window: a centred column under its own title and caption.
+ * One Settings page on a medium or wide window: a centred column under its own title and caption.
  * The content's scroll view spans the pane, so its scrollbar sits at the pane's edge, and keeps its content to the column.
  * A phone's native header shows the title, which the page's screen sets, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
-  const showHeader = useShowsHeader(props.headerFrom);
+  const showHeader = useShowsHeader();
   const settingsColumn = useSettingsColumn(props.headerFrom);
   const bodyColumn = useBodyColumn(settingsColumn);
 
@@ -83,13 +83,12 @@ function useBodyColumn(
   const sizeClass = useSizeClass();
   const inherited = use(ScrollColumnContext);
 
-  return sizeClass === 'wide' ? column : inherited;
+  return sizeClass === 'compact' ? inherited : column;
 }
 
-function useShowsHeader(from: SettingsPageProps['headerFrom']): boolean {
-  const sizeClass = useSizeClass();
-
-  return sizeClass === 'wide' || (from === 'medium' && sizeClass === 'medium');
+// A medium or wide page draws its own title; a phone's native header shows it instead.
+function useShowsHeader(): boolean {
+  return useSizeClass() !== 'compact';
 }
 
 function SettingsPageTop({

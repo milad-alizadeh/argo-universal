@@ -18,6 +18,10 @@ const meta = {
       control: 'select',
       options: ['closed', 'open', 'expanded'],
     },
+    sizeClass: {
+      control: 'select',
+      options: ['compact', 'medium', 'wide'],
+    },
     sidebarShown: { control: 'boolean' },
     attentionCount: { control: 'number' },
   },
@@ -51,6 +55,15 @@ export const InspectorFiles: Story = {
   name: 'Inspector files',
   args: { inspectorState: 'open' },
   // An element in args holds React internals, which Storybook walks as a cyclic arg until the native catalog hangs.
+  render: (args) => (
+    <ScaffoldMock {...args} inspector={<InspectorFilesMock />} />
+  ),
+};
+
+// Paper's medium "Window / Inspector open": the list keeps its fixed width and the Inspector rises as a sheet over the window.
+export const MediumInspector: Story = {
+  name: 'Medium Inspector',
+  args: { sizeClass: 'medium', inspectorState: 'open' },
   render: (args) => (
     <ScaffoldMock {...args} inspector={<InspectorFilesMock />} />
   ),

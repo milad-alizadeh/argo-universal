@@ -8,6 +8,7 @@ import {
   statusLabels,
 } from '#lib/product/status-indicator/status-indicator';
 import { Text } from '#primitives/display/text';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { PullRequestChecks } from './pull-request-checks';
 import type {
   SessionHeaderProps,
@@ -70,11 +71,20 @@ function MetaGap(): React.JSX.Element {
   return <View className="w-2.5 shrink-0" />;
 }
 
+// A medium window's meta line is the status and the PR only (#927).
 function ShownChecks({
   checks,
 }: Pick<SessionPullRequest, 'checks'>): React.JSX.Element | null {
   if (!checks) return null;
 
+  return (
+    <SizeClass compact={null} medium={null} wide={<Checks {...checks} />} />
+  );
+}
+
+function Checks(
+  checks: NonNullable<SessionPullRequest['checks']>,
+): React.JSX.Element {
   return (
     <>
       <MetaGap />

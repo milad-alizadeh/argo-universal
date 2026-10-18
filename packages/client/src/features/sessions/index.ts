@@ -115,11 +115,6 @@ export { type SessionPullRequest } from './components/session-pull-request';
 
 export { type SessionConfigChange } from './hooks/use-session-config-change';
 
-export {
-  chooseFirstSession,
-  type FirstSessionChoice,
-} from './utils/first-session';
-
 export { liveUpdatesStopped } from './utils/live-updates-stopped';
 
 export {

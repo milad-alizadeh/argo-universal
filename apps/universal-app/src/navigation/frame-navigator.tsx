@@ -15,13 +15,14 @@ import {
   usePhoneDrawerWidth,
   useSectionLists,
   useNotifications,
+  type SizeClass,
 } from '@repo/client';
 import { useSizeClass } from '@repo/client/size-class';
 import { usePathname } from 'expo-router';
 import { Drawer, useDrawerStatus } from 'expo-router/drawer';
 import type * as React from 'react';
 import type { ComponentProps } from 'react';
-import { useDrawerOptions, frameSizeClass } from './frame-drawer-options';
+import { useDrawerOptions } from './frame-drawer-options';
 import {
   usePickSection,
   type DrawerContent,
@@ -52,9 +53,9 @@ function NarrowDrawerContent({
 }
 
 // `drawerContent` is called as a function on each render (DrawerContentComponentProps), so it closes over the Frame's parts.
-const contentAt = (wide: boolean, frame: FrameParts, pick: PickSection) =>
+const contentAt = (framed: boolean, frame: FrameParts, pick: PickSection) =>
   function SectionsContent(drawer: DrawerContent): React.JSX.Element {
-    return wide ? (
+    return framed ? (
       <FrameSidebar
         frame={frame}
         onSectionChange={(section) => pick(drawer, section)}
@@ -66,30 +67,30 @@ const contentAt = (wide: boolean, frame: FrameParts, pick: PickSection) =>
 
 type ScreenLayout = NonNullable<ComponentProps<typeof Drawer>['screenLayout']>;
 
-// Every section's pages sit in the Frame's page pane, which on a narrow window fills it.
+// Every section's pages sit in the Frame's page pane, which on a compact window fills it.
 const inPage =
   (frame: FrameParts): ScreenLayout =>
   ({ children }) => <FramePage frame={frame}>{children}</FramePage>;
 
 interface SectionsProps {
-  wide: boolean;
+  framed: boolean;
   frame: FrameParts;
   plugins: readonly PluginSection[];
 }
 
 function SectionsDrawer({
-  wide,
+  framed,
   frame,
   plugins,
 }: SectionsProps): React.JSX.Element {
-  const options = frameDrawerOptions(wide, {
+  const options = frameDrawerOptions(framed, {
     lists: frame.lists,
     plugins,
     path: usePathname(),
   });
 
   const pick = usePickSection(plugins, frame.section);
-  const props = useSectionsDrawerProps(wide, frame, pick);
+  const props = useSectionsDrawerProps(framed, frame, pick);
 
   return <Drawer {...props}>{sectionScreens(options)}</Drawer>;
 }
@@ -108,7 +109,7 @@ function sectionScreens(
 }
 
 function useSectionsDrawerProps(
-  wide: boolean,
+  framed: boolean,
   frame: FrameParts,
   pick: PickSection,
 ): Pick<
@@ -118,7 +119,7 @@ function useSectionsDrawerProps(
   return {
     screenOptions: useDrawerOptions(useSizeClass(), frame),
     screenLayout: inPage(frame),
-    drawerContent: contentAt(wide, frame, pick),
+    drawerContent: contentAt(framed, frame, pick),
   };
 }
 
@@ -134,27 +135,28 @@ const pluginRouteId = (
 ): string | undefined =>
   params?.path ? sectionOf(pluginPath(params.path)) : pluginSection;
 
-// One drawer of sections at every width, so a width change keeps each section's pages; each section hands the Frame its list, and the Frame is told which section the path shows.
+// One drawer of sections at every width, so a width change keeps each section's pages; on a medium or wide window the rail and the list sit beside the pages. Each section hands the Frame its list, and the Frame is told which section the path shows.
 export function FrameNavigator(): React.JSX.Element {
   useNotifications(usePathname());
-  const wide = useSizeClass() === 'wide';
+  const sizeClass = useSizeClass();
+  const framed = sizeClass !== 'compact';
   const plugins = usePluginSections();
-  const frame = useNavigationFrame(wide, plugins);
+  const frame = useNavigationFrame(sizeClass, plugins);
 
   return (
     <Frame frame={frame}>
       <PluginErrorToasts />
-      <SectionsDrawer wide={wide} frame={frame} plugins={plugins} />
+      <SectionsDrawer framed={framed} frame={frame} plugins={plugins} />
     </Frame>
   );
 }
 
 function useNavigationFrame(
-  wide: boolean,
+  sizeClass: SizeClass,
   plugins: readonly PluginSection[],
 ): FrameParts {
   return useFrame({
-    sizeClass: frameSizeClass(wide),
+    sizeClass,
     section: sectionOf(usePathname()),
     lists: useSectionLists(),
     items: [...coreNavigationSections, ...plugins],

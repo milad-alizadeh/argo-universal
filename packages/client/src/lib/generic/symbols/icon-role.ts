@@ -4,6 +4,7 @@ import {
   sizeClassValue,
 } from '../use-size-class/size-class-value';
 import { useSizeClass } from '../use-size-class/use-size-class';
+import { useWide } from '../use-wide/use-wide';
 
 type IconPixels = 12 | 14 | 16 | 20 | 22 | 24;
 
@@ -37,11 +38,9 @@ export type IconRole = keyof typeof iconRoles;
 export type IconRoleValue = SizeClassValue<IconRole>;
 
 export function useIconPixels(role: IconRoleValue): number {
-  const sizeClass = useSizeClass();
+  const scale = useWide() ? 'wide' : 'phone';
 
-  return iconRoles[sizeClassValue(role, sizeClass)][
-    sizeClass === 'wide' ? 'wide' : 'phone'
-  ];
+  return iconRoles[sizeClassValue(role, useSizeClass())][scale];
 }
 
 export function useIconBox(

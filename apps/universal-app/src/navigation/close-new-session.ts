@@ -27,10 +27,10 @@ function closeNewSession(navigation: NavigationProp<ParamListBase>): void {
 }
 
 /*
- * On a wide window, hiding Sessions closes New Session's empty Session, as leaving the
+ * Beside the list, on a medium or wide window, hiding Sessions closes New Session's empty Session, as leaving the
  * section did before sections stayed mounted: the page leaves the section's stack, and the
- * list opens New Session again when Sessions shows. A page swapped out within the shown
- * section is gone already. A narrow window keeps New Session open.
+ * list shows its empty detail again when Sessions shows. A page swapped out within the shown
+ * section is gone already. A compact window keeps New Session open.
  */
 const closeWhenSectionHidden: PageListeners = ({ navigation }) => ({
   blur: (): void => {
@@ -41,4 +41,4 @@ const closeWhenSectionHidden: PageListeners = ({ navigation }) => ({
 
 // The listeners for a Session's page at this width.
 export const useNewSessionListeners = (): PageListeners =>
-  useSizeClass() === 'wide' ? closeWhenSectionHidden : noListeners;
+  useSizeClass() === 'compact' ? noListeners : closeWhenSectionHidden;
