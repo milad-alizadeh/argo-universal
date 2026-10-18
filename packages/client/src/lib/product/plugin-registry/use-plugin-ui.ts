@@ -1,17 +1,13 @@
-import { useEffect, useReducer, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { PluginOnEvent } from './plugin-registry';
 import { PluginUiEvents } from './plugin-ui-events';
-import {
-  interactionUi,
-  reducePluginUi,
-  type PluginUiChange,
-  type PluginUiState,
-} from './plugin-ui-state';
 
 export interface PluginUi {
-  state: PluginUiState;
-  change: (change: PluginUiChange) => void;
-  send: PluginOnEvent;
+  send: (
+    key: string,
+    interaction: Parameters<PluginOnEvent>[1],
+    throttleMs?: number,
+  ) => void | Promise<void>;
   flush: () => Promise<void>;
 }
 
@@ -26,17 +22,12 @@ function useDelivery(send: PluginOnEvent): PluginUiEvents {
 }
 
 export function usePluginUi(onEvent: PluginOnEvent): PluginUi {
-  const [state, change] = useReducer(reducePluginUi, new Map());
   const events = useDelivery(onEvent);
   const flush = useCallback(() => events.flushPending(), [events]);
 
-  const send: PluginOnEvent = (key, interaction) => {
-    const value = interactionUi(interaction);
-
-    if (value) change({ key, value });
-
-    return events.send(key, interaction);
+  const send: PluginUi['send'] = (key, interaction, throttleMs) => {
+    return events.send(key, interaction, throttleMs);
   };
 
-  return { state, change, send, flush };
+  return { send, flush };
 }

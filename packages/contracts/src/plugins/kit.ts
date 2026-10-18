@@ -4,7 +4,11 @@ import { pluginPartSchemas } from './plugin-part-schemas';
 import type { WireSchemaHints } from './plugin-prop-descriptions.gen';
 import { wireParts, type WirePartDefinition } from './wire-parts';
 
+export type { PartBinding, PartUi } from './part-ui';
+
 export { textForApp } from './text-for-app';
+
+export type { WirePartDefinition } from './wire-parts';
 
 export { wireParts, listPartNames } from './wire-parts';
 

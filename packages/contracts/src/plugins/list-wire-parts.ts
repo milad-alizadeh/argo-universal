@@ -72,6 +72,7 @@ export const listWireParts = {
     ).reference,
   },
   'List.Section': {
+    ui: { bindings: [{ prop: 'selection', event: 'onSelectionChange' }] },
     props: listSectionProps,
     versions: [
       listSectionProps.omit({
@@ -155,3 +156,10 @@ export const listWireParts = {
       .reference,
   },
 } as const;
+
+export const listPartNames = [
+  'List',
+  'VirtualList',
+  'Table',
+  'GroupedList',
+] as const;

@@ -8,6 +8,7 @@ import { requiredLabel } from './text-input-label';
 import {
   isInvalid,
   keyboardOf,
+  focusOf,
   type StandaloneTextInputProps,
 } from './text-input-props';
 import { FieldSpinner } from './text-input-spinner';
@@ -69,12 +70,10 @@ function inputBehaviour(props: StandaloneTextInputProps): InputProps {
     accessibilityLabel: props.label,
     value: props.value,
     onChangeText: props.onChangeText,
-    onBlur: props.onBlur,
+    ...focusOf(props),
     placeholder: props.placeholder,
     editable: !props.disabled,
     ...keyboardOf(props),
-    autoFocus: props.focusOnOpen,
-    selectTextOnFocus: props.selectOnFocus,
     onSubmitEditing: props.onSubmit,
   };
 }

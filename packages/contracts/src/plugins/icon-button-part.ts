@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import { pressUi } from './part-ui';
 import { part, stringLabel, onPress } from './plugin-part-schema-utils';
 import { iconButtonProps } from './presentation-kit-props';
 
 export const iconButtonPart = part('An icon-only button.', iconButtonProps, {
+  ui: pressUi,
   events: { onPress: z.undefined() },
   label: 'The required `accessibilityLabel` is the button name.',
   previous: [
