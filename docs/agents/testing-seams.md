@@ -6,7 +6,7 @@ This maps Argo's test boundaries to [Prickles TS4, TS6 and TS7](prickles/prickle
 
 ## Test kinds
 
-Argo has four kinds of test. Owned code is never faked: only the Agent process and the Registry are replaced. The scripted Agent, `createScriptedAgent(scenario)` on the official ACP SDK, is the one fake Agent at every level; a scenario is a typed list of steps, and shared named scenarios cover reply, image, cancel-wait, Permission request, Elicitation, configuration and write pressure.
+Argo has four kinds of test. Owned code is never faked. External boundaries use the fixtures described below. The scripted Agent, `createScriptedAgent(scenario)` on the official ACP SDK, is the one fake Agent at every level; a scenario is a typed list of steps, and shared named scenarios cover reply, image, cancel-wait, Permission request, Elicitation, configuration and write pressure.
 
 | Kind | Runs for real | Replaced |
 |---|---|---|
