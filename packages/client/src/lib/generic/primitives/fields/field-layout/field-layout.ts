@@ -1,5 +1,4 @@
 import { createContext, useContext } from 'react';
-import type { GroupedListProps } from '#primitives/lists/grouped-list';
 import { useWide } from '../../../use-wide/use-wide';
 
 /*
@@ -7,7 +6,7 @@ import { useWide } from '../../../use-wide/use-wide';
  * native group, whose rows stack in a plain native column instead of a scrolling list.
  */
 export const FieldLayout = createContext<
-  GroupedListProps['variant'] | 'overlay' | 'stacked'
+  'grouped' | 'sidebar' | 'overlay' | 'stacked'
 >('grouped');
 
 export function useSidebarList(): boolean {

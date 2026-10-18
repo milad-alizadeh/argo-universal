@@ -1,18 +1,16 @@
-import {
-  Children,
-  cloneElement,
-  Fragment,
-  isValidElement,
-  type ReactNode,
-  type ReactElement,
-} from 'react';
+import { isValidElement, type ReactNode, type ReactElement } from 'react';
+import { Platform, View } from 'react-native';
+import { FooterProvider } from '#primitives/fields/field-description';
 import {
   listPosition,
   type ListPosition,
   type ListSelection,
 } from '../../../list-context';
+import { ListFooter } from '../../../list-footer';
+import { flattenedChildren } from './list-child-nodes';
 import type { ListSectionProps } from './list-props';
-import { ListSection, SectionHeader, SectionFooter } from './list-section';
+import { ListSection } from './list-section';
+import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
 export interface ListChild extends ListSelection {
   key: string;
@@ -26,17 +24,8 @@ function sectionChild(
   return isValidElement<ListSectionProps>(child) && child.type === ListSection;
 }
 
-function hasHeader(props: ListSectionProps): boolean {
-  return [
-    props.title,
-    props.leading,
-    props.trailing,
-    props.onExpandedChange,
-  ].some(Boolean);
-}
-
 function headerEntries(props: ListSectionProps, key: string): ListChild[] {
-  if (!hasHeader(props)) return [];
+  if (!hasSectionHeader(props)) return [];
 
   return [
     {
@@ -48,15 +37,25 @@ function headerEntries(props: ListSectionProps, key: string): ListChild[] {
 }
 
 function footerEntries(props: ListSectionProps, key: string): ListChild[] {
-  return props.footer
-    ? [
-        {
-          key: `${key}:footer`,
-          content: <SectionFooter text={props.footer} />,
-          position: 'only',
-        },
-      ]
-    : [];
+  if (!props.footer || Platform.OS === 'android') return [];
+
+  return [
+    {
+      key: `${key}:footer`,
+      content: footerContent(props, key),
+      position: 'only',
+    },
+  ];
+}
+
+function footerContent(props: ListSectionProps, key: string): ReactNode {
+  return (
+    <ListFooter
+      id={`${key}:footer`}
+      text={props.footer ?? ''}
+      tone={props.tone}
+    />
+  );
 }
 
 function sectionEntries(
@@ -67,28 +66,28 @@ function sectionEntries(
 
   const body = props.isExpanded === false ? [] : selectedEntries(props, key);
 
-  return [...headerEntries(props, key), ...body, ...footerEntries(props, key)];
+  return [
+    ...headerEntries(props, key),
+    ...body,
+    ...footerEntries(props, key),
+    { key: `${key}:gap`, position: 'only', content: <View className="h-4" /> },
+  ];
 }
 
 function selectedEntries(props: ListSectionProps, key: string): ListChild[] {
   return childEntries(props.children, key).map((entry) => ({
     ...entry,
-    selectionMode: props.selectionMode,
-    selection: props.selection,
-    onSelectionChange: props.onSelectionChange,
+    content: (
+      <SectionContent section={props} id={`${key}:footer`}>
+        {entry.content}
+      </SectionContent>
+    ),
+    ...sectionSelection(props, entry),
   }));
 }
 
 function entryKey(child: ReactNode, prefix: string, index: number): string {
   return `${prefix}/${isValidElement(child) ? child.key : index}`;
-}
-
-function fragmentChild(
-  child: ReactNode,
-): child is ReactElement<{ children?: ReactNode }> {
-  return (
-    isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment
-  );
 }
 
 function entriesOf(
@@ -101,22 +100,6 @@ function entriesOf(
   return [{ key, content: child, position }];
 }
 
-function nestedKey(child: ReactNode, prefix: string, index: number): ReactNode {
-  return isValidElement(child)
-    ? cloneElement(child, { key: `${prefix}/${child.key ?? index}` })
-    : child;
-}
-
-function flattenedChildren(children: ReactNode): ReactNode[] {
-  return Children.toArray(children).flatMap((child) => {
-    if (!fragmentChild(child)) return [child];
-
-    return flattenedChildren(child.props.children).map((nested, index) =>
-      nestedKey(nested, String(child.key), index),
-    );
-  });
-}
-
 export function childEntries(children: ReactNode, prefix = ''): ListChild[] {
   const entries = flattenedChildren(children);
 
@@ -127,4 +110,33 @@ export function childEntries(children: ReactNode, prefix = ''): ListChild[] {
       listPosition(index === 0, index === entries.length - 1),
     ),
   );
+}
+
+function SectionContent({
+  section,
+  id,
+  children,
+}: {
+  section: ListSectionProps;
+  id: string;
+  children: ReactNode;
+}): ReactElement {
+  const footer = section.footer
+    ? { id, failure: section.tone === 'danger' }
+    : undefined;
+
+  return <FooterProvider value={footer}>{children}</FooterProvider>;
+}
+
+function sectionSelection(
+  props: ListSectionProps,
+  entry: ListChild,
+): ListSelection {
+  return props.selectionMode
+    ? {
+        selectionMode: props.selectionMode,
+        selection: props.selection,
+        onSelectionChange: props.onSelectionChange,
+      }
+    : entry;
 }

@@ -22,6 +22,11 @@ export const PluginInteraction = z.discriminatedUnion('event', [
     payload: z.undefined().optional(),
   }),
   z.object({ event: z.literal('onChangeText'), payload: z.string() }),
+  z.object({ event: z.literal('onSubmit'), payload: z.undefined().optional() }),
+  z.object({
+    event: z.literal('onValueChange'),
+    payload: z.union([z.string(), z.boolean(), z.number().finite()]),
+  }),
   z.object({ event: z.literal('onSearchTextChange'), payload: z.string() }),
   z.object({
     event: z.literal('onSelectionChange'),

@@ -14,13 +14,12 @@ import {
   svgProps,
   emptyStateProps,
 } from '@repo/contracts/plugins/kit';
-import type { ReactElement } from 'react';
-import { View } from 'react-native';
+import type { Handler } from '@repo/contracts/plugins/wire';
+import type { ReactNode } from 'react';
 import { Button } from '#primitives/actions/button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
-import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { EmptyState } from '#primitives/status/empty-state';
@@ -28,9 +27,17 @@ import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
 import type { PluginPart } from './plugin-parts';
-import { entry, handlerOf, type Entry } from './plugin-rendering';
+import {
+  entry,
+  handlerOf,
+  payloadHandler,
+  type Entry,
+  type RenderContext,
+} from './plugin-rendering';
+import { pluginSettingsEntries } from './plugin-settings-entries';
 
 export const pluginEntries = {
+  ...pluginSettingsEntries,
   EmptyState: entry(emptyStateProps, (props, context) => (
     <EmptyState {...props} action={context.slots.action} />
   )),
@@ -39,15 +46,22 @@ export const pluginEntries = {
       {children}
     </List>
   )),
-  'List.Section': entry(listSectionProps, (props, context, children) => (
-    <ListSection
-      {...props}
-      leading={context.slots.leading}
-      trailing={context.slots.trailing}
-    >
-      {children}
-    </ListSection>
-  )),
+  'List.Section': entry(
+    listSectionProps,
+    ({ onSelectionChange, ...props }, context, children) => (
+      <ListSection
+        {...props}
+        selection={
+          context.ui.state.get(context.key)?.selection ?? props.selection
+        }
+        leading={context.slots.leading}
+        trailing={context.slots.trailing}
+        onSelectionChange={sectionChange(onSelectionChange, context)}
+      >
+        {children}
+      </ListSection>
+    ),
+  ),
   ListItem: entry(listItemProps, ({ onPress, ...props }, context) => (
     <ListItem
       {...props}
@@ -67,14 +81,14 @@ export const pluginEntries = {
     <List appearance="grouped">{children}</List>
   )),
   GroupedListItem: entry(groupedItemProps, (props, context) => (
-    <StandaloneGroupedListItem
-      {...props}
+    <ListItem
+      title={props.label}
+      value={props.value}
+      disabled={props.disabled}
+      leading={context.slots.leading}
+      trailing={context.slots.accessories}
+      meta={legacyMeta(context)}
       onPress={handlerOf(props.onPress, context)}
-      leading={contentSlot(context.slots.leading)}
-      leadingLayout="content"
-      accessory={contentSlot(context.slots.accessories)}
-      footer={context.slots.footer}
-      detail={context.slots.detail}
     />
   )),
   Text: entry(textForApp, (props) => <Text {...props} />),
@@ -101,7 +115,23 @@ export const pluginEntries = {
   )),
 } satisfies Record<PluginPart, Entry>;
 
-// A native RNHostView measures one hosted View, including every node in the Slot.
-function contentSlot(slot: ReactElement | undefined): ReactElement | undefined {
-  return slot ? <View className="self-start">{slot}</View> : undefined;
+function legacyMeta({ slots }: RenderContext): ReactNode {
+  if (!slots.detail && !slots.footer) return undefined;
+
+  return (
+    <Stack direction="column">
+      {slots.detail}
+      {slots.footer}
+    </Stack>
+  );
+}
+
+function sectionChange(
+  handler: Handler | undefined,
+  context: RenderContext,
+): ((payload: string[]) => void) | undefined {
+  return payloadHandler(handler, context, (payload: string[]) => ({
+    event: 'onSelectionChange',
+    payload,
+  }));
 }

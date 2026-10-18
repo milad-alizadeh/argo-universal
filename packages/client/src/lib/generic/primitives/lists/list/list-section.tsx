@@ -1,75 +1,79 @@
-import type { ReactElement, ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
+import {
+  Children,
+  useContext,
+  useId,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import { Platform, View } from 'react-native';
+import { FooterProvider } from '#primitives/fields/field-description';
+import { ListContext, listPosition } from '../../../list-context';
+import { ListFooter } from '../../../list-footer';
+import { flattenedChildren } from './list-child-nodes';
 import type { ListSectionProps } from './list-props';
+import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
-type HeaderProps = Omit<ListSectionProps, 'children'>;
+export function ListSection(props: ListSectionProps): ReactElement {
+  const id = useId();
 
-export function ListSection(props: ListSectionProps): ReactNode {
-  return props.children;
-}
-
-function headerPress(
-  props: HeaderProps,
-): React.ComponentProps<typeof Pressable> {
-  if (!props.onExpandedChange) return { tabIndex: -1 };
-
-  return {
-    role: 'button',
-    accessibilityState: { expanded: props.isExpanded },
-    'aria-expanded': props.isExpanded ?? true,
-    onPress: () => props.onExpandedChange?.(!(props.isExpanded ?? true)),
-  };
-}
-
-const disclosureIcon = (
-  isExpanded?: boolean,
-): 'chevron-right' | 'chevron-down' =>
-  isExpanded === false ? 'chevron-right' : 'chevron-down';
-
-function HeaderLeading(props: HeaderProps): ReactNode {
-  if (props.leading !== undefined) return props.leading;
-
-  if (!props.onExpandedChange) return null;
-
-  return <Icon role="body" name={disclosureIcon(props.isExpanded)} />;
-}
-
-function HeaderContent(props: HeaderProps): ReactElement {
   return (
-    <View className="min-w-0 flex-1">
-      <Text role="heading" aria-level={2}>
-        {props.title}
-      </Text>
-      {props.subtitle ? (
-        <Text role="secondary" tone="muted">
-          {props.subtitle}
-        </Text>
-      ) : null}
+    <View className="mb-4">
+      <Header {...props} />
+      <SectionBody {...props} id={id} />
+      <Footer {...props} id={id} />
     </View>
   );
 }
 
-export function SectionHeader(props: HeaderProps): ReactElement {
-  return (
-    <Pressable
-      {...headerPress(props)}
-      className="flex-row items-center gap-3 px-4 py-3 wide:px-5"
+function Header(props: ListSectionProps): ReactNode {
+  return hasSectionHeader(props) ? <SectionHeader {...props} /> : null;
+}
+
+function Rows(props: ListSectionProps): ReactNode {
+  const children = flattenedChildren(props.children);
+
+  const selection = { ...useContext(ListContext), ...selectionContext(props) };
+
+  if (props.isExpanded === false) return null;
+
+  return Children.map(children, (child, index) => (
+    <ListContext
+      value={{
+        ...selection,
+        position: listPosition(index === 0, index === children.length - 1),
+      }}
     >
-      <HeaderLeading {...props} />
-      <HeaderContent {...props} />
-      {props.trailing}
-    </Pressable>
-  );
+      {child}
+    </ListContext>
+  ));
 }
 
-export function SectionFooter({ text }: { text: string }): ReactElement {
+function selectionContext(
+  props: ListSectionProps,
+): Partial<React.ContextType<typeof ListContext>> {
+  return props.selectionMode
+    ? {
+        selectionMode: props.selectionMode,
+        selection: props.selection,
+        onSelectionChange: props.onSelectionChange,
+      }
+    : {};
+}
+
+function Footer(props: ListSectionProps & { id: string }): ReactNode {
+  if (Platform.OS === 'android' || !props.footer) return null;
+
+  return <ListFooter id={props.id} text={props.footer} tone={props.tone} />;
+}
+
+function SectionBody(props: ListSectionProps & { id: string }): ReactElement {
+  const footer = props.footer
+    ? { id: props.id, failure: props.tone === 'danger' }
+    : undefined;
+
   return (
-    <View className="px-4 py-2 wide:px-5">
-      <Text role="secondary" tone="muted">
-        {text}
-      </Text>
-    </View>
+    <FooterProvider value={footer}>
+      <Rows {...props} />
+    </FooterProvider>
   );
 }

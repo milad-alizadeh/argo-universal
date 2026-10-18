@@ -177,16 +177,14 @@ expectTypeOf<Extract<Keys<Primitives['MenuAction']>, 'role'>>().toBeNever();
 
 // Rows name themselves with `label`; menus offer `options`.
 expectTypeOf<
-  Extract<Keys<Primitives['GroupedListItemProps']>, 'title'>
->().toBeNever();
+  Extract<Keys<Primitives['ListItemProps']>, 'title'>
+>().toEqualTypeOf<'title'>();
 
 expectTypeOf<
   Extract<Keys<Primitives['DrawerItemProps']>, 'title'>
 >().toBeNever();
 
-expectTypeOf<
-  Primitives['GroupedListItemProps']['label']
->().toEqualTypeOf<string>();
+expectTypeOf<Primitives['ListItemProps']['title']>().toEqualTypeOf<string>();
 
 expectTypeOf<Primitives['DrawerItemProps']['label']>().toEqualTypeOf<string>();
 

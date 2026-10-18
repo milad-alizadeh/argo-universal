@@ -1,6 +1,5 @@
-import type * as React from 'react';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { SelectedCheck } from '#primitives/status/selected-check';
+import type { ReactElement } from 'react';
+import { ListItem } from '#primitives/lists/list-item';
 
 interface ChoiceProps {
   selected: boolean;
@@ -8,35 +7,21 @@ interface ChoiceProps {
   description?: string;
   onPress: () => void;
   dangerous?: boolean;
-  leading?: React.ReactElement;
+  leading?: ReactElement;
   accessibilityLabel?: string;
 }
 
-export function ConfigurationChoice(props: ChoiceProps): React.JSX.Element {
-  return <GroupedListItem {...choiceRowProps(props)} />;
-}
-
-function choiceRowProps(
-  props: ChoiceProps,
-): React.ComponentProps<typeof GroupedListItem> {
-  return {
-    ...choiceContent(props),
-    leading: props.leading,
-    selected: props.selected,
-    accessibilityRole: 'button',
-    disclosure: false,
-    onPress: props.onPress,
-    tone: props.dangerous ? 'danger' : undefined,
-    accessory: props.selected ? <SelectedCheck /> : undefined,
-  };
-}
-
-function choiceContent(
-  props: ChoiceProps,
-): React.ComponentProps<typeof GroupedListItem> {
-  return {
-    label: props.label,
-    accessibilityLabel: props.accessibilityLabel ?? props.label,
-    subtitle: props.description ? { text: props.description } : undefined,
-  };
+export function ConfigurationChoice(props: ChoiceProps): ReactElement {
+  return (
+    <ListItem
+      id={props.label}
+      title={props.label}
+      subtitle={props.description}
+      leading={props.leading}
+      selected={props.selected}
+      onPress={props.onPress}
+      accessibilityLabel={props.accessibilityLabel}
+      tone={props.dangerous ? 'danger' : undefined}
+    />
+  );
 }

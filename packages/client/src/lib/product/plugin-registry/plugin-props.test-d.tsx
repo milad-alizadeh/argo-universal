@@ -24,7 +24,9 @@ import { expectTypeOf } from 'vitest';
 import type { z } from 'zod';
 import type { EmptyStateProps } from '#primitives/status/empty-state';
 
-type PublicComponents = Omit<PluginComponents, 'List.Section'> & {
+type NestedPart = Extract<keyof PluginComponents, `${string}.${string}`>;
+
+type PublicComponents = Omit<PluginComponents, NestedPart> & {
   ListSection: PluginComponents['List.Section'];
 };
 

@@ -1,6 +1,6 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
-import { GroupedListContent } from '#primitives/lists/grouped-list-content';
+import { List } from '#primitives/lists/list';
 import { PluginTree, type PluginOnEvent } from './plugin-registry';
 
 export interface PluginSlotContribution {
@@ -23,9 +23,9 @@ export function PluginSlot({
   return (
     <>
       {contributions.map(({ pluginId, name, root, onEvent }) => (
-        <GroupedListContent key={pluginId} title={name}>
+        <List.Section key={pluginId} title={name}>
           <PluginTree root={root} onEvent={onEvent} />
-        </GroupedListContent>
+        </List.Section>
       ))}
     </>
   );

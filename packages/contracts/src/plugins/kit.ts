@@ -70,3 +70,5 @@ export function versionsOf(types: readonly string[]): PartVersions {
 
 // Internal Server callers use the current wire; Apps negotiate their own part versions.
 export const currentPartVersions = versionsOf(Object.keys(wireParts));
+
+export * from './settings-row-props';

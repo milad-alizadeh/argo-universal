@@ -6,7 +6,7 @@ import {
   FieldDescriptionFooter,
   useFieldDescription,
 } from '#primitives/fields/field-description';
-import { useInGroupedListItem } from '#primitives/lists/grouped-list-item';
+import { useInListItem } from '../../../list-item-control-context';
 import type { PickerProps } from './picker-props';
 import { Select } from './picker-select';
 import {
@@ -20,8 +20,8 @@ export function Picker<Value extends string>(
   props: PickerProps<Value>,
 ): React.JSX.Element {
   const field = useFieldDescription(props);
-  const inGroupedListItem = useInGroupedListItem();
-  const row = props.variant === 'row' || inGroupedListItem;
+  const inListItem = useInListItem();
+  const row = props.variant === 'row' || inListItem;
 
   return <PickerFrame {...props} {...field} row={row} />;
 }

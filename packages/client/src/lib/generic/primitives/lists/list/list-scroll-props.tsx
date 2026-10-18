@@ -1,5 +1,8 @@
 import type { ReactElement, ReactNode } from 'react';
+import { View } from 'react-native';
 import { Platform } from 'react-native';
+import { Icon } from '#primitives/content/icon';
+import { ListFooter } from '../../../list-footer';
 import { listTestIdProps } from '../../../list-test-id';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import type { ListProps } from './list-props';
@@ -11,7 +14,8 @@ function scrollEvents<Item>(
     onScroll: props.onScroll,
     onEndReached: props.onEndReached,
     onEndReachedThreshold: props.onEndReachedThreshold,
-    contentInsetAdjustmentBehavior: props.contentInsetAdjustmentBehavior,
+    contentInsetAdjustmentBehavior:
+      props.contentInsetAdjustmentBehavior ?? 'automatic',
     estimatedItemSize: props.estimatedItemSize,
     keyExtractor: props.keyExtractor,
     getItemType: props.getItemType,
@@ -27,7 +31,11 @@ function testProps(
 function scrollBounds<Item>(
   props: ListProps<Item>,
 ): Partial<ScrollFadeListProps<Item>> {
-  return { edges: props.edges, ref: props.ref, maxHeight: props.maxHeight };
+  return {
+    edges: props.edges ?? nativeEdges,
+    ref: props.ref,
+    maxHeight: props.maxHeight,
+  };
 }
 
 function streamProps<Item>(
@@ -54,7 +62,7 @@ function listContents<Item>(
     keyboardDismissMode: props.keyboardDismissMode,
     keyboardShouldPersistTaps: props.keyboardShouldPersistTaps,
     ListHeaderComponent: listContent(props.header),
-    ListFooterComponent: listContent(props.endContent),
+    ListFooterComponent: <ListEnd {...props} />,
   };
 }
 
@@ -96,3 +104,30 @@ function accessibilityProps<Item>(
     accessibilityLabel: props.accessibilityLabel,
   };
 }
+
+function PageFooter({ text }: { text?: string }): ReactNode {
+  if (!text) return null;
+
+  return (
+    <View className="flex-row items-center px-4">
+      {Platform.OS === 'android' ? <Icon name="info" role="body" /> : null}
+      <ListFooter text={text} />
+    </View>
+  );
+}
+
+function ListEnd(
+  props: Pick<ListProps<never>, 'endContent' | 'footer'>,
+): ReactElement {
+  return (
+    <>
+      {props.endContent}
+      <PageFooter text={props.footer} />
+    </>
+  );
+}
+
+const nativeEdges =
+  Platform.OS === 'ios'
+    ? ({ top: 'never', bottom: 'never' } as const)
+    : undefined;

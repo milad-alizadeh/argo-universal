@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { ListSection } from '#primitives/lists/list';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { choiceValue, selectedAnswers } from './elicitation-answers';
 import { CustomAnswer } from './elicitation-custom-answer';
@@ -13,9 +13,9 @@ type ModelProps = { model: QuestionModel };
 export function QuestionRows({ model }: ModelProps): ReactElement {
   return (
     <ElicitationList key={model.question.name}>
-      <GroupedListSection>
+      <ListSection>
         <QuestionOptions model={model} />
-      </GroupedListSection>
+      </ListSection>
       <TextFields>
         <CustomAnswer model={model} />
       </TextFields>

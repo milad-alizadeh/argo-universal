@@ -4,6 +4,13 @@ import { wireParts, versionsOf } from '@repo/contracts/plugins/kit';
 export const pluginParts = {
   EmptyState: wireParts.EmptyState,
   List: wireParts.List,
+  'ListItem.Link': wireParts['ListItem.Link'],
+  'ListItem.Button': wireParts['ListItem.Button'],
+  'ListItem.Toggle': wireParts['ListItem.Toggle'],
+  'ListItem.Picker': wireParts['ListItem.Picker'],
+  'ListItem.Stepper': wireParts['ListItem.Stepper'],
+  'ListItem.TextField': wireParts['ListItem.TextField'],
+
   'List.Section': wireParts['List.Section'],
   ListItem: wireParts.ListItem,
   Label: wireParts.Label,

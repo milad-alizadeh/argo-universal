@@ -127,6 +127,7 @@ export const iconSymbols = {
   'speaker-off': { sf: 'speaker.slash', material: 'volume_off' },
   'state-machine': { sf: 'circle.hexagonpath', material: 'hub' },
   steer: { sf: 'arrow.turn.down.right', material: 'subdirectory_arrow_right' },
+  subtract: { sf: 'minus', material: 'remove' },
   terminal: { sf: 'terminal', material: 'terminal' },
   thinking: { sf: 'brain', material: 'neurology' },
   tool: { sf: 'wrench.adjustable', material: 'build' },

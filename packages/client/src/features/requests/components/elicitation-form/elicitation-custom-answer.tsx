@@ -1,16 +1,14 @@
 import type { ReactElement } from 'react';
-import { TextInput } from '#primitives/inputs/text-input';
+import { ListItem } from '#primitives/lists/list-item';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 import { customAnswer, customValue } from './elicitation-answers';
-import { textFieldVariant } from './elicitation-text-fields';
 
 // A field, not an option row: typing an answer chooses it, beside any options already chosen.
 type ModelProps = { model: QuestionModel };
 
 export function CustomAnswer({ model }: ModelProps): ReactElement {
   return (
-    <TextInput
-      variant={textFieldVariant}
+    <ListItem.TextField
       labelHidden
       label="Custom answer"
       placeholder="Something else…"

@@ -1,10 +1,11 @@
 import type { ReactElement, ReactNode } from 'react';
-import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
+import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 
-export interface DrillProps extends Pick<
-  GroupedListItemProps,
-  'label' | 'value' | 'valueLeading' | 'disabled'
-> {
+export interface DrillProps {
+  label: string;
+  value?: SizeClassValue<string | undefined>;
+  valueLeading?: ReactElement;
+  disabled?: boolean;
   title: string;
   trigger?: ReactElement<{ disabled?: boolean; onPress?: () => void }>;
   contentScrolls?: boolean;

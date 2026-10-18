@@ -6,10 +6,10 @@ import type {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { GroupedListSwitchItem } from '#primitives/lists/grouped-list-switch-item';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
+import { Spinner } from '#primitives/status/spinner';
 import { SettingFieldRow } from './plugin-setting-field-row';
 
 export type PluginLoad =
@@ -43,9 +43,9 @@ export function PluginSettingsDetailView(
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
       <SettingsPage title={props.title} caption={caption} onBack={onBack}>
-        <GroupedList>
+        <List appearance="grouped">
           <PluginBody {...body} />
-        </GroupedList>
+        </List>
       </SettingsPage>
     </View>
   );
@@ -77,13 +77,13 @@ function EnabledSection(props: EnabledProps): React.JSX.Element {
   const { plugin, onEnabledChange } = props;
 
   return (
-    <GroupedListSection>
-      <GroupedListSwitchItem
-        label={enabledLabel}
+    <ListSection>
+      <ListItem.Toggle
+        title={enabledLabel}
         value={plugin.enabled}
         onValueChange={onEnabledChange}
       />
-    </GroupedListSection>
+    </ListSection>
   );
 }
 
@@ -91,13 +91,16 @@ type UnloadedProps = { status: 'loading' | 'missing'; title: string };
 
 function UnloadedPlugin({ status, title }: UnloadedProps): React.JSX.Element {
   return (
-    <GroupedListSection>
+    <ListSection>
       {status === 'loading' ? (
-        <GroupedListItem label="Loading the Plugin…" loading />
+        <ListItem
+          title="Loading the Plugin…"
+          leading={<Spinner accessibilityLabel="Loading" />}
+        />
       ) : (
-        <GroupedListItem label={`The Server has no Plugin named ${title}.`} />
+        <ListItem title={`The Server has no Plugin named ${title}.`} />
       )}
-    </GroupedListSection>
+    </ListSection>
   );
 }
 

@@ -25,12 +25,13 @@ export interface RenderContext {
 export function handlerOf(
   handler: Handler | undefined,
   { onEvent, key }: RenderContext,
+  event: 'onPress' | 'onSubmit' = 'onPress',
 ): (() => void) | undefined {
   if (!handler) return undefined;
 
   return () => {
     if ('$event' in handler)
-      void Promise.resolve(onEvent(key, { event: 'onPress' })).catch(() => {});
+      void Promise.resolve(onEvent(key, { event })).catch(() => {});
     else void runAction(handler);
   };
 }
@@ -62,4 +63,48 @@ export function entry<Schema extends z.ZodType>(
       return isWireContainer(node) ? <Unsupported /> : null;
     },
   };
+}
+
+export function payloadHandler<Value>(
+  handler: Handler | undefined,
+  context: RenderContext,
+  interaction: (value: Value) => PluginInteraction,
+): ((value: Value) => void) | undefined {
+  if (!handler) return undefined;
+
+  return (value) => {
+    if ('$event' in handler)
+      void Promise.resolve(
+        context.onEvent(context.key, interaction(value)),
+      ).catch(() => {});
+    else void runAction(handler);
+  };
+}
+
+export function valueChangeHandler(
+  handler: Handler,
+  context: RenderContext,
+): (payload: string | boolean | number) => void {
+  return (
+    payloadHandler(
+      handler,
+      context,
+      (payload: string | boolean | number): PluginInteraction => ({
+        event: 'onValueChange',
+        payload,
+      }),
+    ) ?? ((): void => {})
+  );
+}
+
+export function textChangeHandler(
+  handler: Handler,
+  context: RenderContext,
+): (payload: string) => void {
+  return (
+    payloadHandler(handler, context, (payload: string): PluginInteraction => ({
+      event: 'onChangeText',
+      payload,
+    })) ?? ((): void => {})
+  );
 }

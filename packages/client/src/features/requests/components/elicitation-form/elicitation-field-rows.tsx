@@ -1,17 +1,11 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
 import type { ReactElement } from 'react';
-import { Platform, View } from 'react-native';
-import { Switch } from '#primitives/inputs/switch';
-import { TextInput, type TextInputProps } from '#primitives/inputs/text-input';
-import {
-  GroupedListItem,
-  type GroupedListItemProps,
-} from '#primitives/lists/grouped-list-item';
+import { type StandaloneTextInputProps } from '#primitives/inputs/text-input';
+import { ListItem } from '#primitives/lists/list-item';
 import { toggledChoice } from './elicitation-answers';
 import { OptionRows } from './elicitation-option-rows';
 import { elicitationChoices, numericProperty } from './elicitation-property';
 import type { ElicitationValue } from './elicitation-schema';
-import { textFieldVariant } from './elicitation-text-fields';
 
 export type ElicitationFieldProps = {
   name: string;
@@ -40,12 +34,11 @@ export function FieldRows(props: ElicitationFieldProps): ReactElement {
 
   if (elicitationChoices(props.property)) return <ChoiceRows {...props} />;
 
-  return <TextInput {...textProps(props)} />;
+  return <ListItem.TextField {...textProps(props)} />;
 }
 
-function textProps(props: ElicitationFieldProps): TextInputProps {
+function textProps(props: ElicitationFieldProps): StandaloneTextInputProps {
   return {
-    variant: textFieldVariant,
     label: fieldLabel(props),
     labelHidden: props.lone,
     required: props.required,
@@ -100,55 +93,13 @@ function selectedValues(value: ElicitationValue | undefined): string[] {
   return typeof value === 'string' ? [value] : [];
 }
 
-// A phone's row holds the system switch; the web's whole row is the switch, its drawing decorative.
 function SwitchRow(props: ElicitationFieldProps): ReactElement {
-  return Platform.OS === 'web' ? (
-    <GroupedListItem
-      {...webSwitchRow(props)}
-      accessory={<SwitchAccessory {...props} />}
-    />
-  ) : (
-    <GroupedListItem
-      label={fieldLabel(props)}
-      disabled={props.inactive}
-      disclosure={false}
-      control={<FieldSwitch {...props} />}
-    />
-  );
-}
-
-// GroupedListItem reports `checked` as the switch's aria-checked on the web; a wide card draws it compact, as its choices.
-function webSwitchRow(props: ElicitationFieldProps): GroupedListItemProps {
-  return {
-    label: fieldLabel(props),
-    size: 'sm',
-    accessibilityRole: 'switch',
-    checked: props.value === true,
-    disabled: props.inactive,
-    disclosure: false,
-    onPress: () => props.onChange(props.value !== true),
-  };
-}
-
-function SwitchAccessory(props: ElicitationFieldProps): ReactElement {
   return (
-    <View
-      className="pointer-events-none"
-      aria-hidden
-      importantForAccessibility="no-hide-descendants"
-    >
-      <FieldSwitch {...props} />
-    </View>
-  );
-}
-
-function FieldSwitch(props: ElicitationFieldProps): ReactElement {
-  return (
-    <Switch
-      accessibilityLabel={fieldLabel(props)}
-      decorative={Platform.OS === 'web'}
-      disabled={props.inactive}
+    <ListItem.Toggle
+      title={fieldLabel(props)}
       value={props.value === true}
+      disabled={props.inactive}
+      description={props.property.description}
       onValueChange={props.onChange}
     />
   );

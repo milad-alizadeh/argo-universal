@@ -1,8 +1,6 @@
 import type { ReactElement } from 'react';
-import {
-  GroupedListItem,
-  type GroupedListItemProps,
-} from '#primitives/lists/grouped-list-item';
+import { ListItem } from '#primitives/lists/list-item';
+import type { ListItemProps } from '#primitives/lists/list-item';
 import { AgentIcon } from './agent-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { agentName } from './configuration-values';
@@ -10,13 +8,13 @@ import { agentName } from './configuration-values';
 type Props = { configuration: ComposerConfigurationProps; wide: boolean };
 
 export function AgentDrill(props: Props): ReactElement {
-  return <GroupedListItem {...agentRow(props)} />;
+  return <ListItem {...agentRow(props)} />;
 }
 
-const agentRow = ({ configuration, wide }: Props): GroupedListItemProps => ({
-  label: 'Agent',
+const agentRow = ({ configuration, wide }: Props): ListItemProps => ({
+  title: 'Agent',
   value: agentName(configuration.agent, configuration.agentId),
-  valueLeading: (
+  leading: (
     <AgentIcon agent={configuration.agent} role={wide ? 'control' : 'row'} />
   ),
 });

@@ -38,7 +38,7 @@ export function itemSurface(
 }
 
 export const itemPress = cn(
-  'w-full flex-row items-start gap-4 px-4 py-4 wide-type:px-3 web:select-none web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2',
+  'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5 web:select-none web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2',
   Platform.OS !== 'android' && 'active:bg-pressed',
 );
 
@@ -58,6 +58,6 @@ export function itemSeparator(
 
   return cn(
     'absolute bottom-0 right-4 left-4 bg-border android:hidden',
-    leading && 'left-14 wide-type:left-12',
+    leading && 'left-14 wide:left-15',
   );
 }

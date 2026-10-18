@@ -3,10 +3,11 @@ import { View } from 'react-native';
 import { formatServerClock, formatServerStart } from '#features/connection';
 import { errorToast } from '#lib/generic/error-toast';
 import { SettingsPage } from '#lib/product/settings-page';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { useErrorToast } from '#primitives/overlays/toast';
+import { Spinner } from '#primitives/status/spinner';
 
 export type ServerDetails =
   | { status: 'loading' }
@@ -43,17 +44,6 @@ export function ConnectionDetailView({
 }
 
 function ServerList({ server }: { server: ServerDetails }): React.JSX.Element {
-  return (
-    <GroupedList>
-      <GroupedListSection title="Server">
-        <ServerRows server={server} />
-      </GroupedListSection>
-    </GroupedList>
-  );
-}
-
-// A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
-function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
   useErrorToast(
     errorToast(
       "Could not load the Server's details",
@@ -61,23 +51,41 @@ function ServerRows({ server }: { server: ServerDetails }): React.JSX.Element {
     ),
   );
 
-  if (server.status !== 'loaded') {
-    return <GroupedListItem label="Connecting to the Server…" loading />;
-  }
-
-  return <LoadedRows server={server} />;
+  return (
+    <List appearance="grouped">
+      <ListSection title="Server">{serverRows(server)}</ListSection>
+    </List>
+  );
 }
 
-function LoadedRows({ server }: { server: LoadedServer }): React.JSX.Element {
+// A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
+function serverRows(server: ServerDetails): React.JSX.Element {
+  if (server.status !== 'loaded') {
+    return <ConnectingRow />;
+  }
+
+  return loadedRows(server);
+}
+
+function loadedRows(server: LoadedServer): React.JSX.Element {
   return (
     <>
-      <GroupedListItem label="Version" value={server.version} />
-      <GroupedListItem
-        label="Started"
+      <ListItem title="Version" value={server.version} />
+      <ListItem
+        title="Started"
         value={formatServerStart(server.startedAt, server.clock)}
       />
-      <GroupedListItem label="PID" value={String(server.pid)} />
-      <GroupedListItem label="Clock" value={formatServerClock(server.clock)} />
+      <ListItem title="PID" value={String(server.pid)} />
+      <ListItem title="Clock" value={formatServerClock(server.clock)} />
     </>
+  );
+}
+
+function ConnectingRow(): React.JSX.Element {
+  return (
+    <ListItem
+      title="Connecting to the Server…"
+      leading={<Spinner accessibilityLabel="Loading" />}
+    />
   );
 }

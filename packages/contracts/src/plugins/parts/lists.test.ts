@@ -50,3 +50,27 @@ it('refuses a control outside the List empty Slot accepted set', () => {
     props: { children: 'Update Argo to see this' },
   });
 });
+
+it.each(['Switch', 'Picker', 'TextInput', 'ListItem.Toggle'])(
+  'refuses %s in a row trailing Slot',
+  (type) => {
+    const row: WireNode = {
+      type: 'ListItem',
+      key: 'row',
+      props: { title: 'Settings' },
+      children: [],
+      slots: {
+        trailing: [
+          { type, key: 'control', props: {}, children: [], slots: {} },
+        ],
+      },
+    };
+
+    expect(
+      prepareWireTree(row, { Text: 3, ListItem: 3, [type]: 1 }),
+    ).toMatchObject({
+      type: 'Text',
+      props: { children: 'Update Argo to see this' },
+    });
+  },
+);
