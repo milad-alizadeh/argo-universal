@@ -61,7 +61,7 @@ it.each([
     import { Text, Column } from '@argo/plugin-kit';
     import { jsx } from '@argo/plugin-kit/jsx-runtime';
     function Replacement() { ${body} }
-    export async function register(argo) { await argo.on('ui.render', () => ${scenario === 'missing tree' ? `({ treePath: 'render:missing' })` : 'jsx(Replacement, {})'}); }
+    export async function register(argo) { await argo.on('ui.render', () => ${renderAnswer(scenario)}); }
   `,
       },
     ]);
@@ -84,3 +84,8 @@ it.each([
   },
   20_000,
 );
+
+const renderAnswer = (scenario: string): string =>
+  scenario === 'missing tree'
+    ? `({ treePath: 'render:missing' })`
+    : 'jsx(Replacement, {})';
