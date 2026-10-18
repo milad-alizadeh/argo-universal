@@ -165,6 +165,8 @@
       --radius-grouped-inner: 4px;
       --tracking-row: 0.5px;
       --tracking-row-detail: 0.25px;
+      /* A tablet's rail and list sit flat on the window, with no glass panel to inset (#927). */
+      --spacing-frame-inset: 0px;
     }
     @variant light {
       /* Every colour is a Tailwind palette shade: the nearest one, measured in OKLab. */

@@ -1,6 +1,7 @@
 import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import { useState } from 'react';
+import { Platform } from 'react-native';
 import type { SectionList, SectionLists } from '#features/frame';
 import {
   type SessionsViewState,
@@ -15,7 +16,6 @@ import {
   newSessionHref,
   useNavigate,
 } from '#lib/product/navigation/navigation';
-import { PhoneSearchBar } from '#lib/product/navigation/phone-search-bar';
 import { SearchField } from '#primitives/inputs/search-field';
 import { newSessionId } from '../lib/product/navigation/new-session';
 import { sections } from '../lib/product/navigation/sections';
@@ -79,12 +79,8 @@ const sessionsRootToolbar = (
   <SessionsRootToolbar {...sessions} onNewSession={onNewSession} />
 );
 
-// iOS's stock search bar for the Settings root.
-const settingsRootToolbar = (
-  onQueryChange: (query: string) => void,
-): React.JSX.Element => (
-  <PhoneSearchBar placeholder={searchSettings} onSearch={onQueryChange} />
-);
+// Settings searches only on the web and desktop; native Settings has no search, at any size (#927).
+const settingsSearches = Platform.OS === 'web';
 
 interface SettingsQuery {
   query: string;
@@ -95,15 +91,28 @@ function SettingsSearch({
   query,
   onQueryChange,
 }: SettingsQuery): React.JSX.Element {
+  const title = <ListTitle>{sections.settings.title}</ListTitle>;
+
+  if (!settingsSearches) return title;
+
   return (
     <SearchField
       label={searchSettings}
       value={query}
       onChangeText={onQueryChange}
-      title={<ListTitle>{sections.settings.title}</ListTitle>}
+      title={title}
     />
   );
 }
+
+const settingsRootHeader = (
+  onQueryChange: (query: string) => void,
+): SectionList['rootHeader'] => ({
+  title: sections.settings.title,
+  ...(settingsSearches && {
+    search: { placeholder: searchSettings, onChangeText: onQueryChange },
+  }),
+});
 
 const settingsFirstPage: FirstPage = { page: 'accounts' };
 
@@ -115,11 +124,7 @@ function settingsList(
   return {
     header: <SettingsSearch query={query} onQueryChange={onQueryChange} />,
     list: <SettingsNavigationList selectedPath={path} query={query} />,
-    rootHeader: {
-      title: sections.settings.title,
-      search: { placeholder: searchSettings, onChangeText: onQueryChange },
-    },
-    rootToolbar: settingsRootToolbar(onQueryChange),
+    rootHeader: settingsRootHeader(onQueryChange),
     useFirstPage: () => settingsFirstPage,
   };
 }

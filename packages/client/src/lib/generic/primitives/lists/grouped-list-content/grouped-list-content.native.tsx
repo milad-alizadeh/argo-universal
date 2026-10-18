@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { usePaneSectionMargin } from '../../../use-size-class/pane-section-margin';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListContentProps } from './grouped-list-content-props';
 import { GroupedListContent as WebGroupedListContent } from './grouped-list-content.tsx';
@@ -103,10 +104,14 @@ const bareRow = [
 type SectionProps = { children: React.ReactElement; title?: string };
 
 function BareSection({ children, title }: SectionProps): React.JSX.Element {
+  const paneMargin = usePaneSectionMargin();
+
   if (title) return <FooterSection title={title}>{children}</FooterSection>;
 
   return (
-    <FieldGroup.Section modifiers={bareRow}>{children}</FieldGroup.Section>
+    <FieldGroup.Section modifiers={[...bareRow, ...paneMargin]}>
+      {children}
+    </FieldGroup.Section>
   );
 }
 
@@ -116,7 +121,7 @@ function BareSection({ children, title }: SectionProps): React.JSX.Element {
  */
 function FooterSection({ children, title }: SectionProps): React.JSX.Element {
   return (
-    <FieldGroup.Section title={title}>
+    <FieldGroup.Section title={title} modifiers={usePaneSectionMargin()}>
       <FieldGroup.SectionFooter>{children}</FieldGroup.SectionFooter>
     </FieldGroup.Section>
   );

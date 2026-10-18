@@ -1,6 +1,5 @@
 import {
   hasLiquidGlass,
-  PhoneConnectionBanner,
   SectionMenuButton,
   screenHeaderOptions,
   type CoreSection,
@@ -13,19 +12,18 @@ import {
   Stack,
   useNavigation,
 } from 'expo-router';
-import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import { DrawerActions } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
 import { headerTitleOptions } from './header-title';
+import { pageLayout } from './page-layout';
+import { phonePaneSectionOptions, usePhonePane } from './phone-pane';
 import { drawerDrawsRootHeader } from './section-drawer-options';
 
 type ScreenHeaderProps = SectionList['rootHeader'];
 
 type StackProps = ComponentProps<typeof Stack>;
-
-type ScreenLayout = NonNullable<StackProps['screenLayout']>;
 
 // With Liquid Glass, content scrolls under a clear header; before it, the opaque header takes the theme's content colour.
 const headerOverPage = { headerTransparent: hasLiquidGlass };
@@ -68,45 +66,22 @@ const stackRootOptions = (
     ? { headerLeft: () => <WebMenuButton />, ...screenHeaderOptions(header) }
     : screenHeaderOptions(header);
 
-interface BannerProps {
-  overHeader: boolean;
-}
-
-// Under a header that floats over the page, the banner moves down by the header's height, as the stack reports it.
-function UnderHeaderBanner({ overHeader }: BannerProps): React.JSX.Element {
-  const headerHeight = useAnimatedHeaderHeight();
-
-  return (
-    <PhoneConnectionBanner
-      headerHeight={overHeader ? headerHeight : undefined}
-    />
-  );
-}
-
-// A compact page's Connection banner floats under its header; a medium or wide window's sits over the panes.
-function NarrowBanner(props: BannerProps): React.JSX.Element | null {
-  return useSizeClass() === 'compact' ? <UnderHeaderBanner {...props} /> : null;
-}
-
-// The page keeps its place in the tree at both widths.
-const pageLayout: ScreenLayout = ({ children, options }) => (
-  <View className="flex-1">
-    {children}
-    <NarrowBanner overHeader={options.headerTransparent === true} />
-  </View>
-);
-
 interface SectionOptions {
   screenOptions: StackProps['screenOptions'];
   rootOptions: NativeStackNavigationOptions;
 }
 
-// The stack's options at this width, and its root's: a compact root shows the section's header; a medium or wide page draws its own.
+// The stack's options at this width, and its root's: a compact root shows the section's header; a phone pane's pages show theirs; another medium or wide page draws its own.
 function useSectionOptions(
   header: ScreenHeaderProps,
   root: boolean,
+  phonePane: boolean,
 ): SectionOptions {
-  if (useSizeClass() !== 'compact')
+  const sizeClass = useSizeClass();
+
+  if (phonePane) return phonePaneSectionOptions(narrowOptions);
+
+  if (sizeClass !== 'compact')
     return { screenOptions: framedOptions, rootOptions: {} };
 
   return {
@@ -136,7 +111,10 @@ export function SectionStack({
   children,
 }: SectionStackProps): React.JSX.Element {
   return (
-    <PageStack header={useSectionList(section).rootHeader}>
+    <PageStack
+      header={useSectionList(section).rootHeader}
+      phonePane={usePhonePane(section)}
+    >
       {children}
     </PageStack>
   );
@@ -147,17 +125,23 @@ interface PageStackProps extends PropsWithChildren {
   root?: boolean;
   rootName?: string;
   singular?: ComponentProps<typeof Stack.Screen>['dangerouslySingular'];
+  // The pages draw as on a phone in a medium window's pane, under the stock header.
+  phonePane?: boolean;
 }
 
 // Core lists and Plugin pages share stock stack headers, page placement and the Connection banner.
 export function PageStack(props: PageStackProps): React.JSX.Element {
+  const phonePane = props.phonePane === true;
+  const layout = pageLayout(phonePane, props.rootName);
+
   const { screenOptions, rootOptions } = useSectionOptions(
     props.header,
     props.root ?? true,
+    phonePane,
   );
 
   return (
-    <Stack screenOptions={screenOptions} screenLayout={pageLayout}>
+    <Stack screenOptions={screenOptions} screenLayout={layout}>
       <Stack.Screen {...rootScreen(props, rootOptions)} />
       {props.children}
     </Stack>
