@@ -122,28 +122,23 @@
 }
 
 /*
- * `wide:` is the desktop drawing: a medium or a wide window, where the list sits beside the pages
- * (ADR-0026, #927). Phones never reach it: they are held in portrait, under the medium breakpoint.
- * `useWide()` matches it.
+ * `wide:` is the desktop drawing: a wide window, where the list sits beside the pages. Compact and
+ * medium windows take the phone shell on every platform (ADR-0026, amended 2026-10-18). Phones never
+ * reach it: they are compact at any width. `useWide()` matches it.
  */
 @custom-variant wide {
-  @media (width >= theme(--breakpoint-medium)) {
+  @media (width >= theme(--breakpoint-wide)) {
     @slot;
   }
 }
 
 /*
- * `wide-type:` is the desktop type scale, the text roles' "-wide" tokens: a wide window everywhere,
- * and on the web and desktop a medium one too. A tablet keeps the phone's type scale at medium.
+ * `wide-type:` is the desktop type scale, the text roles' "-wide" tokens: a wide window, as `wide:`.
+ * Compact and medium windows keep the phone's type scale.
  */
 @custom-variant wide-type {
   @media (width >= theme(--breakpoint-wide)) {
     @slot;
-  }
-  @variant web {
-    @media (width >= theme(--breakpoint-medium)) {
-      @slot;
-    }
   }
 }
 

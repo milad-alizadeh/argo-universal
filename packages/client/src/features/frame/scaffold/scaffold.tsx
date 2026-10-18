@@ -67,7 +67,7 @@ export function ScaffoldSidebar(
 
 export type ScaffoldPageProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
-// A page: beside the list on a medium or wide window, the whole window on a compact one; the tree is the same at each, so the page never remounts.
+// A page: beside the list on a wide window, the whole window on a compact or medium one; the tree is the same at each, so the page never remounts.
 export function ScaffoldPage({
   parts,
   children,
@@ -83,16 +83,16 @@ export function ScaffoldPage({
   );
 }
 
-// A compact window drills in: with no page open, the list is the page.
+// The phone shell drills in: with no page open, the list is the page.
 const shownPage = (
   framed: boolean,
   { page, list }: ScaffoldProps,
 ): ReactNode => (framed ? page : (page ?? list));
 
 /*
- * Places a screen's panes for its Size class, from props only: on a compact window the page
- * drills in over the list; on a medium one the sidebar and the list sit beside the page; on a
- * wide one the Inspector gets its own column too, with resize handles between the panes.
+ * Places a screen's panes for its Size class, from props only: on a compact or medium window the
+ * page drills in over the list, with the Inspector as a sheet; on a wide one the sidebar and the
+ * list sit beside the page, the Inspector gets its own column, and resize handles sit between the panes.
  */
 export function Scaffold(props: ScaffoldProps): React.JSX.Element {
   const parts = useScaffoldParts(props);

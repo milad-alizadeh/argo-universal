@@ -1,5 +1,5 @@
 import { PluginDetailScreen, pluginPath, usePluginAt } from '@repo/client';
-import { useSizeClass } from '@repo/client/size-class';
+import { useWide } from '@repo/client/size-class';
 import { usePathname } from 'expo-router';
 import type * as React from 'react';
 import { Platform } from 'react-native';
@@ -30,8 +30,8 @@ interface PluginRootProps {
 // A Plugin page with, at a narrow root on iOS, ☰ as a stock bar button item, as a section root has.
 export function PluginRoot({ path }: PluginRootProps): React.JSX.Element {
   const { root } = usePluginAt(pluginPath(path));
-  const compact = useSizeClass() === 'compact';
-  const narrowRoot = root && compact;
+  const wide = useWide();
+  const narrowRoot = root && !wide;
 
   return (
     <>

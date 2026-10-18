@@ -10,7 +10,7 @@ import {
 } from './agents-toolbar';
 
 export const agentsHeader = (props: AgentsHeaderProps): ScreenHeaderProps => ({
-  hideFrom: 'medium',
+  hideFrom: 'wide',
   title: agentsTitle,
   search: { placeholder: searchLabel, onChangeText: props.onSearch },
 });

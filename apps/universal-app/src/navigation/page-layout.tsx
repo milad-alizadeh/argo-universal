@@ -1,5 +1,5 @@
 import { PhoneConnectionBanner } from '@repo/client';
-import { CompactScope, useSizeClass } from '@repo/client/size-class';
+import { useWide } from '@repo/client/size-class';
 import type { Stack } from 'expo-router';
 import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import type * as React from 'react';
@@ -23,19 +23,15 @@ function UnderHeaderBanner({ overHeader }: BannerProps): React.JSX.Element {
   );
 }
 
-// A compact page's Connection banner floats under its header; a medium or wide window's sits over the panes.
+// The phone shell's Connection banner floats under the page's header; a wide window's sits over the panes.
 function NarrowBanner(props: BannerProps): React.JSX.Element | null {
-  return useSizeClass() === 'compact' ? <UnderHeaderBanner {...props} /> : null;
+  return useWide() ? null : <UnderHeaderBanner {...props} />;
 }
 
-// The page keeps its place in the tree at every width; in a phone pane, every page but the section's root draws as on a phone.
-export const pageLayout =
-  (phonePane: boolean, rootName = 'index'): ScreenLayout =>
-  ({ children, options, route }) => (
-    <View className="flex-1">
-      <CompactScope active={phonePane && route.name !== rootName}>
-        {children}
-      </CompactScope>
-      <NarrowBanner overHeader={options.headerTransparent === true} />
-    </View>
-  );
+// The page keeps its place in the tree at every width.
+export const pageLayout: ScreenLayout = ({ children, options }) => (
+  <View className="flex-1">
+    {children}
+    <NarrowBanner overHeader={options.headerTransparent === true} />
+  </View>
+);

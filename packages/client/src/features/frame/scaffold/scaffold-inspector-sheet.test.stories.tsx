@@ -25,7 +25,7 @@ const meta = {
 
 export default meta;
 
-// A medium window's Inspector is a sheet over the window: no column beside the page, no expand, and its close button closes the sheet. Its list keeps a fixed width.
+// A medium window takes the phone shell, so its Inspector is a sheet over the window: no column beside the page, no sidebar to resize, no expand, and its close button closes the sheet.
 export const InspectorIsASheetOnMedium: ScaffoldStory = {
   play: controlledPlay(async (context, controlled) => {
     const { canvas, userEvent } = context;

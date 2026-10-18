@@ -20,7 +20,7 @@ type InspectorControlsProps = Pick<
   'expanded' | 'onStateChange'
 >;
 
-// True inside the medium window's Inspector sheet, which gives the pane its own surface and height.
+// True inside the phone shell's Inspector sheet, which gives the pane its own surface and height.
 export const InspectorInSheet = createContext(false);
 
 const controlIconClass = 'text-muted-foreground';
@@ -88,7 +88,7 @@ function InspectorHeader(
 
 /*
  * The Inspector's page, flush with the window's right edge: its header with expand and close, and
- * its content scrolling and fading under that header, all on one surface. In the medium window's
+ * its content scrolling and fading under that header, all on one surface. In the phone shell's
  * sheet it takes the sheet's surface at Paper's height.
  */
 export function InspectorPane(props: InspectorPaneProps): React.JSX.Element {

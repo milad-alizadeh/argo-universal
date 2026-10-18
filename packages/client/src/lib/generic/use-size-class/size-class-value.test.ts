@@ -11,10 +11,10 @@ describe('a size-class value', (): void => {
 
   it.each([
     ['compact', 'secondary'],
-    ['medium', 'body'],
+    ['medium', 'secondary'],
     ['wide', 'body'],
   ] as const)(
-    'picks the %s entry, medium following wide',
+    'picks the %s entry, medium following compact',
     (sizeClass, expected): void => {
       expect(
         sizeClassValue({ compact: 'secondary', wide: 'body' }, sizeClass),

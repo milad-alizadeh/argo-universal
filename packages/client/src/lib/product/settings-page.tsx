@@ -14,12 +14,12 @@ import {
   paneLeadingInset,
   useInIosPane,
 } from '../generic/use-size-class/pane-inset';
-import { useSizeClass } from '../generic/use-size-class/use-size-class';
+import { useWide } from '../generic/use-wide/use-wide';
 
 export type SettingsPageSearch = PageTitleSearch;
 
 export interface SettingsPageProps extends PageTitleRowProps {
-  // Agents keeps the medium window's side padding and toolbar gap on a wide window too.
+  // Agents keeps the narrower side padding and toolbar gap on a wide window too.
   headerFrom?: 'medium' | 'wide';
   caption?: string;
   // A row of controls under the title, such as filters.
@@ -41,7 +41,7 @@ interface SettingsColumn {
 function useSettingsColumn(
   from: SettingsPageProps['headerFrom'],
 ): SettingsColumn {
-  const token = useColumnPaddingToken(from);
+  const token = columnPaddingToken(from);
   const padding = Number.parseFloat(String(useCSSVariable(token)));
 
   return useMemo(
@@ -54,16 +54,12 @@ function useSettingsColumn(
   );
 }
 
-function useColumnPaddingToken(from: SettingsPageProps['headerFrom']): string {
-  const sizeClass = useSizeClass();
-
-  if (sizeClass === 'medium') return '--spacing-6';
-
+function columnPaddingToken(from: SettingsPageProps['headerFrom']): string {
   return from === 'medium' ? '--spacing-6' : '--spacing-8';
 }
 
 /*
- * One Settings page on a medium or wide window: a centred column under its own title and caption.
+ * One Settings page on a wide window: a centred column under its own title and caption.
  * The content's scroll view spans the pane, so its scrollbar sits at the pane's edge, and keeps its content to the column.
  * A phone's native header shows the title, which the page's screen sets, so there the page is its content alone.
  */
@@ -88,15 +84,15 @@ export function SettingsPage(props: SettingsPageProps): ReactNode {
 function useBodyColumn(
   column: SettingsColumn,
 ): React.ContextType<typeof ScrollColumnContext> {
-  const sizeClass = useSizeClass();
+  const wide = useWide();
   const inherited = use(ScrollColumnContext);
 
-  return sizeClass === 'compact' ? inherited : column;
+  return wide ? column : inherited;
 }
 
-// A medium or wide page draws its own title; a phone's native header shows it instead.
+// A wide page draws its own title; the phone shell's header shows it instead.
 function useShowsHeader(): boolean {
-  return useSizeClass() !== 'compact';
+  return useWide();
 }
 
 function SettingsPageTop({

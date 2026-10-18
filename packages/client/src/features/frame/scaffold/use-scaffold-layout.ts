@@ -13,12 +13,12 @@ import {
 // What the Scaffold places: its Slots, and the sidebar's and the Inspector's state, which the caller holds.
 export interface ScaffoldProps {
   sizeClass: SizeClass;
-  // The section picker beside the list on a medium or wide window, such as the rail.
+  // The section picker beside the list on a wide window, such as the rail.
   sidebar: ReactNode;
   // The list's own part of the sidebar's header row.
   listHeader: ReactNode;
   list: ReactNode;
-  // The page beside the list, which draws its own header; a compact window shows it over the list.
+  // The page beside the list, which draws its own header; a compact or medium window shows it over the list.
   page?: ReactNode;
   // The Inspector's page, told whether it fills the page's area, which the Scaffold decides from the window's width.
   inspector: (expanded: boolean) => ReactNode;

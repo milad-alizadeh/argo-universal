@@ -60,7 +60,7 @@ export const InspectorFiles: Story = {
   ),
 };
 
-// Paper's medium "Window / Inspector open": the list keeps its fixed width and the Inspector rises as a sheet over the window.
+// A medium window takes the phone shell (ADR-0026): the page fills the window and the Inspector rises as a sheet over it.
 export const MediumInspector: Story = {
   name: 'Medium Inspector',
   args: { sizeClass: 'medium', inspectorState: 'open' },

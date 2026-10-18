@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
-import { useSizeClass } from '../src/lib/generic/use-size-class/use-size-class';
+import { useWide } from '../src/lib/generic/use-wide/use-wide';
 import { HeaderItems } from '../src/lib/product/header-button';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';
 import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-header';
@@ -10,21 +10,9 @@ import type { ScreenHeaderProps } from '../src/lib/product/navigation/screen-hea
 export function ScreenHeaderMock(
   props: ScreenHeaderProps,
 ): React.JSX.Element | null {
-  const sizeClass = useSizeClass();
-
-  if (headerHidden(props, sizeClass)) return null;
+  if (useWide()) return null;
 
   return <HeaderMockBody {...props} />;
-}
-
-function headerHidden(
-  props: ScreenHeaderProps,
-  sizeClass: ReturnType<typeof useSizeClass>,
-): boolean {
-  return (
-    sizeClass === 'wide' ||
-    (props.hideFrom === 'medium' && sizeClass === 'medium')
-  );
 }
 
 function HeaderMockBody({

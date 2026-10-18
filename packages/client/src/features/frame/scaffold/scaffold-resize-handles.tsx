@@ -110,7 +110,7 @@ function inspectorHandleProps({
 function ListResizeHandle(parts: ScaffoldPartProps): React.JSX.Element | null {
   const { layout } = parts;
 
-  // A medium window's list keeps its fixed width (#927).
+  // Only a wide window frames the page, so only it resizes its panes.
   if (parts.scaffold.sizeClass !== 'wide') return null;
 
   if (layout.listLimit <= layout.measures.listWidth) return null;

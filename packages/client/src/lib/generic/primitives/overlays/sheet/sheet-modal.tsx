@@ -1,5 +1,5 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
-import type { ReactElement, ReactNode } from 'react';
+import { cloneElement, type ReactElement, type ReactNode } from 'react';
 import { type GestureResponderEvent, Pressable, Text } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { CentredOverlayScope } from '#primitives/overlays/centred-overlay';
@@ -11,19 +11,34 @@ import {
 } from './sheet-panel';
 
 /*
- * From the medium size class up, a web sheet the app opens itself centres on the window as a modal,
- * on Radix Dialog as the Dialog's own centred card is: Root `open`/`onOpenChange`, Portal, Overlay,
- * Content `onCloseAutoFocus`/`onEscapeKeyDown`/`onPointerDownOutside` and Title.
+ * From the medium size class up, and below wide for a sheet with a trigger, a web sheet centres on
+ * the window as a modal, on Radix Dialog as the Dialog's own centred card is: Root
+ * `open`/`onOpenChange`, Trigger, Portal, Overlay, Content
+ * `onCloseAutoFocus`/`onEscapeKeyDown`/`onPointerDownOutside` and Title.
  */
 export function ModalSheet(props: PresentationProps): ReactElement {
   return (
     <RadixDialog.Root open={props.open} onOpenChange={openChange(props)}>
+      <ModalTrigger {...props} />
       <RadixDialog.Portal>
         <ModalBackdrop {...props}>
           <ModalContent {...props} />
         </ModalBackdrop>
       </RadixDialog.Portal>
     </RadixDialog.Root>
+  );
+}
+
+// The caller's trigger, as Radix's: Radix takes focus back to it on close; the press opens the sheet.
+function ModalTrigger(props: PresentationProps): ReactElement | null {
+  if (!props.trigger) return null;
+
+  return (
+    <RadixDialog.Trigger asChild disabled={!!props.trigger.props.disabled}>
+      {cloneElement(props.trigger, {
+        onPress: () => props.onOpenChange(true),
+      })}
+    </RadixDialog.Trigger>
   );
 }
 

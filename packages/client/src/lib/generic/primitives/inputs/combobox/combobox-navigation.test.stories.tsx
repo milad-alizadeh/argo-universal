@@ -126,4 +126,6 @@ function standaloneAt(width: number): Story {
 
 export const StandaloneDrawerReturnsToField = standaloneAt(390);
 
-export const StandalonePopoverReturnsToField = standaloneAt(1024);
+export const StandaloneModalReturnsToField = standaloneAt(1024);
+
+export const StandalonePopoverReturnsToField = standaloneAt(1440);

@@ -20,21 +20,21 @@ import {
 } from './use-scaffold-layout';
 
 export interface ScaffoldParts extends ScaffoldPartProps {
-  // A medium or wide window: the sidebar and the list sit beside the page.
+  // A wide window: the sidebar and the list sit beside the page.
   framed: boolean;
-  // A medium window's Inspector, open in a sheet over the window.
+  // A compact or medium window's Inspector, open in a sheet over the window.
   inspectorSheetOpen: boolean;
 }
 
-export const isFramed = (sizeClass: SizeClass): boolean =>
-  sizeClass !== 'compact';
+// ADR-0026, amended 2026-10-18: only a wide window frames the page; compact and medium take the phone shell.
+export const isFramed = (sizeClass: SizeClass): boolean => sizeClass === 'wide';
 
-// ADR-0026: only a wide window has the Inspector's own column; a medium window's Inspector is a sheet (#927), so it takes no room beside the page.
+// Only a wide window has the Inspector's own column; elsewhere the Inspector is a sheet, so it takes no room beside the page.
 const shownInspector = (props: ScaffoldProps): ScaffoldProps =>
   props.sizeClass === 'wide' ? props : { ...props, inspectorState: 'closed' };
 
 const inspectorSheetOpen = (props: ScaffoldProps): boolean =>
-  props.sizeClass === 'medium' && props.inspectorState !== 'closed';
+  props.sizeClass !== 'wide' && props.inspectorState !== 'closed';
 
 // The Scaffold's props as it applies them, with its layout: what its frame, sidebar and page are drawn from.
 export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
@@ -75,7 +75,7 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
 const openInspector = (scaffold: ScaffoldProps, open: boolean): void =>
   scaffold.onInspectorStateChange(open ? 'open' : 'closed');
 
-// A medium window's Inspector: a sheet from the window's bottom edge, which the page's header button opens. Its one large detent is what iPadOS shows as a centred form sheet; a sheet sized to its content opens as a page sheet there.
+// The phone shell's Inspector: a sheet from the window's bottom edge, which the page's header button opens. Its one large detent is what iPadOS shows as a centred form sheet; a sheet sized to its content opens as a page sheet there.
 function InspectorSheet(parts: ScaffoldParts): React.JSX.Element {
   const { scaffold } = parts;
 
@@ -92,13 +92,6 @@ function InspectorSheet(parts: ScaffoldParts): React.JSX.Element {
   );
 }
 
-function InspectorBeside(parts: ScaffoldParts): React.JSX.Element {
-  if (parts.scaffold.sizeClass === 'wide')
-    return <InspectorColumn {...parts} />;
-
-  return <InspectorSheet {...parts} />;
-}
-
 function Backdrop({ scaffold, layout }: ScaffoldPartProps): React.JSX.Element {
   return (
     <>
@@ -108,11 +101,11 @@ function Backdrop({ scaffold, layout }: ScaffoldPartProps): React.JSX.Element {
   );
 }
 
-// The Inspector beside the page or in its sheet, the resize handles, and the banner over the panes.
+// The Inspector beside the page, the resize handles, and the banner over the panes.
 function Overlays(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
-      <InspectorBeside {...parts} />
+      <InspectorColumn {...parts} />
       <ScaffoldResizeHandles {...parts} />
       <PaneBanner left={sidebarWidth(parts.layout)}>
         {parts.scaffold.banner}
@@ -126,18 +119,18 @@ interface FrameEdges {
   after: ReactNode;
 }
 
-// What sits around the sidebar and the page: a framed window's backdrop, Inspector, handles and banner; a compact window's pages place their own banner under their header.
+// What sits around the sidebar and the page: a framed window's backdrop, Inspector, handles and banner; the phone shell's Inspector sheet, as its pages place their own banner under their header.
 const frameEdges = (parts: ScaffoldParts): FrameEdges =>
   parts.framed
     ? {
         before: <Backdrop {...parts} />,
         after: <Overlays {...parts} />,
       }
-    : { before: null, after: null };
+    : { before: null, after: <InspectorSheet {...parts} /> };
 
 export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
-// A framed tablet's panes start under the status bar; the backdrop still runs behind it. A compact window's pages keep their own header insets, and a desktop window has none.
+// A framed tablet's panes start under the status bar; the backdrop still runs behind it. The phone shell's pages keep their own header insets, and a desktop window has none.
 function useFrameTop(framed: boolean): ViewStyle {
   const { top } = useSafeAreaInsets();
 
