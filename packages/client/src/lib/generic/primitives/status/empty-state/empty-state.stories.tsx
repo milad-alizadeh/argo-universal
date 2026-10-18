@@ -5,7 +5,7 @@ import { EmptyState } from './empty-state';
 import type { EmptyStateProps } from './empty-state-props';
 
 const sessions = {
-  icon: 'message',
+  icon: 'sessions',
   title: 'No Sessions yet',
   description: 'Start a Session to work with an Agent.',
   action: <Button label="New Session" />,
@@ -34,6 +34,7 @@ const examples = [
     'Search',
     {
       ...sessions,
+      icon: 'search',
       title: 'No matching Sessions',
       description: 'No Session has “deploy” in its title.',
       action: undefined,
