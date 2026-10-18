@@ -26,6 +26,12 @@ interface DrawingProps extends ListItemProps {
   accessory?: ReactNode;
 }
 
+function rowLabel(props: ListItemProps): string {
+  return [props.title, props.value]
+    .filter((value) => value !== undefined)
+    .join(', ');
+}
+
 function pressClass(disabled?: boolean): string {
   return cn(itemPress, disabled && 'opacity-50');
 }
@@ -43,7 +49,7 @@ function usePressProps(
 ): ComponentProps<typeof Pressable> & { 'aria-pressed'?: boolean } {
   return {
     role: props.onPress ? 'button' : undefined,
-    accessibilityLabel: props.accessibilityLabel ?? props.title,
+    accessibilityLabel: props.accessibilityLabel ?? rowLabel(props),
     accessibilityState: { selected: props.selected, disabled: props.disabled },
     'aria-pressed': props.selected,
     disabled: props.disabled,

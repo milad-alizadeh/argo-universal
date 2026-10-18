@@ -1,11 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect } from 'storybook/test';
+import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { ListItem } from '../list-item';
 import { List } from './list';
+import presentationMeta, { Overview } from './list.stories';
 
 const meta = {
+  ...presentationMeta,
   title: 'Tests/Design System/Primitives/List',
   parameters: { screenPreview: true },
 } satisfies Meta;
@@ -45,6 +48,9 @@ function CollapsingSection(): React.JSX.Element {
     <List appearance="grouped">
       <List.Section
         title="Runs"
+        leading={
+          <Icon role="body" name={isExpanded ? 'folder-open' : 'folder'} />
+        }
         footer="Latest builds"
         isExpanded={isExpanded}
         onExpandedChange={setExpanded}
@@ -61,9 +67,20 @@ export const Section: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByText('Build web')).toBeVisible();
     await expect(canvas.getByText('Latest builds')).toBeVisible();
+    await expect(canvas.getByTestId('icon-folder-open')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Runs' }));
     await expect(canvas.queryByText('Build web')).toBeNull();
+    await expect(canvas.getByTestId('icon-folder')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Runs' }));
     await expect(await canvas.findByText('Build native')).toBeVisible();
+  },
+};
+
+export const Contents: Story = {
+  ...Overview,
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findAllByText('Build the Session layout'),
+    ).toHaveLength(3);
   },
 };

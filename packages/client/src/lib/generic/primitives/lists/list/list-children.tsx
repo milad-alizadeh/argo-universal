@@ -1,5 +1,6 @@
 import {
   Children,
+  cloneElement,
   Fragment,
   isValidElement,
   type ReactNode,
@@ -85,13 +86,27 @@ function entriesOf(
 ): ListChild[] {
   if (sectionChild(child)) return sectionEntries(child, key);
 
-  if (fragmentChild(child)) return childEntries(child.props.children, key);
-
   return [{ key, content: child, position }];
 }
 
+function nestedKey(child: ReactNode, prefix: string, index: number): ReactNode {
+  return isValidElement(child)
+    ? cloneElement(child, { key: `${prefix}/${child.key ?? index}` })
+    : child;
+}
+
+function flattenedChildren(children: ReactNode): ReactNode[] {
+  return Children.toArray(children).flatMap((child) => {
+    if (!fragmentChild(child)) return [child];
+
+    return flattenedChildren(child.props.children).map((nested, index) =>
+      nestedKey(nested, String(child.key), index),
+    );
+  });
+}
+
 export function childEntries(children: ReactNode, prefix = ''): ListChild[] {
-  const entries = Children.toArray(children);
+  const entries = flattenedChildren(children);
 
   return entries.flatMap((child, index) =>
     entriesOf(

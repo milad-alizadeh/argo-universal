@@ -3,6 +3,8 @@
 import type * as PluginKit from '@argo/plugin-kit';
 import {
   Button,
+  List,
+  ListItem as PluginListItem,
   Column,
   Row,
   Stack,
@@ -185,3 +187,9 @@ expectTypeOf<WireProps['Label']>().toExtend<LabelProps>();
 expectTypeOf<WireProps['ProgressBar']>().toExtend<ProgressBarProps>();
 
 expectTypeOf<WireProps['Pill']>().toExtend<PillProps>();
+
+<List
+  empty={<Text label="No runs" />}
+  items={listItems}
+  renderItem={(item) => <PluginListItem key={item.id} title={item.id} />}
+/>;

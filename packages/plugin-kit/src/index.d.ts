@@ -66,6 +66,7 @@ type Content<Name extends WirePart> = Name extends 'Text' | 'Button'
 type ListPart = (typeof listPartNames)[number];
 
 type ListProps<Name extends ListPart, Item> = EventProps<Name> &
+  SlotProps<Name> &
   (
     | {
         items: readonly Item[];

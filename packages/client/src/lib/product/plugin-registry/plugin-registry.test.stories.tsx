@@ -1,5 +1,6 @@
 import {
   runListRoot,
+  emptyRunListRoot,
   helloRoot,
   helloTapEvent,
   slottedRow,
@@ -130,5 +131,13 @@ export const ListAnatomy: Story = {
     await expect(onEvent).toHaveBeenCalledWith('runs/builds/web', {
       event: 'onPress',
     });
+  },
+};
+
+export const EmptyList: Story = {
+  parameters: { screenPreview: true },
+  render: () => <PluginTree root={emptyRunListRoot} onEvent={onEvent} />,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('No runs yet')).toBeVisible();
   },
 };

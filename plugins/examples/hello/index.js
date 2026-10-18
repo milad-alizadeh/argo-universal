@@ -48,28 +48,43 @@ const builds = [
   { id: 'native', title: 'Build native' },
 ];
 
+const buildMeta = (
+  <Label
+    text="2/5 jobs"
+    icon={{ sf: 'checkmark.circle', material: 'check_circle' }}
+  />
+);
+
+function BuildRow({ build, selected, onSelect }) {
+  return (
+    <ListItem
+      title={build.title}
+      subtitle="main"
+      selected={selected === build.id}
+      onPress={() => onSelect(build.id)}
+      meta={buildMeta}
+      progress={{ value: 0.4, tone: 'success', active: true }}
+    />
+  );
+}
+
+const renderBuild = (selected, onSelect) => (build) => (
+  <BuildRow
+    key={build.id}
+    build={build}
+    selected={selected}
+    onSelect={onSelect}
+  />
+);
+
 function HelloListPage() {
   const [selected, setSelected] = useState('');
+
   return (
     <List
       appearance="cards"
       items={builds}
-      renderItem={(build) => (
-        <ListItem
-          key={build.id}
-          title={build.title}
-          subtitle="main"
-          selected={selected === build.id}
-          onPress={() => setSelected(build.id)}
-          meta={
-            <Label
-              text="2/5 jobs"
-              icon={{ sf: 'checkmark.circle', material: 'check_circle' }}
-            />
-          }
-          progress={{ value: 0.4, tone: 'success', active: true }}
-        />
-      )}
+      renderItem={renderBuild(selected, setSelected)}
     />
   );
 }

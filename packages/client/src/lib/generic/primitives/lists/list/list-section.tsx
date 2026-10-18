@@ -23,15 +23,17 @@ function headerPress(
   };
 }
 
-function HeaderLeading(props: HeaderProps): ReactNode {
-  if (!props.onExpandedChange) return props.leading;
+const disclosureIcon = (
+  isExpanded?: boolean,
+): 'chevron-right' | 'chevron-down' =>
+  isExpanded === false ? 'chevron-right' : 'chevron-down';
 
-  return (
-    <Icon
-      role="body"
-      name={props.isExpanded === false ? 'chevron-right' : 'chevron-down'}
-    />
-  );
+function HeaderLeading(props: HeaderProps): ReactNode {
+  if (props.leading !== undefined) return props.leading;
+
+  if (!props.onExpandedChange) return null;
+
+  return <Icon role="body" name={disclosureIcon(props.isExpanded)} />;
 }
 
 function HeaderContent(props: HeaderProps): ReactElement {

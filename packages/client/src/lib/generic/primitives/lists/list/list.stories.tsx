@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
 import { Icon } from '#primitives/content/icon';
 import { ListItem } from '#primitives/lists/list-item';
 import { Variation, Variations } from '../../../variations';
@@ -50,9 +49,4 @@ export const Overview: StoryObj<typeof meta> = {
       ))}
     </Variations>
   ),
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findAllByText('Build the Session layout'),
-    ).toHaveLength(3);
-  },
 };

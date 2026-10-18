@@ -3,17 +3,18 @@ import type { ListAppearance, ListPosition } from '../../../list-context';
 import { cn } from '../../../utils';
 
 const groupedCorners = {
-  only: 'rounded-3xl',
-  first: 'rounded-t-3xl android:rounded-b-grouped-inner android:mb-0.5',
+  only: 'rounded-grouped web:wide:rounded-3xl',
+  first:
+    'rounded-t-grouped web:wide:rounded-t-3xl android:rounded-b-grouped-inner android:mb-0.5',
   middle: 'android:rounded-grouped-inner android:mb-0.5',
-  last: 'rounded-b-3xl android:rounded-t-grouped-inner',
+  last: 'rounded-b-grouped web:wide:rounded-b-3xl android:rounded-t-grouped-inner',
 } satisfies Record<ListPosition, string>;
 
 const appearanceClasses = {
   plain: '',
   grouped: 'bg-card',
   cards:
-    'mb-2 rounded-grouped bg-card web:wide:rounded-2xl web:wide:bg-transparent web:wide:shadow-hairline',
+    'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:bg-transparent web:wide:shadow-hairline',
 };
 
 function corners(

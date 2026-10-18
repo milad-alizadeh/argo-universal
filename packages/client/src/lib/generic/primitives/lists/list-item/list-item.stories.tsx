@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { View } from 'react-native';
+import { action } from 'storybook/actions';
 import { Icon } from '#primitives/content/icon';
 import { Label } from '#primitives/content/label';
+import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { Pill } from '#primitives/status/pill';
 import { Variation, Variations } from '../../../variations';
@@ -25,7 +27,7 @@ const rows: ListItemProps[] = [
     title: 'Answer review comments',
     subtitle: 'Waiting for input',
     selected: true,
-    onPress: fn(),
+    onPress: action('select row'),
   },
   {
     title: 'Deploy web to production',
@@ -44,7 +46,7 @@ const rows: ListItemProps[] = [
     disabled: true,
     badge: 3,
     leading: <Icon role="body" name="archive" />,
-    onPress: fn(),
+    onPress: action('select row'),
   },
 ];
 
@@ -69,13 +71,43 @@ export const Overview: StoryObj<typeof meta> = {
       </Variation>
     </Variations>
   ),
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText('Deploy web to production'),
-    ).toBeVisible();
-    await expect(canvas.getByText('2/5 jobs')).toBeVisible();
-    await expect(
-      canvas.getByRole('button', { name: 'Archived Session' }),
-    ).toHaveAttribute('aria-disabled', 'true');
-  },
+};
+
+function ReferenceMeta(): React.JSX.Element {
+  return (
+    <>
+      <Label icon="checklist" text="7/12 jobs" />
+      <Label icon={{ sf: 'clock', material: 'schedule' }} text="3m 40s" />
+      <Pill text="production" />
+    </>
+  );
+}
+
+const referenceTime = (
+  <Text role="secondary" tone="muted">
+    now
+  </Text>
+);
+
+function ReferenceRow(): React.JSX.Element {
+  return (
+    <ListItem
+      title="Deploy web to production"
+      subtitle="main · Fix cache headers"
+      leading={<Icon role="body" name="code-map" />}
+      trailing={referenceTime}
+      meta={<ReferenceMeta />}
+      progress={{ value: 7 / 12, tone: 'info' }}
+    />
+  );
+}
+
+export const PaperReference: StoryObj<typeof meta> = {
+  render: () => (
+    <View className="w-90">
+      <List appearance="cards" maxHeight={200}>
+        <ReferenceRow />
+      </List>
+    </View>
+  ),
 };

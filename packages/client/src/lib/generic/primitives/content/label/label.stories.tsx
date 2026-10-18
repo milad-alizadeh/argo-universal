@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
 import { Variation, Variations } from '../../../variations';
 import { Label } from './label';
 import type { LabelProps } from './label-props';
@@ -48,9 +47,4 @@ export const Overview: StoryObj<typeof meta> = {
       ))}
     </Variations>
   ),
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(subagents)).toBeVisible();
-    await expect(canvas.getByText('2/5 jobs')).toBeVisible();
-    await expect(canvas.getByTestId('icon-pr-open')).toBeVisible();
-  },
 };

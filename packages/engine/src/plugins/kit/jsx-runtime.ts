@@ -79,7 +79,7 @@ function prepare(
 }
 
 function create(
-  type: React.ElementType | string,
+  type: React.ComponentType<ElementProps> | string,
   props: ElementProps,
   key?: string | number,
 ): React.ReactElement {

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { Text } from '#primitives/content/text';
 import { ListItem } from './list-item';
+import { Overview } from './list-item.stories';
 
 const title = 'Deploy web';
 
@@ -35,5 +36,25 @@ export const Disabled: Story = {
     await userEvent.tab();
     await userEvent.keyboard('{Enter}');
     await expect(args.onPress).not.toHaveBeenCalled();
+  },
+};
+
+export const SlottedAnatomy: Story = {
+  render: Overview.render,
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText('Deploy web to production'),
+    ).toBeVisible();
+    await expect(canvas.getByText('2/5 jobs')).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'Archived Session' }),
+    ).toHaveAttribute('aria-disabled', 'true');
+  },
+};
+
+export const Value: Story = {
+  args: { title: 'Version', value: '1.2', onPress: undefined },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText('Version, 1.2')).toBeVisible();
   },
 };

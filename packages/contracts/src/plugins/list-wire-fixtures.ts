@@ -38,3 +38,8 @@ export const runListRoot: WireNode = {
     },
   ],
 };
+
+export const emptyRunListRoot: WireNode = {
+  ...node('List', 'empty-runs'),
+  slots: { empty: [node('Text', 'empty-label', { label: 'No runs yet' })] },
+};

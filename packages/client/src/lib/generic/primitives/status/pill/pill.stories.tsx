@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
 import { Variation, Variations } from '../../../variations';
 import { Pill } from './pill';
 
@@ -23,8 +22,4 @@ export const Overview: StoryObj<typeof meta> = {
       </Variation>
     </Variations>
   ),
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText('Archived')).toBeVisible();
-    await expect(canvas.getByText('Production')).toBeVisible();
-  },
 };
