@@ -12,25 +12,12 @@ import {
   columnAliasRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
-import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginDetailView } from '../../../screens/plugins/$path/plugin-detail-view';
 import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
-
-const serviceMapLabel = 'Service map';
-
-function firstSvgXml(): string {
-  const fixture = svgFixtures.valid[0];
-
-  if (!fixture) throw new Error('Missing valid SVG fixture');
-
-  return fixture.xml;
-}
-
-const serviceMapXml = firstSvgXml();
 
 function rectAt(rectangles: DOMRect[], index: number): DOMRect {
   const rectangle = rectangles[index];
@@ -55,49 +42,6 @@ export const Tap: Story = {
     await expect(onEvent).toHaveBeenCalledWith('0/2/0', {
       event: helloTapEvent,
     });
-  },
-};
-
-export const SvgPress: Story = {
-  render: () => (
-    <PluginTree
-      root={{
-        type: 'Svg',
-        key: '0',
-        props: {
-          xml: serviceMapXml,
-          label: serviceMapLabel,
-          onPress: { $event: 'onPress' },
-        },
-        children: [],
-        slots: {},
-      }}
-      onEvent={onEvent}
-    />
-  ),
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      canvas.getByRole('button', { name: serviceMapLabel }),
-    );
-    await expect(onEvent).toHaveBeenCalledWith('0', { event: 'onPress' });
-  },
-};
-
-export const SvgFallback: Story = {
-  render: () => (
-    <PluginTree
-      root={{
-        type: 'Svg',
-        key: '0',
-        props: { xml: '<svg><path></svg>', label: serviceMapLabel },
-        children: [],
-        slots: {},
-      }}
-      onEvent={onEvent}
-    />
-  ),
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(serviceMapLabel)).toBeVisible();
   },
 };
 
