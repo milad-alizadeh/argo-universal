@@ -27,6 +27,8 @@ In SDK 57, radii, heights, padding, font stack and destructive red are fixed in 
 
 ## Native grouped sections
 
+[ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md) (proposed) replaces native rows with one Argo-drawn `List` and `ListItem`; this section and "Custom symbols in native rows" then no longer apply to rows.
+
 GroupedListSection uses SwiftUI's universal FieldGroup on iOS. On Android, it composes stock ListItem controls through Expo UI's public API (owner amendment, 2026-10-15). The universal FieldGroup.Section fixes each tile to its generated Material palette and exposes no row-colour prop. Android's shared section therefore supplies the grouped clipping and spacing, while each GroupedListItem owns its native ListItem and public colour props. This also keeps grouping correct when callers put several rows in a section through a child component. React Native scrolls the sections because a lazy native list cannot sit inside the page's React Native scroll view.
 
 ## Custom symbols in native rows
