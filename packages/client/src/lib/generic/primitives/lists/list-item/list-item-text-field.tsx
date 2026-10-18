@@ -68,7 +68,9 @@ function StackedField(props: TextFieldProps): ReactElement {
 
   return (
     <View className={gap}>
-      <StandaloneTextInput {...props} />
+      <View className="min-h-14">
+        <StandaloneTextInput {...props} />
+      </View>
     </View>
   );
 }
