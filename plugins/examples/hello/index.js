@@ -46,7 +46,15 @@ function HelloPage() {
 }
 
 function ExampleBadges() {
-  return <Pill text="Healthy" tone="success" />;
+  return (
+    <>
+      <Pill text="Healthy" tone="success" />
+      <ListItem
+        title="Waiting jobs"
+        badge={{ kind: 'count', count: 3, label: '3 queued jobs' }}
+      />
+    </>
+  );
 }
 
 const builds = [

@@ -32,9 +32,9 @@ const helloTree = (taps: number): WireNode =>
   withChildren(node('Column', '0', { gap: 4 }), [
     node('Text', '0', { label: 'Hello from a Plugin', variant: 'heading' }),
     node('Text', '1', { label: `Tapped ${taps} times` }),
-    node('Pill', '2', { label: 'Healthy', tone: 'success' }),
-    node('GroupedListItem', '3', {
-      label: 'Waiting jobs',
+    node('Pill', '2', { text: 'Healthy', tone: 'success' }),
+    node('ListItem', '3', {
+      title: 'Waiting jobs',
       badge: { kind: 'count', count: 3, label: '3 queued jobs' },
     }),
     helloButtons('4'),

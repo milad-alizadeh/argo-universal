@@ -45,7 +45,8 @@ export const SlottedAnatomy: Story = {
     await expect(
       await canvas.findByText('Deploy web to production'),
     ).toBeVisible();
-    await expect(canvas.getByText('2/5 jobs')).toBeVisible();
+    await expect(canvas.getByLabelText('Needs attention')).toBeVisible();
+    await expect(canvas.getByLabelText('3')).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: 'Archived Session' }),
     ).toHaveAttribute('aria-disabled', 'true');

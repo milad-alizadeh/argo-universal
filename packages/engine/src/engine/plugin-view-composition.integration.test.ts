@@ -87,11 +87,11 @@ it.each([
         children: [
           { type: 'Text' },
           { props: { label } },
-          { type: 'Pill', props: { label: 'Healthy', tone: 'success' } },
+          { type: 'Pill', props: { text: 'Healthy', tone: 'success' } },
           {
-            type: 'GroupedListItem',
+            type: 'ListItem',
             props: {
-              label: 'Waiting jobs',
+              title: 'Waiting jobs',
               badge: { kind: 'count', count: 3, label: '3 queued jobs' },
             },
           },

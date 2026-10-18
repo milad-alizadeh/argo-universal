@@ -52,7 +52,7 @@ function SubagentDot({
   selected: boolean;
 }): React.ReactNode {
   return (
-    <View className={subagentDotClassName(selected)}>
+    <View testID="subagents-status" className={subagentDotClassName(selected)}>
       <SubagentMark status={status} />
     </View>
   );
