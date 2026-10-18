@@ -1,0 +1,23 @@
+{
+  "id": "lists",
+  "name": "Lists",
+  "version": "1.0.0",
+  "engines": {
+    "argo": ">=0.0.0 <2"
+  },
+  "main": "index.js",
+  "icon": {
+    "sf": "puzzlepiece",
+    "material": "extension"
+  },
+  "contributes": {
+    "nav": [
+      {
+        "id": "lists",
+        "title": "Lists",
+        "path": "/lists"
+      }
+    ],
+    "slots": []
+  }
+}

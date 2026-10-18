@@ -5,8 +5,10 @@ export type RowBadge = Exclude<
   number
 >;
 
-// Kit-only: long press and test identity; the frame owns its accessory lane.
+// Kit-only: native selection semantics, long press and test identity.
 export type ListItemProps = KitProps<'ListItem'> & {
+  id?: string;
+  accessibilityRole?: 'button' | 'radio';
   onLongPress?: () => void;
   testID?: string;
 };

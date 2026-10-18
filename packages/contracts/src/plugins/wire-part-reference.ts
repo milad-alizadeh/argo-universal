@@ -138,4 +138,16 @@ export const wirePartReferences = {
     ...layout('A vertical layout alias for `Stack`.'),
     deprecated: 'Use `Stack` with `direction="column"`.',
   },
+  Svg: {
+    summary: 'Sanitized SVG artwork. Use Canvas for interactive drawing.',
+    accessibility: {
+      label: 'Accessible name for the image or button.',
+      keyboard:
+        'Not focusable as an image; `onPress` enables button activation.',
+      voiceOver: 'Reads the label as an image or button, based on `onPress`.',
+      talkBack: 'Reads the label as an image or button, based on `onPress`.',
+    },
+    appearance:
+      '`tone` sets semantic color; Server sanitizes markup and rejects unsupported SVG.',
+  },
 } satisfies Record<string, WirePartReference>;

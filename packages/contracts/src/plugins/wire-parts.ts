@@ -9,27 +9,17 @@ import {
   textProps,
   textV1,
   textV2,
+  svgProps,
   groupedItemV1,
 } from './kit-props';
 import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
 import { listExpansion } from './list-expansion';
 import { listWireParts } from './list-wire-parts';
-import {
-  wirePartReferences,
-  type WirePartReference,
-} from './wire-part-reference';
+import type { WirePartDefinition } from './wire-part-definition';
+import { wirePartReferences } from './wire-part-reference';
 
-export interface WirePartDefinition {
-  props: z.ZodType;
-  expansion?: z.ZodType;
-  versions: readonly z.ZodType[];
-  container: boolean;
-  children: boolean;
-  slots: Record<string, readonly string[]>;
-  events: Record<string, z.ZodType>;
-  reference: WirePartReference;
-}
+export type { WirePartDefinition } from './wire-part-definition';
 
 export const listPartNames = [
   'List',
@@ -45,6 +35,7 @@ const contentParts = [
   'Row',
   'Column',
   'GroupedListItem',
+  'Svg',
   'Pill',
 ] as const;
 
@@ -146,5 +137,14 @@ export const wireParts = {
     slots: {},
     events: {},
     reference: wirePartReferences.Column,
+  },
+  Svg: {
+    props: svgProps,
+    versions: [svgProps],
+    container: false,
+    children: false,
+    slots: {},
+    events: { onPress: z.undefined() },
+    reference: wirePartReferences.Svg,
   },
 } as const satisfies Record<string, WirePartDefinition>;

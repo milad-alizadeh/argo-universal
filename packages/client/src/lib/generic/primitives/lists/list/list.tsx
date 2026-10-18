@@ -1,17 +1,22 @@
 import { useMemo, type ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { ListContext } from '../../../list-context';
-import { listTestIdProps } from '../../../list-test-id';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { childEntries, type ListChild } from './list-children';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import type { ListProps } from './list-props';
+import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
 
 type ChildrenOptions = Omit<
   ListProps<ListChild>,
-  'items' | 'renderItem' | 'getSectionKey' | 'keyExtractor' | 'getItemType'
+  | 'items'
+  | 'renderItem'
+  | 'getSectionKey'
+  | 'keyExtractor'
+  | 'getItemType'
+  | 'maintainVisibleContentPosition'
 >;
 
 function childrenOptions<Item>({
@@ -20,47 +25,10 @@ function childrenOptions<Item>({
   getSectionKey: _section,
   keyExtractor: _key,
   getItemType: _type,
+  maintainVisibleContentPosition: _position,
   ...props
 }: ListProps<Item>): ChildrenOptions {
   return props;
-}
-
-function scrollEvents<Item>(
-  props: ListProps<Item>,
-): Partial<ScrollFadeListProps<Item>> {
-  return {
-    onScroll: props.onScroll,
-    onEndReached: props.onEndReached,
-    onEndReachedThreshold: props.onEndReachedThreshold,
-    contentInsetAdjustmentBehavior: props.contentInsetAdjustmentBehavior,
-  };
-}
-
-function testProps(
-  testID?: string,
-): ReturnType<typeof listTestIdProps> | Record<never, never> {
-  return testID ? listTestIdProps(testID) : {};
-}
-
-function scrollBounds<Item>(
-  props: ListProps<Item>,
-): Partial<ScrollFadeListProps<Item>> {
-  return { edges: props.edges, ref: props.ref, maxHeight: props.maxHeight };
-}
-
-function scrollProps<Item>(
-  props: ListProps<Item>,
-): Partial<ScrollFadeListProps<Item>> {
-  return {
-    ...scrollEvents(props),
-    keyExtractor: props.keyExtractor,
-    getItemType: props.getItemType,
-    extraData: props.extraData,
-    recycleItems: props.recycleItems ?? false,
-    estimatedItemSize: props.estimatedItemSize,
-    ...testProps(props.testID),
-    ...scrollBounds(props),
-  };
 }
 
 function useDataListProps<Item>(
@@ -80,10 +48,13 @@ function useDataListProps<Item>(
   };
 }
 
+const fill = { flex: 1, minWidth: '100%' } as const;
+
 function DataList<Item>(props: ListProps<Item>): ReactElement {
   return (
     <ScrollFadeList
       surfaceClassName="bg-content"
+      style={fill}
       {...useDataListProps(props)}
     />
   );
@@ -97,31 +68,56 @@ function ChildRow({
   appearance: ListProps<never>['appearance'];
 }): ReactElement {
   return (
-    <ListContext
-      value={{ appearance: appearance ?? 'plain', position: item.position }}
-    >
+    <ListContext value={childContext(item, appearance)}>
       {item.content}
     </ListContext>
   );
+}
+
+function childContext(
+  item: ListChild,
+  appearance: ListProps<never>['appearance'],
+): React.ContextType<typeof ListContext> {
+  return {
+    appearance: appearance ?? 'plain',
+    position: item.position,
+    selectionMode: item.selectionMode,
+    selection: item.selection,
+    onSelectionChange: item.onSelectionChange,
+  };
 }
 
 function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
   const items = useMemo(() => childEntries(children), [children]);
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
-  const { appearance } = props;
 
   if (items.length === 0) return <ListEmpty {...props} />;
 
   return (
     <DataList
       {...props}
-      maxHeight={props.maxHeight ?? height}
+      maxHeight={childMaxHeight(props, height)}
       items={items}
       keyExtractor={(item) => item.key}
-      renderItem={(item) => <ChildRow item={item} appearance={appearance} />}
+      renderItem={childRenderer(props.appearance)}
     />
   );
+}
+
+function childRenderer(
+  appearance: ListProps<never>['appearance'],
+): (item: ListChild) => ReactElement {
+  return (item) => <ChildRow item={item} appearance={appearance} />;
+}
+
+function childMaxHeight(
+  props: ChildrenOptions,
+  height: number,
+): ListProps<never>['maxHeight'] {
+  if (props.fit === false) return props.maxHeight;
+
+  return props.maxHeight ?? height;
 }
 
 export function List<Item>(props: ListProps<Item>): ReactElement {

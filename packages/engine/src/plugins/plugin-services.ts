@@ -155,6 +155,7 @@ export class PluginServices {
       codeFolder,
       dataFolder: this.storage.folderOf(pluginId),
       projects: this.options.projects,
+      environment: this.options.environment,
     });
   }
 

@@ -11,6 +11,7 @@ import {
   textForApp,
   groupedItemProps,
   stackProps,
+  svgProps,
 } from '@repo/contracts/plugins/kit';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
@@ -23,6 +24,7 @@ import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
+import { Svg } from '#primitives/visual';
 import type { PluginPart } from './plugin-parts';
 import { entry, handlerOf, type Entry } from './plugin-rendering';
 
@@ -88,6 +90,9 @@ export const pluginEntries = {
     <Stack direction="column" {...props}>
       {children}
     </Stack>
+  )),
+  Svg: entry(svgProps, ({ onPress, ...props }, context) => (
+    <Svg {...props} onPress={handlerOf(onPress, context)} />
   )),
 } satisfies Record<PluginPart, Entry>;
 

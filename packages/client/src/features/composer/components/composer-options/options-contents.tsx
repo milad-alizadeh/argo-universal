@@ -1,17 +1,15 @@
-import { LegendList } from '@legendapp/list/react-native';
 import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
-import { listTestIdProps } from '#lib/generic/list-test-id';
 import { configurationChoices } from '#lib/product/session-configuration';
-import { GroupedList } from '#primitives/lists/grouped-list';
+import { List } from '#primitives/lists/list';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;
 
 type Change = ComposerConfigurationProps['onConfigChange'];
 
-import { SettingSection } from './option-section';
+import { settingSection } from './option-section';
 
 const maximumHeight = 320;
 
@@ -35,15 +33,15 @@ export function OptionsContents(props: ContentsProps): React.JSX.Element {
 function NativeContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="flex-1 bg-content">
-      <GroupedList>{optionSections(props)}</GroupedList>
+      <List fit={false} appearance="grouped">
+        {optionSections(props)}
+      </List>
     </View>
   );
 }
 
 function optionSections({ options, onChange }: ContentsProps): React.ReactNode {
-  return options.map((option) => (
-    <SettingSection key={option.configId} option={option} onChange={onChange} />
-  ));
+  return options.map((option) => settingSection(option, onChange));
 }
 
 function sectionRows(option: Option): number {
@@ -59,32 +57,23 @@ function WebContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="wide:p-3 bg-content">
       <View style={{ height: listHeight }}>
-        <OptionsList {...props} />
+        <OptionsList {...props} maxHeight={listHeight} />
       </View>
     </View>
   );
 }
 
-function OptionsList({ options, onChange }: ContentsProps): React.JSX.Element {
+function OptionsList({
+  options,
+  onChange,
+  maxHeight,
+}: ContentsProps & { maxHeight: number }): React.JSX.Element {
   return (
-    <LegendList
-      {...listProps}
-      {...listTestIdProps('composer-settings-scroll')}
-      data={options}
-      keyExtractor={(option) => option.configId}
-      renderItem={({ item }) => (
-        <SettingSection option={item} onChange={onChange} />
-      )}
-    />
+    <List testID="composer-settings-scroll" maxHeight={maxHeight}>
+      {options.map((option) => settingSection(option, onChange))}
+    </List>
   );
 }
-
-const listProps = {
-  style: { flex: 1 },
-  estimatedItemSize: 120,
-  recycleItems: false,
-  contentContainerStyle: { gap: 16 },
-} as const;
 
 function optionsHeight(options: Option[], height: number): number {
   const rows = options.reduce(

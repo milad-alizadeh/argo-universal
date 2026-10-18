@@ -6,6 +6,7 @@ import type { PluginValue } from './runtime-protocol';
 
 export type PluginServiceOptions = {
   assets: PluginAssets;
+  environment?: NodeJS.ProcessEnv;
   log: (line: string) => void;
   projects: () => Promise<readonly string[]>;
   projectInfo: () => Promise<PluginProjectInfo[]>;

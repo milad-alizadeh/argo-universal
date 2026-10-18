@@ -105,6 +105,15 @@ describe('Plugin wire compatibility', () => {
     ).toEqual([{ ...label, props: { label: 'Readable' } }]);
   });
 
+  it('strips unknown optional props', () => {
+    expect(
+      prepareWireTree(
+        { ...label, props: { ...label.props, future: true } },
+        { Text: 3 },
+      ),
+    ).toEqual(label);
+  });
+
   it('preserves every named-slot node while lowering its parts for the App', () => {
     const root: WireNode = {
       type: 'GroupedListItem',

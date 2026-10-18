@@ -602,10 +602,16 @@ export type WireSchemaHints = {
     "title": PropValue<"Inspector", "title">;
   };
   "Svg": {
-    /** source for this part. */
-    "source": PropValue<"Svg", "source">;
-    /** label for this part. */
-    "accessibilityLabel": PropValue<"Svg", "accessibilityLabel">;
+    /** Sanitized SVG markup to draw. */
+    "xml": PropValue<"Svg", "xml">;
+    /** The accessible name of the artwork. */
+    "label": PropValue<"Svg", "label">;
+    /** The semantic artwork color. */
+    "tone": PropValue<"Svg", "tone">;
+    /** The artwork width divided by its height. */
+    "aspectRatio": PropValue<"Svg", "aspectRatio">;
+    /** The action run when the artwork is pressed. */
+    "onPress": PropValue<"Svg", "onPress">;
   };
   "Chart": {
     /** data for this part. */

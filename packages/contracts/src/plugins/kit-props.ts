@@ -82,6 +82,26 @@ export const groupedItemV1 = z.object({
   onPress: pressHandler.optional().describe('The action run on activation.'),
 });
 
+const svgXmlCharacterLimit = 131_072;
+
+export const svgProps = z.object({
+  xml: z
+    .string()
+    .max(svgXmlCharacterLimit)
+    .describe('Sanitized SVG markup to draw.'),
+  label: z.string().min(1).describe('The accessible name of the artwork.'),
+  tone: z.enum(tones).optional().describe('The semantic artwork color.'),
+  aspectRatio: z
+    .number()
+    .finite()
+    .positive()
+    .optional()
+    .describe('The artwork width divided by its height.'),
+  onPress: pressHandler
+    .optional()
+    .describe('The action run when the artwork is pressed.'),
+});
+
 export const groupedItemProps = groupedItemV1;
 
 export const listProps = z.object({});

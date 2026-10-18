@@ -5,6 +5,7 @@ import {
   pluginPageFallback,
 } from '@repo/contracts/plugins/wire-limits';
 import type { OpenView } from './open-view';
+import { sanitizeTree } from './svg-view';
 import { nextRoot, updateView } from './view-messages';
 import { wireSizeReason } from './wire-size';
 
@@ -15,12 +16,76 @@ export function receive(
   message: ViewMessage,
   reception: Reception,
 ): void {
+  handleMessage(view, message, reception);
+}
+
+function handleMessage(
+  view: OpenView,
+  message: ViewMessage,
+  reception: Reception,
+): void {
   if (ignoresPatch(view, message)) return;
   const reason = refusalReason(view, message);
 
-  if (reason) return refuse(view, reason, reception);
+  if (!reason) return acceptMessage(view, message, reception);
+
+  refuse(view, reason, reception);
+}
+
+function acceptMessage(
+  view: OpenView,
+  message: ViewMessage,
+  reception: Reception,
+): void {
+  const root = nextRoot(view.root, message);
+
+  if (!root) {
+    view.refused = false;
+
+    return updateView(view, message, reception.revision);
+  }
+
+  receiveTree({ view, message, root, reception });
+}
+
+interface TreeReception {
+  view: OpenView;
+  message: ViewMessage;
+  root: NonNullable<ReturnType<typeof nextRoot>>;
+  reception: Reception;
+}
+
+function receiveTree({ view, message, root, reception }: TreeReception): void {
+  const sanitized = sanitizeTree(root);
+
+  logRefusals(view, sanitized.refused, reception);
+
   view.refused = false;
-  updateView(view, message, reception.revision);
+
+  const normalized = normalizedMessage(message, sanitized);
+
+  updateView(view, normalized, reception.revision);
+}
+
+function logRefusals(
+  view: OpenView,
+  refusals: Array<{ node: string; reason: string }>,
+  reception: Reception,
+): void {
+  for (const item of refusals) {
+    reception.log(
+      `Plugin ${view.pluginId}: refused ${view.opening.path} node ${item.node}: ${item.reason}`,
+    );
+  }
+}
+
+function normalizedMessage(
+  message: ViewMessage,
+  sanitized: ReturnType<typeof sanitizeTree>,
+): ViewMessage {
+  if (!sanitized.containsSvg && sanitized.refused.length === 0) return message;
+
+  return { ...message, type: 'snapshot', root: sanitized.root };
 }
 
 function refusalReason(view: OpenView, message: ViewMessage): string | null {
@@ -32,14 +97,17 @@ function refusalReason(view: OpenView, message: ViewMessage): string | null {
   return root ? wireSizeReason(root, pluginPageBytes, 'page') : null;
 }
 
-function refuse(
-  view: OpenView,
-  reason: string,
-  { log, revision }: Reception,
-): void {
+function refuse(view: OpenView, reason: string, reception: Reception): void {
+  if (view.refused) return;
+  reception.log(
+    `Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`,
+  );
+  refuseSilently(view, reception.revision);
+}
+
+function refuseSilently(view: OpenView, revision: number): void {
   if (view.refused) return;
   view.refused = true;
-  log(`Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`);
   updateView(
     view,
     { type: 'snapshot', revision: 0, root: pluginPageFallback },

@@ -25,6 +25,8 @@
     "fflate": "catalog:",
     "node-pty": "catalog:",
     "react": "catalog:",
+    "react-native": "catalog:",
+    "react-native-svg": "catalog:",
     "react-reconciler": "catalog:",
     "semver": "catalog:",
     "tar": "catalog:",
@@ -51,6 +53,8 @@
     "./mocks": "./mocks/engine.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
-    "./shell-runtime": "./src/agents/shell-runtime.ts"
+    "./shell-runtime": "./src/agents/shell-runtime.ts",
+    "./plugins": "./src/plugins/index.ts",
+    "./mocks/keychain": "./mocks/memory-keychain.ts"
   }
 }
