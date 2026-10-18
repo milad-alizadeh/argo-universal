@@ -1,9 +1,11 @@
 import type {
   PluginEvent,
+  PluginSlotInput,
+  SlotId,
   ViewMessage,
   WireNode,
 } from '@repo/contracts/plugins/wire';
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { createElement } from 'react';
 import { diff } from './diff';
 import { reportFailure } from './host-config';
@@ -13,6 +15,11 @@ import { toWire, type Handlers, type Instance } from './wire-tree';
 export type ViewSender = (path: string, message: ViewMessage) => Promise<void>;
 
 type Page = () => ReactNode;
+
+// A Slot's content takes the Slot's context, frozen, as its one prop.
+type SlotContent = ComponentType<{ context: PluginSlotInput['context'] }>;
+
+type Open = Extract<PluginEvent, { type: 'open' }>;
 
 type Dispatch = Extract<PluginEvent, { type: 'dispatch' }>;
 
@@ -26,12 +33,14 @@ interface OpenView {
 
 export interface Pages {
   register: (path: string, page: Page) => void;
+  registerSlot: (slotId: SlotId, content: SlotContent) => void;
   receive: (event: PluginEvent) => void;
 }
 
 interface Hub {
   send: ViewSender;
   pages: Map<string, Page>;
+  slots: Map<string, SlotContent>;
   views: Map<string, OpenView>;
 }
 
@@ -69,13 +78,11 @@ function committed(hub: Hub, view: OpenView, container: Instance): void {
   publish(hub, view, next);
 }
 
-function start(hub: Hub, path: string, page: Page): void {
+function start(hub: Hub, path: string, element: ReactNode): void {
   const view: OpenView = { path, tree: null, revision: 0, handlers: new Map() };
 
   hub.views.set(path, view);
-  view.mounted = mount(createElement(page), (container) =>
-    committed(hub, view, container),
-  );
+  view.mounted = mount(element, (container) => committed(hub, view, container));
 }
 
 // A viewer that joins late gets the current tree again, as a snapshot.
@@ -88,12 +95,31 @@ function resend(hub: Hub, view: OpenView): void {
   });
 }
 
-function open(hub: Hub, path: string): void {
-  const existing = hub.views.get(path);
+function pageElement(hub: Hub, path: string): ReactNode | null {
   const page = hub.pages.get(path);
 
-  if (existing) resend(hub, existing);
-  else if (page) start(hub, path, page);
+  return page ? createElement(page) : null;
+}
+
+function slotElement(hub: Hub, slot: PluginSlotInput): ReactNode | null {
+  const content = hub.slots.get(slot.slotId);
+
+  return content
+    ? createElement(content, { context: Object.freeze({ ...slot.context }) })
+    : null;
+}
+
+// What the open view draws: a registered page, or the Slot content with its context; none when the Plugin registered neither.
+const elementOf = (hub: Hub, { path, slot }: Open): ReactNode | null =>
+  slot ? slotElement(hub, slot) : pageElement(hub, path);
+
+function open(hub: Hub, event: Open): void {
+  const existing = hub.views.get(event.path);
+
+  if (existing) return resend(hub, existing);
+  const element = elementOf(hub, event);
+
+  if (element) start(hub, event.path, element);
 }
 
 function close(hub: Hub, path: string): void {
@@ -112,18 +138,22 @@ function dispatch(hub: Hub, event: Dispatch): void {
 
 function receive(hub: Hub, event: PluginEvent): void {
   if (event.type === 'dispatch') dispatch(hub, event);
-  else if (event.type === 'open') open(hub, event.path);
+  else if (event.type === 'open') open(hub, event);
   else close(hub, event.path);
 }
 
-// A page a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
+// A page or Slot content a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
 export function mountPages(send: ViewSender): Pages {
-  const hub: Hub = { send, pages: new Map(), views: new Map() };
+  const hub: Hub = {
+    send,
+    pages: new Map(),
+    slots: new Map(),
+    views: new Map(),
+  };
 
   return {
-    register: (path, page) => {
-      hub.pages.set(path, page);
-    },
+    register: (path, page) => void hub.pages.set(path, page),
+    registerSlot: (slotId, content) => void hub.slots.set(slotId, content),
     receive: (event) => receive(hub, event),
   };
 }

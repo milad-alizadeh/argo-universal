@@ -84,6 +84,9 @@ export const Variations: Story = {
       <GrowingContent />
       <Section title="Program" rows={program} />
       <Section title="Environment" rows={environment} />
+      <GroupedListContent title="Checks">
+        <Text>The program is checked when you save.</Text>
+      </GroupedListContent>
       <GroupedListContent>
         <Button fullWidth="narrow" label="Save" onPress={action('save')} />
       </GroupedListContent>

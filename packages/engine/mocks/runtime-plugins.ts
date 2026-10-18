@@ -6,6 +6,7 @@ import {
   type HookEventName,
   type PluginCapability,
 } from '@repo/contracts/plugins';
+import type { SlotId } from '@repo/contracts/plugins/wire';
 import { onTestFinished } from 'vitest';
 
 // Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
@@ -18,6 +19,8 @@ type FixturePlugin = {
   main?: string;
   capabilities?: PluginCapability[];
   hooks?: HookEventName[];
+  // The Slots the manifest declares.
+  slots?: SlotId[];
 };
 
 export async function createRuntimePlugins(
@@ -58,7 +61,8 @@ async function writeManifest({
   main,
   capabilities,
   hooks,
-}: Pick<FixturePlugin, 'id' | 'capabilities' | 'hooks'> & {
+  slots,
+}: Pick<FixturePlugin, 'id' | 'capabilities' | 'hooks' | 'slots'> & {
   folder: string;
   main: string;
 }): Promise<void> {
@@ -78,7 +82,7 @@ async function writeManifest({
       id,
       main,
       capabilities,
-      contributes: { ...template.contributes, hooks },
+      contributes: { ...template.contributes, hooks, slots },
     }),
   );
 }
