@@ -1,21 +1,36 @@
+import type { PluginDispatchInput } from '@repo/contracts/plugins/wire';
 import { useMutation } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { errorToast } from '#lib/generic/error-toast';
-import { useErrorToast } from '#primitives/overlays/toast';
+import { errorMessage } from '#lib/generic/error-toast';
+import { showToast } from '#primitives/overlays/toast';
+import type { PluginOnEvent } from '../../lib/product/plugin-registry';
 
-export type PluginDispatch = (
-  pluginId: string,
-  path: string,
-  eventId: string,
-) => void;
+export type PluginDispatch = (input: PluginDispatchInput) => Promise<void>;
 
-// Sends a tapped node's event id to its Plugin's handler; a failed send shows an error toast.
 export function usePluginDispatch(): PluginDispatch {
-  const trpc = useTRPC();
-  const dispatch = useMutation(trpc.plugins.dispatch.mutationOptions());
+  const dispatch = useMutation({
+    ...useTRPC().plugins.dispatch.mutationOptions(),
+    onError: (error) =>
+      showToast({
+        title: 'Plugin action failed',
+        message: errorMessage(error),
+        tone: 'danger',
+      }),
+  });
 
-  useErrorToast(errorToast('Could not reach the Plugin', dispatch.error));
+  return async (input) => {
+    await dispatch.mutateAsync(input);
+  };
+}
 
-  return (pluginId, path, eventId) =>
-    dispatch.mutate({ pluginId, path, eventId });
+type DispatchTarget = Pick<
+  PluginDispatchInput,
+  'pluginId' | 'path' | 'revision' | 'viewId'
+>;
+
+export function bindPluginDispatch(
+  send: PluginDispatch,
+  target: DispatchTarget,
+): PluginOnEvent {
+  return (key, interaction) => send({ ...target, key, ...interaction });
 }

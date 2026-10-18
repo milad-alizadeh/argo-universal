@@ -1,96 +1,137 @@
-import { EventEmitter, on } from 'node:events';
+import { randomUUID } from 'node:crypto';
 import type {
   PluginDispatchInput,
+  PluginEvent,
   ViewMessage,
-  WireNode,
 } from '@repo/contracts/plugins/wire';
-import { applyPatch } from '@repo/contracts/plugins/wire-patch';
-import type { PluginEvent } from './runtime-protocol';
+import type { RpcConnection } from '../rpc';
+import { PluginDispatches } from './dispatches';
+import {
+  createOpenView,
+  currentDispatch,
+  dispatchEvent,
+  type OpenView,
+  type Opening,
+} from './open-view';
+import { updateView, viewMessages } from './view-messages';
 
-type Open = Extract<PluginEvent, { type: 'open' }>;
-
-type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
-
-interface OpenView {
-  pluginId: string;
-  path: string;
-  // What mounts the view in the Plugin, again after a restart.
-  opening: Open;
-  root: WireNode | null;
-  // Counted here, not by the worker, so a reloaded Plugin's fresh snapshot is never older than what an App already holds.
-  revision: number;
-  watchers: number;
-  events: ViewEvents;
-}
-
-/*
- * The pages Apps watch: each Plugin page is mounted while at least one subscription is open,
- * and every watcher gets the current snapshot first, then the patches that follow.
- */
 export class PluginViews {
+  private revision = 0;
   private readonly views = new Map<string, OpenView>();
+  public readonly dispatches = new PluginDispatches();
 
   constructor(
     private readonly send: (pluginId: string, event: PluginEvent) => void,
   ) {}
 
-  receive(pluginId: string, path: string, message: ViewMessage): void {
-    const view = this.views.get(keyOf(pluginId, path));
+  public receive(pluginId: string, viewId: string, message: ViewMessage): void {
+    const view = this.views.get(viewId);
 
-    if (view) update(view, message);
+    if (view?.pluginId === pluginId) updateView(view, message, ++this.revision);
   }
 
-  dispatch(input: PluginDispatchInput): void {
-    const { pluginId, path, eventId, payload } = input;
+  public dispatch(
+    connection: RpcConnection,
+    input: PluginDispatchInput,
+  ): Promise<void> {
+    const event = currentDispatch(this.find(connection.id, input), input);
 
-    this.send(pluginId, { type: 'dispatch', path, eventId, payload });
+    const { requestId, answer } = this.dispatches.wait(
+      input.pluginId,
+      event.viewId,
+    );
+
+    this.send(input.pluginId, dispatchEvent(input, { ...event, requestId }));
+
+    return answer;
   }
 
-  // A restarted or reloaded Plugin has lost its mounted pages.
-  reopen(pluginId: string): void {
+  public reopen(pluginId: string): void {
+    const views = [...this.views.values()].filter(
+      (view) => view.pluginId === pluginId,
+    );
+
+    for (const view of views) this.restart(view);
+  }
+
+  private restart(view: OpenView): void {
+    this.retire(view);
+    this.send(view.pluginId, view.opening);
+  }
+
+  private retire(view: OpenView): void {
+    this.dispatches.end(view.opening.viewId);
+    this.views.delete(view.opening.viewId);
+    view.opening = { ...view.opening, viewId: randomUUID() };
+    view.workerRevision = null;
+    this.views.set(view.opening.viewId, view);
+  }
+
+  public close(): void {
+    for (const view of this.views.values()) this.remove(view);
+  }
+
+  public end(pluginId: string): void {
     for (const view of this.views.values())
-      if (view.pluginId === pluginId) this.send(pluginId, view.opening);
+      if (view.pluginId === pluginId) this.remove(view);
   }
 
-  close(): void {
-    for (const view of this.views.values()) view.events.emit('close');
+  public invalidate(pluginId: string): void {
+    const views = [...this.views.values()].filter(
+      (view) => view.pluginId === pluginId,
+    );
+
+    for (const view of views) this.retire(view);
   }
 
-  // A Plugin turned off ends the pages and Slot contributions Apps watch from it.
-  end(pluginId: string): void {
-    for (const view of this.views.values())
-      if (view.pluginId === pluginId) view.events.emit('close');
-  }
-
-  // `opening.slot` is given when the view is a Slot contribution rather than a page.
-  async *watch(
+  public async *watch(
     pluginId: string,
-    opening: Omit<Open, 'type'>,
-    signal: AbortSignal,
+    opening: Opening,
+    connection: RpcConnection,
   ): AsyncGenerator<ViewMessage> {
-    const view = this.acquire(pluginId, { type: 'open', ...opening });
+    const view = this.acquire(pluginId, opening, connection.id);
 
     try {
-      yield* messages(view, signal);
+      yield* viewMessages(view, connection.signal);
     } finally {
       this.release(view);
     }
   }
 
-  private acquire(pluginId: string, opening: Open): OpenView {
-    const key = keyOf(pluginId, opening.path);
-    const view = this.views.get(key) ?? this.open(key, pluginId, opening);
+  private find(
+    connectionId: string,
+    input: { pluginId: string; path: string },
+  ): OpenView | undefined {
+    return [...this.views.values()].find(
+      (view) =>
+        view.connectionId === connectionId &&
+        view.pluginId === input.pluginId &&
+        view.opening.path === input.path,
+    );
+  }
+
+  private acquire(
+    pluginId: string,
+    opening: Opening,
+    connectionId: string,
+  ): OpenView {
+    const view =
+      this.find(connectionId, { pluginId, path: opening.path }) ??
+      this.open(pluginId, opening, connectionId);
 
     view.watchers += 1;
 
     return view;
   }
 
-  private open(key: string, pluginId: string, opening: Open): OpenView {
-    const view = createView(pluginId, opening);
-
-    this.views.set(key, view);
-    this.send(pluginId, opening);
+  private open(
+    pluginId: string,
+    opening: Opening,
+    connectionId: string,
+  ): OpenView {
+    const view = createOpenView(pluginId, opening, connectionId);
+    this.views.set(view.opening.viewId, view);
+    this.send(pluginId, view.opening);
 
     return view;
   }
@@ -98,84 +139,13 @@ export class PluginViews {
   private release(view: OpenView): void {
     view.watchers -= 1;
 
-    if (view.watchers > 0) return;
-    this.views.delete(keyOf(view.pluginId, view.path));
-    this.send(view.pluginId, { type: 'close', path: view.path });
+    if (view.watchers === 0) this.remove(view);
   }
-}
 
-const keyOf = (pluginId: string, path: string): string => `${pluginId}:${path}`;
-
-function current(view: OpenView, message: ViewMessage): ViewMessage {
-  if (message.type === 'snapshot')
-    return { type: 'snapshot', revision: view.revision, root: message.root };
-
-  return { type: 'patch', revision: view.revision, ops: message.ops };
-}
-
-function createView(pluginId: string, opening: Open): OpenView {
-  const events: ViewEvents = new EventEmitter();
-
-  events.setMaxListeners(0);
-
-  return {
-    pluginId,
-    path: opening.path,
-    opening,
-    root: null,
-    revision: 0,
-    watchers: 0,
-    events,
-  };
-}
-
-function nextRoot(
-  root: WireNode | null,
-  message: ViewMessage,
-): WireNode | null {
-  if (message.type === 'snapshot') return message.root;
-
-  return root && applyPatch(root, message.ops);
-}
-
-const snapshotOf = (view: OpenView): ViewMessage[] =>
-  view.root
-    ? [{ type: 'snapshot', revision: view.revision, root: view.root }]
-    : [];
-
-// Aborting a subscription ends its stream quietly.
-async function* untilAborted<T>(
-  source: AsyncIterable<T>,
-  signal: AbortSignal,
-): AsyncGenerator<T> {
-  try {
-    yield* source;
-  } catch (error) {
-    if (!signal.aborted) throw error;
+  private remove(view: OpenView): void {
+    if (!this.views.delete(view.opening.viewId)) return;
+    this.dispatches.end(view.opening.viewId);
+    view.events.emit('close');
+    this.send(view.pluginId, { type: 'close', viewId: view.opening.viewId });
   }
-}
-
-// The stream starts listening before the snapshot is handed out, so no patch falls between the two.
-async function* messages(
-  view: OpenView,
-  signal: AbortSignal,
-): AsyncGenerator<ViewMessage> {
-  const stream = on(view.events, 'message', { signal, close: ['close'] });
-
-  try {
-    yield* snapshotOf(view);
-
-    for await (const [message] of untilAborted(stream, signal)) yield message;
-  } finally {
-    await stream.return?.();
-  }
-}
-
-function update(view: OpenView, message: ViewMessage): void {
-  const root = nextRoot(view.root, message);
-
-  if (!root) return;
-  view.root = root;
-  view.revision += 1;
-  view.events.emit('message', current(view, message));
 }

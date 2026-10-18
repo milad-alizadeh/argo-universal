@@ -12,6 +12,7 @@ it('shows a snapshot, then applies the next revision', () => {
   expect(reducePluginView(shown, helloTapPatch)).toEqual({
     root: helloTappedRoot,
     revision: 2,
+    viewId: null,
   });
 });
 

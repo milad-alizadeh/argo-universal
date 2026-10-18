@@ -7,12 +7,22 @@ import type {
 } from '@repo/contracts/plugins/wire';
 import type { ComponentType, ReactNode } from 'react';
 import { createElement } from 'react';
-import { diff } from './diff';
 import { reportFailure } from './host-config';
-import { mount, type Mounted } from './reconciler';
+import {
+  nextMessage,
+  runHandler,
+  type OpenView,
+  type DispatchSender,
+} from './page-view';
+import { mount } from './reconciler';
 import { toWire, type Handlers, type Instance } from './wire-tree';
 
-export type ViewSender = (path: string, message: ViewMessage) => Promise<void>;
+export type { DispatchSender } from './page-view';
+
+export type ViewSender = (
+  viewId: string,
+  message: ViewMessage,
+) => Promise<void>;
 
 type Page = () => ReactNode;
 
@@ -23,14 +33,6 @@ type Open = Extract<PluginEvent, { type: 'open' }>;
 
 type Dispatch = Extract<PluginEvent, { type: 'dispatch' }>;
 
-interface OpenView {
-  path: string;
-  mounted?: Mounted;
-  tree: WireNode | null;
-  revision: number;
-  handlers: Handlers;
-}
-
 export interface Pages {
   register: (path: string, page: Page) => void;
   registerSlot: (slotId: SlotId, content: SlotContent) => void;
@@ -39,56 +41,55 @@ export interface Pages {
 
 interface Hub {
   send: ViewSender;
+  settle: DispatchSender;
   pages: Map<string, Page>;
   slots: Map<string, SlotContent>;
   views: Map<string, OpenView>;
 }
 
 // An unhandled rejection ends the worker, which the Server reports as that Plugin's crash.
-function transmit(hub: Hub, path: string, message: ViewMessage): void {
-  hub.send(path, message).catch(reportFailure);
-}
-
-function nextMessage(view: OpenView, next: WireNode): ViewMessage | null {
-  const revision = view.revision + 1;
-
-  if (!view.tree) return { type: 'snapshot', revision, root: next };
-  const ops = diff(view.tree, next);
-
-  return ops.length === 0 ? null : { type: 'patch', revision, ops };
+function transmit(hub: Hub, viewId: string, message: ViewMessage): void {
+  hub.send(viewId, message).catch(reportFailure);
 }
 
 function publish(hub: Hub, view: OpenView, next: WireNode): void {
   const message = nextMessage(view, next);
 
-  if (!message) return;
   view.revision = message.revision;
   view.tree = next;
-  transmit(hub, view.path, message);
+  transmit(hub, view.viewId, message);
 }
 
 function committed(hub: Hub, view: OpenView, container: Instance): void {
   const root = container.children[0];
 
-  if (!root) return;
   const handlers: Handlers = new Map();
-  const next = toWire(root, handlers);
+  const next = root ? toWire(root, handlers) : emptyPage();
 
   view.handlers = handlers;
   publish(hub, view, next);
 }
 
-function start(hub: Hub, path: string, element: ReactNode): void {
-  const view: OpenView = { path, tree: null, revision: 0, handlers: new Map() };
+function emptyPage(): WireNode {
+  return { type: 'Column', key: '0', props: {}, children: [], slots: {} };
+}
 
-  hub.views.set(path, view);
+function start(hub: Hub, viewId: string, element: ReactNode): void {
+  const view: OpenView = {
+    viewId,
+    tree: null,
+    revision: 0,
+    handlers: new Map(),
+  };
+
+  hub.views.set(viewId, view);
   view.mounted = mount(element, (container) => committed(hub, view, container));
 }
 
 // A viewer that joins late gets the current tree again, as a snapshot.
 function resend(hub: Hub, view: OpenView): void {
   if (!view.tree) return;
-  transmit(hub, view.path, {
+  transmit(hub, view.viewId, {
     type: 'snapshot',
     revision: view.revision,
     root: view.tree,
@@ -114,38 +115,42 @@ const elementOf = (hub: Hub, { path, slot }: Open): ReactNode | null =>
   slot ? slotElement(hub, slot) : pageElement(hub, path);
 
 function open(hub: Hub, event: Open): void {
-  const existing = hub.views.get(event.path);
+  const existing = hub.views.get(event.viewId);
 
   if (existing) return resend(hub, existing);
   const element = elementOf(hub, event);
 
-  if (element) start(hub, event.path, element);
+  if (element) start(hub, event.viewId, element);
 }
 
-function close(hub: Hub, path: string): void {
-  hub.views.get(path)?.mounted?.unmount();
-  hub.views.delete(path);
+function close(hub: Hub, viewId: string): void {
+  hub.views.get(viewId)?.mounted?.unmount();
+  hub.views.delete(viewId);
 }
 
-function dispatch(hub: Hub, event: Dispatch): void {
-  const handler = hub.views.get(event.path)?.handlers.get(event.eventId);
-
-  if (handler)
-    Promise.resolve()
-      .then(() => handler(event.payload))
-      .catch(reportFailure);
+async function dispatch(hub: Hub, event: Dispatch): Promise<void> {
+  try {
+    await runHandler(hub.views.get(event.viewId), event);
+    await hub.settle(event.requestId, { ok: true });
+  } catch (error) {
+    await hub.settle(event.requestId, {
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 function receive(hub: Hub, event: PluginEvent): void {
-  if (event.type === 'dispatch') dispatch(hub, event);
+  if (event.type === 'dispatch') void dispatch(hub, event).catch(reportFailure);
   else if (event.type === 'open') open(hub, event);
-  else close(hub, event.path);
+  else close(hub, event.viewId);
 }
 
 // A page or Slot content a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
-export function mountPages(send: ViewSender): Pages {
+export function mountPages(send: ViewSender, settle: DispatchSender): Pages {
   const hub: Hub = {
     send,
+    settle,
     pages: new Map(),
     slots: new Map(),
     views: new Map(),

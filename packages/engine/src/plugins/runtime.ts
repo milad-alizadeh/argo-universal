@@ -9,6 +9,7 @@ import {
   type PluginLocation,
 } from './plugin-location';
 import type { PluginServices } from './plugin-services';
+import { answerPluginCall } from './runtime-calls';
 import { RuntimePlugin } from './runtime-plugin';
 import type { PluginReply } from './runtime-protocol';
 import {
@@ -45,28 +46,14 @@ export class PluginRuntime {
   private callbacks(): ConstructorParameters<typeof HostConnection>[0] {
     return {
       log: this.log,
-      call: (message): Promise<PluginReply> => this.answer(message),
+      call: (message): Promise<PluginReply> =>
+        answerPluginCall(
+          { hooks: this.hooks, services: this.services, views: this.views },
+          message,
+        ),
       status: (message): void => this.update(message),
       crash: (message): void => this.crashed(message),
     };
-  }
-
-  private async answer(
-    message: Extract<HostMessage, { type: 'call' }>,
-  ): Promise<PluginReply> {
-    const { pluginId, generation, request } = message;
-
-    if (request.api === 'hooks')
-      return this.hooks.reply({ pluginId, generation }, request.call);
-
-    if (request.api !== 'view')
-      return this.hooks.whileCalling(
-        pluginId,
-        this.services.handle(pluginId, generation, request),
-      );
-    this.views.receive(pluginId, request.path, request.message);
-
-    return { ok: true };
   }
 
   waiting(pluginId: string, generation: number): () => void {
@@ -136,6 +123,7 @@ export class PluginRuntime {
 
   // Reload, turning off and a crash end the Plugin's resources and its Hooks.
   private release(pluginId: string): void {
+    this.views.invalidate(pluginId);
     this.services.release(pluginId);
     this.hooks.release(pluginId);
   }

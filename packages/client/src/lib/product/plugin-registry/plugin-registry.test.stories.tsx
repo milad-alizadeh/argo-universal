@@ -1,6 +1,6 @@
 import {
   helloRoot,
-  helloTapEventId,
+  helloTapEvent,
   invalidPropsRoot,
   unknownNodesRoot,
   stackRowRoot,
@@ -34,7 +34,9 @@ export const Tap: Story = {
     await expect(canvas.getByText('Hello from a Plugin')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Tap me' }));
     await expect(onEvent).toHaveBeenCalledOnce();
-    await expect(onEvent).toHaveBeenCalledWith(helloTapEventId);
+    await expect(onEvent).toHaveBeenCalledWith('0/2/0', {
+      event: helloTapEvent,
+    });
   },
 };
 

@@ -1,26 +1,11 @@
 import { z } from 'zod';
 
-// A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
-export const projectDetailsSlotId = 'argo/project/details/v1';
-
-// Each Slot id names the one context shape core passes to it.
-export const PluginSlotInput = z.discriminatedUnion('slotId', [
-  z.strictObject({
-    slotId: z.literal(projectDetailsSlotId),
-    context: z.strictObject({ projectId: z.string().min(1) }),
-  }),
-]);
-
-export type PluginSlotInput = z.infer<typeof PluginSlotInput>;
-
-export const SlotId = z.enum([projectDetailsSlotId]);
-
-export type SlotId = z.infer<typeof SlotId>;
-
-// Where a Slot's contribution lives inside its Plugin; page paths start with `/`, so the two never meet.
-export function slotPath({ slotId, context }: PluginSlotInput): string {
-  return `slot:${slotId}:${JSON.stringify(context)}`;
-}
+export {
+  PluginSlotInput,
+  SlotId,
+  projectDetailsSlotId,
+  slotPath,
+} from '#plugin-wire-slot';
 
 // Plugin pages cross the wire as data (ADR-0025): kit component names and props, never code.
 export type WireJson =
@@ -60,7 +45,7 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
   }),
 );
 
-// A function prop crosses as an event id; the App sends it back to `plugins.dispatch`.
+// Function props name their event; dispatch also identifies the node and revision.
 export const WireEvent = z.strictObject({ $event: z.string().min(1) });
 
 export type WireEvent = z.infer<typeof WireEvent>;
@@ -103,11 +88,13 @@ export type PatchOp = z.infer<typeof PatchOp>;
 export const ViewMessage = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('snapshot'),
+    viewId: z.string().optional(),
     revision: z.number().int().nonnegative(),
     root: WireNode,
   }),
   z.strictObject({
     type: z.literal('patch'),
+    viewId: z.string().optional(),
     revision: z.number().int().nonnegative(),
     ops: z.array(PatchOp).min(1),
   }),
@@ -115,17 +102,13 @@ export const ViewMessage = z.discriminatedUnion('type', [
 
 export type ViewMessage = z.infer<typeof ViewMessage>;
 
-export const PluginViewInput = z.object({
-  pluginId: z.string(),
-  path: z.string(),
-});
-
-export const PluginDispatchInput = PluginViewInput.extend({
-  eventId: z.string().min(1),
-  payload: WireJson.optional(),
-});
-
-export type PluginDispatchInput = z.infer<typeof PluginDispatchInput>;
+export {
+  PluginDispatchInput,
+  PluginInteraction,
+  PluginDispatchResult,
+  PluginViewInput,
+  PluginEvent,
+} from '#plugin-wire-events';
 
 // A Slot's stream: the Plugins that fill it, in list order, then each one's view as it arrives.
 export const SlotMessage = z.discriminatedUnion('type', [
@@ -143,22 +126,3 @@ export const SlotMessage = z.discriminatedUnion('type', [
 ]);
 
 export type SlotMessage = z.infer<typeof SlotMessage>;
-
-// What the Server asks a running Plugin's pages to do.
-export const PluginEvent = z.discriminatedUnion('type', [
-  z.object({
-    type: z.literal('open'),
-    path: z.string(),
-    // Given when the view is a Slot contribution rather than a page.
-    slot: PluginSlotInput.optional(),
-  }),
-  z.object({ type: z.literal('close'), path: z.string() }),
-  z.object({
-    type: z.literal('dispatch'),
-    path: z.string(),
-    eventId: z.string(),
-    payload: WireJson.optional(),
-  }),
-]);
-
-export type PluginEvent = z.infer<typeof PluginEvent>;

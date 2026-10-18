@@ -1,4 +1,4 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { PluginInteraction, WireNode } from '@repo/contracts/plugins/wire';
 import type { Handler } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import type { z } from 'zod';
@@ -12,27 +12,35 @@ import {
   stackProps,
   textProps,
 } from './plugin-registry-schemas';
+import { usePluginUi, type PluginUi } from './use-plugin-ui';
+
+export type PluginOnEvent = (
+  key: string,
+  interaction: PluginInteraction,
+) => void | Promise<void>;
 
 export interface PluginTreeProps {
   root: WireNode;
-  // Sends an event id back to the Plugin that owns the page.
-  onEvent: (eventId: string) => void;
+  onEvent: PluginOnEvent;
 }
 
 interface RenderContext {
-  onEvent: (eventId: string) => void;
+  onEvent: PluginOnEvent;
+  key: string;
+  ui: PluginUi;
 }
 
 type Props<Schema extends z.ZodType> = z.output<Schema>;
 
 function handlerOf(
   handler: Handler | undefined,
-  { onEvent }: RenderContext,
+  { onEvent, key }: RenderContext,
 ): (() => void) | undefined {
   if (!handler) return undefined;
 
   return () => {
-    if ('$event' in handler) onEvent(handler.$event);
+    if ('$event' in handler)
+      void Promise.resolve(onEvent(key, { event: 'onPress' })).catch(() => {});
     else void runAction(handler);
   };
 }
@@ -121,7 +129,7 @@ function RenderNode({
     <RenderNode key={child.key} node={child} context={context} />
   ));
 
-  return known.render(node, context, children);
+  return known.render(node, { ...context, key: node.key }, children);
 }
 
 // Draws a Plugin page's wire tree with the real kit components.
@@ -129,5 +137,9 @@ export function PluginTree({
   root,
   onEvent,
 }: PluginTreeProps): React.JSX.Element | null {
-  return <RenderNode node={root} context={{ onEvent }} />;
+  const ui = usePluginUi(onEvent);
+
+  return (
+    <RenderNode node={root} context={{ onEvent: ui.send, key: root.key, ui }} />
+  );
 }

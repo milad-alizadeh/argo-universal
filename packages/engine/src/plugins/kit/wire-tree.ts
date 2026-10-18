@@ -1,6 +1,6 @@
 import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
 
-// A handler a Plugin passes as a prop; the wire carries it as an event id.
+// A handler a Plugin passes as a prop; the wire names its event.
 type PluginFn = (payload?: WireJson) => void | Promise<void>;
 
 export type Prop = WireJson | PluginFn;
@@ -26,11 +26,18 @@ const isSlot = (instance: Instance): boolean => instance.type === slotType;
 const keyOf = (instance: Instance, index: number): string =>
   instance.key ?? String(index);
 
-function wireProp(eventId: string, value: Prop, handlers: Handlers): WireJson {
+function wireProp(
+  event: { id: string; name: string },
+  value: Prop,
+  handlers: Handlers,
+): WireJson {
   if (typeof value !== 'function') return value;
-  handlers.set(eventId, value);
 
-  return { $event: eventId };
+  if (handlers.has(event.id))
+    throw new Error('Plugin nodes must have unique keys');
+  handlers.set(event.id, value);
+
+  return { $event: event.name };
 }
 
 function wireProps(
@@ -41,9 +48,13 @@ function wireProps(
   return Object.fromEntries(
     Object.entries(props).map(([name, value]) => [
       name,
-      wireProp(`${id}:${name}`, value, handlers),
+      wireProp({ id: JSON.stringify([id, name]), name }, value, handlers),
     ]),
   );
+}
+
+function slotId(parent: string, slot: Instance): string {
+  return `${parent}#${encodeURIComponent(slot.key ?? '')}`;
 }
 
 function wireSlots(
@@ -52,7 +63,7 @@ function wireSlots(
   handlers: Handlers,
 ): WireNode['slots'] {
   const filled = instance.children.filter(isSlot).flatMap((slot) => {
-    const [content] = wireChildren(slot.children, `${id}#`, handlers);
+    const [content] = wireChildren(slot.children, slotId(id, slot), handlers);
 
     return slot.key && content ? [[slot.key, content] as const] : [];
   });
@@ -69,7 +80,7 @@ function wireNode(
 
   return {
     type: instance.type,
-    key: id.slice(id.lastIndexOf('/') + 1),
+    key: id,
     props: wireProps(instance.props, id, handlers),
     children: wireChildren(content, id, handlers),
     slots: wireSlots(instance, id, handlers),
@@ -84,13 +95,13 @@ function wireChildren(
   return instances.map((instance, index) =>
     wireNode(
       instance,
-      `${parent}${parent ? '/' : ''}${keyOf(instance, index)}`,
+      `${parent}${parent ? '/' : ''}${encodeURIComponent(keyOf(instance, index))}`,
       handlers,
     ),
   );
 }
 
-// Turns the reconciler's instances into wire nodes, collecting each function prop under its event id.
+// Collects handlers by node key and event name while building the wire tree.
 export function toWire(root: Instance, handlers: Handlers): WireNode {
   const [node] = wireChildren([root], '', handlers);
 

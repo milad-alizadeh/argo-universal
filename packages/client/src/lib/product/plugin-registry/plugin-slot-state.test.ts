@@ -17,8 +17,16 @@ describe('reducePluginSlot', () => {
     expect(
       reducePluginSlot([], { type: 'contributors', pluginIds: ['a', 'b'] }),
     ).toEqual([
-      { pluginId: 'a', path: null, view: { root: null, revision: 0 } },
-      { pluginId: 'b', path: null, view: { root: null, revision: 0 } },
+      {
+        pluginId: 'a',
+        path: null,
+        view: { root: null, revision: 0, viewId: null },
+      },
+      {
+        pluginId: 'b',
+        path: null,
+        view: { root: null, revision: 0, viewId: null },
+      },
     ]);
   });
 
@@ -32,13 +40,17 @@ describe('reducePluginSlot', () => {
     const patched = reducePluginSlot(drawn, view('hello', helloSlotWavePatch));
 
     expect(drawn).toEqual([
-      { pluginId: 'hello', path, view: { root: helloSlotRoot, revision: 1 } },
+      {
+        pluginId: 'hello',
+        path,
+        view: { root: helloSlotRoot, revision: 1, viewId: null },
+      },
     ]);
     expect(patched).toEqual([
       {
         pluginId: 'hello',
         path,
-        view: { root: helloSlotTree('argo', 1), revision: 2 },
+        view: { root: helloSlotTree('argo', 1), revision: 2, viewId: null },
       },
     ]);
   });
@@ -60,7 +72,11 @@ describe('reducePluginSlot', () => {
       }),
     ).toEqual([
       drawn[0],
-      { pluginId: 'other', path: null, view: { root: null, revision: 0 } },
+      {
+        pluginId: 'other',
+        path: null,
+        view: { root: null, revision: 0, viewId: null },
+      },
     ]);
   });
 });

@@ -12,7 +12,11 @@ import {
   WorkerHookCommand,
 } from '@repo/contracts/plugins/hook-protocol';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
-import { PluginEvent, ViewMessage } from '@repo/contracts/plugins/wire';
+import {
+  PluginDispatchResult,
+  PluginEvent,
+  ViewMessage,
+} from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
@@ -21,20 +25,9 @@ export type { PluginEvent } from '@repo/contracts/plugins/wire';
 
 export { FetchCall, FsCall, ProcessCall, ProcessCommand };
 
-export const StorageQuery = z.object({
-  sql: z.string(),
-  params: z.array(z.union([z.string(), z.number(), z.null()])),
-  method: z.enum(['run', 'all', 'get', 'values']),
-});
+export { StorageQuery, StorageResult } from '#plugin-storage-protocol';
 
-export type StorageQuery = z.infer<typeof StorageQuery>;
-
-// `get` answers one row, the other methods a list of rows: the shapes Drizzle's sqlite-proxy driver expects.
-export const StorageResult = z.object({
-  rows: z.array(z.unknown()),
-});
-
-export type StorageResult = z.infer<typeof StorageResult>;
+import { StorageQuery, StorageResult } from '#plugin-storage-protocol';
 
 export const pluginAnswerLimitMs = 3000;
 
@@ -70,8 +63,13 @@ export const PluginRequest = z.discriminatedUnion('api', [
   z.object({ api: z.literal('process'), call: ProcessCall }),
   z.object({ api: z.literal('fetch'), call: FetchCall }),
   z.object({
+    api: z.literal('dispatchResult'),
+    requestId: z.string(),
+    result: PluginDispatchResult,
+  }),
+  z.object({
     api: z.literal('view'),
-    path: z.string(),
+    viewId: z.string(),
     message: ViewMessage,
   }),
 ]);

@@ -1,7 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import {
   helloSnapshot,
-  helloTapEventId,
   helloTapPatch,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { expect, it } from 'vitest';
@@ -17,7 +16,7 @@ const hello = { pluginId: 'hello', path: '/' };
 it('streams the hello page as the wire fixtures describe and delivers a tap to its handler', async () => {
   const home = await createRuntimePlugins([]);
 
-  const { caller, createCaller } = await startEngineTestHost({
+  const { createCaller } = await startEngineTestHost({
     home,
     // The Server's own version, which `plugins/examples/hello` supports.
     version: '0.0.0',
@@ -26,24 +25,30 @@ it('streams the hello page as the wire fixtures describe and delivers a tap to i
 
   const controller = new AbortController();
 
-  const view = await createCaller({ signal: controller.signal }).plugins.view(
-    hello,
-  );
+  const app = createCaller({ signal: controller.signal });
+  const view = await app.plugins.view(hello);
 
   const messages = view[Symbol.asyncIterator]();
 
-  expect((await messages.next()).value).toEqual(helloSnapshot);
+  const snapshot = (await messages.next()).value;
+  expect(snapshot).toMatchObject(helloSnapshot);
 
-  await caller.plugins.dispatch({ ...hello, eventId: helloTapEventId });
+  await app.plugins.dispatch({
+    ...hello,
+    revision: 1,
+    viewId: snapshot.viewId,
+    key: '0/2/0',
+    event: 'onPress',
+  });
 
-  expect((await messages.next()).value).toEqual(helloTapPatch);
+  expect((await messages.next()).value).toMatchObject(helloTapPatch);
   controller.abort();
 }, 20_000);
 
-it('gives a second viewer the current page as a fresh snapshot, with a revision after what the first saw', async () => {
+it('keeps a second Connection on its own page', async () => {
   const home = await createRuntimePlugins([]);
 
-  const { caller, createCaller } = await startEngineTestHost({
+  const { createCaller } = await startEngineTestHost({
     home,
     version: '0.0.0',
     firstPartyPluginsDirectory: examples,
@@ -52,12 +57,17 @@ it('gives a second viewer the current page as a fresh snapshot, with a revision 
   const first = new AbortController();
   const second = new AbortController();
 
-  const early = (
-    await createCaller({ signal: first.signal }).plugins.view(hello)
-  )[Symbol.asyncIterator]();
+  const app = createCaller({ signal: first.signal });
+  const early = (await app.plugins.view(hello))[Symbol.asyncIterator]();
 
-  await early.next();
-  await caller.plugins.dispatch({ ...hello, eventId: helloTapEventId });
+  const snapshot = (await early.next()).value;
+  await app.plugins.dispatch({
+    ...hello,
+    revision: 1,
+    viewId: snapshot.viewId,
+    key: '0/2/0',
+    event: 'onPress',
+  });
   await early.next();
 
   const late = (
@@ -66,8 +76,8 @@ it('gives a second viewer the current page as a fresh snapshot, with a revision 
 
   expect((await late.next()).value).toMatchObject({
     type: 'snapshot',
-    revision: 2,
-    root: { children: [{}, { props: { label: 'Tapped 1 times' } }, {}] },
+    revision: 3,
+    root: { children: [{}, { props: { label: 'Tapped 0 times' } }, {}] },
   });
   first.abort();
   second.abort();
