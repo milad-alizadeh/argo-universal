@@ -91,25 +91,35 @@ function renderSlot(
   name: string,
   context: RenderContext,
 ): React.JSX.Element {
-  return (
-    <Fragment key={name}>
-      {node.slots[name]?.map((child) => slotNode(context, name, child))}
-    </Fragment>
+  const nodes = (node.slots[name] ?? []).map((child) =>
+    slotNode(context, name, child),
   );
+
+  return slotContent(nodes, name);
+}
+
+function slotContent(
+  nodes: (React.JSX.Element | null)[],
+  name: string,
+): React.JSX.Element {
+  const first = nodes.at(0);
+
+  if (nodes.length === 1 && first) return first;
+
+  return <Fragment key={name}>{nodes}</Fragment>;
 }
 
 function slotNode(
   context: RenderContext,
   name: string,
   child: WireNode,
-): React.JSX.Element {
-  return (
-    <RenderNode
-      key={child.key}
-      node={child}
-      context={{ ...context, key: slotNodeKey(context.key, name, child.key) }}
-    />
-  );
+): React.JSX.Element | null {
+  const rendered = RenderNode({
+    node: child,
+    context: { ...context, key: slotNodeKey(context.key, name, child.key) },
+  });
+
+  return rendered ? cloneElement(rendered, { key: child.key }) : null;
 }
 
 function parsedProps(
