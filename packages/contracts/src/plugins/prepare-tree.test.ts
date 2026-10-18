@@ -53,6 +53,29 @@ describe('Plugin wire compatibility', () => {
     { ...stack, type: 'FutureContainer' },
     { ...stack, props: { direction: 'row', style: {} } },
     { ...stack, slots: { media: [label] } },
+    {
+      ...stack,
+      type: 'ListItem',
+      props: { title: 'Row' },
+      slots: { trailing: [{ ...label, type: 'Button' }] },
+    },
+    {
+      ...stack,
+      type: 'ListItem',
+      props: { title: 'Row' },
+      slots: { meta: [label] },
+    },
+    {
+      ...stack,
+      type: 'ListItem',
+      props: { title: 'Row' },
+      slots: { accessory: [label] },
+    },
+    {
+      ...stack,
+      type: 'ListItem',
+      props: { title: 'Row', progress: { value: 1.5 } },
+    },
   ])(
     'replaces an invalid or unsupported container with the update fallback',
     (root) => {

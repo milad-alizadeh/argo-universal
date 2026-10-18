@@ -1,9 +1,6 @@
 import type * as React from 'react';
 import { Text } from '#primitives/content/text';
-import {
-  VirtualListItem,
-  type VirtualListItemProps,
-} from '#primitives/lists/virtual-list-item';
+import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import {
   PullRequestIcon,
@@ -41,7 +38,7 @@ type CompactRowProps = SessionRowProps & ContextMenuTriggerProps;
 
 const compactPresses = (
   props: CompactRowProps,
-): Pick<VirtualListItemProps, 'onPress' | 'onLongPress'> => ({
+): Pick<ListItemProps, 'onPress' | 'onLongPress'> => ({
   onPress: () => props.onSelect(props.session.sessionId),
   onLongPress: props.onLongPress,
 });
@@ -51,13 +48,12 @@ export function CompactSessionRow(props: CompactRowProps): React.JSX.Element {
   const selected = props.selected ?? false;
 
   return (
-    <VirtualListItem
+    <ListItem
       {...compactPresses(props)}
       title={props.session.title}
       accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} selected={selected} />}
       trailing={<CompactTrailing {...props} />}
-      position={props.position}
       selected={selected}
     />
   );

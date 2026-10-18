@@ -64,7 +64,7 @@ function labelProp(type: string, children: React.ReactNode): ElementProps {
 function prepare(
   type: string,
   props: ElementProps,
-  key: string | number | undefined,
+  key?: string | number,
 ): ElementProps {
   rejectStyling(type, props);
   const { children, ...rest } = expandList(type, props);
@@ -79,9 +79,9 @@ function prepare(
 }
 
 function create(
-  type: React.ElementType,
+  type: React.ElementType | string,
   props: ElementProps,
-  key: string | number | undefined,
+  key?: string | number,
 ): React.ReactElement {
   if (typeof type !== 'string')
     return React.createElement(type, { ...props, key });
@@ -101,6 +101,9 @@ const slotNames = new Set([
   'leading',
   'media',
   'accessories',
+  'trailing',
+  'meta',
+  'empty',
   'footer',
   'detail',
 ]);

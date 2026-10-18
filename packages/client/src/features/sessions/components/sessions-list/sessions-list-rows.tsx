@@ -58,7 +58,6 @@ export type SessionListRowProps = Pick<
   | 'selected'
   | 'trailing'
   | 'layout'
-  | 'position'
   | 'onSelect'
   | 'onRename'
   | 'onArchive'
@@ -79,7 +78,7 @@ export const SessionListRow = memo(function SessionListRow({
     <Animated.View
       testID="session-row-surface"
       {...rowFade(animate)}
-      className={rowClassName(props.layout, closing)}
+      className={rowClassName(closing)}
     >
       <SessionRow {...props} />
     </Animated.View>

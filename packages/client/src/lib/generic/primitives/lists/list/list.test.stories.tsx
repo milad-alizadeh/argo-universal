@@ -1,0 +1,69 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
+import { expect } from 'storybook/test';
+import { Text } from '#primitives/content/text';
+import { ListItem } from '../list-item';
+import { List } from './list';
+
+const meta = {
+  title: 'Tests/Design System/Primitives/List',
+  parameters: { screenPreview: true },
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Empty: Story = {
+  render: () => (
+    <List items={[]} renderItem={() => null} empty={<Text>No runs</Text>} />
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('No runs')).toBeVisible();
+  },
+};
+
+export const Loading: Story = {
+  render: () => (
+    <List
+      items={[]}
+      renderItem={() => null}
+      isLoading
+      empty={<Text>No runs</Text>}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByLabelText('Loading')).toBeVisible();
+    await expect(canvas.queryByText('No runs')).toBeNull();
+  },
+};
+
+function CollapsingSection(): React.JSX.Element {
+  const [isExpanded, setExpanded] = useState(true);
+
+  return (
+    <List appearance="grouped">
+      <List.Section
+        title="Runs"
+        footer="Latest builds"
+        isExpanded={isExpanded}
+        onExpandedChange={setExpanded}
+      >
+        <ListItem title="Build web" />
+        <ListItem title="Build native" />
+      </List.Section>
+    </List>
+  );
+}
+
+export const Section: Story = {
+  render: () => <CollapsingSection />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(await canvas.findByText('Build web')).toBeVisible();
+    await expect(canvas.getByText('Latest builds')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Runs' }));
+    await expect(canvas.queryByText('Build web')).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Runs' }));
+    await expect(await canvas.findByText('Build native')).toBeVisible();
+  },
+};

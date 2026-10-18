@@ -25,7 +25,7 @@ const progressSpring = {
   damping: 2 * Math.sqrt(veryLowStiffness * mass),
 } as const;
 
-export interface PlanFillWidth {
+export interface ProgressFillWidth {
   // The filled part's width, in points, on the UI thread.
   fillWidth: SharedValue<number>;
   // Reads the track's width, which the fill is a share of.
@@ -44,7 +44,7 @@ function useShownShare(share: number): SharedValue<number> {
   return shown;
 }
 
-export function usePlanFillWidth(share: number): PlanFillWidth {
+export function useProgressFillWidth(share: number): ProgressFillWidth {
   const trackWidth = useSharedValue(0);
   const shown = useShownShare(share);
 
@@ -61,7 +61,7 @@ export function usePlanFillWidth(share: number): PlanFillWidth {
 }
 
 // Sets the fill's width on the UI thread, so a growing fill never re-renders the row.
-export function usePlanFillStyle(
+export function useProgressFillStyle(
   fillWidth: SharedValue<number>,
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
   return useAnimatedStyle(() => ({ width: fillWidth.get() }), [fillWidth]);

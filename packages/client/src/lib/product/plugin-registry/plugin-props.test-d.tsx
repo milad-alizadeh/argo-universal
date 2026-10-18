@@ -1,4 +1,5 @@
 /** @jsxImportSource @argo/plugin-kit */
+
 import type * as PluginKit from '@argo/plugin-kit';
 import {
   Button,
@@ -13,14 +14,29 @@ import {
   type PluginComponents,
   type PluginProps,
 } from '@argo/plugin-kit';
-import type { WirePart, WireProps } from '@repo/contracts/plugins/kit';
+import type { WireProps } from '@repo/contracts/plugins/kit';
 import { expectTypeOf } from 'vitest';
 import type { ButtonProps } from '#primitives/actions/button';
+import type { LabelProps } from '#primitives/content/label';
 import type { TextProps, TextRole } from '#primitives/content/text';
 import type { StackProps } from '#primitives/layout/stack';
 import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
+import type { ListProps, ListSectionProps } from '#primitives/lists/list';
+import type { ListItemProps } from '#primitives/lists/list-item';
+import type { PillProps } from '#primitives/status/pill';
+import type { ProgressBarProps } from '#primitives/status/progress-bar';
 
-expectTypeOf<Pick<typeof PluginKit, WirePart>>().toExtend<PluginComponents>();
+type PublicComponents = Omit<PluginComponents, 'List.Section'> & {
+  ListSection: PluginComponents['List.Section'];
+};
+
+expectTypeOf<
+  Pick<typeof PluginKit, keyof PublicComponents>
+>().toExtend<PublicComponents>();
+
+expectTypeOf<typeof PluginKit.List.Section>().toEqualTypeOf<
+  PluginComponents['List.Section']
+>();
 
 expectTypeOf<
   Omit<Extract<PluginProps['Text'], { label: string }>, 'children'>
@@ -155,3 +171,17 @@ const optional = Boolean('optional');
 />;
 
 expectTypeOf<PluginProps['VirtualList']>().toHaveProperty('items');
+
+expectTypeOf<WireProps['List']>().toExtend<ListProps<never>>();
+
+expectTypeOf<WireProps['List.Section']>().toExtend<ListSectionProps>();
+
+expectTypeOf<
+  Omit<WireProps['ListItem'], 'onPress'>
+>().toExtend<ListItemProps>();
+
+expectTypeOf<WireProps['Label']>().toExtend<LabelProps>();
+
+expectTypeOf<WireProps['ProgressBar']>().toExtend<ProgressBarProps>();
+
+expectTypeOf<WireProps['Pill']>().toExtend<PillProps>();

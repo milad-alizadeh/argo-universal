@@ -1,4 +1,5 @@
 import {
+  runListRoot,
   helloRoot,
   helloTapEvent,
   slottedRow,
@@ -109,5 +110,25 @@ export const StackAliases: Story = {
     await expect(rectAt(first, 1).left).toBeLessThan(rectAt(second, 1).left);
     await expect(rectAt(first, 2).top).toBeLessThan(rectAt(second, 2).top);
     await expect(rectAt(first, 3).top).toBeLessThan(rectAt(second, 3).top);
+  },
+};
+
+export const ListAnatomy: Story = {
+  parameters: { screenPreview: true },
+  render: () => <PluginTree root={runListRoot} onEvent={onEvent} />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(await canvas.findByText('CI runs')).toBeVisible();
+    await expect(canvas.getByText('main')).toBeVisible();
+    await expect(canvas.getByText('2/5 jobs')).toBeVisible();
+    await expect(canvas.getByText('Production')).toBeVisible();
+    await expect(canvas.getByText('now')).toBeVisible();
+    await expect(canvas.getByRole('progressbar')).toHaveAttribute(
+      'aria-valuenow',
+      '40',
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Deploy web' }));
+    await expect(onEvent).toHaveBeenCalledWith('runs/builds/web', {
+      event: 'onPress',
+    });
   },
 };

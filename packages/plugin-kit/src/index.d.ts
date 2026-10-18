@@ -109,3 +109,17 @@ export const VirtualList: PluginComponents['VirtualList'];
 export const Table: PluginComponents['Table'];
 
 export const GroupedList: PluginComponents['GroupedList'];
+
+export const List: PluginComponents['List'] & {
+  Section: PluginComponents['List.Section'];
+};
+
+export const ListSection: PluginComponents['List.Section'];
+
+export const ListItem: PluginComponents['ListItem'];
+
+export const Label: PluginComponents['Label'];
+
+export const ProgressBar: PluginComponents['ProgressBar'];
+
+export const Pill: PluginComponents['Pill'];

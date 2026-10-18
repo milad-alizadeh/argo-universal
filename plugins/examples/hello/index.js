@@ -1,5 +1,8 @@
 import {
   Button,
+  List,
+  ListItem,
+  Label,
   Column,
   Row,
   Text,
@@ -40,6 +43,37 @@ function HelloPage() {
   );
 }
 
+const builds = [
+  { id: 'web', title: 'Deploy web' },
+  { id: 'native', title: 'Build native' },
+];
+
+function HelloListPage() {
+  const [selected, setSelected] = useState('');
+  return (
+    <List
+      appearance="cards"
+      items={builds}
+      renderItem={(build) => (
+        <ListItem
+          key={build.id}
+          title={build.title}
+          subtitle="main"
+          selected={selected === build.id}
+          onPress={() => setSelected(build.id)}
+          meta={
+            <Label
+              text="2/5 jobs"
+              icon={{ sf: 'checkmark.circle', material: 'check_circle' }}
+            />
+          }
+          progress={{ value: 0.4, tone: 'success', active: true }}
+        />
+      )}
+    />
+  );
+}
+
 const greeting = (projectId, waves) =>
   waves === 0
     ? `Hello from ${projectId}`
@@ -64,5 +98,6 @@ function ProjectDetails({ context }) {
 export function register(argo) {
   settings = argo.settings;
   argo.pages.register('/', HelloPage);
+  argo.pages.register('/lists', HelloListPage);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }

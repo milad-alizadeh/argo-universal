@@ -2,10 +2,7 @@ import type { SessionInfo } from '@repo/contracts';
 import { agentsList } from '@repo/mocks/app';
 import type * as React from 'react';
 import { View } from 'react-native';
-import {
-  virtualListPosition,
-  type VirtualListPosition,
-} from '#primitives/lists/virtual-list-item';
+import { List } from '#primitives/lists/list';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { SessionsLayout } from '../../stores/sessions-view';
 import { SessionRow, type SessionRowProps } from './session-row';
@@ -24,10 +21,8 @@ export interface SessionRowListMockProps {
 
 // As the Sessions list sets its rows: Regular cards 8 apart; Compact rows as one phone grouped section, 2 apart wide.
 const listClassName = {
-  regular:
-    'w-full gap-2 bg-content px-4 py-2 wide:w-frame-list wide:px-2 wide:py-4',
-  compact:
-    'w-full bg-content px-4 py-2 wide:w-frame-list wide:gap-0.5 wide:px-2 wide:py-4',
+  regular: 'w-full bg-content px-4 py-2 wide:w-frame-list wide:px-2 wide:py-4',
+  compact: 'w-full bg-content px-4 py-2 wide:w-frame-list wide:px-2 wide:py-4',
 } satisfies Record<SessionsLayout, string>;
 
 function agentLogo(agent: string): string {
@@ -47,12 +42,6 @@ const shownAge = (
   { trailing }: RowMetadata,
 ): string | undefined => (showsSessionAge(layout) ? trailing : undefined);
 
-const positionOf = (
-  index: number,
-  list: SessionRowListMockProps,
-): VirtualListPosition =>
-  virtualListPosition(index === 0, index === list.sessions.length - 1);
-
 interface ListedRowProps {
   list: SessionRowListMockProps;
   session: SessionInfo;
@@ -71,7 +60,6 @@ function rowProps(row: ListedRowProps, wide: boolean): SessionRowProps {
     selected: wide && session.sessionId === list.selectedSessionId,
     layout,
     trailing: shownAge(layout, metadata),
-    position: positionOf(row.index, list),
     onSelect: list.onSelect,
   };
 }
@@ -85,15 +73,19 @@ function ListedRow(props: ListedRowProps): React.JSX.Element {
   );
 }
 
-const listedRows = (list: SessionRowListMockProps): React.JSX.Element[] =>
-  list.sessions.map((session, index) => (
-    <ListedRow
-      key={session.sessionId}
-      list={list}
-      session={session}
-      index={index}
+function listedRows(props: SessionRowListMockProps): React.JSX.Element {
+  return (
+    <List
+      appearance={props.layout === 'compact' ? 'grouped' : 'cards'}
+      maxHeight={1200}
+      items={props.sessions}
+      keyExtractor={(session) => session.sessionId}
+      renderItem={(session, index) => (
+        <ListedRow list={props} session={session} index={index} />
+      )}
     />
-  ));
+  );
+}
 
 export function SessionRowListMock(
   props: SessionRowListMockProps,
