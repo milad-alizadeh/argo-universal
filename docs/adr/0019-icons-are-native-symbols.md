@@ -1,6 +1,6 @@
 # Icons are native symbols
 
-Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-10-09), except the git icons (see Git icons). Phosphor is removed: its one look sat wrong beside native controls on iOS and Android, and each platform ships a full symbol set that follows its own weight and size rules.
+Every icon is a native system symbol drawn through `expo-symbols` (owner, 2026-10-09), except the git icons (see Git icons) and the web disclosure chevron (see Web disclosure chevron). Phosphor is removed: its one look sat wrong beside native controls on iOS and Android, and each platform ships a full symbol set that follows its own weight and size rules.
 
 | Platform | Symbol set | Drawn by |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ Paper designs may use SF Symbols exported as SVG as mockups only; they never rea
 
 ## Git icons
 
-Git icons are the one exception to native symbols (owner, 2026-10-16). Neither SF Symbols nor Material Symbols has a full set for branches and pull request states, and mixing the nearest names drew a different, incomplete set on each platform. Branch, pull request, every PR state (open, draft, merged, closed, conflict), Merge PR and Changes use Tabler Icons v3.49.0 (MIT, © Paweł Kuna), drawn from the same paths on every platform. Repository uses GitHub's Octicons mark (MIT), also drawn from the same path on every platform (owner decision, 2026-10-16). These icons take priority over SF Symbols, Material Symbols and any other set. The source SVGs and licences are committed in `packages/client/src/lib/generic/symbols/assets/tabler`.
+Git icons are the first exception to native symbols (owner, 2026-10-16). Neither SF Symbols nor Material Symbols has a full set for branches and pull request states, and mixing the nearest names drew a different, incomplete set on each platform. Branch, pull request, every PR state (open, draft, merged, closed, conflict), Merge PR and Changes use Tabler Icons v3.49.0 (MIT, © Paweł Kuna), drawn from the same paths on every platform. Repository uses GitHub's Octicons mark (MIT), also drawn from the same path on every platform (owner decision, 2026-10-16). These icons take priority over SF Symbols, Material Symbols and any other set. The source SVGs and licences are committed in `packages/client/src/lib/generic/symbols/assets/tabler`.
 
 - The source SVGs and Tabler's licence are committed in `packages/client/src/lib/generic/symbols/assets/tabler`. The Swift package `tools/sf-symbols/tabler-symbols` outlines their 2-point strokes and unions them with Core Graphics, so every platform gets filled paths, and writes `tabler-symbol-paths.json` in the custom symbols' units and box.
 - iOS: `with-custom-symbols` writes them into the asset catalog with the other custom symbols, and `SymbolView` draws them.
@@ -42,6 +42,10 @@ Git icons are the one exception to native symbols (owner, 2026-10-16). Neither S
 - Android: `react-native-svg` draws the path, filled with the icon's colour.
 
 `git-symbols.ts` maps each Argo git icon to its Tabler name, as `{ tabler: 'git-branch' }`; such an entry has no SF or Material name. Its asset-catalog name is `custom.<Tabler name>`, like the other custom symbols. Native menu rows draw no image for these icons, as for every custom symbol.
+
+## Web disclosure chevron
+
+A grouped row's disclosure chevron on web and Electron also comes from Tabler (owner, 2026-10-18): `chevron-right`, from the same release and folder as the git icons. Material's `chevron_right` is too thin beside iOS 26's, and SF Symbols cannot ship to the web, while Tabler's chevron has `chevron.forward`'s 7x12 shape and weight in a 20 box. `list-view-symbols.ts` maps it as `web-disclosure`, `{ tabler: 'chevron-right' }`; only the web grouped row draws it. iOS keeps the system `chevron.forward` and Android Material's `chevron_right` (`disclosure`), so `with-custom-symbols` leaves `custom.chevron-right` out of the asset catalog.
 
 ## Considered options
 

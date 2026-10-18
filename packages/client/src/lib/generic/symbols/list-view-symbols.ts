@@ -6,7 +6,8 @@ export const listViewSymbols = {
   disclosure: { sf: 'chevron.forward', material: 'chevron_right' },
   /*
    * A grouped row's disclosure on the web and desktop, where Material's chevron is too thin and SF's
-   * is not shipped: Tabler's chevron has chevron.forward's 7x12 shape and semibold stroke at 20.
+   * is not shipped: Tabler's chevron has chevron.forward's 7x12 shape and semibold stroke at 20
+   * (ADR-0019). iOS and Android draw `disclosure`, so the iOS asset catalog leaves this one out.
    */
   'web-disclosure': { tabler: 'chevron-right' },
   'flat-view': { sf: 'list.bullet', material: 'view_list' },

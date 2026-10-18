@@ -1,12 +1,13 @@
 import type * as React from 'react';
-import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
 import { Icon } from '#primitives/content/icon';
+import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
 import type { RowLanePlace } from './grouped-list-item-lane';
 
 /*
- * The chevron that says a row opens another page. A grouped row draws iOS 26's: 7x12, in the
- * tertiary grey (neutral-300, the border token), its ink M + 3 from the card's edge, 14 after the
- * value. The 20 box leaves 6.67 of air each side of the ink, so it reaches 4 past the row's margin.
+ * The chevron that says a row opens another page. A grouped row draws iOS 26's shape, 7x12, from
+ * Tabler's chevron-right (ADR-0019), in neutral-400 (the focus token, owner 2026-10-18), its ink
+ * M + 3 from the card's edge, 14 after the value. The 20 box leaves 6.67 of air each side of the
+ * ink, so it reaches 4 past the row's margin.
  */
 export function Disclosure({
   visible,
@@ -36,7 +37,7 @@ function GroupedDisclosure(): React.JSX.Element {
     <Icon
       name="web-disclosure"
       role="disclosure"
-      className="-mr-1 shrink-0 text-border"
+      className="-mr-1 shrink-0 text-focus"
     />
   );
 }

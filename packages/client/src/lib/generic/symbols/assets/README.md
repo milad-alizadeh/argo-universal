@@ -22,4 +22,6 @@ swift run --quiet --package-path tools/sf-symbols/tabler-symbols tabler-symbols 
   > packages/client/src/lib/generic/symbols/tabler-symbol-paths.json
 ```
 
+`chevron-right.svg` is the web grouped row's disclosure (ADR-0019, Web disclosure chevron); `with-custom-symbols` leaves it out of the iOS asset catalog.
+
 To add a git icon, copy its outline SVG from the same Tabler release into `tabler/`, regenerate, and map it in `git-symbols.ts`.

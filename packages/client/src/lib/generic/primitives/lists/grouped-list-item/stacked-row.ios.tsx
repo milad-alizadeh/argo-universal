@@ -9,6 +9,7 @@ import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { useStackedList } from '#primitives/fields/field-layout';
 import { rectangularHitArea } from '#primitives/native/native-modifiers';
+import { useIconPixels } from '../../../symbols/icon-role';
 import { useStackedGutter } from './stacked-gutter';
 import type { StackedRowProps } from './stacked-row-props';
 
@@ -83,22 +84,26 @@ export function StackedCell(props: StackedRowProps): ReactElement {
 }
 
 /*
- * A stock Form's icon column: 24 wide from the gutter, the icon centred in it and the title 16
- * past it. The column takes no height, as a Label's icon does not make its row taller (a frame
- * does not clip, so the icon still draws centred on the row).
+ * A stock Form's icon column: as wide as a grouped row's icon (the `grouped-row` role, 24) from the
+ * gutter, the icon centred in it and the title 16 past it. The column takes no height, as a Label's
+ * icon does not make its row taller (a frame does not clip, so the icon still draws centred on the row).
  */
-const iconColumn = 24;
-
 const iconGap = 8;
 
 // A row's icon in a stacked list, in the column a Form gives a Label's icon; the row's own spacing adds the rest of the gap.
 export function StackedIcon(props: { children: ReactElement }): ReactElement {
+  const iconColumn = useIconPixels('grouped-row');
+
   if (!useStackedList()) return props.children;
 
-  return <VStack modifiers={iconModifiers}>{props.children}</VStack>;
+  return (
+    <VStack
+      modifiers={[
+        frame({ width: iconColumn, height: 0 }),
+        padding({ trailing: iconGap }),
+      ]}
+    >
+      {props.children}
+    </VStack>
+  );
 }
-
-const iconModifiers = [
-  frame({ width: iconColumn, height: 0 }),
-  padding({ trailing: iconGap }),
-];
