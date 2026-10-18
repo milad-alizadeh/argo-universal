@@ -15,7 +15,10 @@ it('prompts and cancels through tRPC, with the same Session reopened only once',
 
   const process = requireScriptedProcessAt(agent.processes);
   expect(
-    await caller.feed.row({ sessionId: 'session-1', id: messageId }),
+    await caller.feed.row({
+      sessionId: 'session-1',
+      id: messageId ?? 'dropped',
+    }),
   ).toMatchObject({ content: [{ type: 'text', text: 'Hello' }] });
   await expect(
     caller.session.prompt({

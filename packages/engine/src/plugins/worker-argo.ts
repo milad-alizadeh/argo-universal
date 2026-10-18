@@ -64,6 +64,25 @@ export const argoSource = `(() => {
   const kit = globalThis.__argoKit.createKit((path, message) => call({ api: 'view', path, message }).then(() => {}));
   delete globalThis.__argoKit;
   globalThis.__argoInbox = kit.inbox;
+  const hooks = [];
+  globalThis.__argoHooks = (json) => {
+    const { invocation, hookId, name, event } = JSON.parse(json);
+    const hookCall = (call_) => call({ api: 'hooks', call: { ...call_, invocation } });
+    const next = (rewritten = event) => hookCall({ action: 'next', event: rewritten });
+    const settle = (outcome) => hookCall({ action: 'settle', outcome }).catch(() => {});
+    Promise.resolve()
+      .then(() => hooks[hookId](Object.freeze({ name }), event, next))
+      .then(
+        (answer) => settle(answer === undefined ? { ok: true } : { ok: true, answer }),
+        (error) => settle({ ok: false, error: String(error && error.message) }),
+      );
+  };
+  const on = (name, matcher, hook, options) => {
+    if (typeof matcher === 'function') return on(name, undefined, matcher, hook);
+    const hookId = hooks.push(hook) - 1;
+    const guard = options?.guard === true;
+    return call({ api: 'hooks', call: { action: 'register', hookId, name, matcher, guard } }).then(() => {});
+  };
   globalThis.__argoKitExports = { exports: kit.exports, jsxRuntime: kit.jsxRuntime };
   const call = async (request) => {
     try {
@@ -112,5 +131,7 @@ export const argoSource = `(() => {
       get: async (key) => (await call({ api: 'settings', key })) ?? null,
     }),
     pages: Object.freeze({ register: kit.registerPage }),
+    slots: Object.freeze({ register: kit.registerSlot }),
+    on,
   });
 })()`;

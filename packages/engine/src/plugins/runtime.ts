@@ -1,39 +1,29 @@
-import type { PluginCapability } from '@repo/contracts/plugins';
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { PluginFailures } from './failures';
+import { keepWaiting } from './hooks/keep-waiting';
+import { PluginHooks } from './hooks/plugin-hooks';
 import { HostConnection } from './host-connection';
-import type { ActivatedPlugin } from './plugin-access';
+import {
+  activatedPlugin,
+  hookAllowance,
+  type PluginLocation,
+} from './plugin-location';
 import type { PluginServices } from './plugin-services';
 import { RuntimePlugin } from './runtime-plugin';
 import type { PluginReply } from './runtime-protocol';
 import {
   notStarted,
-  type PluginEntry,
   type PluginStatus,
   type HostMessage,
 } from './runtime-protocol';
 import { PluginViews } from './views';
-
-type PluginLocation = {
-  entry: Omit<PluginEntry, 'generation'>;
-  name?: string;
-  // The manifest's declared Capabilities; without them the Plugin is granted nothing.
-  capabilities?: readonly PluginCapability[];
-};
-
-const activatedPlugin = ({
-  entry,
-  capabilities = [],
-}: PluginLocation): ActivatedPlugin => ({
-  grants: capabilities,
-  codeFolder: entry.directory,
-});
 
 export class PluginRuntime {
   private readonly failures = new PluginFailures();
   private readonly plugins = new Map<string, RuntimePlugin>();
   private readonly host: HostConnection;
   readonly views: PluginViews;
+  readonly hooks: PluginHooks;
   private hostError: string | null = null;
   private closed = false;
 
@@ -45,6 +35,11 @@ export class PluginRuntime {
       this.host.event(pluginId, event),
     );
     this.host = new HostConnection(this.callbacks());
+    this.hooks = new PluginHooks({
+      log,
+      send: ({ pluginId, generation }, invocation): void =>
+        this.host.hook({ pluginId, generation, ...invocation }),
+    });
   }
 
   private callbacks(): ConstructorParameters<typeof HostConnection>[0] {
@@ -61,11 +56,24 @@ export class PluginRuntime {
   ): Promise<PluginReply> {
     const { pluginId, generation, request } = message;
 
+    if (request.api === 'hooks')
+      return this.hooks.reply({ pluginId, generation }, request.call);
+
     if (request.api !== 'view')
-      return this.services.handle(pluginId, generation, request);
+      return this.hooks.whileCalling(
+        pluginId,
+        this.services.handle(pluginId, generation, request),
+      );
     this.views.receive(pluginId, request.path, request.message);
 
     return { ok: true };
+  }
+
+  waiting(pluginId: string, generation: number): () => void {
+    return keepWaiting((command) => this.host.tell(command), {
+      pluginId,
+      generation,
+    });
   }
 
   status(pluginId: string): PluginStatus {
@@ -91,6 +99,8 @@ export class PluginRuntime {
       this.plugins.set(pluginId, plugin);
     }
 
+    this.hooks.allow(pluginId, hookAllowance(location));
+
     return plugin.activate(activatedPlugin(location));
   }
 
@@ -114,10 +124,16 @@ export class PluginRuntime {
       host: this.host,
       grant: (plugin): void =>
         this.services.activate(location.entry.pluginId, plugin),
-      release: (): void => this.services.release(location.entry.pluginId),
+      release: (): void => this.release(location.entry.pluginId),
       log: this.log,
       changed: (status): void => this.failures.update(identity, status),
     });
+  }
+
+  // Reload, turning off and a crash end the Plugin's resources and its Hooks.
+  private release(pluginId: string): void {
+    this.services.release(pluginId);
+    this.hooks.release(pluginId);
   }
 
   async close(): Promise<void> {

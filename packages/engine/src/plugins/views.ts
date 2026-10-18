@@ -1,17 +1,21 @@
 import { EventEmitter, on } from 'node:events';
-import {
-  applyPatch,
-  type PluginDispatchInput,
-  type ViewMessage,
-  type WireNode,
+import type {
+  PluginDispatchInput,
+  ViewMessage,
+  WireNode,
 } from '@repo/contracts/plugins/wire';
+import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import type { PluginEvent } from './runtime-protocol';
+
+type Open = Extract<PluginEvent, { type: 'open' }>;
 
 type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
 
 interface OpenView {
   pluginId: string;
   path: string;
+  // What mounts the view in the Plugin, again after a restart.
+  opening: Open;
   root: WireNode | null;
   // Counted here, not by the worker, so a reloaded Plugin's fresh snapshot is never older than what an App already holds.
   revision: number;
@@ -45,20 +49,20 @@ export class PluginViews {
   // A restarted or reloaded Plugin has lost its mounted pages.
   reopen(pluginId: string): void {
     for (const view of this.views.values())
-      if (view.pluginId === pluginId)
-        this.send(pluginId, { type: 'open', path: view.path });
+      if (view.pluginId === pluginId) this.send(pluginId, view.opening);
   }
 
   close(): void {
     for (const view of this.views.values()) view.events.emit('close');
   }
 
+  // `opening.slot` is given when the view is a Slot contribution rather than a page.
   async *watch(
     pluginId: string,
-    path: string,
+    opening: Omit<Open, 'type'>,
     signal: AbortSignal,
   ): AsyncGenerator<ViewMessage> {
-    const view = this.acquire(pluginId, path);
+    const view = this.acquire(pluginId, { type: 'open', ...opening });
 
     try {
       yield* messages(view, signal);
@@ -67,20 +71,20 @@ export class PluginViews {
     }
   }
 
-  private acquire(pluginId: string, path: string): OpenView {
-    const key = keyOf(pluginId, path);
-    const view = this.views.get(key) ?? this.open(key, pluginId, path);
+  private acquire(pluginId: string, opening: Open): OpenView {
+    const key = keyOf(pluginId, opening.path);
+    const view = this.views.get(key) ?? this.open(key, pluginId, opening);
 
     view.watchers += 1;
 
     return view;
   }
 
-  private open(key: string, pluginId: string, path: string): OpenView {
-    const view = createView(pluginId, path);
+  private open(key: string, pluginId: string, opening: Open): OpenView {
+    const view = createView(pluginId, opening);
 
     this.views.set(key, view);
-    this.send(pluginId, { type: 'open', path });
+    this.send(pluginId, opening);
 
     return view;
   }
@@ -103,12 +107,20 @@ function current(view: OpenView, message: ViewMessage): ViewMessage {
   return { type: 'patch', revision: view.revision, ops: message.ops };
 }
 
-function createView(pluginId: string, path: string): OpenView {
+function createView(pluginId: string, opening: Open): OpenView {
   const events: ViewEvents = new EventEmitter();
 
   events.setMaxListeners(0);
 
-  return { pluginId, path, root: null, revision: 0, watchers: 0, events };
+  return {
+    pluginId,
+    path: opening.path,
+    opening,
+    root: null,
+    revision: 0,
+    watchers: 0,
+    events,
+  };
 }
 
 function nextRoot(

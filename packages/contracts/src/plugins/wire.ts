@@ -1,5 +1,27 @@
 import { z } from 'zod';
 
+// A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
+export const projectDetailsSlotId = 'argo/project/details/v1';
+
+// Each Slot id names the one context shape core passes to it.
+export const PluginSlotInput = z.discriminatedUnion('slotId', [
+  z.strictObject({
+    slotId: z.literal(projectDetailsSlotId),
+    context: z.strictObject({ projectId: z.string().min(1) }),
+  }),
+]);
+
+export type PluginSlotInput = z.infer<typeof PluginSlotInput>;
+
+export const SlotId = z.enum([projectDetailsSlotId]);
+
+export type SlotId = z.infer<typeof SlotId>;
+
+// Where a Slot's contribution lives inside its Plugin; page paths start with `/`, so the two never meet.
+export function slotPath({ slotId, context }: PluginSlotInput): string {
+  return `slot:${slotId}:${JSON.stringify(context)}`;
+}
+
 // Plugin pages cross the wire as data (ADR-0025): kit component names and props, never code.
 export type WireJson =
   | string
@@ -105,47 +127,31 @@ export const PluginDispatchInput = PluginViewInput.extend({
 
 export type PluginDispatchInput = z.infer<typeof PluginDispatchInput>;
 
-function childAt(node: WireNode, step: PatchStep): WireNode {
-  const next =
-    typeof step === 'number' ? node.children[step] : node.slots[step];
+// A Slot's stream: the Plugins that fill it, in list order, then each one's view as it arrives.
+export const SlotMessage = z.discriminatedUnion('type', [
+  z.strictObject({
+    type: z.literal('contributors'),
+    pluginIds: z.array(z.string()),
+  }),
+  z.strictObject({
+    type: z.literal('view'),
+    pluginId: z.string(),
+    // What `plugins.dispatch` takes as `path` for this contribution's events.
+    path: z.string(),
+    message: ViewMessage,
+  }),
+]);
 
-  if (!next) throw new Error(`Patch path leaves the tree at ${step}`);
-
-  return next;
-}
-
-const change =
-  (op: PatchOp) =>
-  (node: WireNode): WireNode =>
-    op.op === 'props' ? { ...node, props: op.props } : op.node;
-
-// Rebuilds the nodes along `path`, so the tree it was given is never mutated.
-function update(
-  node: WireNode,
-  path: readonly PatchStep[],
-  apply: (target: WireNode) => WireNode,
-): WireNode {
-  const [step, ...rest] = path;
-
-  if (step === undefined) return apply(node);
-  const next = update(childAt(node, step), rest, apply);
-
-  return typeof step === 'number'
-    ? { ...node, children: node.children.with(step, next) }
-    : { ...node, slots: { ...node.slots, [step]: next } };
-}
-
-const applyOp = (root: WireNode, op: PatchOp): WireNode =>
-  update(root, op.path, change(op));
-
-// Applies a patch to a snapshot and returns the new root; the input is left untouched.
-export function applyPatch(root: WireNode, ops: readonly PatchOp[]): WireNode {
-  return ops.reduce(applyOp, root);
-}
+export type SlotMessage = z.infer<typeof SlotMessage>;
 
 // What the Server asks a running Plugin's pages to do.
 export const PluginEvent = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('open'), path: z.string() }),
+  z.object({
+    type: z.literal('open'),
+    path: z.string(),
+    // Given when the view is a Slot contribution rather than a page.
+    slot: PluginSlotInput.optional(),
+  }),
   z.object({ type: z.literal('close'), path: z.string() }),
   z.object({
     type: z.literal('dispatch'),

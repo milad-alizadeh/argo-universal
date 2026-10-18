@@ -7,7 +7,9 @@ import {
   type HostMessage,
   type PluginEntry,
   type HostEvent,
+  type HostHook,
   type HostReply,
+  type HostWaiting,
   type WorkerCall,
 } from './runtime-protocol.ts';
 
@@ -31,12 +33,18 @@ export class HostWorkers {
     this.report = report;
   }
 
-  // A reply belongs to the worker generation that asked; a reloaded worker never receives it.
-  reply({ pluginId, generation, id, reply }: HostReply): void {
+  // A reply or Hook belongs to the worker generation it names; a reloaded worker never receives it.
+  deliver({ pluginId, generation, ...command }: HostReply | HostHook): void {
     const record = this.workers.get(pluginId);
 
-    if (record?.generation === generation)
-      record.worker.postMessage({ type: 'reply', id, reply });
+    if (record?.generation === generation) record.worker.postMessage(command);
+  }
+
+  // A starting worker whose call the Server is still answering gets a fresh deadline.
+  waiting({ pluginId }: HostWaiting): void {
+    const record = this.workers.get(pluginId);
+
+    if (record?.heartbeat === null) this.arm(pluginId, record);
   }
 
   event({ pluginId, event }: HostEvent): void {
@@ -113,13 +121,7 @@ export class HostWorkers {
   private call(pluginId: string, record: WorkerRecord, call: WorkerCall): void {
     if (record.heartbeat === null) this.arm(pluginId, record);
 
-    this.report({
-      type: 'call',
-      pluginId,
-      generation: record.generation,
-      id: call.id,
-      request: call.request,
-    });
+    this.report({ ...call, pluginId, generation: record.generation });
   }
 
   private answer(pluginId: string, answer: 'ready' | 'pong'): void {

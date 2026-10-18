@@ -3,6 +3,7 @@ import type { AgentThought, LiveHeader } from '@repo/contracts';
 import { feedRow, turn } from '@repo/db/schema';
 import { expect, it } from 'vitest';
 import { createActor } from 'xstate';
+import { coreOnlyHooks } from '#mocks/core-hooks';
 import { insertSession } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { startSnapshotHost } from '#mocks/session-snapshot';
@@ -121,6 +122,7 @@ it('gives the list and the snapshot the same Live header for a running root Sess
     input: {
       now: (): number => Date.now(),
       createId: randomUUID,
+      hooks: coreOnlyHooks,
       database: host.database,
       runtimeDirectory: host.directory,
       acpResources: createAcpResources(),

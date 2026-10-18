@@ -11,8 +11,10 @@ export const SessionPromptInput = z.strictObject({
 export type SessionPromptInput = z.infer<typeof SessionPromptInput>;
 
 // Local acknowledgement after saving the prompt; Agent completion arrives through the Session Feed.
-export const SessionPromptOutput = z.strictObject({
-  messageId: z.string(),
-});
+export const SessionPromptOutput = z.union([
+  z.strictObject({ messageId: z.string() }),
+  // A Plugin's `prompt.submit` Hook dropped the prompt, so no Turn started; `drop` says why.
+  z.strictObject({ messageId: z.null(), drop: z.string() }),
+]);
 
 export type SessionPromptOutput = z.infer<typeof SessionPromptOutput>;

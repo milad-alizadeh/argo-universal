@@ -9,13 +9,15 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { GroupedListSection } from '#primitives/lists/grouped-list-section';
 import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListContentProps } from './grouped-list-content-props';
 import { GroupedListContent as WebGroupedListContent } from './grouped-list-content.tsx';
 
 /*
  * A native list sizes a plain React Native view as it likes, so the row hosts it and takes its height.
- * iOS's Form gives the row a section of its own, with no card behind it and no inset; Android's column takes it as is.
+ * iOS's Form gives the row a section of its own, with no card behind it and no inset; Android's column takes it as is,
+ * inside a section when it has a title.
  */
 export function GroupedListContent(
   props: GroupedListContentProps,
@@ -24,7 +26,22 @@ export function GroupedListContent(
 
   const row = <HostedRow>{props.children}</HostedRow>;
 
-  return Platform.OS === 'ios' ? <BareSection>{row}</BareSection> : row;
+  if (Platform.OS === 'ios')
+    return <BareSection title={props.title}>{row}</BareSection>;
+
+  return <TitledRow title={props.title}>{row}</TitledRow>;
+}
+
+function TitledRow({
+  children,
+  title,
+}: {
+  children: React.ReactElement;
+  title?: string;
+}): React.JSX.Element {
+  if (!title) return children;
+
+  return <GroupedListSection title={title}>{children}</GroupedListSection>;
 }
 
 // The row spans its list at the content's measured height.
@@ -81,11 +98,15 @@ const bareRow = [
 
 function BareSection({
   children,
+  title,
 }: {
   children: React.ReactElement;
+  title?: string;
 }): React.JSX.Element {
   return (
-    <FieldGroup.Section modifiers={bareRow}>{children}</FieldGroup.Section>
+    <FieldGroup.Section title={title} modifiers={bareRow}>
+      {children}
+    </FieldGroup.Section>
   );
 }
 

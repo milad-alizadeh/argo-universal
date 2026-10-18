@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { useProjects, useServerPageCaption } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { ScreenHeader } from '#lib/product/navigation/screen-header';
+import { ProjectDetailsSlot } from '../../../plugins/project-details-slot';
 import {
   type ProjectDetailViewProps,
   type ProjectLoad,
@@ -31,6 +32,9 @@ function useProjectDetail(name: string): ProjectDetailViewProps {
     caption: useServerPageCaption(),
     project: toProjectLoad(useProjects().data, name),
     onBack: () => navigate('/settings/projects'),
+    renderPluginSlot: (project) => (
+      <ProjectDetailsSlot projectId={project.id} />
+    ),
   };
 }
 

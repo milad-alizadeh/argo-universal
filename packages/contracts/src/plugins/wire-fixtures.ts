@@ -84,3 +84,37 @@ export const invalidPropsSnapshot: ViewMessage = {
   revision: 1,
   root: invalidPropsRoot,
 };
+
+// The event id of "Wave" in hello's Project details contribution.
+export const helloSlotWaveEventId = '0/1:onPress';
+
+export const helloSlotTree = (projectId: string, waves: number): WireNode =>
+  withChildren(node('Column', '0', { gap: 2 }), [
+    node('Text', '0', {
+      label:
+        waves === 0
+          ? `Hello from ${projectId}`
+          : `Waved at ${projectId} ${waves} times`,
+    }),
+    node('Button', '1', {
+      label: 'Wave',
+      variant: 'outline',
+      onPress: { $event: helloSlotWaveEventId },
+    }),
+  ]);
+
+// What hello draws in Project details for the Project `argo`.
+export const helloSlotRoot: WireNode = helloSlotTree('argo', 0);
+
+export const helloSlotSnapshot: ViewMessage = {
+  type: 'snapshot',
+  revision: 1,
+  root: helloSlotRoot,
+};
+
+// What one tap on "Wave" changes.
+export const helloSlotWavePatch: ViewMessage = {
+  type: 'patch',
+  revision: 2,
+  ops: [{ op: 'props', path: [0], props: { label: 'Waved at argo 1 times' } }],
+};

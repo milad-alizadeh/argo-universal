@@ -22,18 +22,23 @@ export interface ProjectDetailViewProps {
   // The Device the Project is on, given only when that is another Device; pairing does not exist yet, so the screen passes none.
   otherDevice?: string;
   onBack?: () => void;
+  // What Plugins add to this Project (the `argo/project/details/v1` Slot), drawn after Folder.
+  renderPluginSlot?: (project: ProjectInfo) => React.ReactNode;
 }
 
 type BodyProps = Pick<
   ProjectDetailViewProps,
-  'project' | 'name' | 'otherDevice'
+  'project' | 'name' | 'otherDevice' | 'renderPluginSlot'
 >;
 
-type SectionsProps = Pick<ProjectDetailViewProps, 'otherDevice'> & {
+type SectionsProps = Pick<
+  ProjectDetailViewProps,
+  'otherDevice' | 'renderPluginSlot'
+> & {
   project: ProjectInfo;
 };
 
-// One Project: its folder, where its new Sessions start, and Remove.
+// One Project: its folder, what Plugins add, where its new Sessions start, and Remove.
 export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
@@ -59,14 +64,12 @@ function ProjectPage(props: ProjectDetailViewProps): React.JSX.Element {
 function ProjectBody({
   project,
   name,
-  otherDevice,
+  ...sections
 }: BodyProps): React.JSX.Element {
   if (project.status !== 'loaded')
     return <UnloadedProject status={project.status} name={name} />;
 
-  return (
-    <ProjectSections project={project.project} otherDevice={otherDevice} />
-  );
+  return <ProjectSections project={project.project} {...sections} />;
 }
 
 type UnloadedProps = { status: 'loading' | 'missing'; name: string };
@@ -91,16 +94,27 @@ function UnloadedRow({ status, name }: UnloadedProps): React.JSX.Element {
 function ProjectSections({
   project,
   otherDevice,
+  renderPluginSlot,
 }: SectionsProps): React.JSX.Element {
   return (
     <GroupedList>
-      <GroupedListSection title="Folder">
-        {deviceRow(otherDevice)}
-        <GroupedListItem icon="folder" label={homePath(project.path)} />
-      </GroupedListSection>
+      <FolderSection project={project} otherDevice={otherDevice} />
+      {renderPluginSlot?.(project)}
       <NewSessionsSection project={project} />
       <RemoveProject />
     </GroupedList>
+  );
+}
+
+function FolderSection({
+  project,
+  otherDevice,
+}: Pick<SectionsProps, 'project' | 'otherDevice'>): React.JSX.Element {
+  return (
+    <GroupedListSection title="Folder">
+      {deviceRow(otherDevice)}
+      <GroupedListItem icon="folder" label={homePath(project.path)} />
+    </GroupedListSection>
   );
 }
 

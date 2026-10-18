@@ -3,6 +3,12 @@ import {
   FsCall,
   ProcessCall,
 } from '@repo/contracts/plugins/argo-calls';
+import {
+  HookCall,
+  HookWaiting,
+  HostHookCommand,
+  WorkerHookCommand,
+} from '@repo/contracts/plugins/hook-protocol';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { PluginEvent, ViewMessage } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
@@ -58,6 +64,7 @@ export const SecretCall = z.discriminatedUnion('action', [
 export type SecretCall = z.infer<typeof SecretCall>;
 
 export const PluginRequest = z.discriminatedUnion('api', [
+  z.object({ api: z.literal('hooks'), call: HookCall }),
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
   z.object({ api: z.literal('settings'), key: z.string() }),
@@ -90,6 +97,7 @@ export type PluginReply = z.infer<typeof PluginReply>;
 export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
+  HookWaiting,
   z.object({
     type: z.literal('event'),
     pluginId: z.string(),
@@ -102,6 +110,7 @@ export const HostCommand = z.discriminatedUnion('type', [
     id: z.number(),
     reply: PluginReply,
   }),
+  HostHookCommand,
 ]);
 
 export type HostCommand = z.infer<typeof HostCommand>;
@@ -109,6 +118,10 @@ export type HostCommand = z.infer<typeof HostCommand>;
 export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
 
 export type HostEvent = Extract<z.infer<typeof HostCommand>, { type: 'event' }>;
+
+export type HostHook = Extract<HostCommand, { type: 'hook' }>;
+
+export type HostWaiting = Extract<HostCommand, { type: 'waiting' }>;
 
 export const HostMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready') }),
@@ -155,6 +168,7 @@ export const WorkerCommand = z.union([
   z.literal('ping'),
   WorkerReply,
   WorkerEvent,
+  WorkerHookCommand,
 ]);
 
 export const notStarted: PluginStatus = {

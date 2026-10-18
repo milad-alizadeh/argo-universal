@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { turn } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor } from 'xstate';
+import { coreOnlyHooks } from '#mocks/core-hooks';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createAcpResources } from '../../../agents';
@@ -41,6 +42,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
     input: {
       now: (): number => Date.now(),
       createId: randomUUID,
+      hooks: coreOnlyHooks,
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),
@@ -71,6 +73,7 @@ it('rejects a malformed cursor before reading Session rows', async (): Promise<v
     input: {
       now: (): number => Date.now(),
       createId: randomUUID,
+      hooks: coreOnlyHooks,
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),

@@ -16,6 +16,7 @@ import {
 import { findMachineActor } from '../src/lib/machine-actor';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { waitForAcpSessionIdle } from './acp-feed';
+import { coreOnlyHooks } from './core-hooks';
 import { startEngineTestHost } from './engine';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -101,6 +102,7 @@ const feedModuleRouterInput = (
   signal: AbortSignal,
 ): AppRouterInput => ({
   database: host.database,
+  hooks: coreOnlyHooks,
   home: host.home,
   sessions: host.openSessions,
   databaseWriter: host.databaseWriter,
