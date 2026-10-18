@@ -43,7 +43,7 @@ The reference catalog includes shipped wire parts and Plugin-tier contracts reco
 | [`Kbd`](./Kbd.md) | A keyboard shortcut key or chord for desktop and web. |
 | [`Label`](./Label.md) | Short text with an optional icon and semantic tone. |
 | [`Link`](./Link.md) | Text that opens a URL or an Argo route. |
-| [`List`](./List.md) | A settings and content list with sections, pagination, refresh, selection, and list or grid layout. |
+| [`List`](./List.md) | A settings and content list with sections, pagination, refresh, selection, and list or grid layout. Its `empty` Slot shows an `EmptyState` when no items remain. |
 | [`ListDetail`](./ListDetail.md) | A list and detail scaffold that splits on wide screens and drills in on compact screens. |
 | [`ListItem`](./ListItem.md) | A slotted list row or grid tile with up to three text lines. |
 | [`ListSection`](./ListSection.md) | A titled List section with an optional footer. |
