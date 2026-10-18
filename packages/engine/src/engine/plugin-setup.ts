@@ -9,7 +9,7 @@ import {
   type Keychain,
   type PluginRuntime,
 } from '../plugins';
-import { readProjectPaths, readTrackerProjects } from '../projects';
+import { readPluginProjects, readProjectPaths } from '../projects';
 import type { HttpServerOptions } from './http-server';
 
 export type PluginSetup = {
@@ -28,7 +28,7 @@ export function startPlugins(options: HttpServerOptions): PluginSetup {
     keychain,
     network: options.pluginNetwork,
     projects: async () => readProjectPaths(options.database),
-    trackerProjects: async () => readTrackerProjects(options.database),
+    projectInfo: async () => readPluginProjects(options.database),
     hooks: hookPort.hooks,
     settings: async (pluginId, key) => pluginSettings.read(pluginId, key),
   });

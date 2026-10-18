@@ -7,6 +7,12 @@ import { PluginStatus } from './runtime';
 import { sfSymbolNames } from './sf-symbol-names.gen';
 import { SlotId } from './wire';
 
+export type PluginProjectInfo = {
+  id: string;
+  name: string;
+  originUrl: string | null;
+};
+
 // Zod's default enum error would print every name in the list.
 const notIn =
   (catalogue: string) =>

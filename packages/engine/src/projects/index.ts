@@ -1,5 +1,5 @@
 export { readProjectPath, readProjectPaths, seedProject } from './project';
 
-export { readTrackerProjects } from './tracker-projects';
+export { readPluginProjects } from './plugin-projects';
 
 export { createProjectsRouter } from './router';

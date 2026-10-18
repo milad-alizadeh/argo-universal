@@ -1,35 +1,31 @@
-import { createGitHubTracker } from './github-tracker.js';
+import {
+  createGitHubTracker,
+  githubRepositoryFromOrigin,
+} from './github-tracker.js';
 
-const trackers = new Map();
+const githubId = 'github';
 
-let argo;
+export function createTrackerRegistry(argo) {
+  const trackers = new Map([[githubId, createGitHubType(argo)]]);
 
-export function registerTrackers(api) {
-  argo = api;
-  trackers.set('github', createGitHubType());
+  return {
+    list: () => [...trackers.values()].map(publicTracker),
+    get: (id) => trackers.get(id) ?? null,
+    has: (id) => trackers.has(id),
+  };
 }
 
-function createGitHubType() {
+const publicTracker = ({ id, name, icon }) => ({ id, name, icon });
+
+function createGitHubType(argo) {
   return {
+    id: githubId,
     name: 'GitHub Issues',
-    icon: 'github',
-    settingsSchema: [],
-    createConnection: (repository) => createConnection(repository),
+    icon: { sf: 'ticket', material: 'confirmation_number' },
+    openClient: (originUrl) => {
+      const repository = githubRepositoryFromOrigin(originUrl);
+
+      return repository ? createGitHubTracker(argo, repository) : null;
+    },
   };
 }
-
-function createConnection(repository) {
-  const adapter = createGitHubTracker(argo);
-
-  return {
-    authStatus: () => adapter.authStatus(),
-    listIssues: () => adapter.listIssues({ repository }),
-    getIssue: (number) => adapter.getIssue({ repository, number }),
-    setStatus: (number, status) =>
-      adapter.setStatus({ repository, number, status }),
-  };
-}
-
-export const trackerExists = (id) => trackers.has(id);
-
-export const tracker = (id) => trackers.get(id);

@@ -6,19 +6,18 @@ import {
   type ViewMessage,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
-import { findWireNode } from '@repo/contracts/plugins/wire-node-key';
+import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import { PluginStorage } from '../plugins/storage';
 
 const trackerPluginId = 'issue-tracker';
 
-const githubTrackerId = 'github';
-
-const githubButtonKey = '0/1/1';
-
 const projectId = 'project-1';
+
+const selectTracker = 'Select GitHub Issues';
+
+const selectedTracker = 'Selected GitHub Issues';
 
 const shippedPlugins = fileURLToPath(
   new URL('../../../../plugins', import.meta.url),
@@ -33,35 +32,80 @@ type TrackerView = Extract<SlotMessage, { type: 'view' }>;
 
 type ReadyTrackerView = { view: TrackerView; root: WireNode };
 
-type EngineCaller = Awaited<ReturnType<typeof startEngineTestHost>>['caller'];
-
-it('persists the tracker choice made in the real Project details Slot', async () => {
+it('persists the Tracker choice through the Project details Slot', async () => {
   const host = await startEngineTestHost({
     firstPartyPluginsDirectory: shippedPlugins,
     version: '0.0.0',
   });
 
-  const controller = new AbortController();
-  const caller = host.createCaller({ signal: controller.signal });
-  const messages = (await caller.plugins.slot(slot))[Symbol.asyncIterator]();
-  const initial = await nextTrackerMessage(messages);
+  const trackerSelected = await selectTrackerInSlot(host);
 
-  const ready = await waitForTrackerChoice(
-    messages,
-    initial,
-    snapshotRoot(initial.message),
-  );
+  expect(trackerSelected && await reopenedTrackerIsSelected(host)).toBe(true);
+}, 20_000);
 
-  expect(findWireNode(ready.root, githubButtonKey)?.props).toMatchObject({
-    label: 'GitHub Issues',
-    disabled: false,
+async function selectTrackerInSlot(
+  host: Awaited<ReturnType<typeof startEngineTestHost>>,
+): Promise<boolean> {
+  const firstController = new AbortController();
+  const firstCaller = host.createCaller({ signal: firstController.signal });
+
+  const firstMessages = (await firstCaller.plugins.slot(slot))[
+    Symbol.asyncIterator
+  ]();
+
+  const firstView = await nextTrackerMessage(firstMessages);
+
+  const ready = await waitForButton({
+    messages: firstMessages,
+    view: firstView,
+    root: snapshotRoot(firstView.message),
+    label: selectTracker,
   });
 
-  await dispatchTrackerChoice(caller, ready);
+  const enabled = findButton(ready.root, selectTracker)?.node.props.disabled === false;
 
-  expectSavedTracker(host.home);
-  controller.abort();
-}, 20_000);
+  await dispatchButton(firstCaller, ready, selectTracker);
+  await waitForButton({
+    messages: firstMessages,
+    view: ready.view,
+    root: ready.root,
+    label: selectedTracker,
+  });
+  firstController.abort();
+
+  return enabled;
+}
+
+async function reopenedTrackerIsSelected(
+  host: Awaited<ReturnType<typeof startEngineTestHost>>,
+): Promise<boolean> {
+  const secondController = new AbortController();
+
+  const secondMessages = (
+    await host
+      .createCaller({ signal: secondController.signal })
+      .plugins.slot(slot)
+  )[Symbol.asyncIterator]();
+
+  const reopened = await nextTrackerMessage(secondMessages);
+
+  const persisted = await waitForButton({
+    messages: secondMessages,
+    view: reopened,
+    root: snapshotRoot(reopened.message),
+    label: selectedTracker,
+  });
+
+  const selected = findButton(persisted.root, selectedTracker);
+
+  secondController.abort();
+
+  return isSelectedButton(selected);
+}
+
+function isSelectedButton(button: { node: WireNode } | undefined): boolean {
+  return button?.node.props.disabled === false && button.node.props.variant === 'default';
+}
 
 async function nextTrackerMessage(
   messages: AsyncIterator<SlotMessage>,
@@ -70,35 +114,47 @@ async function nextTrackerMessage(
 
   if (done) throw new Error('The Plugin Slot closed before its view arrived');
 
-  if (isTrackerView(value)) return value;
-
-  return nextTrackerMessage(messages);
+  return hasTrackerView(value) ? value : nextTrackerMessage(messages);
 }
 
-function isTrackerView(
-  message: SlotMessage,
-): message is Extract<SlotMessage, { type: 'view' }> {
+function hasTrackerView(message: SlotMessage): message is TrackerView {
   return message.type === 'view' && message.pluginId === trackerPluginId;
 }
 
-async function waitForTrackerChoice(
-  messages: AsyncIterator<SlotMessage>,
-  view: TrackerView,
-  root: WireNode,
-): Promise<ReadyTrackerView> {
-  if (findWireNode(root, githubButtonKey)?.props.disabled !== true)
-    return { view, root };
+async function waitForButton({
+  messages,
+  view,
+  root,
+  label,
+}: {
+  messages: AsyncIterator<SlotMessage>;
+  view: TrackerView;
+  root: WireNode;
+  label: string;
+}): Promise<ReadyTrackerView> {
+  const button = findButton(root, label);
+
+  if (button && button.node.props.disabled !== true) return { view, root };
 
   const next = await nextTrackerMessage(messages);
 
-  return waitForTrackerChoice(messages, next, updateRoot(root, next.message));
+  return waitForButton({
+    messages,
+    view: next,
+    root: updateRoot(root, next.message),
+    label,
+  });
 }
 
-async function dispatchTrackerChoice(
-  caller: EngineCaller,
+async function dispatchButton(
+  caller: Awaited<ReturnType<typeof startEngineTestHost>>['caller'],
   ready: ReadyTrackerView,
+  label: string,
 ): Promise<void> {
+  const button = findButton(ready.root, label);
   const viewId = ready.view.message.viewId;
+
+  if (!button) throw new Error(`Could not find the ${label} control`);
 
   if (!viewId) throw new Error('Expected the Plugin view identity');
 
@@ -107,9 +163,21 @@ async function dispatchTrackerChoice(
     path: ready.view.path,
     revision: ready.view.message.revision,
     viewId,
-    key: githubButtonKey,
+    key: button.key,
     event: 'onPress',
   });
+}
+
+function findButton(
+  root: WireNode,
+  label: string,
+): { node: WireNode; key: string } | undefined {
+  const entry = findWireNodeEntry(
+    root,
+    (node) => node.type === 'Button' && node.props.label === label,
+  );
+
+  return entry ? { node: entry.node, key: entry.key } : undefined;
 }
 
 function snapshotRoot(message: ViewMessage): WireNode {
@@ -123,22 +191,4 @@ function updateRoot(previous: WireNode, message: ViewMessage): WireNode {
   if (message.type === 'snapshot') return message.root;
 
   return applyPatch(previous, message.ops);
-}
-
-function expectSavedTracker(home: string): void {
-  const storage = new PluginStorage(home);
-
-  const [result] = storage.execute(trackerPluginId, [
-    {
-      sql: 'SELECT tracker_id FROM tracker_preferences WHERE project_id = ?',
-      params: [projectId],
-      method: 'get',
-    },
-  ]);
-
-  try {
-    expect(result?.rows[0]).toBe(githubTrackerId);
-  } finally {
-    storage.close();
-  }
 }

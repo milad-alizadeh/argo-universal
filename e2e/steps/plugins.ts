@@ -3,7 +3,7 @@ import { promisify } from 'node:util';
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
-import { onPhone, phone } from './frame';
+import { onPhone, phone, wide } from './frame';
 
 const sectionNames = ['Sessions', 'Settings', 'Issues', 'Hello'];
 
@@ -40,9 +40,12 @@ When('I open the {} Plugin', async ({ page }, title: string): Promise<void> => {
     .click();
 });
 
-When('I resize to a phone Frame', async ({ page }): Promise<void> => {
-  await page.setViewportSize(phone);
-});
+When(
+  'I resize to a {word} Frame',
+  async ({ page }, frame: string): Promise<void> => {
+    await page.setViewportSize(frame === 'phone' ? phone : wide);
+  },
+);
 
 Then(
   'the Plugin page shows {}',
@@ -78,11 +81,17 @@ const pluginUrl = (name: string): RegExp =>
     ? /\/plugins\/hello\/hello$/
     : /\/plugins\/issue-tracker\/issues$/;
 
-// Hello draws its own page from the wire; the other Plugins have no page yet, only the frame that holds it.
-const pluginHeading = (page: Page, name: string): Locator =>
-  name === 'Hello'
-    ? page.getByTestId(pluginPage).getByText('Hello from a Plugin')
-    : page.getByTestId(pluginPage);
+const pluginHeading = (page: Page, name: string): Locator => {
+  if (name === 'Hello')
+    return page.getByTestId(pluginPage).getByText('Hello from a Plugin');
+
+  if (name === 'Issue tracker')
+    return page
+      .getByTestId(pluginPage)
+      .getByRole('heading', { name: 'Issues' });
+
+  return page.getByTestId(pluginPage);
+};
 
 When(
   'I press {string} on the Plugin page',
@@ -107,7 +116,7 @@ When('I open the Server Project', async ({ page }): Promise<void> => {
 
 When('I choose GitHub Issues', async ({ page }): Promise<void> => {
   const button = page.getByRole('button', {
-    name: 'GitHub Issues',
+    name: 'Select GitHub Issues',
     exact: true,
   });
 
@@ -139,20 +148,14 @@ Then(
   },
 );
 
-Then(
-  'the Issue actions fit in the phone Frame',
-  async ({ page }): Promise<void> => {
-    await expect(
-      page.getByRole('button', { name: 'Back to Issues', exact: true }),
-    ).toBeInViewport();
-    await expect(
-      page.getByRole('button', { name: 'Close Issue', exact: true }),
-    ).toBeInViewport();
-    await expect(
-      page.getByRole('button', { name: 'Open in GitHub', exact: true }),
-    ).toBeInViewport();
-  },
-);
+Then('the Issue view fits in the viewport', async ({ page }): Promise<void> => {
+  await expect(
+    page.getByRole('button', { name: 'Back to Issues', exact: true }),
+  ).toBeInViewport();
+  await expect(
+    page.getByRole('button', { name: 'Open in GitHub', exact: true }),
+  ).toBeInViewport();
+});
 
 Then(
   'the Plugin row {string} is selected',

@@ -91,11 +91,11 @@ export class PluginAccess {
         `${command.argv.join(' ')} is not a declared command`,
       );
 
-    return {
-      ...command,
-      cwd: await this.workingDirectory(command.cwd),
-      env: childEnvironment(command.env ?? {}, matching),
-    };
+    return checkedCommand(
+      command,
+      await this.workingDirectory(command.cwd),
+      matching,
+    );
   }
 
   checkHost(url: URL): HostRule {
@@ -169,6 +169,18 @@ export class PluginAccess {
       (capability) => capability.kind === 'fetch',
     );
   }
+}
+
+function checkedCommand(
+  command: ProcessCommand,
+  cwd: string,
+  matching: readonly ProcessCapability[],
+): CheckedCommand {
+  return {
+    ...command,
+    cwd,
+    env: childEnvironment(command.env ?? {}, matching),
+  };
 }
 
 /*

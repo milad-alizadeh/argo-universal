@@ -1,18 +1,8 @@
 import { IssueDetail, IssueList } from './issue-list.js';
 import { ProjectDetails } from './project-details.js';
-import { registerTrackers } from './tracker-registry.js';
-import { configureTrackerStorage } from './tracker-storage.js';
+import { createTrackerRegistry } from './tracker-registry.js';
+import { createTrackerStorage } from './tracker-storage.js';
 import { useIssuePage } from './use-issues.js';
-
-function IssuesPage() {
-  return <IssuePage />;
-}
-
-function IssuePage() {
-  const page = useIssuePage(argo);
-
-  return <IssuePageView {...page} />;
-}
 
 function IssuePageView({ selected, ...page }) {
   if (selected?.type === 'issue')
@@ -21,12 +11,22 @@ function IssuePageView({ selected, ...page }) {
   return <IssueList {...page} />;
 }
 
-let argo;
-
 export function register(api) {
-  argo = api;
-  registerTrackers(api);
-  configureTrackerStorage(api);
+  const trackers = createTrackerRegistry(api);
+  const storage = createTrackerStorage(api, trackers.has);
+
+  function IssuesPage() {
+    const page = useIssuePage(api, storage, trackers);
+
+    return <IssuePageView {...page} />;
+  }
+
+  function ProjectDetailsSlot(props) {
+    return (
+      <ProjectDetails {...props} storage={storage} trackers={trackers.list()} />
+    );
+  }
+
   api.pages.register('/', IssuesPage);
-  api.slots.register('argo/project/details/v1', ProjectDetails);
+  api.slots.register('argo/project/details/v1', ProjectDetailsSlot);
 }

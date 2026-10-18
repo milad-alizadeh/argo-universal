@@ -15,6 +15,16 @@ export function findWireNode(
   return findNode({ node: root, key: childNodeKey('', root.key) }, key);
 }
 
+export function findWireNodeEntry(
+  root: WireNode,
+  matches: (node: WireNode) => boolean,
+): AddressedNode | undefined {
+  return findNodeWhere(
+    { node: root, key: childNodeKey('', root.key) },
+    matches,
+  );
+}
+
 type AddressedNode = { node: WireNode; key: string };
 
 function findNode(current: AddressedNode, key: string): WireNode | undefined {
@@ -23,6 +33,17 @@ function findNode(current: AddressedNode, key: string): WireNode | undefined {
   return descendants(current)
     .map((child) => findNode(child, key))
     .find((node) => node !== undefined);
+}
+
+function findNodeWhere(
+  current: AddressedNode,
+  matches: (node: WireNode) => boolean,
+): AddressedNode | undefined {
+  if (matches(current.node)) return current;
+
+  return descendants(current)
+    .map((child) => findNodeWhere(child, matches))
+    .find((entry) => entry !== undefined);
 }
 
 function descendants({ node, key }: AddressedNode): AddressedNode[] {

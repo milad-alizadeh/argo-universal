@@ -177,44 +177,9 @@ export async function readOriginHost(
   return url === null ? null : readRemoteUrlHost(url);
 }
 
-// The GitHub repository named by origin, when origin points to GitHub.
-export async function readGitHubRepository(
+export async function readOriginUrl(
   projectPath: string,
 ): Promise<string | null> {
-  const url = await readOriginUrl(projectPath);
-
-  return url === null ? null : githubRepositoryOf(url);
-}
-
-function githubRepositoryOf(remote: string): string | null {
-  let normalized = remote.replace(/^git@github\.com:/i, 'https://github.com/');
-
-  while (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
-
-  normalized = normalized.replace(/\.git$/, '');
-
-  const parsed = URL.parse(normalized);
-
-  if (parsed?.hostname.toLowerCase() !== 'github.com') return null;
-
-  const parts = parsed.pathname.split('/').filter(Boolean);
-  const [owner, repository] = parts;
-
-  if (parts.length !== 2 || !owner || !repository) return null;
-
-  if (!validGitHubOwner(owner) || !validGitHubRepository(repository))
-    return null;
-
-  return `${owner}/${repository}`;
-}
-
-const validGitHubOwner = (owner: string): boolean =>
-  /^[A-Za-z0-9][A-Za-z0-9-]*$/.test(owner);
-
-const validGitHubRepository = (repository: string): boolean =>
-  /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(repository);
-
-async function readOriginUrl(projectPath: string): Promise<string | null> {
   try {
     const { stdout } = await run([
       '-C',

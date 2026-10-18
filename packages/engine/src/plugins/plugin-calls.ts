@@ -20,10 +20,12 @@ export type StateRequest = Exclude<
   { api: 'view' | 'hooks' | 'dispatchResult' }
 >;
 
-export type UnkeptRequest = Exclude<
+export type KeptRequest = Extract<
   StateRequest,
   { api: 'storage' | 'secrets' | 'settings' | 'projects' }
 >;
+
+export type UnkeptRequest = Exclude<StateRequest, KeptRequest>;
 
 export type MachineRequest = Extract<
   StateRequest,

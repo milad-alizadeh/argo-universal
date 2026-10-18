@@ -1,55 +1,75 @@
-import { trackerExists } from './tracker-registry.js';
+export function createTrackerStorage(argo, trackerExists) {
+  const store = { argo, trackerExists, ensureTables: createTables(argo) };
 
-let argo;
-
-export function configureTrackerStorage(api) {
-  argo = api;
+  return {
+    selectedTracker: (projectId) => selectedTracker(store, projectId),
+    chooseTracker: (projectId, id) => chooseTracker(store, projectId, id),
+    readCache: (projectId) => readCache(store, projectId),
+    writeCache: (projectId, issues) => writeCache(store, projectId, issues),
+    updateCache: (projectId, issue) => updateCache(store, projectId, issue),
+  };
 }
 
-export async function selectedTracker(projectId) {
-  await run(
-    'CREATE TABLE IF NOT EXISTS tracker_preferences (project_id TEXT PRIMARY KEY, tracker_id TEXT NOT NULL)',
-  );
+function createTables(argo) {
+  let tables;
+  const run = (sql) => query(argo, { sql, params: [], method: 'run' });
 
-  const result = await argo.storage.execute({
+  return () => {
+    tables ??= Promise.all([
+      run(
+        'CREATE TABLE IF NOT EXISTS tracker_preferences (project_id TEXT PRIMARY KEY, tracker_id TEXT NOT NULL)',
+      ),
+      run(
+        'CREATE TABLE IF NOT EXISTS issue_cache (project_id TEXT PRIMARY KEY, issues TEXT NOT NULL)',
+      ),
+    ]);
+
+    return tables;
+  };
+}
+
+async function selectedTracker(store, projectId) {
+  await store.ensureTables();
+
+  const result = await query(store.argo, {
     sql: 'SELECT tracker_id FROM tracker_preferences WHERE project_id = ?',
     params: [projectId],
     method: 'get',
   });
 
-  return validSelection(projectId, result.rows[0] ?? null);
+  return validSelection(store, result.rows[0] ?? null, projectId);
 }
 
-async function validSelection(projectId, stored) {
-  if (stored !== null && !trackerExists(stored)) {
-    await removeSelection(projectId);
+async function validSelection(store, stored, projectId) {
+  if (stored === null || store.trackerExists(stored)) return stored;
 
-    return null;
-  }
+  await removeSelection(store.argo, projectId);
 
-  return stored;
+  return null;
 }
 
-export async function chooseTracker(projectId, id) {
-  await run(
-    'CREATE TABLE IF NOT EXISTS tracker_preferences (project_id TEXT PRIMARY KEY, tracker_id TEXT NOT NULL)',
-  );
+async function chooseTracker(store, projectId, id) {
+  await store.ensureTables();
 
-  if (id === null) return removeSelection(projectId);
+  if (id === null) return removeSelection(store.argo, projectId);
 
-  await argo.storage.execute({
+  if (!store.trackerExists(id)) throw new Error('Unknown Issue tracker.');
+
+  await persistSelection(store.argo, projectId, id);
+}
+
+async function persistSelection(argo, projectId, id) {
+  await query(argo, {
     sql: 'INSERT INTO tracker_preferences (project_id, tracker_id) VALUES (?, ?) ON CONFLICT(project_id) DO UPDATE SET tracker_id = excluded.tracker_id',
     params: [projectId, id],
     method: 'run',
   });
 }
 
-export async function readCache(projectId) {
-  await run(
-    'CREATE TABLE IF NOT EXISTS issue_cache (project_id TEXT PRIMARY KEY, issues TEXT NOT NULL)',
-  );
+async function readCache(store, projectId) {
+  await store.ensureTables();
 
-  const result = await argo.storage.execute({
+  const result = await query(store.argo, {
     sql: 'SELECT issues FROM issue_cache WHERE project_id = ?',
     params: [projectId],
     method: 'get',
@@ -58,36 +78,35 @@ export async function readCache(projectId) {
   return decodeIssues(result.rows[0]);
 }
 
-export async function writeCache(projectId, issues) {
-  await run(
-    'CREATE TABLE IF NOT EXISTS issue_cache (project_id TEXT PRIMARY KEY, issues TEXT NOT NULL)',
-  );
-  await argo.storage.execute({
+async function writeCache(store, projectId, issues) {
+  await store.ensureTables();
+
+  await query(store.argo, {
     sql: 'INSERT INTO issue_cache (project_id, issues) VALUES (?, ?) ON CONFLICT(project_id) DO UPDATE SET issues = excluded.issues',
     params: [projectId, JSON.stringify(issues)],
     method: 'run',
   });
 }
 
-export async function updateCache(projectId, issue) {
-  const cached = (await readCache(projectId)) ?? [];
+async function updateCache(store, projectId, issue) {
+  const cached = (await readCache(store, projectId)) ?? [];
 
   const updated = cached.map((entry) =>
     entry.number === issue.number ? issue : entry,
   );
 
-  await writeCache(projectId, updated);
+  await writeCache(store, projectId, updated);
 }
 
-async function removeSelection(projectId) {
-  await argo.storage.execute({
+async function removeSelection(argo, projectId) {
+  await query(argo, {
     sql: 'DELETE FROM tracker_preferences WHERE project_id = ?',
     params: [projectId],
     method: 'run',
   });
 }
 
-const run = (sql) => argo.storage.execute({ sql, params: [], method: 'run' });
+const query = (argo, sql) => argo.storage.execute(sql);
 
 function decodeIssues(serialized) {
   if (typeof serialized !== 'string') return null;

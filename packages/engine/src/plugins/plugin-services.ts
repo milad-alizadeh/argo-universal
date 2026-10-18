@@ -28,11 +28,13 @@ import type { PluginStorage } from './storage';
 
 type Held = { generation: number; resources: PluginResources };
 
+// Nothing is granted to a Plugin whose worker isn't loaded.
 const notActivated: Pick<AccessScope, 'grants' | 'codeFolder'> = {
   grants: [],
   codeFolder: null,
 };
 
+// What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
   private readonly held = new Map<string, Held>();
   private readonly activated = new Map<string, ActivatedPlugin>();
@@ -43,6 +45,7 @@ export class PluginServices {
     private readonly options: PluginServiceOptions,
   ) {}
 
+  // A first-party Plugin's declared Capabilities, granted as its worker loads with no prompt (ADR-0030).
   activate(pluginId: string, plugin: ActivatedPlugin): void {
     this.held.get(pluginId)?.resources.release();
     this.held.delete(pluginId);
@@ -71,6 +74,7 @@ export class PluginServices {
     }
   }
 
+  // Reload, turning off and a crash end the Plugin's child processes, timers and requests, and its Grants.
   release(pluginId: string): void {
     this.held.get(pluginId)?.resources.release();
     this.activated.delete(pluginId);
@@ -154,6 +158,7 @@ export class PluginServices {
     });
   }
 
+  // A later worker generation starts with fresh resources; an earlier one's calls are refused.
   private resources(pluginId: string, generation: number): PluginResources {
     const held = this.held.get(pluginId);
 

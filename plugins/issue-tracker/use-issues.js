@@ -1,192 +1,135 @@
 import { useEffect, useState } from '@argo/plugin-kit';
-import { tracker } from './tracker-registry.js';
-import { readCache, selectedTracker, writeCache } from './tracker-storage.js';
+import { useProjectIssues } from './use-project-issues.js';
 
-export function useProjects(argo, setProjectId) {
-  const [projects, setProjects] = useState([]);
-  const [message, setMessage] = useState('Loading Projects…');
-  const load = argo.projects.list;
+export function useIssuePage(argo, storage, trackers) {
+  const state = useIssueState();
 
-  useEffect(() => {
-    void load()
-      .then((rows) =>
-        receiveProjects({ rows, setProjects, setProjectId, setMessage }),
-      )
-      .catch(() => setMessage('Could not load Projects.'));
-  }, [load, setProjectId]);
+  useIssueData(argo, state, { storage, trackers });
 
-  return { projects, message, setMessage };
+  return pageModel(state, storage, trackers);
 }
 
-export function useIssuePage(argo) {
-  return pageState(usePageInputs(argo));
-}
+function useIssueData(argo, state, dependencies) {
+  const { storage, trackers } = dependencies;
 
-function usePageInputs(argo) {
-  return useProjectState(argo, useSelectionState());
-}
-
-function useSelectionState() {
-  const [projectId, setProjectId] = useState(null);
-  const [selected, setSelected] = useState(null);
-
-  return { projectId, selected, setProjectId, setSelected };
-}
-
-function useProjectState(argo, selected) {
-  const projectData = useProjects(argo, selected.setProjectId);
-
-  const issues = useProjectIssues(
-    projectData.projects,
-    selected.projectId,
-    projectData.setMessage,
+  useProjects(argo, state);
+  useProjectIssues(
+    {
+      projectId: state.projectId[0],
+      projects: state.projects[0],
+      storage,
+      trackers,
+      setIssues: state.issues[1],
+      setMessage: state.message[1],
+      setTrackerId: state.trackerId[1],
+    },
   );
-
-  return combinePageState(selected, projectData, issues);
 }
 
-function combinePageState(selected, projectData, issues) {
-  return { ...selected, ...projectData, ...issues };
-}
-
-function pageState(state) {
+function useIssueState() {
   return {
-    ...state,
-    project: state.projects.find((row) => row.id === state.projectId),
-    onIssue: (event) => selectIssueEvent(event, state),
-    onBack: () => state.setSelected(null),
-    onChanged: (issue) => updateSelectedIssue(issue, state),
+    projects: useState([]),
+    projectId: useState(null),
+    selected: useState(null),
+    issues: useState([]),
+    message: useState('Loading Projects…'),
+    trackerId: useState(null),
   };
 }
 
-function selectIssueEvent(event, state) {
-  if (event.type === 'project') {
-    state.setProjectId(event.id);
-    state.setSelected(null);
-
-    return;
-  }
-
-  state.setSelected(event);
-}
-
-function updateSelectedIssue(issue, state) {
-  state.setSelected({ type: 'issue', issue });
-  state.setIssues((current) =>
-    current.map((entry) => (entry.number === issue.number ? issue : entry)),
-  );
-}
-
-function receiveProjects({ rows, setProjects, setProjectId, setMessage }) {
-  setProjects(rows);
-  setProjectId(rows[0]?.id ?? null);
-  setMessage(projectMessage(rows));
-}
-
-const projectMessage = (rows) => (rows.length === 0 ? 'No Projects yet.' : '');
-
-export function useProjectIssues(projects, projectId, setMessage) {
-  const [issues, setIssues] = useState([]);
+function useProjects(argo, state) {
+  const load = argo.projects.list;
+  const [, setProjects] = state.projects;
+  const [, setProjectId] = state.projectId;
+  const [, setMessage] = state.message;
 
   useEffect(() => {
-    if (projectId === null) return;
-
-    let active = true;
-    const view = { active: () => active, setIssues, setMessage };
-    void loadProjectIssues(projects, projectId, view);
-
-    return () => {
-      active = false;
-    };
-  }, [projectId, projects, setMessage]);
-
-  return { issues, setIssues };
+    return observeProjects(load, { setProjects, setProjectId, setMessage });
+  }, [load, setProjects, setProjectId, setMessage]);
 }
 
-async function loadProjectIssues(projects, projectId, view) {
-  report(view, 'Loading Issues…');
-  const id = await selectedTracker(projectId);
+function observeProjects(load, setters) {
+  let active = true;
 
-  if (!view.active()) return;
-  await loadTrackerIssues({ projects, projectId, id, view });
+  void load().then(
+    (rows) => showProjects(rows, setters, active),
+    () => reportProjectError(active, setters.setMessage),
+  );
+
+  return () => {
+    active = false;
+  };
 }
 
-async function loadTrackerIssues(input) {
-  const connection = connectionOf(input);
+function showProjects(rows, setters, active) {
+  if (!active) return;
 
-  if (!connection) return report(input.view, missingConnectionMessage(input));
-
-  await showCache(input.projectId, connection, input.view);
+  updateProjectRows(rows, setters);
 }
 
-function connectionOf({ projects, projectId, id }) {
-  const project = projects.find((row) => row.id === projectId);
-
-  return connectionFor(project, id);
+function updateProjectRows(rows, setters) {
+  setters.setProjects(rows);
+  selectFirstProject(rows, setters.setProjectId);
+  setters.setMessage(projectsMessage(rows));
 }
 
-function connectionFor(project, id) {
-  if (id === null) return null;
-
-  return connectionForProject(project, id);
+function selectFirstProject(rows, setProjectId) {
+  setProjectId(rows[0]?.id ?? null);
 }
 
-function connectionForProject(project, id) {
-  if (!project?.repository) return null;
-
-  return tracker(id).createConnection(project.repository);
+function projectsMessage(rows) {
+  return rows.length === 0 ? 'No Projects yet.' : 'Loading Issues…';
 }
 
-const missingConnectionMessage = ({ id }) =>
-  id === null
-    ? 'Choose a Tracker in Project details.'
-    : 'This Project has no GitHub remote.';
-
-async function showCache(projectId, connection, view) {
-  const cached = await readCache(projectId);
-
-  if (!view.active()) return;
-
-  if (cached) view.setIssues(cached);
-  await refreshIssues(projectId, connection, view);
+function reportProjectError(active, setMessage) {
+  if (active) setMessage('Could not load Projects.');
 }
 
-async function refreshIssues(projectId, connection, view) {
-  try {
-    await connection.authStatus();
-    const fresh = await connection.listIssues();
-    await writeCache(projectId, fresh);
-
-    if (view.active()) view.setIssues(fresh);
-    report(view, '');
-  } catch (error) {
-    report(view, githubError(error));
-  }
+function pageModel(state, storage, trackers) {
+  return {
+    ...pageState(state),
+    storage,
+    trackers,
+    ...pageActions(state),
+  };
 }
 
-const report = (view, message) => {
-  if (view.active()) view.setMessage(message);
-};
+function pageState(state) {
+  const [projects] = state.projects;
+  const [projectId] = state.projectId;
+  const [selected] = state.selected;
 
-export async function loadIssue(project, issue) {
-  return tracker('github')
-    .createConnection(project.repository)
-    .getIssue(issue.number);
+  return {
+    projects,
+    projectId,
+    project: projects.find((row) => row.id === projectId),
+    trackerId: state.trackerId[0],
+    issues: state.issues[0],
+    message: state.message[0],
+    selected,
+  };
 }
 
-export function githubError(error) {
-  const detail = String(error?.message ?? error);
+function pageActions(state) {
+  const [, setSelected] = state.selected;
 
-  const messages = [
-    [/not found|enoent|no such file/i, 'GitHub CLI (gh) is not installed.'],
-    [/auth|login|not logged|token/i, 'Sign in to GitHub with gh auth login.'],
-  ];
-
-  return errorMessage(messages, detail);
+  return {
+    setMessage: state.message[1],
+    onIssue: (event) => updateSelection(event, state),
+    onBack: () => setSelected(null),
+  };
 }
 
-function errorMessage(messages, detail) {
-  const match = messages.find(([pattern]) => pattern.test(detail));
+function updateSelection(event, state) {
+  if (event.type === 'project') return selectProject(event.id, state);
 
-  return match ? match[1] : detail;
+  state.selected[1](event);
+}
+
+function selectProject(id, state) {
+  state.issues[1]([]);
+  state.trackerId[1](null);
+  state.message[1]('Loading Issues…');
+  state.projectId[1](id);
+  state.selected[1](null);
 }

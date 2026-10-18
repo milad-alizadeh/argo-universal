@@ -1,15 +1,10 @@
 import { pluginKeychainService, type Keychain } from './keychain';
-import type { StateRequest } from './plugin-calls';
+import type { KeptRequest, StateRequest } from './plugin-calls';
 import type { PluginServiceOptions } from './plugin-service-options';
 import type { PluginValue, SecretCall } from './runtime-protocol';
 import type { PluginStorage } from './storage';
 
-// Calls answered from what the Server keeps for the Plugin, with no capability to check.
-export type KeptRequest = Extract<
-  StateRequest,
-  { api: 'storage' | 'secrets' | 'settings' | 'projects' }
->;
-
+// Calls answered from Server-owned state that needs no Capability check.
 const keptApis = new Set<StateRequest['api']>([
   'storage',
   'projects',
@@ -23,13 +18,12 @@ export const isKeptRequest = (request: StateRequest): request is KeptRequest =>
 export type KeptContext = {
   storage: PluginStorage;
   keychain: Keychain;
-  options: Pick<PluginServiceOptions, 'settings' | 'trackerProjects'>;
+  options: Pick<PluginServiceOptions, 'settings' | 'projectInfo'>;
   pluginId: string;
   request: KeptRequest;
   onCall: () => void;
 };
 
-// What the Server keeps per Plugin: its storage, its Keychain items, and its `contributes.settings` values.
 export async function answerKept({
   storage,
   keychain,
@@ -54,7 +48,7 @@ async function answerNonStorageKept({
 }: Omit<KeptContext, 'storage' | 'onCall'> & {
   request: Exclude<KeptRequest, { api: 'storage' }>;
 }): Promise<PluginValue> {
-  if (request.api === 'projects') return options.trackerProjects();
+  if (request.api === 'projects') return options.projectInfo();
 
   if (request.api === 'settings')
     return setting(options, pluginId, request.key);

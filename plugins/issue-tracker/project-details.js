@@ -1,77 +1,134 @@
 import {
   Button,
   Column,
+  Label,
   Row,
   Text,
   useEffect,
   useState,
 } from '@argo/plugin-kit';
-import { chooseTracker, selectedTracker } from './tracker-storage.js';
 
-const githubTracker = 'github';
+export function ProjectDetails({ context, storage, trackers }) {
+  const props = useProjectTracker(storage, context.projectId);
 
-export function ProjectDetails({ context }) {
-  const { selection, choose } = useTrackerChoice(context.projectId);
-
-  return <TrackerChoice selection={selection} choose={choose} />;
-}
-
-function useTrackerChoice(projectId) {
-  const [selection, setSelection] = useState('loading');
-  useEffect(() => {
-    void selectedTracker(projectId).then(setSelection);
-  }, [projectId]);
-
-  const choose = (id) => {
-    return chooseTracker(projectId, id).then(() => setSelection(id));
-  };
-
-  return { selection, choose };
-}
-
-function TrackerChoice({ selection, choose }) {
   return (
     <Column gap={2}>
-      <TrackerHeading />
-      <Row gap={2}>
-        <NoneButton selection={selection} choose={choose} />
-        <GitHubButton selection={selection} choose={choose} />
-      </Row>
+      <TrackerChoices {...props} trackers={trackers} />
     </Column>
   );
 }
 
-const TrackerHeading = () => <Text variant="heading">Issue tracker</Text>;
+function TrackerChoices({ selection, message, choose, trackers }) {
+  return (
+    <>
+      <TrackerHeading />
+      <NoneButton selection={selection} choose={choose} />
+      <TrackerButtons
+        trackers={trackers}
+        selection={selection}
+        choose={choose}
+      />
+      {message && <Text>{message}</Text>}
+    </>
+  );
+}
+
+function TrackerButtons({ trackers, selection, choose }) {
+  return trackers.map((tracker) => (
+    <TrackerButton
+      key={tracker.id}
+      tracker={tracker}
+      selection={selection}
+      choose={choose}
+    />
+  ));
+}
+
+function useProjectTracker(storage, projectId) {
+  const [selection, setSelection] = useState('loading');
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    return readProjectTracker({ storage, projectId, setSelection, setMessage });
+  }, [projectId, storage]);
+
+  return {
+    selection,
+    message,
+    choose: (id) =>
+      saveProjectTracker({ storage, projectId, id, setSelection, setMessage }),
+  };
+}
+
+function readProjectTracker({ storage, projectId, setSelection, setMessage }) {
+  let active = true;
+
+  setSelection('loading');
+  setMessage('');
+  void storage.selectedTracker(projectId).then(
+    (id) => setTrackerSelection(id, active, setSelection),
+    () => setTrackerLoadError(active, setSelection, setMessage),
+  );
+
+  return () => {
+    active = false;
+  };
+}
+
+function setTrackerSelection(id, active, setSelection) {
+  if (active) setSelection(id);
+}
+
+function setTrackerLoadError(active, setSelection, setMessage) {
+  if (!active) return;
+
+  setSelection(null);
+  setMessage('Could not load the Tracker choice.');
+}
+
+async function saveProjectTracker({
+  storage,
+  projectId,
+  id,
+  setSelection,
+  setMessage,
+}) {
+  try {
+    await storage.chooseTracker(projectId, id);
+    setSelection(id);
+    setMessage('');
+  } catch {
+    setMessage('Could not save the Tracker choice.');
+  }
+}
+
+function TrackerHeading() {
+  return <Text variant="heading">Issue tracker</Text>;
+}
 
 function NoneButton({ selection, choose }) {
   return (
-    <TrackerButton
+    <Button
       label="None"
-      selected={selection === null}
+      variant={selection === null ? 'default' : 'outline'}
       disabled={selection === 'loading'}
       onPress={() => choose(null)}
     />
   );
 }
 
-function GitHubButton({ selection, choose }) {
-  return (
-    <TrackerButton
-      label="GitHub Issues"
-      selected={selection === githubTracker}
-      disabled={selection === 'loading'}
-      onPress={() => choose(githubTracker)}
-    />
-  );
-}
+function TrackerButton({ tracker, selection, choose }) {
+  const selected = selection === tracker.id;
 
-function TrackerButton({ label, selected, disabled, onPress }) {
   return (
-    <Button
-      label={label}
-      variant={selected ? 'default' : 'outline'}
-      disabled={disabled}
-      onPress={onPress}
-    />
+    <Row gap={2}>
+      <Label text={tracker.name} icon={tracker.icon} />
+      <Button
+        label={`${selected ? 'Selected' : 'Select'} ${tracker.name}`}
+        variant={selected ? 'default' : 'outline'}
+        disabled={selection === 'loading'}
+        onPress={() => choose(tracker.id)}
+      />
+    </Row>
   );
 }

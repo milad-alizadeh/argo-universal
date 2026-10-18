@@ -2,30 +2,58 @@ const listFields = 'number,title,state,labels,assignees,url';
 
 const issueFields = `${listFields},body`;
 
+const githubErrorMessages = [
+  [/not found|enoent|no such file/i, 'GitHub CLI (gh) is not installed.'],
+  [
+    /not logged in|not authenticated|authentication failed|run gh auth login/i,
+    'Sign in to GitHub with gh auth login.',
+  ],
+];
+
+export const githubError = (error) => {
+  const detail = errorDetail(error);
+
+  return matchingErrorMessage(detail) ?? detail;
+};
+
+function errorDetail(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function matchingErrorMessage(detail) {
+  return githubErrorMessages.find(([pattern]) => pattern.test(detail))?.[1];
+}
+
 // The Tracker talks to GitHub only through the Server-owned `argo` API.
-export function createGitHubTracker(argo) {
+export function createGitHubTracker(argo, repository) {
   return {
     authStatus: () => run(argo, ['gh', 'auth', 'status']),
-    listIssues: ({ repository }) => listIssues(argo, repository),
-    getIssue: ({ repository, number }) => getIssue(argo, repository, number),
-    setStatus: (input) => setStatus(argo, input),
+    listIssues: () => listIssues(argo, repository),
+    getIssue: (number) => getIssue(argo, repository, number),
   };
 }
 
 async function listIssues(argo, repository) {
-  const output = await run(argo, listCommand(repository));
+  const [open, closed] = await Promise.all(
+    ['open', 'closed'].map((state) =>
+      run(argo, listCommand(repository, state)),
+    ),
+  );
 
-  return mapIssueList(parseJson(output, 'GitHub issue list'));
+  return [
+    ...mapIssueList(parseJson(open, 'GitHub open issue list')),
+    ...mapIssueList(parseJson(closed, 'GitHub closed issue list')),
+  ];
 }
 
-const listCommand = (repository) => [
+const listCommand = (repository, state) => [
   'gh',
   'issue',
   'list',
   '--repo',
   repository,
   '--state',
-  'all',
+  state,
   '--limit',
   '50',
   '--json',
@@ -52,26 +80,6 @@ async function getIssue(argo, repository, number) {
   ]);
 
   return mapIssue(parseJson(output, 'GitHub Issue'));
-}
-
-async function setStatus(argo, { repository, number, status }) {
-  const action = statusAction(status);
-  await run(argo, [
-    'gh',
-    'issue',
-    action,
-    issueNumber(number),
-    '--repo',
-    repository,
-  ]);
-}
-
-function statusAction(status) {
-  if (status === 'open') return 'reopen';
-
-  if (status === 'closed') return 'close';
-
-  throw new Error(`Unsupported Issue status: ${status}`);
 }
 
 async function run(argo, argv) {
@@ -145,4 +153,37 @@ function issueNumber(number) {
     throw new Error('Issue number must be a positive integer.');
 
   return String(number);
+}
+
+export function githubRepositoryFromOrigin(originUrl) {
+  if (typeof originUrl !== 'string') return null;
+
+  return githubRepositoryFromMatch(originUrl);
+}
+
+function githubRepositoryFromMatch(originUrl) {
+  const match =
+    /^(?:git@github\.com:|https:\/\/github\.com\/|ssh:\/\/(?:git@)?github\.com\/)([^/?#]+)\/([^/?#]+?)(?:\.git)?\/?$/i.exec(
+      originUrl,
+    );
+
+  const [, owner, name] = match ?? [];
+
+  return validRepositoryParts(owner, name);
+}
+
+function validRepositoryParts(owner, name) {
+  if (hasInvalidRepositoryParts(owner, name)) return null;
+
+  return `${owner}/${name}`;
+}
+
+function hasInvalidRepositoryParts(owner, name) {
+  const validOwner = /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(
+    owner ?? '',
+  );
+
+  const validName = /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name ?? '');
+
+  return ![owner, name, validOwner, validName].every(Boolean);
 }

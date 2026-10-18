@@ -1,6 +1,7 @@
 import { Button, Column, Text } from '@argo/plugin-kit';
+import { githubError, githubRepositoryFromOrigin } from './github-tracker.js';
+import { loadIssue } from './issue-data.js';
 import { IssueDetail } from './issue-detail.js';
-import { githubError, loadIssue } from './use-issues.js';
 
 export function IssueList(props) {
   return (
@@ -44,7 +45,13 @@ function ProjectSummary({ projects, projectId, message }) {
 function ProjectRepository({ projects, projectId }) {
   const project = projects.find((row) => row.id === projectId);
 
-  return project && <Text>{project.repository ?? 'No GitHub remote'}</Text>;
+  if (!project) return null;
+
+  return (
+    <Text>
+      {githubRepositoryFromOrigin(project.originUrl) ?? 'No GitHub remote'}
+    </Text>
+  );
 }
 
 const StatusMessage = ({ message }) => message && <Text>{message}</Text>;
@@ -92,25 +99,37 @@ function emptyState(title, issues) {
   );
 }
 
-function IssueButton({ issue, projects, projectId, onIssue, setMessage }) {
-  const project = projects.find((row) => row.id === projectId);
-  const onPress = () => fetchIssue({ issue, project, onIssue, setMessage });
-
+function IssueButton(props) {
   return (
     <Button
-      label={`#${issue.number}  ${issue.title}`}
+      label={`#${props.issue.number}  ${props.issue.title}`}
       variant="outline"
-      onPress={() => void onPress()}
+      onPress={() => void fetchIssue(props)}
     />
   );
 }
 
-async function fetchIssue({ issue, project, onIssue, setMessage }) {
+async function fetchIssue(props) {
   try {
-    onIssue({ type: 'issue', issue: await loadIssue(project, issue) });
+    props.onIssue(await selectedIssue(props));
   } catch (error) {
-    setMessage(githubError(error));
+    props.setMessage(githubError(error));
   }
+}
+
+async function selectedIssue({
+  issue,
+  projects,
+  projectId,
+  storage,
+  trackers,
+}) {
+  const project = projects.find((row) => row.id === projectId);
+
+  return {
+    type: 'issue',
+    issue: await loadIssue({ project, issue, storage, trackers }),
+  };
 }
 
 export { IssueDetail };

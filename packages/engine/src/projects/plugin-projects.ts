@@ -1,11 +1,12 @@
+import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
-import { readGitHubRepository } from '@repo/git';
+import { readOriginUrl } from '@repo/git';
 
-// Expose only the identity needed to associate a Project with a GitHub Tracker.
-export async function readTrackerProjects(
+// Give Plugins generic Project identity and origin metadata without Tracker rules.
+export async function readPluginProjects(
   database: Database,
-): Promise<{ id: string; name: string; repository: string | null }[]> {
+): Promise<PluginProjectInfo[]> {
   const projects = database
     .select({ id: project.id, path: project.path, name: project.name })
     .from(project)
@@ -15,7 +16,7 @@ export async function readTrackerProjects(
     projects.map(async ({ id, name, path }) => ({
       id,
       name,
-      repository: await readGitHubRepository(path).catch(() => null),
+      originUrl: await readOriginUrl(path).catch(() => null),
     })),
   );
 }
