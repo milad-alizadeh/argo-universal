@@ -2,7 +2,6 @@ import {
   Children,
   Fragment,
   cloneElement,
-  createElement,
   isValidElement,
   type ReactElement,
   type ReactNode,
@@ -22,16 +21,13 @@ export function withSurfaceActions(
 
   if (!first) return trigger;
 
-  return createElement(
-    ActionList,
-    {
-      ...first.props,
-      variant: 'context',
-      trigger,
-      plugin: lists.some((list) => list.props.plugin),
-    },
-    lists.map(declarations),
-  );
+  const context: ActionListProps = {
+    variant: 'context',
+    trigger,
+    plugin: lists.some((list) => list.props.plugin),
+  };
+
+  return cloneElement(first, context, lists.map(declarations));
 }
 
 function actionLists(content: ReactNode): ReactElement<ActionListProps>[] {
