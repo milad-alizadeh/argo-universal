@@ -12,7 +12,7 @@ interface PageColumnStyle {
 export function usePageColumn(): PageColumnStyle {
   const [width, padding] = useCSSVariable([
     '--container-column',
-    useWide() ? '--spacing-6' : '--spacing-4',
+    usePaddingToken(),
   ]).map(tokenNumber);
 
   const inset = padding ?? 0;
@@ -40,4 +40,8 @@ export function PageColumn({
       {children}
     </View>
   );
+}
+
+function usePaddingToken(): string {
+  return useWide() ? '--spacing-6' : '--spacing-4';
 }
