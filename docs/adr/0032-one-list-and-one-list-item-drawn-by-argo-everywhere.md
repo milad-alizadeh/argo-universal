@@ -1,7 +1,3 @@
----
-status: accepted
----
-
 # One List and one ListItem, drawn by Argo everywhere
 
 This amends [ADR-0020](0020-argo-owns-its-primitives.md) for lists and rows (Spec 0017 #959). Argo has two list families:

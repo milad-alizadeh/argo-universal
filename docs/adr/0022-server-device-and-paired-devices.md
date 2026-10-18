@@ -1,7 +1,5 @@
 # The Server Device and paired Devices
 
-Status: Proposed (owner, 2026-10-12).
-
 An App runs on the Server Device or on a paired Device. Only the Server Device may do the actions that decide who can reach the Server or how the Server Device runs:
 
 - pairing a new Device;
