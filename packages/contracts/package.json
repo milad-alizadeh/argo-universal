@@ -27,6 +27,7 @@
     "./plugins/wire-fixtures": "./src/plugins/wire-fixtures.ts",
     "./plugins/sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
     "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",
+    "./plugins/action-list-props": "./src/plugins/action-list-props.ts",
     "./plugins/kit": "./src/plugins/kit.ts",
     "./plugins/replacement-tree": "./src/plugins/replacement-tree.ts",
     "./plugins/prepare-tree": "./src/plugins/prepare-tree.ts",

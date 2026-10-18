@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { homePath } from '#features/settings';
 import { SettingsPage } from '#lib/product/settings-page';
+import { ActionShortcutScope } from '#primitives/actions/action-list';
 import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
@@ -45,9 +46,11 @@ export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
   return (
-    <View className="flex-1 bg-content wide:bg-transparent">
-      <ProjectPage {...props} />
-    </View>
+    <ActionShortcutScope>
+      <View className="flex-1 bg-content wide:bg-transparent">
+        <ProjectPage {...props} />
+      </View>
+    </ActionShortcutScope>
   );
 }
 

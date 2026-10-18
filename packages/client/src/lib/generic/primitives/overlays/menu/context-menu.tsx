@@ -1,15 +1,13 @@
 import * as RadixContextMenu from '@radix-ui/react-context-menu';
+import { Fragment } from 'react';
 import { type ComponentType, type ReactElement, useRef } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/content/icon';
-import { Text, TextClassContext } from '#primitives/content/text';
+import { TextClassContext } from '#primitives/content/text';
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
-import {
-  actionItemClassName,
-  actionItemTextClassName,
-  menuRowsClassName,
-} from './menu-styles';
+import { MenuActionLabel } from './menu-action-label';
+import { MenuSection } from './menu-section';
+import { menuRowClass, menuTextClass, menuRowsClassName } from './menu-styles';
 
 /*
  * The web's context menu, on Radix Context Menu (`@radix-ui/react-context-menu`): Root, Trigger `asChild`,
@@ -23,7 +21,11 @@ export function ContextMenu(props: ContextMenuProps): ReactElement {
     <RadixContextMenu.Root>
       <ContextMenuTrigger {...props} />
       <RadixContextMenu.Portal>
-        <ContextMenuContent groups={props.groups} chosen={chosen} />
+        <ContextMenuContent
+          groups={props.groups}
+          groupTitles={props.groupTitles}
+          chosen={chosen}
+        />
       </RadixContextMenu.Portal>
     </RadixContextMenu.Root>
   );
@@ -41,7 +43,7 @@ function ContextMenuTrigger(props: ContextMenuProps): ReactElement {
 }
 
 const contentClassName = cn(
-  'bg-card border-border min-w-40 overflow-hidden rounded-2xl border p-1 web:shadow-card',
+  'bg-card dark:border-border min-w-65 overflow-hidden rounded-2xl dark:border px-1 py-2 web:shadow-card',
   menuRowsClassName,
   'web:animate-in web:fade-in-0 web:zoom-in-95 web:max-h-(--radix-context-menu-content-available-height) web:overflow-y-auto web:origin-(--radix-context-menu-content-transform-origin) web:cursor-default',
 );
@@ -77,7 +79,7 @@ function runChosen(
   run();
 }
 
-type ContentProps = Pick<ContextMenuProps, 'groups'> & {
+type ContentProps = Pick<ContextMenuProps, 'groups' | 'groupTitles'> & {
   chosen: ChosenAction;
 };
 
@@ -97,21 +99,27 @@ function ContextMenuContent(props: ContentProps): ReactElement {
 
 // The web draws its groups as one run of rows, with no separator between them.
 const menuRows = (props: ContentProps): ReactElement[] =>
-  props.groups
-    .flat()
-    .map((item) => (
-      <ContextMenuRow key={item.label} item={item} chosen={props.chosen} />
-    ));
+  props.groups.map((group, index) => (
+    <Fragment key={group.map((item) => item.id ?? item.label).join()}>
+      <MenuSection {...groupHeading(props, index)} />
+      {group.map((item) => (
+        <ContextMenuRow
+          key={item.id ?? item.label}
+          item={item}
+          chosen={props.chosen}
+        />
+      ))}
+    </Fragment>
+  ));
 
 type RowProps = { item: ContextMenuItem; chosen: ChosenAction };
 
 function ContextMenuRow({ item, chosen }: RowProps): ReactElement {
   return (
-    <TextClassContext.Provider value={actionItemTextClassName}>
+    <TextClassContext.Provider value={menuTextClass(item.tone)}>
       <RadixContextMenu.Item {...itemProps(item, chosen)}>
-        <View className={actionItemClassName}>
-          {item.icon && <Icon name={item.icon} role="body" />}
-          <Text>{item.label}</Text>
+        <View className={menuRowClass(item.tone)}>
+          <MenuActionLabel {...item} />
         </View>
       </RadixContextMenu.Item>
     </TextClassContext.Provider>
@@ -124,7 +132,18 @@ const itemProps = (
 ): RadixContextMenu.ContextMenuItemProps => ({
   asChild: true,
   disabled: item.disabled,
+  'aria-label': item.label,
   onSelect: () => chosen.choose(item),
 });
 
 ContextMenu satisfies ComponentType<ContextMenuProps>;
+
+function groupHeading(
+  props: ContentProps,
+  index: number,
+): Parameters<typeof MenuSection>[0] {
+  return {
+    divided: Boolean(props.groupTitles) && index > 0,
+    title: props.groupTitles?.[index],
+  };
+}

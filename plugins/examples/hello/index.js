@@ -1,10 +1,11 @@
 import {
   Button,
+  ActionList,
+  Action,
   List,
   ListItem,
   Label,
   Column,
-  Row,
   Text,
   Pill,
   useEffect,
@@ -17,14 +18,16 @@ let settings;
 
 function Buttons({ onTap }) {
   return (
-    <Row gap={2}>
-      <Button label="Tap me" onPress={onTap} />
-      <Button
-        label="Say hi"
-        variant="outline"
-        onPress={{ action: 'toast', message: 'Hello from the Plugin' }}
-      />
-    </Row>
+    <ActionList>
+      <ActionList.Section>
+        <Action label="Tap me" icon="add" onPress={onTap} />
+        <Action
+          label="Say hi"
+          icon="agent"
+          onPress={{ action: 'toast', message: 'Hello from the Plugin' }}
+        />
+      </ActionList.Section>
+    </ActionList>
   );
 }
 

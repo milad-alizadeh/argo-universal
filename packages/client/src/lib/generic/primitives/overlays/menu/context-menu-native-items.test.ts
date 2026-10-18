@@ -41,6 +41,22 @@ describe('a phone’s context menu', () => {
     ]);
   });
 
+  it('preserves explicit Action IDs, headings and destructive tone', () => {
+    const sections = contextMenuSections({
+      title: 'Fallback',
+      groupTitles: ['Edit', 'Danger'],
+      groups: [
+        [{ id: 'rename', label: 'Rename', onPress: rename }],
+        [{ id: 'delete', label: 'Delete', tone: 'danger', onPress: archive }],
+      ],
+    });
+
+    expect(sections.map(actionRows)).toEqual([
+      { title: 'Edit', rows: [{ id: 'rename', tone: undefined }] },
+      { title: 'Danger', rows: [{ id: 'delete', tone: 'danger' }] },
+    ]);
+  });
+
   it('runs the action chosen, and never a disabled one', () => {
     chooseEach(contextMenuSections({ groups }));
 
@@ -48,3 +64,12 @@ describe('a phone’s context menu', () => {
     expect(archive).not.toHaveBeenCalled();
   });
 });
+
+interface ActionSectionRows {
+  title?: string;
+  rows: Pick<NativeMenuItem, 'id' | 'tone'>[];
+}
+
+function actionRows({ title, items }: NativeMenuSection): ActionSectionRows {
+  return { title, rows: items.map(({ id, tone }) => ({ id, tone })) };
+}

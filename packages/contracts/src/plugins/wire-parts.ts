@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { actionListWireParts } from './action-list-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
 import {
@@ -23,12 +24,7 @@ import { wirePartReferences } from './wire-part-reference';
 
 export type { WirePartDefinition } from './wire-part-definition';
 
-export const listPartNames = [
-  'List',
-  'VirtualList',
-  'Table',
-  'GroupedList',
-] as const;
+export { listPartNames } from './list-expansion';
 
 const contentParts = [
   'Text',
@@ -44,6 +40,7 @@ const contentParts = [
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
   ...listWireParts,
+  ...actionListWireParts,
   ...controlWireParts,
   GroupedListItem: {
     props: groupedItemProps,

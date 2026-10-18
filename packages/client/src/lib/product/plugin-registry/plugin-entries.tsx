@@ -24,6 +24,7 @@ import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
+import { pluginActionEntries } from './plugin-action-entries';
 import { pluginControlEntries } from './plugin-control-entries';
 import type { PluginPart } from './plugin-parts';
 import {
@@ -36,6 +37,7 @@ import {
 import { pluginSettingsEntries } from './plugin-settings-entries';
 
 export const pluginEntries = {
+  ...pluginActionEntries,
   ...pluginSettingsEntries,
   ...pluginControlEntries,
   EmptyState: entry(emptyStateProps, (props, context) => (

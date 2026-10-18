@@ -1,6 +1,7 @@
 import type { IconName } from '../../../symbols/icon-names';
 import {
   type ActionMenuProps,
+  type MenuAction,
   type MenuChoiceGroup,
   type MenuChoiceRows,
   type MenuProps,
@@ -20,6 +21,7 @@ export interface NativeMenuItem {
   // True on the first row of a later section: Android's flat list sets it apart with a divider.
   divided?: boolean;
   icon?: IconName;
+  tone?: 'danger';
 }
 
 // A run of a system menu's rows, set apart from the run before it; iOS heads it with its title.
@@ -31,13 +33,13 @@ export interface NativeMenuSection {
 // What a menu lists: its options with the chosen value, its groups, or its actions, and whether they are still loading.
 export type MenuRows<Value extends string = string> = (
   | MenuChoiceRows<Value>
-  | Pick<ActionMenuProps, 'actions'>
+  | { actions: readonly MenuAction[] }
 ) &
   Pick<MenuProps<Value>, 'loading'>;
 
 const listsActions = <Value extends string>(
   rows: MenuRows<Value>,
-): rows is Pick<ActionMenuProps, 'actions'> =>
+): rows is { actions: readonly MenuAction[] } =>
   'actions' in rows && rows.actions !== undefined;
 
 export function nativeMenuSections<Value extends string>(
@@ -45,7 +47,7 @@ export function nativeMenuSections<Value extends string>(
 ): NativeMenuSection[] {
   if (rows.loading) return [{ items: [loadingItem] }];
 
-  if (listsActions(rows)) return [{ items: rows.actions.map(actionItem) }];
+  if (listsActions(rows)) return actionSections(rows.actions);
 
   return choiceSections(rows);
 }
@@ -102,11 +104,12 @@ function actionItem(
   action: ActionMenuProps['actions'][number],
 ): NativeMenuItem {
   return {
-    id: action.label,
+    id: action.id ?? action.label,
     title: action.label,
     checked: action.selected,
     disabled: Boolean(action.disabled),
     icon: action.icon,
+    tone: action.tone,
     choose: action.disabled ? nothing : action.onPress,
   };
 }
@@ -123,4 +126,28 @@ function choiceItems(
     icon: choice.icon,
     choose: choice.disabled ? nothing : () => group.onValueChange(choice.value),
   }));
+}
+
+function actionSections(actions: readonly MenuAction[]): NativeMenuSection[] {
+  const sections: NativeMenuSection[] = [];
+
+  for (const action of actions) appendAction(sections, action);
+
+  return sections;
+}
+
+function appendAction(sections: NativeMenuSection[], action: MenuAction): void {
+  if (!sections.length || action.section) sections.push(actionSection(action));
+  appendToLastSection(sections, action);
+}
+
+function actionSection(action: MenuAction): NativeMenuSection {
+  return { title: action.section?.title, items: [] };
+}
+
+function appendToLastSection(
+  sections: NativeMenuSection[],
+  action: MenuAction,
+): void {
+  sections.at(-1)?.items.push(actionItem(action));
 }

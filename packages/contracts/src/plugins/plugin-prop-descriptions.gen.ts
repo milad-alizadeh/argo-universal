@@ -271,8 +271,28 @@ export type WireSchemaHints = {
     "actions": PropValue<"SplitButton", "actions">;
   };
   "ActionList": {
-    /** actions for this part. */
-    "actions": PropValue<"ActionList", "actions">;
+    /** Header buttons and overflow, or a row context menu. */
+    "variant": PropValue<"ActionList", "variant">;
+    /** Spoken overflow menu name. */
+    "accessibilityLabel": PropValue<"ActionList", "accessibilityLabel">;
+  };
+  "ActionList.Section": {
+    /** Optional Section heading. */
+    "title": PropValue<"ActionList.Section", "title">;
+  };
+  "Action": {
+    /** The Action label and accessible name. */
+    "label": PropValue<"Action", "label">;
+    /** The leading Argo icon. */
+    "icon": PropValue<"Action", "icon">;
+    /** Desktop shortcut; Plugins cannot take reserved keys. */
+    "shortcut": PropValue<"Action", "shortcut">;
+    /** Destructive Actions appear last in their own Section. */
+    "tone": PropValue<"Action", "tone">;
+    /** Disable activation without hiding the Action. */
+    "disabled": PropValue<"Action", "disabled">;
+    /** The Plugin handler or built-in App Action. */
+    "onPress": PropValue<"Action", "onPress">;
   };
   "TextInput": {
     /** Spoken and visible field name. */

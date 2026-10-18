@@ -252,6 +252,10 @@ _Avoid_: Profile picture
 A small coloured dot that shows an item's state.
 _Avoid_: Status indicator
 
+**ActionList**:
+The Actions offered by one page, row or tile, shown as header controls or a context menu on each platform.
+_Avoid_: Action panel, action menu (for the declaration)
+
 **Frame**:
 The App's chrome around its pages: the rail, the section sidebar and the panes. It places them with a Scaffold.
 _Avoid_: Shell, app shell, chrome

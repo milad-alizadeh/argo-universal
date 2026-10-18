@@ -137,23 +137,33 @@ function renderedSlots(
   return Object.fromEntries(
     Object.entries(node.slots).map(([name, children]) => [
       name,
-      <Fragment key={name}>
-        {children.map((child) => slotNode(context, name, child))}
-      </Fragment>,
+      slotContent(context, name, children),
     ]),
   );
+}
+
+function slotContent(
+  context: RenderContext,
+  name: string,
+  children: WireNode[],
+): React.JSX.Element {
+  const nodes = children.map((child) => slotNode(context, name, child));
+  const first = nodes.at(0);
+
+  if (nodes.length === 1 && first) return first;
+
+  return <Fragment key={name}>{nodes}</Fragment>;
 }
 
 function slotNode(
   context: RenderContext,
   name: string,
   child: WireNode,
-): React.JSX.Element {
-  return (
-    <RenderNode
-      key={child.key}
-      node={child}
-      context={{ ...context, key: slotNodeKey(context.key, name, child.key) }}
-    />
-  );
+): React.JSX.Element | null {
+  const rendered = RenderNode({
+    node: child,
+    context: { ...context, key: slotNodeKey(context.key, name, child.key) },
+  });
+
+  return rendered ? cloneElement(rendered, { key: child.key }) : null;
 }

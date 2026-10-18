@@ -19,15 +19,18 @@ import {
   type PluginComponents,
   type PluginProps,
 } from '@argo/plugin-kit';
+import { actionProps } from '@repo/contracts/plugins/action-list-props';
 import { emptyStateProps } from '@repo/contracts/plugins/kit';
 import { expectTypeOf } from 'vitest';
 import type { z } from 'zod';
+import type { ActionProps } from '#primitives/actions/action-list';
 import type { EmptyStateProps } from '#primitives/status/empty-state';
 
 type NestedPart = Extract<keyof PluginComponents, `${string}.${string}`>;
 
 type PublicComponents = Omit<PluginComponents, NestedPart> & {
   ListSection: PluginComponents['List.Section'];
+  ActionListSection: PluginComponents['ActionList.Section'];
 };
 
 expectTypeOf<
@@ -145,3 +148,9 @@ expectTypeOf<PluginProps['VirtualList']>().toHaveProperty('items');
 <Text label="Old content" />;
 
 <Text role={{ compact: 'body', wide: 'heading' }}>Responsive</Text>;
+
+expectTypeOf<ActionProps['onPress']>().toEqualTypeOf<() => void>();
+
+expectTypeOf<Omit<z.output<typeof actionProps>, 'onPress'>>().toExtend<
+  Omit<ActionProps, 'onPress'>
+>();

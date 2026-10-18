@@ -100,6 +100,7 @@ const previewMenuAction = (item: NativeMenuItem): ReactElement => (
     key={item.id}
     icon={menuSymbol(item.icon)}
     disabled={item.disabled}
+    destructive={item.tone === 'danger'}
     onPress={item.choose}
   >
     {item.title}

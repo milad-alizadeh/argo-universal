@@ -56,3 +56,11 @@ export const TextInput: PluginComponents['TextInput'];
 export const IconButton: PluginComponents['IconButton'];
 
 export const SplitButton: PluginComponents['SplitButton'];
+
+export const ActionList: PluginComponents['ActionList'] & {
+  Section: PluginComponents['ActionList.Section'];
+};
+
+export const ActionListSection: PluginComponents['ActionList.Section'];
+
+export const Action: PluginComponents['Action'];
