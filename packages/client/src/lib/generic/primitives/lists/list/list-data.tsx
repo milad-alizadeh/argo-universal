@@ -78,8 +78,21 @@ function Row<Item>({ row, props }: RowProps<Item>): ReactElement {
 
   return (
     <ListContext value={context}>
-      {props.renderItem?.(row.item, row.index)}
+      <PaddedRow row={row} props={props} />
     </ListContext>
+  );
+}
+
+// Legend List's web cells ignore horizontal content padding, so each row holds its gutters.
+function PaddedRow<Item>({ row, props }: RowProps<Item>): ReactNode {
+  const paddingHorizontal = usePadding(props.padding);
+  const style = useMemo(() => ({ paddingHorizontal }), [paddingHorizontal]);
+  const content = props.renderItem?.(row.item, row.index);
+
+  return paddingHorizontal === 0 ? (
+    content
+  ) : (
+    <View style={style}>{content}</View>
   );
 }
 
@@ -100,18 +113,16 @@ function usePadding(value: ListProps<never>['padding']): number {
 }
 
 export function useListPadding<Item>(props: ListProps<Item>): {
-  paddingHorizontal: number;
   paddingTop: number;
   paddingBottom?: number;
 } {
-  const paddingHorizontal = usePadding(props.padding);
   const paddingTop = usePadding(props.paddingTop);
   const bottom = usePadding(props.paddingBottom);
   const paddingBottom = props.paddingBottom === undefined ? undefined : bottom;
 
   return useMemo(
-    () => ({ paddingHorizontal, paddingTop, ...bottomPadding(paddingBottom) }),
-    [paddingHorizontal, paddingTop, paddingBottom],
+    () => ({ paddingTop, ...bottomPadding(paddingBottom) }),
+    [paddingTop, paddingBottom],
   );
 }
 
