@@ -1,17 +1,11 @@
 import type {
-  PluginRenderContext,
-  PluginSurface,
-} from '@repo/contracts/plugins/kit';
-import type {
   PluginEvent,
   PluginViewId,
-  PluginSlotInput,
   SlotId,
   ViewMessage,
   WireNode,
 } from '@repo/contracts/plugins/wire';
-import type { ComponentType, ReactNode } from 'react';
-import { createElement } from 'react';
+import type { ReactNode } from 'react';
 import { reportFailure } from './host-config';
 import { schedulePage } from './page-frame';
 import {
@@ -21,6 +15,7 @@ import {
   type DispatchSender,
 } from './page-view';
 import { mount } from './reconciler';
+import { elementOf, type Page, type SlotContent } from './view-content';
 import { toWire, type Handlers, type Instance } from './wire-tree';
 
 export type { DispatchSender } from './page-view';
@@ -29,13 +24,6 @@ export type ViewSender = (
   viewId: PluginViewId,
   message: ViewMessage,
 ) => Promise<void>;
-
-type Page = ComponentType<{ context: PluginRenderContext }>;
-
-// A Slot keeps its own fields alongside the App's surface.
-type SlotContent = ComponentType<{
-  context: PluginSlotInput['context'] & PluginRenderContext;
-}>;
 
 type Open = Extract<PluginEvent, { type: 'open' }>;
 
@@ -103,37 +91,6 @@ function resend(hub: Hub, view: OpenView): void {
     revision: view.revision,
     root: view.tree,
   });
-}
-
-function renderContext(
-  surface: PluginSurface | undefined,
-): PluginRenderContext {
-  return surface
-    ? {
-        surface: Object.freeze({
-          platform: surface.platform,
-          parts: Object.freeze({ ...surface.parts }),
-        }),
-      }
-    : {};
-}
-
-// Every page and Slot gets the surface of the Connection its view belongs to.
-function elementOf(hub: Hub, { path, slot, surface }: Open): ReactNode | null {
-  const context = renderContext(surface);
-
-  if (slot) {
-    const content = hub.slots.get(slot.slotId);
-
-    return content
-      ? createElement(content, {
-          context: Object.freeze({ ...slot.context, ...context }),
-        })
-      : null;
-  }
-  const page = hub.pages.get(path);
-
-  return page ? createElement(page, { context: Object.freeze(context) }) : null;
 }
 
 function open(hub: Hub, event: Open): void {

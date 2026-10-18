@@ -1,16 +1,18 @@
 import { Text } from '@argo/plugin-kit';
 import { jsx } from '@argo/plugin-kit/jsx-runtime';
 
+function frozenSurface(surface) {
+  if (!surface) return true;
+
+  return Object.isFrozen(surface) && Object.isFrozen(surface.parts);
+}
+
 function content({ context: ctx }) {
   return jsx(Text, {
     children: JSON.stringify({
-      platform: ctx.surface?.platform,
-      parts: ctx.surface?.parts,
+      ...ctx.surface,
       projectId: ctx.projectId,
-      frozen:
-        Object.isFrozen(ctx) &&
-        (!ctx.surface ||
-          (Object.isFrozen(ctx.surface) && Object.isFrozen(ctx.surface.parts))),
+      frozen: Object.isFrozen(ctx) && frozenSurface(ctx.surface),
     }),
   });
 }
