@@ -9,6 +9,7 @@ import {
   textV1,
   svgProps,
 } from './kit-props';
+import { listWireParts } from './list-wire-parts';
 import {
   wirePartReferences,
   type WirePartReference,
@@ -24,7 +25,12 @@ export interface WirePartDefinition {
   reference: WirePartReference;
 }
 
-export const listPartNames = ['VirtualList', 'Table', 'GroupedList'] as const;
+export const listPartNames = [
+  'List',
+  'VirtualList',
+  'Table',
+  'GroupedList',
+] as const;
 
 const contentParts = [
   'Text',
@@ -38,6 +44,7 @@ const contentParts = [
 
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
+  ...listWireParts,
   GroupedListItem: {
     props: groupedItemProps,
     versions: [groupedItemProps],

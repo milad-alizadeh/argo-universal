@@ -66,6 +66,7 @@ type Content<Name extends WirePart> = Name extends 'Text' | 'Button'
 type ListPart = (typeof listPartNames)[number];
 
 type ListProps<Name extends ListPart, Item> = EventProps<Name> &
+  SlotProps<Name> &
   (
     | {
         items: readonly Item[];
@@ -111,3 +112,17 @@ export const Table: PluginComponents['Table'];
 export const GroupedList: PluginComponents['GroupedList'];
 
 export const Svg: PluginComponents['Svg'];
+
+export const List: PluginComponents['List'] & {
+  Section: PluginComponents['List.Section'];
+};
+
+export const ListSection: PluginComponents['List.Section'];
+
+export const ListItem: PluginComponents['ListItem'];
+
+export const Label: PluginComponents['Label'];
+
+export const ProgressBar: PluginComponents['ProgressBar'];
+
+export const Pill: PluginComponents['Pill'];

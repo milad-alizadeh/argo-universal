@@ -1,4 +1,3 @@
-import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { useCallback, useMemo } from 'react';
@@ -79,7 +78,7 @@ const noEntries: SessionsListEntry[] = [];
 export interface ListRows {
   // Whether the list is moving rows now.
   animating: boolean;
-  data: SessionsListEntry[];
+  items: SessionsListEntry[];
   extraData: {
     agents: AgentServer[];
     collapsed: ReadonlySet<string>;
@@ -87,9 +86,7 @@ export interface ListRows {
     selectedSessionId?: string;
     layout: SessionsLayout;
   };
-  renderItem: (
-    props: LegendListRenderItemProps<SessionsListEntry>,
-  ) => React.JSX.Element;
+  renderItem: (item: SessionsListEntry, index: number) => React.JSX.Element;
 }
 
 function useExtraData(
@@ -114,7 +111,7 @@ function useRenderItem(
   const headingContext = useHeadingContext(props, collapsedProjects);
 
   return useCallback(
-    ({ item }: LegendListRenderItemProps<SessionsListEntry>) =>
+    (item: SessionsListEntry) =>
       renderEntry(item, sessionContext, headingContext),
     [sessionContext, headingContext],
   );
@@ -127,7 +124,7 @@ export function useListRows(props: SessionsListProps): ListRows {
 
   return {
     animating,
-    data: props.placeholder ? noEntries : entries,
+    items: props.placeholder ? noEntries : entries,
     extraData: useExtraData(props, collapsedProjects),
     renderItem: useRenderItem(props, collapsedProjects, animating),
   };

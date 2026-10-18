@@ -1,11 +1,3 @@
-import {
-  buttonProps,
-  layoutProps,
-  textProps,
-  groupedItemProps,
-  stackProps,
-  svgProps,
-} from '@repo/contracts/plugins/kit';
 import { isWireContainer } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
@@ -13,20 +5,9 @@ import {
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { Button } from '#primitives/actions/button';
-import { Text } from '#primitives/content/text';
-import { Stack } from '#primitives/layout/stack';
-import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
-import { Svg } from '#primitives/visual';
-import type { PluginPart } from './plugin-parts';
-import {
-  entry,
-  handlerOf,
-  type Entry,
-  type RenderContext,
-  type PluginOnEvent,
-} from './plugin-rendering';
+import { Fragment, cloneElement } from 'react';
+import { pluginEntries } from './plugin-entries';
+import type { RenderContext, PluginOnEvent } from './plugin-rendering';
 import { Unsupported } from './plugin-unsupported';
 import { usePluginUi } from './use-plugin-ui';
 
@@ -37,47 +18,7 @@ export interface PluginTreeProps {
   onEvent: PluginOnEvent;
 }
 
-const registry = new Map(
-  Object.entries({
-    GroupedListItem: entry(groupedItemProps, (props, context) => (
-      <StandaloneGroupedListItem
-        {...props}
-        onPress={handlerOf(props.onPress, context)}
-        leading={context.slots.leading}
-        leadingLayout="content"
-        accessory={context.slots.accessories}
-        footer={context.slots.footer}
-        detail={context.slots.detail}
-      />
-    )),
-    Text: entry(textProps, ({ label, variant, ...props }) => (
-      <Text role={variant} {...props}>
-        {label}
-      </Text>
-    )),
-    Button: entry(buttonProps, ({ onPress, ...props }, context) => (
-      <Button {...props} onPress={handlerOf(onPress, context)} />
-    )),
-    Stack: entry(stackProps, ({ direction, ...props }, _context, children) => (
-      <Stack direction={direction} {...props}>
-        {children}
-      </Stack>
-    )),
-    Row: entry(layoutProps, (props, _context, children) => (
-      <Stack direction="row" {...props}>
-        {children}
-      </Stack>
-    )),
-    Column: entry(layoutProps, (props, _context, children) => (
-      <Stack direction="column" {...props}>
-        {children}
-      </Stack>
-    )),
-    Svg: entry(svgProps, ({ onPress, ...props }, context) => (
-      <Svg {...props} onPress={handlerOf(onPress, context)} />
-    )),
-  } satisfies Record<PluginPart, Entry>),
-);
+const registry = new Map(Object.entries(pluginEntries));
 
 interface RenderNodeProps {
   node: WireNode;
@@ -117,13 +58,14 @@ function renderedChildren(
   node: WireNode,
   context: RenderContext,
 ): React.ReactNode {
-  return node.children.map((child) => (
-    <RenderNode
-      key={child.key}
-      node={child}
-      context={{ ...context, key: childNodeKey(context.key, child.key) }}
-    />
-  ));
+  return node.children.map((child) => {
+    const rendered = RenderNode({
+      node: child,
+      context: { ...context, key: childNodeKey(context.key, child.key) },
+    });
+
+    return rendered ? cloneElement(rendered, { key: child.key }) : null;
+  });
 }
 
 function renderedSlots(
@@ -133,9 +75,9 @@ function renderedSlots(
   return Object.fromEntries(
     Object.entries(node.slots).map(([name, children]) => [
       name,
-      <View key={name}>
+      <Fragment key={name}>
         {children.map((child) => slotNode(context, name, child))}
-      </View>,
+      </Fragment>,
     ]),
   );
 }

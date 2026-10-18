@@ -18,6 +18,19 @@ Feature: Plugin navigation
     When I press "Tap me" on the Plugin page
     Then the Plugin page text reads "Tapped 1 times"
 
+  Scenario Outline: A Plugin List stays usable on a <frame> Frame
+    Given a <frame> Frame
+    When I open the Hello lists Plugin
+    Then the Plugin page text reads "Deploy web"
+    And the Plugin page text reads "Build native"
+    When I press "Deploy web" on the Plugin page
+    Then the Plugin row "Deploy web" is selected
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |
+
   Scenario Outline: The phone drawer opens Plugins and returns to core sections
     Given a phone Frame
     When I open the <first> Plugin

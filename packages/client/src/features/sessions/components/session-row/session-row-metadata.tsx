@@ -3,11 +3,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { StatusIndicator } from '#lib/product/status-indicator/status-indicator';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
-import { Badge } from '#primitives/status/badge';
+import { Label } from '#primitives/content/label';
+import { Pill } from '#primitives/status/pill';
 import {
-  PullRequestIndicator,
+  pullRequestAppearance,
   type PullRequestIndicatorProps,
 } from '../pull-request-indicator/pull-request-indicator';
 
@@ -18,7 +17,6 @@ export interface SessionRowMetadataProps {
   pullRequest?: PullRequestIndicatorProps;
 }
 
-// A status dot's ring takes the colour under it: the card a phone or tablet row is, or the selected row's page on a wide web window.
 export function markSurface(selected: boolean): string {
   return cn(
     'border-card bg-card',
@@ -26,17 +24,16 @@ export function markSurface(selected: boolean): string {
   );
 }
 
-function subagentsStatus({
-  session,
-  subagentsFailed,
-}: SessionRowMetadataProps): 'failed' | 'running' | undefined {
-  if (subagentsFailed) return 'failed';
+function subagentStatus(
+  props: SessionRowMetadataProps,
+): 'failed' | 'running' | undefined {
+  if (props.subagentsFailed) return 'failed';
 
-  return session.subagents.running > 0 ? 'running' : undefined;
+  return props.session.subagents.running > 0 ? 'running' : undefined;
 }
 
 function SubagentsStatus(props: SessionRowMetadataProps): React.ReactNode {
-  const status = subagentsStatus(props);
+  const status = subagentStatus(props);
 
   if (status === undefined) return null;
 
@@ -45,103 +42,73 @@ function SubagentsStatus(props: SessionRowMetadataProps): React.ReactNode {
       testID="subagents-status"
       status={status}
       size="small"
-      className={cn(
-        'absolute -right-0.75 -top-0.75',
-        markSurface(props.selected),
-      )}
+      className={cn('absolute left-2 -top-0.75', markSurface(props.selected))}
     />
   );
 }
 
-function SubagentsCount(props: SessionRowMetadataProps): React.JSX.Element {
-  const { subagents } = props.session;
+function SubagentsCount(props: SessionRowMetadataProps): React.ReactNode {
+  const { total, running } = props.session.subagents;
+
+  if (total <= 0) return null;
 
   return (
     <View
-      accessibilityLabel={`Subagents: ${subagents.total}, ${subagents.running} running`}
-      className="shrink-0 flex-row items-center gap-1.5"
+      accessibilityLabel={`Subagents: ${total}, ${running} running`}
+      className="relative shrink-0"
     >
-      <View className="relative">
-        <Icon role="secondary" name="agent" className="text-muted-foreground" />
-        <SubagentsStatus {...props} />
-      </View>
-      <Text role="secondary">{subagents.total}</Text>
+      <Label icon="agent" text={String(total)} />
+      <SubagentsStatus {...props} />
     </View>
   );
 }
 
-function ArchivedBadge(): React.JSX.Element {
+function PullRequestLabel({
+  pullRequest,
+}: Pick<SessionRowMetadataProps, 'pullRequest'>): React.ReactNode {
+  if (!pullRequest) return null;
+  const { number, status } = pullRequest;
+
   return (
-    <Badge variant="secondary" className="py-0">
-      <Text role="badge" className="text-muted-foreground">
-        Archived
-      </Text>
-    </Badge>
+    <Label
+      testID="session-pull-request-slot"
+      icon={pullRequestAppearance[status].icon}
+      text={`#${number}`}
+      tone={pullRequestAppearance[status].tone}
+      accessibilityLabel={`${status} PR #${number}`}
+    />
   );
-}
-
-function IndicatorSlot({
-  testID,
-  children,
-}: {
-  testID: string;
-  children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <View testID={testID} className="h-4 shrink-0 flex-row items-center">
-      {children}
-    </View>
-  );
-}
-
-function subagentsContent(
-  props: SessionRowMetadataProps,
-): React.JSX.Element | undefined {
-  if (props.session.subagents.total <= 0) return undefined;
-
-  return <SubagentsCount key="subagents" {...props} />;
 }
 
 function archivedContent({
   session,
-}: SessionRowMetadataProps): React.JSX.Element | undefined {
-  if (session.archivedAt === null) return undefined;
-
-  return <ArchivedBadge key="archived" />;
-}
-
-function pullRequestContent({
-  pullRequest,
-}: SessionRowMetadataProps): React.JSX.Element | undefined {
-  if (!pullRequest) return undefined;
-
-  return (
-    <IndicatorSlot key="pull-request" testID="session-pull-request-slot">
-      <PullRequestIndicator {...pullRequest} />
-    </IndicatorSlot>
+}: SessionRowMetadataProps): React.ReactNode {
+  return session.archivedAt === null ? null : (
+    <Pill text="Archived" tone="muted" />
   );
 }
 
-const metadataContents = [
-  subagentsContent,
-  archivedContent,
-  pullRequestContent,
-];
+function hasMetadata({
+  session,
+  pullRequest,
+}: SessionRowMetadataProps): boolean {
+  return [
+    session.subagents.total > 0,
+    session.archivedAt !== null,
+    pullRequest !== undefined,
+  ].some(Boolean);
+}
 
-export function SessionRowMetadata(
+export function sessionMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {
-  const items = metadataContents.flatMap((content) => {
-    const item = content(props);
-
-    return item === undefined ? [] : [item];
-  });
-
-  if (items.length === 0) return null;
+  if (!hasMetadata(props)) return null;
 
   return (
-    <View className="min-h-5 flex-row flex-wrap items-center gap-x-3 gap-y-1 pt-1">
-      {items}
+    <View className="min-w-0 flex-row items-center gap-3">
+      <SubagentsCount {...props} />
+      {archivedContent(props)}
+      <PullRequestLabel pullRequest={props.pullRequest} />
     </View>
   );
 }

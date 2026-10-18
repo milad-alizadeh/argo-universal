@@ -3,8 +3,8 @@ import type {
   LegendListRef,
 } from '@legendapp/list/react-native';
 import type { Ref } from 'react';
-import type { SizeClassValue } from '../../generic/use-size-class/size-class-value';
-import { useSizeClassValue } from '../../generic/use-size-class/use-size-class-value';
+import type { SizeClassValue } from '../use-size-class/size-class-value';
+import { useSizeClassValue } from '../use-size-class/use-size-class-value';
 import type { ScrollFadeOptions } from './scroll-fade-options';
 
 export type ScrollFadeListProps<T> = Omit<

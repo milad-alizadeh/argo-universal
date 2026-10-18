@@ -1,6 +1,7 @@
 import { wireParts } from '@repo/contracts/plugins/kit';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
+import type { ElementProps } from './element-props';
 import { jsx, jsxs } from './jsx-runtime';
 import {
   mountPages,
@@ -27,7 +28,17 @@ const hooks = {
 };
 
 // What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
-const exportsOf = { ...components, ...hooks, Fragment: React.Fragment };
+const List = Object.assign((props: ElementProps) => jsx('List', props), {
+  Section: 'List.Section',
+});
+
+const exportsOf = {
+  ...components,
+  ...hooks,
+  List,
+  ListSection: 'List.Section',
+  Fragment: React.Fragment,
+};
 
 const jsxRuntime = { jsx, jsxs, Fragment: React.Fragment };
 

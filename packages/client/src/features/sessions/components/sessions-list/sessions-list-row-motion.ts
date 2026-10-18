@@ -1,6 +1,5 @@
 import { FadeIn } from 'react-native-reanimated';
 import { cn } from '#lib/generic/utils';
-import type { SessionsLayout } from '../../stores/sessions-view';
 
 const fadeInMilliseconds = 200;
 
@@ -13,13 +12,6 @@ export function rowFade(animate?: boolean): Partial<typeof fades> {
   return animate ? fades : noFades;
 }
 
-export function rowClassName(
-  layout?: SessionsLayout,
-  closing?: boolean,
-): string {
-  return cn(
-    layout === 'compact' ? 'wide:pb-0.5' : 'pb-2',
-    'web:transition-opacity web:duration-150',
-    closing && 'opacity-0',
-  );
+export function rowClassName(closing?: boolean): string {
+  return cn('web:transition-opacity web:duration-150', closing && 'opacity-0');
 }
