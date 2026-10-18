@@ -122,6 +122,16 @@ function describeProps(schema: z.core.$ZodType): void {
   describeFields(schemaProperties(schema));
 }
 
+function contentRules(
+  config: ResolvedPartOptions,
+): Pick<WirePartDefinition, 'children' | 'childParts' | 'slots'> {
+  return {
+    children: config.children,
+    childParts: config.childParts,
+    slots: config.slots,
+  };
+}
+
 function definition(
   summary: string,
   schema: z.ZodType,
@@ -131,9 +141,7 @@ function definition(
     props: schema,
     versions: [...config.previous, schema],
     container: config.container,
-    children: config.children,
-    childParts: config.childParts,
-    slots: config.slots,
+    ...contentRules(config),
     events: config.events,
     reference: partReference({ summary, schema, config }),
   };
