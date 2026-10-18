@@ -13,17 +13,15 @@ function useIssueData(argo, state, dependencies) {
   const { storage, trackers } = dependencies;
 
   useProjects(argo, state);
-  useProjectIssues(
-    {
-      projectId: state.projectId[0],
-      projects: state.projects[0],
-      storage,
-      trackers,
-      setIssues: state.issues[1],
-      setMessage: state.message[1],
-      setTrackerId: state.trackerId[1],
-    },
-  );
+  useProjectIssues({
+    projectId: state.projectId[0],
+    projects: state.projects[0],
+    storage,
+    trackers,
+    setIssues: state.issues[1],
+    setMessage: state.message[1],
+    setTrackerId: state.trackerId[1],
+  });
 }
 
 function useIssueState() {
