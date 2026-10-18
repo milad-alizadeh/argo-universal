@@ -54,7 +54,7 @@ export const wirePartReferences = {
       'A grouped settings-style row with optional secondary value and named Slots.',
     accessibility: {
       label:
-        'The required `label` is the spoken name. The optional `value` is secondary text; a badge label is spoken with the row when supplied.',
+        'The required `label` is the spoken name. The optional `value` is secondary text.',
       keyboard:
         'When `onPress` is set, the row exposes link semantics and Enter activates it on web. Disabled rows cannot activate.',
       voiceOver:
@@ -63,17 +63,17 @@ export const wirePartReferences = {
         'A row with `onPress` exposes link semantics. It reads the label and optional value and reports disabled state.',
     },
     appearance:
-      'The row uses Argo semantic surfaces and text tokens, which adapt to the active color scheme. A status or count badge is drawn over its leading image or icon. This schema has no arbitrary color or Image prop.',
+      'The legacy row uses Argo semantic surfaces and text tokens, which adapt to the active color scheme. Use ListItem for Argo-drawn status and count badges.',
     deprecated:
       'Use `ListItem`; this legacy name remains accepted while first-party Plugins migrate.',
   },
   Pill: {
     summary: 'Static short text with a semantic tone or tracker color.',
     accessibility: {
-      label: 'The required `label` is the spoken name.',
+      label: 'The required `text` is the spoken name.',
       keyboard: 'Pill is not focusable and adds no keyboard shortcut.',
-      voiceOver: 'Reads the required `label`.',
-      talkBack: 'Reads the required `label`.',
+      voiceOver: 'Reads the required `text`.',
+      talkBack: 'Reads the required `text`.',
     },
     appearance:
       '`tone` uses semantic colors that adapt to light and dark appearance. `color` is for tracker labels and is preserved as supplied.',

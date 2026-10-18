@@ -11,12 +11,22 @@ import {
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { part } from './plugin-part-schema-utils';
 
-const listItemV1 = listItemProps.extend({
+const listItemV1Base = listItemProps.extend({
   badge: z.number().int().nonnegative().optional(),
 });
-const listItemV2 = listItemV1.extend({
-  badge: z.union([z.number().int().nonnegative(), rowBadgeProps]).optional(),
-});
+
+const listItemV1Status = listItemProps
+  .extend({ badge: rowBadgeProps.options[0].optional() })
+  .transform((props) => {
+    delete props.badge;
+
+    return props;
+  });
+
+const listItemV1 = z.union([listItemV1Status, listItemV1Base]);
+
+const listItemV2 = listItemProps;
+
 const pillV1 = pillProps.omit({ color: true });
 
 export const listWireParts = {
@@ -62,7 +72,7 @@ export const listWireParts = {
     },
     events: { onPress: z.undefined() },
     reference: part(
-      'A slotted list row with up to three text lines.',
+      'A slotted list row with up to three text lines and an optional Argo-drawn status or count badge on the leading lane.',
       listItemProps,
       {
         container: true,

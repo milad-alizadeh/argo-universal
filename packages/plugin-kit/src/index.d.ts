@@ -105,8 +105,6 @@ export const Column: PluginComponents['Column'];
 
 export const GroupedListItem: PluginComponents['GroupedListItem'];
 
-export const Pill: PluginComponents['Pill'];
-
 export const VirtualList: PluginComponents['VirtualList'];
 
 export const Table: PluginComponents['Table'];

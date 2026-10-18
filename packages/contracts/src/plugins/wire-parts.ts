@@ -47,7 +47,7 @@ export const wireParts = {
   ...listWireParts,
   GroupedListItem: {
     props: groupedItemProps,
-    versions: [groupedItemV1, groupedItemProps],
+    versions: [groupedItemV1],
     container: true,
     children: false,
     slots: {

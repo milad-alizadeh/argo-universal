@@ -44,7 +44,7 @@ const variations = [
         title="Claude Code"
         onBack={() => {}}
         icon={<Icon name="sparkle" role="title" />}
-        badge={<Pill tone="success" label="Ready" />}
+        badge={<Pill tone="success" text="Ready" />}
       />
     ),
   },

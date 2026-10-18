@@ -108,8 +108,8 @@ describe('Plugin wire compatibility', () => {
     ).toEqual({
       Text: 2,
       Stack: 1,
-      GroupedListItem: 2,
-      Pill: 1,
+      GroupedListItem: 1,
+      Pill: 2,
     });
     expect(
       prepareWireTree(
@@ -119,21 +119,21 @@ describe('Plugin wire compatibility', () => {
     ).toEqual(label);
   });
 
-  it('strips row badges for Apps that only support GroupedListItem v1', () => {
+  it('strips status badges for Apps that only support ListItem v1', () => {
     const row: WireNode = {
-      type: 'GroupedListItem',
+      type: 'ListItem',
       key: 'item',
       props: {
-        label: 'Waiting jobs',
-        badge: { kind: 'count', count: 3, label: '3 queued jobs' },
+        title: 'Waiting jobs',
+        badge: { kind: 'status', tone: 'success', label: 'Ready' },
       },
       children: [],
       slots: {},
     };
 
     expect(
-      prepareWireTree(row, { ...legacyPartVersions, GroupedListItem: 1 }),
-    ).toEqual({ ...row, props: { label: 'Waiting jobs' } });
+      prepareWireTree(row, { ...legacyPartVersions, ListItem: 1 }),
+    ).toEqual({ ...row, props: { title: 'Waiting jobs' } });
   });
 
   it('preserves every named-slot node while lowering its parts for the App', () => {

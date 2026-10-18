@@ -63,7 +63,7 @@ const githubContent = (step: GitHubStep): GitHubContent =>
   githubContents[step.status]('login' in step ? step.login : '');
 
 const chipView = (chip: GitHubContent['chip']): React.ReactNode =>
-  chip && <Pill tone={chip.tone} label={chip.label} />;
+  chip && <Pill tone={chip.tone} text={chip.label} />;
 
 type OnConnect = GitHubStepViewProps['onConnectGitHub'];
 

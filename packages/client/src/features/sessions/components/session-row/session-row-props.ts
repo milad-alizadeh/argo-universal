@@ -18,5 +18,10 @@ export interface SessionRowProps {
   onArchive?: (sessionId: string) => void;
 }
 
-export const sessionRowLabel = (session: SessionInfo): string => `${session.title}, ${sessionStatusLabels[session.status]}`;
-export const showsSessionAge = (layout: SessionsLayout | undefined, flat = false): boolean => flat || layout === 'compact';
+export const sessionRowLabel = (session: SessionInfo): string =>
+  `${session.title}, ${sessionStatusLabels[session.status]}`;
+
+export const showsSessionAge = (
+  layout: SessionsLayout | undefined,
+  flat = false,
+): boolean => flat || layout === 'compact';

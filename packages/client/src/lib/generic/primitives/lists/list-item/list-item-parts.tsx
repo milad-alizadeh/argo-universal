@@ -8,31 +8,42 @@ import type { ListItemProps } from './list-item-props';
 function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
   if (badge === undefined) return null;
 
-  const rowBadge = typeof badge === 'number' ? { kind: 'count' as const, count: badge } : badge;
-
   return (
-    <View className="absolute -right-1 -top-1">
-      {rowBadge.kind === 'count' ? (
-        <CountBadge badge={{ count: rowBadge.count, label: rowBadge.label }} />
-      ) : (
-        <StatusDot
-          tone={rowBadge.tone}
-          pulse={rowBadge.pulse}
-          accessibilityLabel={rowBadge.label}
-          className="rounded-full bg-card p-0.5"
-        />
-      )}
-    </View>
+    <View className="absolute -right-1 -top-1">{renderRowBadge(badge)}</View>
   );
+}
+
+function renderRowBadge(
+  badge: NonNullable<ListItemProps['badge']>,
+): ReactElement {
+  if (typeof badge === 'number') return <CountBadge badge={{ count: badge }} />;
+
+  return badge.kind === 'count' ? (
+    <CountBadge badge={{ count: badge.count, label: badge.label }} />
+  ) : (
+    <StatusDot
+      tone={badge.tone}
+      pulse={badge.pulse}
+      accessibilityLabel={badge.label}
+      className="rounded-full bg-card p-0.5"
+    />
+  );
+}
+
+function hasBadge(badge: ListItemProps['badge']): boolean {
+  return badge !== undefined && hasBadgeContent(badge);
+}
+
+function hasBadgeContent(badge: NonNullable<ListItemProps['badge']>): boolean {
+  if (typeof badge === 'number') return badge > 0;
+
+  return badge.kind !== 'count' || badge.count > 0;
 }
 
 export function hasLeading(
   props: Pick<ListItemProps, 'leading' | 'badge'>,
 ): boolean {
-  const hasBadge = typeof props.badge === 'number'
-    ? props.badge > 0
-    : props.badge !== undefined;
-  return [Boolean(props.leading), hasBadge].some(Boolean);
+  return [Boolean(props.leading), hasBadge(props.badge)].some(Boolean);
 }
 
 export function Leading(
