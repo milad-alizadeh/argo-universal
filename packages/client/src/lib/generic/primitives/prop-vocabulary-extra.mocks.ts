@@ -1,10 +1,18 @@
 import type * as ActionListKit from '#primitives/actions/action-list';
 import type * as KbdKit from '#primitives/content/kbd';
+import type * as GridKit from '#primitives/layout/grid';
+import type * as ScrollViewKit from '#primitives/layout/scroll-view';
+import type * as SpacerKit from '#primitives/layout/spacer';
+import type * as SurfaceKit from '#primitives/layout/surface';
 import type * as EmptyStateKit from '#primitives/status/empty-state';
 import type * as StatusDotKit from '#primitives/status/status-dot';
 import type * as SvgKit from '#primitives/visual';
 
 export type AdditionalPrimitives = {
+  GridProps: GridKit.GridProps;
+  SpacerProps: SpacerKit.SpacerProps;
+  SurfaceProps: SurfaceKit.SurfaceProps;
+  ScrollViewProps: ScrollViewKit.ScrollViewProps;
   KbdProps: KbdKit.KbdProps;
   ActionListProps: ActionListKit.ActionListProps;
   ActionProps: ActionListKit.ActionProps;
