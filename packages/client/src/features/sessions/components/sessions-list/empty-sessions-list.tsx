@@ -61,7 +61,7 @@ function emptyStateProps(
   const searched = Boolean(props.query);
 
   return {
-    icon: searched ? 'search' : 'sessions',
+    icon: searched ? 'search' : 'message',
     title: emptyListTitle(props),
     description: noMatchingSession(props) ?? sessionPrompt(searched),
     action: sessionAction(searched, props.onStartSession),

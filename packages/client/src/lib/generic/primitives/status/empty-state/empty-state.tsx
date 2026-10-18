@@ -65,7 +65,7 @@ function EmptyStateIcon({ icon }: { icon: string }): React.JSX.Element | null {
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      className="relative h-18 w-22"
+      className="relative h-18 w-22 shrink-0 overflow-visible"
     >
       <DecorativeTiles />
       <IconTile icon={iconName} />
@@ -97,7 +97,7 @@ const secondTilePosition = {
 
 function IconTile({ icon }: { icon: IconName }): React.JSX.Element {
   return (
-    <View className="absolute left-5 top-2 size-12 items-center justify-center rounded-xl bg-card shadow-card">
+    <View className="absolute left-5 top-2 size-12 items-center justify-center rounded-xl bg-card shadow-empty-state-tile">
       <Icon name={icon} role="nav" />
     </View>
   );
