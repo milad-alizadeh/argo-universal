@@ -9,9 +9,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
-import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListContentProps } from './grouped-list-content-props';
-import { GroupedListContent as WebGroupedListContent } from './grouped-list-content.tsx';
 
 /*
  * A native list sizes a plain React Native view as it likes, so the row hosts it and takes its height.
@@ -20,8 +18,6 @@ import { GroupedListContent as WebGroupedListContent } from './grouped-list-cont
 export function GroupedListContent(
   props: GroupedListContentProps,
 ): React.JSX.Element {
-  if (useWide()) return <WebGroupedListContent {...props} />;
-
   const row = <HostedRow>{props.children}</HostedRow>;
 
   return Platform.OS === 'ios' ? <BareSection>{row}</BareSection> : row;

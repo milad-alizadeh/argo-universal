@@ -19,6 +19,11 @@ const mutedStyle = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
  */
 const textSizedRoles: Partial<Record<IconRole, ImageProps['modifiers']>> = {
   row: [font({ textStyle: 'body' }), imageScale('medium')],
+  // A row's disclosure chevron, drawn as a stock Form row's NavigationLink draws it.
+  chevron: [
+    font({ textStyle: 'body', weight: 'semibold' }),
+    imageScale('small'),
+  ],
 };
 
 // Argo's custom and Tabler symbols are in the app's asset catalog.

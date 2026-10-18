@@ -10,16 +10,11 @@ import type * as React from 'react';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
 import { useNativeTheme } from '../../../native-theme';
-import { useWide } from '../../../use-wide/use-wide';
 import type { GroupedListProps } from './grouped-list-props';
 import { compactGroupedListGap } from './grouped-list-spacing';
-import { GroupedList as WebGroupedList } from './grouped-list.tsx';
 
+// SwiftUI draws the list at every size class: the window's width moves the panes, not the drawing.
 export function GroupedList(props: GroupedListProps): React.JSX.Element {
-  const wide = useWide();
-
-  if (wide) return <WebGroupedList {...props} />;
-
   return (
     <FieldLayout value={props.variant ?? 'grouped'}>
       <Host style={{ flex: 1 }} matchContents={false}>

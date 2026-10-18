@@ -9,6 +9,7 @@ import {
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
+import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
 import {
   rowUsesStockButton,
@@ -21,7 +22,6 @@ import {
   type ResolvedItemProps,
   resolvedItem,
 } from './grouped-list-item-props';
-import { GroupedListItem as WebGroupedListItem } from './grouped-list-item.tsx';
 import { NativeRowDetail } from './native-row';
 import { NativeRowFrame } from './native-row-frame';
 
@@ -32,15 +32,16 @@ const ios = Platform.OS === 'ios';
 export function GroupedListItem(
   props: GroupedListItemProps,
 ): React.JSX.Element {
-  const sizeClass = useSizeClass();
+  const item = resolvedItem(props, useSizeClass());
 
-  // A medium or wide window draws the list in React Native, as GroupedList does, so no Form holds the row.
-  if (sizeClass !== 'compact') return <WebGroupedListItem {...props} />;
-
+  /*
+   * The size class picks only what the row says, such as a value a wider row has room for. The row
+   * itself draws as the platform's at every width, so its icons and controls keep their phone sizes.
+   */
   return (
-    <NativeRow
-      {...trailingChoiceMark(resolvedItem(props, sizeClass), isAndroid)}
-    />
+    <CompactScope>
+      <NativeRow {...trailingChoiceMark(item, isAndroid)} />
+    </CompactScope>
   );
 }
 

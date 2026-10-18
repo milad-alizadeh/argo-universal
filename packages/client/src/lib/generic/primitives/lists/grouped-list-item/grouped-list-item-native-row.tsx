@@ -58,12 +58,13 @@ export function RowContent(props: ResolvedItemProps): React.JSX.Element {
   );
 }
 
+// iOS draws a stock Form row's disclosure chevron; Material's trailing slot holds a 24dp icon.
 function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
   if (!visible) return null;
 
   return (
     <Row modifiers={rowDisclosureAccessibility()}>
-      <NativeSymbol name="chevron-right" role={ios ? 'body' : 'row'} muted />
+      <NativeSymbol name="chevron-right" role={ios ? 'chevron' : 'row'} muted />
     </Row>
   );
 }

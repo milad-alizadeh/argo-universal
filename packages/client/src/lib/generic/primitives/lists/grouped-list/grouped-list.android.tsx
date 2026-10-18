@@ -5,12 +5,10 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useWide } from '#lib/generic/use-wide/use-wide';
 import { FieldLayout } from '#primitives/fields/field-layout';
 import { Host } from '#primitives/native/host';
 import type { GroupedListProps } from './grouped-list-props';
 import { compactGroupedListGap } from './grouped-list-spacing';
-import { GroupedList as WebGroupedList } from './grouped-list.tsx';
 
 const gutter = 16;
 
@@ -18,9 +16,8 @@ const topPadding = 8;
 
 const sectionGap = 24;
 
+// Compose draws the list at every size class: the window's width moves the panes, not the drawing.
 export function GroupedList(props: GroupedListProps): React.JSX.Element {
-  if (useWide()) return <WebGroupedList {...props} />;
-
   return (
     <FieldLayout value={props.variant ?? 'grouped'}>
       <SectionsScroll {...props} />
