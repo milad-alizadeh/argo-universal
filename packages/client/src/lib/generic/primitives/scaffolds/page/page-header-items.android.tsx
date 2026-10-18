@@ -14,24 +14,9 @@ import type { PageProps } from './page-props';
 import { PageSearchBar } from './page-search-bar.android';
 import { usePageActions } from './use-page-actions';
 
-export function PagePhoneHeader(
-  props: PageProps & { wide: boolean },
-): ReactElement {
-  const options = {
-    title: props.title,
-    headerShown: !props.wide,
-    headerTitleAlign: 'left',
-  } as const;
+export const pageTitleOptions = { headerTitleAlign: 'left' } as const;
 
-  return (
-    <>
-      <Stack.Screen options={options} />
-      {props.wide ? null : <PageItems {...props} />}
-    </>
-  );
-}
-
-function PageItems(props: PageProps): ReactElement {
+export function PageHeaderItems(props: PageProps): ReactElement {
   const { register, actions, label } = usePageActions();
   const header = { actions, label, search: Boolean(props.search) };
 

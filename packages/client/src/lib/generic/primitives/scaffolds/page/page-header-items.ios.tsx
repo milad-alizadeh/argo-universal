@@ -12,30 +12,13 @@ import { docksSearch } from './page-search-placement';
 import { overflowMenu, toolbarButton } from './page-toolbar-items.ios';
 import { usePageActions } from './use-page-actions';
 
-const titleOptions = {
+export const pageTitleOptions = {
   headerTitleAlign: 'center',
   headerTransparent: false,
   headerLargeTitleEnabled: false,
 } as const;
 
-export function PagePhoneHeader(
-  props: PageProps & { wide: boolean },
-): ReactElement {
-  const options = {
-    ...titleOptions,
-    title: props.title,
-    headerShown: !props.wide,
-  };
-
-  return (
-    <>
-      <Stack.Screen options={options} />
-      {props.wide ? null : <PageItems {...props} />}
-    </>
-  );
-}
-
-function PageItems(props: PageProps): ReactElement {
+export function PageHeaderItems(props: PageProps): ReactElement {
   const { register, actions, label } = usePageActions();
   const docked = Boolean(props.search && docksSearch);
 
