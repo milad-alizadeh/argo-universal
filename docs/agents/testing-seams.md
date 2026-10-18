@@ -31,6 +31,7 @@ Choose the smallest surface used by real callers that proves the required behavi
 | Database behaviour | The Writer and migrations against isolated real SQLite | Initial rows and submitted operations; committed results, rollback, ordering and restart behaviour |
 | Git and filesystem behaviour | Real Git and filesystem operations in temporary directories | Initial files and repositories; resulting files, Checkouts and cleanup |
 | Server startup and transport | The real Server process, HTTP/subscriptions and Engine | Isolated configuration and storage; external services controlled at their ports |
+| Plugin behaviour | The real plugin host and a worker on the Plugin's own folder, through the Plugin kit's test harness ([ADR-0025](../adr/0025-plugins-run-on-the-server-and-draw-argo-components.md)) | Fixture executables on `PATH`, such as `gh`; the Plugin's tree and the results of its events. Engine journeys and App E2E use fixture Plugins, never shipped or example ones |
 | App end-to-end (E2E) | The actual App, tRPC, Engine, Session, Feed, Writer and SQLite | Shared scripted Agent scenarios and the Registry fixture; user-visible outcomes |
 | ACP boundary | The real SDK and Argo readers or mapping under test | Official typed request/response fixtures, malformed wire fixtures for rejection tests, and the scripted Agent where transport is exercised |
 | Process ownership | The real process launcher and OS lifecycle | The scripted Agent as a real process; startup, stdio, exit and cleanup observations |
