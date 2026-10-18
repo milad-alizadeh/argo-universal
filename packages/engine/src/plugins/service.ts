@@ -4,13 +4,17 @@ import type {
   PluginFailure,
   PluginStatus,
 } from '@repo/contracts/plugins/runtime';
-import type {
-  PluginDispatchInput,
-  ViewMessage,
+import {
+  slotPath,
+  type PluginDispatchInput,
+  type PluginSlotInput,
+  type SlotMessage,
+  type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import { callerOf } from './hooks/hook-rules';
 import { discoverPlugins, type PluginsDeps } from './loader';
 import type { PluginRuntime } from './runtime';
+import { merged } from './streams';
 
 type PluginDescriptor = PluginList['plugins'][number];
 
@@ -107,13 +111,46 @@ export class PluginService {
     if (status.state !== 'running')
       throw new Error(status.error ?? `Plugin ${pluginId} is not running`);
 
-    yield* requireRuntime(this.deps).views.watch(pluginId, path, signal);
+    yield* requireRuntime(this.deps).views.watch(pluginId, { path }, signal);
+  }
+
+  // Every enabled Plugin that declares the Slot fills it; one that fails to start is left out, and its failure is reported like any other.
+  async *slot(
+    slot: PluginSlotInput,
+    signal: AbortSignal,
+  ): AsyncGenerator<SlotMessage> {
+    const declaring = (await locatePlugins(this.deps)).filter(({ plugin }) =>
+      fills(plugin, slot),
+    );
+
+    const pluginIds = (await this.started(declaring)).running;
+
+    yield { type: 'contributors', pluginIds };
+    yield* merged(
+      pluginIds.map((pluginId) => this.contribution(pluginId, slot, signal)),
+    );
+  }
+
+  private async *contribution(
+    pluginId: string,
+    slot: PluginSlotInput,
+    signal: AbortSignal,
+  ): AsyncGenerator<SlotMessage> {
+    const path = slotPath(slot);
+    const views = requireRuntime(this.deps).views;
+
+    for await (const message of views.watch(pluginId, { path, slot }, signal))
+      yield { type: 'view', pluginId, path, message };
   }
 
   public failures(signal: AbortSignal): AsyncGenerator<PluginFailure[]> {
     return requireRuntime(this.deps).watchFailures(signal);
   }
 }
+
+const fills = (plugin: PluginDescriptor, slot: PluginSlotInput): boolean =>
+  plugin.enabled &&
+  (plugin.manifest.contributes.slots ?? []).includes(slot.slotId);
 
 const hooks = (plugin: PluginDescriptor, name: HookEventName): boolean =>
   plugin.enabled && (plugin.manifest.contributes.hooks ?? []).includes(name);

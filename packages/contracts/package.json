@@ -11,6 +11,7 @@
     "./plugins/argo-calls": "./src/plugins/argo-calls.ts",
     "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",
     "./plugins/wire": "./src/plugins/wire.ts",
+    "./plugins/wire-patch": "./src/plugins/wire-patch.ts",
     "./plugins/wire-fixtures": "./src/plugins/wire-fixtures.ts",
     "./plugins/sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
     "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts"

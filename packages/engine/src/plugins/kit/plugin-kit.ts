@@ -31,6 +31,7 @@ export interface Kit {
   exports: typeof exportsOf;
   jsxRuntime: typeof jsxRuntime;
   registerPage: Pages['register'];
+  registerSlot: Pages['registerSlot'];
   inbox: (json: string) => void;
 }
 
@@ -42,6 +43,7 @@ export function createKit(send: ViewSender): Kit {
     exports: exportsOf,
     jsxRuntime,
     registerPage: pages.register,
+    registerSlot: pages.registerSlot,
     inbox: (json: string): void =>
       pages.receive(PluginEvent.parse(JSON.parse(json))),
   };
