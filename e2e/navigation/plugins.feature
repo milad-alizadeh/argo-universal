@@ -10,6 +10,7 @@ Feature: Plugin navigation
       | Issues | Issue tracker |
       | Hello  | Hello         |
 
+  @smoke
   Scenario: A tap on a Plugin page reaches the Plugin and redraws the page
     Given a wide Frame
     When I open the Hello Plugin
