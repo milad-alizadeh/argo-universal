@@ -62,11 +62,7 @@ it(
       .toMatchObject({
         revision: 4,
         root: {
-          children: [
-            {},
-            {},
-            { props: { label: '{"search":"","selection":[]}' } },
-          ],
+          children: [{ props: { label: '{"search":"","selection":[]}' } }],
         },
       });
     await second.client.plugins.dispatch.mutate(

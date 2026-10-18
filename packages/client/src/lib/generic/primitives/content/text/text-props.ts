@@ -1,22 +1,10 @@
+import { textRoles } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
 import type { Text as RNText } from 'react-native';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { Tone } from './text-tone';
 
-export const textRoles = [
-  'title',
-  'heading',
-  'body',
-  'secondary',
-  'secondary-code',
-  'control',
-  'badge',
-  'code',
-  'nav-title',
-  'nav-action',
-  'row',
-  'row-detail',
-] as const;
+export { textRoles };
 
 export type TextRole = (typeof textRoles)[number];
 

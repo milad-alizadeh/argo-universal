@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { currentPartVersions } from '@repo/contracts/plugins/kit';
+import type { RpcConnection } from '../rpc';
 import type { AppRouter } from './router';
 
 export type HttpCaller = (
@@ -14,11 +16,16 @@ export function createHttpCaller({
   return (options) =>
     appRouter.createCaller(
       {
-        connection: {
-          id: randomUUID(),
-          signal: options?.signal ?? commandAdmission.signal,
-        },
+        connection: connectionOf(options?.signal ?? commandAdmission.signal),
       },
       options,
     );
+}
+
+function connectionOf(signal: AbortSignal): RpcConnection {
+  return {
+    id: randomUUID(),
+    signal,
+    surface: { platform: 'web', parts: currentPartVersions },
+  };
 }

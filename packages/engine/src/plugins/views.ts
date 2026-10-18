@@ -1,3 +1,4 @@
+import { legacyPartVersions } from '@repo/contracts/plugins/kit';
 import type {
   PluginDispatchInput,
   PluginViewId,
@@ -5,6 +6,7 @@ import type {
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
+import { compatibleView } from './compatible-view';
 import { PluginDispatches } from './dispatches';
 import {
   createOpenView,
@@ -100,10 +102,24 @@ export class PluginViews {
     const view = this.acquire(pluginId, opening, connection.id);
 
     try {
-      yield* messages(view, connection.signal);
+      yield* this.adapt(view, connection);
     } finally {
       this.release(view);
     }
+  }
+
+  private adapt(
+    view: OpenView,
+    connection: RpcConnection,
+  ): AsyncGenerator<ViewMessage> {
+    return compatibleView(
+      messages(view, connection.signal),
+      connection.surface?.parts ?? legacyPartVersions,
+      (reason) =>
+        this.log(
+          `Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`,
+        ),
+    );
   }
 
   private find(

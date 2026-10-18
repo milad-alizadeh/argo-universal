@@ -47,6 +47,34 @@ async function startTransportTestServer(): Promise<{
 }
 
 describe('createTRPCClient', () => {
+  it('reports the registry part versions in the WebSocket handshake', async () => {
+    const server = await startTransportTestServer();
+    const send = vi.spyOn(WebSocket.prototype, 'send');
+    const { client, close } = createTRPCClient(server.url);
+    closers.push(close);
+
+    await client.system.info.query();
+
+    expect(send).toHaveBeenCalledWith(
+      JSON.stringify({
+        method: 'connectionParams',
+        data: {
+          pluginSurface: JSON.stringify({
+            platform: 'web',
+            parts: {
+              GroupedListItem: 1,
+              Text: 2,
+              Button: 1,
+              Stack: 1,
+              Row: 1,
+              Column: 1,
+            },
+          }),
+        },
+      }),
+    );
+  });
+
   it('sends queries and subscriptions over one WebSocket', async () => {
     const server = await startTransportTestServer();
     const { client, close } = createTRPCClient(server.url);

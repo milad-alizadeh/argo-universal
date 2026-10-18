@@ -1,0 +1,26 @@
+{
+  "name": "@argo/plugin-kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts"
+    },
+    "./jsx-runtime": {
+      "types": "./src/jsx-runtime.d.ts"
+    }
+  },
+  "dependencies": {
+    "@repo/contracts": "workspace:*",
+    "@types/react": "catalog:",
+    "zod": "catalog:"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/typescript": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

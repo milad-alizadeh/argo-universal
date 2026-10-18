@@ -1,3 +1,4 @@
+import { isWireContainer } from '@repo/contracts/plugins/prepare-tree';
 import type {
   Handler,
   PluginInteraction,
@@ -6,6 +7,7 @@ import type {
 import type * as React from 'react';
 import type { z } from 'zod';
 import { runAction } from './plugin-registry-actions';
+import { Unsupported } from './plugin-unsupported';
 import type { PluginUi } from './use-plugin-ui';
 
 export type PluginOnEvent = (
@@ -55,7 +57,9 @@ export function entry<Schema extends z.ZodType>(
     render: (node, context, children) => {
       const parsed = schema.safeParse(node.props);
 
-      return parsed.success ? render(parsed.data, context, children) : null;
+      if (parsed.success) return render(parsed.data, context, children);
+
+      return isWireContainer(node) ? <Unsupported /> : null;
     },
   };
 }

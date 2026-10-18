@@ -1,3 +1,11 @@
+import {
+  buttonProps,
+  layoutProps,
+  textProps,
+  groupedItemProps,
+  stackProps,
+} from '@repo/contracts/plugins/kit';
+import { isWireContainer } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   childNodeKey,
@@ -9,13 +17,7 @@ import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
 import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
-import {
-  buttonProps,
-  layoutProps,
-  textProps,
-  groupedItemProps,
-  stackProps,
-} from './plugin-registry-schemas';
+import type { PluginPart } from './plugin-parts';
 import {
   entry,
   handlerOf,
@@ -23,6 +25,7 @@ import {
   type RenderContext,
   type PluginOnEvent,
 } from './plugin-rendering';
+import { Unsupported } from './plugin-unsupported';
 import { usePluginUi } from './use-plugin-ui';
 
 export type { PluginOnEvent } from './plugin-rendering';
@@ -45,8 +48,8 @@ const registry = new Map(
         detail={context.slots.detail}
       />
     )),
-    Text: entry(textProps, ({ label, variant, tone }) => (
-      <Text role={variant} tone={tone}>
+    Text: entry(textProps, ({ label, variant, ...props }) => (
+      <Text role={variant} {...props}>
         {label}
       </Text>
     )),
@@ -68,19 +71,8 @@ const registry = new Map(
         {children}
       </Stack>
     )),
-  } satisfies Record<string, Entry>),
+  } satisfies Record<PluginPart, Entry>),
 );
-
-const isContainer = (node: WireNode): boolean =>
-  node.children.length > 0 || Object.keys(node.slots).length > 0;
-
-function Unsupported(): React.JSX.Element {
-  return (
-    <Text role="secondary" tone="muted">
-      Update Argo to see this
-    </Text>
-  );
-}
 
 interface RenderNodeProps {
   node: WireNode;
@@ -93,7 +85,7 @@ function RenderNode({
 }: RenderNodeProps): React.JSX.Element | null {
   const known = registry.get(node.type);
 
-  if (!known) return isContainer(node) ? <Unsupported /> : null;
+  if (!known) return isWireContainer(node) ? <Unsupported /> : null;
   const children = renderedChildren(node, context);
   const filled = { ...context, slots: renderedSlots(node, context) };
 
