@@ -1,5 +1,6 @@
 import {
   messageSlotFixture,
+  rewrittenMessage,
   replacementTreeFixture,
   refusedTreeFixture,
   renderThrowReason,
@@ -11,9 +12,7 @@ import { Text } from '#primitives/content/text';
 import {
   renderCoreMessage,
   replacementState,
-  rewrittenMessage,
 } from '../../../../mocks/replaceable-slot';
-import { PluginDrawingBoundary } from './plugin-drawing-boundary';
 import { ReplaceableSlotView } from './replaceable-slot';
 import { coreSlotState, type ReplaceableState } from './replaceable-state';
 
@@ -29,12 +28,15 @@ const coreMessageText = 'Core message';
 
 const restOfFeedText = 'Rest of Feed';
 
-const draw = (state: ReplaceableState): React.JSX.Element => (
+const draw = (
+  state: ReplaceableState,
+  renderCore = renderCoreMessage,
+): React.JSX.Element => (
   <View>
     <ReplaceableSlotView
       input={messageSlotFixture}
       state={state}
-      renderCore={renderCoreMessage}
+      renderCore={renderCore}
       onEvent={fn()}
       onFallback={onFallback}
     />
@@ -83,17 +85,14 @@ function ThrowingDrawing(): never {
 }
 
 export const ThrowStaysLocal: Story = {
-  render: () => (
-    <View>
-      <PluginDrawingBoundary
-        fallback={renderCoreMessage(messageSlotFixture)}
-        onFallback={onFallback}
-      >
+  render: () =>
+    draw(coreSlotState(rewrittenMessage()), (input) =>
+      input === messageSlotFixture ? (
+        renderCoreMessage(input)
+      ) : (
         <ThrowingDrawing />
-      </PluginDrawingBoundary>
-      <Text>{restOfFeedText}</Text>
-    </View>
-  ),
+      ),
+    ),
   play: async ({ canvas }) => {
     await expect(canvas.getByText(coreMessageText)).toBeVisible();
     await expect(canvas.getByText(restOfFeedText)).toBeVisible();

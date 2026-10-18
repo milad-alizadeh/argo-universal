@@ -6,7 +6,7 @@ import type {
 } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import { reportFailure } from './host-config';
-import { startPage, transmit } from './mounted-page';
+import { startPage, transmit, failedDrawingRoot } from './mounted-page';
 import { runHandler, type OpenView, type DispatchSender } from './page-view';
 import { ReplacementPages } from './replacement-pages';
 import { elementOf, type Page, type SlotContent } from './view-content';
@@ -59,11 +59,12 @@ function openElement(hub: Hub, event: Open): void {
   const element = hub.replacements.take(event.path) ?? elementOf(hub, event);
 
   if (element)
-    startPage(hub, {
+    return startPage(hub, {
       viewId: event.viewId,
       element,
       replaceable: Boolean(event.renderSlot),
     });
+  missingRender(hub, event);
 }
 
 function close(hub: Hub, viewId: PluginViewId): void {
@@ -89,8 +90,7 @@ async function dispatch(hub: Hub, event: Dispatch): Promise<void> {
 
 function receive(hub: Hub, event: PluginEvent): void {
   if (event.type === 'dispatch') void dispatch(hub, event).catch(reportFailure);
-  else if (event.type === 'open') open(hub, event);
-  else close(hub, event.viewId);
+  else receiveDrawing(hub, event);
 }
 
 // A page or Slot content a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
@@ -115,4 +115,22 @@ function pageHub(send: ViewSender, settle: DispatchSender): Hub {
     views: new Map(),
     replacements: new ReplacementPages(),
   };
+}
+
+function receiveDrawing(
+  hub: Hub,
+  event: Exclude<PluginEvent, { type: 'dispatch' }>,
+): void {
+  if (event.type === 'open') open(hub, event);
+  else if (event.type === 'close') close(hub, event.viewId);
+  else hub.replacements.discard(event.path);
+}
+
+function missingRender(hub: Hub, event: Open): void {
+  if (!event.renderSlot) return;
+  transmit(hub, event.viewId, {
+    type: 'snapshot',
+    revision: 1,
+    root: failedDrawingRoot('replacement tree is no longer available'),
+  });
 }

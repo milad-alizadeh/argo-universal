@@ -61,6 +61,10 @@ export const PluginEvent = z.union([
     surface: PluginSurface.optional(),
   }),
   z.object({ type: z.literal('close'), viewId: PluginViewId }),
+  z.object({
+    type: z.literal('discardRender'),
+    path: z.string().startsWith('render:'),
+  }),
   z
     .object({
       type: z.literal('dispatch'),

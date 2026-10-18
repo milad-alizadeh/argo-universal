@@ -1,12 +1,12 @@
 import {
   messageSlotFixture,
+  rewrittenMessage,
   replacementTreeFixture,
 } from '@repo/contracts/plugins/replaceable-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import {
   renderCoreMessage,
   replacementState,
-  rewrittenMessage,
 } from '../../../../mocks/replaceable-slot';
 import { Variation, Variations } from '../../generic/variations';
 import { ReplaceableSlotView } from './replaceable-slot';

@@ -30,18 +30,3 @@ export function replacementState(root: WireNode): ReplaceableState {
     },
   };
 }
-
-export function rewrittenMessage(): ReplaceableInput {
-  if (messageSlotFixture.slotId !== messageSlotId)
-    throw new Error('Expected message fixture');
-
-  return {
-    ...messageSlotFixture,
-    props: {
-      row: {
-        ...messageSlotFixture.props.row,
-        content: [{ type: 'text', text: 'Rewritten message' }],
-      },
-    },
-  };
-}

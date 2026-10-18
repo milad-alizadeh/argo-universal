@@ -7,6 +7,8 @@ export function hostHooks(
 ): PluginHooks {
   return new PluginHooks({
     log,
+    discard: (pluginId, path): void =>
+      host.event(pluginId, { type: 'discardRender', path }),
     send: ({ pluginId, generation }, invocation): void =>
       host.hook({ pluginId, generation, ...invocation }),
   });

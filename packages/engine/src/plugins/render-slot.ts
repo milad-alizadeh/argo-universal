@@ -18,13 +18,9 @@ export async function* renderSlot(
 ): AsyncGenerator<ReplaceableMessage> {
   const answer = await renderAnswer(runtime, request, connection);
 
-  if ('pluginId' in answer)
-    yield* renderView({
-      runtime,
-      replacement: { ...answer, input: request.input },
-      connection,
-    });
-  else yield { type: 'core', input: coreInput(request.input, answer) };
+  if (connection.signal.aborted) return discardSelected(runtime, answer);
+
+  yield* drawAnswer(runtime, { input: request.input, answer }, connection);
 }
 
 function coreInput(
@@ -49,4 +45,25 @@ async function renderAnswer(
       JsonObject.parse(JSON.parse(JSON.stringify(input))),
     ),
   );
+}
+
+type AnsweredRender = { input: ReplaceableInput; answer: RenderAnswer };
+
+async function* drawAnswer(
+  runtime: PluginRuntime,
+  { input, answer }: AnsweredRender,
+  connection: RpcConnection,
+): AsyncGenerator<ReplaceableMessage> {
+  if ('pluginId' in answer)
+    yield* renderView({
+      runtime,
+      replacement: { ...answer, input },
+      connection,
+    });
+  else yield { type: 'core', input: coreInput(input, answer) };
+}
+
+function discardSelected(runtime: PluginRuntime, answer: RenderAnswer): void {
+  if ('pluginId' in answer)
+    runtime.views.discardRender(answer.pluginId, answer.path);
 }

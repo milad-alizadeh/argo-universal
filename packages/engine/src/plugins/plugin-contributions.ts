@@ -18,6 +18,4 @@ export const hooksEvent = (
 export const rendersSlot = (
   plugin: PluginDescriptor,
   slotId: SlotId,
-): boolean =>
-  hooksEvent(plugin, 'ui.render') &&
-  (plugin.manifest.contributes.slots ?? []).includes(slotId);
+): boolean => hooksEvent(plugin, 'ui.render') && fillsSlot(plugin, { slotId });

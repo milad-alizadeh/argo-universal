@@ -19,7 +19,7 @@
     "./plugins/assets": "./src/plugins/assets.ts",
     "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",
     "./plugins/wire-limits": "./src/plugins/wire-limits.ts",
-    "./plugins/replaceable-fixtures": "./src/plugins/replaceable-fixtures.ts",
+    "./plugins/replaceable-fixtures": "./mocks/replaceable-slots.ts",
     "./plugins/replaceable": "./src/plugins/replaceable.ts",
     "./plugins/wire": "./src/plugins/wire.ts",
     "./plugins/wire-patch": "./src/plugins/wire-patch.ts",

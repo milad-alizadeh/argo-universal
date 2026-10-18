@@ -6,6 +6,7 @@ import {
   traySlotFixture,
   renderThrowReason,
   replacementTreeFixture,
+  refusedTreeFixture,
 } from '@repo/contracts/plugins/replaceable-fixtures';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
@@ -27,8 +28,15 @@ it.each([
   },
   {
     scenario: 'refuse',
-    parts: { Column: 1 },
-    body: `return jsx(Text, { children: 'Plugin replacement' })`,
+    parts: currentPartVersions,
+    body: `return jsx(Column, { children: [jsx(Text, ${JSON.stringify(refusedTreeFixture.children[0]?.props)}), jsx('FuturePart', {})] })`,
+    expected: { type: 'core', input: traySlotFixture },
+    fallbacks: 1,
+  },
+  {
+    scenario: 'missing tree',
+    parts: currentPartVersions,
+    body: '',
     expected: { type: 'core', input: traySlotFixture },
     fallbacks: 1,
   },
@@ -41,7 +49,7 @@ it.each([
   },
 ])(
   'handles a $scenario tree at one Replaceable Slot',
-  async ({ parts, body, expected, fallbacks }) => {
+  async ({ scenario, parts, body, expected, fallbacks }) => {
     const home = await createRuntimePlugins([]);
 
     await writeHookPlugins(home, [
@@ -50,10 +58,10 @@ it.each([
         hooks: ['ui.render'],
         slots: [composerAboveSlotId],
         source: `
-    import { Text } from '@argo/plugin-kit';
+    import { Text, Column } from '@argo/plugin-kit';
     import { jsx } from '@argo/plugin-kit/jsx-runtime';
     function Replacement() { ${body} }
-    export async function register(argo) { await argo.on('ui.render', () => jsx(Replacement, {})); }
+    export async function register(argo) { await argo.on('ui.render', () => ${scenario === 'missing tree' ? `({ treePath: 'render:missing' })` : 'jsx(Replacement, {})'}); }
   `,
       },
     ]);

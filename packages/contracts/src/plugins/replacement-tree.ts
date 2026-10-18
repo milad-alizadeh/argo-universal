@@ -26,9 +26,9 @@ function invalidReplacementReason(
   node: WireNode,
   parts: PartVersions,
 ): string | null {
-  return !supportsWireNode(node, parts)
-    ? `invalid ${node.type} props or children`
-    : null;
+  return supportsWireNode(node, parts)
+    ? null
+    : `invalid ${node.type} props or children`;
 }
 
 function replacementChildReason(

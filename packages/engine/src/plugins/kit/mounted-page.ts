@@ -68,13 +68,7 @@ export function startPage(
 function failDrawing(hub: PageHub, view: OpenView, error: Error): void {
   view.broken = true;
   clearTimeout(view.frame);
-  publish(hub, view, {
-    type: '#render-error',
-    key: '0',
-    props: { reason: error.message },
-    children: [],
-    slots: {},
-  });
+  publish(hub, view, failedDrawingRoot(error.message));
 }
 
 type Commit = { container: Instance; failed: (error: Error) => void };
@@ -128,4 +122,14 @@ function pageRoot(view: OpenView, container: Instance): Instance | undefined {
     throw new Error('A replacement must draw one component');
 
   return container.children[0];
+}
+
+export function failedDrawingRoot(reason: string): WireNode {
+  return {
+    type: '#render-error',
+    key: '0',
+    props: { reason },
+    children: [],
+    slots: {},
+  };
 }

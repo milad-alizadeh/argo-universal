@@ -3,8 +3,8 @@ import {
   composerAboveSlotId,
   messageSlotId,
   toolCallSlotId,
-} from './replaceable-input';
-import type { WireNode } from './wire';
+} from '../src/plugins/replaceable-input';
+import type { WireNode } from '../src/plugins/wire';
 
 export const traySlotFixture: ReplaceableInput = {
   slotId: composerAboveSlotId,
@@ -59,7 +59,10 @@ export const refusedTreeFixture: WireNode = {
   type: 'Column',
   key: '0',
   props: {},
-  children: [{ ...replacementTreeFixture, type: 'FuturePart' }],
+  children: [
+    replacementTreeFixture,
+    { type: 'FuturePart', key: '1', props: {}, children: [], slots: {} },
+  ],
   slots: {},
 };
 
@@ -69,3 +72,18 @@ export const rewrittenTrayFixture = ReplaceableInput.parse({
   slotId: composerAboveSlotId,
   props: { wide: true, inactive: true },
 });
+
+export function rewrittenMessage(): ReplaceableInput {
+  if (messageSlotFixture.slotId !== messageSlotId)
+    throw new Error('Expected message fixture');
+
+  return {
+    ...messageSlotFixture,
+    props: {
+      row: {
+        ...messageSlotFixture.props.row,
+        content: [{ type: 'text', text: 'Rewritten message' }],
+      },
+    },
+  };
+}

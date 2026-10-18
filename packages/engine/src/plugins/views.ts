@@ -113,6 +113,10 @@ export class PluginViews {
     }
   }
 
+  public discardRender(pluginId: string, path: string): void {
+    this.send(pluginId, { type: 'discardRender', path });
+  }
+
   public renderFailed(
     connection: RpcConnection,
     input: RenderFailureInput,
