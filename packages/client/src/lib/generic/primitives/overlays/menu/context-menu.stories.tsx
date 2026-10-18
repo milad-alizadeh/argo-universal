@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Text } from '#primitives/display/text';
@@ -14,7 +15,7 @@ const meta = {
     ],
   },
   // An element in args holds React internals, which Storybook walks while inferring arg types.
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <ContextMenu {...args}>
       <View className="rounded-2xl bg-card p-4">
         <Text>Right-click this row</Text>
