@@ -11,6 +11,7 @@ function node(
 }
 
 const group = 'Canvas.Group';
+
 const rect = 'Canvas.Rect';
 
 const rawColor = '#' + 'fff';

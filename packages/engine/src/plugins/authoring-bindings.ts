@@ -55,6 +55,7 @@ function recordInitializer(
   if (!node) return;
 
   const parameters = functionParameters(node);
+
   if (parameters) firstParameter(names, parameters);
 }
 
