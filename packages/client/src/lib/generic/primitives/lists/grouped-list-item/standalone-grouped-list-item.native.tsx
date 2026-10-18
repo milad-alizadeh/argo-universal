@@ -1,8 +1,8 @@
 import { RNHostView } from '@expo/ui';
 import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
-import { useSizeClass } from '#lib/generic/use-size-class/use-size-class';
 import { Host } from '#primitives/native/host';
+import { useSizeClass } from '../../../use-size-class/use-size-class';
 import { GroupedListItem } from './grouped-list-item';
 
 type Props = ComponentProps<typeof GroupedListItem>;
