@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { Menu, type MenuAction } from '#primitives/overlays/menu';
 import type { PullRequestChecksProps } from './pull-request-checks';
 import {

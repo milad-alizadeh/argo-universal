@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import {
   Dialog,
   DialogDescriptionText,

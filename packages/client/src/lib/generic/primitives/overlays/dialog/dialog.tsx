@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Button } from '#primitives/buttons/button';
-import type { ButtonDataProps } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
+import type { ButtonDataProps } from '#primitives/actions/button';
 import {
   CentredOverlayScope,
   useInCentredOverlay,

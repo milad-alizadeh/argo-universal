@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { type ComponentProps, useContext } from 'react';
 import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { Caret } from './caret';
 import { useClampLeaf, useLineHeight } from './clamp-leaves';
 import { InlineTokens } from './inline-tokens';

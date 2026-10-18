@@ -2,13 +2,13 @@ import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { configurationChoices } from '#lib/product/session-configuration';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { Switch } from '#primitives/inputs/switch';
 import {
   GroupedListItem,
   type GroupedListItemProps,
 } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { SelectedCheck } from '#primitives/status/selected-check';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 
 type Option = SessionConfigOption;

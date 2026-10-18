@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { Pressable } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
-import { Button } from '#primitives/buttons/button';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
 import {

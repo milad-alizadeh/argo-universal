@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { IconButton } from '#primitives/buttons/icon-button';
+import { IconButton } from '#primitives/actions/icon-button';
 import { Menu } from '#primitives/overlays/menu';
 import { type SessionMenu, sessionMenuItems } from './session-menu-items';
 

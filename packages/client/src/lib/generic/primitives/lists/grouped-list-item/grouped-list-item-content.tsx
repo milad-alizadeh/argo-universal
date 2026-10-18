@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { useWideSidebarList } from '#primitives/fields/field-layout';
 import { cn } from '../../../utils';
 import { GroupedListItemAccessory } from './grouped-list-item-accessory';

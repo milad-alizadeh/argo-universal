@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { ContextMenu } from './context-menu';
 import type { ContextMenuProps } from './context-menu-props';
 
@@ -20,7 +20,7 @@ function ContextMenuExample(
 }
 
 const meta = {
-  title: 'Design System/Primitives/ContextMenu',
+  title: 'Design System/Primitives/Overlays/ContextMenu',
   component: ContextMenuExample,
   args: {
     groups: [

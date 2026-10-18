@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { useSizeClass } from '../src/lib/generic/use-size-class/use-size-class';
 import { HeaderItems } from '../src/lib/product/header-button';
 import { HeaderSearchRow } from '../src/lib/product/navigation/header-search';

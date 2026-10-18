@@ -48,7 +48,7 @@ const examples: { label: string; props: ExampleProps }[] = [
 ];
 
 const meta = {
-  title: 'Design System/Primitives/Slider',
+  title: 'Design System/Primitives/Inputs/Slider',
 } satisfies Meta;
 
 export default meta;

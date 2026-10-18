@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { stepMarks } from '#features/setup';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { AgentStepView } from './agent-step';
 import { GitHubStepView } from './github-step';
 import type { OnboardingViewProps } from './onboarding-props';

@@ -6,7 +6,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { motionDuration } from '#lib/generic/motion';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { SessionColumn } from '#lib/product/session-column';
-import { Icon } from '#primitives/display/icon';
+import { Icon } from '#primitives/content/icon';
 
 // How far Jump to latest sits above the Composer's top, on every device.
 const jumpToLatestGap = 12;

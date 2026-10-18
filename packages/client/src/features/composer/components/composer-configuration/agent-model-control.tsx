@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { Spinner } from '#primitives/display/spinner';
 import { MenuTrigger, type MenuTriggerProps } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
+import { Spinner } from '#primitives/status/spinner';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';

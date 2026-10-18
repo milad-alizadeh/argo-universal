@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   VirtualListItem,
   type VirtualListItemProps,

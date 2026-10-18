@@ -16,7 +16,7 @@ const examples: {
 ];
 
 const meta = {
-  title: 'Design System/Primitives/Textarea',
+  title: 'Design System/Primitives/Inputs/Textarea',
   tags: ['third-party'],
 } satisfies Meta;
 

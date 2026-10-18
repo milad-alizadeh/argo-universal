@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import { showToast, useErrorToast } from './toast';
 
 export const failedOpen = {

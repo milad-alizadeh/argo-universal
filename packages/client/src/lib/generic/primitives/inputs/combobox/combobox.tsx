@@ -1,6 +1,6 @@
 import { createElement, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   FieldDescriptionFooter,
   useFieldDescription,

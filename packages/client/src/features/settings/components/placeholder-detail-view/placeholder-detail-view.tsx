@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListItem } from '#primitives/lists/grouped-list-item';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';

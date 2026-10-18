@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { StatusIndicator } from '#lib/product/status-indicator/status-indicator';
-import { Badge } from '#primitives/display/badge';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
+import { Badge } from '#primitives/status/badge';
 import {
   PullRequestIndicator,
   type PullRequestIndicatorProps,

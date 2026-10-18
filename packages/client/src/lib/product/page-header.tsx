@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { useWide } from '../generic/use-wide/use-wide';
 import { cn } from '../generic/utils';
 import { SessionColumn } from './session-column';

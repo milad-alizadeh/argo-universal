@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { ScrollView } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { SessionLayout } from '#lib/product/session-layout';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { findToast } from '../../../../../mocks/find-toast';
 import { canPointAt } from '../../../../../mocks/point-hit';

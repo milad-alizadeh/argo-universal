@@ -5,7 +5,7 @@ import { useContentWide } from '#lib/product/content-layout';
 import {
   IconButton,
   type IconButtonProps,
-} from '#primitives/buttons/icon-button';
+} from '#primitives/actions/icon-button';
 import type { QuestionModel } from '../../hooks/use-elicitation-questions';
 
 type ModelProps = { model: QuestionModel };

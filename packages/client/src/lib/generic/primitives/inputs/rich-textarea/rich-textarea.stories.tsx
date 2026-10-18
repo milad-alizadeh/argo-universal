@@ -35,7 +35,7 @@ const examples = [
 ];
 
 const meta = {
-  title: 'Design System/Primitives/RichTextarea',
+  title: 'Design System/Primitives/Inputs/RichTextarea',
 } satisfies Meta;
 
 export default meta;

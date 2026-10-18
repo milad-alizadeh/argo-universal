@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { Button } from '#primitives/buttons/button';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 
 export type AgentActions = {

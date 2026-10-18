@@ -2,7 +2,7 @@ import { setStringAsync } from 'expo-clipboard';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '#primitives/buttons/icon-button';
+import { IconButton } from '#primitives/actions/icon-button';
 
 export interface CopyButtonProps {
   value: string;

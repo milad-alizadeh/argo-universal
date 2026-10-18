@@ -7,7 +7,9 @@ import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Drill } from './drill';
 
-const meta = { title: 'Design System/Primitives/Drill' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Overlays/Drill',
+} satisfies Meta;
 
 export default meta;
 

@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { SettingsList, type SettingsListProps } from './settings-list';
 import { settingsListMocks } from './settings-list.mocks';
 

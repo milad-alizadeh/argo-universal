@@ -6,7 +6,7 @@ import { useResolveClassNames } from 'uniwind';
 import {
   NativeText,
   type NativeTextRole,
-} from '#primitives/display/native-text';
+} from '#primitives/content/native-text';
 import { useSidebarList } from '#primitives/fields/field-layout';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
 

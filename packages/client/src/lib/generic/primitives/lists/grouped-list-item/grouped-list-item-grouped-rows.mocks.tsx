@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import { SelectedCheck } from '#primitives/display/selected-check';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { SelectedCheck } from '#primitives/status/selected-check';
 import { GroupedListItem } from './grouped-list-item';
 import {
   CodeRows,

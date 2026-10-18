@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
-import { contentActionClass } from '#primitives/buttons/button';
-import { Text } from '#primitives/display/text';
+import { Button } from '#primitives/actions/button';
+import { contentActionClass } from '#primitives/actions/button';
+import { Pressable } from '#primitives/actions/pressable';
+import { Text } from '#primitives/content/text';
 import { TextInput } from '#primitives/inputs/text-input';
-import { Pressable } from '#primitives/pressable';
 import {
   Dialog,
   DialogCancel,
@@ -79,7 +79,7 @@ function ProfileFooter(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Design System/Primitives/Dialog',
+  title: 'Design System/Primitives/Overlays/Dialog',
   tags: ['third-party'],
 } satisfies Meta;
 

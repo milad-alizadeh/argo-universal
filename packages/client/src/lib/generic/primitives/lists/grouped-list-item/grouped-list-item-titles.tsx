@@ -2,7 +2,7 @@ import { Column, Row } from '@expo/ui';
 import { weight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { NativeText } from '#primitives/display/native-text';
+import { NativeText } from '#primitives/content/native-text';
 import { rowHeadlineAccessibility } from './grouped-list-item-accessibility';
 import type { ResolvedItemProps } from './grouped-list-item-props';
 import { RowSubtitle } from './grouped-list-item-subtitle';

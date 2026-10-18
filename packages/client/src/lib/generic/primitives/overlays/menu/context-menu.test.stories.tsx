@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { type ReactElement, useState } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { TextInput } from '#primitives/inputs/text-input';
 import { Dialog, DialogContent } from '#primitives/overlays/dialog';
 import { layoutWidths } from '../../../each-layout';

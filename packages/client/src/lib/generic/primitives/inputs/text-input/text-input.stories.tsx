@@ -13,7 +13,7 @@ import type {
 } from './text-input-props';
 
 const meta = {
-  title: 'Design System/Primitives/TextInput',
+  title: 'Design System/Primitives/Inputs/TextInput',
   parameters: { screenPreview: true },
 } satisfies Meta;
 

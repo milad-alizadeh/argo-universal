@@ -3,8 +3,8 @@ import { createContext, use, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Text } from '#primitives/content/text';
 import type { InspectorState } from '../scaffold/scaffold-geometry';
 
 export interface InspectorPaneProps {

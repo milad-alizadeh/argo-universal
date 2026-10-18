@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { contentActionClass } from '#primitives/buttons/button';
-import { Text } from '#primitives/display/text';
+import { contentActionClass } from '#primitives/actions/button';
+import { Pressable } from '#primitives/actions/pressable';
+import { Text } from '#primitives/content/text';
 import { TextInput } from '#primitives/inputs/text-input';
-import { Pressable } from '#primitives/pressable';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 function PopoverPreview(): React.JSX.Element {
@@ -75,7 +75,7 @@ function DimensionField({
 }
 
 const meta = {
-  title: 'Design System/Primitives/Popover',
+  title: 'Design System/Primitives/Overlays/Popover',
   tags: ['third-party'],
 } satisfies Meta;
 

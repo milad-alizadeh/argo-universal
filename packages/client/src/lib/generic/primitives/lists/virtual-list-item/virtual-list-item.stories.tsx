@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { Variation, Variations } from '../../../variations';
 import { VirtualListItem } from './virtual-list-item';
 import type { VirtualListPosition } from './virtual-list-item-props';
 
 const meta = {
-  title: 'Design System/Primitives/VirtualListItem',
+  title: 'Design System/Primitives/Lists/VirtualListItem',
   component: VirtualListItem,
   args: { title: 'Build the Session layout', onPress: action('press row') },
 } satisfies Meta<typeof VirtualListItem>;

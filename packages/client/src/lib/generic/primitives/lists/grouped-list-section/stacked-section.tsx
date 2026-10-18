@@ -8,7 +8,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
-import { NativeText } from '#primitives/display/native-text';
+import { NativeText } from '#primitives/content/native-text';
 import { useStackedGutter } from '#primitives/lists/grouped-list-item';
 import { roundedFill } from '#primitives/native/native-modifiers';
 import type { GroupedListSectionProps } from './grouped-list-section-props';

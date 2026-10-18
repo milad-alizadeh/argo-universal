@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon, IconSlot, IconSpinner } from '#primitives/display/icon';
+import { Icon, IconSlot, IconSpinner } from '#primitives/content/icon';
 import { useOverlayList } from '#primitives/fields/field-layout';
 import type { IconRole } from '../../../symbols/icon-role';
 import { cn } from '../../../utils';

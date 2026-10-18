@@ -2,8 +2,8 @@ import type { ContentBlock } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { resourceName } from '../../../../lib/product/markdown/resource-name';
 
 export type Reference = Extract<

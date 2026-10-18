@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { memo, useCallback } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   ProjectHeading,
   type ProjectHeadingProps,

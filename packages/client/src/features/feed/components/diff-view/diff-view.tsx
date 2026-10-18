@@ -3,13 +3,13 @@ import { type ReactNode, useState } from 'react';
 import { cn } from '#lib/generic/utils';
 import { CodeBlockHeader } from '#lib/product/markdown/code-block-header';
 import { codeBlockGroup } from '#lib/product/markdown/copy-button';
-import { contentActionClass } from '#primitives/buttons/button';
+import { contentActionClass } from '#primitives/actions/button';
+import { Pressable } from '#primitives/actions/pressable';
+import { Text } from '#primitives/content/text';
 import {
   Collapsible,
   CollapsibleContent,
-} from '#primitives/display/collapsible';
-import { Text } from '#primitives/display/text';
-import { Pressable } from '#primitives/pressable';
+} from '#primitives/layout/collapsible';
 import type { FileDiff } from '../../view/file-diff';
 import { FileHeader, type FileHeaderProps } from './diff-file-header';
 import { DiffScroll } from './diff-hunks';

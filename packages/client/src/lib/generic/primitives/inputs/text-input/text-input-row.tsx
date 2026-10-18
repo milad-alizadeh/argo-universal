@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { type TextInputProps, View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { rowClasses } from '#primitives/lists/grouped-list-item';
 import { cn } from '../../../utils';

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import {
   nextWorkRequest,
   nextWorkValues,

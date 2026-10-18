@@ -7,7 +7,7 @@ import {
   StatusIndicator,
   statusLabels,
 } from '#lib/product/status-indicator/status-indicator';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { PullRequestChecks } from './pull-request-checks';
 import type {
