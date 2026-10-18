@@ -12,12 +12,15 @@ const meta = {
       [{ label: 'Rename', icon: 'rename', onPress: action('rename') }],
       [{ label: 'Archive', icon: 'archive', onPress: action('archive') }],
     ],
-    children: (
+  },
+  // An element in args holds React internals, which Storybook walks while inferring arg types.
+  render: (args) => (
+    <ContextMenu {...args}>
       <View className="rounded-2xl bg-card p-4">
         <Text>Right-click this row</Text>
       </View>
-    ),
-  },
+    </ContextMenu>
+  ),
 } satisfies Meta<typeof ContextMenu>;
 
 export default meta;
