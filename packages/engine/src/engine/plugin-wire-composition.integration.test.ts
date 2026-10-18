@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import { expect, it, onTestFinished } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { pluginTap } from '#mocks/plugin-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
 const listFixture = { id: 'list', fixture: 'keyed-list' };
@@ -10,7 +11,7 @@ const listFixture = { id: 'list', fixture: 'keyed-list' };
 it('prepending to 2,000 Plugin rows sends one keyed insert and retains the full tree for a late viewer', async () => {
   const home = await createRuntimePlugins([listFixture]);
 
-  const { caller, createCaller } = await startEngineTestHost({ home });
+  const { createCaller } = await startEngineTestHost({ home });
   const controller = new AbortController();
   onTestFinished(() => controller.abort());
   const watching = createCaller({ signal: controller.signal });
@@ -19,9 +20,12 @@ it('prepending to 2,000 Plugin rows sends one keyed insert and retains the full 
   const initial = (await stream.next()).value;
 
   expect(rowsOf(initial)).toHaveLength(2000);
-  await caller.plugins.dispatch({ ...input, eventId: '0/prepend:onPress' });
+  await watching.plugins.dispatch(
+    pluginTap(initial, { ...input, key: '0/prepend' }),
+  );
   expect((await stream.next()).value).toEqual({
     type: 'patch',
+    viewId: initial.viewId,
     revision: 2,
     ops: [
       {
@@ -48,19 +52,21 @@ it('prepending to 2,000 Plugin rows sends one keyed insert and retains the full 
 it('moving the first row to the end sends one move op', async () => {
   const home = await createRuntimePlugins([listFixture]);
 
-  const { caller, createCaller } = await startEngineTestHost({ home });
+  const { createCaller } = await startEngineTestHost({ home });
   const controller = new AbortController();
   onTestFinished(() => controller.abort());
   const input = { pluginId: 'list', path: '/' };
 
-  const stream = (
-    await createCaller({ signal: controller.signal }).plugins.view(input)
-  )[Symbol.asyncIterator]();
+  const watching = createCaller({ signal: controller.signal });
+  const stream = (await watching.plugins.view(input))[Symbol.asyncIterator]();
 
-  await stream.next();
-  await caller.plugins.dispatch({ ...input, eventId: '0/move:onPress' });
+  const initial = (await stream.next()).value;
+  await watching.plugins.dispatch(
+    pluginTap(initial, { ...input, key: '0/move' }),
+  );
   expect((await stream.next()).value).toEqual({
     type: 'patch',
+    viewId: initial.viewId,
     revision: 2,
     ops: [{ op: 'move', key: ['list', '0'], parent: ['list'], index: 1999 }],
   });

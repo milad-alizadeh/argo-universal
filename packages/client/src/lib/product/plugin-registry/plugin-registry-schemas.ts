@@ -1,4 +1,4 @@
-import { Handler } from '@repo/contracts/plugins/wire';
+import { Action, WireEvent } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 import { textRoles } from '#primitives/content/text';
 import { isStackGap, stackAlignments } from '#primitives/layout/stack';
@@ -28,7 +28,9 @@ export const buttonProps = z.strictObject({
   tone: z.literal('danger').optional(),
   size: z.enum(['xs', 'sm', 'md', 'lg']).optional(),
   disabled: z.boolean().optional(),
-  onPress: Handler.optional(),
+  onPress: z
+    .union([WireEvent.extend({ $event: z.literal('onPress') }), Action])
+    .optional(),
 });
 
 export const layoutProps = z.strictObject({
@@ -40,7 +42,7 @@ export const groupedItemProps = z.strictObject({
   label: z.string(),
   value: z.string().optional(),
   disabled: z.boolean().optional(),
-  onPress: Handler.optional(),
+  onPress: buttonProps.shape.onPress,
 });
 
 export const stackProps = layoutProps.extend({

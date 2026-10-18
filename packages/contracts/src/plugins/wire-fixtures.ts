@@ -1,7 +1,7 @@
 import type { ViewMessage, WireNode } from './wire';
 
-// The event id of "Tap me": its position in the tree, then the prop.
-export const helloTapEventId = '0/2/0:onPress';
+// The event name carried by the Tap me button.
+export const helloTapEvent = 'onPress';
 
 // A leaf node; `withChildren` makes it a container.
 const node = (
@@ -19,7 +19,7 @@ const helloButtons = (): WireNode =>
   withChildren(node('Row', '2', { gap: 2 }), [
     node('Button', '0', {
       label: 'Tap me',
-      onPress: { $event: helloTapEventId },
+      onPress: { $event: helloTapEvent },
     }),
     node('Button', '1', {
       label: 'Say hi',
@@ -118,8 +118,8 @@ export const invalidPropsSnapshot: ViewMessage = {
   root: invalidPropsRoot,
 };
 
-// The event id of "Wave" in hello's Project details contribution.
-export const helloSlotWaveEventId = '0/1:onPress';
+// The event name carried by the Wave button.
+export const helloSlotWaveEvent = 'onPress';
 
 export const helloSlotTree = (projectId: string, waves: number): WireNode =>
   withChildren(node('Column', '0', { gap: 2 }), [
@@ -132,7 +132,7 @@ export const helloSlotTree = (projectId: string, waves: number): WireNode =>
     node('Button', '1', {
       label: 'Wave',
       variant: 'outline',
-      onPress: { $event: helloSlotWaveEventId },
+      onPress: { $event: helloSlotWaveEvent },
     }),
   ]);
 
@@ -165,7 +165,7 @@ export const slottedRow: WireNode = {
     accessories: [
       node('Button', 'button', {
         label: 'Increment',
-        onPress: { $event: 'slot:increment' },
+        onPress: { $event: 'onPress' },
       }),
       node('Text', 'count', { label: 'Count 0' }),
     ],

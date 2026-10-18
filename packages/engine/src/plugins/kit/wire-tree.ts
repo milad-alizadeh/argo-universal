@@ -1,4 +1,8 @@
 import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
+import {
+  childNodeKey,
+  slotParentKey,
+} from '@repo/contracts/plugins/wire-node-key';
 import { listTypes } from './list-props';
 import { childKeys } from './wire-keys';
 
@@ -40,11 +44,15 @@ function checkUniqueKeys(type: string, children: Instance[]): void {
 
 const isSlot = (instance: Instance): boolean => instance.type === slotType;
 
-function wireProp(eventId: string, value: Prop, handlers: Handlers): WireJson {
+function wireProp(
+  event: { id: string; name: string },
+  value: Prop,
+  handlers: Handlers,
+): WireJson {
   if (typeof value !== 'function') return value;
-  handlers.set(eventId, value);
+  handlers.set(event.id, value);
 
-  return { $event: eventId };
+  return { $event: event.name };
 }
 
 function wireProps(
@@ -55,7 +63,7 @@ function wireProps(
   return Object.fromEntries(
     Object.entries(props).map(([name, value]) => [
       name,
-      wireProp(`${id}:${name}`, value, handlers),
+      wireProp({ id: JSON.stringify([id, name]), name }, value, handlers),
     ]),
   );
 }
@@ -70,7 +78,7 @@ function slotContent(
 
   const content = wireChildren(
     slot.children,
-    `${id}#${encodeURIComponent(slot.key)}`,
+    slotParentKey(id, slot.key),
     handlers,
   );
 
@@ -113,7 +121,7 @@ function wireChildren(
   return instances.map((instance, index) =>
     wireNode(
       instance,
-      `${parent}${parent ? '/' : ''}${encodeURIComponent(keys[index] ?? String(index))}`,
+      childNodeKey(parent, keys[index] ?? String(index)),
       handlers,
     ),
   );
