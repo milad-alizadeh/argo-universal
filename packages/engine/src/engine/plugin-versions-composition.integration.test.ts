@@ -127,7 +127,7 @@ it('adapts snapshots and patches independently for two Apps and a legacy Connect
     snapshotOf(old.messages[0]).root,
   );
 
-  for (const app of [old, current, legacy]) await change(app);
+  await Promise.all([old, current, legacy].map(change));
 
   await expect
     .poll(
