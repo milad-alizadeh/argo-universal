@@ -69,14 +69,20 @@ const root: WireNode = {
   ],
 };
 
-export const DispatchesSurfaceAndActionEvents: Story = {
+export const ActivatesSurface: Story = {
   render: () => <PluginTree root={root} onEvent={onEvent} />,
-  play: async ({ canvas, userEvent, canvasElement }) => {
+  play: async ({ canvas, userEvent }) => {
     await expect(canvas.getByText('Healthy')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: openBuild }));
     await expect(onEvent).toHaveBeenCalledWith('scroll/grid/card', {
       event: 'onPress',
     });
+  },
+};
+
+export const DispatchesContextAction: Story = {
+  render: () => <PluginTree root={root} onEvent={onEvent} />,
+  play: async ({ canvas, userEvent, canvasElement }) => {
     await userEvent.pointer({
       target: canvas.getByText(openBuild),
       keys: '[MouseRight]',

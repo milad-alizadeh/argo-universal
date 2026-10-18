@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { createElement, Fragment, type ReactNode } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
@@ -16,38 +17,79 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ActivatesWithPointerAndKeyboard: Story = {
-  args: { kind: 'card', onPress: pressed, children: <Text>Open build</Text> },
-  play: async ({ canvas }) => {
-    const button = canvas.getByRole('button', { name: 'Open build' });
-    await userEvent.click(button);
-    button.focus();
-    await userEvent.keyboard('{Enter}');
-    await userEvent.keyboard(' ');
-    await expect(pressed).toHaveBeenCalledTimes(3);
-  },
-};
+function activation(activate: (button: HTMLElement) => Promise<void>): Story {
+  return {
+    args: { kind: 'card', onPress: pressed, children: <Text>Open build</Text> },
+    play: async ({ canvas }) => {
+      await activate(canvas.getByRole('button', { name: 'Open build' }));
+      await expect(pressed).toHaveBeenCalledOnce();
+    },
+  };
+}
 
-export const ContextActions: Story = {
+export const PointerActivation = activation(async (button) =>
+  userEvent.click(button),
+);
+
+function keyboardActivation(key: string): Story {
+  return activation(async (button) => {
+    button.focus();
+    await userEvent.keyboard(key);
+  });
+}
+
+export const EnterActivation = keyboardActivation('{Enter}');
+
+export const SpaceActivation = keyboardActivation(' ');
+
+const archive = (
+  <ActionList key="archive">
+    <Action icon="archive" label="Archive build" onPress={archived} />
+  </ActionList>
+);
+
+const copy = (
+  <ActionList key="copy">
+    <Action icon="copy" label="Copy link" onPress={fn()} />
+  </ActionList>
+);
+
+function contextActions(actions: ReactNode): Story {
+  return {
+    args: { kind: 'card', children: <Text>Build actions</Text>, actions },
+    play: async ({ canvas, canvasElement }) => {
+      await userEvent.pointer({
+        target: canvas.getByText('Build actions'),
+        keys: '[MouseRight]',
+      });
+      await userEvent.click(
+        await within(canvasElement.ownerDocument.body).findByRole('menuitem', {
+          name: 'Archive build',
+        }),
+      );
+      await expect(archived).toHaveBeenCalledOnce();
+    },
+  };
+}
+
+export const ContextActions = contextActions(archive);
+
+export const MultipleActionLists = contextActions([copy, archive]);
+
+export const FragmentActionLists = contextActions(
+  <>
+    {copy}
+    {archive}
+  </>,
+);
+
+export const EmptyActionFragment: Story = {
   args: {
     kind: 'card',
-    children: <Text>Build actions</Text>,
-    actions: (
-      <ActionList>
-        <Action icon="archive" label="Archive build" onPress={archived} />
-      </ActionList>
-    ),
+    children: <Text>Still here</Text>,
+    actions: createElement(Fragment),
   },
-  play: async ({ canvas, canvasElement }) => {
-    await userEvent.pointer({
-      target: canvas.getByText('Build actions'),
-      keys: '[MouseRight]',
-    });
-    await userEvent.click(
-      await within(canvasElement.ownerDocument.body).findByRole('menuitem', {
-        name: 'Archive build',
-      }),
-    );
-    await expect(archived).toHaveBeenCalledOnce();
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Still here')).toBeVisible();
   },
 };

@@ -3,11 +3,11 @@ import type { SurfaceProps } from './surface-props';
 
 export const surfaceClass = {
   background: 'bg-content',
-  card: 'rounded-2xl bg-card dark:border dark:border-border',
+  card: 'bg-card dark:border dark:border-border',
   muted:
-    'rounded-xl bg-tray shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180',
+    'bg-tray shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180',
   glass:
-    'rounded-2xl bg-glass shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
+    'bg-glass shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
 } satisfies Record<SurfaceProps['kind'], string>;
 
 export const paddingClass = {
@@ -22,3 +22,10 @@ export const paddingClass = {
   10: 'p-10',
   12: 'p-12',
 } satisfies Record<StackGap, string>;
+
+export const cornerClass = {
+  background: '',
+  card: 'rounded-2xl',
+  muted: 'rounded-xl',
+  glass: 'rounded-2xl',
+} satisfies Record<SurfaceProps['kind'], string>;

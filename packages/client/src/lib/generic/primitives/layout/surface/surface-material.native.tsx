@@ -5,18 +5,20 @@ import {
   liquidGlassAvailable,
 } from '#primitives/content/liquid-glass';
 import type { SurfaceProps } from './surface-props';
-import { paddingClass, surfaceClass } from './surface-styles';
+import { paddingClass, surfaceClass, cornerClass } from './surface-styles';
 
 export function SurfaceMaterial(props: SurfaceProps): React.JSX.Element {
   if (props.kind === 'glass' && liquidGlassAvailable)
     return <GlassMaterial {...props} />;
 
-  const treatment = nativeTreatment(props.kind);
+  return <View className={plainSurfaceClass(props)}>{props.children}</View>;
+}
 
-  return (
-    <View className={cn(treatment, surfacePadding(props.padding))}>
-      {props.children}
-    </View>
+function plainSurfaceClass(props: SurfaceProps): string {
+  return cn(
+    cornerClass[props.kind],
+    nativeTreatment(props.kind),
+    surfacePadding(props.padding),
   );
 }
 
@@ -24,6 +26,7 @@ function GlassMaterial(props: SurfaceProps): React.JSX.Element {
   return (
     <LiquidGlass
       corners="surface"
+      interactive={Boolean(props.onPress)}
       fallbackClassName="rounded-2xl bg-card shadow-card"
     >
       <View className={surfacePadding(props.padding)}>{props.children}</View>
@@ -36,7 +39,5 @@ function surfacePadding(padding: SurfaceProps['padding']): string {
 }
 
 function nativeTreatment(kind: SurfaceProps['kind']): string {
-  return kind === 'glass'
-    ? 'rounded-2xl bg-card shadow-card'
-    : surfaceClass[kind];
+  return kind === 'glass' ? 'bg-card shadow-card' : surfaceClass[kind];
 }

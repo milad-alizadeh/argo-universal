@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   PluginInteraction,
   PluginSlotInput,
@@ -10,16 +11,21 @@ import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
 
-type Opening = { path: string; slot?: PluginSlotInput };
+type Opening = {
+  path: string;
+  slot?: PluginSlotInput;
+  surface?: PluginSurface;
+};
 
 type Event = PluginInteraction & { key: string };
 
 // Observes production snapshots and patches; events use the same checked dispatch as an App.
 export class PluginTestView {
   private readonly controller = new AbortController();
-  private readonly connection = {
-    id: randomUUID(),
-    signal: this.controller.signal,
+  private readonly connection: {
+    id: string;
+    signal: AbortSignal;
+    surface?: PluginSurface;
   };
   private root: WireNode | null = null;
   private latest: ViewMessage | null = null;
@@ -31,6 +37,11 @@ export class PluginTestView {
     private readonly pluginId: string,
     opening: Opening,
   ) {
+    this.connection = {
+      id: randomUUID(),
+      signal: this.controller.signal,
+      surface: opening.surface,
+    };
     this.path = opening.path;
     void this.receive(opening).catch((error: Error) => {
       this.failure = error;

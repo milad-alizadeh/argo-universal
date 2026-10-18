@@ -1,18 +1,11 @@
-import {
-  cloneElement,
-  isValidElement,
-  type ComponentProps,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import type { ActionListProps } from '#primitives/actions/action-list';
 import { usePressRipple } from '#primitives/native/material-palette';
-import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
+import { withSurfaceActions } from './surface-actions';
 import { SurfaceMaterial } from './surface-material';
 import type { SurfaceProps } from './surface-props';
-import { paddingClass } from './surface-styles';
+import { paddingClass, cornerClass } from './surface-styles';
 
 export type { SurfaceProps } from './surface-props';
 
@@ -23,24 +16,8 @@ export function Surface(props: SurfaceProps): ReactElement {
     <SurfaceMaterial {...props} />
   );
 
-  return withActions(props.actions, content);
+  return withSurfaceActions(props.actions, content);
 }
-
-function withActions(
-  actions: ReactNode,
-  trigger: ReactElement<ContextMenuTriggerProps>,
-): ReactElement {
-  if (!isValidElement<ActionListProps>(actions)) return trigger;
-
-  return cloneElement(actions, { variant: 'context', trigger });
-}
-
-const cornerClass = {
-  background: '',
-  card: 'rounded-2xl',
-  muted: 'rounded-xl',
-  glass: 'rounded-2xl',
-};
 
 function usePressProps(props: SurfaceProps): ComponentProps<typeof Pressable> {
   return {

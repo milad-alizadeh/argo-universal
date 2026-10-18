@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, resolve, join } from 'node:path';
 import type { PluginProjectInfo } from '@repo/contracts/plugins';
+import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import { slotPath, type PluginSlotInput } from '@repo/contracts/plugins/wire';
 import { MemoryKeychain } from '@repo/engine/mocks/keychain';
 import {
@@ -22,7 +23,7 @@ export interface PluginTestOptions {
 
 export interface PluginTest {
   log: () => Promise<string>;
-  page: (path?: string) => PluginTestView;
+  page: (path?: string, surface?: PluginSurface) => PluginTestView;
   slot: (slot: PluginSlotInput) => PluginTestView;
   close: () => Promise<void>;
 }
@@ -58,18 +59,23 @@ class HostedPlugin implements PluginTest {
     return readFile(join(this.home, 'logs/plugins.log'), 'utf8');
   }
 
-  public page(path = '/'): PluginTestView {
-    return this.open(path);
+  public page(path = '/', surface?: PluginSurface): PluginTestView {
+    return this.open(path, undefined, surface);
   }
 
   public slot(slot: PluginSlotInput): PluginTestView {
     return this.open(slotPath(slot), slot);
   }
 
-  private open(path: string, slot?: PluginSlotInput): PluginTestView {
+  private open(
+    path: string,
+    slot?: PluginSlotInput,
+    surface?: PluginSurface,
+  ): PluginTestView {
     const view = new PluginTestView(this.service, this.options.pluginId, {
       path,
       slot,
+      surface,
     });
 
     this.views.add(view);

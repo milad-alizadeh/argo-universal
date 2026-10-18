@@ -9,8 +9,8 @@ import { useSizeClass } from '#lib/generic/use-size-class/use-size-class';
 import { useSizeClassValue } from '#lib/generic/use-size-class/use-size-class-value';
 import { useSpacing } from '#lib/generic/use-spacing';
 import { cn } from '#lib/generic/utils';
-import { stackGapClass } from '../../../spacing-classes';
 import type { KitProps } from '../../kit-props';
+import { stackGapClass } from '../spacing-classes';
 
 export type GridProps = KitProps<'Grid'>;
 

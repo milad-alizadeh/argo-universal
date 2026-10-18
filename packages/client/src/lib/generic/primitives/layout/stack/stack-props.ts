@@ -1,7 +1,7 @@
 import { stackAlignments } from '@repo/contracts/kit-tokens';
 import type { KitProps } from '../../kit-props';
 
-export { stackGapClass } from '../../../spacing-classes';
+export { stackGapClass } from '../spacing-classes';
 
 export type { StackGap } from '@repo/contracts/kit-tokens';
 
