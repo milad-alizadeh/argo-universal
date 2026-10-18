@@ -5,10 +5,15 @@ import {
   disabled,
   listRowBackground,
   listRowSeparator,
+  tag,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
-import { useSidebarList } from '#primitives/fields/field-layout';
+import {
+  useSidebarList,
+  useSidebarSelection,
+  useStackedList,
+} from '#primitives/fields/field-layout';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
 import {
@@ -24,6 +29,7 @@ import {
 } from './grouped-list-item-props';
 import { NativeRowDetail } from './native-row';
 import { NativeRowFrame } from './native-row-frame';
+import { StackedRow, useStackedCellModifiers } from './stacked-row';
 
 type Modifiers = NonNullable<ColumnProps['modifiers']>;
 
@@ -40,22 +46,45 @@ export function GroupedListItem(
    */
   return (
     <CompactScope>
-      <NativeRow {...trailingChoiceMark(item, isAndroid)} />
+      <StackedRow icon={leadsWithGlyph(item)}>
+        <NativeRow {...trailingChoiceMark(item, isAndroid)} />
+      </StackedRow>
     </CompactScope>
   );
 }
 
+const leadsWithGlyph = (item: ResolvedItemProps): boolean =>
+  !!(item.icon || item.leading || item.loading);
+
 function NativeRow(props: ResolvedItemProps): React.JSX.Element {
   const modifiers = rowModifiers(props, useSidebarList());
 
-  return rowUsesStockButton(props) && props.onPress ? (
-    <PressableRow press={props.onPress} modifiers={modifiers}>
-      <Column spacing={0}>
-        <RowParts {...props} />
+  const chosen = useSidebarSelection(
+    props.label,
+    !!props.selected,
+    props.onPress,
+  );
+
+  // A selectable sidebar's List chooses the row itself, so the row is its tag rather than a button.
+  if (chosen)
+    return (
+      <ColumnRow item={props} modifiers={[...modifiers, tag(props.label)]} />
+    );
+
+  return <ButtonOrColumnRow item={props} modifiers={modifiers} />;
+}
+
+function ButtonOrColumnRow({ item, modifiers }: RowProps): React.JSX.Element {
+  const cell = useStackedCellModifiers();
+
+  return rowUsesStockButton(item) && item.onPress ? (
+    <PressableRow press={item.onPress} modifiers={modifiers}>
+      <Column spacing={0} modifiers={cell}>
+        <RowParts {...item} />
       </Column>
     </PressableRow>
   ) : (
-    <ColumnRow item={props} modifiers={modifiers} />
+    <ColumnRow item={item} modifiers={[...modifiers, ...cell]} />
   );
 }
 
@@ -88,12 +117,17 @@ interface PressableRowProps {
   children: React.ReactElement;
 }
 
-// A Form row's own button, whose automatic style draws the system press highlight across the cell.
+/*
+ * A Form row's own button, whose automatic style draws the system press highlight across the cell.
+ * Outside a Form that style draws a tinted button, so a stacked row's button is plain.
+ */
 function PressableRow(props: PressableRowProps): React.JSX.Element {
+  const style = useStackedList() ? 'plain' : 'automatic';
+
   return (
     <Button
       onPress={props.press}
-      modifiers={[buttonStyle('automatic'), ...props.modifiers]}
+      modifiers={[buttonStyle(style), ...props.modifiers]}
     >
       {props.children}
     </Button>

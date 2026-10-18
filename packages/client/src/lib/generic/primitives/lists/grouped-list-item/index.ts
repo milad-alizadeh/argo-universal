@@ -12,3 +12,7 @@ export {
 export { type GroupedListItemProps } from './grouped-list-item-props';
 
 export { rowClasses } from './grouped-list-item-styles';
+
+export { StackedCell } from './stacked-row';
+
+export { stackedCellGutter } from './stacked-row-props';

@@ -1,12 +1,22 @@
-// SwiftUI's grouped Form supplies the section drawing; Android composes public ListItem controls.
+// SwiftUI's grouped Form supplies the section drawing, or a stacked list draws it; Android composes public ListItem controls.
 import { FieldGroup } from '@expo/ui';
 import { listRowBackground } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { NativeText } from '#primitives/display/native-text';
+import { useStackedList } from '#primitives/fields/field-layout';
 import type { GroupedListSectionProps } from './grouped-list-section-props';
+import { StackedSection } from './stacked-section';
 
 export function NativeSection(props: GroupedListSectionProps): ReactElement {
+  return useStackedList() ? (
+    <StackedSection {...props} />
+  ) : (
+    <FormSection {...props} />
+  );
+}
+
+function FormSection(props: GroupedListSectionProps): ReactElement {
   const { card } = useNativeTheme().colors;
 
   return (

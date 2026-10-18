@@ -64,7 +64,7 @@ function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
 
   return (
     <Row modifiers={rowDisclosureAccessibility()}>
-      <NativeSymbol name="chevron-right" role={ios ? 'chevron' : 'row'} muted />
+      <NativeSymbol name="disclosure" role={ios ? 'chevron' : 'row'} muted />
     </Row>
   );
 }

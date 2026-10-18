@@ -9,18 +9,22 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { type LayoutChangeEvent, Platform, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { useStackedList } from '#primitives/fields/field-layout';
 import type { GroupedListContentProps } from './grouped-list-content-props';
 
 /*
  * A native list sizes a plain React Native view as it likes, so the row hosts it and takes its height.
- * iOS's Form gives the row a section of its own, with no card behind it and no inset; Android's column takes it as is.
+ * iOS's Form gives the row a section of its own, with no card behind it and no inset; a stacked list and
+ * Android's column take it as is.
  */
 export function GroupedListContent(
   props: GroupedListContentProps,
 ): React.JSX.Element {
+  const stacked = useStackedList();
   const row = <HostedRow>{props.children}</HostedRow>;
+  const formSection = Platform.OS === 'ios' && !stacked;
 
-  return Platform.OS === 'ios' ? <BareSection>{row}</BareSection> : row;
+  return formSection ? <BareSection>{row}</BareSection> : row;
 }
 
 // The row spans its list at the content's measured height.

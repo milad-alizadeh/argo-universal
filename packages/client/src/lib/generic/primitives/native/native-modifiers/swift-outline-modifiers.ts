@@ -6,3 +6,19 @@ type SwiftModifier = SwiftModifiers.ModifierConfig;
 export function rectangularHitArea(): SwiftModifier {
   return SwiftModifiers.contentShape(SwiftModifiers.shapes.rectangle());
 }
+
+// Paints the colour, when there is one, in continuous rounded corners and clips the content to them.
+export function roundedFill(
+  color: string | undefined,
+  radius: number,
+): SwiftModifier[] {
+  const corners = SwiftModifiers.shapes.roundedRectangle({
+    cornerRadius: radius,
+    roundedCornerStyle: 'continuous',
+  });
+
+  return [
+    ...(color ? [SwiftModifiers.background(color, corners)] : []),
+    SwiftModifiers.clipShape('roundedRectangle', radius),
+  ];
+}
