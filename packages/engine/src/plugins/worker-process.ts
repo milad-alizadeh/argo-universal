@@ -5,7 +5,7 @@ import {
   type WorkerCall,
 } from './runtime-protocol.ts';
 import { argoBridge, WorkerCalls } from './worker-argo.ts';
-import { registerPlugin, type PluginInbox } from './worker-modules.ts';
+import { registerPlugin, type PluginInboxes } from './worker-modules.ts';
 
 const post = (message: WorkerCall | 'pong' | 'ready'): void =>
   parentPort?.postMessage(message);
@@ -16,11 +16,21 @@ const calls = new WorkerCalls(post);
  * The listener keeps even a Plugin with no pending work alive, and lets the host
  * detect a blocked worker event loop without running Plugin code in the host.
  */
-let inbox: PluginInbox | null = null;
+let inboxes: PluginInboxes | null = null;
 
-function deliver(command: Exclude<WorkerCommand, 'ping'>): void {
-  if (command.type === 'event') inbox?.(JSON.stringify(command.event));
-  else calls.settle(command);
+type Delivery = Exclude<WorkerCommand, 'ping'>;
+
+function deliver(command: Delivery): void {
+  if (command.type === 'reply') calls.settle(command);
+  else if (inboxes) toInbox(inboxes, command);
+}
+
+function toInbox(
+  { pages, hooks }: PluginInboxes,
+  command: Exclude<Delivery, { type: 'reply' }>,
+): void {
+  if (command.type === 'event') pages(JSON.stringify(command.event));
+  else hooks(JSON.stringify(command));
 }
 
 parentPort?.on('message', (message) => {
@@ -30,6 +40,9 @@ parentPort?.on('message', (message) => {
   else deliver(command);
 });
 
-inbox = await registerPlugin(PluginEntry.parse(workerData), argoBridge(calls));
+inboxes = await registerPlugin(
+  PluginEntry.parse(workerData),
+  argoBridge(calls),
+);
 
 post('ready');

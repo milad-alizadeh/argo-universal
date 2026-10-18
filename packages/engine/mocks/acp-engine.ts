@@ -27,7 +27,10 @@ export const startAcpEngine = async (
     Pick<
       AcpResourceInput,
       'closeTimeoutMs' | 'launchLoginTerminal' | 'launchProcess'
-    > = {
+    > & {
+      // Writes first-party fixture Plugins into the Engine's home before it starts.
+      installPlugins?: (home: string) => Promise<void>;
+    } = {
     steps: [],
   },
   createId: () => string = randomUUID,
@@ -40,6 +43,7 @@ export const startAcpEngine = async (
   const directory = mkdtempSync(join(tmpdir(), 'argo-acp-engine-'));
   await initTestRepository(directory);
   const storage = openTestDatabase({}, directory);
+  await scenario.installPlugins?.(storage.directory);
   const agent = createScriptedAgentProcess(scenario);
 
   const options: EngineTestOptions = {

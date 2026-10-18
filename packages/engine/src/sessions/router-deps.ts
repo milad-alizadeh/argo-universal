@@ -1,3 +1,4 @@
+import type { CoreHooks } from '@repo/contracts/plugins';
 import type { Database } from '@repo/db';
 import type { InstalledAgents } from '../agents';
 import type { FeedDeps } from '../feed';
@@ -15,4 +16,6 @@ export interface SessionRouterDeps extends Pick<
   readSession: ReturnType<typeof createSessionReader>;
   createId: () => string;
   sessionCommandSignal?: AbortSignal;
+  // Plugin Hooks on starting a Session and submitting a prompt (ADR-0027).
+  hooks: CoreHooks;
 }

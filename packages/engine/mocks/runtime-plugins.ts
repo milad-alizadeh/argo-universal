@@ -1,7 +1,11 @@
 import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, extname } from 'node:path';
-import { PluginManifest, type PluginCapability } from '@repo/contracts/plugins';
+import {
+  PluginManifest,
+  type HookEventName,
+  type PluginCapability,
+} from '@repo/contracts/plugins';
 import { onTestFinished } from 'vitest';
 
 // Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
@@ -13,6 +17,7 @@ type FixturePlugin = {
   dev?: boolean;
   main?: string;
   capabilities?: PluginCapability[];
+  hooks?: HookEventName[];
 };
 
 export async function createRuntimePlugins(
@@ -27,17 +32,15 @@ export async function createRuntimePlugins(
   return home;
 }
 
-async function writePlugin(home: string, plugin: FixturePlugin): Promise<void> {
+export async function writePlugin(
+  home: string,
+  plugin: FixturePlugin,
+): Promise<void> {
   const folder = join(home, shippedFolder, plugin.id);
   const main = plugin.main ?? 'index.mjs';
 
   await mkdir(folder, { recursive: true });
-  await writeManifest({
-    folder,
-    id: plugin.id,
-    main,
-    capabilities: plugin.capabilities,
-  });
+  await writeManifest({ ...plugin, folder, main });
   await cp(
     new URL(
       `./plugin-runtime/${plugin.fixture}${extname(main)}`,
@@ -54,11 +57,10 @@ async function writeManifest({
   id,
   main,
   capabilities,
-}: {
+  hooks,
+}: Pick<FixturePlugin, 'id' | 'capabilities' | 'hooks'> & {
   folder: string;
-  id: string;
   main: string;
-  capabilities?: PluginCapability[];
 }): Promise<void> {
   const template = PluginManifest.parse(
     JSON.parse(
@@ -71,7 +73,13 @@ async function writeManifest({
 
   await writeFile(
     join(folder, 'plugin.json'),
-    JSON.stringify({ ...template, id, main, capabilities }),
+    JSON.stringify({
+      ...template,
+      id,
+      main,
+      capabilities,
+      contributes: { ...template.contributes, hooks },
+    }),
   );
 }
 

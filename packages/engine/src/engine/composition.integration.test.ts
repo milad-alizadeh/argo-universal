@@ -47,7 +47,10 @@ it.each(fixtureAgents)(
     });
 
     expect(
-      await caller.feed.row({ sessionId: 'session-1', id: messageId }),
+      await caller.feed.row({
+        sessionId: 'session-1',
+        id: messageId ?? 'dropped',
+      }),
     ).toMatchObject({ sessionUpdate: 'user_message' });
     await expect
       .poll(() =>

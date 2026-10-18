@@ -6,6 +6,8 @@ import {
 } from './host-lifecycle.machine';
 import {
   HostMessage,
+  type HostCommand,
+  type HostHook,
   type PluginEntry,
   type PluginEvent,
   type PluginReply,
@@ -55,13 +57,20 @@ export class HostConnection {
   }
 
   event(pluginId: string, event: PluginEvent): void {
-    if (this.child?.connected)
-      this.child.send({ type: 'event', pluginId, event }, this.sendError);
+    this.tell({ type: 'event', pluginId, event });
+  }
+
+  hook(hook: Omit<HostHook, 'type'>): void {
+    this.tell({ type: 'hook', ...hook });
   }
 
   stop(pluginId: string): void {
-    if (this.child?.connected)
-      this.child.send({ type: 'stop', pluginId }, this.sendError);
+    this.tell({ type: 'stop', pluginId });
+  }
+
+  // A command the host may miss while it restarts: the worker it names is gone too.
+  tell(command: Exclude<HostCommand, { type: 'activate' }>): void {
+    if (this.child?.connected) this.child.send(command, this.sendError);
   }
 
   async close(): Promise<void> {
@@ -117,11 +126,7 @@ export class HostConnection {
     const { pluginId, generation, id } = message;
     const reply = await this.callbacks.call(message);
 
-    if (this.child?.connected)
-      this.child.send(
-        { type: 'reply', pluginId, generation, id, reply },
-        this.sendError,
-      );
+    this.tell({ type: 'reply', pluginId, generation, id, reply });
   }
 
   private exited(child: ChildProcess, reason: string): void {
