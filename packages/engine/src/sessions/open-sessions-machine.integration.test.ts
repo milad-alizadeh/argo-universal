@@ -9,6 +9,7 @@ import {
 } from 'xstate';
 import { TestModel } from 'xstate/graph';
 import { seedAgentFixtures } from '#mocks/agent-fixtures';
+import { coreOnlyHooks } from '#mocks/core-hooks';
 import { openTestDatabase } from '#mocks/database';
 import { unlaunchedInstalledAgents } from '#mocks/installed-agents';
 import { createOpenSessionsModelMachine } from '#mocks/open-sessions';
@@ -29,6 +30,7 @@ seedAgentFixtures(database, [{ agent: 'mock', label: 'mock', logo: '' }]);
 const input: OpenSessionsInput = {
   now: (): number => Date.now(),
   createId: randomUUID,
+  hooks: coreOnlyHooks,
   database,
   runtimeDirectory,
   acpResources: createAcpResources(),
@@ -69,6 +71,7 @@ const events: OpenSessionsEvent[] = [
         input: {
           now: (): number => Date.now(),
           createId: randomUUID,
+          hooks: coreOnlyHooks,
           kind: 'existing',
           database,
           runtimeDirectory,

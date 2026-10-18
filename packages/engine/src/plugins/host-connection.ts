@@ -6,6 +6,7 @@ import {
 } from './host-lifecycle.machine';
 import {
   HostMessage,
+  type HostHook,
   type PluginEntry,
   type PluginEvent,
   type PluginReply,
@@ -57,6 +58,11 @@ export class HostConnection {
   event(pluginId: string, event: PluginEvent): void {
     if (this.child?.connected)
       this.child.send({ type: 'event', pluginId, event }, this.sendError);
+  }
+
+  hook(hook: Omit<HostHook, 'type'>): void {
+    if (this.child?.connected)
+      this.child.send({ type: 'hook', ...hook }, this.sendError);
   }
 
   stop(pluginId: string): void {

@@ -1,3 +1,4 @@
+import type { CoreHooks } from '@repo/contracts/plugins';
 import { CapabilityRefusal } from './capability-refusal';
 import type { PluginAccess } from './plugin-access';
 import { firstHop, type PluginNetwork } from './plugin-fetch';
@@ -13,8 +14,8 @@ import {
   type ProcessCall,
 } from './runtime-protocol';
 
-// Pages are the runtime's own; every other call is answered by PluginServices.
-export type StateRequest = Exclude<PluginRequest, { api: 'view' }>;
+// Pages and Hooks are the runtime's own; every other call is answered by PluginServices.
+export type StateRequest = Exclude<PluginRequest, { api: 'view' | 'hooks' }>;
 
 export type MachineRequest = Extract<
   StateRequest,
@@ -23,6 +24,8 @@ export type MachineRequest = Extract<
 
 // What one checked call runs against, and `allowed`, which logs it once the checker lets it through.
 export type MachineContext = {
+  pluginId: string;
+  spawning: CoreHooks['process.spawn'];
   access: PluginAccess;
   resources: PluginResources;
   network: PluginNetwork;
@@ -53,14 +56,38 @@ async function fsRequest(
 }
 
 async function processRequest(
-  { access, resources, allowed }: MachineContext,
+  context: MachineContext,
   call: ProcessCall,
 ): Promise<PluginValue> {
-  const checked = await checkedProcess(access, call);
+  const checked = await checkedProcess(
+    context.access,
+    await spawnHooked(context, call),
+  );
 
-  allowed();
+  context.allowed();
 
-  return resources.process(checked);
+  return context.resources.process(checked);
+}
+
+type CommandCall = Extract<ProcessCall, { action: 'run' | 'spawn' }>;
+
+const isCommand = (call: ProcessCall): call is CommandCall =>
+  call.action === 'run' || call.action === 'spawn';
+
+// `process.spawn` Hooks see a run or spawn first, so the checker sees the command they leave (ADR-0030).
+async function spawnHooked(
+  { pluginId, spawning }: MachineContext,
+  call: ProcessCall,
+): Promise<ProcessCall> {
+  if (!isCommand(call)) return call;
+  const answer = await spawning({ pluginId, argv: call.argv, cwd: call.cwd });
+
+  if ('blocked' in answer)
+    throw new CapabilityRefusal(
+      `a process.spawn Hook blocked it: ${answer.blocked}`,
+    );
+
+  return { ...call, argv: answer.argv, cwd: answer.cwd };
 }
 
 async function fetchRequest(
@@ -75,7 +102,6 @@ async function fetchRequest(
   return resources.fetch(hop, { access, network });
 }
 
-// When ADR-0027's `process.spawn` Hooks land (#821), they run before this, so the check sees the final argv.
 async function checkedProcess(
   access: PluginAccess,
   call: ProcessCall,

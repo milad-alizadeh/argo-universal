@@ -1,5 +1,6 @@
 import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
 import { SessionOpenFailure } from '@repo/contracts';
+import type { CoreHooks } from '@repo/contracts/plugins';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
@@ -96,6 +97,7 @@ export async function createSession(
     | 'createId'
     | 'sessionCommandSignal'
     | 'installedAgents'
+    | 'hooks'
   >,
   newSession: SessionNewInput,
 ): Promise<SessionNewOutput> {
@@ -120,26 +122,51 @@ export async function createSession(
   await waitForSessionInsertCommitted(
     requireOpenSessionActor(deps.sessions, sessionId),
   );
-  await applyInitialConfiguration(
+  await startSession(
+    deps,
     requireOpenSessionActor(deps.sessions, sessionId),
     newSession,
-  );
-  await submitInitialAcpPrompt(
-    requireOpenSessionActor(deps.sessions, sessionId),
   );
 
   return { sessionId };
 }
 
-const submitInitialAcpPrompt = (session: SessionActorRef): Promise<void> => {
-  const { input, acpLease } = session.getSnapshot().context;
+// Once stored, the Session is started: `session.start` Hooks, its first choices, then its first prompt.
+async function startSession(
+  deps: Pick<SessionRouterDeps, 'hooks'>,
+  session: SessionActorRef,
+  newSession: SessionNewInput,
+): Promise<void> {
+  const { sessionId } = session.getSnapshot().context;
 
-  if (!acpLease || input.kind !== 'new' || input.prompt.length === 0)
-    return Promise.resolve();
+  await deps.hooks['session.start']({
+    sessionId,
+    projectId: newSession.projectId,
+    agent: newSession.agent,
+  });
+  await applyInitialConfiguration(session, newSession);
+  await submitInitialAcpPrompt(session, deps.hooks);
+}
 
-  return submitSessionPrompt(session, {
+// The first prompt passes `prompt.submit` Hooks like any other; a dropped one leaves the Session waiting.
+const submitInitialAcpPrompt = async (
+  session: SessionActorRef,
+  hooks: CoreHooks,
+): Promise<void> => {
+  const { input, acpLease, sessionId } = session.getSnapshot().context;
+
+  if (!acpLease || input.kind !== 'new' || input.prompt.length === 0) return;
+
+  const answer = await hooks['prompt.submit']({
+    sessionId,
+    prompt: input.prompt,
+  });
+
+  if ('dropped' in answer) return;
+
+  await submitSessionPrompt(session, {
     turnId: input.turnId,
-    content: input.prompt,
+    content: answer.prompt,
   });
 };
 

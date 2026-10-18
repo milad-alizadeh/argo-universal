@@ -1,4 +1,5 @@
-import type { PluginList } from '@repo/contracts/plugins';
+import type { HookEventName, PluginList } from '@repo/contracts/plugins';
+import type { Json, JsonObject } from '@repo/contracts/plugins/hook-protocol';
 import type {
   PluginFailure,
   PluginStatus,
@@ -7,6 +8,7 @@ import type {
   PluginDispatchInput,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
+import { callerOf } from './hooks/hook-rules';
 import { discoverPlugins, type PluginsDeps } from './loader';
 import type { PluginRuntime } from './runtime';
 
@@ -36,7 +38,33 @@ export class PluginService {
       name: plugin.manifest.name,
       // Granted at load with no prompt (ADR-0030).
       capabilities: plugin.manifest.capabilities ?? [],
+      hooks: plugin.manifest.contributes.hooks ?? [],
     });
+  }
+
+  // Starts each Plugin that hooks the event, in load order, then runs their Hooks over core (ADR-0027).
+  async runHooks(name: HookEventName, event: JsonObject): Promise<Json> {
+    const pluginIds = await this.hooking(name, callerOf(name, event));
+
+    return requireRuntime(this.deps).hooks.run(pluginIds, name, event);
+  }
+
+  // A Plugin that fails to start is left out; the runtime has already reported why.
+  private async hooking(
+    name: HookEventName,
+    caller: string | undefined,
+  ): Promise<string[]> {
+    const { plugins } = await discoverPlugins(this.deps);
+
+    const declaring = plugins
+      .filter((plugin) => hooks(plugin, name) && plugin.manifest.id !== caller)
+      .map((plugin) => plugin.manifest.id);
+
+    const started = await Promise.all(
+      declaring.map((pluginId) => this.activate(pluginId).catch(() => null)),
+    );
+
+    return declaring.filter((_, index) => started[index]?.state === 'running');
   }
 
   async dispatch(input: PluginDispatchInput): Promise<void> {
@@ -59,6 +87,9 @@ export class PluginService {
     return requireRuntime(this.deps).watchFailures(signal);
   }
 }
+
+const hooks = (plugin: PluginDescriptor, name: HookEventName): boolean =>
+  plugin.enabled && (plugin.manifest.contributes.hooks ?? []).includes(name);
 
 function applyStatus(result: PluginList, runtime: PluginRuntime): void {
   for (const plugin of result.plugins)

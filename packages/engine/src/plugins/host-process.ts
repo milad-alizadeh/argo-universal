@@ -1,5 +1,9 @@
 import { HostWorkers } from './host-workers.ts';
-import { HostCommand } from './runtime-protocol.ts';
+import {
+  HostCommand,
+  type HostHook,
+  type HostReply,
+} from './runtime-protocol.ts';
 
 const workers = new HostWorkers((message) => process.send?.(message));
 
@@ -10,9 +14,12 @@ function lifecycle(
   else workers.stop(command.pluginId);
 }
 
+const isDelivery = (command: HostCommand): command is HostReply | HostHook =>
+  command.type === 'reply' || command.type === 'hook';
+
 function handle(command: HostCommand): void {
   if (command.type === 'activate') workers.activate(command);
-  else if (command.type === 'reply') workers.reply(command);
+  else if (isDelivery(command)) workers.deliver(command);
   else lifecycle(command);
 }
 

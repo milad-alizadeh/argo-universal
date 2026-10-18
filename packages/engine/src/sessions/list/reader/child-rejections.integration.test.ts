@@ -3,6 +3,7 @@ import { turn } from '@repo/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { createActor } from 'xstate';
+import { coreOnlyHooks } from '#mocks/core-hooks';
 import {
   insertEndedTurn,
   insertSession,
@@ -55,6 +56,7 @@ it('excludes only the Subagent with a malformed latest Turn from its healthy par
     input: {
       now: (): number => Date.now(),
       createId: randomUUID,
+      hooks: coreOnlyHooks,
       database,
       runtimeDirectory: directory,
       acpResources: createAcpResources(),

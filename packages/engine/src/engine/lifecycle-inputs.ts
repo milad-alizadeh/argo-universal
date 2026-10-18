@@ -51,6 +51,7 @@ type SessionsSource = {
     | 'createId'
     | 'acpResources'
     | 'installationPorts'
+    | 'hookPort'
   >;
 };
 
@@ -81,6 +82,7 @@ export const sessionsInput = ({
   createId: context.createId,
   acpResources: context.acpResources,
   installedAgents: installedAgentsInput({ context, self }),
+  hooks: context.hookPort.hooks,
 });
 
 export { serverInput } from './server-input';

@@ -12,7 +12,8 @@ export type SessionPromptInput = z.infer<typeof SessionPromptInput>;
 
 // Local acknowledgement after saving the prompt; Agent completion arrives through the Session Feed.
 export const SessionPromptOutput = z.strictObject({
-  messageId: z.string(),
+  // null when a Plugin's `prompt.submit` Hook dropped the prompt, so no Turn started.
+  messageId: z.string().nullable(),
 });
 
 export type SessionPromptOutput = z.infer<typeof SessionPromptOutput>;

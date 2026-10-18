@@ -7,6 +7,7 @@ import {
   type HostMessage,
   type PluginEntry,
   type HostEvent,
+  type HostHook,
   type HostReply,
   type WorkerCall,
 } from './runtime-protocol.ts';
@@ -31,12 +32,11 @@ export class HostWorkers {
     this.report = report;
   }
 
-  // A reply belongs to the worker generation that asked; a reloaded worker never receives it.
-  reply({ pluginId, generation, id, reply }: HostReply): void {
+  // A reply or Hook belongs to the worker generation it names; a reloaded worker never receives it.
+  deliver({ pluginId, generation, ...command }: HostReply | HostHook): void {
     const record = this.workers.get(pluginId);
 
-    if (record?.generation === generation)
-      record.worker.postMessage({ type: 'reply', id, reply });
+    if (record?.generation === generation) record.worker.postMessage(command);
   }
 
   event({ pluginId, event }: HostEvent): void {

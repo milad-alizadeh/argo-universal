@@ -16,6 +16,7 @@ export const promptSession = async (
     | 'createId'
     | 'sessionCommandSignal'
     | 'installedAgents'
+    | 'hooks'
   >,
   { sessionId, prompt }: SessionPromptInput,
 ): Promise<SessionPromptOutput> => {
@@ -24,9 +25,12 @@ export const promptSession = async (
     deps.readSession(sessionId).agent,
   );
   const sessionActor = await openReadySession(deps, sessionId);
+  const answer = await deps.hooks['prompt.submit']({ sessionId, prompt });
+
+  if ('dropped' in answer) return { messageId: null };
   const turnId = deps.createId();
   validateSessionCommandAdmission(deps);
-  await submitSessionPrompt(sessionActor, { turnId, content: prompt });
+  await submitSessionPrompt(sessionActor, { turnId, content: answer.prompt });
 
   return { messageId: userMessageId(turnId) };
 };

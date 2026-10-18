@@ -3,6 +3,10 @@ import {
   FsCall,
   ProcessCall,
 } from '@repo/contracts/plugins/argo-calls';
+import {
+  HookCall,
+  HookInvocation,
+} from '@repo/contracts/plugins/hook-protocol';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { PluginEvent, ViewMessage } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
@@ -58,6 +62,7 @@ export const SecretCall = z.discriminatedUnion('action', [
 export type SecretCall = z.infer<typeof SecretCall>;
 
 export const PluginRequest = z.discriminatedUnion('api', [
+  z.object({ api: z.literal('hooks'), call: HookCall }),
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
   z.object({ api: z.literal('fs'), call: FsCall }),
@@ -101,6 +106,11 @@ export const HostCommand = z.discriminatedUnion('type', [
     id: z.number(),
     reply: PluginReply,
   }),
+  HookInvocation.extend({
+    type: z.literal('hook'),
+    pluginId: z.string(),
+    generation: z.number(),
+  }),
 ]);
 
 export type HostCommand = z.infer<typeof HostCommand>;
@@ -108,6 +118,8 @@ export type HostCommand = z.infer<typeof HostCommand>;
 export type HostReply = Extract<z.infer<typeof HostCommand>, { type: 'reply' }>;
 
 export type HostEvent = Extract<z.infer<typeof HostCommand>, { type: 'event' }>;
+
+export type HostHook = Extract<HostCommand, { type: 'hook' }>;
 
 export const HostMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready') }),
@@ -150,10 +162,13 @@ const WorkerEvent = z.object({
   event: PluginEvent,
 });
 
+const WorkerHook = HookInvocation.extend({ type: z.literal('hook') });
+
 export const WorkerCommand = z.union([
   z.literal('ping'),
   WorkerReply,
   WorkerEvent,
+  WorkerHook,
 ]);
 
 export const notStarted: PluginStatus = {
