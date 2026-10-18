@@ -76,6 +76,7 @@ describe('createTRPCClient', () => {
               Stack: 1,
               Row: 1,
               Column: 1,
+              Svg: 1,
             },
           }),
         },
