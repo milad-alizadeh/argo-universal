@@ -39,13 +39,11 @@ Then('Python Agent is unavailable on this platform', async ({ page }) => {
   const card = agentCard(page, 'Python Agent');
   await expect(
     card.getByRole('button', {
-      name: /^(Unavailable|Install|Remove)( Python Agent)?$/,
+      name: /^(Install|Remove) Python Agent$/,
     }),
   ).toHaveCount(0);
   await expect(
-    onPhone(page)
-      ? card.getByLabel('Not supported on this platform', { exact: true })
-      : card.getByText('Unavailable', { exact: true }),
+    card.getByLabel('Not supported on this platform', { exact: true }),
   ).toBeVisible();
 });
 
