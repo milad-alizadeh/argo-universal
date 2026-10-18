@@ -1,0 +1,26 @@
+import fixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { Variation, Variations as VariationList } from '../../variations';
+import { Svg } from './svg';
+
+const meta = {
+  title: 'Design System/Primitives/Svg',
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Variations: Story = {
+  name: 'Svg',
+  render: () => (
+    <VariationList>
+      <Variation label="Info tone">
+        <Svg xml={fixtures.valid[0]!.xml} label="Service map" tone="info" />
+      </Variation>
+      <Variation label="Drawing unavailable">
+        <Svg xml="<svg><path>" label="Service map" />
+      </Variation>
+    </VariationList>
+  ),
+};

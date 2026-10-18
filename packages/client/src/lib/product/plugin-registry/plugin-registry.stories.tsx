@@ -1,5 +1,6 @@
 import { slottedRow } from '@repo/contracts/plugins/wire-fixtures';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { PluginTree } from './plugin-registry';
@@ -29,4 +30,24 @@ function SlotPreview(): ReactElement {
 
 export const Slots: StoryObj<typeof meta> = {
   render: SlotPreview,
+};
+
+export const Svg: StoryObj<typeof meta> = {
+  render: () => (
+    <PluginTree
+      root={{
+        type: 'Svg',
+        key: '0',
+        props: {
+          xml: svgFixtures.valid[0]!.xml,
+          label: 'Service map',
+          tone: 'info',
+          onPress: { $event: 'onPress' },
+        },
+        children: [],
+        slots: {},
+      }}
+      onEvent={() => {}}
+    />
+  ),
 };

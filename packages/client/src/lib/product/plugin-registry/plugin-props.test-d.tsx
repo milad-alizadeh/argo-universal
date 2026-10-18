@@ -10,6 +10,7 @@ import {
   VirtualList,
   Table,
   GroupedList,
+  Svg,
   type PluginComponents,
   type PluginProps,
 } from '@argo/plugin-kit';
@@ -65,6 +66,7 @@ expectTypeOf<PluginProps['Button']['onPress']>().toExtend<
     </Column>
   </Row>
   <Button label="Tap" onPress={() => {}} />
+  <Svg xml="<svg/>" label="Service map" tone="info" aspectRatio={1.5} />;
 </Stack>;
 
 <Text label="Hello" accessibilityLabel="Greeting" />;

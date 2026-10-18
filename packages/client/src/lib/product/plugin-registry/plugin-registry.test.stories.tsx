@@ -10,6 +10,7 @@ import {
   columnAliasRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
 import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
+import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
@@ -39,6 +40,47 @@ export const Tap: Story = {
     await expect(onEvent).toHaveBeenCalledWith('0/2/0', {
       event: helloTapEvent,
     });
+  },
+};
+
+export const SvgPress: Story = {
+  render: () => (
+    <PluginTree
+      root={{
+        type: 'Svg',
+        key: '0',
+        props: {
+          xml: svgFixtures.valid[0]!.xml,
+          label: 'Service map',
+          onPress: { $event: 'onPress' },
+        },
+        children: [],
+        slots: {},
+      }}
+      onEvent={onEvent}
+    />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Service map' }));
+    await expect(onEvent).toHaveBeenCalledWith('0', { event: 'onPress' });
+  },
+};
+
+export const SvgFallback: Story = {
+  render: () => (
+    <PluginTree
+      root={{
+        type: 'Svg',
+        key: '0',
+        props: { xml: '<svg><path></svg>', label: 'Service map' },
+        children: [],
+        slots: {},
+      }}
+      onEvent={onEvent}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Service map')).toBeVisible();
   },
 };
 

@@ -48,6 +48,14 @@ export const groupedItemProps = z.object({
   onPress: pressHandler.optional(),
 });
 
+export const svgProps = z.object({
+  xml: z.string().max(131_072),
+  label: z.string().min(1),
+  tone: z.enum(tones).optional(),
+  aspectRatio: z.number().finite().positive().optional(),
+  onPress: pressHandler.optional(),
+});
+
 export const listProps = z.object({});
 
 export const stackProps = layoutProps.extend({

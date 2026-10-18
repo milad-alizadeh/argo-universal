@@ -4,6 +4,7 @@ import {
   textProps,
   groupedItemProps,
   stackProps,
+  svgProps,
 } from '@repo/contracts/plugins/kit';
 import { isWireContainer } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode } from '@repo/contracts/plugins/wire';
@@ -17,6 +18,7 @@ import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
 import { StandaloneGroupedListItem } from '#primitives/lists/grouped-list-item';
+import { Svg } from '#primitives/visual';
 import type { PluginPart } from './plugin-parts';
 import {
   entry,
@@ -70,6 +72,9 @@ const registry = new Map(
       <Stack direction="column" {...props}>
         {children}
       </Stack>
+    )),
+    Svg: entry(svgProps, ({ onPress, ...props }, context) => (
+      <Svg {...props} onPress={handlerOf(onPress, context)} />
     )),
   } satisfies Record<PluginPart, Entry>),
 );

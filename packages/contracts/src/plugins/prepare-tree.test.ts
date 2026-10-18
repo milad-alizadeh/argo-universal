@@ -21,6 +21,20 @@ const stack: WireNode = {
   slots: {},
 };
 
+const svg: WireNode = {
+  type: 'Svg',
+  key: 'diagram',
+  props: {
+    xml: '<svg/>',
+    label: 'Service map',
+    tone: 'info',
+    aspectRatio: 1.5,
+    onPress: { $event: 'onPress' },
+  },
+  children: [],
+  slots: {},
+};
+
 describe('Plugin wire compatibility', () => {
   it('strips newer optional props for an older App without losing the part', () => {
     expect(prepareWireTree(label, { Text: 1 })).toEqual({
@@ -45,6 +59,32 @@ describe('Plugin wire compatibility', () => {
 
   it('keeps supported Stack and accepts an App newer than this Server', () => {
     expect(prepareWireTree(stack, { Text: 10, Stack: 10 })).toEqual(stack);
+  });
+
+  it('keeps Svg props for an App that reports the Svg part', () => {
+    expect(prepareWireTree(svg, { Svg: 1 })).toEqual(svg);
+    expect(prepareWireTree(svg, {})).toEqual({
+      type: '#empty',
+      key: svg.key,
+      props: {},
+      children: [],
+      slots: {},
+    });
+  });
+
+  it.each([
+    { ...svg, props: { ...svg.props, xml: 'x'.repeat(131_073) } },
+    { ...svg, props: { ...svg.props, label: '' } },
+    { ...svg, props: { ...svg.props, tone: 'chart-1' } },
+    { ...svg, props: { ...svg.props, aspectRatio: Number.POSITIVE_INFINITY } },
+  ])('rejects invalid Svg props through the registered part schema', (root) => {
+    expect(prepareWireTree(root, { Svg: 1 })).toEqual({
+      type: '#empty',
+      key: svg.key,
+      props: {},
+      children: [],
+      slots: {},
+    });
   });
 
   it.each([
@@ -98,12 +138,15 @@ describe('Plugin wire compatibility', () => {
       key: 'item',
       props: { label: 'Slotted' },
       children: [],
-      slots: { leading: [stack, label] },
+      slots: { leading: [stack, label, svg] },
     };
 
     expect(
-      prepareWireTree(root, { ...legacyPartVersions, GroupedListItem: 1 })
-        .slots,
+      prepareWireTree(root, {
+        ...legacyPartVersions,
+        GroupedListItem: 1,
+        Svg: 1,
+      }).slots,
     ).toEqual({
       leading: [
         {
@@ -113,6 +156,7 @@ describe('Plugin wire compatibility', () => {
           children: [{ ...label, props: { label: 'Readable' } }],
         },
         { ...label, props: { label: 'Readable' } },
+        svg,
       ],
     });
   });

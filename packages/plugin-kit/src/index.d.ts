@@ -109,3 +109,5 @@ export const VirtualList: PluginComponents['VirtualList'];
 export const Table: PluginComponents['Table'];
 
 export const GroupedList: PluginComponents['GroupedList'];
+
+export const Svg: PluginComponents['Svg'];

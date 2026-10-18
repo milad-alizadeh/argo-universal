@@ -7,6 +7,7 @@ import {
   stackProps,
   groupedItemProps,
   listProps,
+  svgProps,
 } from './kit-props';
 
 export const listPartNames = ['VirtualList', 'Table', 'GroupedList'] as const;
@@ -18,6 +19,7 @@ const contentParts = [
   'Row',
   'Column',
   'GroupedListItem',
+  'Svg',
 ] as const;
 
 // Append a schema when a part changes; old versions keep their original props.
@@ -98,5 +100,13 @@ export const wireParts = {
     children: true,
     slots: {},
     events: {},
+  },
+  Svg: {
+    props: svgProps,
+    versions: [svgProps],
+    container: false,
+    children: false,
+    slots: {},
+    events: { onPress: z.undefined() },
   },
 } as const;

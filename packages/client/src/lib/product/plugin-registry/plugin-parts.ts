@@ -8,6 +8,7 @@ export const pluginParts = {
   Stack: wireParts.Stack,
   Row: wireParts.Row,
   Column: wireParts.Column,
+  Svg: wireParts.Svg,
 } satisfies Partial<typeof wireParts>;
 
 export type PluginPart = keyof typeof pluginParts;
