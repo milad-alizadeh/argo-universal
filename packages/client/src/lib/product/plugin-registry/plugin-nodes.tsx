@@ -1,3 +1,4 @@
+import { wirePart, type WirePartDefinition } from '@repo/contracts/plugins/kit';
 import { isWireContainer } from '@repo/contracts/plugins/prepare-tree';
 import { WireJson, type WireNode } from '@repo/contracts/plugins/wire';
 import {
@@ -10,7 +11,6 @@ import type { PluginProps } from './plugin-control-types';
 import { pluginEntries } from './plugin-entries';
 import { legacyNode, legacySlots } from './plugin-legacy';
 import type { RenderContext } from './plugin-rendering';
-import { renderSchema } from './plugin-schema';
 import { Unsupported } from './plugin-unsupported';
 
 const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
@@ -24,7 +24,7 @@ export function RenderNode({
   node,
   context,
 }: RenderNodeProps): React.JSX.Element | null {
-  const part = renderSchema(node.type);
+  const part = wirePart(node.type);
 
   if (!part) return refused(node);
 
@@ -50,7 +50,7 @@ function renderPrepared(
   slots: PluginProps,
 ): React.JSX.Element | null {
   const component = registry.get(node.type);
-  const part = renderSchema(node.type);
+  const part = wirePart(node.type);
 
   if (!component || !part) return refused(node);
   const props = context.controls.props({ node, part, context });
@@ -114,16 +114,18 @@ function slotNode(
 
 function parsedProps(
   node: WireNode,
-  part: NonNullable<ReturnType<typeof renderSchema>>,
+  part: WirePartDefinition,
 ): ReturnType<
   ReturnType<typeof z.record<z.ZodString, typeof WireJson>>['safeParse']
 > {
-  return part.props.pipe(z.record(z.string(), WireJson)).safeParse(node.props);
+  return (part.appProps ?? part.props)
+    .pipe(z.record(z.string(), WireJson))
+    .safeParse(node.props);
 }
 
 function childProps(
   node: WireNode,
-  part: NonNullable<ReturnType<typeof renderSchema>>,
+  part: WirePartDefinition,
   context: RenderContext,
 ): { children?: React.ReactNode } {
   return part.children ? { children: renderedChildren(node, context) } : {};

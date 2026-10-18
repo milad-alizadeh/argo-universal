@@ -13,7 +13,7 @@ type Queued = {
   interaction: PluginInteraction;
   deliver: PluginOnEvent;
   timer: ReturnType<typeof setTimeout>;
-  replies: ReturnType<typeof Promise.withResolvers<void>>[];
+  reply: PromiseWithResolvers<void>;
 };
 
 export class PluginUiEvents {
@@ -49,32 +49,25 @@ export class PluginUiEvents {
 
   private queue(input: QueuedInput): Promise<void> {
     const id = JSON.stringify([input.key, ...handlerPath(input.interaction)]);
-    const reply = Promise.withResolvers<void>();
     const pending = this.queued.get(id);
 
-    if (pending)
-      updateQueued(pending, input.interaction, {
-        reply,
-        deliver: this.deliver,
-      });
-    else this.startQueue(id, input, reply);
+    if (pending) return updateQueued(pending, input.interaction, this.deliver);
 
-    return reply.promise;
+    return this.startQueue(id, input);
   }
 
-  private startQueue(
-    id: string,
-    input: QueuedInput,
-    reply: PromiseWithResolvers<void>,
-  ): void {
+  private startQueue(id: string, input: QueuedInput): Promise<void> {
+    const reply = Promise.withResolvers<void>();
     const timer = setTimeout(() => this.flush(id), input.throttleMs);
     this.queued.set(id, {
       key: input.key,
       interaction: input.interaction,
       timer,
       deliver: this.deliver,
-      replies: [reply],
+      reply,
     });
+
+    return reply.promise;
   }
 
   private flush(id: string): void {
@@ -112,7 +105,7 @@ export class PluginUiEvents {
     for (const pending of this.queued.values()) {
       clearTimeout(pending.timer);
 
-      for (const reply of pending.replies) reply.resolve();
+      pending.reply.resolve();
     }
 
     this.queued.clear();
@@ -123,30 +116,20 @@ async function deliverQueued(pending: Omit<Queued, 'timer'>): Promise<void> {
   try {
     await pending.deliver(pending.key, pending.interaction);
 
-    resolveReplies(pending.replies);
+    pending.reply.resolve();
   } catch (error) {
-    rejectReplies(pending.replies, error);
+    pending.reply.reject(error);
     throw error;
   }
-}
-
-function resolveReplies(replies: PromiseWithResolvers<void>[]): void {
-  for (const reply of replies) reply.resolve();
 }
 
 function updateQueued(
   pending: Queued,
   interaction: PluginInteraction,
-  current: { reply: PromiseWithResolvers<void>; deliver: PluginOnEvent },
-): void {
+  deliver: PluginOnEvent,
+): Promise<void> {
   pending.interaction = interaction;
-  pending.deliver = current.deliver;
-  pending.replies.push(current.reply);
-}
+  pending.deliver = deliver;
 
-function rejectReplies(
-  replies: PromiseWithResolvers<void>[],
-  reason: Parameters<PromiseWithResolvers<void>['reject']>[0],
-): void {
-  for (const reply of replies) reply.reject(reason);
+  return pending.reply.promise;
 }

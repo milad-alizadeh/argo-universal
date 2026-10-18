@@ -25,9 +25,5 @@ export function usePluginUi(onEvent: PluginOnEvent): PluginUi {
   const events = useDelivery(onEvent);
   const flush = useCallback(() => events.flushPending(), [events]);
 
-  const send: PluginUi['send'] = (key, interaction, throttleMs) => {
-    return events.send(key, interaction, throttleMs);
-  };
-
-  return { send, flush };
+  return { send: events.send.bind(events), flush };
 }

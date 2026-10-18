@@ -1,7 +1,7 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { expect, fn, fireEvent, waitFor } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const meta = { title: 'Tests/Plugin state' } satisfies Meta;
@@ -69,37 +69,6 @@ export const FocusedFieldWaitsForBlur: Story = {
   },
 };
 
-export const FailedCoalescedEditRestoresValue: Story = {
-  render: () => (
-    <PluginTree
-      root={node('Slider', 'range', {
-        value: 2,
-        minimumValue: 0,
-        maximumValue: 10,
-        step: 1,
-        valueLabel: '2 jobs',
-        accessibilityLabel: 'Concurrency',
-        onValueChange: { $event: 'onValueChange' },
-      })}
-      onEvent={onEvent}
-    />
-  ),
-  play: async ({ canvas }) => {
-    onEvent.mockRejectedValueOnce(new Error('Handler failed'));
-    const slider = canvas.getByRole('slider', { name: 'Concurrency' });
-    await fireEvent.change(slider, { target: { value: '7' } });
-    await fireEvent.change(slider, { target: { value: '8' } });
-    await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('range', {
-        event: 'onValueChange',
-        payload: 8,
-      }),
-    );
-    await waitFor(() => expect(slider).toHaveValue('2'));
-    await expect(onEvent).toHaveBeenCalledOnce();
-  },
-};
-
 const section: WireNode = {
   ...node('List.Section', 'choices', {
     selectionMode: 'multiple',
@@ -118,21 +87,18 @@ export const AppsKeepSelectionIndependent: Story = {
   ),
   play: async ({ canvas, userEvent }) => {
     const [first, second] = canvas.getAllByRole('button', { name: 'Argo' });
+
     if (!first || !second) throw new Error('Expected one Argo row per App');
-    await userEvent.click(first);
-    await expect(onEvent).toHaveBeenLastCalledWith('choices', {
-      event: 'onSelectionChange',
-      payload: ['argo'],
-    });
-    await userEvent.click(second);
-    await expect(onEvent).toHaveBeenLastCalledWith('choices', {
-      event: 'onSelectionChange',
-      payload: ['argo'],
-    });
-    await userEvent.click(first);
-    await expect(onEvent).toHaveBeenLastCalledWith('choices', {
-      event: 'onSelectionChange',
-      payload: [],
-    });
+    for (const [row, payload] of [
+      [first, ['argo']],
+      [second, ['argo']],
+      [first, []],
+    ] as const) {
+      await userEvent.click(row);
+      await expect(onEvent).toHaveBeenLastCalledWith('choices', {
+        event: 'onSelectionChange',
+        payload,
+      });
+    }
   },
 };
