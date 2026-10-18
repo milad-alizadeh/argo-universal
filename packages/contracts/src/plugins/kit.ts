@@ -4,6 +4,8 @@ import { pluginPartSchemas } from './plugin-part-schemas';
 import type { WireSchemaHints } from './plugin-prop-descriptions.gen';
 import { wireParts, type WirePartDefinition } from './wire-parts';
 
+export { textForApp } from './text-for-app';
+
 export { wireParts, listPartNames } from './wire-parts';
 
 export {

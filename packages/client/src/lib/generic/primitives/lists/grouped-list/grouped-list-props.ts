@@ -1,7 +1,10 @@
 import type { KitProps } from '../../kit-props';
 
-// Kit-only: legacy native grouping, sizing and layout lifecycle.
-export type GroupedListProps = KitProps<'GroupedList'> & {
+/*
+ * Kit-only: legacy native grouping, sizing and layout lifecycle.
+ * Plugin GroupedList uses List; this internal native bridge accepts fixed children.
+ */
+export type GroupedListProps = Pick<KitProps<'GroupedList'>, 'children'> & {
   variant?: 'grouped' | 'sidebar';
   // A content-sized overlay uses compact groups rather than a full screen's scrolling column.
   fit?: boolean;

@@ -75,3 +75,43 @@ export const InvalidEmptyContainer: Story = {
     await expect(canvas.getByText(updateMessage)).toBeVisible();
   },
 };
+
+export const OlderServerText: Story = {
+  render: () => (
+    <PluginTree
+      root={{
+        type: 'Column',
+        key: 'legacy',
+        props: {},
+        slots: {},
+        children: [
+          {
+            type: 'Text',
+            key: 'v1',
+            props: { label: 'Text from v1', variant: 'body' },
+            children: [],
+            slots: {},
+          },
+          {
+            type: 'Text',
+            key: 'v2',
+            props: {
+              label: 'Text from v2',
+              variant: 'heading',
+              accessibilityLabel: 'Legacy spoken title',
+            },
+            children: [],
+            slots: {},
+          },
+        ],
+      }}
+      onEvent={onEvent}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Text from v1')).toBeVisible();
+    await expect(canvas.getByText('Text from v2')).toBeVisible();
+    await expect(canvas.getByLabelText('Legacy spoken title')).toBeVisible();
+    await expect(canvas.queryByText(updateMessage)).toBeNull();
+  },
+};

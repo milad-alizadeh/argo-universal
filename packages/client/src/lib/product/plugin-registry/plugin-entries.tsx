@@ -8,7 +8,7 @@ import {
   listProps,
   buttonProps,
   layoutProps,
-  textProps,
+  textForApp,
   groupedItemProps,
   stackProps,
 } from '@repo/contracts/plugins/kit';
@@ -70,7 +70,7 @@ export const pluginEntries = {
       detail={context.slots.detail}
     />
   )),
-  Text: entry(textProps, (props) => <Text {...props} />),
+  Text: entry(textForApp, (props) => <Text {...props} />),
   Button: entry(buttonProps, ({ onPress, ...props }, context) => (
     <Button {...props} onPress={handlerOf(onPress, context)} />
   )),
