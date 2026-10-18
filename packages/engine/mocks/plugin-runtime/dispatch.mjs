@@ -12,22 +12,16 @@ const choices = (reversed, choose) =>
     jsx(Button, { label: name, onPress: () => choose(name) }, name),
   );
 
-const WaitButtons = ({ wait, release }) =>
-  jsxs(
-    Stack,
-    {
-      direction: 'column',
-      children: [
-        jsx(Button, { label: 'Wait', onPress: wait }, 'wait'),
-        jsx(
-          Button,
-          { label: 'Finish', onPress: () => release.current() },
-          'finish',
-        ),
-      ],
-    },
-    'waiting',
-  );
+const WaitButtons = ({ wait, release }) => {
+  const finish = () => release.current();
+
+  const children = [
+    jsx(Button, { label: 'Wait', onPress: wait }, 'wait'),
+    jsx(Button, { label: 'Finish', onPress: finish }, 'finish'),
+  ];
+
+  return jsxs(Stack, { direction: 'column', children }, 'waiting');
+};
 
 const Waiting = ({ choose }) => {
   const release = useRef(() => {});
