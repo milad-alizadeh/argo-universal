@@ -4,7 +4,8 @@ import {
   type SpawnCaller,
   type Waiting,
 } from './hooks/spawn-hooks';
-import { pluginKeychainService, type Keychain } from './keychain';
+import { answerKept, isKeptRequest, type Kept } from './kept-calls';
+import type { Keychain } from './keychain';
 import {
   PluginAccess,
   type AccessScope,
@@ -20,7 +21,7 @@ import {
 } from './plugin-calls';
 import type { PluginNetwork } from './plugin-fetch';
 import { PluginResources } from './plugin-resources';
-import type { PluginReply, PluginValue, SecretCall } from './runtime-protocol';
+import type { PluginReply, PluginValue } from './runtime-protocol';
 import type { PluginStorage } from './storage';
 
 type Held = { generation: number; resources: PluginResources };
@@ -41,21 +42,6 @@ export type PluginServiceOptions = {
   hooks?: CoreHooks;
   waiting?: Waiting;
 };
-
-// Calls answered from what the Server keeps for the Plugin, with no capability to check.
-type KeptRequest = Extract<
-  StateRequest,
-  { api: 'storage' | 'secrets' | 'settings' }
->;
-
-const keptApis = new Set<StateRequest['api']>([
-  'storage',
-  'secrets',
-  'settings',
-]);
-
-const isKeptRequest = (request: StateRequest): request is KeptRequest =>
-  keptApis.has(request.api);
 
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
@@ -111,7 +97,7 @@ export class PluginServices {
     if (isKeptRequest(request)) {
       this.logCall(pluginId, request);
 
-      return this.perform(pluginId, request);
+      return answerKept(this.kept(), pluginId, request);
     }
 
     return machineCall(
@@ -133,6 +119,12 @@ export class PluginServices {
       network: this.options.network ?? {},
       allowed: () => this.logCall(pluginId, request),
     };
+  }
+
+  private kept(): Kept {
+    const { storage, keychain } = this;
+
+    return { storage, keychain, settings: this.options.settings };
   }
 
   private logCall(pluginId: string, request: StateRequest): void {
@@ -165,40 +157,6 @@ export class PluginServices {
     this.held.set(pluginId, { generation, resources });
 
     return resources;
-  }
-
-  private async perform(
-    pluginId: string,
-    request: KeptRequest,
-  ): Promise<PluginValue> {
-    if (request.api === 'storage')
-      return this.storage.execute(pluginId, request.queries);
-
-    if (request.api === 'settings') return this.setting(pluginId, request.key);
-
-    return this.secrets(pluginId, request.call);
-  }
-
-  private async setting(pluginId: string, key: string): Promise<PluginValue> {
-    if (!this.options.settings)
-      throw new Error('Plugin settings are not available');
-
-    return this.options.settings(pluginId, key);
-  }
-
-  private async secrets(
-    pluginId: string,
-    call: SecretCall,
-  ): Promise<PluginValue> {
-    const service = pluginKeychainService(pluginId);
-
-    if (call.action === 'get') return this.keychain.get(service, call.account);
-
-    await (call.action === 'set'
-      ? this.keychain.set(service, call.account, call.value)
-      : this.keychain.delete(service, call.account));
-
-    return null;
   }
 }
 

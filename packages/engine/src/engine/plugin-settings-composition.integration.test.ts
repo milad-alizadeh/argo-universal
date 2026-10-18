@@ -111,6 +111,7 @@ it.each([
 
 it('lets the Plugin read its settings, secrets included', async () => {
   const keychain = new MemoryKeychain();
+
   const { home, data } = await installed(
     probeSource({
       host: "argo.settings.get('host')",
@@ -121,6 +122,7 @@ it('lets the Plugin read its settings, secrets included', async () => {
     }),
     { settings: probeSettings },
   );
+
   const { caller } = await startEngineTestHost({ home, keychain });
 
   await caller.plugins.setSetting({

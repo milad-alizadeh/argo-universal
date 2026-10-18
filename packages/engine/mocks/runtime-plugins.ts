@@ -65,7 +65,10 @@ async function writeManifest({
   hooks,
   slots,
   settings,
-}: Pick<FixturePlugin, 'id' | 'capabilities' | 'hooks' | 'slots' | 'settings'> & {
+}: Pick<
+  FixturePlugin,
+  'id' | 'capabilities' | 'hooks' | 'slots' | 'settings'
+> & {
   folder: string;
   main: string;
 }): Promise<void> {

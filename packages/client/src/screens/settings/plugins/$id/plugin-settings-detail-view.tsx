@@ -38,15 +38,13 @@ export const enabledLabel = 'Enabled';
 export function PluginSettingsDetailView(
   props: PluginSettingsDetailViewProps,
 ): React.JSX.Element {
+  const { caption, onBack, ...body } = props;
+
   return (
     <View className="flex-1 bg-content wide:bg-transparent">
-      <SettingsPage
-        title={props.title}
-        caption={props.caption}
-        onBack={props.onBack}
-      >
+      <SettingsPage title={props.title} caption={caption} onBack={onBack}>
         <GroupedList>
-          <PluginBody {...props} />
+          <PluginBody {...body} />
         </GroupedList>
       </SettingsPage>
     </View>
@@ -63,15 +61,29 @@ function PluginBody(props: BodyProps): React.JSX.Element {
 
   return (
     <>
-      <GroupedListSection>
-        <GroupedListSwitchItem
-          label={enabledLabel}
-          value={plugin.enabled}
-          onValueChange={props.onEnabledChange}
-        />
-      </GroupedListSection>
+      <EnabledSection {...props} plugin={plugin} />
       <SettingFields {...props} plugin={plugin} />
     </>
+  );
+}
+
+type LoadedPlugin = Extract<PluginLoad, { status: 'loaded' }>;
+
+type EnabledProps = Pick<BodyProps, 'onEnabledChange'> & {
+  plugin: LoadedPlugin;
+};
+
+function EnabledSection(props: EnabledProps): React.JSX.Element {
+  const { plugin, onEnabledChange } = props;
+
+  return (
+    <GroupedListSection>
+      <GroupedListSwitchItem
+        label={enabledLabel}
+        value={plugin.enabled}
+        onValueChange={onEnabledChange}
+      />
+    </GroupedListSection>
   );
 }
 
@@ -90,7 +102,7 @@ function UnloadedPlugin({ status, title }: UnloadedProps): React.JSX.Element {
 }
 
 type FieldsProps = Pick<BodyProps, 'onSettingChange'> & {
-  plugin: Extract<PluginLoad, { status: 'loaded' }>;
+  plugin: LoadedPlugin;
 };
 
 function SettingFields({

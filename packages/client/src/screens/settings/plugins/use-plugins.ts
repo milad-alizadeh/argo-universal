@@ -53,6 +53,7 @@ export function usePluginEnabledChange(
   pluginId: string,
 ): (enabled: boolean) => void {
   const onSuccess = usePluginsInvalidation();
+
   const change = useMutation(
     useTRPC().plugins.setEnabled.mutationOptions({ onSuccess }),
   );
@@ -69,6 +70,7 @@ export function usePluginSettingChange(
   pluginId: string,
 ): (key: string, value: PluginSettingValue) => void {
   const onSuccess = usePluginsInvalidation();
+
   const change = useMutation(
     useTRPC().plugins.setSetting.mutationOptions({ onSuccess }),
   );

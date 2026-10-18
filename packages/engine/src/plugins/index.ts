@@ -12,6 +12,8 @@ export type { PluginNetwork } from './plugin-fetch';
 
 export { PluginRuntime } from './runtime';
 
-export { pluginManifest, PluginService } from './service';
+export { pluginManifest } from './located-plugins';
+
+export { PluginService } from './service';
 
 export type { PluginServiceDeps as PluginsDeps } from './service';

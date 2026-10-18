@@ -6,7 +6,11 @@ import { rowClasses } from '#primitives/lists/grouped-list-item';
 import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
 import { requiredLabel } from './text-input-label';
-import { isInvalid, type PhoneFieldProps } from './text-input-props';
+import {
+  isInvalid,
+  keyboardOf,
+  type PhoneFieldProps,
+} from './text-input-props';
 import { FieldSpinner } from './text-input-spinner';
 
 // A section row: the label, then the field filling the rest; the row shows the focus ring.
@@ -80,8 +84,7 @@ function inputBehaviour(props: PhoneFieldProps): InputProps {
     onChangeText: props.onChangeText,
     onBlur: props.onBlur,
     editable: !props.disabled,
-    keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
-    secureTextEntry: props.secure,
+    ...keyboardOf(props),
     autoCapitalize: 'none',
     autoCorrect: false,
     autoFocus: props.focusOnOpen,

@@ -101,6 +101,7 @@ export class PluginSettings {
     fields: readonly PluginSettingField[],
   ): Promise<string[]> {
     const secrets = fields.filter(({ type }) => type === 'secret');
+
     const values = await Promise.all(
       secrets.map(({ key }) => this.secret(pluginId, key)),
     );

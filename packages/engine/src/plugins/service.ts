@@ -1,7 +1,6 @@
 import type {
   HookEventName,
   PluginList,
-  PluginManifest,
   PluginSettings as PluginSettingsOutput,
   PluginSettingValue,
 } from '@repo/contracts/plugins';
@@ -18,19 +17,22 @@ import {
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import { callerOf } from './hooks/hook-rules';
-import { discoverPlugins, type PluginsDeps } from './loader';
-import type { PluginSettings } from './plugin-settings';
-import type { PluginRuntime } from './runtime';
+import { discoverPlugins } from './loader';
+import {
+  applyEnabled,
+  applyStatus,
+  locatePlugin,
+  locatePlugins,
+  refuseTurnedOff,
+  requireRuntime,
+  requireSettings,
+  type LocatedPlugin,
+  type PluginDescriptor,
+  type PluginServiceDeps,
+} from './located-plugins';
 import { merged } from './streams';
 
-type PluginDescriptor = PluginList['plugins'][number];
-
-type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
-
-export type PluginServiceDeps = PluginsDeps & {
-  pluginRuntime?: PluginRuntime;
-  pluginSettings?: PluginSettings;
-};
+export type { PluginServiceDeps } from './located-plugins';
 
 export class PluginService {
   constructor(private readonly deps: PluginServiceDeps) {}
@@ -181,78 +183,9 @@ export class PluginService {
   }
 }
 
-function applyEnabled(result: PluginList, settings: PluginSettings): void {
-  for (const plugin of result.plugins)
-    plugin.enabled = settings.enabled(plugin.manifest.id);
-}
 const fills = (plugin: PluginDescriptor, slot: PluginSlotInput): boolean =>
   plugin.enabled &&
   (plugin.manifest.contributes.slots ?? []).includes(slot.slotId);
 
 const hooks = (plugin: PluginDescriptor, name: HookEventName): boolean =>
   plugin.enabled && (plugin.manifest.contributes.hooks ?? []).includes(name);
-
-function applyStatus(result: PluginList, runtime: PluginRuntime): void {
-  for (const plugin of result.plugins)
-    Object.assign(plugin, runtime.status(plugin.manifest.id));
-  const error = runtime.error();
-
-  if (error) result.errors.push({ directory: 'plugin-host', message: error });
-}
-
-// Each admitted Plugin with its folder and whether it's turned on.
-async function locatePlugins(
-  deps: PluginServiceDeps,
-): Promise<LocatedPlugin[]> {
-  const locations = new Map<string, string>();
-  const result = await discoverPlugins(deps, locations);
-
-  if (deps.pluginSettings) applyEnabled(result, deps.pluginSettings);
-
-  const { plugins } = result;
-
-  return plugins.flatMap((plugin) => {
-    const directory = locations.get(plugin.manifest.id);
-
-    return directory ? [{ plugin, directory }] : [];
-  });
-}
-
-async function locatePlugin(
-  deps: PluginsDeps,
-  pluginId: string,
-): Promise<LocatedPlugin> {
-  const located = (await locatePlugins(deps)).find(
-    ({ plugin }) => plugin.manifest.id === pluginId,
-  );
-
-  if (!located) throw new Error(`Unknown Plugin: ${pluginId}`);
-
-  return located;
-}
-
-// The manifest of a Plugin the loader admits, for reading its settings schema.
-export async function pluginManifest(
-  deps: PluginsDeps,
-  pluginId: string,
-): Promise<PluginManifest> {
-  return (await locatePlugin(deps, pluginId)).plugin.manifest;
-}
-
-function requireSettings(deps: PluginServiceDeps): PluginSettings {
-  if (!deps.pluginSettings)
-    throw new Error('Plugin settings are not available');
-
-  return deps.pluginSettings;
-}
-
-function requireRuntime(deps: PluginServiceDeps): PluginRuntime {
-  if (!deps.pluginRuntime) throw new Error('Plugin runtime is not running');
-
-  return deps.pluginRuntime;
-}
-
-function refuseTurnedOff(deps: PluginServiceDeps, pluginId: string): void {
-  if (deps.pluginSettings?.enabled(pluginId) === false)
-    throw new Error(`Plugin ${pluginId} is turned off`);
-}

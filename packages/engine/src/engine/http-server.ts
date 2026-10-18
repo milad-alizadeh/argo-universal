@@ -120,13 +120,25 @@ function createHttpRouter(
       ...options,
       blobsFolder: setup.blobsFolder,
       sessionCommandSignal: setup.commandAdmission.signal,
-      pluginRuntime: setup.pluginRuntime,
-      pluginSettings: setup.pluginSettings,
       notifications: setup.notifications,
-      hooks: setup.hookPort.hooks,
+      ...pluginDeps(setup),
     }),
   );
 }
+
+type PluginDeps = Pick<HttpSetup, 'pluginRuntime' | 'pluginSettings'> & {
+  hooks: HookPort['hooks'];
+};
+
+const pluginDeps = ({
+  pluginRuntime,
+  pluginSettings,
+  hookPort,
+}: HttpSetup): PluginDeps => ({
+  pluginRuntime,
+  pluginSettings,
+  hooks: hookPort.hooks,
+});
 
 async function listenWithPlugins(
   server: Server,

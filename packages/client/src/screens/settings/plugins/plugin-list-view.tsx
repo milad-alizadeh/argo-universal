@@ -50,21 +50,41 @@ const loadFailed: ErrorToast = {
 function PluginRows({
   plugins,
   onOpenPlugin,
-}: PluginListViewProps): React.JSX.Element | React.JSX.Element[] {
+}: PluginListViewProps): React.JSX.Element {
   useErrorToast(plugins.status === 'error' ? loadFailed : undefined);
 
   if (plugins.status !== 'loaded')
     return <GroupedListItem label="Loading Plugins…" loading />;
 
-  if (plugins.plugins.length === 0)
-    return <GroupedListItem label="No Plugins yet." />;
+  return <LoadedPlugins rows={plugins.plugins} onOpenPlugin={onOpenPlugin} />;
+}
 
-  return plugins.plugins.map((plugin) => (
+type LoadedPluginsProps = Pick<PluginListViewProps, 'onOpenPlugin'> & {
+  rows: PluginRow[];
+};
+
+function LoadedPlugins({
+  rows,
+  onOpenPlugin,
+}: LoadedPluginsProps): React.JSX.Element | React.JSX.Element[] {
+  if (rows.length === 0) return <GroupedListItem label="No Plugins yet." />;
+
+  return rows.map((plugin) => (
+    <PluginItem key={plugin.pluginId} plugin={plugin} onOpen={onOpenPlugin} />
+  ));
+}
+
+type PluginItemProps = {
+  plugin: PluginRow;
+  onOpen: (pluginId: string) => void;
+};
+
+function PluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
+  return (
     <GroupedListItem
-      key={plugin.pluginId}
       icon={plugin.icon}
       label={plugin.name}
-      onPress={() => onOpenPlugin(plugin.pluginId)}
+      onPress={() => onOpen(plugin.pluginId)}
     />
-  ));
+  );
 }

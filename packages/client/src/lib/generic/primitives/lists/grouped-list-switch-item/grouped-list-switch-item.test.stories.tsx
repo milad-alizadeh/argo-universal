@@ -10,7 +10,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/GroupedListSwitchItem',
   component: GroupedListSwitchItem,
   args: { label, value: false, onValueChange: fn() },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <GroupedList>
       <GroupedListSection>
         <GroupedListSwitchItem {...args} />

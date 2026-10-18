@@ -8,18 +8,32 @@ import type { GroupedListSwitchItemProps } from './grouped-list-switch-item-prop
 export function GroupedListSwitchItem(
   props: GroupedListSwitchItemProps,
 ): React.JSX.Element {
+  if (Platform.OS !== 'web') return <NativeSwitchItem {...props} />;
+
+  return <WebSwitchItem {...props} />;
+}
+
+function NativeSwitchItem(
+  props: GroupedListSwitchItemProps,
+): React.JSX.Element {
+  const { label, icon, disabled, size } = props;
+
+  return (
+    <GroupedListItem
+      label={label}
+      icon={icon}
+      disabled={disabled}
+      size={size}
+      disclosure={false}
+      control={<RowSwitch {...props} />}
+    />
+  );
+}
+
+// GroupedListItem reports `checked` as the switch's aria-checked on the web.
+function WebSwitchItem(props: GroupedListSwitchItemProps): React.JSX.Element {
   const { value, onValueChange, ...row } = props;
 
-  if (Platform.OS !== 'web')
-    return (
-      <GroupedListItem
-        {...row}
-        disclosure={false}
-        control={<RowSwitch {...props} />}
-      />
-    );
-
-  // GroupedListItem reports `checked` as the switch's aria-checked on the web.
   return (
     <GroupedListItem
       {...row}
@@ -46,12 +60,9 @@ function DecorativeSwitch(
   );
 }
 
-function RowSwitch({
-  label,
-  value,
-  onValueChange,
-  disabled,
-}: GroupedListSwitchItemProps): React.JSX.Element {
+function RowSwitch(props: GroupedListSwitchItemProps): React.JSX.Element {
+  const { label, value, onValueChange, disabled } = props;
+
   return (
     <Switch
       accessibilityLabel={label}

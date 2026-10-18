@@ -21,17 +21,22 @@ export interface PluginSettingsDetailScreenProps {
   pluginId: string;
 }
 
+const loading: PluginLoad = { status: 'loading' };
+
 function toPluginLoad(
   plugins: PluginEntry[] | undefined,
   plugin: PluginEntry | undefined,
   settings: PluginSettings | undefined,
 ): PluginLoad {
-  if (!plugins) return { status: 'loading' };
+  if (!plugins) return loading;
 
-  if (!plugin) return { status: 'missing' };
-
-  return settings ? loadedPlugin(plugin, settings) : { status: 'loading' };
+  return plugin ? foundPlugin(plugin, settings) : { status: 'missing' };
 }
+
+const foundPlugin = (
+  plugin: PluginEntry,
+  settings: PluginSettings | undefined,
+): PluginLoad => (settings ? loadedPlugin(plugin, settings) : loading);
 
 const loadedPlugin = (
   { enabled, manifest }: PluginEntry,
@@ -46,6 +51,7 @@ const loadedPlugin = (
 function usePluginLoad(pluginId: string): PluginLoad & { name?: string } {
   const { plugins } = usePluginEntries();
   const plugin = plugins?.find((entry) => entry.manifest.id === pluginId);
+
   const settings = useQuery(
     useTRPC().plugins.settings.queryOptions({ pluginId }),
   );

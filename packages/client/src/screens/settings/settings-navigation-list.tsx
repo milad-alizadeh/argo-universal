@@ -27,14 +27,17 @@ type ServerCounts = Pick<
  * cached answer stays while the Connection is down.
  */
 function useServerCounts(): ServerCounts {
-  const agents = useInstalledAgents();
-  const { plugins } = usePluginEntries();
-
   return {
     projectCount: useProjects().data?.length,
-    agentCount: agents.status === 'loaded' ? agents.agents.length : undefined,
-    pluginCount: plugins?.length,
+    agentCount: useAgentCount(),
+    pluginCount: usePluginEntries().plugins?.length,
   };
+}
+
+function useAgentCount(): number | undefined {
+  const agents = useInstalledAgents();
+
+  return agents.status === 'loaded' ? agents.agents.length : undefined;
 }
 
 export function SettingsNavigationList({

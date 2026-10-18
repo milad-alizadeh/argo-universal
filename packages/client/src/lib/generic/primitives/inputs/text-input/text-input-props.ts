@@ -79,3 +79,15 @@ export type PhoneFieldProps = TextFieldProps & EntryProps & RowEntryProps;
 // Invalid only when there is a message to show: a form may pass an empty entry while nothing has failed.
 export const isInvalid = (props: Pick<TextFieldProps, 'errors'>): boolean =>
   errorMessage(props.errors ?? []) !== undefined;
+
+// The web keyboard an entry asks for: numeric, or masked for a secret.
+export const keyboardOf = ({
+  numeric,
+  secure,
+}: EntryProps): Pick<
+  NativeTextInputProps,
+  'keyboardType' | 'secureTextEntry'
+> => ({
+  keyboardType: numeric ? 'numbers-and-punctuation' : 'default',
+  secureTextEntry: secure,
+});

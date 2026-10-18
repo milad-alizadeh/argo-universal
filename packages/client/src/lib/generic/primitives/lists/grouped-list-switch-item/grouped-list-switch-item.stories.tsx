@@ -11,7 +11,7 @@ const meta = {
   args: {
     label: 'Show closed pull requests',
     value: false,
-    onValueChange: () => {},
+    onValueChange: (): void => {},
   },
 } satisfies Meta<typeof GroupedListSwitchItem>;
 
@@ -19,15 +19,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function LiveRow({
-  label,
-  icon,
-  initial,
-}: {
-  label: string;
-  icon?: 'plug';
-  initial: boolean;
-}): React.JSX.Element {
+type LiveRowProps = { label: string; icon?: 'plug'; initial: boolean };
+
+function LiveRow({ label, icon, initial }: LiveRowProps): React.JSX.Element {
   const [value, setValue] = useState(initial);
 
   return (
@@ -40,6 +34,24 @@ function LiveRow({
   );
 }
 
+const ignore = (): void => {};
+
+function DisabledRows(): React.JSX.Element {
+  return (
+    <GroupedListSection title="Disabled">
+      {[true, false].map((value) => (
+        <GroupedListSwitchItem
+          key={String(value)}
+          label={value ? 'Disabled on' : 'Disabled off'}
+          value={value}
+          disabled
+          onValueChange={ignore}
+        />
+      ))}
+    </GroupedListSection>
+  );
+}
+
 export const Variations: Story = {
   render: () => (
     <GroupedList>
@@ -48,20 +60,7 @@ export const Variations: Story = {
         <LiveRow label="Off" initial={false} />
         <LiveRow label="With an icon" icon="plug" initial />
       </GroupedListSection>
-      <GroupedListSection title="Disabled">
-        <GroupedListSwitchItem
-          label="Disabled on"
-          value
-          disabled
-          onValueChange={() => {}}
-        />
-        <GroupedListSwitchItem
-          label="Disabled off"
-          value={false}
-          disabled
-          onValueChange={() => {}}
-        />
-      </GroupedListSection>
+      <DisabledRows />
     </GroupedList>
   ),
 };
