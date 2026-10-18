@@ -1,3 +1,4 @@
+import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { writeLog } from '@repo/machine-log';
 import { onTestFinished } from 'vitest';
 import { PluginAssets } from '../src/plugins/assets';
@@ -16,6 +17,7 @@ export function startPluginRuntime(home: string): PluginRuntime {
       log,
       assets: new PluginAssets(home),
       projects: async (): Promise<string[]> => [],
+      projectInfo: async (): Promise<PluginProjectInfo[]> => [],
     }),
   );
 

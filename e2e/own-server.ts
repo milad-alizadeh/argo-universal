@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcessByStdio } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { chmod, copyFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
@@ -49,6 +49,7 @@ export async function startOwnServer(
 }> {
   const projectPath = path.join(directory, projectDirectoryName);
   const home = path.join(directory, 'server-home');
+  const fixtureBin = path.join(directory, 'fixture-bin');
   const registryPath = path.join(directory, 'registry.json');
   const installationPath = path.join(directory, 'installation.json');
   await mkdir(directory, { recursive: true });
@@ -67,6 +68,7 @@ export async function startOwnServer(
     JSON.stringify({ outcome: 'success', released: true }),
   );
   await initTestRepository(projectPath, false);
+  await installFakeGitHubCli(fixtureBin);
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
@@ -84,7 +86,7 @@ export async function startOwnServer(
           ARGO_E2E_REGISTRY_PATH: registryPath,
           ARGO_E2E_INSTALLATION_PATH: installationPath,
           ARGO_E2E_REQUEST_LOG: path.join(directory, requestLogName),
-          PATH: '/usr/bin:/bin',
+          PATH: `${fixtureBin}:/usr/bin:/bin`,
         },
         stdio: ['ignore', 'pipe', 'pipe'],
       });
@@ -155,4 +157,11 @@ export async function startOwnServer(
   }
 
   throw new Error(`Another process took the Server's port ${attempts} times`);
+}
+
+async function installFakeGitHubCli(directory: string): Promise<void> {
+  const executable = path.join(directory, 'gh');
+  await mkdir(directory, { recursive: true });
+  await copyFile(new URL('./mocks/gh', import.meta.url), executable);
+  await chmod(executable, 0o755);
 }

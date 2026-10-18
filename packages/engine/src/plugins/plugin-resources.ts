@@ -96,3 +96,14 @@ export class PluginResources {
     if (this.released) throw new Error('Plugin is stopped');
   }
 }
+
+export function supersede(
+  held: { generation: number; resources: PluginResources } | undefined,
+  generation: number,
+): void {
+  if (!held) return;
+
+  if (generation < held.generation)
+    throw new Error('Plugin worker was replaced');
+  held.resources.release();
+}

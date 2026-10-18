@@ -1,3 +1,4 @@
+import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
 import { MemoryKeychain } from '#mocks/memory-keychain';
 import { scratch } from '#mocks/probe-plugin';
@@ -21,6 +22,7 @@ it('keeps no Grants for a Plugin once it is released', async () => {
       assets: new PluginAssets(home),
       log: (): void => {},
       projects: async (): Promise<string[]> => [],
+      projectInfo: async (): Promise<PluginProjectInfo[]> => [],
     },
   );
 

@@ -18,13 +18,15 @@
         "title": "Issues",
         "path": "/"
       }
-    ]
+    ],
+    "slots": ["argo/project/details/v1"]
   },
   "capabilities": [
     {
       "kind": "process:exec",
       "command": "gh",
-      "args": ["auth", "status"]
+      "args": ["auth", "status"],
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
@@ -35,27 +37,36 @@
         "--repo",
         "*",
         "--state",
-        "*",
+        "open",
         "--limit",
         "*",
         "--json",
         "*"
-      ]
+      ],
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
       "command": "gh",
-      "args": ["issue", "view", "*", "--repo", "*", "--json", "*"]
+      "args": [
+        "issue",
+        "list",
+        "--repo",
+        "*",
+        "--state",
+        "closed",
+        "--limit",
+        "*",
+        "--json",
+        "*"
+      ],
+      "env": ["GH_HOST", "GH_TOKEN"]
     },
     {
       "kind": "process:exec",
       "command": "gh",
-      "args": ["issue", "close", "*", "--repo", "*"]
-    },
-    {
-      "kind": "process:exec",
-      "command": "gh",
-      "args": ["issue", "reopen", "*", "--repo", "*"]
+      "args": ["issue", "view", "*", "--repo", "*", "--json", "*"],
+      "env": ["GH_HOST", "GH_TOKEN"]
     }
   ]
 }

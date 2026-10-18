@@ -147,14 +147,42 @@ const oneArgument = (arg: string | undefined, operand: boolean): boolean =>
 export function childEnvironment(
   requested: Record<string, string>,
   matching: readonly ProcessCapability[],
+  serverEnvironment: NodeJS.ProcessEnv = process.env,
 ): Record<string, string> {
-  const declared = new Set(
-    matching.flatMap((capability) => capability.env ?? []),
+  const declared = declaredVariables(matching);
+
+  validateRequestedVariables(requested, declared);
+
+  return Object.assign(
+    inherited(serverEnvironment),
+    declaredEnvironment(declared, serverEnvironment),
+    requested,
   );
+}
 
+const declaredVariables = (
+  matching: readonly ProcessCapability[],
+): Set<string> =>
+  new Set(matching.flatMap((capability) => capability.env ?? []));
+
+function validateRequestedVariables(
+  requested: Record<string, string>,
+  declared: ReadonlySet<string>,
+): void {
   for (const name of Object.keys(requested)) allowVariable(name, declared);
+}
 
-  return Object.assign(inherited(), requested);
+function declaredEnvironment(
+  declared: ReadonlySet<string>,
+  serverEnvironment: NodeJS.ProcessEnv,
+): Record<string, string> {
+  return Object.fromEntries(
+    [...declared].flatMap((name) => {
+      const value = serverEnvironment[name];
+
+      return value === undefined ? [] : [[name, value]];
+    }),
+  );
 }
 
 function allowVariable(name: string, declared: ReadonlySet<string>): void {
@@ -165,10 +193,12 @@ function allowVariable(name: string, declared: ReadonlySet<string>): void {
     throw new CapabilityRefusal(`${name} is not a declared variable`);
 }
 
-const inherited = (): Record<string, string> =>
+const inherited = (
+  serverEnvironment: NodeJS.ProcessEnv,
+): Record<string, string> =>
   Object.fromEntries(
     inheritedVariables.flatMap((name) => {
-      const value = process.env[name];
+      const value = serverEnvironment[name];
 
       return value === undefined ? [] : [[name, value]];
     }),
