@@ -1,11 +1,15 @@
 import { on, type EventEmitter } from 'node:events';
-import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import type {
+  ViewMessage,
+  WireNode,
+  PluginViewId,
+} from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 
 export type ViewEvents = EventEmitter<{ message: [ViewMessage]; close: [] }>;
 
 export interface ViewSnapshot {
-  opening: { viewId: string };
+  opening: { viewId: PluginViewId };
   root: WireNode | null;
   revision: number;
   workerRevision: number | null;

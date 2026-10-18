@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { PluginSlotInput } from '#plugin-wire-slot';
 
+export const PluginViewId = z.string().min(1).brand<'PluginViewId'>();
+
+export type PluginViewId = z.infer<typeof PluginViewId>;
+
+export const PluginDispatchId = z.string().min(1).brand<'PluginDispatchId'>();
+
+export type PluginDispatchId = z.infer<typeof PluginDispatchId>;
+
 export const PluginViewInput = z.object({
   pluginId: z.string(),
   path: z.string(),
@@ -29,7 +37,7 @@ const target = z.object({
 
 export const PluginDispatchInput = PluginViewInput.extend({
   ...target.shape,
-  viewId: z.string().min(1),
+  viewId: PluginViewId,
 }).and(PluginInteraction);
 
 export type PluginDispatchInput = z.infer<typeof PluginDispatchInput>;
@@ -44,16 +52,16 @@ export type PluginDispatchResult = z.infer<typeof PluginDispatchResult>;
 export const PluginEvent = z.union([
   z.object({
     type: z.literal('open'),
-    viewId: z.string(),
+    viewId: PluginViewId,
     path: z.string(),
     slot: PluginSlotInput.optional(),
   }),
-  z.object({ type: z.literal('close'), viewId: z.string() }),
+  z.object({ type: z.literal('close'), viewId: PluginViewId }),
   z
     .object({
       type: z.literal('dispatch'),
-      viewId: z.string(),
-      requestId: z.string(),
+      viewId: PluginViewId,
+      requestId: PluginDispatchId,
       ...target.shape,
     })
     .and(PluginInteraction),

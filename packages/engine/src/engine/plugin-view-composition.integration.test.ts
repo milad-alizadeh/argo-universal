@@ -45,43 +45,51 @@ it('streams the hello page as the wire fixtures describe and delivers a tap to i
   controller.abort();
 }, 20_000);
 
-it('keeps a second Connection on its own page', async () => {
-  const home = await createRuntimePlugins([]);
+it.each([
+  { connection: 'same', revision: 2, label: 'Tapped 1 times' },
+  { connection: 'different', revision: 3, label: 'Tapped 0 times' },
+])(
+  'gives a late subscriber on a $connection Connection its current page',
+  async ({ connection, revision, label }) => {
+    const home = await createRuntimePlugins([]);
 
-  const { createCaller } = await startEngineTestHost({
-    home,
-    version: '0.0.0',
-    firstPartyPluginsDirectory: examples,
-  });
+    const { createCaller } = await startEngineTestHost({
+      home,
+      version: '0.0.0',
+      firstPartyPluginsDirectory: examples,
+    });
 
-  const first = new AbortController();
-  const second = new AbortController();
+    const first = new AbortController();
+    const second = new AbortController();
 
-  const app = createCaller({ signal: first.signal });
-  const early = (await app.plugins.view(hello))[Symbol.asyncIterator]();
+    const app = createCaller({ signal: first.signal });
+    const early = (await app.plugins.view(hello))[Symbol.asyncIterator]();
 
-  const snapshot = (await early.next()).value;
-  await app.plugins.dispatch({
-    ...hello,
-    revision: 1,
-    viewId: snapshot.viewId,
-    key: '0/2/0',
-    event: 'onPress',
-  });
-  await early.next();
+    const snapshot = (await early.next()).value;
+    await app.plugins.dispatch({
+      ...hello,
+      revision: 1,
+      viewId: snapshot.viewId,
+      key: '0/2/0',
+      event: 'onPress',
+    });
+    await early.next();
 
-  const late = (
-    await createCaller({ signal: second.signal }).plugins.view(hello)
-  )[Symbol.asyncIterator]();
+    const lateApp =
+      connection === 'same' ? app : createCaller({ signal: second.signal });
 
-  expect((await late.next()).value).toMatchObject({
-    type: 'snapshot',
-    revision: 3,
-    root: { children: [{}, { props: { label: 'Tapped 0 times' } }, {}] },
-  });
-  first.abort();
-  second.abort();
-}, 20_000);
+    const late = (await lateApp.plugins.view(hello))[Symbol.asyncIterator]();
+
+    expect((await late.next()).value).toMatchObject({
+      type: 'snapshot',
+      revision,
+      root: { children: [{}, { props: { label } }, {}] },
+    });
+    first.abort();
+    second.abort();
+  },
+  20_000,
+);
 
 it('refuses className on a Plugin component by reporting that Plugin as crashed', async () => {
   const home = await createRuntimePlugins([

@@ -1,13 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import type { PluginDispatchResult } from '@repo/contracts/plugins/wire';
+import {
+  type PluginDispatchResult,
+  PluginDispatchId,
+  type PluginViewId,
+} from '@repo/contracts/plugins/wire';
 
 type Pending = {
   pluginId: string;
-  viewId: string;
+  viewId: PluginViewId;
   finish: (result: PluginDispatchResult) => void;
 };
 
-type Dispatch = { requestId: string; answer: Promise<void> };
+type Dispatch = { requestId: PluginDispatchId; answer: Promise<void> };
 
 function completion(
   answer: ReturnType<typeof Promise.withResolvers<void>>,
@@ -19,10 +23,10 @@ function completion(
 }
 
 export class PluginDispatches {
-  private readonly pending = new Map<string, Pending>();
+  private readonly pending = new Map<PluginDispatchId, Pending>();
 
-  public wait(pluginId: string, viewId: string): Dispatch {
-    const requestId = randomUUID();
+  public wait(pluginId: string, viewId: PluginViewId): Dispatch {
+    const requestId = PluginDispatchId.parse(randomUUID());
     const answer = Promise.withResolvers<void>();
     this.pending.set(requestId, {
       pluginId,
@@ -35,7 +39,7 @@ export class PluginDispatches {
 
   public settle(
     pluginId: string,
-    requestId: string,
+    requestId: PluginDispatchId,
     result: PluginDispatchResult,
   ): void {
     const pending = this.pending.get(requestId);
@@ -45,7 +49,7 @@ export class PluginDispatches {
     pending.finish(result);
   }
 
-  public end(viewId: string): void {
+  public end(viewId: PluginViewId): void {
     for (const [id, pending] of this.pending)
       if (pending.viewId === viewId)
         this.settle(pending.pluginId, id, {

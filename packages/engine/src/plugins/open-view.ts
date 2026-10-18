@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
-import type {
-  PluginDispatchInput,
-  PluginEvent,
+import {
+  type PluginDispatchInput,
+  PluginViewId,
+  type PluginDispatchId,
+  type PluginEvent,
 } from '@repo/contracts/plugins/wire';
 import { requireViewHandler } from './view-handler';
 import type { ViewSnapshot } from './view-messages';
@@ -32,7 +34,7 @@ export function createOpenView(
     pluginId,
     connectionId,
     events,
-    opening: { ...opening, type: 'open', viewId: randomUUID() },
+    opening: { ...opening, type: 'open', viewId: createPluginViewId() },
     ...blankView(),
   };
 }
@@ -44,7 +46,7 @@ function blankView(): Pick<
   return { root: null, revision: 0, workerRevision: null, watchers: 0 };
 }
 
-type DispatchTarget = { viewId: string; revision: number };
+type DispatchTarget = { viewId: PluginViewId; revision: number };
 
 export function currentDispatch(
   view: OpenView | undefined,
@@ -69,7 +71,11 @@ function dispatchTarget(
 
 export function dispatchEvent(
   input: PluginDispatchInput,
-  target: DispatchTarget & { requestId: string },
+  target: DispatchTarget & { requestId: PluginDispatchId },
 ): Extract<PluginEvent, { type: 'dispatch' }> {
   return { ...input, ...target, type: 'dispatch' };
+}
+
+export function createPluginViewId(): PluginViewId {
+  return PluginViewId.parse(randomUUID());
 }

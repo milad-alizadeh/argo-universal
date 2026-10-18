@@ -1,5 +1,6 @@
 import type {
   PluginEvent,
+  PluginViewId,
   PluginSlotInput,
   SlotId,
   ViewMessage,
@@ -20,7 +21,7 @@ import { toWire, type Handlers, type Instance } from './wire-tree';
 export type { DispatchSender } from './page-view';
 
 export type ViewSender = (
-  viewId: string,
+  viewId: PluginViewId,
   message: ViewMessage,
 ) => Promise<void>;
 
@@ -44,11 +45,11 @@ interface Hub {
   settle: DispatchSender;
   pages: Map<string, Page>;
   slots: Map<string, SlotContent>;
-  views: Map<string, OpenView>;
+  views: Map<PluginViewId, OpenView>;
 }
 
 // An unhandled rejection ends the worker, which the Server reports as that Plugin's crash.
-function transmit(hub: Hub, viewId: string, message: ViewMessage): void {
+function transmit(hub: Hub, viewId: PluginViewId, message: ViewMessage): void {
   hub.send(viewId, message).catch(reportFailure);
 }
 
@@ -74,7 +75,7 @@ function emptyPage(): WireNode {
   return { type: 'Column', key: '0', props: {}, children: [], slots: {} };
 }
 
-function start(hub: Hub, viewId: string, element: ReactNode): void {
+function start(hub: Hub, viewId: PluginViewId, element: ReactNode): void {
   const view: OpenView = {
     viewId,
     tree: null,
@@ -123,7 +124,7 @@ function open(hub: Hub, event: Open): void {
   if (element) start(hub, event.viewId, element);
 }
 
-function close(hub: Hub, viewId: string): void {
+function close(hub: Hub, viewId: PluginViewId): void {
   hub.views.get(viewId)?.mounted?.unmount();
   hub.views.delete(viewId);
 }

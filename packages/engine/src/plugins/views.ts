@@ -1,6 +1,6 @@
-import { randomUUID } from 'node:crypto';
 import type {
   PluginDispatchInput,
+  PluginViewId,
   PluginEvent,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
@@ -8,6 +8,7 @@ import type { RpcConnection } from '../rpc';
 import { PluginDispatches } from './dispatches';
 import {
   createOpenView,
+  createPluginViewId,
   currentDispatch,
   dispatchEvent,
   type OpenView,
@@ -17,14 +18,18 @@ import { updateView, viewMessages } from './view-messages';
 
 export class PluginViews {
   private revision = 0;
-  private readonly views = new Map<string, OpenView>();
+  private readonly views = new Map<PluginViewId, OpenView>();
   public readonly dispatches = new PluginDispatches();
 
   constructor(
     private readonly send: (pluginId: string, event: PluginEvent) => void,
   ) {}
 
-  public receive(pluginId: string, viewId: string, message: ViewMessage): void {
+  public receive(
+    pluginId: string,
+    viewId: PluginViewId,
+    message: ViewMessage,
+  ): void {
     const view = this.views.get(viewId);
 
     if (view?.pluginId === pluginId) updateView(view, message, ++this.revision);
@@ -62,7 +67,7 @@ export class PluginViews {
   private retire(view: OpenView): void {
     this.dispatches.end(view.opening.viewId);
     this.views.delete(view.opening.viewId);
-    view.opening = { ...view.opening, viewId: randomUUID() };
+    view.opening = { ...view.opening, viewId: createPluginViewId() };
     view.workerRevision = null;
     this.views.set(view.opening.viewId, view);
   }

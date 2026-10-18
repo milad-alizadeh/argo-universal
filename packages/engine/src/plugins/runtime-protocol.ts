@@ -12,11 +12,7 @@ import {
   WorkerHookCommand,
 } from '@repo/contracts/plugins/hook-protocol';
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
-import {
-  PluginDispatchResult,
-  PluginEvent,
-  ViewMessage,
-} from '@repo/contracts/plugins/wire';
+import * as wire from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
@@ -64,13 +60,13 @@ export const PluginRequest = z.discriminatedUnion('api', [
   z.object({ api: z.literal('fetch'), call: FetchCall }),
   z.object({
     api: z.literal('dispatchResult'),
-    requestId: z.string(),
-    result: PluginDispatchResult,
+    requestId: wire.PluginDispatchId,
+    result: wire.PluginDispatchResult,
   }),
   z.object({
     api: z.literal('view'),
-    viewId: z.string(),
-    message: ViewMessage,
+    viewId: wire.PluginViewId,
+    message: wire.ViewMessage,
   }),
 ]);
 
@@ -97,7 +93,7 @@ export const HostCommand = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('event'),
     pluginId: z.string(),
-    event: PluginEvent,
+    event: wire.PluginEvent,
   }),
   z.object({
     type: z.literal('reply'),
@@ -157,7 +153,7 @@ export type WorkerReply = z.infer<typeof WorkerReply>;
 
 const WorkerEvent = z.object({
   type: z.literal('event'),
-  event: PluginEvent,
+  event: wire.PluginEvent,
 });
 
 export const WorkerCommand = z.union([

@@ -1,4 +1,8 @@
-import type { PluginSlotInput, WireNode } from '@repo/contracts/plugins/wire';
+import type {
+  PluginSlotInput,
+  WireNode,
+  PluginViewId,
+} from '@repo/contracts/plugins/wire';
 import { useQuery } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
@@ -34,7 +38,7 @@ type Drawn = {
   path: string;
   root: WireNode;
   revision: number;
-  viewId: string | null;
+  viewId: PluginViewId | null;
 };
 
 const contribution = (
@@ -49,7 +53,7 @@ const contribution = (
     pluginId,
     path,
     revision,
-    viewId: viewId ?? '',
+    viewId,
   }),
 });
 

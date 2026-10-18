@@ -1,5 +1,7 @@
 import type {
   PluginEvent,
+  PluginViewId,
+  PluginDispatchId,
   PluginDispatchResult,
   ViewMessage,
   WireNode,
@@ -9,12 +11,12 @@ import type { Mounted } from './reconciler';
 import type { Handlers } from './wire-tree';
 
 export type DispatchSender = (
-  requestId: string,
+  requestId: PluginDispatchId,
   result: PluginDispatchResult,
 ) => Promise<void>;
 
 export interface OpenView {
-  viewId: string;
+  viewId: PluginViewId;
   mounted?: Mounted;
   tree: WireNode | null;
   revision: number;

@@ -1,4 +1,7 @@
-import type { PluginDispatchInput } from '@repo/contracts/plugins/wire';
+import type {
+  PluginDispatchInput,
+  PluginViewId,
+} from '@repo/contracts/plugins/wire';
 import { useMutation } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import { errorMessage } from '#lib/generic/error-toast';
@@ -25,12 +28,15 @@ export function usePluginDispatch(): PluginDispatch {
 
 type DispatchTarget = Pick<
   PluginDispatchInput,
-  'pluginId' | 'path' | 'revision' | 'viewId'
->;
+  'pluginId' | 'path' | 'revision'
+> & { viewId: PluginViewId | null };
 
 export function bindPluginDispatch(
   send: PluginDispatch,
   target: DispatchTarget,
 ): PluginOnEvent {
-  return (key, interaction) => send({ ...target, key, ...interaction });
+  return async (key, interaction) => {
+    if (!target.viewId) throw new Error('Plugin view is not ready');
+    await send({ ...target, viewId: target.viewId, key, ...interaction });
+  };
 }

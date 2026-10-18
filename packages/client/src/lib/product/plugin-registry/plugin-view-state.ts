@@ -1,10 +1,14 @@
-import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import type {
+  ViewMessage,
+  WireNode,
+  PluginViewId,
+} from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 
 export interface PluginViewState {
   root: WireNode | null;
   revision: number;
-  viewId: string | null;
+  viewId: PluginViewId | null;
 }
 
 export const emptyPluginView: PluginViewState = {

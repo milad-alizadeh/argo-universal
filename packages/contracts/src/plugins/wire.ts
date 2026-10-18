@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PluginViewId } from '#plugin-wire-events';
 
 export {
   PluginSlotInput,
@@ -88,13 +89,13 @@ export type PatchOp = z.infer<typeof PatchOp>;
 export const ViewMessage = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('snapshot'),
-    viewId: z.string().optional(),
+    viewId: PluginViewId.optional(),
     revision: z.number().int().nonnegative(),
     root: WireNode,
   }),
   z.strictObject({
     type: z.literal('patch'),
-    viewId: z.string().optional(),
+    viewId: PluginViewId.optional(),
     revision: z.number().int().nonnegative(),
     ops: z.array(PatchOp).min(1),
   }),
@@ -103,6 +104,8 @@ export const ViewMessage = z.discriminatedUnion('type', [
 export type ViewMessage = z.infer<typeof ViewMessage>;
 
 export {
+  PluginViewId,
+  PluginDispatchId,
   PluginDispatchInput,
   PluginInteraction,
   PluginDispatchResult,

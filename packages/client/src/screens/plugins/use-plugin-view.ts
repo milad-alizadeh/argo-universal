@@ -38,7 +38,7 @@ export function usePluginView(pluginId: string, path: string): PluginView {
   const send = usePluginDispatch();
 
   const { revision, viewId } = state;
-  const target = { pluginId, path, revision, viewId: viewId ?? '' };
+  const target = { pluginId, path, revision, viewId };
 
   return { ...state, dispatch: bindPluginDispatch(send, target) };
 }
