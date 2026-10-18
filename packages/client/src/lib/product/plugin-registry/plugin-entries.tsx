@@ -12,6 +12,8 @@ import {
   groupedItemProps,
   stackProps,
 } from '@repo/contracts/plugins/kit';
+import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { Button } from '#primitives/actions/button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
@@ -61,9 +63,9 @@ export const pluginEntries = {
     <StandaloneGroupedListItem
       {...props}
       onPress={handlerOf(props.onPress, context)}
-      leading={context.slots.leading}
+      leading={contentSlot(context.slots.leading)}
       leadingLayout="content"
-      accessory={context.slots.accessories}
+      accessory={contentSlot(context.slots.accessories)}
       footer={context.slots.footer}
       detail={context.slots.detail}
     />
@@ -92,3 +94,8 @@ export const pluginEntries = {
     </Stack>
   )),
 } satisfies Record<PluginPart, Entry>;
+
+// A native RNHostView measures one hosted View, including every node in the Slot.
+function contentSlot(slot: ReactElement | undefined): ReactElement | undefined {
+  return slot ? <View className="self-start">{slot}</View> : undefined;
+}
