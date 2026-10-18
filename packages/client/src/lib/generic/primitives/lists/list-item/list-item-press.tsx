@@ -1,18 +1,17 @@
-import type { ReactElement, ReactNode, ComponentProps } from 'react';
+import type { ReactElement, ComponentProps } from 'react';
 import { Platform, Pressable } from 'react-native';
 import { TextClassContext } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { cn } from '../../../utils';
+import { linkPress } from './list-item-link-press';
 import { Accessory, ItemContent, Leading, Trailing } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
 import { RadioPress } from './list-item-radio';
 import { itemPress } from './list-item-styles';
 
-export interface DrawingProps extends ListItemProps {
-  accessory?: ReactNode;
-  checked?: boolean;
-  role?: 'link';
-}
+export type { DrawingProps } from './list-item-press-props';
+
+import type { DrawingProps, RowPressProps } from './list-item-press-props';
 
 function rowLabel(props: ListItemProps): string {
   return [props.title, props.value]
@@ -24,17 +23,16 @@ function pressClass(disabled?: boolean): string {
   return cn(itemPress, disabled && 'opacity-50');
 }
 
-const pressHandlers = ({
-  onPress,
-  onLongPress,
-}: ListItemProps): Pick<ListItemProps, 'onPress' | 'onLongPress'> => ({
-  onPress,
-  onLongPress,
-});
+function pressHandlers(props: ListItemProps): RowPressProps {
+  return {
+    onPress: props.href ? linkPress(props) : props.onPress,
+    onLongPress: props.onLongPress,
+  };
+}
 
 function rowRole(
   props: DrawingProps,
-): 'button' | 'link' | 'switch' | 'radio' | undefined {
+): 'button' | 'link' | 'switch' | 'radio' | 'group' | undefined {
   if (props.checked !== undefined) return 'switch';
 
   return explicitRole(props) ?? pressRole(props.onPress);
@@ -45,8 +43,8 @@ const explicitRole = (
 ): DrawingProps['role'] | DrawingProps['accessibilityRole'] =>
   props.role ?? props.accessibilityRole;
 
-const pressRole = (onPress: ListItemProps['onPress']): 'button' | undefined =>
-  onPress ? 'button' : undefined;
+const pressRole = (onPress: ListItemProps['onPress']): 'button' | 'group' =>
+  onPress ? 'button' : 'group';
 
 const rowState = (
   props: DrawingProps,
@@ -56,31 +54,43 @@ const rowState = (
   checked: props.checked,
 });
 
-function accessibilityProps(
-  props: DrawingProps,
-): ComponentProps<typeof Pressable> & { 'aria-pressed'?: boolean } {
+function accessibilityProps(props: DrawingProps): RowPressProps {
   return {
     role: rowRole(props),
-    accessibilityLabel: props.accessibilityLabel ?? rowLabel(props),
+    ...focusProps(props),
     accessibilityState: rowState(props),
+    accessibilityHint: props.description,
     'aria-checked': props.checked,
     'aria-pressed': props.selected,
+    'aria-current': currentPage(props),
+    accessible: props.accessible ?? props.content === undefined,
     disabled: props.disabled,
   };
 }
 
-function usePressProps(props: DrawingProps): ComponentProps<
-  typeof Pressable
-> & {
-  onKeyDown?: React.KeyboardEventHandler;
-} {
+function usePressProps(props: DrawingProps): RowPressProps {
   return {
     ...accessibilityProps(props),
     ...pressHandlers(props),
-    onKeyDown: props.checked === undefined ? undefined : switchKeyDown(props),
+    onKeyDown:
+      props.checked === undefined ? props.onKeyDown : switchKeyDown(props),
     android_ripple: usePressRipple(),
     testID: props.testID,
+    ...triggerProps(props),
     className: pressClass(props.disabled),
+  };
+}
+
+function triggerProps(props: DrawingProps): RowPressProps {
+  return {
+    onPointerDown: props.onPointerDown,
+    onHoverIn: props.onHoverIn,
+    onHoverOut: props.onHoverOut,
+    ref: props.ref,
+    href: props.href,
+    'aria-haspopup': props['aria-haspopup'],
+    'aria-expanded': props['aria-expanded'],
+    'aria-controls': props['aria-controls'],
   };
 }
 
@@ -108,7 +118,7 @@ function ItemContentSlots(props: DrawingProps): ReactElement {
   return (
     <TextClassContext value={undefined}>
       <Leading {...props} />
-      <ItemContent {...props} />
+      {props.content ?? <ItemContent {...props} />}
       <Trailing {...props} />
       <Accessory>{props.accessory}</Accessory>
     </TextClassContext>
@@ -130,4 +140,21 @@ export function ItemPress(props: DrawingProps): ReactElement {
       <ItemContentSlots {...props} />
     </Pressable>
   );
+}
+
+function currentPage(props: DrawingProps): 'page' | undefined {
+  return props.selected && rowRole(props) === 'link' ? 'page' : undefined;
+}
+
+function focusProps(props: DrawingProps): RowPressProps {
+  return {
+    accessibilityLabel: spokenRowLabel(props),
+    tabIndex: rowRole(props) === 'group' ? -1 : undefined,
+  };
+}
+
+function spokenRowLabel(props: DrawingProps): string | undefined {
+  return props.content === undefined
+    ? (props.accessibilityLabel ?? rowLabel(props))
+    : undefined;
 }

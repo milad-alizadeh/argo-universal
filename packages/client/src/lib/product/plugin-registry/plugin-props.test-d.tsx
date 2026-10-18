@@ -26,10 +26,9 @@ import type { z } from 'zod';
 import type { ActionProps } from '#primitives/actions/action-list';
 import type { EmptyStateProps } from '#primitives/status/empty-state';
 
-type PublicComponents = Omit<
-  PluginComponents,
-  'List.Section' | 'ActionList.Section'
-> & {
+type NestedPart = Extract<keyof PluginComponents, `${string}.${string}`>;
+
+type PublicComponents = Omit<PluginComponents, NestedPart> & {
   ListSection: PluginComponents['List.Section'];
   ActionListSection: PluginComponents['ActionList.Section'];
 };

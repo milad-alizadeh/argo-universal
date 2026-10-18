@@ -1,0 +1,118 @@
+[
+  {
+    "type": "Switch",
+    "key": "switch",
+    "props": {
+      "accessibilityLabel": "Notifications",
+      "value": false,
+      "onValueChange": {
+        "$event": "onValueChange"
+      }
+    },
+    "children": [],
+    "slots": {}
+  },
+  {
+    "type": "Checkbox",
+    "key": "checkbox",
+    "props": {
+      "label": "Include archived",
+      "value": false,
+      "onValueChange": {
+        "$event": "onValueChange"
+      }
+    },
+    "children": [],
+    "slots": {}
+  },
+  {
+    "type": "Picker",
+    "key": "picker",
+    "props": {
+      "label": "Environment",
+      "value": "dev",
+      "options": [
+        {
+          "value": "dev",
+          "label": "Development"
+        },
+        {
+          "value": "prod",
+          "label": "Production"
+        }
+      ],
+      "onValueChange": {
+        "$event": "onValueChange"
+      }
+    },
+    "children": [],
+    "slots": {}
+  },
+  {
+    "type": "Slider",
+    "key": "slider",
+    "props": {
+      "value": 2,
+      "minimumValue": 0,
+      "maximumValue": 10,
+      "step": 1,
+      "accessibilityLabel": "Concurrency",
+      "valueLabel": "2 jobs",
+      "onValueChange": {
+        "$event": "onValueChange"
+      }
+    },
+    "children": [],
+    "slots": {}
+  },
+  {
+    "type": "TextInput",
+    "key": "textinput",
+    "props": {
+      "label": "Project name",
+      "value": "Argo",
+      "onChangeText": {
+        "$event": "onChangeText"
+      },
+      "onSubmit": {
+        "$event": "onSubmit"
+      }
+    },
+    "children": [],
+    "slots": {}
+  },
+  {
+    "type": "IconButton",
+    "key": "iconbutton",
+    "props": {
+      "icon": "add",
+      "accessibilityLabel": "Add project",
+      "onPress": {
+        "$event": "onPress"
+      }
+    },
+    "children": [],
+    "slots": {}
+  },
+  {
+    "type": "SplitButton",
+    "key": "splitbutton",
+    "props": {
+      "label": "Deploy",
+      "menuLabel": "More deployments",
+      "onPress": {
+        "$event": "onPress"
+      },
+      "actions": [
+        {
+          "label": "Deploy preview",
+          "onPress": {
+            "$event": "onPress"
+          }
+        }
+      ]
+    },
+    "children": [],
+    "slots": {}
+  }
+]

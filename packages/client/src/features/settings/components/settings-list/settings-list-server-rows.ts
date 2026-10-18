@@ -1,4 +1,4 @@
-import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
+import type { RowBadge } from '#primitives/lists/list-item';
 import {
   connectionValue,
   countValue,
@@ -65,7 +65,7 @@ export function accountsRow(props: SettingsListProps): SettingsRow {
 
 const connectionStatuses: Record<
   NonNullable<SettingsListProps['status']>,
-  GroupedListItemProps['status']
+  Omit<Extract<RowBadge, { kind: 'status' }>, 'kind'>
 > = {
   disconnected: { tone: 'danger', label: 'server unavailable' },
   loading: { tone: 'warning', label: 'connecting' },

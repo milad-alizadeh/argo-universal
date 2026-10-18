@@ -3,20 +3,13 @@ import type {
   PluginViewId,
   SlotId,
   ViewMessage,
-  WireNode,
 } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import { reportFailure } from './host-config';
-import { schedulePage } from './page-frame';
-import {
-  nextMessage,
-  runHandler,
-  type OpenView,
-  type DispatchSender,
-} from './page-view';
-import { mount } from './reconciler';
+import { startPage, transmit, failedDrawingRoot } from './mounted-page';
+import { runHandler, type OpenView, type DispatchSender } from './page-view';
+import { ReplacementPages } from './replacement-pages';
 import { elementOf, type Page, type SlotContent } from './view-content';
-import { toWire, type Handlers, type Instance } from './wire-tree';
 
 export type { DispatchSender } from './page-view';
 
@@ -33,6 +26,7 @@ export interface Pages {
   register: (path: string, page: Page) => void;
   registerSlot: (slotId: SlotId, content: SlotContent) => void;
   receive: (event: PluginEvent) => void;
+  registerReplacement: (path: string, element: ReactNode) => void;
 }
 
 interface Hub {
@@ -41,46 +35,7 @@ interface Hub {
   pages: Map<string, Page>;
   slots: Map<string, SlotContent>;
   views: Map<PluginViewId, OpenView>;
-}
-
-// An unhandled rejection ends the worker, which the Server reports as that Plugin's crash.
-function transmit(hub: Hub, viewId: PluginViewId, message: ViewMessage): void {
-  hub.send(viewId, message).catch(reportFailure);
-}
-
-function publish(hub: Hub, view: OpenView, next: WireNode): void {
-  const message = nextMessage(view, next);
-
-  view.revision = message.revision;
-  view.tree = next;
-  transmit(hub, view.viewId, message);
-}
-
-function committed(hub: Hub, view: OpenView, container: Instance): void {
-  const root = container.children[0];
-
-  const handlers: Handlers = new Map();
-  const next = root ? toWire(root, handlers) : emptyPage();
-
-  view.handlers = handlers;
-  publish(hub, view, next);
-}
-
-function emptyPage(): WireNode {
-  return { type: 'Column', key: '0', props: {}, children: [], slots: {} };
-}
-
-function start(hub: Hub, viewId: PluginViewId, element: ReactNode): void {
-  const view: OpenView = {
-    viewId,
-    frame: undefined,
-    tree: null,
-    revision: 0,
-    handlers: new Map(),
-  };
-
-  hub.views.set(viewId, view);
-  view.mounted = mount(element, (container) => schedule(hub, view, container));
+  replacements: ReplacementPages;
 }
 
 // A viewer that joins late gets the current tree again, as a snapshot.
@@ -97,9 +52,19 @@ function open(hub: Hub, event: Open): void {
   const existing = hub.views.get(event.viewId);
 
   if (existing) return resend(hub, existing);
-  const element = elementOf(hub, event);
+  openElement(hub, event);
+}
 
-  if (element) start(hub, event.viewId, element);
+function openElement(hub: Hub, event: Open): void {
+  const element = hub.replacements.take(event.path) ?? elementOf(hub, event);
+
+  if (element)
+    return startPage(hub, {
+      viewId: event.viewId,
+      element,
+      replaceable: Boolean(event.renderSlot),
+    });
+  missingRender(hub, event);
 }
 
 function close(hub: Hub, viewId: PluginViewId): void {
@@ -125,29 +90,47 @@ async function dispatch(hub: Hub, event: Dispatch): Promise<void> {
 
 function receive(hub: Hub, event: PluginEvent): void {
   if (event.type === 'dispatch') void dispatch(hub, event).catch(reportFailure);
-  else if (event.type === 'open') open(hub, event);
-  else close(hub, event.viewId);
+  else receiveDrawing(hub, event);
 }
 
 // A page or Slot content a Plugin registered, mounted on demand: each commit sends a snapshot first, then revisioned patches.
 export function mountPages(send: ViewSender, settle: DispatchSender): Pages {
-  const hub: Hub = {
-    send,
-    settle,
-    pages: new Map(),
-    slots: new Map(),
-    views: new Map(),
-  };
+  const hub = pageHub(send, settle);
 
   return {
     register: (path, page) => void hub.pages.set(path, page),
     registerSlot: (slotId, content) => void hub.slots.set(slotId, content),
     receive: (event) => receive(hub, event),
+    registerReplacement: (path, element) =>
+      hub.replacements.register(path, element),
   };
 }
 
-function schedule(hub: Hub, view: OpenView, container: Instance): void {
-  schedulePage(view, () => {
-    if (hub.views.get(view.viewId) === view) committed(hub, view, container);
+function pageHub(send: ViewSender, settle: DispatchSender): Hub {
+  return {
+    send,
+    settle,
+    pages: new Map(),
+    slots: new Map(),
+    views: new Map(),
+    replacements: new ReplacementPages(),
+  };
+}
+
+function receiveDrawing(
+  hub: Hub,
+  event: Exclude<PluginEvent, { type: 'dispatch' }>,
+): void {
+  if (event.type === 'open') open(hub, event);
+  else if (event.type === 'close') close(hub, event.viewId);
+  else hub.replacements.discard(event.path);
+}
+
+function missingRender(hub: Hub, event: Open): void {
+  if (!event.renderSlot) return;
+  transmit(hub, event.viewId, {
+    type: 'snapshot',
+    revision: 1,
+    root: failedDrawingRoot('replacement tree is no longer available'),
   });
 }

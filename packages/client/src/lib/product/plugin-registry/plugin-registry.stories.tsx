@@ -1,9 +1,12 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import { WireNode } from '@repo/contracts/plugins/wire';
 import { slottedRow } from '@repo/contracts/plugins/wire-fixtures';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import controls from '@repo/mocks/plugins/controls.json' with { type: 'json' };
+import overlays from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
+import { Stack } from '#primitives/layout/stack';
 import { PluginTree } from './plugin-registry';
 
 const meta = {
@@ -68,3 +71,21 @@ function svgRoot(): WireNode {
     slots: {},
   };
 }
+
+export const Controls: StoryObj<typeof meta> = {
+  render: () => (
+    <Stack direction="column" gap={4}>
+      {controls.map((fixture) => {
+        const root = WireNode.parse(fixture);
+
+        return <PluginTree key={root.key} root={root} onEvent={() => {}} />;
+      })}
+    </Stack>
+  ),
+};
+
+export const Overlays: StoryObj<typeof meta> = {
+  render: () => (
+    <PluginTree root={WireNode.parse(overlays)} onEvent={() => {}} />
+  ),
+};

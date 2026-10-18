@@ -40,7 +40,7 @@ ADR-0025's stability rule also blocks the spec: a kit part turns stable only onc
   - Plugin JSX types are generated from the schemas, so a wrong prop fails in the author's editor, and `argo plugin validate` (#824) checks trees with them.
   - The schema is the only definition of a part's Plugin-facing props, including each prop's description. The kit component's props type is derived from it: one mapped type in the client turns events into callbacks and Slots into React nodes, and a component adds its kit-only props (such as ListItem's `accessory`) by intersection. Changing a Plugin-facing prop means changing the schema; there is nothing to keep in step. Amended by the owner on 2026-10-18.
   - Plugin JSX types and the per-part docs are generated from the same schemas. The docs are built, never committed, and CI runs the build.
-  - The App keeps only the renderers.
+  - The App keeps only the renderers. Its registry maps each wire type straight to its kit component, and one generic renderer reads the schema to turn events into callbacks and Slots into nodes. App-owned state such as drafts, optimistic toggles and selection is handled there once, from schema metadata, never in a per-part adapter. Amended by the owner on 2026-10-18 (#1050).
 - **Parts are versioned.** Each App reports a version per part it draws, extending ADR-0027's list of types.
   - For an older App, the Server strips optional props that App's version doesn't know, and lowers a new part to one it does know where the kit names one. For example, `Stack` lowers to `Row` or `Column`.
   - A container whose props still fail to parse shows "Update Argo to see this", like an unknown container, instead of vanishing.

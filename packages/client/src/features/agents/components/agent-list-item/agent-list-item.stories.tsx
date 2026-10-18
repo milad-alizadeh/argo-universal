@@ -2,8 +2,8 @@ import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { fn } from 'storybook/test';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { AgentListItem } from './agent-list-item';
 
 const entry = publishedRegistry.agents[0];
@@ -16,11 +16,11 @@ const meta = {
   parameters: { screenPreview: true },
   decorators: [
     (Story): ReactElement => (
-      <GroupedList>
-        <GroupedListSection>
+      <List appearance="grouped">
+        <ListSection>
           <Story />
-        </GroupedListSection>
-      </GroupedList>
+        </ListSection>
+      </List>
     ),
   ],
   args: {

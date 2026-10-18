@@ -2,9 +2,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { IconButton } from '#primitives/actions/icon-button';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Icon } from '#primitives/content/icon';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { AttachLayout } from './composer-toolbar-types';
 import type { ComposerProps } from './composer-types';
@@ -53,11 +54,11 @@ interface AttachMenuProps {
 function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-content">
-      <GroupedList fit>
-        <GroupedListSection>
+      <List appearance="grouped" fit>
+        <ListSection>
           <ComposerAttachItems {...menu} />
-        </GroupedListSection>
-      </GroupedList>
+        </ListSection>
+      </List>
     </View>
   );
 }
@@ -139,11 +140,11 @@ function ComposerAttachItem({
   close,
 }: AttachItemProps): React.JSX.Element {
   return (
-    <GroupedListItem
-      label={item.label}
-      icon={item.icon}
+    <ListItem
+      title={item.label}
+      leading={<Icon name={item.icon} role="row" />}
       accessibilityRole="button"
-      disclosure={false}
+
       disabled={!item.onPress}
       onPress={() => close(item.onPress)}
     />

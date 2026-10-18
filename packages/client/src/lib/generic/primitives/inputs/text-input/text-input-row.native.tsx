@@ -1,14 +1,14 @@
 import type * as React from 'react';
-import { StackedCell } from '#primitives/lists/grouped-list-item';
+import { Host } from '#primitives/native/host';
 import { PhoneField } from './text-input-phone-field';
 import type { PhoneFieldProps } from './text-input-props';
 
 // The native field in its list row at every size class; in a stacked list it draws the row's cell.
 export function RowTextInput(props: PhoneFieldProps): React.JSX.Element {
   return (
-    <StackedCell>
+    <Host matchContents={{ vertical: true }} style={{ flex: 1 }}>
       <PhoneField {...props} />
-    </StackedCell>
+    </Host>
   );
 }
 

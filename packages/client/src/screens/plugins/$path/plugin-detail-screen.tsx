@@ -39,12 +39,12 @@ function PluginPage({
   segments: readonly string[];
 }): React.JSX.Element {
   // The segments after the Plugin id and the nav id are the page's own path.
-  const { root, dispatch } = usePluginView(
+  const { root, dispatch, viewId } = usePluginView(
     pluginId,
     `/${segments.slice(2).join('/')}`,
   );
 
-  return <PluginDetailView root={root} onEvent={dispatch} />;
+  return <PluginDetailView viewId={viewId} root={root} onEvent={dispatch} />;
 }
 
 function PluginUnavailable(): React.JSX.Element {

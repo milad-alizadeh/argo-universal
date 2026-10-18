@@ -2,6 +2,7 @@
 import {
   OutlinedTextField,
   type OutlinedTextFieldProps,
+  type TextFieldRef,
   Text,
   useNativeState,
 } from '@expo/ui/jetpack-compose';
@@ -11,6 +12,7 @@ import { codeFace } from '#primitives/content/native-text';
 import type { FieldProps } from '#primitives/fields/field';
 import { errorMessage } from '#primitives/fields/field-errors';
 import { useMaterialPalette } from '#primitives/native/material-palette';
+import { useFormFocus } from '../../../form-focus';
 import { useFieldText } from './text-input-field-text';
 import { requiredLabel } from './text-input-label';
 import { FieldProgress } from './text-input-progress';
@@ -19,11 +21,14 @@ import { isInvalid, type PhoneFieldProps } from './text-input-props';
 const fullWidth = [fillMaxWidth()];
 
 export function PhoneField(props: PhoneFieldProps): React.JSX.Element {
+  const { ref, next } = useFormFocus<TextFieldRef>(props.disabled);
+
   return (
     <OutlinedTextField
+      ref={ref}
       {...useFieldValue(props)}
       {...fieldBehaviour(props)}
-      {...entryBehaviour(props)}
+      {...entryBehaviour(props, next)}
       colors={useMaterialPalette().outlinedFieldColors}
     >
       <FieldSlots {...props} />
@@ -85,11 +90,16 @@ function fieldBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
 }
 
 // Focus as the field appears, and a field that submits its form shows Done on the keyboard's action key.
-function entryBehaviour(props: PhoneFieldProps): OutlinedTextFieldProps {
+function entryBehaviour(
+  props: PhoneFieldProps,
+  next: () => void,
+): OutlinedTextFieldProps {
   return {
     autoFocus: props.focusOnOpen,
     keyboardOptions: keyboardOptions(props),
-    keyboardActions: props.onSubmit && { onDone: props.onSubmit },
+    keyboardActions: props.onSubmit
+      ? { onDone: props.onSubmit }
+      : { onNext: next },
   };
 }
 
@@ -100,7 +110,7 @@ function keyboardOptions(
     capitalization: 'none',
     autoCorrectEnabled: false,
     keyboardType: keyboardType(props),
-    imeAction: props.onSubmit ? 'done' : 'default',
+    imeAction: props.onSubmit ? 'done' : 'next',
   };
 }
 

@@ -1,10 +1,11 @@
-import { useMemo, type ReactElement } from 'react';
+import { useId, useMemo, type ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { ListContext } from '../../../list-context';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
 import { childEntries, type ListChild } from './list-children';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
+import { ListKeyboard } from './list-keyboard';
 import type { ListProps } from './list-props';
 import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
@@ -88,7 +89,8 @@ function childContext(
 }
 
 function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
-  const items = useMemo(() => childEntries(children), [children]);
+  const id = useId();
+  const items = useMemo(() => childEntries(children, id), [children, id]);
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
 
@@ -123,7 +125,11 @@ function childMaxHeight(
 export function List<Item>(props: ListProps<Item>): ReactElement {
   if (props.items !== undefined) return <DataList {...props} />;
 
-  return <ChildrenList {...childrenOptions(props)} />;
+  return (
+    <ListKeyboard fit={props.fit}>
+      <ChildrenList {...childrenOptions(props)} />
+    </ListKeyboard>
+  );
 }
 
 List.Section = ListSection;

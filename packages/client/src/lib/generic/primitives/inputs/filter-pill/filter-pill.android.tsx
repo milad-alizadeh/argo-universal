@@ -29,7 +29,7 @@ function useChipLook(
 
   return {
     colors: chipColors,
-    border: { color: selected ? roles.selected : roles.outlineVariant },
+    border: { color: selected ? roles.primary : roles.outlineVariant },
   };
 }
 

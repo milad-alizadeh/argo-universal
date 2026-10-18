@@ -35,12 +35,12 @@ type EntryProps = Pick<TextFieldProps, 'required' | 'numeric' | 'secure'>;
  */
 type RowEntryProps = Pick<TextFieldProps, 'labelHidden'>;
 
-// A row inside a GroupedListSection: the label leading, the field taking the rest of the row.
+// A row inside a List.Section: the label leading, the field taking the rest of the row.
 export type RowTextInputProps = TextFieldProps &
   EntryProps &
   RowEntryProps & { variant: 'row' };
 
-// A field on its own, outside a GroupedListSection, with its label above it and its footer under it.
+// A field on its own, outside a List.Section, with its label above it and its footer under it.
 export type StandaloneTextInputProps = TextFieldProps &
   EntryProps &
   RowEntryProps & { variant?: 'standalone' };

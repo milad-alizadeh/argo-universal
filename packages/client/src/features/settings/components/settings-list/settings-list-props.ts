@@ -1,5 +1,5 @@
 import type { Href } from 'expo-router';
-import type { GroupedListItemProps } from '#primitives/lists/grouped-list-item';
+import type { RowBadge } from '#primitives/lists/list-item';
 import type { IconName } from '../../../../lib/generic/symbols/icon-names';
 
 // A page's path, one the router knows.
@@ -33,5 +33,5 @@ export interface SettingsRow {
   value?: string;
   needsAttention?: boolean;
   disabled?: boolean;
-  status?: GroupedListItemProps['status'];
+  status?: Omit<Extract<RowBadge, { kind: 'status' }>, 'kind'>;
 }

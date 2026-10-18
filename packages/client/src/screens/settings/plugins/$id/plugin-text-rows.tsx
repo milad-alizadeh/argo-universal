@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { TextInput } from '#primitives/inputs/text-input';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { ListItem } from '#primitives/lists/list-item';
 
 type TextRowProps = {
   label: string;
@@ -16,7 +15,7 @@ export function TextRow({
   onSave,
   ...row
 }: TextRowProps): React.JSX.Element {
-  return <TextInput variant="row" {...row} {...useTextDraft(value, onSave)} />;
+  return <ListItem.TextField {...row} {...useTextDraft(value, onSave)} />;
 }
 
 type Draft = {
@@ -43,8 +42,7 @@ export function SecretRow(props: SecretRowProps): React.JSX.Element {
 
   return (
     <>
-      <TextInput
-        variant="row"
+      <ListItem.TextField
         secure
         {...row}
         placeholder={set ? 'Saved in the Keychain' : 'Not set'}
@@ -58,10 +56,10 @@ export function SecretRow(props: SecretRowProps): React.JSX.Element {
 // An empty secret clears it from the Keychain.
 function ClearSecretRow({ label, onSave }: SecretRowProps): React.JSX.Element {
   return (
-    <GroupedListItem
-      label={`Clear ${label}`}
+    <ListItem.Button
+      title={`Clear ${label}`}
       tone="danger"
-      disclosure={false}
+
       onPress={() => onSave('')}
     />
   );

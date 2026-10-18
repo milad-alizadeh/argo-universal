@@ -4,13 +4,17 @@ import type {
   Json,
   JsonObject,
 } from '@repo/contracts/plugins/hook-protocol';
+import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import { HookBudget } from './hook-budget';
 import type { RegisteredHook } from './hook-registry';
 import { readRewrite } from './hook-rules';
+import type { RenderedReplacement } from './render-answer';
 
 // One link of a chain: the event as this Hook received it, and the rest of the chain beneath it.
 export type HookStep = {
   name: HookEventName;
+  surface?: PluginSurface;
+  replacements?: RenderedReplacement[];
   event: JsonObject;
   rest: (event: JsonObject) => Promise<Json>;
 };

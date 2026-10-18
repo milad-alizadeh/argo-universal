@@ -13,7 +13,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { ListItem } from '#primitives/lists/list-item';
 import {
   pushDestination,
   updateDestination,
@@ -77,11 +77,11 @@ export function SheetLink(props: SheetLinkProps): ReactElement {
   const sheet = useSheet();
 
   return (
-    <GroupedListItem
-      label={props.label}
+    <ListItem.Link
+      title={props.label}
       value={props.value}
-      valueLeading={props.valueLeading}
-      disclosure
+      leading={props.valueLeading}
+
       accessibilityRole="button"
       onPress={() => sheet.push(props.to)}
     />

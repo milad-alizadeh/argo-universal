@@ -1,8 +1,11 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { ListContext } from '../../../list-context';
+import { ListFooter } from '../../../list-footer';
+import { InListItem } from '../../../list-item-control-context';
 import { hasLeading } from './list-item-parts';
+import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import type { ListItemProps } from './list-item-props';
 import { useItemSelection, ChoiceAccessory } from './list-item-selection';
@@ -39,11 +42,22 @@ function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
+  return (
+    <InListItem value>
+      <ItemSurface {...props} />
+      {props.description && Platform.OS !== 'android' ? (
+        <ListFooter text={props.description} />
+      ) : null}
+    </InListItem>
+  );
+}
+
+function ItemSurface(props: DrawingProps): ReactElement {
   const { appearance, position } = useContext(ListContext);
 
   return (
     <View className={itemSurface(appearance, position, props.selected)}>
-      <ItemPress {...props} />
+      <ItemPress {...drawingContent(props)} />
       <Selection selected={props.selected} />
       <ItemSeparator {...props} />
       <ItemProgress progress={props.progress} />
@@ -60,4 +74,13 @@ export function ListItem(props: ListItemProps): ReactElement {
       accessory={<ChoiceAccessory {...selected} />}
     />
   );
+}
+
+function drawingContent(props: DrawingProps): DrawingProps {
+  return {
+    ...placedContent(props),
+    accessibilityLabel:
+      props.accessibilityLabel ??
+      [props.title, props.value].filter(Boolean).join(', '),
+  };
 }

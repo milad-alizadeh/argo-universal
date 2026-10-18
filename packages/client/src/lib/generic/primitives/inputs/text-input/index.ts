@@ -4,3 +4,9 @@ export {
   type StandaloneTextInputProps,
   type TextInputProps,
 } from './text-input-props';
+
+export { RowTextInput } from './text-input-row';
+
+export { StandaloneTextInput } from './text-input-standalone';
+
+export type { TextFieldProps } from './text-input-props';

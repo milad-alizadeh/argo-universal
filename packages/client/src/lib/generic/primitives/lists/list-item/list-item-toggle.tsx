@@ -8,6 +8,7 @@ export type ListItemToggleProps = Pick<
   ListItemProps,
   | 'title'
   | 'subtitle'
+  | 'description'
   | 'leading'
   | 'disabled'
   | 'accessibilityLabel'

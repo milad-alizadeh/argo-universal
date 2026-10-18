@@ -1,24 +1,13 @@
 import { z } from 'zod';
-import { part, stringLabel, onPress } from '../plugin-part-schema-utils';
-import { iconButtonProps } from '../presentation-kit-props';
+import { iconButtonPart } from '../icon-button-part';
+import { part } from '../plugin-part-schema-utils';
 import { selectionPartSchemas } from '../selection-parts';
 import { buttonGroupProps } from '../simple-kit-props';
 import { wireParts } from '../wire-parts';
 
 export const actionsPartSchemas = {
   Button: wireParts.Button,
-  IconButton: part('An icon-only button.', iconButtonProps, {
-    events: { onPress: z.undefined() },
-    label: 'The required `accessibilityLabel` is the button name.',
-    previous: [
-      z.object({
-        icon: z.string().describe('Native symbol name.'),
-        accessibilityLabel: stringLabel,
-        disabled: z.boolean().optional(),
-        onPress: onPress.optional(),
-      }),
-    ],
-  }),
+  IconButton: iconButtonPart,
   ButtonGroup: part('A joined group of buttons.', buttonGroupProps, {
     children: true,
     slots: {},

@@ -12,8 +12,34 @@ export interface ElementProps {
     | ((item: WireJson, index: number) => ReactNode);
 }
 
-const isProp = (value: ElementProps[string]): value is Prop =>
-  typeof value === 'function' || WireJson.safeParse(value).success;
+function isProp(value: ElementProps[string]): value is Prop {
+  if (typeof value === 'function') return true;
+
+  return isPropData(value);
+}
+
+function isPropData(value: ElementProps[string]): boolean {
+  if (Array.isArray(value)) return value.every(isProp);
+
+  if (value === null) return true;
+
+  return isPropScalar(value);
+}
+
+function isPropScalar(value: Exclude<ElementProps[string], null>): boolean {
+  if (typeof value === 'object') return isPropObject(value);
+
+  return WireJson.safeParse(value).success;
+}
+
+function isPropObject(
+  value: Extract<NonNullable<ElementProps[string]>, object>,
+): boolean {
+  return (
+    Object.getPrototypeOf(value) === Object.prototype &&
+    Object.values(value).every(isProp)
+  );
+}
 
 const reserved = new Set(['children', 'argoKey']);
 

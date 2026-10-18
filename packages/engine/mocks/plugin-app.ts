@@ -1,3 +1,4 @@
+import type { PartVersions } from '@repo/contracts/plugins/kit';
 import type {
   ViewMessage,
   PluginDispatchInput,
@@ -20,8 +21,14 @@ export interface PluginApp {
 export function connectPluginApp(
   url: string,
   page: { pluginId: string; path: string },
+  parts?: PartVersions,
 ): PluginApp {
-  const socket = createWSClient({ url: url.replace('http:', 'ws:') });
+  const socket = createWSClient({
+    url: url.replace('http:', 'ws:'),
+    connectionParams: parts
+      ? { pluginSurface: JSON.stringify({ platform: 'web', parts }) }
+      : undefined,
+  });
 
   const client = createTRPCClient<AppRouter>({
     links: [wsLink({ client: socket })],

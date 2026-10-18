@@ -13,3 +13,5 @@ export {
   reducePluginView,
   type PluginViewState,
 } from './plugin-view-state';
+
+export { ReplaceableSlot, ReplaceableSlotRenderer } from './replaceable-slot';

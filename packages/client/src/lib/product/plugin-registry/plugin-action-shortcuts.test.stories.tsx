@@ -2,7 +2,7 @@ import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { ActionShortcutScope } from '#primitives/actions/action-list';
-import { GroupedList } from '#primitives/lists/grouped-list';
+import { List } from '#primitives/lists/list';
 import { PluginSlot } from './plugin-slot';
 
 function actions(label: string): WireNode {
@@ -66,9 +66,9 @@ type Story = StoryObj<typeof meta>;
 export const FirstContributionOwnsShortcut: Story = {
   render: () => (
     <ActionShortcutScope>
-      <GroupedList>
+      <List appearance="grouped">
         <PluginSlot contributions={contributions} />
-      </GroupedList>
+      </List>
     </ActionShortcutScope>
   ),
   play: async ({ canvas, canvasElement, userEvent }) => {

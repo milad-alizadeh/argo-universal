@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Variation, Variations as VariationList } from '../../../variations';
@@ -127,11 +127,11 @@ function ProjectRow(): ReactElement {
   const [value, setValue] = useState('argo');
 
   return (
-    <GroupedList fit>
-      <GroupedListSection>
+    <List appearance="grouped" fit>
+      <ListSection>
         <Combobox {...rowPresentation} value={value} onValueChange={setValue} />
-      </GroupedListSection>
-    </GroupedList>
+      </ListSection>
+    </List>
   );
 }
 

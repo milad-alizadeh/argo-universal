@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { Text } from '#primitives/content/text';
-import { ListItem } from './list-item';
+import { ListItem } from './index';
 import { Overview } from './list-item.stories';
 
 const title = 'Deploy web';
@@ -57,5 +57,25 @@ export const Value: Story = {
   args: { title: 'Version', value: '1.2', onPress: undefined },
   play: async ({ canvas }) => {
     await expect(canvas.getByLabelText('Version, 1.2')).toBeVisible();
+  },
+};
+
+export const StepperBounds: Story = {
+  render: () => (
+    <ListItem.Stepper
+      title="Max Sessions"
+      value={1}
+      min={1}
+      max={2}
+      onValueChange={fn()}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('button', { name: 'Decrease Max Sessions' }),
+    ).toBeDisabled();
+    await expect(
+      canvas.getByRole('button', { name: 'Increase Max Sessions' }),
+    ).toBeEnabled();
   },
 };

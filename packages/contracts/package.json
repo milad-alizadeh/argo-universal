@@ -7,7 +7,9 @@
     "#plugin-identifier": "./src/plugins/plugin-identifier.ts",
     "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
     "#plugin-wire-events": "./src/plugins/wire-events.ts",
-    "#plugin-surface": "./src/plugins/surface.ts"
+    "#plugin-replaceable-slot-id": "./src/plugins/replaceable-slot-id.ts",
+    "#plugin-surface": "./src/plugins/surface.ts",
+    "#plugin-wire-json": "./src/plugins/wire-json.ts"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -18,6 +20,8 @@
     "./plugins/assets": "./src/plugins/assets.ts",
     "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",
     "./plugins/wire-limits": "./src/plugins/wire-limits.ts",
+    "./plugins/replaceable-fixtures": "./mocks/replaceable-slots.ts",
+    "./plugins/replaceable": "./src/plugins/replaceable.ts",
     "./plugins/wire": "./src/plugins/wire.ts",
     "./plugins/wire-patch": "./src/plugins/wire-patch.ts",
     "./plugins/wire-fixtures": "./src/plugins/wire-fixtures.ts",
@@ -25,11 +29,16 @@
     "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",
     "./plugins/action-list-props": "./src/plugins/action-list-props.ts",
     "./plugins/kit": "./src/plugins/kit.ts",
+    "./plugins/replacement-tree": "./src/plugins/replacement-tree.ts",
     "./plugins/prepare-tree": "./src/plugins/prepare-tree.ts",
     "./kit-tokens": "./src/kit-tokens.ts",
     "./plugins/wire-node-key": "./src/plugins/wire-node-key.ts",
     "./kit-props": "./src/kit-props.ts",
-    "./kit-symbols": "./src/kit-symbols/index.ts"
+    "./kit-symbols": "./src/kit-symbols/index.ts",
+    "./plugins/action-handler-path": "./src/plugins/action-handler-path.ts",
+    "./plugins/map-action-content": "./src/plugins/map-action-content.ts",
+    "./plugins/wire-handler": "./src/plugins/wire-handler.ts",
+    "./desktop-share": "./src/desktop-share.ts"
   },
   "scripts": {
     "generate:registry": "node tools/registry/generate.mts && json2ts -i src/agents/upstream/registry.published.schema.gen.json -o src/agents/upstream/registry.gen.ts --cwd src/agents/upstream --unknownAny --bannerComment '/* Generated from ACP Registry 33a1a101ef68ab20a97624ac89d4b977eeac0daf schema and publisher literal by json-schema-to-typescript 16.0.0. */'",

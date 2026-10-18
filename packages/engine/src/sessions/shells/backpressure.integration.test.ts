@@ -83,7 +83,7 @@ it.each(['exit', 'stop'] as const)(
     assert(record);
     assert(record.outputBlobId);
     const output = await readFile(join(host.blobsFolder, record.outputBlobId));
-    expect(output.length).toBe(producedBytes);
+    expect(output).toHaveLength(producedBytes);
     expect(record.outputBlobId).toBe(
       createHash('sha256')
         .update(Buffer.alloc(producedBytes, 120))

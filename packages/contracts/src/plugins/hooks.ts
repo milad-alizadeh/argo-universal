@@ -3,6 +3,7 @@ import { ContentBlock } from '../feed/content-block';
 import { PendingPermission } from '../sessions/snapshot';
 import { StopReason } from '../sessions/turn';
 import { HookEventName } from './hook-protocol';
+import { ReplaceableInput, RenderAnswer } from './replaceable';
 
 export { HookEventName } from './hook-protocol';
 
@@ -49,6 +50,7 @@ const ProcessSpawn = z.strictObject({
  * `tool.check`'s `ask` leaves the Permission request to the person, as core does.
  */
 export const hookEvents = {
+  'ui.render': { event: ReplaceableInput, answer: RenderAnswer },
   'session.start': { event: SessionStart, answer: z.null() },
   'prompt.submit': {
     event: PromptSubmit,
@@ -83,7 +85,7 @@ export type HookAnswer<Name extends HookEventName> = z.infer<
 
 // Each event's Hook chain over core, resolving to its answer; with no Plugins, core answers alone.
 export type CoreHooks = {
-  [Name in HookEventName]: (
+  [Name in Exclude<HookEventName, 'ui.render'>]: (
     event: HookEvent<Name>,
   ) => Promise<HookAnswer<Name>>;
 };

@@ -1,5 +1,7 @@
 import { z } from 'zod';
+import { ReplaceableSlotId } from '#plugin-replaceable-slot-id';
 import { PluginSurface } from '#plugin-surface';
+import { WireJson } from '#plugin-wire-json';
 import { PluginSlotInput } from '#plugin-wire-slot';
 
 export const PluginViewId = z.string().min(1).brand<'PluginViewId'>();
@@ -22,6 +24,26 @@ export const PluginInteraction = z.discriminatedUnion('event', [
     payload: z.undefined().optional(),
   }),
   z.object({ event: z.literal('onChangeText'), payload: z.string() }),
+  z.object({
+    event: z.literal('onConfirm'),
+    payload: z.undefined().optional(),
+  }),
+  z.object({
+    event: z.literal('onDismiss'),
+    payload: z.undefined().optional(),
+  }),
+  z.object({
+    event: z.literal('onValueChange'),
+    payload: z.union([z.boolean(), z.number().finite(), z.string()]),
+  }),
+  z.object({ event: z.literal('onSubmit'), payload: z.undefined().optional() }),
+  z.object({
+    event: z.literal('onAction'),
+    payload: z.object({
+      path: z.array(z.string().min(1)).min(1),
+      value: WireJson.optional(),
+    }),
+  }),
   z.object({ event: z.literal('onSearchTextChange'), payload: z.string() }),
   z.object({
     event: z.literal('onSelectionChange'),
@@ -56,9 +78,14 @@ export const PluginEvent = z.union([
     viewId: PluginViewId,
     path: z.string(),
     slot: PluginSlotInput.optional(),
+    renderSlot: ReplaceableSlotId.optional(),
     surface: PluginSurface.optional(),
   }),
   z.object({ type: z.literal('close'), viewId: PluginViewId }),
+  z.object({
+    type: z.literal('discardRender'),
+    path: z.string().startsWith('render:'),
+  }),
   z
     .object({
       type: z.literal('dispatch'),

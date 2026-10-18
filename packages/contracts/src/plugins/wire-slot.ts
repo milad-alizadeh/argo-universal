@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ReplaceableSlotId } from '#plugin-replaceable-slot-id';
 
 // A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
 export const projectDetailsSlotId = 'argo/project/details/v1';
@@ -13,7 +14,10 @@ export const PluginSlotInput = z.discriminatedUnion('slotId', [
 
 export type PluginSlotInput = z.infer<typeof PluginSlotInput>;
 
-export const SlotId = z.enum([projectDetailsSlotId]);
+export const SlotId = z.union([
+  z.literal(projectDetailsSlotId),
+  ReplaceableSlotId,
+]);
 
 export type SlotId = z.infer<typeof SlotId>;
 

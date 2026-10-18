@@ -1,4 +1,4 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import { ActionShortcutScope } from '#primitives/actions/action-list';
@@ -10,6 +10,7 @@ import {
 export interface PluginDetailViewProps {
   // The page the Plugin draws; blank until the Server's first snapshot arrives.
   root: WireNode | null;
+  viewId?: PluginViewId | null;
   onEvent: PluginOnEvent;
 }
 
@@ -26,11 +27,12 @@ const pageScroll = {
 export function PluginDetailView({
   root,
   onEvent,
+  viewId,
 }: PluginDetailViewProps): React.JSX.Element {
   return (
     <ActionShortcutScope>
       <ScrollFadeView {...pageScroll}>
-        {root && <PluginTree root={root} onEvent={onEvent} />}
+        {root && <PluginTree key={viewId} root={root} onEvent={onEvent} />}
       </ScrollFadeView>
     </ActionShortcutScope>
   );

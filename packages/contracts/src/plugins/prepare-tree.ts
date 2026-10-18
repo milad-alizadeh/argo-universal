@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { legacyPartVersions, wirePart, type PartVersions } from './kit';
+import { mapActionContent } from './map-action-content';
 import { acceptsSlots, type SlotRules } from './prepare-slots';
 import { WireJson, type WireNode } from './wire';
 
@@ -129,6 +130,9 @@ function prepare(node: WireNode, parts: PartVersions): WireNode | null {
 
   return {
     ...compatible,
+    props: mapActionContent(compatible.props, (content) =>
+      prepareWireTree(content, parts),
+    ),
     children: prepareNodes(node.children, parts),
     slots: slotsOf(node, parts),
   };
@@ -148,4 +152,8 @@ export function prepareWireTree(
       slots: {},
     }
   );
+}
+
+export function supportsWireNode(node: WireNode, parts: PartVersions): boolean {
+  return Boolean(currentNode(node) && adapted(node, parts));
 }

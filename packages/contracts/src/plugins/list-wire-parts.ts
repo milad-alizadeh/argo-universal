@@ -12,11 +12,14 @@ import { legacyLabelProps } from './legacy-label-props';
 import { listExpansion } from './list-expansion';
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { part } from './plugin-part-schema-utils';
+import { settingsRowWireParts } from './settings-row-wire-parts';
 import { labelV1 } from './status-kit-props';
 
-const listItemV1Props = listItemProps.extend({
-  badge: z.union([z.number().int().nonnegative(), rowBadgeProps]).optional(),
-});
+const listItemV1Props = listItemProps
+  .omit({ description: true, id: true })
+  .extend({
+    badge: z.union([z.number().int().nonnegative(), rowBadgeProps]).optional(),
+  });
 
 function downgradeListItemV1(
   props: z.infer<typeof listItemV1Props>,
@@ -46,15 +49,16 @@ function omitBadge(
 
 const listItemV1 = listItemV1Props.transform(downgradeListItemV1);
 
-const listItemV2 = listItemProps;
+const listItemV2 = listItemProps.omit({ description: true, id: true });
 
 const pillV1 = pillProps.omit({ color: true });
 
 export const listWireParts = {
+  ...settingsRowWireParts,
   List: {
     props: contentListProps,
     expansion: listExpansion,
-    versions: [contentListProps],
+    versions: [contentListProps.omit({ footer: true }), contentListProps],
     container: true,
     children: true,
     slots: { empty: ['Text', 'Stack', 'EmptyState'] },
@@ -69,11 +73,18 @@ export const listWireParts = {
   },
   'List.Section': {
     props: listSectionProps,
-    versions: [listSectionProps],
+    versions: [
+      listSectionProps.omit({
+        selection: true,
+        selectionMode: true,
+        onSelectionChange: true,
+      }),
+      listSectionProps,
+    ],
     container: true,
     children: true,
     slots: { leading: ['Text', 'Label'], trailing: ['Text', 'Label', 'Pill'] },
-    events: {},
+    events: { onSelectionChange: z.array(z.string()) },
     reference: part(
       'A titled List section with optional subtitle and footer.',
       listSectionProps,
@@ -84,12 +95,12 @@ export const listWireParts = {
   },
   ListItem: {
     props: listItemProps,
-    versions: [listItemV1, listItemV2],
+    versions: [listItemV1, listItemV2, listItemProps],
     container: true,
     children: false,
     slots: {
-      leading: ['Text', 'Label'],
-      trailing: ['Text', 'Label', 'Pill'],
+      leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
+      trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],
       meta: ['Label', 'Pill'],
     },
     events: { onPress: z.undefined() },

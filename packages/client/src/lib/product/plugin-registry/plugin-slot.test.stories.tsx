@@ -5,7 +5,7 @@ import {
 } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { GroupedList } from '#primitives/lists/grouped-list';
+import { List } from '#primitives/lists/list';
 import { PluginSlot, type PluginSlotContribution } from './plugin-slot';
 
 // A second Plugin's contribution, for the order of two.
@@ -35,9 +35,9 @@ const meta = {
   title: 'Tests/PluginSlot',
   component: PluginSlot,
   render: (args): React.JSX.Element => (
-    <GroupedList>
+    <List appearance="grouped">
       <PluginSlot {...args} />
-    </GroupedList>
+    </List>
   ),
 } satisfies Meta<typeof PluginSlot>;
 

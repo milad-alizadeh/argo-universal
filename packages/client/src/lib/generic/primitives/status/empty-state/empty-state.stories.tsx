@@ -46,7 +46,11 @@ const examples = [
 const meta = {
   title: 'Design System/Primitives/Status/EmptyState',
   component: EmptyState,
-  args: sessions,
+  args: {
+    icon: sessions.icon,
+    title: sessions.title,
+    description: sessions.description,
+  },
 } satisfies Meta<typeof EmptyState>;
 
 export default meta;

@@ -1,6 +1,5 @@
 import type * as React from 'react';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List, ListSection } from '#primitives/lists/list';
 import { EmptyState } from '#primitives/status/empty-state';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { settingsRows } from './settings-list-data';
@@ -27,9 +26,9 @@ function SettingsRows(props: SettingsRowsProps): React.JSX.Element {
   if (rows.length === 0) return <NoMatchingSettings query={props.query} />;
 
   return (
-    <GroupedList variant={props.sidebar ? 'sidebar' : 'grouped'}>
-      <GroupedListSection>{rowItems(rows, props)}</GroupedListSection>
-    </GroupedList>
+    <List appearance="grouped">
+      <ListSection>{rowItems(rows, props)}</ListSection>
+    </List>
   );
 }
 
