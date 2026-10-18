@@ -34,6 +34,13 @@ export async function fetchCall(
   hop: Hop,
   context: FetchContext,
 ): Promise<PluginValue> {
+  return responseValue(await fetchResponse(hop, context));
+}
+
+export function fetchResponse(
+  hop: Hop,
+  context: FetchContext,
+): Promise<IncomingMessage> {
   return follow(hop, context, 0);
 }
 
@@ -41,11 +48,11 @@ async function follow(
   hop: Hop,
   context: FetchContext,
   redirects: number,
-): Promise<PluginValue> {
+): Promise<IncomingMessage> {
   const response = await send(hop, context);
   const next = redirected(hop, response);
 
-  if (!next) return responseValue(response);
+  if (!next) return response;
 
   response.resume();
 

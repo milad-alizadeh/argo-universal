@@ -142,6 +142,8 @@ export function describeCall(request: StateRequest): string {
 function describeOtherCall(
   request: Exclude<StateRequest, { api: 'storage' | 'secrets' }>,
 ): string {
+  if (request.api === 'assets') return 'argo.assets.resolve';
+
   if (request.api === 'settings') return `argo.settings.get ${request.key}`;
 
   return describeMachineCall(request);

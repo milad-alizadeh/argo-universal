@@ -1,5 +1,6 @@
 import { writeLog } from '@repo/machine-log';
 import { onTestFinished } from 'vitest';
+import { PluginAssets } from '../src/plugins/assets';
 import { PluginServices } from '../src/plugins/plugin-services';
 import { PluginRuntime } from '../src/plugins/runtime';
 import { PluginStorage } from '../src/plugins/storage';
@@ -13,6 +14,7 @@ export function startPluginRuntime(home: string): PluginRuntime {
     log,
     new PluginServices(new PluginStorage(home), new MemoryKeychain(), {
       log,
+      assets: new PluginAssets(home),
       projects: async (): Promise<string[]> => [],
     }),
   );
