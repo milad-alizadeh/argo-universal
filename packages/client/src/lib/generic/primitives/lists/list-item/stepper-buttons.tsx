@@ -1,7 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { Button, type ButtonProps } from '#primitives/actions/button';
 import type { ListItemStepperProps } from './list-item-stepper';
+
+const stepVariant = Platform.OS === 'ios' ? 'outline' : 'ghost';
 
 export function StepperButtons(
   props: ListItemStepperProps & { children?: ReactNode },
@@ -23,7 +25,7 @@ function stepButton(
 
   return {
     ...stepLabel(props.title, direction),
-    variant: 'ghost',
+    variant: stepVariant,
     size: 'xs',
     disabled: props.disabled || value === props.value,
     onPress: () => props.onValueChange(value),
