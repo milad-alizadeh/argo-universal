@@ -60,6 +60,7 @@ function GroupedListItemLeadingSlot(props: TrailingProps): React.JSX.Element {
       icon={props.icon}
       loading={props.loading}
       leading={props.leading}
+      leadingLayout={props.leadingLayout}
       size={props.size}
       variant={props.variant}
       className={props.emphasis}

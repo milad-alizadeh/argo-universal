@@ -47,7 +47,7 @@ export interface WireNode {
   key: string;
   props: Record<string, WireJson>;
   children: WireNode[];
-  slots: Record<string, WireNode>;
+  slots: Record<string, WireNode[]>;
 }
 
 export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
@@ -56,7 +56,7 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
     key: z.string(),
     props: z.record(z.string(), WireJson),
     children: z.array(WireNode),
-    slots: z.record(z.string(), WireNode),
+    slots: z.record(z.string(), z.array(WireNode)),
   }),
 );
 
@@ -80,22 +80,39 @@ export const Handler = z.union([WireEvent, Action]);
 
 export type Handler = z.infer<typeof Handler>;
 
-// A patch step addresses a node from the root by child index, or by slot name.
-export type PatchStep = number | string;
+// Keys are local to their sibling collection; slot steps keep identically named children distinct.
+export const PatchStep = z.union([
+  z.string(),
+  z.strictObject({ slot: z.string(), key: z.string() }),
+]);
 
-export const PatchStep = z.union([z.number().int().nonnegative(), z.string()]);
+export type PatchStep = z.infer<typeof PatchStep>;
+
+const address = z.array(PatchStep);
 
 export const PatchOp = z.discriminatedUnion('op', [
   z.strictObject({
-    op: z.literal('replace'),
-    path: z.array(PatchStep),
+    op: z.literal('insert'),
+    parent: address,
+    slot: z.string().optional(),
+    index: z.number().int().nonnegative(),
     node: WireNode,
   }),
+  z.strictObject({ op: z.literal('remove'), key: address }),
   z.strictObject({
-    op: z.literal('props'),
-    path: z.array(PatchStep),
-    props: z.record(z.string(), WireJson),
+    op: z.literal('move'),
+    key: address,
+    parent: address,
+    slot: z.string().optional(),
+    index: z.number().int().nonnegative(),
   }),
+  z.strictObject({
+    op: z.literal('setProps'),
+    key: address,
+    props: z.record(z.string(), WireJson),
+    unset: z.array(z.string()).optional(),
+  }),
+  z.strictObject({ op: z.literal('replace'), key: address, node: WireNode }),
 ]);
 
 export type PatchOp = z.infer<typeof PatchOp>;

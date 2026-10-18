@@ -1,7 +1,6 @@
 import { Column, RNHostView } from '@expo/ui';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { IconSlot, IconSpinner } from '#primitives/display/icon';
 import { NativeControl } from '#primitives/native/native-control';
@@ -12,34 +11,14 @@ import {
   type ResolvedItemProps,
   groupedListItemStatus,
 } from './grouped-list-item-props';
+import { NativeRowImage } from './native-row-image';
 import { hiddenFromAccessibility, StatusDot } from './status-dot';
+
+export { NativeRowImage } from './native-row-image';
 
 function NativeRowIcon({ icon }: { icon: IconSymbol }): React.JSX.Element {
   return <NativeSymbol name={icon} role="row" />;
 }
-
-type RowImageProps = {
-  image: ReactElement;
-  variant?: ResolvedItemProps['variant'];
-};
-
-// An image, such as an Agent's logo, centred in the native row's icon slot.
-export function NativeRowImage({
-  image,
-  variant,
-}: RowImageProps): React.JSX.Element {
-  return (
-    <RNHostView matchContents>
-      <IconSlot role={imageRole(variant)} {...hiddenFromAccessibility}>
-        {image}
-      </IconSlot>
-    </RNHostView>
-  );
-}
-
-const imageRole = (
-  variant: ResolvedItemProps['variant'],
-): 'identity' | 'row' => (variant === 'card' ? 'identity' : 'row');
 
 function NativeRowDot(
   props: Pick<ResolvedItemProps, 'needsAttention' | 'status'>,
@@ -83,23 +62,30 @@ export function NativeRowStatus(
 }
 
 // The row's image when it has one, else its icon.
-function NativeRowGlyph({
-  icon,
-  leading,
-  variant,
-}: {
-  icon?: IconSymbol;
-  leading?: ReactElement;
-  variant?: ResolvedItemProps['variant'];
-}): React.JSX.Element | null {
-  if (leading) return <NativeRowImage image={leading} variant={variant} />;
+type GlyphProps = Pick<
+  ResolvedItemProps,
+  'icon' | 'leading' | 'leadingLayout' | 'variant'
+>;
 
-  return icon ? <NativeRowIcon icon={icon} /> : null;
+function NativeRowGlyph({
+  leading,
+  leadingLayout: layout,
+  ...props
+}: GlyphProps): React.JSX.Element | null {
+  if (leading)
+    return (
+      <NativeRowImage image={leading} layout={layout} variant={props.variant} />
+    );
+
+  return props.icon ? <NativeRowIcon icon={props.icon} /> : null;
 }
 
 // The row's icon or image, or a spinner in the icon's slot while the row loads.
 export function NativeRowLeading(
-  props: Pick<ResolvedItemProps, 'icon' | 'loading' | 'leading' | 'variant'>,
+  props: Pick<
+    ResolvedItemProps,
+    'icon' | 'loading' | 'leading' | 'leadingLayout' | 'variant'
+  >,
 ): React.JSX.Element | null {
   if (props.loading) return <NativeRowSpinner />;
 

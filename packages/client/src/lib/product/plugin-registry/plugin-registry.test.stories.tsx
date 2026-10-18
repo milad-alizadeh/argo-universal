@@ -1,9 +1,11 @@
 import {
   helloRoot,
+  slottedRow,
   helloTapEventId,
   invalidPropsRoot,
   unknownNodesRoot,
 } from '@repo/contracts/plugins/wire-fixtures';
+import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
@@ -42,5 +44,26 @@ export const InvalidProps: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Still here')).toBeVisible();
     await expect(canvas.queryByText('42')).toBeNull();
+  },
+};
+
+export const Slots: Story = {
+  render: () => <PluginTree root={slottedRow} onEvent={onEvent} />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByText('First')).toBeVisible();
+    await expect(canvas.getByText('Second')).toBeVisible();
+    await expect(canvas.getByText('Count 0')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Increment' }));
+    await expect(onEvent).toHaveBeenCalledWith('slot:increment');
+  },
+};
+
+export const RefusedPage: Story = {
+  render: () => <PluginTree root={pluginPageFallback} onEvent={onEvent} />,
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText('This Plugin page could not be displayed.'),
+    ).toBeVisible();
+    await expect(canvas.queryByRole('button')).toBeNull();
   },
 };

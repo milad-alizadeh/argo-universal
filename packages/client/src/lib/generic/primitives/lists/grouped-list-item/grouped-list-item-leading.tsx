@@ -8,7 +8,7 @@ import type { ResolvedItemProps } from './grouped-list-item-props';
 
 type LeadingProps = Pick<
   ResolvedItemProps,
-  'icon' | 'loading' | 'leading' | 'size' | 'variant'
+  'icon' | 'loading' | 'leading' | 'leadingLayout' | 'size' | 'variant'
 > & {
   className: string;
 };
@@ -23,41 +23,36 @@ export function GroupedListItemLeading({
   return <RowGlyph {...glyph} />;
 }
 
-function RowGlyph({
-  icon,
-  leading,
-  size,
-  variant,
-  className,
-}: Omit<LeadingProps, 'loading'>): React.JSX.Element | null {
-  if (leading)
-    return (
-      <LeadingSlot size={size} variant={variant}>
-        {leading}
-      </LeadingSlot>
-    );
+function RowGlyph(
+  props: Omit<LeadingProps, 'loading'>,
+): React.JSX.Element | null {
+  if (props.leading)
+    return <LeadingSlot {...props}>{props.leading}</LeadingSlot>;
 
-  return icon ? <RowIcon icon={icon} className={className} /> : null;
+  return props.icon ? (
+    <RowIcon icon={props.icon} className={props.className} />
+  ) : null;
 }
 
 // An image sits centred in the row icon's slot, or on a large row's 40 tile.
-type LeadingSlotProps = Pick<ResolvedItemProps, 'size' | 'variant'> & {
-  children: React.ReactNode;
+type LeadingSlotProps = Pick<
+  ResolvedItemProps,
+  'size' | 'variant' | 'leadingLayout'
+> & {
+  children: React.ReactElement;
 };
 
 function LeadingSlot({
   size,
   variant,
   children,
+  leadingLayout,
 }: LeadingSlotProps): React.JSX.Element {
   const role = useLeadingRole();
 
-  if (size === 'lg')
-    return (
-      <View className="size-10 shrink-0 items-center justify-center rounded-xl bg-card">
-        {children}
-      </View>
-    );
+  if (leadingLayout === 'content') return children;
+
+  if (size === 'lg') return <LargeLeading>{children}</LargeLeading>;
 
   return <IconSlot {...leadingSlotProps(variant, role)}>{children}</IconSlot>;
 }
@@ -97,5 +92,17 @@ function RowSpinner(): React.JSX.Element {
     <IconSlot role={useLeadingRole()}>
       <IconSpinner iconRole="body" colorClassName="accent-foreground" />
     </IconSlot>
+  );
+}
+
+function LargeLeading({
+  children,
+}: {
+  children: React.ReactElement;
+}): React.JSX.Element {
+  return (
+    <View className="size-10 shrink-0 items-center justify-center rounded-xl bg-card">
+      {children}
+    </View>
   );
 }

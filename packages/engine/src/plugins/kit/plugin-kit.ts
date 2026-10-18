@@ -5,6 +5,10 @@ import { mountPages, type Pages, type ViewSender } from './pages';
 
 const components = {
   Text: 'Text',
+  VirtualList: 'VirtualList',
+  Table: 'Table',
+  GroupedList: 'GroupedList',
+  GroupedListItem: 'GroupedListItem',
   Button: 'Button',
   Row: 'Row',
   Column: 'Column',
@@ -17,6 +21,7 @@ const hooks = {
   useCallback: React.useCallback,
   useRef: React.useRef,
   useEffect: React.useEffect,
+  useLayoutEffect: React.useLayoutEffect,
   useContext: React.useContext,
   createContext: React.createContext,
   memo: React.memo,

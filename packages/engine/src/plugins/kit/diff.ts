@@ -4,64 +4,71 @@ import type {
   WireJson,
   WireNode,
 } from '@repo/contracts/plugins/wire';
+import { diffChildren } from './diff-children';
 
-const same = (left: WireJson, right: WireJson): boolean =>
+const same = (left: WireJson | undefined, right: WireJson): boolean =>
   JSON.stringify(left) === JSON.stringify(right);
 
-const sameSlotNames = (left: WireNode, right: WireNode): boolean =>
-  same(Object.keys(left.slots).sort(), Object.keys(right.slots).sort());
-
-const sameIdentity = (left: WireNode, right: WireNode): boolean =>
-  left.type === right.type && left.key === right.key;
-
-const sameStructure = (left: WireNode, right: WireNode): boolean =>
-  sameIdentity(left, right) &&
-  left.children.length === right.children.length &&
-  sameSlotNames(left, right);
-
-const diffProps = (
+function propsChanged(
   before: WireNode,
   after: WireNode,
-  path: PatchStep[],
-): PatchOp[] =>
-  same(before.props, after.props)
-    ? []
-    : [{ op: 'props', path, props: after.props }];
+  key: PatchStep[],
+): PatchOp[] {
+  const props = changedProps(before, after);
 
-const diffChildren = (
+  const unset = Object.keys(before.props).filter(
+    (name) => !(name in after.props),
+  );
+
+  if (Object.keys(props).length === 0 && unset.length === 0) return [];
+
+  return [{ op: 'setProps', key, props, unset: removedProps(unset) }];
+}
+
+function slotsChanged(
   before: WireNode,
   after: WireNode,
-  path: PatchStep[],
-): PatchOp[] =>
-  after.children.flatMap((child, index) => {
-    const old = before.children[index];
+  parent: PatchStep[],
+): PatchOp[] {
+  const names = Object.keys({ ...before.slots, ...after.slots });
+  const context = { parent, compare: diff };
 
-    return old ? diff(old, child, [...path, index]) : [];
-  });
+  return names.flatMap((slot) =>
+    diffChildren(before.slots[slot] ?? [], after.slots[slot] ?? [], {
+      ...context,
+      slot,
+    }),
+  );
+}
 
-const diffSlots = (
-  before: WireNode,
-  after: WireNode,
-  path: PatchStep[],
-): PatchOp[] =>
-  Object.entries(after.slots).flatMap(([name, slot]) => {
-    const old = before.slots[name];
+const sameIdentity = (before: WireNode, after: WireNode): boolean =>
+  before.type === after.type && before.key === after.key;
 
-    return old ? diff(old, slot, [...path, name]) : [];
-  });
-
-// The smallest patch that turns `before` into `after`; a structural change replaces its whole subtree.
+// Author keys retain identity; generated position keys retain positional matching.
 export function diff(
   before: WireNode,
   after: WireNode,
-  path: PatchStep[] = [],
+  key: PatchStep[] = [],
 ): PatchOp[] {
-  if (!sameStructure(before, after))
-    return [{ op: 'replace', path, node: after }];
+  if (!sameIdentity(before, after))
+    return [{ op: 'replace', key, node: after }];
+
+  const collection = { parent: key, compare: diff };
 
   return [
-    ...diffProps(before, after, path),
-    ...diffChildren(before, after, path),
-    ...diffSlots(before, after, path),
+    ...propsChanged(before, after, key),
+    ...diffChildren(before.children, after.children, collection),
+    ...slotsChanged(before, after, key),
   ];
+}
+
+const removedProps = (names: string[]): string[] | undefined =>
+  names.length ? names : undefined;
+
+function changedProps(before: WireNode, after: WireNode): WireNode['props'] {
+  return Object.fromEntries(
+    Object.entries(after.props).filter(
+      ([name, value]) => !same(before.props[name], value),
+    ),
+  );
 }

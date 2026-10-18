@@ -29,6 +29,7 @@ interface OpenView {
   tree: WireNode | null;
   revision: number;
   handlers: Handlers;
+  frame?: ReturnType<typeof setTimeout>;
 }
 
 export interface Pages {
@@ -82,7 +83,7 @@ function start(hub: Hub, path: string, element: ReactNode): void {
   const view: OpenView = { path, tree: null, revision: 0, handlers: new Map() };
 
   hub.views.set(path, view);
-  view.mounted = mount(element, (container) => committed(hub, view, container));
+  view.mounted = mount(element, (container) => schedule(hub, view, container));
 }
 
 // A viewer that joins late gets the current tree again, as a snapshot.
@@ -123,7 +124,11 @@ function open(hub: Hub, event: Open): void {
 }
 
 function close(hub: Hub, path: string): void {
-  hub.views.get(path)?.mounted?.unmount();
+  const view = hub.views.get(path);
+
+  if (!view) return;
+  clearTimeout(view.frame);
+  view.mounted?.unmount();
   hub.views.delete(path);
 }
 
@@ -156,4 +161,24 @@ export function mountPages(send: ViewSender): Pages {
     registerSlot: (slotId, content) => void hub.slots.set(slotId, content),
     receive: (event) => receive(hub, event),
   };
+}
+
+const frameMs = 16;
+
+function flush(hub: Hub, view: OpenView, container: Instance): void {
+  view.frame = undefined;
+
+  try {
+    committed(hub, view, container);
+  } catch (error) {
+    reportFailure(error instanceof Error ? error : new Error(String(error)));
+  }
+}
+
+// One publication per 60 Hz frame, retaining the latest committed tree and its handlers together.
+function schedule(hub: Hub, view: OpenView, container: Instance): void {
+  if (view.frame !== undefined) return;
+  view.frame = setTimeout(() => {
+    if (hub.views.get(view.path) === view) flush(hub, view, container);
+  }, frameMs);
 }

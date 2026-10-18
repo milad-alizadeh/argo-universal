@@ -29,6 +29,7 @@ function insert(parent: Instance, child: Instance, before: Instance): void {
 }
 
 function append(parent: Instance, child: Instance): void {
+  remove(parent, child);
   parent.children.push(child);
 }
 

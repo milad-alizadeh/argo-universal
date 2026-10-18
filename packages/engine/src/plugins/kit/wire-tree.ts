@@ -1,4 +1,6 @@
 import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
+import { listTypes } from './list-props';
+import { childKeys } from './wire-keys';
 
 // A handler a Plugin passes as a prop; the wire carries it as an event id.
 type PluginFn = (payload?: WireJson) => void | Promise<void>;
@@ -21,10 +23,22 @@ export type Handlers = Map<string, PluginFn>;
 
 const slotType = '#slot';
 
-const isSlot = (instance: Instance): boolean => instance.type === slotType;
+function checkChildren(instance: Instance, children: Instance[]): void {
+  if (needsKeys(instance, children))
+    throw new Error(`${instance.type}: every list child needs a key`);
+  checkUniqueKeys(instance.type, children);
+}
 
-const keyOf = (instance: Instance, index: number): string =>
-  instance.key ?? String(index);
+function checkUniqueKeys(type: string, children: Instance[]): void {
+  const seen = new Set<string>();
+
+  for (const key of childKeys(children)) {
+    if (seen.has(key)) throw new Error(`${type}: duplicate child key ${key}`);
+    seen.add(key);
+  }
+}
+
+const isSlot = (instance: Instance): boolean => instance.type === slotType;
 
 function wireProp(eventId: string, value: Prop, handlers: Handlers): WireJson {
   if (typeof value !== 'function') return value;
@@ -46,30 +60,43 @@ function wireProps(
   );
 }
 
+function slotContent(
+  slot: Instance,
+  id: string,
+  handlers: Handlers,
+): [string, WireNode[]][] {
+  if (!slot.key) return [];
+  checkChildren(slot, slot.children);
+
+  const content = wireChildren(
+    slot.children,
+    `${id}#${encodeURIComponent(slot.key)}`,
+    handlers,
+  );
+
+  return content.length ? [[slot.key, content]] : [];
+}
+
 function wireSlots(
   instance: Instance,
   id: string,
   handlers: Handlers,
 ): WireNode['slots'] {
-  const filled = instance.children.filter(isSlot).flatMap((slot) => {
-    const [content] = wireChildren(slot.children, `${id}#`, handlers);
-
-    return slot.key && content ? [[slot.key, content] as const] : [];
-  });
-
-  return Object.fromEntries(filled);
+  return Object.fromEntries(
+    instance.children
+      .filter(isSlot)
+      .flatMap((slot) => slotContent(slot, id, handlers)),
+  );
 }
 
-function wireNode(
-  instance: Instance,
-  id: string,
-  handlers: Handlers,
-): WireNode {
+function wireNode(source: Instance, id: string, handlers: Handlers): WireNode {
+  const instance = rowContent(source);
   const content = instance.children.filter((child) => !isSlot(child));
+  checkChildren(instance, content);
 
   return {
     type: instance.type,
-    key: id.slice(id.lastIndexOf('/') + 1),
+    key: decodeURIComponent(id.slice(id.lastIndexOf('/') + 1)),
     props: wireProps(instance.props, id, handlers),
     children: wireChildren(content, id, handlers),
     slots: wireSlots(instance, id, handlers),
@@ -81,10 +108,12 @@ function wireChildren(
   parent: string,
   handlers: Handlers,
 ): WireNode[] {
+  const keys = childKeys(instances);
+
   return instances.map((instance, index) =>
     wireNode(
       instance,
-      `${parent}${parent ? '/' : ''}${keyOf(instance, index)}`,
+      `${parent}${parent ? '/' : ''}${encodeURIComponent(keys[index] ?? String(index))}`,
       handlers,
     ),
   );
@@ -98,3 +127,21 @@ export function toWire(root: Instance, handlers: Handlers): WireNode {
 
   return node;
 }
+
+const needsKeys = (instance: Instance, children: Instance[]): boolean =>
+  listTypes.has(instance.type) &&
+  children.some((child) => child.key === undefined);
+
+// A composite list row is one keyed item, including when a Fragment supplies several nodes.
+function rowContent(instance: Instance): Instance {
+  if (instance.type !== '#item') return instance;
+
+  const [only] = instance.children;
+
+  if (instance.children.length === 1) return singleRow(only, instance);
+
+  return { ...instance, type: 'Column' };
+}
+
+const singleRow = (only: Instance | undefined, fallback: Instance): Instance =>
+  only ?? fallback;

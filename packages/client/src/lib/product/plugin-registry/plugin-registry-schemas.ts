@@ -34,3 +34,10 @@ export const layoutProps = z.strictObject({
   gap: z.number().refine(isStackGap).optional(),
   align: z.enum(stackAlignments).optional(),
 });
+
+export const groupedItemProps = z.strictObject({
+  label: z.string(),
+  value: z.string().optional(),
+  disabled: z.boolean().optional(),
+  onPress: Handler.optional(),
+});

@@ -5,15 +5,20 @@ import type { Prop, Props } from './wire-tree';
 // What React hands the reconciler: a Plugin's props, plus `children` and the `argoKey` the JSX runtime adds.
 export interface ElementProps {
   children?: ReactNode;
-  [name: string]: Prop | ReactNode;
+  renderItem?: (item: WireJson) => ReactNode;
+  [name: string]: Prop | ReactNode | ((item: WireJson) => ReactNode);
 }
 
-const isProp = (value: Prop | ReactNode): value is Prop =>
+const isProp = (value: ElementProps[string]): value is Prop =>
   typeof value === 'function' || WireJson.safeParse(value).success;
 
 const reserved = new Set(['children', 'argoKey']);
 
-function checked(type: string, name: string, value: Prop | ReactNode): Prop {
+function checked(
+  type: string,
+  name: string,
+  value: ElementProps[string],
+): Prop {
   if (!isProp(value))
     throw new Error(`${type}: prop ${name} must be JSON or a function`);
 
