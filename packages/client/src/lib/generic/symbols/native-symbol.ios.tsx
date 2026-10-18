@@ -2,14 +2,13 @@
 import { Image, type ImageProps } from '@expo/ui/swift-ui';
 import { font, foregroundStyle, imageScale } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { isCustomSymbol } from './custom-symbols';
 import { type DrawnSymbol, drawnSymbol } from './drawn-symbol';
 import { type IconRole, useIconPixels } from './icon-role';
 import { resolveIcon } from './icon-symbol';
 import type { NativeSymbolProps } from './native-symbol-props';
 import { tablerAsset } from './tabler-symbols';
-
-const mutedStyle = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
 
 /*
  * A list row's icon is a Label's, sized by the row's body text so it scales with Dynamic Type, as
@@ -37,18 +36,22 @@ function imageSource(
     : { systemName: symbol.sf };
 }
 
-function symbolModifiers(
+// A muted symbol takes Argo's tertiary token where iOS would use its tertiary label grey.
+function useMutedStyle(muted: boolean | undefined): ImageProps['modifiers'] {
+  const { tertiary } = useNativeTheme().colors;
+
+  return muted === true && tertiary !== undefined
+    ? [foregroundStyle(tertiary)]
+    : [];
+}
+
+function useSymbolModifiers(
   role: IconRole,
   muted: boolean | undefined,
 ): ImageProps['modifiers'] {
-  const modifiers = [
-    ...(textSizedRoles[role] ?? []),
-    muted === true && mutedStyle,
-  ];
+  const mutedStyle = useMutedStyle(muted) ?? [];
 
-  return modifiers.filter(
-    (modifier) => modifier !== undefined && modifier !== false,
-  );
+  return [...(textSizedRoles[role] ?? []), ...mutedStyle];
 }
 
 // An Argo icon inside a SwiftUI tree, which cannot hold a React Native view.
@@ -64,7 +67,7 @@ export function NativeSymbol({
     <Image
       {...imageSource(drawnSymbol(resolveIcon(name).symbol, filled))}
       size={pixels}
-      modifiers={symbolModifiers(role, muted)}
+      modifiers={useSymbolModifiers(role, muted)}
     />
   );
 }

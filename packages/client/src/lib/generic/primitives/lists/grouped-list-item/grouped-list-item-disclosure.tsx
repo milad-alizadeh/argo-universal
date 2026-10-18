@@ -5,7 +5,7 @@ import type { RowLanePlace } from './grouped-list-item-lane';
 
 /*
  * The chevron that says a row opens another page. A grouped row draws iOS 26's shape, 7x12, from
- * Tabler's chevron-right (ADR-0019), in neutral-400 (the focus token, owner 2026-10-18), its ink
+ * Tabler's chevron-right (ADR-0019), in the tertiary token (neutral-400, owner 2026-10-18), its ink
  * M + 3 from the card's edge, 14 after the value. The 20 box leaves 6.67 of air each side of the
  * ink, so it reaches 4 past the row's margin.
  */
@@ -37,7 +37,7 @@ function GroupedDisclosure(): React.JSX.Element {
     <Icon
       name="web-disclosure"
       role="disclosure"
-      className="-mr-1 shrink-0 text-focus"
+      className="-mr-1 shrink-0 text-tertiary"
     />
   );
 }
