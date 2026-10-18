@@ -15,3 +15,9 @@ This flow does not verify TalkBack speech or slider adjustment actions. Inspect 
 `user-message-show-more.yaml` runs on iOS or Android. Open the App's native Storybook at **Feed → UserMessage**, then run `maestro --device <device-id> test e2e/native/user-message-show-more.yaml`.
 
 The "Markdown" prompt clamps to four lines. The flow taps its Show more and expects it to go, which holds only when the clipped markdown leaves Show more uncovered. Clipped lines still count as visible to Maestro, so the flow checks Show more rather than the hidden text.
+
+# Plugin page tap
+
+`plugin-hello-tap.yaml` runs on iOS or Android against a real Server that loads the first-party `hello` Plugin, with the App on the phone Sessions list. Start the Server and Metro, open the development client, then run `maestro --device <device-id> test e2e/native/plugin-hello-tap.yaml`.
+
+The flow opens the `hello` Plugin from the drawer and checks that its page is drawn natively from the wire tree. It reads the current count, which other viewers of the same Server may have raised, presses "Tap me" and expects the count to rise by one. That holds only when the event reaches the Plugin on the Server and its patch comes back.
