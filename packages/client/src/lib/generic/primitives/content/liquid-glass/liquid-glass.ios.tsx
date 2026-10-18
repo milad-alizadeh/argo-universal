@@ -9,6 +9,7 @@ import type { LiquidGlassProps } from './liquid-glass-props';
 
 const cornerClassName = {
   card: 'rounded-sheet',
+  surface: 'rounded-2xl',
   capsule: 'rounded-full',
 } as const;
 

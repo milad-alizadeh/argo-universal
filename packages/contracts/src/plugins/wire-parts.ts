@@ -15,6 +15,7 @@ import {
   svgProps,
   groupedItemV1,
 } from './kit-props';
+import { layoutWireParts } from './layout-wire-parts';
 import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
 import { listExpansion } from './list-expansion';
@@ -41,6 +42,7 @@ const contentParts = [
 
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
+  ...layoutWireParts,
   ...listWireParts,
   ...actionListWireParts,
   ...controlWireParts,

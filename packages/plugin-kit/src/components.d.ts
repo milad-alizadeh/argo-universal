@@ -64,3 +64,11 @@ export const ActionList: PluginComponents['ActionList'] & {
 export const ActionListSection: PluginComponents['ActionList.Section'];
 
 export const Action: PluginComponents['Action'];
+
+export const Spacer: PluginComponents['Spacer'];
+
+export const Grid: PluginComponents['Grid'];
+
+export const Surface: PluginComponents['Surface'];
+
+export const ScrollView: PluginComponents['ScrollView'];
