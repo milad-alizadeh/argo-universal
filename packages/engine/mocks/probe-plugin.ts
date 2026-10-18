@@ -5,7 +5,10 @@ import { createServer } from 'node:https';
 import type { LookupFunction } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { PluginCapability } from '@repo/contracts/plugins';
+import type {
+  PluginCapability,
+  PluginSettingField,
+} from '@repo/contracts/plugins';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { onTestFinished, vi } from 'vitest';
 import { z } from 'zod';
@@ -30,7 +33,11 @@ type Probe = { home: string; entry: string; code: string; data: string };
 // A Plugin is a fixture whose source the test writes, so each scenario names the paths it touches.
 export async function installed(
   source: string,
-  options: { dev?: boolean; capabilities?: PluginCapability[] } = {},
+  options: {
+    dev?: boolean;
+    capabilities?: PluginCapability[];
+    settings?: PluginSettingField[];
+  } = {},
 ): Promise<Probe> {
   const home = await createRuntimePlugins([
     { id: 'probe', fixture: 'healthy', ...options },

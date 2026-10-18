@@ -44,6 +44,15 @@ export function agentsRow(props: SettingsListProps): SettingsRow {
   });
 }
 
+export function pluginsRow(props: SettingsListProps): SettingsRow {
+  return countedRow(props, {
+    label: 'Plugins',
+    icon: 'plug',
+    href: '/settings/plugins',
+    count: props.pluginCount,
+  });
+}
+
 export function accountsRow(props: SettingsListProps): SettingsRow {
   return {
     label: 'Accounts',

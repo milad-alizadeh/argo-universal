@@ -30,7 +30,24 @@ export type PluginServiceOptions = {
   log: (line: string) => void;
   projects: () => Promise<readonly string[]>;
   network?: PluginNetwork;
+  // Answers `argo.settings.get` from the Plugin's `contributes.settings` values.
+  settings?: (pluginId: string, key: string) => Promise<PluginValue>;
 };
+
+// Calls answered from what the Server keeps for the Plugin, with no capability to check.
+type KeptRequest = Extract<
+  StateRequest,
+  { api: 'storage' | 'secrets' | 'settings' }
+>;
+
+const keptApis = new Set<StateRequest['api']>([
+  'storage',
+  'secrets',
+  'settings',
+]);
+
+const isKeptRequest = (request: StateRequest): request is KeptRequest =>
+  keptApis.has(request.api);
 
 // What a Plugin's `argo` calls reach on the Server. Core keeps nothing: storage and the Keychain belong to the Plugin.
 export class PluginServices {
@@ -83,7 +100,7 @@ export class PluginServices {
   ): Promise<PluginValue> {
     const resources = this.resources(pluginId, generation);
 
-    if (request.api === 'storage' || request.api === 'secrets') {
+    if (isKeptRequest(request)) {
       this.logCall(pluginId, request);
 
       return this.perform(pluginId, request);
@@ -139,12 +156,21 @@ export class PluginServices {
 
   private async perform(
     pluginId: string,
-    request: Extract<StateRequest, { api: 'storage' | 'secrets' }>,
+    request: KeptRequest,
   ): Promise<PluginValue> {
     if (request.api === 'storage')
       return this.storage.execute(pluginId, request.queries);
 
+    if (request.api === 'settings') return this.setting(pluginId, request.key);
+
     return this.secrets(pluginId, request.call);
+  }
+
+  private async setting(pluginId: string, key: string): Promise<PluginValue> {
+    if (!this.options.settings)
+      throw new Error('Plugin settings are not available');
+
+    return this.options.settings(pluginId, key);
   }
 
   private async secrets(

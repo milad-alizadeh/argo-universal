@@ -81,6 +81,7 @@ function inputBehaviour(props: PhoneFieldProps): InputProps {
     onBlur: props.onBlur,
     editable: !props.disabled,
     keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
+    secureTextEntry: props.secure,
     autoCapitalize: 'none',
     autoCorrect: false,
     autoFocus: props.focusOnOpen,

@@ -4,13 +4,7 @@ import { type AcpResourceInput } from '../agents';
 import type { RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
-import {
-  createPluginRuntime,
-  type Keychain,
-  type PluginNetwork,
-  type PluginRuntime,
-} from '../plugins';
-import { readProjectPaths } from '../projects';
+import type { Keychain, PluginNetwork } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
@@ -19,6 +13,7 @@ import {
   connectWebSockets,
   listenOnLoopback,
 } from './http-connections';
+import { type HttpPlugins, prepareHttpPlugins } from './http-plugins';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
@@ -50,10 +45,9 @@ export interface HttpServer {
   close: () => Promise<void>;
 }
 
-type HttpSetup = {
+type HttpSetup = HttpPlugins & {
   blobsFolder: string;
   commandAdmission: AbortController;
-  pluginRuntime: PluginRuntime;
   notifications: Notifications;
 };
 
@@ -108,14 +102,10 @@ function prepareHttpSetup(
   serverId: string,
 ): HttpSetup {
   return {
+    ...prepareHttpPlugins(options),
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
-    pluginRuntime: createPluginRuntime(options.home, {
-      keychain: options.keychain,
-      network: options.pluginNetwork,
-      projects: async () => readProjectPaths(options.database),
-    }),
   };
 }
 
@@ -129,6 +119,7 @@ function createHttpRouter(
       blobsFolder: setup.blobsFolder,
       sessionCommandSignal: setup.commandAdmission.signal,
       pluginRuntime: setup.pluginRuntime,
+      pluginSettings: setup.pluginSettings,
       notifications: setup.notifications,
     }),
   );

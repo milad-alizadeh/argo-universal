@@ -69,6 +69,7 @@ function inputBehaviour(props: StandaloneTextInputProps): InputProps {
     placeholder: props.placeholder,
     editable: !props.disabled,
     keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
+    secureTextEntry: props.secure,
     autoFocus: props.focusOnOpen,
     selectTextOnFocus: props.selectOnFocus,
     onSubmitEditing: props.onSubmit,

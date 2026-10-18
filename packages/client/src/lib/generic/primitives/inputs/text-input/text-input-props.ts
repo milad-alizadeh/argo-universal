@@ -39,8 +39,8 @@ export type FieldProgressProps = Pick<TextFieldProps, 'label' | 'loading'>;
 // What the field's spinner says while it checks the value.
 export const fieldLoadingLabel = (label: string): string => `Checking ${label}`;
 
-// What either labelled variant may ask of its entry: a starred label, a numeric keyboard.
-type EntryProps = { required?: boolean; numeric?: boolean };
+// What either labelled variant may ask of its entry: a starred label, a numeric keyboard, masked entry for a secret.
+type EntryProps = { required?: boolean; numeric?: boolean; secure?: boolean };
 
 /*
  * A field may draw no label, its placeholder or the heading above saying what to type, as a

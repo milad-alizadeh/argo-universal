@@ -5,5 +5,16 @@
   "engines": { "argo": ">=0.0.0 <1.0.0" },
   "main": "index.js",
   "icon": { "sf": "powerplug", "material": "power" },
-  "contributes": { "nav": [{ "id": "hello", "title": "Hello", "path": "/" }] }
+  "contributes": {
+    "nav": [{ "id": "hello", "title": "Hello", "path": "/" }],
+    "settings": [
+      {
+        "key": "greeting",
+        "type": "text",
+        "label": "Greeting",
+        "description": "The heading on the Hello page.",
+        "default": "Hello from a Plugin"
+      }
+    ]
+  }
 }

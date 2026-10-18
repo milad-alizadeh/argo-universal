@@ -1,7 +1,11 @@
 import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, extname } from 'node:path';
-import { PluginManifest, type PluginCapability } from '@repo/contracts/plugins';
+import {
+  PluginManifest,
+  type PluginCapability,
+  type PluginSettingField,
+} from '@repo/contracts/plugins';
 import { onTestFinished } from 'vitest';
 
 // Fixture Plugins sit in the first-party root, the only one whose Plugins load (ADR-0030).
@@ -13,6 +17,7 @@ type FixturePlugin = {
   dev?: boolean;
   main?: string;
   capabilities?: PluginCapability[];
+  settings?: PluginSettingField[];
 };
 
 export async function createRuntimePlugins(
@@ -37,6 +42,7 @@ async function writePlugin(home: string, plugin: FixturePlugin): Promise<void> {
     id: plugin.id,
     main,
     capabilities: plugin.capabilities,
+    settings: plugin.settings,
   });
   await cp(
     new URL(
@@ -54,11 +60,13 @@ async function writeManifest({
   id,
   main,
   capabilities,
+  settings,
 }: {
   folder: string;
   id: string;
   main: string;
   capabilities?: PluginCapability[];
+  settings?: PluginSettingField[];
 }): Promise<void> {
   const template = PluginManifest.parse(
     JSON.parse(
@@ -71,7 +79,13 @@ async function writeManifest({
 
   await writeFile(
     join(folder, 'plugin.json'),
-    JSON.stringify({ ...template, id, main, capabilities }),
+    JSON.stringify({
+      ...template,
+      id,
+      main,
+      capabilities,
+      contributes: { ...template.contributes, settings },
+    }),
   );
 }
 

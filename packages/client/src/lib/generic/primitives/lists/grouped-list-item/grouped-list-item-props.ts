@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import type { Pressable } from 'react-native';
-import type { IconName } from '../../../symbols/icon-names';
+import type { IconSymbol } from '../../../symbols/icon-symbol';
 import type { SizeClass } from '../../../use-size-class/size-class';
 import {
   isPerSizeClass,
@@ -19,7 +19,8 @@ export interface ResolvedItemProps {
    * numberOfLines caps it, ending in an ellipsis, such as an Agent's description in a list.
    */
   subtitle?: { text: string; code?: boolean; numberOfLines?: number };
-  icon?: IconName;
+  // An Argo icon, or a Plugin's own SF and Material pair.
+  icon?: IconSymbol;
   // An image in the icon's slot, such as an Agent's logo; it stands in for icon.
   leading?: ReactElement;
   // An image beside the value, such as the selected Agent in Configure.

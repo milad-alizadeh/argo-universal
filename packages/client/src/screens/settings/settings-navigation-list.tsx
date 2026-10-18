@@ -7,6 +7,7 @@ import {
   useProjects,
 } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
+import { usePluginEntries } from './plugins/use-plugins';
 
 export interface SettingsNavigationListProps {
   // The path of the page shown, whose row the sidebar marks.
@@ -15,19 +16,24 @@ export interface SettingsNavigationListProps {
   query?: string;
 }
 
-type ServerCounts = Pick<SettingsListProps, 'projectCount' | 'agentCount'>;
+type ServerCounts = Pick<
+  SettingsListProps,
+  'projectCount' | 'agentCount' | 'pluginCount'
+>;
 
 /*
- * The Server's Projects and Agents the sidebar counts. Each stays undefined until the Server has answered once, so
+ * The Server's Projects, Agents and Plugins the sidebar counts. Each stays undefined until the Server has answered once, so
  * the list never counts 0 for what it does not know yet; once answered, the
  * cached answer stays while the Connection is down.
  */
 function useServerCounts(): ServerCounts {
   const agents = useInstalledAgents();
+  const { plugins } = usePluginEntries();
 
   return {
     projectCount: useProjects().data?.length,
     agentCount: agents.status === 'loaded' ? agents.agents.length : undefined,
+    pluginCount: plugins?.length,
   };
 }
 

@@ -23,6 +23,7 @@ async function expectOpened(
 const phonePages = [
   'Projects',
   'Agents',
+  'Plugins',
   'Accounts',
   'Connection',
   'Appearance',
@@ -31,6 +32,7 @@ const phonePages = [
 const widePages = [
   'Projects',
   'Agents',
+  'Plugins',
   'Accounts',
   'Connection',
   'Devices',

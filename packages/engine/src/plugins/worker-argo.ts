@@ -108,6 +108,9 @@ export const argoSource = `(() => {
       set: async (account, value) => { await secret({ action: 'set', account, value }); },
       delete: async (account) => { await secret({ action: 'delete', account }); },
     }),
+    settings: Object.freeze({
+      get: async (key) => (await call({ api: 'settings', key })) ?? null,
+    }),
     pages: Object.freeze({ register: kit.registerPage }),
   });
 })()`;
