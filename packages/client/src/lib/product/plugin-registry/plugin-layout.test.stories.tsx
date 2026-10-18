@@ -9,6 +9,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const openBuild = 'Open build';
+
 const onEvent = fn(async () => {});
 
 function node(
@@ -25,7 +27,7 @@ const card: WireNode = {
     padding: 4,
     onPress: { $event: 'onPress' },
   }),
-  children: [node('Text', 'title', { children: 'Open build' })],
+  children: [node('Text', 'title', { children: openBuild })],
   slots: {
     actions: [
       {
@@ -71,12 +73,12 @@ export const DispatchesSurfaceAndActionEvents: Story = {
   render: () => <PluginTree root={root} onEvent={onEvent} />,
   play: async ({ canvas, userEvent, canvasElement }) => {
     await expect(canvas.getByText('Healthy')).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Open build' }));
+    await userEvent.click(canvas.getByRole('button', { name: openBuild }));
     await expect(onEvent).toHaveBeenCalledWith('scroll/grid/card', {
       event: 'onPress',
     });
     await userEvent.pointer({
-      target: canvas.getByText('Open build'),
+      target: canvas.getByText(openBuild),
       keys: '[MouseRight]',
     });
     const menu = within(canvasElement.ownerDocument.body);

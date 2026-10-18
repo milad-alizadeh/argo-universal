@@ -67,7 +67,8 @@ function reachesEnd(direction: 'vertical' | 'horizontal'): Story {
       const end = canvas.getByText('Entry 20');
       const scroll = canvas.getByLabelText('Entries');
 
-      scroll.scrollTo({ top: scroll.scrollHeight, left: scroll.scrollWidth });
+      scroll.scrollTop = scroll.scrollHeight;
+      scroll.scrollLeft = scroll.scrollWidth;
       await waitFor(async () => {
         const content = scrollRange(end.getBoundingClientRect(), direction);
         const frame = scrollRange(scroll.getBoundingClientRect(), direction);

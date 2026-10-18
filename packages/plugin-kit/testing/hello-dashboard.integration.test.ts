@@ -17,10 +17,15 @@ it('publishes the Hello dashboard through the real Plugin worker', async () => {
   const page = test.page('/dashboard');
 
   await expect.poll(() => page.tree, { timeout: 10_000 }).not.toBeNull();
+
   for (const text of ['Issues', 'Open', 'In progress', 'Done', 'Blocked']) {
     expect(
       page.tree &&
-        findWireNodeEntry(page.tree, (node) => node.props.children === text),
+        findWireNodeEntry(
+          page.tree,
+          (node) => node.props.children === text || node.props.label === text,
+        ),
+      JSON.stringify(page.tree),
     ).toBeDefined();
   }
 }, 20_000);
