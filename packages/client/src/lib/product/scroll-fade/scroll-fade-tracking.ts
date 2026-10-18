@@ -20,28 +20,31 @@ function useAttach(
   );
 }
 
-interface ContentHeight {
+interface ContentLength {
   content: SharedValue<number>;
   onContentSizeChange: (width: number, height: number) => void;
 }
 
-function useContentHeight(): ContentHeight {
+// The content's length along the scroll's axis: its width when it scrolls sideways.
+function useContentLength(horizontal: boolean): ContentLength {
   const content = useSharedValue(0);
 
   const onContentSizeChange = useCallback(
-    (_width: number, height: number) => content.set(height),
-    [content],
+    (width: number, height: number) => content.set(horizontal ? width : height),
+    [content, horizontal],
   );
 
   return { content, onContentSizeChange };
 }
 
-// Follows a scroll view's offset on the UI thread, and its content height as it changes, so scrolling never renders React.
-export function useScrollFadeTracking(): Required<ScrollFadeTracking> {
+// Follows a scroll view's offset on the UI thread, and its content length as it changes, so scrolling never renders React. Reanimated's offset is the horizontal one for a scroll view that scrolls sideways.
+export function useScrollFadeTracking(
+  horizontal = false,
+): Required<ScrollFadeTracking> {
   const scrollView = useAnimatedRef<ScrollView>();
   const offset = useScrollOffset(scrollView);
   const viewport = useSharedValue(0);
-  const { content, onContentSizeChange } = useContentHeight();
+  const { content, onContentSizeChange } = useContentLength(horizontal);
 
   return {
     attachScrollView: useAttach(scrollView),

@@ -7,7 +7,7 @@ import { useScrollFade } from './scroll-fade-props';
 
 export type ScrollFadeViewProps = ScrollViewProps &
   ScrollFadeOptions & {
-    // Grows with its content up to the max height in `className`, then scrolls; otherwise it fills its parent.
+    // Grows with its content up to the max height in `className`, then scrolls; otherwise it fills its parent. A horizontal one always fits its content's height.
     fitContent?: boolean;
   };
 
@@ -16,7 +16,13 @@ interface Sizing {
   scroll: { className: string };
 }
 
-const sizing = (
+// A horizontal row is as tall as its content and narrows to its parent, scrolling what does not fit.
+const horizontalSizing = (className: string | undefined): Sizing => ({
+  frame: cn('min-w-0', className),
+  scroll: { className: 'grow-0' },
+});
+
+const verticalSizing = (
   fitContent: boolean | undefined,
   className: string | undefined,
 ): Sizing => ({
@@ -24,14 +30,24 @@ const sizing = (
   scroll: { className: fitContent ? 'grow-0' : 'flex-1' },
 });
 
-// A scroll view whose content fades under each edge that hides more of it.
+type SizingProps = Pick<
+  ScrollFadeViewProps,
+  'fitContent' | 'horizontal' | 'className'
+>;
+
+const sizing = ({ fitContent, horizontal, className }: SizingProps): Sizing =>
+  horizontal
+    ? horizontalSizing(className)
+    : verticalSizing(fitContent, className);
+
+// A scroll view whose content fades under each edge that hides more of it: top and bottom, or leading and trailing when `horizontal`.
 export function ScrollFadeView({
   className,
   fitContent,
   ...props
 }: ScrollFadeViewProps): React.JSX.Element {
   const { frame, scroll, attachScrollView } = useScrollFade(props);
-  const classNames = sizing(fitContent, className);
+  const classNames = sizing({ ...props, fitContent, className });
 
   return (
     <ScrollFadeFrame {...frame} className={classNames.frame}>
