@@ -10,8 +10,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@argo/plugin-kit": "workspace:*",
+    "@repo/contracts": "workspace:*",
     "@repo/engine": "workspace:*",
     "@repo/machine-log": "workspace:*",
+    "esbuild": "catalog:",
     "tsx": "catalog:",
     "xstate": "catalog:",
     "zod": "catalog:"
@@ -24,5 +27,8 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "bin": {
+    "argo": "./bin/argo.mjs"
   }
 }

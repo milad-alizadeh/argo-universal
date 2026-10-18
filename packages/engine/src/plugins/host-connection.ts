@@ -1,5 +1,7 @@
 import { fork, type ChildProcess } from 'node:child_process';
 import { createActor } from 'xstate';
+import { ClockRequests } from './clock-requests';
+import { hostCompletion } from './host-completion';
 import {
   hostLifecycleMachine,
   hostBudgetExhausted,
@@ -12,6 +14,8 @@ import {
   type PluginEvent,
   type PluginReply,
 } from './runtime-protocol';
+
+export type PluginHostProcess = ChildProcess;
 
 const closeLimitMs = 1000;
 
@@ -28,6 +32,7 @@ type HostCallbacks = {
 
 export class HostConnection {
   private child: ChildProcess | null = null;
+  readonly clock = new ClockRequests((command) => this.tell(command));
   private readonly lifecycle;
   private completion: Promise<void> = Promise.resolve();
 
@@ -112,7 +117,10 @@ export class HostConnection {
   }
 
   private receive(parsed: ReturnType<typeof HostMessage.safeParse>): void {
-    if (parsed.success) this.message(parsed.data);
+    if (!parsed.success) return;
+
+    if (parsed.data.type === 'clock.advanced') this.clock.settle(parsed.data);
+    else this.message(parsed.data);
   }
 
   private message(message: HostMessage): void {
@@ -165,16 +173,4 @@ function monitorStartup(child: ChildProcess): void {
 
   child.once('message', () => clearTimeout(deadline));
   child.once('close', () => clearTimeout(deadline));
-}
-
-function hostCompletion(
-  child: ChildProcess,
-  completed: (reason: string) => void,
-): Promise<void> {
-  return new Promise((resolve): void => {
-    child.once('close', (code, signal) => {
-      resolve();
-      completed(`${code ?? signal}`);
-    });
-  });
 }

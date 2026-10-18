@@ -85,6 +85,9 @@ export type HookAnswer<Name extends HookEventName> = z.infer<
 
 // Each event's Hook chain over core, resolving to its answer; with no Plugins, core answers alone.
 export type CoreHooks = {
+  // Internal lifecycle signal, before any Agent work can edit a dev Plugin.
+  turnStarted?: (turnId: string) => void;
+} & {
   [Name in Exclude<HookEventName, 'ui.render'>]: (
     event: HookEvent<Name>,
   ) => Promise<HookAnswer<Name>>;

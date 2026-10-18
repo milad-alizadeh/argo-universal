@@ -1,18 +1,21 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import {
-  createContext,
   runInContext,
   SourceTextModule,
   SyntheticModule,
   type Module,
 } from 'node:vm';
-import { kitPrelude } from './kit-prelude.ts';
 import { bundleKit } from './kit/bundle.ts';
 import type { Kit } from './kit/plugin-kit.ts';
 import { requirePluginFile } from './plugin-files.ts';
 import type { PluginEntry } from './runtime-protocol.ts';
-import { argoSource, type ArgoBridge } from './worker-argo.ts';
+import { type ArgoBridge } from './worker-argo.ts';
+import {
+  createPluginRealm,
+  type PluginClock,
+  type PluginRealm,
+} from './worker-realm.ts';
 
 /*
  * The context deliberately has no Node globals; the frozen `argo` object, built inside the context, is its only way out. This is a
@@ -21,8 +24,9 @@ import { argoSource, type ArgoBridge } from './worker-argo.ts';
 export async function registerPlugin(
   entry: PluginEntry,
   bridge: ArgoBridge,
+  clock?: PluginClock,
 ): Promise<PluginInboxes> {
-  const context = sandbox(bridge, await bundleKit());
+  const context = createPluginRealm(bridge, await bundleKit(), clock);
   const { inboxes, kit } = takeKit(context);
 
   await bootstrap(context, new PluginModules(entry, context, kit));
@@ -57,26 +61,6 @@ interface KitModules {
 interface TakenKit {
   inboxes: PluginInboxes;
   kit: KitModules;
-}
-
-type PluginRealm = ReturnType<typeof createContext>;
-
-// The kit runs first, with microtask timers for its scheduler; `argoSource` then builds the frozen `argo` from it and removes the bridge.
-function sandbox(bridge: ArgoBridge, kitSource: string): PluginRealm {
-  const context = createContext(
-    {
-      __argoBridge: bridge,
-      __argoDelay: (delay: number) =>
-        new Promise<void>((resolve) => setTimeout(resolve, delay)),
-    },
-    { codeGeneration: { strings: false, wasm: false } },
-  );
-
-  runInContext(kitPrelude, context);
-  runInContext(kitSource, context);
-  runInContext(`globalThis.argo = ${argoSource}`, context);
-
-  return context;
 }
 
 // What the kit and `argo` left behind for the worker: the inboxes for pages and Hooks, and the modules `@argo/plugin-kit` serves.

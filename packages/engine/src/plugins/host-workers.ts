@@ -1,4 +1,6 @@
-import { Worker } from 'node:worker_threads';
+import type { Worker } from 'node:worker_threads';
+import type { ClockReply } from './clock-protocol.ts';
+import { startWorker, type WorkerRecord } from './host-worker.ts';
 import {
   pluginAnswerLimitMs,
   running,
@@ -11,18 +13,10 @@ import {
   type HostReply,
   type HostWaiting,
   type WorkerCall,
+  type HostCommand,
 } from './runtime-protocol.ts';
 
-const heapLimitMb = 64;
-
 const heartbeatIntervalMs = 1000;
-
-type WorkerRecord = {
-  generation: number;
-  worker: Worker;
-  deadline: ReturnType<typeof setTimeout>;
-  heartbeat: ReturnType<typeof setInterval> | null;
-};
 
 export class HostWorkers {
   private readonly workers = new Map<string, WorkerRecord>();
@@ -47,17 +41,17 @@ export class HostWorkers {
     if (record?.heartbeat === null) this.arm(pluginId, record);
   }
 
-  event({ pluginId, event }: HostEvent): void {
-    this.workers.get(pluginId)?.worker.postMessage({ type: 'event', event });
+  event({
+    pluginId,
+    ...command
+  }: HostEvent | Extract<HostCommand, { type: 'clock.advance' }>): void {
+    this.workers.get(pluginId)?.worker.postMessage(command);
   }
 
   activate(entry: PluginEntry): void {
     if (this.workers.has(entry.pluginId)) return;
 
-    const worker = new Worker(new URL('./worker-process.ts', import.meta.url), {
-      workerData: entry,
-      resourceLimits: { maxOldGenerationSizeMb: heapLimitMb },
-    });
+    const worker = startWorker(entry);
 
     const record = this.record(entry, worker);
     this.workers.set(entry.pluginId, record);
@@ -118,7 +112,11 @@ export class HostWorkers {
   }
 
   // A Plugin waiting on the Server is alive, so a slow call must not count as a hang while it starts.
-  private call(pluginId: string, record: WorkerRecord, call: WorkerCall): void {
+  private call(
+    pluginId: string,
+    record: WorkerRecord,
+    call: WorkerCall | ClockReply,
+  ): void {
     if (record.heartbeat === null) this.arm(pluginId, record);
 
     this.report({ ...call, pluginId, generation: record.generation });

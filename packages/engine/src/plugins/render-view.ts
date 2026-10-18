@@ -76,7 +76,8 @@ class ReplacementDrawing {
     const { parts } = this.context;
     const sanitized = sanitizeTree(root);
 
-    const reason = replacementTreeReason(root, parts) ?? svgRefusal(sanitized);
+    const reason =
+      visualRefusal(sanitized) ?? replacementTreeReason(root, parts);
 
     return reason
       ? this.refuse(reason)
@@ -112,9 +113,13 @@ class ReplacementDrawing {
 const reportedParts = (connection: RpcConnection): PartVersions =>
   connection.surface?.parts ?? legacyPartVersions;
 
-const svgRefusal = (
+const visualRefusal = (
   sanitized: ReturnType<typeof sanitizeTree>,
-): string | undefined => sanitized.refused[0]?.reason;
+): string | undefined => {
+  const item = sanitized.refused[0];
+
+  return item ? `${item.node}: ${item.reason}` : undefined;
+};
 
 function watchReplacement(
   runtime: PluginRuntime,

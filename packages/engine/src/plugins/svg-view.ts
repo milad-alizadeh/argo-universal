@@ -2,6 +2,7 @@ import { mapActionContent } from '@repo/contracts/plugins/map-action-content';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { parseSvg } from './svg-parser';
 import { sanitizeSvg } from './svg-sanitizer';
+import { visualReason } from './visual-validation';
 
 export interface RefusedSvg {
   node: string;
@@ -34,6 +35,8 @@ function visit(
   const sanitized = sanitizeNode(node, path, state);
 
   if (!sanitized) return null;
+
+  if (sanitized.type === 'Canvas') return sanitized;
 
   return addSanitizedChildren(sanitized, path, state);
 }
@@ -71,6 +74,10 @@ function sanitizeNode(
   path: string[],
   state: VisitState,
 ): WireNode | null {
+  const reason = visualReason(node);
+
+  if (reason) return recordRefusal({ node, path, state, reason });
+
   if (node.type !== 'Svg') return node;
 
   state.containsSvg = true;

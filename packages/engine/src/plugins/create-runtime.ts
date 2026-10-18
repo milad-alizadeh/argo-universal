@@ -11,6 +11,7 @@ export type PluginRuntimeOptions = Omit<
   'log' | 'waiting' | 'assets'
 > & {
   keychain?: Keychain;
+  clockStart?: number;
 };
 
 type ServiceOptions = Omit<PluginServiceOptions, 'log' | 'assets'> & {
@@ -20,17 +21,17 @@ type ServiceOptions = Omit<PluginServiceOptions, 'log' | 'assets'> & {
 // The Plugin host and its Plugins log to `<home>/logs/plugins.log`; storage and secrets stay with each Plugin.
 export const createPluginRuntime = (
   home: string,
-  options: PluginRuntimeOptions,
+  { clockStart, ...serviceOptions }: PluginRuntimeOptions,
 ): PluginRuntime => {
-  const log = (line: string): void =>
-    writeLog({ home, label: 'plugins', line });
+  const log = pluginLog(home);
 
   const runtime: PluginRuntime = new PluginRuntime(
     log,
     createServices(home, log, {
-      ...options,
+      ...serviceOptions,
       waiting: (pluginId, generation) => runtime.waiting(pluginId, generation),
     }),
+    clockStart,
   );
 
   return runtime;
@@ -46,3 +47,7 @@ const createServices = (
     assets: new PluginAssets(home),
     ...machine,
   });
+
+function pluginLog(home: string): (line: string) => void {
+  return (line) => writeLog({ home, label: 'plugins', line });
+}

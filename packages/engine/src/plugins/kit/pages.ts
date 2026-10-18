@@ -7,6 +7,7 @@ import type {
 import type { ReactNode } from 'react';
 import { reportFailure } from './host-config';
 import { startPage, transmit, failedDrawingRoot } from './mounted-page';
+import { cancelPageFrame } from './page-frame';
 import { runHandler, type OpenView, type DispatchSender } from './page-view';
 import { ReplacementPages } from './replacement-pages';
 import { elementOf, type Page, type SlotContent } from './view-content';
@@ -71,7 +72,7 @@ function close(hub: Hub, viewId: PluginViewId): void {
   const view = hub.views.get(viewId);
 
   if (!view) return;
-  clearTimeout(view.frame);
+  cancelPageFrame(view);
   view.mounted?.unmount();
   hub.views.delete(viewId);
 }

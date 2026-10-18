@@ -12,7 +12,12 @@ import { coreAnswer, isAnswer } from './hook-rules';
 type HookRunner = (name: HookEventName, event: JsonObject) => Promise<Json>;
 
 // The Server's runner, and where it logs a chain that failed as a whole.
-type AttachedRunner = { run: HookRunner; log: (line: string) => void };
+type AttachedRunner = {
+  run: HookRunner;
+  log: (line: string) => void;
+  turnStarted?: (turnId: string) => void;
+  turnEnded?: (turnId: string) => Promise<void>;
+};
 
 type EventSchemas<Event, Answer> = {
   event: z.ZodType<Event>;
@@ -44,9 +49,10 @@ const typedHooks = (run: HookRunner): CoreHooks => ({
  * runner attaches later; until it does, and after it detaches, core answers alone.
  */
 export class HookPort {
-  public readonly hooks: CoreHooks = typedHooks((name, event) =>
-    this.run(name, event),
-  );
+  public readonly hooks: CoreHooks = {
+    ...typedHooks((name, event) => this.run(name, event)),
+    turnStarted: (turnId) => this.runner?.turnStarted?.(turnId),
+  };
 
   private runner: AttachedRunner | null = null;
 
@@ -58,18 +64,40 @@ export class HookPort {
     this.runner = null;
   }
 
-  private async run(name: HookEventName, event: JsonObject): Promise<Json> {
-    if (!this.runner) return coreAnswer(name, event);
+  private run(name: HookEventName, event: JsonObject): Promise<Json> {
+    const runner = this.runner;
 
-    try {
-      return checkedAnswer(name, await this.runner.run(name, event));
-    } catch (error) {
-      this.runner.log(
-        `${name} Hooks failed, so core answered alone: ${runtimeError(error)}`,
-      );
+    return runner
+      ? runAttached(runner, name, event)
+      : Promise.resolve(coreAnswer(name, event));
+  }
+}
 
-      return coreAnswer(name, event);
-    }
+async function runAttached(
+  runner: AttachedRunner,
+  name: HookEventName,
+  event: JsonObject,
+): Promise<Json> {
+  try {
+    return await runChecked(runner, name, event);
+  } finally {
+    if (name === 'turn.complete') await finishTurn(runner, event.turnId);
+  }
+}
+
+async function runChecked(
+  runner: AttachedRunner,
+  name: HookEventName,
+  event: JsonObject,
+): Promise<Json> {
+  try {
+    return checkedAnswer(name, await runner.run(name, event));
+  } catch (error) {
+    runner.log(
+      `${name} Hooks failed, so core answered alone: ${runtimeError(error)}`,
+    );
+
+    return coreAnswer(name, event);
   }
 }
 
@@ -79,4 +107,12 @@ function checkedAnswer(name: HookEventName, answer: Json): Json {
     throw new Error(`the ${name} chain answered the wrong shape`);
 
   return answer;
+}
+
+async function finishTurn(
+  runner: AttachedRunner,
+  turnId: Json | undefined,
+): Promise<void> {
+  if (typeof turnId !== 'string') return;
+  await runner.turnEnded?.(turnId);
 }

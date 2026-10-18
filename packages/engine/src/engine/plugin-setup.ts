@@ -55,6 +55,8 @@ function attachHooks(options: HttpServerOptions, setup: PluginSetup): void {
 
   setup.hookPort.attach({
     run: (name, event) => plugins.runHooks(name, event),
+    turnStarted: (turnId) => setup.pluginRuntime.turns.started(turnId),
+    turnEnded: (turnId) => setup.pluginRuntime.turns.ended(turnId),
     log: (line) => writeLog({ home: options.home, label: 'plugins', line }),
   });
 }

@@ -1,5 +1,6 @@
 import {
   context,
+  build,
   type BuildContext,
   type BuildResult,
   type Plugin,
@@ -14,7 +15,7 @@ type BundleCallbacks = {
   failed: (error: string) => void;
 };
 
-const devBuildOptions: BuildOptions = {
+export const devBuildOptions: BuildOptions = {
   bundle: true,
   write: false,
   format: 'esm',
@@ -48,7 +49,7 @@ export async function watchPlugin(
   return build;
 }
 
-const registrationSource = (path: string): string =>
+export const registrationSource = (path: string): string =>
   `export { register } from ${JSON.stringify(path)};`;
 
 const reloadPlugin = (callbacks: BundleCallbacks): Plugin => ({
@@ -70,4 +71,19 @@ function loaded(files: OutputFile[], callbacks: BundleCallbacks): void {
   const output = files.at(0);
 
   if (output) callbacks.loaded(output.text);
+}
+
+export async function bundlePlugin(
+  entry: Pick<PluginEntry, 'directory' | 'main'>,
+): Promise<BuildResult> {
+  return build({
+    ...devBuildOptions,
+    metafile: true,
+    absWorkingDir: entry.directory,
+    stdin: {
+      contents: registrationSource(`./${entry.main}`),
+      resolveDir: entry.directory,
+    },
+    plugins: [pluginFiles(entry.directory)],
+  });
 }
