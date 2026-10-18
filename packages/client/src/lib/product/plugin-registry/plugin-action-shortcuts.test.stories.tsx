@@ -1,6 +1,6 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { ActionShortcutScope } from '#primitives/actions/action-list';
 import { GroupedList } from '#primitives/lists/grouped-list';
 import { PluginSlot } from './plugin-slot';
@@ -80,7 +80,7 @@ export const FirstContributionOwnsShortcut: Story = {
       target: canvas.getByText('First row'),
     });
     const firstItem = await page.findByRole('menuitem', { name: 'Copy link' });
-    await expect(within(firstItem).getByText('I')).toBeVisible();
+    await waitFor(() => expect(within(firstItem).getByText('I')).toBeVisible());
     await userEvent.keyboard('{Escape}');
     await userEvent.pointer({
       keys: '[MouseRight]',

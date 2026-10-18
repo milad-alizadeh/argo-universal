@@ -9,6 +9,7 @@ export type AdditionalPrimitives = {
   ActionListProps: ActionListKit.ActionListProps;
   ActionProps: ActionListKit.ActionProps;
   ActionSectionProps: ActionListKit.ActionSectionProps;
+  ActionShortcut: ActionListKit.ActionShortcut;
   EmptyStateProps: EmptyStateKit.EmptyStateProps;
   StatusDotProps: StatusDotKit.StatusDotProps;
   SvgProps: SvgKit.SvgProps;
