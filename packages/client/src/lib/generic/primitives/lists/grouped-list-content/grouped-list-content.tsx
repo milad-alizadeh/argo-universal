@@ -11,7 +11,9 @@ export function GroupedListContent({
   const content = <View>{children}</View>;
 
   return title ? (
-    <GroupedListSection title={title}>{content}</GroupedListSection>
+    <GroupedListSection title={title} cardless>
+      {content}
+    </GroupedListSection>
   ) : (
     content
   );

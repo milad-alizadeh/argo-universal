@@ -11,4 +11,6 @@ export interface GroupedListSectionProps {
    * hint or error under it, so it draws no card and no footer; iOS and the web keep both.
    */
   textFields?: boolean;
+  // The children are content with no card, such as GroupedListContent's, so no card corner clips them.
+  cardless?: boolean;
 }
