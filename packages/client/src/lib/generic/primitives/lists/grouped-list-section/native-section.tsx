@@ -1,6 +1,10 @@
 // SwiftUI's grouped Form supplies the section drawing, or a stacked list draws it; Android composes public ListItem controls.
 import { FieldGroup } from '@expo/ui';
-import { listRowBackground } from '@expo/ui/swift-ui/modifiers';
+import {
+  type ModifierConfig,
+  listRowBackground,
+  listRowSeparatorTint,
+} from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { NativeText } from '#primitives/display/native-text';
@@ -17,17 +21,22 @@ export function NativeSection(props: GroupedListSectionProps): ReactElement {
 }
 
 function FormSection(props: GroupedListSectionProps): ReactElement {
-  const { card } = useNativeTheme().colors;
-
   return (
-    <FieldGroup.Section
-      title={props.title}
-      modifiers={card ? [listRowBackground(card)] : []}
-    >
+    <FieldGroup.Section title={props.title} modifiers={useRowColours()}>
       {footerSlot(props)}
       {props.children}
     </FieldGroup.Section>
   );
+}
+
+// Rows on Argo's card, their separators in Argo's border colour (listRowSeparatorTint in modifiers/index.d.ts).
+function useRowColours(): ModifierConfig[] {
+  const { card, border } = useNativeTheme().colors;
+
+  return [
+    ...(card ? [listRowBackground(card)] : []),
+    ...(border ? [listRowSeparatorTint(border)] : []),
+  ];
 }
 
 // Expo identifies its footer by the slot's element type, so return that slot directly.

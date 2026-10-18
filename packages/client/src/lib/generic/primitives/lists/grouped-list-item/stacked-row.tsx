@@ -16,3 +16,7 @@ export function useStackedCellModifiers(): NonNullable<
 export function StackedCell(props: StackedRowProps): ReactElement {
   return props.children;
 }
+
+export function StackedIcon(props: { children: ReactElement }): ReactElement {
+  return props.children;
+}

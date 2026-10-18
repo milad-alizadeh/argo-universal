@@ -32,3 +32,13 @@ export function useOverlayList(): boolean {
 
   return useWide() && overlay;
 }
+
+/*
+ * A container sized to its content, such as an iPad popover, has no height for a list to fill, so
+ * every list inside it fits its content.
+ */
+export const SizedToContent = createContext(false);
+
+export function useSizedToContent(): boolean {
+  return useContext(SizedToContent);
+}

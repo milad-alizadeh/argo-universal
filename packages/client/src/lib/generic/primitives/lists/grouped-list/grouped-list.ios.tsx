@@ -13,7 +13,12 @@ import { ScrollView } from 'react-native';
 import {
   FieldLayout,
   SidebarSelectionContext,
+  useSizedToContent,
 } from '#primitives/fields/field-layout';
+import {
+  StackedGutter,
+  useStackedGutter,
+} from '#primitives/lists/grouped-list-item';
 import { Host } from '#primitives/native/host';
 import { useNativeTheme } from '../../../native-theme';
 import type { GroupedListProps } from './grouped-list-props';
@@ -23,8 +28,8 @@ type SidebarSelection = NonNullable<
   React.ContextType<typeof SidebarSelectionContext>
 >;
 
-// Matches a grouped Form's gutter and the space between its sections.
-const stackGutter = 16;
+// A grouped Form's space above and below its sections, and between them; its gutter follows the width.
+const stackInset = 16;
 
 const stackSectionGap = 20;
 
@@ -33,7 +38,9 @@ const stackSectionGap = 20;
  * A list that fills its pane is a Form; a list sized to its content stacks the same rows.
  */
 export function GroupedList(props: GroupedListProps): React.JSX.Element {
-  return props.fit ? <StackedList {...props} /> : <FilledList {...props} />;
+  const fit = useSizedToContent() || props.fit;
+
+  return fit ? <StackedList {...props} /> : <FilledList {...props} />;
 }
 
 function FilledList(props: GroupedListProps): React.JSX.Element {
@@ -54,11 +61,13 @@ function FilledList(props: GroupedListProps): React.JSX.Element {
 function StackedList(props: GroupedListProps): React.JSX.Element {
   return (
     <FieldLayout value="stacked">
-      <ScrollView className="shrink" keyboardShouldPersistTaps="handled">
-        <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-          <StackedSections {...props} />
-        </Host>
-      </ScrollView>
+      <StackedGutter>
+        <ScrollView className="shrink" keyboardShouldPersistTaps="handled">
+          <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+            <StackedSections {...props} />
+          </Host>
+        </ScrollView>
+      </StackedGutter>
     </FieldLayout>
   );
 }
@@ -67,7 +76,9 @@ function StackedSections(props: GroupedListProps): React.JSX.Element {
   return (
     <VStack
       spacing={props.gap === 'sm' ? compactGroupedListGap : stackSectionGap}
-      modifiers={[padding({ all: stackGutter })]}
+      modifiers={[
+        padding({ horizontal: useStackedGutter(), vertical: stackInset }),
+      ]}
     >
       {props.children}
     </VStack>

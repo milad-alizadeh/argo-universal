@@ -4,7 +4,7 @@ import {
   fillMaxWidth,
   padding,
 } from '@expo/ui/jetpack-compose/modifiers';
-import { frame } from '@expo/ui/swift-ui/modifiers';
+import { frame, padding as swiftPadding } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useSidebarList } from '#primitives/fields/field-layout';
@@ -58,12 +58,20 @@ export function RowContent(props: ResolvedItemProps): React.JSX.Element {
   );
 }
 
-// iOS draws a stock Form row's disclosure chevron; Material's trailing slot holds a 24dp icon.
+/*
+ * iOS draws a stock Form row's disclosure chevron; Material's trailing slot holds a 24dp icon.
+ * Measured against a stock iOS 26 NavigationLink, its chevron sits 2pt further from the value and
+ * 1.5pt further from the trailing edge than a symbol at the row's end.
+ */
+const disclosureInsets = ios
+  ? [swiftPadding({ leading: 2, trailing: 1.5 })]
+  : [];
+
 function Disclosure({ visible }: { visible: boolean }): React.ReactNode {
   if (!visible) return null;
 
   return (
-    <Row modifiers={rowDisclosureAccessibility()}>
+    <Row modifiers={[...rowDisclosureAccessibility(), ...disclosureInsets]}>
       <NativeSymbol name="disclosure" role={ios ? 'chevron' : 'row'} muted />
     </Row>
   );

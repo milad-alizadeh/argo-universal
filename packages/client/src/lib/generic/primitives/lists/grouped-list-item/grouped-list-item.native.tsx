@@ -3,6 +3,7 @@ import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import {
   buttonStyle,
   disabled,
+  foregroundStyle,
   listRowBackground,
   listRowSeparator,
   tag,
@@ -14,6 +15,7 @@ import {
   useSidebarSelection,
   useStackedList,
 } from '#primitives/fields/field-layout';
+import { useNativeTheme } from '../../../native-theme';
 import { CompactScope } from '../../../use-size-class/compact-scope';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
 import {
@@ -57,7 +59,7 @@ const leadsWithGlyph = (item: ResolvedItemProps): boolean =>
   !!(item.icon || item.leading || item.loading);
 
 function NativeRow(props: ResolvedItemProps): React.JSX.Element {
-  const modifiers = rowModifiers(props, useSidebarList());
+  const modifiers = useRowModifiers(props);
 
   const chosen = useSidebarSelection(
     props.label,
@@ -134,16 +136,44 @@ function PressableRow(props: PressableRowProps): React.JSX.Element {
   );
 }
 
-function rowModifiers(props: ResolvedItemProps, sidebar: boolean): Modifiers {
+function useRowModifiers(props: ResolvedItemProps): Modifiers {
+  const sidebar = useSidebarList();
+  const { colors } = useNativeTheme();
+
   if (!ios) return [fillMaxWidth(), ...rowContainerAccessibility(props)];
 
   return [
-    ...(sidebar
-      ? [listRowBackground('transparent'), listRowSeparator('hidden')]
-      : []),
+    ...(sidebar ? sidebarRowModifiers(props, colors) : []),
     ...rowContainerAccessibility(props),
     disabled(!!props.disabled),
   ];
 }
+
+/*
+ * A sidebar row sits on the sidebar. Its row background (listRowBackground in modifiers/index.d.ts)
+ * replaces the List's selection fill, so the open page's row draws Argo's selected tint itself, and
+ * keeps Argo's foreground where SwiftUI would turn a selected row's symbols white.
+ */
+function sidebarRowModifiers(
+  props: ResolvedItemProps,
+  { selected, foreground }: NativeColors,
+): Modifiers {
+  const open = props.selected ? openRowColours(selected, foreground) : [];
+
+  return open.length > 0
+    ? [...open, listRowSeparator('hidden')]
+    : [listRowBackground('transparent'), listRowSeparator('hidden')];
+}
+
+function openRowColours(
+  selected: string | undefined,
+  foreground: string | undefined,
+): Modifiers {
+  if (!selected || !foreground) return [];
+
+  return [listRowBackground(selected), foregroundStyle(foreground)];
+}
+
+type NativeColors = ReturnType<typeof useNativeTheme>['colors'];
 
 GroupedListItem satisfies React.ComponentType<GroupedListItemProps>;
