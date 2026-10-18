@@ -1,4 +1,3 @@
-import { wireParts } from '@repo/contracts/plugins/kit';
 import {
   contentListProps,
   listSectionProps,
@@ -7,7 +6,6 @@ import {
   progressBarProps,
   pillProps,
   listProps,
-  buttonProps,
   layoutProps,
   textForApp,
   groupedItemProps,
@@ -26,17 +24,7 @@ import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
-import {
-  PluginButton,
-  PluginIconButton,
-  PluginSplitButton,
-} from './plugin-buttons';
-import {
-  PluginPicker,
-  PluginSlider,
-  PluginTextInput,
-  PluginBinaryControl,
-} from './plugin-inputs';
+import { pluginControlEntries } from './plugin-control-entries';
 import type { PluginPart } from './plugin-parts';
 import {
   entry,
@@ -49,29 +37,9 @@ import { pluginSettingsEntries } from './plugin-settings-entries';
 
 export const pluginEntries = {
   ...pluginSettingsEntries,
+  ...pluginControlEntries,
   EmptyState: entry(emptyStateProps, (props, context) => (
     <EmptyState {...props} action={context.slots.action} />
-  )),
-  Picker: entry(wireParts.Picker.props, (props, context) => (
-    <PluginPicker props={props} context={context} />
-  )),
-  Slider: entry(wireParts.Slider.props, (props, context) => (
-    <PluginSlider props={props} context={context} />
-  )),
-  TextInput: entry(wireParts.TextInput.props, (props, context) => (
-    <PluginTextInput props={props} context={context} />
-  )),
-  IconButton: entry(wireParts.IconButton.props, (props, context) => (
-    <PluginIconButton props={props} context={context} />
-  )),
-  SplitButton: entry(wireParts.SplitButton.props, (props, context) => (
-    <PluginSplitButton props={props} context={context} />
-  )),
-  Switch: entry(wireParts.Switch.props, (props, context) => (
-    <PluginBinaryControl type="Switch" props={props} context={context} />
-  )),
-  Checkbox: entry(wireParts.Checkbox.props, (props, context) => (
-    <PluginBinaryControl type="Checkbox" props={props} context={context} />
   )),
   List: entry(contentListProps, (props, context, children) => (
     <List {...props} empty={context.slots.empty}>
@@ -124,9 +92,6 @@ export const pluginEntries = {
     />
   )),
   Text: entry(textForApp, (props) => <Text {...props} />),
-  Button: entry(buttonProps, (props, context) => (
-    <PluginButton props={props} context={context} />
-  )),
   Stack: entry(stackProps, ({ direction, ...props }, _context, children) => (
     <Stack direction={direction} {...props}>
       {children}
