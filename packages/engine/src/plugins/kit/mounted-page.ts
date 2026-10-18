@@ -47,7 +47,13 @@ function committed(hub: PageHub, view: OpenView, container: Instance): void {
 }
 
 function emptyPage(): WireNode {
-  return { type: 'Column', key: '0', props: {}, children: [], slots: {} };
+  return {
+    type: 'Stack',
+    key: '0',
+    props: { direction: 'column' },
+    children: [],
+    slots: {},
+  };
 }
 
 export function startPage(

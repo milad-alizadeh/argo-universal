@@ -14,7 +14,7 @@ import type { KitProps } from '#primitives/kit-props';
 import { Grid } from '#primitives/layout/grid';
 import { ScrollView } from '#primitives/layout/scroll-view';
 import { Spacer } from '#primitives/layout/spacer';
-import { Stack, Row, Column } from '#primitives/layout/stack';
+import { Stack } from '#primitives/layout/stack';
 import { Surface } from '#primitives/layout/surface';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -55,14 +55,9 @@ export const pluginEntries = {
   Grid,
   Surface,
   ScrollView,
-  Row,
-  Column,
   Svg,
 } satisfies {
-  [
-    Name in Exclude<
-      PluginPart,
-      'VirtualList' | 'GroupedList' | 'GroupedListItem'
-    >
-  ]: ComponentType<KitProps<Name, string, React.JSX.Element>>;
+  [Name in PluginPart]: ComponentType<
+    KitProps<Name, string, React.JSX.Element>
+  >;
 };

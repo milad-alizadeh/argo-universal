@@ -72,7 +72,6 @@ export const listWireParts = {
     ).reference,
   },
   'List.Section': {
-    ui: { bindings: [{ prop: 'selection', event: 'onSelectionChange' }] },
     props: listSectionProps,
     versions: [
       listSectionProps.omit({

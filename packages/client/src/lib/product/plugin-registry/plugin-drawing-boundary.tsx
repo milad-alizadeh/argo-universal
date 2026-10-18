@@ -21,12 +21,10 @@ export class PluginDrawingBoundary extends Component<
     return { failed: true };
   }
   public static getDerivedStateFromProps(
-    props: PluginDrawingBoundaryProps,
+    { resetKey }: PluginDrawingBoundaryProps,
     state: DrawingState,
   ): DrawingState | null {
-    return props.resetKey === state.resetKey
-      ? null
-      : { failed: false, resetKey: props.resetKey };
+    return resetKey === state.resetKey ? null : { failed: false, resetKey };
   }
   public override componentDidCatch(error: Error): void {
     this.props.onFallback(error.message);
