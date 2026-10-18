@@ -6,7 +6,8 @@
   "imports": {
     "#plugin-identifier": "./src/plugins/plugin-identifier.ts",
     "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
-    "#plugin-wire-events": "./src/plugins/wire-events.ts"
+    "#plugin-wire-events": "./src/plugins/wire-events.ts",
+    "#plugin-surface": "./src/plugins/surface.ts"
   },
   "exports": {
     ".": "./src/index.ts",

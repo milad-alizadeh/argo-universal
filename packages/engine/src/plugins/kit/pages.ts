@@ -1,4 +1,8 @@
 import type {
+  PluginRenderContext,
+  PluginSurface,
+} from '@repo/contracts/plugins/kit';
+import type {
   PluginEvent,
   PluginViewId,
   PluginSlotInput,
@@ -26,10 +30,12 @@ export type ViewSender = (
   message: ViewMessage,
 ) => Promise<void>;
 
-type Page = () => ReactNode;
+type Page = ComponentType<{ context: PluginRenderContext }>;
 
-// A Slot's content takes the Slot's context, frozen, as its one prop.
-type SlotContent = ComponentType<{ context: PluginSlotInput['context'] }>;
+// A Slot keeps its own fields alongside the App's surface.
+type SlotContent = ComponentType<{
+  context: PluginSlotInput['context'] & PluginRenderContext;
+}>;
 
 type Open = Extract<PluginEvent, { type: 'open' }>;
 
@@ -99,23 +105,36 @@ function resend(hub: Hub, view: OpenView): void {
   });
 }
 
-function pageElement(hub: Hub, path: string): ReactNode | null {
+function renderContext(
+  surface: PluginSurface | undefined,
+): PluginRenderContext {
+  return surface
+    ? {
+        surface: Object.freeze({
+          platform: surface.platform,
+          parts: Object.freeze({ ...surface.parts }),
+        }),
+      }
+    : {};
+}
+
+// Every page and Slot gets the surface of the Connection its view belongs to.
+function elementOf(hub: Hub, { path, slot, surface }: Open): ReactNode | null {
+  const context = renderContext(surface);
+
+  if (slot) {
+    const content = hub.slots.get(slot.slotId);
+
+    return content
+      ? createElement(content, {
+          context: Object.freeze({ ...slot.context, ...context }),
+        })
+      : null;
+  }
   const page = hub.pages.get(path);
 
-  return page ? createElement(page) : null;
+  return page ? createElement(page, { context: Object.freeze(context) }) : null;
 }
-
-function slotElement(hub: Hub, slot: PluginSlotInput): ReactNode | null {
-  const content = hub.slots.get(slot.slotId);
-
-  return content
-    ? createElement(content, { context: Object.freeze({ ...slot.context }) })
-    : null;
-}
-
-// What the open view draws: a registered page, or the Slot content with its context; none when the Plugin registered neither.
-const elementOf = (hub: Hub, { path, slot }: Open): ReactNode | null =>
-  slot ? slotElement(hub, slot) : pageElement(hub, path);
 
 function open(hub: Hub, event: Open): void {
   const existing = hub.views.get(event.viewId);
