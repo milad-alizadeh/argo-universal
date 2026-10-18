@@ -3,7 +3,7 @@ import { part, stringLabel, optionalLabel } from '../plugin-part-schema-utils';
 
 export const visualPartSchemas = {
   Svg: part(
-    'A sanitized SVG visual with bounded dimensions.',
+    'A sanitized SVG visual with bounded dimensions. Use Svg for small fixed markup; use Canvas for data scenes and interactive drawing.',
     z.object({ source: z.string(), accessibilityLabel: optionalLabel }),
     {
       appearance:
@@ -17,10 +17,5 @@ export const visualPartSchemas = {
       accessibilityLabel: stringLabel,
     }),
     { label: 'The required `accessibilityLabel` summarizes the chart data.' },
-  ),
-  CodeMap: part(
-    'A bounded code map visual.',
-    z.object({ source: z.string(), accessibilityLabel: stringLabel }),
-    { label: 'The required `accessibilityLabel` summarizes the code map.' },
   ),
 };
