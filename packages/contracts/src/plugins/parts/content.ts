@@ -8,21 +8,27 @@ import {
   onPress,
   imageSource,
 } from '../plugin-part-schema-utils';
+import { avatarProps } from '../presentation-kit-props';
+import { iconProps } from '../presentation-kit-props';
+import { wireParts } from '../wire-parts';
 
 export const contentPartSchemas = {
   Icon: part(
     'A native symbol with semantic size, tone, and optional status mark.',
-    z.object({
-      name: z.string().describe('A supported native symbol name.'),
-      role: z.string().optional().describe('Semantic icon size role.'),
-      tone,
-      status: z.string().optional().describe('Optional status mark.'),
-      accessibilityLabel: optionalLabel,
-    }),
+    iconProps,
     {
       label:
         'Provide `accessibilityLabel` when the icon conveys information; omit it when decorative.',
       accessibility: accessibility.iconAccessibility,
+      previous: [
+        z.object({
+          name: z.string().describe('A supported native symbol name.'),
+          role: z.string().optional().describe('Semantic icon size role.'),
+          tone,
+          status: z.string().optional().describe('Optional status mark.'),
+          accessibilityLabel: optionalLabel,
+        }),
+      ],
     },
   ),
   Image: part(
@@ -83,14 +89,7 @@ export const contentPartSchemas = {
     }),
     { label: 'The required `accessibilityLabel` names the audio.' },
   ),
-  Label: part(
-    'Short text with an optional icon and semantic tone.',
-    z.object({
-      label: stringLabel,
-      icon: z.string().optional().describe('Optional native symbol name.'),
-      tone,
-    }),
-  ),
+  Label: wireParts.Label,
   Kbd: part(
     'A keyboard shortcut key or chord for desktop and web.',
     z.object({
@@ -103,16 +102,19 @@ export const contentPartSchemas = {
   ),
   Avatar: part(
     'An image or initials with a size and optional status mark.',
-    z.object({
-      source: imageSource.optional(),
-      initials: z.string().optional().describe('Fallback initials.'),
-      size: z.enum(['sm', 'md', 'lg']).optional().describe('Avatar size.'),
-      status: z.string().optional().describe('Optional status mark.'),
-      accessibilityLabel: optionalLabel,
-    }),
+    avatarProps,
     {
       label: 'Set `accessibilityLabel` when identity is not otherwise named.',
       accessibility: accessibility.avatarAccessibility,
+      previous: [
+        z.object({
+          source: imageSource.optional(),
+          initials: z.string().optional().describe('Fallback initials.'),
+          size: z.enum(['sm', 'md', 'lg']).optional().describe('Avatar size.'),
+          status: z.string().optional().describe('Optional status mark.'),
+          accessibilityLabel: optionalLabel,
+        }),
+      ],
     },
   ),
   Markdown: part(

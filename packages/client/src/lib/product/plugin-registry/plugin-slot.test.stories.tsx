@@ -12,7 +12,7 @@ import { PluginSlot, type PluginSlotContribution } from './plugin-slot';
 const trackerRoot: WireNode = {
   type: 'Text',
   key: '0',
-  props: { label: 'No Tracker chosen' },
+  props: { children: 'No Tracker chosen' },
   children: [],
   slots: {},
 };

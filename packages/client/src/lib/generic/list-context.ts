@@ -1,6 +1,7 @@
+import type { KitSchemaProps } from '@repo/contracts/kit-props';
 import { createContext } from 'react';
 
-export type ListAppearance = 'plain' | 'grouped' | 'cards';
+export type ListAppearance = NonNullable<KitSchemaProps['List']['appearance']>;
 
 export type ListPosition = 'only' | 'first' | 'middle' | 'last';
 

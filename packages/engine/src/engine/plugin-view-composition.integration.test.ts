@@ -86,7 +86,7 @@ it.each([
       root: {
         children: [
           { type: 'Text' },
-          { props: { label } },
+          { props: { children: label } },
           { type: 'Pill', props: { text: 'Healthy', tone: 'success' } },
           {
             type: 'ListItem',

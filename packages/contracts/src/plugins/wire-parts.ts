@@ -1,14 +1,18 @@
 import { z } from 'zod';
 import {
   buttonProps,
+  buttonV1,
   groupedItemProps,
   layoutProps,
   listProps,
   stackProps,
   textProps,
   textV1,
+  textV2,
   groupedItemV1,
 } from './kit-props';
+import { legacyButtonProps } from './legacy-button-props';
+import { legacyTextProps } from './legacy-text-props';
 import { listWireParts } from './list-wire-parts';
 import {
   wirePartReferences,
@@ -88,16 +92,23 @@ export const wireParts = {
   },
   Text: {
     props: textProps,
-    versions: [textV1, textProps],
+    versions: [
+      textProps.transform(legacyTextProps).pipe(textV1),
+      textProps.transform(legacyTextProps).pipe(textV2),
+      textProps,
+    ],
     container: false,
     children: false,
-    slots: {},
+    slots: { children: [] },
     events: {},
     reference: wirePartReferences.Text,
   },
   Button: {
     props: buttonProps,
-    versions: [buttonProps],
+    versions: [
+      buttonProps.transform(legacyButtonProps).pipe(buttonV1),
+      buttonProps,
+    ],
     container: false,
     children: false,
     slots: {},

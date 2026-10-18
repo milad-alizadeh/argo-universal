@@ -1,6 +1,7 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
 import type { WirePartDefinition } from '../src/plugins/wire-parts';
+import { pluginObjectSchema } from './plugin-object-schema';
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
@@ -11,7 +12,7 @@ const jsonValueDescription = 'JSON value';
 const schemas: Record<string, JsonSchema> = Object.fromEntries(
   Object.entries(pluginPartSchemas).map(([name, part]) => [
     name,
-    z.toJSONSchema(part.props, { unrepresentable: 'any' }),
+    pluginObjectSchema(part.props),
   ]),
 );
 

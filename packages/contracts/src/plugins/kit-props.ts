@@ -1,20 +1,15 @@
 import { z } from 'zod';
+import { iconName } from '../kit-symbols';
 import {
   buttonSizes,
   buttonVariants,
   stackAlignments,
-  isStackGap,
-  type StackGap,
+  stackGaps,
   textRoles,
   tones,
 } from '../kit-tokens';
-import { materialSymbolNames } from './material-symbol-names.gen';
-import { sfSymbolNames } from './sf-symbol-names.gen';
-import { Action, WireEvent } from './wire';
-
-const pressHandler = z
-  .union([WireEvent.extend({ $event: z.literal('onPress') }), Action])
-  .describe('A Plugin event handler or an App action.');
+import { pressHandler } from './kit-event-props';
+import { perSizeClass } from './schema-size-class';
 
 export const textV1 = z.object({
   label: z.string().describe('The text displayed by the part.'),
@@ -22,14 +17,29 @@ export const textV1 = z.object({
   tone: z.enum(tones).optional().describe('The Argo semantic text tone.'),
 });
 
-export const textProps = textV1.extend({
+export const textV2 = textV1.extend({
   accessibilityLabel: z
     .string()
     .optional()
     .describe('Optional spoken label; defaults to label.'),
 });
 
-export const buttonProps = z.object({
+export const textProps = z.object({
+  children: z
+    .union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
+    .optional()
+    .describe('Text content in source order.'),
+  role: perSizeClass(z.enum(textRoles))
+    .optional()
+    .describe('The typography role, optionally by Size class.'),
+  tone: z.enum(tones).optional().describe('The Argo semantic text tone.'),
+  accessibilityLabel: z
+    .string()
+    .optional()
+    .describe('Optional spoken label; defaults to the text content.'),
+});
+
+export const buttonV1 = z.object({
   label: z.string().describe('The button label.'),
   variant: z.enum(buttonVariants).optional().describe('The button treatment.'),
   tone: z.literal('danger').optional().describe('Semantic danger treatment.'),
@@ -38,14 +48,27 @@ export const buttonProps = z.object({
   onPress: pressHandler.optional().describe('The action run on activation.'),
 });
 
+export const buttonProps = buttonV1.extend({
+  icon: iconName.optional().describe('An Argo icon before the label.'),
+  fullWidth: z
+    .union([z.boolean(), z.literal('narrow')])
+    .optional()
+    .describe('Fill the row always, or only in a narrow window.'),
+  loading: z
+    .boolean()
+    .optional()
+    .describe('Whether the action is running; activation is disabled.'),
+  accessibilityLabel: z
+    .string()
+    .optional()
+    .describe('Spoken name when the visible label says too little.'),
+});
+
 export const layoutProps = z.object({
   gap: z
-    .custom<StackGap>((value) => typeof value === 'number' && isStackGap(value))
-    .meta({
-      type: 'number',
-      description: 'A spacing token: 0, 1, 2, 3, 4, 5, 6, 8, 10, or 12.',
-    })
-    .optional(),
+    .enum(stackGaps)
+    .optional()
+    .describe('A spacing token between children.'),
   align: z.enum(stackAlignments).optional().describe('Cross-axis alignment.'),
 });
 
@@ -63,65 +86,15 @@ export const groupedItemProps = groupedItemV1;
 
 export const listProps = z.object({});
 
-export const contentListProps = z.object({
-  appearance: z.enum(['plain', 'grouped', 'cards']).optional(),
-  isLoading: z.boolean().optional(),
-});
-
-export const listSectionProps = z.object({
-  title: z.string().optional(),
-  subtitle: z.string().optional(),
-  footer: z.string().optional(),
-});
-
-export const progressBarProps = z.object({
-  value: z.number().min(0).max(1),
-  tone: z.enum(tones).optional(),
-  active: z.boolean().optional(),
-  accessibilityLabel: z.string().optional(),
-});
-
-export const labelProps = z.object({
-  icon: z.object({
-    sf: z.enum(sfSymbolNames),
-    material: z.enum(materialSymbolNames),
-  }),
-  text: z.string(),
-  tone: z.enum(tones).optional(),
-  accessibilityLabel: z.string().optional(),
-});
-
-export const pillProps = z.object({
-  text: z.string(),
-  tone: z.enum(tones).optional(),
-  color: z.string().optional(),
-});
-
-export const rowBadgeProps = z.discriminatedUnion('kind', [
-  z.object({
-    kind: z.literal('status'),
-    tone: z.enum(tones),
-    pulse: z.boolean().optional(),
-    label: z.string().optional(),
-  }),
-  z.object({
-    kind: z.literal('count'),
-    count: z.number().int().nonnegative(),
-    label: z.string().optional(),
-  }),
-]);
-
-export const listItemProps = z.object({
-  title: z.string(),
-  subtitle: z.string().optional(),
-  value: z.string().optional(),
-  badge: z.union([z.number().int().nonnegative(), rowBadgeProps]).optional(),
-  progress: progressBarProps.optional(),
-  selected: z.boolean().optional(),
-  disabled: z.boolean().optional(),
-  accessibilityLabel: z.string().optional(),
-  onPress: pressHandler.optional(),
-});
+export {
+  contentListProps,
+  listSectionProps,
+  listItemProps,
+  labelProps,
+  progressBarProps,
+  pillProps,
+  rowBadgeProps,
+} from './list-kit-props';
 
 export const stackProps = layoutProps.extend({
   direction: z.enum(['row', 'column']).describe('The direction of the layout.'),

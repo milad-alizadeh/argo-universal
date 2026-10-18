@@ -11,6 +11,8 @@ import {
   useState,
 } from '@argo/plugin-kit';
 
+const headingRole = 'heading';
+
 let settings;
 
 function Buttons({ onTap }) {
@@ -37,7 +39,7 @@ function HelloPage() {
 
   return (
     <Column gap={4}>
-      <Text variant="heading">{greeting}</Text>
+      <Text role={headingRole}>{greeting}</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <ExampleBadges />
       <Buttons onTap={() => setTaps(taps + 1)} />

@@ -5,7 +5,7 @@ function codeName(name: string): string {
 }
 
 function slotRow(slot: string, types: readonly string[]): string {
-  return `| ${codeName(slot)} | ${types.map(codeName).join(', ')} |`;
+  return `| ${codeName(slot)} | ${types.length ? types.map(codeName).join(', ') : 'Text content'} |`;
 }
 
 export function slotTable(name: string): string {

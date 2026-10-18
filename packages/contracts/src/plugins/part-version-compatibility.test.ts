@@ -9,14 +9,14 @@ describe('Plugin part version compatibility', () => {
   it('derives versions only for registered parts', () => {
     expect(
       versionsOf(['Text', 'Stack', 'GroupedListItem', 'Pill', 'Internal']),
-    ).toEqual({ Text: 2, Stack: 1, GroupedListItem: 1, Pill: 2 });
+    ).toEqual({ Text: 3, Stack: 1, GroupedListItem: 1, Pill: 2 });
   });
 
   it('strips unknown optional props for older Apps', () => {
     const label: WireNode = {
       type: 'Text',
       key: 'label',
-      props: { label: 'Readable', accessibilityLabel: 'Accessible' },
+      props: { children: 'Readable', accessibilityLabel: 'Accessible' },
       children: [],
       slots: {},
     };
@@ -24,9 +24,68 @@ describe('Plugin part version compatibility', () => {
     expect(
       prepareWireTree(
         { ...label, props: { ...label.props, future: true } },
-        { Text: 2 },
+        { Text: 3 },
       ),
     ).toEqual(label);
+  });
+
+  it.each([
+    { version: 1, props: { label: 'Title', variant: 'heading' } },
+    {
+      version: 2,
+      props: {
+        label: 'Title',
+        variant: 'heading',
+        accessibilityLabel: 'Spoken title',
+      },
+    },
+  ])(
+    'lowers Text children and role for App version $version',
+    ({ version, props }) => {
+      const text: WireNode = {
+        type: 'Text',
+        key: 'title',
+        props: {
+          children: 'Title',
+          role: 'heading',
+          accessibilityLabel: 'Spoken title',
+        },
+        children: [],
+        slots: {},
+      };
+
+      expect(prepareWireTree(text, { Text: version })).toEqual({
+        ...text,
+        props,
+      });
+    },
+  );
+
+  it('uses canonical Text props in a current App update fallback', () => {
+    expect(
+      prepareWireTree(
+        {
+          type: 'Future',
+          key: 'future',
+          props: {},
+          children: [
+            {
+              type: 'Text',
+              key: 'title',
+              props: { children: 'Title' },
+              children: [],
+              slots: {},
+            },
+          ],
+          slots: {},
+        },
+        { Text: 3 },
+      ).props,
+    ).toEqual({
+      children: 'Update Argo to see this',
+      role: 'secondary',
+      tone: 'muted',
+    });
   });
 
   it('strips status badges for Apps that only support ListItem v1', () => {

@@ -18,7 +18,7 @@ export const NewerOptionalProp: Story = {
       root={{
         type: 'Text',
         key: 'text',
-        props: { label: 'Still readable', futureOptionalProp: true },
+        props: { children: 'Still readable', futureOptionalProp: true },
         children: [],
         slots: {},
       }}
@@ -42,7 +42,7 @@ export const InvalidContainer: Story = {
           {
             type: 'Text',
             key: 'child',
-            props: { label: 'Hidden child' },
+            props: { children: 'Hidden child' },
             children: [],
             slots: {},
           },

@@ -3,9 +3,9 @@ import { jsx } from '@argo/plugin-kit/jsx-runtime';
 
 function changedNode(step) {
   if (step === 0)
-    return jsx('Text', { label: 'Original', tone: 'muted' }, 'kept');
+    return jsx('Text', { children: 'Original', tone: 'muted' }, 'kept');
 
-  if (step === 1) return jsx('Text', { label: 'Changed' }, 'kept');
+  if (step === 1) return jsx('Text', { children: 'Changed' }, 'kept');
 
   return jsx('Button', { label: 'Changed' }, 'kept');
 }
@@ -37,5 +37,5 @@ export function register(argo) {
 function removedNode(step, removeOnly) {
   if (!removeOnly) return null;
 
-  return step === 0 ? jsx('Text', { label: 'Removed' }, 'removed') : null;
+  return step === 0 ? jsx('Text', { children: 'Removed' }, 'removed') : null;
 }

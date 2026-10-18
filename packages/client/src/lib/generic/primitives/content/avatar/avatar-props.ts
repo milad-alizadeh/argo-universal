@@ -1,15 +1,10 @@
 import type { ReactNode } from 'react';
-import type { ImageSourcePropType } from 'react-native';
-import type { StatusDotProps } from '#primitives/status/status-dot';
+import type { KitProps } from '../../kit-props';
 
-export interface AvatarProps {
-  initials: string;
-  size?: 'sm' | 'lg';
-  source?: ImageSourcePropType;
+// Kit-only: hosted content, decorative presentation, status backdrop and test identity.
+export type AvatarProps = KitProps<'Avatar'> & {
   children?: ReactNode;
-  accessibilityLabel: string;
   decorative?: boolean;
   statusSurface?: 'card' | 'muted' | 'selected';
   testID?: string;
-  status?: Pick<StatusDotProps, 'tone' | 'pulse' | 'accessibilityLabel'>;
-}
+};

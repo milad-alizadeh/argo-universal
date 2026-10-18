@@ -12,7 +12,6 @@ import { wireParts } from './wire-parts';
 import type { WirePartDefinition } from './wire-parts';
 
 export const pluginPartSchemas = {
-  ...wireParts,
   ...layoutPartSchemas,
   ...contentPartSchemas,
   ...statusPartSchemas,
@@ -23,6 +22,7 @@ export const pluginPartSchemas = {
   ...overlaysPartSchemas,
   ...scaffoldsPartSchemas,
   ...visualPartSchemas,
+  ...wireParts,
 } satisfies Record<string, WirePartDefinition>;
 
 export type PluginPartName = keyof typeof pluginPartSchemas;

@@ -1,12 +1,14 @@
 import { Button, Column, Text } from '@argo/plugin-kit';
 
+const headingRole = 'heading';
+
 export function IssueDetail(props) {
   const { issue } = props;
 
   return (
     <Column gap={3}>
       <Button label="Back to Issues" variant="outline" onPress={props.onBack} />
-      <Text variant="heading">{`#${issue.number} ${issue.title}`}</Text>
+      <Text role={headingRole}>{`#${issue.number} ${issue.title}`}</Text>
       <IssueMetadata issue={issue} />
       <Button
         label="Open in GitHub"

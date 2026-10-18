@@ -4,6 +4,7 @@ import {
 } from '@repo/contracts/plugins/kit';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
+import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import { AdaptedViewLimits } from './adapted-view-limits';
 import { diff } from './kit/diff';
@@ -74,10 +75,13 @@ function adapt(
   return boundedMessage(trees, prepareWireTree(trees.raw, parts), message);
 }
 
-const emptyTrees = (refuse: (reason: string) => void): Trees => ({
+const emptyTrees = ({ refuse, parts }: Adaptation): Trees => ({
   raw: null,
   drawn: null,
-  limits: new AdaptedViewLimits(refuse),
+  limits: new AdaptedViewLimits(
+    refuse,
+    prepareWireTree(pluginPageFallback, parts),
+  ),
 });
 
 interface Adaptation {
@@ -92,7 +96,7 @@ async function* adaptedMessages(
   source: AsyncIterable<ViewMessage>,
   { parts, refuse }: Adaptation,
 ): AsyncGenerator<ViewMessage, void> {
-  const trees = emptyTrees(refuse);
+  const trees = emptyTrees({ refuse, parts });
 
   for await (const message of source) {
     const next = adapt(trees, message, parts);

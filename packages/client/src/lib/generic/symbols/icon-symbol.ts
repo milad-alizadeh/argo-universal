@@ -1,8 +1,8 @@
-import { type IconName, iconSymbols } from './icon-names';
-import type { SymbolSource, SystemSymbolSource } from './symbol-source';
+import type { IconSymbol } from '@repo/contracts/kit-symbols';
+import { iconSymbols } from './icon-names';
+import type { SymbolSource } from './symbol-source';
 
-// An Argo icon name, or an SF and Material pair from outside the App's map, such as a Plugin's icon (ADR-0025).
-export type IconSymbol = IconName | SystemSymbolSource;
+export type { IconSymbol } from '@repo/contracts/kit-symbols';
 
 export interface ResolvedIcon {
   symbol: SymbolSource;

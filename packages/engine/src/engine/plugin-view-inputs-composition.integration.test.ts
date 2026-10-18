@@ -54,7 +54,7 @@ it(
       .poll(() => first.messages.at(-1), { timeout: 10_000 })
       .toMatchObject({
         revision: 3,
-        ops: [{ props: { label: '{"search":"Argo","selection":["984"]}' } }],
+        ops: [{ props: { children: '{"search":"Argo","selection":["984"]}' } }],
       });
     const second = connectPluginApp(url, page);
     await expect
@@ -66,9 +66,9 @@ it(
             {
               type: 'Text',
               key: 'list',
-              props: { label: 'Update Argo to see this' },
+              props: { children: 'Update Argo to see this' },
             },
-            { props: { label: '{"search":"","selection":[]}' } },
+            { props: { children: '{"search":"","selection":[]}' } },
           ],
         },
       });

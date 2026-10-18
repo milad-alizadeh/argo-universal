@@ -5,26 +5,18 @@ import {
   optionalLabel,
   handler,
 } from '../plugin-part-schema-utils';
+import { fieldProps } from '../simple-kit-props';
 
 export const formsPartSchemas = {
   Field: part(
     'A labeled wrapper around an input with hint and error content.',
-    z.object({ label: stringLabel, required: z.boolean().optional() }),
+    fieldProps,
     {
-      slots: {
-        control: [
-          'TextInput',
-          'Textarea',
-          'Picker',
-          'Combobox',
-          'Checkbox',
-          'Switch',
-          'Slider',
-          'DatePicker',
-        ],
-        description: ['FieldDescription'],
-        errors: ['FieldErrors'],
-      },
+      previous: [
+        z.object({ label: stringLabel, required: z.boolean().optional() }),
+      ],
+      children: true,
+      slots: {},
     },
   ),
   FieldLayout: part(

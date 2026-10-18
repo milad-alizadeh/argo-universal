@@ -1,4 +1,3 @@
-export interface SpinnerProps {
-  // Spoken only: the spinner draws no text.
-  accessibilityLabel: string;
-}
+import type { KitProps } from '../../kit-props';
+
+export type SpinnerProps = KitProps<'Spinner'>;

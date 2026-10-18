@@ -30,7 +30,10 @@ export function toProps(type: string, raw: ElementProps): Props {
   return Object.fromEntries(
     Object.entries(raw)
       .filter(([name, value]) => !reserved.has(name) && value !== undefined)
-      .map(([name, value]) => [name, checked(type, name, value)]),
+      .map(([name, value]) => [
+        name === 'argoText' ? 'children' : name,
+        checked(type, name, value),
+      ]),
   );
 }
 

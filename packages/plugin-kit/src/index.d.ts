@@ -1,3 +1,4 @@
+import type { KitListProps } from '@repo/contracts/kit-list-props';
 import type {
   WireProps,
   WirePart,
@@ -55,22 +56,19 @@ type Children<Name extends WirePart> =
     ? { children?: ReactNode }
     : { children?: never };
 
-type Content<Name extends WirePart> = Name extends 'Text' | 'Button'
-  ? Omit<EventProps<Name>, 'label'> &
-      (
-        | { label: string; children?: never }
-        | { label?: never; children: string | number | (string | number)[] }
-      )
+type Content<Name extends WirePart> = Name extends 'Text'
+  ? EventProps<Name>
   : EventProps<Name> & SlotProps<Name> & Children<Name>;
 
 type ListPart = (typeof listPartNames)[number];
 
-type ListProps<Name extends ListPart, Item> = EventProps<Name> &
+type ListProps<Name extends ListPart, Item> = KitListProps<Item, ReactNode> &
+  EventProps<Name> &
   SlotProps<Name> &
   (
     | {
-        items: readonly Item[];
-        renderItem: (item: Item) => ReactNode;
+        items: NonNullable<KitListProps<Item, ReactNode>['items']>;
+        renderItem: NonNullable<KitListProps<Item, ReactNode>['renderItem']>;
         children?: never;
       }
     | { items?: never; renderItem?: never; children?: ReactNode }

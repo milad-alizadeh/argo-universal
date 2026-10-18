@@ -32,7 +32,7 @@ it('publishes changed and removed properties', async () => {
       {
         op: 'setProps',
         key: ['kept'],
-        props: { label: 'Changed' },
+        props: { children: 'Changed' },
         unset: ['tone'],
       },
     ],

@@ -14,20 +14,22 @@ const hasContent = (node: WireNode): boolean =>
 export const isWireContainer = (node: WireNode): boolean =>
   Boolean(wirePart(node.type)?.container) || hasContent(node);
 
-function unsupported(node: WireNode): WireNode | null {
-  return isWireContainer(node)
-    ? {
-        type: 'Text',
-        key: node.key,
-        props: {
-          label: 'Update Argo to see this',
-          variant: 'secondary',
-          tone: 'muted',
-        },
-        children: [],
-        slots: {},
-      }
-    : null;
+function updateMessage(key: string): WireNode {
+  return {
+    type: 'Text',
+    key,
+    props: {
+      children: 'Update Argo to see this',
+      role: 'secondary',
+      tone: 'muted',
+    },
+    children: [],
+    slots: {},
+  };
+}
+
+function unsupported(node: WireNode, parts: PartVersions): WireNode | null {
+  return isWireContainer(node) ? adapted(updateMessage(node.key), parts) : null;
 }
 
 function alias(node: WireNode, parts: PartVersions): WireNode {
@@ -120,10 +122,10 @@ function slotsOf(node: WireNode, parts: PartVersions): WireNode['slots'] {
 function prepare(node: WireNode, parts: PartVersions): WireNode | null {
   const current = currentNode(node);
 
-  if (!current) return unsupported(node);
+  if (!current) return unsupported(node, parts);
   const compatible = adapted(current, parts);
 
-  if (!compatible) return unsupported(node);
+  if (!compatible) return unsupported(node, parts);
 
   return {
     ...compatible,

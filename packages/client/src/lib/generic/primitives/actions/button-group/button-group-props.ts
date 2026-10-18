@@ -1,7 +1,4 @@
-import type { ReactNode } from 'react';
+import type { KitProps } from '../../kit-props';
 
-export interface ButtonGroupProps {
-  // Each child passes className on to its Button.
-  children: ReactNode;
-  className?: string;
-}
+// Kit-only: drawing classes.
+export type ButtonGroupProps = KitProps<'ButtonGroup'> & { className?: string };

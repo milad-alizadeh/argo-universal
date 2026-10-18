@@ -8,8 +8,10 @@ import {
   pillProps,
   rowBadgeProps,
 } from './kit-props';
+import { legacyLabelProps } from './legacy-label-props';
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { part } from './plugin-part-schema-utils';
+import { labelV1 } from './status-kit-props';
 
 const listItemV1Props = listItemProps.extend({
   badge: z.union([z.number().int().nonnegative(), rowBadgeProps]).optional(),
@@ -101,7 +103,10 @@ export const listWireParts = {
   },
   Label: {
     props: labelProps,
-    versions: [labelProps],
+    versions: [
+      labelProps.transform(legacyLabelProps).pipe(labelV1),
+      labelProps,
+    ],
     container: false,
     children: false,
     slots: {},

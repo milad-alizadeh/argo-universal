@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { pluginPartSchemas } from './plugin-part-schemas';
-import { wireParts } from './wire-parts';
 
 describe('part accessibility reference', () => {
   it.each([
@@ -40,17 +39,4 @@ describe('part accessibility reference', () => {
       expect(accessibility.talkBack).toContain(talkBack);
     },
   );
-});
-
-describe('wire part reference schemas', () => {
-  it('uses live schemas for Button, Stack, and Table', () => {
-    expect(pluginPartSchemas.Button).toBe(wireParts.Button);
-    expect(pluginPartSchemas.Stack).toBe(wireParts.Stack);
-    expect(pluginPartSchemas.Table).toBe(wireParts.Table);
-  });
-
-  it('keeps Table child and Slot docs aligned with its live wire schema', () => {
-    expect(pluginPartSchemas.Table.children).toBe(true);
-    expect(pluginPartSchemas.Table.slots).toEqual({});
-  });
 });

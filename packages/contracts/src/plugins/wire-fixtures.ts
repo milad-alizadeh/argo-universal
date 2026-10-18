@@ -30,8 +30,8 @@ const helloButtons = (key: string): WireNode =>
 
 const helloTree = (taps: number): WireNode =>
   withChildren(node('Column', '0', { gap: 4 }), [
-    node('Text', '0', { label: 'Hello from a Plugin', variant: 'heading' }),
-    node('Text', '1', { label: `Tapped ${taps} times` }),
+    node('Text', '0', { children: 'Hello from a Plugin', role: 'heading' }),
+    node('Text', '1', { children: `Tapped ${taps} times` }),
     node('Pill', '2', { text: 'Healthy', tone: 'success' }),
     node('ListItem', '3', {
       title: 'Waiting jobs',
@@ -47,32 +47,30 @@ export const helloRoot: WireNode = helloTree(0);
 export const stackRowRoot: WireNode = withChildren(
   node('Stack', '0', { direction: 'row', gap: 2 }),
   [
-    node('Text', '0', { label: 'First' }),
-    node('Text', '1', { label: 'Second' }),
+    node('Text', '0', { children: 'First' }),
+    node('Text', '1', { children: 'Second' }),
   ],
 );
 
-export const rowAliasRoot: WireNode = withChildren(
-  node('Row', '0', { gap: 2 }),
-  [
-    node('Text', '0', { label: 'First' }),
-    node('Text', '1', { label: 'Second' }),
-  ],
-);
+export const rowAliasRoot: WireNode = {
+  ...stackRowRoot,
+  type: 'Row',
+  props: { gap: 2 },
+};
 
 export const stackColumnRoot: WireNode = withChildren(
   node('Stack', '0', { direction: 'column', gap: 2 }),
   [
-    node('Text', '0', { label: 'First' }),
-    node('Text', '1', { label: 'Second' }),
+    node('Text', '0', { children: 'First' }),
+    node('Text', '1', { children: 'Second' }),
   ],
 );
 
 export const columnAliasRoot: WireNode = withChildren(
   node('Column', '0', { gap: 2 }),
   [
-    node('Text', '0', { label: 'First' }),
-    node('Text', '1', { label: 'Second' }),
+    node('Text', '0', { children: 'First' }),
+    node('Text', '1', { children: 'Second' }),
   ],
 );
 
@@ -90,7 +88,7 @@ export const helloTapPatch: ViewMessage = {
     {
       op: 'setProps',
       key: ['1'],
-      props: { label: 'Tapped 1 times' },
+      props: { children: 'Tapped 1 times' },
     },
   ],
 };
@@ -99,10 +97,12 @@ export const helloTappedRoot: WireNode = helloTree(1);
 
 // A newer Plugin's component the App does not know: a leaf is dropped, a container shows "Update Argo to see this".
 export const unknownNodesRoot: WireNode = withChildren(node('Column', '0'), [
-  node('Text', '0', { label: 'Before' }),
+  node('Text', '0', { children: 'Before' }),
   node('Sparkline', '1', { unit: 'ms' }),
-  withChildren(node('Carousel', '2'), [node('Text', '0', { label: 'Inside' })]),
-  node('Text', '3', { label: 'After' }),
+  withChildren(node('Carousel', '2'), [
+    node('Text', '0', { children: 'Inside' }),
+  ]),
+  node('Text', '3', { children: 'After' }),
 ]);
 
 export const unknownNodesSnapshot: ViewMessage = {
@@ -113,8 +113,8 @@ export const unknownNodesSnapshot: ViewMessage = {
 
 // Props the node's schema refuses leave that node out and keep its siblings.
 export const invalidPropsRoot: WireNode = withChildren(node('Column', '0'), [
-  node('Text', '0', { label: 42 }),
-  node('Text', '1', { label: 'Still here' }),
+  node('Text', '0', { children: true }),
+  node('Text', '1', { children: 'Still here' }),
 ]);
 
 export const invalidPropsSnapshot: ViewMessage = {
@@ -129,7 +129,7 @@ export const helloSlotWaveEvent = 'onPress';
 export const helloSlotTree = (projectId: string, waves: number): WireNode =>
   withChildren(node('Column', '0', { gap: 2 }), [
     node('Text', '0', {
-      label:
+      children:
         waves === 0
           ? `Hello from ${projectId}`
           : `Waved at ${projectId} ${waves} times`,
@@ -155,7 +155,11 @@ export const helloSlotWavePatch: ViewMessage = {
   type: 'patch',
   revision: 2,
   ops: [
-    { op: 'setProps', key: ['0'], props: { label: 'Waved at argo 1 times' } },
+    {
+      op: 'setProps',
+      key: ['0'],
+      props: { children: 'Waved at argo 1 times' },
+    },
   ],
 };
 
@@ -164,15 +168,15 @@ export const slottedRow: WireNode = {
   ...node('GroupedListItem', 'row', { label: 'Slotted row' }),
   slots: {
     leading: [
-      node('Text', 'first', { label: 'First' }),
-      node('Text', 'second', { label: 'Second' }),
+      node('Text', 'first', { children: 'First' }),
+      node('Text', 'second', { children: 'Second' }),
     ],
     accessories: [
       node('Button', 'button', {
         label: 'Increment',
         onPress: { $event: 'onPress' },
       }),
-      node('Text', 'count', { label: 'Count 0' }),
+      node('Text', 'count', { children: 'Count 0' }),
     ],
   },
 };

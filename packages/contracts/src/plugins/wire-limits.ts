@@ -10,8 +10,8 @@ export const pluginPageFallback: WireNode = {
   type: 'Text',
   key: 'fallback',
   props: {
-    label: 'This Plugin page could not be displayed.',
-    variant: 'secondary',
+    children: 'This Plugin page could not be displayed.',
+    role: 'secondary',
     tone: 'muted',
   },
   children: [],

@@ -47,7 +47,7 @@ it('caps a page that becomes too large only after invalid-container adaptation',
 const small: WireNode = {
   type: 'Text',
   key: 'ready',
-  props: { label: 'Recovered' },
+  props: { children: 'Recovered' },
   children: [],
   slots: {},
 };
@@ -85,5 +85,23 @@ it('logs one refusal and recovers from an admissible patch using the last tree a
 
   expect(reasons).toEqual([`adapted page exceeds ${pluginPageBytes} bytes`]);
 
+  await stream.return();
+});
+
+it('lowers the capped-page fallback for a previous App Text version', async () => {
+  const stream = compatibleView(oversized(), { Column: 1, Row: 1, Text: 2 });
+  const message = (await stream.next()).value;
+
+  expect(message).toMatchObject({
+    type: 'snapshot',
+    root: {
+      type: 'Text',
+      props: {
+        label: 'This Plugin page could not be displayed.',
+        variant: 'secondary',
+        tone: 'muted',
+      },
+    },
+  });
   await stream.return();
 });

@@ -103,6 +103,9 @@ jobs:
       - name: Lint
         run: pnpm quality:lint
 
+      - name: Build Plugin reference docs
+        run: pnpm docs:build
+
       - name: Type checks
         run: pnpm exec turbo run check-types --continue=dependencies-successful
 

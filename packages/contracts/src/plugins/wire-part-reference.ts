@@ -100,16 +100,17 @@ export const wirePartReferences = {
       'Text content with an optional Argo typography role and semantic tone.',
     accessibility: {
       label:
-        'The required `label` is the content. Optional `accessibilityLabel` overrides the spoken label.',
+        'Text children supply the content. Optional `accessibilityLabel` overrides the spoken label.',
       keyboard: 'Text is not focusable and adds no keyboard shortcut.',
       voiceOver:
-        'Reads `accessibilityLabel` when set; otherwise reads `label`.',
-      talkBack: 'Reads `accessibilityLabel` when set; otherwise reads `label`.',
+        'Reads `accessibilityLabel` when set; otherwise reads the text children.',
+      talkBack:
+        'Reads `accessibilityLabel` when set; otherwise reads the text children.',
     },
     appearance:
       '`tone` selects an Argo semantic text color that adapts to light and dark appearance. This part has no arbitrary `color` or Image prop.',
     sdkProps:
-      'Plugin JSX also accepts text-only children in place of `label`; the worker normalizes them to the wire `label` prop.',
+      'Plugin JSX accepts text children; the worker serializes them as the `children` prop.',
   },
   Button: {
     summary:
@@ -125,8 +126,6 @@ export const wirePartReferences = {
     },
     appearance:
       '`variant` and `tone` select Argo treatments that adapt to light and dark appearance. This part has no arbitrary `color` or Image prop.',
-    sdkProps:
-      'Plugin JSX also accepts text-only children in place of `label`; the worker normalizes them to the wire `label` prop.',
   },
   Stack: layout(
     'A row or column layout with token spacing and cross-axis alignment.',

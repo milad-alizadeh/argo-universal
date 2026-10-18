@@ -70,11 +70,7 @@ export const pluginEntries = {
       detail={context.slots.detail}
     />
   )),
-  Text: entry(textProps, ({ label, variant, ...props }) => (
-    <Text role={variant} {...props}>
-      {label}
-    </Text>
-  )),
+  Text: entry(textProps, (props) => <Text {...props} />),
   Button: entry(buttonProps, ({ onPress, ...props }, context) => (
     <Button {...props} onPress={handlerOf(onPress, context)} />
   )),
