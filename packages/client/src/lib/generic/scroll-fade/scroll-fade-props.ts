@@ -99,11 +99,20 @@ function useEndGap({
   );
 }
 
-// The content's class and style, with the end gap and the column's width.
-function useContentProps(own: ScrollableProps): ScrollableProps {
+// Whether the scroll view scrolls sideways, as a ScrollView or a Legend List says.
+interface AxisProps {
+  horizontal?: boolean | null;
+}
+
+// The content's class and style: a vertical scroll view's gains the end gap and the column's width, which a horizontal one's never takes.
+function useContentProps(own: ScrollableProps & AxisProps): ScrollableProps {
+  const vertical = useScrollColumnStyle(useEndGap(own));
+
   return {
     ...classNameProp(own.contentContainerClassName),
-    contentContainerStyle: useScrollColumnStyle(useEndGap(own)),
+    contentContainerStyle: own.horizontal
+      ? own.contentContainerStyle
+      : vertical,
   };
 }
 
@@ -117,7 +126,7 @@ function ownProps<P extends ScrollableProps>({
   return rest;
 }
 
-function useScrollProps<P extends ScrollableProps>(
+function useScrollProps<P extends ScrollableProps & AxisProps>(
   props: P,
   tracking: ScrollFadeTracking,
 ): Omit<P, keyof ScrollableProps> & ScrollableProps {
@@ -147,15 +156,17 @@ function splitOptions<P extends ScrollFadeOptions>({
 }
 
 // Splits any scroll view's props into its frame's and its own, and wires the two together so the fade follows the scroll.
-export function useScrollFade<P extends ScrollFadeOptions & ScrollableProps>(
-  props: P,
-): ScrollFade<P> {
+export function useScrollFade<
+  P extends ScrollFadeOptions & ScrollableProps & AxisProps,
+>(props: P): ScrollFade<P> {
   const { options, rest } = splitOptions(props);
-  const tracking = useScrollFadeTracking();
+  const horizontal = Boolean(props.horizontal);
+  const tracking = useScrollFadeTracking(horizontal);
   const scroll = useScrollProps(rest, tracking);
+  const depth = fadeDepth(options.depth);
 
   return {
-    frame: { ...options, depth: fadeDepth(options.depth), tracking },
+    frame: { ...options, depth, horizontal, tracking },
     scroll: { scrollEventThrottle: 16, ...scroll },
     attachScrollView: tracking.attachScrollView,
   };

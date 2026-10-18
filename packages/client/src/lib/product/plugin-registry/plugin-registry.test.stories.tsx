@@ -1,4 +1,6 @@
 import {
+  runListRoot,
+  emptyRunListRoot,
   helloRoot,
   helloTapEvent,
   slottedRow,
@@ -12,6 +14,7 @@ import {
 import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
+import { PluginDetailView } from '../../../screens/plugins/$path/plugin-detail-view';
 import { PluginTree } from './plugin-registry';
 
 const onEvent = fn();
@@ -109,5 +112,48 @@ export const StackAliases: Story = {
     await expect(rectAt(first, 1).left).toBeLessThan(rectAt(second, 1).left);
     await expect(rectAt(first, 2).top).toBeLessThan(rectAt(second, 2).top);
     await expect(rectAt(first, 3).top).toBeLessThan(rectAt(second, 3).top);
+  },
+};
+
+const listAnatomy: Story = {
+  parameters: { screenPreview: true },
+  render: () => <PluginDetailView root={runListRoot} onEvent={onEvent} />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(await canvas.findByText('CI runs')).toBeVisible();
+    await expect(canvas.getByText('main')).toBeVisible();
+    await expect(canvas.getByText('2/5 jobs')).toBeVisible();
+    await expect(canvas.getByText('Production')).toBeVisible();
+    await expect(canvas.getByText('now')).toBeVisible();
+    await expect(canvas.getByRole('progressbar')).toHaveAttribute(
+      'aria-valuenow',
+      '40',
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Deploy web' }));
+    await expect(onEvent).toHaveBeenCalledWith('runs/builds/web', {
+      event: 'onPress',
+    });
+  },
+};
+
+function listPage(type: 'List' | 'VirtualList' | 'GroupedList'): Story {
+  return {
+    ...listAnatomy,
+    render: () => (
+      <PluginDetailView root={{ ...runListRoot, type }} onEvent={onEvent} />
+    ),
+  };
+}
+
+export const ListAnatomy = listPage('List');
+
+export const VirtualListAnatomy = listPage('VirtualList');
+
+export const GroupedListAnatomy = listPage('GroupedList');
+
+export const EmptyList: Story = {
+  parameters: { screenPreview: true },
+  render: () => <PluginDetailView root={emptyRunListRoot} onEvent={onEvent} />,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('No runs yet')).toBeVisible();
   },
 };

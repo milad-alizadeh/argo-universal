@@ -1,6 +1,6 @@
-import { helloRoot } from '@repo/contracts/plugins/wire-fixtures';
+import { helloRoot, runListRoot } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { fn } from 'storybook/test';
+import { action } from 'storybook/actions';
 import { PluginDetailView } from './plugin-detail-view';
 
 const meta = {
@@ -9,10 +9,15 @@ const meta = {
   parameters: { screenPreview: true },
   args: {
     root: helloRoot,
-    onEvent: fn(),
+    onEvent: action('Plugin event'),
   },
 } satisfies Meta<typeof PluginDetailView>;
 
 export default meta;
 
 export const Page: StoryObj<typeof meta> = { name: 'PluginDetailView' };
+
+export const ListPage: StoryObj<typeof meta> = {
+  name: 'List page',
+  args: { root: runListRoot },
+};

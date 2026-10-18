@@ -55,6 +55,8 @@ function useSweepProgress(): SharedValue<number> {
 interface GlintProps {
   // The filled part's width, which the glint crosses.
   fillWidth: SharedValue<number>;
+  testID?: string;
+  active?: boolean;
 }
 
 // Moves the glint by transform alone, so no frame lays the row out again; it waits right of the fill in the pause.
@@ -83,7 +85,7 @@ function Glint(props: GlintProps): React.JSX.Element {
 
   return (
     <Animated.View
-      testID="session-plan-sweep"
+      testID={props.testID}
       style={style}
       className={glintClassName}
     />
@@ -91,6 +93,6 @@ function Glint(props: GlintProps): React.JSX.Element {
 }
 
 // A soft glint that runs along the filled part, left to right, then pauses; reduced motion keeps the bar still.
-export function PlanSweep(props: GlintProps): React.JSX.Element | null {
-  return useReducedMotion() ? null : <Glint {...props} />;
+export function ProgressSweep(props: GlintProps): React.JSX.Element | null {
+  return useReducedMotion() || !props.active ? null : <Glint {...props} />;
 }

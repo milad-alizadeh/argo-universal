@@ -1,6 +1,5 @@
 import type { AgentServer } from '@repo/contracts';
 import { useMemo } from 'react';
-import { virtualListPosition } from '#primitives/lists/virtual-list-item';
 import type { SessionsLayout, SessionsOrder } from '../../stores/sessions-view';
 import { showsSessionAge } from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
@@ -112,7 +111,6 @@ export function sessionRowProps(
     trailing: sessionAge(item.session, context.ageFrom, context.order),
     layout: context.layout,
     ...rowMotion(item.session.projectId, context),
-    position: virtualListPosition(item.first, item.last),
     ...rowActions(context),
   };
 }

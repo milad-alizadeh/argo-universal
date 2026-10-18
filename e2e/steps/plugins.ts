@@ -32,17 +32,13 @@ async function navigation(page: Page): Promise<Locator> {
   return page.getByTestId('phone-drawer');
 }
 
-When(
-  'I open the {word} Plugin',
-  async ({ page }, title: string): Promise<void> => {
-    const section = (await navigation(page)).getByRole('button', {
-      name: title,
-      exact: true,
-    });
-
-    await section.click();
-  },
-);
+When('I open the {} Plugin', async ({ page }, title: string): Promise<void> => {
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: title, exact: true })
+    .click();
+});
 
 When('I resize to a phone Frame', async ({ page }): Promise<void> => {
   await page.setViewportSize(phone);
@@ -155,5 +151,14 @@ Then(
     await expect(
       page.getByRole('button', { name: 'Open in GitHub', exact: true }),
     ).toBeInViewport();
+  },
+);
+
+Then(
+  'the Plugin row {string} is selected',
+  async ({ page }, name: string): Promise<void> => {
+    await expect(
+      page.getByTestId(pluginPage).getByRole('button', { name, exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
   },
 );

@@ -8,48 +8,104 @@ import {
   textRoles,
   tones,
 } from '../kit-tokens';
+import { materialSymbolNames } from './material-symbol-names.gen';
+import { sfSymbolNames } from './sf-symbol-names.gen';
 import { Action, WireEvent } from './wire';
 
-const pressHandler = z.union([
-  WireEvent.extend({ $event: z.literal('onPress') }),
-  Action,
-]);
+const pressHandler = z
+  .union([WireEvent.extend({ $event: z.literal('onPress') }), Action])
+  .describe('A Plugin event handler or an App action.');
 
 export const textV1 = z.object({
-  label: z.string(),
-  variant: z.enum(textRoles).optional(),
-  tone: z.enum(tones).optional(),
+  label: z.string().describe('The text displayed by the part.'),
+  variant: z.enum(textRoles).optional().describe('The Argo typography role.'),
+  tone: z.enum(tones).optional().describe('The Argo semantic text tone.'),
 });
 
 export const textProps = textV1.extend({
-  accessibilityLabel: z.string().optional(),
+  accessibilityLabel: z
+    .string()
+    .optional()
+    .describe('Optional spoken label; defaults to label.'),
 });
 
 export const buttonProps = z.object({
-  label: z.string(),
-  variant: z.enum(buttonVariants).optional(),
-  tone: z.literal('danger').optional(),
-  size: z.enum(buttonSizes).optional(),
-  disabled: z.boolean().optional(),
-  onPress: pressHandler.optional(),
+  label: z.string().describe('The button label.'),
+  variant: z.enum(buttonVariants).optional().describe('The button treatment.'),
+  tone: z.literal('danger').optional().describe('Semantic danger treatment.'),
+  size: z.enum(buttonSizes).optional().describe('The button size.'),
+  disabled: z.boolean().optional().describe('Whether activation is disabled.'),
+  onPress: pressHandler.optional().describe('The action run on activation.'),
 });
 
 export const layoutProps = z.object({
   gap: z
     .custom<StackGap>((value) => typeof value === 'number' && isStackGap(value))
+    .meta({
+      type: 'number',
+      description: 'A spacing token: 0, 1, 2, 3, 4, 5, 6, 8, 10, or 12.',
+    })
     .optional(),
-  align: z.enum(stackAlignments).optional(),
+  align: z.enum(stackAlignments).optional().describe('Cross-axis alignment.'),
 });
 
 export const groupedItemProps = z.object({
-  label: z.string(),
-  value: z.string().optional(),
-  disabled: z.boolean().optional(),
-  onPress: pressHandler.optional(),
+  label: z.string().describe('The row label and accessible name.'),
+  value: z.string().optional().describe('Optional secondary row value.'),
+  disabled: z
+    .boolean()
+    .optional()
+    .describe('Whether row activation is disabled.'),
+  onPress: pressHandler.optional().describe('The action run on activation.'),
 });
 
 export const listProps = z.object({});
 
+export const contentListProps = z.object({
+  appearance: z.enum(['plain', 'grouped', 'cards']).optional(),
+  isLoading: z.boolean().optional(),
+});
+
+export const listSectionProps = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  footer: z.string().optional(),
+});
+
+export const progressBarProps = z.object({
+  value: z.number().min(0).max(1),
+  tone: z.enum(tones).optional(),
+  active: z.boolean().optional(),
+  accessibilityLabel: z.string().optional(),
+});
+
+export const labelProps = z.object({
+  icon: z.object({
+    sf: z.enum(sfSymbolNames),
+    material: z.enum(materialSymbolNames),
+  }),
+  text: z.string(),
+  tone: z.enum(tones).optional(),
+  accessibilityLabel: z.string().optional(),
+});
+
+export const pillProps = z.object({
+  text: z.string(),
+  tone: z.enum(tones).optional(),
+});
+
+export const listItemProps = z.object({
+  title: z.string(),
+  subtitle: z.string().optional(),
+  value: z.string().optional(),
+  badge: z.number().int().nonnegative().optional(),
+  progress: progressBarProps.optional(),
+  selected: z.boolean().optional(),
+  disabled: z.boolean().optional(),
+  accessibilityLabel: z.string().optional(),
+  onPress: pressHandler.optional(),
+});
+
 export const stackProps = layoutProps.extend({
-  direction: z.enum(['row', 'column']),
+  direction: z.enum(['row', 'column']).describe('The direction of the layout.'),
 });

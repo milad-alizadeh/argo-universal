@@ -1,15 +1,35 @@
 import { z } from 'zod';
 import {
+  buttonProps,
+  groupedItemProps,
+  layoutProps,
+  listProps,
+  stackProps,
   textProps,
   textV1,
-  buttonProps,
-  layoutProps,
-  stackProps,
-  groupedItemProps,
-  listProps,
 } from './kit-props';
+import { listWireParts } from './list-wire-parts';
+import {
+  wirePartReferences,
+  type WirePartReference,
+} from './wire-part-reference';
 
-export const listPartNames = ['VirtualList', 'Table', 'GroupedList'] as const;
+export interface WirePartDefinition {
+  props: z.ZodType;
+  versions: readonly z.ZodType[];
+  container: boolean;
+  children: boolean;
+  slots: Record<string, readonly string[]>;
+  events: Record<string, z.ZodType>;
+  reference: WirePartReference;
+}
+
+export const listPartNames = [
+  'List',
+  'VirtualList',
+  'Table',
+  'GroupedList',
+] as const;
 
 const contentParts = [
   'Text',
@@ -22,6 +42,7 @@ const contentParts = [
 
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
+  ...listWireParts,
   GroupedListItem: {
     props: groupedItemProps,
     versions: [groupedItemProps],
@@ -34,6 +55,7 @@ export const wireParts = {
       detail: contentParts,
     },
     events: { onPress: z.undefined() },
+    reference: wirePartReferences.GroupedListItem,
   },
   VirtualList: {
     props: listProps,
@@ -42,6 +64,7 @@ export const wireParts = {
     children: true,
     slots: {},
     events: {},
+    reference: wirePartReferences.VirtualList,
   },
   Table: {
     props: listProps,
@@ -50,6 +73,7 @@ export const wireParts = {
     children: true,
     slots: {},
     events: {},
+    reference: wirePartReferences.Table,
   },
   GroupedList: {
     props: listProps,
@@ -58,6 +82,7 @@ export const wireParts = {
     children: true,
     slots: {},
     events: {},
+    reference: wirePartReferences.GroupedList,
   },
   Text: {
     props: textProps,
@@ -66,6 +91,7 @@ export const wireParts = {
     children: false,
     slots: {},
     events: {},
+    reference: wirePartReferences.Text,
   },
   Button: {
     props: buttonProps,
@@ -74,6 +100,7 @@ export const wireParts = {
     children: false,
     slots: {},
     events: { onPress: z.undefined() },
+    reference: wirePartReferences.Button,
   },
   Stack: {
     props: stackProps,
@@ -82,6 +109,7 @@ export const wireParts = {
     children: true,
     slots: {},
     events: {},
+    reference: wirePartReferences.Stack,
   },
   Row: {
     props: layoutProps,
@@ -90,6 +118,7 @@ export const wireParts = {
     children: true,
     slots: {},
     events: {},
+    reference: wirePartReferences.Row,
   },
   Column: {
     props: layoutProps,
@@ -98,5 +127,6 @@ export const wireParts = {
     children: true,
     slots: {},
     events: {},
+    reference: wirePartReferences.Column,
   },
-} as const;
+} as const satisfies Record<string, WirePartDefinition>;

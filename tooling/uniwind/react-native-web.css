@@ -234,6 +234,69 @@
   }
 }
 
+/* A horizontal scroll view fades its leading and trailing edges the same way, along its inline scroll. */
+@property --scroll-fade-leading {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-trailing {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@keyframes scroll-fade-leading {
+  from {
+    --scroll-fade-leading: var(--scroll-fade-leading-rest);
+  }
+  to {
+    --scroll-fade-leading: var(--scroll-fade-leading-depth);
+  }
+}
+@keyframes scroll-fade-trailing {
+  from {
+    --scroll-fade-trailing: var(--scroll-fade-trailing-depth);
+  }
+  to {
+    --scroll-fade-trailing: var(--scroll-fade-trailing-rest);
+  }
+}
+.scroll-fade-inline > * {
+  --scroll-fade-leading: var(--scroll-fade-leading-rest);
+  --scroll-fade-trailing: var(--scroll-fade-trailing-rest);
+  /* A row that scrolls sideways hides its scrollbar, so the whole row fades. */
+  mask-position: left top;
+  mask-size: 100% 100%;
+  mask-image: linear-gradient(
+    to right,
+    transparent var(--scroll-fade-leading-inset),
+    rgb(0 0 0 / 0.15)
+      calc(var(--scroll-fade-leading-inset) + var(--scroll-fade-leading) / 2),
+    black calc(var(--scroll-fade-leading-inset) + var(--scroll-fade-leading)),
+    black
+      calc(
+        100% - var(--scroll-fade-trailing-inset) - var(--scroll-fade-trailing)
+      ),
+    rgb(0 0 0 / 0.15)
+      calc(
+        100% - var(--scroll-fade-trailing-inset) - var(--scroll-fade-trailing) /
+          2
+      ),
+    transparent calc(100% - var(--scroll-fade-trailing-inset))
+  );
+  animation:
+    scroll-fade-leading linear both,
+    scroll-fade-trailing linear both;
+  animation-timeline: scroll(self inline), scroll(self inline);
+  transition: none;
+}
+@supports not (animation-timeline: scroll()) {
+  .scroll-fade-inline > * {
+    --scroll-fade-leading: var(--scroll-fade-leading-depth);
+    --scroll-fade-trailing: var(--scroll-fade-trailing-depth);
+  }
+}
+
 /* Radix positions a wrapper around native-web Content; tips opened from sheets share their layer. */
 [data-radix-popper-content-wrapper]:has(.popover-content) {
   z-index: 50 !important;

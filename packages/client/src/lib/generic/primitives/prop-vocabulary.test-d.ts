@@ -72,7 +72,10 @@ type Values<Props, Key extends PropertyKey> = Props extends unknown
 type Each<Check> = { [Name in keyof Primitives]: Check };
 
 type RetiredNames = {
-  [Name in keyof Primitives]: Extract<Keys<Primitives[Name]>, Retired>;
+  [Name in keyof Primitives]: Extract<
+    Keys<Primitives[Name]>,
+    Name extends 'ListProps' ? Exclude<Retired, 'appearance'> : Retired
+  >;
 };
 
 type OffScaleSizes = {

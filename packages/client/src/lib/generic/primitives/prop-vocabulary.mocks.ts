@@ -3,6 +3,7 @@ import type * as ButtonGroupKit from '#primitives/actions/button-group';
 import type * as IconButtonKit from '#primitives/actions/icon-button';
 import type * as SplitButtonKit from '#primitives/actions/split-button';
 import type * as IconKit from '#primitives/content/icon';
+import type * as LabelKit from '#primitives/content/label';
 import type * as LiquidGlassKit from '#primitives/content/liquid-glass';
 import type * as NativeTextKit from '#primitives/content/native-text';
 import type * as TextKit from '#primitives/content/text';
@@ -27,6 +28,8 @@ import type * as GroupedListContentKit from '#primitives/lists/grouped-list-cont
 import type * as GroupedListItemKit from '#primitives/lists/grouped-list-item';
 import type * as GroupedListSectionKit from '#primitives/lists/grouped-list-section';
 import type * as GroupedListSwitchItemKit from '#primitives/lists/grouped-list-switch-item';
+import type * as ListKit from '#primitives/lists/list';
+import type * as ListItemKit from '#primitives/lists/list-item';
 import type * as VirtualListItemKit from '#primitives/lists/virtual-list-item';
 import type * as HostKit from '#primitives/native/host';
 import type * as AlertKit from '#primitives/overlays/alert';
@@ -41,6 +44,8 @@ import type * as BadgeKit from '#primitives/status/badge';
 import type * as CalloutKit from '#primitives/status/callout';
 import type * as CountBadgeKit from '#primitives/status/count-badge';
 import type * as DisclosureChevronKit from '#primitives/status/disclosure-chevron';
+import type * as PillKit from '#primitives/status/pill';
+import type * as ProgressBarKit from '#primitives/status/progress-bar';
 import type * as SelectedCheckKit from '#primitives/status/selected-check';
 import type * as SpinnerKit from '#primitives/status/spinner';
 
@@ -50,6 +55,12 @@ import type * as SpinnerKit from '#primitives/status/spinner';
  * neither, so a new primitive cannot skip the checks in prop-vocabulary.test-d.ts.
  */
 export type Primitives = {
+  ProgressBarProps: ProgressBarKit.ProgressBarProps;
+  LabelProps: LabelKit.LabelProps;
+  PillProps: PillKit.PillProps;
+  ListProps: ListKit.ListProps<string>;
+  ListSectionProps: ListKit.ListSectionProps;
+  ListItemProps: ListItemKit.ListItemProps;
   AlertAction: AlertKit.AlertAction;
   AlertProps: AlertKit.AlertProps;
   BadgeProps: BadgeKit.BadgeProps;
@@ -130,6 +141,7 @@ export type Primitives = {
 };
 
 export type Aliases = {
+  ListAppearance: ListKit.ListAppearance;
   BadgeTone: BadgeKit.BadgeTone;
   ButtonSize: ButtonKit.ButtonSize;
   FieldErrors: FieldErrorsKit.FieldErrors;

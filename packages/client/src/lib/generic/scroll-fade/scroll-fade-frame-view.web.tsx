@@ -8,12 +8,15 @@ import {
   type ScrollFadeEdgeName,
   edgeInset,
   edgeMode,
+  fadeEdgesFor,
 } from './scroll-fade-options';
 
 type FadeLengths = React.CSSProperties &
-  Record<
-    `--scroll-fade-${ScrollFadeEdgeName}-${'depth' | 'rest' | 'inset'}`,
-    string
+  Partial<
+    Record<
+      `--scroll-fade-${ScrollFadeEdgeName}-${'depth' | 'rest' | 'inset'}`,
+      string
+    >
   >;
 
 const px = (length: number): string => `${length}px`;
@@ -47,19 +50,42 @@ function edgeLengths(
   };
 }
 
-// The lengths the `scroll-fade` class in react-native-web.css reads.
-function fadeLengths(options: FadeOptions): FadeLengths {
-  const top = edgeLengths('top', options);
-  const bottom = edgeLengths('bottom', options);
+// One edge's lengths under the names the CSS reads.
+function edgeVariables(
+  edge: ScrollFadeEdgeName,
+  options: FadeOptions,
+): FadeLengths {
+  const lengths = edgeLengths(edge, options);
 
   return {
-    '--scroll-fade-top-depth': top.depth,
-    '--scroll-fade-top-rest': top.rest,
-    '--scroll-fade-top-inset': top.inset,
-    '--scroll-fade-bottom-depth': bottom.depth,
-    '--scroll-fade-bottom-rest': bottom.rest,
-    '--scroll-fade-bottom-inset': bottom.inset,
+    [`--scroll-fade-${edge}-depth`]: lengths.depth,
+    [`--scroll-fade-${edge}-rest`]: lengths.rest,
+    [`--scroll-fade-${edge}-inset`]: lengths.inset,
   };
+}
+
+// The lengths the `scroll-fade` class in react-native-web.css reads, for the two edges its axis fades.
+function fadeLengths(options: FadeOptions): FadeLengths {
+  const [start, end] = fadeEdgesFor(options.horizontal);
+
+  return { ...edgeVariables(start, options), ...edgeVariables(end, options) };
+}
+
+// A horizontal scroll view takes `scroll-fade-inline`, which fades its leading and trailing edges instead.
+function FadeLayer({
+  children,
+  ...options
+}: FadeOptions & { children: React.ReactNode }): React.JSX.Element {
+  const className = cn(
+    'scroll-fade',
+    options.horizontal && 'scroll-fade-inline',
+  );
+
+  return (
+    <div className={className} style={fadeLengths(options)}>
+      <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
+    </div>
+  );
 }
 
 // Around a scroll view: CSS fades its content itself at each edge as it scrolls, over whatever lies behind, with no JavaScript.
@@ -71,9 +97,7 @@ export function ScrollFadeFrame({
 }: ScrollFadeFrameProps): React.JSX.Element {
   return (
     <View className={cn('relative', className)} style={style}>
-      <div className="scroll-fade" style={fadeLengths(options)}>
-        <ScrollColumnContext value={undefined}>{children}</ScrollColumnContext>
-      </div>
+      <FadeLayer {...options}>{children}</FadeLayer>
     </View>
   );
 }

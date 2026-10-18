@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ScrollFadeView } from './scroll-fade';
-import { ScrollFadePreview } from './scroll-fade-preview.mocks';
+import {
+  ScrollFadePreview,
+  ScrollFadeRowPreview,
+} from './scroll-fade-preview.mocks';
 
 const meta = {
   title: 'Shared/ScrollFade',
@@ -14,4 +17,8 @@ type Story = StoryObj<typeof meta>;
 export const Overview: Story = {
   name: 'ScrollFade',
   render: () => <ScrollFadePreview />,
+};
+
+export const Horizontal: Story = {
+  render: () => <ScrollFadeRowPreview />,
 };
