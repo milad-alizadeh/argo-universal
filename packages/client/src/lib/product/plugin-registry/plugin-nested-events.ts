@@ -6,7 +6,7 @@ import {
 import type { PluginProp, PluginProps } from './plugin-rendering';
 
 type Bind = (
-  handler: Handler,
+  value: WireJson,
   path: string[],
 ) => ((value?: WireJson) => void) | undefined;
 
@@ -29,11 +29,7 @@ export function nestedEventProps(
 }
 
 function mappedValue(input: NestedInput): PluginProp {
-  const handler = Handler.safeParse(input.value).data;
-
-  if (handler) return input.bind(handler, input.path) ?? input.value;
-
-  return mappedContent(input);
+  return input.bind(input.value, input.path) ?? mappedContent(input);
 }
 
 function mappedContent(input: NestedInput): PluginProp {

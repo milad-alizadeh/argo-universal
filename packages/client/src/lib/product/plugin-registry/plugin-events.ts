@@ -23,8 +23,10 @@ export const localEvents = new Set([
 ]);
 
 export function eventProps(input: Input, change: Change): PluginProps {
-  const nested = nestedEventProps(input.node.props, (handler, path) =>
-    nestedCallback(input, { handler, path }, change),
+  if (!Object.keys(input.part.events).length) return input.node.props;
+
+  const nested = nestedEventProps(input.node.props, (value, path) =>
+    nestedCallback(input, { value, path }, change),
   );
 
   return { ...nested, ...rootEvents(input, change) };
@@ -83,7 +85,7 @@ function actionTarget(
 
 function nestedCallback(
   input: Input,
-  nested: { handler: Handler; path: string[] },
+  nested: { value: WireJson; path: string[] },
   change: Change,
 ): ReturnType<typeof callback> {
   const name = nested.path.at(-1) ?? '';
@@ -91,7 +93,19 @@ function nestedCallback(
 
   if (!schema) return undefined;
 
-  return callback(input, { ...nested, name, schema }, change);
+  return handlerCallback(input, { ...nested, name, schema }, change);
+}
+
+function handlerCallback(
+  input: Input,
+  event: Omit<Event, 'handler'> & { value: WireJson },
+  change: Change,
+): ReturnType<typeof callback> {
+  const handler = Handler.safeParse(event.value).data;
+
+  if (!handler) return undefined;
+
+  return callback(input, { ...event, handler }, change);
 }
 
 function referencePath(
