@@ -37,10 +37,18 @@ export function ComposerAgentModelControl(
 
   useCommitEffortFallback(props.configuration);
 
-  if (!selection(props.configuration, 'model') && !props.configuration.agent)
-    return null;
+  if (nothingToConfigure(props.configuration)) return null;
 
   return <AgentModelOverlay {...props} wide={wide} />;
+}
+
+// Hidden until an Agent is chosen, and while neither a model nor an installed Agent can show.
+function nothingToConfigure(
+  configuration: ComposerConfigurationProps,
+): boolean {
+  if (configuration.agent) return false;
+
+  return !configuration.agentId || !selection(configuration, 'model');
 }
 
 // Desktop opens the menu as a popover; everything else opens the Sheet.
