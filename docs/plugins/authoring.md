@@ -1,17 +1,52 @@
-# Validate and test a Plugin
+# Write, validate and test a Plugin
 
-From the Argo repository root, run these commands:
+A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-kit` alone, which provides the components, the `Argo` type of the Plugin API, the test kit and the `argo-plugin` command. Plugins in this repository take the kit from the workspace:
 
-```sh
-pnpm argo plugin validate plugins/examples/hello
-pnpm argo plugin test plugins/examples/hello
+```json
+{
+  "name": "@argo/hello",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "argo-plugin test .",
+    "validate": "argo-plugin validate ."
+  },
+  "devDependencies": {
+    "@argo/plugin-kit": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
 ```
 
-The Server package also provides the `argo` executable. Its Plugin commands accept an absolute or relative Plugin directory.
+Its `tsconfig.json` extends the kit's settings:
+
+```json
+{ "extends": "@argo/plugin-kit/tsconfig.json" }
+```
+
+`plugin.json` stays the manifest. Its `main` names the entry, which can be `.ts` or `.tsx`. The entry exports `register`, which receives the Plugin API:
+
+```tsx
+import { Text, type Argo } from '@argo/plugin-kit';
+
+export function register(argo: Argo): void {
+  argo.pages.register('/', () => <Text>Hello</Text>);
+}
+```
+
+Run the commands from the Plugin folder:
+
+```sh
+pnpm validate
+pnpm test
+```
+
+`argo-plugin <validate|test> <dir>` accepts an absolute or relative Plugin directory. The Server's `argo plugin <validate|test> <dir>` runs the same command.
 
 ## Source validation
 
-`argo plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
+`argo-plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
 It reports Hook registrations, `argo` calls, and Slot registrations from the entry and its imports.
 Diagnostics include the file, line, column, and refusal reason. A refused Plugin produces a non-zero exit code.
 
@@ -28,7 +63,7 @@ Put tests in files named `*.test.js`, `*.test.mjs`, or `*.test.ts` inside the Pl
 The command discovers these files recursively and skips `node_modules`.
 Import `test` from `@argo/plugin-kit/testing`:
 
-```js
+```ts
 import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
 
@@ -66,7 +101,7 @@ The chosen surface sets `ctx.surface.platform`; the test App always speaks the c
 
 For a Project details Slot, use the same input that the Server receives:
 
-```js
+```ts
 const view = await mount({
   slot: {
     slotId: 'argo/project/details/v1',
@@ -78,7 +113,7 @@ const view = await mount({
 
 For a Hook test, use the returned result from the real chain:
 
-```js
+```ts
 const answer = await emit('prompt.submit', {
   sessionId: session.id,
   prompt: [{ type: 'text', text: 'Hello' }],

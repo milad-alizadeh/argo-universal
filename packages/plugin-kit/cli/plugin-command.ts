@@ -1,12 +1,12 @@
 import { resolve } from 'node:path';
+import { validatePlugin } from '@repo/engine/plugin-validation';
+import { readPluginManifest } from '@repo/engine/plugins';
+import { z } from 'zod';
 import {
   startPluginTest,
   type PluginTest,
   type PluginTestCase,
-} from '@argo/plugin-kit/testing';
-import { validatePlugin } from '@repo/engine/plugin-validation';
-import { readPluginManifest } from '@repo/engine/plugins';
-import { z } from 'zod';
+} from '../testing';
 import { withinPluginTestBudget } from './plugin-test-budget';
 import { loadPluginTests, pluginTestFiles } from './plugin-test-files';
 
@@ -19,14 +19,16 @@ const PluginArguments = z.tuple([
 
 const commands = { validate, test: runTests };
 
+// `name` is how the caller is run: `argo-plugin` from the kit, `argo plugin` from the Server.
 export function runPluginCommand(
   args: string[],
   write: Write,
+  name: string,
 ): Promise<number> {
   const parsed = PluginArguments.safeParse(args);
 
   if (!parsed.success) {
-    write('Usage: argo plugin <validate|test> <dir>');
+    write(`Usage: ${name} <validate|test> <dir>`);
 
     return Promise.resolve(1);
   }

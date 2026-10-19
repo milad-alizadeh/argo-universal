@@ -2,12 +2,8 @@ import { readdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { createContext, runInNewContext, type Context } from 'node:vm';
-import {
-  collectPluginTests,
-  test,
-  type PluginTestCase,
-} from '@argo/plugin-kit/testing';
 import { build, type BuildOptions } from 'esbuild';
+import { collectPluginTests, test, type PluginTestCase } from '../testing';
 
 const testFilePattern = /\.test\.(?:js|mjs|ts)$/;
 

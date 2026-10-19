@@ -16,11 +16,12 @@ const refreshInterval =
 
 type ViewSetters = Omit<ProjectView, 'active'>;
 
-export type ProjectIssuesHookInput = Pick<
+type ProjectSource = Pick<
   ProjectIssuesInput,
   'projects' | 'storage' | 'trackers'
-> &
-  ViewSetters & { projectId: string | null };
+> & { projectId: string | null };
+
+export type ProjectIssuesHookInput = ProjectSource & ViewSetters;
 
 type RefreshInput = ProjectIssuesHookInput & { projectId: string };
 
@@ -28,59 +29,39 @@ type StoppableView = ProjectView & { stop: () => void };
 
 type Refresh = () => Promise<void>;
 
-// oxlint-disable-next-line max-lines-per-function -- Keep the effect dependencies literal for exhaustive-deps.
 export function useProjectIssues(input: ProjectIssuesHookInput): void {
-  const {
-    projectId,
-    projects,
-    storage,
-    trackers,
-    setIssues,
-    setMessage,
-    setTrackerId,
-  } = input;
+  const { projectId, projects, storage, trackers } = input;
+  const { setIssues, setMessage, setTracker } = input;
 
   useEffect(
     () =>
-      startProjectRefresh({
-        projectId,
-        projects,
-        storage,
-        trackers,
-        setIssues,
-        setMessage,
-        setTrackerId,
-      }),
-    [
-      projectId,
-      projects,
-      storage,
-      trackers,
-      setIssues,
-      setMessage,
-      setTrackerId,
-    ],
+      startProjectRefresh(
+        { projectId, projects, storage, trackers },
+        { setIssues, setMessage, setTracker },
+      ),
+    [projectId, projects, storage, trackers, setIssues, setMessage, setTracker],
   );
 }
 
 function startProjectRefresh(
-  input: ProjectIssuesHookInput,
+  source: ProjectSource,
+  setters: ViewSetters,
 ): (() => void) | undefined {
-  resetProject(input);
+  resetProject(setters);
 
-  const { projectId } = input;
+  const { projectId } = source;
 
   if (projectId === null) return;
 
-  const view = createProjectView(input);
-  const refresh = createRefresh({ ...input, projectId }, view);
+  const view = createProjectView(setters);
+  const refresh = createRefresh({ ...source, ...setters, projectId }, view);
 
   return scheduleRefresh(refresh, view);
 }
 
-function resetProject({ setIssues, setTrackerId }: ViewSetters): void {
+function resetProject({ setIssues, setTracker }: ViewSetters): void {
   setIssues([]);
-  setTrackerId(null);
+  setTracker(null);
 }
 
 function createProjectView(setters: ViewSetters): StoppableView {
@@ -93,7 +74,7 @@ function createProjectView(setters: ViewSetters): StoppableView {
     },
     setIssues: setters.setIssues,
     setMessage: setters.setMessage,
-    setTrackerId: setters.setTrackerId,
+    setTracker: setters.setTracker,
   };
 }
 

@@ -52,7 +52,7 @@ function useIssueData(
     projects: state.projects[0],
     setIssues: state.issues[1],
     setMessage: state.message[1],
-    setTrackerId: state.trackerId[1],
+    setTracker: state.trackerId[1],
   });
 }
 

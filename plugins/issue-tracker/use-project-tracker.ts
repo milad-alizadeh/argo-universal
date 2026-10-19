@@ -2,12 +2,12 @@ import { useEffect, useState } from '@argo/plugin-kit';
 import type { Setter, TrackerStorage } from './issue-types';
 
 // `loading` until the stored choice arrives; `null` is no Tracker.
-export type Selection = string | null;
+type Selection = string | null;
 
 export type TrackerChoice = {
   selection: Selection;
   message: string;
-  choose: (id: string | null) => void;
+  choose: (id: string | null) => Promise<void>;
 };
 
 type TrackerSource = { storage: TrackerStorage; projectId: string };

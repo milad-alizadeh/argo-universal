@@ -751,9 +751,6 @@ importers:
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../../packages/machine-log
-      esbuild:
-        specifier: 'catalog:'
-        version: 0.28.2
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -1543,6 +1540,12 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       zod:
         specifier: 'catalog:'
         version: 4.6.5

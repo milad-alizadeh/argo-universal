@@ -19,7 +19,7 @@ export type TrackerClient = {
   getIssue: (number: number) => Promise<Issue>;
 };
 
-export type TrackerIcon = NonNullable<PluginProps['Label']['icon']>;
+type TrackerIcon = NonNullable<PluginProps['Label']['icon']>;
 
 export type TrackerType = {
   id: string;

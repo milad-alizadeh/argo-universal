@@ -1,0 +1,6 @@
+{
+  "extends": "@repo/typescript/node.json",
+  // The command runs the Engine's validator, whose realm modules import by their .ts path.
+  "compilerOptions": { "allowImportingTsExtensions": true },
+  "include": ["."]
+}

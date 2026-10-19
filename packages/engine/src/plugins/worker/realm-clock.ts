@@ -37,7 +37,7 @@ function installTimers(delay: (ms: number) => Promise<void>): void {
       const id = next++;
 
       timers.set(id, callback);
-      delay(ms).then(() => fire(timers, id));
+      void delay(ms).then(() => fire(timers, id));
 
       return id;
     },

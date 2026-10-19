@@ -12,7 +12,7 @@ export type ProjectView = {
   active: () => boolean;
   setIssues: (issues: Issue[]) => void;
   setMessage: (message: string) => void;
-  setTrackerId: (id: string | null) => void;
+  setTracker: (id: string | null) => void;
 };
 
 export type ProjectIssuesInput = {
@@ -59,7 +59,7 @@ async function projectClient(
 
   if (!input.view.active()) return null;
 
-  input.view.setTrackerId(trackerId);
+  input.view.setTracker(trackerId);
 
   const client = clientFor({
     projects: input.projects,
