@@ -4,7 +4,7 @@ import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { OnboardingView } from './onboarding-view';
 import {
-  featuredTile,
+  featuredAgent,
   onboardingArgs,
   githubButtons,
   githubSteps,
@@ -61,12 +61,21 @@ const pressCalls = (
 export const AddProjectAddsOne = pressCalls(addProject, 'onAddProject');
 
 export const InstallsFeaturedAgent: Story = {
-  args: { agent: noAgent, featured: featuredTile(false) },
+  args: { agent: noAgent, featured: featuredAgent(false) },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(
       canvas.getByRole('button', { name: 'Install Example Agent' }),
     );
     await expect(args.onInstallAgent).toHaveBeenCalledWith('example-agent');
+  },
+};
+
+export const RemovesInstalledFeaturedAgent: Story = {
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Remove Example Agent' }),
+    );
+    await expect(args.onRemoveAgent).toHaveBeenCalledWith('example-agent');
   },
 };
 

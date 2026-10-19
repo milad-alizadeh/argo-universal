@@ -26,6 +26,7 @@ function useOnboarding(): OnboardingViewProps {
     github: { status: 'not-connected' },
     featured: agents.featured,
     onInstallAgent: agents.install,
+    onRemoveAgent: agents.remove,
     onRetry: agents.retry,
   };
 }

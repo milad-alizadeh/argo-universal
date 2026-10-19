@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { OnboardingView } from './onboarding-view';
 import {
-  featuredTile,
+  featuredAgent,
   onboardingArgs,
   githubSteps,
 } from './onboarding-view.mocks';
@@ -20,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 export const Onboarding: Story = {};
 
 export const NotInstalled: Story = {
-  args: { agent: { status: 'not-installed' }, featured: featuredTile(false) },
+  args: { agent: { status: 'not-installed' }, featured: featuredAgent(false) },
 };
 
 export const LoadingRegistry: Story = {

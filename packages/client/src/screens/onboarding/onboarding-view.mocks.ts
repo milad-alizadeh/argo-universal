@@ -22,8 +22,8 @@ const [example] = publishedRegistry.agents;
 
 if (!example) throw new Error('Registry fixture needs an Agent');
 
-// Get started's one featured tile, installed or not.
-export const featuredTile = (installed: boolean): AgentRows => ({
+// Get started's one featured Agent card, installed or not.
+export const featuredAgent = (installed: boolean): AgentRows => ({
   status: 'loaded',
   rows: [
     {
@@ -42,8 +42,9 @@ export const featuredTile = (installed: boolean): AgentRows => ({
 export const onboardingArgs = (): OnboardingViewProps => ({
   serverName,
   agent: { status: 'done' },
-  featured: featuredTile(true),
+  featured: featuredAgent(true),
   onInstallAgent: fn(),
+  onRemoveAgent: fn(),
   onRetry: fn(),
   github: githubSteps.signedIn,
   onConnectGitHub: fn(),

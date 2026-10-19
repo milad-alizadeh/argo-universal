@@ -8,6 +8,7 @@ export interface OnboardingViewProps {
   github: GitHubStep;
   featured: AgentRows;
   onInstallAgent: (id: string) => void;
+  onRemoveAgent: (id: string) => void;
   onRetry: () => void;
   // Unset until the App can sign in to GitHub, so its buttons show disabled.
   onConnectGitHub?: () => void;

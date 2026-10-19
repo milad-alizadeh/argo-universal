@@ -1,10 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { type AgentRowEntry, RegistryIcon } from '#features/agents';
+import { agentRows } from '#features/agents';
 import type { StepMark } from '#features/setup';
-import { Button } from '#primitives/actions/button';
-import { Text } from '#primitives/content/text';
-import { SelectedCheck } from '#primitives/status/selected-check';
+import { List } from '#primitives/lists/list';
 import { RegistryState } from '../settings/agents/catalog-states';
 import type { OnboardingViewProps } from './onboarding-props';
 import { SetupStep } from './setup-step';
@@ -18,57 +16,26 @@ export function AgentStepView(
       mark={props.mark}
       title="Agent Setup"
       caption="Install your favorite Agents and start your first Session."
-      footer={<AgentTiles {...props} />}
+      footer={<FeaturedAgents {...props} />}
     />
   );
 }
 
-function AgentTiles(props: OnboardingViewProps): React.JSX.Element {
+// The Agents page's Agent card, so a featured Agent installs or is removed as it is there.
+function FeaturedAgents(props: OnboardingViewProps): React.JSX.Element {
   const { rows, ...load } = props.featured;
 
   if (load.status !== 'loaded')
     return <RegistryState load={load} onRetry={props.onRetry} />;
 
   return (
-    <View className="w-full flex-row flex-wrap gap-3">
-      {rows.map((entry) => tile(entry, props))}
+    <View className="w-full">
+      <List appearance="cards" fit>
+        {agentRows(rows, {
+          onInstall: props.onInstallAgent,
+          onRemove: props.onRemoveAgent,
+        })}
+      </List>
     </View>
-  );
-}
-
-const tile = (
-  entry: AgentRowEntry,
-  props: OnboardingViewProps,
-): React.JSX.Element => (
-  <AgentTile key={entry.id} entry={entry} onInstall={props.onInstallAgent} />
-);
-
-type TileProps = {
-  entry: AgentRowEntry;
-  onInstall: (id: string) => void;
-};
-
-function AgentTile(props: TileProps): React.JSX.Element {
-  const { entry } = props;
-
-  return (
-    <View className="min-w-48 flex-1 flex-row items-center gap-2 rounded-control bg-card p-2">
-      <RegistryIcon uri={entry.icon} agentName={entry.name} role="row" />
-      <Text role="body">{entry.name}</Text>
-      <TileAction {...props} />
-    </View>
-  );
-}
-
-function TileAction(props: TileProps): React.JSX.Element {
-  return props.entry.installed ? (
-    <SelectedCheck />
-  ) : (
-    <Button
-      label="Install"
-      accessibilityLabel={`Install ${props.entry.name}`}
-      size="sm"
-      onPress={() => props.onInstall(props.entry.id)}
-    />
   );
 }
