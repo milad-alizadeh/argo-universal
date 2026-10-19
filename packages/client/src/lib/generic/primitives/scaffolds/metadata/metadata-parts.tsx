@@ -2,9 +2,9 @@ import { isValidElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
-import { flattenedChildren } from '#primitives/lists/list';
 import { Pill, type PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
+import { flattenedChildren } from '../../../flattened-children';
 import { MetadataPills } from './metadata-pills';
 import type {
   MetadataLabelProps,

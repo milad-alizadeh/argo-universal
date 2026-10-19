@@ -72,10 +72,10 @@ it('raises a real event through the production Hook chain with isolated storage,
 
 it('advances the Plugin worker clock', async () => {
   const kit =
-    await start(`import { Column, Text, Button, useState } from '@argo/plugin-kit';
+    await start(`import { Stack, Text, Button, useState } from '@argo/plugin-kit';
     function Page() {
       const [value, setValue] = useState('waiting');
-      return <Column><Text>{value}</Text><Button label="Start timer" onPress={() => setTimeout(() => setValue('elapsed'), 1000)} /></Column>;
+      return <Stack direction="column"><Text>{value}</Text><Button label="Start timer" onPress={() => setTimeout(() => setValue('elapsed'), 1000)} /></Stack>;
     }
     export function register(argo) { argo.pages.register('/', Page); }
   `);
@@ -90,8 +90,8 @@ it('advances the Plugin worker clock', async () => {
 
 it('draws only the chosen App wire types', async () => {
   const kit =
-    await start(`import { Column, Text, Button } from '@argo/plugin-kit';
-    export function register(argo) { argo.pages.register('/', () => <Column><Text>Visible</Text><Button label="Unsupported" /></Column>); }
+    await start(`import { Stack, Text, Button } from '@argo/plugin-kit';
+    export function register(argo) { argo.pages.register('/', () => <Stack direction="column"><Text>Visible</Text><Button label="Unsupported" /></Stack>); }
   `);
 
   const limited = await kit.mount({

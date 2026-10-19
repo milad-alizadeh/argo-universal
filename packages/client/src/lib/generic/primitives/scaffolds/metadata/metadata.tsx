@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Platform } from 'react-native';
-import { flattenedChildren, List, ListSection } from '#primitives/lists/list';
+import { List, ListSection } from '#primitives/lists/list';
+import { flattenedChildren } from '../../../flattened-children';
 import {
   MetadataLabel,
   MetadataLink,
