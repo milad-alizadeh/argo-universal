@@ -5,7 +5,13 @@ import { required, type Registry, type Snapshot } from './model.mts';
 import { insideOut } from './ordering.mts';
 import { planSync } from './plan.mts';
 
-it('orders the inner master before its containing master and rejects cycles', () => {
+type OrderingFixture = {
+  families: Registry['families'];
+  snapshots: Map<string, Snapshot>;
+  nested: ReturnType<typeof node>;
+};
+
+function orderingFixture(): OrderingFixture {
   const { master } = pair();
 
   const families: Registry['families'] = ['SessionsList', 'ListItem'].map(
@@ -19,12 +25,22 @@ it('orders the inner master before its containing master and rejects cycles', ()
     ['ListItem', master],
   ]);
 
+  return { families, snapshots, nested };
+}
+
+it('orders the inner master before its containing master', () => {
+  const { families, snapshots } = orderingFixture();
   expect(insideOut(families, snapshots).map((family) => family.name)).toEqual([
     'ListItem',
     'SessionsList',
   ]);
+});
+
+it('rejects nested master cycles', () => {
+  const { families, snapshots, nested } = orderingFixture();
   snapshots.set('ListItem', {
-    ...master,
+    fileId: 'f',
+    rootId: 'inner',
     nodes: [{ ...nested, name: 'SessionsList' }],
   });
   expect(() => insideOut(families, snapshots)).toThrow('Nested master cycle');

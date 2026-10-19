@@ -6,9 +6,10 @@ import type { SyncPlan } from './plan-types.mts';
 import { hasChanges } from './plan.mts';
 import { applyRegistry } from './run-apply.mts';
 import { prepareRun, type RunContext } from './run-context.mts';
-import { loadRegistry, saveJson } from './storage.mts';
+import { runRegistry } from './run-registry.mts';
+import { saveJson } from './storage.mts';
 
-type RunOptions = { apply: boolean; runDirectory: string };
+type RunOptions = { apply: boolean; runDirectory: string; cache: string };
 
 async function saveChecks(
   directory: string,
@@ -28,7 +29,7 @@ export async function syncRegistry(
   path: string,
   options: RunOptions,
 ): Promise<void> {
-  const registry = await loadRegistry(path);
+  const registry = await runRegistry(path, options.cache);
   const context = await prepareRun(client, registry);
   const plans = await buildPlans(context, registry);
   await saveChecks(options.runDirectory, plans, context);

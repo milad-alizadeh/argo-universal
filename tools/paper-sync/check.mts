@@ -1,3 +1,4 @@
+import { rejectAmbiguous } from './boundaries.mts';
 import {
   getRoot,
   required,
@@ -8,6 +9,7 @@ import {
 import { insideOut } from './ordering.mts';
 import type { SyncPlan } from './plan-types.mts';
 import { hasChanges, planSync } from './plan.mts';
+import { preflightInsertions } from './preflight.mts';
 import { type RunContext } from './run-context.mts';
 import { checkTokens } from './tokens.mts';
 
@@ -19,13 +21,14 @@ async function checkedPlan(
   matchTokens(context, source, copy);
   const snapshot = await context.reader.read(copy.fileId, copy.nodeId);
 
-  if (getRoot(snapshot).name !== copy.name)
-    throw new Error('Copy changed state; run scan and enroll');
+  rejectAmbiguous(snapshot, context.registry);
 
-  if (getRoot(source).name !== copy.name)
-    throw new Error('Master renamed; run scan and enroll');
+  validateNames(source, snapshot, copy.name);
 
-  return planSync(source, snapshot, copy);
+  const plan = planSync(source, snapshot, copy);
+  await preflightInsertions(context.client, plan);
+
+  return plan;
 }
 
 async function copyPlans(
@@ -83,4 +86,12 @@ function matchTokens(
     required(context.tokens.get(source.fileId)),
     required(context.tokens.get(copy.fileId)),
   );
+}
+
+function validateNames(source: Snapshot, copy: Snapshot, name: string): void {
+  if (getRoot(copy).name !== name)
+    throw new Error('Copy changed state; run scan and enroll');
+
+  if (getRoot(source).name !== name)
+    throw new Error('Master renamed; run scan and enroll');
 }

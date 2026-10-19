@@ -10,6 +10,7 @@ import {
 import { planStyles } from './plan-styles.mts';
 import { planText } from './plan-text.mts';
 import type { SyncPlan } from './plan-types.mts';
+import { removals } from './removals.mts';
 
 function planChild(
   plan: SyncPlan,
@@ -93,9 +94,7 @@ export function planSync(
   const plan = createPlan({ master, before: copy, binding });
 
   for (const source of master.nodes) planNode(plan, source);
-  plan.removes = copy.nodes.flatMap((node) =>
-    Object.values(plan.binding.nodes).includes(node.id) ? [] : [node.id],
-  );
+  plan.removes = removals(copy, binding);
   planText(plan);
 
   return plan;

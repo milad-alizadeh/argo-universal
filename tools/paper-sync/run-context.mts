@@ -1,3 +1,4 @@
+import { boundaryNames, rejectAmbiguous } from './boundaries.mts';
 import type { PaperClient } from './client.mts';
 import { fileSchema } from './index-model.mts';
 import type { Registry, Snapshot } from './model.mts';
@@ -13,6 +14,8 @@ export type CheckError = {
 
 export type RunContext = {
   reader: SnapshotReader;
+  registry: Registry;
+  client: PaperClient;
   tokens: Map<string, Tokens>;
   masters: Map<string, Snapshot>;
   errors: CheckError[];
@@ -32,10 +35,11 @@ async function readMaster(
   family: Registry['families'][number],
 ): Promise<void> {
   try {
-    context.masters.set(
-      family.name,
-      await context.reader.read(family.master.fileId, family.master.nodeId),
-    );
+    const { fileId, nodeId } = family.master;
+    const source = await context.reader.read(fileId, nodeId);
+
+    rejectAmbiguous(source, context.registry);
+    context.masters.set(family.name, source);
   } catch (error) {
     const identity = { ...family.master, name: family.name };
     context.errors.push({ ...identity, reason: String(error) });
@@ -43,12 +47,16 @@ async function readMaster(
 }
 
 function runContext(client: PaperClient, registry: Registry): RunContext {
-  const reader = new SnapshotReader(
-    client,
-    new Set(registry.families.map((family) => family.name)),
-  );
+  const reader = new SnapshotReader(client, boundaryNames(registry));
 
-  return { reader, tokens: new Map(), masters: new Map(), errors: [] };
+  return {
+    reader,
+    registry,
+    client,
+    tokens: new Map(),
+    masters: new Map(),
+    errors: [],
+  };
 }
 
 export async function prepareRun(

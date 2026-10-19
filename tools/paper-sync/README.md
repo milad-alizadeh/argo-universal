@@ -30,12 +30,15 @@ Use `--registry=path` to select a separate registry for temporary clone tests.
 ## Sync behavior
 
 Sync transfers structure, child order, styles, token references and static SVG artwork.
-Copies retain their outer placement, width, flex placement and existing visibility. Named text slots retain their node IDs through wrapper changes.
+Copies retain their outer placement, width, height, flex placement and existing visibility. Named text slots retain their node IDs through wrapper changes.
 Text that differs during enrollment becomes an override. Later local text edits become overrides on the next successful apply.
 To resume inheritance, remove the slot from `textOverrides`, leaving `lastText` unchanged.
 
 Nested families sync inside-out. Outer plans treat nested copies as separate owners and preserve their named state and overrides.
 Cycles, ambiguous slots, unsupported node types and unsupported SVG references produce errors.
+A duplicate nested master name blocks enrollment of its container. Check and apply use the latest saved scan to reject duplicate masters.
+An unmatched hidden layer or nested copy stops structural deletion, so its overrides cannot be discarded.
+New hidden layers, including SVGs inside new nested copies, are rejected before insertion.
 Missing tokens, different token values and ignored styles stop apply. Tokens stay manual.
 There is no 500-node component limit. Reads use small tree summaries, node batches and SVG-only exports; no full-file JSX export is used.
 

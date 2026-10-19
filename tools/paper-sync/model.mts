@@ -60,6 +60,7 @@ export type Binding = z.infer<typeof bindingSchema>;
 
 export const registrySchema = z.object({
   version: z.literal(1),
+  ambiguousNames: z.array(z.string()).optional(),
   families: z.array(
     z.object({
       name: z.string(),

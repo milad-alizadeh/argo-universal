@@ -1,4 +1,5 @@
-import { enroll } from './bind.mts';
+import { enroll, reconcileBinding } from './bind.mts';
+import { rejectAmbiguous } from './boundaries.mts';
 import { location, nodeMap } from './catalog.mts';
 import type { EnrollmentContext } from './enrollment-model.mts';
 import type { LocatedNode } from './index-model.mts';
@@ -22,7 +23,10 @@ async function readBinding(
   node: LocatedNode,
 ): Promise<Binding> {
   const copy = await context.reader.read(node.fileId, node.id);
-  const binding = oldBinding(context, node) ?? enroll(source, copy);
+  rejectAmbiguous(copy, context.result.registry);
+  const prior = oldBinding(context, node);
+
+  const binding = refreshedBinding(source, copy, prior);
 
   return {
     ...binding,
@@ -45,4 +49,12 @@ export async function enrollCopy(
 
     return undefined;
   }
+}
+
+function refreshedBinding(
+  source: Snapshot,
+  copy: Snapshot,
+  prior: Binding | undefined,
+): Binding {
+  return prior ? reconcileBinding(source, copy, prior) : enroll(source, copy);
 }

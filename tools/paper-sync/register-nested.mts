@@ -1,4 +1,5 @@
 import { enroll } from './bind.mts';
+import { boundaryNames } from './boundaries.mts';
 import type { PaperClient } from './client.mts';
 import { required, type Binding, type Registry } from './model.mts';
 import type { SyncPlan } from './plan-types.mts';
@@ -57,7 +58,7 @@ export async function registerNested(
   plan: SyncPlan,
   input: { registry: Registry; binding: Binding },
 ): Promise<void> {
-  const names = new Set(input.registry.families.map((family) => family.name));
+  const names = boundaryNames(input.registry);
 
   const context: Context = {
     ...input,

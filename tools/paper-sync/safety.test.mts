@@ -14,7 +14,7 @@ it('rejects files outside the canonical configuration', () => {
   );
 });
 
-it('stops on ignored styles and a response for the wrong file', () => {
+it('stops on ignored styles', () => {
   const ignored = {
     content: [{ type: 'text', text: '{"ignoredStyles":["bogus"]}' }],
   };
@@ -22,7 +22,9 @@ it('stops on ignored styles and a response for the wrong file', () => {
   expect(() => toolTexts(ignored, { name: 'update_styles', args: {} })).toThrow(
     'ignored styles',
   );
+});
 
+it('stops on a response for the wrong file', () => {
   const wrong = {
     content: [{ type: 'text', text: '{"file":{"id":"other"}}' }],
   };

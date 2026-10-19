@@ -1,5 +1,6 @@
 import type { PaperClient } from './client.mts';
 import { type DesignNode } from './model.mts';
+import { htmlFor } from './node-html.mts';
 import type { SyncPlan } from './plan-types.mts';
 import { readSnapshot } from './read.mts';
 import { checkTokens, readTokens } from './tokens.mts';
@@ -22,6 +23,8 @@ export async function createNested(
     await readTokens(client, snapshot.fileId),
     await readTokens(client, plan.before.fileId),
   );
+
+  for (const child of snapshot.nodes) htmlFor(child);
 
   for (const child of snapshot.nodes)
     plan.binding.nodes[child.id] = await insert(client, plan, child);

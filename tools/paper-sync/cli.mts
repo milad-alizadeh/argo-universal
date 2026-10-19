@@ -35,6 +35,7 @@ async function connectedCommand(client: PaperClient): Promise<void> {
   await syncRegistry(client, options.registry, {
     apply: command === 'apply',
     runDirectory: options.directory,
+    cache: options.cache,
   });
 }
 

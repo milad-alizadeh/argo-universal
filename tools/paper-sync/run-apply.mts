@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { applyPlan, summarize } from './apply.mts';
+import { boundaryNames } from './boundaries.mts';
 import type { PaperClient } from './client.mts';
 import { required, type Binding, type Registry } from './model.mts';
 import type { SyncPlan } from './plan-types.mts';
@@ -20,7 +21,7 @@ async function applyCopy(
   plan: SyncPlan,
   registry: Registry,
 ): Promise<Binding> {
-  const names = new Set(registry.families.map((family) => family.name));
+  const names = boundaryNames(registry);
 
   const master = await new SnapshotReader(client, names).read(
     plan.master.fileId,
@@ -73,8 +74,21 @@ export async function applyRegistry(
   });
 
   try {
+    await prepareFonts(client, context.plans);
+
     for (const plan of context.plans) await saveCopy(client, context, plan);
   } finally {
     await release(client, context.plans);
   }
+}
+
+async function prepareFonts(
+  client: PaperClient,
+  plans: SyncPlan[],
+): Promise<void> {
+  for (const fileId of new Set(plans.map((plan) => plan.before.fileId)))
+    await client.call('get_font_family_info', {
+      fileId,
+      familyNames: ['SF Pro Text', 'Roboto', 'SF Mono', 'System Sans-Serif'],
+    });
 }

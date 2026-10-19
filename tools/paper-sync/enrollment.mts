@@ -1,3 +1,4 @@
+import { rejectAmbiguous } from './boundaries.mts';
 import { key, type Catalog } from './catalog.mts';
 import type { PaperClient } from './client.mts';
 import { enrollCopy } from './enroll-copy.mts';
@@ -61,6 +62,9 @@ function enrollmentContext(
     [...catalog.masters, ...catalog.duplicates.flat()].map((node) => node.name),
   );
 
+  result.registry.ambiguousNames = [
+    ...new Set(catalog.duplicates.flat().map((node) => node.name)),
+  ];
   const reader = new SnapshotReader(client, names);
 
   return { ...options, catalog, result, reader };
@@ -73,6 +77,9 @@ export async function enrollCatalog(
 ): Promise<Enrollment> {
   const context = enrollmentContext(client, catalog, options);
 
+  for (const fileId of new Set(catalog.nodes.map((node) => node.fileId)))
+    await client.call('get_basic_info', { fileId });
+
   for (const master of catalog.masters) await tryFamily(context, master);
   repairMissing(context);
 
@@ -84,6 +91,7 @@ async function readFamily(
   master: LocatedNode,
 ): Promise<void> {
   const source = await context.reader.read(master.fileId, master.id);
+  rejectAmbiguous(source, context.result.registry);
   const family = await enrollCopies(context, master, source);
   context.result.registry.families.push(family);
   console.log(`${master.name}: ${family.copies.length} copies`);

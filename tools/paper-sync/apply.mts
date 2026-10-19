@@ -4,6 +4,7 @@ import type { Binding } from './model.mts';
 import { patchNodes } from './patch-nodes.mts';
 import type { SyncPlan } from './plan-types.mts';
 import { hasChanges, planSync, sameSnapshot } from './plan.mts';
+import { preflightInsertions } from './preflight.mts';
 import { SnapshotReader } from './snapshot-reader.mts';
 
 function reader(client: PaperClient, plan: SyncPlan): SnapshotReader {
@@ -71,6 +72,7 @@ export async function applyPlan(
   original: SyncPlan,
 ): Promise<Binding> {
   await checkCurrent(client, original);
+  await preflightInsertions(client, original);
   const plan = structuredClone(original);
   await createNodes(client, plan);
   await patchNodes(client, plan);

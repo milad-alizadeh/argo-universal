@@ -9,9 +9,6 @@ function frameHtml(node: DesignNode): string {
   if (!['Frame', 'Text'].includes(node.component))
     throw new Error(`Unsupported node type ${node.component}`);
 
-  if (!node.isVisible)
-    throw new Error(`Creating hidden layers is not supported: ${node.name}`);
-
   const styles = Object.entries(node.styles)
     .map(([key, value]) => `${cssName(key)}:${value}`)
     .join(';');
@@ -20,6 +17,9 @@ function frameHtml(node: DesignNode): string {
 }
 
 export function htmlFor(node: DesignNode): string {
+  if (!node.isVisible)
+    throw new Error(`Creating hidden layers is not supported: ${node.name}`);
+
   return node.svg
     ? node.svg.replace('<svg ', `<svg layer-name="${escapeHtml(node.name)}" `)
     : frameHtml(node);
