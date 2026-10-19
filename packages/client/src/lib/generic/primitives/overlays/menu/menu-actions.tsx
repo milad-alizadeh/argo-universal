@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
-import { TextClassContext } from '#primitives/content/text';
+import { Text, TextClassContext } from '#primitives/content/text';
 import { MenuActionLabel } from './menu-action-label';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
@@ -64,12 +64,10 @@ function actionItem(entry: MenuEntry, index: number): React.JSX.Element {
   );
 }
 
+type SubmenuProps = { submenu: MenuSubmenu };
+
 // Radix's Sub: its trigger row opens the nested rows beside it, by pointer or by the arrow key.
-function MenuSubmenuItem({
-  submenu,
-}: {
-  submenu: MenuSubmenu;
-}): React.JSX.Element {
+function MenuSubmenuItem({ submenu }: SubmenuProps): React.JSX.Element {
   return (
     <RadixMenu.Sub>
       <SubmenuTrigger submenu={submenu} />
@@ -95,20 +93,25 @@ function SubmenuRows({
   );
 }
 
-// The row names the submenu, its trailing chevron pointing to where the rows open.
-function SubmenuTrigger({
-  submenu,
-}: {
-  submenu: MenuSubmenu;
-}): React.JSX.Element {
+// The row names the submenu, then its count, its trailing chevron pointing to where the rows open.
+function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
+  const label = submenu.accessibilityLabel ?? submenu.label;
+
   return (
-    <RadixMenu.SubTrigger asChild aria-label={submenu.label}>
+    <RadixMenu.SubTrigger asChild aria-label={label}>
       <View className={menuRowClass()}>
         <MenuActionLabel {...submenu} />
+        <SubmenuCount count={submenu.count} />
         <Icon name="chevron-right" role="chevron" tone="muted" />
       </View>
     </RadixMenu.SubTrigger>
   );
+}
+
+function SubmenuCount({
+  count,
+}: Pick<MenuSubmenu, 'count'>): React.JSX.Element | null {
+  return count ? <Text tone="muted">{count}</Text> : null;
 }
 
 function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {

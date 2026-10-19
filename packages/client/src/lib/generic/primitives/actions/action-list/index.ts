@@ -41,7 +41,11 @@ export {
   type HeaderActionsProps,
 } from './action-list-header';
 
-export { submenuBadgeText, submenuLabel } from './submenu-badge';
+export {
+  submenuBadgeText,
+  submenuCountText,
+  submenuLabel,
+} from './submenu-badge';
 
 export {
   headerSlots,

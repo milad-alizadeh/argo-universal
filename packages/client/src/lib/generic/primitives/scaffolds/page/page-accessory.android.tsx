@@ -1,4 +1,3 @@
-import { RNHostView } from '@expo/ui';
 import { FloatingActionButton } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
@@ -7,6 +6,7 @@ import { useNativeTheme } from '#lib/generic/native-theme';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import type { IconAction } from '#primitives/actions/action-list';
 import { Icon } from '#primitives/content/icon';
+import { ButtonIcon } from '#primitives/native/button-icon';
 import { Host } from '#primitives/native/host';
 import { pagePrimaryAction } from './page-primary-action';
 import type { PageProps } from './page-props';
@@ -50,14 +50,17 @@ function FabButton({ action }: FabProps): ReactElement {
   );
 }
 
+// The FAB's container is Argo's primary, which Material cannot pair with a content colour, so its icon takes primary-foreground.
 function FabIcon({ action }: FabProps): ReactElement {
+  const tint = useNativeTheme().colors.primaryForeground;
+
   return (
-    <RNHostView matchContents>
+    <ButtonIcon name={action.icon} onPress={action.onPress} tint={tint}>
       <Icon
         name={action.icon}
         role="action"
         className="text-primary-foreground"
       />
-    </RNHostView>
+    </ButtonIcon>
   );
 }
