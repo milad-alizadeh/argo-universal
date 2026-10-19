@@ -8,9 +8,9 @@ import {
   metadataAvatarProps,
   metadataChildParts,
 } from '../metadata-props';
+import { builtInPress } from '../plugin-part-props';
 import {
   part,
-  handler,
   stringLabel,
   optionalLabel,
   containerParts,
@@ -43,7 +43,7 @@ export const scaffoldsPartSchemas = {
       title: stringLabel,
       actions: z.array(z.string()).optional(),
       primaryAction: z
-        .object({ label: stringLabel, onPress: handler('onPress') })
+        .object({ label: stringLabel, onPress: builtInPress })
         .optional()
         .describe('The Page’s one primary action.'),
       search: z.boolean().optional(),

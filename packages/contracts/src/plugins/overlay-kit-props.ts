@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { echoes, handler } from './plugin-part-props';
+import { builtInPress, echoes, handler } from './plugin-part-props';
 
 // The App flips its open state at once and tells the Plugin without waiting.
 export const openChange = <
@@ -57,7 +57,7 @@ export const toastProps = z.object({
   message: z.string().optional().describe('Status detail.'),
   tone: z.enum(['success', 'danger']).describe('Outcome tone.'),
   action: z
-    .object({ label: z.string(), onPress: handler('onPress') })
+    .object({ label: z.string(), onPress: builtInPress })
     .optional()
     .describe('Action offered on the web.'),
 });
