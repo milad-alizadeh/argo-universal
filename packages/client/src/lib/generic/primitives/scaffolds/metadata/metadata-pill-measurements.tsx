@@ -1,9 +1,26 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { Pill } from '#primitives/status/pill';
 import { withOccurrenceKeys } from '../../../occurrence-keys';
 import { pillIdentity } from './metadata-pill-fit';
-import type { PillValuesProps } from './metadata-pills';
+import type { PillValuesProps } from './metadata-props';
+
+interface Measurements {
+  widths: Record<string, number>;
+  measure: (key: string, width: number) => void;
+}
+
+export function usePillMeasurements(): Measurements {
+  const [widths, setWidths] = useState<Record<string, number>>({});
+
+  const measure = (key: string, width: number): void => {
+    setWidths((current) =>
+      current[key] === width ? current : { ...current, [key]: width },
+    );
+  };
+
+  return { widths, measure };
+}
 
 type MeasurementsProps = PillValuesProps & {
   measure: (key: string, width: number) => void;

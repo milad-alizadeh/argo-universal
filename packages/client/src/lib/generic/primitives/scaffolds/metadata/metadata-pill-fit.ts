@@ -1,4 +1,4 @@
-import type { PillValuesProps } from './metadata-pills';
+import type { PillValuesProps } from './metadata-props';
 
 type Pill = PillValuesProps['pills'][number];
 

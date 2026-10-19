@@ -4,9 +4,11 @@ import { useSpacing } from '#lib/generic/use-spacing';
 import { Pill } from '#primitives/status/pill';
 import { withOccurrenceKeys } from '../../../occurrence-keys';
 import { fitPills, pillIdentity } from './metadata-pill-fit';
-import { PillMeasurements } from './metadata-pill-measurements';
-import type { PillValuesProps } from './metadata-pills';
-import { usePillMeasurements } from './use-pill-measurements';
+import {
+  PillMeasurements,
+  usePillMeasurements,
+} from './metadata-pill-measurements';
+import type { PillValuesProps } from './metadata-props';
 
 type VisibleProps = PillValuesProps & { count: number };
 

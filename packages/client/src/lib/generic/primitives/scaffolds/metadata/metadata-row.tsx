@@ -1,39 +1,28 @@
-import type { ReactElement, ReactNode } from 'react';
-import { Platform, View } from 'react-native';
-import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
-import type { MetadataLabelProps } from './metadata-props';
+import type { ReactElement } from 'react';
+import { View } from 'react-native';
+import { Text, TextClassContext } from '#primitives/content/text';
+import { spokenField, type MetadataRowProps } from './metadata-props';
 
-function labelPlacement(): ListItemProps['labelPlacement'] {
-  if (Platform.OS === 'web') return 'above';
-
-  return Platform.OS === 'ios' ? 'beside' : undefined;
-}
-
-function valuePlacement(
-  value: ReactNode,
-): Pick<ListItemProps, 'trailing' | 'meta'> {
-  return Platform.OS === 'android' ? { meta: value } : { trailing: value };
-}
-
-type RowProps = Pick<MetadataLabelProps, 'title' | 'accessibilityLabel'> & {
-  label: string;
-  children: ReactNode;
-};
-
-function rowProps(props: RowProps): ListItemProps {
-  return {
-    title: props.title,
-    labelPlacement: labelPlacement(),
-    accessibilityLabel:
-      props.accessibilityLabel ?? `${props.title}, ${props.label}`,
-    ...valuePlacement(props.children),
-  };
-}
-
-export function MetadataRow(props: RowProps): ReactElement {
+function FieldLabel({ title }: Pick<MetadataRowProps, 'title'>): ReactElement {
   return (
-    <View className={Platform.OS === 'web' ? 'mb-4' : undefined}>
-      <ListItem {...rowProps(props)} />
-    </View>
+    <Text role="secondary" tone="muted" numberOfLines={1}>
+      {title}
+    </Text>
+  );
+}
+
+// Desktop draws a stacked label/value pair, not a row: no press, hover, separator or lanes.
+export function MetadataRow(props: MetadataRowProps): ReactElement {
+  return (
+    <TextClassContext value={undefined}>
+      <View
+        role="group"
+        aria-label={spokenField(props)}
+        className="mb-4 w-full gap-1 select-none"
+      >
+        <FieldLabel title={props.title} />
+        <View className="min-w-0 self-stretch">{props.children}</View>
+      </View>
+    </TextClassContext>
   );
 }

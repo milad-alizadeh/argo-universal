@@ -9,8 +9,8 @@ export type RowBadge = Exclude<
 
 // Kit-only: native selection semantics, long press and test identity.
 export type ListItemProps = KitProps<'ListItem'> & {
-  // A read-only detail field can stack its label above its trailing value.
-  labelPlacement?: 'above' | 'beside';
+  // An iOS read-only detail field lets a long trailing value share the row.
+  labelPlacement?: 'beside';
   onPointerDown?: ComponentProps<typeof Pressable>['onPointerDown'];
   onKeyDown?: React.KeyboardEventHandler;
   role?: 'button' | 'link' | 'group';

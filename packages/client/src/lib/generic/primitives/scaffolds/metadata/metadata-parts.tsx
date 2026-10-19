@@ -1,7 +1,8 @@
-import { Children, isValidElement, type ReactElement } from 'react';
+import { isValidElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
+import { flattenedChildren } from '#primitives/lists/list';
 import { Pill, type PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
 import { MetadataPills } from './metadata-pills';
@@ -73,7 +74,7 @@ export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
 }
 
 function pillProps(children: MetadataPillsProps['children']): PillProps[] {
-  return Children.toArray(children)
+  return flattenedChildren(children)
     .filter(
       (child): child is ReactElement<PillProps> =>
         isValidElement<PillProps>(child) && child.type === Pill,
