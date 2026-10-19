@@ -1,24 +1,17 @@
 import type {
-  PluginProjectInfo,
-  PluginSettingValue,
-} from '@repo/contracts/plugins';
-import type { PluginAssetRef } from '@repo/contracts/plugins/assets';
-import type { Kit } from '../kit/plugin-kit';
-import type {
-  PluginFetchReply,
-  PluginFileEntry,
-  PluginFileInfo,
+  FetchReply,
   ProcessResult,
-} from '../protocol/argo-answers';
-import type { StorageResult } from '../protocol/runtime';
+  StorageResult,
+} from '@repo/contracts/plugins/argo-calls';
+import type { Kit } from '../kit/plugin-kit';
 import type { ArgoCall } from './create-plugin-api';
 import type { HookRegistrar } from './hook-types';
-import type {
-  Argo,
-  ArgoRequest,
-  PluginFetchResponse,
-  PluginProcess,
-} from './plugin-api';
+import type { Argo, ArgoRequest } from './plugin-api';
+
+// What a method resolves to: the Server's answer, inferred from its schema in Contracts.
+type Answer<Call> = Call extends (...args: never[]) => Promise<infer Value>
+  ? Value
+  : never;
 
 // Builds the frozen `argo` object; each method is one request, shaped by `PluginRequest`.
 export function argoObject(call: ArgoCall, kit: Kit, on: HookRegistrar): Argo {
@@ -42,20 +35,27 @@ function stateCalls(call: ArgoCall): StateCalls {
     storage: storageCalls(call),
     projects: Object.freeze({
       list: () =>
-        call<PluginProjectInfo[]>({ api: 'projects', action: 'list' }),
+        call<Answer<Argo['projects']['list']>>({
+          api: 'projects',
+          action: 'list',
+        }),
     }),
     secrets: secretCalls(call),
-    settings: Object.freeze({
-      get: async (key) =>
-        (await call<PluginSettingValue | null>({ api: 'settings', key })) ??
-        null,
-    }),
+    settings: settingCalls(call),
   };
 }
 
+const settingCalls = (call: ArgoCall): Argo['settings'] =>
+  Object.freeze({
+    get: async (key) =>
+      (await call<Answer<Argo['settings']['get']>>({ api: 'settings', key })) ??
+      null,
+  });
+
 const assetCalls = (call: ArgoCall): Argo['assets'] =>
   Object.freeze({
-    resolve: (source) => call<PluginAssetRef>({ api: 'assets', source }),
+    resolve: (source) =>
+      call<Answer<Argo['assets']['resolve']>>({ api: 'assets', source }),
   });
 
 // The Server answers a batch with one result per query.
@@ -75,8 +75,8 @@ function fileCalls(call: ArgoCall): Argo['fs'] {
     write: async (path, content) => {
       await fs({ action: 'write', path, content });
     },
-    list: (path) => fs<PluginFileEntry[]>({ action: 'list', path }),
-    stat: (path) => fs<PluginFileInfo>({ action: 'stat', path }),
+    list: (path) => fs<Answer<Argo['fs']['list']>>({ action: 'list', path }),
+    stat: (path) => fs<Answer<Argo['fs']['stat']>>({ action: 'stat', path }),
   });
 }
 
@@ -98,7 +98,10 @@ type ProcessCall = <Answer>(
 ) => Promise<Answer>;
 
 // A spawned command is named by the id the Server gave it.
-const spawned = (run: ProcessCall, id: string): PluginProcess =>
+const spawned = (
+  run: ProcessCall,
+  id: string,
+): Answer<Argo['process']['spawn']> =>
   Object.freeze({
     wait: () => run<ProcessResult>({ action: 'wait', id }),
     kill: async () => {
@@ -123,7 +126,7 @@ function secretCalls(call: ArgoCall): Argo['secrets'] {
   });
 }
 
-const response = (reply: PluginFetchReply): PluginFetchResponse =>
+const response = (reply: FetchReply): Answer<Argo['fetch']> =>
   Object.freeze({
     ...reply,
     headers: Object.freeze({ ...reply.headers }),

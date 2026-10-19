@@ -1,9 +1,9 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { delimiter } from 'node:path';
+import type { ProcessResult } from '@repo/contracts/plugins/argo-calls';
 import { shellEnvironment } from '../../agents';
 import type { CheckedCommand } from '../access/plugin-access';
-import type { ProcessResult } from '../protocol/argo-answers';
 import type { ProcessCall } from '../protocol/runtime';
 import { argoLimitBytes, argoTimeoutMs } from './plugin-limits';
 

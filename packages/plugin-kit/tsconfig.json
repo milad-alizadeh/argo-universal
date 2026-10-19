@@ -1,7 +1,6 @@
 {
   "extends": "@repo/typescript/base.json",
   "compilerOptions": {
-    "skipLibCheck": false,
     "lib": ["es2025", "DOM"],
     "types": ["react"]
   },

@@ -107,3 +107,18 @@ export type PluginWireNode = {
     slots: Record<string, PluginWireNode[]>;
   };
 }[WirePart];
+
+// The Plugin API: the `argo` object a Plugin's `register` receives, inferred from the call schemas in Contracts.
+export type {
+  Argo,
+  Hook,
+  HookContext,
+  HookNext,
+  HookOptions,
+} from '@repo/engine/plugin-api';
+
+export type {
+  ProcessResult,
+  StorageQuery,
+  StorageResult,
+} from '@repo/contracts/plugins/argo-calls';

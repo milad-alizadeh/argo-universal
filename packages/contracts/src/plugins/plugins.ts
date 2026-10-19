@@ -7,11 +7,14 @@ import { PluginStatus } from './runtime';
 import { sfSymbolNames } from './sf-symbol-names.gen';
 import { SlotId } from './wire';
 
-export type PluginProjectInfo = {
-  id: string;
-  name: string;
-  originUrl: string | null;
-};
+// What `argo.projects.list` tells a Plugin about each Project.
+export const PluginProjectInfo = z.object({
+  id: z.string(),
+  name: z.string(),
+  originUrl: z.string().nullable(),
+});
+
+export type PluginProjectInfo = z.infer<typeof PluginProjectInfo>;
 
 // Zod's default enum error would print every name in the list.
 const notIn =

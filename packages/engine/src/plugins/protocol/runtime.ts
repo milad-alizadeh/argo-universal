@@ -3,6 +3,9 @@ import {
   FsCall,
   ProcessCall,
   ProcessCommand,
+  SecretCall,
+  StorageQuery,
+  StorageResult,
 } from '@repo/contracts/plugins/argo-calls';
 import { PluginAssetRequest } from '@repo/contracts/plugins/assets';
 import {
@@ -23,25 +26,17 @@ export { PluginStatus } from '@repo/contracts/plugins/runtime';
 
 export type { PluginEvent } from '@repo/contracts/plugins/wire';
 
-export { FetchCall, FsCall, ProcessCall, ProcessCommand };
-
-export { StorageQuery, StorageResult } from '#plugin-storage-protocol';
-
-import { StorageQuery, StorageResult } from '#plugin-storage-protocol';
+export {
+  FetchCall,
+  FsCall,
+  ProcessCall,
+  ProcessCommand,
+  SecretCall,
+  StorageQuery,
+  StorageResult,
+};
 
 export const pluginAnswerLimitMs = 3000;
-
-export const SecretCall = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('get'), account: z.string() }),
-  z.object({
-    action: z.literal('set'),
-    account: z.string(),
-    value: z.string(),
-  }),
-  z.object({ action: z.literal('delete'), account: z.string() }),
-]);
-
-export type SecretCall = z.infer<typeof SecretCall>;
 
 export const PluginRequest = z.discriminatedUnion('api', [
   PluginAssetRequest,
