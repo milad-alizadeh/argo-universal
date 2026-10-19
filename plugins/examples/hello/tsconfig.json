@@ -1,0 +1,7 @@
+{
+  "extends": "@argo/plugin-kit/tsconfig.json",
+  // The tests run in Node; Plugin code is checked for Node globals by `argo-plugin validate`.
+  "compilerOptions": { "types": ["node"] },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

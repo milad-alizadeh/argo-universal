@@ -9,7 +9,7 @@ export const example = fileURLToPath(
   new URL('../../../plugins/examples/hello/', import.meta.url),
 );
 
-const testFile = /\.test\.js$/;
+const testFile = /\.test\.[jt]s$/;
 
 const cli = fileURLToPath(new URL('../bin/argo.mjs', import.meta.url));
 
@@ -19,9 +19,9 @@ export async function fixture(source: string): Promise<string> {
   // Each fixture brings its own tests, so the example's tests stay behind.
   await cp(example, directory, {
     recursive: true,
-    filter: (path) => !testFile.test(path),
+    filter: (path) => !testFile.test(path) && !path.includes('node_modules'),
   });
-  await writeFile(join(directory, 'index.js'), source);
+  await writeFile(join(directory, 'index.tsx'), source);
 
   return directory;
 }

@@ -7,6 +7,7 @@ import {
   TextInput,
   useState,
 } from '@argo/plugin-kit';
+import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 
 const labels = [
   { value: 'bug', label: 'Bug' },
@@ -14,13 +15,25 @@ const labels = [
   { value: 'docs', label: 'Docs' },
 ];
 
-const empty = { title: '', labels: [], due: undefined };
+type Draft = {
+  title: string;
+  labels: readonly string[];
+  due: string | undefined;
+};
+
+type Change = <Field extends keyof Draft>(
+  field: Field,
+) => (value: Draft[Field]) => void;
+
+const empty: Draft = { title: '', labels: [], due: undefined };
 
 // Each field echoes at once in the App; the Plugin keeps the draft and reads it on submit.
-export function HelloForm() {
+export function HelloForm(): JSX.Element {
   const [draft, setDraft] = useState(empty);
   const [saved, setSaved] = useState('');
-  const change = (field) => (value) => setDraft({ ...draft, [field]: value });
+
+  const change: Change = (field) => (value) =>
+    setDraft({ ...draft, [field]: value });
 
   return (
     <Stack direction="column" gap={4}>
@@ -32,7 +45,9 @@ export function HelloForm() {
   );
 }
 
-function IssueFields({ draft, change }) {
+function IssueFields(props: { draft: Draft; change: Change }): JSX.Element {
+  const { draft, change } = props;
+
   return (
     <>
       <TextInput
@@ -46,14 +61,17 @@ function IssueFields({ draft, change }) {
   );
 }
 
-function LabelsPicker({ value, onValueChange }) {
+function LabelsPicker(props: {
+  value: readonly string[];
+  onValueChange: (value: readonly string[]) => void;
+}): JSX.Element {
   return (
     <Picker
       label="Labels"
       multiple
       options={labels}
-      value={value}
-      onValueChange={onValueChange}
+      value={props.value}
+      onValueChange={props.onValueChange}
     />
   );
 }

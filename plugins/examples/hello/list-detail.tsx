@@ -11,7 +11,9 @@ import {
   Page,
   Pill,
   useState,
+  type Argo,
 } from '@argo/plugin-kit';
+import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 
 const buildItems = [
   {
@@ -28,11 +30,13 @@ const buildItems = [
   },
 ];
 
+type Build = (typeof buildItems)[number];
+
 // The list's own path; each build's page sits below it, as `/builds/web`.
 const listPath = '/builds';
 
 // A Plugin opens its pages by their full App path: the Plugin id, the nav id, then its own path.
-const buildHref = (build) =>
+const buildHref = (build: Build): string =>
   `/plugins/hello/hello-builds${listPath}/${build.id}`;
 
 const buildMetadata = (
@@ -51,7 +55,9 @@ const buildMetadata = (
   </Metadata>
 );
 
-function CancelAction({ cancelled, onToggle }) {
+type CancelProps = { cancelled: boolean; onToggle: () => void };
+
+function CancelAction({ cancelled, onToggle }: CancelProps): JSX.Element {
   return (
     <ActionList>
       <Action
@@ -64,9 +70,9 @@ function CancelAction({ cancelled, onToggle }) {
 }
 
 // A build's page: its progress, with Metadata beside it on wide screens.
-function BuildPage({ build }) {
+function BuildPage({ build }: { build: Build }): JSX.Element {
   const [cancelled, setCancelled] = useState(false);
-  const toggle = () => setCancelled(!cancelled);
+  const toggle = (): void => setCancelled(!cancelled);
 
   return (
     <Page title={build.title}>
@@ -89,7 +95,9 @@ const buildMeta = (
   </>
 );
 
-function BuildRow({ build, selected }) {
+type BuildRowProps = { build: Build; selected: boolean };
+
+function BuildRow({ build, selected }: BuildRowProps): JSX.Element {
   return (
     <ListItem
       title={build.title}
@@ -110,7 +118,9 @@ const noBuild = (
   />
 );
 
-function BuildList({ selected }) {
+type Selection = { selected?: Build };
+
+function BuildList({ selected }: Selection): JSX.Element {
   return (
     <List
       appearance="cards"
@@ -127,7 +137,7 @@ function BuildList({ selected }) {
 }
 
 // The builds beside the selected one; each build's path selects it, so a link opens it at any width.
-function BuildsListDetail({ selected }) {
+function BuildsListDetail({ selected }: Selection): JSX.Element {
   return (
     <ListDetail
       list={<BuildList selected={selected} />}
@@ -137,17 +147,17 @@ function BuildsListDetail({ selected }) {
   );
 }
 
-const buildPage = (build) =>
-  function HelloBuildPage() {
+const buildPage = (build: Build): (() => JSX.Element) =>
+  function HelloBuildPage(): JSX.Element {
     return <BuildsListDetail selected={build} />;
   };
 
-function HelloBuildsPage() {
+function HelloBuildsPage(): JSX.Element {
   return <BuildsListDetail />;
 }
 
 // The list at its own path, and each build's page below it.
-export function registerBuilds(pages) {
+export function registerBuilds(pages: Argo['pages']): void {
   pages.register(listPath, HelloBuildsPage);
 
   for (const build of buildItems)

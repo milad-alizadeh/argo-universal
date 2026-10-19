@@ -1,9 +1,5 @@
 import { fileURLToPath } from 'node:url';
 import { startPluginTest, type PluginTest } from '@argo/plugin-kit/testing';
-import {
-  projectDetailsSlotId,
-  type PluginSlotInput,
-} from '@repo/contracts/plugins/wire';
 import { expect, it, onTestFinished } from 'vitest';
 
 const project = {
@@ -32,8 +28,8 @@ async function tracker(): Promise<PluginTest> {
   return test;
 }
 
-const slot: PluginSlotInput = {
-  slotId: projectDetailsSlotId,
+const slot: Parameters<PluginTest['slot']>[0] = {
+  slotId: 'argo/project/details/v1',
   context: { projectId: project.id },
 };
 

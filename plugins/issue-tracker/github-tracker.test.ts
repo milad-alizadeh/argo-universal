@@ -1,13 +1,15 @@
+import type { Argo, ProcessResult } from '@argo/plugin-kit';
 import { expect, it } from 'vitest';
-import {
-  createGitHubTracker,
-  githubError,
-  githubRepositoryFromOrigin,
-} from './github-tracker.js';
+import type { GitHubIssue } from './github-issues';
+import { githubRepositoryFromOrigin } from './github-repository';
+import { createGitHubTracker, githubError } from './github-tracker';
+import type { Issue, TrackerClient } from './issue-types';
+
+type Run = Argo['process']['run'];
 
 const repository = 'argo/app';
 
-const issue = (state, body = '') => ({
+const issue = (state: string, body = ''): GitHubIssue => ({
   number: 8,
   title: 'Keep the Plugin boundary',
   state,
@@ -17,7 +19,7 @@ const issue = (state, body = '') => ({
   assignees: [{ login: 'dev' }],
 });
 
-const mappedIssue = (state, body = '') => ({
+const mappedIssue = (state: string, body = ''): Issue => ({
   number: 8,
   title: 'Keep the Plugin boundary',
   status: state.toLowerCase(),
@@ -27,7 +29,7 @@ const mappedIssue = (state, body = '') => ({
   assignees: ['dev'],
 });
 
-const success = (stdout = '') => ({
+const success = (stdout = ''): ProcessResult => ({
   exitCode: 0,
   stdout,
   stderr: '',
@@ -35,16 +37,16 @@ const success = (stdout = '') => ({
   timedOut: false,
 });
 
-const trackerFor = (run) =>
+const trackerFor = (run: Run): TrackerClient =>
   createGitHubTracker({ process: { run } }, repository);
 
 it('maps open and closed Issue list responses independently', async () => {
-  const calls = [];
+  const calls: string[][] = [];
 
   const tracker = trackerFor(async (argv) => {
     calls.push(argv);
 
-    return success(JSON.stringify([issue(argv[6].toUpperCase())]));
+    return success(JSON.stringify([issue(String(argv[6]).toUpperCase())]));
   });
 
   expect(await tracker.listIssues()).toEqual([

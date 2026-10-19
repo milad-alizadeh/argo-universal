@@ -1,0 +1,16 @@
+{
+  "name": "@argo/hello",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "argo-plugin test .",
+    "validate": "argo-plugin validate ."
+  },
+  "devDependencies": {
+    "@argo/plugin-kit": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

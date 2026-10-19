@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PluginManifest } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
@@ -22,7 +22,7 @@ it.each([
     const result = await run('validate', directory);
     expect(result).toMatchObject({
       code: 1,
-      output: expect.stringContaining('index.js:3:'),
+      output: expect.stringContaining('index.tsx:3:'),
     });
     expect(result.output).toContain(reason);
   },
@@ -81,7 +81,7 @@ it.each([
   async (assertion, code, output) => {
     const directory = await fixture('export function register() {}');
     await writeFile(
-      join(directory, 'hello.test.js'),
+      join(directory, 'hello.test.ts'),
       `
     import assert from 'node:assert/strict';
     import { test } from '@argo/plugin-kit/testing';
@@ -106,6 +106,8 @@ it.each([
   'validate accepts %s with %s',
   async (source) => {
     const directory = await fixture(source);
+    // Without the example's `"type": "module"` package, Node reads the entry as CommonJS.
+    await rm(join(directory, 'package.json'));
     expect(await run('validate', directory)).toMatchObject({ code: 0 });
   },
   30_000,

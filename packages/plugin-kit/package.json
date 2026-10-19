@@ -10,7 +10,8 @@
     "./jsx-runtime": {
       "types": "./src/jsx-runtime.d.ts"
     },
-    "./testing": "./testing/index.ts"
+    "./testing": "./testing/index.ts",
+    "./tsconfig.json": "./tsconfig.plugin.json"
   },
   "dependencies": {
     "@repo/contracts": "workspace:*",

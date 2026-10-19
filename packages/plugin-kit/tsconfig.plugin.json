@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // A Plugin's own type check extends this as "@argo/plugin-kit/tsconfig.json". Argo bundles Plugins, so nothing is emitted.
+  "compilerOptions": {
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@argo/plugin-kit",
+    "lib": ["es2025"],
+    "module": "esnext",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2025",
+    "types": [],
+    "verbatimModuleSyntax": true
+  }
+}

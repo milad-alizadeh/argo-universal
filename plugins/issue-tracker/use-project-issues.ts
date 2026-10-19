@@ -1,5 +1,9 @@
 import { useEffect } from '@argo/plugin-kit';
-import { loadProjectIssues } from './issue-data.js';
+import {
+  loadProjectIssues,
+  type ProjectIssuesInput,
+  type ProjectView,
+} from './issue-data';
 
 const millisecondsPerSecond = 1000;
 
@@ -10,8 +14,22 @@ const refreshDelayMinutes = 5;
 const refreshInterval =
   refreshDelayMinutes * secondsPerMinute * millisecondsPerSecond;
 
+type ViewSetters = Omit<ProjectView, 'active'>;
+
+export type ProjectIssuesHookInput = Pick<
+  ProjectIssuesInput,
+  'projects' | 'storage' | 'trackers'
+> &
+  ViewSetters & { projectId: string | null };
+
+type RefreshInput = ProjectIssuesHookInput & { projectId: string };
+
+type StoppableView = ProjectView & { stop: () => void };
+
+type Refresh = () => Promise<void>;
+
 // oxlint-disable-next-line max-lines-per-function -- Keep the effect dependencies literal for exhaustive-deps.
-export function useProjectIssues(input) {
+export function useProjectIssues(input: ProjectIssuesHookInput): void {
   const {
     projectId,
     projects,
@@ -45,23 +63,27 @@ export function useProjectIssues(input) {
   );
 }
 
-function startProjectRefresh(input) {
+function startProjectRefresh(
+  input: ProjectIssuesHookInput,
+): (() => void) | undefined {
   resetProject(input);
 
-  if (input.projectId === null) return;
+  const { projectId } = input;
+
+  if (projectId === null) return;
 
   const view = createProjectView(input);
-  const refresh = createRefresh(input, view);
+  const refresh = createRefresh({ ...input, projectId }, view);
 
   return scheduleRefresh(refresh, view);
 }
 
-function resetProject({ setIssues, setTrackerId }) {
+function resetProject({ setIssues, setTrackerId }: ViewSetters): void {
   setIssues([]);
   setTrackerId(null);
 }
 
-function createProjectView({ setIssues, setMessage, setTrackerId }) {
+function createProjectView(setters: ViewSetters): StoppableView {
   let active = true;
 
   return {
@@ -69,13 +91,13 @@ function createProjectView({ setIssues, setMessage, setTrackerId }) {
     stop: () => {
       active = false;
     },
-    setIssues,
-    setMessage,
-    setTrackerId,
+    setIssues: setters.setIssues,
+    setMessage: setters.setMessage,
+    setTrackerId: setters.setTrackerId,
   };
 }
 
-function createRefresh(input, view) {
+function createRefresh(input: RefreshInput, view: ProjectView): Refresh {
   let refreshing = false;
 
   return async function refresh() {
@@ -91,8 +113,8 @@ function createRefresh(input, view) {
   };
 }
 
-function scheduleRefresh(refresh, view) {
-  let timer;
+function scheduleRefresh(refresh: Refresh, view: StoppableView): () => void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
 
   void refresh().finally(() => {
     if (view.active()) timer = setTimeout(refreshLater, refreshInterval);
@@ -104,7 +126,7 @@ function scheduleRefresh(refresh, view) {
     if (timer !== undefined) clearTimeout(timer);
   };
 
-  function refreshLater() {
+  function refreshLater(): void {
     void refresh().finally(() => {
       if (view.active()) timer = setTimeout(refreshLater, refreshInterval);
     });

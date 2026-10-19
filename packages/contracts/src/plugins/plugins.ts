@@ -55,10 +55,11 @@ export const PluginManifest = z.strictObject({
   name: z.string().trim().min(1),
   version: z.string().min(1),
   engines: z.strictObject({ argo: z.string().trim().min(1) }),
+  // A TypeScript entry is bundled by esbuild as a dev Plugin's is (ADR-0025).
   main: z
     .string()
     .regex(
-      /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.(?:js|mjs|cjs)$/,
+      /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.(?:js|mjs|cjs|ts|tsx)$/,
     ),
   icon: PluginIcon,
   contributes: z.strictObject({

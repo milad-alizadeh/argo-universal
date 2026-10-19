@@ -7,6 +7,7 @@ import {
   Surface,
   Text,
 } from '@argo/plugin-kit';
+import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 
 const headingRole = 'heading';
 
@@ -19,7 +20,7 @@ const metrics = [
   { title: 'Reopened', value: '1' },
 ];
 
-export function HelloDashboard() {
+export function HelloDashboard(): JSX.Element {
   return (
     <ScrollView>
       <Surface kind="background" padding={4}>
@@ -32,7 +33,7 @@ export function HelloDashboard() {
   );
 }
 
-function DashboardMetrics() {
+function DashboardMetrics(): JSX.Element {
   return (
     <Grid columns={{ compact: 2, medium: 2, wide: 3 }} gap={3}>
       {metrics.map(({ title, value }) => (
@@ -44,7 +45,7 @@ function DashboardMetrics() {
   );
 }
 
-function DashboardHeading() {
+function DashboardHeading(): JSX.Element {
   return (
     <Stack direction="row" align="center">
       <Text role={headingRole}>Issues</Text>

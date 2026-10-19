@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
-import { test } from '@argo/plugin-kit/testing';
+import {
+  test,
+  type PluginTest,
+  type PluginTestView,
+} from '@argo/plugin-kit/testing';
 
 test('pressing Tap me updates the hello page', async ({ mount }) => {
   const page = await mount({ page: '/', surface: { platform: 'web' } });
@@ -33,16 +37,32 @@ test('the dashboard shows the week of Issues', async ({ mount }) => {
 });
 
 // The Form's key is its fields' parent key.
-const formKey = (fieldKey) => fieldKey.slice(0, fieldKey.lastIndexOf('/'));
+const formKey = (fieldKey: string): string =>
+  fieldKey.slice(0, fieldKey.lastIndexOf('/'));
 
 // Each edit re-renders the page, so the next one waits for the field to show it.
-const editor = (page, clock) => async (label, event, value) => {
-  await page.dispatch({ key: page.findText(label).key, event, payload: value });
-  const shown = () => page.findText(label).node.props.value;
+const keyOf = (page: PluginTestView, label: string): string => {
+  const entry = page.findText(label);
 
-  while (JSON.stringify(shown()) !== JSON.stringify(value))
-    await clock.advance(0);
+  if (!entry) throw new Error(`Plugin node not found: ${label}`);
+
+  return entry.key;
 };
+
+const editor =
+  (page: PluginTestView, clock: PluginTest['clock']) =>
+  async (
+    label: string,
+    event: string,
+    value: string | string[],
+  ): Promise<void> => {
+    await page.dispatch({ key: keyOf(page, label), event, payload: value });
+
+    const shown = (): string =>
+      JSON.stringify(page.findText(label)?.node.props.value);
+
+    while (shown() !== JSON.stringify(value)) await clock.advance(0);
+  };
 
 test('the form submits the drafted Issue', async ({ mount, clock }) => {
   const page = await mount({ page: '/form', surface: { platform: 'web' } });
@@ -53,7 +73,7 @@ test('the form submits the drafted Issue', async ({ mount, clock }) => {
   await edit('Title', 'onChangeText', 'Crash');
   await edit('Labels', 'onValueChange', ['bug']);
   await edit('Due', 'onValueChange', '2026-10-30');
-  const form = formKey(page.findText('Title').key);
+  const form = formKey(keyOf(page, 'Title'));
   await page.dispatch({ key: form, event: 'onSubmit' });
   assert.equal((await page.find('Created Crash')).type, 'Text');
 });
@@ -77,7 +97,7 @@ const listDetailParts = {
   Action: 3,
 };
 
-const mountBuild = (mount) =>
+const mountBuild = (mount: PluginTest['mount']): Promise<PluginTestView> =>
   mount({
     page: '/builds/web',
     surface: { platform: 'web', parts: listDetailParts },

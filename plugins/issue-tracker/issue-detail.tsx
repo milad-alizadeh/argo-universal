@@ -1,8 +1,12 @@
 import { Button, Stack, Text } from '@argo/plugin-kit';
+import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import type { Issue, PageProps } from './issue-types';
 
 const headingRole = 'heading';
 
-export function IssueDetail(props) {
+type IssueDetailProps = PageProps & { issue: Issue };
+
+export function IssueDetail(props: IssueDetailProps): JSX.Element {
   const { issue } = props;
 
   return (
@@ -19,7 +23,7 @@ export function IssueDetail(props) {
   );
 }
 
-function IssueMetadata({ issue }) {
+function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
   return (
     <>
       <IssueDescription body={issue.body} />
@@ -29,12 +33,16 @@ function IssueMetadata({ issue }) {
   );
 }
 
-const IssueDescription = ({ body }) => <Text>{body || 'No description.'}</Text>;
+const IssueDescription = ({ body }: { body: string }): JSX.Element => (
+  <Text>{body || 'No description.'}</Text>
+);
 
-const IssueLabels = ({ labels }) => (
+const IssueLabels = ({ labels }: { labels: string[] }): JSX.Element => (
   <Text>Labels: {labels.join(', ') || 'None'}</Text>
 );
 
-const IssueAssignees = ({ assignees }) => (
-  <Text>Assignees: {assignees.join(', ') || 'None'}</Text>
-);
+const IssueAssignees = ({
+  assignees,
+}: {
+  assignees: string[];
+}): JSX.Element => <Text>Assignees: {assignees.join(', ') || 'None'}</Text>;
