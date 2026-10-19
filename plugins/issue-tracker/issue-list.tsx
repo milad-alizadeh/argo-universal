@@ -1,16 +1,16 @@
 import { Button, Stack, Text } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { githubRepositoryFromOrigin } from './github-repository';
-import { githubError } from './github-tracker';
+import type { Issue } from './github-issues';
+import { githubError, githubRepositoryFromOrigin } from './github-tracker';
 import { loadIssue } from './issue-data';
 import { IssueDetail } from './issue-detail';
-import type { Issue, PageProps, IssueSelection } from './issue-types';
+import type { IssueSelection, PageProps } from './use-issues';
 
 const headingRole = 'heading';
 
 type GroupProps = PageProps & { title: string };
 
-type IssueProps = GroupProps & { issue: Issue };
+type IssueProps = Omit<GroupProps, 'issues'> & { issue: Issue };
 
 export function IssueList(props: PageProps): JSX.Element {
   return (
@@ -44,24 +44,30 @@ function ProjectChoices(props: PageProps): JSX.Element {
   );
 }
 
-function ProjectSummary({ project, message }: PageProps): JSX.Element {
+function ProjectSummary({
+  projects,
+  projectId,
+  message,
+}: PageProps): JSX.Element {
   return (
     <>
-      <ProjectRepository project={project} />
+      <ProjectRepository projects={projects} projectId={projectId} />
       <StatusMessage message={message} />
     </>
   );
 }
 
-function ProjectRepository(
-  props: Pick<PageProps, 'project'>,
-): JSX.Element | null {
-  if (!props.project) return null;
+function ProjectRepository({
+  projects,
+  projectId,
+}: Pick<PageProps, 'projects' | 'projectId'>): JSX.Element | null {
+  const project = projects.find((row) => row.id === projectId);
+
+  if (!project) return null;
 
   return (
     <Text>
-      {githubRepositoryFromOrigin(props.project.originUrl) ??
-        'No GitHub remote'}
+      {githubRepositoryFromOrigin(project.originUrl) ?? 'No GitHub remote'}
     </Text>
   );
 }
@@ -72,8 +78,8 @@ const StatusMessage = ({ message }: { message: string }): JSX.Element | '' =>
 function IssueGroups(props: PageProps): JSX.Element {
   return (
     <>
-      <IssueGroup {...props} title="Open" />
-      <IssueGroup {...props} title="Closed" />
+      <IssueGroup title="Open" {...props} />
+      <IssueGroup title="Closed" {...props} />
     </>
   );
 }
@@ -86,7 +92,7 @@ function IssueGroup({ title, issues, ...props }: GroupProps): JSX.Element {
   return (
     <Stack direction="column" gap={2}>
       <Text role={headingRole}>{title}</Text>
-      <IssueRows {...props} issues={visible} title={title} />
+      <IssueRows issues={visible} title={title} {...props} />
     </Stack>
   );
 }
@@ -100,9 +106,9 @@ function IssueRows(props: GroupProps): JSX.Element {
   );
 }
 
-function IssueButtons(props: GroupProps): JSX.Element[] {
-  return props.issues.map((issue) => (
-    <IssueButton key={issue.number} {...props} issue={issue} />
+function IssueButtons({ issues, ...props }: GroupProps): JSX.Element[] {
+  return issues.map((issue) => (
+    <IssueButton key={issue.number} issue={issue} {...props} />
   ));
 }
 
@@ -132,15 +138,17 @@ async function fetchIssue(props: IssueProps): Promise<void> {
 
 async function selectedIssue({
   issue,
-  project,
+  projects,
+  projectId,
   storage,
   trackers,
 }: IssueProps): Promise<IssueSelection> {
-  if (!project) throw new Error('Choose a Project.');
+  const project = projects.find((row) => row.id === projectId);
 
   return {
     type: 'issue',
-    issue: await loadIssue({ project, issue, storage, trackers }),
+    // oxlint-disable-next-line typescript/no-non-null-assertion -- As in JavaScript, a missing Project fails on reading its id.
+    issue: await loadIssue({ project: project!, issue, storage, trackers }),
   };
 }
 

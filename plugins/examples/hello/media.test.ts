@@ -22,13 +22,15 @@ test('the media page plays a clip and a sound', async ({ mount }) => {
   const chime = await page.find('Hello chime');
 
   assert.equal(clip.type, 'Video');
-  assert.deepEqual(Object.keys(clip.props.source).sort(), [
+  assert.deepEqual(Object.keys(clip.props.source ?? {}).sort(), [
     'format',
     'hash',
     'pluginId',
   ]);
-  assert.equal(clip.props.source.format, 'mp4');
-  assert.equal(clip.props.poster.format, 'jpeg');
+  assert.partialDeepStrictEqual(clip.props, {
+    source: { format: 'mp4' },
+    poster: { format: 'jpeg' },
+  });
   assert.equal(chime.type, 'Audio');
-  assert.equal(chime.props.source.format, 'mp3');
+  assert.partialDeepStrictEqual(chime.props, { source: { format: 'mp3' } });
 });

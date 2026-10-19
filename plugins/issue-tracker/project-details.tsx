@@ -1,6 +1,7 @@
 import { Button, Stack, Label, Text } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { PublicTracker, TrackerStorage } from './issue-types';
+import type { PublicTracker } from './tracker-registry';
+import type { TrackerStorage } from './tracker-storage';
 import { useProjectTracker, type TrackerChoice } from './use-project-tracker';
 
 const headingRole = 'heading';
@@ -72,7 +73,7 @@ function NoneButton({ selection, choose }: ChoiceProps): JSX.Element {
     <Button
       label="None"
       variant={selection === null ? 'default' : 'outline'}
-      disabled={selection === 'loading'}
+      disabled={selection === undefined}
       onPress={() => choose(null)}
     />
   );
@@ -88,7 +89,7 @@ function TrackerButton(props: TrackerButtonProps): JSX.Element {
       <Button
         label={`${selected ? 'Selected' : 'Select'} ${tracker.name}`}
         variant={selected ? 'default' : 'outline'}
-        disabled={selection === 'loading'}
+        disabled={selection === undefined}
         onPress={() => choose(tracker.id)}
       />
     </Stack>

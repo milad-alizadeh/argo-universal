@@ -1,11 +1,14 @@
 import { useEffect, useState } from '@argo/plugin-kit';
-import type { Setter, TrackerStorage } from './issue-types';
+import type { TrackerStorage } from './tracker-storage';
 
-// `loading` until the stored choice arrives; `null` is no Tracker.
+type Setter<Value> = (value: Value) => void;
+
+// A Tracker's id, or `null` for none.
 type Selection = string | null;
 
+// `selection` is `undefined` until the stored choice arrives.
 export type TrackerChoice = {
-  selection: Selection;
+  selection: Selection | undefined;
   message: string;
   choose: (id: string | null) => Promise<void>;
 };
@@ -13,13 +16,13 @@ export type TrackerChoice = {
 type TrackerSource = { storage: TrackerStorage; projectId: string };
 
 type TrackerState = TrackerSource & {
-  setSelection: Setter<Selection>;
+  setSelection: Setter<Selection | undefined>;
   setMessage: Setter<string>;
 };
 
 export function useProjectTracker(source: TrackerSource): TrackerChoice {
   const { storage, projectId } = source;
-  const [selection, setSelection] = useState<Selection>('loading');
+  const [selection, setSelection] = useState<Selection>();
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -38,7 +41,7 @@ function readProjectTracker(state: TrackerState): () => void {
   const { storage, projectId, setSelection, setMessage } = state;
   let active = true;
 
-  setSelection('loading');
+  setSelection(undefined);
   setMessage('');
   void storage.selectedTracker(projectId).then(
     (id) => setTrackerSelection(id, active, setSelection),

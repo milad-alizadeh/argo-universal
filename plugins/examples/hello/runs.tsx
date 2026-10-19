@@ -5,9 +5,27 @@ import {
   Pill,
   Table,
   useState,
+  type PluginProps,
 } from '@argo/plugin-kit';
+import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 
-const columns = [
+type TableProps = PluginProps['Table'];
+
+type Sort = NonNullable<TableProps['sort']>;
+
+type Run = {
+  id: string;
+  workflow: string;
+  branch: string;
+  status: string;
+  tone: PluginProps['Pill']['tone'];
+  started: string;
+  order: number;
+};
+
+type Rerun = (run: Run) => void;
+
+const columns: TableProps['columns'] = [
   { id: 'workflow', title: 'Workflow' },
   { id: 'branch', title: 'Branch', width: 'lg' },
   { id: 'status', title: 'Status', width: 'md' },
@@ -20,7 +38,7 @@ const columns = [
   },
 ];
 
-const runs = [
+const runs: Run[] = [
   {
     id: 'typecheck',
     workflow: 'Typecheck',
@@ -59,22 +77,22 @@ const runs = [
   },
 ];
 
-const firstSort = { column: 'started', direction: 'ascending' };
+const firstSort: Sort = { column: 'started', direction: 'ascending' };
 
 // Argo reports the column and direction; the Plugin sorts its own rows.
-const sorted = (sort) => {
+const sorted = (sort: Sort): Run[] => {
   const order = sort.direction === 'ascending' ? 1 : -1;
 
   return runs.toSorted((a, b) => order * (a.order - b.order));
 };
 
-const rerunAction = (run, onRerun) => (
+const rerunAction = (run: Run, onRerun: Rerun): JSX.Element => (
   <ActionList>
     <Action label="Re-run" icon="retry" onPress={() => onRerun(run)} />
   </ActionList>
 );
 
-function RunRow({ run, onRerun }) {
+function RunRow({ run, onRerun }: { run: Run; onRerun: Rerun }): JSX.Element {
   return (
     <Table.Row id={run.id} actions={rerunAction(run, onRerun)}>
       <Table.Cell column="workflow" text={run.workflow} />
@@ -87,17 +105,23 @@ function RunRow({ run, onRerun }) {
   );
 }
 
-const renderRun = (onRerun) => (run) => (
-  <RunRow key={run.id} run={run} onRerun={onRerun} />
-);
+const renderRun =
+  (onRerun: Rerun) =>
+  (run: Run): JSX.Element => (
+    <RunRow key={run.id} run={run} onRerun={onRerun} />
+  );
 
-const rerunTitle = (setTitle) => (ran) => setTitle(`Re-ran ${ran.workflow}`);
+const rerunTitle =
+  (setTitle: (title: string) => void): Rerun =>
+  (ran) =>
+    setTitle(`Re-ran ${ran.workflow}`);
 
-function RunsTable({ onRerun }) {
+function RunsTable({ onRerun }: { onRerun: Rerun }): JSX.Element {
   const [sort, setSort] = useState(firstSort);
 
+  // `onSortChange` is typed from every Table prop, so the row type is named rather than inferred from `items`.
   return (
-    <Table
+    <Table<Run>
       accessibilityLabel="CI runs"
       columns={columns}
       sort={sort}
@@ -109,7 +133,7 @@ function RunsTable({ onRerun }) {
 }
 
 // A table of CI runs: columns on wide screens, a list on phones.
-export function HelloRunsPage() {
+export function HelloRunsPage(): JSX.Element {
   const [title, setTitle] = useState('Runs');
 
   return (

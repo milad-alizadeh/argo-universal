@@ -15,12 +15,12 @@ import { HelloDashboard } from './dashboard';
 import { HelloForm } from './form';
 import { registerBuilds } from './list-detail';
 import { HelloListPage } from './lists';
-import { helloMedia } from './media.js';
-import { HelloRunsPage } from './runs.js';
+import { helloMedia } from './media';
+import { HelloRunsPage } from './runs';
 
 const headingRole = 'heading';
 
-let settings: Argo['settings'] | undefined;
+let settings: Argo['settings'];
 
 function Buttons({ onTap }: { onTap: () => void }): JSX.Element {
   return (
@@ -42,9 +42,10 @@ function useGreeting(): string {
   const [greeting, setGreeting] = useState('Hello from a Plugin');
 
   useEffect(() => {
-    void settings?.get('greeting').then((value) => {
-      if (typeof value === 'string' && value) setGreeting(value);
-    });
+    // A setting is text or a switch; the greeting is text.
+    void settings
+      .get('greeting')
+      .then((value) => value && setGreeting(String(value)));
   }, []);
 
   return greeting;

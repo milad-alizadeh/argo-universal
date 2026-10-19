@@ -1,18 +1,17 @@
-import { githubError } from './github-tracker';
-import type {
-  Issue,
-  Project,
-  TrackerClient,
-  TrackerRegistry,
-  TrackerStorage,
-} from './issue-types';
+import type { Argo } from '@argo/plugin-kit';
+import type { Issue } from './github-issues';
+import { githubError, type TrackerClient } from './github-tracker';
+import type { TrackerRegistry } from './tracker-registry';
+import type { TrackerStorage } from './tracker-storage';
+
+export type Project = Awaited<ReturnType<Argo['projects']['list']>>[number];
 
 // What a Project's Issue list shows, while the view that asked for it is still open.
 export type ProjectView = {
   active: () => boolean;
   setIssues: (issues: Issue[]) => void;
   setMessage: (message: string) => void;
-  setTracker: (id: string | null) => void;
+  setTrackerId: (id: string | null) => void;
 };
 
 export type ProjectIssuesInput = {
@@ -59,7 +58,7 @@ async function projectClient(
 
   if (!input.view.active()) return null;
 
-  input.view.setTracker(trackerId);
+  input.view.setTrackerId(trackerId);
 
   const client = clientFor({
     projects: input.projects,

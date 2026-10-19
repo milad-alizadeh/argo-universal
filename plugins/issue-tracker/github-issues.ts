@@ -1,6 +1,14 @@
-import type { Issue } from './issue-types';
+// What gh prints, checked and mapped to the Issues the Tracker shows.
+export type Issue = {
+  number: number;
+  title: string;
+  status: string;
+  body: string;
+  url: string;
+  labels: string[];
+  assignees: string[];
+};
 
-// What gh prints, before each Issue is checked.
 type GitHubName = { name?: string; login?: string };
 
 export type GitHubIssue = {
@@ -18,7 +26,7 @@ export type GitHubJson = GitHubIssue | GitHubIssue[] | null;
 type CheckedIssue = GitHubIssue & {
   number: number;
   title: string;
-  state: 'OPEN' | 'CLOSED';
+  state: string;
   url: string;
 };
 
@@ -39,7 +47,7 @@ export function mapIssue(issue: GitHubJson): Issue {
     status: issue.state.toLowerCase(),
     body: typeof issue.body === 'string' ? issue.body : '',
     url: issue.url,
-    labels: names(issue.labels, 'name'),
+    labels: names(issue.labels),
     assignees: names(issue.assignees, 'login'),
   };
 }
@@ -64,7 +72,7 @@ function validIssue(issue: GitHubJson): issue is CheckedIssue {
 
 function names(
   values: GitHubName[] | undefined,
-  key: keyof GitHubName,
+  key: keyof GitHubName = 'name',
 ): string[] {
   if (!Array.isArray(values)) return [];
 

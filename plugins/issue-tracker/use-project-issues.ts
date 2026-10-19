@@ -31,13 +31,13 @@ type Refresh = () => Promise<void>;
 
 export function useProjectIssues(input: ProjectIssuesHookInput): void {
   const { projectId, projects, storage, trackers } = input;
-  const { setIssues, setMessage, setTracker } = input;
+  const { setIssues, setMessage, setTrackerId: setTracker } = input;
 
   useEffect(
     () =>
       startProjectRefresh(
         { projectId, projects, storage, trackers },
-        { setIssues, setMessage, setTracker },
+        { setIssues, setMessage, setTrackerId: setTracker },
       ),
     [projectId, projects, storage, trackers, setIssues, setMessage, setTracker],
   );
@@ -59,9 +59,9 @@ function startProjectRefresh(
   return scheduleRefresh(refresh, view);
 }
 
-function resetProject({ setIssues, setTracker }: ViewSetters): void {
+function resetProject({ setIssues, setTrackerId }: ViewSetters): void {
   setIssues([]);
-  setTracker(null);
+  setTrackerId(null);
 }
 
 function createProjectView(setters: ViewSetters): StoppableView {
@@ -74,7 +74,7 @@ function createProjectView(setters: ViewSetters): StoppableView {
     },
     setIssues: setters.setIssues,
     setMessage: setters.setMessage,
-    setTracker: setters.setTracker,
+    setTrackerId: setters.setTrackerId,
   };
 }
 

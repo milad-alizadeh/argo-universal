@@ -1,15 +1,34 @@
 import { useEffect, useState, type Argo } from '@argo/plugin-kit';
-import type {
-  Issue,
-  IssueEvent,
-  IssuePage,
-  IssueSelection,
-  Project,
-  Setter,
-  TrackerRegistry,
-  TrackerStorage,
-} from './issue-types';
+import type { Issue } from './github-issues';
+import type { Project } from './issue-data';
+import type { TrackerRegistry } from './tracker-registry';
+import type { TrackerStorage } from './tracker-storage';
 import { useProjectIssues } from './use-project-issues';
+
+type Setter<Value> = (value: Value) => void;
+
+export type IssueSelection = { type: 'issue'; issue: Issue };
+
+// A tap on the Issues page: a Project to show, or an Issue to open.
+type IssueEvent = IssueSelection | { type: 'project'; id: string };
+
+export type IssuePage = {
+  projects: Project[];
+  projectId: string | null;
+  project: Project | undefined;
+  trackerId: string | null;
+  issues: Issue[];
+  message: string;
+  selected: IssueSelection | null;
+  storage: TrackerStorage;
+  trackers: TrackerRegistry;
+  setMessage: Setter<string>;
+  onIssue: (event: IssueEvent) => void;
+  onBack: () => void;
+};
+
+// The Issue list and an open Issue draw the page apart from its selection.
+export type PageProps = Omit<IssuePage, 'selected'>;
 
 type State<Value> = [Value, Setter<Value>];
 
@@ -52,7 +71,7 @@ function useIssueData(
     projects: state.projects[0],
     setIssues: state.issues[1],
     setMessage: state.message[1],
-    setTracker: state.trackerId[1],
+    setTrackerId: state.trackerId[1],
   });
 }
 

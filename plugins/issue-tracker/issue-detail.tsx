@@ -1,6 +1,7 @@
 import { Button, Stack, Text } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Issue, PageProps } from './issue-types';
+import type { Issue } from './github-issues';
+import type { PageProps } from './use-issues';
 
 const headingRole = 'heading';
 

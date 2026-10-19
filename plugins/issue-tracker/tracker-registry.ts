@@ -1,13 +1,26 @@
-import type { Argo } from '@argo/plugin-kit';
-import { githubRepositoryFromOrigin } from './github-repository';
-import { createGitHubTracker } from './github-tracker';
-import type {
-  PublicTracker,
-  TrackerRegistry,
-  TrackerType,
-} from './issue-types';
+import type { Argo, PluginProps } from '@argo/plugin-kit';
+import {
+  createGitHubTracker,
+  githubRepositoryFromOrigin,
+  type TrackerClient,
+} from './github-tracker';
 
 const githubId = 'github';
+
+type TrackerType = {
+  id: string;
+  name: string;
+  icon: NonNullable<PluginProps['Label']['icon']>;
+  openClient: (originUrl: string | null | undefined) => TrackerClient | null;
+};
+
+export type PublicTracker = Pick<TrackerType, 'id' | 'name' | 'icon'>;
+
+export type TrackerRegistry = {
+  list: () => PublicTracker[];
+  get: (id: string) => TrackerType | null;
+  has: (id: string) => boolean;
+};
 
 export function createTrackerRegistry(argo: Argo): TrackerRegistry {
   const trackers = new Map([[githubId, createGitHubType(argo)]]);

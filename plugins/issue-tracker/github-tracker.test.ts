@@ -1,9 +1,12 @@
 import type { Argo, ProcessResult } from '@argo/plugin-kit';
 import { expect, it } from 'vitest';
-import type { GitHubIssue } from './github-issues';
-import { githubRepositoryFromOrigin } from './github-repository';
-import { createGitHubTracker, githubError } from './github-tracker';
-import type { Issue, TrackerClient } from './issue-types';
+import type { GitHubIssue, Issue } from './github-issues';
+import {
+  createGitHubTracker,
+  githubError,
+  githubRepositoryFromOrigin,
+  type TrackerClient,
+} from './github-tracker';
 
 type Run = Argo['process']['run'];
 

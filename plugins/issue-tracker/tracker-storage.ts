@@ -1,5 +1,13 @@
-import type { Argo, StorageQuery, StorageResult } from '@argo/plugin-kit';
-import type { Issue, TrackerStorage } from './issue-types';
+import type { Argo, StorageResult } from '@argo/plugin-kit';
+import type { Issue } from './github-issues';
+
+export type TrackerStorage = {
+  selectedTracker: (projectId: string) => Promise<string | null>;
+  chooseTracker: (projectId: string, id: string | null) => Promise<void>;
+  readCache: (projectId: string) => Promise<Issue[] | null>;
+  writeCache: (projectId: string, issues: Issue[]) => Promise<void>;
+  updateCache: (projectId: string, issue: Issue) => Promise<void>;
+};
 
 type Store = {
   argo: Argo;
@@ -31,7 +39,7 @@ function createTables(argo: Argo): Store['ensureTables'] {
   let tables: Promise<StorageResult[]> | undefined;
 
   const run = (sql: string): Promise<StorageResult> =>
-    query(argo, { sql, params: [], method: 'run' });
+    argo.storage.execute({ sql, params: [], method: 'run' });
 
   return () => {
     tables ??= Promise.all(tableStatements.map((sql) => run(sql)));
@@ -46,26 +54,31 @@ async function selectedTracker(
 ): Promise<string | null> {
   await store.ensureTables();
 
-  const result = await query(store.argo, {
+  const result = await store.argo.storage.execute({
     sql: 'SELECT tracker_id FROM tracker_preferences WHERE project_id = ?',
     params: [projectId],
     method: 'get',
   });
 
-  return validSelection(store, storedText(result), projectId);
+  return validSelection(store, result, projectId);
 }
 
+// A `get` answers its row's one column.
 async function validSelection(
   store: Store,
-  stored: string | null,
+  { rows: [stored = null] }: StorageResult,
   projectId: string,
 ): Promise<string | null> {
-  if (stored === null || store.trackerExists(stored)) return stored;
+  if (kept(store, stored)) return stored;
 
   await removeSelection(store.argo, projectId);
 
   return null;
 }
+
+const kept = (store: Store, stored: unknown): stored is string | null =>
+  stored === null ||
+  (typeof stored === 'string' && store.trackerExists(stored));
 
 async function chooseTracker(
   store: Store,
@@ -86,7 +99,7 @@ async function persistSelection(
   projectId: string,
   id: string,
 ): Promise<void> {
-  await query(argo, {
+  await argo.storage.execute({
     sql: 'INSERT INTO tracker_preferences (project_id, tracker_id) VALUES (?, ?) ON CONFLICT(project_id) DO UPDATE SET tracker_id = excluded.tracker_id',
     params: [projectId, id],
     method: 'run',
@@ -99,13 +112,13 @@ async function readCache(
 ): Promise<Issue[] | null> {
   await store.ensureTables();
 
-  const result = await query(store.argo, {
+  const result = await store.argo.storage.execute({
     sql: 'SELECT issues FROM issue_cache WHERE project_id = ?',
     params: [projectId],
     method: 'get',
   });
 
-  return decodeIssues(storedText(result));
+  return decodeIssues(result);
 }
 
 async function writeCache(
@@ -115,7 +128,7 @@ async function writeCache(
 ): Promise<void> {
   await store.ensureTables();
 
-  await query(store.argo, {
+  await store.argo.storage.execute({
     sql: 'INSERT INTO issue_cache (project_id, issues) VALUES (?, ?) ON CONFLICT(project_id) DO UPDATE SET issues = excluded.issues',
     params: [projectId, JSON.stringify(issues)],
     method: 'run',
@@ -137,27 +150,15 @@ async function updateCache(
 }
 
 async function removeSelection(argo: Argo, projectId: string): Promise<void> {
-  await query(argo, {
+  await argo.storage.execute({
     sql: 'DELETE FROM tracker_preferences WHERE project_id = ?',
     params: [projectId],
     method: 'run',
   });
 }
 
-const query = (argo: Argo, sql: StorageQuery): Promise<StorageResult> =>
-  argo.storage.execute(sql);
-
-// A `get` answers its one column's value, which SQLite stores as text.
-function storedText(result: StorageResult): string | null {
-  const [row] = result.rows;
-
-  return isText(row) ? row : null;
-}
-
-const isText = (row: unknown): row is string => typeof row === 'string';
-
-function decodeIssues(serialized: string | null): Issue[] | null {
-  if (serialized === null) return null;
+function decodeIssues({ rows: [serialized] }: StorageResult): Issue[] | null {
+  if (typeof serialized !== 'string') return null;
 
   try {
     return JSON.parse(serialized);

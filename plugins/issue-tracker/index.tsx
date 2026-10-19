@@ -1,11 +1,10 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { IssueDetail, IssueList } from './issue-list';
-import type { IssuePage } from './issue-types';
 import { ProjectDetails, type ProjectDetailsProps } from './project-details';
 import { createTrackerRegistry } from './tracker-registry';
 import { createTrackerStorage } from './tracker-storage';
-import { useIssuePage } from './use-issues';
+import { useIssuePage, type IssuePage } from './use-issues';
 
 type SlotProps = Pick<ProjectDetailsProps, 'context'>;
 
@@ -16,12 +15,12 @@ function IssuePageView({ selected, ...page }: IssuePage): JSX.Element {
   return <IssueList {...page} />;
 }
 
-export function register(argo: Argo): void {
-  const trackers = createTrackerRegistry(argo);
-  const storage = createTrackerStorage(argo, trackers.has);
+export function register(api: Argo): void {
+  const trackers = createTrackerRegistry(api);
+  const storage = createTrackerStorage(api, trackers.has);
 
   function IssuesPage(): JSX.Element {
-    const page = useIssuePage(argo, storage, trackers);
+    const page = useIssuePage(api, storage, trackers);
 
     return <IssuePageView {...page} />;
   }
@@ -32,6 +31,6 @@ export function register(argo: Argo): void {
     );
   }
 
-  argo.pages.register('/', IssuesPage);
-  argo.slots.register('argo/project/details/v1', ProjectDetailsSlot);
+  api.pages.register('/', IssuesPage);
+  api.slots.register('argo/project/details/v1', ProjectDetailsSlot);
 }

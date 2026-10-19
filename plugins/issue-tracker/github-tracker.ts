@@ -1,6 +1,10 @@
 import type { Argo, ProcessResult } from '@argo/plugin-kit';
-import { mapIssue, parseJson, type GitHubJson } from './github-issues';
-import type { Issue, TrackerClient } from './issue-types';
+import {
+  mapIssue,
+  parseJson,
+  type GitHubJson,
+  type Issue,
+} from './github-issues';
 
 const listFields = 'number,title,state,labels,assignees,url';
 
@@ -14,7 +18,12 @@ const githubErrorMessages: [RegExp, string][] = [
   ],
 ];
 
-// The Tracker reaches GitHub only by running gh.
+export type TrackerClient = {
+  authStatus: () => Promise<string>;
+  listIssues: () => Promise<Issue[]>;
+  getIssue: (number: number) => Promise<Issue>;
+};
+
 type GitHub = { process: Pick<Argo['process'], 'run'> };
 
 export const githubError = (cause: unknown): string => {
@@ -126,4 +135,45 @@ function issueNumber(number: number): string {
     throw new Error('Issue number must be a positive integer.');
 
   return String(number);
+}
+
+export function githubRepositoryFromOrigin(
+  originUrl: string | null | undefined,
+): string | null {
+  if (typeof originUrl !== 'string') return null;
+
+  return githubRepositoryFromMatch(originUrl);
+}
+
+function githubRepositoryFromMatch(originUrl: string): string | null {
+  const match =
+    /^(?:git@github\.com:|https:\/\/github\.com\/|ssh:\/\/(?:git@)?github\.com\/)([^/?#]+)\/([^/?#]+?)(?:\.git)?\/?$/i.exec(
+      originUrl,
+    );
+
+  const [, owner, name] = match ?? [];
+
+  return validRepositoryParts(owner, name);
+}
+
+function validRepositoryParts(
+  owner: string | undefined,
+  name: string | undefined,
+): string | null {
+  if (hasInvalidRepositoryParts(owner, name)) return null;
+
+  return `${owner}/${name}`;
+}
+
+function hasInvalidRepositoryParts(
+  owner: string | undefined,
+  name: string | undefined,
+): boolean {
+  const validOwner = /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(
+    owner ?? '',
+  );
+
+  const validName = /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name ?? '');
+
+  return ![owner, name, validOwner, validName].every(Boolean);
 }
