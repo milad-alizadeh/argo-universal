@@ -47,6 +47,13 @@ it.each([
     expected: { type: 'core', input: traySlotFixture },
     fallbacks: 1,
   },
+  {
+    scenario: 'nested handler',
+    parts: currentPartVersions,
+    body: `return jsx(Text, { children: 'Go', data: { onPress: () => {} } })`,
+    expected: { type: 'core', input: traySlotFixture },
+    fallbacks: 1,
+  },
 ])(
   'handles a $scenario tree at one Replaceable Slot',
   async ({ scenario, parts, body, expected, fallbacks }) => {

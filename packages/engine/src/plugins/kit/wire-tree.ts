@@ -10,7 +10,7 @@ import { wireProps } from './wire-props';
 // A handler a Plugin passes as a prop; the wire carries it as an event id.
 export type PluginFn = (payload?: WireJson) => void | Promise<void>;
 
-export type Prop = WireJson | PluginFn | Prop[] | { [key: string]: Prop };
+export type Prop = WireJson | PluginFn;
 
 export type Props = Record<string, Prop>;
 

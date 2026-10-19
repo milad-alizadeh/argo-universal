@@ -6,6 +6,7 @@ import {
   type WireNode,
 } from '@repo/contracts/plugins/wire';
 import { findWireNode } from '@repo/contracts/plugins/wire-node-key';
+import type { z } from 'zod';
 
 const missingHandler = 'Plugin handler is no longer available';
 
@@ -17,8 +18,17 @@ export function requireViewHandler(
   const node = requireNode(root, input.key);
 
   if (!hasHandler(node, input.event)) throw new Error(missingHandler);
-  partEventPayload(wirePart(node.type)?.events[input.event], input.payload);
+  partEventPayload(eventSchema(node.type, input.event), input.payload);
 }
+
+function eventSchema(type: string, event: string): z.ZodType | undefined {
+  const events = partEvents(type);
+
+  return Object.hasOwn(events, event) ? events[event] : undefined;
+}
+
+const partEvents = (type: string): Record<string, z.ZodType> =>
+  wirePart(type)?.events ?? {};
 
 function requireNode(root: WireNode | null, key: string): WireNode {
   if (!root) throw new Error('Plugin view is no longer available');

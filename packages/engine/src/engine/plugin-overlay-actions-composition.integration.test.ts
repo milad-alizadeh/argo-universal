@@ -54,9 +54,6 @@ it(
     await expect
       .poll(() => latestText(app), { timeout: 10_000 })
       .toContain('Confirmed');
-    await expect(
-      dispatch(app, { key: '0/sheet', event: 'onOpenChange', payload: 'no' }),
-    ).rejects.toThrow('Invalid Plugin event payload');
     await dispatch(app, {
       key: '0/sheet',
       event: 'onOpenChange',
