@@ -11,6 +11,7 @@ import {
   type Argo,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { HelloCanvasPage } from './canvas';
 import { HelloDashboard } from './dashboard';
 import { HelloForm } from './form';
 import { registerBuilds } from './list-detail';
@@ -109,5 +110,6 @@ export function register(argo: Argo): void {
   registerBuilds(argo.pages);
   argo.pages.register('/media', helloMedia(argo.assets));
   argo.pages.register('/runs', HelloRunsPage);
+  argo.pages.register('/canvas', HelloCanvasPage);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }

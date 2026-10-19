@@ -34,7 +34,7 @@ import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
-import { Svg } from '#primitives/visual';
+import { Canvas, Svg } from '#primitives/visual';
 
 export const pluginEntries = {
   Page,
@@ -83,6 +83,13 @@ export const pluginEntries = {
   Surface,
   ScrollView,
   Svg,
+  Canvas,
+  'Canvas.Rect': Canvas.Rect,
+  'Canvas.Circle': Canvas.Circle,
+  'Canvas.Line': Canvas.Line,
+  'Canvas.Path': Canvas.Path,
+  'Canvas.Text': Canvas.Text,
+  'Canvas.Group': Canvas.Group,
   Video,
   Audio,
   Alert,

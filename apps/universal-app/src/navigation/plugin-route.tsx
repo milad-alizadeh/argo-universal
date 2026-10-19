@@ -25,7 +25,10 @@ function useNavRoot(path: string, row: string | undefined): boolean {
   return usePluginAt(path).root && !hasRowDetail(row);
 }
 
-// Each Plugin nav item's pages, under its title on a narrow window; a path whose Plugin is unknown keeps ☰ to leave it.
+/*
+ * Each Plugin nav item's pages, under its title on a narrow window; a path whose Plugin is unknown keeps ☰ to leave it.
+ * iOS 26 full-screen Back would steal a Canvas pan; Back from the edge remains available.
+ */
 export function PluginLayout(): React.JSX.Element {
   const pathname = usePathname();
   const { section } = usePluginAt(pathname);
@@ -37,6 +40,7 @@ export function PluginLayout(): React.JSX.Element {
       root={root}
       rootName="[...path]"
       singular
+      fullScreenGestureEnabled={false}
     />
   );
 }

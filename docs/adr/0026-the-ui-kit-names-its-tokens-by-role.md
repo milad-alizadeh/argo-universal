@@ -20,6 +20,15 @@ Each role has a light and a dark value.
 
 `chart-1` to `chart-5` are deleted. The `spacing-shell-*`, `spacing-session-*` and `spacing-plan-proposal` tokens are debt: each folds into the spacing scale or moves into its one component.
 
+## Canvas tone shades
+
+Owner amendment, 2026-10-19 (#836): Canvas `intensity` uses nine shade tokens per tone, from `--color-tone-<tone>-100` through `-900`.
+An intensity of 0 selects 100; 1 selects 900. Intermediate values select the nearest step.
+`neutral`, `muted` and `accent` use the neutral palette. `info`, `success`, `warning`, `danger` and `done` use blue, green, amber, red and violet.
+Light mode uses palette shades 100 through 900. Dark mode reverses that order, so stronger intensity remains easier to see.
+Without `intensity`, a drawing uses its existing semantic tone token.
+Plugins cannot set colours or add tokens.
+
 ## States
 
 Every interactive component draws the same five states from shared tokens: `hover`, `pressed`, `selected` (flat tints), `focus` (today `ring`) and `disabled`.

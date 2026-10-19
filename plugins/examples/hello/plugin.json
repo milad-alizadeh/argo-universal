@@ -46,6 +46,11 @@
         "id": "hello-runs",
         "title": "Hello runs",
         "path": "/runs"
+      },
+      {
+        "id": "hello-canvas",
+        "title": "Canvas",
+        "path": "/canvas"
       }
     ],
     "settings": [

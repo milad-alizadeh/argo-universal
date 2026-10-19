@@ -1,6 +1,10 @@
 import { useMemo } from 'react';
 import { useCSSVariable, useUniwind } from 'uniwind';
 import { usePrimitiveColor } from '#primitives/native/primitive-color';
+import {
+  resolvedToneShades,
+  toneShadeTokens,
+} from '#primitives/native/tone-shades';
 
 const colorTokens = [
   ['accent', '--color-accent'],
@@ -18,6 +22,9 @@ const colorTokens = [
   ['pressed', '--color-pressed'],
   ['danger', '--color-danger'],
   ['warning', '--color-warning'],
+  ['info', '--color-info'],
+  ['success', '--color-success'],
+  ['done', '--color-done'],
 ] as const;
 
 const tokenNames = colorTokens.map(([, name]) => name);
@@ -33,20 +40,26 @@ type NativeColors = Partial<Record<TokenRole | DerivedRole, string>>;
 export interface NativeTheme {
   colorScheme: 'light' | 'dark';
   colors: NativeColors;
+  toneShades: ReturnType<typeof resolvedToneShades>;
 }
 
 // Argo's tokens for native controls, re-resolved whenever the theme or Appearance changes.
-export function useNativeTheme(): NativeTheme {
+export function useNativeTheme(options?: { toneShades: boolean }): NativeTheme {
   const { theme } = useUniwind();
   const tokens = useCSSVariable(tokenNames);
   const derived = useDerivedColors();
+  const toneShades = useToneShades(options?.toneShades);
 
   const colors = useMemo(
     () => ({ ...tokenColors(tokens), ...derived }),
     [tokens, derived],
   );
 
-  return { colorScheme: theme === 'dark' ? 'dark' : 'light', colors };
+  return {
+    colorScheme: theme === 'dark' ? 'dark' : 'light',
+    colors,
+    toneShades,
+  };
 }
 
 function useDerivedColors(): Partial<Record<DerivedRole, string>> {
@@ -72,4 +85,10 @@ function tokenColors(
   }
 
   return colors;
+}
+
+function useToneShades(enabled?: boolean): NativeTheme['toneShades'] {
+  const shades = useCSSVariable(enabled ? toneShadeTokens : []);
+
+  return useMemo(() => resolvedToneShades(shades), [shades]);
 }

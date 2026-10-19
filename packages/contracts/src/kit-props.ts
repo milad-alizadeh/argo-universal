@@ -89,12 +89,12 @@ type NestedEvents<
 > = Drawing['plugin'] extends true ? Record<never, never> : Events;
 
 type KitList<
-  Element,
+  Values extends readonly unknown[],
   Events,
   Drawing extends KitDrawing,
 > = Drawing['plugin'] extends true
-  ? readonly KitValue<Element, Events, Drawing>[]
-  : KitValue<Element, Events, Drawing>[];
+  ? { readonly [Key in keyof Values]: KitValue<Values[Key], Events, Drawing> }
+  : { [Key in keyof Values]: KitValue<Values[Key], Events, Drawing> };
 
 type KitValue<
   Value,
@@ -118,18 +118,16 @@ type KitValue<
                   [Key in keyof Args]: KitValue<Args[Key], Events, Drawing>;
                 }
               ) => KitValue<Result, Events, Drawing>
-            : Value extends (infer Element)[]
-              ? KitList<Element, Events, Drawing>
-              : Value extends readonly (infer Element)[]
-                ? readonly KitValue<Element, Events, Drawing>[]
-                : Value extends object
-                  ? KitMappedProps<
-                      Value,
-                      NestedEvents<Events, Drawing>,
-                      never,
-                      Drawing
-                    >
-                  : Value;
+            : Value extends readonly unknown[]
+              ? KitList<Value, Events, Drawing>
+              : Value extends object
+                ? KitMappedProps<
+                    Value,
+                    NestedEvents<Events, Drawing>,
+                    never,
+                    Drawing
+                  >
+                : Value;
 
 type EventProp<
   Value,

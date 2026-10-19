@@ -28,3 +28,7 @@ expectTypeOf<SinglePicker['options']>().toExtend<readonly unknown[]>();
 expectTypeOf<ActionSplit['onValueChange']>().toEqualTypeOf<
   ((payload: string) => void | Promise<void>) | undefined
 >();
+
+expectTypeOf<PluginProps['Canvas.Group']['translate']>().toEqualTypeOf<
+  readonly [number, number] | undefined
+>();

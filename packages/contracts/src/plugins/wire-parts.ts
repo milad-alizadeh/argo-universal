@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { actionListWireParts } from './action-list-wire-parts';
+import { canvasWireParts } from './canvas-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
 import { buttonProps, stackProps, textProps, svgProps } from './kit-props';
@@ -26,6 +27,7 @@ export const wireParts = {
   ...controlWireParts,
   ...overlayWireParts,
   ...mediaWireParts,
+  ...canvasWireParts,
   Text: {
     props: textProps,
     container: false,
