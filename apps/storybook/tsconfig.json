@@ -3,6 +3,7 @@
   "include": [
     ".storybook",
     "vitest.config.ts",
+    "vitest.global-setup.ts",
     "vitest.setup.ts",
     "vitest.shims.d.ts"
   ]

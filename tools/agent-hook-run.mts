@@ -5,18 +5,15 @@ import {
   block,
   checkTypes,
   format,
+  FORMATTED_FILE,
   lint,
+  LINTED_FILE,
   parseJson,
   type Result,
   root,
   run,
+  TYPESCRIPT_FILE,
 } from './hook-checks.mts';
-
-const FORMATTED_FILE = /\.(?:[cm]?[jt]sx?|jsonc?|css|ya?ml)$/;
-
-const LINTED_FILE = /\.[cm]?[jt]sx?$/;
-
-const TYPESCRIPT_FILE = /\.[cm]?tsx?$/;
 
 const PATCH_FILE_LINE = /^\*\*\* (?:Add File|Update File|Move to): (.+)$/;
 

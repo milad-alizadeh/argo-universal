@@ -828,6 +828,9 @@ importers:
       '@chromatic-com/storybook':
         specifier: 'catalog:'
         version: 5.4.0(storybook@10.6.1(@types/react@19.2.18)(prettier@3.9.9)(react@19.2.3))
+      '@repo/browser-suite-lock':
+        specifier: workspace:*
+        version: link:../../tooling/browser-suite-lock
       '@repo/typescript':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -1036,6 +1039,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
+      '@repo/browser-suite-lock':
+        specifier: workspace:*
+        version: link:../tooling/browser-suite-lock
       '@repo/desktop':
         specifier: workspace:*
         version: link:../apps/desktop
@@ -1580,6 +1586,31 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.6)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+
+  tooling/browser-suite-lock:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@repo/typescript':
+        specifier: workspace:*
+        version: link:../typescript
+      '@repo/vitest':
+        specifier: workspace:*
+        version: link:../vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

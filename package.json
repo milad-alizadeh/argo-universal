@@ -22,7 +22,8 @@
     "test": "vitest run",
     "test:e2e": "turbo run test:web --filter=@repo/e2e",
     "test:e2e:electron": "turbo run test:electron --filter=@repo/e2e",
-    "test:stories": "turbo run test:stories"
+    "test:stories": "turbo run test:stories",
+    "verify": "node tools/verify.mts"
   },
   "devDependencies": {
     "jscpd": "catalog:",

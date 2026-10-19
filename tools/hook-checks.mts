@@ -9,6 +9,12 @@ export const root = fileURLToPath(new URL('..', import.meta.url)).replace(
   '',
 );
 
+export const FORMATTED_FILE = /\.(?:[cm]?[jt]sx?|jsonc?|css|ya?ml)$/;
+
+export const LINTED_FILE = /\.[cm]?[jt]sx?$/;
+
+export const TYPESCRIPT_FILE = /\.[cm]?tsx?$/;
+
 const BLOCK_EXIT_CODE = 2;
 
 const OUTPUT_LINE_LIMIT = 60;
@@ -102,6 +108,10 @@ export function lint({ files, typeAware, skipped }: LintRun): Result {
 
 export function format(files: string[]): Result {
   return run(binary('oxfmt'), ['--write', UNMATCHED, ...files]);
+}
+
+export function checkFormat(files: string[]): Result {
+  return run(binary('oxfmt'), ['--check', UNMATCHED, ...files]);
 }
 
 export function checkTypes(): Result {
