@@ -33,7 +33,9 @@ const compounds = Object.fromEntries(
     root,
     Object.assign(
       (props: ElementProps) => jsx(root, props),
-      Object.fromEntries(members.map((member) => [member, `${root}.${member}`])),
+      Object.fromEntries(
+        members.map((member) => [member, `${root}.${member}`]),
+      ),
     ),
   ]),
 );

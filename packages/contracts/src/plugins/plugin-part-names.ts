@@ -34,16 +34,15 @@ export type KitCompoundMember<Root extends string> =
     : never;
 
 // Each compound root with its members, so the kit's `Metadata.Label` exists once a `Metadata.Label` part does.
-export const kitCompounds = compoundsOf(pluginPartNames);
+const dottedNames = pluginPartNames.filter((name) => name.includes('.'));
 
-function compoundsOf(names: string[]): Record<string, string[]> {
-  const compounds: Record<string, string[]> = {};
+const rootOf = (name: string): string => name.slice(0, name.indexOf('.'));
 
-  for (const name of names) {
-    const [root, member] = name.split('.');
+const membersOf = (root: string): string[] =>
+  dottedNames.flatMap((name) =>
+    rootOf(name) === root ? [name.slice(root.length + 1)] : [],
+  );
 
-    if (root && member) (compounds[root] ??= []).push(member);
-  }
-
-  return compounds;
-}
+export const kitCompounds = Object.fromEntries(
+  [...new Set(dottedNames.map(rootOf))].map((root) => [root, membersOf(root)]),
+);

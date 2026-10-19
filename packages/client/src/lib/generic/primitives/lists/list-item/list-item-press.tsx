@@ -19,13 +19,8 @@ function rowLabel(props: ListItemProps): string {
     .join(', ');
 }
 
-function pressClass(props: DrawingProps): string {
-  return cn(
-    itemPress,
-    props.labelPlacement === 'above' &&
-      'flex-col gap-1 px-0 py-0 wide:px-0 web:hover:bg-transparent active:bg-transparent',
-    props.disabled && 'opacity-50',
-  );
+function pressClass(disabled?: boolean): string {
+  return cn(itemPress, disabled && 'opacity-50');
 }
 
 function pressHandlers(props: ListItemProps): RowPressProps {
@@ -82,7 +77,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
     android_ripple: usePressRipple(),
     testID: props.testID,
     ...triggerProps(props),
-    className: pressClass(props),
+    className: pressClass(props.disabled),
   };
 }
 
@@ -125,7 +120,7 @@ function ItemContentSlots(props: DrawingProps): ReactElement {
       <Leading {...props} />
       {props.content ?? <ItemContent {...props} />}
       <Trailing {...props} />
-      {props.labelPlacement ? null : <Accessory>{props.accessory}</Accessory>}
+      <Accessory>{props.accessory}</Accessory>
     </TextClassContext>
   );
 }
