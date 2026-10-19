@@ -8,9 +8,9 @@ This amends [ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.
 
 ## Decision
 
-- **`Section footer` is iOS and desktop only.** Desktop and web draw it as iOS does. On Android the section draws no footer, and a description belongs on the row:
+- **`Section footer` is iOS and desktop only.** Desktop and web draw it as iOS does. On Android the section draws no footer, and a description belongs on the row. Amended by the owner on 2026-10-19 (Paper "Settings · Porcelain"): desktop and web draw a row's `description` under its title, as Android does, so each Settings row carries a title and a muted description:
   - a row's own description is its `subtitle` on every platform, so Android loses nothing;
-  - a section footer that explains one row (a toggle, a value) is that row's `description`: the kit draws it as the section footer on iOS and desktop and as the row's subtitle on Android (ADR-0032, as amended);
+  - a section footer that explains one row (a toggle, a value) is that row's `description`: the kit draws it as the section footer on iOS and as the row's subtitle on desktop, web and Android (ADR-0032, as amended);
   - `List footer` is page-level text drawn once after the last section. On Android it draws with an info icon, as `FooterPreference`; on iOS and desktop it draws as the last section's footer.
 - **`destructive` is a row on iOS and desktop, a Button on Android.** On iOS and desktop it stays a danger-red row alone in the last section. On Android the same `ListItem.Button tone="danger"` renders the danger text `Button` below the list, outside any section. Both confirm with the stock Alert (ADR-0020).
 - **One call to action in `trailing`, outside settings rows.** Amended by the owner on 2026-10-18. A content row that needs a call to action, such as an Agent's Install or Remove, is a `ListItem` with one `Button` in `trailing`, top-aligned to the title line, and no accessory; it is not a separate card. Settings rows (the `ListItem.*` wrappers) never take a `Button`: their trailing holds a value, a chevron, a check, a radio, a checkbox or a Switch. `meta` may hold small `IconButton`s (such as an Agent's links) next to its Labels. `actions` means swipe actions and the context menu only, as SwiftUI `swipeActions` and `contextMenu`.

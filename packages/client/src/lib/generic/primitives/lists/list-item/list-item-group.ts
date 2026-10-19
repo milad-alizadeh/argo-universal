@@ -7,8 +7,8 @@ import {
 } from '../../../list-context';
 import { useOpensGroup, type RowGroupEnds } from '../../../row-group-ends';
 
-// Android puts a row's description in its subtitle, so only other platforms draw it as a footer.
-const footerEndsGroup = Platform.OS !== 'android';
+// Android, desktop and web put a row's description in its subtitle, so only iOS draws it as a footer.
+const footerEndsGroup = Platform.OS === 'ios';
 
 const opensAt = new Set<ListPosition>(['first', 'only']);
 

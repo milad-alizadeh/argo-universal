@@ -11,6 +11,7 @@ import { FooterProvider } from '#primitives/fields/field-description';
 import { flattenedChildren } from '../../../flattened-children';
 import { ListContext, listPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
+import { useSectionDrawing } from '../../../list-section-drawing';
 import { createRowGroupEnds } from '../../../row-group-ends';
 import { PressedRowProvider } from '../../../row-highlights';
 import type { ListSectionProps } from './list-props';
@@ -18,12 +19,14 @@ import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
 export function ListSection(props: ListSectionProps): ReactElement {
   const id = useId();
+  const { below } = useSectionDrawing();
 
   return (
-    <View className="mb-4">
+    <View>
       <Header {...props} />
       <SectionBody {...props} id={id} />
       <Footer {...props} id={id} />
+      <View className={below} />
     </View>
   );
 }

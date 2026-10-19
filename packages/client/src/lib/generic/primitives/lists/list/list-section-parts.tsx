@@ -3,10 +3,17 @@ import { Pressable, type PressableProps, View } from 'react-native';
 import { IconButtonBleed } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
+import {
+  type SectionDrawing,
+  useSectionDrawing,
+} from '../../../list-section-drawing';
 import { SkeletonBar } from '../../../list-skeleton';
+import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
 
 type HeaderProps = Omit<ListSectionProps, 'children'>;
+
+type DrawnHeaderProps = HeaderProps & { drawing: SectionDrawing };
 
 const disclosureIcon = (
   isExpanded?: boolean,
@@ -26,7 +33,7 @@ function leadingIcon(props: HeaderProps): ReactNode {
   return props.leading === undefined ? disclosure(props) : props.leading;
 }
 
-// The leading icon sits 8 before the title, muted, the actions' size.
+// The leading icon sits 8 before the title, in the label's colour, the actions' size.
 function HeaderLeading(props: HeaderProps): ReactNode {
   const icon = leadingIcon(props);
 
@@ -44,7 +51,6 @@ function HeaderTitle(props: HeaderProps): ReactNode {
   return (
     <Text
       role="heading"
-      tone="muted"
       numberOfLines={1}
       accessibilityRole="heading"
       aria-level={2}
@@ -58,32 +64,28 @@ function HeaderContent(props: HeaderProps): ReactElement {
   return (
     <View className="min-w-0 flex-1">
       <HeaderTitle {...props} />
-      {props.subtitle ? (
-        <Text role="secondary" tone="muted">
-          {props.subtitle}
-        </Text>
-      ) : null}
+      {props.subtitle ? <Text role="secondary">{props.subtitle}</Text> : null}
     </View>
   );
 }
 
-function HeaderLabel(props: HeaderProps): ReactElement {
+function HeaderLabel(props: DrawnHeaderProps): ReactElement {
   return (
-    <TextClassContext value="text-muted-foreground">
+    <TextClassContext value={props.drawing.heading}>
       <HeaderLeading {...props} />
       <HeaderContent {...props} />
     </TextClassContext>
   );
 }
 
-// The 8 below the header belongs to its label, so a toggle's press area runs down to the rows.
-const labelClassName = 'min-w-0 flex-1 flex-row items-center gap-1 pb-2';
+const labelClassName = (drawing: SectionDrawing): string =>
+  cn('min-w-0 flex-1 flex-row items-center gap-1', drawing.gap);
 
 // A collapsible section's whole label toggles it; its actions stay their own buttons beside it.
-function HeaderToggle(props: HeaderProps): ReactElement {
+function HeaderToggle(props: DrawnHeaderProps): ReactElement {
   if (!props.onExpandedChange || props.isLoading)
     return (
-      <View className={labelClassName}>
+      <View className={labelClassName(props.drawing)}>
         <HeaderLabel {...props} />
       </View>
     );
@@ -101,7 +103,7 @@ const expandedState = (expanded: boolean): ExpandedState => ({
   'aria-expanded': expanded,
 });
 
-function HeaderButton(props: HeaderProps): ReactElement {
+function HeaderButton(props: DrawnHeaderProps): ReactElement {
   const isExpanded = props.isExpanded ?? true;
 
   return (
@@ -111,7 +113,7 @@ function HeaderButton(props: HeaderProps): ReactElement {
       {...expandedState(isExpanded)}
       onPress={() => props.onExpandedChange?.(!isExpanded)}
       onLongPress={props.onLongPress}
-      className={`${labelClassName} web:select-none`}
+      className={cn(labelClassName(props.drawing), 'web:select-none')}
     >
       <HeaderLabel {...props} />
     </Pressable>
@@ -134,9 +136,11 @@ function HeaderActions({ trailing }: Pick<HeaderProps, 'trailing'>): ReactNode {
 }
 
 export function SectionHeader(props: HeaderProps): ReactElement {
+  const drawing = useSectionDrawing();
+
   return (
-    <View className="group flex-row items-start gap-1 px-4 wide:px-5">
-      <HeaderToggle {...props} />
+    <View className={cn('group flex-row items-start gap-1', drawing.inset)}>
+      <HeaderToggle {...props} drawing={drawing} />
       <HeaderActions trailing={props.trailing} />
     </View>
   );
