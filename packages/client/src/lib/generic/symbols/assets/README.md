@@ -12,7 +12,7 @@ Metro imports the font as an asset ID; Vite imports its URL. `expo-symbols` pass
 
 # Tabler git icons
 
-`tabler/` holds the source SVGs of the git icons, unchanged from Tabler Icons v3.49.0's outline set (github.com/tabler/tabler-icons, `icons/outline` at tag `v3.49.0`), and `tabler/LICENSE`, Tabler's MIT licence (ADR-0019). `brand-github.svg` is GitHub's Octicons `mark-github-16.svg` from `github.com/primer/octicons` at tag `v19.15.5`, under the MIT licence in `tabler/OCTICONS-LICENSE`. It draws `repository`.
+`tabler/` holds the source SVGs of the git icons, unchanged from Tabler Icons v3.49.0's outline set (github.com/tabler/tabler-icons, `icons/outline` at tag `v3.49.0`), and `tabler/LICENSE`, Tabler's MIT licence (ADR-0019).
 
 Tabler draws 2-point strokes on a 24-point grid; the asset catalog and the masks need filled shapes. The Swift package `tools/sf-symbols/tabler-symbols` outlines each icon's strokes with round caps and joins, unions them with Core Graphics, and places them in the custom symbols' 137.5-unit box. It needs macOS 14 or later, for `CGPath.normalized(using:)`, and the Swift toolchain from Xcode. To regenerate, from the repository root:
 
@@ -25,3 +25,11 @@ swift run --quiet --package-path tools/sf-symbols/tabler-symbols tabler-symbols 
 `chevron-right.svg` is the web grouped row's disclosure (ADR-0019, Web disclosure chevron); `with-custom-symbols` leaves it out of the iOS asset catalog.
 
 To add a git icon, copy its outline SVG from the same Tabler release into `tabler/`, regenerate, and map it in `git-symbols.ts`.
+
+# Logos
+
+`logos/` holds brand marks as plain SVG files (ADR-0019). `logo-source.ts` imports each one as a react-native-svg component, and `Icon` draws it through its `source` prop, the same on every platform: Metro converts the file with `react-native-svg-transformer` for the app and the desktop app, and `vite-plugin-svgr` converts it for Storybook. A logo's fills are `currentColor`, so it takes the icon's text colour.
+
+`brand-github.svg` is GitHub's Octicons `mark-github-16.svg` from `github.com/primer/octicons` at tag `v19.15.5`, under the MIT licence in `logos/OCTICONS-LICENSE`; the only change is `fill="currentColor"` on its root element. The Agent card's repository link draws it.
+
+To add a logo, copy its SVG into `logos/` with `currentColor` fills, add a `<name>.svg.d.ts` beside it like `brand-github.svg.d.ts`, and add it to `logoSources`.

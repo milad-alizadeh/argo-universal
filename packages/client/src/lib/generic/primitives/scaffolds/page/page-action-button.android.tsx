@@ -2,11 +2,12 @@ import { IconButton } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#lib/generic/native-theme';
+import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
 import type {
   IconAction,
   PressActionProps,
 } from '#primitives/actions/action-list';
-import { Icon, type IconProps } from '#primitives/content/icon';
+import { Icon } from '#primitives/content/icon';
 import { ButtonIcon } from '#primitives/native/button-icon';
 import { Host } from '#primitives/native/host';
 
@@ -14,7 +15,7 @@ import { Host } from '#primitives/native/host';
 export type HeaderIconButtonProps = Pick<
   PressActionProps,
   'label' | 'disabled' | 'onPress'
-> & { icon: IconProps['name'] };
+> & { icon: IconSymbol };
 
 // Universal Button has no stock icon-only variant; Compose owns this control's shape and touch target.
 export function PageActionButton({
