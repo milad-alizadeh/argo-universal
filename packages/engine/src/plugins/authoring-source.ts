@@ -6,7 +6,6 @@ import {
   type CallExpression,
   type Program,
 } from 'oxc-parser';
-import type { z } from 'zod';
 import { registrationNames, canonicalCall } from './authoring-bindings';
 import {
   sourceDiagnostic,
@@ -16,6 +15,7 @@ import {
 import { firstString, memberPath } from './authoring-expressions';
 import { hookSourceReason } from './authoring-hooks';
 import { visualSourceVisitor } from './authoring-visual';
+import { declaresSlot } from './plugin-contributions';
 
 export type PluginSourceReport = {
   calls: string[];
@@ -70,13 +70,6 @@ function inspectCall(context: Inspection, node: CallExpression): void {
   callInspectors.get(name)?.(context, node);
 }
 
-type Contribution = {
-  kind: string;
-  schema: z.ZodType<string>;
-  declared: readonly string[];
-  uses: string[];
-};
-
 function inspectHook(context: Inspection, node: CallExpression): void {
   const name = firstString(node);
 
@@ -87,41 +80,27 @@ function inspectHook(context: Inspection, node: CallExpression): void {
 }
 
 function inspectSlot(context: Inspection, node: CallExpression): void {
-  inspectContribution(context, node, {
-    kind: 'Slot',
-    schema: SlotId,
-    declared: context.manifest.contributes.slots ?? [],
-    uses: context.report.slots,
-  });
+  const slotId = firstString(node);
+
+  if (slotId === undefined) return;
+  context.report.slots.push(slotId);
+
+  const reason = slotReason(context.manifest, slotId);
+
+  if (reason) refuse(context, node, reason);
 }
 
-function inspectContribution(
-  context: Inspection,
-  node: CallExpression,
-  contribution: Contribution,
-): void {
-  const value = firstString(node);
+function slotReason(
+  manifest: PluginManifest,
+  slotId: string,
+): string | undefined {
+  const parsed = SlotId.safeParse(slotId);
 
-  if (value === undefined) return;
-  contribution.uses.push(value);
-  const parsed = contribution.schema.safeParse(value);
+  if (!parsed.success) return `Unknown Slot ${slotId}`;
 
-  if (!parsed.success)
-    return refuse(context, node, `Unknown ${contribution.kind} event ${value}`);
-  requireDeclared(context, node, { ...contribution, value });
-}
-
-function requireDeclared(
-  context: Inspection,
-  node: CallExpression,
-  contribution: Contribution & { value: string },
-): void {
-  if (contribution.declared.includes(contribution.value)) return;
-  refuse(
-    context,
-    node,
-    `Undeclared ${contribution.kind} ${contribution.value}`,
-  );
+  return declaresSlot(manifest, parsed.data)
+    ? undefined
+    : `Undeclared Slot ${slotId}`;
 }
 
 function refuse(

@@ -6,24 +6,24 @@ import {
   type PluginDiagnostic,
   type SourceFile,
 } from './authoring-diagnostics';
+import { realmGlobals } from './worker-realm';
 
-const nodeGlobals = [
-  'process',
-  'require',
-  'module',
-  'exports',
-  'Buffer',
-  '__dirname',
-  '__filename',
-  'global',
-  'setImmediate',
-  'clearImmediate',
-];
+// CommonJS module names, which Node gives every file but no Plugin realm has.
+const moduleNames = ['require', 'module', 'exports', '__dirname', '__filename'];
+
+// Names Plugin code can't reach: those Node gives the Server that a Plugin realm lacks.
+function unavailableGlobals(): string[] {
+  const realm = realmGlobals();
+
+  return [...Object.getOwnPropertyNames(globalThis), ...moduleNames].filter(
+    (name) => !realm.has(name) && /^[A-Za-z_$][\w$]*$/.test(name),
+  );
+}
 
 const marker = '__argo_forbidden_Node_global_';
 
 const define = Object.fromEntries(
-  nodeGlobals.flatMap((name) => [
+  unavailableGlobals().flatMap((name) => [
     [name, marker + name],
     [`globalThis.${name}`, marker + name],
   ]),

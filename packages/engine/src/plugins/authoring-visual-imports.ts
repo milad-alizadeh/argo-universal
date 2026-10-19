@@ -4,6 +4,7 @@ import {
   type JSXOpeningElement,
   type ImportDeclaration,
 } from 'oxc-parser';
+import { visualParts } from './visual-validation';
 
 export function visualImports(program: Program): Map<string, string> {
   const names = new Map<string, string>();
@@ -13,8 +14,6 @@ export function visualImports(program: Program): Map<string, string> {
 
   return names;
 }
-
-const visuals = ['Svg', 'Chart', 'Canvas', 'CodeMap'];
 
 function record(names: Map<string, string>, node: ImportDeclaration): void {
   if (node.source.value !== '@argo/plugin-kit') return;
@@ -33,7 +32,7 @@ function addSpecifier(
 }
 
 function addNamespace(names: Map<string, string>, prefix: string): void {
-  for (const name of visuals) names.set(`${prefix}.${name}`, name);
+  for (const name of visualParts) names.set(`${prefix}.${name}`, name);
 }
 
 function addNamed(
@@ -48,7 +47,7 @@ function addNamed(
       ? specifier.imported.name
       : specifier.imported.value;
 
-  if (visuals.includes(name)) names.set(specifier.local.name, name);
+  if (visualParts.includes(name)) names.set(specifier.local.name, name);
 }
 
 export function jsxName(name: JSXOpeningElement['name']): string {

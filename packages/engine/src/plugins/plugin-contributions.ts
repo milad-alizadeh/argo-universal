@@ -1,13 +1,17 @@
-import type { HookEventName } from '@repo/contracts/plugins';
+import type { HookEventName, PluginManifest } from '@repo/contracts/plugins';
 import type { SlotId } from '@repo/contracts/plugins/wire';
 import type { PluginDescriptor } from './located-plugins';
+
+// A Plugin fills only the Slots its manifest declares; `argo plugin validate` reads the same rule.
+export const declaresSlot = (
+  manifest: PluginManifest,
+  slotId: SlotId,
+): boolean => (manifest.contributes.slots ?? []).includes(slotId);
 
 export const fillsSlot = (
   plugin: PluginDescriptor,
   slot: { slotId: SlotId },
-): boolean =>
-  plugin.enabled &&
-  (plugin.manifest.contributes.slots ?? []).includes(slot.slotId);
+): boolean => plugin.enabled && declaresSlot(plugin.manifest, slot.slotId);
 
 export const hooksEvent = (
   plugin: PluginDescriptor,

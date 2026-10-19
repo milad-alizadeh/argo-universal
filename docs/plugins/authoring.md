@@ -94,7 +94,7 @@ assert.deepEqual(answer, { prompt: [{ type: 'text', text: '[checked] Hello' }] }
 
 ## Dev reload
 
-During an active Turn, the Server keeps the current Plugin worker and defers source rebuild results.
+While any Turn runs, including a subagent's, the Server keeps the current Plugin worker and defers source rebuild results.
 After active Turns end, the Server rebuilds the latest source once. Intermediate syntax errors do not stop the current worker.
 Outside a Turn, the existing file watcher reloads the Plugin after each build.
 Turning a Plugin off releases its worker and pending rebuild.

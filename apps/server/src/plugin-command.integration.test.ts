@@ -6,6 +6,7 @@ import { example, fixture, run } from '../mocks/plugin-cli';
 
 it.each([
   ['process.cwd();', 'Node global process'],
+  ["new URL('https://example.com');", 'Node global URL'],
   [
     "argo.slots.register('argo/composer/above/v1', () => null);",
     'Undeclared Slot',
@@ -28,21 +29,35 @@ it.each([
   30_000,
 );
 
-it('validate reports a bad manifest at the invalid field', async () => {
-  const directory = await fixture('export function register() {}');
-  const file = join(directory, 'plugin.json');
+it.each([
+  ['name', { name: 42 }],
+  ['version', { version: 'one' }],
+  ['argo', { engines: { argo: '*' } }],
+])(
+  'validate reports a bad manifest at its %s field',
+  async (field, change) => {
+    const directory = await fixture('export function register() {}');
+    const file = join(directory, 'plugin.json');
 
-  const manifest = PluginManifest.parse(
-    JSON.parse(await readFile(file, 'utf8')),
-  );
+    const manifest = PluginManifest.parse(
+      JSON.parse(await readFile(file, 'utf8')),
+    );
 
-  await writeFile(file, JSON.stringify({ ...manifest, name: 42 }, null, 2));
-  const result = await run('validate', directory);
-  expect(result).toMatchObject({
-    code: 1,
-    output: expect.stringContaining('plugin.json:3:'),
-  });
-}, 30_000);
+    const text = JSON.stringify({ ...manifest, ...change }, null, 2);
+    await writeFile(file, text);
+
+    const line = text
+      .split('\n')
+      .findIndex((row) => row.includes(`"${field}"`));
+
+    const result = await run('validate', directory);
+    expect(result).toMatchObject({
+      code: 1,
+      output: expect.stringContaining(`plugin.json:${line + 1}:`),
+    });
+  },
+  30_000,
+);
 
 it('validate reports the hello Plugin contributions', async () => {
   expect(await run('validate', example)).toMatchObject({

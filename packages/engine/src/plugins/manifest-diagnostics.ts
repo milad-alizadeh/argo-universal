@@ -12,6 +12,7 @@ import {
   type PluginDiagnostic,
   type SourceFile,
 } from './authoring-diagnostics';
+import { ManifestFieldError } from './manifest';
 import { runtimeError } from './runtime-protocol';
 
 export async function manifestDiagnostics(
@@ -34,7 +35,7 @@ function inspectManifestError(
   if (error instanceof z.ZodError)
     return error.issues.map((issue) => manifestIssue(input, tree, issue));
 
-  return [manifestError(input, errors, error)];
+  return [manifestError({ input, tree, errors }, error)];
 }
 
 function manifestIssue(
@@ -51,28 +52,25 @@ function manifestIssue(
   );
 }
 
-function fieldOffset(input: SourceFile, error: Error): number {
-  const field = error.message.startsWith('version')
-    ? 'version'
-    : otherField(error);
-
-  return Math.max(0, input.source.indexOf(`"${field}"`));
-}
-
-function otherField(error: Error): string {
-  return error.message.startsWith('main file') ? 'main' : 'engines';
-}
+type ParsedManifest = {
+  input: SourceFile;
+  tree: Node | undefined;
+  errors: ParseError[];
+};
 
 function manifestError(
-  input: SourceFile,
-  errors: ParseError[],
+  { input, tree, errors }: ParsedManifest,
   error: Error,
 ): PluginDiagnostic {
   return sourceDiagnostic(
     input,
-    errors[0]?.offset ?? fieldOffset(input, error),
+    errors[0]?.offset ?? issueOffset(tree, fieldPath(error)),
     runtimeError(error),
   );
+}
+
+function fieldPath(error: Error): string[] {
+  return error instanceof ManifestFieldError ? error.field : [];
 }
 
 function issueOffset(

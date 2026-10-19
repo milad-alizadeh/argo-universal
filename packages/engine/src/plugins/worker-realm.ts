@@ -20,16 +20,34 @@ export function createPluginRealm(
   kitSource: string,
   clock?: PluginClock,
 ): PluginRealm {
-  const context = createContext(
-    { __argoBridge: bridge },
-    { codeGeneration: { strings: false, wasm: false } },
-  );
-
-  installClock(context, realClock);
+  const context = baseRealm({ __argoBridge: bridge });
   runInContext(kitSource, context);
 
   if (clock) installClock(context, clock);
   runInContext(`globalThis.argo = ${argoSource}`, context);
+
+  return context;
+}
+
+// The global names a Plugin realm starts with; `argo plugin validate` refuses the Node ones it lacks.
+export function realmGlobals(): Set<string> {
+  const names = new Set<string>();
+  const context = baseRealm({});
+  context.__argoGlobal = (name: string): Set<string> => names.add(name);
+  runInContext(
+    'for (const name of Object.getOwnPropertyNames(globalThis)) __argoGlobal(name)',
+    context,
+  );
+
+  return names;
+}
+
+function baseRealm(globals: { __argoBridge?: ArgoBridge }): PluginRealm {
+  const context = createContext(globals, {
+    codeGeneration: { strings: false, wasm: false },
+  });
+
+  installClock(context, realClock);
 
   return context;
 }

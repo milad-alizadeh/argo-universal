@@ -38,13 +38,29 @@ function checkChildren(node: WireNode, scene: Scene, context: Context): void {
 function checkDrawing(node: WireNode, scene: Scene, context: Context): void {
   scene.count += 1;
   checkLimits(scene.count, context.depth + 1);
+  const reason = drawingReason(node, context.partial);
 
-  if (!isDrawing(node.type)) throw new Error(`shape ${node.type} refused`);
-  const reason = visualPropsReason(node.type, node.props, context.partial);
-
-  if (reason) throw new Error(`${node.type}#${node.key}: ${reason}`);
-  checkPath(node);
+  if (reason) throw new Error(reason);
   checkDrawingChildren(node, scene, context);
+}
+
+// One drawing's own rules, apart from its place in the scene, which canvasReason checks.
+export function drawingReason(
+  node: WireNode,
+  partial: boolean,
+): string | undefined {
+  if (!isDrawing(node.type)) return `shape ${node.type} refused`;
+
+  const reason = drawingDataReason(node, partial);
+
+  return reason && `${node.type}#${node.key}: ${reason}`;
+}
+
+function drawingDataReason(
+  node: WireNode,
+  partial: boolean,
+): string | undefined {
+  return visualPropsReason(node.type, node.props, partial) ?? pathReason(node);
 }
 
 function checkDrawingChildren(
@@ -72,11 +88,20 @@ function checkLimits(count: number, depth: number): void {
     throw new Error(`depth cap exceeded (${canvasDepthLimit})`);
 }
 
-function checkPath(node: WireNode): void {
-  if (node.type !== 'Canvas.Path') return;
+function pathReason(node: WireNode): string | undefined {
+  const d = node.type === 'Canvas.Path' ? node.props.d : undefined;
 
-  if (typeof node.props.d === 'string')
-    validateNumericAttribute('d', node.props.d);
+  return typeof d === 'string' ? numericReason(d) : undefined;
+}
+
+function numericReason(d: string): string | undefined {
+  try {
+    validateNumericAttribute('d', d);
+
+    return undefined;
+  } catch (error) {
+    return runtimeError(error);
+  }
 }
 
 function isDrawing(type: string): boolean {

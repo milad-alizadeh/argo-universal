@@ -824,7 +824,6 @@ const sessionSetup = setup({
         params: Pick<StartTurnParameters, 'turnId'>,
       ): void => {
         const startedAt = context.input.now();
-        context.input.hooks.turnStarted?.(params.turnId);
         enqueue.assign({
           activeTurnId: params.turnId,
           activeTurnStartedAt: startedAt,
