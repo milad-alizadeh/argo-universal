@@ -3,15 +3,37 @@ import type { ListAppearance, ListPosition } from '../../../list-context';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
 
-// Android and web draw a grouped List as segments: small inner corners and a gap instead of separators.
+/*
+ * A grouped List's section shape. iOS draws one plate. Android draws segments: small inner corners and a gap instead
+ * of separators. Desktop and web draw one card with a 1px hairline edge, each row drawing its share of the edge
+ * (Paper "Settings · Porcelain").
+ */
 const groupedCorners = {
-  only: 'rounded-grouped web:wide:rounded-3xl',
-  first:
-    'rounded-t-grouped web:wide:rounded-t-3xl android:rounded-b-grouped-inner android:mb-0.5 web:rounded-b-grouped-inner web:mb-0.5',
-  middle:
-    'android:rounded-grouped-inner android:mb-0.5 web:rounded-grouped-inner web:mb-0.5',
-  last: 'rounded-b-grouped web:wide:rounded-b-3xl android:rounded-t-grouped-inner web:rounded-t-grouped-inner',
-} satisfies Record<ListPosition, string>;
+  ios: {
+    only: 'rounded-grouped',
+    first: 'rounded-t-grouped',
+    middle: '',
+    last: 'rounded-b-grouped',
+  },
+  android: {
+    only: 'rounded-grouped',
+    first: 'rounded-t-grouped rounded-b-grouped-inner mb-0.5',
+    middle: 'rounded-grouped-inner mb-0.5',
+    last: 'rounded-b-grouped rounded-t-grouped-inner',
+  },
+  web: {
+    only: 'rounded-2xl border border-hairline',
+    first: 'rounded-t-2xl border-x border-t border-hairline',
+    middle: 'border-x border-hairline',
+    last: 'rounded-b-2xl border-x border-b border-hairline',
+  },
+} satisfies Record<string, Record<ListPosition, string>>;
+
+const sectionCorners = Platform.select({
+  android: groupedCorners.android,
+  web: groupedCorners.web,
+  default: groupedCorners.ios,
+});
 
 const appearanceClasses = {
   plain: '',
@@ -20,11 +42,14 @@ const appearanceClasses = {
     'mb-2 rounded-grouped bg-card web:wide:rounded-3xl web:wide:bg-transparent web:wide:shadow-hairline',
 };
 
+// A muted row, such as an empty section's placeholder, has no surface, so it takes no corners or edge either.
 function corners(
-  appearance: ListAppearance,
-  position: ListPosition,
+  { appearance, position }: Omit<ItemDrawing, 'menu'>,
+  tone: ListItemProps['tone'],
 ): string | undefined {
-  return appearance === 'grouped' ? groupedCorners[position] : undefined;
+  return appearance === 'grouped' && tone !== 'muted'
+    ? sectionCorners[position]
+    : undefined;
 }
 
 // Paper's Combobox master: a popover's rows sit flat on it, 2px apart, each with the menu-row radius.
@@ -53,19 +78,18 @@ export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
   return rowSurface(drawing, state);
 }
 
-function rowSurface(
-  { appearance, position }: ItemDrawing,
-  { tone }: SurfaceState,
-): string {
+function rowSurface(drawing: ItemDrawing, { tone }: SurfaceState): string {
   return cn(
     'relative overflow-hidden',
-    tone !== 'muted' && appearanceClasses[appearance],
-    corners(appearance, position),
+    tone !== 'muted' && appearanceClasses[drawing.appearance],
+    corners(drawing, tone),
   );
 }
 
+// A desktop or web grouped card holds its rows 16 from its edge (Paper "Settings · Porcelain"); other rows keep 20 on wide.
 const pressLayouts = {
   row: 'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5',
+  card: 'w-full flex-row items-start gap-4 px-4 py-4',
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
 };
 
@@ -84,15 +108,33 @@ const readOnlyCursor = 'web:cursor-auto!';
 // Paper: a control wraps onto its own line, 12px under a menu row's title and 8px under a sheet row's.
 const controlLines = {
   row: 'flex-wrap gap-y-2',
+  card: 'flex-wrap gap-y-2',
   menu: 'flex-wrap gap-y-3',
+} satisfies Record<keyof typeof pressLayouts, string>;
+
+type PressDrawing = {
+  menu: boolean;
+  interactive: boolean;
+  control: boolean;
+  appearance: ListAppearance;
 };
 
-type PressDrawing = { menu: boolean; interactive: boolean; control: boolean };
+const webCard = (appearance: ListAppearance): boolean =>
+  Platform.OS === 'web' && appearance === 'grouped';
 
-function pressLayout({ menu, control }: PressDrawing): string {
-  const layout = menu ? 'menu' : 'row';
+function layoutOf({
+  menu,
+  appearance,
+}: PressDrawing): keyof typeof pressLayouts {
+  if (menu) return 'menu';
 
-  return cn(pressLayouts[layout], control && controlLines[layout]);
+  return webCard(appearance) ? 'card' : 'row';
+}
+
+function pressLayout(press: PressDrawing): string {
+  const layout = layoutOf(press);
+
+  return cn(pressLayouts[layout], press.control && controlLines[layout]);
 }
 
 // Only a row that does something takes the hover and pressed tints; a read-only row stays still.
@@ -104,15 +146,29 @@ export function itemPress(press: PressDrawing): string {
   );
 }
 
-// Only iOS draws separators; Android and web leave rows apart.
-const separatorPlatform = Platform.OS === 'ios';
+// iOS separates every list's rows; desktop and web separate a grouped card's rows only; Android leaves rows apart.
+function separatesRows(appearance: ListAppearance): boolean {
+  if (Platform.OS === 'web') return appearance === 'grouped';
 
-const separatedRow = ({ appearance, position }: ItemDrawing): boolean =>
-  appearance !== 'cards' && ['first', 'middle'].includes(position);
+  return Platform.OS === 'ios' && appearance !== 'cards';
+}
+
+const separatedPositions = new Set<ListPosition>(['first', 'middle']);
 
 function hasSeparator(drawing: ItemDrawing): boolean {
-  return separatorPlatform && !drawing.menu && separatedRow(drawing);
+  if (drawing.menu) return false;
+
+  return (
+    separatesRows(drawing.appearance) &&
+    separatedPositions.has(drawing.position)
+  );
 }
+
+// The desktop card draws its separators in its own hairline, and holds its rows 16 from its edge at every width.
+const separatorDrawing = Platform.select({
+  web: { colour: 'bg-hairline', pastLeading: 'left-14' },
+  default: { colour: 'bg-border', pastLeading: 'left-14 wide:left-15' },
+});
 
 export function itemSeparator(
   drawing: ItemDrawing,
@@ -121,7 +177,8 @@ export function itemSeparator(
   if (!hasSeparator(drawing)) return undefined;
 
   return cn(
-    'absolute bottom-0 right-4 left-4 bg-border',
-    leading && 'left-14 wide:left-15',
+    'absolute bottom-0 right-4 left-4',
+    separatorDrawing.colour,
+    leading && separatorDrawing.pastLeading,
   );
 }

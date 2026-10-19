@@ -83,3 +83,16 @@ export const PickerKeyboardSelection: StoryObj<typeof meta> = {
     await expect(chooseTheme).toHaveBeenCalledOnce();
   },
 };
+
+// Desktop and web draw a row's description inside its row, once, with no footer under the section.
+const fastModeDescription = "Use the Agent's faster model when it offers one.";
+
+export const DescriptionSitsInItsRow: StoryObj<typeof meta> = {
+  render: Settings.render,
+  play: async ({ canvas }) => {
+    await settleViewport(1440);
+    const row = await canvas.findByRole('switch', { name: 'Fast mode' });
+    await expect(within(row).getByText(fastModeDescription)).toBeVisible();
+    await expect(canvas.getAllByText(fastModeDescription)).toHaveLength(1);
+  },
+};

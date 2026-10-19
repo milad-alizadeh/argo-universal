@@ -80,12 +80,12 @@ const sectionEnds = new Set<ListPosition>(['last', 'only']);
 const footerGap = (position: ListPosition): string | undefined =>
   sectionEnds.has(position) ? undefined : 'mb-4';
 
-// A row's description closes its group; a section's gap separates it from the group after it.
+// iOS: a row's description closes its group; a section's gap separates it from the group after it.
 function RowFooter(props: {
   description?: string;
   position: ListPosition;
 }): ReactNode {
-  if (!props.description || Platform.OS === 'android') return null;
+  if (!props.description || Platform.OS !== 'ios') return null;
 
   return (
     <View className={footerGap(props.position)}>
