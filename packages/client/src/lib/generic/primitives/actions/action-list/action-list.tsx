@@ -19,7 +19,8 @@ function ActionListRoot(props: ActionListProps): ReactElement | null {
   const declared = useDeclaredActions(props);
 
   const header = useHeaderRegistration({
-    ...declared,
+    id: declared.id,
+    groups: declared.hinted,
     label: props.accessibilityLabel,
     context: props.variant === 'context',
   });
@@ -43,17 +44,13 @@ function DeclaredActionsBody({
 }): ReactElement | null {
   if (!declared.actions.length) return props.trigger ?? null;
 
-  const body = (
-    <ActionListBody
-      {...{ ...props, groups: hintedGroups(declared.groups, declared.actions) }}
-    />
-  );
+  const body = <ActionListBody {...{ ...props, groups: declared.hinted }} />;
 
   return <View nativeID={declared.id}>{body}</View>;
 }
 
 interface DeclaredActions {
-  groups: ActionGroup[];
+  hinted: ActionGroup[];
   id: string;
   actions: DeclaredAction[];
 }
@@ -72,38 +69,49 @@ function useDeclaredActions(props: ActionListProps): DeclaredActions {
     context: props.variant === 'context',
   });
 
-  return { groups, id, actions };
+  const owned = ownedShortcuts(actions);
+  const hinted = useMemo(() => hintedGroups(groups, owned), [groups, owned]);
+
+  return { hinted, id, actions };
 }
 
-function hintedGroups(
-  groups: ActionGroup[],
-  actions: DeclaredAction[],
-): ActionGroup[] {
-  const hints = new Map(actions.map((action) => [action.id, action]));
+// A string, so the groups (and the header registration) only change when the shortcuts this list owns do.
+function ownedShortcuts(actions: DeclaredAction[]): string {
+  return actions
+    .flatMap((action) => (action.shortcut ? [action.id] : []))
+    .join(' ');
+}
+
+function hintedGroups(groups: ActionGroup[], owned: string): ActionGroup[] {
+  const shortcuts = new Set(owned.split(' '));
 
   return orderedGroups(
     groups.map((group) => ({
       ...group,
-      actions: group.actions.map((entry) => hinted(entry, hints)),
+      actions: group.actions.map((entry) => hinted(entry, shortcuts)),
     })),
   );
 }
 
-// A submenu's Actions take their hints too, since they hold shortcuts of their own.
-function hinted(
-  entry: DeclaredEntry,
-  hints: Map<string, DeclaredAction>,
-): DeclaredEntry {
-  if (isPress(entry)) return hints.get(entry.id) ?? entry;
+// A submenu's Actions keep their hints too, since they hold shortcuts of their own.
+function hinted(entry: DeclaredEntry, shortcuts: Set<string>): DeclaredEntry {
+  if (isPress(entry)) return ownHint(entry, shortcuts);
 
   return {
     ...entry,
     sections: entry.sections.map((section) => ({
       ...section,
-      actions: section.actions.map((action) => hints.get(action.id) ?? action),
+      actions: section.actions.map((action) => ownHint(action, shortcuts)),
     })),
   };
 }
+
+// An Action shows its shortcut only while this list owns it.
+const ownHint = (
+  action: DeclaredAction,
+  shortcuts: Set<string>,
+): DeclaredAction =>
+  shortcuts.has(action.id) ? action : { ...action, shortcut: undefined };
 
 export const ActionList = Object.assign(ActionListRoot, {
   Section: ActionSection,

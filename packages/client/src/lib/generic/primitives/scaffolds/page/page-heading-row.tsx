@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import {
   ActionList,
-  ActionListHeaderContext,
   HeaderActions,
   headerSlots,
   type HeaderActionsProps,
@@ -15,11 +14,10 @@ import {
 } from '#primitives/inputs/search-field';
 import { PageBack } from './page-back';
 import { PageColumn } from './page-column';
-import type { PageProps } from './page-props';
-import { usePageActions } from './use-page-actions';
+import type { PageHeaderInput, PageProps } from './page-props';
 
 // A wide Page's heading, or any Page's when no navigator draws its header.
-export function PageHeadingBody(props: PageProps): ReactElement {
+export function PageHeadingBody(props: PageHeaderInput): ReactElement {
   return (
     <View className="py-6">
       <PageColumn>
@@ -47,7 +45,7 @@ function PageCaption({ caption }: Pick<PageProps, 'caption'>): ReactNode {
 
 type HeadingContent = { title: ReactNode; actions: ReactNode };
 
-export function HeadingRow(props: PageProps): ReactElement {
+export function HeadingRow(props: PageHeaderInput): ReactElement {
   const content = {
     title: <PageTitle title={props.title} />,
     actions: <HeadingActions {...props} />,
@@ -80,21 +78,15 @@ function PlainHeading(props: HeadingContent): ReactElement {
   );
 }
 
-/*
- * Every ActionList in `actions` registers here, as a phone's toolbar takes them, so the heading splits them as one
- * header with one overflow menu. The lists leave only their shortcut anchors in place, out of the row's layout.
- */
+// Every ActionList the Page registered, its own and its content's, split as one header with one overflow menu.
 function HeadingActions(
-  props: Pick<PageProps, 'actions' | 'primaryAction'>,
+  props: Pick<PageHeaderInput, 'header' | 'primaryAction'>,
 ): ReactElement {
-  const { register, ...declared } = usePageActions();
+  const { groups, label } = props.header;
 
   return (
     <>
-      <ActionListHeaderContext value={register}>
-        <View className="absolute">{props.actions}</View>
-      </ActionListHeaderContext>
-      <DeclaredActions {...declared} />
+      <DeclaredActions groups={groups} label={label} />
       {primaryButton(props.primaryAction)}
     </>
   );

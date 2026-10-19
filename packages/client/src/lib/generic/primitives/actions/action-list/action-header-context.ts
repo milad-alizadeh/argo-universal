@@ -6,7 +6,10 @@ interface HeaderRegistration {
   label: string;
 }
 
-type HeaderSink = (id: string, registration: HeaderRegistration) => () => void;
+export type HeaderSink = (
+  id: string,
+  registration: HeaderRegistration,
+) => () => void;
 
 export const ActionListHeaderContext = createContext<HeaderSink | undefined>(
   undefined,

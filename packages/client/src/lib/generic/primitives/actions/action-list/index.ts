@@ -29,7 +29,10 @@ export {
 
 export type { ActionShortcut } from './action-shortcuts';
 
-export { ActionListHeaderContext } from './action-header-context';
+export {
+  ActionListHeaderContext,
+  type HeaderSink,
+} from './action-header-context';
 
 export {
   HeaderActions,

@@ -7,9 +7,9 @@ import {
 } from '#primitives/actions/action-list';
 import { HeadingRow } from './page-heading-row';
 import { usePageNavigator } from './page-navigation-context';
-import type { PageProps } from './page-props';
+import type { PageHeaderInput } from './page-props';
 
-export function PageNavigation(props: PageProps): ReactNode {
+export function PageNavigation(props: PageHeaderInput): ReactNode {
   const navigator = usePageNavigator();
   const wide = useWide();
   const headerTitle = useHeaderTitle(props);
@@ -22,7 +22,7 @@ export function PageNavigation(props: PageProps): ReactNode {
 }
 
 // The navigator draws the header outside the Page's tree, so its Actions join the Page's shortcut scope explicitly.
-function useHeaderTitle(props: PageProps): () => React.ReactElement {
+function useHeaderTitle(props: PageHeaderInput): () => React.ReactElement {
   const scope = useActionShortcutScope();
 
   return () => (

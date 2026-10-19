@@ -610,56 +610,6 @@ export type WireSchemaHints = {
     /** Action offered on the web. */
     "action": PropValue<"Toast", "action">;
   };
-  "Metadata": {
-    /** Optional section heading. */
-    "title": PropValue<"Metadata", "title">;
-  };
-  "Metadata.Label": {
-    /** The field label. */
-    "title": PropValue<"Metadata.Label", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.Label", "accessibilityLabel">;
-    /** The field value. */
-    "text": PropValue<"Metadata.Label", "text">;
-    /** icon for this part. */
-    "icon": PropValue<"Metadata.Label", "icon">;
-  };
-  "Metadata.Link": {
-    /** The field label. */
-    "title": PropValue<"Metadata.Link", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.Link", "accessibilityLabel">;
-    /** The displayed link text; drawn as plain text until kit Link lands. */
-    "text": PropValue<"Metadata.Link", "text">;
-    /** The link destination. */
-    "href": PropValue<"Metadata.Link", "href">;
-  };
-  "Metadata.Pills": {
-    /** The field label. */
-    "title": PropValue<"Metadata.Pills", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.Pills", "accessibilityLabel">;
-  };
-  "Metadata.StatusDot": {
-    /** The field label. */
-    "title": PropValue<"Metadata.StatusDot", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.StatusDot", "accessibilityLabel">;
-    /** The status text. */
-    "text": PropValue<"Metadata.StatusDot", "text">;
-    /** tone for this part. */
-    "tone": PropValue<"Metadata.StatusDot", "tone">;
-  };
-  "Metadata.Avatar": {
-    /** The field label. */
-    "title": PropValue<"Metadata.Avatar", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.Avatar", "accessibilityLabel">;
-    /** The person’s displayed name. */
-    "name": PropValue<"Metadata.Avatar", "name">;
-    /** Optional avatar image URI. */
-    "src": PropValue<"Metadata.Avatar", "src">;
-  };
   "Page": {
     /** The single-line page title. */
     "title": PropValue<"Page", "title">;
@@ -674,10 +624,6 @@ export type WireSchemaHints = {
   };
   "ListDetail": {
 
-  };
-  "Detail": {
-    /** label for this part. */
-    "title": PropValue<"Detail", "title">;
   };
   "Inspector": {
     /** label for this part. */
@@ -856,6 +802,62 @@ export type WireSchemaHints = {
     "scale": PropValue<"Canvas.Group", "scale">;
     /** rotate for this part. */
     "rotate": PropValue<"Canvas.Group", "rotate">;
+  };
+  "Detail": {
+    /** The content as Markdown; drawn as body text until kit Markdown lands. */
+    "markdown": PropValue<"Detail", "markdown">;
+    /** Show the content loading state; the Metadata stays. */
+    "isLoading": PropValue<"Detail", "isLoading">;
+  };
+  "Metadata": {
+    /** Optional section heading. */
+    "title": PropValue<"Metadata", "title">;
+  };
+  "Metadata.Label": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Label", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Label", "accessibilityLabel">;
+    /** The field value. */
+    "text": PropValue<"Metadata.Label", "text">;
+    /** icon for this part. */
+    "icon": PropValue<"Metadata.Label", "icon">;
+  };
+  "Metadata.Link": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Link", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Link", "accessibilityLabel">;
+    /** The displayed link text; drawn as plain text until kit Link lands. */
+    "text": PropValue<"Metadata.Link", "text">;
+    /** The link destination. */
+    "href": PropValue<"Metadata.Link", "href">;
+  };
+  "Metadata.Pills": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Pills", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Pills", "accessibilityLabel">;
+  };
+  "Metadata.StatusDot": {
+    /** The field label. */
+    "title": PropValue<"Metadata.StatusDot", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.StatusDot", "accessibilityLabel">;
+    /** The status text. */
+    "text": PropValue<"Metadata.StatusDot", "text">;
+    /** tone for this part. */
+    "tone": PropValue<"Metadata.StatusDot", "tone">;
+  };
+  "Metadata.Avatar": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Avatar", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Avatar", "accessibilityLabel">;
+    /** The person’s displayed name. */
+    "name": PropValue<"Metadata.Avatar", "name">;
+    /** Optional avatar image URI. */
+    "src": PropValue<"Metadata.Avatar", "src">;
   };
   "ListItem.Link": {
     /** The row or section title. */

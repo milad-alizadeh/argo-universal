@@ -31,6 +31,11 @@
         "id": "hello-form",
         "title": "Hello form",
         "path": "/form"
+      },
+      {
+        "id": "hello-item",
+        "title": "Hello item",
+        "path": "/item"
       }
     ],
     "settings": [

@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { within, expect } from 'storybook/test';
 import { Button } from '#primitives/actions/button';
-import { MetadataPillLine } from './metadata-pill-line';
+// The iOS line, which Storybook's web build would otherwise never draw.
+import { MetadataPills } from './metadata-pills.ios';
 
 const meta = {
   title: 'Tests/Metadata/Pill line',
-  component: MetadataPillLine,
+  component: MetadataPills,
   args: { pills: [{ text: 'iOS' }, { text: 'Android' }, { text: 'Web' }] },
-} satisfies Meta<typeof MetadataPillLine>;
+} satisfies Meta<typeof MetadataPills>;
 
 export default meta;
 
@@ -23,7 +24,7 @@ export const RefitsWithoutLosingTheCount: Story = {
     return (
       <>
         <View style={{ width }}>
-          <MetadataPillLine
+          <MetadataPills
             pills={
               retinted
                 ? args.pills.map((pill) => ({ ...pill, tone: 'info' }))

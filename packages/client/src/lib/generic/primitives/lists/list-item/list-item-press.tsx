@@ -120,7 +120,7 @@ function ItemContentSlots(props: DrawingProps): ReactElement {
       <Leading {...props} />
       {props.content ?? <ItemContent {...props} />}
       <Trailing {...props} />
-      {props.labelPlacement ? null : <Accessory>{props.accessory}</Accessory>}
+      <Accessory>{props.accessory}</Accessory>
     </TextClassContext>
   );
 }

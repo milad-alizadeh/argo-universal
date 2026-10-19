@@ -15,7 +15,7 @@ type Register = NonNullable<ContextType<typeof ActionListHeaderContext>>;
 
 type Registration = Parameters<Register>[1];
 
-interface PageActions {
+export interface PageActions {
   register: Register;
   groups: ActionGroup[];
   label: string;

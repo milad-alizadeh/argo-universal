@@ -1,17 +1,21 @@
 import { Button, Stack, Text, useState } from '@argo/plugin-kit';
+import { Item } from './item.js';
 
 function Counter() {
   const [taps, setTaps] = useState(0);
-  const [details, setDetails] = useState(false);
+  const [view, setView] = useState('counter');
 
-  if (details) return <Details onBack={() => setDetails(false)} />;
+  if (view === 'details') return <Details onBack={() => setView('counter')} />;
+
+  if (view === 'item') return <Item />;
 
   return (
     <Stack direction="column">
       <Text>Counter fixture</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <Button label="Tap me" onPress={() => setTaps(taps + 1)} />
-      <Button label="Open details" onPress={() => setDetails(true)} />
+      <Button label="Open details" onPress={() => setView('details')} />
+      <Button label="Open item" onPress={() => setView('item')} />
     </Stack>
   );
 }

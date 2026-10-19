@@ -3,7 +3,6 @@ import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import {
-  ActionListHeaderContext,
   isSubmenu,
   splitHeaderActions,
   type HeaderActionsProps,
@@ -14,24 +13,22 @@ import {
   PageOverflowButton,
   PageSubmenuButton,
 } from './page-menu-button.android';
-import type { PageProps } from './page-props';
+import type { PageHeaderInput } from './page-props';
 import { PageSearchBar } from './page-search-bar.android';
-import { usePageActions } from './use-page-actions';
 
 export const pageTitleOptions = { headerTitleAlign: 'left' } as const;
 
-// The toolbar draws its items outside the Page's tree, so the ActionLists register their groups and the toolbar draws them.
-export function PageHeaderItems(props: PageProps): ReactElement {
-  const { register, ...actions } = usePageActions();
+// The toolbar draws its items outside the Page's tree, so it draws the groups the Page's ActionLists registered.
+export function PageHeaderItems(props: PageHeaderInput): ReactElement {
+  const { groups, label } = props.header;
   // The search icon takes one of the toolbar's two places.
-  const options = headerOptions({ ...actions, slots: props.search ? 1 : 2 });
+  const options = headerOptions({ groups, label, slots: props.search ? 1 : 2 });
 
   return (
-    <ActionListHeaderContext value={register}>
+    <>
       <Stack.Screen options={options} />
-      {props.actions}
       {props.search ? <PageSearchBar {...props} /> : null}
-    </ActionListHeaderContext>
+    </>
   );
 }
 

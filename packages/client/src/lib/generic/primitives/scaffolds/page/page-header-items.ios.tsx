@@ -2,19 +2,17 @@
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import {
-  ActionListHeaderContext,
   splitHeaderActions,
   type ActionGroup,
 } from '#primitives/actions/action-list';
 import { pagePrimaryAction } from './page-primary-action';
-import type { PageProps } from './page-props';
+import type { PageHeaderInput, PageProps } from './page-props';
 import { PageSearchBar } from './page-search-bar.ios';
 import {
   overflowMenu,
   toolbarButton,
   toolbarEntry,
 } from './page-toolbar-items.ios';
-import { usePageActions } from './use-page-actions';
 
 export const pageTitleOptions = {
   headerTitleAlign: 'center',
@@ -22,15 +20,14 @@ export const pageTitleOptions = {
   headerLargeTitleEnabled: false,
 } as const;
 
-export function PageHeaderItems(props: PageProps): ReactElement {
-  const { register, groups, label } = usePageActions();
+export function PageHeaderItems(props: PageHeaderInput): ReactElement {
+  const { groups, label } = props.header;
 
   return (
-    <ActionListHeaderContext value={register}>
-      {props.actions}
+    <>
       <HeaderItems {...props} declared={groups} label={label} />
       {props.search ? <PageSearchBar {...props} /> : null}
-    </ActionListHeaderContext>
+    </>
   );
 }
 

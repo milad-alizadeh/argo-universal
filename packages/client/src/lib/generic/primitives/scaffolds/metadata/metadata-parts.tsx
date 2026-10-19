@@ -2,7 +2,8 @@ import { isValidElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
-import { Pill, type PillProps } from '#primitives/status/pill';
+import { ListItem } from '#primitives/lists/list-item';
+import type { PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
 import { flattenedChildren } from '../../../flattened-children';
 import { MetadataPills } from './metadata-pills';
@@ -13,37 +14,43 @@ import type {
   MetadataAvatarProps,
   MetadataPillsProps,
 } from './metadata-props';
-import { MetadataRow } from './metadata-row';
 import { MetadataText } from './metadata-value';
+
+type FieldOwnProps = Pick<MetadataLabelProps, 'title' | 'accessibilityLabel'>;
+
+// A field's own props; the value it draws comes from its kind.
+function fieldProps(props: FieldOwnProps): FieldOwnProps {
+  return { title: props.title, accessibilityLabel: props.accessibilityLabel };
+}
 
 export function MetadataLabel(props: MetadataLabelProps): ReactElement {
   return (
-    <MetadataRow {...props} label={props.text}>
+    <ListItem.Field {...fieldProps(props)} valueLabel={props.text}>
       <MetadataText text={props.text}>
         {props.icon ? <Icon name={props.icon} role="body" /> : null}
       </MetadataText>
-    </MetadataRow>
+    </ListItem.Field>
   );
 }
 
 export function MetadataLink(props: MetadataLinkProps): ReactElement {
   return (
-    <MetadataRow {...props} label={props.text}>
+    <ListItem.Field {...fieldProps(props)} valueLabel={props.text}>
       <MetadataText text={props.text} />
-    </MetadataRow>
+    </ListItem.Field>
   );
 }
 
 export function MetadataStatus(props: MetadataStatusDotProps): ReactElement {
   return (
-    <MetadataRow {...props} label={props.text}>
+    <ListItem.Field {...fieldProps(props)} valueLabel={props.text}>
       <MetadataText text={props.text}>
         <StatusDot
           tone={props.tone}
           size={Platform.OS === 'ios' ? 'md' : 'sm'}
         />
       </MetadataText>
-    </MetadataRow>
+    </ListItem.Field>
   );
 }
 
@@ -59,7 +66,7 @@ function initials(name: string): string {
 
 export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
   return (
-    <MetadataRow {...props} label={props.name}>
+    <ListItem.Field {...fieldProps(props)} valueLabel={props.name}>
       <MetadataText text={props.name}>
         <Avatar
           size="sm"
@@ -69,25 +76,26 @@ export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
           decorative
         />
       </MetadataText>
-    </MetadataRow>
+    </ListItem.Field>
   );
 }
 
+// The wire lets only Pills in (`children: ['Pill']`), so each child's props are a Pill's values.
 function pillProps(children: MetadataPillsProps['children']): PillProps[] {
-  return flattenedChildren(children)
-    .filter(
-      (child): child is ReactElement<PillProps> =>
-        isValidElement<PillProps>(child) && child.type === Pill,
-    )
-    .map((child) => child.props);
+  return flattenedChildren(children).flatMap((child) =>
+    isValidElement<PillProps>(child) ? [child.props] : [],
+  );
 }
 
 export function MetadataPillsField(props: MetadataPillsProps): ReactElement {
   const pills = pillProps(props.children);
 
   return (
-    <MetadataRow {...props} label={pills.map((pill) => pill.text).join(', ')}>
+    <ListItem.Field
+      {...fieldProps(props)}
+      valueLabel={pills.map((pill) => pill.text).join(', ')}
+    >
       <MetadataPills pills={pills} />
-    </MetadataRow>
+    </ListItem.Field>
   );
 }

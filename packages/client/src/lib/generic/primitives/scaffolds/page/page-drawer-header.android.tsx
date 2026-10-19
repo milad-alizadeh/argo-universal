@@ -13,15 +13,11 @@ import type {
   ParamListBase,
 } from 'expo-router/react-navigation';
 import type { ReactElement } from 'react';
-import {
-  ActionListHeaderContext,
-  type HeaderActionsProps,
-} from '#primitives/actions/action-list';
+import type { HeaderActionsProps } from '#primitives/actions/action-list';
 import { headerClaims } from './page-header-host';
 import { headerOptions, pageTitleOptions } from './page-header-items.android';
-import type { PageProps } from './page-props';
+import type { PageHeaderInput, PageProps } from './page-props';
 import { PageSearchBar } from './page-search-bar.android';
-import { usePageActions } from './use-page-actions';
 
 // What useNavigation returns by default: a stack screen's navigation, whose state may be unset.
 type PageNavigation = Omit<NavigationProp<ParamListBase>, 'getState'> & {
@@ -39,18 +35,13 @@ const released: DrawerHeader = {
   headerRight: undefined,
 };
 
-export function PageDrawerHeader(props: PageProps): ReactElement {
-  const { register, ...actions } = usePageActions();
+export function PageDrawerHeader(props: PageHeaderInput): ReactElement | null {
+  const { groups, label } = props.header;
 
   // The search icon is on the stack's header, so the drawer's has both of its places for Actions.
-  useDrawerHeader(props.title, { ...actions, slots: 2 });
+  useDrawerHeader(props.title, { groups, label, slots: 2 });
 
-  return (
-    <ActionListHeaderContext value={register}>
-      {props.actions}
-      {props.search ? <StackSearch {...props} /> : null}
-    </ActionListHeaderContext>
-  );
+  return props.search ? <StackSearch {...props} /> : null;
 }
 
 // Android's search stays the stack's own bar, which shows the stack's header, titled, under the drawer's.

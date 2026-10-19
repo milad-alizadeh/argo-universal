@@ -3,13 +3,19 @@ import { View } from 'react-native';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { cn } from '#lib/generic/utils';
-import { ActionShortcutScope } from '#primitives/actions/action-list';
+import {
+  ActionListHeaderContext,
+  ActionShortcutScope,
+  type HeaderSink,
+} from '#primitives/actions/action-list';
 import { PageAccessory } from './page-accessory';
 import { usePageColumn } from './page-column';
+import { PageHeaderSinkProvider } from './page-header-actions';
 import { PageHeading } from './page-heading';
 import { PageNavigation } from './page-navigation';
 import { pagePrimaryAction } from './page-primary-action';
 import type { PageProps } from './page-props';
+import { usePageActions } from './use-page-actions';
 
 // Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Page(props: PageProps): ReactElement {
@@ -20,26 +26,45 @@ export function Page(props: PageProps): ReactElement {
   );
 }
 
+// The page's own Actions register first, so they lead those its content hands up.
 function PageSurface(props: PageProps): ReactElement {
+  const header = usePageActions();
+
   return (
     <View
       testID={props.testID}
       className="min-h-0 flex-1 bg-content wide:mt-frame-inset"
     >
-      <PageNavigation {...props} />
-      <PageHeading {...props} />
-      <PageBody {...props} />
+      <OwnActions register={header.register} actions={props.actions} />
+      <PageNavigation {...props} header={header} />
+      <PageHeading {...props} header={header} />
+      <PageBody {...props} register={header.register} />
       <PageAccessory {...props} />
     </View>
   );
 }
 
-function PageBody(props: PageProps): ReactElement {
+// Mounted for their registration only: the lists leave just their shortcut anchors, out of the Page's layout.
+function OwnActions(
+  props: Pick<PageProps, 'actions'> & { register: HeaderSink },
+): ReactElement {
+  return (
+    <ActionListHeaderContext value={props.register}>
+      <View className="absolute">{props.actions}</View>
+    </ActionListHeaderContext>
+  );
+}
+
+function PageBody(props: PageProps & { register: HeaderSink }): ReactElement {
   const { column, className } = usePageBody(props);
 
   return (
     <View className={className}>
-      <ScrollColumnContext value={column}>{props.children}</ScrollColumnContext>
+      <PageHeaderSinkProvider value={props.register}>
+        <ScrollColumnContext value={column}>
+          {props.children}
+        </ScrollColumnContext>
+      </PageHeaderSinkProvider>
     </View>
   );
 }

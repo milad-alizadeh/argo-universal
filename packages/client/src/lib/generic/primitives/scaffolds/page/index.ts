@@ -8,3 +8,5 @@ export {
   PageAtDrawerRoot,
   PageNavigationEnabled,
 } from './page-navigation-context';
+
+export { PageHeaderActions } from './page-header-actions';
