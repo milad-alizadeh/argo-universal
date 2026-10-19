@@ -1,4 +1,3 @@
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
 import {
   replaceableRewriteSchema,
   type ReplaceableInput,
@@ -60,7 +59,7 @@ function coreInput(
 
 function useTreeRefusal(props: ReplaceableSlotViewProps): boolean {
   const root = replacementRoot(props.state);
-  const reason = root ? replacementTreeReason(root, currentPartVersions) : null;
+  const reason = root ? replacementTreeReason(root) : null;
   const { onFallback } = props;
   useEffect(() => {
     if (reason) onFallback(reason);

@@ -3,8 +3,6 @@ import * as accessibility from '../part-accessibility-metadata';
 import {
   part,
   stringLabel,
-  optionalLabel,
-  tone,
   onPress,
   imageSource,
 } from '../plugin-part-schema-utils';
@@ -20,15 +18,6 @@ export const contentPartSchemas = {
       label:
         'The surrounding control supplies the accessible name; this symbol is decorative.',
       accessibility: accessibility.iconAccessibility,
-      previous: [
-        z.object({
-          name: z.string().describe('A supported native symbol name.'),
-          role: z.string().optional().describe('Semantic icon size role.'),
-          tone,
-          status: z.string().optional().describe('Optional status mark.'),
-          accessibilityLabel: optionalLabel,
-        }),
-      ],
     },
   ),
   Image: part(
@@ -84,15 +73,6 @@ export const contentPartSchemas = {
     {
       label: 'The required accessibilityLabel supplies the spoken identity.',
       accessibility: accessibility.avatarAccessibility,
-      previous: [
-        z.object({
-          source: imageSource.optional(),
-          initials: z.string().optional().describe('Fallback initials.'),
-          size: z.enum(['sm', 'md', 'lg']).optional().describe('Avatar size.'),
-          status: z.string().optional().describe('Optional status mark.'),
-          accessibilityLabel: optionalLabel,
-        }),
-      ],
     },
   ),
   Markdown: part(

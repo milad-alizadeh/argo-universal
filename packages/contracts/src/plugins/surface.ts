@@ -1,23 +1,28 @@
 import { z } from 'zod';
 
-export const PartVersions = z.record(
-  z.string().min(1),
-  z.number().int().positive(),
-);
+// The Plugin wire this App and Server speak; bump it, and the minimum, for a change an older App can't draw (ADR-0034).
+export const pluginWireVersion = 1;
 
-export type PartVersions = z.infer<typeof PartVersions>;
+// The oldest App wire version the Server still sends Plugin trees to.
+export const minimumPluginWireVersion = 1;
 
 export const PluginSurface = z.object({
   platform: z.enum(['ios', 'android', 'web', 'desktop']),
-  parts: PartVersions,
+  wireVersion: z.number().int().positive(),
 });
 
 export type PluginSurface = z.infer<typeof PluginSurface>;
 
+// The surface an App reports for its platform when it speaks this build's wire version.
+export const currentPluginSurface = (
+  platform: PluginSurface['platform'],
+): PluginSurface => ({ platform, wireVersion: pluginWireVersion });
+
+// An App that reports no wire version, or one below the minimum, sees "Update Argo" instead of Plugin trees.
+export const drawsPluginWire = (surface: PluginSurface | undefined): boolean =>
+  (surface?.wireVersion ?? 0) >= minimumPluginWireVersion;
+
 // Render context belongs to one App; legacy Connections did not report a surface.
 export type PluginRenderContext = Readonly<{
-  surface?: Readonly<{
-    platform: PluginSurface['platform'];
-    parts: Readonly<PartVersions>;
-  }>;
+  surface?: Readonly<PluginSurface>;
 }>;

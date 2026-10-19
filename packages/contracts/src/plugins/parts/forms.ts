@@ -9,9 +9,6 @@ import { fieldProps } from '../simple-kit-props';
 
 export const formsPartSchemas = {
   Field: part('A Field wrapper around its child control.', fieldProps, {
-    previous: [
-      z.object({ label: stringLabel, required: z.boolean().optional() }),
-    ],
     children: true,
     slots: {},
   }),

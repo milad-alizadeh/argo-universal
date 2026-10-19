@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import {
   messageSlotFixture,
   rewrittenMessage,
@@ -59,10 +59,7 @@ it.each([
     ]);
     const { url } = await startEngineTestHost({ home });
 
-    const app = renderApp(url, input, {
-      platform: 'web',
-      parts: currentPartVersions,
-    });
+    const app = renderApp(url, input, currentPluginSurface('web'));
 
     await expect
       .poll(() => app.messages[0], { timeout: 10_000 })
@@ -100,10 +97,7 @@ it('retains a replacement while an outer Hook waits on a slow argo call', async 
   ]);
   const { url } = await startEngineTestHost({ home });
 
-  const app = renderApp(url, traySlotFixture, {
-    platform: 'web',
-    parts: currentPartVersions,
-  });
+  const app = renderApp(url, traySlotFixture, currentPluginSurface('web'));
 
   await expect
     .poll(() => app.messages[0], { timeout: 50_000 })

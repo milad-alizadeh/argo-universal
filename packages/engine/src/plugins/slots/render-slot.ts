@@ -1,4 +1,5 @@
 import { JsonObject } from '@repo/contracts/plugins/hook-protocol';
+import { drawsPluginWire } from '@repo/contracts/plugins/kit';
 import {
   RenderAnswer,
   type ReplaceableInput,
@@ -7,6 +8,7 @@ import {
 import type { RpcConnection } from '../../rpc';
 import type { StartedPlugins } from '../located-plugins';
 import type { PluginRuntime } from '../runtime/plugin-runtime';
+import { belowWireMinimum } from '../views/render-fallback';
 import { renderView } from './render-view';
 
 type RenderRequest = { input: ReplaceableInput; plugins: StartedPlugins };
@@ -54,13 +56,30 @@ async function* drawAnswer(
   { input, answer }: AnsweredRender,
   connection: RpcConnection,
 ): AsyncGenerator<ReplaceableMessage> {
-  if ('pluginId' in answer)
+  if (!('pluginId' in answer))
+    yield { type: 'core', input: coreInput(input, answer) };
+  else if (drawsPluginWire(connection.surface))
     yield* renderView({
       runtime,
       replacement: { ...answer, input },
       connection,
     });
-  else yield { type: 'core', input: coreInput(input, answer) };
+  else yield drawCoreForOlderApp(runtime, { ...answer, input });
+}
+
+type Selected = Extract<RenderAnswer, { pluginId: string }> & {
+  input: ReplaceableInput;
+};
+
+// An App older than the wire minimum draws core's own in every Replaceable Slot (ADR-0034).
+function drawCoreForOlderApp(
+  runtime: PluginRuntime,
+  { pluginId, path, input }: Selected,
+): ReplaceableMessage {
+  runtime.views.discardRender(pluginId, path);
+  runtime.renderFallback(pluginId, input.slotId, belowWireMinimum);
+
+  return { type: 'core', input };
 }
 
 function discardSelected(runtime: PluginRuntime, answer: RenderAnswer): void {

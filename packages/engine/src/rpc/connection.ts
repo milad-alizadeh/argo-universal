@@ -19,11 +19,24 @@ export function createRpcContext(
   const controller = new AbortController();
   socket.once('close', () => controller.abort());
 
-  const surface = params?.['pluginSurface']
-    ? PluginSurface.parse(JSON.parse(params['pluginSurface']))
-    : undefined;
-
   return {
-    connection: { id: randomUUID(), signal: controller.signal, surface },
+    connection: {
+      id: randomUUID(),
+      signal: controller.signal,
+      surface: reportedSurface(params?.['pluginSurface']),
+    },
   };
+}
+
+// A missing, non-JSON or malformed surface reports no wire version: that App sees "Update Argo", not a broken Connection.
+function reportedSurface(
+  reported: string | undefined,
+): PluginSurface | undefined {
+  if (!reported) return undefined;
+
+  try {
+    return PluginSurface.safeParse(JSON.parse(reported)).data;
+  } catch {
+    return undefined;
+  }
 }

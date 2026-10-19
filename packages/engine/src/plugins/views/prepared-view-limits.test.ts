@@ -4,7 +4,7 @@ import {
   pluginPageFallback,
 } from '@repo/contracts/plugins/wire-limits';
 import { expect, it } from 'vitest';
-import { compatibleView } from './compatible-view';
+import { preparedView } from './prepared-view';
 
 const large: WireNode = {
   type: 'Stack',
@@ -24,11 +24,11 @@ async function* oversized(): AsyncGenerator<ViewMessage> {
   yield { type: 'snapshot', revision: 1, root: large };
 }
 
-it('caps a page that becomes too large only after invalid-container adaptation', async () => {
+it('caps a page that becomes too large only after invalid containers become Update Argo', async () => {
   expect(Buffer.byteLength(JSON.stringify(large))).toBeLessThan(
     pluginPageBytes,
   );
-  const stream = compatibleView(oversized());
+  const stream = preparedView(oversized());
 
   const message = (await stream.next()).value;
 
@@ -65,9 +65,7 @@ async function* recovering(): AsyncGenerator<ViewMessage> {
 it('logs one refusal and recovers from an admissible patch using the last tree actually sent', async () => {
   const reasons: string[] = [];
 
-  const stream = compatibleView(recovering(), undefined, (reason) =>
-    reasons.push(reason),
-  );
+  const stream = preparedView(recovering(), (reason) => reasons.push(reason));
 
   const first = (await stream.next()).value;
   const recovered = (await stream.next()).value;
@@ -83,25 +81,7 @@ it('logs one refusal and recovers from an admissible patch using the last tree a
     ops: [{ op: 'replace', key: [], node: small }],
   });
 
-  expect(reasons).toEqual([`adapted page exceeds ${pluginPageBytes} bytes`]);
+  expect(reasons).toEqual([`prepared page exceeds ${pluginPageBytes} bytes`]);
 
-  await stream.return();
-});
-
-it('lowers the capped-page fallback for a previous App Text version', async () => {
-  const stream = compatibleView(oversized(), { Column: 1, Row: 1, Text: 2 });
-  const message = (await stream.next()).value;
-
-  expect(message).toMatchObject({
-    type: 'snapshot',
-    root: {
-      type: 'Text',
-      props: {
-        label: 'This Plugin page could not be displayed.',
-        variant: 'secondary',
-        tone: 'muted',
-      },
-    },
-  });
   await stream.return();
 });

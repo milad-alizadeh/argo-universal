@@ -1,6 +1,5 @@
-import { z } from 'zod';
 import { collapsibleProps, openChange } from '../overlay-kit-props';
-import { part, stringLabel } from '../plugin-part-schema-utils';
+import { part } from '../plugin-part-schema-utils';
 import { wireParts } from '../wire-parts';
 
 export const layoutPartSchemas = {
@@ -14,15 +13,6 @@ export const layoutPartSchemas = {
     'A disclosure container that shows or hides its content.',
     collapsibleProps,
     {
-      previous: [
-        z.object({
-          label: stringLabel,
-          expanded: z
-            .boolean()
-            .optional()
-            .describe('Whether content is initially expanded.'),
-        }),
-      ],
       children: true,
       events: { onOpenChange: openChange(collapsibleProps) },
       slots: {},

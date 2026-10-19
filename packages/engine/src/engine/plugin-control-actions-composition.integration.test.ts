@@ -40,7 +40,7 @@ it(
     });
     await expect
       .poll(() => app.messages.at(-1), { timeout: 10_000 })
-      .toMatchObject({ revision: 2, ops: [{ props: { label: 'Second' } }] });
+      .toMatchObject({ revision: 2, ops: [{ props: { children: 'Second' } }] });
     await expect(
       app.client.plugins.dispatch.mutate({ ...target, key: '0/run/first' }),
     ).rejects.toThrow('Plugin view changed');
@@ -78,6 +78,9 @@ it(
     await app.client.plugins.dispatch.mutate({ ...target, payload: true });
     await expect
       .poll(() => app.messages.at(-1), { timeout: 10_000 })
-      .toMatchObject({ revision: 2, ops: [{ props: { label: 'Enabled' } }] });
+      .toMatchObject({
+        revision: 2,
+        ops: [{ props: { children: 'Enabled' } }],
+      });
   },
 );

@@ -4,7 +4,7 @@ import { jsx } from '@argo/plugin-kit/jsx-runtime';
 function frozenSurface(surface) {
   if (!surface) return true;
 
-  return Object.isFrozen(surface) && Object.isFrozen(surface.parts);
+  return Object.isFrozen(surface);
 }
 
 function content({ context: ctx }) {

@@ -1,10 +1,5 @@
 import { z } from 'zod';
-import {
-  legacyPartVersions,
-  wirePart,
-  type PartVersions,
-  type WirePartDefinition,
-} from './kit';
+import { wirePart } from './kit';
 import {
   acceptsChildren,
   acceptsSlots,
@@ -13,7 +8,6 @@ import {
 } from './prepare-slots';
 import { refusedBelowRoot, rootSlotParts } from './root-only';
 import { WireJson, type WireNode } from './wire';
-import type { LoweredPart } from './wire-part-definition';
 
 const jsonProps = z.record(z.string(), WireJson);
 
@@ -28,7 +22,8 @@ export { isRootOnly, refusedBelowRoot, rootSlotParts } from './root-only';
 export const isWireContainer = (node: WireNode): boolean =>
   Boolean(wirePart(node.type)?.container) || hasContent(node);
 
-function updateMessage(key: string): WireNode {
+// Shown for a container no App can draw, and for a whole Plugin tree when the App is older than the wire minimum.
+export function updateArgoNode(key: string): WireNode {
   return {
     type: 'Text',
     key,
@@ -42,8 +37,8 @@ function updateMessage(key: string): WireNode {
   };
 }
 
-function unsupported(node: WireNode, parts: PartVersions): WireNode | null {
-  return isWireContainer(node) ? adapted(updateMessage(node.key), parts) : null;
+function unsupported(node: WireNode): WireNode | null {
+  return isWireContainer(node) ? updateArgoNode(node.key) : null;
 }
 
 function parsedNode(node: WireNode, schema: z.ZodType): WireNode | null {
@@ -79,91 +74,45 @@ function currentNode(node: WireNode): WireNode | null {
   return parsedNode(node, part.props);
 }
 
-function versionSchema(
-  versions: readonly z.ZodType[],
-  version: number | undefined,
-): z.ZodType | undefined {
-  if (!version) return undefined;
-
-  return versions[Math.min(version, versions.length) - 1];
-}
-
-function lowered(
-  node: WireNode,
-  part: WirePartDefinition,
-  parts: PartVersions,
-): WireNode | null {
-  const older = part.lower?.(node.props);
-
-  return older ? olderNode(node, older, parts) : null;
-}
-
-function olderNode(
-  node: WireNode,
-  older: LoweredPart,
-  parts: PartVersions,
-): WireNode | null {
-  const schema = versionSchema(older.versions, parts[older.type]);
-  const { type, props } = older;
-
-  return schema ? parsedNode({ ...node, type, props }, schema) : null;
-}
-
-function adapted(node: WireNode, parts: PartVersions): WireNode | null {
-  const part = wirePart(node.type);
-
-  if (!part) return null;
-  const schema = versionSchema(part.versions, parts[node.type]);
-
-  return schema ? parsedNode(node, schema) : lowered(node, part, parts);
-}
-
 function prepareNodes(
   nodes: WireNode[],
-  parts: PartVersions,
   roots: readonly string[] = [],
 ): WireNode[] {
   return nodes.flatMap((child) => {
     const next = refusedBelowRoot(child, roots)
-      ? unsupported(child, parts)
-      : prepare(child, parts);
+      ? unsupported(child)
+      : prepare(child);
 
     return next ? [next] : [];
   });
 }
 
-function slotsOf(node: WireNode, parts: PartVersions): WireNode['slots'] {
+function slotsOf(node: WireNode): WireNode['slots'] {
   return Object.fromEntries(
     Object.entries(node.slots).flatMap(([name, children]) => {
-      const prepared = prepareNodes(children, parts, rootSlotParts(node, name));
+      const prepared = prepareNodes(children, rootSlotParts(node, name));
 
       return prepared.length ? [[name, prepared]] : [];
     }),
   );
 }
 
-function prepare(node: WireNode, parts: PartVersions): WireNode | null {
+function prepare(node: WireNode): WireNode | null {
   const current = currentNode(node);
 
-  if (!current) return unsupported(node, parts);
-  const compatible = adapted(current, parts);
-
-  if (!compatible) return unsupported(node, parts);
+  if (!current) return unsupported(node);
 
   return {
-    ...compatible,
-    children: prepareNodes(node.children, parts),
-    slots: slotsOf(node, parts),
+    ...current,
+    children: prepareNodes(node.children),
+    slots: slotsOf(node),
   };
 }
 
-// Both validation and version adaptation happen before a tree reaches an App.
-export function prepareWireTree(
-  root: WireNode,
-  parts: PartVersions = legacyPartVersions,
-): WireNode {
+// Every tree is checked against the one current schema set before it reaches an App.
+export function prepareWireTree(root: WireNode): WireNode {
   return (
-    prepare(root, parts) ?? {
+    prepare(root) ?? {
       type: '#empty',
       key: root.key,
       props: {},
@@ -173,6 +122,6 @@ export function prepareWireTree(
   );
 }
 
-export function supportsWireNode(node: WireNode, parts: PartVersions): boolean {
-  return Boolean(currentNode(node) && adapted(node, parts));
+export function supportsWireNode(node: WireNode): boolean {
+  return Boolean(currentNode(node));
 }

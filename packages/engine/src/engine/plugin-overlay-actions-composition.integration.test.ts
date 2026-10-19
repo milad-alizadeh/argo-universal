@@ -1,4 +1,3 @@
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
 import { ViewMessage, type PartEvent } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
@@ -14,7 +13,7 @@ async function overlayApp(): Promise<ReturnType<typeof connectPluginApp>> {
 
   const { url } = await startEngineTestHost({ home });
 
-  const app = connectPluginApp(url, page, currentPartVersions);
+  const app = connectPluginApp(url, page);
 
   await expect.poll(() => app.messages.length, { timeout: 10_000 }).toBe(1);
 

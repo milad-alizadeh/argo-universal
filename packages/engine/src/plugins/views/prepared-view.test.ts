@@ -1,8 +1,7 @@
-import { legacyPartVersions } from '@repo/contracts/plugins/kit';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import { expect, it } from 'vitest';
-import { compatibleView } from './compatible-view';
+import { preparedView } from './prepared-view';
 
 const leaf = (key: string, label: string): WireNode => ({
   type: 'Text',
@@ -37,7 +36,7 @@ async function* messages(): AsyncGenerator<ViewMessage> {
       {
         op: 'setProps',
         key: ['label'],
-        props: { children: 'After', accessibilityLabel: 'New optional prop' },
+        props: { children: 'After', futureProp: 'Unknown optional prop' },
       },
     ],
   };
@@ -53,20 +52,13 @@ async function collect(
   return received;
 }
 
-it('rebases patches after lowering and pruning, and advances revisions for stripped props', async () => {
-  const received = await collect(
-    compatibleView(messages(), legacyPartVersions),
-  );
+it('rebases patches after pruning, and advances revisions for stripped props', async () => {
+  const received = await collect(preparedView(messages()));
 
   expect(received[0]).toEqual({
     type: 'snapshot',
     revision: 1,
-    root: {
-      ...root,
-      type: 'Column',
-      props: {},
-      children: [{ ...leaf('label', 'Before'), props: { label: 'Before' } }],
-    },
+    root: { ...root, children: [leaf('label', 'Before')] },
   });
   expect(received[1]).toEqual({
     type: 'patch',
@@ -75,7 +67,7 @@ it('rebases patches after lowering and pruning, and advances revisions for strip
       {
         op: 'setProps',
         key: ['label'],
-        props: { label: 'After' },
+        props: { children: 'After' },
         unset: undefined,
       },
     ],
@@ -83,12 +75,7 @@ it('rebases patches after lowering and pruning, and advances revisions for strip
   expect(received[2]).toEqual({
     type: 'snapshot',
     revision: 3,
-    root: {
-      ...root,
-      type: 'Column',
-      props: {},
-      children: [{ ...leaf('label', 'After'), props: { label: 'After' } }],
-    },
+    root: { ...root, children: [leaf('label', 'After')] },
   });
 });
 
@@ -122,25 +109,23 @@ function patchOf(
 }
 
 it('recovers when an invalid container becomes valid in a patch', async () => {
-  const received = await collect(
-    compatibleView(changing(), legacyPartVersions),
-  );
+  const received = await collect(preparedView(changing()));
 
   const [first, second] = received;
 
   expect(first).toMatchObject({
     type: 'snapshot',
-    root: { type: 'Text', props: { label: 'Update Argo to see this' } },
+    root: { type: 'Text', props: { children: 'Update Argo to see this' } },
   });
 
   expect(second).toMatchObject({
     type: 'patch',
-    ops: [{ op: 'replace', key: [], node: { type: 'Column' } }],
+    ops: [{ op: 'replace', key: [], node: { type: 'Stack' } }],
   });
   const snapshot = snapshotOf(first);
   const patch = patchOf(second);
 
   expect(applyPatch(snapshot.root, patch.ops).children).toEqual([
-    { ...leaf('label', 'Before'), props: { label: 'Before' } },
+    leaf('label', 'Before'),
   ]);
 });
