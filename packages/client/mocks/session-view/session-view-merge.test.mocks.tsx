@@ -33,7 +33,9 @@ export const mergeWaitsForChecks: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
     await expect(await canvas.findByLabelText('PR #45, Open')).toBeVisible();
-    await expect(canvas.getByLabelText('Checks 3/5, 2 running')).toBeVisible();
+    await expect(
+      canvas.getByLabelText('CI Checks 3/5, 2 running'),
+    ).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: mergeLabel }),
     ).toBeDisabled();
@@ -48,7 +50,7 @@ export const mergesWhenChecksPass: Story = {
   play: async ({ canvas, args, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await expect(
-      await canvas.findByLabelText('Checks 5/5, passed'),
+      await canvas.findByLabelText('CI Checks 5/5, passed'),
     ).toBeVisible();
     const merge = canvas.getByRole('button', { name: mergeLabel });
     await expect(merge).toBeEnabled();
@@ -74,7 +76,7 @@ export const listsEveryPullRequest: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await expect(
-      await canvas.findByLabelText('Checks 4/5, 1 failing'),
+      await canvas.findByLabelText('CI Checks 4/5, 1 failing'),
     ).toBeVisible();
     await expect(canvas.queryByLabelText('PR #46, Draft')).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: '+1 PR' }));
@@ -94,6 +96,6 @@ export const listsEveryPullRequest: Story = {
     );
     await expect(await canvas.findByLabelText('PR #46, Draft')).toBeVisible();
     // The draft has no checks to show.
-    await expect(canvas.queryByLabelText(/^Checks /)).toBeNull();
+    await expect(canvas.queryByLabelText(/^CI Checks /)).toBeNull();
   },
 };

@@ -122,6 +122,9 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
   return {
     label: triggerLabel(props),
     accessibilityLabel: 'Agent and model',
+    labelRole: { compact: 'row', wide: 'control' },
+    variant: 'toolbar',
+    size: 'md',
     disabled: props.disabled,
     leading: agentModelLeading(props),
     trailing: <AgentModelTrailing configuration={configuration} wide={wide} />,

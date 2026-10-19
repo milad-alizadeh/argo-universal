@@ -33,7 +33,7 @@ function proseClassName(
   return cn(
     'font-sans',
     proseVariantClassNames[variant],
-    heading && markdownBlockClassNames.heading,
+    heading && markdownBlockClassNames.proseHeading,
   );
 }
 

@@ -136,7 +136,7 @@ function planTriggerClass({
   return contentActionClass({
     variant: 'ghost',
     className: wide
-      ? 'h-8 sm:h-8 py-0 w-full pl-2 pr-1.5 gap-1.5 rounded-none justify-start'
+      ? 'h-8 sm:h-8 py-0 w-full px-3 gap-1.5 rounded-none justify-start'
       : chipClassName,
     disabled,
   });

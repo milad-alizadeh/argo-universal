@@ -35,5 +35,7 @@ export type IconButtonProps = IconButtonGlyph &
      * so the glyph lines up with text, gaps and padding: a row's trailing action, inline links.
      */
     bleed?: boolean;
+    // The button's corners; `control` by default.
+    corners?: 'control' | 'tight' | 'round';
     badge?: ReactNode;
   };
