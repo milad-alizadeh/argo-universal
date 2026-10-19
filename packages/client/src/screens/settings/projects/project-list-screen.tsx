@@ -16,13 +16,15 @@ function toProjectsLoad(
   return { status: 'loading' };
 }
 
-export function ProjectListScreen(): React.JSX.Element {
+// The Projects list, marking the Project whose page is open beside it.
+export function ProjectList(props: { selected?: string }): React.JSX.Element {
   const navigate = useNavigate();
 
   return (
     <ProjectListView
       caption={useServerPageCaption()}
       projects={toProjectsLoad(useProjects())}
+      selected={props.selected}
       onOpenProject={(name) => navigate(projectHref(name))}
     />
   );

@@ -100,3 +100,37 @@ test('the form submits the drafted Issue', async ({ mount, clock }) => {
   await page.dispatch({ key: form, event: 'onSubmit' });
   assert.equal((await page.find('Created Crash')).type, 'Text');
 });
+
+const listDetailParts = {
+  ListDetail: 1,
+  List: 2,
+  ListItem: 3,
+  Pill: 2,
+  Label: 3,
+  Page: 1,
+  Detail: 1,
+  Metadata: 1,
+  'Metadata.StatusDot': 1,
+  'Metadata.Avatar': 1,
+  'Metadata.Pills': 1,
+  'Metadata.Label': 1,
+  'Metadata.Link': 1,
+  EmptyState: 1,
+  ActionList: 1,
+  Action: 3,
+};
+
+test('a build page shows the builds beside the selected one', async ({
+  mount,
+}) => {
+  const page = await mount({
+    page: '/builds/web',
+    surface: { platform: 'web', parts: listDetailParts },
+  });
+
+  assert.equal((await page.find('Deploy web')).type, 'ListItem');
+  assert.equal((await page.find('Build native')).type, 'ListItem');
+  assert.equal((await page.find('Sync fails on large repos')).type, 'Page');
+  await page.press('Close');
+  assert.equal((await page.find('Reopen')).type, 'Action');
+});

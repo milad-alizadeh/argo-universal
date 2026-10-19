@@ -37,7 +37,8 @@ function useProjectDetail(name: string): ProjectDetailViewProps {
   };
 }
 
-export function ProjectDetailScreen({
+// One Project's page, beside the Projects list on a wide window.
+export function ProjectDetail({
   name,
 }: ProjectDetailScreenProps): React.JSX.Element {
   return <ProjectDetailView {...useProjectDetail(name)} />;
