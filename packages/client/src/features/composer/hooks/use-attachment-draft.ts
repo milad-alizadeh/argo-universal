@@ -2,6 +2,7 @@ import type { BlobRef, SessionNewInput } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
 import { type Dispatch, useReducer } from 'react';
 import { useTRPC } from '#features/connection';
+import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import type { ComposerDraft } from '../components/composer/composer';
 import { keptDrafts } from '../stores/kept-draft';
 import {
@@ -16,7 +17,6 @@ import {
 import { type DraftKey, type DraftOwner, draftKey } from '../utils/draft-key';
 import { draftPrompt } from '../utils/draft-prompt';
 import { droppedFiles, pickFiles, pickImages } from './pick-attachments';
-import type { DroppedFiles } from './use-file-drop';
 import { useKeptDraft } from './use-kept-draft';
 
 export interface AttachmentDraft {

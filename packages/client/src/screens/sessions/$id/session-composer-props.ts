@@ -44,12 +44,7 @@ export interface OpenSession {
 
 type DraftProps = Pick<
   ComposerProps,
-  | 'draft'
-  | 'onDraftChange'
-  | 'onAttachImages'
-  | 'onAttachFiles'
-  | 'onDropFiles'
-  | 'onSend'
+  'draft' | 'onDraftChange' | 'onAttachImages' | 'onAttachFiles' | 'onSend'
 >;
 
 const isTurnRunning = (snapshot: SessionSnapshot): boolean =>
@@ -136,7 +131,6 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
   onDraftChange: commands.changeDraft,
   onAttachImages: () => void commands.attachImages(),
   onAttachFiles: () => void commands.attachFiles(),
-  onDropFiles: (dropped) => void commands.attachDroppedFiles(dropped),
   onSend: (sent) => void commands.sendDraft(sent),
 });
 

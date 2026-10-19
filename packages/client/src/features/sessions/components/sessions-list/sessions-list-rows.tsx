@@ -18,7 +18,7 @@ export type SessionListRowProps = Pick<
   | 'session'
   | 'logo'
   | 'selected'
-  | 'trailing'
+  | 'age'
   | 'layout'
   | 'onSelect'
   | 'onRename'

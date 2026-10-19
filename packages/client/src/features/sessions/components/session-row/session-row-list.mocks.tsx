@@ -6,7 +6,6 @@ import { List } from '#primitives/lists/list';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { SessionsLayout } from '../../stores/sessions-view';
 import { SessionRow, type SessionRowProps } from './session-row';
-import { showsSessionAge } from './session-row-props';
 
 export interface SessionRowListMockProps {
   sessions: readonly SessionInfo[];
@@ -15,7 +14,7 @@ export interface SessionRowListMockProps {
   layout?: SessionsLayout;
   metadata?: Record<
     string,
-    Pick<SessionRowProps, 'pullRequest' | 'subagentsFailed' | 'trailing'>
+    Pick<SessionRowProps, 'pullRequest' | 'subagentsFailed' | 'age'>
   >;
 }
 
@@ -36,12 +35,6 @@ const metadataOf = (
   session: SessionInfo,
 ): RowMetadata => list.metadata?.[session.sessionId] ?? {};
 
-// The age shows only where the list would show it.
-const shownAge = (
-  layout: SessionsLayout,
-  { trailing }: RowMetadata,
-): string | undefined => (showsSessionAge(layout) ? trailing : undefined);
-
 interface ListedRowProps {
   list: SessionRowListMockProps;
   session: SessionInfo;
@@ -59,7 +52,6 @@ function rowProps(row: ListedRowProps, wide: boolean): SessionRowProps {
     logo: agentLogo(session.agent),
     selected: wide && session.sessionId === list.selectedSessionId,
     layout,
-    trailing: shownAge(layout, metadata),
     onSelect: list.onSelect,
   };
 }

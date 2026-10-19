@@ -46,8 +46,9 @@ function PaperSessionList(
 }
 
 /*
- * Paper's list: every status, both Agents, pull request metadata, a failed Subagent,
- * a finished Plan with no bar, and the first row selected on wide layouts.
+ * Paper's list: every status, both Agents, the time leading each meta line, pull request metadata,
+ * a failed Subagent, a finished Plan with no bar, a status dot ending every row but an idle one's,
+ * and the first row selected on wide layouts.
  */
 export const Overview: Story = {
   name: 'SessionRow',
@@ -66,7 +67,7 @@ export const Overview: Story = {
   ),
 };
 
-// One line per Session: its PR's glyph in the PR's state colour, or with no PR how long ago it was active.
+// One line per Session: its PR's glyph in the PR's state colour, or with no PR how long ago it was active, then its status dot unless idle.
 export const Compact: Story = {
   name: 'Compact',
   render: (args) => (

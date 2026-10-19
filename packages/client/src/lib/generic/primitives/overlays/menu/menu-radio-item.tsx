@@ -57,10 +57,11 @@ export function focusTracking(focus: KeyboardFocus): FocusTracking {
   };
 }
 
-// A choice menu's radio row.
+// A choice menu's radio row: its icon, label and check 6px apart, as Paper's View options rows.
 function choiceItemClassName(keyboardFocus: boolean): string {
   return cn(
     choiceRowClassName,
+    'gap-1.5',
     'cursor-default rounded-xl outline-0 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
     keyboardFocus &&
       'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
@@ -102,12 +103,12 @@ function RadioIndicator(): React.JSX.Element {
   );
 }
 
-// The option's icon leads the row: a Body-size glyph in a list row's leading slot.
+// The option's icon leads the row: a Body-size glyph in a slot as wide as the trailing check's.
 function RadioIcon(props: { icon?: IconName }): React.JSX.Element | null {
   if (!props.icon) return null;
 
   return (
-    <IconSlot role="row">
+    <IconSlot role="body">
       <Icon name={props.icon} role="body" />
     </IconSlot>
   );

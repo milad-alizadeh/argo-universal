@@ -8,6 +8,7 @@ import {
   type ListSelection,
 } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
+import { useSectionDrawing } from '../../../list-section-drawing';
 import { useInMenu } from '../../../menu-rows-context';
 import type { ListSectionProps } from './list-props';
 import { ListSection } from './list-section';
@@ -75,9 +76,11 @@ function sectionEntries(
   ];
 }
 
-// Paper's Combobox master: a popover's groups sit 8px apart; other lists keep 16px between sections.
+// Paper's Combobox master: a popover's groups sit 8px apart; other lists take their section drawing's gap.
 function SectionGap(): ReactElement {
-  return <View className={useInMenu() ? 'h-2' : 'h-4'} />;
+  const { below } = useSectionDrawing();
+
+  return <View className={useInMenu() ? 'h-2' : below} />;
 }
 
 // A popover's last group ends at the popover's own inset, with no gap below it.

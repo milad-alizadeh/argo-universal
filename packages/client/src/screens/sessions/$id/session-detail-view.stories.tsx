@@ -10,6 +10,7 @@ import {
   type SessionDetailViewProps,
 } from './session-detail-view';
 import { ElicitationPreview } from './session-detail-view-elicitation.mocks';
+import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
   pullRequestMocks,
   withPullRequests,
@@ -92,6 +93,12 @@ export const LongFeed: Story = {
   args: { view: { state: 'open', ...longSession } },
 };
 
+// A long Feed in the Frame: the rail's toggle collapses and expands the sidebar while the Feed keeps its layout and only slides.
+export const LongFeedInFrame: Story = {
+  args: { view: { state: 'open', ...longSession } },
+  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
+};
+
 export const Empty: Story = {
   args: { view: { state: 'open', ...emptySession } },
 };
@@ -110,6 +117,18 @@ export const Disconnected: Story = {
 // Archived: the Feed reads as before; a banner takes the Composer's place.
 export const Archived: Story = {
   args: { view: { state: 'open', ...idleSession, archived: true } },
+};
+
+// Files dragged over the window: the pane below the header shows where they land, and the Feed recedes behind the label.
+export const DraggingFiles: Story = {
+  play: async ({ canvasElement }) => {
+    const transfer = new DataTransfer();
+
+    transfer.items.add(new File(['# Notes'], 'notes.md'));
+    canvasElement.dispatchEvent(
+      new DragEvent('dragenter', { bubbles: true, dataTransfer: transfer }),
+    );
+  },
 };
 
 export const Opening: Story = { args: { view: { state: 'opening' } } };

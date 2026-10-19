@@ -87,8 +87,8 @@ const server = createActor(serverConnectionMachine, {
   },
 });
 
-// The 12px lights centred in the rail's 44px row: the glass is inset 8, and the row's 52px of lights centres in the 80px rail.
-const trafficLights = { x: 22, y: 24 };
+// The 12px lights centred in the shared top bar's 44px row: the glass is inset 8, and the 52px of lights starts 12 into the 68px window controls.
+const trafficLights = { x: 20, y: 24 };
 
 const createWindow = (url: string): void => {
   const stateFile = path.join(app.getPath('userData'), 'window-state.json');
@@ -103,7 +103,7 @@ const createWindow = (url: string): void => {
     // Below 600 is a phone's width, the compact size class (ADR-0026).
     minWidth: 600,
     show: !runsInBackground,
-    // On macOS the traffic lights sit in the rail's window-controls row on the glass, with no title bar above.
+    // On macOS the traffic lights sit in the shared top bar's window controls on the glass, with no title bar above.
     ...(process.platform === 'darwin' && {
       titleBarStyle: 'hidden',
       trafficLightPosition: trafficLights,

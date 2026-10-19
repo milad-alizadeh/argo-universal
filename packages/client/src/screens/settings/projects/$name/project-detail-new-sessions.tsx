@@ -8,8 +8,12 @@ const checkoutOptions = [
   { value: 'main', label: 'Local' },
 ] as const;
 
-const newSessionsFooter =
-  "A new worktree keeps each Session's files apart. The main checkout shares one folder. New worktrees branch from the base branch.";
+// Paper "Settings · Porcelain": each row says what it changes.
+const descriptions = {
+  startIn: "A new worktree keeps each Session's files apart",
+  baseBranch: 'New worktrees branch from it',
+  archive: 'Archiving a Session removes its folder; the branch stays',
+};
 
 type ProjectProps = { project: ProjectInfo };
 
@@ -20,6 +24,7 @@ type PickerRowProps = Pick<
   'value' | 'options'
 > & {
   label: string;
+  description: string;
 };
 
 // Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
@@ -44,14 +49,19 @@ function PickerRow(props: PickerRowProps): React.JSX.Element {
       options={props.options}
       disabled
       onValueChange={ignoreChoice}
-      description={props.label === 'Start in' ? newSessionsFooter : undefined}
+      description={props.description}
     />
   );
 }
 
 function StartInRow({ choice }: ChoiceProps): React.JSX.Element {
   return (
-    <PickerRow label="Start in" value={choice.type} options={checkoutOptions} />
+    <PickerRow
+      label="Start in"
+      description={descriptions.startIn}
+      value={choice.type}
+      options={checkoutOptions}
+    />
   );
 }
 
@@ -61,6 +71,7 @@ function BaseBranchRow({ choice }: ChoiceProps): React.JSX.Element | null {
   return (
     <PickerRow
       label="Base branch"
+      description={descriptions.baseBranch}
       value={choice.baseBranch}
       options={[{ value: choice.baseBranch, label: choice.baseBranch }]}
     />
@@ -73,6 +84,7 @@ function ArchiveRow(): React.JSX.Element {
   return (
     <ListItem.Toggle
       title="Delete the worktree on archive"
+      description={descriptions.archive}
       value={false}
       disabled
       onValueChange={ignoreChoice}

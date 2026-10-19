@@ -11,7 +11,7 @@ export interface SessionsListProps {
   agents: AgentServer[];
   sessions: SessionInfo[];
   query: string;
-  // How the list orders, groups, filters and lays out its rows.
+  // How the list groups, filters and lays out its rows.
   view: SessionsView;
   selectedSessionId?: string;
   onSelect: (id: string) => void;

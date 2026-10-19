@@ -37,6 +37,8 @@ import Tune from '@expo/material-symbols/tune.xml';
 import UnfoldMore from '@expo/material-symbols/unfold_more.xml';
 import VerifiedUser from '@expo/material-symbols/verified_user.xml';
 import VerticalAlignCenter from '@expo/material-symbols/vertical_align_center.xml';
+import ViewAgenda from '@expo/material-symbols/view_agenda.xml';
+import ViewHeadline from '@expo/material-symbols/view_headline.xml';
 import ViewInAr from '@expo/material-symbols/view_in_ar.xml';
 import ViewList from '@expo/material-symbols/view_list.xml';
 import VolumeOff from '@expo/material-symbols/volume_off.xml';
@@ -86,6 +88,8 @@ export const materialImagesPZ = {
   unfold_more: UnfoldMore,
   verified_user: VerifiedUser,
   vertical_align_center: VerticalAlignCenter,
+  view_agenda: ViewAgenda,
+  view_headline: ViewHeadline,
   view_in_ar: ViewInAr,
   view_list: ViewList,
   volume_off: VolumeOff,

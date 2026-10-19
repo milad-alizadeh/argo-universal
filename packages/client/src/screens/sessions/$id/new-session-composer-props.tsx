@@ -20,7 +20,6 @@ export const promptComposerProps = (
   ...composerDraftProps(props),
   onAttachImages: props.onAttachImages,
   onAttachFiles: props.onAttachFiles,
-  onDropFiles: props.onDropFiles,
   onSend: props.onSend,
   configuration: configurationOf(props),
   placeholder: '',

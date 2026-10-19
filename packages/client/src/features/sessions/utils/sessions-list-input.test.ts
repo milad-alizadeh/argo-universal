@@ -7,14 +7,12 @@ import {
 } from './sessions-list-input';
 
 const defaults: SessionsView = {
-  order: 'activity',
   group: 'project',
   status: 'active',
   layout: 'regular',
 };
 
 const chosen: SessionsView = {
-  order: 'created',
   group: 'none',
   status: 'all',
   layout: 'compact',
@@ -36,15 +34,9 @@ describe('what session.list is asked for the view', () => {
     },
   );
 
-  // A Server from before `order` rejects the field, so the default order is left for the Server to assume.
-  it('leaves Last activity unsaid', () => {
-    expect(sessionsListInput(defaults, '')).not.toHaveProperty('order');
-  });
-
-  it('passes the Created order and the search', () => {
+  it('passes the search', () => {
     expect(sessionsListInput(chosen, 'fix')).toStrictEqual({
       archived: undefined,
-      order: 'created',
       query: 'fix',
     });
   });
@@ -67,34 +59,18 @@ describe('which Sessions a status shows', () => {
 });
 
 describe('the view an older Server can list after it refused this one', () => {
-  it.each([
-    {
-      case: 'All falls back to Active',
-      view: { ...chosen, order: 'activity' },
-      fallback: { ...chosen, order: 'activity', status: 'active' },
-    },
-    {
-      case: 'Created falls back to Last activity',
-      view: { ...chosen, status: 'archived' },
-      fallback: { ...chosen, order: 'activity', status: 'archived' },
-    },
-    {
-      case: 'All and Created fall back together',
-      view: chosen,
-      fallback: { ...chosen, order: 'activity', status: 'active' },
-    },
-  ] as const)('$case, keeping the rest of the view', ({ view, fallback }) => {
-    expect(olderServerView(view, 'BAD_REQUEST')).toStrictEqual(fallback);
+  it('falls back from All to Active, keeping the rest of the view', () => {
+    expect(olderServerView(chosen, 'BAD_REQUEST')).toStrictEqual({
+      ...chosen,
+      status: 'active',
+    });
   });
 
-  it.each([
-    { status: 'active', order: 'activity' },
-    { status: 'archived', order: 'activity' },
-  ] as const)(
-    'has nothing to fall back to for $status by $order',
-    ({ status, order }) => {
+  it.each(['active', 'archived'] as const)(
+    'has nothing to fall back to for %s',
+    (status) => {
       expect(
-        olderServerView({ ...chosen, status, order }, 'BAD_REQUEST'),
+        olderServerView({ ...chosen, status }, 'BAD_REQUEST'),
       ).toBeUndefined();
     },
   );

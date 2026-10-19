@@ -54,21 +54,6 @@ export function withImages(width: number): Story {
   };
 }
 
-export const dragFiles = (
-  type: 'dragover' | 'drop',
-  files: File[],
-): DragEvent => {
-  const transfer = new DataTransfer();
-
-  for (const file of files) transfer.items.add(file);
-
-  return new DragEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    dataTransfer: transfer,
-  });
-};
-
 export function attachmentMenus(width: number): Story {
   return {
     args: {

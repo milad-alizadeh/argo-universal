@@ -3,13 +3,14 @@ import { memo } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { IconButton } from '#primitives/actions/icon-button';
+import { ScrollView } from '#primitives/layout/scroll-view';
 import {
   type Section,
   type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
 import { sectionAttentionCount } from '../../utils/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
-import { useRailTileStyle } from './rail-tile-style';
+import { railTiles, useRailTileStyle } from './rail-tile-style';
 
 interface DesktopRailProps {
   items: readonly NavigationSection[];
@@ -36,16 +37,17 @@ interface TileSelection {
   'aria-current'?: 'page';
 }
 
-const tileClass = 'rounded-xl';
-
 function selectionProps(selected: boolean): TileSelection {
   if (!selected)
-    return { iconClassName: 'text-foreground/72', className: tileClass };
+    return {
+      iconClassName: 'text-foreground/72',
+      className: railTiles.corners,
+    };
 
   return {
     iconClassName: 'text-foreground',
     'aria-current': 'page',
-    className: cn(tileClass, 'bg-selected'),
+    className: cn(railTiles.corners, railTiles.selected),
   };
 }
 
@@ -64,7 +66,7 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
       icon={icon}
       iconRole="nav"
       iconFilled={props.selected}
-      size="xl"
+      size={railTiles.size}
       variant="ghost"
       accessibilityLabel={title}
       onPress={() => props.onSectionChange(props.section.id)}
@@ -82,12 +84,19 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
   );
 });
 
+// The sections scroll once Plugins add more than the window holds; the sidebar toggle stays at the foot.
 function RailSections(props: DesktopRailProps): React.JSX.Element {
+  const tiles = props.items.map((section) => (
+    <SectionButton key={section.id} {...railSectionProps(section, props)} />
+  ));
+
   return (
-    <View className="flex-1 gap-px web:-mt-0.5">
-      {props.items.map((section) => (
-        <SectionButton key={section.id} {...railSectionProps(section, props)} />
-      ))}
+    <View className="min-h-0 flex-1 self-stretch">
+      <ScrollView accessibilityLabel="Sections">
+        <View className={cn('items-center pb-2', railTiles.column)}>
+          {tiles}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -116,31 +125,31 @@ function SidebarToggle(props: DesktopRailProps): React.JSX.Element {
       variant="ghost"
       accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
       onPress={() => onSidebarShownChange(!sidebarShown)}
-      className={tileClass}
+      className={railTiles.corners}
     />
   );
 }
 
-// The separator starts below the window-controls row, clear of the traffic lights; a tablet has no such row, so it starts level with the first tile.
+// A tablet's separator starts level with the first tile; the desktop's tinted rail needs none (Paper Variant B).
 function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
   if (!props.sidebarShown) return null;
 
   return (
     <View
       pointerEvents="none"
-      className="absolute bottom-4 right-0 top-4 w-px bg-hairline web:top-frame-control"
+      className="absolute bottom-4 right-0 top-4 w-px bg-hairline web:hidden"
     />
   );
 }
 
-// The wide window's rail on the glass: a window-controls row, the sections, and the sidebar toggle at the bottom.
+// The wide window's rail on the glass: the shared top bar's window controls above it, then the sections, and the sidebar toggle at the bottom. The glass draws its tint.
 export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
   return (
     <View
       testID="desktop-rail"
       className="relative w-frame-rail shrink-0 items-center pb-2 native:pt-4"
     >
-      {/* Electron draws the traffic lights here, and the window drags by it; a tablet has no window controls, so its first tile sits inset from the rail's top edge by the same 16 as its sides. */}
+      {/* The shared top bar: Electron draws the traffic lights here, and the window drags by it; a tablet has no window controls, so its first tile sits inset from the rail's top edge by 16. */}
       <View className="hidden h-frame-control self-stretch web:flex web:[app-region:drag]" />
       <RailSections {...props} />
       {props.hasSidebar ? <SidebarToggle {...props} /> : null}

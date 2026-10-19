@@ -37,16 +37,14 @@ function entries(
   collapsed: ReadonlySet<string>,
 ): SessionsListEntry[] {
   const { projects, sessions } = input;
-  const { order } = input.view;
 
-  if (listsFlat(input)) return flatEntries({ projects, sessions, order });
+  if (listsFlat(input)) return flatEntries({ projects, sessions });
 
   return listEntries({
     projects,
     sessions,
     collapsed,
     hideEmptyProjects: hidesEmptyProjects(input),
-    order,
   });
 }
 

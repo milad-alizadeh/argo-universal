@@ -3,16 +3,14 @@ import {
   type SessionsView,
   sessionsGroupChoices,
   sessionsLayoutChoices,
-  sessionsOrderChoices,
   sessionsStatusChoices,
 } from '../stores/sessions-view';
 
-// Each of the view's fields as one group of the menu, under its heading, in Paper's order.
+// Each of the view's fields as one group of the menu, under its heading, in Paper's order; every option has its icon.
 const viewGroups = [
-  { field: 'order', label: 'Order by', options: sessionsOrderChoices },
+  { field: 'layout', label: 'Layout', options: sessionsLayoutChoices },
   { field: 'group', label: 'Group by', options: sessionsGroupChoices },
   { field: 'status', label: 'Status', options: sessionsStatusChoices },
-  { field: 'layout', label: 'Layout', options: sessionsLayoutChoices },
 ] as const;
 
 type ViewGroup = (typeof viewGroups)[number];

@@ -183,7 +183,7 @@
      the rows share one plate, and Material's 4 between its row tiles. */
   --radius-grouped-inner: 0px;
   --spacing-frame-bar: 64px;
-  /* The rail, the sidebar control bar and the Inspector bar on a wide window. */
+  /* The rail on a wide window; the web narrows it below. */
   --spacing-frame-rail: 80px;
   --spacing-frame-control: 44px;
   --spacing-frame-list: 312px;
@@ -227,6 +227,10 @@
 
 @layer theme {
   :root {
+    @variant web {
+      /* Paper "Rail · narrow variants", Variant B: the desktop's tinted rail. A tablet keeps Material's 80 rail. */
+      --spacing-frame-rail: 56px;
+    }
     @variant ios {
       --font-sans: System;
       /* React Native resolves ui-monospace to SF Mono on iOS. */
@@ -465,39 +469,35 @@
       --color-tone-done-700: var(--color-violet-300);
       --color-tone-done-800: var(--color-violet-200);
       --color-tone-done-900: var(--color-violet-100);
-      --color-foreground: var(--color-neutral-50);
-      /* The iOS Settings grouped row (#1c1c1c). */
+      /* Graphite: a true neutral near-black. Each surface is one lightness
+         step up the neutral ramp, so elevation needs no shadow; text is
+         neutral-200, never white; tints and edges are white alphas. */
+      --color-foreground: var(--color-neutral-200);
       --color-card: var(--color-neutral-900);
-      --color-primary: var(--color-neutral-50);
+      --color-primary: var(--color-neutral-200);
       --color-primary-foreground: var(--color-neutral-900);
-      --color-accent: var(--color-neutral-400);
+      /* Blue in dark, as iOS draws its controls: the switch's on track, and
+         every other accent use (slider, checkmark, picker value, iOS tint). */
+      --color-accent: var(--color-blue-600);
       --color-muted: var(--color-neutral-800);
       --color-muted-foreground: var(--color-neutral-400);
       /* iOS's tertiary label on a dark card. */
       --color-tertiary: var(--color-neutral-600);
-      --color-danger: var(--color-red-500);
-      /* One step lighter than muted, so a border shows on a muted fill. */
-      --color-border: var(--color-neutral-700);
+      --color-danger: var(--color-red-400);
+      /* A white alpha, so an edge shows on every surface, muted fills included. */
+      --color-border: color-mix(in oklab, var(--color-white) 10%, transparent);
       --color-focus: var(--color-neutral-500);
       --color-done: var(--color-violet-400);
-      --color-success: var(--color-green-500);
+      --color-success: var(--color-emerald-500);
       --color-info: var(--color-blue-400);
       --color-warning: var(--color-amber-500);
-      /* The iOS Settings grouped background (#000000). */
-      --color-content: var(--color-black);
-      --color-glass: color-mix(
-        in oklab,
-        var(--color-neutral-900) 50%,
-        transparent
-      );
-      --color-tray: color-mix(
-        in oklab,
-        var(--color-neutral-800) 70%,
-        transparent
-      );
-      --color-glow-warm: var(--color-stone-600);
-      --color-glow-graphite: var(--color-neutral-700);
-      --color-glow-sand: var(--color-olive-600);
+      --color-content: var(--color-neutral-950);
+      --color-glass: color-mix(in oklab, var(--color-white) 4%, transparent);
+      --color-tray: color-mix(in oklab, var(--color-white) 3%, transparent);
+      /* Neutral greys, so the glows only lighten the ground and cast no colour. */
+      --color-glow-warm: var(--color-neutral-500);
+      --color-glow-graphite: var(--color-neutral-400);
+      --color-glow-sand: var(--color-neutral-600);
       --color-hover: color-mix(in oklab, var(--color-white) 4%, transparent);
       --color-selected: color-mix(in oklab, var(--color-white) 6%, transparent);
       --color-pressed: color-mix(in oklab, var(--color-white) 8%, transparent);
@@ -506,19 +506,18 @@
         var(--color-white) 8%,
         var(--color-content)
       );
-      /* Light's 5% black doubled to 10% white, as the tints double (2/3/4 to
-         4/6/8): a light edge needs more to show on a dark ground. */
-      --color-hairline: #ffffff1a;
-      --shadow-control: 0 1px 2px var(--color-shadow-subtle);
-      /* Light's shadows, plus a 1px bezel: a dark shadow on a dark ground cannot show the edge. */
+      /* 6% white, the selected tint's step: a light edge needs more than
+         light's 5% black to show on a dark ground. */
+      --color-hairline: #ffffff0f;
+      /* No elevation shadows: a dark shadow cannot show on a dark ground, so
+         a raised surface is a lighter fill with a hairline edge. */
+      --shadow-control: 0 0 0 0 #0000;
       --shadow-card:
-        0 0 0 1px #ffffff14, 0 1px 2px var(--color-shadow-subtle),
-        0 0 40px -8px var(--color-shadow-strong),
-        0 16px 32px -16px var(--color-shadow);
-      --shadow-raised: 0 0 0 1px #ffffff14, 0 4px 16px #00000066;
+        inset 0 1px 0 var(--color-hairline), 0 0 0 1px var(--color-hairline);
+      --shadow-raised: 0 0 0 1px var(--color-hairline);
       --shadow-glass:
-        inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
-      --shadow-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
+        inset 0 1px 0 var(--color-hairline), 0 0 0 1px var(--color-hairline);
+      --shadow-tray: 0 0 0 1px var(--color-hairline);
       --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
     }
   }

@@ -1,21 +1,18 @@
 import type { AgentServer } from '@repo/contracts';
 import { useMemo } from 'react';
-import type { SessionsLayout, SessionsOrder } from '../../stores/sessions-view';
-import { showsSessionAge } from '../session-row/session-row-props';
+import { useClock } from '#lib/generic/use-clock';
+import type { SessionsLayout } from '../../stores/sessions-view';
 import type { SessionsListEntry } from '../sessions-list-entries';
-import { sessionAge, useAgeFrom } from './session-age';
-import { listsFlat } from './sessions-list-entries-state';
+import { sessionAge } from './session-age';
 import type { SessionsListProps } from './sessions-list-props';
 import type { SessionListRowProps } from './sessions-list-rows';
 
 export interface SessionRowContext {
   agentLogos: Map<string, string>;
   layout: SessionsLayout;
-  // The list's order, whose time each row's age counts from.
-  order: SessionsOrder;
   selectedSessionId?: string;
-  // When rows show their ages, the time those count to.
-  ageFrom?: number;
+  // The time each row's age counts to.
+  ageFrom: number;
   // Rows that mount while the list reorders fade in.
   animating: boolean;
   // Projects whose rows are fading out.
@@ -54,21 +51,18 @@ function useRowActions(props: SessionsListProps): RowActions {
   );
 }
 
-// The list's order and, while rows show ages, the time they count to.
-function useRowAge(
-  props: SessionsListProps,
-): Pick<SessionRowContext, 'order' | 'ageFrom'> {
-  const { layout, order } = props.view;
-  const ageFrom = useAgeFrom(showsSessionAge(layout, listsFlat(props)));
+// The time each row's age counts to; the clock ticks so ages stay current, and memoised rows redraw only when their text changes.
+function useRowAge(): Pick<SessionRowContext, 'ageFrom'> {
+  const ageFrom = useClock(true);
 
-  return useMemo(() => ({ order, ageFrom }), [order, ageFrom]);
+  return useMemo(() => ({ ageFrom }), [ageFrom]);
 }
 
 function useRowInputs(props: SessionsListProps): RowInputs {
   const { selectedSessionId } = props;
   const { layout } = props.view;
   const agentLogos = useAgentLogos(props.agents);
-  const age = useRowAge(props);
+  const age = useRowAge();
   const actions = useRowActions(props);
 
   return useMemo(
@@ -108,7 +102,7 @@ export function sessionRowProps(
     session: item.session,
     logo: context.agentLogos.get(item.session.agent) ?? '',
     selected: context.selectedSessionId === item.id,
-    trailing: sessionAge(item.session, context.ageFrom, context.order),
+    age: sessionAge(item.session, context.ageFrom),
     layout: context.layout,
     ...rowMotion(item.session.projectId, context),
     ...rowActions(context),

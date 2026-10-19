@@ -22,8 +22,11 @@ export const Settings: StoryObj<typeof meta> = {
   ),
 };
 
-// A row's description is a footer that ends its group: the rows after it start a new card.
-export const FooterSplitsGroup: StoryObj<typeof meta> = {
+/*
+ * A row's description: under its title on desktop, web and Android, the rows staying in one card; on iOS a footer
+ * that ends its group, so the rows after it start a new card.
+ */
+export const RowDescription: StoryObj<typeof meta> = {
   render: () => (
     <View className="w-90 flex-1">
       <List appearance="grouped" maxHeight={1000}>

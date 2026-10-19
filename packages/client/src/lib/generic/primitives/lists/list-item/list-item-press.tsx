@@ -1,6 +1,7 @@
-import type { ReactElement, ComponentProps } from 'react';
+import { use, type ReactElement, type ComponentProps } from 'react';
 import { Platform, Pressable } from 'react-native';
 import { usePressRipple } from '#primitives/native/material-palette';
+import { ListContext } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
 import { usePressedRowHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
@@ -34,10 +35,14 @@ function interactive(props: DrawingProps): boolean {
   ].some(Boolean);
 }
 
-function pressClass(props: DrawingProps, menu: boolean): string {
+type RowPlace = Pick<React.ContextType<typeof ListContext>, 'appearance'> & {
+  menu: boolean;
+};
+
+function pressClass(props: DrawingProps, place: RowPlace): string {
   return cn(
     itemPress({
-      menu,
+      ...place,
       interactive: interactive(props),
       control: props.control !== undefined,
     }),
@@ -91,7 +96,7 @@ function accessibilityProps(props: DrawingProps): RowPressProps {
 }
 
 function usePressProps(props: DrawingProps): RowPressProps {
-  const menu = useInMenu();
+  const place = { menu: useInMenu(), appearance: use(ListContext).appearance };
 
   return {
     ...accessibilityProps(props),
@@ -102,7 +107,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
     testID: props.testID,
     ...triggerProps(props),
     ...usePressedRowHandlers(),
-    className: pressClass(props, menu),
+    className: pressClass(props, place),
   };
 }
 
