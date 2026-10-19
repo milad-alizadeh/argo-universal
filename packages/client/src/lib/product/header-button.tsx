@@ -123,7 +123,7 @@ interface ListHeaderButtonProps extends Pick<
   dot?: HeaderButtonProps['dot'];
 }
 
-// A wide window's list header action, such as the Sessions view menu's trigger: a small ghost button with a muted icon and a header button's dot.
+// A wide window's list header action, such as the Sessions view menu's trigger: a 28 ghost button with a muted 16 control glyph and a header button's dot (Paper "SessionsList").
 export function ListHeaderButton({
   dot,
   ...buttonProps
@@ -133,7 +133,7 @@ export function ListHeaderButton({
       {...buttonProps}
       variant="ghost"
       className="size-7 sm:size-7"
-      iconRole="action"
+      iconRole="control"
       iconClassName="text-muted-foreground"
       badge={dot && <HeaderButtonDot dot={dot} on="small" />}
     />

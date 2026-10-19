@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { cn } from '#lib/generic/utils';
 import { ActionShortcutScope } from '#primitives/actions/action-list';
@@ -28,7 +28,7 @@ function entryKind(entry: SessionsListEntry): SessionsListEntry['kind'] {
 const fillStyle = { minHeight: 0 };
 
 // A Regular row and the 8 below it; a Compact row is one line.
-const estimatedItemSize = { regular: 84, compact: 40 } as const;
+const estimatedItemSize = { regular: 80, compact: 38 } as const;
 
 const listBehaviour = {
   testID: 'sessions-scroll',
@@ -90,13 +90,24 @@ interface SessionsLegendListProps extends SessionsListProps {
   onScroll: () => void;
 }
 
-const standardTopPadding = { compact: 5, wide: 2 } as const;
+const standardTopPadding = { compact: 5, wide: 1 } as const;
 
 const searchTopPadding = { compact: 0, wide: 2 } as const;
 
-function sessionListAppearance(props: SessionsListProps): 'grouped' | 'cards' {
+// Web draws Session rows flat on the sidebar, with no card, edge or separator (Paper "Screen / 1 Porcelain · Ring · Regular"); phones keep their cards and grouped lists.
+function sessionListAppearance(
+  props: SessionsListProps,
+): 'plain' | 'grouped' | 'cards' {
+  if (Platform.OS === 'web') return 'plain';
+
   return props.view.layout === 'compact' ? 'grouped' : 'cards';
 }
+
+// Paper "SessionsList": web rows sit 8 in from the sidebar's left, and each row's own margin takes the right to 14.
+const sessionListPadding = {
+  compact: 4,
+  wide: Platform.OS === 'web' ? 2 : 0,
+} as const;
 
 function sessionListSection(
   props: SessionsListProps,
@@ -113,7 +124,7 @@ function sessionListOptions(
   return {
     appearance: sessionListAppearance(props),
     getSectionKey: sessionListSection(props),
-    padding: { compact: 4, wide: 0 },
+    padding: sessionListPadding,
     paddingTop: searchesAsOneList(props)
       ? searchTopPadding
       : standardTopPadding,
