@@ -1,4 +1,4 @@
-import { PhoneConnectionBanner } from '@repo/client';
+import { PhoneConnectionBanner, ScreenInspector } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
 import type { Stack } from 'expo-router';
 import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
@@ -28,10 +28,10 @@ function NarrowBanner(props: BannerProps): React.JSX.Element | null {
   return useWide() ? null : <UnderHeaderBanner {...props} />;
 }
 
-// The page keeps its place in the tree at every width.
+// The page keeps its place in the tree at every width; while shown, its Inspector draws in the Frame's column.
 export const pageLayout: ScreenLayout = ({ children, options }) => (
   <View className="flex-1">
-    {children}
+    <ScreenInspector>{children}</ScreenInspector>
     <NarrowBanner overHeader={options.headerTransparent === true} />
   </View>
 );

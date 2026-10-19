@@ -1,11 +1,6 @@
-import {
-  use,
-  useLayoutEffect,
-  useRef,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { use, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
+import { useClaim } from '#lib/generic/claim-store';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import {
   PageBesideList,
@@ -15,7 +10,6 @@ import type { ListDetailProps } from './list-detail-props';
 import {
   ListDetailSidebarContext,
   type ListDetailSidebar,
-  type SidebarClaim,
 } from './list-detail-sidebar';
 
 /*
@@ -65,28 +59,13 @@ function Split(props: ListDetailProps): ReactElement {
 function BesideSidebar(
   props: ListDetailProps & { sidebar: ListDetailSidebar },
 ): ReactElement {
-  useSidebarList(props.sidebar, props.list);
+  useClaim(props.sidebar, props.list);
 
   return (
     <View testID={props.testID} className="flex-1">
       <DetailPane {...props} />
     </View>
   );
-}
-
-// Holds the sidebar while mounted, and shows the list as each render has it.
-function useSidebarList(sidebar: ListDetailSidebar, list: ReactNode): void {
-  const claim = useRef<SidebarClaim>(null);
-
-  useLayoutEffect(() => {
-    const held = sidebar.claim();
-    claim.current = held;
-
-    return held.release;
-  }, [sidebar]);
-
-  // Runs after the claim above, in the same commit.
-  useLayoutEffect(() => claim.current?.show(list), [sidebar, list]);
 }
 
 // Each side keeps its own place in the tree and fills it; nested ListDetails split again (SettingsLayout's Projects).

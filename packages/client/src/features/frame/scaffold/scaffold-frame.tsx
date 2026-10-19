@@ -3,13 +3,11 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
-import { Sheet } from '#primitives/overlays/sheet';
 import { FrameBackdrop } from '../components/frame-backdrop/frame-backdrop';
 import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
-import { InspectorInSheet } from '../components/inspector-pane';
 import { PaneBanner, WindowDragStrip } from './scaffold-chrome';
 import { ScaffoldResizeHandles } from './scaffold-resize-handles';
 import {
@@ -22,19 +20,14 @@ import {
 export interface ScaffoldParts extends ScaffoldPartProps {
   // A wide window: the sidebar and the list sit beside the page.
   framed: boolean;
-  // A compact or medium window's Inspector, open in a sheet over the window.
-  inspectorSheetOpen: boolean;
 }
 
 // ADR-0026, amended 2026-10-18: only a wide window frames the page; compact and medium take the phone shell.
 export const isFramed = (sizeClass: SizeClass): boolean => sizeClass === 'wide';
 
-// Only a wide window has the Inspector's own column; elsewhere the Inspector is a sheet, so it takes no room beside the page.
+// Only a wide window has the Inspector's own column; elsewhere the page's Inspector is its own sheet, so it takes no room beside the page.
 const shownInspector = (props: ScaffoldProps): ScaffoldProps =>
   props.sizeClass === 'wide' ? props : { ...props, inspectorState: 'closed' };
-
-const inspectorSheetOpen = (props: ScaffoldProps): boolean =>
-  props.sizeClass !== 'wide' && props.inspectorState !== 'closed';
 
 // The Scaffold's props as it applies them, with its layout: what its frame, sidebar and page are drawn from.
 export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
@@ -44,7 +37,6 @@ export function useScaffoldParts(props: ScaffoldProps): ScaffoldParts {
     scaffold,
     layout: useScaffoldLayout(scaffold),
     framed: isFramed(props.sizeClass),
-    inspectorSheetOpen: inspectorSheetOpen(props),
   };
 }
 
@@ -69,35 +61,6 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
     <FramePane testID="desktop-inspector" {...inspectorPlacement(parts)}>
       {parts.scaffold.inspector(parts.layout.inspectorExpanded)}
     </FramePane>
-  );
-}
-
-const openInspector = (scaffold: ScaffoldProps, open: boolean): void =>
-  scaffold.onInspectorStateChange(open ? 'open' : 'closed');
-
-// The phone shell's Inspector: a sheet from the window's bottom edge, which the page's header button opens. Its one large detent is what iPadOS shows as a centred form sheet; a sheet sized to its content opens as a page sheet there.
-function InspectorSheet(parts: ScaffoldParts): React.JSX.Element {
-  const { scaffold } = parts;
-
-  return (
-    <Sheet
-      open={parts.inspectorSheetOpen}
-      onOpenChange={(open) => openInspector(scaffold, open)}
-      label="Inspector"
-      detents={['large']}
-      bottomEdge
-    >
-      {inspectorPage(scaffold)}
-    </Sheet>
-  );
-}
-
-// An untitled root page, so a part of the Inspector can push its own pages over it; Sheet reads it from its direct children.
-function inspectorPage(scaffold: ScaffoldProps): React.JSX.Element {
-  return (
-    <Sheet.Page name="inspector">
-      <InspectorInSheet value>{scaffold.inspector(false)}</InspectorInSheet>
-    </Sheet.Page>
   );
 }
 
@@ -128,14 +91,14 @@ interface FrameEdges {
   after: ReactNode;
 }
 
-// What sits around the sidebar and the page: a framed window's backdrop, Inspector, handles and banner; the phone shell's Inspector sheet, as its pages place their own banner under their header.
+// What sits around the sidebar and the page: a framed window's backdrop, Inspector, handles and banner. The phone shell has none: its pages place their own banner under their header.
 const frameEdges = (parts: ScaffoldParts): FrameEdges =>
   parts.framed
     ? {
         before: <Backdrop {...parts} />,
         after: <Overlays {...parts} />,
       }
-    : { before: null, after: <InspectorSheet {...parts} /> };
+    : { before: null, after: null };
 
 export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 

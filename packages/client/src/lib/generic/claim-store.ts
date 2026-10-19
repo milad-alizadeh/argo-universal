@@ -23,31 +23,45 @@ interface Held<Value> {
   value: Value;
 }
 
+interface Place<Value> {
+  held: Held<Value> | undefined;
+  notify: () => void;
+}
+
+// One claim on the place: it shows and releases only while it still holds it.
+function claimOf<Value>(place: Place<Value>, own: Held<Value>): Claim<Value> {
+  return {
+    show: (value) => {
+      own.value = value;
+
+      if (place.held === own) place.notify();
+    },
+    release: () => {
+      if (place.held !== own) return;
+
+      place.held = undefined;
+      place.notify();
+    },
+  };
+}
+
 export function createClaimStore<Value>(empty: Value): ClaimStore<Value> {
   const listeners = listenerSet();
-  let held: Held<Value> | undefined;
+  const place: Place<Value> = { held: undefined, notify: listeners.notify };
 
   const claim = (): Claim<Value> => {
     const own: Held<Value> = { value: empty };
-    held = own;
-    listeners.notify();
+    place.held = own;
+    place.notify();
 
-    return {
-      show: (value) => {
-        own.value = value;
-
-        if (held === own) listeners.notify();
-      },
-      release: () => {
-        if (held !== own) return;
-
-        held = undefined;
-        listeners.notify();
-      },
-    };
+    return claimOf(place, own);
   };
 
-  return { claim, subscribe: listeners.subscribe, current: () => held?.value };
+  return {
+    claim,
+    subscribe: listeners.subscribe,
+    current: () => place.held?.value,
+  };
 }
 
 // Holds the place while mounted, and shows the value as each render has it.

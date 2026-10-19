@@ -3,7 +3,7 @@ import {
   type ClaimStore,
   createClaimStore,
   useClaimed,
-} from '../../../claim-store';
+} from '#lib/generic/claim-store';
 
 /*
  * The App Frame's sidebar, offered to a section's root ListDetail on a wide window so its list sits beside the Rail

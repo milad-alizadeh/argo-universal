@@ -2,7 +2,6 @@ import type * as React from 'react';
 import type { FileDiff } from '#features/feed';
 import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
 import { recordedFile } from '../../../../../mocks/feed-edit-mock';
-import { InspectorInSheet } from '../inspector-pane';
 import {
   ChangesInspector,
   type ChangesInspectorProps,
@@ -49,27 +48,25 @@ export const changesArgs = {
   viewed: [fewFiles[1]?.path ?? ''],
   onViewedChange: ignore,
   expanded: false,
-  onStateChange: ignore,
+  onExpandedChange: ignore,
+  onOpenChange: ignore,
 } satisfies ChangesInspectorProps;
 
 const inspectorSheet: Omit<SheetProps, 'children'> = {
   open: true,
   onOpenChange: ignore,
   label: 'Inspector',
-  detents: ['large'],
-  bottomEdge: true,
+  detents: ['medium', 'large'],
 };
 
-// The phone shell's Inspector sheet, whose root page Compare Against pushes its branches over.
+// The web's Inspector sheet under wide, whose root page Compare Against pushes its branches over.
 export function ChangesInspectorSheet(
   props: ChangesInspectorProps,
 ): React.JSX.Element {
   return (
     <Sheet {...inspectorSheet}>
       <Sheet.Page name="inspector">
-        <InspectorInSheet value>
-          <ChangesInspector {...props} />
-        </InspectorInSheet>
+        <ChangesInspector {...props} inSheet />
       </Sheet.Page>
     </Sheet>
   );
