@@ -1,13 +1,18 @@
-import type { SessionConfigOption } from '@repo/contracts';
-import { skipToken, useIsRestoring, useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { useTRPCClient } from '#features/connection';
-import { useErrorToast } from '#primitives/overlays/toast';
+import type {
+  AgentOptionsUpdate,
+  SessionOpenError,
+  SessionAgentOptionsInput,
+} from '@repo/contracts';
+import { skipToken, type SkipToken } from '@tanstack/react-query';
+import { useSubscription } from '@trpc/tanstack-react-query';
+import { useMemo, useState } from 'react';
 import {
-  readAgentOptions,
-  sessionOptionsQuery,
-  type SessionOptionsOwner,
-} from '../api/session-options-cache';
+  useTRPC,
+  useResubscribeOnReconnect,
+  type ClientError,
+} from '#features/connection';
+import { useErrorToast } from '#primitives/overlays/toast';
+import { openErrorOf } from '../utils/open-failure';
 import { optionsReadToast } from '../utils/options-read-toast';
 import {
   type SessionOptions,
@@ -16,62 +21,123 @@ import {
 } from '../utils/session-options';
 import { useConnectionDropped } from './use-connection-dropped';
 
-interface CachedOptions {
-  cached: SessionConfigOption[] | undefined;
-  // While the persisted cache restores, nobody knows yet whether it holds options.
-  restoring: boolean;
-  // The Server is reading a New worktree's options.
-  reading: boolean;
+export interface OptionsDiscovery extends SessionOptions {
+  stage?: AgentOptionsUpdate['stage'];
+  progress?: number;
+  error?: SessionOpenError;
+  retry: () => void;
 }
 
-type OptionsOwner = Pick<
-  SessionOptionsChoice,
-  'agent' | 'projectId' | 'inNewWorktree'
->;
+type Choice = Pick<SessionOptionsChoice, 'agent' | 'projectId' | 'picks'> & {
+  sessionId?: string;
+};
 
-// Only a New worktree with an Agent and a Project reads.
-const reads = ({ inNewWorktree, agent, projectId }: OptionsOwner): boolean =>
-  inNewWorktree && !!agent && !!projectId;
-
-const ownerOf = ({ agent, projectId }: OptionsOwner): SessionOptionsOwner => ({
-  agent: agent ?? '',
-  projectId: projectId ?? '',
-});
-
-// Send's own open reports the Agent's failure; a toast any other.
-function useReadFailure(error: Error | null): void {
-  const dropped = useConnectionDropped(error);
-
-  useErrorToast(optionsReadToast(error, dropped));
+interface Received {
+  owner: string;
+  update: AgentOptionsUpdate;
 }
 
-// A failed read shows no options.
-function useCached(owner: OptionsOwner): CachedOptions {
-  const client = useTRPCClient();
-  const input = ownerOf(owner);
-  const read = reads(owner) ? readAgentOptions(client, input) : skipToken;
-  const query = useQuery(sessionOptionsQuery(input, read));
+interface DiscoveryRead {
+  data: AgentOptionsUpdate | undefined;
+  error: ClientError | null;
+  reset: () => void;
+}
 
-  useReadFailure(query.error);
+const inputOf = ({
+  agent,
+  projectId,
+  picks,
+  sessionId,
+}: Choice): SessionAgentOptionsInput | SkipToken =>
+  agent && projectId ? { agent, projectId, picks, sessionId } : skipToken;
+
+// Keep the displayed Server snapshot while a changed pick restarts the stream.
+function retainSnapshot(
+  previous: Received | undefined,
+  next: Received,
+): Received {
+  if (!previous) return next;
+
+  return retainOwnedSnapshot(previous, next);
+}
+
+function retainOwnedSnapshot(previous: Received, next: Received): Received {
+  if (next.update.configOptions !== null) return next;
+
+  if (previous.owner !== next.owner) return next;
 
   return {
-    cached: query.data,
-    restoring: useIsRestoring(),
-    reading: query.isFetching,
+    ...next,
+    update: { ...next.update, configOptions: previous.update.configOptions },
   };
 }
 
-// New Session's model, effort and mode at once, before any Session opens.
-export function useSessionOptions(
-  choice: SessionOptionsChoice,
-): SessionOptions {
-  const { saved, picks } = choice;
-  const { cached, restoring, reading } = useCached(choice);
-  const opening = (choice.opening && !restoring) || reading;
+function useDiscovery(choice: Choice): DiscoveryRead {
+  const owner = ownerOf(choice);
 
-  // The same options while nothing changes, so the screen's effects run only on a change.
+  const [received, setReceived] = useState<Received>();
+
+  const stream = useSubscription({
+    ...useTRPC().session.agentOptions.subscriptionOptions(inputOf(choice)),
+    onData: (update) =>
+      setReceived((previous) => retainSnapshot(previous, { owner, update })),
+  });
+
+  useResubscribeOnReconnect(stream);
+
+  return {
+    data: currentUpdate(received, owner),
+    error: stream.error,
+    reset: stream.reset,
+  };
+}
+
+const ownerOf = (choice: Choice): string =>
+  JSON.stringify([choice.agent, choice.projectId, choice.sessionId]);
+
+const currentUpdate = (
+  received: Received | undefined,
+  owner: string,
+): AgentOptionsUpdate | undefined =>
+  received?.owner === owner ? received.update : undefined;
+
+function useReadError(
+  read: DiscoveryRead,
+  sessionId: string | undefined,
+): SessionOpenError | undefined {
+  const dropped = useConnectionDropped(read.error);
+  useErrorToast(sessionId ? optionsReadToast(read.error, dropped) : undefined);
+
+  return dropped ? undefined : openErrorOf(read.error);
+}
+
+function useOptions(
+  read: DiscoveryRead,
+  picks: Choice['picks'],
+): SessionOptions {
+  const cached = read.data?.configOptions ?? undefined;
+  const opening = isOpening(read);
+
   return useMemo(
-    () => sessionOptions(cached, { saved, picks, opening }),
-    [cached, saved, picks, opening],
+    () => sessionOptions(cached, { saved: {}, picks, opening }),
+    [cached, picks, opening],
   );
+}
+
+const isOpening = (read: DiscoveryRead): boolean =>
+  read.data?.configOptions === null && !read.error;
+
+// The Server owns both the saved snapshot and discovery; the screen keeps only picks.
+export function useSessionOptions(choice: Choice): OptionsDiscovery {
+  const read = useDiscovery(choice);
+  const error = useReadError(read, choice.sessionId);
+  const options = useOptions(read, choice.picks);
+
+  return {
+    ...options,
+    stage: read.data?.stage,
+    progress: read.data?.progress,
+    error,
+    retry: read.reset,
+  };
 }

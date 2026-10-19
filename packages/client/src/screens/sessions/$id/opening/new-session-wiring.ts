@@ -1,10 +1,11 @@
-import type { SessionCallouts } from '#features/sessions';
+import type { useSessionOptions, SessionCallouts } from '#features/sessions';
 import type { Navigate } from '#lib/product/navigation/navigation';
 import type { ReadySessionNewViewProps } from '../session-new-view';
 import type { NewSessionData } from './use-new-session-data';
 import type { AttachmentDraft, SessionOpening } from './use-session-opening';
 
 export interface NewSessionWiring {
+  discovery?: ReturnType<typeof useSessionOptions>;
   configuration?: Pick<
     ReadySessionNewViewProps['configuration'],
     'configOptions' | 'onConfigChange' | 'opening'

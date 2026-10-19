@@ -28,9 +28,9 @@ export function ComposerAttachMenu(layout: AttachLayout): React.JSX.Element {
   );
 }
 
-// A native touch target comes from hitSlop, so the controls draw at their visible size and line up with the text; the web ignores hitSlop and keeps its minimum.
+// Desktop controls match Paper; native hitSlop and narrow web minimums preserve touch targets.
 export const composerIconButton =
-  'size-7 native:min-h-0 native:min-w-0 android:min-h-0 android:min-w-0';
+  'size-7 wide:min-h-0 wide:min-w-0 native:min-h-0 native:min-w-0 android:min-h-0 android:min-w-0';
 
 const attachTriggerProps = {
   icon: 'add',
@@ -38,7 +38,7 @@ const attachTriggerProps = {
   iconRole: 'control',
   hitSlop: 8,
   accessibilityLabel: 'Attach',
-  className: `p-0 ${composerIconButton}`,
+  className: `p-0 ${composerIconButton} wide:w-4 wide:mr-1.5`,
   iconClassName: 'text-muted-foreground',
 } as const;
 

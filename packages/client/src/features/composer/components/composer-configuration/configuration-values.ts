@@ -40,7 +40,12 @@ export function selection(
 }
 
 // Configure's own rows show these categories; any other select option gets a row of its own.
-const configuredCategories = new Set(['mode', 'model', 'thought_level']);
+const configuredCategories = new Set([
+  'mode',
+  'model',
+  'thought_level',
+  'collaboration_mode',
+]);
 
 export function otherSelections(
   configuration: ConfigurationValues,
@@ -171,4 +176,8 @@ export function checkoutName(
 
 function checkoutBasename(path?: string): string | undefined {
   return path?.split(/[\\/]/).findLast((part) => part !== '');
+}
+
+export function isFastMode(option: SessionConfigOption): boolean {
+  return option.configId === 'fast' || option.configId === 'fast-mode';
 }

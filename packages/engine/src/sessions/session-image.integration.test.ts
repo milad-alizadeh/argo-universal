@@ -93,3 +93,73 @@ it.each(newSessionInputs)(
     );
   },
 );
+
+it.each([
+  { agent: 'grok-build', accepts: true },
+  { agent: 'other-agent', accepts: false },
+])(
+  'handles image:false for $agent without changing other Agents',
+  async ({ agent, accepts }) => {
+    const requests: PromptRequest[] = [];
+    const received = Promise.withResolvers<PromptRequest>();
+
+    const host = await startAcpEngine(
+      {
+        steps: [],
+        initialize: {
+          protocolVersion: 1,
+          agentCapabilities: {
+            promptCapabilities: {
+              image: false,
+              audio: false,
+              embeddedContext: true,
+            },
+            sessionCapabilities: { close: {}, resume: {} },
+          },
+        },
+        responses: { 'session/prompt': [{ requests, received }] },
+      },
+      undefined,
+      agent,
+    );
+
+    const created = await host.caller.session.new({
+      ...emptySessionInput,
+      agent,
+    });
+
+    const blob = await uploadBlob(
+      {
+        databaseWriter: host.databaseWriter,
+        blobsFolder: blobsFolderIn(host.home),
+      },
+      new Blob([new Uint8Array([137, 80, 78, 71, 1, 2, 3, 255])], {
+        type: 'image/png',
+      }),
+    );
+
+    const result = host.caller.session.prompt({
+      ...created,
+      prompt: [{ type: 'image', mimeType: 'image/png', blob }],
+    });
+
+    const outcome = await result.then(
+      () => 'sent',
+      (error: Error) => error.message,
+    );
+
+    const expectedOutcome = accepts
+      ? 'sent'
+      : 'This Agent does not support image prompts';
+
+    expect(outcome).toBe(expectedOutcome);
+
+    if (accepts) await received.promise;
+
+    const expected = accepts
+      ? [[{ type: 'image', mimeType: 'image/png', data: 'iVBORwECA/8=' }]]
+      : [];
+
+    expect(requests.map((request) => request.prompt)).toEqual(expected);
+  },
+);

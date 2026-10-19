@@ -4,6 +4,7 @@ import type { PlayContext } from './composer-story-context.test.mocks';
 import {
   chooseAgentLabel,
   chooseModelLabel,
+  agentModelLabel,
   subagentCountLabel,
 } from './composer-test-contract.test.mocks';
 import { expectPhoneFooter, expectWideFooter } from './work-status.test.mocks';
@@ -48,18 +49,14 @@ export async function expectResponsiveFooter({
   }
 }
 
-// A desktop's Configure shows a read-only Agent row; a sheet names the Agent in its title instead.
+// Both layouts show the read-only Agent row after Send; the phone names its sheet.
 async function expectAgentShown(width: number, agent: string): Promise<void> {
   const overlay = within(document.body);
 
   if (width < wideBreakpoint()) {
     await expect(
-      await overlay.findByRole('heading', { name: agent }),
+      await overlay.findByRole('heading', { name: agentModelLabel }),
     ).toBeVisible();
-
-    return expect(
-      overlay.queryByRole('group', { name: chooseAgentLabel }),
-    ).not.toBeInTheDocument();
   }
 
   await waitFor(() =>
@@ -70,6 +67,9 @@ async function expectAgentShown(width: number, agent: string): Promise<void> {
   await expect(
     overlay.queryByRole('button', { name: chooseAgentLabel }),
   ).not.toBeInTheDocument();
+  await expect(
+    overlay.getByRole('group', { name: chooseAgentLabel }),
+  ).toHaveTextContent(agent);
 }
 
 export async function browseResponsiveMenu({
@@ -89,7 +89,9 @@ export async function browseResponsiveMenu({
 
   if (width < wideBreakpoint()) {
     await userEvent.click(
-      await overlay.findByRole('button', { name: `Back to ${agent}` }),
+      await overlay.findByRole('button', {
+        name: `Back to ${agentModelLabel}`,
+      }),
     );
     await expect(
       await overlay.findByRole('slider', { name: 'Effort' }),

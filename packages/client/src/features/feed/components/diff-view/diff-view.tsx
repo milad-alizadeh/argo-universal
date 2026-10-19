@@ -42,8 +42,7 @@ interface DiffViewState extends FileHeaderProps {
 
 const showAllClassName = contentActionClass({
   variant: 'link',
-  className:
-    'h-6 sm:h-6 justify-start rounded-none border-t border-border bg-content px-3 py-0',
+  className: 'h-6 sm:h-6 justify-start rounded-none bg-content px-3 py-0',
 });
 
 const showAllTextClassName =
@@ -136,7 +135,7 @@ const diffClassName = (inline: boolean): string =>
   cn(
     'min-w-0',
     codeBlockGroup,
-    inline && 'overflow-hidden rounded-2xl border border-border',
+    inline && 'overflow-hidden rounded-2xl bg-tint px-1 pb-1',
   );
 
 function DiffFrame(
@@ -160,10 +159,14 @@ export function DiffView(props: DiffViewProps): React.JSX.Element {
   return (
     <DiffFrame {...view}>
       <DiffHeader {...view} />
-      <CollapsibleContent>
+      <CollapsibleContent className={diffContentClass(view.inline)}>
         <DiffScroll hunks={view.preview.hunks} inline={view.inline} />
         <ShowAllLines {...view.preview} />
       </CollapsibleContent>
     </DiffFrame>
   );
+}
+
+function diffContentClass(inline: boolean | undefined): string | undefined {
+  return inline ? 'overflow-hidden rounded-xl bg-content' : undefined;
 }

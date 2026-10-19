@@ -9,7 +9,6 @@ import {
   StartSessionIn,
 } from '#features/composer';
 import {
-  SessionCallout,
   type SessionCalloutProps,
   SessionHeaderBar,
   type StartingFeed,
@@ -21,7 +20,7 @@ import { useContentWide } from '#lib/product/content-layout';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { composerDraftProps } from './new-session-draft';
+import { promptComposerProps } from './new-session-composer-props';
 import { NewSessionFeed } from './new-session-feed';
 
 export interface ReadySessionNewViewProps {
@@ -58,6 +57,7 @@ export interface ReadySessionNewViewProps {
   attachmentErrorKey?: string;
   // Sign in or Retry after the Session failed to open; the Feed and Composer stay.
   callout?: SessionCalloutProps;
+  calloutInConfiguration?: boolean;
   // A terminal sign-in method's panel or sheet.
   signInTerminal?: TerminalSignInProps;
 }
@@ -88,7 +88,7 @@ export function SessionNewView(props: SessionNewViewProps): React.JSX.Element {
 
 function NewSessionStartIn(props: ReadySessionNewViewProps): React.JSX.Element {
   return (
-    <View className="w-full items-center pb-2">
+    <View className="w-full items-center pb-2 wide:pb-0">
       <StartSessionIn {...startInProps(props)} />
     </View>
   );
@@ -98,40 +98,17 @@ function PromptComposer(props: ReadySessionNewViewProps): React.JSX.Element {
   return <Composer {...promptComposerProps(props)} />;
 }
 
-// A Send held by a failed open presents a phone's dismissed sheet again.
-const calloutOf = ({
-  callout,
-  opening,
-}: ReadySessionNewViewProps): React.ReactNode =>
-  callout && <SessionCallout key={String(opening)} {...callout} />;
-
-const promptComposerProps = (
-  props: ReadySessionNewViewProps,
-): ComposerProps => ({
-  ...composerDraftProps(props),
-  onAttachImages: props.onAttachImages,
-  onAttachFiles: props.onAttachFiles,
-  onDropFiles: props.onDropFiles,
-  onSend: props.onSend,
-  configuration: props.configuration,
-  placeholder: 'What should the Agent work on?',
-  sendable: props.canOpen,
-  callout: calloutOf(props),
-  error: props.attachmentError,
-  errorKey: props.attachmentErrorKey,
-});
-
 function NewSessionComposer(
   props: ReadySessionNewViewProps,
 ): React.JSX.Element {
   const wide = useContentWide();
 
   return (
-    <>
+    <View className="w-full self-center">
       {/* A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off. */}
       {!wide && !props.starting && <NewSessionStartIn {...props} />}
       <PromptComposer {...props} />
-    </>
+    </View>
   );
 }
 
@@ -153,10 +130,6 @@ function ReadySessionNewView(
 const startInProps = (
   props: ReadySessionNewViewProps,
 ): React.ComponentProps<typeof StartSessionIn> => ({
-  agents: props.agents,
-  agent: props.configuration.agent,
-  onAgentChange: props.onAgentChange,
-  onAddAgents: props.onAddAgents,
   serverName: props.serverName,
   serverConnected: props.connected,
   projects: props.projects,

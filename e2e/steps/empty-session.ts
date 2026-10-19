@@ -26,54 +26,12 @@ const openedIn = ({ params }: LoggedRequest): string | undefined =>
 const closeRequests = (app: Parameters<typeof localRequests>[0]): number =>
   localRequests(app, 'session/close').length;
 
-// A Local New Session opens its empty Session in the Project folder at once.
-When('the empty Session is open', async ({ page, app }): Promise<void> => {
-  await expect
-    .poll(() => openRequests(app).map(openedIn))
-    .toEqual([realpathSync(app.projectPath)]);
-  await waitForEmptySession(page);
-});
-
 When(
   'I choose Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
     const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await chooseAgent(page, label);
     await waitForEmptySession(page);
-  },
-);
-
-Then('the Agent closed the empty Session', async ({ app }): Promise<void> => {
-  await expect.poll(() => closeRequests(app)).toBeGreaterThanOrEqual(1);
-});
-
-Then('the Agent closed no Session', async ({ app }): Promise<void> => {
-  expect(closeRequests(app)).toBe(0);
-});
-
-Then(
-  'the empty Session left no worktree or branch',
-  async ({ app }): Promise<void> => {
-    await expect
-      .poll(() => readSessionCheckouts(app.projectPath))
-      .toEqual({ branches: [], worktrees: 1 });
-  },
-);
-
-Then('only the new empty Session remains', async ({ app }): Promise<void> => {
-  await expect
-    .poll(() => ({
-      opened: openRequests(app).length,
-      closed: closeRequests(app),
-    }))
-    .toEqual({ opened: 2, closed: 1 });
-});
-
-// No second Session opened, so the prompt went to the one opened before the drop.
-Then(
-  'the prompt went to the Session opened before the drop',
-  async ({ app }): Promise<void> => {
-    expect(openRequests(app)).toHaveLength(1);
   },
 );
 

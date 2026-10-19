@@ -27,7 +27,7 @@ export const FeedMarkdown = memo(function FeedMarkdown({
 
   return (
     <MarkdownVariant.Provider value={variant}>
-      <View className={blockGaps[variant]}>
+      <View className={`web:select-text ${blockGaps[variant]}`}>
         <Blocks tokens={tokens} caret={streaming} />
       </View>
     </MarkdownVariant.Provider>

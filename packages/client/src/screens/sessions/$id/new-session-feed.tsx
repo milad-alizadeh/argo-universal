@@ -17,8 +17,8 @@ function NewSessionHeading({
   if (!useContentWide()) return null;
 
   return (
-    <View className="flex-1 justify-center pb-10">
-      <SessionColumn className="items-center px-4">
+    <View className="flex-1 justify-center">
+      <SessionColumn className="items-center gap-6 px-4">
         <NewSessionTitle />
         {context}
       </SessionColumn>

@@ -1,7 +1,9 @@
-import type { ReactElement } from 'react';
-import { Platform, View } from 'react-native';
+import { useState, type ReactElement, type ReactNode } from 'react';
+import { Platform, View, type ViewProps } from 'react-native';
+import { Text } from '#primitives/content/text';
 import { List, ListSection } from '#primitives/lists/list';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
+import { Spinner } from '#primitives/status/spinner';
 import { AgentDrill } from './agent-drill';
 import { EffortControl, switchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -23,14 +25,54 @@ interface ContentsProps extends MenuProps {
  * open beside it; elsewhere a sheet page, titled with the Agent's name, whose rows push pages.
  */
 export function AgentModelMenu(props: ContentsProps): ReactElement {
+  const layout = useMenuLayout(props);
+
   return (
-    <View className="native:flex-1 bg-content web:wide:bg-card">
+    <View className="native:flex-1 bg-content web:wide:bg-card" {...layout}>
       <PopoverHoverGroup>
         <List appearance="grouped" fit={Platform.OS === 'web' || props.wide}>
           {configurationDrills(props)}
           {configurationTuning(props)}
         </List>
+        <ConfigurationStatus configuration={props.configuration} />
       </PopoverHoverGroup>
+    </View>
+  );
+}
+
+function loadingConfiguration(
+  configuration: ComposerConfigurationProps,
+): boolean {
+  return !!configuration.opening && !configuration.configOptions.length;
+}
+
+function useMenuLayout(
+  props: ContentsProps,
+): Pick<ViewProps, 'style' | 'onLayout'> {
+  const [readyHeight, setReadyHeight] = useState<number>();
+  const loading = loadingConfiguration(props.configuration);
+  const retainHeight = props.wide && loading;
+
+  return {
+    style: retainHeight ? { minHeight: readyHeight } : undefined,
+    onLayout: (event) => {
+      if (!props.wide || loading) return;
+      setReadyHeight(event.nativeEvent.layout.height);
+    },
+  };
+}
+
+function ConfigurationStatus({ configuration }: MenuProps): ReactNode {
+  if (configuration.status != null) return configuration.status;
+
+  if (!loadingConfiguration(configuration)) return null;
+
+  return (
+    <View className="flex-row items-center gap-2 p-3">
+      <Spinner accessibilityLabel="Loading configuration…" />
+      <Text role="body" tone="muted">
+        Loading configuration…
+      </Text>
     </View>
   );
 }
@@ -58,7 +100,7 @@ function configurationDrills(props: ContentsProps): ReactElement {
 
   return (
     <ListSection footer={notice}>
-      {props.wide ? <AgentDrill configuration={props.configuration} /> : null}
+      <AgentDrill configuration={props.configuration} />
       <ModelPicker configuration={props.configuration} />
       {optionDrills(props)}
     </ListSection>

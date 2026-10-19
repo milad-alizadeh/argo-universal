@@ -36,7 +36,7 @@ export interface LaunchCalloutProps {
 
 // Each callout kind's props.
 type CalloutKinds = {
-  loading: Record<never, never>;
+  loading: { title?: string; progress?: number | null };
   authenticate: AuthCalloutProps;
   'auth-required': AuthRequiredCardProps;
   launch: LaunchCalloutProps;

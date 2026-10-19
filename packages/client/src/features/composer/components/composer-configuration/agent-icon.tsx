@@ -11,7 +11,7 @@ interface AgentIconProps {
 
 export function AgentIcon({
   agent,
-  role = 'control',
+  role = { compact: 'body', wide: 'row' },
 }: AgentIconProps): React.JSX.Element | null {
   return agent ? (
     <IconSlot role={role}>

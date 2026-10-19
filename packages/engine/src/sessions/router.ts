@@ -1,6 +1,6 @@
 import {
   SessionAgentOptionsInput,
-  SessionAgentOptionsOutput,
+  AgentOptionsUpdate,
   SessionAnswerElicitationInput,
   SessionAnswerElicitationOutput,
   SessionAnswerPermissionInput,
@@ -37,7 +37,7 @@ import {
   routerFactory,
   zAsyncIterable,
 } from '../rpc';
-import { readAgentOptions } from './agent-options';
+import { agentOptionsUpdates } from './agent-options';
 import { createArchiveRouter } from './archive/archive-router';
 import { createSessionList } from './list/session-list';
 import type { SessionRouterDeps } from './router-deps';
@@ -119,8 +119,10 @@ const createStartRouter = routerFactory((deps: SessionRouterDeps) =>
       .mutation(({ input }) => openSession(deps, input)),
     agentOptions: publicProcedure
       .input(SessionAgentOptionsInput)
-      .output(SessionAgentOptionsOutput)
-      .query(({ input, signal }) => readAgentOptions(deps, input, signal)),
+      .output(zAsyncIterable({ yield: AgentOptionsUpdate }))
+      .subscription(({ input, signal }) =>
+        agentOptionsUpdates(deps, input, signal),
+      ),
   }),
 );
 

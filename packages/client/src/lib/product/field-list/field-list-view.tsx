@@ -14,16 +14,25 @@ export interface FieldListProps {
 
 export function FieldList(props: FieldListProps): ReactElement {
   return (
-    <List appearance="grouped" testID={props.testID} header={props.header}>
-      {props.sections.map((section, index) => (
-        <List.Section
-          key={section.title ?? index}
-          title={section.title}
-          footer={section.footer}
-        >
-          {section.rows}
-        </List.Section>
-      ))}
+    <List
+      fit={false}
+      appearance="grouped"
+      testID={props.testID}
+      header={props.header}
+    >
+      {props.sections.map(sectionView)}
     </List>
+  );
+}
+
+function sectionView(section: FieldListSection, index: number): ReactElement {
+  return (
+    <List.Section
+      key={section.title ?? index}
+      title={section.title}
+      footer={section.footer}
+    >
+      {section.rows}
+    </List.Section>
   );
 }

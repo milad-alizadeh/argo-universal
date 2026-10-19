@@ -46,8 +46,9 @@ export const ComposerUsesAvailableWidth: ScaffoldStory = {
   play: controlledPlay(async (context, controlled) => {
     const { canvas } = context;
     await settleViewport(narrowDesktopWidth);
-    const mode = await canvas.findByRole('button', { name: 'Mode' });
-    await waitFor(() => expect(mode).toBeVisible());
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible(),
+    );
     await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
     await controlled.render({ inspectorState: 'open' });
     await waitFor(() =>
@@ -77,7 +78,9 @@ export const ComposerUsesAvailableWidth: ScaffoldStory = {
       shownText(canvas.getByRole('textbox', { name: 'Message' })),
     ).toBe(preservedDraft);
     await pressInspectorButton(context, controlled, 'closed');
-    await waitFor(() => expect(mode).toBeVisible());
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible(),
+    );
     await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
     await expect(canvas.getByText('session', { exact: true })).toBeVisible();
     await expect(window.innerWidth).toBe(narrowDesktopWidth);

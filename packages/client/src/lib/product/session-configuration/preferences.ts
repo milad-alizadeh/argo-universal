@@ -14,11 +14,6 @@ type SelectOption = Extract<SessionConfigOption, { type: 'select' }>;
 
 export type RememberedOption = SelectOption & { category: Category };
 
-export interface ConfigurationChange {
-  configId: string;
-  value: string;
-}
-
 export function isRememberedConfiguration(
   option: SessionConfigOption,
 ): option is RememberedOption {
@@ -85,27 +80,4 @@ function offeredChoices(
   return option.category === 'thought_level'
     ? configurationEffortChoices(model, option)
     : configurationChoices(option);
-}
-
-// The next saved choice to apply to a Session, model before effort before mode; each option is applied at most once.
-export function nextRememberedChange(
-  options: SessionConfigOption[],
-  saved: SavedChoices,
-  applied: readonly string[],
-): ConfigurationChange | undefined {
-  const current = orderedOptions(options);
-
-  return draftConfiguration(options, saved)
-    .filter(({ configId }) => !applied.includes(configId))
-    .map(({ configId, currentValue }) => ({ configId, value: currentValue }))
-    .find((change) => differsFromSession(current, change));
-}
-
-function differsFromSession(
-  current: RememberedOption[],
-  { configId, value }: ConfigurationChange,
-): boolean {
-  return current.some(
-    (option) => option.configId === configId && option.currentValue !== value,
-  );
 }

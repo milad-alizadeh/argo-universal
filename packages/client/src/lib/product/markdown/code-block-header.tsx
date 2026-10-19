@@ -1,6 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { Icon } from '#primitives/content/icon';
+import { fileTypeIcon } from '../../generic/symbols/file-type-icon';
 import { CodeBlockTitle } from './code-block-title/code-block-title';
 import { CopyButton } from './copy-button';
 import { type HeaderResource, ResourceHeading } from './resource-heading';
@@ -10,14 +12,12 @@ interface CodeBlockHeaderProps {
   copyValue: string;
   copyLabel?: string;
   resource?: HeaderResource;
-  hasBody?: boolean;
 }
 
-function headerClassName(isResource: boolean, hasBody: boolean): string {
+function headerClassName(isResource: boolean): string {
   return cn(
-    'shrink-0 flex-row bg-content pr-1.5 pl-3',
+    'shrink-0 flex-row pr-0.5 pl-3',
     isResource ? 'items-start gap-2 py-2' : 'h-8 items-center justify-between',
-    hasBody && 'border-b border-border',
   );
 }
 
@@ -25,10 +25,27 @@ function HeaderTitle({
   title,
   resource,
 }: Pick<CodeBlockHeaderProps, 'title' | 'resource'>): React.JSX.Element {
-  return resource ? (
-    <ResourceHeading title={title} resource={resource} />
-  ) : (
-    <CodeBlockTitle title={title} />
+  if (resource) return <ResourceHeading title={title} resource={resource} />;
+
+  return <LanguageTitle title={title} />;
+}
+
+function languageIcon(
+  title: string,
+): NonNullable<React.ComponentProps<typeof Icon>['name']> {
+  if (['bash', 'sh', 'shell', 'zsh'].includes(title)) return 'terminal';
+
+  return fileTypeIcon(title.includes('.') ? title : `snippet.${title}`);
+}
+
+function LanguageTitle({
+  title,
+}: Pick<CodeBlockHeaderProps, 'title'>): React.JSX.Element {
+  return (
+    <View className="min-w-0 flex-1 flex-row items-center gap-1.5 pr-2">
+      <Icon name={languageIcon(title)} role="mark" tone="muted" />
+      <CodeBlockTitle title={title} />
+    </View>
   );
 }
 
@@ -37,10 +54,9 @@ export function CodeBlockHeader({
   copyValue,
   copyLabel = 'Copy code',
   resource,
-  hasBody = true,
 }: CodeBlockHeaderProps): React.JSX.Element {
   return (
-    <View className={headerClassName(resource !== undefined, hasBody)}>
+    <View className={headerClassName(resource !== undefined)}>
       <HeaderTitle title={title} resource={resource} />
       <CopyButton value={copyValue} label={copyLabel} revealOnHover />
     </View>

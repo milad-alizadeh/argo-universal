@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { ActionShortcut } from '#primitives/content/kbd';
+import type { TextProps } from '#primitives/content/text';
 import type { IconName } from '../../../symbols/icon-names';
 import type { SizeClassValue } from '../../../use-size-class/size-class-value';
 import type { KitProps } from '../../kit-props';
@@ -50,6 +51,7 @@ export type MenuOption<Value extends string> = Extract<
  * Argo draws it on desktop and the web; on phones it is the label of the SwiftUI Menu or the Compose DropdownMenu anchor.
  */
 export interface MenuTriggerProps {
+  labelRole?: TextProps['role'];
   // The current value, which names the trigger.
   label: string;
   icon?: IconName;

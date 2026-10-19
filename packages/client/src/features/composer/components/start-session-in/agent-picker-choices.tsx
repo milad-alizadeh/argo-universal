@@ -1,15 +1,18 @@
 import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { useWindowDimensions } from 'react-native';
-import { RegistryIcon } from '#features/agents';
 import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import type { StartSessionInProps } from './start-session-types';
+import { AgentIcon } from '../composer-configuration/agent-icon';
 
-export type AgentChoiceProps = StartSessionInProps & {
+export interface AgentChoiceProps {
+  agents: AgentServer[];
+  agent?: AgentServer;
+  onAgentChange: (id: string) => void;
+  onAddAgents: () => void;
   close: (after?: () => void) => void;
-};
+}
 
 const maximumHeight = 320;
 
@@ -48,7 +51,7 @@ function AgentChoice({ agent }: RowProps): React.JSX.Element {
     <ListItem
       {...agentChoiceProps(agent)}
       leading={
-        <RegistryIcon uri={agent.icon} agentName={agent.name} role="row" />
+        <AgentIcon agent={agent} role={{ compact: 'body', wide: 'row' }} />
       }
     />
   );
@@ -65,7 +68,9 @@ const addAgentsProps = (
   props: AgentChoiceProps,
 ): React.ComponentProps<typeof ListItem> => ({
   title: 'Add Agents',
-  leading: <Icon name="add" role="row" />,
+  leading: (
+    <Icon fitArtwork name="add" role={{ compact: 'body', wide: 'row' }} />
+  ),
   onPress: () => props.close(props.onAddAgents),
 });
 

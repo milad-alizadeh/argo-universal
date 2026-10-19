@@ -80,6 +80,7 @@ function drillProps<Value extends string>(
   return {
     label: props.label,
     title: props.title ?? props.label,
+    valueLeading: props.valueLeading,
     value: props.options.find((entry) => entry.value === props.value)?.label,
     disabled: props.disabled,
     onClose: props.onBlur,

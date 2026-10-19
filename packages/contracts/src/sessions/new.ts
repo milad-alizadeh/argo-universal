@@ -22,6 +22,8 @@ export const SessionCheckoutChoice = z.discriminatedUnion('type', [
 export type SessionCheckoutChoice = z.infer<typeof SessionCheckoutChoice>;
 
 export const InitialConfigOption = z.strictObject({
+  // Cached defaults may disappear when the selected model changes.
+  optional: z.boolean().optional(),
   configId: z.string(),
   value: z.union([z.string(), z.boolean()]),
 });

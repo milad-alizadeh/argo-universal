@@ -1,17 +1,9 @@
 import { useIsPreview } from 'expo-router';
 import type * as React from 'react';
 import { useInstalledAgents } from '#features/agents';
-import {
-  useBlobUrl,
-  useConnectionState,
-  useResubscribeOnReconnect,
-} from '#features/connection';
+import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
-import {
-  useCacheSessionOptions,
-  useConnectionDropped,
-  useMergeMethod,
-} from '#features/sessions';
+import { useConnectionDropped, useMergeMethod } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
@@ -34,6 +26,7 @@ import {
   type SessionCommands,
   useSessionCommands,
 } from './use-session-commands';
+import { useSessionReadOptions } from './use-session-read-options';
 
 export interface SessionDetailScreenProps {
   id: string;
@@ -81,14 +74,6 @@ function ConnectedSession({
 const previewed = (props: SessionDetailViewProps): SessionDetailViewProps =>
   props.state === 'open' ? { ...props, preview: true } : props;
 
-// A Session the Server refused to open tries again when the Connection reopens; its callout already said why.
-function useRetryOpenOnReconnect(feed: SessionFeed): void {
-  useResubscribeOnReconnect({
-    status: feed.openError ? 'error' : 'idle',
-    reset: feed.retryOpen,
-  });
-}
-
 type SessionSurroundings =
   | 'agents'
   | 'navigate'
@@ -124,11 +109,6 @@ const useFeedCommands = (
     agent: feed.snapshot?.agent,
   });
 
-function useFeedUpkeep(feed: SessionFeed): void {
-  useRetryOpenOnReconnect(feed);
-  useCacheSessionOptions(feed.snapshot);
-}
-
 interface ConnectedFeed {
   feed: SessionFeed;
   // The Connection dropped the Feed's open: a toast says why, not a callout.
@@ -156,15 +136,30 @@ function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
   const { sessionId } = page;
   const sources = useConnectedFeed(sessionId);
   const surroundings = useSessionSurroundings(page, sources.feed);
-  const { agents } = surroundings;
-  const callouts = useSessionCallout({ sessionId, agents, ...sources });
 
-  useFeedUpkeep(sources.feed);
+  const reads = usePageCallout(sessionId, sources, surroundings.agents);
 
   return toSessionViewProps({
     sessionId,
     ...sources,
-    callouts,
     ...surroundings,
+    ...reads,
   });
+}
+
+function usePageCallout(
+  sessionId: string,
+  sources: ConnectedFeed,
+  agents: SessionDetailViewSources['agents'],
+): Pick<SessionDetailViewSources, 'options' | 'callouts'> {
+  const options = useSessionReadOptions(sessionId, sources.feed);
+
+  const callouts = useSessionCallout({
+    sessionId,
+    agents,
+    discovery: options,
+    ...sources,
+  });
+
+  return { options, callouts };
 }

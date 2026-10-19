@@ -2,11 +2,11 @@ import { rename, writeFile } from 'node:fs/promises';
 import { expect } from '../fixtures';
 import { readAgents } from './agents';
 import { Given, When, Then } from './fixtures';
-import { waitForEmptySession } from './new-session';
+import { openConfiguration, waitForEmptySession } from './new-session';
 
 const optionsLabel = 'Agent and model';
 
-const selectAgentLabel = 'Select Agent';
+const selectAgentLabel = /^Agent(?:,|$)/;
 
 async function writeInstallation(
   path: string,
@@ -26,6 +26,7 @@ Then(
   'the Agent picker offers only Add Agents and Send is disabled',
   async ({ page }) => {
     await checkZeroAgentComposer(page);
+    await openConfiguration(page);
     await page
       .getByRole('button', { name: selectAgentLabel, exact: true })
       .click();
@@ -35,17 +36,16 @@ Then(
     await expect(
       page.getByRole('button', { name: 'Claude', exact: true }),
     ).toHaveCount(0);
-    await page.keyboard.press('Escape');
+    await closeAgentPicker(page);
   },
 );
 
 async function checkZeroAgentComposer(
   page: Parameters<typeof readAgents>[0],
 ): Promise<void> {
-  await expect(
-    page.getByRole('button', { name: selectAgentLabel, exact: true }),
-  ).toContainText(selectAgentLabel);
-  await expect(page.getByRole('button', { name: optionsLabel })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: optionsLabel })).toContainText(
+    'Choose Agent',
+  );
   await expect(
     page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeDisabled();
@@ -53,6 +53,7 @@ async function checkZeroAgentComposer(
 
 When('I type {string} and open Add Agents', async ({ page }, text: string) => {
   await page.getByRole('textbox', { name: 'Message' }).fill(text);
+  await openConfiguration(page);
   await page
     .getByRole('button', { name: selectAgentLabel, exact: true })
     .click();
@@ -76,9 +77,14 @@ Given('the Agent download is held', async ({ app }) => {
 });
 
 Then('the first launch shows Loading', async ({ page }) => {
-  await expect(page.getByRole('button', { name: optionsLabel })).toContainText(
-    'Loading…',
-  );
+  await openConfiguration(page);
+  await expect(page.getByText('Installing…', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('progressbar', { name: 'Installing Agent' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /^Agent(?:,|$)/ }),
+  ).toBeEnabled();
 });
 
 When('the Agent download finishes', async ({ app }) => {
@@ -91,3 +97,12 @@ Then('the Composer shows Agent options', async ({ page }) => {
     page.getByRole('button', { name: optionsLabel }),
   ).not.toContainText('Loading…');
 });
+
+async function closeAgentPicker(
+  page: Parameters<typeof readAgents>[0],
+): Promise<void> {
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: optionsLabel })).toBeHidden();
+}

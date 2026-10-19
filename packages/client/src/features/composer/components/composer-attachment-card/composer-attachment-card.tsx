@@ -24,7 +24,7 @@ export interface ComposerAttachmentCardProps {
 }
 
 const cardClass =
-  'group relative w-40 h-30 shrink-0 overflow-hidden rounded-md border bg-card';
+  'group/attachment relative w-40 h-30 shrink-0 overflow-hidden rounded-md border bg-card';
 
 const previewClass = 'h-22.5 overflow-hidden';
 
@@ -35,12 +35,12 @@ const kindClass = 'items-center justify-center gap-1 bg-muted';
 const mutedClass = 'text-muted-foreground';
 
 const removeClass =
-  'absolute right-0 top-0 size-8 sm:size-8 rounded-sm bg-card web:wide:opacity-0';
+  'absolute right-1 top-1 rounded-full web:rounded-full web:wide:opacity-0';
 
 const removeHoverClass = (disabled: boolean): string =>
   disabled
-    ? 'web:wide:group-hover:opacity-50'
-    : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100';
+    ? 'web:wide:group-hover/attachment:opacity-50'
+    : 'web:wide:group-hover/attachment:opacity-100 web:wide:focus-visible:opacity-100';
 
 const extensionOf = (name: string): string => {
   const dot = name.lastIndexOf('.');
@@ -133,7 +133,8 @@ function RemoveButton(props: ComposerAttachmentCardProps): React.JSX.Element {
       accessibilityLabel={`Remove ${props.attachment.name}`}
       icon="close"
       iconRole="secondary"
-      variant="ghost"
+      variant="filled"
+      size="xs"
       className={cn(removeClass, removeHoverClass(props.disabled))}
       onPress={props.onRemove}
     />

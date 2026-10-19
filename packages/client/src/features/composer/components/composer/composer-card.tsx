@@ -17,7 +17,7 @@ const cardGlass = {
   interactive: true,
   className: 'w-full z-10',
   fallbackClassName:
-    'rounded-2xl bg-card shadow-card web:backdrop-blur-glass web:backdrop-saturate-180',
+    'rounded-2xl bg-card shadow-card wide:bg-card/90 wide:shadow-glass web:backdrop-blur-glass web:backdrop-saturate-180',
 } as const;
 
 export function ComposerCard(layout: CardLayout): React.JSX.Element {
@@ -92,7 +92,7 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
 function ComposerText(layout: TextLayout): React.JSX.Element {
   return (
     // The card's layout lets touches through, so a press on its open space reaches the glass.
-    <View className="pointer-events-box-none px-4 pt-3 pb-2">
+    <View className="pointer-events-box-none px-4 wide:px-4.75 pt-3 pb-2">
       <RichTextarea {...textInputProps(layout)} />
     </View>
   );
@@ -105,7 +105,7 @@ function textInputProps({
 }: TextLayout): React.ComponentProps<typeof RichTextarea> {
   return {
     accessibilityLabel: 'Message',
-    placeholder: props.placeholder ?? 'Message the Agent…',
+    placeholder: props.placeholder ?? '',
     value: props.draft.text,
     disabled: inactive,
     onChangeText: (text) => props.onDraftChange({ ...props.draft, text }),

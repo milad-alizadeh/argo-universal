@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import { ConfigurationCombobox } from './configuration-combobox';
+import { ConfigurationRowIcon } from './configuration-row-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
-import { otherSelections } from './configuration-values';
+import { otherSelections, isFastMode } from './configuration-values';
 
 interface OptionsProps {
   configuration: ComposerConfigurationProps;
@@ -15,7 +16,14 @@ export function optionDrills(props: OptionsProps): ReactElement[] {
       configuration={props.configuration}
       option={option}
       label={option.name}
+      leading={optionIcon(option)}
       title={option.name}
     />
   ));
+}
+
+function optionIcon(option: Parameters<typeof isFastMode>[0]): ReactElement {
+  return (
+    <ConfigurationRowIcon name={isFastMode(option) ? 'fast-mode' : 'filters'} />
+  );
 }
