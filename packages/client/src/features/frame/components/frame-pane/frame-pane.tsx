@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useLayoutEffect, useRef } from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 import Animated, {
   ReduceMotion,
@@ -9,7 +9,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { bezierEasing } from '#lib/generic/bezier-easing';
-import { easingCurve, motionDuration } from '#lib/generic/motion';
+import type { FrameTiming } from '../../utils/frame-timing';
+import { type PaneSpan, paneShift } from '../../utils/pane-shift';
 import { useStableContentWidth } from './stable-content-width';
 
 export interface FramePaneProps {
@@ -20,53 +21,87 @@ export interface FramePaneProps {
   hidden: boolean;
   transitionKey: string;
   animate?: boolean;
+  timing: FrameTiming;
   children: ReactNode;
 }
 
-type PaneWidthProps = Pick<
-  FramePaneProps,
-  'width' | 'transitionKey' | 'animate'
->;
+type AnimatedViewStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
 
 type PaneContentProps = Pick<
   FramePaneProps,
   'testID' | 'width' | 'contentWidth' | 'children'
->;
+> & { shiftStyle: AnimatedViewStyle };
 
 interface HiddenPaneProps extends ViewProps {
   inert: boolean;
 }
 
-function timedWidth(width: number): number {
-  return withTiming(width, {
-    duration: motionDuration.framePane,
-    easing: bezierEasing(easingCurve.decelerate),
+interface PaneMotionValues {
+  width: SharedValue<number>;
+  shift: SharedValue<number>;
+}
+
+const timed = (value: number, { duration, curve }: FrameTiming): number =>
+  withTiming(value, {
+    duration,
+    easing: bezierEasing(curve),
     reduceMotion: ReduceMotion.System,
   });
-}
 
-function useWidthTransition(
-  animatedWidth: SharedValue<number>,
-  { width, transitionKey, animate = true }: PaneWidthProps,
+// A pane with content of its own width, or one showing or hiding, clips it by its width; a reflowing pane that stays takes its new width at once and slides its content there (FLIP), so the Feed lays out once.
+const slidesBetween = (props: FramePaneProps, last: PaneSpan): boolean =>
+  props.contentWidth === undefined && last.width > 0 && props.width > 0;
+
+function play(
+  values: PaneMotionValues,
+  props: FramePaneProps,
+  last: PaneSpan,
 ): void {
-  const previousTransition = useRef(transitionKey);
-  useEffect(() => {
-    const moves = animate && previousTransition.current !== transitionKey;
-    animatedWidth.set(moves ? timedWidth(width) : width);
-    previousTransition.current = transitionKey;
-  }, [animatedWidth, width, transitionKey, animate]);
+  if (slidesBetween(props, last)) {
+    values.width.set(props.width);
+    values.shift.set(values.shift.get() + paneShift(last, props));
+    values.shift.set(timed(0, props.timing));
+
+    return;
+  }
+
+  values.width.set(timed(props.width, props.timing));
 }
 
-function useAnimatedWidth(
-  props: PaneWidthProps,
-): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
-  const animatedWidth = useSharedValue(props.width);
-  useWidthTransition(animatedWidth, props);
+const moves = (props: FramePaneProps, last: FramePaneProps): boolean =>
+  (props.animate ?? true) && last.transitionKey !== props.transitionKey;
 
-  return useAnimatedStyle<ViewStyle>(
-    () => ({ width: animatedWidth.get() }),
-    [animatedWidth],
-  );
+function usePaneMotion(values: PaneMotionValues, props: FramePaneProps): void {
+  const last = useRef(props);
+  useLayoutEffect(() => {
+    if (moves(props, last.current)) play(values, props, last.current);
+    else values.width.set(props.width);
+
+    last.current = props;
+  }, [values, props]);
+}
+
+interface PaneStyles {
+  // The pane's clip, and its content's slide.
+  widthStyle: AnimatedViewStyle;
+  shiftStyle: AnimatedViewStyle;
+}
+
+function usePaneStyles(props: FramePaneProps): PaneStyles {
+  const width = useSharedValue(props.width);
+  const shift = useSharedValue(0);
+  usePaneMotion({ width, shift }, props);
+
+  return {
+    widthStyle: useAnimatedStyle<ViewStyle>(
+      () => ({ width: width.get() }),
+      [width],
+    ),
+    shiftStyle: useAnimatedStyle<ViewStyle>(
+      () => ({ transform: [{ translateX: shift.get() }] }),
+      [shift],
+    ),
+  };
 }
 
 function hiddenPaneProps(hidden: boolean): HiddenPaneProps {
@@ -85,27 +120,27 @@ function PaneContent(props: PaneContentProps): React.JSX.Element {
   const width = useStableContentWidth(props.width, props.contentWidth);
 
   return (
-    <View
+    <Animated.View
       testID={`${props.testID}-content`}
       className="flex-1"
-      style={{ width }}
+      style={[{ width }, props.shiftStyle]}
     >
       {props.children}
-    </View>
+    </Animated.View>
   );
 }
 
 export function FramePane(props: FramePaneProps): React.JSX.Element {
-  const animatedStyle = useAnimatedWidth(props);
+  const { widthStyle, shiftStyle } = usePaneStyles(props);
 
   return (
     <Animated.View
       testID={props.testID}
-      style={animatedStyle}
+      style={widthStyle}
       {...hiddenPaneProps(props.hidden)}
     >
       <View className="flex-1 overflow-hidden">
-        <PaneContent {...props} />
+        <PaneContent {...props} shiftStyle={shiftStyle} />
       </View>
     </Animated.View>
   );

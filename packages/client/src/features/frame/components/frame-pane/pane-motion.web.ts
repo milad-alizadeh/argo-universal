@@ -5,12 +5,14 @@ import {
   mayAnimate,
   playFrames,
 } from '../../hooks/use-frame-transition.web';
+import { paneShift } from '../../utils/pane-shift';
 import type { PaneGeometry } from './pane-geometry';
 import {
   type PaneElements,
   type PaneMode,
   type PaneMotionInput,
   type PanePosition,
+  restingPosition,
   startingPosition,
 } from './pane-position.web';
 import { slideStyle } from './slide-style';
@@ -29,8 +31,12 @@ export interface PaneMotionRefs {
   motion: RefObject<Animation[]>;
 }
 
-function travelled(start: PanePosition, next: PaneGeometry): boolean {
-  return start.width !== next.width || start.offset !== next.offset;
+function travelled(start: PanePosition, end: PanePosition): boolean {
+  return (
+    start.width !== end.width ||
+    start.offset !== end.offset ||
+    start.opacity !== end.opacity
+  );
 }
 
 function shouldMove(input: PaneMotionInput, start: PanePosition): boolean {
@@ -38,7 +44,7 @@ function shouldMove(input: PaneMotionInput, start: PanePosition): boolean {
 
   return (
     last.transitionKey !== next.transitionKey &&
-    travelled(start, next) &&
+    travelled(start, restingPosition(next, input.reflows)) &&
     mayAnimate(input.animate)
   );
 }
@@ -50,15 +56,29 @@ function shiftFrames(translation: number): [Keyframe, Keyframe] {
   ];
 }
 
+// A pane appearing from nothing slides in by its whole width rather than from its centre.
+const visibleStart = (start: PanePosition, end: PanePosition): PanePosition =>
+  start.width > 0 ? start : { ...start, width: end.width };
+
+/*
+ * FLIP: the content already holds its final width, so the Feed lays out once; it slides from where it
+ * showed by transform and fades out by opacity as it hides, so nothing reflows while it moves.
+ */
 function reflowFrames(
   frame: HTMLDivElement,
   start: PanePosition,
   next: PaneGeometry,
 ): readonly ElementFrame[] {
-  const [from, to] = shiftFrames(start.offset - next.offset);
-  const fromWidth = { ...from, width: `${start.width}px` };
+  const end = restingPosition(next, true);
+  const [from, to] = shiftFrames(paneShift(visibleStart(start, end), end));
 
-  return [[frame, [fromWidth, { ...to, width: `${next.width}px` }]]];
+  // A pane showing is whole at once and slides in; one hiding fades as it goes.
+  const keyframes = [
+    { ...from, opacity: Math.max(start.opacity, end.opacity) },
+    { ...to, opacity: end.opacity },
+  ];
+
+  return [[frame, keyframes]];
 }
 
 function slideFrames(
@@ -98,7 +118,9 @@ function restartMotion(
   const start = startingPosition(input, motion);
   cancelMotion(motion);
 
-  return shouldMove(input, start) ? playFrames(paneFrames(input, start)) : [];
+  return shouldMove(input, start)
+    ? playFrames(paneFrames(input, start), input.timing)
+    : [];
 }
 
 function readPanes({

@@ -1,5 +1,14 @@
 import type { ViewStyle } from 'react-native';
 import { useMaterialPalette } from '#primitives/native/material-palette';
+import type { RailTiles } from './rail-tiles';
+
+// A tablet's 80 rail: 48 tiles a hairline apart; the style below fills the selected one.
+export const railTiles: RailTiles = {
+  size: 'xl',
+  corners: 'rounded-xl',
+  selected: 'bg-selected',
+  column: 'gap-px',
+};
 
 /*
  * @expo/ui has no NavigationRail, so Argo draws the rail (#927); its selected tile takes the Material palette's

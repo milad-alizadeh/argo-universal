@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
-import { pluginNavigationItems } from '../navigation-items.mocks';
+import {
+  manyPluginNavigationItems,
+  pluginNavigationItems,
+} from '../navigation-items.mocks';
 import { FrameRail } from './frame-rail';
 
 const meta = {
@@ -44,6 +48,30 @@ export const ListsAndPicksPluginItems: Story = {
 
 export const SectionWithAListTogglesTheSidebar: Story = {
   play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('button', { name: sidebarToggle }),
+    ).toBeVisible();
+  },
+};
+
+// More Plugin sections than a short window holds scroll above the sidebar toggle, which stays in reach.
+export const ManySectionsScrollAboveTheToggle: Story = {
+  args: { items: manyPluginNavigationItems },
+  decorators: [
+    (Story) => (
+      <View className="h-64 flex-row">
+        <Story />
+      </View>
+    ),
+  ],
+  play: async ({ args, canvas, userEvent }) => {
+    const last = manyPluginNavigationItems.at(-1);
+    const tile = canvas.getByRole('button', { name: last?.title });
+
+    tile.scrollIntoView();
+    await userEvent.click(tile);
+
+    await expect(args.onSectionChange).toHaveBeenLastCalledWith(last?.id);
     await expect(
       canvas.getByRole('button', { name: sidebarToggle }),
     ).toBeVisible();

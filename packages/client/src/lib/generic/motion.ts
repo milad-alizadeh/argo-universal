@@ -15,6 +15,8 @@ export const easingCurve = {
   decelerate: { x1: 0.22, y1: 1, x2: 0.36, y2: 1 },
   // The ease iOS uses when a transparent header gains its scroll edge.
   standard: { x1: 0.25, y1: 0.1, x2: 0.25, y2: 1 },
+  // Tailwind's ease-out: full speed at once, then slowing, for the sidebar collapsing and expanding.
+  easeOut: { x1: 0, y1: 0, x2: 0.2, y2: 1 },
 };
 
 export type CubicBezier = (typeof easingCurve)[keyof typeof easingCurve];

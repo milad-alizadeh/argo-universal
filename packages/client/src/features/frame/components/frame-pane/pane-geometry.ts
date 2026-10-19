@@ -8,11 +8,12 @@ export interface PaneGeometry {
   contentWidth: number;
   transitionKey: string;
   frameWidth: number;
+  hidden: boolean;
 }
 
 type PanePlacement = Pick<
   FramePaneProps,
-  'width' | 'offset' | 'contentWidth' | 'transitionKey'
+  'width' | 'offset' | 'contentWidth' | 'transitionKey' | 'hidden'
 >;
 
 const placementKeys = [
@@ -20,6 +21,7 @@ const placementKeys = [
   'offset',
   'contentWidth',
   'transitionKey',
+  'hidden',
 ] as const;
 
 const frameKeys = ['transitionKey', 'width', 'contentWidth'] as const;
@@ -37,17 +39,18 @@ function initialGeometry({
   offset,
   contentWidth = width,
   transitionKey,
+  hidden,
 }: PanePlacement): PaneGeometry {
   const frameWidth = Math.max(width, contentWidth);
 
-  return { width, offset, contentWidth, transitionKey, frameWidth };
+  return { width, offset, contentWidth, transitionKey, frameWidth, hidden };
 }
 
 function heldPlacement(
   held: PaneGeometry,
   placement: PanePlacement,
 ): PaneGeometry {
-  const { width, offset, transitionKey } = placement;
+  const { width, offset, transitionKey, hidden } = placement;
 
   const contentWidth = stableContentWidth(
     placement.contentWidth,
@@ -55,7 +58,7 @@ function heldPlacement(
     held.contentWidth,
   );
 
-  return { ...held, width, offset, contentWidth, transitionKey };
+  return { ...held, width, offset, contentWidth, transitionKey, hidden };
 }
 
 // The frame keeps its width until the transition, width or content width changes, so a running slide stays inside it.

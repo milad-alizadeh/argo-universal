@@ -6,52 +6,54 @@ import {
   FramePane,
   type FramePaneProps,
 } from '../components/frame-pane/frame-pane';
-import { GlassSurface } from '../components/glass-surface/glass-surface';
-import type {
-  ScaffoldLayout,
-  ScaffoldPartProps,
-  ScaffoldProps,
-} from './use-scaffold-layout';
+import {
+  GlassSurface,
+  type GlassSurfaceProps,
+} from '../components/glass-surface/glass-surface';
+import { SidebarBar } from '../components/sidebar-bar/sidebar-bar';
+import type { FrameMotion } from '../utils/frame-timing';
+import type { ScaffoldPartProps, ScaffoldProps } from './use-scaffold-layout';
 
 // The list scrolls across the whole pane, so its scrollbar sits at the pane's edge; its rows keep 8 from the rail and 14 from the pane's edge.
 const listColumn = { paddingLeft: 8, paddingRight: 14 };
 
-function SidebarGlass({
+const glassGeometry = ({
+  scaffold,
   layout,
-}: {
-  layout: ScaffoldLayout;
-}): React.JSX.Element {
-  const { measures, shownListWidth, visibleListWidth } = layout;
+}: ScaffoldPartProps): Omit<GlassSurfaceProps, keyof FrameMotion> => ({
+  width: layout.measures.railWidth + layout.shownListWidth,
+  expandedWidth: layout.measures.railWidth + layout.visibleListWidth,
+  railWidth: layout.measures.railWidth,
+  barHeight: layout.measures.barHeight,
+  sidebarShown: scaffold.sidebarShown,
+});
 
+function SidebarGlass(parts: ScaffoldPartProps): React.JSX.Element {
+  return <GlassSurface {...glassGeometry(parts)} {...parts.layout.motion} />;
+}
+
+// The shared top bar across the rail and the list: the window controls over the rail, then the list's title and actions.
+function SidebarTopBar({
+  scaffold,
+  layout,
+}: ScaffoldPartProps): React.JSX.Element {
   return (
-    <GlassSurface
-      width={measures.railWidth + shownListWidth}
-      expandedWidth={measures.railWidth + visibleListWidth}
+    <SidebarBar
+      left={layout.measures.railWidth}
+      width={layout.visibleListWidth}
+      sidebarShown={scaffold.sidebarShown}
       {...layout.motion}
-    />
+    >
+      {scaffold.listHeader}
+    </SidebarBar>
   );
 }
 
-// A tablet's rail starts its 48 first tile 16 below the top; the header drops by the same 16 and pads its top by 4, so its 40 content box centres on the tile.
-function SidebarListHeader({
-  children,
-}: {
-  children: ReactNode;
-}): React.JSX.Element {
-  return (
-    <View className="h-frame-control flex-row items-center gap-1 pl-6 pr-3.5 native:mt-4 native:pt-1">
-      {children}
-    </View>
-  );
-}
-
-function SidebarListContent({
-  listHeader,
-  list,
-}: ScaffoldProps): React.JSX.Element {
+// The list starts under the top bar, which draws the list's header apart, so the header fades in place while the list slides.
+function SidebarListContent({ list }: ScaffoldProps): React.JSX.Element {
   return (
     <>
-      <SidebarListHeader>{listHeader}</SidebarListHeader>
+      <View className="h-frame-control native:mt-4" />
       <View className="-mt-0.5 min-h-0 flex-1 overflow-hidden">
         <ScrollColumnContext value={listColumn}>{list}</ScrollColumnContext>
       </View>
@@ -93,9 +95,10 @@ export function ScaffoldSidebarColumn({
   return (
     <View className="p-frame-inset">
       <View className="flex-1 flex-row">
-        <SidebarGlass layout={parts.layout} />
+        <SidebarGlass {...parts} />
         {sidebar}
         <SidebarList {...parts} />
+        <SidebarTopBar {...parts} />
       </View>
     </View>
   );

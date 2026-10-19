@@ -10,6 +10,7 @@ import {
   type SessionDetailViewProps,
 } from './session-detail-view';
 import { ElicitationPreview } from './session-detail-view-elicitation.mocks';
+import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
   pullRequestMocks,
   withPullRequests,
@@ -90,6 +91,12 @@ export const LoadingEarlier: Story = {
 
 export const LongFeed: Story = {
   args: { view: { state: 'open', ...longSession } },
+};
+
+// A long Feed in the Frame: the rail's toggle collapses and expands the sidebar while the Feed keeps its layout and only slides.
+export const LongFeedInFrame: Story = {
+  args: { view: { state: 'open', ...longSession } },
+  render: ({ view }): React.JSX.Element => <FramedSessionPreview {...view} />,
 };
 
 export const Empty: Story = {

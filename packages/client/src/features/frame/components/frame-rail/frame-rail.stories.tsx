@@ -7,7 +7,10 @@ import {
   coreNavigationSections,
   sectionOrder,
 } from '../../../../lib/product/navigation/sections';
-import { pluginNavigationItems } from '../navigation-items.mocks';
+import {
+  manyPluginNavigationItems,
+  pluginNavigationItems,
+} from '../navigation-items.mocks';
 import { FrameRail } from './frame-rail';
 
 type FrameRailProps = React.ComponentProps<typeof FrameRail>;
@@ -34,13 +37,21 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The rail at a window's height; the glass sits behind it in the Frame.
+// The rail at a window's height on the glass's tint, which the Frame draws behind it; a short window scrolls the sections.
 function RailColumn({
   children,
+  short = false,
 }: {
   children: React.ReactNode;
+  short?: boolean;
 }): React.JSX.Element {
-  return <View className="h-96 flex-row">{children}</View>;
+  return (
+    <View
+      className={short ? 'h-64 flex-row bg-hover' : 'h-96 flex-row bg-hover'}
+    >
+      {children}
+    </View>
+  );
 }
 
 function PluginPageVariation(args: FrameRailProps): React.JSX.Element {
@@ -59,22 +70,38 @@ function PluginPageVariation(args: FrameRailProps): React.JSX.Element {
   );
 }
 
-// Paper's rail: the selected tile pressed in, and the hairline separator while the sidebar shows; none once it hides. A Plugin page lists its nav items after the core sections and has no sidebar toggle.
+function SidebarVariation({
+  label,
+  ...args
+}: FrameRailProps & { label: string }): React.JSX.Element {
+  return (
+    <Variation label={label}>
+      <RailColumn>
+        <FrameRail {...args} />
+      </RailColumn>
+    </Variation>
+  );
+}
+
+function ManySectionsVariation(args: FrameRailProps): React.JSX.Element {
+  return (
+    <Variation label="Many Plugin sections">
+      <RailColumn short>
+        <FrameRail {...args} items={manyPluginNavigationItems} />
+      </RailColumn>
+    </Variation>
+  );
+}
+
+// Paper "Rail · narrow variants", Variant B: 40 tiles on the tinted rail, the selected one a flat tint, and no separator. A Plugin page lists its nav items after the core sections and has no sidebar toggle; once Plugins add more than the window holds, the sections scroll above the toggle.
 export const Overview: Story = {
   name: 'FrameRail',
   render: (args) => (
     <Variations className="flex-row">
-      <Variation label="Sidebar shown">
-        <RailColumn>
-          <FrameRail {...args} sidebarShown />
-        </RailColumn>
-      </Variation>
-      <Variation label="Sidebar hidden">
-        <RailColumn>
-          <FrameRail {...args} sidebarShown={false} />
-        </RailColumn>
-      </Variation>
+      <SidebarVariation {...args} label="Sidebar shown" sidebarShown />
+      <SidebarVariation {...args} label="Sidebar hidden" sidebarShown={false} />
       <PluginPageVariation {...args} />
+      <ManySectionsVariation {...args} />
     </Variations>
   ),
 };

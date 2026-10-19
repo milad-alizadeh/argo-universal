@@ -14,15 +14,16 @@ function createPaneRefs(): PaneRefs {
 
 export function usePaneMotion(
   next: PaneGeometry,
-  { animate, reflows }: PaneMode,
+  { animate, reflows, timing }: PaneMode,
 ): PaneRefs {
   const [refs] = useState(createPaneRefs);
   const previous = useRef(next);
   const motion = useRef<Animation[]>([]);
   useCancelOnUnmount(motion);
   useLayoutEffect(() => {
-    syncPaneMotion({ refs, previous, motion }, next, { animate, reflows });
-  }, [refs, next, animate, reflows]);
+    const mode = { animate, reflows, timing };
+    syncPaneMotion({ refs, previous, motion }, next, mode);
+  }, [refs, next, animate, reflows, timing]);
 
   return refs;
 }
