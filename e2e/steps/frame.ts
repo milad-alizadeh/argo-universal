@@ -50,11 +50,15 @@ Given('a phone Frame', async ({ page }): Promise<void> => {
   await openApp(page, phone);
 });
 
-// Another page on the same Server, opened wide at the App's root; only the web App can open one.
-export async function openWidePage(app: Pick<App, 'openPage'>): Promise<Page> {
+// Another page on the same Server, opened wide at the App's root; only the web App can open one. `prepare` runs before the App loads, such as to route its WebSocket.
+export async function openWidePage(
+  app: Pick<App, 'openPage'>,
+  prepare?: (page: Page) => Promise<void>,
+): Promise<Page> {
   if (!app.openPage) throw new Error('This scenario needs the web App');
   const other = await app.openPage();
   await other.setViewportSize(wide);
+  await prepare?.(other);
   await other.goto('/');
 
   return other;
