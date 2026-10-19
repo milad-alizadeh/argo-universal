@@ -1,7 +1,7 @@
 import { wirePart, type WirePartDefinition } from '@repo/contracts/plugins/kit';
 import {
-  isRootOnly,
   isWireContainer,
+  refusedBelowRoot,
   rootSlotParts,
 } from '@repo/contracts/plugins/prepare-tree';
 import { WireJson, type WireNode } from '@repo/contracts/plugins/wire';
@@ -35,9 +35,9 @@ export function RenderNode({
 
 function drawablePart(
   node: WireNode,
-  { nested }: Rendering.RenderContext,
+  { roots }: Rendering.RenderContext,
 ): WirePartDefinition | undefined {
-  if (nested && isRootOnly(node)) return undefined;
+  if (roots && refusedBelowRoot(node, roots)) return undefined;
 
   return wirePart(node.type);
 }
@@ -95,15 +95,15 @@ function renderedChildren(
   context: Rendering.RenderContext,
   slot?: SlotPlace,
 ): (React.JSX.Element | null)[] {
+  const roots = slot?.roots ?? [];
+
   return nodes.map((node) => {
     const key =
       slot === undefined
         ? childNodeKey(context.key, node.key)
         : slotNodeKey(context.key, slot.name, node.key);
 
-    const nested = !slot?.roots.includes(node.type);
-
-    return RenderNode({ node, context: { ...context, key, nested } });
+    return RenderNode({ node, context: { ...context, key, roots } });
   });
 }
 

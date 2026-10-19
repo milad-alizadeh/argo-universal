@@ -120,17 +120,24 @@ const listDetailParts = {
   Action: 3,
 };
 
-test('a build page shows the builds beside the selected one', async ({
-  mount,
-}) => {
-  const page = await mount({
+const mountBuild = (mount) =>
+  mount({
     page: '/builds/web',
     surface: { platform: 'web', parts: listDetailParts },
   });
 
-  assert.equal((await page.find('Deploy web')).type, 'ListItem');
+test('a build page shows the builds beside the selected one', async ({
+  mount,
+}) => {
+  const page = await mountBuild(mount);
+
   assert.equal((await page.find('Build native')).type, 'ListItem');
-  assert.equal((await page.find('Sync fails on large repos')).type, 'Page');
-  await page.press('Close');
-  assert.equal((await page.find('Reopen')).type, 'Action');
+  assert.equal((await page.find('Running')).type, 'Metadata.StatusDot');
+});
+
+test('cancelling a build offers to rerun it', async ({ mount }) => {
+  const page = await mountBuild(mount);
+
+  await page.press('Cancel');
+  assert.equal((await page.find('Rerun')).type, 'Action');
 });

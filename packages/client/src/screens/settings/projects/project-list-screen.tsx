@@ -1,31 +1,6 @@
-import type { ProjectInfo } from '@repo/contracts';
-import type { UseQueryResult } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useProjects, useServerPageCaption } from '#features/settings';
-import { projectHref, useNavigate } from '#lib/product/navigation/navigation';
-import type { ProjectsLoad } from './project-list-props';
-import { ProjectListView } from './project-list-view';
+import { ProjectListDetail } from './project-list-detail';
 
-function toProjectsLoad(
-  projects: UseQueryResult<ProjectInfo[], unknown>,
-): ProjectsLoad {
-  if (projects.data) return { status: 'loaded', projects: projects.data };
-
-  if (projects.isError) return { status: 'error' };
-
-  return { status: 'loading' };
-}
-
-// The Projects list, marking the Project whose page is open beside it.
-export function ProjectList(props: { selected?: string }): React.JSX.Element {
-  const navigate = useNavigate();
-
-  return (
-    <ProjectListView
-      caption={useServerPageCaption()}
-      projects={toProjectsLoad(useProjects())}
-      selected={props.selected}
-      onOpenProject={(name) => navigate(projectHref(name))}
-    />
-  );
+export function ProjectListScreen(): React.JSX.Element {
+  return <ProjectListDetail />;
 }

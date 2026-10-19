@@ -17,16 +17,14 @@ const buildItems = [
   {
     id: 'web',
     title: 'Deploy web',
-    issue: 'Sync fails on large repos',
-    open: 'Sync stops after a few minutes on repositories with more than 50,000 files.',
-    closed: 'Closed. Sync now fetches large repositories in batches.',
+    running: 'Deploying main to production: 2 of 5 jobs done.',
+    cancelled: 'Cancelled. Rerun to deploy main again.',
   },
   {
     id: 'native',
     title: 'Build native',
-    issue: 'Add CSV export',
-    open: 'Export the visible Issues as CSV, with the columns shown.',
-    closed: 'Closed. CSV export ships in v1.3.',
+    running: 'Building the iOS and Android apps: 2 of 5 jobs done.',
+    cancelled: 'Cancelled. Rerun to build the apps again.',
   },
 ];
 
@@ -37,15 +35,14 @@ const listPath = '/builds';
 const buildHref = (build) =>
   `/plugins/hello/hello-builds${listPath}/${build.id}`;
 
-const itemMetadata = (
+const buildMetadata = (
   <Metadata>
-    <Metadata.StatusDot title="Status" text="In progress" tone="info" />
-    <Metadata.Avatar title="Assignee" name="Ana Ruiz" />
-    <Metadata.Pills title="Labels">
-      <Pill text="bug" />
-      <Pill text="sync" />
+    <Metadata.StatusDot title="Status" text="Running" tone="info" />
+    <Metadata.Avatar title="Started by" name="Ana Ruiz" />
+    <Metadata.Pills title="Branch">
+      <Pill text="main" />
     </Metadata.Pills>
-    <Metadata.Label title="Opened" text="2 days ago" />
+    <Metadata.Label title="Started" text="2 minutes ago" />
     <Metadata.Link
       title="Docs"
       text="example.com"
@@ -54,11 +51,11 @@ const itemMetadata = (
   </Metadata>
 );
 
-function CloseAction({ closed, onToggle }) {
+function CancelAction({ cancelled, onToggle }) {
   return (
     <ActionList>
       <Action
-        label={closed ? 'Reopen' : 'Close'}
+        label={cancelled ? 'Rerun' : 'Cancel'}
         icon="check"
         onPress={onToggle}
       />
@@ -66,17 +63,17 @@ function CloseAction({ closed, onToggle }) {
   );
 }
 
-// An item page: its content, with Metadata beside it on wide screens.
+// A build's page: its progress, with Metadata beside it on wide screens.
 function BuildPage({ build }) {
-  const [closed, setClosed] = useState(false);
-  const toggle = () => setClosed(!closed);
+  const [cancelled, setCancelled] = useState(false);
+  const toggle = () => setCancelled(!cancelled);
 
   return (
-    <Page title={build.issue}>
+    <Page title={build.title}>
       <Detail
-        markdown={closed ? build.closed : build.open}
-        metadata={itemMetadata}
-        actions={<CloseAction closed={closed} onToggle={toggle} />}
+        markdown={cancelled ? build.cancelled : build.running}
+        metadata={buildMetadata}
+        actions={<CancelAction cancelled={cancelled} onToggle={toggle} />}
       />
     </Page>
   );
@@ -119,7 +116,11 @@ function BuildList({ selected }) {
       appearance="cards"
       items={buildItems}
       renderItem={(build) => (
-        <BuildRow key={build.id} build={build} selected={build === selected} />
+        <BuildRow
+          key={build.id}
+          build={build}
+          selected={build.id === selected?.id}
+        />
       )}
     />
   );

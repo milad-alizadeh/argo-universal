@@ -23,7 +23,7 @@ const hasSlots = (node: WireNode): boolean =>
 const hasContent = (node: WireNode): boolean =>
   node.children.length > 0 || hasSlots(node);
 
-export { isRootOnly, rootSlotParts } from './root-only';
+export { isRootOnly, refusedBelowRoot, rootSlotParts } from './root-only';
 
 export const isWireContainer = (node: WireNode): boolean =>
   Boolean(wirePart(node.type)?.container) || hasContent(node);

@@ -45,10 +45,9 @@ export { PluginListScreen } from './screens/settings/plugins/plugin-list-screen'
 
 export { PluginSettingsDetailScreen } from './screens/settings/plugins/$id/plugin-settings-detail-screen';
 
-export {
-  ProjectDetailScreen,
-  ProjectListScreen,
-} from './screens/settings/projects/project-list-detail';
+export { ProjectListScreen } from './screens/settings/projects/project-list-screen';
+
+export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
 export { hasLiquidGlass } from '#lib/generic/native-header';
 
