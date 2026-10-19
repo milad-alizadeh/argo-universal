@@ -41,11 +41,7 @@ type RowPlace = Pick<React.ContextType<typeof ListContext>, 'appearance'> & {
 
 function pressClass(props: DrawingProps, place: RowPlace): string {
   return cn(
-    itemPress({
-      ...place,
-      interactive: interactive(props),
-      control: props.control !== undefined,
-    }),
+    itemPress({ ...props, ...place, interactive: interactive(props) }),
     props.disabled && 'opacity-50',
   );
 }

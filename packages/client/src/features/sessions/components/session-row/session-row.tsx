@@ -8,6 +8,7 @@ import { SessionRowMenu } from './session-row-menu';
 import { sessionMetadata } from './session-row-metadata';
 import { sessionProgress } from './session-row-plan';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
+import { sidebarDrawing } from './session-row-sidebar';
 import { rowStatusDot } from './session-row-status';
 
 export type { SessionRowProps } from './session-row-props';
@@ -42,6 +43,7 @@ function RegularRow(props: SessionRowPressProps): React.JSX.Element {
   return (
     <ListItem
       {...rowIdentity(props)}
+      {...sidebarDrawing(props.session.status, 'regular')}
       leading={<SessionMark {...props} />}
       trailing={rowStatusDot(props.session.status)}
       meta={sessionMetadata({ ...props, selected })}
