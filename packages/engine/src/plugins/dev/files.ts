@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, extname } from 'node:path';
 import type { Loader, OnLoadArgs, OnLoadResult, Plugin } from 'esbuild';
-import { requirePluginFile } from '../discovery/plugin-files';
+import { requirePluginFile } from '../access/plugin-files';
 
 type ObserveSource = (path: string, contents: string) => void;
 

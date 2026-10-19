@@ -5,7 +5,7 @@ import type { LookupFunction } from 'node:net';
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { PluginAccess } from '../access/plugin-access';
 import { checkedLookup } from '../access/plugin-addresses';
-import type { FetchCall, PluginValue } from '../protocol/runtime-protocol';
+import type { FetchCall, PluginValue } from '../protocol/runtime';
 import { redirected, responseValue, type Hop } from './plugin-fetch-response';
 
 // What the Server decides about TLS and name lookup; tests pass a fixture certificate authority and resolver.

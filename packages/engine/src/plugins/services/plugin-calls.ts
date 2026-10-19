@@ -8,7 +8,7 @@ import {
   type PluginRequest,
   type PluginValue,
   type ProcessCall,
-} from '../protocol/runtime-protocol';
+} from '../protocol/runtime';
 import { firstHop, type PluginNetwork } from './plugin-fetch';
 import { fileAccessOf } from './plugin-file-calls';
 import type { CheckedProcessCall } from './plugin-processes';
@@ -132,11 +132,6 @@ export function failureLine(
 
   return `Plugin ${pluginId}: argo call failed: ${runtimeError(cause)}`;
 }
-
-export const replyError = (cause: unknown): string =>
-  cause instanceof CapabilityRefusal
-    ? `Refused: ${cause.message}`
-    : runtimeError(cause);
 
 // The log names the call and where it points, never a secret value or a file's content.
 export function describeCall(request: StateRequest): string {

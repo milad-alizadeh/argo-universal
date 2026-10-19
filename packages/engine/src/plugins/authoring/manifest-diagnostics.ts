@@ -8,7 +8,7 @@ import {
 } from 'jsonc-parser';
 import { z } from 'zod';
 import { ManifestFieldError } from '../discovery/manifest';
-import { runtimeError } from '../protocol/runtime-protocol';
+import { runtimeError } from '../protocol/runtime';
 import {
   sourceDiagnostic,
   type PluginDiagnostic,

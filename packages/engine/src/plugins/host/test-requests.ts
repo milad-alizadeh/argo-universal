@@ -1,4 +1,4 @@
-import type { HostCommand } from '../protocol/runtime-protocol';
+import type { HostCommand } from '../protocol/runtime';
 import {
   TestCommand,
   type TestAction,
@@ -18,7 +18,7 @@ export class TestRequests {
   private readonly pending = new Map<number, PendingTest>();
   constructor(private readonly tell: (command: HostTest) => void) {}
 
-  async send(pluginId: string, action: TestAction): Promise<void> {
+  public async send(pluginId: string, action: TestAction): Promise<void> {
     const { command, pending } = this.request(pluginId, action);
     const timeout = testDeadline(pending.reject);
 
@@ -35,7 +35,7 @@ export class TestRequests {
     const id = this.next++;
 
     const command = {
-      ...TestCommand.parse({ type: 'test', id, request: action }),
+      ...TestCommand.parse({ type: 'test', id, action }),
       pluginId,
     };
 
@@ -45,7 +45,7 @@ export class TestRequests {
     return { command, pending };
   }
 
-  settle(reply: TestReply): void {
+  public settle(reply: TestReply): void {
     const pending = this.pending.get(reply.id);
 
     if (!pending) return;

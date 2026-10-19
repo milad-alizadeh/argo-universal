@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { delimiter } from 'node:path';
 import { shellEnvironment } from '../../agents';
 import type { CheckedCommand } from '../access/plugin-access';
-import type { ProcessCall } from '../protocol/runtime-protocol';
+import type { ProcessCall } from '../protocol/runtime';
 import { argoLimitBytes, argoTimeoutMs } from './plugin-limits';
 
 // A run or spawn reaches here only after the checker gave it its working directory and environment.

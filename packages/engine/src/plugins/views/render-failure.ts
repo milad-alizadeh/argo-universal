@@ -1,6 +1,6 @@
 import type { RenderFailureInput } from '@repo/contracts/plugins/replaceable';
-import { renderFallbackLine } from '../runtime/render-fallback';
 import type { OpenView } from './open-view';
+import { renderFallbackLine } from './render-fallback';
 
 export function reportDrawingFailure(
   view: OpenView | undefined,

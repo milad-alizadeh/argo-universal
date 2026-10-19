@@ -12,9 +12,9 @@ import {
   type HostWaiting,
   type WorkerCall,
   type HostCommand,
-} from '../protocol/runtime-protocol.ts';
+} from '../protocol/runtime.ts';
 import type { TestReply } from '../protocol/test-control.ts';
-import { startWorker, type WorkerRecord } from './worker.ts';
+import { startWorker, type WorkerRecord } from './start-worker.ts';
 
 const heartbeatIntervalMs = 1000;
 

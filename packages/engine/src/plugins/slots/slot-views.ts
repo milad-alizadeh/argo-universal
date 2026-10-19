@@ -4,8 +4,8 @@ import {
   type SlotMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
-import type { PluginViews } from './plugin-views';
-import { merged } from './streams';
+import type { PluginViews } from '../views/plugin-views';
+import { merged } from './merge-streams';
 
 type Contributions = { pluginIds: string[]; slot: PluginSlotInput };
 

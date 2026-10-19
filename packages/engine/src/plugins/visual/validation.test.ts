@@ -1,6 +1,6 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
-import { sanitizeTree } from '../svg/view';
+import { sanitizeTree } from './sanitize-tree';
 
 function node(
   type: string,

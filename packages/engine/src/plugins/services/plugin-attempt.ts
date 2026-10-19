@@ -1,5 +1,5 @@
 import type { SpawnCaller } from '../hooks/spawn-hooks';
-import type { PluginValue } from '../protocol/runtime-protocol';
+import type { PluginValue } from '../protocol/runtime';
 import { answerKept, isKeptRequest } from './kept-calls';
 import type { Keychain } from './keychain';
 import type { StateRequest, UnkeptRequest } from './plugin-calls';

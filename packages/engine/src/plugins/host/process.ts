@@ -2,7 +2,7 @@ import {
   HostCommand,
   type HostHook,
   type HostReply,
-} from '../protocol/runtime-protocol.ts';
+} from '../protocol/runtime.ts';
 import { HostWorkers } from './workers.ts';
 
 const workers = new HostWorkers((message) => process.send?.(message));

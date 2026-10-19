@@ -4,7 +4,7 @@ import type { PluginManifest } from '@repo/contracts/plugins';
 import type { BuildResult } from 'esbuild';
 import { bundlePlugin } from '../dev/bundle';
 import { readManifest } from '../discovery/manifest';
-import { runtimeError } from '../protocol/runtime-protocol';
+import { runtimeError } from '../protocol/runtime';
 import { BuildError, buildDiagnostics } from './build-diagnostics';
 import type { PluginDiagnostic } from './diagnostics';
 import { inspectGlobals } from './globals';

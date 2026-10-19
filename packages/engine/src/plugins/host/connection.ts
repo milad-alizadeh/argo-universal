@@ -7,7 +7,7 @@ import {
   type PluginEntry,
   type PluginEvent,
   type PluginReply,
-} from '../protocol/runtime-protocol';
+} from '../protocol/runtime';
 import { hostCompletion } from './completion';
 import { hostLifecycleMachine, hostBudgetExhausted } from './lifecycle.machine';
 import { TestRequests } from './test-requests';
@@ -29,7 +29,7 @@ type HostCallbacks = {
 
 export class HostConnection {
   private child: ChildProcess | null = null;
-  readonly tests = new TestRequests((command) => this.tell(command));
+  public readonly tests = new TestRequests((command) => this.tell(command));
   private readonly lifecycle;
   private completion: Promise<void> = Promise.resolve();
 

@@ -1,4 +1,4 @@
-import type { PluginValue, SecretCall } from '../protocol/runtime-protocol';
+import type { PluginValue, SecretCall } from '../protocol/runtime';
 import { pluginKeychainService, type Keychain } from './keychain';
 import type { KeptRequest, StateRequest } from './plugin-calls';
 import type { PluginServiceOptions } from './plugin-service-options';

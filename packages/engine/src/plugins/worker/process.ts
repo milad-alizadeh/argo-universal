@@ -3,7 +3,7 @@ import {
   PluginEntry,
   WorkerCommand,
   type WorkerCall,
-} from '../protocol/runtime-protocol.ts';
+} from '../protocol/runtime.ts';
 import type { TestAction, TestReply } from '../protocol/test-control.ts';
 import { argoBridge, WorkerCalls } from './argo.ts';
 import { registerPlugin, type PluginInboxes } from './modules.ts';
@@ -64,15 +64,14 @@ async function runTest(
   command: Extract<Delivery, { type: 'test' }>,
 ): Promise<void> {
   try {
-    await perform(command.request);
+    await runTestAction(command.action);
     post({ type: 'test.done', id: command.id });
   } catch (error) {
     post({ type: 'test.done', id: command.id, error: String(error) });
   }
 }
 
-// Advancing the clock is the only test action so far.
-function perform(action: TestAction): Promise<void> {
+function runTestAction(action: TestAction): Promise<void> {
   if (!clock) throw new Error('Plugin has no test clock');
 
   return clock.advance(action.ms);

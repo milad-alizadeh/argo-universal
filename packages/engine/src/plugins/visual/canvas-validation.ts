@@ -1,5 +1,5 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { runtimeError } from '../protocol/runtime-protocol';
+import { runtimeError } from '../protocol/runtime';
 import { validateNumericAttribute } from '../svg/numeric-validation';
 import { visualPropsReason, visualSchemas } from './props';
 

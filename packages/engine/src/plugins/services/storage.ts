@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { DatabaseSync, SQLOutputValue, StatementSync } from 'node:sqlite';
 import { attachReadOnly, openPluginDatabase } from '@repo/db/plugin-database';
-import type { StorageQuery, StorageResult } from '../protocol/runtime-protocol';
+import type { StorageQuery, StorageResult } from '../protocol/runtime';
 
 const databaseFile = 'plugin.db';
 

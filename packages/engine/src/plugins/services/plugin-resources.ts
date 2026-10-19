@@ -1,7 +1,7 @@
 import type { PluginAccess } from '../access/plugin-access';
 import type { AssetContent } from '../assets/content';
 import { readAssetResponse } from '../assets/fetch';
-import type { FsCall, PluginValue } from '../protocol/runtime-protocol';
+import type { FsCall, PluginValue } from '../protocol/runtime';
 import { fetchCall, fetchResponse, type FetchContext } from './plugin-fetch';
 import type { Hop } from './plugin-fetch-response';
 import { fsCall } from './plugin-file-calls';

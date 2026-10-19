@@ -1,6 +1,6 @@
 import type { ActivatedPlugin } from '../access/plugin-access';
 import type { HostConnection } from '../host/connection';
-import type { PluginEntry, PluginStatus } from '../protocol/runtime-protocol';
+import type { PluginEntry, PluginStatus } from '../protocol/runtime';
 
 export type RuntimePluginInput = {
   deferReload: () => boolean;

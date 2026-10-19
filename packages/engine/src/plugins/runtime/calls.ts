@@ -3,7 +3,7 @@ import type {
   HostMessage,
   PluginReply,
   PluginRequest,
-} from '../protocol/runtime-protocol';
+} from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
 import type { PluginViews } from '../views/plugin-views';
 

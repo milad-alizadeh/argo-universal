@@ -13,7 +13,7 @@ export type TestAction = z.infer<typeof TestAction>;
 export const TestCommand = z.object({
   type: z.literal('test'),
   id: z.number().int().nonnegative(),
-  request: TestAction,
+  action: TestAction,
 });
 
 export const TestReply = z.object({

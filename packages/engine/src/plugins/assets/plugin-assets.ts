@@ -8,7 +8,7 @@ import {
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PluginAssetRef } from '@repo/contracts/plugins/assets';
-import { openExisting, openFlags } from '../services/plugin-file-open';
+import { openExisting, openFlags } from '../access/plugin-file-open';
 import type { AssetContent } from './content';
 
 export type OpenedAsset = {

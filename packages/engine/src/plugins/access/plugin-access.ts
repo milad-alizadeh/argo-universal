@@ -6,7 +6,7 @@ import {
   type PluginCapability,
   type ProcessCapability,
 } from '@repo/contracts/plugins';
-import type { ProcessCommand } from '../protocol/runtime-protocol';
+import type { ProcessCommand } from '../protocol/runtime';
 import { CapabilityRefusal } from './capability-refusal';
 import {
   allowLinks,

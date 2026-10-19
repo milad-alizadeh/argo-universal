@@ -1,9 +1,9 @@
 import type { PluginList, PluginManifest } from '@repo/contracts/plugins';
-import type { PluginRuntime } from '../runtime/plugin-runtime';
-import type { PluginSettings } from '../settings/plugin-settings';
-import { discoverPlugins, type PluginsDeps } from './loader';
+import { discoverPlugins, type PluginsDeps } from './discovery/loader';
+import type { PluginRuntime } from './runtime/plugin-runtime';
+import type { PluginSettings } from './settings/plugin-settings';
 
-export type PluginDescriptor = PluginList['plugins'][number];
+type PluginDescriptor = PluginList['plugins'][number];
 
 export type LocatedPlugin = { plugin: PluginDescriptor; directory: string };
 

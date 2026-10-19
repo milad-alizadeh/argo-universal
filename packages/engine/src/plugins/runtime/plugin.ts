@@ -1,9 +1,9 @@
 import type { BuildContext } from 'esbuild';
 import type { ActivatedPlugin } from '../access/plugin-access';
 import { watchPlugin } from '../dev/bundle';
-import { notStarted, runtimeError } from '../protocol/runtime-protocol';
-import type { PluginStatus } from '../protocol/runtime-protocol';
-import type { RuntimePluginInput } from './runtime-plugin-input';
+import { notStarted, runtimeError } from '../protocol/runtime';
+import type { PluginStatus } from '../protocol/runtime';
+import type { RuntimePluginInput } from './plugin-input';
 
 export class RuntimePlugin {
   status = notStarted;

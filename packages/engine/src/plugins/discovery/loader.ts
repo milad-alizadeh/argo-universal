@@ -3,7 +3,7 @@ import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
 import { z } from 'zod';
-import { notStarted } from '../protocol/runtime-protocol';
+import { notStarted } from '../protocol/runtime';
 import { readManifest } from './manifest';
 
 export interface PluginsDeps {

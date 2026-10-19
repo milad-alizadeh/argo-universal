@@ -1,6 +1,11 @@
-import type { HookEventName, PluginManifest } from '@repo/contracts/plugins';
+import type {
+  HookEventName,
+  PluginList,
+  PluginManifest,
+} from '@repo/contracts/plugins';
 import type { SlotId } from '@repo/contracts/plugins/wire';
-import type { PluginDescriptor } from './located-plugins';
+
+type PluginDescriptor = PluginList['plugins'][number];
 
 // A Plugin fills only the Slots its manifest declares; `argo plugin validate` reads the same rule.
 export const declaresSlot = (

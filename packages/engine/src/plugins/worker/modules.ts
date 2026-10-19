@@ -6,10 +6,10 @@ import {
   SyntheticModule,
   type Module,
 } from 'node:vm';
-import { requirePluginFile } from '../discovery/plugin-files.ts';
+import { requirePluginFile } from '../access/plugin-files.ts';
 import { bundleKit } from '../kit/bundle.ts';
 import type { Kit } from '../kit/plugin-kit.ts';
-import type { PluginEntry } from '../protocol/runtime-protocol.ts';
+import type { PluginEntry } from '../protocol/runtime.ts';
 import { type ArgoBridge } from './argo.ts';
 import {
   createPluginRealm,

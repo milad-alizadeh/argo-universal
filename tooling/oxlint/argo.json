@@ -108,20 +108,26 @@
       "rules": { "sonarjs/code-eval": "off" }
     },
     {
-      // A Plugin test clock replaces the realm's timer globals, so the kit schedules only through kit-scheduler.ts (#824).
+      // A Plugin test clock replaces the realm's timer globals, so the kit schedules only through kit/scheduler.ts (#824).
       "files": ["packages/engine/src/plugins/kit/**"],
       "rules": {
         "no-restricted-globals": [
           "error",
           { "name": "setTimeout", "message": "Use kitScheduler.schedule." },
           { "name": "clearTimeout", "message": "Use kitScheduler.cancel." },
-          { "name": "setInterval", "message": "Use kitScheduler.schedule." },
-          { "name": "clearInterval", "message": "Use kitScheduler.cancel." }
+          {
+            "name": "setInterval",
+            "message": "The kit has no interval timer; reschedule with kitScheduler.schedule."
+          },
+          {
+            "name": "clearInterval",
+            "message": "The kit has no interval timer; cancel with kitScheduler.cancel."
+          }
         ]
       }
     },
     {
-      "files": ["packages/engine/src/plugins/kit/kit-scheduler.ts"],
+      "files": ["packages/engine/src/plugins/kit/scheduler.ts"],
       "rules": { "no-restricted-globals": "off" }
     },
     {

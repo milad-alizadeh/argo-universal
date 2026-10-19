@@ -1,6 +1,6 @@
 import { reportFailure } from './host-config';
-import { kitScheduler } from './kit-scheduler';
 import type { OpenView } from './page-view';
+import { kitScheduler } from './scheduler';
 
 const frameMs = 16;
 

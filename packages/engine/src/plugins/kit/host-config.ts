@@ -4,7 +4,7 @@ import {
 } from 'react-reconciler/constants';
 import { keyOfProps, toProps, type ElementProps } from './element-props';
 import type { KitHostConfig } from './host-types';
-import { kitScheduler } from './kit-scheduler';
+import { kitScheduler } from './scheduler';
 import { transitionContext } from './transition-context';
 import type { Instance } from './wire-tree';
 

@@ -3,11 +3,7 @@ import { realpath, stat, type FileHandle } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 import { CapabilityRefusal } from '../access/capability-refusal';
 import { inside } from '../access/plugin-access-rules';
-import {
-  openExisting,
-  openFlags,
-  sameNode,
-} from '../services/plugin-file-open';
+import { openExisting, openFlags, sameNode } from '../access/plugin-file-open';
 import { assetBytes, assetFormat, type AssetContent } from './content';
 
 type AssetFile = { codeFolder: string; path: string; asset: string };

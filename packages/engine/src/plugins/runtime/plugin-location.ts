@@ -1,7 +1,7 @@
 import type { HookEventName, PluginCapability } from '@repo/contracts/plugins';
 import type { ActivatedPlugin } from '../access/plugin-access';
 import type { HookAllowance } from '../hooks/hook-registry';
-import type { PluginEntry } from '../protocol/runtime-protocol';
+import type { PluginEntry } from '../protocol/runtime';
 
 export type PluginLocation = {
   entry: Omit<PluginEntry, 'generation'>;

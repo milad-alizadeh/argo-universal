@@ -1,4 +1,4 @@
-import type { RuntimePlugin } from './runtime-plugin';
+import type { RuntimePlugin } from './plugin';
 
 // While any Turn can be writing Plugin sources, workers keep their last complete build.
 export class PluginTurns {

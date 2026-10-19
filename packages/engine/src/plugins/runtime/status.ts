@@ -1,7 +1,7 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import type { z } from 'zod';
+import type { RuntimePlugin } from './plugin';
 import type { PluginLocation } from './plugin-location';
-import type { RuntimePlugin } from './runtime-plugin';
 
 type PluginIdentity = Pick<z.input<typeof PluginFailure>, 'pluginId' | 'name'>;
 

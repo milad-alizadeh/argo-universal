@@ -3,11 +3,11 @@ import type {
   PluginAssetSource,
 } from '@repo/contracts/plugins/assets';
 import type { ActivatedPlugin } from '../access/plugin-access';
-import type { MachineContext } from '../services/plugin-calls';
-import { firstHop } from '../services/plugin-fetch';
-import type { AssetContent } from './content';
-import { readAssetFile } from './file';
-import type { PluginAssets } from './plugin-assets';
+import type { AssetContent } from '../assets/content';
+import { readAssetFile } from '../assets/file';
+import type { PluginAssets } from '../assets/plugin-assets';
+import type { MachineContext } from './plugin-calls';
+import { firstHop } from './plugin-fetch';
 
 type AssetCall = Pick<
   MachineContext,

@@ -7,7 +7,7 @@ import {
   type OutputFile,
   type BuildOptions,
 } from 'esbuild';
-import type { PluginEntry } from '../protocol/runtime-protocol';
+import type { PluginEntry } from '../protocol/runtime';
 import { pluginFiles } from './files';
 import { DevVersion } from './version';
 

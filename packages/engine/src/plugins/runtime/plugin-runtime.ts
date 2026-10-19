@@ -3,25 +3,28 @@ import { hostHooks } from '../hooks/host-hooks';
 import { keepWaiting } from '../hooks/keep-waiting';
 import type { PluginHooks } from '../hooks/plugin-hooks';
 import { HostConnection } from '../host/connection';
-import type { PluginReply } from '../protocol/runtime-protocol';
+import type { PluginReply } from '../protocol/runtime';
 import {
   notStarted,
   type PluginStatus,
   type HostMessage,
-} from '../protocol/runtime-protocol';
+} from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
 import { PluginViews } from '../views/plugin-views';
+import {
+  oncePerRenderFallback,
+  renderFallbackLine,
+} from '../views/render-fallback';
+import { answerPluginCall } from './calls';
 import { PluginFailures } from './failures';
+import { RuntimePlugin } from './plugin';
 import {
   activatedPlugin,
   hookAllowance,
   type PluginLocation,
 } from './plugin-location';
 import { PluginTurns } from './plugin-turns';
-import { oncePerRenderFallback, renderFallbackLine } from './render-fallback';
-import { answerPluginCall } from './runtime-calls';
-import { RuntimePlugin } from './runtime-plugin';
-import { hostCrashLine, pluginIdentity } from './runtime-status';
+import { hostCrashLine, pluginIdentity } from './status';
 
 export class PluginRuntime {
   private readonly failures = new PluginFailures();
@@ -155,15 +158,10 @@ export class PluginRuntime {
   }
 
   private update(message: Extract<HostMessage, { type: 'status' }>): void {
-    if (message.state === 'running') this.views.reopen(message.pluginId);
-    this.plugins.get(message.pluginId)?.update(
-      {
-        state: message.state,
-        hanging: message.hanging,
-        error: message.error,
-      },
-      message.generation,
-    );
+    const { pluginId, generation, state, hanging, error } = message;
+
+    if (state === 'running') this.views.reopen(pluginId);
+    this.plugins.get(pluginId)?.update({ state, hanging, error }, generation);
   }
 
   private crashed(message: string): void {

@@ -5,7 +5,7 @@ import {
 } from '@repo/contracts/plugins';
 import { JsonObject, type Json } from '@repo/contracts/plugins/hook-protocol';
 import type { z } from 'zod';
-import { runtimeError } from '../protocol/runtime-protocol';
+import { runtimeError } from '../protocol/runtime';
 import { coreAnswer, isAnswer } from './hook-rules';
 
 // Runs one event's Hook chain on JSON: the Server's runner, or core alone.

@@ -9,7 +9,7 @@ const hookOptionIndex = 2;
 
 const matcherOptionIndex = 3;
 
-import { runtimeError } from '../protocol/runtime-protocol';
+import { runtimeError } from '../protocol/runtime';
 
 export function hookSourceReason(
   node: CallExpression,

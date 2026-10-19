@@ -11,7 +11,6 @@ import { dirname } from 'node:path';
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { FileAccess, PluginAccess } from '../access/plugin-access';
 import { realOrMissing } from '../access/plugin-access-rules';
-import type { FsCall, PluginValue } from '../protocol/runtime-protocol';
 import {
   openExisting,
   openFlags,
@@ -19,7 +18,8 @@ import {
   removeCreated,
   sameNode,
   type OpenFile,
-} from './plugin-file-open';
+} from '../access/plugin-file-open';
+import type { FsCall, PluginValue } from '../protocol/runtime';
 import { argoLimitBytes } from './plugin-limits';
 
 // A checked path, the access it was checked for, and the checker to ask again once it is open.

@@ -8,8 +8,8 @@ import type {
   WireNode,
 } from '@repo/contracts/plugins/wire';
 import { diff } from './diff';
-import type { KitTimer } from './kit-scheduler';
 import type { Mounted } from './reconciler';
+import type { KitTimer } from './scheduler';
 import type { Handlers } from './wire-tree';
 
 export type DispatchSender = (

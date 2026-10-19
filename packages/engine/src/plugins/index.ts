@@ -14,7 +14,7 @@ export type { OpenedAsset } from './assets/plugin-assets';
 
 export { PluginRuntime } from './runtime/plugin-runtime';
 
-export { pluginManifest } from './discovery/located-plugins';
+export { pluginManifest } from './located-plugins';
 
 export { PluginService } from './service';
 

@@ -3,7 +3,7 @@ import {
   type PluginValue,
   type WorkerCall,
   type WorkerReply,
-} from '../protocol/runtime-protocol.ts';
+} from '../protocol/runtime.ts';
 
 type Pending = {
   resolve: (value: PluginValue) => void;

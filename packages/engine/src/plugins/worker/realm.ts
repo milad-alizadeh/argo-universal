@@ -1,6 +1,6 @@
 import { createContext, runInContext } from 'node:vm';
 import { argoSource, type ArgoBridge } from './argo.ts';
-import { kitPrelude } from './kit-prelude.ts';
+import { kitPrelude, kitTimersSource } from './kit-prelude.ts';
 
 export type PluginRealm = ReturnType<typeof createContext>;
 
@@ -14,13 +14,14 @@ const realClock: PluginClock = {
   now: Date.now,
 };
 
-// The kit loads before a test clock replaces the timer globals, so kitScheduler keeps real time; only Plugin timers and dates use the test clock.
+// The kit is handed real timers first; only Plugin timers and dates use a test clock.
 export function createPluginRealm(
   bridge: ArgoBridge,
   kitSource: string,
   clock?: PluginClock,
 ): PluginRealm {
   const context = baseRealm({ __argoBridge: bridge });
+  runInContext(kitTimersSource, context);
   runInContext(kitSource, context);
 
   if (clock) installClock(context, clock);

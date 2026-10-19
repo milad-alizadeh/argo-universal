@@ -7,7 +7,7 @@
     "#mocks/*": "./mocks/*.ts",
     "#plugin-test-control": "./src/plugins/protocol/test-control.ts",
     "#plugin-entry": "./src/plugins/protocol/plugin-entry.ts",
-    "#plugin-storage-protocol": "./src/plugins/protocol/storage-protocol.ts"
+    "#plugin-storage-protocol": "./src/plugins/protocol/storage.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

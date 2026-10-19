@@ -1,7 +1,7 @@
 import type { CoreHooks, PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PluginAssets } from '../assets/plugin-assets';
 import type { Waiting } from '../hooks/spawn-hooks';
-import type { PluginValue } from '../protocol/runtime-protocol';
+import type { PluginValue } from '../protocol/runtime';
 import type { PluginNetwork } from './plugin-fetch';
 
 export type PluginServiceOptions = {

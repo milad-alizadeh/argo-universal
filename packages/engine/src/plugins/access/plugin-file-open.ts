@@ -1,7 +1,7 @@
 import type { Stats } from 'node:fs';
 import { constants } from 'node:fs';
 import { lstat, open, unlink, type FileHandle } from 'node:fs/promises';
-import { CapabilityRefusal } from '../access/capability-refusal';
+import { CapabilityRefusal } from './capability-refusal';
 
 // Never follow a final symlink, and never block on a FIFO.
 export const openFlags = constants.O_NOFOLLOW | constants.O_NONBLOCK;

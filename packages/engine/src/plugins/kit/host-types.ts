@@ -1,6 +1,6 @@
 import type { HostConfig } from 'react-reconciler';
 import type { ElementProps } from './element-props';
-import type { KitTimer } from './kit-scheduler';
+import type { KitTimer } from './scheduler';
 import type { Instance } from './wire-tree';
 
 // Nothing in a Plugin page is a text node, a suspense boundary or a portal: text goes through the `Text` component.

@@ -23,6 +23,12 @@ import {
 import type { RpcConnection } from '../rpc';
 import { discoverPlugins } from './discovery/loader';
 import {
+  fillsSlot,
+  hooksEvent,
+  rendersSlot,
+} from './discovery/plugin-contributions';
+import { callerOf } from './hooks/hook-rules';
+import {
   applyEnabled,
   applyStatus,
   locatePlugin,
@@ -31,18 +37,12 @@ import {
   requireSettings,
   type LocatedPlugin,
   type PluginServiceDeps,
-} from './discovery/located-plugins';
-import { startPlugin, startPlugins } from './discovery/plugin-activation';
-import {
-  fillsSlot,
-  hooksEvent,
-  rendersSlot,
-} from './discovery/plugin-contributions';
-import { callerOf } from './hooks/hook-rules';
-import { renderSlot } from './views/render-slot';
-import { slotViews } from './views/slot-views';
+} from './located-plugins';
+import { startPlugin, startPlugins } from './plugin-activation';
+import { renderSlot } from './slots/render-slot';
+import { slotViews } from './slots/slot-views';
 
-export type { PluginServiceDeps } from './discovery/located-plugins';
+export type { PluginServiceDeps } from './located-plugins';
 
 export class PluginService {
   constructor(private readonly deps: PluginServiceDeps) {}

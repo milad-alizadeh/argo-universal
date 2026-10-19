@@ -2,22 +2,22 @@ import type {
   PluginAssetRef,
   PluginAssetSource,
 } from '@repo/contracts/plugins/assets';
+import { replyError } from '../access/capability-refusal';
 import {
   PluginAccess,
   type AccessScope,
   type ActivatedPlugin,
 } from '../access/plugin-access';
 import type { OpenedAsset } from '../assets/plugin-assets';
-import { resolvePluginAsset } from '../assets/resolver';
 import { spawnHooks, type SpawnCaller } from '../hooks/spawn-hooks';
-import type { PluginReply, PluginValue } from '../protocol/runtime-protocol';
+import type { PluginReply, PluginValue } from '../protocol/runtime';
+import { resolvePluginAsset } from './asset-resolver';
 import type { Keychain } from './keychain';
 import { attemptPluginCall } from './plugin-attempt';
 import {
   describeCall,
   failureLine,
   machineCall,
-  replyError,
   type MachineContext,
   type StateRequest,
   type UnkeptRequest,

@@ -1,8 +1,8 @@
 import { mapActionContent } from '@repo/contracts/plugins/map-action-content';
 import type { WireNode } from '@repo/contracts/plugins/wire';
-import { visualReason } from '../visual/validation';
-import { parseSvg } from './parser';
-import { sanitizeSvg } from './sanitizer';
+import { parseSvg } from '../svg/parser';
+import { sanitizeSvg } from '../svg/sanitizer';
+import { visualReason } from './validation';
 
 export interface RefusedSvg {
   node: string;

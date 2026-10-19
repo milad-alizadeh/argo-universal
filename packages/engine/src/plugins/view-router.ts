@@ -13,8 +13,8 @@ import {
   router,
   routerFactory,
   type RpcConnection,
-} from '../../rpc';
-import type { PluginService } from '../service';
+} from '../rpc';
+import type { PluginService } from './service';
 
 export function requireSignal(signal: AbortSignal | undefined): AbortSignal {
   if (!signal) throw new Error('Plugin subscription signal is missing');
@@ -95,7 +95,7 @@ const renderFailureRouter = routerFactory((plugins: PluginService) =>
   }),
 );
 
-import { mergeRouters } from '../../rpc';
+import { mergeRouters } from '../rpc';
 
 export const createPluginViewRouter = routerFactory((plugins: PluginService) =>
   mergeRouters(

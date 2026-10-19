@@ -1,5 +1,5 @@
 import { Worker } from 'node:worker_threads';
-import type { PluginEntry } from '../protocol/runtime-protocol.ts';
+import type { PluginEntry } from '../protocol/runtime.ts';
 
 const heapLimitMb = 64;
 

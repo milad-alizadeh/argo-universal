@@ -1,5 +1,5 @@
 import type { IncomingMessage } from 'node:http';
-import type { PluginValue } from '../protocol/runtime-protocol';
+import type { PluginValue } from '../protocol/runtime';
 import { argoFetchLimitBytes } from './plugin-limits';
 
 // One request `argo.fetch` sends: the first, or one a redirect leads to.
