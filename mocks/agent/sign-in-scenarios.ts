@@ -88,7 +88,7 @@ const turnTerminalSignIn = (steps: Steps): ScriptedScenario => ({
 
 /*
  * Exits while opening its first Session; the Agent started again after that exit opens Sessions.
- * New Session first reads the never-opened Agent's options from an ACP session of its own (ADR-0023), which opens normally.
+ * New Session first reads the never-opened Agent's options from an Agent session of its own (ADR-0023), which opens normally.
  */
 const openExitOnce = (steps: Steps): ScriptedScenario => ({
   ...base(steps),

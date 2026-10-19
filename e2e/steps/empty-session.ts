@@ -15,20 +15,21 @@ const checkedAttribute = 'aria-checked';
 const argoBranches = async (projectPath: string): Promise<string[]> =>
   (await readSessionCheckouts(projectPath)).branches;
 
-export const openRequests = (requestLogPath: string): LoggedRequest[] =>
-  localRequests(requestLogPath, 'session/new');
+export const openRequests = (
+  app: Parameters<typeof localRequests>[0],
+): LoggedRequest[] => localRequests(app, 'session/new');
 
 // The folder a Session opened in; temporary folders are reached through symlinks on macOS.
 const openedIn = ({ params }: LoggedRequest): string | undefined =>
   params?.cwd === undefined ? undefined : realpathSync(params.cwd);
 
-const closeRequests = (requestLogPath: string): number =>
-  localRequests(requestLogPath, 'session/close').length;
+const closeRequests = (app: Parameters<typeof localRequests>[0]): number =>
+  localRequests(app, 'session/close').length;
 
 // A Local New Session opens its empty Session in the Project folder at once.
 When('the empty Session is open', async ({ page, app }): Promise<void> => {
   await expect
-    .poll(() => openRequests(app.requestLogPath).map(openedIn))
+    .poll(() => openRequests(app).map(openedIn))
     .toEqual([realpathSync(app.projectPath)]);
   await waitForEmptySession(page);
 });
@@ -43,13 +44,11 @@ When(
 );
 
 Then('the Agent closed the empty Session', async ({ app }): Promise<void> => {
-  await expect
-    .poll(() => closeRequests(app.requestLogPath))
-    .toBeGreaterThanOrEqual(1);
+  await expect.poll(() => closeRequests(app)).toBeGreaterThanOrEqual(1);
 });
 
 Then('the Agent closed no Session', async ({ app }): Promise<void> => {
-  expect(closeRequests(app.requestLogPath)).toBe(0);
+  expect(closeRequests(app)).toBe(0);
 });
 
 Then(
@@ -64,8 +63,8 @@ Then(
 Then('only the new empty Session remains', async ({ app }): Promise<void> => {
   await expect
     .poll(() => ({
-      opened: openRequests(app.requestLogPath).length,
-      closed: closeRequests(app.requestLogPath),
+      opened: openRequests(app).length,
+      closed: closeRequests(app),
     }))
     .toEqual({ opened: 2, closed: 1 });
 });
@@ -74,7 +73,7 @@ Then('only the new empty Session remains', async ({ app }): Promise<void> => {
 Then(
   'the prompt went to the Session opened before the drop',
   async ({ app }): Promise<void> => {
-    expect(openRequests(app.requestLogPath)).toHaveLength(1);
+    expect(openRequests(app)).toHaveLength(1);
   },
 );
 
@@ -83,15 +82,13 @@ const worktreeOpens = (app: {
   requestLogPath: string;
   projectPath: string;
 }): LoggedRequest[] =>
-  openRequests(app.requestLogPath).filter(
+  openRequests(app).filter(
     (request) => openedIn(request) !== realpathSync(app.projectPath),
   );
 
-// Reading a never-opened Agent's options may open an ACP session in the Project folder, but it closes it and leaves no Session or worktree.
+// Reading a never-opened Agent's options may open an Agent session in the Project folder, but it closes it and leaves no Session or worktree.
 Then('no Session or worktree exists yet', async ({ app }): Promise<void> => {
-  await expect
-    .poll(() => closeRequests(app.requestLogPath))
-    .toBe(openRequests(app.requestLogPath).length);
+  await expect.poll(() => closeRequests(app)).toBe(openRequests(app).length);
   expect(worktreeOpens(app)).toEqual([]);
   expect(await argoBranches(app.projectPath)).toEqual([]);
 });

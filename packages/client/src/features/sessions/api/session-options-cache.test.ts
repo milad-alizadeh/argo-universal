@@ -7,8 +7,8 @@ import {
 } from '@tanstack/react-query';
 import { describe, expect, it } from 'vitest';
 import { persistOnly } from '../../../lib/product/query-persister';
+import { sessionOptions } from '../utils/session-options';
 import {
-  sessionOptions,
   sessionOptionsKey,
   sessionOptionsQuery,
   writeSessionOptions,
@@ -37,7 +37,7 @@ const withModel = (value: string): SessionConfigOption[] =>
 const choice = { agent, projectId, saved: {}, picks: {}, opening: false };
 
 const cached = (client: QueryClient): SessionConfigOption[] | undefined =>
-  client.getQueryData(sessionOptionsQuery(agent, projectId).queryKey);
+  client.getQueryData(sessionOptionsQuery({ agent, projectId }).queryKey);
 
 describe('the Session options cache', () => {
   it('shows the cached options, then the next opened Session’s options', () => {

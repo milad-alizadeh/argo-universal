@@ -2,12 +2,19 @@ import type { SessionConfigOption } from '@repo/contracts';
 import { skipToken, useIsRestoring, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTRPCClient } from '#features/connection';
+import { useErrorToast } from '#primitives/overlays/toast';
+import {
+  readAgentOptions,
+  sessionOptionsQuery,
+  type SessionOptionsOwner,
+} from '../api/session-options-cache';
+import { optionsReadToast } from '../utils/options-read-toast';
 import {
   type SessionOptions,
   type SessionOptionsChoice,
   sessionOptions,
-  sessionOptionsQuery,
-} from '../utils/session-options-cache';
+} from '../utils/session-options';
+import { useConnectionDropped } from './use-connection-dropped';
 
 interface CachedOptions {
   cached: SessionConfigOption[] | undefined;
@@ -22,36 +29,37 @@ type OptionsOwner = Pick<
   'agent' | 'projectId' | 'inNewWorktree'
 >;
 
-type ReadOptions = (context: {
-  signal: AbortSignal;
-}) => Promise<SessionConfigOption[]>;
-
-type ReadOwner = { agent: string; projectId: string };
-
 // Only a New worktree with an Agent and a Project reads.
-const reads = (owner: OptionsOwner): owner is OptionsOwner & ReadOwner =>
-  owner.inNewWorktree && !!owner.agent && !!owner.projectId;
+const reads = ({ inNewWorktree, agent, projectId }: OptionsOwner): boolean =>
+  inNewWorktree && !!agent && !!projectId;
 
-// The query runs the read only while nothing is cached.
-const readOptions = (
-  client: ReturnType<typeof useTRPCClient>,
-  owner: OptionsOwner,
-): ReadOptions | typeof skipToken => {
-  if (!reads(owner)) return skipToken;
-  const { agent, projectId } = owner;
+const ownerOf = ({ agent, projectId }: OptionsOwner): SessionOptionsOwner => ({
+  agent: agent ?? '',
+  projectId: projectId ?? '',
+});
 
-  return ({ signal }) =>
-    client.session.agentOptions.query({ agent, projectId }, { signal });
-};
+// Send's own open reports the Agent's failure; a toast any other.
+function useReadFailure(error: Error | null): void {
+  const dropped = useConnectionDropped(error);
 
-// A failed read shows no options, and Send's own open reports why.
-const useCached = (owner: OptionsOwner): CachedOptions => {
-  const query = sessionOptionsQuery(owner.agent ?? '', owner.projectId ?? '');
-  const queryFn = readOptions(useTRPCClient(), owner);
-  const { data, isFetching } = useQuery({ ...query, queryFn, retry: false });
+  useErrorToast(optionsReadToast(error, dropped));
+}
 
-  return { cached: data, restoring: useIsRestoring(), reading: isFetching };
-};
+// A failed read shows no options.
+function useCached(owner: OptionsOwner): CachedOptions {
+  const client = useTRPCClient();
+  const input = ownerOf(owner);
+  const read = reads(owner) ? readAgentOptions(client, input) : skipToken;
+  const query = useQuery(sessionOptionsQuery(input, read));
+
+  useReadFailure(query.error);
+
+  return {
+    cached: query.data,
+    restoring: useIsRestoring(),
+    reading: query.isFetching,
+  };
+}
 
 // New Session's model, effort and mode at once, before any Session opens.
 export function useSessionOptions(

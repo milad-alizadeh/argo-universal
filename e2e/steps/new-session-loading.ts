@@ -18,7 +18,7 @@ Given(
     await openNewSession(page);
     await chooseAgent(page, label);
     await waitForEmptySession(page);
-    markLocalStart(app.requestLogPath);
+    markLocalStart(app);
     await chooseLocalCheckout(page);
     await waitForEmptySession(page);
   },
