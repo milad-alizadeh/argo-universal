@@ -1,4 +1,5 @@
 import { expect } from '../fixtures';
+import { markLocalStart } from './agent-requests';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 import {
@@ -9,13 +10,15 @@ import {
   waitForEmptySession,
 } from './new-session';
 
-// The Agent first, so its Session is the only one Local opens.
+// The Agent first, so its Session is the only one Local opens; its New worktree options read ends before Local is chosen.
 Given(
   'a Local New Session with Agent {int}',
-  async ({ page, server }, ordinal: number): Promise<void> => {
+  async ({ page, server, app }, ordinal: number): Promise<void> => {
     const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await openNewSession(page);
     await chooseAgent(page, label);
+    await waitForEmptySession(page);
+    markLocalStart(app);
     await chooseLocalCheckout(page);
     await waitForEmptySession(page);
   },

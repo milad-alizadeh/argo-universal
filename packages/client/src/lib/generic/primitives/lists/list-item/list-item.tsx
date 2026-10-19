@@ -5,22 +5,36 @@ import { ListContext, type ListPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
+import { useInMenu } from '../../../menu-rows-context';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { useGroupPosition } from './list-item-group';
 import { hasLeading } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import type { ListItemProps } from './list-item-props';
-import { useItemSelection, ChoiceAccessory } from './list-item-selection';
-import { itemSeparator, itemSurface } from './list-item-styles';
+import {
+  useItemSelection,
+  ChoiceAccessory,
+  ChoiceSlot,
+} from './list-item-selection';
+import {
+  itemSeparator,
+  itemSurface,
+  type ItemDrawing,
+} from './list-item-styles';
 
 const hairline = { height: StyleSheet.hairlineWidth };
 
-function ItemSeparator(props: ListItemProps): ReactNode {
-  const { appearance, position, index } = useContext(ListContext);
-  const covered = useSeparatorCovered(index);
+function useItemDrawing(): ItemDrawing {
+  const { appearance, position } = useContext(ListContext);
 
-  const separator = itemSeparator(appearance, position, hasLeading(props));
+  return { appearance, position, menu: useInMenu() };
+}
+
+function ItemSeparator(props: ListItemProps): ReactNode {
+  const { index } = useContext(ListContext);
+  const covered = useSeparatorCovered(index);
+  const separator = itemSeparator(useItemDrawing(), hasLeading(props));
 
   return separator && !covered ? (
     <View className={separator} style={hairline} />
@@ -80,13 +94,14 @@ function RowFooter(props: {
   );
 }
 
+// Paper's Combobox: a menu's chosen row shows its check only, with no selected fill.
 function ItemSurface(props: DrawingProps): ReactElement {
-  const { appearance, position } = useContext(ListContext);
+  const drawing = useItemDrawing();
 
   return (
-    <View className={itemSurface(appearance, position, props)}>
+    <View className={itemSurface(drawing, props)}>
       <ItemPress {...drawingContent(props)} />
-      <Selection selected={props.selected} />
+      <Selection selected={props.selected && !drawing.menu} />
       <ItemSeparator {...props} />
       <ItemProgress progress={props.progress} />
     </View>
@@ -104,22 +119,36 @@ function LoadingItem(props: ListItemProps): ReactElement {
   );
 }
 
-// Only a choosing List draws the choice slot; an empty one would hold the trailing lane off the row's edge.
 export function ListItem(props: ListItemProps): ReactElement {
   if (props.isLoading) return <LoadingItem {...props} />;
 
   return <ChoosingItem {...props} />;
 }
 
+// A menu row's check leads the row, as in Paper's Combobox; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem(props: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
+  const menu = useInMenu();
+
+  return (
+    <ListItemFrame
+      {...selected}
+      choice={menu ? <ChoiceSlot {...selected} /> : undefined}
+      accessory={useTrailingChoice(menu, selected)}
+    />
+  );
+}
+
+// An empty trailing choice would hold the trailing lane off the row's edge.
+function useTrailingChoice(
+  menu: boolean,
+  selected: ListItemProps,
+): ReactElement | undefined {
   const { selectionMode } = useContext(ListContext);
 
-  const accessory = selectionMode ? (
-    <ChoiceAccessory {...selected} />
-  ) : undefined;
+  if (menu || !selectionMode) return undefined;
 
-  return <ListItemFrame {...selected} accessory={accessory} />;
+  return <ChoiceAccessory {...selected} />;
 }
 
 function drawingContent(props: DrawingProps): DrawingProps {

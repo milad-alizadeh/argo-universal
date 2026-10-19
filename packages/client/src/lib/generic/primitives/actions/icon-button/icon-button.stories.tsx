@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
+import { logoSources } from '../../../symbols/logo-source';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Text } from '../../content/text';
 import { IconButton } from './icon-button';
@@ -115,16 +116,23 @@ function BadgeExample(): React.JSX.Element {
   );
 }
 
-const metaLink = (icon: 'repository' | 'web'): React.JSX.Element => (
-  <IconButton
-    key={icon}
-    icon={icon}
-    size="xs"
-    variant="ghost"
-    iconTone="muted"
-    bleed
-    accessibilityLabel={icon}
-  />
+const metaLinkProps = {
+  size: 'xs',
+  variant: 'ghost',
+  iconTone: 'muted',
+  bleed: true,
+} as const;
+
+// The repository's GitHub logo and the website's symbol, as on the Agent card.
+const metaLinks = (
+  <>
+    <IconButton
+      {...metaLinkProps}
+      iconSource={logoSources.github}
+      accessibilityLabel="Repository"
+    />
+    <IconButton {...metaLinkProps} icon="web" accessibilityLabel="Website" />
+  </>
 );
 
 // Each glyph sits on the text line and the row's gap; its hit area bleeds past it.
@@ -135,7 +143,7 @@ function BleedExample(): React.JSX.Element {
         <Text role="secondary" tone="muted">
           v1.0.0
         </Text>
-        {(['repository', 'web'] as const).map(metaLink)}
+        {metaLinks}
       </View>
     </Variation>
   );

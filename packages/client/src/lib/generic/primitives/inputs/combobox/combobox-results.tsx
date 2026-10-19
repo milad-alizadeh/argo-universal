@@ -4,6 +4,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { moveFocusAmong } from '#lib/generic/arrow-focus';
 import { ComboboxChoices } from './combobox-choices';
 import type { ComboboxContentProps } from './combobox-props';
 
@@ -35,28 +36,11 @@ function Options<Value extends string>(
   return <ComboboxChoices {...props} />;
 }
 
-const directions = new Map([
-  ['ArrowDown', 1],
-  ['ArrowUp', -1],
-  ['Home', -Infinity],
-  ['End', Infinity],
-]);
-
+// The choices are radio buttons; a disabled one is passed over.
 function moveFocus(event: KeyboardEvent<HTMLDivElement>): void {
-  const direction = directions.get(event.key);
-
-  if (direction === undefined) return;
-
   const choices = [...event.currentTarget.querySelectorAll('button')].filter(
     (choice) => choice.role === 'radio' && !choice.disabled,
   );
 
-  const index = choices.findIndex(
-    (choice) => choice === document.activeElement,
-  );
-
-  const next = Math.min(choices.length - 1, Math.max(0, index + direction));
-
-  event.preventDefault();
-  choices[next]?.focus();
+  moveFocusAmong(event, choices);
 }

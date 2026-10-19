@@ -12,7 +12,10 @@ import {
 } from '#lib/product/session-configuration';
 import type { ComposerConfigurationProps } from './configuration-types';
 
-type SelectConfiguration = Extract<SessionConfigOption, { type: 'select' }>;
+export type SelectConfiguration = Extract<
+  SessionConfigOption,
+  { type: 'select' }
+>;
 
 type BooleanConfiguration = Extract<SessionConfigOption, { type: 'boolean' }>;
 
@@ -33,6 +36,19 @@ export function selection(
   return configuration.configOptions.find(
     (option): option is SelectConfiguration =>
       option.type === 'select' && option.category === category,
+  );
+}
+
+// Configure's own rows show these categories; any other select option gets a row of its own.
+const configuredCategories = new Set(['mode', 'model', 'thought_level']);
+
+export function otherSelections(
+  configuration: ConfigurationValues,
+): SelectConfiguration[] {
+  return configuration.configOptions.filter(
+    (option): option is SelectConfiguration =>
+      option.type === 'select' &&
+      !configuredCategories.has(option.category ?? ''),
   );
 }
 

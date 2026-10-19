@@ -1,5 +1,5 @@
 import { useContext, type ReactNode } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { CheckboxIndicator } from '#primitives/inputs/checkbox';
 import { ListContext, type ListSelection } from '../../../list-context';
 import { ChoiceMark } from './list-item-choice-mark';
@@ -59,4 +59,17 @@ function choiceMark(
     );
 
   return <ChoiceMark {...props} />;
+}
+
+// Paper's Combobox master: a menu row in a choice list keeps a leading slot for its check, so labels align.
+export function ChoiceSlot(props: ListItemProps): ReactNode {
+  const { selectionMode } = useContext(ListContext);
+
+  if (!selectionMode) return null;
+
+  return (
+    <View className="h-5 w-4 shrink-0 items-center justify-center">
+      <ChoiceMark {...props} />
+    </View>
+  );
 }

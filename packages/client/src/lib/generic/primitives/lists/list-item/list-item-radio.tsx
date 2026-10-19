@@ -1,20 +1,25 @@
 import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../../utils';
 import type { DrawingProps } from './list-item-press';
-import { itemPress } from './list-item-styles';
 
-export function RadioPress({
-  row,
-  children,
-}: {
+// The row's press class comes from the row, so a radio row draws like its siblings.
+type RadioPressProps = {
   row: DrawingProps;
+  className?: string;
   children: ReactNode;
-}): ReactElement {
-  return <button {...radioProps(row)}>{children}</button>;
+};
+
+export function RadioPress(props: RadioPressProps): ReactElement {
+  return (
+    <button {...radioProps(props.row, props.className)}>
+      {props.children}
+    </button>
+  );
 }
 
 function radioProps(
   row: DrawingProps,
+  className?: string,
 ): React.ComponentProps<'button'> & { 'data-testid'?: string } {
   return {
     type: 'button',
@@ -23,11 +28,7 @@ function radioProps(
     'aria-checked': !!row.selected,
     disabled: row.disabled,
     onClick: row.onPress,
-    className: radioClass(row.disabled),
+    className: cn('flex w-full text-left', className),
     'data-testid': row.testID,
   };
-}
-
-function radioClass(disabled?: boolean): string {
-  return cn('flex w-full text-left', itemPress, disabled && 'opacity-50');
 }

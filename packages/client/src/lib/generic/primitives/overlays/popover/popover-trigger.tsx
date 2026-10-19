@@ -8,13 +8,18 @@ import {
 import { usePopoverState } from './popover-context';
 import { PopoverHover } from './popover-hover';
 import type { PopoverTriggerProps as TriggerProps } from './popover-props';
+import { useTriggerElement } from './popover-trigger-element';
 
 // Radix's Trigger anchors the content and names it; the caller's element draws the trigger.
 export function PopoverTrigger(props: TriggerProps): JSX.Element {
   const behavior = useTriggerBehavior(props);
 
   return (
-    <WebPopover.Trigger asChild disabled={props.disabled ?? undefined}>
+    <WebPopover.Trigger
+      ref={useTriggerElement()}
+      asChild
+      disabled={props.disabled ?? undefined}
+    >
       {triggerChild(props.children, behavior, {
         role: 'button',
         disabled: props.disabled,

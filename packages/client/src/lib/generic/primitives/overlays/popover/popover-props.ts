@@ -24,6 +24,8 @@ export type PopoverContentProps = {
   side?: 'top' | 'bottom' | 'left' | 'right';
   align?: 'start' | 'center' | 'end';
   sideOffset?: number;
+  // Along the side, from the aligned edge; negative moves it back past that edge.
+  alignOffset?: number;
   // The popover's accessible name; a phone's Sheet takes it as its label.
   accessibilityLabel?: string;
   className?: string;
@@ -35,6 +37,8 @@ export type PopoverContentProps = {
   onCloseAutoFocus?: (event: Event) => void;
   // After the popover has closed.
   onClosed?: () => void;
+  // Web only: Escape, just before the popover closes.
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
   children?: ReactNode;
 };
 

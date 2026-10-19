@@ -1,12 +1,14 @@
 import { useContext, useId, useMemo, type ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { ListContext } from '../../../list-context';
+import { useInMenu } from '../../../menu-rows-context';
 import { PressedRowProvider } from '../../../row-highlights';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
-import { childEntries, type ListChild } from './list-children';
+import { childEntries, menuEntries, type ListChild } from './list-children';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import { ListKeyboard } from './list-keyboard';
+import { ListMenuRows } from './list-menu-rows';
 import type { ListProps } from './list-props';
 import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
@@ -52,11 +54,12 @@ function useDataListProps<Item>(
 
 const fill = { flex: 1, minWidth: '100%' } as const;
 
+// Its fades blend into the surface behind the list: a popover's card, else the page.
 function DataList<Item>(props: ListProps<Item>): ReactElement {
   return (
     <PressedRowProvider>
       <ScrollFadeList
-        surfaceClassName="bg-content"
+        surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
         style={fill}
         {...useDataListProps(props)}
       />
@@ -95,9 +98,19 @@ function childContext(
   };
 }
 
-function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
+function useChildEntries(children: ChildrenOptions['children']): ListChild[] {
   const id = useId();
-  const items = useMemo(() => childEntries(children, id), [children, id]);
+  const menu = useInMenu();
+
+  return useMemo(() => {
+    const entries = childEntries(children, id);
+
+    return menu ? menuEntries(entries) : entries;
+  }, [children, id, menu]);
+}
+
+function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
+  const items = useChildEntries(children);
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
 
@@ -129,13 +142,21 @@ function childMaxHeight(
   return props.maxHeight ?? height;
 }
 
-export function List<Item>(props: ListProps<Item>): ReactElement {
+function ListRows<Item>(props: ListProps<Item>): ReactElement {
   if (props.items !== undefined) return <DataList {...props} />;
 
   return (
     <ListKeyboard fit={props.fit}>
       <ChildrenList {...childrenOptions(props)} />
     </ListKeyboard>
+  );
+}
+
+export function List<Item>(props: ListProps<Item>): ReactElement {
+  return (
+    <ListMenuRows>
+      <ListRows {...props} />
+    </ListMenuRows>
   );
 }
 

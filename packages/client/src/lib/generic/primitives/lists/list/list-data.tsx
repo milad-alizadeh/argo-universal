@@ -14,6 +14,7 @@ import {
   listPosition,
   type ListPosition,
 } from '../../../list-context';
+import { useInMenu } from '../../../menu-rows-context';
 import { createRowGroupEnds, type RowGroupEnds } from '../../../row-group-ends';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import { listInsets } from './list-insets';
@@ -102,7 +103,7 @@ function Row<Item>(rowProps: GroupedRowProps<Item>): ReactElement {
 
 // Legend List's web cells ignore horizontal content padding, so each row holds its gutters.
 function PaddedRow<Item>({ row, props }: RowProps<Item>): ReactNode {
-  const paddingHorizontal = usePadding(listInsets(props).padding);
+  const paddingHorizontal = usePadding(listInsets(props, useInMenu()).padding);
   const style = useMemo(() => ({ paddingHorizontal }), [paddingHorizontal]);
   const content = props.renderItem?.(row.item, row.index);
 
@@ -132,7 +133,7 @@ export function useListPadding<Item>(props: ListProps<Item>): {
   paddingTop: number;
   paddingBottom?: number;
 } {
-  const insets = listInsets(props);
+  const insets = listInsets(props, useInMenu());
   const paddingTop = usePadding(insets.paddingTop);
   const bottom = usePadding(insets.paddingBottom);
   const paddingBottom = insets.paddingBottom === undefined ? undefined : bottom;

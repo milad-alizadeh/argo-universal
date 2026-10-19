@@ -3,7 +3,11 @@ import type {
   RequestPermissionResponse,
 } from '@agentclientprotocol/sdk';
 import type { PendingElicitation, PendingPermission } from '@repo/contracts';
-import type { AcpSessionDestination } from '../../../agents';
+import {
+  type AcpSessionDestination,
+  cancelledElicitation,
+  cancelledPermission,
+} from '../../../agents';
 import {
   toPendingElicitation,
   toPendingPermission,
@@ -74,11 +78,9 @@ class PendingResponses<Response> {
 // The Permission requests and Elicitations an ACP Session holds open for the App.
 export class AcpSessionRequests {
   private readonly permissions =
-    new PendingResponses<RequestPermissionResponse>({
-      outcome: { outcome: 'cancelled' },
-    });
+    new PendingResponses<RequestPermissionResponse>(cancelledPermission);
   private readonly elicitations =
-    new PendingResponses<CreateElicitationResponse>({ action: 'cancel' });
+    new PendingResponses<CreateElicitationResponse>(cancelledElicitation);
   public constructor(private readonly createId: () => string) {}
   public requestPermission(
     send: Send,

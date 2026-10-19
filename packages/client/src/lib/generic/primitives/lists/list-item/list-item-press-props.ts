@@ -5,6 +5,8 @@ import type { ListItemProps } from './list-item-props';
 export interface DrawingProps extends ListItemProps {
   accessible?: boolean;
   accessory?: ReactNode;
+  // A menu row's leading check slot.
+  choice?: ReactNode;
   checked?: boolean;
   content?: ReactNode;
 }

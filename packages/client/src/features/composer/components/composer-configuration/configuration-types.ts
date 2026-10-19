@@ -17,10 +17,3 @@ export interface ComposerConfigurationProps {
     path?: string;
   };
 }
-
-// A page of choices, such as the models; a phone's sheet fits it.
-export interface ConfigurationChoicesProps {
-  configuration: ComposerConfigurationProps;
-  onSelect: () => void;
-  onContentHeightChange?: (height: number) => void;
-}

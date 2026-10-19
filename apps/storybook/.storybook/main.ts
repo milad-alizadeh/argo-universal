@@ -4,6 +4,7 @@ import type { StorybookConfig } from '@storybook/react-native-web-vite';
 import tailwindcss from '@tailwindcss/vite';
 import { uniwind } from 'uniwind/vite';
 import { mergeConfig, type PluginOption } from 'vite';
+import svgr from 'vite-plugin-svgr';
 import { sfSymbolImages } from '../../../tools/sf-symbols/sf-symbol-images.mts';
 import {
   expoDeclarationImports,
@@ -67,6 +68,8 @@ const vitePlugins = (): PluginOption[] => [
   expoDeclarationImports,
   expoSymbolsWebImports,
   sfSymbolImages,
+  // A logo SVG imports as a react-native-svg component, as Metro's react-native-svg-transformer gives the app (ADR-0019).
+  svgr({ include: '**/*.svg', svgrOptions: { native: true } }),
   tailwindcss(),
   // Uniwind resolves these from process.cwd(), so they are absolute.
   uniwind({
