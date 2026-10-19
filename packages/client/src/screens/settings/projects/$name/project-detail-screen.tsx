@@ -1,5 +1,6 @@
 import type * as React from 'react';
-import { ProjectListDetail } from '../project-list-detail';
+import { PageBesideList } from '#primitives/scaffolds/page';
+import { ProjectDetailPane } from './project-detail-pane';
 
 export interface ProjectDetailScreenProps {
   name: string;
@@ -8,5 +9,9 @@ export interface ProjectDetailScreenProps {
 export function ProjectDetailScreen({
   name,
 }: ProjectDetailScreenProps): React.JSX.Element {
-  return <ProjectListDetail name={name} />;
+  return (
+    <PageBesideList value={false}>
+      <ProjectDetailPane name={name} />
+    </PageBesideList>
+  );
 }

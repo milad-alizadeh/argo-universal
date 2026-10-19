@@ -16,17 +16,14 @@ function toProjectsLoad(
   return { status: 'loading' };
 }
 
-// The Projects list, marking the Project whose page is open beside it.
-export function ProjectListPane(props: {
-  selected?: string;
-}): React.JSX.Element {
+// The Projects list, a full page; each Project opens its own page, which goes Back to it.
+export function ProjectListPane(): React.JSX.Element {
   const navigate = useNavigate();
 
   return (
     <ProjectListView
       caption={useServerPageCaption()}
       projects={toProjectsLoad(useProjects())}
-      selected={props.selected}
       onOpenProject={(name) => navigate(projectHref(name))}
     />
   );

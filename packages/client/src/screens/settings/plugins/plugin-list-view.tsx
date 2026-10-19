@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { RowDrawingContext } from '#lib/generic/row-drawing-context';
 import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
 import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
@@ -27,15 +28,17 @@ export interface PluginListViewProps {
 
 export const pluginsTitle = 'Plugins';
 
-// One row per Plugin, as iOS Settings lists its Apps: each opens the Plugin's own page.
+// One row per Plugin in one card, as iOS Settings lists its Apps: each opens the Plugin's own page.
 export function PluginListView(props: PluginListViewProps): React.JSX.Element {
+  useErrorToast(props.plugins.status === 'error' ? loadFailed : undefined);
+
   return (
     <Page title={pluginsTitle} caption={props.caption}>
-      <List appearance="grouped">
-        <ListSection>
-          <PluginRows {...props} />
-        </ListSection>
-      </List>
+      <RowDrawingContext value="content">
+        <List appearance="grouped">
+          <ListSection>{pluginRows(props)}</ListSection>
+        </List>
+      </RowDrawingContext>
     </Page>
   );
 }
@@ -45,47 +48,39 @@ const loadFailed: ErrorToast = {
   message: 'The Server did not send its Plugins.',
 };
 
-// A failed load keeps the loading row: the toast says why, and the query retries when the Connection reopens.
-function PluginRows({
+/*
+ * The section's rows as its own children, so the card knows its first and last row. A failed load keeps the loading
+ * row: the toast says why, and the query retries when the Connection reopens.
+ */
+function pluginRows({
   plugins,
   onOpenPlugin,
-}: PluginListViewProps): React.JSX.Element {
-  useErrorToast(plugins.status === 'error' ? loadFailed : undefined);
+}: PluginListViewProps): React.JSX.Element | React.JSX.Element[] {
+  if (plugins.status !== 'loaded') return loadingPlugins;
 
-  if (plugins.status !== 'loaded')
-    return (
-      <ListItem
-        title="Loading Plugins…"
-        leading={<Spinner accessibilityLabel="Loading" />}
-      />
-    );
+  if (plugins.plugins.length === 0) return <ListItem title="No Plugins yet." />;
 
-  return <LoadedPlugins rows={plugins.plugins} onOpenPlugin={onOpenPlugin} />;
-}
-
-type LoadedPluginsProps = Pick<PluginListViewProps, 'onOpenPlugin'> & {
-  rows: PluginRow[];
-};
-
-function LoadedPlugins({
-  rows,
-  onOpenPlugin,
-}: LoadedPluginsProps): React.JSX.Element | React.JSX.Element[] {
-  if (rows.length === 0) return <ListItem title="No Plugins yet." />;
-
-  return rows.map((plugin) => (
+  return plugins.plugins.map((plugin) => (
     <PluginItem key={plugin.pluginId} plugin={plugin} onOpen={onOpenPlugin} />
   ));
 }
+
+const loadingPlugins = (
+  <ListItem
+    title="Loading Plugins…"
+    leading={<Spinner accessibilityLabel="Loading" />}
+  />
+);
 
 type PluginItemProps = {
   plugin: PluginRow;
   onOpen: (pluginId: string) => void;
 };
 
+// Paper's Plugins page: each row pushes the Plugin's page, so it draws the disclosure chevron.
 function PluginItem({ plugin, onOpen }: PluginItemProps): React.JSX.Element {
   return (
-    <ListItem
+    <ListItem.Link
       leading={<Icon name={plugin.icon} role="row" />}
       title={plugin.name}
       onPress={() => onOpen(plugin.pluginId)}

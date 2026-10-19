@@ -2,6 +2,7 @@ import { use } from 'react';
 import { Platform } from 'react-native';
 import { ListContext } from './list-context';
 import { useInMenu } from './menu-rows-context';
+import { useRowDrawing } from './row-drawing-context';
 
 export interface SectionDrawing {
   // The header label's colour, for its text and leading icon.
@@ -14,6 +15,8 @@ export interface SectionDrawing {
   gap: string;
   // The space after the section, before the next one.
   below: string;
+  // A title colour set after the heading role, which otherwise draws its own over the heading colour above.
+  title?: string;
 }
 
 const muted = 'text-muted-foreground';
@@ -39,14 +42,28 @@ const drawings = {
     footer: 'text-tone-neutral-600',
     ...rowInset,
   },
+  // Paper's List / Grouped on a page: a muted heading over the rows' text, 8 above the card; cards sit 16 apart.
+  content: {
+    heading: muted,
+    title: muted,
+    footer: muted,
+    inset: 'px-5',
+    gap: 'pb-2',
+    below: 'h-4',
+  },
   plain: { heading: muted, footer: muted, ...rowInset },
 } satisfies Record<string, SectionDrawing>;
 
-const groupedDrawing = Platform.OS === 'web' ? drawings.card : drawings.phone;
+function groupedDrawing(content: boolean): SectionDrawing {
+  if (Platform.OS !== 'web') return drawings.phone;
+
+  return content ? drawings.content : drawings.card;
+}
 
 export function useSectionDrawing(): SectionDrawing {
   const grouped = use(ListContext).appearance === 'grouped';
   const menu = useInMenu();
+  const content = useRowDrawing() === 'content';
 
-  return grouped && !menu ? groupedDrawing : drawings.plain;
+  return grouped && !menu ? groupedDrawing(content) : drawings.plain;
 }

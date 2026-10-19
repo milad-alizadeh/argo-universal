@@ -1,15 +1,13 @@
-import { use, type ReactElement, type ComponentProps } from 'react';
+import { type ReactElement, type ComponentProps } from 'react';
 import { Platform, Pressable } from 'react-native';
 import { usePressRipple } from '#primitives/native/material-palette';
-import { ListContext } from '../../../list-context';
-import { useInMenu } from '../../../menu-rows-context';
 import { usePressedRowHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
 import { linkPress } from './list-item-link-press';
+import { usePressClass } from './list-item-press-class';
 import type { ListItemProps } from './list-item-props';
 import { RadioRow } from './list-item-radio';
 import { ItemContentSlots } from './list-item-slots';
-import { itemPress } from './list-item-styles';
 import { useRowFocus } from './use-row-focus';
 
 export type { DrawingProps } from './list-item-press-props';
@@ -20,34 +18,6 @@ function rowLabel(props: ListItemProps): string {
   return [props.title, props.value]
     .filter((value) => value !== undefined)
     .join(', ');
-}
-
-// A menu trigger's row (a web Picker row) presses through its pointer handler and popup.
-function interactive(props: DrawingProps): boolean {
-  if (props.disabled) return false;
-
-  return [
-    props.onPress,
-    props.href,
-    props.onLongPress,
-    props.onPointerDown,
-    props['aria-haspopup'],
-  ].some(Boolean);
-}
-
-type RowPlace = Pick<React.ContextType<typeof ListContext>, 'appearance'> & {
-  menu: boolean;
-};
-
-function pressClass(props: DrawingProps, place: RowPlace): string {
-  return cn(
-    itemPress({
-      ...place,
-      interactive: interactive(props),
-      control: props.control !== undefined,
-    }),
-    props.disabled && 'opacity-50',
-  );
 }
 
 function pressHandlers(props: ListItemProps): RowPressProps {
@@ -96,8 +66,6 @@ function accessibilityProps(props: DrawingProps): RowPressProps {
 }
 
 function usePressProps(props: DrawingProps): RowPressProps {
-  const place = { menu: useInMenu(), appearance: use(ListContext).appearance };
-
   return {
     ...accessibilityProps(props),
     ...pressHandlers(props),
@@ -107,7 +75,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
     testID: props.testID,
     ...triggerProps(props),
     ...usePressedRowHandlers(),
-    className: pressClass(props, place),
+    className: usePressClass(props),
   };
 }
 

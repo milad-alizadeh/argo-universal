@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import type { KitProps } from '../../kit-props';
 import { ListItemFrame } from './list-item';
-import { LinkAccessory } from './list-item-parts';
+import { useLinkAccessory } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
 
 type LinkProps = KitProps<'ListItem.Link'> &
@@ -25,7 +25,7 @@ export function ListItemLink(props: LinkProps): ReactElement {
       {...props}
       role={linkRole(props)}
       accessibilityLabel={linkLabel(props)}
-      accessory={<LinkAccessory />}
+      accessory={useLinkAccessory()}
     />
   );
 }

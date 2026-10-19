@@ -26,6 +26,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   id?: string;
   accessibilityRole?: 'button' | 'radio';
   onLongPress?: () => void;
+  // A value that reads as content, such as a Server's details, in the title's colour rather than muted.
+  valueTone?: 'neutral';
   // Draws the disclosure chevron of a row that pushes a page, outside a choosing section.
   disclosure?: boolean;
   testID?: string;

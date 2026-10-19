@@ -6,6 +6,7 @@ import { ListFooter } from '../../../list-footer';
 import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useInMenu } from '../../../menu-rows-context';
+import { useRowDrawing } from '../../../row-drawing-context';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { useGroupPosition } from './list-item-group';
 import { hasLeading, LinkAccessory } from './list-item-parts';
@@ -28,7 +29,7 @@ const hairline = { height: StyleSheet.hairlineWidth };
 function useItemDrawing(): ItemDrawing {
   const { appearance, position } = useContext(ListContext);
 
-  return { appearance, position, menu: useInMenu() };
+  return { appearance, position, menu: useInMenu(), rows: useRowDrawing() };
 }
 
 function ItemSeparator(props: ListItemProps): ReactNode {

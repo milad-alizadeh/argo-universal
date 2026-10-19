@@ -44,13 +44,14 @@ function HeaderLeading(props: HeaderProps): ReactNode {
   ) : null;
 }
 
-function HeaderTitle(props: HeaderProps): ReactNode {
+function HeaderTitle(props: DrawnHeaderProps): ReactNode {
   if (props.isLoading)
     return <SkeletonBar kind="title" text={props.title} textRole="heading" />;
 
   return (
     <Text
       role="heading"
+      className={props.drawing.title}
       numberOfLines={1}
       accessibilityRole="heading"
       aria-level={2}
@@ -60,7 +61,7 @@ function HeaderTitle(props: HeaderProps): ReactNode {
   );
 }
 
-function HeaderContent(props: HeaderProps): ReactElement {
+function HeaderContent(props: DrawnHeaderProps): ReactElement {
   return (
     <View className="min-w-0 flex-1">
       <HeaderTitle {...props} />

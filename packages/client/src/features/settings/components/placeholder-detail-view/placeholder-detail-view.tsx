@@ -43,7 +43,7 @@ function RowNote({ description }: NoteProps): React.JSX.Element {
   return (
     <List appearance="grouped">
       <ListSection>
-        <ListItem title={description} />
+        <ListItem title={description} tone="muted" />
       </ListSection>
     </List>
   );
