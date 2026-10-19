@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import type * as React from 'react';
-import { Text } from '#primitives/content/text';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import { CompactSessionRow } from './session-row-compact';
@@ -9,18 +8,11 @@ import { SessionRowMenu } from './session-row-menu';
 import { sessionMetadata } from './session-row-metadata';
 import { sessionProgress } from './session-row-plan';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
+import { rowStatusDot } from './session-row-status';
 
 export type { SessionRowProps } from './session-row-props';
 
 type SessionRowPressProps = SessionRowProps & ContextMenuTriggerProps;
-
-function sessionTime(text?: string): React.ReactNode {
-  return text === undefined ? undefined : (
-    <Text role="secondary" tone="muted">
-      {text}
-    </Text>
-  );
-}
 
 type RowIdentity = Pick<
   ListItemProps,
@@ -43,14 +35,15 @@ function rowIdentity(props: SessionRowPressProps): RowIdentity {
   };
 }
 
+// Regular: the time leads the meta line, and a status dot ends the title line.
 function RegularRow(props: SessionRowPressProps): React.JSX.Element {
   const selected = props.selected ?? false;
 
   return (
     <ListItem
       {...rowIdentity(props)}
-      leading={<SessionMark {...props} selected={selected} />}
-      trailing={sessionTime(props.trailing)}
+      leading={<SessionMark {...props} />}
+      trailing={rowStatusDot(props.session.status)}
       meta={sessionMetadata({ ...props, selected })}
       progress={sessionProgress(props.session)}
     />

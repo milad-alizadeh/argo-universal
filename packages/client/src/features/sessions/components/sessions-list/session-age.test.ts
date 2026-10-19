@@ -23,8 +23,4 @@ describe('how old a One list row reads', () => {
   ] as const)('reads $age in the $order order', ({ order, age }) => {
     expect(sessionAge(session, now, order)).toBe(age);
   });
-
-  it('reads no age while the list shows none', () => {
-    expect(sessionAge(session, undefined, 'created')).toBeUndefined();
-  });
 });

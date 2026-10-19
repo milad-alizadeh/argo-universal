@@ -1,5 +1,7 @@
+import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { eachLayout } from '#lib/generic/each-layout';
+import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
 import type { SessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list-props';
 import { sessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
 import {
@@ -11,9 +13,20 @@ import {
   type Story,
 } from './sessions-list-story-context.test.mocks';
 
+// Tall enough that the list draws every row at once, each with its meta line.
+const everyRowHeight = 1800;
+
 // One list: every Session in one run with no Project headings, each row showing how long ago it was active.
 export const oneList: Story = {
   args: { view: { ...defaultSessionsView, group: 'none' } },
+  render: (args) => (
+    <View
+      className="w-full wide:w-frame-list"
+      style={{ height: everyRowHeight }}
+    >
+      <SessionsList {...args} />
+    </View>
+  ),
   play: async ({ canvas }) =>
     eachLayout(async () => {
       for (const session of sessionsListProps.sessions)
@@ -23,9 +36,9 @@ export const oneList: Story = {
       await expect(
         canvas.queryByRole('button', { name: exampleProjectName }),
       ).not.toBeInTheDocument();
-      await expect(
-        canvas.getAllByText(/^(now|\d+[mhdw])$/).length,
-      ).toBeGreaterThan(0);
+      await expect(canvas.getAllByText(/^(now|\d+[mhdw])$/).length).toBe(
+        sessionsListProps.sessions.length,
+      );
     }),
 };
 

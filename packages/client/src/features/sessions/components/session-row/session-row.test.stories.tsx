@@ -6,6 +6,7 @@ import {
   metadata,
   meta as sessionRowTestMeta,
   running,
+  statusDots,
   statusParity,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
@@ -60,6 +61,9 @@ export const PullRequestWithoutOtherMetadataDark: Story = {
 };
 
 export const StatusParity = statusParity;
+
+// Time leads the meta line; a dot ends every row but an idle one's.
+export const StatusDots = statusDots('regular');
 
 export const PlanAndSubagents: Story = {
   args: {

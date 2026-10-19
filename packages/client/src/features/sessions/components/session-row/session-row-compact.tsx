@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
@@ -8,18 +9,27 @@ import {
 } from '../pull-request-indicator/pull-request-indicator';
 import { SessionMark } from './session-row-mark';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
+import { rowStatusDot } from './session-row-status';
 
-type CompactEndProps = Pick<SessionRowProps, 'pullRequest' | 'trailing'>;
+type CompactEndProps = Pick<SessionRowProps, 'session' | 'pullRequest' | 'age'>;
 
-// A Compact row's end: its PR's glyph, without the number; with no PR, how long ago the Session was active.
-function CompactTrailing({
-  pullRequest,
-  trailing,
-}: CompactEndProps): React.ReactNode {
+// Its PR's glyph, without the number; with no PR, how long ago the Session was active.
+function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
   if (pullRequest) return <PullRequestIcon status={pullRequest.status} />;
 
-  return trailing === undefined ? undefined : (
-    <Text role="row-detail">{trailing}</Text>
+  return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
+}
+
+// A Compact row's end: its detail, then the status dot while the Session is not idle.
+function compactTrailing(props: CompactEndProps): React.ReactNode {
+  const detail = compactDetail(props);
+  const status = rowStatusDot(props.session.status);
+
+  return detail === undefined && status === undefined ? undefined : (
+    <View className="flex-row items-center gap-1.5">
+      {detail}
+      {status}
+    </View>
   );
 }
 
@@ -52,8 +62,8 @@ export function CompactSessionRow(props: CompactRowProps): React.JSX.Element {
       {...compactPresses(props)}
       title={props.session.title}
       accessibilityLabel={compactLabel(props)}
-      leading={<SessionMark {...props} selected={selected} />}
-      trailing={<CompactTrailing {...props} />}
+      leading={<SessionMark {...props} />}
+      trailing={compactTrailing(props)}
       selected={selected}
     />
   );
