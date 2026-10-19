@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { legacyPartVersions } from './kit';
 import { prepareWireTree } from './prepare-tree';
 import type { WireNode } from './wire';
 
@@ -21,33 +20,9 @@ const stack: WireNode = {
   slots: {},
 };
 
-describe('Plugin wire compatibility', () => {
-  it('strips newer optional props for an older App without losing the part', () => {
-    expect(prepareWireTree(label, { Text: 1 })).toEqual({
-      ...label,
-      props: { label: 'Readable' },
-    });
-    expect(prepareWireTree(label, { Text: 2 })).toEqual({
-      ...label,
-      props: { label: 'Readable', accessibilityLabel: 'Accessible' },
-    });
-  });
-
-  it('lowers Stack to Row or Column with its key, layout and children', () => {
-    const parts = { ...legacyPartVersions, Text: 3 };
-
-    expect(prepareWireTree(stack, parts)).toEqual({
-      ...stack,
-      type: 'Row',
-      props: { gap: 2 },
-    });
-    expect(
-      prepareWireTree({ ...stack, props: { direction: 'column' } }, parts),
-    ).toEqual({ ...stack, type: 'Column', props: {} });
-  });
-
-  it('keeps supported Stack and accepts an App newer than this Server', () => {
-    expect(prepareWireTree(stack, { Text: 10, Stack: 10 })).toEqual(stack);
+describe('Plugin wire preparation', () => {
+  it('keeps a valid tree as it is', () => {
+    expect(prepareWireTree(stack)).toEqual(stack);
   });
 
   it.each([
@@ -86,8 +61,8 @@ describe('Plugin wire compatibility', () => {
         type: 'Text',
         key: 'stack',
         props: {
-          label: updateMessage,
-          variant: 'secondary',
+          children: updateMessage,
+          role: 'secondary',
           tone: 'muted',
         },
         children: [],
@@ -102,19 +77,16 @@ describe('Plugin wire compatibility', () => {
 
     expect(
       prepareWireTree({ ...stack, children: [bad, unknown, label] }).children,
-    ).toEqual([{ ...label, props: { label: 'Readable' } }]);
+    ).toEqual([label]);
   });
 
   it('strips unknown optional props', () => {
     expect(
-      prepareWireTree(
-        { ...label, props: { ...label.props, future: true } },
-        { Text: 3 },
-      ),
+      prepareWireTree({ ...label, props: { ...label.props, future: true } }),
     ).toEqual(label);
   });
 
-  it('preserves every named-slot node while lowering its parts for the App', () => {
+  it('preserves every named-slot node', () => {
     const root: WireNode = {
       type: 'List',
       key: 'list',
@@ -123,19 +95,7 @@ describe('Plugin wire compatibility', () => {
       slots: { empty: [stack, label] },
     };
 
-    expect(
-      prepareWireTree(root, { ...legacyPartVersions, List: 2 }).slots,
-    ).toEqual({
-      empty: [
-        {
-          ...stack,
-          type: 'Row',
-          props: { gap: 2 },
-          children: [{ ...label, props: { label: 'Readable' } }],
-        },
-        { ...label, props: { label: 'Readable' } },
-      ],
-    });
+    expect(prepareWireTree(root).slots).toEqual({ empty: [stack, label] });
   });
 
   it('refuses undeclared slots and parts outside their closed accepted set', () => {
@@ -147,16 +107,12 @@ describe('Plugin wire compatibility', () => {
       slots: { unknown: [label] },
     };
 
-    const parts = { ...legacyPartVersions, List: 2 };
-
-    expect(prepareWireTree(root, parts).props['label']).toBe(
-      'Update Argo to see this',
-    );
+    expect(prepareWireTree(root).props['children']).toBe(updateMessage);
     expect(
-      prepareWireTree(
-        { ...root, slots: { empty: [{ ...stack, type: 'Svg' }] } },
-        parts,
-      ).props['label'],
+      prepareWireTree({
+        ...root,
+        slots: { empty: [{ ...stack, type: 'Svg' }] },
+      }).props['children'],
     ).toBe(updateMessage);
   });
 });

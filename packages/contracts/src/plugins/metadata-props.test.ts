@@ -29,8 +29,6 @@ const accepted = [
   },
 ];
 
-const parts = { Metadata: 1, 'Metadata.Pills': 1, Pill: 1 };
-
 function node(type: string, children: WireNode[] = []): WireNode {
   return { type, key: type, props: {}, children, slots: {} };
 }
@@ -53,15 +51,13 @@ describe('Metadata fields', () => {
   });
 
   it.each(accepted)('accepts $type as a Metadata child', ({ type }) => {
-    expect(supportsWireNode(node('Metadata', [node(type)]), parts)).toBe(true);
+    expect(supportsWireNode(node('Metadata', [node(type)]))).toBe(true);
   });
 
   it.each(['Text', 'Pill', 'ListItem', 'Metadata'])(
     'rejects %s as a Metadata child',
     (type) => {
-      expect(supportsWireNode(node('Metadata', [node(type)]), parts)).toBe(
-        false,
-      );
+      expect(supportsWireNode(node('Metadata', [node(type)]))).toBe(false);
     },
   );
 
@@ -75,6 +71,6 @@ describe('Metadata fields', () => {
       props: { title: 'Labels' },
     };
 
-    expect(supportsWireNode(pills, parts)).toBe(expected);
+    expect(supportsWireNode(pills)).toBe(expected);
   });
 });

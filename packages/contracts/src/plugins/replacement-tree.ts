@@ -1,49 +1,32 @@
-import type { PartVersions } from './kit';
+import { wirePart } from './kit';
 import { isRootOnly, supportsWireNode } from './prepare-tree';
 import type { WireNode } from './wire';
 
-export function replacementTreeReason(
-  node: WireNode,
-  parts: PartVersions,
-): string | null {
-  return (
-    replacementNodeReason(node, parts) ?? replacementChildReason(node, parts)
-  );
+// A Replaceable Slot tree is drawn whole or not at all, checked against the current schema set.
+export function replacementTreeReason(node: WireNode): string | null {
+  return replacementNodeReason(node) ?? replacementChildReason(node);
 }
 
-function replacementNodeReason(
-  node: WireNode,
-  parts: PartVersions,
-): string | null {
+function replacementNodeReason(node: WireNode): string | null {
   if (node.type === '#render-error') return drawingErrorReason(node);
 
-  if (!parts[node.type]) return `App did not report ${node.type}`;
+  if (!wirePart(node.type)) return `${node.type} is not a kit part`;
 
-  return invalidReplacementReason(node, parts);
+  return kitNodeReason(node);
 }
 
-function invalidReplacementReason(
-  node: WireNode,
-  parts: PartVersions,
-): string | null {
+function kitNodeReason(node: WireNode): string | null {
   if (isRootOnly(node)) return `${node.type} cannot replace a core component`;
 
-  return supportsWireNode(node, parts)
+  return supportsWireNode(node)
     ? null
     : `invalid ${node.type} props or children`;
 }
 
-function replacementChildReason(
-  node: WireNode,
-  parts: PartVersions,
-): string | null {
+function replacementChildReason(node: WireNode): string | null {
   const children = [...node.children, ...Object.values(node.slots).flat()];
 
-  return (
-    children
-      .map((child) => replacementTreeReason(child, parts))
-      .find(Boolean) ?? null
-  );
+  return children.map(replacementTreeReason).find(Boolean) ?? null;
 }
 
 const drawingErrorReason = (node: WireNode): string =>

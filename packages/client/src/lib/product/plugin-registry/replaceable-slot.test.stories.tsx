@@ -75,7 +75,7 @@ export const RefusedWhole: Story = {
     await expect(canvas.getByText(coreMessageText)).toBeVisible();
     await expect(canvas.queryByText('Plugin replacement')).toBeNull();
     await expect(onFallback).toHaveBeenCalledWith(
-      'App did not report FuturePart',
+      'FuturePart is not a kit part',
     );
   },
 };

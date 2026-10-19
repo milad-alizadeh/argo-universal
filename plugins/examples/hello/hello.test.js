@@ -2,21 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
 
 test('pressing Tap me updates the hello page', async ({ mount }) => {
-  const page = await mount({
-    page: '/',
-    surface: {
-      platform: 'web',
-      parts: {
-        Column: 1,
-        Text: 3,
-        ActionList: 1,
-        'ActionList.Section': 1,
-        Action: 1,
-        Pill: 1,
-        ListItem: 1,
-      },
-    },
-  });
+  const page = await mount({ page: '/', surface: { platform: 'web' } });
 
   assert.equal((await page.find('Tapped 0 times')).type, 'Text');
   await page.press('Tap me');
@@ -25,13 +11,7 @@ test('pressing Tap me updates the hello page', async ({ mount }) => {
 
 // The primary Action is a keyed Action in the Page's `primaryAction` Slot, pressed by its label.
 test('the lists Page primary Action adds a build', async ({ mount }) => {
-  const page = await mount({
-    page: '/lists',
-    surface: {
-      platform: 'web',
-      parts: { Page: 1, List: 2, ListItem: 3, Action: 4, Pill: 2, Label: 2 },
-    },
-  });
+  const page = await mount({ page: '/lists', surface: { platform: 'web' } });
 
   const add = await page.find('Add build');
   assert.equal(add.type, 'Action');
@@ -43,18 +23,7 @@ test('the lists Page primary Action adds a build', async ({ mount }) => {
 test('the dashboard shows the week of Issues', async ({ mount }) => {
   const page = await mount({
     page: '/dashboard',
-    surface: {
-      platform: 'web',
-      parts: {
-        ScrollView: 1,
-        Surface: 1,
-        Card: 1,
-        Stack: 1,
-        Grid: 1,
-        Spacer: 1,
-        Text: 3,
-      },
-    },
+    surface: { platform: 'web' },
   });
 
   assert.equal((await page.find('Issues')).type, 'Text');
@@ -62,15 +31,6 @@ test('the dashboard shows the week of Issues', async ({ mount }) => {
   for (const title of ['Open', 'In progress', 'Done', 'Blocked'])
     assert.equal((await page.find(title)).type, 'Card');
 });
-
-const formParts = {
-  Stack: 1,
-  Form: 1,
-  TextInput: 3,
-  Picker: 4,
-  DatePicker: 2,
-  Text: 3,
-};
 
 // The Form's key is its fields' parent key.
 const formKey = (fieldKey) => fieldKey.slice(0, fieldKey.lastIndexOf('/'));
@@ -85,10 +45,7 @@ const editor = (page, clock) => async (label, event, value) => {
 };
 
 test('the form submits the drafted Issue', async ({ mount, clock }) => {
-  const page = await mount({
-    page: '/form',
-    surface: { platform: 'web', parts: formParts },
-  });
+  const page = await mount({ page: '/form', surface: { platform: 'web' } });
 
   await page.find('Title');
   const edit = editor(page, clock);

@@ -1,13 +1,9 @@
-import {
-  currentPartVersions,
-  type PartVersions,
-} from '@repo/contracts/plugins/kit';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type { ViewMessage, WireNode } from '@repo/contracts/plugins/wire';
 import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import { diff } from '../kit/diff';
-import { AdaptedViewLimits } from './adapted-view-limits';
+import { PreparedViewLimits } from './prepared-view-limits';
 
 function nextRoot(
   root: WireNode | null,
@@ -38,7 +34,7 @@ function outgoing(
 interface Trees {
   raw: WireNode | null;
   drawn: WireNode | null;
-  limits: AdaptedViewLimits;
+  limits: PreparedViewLimits;
 }
 
 function rememberDrawn(
@@ -63,52 +59,37 @@ function boundedMessage(
   return result;
 }
 
-function adapt(
-  trees: Trees,
-  message: ViewMessage,
-  parts: PartVersions,
-): ViewMessage | null {
+function prepared(trees: Trees, message: ViewMessage): ViewMessage | null {
   trees.raw = nextRoot(trees.raw, message);
 
   if (!trees.raw) return null;
 
-  return boundedMessage(trees, prepareWireTree(trees.raw, parts), message);
-}
-
-const emptyTrees = ({ refuse, parts }: Adaptation): Trees => ({
-  raw: null,
-  drawn: null,
-  limits: new AdaptedViewLimits(
-    refuse,
-    prepareWireTree(pluginPageFallback, parts),
-  ),
-});
-
-interface Adaptation {
-  parts: PartVersions;
-  refuse: (reason: string) => void;
+  return boundedMessage(trees, prepareWireTree(trees.raw), message);
 }
 
 const ignoreRefusal = (): void => {};
 
-// Diff the adapted trees: keyed mutations are recomputed after parts and slots are adapted.
-async function* adaptedMessages(
+// Diff the prepared trees: keyed mutations are recomputed after invalid nodes are dropped or replaced.
+async function* preparedMessages(
   source: AsyncIterable<ViewMessage>,
-  { parts, refuse }: Adaptation,
+  refuse: (reason: string) => void,
 ): AsyncGenerator<ViewMessage, void> {
-  const trees = emptyTrees({ refuse, parts });
+  const trees: Trees = {
+    raw: null,
+    drawn: null,
+    limits: new PreparedViewLimits(refuse, pluginPageFallback),
+  };
 
   for await (const message of source) {
-    const next = adapt(trees, message, parts);
+    const next = prepared(trees, message);
 
     if (next) yield next;
   }
 }
 
-export function compatibleView(
+export function preparedView(
   source: AsyncIterable<ViewMessage>,
-  parts: PartVersions = currentPartVersions,
   refuse: (reason: string) => void = ignoreRefusal,
 ): AsyncGenerator<ViewMessage, void> {
-  return adaptedMessages(source, { parts, refuse });
+  return preparedMessages(source, refuse);
 }

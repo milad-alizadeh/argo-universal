@@ -3,25 +3,13 @@ import { actionListWireParts } from './action-list-wire-parts';
 import { canvasWireParts } from './canvas-wire-parts';
 import { controlWireParts } from './control-wire-parts';
 import { emptyStateWirePart } from './empty-state-wire-part';
-import {
-  buttonProps,
-  buttonV1,
-  layoutProps,
-  stackProps,
-  textProps,
-  textV1,
-  textV2,
-  svgProps,
-} from './kit-props';
+import { buttonProps, stackProps, textProps, svgProps } from './kit-props';
 import { layoutWireParts } from './layout-wire-parts';
-import { legacyButtonProps } from './legacy-button-props';
-import { legacyTextProps } from './legacy-text-props';
 import { listWireParts } from './list-wire-parts';
 import { mediaWireParts } from './media-wire-parts';
 import { overlayWireParts } from './overlay-wire-parts';
 import { scaffoldWireParts } from './scaffold-wire-parts';
 import { tableWireParts } from './table-wire-parts';
-import { textForApp } from './text-for-app';
 import type { WirePartDefinition } from './wire-part-definition';
 import { wirePartReferences } from './wire-part-reference';
 
@@ -29,7 +17,7 @@ export type { WirePartDefinition } from './wire-part-definition';
 
 export { listPartNames } from './list-expansion';
 
-// Append a schema when a part changes; old versions keep their original props.
+// Each part has one props schema; a change an older App can't draw bumps the Plugin wire version (ADR-0034).
 export const wireParts = {
   ...layoutWireParts,
   ...scaffoldWireParts,
@@ -42,12 +30,6 @@ export const wireParts = {
   ...canvasWireParts,
   Text: {
     props: textProps,
-    appProps: textForApp,
-    versions: [
-      textProps.transform(legacyTextProps).pipe(textV1),
-      textProps.transform(legacyTextProps).pipe(textV2),
-      textProps,
-    ],
     container: false,
     children: false,
     slots: { children: [] },
@@ -56,10 +38,6 @@ export const wireParts = {
   },
   Button: {
     props: buttonProps,
-    versions: [
-      buttonProps.transform(legacyButtonProps).pipe(buttonV1),
-      buttonProps,
-    ],
     container: false,
     children: false,
     slots: {},
@@ -69,13 +47,6 @@ export const wireParts = {
   },
   Stack: {
     props: stackProps,
-    versions: [stackProps],
-    // Apps before Stack drew Row and Column.
-    lower: ({ direction, ...props }) => ({
-      type: direction === 'row' ? 'Row' : 'Column',
-      props,
-      versions: [layoutProps],
-    }),
     container: true,
     children: true,
     slots: {},
@@ -85,7 +56,6 @@ export const wireParts = {
   EmptyState: emptyStateWirePart,
   Svg: {
     props: svgProps,
-    versions: [svgProps],
     container: false,
     children: false,
     slots: {},
