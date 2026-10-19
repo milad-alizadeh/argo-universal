@@ -25,6 +25,16 @@ const surfaceProps = z.object({
   onPress: onPress.optional().describe('Action run on activation.'),
 });
 
+const cardProps = z.object({
+  title: z.string().describe('The card title on its header line.'),
+  subtitle: z.string().optional().describe('A second line below the title.'),
+  accessibilityLabel: z
+    .string()
+    .optional()
+    .describe("The card's spoken name; defaults to title and subtitle."),
+  onPress: onPress.optional().describe('Action run when the card is pressed.'),
+});
+
 const scrollViewProps = z.object({
   accessibilityLabel: z
     .string()
@@ -48,6 +58,28 @@ export const layoutWireParts = {
     appearance:
       'background is flat content; card is flat card; muted is recessed tray; glass is sidebar material, with a plain fill below iOS 26 and on Android.',
   }),
+  Card: part(
+    'A card on the card Surface: media, an icon, title and subtitle, one action and a body.',
+    cardProps,
+    {
+      children: true,
+      slots: {
+        media: ['Image', 'Video', 'Svg'],
+        icon: ['Icon', 'Avatar', 'Image', 'Svg'],
+        actions: ['Button', 'IconButton', 'ActionList'],
+      },
+      accessibility: {
+        keyboard:
+          'A Card with onPress is one focus stop that activates with Enter or Space; its action stays a focus stop of its own.',
+        voiceOver:
+          'A pressable Card is a button named by accessibilityLabel, or its title and subtitle; a static Card is a group of the same name that reads its media, title, subtitle, action and body in order.',
+        talkBack:
+          'A pressable Card is a button named by accessibilityLabel, or its title and subtitle; a static Card is a group of the same name that reads its media, title, subtitle, action and body in order.',
+      },
+      appearance:
+        'Desktop, web and iOS draw the card Surface; Android draws the stock Material 3 filled Card. media runs full bleed across the top; one Button or IconButton sits top right on the title line.',
+    },
+  ),
   ScrollView: part(
     'A scroll container owning its scroll fade.',
     scrollViewProps,

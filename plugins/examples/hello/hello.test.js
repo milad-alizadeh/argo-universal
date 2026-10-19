@@ -31,6 +31,7 @@ test('the dashboard shows the week of Issues', async ({ mount }) => {
       parts: {
         ScrollView: 1,
         Surface: 1,
+        Card: 1,
         Stack: 1,
         Grid: 1,
         Spacer: 1,
@@ -39,8 +40,10 @@ test('the dashboard shows the week of Issues', async ({ mount }) => {
     },
   });
 
-  for (const text of ['Issues', 'Open', 'In progress', 'Done', 'Blocked'])
-    assert.equal((await page.find(text)).type, 'Text');
+  assert.equal((await page.find('Issues')).type, 'Text');
+
+  for (const title of ['Open', 'In progress', 'Done', 'Blocked'])
+    assert.equal((await page.find(title)).type, 'Card');
 });
 
 const formParts = {

@@ -1,4 +1,5 @@
 import {
+  Card,
   Grid,
   ScrollView,
   Spacer,
@@ -33,12 +34,9 @@ function DashboardMetrics() {
   return (
     <Grid columns={{ compact: 2, medium: 2, wide: 4 }} gap={3}>
       {metrics.map(({ title, value }) => (
-        <Surface key={title} kind="card" padding={4}>
-          <Stack direction="column" gap={2}>
-            <Text role="secondary">{title}</Text>
-            <Text role={headingRole}>{value}</Text>
-          </Stack>
-        </Surface>
+        <Card key={title} title={title}>
+          <Text role={headingRole}>{value}</Text>
+        </Card>
       ))}
     </Grid>
   );

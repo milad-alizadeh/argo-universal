@@ -1,10 +1,7 @@
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
 import { fn } from 'storybook/test';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
-import { AgentListItem } from './agent-list-item';
+import { AgentCard } from './agent-card';
 
 const entry = publishedRegistry.agents[0];
 
@@ -12,17 +9,8 @@ if (!entry) throw new Error('Registry fixture needs an Agent');
 
 const meta = {
   title: 'Agents/Agent card',
-  component: AgentListItem,
+  component: AgentCard,
   parameters: { screenPreview: true },
-  decorators: [
-    (Story): ReactElement => (
-      <List appearance="grouped">
-        <ListSection>
-          <Story />
-        </ListSection>
-      </List>
-    ),
-  ],
   args: {
     agent: {
       ...entry,
@@ -34,7 +22,7 @@ const meta = {
     onInstall: fn(),
     onRemove: fn(),
   },
-} satisfies Meta<typeof AgentListItem>;
+} satisfies Meta<typeof AgentCard>;
 
 export default meta;
 

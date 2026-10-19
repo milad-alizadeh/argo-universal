@@ -37,7 +37,13 @@ export type WireSchemaHints = {
     "onPress": PropValue<"Surface", "onPress">;
   };
   "Card": {
-    /** on Press for this part. */
+    /** The card title on its header line. */
+    "title": PropValue<"Card", "title">;
+    /** A second line below the title. */
+    "subtitle": PropValue<"Card", "subtitle">;
+    /** The card's spoken name; defaults to title and subtitle. */
+    "accessibilityLabel": PropValue<"Card", "accessibilityLabel">;
+    /** Action run when the card is pressed. */
     "onPress": PropValue<"Card", "onPress">;
   };
   "ScrollView": {
