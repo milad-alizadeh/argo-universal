@@ -9,7 +9,7 @@ import type { AlertAction } from './alert-props';
 
 const onAnswer = fn();
 
-const cancel: AlertAction = { label: 'Cancel', cancel: true };
+const cancel: AlertAction = { label: 'Cancel', role: 'cancel' };
 
 interface AskAgentProps {
   verb: 'Remove' | 'Update';

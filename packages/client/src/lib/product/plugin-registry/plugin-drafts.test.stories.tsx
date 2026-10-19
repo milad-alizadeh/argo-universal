@@ -33,8 +33,8 @@ function PatchedDraft(): React.JSX.Element {
   return (
     <PluginTree
       root={root}
-      onEvent={(key, interaction) => {
-        onEvent(key, interaction);
+      onEvent={(key, event) => {
+        onEvent(key, event);
         setRoot({
           ...root,
           props: { ...root.props, value: 'Server replacement' },
@@ -44,6 +44,7 @@ function PatchedDraft(): React.JSX.Element {
   );
 }
 
+// The Server's value waits while the field has focus and shows once it blurs.
 export const FocusedDraftSurvivesPatch: Story = {
   render: PatchedDraft,
   play: async ({ canvas, userEvent }) => {
@@ -58,6 +59,8 @@ export const FocusedDraftSurvivesPatch: Story = {
     );
     await expect(field).toHaveFocus();
     await expect(field).toHaveValue(localEdit);
+    await userEvent.tab();
+    await waitFor(() => expect(field).toHaveValue('Server replacement'));
   },
 };
 

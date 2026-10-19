@@ -17,7 +17,7 @@ export interface PluginTreeProps {
 export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
   const context = {
     key: childNodeKey('', props.root.key),
-    ui: usePluginDispatcher(props.onEvent),
+    send: usePluginDispatcher(props.onEvent),
     controls: usePluginControls(props.root),
   };
 

@@ -15,6 +15,8 @@ import {
   alertActionPress,
   ignoreCloseWhileBusy,
   isAlertActionEnabled,
+  isCancel,
+  isDestructive,
   type AlertAction,
   answeredAlert,
   type AlertProps,
@@ -57,7 +59,7 @@ function AlertTitle(
 }
 
 function AlertAnswers(props: AnsweredAlertProps): React.JSX.Element {
-  const answers = props.actions.filter((action) => !action.cancel);
+  const answers = props.actions.filter((action) => !isCancel(action));
 
   return (
     <AlertDialog.ConfirmButton>
@@ -85,7 +87,7 @@ function AlertMessage(props: {
 function AlertCancel(
   props: Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'>,
 ): React.JSX.Element | null {
-  const action = props.actions.find((candidate) => candidate.cancel);
+  const action = props.actions.find(isCancel);
 
   if (!action) return null;
 
@@ -119,7 +121,7 @@ function useAnswerColors(
 ): React.ComponentProps<typeof TextButton>['colors'] {
   const palette = useMaterialPalette();
 
-  return action.tone === 'danger'
+  return isDestructive(action)
     ? palette.dialogDangerColors
     : palette.dialogAnswerColors;
 }

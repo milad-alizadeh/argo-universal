@@ -13,6 +13,8 @@ import {
   alertActionPress,
   ignoreCloseWhileBusy,
   isAlertActionEnabled,
+  isCancel,
+  isDestructive,
   type AlertAction,
   answeredAlert,
   type AlertProps,
@@ -77,7 +79,7 @@ function AlertButtons(
 
 // The web reads left to right, so Cancel comes first and the answer sits at the trailing edge.
 function cancelFirst(actions: readonly AlertAction[]): AlertAction[] {
-  return [...actions].sort((a, b) => Number(!!b.cancel) - Number(!!a.cancel));
+  return [...actions].sort((a, b) => Number(isCancel(b)) - Number(isCancel(a)));
 }
 
 type AlertButtonProps = Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'> & {
@@ -91,8 +93,8 @@ function AlertButton(props: AlertButtonProps): React.JSX.Element {
   return (
     <Button
       label={action.label}
-      variant={action.cancel ? 'outline' : 'default'}
-      tone={action.tone}
+      variant={isCancel(action) ? 'outline' : 'default'}
+      tone={isDestructive(action) ? 'danger' : undefined}
       loading={action.loading}
       disabled={!isAlertActionEnabled(action, props.actions)}
       onPress={alertActionPress(action, props.onOpenChange)}

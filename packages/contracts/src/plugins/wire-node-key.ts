@@ -27,6 +27,21 @@ export function findWireNodeEntry(
 
 type AddressedNode = { node: WireNode; key: string };
 
+// Every node's address in the tree, from one walk.
+export function wireNodeKeys(root: WireNode): Set<string> {
+  const keys = new Set<string>();
+
+  const visit = (current: AddressedNode): void => {
+    keys.add(current.key);
+
+    for (const child of descendants(current)) visit(child);
+  };
+
+  visit({ node: root, key: childNodeKey('', root.key) });
+
+  return keys;
+}
+
 function findNode(current: AddressedNode, key: string): WireNode | undefined {
   if (current.key === key) return current.node;
 

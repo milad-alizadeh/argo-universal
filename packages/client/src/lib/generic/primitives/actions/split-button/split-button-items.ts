@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { actionGroups } from '#primitives/actions/action-list';
+import { declaredActions } from '#primitives/actions/action-list';
 import {
   type MenuAction,
   type NativeMenuItem,
@@ -60,19 +60,6 @@ function menuActions(props: {
   actions?: readonly MenuAction[];
   children?: ReactNode;
 }): readonly MenuAction[] {
+  // A Plugin declares its menu entries as keyed Action children, as in ActionList.
   return props.actions ?? declaredActions(props.children);
-}
-
-// A Plugin declares its menu entries as keyed Action children, as in ActionList.
-function declaredActions(children: ReactNode): MenuAction[] {
-  return actionGroups(children).flatMap((group) =>
-    group.actions.map(({ id, label, icon, disabled, tone, onPress }) => ({
-      id,
-      label,
-      icon,
-      disabled,
-      tone,
-      onPress,
-    })),
-  );
 }

@@ -2,6 +2,7 @@ import { WireNode } from '@repo/contracts/plugins/wire';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import fixture from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
@@ -33,6 +34,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// The answer reaches the Plugin before the close, which may remove the Alert and its Actions.
 export const AlertAnswer: Story = {
   args: { overlay: 'alert' },
   play: async ({ userEvent }) => {
@@ -41,8 +43,8 @@ export const AlertAnswer: Story = {
     await waitFor(() => expect(page.queryByRole('button', apply)).toBeNull());
     await waitFor(() =>
       expect(onEvent.mock.calls).toEqual([
-        ['overlays/alert', { event: 'onOpenChange', payload: false }],
         ['overlays/alert/apply', { event: 'onPress' }],
+        ['overlays/alert', { event: 'onOpenChange', payload: false }],
       ]),
     );
   },
@@ -65,8 +67,8 @@ export const AlertCancelRole: Story = {
     await userEvent.click(within(alert).getByRole('button', cancel));
     await waitFor(() =>
       expect(onEvent.mock.calls).toEqual([
-        ['overlays/alert', { event: 'onOpenChange', payload: false }],
         ['overlays/alert/cancel', { event: 'onPress' }],
+        ['overlays/alert', { event: 'onOpenChange', payload: false }],
       ]),
     );
   },
@@ -86,25 +88,52 @@ export const SheetCloseReachesPlugin: Story = {
   },
 };
 
-export const DraftAndAcknowledgement: Story = {
+const applySheet = { name: 'Apply sheet' };
+
+export const ConfirmAcknowledgement: Story = {
   play: async ({ userEvent }) => {
     const page = within(document.body);
-    const field = await page.findByRole('textbox', { name: fieldName });
-    await userEvent.clear(field);
-    await userEvent.type(field, 'Atlas');
-    await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('overlays/sheet/body/field', {
-        event: 'onChangeText',
-        payload: 'Atlas',
-      }),
-    );
     const answer = Promise.withResolvers<void>();
     onEvent.mockReturnValueOnce(answer.promise);
-    const apply = page.getByRole('button', { name: 'Apply sheet' });
-    await userEvent.click(apply);
-    await expect(apply).toHaveAttribute('aria-busy', 'true');
+    const confirm = await page.findByRole('button', applySheet);
+    await userEvent.click(confirm);
+    await expect(confirm).toHaveAttribute('aria-busy', 'true');
     answer.reject(new Error('Refused'));
-    await waitFor(() => expect(apply).toHaveAttribute('aria-busy', 'false'));
-    await expect(field).toHaveValue('Atlas');
+    await waitFor(() => expect(confirm).toHaveAttribute('aria-busy', 'false'));
+  },
+};
+
+const delivered = fn();
+
+// The press goes through the delivery current when it is sent, not the one the sheet first rendered with.
+function UpdatedDelivery(): React.JSX.Element {
+  const [revision, update] = useState(1);
+
+  return (
+    <PluginTree
+      root={roots.sheet}
+      onEvent={(key, event) => {
+        delivered(revision, key, event);
+        update(2);
+      }}
+    />
+  );
+}
+
+export const CurrentDeliveryAfterEdit: Story = {
+  render: UpdatedDelivery,
+  play: async ({ userEvent }) => {
+    const page = within(document.body);
+    const input = await page.findByRole('textbox', { name: fieldName });
+    await userEvent.type(input, 'Atlas');
+    await waitFor(() => expect(delivered).toHaveBeenCalled());
+    await userEvent.click(page.getByRole('button', applySheet));
+    await waitFor(() =>
+      expect(delivered).toHaveBeenLastCalledWith(
+        2,
+        'overlays/sheet/body/apply',
+        { event: 'onPress' },
+      ),
+    );
   },
 };

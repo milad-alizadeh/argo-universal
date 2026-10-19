@@ -55,6 +55,11 @@ export function actionGroups(children: ReactNode): ActionGroup[] {
   return mergeLooseGroups(flattenedChildren(children).flatMap(childGroups));
 }
 
+// A part's keyed Action children in order, as an Alert's answers or a SplitButton's menu.
+export function declaredActions(children: ReactNode): DeclaredAction[] {
+  return actionGroups(children).flatMap((group) => group.actions);
+}
+
 export function orderedGroups(groups: ActionGroup[]): ActionGroup[] {
   const normal = groups.flatMap(normalGroup);
 

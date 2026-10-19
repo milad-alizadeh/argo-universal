@@ -1,16 +1,14 @@
-import type { ReactNode } from 'react';
-import { actionGroups } from '#primitives/actions/action-list';
+import {
+  declaredActions,
+  type ActionProps,
+} from '#primitives/actions/action-list';
 import type { KitProps } from '../../kit-props';
 
-// One answer. Argo's own callers pass answers as data; a Plugin declares them as Action children.
-export type AlertAction = {
-  label: string;
-  onPress?: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  cancel?: boolean;
-  tone?: 'danger';
-};
+// One answer is an Action. Argo's own callers pass answers as data; a Plugin declares them as Action children.
+export type AlertAction = Pick<ActionProps, 'label'> &
+  Partial<Pick<ActionProps, 'onPress' | 'disabled' | 'tone' | 'role'>> & {
+    loading?: boolean;
+  };
 
 // Kit-only: `actions` for Argo's own callers.
 export type AlertProps = KitProps<'Alert'> & {
@@ -27,29 +25,23 @@ export function answeredAlert({
   children,
   ...props
 }: AlertProps): AnsweredAlertProps {
-  return { ...props, actions: actions ?? declaredAnswers(children) };
+  return { ...props, actions: actions ?? declaredActions(children) };
 }
 
-function declaredAnswers(children: ReactNode): AlertAction[] {
-  return actionGroups(children).flatMap((group) =>
-    group.actions.map(({ label, tone, role, disabled, onPress }) => ({
-      label,
-      tone: role === 'destructive' ? 'danger' : tone,
-      cancel: role === 'cancel',
-      disabled,
-      onPress,
-    })),
-  );
-}
+export const isCancel = (action: AlertAction): boolean =>
+  action.role === 'cancel';
 
-// Every answer closes the alert before it runs, so the action may open something else.
+export const isDestructive = (action: AlertAction): boolean =>
+  action.role === 'destructive' || action.tone === 'danger';
+
+// Every answer runs, then closes the alert: a Plugin hears the answer before the close that may remove it.
 export function alertActionPress(
   action: AlertAction,
   onOpenChange: AnsweredAlertProps['onOpenChange'],
 ): () => void {
   return () => {
-    onOpenChange(false);
     action.onPress?.();
+    onOpenChange(false);
   };
 }
 

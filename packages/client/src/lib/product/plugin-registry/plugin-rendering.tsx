@@ -1,13 +1,13 @@
 import type { WirePartDefinition } from '@repo/contracts/plugins/kit';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
-import type { PluginUi } from '../plugin-dispatcher';
+import type { PluginSend } from '../plugin-dispatcher';
 
 export type { PluginOnEvent } from '../plugin-dispatcher';
 
 export interface RenderContext {
   key: string;
-  ui: PluginUi;
+  send: PluginSend;
   controls: PluginControls;
 }
 

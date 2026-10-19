@@ -14,11 +14,13 @@ type Event = {
   handler?: Handler;
 };
 
-export type Change = (edit: {
+export type Edit = {
   rules: PartEventRules;
   value?: WireJson;
   deliver: () => Promise<void>;
-}) => void;
+};
+
+export type Change = (edit: Edit) => void;
 
 export function eventProps(input: Input, change: Change): PluginProps {
   return Object.fromEntries(
@@ -57,5 +59,5 @@ async function deliver(
   if (!handler) return;
 
   if (!('$event' in handler)) return runAction(handler);
-  await context.ui.send(context.key, { event: name, payload, schema });
+  await context.send(context.key, { event: name, payload, schema });
 }

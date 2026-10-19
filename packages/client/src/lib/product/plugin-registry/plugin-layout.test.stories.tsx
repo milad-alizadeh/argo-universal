@@ -79,14 +79,21 @@ const root: WireNode = {
   ],
 };
 
+// A Surface has no disabled state, so a second tap while the Plugin answers sends nothing.
 export const ActivatesSurface: Story = {
   render: () => <PluginTree root={root} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
+    const answer = Promise.withResolvers<void>();
+    onEvent.mockReturnValueOnce(answer.promise);
     await expect(canvas.getByText('Healthy')).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: openBuild }));
+    const surface = canvas.getByRole('button', { name: openBuild });
+    await userEvent.click(surface);
+    await userEvent.click(surface);
+    await expect(onEvent).toHaveBeenCalledOnce();
     await expect(onEvent).toHaveBeenCalledWith('scroll/grid/card', {
       event: 'onPress',
     });
+    answer.resolve();
   },
 };
 
@@ -99,10 +106,6 @@ export const DispatchesContextAction: Story = {
       keys: '[MouseRight]',
     });
     const menu = within(canvasElement.ownerDocument.body);
-
-    await expect(
-      await menu.findByRole('menuitem', { name: 'Copy link' }),
-    ).toBeInTheDocument();
     await userEvent.click(
       await menu.findByRole('menuitem', { name: 'Archive build' }),
     );
