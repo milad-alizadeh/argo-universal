@@ -118,3 +118,19 @@ Then(
     ).toBeInViewport();
   },
 );
+
+Then(
+  'the Plugin item shows its content and Metadata',
+  async ({ page }): Promise<void> => {
+    await expect(page.getByText('Fixture item content.')).toBeVisible();
+
+    for (const field of [
+      'Status, Open',
+      'Assignee, Ana Ruiz',
+      'Labels, fixture',
+      'Opened, Today',
+      'Docs, example.com',
+    ])
+      await expect(page.getByRole('group', { name: field })).toBeVisible();
+  },
+);

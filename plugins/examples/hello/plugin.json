@@ -21,6 +21,11 @@
         "id": "hello-lists",
         "title": "Hello lists",
         "path": "/lists"
+      },
+      {
+        "id": "hello-item",
+        "title": "Hello item",
+        "path": "/item"
       }
     ],
     "settings": [

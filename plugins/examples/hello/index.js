@@ -2,6 +2,9 @@ import {
   Button,
   ActionList,
   Action,
+  Detail,
+  Metadata,
+  Page,
   List,
   ListItem,
   Label,
@@ -112,6 +115,52 @@ function HelloListPage() {
   );
 }
 
+const itemMetadata = (
+  <Metadata>
+    <Metadata.StatusDot title="Status" text="In progress" tone="info" />
+    <Metadata.Avatar title="Assignee" name="Ana Ruiz" />
+    <Metadata.Pills title="Labels">
+      <Pill text="bug" />
+      <Pill text="sync" />
+    </Metadata.Pills>
+    <Metadata.Label title="Opened" text="2 days ago" />
+    <Metadata.Link
+      title="Docs"
+      text="example.com"
+      href="https://example.com/hello"
+    />
+  </Metadata>
+);
+
+// An item page: its content, with Metadata beside it on wide screens.
+function HelloItemPage() {
+  const [closed, setClosed] = useState(false);
+
+  const actions = (
+    <ActionList>
+      <Action
+        label={closed ? 'Reopen' : 'Close'}
+        icon="check"
+        onPress={() => setClosed(!closed)}
+      />
+    </ActionList>
+  );
+
+  return (
+    <Page title="Sync fails on large repos">
+      <Detail
+        markdown={
+          closed
+            ? 'Closed. Sync now fetches large repositories in batches.'
+            : 'Sync stops after a few minutes on repositories with more than 50,000 files.'
+        }
+        metadata={itemMetadata}
+        actions={actions}
+      />
+    </Page>
+  );
+}
+
 const greeting = (projectId, waves) =>
   waves === 0
     ? `Hello from ${projectId}`
@@ -137,5 +186,6 @@ export function register(argo) {
   settings = argo.settings;
   argo.pages.register('/', HelloPage);
   argo.pages.register('/lists', HelloListPage);
+  argo.pages.register('/item', HelloItemPage);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }
