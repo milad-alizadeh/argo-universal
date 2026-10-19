@@ -1,3 +1,4 @@
+import { isIcon } from './icons.mts';
 import {
   layoutKeys,
   type Binding,
@@ -59,10 +60,17 @@ export function planStyles(
   planSvg(plan, source, target);
 }
 
-function planSvg(plan: SyncPlan, source: DesignNode, target: DesignNode): void {
-  if (!source.svg) return;
+function changedArtwork(source: DesignNode, target: DesignNode): boolean {
+  return Boolean(source.svg) && source.svg !== target.svg;
+}
 
-  if (source.svg !== target.svg) replaceSvg(plan, source, target);
+function keepsGlyph(source: DesignNode, target: DesignNode): boolean {
+  return isIcon(source) && isIcon(target);
+}
+
+function planSvg(plan: SyncPlan, source: DesignNode, target: DesignNode): void {
+  if (changedArtwork(source, target) && !keepsGlyph(source, target))
+    replaceSvg(plan, source, target);
 }
 
 function replaceSvg(

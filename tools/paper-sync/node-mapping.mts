@@ -1,4 +1,5 @@
 import { codeName } from './catalog.mts';
+import { iconGroups, iconSlots } from './icons.mts';
 import {
   required,
   type Binding,
@@ -65,12 +66,38 @@ function alignChild(
   if (sameRole(source, copy)) nodes[ids.id] = copy.id;
 }
 
+function freeIcons(
+  icons: DesignNode[] | undefined,
+  nodes: Binding['nodes'],
+): DesignNode[] {
+  const used = new Set(Object.values(nodes));
+
+  return (icons ?? []).filter((icon) => !used.has(icon.id));
+}
+
+function mapIcon(
+  source: DesignNode,
+  matches: DesignNode[],
+  nodes: Binding['nodes'],
+): void {
+  if (!nodes[source.id] && matches.length === 1)
+    nodes[source.id] = required(matches[0]).id;
+}
+
+function mapIcons(pair: Pair, nodes: Binding['nodes']): void {
+  const icons = iconGroups(pair.copy);
+
+  for (const [name, source] of iconSlots(pair.master))
+    mapIcon(source, freeIcons(icons.get(name), nodes), nodes);
+}
+
 export function mapNodes(
   master: Snapshot,
   copy: Snapshot,
   nodes: Binding['nodes'],
 ): void {
   const pair = { master, copy };
+  mapIcons(pair, nodes);
 
   for (const source of master.nodes) alignedChildren(source, pair, nodes);
 

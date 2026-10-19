@@ -22,7 +22,18 @@ Nested copies belong to their own master family. Duplicate master names remain u
 
 Copies must use an exact master name. Enrollment matches text slots by layer name, such as `Title` and `Detail`.
 Repeated slot names within one component prevent enrollment. Text inside a nested copy belongs to that nested copy.
-Copies can override text, hide layers, or select another named state. Other differences are drift.
+Copies can override text, swap icons, hide layers, or select another named state. Other differences are drift.
+
+## Icon slots
+
+An icon slot is an SVG layer named `Icon`, `Icon / <glyph>` or `Icon (ios|android|phone) / <glyph>`.
+Its slot name is `Icon` when it sits directly in the component, otherwise `<parent layer> > Icon`, such as `Language > Icon`.
+Enrollment matches a copy's icon to the master's slot by slot name, so `Icon / trash` in a copy fills the master's `Icon / more` slot.
+Two icon slots with the same slot name in one master block enrollment; rename one parent to tell them apart.
+
+The glyph belongs to the copy: its SVG artwork and the name after `Icon / `. `check` does not count a different glyph as drift, and `apply` never redraws an icon slot.
+The icon's own styles still sync: size, colour token such as `fill`, and placement are drift, and `apply` sets them on the copy's icon.
+To change a copy's glyph, edit that copy. SVG layers with other names keep the old rule: their artwork comes from the master.
 
 The registry lives in `.paper-sync/registry.json`. It stores links, slot overrides and each copy's location; Paper remains the design source.
 Use `--registry=path` to select a separate registry for temporary clone tests.
@@ -78,5 +89,5 @@ pnpm --filter @repo/tools exec vitest run paper-sync
 pnpm --filter @repo/tools exec tsc --noEmit
 ```
 
-Unit tests cover discovery, slot preservation, nested ordering, rebinding, structural patches and transfer rejection paths.
+Unit tests cover discovery, slot and icon preservation, nested ordering, rebinding, structural patches and transfer rejection paths.
 Live rollout evidence belongs in the PR body. Apply tests use temporary clones, which are removed after the test.

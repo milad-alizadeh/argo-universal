@@ -28,7 +28,7 @@ function rejectExtraIcon(copy: Snapshot, linked: Binding): void {
 
   if (extraIcon)
     throw new Error(
-      `${getRoot(copy).name}: unmatched icon ${extraIcon.name}; choose a master with that icon before enrollment`,
+      `${getRoot(copy).name}: unmatched icon ${extraIcon.name}; name it like the master's icon slot or choose a master with that icon`,
     );
 }
 
