@@ -20,7 +20,7 @@ type Field = {
   value: Value;
   source?: WireJson;
   type: string;
-  local?: PartEventRules;
+  local: Partial<PartEventRules>;
   focused: boolean;
   pending: Map<number, WireJson | undefined>;
   blocks: boolean;
@@ -39,8 +39,10 @@ export function usePluginControls(root: WireNode): PluginControls {
 
 function fieldFor(fields: Map<string, Field>, input: ControlInput): Field {
   const field = matchingField(fields.get(input.context.key), input);
+  const prop = field.local.value;
 
-  if (!field.focused) syncField(field, localSource(field, input));
+  if (!field.focused && prop !== undefined)
+    syncField(field, input.source[prop]);
   fields.set(input.context.key, field);
 
   return field;
@@ -60,16 +62,10 @@ function matchingField(field: Field | undefined, input: ControlInput): Field {
 }
 
 // The Part event whose metadata names a prop the App echoes at once.
-const localRules = (part: WirePartDefinition): PartEventRules | undefined =>
+const localRules = (part: WirePartDefinition): Partial<PartEventRules> =>
   Object.values(part.events)
     .map(partEventRules)
-    .find((rules) => rules.value !== undefined);
-
-function localSource(field: Field, input: ControlInput): WireJson | undefined {
-  const prop = field.local?.value;
-
-  return prop === undefined ? undefined : input.source[prop];
-}
+    .find((rules) => rules.value !== undefined) ?? {};
 
 function syncField(field: Field, source?: WireJson): void {
   if (!Object.is(field.source, source) && !currentRequest(field))
@@ -84,16 +80,11 @@ function propsFor(
 ): PluginProps {
   const change = changeFor(field, update);
   const props = { ...input.node.props, ...eventProps(input, change) };
+  const prop = field.local.value;
 
-  Object.assign(props, localValue(field), focusOf(field, update));
+  if (prop !== undefined) props[prop] = currentValue(field);
 
-  return Object.assign(props, pendingProps(field));
-}
-
-function localValue(field: Field): PluginProps {
-  const prop = field.local?.value;
-
-  return prop === undefined ? {} : { [prop]: currentValue(field) };
+  return Object.assign(props, focusOf(field, update), pendingProps(field));
 }
 
 function pendingProps(field: Field): PluginProps {
@@ -136,7 +127,7 @@ function currentRequest(field: Field): Value | undefined {
 
 // A coalesced field keeps what the user types while it has focus.
 function focusOf(field: Field, update: () => void): PluginProps {
-  if (!field.local?.throttleMs) return {};
+  if (!field.local.throttleMs) return {};
 
   return {
     onFocus: (): void => {
