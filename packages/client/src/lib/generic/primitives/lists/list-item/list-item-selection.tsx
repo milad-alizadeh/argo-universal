@@ -61,7 +61,7 @@ function choiceMark(
   return <ChoiceMark {...props} />;
 }
 
-// Paper Combobox 9BM-0: a menu row in a choice list keeps a leading slot for its check, so labels align.
+// Paper's Combobox master: a menu row in a choice list keeps a leading slot for its check, so labels align.
 export function ChoiceSlot(props: ListItemProps): ReactNode {
   const { selectionMode } = useContext(ListContext);
 

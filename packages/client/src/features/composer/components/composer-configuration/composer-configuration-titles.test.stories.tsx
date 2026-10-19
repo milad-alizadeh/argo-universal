@@ -19,7 +19,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Paper 9FK-0: the desktop popover is a flat menu with no title and no section titles.
+// Paper's Configure: the desktop popover is a flat menu with no title and no section titles.
 export const ConfigureHasNoTitlesWide: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
@@ -98,5 +98,26 @@ export const ConfigureIsASheetBelowWide: Story = {
         within(configure).getByRole('heading', { name: modelPickerLabel }),
       ).toBeVisible(),
     );
+  },
+};
+
+// A phone keeps its sheet: the Configure page title, titled sections and a read-only Agent row.
+export const ConfigureKeepsItsSheetPhone: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.phone);
+    await userEvent.click(
+      canvas.getByRole('button', { name: agentModelLabel }),
+    );
+
+    const overlay = within(document.body);
+
+    for (const name of ['Configure', 'Model', 'Response'])
+      await expect(await overlay.findByRole('heading', { name })).toBeVisible();
+    await expect(
+      overlay.getByRole('button', { name: /^Model,/ }),
+    ).toBeVisible();
+    await expect(
+      overlay.queryByRole('button', { name: /^Agent,/ }),
+    ).not.toBeInTheDocument();
   },
 };

@@ -7,7 +7,7 @@ type Insets = Pick<
 
 type Options = Insets & Pick<ListProps<never>, 'appearance' | 'fit'>;
 
-// Paper Combobox 9BM-0: a grouped list in a popover holds its menu rows 4px inside the popover.
+// Paper's Combobox master: a grouped list in a popover holds its menu rows 4px inside the popover.
 const menuInset = 1;
 
 export function listInsets(props: Options, menu: boolean): Insets {

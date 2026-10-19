@@ -75,7 +75,7 @@ function sectionEntries(
   ];
 }
 
-// Paper Combobox 9BM-0: a popover's groups sit 8px apart; other lists keep 16px between sections.
+// Paper's Combobox master: a popover's groups sit 8px apart; other lists keep 16px between sections.
 function SectionGap(): ReactElement {
   return <View className={useInMenu() ? 'h-2' : 'h-4'} />;
 }

@@ -33,7 +33,7 @@ function transitions(width: number): StoryObj<typeof meta> {
 
   return {
     args: {
-      label: 'Session settings',
+      label: 'Popover',
       trigger: (
         <Pressable role="button">
           <Text>Settings</Text>

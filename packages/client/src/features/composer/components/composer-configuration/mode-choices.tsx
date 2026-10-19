@@ -19,7 +19,7 @@ const destructiveTextClassName = 'text-danger';
 
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 bg-content web:wide:bg-card">
+    <View className="native:flex-1 native:wide:p-3 bg-content web:wide:bg-card">
       <List appearance="grouped" fit>
         <ListSection selectionMode="single">
           {configurationChoices(props.mode).map((choice) => (

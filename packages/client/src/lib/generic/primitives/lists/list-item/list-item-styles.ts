@@ -24,7 +24,7 @@ function corners(
   return appearance === 'grouped' ? groupedCorners[position] : undefined;
 }
 
-// Paper Combobox 9BM-0: a popover's rows sit flat on it, 2px apart, each with the menu-row radius.
+// Paper's Combobox master: a popover's rows sit flat on it, 2px apart, each with the menu-row radius.
 const menuGaps = {
   only: '',
   first: 'mb-0.5',
