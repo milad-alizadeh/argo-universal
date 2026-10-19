@@ -6,6 +6,8 @@ export {
   usePopoverClose,
 } from './popover';
 
+export { PopoverAnchor } from './popover-anchor';
+
 export { PopoverTitle } from './popover-title';
 
 export {

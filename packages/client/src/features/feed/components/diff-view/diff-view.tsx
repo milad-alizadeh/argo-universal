@@ -23,6 +23,9 @@ import {
 export interface DiffViewProps {
   file: FileDiff;
   inline?: boolean;
+  // Inspector only: the file's Viewed mark. Marking a file viewed folds it; clearing the mark opens it.
+  viewed?: boolean;
+  onViewedChange?: (viewed: boolean) => void;
 }
 
 interface DiffPreview {
@@ -61,10 +64,45 @@ function useDiffPreview(file: FileDiff, inline: boolean): DiffPreview {
 
 function useDiffViewState(props: DiffViewProps): DiffViewState {
   const inline = props.inline === true;
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useViewedFold(props.viewed);
   const preview = useDiffPreview(props.file, inline);
 
-  return { file: props.file, inline, open, onOpenChange: setOpen, preview };
+  return {
+    file: props.file,
+    inline,
+    open,
+    onOpenChange: setOpen,
+    viewed: props.viewed,
+    onViewedChange: viewedChange(props.onViewedChange, setOpen),
+    preview,
+  };
+}
+
+// The fold follows the Viewed mark whenever it changes, here or from the owner, such as marks that load after the files.
+function useViewedFold(
+  viewed: boolean | undefined,
+): readonly [boolean, (open: boolean) => void] {
+  const [open, setOpen] = useState(!viewed);
+  const [shownViewed, setShownViewed] = useState(viewed);
+
+  if (viewed !== shownViewed) {
+    setShownViewed(viewed);
+    setOpen(!viewed);
+  }
+
+  return [open, setOpen] as const;
+}
+
+function viewedChange(
+  onViewedChange: DiffViewProps['onViewedChange'],
+  setOpen: (open: boolean) => void,
+): FileHeaderProps['onViewedChange'] {
+  if (!onViewedChange) return undefined;
+
+  return (viewed) => {
+    setOpen(!viewed);
+    onViewedChange(viewed);
+  };
 }
 
 function ShowAllLines(props: DiffPreview): React.JSX.Element | null {

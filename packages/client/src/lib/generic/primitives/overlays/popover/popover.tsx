@@ -48,6 +48,8 @@ function contentPlacement({
   return { align, sideOffset };
 }
 
+const listContentClassName = 'w-80 overflow-hidden p-0';
+
 // A ref handed to the content still reaches Radix's element: the close transition waits on it.
 type BodyProps = ContentProps & { ref?: React.Ref<HTMLDivElement> };
 
@@ -76,13 +78,16 @@ function webContentProps(
   };
 }
 
+const surfaceClassName = (props: ContentProps): string =>
+  cn(contentClassName, props.list && listContentClassName, props.className);
+
 function PopoverSurface(
   props: ContentProps & { open: boolean },
 ): React.JSX.Element {
   return (
     <View
       style={props.style}
-      className={cn(contentClassName, props.className)}
+      className={surfaceClassName(props)}
       data-state={props.open ? 'open' : 'closed'}
     >
       <TextClassContext.Provider value="text-foreground">

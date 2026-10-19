@@ -25,7 +25,12 @@ export const switchProps = binaryControlProps.extend({
 
 export const checkboxProps = binaryControlProps.extend({
   label: stringLabel,
-  variant: z.literal('option').optional().describe('The option row treatment.'),
+  variant: z
+    .enum(['option', 'inline'])
+    .optional()
+    .describe(
+      'The option row treatment, or inline beside other content and sized to its label.',
+    ),
   selection: z
     .enum(['single', 'multiple'])
     .optional()

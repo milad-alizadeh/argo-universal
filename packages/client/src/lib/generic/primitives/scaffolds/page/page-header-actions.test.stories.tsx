@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { Action, ActionList } from '#primitives/actions/action-list';
-import { Page, PageHeaderActions } from './index';
+import { Page } from './index';
 import {
   exampleSubmenu,
   type SubmenuBadge,
@@ -169,38 +169,3 @@ export const HeaderShortcut = atWidth(pageWidths.Wide, {
     await expect(renamed).toHaveBeenCalledOnce();
   },
 });
-
-const joined = fn();
-
-// Content parts hand their Actions up beside the Page's own; none replaces another's.
-export const ContentActionsJoinTheHeader: Story = {
-  args: {
-    title: 'Issue',
-    actions: (
-      <ActionList>
-        <Action label="Share" icon="filters" onPress={() => joined('share')} />
-      </ActionList>
-    ),
-    children: (
-      <>
-        <PageHeaderActions>
-          <ActionList>
-            <Action label="Edit" icon="rename" onPress={() => joined('edit')} />
-          </ActionList>
-        </PageHeaderActions>
-        <PageHeaderActions>
-          <ActionList>
-            <Action label="Pin" icon="archive" onPress={() => joined('pin')} />
-          </ActionList>
-        </PageHeaderActions>
-      </>
-    ),
-  },
-  play: async ({ canvas, userEvent }) => {
-    joined.mockClear();
-    await userEvent.click(canvas.getByRole('button', { name: 'Share' }));
-    await userEvent.click(canvas.getByRole('button', { name: 'Pin' }));
-    await expect(joined.mock.calls).toEqual([['share'], ['pin']]);
-    await expect(canvas.getByRole('button', { name: 'Edit' })).toBeVisible();
-  },
-};

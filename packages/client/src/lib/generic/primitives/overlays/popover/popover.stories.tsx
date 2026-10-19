@@ -1,10 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { View } from 'react-native';
-import { contentActionClass } from '#primitives/actions/button';
+import { Button, contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
 import { Text } from '#primitives/content/text';
+import { Combobox } from '#primitives/inputs/combobox';
 import { TextInput } from '#primitives/inputs/text-input';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import { PopoverAnchor } from './popover-anchor';
+import { PopoverTitle } from './popover-title';
 
 function PopoverPreview(): React.JSX.Element {
   return (
@@ -74,6 +78,43 @@ function DimensionField({
   );
 }
 
+const fruits = ['Apple', 'Banana', 'Cherry'].map((name) => ({
+  value: name,
+  label: name,
+}));
+
+// A popover that another control opens, placed against it, holding a choice list at Paper's 320 width.
+function AnchoredListPreview(): React.JSX.Element {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverAnchor>
+        <Button
+          label="Choose a fruit"
+          variant="outline"
+          onPress={() => setOpen(true)}
+        />
+      </PopoverAnchor>
+      <FruitList onClose={() => setOpen(false)} />
+    </Popover>
+  );
+}
+
+function FruitList(props: { onClose: () => void }): React.JSX.Element {
+  return (
+    <PopoverContent align="start" accessibilityLabel="Fruit" list>
+      <PopoverTitle>Fruit</PopoverTitle>
+      <Combobox.Content
+        label="Fruit"
+        options={fruits}
+        onValueChange={props.onClose}
+        onClose={props.onClose}
+      />
+    </PopoverContent>
+  );
+}
+
 const meta = {
   title: 'Design System/Primitives/Overlays/Popover',
   tags: ['third-party'],
@@ -86,4 +127,8 @@ type Story = StoryObj<typeof meta>;
 export const Variations: Story = {
   name: 'Popover',
   render: () => <PopoverPreview />,
+};
+
+export const AnchoredList: Story = {
+  render: () => <AnchoredListPreview />,
 };
