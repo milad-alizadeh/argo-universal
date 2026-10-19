@@ -1,6 +1,11 @@
 import { Platform } from 'react-native';
 import type { ListAppearance, ListPosition } from '../../../list-context';
 import { cn } from '../../../utils';
+import {
+  controlLines,
+  pressLayouts,
+  sidebarLayouts,
+} from './list-item-layouts';
 import type { ListItemProps } from './list-item-props';
 
 /*
@@ -90,13 +95,6 @@ function rowSurface(
   );
 }
 
-// A desktop or web grouped card holds its rows 16 from its edge (Paper "Settings · Porcelain"); other rows keep 20 on wide.
-const pressLayouts = {
-  row: 'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5',
-  card: 'w-full flex-row items-start gap-4 px-4 py-4',
-  menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
-};
-
 const pressFocus = 'web:select-none web:rounded-inherit';
 
 // Pressed (4%) follows hover (2%) on the web, so a held row is darker than a hovered one.
@@ -108,36 +106,32 @@ const pressTints = cn(
 // The web's Pressable draws a pointer cursor in an unlayered rule; a read-only row takes the page's.
 const readOnlyCursor = 'web:cursor-auto!';
 
-// Paper: a control wraps onto its own line, 12px under a menu row's title and 8px under a sheet row's.
-const controlLines = {
-  row: 'flex-wrap gap-y-2',
-  card: 'flex-wrap gap-y-2',
-  menu: 'flex-wrap gap-y-3',
-} satisfies Record<keyof typeof pressLayouts, string>;
-
 type PressDrawing = {
   menu: boolean;
   interactive: boolean;
-  control: boolean;
   appearance: ListAppearance;
-};
+} & Pick<ListItemProps, 'control' | 'sidebar'>;
 
-const webCard = (appearance: ListAppearance): boolean =>
-  Platform.OS === 'web' && appearance === 'grouped';
+const plainLayout = (appearance: ListAppearance): 'card' | 'row' =>
+  Platform.OS === 'web' && appearance === 'grouped' ? 'card' : 'row';
 
 function layoutOf({
   menu,
   appearance,
+  sidebar,
 }: PressDrawing): keyof typeof pressLayouts {
   if (menu) return 'menu';
 
-  return webCard(appearance) ? 'card' : 'row';
+  return sidebar ? sidebarLayouts[sidebar] : plainLayout(appearance);
 }
 
 function pressLayout(press: PressDrawing): string {
   const layout = layoutOf(press);
 
-  return cn(pressLayouts[layout], press.control && controlLines[layout]);
+  return cn(
+    pressLayouts[layout],
+    press.control !== undefined && controlLines[layout],
+  );
 }
 
 // Only a row that does something takes the hover and pressed tints; a read-only row stays still.

@@ -42,6 +42,7 @@
     "test:stories": {
       "dependsOn": ["transit"],
       "env": ["VITEST_MAX_WORKERS"],
+      "passThroughEnv": ["ARGO_BROWSER_SUITE_LOCK_HELD"],
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": []
     },
@@ -52,14 +53,18 @@
       // A CI shard's blob report replays from the cache too, so the merged HTML report stays whole.
       "outputs": ["playwright-report/**", "blob-report/**"],
       "env": ["ARGO_E2E_SHARD", "ARGO_E2E_FOCUS"],
-      "passThroughEnv": ["PLAYWRIGHT_*"]
+      "passThroughEnv": ["PLAYWRIGHT_*", "ARGO_BROWSER_SUITE_LOCK_HELD"]
     },
     "test:electron": {
       "dependsOn": ["^build", "^package"],
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": ["playwright-report/**"],
       // xvfb-run hands Electron its display through XAUTHORITY.
-      "passThroughEnv": ["PLAYWRIGHT_*", "XAUTHORITY"]
+      "passThroughEnv": [
+        "PLAYWRIGHT_*",
+        "XAUTHORITY",
+        "ARGO_BROWSER_SUITE_LOCK_HELD"
+      ]
     },
     // Electron Forge's package; e2e launches Electron from .vite/build, so the 300 MB out/ stays out of the shared cache.
     "package": {

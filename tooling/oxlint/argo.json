@@ -1089,9 +1089,10 @@
                   "@repo/**",
                   "!@repo/mocks",
                   "!@repo/mocks/**",
-                  "!@repo/engine/server-runtime"
+                  "!@repo/engine/server-runtime",
+                  "!@repo/browser-suite-lock"
                 ],
-                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018), and reads server.json through the Engine server-runtime subpath."
+                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018), reads server.json through the Engine server-runtime subpath, and queues through the browser-suite lock."
               }
             ]
           }
@@ -2145,9 +2146,10 @@
                   "!@repo/client",
                   "!@repo/client/**",
                   "!@repo/uniwind",
-                  "!@repo/uniwind/**"
+                  "!@repo/uniwind/**",
+                  "!@repo/browser-suite-lock"
                 ],
-                "message": "storybook imports only client and uniwind from the workspace."
+                "message": "storybook imports only client and uniwind from the workspace, and the browser-suite lock in its test setup."
               }
             ]
           }

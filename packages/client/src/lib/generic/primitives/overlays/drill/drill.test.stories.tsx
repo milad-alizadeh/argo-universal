@@ -1,19 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState, type ReactElement } from 'react';
-import { expect, fn, waitFor, within } from 'storybook/test';
-import { List } from '#primitives/lists/list';
-import { ListItem } from '#primitives/lists/list-item';
-import { MenuTrigger } from '#primitives/overlays/menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '#primitives/overlays/popover';
+import type { ReactElement } from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../each-layout';
 import { settleViewport } from '../../../settle-viewport';
-import { Drill } from './drill';
-
-const picked = fn<(value: string) => void>();
+import { Menu, picked } from './drill-menu.mocks';
 
 const meta = {
   title: 'Tests/Drill',
@@ -27,61 +17,6 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-const fruits = ['Apple', 'Banana', 'Cherry'];
-
-const vegetables = ['Carrot', 'Leek'];
-
-function Menu(): ReactElement {
-  return (
-    <Popover>
-      <PopoverTrigger>
-        <MenuTrigger label="Configure" />
-      </PopoverTrigger>
-      <PopoverContent accessibilityLabel="Configure" className="p-0">
-        <List appearance="grouped" fit>
-          <List.Section>
-            <Choice label="Fruit" choices={fruits} keepOpen />
-            <Choice label="Vegetable" choices={vegetables} />
-          </List.Section>
-        </List>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-type ChoiceProps = { label: string; choices: string[]; keepOpen?: boolean };
-
-function Choice(props: ChoiceProps): ReactElement {
-  const [value, setValue] = useState(props.choices[0] ?? '');
-
-  return (
-    <Drill
-      label={props.label}
-      value={value}
-      title={`Select ${props.label}`}
-      keepOpen={props.keepOpen}
-    >
-      {(close) => (
-        <List appearance="grouped" fit>
-          <List.Section
-            selectionMode="single"
-            selection={[value]}
-            onSelectionChange={([next = value]) => {
-              setValue(next);
-              picked(next);
-              close();
-            }}
-          >
-            {props.choices.map((choice) => (
-              <ListItem key={choice} id={choice} title={choice} />
-            ))}
-          </List.Section>
-        </List>
-      )}
-    </Drill>
-  );
-}
 
 const page = within(document.body);
 
@@ -126,6 +61,23 @@ export const KeepOpenKeepsBothOpenAfterAPick: Story = {
     await userEvent.click(document.body);
     await waitFor(() => expect(choices).not.toBeInTheDocument());
     await waitFor(() => expect(menu).not.toBeInTheDocument());
+  },
+};
+
+// A click on the menu closes the choices beside it and leaves the menu open, though its rows stop the click.
+export const MenuClickClosesTheChoices: Story = {
+  play: async ({ userEvent }) => {
+    const { menu, choices } = await openChoices(userEvent, 'Fruit');
+
+    await userEvent.click(
+      within(menu).getByRole('button', { name: /^Vegetable,/ }),
+    );
+
+    await waitFor(() => expect(choices).not.toBeInTheDocument());
+    await expect(
+      await page.findByRole('dialog', { name: 'Select Vegetable' }),
+    ).toBeVisible();
+    await expect(menu).toHaveAttribute(openState, 'open');
   },
 };
 

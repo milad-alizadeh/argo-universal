@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import { ListTitle } from '#lib/product/list-title';
 import { IconButton } from '#primitives/actions/icon-button';
 import { SearchField } from '#primitives/inputs/search-field';
@@ -16,7 +17,7 @@ const newSessionAppearance = {
   size: 'sm',
   className: 'size-7 sm:size-7',
   icon: 'new-session',
-  iconRole: 'action',
+  iconRole: 'control',
   iconClassName: 'text-muted-foreground',
 } as const;
 
@@ -36,10 +37,11 @@ function SessionsHeaderActions({
   );
 }
 
-// The wide window's Sessions list header row: the title, the view menu, New Session, and Search last.
+// The wide window's Sessions list header row (Paper "SessionsList"): the title, Search, the view menu, then New Session.
 export function SessionsHeader(props: SessionsHeaderProps): React.JSX.Element {
   return (
     <SearchField
+      sidebar={Platform.OS === 'web'}
       label={searchSessionsLabel}
       value={props.query}
       onChangeText={props.onQueryChange}

@@ -81,7 +81,10 @@ export const PlanAndSubagents: Story = {
       await expect(
         canvas.getByLabelText('Subagents: 3, 2 running'),
       ).toBeVisible();
-      await expect(canvas.getByTestId('subagents-status')).toBeVisible();
+      // The web's sidebar row draws the count alone; its own status dot speaks for the Session.
+      await expect(
+        canvas.queryByTestId('subagents-status'),
+      ).not.toBeInTheDocument();
     }
   },
 };

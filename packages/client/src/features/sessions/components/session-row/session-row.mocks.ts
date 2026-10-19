@@ -18,6 +18,7 @@ export const paperSessionRows: SessionInfo[] = [
     ...sessionRows.withPlan,
     title: 'Build the Session layout',
     activity: 'Running pnpm typecheck',
+    shells: { running: 1, total: 1 },
     subagents: { running: 2, total: 3 },
   },
   {
@@ -60,7 +61,7 @@ export const paperSessionMetadata = {
   },
   'session-failed': {
     subagentsFailed: true,
-    pullRequest: { number: 47, status: 'draft' },
+    pullRequest: { number: 40, status: 'closed' },
     age: '1h',
   },
   'session-idle': {
