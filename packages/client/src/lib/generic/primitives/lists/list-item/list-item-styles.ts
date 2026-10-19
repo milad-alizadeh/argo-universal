@@ -30,13 +30,12 @@ function corners(
 export function itemSurface(
   appearance: ListAppearance,
   position: ListPosition,
-  { selected, tone }: Pick<ListItemProps, 'selected' | 'tone'>,
+  { tone }: Pick<ListItemProps, 'tone'>,
 ): string {
   return cn(
     'relative overflow-hidden',
     tone !== 'muted' && appearanceClasses[appearance],
     corners(appearance, position),
-    selected && 'web:wide:shadow-inset',
   );
 }
 
