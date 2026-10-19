@@ -3,6 +3,7 @@ import { agentCard } from './agent-catalog';
 import { Given, When, Then } from './fixtures';
 import { reloadApp } from './frame';
 import { returnToSessions } from './navigation';
+import { openConfiguration } from './new-session';
 
 Given('the fixture Server has no Projects', async ({ page }) => {
   await expect(
@@ -32,10 +33,11 @@ When('the fixture Project is registered', async ({ app, page }) => {
 });
 
 Then('the Agent picker remembers {string}', async ({ page }, name: string) => {
+  await openConfiguration(page);
   await expect(
-    page.getByRole('button', { name: 'Select Agent', exact: true }),
+    page.getByRole('button', { name: /^Agent(?:,|$)/ }),
   ).toContainText(name);
-  await page.getByRole('button', { name: 'Select Agent', exact: true }).click();
+  await page.getByRole('button', { name: /^Agent(?:,|$)/ }).click();
   await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',

@@ -1,7 +1,6 @@
 import type { SessionSnapshot } from '@repo/contracts';
-import { useMutation } from '@tanstack/react-query';
 import { type InstalledAgents, loadedAgents } from '#features/agents';
-import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { useResubscribeOnReconnect } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
 import {
   type OpenAttempt,
@@ -25,6 +24,8 @@ import {
 } from '#features/sessions';
 import { useErrorToast } from '#primitives/overlays/toast';
 import type { SessionCommands } from './use-session-commands';
+import type { useSessionReadOptions } from './use-session-read-options';
+import { useSessionRetry } from './use-session-retry';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
@@ -35,15 +36,15 @@ export interface SessionCalloutSources {
   feedDropped: boolean;
   commands: Pick<SessionCommands, 'promptSession' | 'setConfigOption'>;
   agents: InstalledAgents;
+  discovery: Pick<ReturnType<typeof useSessionReadOptions>, 'error' | 'retry'>;
 }
-
-const labelOf = (agents: InstalledAgents, agent: string): string | undefined =>
-  loadedAgents(agents).find((entry) => entry.id === agent)?.name;
 
 const agentName = (
   snapshot: SessionSnapshot,
   agents: InstalledAgents,
-): string => labelOf(agents, snapshot.agent) ?? snapshot.agent;
+): string =>
+  loadedAgents(agents).find((entry) => entry.id === snapshot.agent)?.name ??
+  snapshot.agent;
 
 const authSubject = (
   snapshot: SessionSnapshot | null,
@@ -56,22 +57,6 @@ const authSubject = (
         agentName: agentName(snapshot, agents),
       }
     : undefined;
-
-interface Retry {
-  attempt: OpenAttempt;
-  openAgain: () => void;
-}
-
-// Retry opens the Session again without a Turn.
-function useRetry(sessionId: string, feed: SessionFeed): Retry {
-  const trpc = useTRPC();
-
-  const retry = useMutation(
-    trpc.session.open.mutationOptions({ onSuccess: () => feed.retryOpen() }),
-  );
-
-  return { attempt: retry, openAgain: () => retry.mutate({ sessionId }) };
-}
 
 interface SessionSignIn {
   signIn: PastSessionSignIn;
@@ -107,23 +92,44 @@ const shownProblem = (
 
 // What the Session's open or last Turn asks for; an open the Connection dropped shows one toast instead.
 function useOpenProblem(sources: SessionCalloutSources): RetriableProblem {
-  const { sessionId, feed, commands } = sources;
-  const { attempt, openAgain } = useRetry(sessionId, feed);
+  const { sessionId, feed } = sources;
+  const { attempt, openAgain } = useSessionRetry(sessionId, feed);
+  const problemSources = useProblemSources(sources, attempt);
 
-  const problemSources: SessionProblemSources = {
+  useErrorToast(pastSessionDropToast(problemSources, feed.snapshot !== null));
+  useRetryOnReconnect(problemSources, openAgain);
+  const current = { problem: shownProblem(feed, problemSources), openAgain };
+
+  return isArchived(feed)
+    ? current
+    : discoveryFallback(current, sources.discovery);
+}
+
+function useProblemSources(
+  { feed, feedDropped, commands }: SessionCalloutSources,
+  attempt: OpenAttempt,
+): SessionProblemSources {
+  return {
     feedOpenError: feed.openError,
-    feedDropped: sources.feedDropped,
+    feedDropped,
     retry: attempt,
     retryDropped: useConnectionDropped(attempt.error),
     commands: [commands.promptSession, commands.setConfigOption],
     items: feed.view?.items,
   };
-
-  useErrorToast(pastSessionDropToast(problemSources, feed.snapshot !== null));
-  useRetryOnReconnect(problemSources, openAgain);
-
-  return { problem: shownProblem(feed, problemSources), openAgain };
 }
+
+// Discovery retries only configuration; it must not resume the browsed Session.
+const discoveryFallback = (
+  current: RetriableProblem,
+  discovery: SessionCalloutSources['discovery'],
+): RetriableProblem =>
+  current.problem || !discovery.error
+    ? current
+    : {
+        problem: { type: 'open', error: discovery.error },
+        openAgain: discovery.retry,
+      };
 
 // The sign-in rule over that problem, with the Turn's sign-in kept across remounts.
 function useSessionSignIn(sources: SessionCalloutSources): SessionSignIn {

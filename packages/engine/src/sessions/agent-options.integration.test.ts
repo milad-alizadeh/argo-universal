@@ -285,58 +285,72 @@ it('returns persisted options before a silent refresh completes', async () => {
   await stream.return?.();
 });
 
-it('keeps an accepted model change when an older discovery finishes later', async () => {
-  const received = Promise.withResolvers<NewSessionRequest>();
-  const release = Promise.withResolvers<void>();
+it.each([undefined, 'large'])(
+  'preserves newer saved options while discovery returns its explicit pick %s',
+  async (model) => {
+    const received = Promise.withResolvers<NewSessionRequest>();
+    const release = Promise.withResolvers<void>();
 
-  const changed = acpConfiguration.map((option) =>
-    option.id === 'model' && option.type === 'select'
-      ? { ...option, currentValue: 'small' }
-      : option,
-  );
+    const changed = acpConfiguration
+      .filter((option) => option.category === 'model')
+      .map((option) =>
+        option.id === 'model' && option.type === 'select'
+          ? { ...option, currentValue: 'small' }
+          : option,
+      );
 
-  const host = await startAcpEngine({
-    steps: [],
-    configOptions: acpConfiguration,
-    responses: {
-      'session/new': [
-        { result: { sessionId: 'actual', configOptions: acpConfiguration } },
-        {
-          received,
-          waitFor: release.promise,
-          result: { sessionId: 'discovery', configOptions: acpConfiguration },
-        },
-      ],
-      'session/set_config_option': [{ result: { configOptions: changed } }],
-    },
-  });
+    const host = await startAcpEngine({
+      steps: [],
+      configOptions: acpConfiguration,
+      responses: {
+        'session/new': [
+          { result: { sessionId: 'actual', configOptions: acpConfiguration } },
+          {
+            received,
+            waitFor: release.promise,
+            result: { sessionId: 'discovery', configOptions: acpConfiguration },
+          },
+        ],
+        'session/set_config_option': [{ result: { configOptions: changed } }],
+      },
+    });
 
-  const created = await host.caller.session.new(emptySessionInput);
+    const created = await host.caller.session.new(emptySessionInput);
 
-  const stream = (await host.caller.session.agentOptions(optionsInput()))[
-    Symbol.asyncIterator
-  ]();
+    const stream = (
+      await host.caller.session.agentOptions({
+        ...optionsInput(),
+        picks: model ? { model } : undefined,
+      })
+    )[Symbol.asyncIterator]();
 
-  expect((await stream.next()).value?.configOptions).not.toBeNull();
-  const refreshing = stream.next();
-  await received.promise;
+    expect((await stream.next()).value?.configOptions).not.toBeNull();
+    const refreshing = stream.next();
+    await received.promise;
 
-  const applied = await host.caller.session.setConfigOption({
-    ...created,
-    configId: 'model',
-    type: 'id',
-    value: 'small',
-  });
+    const applied = await host.caller.session.setConfigOption({
+      ...created,
+      configId: 'model',
+      type: 'id',
+      value: 'small',
+    });
 
-  release.resolve();
-  expect((await refreshing).value?.configOptions).toEqual(
-    applied.configOptions,
-  );
-  await expect
-    .poll(() => host.database.select().from(agentOptions).get()?.configOptions)
-    .toEqual(applied.configOptions);
-  await stream.return?.();
-});
+    release.resolve();
+    const refreshed = (await refreshing).value?.configOptions;
+    expect(
+      refreshed?.find((option) => option.category === 'model')?.currentValue,
+    ).toBe(model ?? 'small');
+    expect(
+      refreshed?.some((option) => option.category === 'thought_level'),
+    ).toBe(model !== undefined);
+    await expect
+      .poll(
+        () => host.database.select().from(agentOptions).get()?.configOptions,
+      )
+      .toEqual(applied.configOptions);
+    await stream.return?.();
+  },
+);
 
 it('keeps saved options but reports sign-in when background discovery fails', async () => {
   const host = await startAcpEngine({

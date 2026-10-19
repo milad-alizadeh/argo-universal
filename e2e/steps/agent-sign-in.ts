@@ -49,7 +49,7 @@ Then(
   'the App offers the sign-in methods {string} then {string}',
   async ({ page }, first: string, second: string): Promise<void> => {
     await expect(
-      page.getByText('Choose one of the following authentication options:'),
+      page.getByText(configurationSignIn, { exact: true }),
     ).toBeVisible(sessionOpenTimeout);
     await expect(page.getByRole('button', { name: first })).toBeVisible();
     await page.getByRole('button', { name: menuLabel }).click();

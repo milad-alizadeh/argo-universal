@@ -1,4 +1,21 @@
 Feature: Agent sign-in and launch callouts
+  Scenario: A stored Session offers sign-in when configuration discovery needs authentication
+    Given a wide Frame
+    And Agent 1 needs sign-in
+    When I open a New Session
+    And I open the configuration picker
+    Then the App asks to authenticate to Agent 1 with "Sign in"
+    When I choose the sign-in method "Sign in"
+    Then the sign-in callout is gone
+    When I send the prompt "Restore configuration after signing in"
+    Then the Agent replies "The shared fixture completed this Turn."
+    When the Engine restarts
+    And I reload the App and open the Session "Restore configuration after signing in"
+    Then the App asks to authenticate to Agent 1 with "Sign in"
+    When I choose the sign-in method "Sign in"
+    Then the sign-in callout is gone
+    And the configuration shows model "Large" and effort "High"
+
   Scenario Outline: Configuration launch failure offers Retry before Send in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 exits while fetching configuration

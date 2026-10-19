@@ -1,8 +1,13 @@
 import { expect } from '../fixtures';
 import { agentCard, browseAgents } from './agent-catalog';
+import { closeAgentMenus } from './agent-menus';
 import { When, Then } from './fixtures';
 import { onPhone } from './frame';
-import { openNewSession } from './new-session';
+import {
+  agentModelLabel,
+  openConfiguration,
+  openNewSession,
+} from './new-session';
 import { toast } from './toasts';
 
 const exampleName = 'Example Agent';
@@ -80,11 +85,12 @@ async function openSessionsSection(
 async function checkPickerAndReturn(
   page: Parameters<typeof openNewSession>[0],
 ): Promise<void> {
-  await page.getByRole('button', { name: 'Select Agent', exact: true }).click();
+  await openConfiguration(page);
+  await page.getByRole('button', { name: /^Agent(?:,|$)/ }).click();
   await expect(
     page.getByRole('button', { name: exampleName, exact: true }),
   ).toBeVisible();
-  await page.keyboard.press('Escape');
+  await closeAgentMenus(page, agentModelLabel);
 
   if (onPhone(page))
     await page.getByRole('link', { name: 'Sessions, back' }).click();

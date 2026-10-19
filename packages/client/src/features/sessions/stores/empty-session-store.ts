@@ -33,6 +33,7 @@ export class EmptySessionStore {
     },
   });
   private input: SessionNewInput | undefined;
+  private choiceKey: string | undefined;
   private configuration: EmptySessionConfiguration = {
     initial: [],
   };
@@ -59,8 +60,16 @@ export class EmptySessionStore {
 
   // Incomplete choices cannot send a stale Agent or Project.
   public choose({ input, connected }: EmptySessionChoices): void {
+    if (input) this.chooseIdentity(input);
     this.input = connected ? input : undefined;
     this.emit();
+  }
+
+  private chooseIdentity(input: SessionNewInput): void {
+    const key = JSON.stringify([input.agent, input.projectId, input.checkout]);
+
+    if (key !== this.choiceKey) this.outcome = settledOpen;
+    this.choiceKey = key;
   }
 
   // Keep unsent choices until Send.

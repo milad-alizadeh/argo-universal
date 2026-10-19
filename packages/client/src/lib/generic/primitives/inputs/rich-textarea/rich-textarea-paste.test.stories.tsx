@@ -113,6 +113,8 @@ const copiedPage =
 // Selects the rendered HTML and copies it, so the clipboard holds the browser's own text/html.
 async function copyPage(html: string): Promise<void> {
   const source = document.createElement('div');
+  // This represents selectable content on an external page, not App chrome.
+  source.style.userSelect = 'text';
   source.innerHTML = html;
   document.body.append(source);
   const range = document.createRange();

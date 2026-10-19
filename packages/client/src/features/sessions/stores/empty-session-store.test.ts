@@ -124,3 +124,17 @@ it('uses the latest Agent and never sends stale incomplete choices', () => {
   h.store.send(prompt);
   expect(h.calls.open[0]?.input.agent).toBe('agent-two');
 });
+
+it.each([
+  local('agent-two'),
+  { ...local('agent-one'), projectId: 'another-project' },
+])('clears a failed Send when choosing $agent in $projectId', async (input) => {
+  h.choose(local('agent-one'));
+  h.store.send(prompt);
+  h.calls.open[0]?.call.reject(authRequired);
+  await settle();
+  expect(h.store.getState().attempt.status).toBe('failed');
+  h.choose(input);
+  expect(h.store.getState().attempt.status).toBe('idle');
+  expect(h.calls.clearDraft).toBe(0);
+});

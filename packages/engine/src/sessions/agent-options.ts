@@ -160,13 +160,26 @@ async function refreshAgentOptions(
       ),
     );
 
-    return (
-      readAgentConfiguration({ database: deps.database, writer }, input)
-        ?.configOptions ?? options
-    );
+    return discoveryResult(deps, input, options);
   } finally {
     await lease.close();
   }
+}
+
+// Explicit picks need their discovered schema even when a newer Session owns persistence.
+function discoveryResult(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+  options: SessionAgentOptionsOutput,
+): SessionAgentOptionsOutput {
+  if (Object.keys(input.picks ?? {}).length) return options;
+
+  return (
+    readAgentConfiguration(
+      { database: deps.database, writer: deps.findWriter() },
+      input,
+    )?.configOptions ?? options
+  );
 }
 
 // One endpoint sends the durable snapshot first, then refreshes without hiding it.

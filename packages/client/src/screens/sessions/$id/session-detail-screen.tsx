@@ -137,22 +137,29 @@ function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
   const sources = useConnectedFeed(sessionId);
   const surroundings = useSessionSurroundings(page, sources.feed);
 
-  const callouts = usePageCallout(sessionId, sources, surroundings.agents);
-
-  const options = useSessionReadOptions(sessionId, sources.feed);
+  const reads = usePageCallout(sessionId, sources, surroundings.agents);
 
   return toSessionViewProps({
     sessionId,
     ...sources,
-    callouts,
     ...surroundings,
-    options,
+    ...reads,
   });
 }
 
-const usePageCallout = (
+function usePageCallout(
   sessionId: string,
   sources: ConnectedFeed,
   agents: SessionDetailViewSources['agents'],
-): ReturnType<typeof useSessionCallout> =>
-  useSessionCallout({ sessionId, agents, ...sources });
+): Pick<SessionDetailViewSources, 'options' | 'callouts'> {
+  const options = useSessionReadOptions(sessionId, sources.feed);
+
+  const callouts = useSessionCallout({
+    sessionId,
+    agents,
+    discovery: options,
+    ...sources,
+  });
+
+  return { options, callouts };
+}
