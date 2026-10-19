@@ -137,10 +137,6 @@ function restingOf(read: () => number): Promise<number> {
   }, settleWait);
 }
 
-// Waits until an element, in view or not, holds still for two frames, as it does once the rows around it stop moving.
-export const restingTopOf = (element: HTMLElement): Promise<number> =>
-  restingOf(() => element.getBoundingClientRect().top);
-
 const bottomOf = (element: HTMLElement): number =>
   element.getBoundingClientRect().bottom;
 
