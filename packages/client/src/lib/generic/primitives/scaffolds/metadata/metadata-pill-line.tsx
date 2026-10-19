@@ -24,7 +24,7 @@ function VisiblePills(props: VisibleProps): ReactElement {
   return (
     <View
       testID="metadata-visible-pills"
-      className="flex-row items-center gap-1 overflow-hidden"
+      className="flex-row items-center justify-end gap-1 overflow-hidden"
     >
       {visiblePills(props)}
       {hidden > 0 ? <Pill text={`+${hidden}`} /> : null}
