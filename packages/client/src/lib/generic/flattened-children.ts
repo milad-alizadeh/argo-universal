@@ -21,6 +21,7 @@ function nestedKey(child: ReactNode, prefix: string, index: number): ReactNode {
     : child;
 }
 
+// Children as one flat list, as a kit component reads its children and plural Slots. Fragments, written by a screen or wrapping a Slot of several nodes, open in place, and nested keys take the Fragment's key as a prefix so they stay unique.
 export function flattenedChildren(children: ReactNode): ReactNode[] {
   return Children.toArray(children).flatMap((child) => {
     if (!fragmentChild(child)) return [child];

@@ -75,5 +75,8 @@ export const currentPartVersions = versionsOf(Object.keys(wireParts));
 
 export * from './settings-row-props';
 
-// The current App draws every wire part.
-export const pluginPartNames = Object.keys(wireParts);
+export {
+  pluginPartNames,
+  pluginKitExports,
+  type PluginKitExport,
+} from './plugin-part-names';

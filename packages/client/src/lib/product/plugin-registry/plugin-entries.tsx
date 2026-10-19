@@ -12,7 +12,11 @@ import { Slider } from '#primitives/inputs/slider';
 import { Switch } from '#primitives/inputs/switch';
 import { TextInput } from '#primitives/inputs/text-input';
 import type { KitProps } from '#primitives/kit-props';
+import { Grid } from '#primitives/layout/grid';
+import { ScrollView } from '#primitives/layout/scroll-view';
+import { Spacer } from '#primitives/layout/spacer';
 import { Stack } from '#primitives/layout/stack';
+import { Surface } from '#primitives/layout/surface';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { EmptyState } from '#primitives/status/empty-state';
@@ -47,6 +51,10 @@ export const pluginEntries = {
   Text,
   Button,
   Stack,
+  Spacer,
+  Grid,
+  Surface,
+  ScrollView,
   Svg,
 } satisfies {
   [Name in WirePart]: ComponentType<KitProps<Name, string, React.JSX.Element>>;

@@ -21,6 +21,11 @@
         "id": "hello-lists",
         "title": "Hello lists",
         "path": "/lists"
+      },
+      {
+        "id": "hello-dashboard",
+        "title": "Hello dashboard",
+        "path": "/dashboard"
       }
     ],
     "settings": [

@@ -20,36 +20,31 @@ export type WireSchemaHints = {
     "direction": PropValue<"Stack", "direction">;
   };
   "Spacer": {
-    /** Minimum token length. */
-    "minLength": PropValue<"Spacer", "minLength">;
+
   };
   "Grid": {
-    /** Column count, optionally by Size class. */
+    /** Equal columns, optionally per Size class. Phones draw at most two. */
     "columns": PropValue<"Grid", "columns">;
     /** Spacing token between cells. */
     "gap": PropValue<"Grid", "gap">;
   };
   "Surface": {
-    /** Surface treatment. */
+    /** Named Surface with its fill, radius and depth. */
     "kind": PropValue<"Surface", "kind">;
-    /** Semantic fill role. */
-    "fill": PropValue<"Surface", "fill">;
-    /** Semantic shape token. */
-    "radius": PropValue<"Surface", "radius">;
-    /** Semantic depth token. */
-    "depth": PropValue<"Surface", "depth">;
-    /** on Press for this part. */
+    /** Spacing token inside the Surface. */
+    "padding": PropValue<"Surface", "padding">;
+    /** Action run on activation. */
     "onPress": PropValue<"Surface", "onPress">;
-    /** Actions available from this surface. */
-    "actions": PropValue<"Surface", "actions">;
   };
   "Card": {
     /** on Press for this part. */
     "onPress": PropValue<"Card", "onPress">;
   };
   "ScrollView": {
+    /** Spoken name of the scroll region. */
+    "accessibilityLabel": PropValue<"ScrollView", "accessibilityLabel">;
     /** Scroll direction. */
-    "axis": PropValue<"ScrollView", "axis">;
+    "direction": PropValue<"ScrollView", "direction">;
   };
   "Collapsible": {
     /** Controlled open state. */

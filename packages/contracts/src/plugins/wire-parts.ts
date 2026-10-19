@@ -12,6 +12,7 @@ import {
   textV2,
   svgProps,
 } from './kit-props';
+import { layoutWireParts } from './layout-wire-parts';
 import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
 import { listWireParts } from './list-wire-parts';
@@ -25,6 +26,7 @@ export { listPartNames } from './list-expansion';
 
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
+  ...layoutWireParts,
   ...listWireParts,
   ...actionListWireParts,
   ...controlWireParts,

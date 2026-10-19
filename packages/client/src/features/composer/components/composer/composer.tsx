@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { PermissionRequest } from '#features/requests';
 import { cn } from '#lib/generic/utils';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
+import { Surface } from '#primitives/layout/surface';
 import { useErrorToast } from '#primitives/overlays/toast';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
@@ -34,8 +35,7 @@ function useComposerClass(): string {
   return cn('w-full items-center', useSessionFill().filled && filledClass);
 }
 
-const requestTrayClass =
-  'self-stretch -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass web:backdrop-blur-glass web:backdrop-saturate-110';
+const requestTrayClass = 'self-stretch -mb-3 pb-3';
 
 const requestClass = (wide: boolean, filled: boolean): string =>
   cn(wide && requestTrayClass, filled && filledClass);
@@ -56,7 +56,7 @@ function ComposerRequest(layout: ComposerLayout): React.JSX.Element | null {
 
   return (
     <View className={requestClass(layout.wide, filled)}>
-      {composerRequestContent(layout)}
+      <ComposerRequestSurface {...layout} />
     </View>
   );
 }
@@ -70,4 +70,10 @@ function composerRequestContent({ props }: ComposerLayout): React.ReactNode {
 
 function hasComposerRequest({ props }: ComposerLayout): boolean {
   return Boolean(props.permissionRequest || props.callout);
+}
+
+function ComposerRequestSurface(layout: ComposerLayout): React.ReactNode {
+  const content = composerRequestContent(layout);
+
+  return layout.wide ? <Surface kind="muted">{content}</Surface> : content;
 }

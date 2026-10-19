@@ -4,7 +4,7 @@ import {
   buttonSizes,
   buttonVariants,
   stackAlignments,
-  stackGaps,
+  spacingSteps,
   textRoles,
   tones,
 } from '../kit-tokens';
@@ -66,7 +66,7 @@ export const buttonProps = buttonV1.extend({
 
 export const layoutProps = z.object({
   gap: z
-    .enum(stackGaps)
+    .enum(spacingSteps)
     .optional()
     .describe('A spacing token between children.'),
   align: z.enum(stackAlignments).optional().describe('Cross-axis alignment.'),
