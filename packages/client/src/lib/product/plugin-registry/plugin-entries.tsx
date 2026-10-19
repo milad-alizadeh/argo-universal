@@ -27,6 +27,7 @@ import { ListItem } from '#primitives/lists/list-item';
 import { Alert } from '#primitives/overlays/alert';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Detail } from '#primitives/scaffolds/detail';
+import { ListDetail } from '#primitives/scaffolds/list-detail';
 import { Metadata } from '#primitives/scaffolds/metadata';
 import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
@@ -36,6 +37,7 @@ import { Svg } from '#primitives/visual';
 
 export const pluginEntries = {
   Page,
+  ListDetail,
   Detail,
   Metadata,
   'Metadata.Label': Metadata.Label,

@@ -13,6 +13,7 @@ import type * as SpacerKit from '#primitives/layout/spacer';
 import type * as SurfaceKit from '#primitives/layout/surface';
 import type * as ListItemKit from '#primitives/lists/list-item';
 import type * as DetailKit from '#primitives/scaffolds/detail';
+import type * as ListDetailKit from '#primitives/scaffolds/list-detail';
 import type * as MetadataKit from '#primitives/scaffolds/metadata';
 import type * as PageKit from '#primitives/scaffolds/page';
 import type * as EmptyStateKit from '#primitives/status/empty-state';
@@ -33,6 +34,8 @@ export type AdditionalPrimitives = {
   ScrollViewProps: ScrollViewKit.ScrollViewProps;
   PageProps: PageKit.PageProps;
   DetailProps: DetailKit.DetailProps;
+  ListDetailProps: ListDetailKit.ListDetailProps;
+  ListDetailSidebar: ListDetailKit.ListDetailSidebar;
   ActionGroup: ActionListKit.ActionGroup;
   DeclaredAction: ActionListKit.DeclaredAction;
   DeclaredEntry: ActionListKit.DeclaredEntry;

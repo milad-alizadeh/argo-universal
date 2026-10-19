@@ -9,6 +9,12 @@ if (!recorded) throw new Error('Recorded catalog needs a model picker.');
 
 export const configuration = recorded;
 
+// The recorded Agent's current model, as its choice is announced.
+export const currentModel = 'Opus 5.5 (recommended)';
+
+// Another of its recorded models.
+export const otherModel = 'Haiku 4.5';
+
 export const agentModelLabel = 'Agent and model';
 
 export const modelPickerLabel = 'Select Model';

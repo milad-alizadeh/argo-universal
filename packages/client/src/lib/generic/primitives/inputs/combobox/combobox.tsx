@@ -85,6 +85,7 @@ function drillProps<Value extends string>(
     onClose: props.onBlur,
     contentScrolls: true,
     trigger: props.trigger,
+    keepOpen: props.keepOpen,
   };
 }
 

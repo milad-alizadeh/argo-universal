@@ -1,6 +1,6 @@
 /*
- * Branches, pull requests and changes use Tabler Icons (MIT); `repository` uses GitHub's Octicons mark (MIT).
- * Every platform draws the same paths (ADR-0019).
+ * Branches, pull requests and changes use Tabler Icons (MIT); every platform draws the same paths (ADR-0019).
+ * The GitHub mark is a logo, drawn by Icon's `source`, not a symbol name.
  */
 export const gitSymbols = {
   branch: { tabler: 'git-branch' },
@@ -12,5 +12,4 @@ export const gitSymbols = {
   'pr-merged': { tabler: 'git-merge' },
   'pr-closed': { tabler: 'git-pull-request-closed' },
   'pr-conflict': { tabler: 'git-pull-request-conflict' },
-  repository: { tabler: 'brand-github' },
 } as const;

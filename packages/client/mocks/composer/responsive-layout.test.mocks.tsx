@@ -51,7 +51,11 @@ export function responsiveLayout(width: number, agentIndex: number): Story {
       await expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible();
       await expectResponsiveFooter({ canvas, card, width });
       await userEvent.click(trigger);
-      await browseResponsiveMenu({ userEvent, width });
+      await browseResponsiveMenu({
+        userEvent,
+        width,
+        agent: catalog.agent.name,
+      });
       await userEvent.keyboard('{Escape}');
     },
   };

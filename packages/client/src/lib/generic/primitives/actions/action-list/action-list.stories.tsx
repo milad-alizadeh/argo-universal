@@ -39,9 +39,9 @@ const issues: DemoAction[] = [
 const projects: DemoAction[] = [
   { label: 'Add Project', icon: 'add', result: 'Project added' },
   {
-    label: 'Import from GitHub',
-    icon: 'repository',
-    result: 'Imported from GitHub',
+    label: 'Create branch',
+    icon: 'branch',
+    result: 'Branch created',
   },
   {
     label: 'Show archived',

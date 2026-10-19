@@ -43,7 +43,6 @@
         "expo-haptics",
         "expo-image-picker",
         "expo-video",
-        "react-native-svg",
         // Knip assumes OTA updates are installed unless Expo config explicitly disables them.
         "expo-updates"
       ],

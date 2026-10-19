@@ -1,7 +1,7 @@
 import type { SessionConfigOption, SessionSnapshot } from '@repo/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { writeSessionOptions } from './use-session-options';
+import { writeSessionOptions } from '../api/session-options-cache';
 
 interface OwnedOptions {
   agent: string;

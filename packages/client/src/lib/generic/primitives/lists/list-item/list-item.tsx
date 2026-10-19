@@ -1,26 +1,40 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { ProgressBar } from '#primitives/status/progress-bar';
-import { ListContext } from '../../../list-context';
+import { ListContext, type ListPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
+import { useInMenu } from '../../../menu-rows-context';
 import { useSeparatorCovered } from '../../../row-highlights';
-import { useSelectedHighlight } from './list-item-highlight';
+import { useGroupPosition } from './list-item-group';
 import { hasLeading } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import type { ListItemProps } from './list-item-props';
-import { useItemSelection, ChoiceAccessory } from './list-item-selection';
-import { itemSeparator, itemSurface } from './list-item-styles';
+import {
+  useItemSelection,
+  ChoiceAccessory,
+  ChoiceSlot,
+} from './list-item-selection';
+import {
+  itemSeparator,
+  itemSurface,
+  type ItemDrawing,
+} from './list-item-styles';
 
 const hairline = { height: StyleSheet.hairlineWidth };
 
-function ItemSeparator(props: ListItemProps): ReactNode {
-  const { appearance, position, highlights, index } = useContext(ListContext);
-  const covered = useSeparatorCovered(highlights, index);
+function useItemDrawing(): ItemDrawing {
+  const { appearance, position } = useContext(ListContext);
 
-  const separator = itemSeparator(appearance, position, hasLeading(props));
+  return { appearance, position, menu: useInMenu() };
+}
+
+function ItemSeparator(props: ListItemProps): ReactNode {
+  const { index } = useContext(ListContext);
+  const covered = useSeparatorCovered(index);
+  const separator = itemSeparator(useItemDrawing(), hasLeading(props));
 
   return separator && !covered ? (
     <View className={separator} style={hairline} />
@@ -48,24 +62,46 @@ function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
+  const list = useContext(ListContext);
+  const position = useGroupPosition(props.description);
+
   return (
     <InListItem value>
-      <ItemSurface {...props} />
-      {props.description && Platform.OS !== 'android' ? (
-        <ListFooter text={props.description} />
-      ) : null}
+      <ListContext value={{ ...list, position }}>
+        <ItemSurface {...props} />
+      </ListContext>
+      <RowFooter description={props.description} position={list.position} />
     </InListItem>
   );
 }
 
-function ItemSurface(props: DrawingProps): ReactElement {
-  const { appearance, position } = useContext(ListContext);
-  useSelectedHighlight(props.selected);
+const sectionEnds = new Set<ListPosition>(['last', 'only']);
+
+const footerGap = (position: ListPosition): string | undefined =>
+  sectionEnds.has(position) ? undefined : 'mb-4';
+
+// A row's description closes its group; a section's gap separates it from the group after it.
+function RowFooter(props: {
+  description?: string;
+  position: ListPosition;
+}): ReactNode {
+  if (!props.description || Platform.OS === 'android') return null;
 
   return (
-    <View className={itemSurface(appearance, position, props)}>
+    <View className={footerGap(props.position)}>
+      <ListFooter text={props.description} />
+    </View>
+  );
+}
+
+// Paper's Combobox: a menu's chosen row shows its check only, with no selected fill.
+function ItemSurface(props: DrawingProps): ReactElement {
+  const drawing = useItemDrawing();
+
+  return (
+    <View className={itemSurface(drawing, props)}>
       <ItemPress {...drawingContent(props)} />
-      <Selection selected={props.selected} />
+      <Selection selected={props.selected && !drawing.menu} />
       <ItemSeparator {...props} />
       <ItemProgress progress={props.progress} />
     </View>
@@ -83,22 +119,36 @@ function LoadingItem(props: ListItemProps): ReactElement {
   );
 }
 
-// Only a choosing List draws the choice slot; an empty one would hold the trailing lane off the row's edge.
 export function ListItem(props: ListItemProps): ReactElement {
   if (props.isLoading) return <LoadingItem {...props} />;
 
   return <ChoosingItem {...props} />;
 }
 
+// A menu row's check leads the row, as in Paper's Combobox; elsewhere only a choosing List draws it, trailing.
 function ChoosingItem(props: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
+  const menu = useInMenu();
+
+  return (
+    <ListItemFrame
+      {...selected}
+      choice={menu ? <ChoiceSlot {...selected} /> : undefined}
+      accessory={useTrailingChoice(menu, selected)}
+    />
+  );
+}
+
+// An empty trailing choice would hold the trailing lane off the row's edge.
+function useTrailingChoice(
+  menu: boolean,
+  selected: ListItemProps,
+): ReactElement | undefined {
   const { selectionMode } = useContext(ListContext);
 
-  const accessory = selectionMode ? (
-    <ChoiceAccessory {...selected} />
-  ) : undefined;
+  if (menu || !selectionMode) return undefined;
 
-  return <ListItemFrame {...selected} accessory={accessory} />;
+  return <ChoiceAccessory {...selected} />;
 }
 
 function drawingContent(props: DrawingProps): DrawingProps {

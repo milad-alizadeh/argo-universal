@@ -56,6 +56,26 @@ export const requests = (
   method: string,
 ): LoggedRequest[] => requestsIn(loggedMessages(requestLogPath), method);
 
+// The scenario's App, whose Agents log every request they receive.
+type RequestLog = { requestLogPath: string };
+
+// Where a scenario's Local Session requests begin: New Session first reads an uncached Agent's options for its default New worktree (ADR-0023). Each scenario's App is its own key.
+const localStarts = new WeakMap<RequestLog, number>();
+
+export const markLocalStart = (app: RequestLog): void => {
+  localStarts.set(app, loggedMessages(app.requestLogPath).length);
+};
+
+// The requests since the Local checkout was chosen, or all of them when it never was.
+export const localRequests = (
+  app: RequestLog,
+  method: string,
+): LoggedRequest[] =>
+  requestsIn(
+    loggedMessages(app.requestLogPath).slice(localStarts.get(app) ?? 0),
+    method,
+  );
+
 // Where the Agent received the request.
 export const receivedAt = (
   messages: LoggedMessage[],

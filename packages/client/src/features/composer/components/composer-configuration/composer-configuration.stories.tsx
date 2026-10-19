@@ -5,6 +5,7 @@ import { action } from 'storybook/actions';
 import {
   composerFastModeConfiguration,
   composerLongListConfiguration,
+  composerLongSettingsOptions,
   composerUnlistedEffortConfigurations,
 } from '../../../../../mocks/composer-mock';
 import { updateComposerSettings } from '../../../../../mocks/composer-mock';
@@ -48,6 +49,21 @@ export const LongLists: StoryObj<typeof meta> = {
 export const FastMode: StoryObj<typeof meta> = {
   name: 'Fast mode on',
   args: { configuration: composerFastModeConfiguration(true) },
+  render: DefaultEffort.render,
+};
+
+// Fast mode and an Agent's other select options sit in Configure beside its model and effort.
+export const OtherOptions: StoryObj<typeof meta> = {
+  name: 'Other options',
+  args: {
+    configuration: {
+      ...configuration,
+      configOptions: [
+        ...configuration.configOptions,
+        ...composerLongSettingsOptions,
+      ],
+    },
+  },
   render: DefaultEffort.render,
 };
 

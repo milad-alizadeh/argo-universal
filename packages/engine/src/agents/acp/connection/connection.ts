@@ -29,6 +29,7 @@ import { routeTerminalRequests } from '../shell-commands/terminal-requests';
 import { createAgentClient, awaitAcpOpening } from './client';
 import { negotiateAcpInitialize } from './initialize';
 import { sessionCapabilities, openProtocolSession } from './open-session';
+import { cancelledElicitation, cancelledPermission } from './refusals';
 import { createAcpResponseReaders } from './response-readers';
 import { SubagentRoutes } from './subagent-routing';
 
@@ -235,7 +236,7 @@ export class AcpConnection {
           ...context,
           signal: AbortSignal.any([context.signal, session.controller.signal]),
         }),
-      fallback: { outcome: { outcome: 'cancelled' } },
+      fallback: cancelledPermission,
     });
   private readonly elicitation: Elicitation = (context) =>
     this.respond({
@@ -245,7 +246,7 @@ export class AcpConnection {
           ...context,
           signal: AbortSignal.any([context.signal, session.controller.signal]),
         }),
-      fallback: { action: 'cancel' },
+      fallback: cancelledElicitation,
     });
   private find(id: string | undefined): AgentSession | undefined {
     const session = id === undefined ? undefined : this.agentSessions.get(id);

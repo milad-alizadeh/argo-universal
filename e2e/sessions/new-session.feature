@@ -134,10 +134,23 @@ Feature: New Session
   Scenario: A New worktree Session is created only at Send
     Given a phone Frame
     And a New Session with Agent 1
-    Then the Agent opened no Session
+    Then no Session or worktree exists yet
     When I send the prompt "Fix the flaky login test"
     Then the Agent replies "The shared fixture completed this Turn."
     And the Agent opened one Session in a new worktree
+
+  Scenario Outline: A New worktree offers the options of an Agent this Device never opened, with Agent <agent> in a <frame> Frame
+    Given a <frame> Frame
+    And a New Session with Agent <agent>
+    When I choose model "Small" and effort "Low"
+    And I send the prompt "Use my configured Session"
+    Then the Agent replies "The shared fixture completed this Turn."
+    And the configuration shows model "Small" and effort "Low"
+
+    Examples:
+      | agent | frame |
+      | 1     | phone |
+      | 2     | wide  |
 
   Scenario: The Checkout choice is remembered
     Given a phone Frame

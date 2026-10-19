@@ -14,10 +14,8 @@ import {
   listPosition,
   type ListPosition,
 } from '../../../list-context';
-import {
-  createRowHighlights,
-  type RowHighlights,
-} from '../../../row-highlights';
+import { useInMenu } from '../../../menu-rows-context';
+import { createRowGroupEnds, type RowGroupEnds } from '../../../row-group-ends';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import { listInsets } from './list-insets';
 import type { ListProps } from './list-props';
@@ -78,26 +76,24 @@ interface RowProps<Item> {
   props: ListProps<Item>;
 }
 
-type HighlightedRowProps<Item> = RowProps<Item> & {
-  highlights: RowHighlights;
-};
+type GroupedRowProps<Item> = RowProps<Item> & { groupEnds: RowGroupEnds };
 
 function useRowContext<Item>({
   row,
   props,
-  highlights,
-}: HighlightedRowProps<Item>): React.ContextType<typeof ListContext> {
+  groupEnds,
+}: GroupedRowProps<Item>): React.ContextType<typeof ListContext> {
   const appearance = props.appearance ?? 'plain';
   const position = positionOf(props, row.index);
   const index = row.index;
 
   return useMemo(
-    () => ({ appearance, position, highlights, index }),
-    [appearance, position, highlights, index],
+    () => ({ appearance, position, index, groupEnds }),
+    [appearance, position, index, groupEnds],
   );
 }
 
-function Row<Item>(rowProps: HighlightedRowProps<Item>): ReactElement {
+function Row<Item>(rowProps: GroupedRowProps<Item>): ReactElement {
   return (
     <ListContext value={useRowContext(rowProps)}>
       <PaddedRow row={rowProps.row} props={rowProps.props} />
@@ -107,7 +103,7 @@ function Row<Item>(rowProps: HighlightedRowProps<Item>): ReactElement {
 
 // Legend List's web cells ignore horizontal content padding, so each row holds its gutters.
 function PaddedRow<Item>({ row, props }: RowProps<Item>): ReactNode {
-  const paddingHorizontal = usePadding(listInsets(props).padding);
+  const paddingHorizontal = usePadding(listInsets(props, useInMenu()).padding);
   const style = useMemo(() => ({ paddingHorizontal }), [paddingHorizontal]);
   const content = props.renderItem?.(row.item, row.index);
 
@@ -121,11 +117,11 @@ function PaddedRow<Item>({ row, props }: RowProps<Item>): ReactNode {
 export function useRenderedRows<Item>(
   props: ListProps<Item>,
 ): (row: LegendListRenderItemProps<Item>) => ReactElement {
-  const [highlights] = useState(createRowHighlights);
+  const [groupEnds] = useState(createRowGroupEnds);
 
   return useCallback(
-    (row) => <Row row={row} props={props} highlights={highlights} />,
-    [props, highlights],
+    (row) => <Row row={row} props={props} groupEnds={groupEnds} />,
+    [props, groupEnds],
   );
 }
 
@@ -137,7 +133,7 @@ export function useListPadding<Item>(props: ListProps<Item>): {
   paddingTop: number;
   paddingBottom?: number;
 } {
-  const insets = listInsets(props);
+  const insets = listInsets(props, useInMenu());
   const paddingTop = usePadding(insets.paddingTop);
   const bottom = usePadding(insets.paddingBottom);
   const paddingBottom = insets.paddingBottom === undefined ? undefined : bottom;

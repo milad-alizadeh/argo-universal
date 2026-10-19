@@ -9,6 +9,9 @@ export const PageNavigationEnabled = createContext(true);
 // The App's navigation marks a Page whose narrow header its drawer draws, as an Android Plugin root's is.
 export const PageAtDrawerRoot = createContext(false);
 
+// A ListDetail marks the detail it shows beside its list, which needs no Back to reach the list.
+export const PageBesideList = createContext(false);
+
 // Whether a navigator draws this Page's narrow header, so the Page leaves its own heading out.
 export function usePageNavigator(): boolean {
   const enabled = use(PageNavigationEnabled);

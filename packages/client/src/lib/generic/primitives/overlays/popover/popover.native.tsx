@@ -10,7 +10,7 @@ import type {
   PopoverTriggerProps as TriggerProps,
 } from './popover-props';
 
-export { usePopoverClose } from './popover-context';
+export { useEnclosingPopoverClose, usePopoverClose } from './popover-context';
 
 // Phones show a popover's content in a Sheet, as every overlay is a popover on desktop and a sheet on a phone.
 function Popover(props: PopoverProps): React.JSX.Element {

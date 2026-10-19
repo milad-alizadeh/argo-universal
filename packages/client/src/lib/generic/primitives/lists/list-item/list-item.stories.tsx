@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { Slider } from '#primitives/inputs/slider';
 import { List } from '#primitives/lists/list';
 import { Pill } from '#primitives/status/pill';
 import { Variation, Variations } from '../../../variations';
@@ -42,6 +43,21 @@ const rows: ListItemProps[] = [
     subtitle: '2 need your attention',
     badge: { kind: 'status', tone: 'warning', label: 'Needs attention' },
   },
+  {
+    title: 'Effort',
+    value: 'High',
+    control: (
+      <Slider
+        accessibilityLabel="Effort"
+        valueLabel="High"
+        minimumValue={0}
+        maximumValue={3}
+        step={1}
+        value={2}
+        onValueChange={action('change effort')}
+      />
+    ),
+  },
 ];
 
 function Anatomy(): React.JSX.Element {
@@ -60,7 +76,7 @@ export const Overview: StoryObj<typeof meta> = {
   name: 'ListItem',
   render: () => (
     <Variations>
-      <Variation label="One, two and three lines; selected, progress, badge and disabled">
+      <Variation label="One, two and three lines; selected, progress, badge, disabled and a control">
         <Anatomy />
       </Variation>
     </Variations>

@@ -37,10 +37,18 @@ export function ComposerAgentModelControl(
 
   useCommitEffortFallback(props.configuration);
 
-  if (!selection(props.configuration, 'model') && !props.configuration.agent)
-    return null;
+  if (nothingToConfigure(props.configuration)) return null;
 
   return <AgentModelOverlay {...props} wide={wide} />;
+}
+
+// Hidden until an Agent is chosen, and while neither a model nor an installed Agent can show.
+function nothingToConfigure(
+  configuration: ComposerConfigurationProps,
+): boolean {
+  if (configuration.agent) return false;
+
+  return !configuration.agentId || !selection(configuration, 'model');
 }
 
 // Desktop opens the menu as a popover; everything else opens the Sheet.
@@ -74,7 +82,7 @@ function AgentModelPopover(props: TriggerProps): React.JSX.Element {
   );
 }
 
-// Elsewhere Configure is a sheet whose Agent and Model rows push their choices as pages.
+// Elsewhere Configure is a sheet whose Model and option rows push their choices as pages.
 function AgentModelSheet(props: TriggerProps): React.JSX.Element {
   const [open, setOpen] = useComposerOverlay(props.disabled);
 
@@ -91,12 +99,15 @@ function AgentModelSheet(props: TriggerProps): React.JSX.Element {
   );
 }
 
-// Sheet reads the page declaration from its direct children.
+// Sheet reads the page declaration from its direct children. The title names the Agent, as no row does.
 function configurePage(
   configuration: ComposerConfigurationProps,
 ): React.JSX.Element {
   return (
-    <Sheet.Page name="configure" title="Configure">
+    <Sheet.Page
+      name="configure"
+      title={agentName(configuration.agent, configuration.agentId)}
+    >
       <AgentModelMenu configuration={configuration} wide={false} />
     </Sheet.Page>
   );
@@ -118,10 +129,10 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
   };
 }
 
-// A spinner while the Session opens; wide, the Agent's icon otherwise.
+// A spinner while the options load; wide, the Agent's icon otherwise.
 function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   if (props.configuration.opening)
-    return <Spinner accessibilityLabel="Opening the Session" />;
+    return <Spinner accessibilityLabel="Loading options" />;
 
   return props.wide ? (
     <AgentIcon agent={props.configuration.agent} />

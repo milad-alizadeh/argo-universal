@@ -135,6 +135,8 @@ catalog:
   react-native-safe-area-context: ~5.7.0
   react-native-screens: ~4.26.0
   react-native-svg: 15.15.4
+  # Imports a logo SVG as a react-native-svg component in Metro (ADR-0019).
+  react-native-svg-transformer: 1.5.3
   # 0.21.2, not 0.21.3: Uniwind 1.12.1 crashes on web start with 0.21.3 (uni-stack/uniwind#704, fix pending).
   react-native-web: 0.21.2
   react-native-worklets: 0.10.1
@@ -148,6 +150,8 @@ catalog:
   typescript: 7.0.2
   uniwind: 1.12.1
   vite: 8.3.2
+  # The same SVG import in Storybook's Vite build, with SVGR's native output.
+  vite-plugin-svgr: 5.2.0
   vitest: 5.0.3
   ws: 8.22.0
   # Exact pin: XState may change types in minor releases.

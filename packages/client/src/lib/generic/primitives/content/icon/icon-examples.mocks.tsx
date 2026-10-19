@@ -3,6 +3,7 @@ import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { iconNames } from '../../../symbols/icon-names';
 import { type IconRole, useIconPixels } from '../../../symbols/icon-role';
+import { logoSources } from '../../../symbols/logo-source';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { FilledSymbols } from './filled-symbols.mocks';
 import { Icon } from './icon';
@@ -128,8 +129,23 @@ export function IconExamples(): React.JSX.Element {
         <FilledSymbols />
       </Variation>
       <ColorsExample />
+      <LogoExample />
       <CornerStatusExample />
     </VariationList>
+  );
+}
+
+// A logo draws its own SVG through `source`, at the role's size and in the text colour, beside a symbol.
+function LogoExample(): React.JSX.Element {
+  return (
+    <Variation label="Logo source: GitHub's mark beside the web symbol">
+      <View className="flex-row items-center gap-3">
+        <Icon source={logoSources.github} role="control" />
+        <Icon name="web" role="control" />
+        <Icon source={logoSources.github} role="control" tone="muted" />
+        <Icon name="web" role="control" tone="muted" />
+      </View>
+    </Variation>
   );
 }
 

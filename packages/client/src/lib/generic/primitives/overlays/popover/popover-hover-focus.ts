@@ -26,10 +26,22 @@ function hoverFocus(hover: Hover | undefined, props: FocusProps): FocusProps {
     },
     onCloseAutoFocus: (event) => {
       preventPointerFocus(hover, event);
+      keepFocusMovedAway(event);
       props.onClosed?.();
       props.onCloseAutoFocus?.(event);
     },
   };
+}
+
+/*
+ * A popover still closing when the reader opens another control leaves focus there: Radix would pull it back
+ * to this trigger and close that control's popover. The closed content is already gone from the page, so
+ * focus that was inside it now sits on the body.
+ */
+function keepFocusMovedAway(event: Event): void {
+  const focused = document.activeElement;
+
+  if (focused && focused !== document.body) event.preventDefault();
 }
 
 function preventPointerFocus(hover: Hover | undefined, event: Event): void {

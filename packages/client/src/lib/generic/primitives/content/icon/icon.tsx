@@ -7,7 +7,13 @@ import { TextClassContext, toneClass } from '#primitives/content/text';
 import { StatusDot } from '#primitives/status/status-dot';
 import { type DrawnSymbol, drawnSymbol } from '../../../symbols/drawn-symbol';
 import { useIconBox, useIconPixels } from '../../../symbols/icon-role';
-import { type ResolvedIcon, resolveIcon } from '../../../symbols/icon-symbol';
+import {
+  type IconSymbol,
+  type ResolvedIcon,
+  resolveIcon,
+} from '../../../symbols/icon-symbol';
+import { LogoGlyph } from '../../../symbols/logo-glyph';
+import type { LogoSource } from '../../../symbols/logo-source';
 import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
 
@@ -53,7 +59,29 @@ export function Icon(props: IconProps): React.JSX.Element {
   );
 }
 
+type LogoIconProps = IconProps & { source: LogoSource };
+
+type SymbolIconProps = IconProps & { name: IconSymbol };
+
 function IconGlyph(props: IconProps): React.JSX.Element {
+  if (props.source) return <IconLogo {...props} source={props.source} />;
+
+  return <IconSymbolGlyph {...props} name={props.name} />;
+}
+
+// Logos are SVG assets rather than symbols (ADR-0019, Logos).
+function IconLogo(props: LogoIconProps): React.JSX.Element {
+  return (
+    <LogoGlyph
+      source={props.source}
+      pixels={useIconPixels(props.role)}
+      colorClassName={useIconColor(props)}
+      testID={props.testID ?? `icon-${props.source.label.toLowerCase()}`}
+    />
+  );
+}
+
+function IconSymbolGlyph(props: SymbolIconProps): React.JSX.Element {
   const colorClassName = useIconColor(props);
   const icon = resolveIcon(props.name);
 

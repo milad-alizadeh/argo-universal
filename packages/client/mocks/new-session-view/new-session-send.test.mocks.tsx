@@ -36,7 +36,7 @@ export const sendsWhileTheSessionOpens: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await eachLayout(async () => {
       await expect(
-        await canvas.findByRole('progressbar', { name: 'Opening the Session' }),
+        await canvas.findByRole('progressbar', { name: 'Loading options' }),
       ).toBeVisible();
       await expect(
         canvas.getByRole('button', { name: sendLabel }),

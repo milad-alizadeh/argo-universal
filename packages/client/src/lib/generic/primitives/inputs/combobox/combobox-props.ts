@@ -12,6 +12,10 @@ export type ComboboxProps<Value extends string> = KitProps<'Combobox', Value> &
   Pick<PickerProps<Value>, 'invalid' | 'errors' | 'hint' | 'onBlur'> & {
     filter?: (option: ComboboxOption<Value>, query: string) => boolean;
     trigger?: ReactElement<{ disabled?: boolean; onPress?: () => void }>;
+    // As Drill's: a desktop pick leaves the choices and their menu open.
+    keepOpen?: boolean;
+    // False drops the search from the choices on every platform, for a short list such as a Configure row's.
+    searchable?: boolean;
   };
 
 export type ComboboxContentProps<Value extends string> =

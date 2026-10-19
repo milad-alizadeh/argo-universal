@@ -69,3 +69,20 @@ export const WithoutModelHidesControlWide: Story = {
     ).not.toBeInTheDocument();
   },
 };
+
+// Before New Session has an Agent, there is nothing to configure, even with options at hand.
+function withoutAgentAt(width: number): Story {
+  return {
+    args: { configuration: { ...configuration, agentId: undefined } },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.queryByRole('button', { name: agentModelLabel }),
+      ).not.toBeInTheDocument();
+    },
+  };
+}
+
+export const WithoutAgentHidesControlWide = withoutAgentAt(layoutWidths.wide);
+
+export const WithoutAgentHidesControlPhone = withoutAgentAt(layoutWidths.phone);

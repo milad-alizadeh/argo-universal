@@ -90,6 +90,35 @@ export const SearchInPopover = searchAt(layoutWidths.wide);
 
 export const SearchInSheet = searchAt(layoutWidths.phone);
 
+// From the search, the arrow keys, Home and End move through the choices and pass over a disabled one.
+export const ArrowKeysMoveThroughChoices: Story = {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  play: async ({ canvas, userEvent }) => {
+    const page = within(document.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Project' }));
+    await page.findByRole('searchbox', { name: searchLabel });
+
+    const argo = page.getByRole('radio', { name: 'Argo' });
+    const paper = page.getByRole('radio', { name: 'Paper' });
+
+    const down = '{ArrowDown}';
+
+    await userEvent.keyboard(down);
+    await expect(argo).toHaveFocus();
+    await userEvent.keyboard(down);
+    await expect(paper).toHaveFocus();
+    await userEvent.keyboard(down);
+    await expect(paper).toHaveFocus();
+    await userEvent.keyboard('{Home}');
+    await expect(argo).toHaveFocus();
+    await userEvent.keyboard('{ArrowUp}');
+    await expect(argo).toHaveFocus();
+    await userEvent.keyboard('{End}');
+    await expect(paper).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
 // The popover opens beside its trigger, inside the window, where the pointer can reach it.
 export const PopoverOpensAtTrigger: Story = {
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),

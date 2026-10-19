@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { Platform, View } from 'react-native';
+import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
 import {
@@ -60,8 +61,8 @@ function pageProps({
   direction,
 }: PagerProps): Pick<
   IconButtonProps,
-  'icon' | 'accessibilityLabel' | 'disabled' | 'onPress'
-> {
+  'accessibilityLabel' | 'disabled' | 'onPress'
+> & { icon: IconSymbol } {
   const page = pages[direction];
 
   return {

@@ -65,6 +65,7 @@
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/react": "catalog:",
+    "react-native-svg-transformer": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
