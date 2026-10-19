@@ -15,6 +15,8 @@ export const ListContext = createContext<
   ListSelection & {
     appearance: ListAppearance;
     position: ListPosition;
+    // Set inside a List's own rows, so a part that would draw its own List draws a section instead.
+    inList?: boolean;
   }
 >({ appearance: 'plain', position: 'only' });
 
