@@ -78,30 +78,8 @@ test('the form submits the drafted Issue', async ({ mount, clock }) => {
   assert.equal((await page.find('Created Crash')).type, 'Text');
 });
 
-const listDetailParts = {
-  ListDetail: 1,
-  List: 2,
-  ListItem: 3,
-  Pill: 2,
-  Label: 3,
-  Page: 1,
-  Detail: 1,
-  Metadata: 1,
-  'Metadata.StatusDot': 1,
-  'Metadata.Avatar': 1,
-  'Metadata.Pills': 1,
-  'Metadata.Label': 1,
-  'Metadata.Link': 1,
-  EmptyState: 1,
-  ActionList: 1,
-  Action: 3,
-};
-
 const mountBuild = (mount: PluginTest['mount']): Promise<PluginTestView> =>
-  mount({
-    page: '/builds/web',
-    surface: { platform: 'web', parts: listDetailParts },
-  });
+  mount({ page: '/builds/web', surface: { platform: 'web' } });
 
 test('a build page shows the builds beside the selected one', async ({
   mount,

@@ -5,17 +5,7 @@ import { test } from '@argo/plugin-kit/testing';
 test('the media page plays a clip and a sound', async ({ mount }) => {
   const page = await mount({
     page: '/media',
-    surface: {
-      platform: 'web',
-      parts: {
-        ScrollView: 1,
-        Surface: 1,
-        Stack: 1,
-        Text: 3,
-        Video: 1,
-        Audio: 1,
-      },
-    },
+    surface: { platform: 'web' },
   });
 
   const clip = await page.find('Hello clip');

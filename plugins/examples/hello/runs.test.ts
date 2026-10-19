@@ -5,18 +5,7 @@ import { test } from '@argo/plugin-kit/testing';
 test('the runs Page sorts its table of runs', async ({ mount, clock }) => {
   const page = await mount({
     page: '/runs',
-    surface: {
-      platform: 'web',
-      parts: {
-        Page: 1,
-        Table: 1,
-        'Table.Row': 1,
-        'Table.Cell': 1,
-        ActionList: 1,
-        Action: 1,
-        Pill: 1,
-      },
-    },
+    surface: { platform: 'web' },
   });
 
   assert.equal((await page.find('CI runs')).type, 'Table');
