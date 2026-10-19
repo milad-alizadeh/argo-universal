@@ -1,99 +1,48 @@
-import {
-  type SessionInfo,
-  type SessionListInput,
-  SessionListOrder,
-  type SessionListOutput,
+import type {
+  SessionInfo,
+  SessionListInput,
+  SessionListOutput,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { jsonCodec } from '../../lib/json-codec';
 
-// Where a row sits in its order: that order's time, then its id.
-const placeSchema = z.strictObject({
-  at: z.int(),
-  sessionId: z.string(),
-});
-
-type Place = z.infer<typeof placeSchema>;
-
-// A cursor names the order it pages, so a page asked for in another order is rejected rather than misplaced.
-const cursorSchema = jsonCodec(placeSchema.extend({ order: SessionListOrder }));
-
-type Cursor = z.infer<typeof cursorSchema>;
-
-// A cursor from before `order` placed a row by its last activity alone, so it pages the activity order.
-const legacyCursorSchema = jsonCodec(
+// Where a row sits in the list: its last activity, then its id.
+const cursorSchema = jsonCodec(
   z.strictObject({ activityAt: z.int(), sessionId: z.string() }),
 );
 
+type Cursor = z.infer<typeof cursorSchema>;
+
 const pageSize = 50;
 
-// Each order's time; newest first.
-const orderTimes = {
-  activity: (row: SessionInfo): number => row.activityAt,
-  created: (row: SessionInfo): number => row.createdAt,
-} satisfies Record<SessionListOrder, (row: SessionInfo) => number>;
-
+// Sessions page most recently active first.
 export function sessionListPage(
   input: SessionListInput,
   readRows: () => SessionInfo[],
 ): SessionListOutput {
-  const order = input.order ?? 'activity';
   // A malformed cursor is rejected before any row is read.
-  const cursor = parseCursor(input.cursor, order);
-  const rows = readRows().filter((row): boolean => matchesInput(row, input));
-  const matching = rowsAfter(cursor, place(order), rows);
+  const cursor = parseCursor(input.cursor);
+
+  const matching = readRows()
+    .filter(
+      (row): boolean => matchesInput(row, input) && afterCursor(row, cursor),
+    )
+    .sort(compareRows);
+
   const page = matching.slice(0, pageSize);
 
-  return {
-    sessions: page,
-    nextCursor: nextCursor(matching, order, page.at(-1)),
-  };
+  return { sessions: page, nextCursor: nextCursor(matching, page.at(-1)) };
 }
 
-// The rows after the cursor, in its order.
-function rowsAfter(
-  cursor: Cursor | undefined,
-  placeOf: (row: SessionInfo) => Place,
-  rows: SessionInfo[],
-): SessionInfo[] {
-  return rows
-    .filter((row): boolean => afterCursor(placeOf(row), cursor))
-    .sort((first, second) => comparePlaces(placeOf(first), placeOf(second)));
-}
-
-function parseCursor(
-  cursor: string | undefined,
-  order: SessionListOrder,
-): Cursor | undefined {
+function parseCursor(cursor: string | undefined): Cursor | undefined {
   if (cursor === undefined) return undefined;
 
-  return cursorFor(order, decodeCursor(cursor));
-}
-
-function decodeCursor(cursor: string): Cursor | undefined {
-  const text = Buffer.from(cursor, 'base64url').toString('utf8');
-
-  return cursorSchema.safeParse(text).data ?? legacyCursor(text);
-}
-
-function legacyCursor(text: string): Cursor | undefined {
-  const legacy = legacyCursorSchema.safeParse(text).data;
-
-  return (
-    legacy && {
-      order: 'activity',
-      at: legacy.activityAt,
-      sessionId: legacy.sessionId,
-    }
+  const parsed = cursorSchema.safeParse(
+    Buffer.from(cursor, 'base64url').toString('utf8'),
   );
-}
 
-function cursorFor(
-  order: SessionListOrder,
-  cursor: Cursor | undefined,
-): Cursor {
-  if (cursor !== undefined && cursor.order === order) return cursor;
+  if (parsed.success) return parsed.data;
 
   throw new TRPCError({
     code: 'BAD_REQUEST',
@@ -127,20 +76,16 @@ function matchesQuery(row: SessionInfo, query: string | undefined): boolean {
   );
 }
 
-const place =
-  (order: SessionListOrder) =>
-  (row: SessionInfo): Place => ({
-    at: orderTimes[order](row),
-    sessionId: row.sessionId,
-  });
-
-function afterCursor(rowPlace: Place, cursor: Cursor | undefined): boolean {
-  return !cursor || comparePlaces(cursor, rowPlace) < 0;
+function afterCursor(row: SessionInfo, cursor: Cursor | undefined): boolean {
+  return !cursor || compareRows(cursor, row) < 0;
 }
 
-// Newest first; ties break by `sessionId`, highest first.
-function comparePlaces(first: Place, second: Place): number {
-  return second.at - first.at || compareIds(first.sessionId, second.sessionId);
+// Most recently active first; ties break by `sessionId`, highest first.
+function compareRows(first: Cursor, second: Cursor): number {
+  return (
+    second.activityAt - first.activityAt ||
+    compareIds(first.sessionId, second.sessionId)
+  );
 }
 
 function compareIds(first: string, second: string): number {
@@ -151,12 +96,14 @@ function compareIds(first: string, second: string): number {
 
 function nextCursor(
   rows: SessionInfo[],
-  order: SessionListOrder,
   last: SessionInfo | undefined,
 ): string | null {
   return rows.length > pageSize && last
     ? Buffer.from(
-        z.encode(cursorSchema, { order, ...place(order)(last) }),
+        z.encode(cursorSchema, {
+          activityAt: last.activityAt,
+          sessionId: last.sessionId,
+        }),
       ).toString('base64url')
     : null;
 }

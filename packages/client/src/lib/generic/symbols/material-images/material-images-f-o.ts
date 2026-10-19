@@ -31,6 +31,7 @@ import KeyboardReturn from '@expo/material-symbols/keyboard_return.xml';
 import Language from '@expo/material-symbols/language.xml';
 import Lightbulb from '@expo/material-symbols/lightbulb.xml';
 import Link from '@expo/material-symbols/link.xml';
+import List from '@expo/material-symbols/list.xml';
 import Lock from '@expo/material-symbols/lock.xml';
 import Manufacturing from '@expo/material-symbols/manufacturing.xml';
 import Map from '@expo/material-symbols/map.xml';
@@ -79,6 +80,7 @@ export const materialImagesFO = {
   language: Language,
   lightbulb: Lightbulb,
   link: Link,
+  list: List,
   lock: Lock,
   manufacturing: Manufacturing,
   map: Map,

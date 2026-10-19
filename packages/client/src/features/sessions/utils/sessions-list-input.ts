@@ -20,60 +20,27 @@ export function showsUnderStatus(
   return archived === undefined || (archivedAt !== null) === archived;
 }
 
-/*
- * What `session.list` is asked for a view and a search: its status's `archived` filter and its order; an empty search asks for every title.
- * Last activity is the Server's default order, so it goes unsaid, and a Server from before `order` still answers the default view.
- */
+// What `session.list` is asked for a view and a search: its status's `archived` filter; an empty search asks for every title.
 export function sessionsListInput(
   view: SessionsView,
   query: string,
-): Pick<SessionListInput, 'archived' | 'order' | 'query'> {
-  const input: Pick<SessionListInput, 'archived' | 'order' | 'query'> = {
+): Pick<SessionListInput, 'archived' | 'query'> {
+  return {
     archived: statusArchived(view.status),
     query: query || undefined,
   };
-
-  if (view.order === 'created') input.order = view.order;
-
-  return input;
 }
 
-// The choices a Server from before Status All and Order Created does not know, field by field.
-const newerServerChoices: Pick<SessionsView, 'status' | 'order'> = {
-  status: 'all',
-  order: 'created',
-};
-
-type NewerServerField = keyof typeof newerServerChoices;
-
-// A field's default when the view chose what an older Server does not know, else the view's own choice.
-const olderServerChoice = <Field extends NewerServerField>(
-  view: SessionsView,
-  field: Field,
-): SessionsView[Field] =>
-  view[field] === newerServerChoices[field]
-    ? defaultSessionsView[field]
-    : view[field];
-
 /*
- * The view an older Server can list, when it refused this one: a Server from before Status All and Order Created
- * answers BAD_REQUEST to a request without `archived` or with `order`, so those fields fall back to Active and Last activity.
+ * The view an older Server can list, when it refused this one: a Server from before Status All answers BAD_REQUEST
+ * to a request without `archived`, so All falls back to Active.
  * Undefined when the refusal is not that, so the list shows its load failure as before.
  */
 export function olderServerView(
   view: SessionsView,
   errorCode: string | undefined,
 ): SessionsView | undefined {
-  const older: SessionsView = {
-    ...view,
-    status: olderServerChoice(view, 'status'),
-    order: olderServerChoice(view, 'order'),
-  };
+  if (errorCode !== 'BAD_REQUEST' || view.status !== 'all') return undefined;
 
-  if (errorCode !== 'BAD_REQUEST' || isSameView(older, view)) return undefined;
-
-  return older;
+  return { ...view, status: defaultSessionsView.status };
 }
-
-const isSameView = (older: SessionsView, view: SessionsView): boolean =>
-  older.status === view.status && older.order === view.order;

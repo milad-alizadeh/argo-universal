@@ -3,7 +3,6 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
-import { useIconBox } from '../../../symbols/icon-role';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
 import {
@@ -103,10 +102,7 @@ function MenuChoiceGroupRows(
   return (
     <>
       {props.first ? null : <MenuGroupSeparator />}
-      <MenuGroupHeading
-        label={props.group.label}
-        inset={props.group.options.some((choice) => choice.icon)}
-      />
+      <MenuGroupHeading label={props.group.label} />
       <MenuChoiceRadios {...props} />
     </>
   );
@@ -140,24 +136,15 @@ function MenuChoiceRadios({
   );
 }
 
-// With icons, the heading keeps the rows' empty icon slot, so it lines up with the labels after it.
-function MenuGroupHeading(props: {
-  label?: string;
-  inset: boolean;
-}): React.JSX.Element | null {
+// The heading starts where its rows do, at their icon when they have one, as Paper's View options headings.
+function MenuGroupHeading(props: { label?: string }): React.JSX.Element | null {
   if (!props.label) return null;
 
   return (
-    <View className="flex-row gap-3 px-3 pb-1 pt-1.5">
-      {props.inset ? <IconSlotWidth /> : null}
+    <View className="px-3 pb-1 pt-1.5">
       <Text role="secondary" className="select-none">
         {props.label}
       </Text>
     </View>
   );
-}
-
-// The width of the rows' leading icon slot, with no height, so the heading stays as tall as its text.
-function IconSlotWidth(): React.JSX.Element {
-  return <View style={{ width: useIconBox('row').width }} />;
 }

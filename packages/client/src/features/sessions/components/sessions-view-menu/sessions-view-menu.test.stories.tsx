@@ -6,9 +6,8 @@ import { SessionsViewMenu } from './sessions-view-menu';
 
 const onViewChange = fn();
 
-// Paper's defaults: Last activity, By project, Active and Regular.
+// Paper's defaults: Regular, By project and Active.
 const defaults: SessionsView = {
-  order: 'activity',
   group: 'project',
   status: 'active',
   layout: 'regular',
@@ -31,20 +30,18 @@ const menu = (): ReturnType<typeof within> => within(document.body);
 
 const trigger = { name: 'Filter Sessions' };
 
-// Paper's options in order, each group's under its heading, with which are checked at the default.
+// Paper's options in order, each group's under its heading, with its icon and which are checked at the default.
 const paperOptions = [
-  { name: 'Last activity', checked: true },
-  { name: 'Created', checked: false },
-  { name: 'By project', checked: true },
-  { name: 'One list', checked: false },
-  { name: 'Active', checked: true },
-  { name: 'Archived', checked: false },
-  { name: 'All', checked: false },
-  { name: 'Regular', checked: true },
-  { name: 'Compact', checked: false },
+  { name: 'Regular', icon: 'regular-layout', checked: true },
+  { name: 'Compact', icon: 'compact-layout', checked: false },
+  { name: 'By project', icon: 'folder', checked: true },
+  { name: 'One list', icon: 'one-list', checked: false },
+  { name: 'Active', icon: 'triage', checked: true },
+  { name: 'Archived', icon: 'archived', checked: false },
+  { name: 'All', icon: 'all-sessions', checked: false },
 ] as const;
 
-const headings = ['Order by', 'Group by', 'Status', 'Layout'];
+const headings = ['Layout', 'Group by', 'Status'];
 
 const optionRow = (name: string): HTMLElement =>
   menu().getByRole('menuitemradio', { name });
@@ -64,7 +61,7 @@ async function expectOptions(): Promise<void> {
     await expect(rows[index]).toHaveAttribute('aria-checked', String(checked));
 }
 
-// The four groups in Paper's order and labels, each default checked, and no action after them.
+// The three groups in Paper's order and labels, each default checked, and no action after them.
 export const ShowsViewOptions: Story = {
   play: async ({ canvas, userEvent }) =>
     eachLayout(async () => {
@@ -100,8 +97,6 @@ function chooses(
   };
 }
 
-export const ChoosesCreated = chooses('Created', { order: 'created' });
-
 export const ChoosesOneList = chooses('One list', { group: 'none' });
 
 export const ChoosesArchived = chooses('Archived', { status: 'archived' });
@@ -131,27 +126,29 @@ function dotShown(view: SessionsView, shown: boolean): Story {
 export const NoDotAtDefault = dotShown(defaults, false);
 
 export const DotAwayFromDefault = dotShown(
-  { ...defaults, order: 'created' },
+  { ...defaults, layout: 'compact' },
   true,
 );
 
-// No option leads with an icon, so every group's labels share one lane, as in Paper.
-async function expectNoOptionIcon(name: string): Promise<void> {
-  const icons = within(optionRow(name))
+// Every option leads with its own icon, and the chosen one ends with the check.
+async function expectOptionIcons(
+  option: (typeof paperOptions)[number],
+): Promise<void> {
+  const icons = within(optionRow(option.name))
     .queryAllByTestId(/^icon-/)
-    .map((icon) => icon.dataset.testid)
-    // The check, which a chosen option carries, is not the option's icon.
-    .filter((testId) => testId !== 'icon-check');
+    .map((icon) => icon.dataset.testid);
 
-  await expect(icons).toEqual([]);
+  const check = option.checked ? ['icon-check'] : [];
+
+  await expect(icons).toEqual([`icon-${option.icon}`, ...check]);
 }
 
-export const ShowsNoOptionIcons: Story = {
+export const ShowsOptionIcons: Story = {
   play: async ({ canvas, userEvent }) =>
     eachLayout(async () => {
       await userEvent.click(canvas.getByRole('button', trigger));
 
-      for (const { name } of paperOptions) await expectNoOptionIcon(name);
+      for (const option of paperOptions) await expectOptionIcons(option);
 
       await userEvent.keyboard('{Escape}');
     }),

@@ -36,7 +36,7 @@ type SessionListQuery = UseInfiniteQueryResult<
 >;
 
 /*
- * The Server pages in the view's order, so the pages loaded so far are the newest in it.
+ * The Server pages most recently active first, so the pages loaded so far are the newest.
  * The list waits, pending behind its skeleton, until the view this Device kept has loaded.
  */
 function useSessionListQuery({
@@ -90,12 +90,12 @@ const firstPageFailure = ({
 
 const newerServerToast: ErrorToast = {
   title: 'This view needs a newer Server',
-  message: 'Update the Server to list All or by Created.',
+  message: 'Update the Server to list All.',
 };
 
 /*
- * A Server from before Status All and Order Created refuses the view this Device kept, so the list would fail on every launch.
- * Its first page failing that way puts those fields back to their defaults, which the menu then shows and the list asks for;
+ * A Server from before Status All refuses the view this Device kept, so the list would fail on every launch.
+ * Its first page failing that way puts the status back to Active, which the menu then shows and the list asks for;
  * the list stays behind its skeleton meanwhile. Returns whether it is falling back.
  */
 function useOlderServerFallback(
