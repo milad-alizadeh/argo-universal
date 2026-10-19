@@ -57,7 +57,7 @@ function FilterPillRow(props: PillRowProps): React.JSX.Element {
   );
 }
 
-// The row sits in the Page's column, inside its side padding, so the pills line up with the page's content and scroll within it.
+// The row heads the catalog List, inset like its rows, so the pills line up with the cards and scroll with them.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
-  return <FilterPillRow {...props} contentClassName="wide:px-0" />;
+  return <FilterPillRow {...props} contentClassName="px-4 wide:px-0" />;
 }

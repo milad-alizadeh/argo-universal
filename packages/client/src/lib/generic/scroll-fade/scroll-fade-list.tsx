@@ -88,10 +88,14 @@ function useContentLength(
 
 interface FrameSize {
   className?: string;
-  style?: { height: number };
+  style?: { flexBasis: number; maxHeight: number };
 }
 
-// As tall as the content, up to the window's size class's cap; with no cap the frame fills its parent.
+/*
+ * As tall as the content, up to the window's size class's cap, in a parent that grows with it; with
+ * no cap the frame fills its parent. A bounded parent's free space still goes to the frame: iOS
+ * insets the content under a see-through header, which a content-tall frame would cut off.
+ */
 function useFrameSize(
   list: RefObject<LegendListRef | null>,
   cap: ScrollFadeListProps<unknown>['maxHeight'],
@@ -101,7 +105,10 @@ function useFrameSize(
 
   if (maxHeight === undefined) return { className: 'min-h-0 flex-1' };
 
-  return { style: { height: Math.min(length ?? maxHeight, maxHeight) } };
+  return {
+    className: 'min-h-0 grow',
+    style: { flexBasis: Math.min(length ?? maxHeight, maxHeight), maxHeight },
+  };
 }
 
 const assignRef = <T,>(ref: Ref<T> | undefined, instance: T | null): void => {

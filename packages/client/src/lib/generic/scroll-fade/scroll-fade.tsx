@@ -13,13 +13,18 @@ export type ScrollFadeViewProps = ScrollViewProps &
 
 interface Sizing {
   frame: string;
-  scroll: { className: string };
+  scroll: Pick<ScrollViewProps, 'contentInsetAdjustmentBehavior'> & {
+    className: string;
+  };
 }
 
-// A horizontal row is as tall as its content and narrows to its parent, scrolling what does not fit.
+/*
+ * A horizontal row is as tall as its content and narrows to its parent, scrolling what does not fit. It never takes
+ * iOS's header inset: under a clear header that would push its content out of view, and keep it there.
+ */
 const horizontalSizing = (className: string | undefined): Sizing => ({
   frame: cn('min-w-0', className),
-  scroll: { className: 'grow-0' },
+  scroll: { className: 'grow-0', contentInsetAdjustmentBehavior: 'never' },
 });
 
 const verticalSizing = (

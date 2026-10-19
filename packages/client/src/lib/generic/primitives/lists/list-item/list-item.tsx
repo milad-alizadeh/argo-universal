@@ -8,7 +8,6 @@ import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useInMenu } from '../../../menu-rows-context';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { useGroupPosition } from './list-item-group';
-import { useSelectedHighlight } from './list-item-highlight';
 import { hasLeading } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
@@ -33,8 +32,8 @@ function useItemDrawing(): ItemDrawing {
 }
 
 function ItemSeparator(props: ListItemProps): ReactNode {
-  const { highlights, index } = useContext(ListContext);
-  const covered = useSeparatorCovered(highlights, index);
+  const { index } = useContext(ListContext);
+  const covered = useSeparatorCovered(index);
   const separator = itemSeparator(useItemDrawing(), hasLeading(props));
 
   return separator && !covered ? (
@@ -98,7 +97,6 @@ function RowFooter(props: {
 // Paper's Combobox: a menu's chosen row shows its check only, with no selected fill.
 function ItemSurface(props: DrawingProps): ReactElement {
   const drawing = useItemDrawing();
-  useSelectedHighlight(props.selected);
 
   return (
     <View className={itemSurface(drawing, props)}>

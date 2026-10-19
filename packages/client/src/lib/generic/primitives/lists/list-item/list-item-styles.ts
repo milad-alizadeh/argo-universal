@@ -3,12 +3,14 @@ import type { ListAppearance, ListPosition } from '../../../list-context';
 import { cn } from '../../../utils';
 import type { ListItemProps } from './list-item-props';
 
+// Android and web draw a grouped List as segments: small inner corners and a gap instead of separators.
 const groupedCorners = {
   only: 'rounded-grouped web:wide:rounded-3xl',
   first:
-    'rounded-t-grouped web:wide:rounded-t-3xl android:rounded-b-grouped-inner android:mb-0.5',
-  middle: 'android:rounded-grouped-inner android:mb-0.5',
-  last: 'rounded-b-grouped web:wide:rounded-b-3xl android:rounded-t-grouped-inner',
+    'rounded-t-grouped web:wide:rounded-t-3xl android:rounded-b-grouped-inner android:mb-0.5 web:rounded-b-grouped-inner web:mb-0.5',
+  middle:
+    'android:rounded-grouped-inner android:mb-0.5 web:rounded-grouped-inner web:mb-0.5',
+  last: 'rounded-b-grouped web:wide:rounded-b-3xl android:rounded-t-grouped-inner web:rounded-t-grouped-inner',
 } satisfies Record<ListPosition, string>;
 
 const appearanceClasses = {
@@ -39,7 +41,7 @@ export interface ItemDrawing {
   menu: boolean;
 }
 
-type SurfaceState = Pick<ListItemProps, 'selected' | 'tone'>;
+type SurfaceState = Pick<ListItemProps, 'tone'>;
 
 export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
   if (drawing.menu)
@@ -53,13 +55,12 @@ export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
 
 function rowSurface(
   { appearance, position }: ItemDrawing,
-  { selected, tone }: SurfaceState,
+  { tone }: SurfaceState,
 ): string {
   return cn(
     'relative overflow-hidden',
     tone !== 'muted' && appearanceClasses[appearance],
     corners(appearance, position),
-    selected && 'web:wide:shadow-inset',
   );
 }
 
@@ -103,10 +104,14 @@ export function itemPress(press: PressDrawing): string {
   );
 }
 
-function hasSeparator({ appearance, position, menu }: ItemDrawing): boolean {
-  return (
-    !menu && appearance !== 'cards' && ['first', 'middle'].includes(position)
-  );
+// Only iOS draws separators; Android and web leave rows apart.
+const separatorPlatform = Platform.OS === 'ios';
+
+const separatedRow = ({ appearance, position }: ItemDrawing): boolean =>
+  appearance !== 'cards' && ['first', 'middle'].includes(position);
+
+function hasSeparator(drawing: ItemDrawing): boolean {
+  return separatorPlatform && !drawing.menu && separatedRow(drawing);
 }
 
 export function itemSeparator(
@@ -116,7 +121,7 @@ export function itemSeparator(
   if (!hasSeparator(drawing)) return undefined;
 
   return cn(
-    'absolute bottom-0 right-4 left-4 bg-border android:hidden',
+    'absolute bottom-0 right-4 left-4 bg-border',
     leading && 'left-14 wide:left-15',
   );
 }

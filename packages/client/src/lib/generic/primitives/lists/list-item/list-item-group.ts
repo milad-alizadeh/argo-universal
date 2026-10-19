@@ -19,8 +19,7 @@ const endsAt = new Set<ListPosition>(['last', 'only']);
  * takes the bottom corners and no separator, and the row after it opens a new group.
  */
 export function useGroupPosition(description?: string): ListPosition {
-  const { position, highlights, index } = useContext(ListContext);
-  const groupEnds = highlights?.groupEnds;
+  const { position, groupEnds, index } = useContext(ListContext);
   const ends = endsGroup(description);
 
   useMarkGroupEnd(groupEnds, index, ends);
