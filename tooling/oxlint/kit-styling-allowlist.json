@@ -37,7 +37,6 @@
         "packages/client/src/features/feed/components/tool-call-row/tool-call-row.tsx",
         "packages/client/src/features/feed/components/user-message/reference-chips.tsx",
         "packages/client/src/features/feed/components/user-message/user-message-bubble.tsx",
-        "packages/client/src/features/frame/components/frame-rail/frame-rail.tsx",
         "packages/client/src/features/requests/components/elicitation-form/elicitation-form-body.tsx",
         "packages/client/src/features/requests/components/elicitation-form/elicitation-outcome.tsx",
         "packages/client/src/features/requests/components/elicitation-form/elicitation-question-header.tsx",
