@@ -77,14 +77,14 @@ function switchStateClass(
   props: Pick<SwitchProps, 'value' | 'disabled'>,
 ): string {
   return cn(
-    props.value ? 'bg-primary' : 'bg-border',
+    props.value ? 'bg-accent' : 'bg-border',
     props.disabled && 'opacity-50',
   );
 }
 
 function thumbClass(props: Pick<SwitchProps, 'value' | 'size'>): string {
   return cn(
-    'bg-card rounded-full transition-transform',
+    'bg-card dark:bg-foreground rounded-full transition-transform',
     props.size === 'sm' ? 'size-3' : 'size-4.5 shadow-control',
     'web:pointer-events-none web:block web:ring-0',
     thumbPosition(props),
@@ -92,12 +92,9 @@ function thumbClass(props: Pick<SwitchProps, 'value' | 'size'>): string {
 }
 
 function thumbPosition(props: Pick<SwitchProps, 'value' | 'size'>): string {
-  if (!props.value) return 'dark:bg-foreground translate-x-0';
+  if (!props.value) return 'translate-x-0';
 
-  return cn(
-    'dark:bg-primary-foreground',
-    props.size === 'sm' ? 'translate-x-2.5' : 'translate-x-3.5',
-  );
+  return props.size === 'sm' ? 'translate-x-2.5' : 'translate-x-3.5';
 }
 
 Switch satisfies React.ComponentType<SwitchProps>;
