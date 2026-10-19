@@ -169,6 +169,7 @@ catalog:
   "@types/react-reconciler": 0.33.0
   react-reconciler: 0.33.0
   "@shopify/react-native-skia": 2.6.2
+  "@babel/parser": 7.29.9
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict
