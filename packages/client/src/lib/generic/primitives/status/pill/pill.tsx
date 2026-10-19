@@ -9,12 +9,24 @@ const fills = {
   neutral: 'bg-tint',
   muted: 'bg-tint',
   accent: 'bg-accent/10',
-  info: 'bg-info/10',
-  success: 'bg-success/10',
-  warning: 'bg-warning/10',
-  danger: 'bg-danger/10',
-  done: 'bg-done/10',
+  info: 'bg-info/14',
+  success: 'bg-success/14',
+  warning: 'bg-warning/18',
+  danger: 'bg-danger/14',
+  done: 'bg-done/14',
 } satisfies Record<Tone, string>;
+
+// Neutral text is muted; warning text stays foreground, as amber text on amber reads poorly.
+const textTones = {
+  neutral: 'muted',
+  muted: 'muted',
+  accent: 'accent',
+  info: 'info',
+  success: 'success',
+  warning: 'neutral',
+  danger: 'danger',
+  done: 'done',
+} as const satisfies Record<Tone, Tone>;
 
 function pillClassName(
   tone: Tone | undefined,
@@ -33,8 +45,8 @@ const PillText = ({
   color,
 }: Pick<PillProps, 'text' | 'tone' | 'color'>): ReactElement => (
   <Text
-    role="secondary"
-    tone={tone}
+    role="badge"
+    tone={textTones[tone ?? 'muted']}
     numberOfLines={1}
     style={color ? { color } : undefined}
   >
