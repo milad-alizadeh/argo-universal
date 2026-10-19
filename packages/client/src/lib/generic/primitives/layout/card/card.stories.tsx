@@ -66,12 +66,7 @@ function CardGrid(): React.JSX.Element {
 // The unrelated example from the Paper master: a deploy status card.
 function DeployCard(): React.JSX.Element {
   return (
-    <Card
-      icon={<Icon role="row" name="server" />}
-      title="api-gateway"
-      subtitle="Production"
-      actions={moreButton}
-    >
+    <Card title="api-gateway" subtitle="Production" actions={moreButton}>
       <Stack direction="column" gap={2} align="start">
         <Text>Deployed 12 min ago by Ana Ruiz</Text>
         <Pill tone="success" text="Healthy" />

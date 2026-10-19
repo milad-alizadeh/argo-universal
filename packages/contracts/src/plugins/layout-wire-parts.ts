@@ -66,7 +66,7 @@ export const layoutWireParts = {
       slots: {
         media: ['Image', 'Video', 'Svg'],
         icon: ['Icon', 'Avatar', 'Image', 'Svg'],
-        actions: ['Button', 'IconButton', 'ActionList'],
+        actions: ['Button', 'IconButton'],
       },
       accessibility: {
         keyboard:

@@ -41,7 +41,7 @@ function AgentBody({ agent }: { agent: AgentRowEntry }): React.JSX.Element {
   );
 }
 
-export const agentRows = (
+export const agentCards = (
   agents: readonly AgentRowEntry[],
   actions: AgentActions,
 ): React.JSX.Element[] =>
