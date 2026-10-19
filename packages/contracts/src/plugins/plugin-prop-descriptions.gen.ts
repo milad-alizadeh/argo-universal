@@ -774,28 +774,6 @@ export type WireSchemaHints = {
     /** on Press for this part. */
     "onPress": PropValue<"ListItem.Button", "onPress">;
   };
-  "GroupedListItem": {
-    /** The row label and accessible name. */
-    "label": PropValue<"GroupedListItem", "label">;
-    /** Optional secondary row value. */
-    "value": PropValue<"GroupedListItem", "value">;
-    /** Whether row activation is disabled. */
-    "disabled": PropValue<"GroupedListItem", "disabled">;
-    /** The action run on activation. */
-    "onPress": PropValue<"GroupedListItem", "onPress">;
-  };
-  "VirtualList": {
-    /** Input items, expanded in the worker; pair with renderItem. */
-    "items": PropValue<"VirtualList", "items">;
-    /** Renders one keyed child for each item; receives the item and its index. */
-    "renderItem": PropValue<"VirtualList", "renderItem">;
-  };
-  "GroupedList": {
-    /** Input items, expanded in the worker; pair with renderItem. */
-    "items": PropValue<"GroupedList", "items">;
-    /** Renders one keyed child for each item; receives the item and its index. */
-    "renderItem": PropValue<"GroupedList", "renderItem">;
-  };
   "Text": {
     /** Text content in source order. */
     "children": PropValue<"Text", "children">;
@@ -805,17 +783,5 @@ export type WireSchemaHints = {
     "tone": PropValue<"Text", "tone">;
     /** Optional spoken label; defaults to the text content. */
     "accessibilityLabel": PropValue<"Text", "accessibilityLabel">;
-  };
-  "Row": {
-    /** A spacing token between children. */
-    "gap": PropValue<"Row", "gap">;
-    /** Cross-axis alignment. */
-    "align": PropValue<"Row", "align">;
-  };
-  "Column": {
-    /** A spacing token between children. */
-    "gap": PropValue<"Column", "gap">;
-    /** Cross-axis alignment. */
-    "align": PropValue<"Column", "align">;
   };
 };

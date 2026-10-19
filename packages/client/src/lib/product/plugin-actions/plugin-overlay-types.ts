@@ -1,9 +1,9 @@
 import type { OverlayAction } from '@repo/contracts/plugins/wire';
 import type { AlertAction } from '#primitives/overlays/alert';
-import type { OpenOverlay, PluginActions } from './use-plugin-actions';
+import type { OpenOverlay, Overlays } from './overlays';
 
 export interface OverlayProps {
-  actions: PluginActions;
+  actions: Overlays;
   renderContent: (opened: OpenOverlay) => React.JSX.Element;
 }
 
@@ -49,6 +49,5 @@ function answerLabel(action: OverlayAction, confirmed: boolean): string {
   return label ?? defaultLabel(confirmed);
 }
 
-function defaultLabel(confirmed: boolean): string {
-  return confirmed ? 'Confirm' : 'Cancel';
-}
+const defaultLabel = (confirmed: boolean): string =>
+  confirmed ? 'Confirm' : 'Cancel';

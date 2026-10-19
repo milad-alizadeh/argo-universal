@@ -1,29 +1,7 @@
 import { wireParts } from './wire-parts';
 
-// Older Servers and Apps still exchange these wire aliases; new Plugins use the kit's actual components.
-export const legacyWirePartNames = [
-  'Row',
-  'Column',
-  'VirtualList',
-  'GroupedList',
-  'GroupedListItem',
-  'Table',
-] as const;
-
-const legacyNames = new Set<string>(legacyWirePartNames);
-
-export function isLegacyWirePart(name: string): boolean {
-  return legacyNames.has(name);
-}
-
-export type PluginPart = Exclude<
-  keyof typeof wireParts,
-  (typeof legacyWirePartNames)[number]
->;
-
-export const pluginPartNames = Object.keys(wireParts).filter(
-  (name) => !isLegacyWirePart(name),
-);
+// The current App draws every wire part.
+export const pluginPartNames = Object.keys(wireParts);
 
 // Extra names `@argo/plugin-kit` exports for a part, kept for Plugins written against them.
 const pluginPartAliases = { ListSection: 'List.Section' } as const;

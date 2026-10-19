@@ -9,7 +9,8 @@ const largeRow = (_, i) =>
 function GrowPage() {
   const [count, setCount] = useState(0);
 
-  return jsx('Column', {
+  return jsx('Stack', {
+    direction: 'column',
     children: [
       jsx(
         'Button',
@@ -31,7 +32,7 @@ function CoalescedPage() {
   return jsx('Text', { children: `Commit ${count}` });
 }
 
-function accessories(count, setCount) {
+function trailing(count, setCount) {
   if (count === 2) return [];
 
   return [
@@ -47,13 +48,13 @@ function accessories(count, setCount) {
 function SlottedPage({ initial = 0 }) {
   const [count, setCount] = useState(initial);
 
-  return jsx('GroupedListItem', {
-    label: 'Slotted row',
+  return jsx('ListItem', {
+    title: 'Slotted row',
     leading:
       count === 2
         ? []
         : jsx(Fragment, { children: [row('First'), row('Second')] }),
-    accessories: accessories(count, setCount),
+    trailing: trailing(count, setCount),
   });
 }
 
@@ -81,10 +82,11 @@ function ListPage() {
     Array.from({ length: 2000 }, (_, i) => String(i)),
   );
 
-  return jsx('Column', {
+  return jsx('Stack', {
+    direction: 'column',
     children: [
       ...listActions(setItems),
-      jsx('VirtualList', { items, renderItem: row }, 'list'),
+      jsx('List', { items, renderItem: row }, 'list'),
     ],
   });
 }
@@ -93,18 +95,18 @@ const CustomRow = ({ id }) => row(id);
 
 const pages = {
   '/indexed': () =>
-    jsx('VirtualList', {
+    jsx('List', {
       items: ['row'],
       renderItem: (id, index) =>
         jsx('Text', { children: `${index}:${id}` }, id),
     }),
   '/custom': () =>
-    jsx('VirtualList', {
+    jsx('List', {
       items: ['row'],
       renderItem: (id) => jsx(CustomRow, { id }, id),
     }),
   '/fragment': () =>
-    jsx('VirtualList', {
+    jsx('List', {
       items: ['row'],
       renderItem: (id) => jsx(Fragment, { children: row(id) }, id),
     }),
@@ -115,12 +117,11 @@ const pages = {
   '/slots': SlottedPage,
   '/slots-empty': () => jsx(SlottedPage, { initial: 1 }),
   '/missing': () =>
-    jsx('VirtualList', {
+    jsx('List', {
       items: ['row'],
       renderItem: (id) => jsx('Text', { children: id }),
     }),
-  '/duplicate': () =>
-    jsx('VirtualList', { items: ['row', 'row'], renderItem: row }),
+  '/duplicate': () => jsx('List', { items: ['row', 'row'], renderItem: row }),
 };
 
 export function register(argo) {

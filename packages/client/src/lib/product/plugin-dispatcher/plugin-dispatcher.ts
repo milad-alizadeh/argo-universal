@@ -8,7 +8,7 @@ type Queued = {
   interaction: PluginInteraction;
   deliver: PluginOnEvent;
   timer?: ReturnType<typeof setTimeout>;
-  replies: PromiseWithResolvers<void>[];
+  reply: PromiseWithResolvers<void>;
 };
 
 export class PluginDispatcher {
@@ -42,10 +42,8 @@ export class PluginDispatcher {
     const pending = this.pending(key, interaction, delay);
     pending.interaction = interaction;
     pending.deliver = this.deliver;
-    const reply = Promise.withResolvers<void>();
-    pending.replies.push(reply);
 
-    return reply.promise;
+    return pending.reply.promise;
   }
 
   private pending(
@@ -54,7 +52,8 @@ export class PluginDispatcher {
     delay: number,
   ): Queued {
     const id = JSON.stringify([key, ...handlerPath(interaction)]);
-    const queued = { key, interaction, deliver: this.deliver, replies: [] };
+    const reply = Promise.withResolvers<void>();
+    const queued = { key, interaction, deliver: this.deliver, reply };
 
     return this.queued.get(id) ?? this.enqueue(id, queued, delay);
   }
@@ -94,7 +93,7 @@ export class PluginDispatcher {
     for (const pending of this.queued.values()) {
       clearTimeout(pending.timer);
 
-      for (const reply of pending.replies) reply.resolve();
+      pending.reply.resolve();
     }
 
     this.queued.clear();
@@ -104,21 +103,9 @@ export class PluginDispatcher {
 async function deliverQueued(pending: Queued): Promise<void> {
   try {
     await pending.deliver(pending.key, pending.interaction);
-
-    resolveQueued(pending);
+    pending.reply.resolve();
   } catch (error) {
-    rejectQueued(
-      pending,
-      error instanceof Error ? error : new Error(String(error)),
-    );
+    pending.reply.reject(error);
     throw error;
   }
-}
-
-function rejectQueued(pending: Queued, error: Error): void {
-  for (const reply of pending.replies.toReversed()) reply.reject(error);
-}
-
-function resolveQueued(pending: Queued): void {
-  for (const reply of pending.replies) reply.resolve();
 }

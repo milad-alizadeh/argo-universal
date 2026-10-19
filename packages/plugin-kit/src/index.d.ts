@@ -10,7 +10,6 @@ import type {
 } from '@repo/contracts/kit-props';
 import type {
   WirePart,
-  PluginPart,
   WireProps,
   wireParts,
   listPartNames,
@@ -115,7 +114,7 @@ type Content<Name extends WirePart> = Name extends 'Text'
   ? EventProps<Name>
   : EventProps<Name> & SlotProps<Name> & Children<Name>;
 
-type ListPart = (typeof listPartNames)[number];
+type ListPart = Extract<(typeof listPartNames)[number], WirePart>;
 
 type ListProps<Name extends ListPart, Item> = EventProps<Name, Item> &
   SlotProps<Name> &
@@ -127,13 +126,13 @@ type ListComponent<Name extends ListPart> = <Item>(
 
 // Inferred directly from Contracts; adding a schema prop updates Plugin JSX immediately.
 export type PluginProps = {
-  [Name in PluginPart]: Name extends ListPart
+  [Name in WirePart]: Name extends ListPart
     ? ListProps<Name, unknown>
     : Content<Name>;
 };
 
 export type PluginComponents = {
-  [Name in PluginPart]: Name extends ListPart
+  [Name in WirePart]: Name extends ListPart
     ? ListComponent<Name>
     : ComponentType<PluginProps[Name]>;
 };
@@ -141,11 +140,11 @@ export type PluginComponents = {
 export * from './components';
 
 export type PluginWireNode = {
-  [Name in PluginPart]: {
+  [Name in WirePart]: {
     type: Name;
     key: string;
     props: MappedPluginProps<DeclaredProps<WireProps[Name]>, Name, unknown>;
     children: PluginWireNode[];
     slots: Record<string, PluginWireNode[]>;
   };
-}[PluginPart];
+}[WirePart];

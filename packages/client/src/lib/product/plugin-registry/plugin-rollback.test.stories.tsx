@@ -21,6 +21,8 @@ const switchRoot = WireNode.parse(
 
 const onEvent = fn();
 
+const newerFailure = 'Newer edit failed';
+
 function PatchedSwitch(): React.JSX.Element {
   const [root, setRoot] = useState(switchRoot);
 
@@ -54,7 +56,7 @@ const slider = (): React.JSX.Element => (
   <PluginTree root={sliderRoot} onEvent={onEvent} />
 );
 
-function overlapping(newerFirst: boolean): Story {
+function overlapping(newerFirst: boolean, firstFails = false): Story {
   return {
     render: slider,
     play: async ({ canvas }) => {
@@ -70,15 +72,16 @@ function overlapping(newerFirst: boolean): Story {
       await waitFor(() => expect(onEvent).toHaveBeenCalledTimes(2));
 
       if (newerFirst) {
-        second.reject(new Error('Newer edit failed'));
+        second.reject(new Error(newerFailure));
         await waitFor(() => expect(range).toHaveValue('7'));
-        first.resolve();
+
+        settleFirst(first, firstFails);
       } else {
-        first.resolve();
-        second.reject(new Error('Newer edit failed'));
+        settleFirst(first, firstFails);
+        second.reject(new Error(newerFailure));
       }
 
-      await waitFor(() => expect(range).toHaveValue('7'));
+      await waitFor(() => expect(range).toHaveValue(firstFails ? '2' : '7'));
     },
   };
 }
@@ -86,6 +89,8 @@ function overlapping(newerFirst: boolean): Story {
 export const NewerRejectionArrivesFirst = overlapping(true);
 
 export const OlderAcceptanceArrivesFirst = overlapping(false);
+
+export const OlderFailureArrivesFirst = overlapping(false, true);
 
 export const FailedCoalescedEditRestoresValue: Story = {
   render: slider,
@@ -102,5 +107,34 @@ export const FailedCoalescedEditRestoresValue: Story = {
     );
     await waitFor(() => expect(slider).toHaveValue('2'));
     await expect(onEvent).toHaveBeenCalledOnce();
+  },
+};
+
+function settleFirst(reply: PromiseWithResolvers<void>, fails: boolean): void {
+  if (fails) reply.reject(new Error('Older edit failed'));
+  else reply.resolve();
+}
+
+export const InterleavedFailuresRestoreValue: Story = {
+  render: slider,
+  play: async ({ canvas }) => {
+    const first = Promise.withResolvers<void>();
+    const second = Promise.withResolvers<void>();
+    const third = Promise.withResolvers<void>();
+    onEvent
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise)
+      .mockReturnValueOnce(third.promise);
+    const range = canvas.getByRole('slider', { name: 'Concurrency' });
+
+    for (const [index, value] of ['7', '8', '9'].entries()) {
+      await fireEvent.change(range, { target: { value } });
+      await waitFor(() => expect(onEvent).toHaveBeenCalledTimes(index + 1));
+    }
+
+    second.reject(new Error('Middle edit failed'));
+    first.reject(new Error('Older edit failed'));
+    third.reject(new Error(newerFailure));
+    await waitFor(() => expect(range).toHaveValue('2'));
   },
 };

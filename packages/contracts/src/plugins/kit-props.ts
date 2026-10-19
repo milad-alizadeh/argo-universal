@@ -72,16 +72,6 @@ export const layoutProps = z.object({
   align: z.enum(stackAlignments).optional().describe('Cross-axis alignment.'),
 });
 
-export const groupedItemV1 = z.object({
-  label: z.string().describe('The row label and accessible name.'),
-  value: z.string().optional().describe('Optional secondary row value.'),
-  disabled: z
-    .boolean()
-    .optional()
-    .describe('Whether row activation is disabled.'),
-  onPress: pressHandler.optional().describe('The action run on activation.'),
-});
-
 const svgXmlCharacterLimit = 131_072;
 
 export const svgProps = z.object({
@@ -101,8 +91,6 @@ export const svgProps = z.object({
     .optional()
     .describe('The action run when the artwork is pressed.'),
 });
-
-export const groupedItemProps = groupedItemV1;
 
 export const listProps = z.object({});
 

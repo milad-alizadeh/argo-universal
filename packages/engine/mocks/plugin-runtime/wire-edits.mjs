@@ -13,7 +13,8 @@ function changedNode(step) {
 function Edits({ initial, removeOnly = false }) {
   const [step, setStep] = useState(initial);
 
-  return jsx('Column', {
+  return jsx('Stack', {
+    direction: 'column',
     children: [
       jsx(
         'Button',

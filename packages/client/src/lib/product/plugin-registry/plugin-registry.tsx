@@ -1,13 +1,10 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
 import * as React from 'react';
+import { usePluginActions, type PluginActions } from '../plugin-actions';
 import { usePluginDispatcher } from '../plugin-dispatcher';
 import { RenderNode } from './plugin-nodes';
-import { PluginOverlay } from './plugin-overlay';
-import { overlayEvents } from './plugin-overlay-events';
 import type { RenderContext, PluginOnEvent } from './plugin-rendering';
-import type { OpenOverlay } from './use-plugin-actions';
-import { usePluginActions, type PluginActions } from './use-plugin-actions';
 import { usePluginControls } from './use-plugin-controls';
 
 export type { PluginOnEvent } from './plugin-rendering';
@@ -19,28 +16,11 @@ export interface PluginTreeProps {
 }
 
 export function PluginTree(props: PluginTreeProps): React.JSX.Element {
-  const actions = usePluginActions(props.actions);
+  const [actions, overlay] = usePluginActions(props.actions, PluginTree);
   const context = useRenderContext(props, actions);
   const content = RenderNode({ node: props.root, context });
 
-  const overlay = props.actions ? null : (
-    <PluginOverlay actions={actions} renderContent={overlayRenderer(actions)} />
-  );
-
   return React.createElement(React.Fragment, null, content, overlay);
-}
-
-function overlayRenderer(
-  actions: PluginActions,
-): (opened: OpenOverlay) => React.JSX.Element {
-  return (opened) => (
-    <PluginTree
-      key={opened.id}
-      root={opened.action.content}
-      onEvent={overlayEvents(opened)}
-      actions={actions}
-    />
-  );
 }
 
 function useRenderContext(

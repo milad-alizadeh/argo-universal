@@ -20,9 +20,7 @@ export {
   pillProps,
   textProps,
   buttonProps,
-  layoutProps,
   stackProps,
-  groupedItemProps,
   svgProps,
   emptyStateProps,
 } from './kit-props';
@@ -80,7 +78,5 @@ export * from './settings-row-props';
 export {
   pluginPartNames,
   pluginKitExports,
-  isLegacyWirePart,
   type PluginKitExport,
-  type PluginPart,
 } from './plugin-part-names';

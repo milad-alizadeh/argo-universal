@@ -1,24 +1,9 @@
 import type { Action, OverlayAction } from '@repo/contracts/plugins/wire';
-import { useReducer, useState } from 'react';
-import { runAction } from '../plugin-dispatcher';
-import type { PluginOnEvent } from './plugin-rendering';
+import type { PluginOnEvent } from '../plugin-dispatcher';
+import { runAction } from './built-in-actions';
 
-export function usePluginActions(inherited?: PluginActions): PluginActions {
-  const [, update] = useReducer((revision: number) => revision + 1, 0);
-  const [state] = useState(() => new Overlays(update));
-
-  return (
-    inherited ?? {
-      overlay: state.overlay,
-      pending: state.pending,
-      registerFlush: state.registerFlush,
-      run: state.run,
-      finish: state.finish,
-    }
-  );
-}
-
-class Overlays {
+// Runs a Plugin's Actions: built-in ones in the App, overlay ones by opening the single overlay this tree hosts.
+export class Overlays {
   public overlay: OpenOverlay | null = null;
   public pending: Answer | null = null;
   private generation = 0;
@@ -113,7 +98,7 @@ export type Answer = 'onConfirm' | 'onDismiss';
 
 export type Flush = () => Promise<void>;
 
-export type PluginActions = Pick<Overlays, keyof Overlays>;
+export type PluginActions = Pick<Overlays, 'run' | 'registerFlush'>;
 
 function answerPath(
   handler: { $path?: string[] },

@@ -10,7 +10,7 @@ export const actionListWireParts = {
   ActionList: {
     ...part('Actions offered by a page, row or tile.', actionListProps, {
       children: true,
-      slots: { trigger: ['ListItem', 'Text', 'Stack', 'Row', 'Column'] },
+      slots: { trigger: ['ListItem', 'Text', 'Stack'] },
       label:
         'Action labels name buttons; accessibilityLabel names the overflow menu.',
       accessibility: {
