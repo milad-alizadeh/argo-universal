@@ -1,43 +1,38 @@
-import type { ComponentProps, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable } from 'react-native';
-import { cn } from '#lib/generic/utils';
+import { ContextActions } from '#primitives/actions/action-list';
 import { usePressRipple } from '#primitives/native/material-palette';
-import { withSurfaceActions } from './surface-actions';
 import { SurfaceMaterial } from './surface-material';
 import type { SurfaceProps } from './surface-props';
-import { paddingClass, cornerClass } from './surface-styles';
+import { pressClass } from './surface-treatment';
 
 export type { SurfaceProps } from './surface-props';
 
 export function Surface(props: SurfaceProps): ReactElement {
-  const content = props.onPress ? (
-    <PressableSurface {...props} />
-  ) : (
-    <SurfaceMaterial {...props} />
+  return (
+    <ContextActions actions={props.actions}>
+      {props.onPress ? (
+        <PressableSurface {...props} />
+      ) : (
+        <SurfaceMaterial {...props} />
+      )}
+    </ContextActions>
   );
-
-  return withSurfaceActions(props.actions, content);
-}
-
-function usePressProps(props: SurfaceProps): ComponentProps<typeof Pressable> {
-  return {
-    role: 'button' as const,
-    onPress: props.onPress,
-    android_ripple: usePressRipple(),
-    className: cn(
-      'overflow-hidden web:hover:bg-hover web:active:bg-pressed ios:active:bg-pressed',
-      cornerClass[props.kind],
-      paddingClass[props.padding ?? 0],
-    ),
-  };
 }
 
 function PressableSurface(props: SurfaceProps): ReactElement {
-  const press = usePressProps(props);
+  const ripple = usePressRipple();
 
   return (
     <SurfaceMaterial {...props} padding={0}>
-      <Pressable {...press}>{props.children}</Pressable>
+      <Pressable
+        role="button"
+        onPress={props.onPress}
+        android_ripple={ripple}
+        className={pressClass(props)}
+      >
+        {props.children}
+      </Pressable>
     </SurfaceMaterial>
   );
 }

@@ -12,14 +12,14 @@ const examples: (Omit<LiquidGlassProps, 'children'> & {
   {
     label: 'Card',
     text: 'Message the Agent…',
-    corners: 'card',
+    corners: 'sheet',
     className: 'w-full',
     fallbackClassName: 'rounded-2xl bg-card shadow-glass',
   },
   {
     label: 'Capsule',
     text: '2 Subagents',
-    corners: 'capsule',
+    corners: 'pill',
     interactive: true,
     className: 'h-6 justify-center self-start',
     fallbackClassName: 'rounded-full border border-border bg-card shadow-card',

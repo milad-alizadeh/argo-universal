@@ -1,4 +1,5 @@
-import { Children, Fragment, isValidElement, type ReactNode } from 'react';
+import { isValidElement, type ReactNode } from 'react';
+import { flattenedChildren } from '../../../flattened-children';
 import type { ActionProps, ActionSectionProps } from './action-list-props';
 
 export function Action(_props: ActionProps): null {
@@ -39,9 +40,6 @@ function nestedGroups(child: ReactNode): ActionGroup[] {
 function sectionGroups(
   child: React.ReactElement<ActionSectionProps>,
 ): ActionGroup[] {
-  if (child.type === Fragment)
-    return prefixedGroups(child.props.children, String(child.key));
-
   if (child.type !== ActionSection) return [];
 
   return [
@@ -54,7 +52,7 @@ function sectionGroups(
 }
 
 export function actionGroups(children: ReactNode): ActionGroup[] {
-  return mergeLooseGroups(Children.toArray(children).flatMap(childGroups));
+  return mergeLooseGroups(flattenedChildren(children).flatMap(childGroups));
 }
 
 export function orderedGroups(groups: ActionGroup[]): ActionGroup[] {
@@ -107,14 +105,4 @@ function mergeable(
   if (!previous) return false;
 
   return !previous.boundary && !group.boundary;
-}
-
-function prefixedGroups(children: ReactNode, prefix: string): ActionGroup[] {
-  return actionGroups(children).map((group) => ({
-    ...group,
-    actions: group.actions.map((action) => ({
-      ...action,
-      id: `${encodeURIComponent(prefix)}/${action.id}`,
-    })),
-  }));
 }

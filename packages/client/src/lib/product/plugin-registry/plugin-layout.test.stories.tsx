@@ -31,6 +31,16 @@ const card: WireNode = {
   slots: {
     actions: [
       {
+        ...node('ActionList', 'share'),
+        children: [
+          node('Action', 'copy', {
+            label: 'Copy link',
+            icon: 'copy',
+            onPress: { $event: 'onPress' },
+          }),
+        ],
+      },
+      {
         ...node('ActionList', 'actions'),
         children: [
           node('Action', 'archive', {
@@ -80,6 +90,7 @@ export const ActivatesSurface: Story = {
   },
 };
 
+// Two ActionLists in the actions Slot reach Surface the way the renderer sends a plural Slot.
 export const DispatchesContextAction: Story = {
   render: () => <PluginTree root={root} onEvent={onEvent} />,
   play: async ({ canvas, userEvent, canvasElement }) => {
@@ -89,6 +100,9 @@ export const DispatchesContextAction: Story = {
     });
     const menu = within(canvasElement.ownerDocument.body);
 
+    await expect(
+      await menu.findByRole('menuitem', { name: 'Copy link' }),
+    ).toBeInTheDocument();
     await userEvent.click(
       await menu.findByRole('menuitem', { name: 'Archive build' }),
     );

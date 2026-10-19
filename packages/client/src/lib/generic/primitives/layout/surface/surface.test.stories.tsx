@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { createElement, Fragment, type ReactNode } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
@@ -48,48 +47,22 @@ const archive = (
   </ActionList>
 );
 
-const copy = (
-  <ActionList key="copy">
-    <Action icon="copy" label="Copy link" onPress={fn()} />
-  </ActionList>
-);
-
-function contextActions(actions: ReactNode): Story {
-  return {
-    args: { kind: 'card', children: <Text>Build actions</Text>, actions },
-    play: async ({ canvas, canvasElement }) => {
-      await userEvent.pointer({
-        target: canvas.getByText('Build actions'),
-        keys: '[MouseRight]',
-      });
-      await userEvent.click(
-        await within(canvasElement.ownerDocument.body).findByRole('menuitem', {
-          name: 'Archive build',
-        }),
-      );
-      await expect(archived).toHaveBeenCalledOnce();
-    },
-  };
-}
-
-export const ContextActions = contextActions(archive);
-
-export const MultipleActionLists = contextActions([copy, archive]);
-
-export const FragmentActionLists = contextActions(
-  <>
-    {copy}
-    {archive}
-  </>,
-);
-
-export const EmptyActionFragment: Story = {
+export const ContextActions: Story = {
   args: {
     kind: 'card',
-    children: <Text>Still here</Text>,
-    actions: createElement(Fragment),
+    children: <Text>Build actions</Text>,
+    actions: archive,
   },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText('Still here')).toBeVisible();
+  play: async ({ canvas, canvasElement }) => {
+    await userEvent.pointer({
+      target: canvas.getByText('Build actions'),
+      keys: '[MouseRight]',
+    });
+    await userEvent.click(
+      await within(canvasElement.ownerDocument.body).findByRole('menuitem', {
+        name: 'Archive build',
+      }),
+    );
+    await expect(archived).toHaveBeenCalledOnce();
   },
 };
