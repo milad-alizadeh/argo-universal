@@ -31,10 +31,16 @@ export const AcceptedOutcome: Story = {
   ),
   play: async ({ canvas }) => {
     await expect(canvas.getByText('You answered')).toBeVisible();
-    await expect(canvas.getByText('No', { exact: true })).toBeVisible();
     await expect(
-      canvas.getByText('argo-server', { exact: true }),
+      canvas.getByRole('group', { name: 'Name, argo-server' }),
     ).toBeVisible();
+    await expect(
+      canvas.getByRole('group', { name: 'Port, 3000' }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('group', { name: 'Enable logging, No' }),
+    ).toBeVisible();
+    await expect(canvas.getByText('No', { exact: true })).toBeVisible();
   },
 };
 
@@ -73,7 +79,10 @@ export const EmptyAcceptedOutcome: Story = {
     />
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('None', { exact: true })).toBeVisible();
+    await expect(
+      canvas.getByRole('group', { name: 'Choice, None' }),
+    ).toBeVisible();
+    await expect(canvas.getByRole('group', { name: 'Options' })).toBeVisible();
   },
 };
 

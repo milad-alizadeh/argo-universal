@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { type StepMark } from '#features/setup';
 import { cn } from '#lib/generic/utils';
+import { Button } from '#primitives/actions/button';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 
@@ -62,6 +63,8 @@ export interface SetupStepProps {
   // Under the caption, such as a link to another account.
   footer?: ReactNode;
   action?: ReactNode;
+  // A step's add action in place of `action`, such as Add Agent.
+  add?: StepAdd;
 }
 
 function StepTitle(props: SetupStepProps): React.JSX.Element {
@@ -89,17 +92,47 @@ function StepBody(props: SetupStepProps): React.JSX.Element {
   );
 }
 
+function StepAction(props: SetupStepProps): React.JSX.Element | null {
+  const action = props.add ? (
+    <StepButton {...props.add} mark={props.mark} />
+  ) : (
+    props.action
+  );
+
+  return action ? (
+    <View className="w-33 shrink-0 flex-row justify-end">{action}</View>
+  ) : null;
+}
+
 // One Onboarding step: its mark, what it is, and its action in a fixed slot so every step's buttons line up.
 export function SetupStep(props: SetupStepProps): React.JSX.Element {
   return (
     <View className="flex-row items-start gap-3 py-4">
       <StepMarkView mark={props.mark} number={props.number} />
       <StepBody {...props} />
-      {props.action && (
-        <View className="w-33 shrink-0 flex-row justify-end">
-          {props.action}
-        </View>
-      )}
+      <StepAction {...props} />
     </View>
+  );
+}
+
+type StepAdd = {
+  label: string;
+  // Unset until the App can do what the button says, so it shows disabled.
+  onPress?: () => void;
+};
+
+// A step's add action: filled with a + when the step is next, outlined otherwise.
+function StepButton(props: StepAdd & { mark: StepMark }): React.JSX.Element {
+  const next = props.mark === 'next';
+
+  return (
+    <Button
+      label={props.label}
+      icon={next ? 'add' : undefined}
+      variant={next ? 'default' : 'outline'}
+      size="sm"
+      disabled={!props.onPress}
+      onPress={props.onPress}
+    />
   );
 }

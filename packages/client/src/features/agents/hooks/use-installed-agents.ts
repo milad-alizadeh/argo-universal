@@ -9,11 +9,7 @@ import {
 import { useEffect } from 'react';
 import { useTRPC, type ClientError } from '#features/connection';
 import { showToast } from '#primitives/overlays/toast';
-import {
-  type AgentRows,
-  agentsPage,
-  featuredAgents,
-} from '../utils/agent-rows';
+import { type AgentRows, agentsPage } from '../utils/agent-rows';
 import {
   type InstalledAgents,
   installedAgents,
@@ -87,17 +83,12 @@ export interface RegistryAgents extends AgentChanges {
   installed: InstalledAgents;
   // The Agents page rows, before its filter and search.
   page: AgentRows;
-  // Get started's featured tiles.
-  featured: AgentRows;
   // Loads the Registry and the Installed Agents again.
   retry: () => void;
 }
 
 // What useRegistryAgents shows, apart from its actions.
-type RegistryAgentsData = Pick<
-  RegistryAgents,
-  'installed' | 'page' | 'featured'
->;
+type RegistryAgentsData = Pick<RegistryAgents, 'installed' | 'page'>;
 
 const registryAgentsData = (
   installed: InstalledAgents,
@@ -105,7 +96,6 @@ const registryAgentsData = (
 ): RegistryAgentsData => ({
   installed,
   page: agentsPage(installed, registry),
-  featured: featuredAgents(installed, registry),
 });
 
 type RegistryEntry = AgentsRegistryOutput['agents'][number];

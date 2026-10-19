@@ -1,4 +1,3 @@
-import type { AgentRows } from '#features/agents';
 import { type AgentStep, type GitHubStep } from '#features/setup';
 
 export interface OnboardingViewProps {
@@ -6,9 +5,8 @@ export interface OnboardingViewProps {
   serverName?: string;
   agent: AgentStep;
   github: GitHubStep;
-  featured: AgentRows;
-  onInstallAgent: (id: string) => void;
-  onRetry: () => void;
+  // Opens the Agents page.
+  onAddAgent: () => void;
   // Unset until the App can sign in to GitHub, so its buttons show disabled.
   onConnectGitHub?: () => void;
   // Unset until the App can add a Project, so its button shows disabled.
