@@ -43,7 +43,7 @@ export function SessionLayout(props: SessionLayoutProps): React.JSX.Element {
 
 const overlapComposerStyle = { marginTop: -composerOverlap };
 
-// Wide, the Frame already paints this surface, with the glow behind the glass reaching under the pane, so the container lets it show.
+// Wide, the Frame already paints this surface, so the container lets it show.
 const overlapSurface = cn(sessionSurface, 'wide:bg-transparent');
 
 const bottomEdge = ['bottom'] as const;

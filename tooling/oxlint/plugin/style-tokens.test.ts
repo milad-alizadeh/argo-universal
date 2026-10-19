@@ -11,12 +11,12 @@ ruleTester.run('style-tokens', styleTokens, {
   valid: [
     '<View className="h-5.5 min-w-5.5 bg-tray shadow-tray" />;',
     "const list = 'w-full wide:w-frame-list wide:px-2';",
-    'const glow = `color-mix(in oklab, ${colour} 40%, transparent)`;',
+    'const fill = `color-mix(in oklab, ${colour} 40%, transparent)`;',
     "const issue = 'See [the link](https://example.com) and items[0]';",
     "const heading = '# Title';",
     "const reference = '[spec]: https://argo.dev/spec';",
     "type('#412 ');",
-    "useCSSVariable('--color-glow-warm');",
+    "useCSSVariable('--color-content');",
     '<Text className="text-foreground dark:text-muted-foreground" />;',
     "const surface = 'bg-card border-border bg-selected text-danger/10';",
     "const plain = 'bg-transparent text-xs border-2 shadow-sm';",
@@ -41,7 +41,7 @@ ruleTester.run('style-tokens', styleTokens, {
       code: '<View className="bg-[#e5e5e5b3] dark:bg-[#262626b3]" />;',
       errors: rawColour,
     },
-    { code: "const glow = { warm: '#c4aa8c' };", errors: rawColour },
+    { code: "const swatch = { warm: '#c4aa8c' };", errors: rawColour },
     { code: '<Switch color="#fff" />;', errors: rawColour },
     {
       code: "const shadow = '0 1px 2px rgb(0 0 0 / 0.05)';",
