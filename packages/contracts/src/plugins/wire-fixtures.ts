@@ -137,12 +137,11 @@ export const slotCounterWavePatch: ViewMessage = {
 // Both multi-node Slots and element-array props retain their order and their events.
 export const slottedRow: WireNode = {
   ...node('ListItem', 'row', { title: 'Slotted row' }),
+  // Text goes in trailing: the leading lane is a fixed icon-width box (ADR-0032).
   slots: {
-    leading: [
+    trailing: [
       node('Text', 'first', { children: 'First' }),
       node('Text', 'second', { children: 'Second' }),
-    ],
-    trailing: [
       node('Button', 'button', {
         label: 'Increment',
         onPress: { $event: 'onPress' },
