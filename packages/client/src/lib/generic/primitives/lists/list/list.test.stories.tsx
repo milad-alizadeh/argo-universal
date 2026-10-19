@@ -131,3 +131,24 @@ export const SelectAndDeselectMultiple: Story = {
     await expect(canvas.getByRole('button', { name: 'Locked' })).toBeDisabled();
   },
 };
+
+export const LoadingSection: Story = {
+  render: () => (
+    <List appearance="cards">
+      <List.Section
+        isLoading
+        title="Example Project"
+        onExpandedChange={() => {}}
+      >
+        <ListItem isLoading title="Build the Session layout" />
+      </List.Section>
+    </List>
+  ),
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText('Example Project'),
+    ).toBeInTheDocument();
+    await expect(canvas.queryByRole('button')).toBeNull();
+    await expect(canvas.queryByRole('heading')).toBeNull();
+  },
+};

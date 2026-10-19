@@ -25,6 +25,6 @@ export type ListItemProps = KitProps<'ListItem'> & {
   accessibilityRole?: 'button' | 'radio';
   onLongPress?: () => void;
   testID?: string;
-  // A placeholder while the list loads: bars where the leading icon, title, subtitle and meta will be, each as wide as its placeholder text.
+  // A placeholder while the list loads: bars where the title, subtitle and meta will be, each as wide as its placeholder text; any `leading`, even null, becomes a round mark.
   isLoading?: boolean;
 };
