@@ -4,6 +4,13 @@ import { pluginPartVersions } from './plugin-parts';
 it('advertises the versions of the parts this App draws', () => {
   expect(pluginPartVersions).toEqual({
     Page: 1,
+    Detail: 1,
+    Metadata: 1,
+    'Metadata.Label': 1,
+    'Metadata.Link': 1,
+    'Metadata.Pills': 1,
+    'Metadata.StatusDot': 1,
+    'Metadata.Avatar': 1,
     ActionList: 1,
     'ActionList.Section': 1,
     Action: 1,
