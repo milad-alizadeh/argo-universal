@@ -90,6 +90,39 @@ async function* deliverSubscription(
   yield* deliverLive(listener, delivery);
 }
 
+function isStoredSnapshot(
+  resources: FeedDeps,
+  sessionId: string,
+  event: FeedSubscribeOutput,
+): event is Extract<FeedSubscribeOutput, { type: 'snapshot' }> {
+  return event.type === 'snapshot' && !resources.findFeed(sessionId);
+}
+
+async function storedSummaryEvent(
+  resources: FeedDeps,
+  sessionId: string,
+  event: FeedSubscribeOutput,
+): Promise<FeedSubscribeOutput> {
+  if (!isStoredSnapshot(resources, sessionId, event)) return event;
+
+  const changes = await resources
+    .readStoredChangesSummary(sessionId)
+    .catch(() => null);
+
+  if (!changes) return event;
+
+  return { ...event, snapshot: { ...event.snapshot, changes } };
+}
+
+async function* withStoredSummaries(
+  resources: FeedDeps,
+  start: SubscriptionStart,
+  listener: FeedListener,
+): AsyncGenerator<FeedSubscribeOutput> {
+  for await (const event of deliverSubscription(resources, start, listener))
+    yield await storedSummaryEvent(resources, start.sessionId, event);
+}
+
 export async function* streamFeed(
   resources: FeedDeps,
   input: FeedSubscribeInput,
@@ -100,7 +133,7 @@ export async function* streamFeed(
 
   try {
     listener.start();
-    yield* deliverSubscription(resources, start, listener);
+    yield* withStoredSummaries(resources, start, listener);
   } finally {
     listener.stop();
   }

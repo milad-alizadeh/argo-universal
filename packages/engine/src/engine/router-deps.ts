@@ -9,6 +9,7 @@ import {
   createSessionConnections,
   createSessionReader,
   createSessionSnapshotWatcher,
+  readDefaultChangesSummary,
   type SessionRouterDeps,
 } from '../sessions';
 import type { SystemDeps } from '../system';
@@ -47,13 +48,30 @@ export function createAppRouterDeps(
   sources: FeedSources = createFeedSources(input),
 ): AppRouterDeps {
   const setup = createAgentSetup(input);
+  const readSession = createSessionReader(input.database);
 
   return {
     ...input,
     ...sources,
     ...setup,
-    readSession: createSessionReader(input.database),
+    readSession,
+    readStoredChangesSummary: createStoredChangesReader(input, readSession),
     watchSessionSnapshot: createSessionSnapshotWatcher(sources),
+  };
+}
+
+function createStoredChangesReader(
+  input: AppRouterInput,
+  readSession: ReturnType<typeof createSessionReader>,
+): FeedDeps['readStoredChangesSummary'] {
+  return (sessionId) => {
+    const session = readSession(sessionId);
+
+    return readDefaultChangesSummary(
+      input.database,
+      session.projectId,
+      session.checkout.path,
+    );
   };
 }
 

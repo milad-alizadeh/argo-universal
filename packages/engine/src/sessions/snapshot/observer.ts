@@ -3,7 +3,8 @@ import type { Observer, Subscription } from 'xstate';
 import type { FeedDeps } from '../../feed';
 import type { OpenSessionsActorRef } from '../open-sessions-machine';
 import type { SessionActorRef } from '../session-machine';
-import { SnapshotFeed, SnapshotPublication } from './publication';
+import { SnapshotPublication } from './publication';
+import { SnapshotFeed } from './snapshot-feed';
 
 export type SnapshotEvent = Extract<
   FeedSubscribeOutput,

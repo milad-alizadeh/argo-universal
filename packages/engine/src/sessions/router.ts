@@ -39,6 +39,7 @@ import {
 } from '../rpc';
 import { agentOptionsUpdates } from './agent-options';
 import { createArchiveRouter } from './archive/archive-router';
+import { createChangesRouter } from './changes-router';
 import { createSessionList } from './list/session-list';
 import type { SessionRouterDeps } from './router-deps';
 import {
@@ -55,7 +56,6 @@ import { saveSessionPlan } from './session-save-plan';
 import { markSessionSeen } from './session-seen';
 import { createShellSessionRouter } from './shells/router';
 import { createSubagentsReader } from './subagents';
-import { unimplementedSessionRouter } from './unimplemented-router';
 
 type SessionList = ReturnType<typeof createSessionList>;
 
@@ -204,7 +204,7 @@ export const createSessionRouter = routerFactory((deps: SessionRouterDeps) => {
     createRenameRouter(deps),
     createAnswerRouter(deps),
     createSubagentsRouter(deps),
-    unimplementedSessionRouter,
+    createChangesRouter(deps),
     createShellSessionRouter(deps),
   );
 });

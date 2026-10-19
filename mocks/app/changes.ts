@@ -8,7 +8,7 @@ import recordings from './changes-recordings.json';
 
 const ChangesMock = z.strictObject({
   summary: ChangesSummary,
-  files: SessionChangesOutput,
+  files: SessionChangesOutput.shape.files,
   diffs: z.record(z.string(), SessionDiffOutput),
 });
 

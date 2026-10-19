@@ -1,4 +1,9 @@
-import type { SessionSnapshot, SessionUpdate, Turn } from '@repo/contracts';
+import type {
+  ChangesSummary,
+  SessionSnapshot,
+  SessionUpdate,
+  Turn,
+} from '@repo/contracts';
 import type { FeedDeps } from '../../feed';
 import { createLiveHeaderReader } from '../live-header';
 import type { SessionActorRef } from '../session-machine';
@@ -20,6 +25,7 @@ type SessionState = ReturnType<SessionActorRef['getSnapshot']> | null;
 
 type FeedState = Pick<SessionSnapshot, 'epoch' | 'maxRevision'> & {
   rows?: Record<string, SessionUpdate>;
+  changes?: ChangesSummary;
 };
 
 interface SnapshotRead {
