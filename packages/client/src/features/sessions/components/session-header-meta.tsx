@@ -111,8 +111,8 @@ function PullRequestMeta(
 
 function TitleLine({ title }: { title: string }): React.JSX.Element {
   return (
-    // A long title stops at two thirds of the row, well clear of the actions.
-    <View className="max-w-2/3">
+    // The title takes the row's whole width and truncates against the actions.
+    <View className="min-w-0 self-stretch">
       <Text
         accessibilityRole="heading"
         aria-level={2}

@@ -31,10 +31,10 @@ const ringCircle = {
 const arcGap = 1.2;
 
 const stateTone = {
-  failing: { text: 'text-danger', stroke: 'bg-danger' },
-  running: { text: 'text-warning', stroke: 'bg-warning' },
-  passed: { text: 'text-success', stroke: 'bg-success' },
-} satisfies Record<ChecksState, { text: string; stroke: string }>;
+  failing: { stroke: 'bg-danger' },
+  running: { stroke: 'bg-warning' },
+  passed: { stroke: 'bg-success' },
+} satisfies Record<ChecksState, { stroke: string }>;
 
 const ThemedCircle = withUniwind(Circle, {
   stroke: {
@@ -103,10 +103,10 @@ function SplitRing({ checks, state }: ChecksRingProps): React.JSX.Element {
 
 function Ring(props: ChecksRingProps): React.JSX.Element {
   if (props.state === 'passed')
-    return <Icon role="secondary" name="passed" className="text-success" />;
+    return <Icon role="control" name="passed" className="text-success" />;
 
   return (
-    <IconSlot role="secondary">
+    <IconSlot role="control">
       <SplitRing {...props} />
     </IconSlot>
   );
@@ -122,26 +122,22 @@ function describeChecks(checks: PullRequestChecksProps): ChecksSummaryProps {
   const state = checksState(checks);
 
   return {
-    summary: `Checks ${checks.passed}/${checks.total}`,
+    summary: `CI Checks ${checks.passed}/${checks.total}`,
     label: stateText(checks, state),
     state,
   };
 }
 
+// The ring shows the state, so the line reads the count only; the state is read out.
 function ChecksSummary(props: ChecksSummaryProps): React.JSX.Element {
   return (
-    <>
-      <Text role="secondary" className="font-medium text-foreground">
-        {props.summary}
-      </Text>
-      <Text role="secondary" className={stateTone[props.state].text}>
-        {props.label}
-      </Text>
-    </>
+    <Text role="secondary" className="font-medium text-foreground">
+      {props.summary}
+    </Text>
   );
 }
 
-// "Checks 3/5 · 2 running": a ring split by result, the count, and the state in its colour.
+// "CI Checks 3/5": a ring split by result, coloured by state, and the count.
 export function PullRequestChecks(
   checks: PullRequestChecksProps,
 ): React.JSX.Element {

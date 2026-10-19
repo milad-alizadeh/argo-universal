@@ -23,4 +23,4 @@ export type { ListItemFieldProps } from './list-item-field';
 
 export { ListItemFieldRow } from './list-item-field-row';
 
-export { ItemBadge } from './list-item-parts';
+export { ItemBadge } from './list-item-badge';

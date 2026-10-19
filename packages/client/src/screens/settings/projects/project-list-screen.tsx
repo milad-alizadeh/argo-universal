@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { ProjectListDetail } from './project-list-detail';
+import { ProjectListPane } from './project-list-pane';
 
 export function ProjectListScreen(): React.JSX.Element {
-  return <ProjectListDetail />;
+  return <ProjectListPane />;
 }

@@ -58,7 +58,7 @@ function CurrentEffortLabel({
   const selected = currentEffort(configuration).selected;
 
   return selected ? (
-    <Text role="row" tone="muted" numberOfLines={1}>
+    <Text role="control" tone="muted" numberOfLines={1}>
       {selected.name}
     </Text>
   ) : null;

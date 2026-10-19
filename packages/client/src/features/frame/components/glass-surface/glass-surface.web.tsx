@@ -81,7 +81,23 @@ function useGlassMotion(props: GlassSurfaceProps, box: GlassBox): GlassRefs {
   return refs;
 }
 
-// Paper's tinted rail: the hover tint sets it apart from the list with no hairline, its top-right corner rounding where the list begins.
+// Dark only, Paper's Graphite: a hairline beside the list; none once the list hides, where the panel's own edge is.
+function RailSeparator({
+  shown,
+}: {
+  shown: boolean;
+}): React.JSX.Element | null {
+  if (!shown) return null;
+
+  return (
+    <div className="absolute bottom-4 right-0 top-0 hidden w-px bg-hairline dark:flex" />
+  );
+}
+
+/*
+ * Light, Paper's Rail B: the hover tint sets the rail apart from the list with no hairline, its top-right corner rounding
+ * where the list begins. Dark has no tint, which would lift the rail above the list, only the separator.
+ */
 function RailTint({
   railRef,
   props,
@@ -90,9 +106,11 @@ function RailTint({
   return (
     <div
       ref={railRef}
-      className="absolute bottom-0 left-0 rounded-tr-2xl bg-hover"
+      className="absolute bottom-0 left-0 rounded-tr-2xl bg-hover dark:bg-transparent"
       style={{ width: props.railWidth, top: railTop(props, box) }}
-    />
+    >
+      <RailSeparator shown={props.sidebarShown} />
+    </div>
   );
 }
 

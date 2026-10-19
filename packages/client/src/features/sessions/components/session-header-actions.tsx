@@ -71,7 +71,6 @@ function ChangesButton({
       accessibilityLabel="Changes"
       {...inspectorToggle(changes)}
       icon="diff"
-      className="bg-foreground/7"
     />
   );
 }

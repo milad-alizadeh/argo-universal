@@ -7,6 +7,7 @@ export const railTiles: RailTiles = {
   corners: 'rounded-xl',
   selected: 'bg-selected',
   column: 'gap-px',
+  collapsedColumn: 'gap-px',
 };
 
 // The selected tile's fill: the `bg-selected` class draws it here; Android takes it from its Material palette.

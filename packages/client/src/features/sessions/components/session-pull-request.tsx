@@ -28,7 +28,7 @@ function PullRequestIcon({
   return (
     <Icon
       name={appearance.icon}
-      role="secondary"
+      role="control"
       tone={appearance.tone}
       className="shrink-0"
     />

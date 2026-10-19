@@ -2,6 +2,7 @@ import type * as React from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { View } from 'react-native';
 import type { FramePaneProps } from './frame-pane';
+import { leftEdgeClip, useEdgeClip } from './pane-edge-clip.web';
 import { type PaneGeometry, usePaneGeometry } from './pane-geometry';
 import type { PaneRefs } from './pane-motion.web';
 import { slideStyle } from './slide-style';
@@ -150,15 +151,13 @@ function PaneViewport(props: FramePaneProps): React.JSX.Element {
   );
 }
 
-// Content sliding in from the left stays behind the pane's edge, under the sidebar it slides away from; to the right it may run past, off the window or under the Inspector.
-const leftEdgeClip = 'inset(0 -100vw 0 0)';
-
 export function FramePane(props: FramePaneProps): React.JSX.Element {
   return (
     <div
+      ref={useEdgeClip(props)}
       data-testid={props.testID}
       className="relative min-w-0 shrink-0"
-      style={{ width: props.width, clipPath: leftEdgeClip }}
+      style={{ width: props.width, clipPath: leftEdgeClip(0) }}
       aria-hidden={props.hidden}
       inert={props.hidden}
     >

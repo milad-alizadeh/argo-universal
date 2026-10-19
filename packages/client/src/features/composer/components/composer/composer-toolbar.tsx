@@ -96,14 +96,17 @@ function ComposerSendButton(layout: SendLayout): React.JSX.Element {
 function sendButtonProps(
   layout: SendLayout,
 ): React.ComponentProps<typeof IconButton> {
+  const action = sendButtonAction(layout);
+
   return {
-    ...sendButtonAction(layout),
+    ...action,
     ...filledSendProps,
     loading: layout.sendState === 'sending',
+    // Paper dims a disabled Send to 35%, whatever stops it.
     className: cn(
-      'rounded-full',
       composerIconButton,
-      layout.sendState === 'blocked' && 'opacity-35',
+      'shadow-control',
+      action.disabled && 'opacity-35',
     ),
   };
 }
@@ -134,6 +137,8 @@ function stopButtonAction(
 
 const filledSendProps = {
   variant: 'filled',
+  size: 'xs',
+  corners: 'round',
   iconFilled: true,
   hitSlop: 8,
   iconRole: 'control',

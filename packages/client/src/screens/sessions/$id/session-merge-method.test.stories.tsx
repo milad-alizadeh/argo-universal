@@ -45,7 +45,7 @@ async function pickMethod(
 ): Promise<void> {
   await settleViewport(layoutWidths.wide);
   await expect(
-    await canvas.findByLabelText('Checks 5/5, passed'),
+    await canvas.findByLabelText('CI Checks 5/5, passed'),
   ).toBeVisible();
   await userEvent.click(canvas.getByRole('button', { name: optionsLabel }));
 
