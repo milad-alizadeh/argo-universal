@@ -48,3 +48,20 @@ export const textEvents = <Fields extends TextProps>(
   ...textChangeEvents(props),
   onSubmit: z.undefined().meta({ flush: true }),
 });
+
+export const datePickerProps = z.object({
+  label: z.string().describe('Spoken and visible field name.'),
+  value: z
+    .string()
+    .optional()
+    .describe(
+      'Local ISO value: `YYYY-MM-DD`, `HH:mm`, or `YYYY-MM-DDTHH:mm` by mode.',
+    ),
+  mode: z
+    .enum(['date', 'time', 'datetime'])
+    .optional()
+    .describe('Pick a date, a time, or both.'),
+  onValueChange: handler('onValueChange').describe('Reports a picked value.'),
+  required: z.boolean().optional().describe('The field requires a value.'),
+  disabled: z.boolean().optional().describe('Disable picking.'),
+});

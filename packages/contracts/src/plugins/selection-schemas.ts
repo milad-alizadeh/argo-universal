@@ -36,6 +36,21 @@ export const pickerSchema = z.object({
   variant: z.enum(['row', 'field']).optional().describe('Selection placement.'),
 });
 
+// One Picker, one value or several: `multiple` switches `value` and its change to a list.
+export const pickerPartSchema = z.union([
+  pickerSchema.extend({
+    multiple: z.literal(false).optional().describe('Pick several values.'),
+  }),
+  pickerSchema.extend({
+    multiple: z.literal(true).describe('Pick several values.'),
+    value: z
+      .array(selectionValue)
+      .readonly()
+      .optional()
+      .describe('Selected values.'),
+  }),
+]);
+
 const comboboxOption = selectionOption.extend({
   accessibilityLabel: z.string().optional(),
   code: z.boolean().optional(),

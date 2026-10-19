@@ -6,7 +6,9 @@ import { IconButton } from '#primitives/actions/icon-button';
 import { SplitButton } from '#primitives/actions/split-button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
+import { Form } from '#primitives/fields/form';
 import { Checkbox } from '#primitives/inputs/checkbox';
+import { DatePicker } from '#primitives/inputs/date-picker';
 import { Picker } from '#primitives/inputs/picker';
 import { Slider } from '#primitives/inputs/slider';
 import { Switch } from '#primitives/inputs/switch';
@@ -36,6 +38,8 @@ export const pluginEntries = {
   Checkbox,
   Slider,
   TextInput,
+  DatePicker,
+  Form,
   IconButton,
   SplitButton,
   List,

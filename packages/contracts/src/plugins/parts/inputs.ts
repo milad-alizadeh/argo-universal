@@ -12,6 +12,7 @@ import { searchFieldProps } from '../presentation-kit-props';
 import { filterPillProps } from '../presentation-kit-props';
 import { selectionPartSchemas } from '../selection-parts';
 import {
+  datePickerProps,
   textChangeEvents,
   textareaProps,
   textEvents,
@@ -120,11 +121,17 @@ export const inputsPartSchemas = {
   }),
   DatePicker: part(
     'A native date, time, or combined picker.',
-    z.object({
-      label: stringLabel,
-      value: z.string().optional(),
-      mode: z.enum(['date', 'time', 'datetime']).optional(),
-    }),
-    { label: 'The required `label` names the picker.' },
+    datePickerProps,
+    {
+      label: 'The required `label` names the picker.',
+      previous: [
+        z.object({
+          label: stringLabel,
+          value: z.string().optional(),
+          mode: z.enum(['date', 'time', 'datetime']).optional(),
+        }),
+      ],
+      events: { onValueChange: echoes(datePickerProps, 'value') },
+    },
   ),
 };

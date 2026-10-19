@@ -1,5 +1,8 @@
 import type * as ActionListKit from '#primitives/actions/action-list';
 import type * as KbdKit from '#primitives/content/kbd';
+import type * as FieldDescriptionKit from '#primitives/fields/field-description';
+import type * as FormKit from '#primitives/fields/form';
+import type * as DatePickerKit from '#primitives/inputs/date-picker';
 import type * as GridKit from '#primitives/layout/grid';
 import type * as ScrollViewKit from '#primitives/layout/scroll-view';
 import type * as SpacerKit from '#primitives/layout/spacer';
@@ -28,4 +31,7 @@ export type AdditionalPrimitives = {
   EmptyStateProps: EmptyStateKit.EmptyStateProps;
   StatusDotProps: StatusDotKit.StatusDotProps;
   SvgProps: SvgKit.SvgProps;
+  DatePickerProps: DatePickerKit.DatePickerProps;
+  DescribedField: FieldDescriptionKit.DescribedField;
+  FormProps: FormKit.FormProps;
 };

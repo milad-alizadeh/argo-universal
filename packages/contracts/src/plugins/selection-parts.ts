@@ -2,12 +2,14 @@ import { z } from 'zod';
 import { echoes } from './plugin-part-props';
 import { part, stringLabel, onPress } from './plugin-part-schema-utils';
 import {
+  pickerPartSchema,
   pickerSchema,
   comboboxSchema,
   menuChoice,
   menuSchema,
   splitButtonSchema,
 } from './selection-schemas';
+import { selectionValue } from './selection-value';
 
 const pickerEvents = {
   onValueChange: echoes(pickerSchema, 'value'),
@@ -28,7 +30,7 @@ const legacyPicker = z.object({
 });
 
 function oldPicker(
-  props: z.output<typeof pickerSchema>,
+  props: z.output<typeof pickerPartSchema>,
 ): z.input<typeof legacyPicker> {
   const legacy: z.input<typeof legacyPicker> = {
     label: props.label,
@@ -36,15 +38,26 @@ function oldPicker(
     variant: 'menu',
   };
 
-  if (props.value !== undefined) legacy.value = props.value;
+  if (props.multiple) legacy.multiple = true;
+
+  if (props.value !== undefined) legacy.value = legacyValue(props.value);
 
   return legacy;
 }
 
+const legacyValue = (value: string | readonly string[]): string | string[] =>
+  typeof value === 'string' ? value : [...value];
+
 export const selectionPartSchemas = {
-  Picker: part('A selection control.', pickerSchema, {
-    events: pickerEvents,
-    previous: [pickerSchema.transform(oldPicker).pipe(legacyPicker)],
+  Picker: part('A selection control.', pickerPartSchema, {
+    events: {
+      ...pickerEvents,
+      // A multiple Picker echoes its whole list and stays open, so a toggle never locks it.
+      onValueChange: z
+        .union([selectionValue, z.array(selectionValue)])
+        .meta({ value: 'value', blocks: false }),
+    },
+    previous: [pickerPartSchema.transform(oldPicker).pipe(legacyPicker)],
   }),
   Combobox: part('A searchable Picker.', comboboxSchema, {
     events: pickerEvents,

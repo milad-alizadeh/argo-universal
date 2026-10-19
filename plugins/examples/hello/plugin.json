@@ -26,6 +26,11 @@
         "id": "hello-dashboard",
         "title": "Hello dashboard",
         "path": "/dashboard"
+      },
+      {
+        "id": "hello-form",
+        "title": "Hello form",
+        "path": "/form"
       }
     ],
     "settings": [

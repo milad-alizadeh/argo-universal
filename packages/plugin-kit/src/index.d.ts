@@ -7,6 +7,7 @@ import type {
   KitChoiceValue,
   KitListItem,
   KitNode,
+  KitValuePayload,
 } from '@repo/contracts/kit-props';
 import type {
   WirePart,
@@ -84,7 +85,10 @@ type MappedPluginProps<
             | ExpansionValue<Exclude<Props[Prop], WireEvent>, Item>
             | Callback<
                 ExpansionValue<
-                  z.output<Extract<Events<Name>[Prop], z.ZodType>>,
+                  KitValuePayload<
+                    z.output<Extract<Events<Name>[Prop], z.ZodType>>,
+                    Props
+                  >,
                   Item
                 >
               >

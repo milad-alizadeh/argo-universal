@@ -340,7 +340,7 @@ export type WireSchemaHints = {
   "Picker": {
     /** Spoken and visible selection name. */
     "label": PropValue<"Picker", "label">;
-    /** Selected value. */
+    /** Selected values. */
     "value": PropValue<"Picker", "value">;
     /** Available choices. */
     "options": PropValue<"Picker", "options">;
@@ -358,6 +358,8 @@ export type WireSchemaHints = {
     "loadError": PropValue<"Picker", "loadError">;
     /** Selection placement. */
     "variant": PropValue<"Picker", "variant">;
+    /** Pick several values. */
+    "multiple": PropValue<"Picker", "multiple">;
   };
   "FilterPill": {
     /** Filter name. */
@@ -442,12 +444,18 @@ export type WireSchemaHints = {
     "disabled": PropValue<"Slider", "disabled">;
   };
   "DatePicker": {
-    /** The visible and accessible label. */
+    /** Spoken and visible field name. */
     "label": PropValue<"DatePicker", "label">;
-    /** value for this part. */
+    /** Local ISO value: `YYYY-MM-DD`, `HH:mm`, or `YYYY-MM-DDTHH:mm` by mode. */
     "value": PropValue<"DatePicker", "value">;
-    /** mode for this part. */
+    /** Pick a date, a time, or both. */
     "mode": PropValue<"DatePicker", "mode">;
+    /** Reports a picked value. */
+    "onValueChange": PropValue<"DatePicker", "onValueChange">;
+    /** The field requires a value. */
+    "required": PropValue<"DatePicker", "required">;
+    /** Disable picking. */
+    "disabled": PropValue<"DatePicker", "disabled">;
   };
   "Field": {
 
@@ -465,9 +473,9 @@ export type WireSchemaHints = {
     "errors": PropValue<"FieldErrors", "errors">;
   };
   "Form": {
-    /** The visible and accessible label. */
+    /** The submit Button label. */
     "submitLabel": PropValue<"Form", "submitLabel">;
-    /** Action or Plugin event invoked by onSubmit. */
+    /** Submits every field value. */
     "onSubmit": PropValue<"Form", "onSubmit">;
   };
   "List": {

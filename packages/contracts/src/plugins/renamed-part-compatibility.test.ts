@@ -48,9 +48,12 @@ it.each(previousAppFixtures)(
       ...node,
       props: legacy,
     });
-    expect(prepareWireTree(node, { [type]: 2 })).toEqual(node);
+    expect(prepareWireTree(node, { [type]: latest })).toEqual(node);
   },
 );
+
+// Every part's newest version.
+const latest = Number.MAX_SAFE_INTEGER;
 
 it.each(previousDraftFixtures)(
   'keeps representable $type fields in the prior draft schema',
@@ -67,7 +70,7 @@ it.each(previousDraftFixtures)(
       ...node,
       props: legacy,
     });
-    expect(prepareWireTree(node, { [type]: 2 })).toEqual(node);
+    expect(prepareWireTree(node, { [type]: latest })).toEqual(node);
   },
 );
 
@@ -91,4 +94,18 @@ it('lowers responsive Text and its ordered content without leaking undefined pro
     prepareWireTree({ ...text, props: { children: 'Body' } }, { Text: 1 })
       .props,
   ).toEqual({ label: 'Body' });
+});
+
+it.each([2, 3])('leaves a multiple Picker out for Picker %i', (version) => {
+  const node: WireNode = {
+    type: 'Picker',
+    key: 'labels',
+    props: { label: 'Labels', multiple: true, options: [] },
+    children: [],
+    slots: {},
+  };
+
+  expect(prepareWireTree(node, { Picker: version })).toMatchObject({
+    type: '#empty',
+  });
 });

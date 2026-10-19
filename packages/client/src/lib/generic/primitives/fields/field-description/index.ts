@@ -1,4 +1,5 @@
 export {
+  type DescribedField,
   type FieldDescription,
   FieldDescriptionFooter,
   useFieldDescription,

@@ -5,7 +5,6 @@ import { Text } from '#primitives/content/text';
 import type { FieldDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
 import type { ComboboxProps } from './combobox-props';
-import { comboboxValue } from './combobox-value';
 
 // Radix's Trigger hands its child the anchor ref and popup state; dropping the ref leaves the popover unplaced.
 type Anchor = Pick<
@@ -16,20 +15,32 @@ type Anchor = Pick<
   'aria-controls'?: string;
 };
 
-type Props<Value extends string> = ComboboxProps<Value> &
+// The owner names the value: one choice for Combobox, a summary for a multiple Picker.
+export type TriggerFields = Pick<
+  ComboboxProps<string>,
+  'label' | 'disabled'
+> & {
+  valueLabel: string;
+  // Web only: a multiple Picker's listbox opens below, so its trigger points down as Select's does.
+  chevron?: 'chevron-up-down' | 'chevron-down';
+};
+
+type Props = TriggerFields &
   FieldDescription &
   Anchor & { onPress?: () => void };
 
-export function ComboboxTrigger<Value extends string>(
-  props: Props<Value>,
-): ReactElement {
+export function ComboboxTrigger(props: Props): ReactElement {
   return createElement(
     Pressable,
     triggerProps(props),
     <View className="min-w-0 flex-1">
-      <Text>{comboboxValue(props)}</Text>
+      <Text>{props.valueLabel}</Text>
     </View>,
-    <Icon name="chevron-up-down" role="control" aria-hidden />,
+    <Icon
+      name={props.chevron ?? 'chevron-up-down'}
+      role="control"
+      aria-hidden
+    />,
   );
 }
 
@@ -38,7 +49,7 @@ type Attributes = React.ComponentProps<typeof Pressable> &
     'aria-describedby'?: string;
   };
 
-function triggerProps<Value extends string>(props: Props<Value>): Attributes {
+function triggerProps(props: Props): Attributes {
   return {
     ref: props.ref,
     'aria-haspopup': props['aria-haspopup'],
