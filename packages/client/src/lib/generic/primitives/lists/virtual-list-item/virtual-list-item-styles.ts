@@ -2,19 +2,6 @@ import { Platform } from 'react-native';
 import { cn } from '../../../utils';
 import type { VirtualListPosition } from './virtual-list-item-props';
 
-const positions = {
-  'true-true': 'only',
-  'true-false': 'first',
-  'false-false': 'middle',
-  'false-true': 'last',
-} as const satisfies Record<`${boolean}-${boolean}`, VirtualListPosition>;
-
-// A row's position from whether it starts and ends its section.
-export const virtualListPosition = (
-  first: boolean,
-  last: boolean,
-): VirtualListPosition => positions[`${first}-${last}`];
-
 /*
  * A phone row is a piece of its section's grouped card, which it clips to: iOS's rows share one plate,
  * square inside it; Material's are tiles 2 apart, 4 round inside.
@@ -42,8 +29,8 @@ export function surfaceClasses(
 // Android's Pressable draws the ripple; elsewhere the row takes the pressed tint.
 const pressedTint = Platform.OS === 'android' ? undefined : 'active:bg-pressed';
 
-// The stock rows' heights and gaps: iOS 44, Material 56; wide, 32. Shared with loading placeholders that stand in for a row.
-export const rowGeometryClasses =
+// The stock rows' heights and gaps: iOS 44, Material 56; wide, 32.
+const rowGeometryClasses =
   'min-h-11 flex-row items-center gap-3 px-4 py-2.75 android:min-h-14 android:gap-4 android:py-2 wide:min-h-8 wide:gap-3 wide:py-0 wide:pl-4 wide:pr-3';
 
 export const rowClasses = cn(

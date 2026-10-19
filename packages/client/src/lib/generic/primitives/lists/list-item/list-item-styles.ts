@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import type { ListAppearance, ListPosition } from '../../../list-context';
 import { cn } from '../../../utils';
+import type { ListItemProps } from './list-item-props';
 
 const groupedCorners = {
   only: 'rounded-grouped web:wide:rounded-3xl',
@@ -27,11 +28,11 @@ function corners(
 export function itemSurface(
   appearance: ListAppearance,
   position: ListPosition,
-  selected?: boolean,
+  { selected, tone }: Pick<ListItemProps, 'selected' | 'tone'>,
 ): string {
   return cn(
     'relative overflow-hidden',
-    appearanceClasses[appearance],
+    tone !== 'muted' && appearanceClasses[appearance],
     corners(appearance, position),
     selected && 'web:wide:shadow-inset',
   );
