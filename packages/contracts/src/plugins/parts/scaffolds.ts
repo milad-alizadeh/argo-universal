@@ -4,11 +4,7 @@ import { wireParts } from '../wire-parts';
 
 export const scaffoldsPartSchemas = {
   Page: wireParts.Page,
-  ListDetail: part(
-    'A list and detail scaffold that splits on wide screens and drills in on compact screens.',
-    z.object({}),
-    { slots: { list: ['List'], detail: ['Detail'] } },
-  ),
+  ListDetail: wireParts.ListDetail,
   Inspector: part(
     'A side pane on wide screens and a Sheet on compact screens.',
     z.object({ title: optionalLabel }),

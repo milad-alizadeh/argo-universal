@@ -7,7 +7,7 @@ import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import type { LoadedProps } from './project-list-props';
 
-type FoundProps = Pick<LoadedProps, 'onOpenProject'> & {
+type FoundProps = Pick<LoadedProps, 'onOpenProject' | 'selected'> & {
   found: ProjectInfo[];
   searching: boolean;
 };
@@ -51,12 +51,15 @@ function noProjects(searching: boolean): React.JSX.Element {
 
 function foundProjects({
   found,
+  selected,
   onOpenProject,
 }: FoundProps): React.JSX.Element {
+  const row = { selected, onOpen: onOpenProject };
+
   return (
     <List.Section title={countTitle(found.length)}>
       {found.map((project) => (
-        <ProjectRow key={project.id} project={project} onOpen={onOpenProject} />
+        <ProjectRow key={project.id} project={project} {...row} />
       ))}
     </List.Section>
   );
@@ -93,6 +96,8 @@ function missingDetail(compact?: boolean): ProjectDetail {
 
 type ProjectRowProps = {
   project: ProjectInfo;
+  // The Project whose page is open beside the list.
+  selected?: string;
   onOpen: (name: string) => void;
 };
 
@@ -116,6 +121,7 @@ function ProjectLink(
       leading={<Icon name="folder" role="row" />}
       title={props.project.name}
       {...detail}
+      selected={props.project.name === props.selected}
       accessibilityLabel={`${props.project.name}, ${detail.value ?? folderNotFound}`}
       onPress={() => props.onOpen(props.project.name)}
     />

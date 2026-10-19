@@ -24,8 +24,32 @@ export const detailProps = z.object({
     .describe('Show the content loading state; the Metadata stays.'),
 });
 
+const listDetailReader =
+  'Reads the list, then the selected item beside it on wide windows; on compact ones the list is the screen and opening a row moves to the item.';
+
 export const scaffoldWireParts = {
   Page: pageWirePart,
+  ListDetail: part(
+    'A list beside its selected item on wide windows; on compact ones the list drills in to the item.',
+    z.object({}),
+    {
+      root: true,
+      // The detail is a whole page: its own title and Actions.
+      slots: {
+        list: ['List'],
+        detail: ['Page', 'Detail'],
+        empty: ['EmptyState'],
+      },
+      accessibility: {
+        label:
+          'Not labelled itself: the list and the detail name themselves, and the detail Page names the screen.',
+        keyboard:
+          'The scaffold is not focusable. Tab moves from the list to the detail on wide windows.',
+        voiceOver: listDetailReader,
+        talkBack: listDetailReader,
+      },
+    },
+  ),
   Detail: part(
     'An item page: content beside its Metadata on wide screens, above it on narrow ones.',
     detailProps,

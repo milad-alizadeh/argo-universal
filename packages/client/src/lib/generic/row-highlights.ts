@@ -1,4 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
+import { listenerSet } from './listener-set';
+import { createRowGroupEnds, type RowGroupEnds } from './row-group-ends';
 
 export type HighlightReason = 'hover' | 'press' | 'selected';
 
@@ -11,6 +13,8 @@ export interface RowHighlights {
   highlighted: (index: number) => boolean;
   mark: (index: number, reason: HighlightReason, on: boolean) => void;
   clear: (index: number) => void;
+  // The rows that end their group, kept beside the highlights each List already holds.
+  groupEnds: RowGroupEnds;
 }
 
 type Marks = Map<number, Set<HighlightReason>>;
@@ -37,21 +41,6 @@ function toggle(
   return true;
 }
 
-function listenerSet(): Pick<RowHighlights, 'subscribe'> & {
-  notify: () => void;
-} {
-  const listeners = new Set<() => void>();
-
-  return {
-    subscribe(listener) {
-      listeners.add(listener);
-
-      return () => listeners.delete(listener);
-    },
-    notify: () => listeners.forEach((listener) => listener()),
-  };
-}
-
 export function createRowHighlights(): RowHighlights {
   const marks: Marks = new Map();
   const { subscribe, notify } = listenerSet();
@@ -65,6 +54,7 @@ export function createRowHighlights(): RowHighlights {
     clear(index) {
       if (marks.delete(index)) notify();
     },
+    groupEnds: createRowGroupEnds(),
   };
 }
 
