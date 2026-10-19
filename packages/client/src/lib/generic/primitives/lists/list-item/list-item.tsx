@@ -65,11 +65,14 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
   );
 }
 
+// Paper's Combobox: a menu's chosen row shows its check only, with no selected fill.
 function ItemSurface(props: DrawingProps): ReactElement {
+  const drawing = useItemDrawing();
+
   return (
-    <View className={itemSurface(useItemDrawing(), props.selected)}>
+    <View className={itemSurface(drawing, props.selected)}>
       <ItemPress {...drawingContent(props)} />
-      <Selection selected={props.selected} />
+      <Selection selected={props.selected && !drawing.menu} />
       <ItemSeparator {...props} />
       <ItemProgress progress={props.progress} />
     </View>

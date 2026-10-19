@@ -61,10 +61,14 @@ const pressLayouts = {
 const pressFocus =
   'web:select-none web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
 
+// Pressed (4%) follows hover (2%) on the web, so a held row is darker than a hovered one.
 const pressTints = cn(
-  'web:hover:bg-hover',
-  Platform.OS !== 'android' && 'active:bg-pressed',
+  'web:hover:bg-hover web:active:bg-pressed',
+  Platform.OS === 'ios' && 'active:bg-pressed',
 );
+
+// The web's Pressable draws a pointer cursor in an unlayered rule; a read-only row takes the page's.
+const stillRow = 'web:cursor-auto!';
 
 // Paper: a control wraps onto its own line, 12px under a menu row's title and 8px under a sheet row's.
 const controlLines = {
@@ -82,7 +86,11 @@ function pressLayout({ menu, control }: PressDrawing): string {
 
 // Only a row that does something takes the hover and pressed tints; a read-only row stays still.
 export function itemPress(press: PressDrawing): string {
-  return cn(pressLayout(press), pressFocus, press.interactive && pressTints);
+  return cn(
+    pressLayout(press),
+    pressFocus,
+    press.interactive ? pressTints : stillRow,
+  );
 }
 
 function hasSeparator({ appearance, position, menu }: ItemDrawing): boolean {
