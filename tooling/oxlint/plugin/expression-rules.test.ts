@@ -68,8 +68,18 @@ ruleTester.run('static-imports', staticImports, {
       filename: rendererLoader,
     },
     { code: "await import('./flat/flat-map.web');", filename: rendererLoader },
+    {
+      code: "await import('./canvas-renderer');",
+      filename:
+        '/repo/packages/client/src/lib/generic/primitives/visual/canvas/canvas-loader.web.tsx',
+    },
   ],
   invalid: [
+    {
+      code: "await import('./canvas-renderer');",
+      filename: '/repo/another-loader.tsx',
+      errors: [{ messageId: 'staticImports' }],
+    },
     {
       code: "await import('./three/three-map.web');",
       filename: '/repo/another-loader.tsx',

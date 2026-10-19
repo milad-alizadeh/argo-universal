@@ -69,7 +69,11 @@ function renderParsed(
 
   if (part.children) props.children = renderedChildren(node.children, context);
 
-  return createElement(component, { ...props, ...slots, key: context.key });
+  return createElement(component, {
+    ...props,
+    ...slots,
+    key: elementKey(node, context.key),
+  });
 }
 
 function refused(node: WireNode): React.JSX.Element | null {
@@ -136,4 +140,8 @@ function slotContent(
   if (nodes.length === 1 && first) return first;
 
   return createElement(Fragment, { key }, nodes);
+}
+
+function elementKey(node: WireNode, scopedKey: string): string {
+  return node.type.startsWith('Canvas.') ? node.key : scopedKey;
 }

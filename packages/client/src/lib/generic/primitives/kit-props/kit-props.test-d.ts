@@ -35,3 +35,7 @@ expectTypeOf<ActionMenu['onValueChange']>().toEqualTypeOf<undefined>();
 expectTypeOf<KitProps<'Callout', string, DrawnNode>['actions']>().toEqualTypeOf<
   DrawnNode | undefined
 >();
+
+expectTypeOf<KitProps<'Canvas.Group'>['translate']>().toEqualTypeOf<
+  [number, number] | undefined
+>();

@@ -1,9 +1,10 @@
 {
   "name": "@repo/universal-app",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "postinstall": "setup-skia-web public",
     "android": "expo run:android",
     "build": "expo export --platform web",
     "check-types": "tsc --noEmit",
@@ -15,12 +16,14 @@
   },
   "dependencies": {
     "@expo/material-symbols": "catalog:",
+    "@expo/metro-runtime": "catalog:",
     "@expo/ui": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/datetimepicker": "catalog:",
     "@react-native-community/slider": "catalog:",
     "@repo/client": "workspace:*",
     "@repo/uniwind": "workspace:*",
+    "@shopify/react-native-skia": "catalog:",
     "@storybook/addon-ondevice-actions": "catalog:",
     "@storybook/addon-ondevice-controls": "catalog:",
     "@storybook/react-native": "catalog:",

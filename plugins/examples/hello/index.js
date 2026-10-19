@@ -12,6 +12,7 @@ import {
   useEffect,
   useState,
 } from '@argo/plugin-kit';
+import { HelloCanvasPage } from './canvas.js';
 import { HelloDashboard } from './dashboard.js';
 import { HelloForm } from './form.js';
 import { registerBuilds } from './list-detail.js';
@@ -166,5 +167,6 @@ export function register(argo) {
   registerBuilds(argo.pages);
   argo.pages.register('/media', helloMedia(argo.assets));
   argo.pages.register('/runs', HelloRunsPage);
+  argo.pages.register('/canvas', HelloCanvasPage);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }
