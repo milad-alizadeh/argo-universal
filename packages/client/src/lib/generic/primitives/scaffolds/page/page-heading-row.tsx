@@ -1,16 +1,20 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { Action, ActionList } from '#primitives/actions/action-list';
+import {
+  Action,
+  ActionList,
+  HeaderActions,
+} from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import {
   SearchField,
   type SearchFieldProps,
 } from '#primitives/inputs/search-field';
 import { PageColumn } from './page-column';
-import type { PageProps } from './page-props';
+import type { PageHeaderInput, PageProps } from './page-props';
 
 // A wide Page's heading, or any Page's when no navigator draws its header.
-export function PageHeadingBody(props: PageProps): ReactElement {
+export function PageHeadingBody(props: PageHeaderInput): ReactElement {
   return (
     <View className="py-6">
       <PageColumn>
@@ -22,7 +26,7 @@ export function PageHeadingBody(props: PageProps): ReactElement {
 
 type HeadingContent = { title: ReactNode; actions: ReactNode };
 
-export function HeadingRow(props: PageProps): ReactElement {
+export function HeadingRow(props: PageHeaderInput): ReactElement {
   const content = {
     title: <PageTitle title={props.title} />,
     actions: <HeadingActions {...props} />,
@@ -42,12 +46,15 @@ function PlainHeading(props: HeadingContent): ReactElement {
   );
 }
 
+// The Actions gathered for the header, then the primary Action at the end.
 function HeadingActions(
-  props: Pick<PageProps, 'actions' | 'primaryAction'>,
+  props: Pick<PageHeaderInput, 'header' | 'primaryAction'>,
 ): ReactElement {
+  const { groups, label } = props.header;
+
   return (
     <>
-      {props.actions}
+      {groups.length ? <HeaderActions groups={groups} label={label} /> : null}
       {primaryButton(props.primaryAction)}
     </>
   );

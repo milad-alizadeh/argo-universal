@@ -1,19 +1,20 @@
-import { use, type ReactElement, type ReactNode } from 'react';
+import { use, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { cn } from '#lib/generic/utils';
-import { ActionShortcutScope } from '#primitives/actions/action-list';
+import {
+  ActionListHeaderContext,
+  ActionShortcutScope,
+  type HeaderSink,
+} from '#primitives/actions/action-list';
 import { PageAccessory } from './page-accessory';
 import { usePageColumn } from './page-column';
-import {
-  PageContentActionsProvider,
-  usePageContentActionsState,
-  type SetContentActions,
-} from './page-content-actions';
+import { PageHeaderSinkProvider } from './page-header-actions';
 import { PageHeading } from './page-heading';
 import { PageNavigation } from './page-navigation';
 import type { PageProps } from './page-props';
+import { usePageActions } from './use-page-actions';
 import { usePageSearch } from './use-page-search';
 
 export function Page(props: PageProps): ReactElement {
@@ -26,47 +27,45 @@ export function Page(props: PageProps): ReactElement {
   );
 }
 
+// The page's own Actions register first, so they lead those its content hands up.
 function PageSurface(props: PageProps): ReactElement {
-  const content = usePageContentActionsState();
-  const header = { ...props, actions: headerActions(props, content.actions) };
+  const header = usePageActions();
 
   return (
     <View
       testID={props.testID}
       className="min-h-0 flex-1 bg-content wide:mt-frame-inset"
     >
-      <PageNavigation {...header} />
-      <PageHeading {...header} />
-      <PageBody {...props} setContentActions={content.setActions} />
+      <OwnActions register={header.register} actions={props.actions} />
+      <PageNavigation {...props} header={header} />
+      <PageHeading {...props} header={header} />
+      <PageBody {...props} register={header.register} />
       <PageAccessory {...props} />
     </View>
   );
 }
 
-// The page's own Actions first, then those its content handed up.
-function headerActions(props: PageProps, content: ReactNode): ReactNode {
-  if (!content) return props.actions;
-
+// Mounted for their registration only: every ActionList under a header sink draws nothing itself.
+function OwnActions(
+  props: Pick<PageProps, 'actions'> & { register: HeaderSink },
+): ReactElement {
   return (
-    <>
+    <ActionListHeaderContext value={props.register}>
       {props.actions}
-      {content}
-    </>
+    </ActionListHeaderContext>
   );
 }
 
-function PageBody(
-  props: PageProps & { setContentActions: SetContentActions },
-): ReactElement {
+function PageBody(props: PageProps & { register: HeaderSink }): ReactElement {
   const { column, className } = usePageBody(props);
 
   return (
     <View className={className}>
-      <PageContentActionsProvider value={props.setContentActions}>
+      <PageHeaderSinkProvider value={props.register}>
         <ScrollColumnContext value={column}>
           {props.children}
         </ScrollColumnContext>
-      </PageContentActionsProvider>
+      </PageHeaderSinkProvider>
     </View>
   );
 }

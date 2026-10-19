@@ -16,7 +16,8 @@ function ActionListRoot(props: ActionListProps): ReactElement | null {
   const declared = useDeclaredActions(props);
 
   const header = useHeaderRegistration({
-    ...declared,
+    id: declared.id,
+    groups: declared.hinted,
     label: props.accessibilityLabel,
     context: props.variant === 'context',
   });
@@ -35,17 +36,13 @@ function DeclaredActionsBody({
 }): ReactElement | null {
   if (!declared.actions.length) return props.trigger ?? null;
 
-  const body = (
-    <ActionListBody
-      {...{ ...props, groups: hintedGroups(declared.groups, declared.actions) }}
-    />
-  );
+  const body = <ActionListBody {...{ ...props, groups: declared.hinted }} />;
 
   return <View nativeID={declared.id}>{body}</View>;
 }
 
 interface DeclaredActions {
-  groups: ActionGroup[];
+  hinted: ActionGroup[];
   id: string;
   actions: DeclaredAction[];
 }
@@ -64,19 +61,28 @@ function useDeclaredActions(props: ActionListProps): DeclaredActions {
     context: props.variant === 'context',
   });
 
-  return { groups, id, actions };
+  const owned = ownedShortcuts(actions);
+  const hinted = useMemo(() => hintedGroups(groups, owned), [groups, owned]);
+
+  return { hinted, id, actions };
 }
 
-function hintedGroups(
-  groups: ActionGroup[],
-  actions: DeclaredAction[],
-): ActionGroup[] {
-  const hints = new Map(actions.map((action) => [action.id, action]));
+// A string, so the groups (and the header registration) only change when the shortcuts this list owns do.
+function ownedShortcuts(actions: DeclaredAction[]): string {
+  return actions
+    .flatMap((action) => (action.shortcut ? [action.id] : []))
+    .join(' ');
+}
+
+function hintedGroups(groups: ActionGroup[], owned: string): ActionGroup[] {
+  const shortcuts = new Set(owned.split(' '));
 
   return orderedGroups(
     groups.map((group) => ({
       ...group,
-      actions: group.actions.map((action) => hints.get(action.id) ?? action),
+      actions: group.actions.map((action) =>
+        shortcuts.has(action.id) ? action : { ...action, shortcut: undefined },
+      ),
     })),
   );
 }

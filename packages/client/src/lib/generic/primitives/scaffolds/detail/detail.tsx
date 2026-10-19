@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
-import { usePageContentActions } from '#primitives/scaffolds/page';
+import { PageHeaderActions } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { DetailColumns } from './detail-columns';
@@ -14,23 +14,19 @@ const scroll = {
   contentInsetAdjustmentBehavior: 'automatic',
 } as const;
 
-// Foundations / Detail: content, then its Metadata beside it on wide containers.
+/*
+ * Foundations / Detail: content, then its Metadata beside it on wide containers.
+ * Inside a Page its Actions join the Page header; on their own they follow the content.
+ */
 export function Detail(props: DetailProps): ReactElement {
   return (
     <ScrollFadeView {...scroll} testID={props.testID}>
       <DetailColumns metadata={props.metadata}>
         <DetailContent {...props} />
       </DetailColumns>
-      <DetailActions actions={props.actions} />
+      <PageHeaderActions>{props.actions}</PageHeaderActions>
     </ScrollFadeView>
   );
-}
-
-// Inside a Page the Actions join its header; on their own they follow the content.
-function DetailActions({ actions }: Pick<DetailProps, 'actions'>): ReactNode {
-  const inPage = usePageContentActions(actions);
-
-  return inPage ? null : actions;
 }
 
 function DetailContent({

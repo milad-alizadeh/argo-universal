@@ -1,21 +1,22 @@
 import {
   useCallback,
   useState,
-  type ContextType,
   type Dispatch,
   type SetStateAction,
 } from 'react';
 import {
-  ActionListHeaderContext,
+  orderedGroups,
+  type ActionGroup,
   type DeclaredAction,
+  type HeaderSink,
 } from '#primitives/actions/action-list';
 
-type Register = NonNullable<ContextType<typeof ActionListHeaderContext>>;
+type Registration = Parameters<HeaderSink>[1];
 
-type Registration = Parameters<Register>[1];
-
-interface PageActions {
-  register: Register;
+// The one place a Page's header Actions gather: its own, then those its content hands up.
+export interface PageActions {
+  register: HeaderSink;
+  groups: ActionGroup[];
   actions: DeclaredAction[];
   label: string;
 }
@@ -36,18 +37,20 @@ export function usePageActions(): PageActions {
   const register = useHeaderRegister(setHeaders);
 
   const ordered = orderedHeaders(headers);
+  const groups = headerGroups(ordered);
 
   return {
     register,
-    actions: declaredActions(ordered),
+    groups,
+    actions: groups.flatMap((group) => group.actions),
     label: ordered[0]?.[1].label ?? 'More actions',
   };
 }
 
 function useHeaderRegister(
   setHeaders: Dispatch<SetStateAction<Headers>>,
-): Register {
-  return useCallback<Register>(
+): HeaderSink {
+  return useCallback<HeaderSink>(
     (id, value) => {
       setHeaders((previous) => withHeader(previous, id, value));
 
@@ -83,10 +86,16 @@ function orderedHeaders(headers: Headers): [string, Registration][] {
   return [...headers.registered].sort(([a], [b]) => place(a) - place(b));
 }
 
-function declaredActions(headers: [string, Registration][]): DeclaredAction[] {
-  return headers.flatMap(([id, header]) =>
-    header.groups.flatMap((group) =>
-      group.actions.map((action) => ({ ...action, id: `${id}/${action.id}` })),
+function headerGroups(headers: [string, Registration][]): ActionGroup[] {
+  return orderedGroups(
+    headers.flatMap(([id, header]) =>
+      header.groups.map((group) => ({
+        ...group,
+        actions: group.actions.map((action) => ({
+          ...action,
+          id: `${id}/${action.id}`,
+        })),
+      })),
     ),
   );
 }

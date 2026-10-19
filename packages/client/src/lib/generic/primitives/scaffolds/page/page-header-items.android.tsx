@@ -2,22 +2,18 @@
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import {
-  ActionListHeaderContext,
-  type DeclaredAction,
-} from '#primitives/actions/action-list';
+import type { DeclaredAction } from '#primitives/actions/action-list';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Menu } from '#primitives/overlays/menu';
 import { PageActionButton } from './page-action-button.android';
 import { headerActions } from './page-action-groups';
-import type { PageProps } from './page-props';
+import type { PageHeaderInput } from './page-props';
 import { PageSearchBar } from './page-search-bar.android';
-import { usePageActions } from './use-page-actions';
 
 export const pageTitleOptions = { headerTitleAlign: 'left' } as const;
 
-export function PageHeaderItems(props: PageProps): ReactElement {
-  const { register, actions, label } = usePageActions();
+export function PageHeaderItems(props: PageHeaderInput): ReactElement {
+  const { actions, label } = props.header;
   const header = { actions, label, search: Boolean(props.search) };
 
   const options = {
@@ -25,11 +21,10 @@ export function PageHeaderItems(props: PageProps): ReactElement {
   };
 
   return (
-    <ActionListHeaderContext value={register}>
+    <>
       <Stack.Screen options={options} />
-      {props.actions}
       {props.search ? <PageSearchBar {...props} /> : null}
-    </ActionListHeaderContext>
+    </>
   );
 }
 

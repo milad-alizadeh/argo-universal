@@ -8,4 +8,4 @@ export { PageColumn } from './page-column';
 
 export { PageNavigationEnabled } from './page-navigation-context';
 
-export { usePageContentActions } from './page-content-actions';
+export { PageHeaderActions } from './page-header-actions';

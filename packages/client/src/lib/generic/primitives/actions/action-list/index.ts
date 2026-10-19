@@ -15,8 +15,13 @@ export {
 
 export type { ActionShortcut } from './action-shortcuts';
 
-export { type DeclaredAction } from './action-declarations';
+export { type DeclaredAction, orderedGroups } from './action-declarations';
 
-export { ActionListHeaderContext } from './action-header-context';
+export {
+  ActionListHeaderContext,
+  type HeaderSink,
+} from './action-header-context';
+
+export { HeaderActions } from './action-list-header';
 
 export type { ActionGroup } from './action-declarations';

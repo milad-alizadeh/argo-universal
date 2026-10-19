@@ -3,9 +3,9 @@ import type { ReactNode } from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
 import { PageHeaderItems, pageTitleOptions } from './page-header-items';
 import { usePageNavigator } from './page-navigation-context';
-import type { PageProps } from './page-props';
+import type { PageHeaderInput } from './page-props';
 
-export function PageNavigation(props: PageProps): ReactNode {
+export function PageNavigation(props: PageHeaderInput): ReactNode {
   const navigator = usePageNavigator();
   const wide = useWide();
 
