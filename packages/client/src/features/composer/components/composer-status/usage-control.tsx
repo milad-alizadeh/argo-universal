@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon';
+import { Icon } from '#primitives/content/icon';
 import type { ComposerStatusProps, UsageLimit } from '../../utils/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import {
@@ -68,13 +68,20 @@ function UsageContent({ usage }: Pick<UsageProps, 'usage'>): JSX.Element {
   );
 }
 
+// A tablet's larger type leaves no room for the word on a medium window (#927).
+function UsageWord({ wide }: Pick<UsageProps, 'wide'>): JSX.Element {
+  return (
+    <ControlLabel label="Usage" wide={wide} className="hidden wide-type:flex" />
+  );
+}
+
 function UsageTriggerContent({ usage, wide }: UsageProps): JSX.Element {
   const percentClass = cn(unselectableTextClassName, !wide && 'hidden');
 
   return (
     <>
       <Icon role="control" name="usage" className={mutedTextClassName} />
-      <ControlLabel label="Usage" wide={wide} />
+      <UsageWord wide={wide} />
       <StatusText role="secondary" className={percentClass}>
         {usage.limits[0]?.usedPercent}%
       </StatusText>

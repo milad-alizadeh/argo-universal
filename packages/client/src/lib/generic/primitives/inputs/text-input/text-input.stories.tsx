@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListContent } from '#primitives/lists/grouped-list-content';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { View } from 'react-native';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { TextInput } from './text-input';
 import type {
@@ -13,7 +13,7 @@ import type {
 } from './text-input-props';
 
 const meta = {
-  title: 'Design System/Primitives/TextInput',
+  title: 'Design System/Primitives/Inputs/TextInput',
   parameters: { screenPreview: true },
 } satisfies Meta;
 
@@ -34,36 +34,36 @@ const title = 'Drafts vanish after a reconnect';
 
 function VariationsExample(): React.JSX.Element {
   return (
-    <GroupedList>
+    <List appearance="grouped">
       <RowSection />
       <InvalidSection />
       <StateSections />
-      <GroupedListContent>
+      <View>
         <OwnVariations />
-      </GroupedListContent>
-    </GroupedList>
+      </View>
+    </List>
   );
 }
 
 function StateSections(): React.JSX.Element {
   return (
     <>
-      <GroupedListSection textFields title="Row disabled">
+      <ListSection title="Row disabled">
         <TypedRow label="Name" initial="Example ACP" disabled />
-      </GroupedListSection>
-      <GroupedListSection textFields title="Row checking">
+      </ListSection>
+      <ListSection title="Row checking">
         <TypedRow mono label="Executable" initial="example-acp" loading />
-      </GroupedListSection>
+      </ListSection>
     </>
   );
 }
 
 function RowSection(): React.JSX.Element {
   return (
-    <GroupedListSection textFields title="Row" footer={pathHint}>
+    <ListSection title="Row" footer={pathHint}>
       <TypedRow label="Name" initial="Example ACP" />
       <TypedRow mono label="Executable" initial="example-acp" hint={pathHint} />
-    </GroupedListSection>
+    </ListSection>
   );
 }
 
@@ -76,14 +76,9 @@ const invalidRow = {
 
 function InvalidSection(): React.JSX.Element {
   return (
-    <GroupedListSection
-      textFields
-      title="Row invalid"
-      footer={spaceError}
-      tone="danger"
-    >
+    <ListSection title="Row invalid" footer={spaceError} tone="danger">
       <TypedRow {...invalidRow} />
-    </GroupedListSection>
+    </ListSection>
   );
 }
 

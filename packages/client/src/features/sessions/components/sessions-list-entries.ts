@@ -7,9 +7,6 @@ export type SessionsListEntry =
       kind: 'session';
       id: string;
       session: SessionInfo;
-      // Where the row sits among its Project's rows, so a phone's Compact rows round the ends of their section.
-      first: boolean;
-      last: boolean;
     }
   | { kind: 'empty'; id: string };
 
@@ -86,17 +83,11 @@ function projectEntries(
   return [heading, ...projectBody(project, projectSessions)];
 }
 
-function sessionEntry(
-  session: SessionInfo,
-  index: number,
-  rows: readonly SessionInfo[],
-): SessionsListEntry {
+function sessionEntry(session: SessionInfo): SessionsListEntry {
   return {
     kind: 'session',
     id: session.sessionId,
     session,
-    first: index === 0,
-    last: index === rows.length - 1,
   };
 }
 

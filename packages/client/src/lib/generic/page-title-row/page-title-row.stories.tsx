@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Badge } from '#primitives/display/badge';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Icon } from '#primitives/content/icon';
+import { Pill } from '#primitives/status/pill';
 import { Variation, Variations as VariationList } from '../variations';
 import { PageTitleRow } from './page-title-row';
 
@@ -45,11 +44,7 @@ const variations = [
         title="Claude Code"
         onBack={() => {}}
         icon={<Icon name="sparkle" role="title" />}
-        badge={
-          <Badge tone="success">
-            <Text>Ready</Text>
-          </Badge>
-        }
+        badge={<Pill tone="success" text="Ready" />}
       />
     ),
   },

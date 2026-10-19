@@ -1,6 +1,6 @@
 import { cloneElement, type ReactElement, useState } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import type {
   TriggerElement,
   TriggerHandlers,
@@ -11,8 +11,10 @@ import {
   PopoverTrigger,
   usePopoverClose,
 } from '#primitives/overlays/popover';
+import type { KitProps } from '../../kit-props';
 
-type TooltipProps = { label: string; children: TriggerElement };
+// Kit-only: the interactive trigger.
+type TooltipProps = KitProps<'Tooltip'> & { children: TriggerElement };
 
 export function Tooltip(props: TooltipProps): ReactElement {
   const [open, setOpen] = useState(false);

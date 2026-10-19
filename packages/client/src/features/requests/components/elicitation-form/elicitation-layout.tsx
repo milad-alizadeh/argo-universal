@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
+import { Surface } from '#primitives/layout/surface';
 import {
   RequestCard,
   type RequestCardProps,
@@ -78,9 +79,9 @@ function ElicitationTray({ children }: { children: ReactNode }): ReactElement {
     <View
       role="region"
       aria-label="Elicitation questions"
-      className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-tray web:backdrop-blur-glass web:backdrop-saturate-110"
+      className="self-stretch mx-1.75 -mb-3 pb-3"
     >
-      {children}
+      <Surface kind="muted">{children}</Surface>
     </View>
   );
 }

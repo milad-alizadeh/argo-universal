@@ -1,6 +1,6 @@
 import type { SizeClass } from './size-class';
 
-// Medium follows compact unless a caller supplies its approved medium layout.
+// Medium lays out like compact, in the phone shell (ADR-0026), unless a caller supplies its own medium value.
 export interface SizeClassValues<T> {
   compact: T;
   medium?: T;

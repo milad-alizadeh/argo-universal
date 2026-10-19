@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { configurationChoices } from '#lib/product/session-configuration';
-import { Icon } from '#primitives/display/icon';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Icon } from '#primitives/content/icon';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { ConfigurationChoice } from './configuration-choice';
 import { configurationIcon, choiceMetadata } from './configuration-values';
 import { isDangerous } from './configuration-values';
@@ -20,13 +20,13 @@ const destructiveTextClassName = 'text-danger';
 export function ModeContents(props: ModeContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-content">
-      <GroupedList fit>
-        <GroupedListSection>
+      <List appearance="grouped" fit>
+        <ListSection selectionMode="single">
           {configurationChoices(props.mode).map((choice) => (
             <ModeChoice key={choice.value} {...props} choice={choice} />
           ))}
-        </GroupedListSection>
-      </GroupedList>
+        </ListSection>
+      </List>
     </View>
   );
 }

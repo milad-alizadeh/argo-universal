@@ -32,7 +32,8 @@ export function connectWebSockets(
   const handler = applyWSSHandler({
     wss: webSocketServer,
     router,
-    createContext: ({ req }) => createRpcContext(req.socket),
+    createContext: ({ req, info }) =>
+      createRpcContext(req.socket, info.connectionParams),
     keepAlive: { enabled: true, pingMs: 30_000, pongWaitMs: 5000 },
   });
 

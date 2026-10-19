@@ -1,6 +1,6 @@
 import { type ReactElement, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import { TextInput } from '#primitives/inputs/text-input';
 import {
   Dialog,

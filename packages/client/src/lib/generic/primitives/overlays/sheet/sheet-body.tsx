@@ -1,11 +1,17 @@
 import type { ReactElement, ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { sheetInsetClass } from './sheet-inset';
 import type { SheetProps } from './sheet-props';
 
 type BodyProps = Pick<
   SheetProps,
-  'label' | 'footer' | 'contentScrolls' | 'dismissible' | 'onOpenChange'
+  | 'label'
+  | 'footer'
+  | 'contentScrolls'
+  | 'dismissible'
+  | 'onOpenChange'
+  | 'inset'
 > & {
   // The page fills the sheet's height, as a sheet with detents gives it.
   fill: boolean;
@@ -35,7 +41,11 @@ function escape(props: Pick<BodyProps, 'dismissible' | 'onOpenChange'>): void {
 function PageContent(props: BodyProps): ReactElement {
   if (!props.contentScrolls) return <PageScroll {...props} />;
 
-  return <View className={cn(props.fill && 'flex-1')}>{props.children}</View>;
+  return (
+    <View className={cn(sheetInsetClass(props.inset), props.fill && 'flex-1')}>
+      {props.children}
+    </View>
+  );
 }
 
 function PageScroll(props: BodyProps): ReactElement {
@@ -45,7 +55,7 @@ function PageScroll(props: BodyProps): ReactElement {
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets={!props.footer}
     >
-      {props.children}
+      <View className={sheetInsetClass(props.inset)}>{props.children}</View>
     </ScrollView>
   );
 }

@@ -13,22 +13,14 @@ export function AgentsPhoneHeader(
 ): React.JSX.Element | null {
   return (
     <>
-      <ScreenHeader title={agentsTitle} hideFrom="medium" />
-      <SizeClass
-        compact={<AgentsNativeSearch {...props} />}
-        medium={null}
-        wide={null}
-      />
+      <ScreenHeader title={agentsTitle} hideFrom="wide" />
+      <SizeClass only="compact">
+        <AgentsNativeSearch {...props} />
+      </SizeClass>
     </>
   );
 }
 
 function AgentsNativeSearch(props: AgentsHeaderProps): React.JSX.Element {
-  return (
-    <PhoneSearchBar
-      headerButton
-      placeholder={searchLabel}
-      onSearch={props.onSearch}
-    />
-  );
+  return <PhoneSearchBar placeholder={searchLabel} onSearch={props.onSearch} />;
 }

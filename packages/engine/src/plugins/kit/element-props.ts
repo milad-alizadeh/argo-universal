@@ -5,17 +5,54 @@ import type { Prop, Props } from './wire-tree';
 // What React hands the reconciler: a Plugin's props, plus `children` and the `argoKey` the JSX runtime adds.
 export interface ElementProps {
   children?: ReactNode;
-  [name: string]: Prop | ReactNode;
+  renderItem?: (item: WireJson, index: number) => ReactNode;
+  [name: string]:
+    | Prop
+    | ReactNode
+    | ((item: WireJson, index: number) => ReactNode);
 }
 
-const isProp = (value: Prop | ReactNode): value is Prop =>
-  typeof value === 'function' || WireJson.safeParse(value).success;
+function isProp(value: ElementProps[string]): value is Prop {
+  if (typeof value === 'function') return true;
+
+  return isPropData(value);
+}
+
+// Handlers go only in top-level props, so nested data is plain JSON.
+function isPropData(value: ElementProps[string]): boolean {
+  if (Array.isArray(value)) return value.every(isPropData);
+
+  if (value === null) return true;
+
+  return isPropScalar(value);
+}
+
+function isPropScalar(value: Exclude<ElementProps[string], null>): boolean {
+  if (typeof value === 'object') return isPropObject(value);
+
+  return WireJson.safeParse(value).success;
+}
+
+function isPropObject(
+  value: Extract<NonNullable<ElementProps[string]>, object>,
+): boolean {
+  return (
+    Object.getPrototypeOf(value) === Object.prototype &&
+    Object.values(value).every(isPropData)
+  );
+}
 
 const reserved = new Set(['children', 'argoKey']);
 
-function checked(type: string, name: string, value: Prop | ReactNode): Prop {
+function checked(
+  type: string,
+  name: string,
+  value: ElementProps[string],
+): Prop {
   if (!isProp(value))
-    throw new Error(`${type}: prop ${name} must be JSON or a function`);
+    throw new Error(
+      `${type}: prop ${name} must be JSON or a top-level function`,
+    );
 
   return value;
 }
@@ -25,7 +62,10 @@ export function toProps(type: string, raw: ElementProps): Props {
   return Object.fromEntries(
     Object.entries(raw)
       .filter(([name, value]) => !reserved.has(name) && value !== undefined)
-      .map(([name, value]) => [name, checked(type, name, value)]),
+      .map(([name, value]) => [
+        name === 'argoText' ? 'children' : name,
+        checked(type, name, value),
+      ]),
   );
 }
 

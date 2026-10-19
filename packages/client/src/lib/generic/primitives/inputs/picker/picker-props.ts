@@ -1,27 +1,23 @@
 import type { FieldErrors } from '#primitives/fields/field-errors';
+import type { KitProps } from '../../kit-props';
 
-export type PickerOption<Value extends string> = {
-  value: Value;
-  label: string;
-  disabled?: boolean;
-  supportingText?: string;
-};
-
-export type PickerProps<Value extends string> = {
-  label: string;
-  required?: boolean;
-  value?: Value;
-  options: readonly PickerOption<Value>[];
-  onValueChange: (value: Value) => void;
-  placeholder?: string;
-  disabled?: boolean;
+// Kit-only: local validation, hint and blur handling.
+export type PickerProps<Value extends string> = KitProps<'Picker', Value> & {
   invalid?: boolean;
-  /** Validation errors for the chosen value. */
   errors?: FieldErrors;
   hint?: string;
-  loading?: boolean;
-  /** Why the options failed to load; shown in place of the option list. */
-  loadError?: string;
-  variant?: 'row' | 'field';
   onBlur?: () => void;
 };
+
+export type SinglePickerProps<Value extends string> = Exclude<
+  PickerProps<Value>,
+  { multiple: true }
+>;
+
+export type MultiplePickerProps<Value extends string> = Extract<
+  PickerProps<Value>,
+  { multiple: true }
+>;
+
+export type PickerOption<Value extends string> =
+  PickerProps<Value>['options'][number];

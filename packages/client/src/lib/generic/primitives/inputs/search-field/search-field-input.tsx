@@ -1,16 +1,16 @@
 import type * as React from 'react';
 import { type ComponentProps, type RefObject, useRef } from 'react';
 import { TextInput, View } from 'react-native';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Icon } from '#primitives/display/icon';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Icon } from '#primitives/content/icon';
 import type { SearchQueryProps } from './search-field-props';
 
-// Foundations: SearchField / On content, shared by medium and wide list toolbars.
+// Foundations: SearchField / On content, shared by medium and wide list toolbars; it narrows to fit beside other controls.
 export function SearchFieldInput(props: SearchQueryProps): React.JSX.Element {
   const controls = useInputControls(props.onChangeText);
 
   return (
-    <View className="h-8 w-60 max-w-full shrink-0 flex-row items-center gap-2 rounded-full bg-card px-2.5">
+    <View className="h-8 w-60 max-w-full min-w-0 shrink flex-row items-center gap-2 rounded-full bg-card px-2.5">
       <SearchLens />
       <FieldQuery {...props} {...controls} />
       <ClearSearch value={props.value} clear={controls.clear} />

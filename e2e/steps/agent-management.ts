@@ -9,7 +9,7 @@ const exampleName = 'Example Agent';
 When('I install Example Agent from its card', async ({ page }) => {
   await agentCard(page, exampleName)
     .getByRole('button', {
-      name: onPhone(page) ? 'Install Example Agent' : 'Install',
+      name: 'Install Example Agent',
       exact: true,
     })
     .click();
@@ -20,7 +20,7 @@ Then(
   async ({ page }) => {
     await expect(
       agentCard(page, exampleName).getByRole('button', {
-        name: onPhone(page) ? 'Remove Example Agent' : 'Remove',
+        name: 'Remove Example Agent',
         exact: true,
       }),
     ).toBeVisible();
@@ -35,7 +35,7 @@ Then(
 When('I remove Example Agent from its card', async ({ page }) => {
   await agentCard(page, exampleName)
     .getByRole('button', {
-      name: onPhone(page) ? 'Remove Example Agent' : 'Remove',
+      name: 'Remove Example Agent',
       exact: true,
     })
     .click();
@@ -47,7 +47,7 @@ Then(
     await expect(page.getByRole('dialog', { name: /Remove/ })).toHaveCount(0);
     await expect(
       agentCard(page, exampleName).getByRole('button', {
-        name: onPhone(page) ? 'Install Example Agent' : 'Install',
+        name: 'Install Example Agent',
         exact: true,
       }),
     ).toBeVisible();

@@ -1,6 +1,6 @@
 import { Row } from '@expo/ui';
 import * as Compose from '@expo/ui/jetpack-compose/modifiers';
-import { NativeText } from '#primitives/display/native-text';
+import { NativeText } from '#primitives/content/native-text';
 import type { CheckboxRowProps } from './checkbox-apple-row';
 import type { CheckboxProps } from './checkbox-props';
 import { RadioMark, type RadioMarkProps } from './checkbox-radio';

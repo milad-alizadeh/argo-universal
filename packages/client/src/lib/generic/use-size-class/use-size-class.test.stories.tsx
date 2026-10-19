@@ -26,7 +26,7 @@ const compactContent = 'Compact content';
 
 const wideContent = 'Wide content';
 
-// The hook and the theme.css breakpoint variants change at the same widths.
+// The hook and the theme.css variants change at the same widths; `wide:`, the desktop drawing, starts at wide.
 export const ChangesAtEachBreakpoint: Story = {
   play: async ({ canvas }) => {
     const steps = [
@@ -51,7 +51,7 @@ export const ChangesAtEachBreakpoint: Story = {
   },
 };
 
-// A gate draws its content at one size class only; medium follows compact until it has its own design.
+// A gate draws its content at one size class only; medium lays out like compact.
 export const GatesBySizeClass: Story = {
   play: async ({ canvas }) => {
     const steps = [

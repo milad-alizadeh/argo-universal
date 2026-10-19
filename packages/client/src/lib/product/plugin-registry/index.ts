@@ -1,7 +1,9 @@
-export { PluginTree } from './plugin-registry';
+export { PluginTree, type PluginOnEvent } from './plugin-registry';
 
-export {
-  emptyPluginView,
-  reducePluginView,
-  type PluginViewState,
-} from './plugin-view-state';
+export { PluginSlot, type PluginSlotContribution } from './plugin-slot';
+
+export * from './plugin-slot-state';
+
+export * from './plugin-view-state';
+
+export { ReplaceableSlot, ReplaceableSlotRenderer } from './replaceable-slot';

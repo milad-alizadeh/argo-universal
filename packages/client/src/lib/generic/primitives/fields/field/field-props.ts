@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
 import type { FieldErrors } from '#primitives/fields/field-errors';
+import type { KitProps } from '../../kit-props';
 
-export type FieldProps = {
+// Kit-only: local validation and help text.
+export type FieldProps = KitProps<'Field'> & {
   errors?: FieldErrors;
   hint?: string;
-  children: ReactNode;
 };

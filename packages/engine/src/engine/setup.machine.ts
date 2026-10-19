@@ -13,7 +13,7 @@ import {
 } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import type { NotificationOptions } from '../notifications';
-import type { Keychain, PluginNetwork } from '../plugins';
+import { HookPort, type Keychain, type PluginNetwork } from '../plugins';
 import {
   type OpenSessionsInput,
   openSessionsMachine,
@@ -84,6 +84,8 @@ export interface EngineContext extends EngineInput {
   failure: string | null;
   acpResources: AcpResources;
   commandAdmission: AbortController;
+  // Sessions reach Plugin Hooks through this before the Plugin runtime starts with the HTTP server.
+  hookPort: HookPort;
 }
 
 type EngineEvent =
@@ -190,4 +192,5 @@ export const createEngineContext = (input: EngineInput): EngineContext => ({
   failure: null,
   acpResources: createAcpResources(input.acp),
   commandAdmission: new AbortController(),
+  hookPort: new HookPort(),
 });

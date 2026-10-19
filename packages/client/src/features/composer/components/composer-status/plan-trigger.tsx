@@ -3,10 +3,10 @@ import type { JSX } from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { cn } from '#lib/generic/utils';
-import { contentActionClass } from '#primitives/buttons/button';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
-import { Pressable } from '#primitives/pressable';
+import { contentActionClass } from '#primitives/actions/button';
+import { Pressable } from '#primitives/actions/pressable';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { completedSteps } from '../../utils/status';
 import { chipClassName, unselectableTextClassName } from './status-surface';
 

@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - plugins/issue-tracker
   - tooling/*
   # Playwright suite as its own package, as Turborepo's Playwright guide recommends (docs/research/playwright.md).
   - e2e
@@ -11,6 +12,7 @@ packages:
 
 # Every shared dependency is pinned here; packages refer to it as "catalog:".
 catalog:
+  "@jridgewell/trace-mapping": 0.3.31
   "@xterm/xterm": 6.0.0
   "@xterm/addon-fit": 0.11.0
   node-pty: 1.1.0
@@ -29,6 +31,7 @@ catalog:
   eslint-plugin-playwright: 2.12.1
   eslint-plugin-sonarjs: 4.2.2
   eslint-plugin-unicorn: 77.0.0
+  oxc-parser: 0.150.0
   oxfmt: 0.72.0
   oxlint: 1.87.0
   oxlint-tsgolint: 7.0.2003
@@ -110,6 +113,7 @@ catalog:
   expo-glass-effect: ~57.0.4
   expo-linking: ~57.0.11
   expo-router: ~57.0.24
+  expo-screen-orientation: ~57.0.2
   expo-splash-screen: ~57.0.9
   expo-status-bar: ~57.0.1
   expo-symbols: ~57.0.3

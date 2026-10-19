@@ -1,3 +1,4 @@
+import { slotCounterRoot } from '@repo/contracts/plugins/wire-fixtures';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import {
@@ -5,6 +6,7 @@ import {
   otherDeviceName,
   worktreeProject,
 } from '../../../../features/settings/components/settings-pages.mocks';
+import { PluginSlot } from '../../../../lib/product/plugin-registry';
 import { ProjectDetailView } from './project-detail-view';
 
 const meta = {
@@ -28,6 +30,24 @@ export const Local: Story = {
   args: {
     name: localProject.name,
     project: { status: 'loaded', project: localProject },
+  },
+};
+
+// A Plugin's content in the Project details Slot, in its own titled section.
+export const WithPluginContent: Story = {
+  args: {
+    renderPluginSlot: () => (
+      <PluginSlot
+        contributions={[
+          {
+            pluginId: 'hello',
+            name: 'Hello',
+            root: slotCounterRoot,
+            onEvent: action('plugin event'),
+          },
+        ]}
+      />
+    ),
   },
 };
 

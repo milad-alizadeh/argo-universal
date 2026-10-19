@@ -5,8 +5,9 @@ import type {
 } from 'node:http';
 import { maxBlobUploadBytes } from '@repo/contracts';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
+import { handleAsset, type AssetReader } from './asset-response';
 import { streamBlob } from './blob-response';
-import { answerError, httpStatus } from './http-response';
+import { answerError, httpStatus, reportHttpFailure } from './http-response';
 import type { RequestGuard } from './request-guard';
 import type { AppRouter } from './router';
 
@@ -14,6 +15,7 @@ export interface RequestListenerOptions {
   guard: RequestGuard;
   blobsFolder: string;
   router: AppRouter;
+  readAsset: AssetReader;
 }
 
 const blobUrlPattern = /^\/blobs\/([^/?]*)(\?.*)?$/;
@@ -37,6 +39,18 @@ export function createRequestListener(
 }
 
 function dispatchRequest(
+  sources: { options: RequestListenerOptions; handleTRPC: RequestListener },
+  request: IncomingMessage,
+  response: ServerResponse,
+): void {
+  const path = request.url ?? '';
+
+  if (path.startsWith('/plugin-assets/'))
+    return handleAsset(sources.options, request, response);
+  dispatchCoreRequest(sources, request, response);
+}
+
+function dispatchCoreRequest(
   sources: { options: RequestListenerOptions; handleTRPC: RequestListener },
   request: IncomingMessage,
   response: ServerResponse,
@@ -83,17 +97,10 @@ function handleBlob(
       headers: { allow: 'GET' },
     });
   streamBlob(options, options.id, response).catch((cause: unknown): void =>
-    reportBlobFailure(response, cause),
+    reportHttpFailure(response, cause),
   );
 }
 
 function matchedBlobId(match: RegExpExecArray): string {
   return match[1] ?? '';
-}
-
-function reportBlobFailure(response: ServerResponse, cause: unknown): void {
-  console.error(`engine: ${String(cause)}`);
-
-  if (response.headersSent) response.destroy();
-  else answerError(response, httpStatus.internalError, 'Internal error');
 }

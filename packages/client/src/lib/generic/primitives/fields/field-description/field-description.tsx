@@ -4,7 +4,7 @@ import {
   type ComponentProps,
   type ReactElement,
 } from 'react';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   errorMessage,
   type FieldErrors,

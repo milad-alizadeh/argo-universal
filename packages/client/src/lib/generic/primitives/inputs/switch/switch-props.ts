@@ -1,9 +1,7 @@
-export type SwitchProps = {
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-  /** Spoken name; a switch draws no text of its own. */
-  accessibilityLabel?: string;
-  disabled?: boolean;
+import type { KitProps } from '../../kit-props';
+
+// Kit-only: web sizing and decorative presentation.
+export type SwitchProps = KitProps<'Switch'> & {
   /** Web only: phones draw the system switch, which has one size. */
   size?: 'sm' | 'md';
   /**

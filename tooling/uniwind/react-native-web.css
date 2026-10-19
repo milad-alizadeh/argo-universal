@@ -123,6 +123,14 @@
 .sheet-full {
   height: calc(100dvh - var(--spacing) * 14);
 }
+/* A sheet kept to the bottom edge spans the window, as the phone shell's Inspector does. */
+.sheet-edge {
+  max-width: none;
+}
+/* vaul's grab handle takes Paper's neutral-200; vaul's own 70% opacity makes it neutral-200/70. */
+.sheet [data-vaul-handle] {
+  background: var(--color-neutral-200);
+}
 
 /* ScrollFadeFrame: a scroll view's content fades to nothing at each edge with
    content past it, over whatever lies behind. The scroll view's own scroll
@@ -223,6 +231,69 @@
 @media (prefers-reduced-motion: reduce) {
   .scroll-fade > * {
     transition: none;
+  }
+}
+
+/* A horizontal scroll view fades its leading and trailing edges the same way, along its inline scroll. */
+@property --scroll-fade-leading {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-trailing {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@keyframes scroll-fade-leading {
+  from {
+    --scroll-fade-leading: var(--scroll-fade-leading-rest);
+  }
+  to {
+    --scroll-fade-leading: var(--scroll-fade-leading-depth);
+  }
+}
+@keyframes scroll-fade-trailing {
+  from {
+    --scroll-fade-trailing: var(--scroll-fade-trailing-depth);
+  }
+  to {
+    --scroll-fade-trailing: var(--scroll-fade-trailing-rest);
+  }
+}
+.scroll-fade-inline > * {
+  --scroll-fade-leading: var(--scroll-fade-leading-rest);
+  --scroll-fade-trailing: var(--scroll-fade-trailing-rest);
+  /* A row that scrolls sideways hides its scrollbar, so the whole row fades. */
+  mask-position: left top;
+  mask-size: 100% 100%;
+  mask-image: linear-gradient(
+    to right,
+    transparent var(--scroll-fade-leading-inset),
+    rgb(0 0 0 / 0.15)
+      calc(var(--scroll-fade-leading-inset) + var(--scroll-fade-leading) / 2),
+    black calc(var(--scroll-fade-leading-inset) + var(--scroll-fade-leading)),
+    black
+      calc(
+        100% - var(--scroll-fade-trailing-inset) - var(--scroll-fade-trailing)
+      ),
+    rgb(0 0 0 / 0.15)
+      calc(
+        100% - var(--scroll-fade-trailing-inset) - var(--scroll-fade-trailing) /
+          2
+      ),
+    transparent calc(100% - var(--scroll-fade-trailing-inset))
+  );
+  animation:
+    scroll-fade-leading linear both,
+    scroll-fade-trailing linear both;
+  animation-timeline: scroll(self inline), scroll(self inline);
+  transition: none;
+}
+@supports not (animation-timeline: scroll()) {
+  .scroll-fade-inline > * {
+    --scroll-fade-leading: var(--scroll-fade-leading-depth);
+    --scroll-fade-trailing: var(--scroll-fade-trailing-depth);
   }
 }
 

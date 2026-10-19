@@ -1,6 +1,5 @@
 import { useStore } from '@tanstack/react-form';
-import { Platform } from 'react-native';
-import type { GroupedListSectionProps } from '#primitives/lists/grouped-list-section';
+import type { ListSectionProps } from '#primitives/lists/list';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import { fieldLabel } from './elicitation-field-rows';
 import {
@@ -26,7 +25,7 @@ function fieldKind(entry: ElicitationEntry): FieldKind {
 }
 
 // iOS gives each field to type in a section of its own, so it reads as an inset field.
-const separateTextFields = Platform.OS === 'ios';
+const separateTextFields = true;
 
 const standsAlone = (kind: FieldKind): boolean =>
   kind === 'choices' || (separateTextFields && kind === 'text');
@@ -117,7 +116,7 @@ const shownErrors = (props: SectionFields, meta: FieldMeta): string =>
 // The shown errors stand in for the section's hint, in the danger tone.
 export function useSectionFooter(
   props: SectionFields,
-): Pick<GroupedListSectionProps, 'footer' | 'tone'> {
+): Pick<ListSectionProps, 'footer' | 'tone'> {
   const errors = useStore(props.model.form.store, (state) =>
     shownErrors(props, state.fieldMeta),
   );

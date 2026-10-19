@@ -1,46 +1,47 @@
-interface AlertActionBase {
-  label: string;
-  onPress?: () => void;
-  // Shown but not pressable, such as an answer the current state does not allow.
-  disabled?: boolean;
-  // Running, such as a removal: the alert shows progress and takes no answer or close. iOS hides it instead.
-  loading?: boolean;
-}
+import {
+  declaredActions,
+  type ActionProps,
+} from '#primitives/actions/action-list';
+import type { KitProps } from '../../kit-props';
 
-// A cancel action dismisses. iOS drops the red of a cancel action, so cancel and danger never meet.
-interface CancelAlertAction extends AlertActionBase {
-  cancel: true;
-  tone?: never;
-}
+// One answer is an Action. Argo's own callers pass answers as data; a Plugin declares them as Action children.
+export type AlertAction = Pick<ActionProps, 'label'> &
+  Partial<Pick<ActionProps, 'onPress' | 'disabled' | 'tone' | 'role'>> & {
+    loading?: boolean;
+  };
 
-interface AnswerAlertAction extends AlertActionBase {
-  cancel?: false;
-  // The danger tone draws the action in red.
-  tone?: 'danger';
-}
+// Kit-only: `actions` for Argo's own callers.
+export type AlertProps = KitProps<'Alert'> & {
+  actions?: readonly AlertAction[];
+};
 
-export type AlertAction = CancelAlertAction | AnswerAlertAction;
-
-/*
- * A short question with a few answers, drawn by the system: a SwiftUI alert on iOS,
- * a Material 3 AlertDialog on Android, a centred dialog on the web. Forms and longer content use Dialog.
- */
-export interface AlertProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  message?: string;
+// What every platform draws: the answers, whichever way they were given.
+export type AnsweredAlertProps = Omit<AlertProps, 'actions' | 'children'> & {
   actions: readonly AlertAction[];
+};
+
+export function answeredAlert({
+  actions,
+  children,
+  ...props
+}: AlertProps): AnsweredAlertProps {
+  return { ...props, actions: actions ?? declaredActions(children) };
 }
 
-// Every answer closes the alert before it runs, so the action may open something else.
+export const isCancel = (action: AlertAction): boolean =>
+  action.role === 'cancel';
+
+export const isDestructive = (action: AlertAction): boolean =>
+  action.role === 'destructive' || action.tone === 'danger';
+
+// Every answer runs, then closes the alert: a Plugin hears the answer before the close that may remove it.
 export function alertActionPress(
   action: AlertAction,
-  onOpenChange: AlertProps['onOpenChange'],
+  onOpenChange: AnsweredAlertProps['onOpenChange'],
 ): () => void {
   return () => {
-    onOpenChange(false);
     action.onPress?.();
+    onOpenChange(false);
   };
 }
 
@@ -58,8 +59,8 @@ export function isAlertActionEnabled(
 
 // A running alert ignores the system's requests to close it: Escape, the scrim, Android Back.
 export function ignoreCloseWhileBusy(
-  props: Pick<AlertProps, 'actions' | 'onOpenChange'>,
-): AlertProps['onOpenChange'] {
+  props: Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'>,
+): AnsweredAlertProps['onOpenChange'] {
   return (open) => {
     if (open || !isAlertBusy(props.actions)) props.onOpenChange(open);
   };

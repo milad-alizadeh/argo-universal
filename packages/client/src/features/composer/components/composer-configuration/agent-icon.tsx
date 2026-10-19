@@ -1,7 +1,7 @@
 import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
 import { AgentLogo } from '#features/agents';
-import { IconSlot } from '#primitives/display/icon';
+import { IconSlot } from '#primitives/content/icon';
 import type { IconRoleValue } from '../../../../lib/generic/symbols/icon-role';
 
 interface AgentIconProps {

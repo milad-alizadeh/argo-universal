@@ -1,24 +1,6 @@
-import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
-import type * as React from 'react';
-import { useCallback, useMemo, useState } from 'react';
-import { Platform, View, type ViewStyle } from 'react-native';
-import { useResolveClassNames } from 'uniwind';
-import { listTestIdProps } from '#lib/generic/list-test-id';
-import {
-  groupedListGap,
-  groupedListPadding,
-} from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
-import { ScrollFadeList } from '../scroll-fade/scroll-fade-list';
-import { CardRow } from './card-row';
-import {
-  type FieldListEntry,
-  type FieldListSection,
-  fieldListEntries,
-  fieldListEntryKey,
-  fieldListEntryKind,
-} from './field-list-entries';
-import { type HoverStore, createHoverStore } from './field-row-hover-store';
+import type { ReactElement } from 'react';
+import { List } from '#primitives/lists/list';
+import type { FieldListSection } from './field-list-entries';
 
 export type { FieldListSection } from './field-list-entries';
 
@@ -28,139 +10,18 @@ export interface FieldListProps {
   gap?: 'sm';
 }
 
-// The Settings page's surface: the phone's page, or the Frame behind a wide window's page.
-const fadeSurface = 'bg-content';
-
-const rowHeightEstimate = 52;
-
-/*
- * GroupedList's sections as one virtualised list, so a long list mounts only the rows in view.
- * Each title, row and footer is an item; rows round the card's ends and draw separators between them.
- */
-export function FieldList(props: FieldListProps): React.JSX.Element {
-  const entries = useMemo(
-    () => fieldListEntries(props.sections),
-    [props.sections],
-  );
-
+export function FieldList(props: FieldListProps): ReactElement {
   return (
-    <ScrollFadeList
-      {...listTestIdPropsFor(props.testID)}
-      {...fieldListDefaults}
-      contentContainerStyle={useGroupPadding()}
-      data={entries}
-      renderItem={useEntryRenderer(props.gap)}
-    />
+    <List appearance="grouped" testID={props.testID}>
+      {props.sections.map((section, index) => (
+        <List.Section
+          key={section.title ?? index}
+          title={section.title}
+          footer={section.footer}
+        >
+          {section.rows}
+        </List.Section>
+      ))}
+    </List>
   );
-}
-
-// iOS's glass bars already fade the edges.
-const glassBarsFade = { top: 'never', bottom: 'never' } as const;
-
-const fieldListDefaults = {
-  surfaceClassName: fadeSurface,
-  edges: Platform.OS === 'ios' ? glassBarsFade : undefined,
-  keyExtractor: fieldListEntryKey,
-  getItemType: fieldListEntryKind,
-  estimatedItemSize: rowHeightEstimate,
-};
-
-function listTestIdPropsFor(
-  testID: string | undefined,
-): Partial<ReturnType<typeof listTestIdProps>> {
-  return testID ? listTestIdProps(testID) : {};
-}
-
-type PaddingKey = keyof Pick<
-  ViewStyle,
-  | 'paddingInlineStart'
-  | 'paddingInlineEnd'
-  | 'paddingLeft'
-  | 'paddingRight'
-  | 'paddingHorizontal'
->;
-
-// The web resolves a class to a CSS length such as "16px"; native resolves it to a number.
-type ResolvedLength = ViewStyle['gap'] | Exclude<ViewStyle[PaddingKey], string>;
-
-const pixels = (length: ResolvedLength): number => {
-  if (typeof length === 'number') return length;
-
-  return typeof length === 'string' ? Number.parseFloat(length) : 0;
-};
-
-const isSet = (value: ResolvedLength): boolean =>
-  value !== undefined && value !== null;
-
-function firstLength(style: ViewStyle, keys: readonly PaddingKey[]): number {
-  return pixels(keys.map((key) => style[key]).find(isSet));
-}
-
-const startPaddingKeys = [
-  'paddingInlineStart',
-  'paddingLeft',
-  'paddingHorizontal',
-] as const;
-
-const endPaddingKeys = [
-  'paddingInlineEnd',
-  'paddingRight',
-  'paddingHorizontal',
-] as const;
-
-// GroupedList's gutters, in the numbers Legend List lays its items out with; the scroll fade adds the end gap.
-function useGroupPadding(): ViewStyle {
-  const padding = useResolveClassNames(groupedListPadding);
-
-  return {
-    paddingLeft: firstLength(padding, startPaddingKeys),
-    paddingRight: firstLength(padding, endPaddingKeys),
-    paddingTop: pixels(padding.paddingTop),
-  };
-}
-
-function useEntryRenderer(
-  density: FieldListProps['gap'],
-): (props: LegendListRenderItemProps<FieldListEntry>) => React.JSX.Element {
-  const sectionGap = useSectionGap(density);
-  const [store] = useState(createHoverStore);
-
-  return useCallback(
-    ({ item, index }: LegendListRenderItemProps<FieldListEntry>) => (
-      <View style={item.gapAbove ? { paddingTop: sectionGap } : undefined}>
-        <EntryContent entry={item} index={index} store={store} />
-      </View>
-    ),
-    [sectionGap, store],
-  );
-}
-
-function useSectionGap(density: FieldListProps['gap']): number {
-  // The web resolves the gap class to rowGap; native resolves it to gap.
-  const normal = useResolveClassNames(groupedListGap);
-  const small = useResolveClassNames('gap-2');
-
-  return resolvedGap(density === 'sm' ? small : normal);
-}
-
-const resolvedGap = (style: ViewStyle): number =>
-  pixels(style.rowGap ?? style.gap);
-
-// A title or footer is GroupedListSection's own, with an empty card where the rows would be.
-function EntryContent(props: {
-  entry: FieldListEntry;
-  index: number;
-  store: HoverStore;
-}): React.JSX.Element {
-  const { entry } = props;
-
-  if (entry.kind === 'title')
-    return <GroupedListSection title={entry.title}>{null}</GroupedListSection>;
-
-  if (entry.kind === 'footer')
-    return (
-      <GroupedListSection footer={entry.footer}>{null}</GroupedListSection>
-    );
-
-  return <CardRow entry={entry} index={props.index} store={props.store} />;
 }

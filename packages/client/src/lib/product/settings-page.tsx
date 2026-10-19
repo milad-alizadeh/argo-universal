@@ -1,25 +1,29 @@
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import { type ReactNode, use, useMemo } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { hasLiquidGlass } from '#lib/generic/native-header';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   PageTitleRow,
   type PageTitleRowProps,
   type PageTitleSearch,
 } from '../generic/page-title-row/page-title-row';
-import { useSizeClass } from '../generic/use-size-class/use-size-class';
+import { useWide } from '../generic/use-wide/use-wide';
 
 export type SettingsPageSearch = PageTitleSearch;
 
 export interface SettingsPageProps extends PageTitleRowProps {
-  // Agents has an approved inline header from medium upwards.
+  // Agents keeps the narrower side padding and toolbar gap on a wide window too.
   headerFrom?: 'medium' | 'wide';
   caption?: string;
   // A row of controls under the title, such as filters.
   toolbar?: ReactNode;
+  // A phone's row of controls under its native header, such as filters. It spans the screen and pads its own sides.
+  phoneToolbar?: ReactNode;
   children: ReactNode;
 }
 
@@ -35,7 +39,7 @@ interface SettingsColumn {
 function useSettingsColumn(
   from: SettingsPageProps['headerFrom'],
 ): SettingsColumn {
-  const token = useColumnPaddingToken(from);
+  const token = columnPaddingToken(from);
   const padding = Number.parseFloat(String(useCSSVariable(token)));
 
   return useMemo(
@@ -48,11 +52,7 @@ function useSettingsColumn(
   );
 }
 
-function useColumnPaddingToken(from: SettingsPageProps['headerFrom']): string {
-  const sizeClass = useSizeClass();
-
-  if (sizeClass === 'medium') return '--spacing-4';
-
+function columnPaddingToken(from: SettingsPageProps['headerFrom']): string {
   return from === 'medium' ? '--spacing-6' : '--spacing-8';
 }
 
@@ -62,7 +62,7 @@ function useColumnPaddingToken(from: SettingsPageProps['headerFrom']): string {
  * A phone's native header shows the title, which the page's screen sets, so there the page is its content alone.
  */
 export function SettingsPage(props: SettingsPageProps): ReactNode {
-  const showHeader = useShowsHeader(props.headerFrom);
+  const showHeader = useShowsHeader();
   const settingsColumn = useSettingsColumn(props.headerFrom);
   const bodyColumn = useBodyColumn(settingsColumn);
 
@@ -71,7 +71,9 @@ export function SettingsPage(props: SettingsPageProps): ReactNode {
     <View className="flex-1 wide:mt-frame-inset">
       {showHeader ? (
         <SettingsPageTop {...props} column={settingsColumn} />
-      ) : null}
+      ) : (
+        <PhoneToolbar>{props.phoneToolbar}</PhoneToolbar>
+      )}
       <SettingsPageBody column={bodyColumn}>{props.children}</SettingsPageBody>
     </View>
   );
@@ -80,16 +82,15 @@ export function SettingsPage(props: SettingsPageProps): ReactNode {
 function useBodyColumn(
   column: SettingsColumn,
 ): React.ContextType<typeof ScrollColumnContext> {
-  const sizeClass = useSizeClass();
+  const wide = useWide();
   const inherited = use(ScrollColumnContext);
 
-  return sizeClass === 'wide' ? column : inherited;
+  return wide ? column : inherited;
 }
 
-function useShowsHeader(from: SettingsPageProps['headerFrom']): boolean {
-  const sizeClass = useSizeClass();
-
-  return sizeClass === 'wide' || (from === 'medium' && sizeClass === 'medium');
+// A wide page draws its own title; the phone shell's header shows it instead.
+function useShowsHeader(): boolean {
+  return useWide();
 }
 
 function SettingsPageTop({
@@ -101,6 +102,31 @@ function SettingsPageTop({
       <SettingsPageHeader {...props} />
     </View>
   );
+}
+
+// On iOS the list's Form keeps its own gap above its first section, so the row adds none below. The row spans the screen and pads its own sides, so a row that scrolls sideways runs to the screen's edges.
+const phoneToolbarClass = 'z-10 shrink-0 py-3 ios:pb-0';
+
+function PhoneToolbar(props: { children: ReactNode }): ReactNode {
+  if (!props.children) return null;
+
+  const toolbar = <View className={phoneToolbarClass}>{props.children}</View>;
+
+  return hasLiquidGlass ? (
+    <UnderGlassHeader>{toolbar}</UnderGlassHeader>
+  ) : (
+    toolbar
+  );
+}
+
+/*
+ * iOS 26's header is transparent and the page starts under it (`headerTransparent` in the section stack), so the row
+ * starts at the header's bottom edge, the height the stack reports (`useHeaderHeight`). A list keeps its own inset.
+ */
+function UnderGlassHeader(props: { children: ReactNode }): React.JSX.Element {
+  const headerHeight = useHeaderHeight();
+
+  return <View style={{ paddingTop: headerHeight }}>{props.children}</View>;
 }
 
 function SettingsPageBody(props: {

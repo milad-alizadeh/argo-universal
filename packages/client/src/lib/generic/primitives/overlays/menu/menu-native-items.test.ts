@@ -86,6 +86,55 @@ describe('a system menu', () => {
     ]);
   });
 
+  it('preserves Action identities, section titles and destructive disabled rows', () => {
+    const remove = vi.fn<() => void>();
+
+    const actions = [
+      { id: 'copy', label: 'Copy', icon: 'copy', onPress: vi.fn<() => void>() },
+      {
+        id: 'delete',
+        label: 'Delete',
+        icon: 'delete',
+        onPress: remove,
+        tone: 'danger',
+        disabled: true,
+        section: { title: 'Danger' },
+      },
+    ] as const;
+
+    const sections = nativeMenuSections({ actions });
+
+    expect(sections.map(({ title }) => title)).toEqual([undefined, 'Danger']);
+    expect(
+      nativeMenuItems({ actions }).map(
+        ({ id, icon, tone, disabled, divided }) => ({
+          id,
+          icon,
+          tone,
+          disabled,
+          divided,
+        }),
+      ),
+    ).toEqual([
+      {
+        id: 'copy',
+        icon: 'copy',
+        tone: undefined,
+        disabled: false,
+        divided: undefined,
+      },
+      {
+        id: 'delete',
+        icon: 'delete',
+        tone: 'danger',
+        disabled: true,
+        divided: true,
+      },
+    ]);
+    sections[1]?.items[0]?.choose();
+    expect(remove).not.toHaveBeenCalled();
+  });
+
   it('lists actions as they are, running the one chosen', () => {
     const squash = vi.fn<() => void>();
 

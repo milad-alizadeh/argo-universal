@@ -18,6 +18,7 @@ import { AppState, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind, withUniwind } from 'uniwind';
+import { holdPhonesInPortrait } from '@/lib/phone-orientation';
 import { useNavigationTheme } from '@/lib/theme';
 import { useWindowBackground } from '@/lib/window-background';
 
@@ -36,6 +37,8 @@ if (__DEV__ && Platform.OS !== 'web') {
     },
   ]);
 }
+
+holdPhonesInPortrait();
 
 declare global {
   interface Window {

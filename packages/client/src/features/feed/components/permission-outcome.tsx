@@ -4,8 +4,8 @@ import {
 } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 
 export interface PermissionOutcomeProps {
   outcome: Outcome;
@@ -57,7 +57,7 @@ function OutcomeIcon({
   kind,
 }: Pick<OutcomeRowProps, 'kind'>): React.JSX.Element {
   return (
-    <View className="h-6 shrink-0 justify-center wide:h-5">
+    <View className="h-6 shrink-0 justify-center wide-type:h-5">
       <Icon
         name={allowedKinds.has(kind) ? 'check' : 'close'}
         role="body"

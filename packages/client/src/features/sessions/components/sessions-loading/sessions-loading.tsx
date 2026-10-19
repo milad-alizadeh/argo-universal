@@ -55,12 +55,12 @@ interface SkeletonRowProps {
 
 const sessionSkeletonLines = [
   {
-    slot: 'h-6 wide:h-5 justify-center',
+    slot: 'h-6 wide-type:h-5 justify-center',
     bar: 'h-2.5 rounded-sm bg-foreground/5',
     testID: 'session-skeleton-title',
   },
   {
-    slot: 'h-5 wide:h-4 justify-center',
+    slot: 'h-5 wide-type:h-4 justify-center',
     bar: 'h-2 rounded-sm bg-foreground/5',
   },
   { slot: 'h-5 justify-center pt-1', bar: 'h-2 rounded-sm bg-foreground/5' },

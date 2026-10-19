@@ -1,8 +1,8 @@
 import type * as React from 'react';
 import { Linking, View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { Text } from '#primitives/content/text';
 import { Tooltip } from '#primitives/overlays/tooltip';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 

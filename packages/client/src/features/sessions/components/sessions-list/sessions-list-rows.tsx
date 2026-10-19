@@ -1,8 +1,7 @@
 import type * as React from 'react';
 import { memo, useCallback } from 'react';
-import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   ProjectHeading,
   type ProjectHeadingProps,
@@ -18,39 +17,6 @@ export function NoSessionsYet(): React.JSX.Element {
   );
 }
 
-export interface EmptyListProps {
-  title: string;
-  // Why the list is empty, such as which search found nothing.
-  message?: string;
-}
-
-function EmptyListMessage({
-  message,
-}: Pick<EmptyListProps, 'message'>): React.JSX.Element | null {
-  if (!message) return null;
-
-  return (
-    <Text role="secondary" className="text-center">
-      {message}
-    </Text>
-  );
-}
-
-// What a list shows in place of rows it does not have: a heading, and a line on why. Settings' search shows it too.
-export function EmptyList({
-  title,
-  message,
-}: EmptyListProps): React.JSX.Element {
-  return (
-    <View className="items-center gap-1 px-4 py-8">
-      <Text role={'heading'} className="text-center">
-        {title}
-      </Text>
-      <EmptyListMessage message={message} />
-    </View>
-  );
-}
-
 export type SessionListRowProps = Pick<
   SessionRowProps,
   | 'session'
@@ -58,7 +24,6 @@ export type SessionListRowProps = Pick<
   | 'selected'
   | 'trailing'
   | 'layout'
-  | 'position'
   | 'onSelect'
   | 'onRename'
   | 'onArchive'
@@ -79,7 +44,7 @@ export const SessionListRow = memo(function SessionListRow({
     <Animated.View
       testID="session-row-surface"
       {...rowFade(animate)}
-      className={rowClassName(props.layout, closing)}
+      className={rowClassName(closing)}
     >
       <SessionRow {...props} />
     </Animated.View>

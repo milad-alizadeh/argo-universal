@@ -1,11 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { openDatabase } from '@repo/db';
 import { project } from '@repo/db/schema';
@@ -26,7 +20,6 @@ import { createFileAgentsFetcher } from '@repo/mocks/registry/port';
 import { scriptedDownloads } from '@repo/mocks/registry/scripted';
 import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
-import { firstPartyPluginsDirectory } from '../src/engine/first-party-plugins';
 
 const home = resolveRuntimeDirectory();
 
@@ -65,29 +58,6 @@ function publishAddress(message: EngineMessage): void {
   });
 }
 
-/*
- * Only first-party Plugins load (ADR-0030), so a scenario adds a fixture Plugin beside Argo's
- * shipped ones, which this root links to.
- */
-function e2ePluginsDirectory(): string {
-  const directory = join(home, 'shipped-plugins');
-
-  mkdirSync(directory, { recursive: true });
-
-  for (const entry of readdirSync(firstPartyPluginsDirectory))
-    linkShipped(entry, directory);
-
-  return directory;
-}
-
-function linkShipped(entry: string, directory: string): void {
-  const link = join(directory, entry);
-
-  if (entry.startsWith('.') || existsSync(link)) return;
-
-  symlinkSync(join(firstPartyPluginsDirectory, entry), link);
-}
-
 const seed = openDatabase(join(home, 'argo.db'));
 
 const save = seed.$client.prepare(
@@ -105,7 +75,7 @@ const engine = composeEngine({
   home,
   port,
   version,
-  firstPartyPluginsDirectory: e2ePluginsDirectory(),
+  firstPartyPluginsDirectory: join(home, 'shipped-plugins'),
   startedAt,
   now: Date.now,
   createId: randomUUID,

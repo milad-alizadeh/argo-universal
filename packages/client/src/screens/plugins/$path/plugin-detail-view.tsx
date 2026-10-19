@@ -1,22 +1,39 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { PluginTree } from '../../../lib/product/plugin-registry';
+import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
+import { ActionShortcutScope } from '#primitives/actions/action-list';
+import {
+  PluginTree,
+  type PluginOnEvent,
+} from '../../../lib/product/plugin-registry';
 
 export interface PluginDetailViewProps {
   // The page the Plugin draws; blank until the Server's first snapshot arrives.
   root: WireNode | null;
-  onEvent: (eventId: string) => void;
+  viewId?: PluginViewId | null;
+  onEvent: PluginOnEvent;
 }
+
+// Under iOS 26's transparent header, the page starts below it and scrolls on under the glass.
+const pageScroll = {
+  testID: 'plugin-page',
+  className: 'bg-content',
+  surfaceClassName: 'bg-content',
+  contentContainerClassName: 'p-6',
+  contentInsetAdjustmentBehavior: 'automatic',
+} as const;
 
 // Foundations / PluginPage: a Plugin's page, drawn by the App's registry.
 export function PluginDetailView({
   root,
   onEvent,
+  viewId,
 }: PluginDetailViewProps): React.JSX.Element {
   return (
-    <View testID="plugin-page" className="flex-1 bg-content p-6">
-      {root && <PluginTree root={root} onEvent={onEvent} />}
-    </View>
+    <ActionShortcutScope>
+      <ScrollFadeView {...pageScroll}>
+        {root && <PluginTree key={viewId} root={root} onEvent={onEvent} />}
+      </ScrollFadeView>
+    </ActionShortcutScope>
   );
 }

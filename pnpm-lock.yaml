@@ -197,6 +197,9 @@ catalogs:
     '@gorhom/portal':
       specifier: 1.0.14
       version: 1.0.14
+    '@jridgewell/trace-mapping':
+      specifier: 0.3.31
+      version: 0.3.31
     '@legendapp/list':
       specifier: 3.6.0
       version: 3.6.0
@@ -416,6 +419,9 @@ catalogs:
     expo-router:
       specifier: ~57.0.24
       version: 57.0.24
+    expo-screen-orientation:
+      specifier: ~57.0.2
+      version: 57.0.3
     expo-splash-screen:
       specifier: ~57.0.9
       version: 57.0.9
@@ -452,6 +458,9 @@ catalogs:
     node-pty:
       specifier: 1.1.0
       version: 1.1.0
+    oxc-parser:
+      specifier: 0.150.0
+      version: 0.150.0
     oxfmt:
       specifier: 0.72.0
       version: 0.72.0
@@ -593,6 +602,9 @@ importers:
       sherif:
         specifier: 'catalog:'
         version: 1.13.0
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       turbo:
         specifier: 'catalog:'
         version: 2.11.7
@@ -715,12 +727,21 @@ importers:
 
   apps/server:
     dependencies:
+      '@argo/plugin-kit':
+        specifier: workspace:*
+        version: link:../../packages/plugin-kit
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@repo/engine':
         specifier: workspace:*
         version: link:../../packages/engine
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../../packages/machine-log
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -909,6 +930,9 @@ importers:
       expo-router:
         specifier: 'catalog:'
         version: 57.0.24(842a24270c9e051bd08a32e9b22725bc)
+      expo-screen-orientation:
+        specifier: 'catalog:'
+        version: 57.0.3(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))
       expo-splash-screen:
         specifier: 'catalog:'
         version: 57.0.9(expo@57.0.26)(supports-color@8.1.1)(typescript@7.0.2)
@@ -1303,6 +1327,9 @@ importers:
       json-schema-to-typescript:
         specifier: 'catalog:'
         version: 16.0.0
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1334,6 +1361,9 @@ importers:
       '@agentclientprotocol/sdk':
         specifier: 'catalog:'
         version: 1.7.0(zod@4.6.5)
+      '@jridgewell/trace-mapping':
+        specifier: 'catalog:'
+        version: 0.3.31
       '@repo/contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -1364,12 +1394,24 @@ importers:
       fflate:
         specifier: 'catalog:'
         version: 0.8.3
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       node-pty:
         specifier: 'catalog:'
         version: 1.1.0(patch_hash=7d1011d673c499bcb613735c649b2e5ae78dc6430f35dd2d18f077fa6a7f5e01)
+      oxc-parser:
+        specifier: 'catalog:'
+        version: 0.150.0
       react:
         specifier: 'catalog:'
         version: 19.2.3
+      react-native:
+        specifier: 'catalog:'
+        version: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
+      react-native-svg:
+        specifier: 'catalog:'
+        version: 15.15.4(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
       react-reconciler:
         specifier: 'catalog:'
         version: 0.33.0(react@19.2.3)
@@ -1444,6 +1486,61 @@ importers:
 
   packages/machine-log:
     devDependencies:
+      '@repo/typescript':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.6)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+
+  packages/plugin-kit:
+    dependencies:
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@repo/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@repo/typescript':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(happy-dom@20.14.6)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+
+  plugins/issue-tracker:
+    devDependencies:
+      '@argo/plugin-kit':
+        specifier: workspace:*
+        version: link:../../packages/plugin-kit
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@repo/typescript':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -6378,6 +6475,12 @@ packages:
         optional: true
       react-server-dom-webpack:
         optional: true
+
+  expo-screen-orientation@57.0.3:
+    resolution: {integrity: sha512-hKtTKAoinahalc5nzMmGfVtj1NfVj4pFJycJGy/HUzrBlu+1rOnHdGUKgaSKkMhr5Mr9GxAxcuLvuM+oyFNFLA==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
 
   expo-server@57.0.3:
     resolution: {integrity: sha512-aK+LdKzauHSGmsOStZtyxdzv0zWssCkxTw3m4QuOhfDSJsZaMRTd9O41d8ixU/QfELTbaJ0oRNcF7JFV/7O9YQ==}
@@ -13989,6 +14092,11 @@ snapshots:
       - expo-font
       - react-native-worklets
       - supports-color
+
+  expo-screen-orientation@57.0.3(expo@57.0.26)(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)):
+    dependencies:
+      expo: 57.0.26(20d7116fd28de8d0bee1b55e844b7a77)
+      react-native: 0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
 
   expo-server@57.0.3: {}
 

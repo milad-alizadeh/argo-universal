@@ -1,11 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { type MockInstance, expect, spyOn, waitFor } from 'storybook/test';
-import { Text } from '#primitives/display/text';
-import { fadedEdges } from '../../../../mocks/scroll-fade';
+import { Text } from '#primitives/content/text';
+import { List } from '#primitives/lists/list';
+import { fadedEdges, fadedInlineEdges } from '../../../../mocks/scroll-fade';
 import { ScrollFadeView } from './scroll-fade';
-import { ScrollFadeList } from './scroll-fade-list';
-import { ScrollFadePreview } from './scroll-fade-preview.mocks';
+import {
+  ScrollFadePreview,
+  ScrollFadeRowPreview,
+} from './scroll-fade-preview.mocks';
 
 const meta = {
   title: 'Tests/ScrollFade',
@@ -53,6 +56,40 @@ export const NoFadeWhenContentFits: Story = {
   },
 };
 
+export const HorizontalFadesFollowScroll: Story = {
+  render: () => <ScrollFadeRowPreview />,
+  play: async ({ canvas }) => {
+    const row = await canvas.findByTestId('scroll-fade-row');
+    // At rest only the trailing edge hides content.
+    await waitFor(() =>
+      expect(fadedInlineEdges(row)).toEqual({ leading: false, trailing: true }),
+    );
+    row.scrollLeft = 40;
+    await waitFor(() =>
+      expect(fadedInlineEdges(row)).toEqual({ leading: true, trailing: true }),
+    );
+    row.scrollLeft = row.scrollWidth;
+    await waitFor(() =>
+      expect(fadedInlineEdges(row)).toEqual({ leading: true, trailing: false }),
+    );
+    // The row is no taller than its content: the vertical fade's end gap never pads it.
+    await expect(row.scrollHeight).toBe(row.clientHeight);
+  },
+};
+
+export const NoHorizontalFadeWhenRowFits: Story = {
+  render: () => <ScrollFadeRowPreview labels={['All']} />,
+  play: async ({ canvas }) => {
+    await canvas.findByText('All');
+    const row = canvas.getByTestId('scroll-fade-row');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect(fadedInlineEdges(row)).toEqual({
+      leading: false,
+      trailing: false,
+    });
+  },
+};
+
 // Scroll view props only native lists take; a web list that passes them to its DOM element makes React warn of unknown attributes.
 const nativeOnlyProps = {
   keyboardShouldPersistTaps: 'handled',
@@ -84,11 +121,11 @@ export const ListKeepsNativeOnlyPropsOffTheWeb: Story = {
   },
   render: () => (
     <View style={listFrame}>
-      <ScrollFadeList
+      <List
         {...nativeOnlyProps}
-        data={rows}
+        items={rows}
         keyExtractor={(row) => row}
-        renderItem={({ item }) => <Text>{item}</Text>}
+        renderItem={(item) => <Text>{item}</Text>}
       />
     </View>
   ),

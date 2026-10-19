@@ -1,31 +1,18 @@
 import type { ReactElement } from 'react';
 import type { PickerProps } from '#primitives/inputs/picker';
-import type { IconName } from '../../../symbols/icon-names';
+import type { KitProps } from '../../kit-props';
 
-export interface ComboboxOption<Value extends string> {
-  value: Value;
-  label: string;
-  accessibilityLabel?: string;
-  supporting?: string;
-  code?: boolean;
-  icon?: IconName;
-  disabled?: boolean;
-}
+export type ComboboxOption<Value extends string> = KitProps<
+  'Combobox',
+  Value
+>['options'][number];
 
-export type ComboboxProps<Value extends string> = Omit<
-  PickerProps<Value>,
-  'options'
-> & {
-  options: readonly ComboboxOption<Value>[];
-  title?: string;
-  searchPlaceholder?: string;
-  emptyLabel?: string;
-  filter?: (option: ComboboxOption<Value>, query: string) => boolean;
-  footerAction?: { label: string; onPress: () => void };
-  trigger?: ReactElement<{ disabled?: boolean; onPress?: () => void }>;
-};
+// Kit-only: local form validation, filtering and interactive trigger.
+export type ComboboxProps<Value extends string> = KitProps<'Combobox', Value> &
+  Pick<PickerProps<Value>, 'invalid' | 'errors' | 'hint' | 'onBlur'> & {
+    filter?: (option: ComboboxOption<Value>, query: string) => boolean;
+    trigger?: ReactElement<{ disabled?: boolean; onPress?: () => void }>;
+  };
 
 export type ComboboxContentProps<Value extends string> =
-  ComboboxProps<Value> & {
-    onClose?: () => void;
-  };
+  ComboboxProps<Value> & { onClose?: () => void };

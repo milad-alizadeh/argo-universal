@@ -1,0 +1,49 @@
+import { z } from 'zod';
+import { iconSymbol } from '../kit-symbols/icon-schema';
+import { tones } from '../kit-tokens';
+
+const field = z.object({
+  title: z.string().describe('The field label.'),
+  accessibilityLabel: z
+    .string()
+    .optional()
+    .describe('Override the spoken field name and value.'),
+});
+
+export const metadataProps = z.object({
+  title: z.string().optional().describe('Optional section heading.'),
+});
+
+export const metadataLabelProps = field.extend({
+  text: z.string().describe('The field value.'),
+  icon: iconSymbol.optional(),
+});
+
+export const metadataLinkProps = field.extend({
+  text: z
+    .string()
+    .describe(
+      'The displayed link text; drawn as plain text until kit Link lands.',
+    ),
+  href: z.string().describe('The link destination.'),
+});
+
+export const metadataPillsProps = field;
+
+export const metadataStatusDotProps = field.extend({
+  text: z.string().describe('The status text.'),
+  tone: z.enum(tones),
+});
+
+export const metadataAvatarProps = field.extend({
+  name: z.string().describe('The person’s displayed name.'),
+  src: z.string().optional().describe('Optional avatar image URI.'),
+});
+
+export const metadataChildParts = [
+  'Metadata.Label',
+  'Metadata.Link',
+  'Metadata.Pills',
+  'Metadata.StatusDot',
+  'Metadata.Avatar',
+] as const;

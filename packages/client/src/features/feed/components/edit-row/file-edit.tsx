@@ -2,12 +2,12 @@ import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { fileTypeIcon } from '#lib/generic/symbols/file-type-icon';
+import { Text } from '#primitives/content/text';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleHeader,
-} from '#primitives/display/collapsible';
-import { Text } from '#primitives/display/text';
+} from '#primitives/layout/collapsible';
 import type { FileDiff } from '../../view/file-diff';
 import { DiffView } from '../diff-view/diff-view';
 import { FileName } from './file-name';

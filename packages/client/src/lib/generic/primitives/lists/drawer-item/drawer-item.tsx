@@ -1,9 +1,9 @@
 import type * as React from 'react';
-import { contentActionClass } from '#primitives/buttons/button';
-import { CountBadge } from '#primitives/display/count-badge';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
-import { Pressable } from '#primitives/pressable';
+import { contentActionClass } from '#primitives/actions/button';
+import { Pressable } from '#primitives/actions/pressable';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
+import { CountBadge } from '#primitives/status/count-badge';
 import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
 

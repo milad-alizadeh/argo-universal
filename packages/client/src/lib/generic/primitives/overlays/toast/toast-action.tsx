@@ -1,5 +1,5 @@
 import { toast as sonner } from 'sonner';
-import { Icon } from '#primitives/display/icon';
+import { Icon } from '#primitives/content/icon';
 import type { Toast, ToastAction } from './toast';
 
 // An action's toast stays 4 seconds: long enough to press Undo, inside the Server's 5-second window.

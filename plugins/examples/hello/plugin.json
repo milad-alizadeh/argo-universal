@@ -2,8 +2,46 @@
   "id": "hello",
   "name": "Hello",
   "version": "0.0.1",
-  "engines": { "argo": ">=0.0.0 <1.0.0" },
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
   "main": "index.js",
-  "icon": { "sf": "powerplug", "material": "power" },
-  "contributes": { "nav": [{ "id": "hello", "title": "Hello", "path": "/" }] }
+  "icon": {
+    "sf": "powerplug",
+    "material": "power"
+  },
+  "contributes": {
+    "nav": [
+      {
+        "id": "hello",
+        "title": "Hello",
+        "path": "/"
+      },
+      {
+        "id": "hello-lists",
+        "title": "Hello lists",
+        "path": "/lists"
+      },
+      {
+        "id": "hello-dashboard",
+        "title": "Hello dashboard",
+        "path": "/dashboard"
+      },
+      {
+        "id": "hello-form",
+        "title": "Hello form",
+        "path": "/form"
+      }
+    ],
+    "settings": [
+      {
+        "key": "greeting",
+        "type": "text",
+        "label": "Greeting",
+        "description": "The heading on the Hello page.",
+        "default": "Hello from a Plugin"
+      }
+    ],
+    "slots": ["argo/project/details/v1"]
+  }
 }

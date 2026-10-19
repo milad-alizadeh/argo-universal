@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { ListSection } from '#primitives/lists/list';
 import type { ElicitationModel } from '../../hooks/use-elicitation-form';
 import { FieldRows } from './elicitation-field-rows';
 import { ElicitationFormField } from './elicitation-form-body';
@@ -33,18 +33,18 @@ function FieldsSection({
   section,
 }: ModelProps & { section: FieldSection }): ReactElement {
   const footer = useSectionFooter({ model, entries: section.entries });
-  const rows = <SectionRows model={model} section={section} />;
+  const rows = sectionRows({ model, section });
 
   if (section.textFields) return <TextFields {...footer}>{rows}</TextFields>;
 
   return (
-    <GroupedListSection title={section.title} {...footer}>
+    <ListSection title={section.title} {...footer}>
       {rows}
-    </GroupedListSection>
+    </ListSection>
   );
 }
 
-function SectionRows({
+function sectionRows({
   model,
   section,
 }: ModelProps & { section: FieldSection }): ReactElement[] {

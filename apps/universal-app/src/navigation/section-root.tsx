@@ -1,11 +1,12 @@
 import {
   type FirstPage,
   type CoreSection,
+  EmptyState,
   type SectionList,
   useNeedsAttention,
   useSectionList,
 } from '@repo/client';
-import { useSizeClass } from '@repo/client/size-class';
+import { useWide } from '@repo/client/size-class';
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { Stack, useFocusEffect, useNavigation } from 'expo-router';
 import { CommonActions, DrawerActions } from 'expo-router/react-navigation';
@@ -104,14 +105,40 @@ function RootList({ section, narrow }: RootListProps): React.JSX.Element {
   );
 }
 
-// A section's root page: its list under the section's header on a narrow window; on a wide one, where the list sits beside the pages, the section's first page, which the section's list names.
+/*
+ * A section's root page: its list under the section's header in the phone shell. Where the list
+ * sits beside the pages, the section's empty detail until a page is picked, when it has one, or
+ * else the section's first page, which the section's list names.
+ */
 export function SectionRoot({ section }: SectionRootProps): React.ReactNode {
-  const { useFirstPage } = useSectionList(section);
-  const wide = useSizeClass() === 'wide';
+  const wide = useWide();
+  const besidePages = useBesidePages(section, wide);
 
-  if (wide && useFirstPage) {
-    return <OpenFirstPage useFirstPage={useFirstPage} />;
-  }
+  if (besidePages) return besidePages;
 
   return <RootList section={section} narrow={!wide} />;
+}
+
+// What the root shows where the list sits beside the pages, if anything.
+function useBesidePages(section: CoreSection, wide: boolean): React.ReactNode {
+  const list = useSectionList(section);
+
+  if (!wide) return null;
+
+  if (list.emptyPage) return <EmptyPage {...list.emptyPage} />;
+
+  return firstPage(list);
+}
+
+const firstPage = ({ useFirstPage }: SectionList): React.ReactNode =>
+  useFirstPage ? <OpenFirstPage useFirstPage={useFirstPage} /> : null;
+
+type EmptyPageProps = NonNullable<SectionList['emptyPage']>;
+
+function EmptyPage(props: EmptyPageProps): React.JSX.Element {
+  return (
+    <View testID="empty-detail" className="flex-1">
+      <EmptyState {...props} />
+    </View>
+  );
 }

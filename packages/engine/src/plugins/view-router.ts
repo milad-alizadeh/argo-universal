@@ -1,8 +1,19 @@
 import {
+  ReplaceableInput,
+  RenderFailureInput,
+} from '@repo/contracts/plugins/replaceable';
+import {
   PluginDispatchInput,
+  PluginSlotInput,
   PluginViewInput,
 } from '@repo/contracts/plugins/wire';
-import { publicProcedure, router, routerFactory } from '../rpc';
+import { TRPCError } from '@trpc/server';
+import {
+  publicProcedure,
+  router,
+  routerFactory,
+  type RpcConnection,
+} from '../rpc';
 import type { PluginService } from './service';
 
 export function requireSignal(signal: AbortSignal | undefined): AbortSignal {
@@ -11,16 +22,86 @@ export function requireSignal(signal: AbortSignal | undefined): AbortSignal {
   return signal;
 }
 
-// What Apps use to show a Plugin's page and to send its taps back.
-export const createPluginViewRouter = routerFactory((plugins: PluginService) =>
+function requireConnection(
+  connection: RpcConnection | undefined,
+): RpcConnection {
+  if (!connection || connection.signal.aborted)
+    throw new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message: 'Plugin views require a live App Connection',
+    });
+
+  return connection;
+}
+
+function connectionOf(
+  connection: RpcConnection | undefined,
+  signal?: AbortSignal,
+): RpcConnection {
+  const live = requireConnection(connection);
+
+  return {
+    ...live,
+    signal: signal ? AbortSignal.any([live.signal, signal]) : live.signal,
+  };
+}
+
+const viewsRouter = routerFactory((plugins: PluginService) =>
   router({
     view: publicProcedure
       .input(PluginViewInput)
-      .subscription(({ input, signal }) =>
-        plugins.view(input, requireSignal(signal)),
+      .subscription(({ input, ctx, signal }) =>
+        plugins.view(input, connectionOf(ctx.connection, signal)),
       ),
+    slot: publicProcedure
+      .input(PluginSlotInput)
+      .subscription(({ input, ctx, signal }) =>
+        plugins.slot(input, connectionOf(ctx.connection, signal)),
+      ),
+  }),
+);
+
+const dispatchRouter = routerFactory((plugins: PluginService) =>
+  router({
     dispatch: publicProcedure
       .input(PluginDispatchInput)
-      .mutation(({ input }) => plugins.dispatch(input)),
+      .mutation(async ({ input, ctx }) => {
+        await plugins.dispatch(requireConnection(ctx.connection), input);
+
+        return { ok: true as const };
+      }),
   }),
+);
+
+const renderRouter = routerFactory((plugins: PluginService) =>
+  router({
+    render: publicProcedure
+      .input(ReplaceableInput)
+      .subscription(({ input, ctx, signal }) =>
+        plugins.render(input, connectionOf(ctx.connection, signal)),
+      ),
+  }),
+);
+
+const renderFailureRouter = routerFactory((plugins: PluginService) =>
+  router({
+    renderFailed: publicProcedure
+      .input(RenderFailureInput)
+      .mutation(({ input, ctx }) => {
+        plugins.renderFailed(requireConnection(ctx.connection), input);
+
+        return { ok: true as const };
+      }),
+  }),
+);
+
+import { mergeRouters } from '../rpc';
+
+export const createPluginViewRouter = routerFactory((plugins: PluginService) =>
+  mergeRouters(
+    viewsRouter(plugins),
+    dispatchRouter(plugins),
+    renderRouter(plugins),
+    renderFailureRouter(plugins),
+  ),
 );

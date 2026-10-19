@@ -3,8 +3,8 @@ import type { JSX } from 'react';
 import { ScrollView, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { cn } from '#lib/generic/utils';
-import { Icon, IconSpinner } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon, IconSpinner } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { maximumPlanStepsHeight } from '../../utils/status';
 import { mutedTextClassName } from './status-surface';
@@ -64,7 +64,7 @@ function PlanStep({ entry }: StepProps): JSX.Element {
 
   return (
     <View className={className}>
-      <View className="h-6 wide:h-5 shrink-0 justify-center">
+      <View className="h-6 wide-type:h-5 shrink-0 justify-center">
         <StepIndicator entry={entry} />
       </View>
       <StepText entry={entry} />

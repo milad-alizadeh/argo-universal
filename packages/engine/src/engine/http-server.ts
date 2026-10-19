@@ -1,26 +1,24 @@
 import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
-import { type AcpResourceInput } from '../agents';
-import type { RegistryActor } from '../agents';
+import type { AcpResourceInput, RegistryActor } from '../agents';
 import { blobsFolderIn } from '../blob';
 import { Notifications, type NotificationOptions } from '../notifications';
-import {
-  createPluginRuntime,
-  type Keychain,
-  type PluginNetwork,
-  type PluginRuntime,
-} from '../plugins';
-import { readProjectPaths } from '../projects';
+import type { HookPort, Keychain, PluginNetwork } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import { readServerId } from '../system';
+import { createHttpCaller, type HttpCaller } from './http-callers';
 import {
   admitClose,
   connectWebSockets,
   listenOnLoopback,
 } from './http-connections';
+import { closePlugins, startPlugins, type PluginSetup } from './plugin-setup';
 import { createRequestGuard } from './request-guard';
-import { createRequestListener } from './request-listener';
+import {
+  createRequestListener,
+  type RequestListenerOptions,
+} from './request-listener';
 import { type AppRouter, createAppRouter } from './router';
 import { createAppRouterDeps } from './router-deps';
 
@@ -40,20 +38,19 @@ export interface HttpServerOptions {
   commandAdmission?: AbortController;
   acp?: AcpResourceInput;
   notificationOptions?: NotificationOptions;
+  // Where Sessions reach Plugin Hooks; the Plugin runtime attaches to it while the server runs.
+  hookPort?: HookPort;
 }
 
 export interface HttpServer {
   notifications: Notifications;
-  createCaller: (
-    options?: Parameters<AppRouter['createCaller']>[1],
-  ) => ReturnType<AppRouter['createCaller']>;
+  createCaller: HttpCaller;
   close: () => Promise<void>;
 }
 
-type HttpSetup = {
+type HttpSetup = PluginSetup & {
   blobsFolder: string;
   commandAdmission: AbortController;
-  pluginRuntime: PluginRuntime;
   notifications: Notifications;
 };
 
@@ -63,7 +60,10 @@ export async function startHttpServer(
 ): Promise<HttpServer> {
   const setup = await prepareHttpServer(options);
   const guard = createRequestGuard(options.port);
-  const server = createHttpListener(guard, setup.blobsFolder, setup.appRouter);
+
+  const server = createServer(
+    createRequestListener(listenerOptions(setup, guard)),
+  );
 
   await listenWithPlugins(server, options.port, setup);
 
@@ -82,7 +82,7 @@ function connectHttpServer(
     close: admitClose(setup.commandAdmission, () =>
       closeHttpServices(setup, closeConnections),
     ),
-    createCaller: (options) => setup.appRouter.createCaller({}, options),
+    createCaller: createHttpCaller(setup),
   };
 }
 
@@ -91,7 +91,7 @@ async function closeHttpServices(
   closeConnections: () => Promise<void>,
 ): Promise<void> {
   setup.notifications.close();
-  await Promise.all([closeConnections(), setup.pluginRuntime.close()]);
+  await Promise.all([closeConnections(), closePlugins(setup)]);
 }
 
 async function prepareHttpServer(
@@ -111,11 +111,7 @@ function prepareHttpSetup(
     blobsFolder: blobsFolderIn(options.home),
     commandAdmission: options.commandAdmission ?? new AbortController(),
     notifications: new Notifications({ ...options, serverId }),
-    pluginRuntime: createPluginRuntime(options.home, {
-      keychain: options.keychain,
-      network: options.pluginNetwork,
-      projects: async () => readProjectPaths(options.database),
-    }),
+    ...startPlugins(options),
   };
 }
 
@@ -128,30 +124,44 @@ function createHttpRouter(
       ...options,
       blobsFolder: setup.blobsFolder,
       sessionCommandSignal: setup.commandAdmission.signal,
-      pluginRuntime: setup.pluginRuntime,
       notifications: setup.notifications,
+      ...pluginDeps(setup),
     }),
   );
 }
 
+type PluginDeps = Pick<HttpSetup, 'pluginRuntime' | 'pluginSettings'> & {
+  hooks: HookPort['hooks'];
+};
+
+const pluginDeps = (setup: HttpSetup): PluginDeps => ({
+  pluginRuntime: setup.pluginRuntime,
+  pluginSettings: setup.pluginSettings,
+  hooks: setup.hookPort.hooks,
+});
+
 async function listenWithPlugins(
   server: Server,
   port: number,
-  setup: Pick<HttpSetup, 'pluginRuntime' | 'notifications'>,
+  setup: HttpSetup,
 ): Promise<void> {
   try {
     await listenOnLoopback(server, port);
   } catch (error) {
     setup.notifications.close();
-    await setup.pluginRuntime.close();
+    await closePlugins(setup);
     throw error;
   }
 }
 
-function createHttpListener(
+function listenerOptions(
+  setup: HttpSetup & { appRouter: AppRouter },
   guard: ReturnType<typeof createRequestGuard>,
-  blobsFolder: string,
-  router: AppRouter,
-): Server {
-  return createServer(createRequestListener({ guard, blobsFolder, router }));
+): RequestListenerOptions {
+  return {
+    guard,
+    blobsFolder: setup.blobsFolder,
+    router: setup.appRouter,
+    readAsset: setup.pluginRuntime.openAsset,
+  };
 }

@@ -6,7 +6,7 @@ This maps Argo's test boundaries to [Prickles TS4, TS6 and TS7](prickles/prickle
 
 ## Test kinds
 
-Argo has four kinds of test. Owned code is never faked: only the Agent process and the Registry are replaced. The scripted Agent, `createScriptedAgent(scenario)` on the official ACP SDK, is the one fake Agent at every level; a scenario is a typed list of steps, and shared named scenarios cover reply, image, cancel-wait, Permission request, Elicitation, configuration and write pressure.
+Argo has four kinds of test. Owned code is never faked. External boundaries use the fixtures described below. The scripted Agent, `createScriptedAgent(scenario)` on the official ACP SDK, is the one fake Agent at every level; a scenario is a typed list of steps, and shared named scenarios cover reply, image, cancel-wait, Permission request, Elicitation, configuration and write pressure.
 
 | Kind | Runs for real | Replaced |
 |---|---|---|
@@ -31,6 +31,7 @@ Choose the smallest surface used by real callers that proves the required behavi
 | Database behaviour | The Writer and migrations against isolated real SQLite | Initial rows and submitted operations; committed results, rollback, ordering and restart behaviour |
 | Git and filesystem behaviour | Real Git and filesystem operations in temporary directories | Initial files and repositories; resulting files, Checkouts and cleanup |
 | Server startup and transport | The real Server process, HTTP/subscriptions and Engine | Isolated configuration and storage; external services controlled at their ports |
+| Plugin behaviour | The real plugin host and a worker on the Plugin's own folder, through the Plugin kit's test harness ([ADR-0025](../adr/0025-plugins-run-on-the-server-and-draw-argo-components.md)) | Fixture executables on `PATH`, such as `gh`; the Plugin's tree and the results of its events. Engine journeys and App E2E use fixture Plugins, never shipped or example ones |
 | App end-to-end (E2E) | The actual App, tRPC, Engine, Session, Feed, Writer and SQLite | Shared scripted Agent scenarios and the Registry fixture; user-visible outcomes |
 | ACP boundary | The real SDK and Argo readers or mapping under test | Official typed request/response fixtures, malformed wire fixtures for rejection tests, and the scripted Agent where transport is exercised |
 | Process ownership | The real process launcher and OS lifecycle | The scripted Agent as a real process; startup, stdio, exit and cleanup observations |
@@ -75,3 +76,17 @@ The scripted Agent and typed fixtures prove Argo's handling of the supplied scen
 For Registry Agent launch under Spec 0014 #721, the external download and npm ports supply only files, timing and failures. App journeys keep tRPC, Engine, SQLite, file materialization and launch real. The Registry fixture serves the scripted Agent as a compressed binary. Holding the download makes the first-launch `Loading…` state observable.
 
 Bootstraps seed `agent_servers` Registry rows. Get started fixtures can begin without Projects; production startup registers their fixture Project on restart. Test steps observe the App and public procedures. The fixtures do not implement selection, admission, persistence or installation status.
+
+## Plugin boundaries
+
+Plugin behaviour belongs in the Plugin's own folder. `@argo/plugin-kit/testing` exports `startPluginTest`. It starts the production loader, Plugin host, worker and Plugin SQLite. Tests observe live trees, find text and dispatch checked events. Slot views receive the production Slot context.
+
+The harness reuses the Engine's in-memory fixture for the external OS Keychain. Tests cannot read or change the user's secrets.
+
+The harness accepts Project identities as fixture inputs to `argo.projects.list`. Its `path` option prepends executable fixture folders for that runtime's external commands. It does not change the test process environment. The Issue tracker uses a fixture `gh` on PATH. Its journeys run with the other package tests in CI.
+
+Engine journeys use fixture Plugins in `packages/engine/mocks/`. Each fixture exercises a core contract: keyed patches, dispatch, Connections, late subscribers, Slots or Capabilities. Shared wire fixtures describe those scenarios.
+
+App E2E loads `e2e/mocks/plugins/`. These scenarios prove navigation, page events, Slot composition and failure handling. Neither layer loads the shipped `plugins/` folder. `plugins/examples/hello` remains a demo. Changes to the demo or the Issue tracker do not change Engine or App expectations.
+
+The harness proves Plugin behaviour through the real runtime and supplied external fixtures. It does not prove App rendering, HTTP transport, GitHub authentication or upstream GitHub compatibility.

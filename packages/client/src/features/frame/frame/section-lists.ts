@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { createContext, use } from 'react';
 import type { FirstPage } from '#lib/product/navigation/navigation';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
+import type { EmptyStateProps } from '#primitives/status/empty-state';
 import type { CoreSection } from '../../../lib/product/navigation/sections';
 
 // What a section hands the Frame: its list, and what goes with it.
@@ -18,6 +19,8 @@ export interface SectionList {
    * it is still being chosen; without one, the root keeps its own page. Called as a hook.
    */
   useFirstPage?: () => FirstPage | undefined;
+  // What the detail beside the list shows at the section's root, where nothing is selected yet; without it, the root opens the first page.
+  emptyPage?: Pick<EmptyStateProps, 'title' | 'description'>;
 }
 
 export type SectionLists = Record<CoreSection, SectionList>;

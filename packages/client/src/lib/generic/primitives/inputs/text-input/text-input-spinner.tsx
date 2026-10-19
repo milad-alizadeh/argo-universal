@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { Spinner } from '#primitives/display/spinner';
+import { Spinner } from '#primitives/status/spinner';
 import { type FieldProgressProps, fieldLoadingLabel } from './text-input-props';
 
 // The spinner that trails a wide or web field while its value is checked.

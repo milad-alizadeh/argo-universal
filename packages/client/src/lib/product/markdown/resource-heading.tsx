@@ -2,8 +2,8 @@ import type * as React from 'react';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { resourceIcon } from './resource-name';
 
 export interface HeaderResource {
@@ -48,7 +48,7 @@ function ResourceUri({ uri }: { uri: string }): React.JSX.Element {
 
 function ResourceIcon({ uri }: { uri: string }): React.JSX.Element {
   return (
-    <View className="h-6 w-icon-md shrink-0 items-center justify-center wide:h-5">
+    <View className="h-6 w-icon-md shrink-0 items-center justify-center wide-type:h-5">
       <Icon
         role="control"
         name={resourceIcon(uri)}

@@ -3,19 +3,45 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#plugin-identifier": "./src/plugins/plugin-identifier.ts",
+    "#plugin-wire-slot": "./src/plugins/wire-slot.ts",
+    "#plugin-wire-events": "./src/plugins/wire-events.ts",
+    "#plugin-replaceable-slot-id": "./src/plugins/replaceable-slot-id.ts",
+    "#plugin-surface": "./src/plugins/surface.ts",
+    "#plugin-wire-json": "./src/plugins/wire-json.ts"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",
     "./plugins/runtime": "./src/plugins/runtime.ts",
     "./plugins/argo-calls": "./src/plugins/argo-calls.ts",
+    "./plugins/assets": "./src/plugins/assets.ts",
+    "./plugins/hook-protocol": "./src/plugins/hook-protocol.ts",
+    "./plugins/wire-limits": "./src/plugins/wire-limits.ts",
+    "./plugins/replaceable-fixtures": "./mocks/replaceable-slots.ts",
+    "./plugins/replaceable": "./src/plugins/replaceable.ts",
     "./plugins/wire": "./src/plugins/wire.ts",
+    "./plugins/wire-patch": "./src/plugins/wire-patch.ts",
     "./plugins/wire-fixtures": "./src/plugins/wire-fixtures.ts",
     "./plugins/sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
-    "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts"
+    "./plugins/material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",
+    "./plugins/action-list-props": "./src/plugins/action-list-props.ts",
+    "./plugins/kit": "./src/plugins/kit.ts",
+    "./plugins/replacement-tree": "./src/plugins/replacement-tree.ts",
+    "./plugins/prepare-tree": "./src/plugins/prepare-tree.ts",
+    "./kit-tokens": "./src/kit-tokens.ts",
+    "./plugins/wire-node-key": "./src/plugins/wire-node-key.ts",
+    "./kit-props": "./src/kit-props.ts",
+    "./kit-symbols": "./src/kit-symbols/index.ts",
+    "./desktop-share": "./src/desktop-share.ts",
+    "./plugins/visual-props": "./src/plugins/visual-props.ts"
   },
   "scripts": {
     "generate:registry": "node tools/registry/generate.mts && json2ts -i src/agents/upstream/registry.published.schema.gen.json -o src/agents/upstream/registry.gen.ts --cwd src/agents/upstream --unknownAny --bannerComment '/* Generated from ACP Registry 33a1a101ef68ab20a97624ac89d4b977eeac0daf schema and publisher literal by json-schema-to-typescript 16.0.0. */'",
+    "generate:plugin-reference": "tsx tools/generate-plugin-reference.mts",
+    "check:plugin-reference": "tsx tools/generate-plugin-reference.mts --check",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -29,6 +55,7 @@
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
     "json-schema-to-typescript": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

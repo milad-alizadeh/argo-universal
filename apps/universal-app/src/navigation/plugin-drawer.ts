@@ -12,21 +12,21 @@ type PluginLocation = { plugins: readonly PluginSection[]; path: string };
 type FrameSections = PluginLocation & { lists: SectionLists };
 
 export const frameDrawerOptions =
-  (wide: boolean, sections: FrameSections) =>
+  (framed: boolean, sections: FrameSections) =>
   ({ route }: { route: RouteProp<ParamListBase> }): DrawerNavigationOptions => {
-    if (route.name === 'plugins') return pluginDrawerOptions(wide, sections);
+    if (route.name === 'plugins') return pluginDrawerOptions(framed, sections);
 
-    return drawerScreenOptions(wide, sections.lists)({ route });
+    return drawerScreenOptions(framed, sections.lists)({ route });
   };
 
 // A Plugin has no SectionList: its narrow root header is the nav item's title, or none while its Plugin is unknown, which still opens the drawer.
 function pluginDrawerOptions(
-  wide: boolean,
+  framed: boolean,
   location: PluginLocation,
 ): DrawerNavigationOptions {
   const { section, root } = pluginAt(location.plugins, location.path);
 
-  return wide || !root
+  return framed || !root
     ? stackOwnsHeader
     : drawerRootOptions({ title: titleOf(section) });
 }

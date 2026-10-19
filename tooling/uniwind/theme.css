@@ -77,9 +77,9 @@
   --text-nav-action: 17px;
   --leading-nav-action: var(--leading-5_5);
   --font-weight-nav-action: var(--font-weight-normal);
-  /* A grouped row Argo draws, as the stock rows set it: Material's bodyLarge
-     title (16/24, +0.5) and bodyMedium detail (14/20, +0.25); iOS steps both
-     to its Body (17/22). The wide step is Body and Secondary. */
+  /* A row Argo draws: Material's bodyLarge title (16/24, +0.5) and
+     bodyMedium detail (14/20, +0.25). iOS takes the same sizes, without the
+     tracking, so phone type never differs. The wide step is Body and Secondary. */
   --text-row: var(--text-base);
   --leading-row: var(--leading-6);
   --tracking-row: 0px;
@@ -107,7 +107,7 @@
   --radius-grouped-inner: 0px;
   --spacing-frame-bar: 64px;
   /* The rail, the sidebar control bar and the Inspector bar on a wide window. */
-  --spacing-frame-rail: 72px;
+  --spacing-frame-rail: 80px;
   --spacing-frame-control: 44px;
   --spacing-frame-list: 312px;
   --spacing-frame-inspector: 352px;
@@ -121,6 +121,33 @@
   --color-shadow-strong: #00000024;
 }
 
+/*
+ * `wide:` is the desktop drawing: a wide window, where the list sits beside the pages. Compact and
+ * medium windows take the phone shell on every platform (ADR-0026, amended 2026-10-18). Phones never
+ * reach it: they are compact at any width. `useWide()` matches it.
+ */
+@custom-variant wide {
+  @media (width >= theme(--breakpoint-wide)) {
+    @slot;
+  }
+}
+
+/*
+ * `wide-type:` is the desktop type scale, the text roles' "-wide" tokens. Text follows the platform,
+ * not the shell: a wide window everywhere, and on the web and desktop a medium one too, though a
+ * medium window takes the phone shell. A tablet keeps the phone's type scale at medium.
+ */
+@custom-variant wide-type {
+  @media (width >= theme(--breakpoint-wide)) {
+    @slot;
+  }
+  @variant web {
+    @media (width >= theme(--breakpoint-medium)) {
+      @slot;
+    }
+  }
+}
+
 @layer theme {
   :root {
     @variant ios {
@@ -128,10 +155,6 @@
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
       --radius-grouped: 26px;
-      --text-row: 17px;
-      --leading-row: var(--leading-5_5);
-      --text-row-detail: 17px;
-      --leading-row-detail: var(--leading-5_5);
     }
     @variant android {
       --font-sans: sans-serif;
@@ -139,6 +162,8 @@
       --radius-grouped-inner: 4px;
       --tracking-row: 0.5px;
       --tracking-row-detail: 0.25px;
+      /* A tablet's rail and list sit flat on the window, with no glass panel to inset (#927). */
+      --spacing-frame-inset: 0px;
     }
     @variant light {
       /* Every colour is a Tailwind palette shade: the nearest one, measured in OKLab. */
@@ -153,6 +178,8 @@
          tints. Neutral, as every other grey: the step lighter than neutral-200. */
       --color-muted: var(--color-neutral-100);
       --color-muted-foreground: var(--color-neutral-500);
+      /* A step quieter than muted-foreground: a grouped row's disclosure chevron. */
+      --color-tertiary: var(--color-neutral-400);
       --color-danger: var(--color-red-500);
       /* One step darker than muted, so a border shows on a muted fill. */
       --color-border: var(--color-neutral-300);
@@ -224,6 +251,8 @@
       --color-accent: var(--color-neutral-400);
       --color-muted: var(--color-neutral-800);
       --color-muted-foreground: var(--color-neutral-400);
+      /* iOS's tertiary label on a dark card. */
+      --color-tertiary: var(--color-neutral-600);
       --color-danger: var(--color-red-500);
       /* One step lighter than muted, so a border shows on a muted fill. */
       --color-border: var(--color-neutral-700);
@@ -274,7 +303,7 @@
   }
 }
 
-/* Text roles: phone tokens first, the "-wide" tokens from the wide breakpoint. */
+/* Text roles: phone tokens first, the "-wide" tokens with the desktop type scale (`wide-type:`). */
 @utility type-title {
   font-size: var(--text-title);
   line-height: var(--leading-title);
@@ -288,7 +317,7 @@
   font-weight: var(--font-weight-heading);
   color: var(--color-foreground);
 
-  @variant wide {
+  @variant wide-type {
     font-size: var(--text-heading-wide);
     line-height: var(--leading-heading-wide);
   }
@@ -300,7 +329,7 @@
   font-weight: var(--font-weight-body);
   color: var(--color-foreground);
 
-  @variant wide {
+  @variant wide-type {
     font-size: var(--text-body-wide);
     line-height: var(--leading-body-wide);
   }
@@ -312,7 +341,7 @@
   font-weight: var(--font-weight-secondary);
   color: var(--color-muted-foreground);
 
-  @variant wide {
+  @variant wide-type {
     font-size: var(--text-secondary-wide);
     line-height: var(--leading-secondary-wide);
   }
@@ -338,7 +367,7 @@
   font-weight: var(--font-weight-code);
 }
 
-/* Code set as a secondary line, such as a path under a name: muted, and on a wide window the secondary line height. */
+/* Code set as a secondary line, such as a path under a name: muted, and with the desktop type scale the secondary line height. */
 @utility type-secondary-code {
   font-family: var(--font-mono);
   font-size: var(--text-code);
@@ -346,7 +375,7 @@
   font-weight: var(--font-weight-code);
   color: var(--color-muted-foreground);
 
-  @variant wide {
+  @variant wide-type {
     line-height: var(--leading-secondary-wide);
   }
 }
@@ -372,7 +401,7 @@
   font-weight: var(--font-weight-body);
   color: var(--color-foreground);
 
-  @variant wide {
+  @variant wide-type {
     font-size: var(--text-body-wide);
     line-height: var(--leading-body-wide);
     letter-spacing: 0px;
@@ -386,7 +415,7 @@
   font-weight: var(--font-weight-secondary);
   color: var(--color-muted-foreground);
 
-  @variant wide {
+  @variant wide-type {
     font-size: var(--text-secondary-wide);
     line-height: var(--leading-secondary-wide);
     letter-spacing: 0px;
@@ -398,6 +427,12 @@
    the variable each theme sets. */
 @utility shadow-control {
   box-shadow: var(--shadow-control);
+}
+
+@utility shadow-empty-state-tile {
+  box-shadow:
+    0 1px 2px var(--color-shadow-subtle),
+    0 4px 12px var(--color-shadow);
 }
 
 @utility shadow-card {

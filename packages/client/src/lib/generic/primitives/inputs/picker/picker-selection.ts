@@ -1,19 +1,13 @@
-import type { PickerOption, PickerProps } from './picker-props';
-
-export function pickerLabel(
-  props: Pick<PickerProps<string>, 'label' | 'required'>,
-): string {
-  return props.required ? `${props.label} *` : props.label;
-}
+import type { PickerOption, SinglePickerProps } from './picker-props';
 
 export function pickerOption<Value extends string>(
-  props: Pick<PickerProps<Value>, 'options' | 'value'>,
+  props: Pick<SinglePickerProps<Value>, 'options' | 'value'>,
 ): PickerOption<Value> | undefined {
   return props.options.find((option) => option.value === props.value);
 }
 
 export function choosePickerOption<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
   next?: string,
 ): void {
   if (props.disabled) return;
@@ -23,7 +17,7 @@ export function choosePickerOption<Value extends string>(
 }
 
 function commitChoice<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
   option: PickerOption<Value>,
 ): void {
   if (option.disabled) return;
@@ -31,7 +25,10 @@ function commitChoice<Value extends string>(
 }
 
 export function pickerValue<Value extends string>(
-  props: PickerProps<Value>,
+  props: Pick<
+    SinglePickerProps<Value>,
+    'loading' | 'options' | 'value' | 'placeholder'
+  >,
 ): string {
   if (props.loading) return 'Loading…';
   const option = pickerOption(props);
@@ -40,7 +37,7 @@ export function pickerValue<Value extends string>(
 }
 
 function unchosenValue(
-  props: Pick<PickerProps<string>, 'value' | 'placeholder'>,
+  props: Pick<SinglePickerProps<string>, 'value' | 'placeholder'>,
 ): string {
   if (props.value !== undefined) return `${props.value} (unavailable)`;
 
@@ -48,7 +45,7 @@ function unchosenValue(
 }
 
 export function pickerOptionsMessage(
-  props: Pick<PickerProps<string>, 'loading' | 'loadError' | 'options'>,
+  props: Pick<SinglePickerProps<string>, 'loading' | 'loadError' | 'options'>,
 ): string | undefined {
   if (props.loading) return 'Loading options…';
 

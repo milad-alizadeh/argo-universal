@@ -1,13 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { Combobox } from '#primitives/inputs/combobox';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Drill } from './drill';
 
-const meta = { title: 'Design System/Primitives/Drill' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Overlays/Drill',
+} satisfies Meta;
 
 export default meta;
 
@@ -42,11 +44,11 @@ function FruitField(): ReactElement {
   const [value, setValue] = useState('Apple');
 
   return (
-    <GroupedList fit>
-      <GroupedListSection>
+    <List appearance="grouped" fit>
+      <ListSection>
         <FruitDrill value={value} onValueChange={setValue} />
-      </GroupedListSection>
-    </GroupedList>
+      </ListSection>
+    </List>
   );
 }
 

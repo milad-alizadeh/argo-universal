@@ -16,6 +16,7 @@ import { openSessionsId, openSessionsMachine } from '../src/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { fixtureRegistry, seedAgentFixtures } from './agent-fixtures';
 import { openTestDatabase } from './database';
+import { MemoryKeychain } from './memory-keychain';
 import { shippedFolder } from './runtime-plugins';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -83,6 +84,8 @@ export async function startEngineTestHost(
     installationPorts: createInstallationPorts(),
     // Fixture Plugins are first-party: only that root loads (ADR-0030).
     firstPartyPluginsDirectory: join(home, shippedFolder),
+    // Tests never reach the Mac's Keychain, which CI's Linux runners don't have.
+    keychain: new MemoryKeychain(),
     ...options,
     home,
     port,

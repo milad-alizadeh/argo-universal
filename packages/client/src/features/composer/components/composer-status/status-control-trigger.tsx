@@ -1,7 +1,7 @@
 import type { JSX, ReactNode } from 'react';
 import { cn } from '#lib/generic/utils';
-import { contentActionClass } from '#primitives/buttons/button';
-import { Pressable } from '#primitives/pressable';
+import { contentActionClass } from '#primitives/actions/button';
+import { Pressable } from '#primitives/actions/pressable';
 import { StatusText } from './status-text';
 
 interface ControlTriggerProps {
@@ -44,13 +44,20 @@ export function createStatusControlTrigger(
 interface ControlLabelProps {
   label: string;
   wide: boolean;
+  className?: string;
 }
 
-export function ControlLabel({ label, wide }: ControlLabelProps): JSX.Element {
+export function ControlLabel({
+  label,
+  wide,
+  className,
+}: ControlLabelProps): JSX.Element {
+  const shown = cn(className, !wide && 'hidden');
+
   return (
     <StatusText
       role="secondary"
-      className={cn('select-none text-foreground', !wide && 'hidden')}
+      className={cn('select-none text-foreground', shown)}
     >
       {label}
     </StatusText>

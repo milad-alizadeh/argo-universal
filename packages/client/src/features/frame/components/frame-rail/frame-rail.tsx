@@ -2,13 +2,14 @@ import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
-import { IconButton } from '#primitives/buttons/icon-button';
+import { IconButton } from '#primitives/actions/icon-button';
 import {
   type Section,
   type NavigationSection,
 } from '../../../../lib/product/navigation/sections';
 import { sectionAttentionCount } from '../../utils/attention-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
+import { useRailTileStyle } from './rail-tile-style';
 
 interface DesktopRailProps {
   items: readonly NavigationSection[];
@@ -48,6 +49,13 @@ function selectionProps(selected: boolean): TileSelection {
   };
 }
 
+// Android fills the selected tile from the Material palette; the style wins over the class there.
+function useTileSelection(
+  selected: boolean,
+): TileSelection & { style: ReturnType<typeof useRailTileStyle> } {
+  return { ...selectionProps(selected), style: useRailTileStyle(selected) };
+}
+
 function SectionTile(props: SectionButtonProps): React.JSX.Element {
   const { title, icon } = props.section;
 
@@ -60,7 +68,7 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
       variant="ghost"
       accessibilityLabel={title}
       onPress={() => props.onSectionChange(props.section.id)}
-      {...selectionProps(props.selected)}
+      {...useTileSelection(props.selected)}
     />
   );
 }
@@ -76,7 +84,7 @@ const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
 
 function RailSections(props: DesktopRailProps): React.JSX.Element {
   return (
-    <View className="-mt-0.5 flex-1 gap-px">
+    <View className="flex-1 gap-px web:-mt-0.5">
       {props.items.map((section) => (
         <SectionButton key={section.id} {...railSectionProps(section, props)} />
       ))}
@@ -113,13 +121,14 @@ function SidebarToggle(props: DesktopRailProps): React.JSX.Element {
   );
 }
 
+// The separator starts below the window-controls row, clear of the traffic lights; a tablet has no such row, so it starts level with the first tile.
 function RailEdge(props: { sidebarShown: boolean }): React.JSX.Element | null {
   if (!props.sidebarShown) return null;
 
   return (
     <View
       pointerEvents="none"
-      className="absolute bottom-4 right-0 top-4 w-px bg-hairline"
+      className="absolute bottom-4 right-0 top-4 w-px bg-hairline web:top-frame-control"
     />
   );
 }
@@ -129,10 +138,10 @@ export const FrameRail = memo(function FrameRail(props: DesktopRailProps) {
   return (
     <View
       testID="desktop-rail"
-      className="relative w-frame-rail shrink-0 items-center pb-2"
+      className="relative w-frame-rail shrink-0 items-center pb-2 native:pt-4"
     >
-      {/* Electron draws the traffic lights here, and the window drags by it. */}
-      <View className="h-frame-control self-stretch web:[app-region:drag]" />
+      {/* Electron draws the traffic lights here, and the window drags by it; a tablet has no window controls, so its first tile sits inset from the rail's top edge by the same 16 as its sides. */}
+      <View className="hidden h-frame-control self-stretch web:flex web:[app-region:drag]" />
       <RailSections {...props} />
       {props.hasSidebar ? <SidebarToggle {...props} /> : null}
       <RailEdge sidebarShown={props.sidebarShown} />

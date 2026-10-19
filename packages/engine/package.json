@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#mocks/*": "./mocks/*.ts"
+    "#mocks/*": "./mocks/*.ts",
+    "#plugin-test-control": "./src/plugins/protocol/test-control.ts",
+    "#plugin-entry": "./src/plugins/protocol/plugin-entry.ts",
+    "#plugin-storage-protocol": "./src/plugins/protocol/storage.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -12,6 +15,7 @@
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "catalog:",
+    "@jridgewell/trace-mapping": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/git": "workspace:*",
@@ -22,8 +26,12 @@
     "drizzle-orm": "catalog:",
     "esbuild": "catalog:",
     "fflate": "catalog:",
+    "jsonc-parser": "catalog:",
     "node-pty": "catalog:",
+    "oxc-parser": "catalog:",
     "react": "catalog:",
+    "react-native": "catalog:",
+    "react-native-svg": "catalog:",
     "react-reconciler": "catalog:",
     "semver": "catalog:",
     "tar": "catalog:",
@@ -50,6 +58,9 @@
     "./mocks": "./mocks/engine.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./server-runtime": "./src/server-runtime.ts",
-    "./shell-runtime": "./src/agents/shell-runtime.ts"
+    "./shell-runtime": "./src/agents/shell-runtime.ts",
+    "./plugins": "./src/plugins/index.ts",
+    "./plugin-validation": "./src/plugins/authoring/validate.ts",
+    "./mocks/keychain": "./mocks/memory-keychain.ts"
   }
 }

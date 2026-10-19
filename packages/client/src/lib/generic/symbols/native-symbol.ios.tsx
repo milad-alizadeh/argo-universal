@@ -2,23 +2,26 @@
 import { Image, type ImageProps } from '@expo/ui/swift-ui';
 import { font, foregroundStyle, imageScale } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { isCustomSymbol } from './custom-symbols';
 import { type DrawnSymbol, drawnSymbol } from './drawn-symbol';
-import { iconSymbols } from './icon-names';
 import { type IconRole, useIconPixels } from './icon-role';
+import { resolveIcon } from './icon-symbol';
 import type { NativeSymbolProps } from './native-symbol-props';
 import { tablerAsset } from './tabler-symbols';
 
-const mutedStyle = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
-
 /*
  * A list row's icon is a Label's, sized by the row's body text so it scales with Dynamic Type, as
- * stock iOS draws it. Image's `size` is a fixed point size, so it would not scale. A Label draws its
- * icon at the large image scale, so `imageScale('medium')` (SwiftUI's default) brings it back to
- * the body text's size.
+ * stock iOS draws it. Image's `size` is a fixed point size, so it would not scale. A Label in a
+ * Form draws its icon at the large image scale (24pt wide at body size on iOS 26), and so does a row.
  */
 const textSizedRoles: Partial<Record<IconRole, ImageProps['modifiers']>> = {
-  row: [font({ textStyle: 'body' }), imageScale('medium')],
+  row: [font({ textStyle: 'body' }), imageScale('large')],
+  // A row's disclosure chevron, drawn as a stock Form row's NavigationLink draws it.
+  chevron: [
+    font({ textStyle: 'body', weight: 'semibold' }),
+    imageScale('small'),
+  ],
 };
 
 // Argo's custom and Tabler symbols are in the app's asset catalog.
@@ -33,18 +36,22 @@ function imageSource(
     : { systemName: symbol.sf };
 }
 
-function symbolModifiers(
+// A muted symbol takes Argo's tertiary token where iOS would use its tertiary label grey.
+function useMutedStyle(muted: boolean | undefined): ImageProps['modifiers'] {
+  const { tertiary } = useNativeTheme().colors;
+
+  return muted === true && tertiary !== undefined
+    ? [foregroundStyle(tertiary)]
+    : [];
+}
+
+function useSymbolModifiers(
   role: IconRole,
   muted: boolean | undefined,
 ): ImageProps['modifiers'] {
-  const modifiers = [
-    ...(textSizedRoles[role] ?? []),
-    muted === true && mutedStyle,
-  ];
+  const mutedStyle = useMutedStyle(muted) ?? [];
 
-  return modifiers.filter(
-    (modifier) => modifier !== undefined && modifier !== false,
-  );
+  return [...(textSizedRoles[role] ?? []), ...mutedStyle];
 }
 
 // An Argo icon inside a SwiftUI tree, which cannot hold a React Native view.
@@ -58,9 +65,9 @@ export function NativeSymbol({
 
   return (
     <Image
-      {...imageSource(drawnSymbol(iconSymbols[name], filled))}
+      {...imageSource(drawnSymbol(resolveIcon(name).symbol, filled))}
       size={pixels}
-      modifiers={symbolModifiers(role, muted)}
+      modifiers={useSymbolModifiers(role, muted)}
     />
   );
 }

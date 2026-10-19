@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createActor } from 'xstate';
 import { createAcpResources } from '../src/agents';
 import { openSessionsMachine } from '../src/sessions';
+import { coreOnlyHooks } from './core-hooks';
 import { openTestDatabase } from './database';
 import { unlaunchedInstalledAgents } from './installed-agents';
 
@@ -41,6 +42,7 @@ function modelSessions(
     input: {
       now: (): number => Date.now(),
       createId: randomUUID,
+      hooks: coreOnlyHooks,
       database: runtime.database,
       runtimeDirectory: runtime.directory,
       acpResources: createAcpResources(),

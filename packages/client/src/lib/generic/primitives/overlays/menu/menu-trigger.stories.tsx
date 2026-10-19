@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Spinner } from '#primitives/display/spinner';
+import { Spinner } from '#primitives/status/spinner';
 import { Variation, Variations as VariationList } from '../../../variations';
 import type { MenuTriggerProps } from './menu-props';
 import { MenuTrigger } from './menu-trigger';
 
-const meta = { title: 'Design System/Primitives/MenuTrigger' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Overlays/MenuTrigger',
+} satisfies Meta;
 
 export default meta;
 

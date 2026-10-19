@@ -1,0 +1,37 @@
+import type * as ActionListKit from '#primitives/actions/action-list';
+import type * as KbdKit from '#primitives/content/kbd';
+import type * as FieldDescriptionKit from '#primitives/fields/field-description';
+import type * as FormKit from '#primitives/fields/form';
+import type * as DatePickerKit from '#primitives/inputs/date-picker';
+import type * as GridKit from '#primitives/layout/grid';
+import type * as ScrollViewKit from '#primitives/layout/scroll-view';
+import type * as SpacerKit from '#primitives/layout/spacer';
+import type * as SurfaceKit from '#primitives/layout/surface';
+import type * as MetadataKit from '#primitives/scaffolds/metadata';
+import type * as EmptyStateKit from '#primitives/status/empty-state';
+import type * as StatusDotKit from '#primitives/status/status-dot';
+import type * as SvgKit from '#primitives/visual';
+
+export type AdditionalPrimitives = {
+  MetadataProps: MetadataKit.MetadataProps;
+  MetadataLabelProps: MetadataKit.MetadataLabelProps;
+  MetadataLinkProps: MetadataKit.MetadataLinkProps;
+  MetadataPillsProps: MetadataKit.MetadataPillsProps;
+  MetadataStatusDotProps: MetadataKit.MetadataStatusDotProps;
+  MetadataAvatarProps: MetadataKit.MetadataAvatarProps;
+  GridProps: GridKit.GridProps;
+  SpacerProps: SpacerKit.SpacerProps;
+  SurfaceProps: SurfaceKit.SurfaceProps;
+  ScrollViewProps: ScrollViewKit.ScrollViewProps;
+  KbdProps: KbdKit.KbdProps;
+  ActionListProps: ActionListKit.ActionListProps;
+  ActionProps: ActionListKit.ActionProps;
+  ActionSectionProps: ActionListKit.ActionSectionProps;
+  ActionShortcut: ActionListKit.ActionShortcut;
+  EmptyStateProps: EmptyStateKit.EmptyStateProps;
+  StatusDotProps: StatusDotKit.StatusDotProps;
+  SvgProps: SvgKit.SvgProps;
+  DatePickerProps: DatePickerKit.DatePickerProps;
+  DescribedField: FieldDescriptionKit.DescribedField;
+  FormProps: FormKit.FormProps;
+};

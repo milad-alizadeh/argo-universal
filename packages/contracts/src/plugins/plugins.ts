@@ -1,10 +1,17 @@
 import { z } from 'zod';
 import { PluginCapability } from './capabilities';
+import { HookEventName } from './hooks';
 import { materialSymbolNames } from './material-symbol-names.gen';
+import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
 import { sfSymbolNames } from './sf-symbol-names.gen';
+import { SlotId } from './wire';
 
-const PluginIdentifier = z.string().regex(/^[a-z][a-z0-9-]*$/);
+export type PluginProjectInfo = {
+  id: string;
+  name: string;
+  originUrl: string | null;
+};
 
 // Zod's default enum error would print every name in the list.
 const notIn =
@@ -64,6 +71,23 @@ export const PluginManifest = z.strictObject({
         (items) => new Set(items.map((item) => item.id)).size === items.length,
         'Nav ids must be unique',
       ),
+    settings: PluginSettingsSchema.optional(),
+    // The Slots the Plugin fills; core asks only these Plugins for a Slot's content.
+    slots: z
+      .array(SlotId)
+      .refine(
+        (slots) => new Set(slots).size === slots.length,
+        'Slot ids must be unique',
+      )
+      .optional(),
+    // The core events the Plugin hooks; its worker starts when one fires (ADR-0027).
+    hooks: z
+      .array(HookEventName)
+      .refine(
+        (events) => new Set(events).size === events.length,
+        'Hook events must be unique',
+      )
+      .optional(),
   }),
   capabilities: z.array(PluginCapability).optional(),
 });
@@ -87,9 +111,27 @@ export const PluginList = z.object({
 export type PluginList = z.infer<typeof PluginList>;
 
 export {
+  HookEventName,
+  hookEvents,
+  type HookAnswer,
+  type HookEvent,
+  type CoreHooks,
+} from './hooks';
+
+export {
   PluginCapability,
   isRefusedVariable,
   isSpecialHost,
   type FetchCapability,
   type ProcessCapability,
 } from './capabilities';
+
+export {
+  PluginEnablement,
+  PluginSettingChange,
+  PluginSettingField,
+  PluginSettings,
+  PluginSettingsSchema,
+  PluginSettingValue,
+  PluginStateRecord,
+} from './plugin-settings';

@@ -76,6 +76,47 @@ export const rejectedManifests = [
     reason: 'main',
   },
   {
+    folder: 'duplicate-setting',
+    patch: {
+      contributes: {
+        nav: [],
+        settings: [
+          { key: 'host', type: 'text', label: 'Host' },
+          { key: 'host', type: 'toggle', label: 'Host again' },
+        ],
+      },
+    },
+    reason: 'Setting keys must be unique',
+  },
+  {
+    folder: 'unlisted-picker-default',
+    patch: {
+      contributes: {
+        nav: [],
+        settings: [
+          {
+            key: 'sort',
+            type: 'picker',
+            label: 'Sort by',
+            options: [{ value: 'updated', label: 'Recently updated' }],
+            default: 'stars',
+          },
+        ],
+      },
+    },
+    reason: 'A picker default must be one of its options',
+  },
+  {
+    folder: 'unknown-setting-type',
+    patch: {
+      contributes: {
+        nav: [],
+        settings: [{ key: 'count', type: 'number', label: 'Count' }],
+      },
+    },
+    reason: 'settings',
+  },
+  {
     folder: 'invalid-nav',
     patch: {
       contributes: { nav: [{ id: 'bad', title: 'Bad', path: '../sessions' }] },

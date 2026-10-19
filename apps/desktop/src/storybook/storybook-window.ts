@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { app, BrowserWindow } from 'electron';
+import { handleShareMenu } from '../main/share-menu';
 import { handleSymbolImages } from '../main/symbol-images';
 
 /*
@@ -32,6 +33,8 @@ const createWindow = (url: string): void => {
 };
 
 handleSymbolImages(origin);
+
+handleShareMenu(origin);
 
 void app.whenReady().then((): void => createWindow(storybookUrl));
 

@@ -2,41 +2,30 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { formatElapsed } from '#lib/generic/format-elapsed';
 import { useClock } from '#lib/generic/use-clock';
-import { cn } from '#lib/generic/utils';
-import {
-  StatusIndicator,
-  statusLabels,
-} from '#lib/product/status-indicator/status-indicator';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
+import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { PullRequestChecks } from './pull-request-checks';
-import type {
-  SessionHeaderProps,
-  SessionHeaderStatus,
-} from './session-header-props';
+import type { SessionHeaderProps } from './session-header-props';
 import {
   MorePullRequests,
   type SessionPullRequest,
   SessionPullRequestLabel,
 } from './session-pull-request';
-
-const statusTextColor = {
-  running: 'text-success',
-  needs_input: 'text-warning',
-  idle: 'text-muted-foreground',
-} satisfies Record<SessionHeaderStatus, string>;
+import { StatusDescription } from './session-status-description';
 
 type ElapsedTimeProps = Pick<SessionHeaderProps, 'startedAt' | 'now'>;
 
-function ElapsedTime({
-  startedAt,
-  now,
-}: ElapsedTimeProps): React.JSX.Element | null {
+const tabletHidden = 'hidden text-muted-foreground wide-type:flex';
+
+function ElapsedTime(props: ElapsedTimeProps): React.JSX.Element | null {
+  const { startedAt, now } = props;
   const clock = useClock(startedAt !== null, now);
 
   if (startedAt === null) return null;
 
+  // A tablet's larger type leaves the medium window's meta line no room for it (#927).
   return (
-    <Text role="secondary" className="text-muted-foreground">
+    <Text role="secondary" className={tabletHidden}>
       {formatElapsed(clock - startedAt)}
     </Text>
   );
@@ -44,22 +33,13 @@ function ElapsedTime({
 
 type StatusLineProps = Pick<SessionHeaderProps, 'status' | 'startedAt' | 'now'>;
 
-const statusDot = {
-  size: 'small',
-  className: 'size-1.5 border-0',
-  testID: 'session-status',
-} as const;
-
 function StatusLine({
   status,
   ...elapsed
 }: StatusLineProps): React.JSX.Element {
   return (
     <>
-      <Text role="secondary" className={cn(statusTextColor[status])}>
-        {statusLabels[status]}
-      </Text>
-      <StatusIndicator status={status} {...statusDot} />
+      <StatusDescription status={status} />
       <ElapsedTime {...elapsed} />
     </>
   );
@@ -70,11 +50,20 @@ function MetaGap(): React.JSX.Element {
   return <View className="w-2.5 shrink-0" />;
 }
 
+// A medium window's meta line is the status and the PR only (#927).
 function ShownChecks({
   checks,
 }: Pick<SessionPullRequest, 'checks'>): React.JSX.Element | null {
   if (!checks) return null;
 
+  return (
+    <SizeClass compact={null} medium={null} wide={<Checks {...checks} />} />
+  );
+}
+
+function Checks(
+  checks: NonNullable<SessionPullRequest['checks']>,
+): React.JSX.Element {
   return (
     <>
       <MetaGap />

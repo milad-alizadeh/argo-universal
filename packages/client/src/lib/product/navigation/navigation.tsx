@@ -62,20 +62,18 @@ function swapsPage({ shown, wide }: Place, next: string): boolean {
   return wide && isPage(next) && samePageSection(shown, next);
 }
 
-// Whether opening `next` swaps out the shown page rather than going over it.
-const replaces = (
-  place: Place,
-  next: Href,
-  options?: NavigateOptions,
-): boolean => options?.replace === true || swapsPage(place, pathOf(next));
+function go(href: Href, swaps: boolean): void {
+  if (swaps) router.replace(href);
+  else router.navigate(href);
+}
 
 // Opens a page: pushed over the shown one on a narrow window, beside the list on a wide one.
 export function useNavigate(): Navigate {
   const place = { shown: usePathname(), wide: useWide() };
 
   return (href, options) => {
-    if (replaces(place, href, options)) router.replace(href);
-    else router.navigate(href);
+    if (options?.replace) router.replace(href);
+    else go(href, swapsPage(place, pathOf(href)));
   };
 }
 

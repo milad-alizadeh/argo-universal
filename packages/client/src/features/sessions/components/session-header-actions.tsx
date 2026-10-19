@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useInspector } from '#lib/product/inspector';
-import { IconButton } from '#primitives/buttons/icon-button';
+import { IconButton } from '#primitives/actions/icon-button';
 import type { MergeMethod } from '../stores/merge-method';
 import { MergePrButton, type MergePrButtonProps } from './merge-pr-button';
 import {

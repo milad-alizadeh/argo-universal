@@ -2,7 +2,7 @@ import type * as React from 'react';
 import type { SizeClassValues } from '../use-size-class/size-class-value';
 import { useSizeClassValue } from '../use-size-class/use-size-class-value';
 
-// Medium follows compact until it has a Paper design (#762).
+// `only="compact"` draws on a medium window too: medium lays out like compact unless given its own slot.
 type SizeClassProps =
   | { only: 'compact' | 'wide'; children: React.ReactNode }
   | SizeClassValues<React.ReactNode>;

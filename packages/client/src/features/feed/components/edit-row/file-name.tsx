@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { Platform, type TextStyle } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 
 const fileNameClassName =
   'select-none min-w-0 shrink web:underline web:decoration-focus web:underline-offset-2';

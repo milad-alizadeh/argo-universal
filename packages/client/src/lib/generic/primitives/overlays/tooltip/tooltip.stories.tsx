@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
-import { IconButton } from '#primitives/buttons/icon-button';
+import { IconButton } from '#primitives/actions/icon-button';
 import { Tooltip } from './tooltip';
 
 const label = 'Repository';
 
 const meta = {
-  title: 'Design System/Primitives/Tooltip',
+  title: 'Design System/Primitives/Overlays/Tooltip',
   render: (): ReactElement => (
     <Tooltip label={label}>
       <IconButton

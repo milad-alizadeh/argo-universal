@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/generic/occurrence-keys';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import type { DiffLine, FileDiff } from '../../view/file-diff';
 import { lineStyles } from './diff-lines';
 

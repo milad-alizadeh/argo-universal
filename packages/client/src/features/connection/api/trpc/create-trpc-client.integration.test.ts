@@ -1,4 +1,8 @@
 import { ClockTick } from '@repo/contracts';
+import {
+  currentPartVersions,
+  type PluginSurface,
+} from '@repo/contracts/plugins/kit';
 import { startEngineTestHost } from '@repo/engine/mocks';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTRPCClient } from './create-trpc-client';
@@ -47,6 +51,50 @@ async function startTransportTestServer(): Promise<{
 }
 
 describe('createTRPCClient', () => {
+  it('reports the registry part versions in the WebSocket handshake', async () => {
+    const server = await startTransportTestServer();
+    const send = vi.spyOn(WebSocket.prototype, 'send');
+    const { client, close } = createTRPCClient(server.url);
+    closers.push(close);
+
+    await client.system.info.query();
+
+    expect(send).toHaveBeenCalledWith(
+      JSON.stringify({
+        method: 'connectionParams',
+        data: {
+          pluginSurface: JSON.stringify({
+            platform: 'web',
+            parts: currentPartVersions,
+          }),
+        },
+      }),
+    );
+  });
+
+  it('reports an updated surface when the App reconnects', async () => {
+    const server = await startTransportTestServer();
+    const send = vi.spyOn(WebSocket.prototype, 'send');
+    let surface: PluginSurface = { platform: 'ios', parts: { Text: 1 } };
+    const app = createTRPCClient(server.url, undefined, () => surface);
+    closers.push(app.close);
+
+    await app.client.system.info.query();
+    surface = { platform: 'ios', parts: { Text: 3, Button: 2 } };
+    app.webSocketClient.connection?.ws?.close();
+
+    await expect
+      .poll(() => send)
+      .toHaveBeenCalledWith(
+        JSON.stringify({
+          method: 'connectionParams',
+          data: { pluginSurface: JSON.stringify(surface) },
+        }),
+      );
+    expect(await app.client.system.info.query()).toEqual(systemInfo);
+    expect(server.connections()).toBe(2);
+  });
+
   it('sends queries and subscriptions over one WebSocket', async () => {
     const server = await startTransportTestServer();
     const { client, close } = createTRPCClient(server.url);

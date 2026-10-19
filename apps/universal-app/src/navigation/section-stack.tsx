@@ -1,31 +1,28 @@
 import {
   hasLiquidGlass,
-  PhoneConnectionBanner,
   SectionMenuButton,
   screenHeaderOptions,
   type CoreSection,
   type SectionList,
   useSectionList,
 } from '@repo/client';
-import { useSizeClass } from '@repo/client/size-class';
+import { useWide } from '@repo/client/size-class';
 import {
   type NativeStackNavigationOptions,
   Stack,
   useNavigation,
 } from 'expo-router';
-import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
 import { DrawerActions } from 'expo-router/react-navigation';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
 import { headerTitleOptions } from './header-title';
+import { pageLayout } from './page-layout';
 import { drawerDrawsRootHeader } from './section-drawer-options';
 
 type ScreenHeaderProps = SectionList['rootHeader'];
 
 type StackProps = ComponentProps<typeof Stack>;
-
-type ScreenLayout = NonNullable<StackProps['screenLayout']>;
 
 // With Liquid Glass, content scrolls under a clear header; before it, the opaque header takes the theme's content colour.
 const headerOverPage = { headerTransparent: hasLiquidGlass };
@@ -41,7 +38,7 @@ const narrowOptions = {
 } satisfies StackProps['screenOptions'];
 
 // A wide window shows one page beside the list: it draws its own header, and a new page replaces the shown one without a transition.
-const wideOptions = {
+const framedOptions = {
   headerShown: false,
   animation: 'none',
   freezeOnBlur: true,
@@ -68,47 +65,17 @@ const stackRootOptions = (
     ? { headerLeft: () => <WebMenuButton />, ...screenHeaderOptions(header) }
     : screenHeaderOptions(header);
 
-interface BannerProps {
-  overHeader: boolean;
-}
-
-// Under a header that floats over the page, the banner moves down by the header's height, as the stack reports it.
-function UnderHeaderBanner({ overHeader }: BannerProps): React.JSX.Element {
-  const headerHeight = useAnimatedHeaderHeight();
-
-  return (
-    <PhoneConnectionBanner
-      headerHeight={overHeader ? headerHeight : undefined}
-    />
-  );
-}
-
-// A narrow page's Connection banner floats under its header; a wide window's sits over the panes.
-function NarrowBanner(props: BannerProps): React.JSX.Element | null {
-  return useSizeClass() === 'wide' ? null : <UnderHeaderBanner {...props} />;
-}
-
-// The page keeps its place in the tree at both widths.
-const pageLayout: ScreenLayout = ({ children, options }) => (
-  <View className="flex-1">
-    {children}
-    <NarrowBanner overHeader={options.headerTransparent === true} />
-  </View>
-);
-
 interface SectionOptions {
   screenOptions: StackProps['screenOptions'];
   rootOptions: NativeStackNavigationOptions;
 }
 
-// The stack's options at this width, and its root's: a narrow root shows the section's header; a wide page draws its own.
+// The stack's options at this width, and its root's: the phone shell's root shows the section's header; a wide window's page draws its own.
 function useSectionOptions(
   header: ScreenHeaderProps,
   root: boolean,
 ): SectionOptions {
-  const wide = useSizeClass() === 'wide';
-
-  if (wide) return { screenOptions: wideOptions, rootOptions: {} };
+  if (useWide()) return { screenOptions: framedOptions, rootOptions: {} };
 
   return {
     screenOptions: narrowOptions,

@@ -1,5 +1,5 @@
 import type { ReactNode, JSX } from 'react';
-import { LiquidGlass } from '#primitives/display/liquid-glass';
+import { LiquidGlass } from '#primitives/content/liquid-glass';
 
 export const mutedTextClassName = 'text-muted-foreground';
 
@@ -14,7 +14,7 @@ interface ChipSurfaceProps {
 }
 
 const chipSurfaceProps = {
-  corners: 'capsule',
+  corners: 'pill',
   interactive: true,
   className: 'h-6',
   fallbackClassName: 'rounded-full border border-border bg-card shadow-card',

@@ -42,9 +42,13 @@ ipcRenderer
   // The Storybook window has no handler; it is never minimized to the App.
   .catch((): void => undefined);
 
-// The renderer gets the Server address, window controls and state, and system symbols, nothing else (ADR 0002).
+// ADR-0002 permits native sharing of text and URLs alongside window controls and system symbols.
 const argo = {
   serverUrl,
+  share:
+    process.platform === 'darwin'
+      ? (content): Promise<void> => ipcRenderer.invoke('share:open', content)
+      : undefined,
   window: {
     show: (): void => ipcRenderer.send('window:show'),
     minimize: (): void => ipcRenderer.send('window:minimize'),

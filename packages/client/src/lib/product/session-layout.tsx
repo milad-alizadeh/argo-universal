@@ -77,12 +77,22 @@ function OverlapContent(props: SessionLayoutProps): React.JSX.Element {
   );
 }
 
+/*
+ * A window has no home indicator to lift the Composer off its bottom edge, so on the web and desktop at every width,
+ * and on a wide tablet, the Composer keeps the column's side gap below it too.
+ */
+const composerBottomGap = 'web:pb-4 wide:pb-4';
+
 function OverlapComposer(props: { children: ReactNode }): React.JSX.Element {
   const { filled } = useSessionFill();
 
   return (
     <View
-      className={cn('relative z-10 wide:pb-4', filled && `${filledClass} pt-4`)}
+      className={cn(
+        'relative z-10',
+        composerBottomGap,
+        filled && `${filledClass} pt-4`,
+      )}
       style={filled ? undefined : overlapComposerStyle}
     >
       <ComposerColumn fill={filled}>{props.children}</ComposerColumn>

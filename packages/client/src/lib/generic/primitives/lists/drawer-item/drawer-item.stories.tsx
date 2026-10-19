@@ -7,7 +7,7 @@ import type { IconName } from '../../../symbols/icon-names';
 import { DrawerItem } from './drawer-item';
 
 const meta = {
-  title: 'Design System/Primitives/DrawerItem',
+  title: 'Design System/Primitives/Lists/DrawerItem',
 } satisfies Meta;
 
 export default meta;

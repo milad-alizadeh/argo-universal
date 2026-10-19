@@ -36,7 +36,10 @@ export function menuAction(item: NativeMenuItem): NativeMenuAction {
     id: item.id,
     title: item.title,
     ...checkState(item.checked),
-    ...disabledAttributes(item.disabled),
+    attributes: {
+      disabled: item.disabled,
+      destructive: item.tone === 'danger',
+    },
     ...itemImage(item.icon),
   };
 }
@@ -67,9 +70,3 @@ const checkState = (
   checked: boolean | undefined,
 ): Pick<NativeMenuAction, 'state'> =>
   checked === undefined ? {} : { state: checked ? 'on' : 'off' };
-
-// MenuAction.attributes.disabled: the system greys the item and does not run it.
-const disabledAttributes = (
-  disabled: boolean,
-): Pick<NativeMenuAction, 'attributes'> =>
-  disabled ? { attributes: { disabled: true } } : {};

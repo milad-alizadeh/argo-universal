@@ -1,12 +1,16 @@
 import type * as React from 'react';
 import { type TextInputProps, View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
+import { requiredLabel } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
-import { rowClasses } from '#primitives/lists/grouped-list-item';
 import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
-import { requiredLabel } from './text-input-label';
-import { isInvalid, type PhoneFieldProps } from './text-input-props';
+import {
+  isInvalid,
+  keyboardOf,
+  focusOf,
+  type PhoneFieldProps,
+} from './text-input-props';
 import { FieldSpinner } from './text-input-spinner';
 
 // A section row: the label, then the field filling the rest; the row shows the focus ring.
@@ -14,7 +18,7 @@ export function RowTextInput(props: PhoneFieldProps): React.JSX.Element {
   return (
     <View
       className={cn(
-        rowClasses({ label: props.label }, false),
+        'min-w-0 flex-1 flex-row items-center gap-4',
         'web:focus-within:outline-2 web:focus-within:outline-focus web:focus-within:-outline-offset-2',
       )}
     >
@@ -78,13 +82,11 @@ function inputBehaviour(props: PhoneFieldProps): InputProps {
     value: props.value,
     placeholder: props.placeholder,
     onChangeText: props.onChangeText,
-    onBlur: props.onBlur,
+    ...focusOf(props),
     editable: !props.disabled,
-    keyboardType: props.numeric ? 'numbers-and-punctuation' : 'default',
+    ...keyboardOf(props),
     autoCapitalize: 'none',
     autoCorrect: false,
-    autoFocus: props.focusOnOpen,
-    selectTextOnFocus: props.selectOnFocus,
     onSubmitEditing: props.onSubmit,
   };
 }
@@ -92,7 +94,7 @@ function inputBehaviour(props: PhoneFieldProps): InputProps {
 const inputClasses = (mono: PhoneFieldProps['mono']): string =>
   cn(
     mono ? 'type-code' : 'type-body',
-    'h-6 flex-1 rounded-none web:rounded-none border-0 bg-transparent px-0 py-0 shadow-none sm:h-6 web:focus-visible:ring-0 dark:bg-transparent',
+    'h-6 wide-type:h-5 flex-1 rounded-none web:rounded-none border-0 bg-transparent px-0 py-0 shadow-none web:focus-visible:ring-0 dark:bg-transparent',
   );
 
 RowTextInput satisfies React.ComponentType<PhoneFieldProps>;

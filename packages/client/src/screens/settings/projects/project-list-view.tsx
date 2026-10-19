@@ -2,11 +2,11 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { SettingsPage } from '#lib/product/settings-page';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { IconButton } from '#primitives/actions/icon-button';
+import { List } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { Spinner } from '#primitives/status/spinner';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
 import { LoadedProjects } from './project-list-rows';
 import { pageSearch, projectsTitle } from './project-list-search';
@@ -63,14 +63,20 @@ function ProjectsBody(props: SearchedProps): React.JSX.Element {
   const { projects } = props;
   useErrorToast(projects.status === 'error' ? loadFailed : undefined);
 
-  if (projects.status !== 'loaded')
-    return (
-      <GroupedList>
-        <GroupedListSection>
-          <GroupedListItem label="Loading Projects…" loading />
-        </GroupedListSection>
-      </GroupedList>
-    );
+  if (projects.status !== 'loaded') return <LoadingProjects />;
 
   return <LoadedProjects {...props} projects={projects.projects} />;
+}
+
+function LoadingProjects(): React.JSX.Element {
+  return (
+    <List appearance="grouped">
+      <List.Section>
+        <ListItem
+          title="Loading Projects…"
+          leading={<Spinner accessibilityLabel="Loading Projects" />}
+        />
+      </List.Section>
+    </List>
+  );
 }

@@ -1,9 +1,7 @@
 import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
-import { Platform, View } from 'react-native';
 import { Slider } from '#primitives/inputs/slider';
-import { Switch } from '#primitives/inputs/switch';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
+import { ListItem } from '#primitives/lists/list-item';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 
@@ -25,10 +23,10 @@ export function EffortControl(props: TuningProps): React.JSX.Element | null {
   if (!effort.option || !effort.selected) return null;
 
   return (
-    <GroupedListItem
-      label="Effort"
+    <ListItem
+      title="Effort"
       value={effort.selected.name}
-      detail={<EffortSlider {...props} effort={effort} />}
+      meta={<EffortSlider {...props} effort={effort} />}
     />
   );
 }
@@ -72,30 +70,13 @@ export function SwitchOptions(props: TuningProps): React.JSX.Element {
   );
 }
 
-function ConfigurationSwitch(props: SwitchProps): React.JSX.Element {
-  return Platform.OS === 'web' ? (
-    <WebConfigurationSwitch {...props} />
-  ) : (
-    <NativeConfigurationSwitch {...props} />
-  );
-}
-
-function NativeConfigurationSwitch(props: SwitchProps): React.JSX.Element {
-  return (
-    <GroupedListItem
-      label={props.option.name}
-      control={<NativeSwitchControl {...props} />}
-    />
-  );
-}
-
-function NativeSwitchControl({
+function ConfigurationSwitch({
   configuration,
   option,
 }: SwitchProps): React.JSX.Element {
   return (
-    <Switch
-      accessibilityLabel={option.name}
+    <ListItem.Toggle
+      title={option.name}
       value={option.currentValue}
       onValueChange={(checked) =>
         configuration.onConfigChange(option.configId, checked)
@@ -103,61 +84,6 @@ function NativeSwitchControl({
     />
   );
 }
-
-function WebConfigurationSwitch(props: SwitchProps): React.JSX.Element {
-  return (
-    <GroupedListItem
-      {...webSwitchRowProps(props)}
-      accessory={<DecorativeSwitch option={props.option} />}
-    />
-  );
-}
-
-function webSwitchRowProps({
-  configuration,
-  option,
-}: SwitchProps): React.ComponentProps<typeof GroupedListItem> {
-  return {
-    label: option.name,
-    accessibilityRole: 'switch',
-    checked: option.currentValue,
-    disclosure: false,
-    onPress: () =>
-      configuration.onConfigChange(option.configId, !option.currentValue),
-  };
-}
-
-function DecorativeSwitch({
-  option,
-}: {
-  option: BooleanOption;
-}): React.JSX.Element {
-  return (
-    <View
-      className="pointer-events-none"
-      aria-hidden
-      importantForAccessibility="no-hide-descendants"
-    >
-      <DecorativeSwitchControl option={option} />
-    </View>
-  );
-}
-
-function DecorativeSwitchControl({
-  option,
-}: {
-  option: BooleanOption;
-}): React.JSX.Element {
-  return (
-    <Switch
-      decorative
-      value={option.currentValue}
-      onValueChange={ignoreDecorativeChange}
-    />
-  );
-}
-
-function ignoreDecorativeChange(): void {}
 
 function selectedEffortLabel(effort: ReturnType<typeof currentEffort>): string {
   return effort.selected?.name ?? '';

@@ -2,8 +2,8 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
-import { Icon, IconSlot } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon, IconSlot } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 
 // A PR's CI checks: how many passed, failed and still run, out of all of them.
 export interface PullRequestChecksProps {

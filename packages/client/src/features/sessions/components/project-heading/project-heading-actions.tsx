@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
-import { IconButton } from '#primitives/buttons/icon-button';
+import { IconButton } from '#primitives/actions/icon-button';
 import type { ProjectHeadingProps } from './project-heading';
 
 // Each button reveals itself on row hover or its own keyboard focus; a click that leaves focus behind does not hold it.

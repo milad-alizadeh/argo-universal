@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { rename, writeFile } from 'node:fs/promises';
 import { expect } from '../fixtures';
 import { readAgents } from './agents';
 import { Given, When, Then } from './fixtures';
@@ -7,6 +7,16 @@ import { waitForEmptySession } from './new-session';
 const optionsLabel = 'Agent and model';
 
 const selectAgentLabel = 'Select Agent';
+
+async function writeInstallation(
+  path: string,
+  released: boolean,
+): Promise<void> {
+  const next = `${path}.next`;
+
+  await writeFile(next, JSON.stringify({ outcome: 'success', released }));
+  await rename(next, path);
+}
 
 Given('no Agents are installed', async ({ page, server }) => {
   expect(await readAgents(page, server.httpUrl)).toEqual([]);
@@ -62,10 +72,7 @@ When('I return to New Session', async ({ page }) => {
 });
 
 Given('the Agent download is held', async ({ app }) => {
-  await writeFile(
-    app.installationPath,
-    JSON.stringify({ outcome: 'success', released: false }),
-  );
+  await writeInstallation(app.installationPath, false);
 });
 
 Then('the first launch shows Loading', async ({ page }) => {
@@ -75,10 +82,7 @@ Then('the first launch shows Loading', async ({ page }) => {
 });
 
 When('the Agent download finishes', async ({ app }) => {
-  await writeFile(
-    app.installationPath,
-    JSON.stringify({ outcome: 'success', released: true }),
-  );
+  await writeInstallation(app.installationPath, true);
 });
 
 Then('the Composer shows Agent options', async ({ page }) => {

@@ -3,6 +3,7 @@ import { turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor, waitFor } from 'xstate';
+import { coreOnlyHooks } from '#mocks/core-hooks';
 import {
   insertEndedTurn,
   insertSession,
@@ -45,6 +46,7 @@ it.each(writerTurnCases)(
       input: {
         now: () => 1000,
         createId: randomUUID,
+        hooks: coreOnlyHooks,
         database,
         runtimeDirectory: directory,
         acpResources: createAcpResources(),

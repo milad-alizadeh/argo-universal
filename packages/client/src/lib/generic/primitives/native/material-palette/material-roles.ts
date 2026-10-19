@@ -25,6 +25,11 @@ interface StateRoles {
   accent: Role;
   // Argo's selection tint, in place of Material's secondary container on chips and drawer items.
   selected: Role;
+  /*
+   * A navigation rail's active indicator: Material's secondary container is muted, which matches the content surface
+   * the rail sits on, so the rail takes tint, the fill that shows on it.
+   */
+  indicator: Role;
   // Argo's pressed tint, the colour of every press ripple in place of Material's state layer.
   pressed: Role;
   disabledContent: Role;
@@ -64,6 +69,7 @@ function stateRoles(colors: Colors): StateRoles {
     onError: colors.primaryForeground,
     accent: colors.accent,
     selected: colors.selected,
+    indicator: colors.tint,
     pressed: colors.pressed,
     disabledContent: colors.disabledContent,
     disabledContainer: colors.disabledContainer,

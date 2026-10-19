@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 import { Menu, type MenuAction } from '#primitives/overlays/menu';
 import type { PullRequestChecksProps } from './pull-request-checks';
 import {
@@ -40,13 +40,17 @@ interface SecondaryPairProps {
   muted: string;
 }
 
+// A tablet's larger type leaves the medium window's meta line room for the number only (#927).
 function SecondaryPair(props: SecondaryPairProps): React.JSX.Element {
   return (
     <>
       <Text role="secondary" className="font-medium text-foreground">
         {props.strong}
       </Text>
-      <Text role="secondary" className="text-muted-foreground">
+      <Text
+        role="secondary"
+        className="hidden text-muted-foreground wide-type:flex"
+      >
         {props.muted}
       </Text>
     </>

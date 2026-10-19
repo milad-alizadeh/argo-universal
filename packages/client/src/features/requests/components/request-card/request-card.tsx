@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { useContentWide } from '#lib/product/content-layout';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
+import { Surface } from '#primitives/layout/surface';
 import { useRequestKeyboard } from '../../hooks/use-request-keyboard';
 import { RequestFooter } from './request-footer';
 import { SheetWhenCompact } from './request-sheet';
@@ -69,18 +70,17 @@ function RequestContainer(
       testID={props.testID}
       className={cn(containerClassName(props), props.className)}
     >
-      <RequestContents {...props} />
+      <RequestSurface {...props} />
     </View>
   );
 }
 
 function containerClassName({
   surface,
-  appearance,
 }: Pick<RequestCardProps, 'surface' | 'appearance'>): string {
   if (surface === 'tray') return 'w-full gap-3 px-3 pt-3 pb-3.5';
 
-  return cn('w-full max-w-column', appearance !== 'embedded' && cardClassName);
+  return 'w-full max-w-column';
 }
 
 function RequestContents(props: RequestCardProps): ReactNode {
@@ -94,8 +94,16 @@ function RequestContents(props: RequestCardProps): ReactNode {
   );
 }
 
-const cardClassName =
-  'rounded-2xl bg-card shadow-card web:backdrop-blur-glass web:backdrop-saturate-180';
+function RequestSurface(props: RequestCardProps): ReactNode {
+  if (props.appearance === 'embedded' || props.surface === 'tray')
+    return <RequestContents {...props} />;
+
+  return (
+    <Surface kind="card">
+      <RequestContents {...props} />
+    </Surface>
+  );
+}
 
 function RequestBody({
   state,

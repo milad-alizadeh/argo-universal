@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { cn } from '#lib/generic/utils';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import { ShimmerText } from './shimmer-text';
 
 const regexSpecialCharacters = /[.*+?^${}()|[\]\\]/g;

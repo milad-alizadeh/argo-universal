@@ -1,7 +1,6 @@
 import type * as React from 'react';
-import { EmptyList } from '#features/sessions';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List, ListSection } from '#primitives/lists/list';
+import { EmptyState } from '#primitives/status/empty-state';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { settingsRows } from './settings-list-data';
 import type { SettingsListProps } from './settings-list-props';
@@ -27,9 +26,9 @@ function SettingsRows(props: SettingsRowsProps): React.JSX.Element {
   if (rows.length === 0) return <NoMatchingSettings query={props.query} />;
 
   return (
-    <GroupedList variant={props.sidebar ? 'sidebar' : 'grouped'}>
-      <GroupedListSection>{rowItems(rows, props)}</GroupedListSection>
-    </GroupedList>
+    <List appearance="grouped">
+      <ListSection>{rowItems(rows, props)}</ListSection>
+    </List>
   );
 }
 
@@ -62,9 +61,10 @@ function NoMatchingSettings({
   query = '',
 }: Pick<SettingsListProps, 'query'>): React.JSX.Element {
   return (
-    <EmptyList
+    <EmptyState
+      icon="search"
       title="No matching settings"
-      message={`No Settings page has "${query.trim()}" in its name.`}
+      description={`No Settings page has "${query.trim()}" in its name.`}
     />
   );
 }

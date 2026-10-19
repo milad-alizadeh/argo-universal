@@ -1,6 +1,6 @@
 import { createElement, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import {
   FieldDescriptionFooter,
   useFieldDescription,
@@ -10,6 +10,7 @@ import { Drill, type DrillProps } from '#primitives/overlays/drill';
 import { ComboboxContent } from './combobox-content';
 import type { ComboboxProps } from './combobox-props';
 import { ComboboxTrigger } from './combobox-trigger';
+import { comboboxValue } from './combobox-value';
 
 function ComboboxRoot<Value extends string>(
   props: ComboboxProps<Value>,
@@ -26,9 +27,7 @@ function ComboboxRoot<Value extends string>(
 function ComboboxField<Value extends string>(
   props: ComboboxProps<Value> & { field: FieldDescription },
 ): ReactElement {
-  const trigger = props.trigger ?? (
-    <ComboboxTrigger {...props} {...props.field} />
-  );
+  const trigger = props.trigger ?? <FieldTrigger {...props} />;
 
   return createElement(
     View,
@@ -36,6 +35,18 @@ function ComboboxField<Value extends string>(
     <FieldLabel label={props.label} required={props.required} />,
     <ComboboxControl {...props} trigger={trigger} />,
     <FieldDescriptionFooter {...props.field} />,
+  );
+}
+
+function FieldTrigger<Value extends string>(
+  props: ComboboxProps<Value> & { field: FieldDescription },
+): ReactElement {
+  return (
+    <ComboboxTrigger
+      {...props}
+      {...props.field}
+      valueLabel={comboboxValue(props)}
+    />
   );
 }
 

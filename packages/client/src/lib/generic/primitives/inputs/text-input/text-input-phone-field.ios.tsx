@@ -1,10 +1,11 @@
 import { Row, TextInput, type TextInputProps, useNativeState } from '@expo/ui';
 import { accessibilityLabel } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { codeFace, NativeText } from '#primitives/display/native-text';
+import { KeyboardController } from 'react-native-keyboard-controller';
+import { codeFace, NativeText } from '#primitives/content/native-text';
 import { Field } from '#primitives/fields/field';
+import { requiredLabel } from '#primitives/fields/field';
 import { useFieldText } from './text-input-field-text';
-import { requiredLabel } from './text-input-label';
 import { FieldProgress } from './text-input-progress';
 import { isInvalid, type PhoneFieldProps } from './text-input-props';
 
@@ -50,8 +51,9 @@ function fieldBehaviour(props: PhoneFieldProps): TextInputProps {
     autoCapitalize: 'none',
     autoCorrect: false,
     keyboardType: props.numeric ? 'numbers-and-punctuation' : undefined,
-    // Beside a label the value trails the row; alone, the entry leads it as the row's title would.
-    textAlign: props.labelHidden ? 'left' : 'right',
+    secureTextEntry: props.secure,
+    // The editable value leads its lane, immediately after the optional label.
+    textAlign: 'left',
     ...entryBehaviour(props),
   };
 }
@@ -65,7 +67,12 @@ function entryBehaviour(props: PhoneFieldProps): TextInputProps {
 
   const submit = props.onSubmit;
 
-  if (!submit) return focus;
+  if (!submit)
+    return {
+      ...focus,
+      onSubmitEditing: () => KeyboardController.setFocusTo('next'),
+      returnKeyType: 'next',
+    };
 
   return { ...focus, onSubmitEditing: () => submit(), returnKeyType: 'done' };
 }

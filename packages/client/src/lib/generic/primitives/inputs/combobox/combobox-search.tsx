@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { TextInput, View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
+import { Icon } from '#primitives/content/icon';
 import { cn } from '../../../utils';
 import type { ComboboxSearchProps } from './combobox-search-props';
 

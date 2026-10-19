@@ -18,6 +18,10 @@ const meta = {
       control: 'select',
       options: ['closed', 'open', 'expanded'],
     },
+    sizeClass: {
+      control: 'select',
+      options: ['compact', 'medium', 'wide'],
+    },
     sidebarShown: { control: 'boolean' },
     attentionCount: { control: 'number' },
   },
@@ -51,6 +55,15 @@ export const InspectorFiles: Story = {
   name: 'Inspector files',
   args: { inspectorState: 'open' },
   // An element in args holds React internals, which Storybook walks as a cyclic arg until the native catalog hangs.
+  render: (args) => (
+    <ScaffoldMock {...args} inspector={<InspectorFilesMock />} />
+  ),
+};
+
+// A medium window takes the phone shell (ADR-0026): the page fills the window and the Inspector rises as a sheet over it.
+export const MediumInspector: Story = {
+  name: 'Medium Inspector',
+  args: { sizeClass: 'medium', inspectorState: 'open' },
   render: (args) => (
     <ScaffoldMock {...args} inspector={<InspectorFilesMock />} />
   ),

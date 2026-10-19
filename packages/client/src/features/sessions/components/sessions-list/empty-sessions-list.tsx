@@ -1,9 +1,14 @@
 import type * as React from 'react';
+import { Button } from '#primitives/actions/button';
+import type { EmptyStateProps } from '#primitives/status/empty-state';
+import { EmptyState } from '#primitives/status/empty-state';
 import type { SessionsStatus } from '../../stores/sessions-view';
 import type { SessionsListProps } from './sessions-list-props';
-import { EmptyList } from './sessions-list-rows';
 
-type EmptySessionsListProps = Pick<SessionsListProps, 'query' | 'view'>;
+type EmptySessionsListProps = Pick<
+  SessionsListProps,
+  'query' | 'view' | 'onStartSession'
+>;
 
 interface EmptyCopy {
   // Under Project headings an Active or All list keeps every Project's row, so it is empty only with no Projects.
@@ -50,13 +55,34 @@ function noMatchingSession({
 }
 
 // What the Sessions list says with no rows to show, for its search, status and grouping.
+function emptyStateProps(
+  props: EmptySessionsListProps,
+): Pick<EmptyStateProps, 'icon' | 'title' | 'description' | 'action'> {
+  const searched = Boolean(props.query);
+
+  return {
+    icon: searched ? 'search' : 'sessions',
+    title: emptyListTitle(props),
+    description: noMatchingSession(props) ?? sessionPrompt(searched),
+    action: sessionAction(searched, props.onStartSession),
+  };
+}
+
+function sessionPrompt(searched: boolean): string | undefined {
+  return searched ? undefined : 'Start a Session to work with an Agent.';
+}
+
+function sessionAction(
+  searched: boolean,
+  onStartSession: EmptySessionsListProps['onStartSession'],
+): React.JSX.Element | undefined {
+  return searched ? undefined : (
+    <Button label="New Session" onPress={onStartSession} />
+  );
+}
+
 export function EmptySessionsList(
   props: EmptySessionsListProps,
 ): React.JSX.Element {
-  return (
-    <EmptyList
-      title={emptyListTitle(props)}
-      message={noMatchingSession(props)}
-    />
-  );
+  return <EmptyState {...emptyStateProps(props)} />;
 }

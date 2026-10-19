@@ -1,20 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListContent } from '#primitives/lists/grouped-list-content';
-import { GroupedListItem } from '#primitives/lists/grouped-list-item';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Picker } from './picker';
-import type { PickerProps } from './picker-props';
+import { MultipleExample, multipleExamples } from './picker-multiple-examples';
+import type { SinglePickerProps } from './picker-props';
 
 const options = [
   { value: 'low', label: 'Low' },
   {
     value: 'medium',
     label: 'Medium',
-    supportingText: 'A balanced amount of reasoning',
+    subtitle: 'A balanced amount of reasoning',
   },
   { value: 'high', label: 'High' },
 ] as const;
@@ -25,7 +25,7 @@ const longOptions = [
     value: 'maximum',
     label:
       'Maximum reasoning for a complex implementation with several linked changes',
-    supportingText: 'Uses more time and more of your plan',
+    subtitle: 'Uses more time and more of your plan',
   },
   { value: 'legacy', label: 'Legacy', disabled: true },
   { value: 'adaptive', label: 'Adaptive' },
@@ -34,7 +34,7 @@ const longOptions = [
 ] as const;
 
 type ExampleProps = Partial<
-  Omit<PickerProps<string>, 'onValueChange' | 'label'>
+  Omit<SinglePickerProps<string>, 'onValueChange' | 'label'>
 >;
 
 function PickerExample(props: ExampleProps): React.JSX.Element {
@@ -75,7 +75,7 @@ const examples: { label: string; props: ExampleProps }[] = [
 ];
 
 const meta = {
-  title: 'Design System/Primitives/Picker',
+  title: 'Design System/Primitives/Inputs/Picker',
   parameters: { screenPreview: true },
 } satisfies Meta;
 
@@ -90,12 +90,12 @@ export const Variations: Story = {
 
 function PickerVariations(): React.JSX.Element {
   return (
-    <GroupedList>
+    <List appearance="grouped">
       <AccessoryExample />
-      <GroupedListContent>
+      <View>
         <StandaloneVariations />
-      </GroupedListContent>
-    </GroupedList>
+      </View>
+    </List>
   );
 }
 
@@ -107,17 +107,27 @@ function StandaloneVariations(): React.JSX.Element {
           <PickerExample {...props} />
         </Variation>
       ))}
+      {multipleExamples.map(multipleVariation)}
     </VariationList>
   );
 }
 
 function AccessoryExample(): React.JSX.Element {
   return (
-    <GroupedListSection title="GroupedListItem accessory">
-      <GroupedListItem
-        label="Effort"
-        accessory={<PickerExample value="medium" variant="row" />}
+    <ListSection title="ListItem accessory">
+      <ListItem
+        title="Effort"
+        trailing={<PickerExample value="medium" variant="row" />}
       />
-    </GroupedListSection>
+    </ListSection>
   );
 }
+
+const multipleVariation = (example: {
+  label: string;
+  props: React.ComponentProps<typeof MultipleExample>;
+}): React.JSX.Element => (
+  <Variation key={example.label} label={example.label}>
+    <MultipleExample {...example.props} />
+  </Variation>
+);

@@ -1,5 +1,10 @@
+import {
+  currentPartVersions,
+  type PluginSurface,
+} from '@repo/contracts/plugins/kit';
 import type { AppRouter } from '@repo/engine/router';
 import * as trpc from '@trpc/client';
+import { pluginPlatform } from './plugin-platform';
 
 export interface ServerClient {
   client: trpc.TRPCClient<AppRouter>;
@@ -18,6 +23,7 @@ export function serverHttpUrl(serverUrl: string, path: string): string {
 function createWebSocketClient(
   serverUrl: string,
   beforeConnect: () => Promise<void>,
+  surface: () => PluginSurface,
 ): ServerClient['webSocketClient'] {
   return trpc.createWSClient({
     // `beforeConnect` waits out the retry delay, so foreground and Try again can cut it short.
@@ -26,6 +32,7 @@ function createWebSocketClient(
 
       return serverUrl;
     },
+    connectionParams: () => ({ pluginSurface: JSON.stringify(surface()) }),
     retryDelayMs: () => 0,
     keepAlive: { enabled: true, intervalMs: 5000, pongTimeoutMs: 1000 },
   });
@@ -46,12 +53,23 @@ function createServerClient(
   });
 }
 
+const appSurface = (): PluginSurface => ({
+  platform: pluginPlatform(),
+  parts: currentPartVersions,
+});
+
 // Every tRPC call goes over one WebSocket to the Server, except a call with a file, which goes over HTTP (ADR 0002).
 export function createTRPCClient(
   serverUrl: string,
   beforeConnect: () => Promise<void> = async (): Promise<void> => {},
+  surface: () => PluginSurface = appSurface,
 ): ServerClient {
-  const webSocketClient = createWebSocketClient(serverUrl, beforeConnect);
+  const webSocketClient = createWebSocketClient(
+    serverUrl,
+    beforeConnect,
+    surface,
+  );
+
   const client = createServerClient(serverUrl, webSocketClient);
 
   return { client, webSocketClient, close: () => webSocketClient.close() };

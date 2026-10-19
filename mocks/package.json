@@ -9,7 +9,10 @@
     "./app": "./app/index.ts",
     "./git/*": "./git/*.ts",
     "./network/*": "./network/*.ts",
-    "./registry/*": "./registry/*.ts"
+    "./plugins/svg.json": "./plugins/svg.json",
+    "./registry/*": "./registry/*.ts",
+    "./plugins/controls.json": "./plugins/controls.json",
+    "./plugins/overlays.json": "./plugins/overlays.json"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

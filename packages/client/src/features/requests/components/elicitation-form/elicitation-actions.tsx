@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
-import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
-import { Button, type ButtonProps } from '#primitives/buttons/button';
+import { Button, type ButtonProps } from '#primitives/actions/button';
 
 export type ElicitationActionsProps = {
   // Submit on the last page, Next before it.
@@ -52,7 +51,7 @@ function skipProps(props: ElicitationActionsProps, wide: boolean): ButtonProps {
   return {
     ...actionProps(wide),
     label: 'Skip',
-    variant: wide || Platform.OS === 'ios' ? 'ghost' : 'outline',
+    variant: 'ghost',
     disabled: props.inactive,
     onPress: props.onSkip,
   };

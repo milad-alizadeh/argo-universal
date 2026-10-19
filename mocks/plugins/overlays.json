@@ -1,0 +1,139 @@
+{
+  "type": "Stack",
+  "key": "overlays",
+  "props": {
+    "direction": "column",
+    "gap": 4
+  },
+  "children": [
+    {
+      "type": "Alert",
+      "key": "alert",
+      "props": {
+        "open": false,
+        "title": "Alert title",
+        "message": "Alert wire content",
+        "onOpenChange": {
+          "$event": "onOpenChange"
+        }
+      },
+      "children": [
+        {
+          "type": "Action",
+          "key": "apply",
+          "props": {
+            "label": "Apply alert",
+            "onPress": {
+              "$event": "onPress"
+            }
+          },
+          "children": [],
+          "slots": {}
+        },
+        {
+          "type": "Action",
+          "key": "cancel",
+          "props": {
+            "label": "Cancel alert",
+            "role": "cancel",
+            "onPress": {
+              "$event": "onPress"
+            }
+          },
+          "children": [],
+          "slots": {}
+        }
+      ],
+      "slots": {}
+    },
+    {
+      "type": "Sheet",
+      "key": "sheet",
+      "props": {
+        "open": false,
+        "label": "Sheet title",
+        "onOpenChange": {
+          "$event": "onOpenChange"
+        }
+      },
+      "children": [
+        {
+          "type": "Stack",
+          "key": "body",
+          "props": {
+            "direction": "column",
+            "gap": 4
+          },
+          "children": [
+            {
+              "type": "TextInput",
+              "key": "field",
+              "props": {
+                "label": "Overlay name",
+                "value": "Argo",
+                "onChangeText": {
+                  "$event": "onChangeText"
+                }
+              },
+              "children": [],
+              "slots": {}
+            },
+            {
+              "type": "Button",
+              "key": "cancel",
+              "props": {
+                "label": "Cancel sheet",
+                "onPress": {
+                  "$event": "onPress"
+                }
+              },
+              "children": [],
+              "slots": {}
+            },
+            {
+              "type": "Button",
+              "key": "apply",
+              "props": {
+                "label": "Apply sheet",
+                "onPress": {
+                  "$event": "onPress"
+                }
+              },
+              "children": [],
+              "slots": {}
+            }
+          ],
+          "slots": {}
+        }
+      ],
+      "slots": {}
+    },
+    {
+      "type": "Button",
+      "key": "share",
+      "props": {
+        "label": "Share content",
+        "onPress": {
+          "action": "share",
+          "title": "Argo",
+          "message": "Shared from a Plugin"
+        }
+      },
+      "children": [],
+      "slots": {}
+    },
+    {
+      "type": "Button",
+      "key": "pop",
+      "props": {
+        "label": "Back one page",
+        "onPress": {
+          "action": "pop"
+        }
+      },
+      "children": [],
+      "slots": {}
+    }
+  ],
+  "slots": {}
+}

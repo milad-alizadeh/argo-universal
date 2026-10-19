@@ -1,0 +1,37 @@
+import type {
+  HookEventName,
+  PluginProjectInfo,
+  PluginSettingValue,
+} from '@repo/contracts/plugins';
+import type { JsonObject, Json } from '@repo/contracts/plugins/hook-protocol';
+import type { PluginSlotInput } from '@repo/contracts/plugins/wire';
+import type { PluginStorage } from '@repo/engine/plugins';
+import type { PluginMount, PluginTestView } from './view';
+
+export interface PluginTestOptions {
+  directory: string;
+  pluginId: string;
+  version: string;
+  projects?: PluginProjectInfo[];
+  // Folders containing external executable fixtures, prepended only for this runtime.
+  path?: string[];
+  clockStart?: number;
+  settings?: Map<string, PluginSettingValue>;
+}
+
+export interface PluginTest {
+  log: () => Promise<string>;
+  page: (path?: string) => PluginTestView;
+  slot: (slot: PluginSlotInput) => PluginTestView;
+  close: () => Promise<void>;
+  mount: (input: PluginMount) => Promise<PluginTestView>;
+  emit: (name: HookEventName, event: JsonObject) => Promise<Json>;
+  clock: { advance: (ms: number) => Promise<void> };
+  settings: Map<string, PluginSettingValue>;
+  storage: {
+    execute: (
+      queries: Parameters<PluginStorage['execute']>[1],
+    ) => ReturnType<PluginStorage['execute']>;
+  };
+  session: { id: string; projectId: string; agent: string };
+}

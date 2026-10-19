@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcessByStdio } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { cp, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
@@ -67,6 +67,11 @@ export async function startOwnServer(
     JSON.stringify({ outcome: 'success', released: true }),
   );
   await initTestRepository(projectPath, false);
+  await cp(
+    new URL('./mocks/plugins', import.meta.url),
+    path.join(home, 'shipped-plugins'),
+    { recursive: true },
+  );
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();

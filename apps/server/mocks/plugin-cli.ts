@@ -1,0 +1,43 @@
+import { execFile, type ExecFileException } from 'node:child_process';
+import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { onTestFinished } from 'vitest';
+
+export const example = fileURLToPath(
+  new URL('../../../plugins/examples/hello/', import.meta.url),
+);
+
+const cli = fileURLToPath(new URL('../bin/argo.mjs', import.meta.url));
+
+export async function fixture(source: string): Promise<string> {
+  const directory = await mkdtemp(join(tmpdir(), 'argo-cli-plugin-'));
+  onTestFinished(() => rm(directory, { recursive: true, force: true }));
+  await cp(example, directory, { recursive: true });
+  await writeFile(join(directory, 'index.js'), source);
+
+  return directory;
+}
+
+type CommandResult = { code: string | number | null; output: string };
+
+export function run(
+  command: string,
+  directory: string,
+): Promise<CommandResult> {
+  return new Promise((resolve) => {
+    execFile(
+      process.execPath,
+      [cli, 'plugin', command, directory],
+      { timeout: 20_000, cwd: tmpdir() },
+      (error, output, stderr) => {
+        resolve({ code: errorCode(error), output: output + stderr });
+      },
+    );
+  });
+}
+
+function errorCode(error: ExecFileException | null): string | number {
+  return error ? (error.code ?? 1) : 0;
+}

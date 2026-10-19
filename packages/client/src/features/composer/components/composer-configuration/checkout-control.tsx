@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
-import { GroupedList } from '#primitives/lists/grouped-list';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
+import { List } from '#primitives/lists/list';
+import { ListSection } from '#primitives/lists/list';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ConfigurationChoice } from './configuration-choice';
@@ -26,16 +26,16 @@ interface ChoiceProps extends ContentsProps {
 export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 wide:p-3 bg-content">
-      <GroupedList fit>
+      <List appearance="grouped" fit>
         <CheckoutChoices {...props} />
-      </GroupedList>
+      </List>
     </View>
   );
 }
 
 function CheckoutChoices(props: ContentsProps): React.JSX.Element {
   return (
-    <GroupedListSection>
+    <ListSection selectionMode="single">
       {[false, true].map((newWorktree) => (
         <CheckoutChoice
           key={String(newWorktree)}
@@ -43,7 +43,7 @@ function CheckoutChoices(props: ContentsProps): React.JSX.Element {
           newWorktree={newWorktree}
         />
       ))}
-    </GroupedListSection>
+    </ListSection>
   );
 }
 
@@ -97,16 +97,20 @@ function CheckoutPath({
 }: Pick<CheckoutProps, 'checkout'>): React.JSX.Element {
   return (
     <View className="min-w-0 shrink">
-      <Text
-        selectable={false}
-        numberOfLines={1}
-        role={checkout.newWorktree ? 'code' : 'secondary'}
-      >
+      <Text selectable={false} numberOfLines={1} {...pathText(checkout)}>
         {checkoutName(checkout)}
       </Text>
     </View>
   );
 }
+
+// A branch keeps its prefix and its end; the web ignores the mode and cuts the tail.
+const pathText = (
+  checkout: CheckoutProps['checkout'],
+): Pick<React.ComponentProps<typeof Text>, 'ellipsizeMode' | 'role'> =>
+  checkout.newWorktree
+    ? { ellipsizeMode: 'middle', role: 'code' }
+    : { ellipsizeMode: 'tail', role: 'secondary' };
 
 function CheckoutIcon({
   newWorktree,

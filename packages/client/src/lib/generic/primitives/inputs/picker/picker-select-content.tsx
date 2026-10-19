@@ -1,8 +1,8 @@
 import * as RadixSelect from '@radix-ui/react-select';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { TextClassContext } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { TextClassContext } from '#primitives/content/text';
 import {
   selectContentClassName,
   selectViewportClassName,

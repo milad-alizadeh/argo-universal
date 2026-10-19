@@ -1,5 +1,6 @@
 import { Dimensions, Platform } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { useInCompactScope } from './compact-scope';
 import { type SizeClass, sizeClass } from './size-class';
 
 // Android's own phone/tablet split: a tablet's shorter screen side is 600dp or more (sw600dp).
@@ -17,11 +18,13 @@ function isPhone(): boolean {
 const reaches = (resolved: { display?: unknown }): boolean =>
   resolved.display === 'flex';
 
-// The breakpoints come from tooling/uniwind/theme.css through Uniwind's own variants.
+// The breakpoints come from tooling/uniwind/theme.css through Uniwind's own variants; a system sheet's content is compact.
 export function useSizeClass(): SizeClass {
-  return sizeClass({
+  const shown = sizeClass({
     medium: reaches(useResolveClassNames('hidden medium:flex')),
-    wide: reaches(useResolveClassNames('hidden wide:flex')),
+    wide: reaches(useResolveClassNames('hidden wide-type:flex')),
     phone: isPhone(),
   });
+
+  return useInCompactScope() ? 'compact' : shown;
 }

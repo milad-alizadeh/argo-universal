@@ -1,40 +1,38 @@
-import Archive from '@expo/material-symbols/archive.xml';
-import Edit from '@expo/material-symbols/edit.xml';
-import EditSquare from '@expo/material-symbols/edit_square.xml';
-import Settings from '@expo/material-symbols/settings.xml';
-import { DropdownMenuItem, Icon } from '@expo/ui/jetpack-compose';
-import type { AndroidSymbol } from 'expo-symbols';
+import { RNHostView } from '@expo/ui';
+import { DropdownMenuItem } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import type { ImageSourcePropType } from 'react-native';
-import { drawnSymbol } from '../../../symbols/drawn-symbol';
-import { type IconName, iconSymbols } from '../../../symbols/icon-names';
+import { View } from 'react-native';
+import { Icon } from '#primitives/content/icon';
+import type { IconName } from '../../../symbols/icon-names';
 
-// Compose's Icon draws a bundled vector drawable, so each Material symbol a menu row shows is imported here; a symbol not listed draws no icon.
-const materialImages: Partial<Record<AndroidSymbol, ImageSourcePropType>> = {
-  archive: Archive,
-  edit: Edit,
-  edit_square: EditSquare,
-  settings: Settings,
-};
-
-function materialImage(icon?: IconName): ImageSourcePropType | undefined {
-  if (!icon) return undefined;
-  const symbol = drawnSymbol(iconSymbols[icon]);
-
-  return symbol.kind === 'system' ? materialImages[symbol.material] : undefined;
+interface LeadingProps {
+  icon?: IconName;
+  tone?: 'danger';
+  disabled?: boolean;
 }
 
-// Material's leading icon, at its 24dp size; it takes the item's leading icon colour.
-export function ItemLeadingIcon(props: {
-  icon?: IconName;
-}): React.JSX.Element | null {
-  const source = materialImage(props.icon);
-
-  if (!source) return null;
+export function ItemLeadingIcon(props: LeadingProps): React.JSX.Element | null {
+  if (!props.icon) return null;
 
   return (
     <DropdownMenuItem.LeadingIcon>
-      <Icon source={source} />
+      <NativeIcon {...props} icon={props.icon} />
     </DropdownMenuItem.LeadingIcon>
+  );
+}
+
+function NativeIcon(
+  props: LeadingProps & { icon: IconName },
+): React.JSX.Element {
+  return (
+    <RNHostView matchContents>
+      <View className={props.disabled ? 'opacity-38' : undefined}>
+        <Icon
+          name={props.icon}
+          role="grouped-row"
+          tone={props.tone ?? 'muted'}
+        />
+      </View>
+    </RNHostView>
   );
 }

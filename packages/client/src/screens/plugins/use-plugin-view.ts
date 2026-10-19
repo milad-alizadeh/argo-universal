@@ -1,44 +1,44 @@
-import { useMutation } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
-import { useReducer } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { errorToast } from '#lib/generic/error-toast';
-import { useErrorToast } from '#primitives/overlays/toast';
 import {
   emptyPluginView,
   reducePluginView,
   type PluginViewState,
+  type PluginOnEvent,
 } from '../../lib/product/plugin-registry';
+import { usePluginDispatch, bindPluginDispatch } from './use-plugin-dispatch';
+import { usePluginStreamState } from './use-plugin-stream-state';
 
 interface PluginView extends PluginViewState {
-  // Sends a tapped node's event id to the Plugin's handler.
-  dispatch: (eventId: string) => void;
+  dispatch: PluginOnEvent;
 }
 
-type Dispatch = (eventId: string) => void;
+type Page = { pluginId: string; path: string };
 
-function useDispatch(pluginId: string, path: string): Dispatch {
+function usePageState(page: Page): PluginViewState {
   const trpc = useTRPC();
-  const dispatch = useMutation(trpc.plugins.dispatch.mutationOptions());
 
-  useErrorToast(errorToast('Could not reach the Plugin', dispatch.error));
-
-  return (eventId) => dispatch.mutate({ pluginId, path, eventId });
-}
-
-// Watches one Plugin page on the connected Server: a snapshot first, then patches.
-export function usePluginView(pluginId: string, path: string): PluginView {
-  const trpc = useTRPC();
-  const [state, receive] = useReducer(reducePluginView, emptyPluginView);
+  const { value, receive } = usePluginStreamState(
+    { trpc, key: JSON.stringify(page) },
+    emptyPluginView,
+    reducePluginView,
+  );
 
   const subscription = useSubscription(
-    trpc.plugins.view.subscriptionOptions(
-      { pluginId, path },
-      { onData: receive },
-    ),
+    trpc.plugins.view.subscriptionOptions(page, { onData: receive }),
   );
 
   useResubscribeOnReconnect(subscription);
 
-  return { ...state, dispatch: useDispatch(pluginId, path) };
+  return value;
+}
+
+export function usePluginView(pluginId: string, path: string): PluginView {
+  const state = usePageState({ pluginId, path });
+  const send = usePluginDispatch();
+
+  const { revision, viewId } = state;
+  const target = { pluginId, path, revision, viewId };
+
+  return { ...state, dispatch: bindPluginDispatch(send, target) };
 }

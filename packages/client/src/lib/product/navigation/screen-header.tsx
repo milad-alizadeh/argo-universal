@@ -3,7 +3,7 @@ import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Platform } from 'react-native';
 import { HeaderItems } from '#lib/product/header-button';
-import { useSizeClass } from '../../generic/use-size-class/use-size-class';
+import { useWide } from '../../generic/use-wide/use-wide';
 import {
   type HeaderSearch,
   HeaderSearchRow,
@@ -16,8 +16,8 @@ import {
  * `Stack.Toolbar` and `Stack.SearchBar`.
  */
 export interface ScreenHeaderProps {
-  // Pages with an inline medium header hide the stack header there too.
-  hideFrom?: 'medium';
+  // Pages with an inline header on a wide window hide the stack header there too.
+  hideFrom?: 'wide';
   title: string;
   left?: ReactNode;
   right?: readonly ReactElement[];
@@ -106,22 +106,19 @@ const stackTitleOptions = ({ title }: ScreenHeaderProps): HeaderOptions => ({
 export const screenHeaderOptions: (header: ScreenHeaderProps) => HeaderOptions =
   Platform.OS === 'web' ? webHeaderOptions : stackTitleOptions;
 
-// A narrow window's page header, which the page sets on its section stack; a wide window's page draws its own title, so there this sets nothing.
+// The phone shell's page header, which the page sets on its section stack; a wide window's page draws its own title, so there this sets nothing.
 export function ScreenHeader(
   props: ScreenHeaderProps,
 ): React.JSX.Element | null {
-  const sizeClass = useSizeClass();
+  const wide = useWide();
 
-  if (props.hideFrom === 'medium') {
-    const options = {
-      ...screenHeaderOptions(props),
-      headerShown: sizeClass === 'compact',
-    };
+  if (props.hideFrom === 'wide') {
+    const options = { ...screenHeaderOptions(props), headerShown: !wide };
 
     return <Stack.Screen options={options} />;
   }
 
-  if (sizeClass === 'wide') return null;
+  if (wide) return null;
 
   return <Stack.Screen options={screenHeaderOptions(props)} />;
 }

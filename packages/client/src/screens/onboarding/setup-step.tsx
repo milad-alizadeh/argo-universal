@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { type StepMark } from '#features/setup';
 import { cn } from '#lib/generic/utils';
-import { Icon } from '#primitives/display/icon';
-import { Text } from '#primitives/display/text';
+import { Icon } from '#primitives/content/icon';
+import { Text } from '#primitives/content/text';
 
 const markClasses: Record<StepMark, string> = {
   done: 'bg-success',

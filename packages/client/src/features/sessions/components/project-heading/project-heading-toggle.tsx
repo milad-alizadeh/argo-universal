@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { contentActionClass } from '#primitives/buttons/button';
-import { Icon } from '#primitives/display/icon';
-import { Text, TextClassContext } from '#primitives/display/text';
+import { contentActionClass } from '#primitives/actions/button';
+import { Pressable } from '#primitives/actions/pressable';
+import { Icon } from '#primitives/content/icon';
+import { Text, TextClassContext } from '#primitives/content/text';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
-import { Pressable } from '#primitives/pressable';
 
 function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {
   return (

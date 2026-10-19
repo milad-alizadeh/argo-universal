@@ -4,6 +4,7 @@ import {
 } from 'react-reconciler/constants';
 import { keyOfProps, toProps, type ElementProps } from './element-props';
 import type { KitHostConfig } from './host-types';
+import { kitScheduler } from './scheduler';
 import { transitionContext } from './transition-context';
 import type { Instance } from './wire-tree';
 
@@ -29,6 +30,7 @@ function insert(parent: Instance, child: Instance, before: Instance): void {
 }
 
 function append(parent: Instance, child: Instance): void {
+  remove(parent, child);
   parent.children.push(child);
 }
 
@@ -56,8 +58,8 @@ export const hostConfig: KitHostConfig = {
   supportsHydration: false,
   isPrimaryRenderer: false,
   noTimeout,
-  scheduleTimeout: (callback, delay) => setTimeout(callback, delay),
-  cancelTimeout: (id) => clearTimeout(id),
+  scheduleTimeout: (callback, delay) => kitScheduler.schedule(callback, delay),
+  cancelTimeout: (id) => kitScheduler.cancel(id),
   scheduleMicrotask: (callback) => {
     Promise.resolve().then(callback).catch(reportFailure);
   },

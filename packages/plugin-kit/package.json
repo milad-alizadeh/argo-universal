@@ -1,0 +1,32 @@
+{
+  "name": "@argo/plugin-kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts"
+    },
+    "./jsx-runtime": {
+      "types": "./src/jsx-runtime.d.ts"
+    },
+    "./testing": "./testing/index.ts"
+  },
+  "dependencies": {
+    "@repo/contracts": "workspace:*",
+    "@repo/engine": "workspace:*",
+    "@types/react": "catalog:",
+    "zod": "catalog:"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit && tsc --noEmit -p testing/tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@repo/typescript": "workspace:*",
+    "@repo/vitest": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

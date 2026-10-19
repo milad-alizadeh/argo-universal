@@ -1,9 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
-import { onPhone } from './frame';
+import { onPhone, phone, wide } from './frame';
 
-const sectionNames = ['Sessions', 'Settings', 'Issues', 'Hello'];
+const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists'];
 
 // A phone Frame lists sections in the Drawer behind ☰; a wide one in its Rail.
 async function navigation(page: Page): Promise<Locator> {
@@ -14,14 +14,18 @@ async function navigation(page: Page): Promise<Locator> {
   return page.getByTestId('phone-drawer');
 }
 
+When('I open the {} Plugin', async ({ page }, title: string): Promise<void> => {
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: title, exact: true })
+    .click();
+});
+
 When(
-  'I open the {word} Plugin',
-  async ({ page }, title: string): Promise<void> => {
-    await (
-      await navigation(page)
-    )
-      .getByRole('button', { name: title, exact: true })
-      .click();
+  'I resize to a {word} Frame',
+  async ({ page }, frame: string): Promise<void> => {
+    await page.setViewportSize(frame === 'phone' ? phone : wide);
   },
 );
 
@@ -42,7 +46,7 @@ Then(
   'the navigation lists core sections before Plugin items',
   async ({ page }): Promise<void> => {
     const items = (await navigation(page)).getByRole('button', {
-      name: /^(Sessions|Settings|Issues|Hello)$/,
+      name: /^(Sessions|Settings|Counter|Lists)$/,
     });
 
     await expect(items).toHaveCount(sectionNames.length);
@@ -55,15 +59,16 @@ Then(
 const pluginPage = 'plugin-page';
 
 const pluginUrl = (name: string): RegExp =>
-  name === 'Hello'
-    ? /\/plugins\/hello\/hello$/
-    : /\/plugins\/issue-tracker\/issues$/;
+  name === 'Counter'
+    ? /\/plugins\/counter\/counter$/
+    : /\/plugins\/lists\/lists\/lists$/;
 
-// Hello draws its own page from the wire; the other Plugins have no page yet, only the frame that holds it.
 const pluginHeading = (page: Page, name: string): Locator =>
-  name === 'Hello'
-    ? page.getByTestId(pluginPage).getByText('Hello from a Plugin')
-    : page.getByTestId(pluginPage);
+  page
+    .getByTestId(pluginPage)
+    .getByText(name === 'Counter' ? 'Counter fixture' : 'Deploy web', {
+      exact: true,
+    });
 
 When(
   'I press {string} on the Plugin page',
@@ -79,5 +84,37 @@ Then(
   'the Plugin page text reads {string}',
   async ({ page }, text: string): Promise<void> => {
     await expect(page.getByTestId(pluginPage).getByText(text)).toBeVisible();
+  },
+);
+
+When('I open the Server Project', async ({ page }): Promise<void> => {
+  await page.getByRole('link', { name: /^project,/ }).click();
+});
+
+Then(
+  'the Plugin row {string} is selected',
+  async ({ page }, name: string): Promise<void> => {
+    await expect(
+      page.getByTestId(pluginPage).getByRole('button', { name, exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+  },
+);
+
+Then(
+  'the Project details show the fixture Plugin Slot',
+  async ({ page }): Promise<void> => {
+    await expect(page.getByText(/^Fixture Slot for /)).toBeVisible();
+  },
+);
+
+Then(
+  'the Plugin detail actions fit in the viewport',
+  async ({ page }): Promise<void> => {
+    await expect(
+      page.getByRole('button', { name: 'Back to counter', exact: true }),
+    ).toBeInViewport();
+    await expect(
+      page.getByRole('button', { name: 'Open documentation', exact: true }),
+    ).toBeInViewport();
   },
 );

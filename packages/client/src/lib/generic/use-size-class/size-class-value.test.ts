@@ -22,6 +22,15 @@ describe('a size-class value', (): void => {
     },
   );
 
+  it('picks its own medium entry when given one', (): void => {
+    expect(
+      sizeClassValue(
+        { compact: 'secondary', medium: 'heading', wide: 'body' },
+        'medium',
+      ),
+    ).toBe('heading');
+  });
+
   it('keeps a plain object value whole', (): void => {
     const style = { paddingTop: 8 };
 

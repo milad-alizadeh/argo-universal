@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View, ScrollView } from 'react-native';
-import { LiquidGlass } from '#primitives/display/liquid-glass';
+import { LiquidGlass } from '#primitives/content/liquid-glass';
 import { RichTextarea } from '#primitives/inputs/rich-textarea';
 import { ComposerAttachmentCard } from '../composer-attachment-card/composer-attachment-card';
 import type {
@@ -13,7 +13,7 @@ import { ComposerBottomTray } from './composer-trays';
 import type { ComposerDraft } from './composer-types';
 
 const cardGlass = {
-  corners: 'card',
+  corners: 'sheet',
   interactive: true,
   className: 'w-full z-10',
   fallbackClassName:

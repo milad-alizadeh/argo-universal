@@ -1,7 +1,7 @@
 import type { ViewMessage, WireNode } from './wire';
 
-// The event id of "Tap me": its position in the tree, then the prop.
-export const helloTapEventId = '0/2/0:onPress';
+// The event name carried by the Tap me button.
+export const counterTapEvent = 'onPress';
 
 // A leaf node; `withChildren` makes it a container.
 const node = (
@@ -15,11 +15,13 @@ const withChildren = (parent: WireNode, children: WireNode[]): WireNode => ({
   children,
 });
 
-const helloButtons = (): WireNode =>
-  withChildren(node('Row', '2', { gap: 2 }), [
+const column = node('Stack', '0', { direction: 'column' });
+
+const counterButtons = (key: string): WireNode =>
+  withChildren(node('Stack', key, { direction: 'row', gap: 2 }), [
     node('Button', '0', {
       label: 'Tap me',
-      onPress: { $event: helloTapEventId },
+      onPress: { $event: counterTapEvent },
     }),
     node('Button', '1', {
       label: 'Say hi',
@@ -28,43 +30,50 @@ const helloButtons = (): WireNode =>
     }),
   ]);
 
-const helloTree = (taps: number): WireNode =>
-  withChildren(node('Column', '0', { gap: 4 }), [
-    node('Text', '0', { label: 'Hello from a Plugin', variant: 'heading' }),
-    node('Text', '1', { label: `Tapped ${taps} times` }),
-    helloButtons(),
+const counterTree = (taps: number): WireNode =>
+  withChildren(node('Stack', '0', { direction: 'column', gap: 4 }), [
+    node('Text', '0', { children: 'Counter fixture', role: 'heading' }),
+    node('Text', '1', { children: `Tapped ${taps} times` }),
+    node('Pill', '2', { text: 'Healthy', tone: 'success' }),
+    node('ListItem', '3', {
+      title: 'Waiting jobs',
+      badge: { kind: 'count', count: 3, label: '3 queued jobs' },
+    }),
+    counterButtons('4'),
   ]);
 
-// What `plugins/examples/hello` draws: the Engine journey expects the reconciler to produce it, and the registry stories render it.
-export const helloRoot: WireNode = helloTree(0);
+// The wire-counter fixture Plugin draws this; registry stories render the same wire contract.
+export const counterRoot: WireNode = counterTree(0);
 
-export const helloSnapshot: ViewMessage = {
+export const counterSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,
-  root: helloRoot,
+  root: counterRoot,
 };
 
 // What one tap on "Tap me" changes.
-export const helloTapPatch: ViewMessage = {
+export const counterTapPatch: ViewMessage = {
   type: 'patch',
   revision: 2,
   ops: [
     {
-      op: 'props',
-      path: [1],
-      props: { label: 'Tapped 1 times' },
+      op: 'setProps',
+      key: ['1'],
+      props: { children: 'Tapped 1 times' },
     },
   ],
 };
 
-export const helloTappedRoot: WireNode = helloTree(1);
+export const counterTappedRoot: WireNode = counterTree(1);
 
 // A newer Plugin's component the App does not know: a leaf is dropped, a container shows "Update Argo to see this".
-export const unknownNodesRoot: WireNode = withChildren(node('Column', '0'), [
-  node('Text', '0', { label: 'Before' }),
+export const unknownNodesRoot: WireNode = withChildren(column, [
+  node('Text', '0', { children: 'Before' }),
   node('Sparkline', '1', { unit: 'ms' }),
-  withChildren(node('Carousel', '2'), [node('Text', '0', { label: 'Inside' })]),
-  node('Text', '3', { label: 'After' }),
+  withChildren(node('Carousel', '2'), [
+    node('Text', '0', { children: 'Inside' }),
+  ]),
+  node('Text', '3', { children: 'After' }),
 ]);
 
 export const unknownNodesSnapshot: ViewMessage = {
@@ -74,9 +83,9 @@ export const unknownNodesSnapshot: ViewMessage = {
 };
 
 // Props the node's schema refuses leave that node out and keep its siblings.
-export const invalidPropsRoot: WireNode = withChildren(node('Column', '0'), [
-  node('Text', '0', { label: 42 }),
-  node('Text', '1', { label: 'Still here' }),
+export const invalidPropsRoot: WireNode = withChildren(column, [
+  node('Text', '0', { children: true }),
+  node('Text', '1', { children: 'Still here' }),
 ]);
 
 export const invalidPropsSnapshot: ViewMessage = {
@@ -84,3 +93,62 @@ export const invalidPropsSnapshot: ViewMessage = {
   revision: 1,
   root: invalidPropsRoot,
 };
+
+// The event name carried by the Wave button.
+export const slotCounterWaveEvent = 'onPress';
+
+export const slotCounterTree = (projectId: string, waves: number): WireNode =>
+  withChildren(node('Stack', '0', { direction: 'column', gap: 2 }), [
+    node('Text', '0', {
+      children:
+        waves === 0
+          ? `Hello from ${projectId}`
+          : `Waved at ${projectId} ${waves} times`,
+    }),
+    node('Button', '1', {
+      label: 'Wave',
+      variant: 'outline',
+      onPress: { $event: slotCounterWaveEvent },
+    }),
+  ]);
+
+// The slot-counter fixture Plugin in Project details for the Project `argo`.
+export const slotCounterRoot: WireNode = slotCounterTree('argo', 0);
+
+export const slotCounterSnapshot: ViewMessage = {
+  type: 'snapshot',
+  revision: 1,
+  root: slotCounterRoot,
+};
+
+// What one tap on "Wave" changes.
+export const slotCounterWavePatch: ViewMessage = {
+  type: 'patch',
+  revision: 2,
+  ops: [
+    {
+      op: 'setProps',
+      key: ['0'],
+      props: { children: 'Waved at argo 1 times' },
+    },
+  ],
+};
+
+// Both multi-node Slots and element-array props retain their order and their events.
+export const slottedRow: WireNode = {
+  ...node('ListItem', 'row', { title: 'Slotted row' }),
+  // Text goes in trailing: the leading lane is a fixed icon-width box (ADR-0032).
+  slots: {
+    trailing: [
+      node('Text', 'first', { children: 'First' }),
+      node('Text', 'second', { children: 'Second' }),
+      node('Button', 'button', {
+        label: 'Increment',
+        onPress: { $event: 'onPress' },
+      }),
+      node('Text', 'count', { children: 'Count 0' }),
+    ],
+  },
+};
+
+export { runListRoot, emptyRunListRoot } from './list-wire-fixtures';

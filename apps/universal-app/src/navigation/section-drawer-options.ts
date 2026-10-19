@@ -33,11 +33,11 @@ export function drawerRootOptions(
   return { ...shown, swipeEnabled: edgeSwipeOpens };
 }
 
-// Each section's options on the Frame's drawer: its header shows only on a narrow section root, so no page shows two.
+// Each section's options on the Frame's drawer: its header shows only on the phone shell's section root, so no page shows two.
 export const drawerScreenOptions =
-  (wide: boolean, lists: SectionLists) =>
+  (framed: boolean, lists: SectionLists) =>
   ({ route }: { route: RouteProp<ParamListBase> }): DrawerNavigationOptions =>
-    wide || !atSectionRoot(route)
+    framed || !atSectionRoot(route)
       ? stackOwnsHeader
       : drawerRootOptions(lists[coreSectionOf(route.name)].rootHeader);
 

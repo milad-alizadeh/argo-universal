@@ -43,6 +43,6 @@ function modelOptions(model: Model): ComboboxOption<string>[] {
     value: choice.value,
     label: modelName(choice),
     accessibilityLabel: choice.name,
-    supporting: choice.description,
+    subtitle: choice.description,
   }));
 }

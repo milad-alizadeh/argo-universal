@@ -27,6 +27,7 @@ function listData(props: SessionListViewProps): ListData {
 type ListActions = Pick<
   SessionsListProps,
   | 'onNewSession'
+  | 'onStartSession'
   | 'onProjectSettings'
   | 'onSelect'
   | 'onRename'
@@ -37,6 +38,7 @@ type ListActions = Pick<
 function listActions(props: SessionListViewProps): ListActions {
   return {
     onNewSession: props.onNewSessionInProject,
+    onStartSession: props.onNewSession,
     onProjectSettings: props.onProjectSettings,
     onSelect: props.onSelect,
     onRename: props.onRename,

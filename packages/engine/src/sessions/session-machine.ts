@@ -7,6 +7,7 @@ import type {
   SessionConfigOption,
 } from '@repo/contracts';
 import type { SessionOpenError } from '@repo/contracts';
+import type { CoreHooks } from '@repo/contracts/plugins';
 import { countRejection } from '@repo/machine-log';
 import { createRejectionCounter } from '@repo/machine-log';
 import {
@@ -18,7 +19,9 @@ import {
   fromCallback,
   sendTo,
   setup,
+  spawnChild,
   stateIn,
+  stopChild,
   or,
   and,
   type AnyActorRef,
@@ -95,6 +98,12 @@ import {
   withoutHeldChoice,
 } from './configuration/held-configuration';
 import { pendingInputRequest } from './pending-input';
+import {
+  permissionHookedEvent,
+  toolCallHooks,
+  toolCallHooksId,
+  type PermissionHooked,
+} from './permission-hooks';
 import { validateConfigChoice } from './session-admission';
 import {
   createSessionCheckout,
@@ -184,6 +193,8 @@ export type SessionMachineInput = SessionInput & {
   createId: () => string;
   acp: AcpSessionDependencies;
   archive?: boolean;
+  // Plugin Hooks on Permission requests and settled Turns (ADR-0027).
+  hooks: CoreHooks;
 };
 
 export type SessionCommand =
@@ -216,7 +227,8 @@ type SessionEvent =
   | AcpLifetimeEvent
   | { type: typeof storageFailingEvent }
   | { type: 'session.shutdown' }
-  | { type: 'agent.shellChanged'; shell: ShellRecord };
+  | { type: 'agent.shellChanged'; shell: ShellRecord }
+  | PermissionHooked;
 
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
@@ -226,6 +238,8 @@ export interface SessionContext extends SessionData {
   activeTurnStartedAt: number | null;
   usage: ContextUsage | null;
   permissionQueue: PendingPermission[];
+  // The option a `tool.check` Hook chose for a queued request, by request id; it answers once the request is first in the queue.
+  hookedPermissions: Record<string, string | null>;
   elicitationQueue: PendingElicitation[];
   configOptions: SessionConfigOption[];
   rejectedMessages: number;
@@ -333,6 +347,7 @@ const sessionSetup = setup({
     output: {} as Pick<SessionContext, 'failure'>,
   },
   actors: {
+    toolCallHooks,
     saveArchive: fromPromise<
       void,
       { context: SessionContext; writer: WriterActorRef | undefined }
@@ -846,6 +861,12 @@ const sessionSetup = setup({
             },
           });
 
+          void context.input.hooks['turn.complete']({
+            sessionId: context.sessionId,
+            turnId: context.activeTurnId,
+            stopReason: params.stopReason,
+          });
+
           if (context.feedEnded) {
             enqueue.sendTo(writer, { type: writeFeedEvent, job });
           } else {
@@ -872,6 +893,7 @@ const sessionSetup = setup({
           activeTurnId: null,
           activeTurnStartedAt: null,
           permissionQueue: [],
+          hookedPermissions: {},
           elicitationQueue: [],
           storageFailedTurn: false,
         });
@@ -886,6 +908,59 @@ const sessionSetup = setup({
         };
       },
     ),
+    hookPermission: spawnChild('toolCallHooks', {
+      id: ({ event }): string => {
+        assertEvent(event, acpPermissionEvent);
+
+        return toolCallHooksId(event.request.requestId);
+      },
+      input: ({ context, event, self }): InputFrom<typeof toolCallHooks> => {
+        assertEvent(event, acpPermissionEvent);
+
+        return {
+          hooks: context.input.hooks,
+          sessionId: context.sessionId,
+          request: event.request,
+          session: self,
+        };
+      },
+    }),
+    // A Hook's answer for a request still queued waits until the request is first.
+    rememberHookedPermission: assign({
+      hookedPermissions: ({
+        context,
+        event,
+      }): SessionContext['hookedPermissions'] => {
+        assertEvent(event, permissionHookedEvent);
+
+        return event.answer &&
+          context.permissionQueue.some(
+            (request) => request.requestId === event.requestId,
+          )
+          ? {
+              ...context.hookedPermissions,
+              [event.requestId]: event.answer.optionId,
+            }
+          : context.hookedPermissions;
+      },
+    }),
+    forgetPermissionHooks: stopChild(({ event }): string => {
+      assertEvent(event, permissionHookedEvent);
+
+      return toolCallHooksId(event.requestId);
+    }),
+    // A hooked answer settles the first request as a person's answer does, through the Feed.
+    answerHookedPermission: enqueueActions(({ context, enqueue }): void => {
+      const request = context.permissionQueue[0];
+
+      if (!request || !(request.requestId in context.hookedPermissions)) return;
+
+      enqueue.raise({
+        type: answerPermissionEvent,
+        requestId: request.requestId,
+        optionId: context.hookedPermissions[request.requestId] ?? null,
+      });
+    }),
     queueElicitation: assign(
       ({ context, event }): Pick<SessionContext, 'elicitationQueue'> => {
         assertEvent(event, acpElicitationEvent);
@@ -1272,6 +1347,7 @@ export const sessionMachine = sessionSetup.createMachine({
       activeTurnStartedAt: null,
       usage: null,
       permissionQueue: [],
+      hookedPermissions: {},
       elicitationQueue: [],
       configOptions: [],
       rejectedMessages: 0,
@@ -1306,6 +1382,8 @@ export const sessionMachine = sessionSetup.createMachine({
     };
   },
   on: {
+    // Outside a Turn a hooked answer has nothing to settle; its Hooks still end.
+    [permissionHookedEvent]: { actions: 'forgetPermissionHooks' },
     'agent.shellChanged': {
       actions: assign(({ context, event }) => ({
         shells: [
@@ -1717,7 +1795,14 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
                 [acpPermissionEvent]: {
                   target: '.awaitingPermission',
-                  actions: 'queuePermission',
+                  actions: ['queuePermission', 'hookPermission'],
+                },
+                [permissionHookedEvent]: {
+                  actions: [
+                    'forgetPermissionHooks',
+                    'rememberHookedPermission',
+                    'answerHookedPermission',
+                  ],
                 },
                 [acpElicitationEvent]: {
                   target: '.awaitingElicitation',
@@ -1760,7 +1845,7 @@ export const sessionMachine = sessionSetup.createMachine({
                     { guard: 'hasElicitation', target: 'awaitingElicitation' },
                   ],
                 },
-                awaitingPermission: {},
+                awaitingPermission: { entry: 'answerHookedPermission' },
                 awaitingElicitation: {},
                 cancelling: {
                   on: {

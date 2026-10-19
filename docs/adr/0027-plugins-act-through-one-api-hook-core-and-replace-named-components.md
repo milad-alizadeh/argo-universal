@@ -17,7 +17,7 @@ This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.m
   - `next({ ...e, ... })` rewrites what the rest of the chain sees, within what the event allows;
   - returning without `next` answers for core.
 
-  The first events are `session.start`, `prompt.submit` (before the prompt reaches the Agent), `tool.call` (when the Agent asks for a Permission request, ADR-0006), `turn.complete` (after ADR-0024 settles the Turn) and `process.spawn` (every `argo.process` call, so a Plugin can watch or block other Plugins' commands; ADR-0030 makes this a Capability). Hooks run in worker order, first-party Plugins first. A hook that throws, answers the wrong shape or misses its time budget is skipped and core goes on; a hook that guards declares a handler that refuses instead. Copied from Claude Code's hook chain and VS Code's `onWill*` events.
+  The first events are `session.start`, `prompt.submit` (before the prompt reaches the Agent), `tool.check` (when the Agent asks for a Permission request, ADR-0006; Claude Code's name for deciding a tool's permission), `turn.complete` (after ADR-0024 settles the Turn) and `process.spawn` (every `argo.process` call, so a Plugin can watch or block other Plugins' commands; ADR-0030 makes this a Capability). Hooks run in worker order, first-party Plugins first. A hook that throws, answers the wrong shape or misses its time budget is skipped and core goes on; a hook that guards declares a handler that refuses instead. Copied from Claude Code's hook chain and VS Code's `onWill*` events.
 - **Some core components can be replaced.** A Replaceable Slot is a Slot placed around a core component instead of beside it. Its frozen context carries the props core would draw it with. A Plugin's `ui.render` hook on that Slot can:
   - pass it through with `next(e)`, and core draws its own;
   - rewrite its props with `next({ ...e, props })`, and core draws its own with them;
@@ -28,7 +28,7 @@ This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.m
 - **Plugins can be written and checked by an Agent.** Argo ships three tools:
   - `argo plugin validate <dir>` reads the manifest and entry as the loader will, and reports the hooks, `argo` calls and Slots it uses and everything the Server would refuse;
   - `argo plugin test <dir>` runs a Plugin's tests against a test kit with a fake clock, storage, settings and Session. `mount({ slot | page, surface })` draws a Plugin tree for a chosen App, with `find` and `press`;
-  - a dev Plugin hot-reloads when the Agent Turn that edited it ends, instead of on every file change.
+  - a dev Plugin hot-reloads after all active Agent Turns end, instead of on every file change during a Turn. The owner approved this policy on 2026-10-19 for #824: file-watch events do not identify the writing Turn. Edits outside a Turn reload immediately.
 
   Copied from Claude Code's `plugin validate`, `plugin test` and its testing kit.
 

@@ -1,43 +1,20 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View, type ViewStyle } from 'react-native';
-import { listTestIdProps } from '#lib/generic/list-test-id';
+import { View } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
-import type { SizeClassValues } from '#lib/generic/use-size-class/size-class-value';
 import { cn } from '#lib/generic/utils';
-import { ScrollFadeList } from '#lib/product/scroll-fade/scroll-fade-list';
+import { ActionShortcutScope } from '#primitives/actions/action-list';
+import { List } from '#primitives/lists/list';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { EmptySessionsList } from './empty-sessions-list';
-import { searchesAsOneList } from './sessions-list-entries-state';
+import { listsFlat, searchesAsOneList } from './sessions-list-entries-state';
 import { type ListRows, useListRows } from './sessions-list-entry-rows';
 import type { SessionsListProps } from './sessions-list-props';
 import { useScrolling } from './sessions-list-scrolling';
 
-/*
- * Wide, Paper's sidebar list: the first Project sits level with the rail's first tile.
- * The Frame's list pane sets the column its content keeps to, 8 from the left and 14 from the right, so rows add no side padding.
- */
-const contentStyle = {
-  paddingLeft: 0,
-  paddingRight: 0,
-  paddingTop: 6,
-};
-
-// A phone list insets its Session cards 16 from the screen's edges, as Paper's Sessions screen does.
-const phoneContentStyle = {
-  ...contentStyle,
-  paddingLeft: 16,
-  paddingRight: 16,
-  paddingTop: 20,
-};
-
-// Android's search results start right under the open search, as Material's search results do.
-const searchResultsContentStyle = { ...phoneContentStyle, paddingTop: 0 };
-
-const contentStyles = (searchResults: boolean): SizeClassValues<ViewStyle> => ({
-  compact: searchResults ? searchResultsContentStyle : phoneContentStyle,
-  wide: contentStyle,
-});
+function entrySection(entry: SessionsListEntry): string {
+  return entry.kind === 'session' ? entry.session.projectId : entry.id;
+}
 
 function entryKey(entry: SessionsListEntry): string {
   return entry.id;
@@ -54,7 +31,7 @@ const fillStyle = { minHeight: 0 };
 const estimatedItemSize = { regular: 84, compact: 40 } as const;
 
 const listBehaviour = {
-  ...listTestIdProps('sessions-scroll'),
+  testID: 'sessions-scroll',
   keyExtractor: entryKey,
   // Rows hold no state of their own, so scrolling reuses them instead of mounting new ones.
   recycleItems: true,
@@ -63,13 +40,9 @@ const listBehaviour = {
   contentInsetAdjustmentBehavior: 'automatic' as const,
 };
 
-// The page's colour, which a native list fades into; the web fades the rows themselves over the glass.
-const fadeSurface = 'bg-content';
-
 // The top fades once content scrolls under the header, unless iOS's glass header shades it; the last rows always sink into the bottom edge.
 const sessionsFade = {
   edges: { top: hasLiquidGlass ? 'never' : 'scrolled', bottom: 'always' },
-  surfaceClassName: fadeSurface,
 } as const;
 
 function surfaceClassName(glide: boolean): string {
@@ -90,20 +63,22 @@ function SessionsListSurface(
   props: SessionsListSurfaceProps,
 ): React.JSX.Element {
   return (
-    <View className={surfaceClassName(props.glide)} style={fillStyle}>
-      {props.children}
-    </View>
+    <ActionShortcutScope>
+      <View className={surfaceClassName(props.glide)} style={fillStyle}>
+        {props.children}
+      </View>
+    </ActionShortcutScope>
   );
 }
 
 interface ListChrome {
-  ListEmptyComponent: React.ReactElement;
+  empty: React.ReactElement;
   estimatedItemSize: number;
 }
 
 function listChrome(props: SessionsListProps): ListChrome {
   return {
-    ListEmptyComponent: props.placeholder ?? (
+    empty: props.placeholder ?? (
       <EmptySessionsList query={props.query} view={props.view} />
     ),
     estimatedItemSize: estimatedItemSize[props.view.layout],
@@ -115,14 +90,42 @@ interface SessionsLegendListProps extends SessionsListProps {
   onScroll: () => void;
 }
 
-function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
-  const contentContainerStyle = contentStyles(searchesAsOneList(props));
+const standardTopPadding = { compact: 5, wide: 2 } as const;
 
+const searchTopPadding = { compact: 0, wide: 2 } as const;
+
+function sessionListAppearance(props: SessionsListProps): 'grouped' | 'cards' {
+  return props.view.layout === 'compact' ? 'grouped' : 'cards';
+}
+
+function sessionListSection(
+  props: SessionsListProps,
+): typeof entrySection | undefined {
+  return listsFlat(props) ? undefined : entrySection;
+}
+
+function sessionListOptions(
+  props: SessionsListProps,
+): Pick<
+  React.ComponentProps<typeof List<SessionsListEntry>>,
+  'appearance' | 'getSectionKey' | 'padding' | 'paddingTop'
+> {
+  return {
+    appearance: sessionListAppearance(props),
+    getSectionKey: sessionListSection(props),
+    padding: { compact: 4, wide: 0 },
+    paddingTop: searchesAsOneList(props)
+      ? searchTopPadding
+      : standardTopPadding,
+  };
+}
+
+function SessionsLegendList(props: SessionsLegendListProps): React.JSX.Element {
   return (
-    <ScrollFadeList
+    <List
       {...listBehaviour}
       {...sessionsFade}
-      contentContainerStyle={contentContainerStyle}
+      {...sessionListOptions(props)}
       onEndReached={props.onEndReached}
       onScroll={props.onScroll}
       {...listRows(props.rows)}

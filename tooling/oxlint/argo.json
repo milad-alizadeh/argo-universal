@@ -99,9 +99,36 @@
   },
   "overrides": [
     {
-      // ADR-0027: this worker-only loader evaluates first-party Plugin modules in a context without Node globals.
-      "files": ["packages/engine/src/plugins/worker-modules.ts"],
+      // ADR-0027 confines first-party Plugin evaluation to the worker realm. #824 explicitly runs local Plugin tests.
+      "files": [
+        "packages/engine/src/plugins/worker/modules.ts",
+        "packages/engine/src/plugins/worker/realm.ts",
+        "apps/server/src/plugin-test-files.ts"
+      ],
       "rules": { "sonarjs/code-eval": "off" }
+    },
+    {
+      // A Plugin test clock replaces the realm's timer globals, so the kit schedules only through kit/scheduler.ts (#824).
+      "files": ["packages/engine/src/plugins/kit/**"],
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          { "name": "setTimeout", "message": "Use kitScheduler.schedule." },
+          { "name": "clearTimeout", "message": "Use kitScheduler.cancel." },
+          {
+            "name": "setInterval",
+            "message": "The kit has no interval timer; reschedule with kitScheduler.schedule."
+          },
+          {
+            "name": "clearInterval",
+            "message": "The kit has no interval timer; cancel with kitScheduler.cancel."
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/plugins/kit/scheduler.ts"],
+      "rules": { "no-restricted-globals": "off" }
     },
     {
       // #717 keeps the connection in one file; the owner approved this length exception on 2026-10-15.
@@ -116,7 +143,7 @@
     {
       // `shape` is @expo/ui Compose's own prop name on Surface and Button; the rule allows member reads but not package prop keys.
       "files": [
-        "packages/client/src/lib/generic/primitives/buttons/split-button/split-button-look.android.ts",
+        "packages/client/src/lib/generic/primitives/actions/split-button/split-button-look.android.ts",
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-dialog.android.tsx",
         "packages/client/src/lib/generic/primitives/inputs/picker/picker-row.android.tsx",
         "packages/client/src/lib/generic/primitives/lists/grouped-list-item/grouped-list-item.android.tsx"
@@ -277,7 +304,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               }
             ]
@@ -302,7 +329,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -343,7 +370,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -390,7 +417,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -480,7 +507,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -606,7 +633,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -728,7 +755,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -777,7 +804,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -822,7 +849,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -851,7 +878,7 @@
       }
     },
     {
-      // Generic code imports neither product nor local code (A2, ADR-0016 item 9).
+      // Generic code imports neither product nor local code; ADR-0031 adds the type-only kit prop surface beside the shared kit tokens.
       "files": ["packages/client/src/lib/generic/**"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
@@ -868,7 +895,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -880,7 +907,11 @@
                 "message": "Generic code imports neither product nor local code (A2)."
               },
               {
-                "group": ["@repo/**"],
+                "group": [
+                  "@repo/**",
+                  "!@repo/contracts/kit-props",
+                  "!@repo/contracts/kit-symbols"
+                ],
                 "message": "Generic code imports neither product nor local code (A2)."
               }
             ]
@@ -889,11 +920,8 @@
       }
     },
     {
-      // A primitive folder's files reach another primitive only through its index (#primitives/<group>/<name>), never relatively. Repeats the lib/generic patterns.
-      "files": [
-        "packages/client/src/lib/generic/primitives/*/*/*",
-        "packages/client/src/lib/generic/primitives/pressable/*"
-      ],
+      // Primitives use one another through their indexes. Contracts supplies only their shared kit tokens, never domain types.
+      "files": ["packages/client/src/lib/generic/primitives/*/*/*"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
         "no-restricted-imports": [
@@ -909,11 +937,11 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
-                "regex": "^(\\.\\./)+(buttons|display|fields|inputs|lists|native|overlays|pressable)(/|$)",
+                "regex": "^(\\.\\./)+(actions|content|fields|inputs|layout|lists|native|overlays|scaffolds|status|visual)(/|$)",
                 "message": "Import another primitive through its folder's index, #primitives/<group>/<name>."
               },
               {
@@ -922,15 +950,21 @@
               },
               {
                 "regex": "^#(features|lib/product)/",
-                "message": "Generic code imports neither product nor local code (A2)."
+                "message": "The UI kit cannot import features or product/domain types (A2)."
               },
               {
                 "regex": "^(\\.\\./)+(features|product)(/|$)",
-                "message": "Generic code imports neither product nor local code (A2)."
+                "message": "The UI kit cannot import features or product/domain types (A2)."
               },
               {
-                "group": ["@repo/**", "!@repo/uniwind", "!@repo/uniwind/**"],
-                "message": "Generic code imports neither product nor local code (A2)."
+                "group": [
+                  "@repo/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**",
+                  "!@repo/contracts/kit-tokens",
+                  "!@repo/contracts/kit-symbols"
+                ],
+                "message": "The UI kit cannot import feature or domain packages (A2)."
               }
             ]
           }
@@ -955,7 +989,7 @@
                 "message": "Import primitives through #primitives/* so each platform's drawing resolves (ADR-0020)."
               },
               {
-                "regex": "^#primitives/(pressable/|[^/]+/[^/]+/)",
+                "regex": "^#primitives/([^/]+/[^/]+/)",
                 "message": "Import a primitive through its folder's index, #primitives/<group>/<name>; only files inside the folder import its files."
               },
               {
@@ -2149,13 +2183,14 @@
       "excludeFiles": [
         "**/*.test.*",
         "**/mocks/**",
+        "apps/server/bin/argo.mjs",
         "apps/server/src/supervisor/engine-process.ts",
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/engine/caffeinate.ts",
-        "packages/engine/src/plugins/host-connection.ts",
-        "packages/engine/src/plugins/keychain.ts",
-        "packages/engine/src/plugins/plugin-processes.ts",
+        "packages/engine/src/plugins/host/connection.ts",
+        "packages/engine/src/plugins/services/keychain.ts",
+        "packages/engine/src/plugins/services/plugin-processes.ts",
         "packages/engine/src/agents/acp/process.ts",
         "packages/engine/src/agents/launch/shell-env.ts",
         "packages/engine/src/agents/launch/processes/process.ts",

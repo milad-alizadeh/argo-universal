@@ -10,6 +10,18 @@ export function fadedEdges(scroll: HTMLElement): FadedEdges {
   return { top: fades('top'), bottom: fades('bottom') };
 }
 
+type FadedInlineEdges = { leading: boolean; trailing: boolean };
+
+// Which edges of a horizontal web scroll view fade its content now.
+export function fadedInlineEdges(scroll: HTMLElement): FadedInlineEdges {
+  const style = getComputedStyle(scroll);
+
+  const fades = (edge: 'leading' | 'trailing'): boolean =>
+    Number.parseFloat(style.getPropertyValue(`--scroll-fade-${edge}`)) > 0;
+
+  return { leading: fades('leading'), trailing: fades('trailing') };
+}
+
 const length = (style: CSSStyleDeclaration, name: string): number =>
   Number.parseFloat(style.getPropertyValue(name)) || 0;
 

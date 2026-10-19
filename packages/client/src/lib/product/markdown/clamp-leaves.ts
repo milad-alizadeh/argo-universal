@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { createContext, useCallback, useContext } from 'react';
 import type { View } from 'react-native';
-import { type TextRole, useTextStyle } from '#primitives/display/text';
+import { type TextRole, useTextStyle } from '#primitives/content/text';
 
 type MeasurableNode = Pick<React.ComponentRef<typeof View>, 'measureLayout'>;
 

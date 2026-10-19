@@ -67,7 +67,7 @@ The Server process that runs Plugin code, each Plugin in its own worker thread w
 _Avoid_: Extension host, sandbox
 
 **Hook**:
-A Plugin function on a core event, such as `prompt.submit` or `tool.call`. Hooks on one event form a chain: each passes the event on, rewrites it, or answers for core.
+A Plugin function on a core event, such as `prompt.submit` or `tool.check`. Hooks on one event form a chain: each passes the event on, rewrites it, or answers for core.
 _Avoid_: Listener, interceptor, middleware
 
 **Slot**:
@@ -77,6 +77,10 @@ _Avoid_: Contribution point, hook, outlet
 **Replaceable Slot**:
 A Slot placed around a core component, such as a Tool call in the Feed. A Plugin may pass it through, change its props or draw its own; core draws its own when the Plugin's tree is refused.
 _Avoid_: Override, component override
+
+**Part event**:
+A named handler prop on a kit part, such as `onPress`; the App sends it to the Plugin by node key and event name, checked against the part's schema.
+_Avoid_: Interaction, action (Action is a kit part), handler
 
 **Capability**:
 Something a Plugin's manifest says it needs, such as running `gh` or reaching `api.github.com`. Without any, a Plugin's calls to the machine can only read Projects and use the Plugin's own data.
@@ -236,6 +240,30 @@ _Avoid_: Notice, Feed entry
 Argo's small set of components, tokens and prop names that every screen, and later every plugin, is built from. Its components are the primitives of ADR-0020.
 _Avoid_: Design system (for the code), component library
 
+**Pill**:
+A short, static label that shows an Argo status or a Tracker label.
+_Avoid_: Badge, chip
+
+**Row badge**:
+A status dot or count drawn at the top-end corner of a row's leading icon or image.
+_Avoid_: Badge (for a Pill)
+
+**Avatar**:
+A circular image or initials that identifies a person or Agent, with an optional StatusDot.
+_Avoid_: Profile picture
+
+**StatusDot**:
+A small coloured dot that shows an item's state.
+_Avoid_: Status indicator
+
+**Metadata**:
+Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar.
+_Avoid_: Properties, key-value list
+
+**ActionList**:
+The Actions offered by one page, row or tile, shown as header controls or a context menu on each platform.
+_Avoid_: Action panel, action menu (for the declaration)
+
 **Frame**:
 The App's chrome around its pages: the rail, the section sidebar and the panes. It places them with a Scaffold.
 _Avoid_: Shell, app shell, chrome
@@ -245,8 +273,8 @@ A kit component that arranges a screen's panes for its Size class, such as list 
 _Avoid_: Layout (for a whole screen), template
 
 **Surface**:
-A named background a kit component draws on, such as `card`, `tray`, `glass` or `overlay`, with its fill, radius and depth.
-_Avoid_: Panel, background, layer
+A named background a kit component draws on: `background`, `card`, `muted` or `glass`, with its fill, radius and depth. There is no overlay kind; overlays draw their own.
+_Avoid_: Panel, layer, tray
 
 **Slot**:
 A named place in a kit component that takes another component, such as a row's `leading` or `trailing`. Each Slot names the components it accepts.

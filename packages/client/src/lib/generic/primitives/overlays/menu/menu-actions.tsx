@@ -1,16 +1,18 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
+import { Fragment } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/display/icon';
-import { Text, TextClassContext } from '#primitives/display/text';
+import { TextClassContext } from '#primitives/content/text';
+import { MenuActionLabel } from './menu-action-label';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
 import type { ActionMenuProps, MenuAction } from './menu-props';
+import { MenuSection } from './menu-section';
 import {
   actionContentClassName,
-  actionItemClassName,
-  actionItemTextClassName,
+  menuRowClass,
+  menuTextClass,
 } from './menu-styles';
 
 type MenuActionsProps = ActionMenuProps & { focus: KeyboardFocus };
@@ -40,37 +42,41 @@ function actionContentProps(
   };
 }
 
-function actionItem(action: MenuAction): React.JSX.Element {
-  return <MenuActionItem key={action.label} action={action} />;
+function actionItem(action: MenuAction, index: number): React.JSX.Element {
+  return (
+    <Fragment key={index}>
+      {action.section && (
+        <MenuSection divided={index > 0} title={action.section.title} />
+      )}
+      <MenuActionItem action={action} />
+    </Fragment>
+  );
 }
 
 function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
   return (
-    <TextClassContext.Provider value={actionItemTextClassName}>
-      <RadixMenu.Item
-        asChild
-        disabled={action.disabled}
-        onSelect={action.onPress}
-      >
-        <View {...actionRow(action)}>{actionLabel(action)}</View>
+    <TextClassContext.Provider value={menuTextClass(action.tone)}>
+      <RadixMenu.Item {...actionItemProps(action)}>
+        <View {...actionRow(action)}>
+          <MenuActionLabel {...action} />
+        </View>
       </RadixMenu.Item>
     </TextClassContext.Provider>
   );
 }
 
-// The row's icon, as a context menu's rows lead with theirs, then its label.
-function actionLabel(action: MenuAction): React.JSX.Element {
-  return (
-    <>
-      {action.icon && <Icon name={action.icon} role="body" />}
-      {action.content ?? <Text>{action.label}</Text>}
-    </>
-  );
+function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
+  return {
+    asChild: true,
+    'aria-label': action.label,
+    disabled: action.disabled,
+    onSelect: action.onPress,
+  };
 }
 
 function actionRow(action: MenuAction): React.ComponentProps<typeof View> {
   return {
-    className: actionItemClassName,
+    className: menuRowClass(action.tone),
     accessibilityState:
       action.selected === undefined ? undefined : { selected: action.selected },
   };

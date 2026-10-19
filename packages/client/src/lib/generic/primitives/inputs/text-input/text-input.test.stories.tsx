@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn } from 'storybook/test';
-import { GroupedListSection } from '#primitives/lists/grouped-list-section';
+import { ListSection } from '#primitives/lists/list';
 import { settleViewport } from '../../../settle-viewport';
 import { TextInput } from './text-input';
 
@@ -83,9 +83,9 @@ function InSection(props: ExampleProps): React.JSX.Element {
   if (props.variant === 'standalone') return <Example {...props} />;
 
   return (
-    <GroupedListSection footer={failure} tone="danger" textFields>
+    <ListSection footer={failure} tone="danger">
       <Example {...props} />
-    </GroupedListSection>
+    </ListSection>
   );
 }
 

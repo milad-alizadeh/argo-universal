@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '#primitives/buttons/button';
+import { Button } from '#primitives/actions/button';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Alert } from './alert';
 import type { AlertProps } from './alert-props';
@@ -23,7 +23,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       message: removeMessage,
       actions: [
         { label: removeAgent, tone: 'danger' },
-        { label: 'Cancel', cancel: true },
+        { label: 'Cancel', role: 'cancel' },
       ],
     },
   },
@@ -33,7 +33,10 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
     alert: {
       title: 'Discard your changes?',
       message: 'The Agent keeps its saved launch settings.',
-      actions: [{ label: 'Keep editing', cancel: true }, { label: 'Discard' }],
+      actions: [
+        { label: 'Keep editing', role: 'cancel' },
+        { label: 'Discard' },
+      ],
     },
   },
   {
@@ -43,7 +46,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       title: 'Update Example ACP?',
       message: 'Stop its running Sessions before updating it.',
       actions: [
-        { label: 'Cancel', cancel: true },
+        { label: 'Cancel', role: 'cancel' },
         { label: 'Update', disabled: true },
       ],
     },
@@ -57,7 +60,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       message: removeMessage,
       actions: [
         { label: removeAgent, tone: 'danger', loading: true },
-        { label: 'Cancel', cancel: true },
+        { label: 'Cancel', role: 'cancel' },
       ],
     },
   },
@@ -80,7 +83,9 @@ function AlertPreview(props: AlertPreviewProps): React.JSX.Element {
   );
 }
 
-const meta = { title: 'Design System/Primitives/Alert' } satisfies Meta;
+const meta = {
+  title: 'Design System/Primitives/Overlays/Alert',
+} satisfies Meta;
 
 export default meta;
 

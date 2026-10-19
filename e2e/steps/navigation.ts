@@ -98,10 +98,13 @@ Then(
 );
 
 Then(
-  'the wide Frame opens the first Sessions page',
+  'the wide Frame shows no Session beside the Sessions list',
   async ({ page }): Promise<void> => {
-    // With no Session yet, the first page is New Session; the URL names it.
-    await expect(page).toHaveURL(/\/sessions\/new$/);
+    // Nothing is picked, so the detail beside the list stays empty and the URL names the list.
+    await expect(page).toHaveURL(/\/sessions$/);
     await expect(page.getByTestId(wideFrame)).toBeVisible();
+    await expect(
+      page.getByText('Select a Session', { exact: true }),
+    ).toBeVisible();
   },
 );

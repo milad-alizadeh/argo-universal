@@ -1,8 +1,8 @@
 import { createElement } from 'react';
-import { Text } from '#primitives/display/text';
+import { Text } from '#primitives/content/text';
 import type { FieldDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
-import type { PickerOption, PickerProps } from './picker-props';
+import type { PickerOption, SinglePickerProps } from './picker-props';
 import {
   SelectContent,
   SelectItem,
@@ -11,7 +11,7 @@ import {
 } from './picker-select';
 import { pickerOptionsMessage, pickerValue } from './picker-selection';
 
-type TriggerProps<Value extends string> = PickerProps<Value> &
+type TriggerProps<Value extends string> = SinglePickerProps<Value> &
   FieldDescription & { row: boolean };
 
 type TriggerAttributes = React.ComponentProps<typeof SelectTrigger> & {
@@ -50,7 +50,7 @@ function triggerClassName(props: { row: boolean; invalid: boolean }): string {
 }
 
 export function PickerContent<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): React.JSX.Element {
   const message = pickerOptionsMessage(props);
 
@@ -81,7 +81,7 @@ function OptionsMessage(props: {
 }
 
 function PickerOptions<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): React.JSX.Element {
   return (
     <>

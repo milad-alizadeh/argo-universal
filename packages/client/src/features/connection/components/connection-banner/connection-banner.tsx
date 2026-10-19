@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Keyframe } from 'react-native-reanimated';
-import { IconButton } from '#primitives/buttons/icon-button';
-import { LiquidGlass } from '#primitives/display/liquid-glass';
-import { Spinner } from '#primitives/display/spinner';
-import { Text } from '#primitives/display/text';
+import { IconButton } from '#primitives/actions/icon-button';
+import { LiquidGlass } from '#primitives/content/liquid-glass';
+import { Text } from '#primitives/content/text';
 import { NativeOnlyAnimatedView } from '#primitives/native/native-only-animated-view';
+import { Spinner } from '#primitives/status/spinner';
 import { motionDuration } from '../../../../lib/generic/motion';
 import type { ConnectionState } from '../../stores/connection';
 
@@ -45,7 +45,7 @@ export function ConnectionBanner({
       className="self-center"
     >
       <LiquidGlass
-        corners="capsule"
+        corners="pill"
         className="h-9 self-center wide:h-8"
         fallbackClassName="rounded-full bg-card shadow-raised wide:shadow-card dark:border dark:border-border"
       >

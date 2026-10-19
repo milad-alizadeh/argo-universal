@@ -1,8 +1,10 @@
+import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { writeLog } from '@repo/machine-log';
 import { onTestFinished } from 'vitest';
-import { PluginServices } from '../src/plugins/plugin-services';
-import { PluginRuntime } from '../src/plugins/runtime';
-import { PluginStorage } from '../src/plugins/storage';
+import { PluginAssets } from '../src/plugins/assets/plugin-assets';
+import { PluginRuntime } from '../src/plugins/runtime/plugin-runtime';
+import { PluginServices } from '../src/plugins/services/plugin-services';
+import { PluginStorage } from '../src/plugins/services/storage';
 import { MemoryKeychain } from './memory-keychain';
 
 export function startPluginRuntime(home: string): PluginRuntime {
@@ -13,7 +15,9 @@ export function startPluginRuntime(home: string): PluginRuntime {
     log,
     new PluginServices(new PluginStorage(home), new MemoryKeychain(), {
       log,
+      assets: new PluginAssets(home),
       projects: async (): Promise<string[]> => [],
+      projectInfo: async (): Promise<PluginProjectInfo[]> => [],
     }),
   );
 

@@ -6,7 +6,7 @@ import { StandaloneTextInput } from './text-input-standalone';
 
 /*
  * One text field in three variants: on its own (the default), as a row inside a
- * GroupedListSection, or the bare box for a caller that lays out its own label. Each
+ * List.Section, or the bare box for a caller that lays out its own label. Each
  * variant resolves its iOS, Android or web drawing from its own platform files.
  */
 export function TextInput(props: TextInputProps): ReactElement {

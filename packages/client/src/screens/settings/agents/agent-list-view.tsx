@@ -3,7 +3,6 @@ import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { type AgentRows, type AgentsFilter } from '#features/agents';
 import { SettingsPage } from '#lib/product/settings-page';
-import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import {
   AgentsFilterPills,
   AgentsToolbar,
@@ -51,23 +50,9 @@ function AgentsPage(props: ListProps): React.JSX.Element {
       title={agentsTitle}
       headerFrom="medium"
       toolbar={<AgentsToolbar {...props} />}
+      phoneToolbar={<AgentsFilterPills {...props} />}
     >
-      <PhoneFilters {...props} />
       <AgentCatalog {...props} />
     </SettingsPage>
-  );
-}
-
-function PhoneFilters(props: AgentsFilterProps): React.JSX.Element | null {
-  return (
-    <SizeClass
-      compact={
-        <View className="z-10 shrink-0 px-4 py-3">
-          <AgentsFilterPills {...props} />
-        </View>
-      }
-      medium={null}
-      wide={null}
-    />
   );
 }
