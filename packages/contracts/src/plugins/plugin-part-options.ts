@@ -5,7 +5,7 @@ import type { WirePartDefinition } from './wire-parts';
 export interface PartOptions {
   slots?: Record<string, readonly string[]>;
   events?: Record<string, z.ZodType>;
-  children?: boolean;
+  children?: boolean | readonly string[];
   container?: boolean;
   label?: string;
   appearance?: string;

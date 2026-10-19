@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { legacyPartVersions, wirePart, type PartVersions } from './kit';
 import { mapActionContent } from './map-action-content';
-import { acceptsSlots, type SlotRules } from './prepare-slots';
+import {
+  acceptsChildren,
+  acceptsSlots,
+  type ChildRule,
+  type SlotRules,
+} from './prepare-slots';
 import { WireJson, type WireNode } from './wire';
 
 const jsonProps = z.record(z.string(), WireJson);
@@ -59,16 +64,14 @@ function parsedNode(node: WireNode, schema: z.ZodType): WireNode | null {
 const styled = (node: WireNode): boolean =>
   'className' in node.props || 'style' in node.props;
 
-const allowedContent = (node: WireNode, container: boolean): boolean =>
-  container || node.children.length === 0;
-
 interface ContentRules {
-  children: boolean;
+  children: ChildRule;
   slots: SlotRules;
 }
 
 const validContent = (node: WireNode, rules: ContentRules): boolean =>
-  acceptsSlots(node, rules.slots) && allowedContent(node, rules.children);
+  acceptsSlots(node, rules.slots) &&
+  acceptsChildren(node.children, rules.children);
 
 const allowedStructure = (node: WireNode, rules: ContentRules): boolean =>
   !styled(node) && validContent(node, rules);

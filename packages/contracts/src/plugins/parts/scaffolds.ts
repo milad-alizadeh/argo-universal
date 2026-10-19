@@ -1,5 +1,14 @@
 import { z } from 'zod';
 import {
+  metadataProps,
+  metadataLabelProps,
+  metadataLinkProps,
+  metadataPillsProps,
+  metadataStatusDotProps,
+  metadataAvatarProps,
+  metadataChildParts,
+} from '../metadata-props';
+import {
   part,
   handler,
   stringLabel,
@@ -8,6 +17,26 @@ import {
 } from '../plugin-part-schema-utils';
 
 export const scaffoldsPartSchemas = {
+  Metadata: part(
+    'Read-only label/value fields for a detail view.',
+    metadataProps,
+    { children: metadataChildParts },
+  ),
+  'Metadata.Label': part('A text Metadata field.', metadataLabelProps),
+  'Metadata.Link': part(
+    'A link Metadata field, currently drawn as plain text.',
+    metadataLinkProps,
+  ),
+  'Metadata.Pills': part(
+    'A Metadata field containing Pills.',
+    metadataPillsProps,
+    { children: ['Pill'] },
+  ),
+  'Metadata.StatusDot': part(
+    'A labelled status Metadata field.',
+    metadataStatusDotProps,
+  ),
+  'Metadata.Avatar': part('A person Metadata field.', metadataAvatarProps),
   Page: part(
     'A page scaffold with a title, header actions, and optional search.',
     z.object({

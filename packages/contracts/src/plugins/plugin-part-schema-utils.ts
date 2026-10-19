@@ -85,7 +85,7 @@ function resolveOptions(
 function inferContainer(
   config: Pick<ResolvedPartOptions, 'children' | 'slots'>,
 ): boolean {
-  return config.children || Object.keys(config.slots).length > 0;
+  return Boolean(config.children) || Object.keys(config.slots).length > 0;
 }
 
 function inferredEvents(schema: z.ZodType): Record<string, z.ZodType> {

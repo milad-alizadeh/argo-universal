@@ -252,6 +252,10 @@ _Avoid_: Profile picture
 A small coloured dot that shows an item's state.
 _Avoid_: Status indicator
 
+**Metadata**:
+Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar.
+_Avoid_: Properties, key-value list
+
 **ActionList**:
 The Actions offered by one page, row or tile, shown as header controls or a context menu on each platform.
 _Avoid_: Action panel, action menu (for the declaration)
