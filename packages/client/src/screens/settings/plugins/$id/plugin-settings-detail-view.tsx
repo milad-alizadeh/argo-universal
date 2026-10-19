@@ -4,11 +4,10 @@ import type {
   PluginSettings,
 } from '@repo/contracts/plugins';
 import type * as React from 'react';
-import { View } from 'react-native';
-import { SettingsPage } from '#lib/product/settings-page';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { Page } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 import { SettingFieldRow } from './plugin-setting-field-row';
 
@@ -41,13 +40,11 @@ export function PluginSettingsDetailView(
   const { caption, onBack, ...body } = props;
 
   return (
-    <View className="flex-1 bg-content wide:bg-transparent">
-      <SettingsPage title={props.title} caption={caption} onBack={onBack}>
-        <List appearance="grouped">
-          <PluginBody {...body} />
-        </List>
-      </SettingsPage>
-    </View>
+    <Page title={props.title} caption={caption} onBack={onBack}>
+      <List appearance="grouped">
+        <PluginBody {...body} />
+      </List>
+    </Page>
   );
 }
 

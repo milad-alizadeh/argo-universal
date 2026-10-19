@@ -50,6 +50,31 @@ export const FiltersWide = filtering(layoutWidths.wide);
 
 export const FiltersPhone = filtering(layoutWidths.phone);
 
+function searching(width: number): Story {
+  return {
+    beforeEach: () => settleViewport(width),
+    play: async ({ canvas, userEvent }) => {
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Search Agents' }),
+      );
+      await userEvent.type(
+        canvas.getByRole('textbox', { name: 'Search Agents' }),
+        'Python',
+      );
+      await expect(
+        canvas.getByRole('group', { name: /^Python Agent, v/ }),
+      ).toBeVisible();
+      await expect(
+        canvas.queryByRole('group', { name: /^Example Agent, v/ }),
+      ).not.toBeInTheDocument();
+    },
+  };
+}
+
+export const SearchesWide = searching(layoutWidths.wide);
+
+export const SearchesPhone = searching(layoutWidths.phone);
+
 function empty(filter: AgentsFilter, search: string, expected: string): Story {
   return {
     args: {

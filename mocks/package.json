@@ -12,7 +12,8 @@
     "./plugins/svg.json": "./plugins/svg.json",
     "./registry/*": "./registry/*.ts",
     "./plugins/controls.json": "./plugins/controls.json",
-    "./plugins/overlays.json": "./plugins/overlays.json"
+    "./plugins/overlays.json": "./plugins/overlays.json",
+    "./plugins/page.json": "./plugins/page.json"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

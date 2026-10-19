@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  actionEntryProps,
   actionListProps,
   actionProps,
   actionPropsV1,
@@ -28,10 +29,14 @@ export const actionListWireParts = {
     children: true,
   }),
   Action: part(
-    'One Action declared inside ActionList, SplitButton or Alert.',
-    actionProps,
+    'One Action declared inside ActionList, SplitButton or Alert: it runs on press, or opens a submenu of keyed ActionList.Section children.',
+    actionEntryProps,
     {
-      previous: [actionPropsV1],
+      // Apps before submenus parse a press Action only, so they drop a submenu.
+      previous: [actionPropsV1, actionProps],
+      // Only a submenu holds children; a press Action's are ignored.
+      children: ['ActionList.Section'],
+      container: false,
       // A press sends pending edits first, so a confirming Action acts on what the user typed.
       events: { onPress: z.undefined().meta({ flush: true }) },
     },

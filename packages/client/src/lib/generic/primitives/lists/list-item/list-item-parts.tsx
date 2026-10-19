@@ -5,7 +5,8 @@ import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
 import type { ListItemProps, RowBadge } from './list-item-props';
 
-function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
+// A Row badge at the top-end corner of the view it sits in, such as a row's leading icon or a header button.
+export function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
   if (badge === undefined) return null;
 
   return (

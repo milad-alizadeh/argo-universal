@@ -1,0 +1,55 @@
+import { RNHostView } from '@expo/ui';
+import { IconButton } from '@expo/ui/jetpack-compose';
+import { semantics } from '@expo/ui/jetpack-compose/modifiers';
+import type { ReactElement } from 'react';
+import { useNativeTheme } from '#lib/generic/native-theme';
+import type {
+  IconAction,
+  PressActionProps,
+} from '#primitives/actions/action-list';
+import { Icon, type IconProps } from '#primitives/content/icon';
+import { Host } from '#primitives/native/host';
+
+// What a header icon button draws and runs; a menu's opens its menu, and the overflow's icon is a symbol pair.
+export type HeaderIconButtonProps = Pick<
+  PressActionProps,
+  'label' | 'disabled' | 'onPress'
+> & { icon: IconProps['name'] };
+
+// Universal Button has no stock icon-only variant; Compose owns this control's shape and touch target.
+export function PageActionButton({
+  action,
+}: {
+  action: IconAction;
+}): ReactElement {
+  return (
+    <Host matchContents>
+      <HeaderIconButton {...action} />
+    </Host>
+  );
+}
+
+// The Compose IconButton alone, for a Host or a DropdownMenu trigger that already holds it.
+export function HeaderIconButton(props: HeaderIconButtonProps): ReactElement {
+  const { colors } = useNativeTheme();
+
+  return (
+    <IconButton {...actionButtonProps(props, colors.foreground)}>
+      <RNHostView matchContents>
+        <Icon name={props.icon} role="action" />
+      </RNHostView>
+    </IconButton>
+  );
+}
+
+function actionButtonProps(
+  action: HeaderIconButtonProps,
+  foreground: string | undefined,
+): Omit<React.ComponentProps<typeof IconButton>, 'children'> {
+  return {
+    onClick: action.onPress,
+    enabled: !action.disabled,
+    colors: { contentColor: foreground },
+    modifiers: [semantics({ contentDescription: action.label })],
+  };
+}

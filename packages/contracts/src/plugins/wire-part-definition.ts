@@ -20,6 +20,8 @@ export interface WirePartDefinition {
   lower?: (props: WireProps) => LoweredPart;
   container: boolean;
   children: boolean | readonly string[];
+  // Only a tree's root may be this part, such as a Page that owns the screen's header.
+  root?: boolean;
   slots: Record<string, readonly string[]>;
   events: Record<string, z.ZodType>;
   reference: WirePartReference;

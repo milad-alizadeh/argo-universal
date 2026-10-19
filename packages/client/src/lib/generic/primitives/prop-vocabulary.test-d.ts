@@ -1,6 +1,6 @@
 import type { ViewProps } from 'react-native';
 import { expectTypeOf } from 'vitest';
-import type { ActionProps } from '#primitives/actions/action-list';
+import type { PressActionProps } from '#primitives/actions/action-list';
 import type { IconRole } from '../symbols/icon-role';
 import type { SizeClassValue } from '../use-size-class/size-class-value';
 import type { Aliases, Primitives } from './prop-vocabulary.mocks';
@@ -97,7 +97,7 @@ type OwnRoles = {
     Values<Primitives[Name], 'role'>,
     | SizeClassValue<Aliases['TextRole']>
     | SizeClassValue<IconRole>
-    | NonNullable<ActionProps['role']>
+    | NonNullable<PressActionProps['role']>
     | NonNullable<ViewProps['role']>
   >;
 };

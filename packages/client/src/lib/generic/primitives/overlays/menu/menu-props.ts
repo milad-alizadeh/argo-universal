@@ -17,6 +17,21 @@ export type MenuAction = Actions['actions'][number] & {
   tone?: 'danger';
 };
 
+// Kit-only: a row that opens a nested menu of its own rows, as a submenu Action does in a header's overflow menu.
+export interface MenuSubmenu {
+  id?: string;
+  label: string;
+  icon?: IconName;
+  section?: { title?: string };
+  actions: readonly MenuEntry[];
+}
+
+export type MenuEntry = MenuAction | MenuSubmenu;
+
+export function isMenuSubmenu(entry: MenuEntry): entry is MenuSubmenu {
+  return 'actions' in entry;
+}
+
 export type MenuOption<Value extends string> = Extract<
   DerivedMenu<Value>,
   { options: readonly unknown[] }
@@ -65,8 +80,8 @@ export type GroupedChoiceMenuProps = Extract<
 > &
   MenuTrigger;
 
-export type ActionMenuProps = Actions &
-  MenuTrigger & { actions: readonly MenuAction[] };
+export type ActionMenuProps = Omit<Actions, 'actions'> &
+  MenuTrigger & { actions: readonly MenuEntry[] };
 
 export type MenuProps<Value extends string = string> =
   | ChoiceMenuProps<Value>

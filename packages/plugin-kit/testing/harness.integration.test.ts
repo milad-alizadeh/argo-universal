@@ -24,7 +24,7 @@ it('delivers a text event through the worker and applies its keyed patch to the 
     .poll(() => page.findText('empty'), { timeout: 10_000 })
     .toBeDefined();
   await page.dispatch({
-    key: '0/search',
+    key: 'search',
     event: 'onChangeText',
     payload: 'typed text',
   });

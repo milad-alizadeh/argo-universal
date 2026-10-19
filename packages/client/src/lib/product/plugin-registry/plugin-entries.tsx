@@ -23,12 +23,14 @@ import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Alert } from '#primitives/overlays/alert';
 import { Sheet } from '#primitives/overlays/sheet';
+import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
 
 export const pluginEntries = {
+  Page,
   ActionList,
   'ActionList.Section': ActionList.Section,
   Action,

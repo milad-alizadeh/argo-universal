@@ -1,12 +1,12 @@
 import {
   declaredActions,
-  type ActionProps,
+  type PressActionProps,
 } from '#primitives/actions/action-list';
 import type { KitProps } from '../../kit-props';
 
 // One answer is an Action. Argo's own callers pass answers as data; a Plugin declares them as Action children.
-export type AlertAction = Pick<ActionProps, 'label'> &
-  Partial<Pick<ActionProps, 'onPress' | 'disabled' | 'tone' | 'role'>> & {
+export type AlertAction = Pick<PressActionProps, 'label'> &
+  Partial<Pick<PressActionProps, 'onPress' | 'disabled' | 'tone' | 'role'>> & {
     loading?: boolean;
   };
 

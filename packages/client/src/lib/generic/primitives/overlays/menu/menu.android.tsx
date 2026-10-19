@@ -1,12 +1,9 @@
 // Stock Compose DropdownMenu: MenuView's Android drawing takes no container colour, so the menu builds the same tree with `color`.
 import { RNHostView } from '@expo/ui';
-import { DropdownMenu } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { useState } from 'react';
 import { Pressable } from 'react-native';
 import { Host } from '#primitives/native/host';
-import { useMaterialPalette } from '#primitives/native/material-palette';
-import { MenuDropdownItems } from './menu-dropdown-items';
+import { MenuDropdown } from './menu-dropdown';
 import { nativeMenuItems } from './menu-native-items';
 import { NativeMenuTrigger } from './menu-phone-parts';
 import type { MenuProps } from './menu-props';
@@ -23,32 +20,18 @@ export function Menu<Value extends string>(
   );
 }
 
-// DropdownMenu is controlled: `expanded` shows it, `onDismissRequest` closes it on an outside tap or back.
 function OpenableMenu<Value extends string>(
   props: MenuProps<Value>,
 ): React.JSX.Element {
-  const [expanded, setExpanded] = useState(false);
-  const close = (): void => setExpanded(false);
-  const color = useMaterialPalette().roles.surfaceContainer;
-
   return (
-    <DropdownMenu expanded={expanded} onDismissRequest={close} color={color}>
-      <MenuTrigger menu={props} onPress={() => setExpanded(true)} />
-      <MenuDropdownItems items={nativeMenuItems(props)} onChosen={close} />
-    </DropdownMenu>
-  );
-}
-
-function MenuTrigger<Value extends string>(props: {
-  menu: MenuProps<Value>;
-  onPress: () => void;
-}): React.JSX.Element {
-  return (
-    <DropdownMenu.Trigger>
-      <MenuPress onPress={props.onPress}>
-        <NativeMenuTrigger {...props.menu} />
-      </MenuPress>
-    </DropdownMenu.Trigger>
+    <MenuDropdown
+      items={nativeMenuItems(props)}
+      trigger={(open) => (
+        <MenuPress onPress={open}>
+          <NativeMenuTrigger {...props} />
+        </MenuPress>
+      )}
+    />
   );
 }
 
