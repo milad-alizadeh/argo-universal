@@ -80,14 +80,15 @@ export const listsEveryPullRequest: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '+1 PR' }));
     const overlay = within(document.body);
 
-    const listed = await overlay.findByRole('menuitem', {
+    // The shown PR is the checked one of a single choice.
+    const listed = await overlay.findByRole('menuitemradio', {
       name: new RegExp(pullRequestMocks.checksFailing.title),
     });
 
     // The menu fades in.
     await waitFor(() => expect(listed).toBeVisible());
     await userEvent.click(
-      overlay.getByRole('menuitem', {
+      overlay.getByRole('menuitemradio', {
         name: new RegExp(pullRequestMocks.followUp.title),
       }),
     );

@@ -3,24 +3,39 @@ import { View } from 'react-native';
 import { SessionsHeader } from '../src/features/sessions/components/sessions-header';
 import type { SessionsStatus } from '../src/features/sessions/stores/sessions-view';
 import { showsUnderStatus } from '../src/features/sessions/utils/sessions-list-input';
+import { useWide } from '../src/lib/generic/use-wide/use-wide';
 import {
   SessionListView,
   type SessionListViewProps,
 } from '../src/screens/sessions/session-list-view';
+import { SessionsRootPage } from '../src/screens/sessions/sessions-root-page';
 
+// A wide window's sidebar list under its header row; a phone's root Page around the list.
 export function SessionsPreviewMock(args: SessionListViewProps): ReactElement {
   const props = usePreviewSessions(args);
+  const { view, query, sessions } = props;
 
   return (
     <View className="flex-1 w-full" style={{ minHeight: 0 }}>
-      <PreviewHeader {...props} />
-      <SessionListView
-        {...args}
-        view={props.view}
-        query={props.query}
-        sessions={props.sessions}
-      />
+      <PreviewChrome {...props}>
+        <SessionListView {...args} {...{ view, query, sessions }} />
+      </PreviewChrome>
     </View>
+  );
+}
+
+function PreviewChrome({
+  children,
+  ...props
+}: PreviewProps & { children: ReactElement }): ReactElement {
+  if (!useWide())
+    return <SessionsRootPage {...props}>{children}</SessionsRootPage>;
+
+  return (
+    <>
+      <PreviewHeader {...props} />
+      {children}
+    </>
   );
 }
 

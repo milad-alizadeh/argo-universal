@@ -1,6 +1,7 @@
 // iOS draws the Page's Actions as UIKit bar items and its search as the stock search bar.
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import {
   splitHeaderActions,
   type ActionGroup,
@@ -42,9 +43,11 @@ function HeaderItems(props: HeaderProps): ReactElement {
     primary ? 1 : 2,
   );
 
+  const entry = toolbarEntry(useNativeTheme().colors.primary);
+
   return (
     <Stack.Toolbar placement="right">
-      {direct.map(toolbarEntry)}
+      {direct.map(entry)}
       {overflowMenu(overflow, props.label)}
       {primary ? toolbarButton({ ...primary, id: 'primary' }) : null}
     </Stack.Toolbar>

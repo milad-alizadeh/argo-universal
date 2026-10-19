@@ -12,8 +12,8 @@ export interface SectionList {
   list: ReactNode;
   // The header over the list when the list is the section's root page, as Android's drawer header and the web's JS header draw it.
   rootHeader: ScreenHeaderProps;
-  // The root page's own stock header items and search bar (`Stack.Toolbar`, `Stack.SearchBar`), which iOS shows instead of `rootHeader`'s.
-  rootToolbar?: ReactNode;
+  // A narrow window's root page, such as a Page around the list, which then fills the root header itself; without it, the root shows the list under `rootHeader`.
+  rootPage?: ReactNode;
   /*
    * The page a window with the list beside it opens at the section's root, or undefined while
    * it is still being chosen; without one, the root keeps its own page. Called as a hook.

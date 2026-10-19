@@ -5,7 +5,8 @@ export default defineConfig({
     // Every package is a project; an app joins by adding its own vitest.config.ts.
     projects: [
       'packages/*',
-      'plugins/*',
+      'plugins/issue-tracker',
+      'plugins/examples/hello',
       'apps/*/vitest.config.{ts,mts}',
       'tooling/vitest',
       'tooling/oxlint',

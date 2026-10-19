@@ -6,13 +6,11 @@ import {
   type SessionsLoadState,
   type SessionsView,
   serverSilentMessage,
-  newSessionBesideSearch,
   SessionsLoading,
 } from '#features/sessions';
 import { Screen } from '#lib/product/screen/screen';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { SizeClass } from '../../lib/generic/size-class/size-class';
-import { FloatingActionButton } from './floating-action-button';
 import { SessionsListContent } from './session-list-view-rows';
 
 export interface SessionListViewProps {
@@ -114,33 +112,6 @@ function WideLoading(props: Pick<SessionsView, 'layout'>): React.JSX.Element {
 
 const fillStyle = { minHeight: 0 };
 
-// Wide, New Session sits in the header row; on an iOS phone, beside the search bar.
-function NewSessionControl({
-  onNewSession,
-}: Pick<SessionListViewProps, 'onNewSession'>): React.JSX.Element | null {
-  if (newSessionBesideSearch) return null;
-
-  return (
-    <SizeClass only="compact">
-      <NewSessionButton onNewSession={onNewSession} />
-    </SizeClass>
-  );
-}
-
-function NewSessionButton({
-  onNewSession,
-}: Pick<SessionListViewProps, 'onNewSession'>): React.JSX.Element {
-  return (
-    <View className="absolute bottom-10.5 right-5">
-      <FloatingActionButton
-        accessibilityLabel="New Session"
-        icon="new-session"
-        onPress={onNewSession}
-      />
-    </View>
-  );
-}
-
 function SessionsLayout(props: SessionListViewProps): React.JSX.Element {
   return (
     <Screen
@@ -149,7 +120,6 @@ function SessionsLayout(props: SessionListViewProps): React.JSX.Element {
       style={fillStyle}
     >
       <SessionsContent {...props} />
-      <NewSessionControl onNewSession={props.onNewSession} />
     </Screen>
   );
 }

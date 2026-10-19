@@ -68,3 +68,18 @@ it('keeps a submenu’s keyed Sections and Actions', () => {
     'newest',
   ]);
 });
+
+const oldest = node('Action', 'oldest', {
+  label: 'Oldest',
+  onPress: { $event: 'onPress' },
+  selected: true,
+});
+
+it.each([
+  ['keeps a choice’s check for Apps with choices', 4, true],
+  ['drops a choice’s check for Apps before choices', 3, undefined],
+])('%s', (_, version, selected) => {
+  const prepared = prepareWireTree(oldest, { Action: version });
+
+  expect(prepared.props.selected).toBe(selected);
+});

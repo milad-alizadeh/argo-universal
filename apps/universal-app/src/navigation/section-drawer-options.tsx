@@ -9,9 +9,11 @@ import {
   type ParamListBase,
   type RouteProp,
 } from 'expo-router/react-navigation';
+import type * as React from 'react';
 import { Platform } from 'react-native';
+import { DrawerMenuButton } from './drawer-menu-button';
 
-// Android's section roots show the drawer's own header, with its stock toggle, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, so iOS keeps Liquid Glass, stock bar button items and the native search.
+// Android's section roots show the drawer's own header, led by ☰ with the attention dot, as a leading item in a native-stack header drops the native title; iOS and the web show the stack's, so iOS keeps Liquid Glass, stock bar button items and the native search.
 export const drawerDrawsRootHeader = Platform.OS === 'android';
 
 // Android's back gesture owns the screen edge, so there only ☰ opens the drawer.
@@ -20,6 +22,8 @@ const edgeSwipeOpens = Platform.OS === 'ios';
 const atSectionRoot = (route: RouteProp<ParamListBase>): boolean =>
   (getFocusedRouteNameFromRoute(route) ?? 'index') === 'index';
 
+const menuButton = (): React.JSX.Element => <DrawerMenuButton />;
+
 // A pushed page, and every page of a wide window, keeps its stack's header; its edge swipe goes back.
 export const stackOwnsHeader = { headerShown: false, swipeEnabled: false };
 
@@ -27,7 +31,11 @@ export function drawerRootOptions(
   header: SectionList['rootHeader'],
 ): DrawerNavigationOptions {
   const shown = drawerDrawsRootHeader
-    ? { headerShown: true, ...nativeHeaderOptions(header) }
+    ? {
+        headerShown: true,
+        headerLeft: menuButton,
+        ...nativeHeaderOptions(header),
+      }
     : { headerShown: false };
 
   return { ...shown, swipeEnabled: edgeSwipeOpens };

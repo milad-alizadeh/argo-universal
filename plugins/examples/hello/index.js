@@ -6,6 +6,7 @@ import {
   ListItem,
   Label,
   Stack,
+  Page,
   Text,
   Pill,
   useEffect,
@@ -65,10 +66,15 @@ function ExampleBadges() {
   );
 }
 
-const builds = [
+const firstBuilds = [
   { id: 'web', title: 'Deploy web' },
   { id: 'native', title: 'Build native' },
 ];
+
+const nextBuild = (builds) => ({
+  id: `build-${builds.length + 1}`,
+  title: `Build ${builds.length + 1}`,
+});
 
 const buildMeta = (
   <>
@@ -103,15 +109,28 @@ const renderBuild = (selected, onSelect) => (build) => (
   />
 );
 
+// The page's one main Action: Android's FAB, a header button everywhere else.
+const addBuild = (builds, setBuilds) => (
+  <Action
+    key="add"
+    label="Add build"
+    icon="add"
+    onPress={() => setBuilds([...builds, nextBuild(builds)])}
+  />
+);
+
 function HelloListPage() {
   const [selected, setSelected] = useState('');
+  const [builds, setBuilds] = useState(firstBuilds);
 
   return (
-    <List
-      appearance="cards"
-      items={builds}
-      renderItem={renderBuild(selected, setSelected)}
-    />
+    <Page title="Hello lists" primaryAction={addBuild(builds, setBuilds)}>
+      <List
+        appearance="cards"
+        items={builds}
+        renderItem={renderBuild(selected, setSelected)}
+      />
+    </Page>
   );
 }
 
