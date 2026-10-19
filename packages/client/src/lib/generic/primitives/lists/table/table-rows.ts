@@ -113,9 +113,10 @@ function firstColumnPerRole(columns: TableProps['columns']): CompactColumns {
 
 // Unless a column names its own line; each line takes its first column, and the first column is the title at worst.
 export function compactColumns(columns: TableProps['columns']): CompactColumns {
-  const { title = columns[0], subtitle, value } = firstColumnPerRole(columns);
+  const { title, subtitle, value } = firstColumnPerRole(columns);
+  const unclaimed = columns.find((c) => c !== subtitle && c !== value);
 
-  return { title, subtitle, value };
+  return { title: title ?? unclaimed ?? columns[0], subtitle, value };
 }
 
 export const cellOf = (row: TableRow, column?: TableColumn): TableCell =>

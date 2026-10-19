@@ -12,48 +12,38 @@ it('keeps a Table of rows, cells, Pills and row ActionLists', () => {
   );
 });
 
-it('refuses a Table for an App that predates it', () => {
-  const older = Object.fromEntries(
-    Object.entries(currentPartVersions).filter(([type]) => type !== 'Table'),
-  );
+const older = Object.fromEntries(
+  Object.entries(currentPartVersions).filter(([type]) => type !== 'Table'),
+);
 
-  expect(prepareWireTree(runTableRoot, older)).toMatchObject({
-    type: 'Text',
-    props: { children: updateMessage },
-  });
-});
+const controlInACell: WireNode = {
+  type: 'Table.Cell',
+  key: 'cell',
+  props: { column: 'name', text: 'Deploy' },
+  children: [
+    {
+      type: 'Button',
+      key: 'deploy',
+      props: { label: 'Deploy' },
+      children: [],
+      slots: {},
+    },
+  ],
+  slots: {},
+};
 
-it('refuses a control drawn in a cell', () => {
-  const cell: WireNode = {
-    type: 'Table.Cell',
-    key: 'cell',
-    props: { column: 'name', text: 'Deploy' },
-    children: [
-      {
-        type: 'Button',
-        key: 'deploy',
-        props: { label: 'Deploy' },
-        children: [],
-        slots: {},
-      },
-    ],
-    slots: {},
-  };
+const columnWithoutAnId: WireNode = {
+  ...runTableRoot,
+  props: { columns: [{ title: 'Workflow' }] },
+  children: [],
+};
 
-  expect(prepareWireTree(cell, currentPartVersions)).toMatchObject({
-    type: 'Text',
-    props: { children: updateMessage },
-  });
-});
-
-it('refuses a column without an id', () => {
-  const table: WireNode = {
-    ...runTableRoot,
-    props: { columns: [{ title: 'Workflow' }] },
-    children: [],
-  };
-
-  expect(prepareWireTree(table, currentPartVersions)).toMatchObject({
+it.each([
+  ['a Table for an App that predates it', runTableRoot, older],
+  ['a control drawn in a cell', controlInACell, currentPartVersions],
+  ['a column without an id', columnWithoutAnId, currentPartVersions],
+])('refuses %s', (_name, tree, versions) => {
+  expect(prepareWireTree(tree, versions)).toMatchObject({
     type: 'Text',
     props: { children: updateMessage },
   });

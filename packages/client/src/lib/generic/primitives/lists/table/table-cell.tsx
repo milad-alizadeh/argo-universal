@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react';
-import { View } from 'react-native';
+import type { ReactElement, ReactNode } from 'react';
+import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
 import type { TableColumn } from './table-props';
@@ -13,6 +13,12 @@ export function columnClass(column: TableColumn, first: boolean): string {
 
   return cn('shrink-0', widths[column.width ?? 'md']);
 }
+
+// A drawn cell on a ListItem: Android writes it under the title, as its other ListItems do; elsewhere it trails.
+export const nodeValue = (
+  content: ReactNode,
+): { trailing: ReactNode } | { meta: ReactNode } =>
+  Platform.OS === 'android' ? { meta: content } : { trailing: content };
 
 export const alignClass = (column: TableColumn): string | undefined =>
   column.align === 'end' ? 'items-end' : undefined;

@@ -85,7 +85,7 @@ function PinnedCell({ column, row }: CellRowProps): ReactElement {
   );
 }
 
-// Read through each pinned cell, so the scrolled copy is hidden from assistive technology.
+// Rows are read through each pinned cell, so their scrolled copy is hidden; the header keeps its sort buttons.
 function ScrolledColumns(props: ScrollProps): ReactElement {
   const fade = useSpacing('--spacing-8');
 
@@ -95,7 +95,6 @@ function ScrolledColumns(props: ScrollProps): ReactElement {
       surfaceClassName="bg-card"
       depth={{ leading: fade, trailing: fade }}
       className="flex-1"
-      aria-hidden
       contentContainerClassName="pl-4 pr-3"
     >
       <ScrolledGrid {...props} />
@@ -135,7 +134,7 @@ function ScrolledRow(props: {
   row: TableRow;
 }): ReactElement {
   return (
-    <View className="h-12 flex-row items-center gap-4">
+    <View aria-hidden className="h-12 flex-row items-center gap-4">
       {props.columns.map((column) => (
         <ScrolledCell key={column.id} column={column} row={props.row} />
       ))}

@@ -24,6 +24,10 @@ function keep(detail: ReactElement): string {
   return row;
 }
 
+// A reload forgets every Row detail, so its `row` param then shows the nav item's own page.
+export const hasRowDetail = (row: string | undefined): boolean =>
+  row !== undefined && details.has(row);
+
 function useOpenRowDetail(): OpenRowDetail {
   const router = useRouter();
   const pathname = usePathname();

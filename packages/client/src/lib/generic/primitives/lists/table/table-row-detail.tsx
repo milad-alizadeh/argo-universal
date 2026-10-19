@@ -1,8 +1,8 @@
-import { createContext, type ReactElement, type ReactNode } from 'react';
-import { Platform } from 'react-native';
+import { createContext, type ReactElement } from 'react';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Page } from '#primitives/scaffolds/page';
+import { nodeValue } from './table-cell';
 import type { TableColumn, TableProps } from './table-props';
 import { cellOf, type TableCell, type TableRow } from './table-rows';
 
@@ -62,8 +62,3 @@ function DetailItem({ column, cell }: DetailItemProps): ReactElement {
     />
   );
 }
-
-const nodeValue = (
-  content: ReactNode,
-): { trailing: ReactNode } | { meta: ReactNode } =>
-  Platform.OS === 'android' ? { meta: content } : { trailing: content };

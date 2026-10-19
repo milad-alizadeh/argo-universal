@@ -1,9 +1,10 @@
-import { use, type ReactElement, type ReactNode } from 'react';
+import { use, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { ContextActions } from '#primitives/actions/action-list';
 import { List } from '#primitives/lists/list';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
 import { PageHeaderActions } from '#primitives/scaffolds/page';
+import { nodeValue } from './table-cell';
 import type { TableProps } from './table-props';
 import { TableRowDetail, TableRowDetailHost } from './table-row-detail';
 import {
@@ -96,9 +97,6 @@ function useRowOpen(props: RowProps): (() => void) | undefined {
 }
 
 type Lines = Pick<ListItemProps, 'subtitle' | 'value' | 'trailing' | 'meta'>;
-
-const nodeValue = (content: ReactNode): Lines =>
-  Platform.OS === 'android' ? { meta: content } : { trailing: content };
 
 // Android writes the value after the subtitle, "main · 2 min ago", as its other ListItems do.
 const textValue = (subtitle: string, value: string): Lines =>
