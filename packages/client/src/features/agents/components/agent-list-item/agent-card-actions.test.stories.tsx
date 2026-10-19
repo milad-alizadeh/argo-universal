@@ -2,18 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
-import type { AgentRowEntry } from '../../utils/agent-rows';
-import { iconAgent } from '../registry-icons.mocks';
+import { agentRow as agent } from '../registry-icons.mocks';
 import { AgentListItem } from './agent-list-item';
-
-const agent: AgentRowEntry = {
-  id: iconAgent.entry.id,
-  name: iconAgent.entry.name,
-  description: iconAgent.entry.description,
-  version: iconAgent.entry.version,
-  installed: false,
-  unavailable: false,
-};
 
 const meta = {
   title: 'Tests/AgentCardActions',

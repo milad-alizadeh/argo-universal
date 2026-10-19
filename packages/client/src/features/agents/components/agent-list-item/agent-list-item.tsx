@@ -8,7 +8,7 @@ import {
   type AgentActions,
   type AgentCardProps,
 } from './agent-button';
-import { AgentMeta } from './agent-links';
+import { AgentMeta } from './agent-meta';
 
 export function AgentListItem(props: AgentCardProps): React.JSX.Element {
   return (

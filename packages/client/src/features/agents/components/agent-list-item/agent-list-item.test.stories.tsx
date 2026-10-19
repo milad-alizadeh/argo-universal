@@ -1,24 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, spyOn, waitFor } from 'storybook/test';
-import type { AgentRowEntry } from '../../utils/agent-rows';
 import {
+  agentRow,
   base64Icon,
   encodedIcon,
-  iconAgent,
   iconXml,
   malformedIconXml,
 } from '../registry-icons.mocks';
 import { AgentListItem } from './agent-list-item';
 
-const agent: AgentRowEntry = {
-  id: iconAgent.entry.id,
-  name: iconAgent.entry.name,
-  description: iconAgent.entry.description,
-  icon: iconAgent.entry.icon,
-  version: iconAgent.entry.version,
-  installed: false,
-  unavailable: false,
-};
+const agent = { ...agentRow, icon: encodedIcon };
 
 const meta = {
   title: 'Tests/AgentListItem',

@@ -24,7 +24,13 @@ const meta = {
     ),
   ],
   args: {
-    agent: { ...entry, installed: false, unavailable: false },
+    agent: {
+      ...entry,
+      repository: 'https://example.org/repository',
+      website: 'https://example.org/website',
+      installed: false,
+      unavailable: false,
+    },
     onInstall: fn(),
     onRemove: fn(),
   },
