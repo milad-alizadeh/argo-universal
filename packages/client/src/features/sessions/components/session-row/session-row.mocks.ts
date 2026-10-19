@@ -18,6 +18,7 @@ export const paperSessionRows: SessionInfo[] = [
     ...sessionRows.withPlan,
     title: 'Build the Session layout',
     activity: 'Running pnpm typecheck',
+    shells: { running: 1, total: 1 },
     subagents: { running: 2, total: 3 },
   },
   {

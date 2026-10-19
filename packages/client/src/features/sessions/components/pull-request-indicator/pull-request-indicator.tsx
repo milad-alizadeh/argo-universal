@@ -26,15 +26,16 @@ export interface PullRequestIndicatorProps {
   status: PullRequestStatus;
 }
 
-// The PR's glyph in its state colour, sized beside Secondary text.
+// The PR's glyph in its state colour, beside Secondary text; alone at a sidebar row's end it fills a mark's box.
 export function PullRequestIcon({
   status,
-}: Pick<PullRequestIndicatorProps, 'status'>): React.JSX.Element {
+  role = 'secondary',
+}: Pick<PullRequestIndicatorProps, 'status'> & {
+  role?: 'secondary' | 'mark';
+}): React.JSX.Element {
   const appearance = pullRequestAppearance[status];
 
-  return (
-    <Icon role="secondary" name={appearance.icon} tone={appearance.tone} />
-  );
+  return <Icon role={role} name={appearance.icon} tone={appearance.tone} />;
 }
 
 function PullRequestNumber({
