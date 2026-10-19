@@ -20,12 +20,7 @@ export {
   type RegistryLoad,
 } from './utils/installed-agents';
 
-export {
-  agentsPage,
-  type AgentRowEntry,
-  type AgentRows,
-  type RowsLoad,
-} from './utils/agent-rows';
+export { agentsPage, type AgentRows, type RowsLoad } from './utils/agent-rows';
 
 export {
   filterAgents,

@@ -46,10 +46,12 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     getSectionKey?: (item: Item) => string | undefined;
   };
 
-// Kit-only: native selection and controlled section expansion.
+// Kit-only: native selection, controlled section expansion, a phone's long press on the header and the loading header.
 export type ListSectionProps = KitProps<'List.Section'> &
   ListSelection & {
     tone?: 'danger';
     isExpanded?: boolean;
     onExpandedChange?: (expanded: boolean) => void;
+    onLongPress?: () => void;
+    isLoading?: boolean;
   };
