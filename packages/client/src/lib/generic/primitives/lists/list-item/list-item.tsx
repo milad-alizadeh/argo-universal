@@ -4,6 +4,8 @@ import { ProgressBar } from '#primitives/status/progress-bar';
 import { ListContext } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { InListItem } from '../../../list-item-control-context';
+import { useSeparatorCovered } from '../../../row-highlights';
+import { useSelectedHighlight } from './list-item-highlight';
 import { hasLeading } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
@@ -14,11 +16,14 @@ import { itemSeparator, itemSurface } from './list-item-styles';
 const hairline = { height: StyleSheet.hairlineWidth };
 
 function ItemSeparator(props: ListItemProps): ReactNode {
-  const { appearance, position } = useContext(ListContext);
+  const { appearance, position, highlights, index } = useContext(ListContext);
+  const covered = useSeparatorCovered(highlights, index);
 
   const separator = itemSeparator(appearance, position, hasLeading(props));
 
-  return separator ? <View className={separator} style={hairline} /> : null;
+  return separator && !covered ? (
+    <View className={separator} style={hairline} />
+  ) : null;
 }
 
 function ItemProgress({
@@ -54,6 +59,7 @@ export function ListItemFrame(props: DrawingProps): ReactElement {
 
 function ItemSurface(props: DrawingProps): ReactElement {
   const { appearance, position } = useContext(ListContext);
+  useSelectedHighlight(props.selected);
 
   return (
     <View className={itemSurface(appearance, position, props.selected)}>

@@ -2,6 +2,7 @@ import {
   Children,
   useContext,
   useId,
+  useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -10,6 +11,7 @@ import { FooterProvider } from '#primitives/fields/field-description';
 import { flattenedChildren } from '../../../flattened-children';
 import { ListContext, listPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
+import { createRowHighlights } from '../../../row-highlights';
 import type { ListSectionProps } from './list-props';
 import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
@@ -32,20 +34,28 @@ function Header(props: ListSectionProps): ReactNode {
 function Rows(props: ListSectionProps): ReactNode {
   const children = flattenedChildren(props.children);
 
-  const selection = { ...useContext(ListContext), ...selectionContext(props) };
+  const [highlights] = useState(createRowHighlights);
+
+  const section = {
+    ...useContext(ListContext),
+    ...selectionContext(props),
+    highlights,
+  };
 
   if (props.isExpanded === false) return null;
 
   return Children.map(children, (child, index) => (
-    <ListContext
-      value={{
-        ...selection,
-        position: listPosition(index === 0, index === children.length - 1),
-      }}
-    >
+    <ListContext value={{ ...section, ...rowPlace(index, children.length) }}>
       {child}
     </ListContext>
   ));
+}
+
+function rowPlace(
+  index: number,
+  count: number,
+): Pick<React.ContextType<typeof ListContext>, 'position' | 'index'> {
+  return { position: listPosition(index === 0, index === count - 1), index };
 }
 
 function selectionContext(

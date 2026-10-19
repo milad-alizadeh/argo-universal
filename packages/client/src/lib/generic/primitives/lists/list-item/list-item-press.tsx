@@ -3,6 +3,7 @@ import { Platform, Pressable } from 'react-native';
 import { TextClassContext } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { cn } from '../../../utils';
+import { useHighlightHandlers } from './list-item-highlight';
 import { linkPress } from './list-item-link-press';
 import { Accessory, ItemContent, Leading, Trailing } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
@@ -77,6 +78,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
     android_ripple: usePressRipple(),
     testID: props.testID,
     ...triggerProps(props),
+    ...useHighlightHandlers(props),
     className: pressClass(props.disabled),
   };
 }
@@ -84,8 +86,6 @@ function usePressProps(props: DrawingProps): RowPressProps {
 function triggerProps(props: DrawingProps): RowPressProps {
   return {
     onPointerDown: props.onPointerDown,
-    onHoverIn: props.onHoverIn,
-    onHoverOut: props.onHoverOut,
     ref: props.ref,
     href: props.href,
     'aria-haspopup': props['aria-haspopup'],
