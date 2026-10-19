@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { delimiter } from 'node:path';
+import type { ProcessResult } from '@repo/contracts/plugins/argo-calls';
 import { shellEnvironment } from '../../agents';
 import type { CheckedCommand } from '../access/plugin-access';
 import type { ProcessCall } from '../protocol/runtime';
@@ -11,14 +12,6 @@ export type CheckedProcessCall =
   | Extract<ProcessCall, { action: 'wait' | 'kill' }>
   | (CheckedCommand & { action: 'run' })
   | (CheckedCommand & { action: 'spawn' });
-
-export type ProcessResult = {
-  exitCode: number | null;
-  stdout: string;
-  stderr: string;
-  truncated: boolean;
-  timedOut: boolean;
-};
 
 type Running = { child: ChildProcess; done: Promise<ProcessResult> };
 

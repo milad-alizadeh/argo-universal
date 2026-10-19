@@ -1,7 +1,3 @@
-// The real timer pair the kit keeps, set before the kit loads and before any test clock.
-export const kitTimersSource =
-  'globalThis.__argoKitTimers = { schedule: setTimeout, cancel: clearTimeout };';
-
 // Timers are realm-local functions; only their delay crosses to the worker clock.
 export const kitPrelude = `
   (() => {

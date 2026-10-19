@@ -9,7 +9,7 @@ export const example = fileURLToPath(
   new URL('../../../plugins/examples/hello/', import.meta.url),
 );
 
-const testFile = /\.test\.js$/;
+const testFile = /\.test\.[jt]s$/;
 
 const cli = fileURLToPath(new URL('../bin/argo.mjs', import.meta.url));
 
@@ -21,7 +21,7 @@ export async function fixture(source: string): Promise<string> {
     recursive: true,
     filter: (path) => !testFile.test(path),
   });
-  await writeFile(join(directory, 'index.js'), source);
+  await writeFile(join(directory, 'index.tsx'), source);
 
   return directory;
 }

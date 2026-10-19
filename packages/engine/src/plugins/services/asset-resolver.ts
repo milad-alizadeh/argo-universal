@@ -2,17 +2,18 @@ import type {
   PluginAssetRef,
   PluginAssetSource,
 } from '@repo/contracts/plugins/assets';
-import type { ActivatedPlugin } from '../access/plugin-access';
+import type { ActivatedPlugin, PluginAccess } from '../access/plugin-access';
 import type { AssetContent } from '../assets/content';
 import { readAssetFile } from '../assets/file';
 import type { PluginAssets } from '../assets/plugin-assets';
-import type { MachineContext } from './plugin-calls';
-import { firstHop } from './plugin-fetch';
+import { firstHop, type PluginNetwork } from './plugin-fetch';
+import type { PluginResources } from './plugin-resources';
 
-type AssetCall = Pick<
-  MachineContext,
-  'pluginId' | 'access' | 'network' | 'resources'
-> & {
+type AssetCall = {
+  pluginId: string;
+  access: PluginAccess;
+  network: PluginNetwork;
+  resources: PluginResources;
   assets: PluginAssets;
   activated: () => ActivatedPlugin | undefined;
 };

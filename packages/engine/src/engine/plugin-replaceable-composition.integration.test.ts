@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
 import {
   messageSlotFixture,
@@ -54,10 +54,7 @@ it.each([traySlotFixture, messageSlotFixture, toolCallSlotFixture])(
     ]);
     const { url } = await startEngineTestHost({ home });
 
-    const app = renderApp(url, input, {
-      platform: 'ios',
-      parts: currentPartVersions,
-    });
+    const app = renderApp(url, input, currentPluginSurface('ios'));
 
     await expect
       .poll(() => app.messages[0], { timeout: 10_000 })

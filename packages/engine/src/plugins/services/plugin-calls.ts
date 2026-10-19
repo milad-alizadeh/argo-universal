@@ -1,18 +1,22 @@
-import type { CoreHooks } from '@repo/contracts/plugins';
 import { CapabilityRefusal } from '../access/capability-refusal';
-import type { PluginAccess } from '../access/plugin-access';
+import type { ActivatedPlugin, PluginAccess } from '../access/plugin-access';
 import {
   runtimeError,
-  type FetchCall,
-  type FsCall,
   type PluginRequest,
   type PluginValue,
-  type ProcessCall,
+  type SecretCall,
 } from '../protocol/runtime';
-import { firstHop, type PluginNetwork } from './plugin-fetch';
-import { fileAccessOf } from './plugin-file-calls';
-import type { CheckedProcessCall } from './plugin-processes';
+import {
+  answerAsset,
+  answerFetch,
+  answerFs,
+  answerProcess,
+} from './checked-calls';
+import { pluginKeychainService, type Keychain } from './keychain';
+import type { PluginNetwork } from './plugin-fetch';
 import type { PluginResources } from './plugin-resources';
+import type { PluginServiceOptions } from './plugin-services';
+import type { PluginStorage } from './storage';
 
 // Pages and Hooks are the runtime's own; every other call is answered by PluginServices.
 export type StateRequest = Exclude<
@@ -20,106 +24,102 @@ export type StateRequest = Exclude<
   { api: 'view' | 'hooks' | 'dispatchResult' }
 >;
 
-export type KeptRequest = Extract<
-  StateRequest,
-  { api: 'storage' | 'secrets' | 'settings' | 'projects' }
->;
+type Api = StateRequest['api'];
 
-export type UnkeptRequest = Exclude<StateRequest, KeptRequest>;
+type RequestOf<Name extends Api> = Extract<StateRequest, { api: Name }>;
 
-export type MachineRequest = Extract<
-  StateRequest,
-  { api: 'fs' | 'process' | 'fetch' }
->;
-
-// What one checked call runs against, and `allowed`, which logs it once the checker lets it through.
-export type MachineContext = {
+// What one call from one worker generation may reach.
+export type CallReach = {
   pluginId: string;
-  spawning: CoreHooks['process.spawn'];
-  access: PluginAccess;
+  generation: number;
   resources: PluginResources;
+  storage: PluginStorage;
+  keychain: Keychain;
+  options: PluginServiceOptions;
   network: PluginNetwork;
-  allowed: () => void;
+  access: () => PluginAccess;
+  activated: () => ActivatedPlugin | undefined;
 };
 
-// The checker decides before the call runs, so a refused call never reaches the machine.
-export async function machineCall(
-  context: MachineContext,
-  request: MachineRequest,
-): Promise<PluginValue> {
-  if (request.api === 'fs') return fsRequest(context, request.call);
+// `logCall` logs the call once it is let through.
+export type PluginCall = CallReach & { logCall: () => void };
 
-  if (request.api === 'process') return processRequest(context, request.call);
+type CallKind<Name extends Api> = {
+  describe: (request: RequestOf<Name>) => string;
+  answer: (call: PluginCall, request: RequestOf<Name>) => Promise<PluginValue>;
+};
 
-  return fetchRequest(context, request.call);
-}
+type CallKinds = { [Name in Api]: CallKind<Name> };
 
-async function fsRequest(
-  { access, resources, allowed }: MachineContext,
-  call: FsCall,
-): Promise<PluginValue> {
-  const path = await access.checkPath(call.path, fileAccessOf(call));
+// Storage, Projects, secrets and settings are Server-owned state; they are logged and answered with no Capability check.
+const kept = <Name extends Api>(
+  describe: CallKind<Name>['describe'],
+  answer: CallKind<Name>['answer'],
+): CallKind<Name> => ({
+  describe,
+  answer: async (call, request): Promise<PluginValue> => {
+    call.logCall();
 
-  allowed();
+    return answer(call, request);
+  },
+});
 
-  return resources.fs(access, call, path);
-}
+const calls: CallKinds = {
+  storage: kept(
+    ({ queries }) => `argo.storage ${queries.length}`,
+    async (call, { queries }) => call.storage.execute(call.pluginId, queries),
+  ),
+  projects: kept(
+    () => 'argo.projects.list',
+    async (call) => call.options.projectInfo(),
+  ),
+  settings: kept(
+    ({ key }) => `argo.settings.get ${key}`,
+    (call, { key }) => setting(call, key),
+  ),
+  secrets: kept(
+    ({ call }) => `argo.secrets.${call.action} ${call.account}`,
+    (call, request) => secrets(call, request.call),
+  ),
+  assets: {
+    describe: () => 'argo.assets.resolve',
+    answer: (call, { source }) => answerAsset(call, source),
+  },
+  fs: {
+    describe: ({ call }) => `argo.fs.${call.action} ${call.path}`,
+    answer: (call, request) => answerFs(call, request.call),
+  },
+  process: {
+    describe: ({ call }) =>
+      `argo.process.${call.action} ${'argv' in call ? call.argv.join(' ') : call.id}`,
+    answer: (call, request) => answerProcess(call, request.call),
+  },
+  fetch: {
+    describe: ({ call: { method = 'GET', url } }) =>
+      `argo.fetch ${method} ${url}`,
+    answer: (call, request) => answerFetch(call, request.call),
+  },
+};
 
-async function processRequest(
-  context: MachineContext,
-  call: ProcessCall,
-): Promise<PluginValue> {
-  const checked = await checkedProcess(
-    context.access,
-    await spawnHooked(context, call),
+export const answerCall = <Name extends Api>(
+  reach: CallReach,
+  request: RequestOf<Name> & { api: Name },
+): Promise<PluginValue> =>
+  calls[request.api].answer(
+    {
+      ...reach,
+      logCall: () =>
+        reach.options.log(
+          `Plugin ${reach.pluginId}: ${describeCall<Name>(request)}`,
+        ),
+    },
+    request,
   );
 
-  context.allowed();
-
-  return context.resources.process(checked);
-}
-
-type CommandCall = Extract<ProcessCall, { action: 'run' | 'spawn' }>;
-
-const isCommand = (call: ProcessCall): call is CommandCall =>
-  call.action === 'run' || call.action === 'spawn';
-
-// `process.spawn` Hooks see a run or spawn first, so the checker sees the command they leave (ADR-0030).
-async function spawnHooked(
-  { pluginId, spawning }: MachineContext,
-  call: ProcessCall,
-): Promise<ProcessCall> {
-  if (!isCommand(call)) return call;
-  const answer = await spawning({ pluginId, argv: call.argv, cwd: call.cwd });
-
-  if ('blocked' in answer)
-    throw new CapabilityRefusal(
-      `a process.spawn Hook blocked it: ${answer.blocked}`,
-    );
-
-  return { ...call, argv: answer.argv, cwd: answer.cwd };
-}
-
-async function fetchRequest(
-  { access, resources, network, allowed }: MachineContext,
-  call: FetchCall,
-): Promise<PluginValue> {
-  const hop = firstHop(call);
-
-  access.checkHost(hop.url);
-  allowed();
-
-  return resources.fetch(hop, { access, network });
-}
-
-async function checkedProcess(
-  access: PluginAccess,
-  call: ProcessCall,
-): Promise<CheckedProcessCall> {
-  if (call.action === 'wait' || call.action === 'kill') return call;
-
-  return { ...(await access.checkCommand(call)), action: call.action };
-}
+// The log names the call and where it points, never a secret value or a file's content.
+const describeCall = <Name extends Api>(
+  request: RequestOf<Name> & { api: Name },
+): string => calls[request.api].describe(request);
 
 // A refusal is one line naming the Plugin and the call; any other failure keeps its own line.
 export function failureLine(
@@ -133,47 +133,26 @@ export function failureLine(
   return `Plugin ${pluginId}: argo call failed: ${runtimeError(cause)}`;
 }
 
-// The log names the call and where it points, never a secret value or a file's content.
-export function describeCall(request: StateRequest): string {
-  if (request.api === 'storage')
-    return `argo.storage ${request.queries.length}`;
+async function setting(
+  { options, pluginId }: PluginCall,
+  key: string,
+): Promise<PluginValue> {
+  if (!options.settings) throw new Error('Plugin settings are not available');
 
-  return describeKeptCall(request);
+  return options.settings(pluginId, key);
 }
 
-function describeKeptCall(
-  request: Exclude<StateRequest, { api: 'storage' }>,
-): string {
-  if (request.api === 'projects') return 'argo.projects.list';
+async function secrets(
+  { keychain, pluginId }: PluginCall,
+  call: SecretCall,
+): Promise<PluginValue> {
+  const service = pluginKeychainService(pluginId);
 
-  if (request.api === 'secrets')
-    return `argo.secrets.${request.call.action} ${request.call.account}`;
+  if (call.action === 'get') return keychain.get(service, call.account);
 
-  return describeOtherCall(request);
+  await (call.action === 'set'
+    ? keychain.set(service, call.account, call.value)
+    : keychain.delete(service, call.account));
+
+  return null;
 }
-
-function describeOtherCall(
-  request: Exclude<StateRequest, { api: 'storage' | 'secrets' | 'projects' }>,
-): string {
-  if (request.api === 'assets') return 'argo.assets.resolve';
-
-  if (request.api === 'settings') return `argo.settings.get ${request.key}`;
-
-  return describeMachineCall(request);
-}
-
-function describeMachineCall(request: MachineRequest): string {
-  if (request.api === 'fs')
-    return `argo.fs.${request.call.action} ${request.call.path}`;
-
-  if (request.api === 'process')
-    return `argo.process.${request.call.action} ${describeProcess(request.call)}`;
-
-  return describeFetch(request.call);
-}
-
-const describeFetch = ({ method = 'GET', url }: FetchCall): string =>
-  `argo.fetch ${method} ${url}`;
-
-const describeProcess = (call: ProcessCall): string =>
-  'argv' in call ? call.argv.join(' ') : call.id;

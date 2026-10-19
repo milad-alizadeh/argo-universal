@@ -67,7 +67,6 @@ const defaultOptions = {
   label: '',
   appearance: defaultAppearance,
   accessibility: {},
-  previous: [],
 } satisfies Required<Omit<PartOptions, 'container'>>;
 
 function resolveOptions(
@@ -130,7 +129,6 @@ function definition(
 ): WirePartDefinition {
   return {
     props: schema,
-    versions: [...config.previous, schema],
     ...structure(config),
     reference: partReference({ summary, schema, config }),
   };

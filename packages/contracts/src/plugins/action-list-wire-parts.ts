@@ -1,10 +1,7 @@
 import { z } from 'zod';
 import {
   actionEntryProps,
-  actionEntryPropsV3,
   actionListProps,
-  actionProps,
-  actionPropsV1,
   actionSectionProps,
 } from './action-list-props';
 import { part } from './plugin-part-schema-utils';
@@ -33,8 +30,6 @@ export const actionListWireParts = {
     'One Action declared inside ActionList, SplitButton or Alert: it runs on press, or opens a submenu of keyed ActionList.Section children.',
     actionEntryProps,
     {
-      // Apps before submenus parse a press Action only, so they drop a submenu; Apps before choices drop `selected`.
-      previous: [actionPropsV1, actionProps, actionEntryPropsV3],
       // Only a submenu holds children; a press Action's are ignored.
       children: ['ActionList.Section'],
       container: false,

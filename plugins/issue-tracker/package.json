@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
-    "check-types": "tsc --noEmit"
+    "validate": "argo-plugin validate ."
   },
   "devDependencies": {
     "@argo/plugin-kit": "workspace:*",
     "@repo/contracts": "workspace:*",
-    "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",

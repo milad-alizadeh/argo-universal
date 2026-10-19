@@ -4,10 +4,10 @@ export type {
 } from '@repo/contracts/plugins/kit';
 
 import type {
-  KitChoiceValue,
-  KitListItem,
-  KitNode,
-  KitValuePayload,
+  DeclaredProps,
+  Expansion,
+  KitDrawing,
+  KitMappedProps,
 } from '@repo/contracts/kit-props';
 import type {
   WirePart,
@@ -15,9 +15,7 @@ import type {
   wireParts,
   listPartNames,
 } from '@repo/contracts/plugins/kit';
-import type { WireEvent, WireNode } from '@repo/contracts/plugins/wire';
 import type { ComponentType, ReactNode, ReactElement } from 'react';
-import type { z } from 'zod';
 
 export {
   useState,
@@ -35,69 +33,25 @@ export {
 
 type Events<Name extends WirePart> = (typeof wireParts)[Name]['events'];
 
-type Callback<Payload> = [Payload] extends [undefined]
-  ? () => void | Promise<void>
-  : (payload: Payload) => void | Promise<void>;
-
-type DeclaredProps<Props> = Props extends object
-  ? {
-      [Prop in keyof Props as string extends Prop ? never : Prop]: Props[Prop];
-    }
-  : Props;
-
-type Expansion<Name extends WirePart> = (typeof wireParts)[Name] extends {
-  expansion: infer Schema extends z.ZodType;
+// Plugin JSX: a handler goes beside the value it replaces, only in top-level props; a nested handler is a built-in Action.
+interface PluginDrawing<Item> extends KitDrawing {
+  node: ReactNode;
+  choice: string;
+  item: Item;
+  wireNode: PluginWireNode;
+  returns: void | Promise<void>;
+  plugin: true;
 }
-  ? z.output<Schema>
-  : Record<never, never>;
 
-// Handlers go only in top-level props; a nested handler is a built-in Action.
-type ExpansionValue<Value, Item> = Value extends WireNode
-  ? PluginWireNode
-  : Value extends KitChoiceValue
-    ? string
-    : Value extends WireEvent
-      ? never
-      : Value extends KitListItem
-        ? Item
-        : Value extends KitNode
-          ? ReactNode
-          : Value extends (...args: infer Args) => infer Result
-            ? (
-                ...args: {
-                  [Key in keyof Args]: ExpansionValue<Args[Key], Item>;
-                }
-              ) => ExpansionValue<Result, Item>
-            : Value extends readonly (infer Element)[]
-              ? readonly ExpansionValue<Element, Item>[]
-              : Value extends object
-                ? { [Key in keyof Value]: ExpansionValue<Value[Key], Item> }
-                : Value;
-
-type MappedPluginProps<
+type MappedPluginProps<Props, Name extends WirePart, Item> = KitMappedProps<
   Props,
-  Name extends WirePart,
-  Item,
-> = Props extends object
-  ? {
-      [Prop in keyof Props]: Prop extends keyof Events<Name>
-        ?
-            | ExpansionValue<Exclude<Props[Prop], WireEvent>, Item>
-            | Callback<
-                ExpansionValue<
-                  KitValuePayload<
-                    z.output<Extract<Events<Name>[Prop], z.ZodType>>,
-                    Props
-                  >,
-                  Item
-                >
-              >
-        : ExpansionValue<Props[Prop], Item>;
-    }
-  : Props;
+  Events<Name>,
+  never,
+  PluginDrawing<Item>
+>;
 
 type EventProps<Name extends WirePart, Item = unknown> = MappedPluginProps<
-  DeclaredProps<WireProps[Name] & Expansion<Name>>,
+  DeclaredProps<WireProps[Name] & Expansion<(typeof wireParts)[Name]>>,
   Name,
   Item
 >;
@@ -153,3 +107,25 @@ export type PluginWireNode = {
     slots: Record<string, PluginWireNode[]>;
   };
 }[WirePart];
+
+// The timers a Plugin realm provides; Plugin code has no other host globals.
+declare global {
+  function setTimeout(callback: () => void, ms?: number): number;
+  function clearTimeout(id: number | undefined): void;
+}
+
+// The Plugin API: the `argo` object a Plugin's `register` receives, inferred from the call schemas in Contracts.
+export type { Argo } from '@repo/contracts/plugins/argo-api';
+
+export type {
+  Hook,
+  HookContext,
+  HookNext,
+  HookOptions,
+} from '@repo/contracts/plugins/hooks';
+
+export type {
+  ProcessResult,
+  StorageQuery,
+  StorageResult,
+} from '@repo/contracts/plugins/argo-calls';

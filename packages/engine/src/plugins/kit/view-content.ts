@@ -1,3 +1,4 @@
+import type { Page, SlotContent } from '@repo/contracts/plugins/argo-api';
 import type {
   PluginRenderContext,
   PluginSurface,
@@ -6,13 +7,7 @@ import type {
   PluginEvent,
   PluginSlotInput,
 } from '@repo/contracts/plugins/wire';
-import { createElement, type ComponentType, type ReactNode } from 'react';
-
-export type Page = ComponentType<{ context: PluginRenderContext }>;
-
-export type SlotContent = ComponentType<{
-  context: PluginSlotInput['context'] & PluginRenderContext;
-}>;
+import { createElement, type ReactNode } from 'react';
 
 type Content = { pages: Map<string, Page>; slots: Map<string, SlotContent> };
 
@@ -25,7 +20,7 @@ function renderContext(
     ? {
         surface: Object.freeze({
           platform: surface.platform,
-          parts: Object.freeze({ ...surface.parts }),
+          wireVersion: surface.wireVersion,
         }),
       }
     : {};

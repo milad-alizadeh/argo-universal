@@ -1,0 +1,1 @@
+{ "extends": "@argo/plugin-kit/tsconfig.test.json" }

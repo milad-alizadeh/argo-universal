@@ -63,7 +63,7 @@ What the native rows give that Argo's can't match is small:
 - **Accessibility.** `ListItem` reports its role, selected and disabled states, and its value. Its text follows the type roles, so it scales with Dynamic Type and Android font scale. Native controls in slots keep their own accessibility.
 - **Badges.** All rows use Argo's badge. This replaces ADR-0020's "Badges follow their row" for rows; the Android drawer keeps its native item.
 - **Settings disclosures.** Native disclosure inside a Form goes away with the Form; Collapsible stays Argo-drawn everywhere.
-- **The Plugin wire** has `List`, `List.Section`, `ListItem` and the five wrappers. Their Contracts schemas refuse controls in `trailing`, so a misplaced Switch fails in the author's editor. ADR-0031's so `GroupedList` and `VirtualList` become `List` with an appearance. The old names stay as aliases that lower to `List` until no first-party Plugin uses them.
+- **The Plugin wire** has `List`, `List.Section`, `ListItem` and the five wrappers. Their Contracts schemas refuse controls in `trailing`, so a misplaced Switch fails in the author's editor. `GroupedList` and `VirtualList` become `List` with an appearance. The old names are gone, with no aliases: [ADR-0034](0034-plugin-apps-check-one-wire-version.md) removed lowering.
 
 ## Consequences
 

@@ -11,10 +11,14 @@ export const shortcutProps = z.object({
   key: z.string().min(1).describe('KeyboardEvent.key, such as Enter or c.'),
 });
 
-// The Action every App drew before `role`, when `icon` was required.
-export const actionPropsV1 = z.object({
+// An Alert answer has no icon; UIAlertAction.Style and Raycast's Alert.ActionStyle mark its role.
+export const actionProps = z.object({
   label: z.string().min(1).describe('The Action label and accessible name.'),
-  icon: iconName.describe('The leading Argo icon.'),
+  icon: iconName
+    .optional()
+    .describe(
+      'The leading Argo icon; a header ActionList shows only Actions with one as buttons.',
+    ),
   shortcut: shortcutProps
     .optional()
     .describe('Desktop shortcut; Plugins cannot take reserved keys.'),
@@ -27,15 +31,6 @@ export const actionPropsV1 = z.object({
     .optional()
     .describe('Disable activation without hiding the Action.'),
   onPress: pressHandler.describe('The Plugin handler or built-in App Action.'),
-});
-
-// An Alert answer has no icon; UIAlertAction.Style and Raycast's Alert.ActionStyle mark its role.
-export const actionProps = actionPropsV1.extend({
-  icon: iconName
-    .optional()
-    .describe(
-      'The leading Argo icon; a header ActionList shows only Actions with one as buttons.',
-    ),
   role: z
     .enum(['cancel', 'destructive'])
     .optional()
@@ -46,7 +41,7 @@ export const actionProps = actionPropsV1.extend({
 
 // An Action that opens a menu of its own: its keyed ActionList.Section children hold the entries, and a full header folds it into the overflow menu as a nested menu.
 export const submenuActionProps = z.object({
-  label: actionPropsV1.shape.label,
+  label: actionProps.shape.label,
   icon: iconName.describe(
     'The leading Argo icon; a header ActionList shows only Actions with one as buttons, and a submenu needs one.',
   ),
@@ -54,9 +49,6 @@ export const submenuActionProps = z.object({
     .optional()
     .describe('A count or status dot on the icon.'),
 });
-
-// The Action every App drew before choices: a press Action had no check.
-export const actionEntryPropsV3 = z.union([actionProps, submenuActionProps]);
 
 // A press Action that can be its Section's chosen option, as a filter's: the check marks it, as UIMenu's state and Material's trailing check do.
 export const choiceActionProps = actionProps.extend({

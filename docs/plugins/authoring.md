@@ -1,17 +1,59 @@
-# Validate and test a Plugin
+# Write, validate and test a Plugin
 
-From the Argo repository root, run these commands:
+A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-kit` alone, which provides the components, the `Argo` type of the Plugin API, the test kit and the `argo-plugin` command. Plugins in this repository take the kit from the workspace:
 
-```sh
-pnpm argo plugin validate plugins/examples/hello
-pnpm argo plugin test plugins/examples/hello
+```json
+{
+  "name": "@argo/hello",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "argo-plugin test .",
+    "validate": "argo-plugin validate ."
+  },
+  "devDependencies": {
+    "@argo/plugin-kit": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}
 ```
 
-The Server package also provides the `argo` executable. Its Plugin commands accept an absolute or relative Plugin directory.
+Its `tsconfig.json` extends the kit's settings, and its `tsconfig.test.json` the kit's test settings:
+
+```json
+{ "extends": "@argo/plugin-kit/tsconfig.json" }
+```
+
+```json
+{ "extends": "@argo/plugin-kit/tsconfig.test.json" }
+```
+
+Plugin code runs without Node, so it is checked without Node's types; only `*.test.ts` files see them.
+
+`plugin.json` stays the manifest. Its `main` names the entry, which can be `.ts` or `.tsx`. The entry exports `register`, which receives the Plugin API:
+
+```tsx
+import { Text, type Argo } from '@argo/plugin-kit';
+
+export function register(argo: Argo): void {
+  argo.pages.register('/', () => <Text>Hello</Text>);
+}
+```
+
+Run the commands from the Plugin folder:
+
+```sh
+pnpm validate
+pnpm test
+```
+
+`argo-plugin <validate|test> <dir>` accepts an absolute or relative Plugin directory. The Server's `argo plugin <validate|test> <dir>` runs the same command.
 
 ## Source validation
 
-`argo plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
+`argo-plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
 It reports Hook registrations, `argo` calls, and Slot registrations from the entry and its imports.
 Diagnostics include the file, line, column, and refusal reason. A refused Plugin produces a non-zero exit code.
 
@@ -28,18 +70,12 @@ Put tests in files named `*.test.js`, `*.test.mjs`, or `*.test.ts` inside the Pl
 The command discovers these files recursively and skips `node_modules`.
 Import `test` from `@argo/plugin-kit/testing`:
 
-```js
+```ts
 import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
 
 test('a press changes the page', async ({ mount }) => {
-  const page = await mount({
-    page: '/',
-    surface: {
-      platform: 'web',
-      parts: { Column: 1, Text: 3, Button: 3 },
-    },
-  });
+  const page = await mount({ page: '/', surface: { platform: 'web' } });
 
   await page.press('Increment');
   assert.equal((await page.find('Count: 1')).type, 'Text');
@@ -57,7 +93,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 
 | API | Behavior |
 | --- | --- |
-| `mount({ page, surface })` | Opens a page with the chosen App platform and wire-part versions. |
+| `mount({ page, surface })` | Opens a page with the chosen App platform. |
 | `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
 | `view.find(text)` | Waits for a matching node and returns its wire data. |
 | `view.press(text)` | Sends `onPress` through the production dispatch path. |
@@ -68,23 +104,23 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
 `find` matches a label, title, text, text content, or accessible label. It waits up to three seconds.
-The chosen surface controls which wire types reach the observed tree. The kit does not open an App or draw native pixels.
+The chosen surface sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
 For a Project details Slot, use the same input that the Server receives:
 
-```js
+```ts
 const view = await mount({
   slot: {
     slotId: 'argo/project/details/v1',
     context: { projectId: session.projectId },
   },
-  surface: { platform: 'ios', parts: { Column: 1, Text: 3, Button: 3 } },
+  surface: { platform: 'ios' },
 });
 ```
 
 For a Hook test, use the returned result from the real chain:
 
-```js
+```ts
 const answer = await emit('prompt.submit', {
   sessionId: session.id,
   prompt: [{ type: 'text', text: 'Hello' }],

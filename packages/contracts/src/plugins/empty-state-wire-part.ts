@@ -4,7 +4,6 @@ import type { WirePartDefinition } from './wire-parts';
 
 export const emptyStateWirePart = {
   props: emptyStateProps,
-  versions: [emptyStateProps],
   container: true,
   children: false,
   slots: { action: ['Button'] },

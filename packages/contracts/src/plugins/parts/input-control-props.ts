@@ -1,13 +1,6 @@
 import { z } from 'zod';
 import { handler, stringLabel } from '../plugin-part-props';
 
-export const selectionControlV1 = z.object({
-  label: stringLabel,
-  checked: z.boolean().optional(),
-  disabled: z.boolean().optional(),
-  onChange: z.boolean().optional(),
-});
-
 const binaryControlProps = z.object({
   value: z.boolean().describe('The current on or off state.'),
   onValueChange: handler('onValueChange').describe(
@@ -35,15 +28,6 @@ export const checkboxProps = binaryControlProps.extend({
     .enum(['single', 'multiple'])
     .optional()
     .describe('The selection mode.'),
-});
-
-export const sliderV1 = z.object({
-  label: stringLabel,
-  value: z.number(),
-  min: z.number(),
-  max: z.number(),
-  step: z.number().optional(),
-  onChange: z.number().optional(),
 });
 
 export const sliderProps = z.object({

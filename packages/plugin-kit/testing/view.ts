@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import {
-  currentPartVersions,
+  currentPluginSurface,
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
 import type {
@@ -15,23 +15,24 @@ import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
 
-type Opening = {
+// A test mount chooses the platform; the test App always speaks the current wire version.
+type MountSurface = Pick<PluginSurface, 'platform'>;
+
+export type Opening = {
   path: string;
   slot?: PluginSlotInput;
-  surface?: PluginSurface;
+  surface?: MountSurface;
 };
 
-export type PluginMount = { surface: PluginSurface } & (
+export type PluginMount = { surface: MountSurface } & (
   | { page: string }
   | { slot: PluginSlotInput }
 );
 
 const viewLimitMs = 3000;
 
-const currentSurface: PluginSurface = {
-  platform: 'web',
-  parts: currentPartVersions,
-};
+const testSurface = (mount?: MountSurface): PluginSurface =>
+  currentPluginSurface(mount?.platform ?? 'web');
 
 type Event = PartEvent & { key: string };
 
@@ -52,8 +53,7 @@ export class PluginTestView {
     this.connection = {
       id: randomUUID(),
       signal: this.controller.signal,
-      // Without a mount surface, it reports every current part, as an up-to-date App does.
-      surface: opening.surface ?? currentSurface,
+      surface: testSurface(opening.surface),
     };
     this.path = opening.path;
     void this.receive(opening).catch((error: Error) => {
@@ -65,6 +65,10 @@ export class PluginTestView {
     if (this.failure) throw this.failure;
 
     return this.root;
+  }
+
+  public get message(): ViewMessage | null {
+    return this.latest;
   }
 
   public findText(text: string): ReturnType<typeof findWireNodeEntry> {
@@ -90,7 +94,7 @@ export class PluginTestView {
     return entry.node;
   }
 
-  private async waitFor(ready: () => boolean): Promise<void> {
+  public async waitFor(ready: () => boolean): Promise<void> {
     const deadline = Date.now() + viewLimitMs;
 
     while (!ready()) {
@@ -98,10 +102,6 @@ export class PluginTestView {
         throw new Error('Plugin view did not reach the expected state');
       await delay(1);
     }
-  }
-
-  public press(text: string): Promise<void> {
-    return this.tap(text);
   }
 
   public async dispatch(event: Event): Promise<void> {
@@ -118,7 +118,7 @@ export class PluginTestView {
     });
   }
 
-  public async tap(text: string): Promise<void> {
+  public async press(text: string): Promise<void> {
     const entry = this.findText(text);
 
     if (!entry) throw new Error(`Plugin control not found: ${text}`);

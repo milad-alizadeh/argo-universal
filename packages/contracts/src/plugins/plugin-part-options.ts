@@ -11,7 +11,6 @@ export interface PartOptions {
   label?: string;
   appearance?: string;
   accessibility?: Partial<WirePartReference['accessibility']>;
-  previous?: readonly z.ZodType[];
 }
 
 export type ResolvedPartOptions = Required<Omit<PartOptions, 'container'>> & {

@@ -1,6 +1,6 @@
 import { ClockTick } from '@repo/contracts';
 import {
-  currentPartVersions,
+  pluginWireVersion,
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
 import { startEngineTestHost } from '@repo/engine/mocks';
@@ -51,7 +51,7 @@ async function startTransportTestServer(): Promise<{
 }
 
 describe('createTRPCClient', () => {
-  it('reports the registry part versions in the WebSocket handshake', async () => {
+  it('reports the Plugin wire version in the WebSocket handshake', async () => {
     const server = await startTransportTestServer();
     const send = vi.spyOn(WebSocket.prototype, 'send');
     const { client, close } = createTRPCClient(server.url);
@@ -65,7 +65,7 @@ describe('createTRPCClient', () => {
         data: {
           pluginSurface: JSON.stringify({
             platform: 'web',
-            parts: currentPartVersions,
+            wireVersion: pluginWireVersion,
           }),
         },
       }),
@@ -75,12 +75,12 @@ describe('createTRPCClient', () => {
   it('reports an updated surface when the App reconnects', async () => {
     const server = await startTransportTestServer();
     const send = vi.spyOn(WebSocket.prototype, 'send');
-    let surface: PluginSurface = { platform: 'ios', parts: { Text: 1 } };
+    let surface: PluginSurface = { platform: 'ios', wireVersion: 1 };
     const app = createTRPCClient(server.url, undefined, () => surface);
     closers.push(app.close);
 
     await app.client.system.info.query();
-    surface = { platform: 'ios', parts: { Text: 3, Button: 2 } };
+    surface = { platform: 'ios', wireVersion: 2 };
     app.webSocketClient.connection?.ws?.close();
 
     await expect

@@ -66,6 +66,10 @@ _Avoid_: Extension, add-on, mod
 The Server process that runs Plugin code, each Plugin in its own worker thread with no Node; a Plugin reaches the machine only through its `argo` object. Apps never run Plugin code.
 _Avoid_: Extension host, sandbox
 
+**Plugin API**:
+The `argo` object a Plugin's `register` receives: its calls to files, processes, the network, storage, secrets and settings, and its pages, Slots and Hooks. `@argo/plugin-kit` exports its type as `Argo`.
+_Avoid_: SDK, host API, `api`
+
 **Hook**:
 A Plugin function on a core event, such as `prompt.submit` or `tool.check`. Hooks on one event form a chain: each passes the event on, rewrites it, or answers for core.
 _Avoid_: Listener, interceptor, middleware
@@ -77,6 +81,10 @@ _Avoid_: Contribution point, hook, outlet
 **Replaceable Slot**:
 A Slot placed around a core component, such as a Tool call in the Feed. A Plugin may pass it through, change its props or draw its own; core draws its own when the Plugin's tree is refused.
 _Avoid_: Override, component override
+
+**Plugin wire version**:
+The one version of the Plugin wire that an App reports when it connects. The Server sends Plugin trees only to an App at or above the minimum; an older App sees "Update Argo" in place of Plugin pages and Slots, and core's own component in Replaceable Slots. See ADR-0034.
+_Avoid_: Part version, kit version, protocol version
 
 **Part event**:
 A named handler prop on a kit part, such as `onPress`; the App sends it to the Plugin by node key and event name, checked against the part's schema.

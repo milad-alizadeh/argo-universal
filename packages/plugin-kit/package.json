@@ -3,23 +3,32 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "argo-plugin": "./bin/argo-plugin.mjs"
+  },
   "exports": {
     ".": {
       "types": "./src/index.d.ts"
     },
+    "./cli": "./cli/plugin-command.ts",
+    "./launch": "./bin/launch.mjs",
     "./jsx-runtime": {
       "types": "./src/jsx-runtime.d.ts"
     },
-    "./testing": "./testing/index.ts"
+    "./testing": "./testing/index.ts",
+    "./tsconfig.json": "./tsconfig.plugin.json",
+    "./tsconfig.test.json": "./tsconfig.plugin-test.json"
   },
   "dependencies": {
     "@repo/contracts": "workspace:*",
     "@repo/engine": "workspace:*",
     "@types/react": "catalog:",
+    "esbuild": "catalog:",
+    "tsx": "catalog:",
     "zod": "catalog:"
   },
   "scripts": {
-    "check-types": "tsc --noEmit && tsc --noEmit -p testing/tsconfig.json",
+    "check-types": "tsc --noEmit && tsc --noEmit -p testing/tsconfig.json && tsc --noEmit -p cli/tsconfig.json",
     "test": "vitest run"
   },
   "devDependencies": {
