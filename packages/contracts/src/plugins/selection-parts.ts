@@ -59,6 +59,7 @@ export const selectionPartSchemas = {
     'A primary action with a secondary action menu.',
     splitButtonSchema,
     {
+      children: true,
       events,
       previous: [
         z.object({

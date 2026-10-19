@@ -1,8 +1,15 @@
+import type { ReactNode } from 'react';
+import { actionGroups } from '#primitives/actions/action-list';
 import {
+  type MenuAction,
   type NativeMenuItem,
   nativeMenuItems,
 } from '#primitives/overlays/menu';
-import type { SplitButtonProps, SplitMenuItems } from './split-button-props';
+import type {
+  SplitButtonProps,
+  SplitMenuItems,
+  SplitMenuRows,
+} from './split-button-props';
 
 // Everything a phone's native split draws, read from SplitButton's props; the menu rows are the kit Menu's.
 export interface NativeSplit {
@@ -42,9 +49,30 @@ const actingOf = ({
 // Only what the chevron offers, not the split's own look.
 export function menuRows<Value extends string>(
   props: SplitMenuItems<Value>,
-): SplitMenuItems<Value> {
-  if (props.actions) return { actions: props.actions };
+): SplitMenuRows<Value> {
+  if (!props.options) return { actions: menuActions(props) };
   const { options, value, onValueChange } = props;
 
   return { options, value, onValueChange };
+}
+
+function menuActions(props: {
+  actions?: readonly MenuAction[];
+  children?: ReactNode;
+}): readonly MenuAction[] {
+  return props.actions ?? declaredActions(props.children);
+}
+
+// A Plugin declares its menu entries as keyed Action children, as in ActionList.
+function declaredActions(children: ReactNode): MenuAction[] {
+  return actionGroups(children).flatMap((group) =>
+    group.actions.map(({ id, label, icon, disabled, tone, onPress }) => ({
+      id,
+      label,
+      icon,
+      disabled,
+      tone,
+      onPress,
+    })),
+  );
 }

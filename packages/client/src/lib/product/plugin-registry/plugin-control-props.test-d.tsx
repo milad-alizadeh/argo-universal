@@ -54,9 +54,14 @@ const choices = [{ value: 'dev', label: 'Development' }];
   }}
 />;
 
+<Kit.SplitButton label="Run" menuLabel="More">
+  <Kit.Action key="retry" label="Retry" icon="add" onPress={(): void => {}} />
+</Kit.SplitButton>;
+
 <Kit.SplitButton
   label="Run"
   menuLabel="More"
+  // @ts-expect-error Menu entries are keyed Action children, never handler data.
   actions={[{ label: 'Retry', onPress: (): void => {} }]}
 />;
 

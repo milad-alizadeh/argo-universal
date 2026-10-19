@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { MenuAction } from '#primitives/overlays/menu';
 import type { KitProps } from '../../kit-props';
 
@@ -8,20 +9,31 @@ export type SplitButtonOption<Value extends string> = Extract<
   { options: readonly unknown[] }
 >['options'][number];
 
-// Kit-only: custom web action content.
+// Kit-only: Argo's own callers pass menu actions as data, with custom web content.
 export type SplitButtonProps<Value extends string = string> = Derived<Value> & {
   actions?: readonly MenuAction[];
 };
 
+type Choices<Value extends string> = Extract<
+  Derived<Value>,
+  { options: readonly unknown[] }
+>;
+
+// What the chevron's menu lists: the choices, or the actions.
+export type SplitMenuRows<Value extends string = string> =
+  | Pick<Choices<Value>, 'options' | 'value' | 'onValueChange'>
+  | { actions: readonly MenuAction[] };
+
+// The menu's rows: choices, actions given as data, or keyed Action children.
 export type SplitMenuItems<Value extends string = string> =
-  | Pick<
-      Extract<Derived<Value>, { options: readonly unknown[] }>,
-      'options' | 'value' | 'onValueChange' | 'actions'
-    >
-  | Pick<
-      Extract<Derived<Value>, { actions: readonly unknown[] }>,
-      'actions' | 'options' | 'value' | 'onValueChange'
-    >;
+  | Pick<Choices<Value>, 'options' | 'value' | 'onValueChange' | 'actions'>
+  | {
+      actions?: readonly MenuAction[];
+      children?: ReactNode;
+      options?: never;
+      value?: never;
+      onValueChange?: never;
+    };
 
 type SplitMenuLook<Value extends string> = Pick<
   Derived<Value>,

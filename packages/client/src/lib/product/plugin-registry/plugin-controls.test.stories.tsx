@@ -131,9 +131,8 @@ export const UseSplitButton: Story = {
     await userEvent.click(
       within(document.body).getByRole('menuitem', { name: 'Deploy preview' }),
     );
-    await expect(onEvent).toHaveBeenCalledWith('splitbutton', {
-      event: 'onAction',
-      payload: { path: ['actions', '0', 'onPress'] },
+    await expect(onEvent).toHaveBeenCalledWith('splitbutton/preview', {
+      event: 'onPress',
     });
   },
 };

@@ -1,25 +1,36 @@
-import { SplitButton, Switch, Text, Stack, useState } from '@argo/plugin-kit';
+import {
+  Action,
+  SplitButton,
+  Switch,
+  Text,
+  Stack,
+  useState,
+} from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
 const refuse = async () => {
   throw new Error('Secondary refused');
 };
 
+const action = (key, label, onPress) =>
+  jsx(Action, { label, icon: 'add', onPress }, key);
+
+// The secondary menu's entries are keyed Action children.
 function secondaryActions(setResult) {
   return [
-    { label: 'First', onPress: () => setResult('First') },
-    { label: 'Second', onPress: () => setResult('Second') },
-    { label: 'Refuse', onPress: refuse },
+    action('first', 'First', () => setResult('First')),
+    action('second', 'Second', () => setResult('Second')),
+    action('refuse', 'Refuse', refuse),
   ];
 }
 
 function runButton(setResult) {
-  return jsx(
+  return jsxs(
     SplitButton,
     {
       label: 'Run',
       menuLabel: 'Other runs',
-      actions: secondaryActions(setResult),
+      children: secondaryActions(setResult),
     },
     'run',
   );

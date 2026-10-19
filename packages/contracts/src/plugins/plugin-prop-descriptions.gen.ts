@@ -262,8 +262,6 @@ export type WireSchemaHints = {
     "options": PropValue<"SplitButton", "options">;
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"SplitButton", "onValueChange">;
-    /** actions for this part. */
-    "actions": PropValue<"SplitButton", "actions">;
   };
   "ActionList": {
     /** Header buttons and overflow, or a row context menu. */

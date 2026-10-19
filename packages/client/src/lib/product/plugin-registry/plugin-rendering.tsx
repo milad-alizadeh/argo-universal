@@ -13,9 +13,7 @@ export interface RenderContext {
 
 type Callback = (value?: WireJson) => void;
 
-export type ActionProps = Record<string, WireJson | Callback | undefined>;
-
-type PluginProp = ReactNode | WireJson | ActionProps[] | Callback;
+type PluginProp = ReactNode | WireJson | Callback;
 
 export type PluginProps = Record<string, PluginProp>;
 

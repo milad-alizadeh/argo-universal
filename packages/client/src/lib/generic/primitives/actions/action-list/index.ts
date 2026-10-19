@@ -1,10 +1,6 @@
 export { ActionList } from './action-list';
 
-export {
-  Action,
-  actionGroups,
-  type DeclaredAction,
-} from './action-declarations';
+export { Action, actionGroups } from './action-declarations';
 
 export { ActionShortcutScope } from './action-shortcut-scope';
 
