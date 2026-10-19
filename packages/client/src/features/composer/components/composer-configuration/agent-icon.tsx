@@ -1,13 +1,18 @@
 import type { AgentServer } from '@repo/contracts';
 import type * as React from 'react';
+import { View } from 'react-native';
 import { AgentLogo } from '#features/agents';
 import { IconSlot } from '#primitives/content/icon';
 import type { IconRoleValue } from '../../../../lib/generic/symbols/icon-role';
+import { referenceShare } from '../../../../lib/generic/symbols/symbol-path';
 
 interface AgentIconProps {
   agent?: AgentServer;
   role?: IconRoleValue;
 }
+
+// A logo fills the share of its box that the symbols beside it fill, as the kit's logos do; the Agent glyph is already a symbol.
+const logoScale = { transform: [{ scale: referenceShare }] };
 
 export function AgentIcon({
   agent,
@@ -15,14 +20,23 @@ export function AgentIcon({
 }: AgentIconProps): React.JSX.Element | null {
   return agent ? (
     <IconSlot role={role}>
-      <AgentLogo
-        logo={agentLogo(agent)}
-        label={agent.name}
-        role={role}
-        testID="composer-agent-icon"
-      />
+      <ScaledLogo agent={agent} role={role} />
     </IconSlot>
   ) : null;
 }
 
-const agentLogo = (agent: AgentServer): string => agent.icon ?? '';
+function ScaledLogo(props: Required<AgentIconProps>): React.JSX.Element {
+  return (
+    <View
+      className="h-full w-full"
+      style={props.agent.icon ? logoScale : undefined}
+    >
+      <AgentLogo
+        logo={props.agent.icon ?? ''}
+        label={props.agent.name}
+        role={props.role}
+        testID="composer-agent-icon"
+      />
+    </View>
+  );
+}

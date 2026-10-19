@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { useEffect, useMemo } from 'react';
-import type { BoxShadowValue, ColorValue, ViewStyle } from 'react-native';
+import { useEffect } from 'react';
+import type { ViewStyle } from 'react-native';
 import Animated, {
   type SharedValue,
   cancelAnimation,
@@ -9,7 +9,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/generic/utils';
 
 const dimmedOpacity = 0.45;
@@ -17,7 +16,7 @@ const dimmedOpacity = 0.45;
 const blinkMilliseconds = 650;
 
 export interface BlinkingDotProps {
-  // A background class such as `bg-warning`; the glow takes the same colour.
+  // A background class such as `bg-warning`.
   colorClassName: string;
   blinking?: boolean;
   className?: string;
@@ -25,7 +24,7 @@ export interface BlinkingDotProps {
   accessibilityLabel?: string;
 }
 
-// A status dot that blinks and glows while something is live or waits on you.
+// A status dot that blinks while something is live or waits on you; Paper draws it flat, with no glow.
 export function BlinkingDot({
   colorClassName,
   blinking = true,
@@ -33,7 +32,7 @@ export function BlinkingDot({
   testID,
   accessibilityLabel,
 }: BlinkingDotProps): React.JSX.Element {
-  const style = useBlinkingStyle(colorClassName, blinking);
+  const style = useBlinkingStyle(blinking);
 
   return (
     <AnimatedDotView
@@ -68,21 +67,11 @@ function animatedDotProps(
 }
 
 function useBlinkingStyle(
-  colorClassName: string,
   blinking: boolean,
 ): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
-  const { backgroundColor } = useResolveClassNames(colorClassName);
   const opacity = useBlinkingOpacity(blinking);
 
-  const boxShadow = useMemo(
-    () => glowShadow(backgroundColor, blinking),
-    [backgroundColor, blinking],
-  );
-
-  return useAnimatedStyle(
-    () => ({ opacity: opacity.get(), boxShadow }),
-    [opacity, boxShadow],
-  );
+  return useAnimatedStyle(() => ({ opacity: opacity.get() }), [opacity]);
 }
 
 function useBlinkingOpacity(blinking: boolean): SharedValue<number> {
@@ -102,13 +91,4 @@ function blink(): number {
     -1,
     true,
   );
-}
-
-function glowShadow(
-  color: ColorValue | undefined,
-  blinking: boolean,
-): BoxShadowValue[] {
-  if (!blinking) return [];
-
-  return [{ offsetX: 0, offsetY: 0, blurRadius: 4, spreadDistance: 0, color }];
 }

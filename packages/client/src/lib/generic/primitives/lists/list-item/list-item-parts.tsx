@@ -59,18 +59,34 @@ export function hasLeading(
   return [Boolean(props.leading), hasBadge(props.badge)].some(Boolean);
 }
 
-// Paper: a menu row's icon slot is 20px and sizes its icon with the menu role; other rows keep the row icon slot.
+/*
+ * Paper: a menu row's icon slot is 20px and sizes its icon with the menu role, a sidebar row's is 16 wide on its
+ * title's 20 line; other rows keep the row icon slot.
+ */
 const leadingClasses = {
   row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',
   menu: 'relative h-5 w-5 shrink-0 items-center justify-center',
+  sidebar: 'relative h-5 w-4 shrink-0 items-center justify-center',
 };
 
-const leadingIconRoles = { row: undefined, menu: 'menu' } as const;
+type LeadingLane = keyof typeof leadingClasses;
 
-export function Leading(
-  props: Pick<ListItemProps, 'leading' | 'badge'>,
-): ReactNode {
-  const lane = useInMenu() ? 'menu' : 'row';
+const leadingIconRoles = {
+  row: undefined,
+  menu: 'menu',
+  sidebar: undefined,
+} as const satisfies Record<LeadingLane, 'menu' | undefined>;
+
+type LeadingProps = Pick<ListItemProps, 'leading' | 'badge' | 'sidebar'>;
+
+function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
+  if (menu) return 'menu';
+
+  return sidebar ? 'sidebar' : 'row';
+}
+
+export function Leading(props: LeadingProps): ReactNode {
+  const lane = leadingLane(useInMenu(), props.sidebar !== undefined);
 
   if (!hasLeading(props)) return null;
 
@@ -80,38 +96,6 @@ export function Leading(
         {props.leading}
       </IconRoleContext>
       <ItemBadge badge={props.badge} />
-    </View>
-  );
-}
-
-type SubtitleProps = { text?: string; multiline?: boolean };
-
-function Subtitle({ text, multiline }: SubtitleProps): ReactNode {
-  return text === undefined ? null : (
-    <Text
-      role="row-detail"
-      tone="muted"
-      numberOfLines={multiline ? undefined : 1}
-    >
-      {text}
-    </Text>
-  );
-}
-
-function Meta({ children }: { children?: ReactNode }): ReactNode {
-  return children ? (
-    <View className="min-w-0 flex-row items-center gap-3 pt-1">{children}</View>
-  ) : null;
-}
-
-export function ItemContent(props: ListItemProps): ReactElement {
-  return (
-    <View className="min-w-0 flex-1 gap-0.5">
-      <Text role="row" tone={props.tone} numberOfLines={1}>
-        {props.title}
-      </Text>
-      <Subtitle text={props.subtitle} multiline={!!props.description} />
-      <Meta>{props.meta}</Meta>
     </View>
   );
 }

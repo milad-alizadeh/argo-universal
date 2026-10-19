@@ -41,7 +41,8 @@ export default defineConfig<AppOptions & ServerOptions>({
     steps: 'steps/**/*.ts',
     outputDir: '.features-gen',
   }),
-  globalSetup: './engine-bundle.ts',
+  // The lock queues this run behind any other browser suite on the Mac (docs/agents/storybook.md).
+  globalSetup: ['./browser-suite-lock.ts', './engine-bundle.ts'],
   fullyParallel: true,
   shard,
   forbidOnly: !!process.env.CI,

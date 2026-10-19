@@ -3,11 +3,9 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated, { type SharedValue } from 'react-native-reanimated';
 import { IconButton } from '#primitives/actions/icon-button';
-import { Icon } from '#primitives/content/icon';
 import {
   type SearchFieldGeometry,
   useCloseStyle,
-  useLensStyle,
   useRestStyle,
   useSurfaceStyle,
   useTextStyle,
@@ -17,39 +15,56 @@ export interface MorphState {
   open: boolean;
   progress: SharedValue<number>;
   geometry: SearchFieldGeometry;
+  // A sidebar's search draws the 16 control glyph.
+  sidebar?: boolean;
 }
 
-type RestRowProps = MorphState & { title: ReactNode; actions?: ReactNode };
+export type RestRowProps = MorphState & {
+  title: ReactNode;
+  actions?: ReactNode;
+};
 
-// The title and other actions, which leave the accessibility tree while the field covers them.
-export function RestRow(props: RestRowProps): React.JSX.Element {
+type RestGroupProps = Pick<MorphState, 'open' | 'progress'> & {
+  className: string;
+  children: ReactNode;
+};
+
+// What the field covers when it opens: it fades, and leaves the accessibility tree.
+function RestGroup(props: RestGroupProps): React.JSX.Element {
   return (
     <Animated.View
       aria-hidden={props.open}
       accessibilityElementsHidden={props.open}
       inert={props.open}
-      className="min-w-0 flex-1 flex-row items-center gap-1"
+      className={props.className}
       style={useRestStyle(props.progress)}
     >
-      <View className="min-w-0 flex-1">{props.title}</View>
-      {props.actions}
+      {props.children}
     </Animated.View>
   );
 }
 
-// Drawn above the surface, so the button's lens becomes the field's.
-export function Lens(props: MorphState): React.JSX.Element {
+// The title and other actions; a sidebar draws its actions after the search button instead.
+export function RestRow(props: RestRowProps): React.JSX.Element {
   return (
-    <Animated.View
-      pointerEvents="none"
-      className="absolute inset-y-0 right-0 items-center justify-center"
-      style={[
-        { width: props.geometry.triggerWidth },
-        useLensStyle(props.progress, props.geometry),
-      ]}
+    <RestGroup
+      {...props}
+      className="min-w-0 flex-1 flex-row items-center gap-1"
     >
-      <Icon name="search" role="action" className="text-muted-foreground" />
-    </Animated.View>
+      <View className="min-w-0 flex-1">{props.title}</View>
+      {props.sidebar ? null : props.actions}
+    </RestGroup>
+  );
+}
+
+// A sidebar's actions, after its search button; they leave with the title.
+export function TrailingActions(props: RestRowProps): ReactNode {
+  if (!props.sidebar || !props.actions) return null;
+
+  return (
+    <RestGroup {...props} className="shrink-0 flex-row items-center gap-1">
+      {props.actions}
+    </RestGroup>
   );
 }
 

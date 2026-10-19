@@ -7,6 +7,7 @@ export default defineConfig({
       'packages/*',
       'plugins/*/vitest.config.{ts,js,mts}',
       'apps/*/vitest.config.{ts,mts}',
+      'tooling/browser-suite-lock',
       'tooling/vitest',
       'tooling/oxlint',
       'tools/vitest.config.mts',
