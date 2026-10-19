@@ -65,7 +65,7 @@ A scan therefore rereads every page in the selected file. It records elapsed tim
 A scan without `--file` reads all nine files.
 
 `report` reads the saved inventory and registry without contacting Paper. It writes Markdown and JSON under `.paper-sync/<timestamp>/`.
-The report lists each master's copies by file, page, board and flow, plus unenrolled matches, duplicate names and masters without copies.
+The report lists each master's copies by file, page, board and flow, plus unenrolled matches of families that have masters, duplicate names and masters without copies.
 
 A move within a file keeps node IDs. A cross-file copy changes them.
 If a registered ID disappears, enrollment offers same-name, same-structure candidates in the same page, board and flow.

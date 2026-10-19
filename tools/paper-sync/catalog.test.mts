@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { discover } from './catalog.mts';
 import type { PageIndex } from './index-model.mts';
+import { unenrolled } from './report-data.mts';
 import { parseSummary } from './summary.mts';
 
 const button = 'Button / Default';
@@ -48,24 +49,20 @@ it('discovers families across files without promoting nested copies to masters',
   expect(catalog.duplicates).toEqual([]);
 });
 
-it.each(['Button', 'Button (ios)', 'Button · states'])(
-  'reads a family from the CodeName card %s',
-  (card) => {
-    const catalog = discover([page('one', 'Button', card)]);
-    expect(catalog.masters.map((node) => node.name)).toEqual([button]);
-    expect(catalog.families).toEqual(new Set(['Button']));
-  },
-);
+it('lists unlinked copies only for families that have masters', () => {
+  const issues = page('two', 'Issue', 'Issues list');
+  const empty = { id: 'empty', name: 'Components / Issue row' };
+  issues.nodes.push({ ...empty, component: 'Frame', parentId: null });
+  const catalog = discover([page('one', 'Button'), issues]);
 
-it.each(['Settings page', 'Issue page (phone)', 'PR bar'])(
-  'reads no family from the descriptive card %s',
-  (card) => {
-    const family = card.split(' ')[0] ?? '';
-    const catalog = discover([page('one', family, card)]);
-    expect(catalog.masters).toEqual([]);
-    expect(catalog.families).toEqual(new Set());
-  },
-);
+  const registry = { version: 1 as const, families: [] };
+  const list = unenrolled(catalog, { registry, excluded: [], rebindings: [] });
+
+  expect(list.map((node) => [node.fileId, node.name])).toEqual([
+    ['one', button],
+    ['two', button],
+  ]);
+});
 
 it('reports duplicate names across files without choosing a master', () => {
   const catalog = discover([page('one', 'Button'), page('two', 'Button')]);

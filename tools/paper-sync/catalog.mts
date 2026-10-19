@@ -23,11 +23,8 @@ export function codeName(name: string): string | undefined {
   )?.[1];
 }
 
-// A card names a family only with a master-style CodeName; descriptive cards such as `Components / Settings page` hold none.
 function cardFamily(name: string): string | undefined {
-  return /^Components \/ ([A-Z][A-Za-z0-9]*)(?: \((?:ios|android|phone)\))?(?: · .+)?$/.exec(
-    name,
-  )?.[1];
+  return /^Components \/ ([A-Z][A-Za-z0-9]*)(?:$|[ (·])/.exec(name)?.[1];
 }
 
 function belongsToCard(node: LocatedNode, parents: LocatedNode[]): boolean {
