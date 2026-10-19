@@ -12,7 +12,7 @@ import type {
   PickerMenuItem,
   PickerMenuProps,
 } from './picker-native-menu-props';
-import type { PickerProps } from './picker-props';
+import type { SinglePickerProps } from './picker-props';
 import {
   choosePickerOption,
   pickerOption,
@@ -25,8 +25,8 @@ type MenuChoice = Pick<PickerMenuProps, 'selectedValue' | 'onValueChange'> & {
 };
 
 // A SwiftUI menu Picker on iOS, a Material exposed dropdown on Android.
-export function Picker<Value extends string>(
-  props: PickerProps<Value>,
+export function SinglePicker<Value extends string>(
+  props: SinglePickerProps<Value>,
 ): React.JSX.Element {
   const field = useFieldDescription(props);
 
@@ -41,7 +41,7 @@ export function Picker<Value extends string>(
 }
 
 function PickerControl<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): React.JSX.Element {
   return (
     <ChoiceHost>
@@ -53,7 +53,7 @@ function PickerControl<Value extends string>(
 }
 
 function PickerMenu<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): React.JSX.Element {
   const { key, ...choice } = useMenuChoice(props);
 
@@ -69,7 +69,7 @@ function PickerMenu<Value extends string>(
 
 // A choice the Picker cannot take remounts it, so the native control drops back to the current value.
 function useMenuChoice<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): MenuChoice {
   const [revision, setRevision] = useState(0);
 
@@ -84,7 +84,7 @@ function useMenuChoice<Value extends string>(
 }
 
 function menuSelection<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): string {
   const option = pickerOption(props);
 
@@ -93,7 +93,7 @@ function menuSelection<Value extends string>(
 
 // Universal items cannot be disabled, so the menu leaves out disabled options and shows a load message as an item that does nothing.
 function menuItems<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
 ): PickerMenuItem[] {
   const message = pickerOptionsMessage(props);
   const current = { label: pickerValue(props), value: menuSelection(props) };
@@ -108,7 +108,7 @@ function menuItems<Value extends string>(
 }
 
 function chooseTag<Value extends string>(
-  props: PickerProps<Value>,
+  props: SinglePickerProps<Value>,
   tag: string,
 ): boolean {
   const option = props.options.find(
@@ -121,4 +121,4 @@ function chooseTag<Value extends string>(
   return true;
 }
 
-Picker satisfies ComponentType<PickerProps<string>>;
+SinglePicker satisfies ComponentType<SinglePickerProps<string>>;

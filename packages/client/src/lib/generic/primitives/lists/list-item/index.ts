@@ -16,3 +16,5 @@ export const ListItem = Object.assign(Item, {
 });
 
 export type { ListItemProps, RowBadge } from './list-item-props';
+
+export { ListItemFieldRow } from './list-item-field-row';

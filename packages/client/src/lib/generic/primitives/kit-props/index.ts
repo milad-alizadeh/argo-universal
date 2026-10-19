@@ -7,13 +7,20 @@ import type {
   KitChoiceValue,
   KitListItem,
   KitNode,
+  KitValuePayload,
 } from '@repo/contracts/kit-props';
 import type { ReactNode } from 'react';
 
-type Callback<Event, Choice> = Event extends { empty: true }
+type ChoicePayload<Payload, Choice> = Payload extends KitChoiceValue
+  ? Choice
+  : Payload extends readonly (infer Element)[]
+    ? ChoicePayload<Element, Choice>[]
+    : Payload;
+
+type Callback<Event, Choice, Props> = Event extends { empty: true }
   ? () => void
   : Event extends { payload: infer Payload }
-    ? (payload: Payload extends KitChoiceValue ? Choice : Payload) => void
+    ? (payload: ChoicePayload<KitValuePayload<Payload, Props>, Choice>) => void
     : never;
 
 type CleanProps<Props> = Props extends object
@@ -70,7 +77,7 @@ type MappedProps<
       : Prop extends keyof Events
         ? [Exclude<Props[Prop], undefined>] extends [never]
           ? Props[Prop]
-          : Callback<Events[Prop], Choice>
+          : Callback<Events[Prop], Choice, Props>
         : KitValue<Props[Prop], Events, Node, Choice, Item>;
 };
 

@@ -1,6 +1,5 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import type { PickerProps } from '#primitives/inputs/picker';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 
@@ -16,7 +15,12 @@ type ProjectProps = { project: ProjectInfo };
 
 type ChoiceProps = { choice: ProjectInfo['checkoutChoice'] };
 
-type PickerRowProps = Pick<PickerProps<string>, 'label' | 'value' | 'options'>;
+type PickerRowProps = Pick<
+  React.ComponentProps<typeof ListItem.Picker>,
+  'value' | 'options'
+> & {
+  label: string;
+};
 
 // Where the Project's next Session starts, as the last New Session chose; the Server cannot change it from here yet.
 export function NewSessionsSection({

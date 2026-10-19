@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { type TextInputProps, View } from 'react-native';
 import { Text } from '#primitives/content/text';
+import { requiredLabel } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { cn } from '../../../utils';
 import { BareTextInput } from './text-input-bare';
-import { requiredLabel } from './text-input-label';
 import {
   isInvalid,
   keyboardOf,
