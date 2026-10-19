@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
+import type { IconRole } from '#lib/generic/symbols/icon-role';
 import { CopyButton } from '#lib/product/markdown/copy-button';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
@@ -17,6 +18,9 @@ export interface FileHeaderProps {
   viewed?: boolean;
   onViewedChange?: (viewed: boolean) => void;
 }
+
+// The phone header's chevron sits one size down from the Body chevron, beside the path's smaller code text.
+type FileHeaderToggleProps = FileHeaderProps & { chevron?: IconRole };
 
 const toggleClassName = contentActionClass({
   variant: 'link',
@@ -65,22 +69,16 @@ function FilePath({ path }: { path: string }): React.JSX.Element {
   );
 }
 
-function ToggleLabel({
-  path,
-  open,
-}: {
-  path: string;
-  open: boolean;
-}): React.JSX.Element {
+function ToggleLabel(props: FileHeaderToggleProps): React.JSX.Element {
   return (
     <TextClassContext.Provider value="select-none no-underline">
-      <DisclosureChevron open={open} />
-      <FilePath path={path} />
+      <DisclosureChevron open={props.open} role={props.chevron} />
+      <FilePath path={props.file.path} />
     </TextClassContext.Provider>
   );
 }
 
-function FileHeaderToggle(props: FileHeaderProps): React.JSX.Element {
+function FileHeaderToggle(props: FileHeaderToggleProps): React.JSX.Element {
   return (
     <Pressable
       aria-label={`Diff for ${props.file.path}`}
@@ -89,7 +87,7 @@ function FileHeaderToggle(props: FileHeaderProps): React.JSX.Element {
       role="button"
       className={toggleClassName}
     >
-      <ToggleLabel path={props.file.path} open={props.open} />
+      <ToggleLabel {...props} />
     </Pressable>
   );
 }
@@ -136,11 +134,11 @@ function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
     <View className="gap-0.5 bg-muted py-2 pr-3 pl-2">
       <View className="min-h-5 flex-row items-center gap-2">
-        <FileHeaderToggle {...props} />
+        <FileHeaderToggle {...props} chevron="secondary" />
         <ViewedMark {...props} />
       </View>
       {hasChangeCounts(props.file) && (
-        <View className="flex-row gap-2 pl-7">
+        <View className="flex-row gap-2 pl-6">
           <ChangeCounts file={props.file} />
         </View>
       )}
