@@ -59,12 +59,16 @@ interface SectionOptions {
 function useSectionOptions(
   header: ScreenHeaderProps,
   root: boolean,
+  fullScreenGestureEnabled?: boolean,
 ): SectionOptions {
-  if (useWide()) return { screenOptions: framedOptions, rootOptions: {} };
+  const wide = useWide();
 
   return {
-    screenOptions: narrowOptions,
-    rootOptions: narrowRootOptions(header, root),
+    screenOptions: {
+      ...(wide ? framedOptions : narrowOptions),
+      fullScreenGestureEnabled,
+    },
+    rootOptions: wide ? {} : narrowRootOptions(header, root),
   };
 }
 
@@ -99,6 +103,7 @@ interface PageStackProps extends PropsWithChildren {
   header: ScreenHeaderProps;
   root?: boolean;
   rootName?: string;
+  fullScreenGestureEnabled?: boolean;
   singular?: ComponentProps<typeof Stack.Screen>['dangerouslySingular'];
 }
 
@@ -107,6 +112,7 @@ export function PageStack(props: PageStackProps): React.JSX.Element {
   const { screenOptions, rootOptions } = useSectionOptions(
     props.header,
     props.root ?? true,
+    props.fullScreenGestureEnabled,
   );
 
   return (
