@@ -276,7 +276,7 @@ export type WireSchemaHints = {
   "Action": {
     /** The Action label and accessible name. */
     "label": PropValue<"Action", "label">;
-    /** The leading Argo icon. */
+    /** The leading Argo icon; a header ActionList shows only Actions with one as buttons. */
     "icon": PropValue<"Action", "icon">;
     /** Desktop shortcut; Plugins cannot take reserved keys. */
     "shortcut": PropValue<"Action", "shortcut">;
@@ -286,6 +286,8 @@ export type WireSchemaHints = {
     "disabled": PropValue<"Action", "disabled">;
     /** The Plugin handler or built-in App Action. */
     "onPress": PropValue<"Action", "onPress">;
+    /** An Alert answer that dismisses the question, or one that destroys data. */
+    "role": PropValue<"Action", "role">;
   };
   "TextInput": {
     /** Spoken and visible field name. */

@@ -20,10 +20,9 @@
       "children": [
         {
           "type": "Action",
-          "key": "cancel",
+          "key": "apply",
           "props": {
-            "label": "Cancel alert",
-            "icon": "close",
+            "label": "Apply alert",
             "onPress": {
               "$event": "onPress"
             }
@@ -33,10 +32,10 @@
         },
         {
           "type": "Action",
-          "key": "apply",
+          "key": "cancel",
           "props": {
-            "label": "Apply alert",
-            "icon": "check",
+            "label": "Cancel alert",
+            "role": "cancel",
             "onPress": {
               "$event": "onPress"
             }

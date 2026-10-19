@@ -32,9 +32,10 @@ export function answeredAlert({
 
 function declaredAnswers(children: ReactNode): AlertAction[] {
   return actionGroups(children).flatMap((group) =>
-    group.actions.map(({ label, tone, disabled, onPress }) => ({
+    group.actions.map(({ label, tone, role, disabled, onPress }) => ({
       label,
-      tone,
+      tone: role === 'destructive' ? 'danger' : tone,
+      cancel: role === 'cancel',
       disabled,
       onPress,
     })),

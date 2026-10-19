@@ -54,7 +54,15 @@ function Overflow({ actions, label }: OverflowProps): ReactElement | null {
   );
 }
 
-function HeaderAction({ action }: { action: DeclaredAction }): ReactElement {
+// A header button is an icon, so only an Action with one becomes a button.
+type IconAction = DeclaredAction & {
+  icon: NonNullable<DeclaredAction['icon']>;
+};
+
+const hasIcon = (action: DeclaredAction): action is IconAction =>
+  action.icon !== undefined;
+
+function HeaderAction({ action }: { action: IconAction }): ReactElement {
   return (
     <IconButton
       icon={action.icon}
@@ -67,10 +75,11 @@ function HeaderAction({ action }: { action: DeclaredAction }): ReactElement {
   );
 }
 
-function directActions(groups: ActionGroup[]): DeclaredAction[] {
+function directActions(groups: ActionGroup[]): IconAction[] {
   return groups
     .flatMap((group) => group.actions)
     .filter((action) => action.tone !== 'danger')
+    .filter(hasIcon)
     .slice(0, 2);
 }
 

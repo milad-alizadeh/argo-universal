@@ -10,7 +10,8 @@ export const shortcutProps = z.object({
   key: z.string().min(1).describe('KeyboardEvent.key, such as Enter or c.'),
 });
 
-export const actionProps = z.object({
+// The Action every App drew before `role`, when `icon` was required.
+export const actionPropsV1 = z.object({
   label: z.string().min(1).describe('The Action label and accessible name.'),
   icon: iconName.describe('The leading Argo icon.'),
   shortcut: shortcutProps
@@ -25,6 +26,21 @@ export const actionProps = z.object({
     .optional()
     .describe('Disable activation without hiding the Action.'),
   onPress: pressHandler.describe('The Plugin handler or built-in App Action.'),
+});
+
+// An Alert answer has no icon; UIAlertAction.Style and Raycast's Alert.ActionStyle mark its role.
+export const actionProps = actionPropsV1.extend({
+  icon: iconName
+    .optional()
+    .describe(
+      'The leading Argo icon; a header ActionList shows only Actions with one as buttons.',
+    ),
+  role: z
+    .enum(['cancel', 'destructive'])
+    .optional()
+    .describe(
+      'An Alert answer that dismisses the question, or one that destroys data.',
+    ),
 });
 
 export const actionListProps = z.object({

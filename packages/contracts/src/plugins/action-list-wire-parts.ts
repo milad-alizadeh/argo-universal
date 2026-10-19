@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   actionListProps,
   actionProps,
+  actionPropsV1,
   actionSectionProps,
 } from './action-list-props';
 import { part } from './plugin-part-schema-utils';
@@ -26,8 +27,13 @@ export const actionListWireParts = {
   'ActionList.Section': part('A group of Actions.', actionSectionProps, {
     children: true,
   }),
-  Action: part('One Action declared inside ActionList.', actionProps, {
-    // A press sends pending edits first, so a confirming Action acts on what the user typed.
-    events: { onPress: z.undefined().meta({ flush: true }) },
-  }),
+  Action: part(
+    'One Action declared inside ActionList, SplitButton or Alert.',
+    actionProps,
+    {
+      previous: [actionPropsV1],
+      // A press sends pending edits first, so a confirming Action acts on what the user typed.
+      events: { onPress: z.undefined().meta({ flush: true }) },
+    },
+  ),
 };

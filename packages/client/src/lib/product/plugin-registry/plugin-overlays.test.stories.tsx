@@ -17,6 +17,10 @@ const onEvent = fn();
 
 const fieldName = 'Overlay name';
 
+const apply = { name: 'Apply alert' };
+
+const cancel = { name: 'Cancel alert' };
+
 const meta = {
   title: 'Tests/Plugin overlays',
   args: { overlay: 'sheet' },
@@ -33,16 +37,36 @@ export const AlertAnswer: Story = {
   args: { overlay: 'alert' },
   play: async ({ userEvent }) => {
     const page = within(document.body);
-    await userEvent.click(
-      await page.findByRole('button', { name: 'Apply alert' }),
-    );
-    await waitFor(() =>
-      expect(page.queryByRole('button', { name: 'Apply alert' })).toBeNull(),
-    );
+    await userEvent.click(await page.findByRole('button', apply));
+    await waitFor(() => expect(page.queryByRole('button', apply)).toBeNull());
     await waitFor(() =>
       expect(onEvent.mock.calls).toEqual([
         ['overlays/alert', { event: 'onOpenChange', payload: false }],
         ['overlays/alert/apply', { event: 'onPress' }],
+      ]),
+    );
+  },
+};
+
+// The Plugin declares Apply first; its `role: 'cancel'` Action is the alert's Cancel, which the web reads first.
+export const AlertCancelRole: Story = {
+  args: { overlay: 'alert' },
+  play: async ({ userEvent }) => {
+    const alert = await within(document.body).findByRole('dialog', {
+      name: 'Alert title',
+    });
+
+    const answers = within(alert).getAllByRole('button');
+    await expect(answers.map((answer) => answer.textContent)).toEqual([
+      cancel.name,
+      apply.name,
+    ]);
+
+    await userEvent.click(within(alert).getByRole('button', cancel));
+    await waitFor(() =>
+      expect(onEvent.mock.calls).toEqual([
+        ['overlays/alert', { event: 'onOpenChange', payload: false }],
+        ['overlays/alert/cancel', { event: 'onPress' }],
       ]),
     );
   },
