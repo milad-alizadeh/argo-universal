@@ -122,22 +122,23 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
   return {
     label: triggerLabel(props),
     accessibilityLabel: 'Agent and model',
+    labelRole: { compact: 'row', wide: 'control' },
+    variant: 'toolbar',
+    size: 'md',
     disabled: props.disabled,
     leading: agentModelLeading(props),
     trailing: <AgentModelTrailing configuration={configuration} wide={wide} />,
   };
 }
 
-// Keep the Agent identity stable while its settings load inside the picker.
+// Keep the Agent identity stable while its settings load inside the picker; it is a control icon, as the other triggers'.
 function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   if (!props.wide) return undefined;
 
   if (props.configuration.agent)
-    return <AgentIcon agent={props.configuration.agent} />;
+    return <AgentIcon agent={props.configuration.agent} role="control" />;
 
-  return (
-    <Icon fitArtwork name="agent" role={{ compact: 'body', wide: 'row' }} />
-  );
+  return <Icon name="agent" role="control" />;
 }
 
 // Unlike Configure's Agent row, the trigger shows no id for an Agent that is not installed.

@@ -74,7 +74,7 @@ function DetailPane(props: ListDetailProps): ReactElement {
   );
 }
 
-// Each side keeps its own place in the tree and fills it; nested ListDetails split again (SettingsLayout's Projects).
+// Each side keeps its own place in the tree and fills it; a nested ListDetail splits again.
 function Pane(props: {
   testID?: string;
   className?: string;

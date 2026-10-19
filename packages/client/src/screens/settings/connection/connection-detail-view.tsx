@@ -64,15 +64,20 @@ function serverRows(server: ServerDetails): React.JSX.Element {
 function loadedRows(server: LoadedServer): React.JSX.Element {
   return (
     <>
-      <ListItem title="Version" value={server.version} />
-      <ListItem
+      <DetailRow title="Version" value={server.version} />
+      <DetailRow
         title="Started"
         value={formatServerStart(server.startedAt, server.clock)}
       />
-      <ListItem title="PID" value={String(server.pid)} />
-      <ListItem title="Clock" value={formatServerClock(server.clock)} />
+      <DetailRow title="PID" value={String(server.pid)} />
+      <DetailRow title="Clock" value={formatServerClock(server.clock)} />
     </>
   );
+}
+
+// Paper's Connection page: a Server detail reads as content, in the title's colour.
+function DetailRow(props: { title: string; value: string }): React.JSX.Element {
+  return <ListItem {...props} valueTone="neutral" />;
 }
 
 function ConnectingRow(): React.JSX.Element {

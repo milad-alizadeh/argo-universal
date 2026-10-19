@@ -9,9 +9,9 @@ import { ListSection } from '#primitives/lists/list';
 import { ConfigurationChoice } from './configuration-choice';
 import { ConfigurationCombobox } from './configuration-combobox';
 import { ConfigurationRowIcon } from './configuration-row-icon';
-import { configurationIcon, choiceMetadata } from './configuration-values';
 import { selection } from './configuration-values';
 import { isDangerous } from './configuration-values';
+import { modeIcon } from './mode-icon';
 import type { ModeContentsProps } from './mode-types';
 
 interface ModeChoiceProps extends ModeContentsProps {
@@ -70,7 +70,7 @@ function modeChoiceIconProps(
 ): React.ComponentProps<typeof Icon> {
   return {
     role: 'control',
-    name: configurationIcon(choiceMetadata(choice)?.icon),
+    name: modeIcon(choice),
     className: cn(
       'text-foreground',
       isDangerous(choice) && destructiveTextClassName,

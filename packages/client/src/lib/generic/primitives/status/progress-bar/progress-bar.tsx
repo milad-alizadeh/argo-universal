@@ -38,6 +38,7 @@ function Fill(props: FillProps): ReactElement {
   const className = cn(
     'h-full overflow-hidden',
     progressColors[props.tone ?? 'neutral'].fill,
+    props.track === 'hairline' && 'rounded-full',
   );
 
   return (
@@ -72,9 +73,15 @@ function trackProps(
     testID: partTestID(props.testID, 'bar'),
     className: cn(
       'h-0.75 w-full overflow-hidden wide-type:h-0.5',
-      progressColors[props.tone ?? 'neutral'].track,
+      trackColor(props),
     ),
   };
+}
+
+function trackColor({ track, tone }: ProgressBarProps): string {
+  return track === 'hairline'
+    ? 'rounded-full bg-hairline'
+    : progressColors[tone ?? 'neutral'].track;
 }
 
 function clampedValue(value: number): number {

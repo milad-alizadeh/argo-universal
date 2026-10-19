@@ -33,14 +33,23 @@ type SectionButtonProps = Pick<
 
 interface TileSelection {
   iconClassName: string;
+  iconWeight?: 'light';
   className: string;
   'aria-current'?: 'page';
 }
 
+/*
+ * Paper draws SF Regular outlines at 24, the selected one filled. Where the browser draws Material Symbols, Light is
+ * the stroke closest to that; the filled glyph keeps Argo's one filled font. Dark greys the outlines to
+ * muted-foreground, as Graphite does.
+ */
+const railIconWeight = 'light';
+
 function selectionProps(selected: boolean): TileSelection {
   if (!selected)
     return {
-      iconClassName: 'text-foreground/72',
+      iconClassName: 'text-foreground/72 dark:text-muted-foreground',
+      iconWeight: railIconWeight,
       className: railTiles.corners,
     };
 
@@ -90,12 +99,14 @@ function RailSections(props: DesktopRailProps): React.JSX.Element {
     <SectionButton key={section.id} {...railSectionProps(section, props)} />
   ));
 
+  const column = props.sidebarShown
+    ? railTiles.column
+    : railTiles.collapsedColumn;
+
   return (
     <View className="min-h-0 flex-1 self-stretch">
       <ScrollView accessibilityLabel="Sections">
-        <View className={cn('items-center pb-2', railTiles.column)}>
-          {tiles}
-        </View>
+        <View className={cn('items-center pb-2', column)}>{tiles}</View>
       </ScrollView>
     </View>
   );
@@ -113,19 +124,25 @@ function railSectionProps(
   };
 }
 
-function SidebarToggle(props: DesktopRailProps): React.JSX.Element {
-  const { sidebarShown, onSidebarShownChange } = props;
+const sidebarToggleLook = {
+  icon: 'sidebar',
+  iconRole: 'nav',
+  iconClassName: 'text-muted-foreground',
+  iconWeight: railIconWeight,
+  size: 'lg',
+  variant: 'ghost',
+  className: railTiles.corners,
+} as const;
 
+function SidebarToggle({
+  sidebarShown,
+  onSidebarShownChange,
+}: DesktopRailProps): React.JSX.Element {
   return (
     <IconButton
-      icon="sidebar"
-      iconRole="nav"
-      iconClassName="text-muted-foreground"
-      size="lg"
-      variant="ghost"
-      accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
+      {...sidebarToggleLook}
+      accessibilityLabel={`${sidebarShown ? 'Hide' : 'Show'} sidebar`}
       onPress={() => onSidebarShownChange(!sidebarShown)}
-      className={railTiles.corners}
     />
   );
 }

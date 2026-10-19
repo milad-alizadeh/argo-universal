@@ -63,6 +63,10 @@ export interface MenuTriggerProps {
   tone?: 'muted' | 'danger';
   // A narrow row, such as the phone Composer's: the label is hidden and read out as the trigger's name, and the chevron goes.
   iconOnly?: boolean;
+  // Desktop and the web only: a toolbar's picker, such as the Composer's, takes radius-md corners, not a control's.
+  variant?: 'default' | 'toolbar';
+  // Desktop and the web only: `md` steps the height from 28 to 32, for a 20px logo.
+  size?: 'sm' | 'md';
   disabled?: boolean;
   accessibilityLabel?: string;
   testID?: string;

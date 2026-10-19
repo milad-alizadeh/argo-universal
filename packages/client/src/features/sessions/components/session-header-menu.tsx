@@ -3,11 +3,12 @@ import { IconButton } from '#primitives/actions/icon-button';
 import { Menu } from '#primitives/overlays/menu';
 import { type SessionMenu, sessionMenuItems } from './session-menu-items';
 
-// The header's icon buttons: ghost, extra small, foreground icons.
+// The header's icon buttons: ghost, extra small and tight-cornered, with 16px foreground icons.
 export const headerActionAppearance = {
   variant: 'ghost',
   size: 'xs',
-  iconRole: 'action',
+  corners: 'tight',
+  iconRole: 'control',
   iconClassName: 'text-foreground',
 } as const;
 

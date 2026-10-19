@@ -3,7 +3,6 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
-import { FrameBackdrop } from '../components/frame-backdrop/frame-backdrop';
 import {
   FramePane,
   type FramePaneProps,
@@ -64,15 +63,6 @@ function InspectorColumn(parts: ScaffoldPartProps): React.JSX.Element {
   );
 }
 
-function Backdrop({ scaffold, layout }: ScaffoldPartProps): React.JSX.Element {
-  return (
-    <>
-      <FrameBackdrop sidebarShown={scaffold.sidebarShown} {...layout.motion} />
-      <WindowDragStrip />
-    </>
-  );
-}
-
 // The Inspector beside the page, the resize handles, and the banner over the panes.
 function Overlays(parts: ScaffoldParts): React.JSX.Element {
   return (
@@ -91,18 +81,18 @@ interface FrameEdges {
   after: ReactNode;
 }
 
-// What sits around the sidebar and the page: a framed window's backdrop, Inspector, handles and banner. The phone shell has none: its pages place their own banner under their header.
+// What sits around the sidebar and the page: a framed window's drag strip, Inspector, handles and banner. The phone shell has none: its pages place their own banner under their header.
 const frameEdges = (parts: ScaffoldParts): FrameEdges =>
   parts.framed
     ? {
-        before: <Backdrop {...parts} />,
+        before: <WindowDragStrip />,
         after: <Overlays {...parts} />,
       }
     : { before: null, after: null };
 
 export type ScaffoldFrameProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
-// A framed tablet's panes start under the status bar; the backdrop still runs behind it. The phone shell's pages keep their own header insets, and a desktop window has none.
+// A framed tablet's panes start under the status bar; the window surface still runs behind it. The phone shell's pages keep their own header insets, and a desktop window has none.
 function useFrameTop(framed: boolean): ViewStyle {
   const { top } = useSafeAreaInsets();
 

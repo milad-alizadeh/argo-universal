@@ -8,14 +8,13 @@ import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
-  configurationIcon,
-  choiceMetadata,
   isDangerous,
   configurationLabel,
   selectedChoice,
   selection,
 } from './configuration-values';
 import { ModeContents } from './mode-choices';
+import { modeIcon } from './mode-icon';
 import type { Mode } from './mode-types';
 
 interface ModeControlProps {
@@ -46,6 +45,13 @@ function ModePopover(
   );
 }
 
+// Paper's Composer pickers: control text and radius-md corners.
+const modeTriggerAppearance = {
+  accessibilityLabel: 'Mode',
+  labelRole: { compact: 'row', wide: 'control' },
+  variant: 'toolbar',
+} as const;
+
 // Wide, the icon, label and chevron; narrow, the icon alone. Full access reads red.
 function modeTrigger(
   props: ModeControlProps & { wide: boolean },
@@ -54,7 +60,7 @@ function modeTrigger(
 
   return (
     <MenuTrigger
-      accessibilityLabel="Mode"
+      {...modeTriggerAppearance}
       disabled={props.disabled}
       label={modeLabel(current)}
       icon={modeIcon(current)}
@@ -66,12 +72,6 @@ function modeTrigger(
 
 function modeLabel(current?: SessionConfigSelectOption): string {
   return current ? configurationLabel(current.name) || 'Mode' : 'Mode';
-}
-
-function modeIcon(
-  current?: SessionConfigSelectOption,
-): ReturnType<typeof configurationIcon> {
-  return configurationIcon(current ? choiceMetadata(current)?.icon : undefined);
 }
 
 type ModeSheetProps = ModeControlProps & { mode: Mode; wide: boolean };

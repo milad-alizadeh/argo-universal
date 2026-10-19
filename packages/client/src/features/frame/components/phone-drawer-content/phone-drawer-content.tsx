@@ -14,7 +14,6 @@ import {
   attentionBadge,
   sectionAttentionCount,
 } from '../../utils/attention-badge';
-import { PhoneDrawerBackdrop } from './phone-drawer-backdrop';
 
 interface DrawerNavigation {
   items: readonly NavigationSection[];
@@ -27,7 +26,6 @@ interface DrawerNavigation {
 
 export interface PhoneDrawerContentProps extends DrawerNavigation {
   open: boolean;
-  width: number;
 }
 
 function sectionItem(
@@ -75,7 +73,7 @@ function SectionButtons(navigation: DrawerNavigation): React.JSX.Element {
   );
 }
 
-// Plain translucent glass: over a still, soft glow a blur would cost a filter pass and show nothing.
+// Plain translucent glass: over the plain window surface a blur would cost a filter pass and show nothing.
 function DrawerGlass(navigation: DrawerNavigation): React.JSX.Element {
   const { top } = useSafeAreaInsets();
 
@@ -94,15 +92,13 @@ function DrawerGlass(navigation: DrawerNavigation): React.JSX.Element {
 const hiddenWhileClosed = (open: boolean) =>
   ({ 'aria-hidden': !open, accessibilityElementsHidden: !open }) as const;
 
-// The phone's drawer of sections: the title, then a row per section, over a still glow.
+// The phone's drawer of sections: the title, then a row per section, on the window surface.
 export function PhoneDrawerContent({
   open,
-  width,
   ...glass
 }: PhoneDrawerContentProps): React.JSX.Element {
   return (
     <View className="flex-1" {...hiddenWhileClosed(open)}>
-      <PhoneDrawerBackdrop width={width} />
       <DrawerGlass {...glass} />
     </View>
   );

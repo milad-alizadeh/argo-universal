@@ -23,6 +23,8 @@ const triggerKeys = [
   'trailing',
   'tone',
   'iconOnly',
+  'variant',
+  'size',
   'disabled',
   'accessibilityLabel',
   'testID',
@@ -42,6 +44,24 @@ const triggerClassName = cn(
 );
 
 const iconOnlyClassName = 'w-11 android:w-12 web:w-7 web:px-0 justify-center';
+
+const variantClassNames = {
+  default: '',
+  toolbar: 'web:rounded-md',
+} satisfies Record<NonNullable<MenuTriggerProps['variant']>, string>;
+
+const sizeClassNames = {
+  sm: '',
+  md: 'web:h-8',
+} satisfies Record<NonNullable<MenuTriggerProps['size']>, string>;
+
+// A toolbar picker's corners and height; the defaults draw nothing extra.
+function toolbarClass({
+  variant = 'default',
+  size = 'sm',
+}: Pick<MenuTriggerProps, 'variant' | 'size'>): string {
+  return cn(variantClassNames[variant], sizeClassNames[size]);
+}
 
 export function MenuTrigger(props: TriggerProps): ReactElement {
   return (
@@ -77,6 +97,7 @@ function overlayHandlers(props: TriggerProps): OverlayHandlers {
 function triggerClass(props: MenuTriggerProps): string {
   return cn(
     triggerClassName,
+    toolbarClass(props),
     props.iconOnly && iconOnlyClassName,
     props.disabled && 'opacity-35',
   );

@@ -25,7 +25,7 @@ type IconControlProps = Omit<IconButtonProps, keyof IconAppearance | 'badge'>;
 
 type IconPresentation = Pick<
   IconControlProps,
-  'size' | 'variant' | 'loading' | 'selected' | 'bleed'
+  'size' | 'variant' | 'loading' | 'selected' | 'bleed' | 'corners'
 >;
 
 type PressableInput = ComponentProps<typeof Pressable>;
@@ -90,16 +90,14 @@ function iconAdornment(
 function iconPressableProps({
   tone: _tone,
   iconTone: _iconTone,
-  size,
-  variant,
-  loading,
-  selected,
-  bleed,
-  ...pressable
+  ...props
 }: IconControlProps): PressableInput {
+  const { size, variant, loading, selected, bleed, corners, ...pressable } =
+    props;
+
   return createIconPressable(
     { ...pressable, ...pressedAttribute(selected) },
-    { size, variant, loading, selected, bleed },
+    { size, variant, loading, selected, bleed, corners },
   );
 }
 
@@ -121,19 +119,25 @@ function createIconPressable(
   };
 }
 
-function iconContainerClass(
-  props: Pick<
-    IconButtonProps,
-    'size' | 'variant' | 'disabled' | 'className' | 'selected' | 'bleed'
-  >,
-): string {
-  const { size, variant, className } = props;
+type ContainerProps = Pick<
+  IconButtonProps,
+  | 'size'
+  | 'variant'
+  | 'disabled'
+  | 'className'
+  | 'selected'
+  | 'bleed'
+  | 'corners'
+>;
+
+function iconContainerClass(props: ContainerProps): string {
+  const { size, variant, corners, className } = props;
   const disabled = !!props.disabled;
   const pressed = props.selected === true;
   const bleed = !!props.bleed;
 
   return cn(
-    iconButtonClasses({ size, variant, disabled, pressed, bleed }),
+    iconButtonClasses({ size, variant, disabled, pressed, bleed, corners }),
     className,
   );
 }

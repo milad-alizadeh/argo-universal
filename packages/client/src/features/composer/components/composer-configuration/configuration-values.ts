@@ -1,10 +1,8 @@
 import type {
   AgentServer,
-  ConfigOptionIcon,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import type { IconName } from '#lib/generic/symbols/icon-names';
 import {
   configurationChoices,
   currentConfigurationChoice,
@@ -105,22 +103,6 @@ function fallbackEffort(
         );
 
   return below.at(-1) ?? offered[Math.floor(offered.length / 2)];
-}
-
-const optionIcons = {
-  ShieldWarning: 'permission',
-  Pencil: 'edit',
-  MapTrifold: 'plan-mode',
-  Sparkles: 'sparkle',
-  WarningTriangle: 'warning',
-} satisfies Record<ConfigOptionIcon, IconName>;
-
-const configurationIcons = new Map(Object.entries(optionIcons));
-
-export function configurationIcon(name?: string): IconName {
-  if (!name) return 'permission';
-
-  return configurationIcons.get(name) ?? 'permission';
 }
 
 // The Agent's name; without an installed Agent, the fallback a surface shows instead.

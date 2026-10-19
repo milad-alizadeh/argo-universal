@@ -18,6 +18,12 @@ export const iconButtonClasses = cva(
       disabled: { true: 'opacity-38' },
       // A toggle that is on, such as Bold in the format bar.
       pressed: { true: 'bg-selected' },
+      // The web's corners: a control's radius, a header action's tighter 6, or a round button such as Send.
+      corners: {
+        control: '',
+        tight: 'web:rounded-sm',
+        round: 'rounded-full web:rounded-full',
+      },
       size: {
         xs: 'size-11 sm:size-7',
         sm: 'size-11 sm:size-8',
@@ -35,7 +41,7 @@ export const iconButtonClasses = cva(
       { bleed: true, size: 'md', className: 'web:sm:-m-3' },
       { bleed: true, size: 'xl', className: '-m-4' },
     ],
-    defaultVariants: { size: 'sm', variant: 'default' },
+    defaultVariants: { size: 'sm', variant: 'default', corners: 'control' },
   },
 );
 

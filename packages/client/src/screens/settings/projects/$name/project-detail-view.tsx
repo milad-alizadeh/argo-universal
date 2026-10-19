@@ -1,6 +1,7 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { homePath } from '#features/settings';
+import { RowDrawingContext } from '#lib/generic/row-drawing-context';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -45,7 +46,9 @@ export function ProjectDetailView(
 ): React.JSX.Element {
   return (
     <Page title={props.name} caption={props.caption} onBack={props.onBack}>
-      <ProjectBody {...props} />
+      <RowDrawingContext value="content">
+        <ProjectBody {...props} />
+      </RowDrawingContext>
     </Page>
   );
 }

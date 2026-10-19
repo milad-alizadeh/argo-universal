@@ -103,13 +103,13 @@ function RadioIndicator(): React.JSX.Element {
   );
 }
 
-// The option's icon leads the row: a Body-size glyph in a slot as wide as the trailing check's.
+// The option's icon leads the row at the one menu icon size.
 function RadioIcon(props: { icon?: IconName }): React.JSX.Element | null {
   if (!props.icon) return null;
 
   return (
-    <IconSlot role="body">
-      <Icon name={props.icon} role="body" />
+    <IconSlot role="menu">
+      <Icon name={props.icon} role="menu" />
     </IconSlot>
   );
 }

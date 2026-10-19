@@ -1,12 +1,14 @@
 import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import { ReplaceableSlot } from '#lib/product/plugin-registry/replaceable-slot';
 import {
   ComposerPlan,
   ComposerWorkChips,
 } from '../composer-status/composer-status';
 import { WrittenPlan } from '../written-plan/written-plan';
+import { composerTrayClass } from './composer-tray-class';
 import type {
   TopTrayLayout,
   PlanLayout,
@@ -57,7 +59,7 @@ function ComposerWidePlan(layout: PlanLayout): React.JSX.Element | null {
   if (hasRequest(layout) || !hasPlan(layout)) return null;
 
   return (
-    <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass web:backdrop-blur-tray web:backdrop-saturate-110">
+    <View className={cn(composerTrayClass, '-mb-3 pb-3 rounded-t-xl')}>
       <ComposerPlans {...layout} />
     </View>
   );

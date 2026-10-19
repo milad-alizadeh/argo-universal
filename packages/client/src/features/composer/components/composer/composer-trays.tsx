@@ -1,7 +1,9 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { cn } from '#lib/generic/utils';
 import { ComposerStatusControls } from '../composer-status/composer-status';
 import { TrayCheckout } from './composer-tray-checkout';
+import { composerTrayClass } from './composer-tray-class';
 import type {
   BottomTrayLayout,
   WideStatusLayout,
@@ -25,8 +27,8 @@ function ComposerWideStatus(
   if (!(layout.props.configuration || layout.props.status)) return null;
 
   return (
-    <View className="h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-xl bg-tray shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180">
-      <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">
+    <View className={cn(composerTrayClass, 'h-11 -mt-3 pt-3 rounded-b-xl')}>
+      <View className="flex-1 min-h-0 flex-row items-center px-1.5 gap-1">
         <ComposerTrayStatus {...layout} />
         <View className="flex-1" />
         <ComposerTrayCheckout {...layout} />
