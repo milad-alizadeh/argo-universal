@@ -52,7 +52,13 @@ function EffortSlider(): React.JSX.Element {
   );
 }
 
-// A search field above a List of menu rows: one disabled, one with a Slider under its title.
+function FastToggle(): React.JSX.Element {
+  const [fast, setFast] = useState(false);
+
+  return <ListItem.Toggle title="Fast" value={fast} onValueChange={setFast} />;
+}
+
+// A search field above a List of menu rows: one disabled, one with a Slider under its title, one a switch.
 function MenuPopover(): React.JSX.Element {
   return (
     <Popover>
@@ -64,6 +70,7 @@ function MenuPopover(): React.JSX.Element {
           <ListItem title="Medium" disabled onPress={action('medium')} />
           <ListItem title="Large" onPress={action('large')} />
           <ListItem title="Effort" control={<EffortSlider />} />
+          <FastToggle />
         </List>
       </PopoverContent>
     </Popover>
@@ -91,6 +98,21 @@ export const ArrowKeysSkipDisabledRowsWide: Story = {
     await expect(menu.getByRole('button', { name: 'Large' })).toHaveFocus();
     await context.userEvent.keyboard('{ArrowUp}');
     await expect(small).toHaveFocus();
+  },
+};
+
+// A switch row's own drawn switch is not a row of its own.
+export const ArrowUpLeavesASwitchRowWide: Story = {
+  render: () => <MenuPopover />,
+  play: async (context) => {
+    const menu = within(await openMenu(context));
+
+    menu.getByRole('button', { name: 'Small' }).focus();
+
+    await context.userEvent.keyboard('{End}');
+    await expect(menu.getByRole('switch', { name: 'Fast' })).toHaveFocus();
+    await context.userEvent.keyboard('{ArrowUp}');
+    await expect(menu.getByRole('button', { name: 'Large' })).toHaveFocus();
   },
 };
 

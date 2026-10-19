@@ -4,11 +4,12 @@ import { moveFocusAmong } from '#lib/generic/arrow-focus';
 // A menu's rows are what a press reaches; a control inside one (a slider, a field) is not a row.
 const rowRoles = '[role="button"],[role="radio"],[role="switch"],[role="link"]';
 
-const unavailable = ':disabled,[aria-disabled="true"]';
+// A row's own drawn part, such as a switch row's switch, is out of the tab order and is not a row of its own.
+const notARow = ':disabled,[aria-disabled="true"],[tabindex="-1"]';
 
 const menuRows = (menu: HTMLElement): HTMLElement[] =>
   [...menu.querySelectorAll<HTMLElement>(rowRoles)].filter(
-    (row) => !row.matches(unavailable),
+    (row) => !row.matches(notARow) && !row.parentElement?.closest(rowRoles),
   );
 
 /*
