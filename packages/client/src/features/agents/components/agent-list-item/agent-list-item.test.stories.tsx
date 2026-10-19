@@ -7,15 +7,15 @@ import {
   iconXml,
   malformedIconXml,
 } from '../registry-icons.mocks';
-import { AgentCard } from './agent-card';
+import { AgentListItem } from './agent-list-item';
 
 const agent = { ...agentRow, icon: encodedIcon };
 
 const meta = {
-  title: 'Tests/AgentCard',
-  component: AgentCard,
+  title: 'Tests/AgentListItem',
+  component: AgentListItem,
   args: { agent, onInstall: fn(), onRemove: fn() },
-} satisfies Meta<typeof AgentCard>;
+} satisfies Meta<typeof AgentListItem>;
 
 export default meta;
 

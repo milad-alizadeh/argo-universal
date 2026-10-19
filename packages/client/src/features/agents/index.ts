@@ -9,7 +9,10 @@ export { AgentLogo } from './components/agent-logo/agent-logo';
 
 export { RegistryIcon } from './components/registry-icon/registry-icon';
 
-export { agentCards } from './components/agent-card/agent-card';
+export {
+  agentRows,
+  AgentListItem,
+} from './components/agent-list-item/agent-list-item';
 
 export {
   loadedAgents,

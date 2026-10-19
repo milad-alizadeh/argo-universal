@@ -3,13 +3,13 @@ import { expect, fn } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { agentRow as agent } from '../registry-icons.mocks';
-import { AgentCard } from './agent-card';
+import { AgentListItem } from './agent-list-item';
 
 const meta = {
   title: 'Tests/AgentCardActions',
-  component: AgentCard,
+  component: AgentListItem,
   args: { agent, onInstall: fn(), onRemove: fn() },
-} satisfies Meta<typeof AgentCard>;
+} satisfies Meta<typeof AgentListItem>;
 
 export default meta;
 

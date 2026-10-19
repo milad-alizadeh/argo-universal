@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import {
-  agentCards,
+  agentRows,
   filterAgents,
   agentsEmptyLabel,
   type RowsLoad,
@@ -30,7 +30,7 @@ export function AgentCatalog(props: CatalogProps): React.JSX.Element {
 const catalogSections = (props: CatalogProps): FieldListSection[] => {
   const { rows, ...load } = props.agents;
   const agents = filterAgents(rows, props.filter, props.search);
-  const cards = agents.map((agent) => ({ rows: agentCards([agent], props) }));
+  const cards = agents.map((agent) => ({ rows: agentRows([agent], props) }));
 
   if (load.status !== 'loaded') return [...cards, registrySection(load, props)];
 

@@ -18,14 +18,13 @@ const linksOf = (agent: AgentRowEntry): Link[] => [
 
 type AgentMetaProps = { agent: AgentRowEntry };
 
-// Whether the card has a meta line at all: desktop's unsupported note or a link.
-export const hasAgentMeta = (agent: AgentRowEntry): boolean =>
-  agent.unavailable || linksOf(agent).some((link) => link.url);
-
-// One line, every item centred on the text and spaced by the line's own gap: desktop's unsupported note, then the links.
+// One line, every item centred on the text and spaced by the row's own gap: version, desktop's unsupported note, then the links.
 export function AgentMeta({ agent }: AgentMetaProps): React.JSX.Element {
   return (
     <>
+      <Text role="secondary" tone="muted">
+        v{agent.version}
+      </Text>
       <UnsupportedNote agent={agent} />
       {linksOf(agent).map((link) => (
         <AgentLink key={link.label} link={link} />
