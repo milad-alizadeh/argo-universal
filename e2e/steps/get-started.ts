@@ -1,6 +1,8 @@
 import { expect } from '../fixtures';
+import { agentCard } from './agent-catalog';
 import { Given, When, Then } from './fixtures';
 import { reloadApp } from './frame';
+import { returnToSessions } from './navigation';
 
 Given('the fixture Server has no Projects', async ({ page }) => {
   await expect(
@@ -8,11 +10,17 @@ Given('the fixture Server has no Projects', async ({ page }) => {
   ).toBeVisible();
 });
 
-When('I install featured Agent {string}', async ({ page }, name: string) => {
-  await page
-    .getByRole('button', { name: `Install ${name}`, exact: true })
-    .click();
-});
+// Get started's Add Agent opens the Agents page; the Agent installs from its card there.
+When(
+  'I add Agent {string} from Get started',
+  async ({ page }, name: string) => {
+    await page.getByRole('button', { name: 'Add Agent', exact: true }).click();
+    await agentCard(page, name)
+      .getByRole('button', { name: `Install ${name}`, exact: true })
+      .click();
+    await returnToSessions(page);
+  },
+);
 
 Then('Agent Setup is done', async ({ page }) => {
   await expect(page.getByLabel('Done', { exact: true })).toHaveCount(1);

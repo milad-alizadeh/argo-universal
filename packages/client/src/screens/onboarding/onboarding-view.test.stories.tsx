@@ -4,7 +4,6 @@ import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { OnboardingView } from './onboarding-view';
 import {
-  featuredAgent,
   onboardingArgs,
   githubButtons,
   githubSteps,
@@ -43,7 +42,7 @@ export const DoneStepsShowTheAccount: Story = {
   },
 };
 
-type Handler = 'onAddProject';
+type Handler = 'onAddAgent' | 'onAddProject';
 
 // Pressing the button calls its handler.
 const pressCalls = (
@@ -58,34 +57,9 @@ const pressCalls = (
   },
 });
 
+export const AddAgentOpensAgents = pressCalls('Add Agent', 'onAddAgent');
+
 export const AddProjectAddsOne = pressCalls(addProject, 'onAddProject');
-
-export const InstallsFeaturedAgent: Story = {
-  args: { agent: noAgent, featured: featuredAgent(false) },
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Install Example Agent' }),
-    );
-    await expect(args.onInstallAgent).toHaveBeenCalledWith('example-agent');
-  },
-};
-
-export const RemovesInstalledFeaturedAgent: Story = {
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Remove Example Agent' }),
-    );
-    await expect(args.onRemoveAgent).toHaveBeenCalledWith('example-agent');
-  },
-};
-
-export const RetriesRegistry: Story = {
-  args: { featured: { status: 'failed', failed: 'registry', rows: [] } },
-  play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
-    await expect(args.onRetry).toHaveBeenCalledOnce();
-  },
-};
 
 export const ProjectCanComeBeforeAnAgent: Story = {
   args: { agent: noAgent },

@@ -1,10 +1,10 @@
 @without-projects
 Feature: Get started with an Agent
-  Scenario Outline: Install a featured Agent and remember it for New Session
+  Scenario Outline: Add an Agent from Get started and start a New Session with it
     Given a wide Frame
     And no Agents are installed
     And the fixture Server has no Projects
-    When I install featured Agent "<name>"
+    When I add Agent "<name>" from Get started
     Then Agent Setup is done
     When the fixture Project is registered
     And I open a New Session

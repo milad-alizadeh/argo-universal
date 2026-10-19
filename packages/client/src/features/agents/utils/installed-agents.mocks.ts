@@ -12,7 +12,7 @@ export const server = (id: string, name: string): AgentServer => ({
   env: {},
 });
 
-export const entry = (id: string, name: string): ACPAgent => ({
+const entry = (id: string, name: string): ACPAgent => ({
   id,
   name,
   version: '2.0.0',

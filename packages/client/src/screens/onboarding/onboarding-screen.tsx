@@ -1,33 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import {
-  type InstalledAgents,
-  loadedAgents,
-  useRegistryAgents,
-  useRememberedAgent,
-} from '#features/agents';
+import { loadedAgents, useInstalledAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
-import { type AgentStep, agentStep } from '#features/setup';
+import { agentStep } from '#features/setup';
+import { useNavigate } from '#lib/product/navigation/navigation';
 import type { OnboardingViewProps } from './onboarding-props';
 import { OnboardingView } from './onboarding-view';
 
-// The step has no loading look, so it stays open until the Server lists an Installed Agent.
-const installedStep = (installed: InstalledAgents): AgentStep =>
-  agentStep(loadedAgents(installed));
-
 function useOnboarding(): OnboardingViewProps {
-  // An Agent installed here becomes New Session's Agent.
-  const agents = useRegistryAgents(useRememberedAgent().select);
+  // The step has no loading look, so it stays open until the Server lists an Installed Agent.
+  const installed = loadedAgents(useInstalledAgents());
   const serverName = useQuery(useTRPC().system.info.queryOptions()).data?.name;
+  const navigate = useNavigate();
 
   return {
     serverName,
-    agent: installedStep(agents.installed),
+    agent: agentStep(installed),
     github: { status: 'not-connected' },
-    featured: agents.featured,
-    onInstallAgent: agents.install,
-    onRemoveAgent: agents.remove,
-    onRetry: agents.retry,
+    onAddAgent: () => navigate('/settings/agents'),
   };
 }
 
