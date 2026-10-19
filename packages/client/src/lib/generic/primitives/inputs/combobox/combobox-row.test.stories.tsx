@@ -125,10 +125,12 @@ export const RowKeepsOpenWithoutSearchWide: Story = {
 export const RowSearchesAndClosesByDefaultWide: Story = {
   play: async (context) => {
     const { choices } = await openRow(context, 'Branch');
+    const search = within(choices).getByRole('searchbox', {
+      name: 'Search Branch',
+    });
 
-    await expect(
-      within(choices).getByRole('searchbox', { name: 'Search Branch' }),
-    ).toBeVisible();
+    // The choices fade in from transparent, so the search shows once their entrance starts.
+    await waitFor(() => expect(search).toBeVisible());
     await context.userEvent.click(
       within(choices).getByRole('radio', { name: 'Paper' }),
     );
