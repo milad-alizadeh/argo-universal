@@ -7,9 +7,11 @@ describe('Plugin part version compatibility', () => {
   const title = 'Waiting jobs';
 
   it('derives versions only for registered parts', () => {
-    expect(
-      versionsOf(['Text', 'Stack', 'GroupedListItem', 'Pill', 'Internal']),
-    ).toEqual({ Text: 3, Stack: 1, GroupedListItem: 1, Pill: 2 });
+    expect(versionsOf(['Text', 'Stack', 'Pill', 'Internal'])).toEqual({
+      Text: 3,
+      Stack: 1,
+      Pill: 2,
+    });
   });
 
   it('strips unknown optional props for older Apps', () => {

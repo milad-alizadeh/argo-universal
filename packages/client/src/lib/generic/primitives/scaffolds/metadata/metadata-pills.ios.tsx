@@ -55,7 +55,7 @@ function VisiblePills(
   return (
     <View
       testID="metadata-visible-pills"
-      className="flex-row items-center gap-1 overflow-hidden"
+      className="flex-row items-center justify-end gap-1 overflow-hidden"
     >
       {keyedPills(props.pills.slice(0, props.count))}
       {hidden > 0 ? <Pill text={`+${hidden}`} /> : null}

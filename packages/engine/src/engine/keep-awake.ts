@@ -4,15 +4,14 @@ import {
   openSessionsId,
   openSessionsMachine,
   type OpenSessionsActorRef,
-  type SessionActorRef,
+  watchTurnActivity,
 } from '../sessions';
 import { caffeinate, type Caffeinate } from './caffeinate';
 
 export type KeepAwakeInput = { caffeinate?: Caffeinate };
 
 /*
- * Open Sessions forwards every Session snapshot through syncSnapshot.
- * Read Turn ownership there; an idle Agent session must not keep the Mac awake.
+ * The Mac stays awake while any Turn runs; an idle Agent session must not keep it awake.
  */
 export const caffeinateActor = fromCallback<EventObject, KeepAwakeInput>(
   ({ input, self }) => {
@@ -36,21 +35,17 @@ class IdleSleepAssertion {
   public constructor(private readonly acquire: Caffeinate) {}
 
   public watch(sessions: OpenSessionsActorRef): () => void {
-    const subscription = sessions.subscribe(() => this.update(sessions));
-    this.update(sessions);
+    const unwatch = watchTurnActivity(sessions, (active) =>
+      active ? this.hold() : this.release(),
+    );
 
     return (): void => {
-      subscription.unsubscribe();
+      unwatch();
       this.release();
     };
   }
 
-  private update(sessions: OpenSessionsActorRef): void {
-    const active = Object.values(sessions.getSnapshot().context.sessions).some(
-      hasActiveTurn,
-    );
-
-    if (!active) return this.release();
+  private hold(): void {
     this.stop ??= this.acquire(process.pid);
   }
 
@@ -58,13 +53,4 @@ class IdleSleepAssertion {
     this.stop?.();
     this.stop = undefined;
   }
-}
-
-function hasActiveTurn(session: SessionActorRef): boolean {
-  const { activeTurnId, subagentFeeds } = session.getSnapshot().context;
-
-  return (
-    activeTurnId !== null ||
-    [...subagentFeeds.children.values()].some((child) => child.turnId !== null)
-  );
 }

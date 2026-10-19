@@ -1,12 +1,11 @@
 import type * as React from 'react';
-import { View } from 'react-native';
 import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
-import { SettingsPage } from '#lib/product/settings-page';
 import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { Page } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 
 export interface PluginRow {
@@ -31,15 +30,13 @@ export const pluginsTitle = 'Plugins';
 // One row per Plugin, as iOS Settings lists its Apps: each opens the Plugin's own page.
 export function PluginListView(props: PluginListViewProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-content wide:bg-transparent">
-      <SettingsPage title={pluginsTitle} caption={props.caption}>
-        <List appearance="grouped">
-          <ListSection>
-            <PluginRows {...props} />
-          </ListSection>
-        </List>
-      </SettingsPage>
-    </View>
+    <Page title={pluginsTitle} caption={props.caption}>
+      <List appearance="grouped">
+        <ListSection>
+          <PluginRows {...props} />
+        </ListSection>
+      </List>
+    </Page>
   );
 }
 

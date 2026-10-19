@@ -11,7 +11,7 @@ const node = (
 ): WireNode => ({ type, key, props, children: [], slots: {} });
 
 const root: WireNode = {
-  ...node('GroupedList', 'settings', {}),
+  ...node('List', 'settings', { appearance: 'grouped' }),
   children: [
     node('ListItem.Toggle', 'fast', {
       title: 'Fast mode',
@@ -40,7 +40,7 @@ const meta = {
 
 export default meta;
 
-export const LegacyListUsesSettingsWrappers: StoryObj<typeof meta> = {
+export const GroupedListUsesSettingsWrappers: StoryObj<typeof meta> = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(1440);
     await userEvent.click(
@@ -65,21 +65,5 @@ export const FieldDraftSurvivesEventDelivery: StoryObj<typeof meta> = {
         payload: 'Argo',
       }),
     );
-  },
-};
-
-export const LegacyRowPreservesDetailAndFooter: StoryObj<typeof meta> = {
-  args: {
-    root: {
-      ...node('GroupedListItem', 'legacy', { label: 'Legacy setting' }),
-      slots: {
-        detail: [node('Text', 'detail', { children: 'Detail content' })],
-        footer: [node('Text', 'footer', { children: 'Footer content' })],
-      },
-    },
-  },
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByText('Detail content')).toBeVisible();
-    await expect(canvas.getByText('Footer content')).toBeVisible();
   },
 };

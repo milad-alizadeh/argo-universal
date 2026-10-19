@@ -21,8 +21,13 @@ import {
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
+import { discoverPlugins } from './discovery/loader';
+import {
+  fillsSlot,
+  hooksEvent,
+  rendersSlot,
+} from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
-import { discoverPlugins } from './loader';
 import {
   applyEnabled,
   applyStatus,
@@ -34,9 +39,8 @@ import {
   type PluginServiceDeps,
 } from './located-plugins';
 import { startPlugin, startPlugins } from './plugin-activation';
-import { fillsSlot, hooksEvent, rendersSlot } from './plugin-contributions';
-import { renderSlot } from './render-slot';
-import { slotViews } from './slot-views';
+import { renderSlot } from './slots/render-slot';
+import { slotViews } from './slots/slot-views';
 
 export type { PluginServiceDeps } from './located-plugins';
 

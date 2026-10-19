@@ -7,9 +7,9 @@ import {
 } from 'react';
 import { Platform, View } from 'react-native';
 import { FooterProvider } from '#primitives/fields/field-description';
+import { flattenedChildren } from '../../../flattened-children';
 import { ListContext, listPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
-import { flattenedChildren } from './list-child-nodes';
 import type { ListSectionProps } from './list-props';
 import { hasSectionHeader, SectionHeader } from './list-section-parts';
 

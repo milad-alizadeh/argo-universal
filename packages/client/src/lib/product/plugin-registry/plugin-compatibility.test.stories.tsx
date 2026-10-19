@@ -62,9 +62,9 @@ export const InvalidEmptyContainer: Story = {
   render: () => (
     <PluginTree
       root={{
-        type: 'Row',
+        type: 'Stack',
         key: 'empty',
-        props: { gap: 'invalid' },
+        props: { direction: 'row', gap: 'invalid' },
         children: [],
         slots: {},
       }}
@@ -80,9 +80,9 @@ export const OlderServerText: Story = {
   render: () => (
     <PluginTree
       root={{
-        type: 'Column',
-        key: 'legacy',
-        props: {},
+        type: 'Stack',
+        key: 'texts',
+        props: { direction: 'column' },
         slots: {},
         children: [
           {

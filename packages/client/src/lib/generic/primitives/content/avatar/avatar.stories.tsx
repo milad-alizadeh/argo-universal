@@ -52,6 +52,7 @@ function AvatarInitialsExamples({
   return (
     <>
       <InitialsExample args={args} />
+      <SmallExample args={args} />
       <StatusExample args={args} />
     </>
   );
@@ -65,6 +66,18 @@ function InitialsExample({
   return (
     <Variation label="Initials">
       <Avatar {...args} />
+    </Variation>
+  );
+}
+
+function SmallExample({
+  args,
+}: {
+  args: React.ComponentProps<typeof Avatar>;
+}): React.JSX.Element {
+  return (
+    <Variation label="Small">
+      <Avatar {...args} size="sm" />
     </Variation>
   );
 }

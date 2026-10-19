@@ -2,9 +2,9 @@ import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { Field } from '#primitives/fields/field';
+import { requiredLabel } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { BareTextInput } from './text-input-bare';
-import { requiredLabel } from './text-input-label';
 import {
   isInvalid,
   keyboardOf,

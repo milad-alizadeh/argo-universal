@@ -1,10 +1,14 @@
 import { z } from 'zod';
-import { actionProps } from './action-list-props';
+import { echoes } from './plugin-part-props';
 import { part, stringLabel } from './plugin-part-schema-utils';
 import { WireEvent } from './wire';
 
 export const pageProps = z.object({
   title: stringLabel.describe('The single-line page title.'),
+  caption: z
+    .string()
+    .optional()
+    .describe('A muted line under the title on wide windows; phones hide it.'),
   search: z
     .object({
       label: stringLabel.describe('The search label and placeholder.'),
@@ -15,30 +19,32 @@ export const pageProps = z.object({
     .string()
     .optional()
     .describe('The search query; drafts stay in the App.'),
-  // A Plugin event only: an App Action here would run on every keystroke, unthrottled.
+  // A Plugin event only: an App Action here would run on every keystroke.
   onChangeText: WireEvent.extend({ $event: z.literal('onChangeText') })
     .optional()
     .describe('Receive the search query when it changes.'),
-  primaryAction: actionProps
-    .optional()
-    .describe(
-      'The main Action: a header button, iOS toolbar item, or Android FAB.',
-    ),
 });
 
 const pageReader =
   'Announces the title as the screen title, then the search field and header Actions, then the content.';
 
 export const pageWirePart = part(
-  'A page with a title, header Actions, optional search, and content.',
+  'A page with a title, header Actions, a primary Action, optional search, and content.',
   pageProps,
   {
     children: true,
     root: true,
-    slots: { actions: ['ActionList'] },
+    slots: {
+      actions: ['ActionList'],
+      // The main Action: a header button, iOS toolbar item, or Android FAB.
+      primaryAction: ['Action'],
+    },
+    // Typed search echoes at once and coalesces, and never holds the page.
     events: {
-      onChangeText: z.string().meta({ throttleMs: 150 }),
-      onPress: z.undefined(),
+      onChangeText: echoes(pageProps, 'value', {
+        throttleMs: 150,
+        blocks: false,
+      }),
     },
     accessibility: {
       label: 'The required `title` names the screen.',

@@ -1,15 +1,14 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
+import { Action } from '#primitives/actions/action-list';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { Page, PageColumn, type PageProps } from '#primitives/scaffolds/page';
+import { Page, type PageProps } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 import type { ProjectListViewProps, SearchedProps } from './project-list-props';
 import { LoadedProjects } from './project-list-rows';
-import { pageSearch, projectsTitle } from './project-list-search';
+import { projectsTitle, searchLabel } from './project-list-search';
 
 // The Server's Projects, found by name or folder; each opens its own page.
 export function ProjectListView(
@@ -23,7 +22,6 @@ export function ProjectListView(
 function ProjectsPage(props: SearchedProps): React.JSX.Element {
   return (
     <Page {...pageProps(props)}>
-      <ProjectCaption caption={props.caption} />
       <ProjectsBody {...props} />
     </Page>
   );
@@ -32,31 +30,17 @@ function ProjectsPage(props: SearchedProps): React.JSX.Element {
 function pageProps(props: SearchedProps): PageProps {
   return {
     title: projectsTitle,
+    caption: props.caption,
     primaryAction: addProject,
-    search: { label: pageSearch(props).label },
+    search: { label: searchLabel },
     value: props.search,
     onChangeText: props.onSearch,
   };
 }
 
-function ProjectCaption({ caption }: { caption?: string }): React.ReactNode {
-  if (!caption) return null;
-
-  return (
-    <PageColumn>
-      <View className="hidden pb-6 wide:flex">
-        <Text tone="muted">{caption}</Text>
-      </View>
-    </PageColumn>
-  );
-}
-
-const addProject = {
-  label: 'Add Project',
-  icon: 'add',
-  disabled: true,
-  onPress: unavailable,
-} as const;
+const addProject = (
+  <Action label="Add Project" icon="add" disabled onPress={unavailable} />
+);
 
 // The Server cannot add a Project from the App yet.
 function unavailable(): void {}

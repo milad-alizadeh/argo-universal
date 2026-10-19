@@ -8,9 +8,9 @@ import { childKeys } from './wire-keys';
 import { wireProps } from './wire-props';
 
 // A handler a Plugin passes as a prop; the wire carries it as an event id.
-export type PluginFn = (payload?: WireJson) => void | Promise<void>;
+type PluginFn = (payload?: WireJson) => void | Promise<void>;
 
-export type Prop = WireJson | PluginFn | Prop[] | { [key: string]: Prop };
+export type Prop = WireJson | PluginFn;
 
 export type Props = Record<string, Prop>;
 
@@ -114,7 +114,7 @@ export function toWire(root: Instance, handlers: Handlers): WireNode {
 }
 
 const needsKeys = (instance: Instance, children: Instance[]): boolean =>
-  listTypes.has(instance.type) &&
+  keyedContainer(instance.type) &&
   children.some((child) => child.key === undefined);
 
 // A composite list row is one keyed item, including when a Fragment supplies several nodes.
@@ -134,3 +134,6 @@ function rowContent(instance: Instance): Instance {
 
 const singleRow = (only: Instance | undefined, fallback: Instance): Instance =>
   only ?? fallback;
+
+const keyedContainer = (type: string): boolean =>
+  listTypes.has(type) || type === 'Canvas' || type === 'Canvas.Group';

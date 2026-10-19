@@ -7,11 +7,10 @@ import type {
   KitChoiceValue,
   KitListItem,
   KitNode,
+  KitValuePayload,
 } from '@repo/contracts/kit-props';
 import type {
-  KitCompoundMember,
   WirePart,
-  PluginPart,
   WireProps,
   wireParts,
   listPartNames,
@@ -52,12 +51,13 @@ type Expansion<Name extends WirePart> = (typeof wireParts)[Name] extends {
   ? z.output<Schema>
   : Record<never, never>;
 
+// Handlers go only in top-level props; a nested handler is a built-in Action.
 type ExpansionValue<Value, Item> = Value extends WireNode
   ? PluginWireNode
   : Value extends KitChoiceValue
     ? string
     : Value extends WireEvent
-      ? Callback<undefined> | Value
+      ? never
       : Value extends KitListItem
         ? Item
         : Value extends KitNode
@@ -85,7 +85,10 @@ type MappedPluginProps<
             | ExpansionValue<Exclude<Props[Prop], WireEvent>, Item>
             | Callback<
                 ExpansionValue<
-                  z.output<Extract<Events<Name>[Prop], z.ZodType>>,
+                  KitValuePayload<
+                    z.output<Extract<Events<Name>[Prop], z.ZodType>>,
+                    Props
+                  >,
                   Item
                 >
               >
@@ -108,15 +111,15 @@ type SlotProps<Name extends WirePart> = {
 };
 
 type Children<Name extends WirePart> =
-  (typeof wireParts)[Name]['children'] extends true
-    ? { children?: ReactNode }
-    : { children?: never };
+  (typeof wireParts)[Name]['children'] extends false
+    ? { children?: never }
+    : { children?: ReactNode };
 
 type Content<Name extends WirePart> = Name extends 'Text'
   ? EventProps<Name>
   : EventProps<Name> & SlotProps<Name> & Children<Name>;
 
-type ListPart = (typeof listPartNames)[number];
+type ListPart = Extract<(typeof listPartNames)[number], WirePart>;
 
 type ListProps<Name extends ListPart, Item> = EventProps<Name, Item> &
   SlotProps<Name> &
@@ -128,33 +131,25 @@ type ListComponent<Name extends ListPart> = <Item>(
 
 // Inferred directly from Contracts; adding a schema prop updates Plugin JSX immediately.
 export type PluginProps = {
-  [Name in PluginPart]: Name extends ListPart
+  [Name in WirePart]: Name extends ListPart
     ? ListProps<Name, unknown>
     : Content<Name>;
 };
 
 export type PluginComponents = {
-  [Name in PluginPart]: Name extends ListPart
+  [Name in WirePart]: Name extends ListPart
     ? ListComponent<Name>
     : ComponentType<PluginProps[Name]>;
-};
-
-// A compound root with its members, read from the dotted part names: Metadata carries Metadata.Label.
-export type KitCompound<Root extends PluginPart> = PluginComponents[Root] & {
-  [Member in KitCompoundMember<Root>]: PluginComponents[Extract<
-    `${Root}.${Member}`,
-    PluginPart
-  >];
 };
 
 export * from './components';
 
 export type PluginWireNode = {
-  [Name in PluginPart]: {
+  [Name in WirePart]: {
     type: Name;
     key: string;
     props: MappedPluginProps<DeclaredProps<WireProps[Name]>, Name, unknown>;
     children: PluginWireNode[];
     slots: Record<string, PluginWireNode[]>;
   };
-}[PluginPart];
+}[WirePart];

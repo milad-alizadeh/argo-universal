@@ -6,7 +6,8 @@ import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Variation, Variations as VariationList } from '../../../variations';
 import { Picker } from './picker';
-import type { PickerProps } from './picker-props';
+import { MultipleExample, multipleExamples } from './picker-multiple-examples';
+import type { SinglePickerProps } from './picker-props';
 
 const options = [
   { value: 'low', label: 'Low' },
@@ -33,7 +34,7 @@ const longOptions = [
 ] as const;
 
 type ExampleProps = Partial<
-  Omit<PickerProps<string>, 'onValueChange' | 'label'>
+  Omit<SinglePickerProps<string>, 'onValueChange' | 'label'>
 >;
 
 function PickerExample(props: ExampleProps): React.JSX.Element {
@@ -106,6 +107,7 @@ function StandaloneVariations(): React.JSX.Element {
           <PickerExample {...props} />
         </Variation>
       ))}
+      {multipleExamples.map(multipleVariation)}
     </VariationList>
   );
 }
@@ -120,3 +122,12 @@ function AccessoryExample(): React.JSX.Element {
     </ListSection>
   );
 }
+
+const multipleVariation = (example: {
+  label: string;
+  props: React.ComponentProps<typeof MultipleExample>;
+}): React.JSX.Element => (
+  <Variation key={example.label} label={example.label}>
+    <MultipleExample {...example.props} />
+  </Variation>
+);

@@ -1,8 +1,10 @@
 import { ClockTick } from '@repo/contracts';
-import type { PluginSurface } from '@repo/contracts/plugins/kit';
+import {
+  currentPartVersions,
+  type PluginSurface,
+} from '@repo/contracts/plugins/kit';
 import { startEngineTestHost } from '@repo/engine/mocks';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pluginPartVersions } from '../../../../lib/product/plugin-registry/plugin-parts';
 import { createTRPCClient } from './create-trpc-client';
 
 const binaryMime = 'application/octet-stream';
@@ -63,7 +65,7 @@ describe('createTRPCClient', () => {
         data: {
           pluginSurface: JSON.stringify({
             platform: 'web',
-            parts: pluginPartVersions,
+            parts: currentPartVersions,
           }),
         },
       }),

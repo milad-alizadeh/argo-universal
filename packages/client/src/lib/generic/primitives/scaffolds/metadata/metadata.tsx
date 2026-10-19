@@ -1,6 +1,7 @@
-import { Children, useContext, type ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 import { List, ListSection } from '#primitives/lists/list';
+import { flattenedChildren } from '../../../flattened-children';
 import { ListContext } from '../../../list-context';
 import {
   MetadataLabel,
@@ -14,7 +15,7 @@ import type { MetadataProps } from './metadata-props';
 const listOptions = { padding: 0, paddingTop: 0, paddingBottom: 0 } as const;
 
 function MetadataRoot({ title, children }: MetadataProps): ReactNode {
-  if (Children.toArray(children).length === 0) return null;
+  if (flattenedChildren(children).length === 0) return null;
 
   return (
     <OwnList>

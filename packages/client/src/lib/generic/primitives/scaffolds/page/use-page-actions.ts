@@ -1,23 +1,23 @@
 import {
-  useCallback,
   useState,
+  type ContextType,
   type Dispatch,
   type SetStateAction,
 } from 'react';
 import {
+  ActionListHeaderContext,
   orderedGroups,
+  prefixedGroups,
   type ActionGroup,
-  type DeclaredAction,
-  type HeaderSink,
 } from '#primitives/actions/action-list';
 
-type Registration = Parameters<HeaderSink>[1];
+type Register = NonNullable<ContextType<typeof ActionListHeaderContext>>;
 
-// The one place a Page's header Actions gather: its own, then those its content hands up.
+type Registration = Parameters<Register>[1];
+
 export interface PageActions {
-  register: HeaderSink;
+  register: Register;
   groups: ActionGroup[];
-  actions: DeclaredAction[];
   label: string;
 }
 
@@ -32,32 +32,29 @@ interface Headers {
 
 const noHeaders: Headers = { registered: new Map(), order: new Map() };
 
+// A Page's header takes its items as data, as iOS's toolbar does, so its ActionLists register here and the header splits them once.
 export function usePageActions(): PageActions {
   const [headers, setHeaders] = useState(noHeaders);
-  const register = useHeaderRegister(setHeaders);
+  // Made once, so the ActionLists that read it never re-register because the Page drew again.
+  const [register] = useState(() => headerRegister(setHeaders));
 
   const ordered = orderedHeaders(headers);
-  const groups = headerGroups(ordered);
 
   return {
     register,
-    groups,
-    actions: groups.flatMap((group) => group.actions),
+    groups: declaredGroups(ordered),
     label: ordered[0]?.[1].label ?? 'More actions',
   };
 }
 
-function useHeaderRegister(
+function headerRegister(
   setHeaders: Dispatch<SetStateAction<Headers>>,
-): HeaderSink {
-  return useCallback<HeaderSink>(
-    (id, value) => {
-      setHeaders((previous) => withHeader(previous, id, value));
+): Register {
+  return (id, value) => {
+    setHeaders((previous) => withHeader(previous, id, value));
 
-      return (): void => setHeaders((previous) => withoutHeader(previous, id));
-    },
-    [setHeaders],
-  );
+    return (): void => setHeaders((previous) => withoutHeader(previous, id));
+  };
 }
 
 function withHeader(
@@ -86,16 +83,9 @@ function orderedHeaders(headers: Headers): [string, Registration][] {
   return [...headers.registered].sort(([a], [b]) => place(a) - place(b));
 }
 
-function headerGroups(headers: [string, Registration][]): ActionGroup[] {
+// Each list's ids gain its own prefix, so two lists never share one; danger Actions from every list end up last.
+function declaredGroups(headers: [string, Registration][]): ActionGroup[] {
   return orderedGroups(
-    headers.flatMap(([id, header]) =>
-      header.groups.map((group) => ({
-        ...group,
-        actions: group.actions.map((action) => ({
-          ...action,
-          id: `${id}/${action.id}`,
-        })),
-      })),
-    ),
+    headers.flatMap(([id, header]) => prefixedGroups(header.groups, id)),
   );
 }

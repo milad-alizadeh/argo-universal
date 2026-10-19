@@ -3,7 +3,7 @@ import type {
   HookRegistration,
   JsonObject,
 } from '@repo/contracts/plugins/hook-protocol';
-import { CapabilityRefusal } from '../capability-refusal';
+import { CapabilityRefusal } from '../access/capability-refusal';
 import { guardRefusal, matches, takesMatcher } from './hook-rules';
 
 // What a Plugin's manifest lets it hook: the events it declares, and its Grants.

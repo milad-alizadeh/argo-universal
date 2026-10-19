@@ -1,15 +1,18 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { useWide } from '#lib/generic/use-wide/use-wide';
 import {
-  Action,
   ActionList,
   HeaderActions,
+  headerSlots,
+  type HeaderActionsProps,
 } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import {
   SearchField,
   type SearchFieldProps,
 } from '#primitives/inputs/search-field';
+import { PageBack } from './page-back';
 import { PageColumn } from './page-column';
 import type { PageHeaderInput, PageProps } from './page-props';
 
@@ -18,9 +21,25 @@ export function PageHeadingBody(props: PageHeaderInput): ReactElement {
   return (
     <View className="py-6">
       <PageColumn>
-        <HeadingRow {...props} />
+        <View className="gap-1">
+          <HeadingRow {...props} />
+          <PageCaption caption={props.caption} />
+        </View>
       </PageColumn>
     </View>
+  );
+}
+
+// A wide page's caption; a phone leaves it out, as its native header has no room for it.
+function PageCaption({ caption }: Pick<PageProps, 'caption'>): ReactNode {
+  const wide = useWide();
+
+  if (!caption || !wide) return null;
+
+  return (
+    <Text role="body" tone="muted">
+      {caption}
+    </Text>
   );
 }
 
@@ -32,9 +51,22 @@ export function HeadingRow(props: PageHeaderInput): ReactElement {
     actions: <HeadingActions {...props} />,
   };
 
-  if (props.search) return <SearchHeading {...content} page={props} />;
+  return (
+    <View>
+      <PageBack onBack={props.onBack} />
+      <Heading content={content} page={props} />
+    </View>
+  );
+}
 
-  return <PlainHeading {...content} />;
+function Heading(props: {
+  content: HeadingContent;
+  page: PageProps;
+}): ReactElement {
+  if (props.page.search)
+    return <SearchHeading {...props.content} page={props.page} />;
+
+  return <PlainHeading {...props.content} />;
 }
 
 function PlainHeading(props: HeadingContent): ReactElement {
@@ -46,7 +78,7 @@ function PlainHeading(props: HeadingContent): ReactElement {
   );
 }
 
-// The Actions gathered for the header, then the primary Action at the end.
+// Every ActionList the Page registered, its own and its content's, split as one header with one overflow menu.
 function HeadingActions(
   props: Pick<PageHeaderInput, 'header' | 'primaryAction'>,
 ): ReactElement {
@@ -54,15 +86,28 @@ function HeadingActions(
 
   return (
     <>
-      {groups.length ? <HeaderActions groups={groups} label={label} /> : null}
+      <DeclaredActions groups={groups} label={label} />
       {primaryButton(props.primaryAction)}
     </>
   );
 }
 
+function DeclaredActions(
+  props: Omit<HeaderActionsProps, 'slots'>,
+): ReactElement | null {
+  if (!props.groups.length) return null;
+
+  return <HeaderActions {...props} slots={headerSlots} />;
+}
+
 function PageTitle({ title }: Pick<PageProps, 'title'>): ReactElement {
   return (
-    <Text role="title" accessibilityRole="heading" numberOfLines={1}>
+    <Text
+      role="title"
+      accessibilityRole="heading"
+      aria-level={1}
+      numberOfLines={1}
+    >
       {title}
     </Text>
   );
@@ -97,16 +142,10 @@ function searchQuery(
   };
 }
 
-function primaryButton(
-  action: PageProps['primaryAction'],
-): ReactElement | null {
+function primaryButton(action: PageProps['primaryAction']): ReactNode {
   if (!action) return null;
 
-  return (
-    <ActionList>
-      <Action {...action} />
-    </ActionList>
-  );
+  return <ActionList>{action}</ActionList>;
 }
 
 function ignoreSearch(): void {}

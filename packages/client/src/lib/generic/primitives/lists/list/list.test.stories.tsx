@@ -103,7 +103,7 @@ export const HeaderAndEndContentOnEmptyList: Story = {
 };
 
 function MultipleSelection(): React.JSX.Element {
-  const [selection, onSelectionChange] = useState(['web']);
+  const [selection, onSelectionChange] = useState<readonly string[]>(['web']);
 
   return (
     <List>

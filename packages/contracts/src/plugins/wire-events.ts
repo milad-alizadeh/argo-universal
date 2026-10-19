@@ -17,41 +17,45 @@ export const PluginViewInput = z.object({
   path: z.string(),
 });
 
-export const PluginInteraction = z.discriminatedUnion('event', [
-  z.object({ event: z.literal('onPress'), payload: z.undefined().optional() }),
-  z.object({
-    event: z.literal('onLongPress'),
-    payload: z.undefined().optional(),
-  }),
-  z.object({ event: z.literal('onChangeText'), payload: z.string() }),
-  z.object({
-    event: z.literal('onConfirm'),
-    payload: z.undefined().optional(),
-  }),
-  z.object({
-    event: z.literal('onDismiss'),
-    payload: z.undefined().optional(),
-  }),
-  z.object({
-    event: z.literal('onValueChange'),
-    payload: z.union([z.boolean(), z.number().finite(), z.string()]),
-  }),
-  z.object({ event: z.literal('onSubmit'), payload: z.undefined().optional() }),
-  z.object({
-    event: z.literal('onAction'),
-    payload: z.object({
-      path: z.array(z.string().min(1)).min(1),
-      value: WireJson.optional(),
-    }),
-  }),
-  z.object({ event: z.literal('onSearchTextChange'), payload: z.string() }),
-  z.object({
-    event: z.literal('onSelectionChange'),
-    payload: z.array(z.string()),
-  }),
-]);
+// A Part event: the App names the node by key and the handler prop by event name.
+export const PartEvent = z.object({
+  event: z.string().min(1),
+  payload: WireJson.optional(),
+});
 
-export type PluginInteraction = z.infer<typeof PluginInteraction>;
+export type PartEvent = z.infer<typeof PartEvent>;
+
+// The App before it sends and the Server on arrival both check a payload against the part's event schema.
+export function partEventPayload(
+  schema: z.ZodType | undefined,
+  payload?: WireJson,
+): WireJson | undefined {
+  const checked = (schema ?? z.never())
+    .pipe(WireJson.optional())
+    .safeParse(payload);
+
+  if (!checked.success) throw new Error('Invalid Plugin event payload');
+
+  return checked.data;
+}
+
+/*
+ * What a Part event's schema metadata asks of the App. `value` names the prop the App echoes the payload into
+ * at once; `blocks` holds the part disabled while the Plugin answers; `flush` sends pending edits first;
+ * `throttleMs` coalesces quick edits.
+ */
+const PartEventRules = z.object({
+  value: z.string().optional(),
+  blocks: z.boolean().default(true),
+  flush: z.boolean().default(false),
+  throttleMs: z.number().default(0),
+});
+
+export type PartEventRules = z.output<typeof PartEventRules>;
+
+export function partEventRules(schema: z.ZodType | undefined): PartEventRules {
+  return PartEventRules.parse(schema?.meta() ?? {});
+}
 
 const target = z.object({
   revision: z.number().int().positive(),
@@ -60,8 +64,9 @@ const target = z.object({
 
 export const PluginDispatchInput = PluginViewInput.extend({
   ...target.shape,
+  ...PartEvent.shape,
   viewId: PluginViewId,
-}).and(PluginInteraction);
+});
 
 export type PluginDispatchInput = z.infer<typeof PluginDispatchInput>;
 
@@ -86,14 +91,13 @@ export const PluginEvent = z.union([
     type: z.literal('discardRender'),
     path: z.string().startsWith('render:'),
   }),
-  z
-    .object({
-      type: z.literal('dispatch'),
-      viewId: PluginViewId,
-      requestId: PluginDispatchId,
-      ...target.shape,
-    })
-    .and(PluginInteraction),
+  z.object({
+    type: z.literal('dispatch'),
+    viewId: PluginViewId,
+    requestId: PluginDispatchId,
+    ...target.shape,
+    ...PartEvent.shape,
+  }),
 ]);
 
 export type PluginEvent = z.infer<typeof PluginEvent>;

@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
-import { Text } from '#primitives/content/text';
+import { Text, TextClassContext } from '#primitives/content/text';
 import { ListItem, ListItemFrame } from './list-item';
 
 export interface ListItemFieldProps {
@@ -33,19 +33,28 @@ export function ListItemField(props: ListItemFieldProps): ReactElement {
   );
 }
 
+// A stacked label/value pair, not a row: no press, hover, separator or lanes.
 function StackedField(props: FieldProps): ReactElement {
   return (
-    <View
-      accessible
-      role="group"
-      accessibilityLabel={props.label}
-      className="mb-4 gap-1"
-    >
-      <Text role="secondary" tone="muted" numberOfLines={1}>
-        {props.title}
-      </Text>
-      <View className="min-w-0">{props.children}</View>
-    </View>
+    <TextClassContext value={undefined}>
+      <View
+        accessible
+        role="group"
+        accessibilityLabel={props.label}
+        className="mb-4 w-full gap-1 select-none"
+      >
+        <StackedTitle title={props.title} />
+        <View className="min-w-0 self-stretch">{props.children}</View>
+      </View>
+    </TextClassContext>
+  );
+}
+
+function StackedTitle({ title }: { title: string }): ReactElement {
+  return (
+    <Text role="secondary" tone="muted" numberOfLines={1}>
+      {title}
+    </Text>
   );
 }
 

@@ -1,48 +1,36 @@
 import { wireParts } from './wire-parts';
 
-// Older Servers and Apps still exchange these wire aliases; new Plugins use the kit's actual components.
-export const legacyWirePartNames = [
-  'Row',
-  'Column',
-  'VirtualList',
-  'GroupedList',
-  'GroupedListItem',
-  'Table',
-] as const;
+// The current App draws every wire part.
+const pluginPartNames = Object.keys(wireParts);
 
-const legacyNames = new Set<string>(legacyWirePartNames);
+// Extra names `@argo/plugin-kit` exports for a part, kept for Plugins written against them.
+const pluginPartAliases = { ListSection: 'List.Section' } as const;
 
-export function isLegacyWirePart(name: string): boolean {
-  return legacyNames.has(name);
+// One `@argo/plugin-kit` export: a part, with each dotted part such as `List.Section` as a member of its owner.
+export interface PluginKitExport {
+  name: string;
+  part: string;
+  members: Record<string, string>;
 }
 
-export type PluginPart = Exclude<
-  keyof typeof wireParts,
-  (typeof legacyWirePartNames)[number]
->;
+function membersOf(parent: string): Record<string, string> {
+  return Object.fromEntries(
+    pluginPartNames.flatMap((name) => {
+      const [owner, member] = name.split('.');
 
-export const pluginPartNames = Object.keys(wireParts).filter(
-  (name) => !isLegacyWirePart(name),
-);
-
-// A compound's members, such as `Label` for `Metadata.Label`, read from the dotted part names.
-export type KitCompoundMember<Root extends string> =
-  PluginPart extends infer Name
-    ? Name extends `${Root}.${infer Member}`
-      ? Member
-      : never
-    : never;
-
-// Each compound root with its members, so the kit's `Metadata.Label` exists once a `Metadata.Label` part does.
-const dottedNames = pluginPartNames.filter((name) => name.includes('.'));
-
-const rootOf = (name: string): string => name.slice(0, name.indexOf('.'));
-
-const membersOf = (root: string): string[] =>
-  dottedNames.flatMap((name) =>
-    rootOf(name) === root ? [name.slice(root.length + 1)] : [],
+      return owner === parent && member ? [[member, name]] : [];
+    }),
   );
+}
 
-export const kitCompounds = Object.fromEntries(
-  [...new Set(dottedNames.map(rootOf))].map((root) => [root, membersOf(root)]),
-);
+// What the Plugin kit exports, at runtime and in its declarations; both read this list.
+export const pluginKitExports: PluginKitExport[] = [
+  ...pluginPartNames
+    .filter((name) => !name.includes('.'))
+    .map((name) => ({ name, part: name, members: membersOf(name) })),
+  ...Object.entries(pluginPartAliases).map(([name, part]) => ({
+    name,
+    part,
+    members: {},
+  })),
+];

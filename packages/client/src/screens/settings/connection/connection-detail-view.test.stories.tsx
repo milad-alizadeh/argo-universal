@@ -35,8 +35,8 @@ export const ShowsServerInfoAndClock: Story = {
   },
 };
 
-// A wide window's page carries its title and caption; a phone's native header carries the title instead.
-export const TitlesThePageOnWideWindows: Story = {
+// Page owns where its title goes at each width; this checks the caption shows on a wide window only.
+export const CaptionsThePageOnWideWindows: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
     await expect(
@@ -47,7 +47,7 @@ export const TitlesThePageOnWideWindows: Story = {
     ).toBeVisible();
     await settleViewport(layoutWidths.phone);
     await expect(
-      canvas.queryByRole('heading', { name: 'Connection' }),
+      canvas.queryByText('The Argo Server this App is talking to.'),
     ).toBeNull();
     await expect(
       canvas.getByRole('group', { name: 'PID, 4242' }),

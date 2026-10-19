@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import {
+  actionEntryProps,
   actionListProps,
   actionProps,
+  actionPropsV1,
   actionSectionProps,
 } from './action-list-props';
 import { part } from './plugin-part-schema-utils';
@@ -10,7 +12,7 @@ export const actionListWireParts = {
   ActionList: {
     ...part('Actions offered by a page, row or tile.', actionListProps, {
       children: true,
-      slots: { trigger: ['ListItem', 'Text', 'Stack', 'Row', 'Column'] },
+      slots: { trigger: ['ListItem', 'Text', 'Stack'] },
       label:
         'Action labels name buttons; accessibilityLabel names the overflow menu.',
       accessibility: {
@@ -26,7 +28,17 @@ export const actionListWireParts = {
   'ActionList.Section': part('A group of Actions.', actionSectionProps, {
     children: true,
   }),
-  Action: part('One Action declared inside ActionList.', actionProps, {
-    events: { onPress: z.undefined() },
-  }),
+  Action: part(
+    'One Action declared inside ActionList, SplitButton or Alert: it runs on press, or opens a submenu of keyed ActionList.Section children.',
+    actionEntryProps,
+    {
+      // Apps before submenus parse a press Action only, so they drop a submenu.
+      previous: [actionPropsV1, actionProps],
+      // Only a submenu holds children; a press Action's are ignored.
+      children: ['ActionList.Section'],
+      container: false,
+      // A press sends pending edits first, so a confirming Action acts on what the user typed.
+      events: { onPress: z.undefined().meta({ flush: true }) },
+    },
+  ),
 };

@@ -5,15 +5,17 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useNativeTheme } from '#lib/generic/native-theme';
 import { useWide } from '#lib/generic/use-wide/use-wide';
+import type { IconAction } from '#primitives/actions/action-list';
 import { Icon } from '#primitives/content/icon';
 import { Host } from '#primitives/native/host';
+import { pagePrimaryAction } from './page-primary-action';
 import type { PageProps } from './page-props';
 
-type FabProps = { action: NonNullable<PageProps['primaryAction']> };
+type FabProps = { action: IconAction };
 
 // Android's primary Action is the Material FAB. Material has no disabled FAB, so an unavailable Action shows none.
 export function PageAccessory(props: PageProps): ReactElement | null {
-  const action = useWide() ? undefined : available(props.primaryAction);
+  const action = useWide() ? undefined : available(pagePrimaryAction(props));
 
   if (!action) return null;
 
@@ -26,9 +28,7 @@ export function PageAccessory(props: PageProps): ReactElement | null {
   );
 }
 
-function available(
-  action: PageProps['primaryAction'],
-): PageProps['primaryAction'] {
+function available(action: IconAction | undefined): IconAction | undefined {
   return action?.disabled ? undefined : action;
 }
 

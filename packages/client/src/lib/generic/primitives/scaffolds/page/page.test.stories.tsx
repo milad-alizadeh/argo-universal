@@ -1,11 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
-import { layoutWidths } from '#lib/generic/each-layout';
-import { settleViewport } from '#lib/generic/settle-viewport';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { Page } from './index';
+import { atWidth, pageWidths as widths } from './page-widths.mocks';
 
 const meta = {
   title: 'Tests/Page',
@@ -17,23 +16,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Page draws its own heading at both widths in a story, which has no navigator; each claim runs at both.
-const widths = { Phone: layoutWidths.phone, Wide: layoutWidths.wide } as const;
-
-function atWidth(width: number, story: Story): Story {
-  return { ...story, beforeEach: () => settleViewport(width) };
-}
+const project = 'argo-universal';
 
 const titleAndContent: Story = {
-  args: { title: 'Projects', children: <Text>argo-universal</Text> },
+  args: { title: 'Projects', children: <Text>{project}</Text> },
   play: async ({ canvas }) => {
     await expect(
-      canvas.getByRole('heading', { name: 'Projects' }),
+      canvas.getByRole('heading', { level: 1, name: 'Projects' }),
     ).toBeVisible();
-    await expect(canvas.getByText('argo-universal')).toBeVisible();
+    await expect(canvas.getByText(project)).toBeVisible();
     await expect(
       canvas.queryByRole('button', { name: 'More actions' }),
     ).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
   },
 };
 
@@ -64,6 +59,40 @@ function SearchablePage(): React.JSX.Element {
 export const TitleAndContentPhone = atWidth(widths.Phone, titleAndContent);
 
 export const TitleAndContentWide = atWidth(widths.Wide, titleAndContent);
+
+const returned = fn();
+
+const caption = 'The Argo Server this App is talking to.';
+
+const drillIn = {
+  title: project,
+  caption,
+  onBack: returned,
+  children: <Text>Folder</Text>,
+};
+
+// A wide drill-in page draws its own Back and caption.
+export const BackAndCaptionWide = atWidth(widths.Wide, {
+  args: drillIn,
+  play: async ({ canvas, userEvent }) => {
+    returned.mockClear();
+    await expect(canvas.getByText(caption)).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
+    await expect(returned).toHaveBeenCalledOnce();
+  },
+});
+
+// A phone's stack header has Back and no room for a caption, so the Page draws neither.
+export const BackAndCaptionPhone = atWidth(widths.Phone, {
+  args: drillIn,
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('heading', { level: 1, name: project }),
+    ).toBeVisible();
+    await expect(canvas.queryByText(caption)).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
+  },
+});
 
 const searchAndClear: Story = {
   render: () => <SearchablePage />,
@@ -96,11 +125,9 @@ const chosen = fn();
 const headerActions: Story = {
   args: {
     title: 'Projects',
-    primaryAction: {
-      label: primaryLabel,
-      icon: 'add',
-      onPress: () => chosen('add'),
-    },
+    primaryAction: (
+      <Action label={primaryLabel} icon="add" onPress={() => chosen('add')} />
+    ),
     actions: (
       <ActionList>
         <Action
@@ -127,12 +154,9 @@ export const HeaderActionsWide = atWidth(widths.Wide, headerActions);
 export const DisabledPrimary: Story = {
   args: {
     title: 'Projects',
-    primaryAction: {
-      label: primaryLabel,
-      icon: 'add',
-      disabled: true,
-      onPress: chosen,
-    },
+    primaryAction: (
+      <Action label={primaryLabel} icon="add" disabled onPress={chosen} />
+    ),
   },
   play: async ({ canvas }) => {
     await expect(

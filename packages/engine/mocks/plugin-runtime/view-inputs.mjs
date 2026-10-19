@@ -1,4 +1,4 @@
-import { Page, Text, useState } from '@argo/plugin-kit';
+import { Action, Page, Text, useState } from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
 const searchPage = (value, onChangeText) => ({
@@ -8,14 +8,19 @@ const searchPage = (value, onChangeText) => ({
   onChangeText,
 });
 
-const addInput = (setAdded) => ({
-  label: 'Add input',
-  icon: 'add',
-  onPress: () => setAdded((count) => count + 1),
-});
+const addInput = (setAdded) =>
+  jsx(
+    Action,
+    {
+      label: 'Add input',
+      icon: 'add',
+      onPress: () => setAdded((count) => count + 1),
+    },
+    'add',
+  );
 
 const content = (setSelection, heard) => [
-  jsx('List', { onSelectionChange: setSelection }, 'list'),
+  jsx('List.Section', { onSelectionChange: setSelection }, 'list'),
   jsx(Text, { children: heard }, 'heard'),
 ];
 

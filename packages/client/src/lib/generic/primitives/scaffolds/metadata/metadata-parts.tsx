@@ -1,10 +1,11 @@
-import { Children, isValidElement, type ReactElement } from 'react';
+import { isValidElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
 import { ListItem } from '#primitives/lists/list-item';
 import type { PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
+import { flattenedChildren } from '../../../flattened-children';
 import { MetadataPills } from './metadata-pills';
 import type {
   MetadataLabelProps,
@@ -81,7 +82,7 @@ export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
 
 // The wire lets only Pills in (`children: ['Pill']`), so each child's props are a Pill's values.
 function pillProps(children: MetadataPillsProps['children']): PillProps[] {
-  return Children.toArray(children).flatMap((child) =>
+  return flattenedChildren(children).flatMap((child) =>
     isValidElement<PillProps>(child) ? [child.props] : [],
   );
 }

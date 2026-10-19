@@ -53,7 +53,7 @@ it('ignores empty React children in slot arrays and inserts a conditional node',
     type: 'snapshot',
     root: {
       slots: {
-        accessories: [{ key: 'always', props: { children: 'Always' } }],
+        trailing: [{ key: 'always', props: { children: 'Always' } }],
       },
     },
   });
@@ -66,7 +66,7 @@ it('ignores empty React children in slot arrays and inserts a conditional node',
       {
         op: 'insert',
         parent: [],
-        slot: 'accessories',
+        slot: 'trailing',
         index: 0,
         node: {
           type: 'Text',

@@ -5,7 +5,9 @@ export type ListItemPickerProps<Value extends string = string> = KitProps<
   Value
 >;
 
-export function pickerRowValue(props: ListItemPickerProps): string {
+export function pickerRowValue<Value extends string>(
+  props: ListItemPickerProps<Value>,
+): string {
   if (props.loading) return 'Loading…';
 
   const option = props.options.find((item) => item.value === props.value);
@@ -13,6 +15,6 @@ export function pickerRowValue(props: ListItemPickerProps): string {
   return option ? option.label : pickerPlaceholder(props);
 }
 
-function pickerPlaceholder(props: ListItemPickerProps): string {
+function pickerPlaceholder(props: { placeholder?: string }): string {
   return props.placeholder ?? 'Choose…';
 }

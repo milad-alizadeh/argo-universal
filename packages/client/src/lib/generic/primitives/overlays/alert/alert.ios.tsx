@@ -12,19 +12,21 @@ import {
   isAlertActionEnabled,
   isAlertBusy,
   type AlertAction,
+  answeredAlert,
   type AlertProps,
+  type AnsweredAlertProps,
 } from './alert-props';
 
 // Every question, a destructive one too, is the stock centred alert with its answers side by side (Paper).
 export function Alert(props: AlertProps): React.JSX.Element {
   return (
     <Host matchContents>
-      <PlainAlert {...props} />
+      <PlainAlert {...answeredAlert(props)} />
     </Host>
   );
 }
 
-type AlertActionsProps = Pick<AlertProps, 'actions' | 'onOpenChange'>;
+type AlertActionsProps = Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'>;
 
 // The props SwiftUI's alert presents itself from.
 interface AlertPresentation {
@@ -34,7 +36,7 @@ interface AlertPresentation {
 }
 
 // A running answer hides the alert: SwiftUI closes it on any press and draws no progress, so the screen shows it.
-function alertPresentation(props: AlertProps): AlertPresentation {
+function alertPresentation(props: AnsweredAlertProps): AlertPresentation {
   return {
     title: props.title,
     isPresented: props.open && !isAlertBusy(props.actions),
@@ -42,7 +44,7 @@ function alertPresentation(props: AlertProps): AlertPresentation {
   };
 }
 
-function PlainAlert(props: AlertProps): React.JSX.Element {
+function PlainAlert(props: AnsweredAlertProps): React.JSX.Element {
   return (
     <SwiftAlert {...alertPresentation(props)}>
       <SwiftAlert.Trigger>
@@ -57,7 +59,7 @@ function PlainAlert(props: AlertProps): React.JSX.Element {
 }
 
 function PlainAlertMessage(props: {
-  message: AlertProps['message'];
+  message: AnsweredAlertProps['message'];
 }): React.JSX.Element | null {
   if (!props.message) return null;
 
@@ -89,17 +91,9 @@ function AlertActions(props: AlertActionsProps): React.JSX.Element {
   );
 }
 
-function actionRole(
-  action: AlertProps['actions'][number],
-): 'cancel' | 'destructive' | undefined {
-  if (action.cancel) return 'cancel';
-
-  return swiftRole(action.tone);
-}
-
 // SwiftUI names the danger tone's role `destructive`.
-function swiftRole(tone: AlertAction['tone']): 'destructive' | undefined {
-  return tone === 'danger' ? 'destructive' : undefined;
+function actionRole(action: AlertAction): AlertAction['role'] {
+  return action.role ?? (action.tone === 'danger' ? 'destructive' : undefined);
 }
 
 Alert satisfies React.ComponentType<AlertProps>;

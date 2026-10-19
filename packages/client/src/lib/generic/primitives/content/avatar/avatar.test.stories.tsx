@@ -38,6 +38,17 @@ export const ShowsInitialsWithoutStatus: Story = {
   },
 };
 
+export const ShowsOneInitialWhenSmall: Story = {
+  render: () => (
+    <Avatar size="sm" initials="SR" accessibilityLabel="Sam Rivera" />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('img', { name: 'Sam Rivera' })).toBeVisible();
+    await expect(canvas.getByText('S')).toBeVisible();
+    await expect(canvas.queryByText('SR')).not.toBeInTheDocument();
+  },
+};
+
 export const HidesDecorativeAvatar: Story = {
   render: () => (
     <Avatar

@@ -10,12 +10,14 @@ import {
   type PluginRuntime,
 } from '../plugins';
 import { readPluginProjects, readProjectPaths } from '../projects';
+import { watchTurnActivity } from '../sessions';
 import type { HttpServerOptions } from './http-server';
 
 export type PluginSetup = {
   pluginRuntime: PluginRuntime;
   pluginSettings: PluginSettings;
   hookPort: HookPort;
+  unwatchTurns: () => void;
 };
 
 // The Plugin runtime, with core's Hook events run through the Plugins that hook them, started on first use.
@@ -33,9 +35,21 @@ export function startPlugins(options: HttpServerOptions): PluginSetup {
     settings: async (pluginId, key) => pluginSettings.read(pluginId, key),
   });
 
-  attachHooks(options, { pluginRuntime, pluginSettings, hookPort });
+  return connectPlugins(options, { pluginRuntime, pluginSettings, hookPort });
+}
 
-  return { pluginRuntime, pluginSettings, hookPort };
+// Sessions reach Plugins through Hooks; dev Plugins reload only once every Turn has ended (ADR-0027).
+function connectPlugins(
+  options: HttpServerOptions,
+  setup: Omit<PluginSetup, 'unwatchTurns'>,
+): PluginSetup {
+  attachHooks(options, setup);
+
+  const unwatchTurns = watchTurnActivity(options.sessions, (active) => {
+    void setup.pluginRuntime.turns.changed(active);
+  });
+
+  return { ...setup, unwatchTurns };
 }
 
 // The runtime and the settings it answers `argo.settings` from share one Keychain.
@@ -50,7 +64,10 @@ function settingsFor(
   });
 }
 
-function attachHooks(options: HttpServerOptions, setup: PluginSetup): void {
+function attachHooks(
+  options: HttpServerOptions,
+  setup: Omit<PluginSetup, 'unwatchTurns'>,
+): void {
   const plugins = new PluginService({ ...options, ...setup });
 
   setup.hookPort.attach({
@@ -61,8 +78,9 @@ function attachHooks(options: HttpServerOptions, setup: PluginSetup): void {
 
 // Core answers alone again before the runtime closes.
 export async function closePlugins(
-  setup: Pick<PluginSetup, 'pluginRuntime' | 'hookPort'>,
+  setup: Pick<PluginSetup, 'pluginRuntime' | 'hookPort' | 'unwatchTurns'>,
 ): Promise<void> {
+  setup.unwatchTurns();
   setup.hookPort.detach();
   await setup.pluginRuntime.close();
 }

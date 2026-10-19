@@ -7,139 +7,105 @@
   },
   "children": [
     {
-      "type": "Button",
-      "key": "alert-trigger",
+      "type": "Alert",
+      "key": "alert",
       "props": {
-        "label": "Open alert",
-        "onPress": {
-          "action": "alert",
-          "title": "Alert title",
-          "content": {
-            "type": "Text",
-            "key": "message",
-            "props": {
-              "children": "Alert wire content"
-            },
-            "children": [],
-            "slots": {}
-          },
-          "confirmLabel": "Apply alert",
-          "cancelLabel": "Cancel alert",
-          "onConfirm": {
-            "$event": "onConfirm"
-          },
-          "onDismiss": {
-            "$event": "onDismiss"
-          }
+        "open": false,
+        "title": "Alert title",
+        "message": "Alert wire content",
+        "onOpenChange": {
+          "$event": "onOpenChange"
         }
       },
-      "children": [],
+      "children": [
+        {
+          "type": "Action",
+          "key": "apply",
+          "props": {
+            "label": "Apply alert",
+            "onPress": {
+              "$event": "onPress"
+            }
+          },
+          "children": [],
+          "slots": {}
+        },
+        {
+          "type": "Action",
+          "key": "cancel",
+          "props": {
+            "label": "Cancel alert",
+            "role": "cancel",
+            "onPress": {
+              "$event": "onPress"
+            }
+          },
+          "children": [],
+          "slots": {}
+        }
+      ],
       "slots": {}
     },
     {
-      "type": "Button",
-      "key": "dialog-trigger",
+      "type": "Sheet",
+      "key": "sheet",
       "props": {
-        "label": "Open dialog",
-        "onPress": {
-          "action": "dialog",
-          "title": "Dialog title",
-          "content": {
-            "type": "Stack",
-            "key": "body",
-            "props": {
-              "direction": "column",
-              "gap": 4
-            },
-            "children": [
-              {
-                "type": "TextInput",
-                "key": "field",
-                "props": {
-                  "label": "Overlay name",
-                  "value": "Argo",
-                  "onChangeText": {
-                    "$event": "onChangeText",
-                    "$path": [
-                      "onPress",
-                      "content",
-                      "children",
-                      "0",
-                      "props",
-                      "onChangeText"
-                    ]
-                  }
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          "confirmLabel": "Apply dialog",
-          "cancelLabel": "Cancel dialog",
-          "onConfirm": {
-            "$event": "onConfirm"
-          },
-          "onDismiss": {
-            "$event": "onDismiss"
-          }
+        "open": false,
+        "label": "Sheet title",
+        "onOpenChange": {
+          "$event": "onOpenChange"
         }
       },
-      "children": [],
-      "slots": {}
-    },
-    {
-      "type": "Button",
-      "key": "sheet-trigger",
-      "props": {
-        "label": "Open sheet",
-        "onPress": {
-          "action": "sheet",
-          "title": "Sheet title",
-          "content": {
-            "type": "Stack",
-            "key": "body",
-            "props": {
-              "direction": "column",
-              "gap": 4
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "message",
-                "props": {
-                  "children": "Sheet wire content"
-                },
-                "children": [],
-                "slots": {}
+      "children": [
+        {
+          "type": "Stack",
+          "key": "body",
+          "props": {
+            "direction": "column",
+            "gap": 4
+          },
+          "children": [
+            {
+              "type": "TextInput",
+              "key": "field",
+              "props": {
+                "label": "Overlay name",
+                "value": "Argo",
+                "onChangeText": {
+                  "$event": "onChangeText"
+                }
               },
-              {
-                "type": "Button",
-                "key": "close",
-                "props": {
-                  "label": "Close from content",
-                  "onPress": {
-                    "action": "dismiss"
-                  }
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          "confirmLabel": "Apply sheet",
-          "cancelLabel": "Cancel sheet",
-          "onConfirm": {
-            "$event": "onConfirm"
-          },
-          "onDismiss": {
-            "$event": "onDismiss"
-          }
+              "children": [],
+              "slots": {}
+            },
+            {
+              "type": "Button",
+              "key": "cancel",
+              "props": {
+                "label": "Cancel sheet",
+                "onPress": {
+                  "$event": "onPress"
+                }
+              },
+              "children": [],
+              "slots": {}
+            },
+            {
+              "type": "Button",
+              "key": "apply",
+              "props": {
+                "label": "Apply sheet",
+                "onPress": {
+                  "$event": "onPress"
+                }
+              },
+              "children": [],
+              "slots": {}
+            }
+          ],
+          "slots": {}
         }
-      },
-      "children": [],
+      ],
       "slots": {}
     },
     {

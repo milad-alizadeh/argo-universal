@@ -1,8 +1,7 @@
 import type { WirePartDefinition } from '@repo/contracts/plugins/kit';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
-import type { PluginUi } from '../plugin-dispatcher';
-import type { PluginActions } from './use-plugin-actions';
+import type { PluginSend } from '../plugin-dispatcher';
 
 export type { PluginOnEvent } from '../plugin-dispatcher';
 
@@ -10,23 +9,15 @@ export interface RenderContext {
   key: string;
   // Set below the tree's root, where a root-only part such as Page is refused.
   nested?: boolean;
-  ui: PluginUi;
+  send: PluginSend;
   controls: PluginControls;
-  actions: PluginActions;
 }
 
 type Callback = (value?: WireJson) => void;
 
-export type PluginProp =
-  | ReactNode
-  | WireJson
-  | Callback
-  | PluginProps
-  | PluginProp[];
+type PluginProp = ReactNode | WireJson | Callback;
 
-export interface PluginProps {
-  [name: string]: PluginProp;
-}
+export type PluginProps = Record<string, PluginProp>;
 
 export type ControlInput = {
   node: WireNode;

@@ -29,6 +29,21 @@ export function handler<const Name extends string>(
 
 export const onPress = handler('onPress');
 
+// Events go only on a part's top-level props, so a press inside prop data runs a Built-in Action.
+export const builtInPress = Action.describe('Built-in Action run on press.');
+
+// The App echoes the payload into `prop` at once, so the payload schema is that prop's schema.
+export function echoes<
+  Prop extends string,
+  Fields extends Record<string, z.ZodType> & Record<Prop, z.ZodType>,
+>(
+  props: z.ZodObject<Fields>,
+  prop: Prop,
+  rules: { blocks?: boolean; throttleMs?: number } = {},
+): z.ZodNonOptional<Fields[Prop]> {
+  return props.shape[prop].nonoptional().meta({ value: prop, ...rules });
+}
+
 export const imageSource = z
   .union([z.string().url(), z.object({ asset: z.string() })])
   .describe('A remote URL or Plugin asset served through the Server.');

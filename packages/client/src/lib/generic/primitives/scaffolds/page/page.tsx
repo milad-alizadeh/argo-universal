@@ -13,16 +13,15 @@ import { usePageColumn } from './page-column';
 import { PageHeaderSinkProvider } from './page-header-actions';
 import { PageHeading } from './page-heading';
 import { PageNavigation } from './page-navigation';
+import { pagePrimaryAction } from './page-primary-action';
 import type { PageProps } from './page-props';
 import { usePageActions } from './use-page-actions';
-import { usePageSearch } from './use-page-search';
 
+// Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Page(props: PageProps): ReactElement {
-  const search = usePageSearch(props);
-
   return (
     <ActionShortcutScope>
-      <PageSurface {...props} {...search} />
+      <PageSurface {...props} />
     </ActionShortcutScope>
   );
 }
@@ -45,13 +44,13 @@ function PageSurface(props: PageProps): ReactElement {
   );
 }
 
-// Mounted for their registration only: every ActionList under a header sink draws nothing itself.
+// Mounted for their registration only: the lists leave just their shortcut anchors, out of the Page's layout.
 function OwnActions(
   props: Pick<PageProps, 'actions'> & { register: HeaderSink },
 ): ReactElement {
   return (
     <ActionListHeaderContext value={props.register}>
-      {props.actions}
+      <View className="absolute">{props.actions}</View>
     </ActionListHeaderContext>
   );
 }
@@ -95,5 +94,7 @@ function bodyClass(props: PageProps, wide: boolean): string {
 
 // Android's FAB, which the body's end clears; an unavailable primary Action shows none.
 function hasFab(props: PageProps): boolean {
-  return Boolean(props.primaryAction && !props.primaryAction.disabled);
+  const action = pagePrimaryAction(props);
+
+  return Boolean(action && !action.disabled);
 }

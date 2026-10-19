@@ -25,26 +25,26 @@ describe('a root-only part', () => {
     expect(prepareWireTree(page, currentPartVersions)).toEqual(page);
   });
 
-  it.each([host('Column', {}), host('Page', { title: 'Host' })])(
-    'is refused as a child of $type',
-    (root) => {
-      expect(prepareWireTree(root, currentPartVersions).children).toEqual([
-        {
-          type: 'Text',
-          key: 'page',
-          props: {
-            children: 'Update Argo to see this',
-            role: 'secondary',
-            tone: 'muted',
-          },
-          children: [],
-          slots: {},
+  it.each([
+    host('Stack', { direction: 'column' }),
+    host('Page', { title: 'Host' }),
+  ])('is refused as a child of $type', (root) => {
+    expect(prepareWireTree(root, currentPartVersions).children).toEqual([
+      {
+        type: 'Text',
+        key: 'page',
+        props: {
+          children: 'Update Argo to see this',
+          role: 'secondary',
+          tone: 'muted',
         },
-      ]);
-    },
-  );
+        children: [],
+        slots: {},
+      },
+    ]);
+  });
 
-  it.each([page, host('Column', {})])(
+  it.each([page, host('Stack', { direction: 'column' })])(
     'refuses a Replaceable Slot tree that holds it ($type)',
     (root) => {
       expect(replacementTreeReason(root, currentPartVersions)).toBe(

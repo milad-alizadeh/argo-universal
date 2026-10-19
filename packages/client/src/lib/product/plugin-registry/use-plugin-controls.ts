@@ -1,68 +1,113 @@
-import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
-import { findWireNode } from '@repo/contracts/plugins/wire-node-key';
-import { isValidElement, useEffect, useReducer, useState } from 'react';
-import { throttle } from '../plugin-dispatcher';
-import { eventProps, localEvents, type Change } from './plugin-events';
+import type { WirePartDefinition } from '@repo/contracts/plugins/kit';
+import {
+  partEventRules,
+  type PartEventRules,
+  type WireNode,
+  type WireJson,
+} from '@repo/contracts/plugins/wire';
+import { wireNodeKeys } from '@repo/contracts/plugins/wire-node-key';
+import { useEffect, useReducer, useState } from 'react';
+import { eventProps, type Change, type Edit } from './plugin-events';
 import type {
   ControlInput,
-  PluginProp,
   PluginProps,
   PluginControls,
 } from './plugin-rendering';
 
+type Value = { sequence: number; value: WireJson | undefined };
+
+type Request = { value: WireJson | undefined; blocks: boolean };
+
 type Field = {
-  value?: WireJson;
+  value: Value;
+  // The Server's latest value, and whether the field has yet to show it.
   source?: WireJson;
+  stale: boolean;
   type: string;
+  rules: Partial<PartEventRules>;
   focused: boolean;
-  pending: number;
-  event: string;
-  path?: string[];
+  pending: Map<number, Request>;
 };
 
 export function usePluginControls(root: WireNode): PluginControls {
   const [fields] = useState(() => new Map<string, Field>());
   const [, update] = useReducer((revision: number) => revision + 1, 0);
   useEffect(() => {
-    for (const key of fields.keys())
-      if (!findWireNode(root, key)) fields.delete(key);
+    const live = wireNodeKeys(root);
+
+    for (const key of fields.keys()) if (!live.has(key)) fields.delete(key);
   }, [fields, root]);
 
-  return (input) => {
-    const field = fieldFor(fields, input);
-
-    return propsFor(input, field, update);
-  };
+  return (input) => propsFor(input, fieldFor(fields, input), update);
 }
 
 function fieldFor(fields: Map<string, Field>, input: ControlInput): Field {
-  const { node, context } = input;
-  const source = input.source.value ?? input.source.selection;
-  const existing = fields.get(context.key);
-  const field = matchingField(existing, node.type, source);
-  syncField(field, source);
-  fields.set(context.key, field);
+  const { key } = input.context;
+  const field = matchingField(fields.get(key), input);
+  fields.set(key, field);
+  syncEcho(fields, field, input);
 
   return field;
 }
 
-function matchingField(
-  field: Field | undefined,
-  type: string,
-  source?: WireJson,
-): Field {
-  if (field?.type === type) return field;
+function syncEcho(
+  fields: Map<string, Field>,
+  field: Field,
+  input: ControlInput,
+): void {
+  const prop = field.rules.value;
 
-  return { type, value: source, source, focused: false, pending: 0, event: '' };
+  if (prop === undefined) return;
+  syncField(field, input.source[prop]);
+
+  // Closing an overlay unmounts its fields without a blur.
+  if (closed(field)) blurWithin(fields, input.context.key);
 }
 
+const closed = (field: Field): boolean =>
+  field.rules.value === 'open' && currentValue(field) === false;
+
+function matchingField(field: Field | undefined, input: ControlInput): Field {
+  if (field?.type === input.node.type) return field;
+
+  return {
+    type: input.node.type,
+    value: { sequence: 0, value: undefined },
+    stale: false,
+    rules: echoRules(input.part),
+    focused: false,
+    pending: new Map(),
+  };
+}
+
+// The Part event whose metadata names a prop the App echoes at once.
+const echoRules = (part: WirePartDefinition): Partial<PartEventRules> =>
+  Object.values(part.events)
+    .map(partEventRules)
+    .find((rules) => rules.value !== undefined) ?? {};
+
+// The Server's value shows once the field has no focus and no edit pending.
 function syncField(field: Field, source?: WireJson): void {
-  if (field.focused) return;
-
   if (!Object.is(field.source, source))
-    field.value = pendingValue(field, source);
-  field.source = source;
+    Object.assign(field, { source, stale: true });
+
+  if (showsServer(field))
+    Object.assign(field, {
+      value: { ...field.value, value: source },
+      stale: false,
+    });
 }
+
+const showsServer = (field: Field): boolean =>
+  field.stale && !field.focused && field.pending.size === 0;
+
+function blurWithin(fields: Map<string, Field>, key: string): void {
+  for (const [child, field] of fields)
+    if (isDescendant(child, key)) field.focused = false;
+}
+
+const isDescendant = (child: string, key: string): boolean =>
+  child.startsWith(`${key}/`) || child.startsWith(`${key}#`);
 
 function propsFor(
   input: ControlInput,
@@ -71,103 +116,65 @@ function propsFor(
 ): PluginProps {
   const change = changeFor(field, update);
   const props = { ...input.node.props, ...eventProps(input, change) };
+  const prop = field.rules.value;
 
-  const prop = localProp(input);
+  if (prop !== undefined) props[prop] = currentValue(field);
+  const pending = blocked(field) ? { disabled: true, loading: true } : {};
 
-  if (prop) props[prop] = field.value;
-
-  const pending = isPending(input, field) ? pendingProps(props, field) : props;
-
-  const text = Boolean(input.part.events.onChangeText);
-
-  return Object.assign(pending, focusOf(field, update, text));
+  return Object.assign(props, focusOf(field, update), pending);
 }
 
-function localProp({ part }: ControlInput): string | undefined {
-  const event = Object.keys(part.events).find((name) => localEvents.has(name));
+const blocked = (field: Field): boolean =>
+  [...field.pending.values()].some((request) => request.blocks);
 
-  if (!event) return undefined;
-
-  return event === 'onSelectionChange' ? 'selection' : 'value';
-}
-
-// A nested handler, such as a Page's primary Action, disables only the object that holds it.
-function pendingProps(props: PluginProps, { path = [] }: Field): PluginProps {
-  const owner = path.slice(0, -1);
-
-  if (!owner.length) return { ...props, disabled: true, loading: true };
-
-  return disabledAt(props, owner);
-}
-
-function disabledAt(props: PluginProps, path: string[]): PluginProps {
-  const [name, ...rest] = path;
-
-  if (name === undefined) return { ...props, disabled: true };
-
-  return { ...props, [name]: disabledIn(props[name], rest) };
-}
-
-function disabledIn(value: PluginProp, path: string[]): PluginProp {
-  if (Array.isArray(value)) return disabledItem(value, path);
-
-  return isPropsObject(value) ? disabledAt(value, path) : value;
-}
-
-function disabledItem(
-  items: PluginProp[],
-  [index, ...rest]: string[],
-): PluginProp[] {
-  return items.map((child, position) =>
-    String(position) === index ? disabledIn(child, rest) : child,
-  );
-}
-
-// Callers rule out arrays first.
-function isPropsObject(value: PluginProp): value is PluginProps {
-  if (!value || typeof value !== 'object') return false;
-
-  return !isValidElement(value);
-}
-
+// A blocking event waits for the one before it; an echo of the shown value changes nothing.
 function changeFor(field: Field, update: () => void): Change {
-  return ({ event, path, value, deliver }) => {
-    const previous = field.value;
-    const next = localEvents.has(event) ? value : previous;
-    Object.assign(field, { value: next, event, path });
-    field.pending += 1;
-    update();
-    void deliver()
-      .catch(() => {
-        if (Object.is(field.value, next)) field.value = previous;
-      })
-      .finally(settled(field, update));
+  return (edit) => {
+    if (waiting(field, edit) || echoed(field, edit)) return;
+    request(field, edit, update);
   };
 }
 
-function settled(field: Field, update: () => void): () => void {
-  return () => {
-    field.pending -= 1;
-    update();
-  };
+const waiting = (field: Field, edit: Edit): boolean =>
+  edit.rules.blocks && blocked(field);
+
+const echoed = (field: Field, edit: Edit): boolean =>
+  edit.rules.value !== undefined && Object.is(edit.value, currentValue(field));
+
+function request(field: Field, edit: Edit, update: () => void): void {
+  const sequence = Math.max(field.value.sequence, ...field.pending.keys()) + 1;
+  const value = edit.rules.value ? edit.value : currentValue(field);
+  field.pending.set(sequence, { value, blocks: edit.rules.blocks });
+  update();
+  void edit
+    .deliver()
+    .then(() => accept(field, { sequence, value }))
+    // A refused edit leaves the last accepted value showing.
+    .catch(() => {})
+    .finally(() => settled(field, sequence, update));
 }
 
-function isPending(input: ControlInput, field: Field): boolean {
-  return field.pending > 0 && blocking(input, field.event);
+function accept(field: Field, value: Value): void {
+  if (value.sequence > field.value.sequence) field.value = value;
 }
 
-function blocking({ part, node }: ControlInput, event: string): boolean {
-  if (node.type === 'ListItem') return false;
-
-  return !throttle(part.events[event]);
+function settled(field: Field, sequence: number, update: () => void): void {
+  field.pending.delete(sequence);
+  update();
 }
 
-function pendingValue(field: Field, source?: WireJson): WireJson | undefined {
-  return field.pending ? field.value : source;
+// The newest pending edit shows until an edit after it is accepted.
+function currentValue(field: Field): WireJson | undefined {
+  const last = [...field.pending].at(-1);
+
+  return last && last[0] > field.value.sequence
+    ? last[1].value
+    : field.value.value;
 }
 
-function focusOf(field: Field, update: () => void, text: boolean): PluginProps {
-  if (!text) return {};
+// A coalesced field keeps what the user types while it has focus.
+function focusOf(field: Field, update: () => void): PluginProps {
+  if (!field.rules.throttleMs) return {};
 
   return {
     onFocus: (): void => {

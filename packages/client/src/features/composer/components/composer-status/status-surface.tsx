@@ -14,7 +14,7 @@ interface ChipSurfaceProps {
 }
 
 const chipSurfaceProps = {
-  corners: 'capsule',
+  corners: 'pill',
   interactive: true,
   className: 'h-6',
   fallbackClassName: 'rounded-full border border-border bg-card shadow-card',

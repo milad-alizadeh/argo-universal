@@ -1,33 +1,34 @@
-import { PluginInteraction, WireJson } from '@repo/contracts/plugins/wire';
+import {
+  partEventPayload,
+  type PartEvent,
+  type WireJson,
+} from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 
 export type PluginOnEvent = (
   key: string,
-  interaction: PluginInteraction,
+  event: PartEvent,
 ) => void | Promise<void>;
 
-export type PluginEvent = {
+// A Part event before the App checks its payload against the part's event schema.
+export type PartEventInput = {
   event: string;
   payload?: WireJson;
-  path?: string[];
   schema: z.ZodType;
 };
 
-export function checkedEvent({
-  event,
-  payload,
-  path,
-  schema,
-}: PluginEvent): PluginInteraction {
-  const value = schema
-    .pipe(WireJson.optional())
-    .parse(schema instanceof z.ZodUndefined ? undefined : payload);
+// A payload that fails the check is not sent; the field it came from rolls back.
+export function checkedPartEvent(input: PartEventInput): PartEvent {
+  const { event, schema } = input;
 
-  if (path) return { event: 'onAction', payload: { path, value } };
-
-  return PluginInteraction.parse({ event, payload: value });
+  try {
+    return { event, payload: partEventPayload(schema, sent(input)) };
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') console.error(event, error);
+    throw error;
+  }
 }
 
-export function throttle(schema?: z.ZodType): number {
-  return z.number().catch(0).parse(schema?.meta()?.throttleMs);
-}
+// A press reports a native event object; its Part event carries no payload.
+const sent = ({ schema, payload }: PartEventInput): WireJson | undefined =>
+  schema instanceof z.ZodUndefined ? undefined : payload;

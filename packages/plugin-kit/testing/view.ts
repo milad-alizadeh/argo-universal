@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
+import { setTimeout as delay } from 'node:timers/promises';
+import {
+  currentPartVersions,
+  type PluginSurface,
+} from '@repo/contracts/plugins/kit';
 import type {
-  PluginInteraction,
+  PartEvent,
   PluginSlotInput,
   SlotMessage,
   ViewMessage,
@@ -11,19 +15,30 @@ import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
 
-type Opening = { path: string; slot?: PluginSlotInput };
+type Opening = {
+  path: string;
+  slot?: PluginSlotInput;
+  surface?: PluginSurface;
+};
 
-type Event = PluginInteraction & { key: string };
+export type PluginMount = { surface: PluginSurface } & (
+  | { page: string }
+  | { slot: PluginSlotInput }
+);
+
+const viewLimitMs = 3000;
+
+const currentSurface: PluginSurface = {
+  platform: 'web',
+  parts: currentPartVersions,
+};
+
+type Event = PartEvent & { key: string };
 
 // Observes production snapshots and patches; events use the same checked dispatch as an App.
 export class PluginTestView {
   private readonly controller = new AbortController();
-  // Reports every current part, as an up-to-date App does.
-  private readonly connection = {
-    id: randomUUID(),
-    signal: this.controller.signal,
-    surface: { platform: 'web' as const, parts: currentPartVersions },
-  };
+  private readonly connection;
   private root: WireNode | null = null;
   private latest: ViewMessage | null = null;
   private failure: Error | null = null;
@@ -34,6 +49,12 @@ export class PluginTestView {
     private readonly pluginId: string,
     opening: Opening,
   ) {
+    this.connection = {
+      id: randomUUID(),
+      signal: this.controller.signal,
+      // Without a mount surface, it reports every current part, as an up-to-date App does.
+      surface: opening.surface ?? currentSurface,
+    };
     this.path = opening.path;
     void this.receive(opening).catch((error: Error) => {
       this.failure = error;
@@ -50,10 +71,37 @@ export class PluginTestView {
     if (!this.tree) return undefined;
 
     return findWireNodeEntry(this.tree, (node) =>
-      ['label', 'title', 'text', 'children'].some(
+      ['label', 'title', 'text', 'children', 'accessibilityLabel'].some(
         (prop) => node.props[prop] === text,
       ),
     );
+  }
+
+  public async ready(): Promise<void> {
+    await this.waitFor(() => this.tree !== null);
+  }
+
+  public async find(text: string): Promise<WireNode> {
+    await this.waitFor(() => this.findText(text) !== undefined);
+    const entry = this.findText(text);
+
+    if (!entry) throw new Error(`Plugin node not found: ${text}`);
+
+    return entry.node;
+  }
+
+  private async waitFor(ready: () => boolean): Promise<void> {
+    const deadline = Date.now() + viewLimitMs;
+
+    while (!ready()) {
+      if (Date.now() >= deadline)
+        throw new Error('Plugin view did not reach the expected state');
+      await delay(1);
+    }
+  }
+
+  public press(text: string): Promise<void> {
+    return this.tap(text);
   }
 
   public async dispatch(event: Event): Promise<void> {

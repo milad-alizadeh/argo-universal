@@ -1,5 +1,6 @@
 import type { ViewProps } from 'react-native';
 import { expectTypeOf } from 'vitest';
+import type { PressActionProps } from '#primitives/actions/action-list';
 import type { IconRole } from '../symbols/icon-role';
 import type { SizeClassValue } from '../use-size-class/size-class-value';
 import type { Aliases, Primitives } from './prop-vocabulary.mocks';
@@ -90,12 +91,13 @@ type DomainPropNames = {
   [Name in keyof Primitives]: Extract<Keys<Primitives[Name]>, DomainNouns>;
 };
 
-// `role` names typography or an icon's placement, alone or one per size class; ARIA is `accessibilityRole`. React Native's own `role` passes through.
+// `role` names typography, an icon's placement or an Alert answer's role, alone or one per size class; ARIA is `accessibilityRole`. React Native's own `role` passes through.
 type OwnRoles = {
   [Name in keyof Primitives]: Exclude<
     Values<Primitives[Name], 'role'>,
     | SizeClassValue<Aliases['TextRole']>
     | SizeClassValue<IconRole>
+    | NonNullable<PressActionProps['role']>
     | NonNullable<ViewProps['role']>
   >;
 };
@@ -170,8 +172,6 @@ expectTypeOf<
 
 // `role` is for typography and icon placement only.
 expectTypeOf<OwnRoles>().toEqualTypeOf<Each<never>>();
-
-expectTypeOf<Extract<Keys<Primitives['AlertAction']>, 'role'>>().toBeNever();
 
 expectTypeOf<Extract<Keys<Primitives['MenuAction']>, 'role'>>().toBeNever();
 

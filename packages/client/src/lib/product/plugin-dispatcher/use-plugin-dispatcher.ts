@@ -1,30 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { PluginDispatcher } from './plugin-dispatcher';
 import type { PluginOnEvent } from './plugin-event';
 
-export interface PluginUi {
-  send: PluginDispatcher['send'];
-  dispatch: PluginOnEvent;
-  flush: () => Promise<void>;
-}
+export type PluginSend = PluginDispatcher['send'];
 
-function useDelivery(send: PluginOnEvent): PluginDispatcher {
-  const [events] = useState(() => new PluginDispatcher(send));
+export function usePluginDispatcher(onEvent: PluginOnEvent): PluginSend {
+  const [events] = useState(() => new PluginDispatcher(onEvent));
   useEffect(() => {
-    events.setDelivery(send);
-  }, [events, send]);
+    events.setDelivery(onEvent);
+  }, [events, onEvent]);
   useEffect(() => (): void => events.close(), [events]);
 
-  return events;
-}
-
-export function usePluginDispatcher(onEvent: PluginOnEvent): PluginUi {
-  const events = useDelivery(onEvent);
-  const flush = useCallback(() => events.flushPending(), [events]);
-
-  return {
-    send: events.send.bind(events),
-    dispatch: events.dispatch.bind(events),
-    flush,
-  };
+  return events.send.bind(events);
 }

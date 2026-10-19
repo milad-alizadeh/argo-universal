@@ -1,4 +1,3 @@
-import { isLegacyWirePart } from '../src/plugins/plugin-part-names';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
 import type { WirePartDefinition } from '../src/plugins/wire-parts';
 import { accessibilitySection } from './plugin-reference-accessibility';
@@ -59,10 +58,14 @@ function deprecation(part: WirePartDefinition): string {
   return part.reference.deprecated ?? 'None.';
 }
 
+const code = (type: string): string => `\`${type}\``;
+
 function childrenNote(part: WirePartDefinition): string {
-  return part.children
-    ? 'Accepts child parts in source order.'
-    : 'Does not accept child nodes on the wire.';
+  if (part.children === true) return 'Accepts child parts in source order.';
+
+  if (!part.children) return 'Does not accept child nodes on the wire.';
+
+  return `Accepts ${part.children.map(code).join(', ')} children in source order.`;
 }
 
 function sdkPropNote(part: WirePartDefinition): string {
@@ -134,6 +137,4 @@ ${rows.join('\n')}
 `;
 }
 
-export const partNames = Object.keys(pluginPartSchemas)
-  .filter((name) => !isLegacyWirePart(name))
-  .sort();
+export const partNames = Object.keys(pluginPartSchemas).sort();

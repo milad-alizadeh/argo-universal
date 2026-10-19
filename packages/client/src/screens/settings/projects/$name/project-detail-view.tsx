@@ -1,13 +1,11 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
-import { View } from 'react-native';
 import { homePath } from '#features/settings';
-import { SettingsPage } from '#lib/product/settings-page';
-import { ActionShortcutScope } from '#primitives/actions/action-list';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Metadata } from '#primitives/scaffolds/metadata';
+import { Page } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 import { NewSessionsSection } from './project-detail-new-sessions';
 import { RemoveProject } from './project-detail-remove';
@@ -46,23 +44,9 @@ export function ProjectDetailView(
   props: ProjectDetailViewProps,
 ): React.JSX.Element {
   return (
-    <ActionShortcutScope>
-      <View className="flex-1 bg-content wide:bg-transparent">
-        <ProjectPage {...props} />
-      </View>
-    </ActionShortcutScope>
-  );
-}
-
-function ProjectPage(props: ProjectDetailViewProps): React.JSX.Element {
-  return (
-    <SettingsPage
-      title={props.name}
-      caption={props.caption}
-      onBack={props.onBack}
-    >
+    <Page title={props.name} caption={props.caption} onBack={props.onBack}>
       <ProjectBody {...props} />
-    </SettingsPage>
+    </Page>
   );
 }
 

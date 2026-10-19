@@ -44,38 +44,19 @@ describe('Svg wire part', () => {
       slots: {},
     };
 
-    const stack: WireNode = {
-      type: 'Stack',
-      key: 'stack',
-      props: { direction: 'row', gap: 2 },
-      children: [text],
-      slots: {},
-    };
-
     const root: WireNode = {
-      type: 'GroupedListItem',
+      type: 'ListItem',
       key: 'item',
-      props: { label: 'Slotted' },
+      props: { title: 'Slotted' },
       children: [],
-      slots: { leading: [stack, svg] },
+      slots: { leading: [text, svg] },
     };
 
     expect(
-      prepareWireTree(root, {
-        ...legacyPartVersions,
-        GroupedListItem: 1,
-        Svg: 1,
-      }).slots,
+      prepareWireTree(root, { ...legacyPartVersions, ListItem: 3, Svg: 1 })
+        .slots,
     ).toEqual({
-      leading: [
-        {
-          ...stack,
-          type: 'Row',
-          props: { gap: 2 },
-          children: [{ ...text, props: { label: 'Readable' } }],
-        },
-        svg,
-      ],
+      leading: [{ ...text, props: { label: 'Readable' } }, svg],
     });
   });
 });

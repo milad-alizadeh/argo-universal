@@ -20,3 +20,7 @@ export const ListItem = Object.assign(Item, {
 export type { ListItemProps, RowBadge } from './list-item-props';
 
 export type { ListItemFieldProps } from './list-item-field';
+
+export { ListItemFieldRow } from './list-item-field-row';
+
+export { ItemBadge } from './list-item-parts';

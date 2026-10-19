@@ -43,6 +43,7 @@ export function PageColumn({
   );
 }
 
+// A wide inset holds the Back button that hangs left of a drill-in page's title (page-back).
 function usePaddingToken(): string {
-  return useWide() ? '--spacing-6' : '--spacing-4';
+  return useWide() ? '--spacing-8' : '--spacing-4';
 }

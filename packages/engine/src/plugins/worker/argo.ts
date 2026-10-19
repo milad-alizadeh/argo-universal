@@ -1,0 +1,151 @@
+import {
+  PluginRequest,
+  type PluginValue,
+  type WorkerCall,
+  type WorkerReply,
+} from '../protocol/runtime.ts';
+
+type Pending = {
+  resolve: (value: PluginValue) => void;
+  reject: (error: Error) => void;
+};
+
+// Sends each `argo` call to the Server through the plugin host and waits for its reply.
+export class WorkerCalls {
+  private readonly pending = new Map<number, Pending>();
+  private readonly send: (message: WorkerCall) => void;
+  private next = 0;
+
+  constructor(send: (message: WorkerCall) => void) {
+    this.send = send;
+  }
+
+  call(request: PluginRequest): Promise<PluginValue> {
+    const id = this.next++;
+
+    return new Promise((resolve, reject) => {
+      this.pending.set(id, { resolve, reject });
+      this.send({ type: 'call', id, request });
+    });
+  }
+
+  settle(message: WorkerReply): void {
+    const pending = this.pending.get(message.id);
+    this.pending.delete(message.id);
+
+    if (pending) settleWith(pending, message);
+  }
+}
+
+function settleWith(pending: Pending, { reply }: WorkerReply): void {
+  if (reply.ok) pending.resolve(reply.value);
+  else pending.reject(new Error(reply.error));
+}
+
+export type ArgoBridge = (json: string) => Promise<string>;
+
+/*
+ * The only host function a Plugin's context ever holds, and the context never sees it:
+ * it takes and returns JSON strings, so no object, promise or error from this realm
+ * reaches Plugin code (and with it no path to this realm's `Function`). `argoSource`
+ * wraps it inside the context, then removes it.
+ */
+export const argoBridge =
+  (calls: WorkerCalls): ArgoBridge =>
+  async (json) => {
+    const value = await calls.call(PluginRequest.parse(JSON.parse(json)));
+
+    return JSON.stringify(value ?? null);
+  };
+
+export const argoSource = `(() => {
+  const bridge = globalThis.__argoBridge;
+  delete globalThis.__argoBridge;
+  const kit = globalThis.__argoKit.createKit((viewId, message) => call({ api: 'view', viewId, message }).then(() => {}), (requestId, result) => call({ api: 'dispatchResult', requestId, result }).then(() => {}));
+  delete globalThis.__argoKit;
+  globalThis.__argoInbox = kit.inbox;
+  const freeze = (value) => {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  };
+  const hooks = [];
+  globalThis.__argoHooks = (json) => {
+    const { invocation, hookId, name, event, surface } = JSON.parse(json);
+    const hookCall = (call_) => call({ api: 'hooks', call: { ...call_, invocation } });
+    const next = (rewritten = event) => hookCall({ action: 'next', event: rewritten });
+    const settle = (outcome) => hookCall({ action: 'settle', outcome }).catch(() => {});
+    Promise.resolve()
+      .then(() => hooks[hookId](freeze({ name, surface, props: name === 'ui.render' ? event.props : undefined }), name === 'ui.render' ? freeze(event) : event, next))
+      .then((answer) => name === 'ui.render' && kit.isElement(answer) ? kit.replacement(invocation, answer) : answer)
+      .then(
+        (answer) => settle(answer === undefined ? { ok: true } : { ok: true, answer }),
+        (error) => settle({ ok: false, error: String(error && error.message) }),
+      );
+  };
+  const on = (name, matcher, hook, options) => {
+    if (typeof matcher === 'function') return on(name, undefined, matcher, hook);
+    const hookId = hooks.push(hook) - 1;
+    const guard = options?.guard === true;
+    return call({ api: 'hooks', call: { action: 'register', hookId, name, matcher, guard } }).then(() => {});
+  };
+  globalThis.__argoKitExports = { exports: kit.exports, jsxRuntime: kit.jsxRuntime };
+  const call = async (request) => {
+    try {
+      return JSON.parse(await bridge(JSON.stringify(request)));
+    } catch (error) {
+      throw new Error(String(error && error.message));
+    }
+  };
+  const secret = async (call_) => (await call({ api: 'secrets', call: call_ })) ?? null;
+  const fs = (call_) => call({ api: 'fs', call: call_ });
+  const run = (call_) => call({ api: 'process', call: call_ });
+  const spawned = (id) => Object.freeze({
+    wait: () => run({ action: 'wait', id }),
+    kill: async () => { await run({ action: 'kill', id }); },
+  });
+  const response = (reply) => Object.freeze({
+    ...reply,
+    headers: Object.freeze({ ...reply.headers }),
+    text: async () => reply.body,
+    json: async () => JSON.parse(reply.body),
+  });
+  return Object.freeze({
+    assets: Object.freeze({
+      resolve: (source) => call({ api: 'assets', source }),
+    }),
+    fs: Object.freeze({
+      read: (path) => fs({ action: 'read', path }),
+      write: async (path, content) => { await fs({ action: 'write', path, content }); },
+      list: (path) => fs({ action: 'list', path }),
+      stat: (path) => fs({ action: 'stat', path }),
+    }),
+    process: Object.freeze({
+      run: (argv, options = {}) => run({ action: 'run', argv, ...options }),
+      spawn: async (argv, options = {}) =>
+        spawned(await run({ action: 'spawn', argv, ...options })),
+    }),
+    fetch: async (url, options = {}) =>
+      response(await call({ api: 'fetch', call: { url, ...options } })),
+    storage: Object.freeze({
+      batch: (queries) => call({ api: 'storage', queries }),
+      execute: async (query) => (await call({ api: 'storage', queries: [query] }))[0],
+    }),
+    projects: Object.freeze({
+      list: () => call({ api: 'projects', action: 'list' }),
+    }),
+    secrets: Object.freeze({
+      get: (account) => secret({ action: 'get', account }),
+      set: async (account, value) => { await secret({ action: 'set', account, value }); },
+      delete: async (account) => { await secret({ action: 'delete', account }); },
+    }),
+    settings: Object.freeze({
+      get: async (key) => (await call({ api: 'settings', key })) ?? null,
+    }),
+    pages: Object.freeze({ register: kit.registerPage }),
+    slots: Object.freeze({ register: kit.registerSlot }),
+    on,
+  });
+})()`;

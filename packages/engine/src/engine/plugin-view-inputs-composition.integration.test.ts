@@ -1,6 +1,6 @@
 import { currentPartVersions } from '@repo/contracts/plugins/kit';
 import type {
-  PluginInteraction,
+  PartEvent,
   PluginDispatchInput,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
@@ -14,7 +14,7 @@ const page = { pluginId: 'inputs', path: '/' };
 function event(
   view: ViewMessage | undefined,
   key: string,
-  interaction: PluginInteraction,
+  interaction: PartEvent,
 ): PluginDispatchInput {
   if (!view?.viewId) throw new Error('Expected a view identity');
 
@@ -56,10 +56,7 @@ it(
     );
     await expect.poll(() => first.messages.length, { timeout: 10_000 }).toBe(3);
     await first.client.plugins.dispatch.mutate(
-      event(first.messages[2], 'page', {
-        event: 'onAction',
-        payload: { path: ['primaryAction', 'onPress'] },
-      }),
+      event(first.messages[2], 'page#primaryAction/add', { event: 'onPress' }),
     );
     await expect
       .poll(() => first.messages.at(-1), { timeout: 10_000 })
@@ -75,8 +72,9 @@ it(
         root: {
           type: 'Page',
           props: { title: 'Inputs', value: '' },
+          slots: { primaryAction: [{ type: 'Action', key: 'add' }] },
           children: [
-            { type: 'List', key: 'list' },
+            { type: 'List.Section', key: 'list' },
             { props: { children: heard('', [], 0) } },
           ],
         },

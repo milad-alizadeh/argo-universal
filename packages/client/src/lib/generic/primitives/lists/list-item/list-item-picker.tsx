@@ -24,10 +24,19 @@ function PickerMenu<Value extends string>(
       accessibilityLabel={props.title}
       value={props.value ?? ''}
       options={props.options}
-      onValueChange={props.onValueChange}
+      onValueChange={(next) => choose(props, next)}
       disabled={props.disabled}
       loading={props.loading}
       trigger={<PickerRow {...props} />}
     />
   );
+}
+
+function choose<Value extends string>(
+  props: ListItemPickerProps<Value>,
+  next: string,
+): void {
+  const option = props.options.find((item) => item.value === next);
+
+  if (option) props.onValueChange(option.value);
 }

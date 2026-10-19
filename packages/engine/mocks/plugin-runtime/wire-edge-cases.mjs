@@ -4,7 +4,8 @@ import { jsx } from '@argo/plugin-kit/jsx-runtime';
 function MixedKeys() {
   const [changed, setChanged] = useState(false);
 
-  return jsx('Column', {
+  return jsx('Stack', {
+    direction: 'column',
     children: [
       jsx('Button', { label: 'Change', onPress: () => setChanged(true) }, '1'),
       jsx('Text', { children: changed ? 'Changed' : 'Original' }),
@@ -16,10 +17,10 @@ function MixedKeys() {
 function ConditionalSlots() {
   const [visible, setVisible] = useState(false);
 
-  return jsx('GroupedListItem', {
-    label: 'Conditional slots',
+  return jsx('ListItem', {
+    title: 'Conditional slots',
     onPress: () => setVisible((value) => !value),
-    accessories: [
+    trailing: [
       null,
       undefined,
       false,

@@ -30,30 +30,12 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
   }),
 );
 
-// Nested callbacks retain their original prop path when adaptation removes or reorders content.
+// A handler prop on the wire; the App sends it back as a Part event by node key and event name.
 export const WireEvent = z.strictObject({
   $event: z.string().min(1),
-  $path: z.array(z.string()).optional(),
 });
 
 export type WireEvent = z.infer<typeof WireEvent>;
-
-export const OverlayAction = z
-  .strictObject({
-    action: z.enum(['alert', 'dialog', 'sheet']),
-    title: z.string(),
-    content: WireNode,
-    confirmLabel: z.string().optional(),
-    cancelLabel: z.string().optional(),
-    onConfirm: WireEvent.extend({ $event: z.literal('onConfirm') }).optional(),
-    onDismiss: WireEvent.extend({ $event: z.literal('onDismiss') }).optional(),
-  })
-  .refine(
-    ({ action, content }) => action !== 'alert' || content.type === 'Text',
-    { error: 'Alert content must be a Text wire node.' },
-  );
-
-export type OverlayAction = z.infer<typeof OverlayAction>;
 
 // Built-in Actions run in the App without a round trip to the Server.
 export const Action = z.discriminatedUnion('action', [
@@ -68,10 +50,6 @@ export const Action = z.discriminatedUnion('action', [
     title: z.string().optional(),
   }),
   z.strictObject({ action: z.literal('pop') }),
-  z.strictObject({
-    action: z.literal('dismiss'),
-  }),
-  OverlayAction,
 ]);
 
 export type Action = z.infer<typeof Action>;
@@ -139,10 +117,13 @@ export {
   PluginViewId,
   PluginDispatchId,
   PluginDispatchInput,
-  PluginInteraction,
+  PartEvent,
+  partEventPayload,
   PluginDispatchResult,
   PluginViewInput,
   PluginEvent,
+  partEventRules,
+  type PartEventRules,
 } from '#plugin-wire-events';
 
 // A Slot's stream: the Plugins that fill it, in list order, then each one's view as it arrives.

@@ -1,18 +1,38 @@
-import type { KitCompound, PluginComponents } from './index';
+/* Generated from Contracts part names by `pnpm docs:build`. Do not edit by hand. */
+import type { PluginComponents } from './index';
 
-export const Text: PluginComponents['Text'];
+export const Spacer: PluginComponents['Spacer'];
 
-export const Button: PluginComponents['Button'];
+export const Grid: PluginComponents['Grid'];
 
-export const Stack: PluginComponents['Stack'];
+export const Surface: PluginComponents['Surface'];
 
-export const Svg: PluginComponents['Svg'];
+export const ScrollView: PluginComponents['ScrollView'];
 
-export const List: KitCompound<'List'>;
+export const Page: PluginComponents['Page'];
 
-export const ListSection: PluginComponents['List.Section'];
+export const Detail: PluginComponents['Detail'];
 
-export const ListItem: KitCompound<'ListItem'>;
+export const Metadata: PluginComponents['Metadata'] & {
+  Label: PluginComponents['Metadata.Label'];
+  Link: PluginComponents['Metadata.Link'];
+  Pills: PluginComponents['Metadata.Pills'];
+  StatusDot: PluginComponents['Metadata.StatusDot'];
+  Avatar: PluginComponents['Metadata.Avatar'];
+};
+
+export const List: PluginComponents['List'] & {
+  Section: PluginComponents['List.Section'];
+};
+
+export const ListItem: PluginComponents['ListItem'] & {
+  Link: PluginComponents['ListItem.Link'];
+  Toggle: PluginComponents['ListItem.Toggle'];
+  Picker: PluginComponents['ListItem.Picker'];
+  Stepper: PluginComponents['ListItem.Stepper'];
+  TextField: PluginComponents['ListItem.TextField'];
+  Button: PluginComponents['ListItem.Button'];
+};
 
 export const Label: PluginComponents['Label'];
 
@@ -20,7 +40,11 @@ export const ProgressBar: PluginComponents['ProgressBar'];
 
 export const Pill: PluginComponents['Pill'];
 
-export const EmptyState: PluginComponents['EmptyState'];
+export const ActionList: PluginComponents['ActionList'] & {
+  Section: PluginComponents['ActionList.Section'];
+};
+
+export const Action: PluginComponents['Action'];
 
 export const Picker: PluginComponents['Picker'];
 
@@ -32,16 +56,26 @@ export const Slider: PluginComponents['Slider'];
 
 export const TextInput: PluginComponents['TextInput'];
 
-export const IconButton: PluginComponents['IconButton'];
+export const DatePicker: PluginComponents['DatePicker'];
+
+export const Form: PluginComponents['Form'];
 
 export const SplitButton: PluginComponents['SplitButton'];
 
-export const ActionList: KitCompound<'ActionList'>;
+export const IconButton: PluginComponents['IconButton'];
 
-export const Action: PluginComponents['Action'];
+export const Alert: PluginComponents['Alert'];
 
-export const Page: PluginComponents['Page'];
+export const Sheet: PluginComponents['Sheet'];
 
-export const Detail: PluginComponents['Detail'];
+export const Text: PluginComponents['Text'];
 
-export const Metadata: KitCompound<'Metadata'>;
+export const Button: PluginComponents['Button'];
+
+export const Stack: PluginComponents['Stack'];
+
+export const EmptyState: PluginComponents['EmptyState'];
+
+export const Svg: PluginComponents['Svg'];
+
+export const ListSection: PluginComponents['List.Section'];

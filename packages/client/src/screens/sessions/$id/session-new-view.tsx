@@ -11,6 +11,7 @@ import {
 import {
   SessionCallout,
   type SessionCalloutProps,
+  SessionHeaderBar,
   type StartingFeed,
   TerminalSignIn,
   type TerminalSignInProps,
@@ -20,7 +21,6 @@ import { useContentWide } from '#lib/product/content-layout';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { PageHeader } from '#primitives/scaffolds/page';
 import { composerDraftProps } from './new-session-draft';
 import { NewSessionFeed } from './new-session-feed';
 
@@ -73,7 +73,7 @@ const loadFailed: ErrorToast = {
 };
 
 // The header stays empty until the first prompt starts the Session and gives it a title.
-const newSessionHeader = <PageHeader title={null} />;
+const newSessionHeader = <SessionHeaderBar title={null} />;
 
 // The Composer of a Session not yet opened: its first prompt opens it with the chosen Agent, model and effort.
 export function SessionNewView(props: SessionNewViewProps): React.JSX.Element {

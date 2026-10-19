@@ -1,124 +1,92 @@
-import { handlerPath } from '@repo/contracts/plugins/action-handler-path';
-import type { PluginInteraction } from '@repo/contracts/plugins/wire';
-import { checkedEvent, throttle, type PluginEvent } from './plugin-event';
-import type { PluginOnEvent } from './plugin-event';
+import { partEventRules, type PartEvent } from '@repo/contracts/plugins/wire';
+import {
+  checkedPartEvent,
+  type PartEventInput,
+  type PluginOnEvent,
+} from './plugin-event';
 
 type Queued = {
   key: string;
-  interaction: PluginInteraction;
+  event: PartEvent;
   deliver: PluginOnEvent;
-  timer?: ReturnType<typeof setTimeout>;
-  replies: PromiseWithResolvers<void>[];
+  timer: ReturnType<typeof setTimeout>;
+  reply: PromiseWithResolvers<void>;
 };
 
 export class PluginDispatcher {
   private readonly queued = new Map<string, Queued>();
-  private readonly inFlight = new Set<Promise<void>>();
+  // Throttled edits on their way to the Plugin; they settle, never reject.
+  private readonly edits = new Set<Promise<void>>();
   constructor(private deliver: PluginOnEvent) {}
 
   public setDelivery(deliver: PluginOnEvent): void {
     this.deliver = deliver;
   }
 
-  public dispatch(
-    key: string,
-    interaction: PluginInteraction,
-  ): void | Promise<void> {
-    const delivery = this.deliver(key, interaction);
+  public send(key: string, input: PartEventInput): void | Promise<void> {
+    const event = checkedPartEvent(input);
+    const { flush, throttleMs } = partEventRules(input.schema);
+    const deliver = this.deliver;
 
-    if (delivery) this.track(delivery);
+    if (throttleMs) return this.queue({ key, event, deliver }, throttleMs);
+    // Queued edits reach the Plugin, in order, before a Submit or press that flushes.
+    const edits = flush ? this.releaseAll() : [];
 
-    return delivery;
+    return after(edits, () => deliver(key, event));
   }
 
-  public send(key: string, event: PluginEvent): void | Promise<void> {
-    const interaction = checkedEvent(event);
-    const delay = throttle(event.schema);
-
-    if (event.event === 'onSubmit')
-      return this.flushPending().then(() => this.dispatch(key, interaction));
-
-    if (!delay) return this.dispatch(key, interaction);
-    const pending = this.pending(key, interaction, delay);
-    pending.interaction = interaction;
-    pending.deliver = this.deliver;
-    const reply = Promise.withResolvers<void>();
-    pending.replies.push(reply);
-
-    return reply.promise;
-  }
-
-  private pending(
-    key: string,
-    interaction: PluginInteraction,
+  private queue(
+    edit: Omit<Queued, 'timer' | 'reply'>,
     delay: number,
-  ): Queued {
-    const id = JSON.stringify([key, ...handlerPath(interaction)]);
-    const queued = { key, interaction, deliver: this.deliver, replies: [] };
+  ): Promise<void> {
+    const id = JSON.stringify([edit.key, edit.event.event]);
 
-    return this.queued.get(id) ?? this.enqueue(id, queued, delay);
-  }
-
-  private enqueue(id: string, pending: Queued, delay: number): Queued {
-    pending.timer = setTimeout(() => this.flush(id), delay);
-    this.queued.set(id, pending);
-
-    return pending;
-  }
-
-  private flush(id: string): void {
-    const pending = this.queued.get(id);
-
-    if (!pending) return;
-    clearTimeout(pending.timer);
-    this.queued.delete(id);
-    this.track(deliverQueued(pending));
-  }
-
-  private track(delivery: Promise<void>): void {
-    this.inFlight.add(delivery);
-
-    const settled = (): void => {
-      this.inFlight.delete(delivery);
+    const queued = this.queued.get(id) ?? {
+      ...edit,
+      timer: setTimeout(() => this.release(id), delay),
+      reply: Promise.withResolvers<void>(),
     };
 
-    void delivery.then(settled, settled);
+    this.queued.set(id, Object.assign(queued, edit));
+
+    return queued.reply.promise;
   }
 
-  public async flushPending(): Promise<void> {
-    for (const id of this.queued.keys()) this.flush(id);
-    await Promise.all(this.inFlight);
+  private release(id: string): void {
+    const queued = this.queued.get(id);
+
+    if (!queued) return;
+    clearTimeout(queued.timer);
+    this.queued.delete(id);
+    const delivery = deliverQueued(queued);
+    this.edits.add(delivery);
+    void delivery.then(() => this.edits.delete(delivery));
   }
 
+  private releaseAll(): Promise<void>[] {
+    for (const id of this.queued.keys()) this.release(id);
+
+    return [...this.edits];
+  }
+
+  // Closing sends what the user typed rather than dropping it.
   public close(): void {
-    for (const pending of this.queued.values()) {
-      clearTimeout(pending.timer);
-
-      for (const reply of pending.replies) reply.resolve();
-    }
-
-    this.queued.clear();
+    void this.releaseAll();
   }
 }
 
-async function deliverQueued(pending: Queued): Promise<void> {
+function after(
+  edits: Promise<void>[],
+  deliver: () => void | Promise<void>,
+): void | Promise<void> {
+  return edits.length ? Promise.all(edits).then(deliver) : deliver();
+}
+
+async function deliverQueued(queued: Queued): Promise<void> {
   try {
-    await pending.deliver(pending.key, pending.interaction);
-
-    resolveQueued(pending);
+    await queued.deliver(queued.key, queued.event);
+    queued.reply.resolve();
   } catch (error) {
-    rejectQueued(
-      pending,
-      error instanceof Error ? error : new Error(String(error)),
-    );
-    throw error;
+    queued.reply.reject(error);
   }
-}
-
-function rejectQueued(pending: Queued, error: Error): void {
-  for (const reply of pending.replies.toReversed()) reply.reject(error);
-}
-
-function resolveQueued(pending: Queued): void {
-  for (const reply of pending.replies) reply.resolve();
 }

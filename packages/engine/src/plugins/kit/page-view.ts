@@ -1,4 +1,3 @@
-import { handlerPath } from '@repo/contracts/plugins/action-handler-path';
 import type {
   PluginEvent,
   PluginViewId,
@@ -9,6 +8,7 @@ import type {
 } from '@repo/contracts/plugins/wire';
 import { diff } from './diff';
 import type { Mounted } from './reconciler';
+import type { KitTimer } from './scheduler';
 import type { Handlers } from './wire-tree';
 
 export type DispatchSender = (
@@ -21,7 +21,7 @@ export interface OpenView {
   mounted?: Mounted;
   broken?: boolean;
   replaceable?: boolean;
-  frame: ReturnType<typeof setTimeout> | undefined;
+  frame: KitTimer | undefined;
   tree: WireNode | null;
   revision: number;
   handlers: Handlers;
@@ -52,14 +52,10 @@ async function runCurrentHandler(
 ): Promise<void> {
   requireCurrentRevision(view, event.revision);
 
-  const handler = view.handlers.get(
-    JSON.stringify([event.key, ...handlerPath(event)]),
-  );
+  const handler = view.handlers.get(JSON.stringify([event.key, event.event]));
 
   if (!handler) throw new Error('Plugin handler is no longer available');
-  await handler(
-    event.event === 'onAction' ? event.payload.value : event.payload,
-  );
+  await handler(event.payload);
 }
 
 function requireCurrentRevision(view: OpenView, revision: number): void {

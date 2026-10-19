@@ -197,6 +197,9 @@ catalogs:
     '@gorhom/portal':
       specifier: 1.0.14
       version: 1.0.14
+    '@jridgewell/trace-mapping':
+      specifier: 0.3.31
+      version: 0.3.31
     '@legendapp/list':
       specifier: 3.6.0
       version: 3.6.0
@@ -455,6 +458,9 @@ catalogs:
     node-pty:
       specifier: 1.1.0
       version: 1.1.0
+    oxc-parser:
+      specifier: 0.150.0
+      version: 0.150.0
     oxfmt:
       specifier: 0.72.0
       version: 0.72.0
@@ -596,6 +602,9 @@ importers:
       sherif:
         specifier: 'catalog:'
         version: 1.13.0
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       turbo:
         specifier: 'catalog:'
         version: 2.11.7
@@ -718,12 +727,21 @@ importers:
 
   apps/server:
     dependencies:
+      '@argo/plugin-kit':
+        specifier: workspace:*
+        version: link:../../packages/plugin-kit
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@repo/engine':
         specifier: workspace:*
         version: link:../../packages/engine
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../../packages/machine-log
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -1230,9 +1248,6 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
     devDependencies:
-      '@argo/plugin-kit':
-        specifier: workspace:*
-        version: link:../plugin-kit
       '@lexical/headless':
         specifier: 'catalog:'
         version: 0.52.0(typescript@7.0.2)
@@ -1346,6 +1361,9 @@ importers:
       '@agentclientprotocol/sdk':
         specifier: 'catalog:'
         version: 1.7.0(zod@4.6.5)
+      '@jridgewell/trace-mapping':
+        specifier: 'catalog:'
+        version: 0.3.31
       '@repo/contracts':
         specifier: workspace:*
         version: link:../contracts
@@ -1376,9 +1394,15 @@ importers:
       fflate:
         specifier: 'catalog:'
         version: 0.8.3
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       node-pty:
         specifier: 'catalog:'
         version: 1.1.0(patch_hash=7d1011d673c499bcb613735c649b2e5ae78dc6430f35dd2d18f077fa6a7f5e01)
+      oxc-parser:
+        specifier: 'catalog:'
+        version: 0.150.0
       react:
         specifier: 'catalog:'
         version: 19.2.3

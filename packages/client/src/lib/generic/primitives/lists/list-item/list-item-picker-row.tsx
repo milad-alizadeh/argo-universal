@@ -6,7 +6,9 @@ import {
   type ListItemPickerProps,
 } from './list-item-picker-props';
 
-export function PickerRow(props: ListItemPickerProps): ReactElement {
+export function PickerRow<Value extends string>(
+  props: ListItemPickerProps<Value>,
+): ReactElement {
   return (
     <ListItemFrame
       {...props}

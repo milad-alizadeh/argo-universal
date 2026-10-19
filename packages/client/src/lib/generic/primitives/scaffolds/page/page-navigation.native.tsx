@@ -1,15 +1,23 @@
 import { type NativeStackNavigationOptions, Stack } from 'expo-router';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
+import { PageDrawerHeader } from './page-drawer-header';
 import { PageHeaderItems, pageTitleOptions } from './page-header-items';
-import { usePageNavigator } from './page-navigation-context';
+import { usePageHeaderHost } from './page-navigation-context';
 import type { PageHeaderInput } from './page-props';
 
 export function PageNavigation(props: PageHeaderInput): ReactNode {
-  const navigator = usePageNavigator();
-  const wide = useWide();
+  const host = usePageHeaderHost();
 
-  if (!navigator) return null;
+  if (host === 'none') return null;
+
+  if (host === 'drawer') return <PageDrawerHeader {...props} />;
+
+  return <StackHeader {...props} />;
+}
+
+function StackHeader(props: PageHeaderInput): ReactElement {
+  const wide = useWide();
 
   return (
     <>

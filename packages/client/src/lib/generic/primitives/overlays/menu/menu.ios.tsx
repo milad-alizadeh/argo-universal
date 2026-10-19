@@ -4,7 +4,7 @@ import { useNativeTheme } from '#lib/generic/native-theme';
 import { nativeMenuItems, nativeMenuSections } from './menu-native-items';
 import { NativeMenuTrigger } from './menu-phone-parts';
 import type { MenuProps } from './menu-props';
-import { menuAction, runAction, sectionAction } from './menu-view-actions.ios';
+import { runAction, sectionActions } from './menu-view-actions.ios';
 
 // Expo UI's MenuView drop-in, a SwiftUI Menu; Android draws Compose's DropdownMenu instead.
 export function Menu<Value extends string>(
@@ -30,12 +30,10 @@ type MenuViewActions = Pick<
 function menuViewActions<Value extends string>(
   props: MenuProps<Value>,
 ): MenuViewActions {
-  const sections = nativeMenuSections(props);
   const items = nativeMenuItems(props);
 
   return {
-    actions:
-      sections.length > 1 ? sections.map(sectionAction) : items.map(menuAction),
+    actions: sectionActions(nativeMenuSections(props)),
     onPressAction: (event) => runAction(items, event),
   };
 }

@@ -5,7 +5,6 @@ import type { WirePartDefinition } from './wire-parts';
 export interface PartOptions {
   slots?: Record<string, readonly string[]>;
   events?: Record<string, z.ZodType>;
-  // True takes any part; a list, like a slot's, takes only those part types.
   children?: boolean | readonly string[];
   root?: boolean;
   container?: boolean;

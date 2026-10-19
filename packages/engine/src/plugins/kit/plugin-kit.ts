@@ -1,4 +1,7 @@
-import { kitCompounds, pluginPartNames } from '@repo/contracts/plugins/kit';
+import {
+  pluginKitExports,
+  type PluginKitExport,
+} from '@repo/contracts/plugins/kit';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
@@ -9,10 +12,6 @@ import {
   type ViewSender,
   type DispatchSender,
 } from './pages';
-
-const components = Object.fromEntries(
-  pluginPartNames.map((name) => [name, name]),
-);
 
 const hooks = {
   useState: React.useState,
@@ -27,25 +26,24 @@ const hooks = {
   memo: React.memo,
 };
 
-// A compound such as Metadata draws its root and carries its members, such as Metadata.Label.
-const compounds = Object.fromEntries(
-  Object.entries(kitCompounds).map(([root, members]) => [
-    root,
-    Object.assign(
-      (props: ElementProps) => jsx(root, props),
-      Object.fromEntries(
-        members.map((member) => [member, `${root}.${member}`]),
-      ),
-    ),
-  ]),
-);
+type KitComponent =
+  | string
+  | (((props: ElementProps) => ReturnType<typeof jsx>) &
+      Record<string, string>);
+
+// A part with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
+function kitComponent({ part, members }: PluginKitExport): KitComponent {
+  if (!Object.keys(members).length) return part;
+
+  return Object.assign((props: ElementProps) => jsx(part, props), members);
+}
 
 // What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
 const exportsOf = {
-  ...components,
+  ...Object.fromEntries(
+    pluginKitExports.map((entry) => [entry.name, kitComponent(entry)]),
+  ),
   ...hooks,
-  ...compounds,
-  ListSection: 'List.Section',
   Fragment: React.Fragment,
 };
 

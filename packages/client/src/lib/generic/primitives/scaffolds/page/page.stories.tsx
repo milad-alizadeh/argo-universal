@@ -6,6 +6,7 @@ import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { Variation, Variations } from '../../../variations';
 import { Page, type PageProps } from './index';
+import { exampleSubmenu } from './page-submenu-example.mocks';
 
 const meta = {
   title: 'Design System/Primitives/Scaffolds/Page',
@@ -25,8 +26,10 @@ export const States: Story = {
 const examples = [
   { label: 'Title' },
   { label: 'Actions', actions: true },
+  { label: 'Actions, with a submenu', actions: true, submenu: true },
   { label: 'Search', search: true },
   { label: 'Primary action', search: true, primary: true },
+  { label: 'Drill-in, with Back and a caption', drillIn: true },
 ];
 
 function PageVariations(): React.JSX.Element {
@@ -41,7 +44,13 @@ function PageVariations(): React.JSX.Element {
   );
 }
 
-type Example = { search?: boolean; actions?: boolean; primary?: boolean };
+type Example = {
+  search?: boolean;
+  actions?: boolean;
+  submenu?: boolean;
+  primary?: boolean;
+  drillIn?: boolean;
+};
 
 function PageExample(props: Example): React.JSX.Element {
   const [query, onChangeText] = useState('');
@@ -61,13 +70,13 @@ function primaryAction(
   shown: boolean | undefined,
   choose: (value: string) => void,
 ): PageProps['primaryAction'] {
-  return shown
-    ? {
-        label: 'Add Project',
-        icon: 'add',
-        onPress: () => choose('New Project'),
-      }
-    : undefined;
+  return shown ? (
+    <Action
+      label="Add Project"
+      icon="add"
+      onPress={() => choose('New Project')}
+    />
+  ) : undefined;
 }
 
 function ExampleContent({ query }: { query: string }): React.JSX.Element {
@@ -84,16 +93,21 @@ function ExampleContent({ query }: { query: string }): React.JSX.Element {
   );
 }
 
+interface ExampleActionsProps {
+  choose: (result: string) => void;
+  submenu?: boolean;
+}
+
 function ExampleActions({
   choose,
-}: {
-  choose: (result: string) => void;
-}): React.JSX.Element {
+  submenu,
+}: ExampleActionsProps): React.JSX.Element {
   return (
     <ActionList>
       {exampleActions.map((action) => (
         <Action key={action.label} {...exampleAction(action, choose)} />
       ))}
+      {submenu ? exampleSubmenu(choose) : null}
     </ActionList>
   );
 }
@@ -117,11 +131,7 @@ interface ExampleState {
 }
 
 function exampleProps(props: Example, state: ExampleState): PageProps {
-  const search = props.search
-    ? {
-        label: 'Search Projects',
-      }
-    : undefined;
+  const search = props.search ? { label: 'Search Projects' } : undefined;
 
   return {
     title: 'Projects',
@@ -129,13 +139,29 @@ function exampleProps(props: Example, state: ExampleState): PageProps {
     onChangeText: state.onChangeText,
     search,
     primaryAction: primaryAction(props.primary, state.setResult),
-    actions: exampleHeaderActions(props.actions, state.setResult),
+    actions: exampleHeaderActions(props, state.setResult),
+    ...drillIn(props.drillIn, state.setResult),
+  };
+}
+
+// Back and the caption show on a wide window only.
+function drillIn(
+  shown: boolean | undefined,
+  choose: (value: string) => void,
+): Pick<PageProps, 'caption' | 'onBack'> {
+  if (!shown) return {};
+
+  return {
+    caption: 'Projects on this Mac',
+    onBack: () => choose('Back'),
   };
 }
 
 function exampleHeaderActions(
-  shown: boolean | undefined,
+  { actions, submenu }: Example,
   choose: (value: string) => void,
 ): React.ReactNode {
-  return shown ? <ExampleActions choose={choose} /> : undefined;
+  return actions ? (
+    <ExampleActions choose={choose} submenu={submenu} />
+  ) : undefined;
 }

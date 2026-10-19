@@ -13,7 +13,7 @@ import { ComposerBottomTray } from './composer-trays';
 import type { ComposerDraft } from './composer-types';
 
 const cardGlass = {
-  corners: 'card',
+  corners: 'sheet',
   interactive: true,
   className: 'w-full z-10',
   fallbackClassName:

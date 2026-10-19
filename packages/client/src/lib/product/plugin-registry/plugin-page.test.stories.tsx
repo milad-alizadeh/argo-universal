@@ -1,8 +1,7 @@
-import type { PluginInteraction } from '@repo/contracts/plugins/wire';
-import { WireNode } from '@repo/contracts/plugins/wire';
+import { WireNode, type PartEvent } from '@repo/contracts/plugins/wire';
 import fixture from '@repo/mocks/plugins/page.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
 const root = WireNode.parse(fixture);
@@ -31,17 +30,13 @@ export const DrawsTitleAndContent: Story = {
   },
 };
 
-// A header Action dispatches from its own node; the primary Action is a nested prop of the Page.
-function headerAction(
-  name: string,
-  key: string,
-  interaction: PluginInteraction,
-): Story {
+// Every header Action, the primary one included, dispatches from its own keyed node.
+function headerAction(name: string, key: string, event: PartEvent): Story {
   return {
     play: async ({ canvas, userEvent }) => {
       onEvent.mockClear();
       await userEvent.click(canvas.getByRole('button', { name }));
-      await expect(onEvent).toHaveBeenLastCalledWith(key, interaction);
+      await expect(onEvent).toHaveBeenLastCalledWith(key, event);
     },
   };
 }
@@ -52,10 +47,27 @@ export const FiltersActionDispatchesItsEvent = headerAction(
   { event: 'onPress' },
 );
 
-export const PrimaryActionDispatchesItsPath = headerAction(newIssue, 'page', {
-  event: 'onAction',
-  payload: { path: ['primaryAction', 'onPress'], value: undefined },
-});
+export const PrimaryActionDispatchesItsEvent = headerAction(
+  newIssue,
+  'page#primaryAction/new',
+  { event: 'onPress' },
+);
+
+// An Action inside a submenu is a keyed child of the submenu's own node.
+export const SubmenuActionDispatchesItsEvent: Story = {
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    onEvent.mockClear();
+    await userEvent.click(canvas.getByRole('button', { name: 'Sort, 2' }));
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(
+      await page.findByRole('menuitem', { name: 'Oldest' }),
+    );
+    await expect(onEvent).toHaveBeenLastCalledWith(
+      'page#actions/actions/sort/order/oldest',
+      { event: 'onPress' },
+    );
+  },
+};
 
 export const PrimaryActionWaitsForItsHandler: Story = {
   play: async ({ canvas, userEvent }) => {

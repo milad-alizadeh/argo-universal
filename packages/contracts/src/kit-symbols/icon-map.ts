@@ -3,6 +3,7 @@ import { formatSymbols } from './format-symbols';
 import { gitSymbols } from './git-symbols';
 import { listViewSymbols } from './list-view-symbols';
 import { statusSymbols } from './status-symbols';
+import { timeSymbols } from './time-symbols';
 
 export const iconSymbols = {
   ...fileSymbols,
@@ -10,6 +11,7 @@ export const iconSymbols = {
   ...gitSymbols,
   ...listViewSymbols,
   ...statusSymbols,
+  ...timeSymbols,
   activity: { sf: 'waveform.path.ecg', material: 'monitor_heart' },
   add: { sf: 'plus', material: 'add' },
   agent: { sf: 'custom.robot', material: 'smart_toy' },
@@ -51,7 +53,6 @@ export const iconSymbols = {
   computer: { sf: 'desktopcomputer', material: 'desktop_mac' },
   connection: { sf: 'wifi', material: 'wifi' },
   copy: { sf: 'doc.on.doc', material: 'content_copy' },
-  cycle: { sf: 'calendar.badge.clock', material: 'event_repeat' },
   unavailable: { sf: 'nosign', material: 'block' },
   delete: { sf: 'trash', material: 'delete' },
   diagram: { sf: 'flowchart', material: 'schema' },

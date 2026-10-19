@@ -20,9 +20,7 @@ export {
   pillProps,
   textProps,
   buttonProps,
-  layoutProps,
   stackProps,
-  groupedItemProps,
   svgProps,
   emptyStateProps,
 } from './kit-props';
@@ -72,15 +70,9 @@ export function versionsOf(types: readonly string[]): PartVersions {
   );
 }
 
-// Internal Server callers use the current wire; Apps negotiate their own part versions.
+// This App and internal Server callers draw every wire part at its latest version; older Apps report their own.
 export const currentPartVersions = versionsOf(Object.keys(wireParts));
 
 export * from './settings-row-props';
 
-export {
-  pluginPartNames,
-  kitCompounds,
-  isLegacyWirePart,
-  type KitCompoundMember,
-  type PluginPart,
-} from './plugin-part-names';
+export { pluginKitExports, type PluginKitExport } from './plugin-part-names';

@@ -73,8 +73,8 @@ it('moving the first row to the end sends one move op', async () => {
 }, 20_000);
 
 it.each([
-  { path: '/missing', error: 'VirtualList: every list child needs a key' },
-  { path: '/duplicate', error: 'VirtualList: duplicate child key row' },
+  { path: '/missing', error: 'List: every list child needs a key' },
+  { path: '/duplicate', error: 'List: duplicate child key row' },
 ])(
   'refuses $path list keys with one log line naming the Plugin',
   async ({ path, error }) => {

@@ -1,3 +1,4 @@
+import { currentPartVersions } from '@repo/contracts/plugins/kit';
 import {
   replaceableRewriteSchema,
   type ReplaceableInput,
@@ -6,7 +7,6 @@ import { replacementTreeReason } from '@repo/contracts/plugins/replacement-tree'
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { PluginDrawingBoundary } from './plugin-drawing-boundary';
-import { pluginPartVersions } from './plugin-parts';
 import { PluginTree, type PluginOnEvent } from './plugin-registry';
 import type { ReplaceableState } from './replaceable-state';
 
@@ -60,7 +60,7 @@ function coreInput(
 
 function useTreeRefusal(props: ReplaceableSlotViewProps): boolean {
   const root = replacementRoot(props.state);
-  const reason = root ? replacementTreeReason(root, pluginPartVersions) : null;
+  const reason = root ? replacementTreeReason(root, currentPartVersions) : null;
   const { onFallback } = props;
   useEffect(() => {
     if (reason) onFallback(reason);

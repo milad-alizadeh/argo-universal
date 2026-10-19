@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "argo": "node --experimental-vm-modules --import tsx apps/server/src/main.ts",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "db:generate": "pnpm --filter @repo/db db:generate",
@@ -30,6 +31,7 @@
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "sherif": "catalog:",
+    "tsx": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

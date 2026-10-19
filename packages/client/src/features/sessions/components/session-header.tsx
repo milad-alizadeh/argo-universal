@@ -1,12 +1,12 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { PageHeader } from '#primitives/scaffolds/page';
 import { SizeClass } from '../../../lib/generic/size-class/size-class';
 import { defaultMergeMethod, type MergeMethod } from '../stores/merge-method';
 import {
   SessionHeaderActions,
   type SessionHeaderActionsProps,
 } from './session-header-actions';
+import { SessionHeaderBar } from './session-header-bar';
 import { SessionHeaderTitle } from './session-header-meta';
 import type { SessionHeaderProps } from './session-header-props';
 import type { SessionPullRequest } from './session-pull-request';
@@ -72,14 +72,14 @@ function WideSessionHeader({
   const actions = { ...mergeChoice, shown, onMerge, menu };
 
   return (
-    <PageHeader
+    <SessionHeaderBar
       title={<SessionHeaderTitle {...props} shown={shown} onShow={show} />}
       actions={<SessionHeaderActions {...actions} />}
     />
   );
 }
 
-// A phone gets the native stack's own header, which the Session's screen names: the plain title, its back button and the Session's menu. Wide draws its PageHeader with a one-line title, the meta line (status, one PR, its checks) and the actions.
+// A phone gets the native stack's own header, which the Session's screen names: the plain title, its back button and the Session's menu. Wide draws its SessionHeaderBar with a one-line title, the meta line (status, one PR, its checks) and the actions.
 export function SessionHeader(props: SessionHeaderProps): React.JSX.Element {
   const state = useWideHeaderState(props);
 

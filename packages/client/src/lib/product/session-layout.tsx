@@ -20,7 +20,7 @@ import {
 } from './session-fill';
 
 export interface SessionLayoutProps {
-  // Wide, the Session's PageHeader; a phone sets its native header from here.
+  // Wide, the Session's SessionHeaderBar; a phone sets its native header from here.
   header: ReactNode;
   // Full pane width, so it scrolls from anywhere in the pane; its rows sit in SessionColumns.
   feed: ReactNode;

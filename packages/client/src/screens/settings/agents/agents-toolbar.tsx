@@ -57,7 +57,7 @@ function FilterPillRow(props: PillRowProps): React.JSX.Element {
   );
 }
 
-// A phone's row spans the screen, so the pills scroll out to its edges; the row's padding holds them at the page's margin at rest.
+// The row sits in the Page's column, inside its side padding, so the pills line up with the page's content and scroll within it.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
   return <FilterPillRow {...props} contentClassName="wide:px-0" />;
 }

@@ -28,7 +28,7 @@ This amends [ADR-0025](0025-plugins-run-on-the-server-and-draw-argo-components.m
 - **Plugins can be written and checked by an Agent.** Argo ships three tools:
   - `argo plugin validate <dir>` reads the manifest and entry as the loader will, and reports the hooks, `argo` calls and Slots it uses and everything the Server would refuse;
   - `argo plugin test <dir>` runs a Plugin's tests against a test kit with a fake clock, storage, settings and Session. `mount({ slot | page, surface })` draws a Plugin tree for a chosen App, with `find` and `press`;
-  - a dev Plugin hot-reloads when the Agent Turn that edited it ends, instead of on every file change.
+  - a dev Plugin hot-reloads after all active Agent Turns end, instead of on every file change during a Turn. The owner approved this policy on 2026-10-19 for #824: file-watch events do not identify the writing Turn. Edits outside a Turn reload immediately.
 
   Copied from Claude Code's `plugin validate`, `plugin test` and its testing kit.
 

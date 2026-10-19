@@ -17,7 +17,7 @@ This amends [ADR-0032](0032-one-list-and-one-list-item-drawn-by-argo-everywhere.
 - **Text inputs follow each platform's form.**
   - iOS and desktop: a single-line field sits inside a grouped row, as SwiftUI `TextField` in a Form: `ListItem.TextField`, the Expo UI `TextInput` filling the row in its own `Host` (ADR-0032), with the label as placeholder or leading text. A multi-line field fills its own section. Help and validation text go in that section's footer.
   - Android: the same `ListItem.TextField`s render as Material text fields that stand alone, stacked outside rows, as ADR-0020 already says. Each field shows its label, its help text and its error as the field's own supporting text, with a character count when there is a limit. Multi-line is the same field with more lines.
-  - Forms submit from a button or the header, never from a row. Field state uses TanStack Form, and the keyboard is handled by `react-native-keyboard-controller` (ADR-0032).
+  - Forms submit from one `Button` at the bottom, never from the header or a row (owner, 2026-10-19): the Dialog footer on desktop and web, a full-width stock Button on phones. Field state uses TanStack Form, and the keyboard is handled by `react-native-keyboard-controller` (ADR-0032).
 
 ## Consequences
 

@@ -12,7 +12,6 @@ import { Fragment, createElement, type ElementType } from 'react';
 import { z } from 'zod';
 import { Text } from '#primitives/content/text';
 import { pluginEntries } from './plugin-entries';
-import { legacyNode, legacySlots } from './plugin-legacy';
 import type * as Rendering from './plugin-rendering';
 
 const registry = new Map<string, ElementType>(Object.entries(pluginEntries));
@@ -26,15 +25,11 @@ export function RenderNode({
   const part = drawablePart(node, context);
 
   if (!part) return refused(node);
-  const parsed = parsedProps(node, part);
+  const input = parsedInput(node, part, context);
 
-  if (!parsed.success) return refused(node);
-  const source = node.props;
-  const prepared = legacyNode({ ...node, props: parsed.data });
-  const input = { node: prepared, part, context, source };
-  const slots = legacySlots(node.type, renderedSlots(node, part, context));
+  if (!input) return refused(node);
 
-  return renderPrepared(input, slots);
+  return renderParsed(input, renderedSlots(node, part, context));
 }
 
 function drawablePart(
@@ -46,16 +41,22 @@ function drawablePart(
   return wirePart(node.type);
 }
 
-function parsedProps(
+function parsedInput(
   node: WireNode,
   part: WirePartDefinition,
-): z.ZodSafeParseResult<WireNode['props']> {
-  return (part.appProps ?? part.props)
+  context: Rendering.RenderContext,
+): Rendering.ControlInput | null {
+  const parsed = (part.appProps ?? part.props)
     .pipe(z.record(z.string(), WireJson))
     .safeParse(node.props);
+
+  if (!parsed.success) return null;
+  const props = parsed.data;
+
+  return { node: { ...node, props }, part, context, source: node.props };
 }
 
-function renderPrepared(
+function renderParsed(
   input: Rendering.ControlInput,
   slots: Rendering.PluginProps,
 ): React.JSX.Element | null {

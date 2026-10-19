@@ -2,23 +2,27 @@
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import type { DeclaredAction } from '#primitives/actions/action-list';
-import { IconButton } from '#primitives/actions/icon-button';
-import { Menu } from '#primitives/overlays/menu';
+import {
+  isSubmenu,
+  splitHeaderActions,
+  type HeaderActionsProps,
+  type HeaderEntry,
+} from '#primitives/actions/action-list';
 import { PageActionButton } from './page-action-button.android';
-import { headerActions } from './page-action-groups';
+import {
+  PageOverflowButton,
+  PageSubmenuButton,
+} from './page-menu-button.android';
 import type { PageHeaderInput } from './page-props';
 import { PageSearchBar } from './page-search-bar.android';
 
 export const pageTitleOptions = { headerTitleAlign: 'left' } as const;
 
+// The toolbar draws its items outside the Page's tree, so it draws the groups the Page's ActionLists registered.
 export function PageHeaderItems(props: PageHeaderInput): ReactElement {
-  const { actions, label } = props.header;
-  const header = { actions, label, search: Boolean(props.search) };
-
-  const options = {
-    headerRight: (): ReactElement => <HeaderActions {...header} />,
-  };
+  const { groups, label } = props.header;
+  // The search icon takes one of the toolbar's two places.
+  const options = headerOptions({ groups, label, slots: props.search ? 1 : 2 });
 
   return (
     <>
@@ -28,55 +32,30 @@ export function PageHeaderItems(props: PageHeaderInput): ReactElement {
   );
 }
 
-interface HeaderActionsProps {
-  actions: DeclaredAction[];
-  label: string;
-  search: boolean;
+// A native stack's header and a drawer's both take the Actions as `headerRight`.
+export interface HeaderRightOptions {
+  headerRight: () => ReactElement;
 }
 
-function HeaderActions(props: HeaderActionsProps): ReactElement {
-  const { direct, overflow } = splitHeaderActions(props);
+export function headerOptions(header: HeaderActionsProps): HeaderRightOptions {
+  return { headerRight: () => <ToolbarActions {...header} /> };
+}
+
+// Direct Actions, submenus and the overflow menu are all stock Compose icon buttons, the menus stock DropdownMenus.
+function ToolbarActions(props: HeaderActionsProps): ReactElement {
+  const { direct, overflow } = splitHeaderActions(props.groups, props.slots);
 
   return (
     <View className="flex-row items-center">
-      {direct.map(headerButton)}
-      {overflowMenu(overflow, props.label)}
+      {direct.map(toolbarEntry)}
+      <PageOverflowButton groups={overflow} label={props.label} />
     </View>
   );
 }
 
-function headerButton(action: DeclaredAction): ReactElement {
-  return <PageActionButton key={action.id} action={action} />;
-}
+function toolbarEntry(entry: HeaderEntry): ReactElement {
+  if (isSubmenu(entry))
+    return <PageSubmenuButton key={entry.id} submenu={entry} />;
 
-function overflowMenu(
-  actions: DeclaredAction[],
-  label: string,
-): ReactElement | null {
-  if (!actions.length) return null;
-
-  return (
-    <Menu
-      accessibilityLabel={label}
-      trigger={moreTrigger(label)}
-      actions={actions}
-    />
-  );
-}
-
-function moreTrigger(label: string): ReactElement {
-  return (
-    <IconButton
-      icon={{ sf: 'ellipsis', material: 'more_vert' }}
-      accessibilityLabel={label}
-      variant="ghost"
-    />
-  );
-}
-
-function splitHeaderActions(props: {
-  actions: DeclaredAction[];
-  search: boolean;
-}): ReturnType<typeof headerActions> {
-  return headerActions(props.actions, props.search ? 1 : 2);
+  return <PageActionButton key={entry.id} action={entry} />;
 }
