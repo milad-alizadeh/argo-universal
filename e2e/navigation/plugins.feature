@@ -80,3 +80,19 @@ Feature: Plugin navigation
       | frame |
       | wide  |
       | phone |
+
+  Scenario: A Plugin ListDetail keeps its list in the sidebar on a wide Frame
+    Given a wide Frame
+    When I open the Issues Plugin
+    Then the Plugin page says "Select an Issue"
+    And the Plugin list shows "Sync fails on large repos" in the sidebar
+    When I open the Plugin row "Add CSV export"
+    Then the Plugin page heading reads "Add CSV export"
+    And the Plugin list shows "Sync fails on large repos" in the sidebar
+
+  Scenario: A Plugin ListDetail drills into the opened row on a phone Frame
+    Given a phone Frame
+    When I open the Issues Plugin
+    And I open the Plugin row "Add CSV export"
+    Then the Plugin page heading reads "Add CSV export"
+    And the Plugin row "Sync fails on large repos" is hidden

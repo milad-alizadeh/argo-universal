@@ -3,7 +3,7 @@ import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
 import { onPhone, phone, wide } from './frame';
 
-const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists'];
+const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists', 'Issues'];
 
 // A phone Frame lists sections in the Drawer behind ☰; a wide one in its Rail.
 async function navigation(page: Page): Promise<Locator> {
@@ -46,7 +46,7 @@ Then(
   'the navigation lists core sections before Plugin items',
   async ({ page }): Promise<void> => {
     const items = (await navigation(page)).getByRole('button', {
-      name: /^(Sessions|Settings|Counter|Lists)$/,
+      name: /^(Sessions|Settings|Counter|Lists|Issues)$/,
     });
 
     await expect(items).toHaveCount(sectionNames.length);
@@ -132,5 +132,44 @@ Then(
       'Docs, example.com',
     ])
       await expect(page.getByRole('group', { name: field })).toBeVisible();
+  },
+);
+
+When(
+  'I open the Plugin row {string}',
+  async ({ page }, name: string): Promise<void> => {
+    await page.getByText(name, { exact: true }).click();
+  },
+);
+
+Then(
+  'the Plugin page heading reads {string}',
+  async ({ page }, name: string): Promise<void> => {
+    // On a phone the stack's header draws the page title, outside the Plugin page.
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+  },
+);
+
+// A root ListDetail's list sits in the Frame's sidebar, beside the page.
+Then(
+  'the Plugin list shows {string} in the sidebar',
+  async ({ page }, name: string): Promise<void> => {
+    await expect(
+      page.getByTestId('desktop-list').getByText(name, { exact: true }),
+    ).toBeVisible();
+  },
+);
+
+Then(
+  'the Plugin page says {string}',
+  async ({ page }, text: string): Promise<void> => {
+    await expect(page.getByText(text, { exact: true })).toBeVisible();
+  },
+);
+
+Then(
+  'the Plugin row {string} is hidden',
+  async ({ page }, name: string): Promise<void> => {
+    await expect(page.getByText(name, { exact: true })).toBeHidden();
   },
 );

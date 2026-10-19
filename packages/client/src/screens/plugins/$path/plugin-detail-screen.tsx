@@ -23,7 +23,7 @@ export function PluginDetailScreen({
 }: PluginDetailScreenProps): React.JSX.Element {
   const { section, loaded } = usePluginAt(pluginPath(path));
 
-  if (section) return <PluginPage section={section} />;
+  if (section) return <PluginPage section={section} path={path} />;
 
   return loaded ? (
     <PluginUnavailable />
@@ -32,15 +32,14 @@ export function PluginDetailScreen({
   );
 }
 
+// The Plugin's own page path is the route's, after the Plugin id and nav id, so a navigate Action opens a page below the nav item's root.
 function PluginPage({
   section,
-}: {
+  path,
+}: PluginDetailScreenProps & {
   section: PluginSection;
 }): React.JSX.Element {
-  const view = usePluginView(
-    section.pluginId,
-    `/${section.segments.slice(2).join('/')}`,
-  );
+  const view = usePluginView(section.pluginId, `/${path.slice(2).join('/')}`);
 
   return <PluginDetailView {...pluginPageProps(section, view)} />;
 }
