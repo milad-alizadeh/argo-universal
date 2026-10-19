@@ -11,11 +11,16 @@ type Options = Insets & Pick<ListProps<never>, 'appearance' | 'fit'>;
 const menuInset = 1;
 
 export function listInsets(props: Options, menu: boolean): Insets {
-  if (props.appearance !== 'grouped') return props;
+  if (props.appearance !== 'grouped') return plainInsets(props, menu);
 
   if (menu) return menuInsets(props);
 
   return { padding: horizontalInset(props), ...verticalInsets(props) };
+}
+
+// A plain list in a popover sits in its caller's inset, so it adds no scroll end gap below its last row.
+function plainInsets(props: Options, menu: boolean): Insets {
+  return menu ? { ...props, paddingBottom: props.paddingBottom ?? 0 } : props;
 }
 
 function horizontalInset(props: Options): Insets['padding'] {
