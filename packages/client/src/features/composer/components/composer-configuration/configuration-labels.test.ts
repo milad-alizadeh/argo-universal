@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { checkoutName, modelName } from './configuration-values';
+import { modeIcon } from './mode-icon';
 
 it.each([
   ['Model', 'Model'],
@@ -48,4 +49,26 @@ it('labels a Local Checkout independently of its path', () => {
       path: '/work/project',
     }),
   ).toBe('Local');
+});
+
+// Claude's ACP modes arrive without Argo's icon metadata; each still gets its own icon.
+it.each([
+  ['default', 'permission'],
+  ['acceptEdits', 'edit'],
+  ['plan', 'plan-mode'],
+  ['auto', 'sparkle'],
+  ['bypassPermissions', 'warning'],
+  ['unknown-mode', 'permission'],
+])('draws mode %j with the %j icon', (value, expected) => {
+  expect(modeIcon({ value, name: value })).toBe(expected);
+});
+
+it("prefers the Agent's own mode icon over the value's", () => {
+  expect(
+    modeIcon({
+      value: 'default',
+      name: 'Plan',
+      _meta: { argo: { icon: 'MapTrifold' } },
+    }),
+  ).toBe('plan-mode');
 });

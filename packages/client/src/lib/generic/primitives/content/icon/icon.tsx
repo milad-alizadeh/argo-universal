@@ -16,6 +16,7 @@ import { LogoGlyph } from '../../../symbols/logo-glyph';
 import type { LogoSource } from '../../../symbols/logo-source';
 import { SymbolGlyph } from '../../../symbols/symbol-glyph/symbol-glyph';
 import type { IconProps, IconSlotProps, IconSpinnerProps } from './icon-props';
+import { useSlotIconRole } from './icon-role-context';
 
 // Material's font em includes more whitespace; normalize its drawing without changing the layout slot.
 const materialGlyphScale = 1.125;
@@ -47,7 +48,8 @@ function useIconColor(props: Pick<IconProps, 'tone' | 'className'>): string {
   );
 }
 
-export function Icon(props: IconProps): React.JSX.Element {
+export function Icon(slotted: IconProps): React.JSX.Element {
+  const props = { ...slotted, role: useSlotIconRole(slotted.role) };
   const glyph = <IconGlyph {...props} />;
 
   if (!props.status) return glyph;

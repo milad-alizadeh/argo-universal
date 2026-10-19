@@ -14,6 +14,8 @@ export const iconRoles = {
   mark: { wide: 14, phone: 14 },
   // A list row's leading icon.
   row: { wide: 20, phone: 24 },
+  // A web menu or popover row's leading icon: one size in every menu, set by the row (owner, 2026-10-19).
+  menu: { wide: 20, phone: 20 },
   // A grouped list row's leading icon, a stock Form's and Material list item's 24 at every width (owner, 2026-10-18).
   'grouped-row': { wide: 24, phone: 24 },
   // A grouped list row's disclosure on the web: its chevron draws iOS's 7x12 in this box at every width.

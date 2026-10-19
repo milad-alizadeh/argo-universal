@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
+import { Icon, IconRoleContext } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useInMenu } from '../../../menu-rows-context';
 import { useInSidebar } from '../../../row-drawing-context';
@@ -18,30 +18,43 @@ export function hasLeading(
   return [Boolean(props.leading), hasBadge(props.badge)].some(Boolean);
 }
 
-// Paper: a menu row's icon slot is 20px, a sidebar row's 16 wide on its title's 20 line; other rows keep the row icon slot.
+/*
+ * Paper: a menu row's icon slot is 20px and sizes its icon with the menu role, a sidebar row's is 16 wide on its
+ * title's 20 line; other rows keep the row icon slot.
+ */
 const leadingClasses = {
   row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',
   menu: 'relative h-5 w-5 shrink-0 items-center justify-center',
   sidebar: 'relative h-5 w-4 shrink-0 items-center justify-center',
 };
 
+type LeadingLane = keyof typeof leadingClasses;
+
+const leadingIconRoles = {
+  row: undefined,
+  menu: 'menu',
+  sidebar: undefined,
+} as const satisfies Record<LeadingLane, 'menu' | undefined>;
+
 type LeadingProps = Pick<ListItemProps, 'leading' | 'badge' | 'sidebar'>;
 
-function leadingSlot(menu: boolean, sidebar: boolean): string {
-  if (menu) return leadingClasses.menu;
+function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
+  if (menu) return 'menu';
 
-  return sidebar ? leadingClasses.sidebar : leadingClasses.row;
+  return sidebar ? 'sidebar' : 'row';
 }
 
 export function Leading(props: LeadingProps): ReactNode {
-  const menu = useInMenu();
+  const lane = leadingLane(useInMenu(), props.sidebar !== undefined);
   const badge = useLeadingBadge(props.badge);
 
   if (!hasLeading(props)) return null;
 
   return (
-    <View className={leadingSlot(menu, props.sidebar !== undefined)}>
-      {props.leading}
+    <View className={leadingClasses[lane]}>
+      <IconRoleContext value={leadingIconRoles[lane]}>
+        {props.leading}
+      </IconRoleContext>
       <ItemBadge badge={badge} />
     </View>
   );
