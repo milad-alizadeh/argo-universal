@@ -55,7 +55,7 @@ export function itemSurface(
 
 const pressLayouts = {
   row: 'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5',
-  menu: 'w-full min-h-9 flex-row items-center gap-2 rounded-xl p-2',
+  menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
 };
 
 const pressFocus =

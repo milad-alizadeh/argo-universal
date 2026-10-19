@@ -12,15 +12,11 @@ interface OptionsProps {
   configuration: ComposerConfigurationProps;
 }
 
-// An Agent's other select options, such as a response style: each row opens its own choices.
-export function OptionDrills(props: OptionsProps): ReactElement {
-  return (
-    <>
-      {otherSelections(props.configuration).map((option) => (
-        <OptionDrill key={option.configId} {...props} option={option} />
-      ))}
-    </>
-  );
+// An Agent's other select options, such as a response style: each row opens its own choices. A call, so the list places each row.
+export function optionDrills(props: OptionsProps): ReactElement[] {
+  return otherSelections(props.configuration).map((option) => (
+    <OptionDrill key={option.configId} {...props} option={option} />
+  ));
 }
 
 type DrillProps = OptionsProps & { option: SelectConfiguration };

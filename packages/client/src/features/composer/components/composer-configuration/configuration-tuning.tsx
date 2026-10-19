@@ -60,14 +60,11 @@ function selectEffort(
     configuration.onConfigChange(effort.option.configId, choice.value);
 }
 
-export function SwitchOptions(props: TuningProps): React.JSX.Element {
-  return (
-    <>
-      {switches(props.configuration).map((option) => (
-        <ConfigurationSwitch key={option.configId} {...props} option={option} />
-      ))}
-    </>
-  );
+// A call, so the list places each switch row.
+export function switchOptions(props: TuningProps): React.JSX.Element[] {
+  return switches(props.configuration).map((option) => (
+    <ConfigurationSwitch key={option.configId} {...props} option={option} />
+  ));
 }
 
 function ConfigurationSwitch({

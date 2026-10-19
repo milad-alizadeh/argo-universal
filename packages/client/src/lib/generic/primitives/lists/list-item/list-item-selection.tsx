@@ -68,7 +68,7 @@ export function ChoiceSlot(props: ListItemProps): ReactNode {
   if (!selectionMode) return null;
 
   return (
-    <View className="w-4 shrink-0 items-center justify-center">
+    <View className="h-5 w-4 shrink-0 items-center justify-center">
       <ChoiceMark {...props} />
     </View>
   );
