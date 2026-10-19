@@ -10,6 +10,7 @@ import {
 } from '#features/composer';
 import {
   SessionCallout,
+  ConfigurationStatus,
   type SessionCalloutProps,
   SessionHeaderBar,
   type StartingFeed,
@@ -58,6 +59,7 @@ export interface ReadySessionNewViewProps {
   attachmentErrorKey?: string;
   // Sign in or Retry after the Session failed to open; the Feed and Composer stay.
   callout?: SessionCalloutProps;
+  calloutInConfiguration?: boolean;
   // A terminal sign-in method's panel or sheet.
   signInTerminal?: TerminalSignInProps;
 }
@@ -88,7 +90,7 @@ export function SessionNewView(props: SessionNewViewProps): React.JSX.Element {
 
 function NewSessionStartIn(props: ReadySessionNewViewProps): React.JSX.Element {
   return (
-    <View className="w-full items-center pb-2">
+    <View className="w-full items-center pb-2 wide:pb-0">
       <StartSessionIn {...startInProps(props)} />
     </View>
   );
@@ -113,10 +115,23 @@ const promptComposerProps = (
   onAttachFiles: props.onAttachFiles,
   onDropFiles: props.onDropFiles,
   onSend: props.onSend,
-  configuration: props.configuration,
-  placeholder: 'What should the Agent work on?',
+  configuration: {
+    ...props.configuration,
+    agentChoices: props.opening
+      ? undefined
+      : {
+          agents: props.agents,
+          onChange: props.onAgentChange,
+          onAdd: props.onAddAgents,
+        },
+    status:
+      props.calloutInConfiguration && props.callout ? (
+        <ConfigurationStatus {...props.callout} />
+      ) : undefined,
+  },
+  placeholder: '',
   sendable: props.canOpen,
-  callout: calloutOf(props),
+  callout: props.calloutInConfiguration ? undefined : calloutOf(props),
   error: props.attachmentError,
   errorKey: props.attachmentErrorKey,
 });
@@ -127,11 +142,11 @@ function NewSessionComposer(
   const wide = useContentWide();
 
   return (
-    <>
+    <View className="w-full self-center">
       {/* A Session has no such row, so it goes with the sent prompt and the Feed keeps its place at hand-off. */}
       {!wide && !props.starting && <NewSessionStartIn {...props} />}
       <PromptComposer {...props} />
-    </>
+    </View>
   );
 }
 
@@ -153,10 +168,6 @@ function ReadySessionNewView(
 const startInProps = (
   props: ReadySessionNewViewProps,
 ): React.ComponentProps<typeof StartSessionIn> => ({
-  agents: props.agents,
-  agent: props.configuration.agent,
-  onAgentChange: props.onAgentChange,
-  onAddAgents: props.onAddAgents,
   serverName: props.serverName,
   serverConnected: props.connected,
   projects: props.projects,

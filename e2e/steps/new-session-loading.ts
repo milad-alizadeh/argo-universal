@@ -10,7 +10,7 @@ import {
   waitForEmptySession,
 } from './new-session';
 
-// The Agent first, so its Session is the only one Local opens; its New worktree options read ends before Local is chosen.
+// Discover the Agent's options before selecting the Local checkout.
 Given(
   'a Local New Session with Agent {int}',
   async ({ page, server, app }, ordinal: number): Promise<void> => {

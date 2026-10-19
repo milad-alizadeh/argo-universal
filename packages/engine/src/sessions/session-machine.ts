@@ -87,6 +87,7 @@ import {
   isOfferedConfigChoice,
 } from './admission/config-admission';
 import { isReplayedHistory } from './admission/update-admission';
+import { AgentOptionsJob } from './agent-options-storage';
 import {
   saveSessionArchive,
   removeSessionCheckout,
@@ -589,6 +590,14 @@ const sessionSetup = setup({
 
         const heldConfig = withoutHeldChoice(context.heldConfig, applied);
 
+        enqueue.sendTo(writer, {
+          type: writeFeedEvent,
+          job: new AgentOptionsJob(
+            { agent: context.agent, projectId: context.projectId },
+            nextOptions,
+            true,
+          ),
+        });
         enqueue.assign({
           configOptions: nextOptions,
           configValues,
@@ -758,6 +767,14 @@ const sessionSetup = setup({
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
     rememberFeedEnded: assign({ feedEnded: true }),
+    storeAgentOptions: sendTo(writer, ({ context }) => ({
+      type: writeFeedEvent,
+      job: new AgentOptionsJob(
+        { agent: context.agent, projectId: context.projectId },
+        context.configOptions,
+        true,
+      ),
+    })),
     storeAcpSession: sendTo(writer, ({ context }) => ({
       type: writeFeedEvent,
       job: new SessionRowUpdateJob({
@@ -1605,6 +1622,7 @@ export const sessionMachine = sessionSetup.createMachine({
                     'finishAcpRegistration',
                     'storeSession',
                     'storeAcpSession',
+                    'storeAgentOptions',
                     'discloseInterruption',
                   ],
                 },

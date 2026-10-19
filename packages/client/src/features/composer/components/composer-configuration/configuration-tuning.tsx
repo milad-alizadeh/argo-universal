@@ -1,9 +1,10 @@
 import type { SessionConfigOption } from '@repo/contracts';
 import type * as React from 'react';
+import { Icon } from '#primitives/content/icon';
 import { Slider } from '#primitives/inputs/slider';
 import { ListItem } from '#primitives/lists/list-item';
 import type { ComposerConfigurationProps } from './configuration-types';
-import { currentEffort, switches } from './configuration-values';
+import { currentEffort, switches, isFastMode } from './configuration-values';
 
 interface TuningProps {
   configuration: ComposerConfigurationProps;
@@ -25,6 +26,13 @@ export function EffortControl(props: TuningProps): React.JSX.Element | null {
   return (
     <ListItem
       title="Effort"
+      leading={
+        <Icon
+          fitArtwork
+          name="thinking"
+          role={{ compact: 'body', wide: 'row' }}
+        />
+      }
       value={effort.selected.name}
       control={<EffortSlider {...props} effort={effort} />}
     />
@@ -74,6 +82,13 @@ function ConfigurationSwitch({
   return (
     <ListItem.Toggle
       title={option.name}
+      leading={
+        <Icon
+          fitArtwork
+          name={isFastMode(option) ? 'fast-mode' : 'filters'}
+          role={{ compact: 'body', wide: 'row' }}
+        />
+      }
       value={option.currentValue}
       onValueChange={(checked) =>
         configuration.onConfigChange(option.configId, checked)

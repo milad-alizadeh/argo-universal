@@ -1,7 +1,9 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
+import { Text } from '#primitives/content/text';
 import { List, ListSection } from '#primitives/lists/list';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
+import { Spinner } from '#primitives/status/spinner';
 import { AgentDrill } from './agent-drill';
 import { EffortControl, switchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
@@ -23,13 +25,34 @@ interface ContentsProps extends MenuProps {
  * open beside it; elsewhere a sheet page, titled with the Agent's name, whose rows push pages.
  */
 export function AgentModelMenu(props: ContentsProps): ReactElement {
+  const [readyHeight, setReadyHeight] = useState<number>();
+  const loading =
+    props.configuration.opening && !props.configuration.configOptions.length;
+
   return (
-    <View className="native:flex-1 bg-content web:wide:bg-card">
+    <View
+      className="native:flex-1 bg-content web:wide:bg-card"
+      style={props.wide && loading ? { minHeight: readyHeight } : undefined}
+      onLayout={(event) => {
+        if (props.wide && !loading)
+          setReadyHeight(event.nativeEvent.layout.height);
+      }}
+    >
       <PopoverHoverGroup>
         <List appearance="grouped" fit={Platform.OS === 'web' || props.wide}>
           {configurationDrills(props)}
           {configurationTuning(props)}
         </List>
+        {props.configuration.status ??
+          (props.configuration.opening &&
+          !props.configuration.configOptions.length ? (
+            <View className="flex-row items-center gap-2 p-3">
+              <Spinner accessibilityLabel="Loading configuration…" />
+              <Text role="body" tone="muted">
+                Loading configuration…
+              </Text>
+            </View>
+          ) : null)}
       </PopoverHoverGroup>
     </View>
   );
@@ -58,7 +81,7 @@ function configurationDrills(props: ContentsProps): ReactElement {
 
   return (
     <ListSection footer={notice}>
-      {props.wide ? <AgentDrill configuration={props.configuration} /> : null}
+      <AgentDrill configuration={props.configuration} />
       <ModelPicker configuration={props.configuration} />
       {optionDrills(props)}
     </ListSection>

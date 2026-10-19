@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { type AgentsFilter, agentsPage } from '#features/agents';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
@@ -8,6 +8,7 @@ import {
   agentListArgs,
   catalog,
   emptyCatalog,
+  longCatalog,
   pageRows,
 } from './agent-list-view.mocks';
 
@@ -148,5 +149,21 @@ export const Retry: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.onRetry).toHaveBeenCalledOnce();
+  },
+};
+
+// The last Agent must fit inside the window when the catalog is scrolled to its end.
+export const CatalogEndReachable: Story = {
+  beforeEach: () => settleViewport(layoutWidths.wide),
+  args: { agents: pageRows([], { status: 'loaded', registry: longCatalog }) },
+  play: async ({ canvas }) => {
+    const scroll = await canvas.findByTestId('agents-catalog');
+    scroll.scrollTop = scroll.scrollHeight;
+    const last = await canvas.findByRole('group', { name: /^Agent 199, v/ });
+    await waitFor(() =>
+      expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        window.innerHeight,
+      ),
+    );
   },
 };

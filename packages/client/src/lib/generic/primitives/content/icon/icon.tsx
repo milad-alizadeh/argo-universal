@@ -92,6 +92,7 @@ function IconSymbolGlyph(props: SymbolIconProps): React.JSX.Element {
       colorClassName={colorClassName}
       pixels={useIconPixels(props.role)}
       glyphScale={glyphScale}
+      fitArtwork={props.fitArtwork}
       weight={props.weight}
       testID={props.testID ?? `icon-${icon.key}`}
     />

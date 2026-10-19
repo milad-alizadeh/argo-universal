@@ -17,7 +17,7 @@ type CalloutViews = {
 };
 
 const views: CalloutViews = {
-  loading: () => <CalloutLoading />,
+  loading: (props) => <CalloutLoading {...props} />,
   authenticate: (props) => <AuthCallout {...props} />,
   'auth-required': (props) => <AuthRequiredCard {...props} />,
   launch: (props) => <LaunchCallout {...props} />,

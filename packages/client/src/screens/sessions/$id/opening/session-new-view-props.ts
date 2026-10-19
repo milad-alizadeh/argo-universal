@@ -1,5 +1,9 @@
 import type { AgentServer } from '@repo/contracts';
-import { type ChosenSettings, chooseAnotherProject } from '#features/sessions';
+import {
+  type ChosenSettings,
+  chooseAnotherProject,
+  openProblem,
+} from '#features/sessions';
 import type {
   SessionNewViewProps,
   ReadySessionNewViewProps,
@@ -60,16 +64,22 @@ const configurationProps = (wiring: NewSessionWiring): ConfigurationProps => ({
 });
 
 type NoticeProps = ReadyProps<
-  'attachmentError' | 'attachmentErrorKey' | 'callout' | 'signInTerminal'
+  | 'attachmentError'
+  | 'attachmentErrorKey'
+  | 'callout'
+  | 'signInTerminal'
+  | 'calloutInConfiguration'
 >;
 
 const noticeProps = ({
   attachmentDraft,
   callout,
+  sessionOpening,
 }: NewSessionWiring): NoticeProps => ({
   attachmentError: attachmentDraft.attachmentError?.message,
   attachmentErrorKey: attachmentDraft.attachmentError?.key,
   ...callout,
+  calloutInConfiguration: !openProblem(sessionOpening.session),
 });
 
 const readyProps = (

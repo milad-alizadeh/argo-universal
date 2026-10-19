@@ -47,7 +47,7 @@ function useChooseInStore(
   }, [store, choiceKey, connected]);
 }
 
-// New Session's real, empty Session for the current choices; leaving without sending closes it.
+// Keep unsent choices and hand off the Session created by Send.
 export function useEmptySession(
   choices: EmptySessionChoices,
   clearDraft: () => void,

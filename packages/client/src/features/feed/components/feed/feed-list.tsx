@@ -43,7 +43,7 @@ export function FeedList(props: FeedListProps): React.JSX.Element {
   const shared = { list, ...props, ...position };
 
   return (
-    <View style={fillShrinkable}>
+    <View style={fillShrinkable} className="web:select-text">
       <FeedBody {...shared} />
       <JumpToLatestWhenAway {...shared} />
     </View>

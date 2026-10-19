@@ -1,5 +1,8 @@
+import { EventEmitter, on } from 'node:events';
 import {
   SessionOpenFailure,
+  InitialConfigOption,
+  type AgentOptionsUpdate,
   type SessionAgentOptionsInput,
   type SessionAgentOptionsOutput,
 } from '@repo/contracts';
@@ -14,9 +17,16 @@ import {
   sessionOpenError,
 } from '../agents';
 import { readProjectPath } from '../projects';
+import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { readAcpConfiguration } from './acp/acp-configuration';
+import {
+  AgentOptionsJob,
+  readAgentConfiguration,
+} from './agent-options-storage';
+import { configureOptionsSession } from './configure-options-session';
 import type { SessionRouterDeps } from './router-deps';
 import { validateSessionCommandAdmission } from './session-command';
+import { readSessionRow } from './session-record';
 
 const rejections = createRejectionCounter('Agent options');
 
@@ -30,13 +40,14 @@ const optionsDestination: AcpSessionDestination = {
 
 type OptionsDeps = Pick<
   SessionRouterDeps,
-  'database' | 'installedAgents' | 'sessions' | 'sessionCommandSignal'
+  | 'database'
+  | 'installedAgents'
+  | 'sessions'
+  | 'sessionCommandSignal'
+  | 'findWriter'
 >;
 
-/*
- * The Agent's launch or sign-in failure, as Send's open would report it (ADR-0004), so the
- * App leaves it to Send's callout instead of showing it twice.
- */
+// Discovery uses the same sign-in and failure contract as Send (ADR-0004).
 const agentFailure = (cause: unknown): TRPCError => {
   const failure = new SessionOpenFailure(sessionOpenError(cause));
 
@@ -51,14 +62,28 @@ async function openOptionsSession(
   deps: OptionsDeps,
   { agent, projectId }: SessionAgentOptionsInput,
   signal: AbortSignal,
+  progress: (stage: 'installing' | 'loading', fraction?: number) => void,
 ): Promise<AcpSessionLease> {
   const installed = requireInstalledAgent(deps.installedAgents, agent);
   const cwd = readProjectPath(deps.database, projectId);
   validateSessionCommandAdmission(deps);
 
   try {
+    const launch = await deps.installedAgents.launch(
+      installed,
+      projectId,
+      signal,
+      (fraction) => progress('installing', fraction),
+    );
     return await deps.sessions.getSnapshot().context.acpResources.open({
-      launch: await deps.installedAgents.launch(installed, projectId, signal),
+      launch: {
+        ...launch,
+        resolve: async (signal) => {
+          const resolved = await launch.resolve(signal);
+          progress('loading');
+          return resolved;
+        },
+      },
       opening: { method: 'session/new', params: { cwd, mcpServers: [] } },
       destination: optionsDestination,
       signal,
@@ -68,21 +93,150 @@ async function openOptionsSession(
   }
 }
 
-/*
- * Before Send, a New worktree has no Session to read options from (ADR-0023).
- * A new Agent session in the Project folder reports them and is closed at once;
- * no Session, Checkout, row or cache is created, and no prompt is sent.
- */
-export async function readAgentOptions(
+// Discover in the Project folder and commit before publishing the refreshed snapshot.
+async function refreshAgentOptions(
   deps: OptionsDeps,
   input: SessionAgentOptionsInput,
-  signal: AbortSignal = new AbortController().signal,
+  signal: AbortSignal,
+  progress: (stage: 'installing' | 'loading', fraction?: number) => void,
 ): Promise<SessionAgentOptionsOutput> {
-  const lease = await openOptionsSession(deps, input, signal);
+  requireInstalledAgent(deps.installedAgents, input.agent);
+  const writer = deps.findWriter();
+  const saved = readAgentConfiguration(
+    { database: deps.database, writer },
+    input,
+  );
+  if (!writer)
+    throw new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message: 'Server storage is unavailable.',
+    });
+  const lease = await openOptionsSession(deps, input, signal, progress);
 
   try {
-    return readAcpConfiguration(lease.response.configOptions, rejections);
+    const options = await configureOptionsSession(
+      lease,
+      readAcpConfiguration(lease.response.configOptions, rejections),
+      saved?.configOptions ?? [],
+      input.picks ?? {},
+      signal,
+    );
+    signal.throwIfAborted();
+    if (input.sessionId && saved) return options;
+    await writeDatabaseJobAndWaitForCommit(
+      writer,
+      new AgentOptionsJob(
+        { agent: input.agent, projectId: input.projectId },
+        options,
+        true,
+        saved?.revision ?? 0,
+      ),
+    );
+    return (
+      readAgentConfiguration({ database: deps.database, writer }, input)
+        ?.configOptions ?? options
+    );
   } finally {
     await lease.close();
+  }
+}
+
+// One endpoint sends the durable snapshot first, then refreshes without hiding it.
+export async function* agentOptionsUpdates(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+  signal?: AbortSignal,
+): AsyncGenerator<AgentOptionsUpdate, void> {
+  input = sessionOptionsInput(deps, input);
+  requireInstalledAgent(deps.installedAgents, input.agent);
+  const saved = readAgentConfiguration(
+    { database: deps.database, writer: deps.findWriter() },
+    input,
+  );
+  const owner = { agent: input.agent, projectId: input.projectId };
+  yield {
+    ...owner,
+    configOptions: saved
+      ? saved.configOptions.map((option) => {
+          const value = input.picks?.[option.configId];
+          return typeof value === typeof option.currentValue
+            ? ({ ...option, currentValue: value } as typeof option)
+            : option;
+        })
+      : null,
+  };
+  // The reader retains this snapshot even if discovery asks for sign-in or fails.
+  yield* discoveryUpdates(deps, input, saved?.configOptions ?? null, signal);
+}
+
+// Browsing keeps the Session closed. Discover using its own saved choices, not
+// whichever choices another Session most recently wrote for this Agent.
+function sessionOptionsInput(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+): SessionAgentOptionsInput {
+  if (!input.sessionId) return input;
+  const session = readSessionRow(
+    { database: deps.database, writer: deps.findWriter() },
+    input.sessionId,
+  );
+  if (
+    !session ||
+    session.agent !== input.agent ||
+    session.projectId !== input.projectId
+  )
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: 'Session not found for this Agent and Project.',
+    });
+  return {
+    ...input,
+    picks: Object.fromEntries(
+      [
+        ...InitialConfigOption.array().parse(session.configValues),
+        ...InitialConfigOption.array().parse(session.heldConfig),
+      ].map(({ configId, value }) => [configId, value]),
+    ),
+  };
+}
+
+// Buffer progress while discovery runs; cancellation stops this reader and its discovery.
+async function* discoveryUpdates(
+  deps: OptionsDeps,
+  input: SessionAgentOptionsInput,
+  cached: SessionAgentOptionsOutput | null,
+  signal?: AbortSignal,
+): AsyncGenerator<AgentOptionsUpdate> {
+  const controller = new AbortController();
+  const active = signal
+    ? AbortSignal.any([signal, controller.signal])
+    : controller.signal;
+  type Event = { update: AgentOptionsUpdate } | { error: unknown };
+  const events = new EventEmitter<{ update: [Event]; done: [] }>();
+  const stream = on(events, 'update', { signal: active, close: ['done'] });
+  const owner = { agent: input.agent, projectId: input.projectId };
+  const work = refreshAgentOptions(deps, input, active, (stage, progress) => {
+    events.emit('update', {
+      update: { ...owner, configOptions: cached, stage, progress },
+    });
+  })
+    .then(
+      (configOptions) =>
+        events.emit('update', {
+          update: { ...owner, configOptions, stage: 'ready' },
+        }),
+      (error: unknown) => events.emit('update', { error }),
+    )
+    .finally(() => events.emit('done'));
+  try {
+    for await (const [event] of stream) {
+      const value = event as Event;
+      if ('error' in value) throw value.error;
+      yield value.update;
+    }
+  } finally {
+    controller.abort();
+    await stream.return?.();
+    await work;
   }
 }

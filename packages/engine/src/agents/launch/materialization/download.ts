@@ -17,9 +17,13 @@ class ArchiveChunks {
 
 const readArchiveBody = async (
   body: ReadableStream<Uint8Array>,
+  total: number,
+  progress?: (fraction: number) => void,
 ): Promise<Uint8Array> => {
   const reader = body.getReader(),
     chunks = new ArchiveChunks();
+  let received = 0;
+  let reported = -1;
 
   try {
     for (;;) {
@@ -27,6 +31,12 @@ const readArchiveBody = async (
 
       if (next.done) return chunks.bytes();
       chunks.add(next.value);
+      received += next.value.length;
+      const percent = Math.min(100, Math.floor((received / total) * 100));
+      if (total > 0 && percent !== reported) {
+        reported = percent;
+        progress?.(percent / 100);
+      }
     }
   } finally {
     await reader.cancel();
@@ -36,6 +46,7 @@ const readArchiveBody = async (
 export const downloadAgentArchive = async (
   url: string,
   signal: AbortSignal,
+  progress?: (fraction: number) => void,
 ): Promise<Uint8Array> => {
   const response = await fetch(url, { signal });
 
@@ -44,5 +55,11 @@ export const downloadAgentArchive = async (
 
   if (!response.body) throw new Error('Agent download is empty');
 
-  return readArchiveBody(response.body);
+  return readArchiveBody(
+    response.body,
+    response.headers.get('content-encoding')
+      ? 0
+      : Number(response.headers.get('content-length')),
+    progress,
+  );
 };

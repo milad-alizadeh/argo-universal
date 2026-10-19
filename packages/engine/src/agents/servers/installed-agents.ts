@@ -35,6 +35,7 @@ export type InstalledAgents = {
     agent: InstalledAgent,
     projectId: string,
     signal: AbortSignal,
+    onInstalling?: (progress?: number) => void,
   ) => Promise<DeferredAgentLaunch>;
 };
 
@@ -56,8 +57,8 @@ export const createInstalledAgents = (
       ? { installed: true, agent }
       : { installed: false, message: `Agent "${id}" is not installed.` };
   },
-  launch: (agent, projectId, signal) =>
-    launchInstalledAgent(input, { agent, projectId, signal }),
+  launch: (agent, projectId, signal, onInstalling) =>
+    launchInstalledAgent(input, { agent, projectId, signal, onInstalling }),
 });
 
 // New Session, Send, open, Retry and sign-in admit only an Installed Agent, and all show this one open failure otherwise.
@@ -83,6 +84,7 @@ type LaunchSubject = {
   agent: InstalledAgent;
   projectId: string;
   signal: AbortSignal;
+  onInstalling?: (progress?: number) => void;
 };
 
 // The Registry version is read now; the command is resolved only when ACP resources start a connection.
@@ -119,14 +121,26 @@ const resolveLaunch = async (
 // The Project's main Checkout is the Agent's folder and the source of its login-shell env (ADR-0004).
 const commandInput = async (
   input: InstalledAgentsInput,
-  { agent, signal }: LaunchSubject,
+  { agent, signal, onInstalling }: LaunchSubject,
   cwd: string,
 ): Promise<CommandInput> => ({
   database: input.database,
   registry: input.registry,
   home: input.home,
   id: agent.id,
-  ports: input.ports,
+  ports: {
+    runTool: (tool) => {
+      if (tool.args.includes('install')) onInstalling?.();
+      return input.ports.runTool(tool);
+    },
+    download: async (url, signal) => {
+      onInstalling?.();
+      const bytes = await input.ports.download(url, signal, onInstalling);
+      // Extraction and verification have no measurable total.
+      onInstalling?.();
+      return bytes;
+    },
+  },
   shellEnv: definedEnvironment(await shellEnvironment(cwd)),
   signal,
   isDirectoryInUse: input.resources.isDirectoryInUse,

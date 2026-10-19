@@ -18,22 +18,6 @@ export const openingAgain = ({
   connectionError: undefined,
 });
 
-// Opening again found nothing to open: a retried failure is on show again, for Retry.
-const nothingToOpen = (outcome: NewSessionOutcome): NewSessionOutcome =>
-  outcome.attempt.status === 'retrying'
-    ? {
-        ...outcome,
-        attempt: { status: 'failed', error: outcome.attempt.error },
-      }
-    : outcome;
-
-// Retry on a Local Session: one whose open failed opens again; with none, a retried failure is on show again.
-export const retriedLocal = (
-  outcome: NewSessionOutcome,
-  reopened: boolean,
-): NewSessionOutcome =>
-  reopened ? openingAgain(outcome) : nothingToOpen(outcome);
-
 /*
  * An open the Connection dropped, as its state was when the open failed, leaves the attempt idle
  * for a toast; any other failure fails it, for the callout and Retry.

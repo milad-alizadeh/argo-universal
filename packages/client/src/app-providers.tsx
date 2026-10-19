@@ -1,5 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from 'react';
 import { ConnectionContext } from '#features/connection';
@@ -10,11 +9,7 @@ import {
   createServerMediaUrl,
 } from '#features/connection';
 import { TRPCProvider } from '#features/connection';
-import { sessionOptionsKey } from '#features/sessions';
 import { MediaUrlContext } from '#primitives/content/media-url';
-import { queryPersistOptions } from './lib/product/query-persister';
-
-const persistOptions = queryPersistOptions(sessionOptionsKey);
 
 export interface AppProvidersProps {
   serverUrl: string;
@@ -49,39 +44,19 @@ interface ConnectionProvidersProps extends ServerProvidersProps {
   queryClient: QueryClient;
 }
 
-interface PersistedQueriesProps {
-  queryClient: QueryClient;
-  children: React.ReactNode;
-}
-
-// Only the Session options cache outlives the App (see persistOptions).
-function PersistedQueries({
-  queryClient,
-  children,
-}: PersistedQueriesProps): React.JSX.Element {
-  return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={persistOptions}
-    >
-      {children}
-    </PersistQueryClientProvider>
-  );
-}
-
 function ConnectionProviders({
   queryClient,
   ...props
 }: ConnectionProvidersProps): React.JSX.Element {
   return (
-    <PersistedQueries queryClient={queryClient}>
+    <QueryClientProvider client={queryClient}>
       <TRPCProvider
         trpcClient={props.connection.client}
         queryClient={queryClient}
       >
         <ServerProviders {...props} />
       </TRPCProvider>
-    </PersistedQueries>
+    </QueryClientProvider>
   );
 }
 

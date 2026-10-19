@@ -13,9 +13,10 @@ const signInTerminal = 'Agent sign-in terminal';
 export const callout = (page: Page, title: string | RegExp): Locator =>
   page.getByRole('heading', { name: title, exact: typeof title === 'string' });
 
-// Sign-in and launch trouble show only once a Session opens, so these steps check only that the Agent is listed as saved.
+// These steps select scripted Agent behaviour; the Agent must be installed.
 for (const fixture of [
   'Agent {int} needs sign-in',
+  'Agent {int} exits while fetching configuration',
   'Agent {int} offers two sign-in methods',
   'Agent {int} holds its sign-in',
   'Agent {int} signs in through a terminal',
@@ -29,9 +30,11 @@ Then(
   'the App asks to authenticate to Agent {int} with {string}',
   async ({ page, server }, ordinal: number, method: string): Promise<void> => {
     const { name: label } = await readAgent(page, server.httpUrl, ordinal);
-    await expect(callout(page, `Authenticate to ${label}`)).toBeVisible(
-      sessionOpenTimeout,
-    );
+    await expect(
+      page.url().endsWith('/sessions/new')
+        ? page.getByText('Sign in to load configuration.', { exact: true })
+        : callout(page, `Authenticate to ${label}`),
+    ).toBeVisible(sessionOpenTimeout);
     await expect(
       page.getByRole('button').filter({ hasText: method }),
     ).toBeVisible();
@@ -74,7 +77,11 @@ Then(
   'the App is authenticating to Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
     const { name: label } = await readAgent(page, server.httpUrl, ordinal);
-    await expect(callout(page, `Authenticating to ${label}…`)).toBeVisible();
+    await expect(
+      page.url().endsWith('/sessions/new')
+        ? page.getByText('Signing in…', { exact: true })
+        : callout(page, `Authenticating to ${label}…`),
+    ).toBeVisible();
   },
 );
 
@@ -88,6 +95,16 @@ Then('the sign-in callout is gone', async ({ page }): Promise<void> => {
     sessionOpenTimeout,
   );
   await expect(callout(page, 'Authentication Required')).toHaveCount(0);
+  if (page.url().endsWith('/sessions/new')) {
+    await expect(
+      page.getByText('Sign in to load configuration.', { exact: true }),
+    ).toHaveCount(0, sessionOpenTimeout);
+    await expect(page.getByText('Signing in…', { exact: true })).toHaveCount(
+      0,
+      sessionOpenTimeout,
+    );
+    await page.keyboard.press('Escape');
+  }
 });
 
 Then(

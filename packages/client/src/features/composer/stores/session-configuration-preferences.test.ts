@@ -1,13 +1,11 @@
 import type {} from '@repo/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  accepted,
   catalogCases,
   withoutEffortCases,
   drafted,
   restrictedEffort,
 } from '../../../../mocks/composer-preference-mock';
-import { nextRememberedChange } from './session-configuration-preferences';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -65,62 +63,6 @@ describe('draftConfiguration', () => {
         { configId: effort.configId, value: chosenEffort },
         defaultMode,
       ]);
-    },
-  );
-});
-
-describe('nextRememberedChange', () => {
-  it.each(catalogCases)(
-    'applies the saved model for $agent.agent before its effort',
-    ({ agent, model, narrower, chosenEffort }) => {
-      expect(
-        nextRememberedChange(
-          agent.configOptions,
-          { model: narrower.value, thought_level: chosenEffort },
-          [],
-        ),
-      ).toEqual({ configId: model.configId, value: narrower.value });
-    },
-  );
-
-  it.each(catalogCases)(
-    'applies the saved effort for $agent.agent once the Session runs the saved model',
-    ({ agent, model, effort, narrower, chosenEffort }) => {
-      expect(
-        nextRememberedChange(
-          accepted(agent, { model: narrower.value }),
-          { model: narrower.value, thought_level: chosenEffort },
-          [model.configId],
-        ),
-      ).toEqual({ configId: effort.configId, value: chosenEffort });
-    },
-  );
-
-  it.each(catalogCases)(
-    'changes nothing for $agent.agent when the Session already runs every saved choice',
-    ({ agent, model, effort, mode }) => {
-      expect(
-        nextRememberedChange(
-          agent.configOptions,
-          {
-            model: model.currentValue,
-            thought_level: effort.currentValue,
-            mode: mode.currentValue,
-          },
-          [],
-        ),
-      ).toBeUndefined();
-    },
-  );
-
-  it.each(catalogCases)(
-    'never applies an option for $agent.agent twice, even when the Session refused it',
-    ({ agent, model, narrower }) => {
-      expect(
-        nextRememberedChange(agent.configOptions, { model: narrower.value }, [
-          model.configId,
-        ]),
-      ).toBeUndefined();
     },
   );
 });

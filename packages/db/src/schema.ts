@@ -11,6 +11,7 @@ export * from './schema/projects';
 export * from './schema/sessions';
 
 export * from './schema/agent-servers';
+export * from './schema/agent-options';
 
 export * from './schema/registry-cache';
 

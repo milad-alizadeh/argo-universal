@@ -57,7 +57,7 @@ function ComposerWidePlan(layout: PlanLayout): React.JSX.Element | null {
   if (hasRequest(layout) || !hasPlan(layout)) return null;
 
   return (
-    <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-2xl bg-tray shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180">
+    <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass web:backdrop-blur-[3px] web:backdrop-saturate-110">
       <ComposerPlans {...layout} />
     </View>
   );

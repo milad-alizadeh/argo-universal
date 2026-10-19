@@ -58,7 +58,9 @@ function CancelButton({
 }
 
 // Never more than two controls: several methods share one split button, whose menu changes its face without signing in.
-function MethodActions(props: AuthCalloutProps): React.JSX.Element | null {
+export function MethodActions(
+  props: AuthCalloutProps,
+): React.JSX.Element | null {
   const [first, second] = props.methods;
 
   if (!first) return null;

@@ -5,16 +5,16 @@ import { onPhone } from './frame';
 import { sessionOpenTimeout } from './new-session';
 import { shownToasts } from './toasts';
 
-const retryHint = 'Try to restart the Agent';
-
 const launchFailureTitle = 'Failed to Launch';
 
 Then(
   'the App says the Agent failed to launch',
   async ({ page }): Promise<void> => {
-    await expect(callout(page, launchFailureTitle)).toBeVisible(
-      sessionOpenTimeout,
-    );
+    await expect(
+      page
+        .getByText('Couldn’t load configuration.', { exact: true })
+        .or(callout(page, launchFailureTitle)),
+    ).toBeVisible(sessionOpenTimeout);
   },
 );
 
@@ -26,7 +26,9 @@ Then(
 );
 
 When('I press Retry', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: retryHint }).click();
+  await page
+    .getByRole('button', { name: /^(Retry|Try to restart the Agent)$/ })
+    .click();
 });
 
 // A phone's sheet swipes away; a wide window's tray stays above the Composer.
@@ -41,6 +43,9 @@ Then('the launch callout is gone', async ({ page }): Promise<void> => {
     0,
     sessionOpenTimeout,
   );
+  await expect(
+    page.getByText('Couldn’t load configuration.', { exact: true }),
+  ).toHaveCount(0, sessionOpenTimeout);
 });
 
 /*

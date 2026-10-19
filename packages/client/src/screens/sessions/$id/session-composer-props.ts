@@ -34,6 +34,10 @@ export interface OpenSession {
   elicitation: ElicitationFormProps | undefined;
   permission: PermissionRequestProps | undefined;
   mergeMethod: MergeMethodChoice;
+  options?: {
+    configOptions: SessionSnapshot['configOptions'];
+    loading: boolean;
+  };
   // The Feed's end came on screen or left it.
   onAtEndChange: (atEnd: boolean) => void;
 }
@@ -99,7 +103,10 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
   return {
     agent: sessionAgent(open),
     agentId: snapshot.agent,
-    configOptions: snapshot.configOptions,
+    configOptions: snapshot.configOptions.length
+      ? snapshot.configOptions
+      : (open.options?.configOptions ?? []),
+    opening: !snapshot.configOptions.length && open.options?.loading,
     onConfigChange: open.commands.changeConfig,
     turnRunning: isTurnRunning(snapshot),
     checkout: checkoutProps(snapshot.checkout),

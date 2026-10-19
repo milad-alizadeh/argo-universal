@@ -13,7 +13,7 @@ const sectionCorners = {
   last: 'rounded-b-grouped',
 } as const satisfies Record<VirtualListPosition, string>;
 
-// Wide, a bare row that hover tints and selection presses into the glass.
+// Wide, a bare row that hover tints and selection uses the shared flat fill.
 export function surfaceClasses(
   position: VirtualListPosition,
   selected: boolean,
@@ -22,7 +22,7 @@ export function surfaceClasses(
     'overflow-hidden rounded-grouped-inner bg-card',
     sectionCorners[position],
     'wide:rounded-xl wide:bg-transparent',
-    selected && 'wide:bg-selected wide:shadow-inset',
+    selected && 'wide:bg-selected',
   );
 }
 

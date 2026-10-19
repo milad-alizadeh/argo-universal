@@ -868,3 +868,33 @@ it.each(appFixtureAgentIds)(
     ).toEqual([{ status: 'ended' }]);
   },
 );
+
+it('ignores a cached default removed by the selected model before the first prompt', async () => {
+  const requests: SetSessionConfigOptionRequest[] = [];
+  const changed = acpConfiguration
+    .filter((option) => option.id !== 'fast')
+    .map((option) =>
+      option.id === 'model' && option.type === 'select'
+        ? { ...option, currentValue: 'small' }
+        : option,
+    );
+  const host = await startAcpEngine({
+    steps: [],
+    configOptions: acpConfiguration,
+    responses: {
+      'session/set_config_option': [
+        { requests, result: { configOptions: changed } },
+      ],
+    },
+  });
+  await expect(
+    host.caller.session.new({
+      ...emptySessionInput,
+      configOptions: [
+        { configId: 'model', value: 'small' },
+        { configId: 'fast', value: false, optional: true },
+      ],
+    }),
+  ).resolves.toHaveProperty('sessionId');
+  expect(requests.map(({ configId }) => configId)).toEqual(['model']);
+});

@@ -6,6 +6,8 @@ import {
   dialog,
   ipcMain,
   Menu,
+  screen,
+  shell,
   type WindowOpenHandlerResponse,
 } from 'electron';
 import { createActor } from 'xstate';
@@ -25,6 +27,7 @@ import {
   reportWindowMinimized,
 } from './window-minimized';
 import { handleWindowShow } from './window-show';
+import { readWindowState, saveWindowState, windowBounds } from './window-state';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
 const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
@@ -88,9 +91,13 @@ const server = createActor(serverConnectionMachine, {
 const trafficLights = { x: 22, y: 24 };
 
 const createWindow = (url: string): void => {
+  const stateFile = path.join(app.getPath('userData'), 'window-state.json');
+  const saved = readWindowState(stateFile);
+  const display = saved
+    ? screen.getDisplayMatching(saved.bounds)
+    : screen.getPrimaryDisplay();
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    ...windowBounds(saved?.bounds, display.workArea),
     // Below 600 is a phone's width, the compact size class (ADR-0026).
     minWidth: 600,
     show: !runsInBackground,
@@ -111,20 +118,40 @@ const createWindow = (url: string): void => {
     },
   });
 
+  if (saved?.maximized) mainWindow.maximize();
+  mainWindow.on('close', () => {
+    saveWindowState(stateFile, {
+      bounds: mainWindow.getNormalBounds(),
+      maximized: mainWindow.isMaximized(),
+    });
+  });
   reportWindowMinimized(mainWindow);
 
   // Keep the window on the App; the development inspector opens separately.
   mainWindow.webContents.on('will-navigate', (event, target): void => {
-    if (originOf(target) !== windowOrigin) event.preventDefault();
+    if (originOf(target) === windowOrigin) return;
+    event.preventDefault();
+    openBrowserLink(target);
   });
   mainWindow.webContents.setWindowOpenHandler(
-    (): WindowOpenHandlerResponse => ({
-      action: 'deny',
-    }),
+    ({ url }): WindowOpenHandlerResponse => {
+      openBrowserLink(url);
+      return { action: 'deny' };
+    },
   );
 
   void mainWindow.loadURL(webDevelopmentUrl ?? `${appOrigin}/`);
 };
+
+// Agent metadata and Feed links open in the system browser, never a second App window.
+function openBrowserLink(target: string): void {
+  if (!URL.canParse(target)) return;
+  const { protocol } = new URL(target);
+  if (protocol !== 'https:' && protocol !== 'http:') return;
+  void shell.openExternal(target).catch((error: unknown) => {
+    console.error('Could not open browser link', error);
+  });
+}
 
 for (const action of ['minimize', 'maximize', 'close'] as const) {
   ipcMain.on(`window:${action}`, (event): void => {

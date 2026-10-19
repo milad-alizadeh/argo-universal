@@ -1,6 +1,7 @@
 import { agentScenarioSteps, agentStep } from './agent-steps';
 
 const signInSteps = [
+  [agentStep('exits while fetching configuration'), 'configuration-exit-once'],
   [agentStep('needs sign-in'), 'sign-in-required'],
   [agentStep('offers two sign-in methods'), 'sign-in-methods'],
   [agentStep('holds its sign-in'), 'sign-in-held'],

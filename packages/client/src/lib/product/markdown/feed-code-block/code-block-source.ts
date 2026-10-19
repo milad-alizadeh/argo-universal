@@ -49,7 +49,3 @@ export function headerTitle(
 ): string {
   return sourceTitle(source) ?? language ?? '';
 }
-
-export function hasBody({ code, description }: CodeBlockSource): boolean {
-  return code !== undefined || !!description;
-}

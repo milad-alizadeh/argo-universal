@@ -27,13 +27,14 @@ export function CheckoutContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 native:wide:p-3 bg-content web:wide:bg-card">
       <List appearance="grouped" fit>
-        <CheckoutChoices {...props} />
+        {checkoutChoices(props)}
       </List>
     </View>
   );
 }
 
-function CheckoutChoices(props: ContentsProps): React.JSX.Element {
+// List reads sections from its direct children to trim the final menu gap.
+function checkoutChoices(props: ContentsProps): React.JSX.Element {
   return (
     <ListSection selectionMode="single">
       {[false, true].map((newWorktree) => (
@@ -132,7 +133,7 @@ function checkoutTrigger({
 }: CheckoutProps): React.JSX.Element {
   return (
     <MenuTrigger
-      tone="muted"
+      labelRole={{ compact: 'row', wide: 'secondary' }}
       disabled={disabled}
       accessibilityLabel="Checkout"
       label={checkout.newWorktree ? 'New worktree' : 'Local'}

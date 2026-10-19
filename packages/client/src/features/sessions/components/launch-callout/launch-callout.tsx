@@ -1,5 +1,8 @@
 import type * as React from 'react';
+import { View } from 'react-native';
+import { Text } from '#primitives/content/text';
 import { Callout, CalloutButton } from '#primitives/status/callout';
+import { ProgressBar } from '#primitives/status/progress-bar';
 import type { LaunchCalloutProps } from '../../types/session-callout';
 
 const retryHint = 'Try to restart the Agent';
@@ -30,6 +33,27 @@ const RetryButton = ({
 );
 
 // While Retry or a sign-in's methods load, the tray or the sheet shows Loading….
-export function CalloutLoading(): React.JSX.Element {
-  return <Callout busy title="Loading…" />;
+export function CalloutLoading({
+  title,
+  progress,
+}: {
+  title?: string;
+  progress?: number | null;
+}): React.JSX.Element {
+  if (!title) return <Callout busy title="Loading…" />;
+  return (
+    <View className="gap-3 p-3">
+      <Text role="secondary" className="text-muted-foreground">
+        {title}
+      </Text>
+      {progress !== undefined && (
+        <ProgressBar
+          value={progress ?? 1}
+          indeterminate={progress === null}
+          active
+          accessibilityLabel="Installing Agent"
+        />
+      )}
+    </View>
+  );
 }

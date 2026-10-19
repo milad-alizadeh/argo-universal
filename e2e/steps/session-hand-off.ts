@@ -7,6 +7,7 @@ const historyLength = 'history.length';
 
 // The history length before the first prompt, read after it to show no page was added.
 const historyBefore = new WeakMap<Page, number>();
+const composerWidthBefore = new WeakMap<Page, number>();
 
 // Notes whether the sent prompt, once in a Feed, ever leaves it while New Session becomes the Session.
 const watchPrompt = (prompt: string): string => `{
@@ -25,6 +26,11 @@ When(
   'I send the first prompt {string}',
   async ({ page }, prompt: string): Promise<void> => {
     historyBefore.set(page, await page.evaluate<number>(historyLength));
+    const composer = await page
+      .getByRole('textbox', { name: 'Message' })
+      .boundingBox();
+    if (!composer) throw new Error('The Composer is not visible');
+    composerWidthBefore.set(page, composer.width);
     await page.evaluate(watchPrompt(prompt));
     await sendPrompt(page, prompt);
   },
@@ -33,6 +39,10 @@ When(
 Then(
   'New Session became that Session in place with the prompt shown throughout',
   async ({ page }): Promise<void> => {
+    const composer = await page
+      .getByRole('textbox', { name: 'Message' })
+      .boundingBox();
+    expect(composer?.width).toBe(composerWidthBefore.get(page));
     const url = new URL(page.url());
     expect({
       path: /^\/sessions\/[\da-f-]{36}$/.test(url.pathname),

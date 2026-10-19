@@ -7,7 +7,9 @@ import { Icon } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ConfigurationChoice } from './configuration-choice';
+import { ConfigurationCombobox } from './configuration-combobox';
 import { configurationIcon, choiceMetadata } from './configuration-values';
+import { selection } from './configuration-values';
 import { isDangerous } from './configuration-values';
 import type { ModeContentsProps } from './mode-types';
 
@@ -26,6 +28,7 @@ export function ModeContents(props: ModeContentsProps): React.JSX.Element {
             <ModeChoice key={choice.value} {...props} choice={choice} />
           ))}
         </ListSection>
+        {collaborationSection(props)}
       </List>
     </View>
   );
@@ -82,4 +85,28 @@ function selectMode({
 }: ModeChoiceProps): void {
   configuration.onConfigChange(mode.configId, choice.value);
   close();
+}
+
+function collaborationSection({
+  configuration,
+}: ModeContentsProps): React.JSX.Element | null {
+  const option = selection(configuration, 'collaboration_mode');
+  if (!option) return null;
+  return (
+    <ListSection>
+      <ConfigurationCombobox
+        configuration={configuration}
+        option={option}
+        label={option.name}
+        title={option.name}
+        leading={
+          <Icon
+            fitArtwork
+            name="plan-mode"
+            role={{ compact: 'body', wide: 'row' }}
+          />
+        }
+      />
+    </ListSection>
+  );
 }

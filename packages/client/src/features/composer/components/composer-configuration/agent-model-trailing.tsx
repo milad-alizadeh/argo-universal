@@ -8,10 +8,9 @@ import {
   currentEffort,
   selectedChoice,
   switches,
+  isFastMode,
   choiceMetadata,
 } from './configuration-values';
-
-const fastModeConfigId = 'fast';
 
 interface TrailingProps {
   configuration: ComposerConfigurationProps;
@@ -32,7 +31,7 @@ function FastModeIndicator({
   configuration,
 }: Pick<TrailingProps, 'configuration'>): React.JSX.Element | null {
   const fastOn = switches(configuration).some(
-    (option) => option.configId === fastModeConfigId && option.currentValue,
+    (option) => isFastMode(option) && option.currentValue,
   );
 
   return fastOn ? (

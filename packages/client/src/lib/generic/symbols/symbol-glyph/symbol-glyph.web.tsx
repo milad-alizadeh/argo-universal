@@ -69,7 +69,10 @@ export function SymbolGlyph(props: SymbolGlyphProps): React.JSX.Element {
   );
 }
 
-type GlyphDrawingProps = Pick<SymbolGlyphProps, 'symbol' | 'pixels' | 'weight'>;
+type GlyphDrawingProps = Pick<
+  SymbolGlyphProps,
+  'symbol' | 'pixels' | 'weight' | 'fitArtwork'
+>;
 
 /*
  * The desktop app on macOS draws SF Symbols from the system and Argo's custom symbols from their paths; the browser
@@ -79,6 +82,7 @@ function GlyphDrawing({
   symbol,
   pixels,
   weight,
+  fitArtwork,
 }: GlyphDrawingProps): React.JSX.Element {
   const render = useSymbolImageRenderer();
 
@@ -86,10 +90,39 @@ function GlyphDrawing({
     return <PathMask path={tablerSymbolPath(symbol.tabler)} pixels={pixels} />;
 
   if (render)
-    return <AppleSymbolImage render={render} sf={symbol.sf} pixels={pixels} />;
+    return (
+      <AppleSymbolImage
+        render={render}
+        sf={symbol.sf}
+        pixels={pixels}
+        fitArtwork={fitArtwork}
+      />
+    );
 
-  return <MaterialGlyph symbol={symbol} pixels={pixels} weight={weight} />;
+  return (
+    <MaterialGlyph
+      symbol={symbol}
+      pixels={pixels * (fitArtwork ? materialArtworkScale(symbol.material) : 1)}
+      weight={weight}
+    />
+  );
 }
+
+// Measured ink extents of the shipped MaterialSymbols_200ExtraLight font at 100px.
+// Picker drawings use 90% of their slot; other symbols retain their text metrics.
+const materialArtworkExtent: Partial<
+  Record<SystemDrawing['material'], number>
+> = {
+  deployed_code: 74.16667938232422,
+  neurology: 68.43750762939453,
+  bolt: 73.64583587646484,
+  tune: 70.83334350585938,
+  add: 50,
+  smart_toy: 75,
+};
+
+const materialArtworkScale = (name: SystemDrawing['material']): number =>
+  90 / (materialArtworkExtent[name] ?? 80);
 
 interface MaterialGlyphProps extends Pick<
   SymbolGlyphProps,
@@ -114,7 +147,10 @@ function MaterialGlyph({
   );
 }
 
-interface AppleSymbolImageProps extends Pick<SymbolGlyphProps, 'pixels'> {
+interface AppleSymbolImageProps extends Pick<
+  SymbolGlyphProps,
+  'pixels' | 'fitArtwork'
+> {
   render: RenderSymbolImage;
   sf: SystemDrawing['sf'];
 }
@@ -123,11 +159,19 @@ function AppleSymbolImage({
   render,
   sf,
   pixels,
+  fitArtwork,
 }: AppleSymbolImageProps): React.JSX.Element {
   if (isCustomSymbol(sf))
     return <PathMask path={customSymbolPath(sf)} pixels={pixels} />;
 
-  return <MaskedSymbol render={render} sf={sf} pixels={pixels} />;
+  return (
+    <MaskedSymbol
+      render={render}
+      sf={sf}
+      pixels={pixels}
+      fitArtwork={fitArtwork}
+    />
+  );
 }
 
 interface PathMaskProps extends Pick<SymbolGlyphProps, 'pixels'> {
@@ -140,7 +184,10 @@ function PathMask({ path, pixels }: PathMaskProps): React.JSX.Element {
   return <SymbolMask url={symbolPathImage(path)} {...size} scale={1} />;
 }
 
-interface MaskedSymbolProps extends Pick<SymbolGlyphProps, 'pixels'> {
+interface MaskedSymbolProps extends Pick<
+  SymbolGlyphProps,
+  'pixels' | 'fitArtwork'
+> {
   render: RenderSymbolImage;
   sf: SFSymbol;
 }
@@ -156,7 +203,9 @@ function MaskedSymbol(props: MaskedSymbolProps): React.JSX.Element | null {
   });
 
   if (!image || !reference) return null;
-  const scale = fitScale(props.pixels, reference, image);
+  const scale = props.fitArtwork
+    ? (props.pixels * 0.9) / Math.max(image.width, image.height)
+    : fitScale(props.pixels, reference, image);
 
   return <SymbolMask {...image} scale={scale} />;
 }

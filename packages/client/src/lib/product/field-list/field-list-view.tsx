@@ -14,7 +14,12 @@ export interface FieldListProps {
 
 export function FieldList(props: FieldListProps): ReactElement {
   return (
-    <List appearance="grouped" testID={props.testID} header={props.header}>
+    <List
+      fit={false}
+      appearance="grouped"
+      testID={props.testID}
+      header={props.header}
+    >
       {props.sections.map((section, index) => (
         <List.Section
           key={section.title ?? index}

@@ -2,6 +2,7 @@ import type * as React from 'react';
 import type { SessionNewViewProps } from '../session-new-view';
 import { openedSession, useOpenedConfiguration } from './opened-session';
 import { toSessionNewViewProps } from './session-new-view-props';
+import { useNewSessionCallout } from './use-new-session-callout';
 import { useOpeningWiring } from './use-opening-wiring';
 
 interface EmptySessionOpeningProps {
@@ -15,8 +16,9 @@ export function EmptySessionOpening({
   children,
 }: EmptySessionOpeningProps): React.JSX.Element {
   const wiring = useOpeningWiring(projectId);
-  const configuration = useOpenedConfiguration(openedSession(wiring));
-  const view = toSessionNewViewProps({ ...wiring, configuration });
+  const options = useOpenedConfiguration(openedSession(wiring));
+  const callout = useNewSessionCallout({ ...wiring, ...options });
+  const view = toSessionNewViewProps({ ...wiring, ...options, callout });
 
   return <>{children(view)}</>;
 }

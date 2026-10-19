@@ -238,10 +238,8 @@
       --shadow-tray:
         0 0 0 1px var(--color-shadow-subtle),
         0 12px 32px var(--color-shadow-subtle);
-      /* Hairline: a bare row's 1px edge. Inset: a selected row or tile pressed
-         a little into its surface. */
+      /* Hairline: a resting row's 1px edge. Selected rows use a flat fill. */
       --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
-      --shadow-inset: inset 0 1px 2px var(--color-shadow-subtle);
     }
     @variant dark {
       --color-foreground: var(--color-neutral-50);
@@ -299,7 +297,6 @@
         inset 0 1px 0 #ffffff14, 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
       --shadow-tray: 0 0 0 1px #ffffff14, 0 12px 32px #00000066;
       --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
-      --shadow-inset: inset 0 1px 2px var(--color-shadow-subtle);
     }
   }
 }
@@ -454,8 +451,4 @@
 
 @utility shadow-hairline {
   box-shadow: var(--shadow-hairline);
-}
-
-@utility shadow-inset {
-  box-shadow: var(--shadow-inset);
 }

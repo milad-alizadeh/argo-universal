@@ -20,15 +20,23 @@ const authSubject = ({
       }
     : undefined;
 
-type CalloutSources = Pick<NewSessionWiring, 'data' | 'sessionOpening'>;
+type CalloutSources = Pick<
+  NewSessionWiring,
+  'data' | 'sessionOpening' | 'discovery'
+>;
 
-/*
- * New Session's sign-in and launch callouts. Retry, or a finished sign-in, opens again:
- * a Local checkout reopens its Empty Session, and a New worktree sends the current draft again.
- */
+// Before Send, sign-in and Retry repeat discovery only. After Send, they retry its pending opening.
 export function useNewSessionCallout(sources: CalloutSources): SessionCallouts {
-  const problem = openProblem(sources.sessionOpening.session);
-  const { openAgain } = sources.sessionOpening;
+  const sentProblem = openProblem(sources.sessionOpening.session);
+  const discovery = sources.discovery;
+  const problem =
+    sentProblem ??
+    (discovery?.error
+      ? { type: 'open' as const, error: discovery.error }
+      : undefined);
+  const openAgain = sentProblem
+    ? sources.sessionOpening.openAgain
+    : () => discovery?.retry();
 
   const auth = useSessionAuth({
     subject: authSubject(sources.data),
@@ -37,8 +45,21 @@ export function useNewSessionCallout(sources: CalloutSources): SessionCallouts {
   });
 
   return {
-    callout:
-      problem && openCallout(problem, { signIn: auth.callout, openAgain }),
+    callout: problem
+      ? openCallout(problem, { signIn: auth.callout, openAgain })
+      : discovery?.loading
+        ? {
+            kind: 'loading',
+            title:
+              discovery.stage === 'installing'
+                ? 'Installing…'
+                : 'Loading configuration…',
+            progress:
+              discovery.stage === 'installing'
+                ? (discovery.progress ?? null)
+                : undefined,
+          }
+        : undefined,
     signInTerminal: auth.terminal,
   };
 }

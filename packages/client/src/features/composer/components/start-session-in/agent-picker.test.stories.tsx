@@ -1,72 +1,89 @@
+import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, within, waitFor } from 'storybook/test';
+import { expect, fn, within, waitFor } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
-import { StartSessionIn } from './start-session-in';
-import contextMeta from './start-session-in.stories';
+import { ComposerAgentModelControl } from '../composer-configuration/composer-configuration';
 
+const agents = newSessionCatalogs.bothAvailable;
+const onAgentChange = fn();
+const onAddAgents = fn();
 const meta = {
-  ...contextMeta,
   title: 'Tests/New Session Agent picker',
-} satisfies Meta<typeof StartSessionIn>;
-
+  component: ComposerAgentModelControl,
+  args: {
+    disabled: false,
+    configuration: {
+      agent: agents[0],
+      configOptions: [],
+      onConfigChange: fn(),
+      checkout: { branch: 'main', newWorktree: false },
+      agentChoices: { agents, onChange: onAgentChange, onAdd: onAddAgents },
+    },
+  },
+} satisfies Meta<typeof ComposerAgentModelControl>;
 export default meta;
-
 type Story = StoryObj<typeof meta>;
-
-const pickerLabel = 'Select Agent';
 
 function selectAgent(width: number): Story {
   return {
     beforeEach: (): Promise<void> => settleViewport(width),
-    play: async ({ canvas, userEvent, args }) => {
-      const first = args.agents[0],
-        second = args.agents[1];
-
+    play: async ({ canvas, userEvent }) => {
+      const first = agents[0],
+        second = agents[1];
       if (!first || !second) throw new Error('Picker fixture needs two Agents');
-      const trigger = canvas.getByRole('button', { name: pickerLabel });
-      await userEvent.click(trigger);
-      const overlay = within(document.body);
-      await expect(
-        overlay.getByRole('button', { name: first.name }),
-      ).toHaveAttribute('aria-pressed', 'true');
-      await userEvent.click(overlay.getByRole('button', { name: second.name }));
-      await waitFor(() =>
-        expect(args.onAgentChange).toHaveBeenCalledWith(second.id),
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Agent and model' }),
       );
-      await waitFor(() => expect(trigger).toHaveFocus());
-      await userEvent.click(trigger);
-      await userEvent.keyboard('{Escape}');
-      await waitFor(() =>
-        expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
-      );
-      await expect(trigger).toHaveFocus();
-    },
-  };
-}
-
-function addAgents(width: number): Story {
-  return {
-    args: { agents: [], agent: undefined },
-    beforeEach: (): Promise<void> => settleViewport(width),
-    play: async ({ canvas, userEvent, args }) => {
-      await expect(
-        canvas.getByRole('button', { name: pickerLabel }),
-      ).toHaveTextContent(pickerLabel);
-      await userEvent.click(canvas.getByRole('button', { name: pickerLabel }));
       const overlay = within(document.body);
       await userEvent.click(
-        overlay.getByRole('button', { name: 'Add Agents' }),
+        await overlay.findByRole('button', { name: /^Agent,/ }),
       );
-      await waitFor(() => expect(args.onAddAgents).toHaveBeenCalledOnce());
+      await waitFor(() =>
+        expect(
+          overlay.getByRole('button', { name: first.name }),
+        ).toHaveAttribute('aria-pressed', 'true'),
+      );
+      await userEvent.click(overlay.getByRole('button', { name: second.name }));
+      await waitFor(() =>
+        expect(onAgentChange).toHaveBeenCalledWith(second.id),
+      );
+      await waitFor(() =>
+        expect(overlay.getByRole('button', { name: /^Agent,/ })).toBeVisible(),
+      );
     },
   };
 }
-
+function addAgents(width: number): Story {
+  return {
+    args: {
+      configuration: {
+        ...meta.args.configuration,
+        agent: undefined,
+        agentChoices: {
+          agents: [],
+          onChange: onAgentChange,
+          onAdd: onAddAgents,
+        },
+      },
+    },
+    beforeEach: (): Promise<void> => settleViewport(width),
+    play: async ({ canvas, userEvent }) => {
+      const trigger = canvas.getByRole('button', { name: 'Agent and model' });
+      await expect(trigger).toHaveTextContent('Choose Agent');
+      await userEvent.click(trigger);
+      const overlay = within(document.body);
+      await userEvent.click(
+        await overlay.findByRole('button', { name: /^Agent,/ }),
+      );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: 'Add Agents' }),
+      );
+      await waitFor(() => expect(onAddAgents).toHaveBeenCalledOnce());
+    },
+  };
+}
 export const SelectWide = selectAgent(layoutWidths.wide);
-
 export const SelectPhone = selectAgent(layoutWidths.phone);
-
 export const AddWithZeroAgentsWide = addAgents(layoutWidths.wide);
-
 export const AddWithZeroAgentsPhone = addAgents(layoutWidths.phone);

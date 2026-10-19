@@ -45,7 +45,7 @@ function selectionProps(selected: boolean): TileSelection {
   return {
     iconClassName: 'text-foreground',
     'aria-current': 'page',
-    className: cn(tileClass, 'bg-selected shadow-inset'),
+    className: cn(tileClass, 'bg-selected'),
   };
 }
 

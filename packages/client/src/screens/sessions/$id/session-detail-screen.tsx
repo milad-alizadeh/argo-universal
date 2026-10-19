@@ -8,9 +8,9 @@ import {
 } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
 import {
-  useCacheSessionOptions,
   useConnectionDropped,
   useMergeMethod,
+  useSessionOptions,
 } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
@@ -124,11 +124,6 @@ const useFeedCommands = (
     agent: feed.snapshot?.agent,
   });
 
-function useFeedUpkeep(feed: SessionFeed): void {
-  useRetryOpenOnReconnect(feed);
-  useCacheSessionOptions(feed.snapshot);
-}
-
 interface ConnectedFeed {
   feed: SessionFeed;
   // The Connection dropped the Feed's open: a toast says why, not a callout.
@@ -159,12 +154,20 @@ function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
   const { agents } = surroundings;
   const callouts = useSessionCallout({ sessionId, agents, ...sources });
 
-  useFeedUpkeep(sources.feed);
+  const snapshot = sources.feed.snapshot;
+  const options = useSessionOptions({
+    agent: snapshot?.configOptions.length ? undefined : snapshot?.agent,
+    projectId: snapshot?.projectId,
+    sessionId,
+    picks: {},
+  });
+  useRetryOpenOnReconnect(sources.feed);
 
   return toSessionViewProps({
     sessionId,
     ...sources,
     callouts,
     ...surroundings,
+    options,
   });
 }

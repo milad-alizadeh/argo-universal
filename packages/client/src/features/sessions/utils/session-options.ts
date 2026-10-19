@@ -10,15 +10,15 @@ export interface SessionOptionsChoice {
   projectId: string | undefined;
   saved: SavedChoices;
   picks: ConfigurationPicks;
-  // True while New Session opens its Local Session.
+  // True only when the Server reports discovery with no saved options.
   opening: boolean;
-  // A New worktree opens no Session before Send, so the Server reads an uncached Agent's options (ADR-0023).
+  // Checkout choice does not change how options are read.
   inNewWorktree: boolean;
 }
 
 export interface SessionOptions {
   configOptions: SessionConfigOption[];
-  // Only while this Device has no options for the Agent and Project and a Session or the Server reads them; then the cache shows at once.
+  // Saved Server options remain visible during refresh.
   loading: boolean;
 }
 

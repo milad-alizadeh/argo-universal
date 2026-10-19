@@ -18,13 +18,9 @@ export { useAttachmentDraft } from './hooks/use-attachment-draft';
 export type { AttachmentError } from './utils/attachment-draft';
 
 export {
-  type ConfigurationChange,
   isRememberedConfiguration,
-  nextRememberedChange,
-  rememberSessionConfiguration,
   type SavedChoices,
-  savedChoicesQuery,
-} from './stores/session-configuration-preferences';
+} from '#lib/product/session-configuration';
 
 export {
   configurationChoices,

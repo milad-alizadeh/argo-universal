@@ -2,10 +2,15 @@ import { z } from 'zod';
 import { sessionColumns } from '../columns';
 import { SessionConfigOption } from './set-config-option';
 
-// Input of `session.agentOptions`: the Agent and Project a New worktree will start a Session for (ADR-0023).
-export const SessionAgentOptionsInput = z.strictObject({
+// Input of `session.agentOptions`: the Agent and Project the reader selected (ADR-0023).
+const AgentOptionsOwner = z.strictObject({
   projectId: sessionColumns.shape.projectId,
   agent: sessionColumns.shape.agent,
+});
+
+export const SessionAgentOptionsInput = AgentOptionsOwner.extend({
+  sessionId: sessionColumns.shape.id.optional(),
+  picks: z.record(z.string(), z.union([z.string(), z.boolean()])).optional(),
 });
 
 export type SessionAgentOptionsInput = z.infer<typeof SessionAgentOptionsInput>;
@@ -16,3 +21,18 @@ export const SessionAgentOptionsOutput = z.array(SessionConfigOption);
 export type SessionAgentOptionsOutput = z.infer<
   typeof SessionAgentOptionsOutput
 >;
+
+export const AgentConfiguration = AgentOptionsOwner.extend({
+  configOptions: SessionAgentOptionsOutput,
+});
+
+export type AgentConfiguration = z.infer<typeof AgentConfiguration>;
+
+// Null means discovery is running and the Server has no saved options yet.
+export const AgentOptionsUpdate = z.strictObject({
+  ...AgentOptionsOwner.shape,
+  configOptions: SessionAgentOptionsOutput.nullable(),
+  stage: z.enum(['installing', 'loading', 'ready']).optional(),
+  progress: z.number().min(0).max(1).optional(),
+});
+export type AgentOptionsUpdate = z.infer<typeof AgentOptionsUpdate>;

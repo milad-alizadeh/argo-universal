@@ -58,8 +58,10 @@ function progressAccessibility(
     accessibilityLabel: props.accessibilityLabel,
     'aria-valuemin': 0,
     'aria-valuemax': percent,
-    'aria-valuenow': now,
-    accessibilityValue: { min: 0, max: percent, now },
+    'aria-valuenow': props.indeterminate ? undefined : now,
+    accessibilityValue: props.indeterminate
+      ? undefined
+      : { min: 0, max: percent, now },
   };
 }
 

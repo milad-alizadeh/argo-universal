@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { Icon } from '#primitives/content/icon';
 import { ConfigurationCombobox } from './configuration-combobox';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { modelName, selection } from './configuration-values';
@@ -18,6 +19,13 @@ export function ModelPicker(props: ModelPickerProps): ReactElement | null {
       configuration={props.configuration}
       option={model}
       label="Model"
+      leading={
+        <Icon
+          fitArtwork
+          name="code-map"
+          role={{ compact: 'body', wide: 'row' }}
+        />
+      }
       title="Select Model"
       choiceLabel={modelName}
     />

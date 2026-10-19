@@ -1,12 +1,49 @@
 Feature: Agent sign-in and launch callouts
-  Scenario Outline: A Local New Session signs in when it opens in a <frame> Frame
+  Scenario Outline: Configuration launch failure offers Retry before Send in a <frame> Frame
+    Given a <frame> Frame
+    And Agent 1 exits while fetching configuration
+    When I open a New Session
+    And I open the configuration picker
+    Then the App says the Agent failed to launch
+    And the launch failure shows "Agent exited with status 17"
+    When I press Retry
+    Then the launch callout is gone
+    And the Composer shows Agent options
+    And configuration discovery has not sent a prompt
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |
+
+  Scenario Outline: Configuration asks for sign-in before Send in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 needs sign-in
-    And a Local New Session with Agent 1
+    When I open a New Session
+    And I open the configuration picker
     Then the App asks to authenticate to Agent 1 with "Sign in"
     When I choose the sign-in method "Sign in"
     Then the sign-in callout is gone
-    When I send the prompt "Fix the flaky login test"
+    And the Composer shows Agent options
+    And configuration discovery has not sent a prompt
+    When I send the prompt "Only Send creates my Session"
+    Then the Agent replies "The shared fixture completed this Turn."
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |
+
+  Scenario Outline: A Local New Session signs in before Send in a <frame> Frame
+    Given a <frame> Frame
+    And Agent 1 needs sign-in
+    When I open a New Session
+    And I open the configuration picker
+    Then the App asks to authenticate to Agent 1 with "Sign in"
+    When I choose the sign-in method "Sign in"
+    Then the sign-in callout is gone
+    When I choose the local Checkout
+    And I send the prompt "Fix the flaky login test"
     Then the Agent replies "The shared fixture completed this Turn."
 
     Examples:
@@ -17,7 +54,8 @@ Feature: Agent sign-in and launch callouts
   Scenario Outline: A failed sign-in method brings the methods back in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 offers two sign-in methods
-    And a Local New Session with Agent 1
+    When I open a New Session
+    And I open the configuration picker
     Then the App offers the sign-in methods "Sign in" then "Use an API key"
     When I choose the sign-in method "Sign in"
     Then the sign-in says why it failed: "Internal error: The sign-in was refused."
@@ -33,8 +71,9 @@ Feature: Agent sign-in and launch callouts
   Scenario Outline: Cancel stops a sign-in and brings the methods back in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 holds its sign-in
-    And a Local New Session with Agent 1
-    When I choose the sign-in method "Sign in"
+    When I open a New Session
+    And I open the configuration picker
+    And I choose the sign-in method "Sign in"
     Then the App is authenticating to Agent 1
     When I cancel the sign-in
     Then the App asks to authenticate to Agent 1 with "Sign in"
@@ -44,14 +83,15 @@ Feature: Agent sign-in and launch callouts
       | wide  |
       | phone |
 
-  Scenario Outline: A New worktree asks to sign in at Send and keeps the prompt in a <frame> Frame
+  Scenario Outline: A New worktree signs in before Send in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 needs sign-in
-    And a New Session with Agent 1
-    When I try to send the prompt "Fix the flaky login test"
+    When I open a New Session
+    And I open the configuration picker
     Then the App asks to authenticate to Agent 1 with "Sign in"
-    And the Message box still holds "Fix the flaky login test"
     When I choose the sign-in method "Sign in"
+    Then the sign-in callout is gone
+    When I send the prompt "Fix the flaky login test"
     Then the Agent replies "The shared fixture completed this Turn."
 
     Examples:
@@ -62,8 +102,9 @@ Feature: Agent sign-in and launch callouts
   Scenario Outline: A terminal sign-in method opens its terminal in a <frame> Frame
     Given a <frame> Frame
     And Agent 1 signs in through a terminal
-    And a Local New Session with Agent 1
-    When I choose the sign-in method "Terminal sign-in"
+    When I open a New Session
+    And I open the configuration picker
+    And I choose the sign-in method "Terminal sign-in"
     Then the sign-in terminal "Terminal sign-in" is open
     When I close the sign-in terminal
     Then the App asks to authenticate to Agent 1 with "Terminal sign-in"
@@ -148,12 +189,12 @@ Feature: Agent sign-in and launch callouts
     Given a <frame> Frame
     And Agent 1 exits while opening its first Session
     And a Local New Session with Agent 1
+    When I try to send the prompt "Fix the flaky login test"
     Then the App says the Agent failed to launch
     And the launch failure shows "Agent exited with status 17"
     And the launch failure shows "Agent fixture failed"
     When I press Retry
     Then the launch callout is gone
-    When I send the prompt "Fix the flaky login test"
     Then the Agent replies "The shared fixture completed this Turn."
 
     Examples:
@@ -213,9 +254,7 @@ Feature: Agent sign-in and launch callouts
     Given a <frame> Frame
     And Agent 1 exits while opening its first Session
     And a Local New Session with Agent 1
-    Then the App says the Agent failed to launch
-    When I put the callout away
-    And I try to send the prompt "Fix the flaky login test"
+    When I try to send the prompt "Fix the flaky login test"
     Then the App says the Agent failed to launch
     When I press Retry
     Then the Agent replies "The shared fixture completed this Turn."

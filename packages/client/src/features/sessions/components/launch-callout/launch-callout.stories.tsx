@@ -38,6 +38,15 @@ function LaunchCalloutGallery(args: GalleryArgs): React.JSX.Element {
 
 const gallery = (
   <Variations>
+    <Variation label="Installing with download progress">
+      <CalloutLoading title="Installing…" progress={0.48} />
+    </Variation>
+    <Variation label="Installing without a known total">
+      <CalloutLoading title="Installing…" progress={null} />
+    </Variation>
+    <Variation label="Loading configuration">
+      <CalloutLoading title="Loading configuration…" />
+    </Variation>
     <Variation label={examples.failed}>{failed}</Variation>
     <Variation label={examples.retrying}>
       <CalloutLoading />

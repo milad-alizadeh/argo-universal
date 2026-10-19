@@ -12,6 +12,7 @@ import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import { ConnectionAuthentication } from '../../auth/authenticate';
+import { vendorInitialization } from '../../vendor';
 import { authenticationMethods } from '../auth-methods';
 import {
   drainProcessExit,
@@ -155,7 +156,10 @@ export class AcpConnection {
       this.readers,
     ).catch((cause: unknown) => this.rejectOpening(cause));
 
-    this.initialized = { initialization, launch };
+    this.initialized = {
+      initialization: vendorInitialization(launch, initialization),
+      launch,
+    };
     this.prepareAuthentication(launch);
 
     return this;

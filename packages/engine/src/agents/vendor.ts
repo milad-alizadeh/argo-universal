@@ -1,3 +1,4 @@
+import type { InitializeResponse } from '@agentclientprotocol/sdk';
 import type { AgentLaunch } from './agent-launch';
 
 const environment = new Map<string, Readonly<Record<string, string>>>([
@@ -21,3 +22,23 @@ export const terminalSuccessPatterns = (
   launch: Pick<AgentLaunch, 'agentId'>,
   methodId: string,
 ): readonly string[] => terminalSuccess.get(launch.agentId)?.[methodId] ?? [];
+
+// Grok accepts ACP image blocks but omits image:true in initialize.
+// https://github.com/phuryn/grok-build-vscode/blob/main/research/vision-input.md
+export function vendorInitialization(
+  launch: Pick<AgentLaunch, 'registryId'>,
+  initialization: InitializeResponse,
+): InitializeResponse {
+  if (launch.registryId !== 'grok-build') return initialization;
+
+  return {
+    ...initialization,
+    agentCapabilities: {
+      ...initialization.agentCapabilities,
+      promptCapabilities: {
+        ...initialization.agentCapabilities?.promptCapabilities,
+        image: true,
+      },
+    },
+  };
+}
