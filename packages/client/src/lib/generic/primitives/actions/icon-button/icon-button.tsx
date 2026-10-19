@@ -5,7 +5,11 @@ import { ButtonAdornment } from '#primitives/actions/button';
 import { buttonInteractionProps } from '#primitives/actions/button';
 import { IconButtonBleed } from './icon-button-bleed';
 import type { IconButtonProps } from './icon-button-props';
-import { iconButtonClasses } from './icon-button-styles';
+import {
+  iconButtonClasses,
+  iconSpinnerClass,
+  iconToneTextClass,
+} from './icon-button-styles';
 
 type IconAppearance = Pick<
   IconButtonProps,
@@ -31,18 +35,13 @@ interface IconDrawing {
   adornment: ComponentProps<typeof ButtonAdornment>;
 }
 
-export function IconButton({
-  badge,
-  tone,
-  iconTone,
-  ...props
-}: IconButtonProps): ReactElement {
+export function IconButton({ badge, ...props }: IconButtonProps): ReactElement {
   const bleed = useContext(IconButtonBleed);
   const drawing = iconDrawing({ ...props, bleed: props.bleed ?? bleed });
 
   return (
     <Pressable {...drawing.pressable}>
-      <ButtonAdornment {...withTone(drawing.adornment, tone, iconTone)} />
+      <ButtonAdornment {...drawing.adornment} />
       {badge}
     </Pressable>
   );
@@ -56,7 +55,7 @@ function iconDrawing({
   iconFilled,
   iconWeight,
   ...props
-}: Omit<IconButtonProps, 'badge' | 'iconTone'>): IconDrawing {
+}: Omit<IconButtonProps, 'badge'>): IconDrawing {
   const appearance = { icon, iconRole, iconClassName, iconFilled, iconWeight };
 
   return createIconDrawing(props, { ...appearance, iconSource });
@@ -84,10 +83,13 @@ function iconAdornment(
     weight: appearance.iconWeight,
     loading: props.loading,
     textClass: iconTextClass({ ...props, ...appearance }),
+    spinnerClass: iconSpinnerClass(props),
   };
 }
 
 function iconPressableProps({
+  tone: _tone,
+  iconTone: _iconTone,
   size,
   variant,
   loading,
@@ -137,27 +139,16 @@ function iconContainerClass(
 }
 
 function iconTextClass(
-  props: Pick<IconButtonProps, 'variant' | 'iconClassName'>,
+  props: Pick<
+    IconButtonProps,
+    'variant' | 'iconClassName' | 'tone' | 'iconTone'
+  >,
 ): string {
   return cn(
     props.variant === 'filled' ? 'text-primary-foreground' : 'text-foreground',
     props.iconClassName,
+    iconToneTextClass(props),
   );
 }
 
 export type { IconButtonProps } from './icon-button-props';
-
-function withTone(
-  adornment: IconDrawing['adornment'],
-  tone: IconButtonProps['tone'],
-  iconTone: IconButtonProps['iconTone'],
-): IconDrawing['adornment'] {
-  return {
-    ...adornment,
-    textClass: cn(
-      adornment.textClass,
-      iconTone === 'muted' && 'text-muted-foreground',
-      tone === 'danger' && 'text-danger',
-    ),
-  };
-}

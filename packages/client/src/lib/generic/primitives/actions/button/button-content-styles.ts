@@ -75,6 +75,22 @@ const textClasses = cva(
   },
 );
 
+const foregroundAccent = 'accent-foreground';
+
+const spinnerClasses = cva('', {
+  variants: {
+    variant: {
+      default: 'accent-primary-foreground',
+      outline: foregroundAccent,
+      secondary: foregroundAccent,
+      ghost: foregroundAccent,
+      link: 'accent-primary',
+    },
+    destructive: { true: 'accent-danger' },
+  },
+  defaultVariants: { variant: 'default' },
+});
+
 type ButtonClassProps = Pick<
   DrawnButtonProps,
   'variant' | 'size' | 'tone' | 'disabled' | 'fullWidth' | 'className'
@@ -104,6 +120,16 @@ export function contentTextClass(
     textClasses({ variant: props.variant, destructive }),
     nativeLabelClass,
   );
+}
+
+// The label colour as an accent token, for the loading spinner.
+export function contentSpinnerClass(
+  props: Pick<ButtonProps, 'tone' | 'variant'>,
+): string {
+  return spinnerClasses({
+    variant: props.variant,
+    destructive: props.tone === 'danger',
+  });
 }
 
 // A Pressable that stands beside a phone Button takes `native` so the two draw the same system button.

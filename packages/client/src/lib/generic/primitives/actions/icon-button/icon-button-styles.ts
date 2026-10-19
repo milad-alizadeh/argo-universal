@@ -1,4 +1,6 @@
 import { cva } from 'class-variance-authority';
+import { cn } from '#lib/generic/utils';
+import type { IconButtonProps } from './icon-button-props';
 
 export const iconButtonClasses = cva(
   'shrink-0 items-center justify-center rounded-md web:rounded-control border border-transparent web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-foreground web:focus-visible:outline-offset-3 min-h-11 min-w-11 web:sm:min-h-0 web:sm:min-w-0 android:min-h-12 android:min-w-12',
@@ -36,3 +38,46 @@ export const iconButtonClasses = cva(
     defaultVariants: { size: 'sm', variant: 'default' },
   },
 );
+
+// ActivityIndicator takes its colour from an `accent-*` class, so the spinner draws the glyph colour as one.
+const iconSpinnerClasses = cva('accent-foreground', {
+  variants: {
+    variant: {
+      default: '',
+      ghost: '',
+      outline: '',
+      filled: 'accent-primary-foreground',
+    },
+    muted: { true: 'accent-muted-foreground' },
+    danger: { true: 'accent-danger' },
+  },
+  defaultVariants: { variant: 'default' },
+});
+
+export function iconSpinnerClass(
+  props: Pick<IconButtonProps, 'variant' | 'tone' | 'iconTone'>,
+): string {
+  return cn(
+    iconSpinnerClasses({
+      variant: props.variant,
+      muted: props.iconTone === 'muted',
+      danger: props.tone === 'danger',
+    }),
+  );
+}
+
+const iconToneTextClasses = cva('', {
+  variants: {
+    muted: { true: 'text-muted-foreground' },
+    danger: { true: 'text-danger' },
+  },
+});
+
+export function iconToneTextClass(
+  props: Pick<IconButtonProps, 'tone' | 'iconTone'>,
+): string {
+  return iconToneTextClasses({
+    muted: props.iconTone === 'muted',
+    danger: props.tone === 'danger',
+  });
+}

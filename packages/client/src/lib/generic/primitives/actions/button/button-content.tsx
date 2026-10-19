@@ -2,7 +2,11 @@ import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { ButtonAdornment } from './button-adornment';
-import { contentButtonClass, contentTextClass } from './button-content-styles';
+import {
+  contentButtonClass,
+  contentSpinnerClass,
+  contentTextClass,
+} from './button-content-styles';
 import type { DrawnButtonProps } from './button-props';
 import { buttonInteractionProps } from './button-state';
 
@@ -14,11 +18,23 @@ export function ContentButton(props: DrawnButtonProps): ReactElement {
   return (
     <TextClassContext.Provider value={textClass}>
       <Pressable {...contentPressableProps(props)}>
-        <ButtonAdornment {...props} role="control" textClass={textClass} />
+        <ButtonAdornment {...adornmentProps(props, textClass)} />
         <Text role="control">{props.label}</Text>
       </Pressable>
     </TextClassContext.Provider>
   );
+}
+
+function adornmentProps(
+  props: DrawnButtonProps,
+  textClass: string,
+): ComponentProps<typeof ButtonAdornment> {
+  return {
+    ...props,
+    role: 'control',
+    textClass,
+    spinnerClass: contentSpinnerClass(props),
+  };
 }
 
 function contentPressableProps(
