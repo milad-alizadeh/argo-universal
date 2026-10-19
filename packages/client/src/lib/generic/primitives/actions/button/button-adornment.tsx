@@ -11,6 +11,8 @@ interface AdornmentProps {
   source?: LogoSource;
   loading?: boolean;
   textClass: string;
+  // ActivityIndicator takes its colour from an `accent-*` class, so the spinner carries the label colour as one.
+  spinnerClass: string;
   role: IconRole;
   filled?: boolean;
   weight?: IconProps['weight'];
@@ -38,7 +40,7 @@ function adornment(
 ): ReactElement {
   if (props.loading || !glyph)
     return (
-      <IconSpinner colorClassName={props.textClass} iconRole={props.role} />
+      <IconSpinner colorClassName={props.spinnerClass} iconRole={props.role} />
     );
 
   return <AdornmentIcon {...props} glyph={glyph} />;

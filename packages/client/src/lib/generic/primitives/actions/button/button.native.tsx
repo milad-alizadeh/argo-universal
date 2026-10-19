@@ -86,9 +86,10 @@ const iosFullWidth = (props: Pick<ButtonProps, 'fullWidth'>): boolean =>
 function rowColors(
   variant: UniversalButtonVariant,
   dangerColor: string | undefined,
-): Pick<RowProps, 'textClass' | 'dangerLabel'> {
+): Pick<RowProps, 'textClass' | 'spinnerClass' | 'dangerLabel'> {
   return {
     textClass: adornmentClass(variant, dangerColor),
+    spinnerClass: adornmentSpinnerClass(variant, dangerColor),
     dangerLabel: androidDangerLabel(variant, dangerColor),
   };
 }
@@ -104,7 +105,7 @@ function androidDangerLabel(
 type RowProps = Pick<
   ButtonProps,
   'label' | 'icon' | 'loading' | 'fullWidth'
-> & { textClass: string; dangerLabel: boolean };
+> & { textClass: string; spinnerClass: string; dangerLabel: boolean };
 
 function ButtonRow(props: RowProps): ReactElement {
   return (
@@ -136,19 +137,29 @@ function adornmentClass(
     : adornmentClasses[variant];
 }
 
+const adornmentSpinnerClasses = {
+  filled: 'accent-primary-foreground',
+  outlined: 'accent-primary',
+  text: 'accent-primary',
+} as const satisfies Record<UniversalButtonVariant, string>;
+
+function adornmentSpinnerClass(
+  variant: UniversalButtonVariant,
+  dangerColor: string | undefined,
+): string {
+  return dangerColor && variant !== 'filled'
+    ? 'accent-danger'
+    : adornmentSpinnerClasses[variant];
+}
+
 function HostedAdornment(
-  props: Pick<RowProps, 'icon' | 'loading' | 'textClass'>,
+  props: Pick<RowProps, 'icon' | 'loading' | 'textClass' | 'spinnerClass'>,
 ): ReactElement | null {
   if (!props.icon && !props.loading) return null;
 
   return (
     <RNHostView matchContents>
-      <ButtonAdornment
-        icon={props.icon}
-        loading={props.loading}
-        textClass={props.textClass}
-        role="control"
-      />
+      <ButtonAdornment {...props} role="control" />
     </RNHostView>
   );
 }
