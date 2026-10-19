@@ -11,6 +11,7 @@ import {
   type ChildRule,
   type SlotRules,
 } from './prepare-slots';
+import { refusedBelowRoot, rootSlotParts } from './root-only';
 import { WireJson, type WireNode } from './wire';
 import type { LoweredPart } from './wire-part-definition';
 
@@ -21,6 +22,8 @@ const hasSlots = (node: WireNode): boolean =>
 
 const hasContent = (node: WireNode): boolean =>
   node.children.length > 0 || hasSlots(node);
+
+export { isRootOnly, refusedBelowRoot, rootSlotParts } from './root-only';
 
 export const isWireContainer = (node: WireNode): boolean =>
   Boolean(wirePart(node.type)?.container) || hasContent(node);
@@ -115,13 +118,13 @@ function adapted(node: WireNode, parts: PartVersions): WireNode | null {
   return schema ? parsedNode(node, schema) : lowered(node, part, parts);
 }
 
-// A root-only part, such as Page, owns its screen; below the root it would take over the host's header.
-export const isRootOnly = (node: WireNode): boolean =>
-  Boolean(wirePart(node.type)?.root);
-
-function prepareNodes(nodes: WireNode[], parts: PartVersions): WireNode[] {
+function prepareNodes(
+  nodes: WireNode[],
+  parts: PartVersions,
+  roots: readonly string[] = [],
+): WireNode[] {
   return nodes.flatMap((child) => {
-    const next = isRootOnly(child)
+    const next = refusedBelowRoot(child, roots)
       ? unsupported(child, parts)
       : prepare(child, parts);
 
@@ -132,7 +135,7 @@ function prepareNodes(nodes: WireNode[], parts: PartVersions): WireNode[] {
 function slotsOf(node: WireNode, parts: PartVersions): WireNode['slots'] {
   return Object.fromEntries(
     Object.entries(node.slots).flatMap(([name, children]) => {
-      const prepared = prepareNodes(children, parts);
+      const prepared = prepareNodes(children, parts, rootSlotParts(node, name));
 
       return prepared.length ? [[name, prepared]] : [];
     }),

@@ -16,6 +16,11 @@
         "id": "lists",
         "title": "Lists",
         "path": "/lists"
+      },
+      {
+        "id": "issues",
+        "title": "Issues",
+        "path": "/issues"
       }
     ],
     "slots": []

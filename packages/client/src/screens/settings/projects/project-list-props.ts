@@ -9,6 +9,8 @@ export interface ProjectListViewProps {
   caption?: string;
   projects: ProjectsLoad;
   onOpenProject: (name: string) => void;
+  // The Project whose page is open beside the list.
+  selected?: string;
   // Where the search starts, for stories.
   initialSearch?: string;
 }
