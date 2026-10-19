@@ -8,14 +8,13 @@ import {
   pillProps,
   rowBadgeProps,
 } from './kit-props';
-import { legacyLabelProps } from './legacy-label-props';
+import { labelVersions } from './legacy-label-props';
 import { listExpansion } from './list-expansion';
 import { rowPress } from './list-kit-props';
 import { progressBarAccessibility } from './part-accessibility-metadata';
 import { echoes } from './plugin-part-props';
 import { part } from './plugin-part-schema-utils';
 import { settingsRowWireParts } from './settings-row-wire-parts';
-import { labelV1 } from './status-kit-props';
 
 const listItemV1Props = listItemProps
   .omit({ description: true, id: true })
@@ -120,18 +119,19 @@ export const listWireParts = {
   },
   Label: {
     props: labelProps,
-    versions: [
-      labelProps.transform(legacyLabelProps).pipe(labelV1),
-      labelProps,
-    ],
+    versions: labelVersions,
     container: false,
     children: false,
     slots: {},
     events: {},
-    reference: part('Short text with an icon and semantic tone.', labelProps, {
-      label:
-        'The text supplies the accessible name; accessibilityLabel overrides it.',
-    }).reference,
+    reference: part(
+      'Short text with an optional icon and semantic tone.',
+      labelProps,
+      {
+        label:
+          'The text supplies the accessible name; accessibilityLabel overrides it.',
+      },
+    ).reference,
   },
   ProgressBar: {
     props: progressBarProps,

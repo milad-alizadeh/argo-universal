@@ -37,10 +37,18 @@ export const labelV1 = z.object({
     .describe('Optional spoken description.'),
 });
 
-export const labelProps = labelV1.extend({
+export const labelV2 = labelV1.extend({
   icon: iconSymbol.describe(
     'An Argo icon name or an SF and Material symbol pair.',
   ),
+});
+
+export const labelProps = labelV2.extend({
+  icon: iconSymbol
+    .optional()
+    .describe(
+      'An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text.',
+    ),
 });
 
 export const pillProps = z.object({

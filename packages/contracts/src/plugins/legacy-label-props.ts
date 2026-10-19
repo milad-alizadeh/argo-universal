@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { iconSymbols } from '../kit-symbols';
-import { type labelProps, labelV1 } from './status-kit-props';
+import { labelProps, labelV1, labelV2 } from './status-kit-props';
 
 const namedIcons = new Map(Object.entries(iconSymbols));
 
@@ -18,8 +18,21 @@ function oldIcon(
   return parsed.success ? parsed.data : unavailableIcon;
 }
 
-export function legacyLabelProps(
+function legacyLabelProps(
   props: z.output<typeof labelProps>,
 ): z.input<typeof labelV1> {
   return { ...props, icon: oldIcon(props.icon) };
 }
+
+// Apps before Label v3 need an icon, so a text-only Label gets the fallback symbol.
+function labelV2PropsOf(
+  props: z.output<typeof labelProps>,
+): z.input<typeof labelV2> {
+  return { ...props, icon: props.icon ?? unavailableIcon };
+}
+
+export const labelVersions = [
+  labelProps.transform(legacyLabelProps).pipe(labelV1),
+  labelProps.transform(labelV2PropsOf).pipe(labelV2),
+  labelProps,
+] as const;
