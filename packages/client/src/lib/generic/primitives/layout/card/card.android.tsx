@@ -46,16 +46,19 @@ function MeasuredCard(props: CardProps & { width: number }): ReactElement {
   );
 }
 
-// A pressable card ripples across its whole shape; the Card clips the ripple and the media to it.
 function CardPress(props: CardProps): ReactElement {
-  const ripple = usePressRipple();
+  return props.onPress ? (
+    <PressableCard {...props} />
+  ) : (
+    <CardGroup {...props}>
+      <CardBody {...props} />
+    </CardGroup>
+  );
+}
 
-  if (!props.onPress)
-    return (
-      <CardGroup {...props}>
-        <CardBody {...props} />
-      </CardGroup>
-    );
+// A pressable card ripples across its whole shape; the Card clips the ripple and the media to it.
+function PressableCard(props: CardProps): ReactElement {
+  const ripple = usePressRipple();
 
   return (
     <Pressable

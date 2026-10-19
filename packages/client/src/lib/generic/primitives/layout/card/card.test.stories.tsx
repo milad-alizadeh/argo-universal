@@ -9,6 +9,8 @@ import { Card } from './card';
 
 const mediaXml = fixtures.valid[0]?.xml ?? '';
 
+const title = 'api-gateway';
+
 const pressed = fn();
 
 const removed = fn();
@@ -16,7 +18,7 @@ const removed = fn();
 const meta = {
   title: 'Tests/Card',
   component: Card,
-  args: { title: 'api-gateway' },
+  args: { title },
 } satisfies Meta<typeof Card>;
 
 export default meta;
@@ -25,9 +27,7 @@ type Story = StoryObj<typeof meta>;
 
 export const TitleOnly: Story = {
   play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('group', { name: 'api-gateway' }),
-    ).toBeVisible();
+    await expect(canvas.getByRole('group', { name: title })).toBeVisible();
     await expect(canvas.queryByRole('button')).toBeNull();
   },
 };
@@ -86,9 +86,7 @@ export const Media: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByLabelText('Service map')).toBeVisible();
-    await expect(
-      canvas.getByRole('group', { name: 'api-gateway' }),
-    ).toBeVisible();
+    await expect(canvas.getByRole('group', { name: title })).toBeVisible();
   },
 };
 
