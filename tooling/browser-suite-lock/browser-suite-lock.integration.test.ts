@@ -164,6 +164,19 @@ describe('acquireBrowserSuiteLock on a real port', () => {
     await expect(isHeld(port)).resolves.toBe(false);
   });
 
+  it('keeps holding when a waiter hangs up mid-answer', async () => {
+    const port = await freePort();
+    const release = await acquireBrowserSuiteLock({ port, pollMs: POLL_MS });
+    const waiter = connect({ port, host: HOST });
+
+    await once(waiter, 'connect');
+    waiter.resetAndDestroy();
+    await once(waiter, 'close');
+
+    await expect(isHeld(port)).resolves.toBe(true);
+    release();
+  });
+
   it('frees the lock when its holder is killed without releasing', async () => {
     const port = await freePort();
     const other = holdInAnotherProcess(port);

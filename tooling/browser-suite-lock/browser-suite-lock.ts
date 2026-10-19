@@ -51,6 +51,10 @@ function serveHolder(): Server {
   });
 
   return createServer((socket): void => {
+    // A waiter that hangs up early resets the connection; that must never crash the suite holding the lock.
+    socket.on('error', (): void => {
+      socket.destroy();
+    });
     socket.end(holder);
   });
 }
