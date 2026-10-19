@@ -17,6 +17,9 @@ const scene = WireNode.parse(fixture);
 
 const onEvent = fn();
 
+// A cold browser fetches and compiles CanvasKit before the drawing is ready.
+const canvasReady = { timeout: 15_000 };
+
 const activity = 'Build activity';
 
 interface PointerPoint {
@@ -42,7 +45,7 @@ function drawingPress(
     render: () => <PluginTree root={scene} onEvent={onEvent} />,
     play: async ({ canvas, userEvent }) => {
       await expect(
-        canvas.findByRole('button', { name: label }),
+        canvas.findByRole('button', { name: label }, canvasReady),
       ).resolves.toBeInTheDocument();
       const image = canvas.getByRole('img', { name: activity });
       await userEvent.pointer({
@@ -76,7 +79,11 @@ export const TransformedGroup = drawingPress(
 export const AccessibleDrawings: Story = {
   render: () => <PluginTree root={scene} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
-    const button = await canvas.findByRole('button', { name: 'Native build' });
+    const button = await canvas.findByRole(
+      'button',
+      { name: 'Native build' },
+      canvasReady,
+    );
     button.focus();
     await userEvent.keyboard('{Enter}');
     await expect(onEvent).toHaveBeenCalledWith('scene/circle', {
@@ -92,7 +99,7 @@ export const AccessibleDrawings: Story = {
 export const Hover: Story = {
   render: () => <PluginTree root={scene} onEvent={onEvent} />,
   play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', { name: 'Web build' });
+    await canvas.findByRole('button', { name: 'Web build' }, canvasReady);
     const image = canvas.getByRole('img', { name: activity });
     await userEvent.pointer({ target: image, coords: point(image, 60, 50) });
     await expect(canvas.findByRole('tooltip')).resolves.toHaveTextContent(
@@ -129,14 +136,14 @@ function DrawingPatch(): React.JSX.Element {
 export const CameraSurvivesPatch: Story = {
   render: DrawingPatch,
   play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', { name: 'Web build' });
+    await canvas.findByRole('button', { name: 'Web build' }, canvasReady);
     const image = canvas.getByRole('img', { name: activity });
     canvas.getByRole('application', { name: 'Build activity canvas' }).focus();
     await userEvent.keyboard('{ArrowLeft}');
     await userEvent.click(
       canvas.getByRole('button', { name: 'Change one shape' }),
     );
-    await canvas.findByRole('button', { name: 'Changed build' });
+    await canvas.findByRole('button', { name: 'Changed build' }, canvasReady);
     const shifted = point(image, 20, 45);
     await userEvent.pointer({
       target: image,

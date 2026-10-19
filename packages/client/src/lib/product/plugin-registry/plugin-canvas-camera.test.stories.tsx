@@ -15,6 +15,9 @@ type Story = StoryObj<typeof meta>;
 
 const onEvent = fn();
 
+// A cold browser fetches and compiles CanvasKit before the drawing is ready.
+const canvasReady = { timeout: 15_000 };
+
 const labels = 'File labels';
 
 const scene = WireNode.parse(fixture);
@@ -57,7 +60,7 @@ function Sample({ root }: { root: WireNode }): React.JSX.Element {
 export const ZoomAndCull: Story = {
   render: () => <Sample root={narrow} />,
   play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', { name: 'File' });
+    await canvas.findByRole('button', { name: 'File' }, canvasReady);
     const image = canvas.getByRole('img', { name: labels });
 
     const frame = canvas.getByRole('application', {
@@ -79,7 +82,7 @@ export const FixedCameraDoesNotZoom: Story = {
     <Sample root={{ ...narrow, props: { ...narrow.props, camera: 'fixed' } }} />
   ),
   play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', { name: 'File' });
+    await canvas.findByRole('button', { name: 'File' }, canvasReady);
     const image = canvas.getByRole('img', { name: labels });
 
     const frame = canvas.getByRole('application', {
@@ -110,7 +113,7 @@ function CameraPatch(): React.JSX.Element {
 export const FixedAfterPan: Story = {
   render: CameraPatch,
   play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', { name: 'Web build' });
+    await canvas.findByRole('button', { name: 'Web build' }, canvasReady);
     const image = canvas.getByRole('img', { name: 'Build activity' });
     canvas.getByRole('application', { name: 'Build activity canvas' }).focus();
     await userEvent.keyboard('{ArrowLeft}');
@@ -135,7 +138,7 @@ export const ReleaseOutsideFixed: Story = {
     </>
   ),
   play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', { name: 'Web build' });
+    await canvas.findByRole('button', { name: 'Web build' }, canvasReady);
     const image = canvas.getByRole('img', { name: 'Build activity' });
     const bounds = image.getBoundingClientRect();
     const coords = { clientX: bounds.left + 60, clientY: bounds.top + 45 };
