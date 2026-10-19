@@ -1,6 +1,5 @@
 import type { KitSchemaProps } from '@repo/contracts/kit-props';
 import { createContext } from 'react';
-import type { RowHighlights } from './row-highlights';
 
 export type ListAppearance = NonNullable<KitSchemaProps['List']['appearance']>;
 
@@ -18,8 +17,7 @@ export const ListContext = createContext<
     position: ListPosition;
     // Set inside a List's own rows, so a part that would draw its own List draws a section instead.
     inList?: boolean;
-    // The row's place among its List's rows, for the separators a highlighted neighbour covers.
-    highlights?: RowHighlights;
+    // The row's place among its List's rows, for the separators a pressed neighbour covers.
     index?: number;
   }
 >({ appearance: 'plain', position: 'only' });

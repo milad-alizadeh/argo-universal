@@ -1,11 +1,5 @@
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
-import {
-  useCallback,
-  useMemo,
-  useState,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { useSpacingStep } from '#primitives/layout/spacing';
 import { Spinner } from '#primitives/status/spinner';
@@ -14,10 +8,6 @@ import {
   listPosition,
   type ListPosition,
 } from '../../../list-context';
-import {
-  createRowHighlights,
-  type RowHighlights,
-} from '../../../row-highlights';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import { listInsets } from './list-insets';
 import type { ListProps } from './list-props';
@@ -78,26 +68,21 @@ interface RowProps<Item> {
   props: ListProps<Item>;
 }
 
-type HighlightedRowProps<Item> = RowProps<Item> & {
-  highlights: RowHighlights;
-};
-
 function useRowContext<Item>({
   row,
   props,
-  highlights,
-}: HighlightedRowProps<Item>): React.ContextType<typeof ListContext> {
+}: RowProps<Item>): React.ContextType<typeof ListContext> {
   const appearance = props.appearance ?? 'plain';
   const position = positionOf(props, row.index);
   const index = row.index;
 
   return useMemo(
-    () => ({ appearance, position, highlights, index }),
-    [appearance, position, highlights, index],
+    () => ({ appearance, position, index }),
+    [appearance, position, index],
   );
 }
 
-function Row<Item>(rowProps: HighlightedRowProps<Item>): ReactElement {
+function Row<Item>(rowProps: RowProps<Item>): ReactElement {
   return (
     <ListContext value={useRowContext(rowProps)}>
       <PaddedRow row={rowProps.row} props={rowProps.props} />
@@ -121,12 +106,7 @@ function PaddedRow<Item>({ row, props }: RowProps<Item>): ReactNode {
 export function useRenderedRows<Item>(
   props: ListProps<Item>,
 ): (row: LegendListRenderItemProps<Item>) => ReactElement {
-  const [highlights] = useState(createRowHighlights);
-
-  return useCallback(
-    (row) => <Row row={row} props={props} highlights={highlights} />,
-    [props, highlights],
-  );
+  return useCallback((row) => <Row row={row} props={props} />, [props]);
 }
 
 function usePadding(value: ListProps<never>['padding']): number {
