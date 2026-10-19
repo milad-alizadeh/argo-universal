@@ -20,6 +20,8 @@ export { watchTurnActivity } from './turn-activity';
 
 export { createSessionReader } from './session-record';
 
+export { readDefaultChangesSummary } from './changes-summary';
+
 export { createSessionActorInput } from './session-actor-input';
 
 export { openSessionsId } from './open-sessions-system';

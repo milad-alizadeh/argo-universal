@@ -1,4 +1,4 @@
-import type { ChangesSummary, SessionSnapshot } from '@repo/contracts';
+import { emptyChangesSummary, type SessionSnapshot } from '@repo/contracts';
 import { toShell } from '../acp/shells/shells';
 import { withHeldConfiguration } from '../configuration/held-configuration';
 import { snapshotState, type SessionState } from './state';
@@ -7,7 +7,7 @@ import { snapshotState, type SessionState } from './state';
 export type FeedSnapshot = Pick<
   SessionSnapshot,
   'epoch' | 'maxRevision' | 'liveHeader' | 'activeTurnId'
->;
+> & { changes?: SessionSnapshot['changes'] };
 
 export type StoredSnapshot = Pick<
   SessionSnapshot,
@@ -38,7 +38,6 @@ type StoredFields = Pick<
   | 'titleSource'
   | 'archivedAt'
   | 'checkout'
-  | 'changes'
   | 'subagents'
 >;
 
@@ -46,8 +45,6 @@ type SessionFields = Pick<
   SessionSnapshot,
   'usage' | 'pendingPermission' | 'pendingElicitation' | 'configOptions'
 >;
-
-const noChanges: ChangesSummary = { files: 0, additions: 0, deletions: 0 };
 
 const idleContext: SessionDisplayContext = {
   usage: null,
@@ -66,6 +63,7 @@ export function toSessionSnapshot(
     ...storedFields(stored),
     ...sessionFields(session),
     ...activeTurnFields(session, feed),
+    changes: feed.changes ?? emptyChangesSummary,
     maxRevision: feed.maxRevision,
     epoch: feed.epoch,
     shells: session ? liveShells(session) : stored.shells,
@@ -80,7 +78,6 @@ function storedFields(stored: StoredSnapshot): StoredFields {
     titleSource: stored.titleSource,
     archivedAt: stored.archivedAt,
     checkout: stored.checkout,
-    changes: noChanges,
     subagents: stored.subagents,
   };
 }

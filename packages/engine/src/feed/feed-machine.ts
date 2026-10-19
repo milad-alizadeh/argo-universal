@@ -1,5 +1,4 @@
-import type { FeedChange, PlanUpdate, SessionUpdate } from '@repo/contracts';
-import type { session } from '@repo/db/schema';
+import { emptyChangesSummary } from '@repo/contracts';
 import { countRejection } from '@repo/machine-log';
 import {
   type ActorRefFrom,
@@ -10,121 +9,40 @@ import {
   setup,
 } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
-import {
-  databaseWriterId,
-  type WriterCommit,
-  type WriterJob,
-  writerMachine,
-} from '../storage';
+import { databaseWriterId, writerMachine } from '../storage';
 import { prepareAcpFeedApplication } from './acp/application';
-import type { MessageStreams } from './acp/message-identity';
-import type { AcpSessionNotification as SessionNotification } from './acp/session-notification';
-import type { OutputBlob } from './acp/tool-output';
+import { settledEditRefresh } from './changes-refresh';
 import { prepareFeedApplication } from './feed-application';
-import { type Feed, type FeedStreamEvent } from './feed-change';
+import type {
+  FeedBatch,
+  FeedContext,
+  FeedEvent,
+  FeedInput,
+  FeedInternalEvent,
+} from './feed-machine-types';
 import { prepareTurnSettlement } from './feed-turn-settlement';
 import {
   createRowsWriteRequest,
   rejectUnavailableWriter,
   type WriterJobParameters,
 } from './feed-write-request';
-import type { FeedPublication } from './publication';
 import {
   sessionRowChanges,
   sessionRowEvents,
   sessionRowTransitions,
-  type SessionRowEvent,
 } from './session-rows';
-import type { FeedTurnEnding } from './turn-settlement';
+
+export type {
+  FeedBatch,
+  FeedContext,
+  FeedEvent,
+  FeedInput,
+  FeedInternalEvent,
+} from './feed-machine-types';
 
 const feedChangeRejected = 'feed.changeRejected';
 
 type FeedLogParameters = { line: string };
-
-// What the Session reads from its `session` row when it opens.
-export interface FeedInput extends Pick<
-  typeof session.$inferSelect,
-  'epoch' | 'maxRevision'
-> {
-  sessionId: string;
-  rows?: Record<string, SessionUpdate>;
-  now: () => number;
-  createId: () => string;
-  activityAt?: number;
-  // One past the highest stored position.
-  nextPosition: number;
-  // A row that has left memory, as last handed to the database writer.
-  findWrittenRow: (id: string) => SessionUpdate | undefined;
-  findUnaddressedPlan?: (acpSessionId: string) => PlanUpdate | undefined;
-  // Called when the database writer refuses this Feed's rows because storage is failing.
-  storageFailing?: () => void;
-}
-
-export interface FeedContext
-  extends
-    Feed,
-    Pick<
-      FeedInput,
-      | 'epoch'
-      | 'findWrittenRow'
-      | 'findUnaddressedPlan'
-      | 'now'
-      | 'createId'
-      | 'storageFailing'
-    > {
-  activityAt: number;
-  lastSettledTurnId: string | null;
-  // Rows changed since the last write, in the order they first changed.
-  changedRowIds: string[];
-  // Stream events waiting for the next batch.
-  streamEvents: FeedStreamEvent[];
-  rejectedChanges: number;
-  messageStreams: MessageStreams;
-  // Whole tool output cut to a preview since the last write.
-  outputBlobs: OutputBlob[];
-  unaddressedPlan?: { acpSessionId: string; rowId: string };
-}
-
-export type FeedEvent =
-  | {
-      type: 'feed.change';
-      change: FeedChange;
-      turnId: string | null;
-      committed?: WriterCommit;
-    }
-  | {
-      type: 'feed.acpUpdate';
-      acpSessionId: SessionNotification['sessionId'];
-      update: SessionNotification['update'];
-      turnId: string | null;
-      stale?: true;
-    }
-  | {
-      type: 'feed.completeTurn';
-      turnId: string;
-      ending?: FeedTurnEnding;
-      commitWith?: WriterJob;
-      published?: FeedPublication;
-    }
-  | SessionRowEvent
-  | { type: 'feed.flush' };
-
-// Raised after `feed.change` is applied, so each region reacts to it once.
-type FeedChangeApplied = {
-  type: 'feed.changeApplied';
-  settled: boolean;
-  commitWith?: WriterJob;
-  committed?: WriterCommit;
-};
-
-type FeedChangeRejected = { type: 'feed.changeRejected'; reason: string };
-
-export type FeedInternalEvent =
-  | FeedChangeApplied
-  | FeedChangeRejected
-  | { type: 'feed.publish'; published?: FeedPublication };
-
-export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
 const writeRows = [
   { type: 'sendToWriter', params: createRowsWriteRequest },
@@ -172,13 +90,35 @@ export const feedMachine = setup({
         });
       enqueue.assign(result.state);
       raiseFeedEvents(result.events, (raised) => enqueue.raise(raised));
+
+      raiseFeedEvents(settledEditRefresh(event, result.state.rows), (raised) =>
+        enqueue.raise(raised),
+      );
     }),
     settleTurnRows: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.completeTurn');
       const result = prepareTurnSettlement(context, event);
 
-      if (result.state) enqueue.assign(result.state);
+      if (result.state) {
+        enqueue.assign(result.state);
+        enqueue.raise({ type: 'feed.refreshChanges' });
+      }
+
       raiseFeedEvents(result.events, (raised) => enqueue.raise(raised));
+    }),
+    refreshChanges: enqueueActions(({ context, self, enqueue }): void => {
+      if (!context.refreshChanges) return;
+
+      const request = context.changesRequest + 1;
+
+      enqueue.assign({ changesRequest: request });
+      void context.refreshChanges().then(
+        (summary): void => {
+          if (self.getSnapshot().status === 'active')
+            self.send({ type: 'feed.changesRefreshed', request, summary });
+        },
+        (): void => {},
+      );
     }),
     acknowledgePublication: ({ event }): void => {
       assertEvent(event, 'feed.publish');
@@ -245,14 +185,23 @@ export const feedMachine = setup({
     rejectedChanges: 0,
     messageStreams: {},
     outputBlobs: [],
+    changes: emptyChangesSummary,
+    changesRequest: 0,
   }),
   initial: 'active',
   states: {
     active: {
       type: 'parallel',
+      entry: 'refreshChanges',
       on: {
         'feed.acpUpdate': { actions: 'applyAcpUpdate' },
         'feed.completeTurn': { actions: 'settleTurnRows' },
+        'feed.refreshChanges': { actions: 'refreshChanges' },
+        'feed.changesRefreshed': {
+          guard: ({ context, event }): boolean =>
+            event.request === context.changesRequest,
+          actions: assign({ changes: ({ event }) => event.summary }),
+        },
         ...sessionRowTransitions,
         'feed.change': { actions: 'applyChange' },
         'feed.changeRejected': {

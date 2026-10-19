@@ -33,34 +33,6 @@ it('rejects an unsupported Session paging direction', async (): Promise<void> =>
   ).toBe('BAD_REQUEST');
 });
 
-type SessionCaller = Awaited<ReturnType<typeof startAcpEngine>>['caller'];
-
-it.each([
-  {
-    procedure: 'changes',
-    call: async (caller: SessionCaller): Promise<void> => {
-      await caller.session.changes({ sessionId: 'session-1' });
-    },
-    message: 'This procedure is not implemented yet',
-  },
-  {
-    procedure: 'diff',
-    call: async (caller: SessionCaller): Promise<void> => {
-      await caller.session.diff({ sessionId: 'session-1', path: 'file.ts' });
-    },
-    message: 'This procedure is not implemented yet',
-  },
-])(
-  'preserves the unimplemented $procedure error',
-  async ({ call, message }): Promise<void> => {
-    const { caller } = await startAcpEngine({ steps: [] });
-    await expect(call(caller)).rejects.toMatchObject({
-      code: 'NOT_IMPLEMENTED',
-      message,
-    });
-  },
-);
-
 it.each([
   { sessionId: 'session-1' },
   { sessionId: 'session-1', title: 42 },

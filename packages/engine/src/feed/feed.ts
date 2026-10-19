@@ -1,4 +1,4 @@
-import type { SessionUpdate } from '@repo/contracts';
+import type { ChangesSummary, SessionUpdate } from '@repo/contracts';
 import type { FeedRowInput, FeedSubscribeOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { Observer, Subscription } from 'xstate';
@@ -16,6 +16,7 @@ type SnapshotEvent = Extract<
 // What Feed needs from Sessions; the Engine composition supplies it, so Feed imports no Sessions code.
 interface SessionLookup {
   readSession: (sessionId: string) => { epoch: number; maxRevision: number };
+  readStoredChangesSummary: (sessionId: string) => Promise<ChangesSummary>;
   watchSessionSnapshot: (
     sessionId: string,
     listener: Observer<SnapshotEvent>,

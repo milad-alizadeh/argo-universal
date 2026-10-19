@@ -7,6 +7,8 @@ import { promisify } from 'node:util';
 import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
 
+export * from './changes';
+
 const execute = promisify(execFile);
 
 const run = (

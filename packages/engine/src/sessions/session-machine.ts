@@ -92,6 +92,7 @@ import {
   saveSessionArchive,
   removeSessionCheckout,
 } from './archive/archive-operations';
+import { readDefaultChangesSummary } from './changes-summary';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { currentModel, toConfigValues } from './configuration/config-choices';
 import {
@@ -1466,6 +1467,12 @@ export const sessionMachine = sessionSetup.createMachine({
           nextPosition: context.nextPosition,
           now: context.input.now,
           createId: context.input.createId,
+          refreshChanges: () =>
+            readDefaultChangesSummary(
+              context.input.database,
+              context.projectId,
+              context.checkout.path,
+            ),
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
               database: context.input.database,
