@@ -1,7 +1,7 @@
 import { writeLog } from '@repo/machine-log';
 import { PluginAssets } from '../assets/plugin-assets';
 import { macKeychain, type Keychain } from '../services/keychain';
-import type { PluginServiceOptions } from '../services/plugin-service-options';
+import type { PluginServiceOptions } from '../services/plugin-services';
 import { PluginServices } from '../services/plugin-services';
 import { PluginStorage } from '../services/storage';
 import { PluginRuntime } from './plugin-runtime';

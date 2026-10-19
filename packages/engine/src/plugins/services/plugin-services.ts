@@ -1,30 +1,36 @@
-import type {
-  PluginAssetRef,
-  PluginAssetSource,
-} from '@repo/contracts/plugins/assets';
+import type { CoreHooks, PluginProjectInfo } from '@repo/contracts/plugins';
+import type { PluginAssetRef } from '@repo/contracts/plugins/assets';
 import { replyError } from '../access/capability-refusal';
 import {
   PluginAccess,
   type AccessScope,
   type ActivatedPlugin,
 } from '../access/plugin-access';
-import type { OpenedAsset } from '../assets/plugin-assets';
-import { spawnHooks, type SpawnCaller } from '../hooks/spawn-hooks';
+import type { OpenedAsset, PluginAssets } from '../assets/plugin-assets';
+import type { SpawnCaller, Waiting } from '../hooks/spawn-hooks';
 import type { PluginReply, PluginValue } from '../protocol/runtime';
-import { resolvePluginAsset } from './asset-resolver';
 import type { Keychain } from './keychain';
-import { attemptPluginCall } from './plugin-attempt';
 import {
-  describeCall,
+  answerCall,
   failureLine,
-  machineCall,
-  type MachineContext,
+  type CallReach,
   type StateRequest,
-  type UnkeptRequest,
 } from './plugin-calls';
+import type { PluginNetwork } from './plugin-fetch';
 import { PluginResources, supersede } from './plugin-resources';
-import type { PluginServiceOptions } from './plugin-service-options';
 import type { PluginStorage } from './storage';
+
+export type PluginServiceOptions = {
+  assets: PluginAssets;
+  environment?: NodeJS.ProcessEnv;
+  log: (line: string) => void;
+  projects: () => Promise<readonly string[]>;
+  projectInfo: () => Promise<PluginProjectInfo[]>;
+  network?: PluginNetwork;
+  settings?: (pluginId: string, key: string) => Promise<PluginValue>;
+  hooks?: CoreHooks;
+  waiting?: Waiting;
+};
 
 type Held = { generation: number; resources: PluginResources };
 
@@ -90,61 +96,22 @@ export class PluginServices {
     caller: SpawnCaller,
     request: StateRequest,
   ): Promise<PluginValue> {
-    return attemptPluginCall({
-      caller,
-      request,
-      resources: this.resources(caller.pluginId, caller.generation),
+    return answerCall(this.reach(caller), request);
+  }
+
+  private reach({ pluginId, generation }: SpawnCaller): CallReach {
+    return {
+      pluginId,
+      generation,
+      resources: this.resources(pluginId, generation),
       storage: this.storage,
       keychain: this.keychain,
       options: this.options,
-      logCall: () => this.logCall(caller.pluginId, request),
-      callMachine: (held, unkept) => this.callMachine(caller, held, unkept),
-    });
-  }
-
-  private callMachine(
-    caller: SpawnCaller,
-    resources: PluginResources,
-    request: UnkeptRequest,
-  ): Promise<PluginValue> {
-    if (request.api === 'assets')
-      return this.resolveAsset(caller.pluginId, request.source, resources);
-
-    return machineCall(this.context(caller, resources, request), request);
-  }
-
-  private resolveAsset(
-    pluginId: string,
-    source: PluginAssetSource,
-    resources: PluginResources,
-  ): Promise<PluginAssetRef> {
-    return resolvePluginAsset(source, {
-      pluginId,
-      resources,
-      access: this.access(pluginId),
       network: this.options.network ?? {},
-      assets: this.options.assets,
-      activated: () => this.activated.get(pluginId),
-    });
-  }
-
-  private context(
-    { pluginId, generation }: SpawnCaller,
-    resources: PluginResources,
-    request: StateRequest,
-  ): MachineContext {
-    return {
-      pluginId,
-      spawning: spawnHooks(this.options, { pluginId, generation }),
-      access: this.access(pluginId),
-      resources,
-      network: this.options.network ?? {},
-      allowed: () => this.logCall(pluginId, request),
+      access: (): PluginAccess => this.access(pluginId),
+      activated: (): ActivatedPlugin | undefined =>
+        this.activated.get(pluginId),
     };
-  }
-
-  private logCall(pluginId: string, request: StateRequest): void {
-    this.options.log(`Plugin ${pluginId}: ${describeCall(request)}`);
   }
 
   private access(pluginId: string): PluginAccess {
