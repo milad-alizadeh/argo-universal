@@ -26,7 +26,7 @@ export function EffortControl(props: TuningProps): React.JSX.Element | null {
     <ListItem
       title="Effort"
       value={effort.selected.name}
-      meta={<EffortSlider {...props} effort={effort} />}
+      control={<EffortSlider {...props} effort={effort} />}
     />
   );
 }

@@ -1,13 +1,12 @@
 import type { ReactElement, ComponentProps } from 'react';
 import { Platform, Pressable } from 'react-native';
-import { TextClassContext } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { useInMenu } from '../../../menu-rows-context';
 import { cn } from '../../../utils';
 import { linkPress } from './list-item-link-press';
-import { Accessory, ItemContent, Leading, Trailing } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
 import { RadioPress } from './list-item-radio';
+import { ItemContentSlots } from './list-item-slots';
 import { itemPress } from './list-item-styles';
 
 export type { DrawingProps } from './list-item-press-props';
@@ -35,7 +34,11 @@ function interactive(props: DrawingProps): boolean {
 
 function pressClass(props: DrawingProps, menu: boolean): string {
   return cn(
-    itemPress({ menu, interactive: interactive(props) }),
+    itemPress({
+      menu,
+      interactive: interactive(props),
+      control: props.control !== undefined,
+    }),
     props.disabled && 'opacity-50',
   );
 }
@@ -131,18 +134,6 @@ function switchKeyDown(props: DrawingProps): React.KeyboardEventHandler {
 
     if (canToggle(props, event)) pressRow(props);
   };
-}
-
-function ItemContentSlots(props: DrawingProps): ReactElement {
-  return (
-    <TextClassContext value={undefined}>
-      {props.choice}
-      <Leading {...props} />
-      {props.content ?? <ItemContent {...props} />}
-      <Trailing {...props} />
-      {props.labelPlacement ? null : <Accessory>{props.accessory}</Accessory>}
-    </TextClassContext>
-  );
 }
 
 export function ItemPress(props: DrawingProps): ReactElement {

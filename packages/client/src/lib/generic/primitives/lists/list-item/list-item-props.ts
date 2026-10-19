@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
 import type { KitProps } from '../../kit-props';
 
@@ -11,6 +11,8 @@ export type RowBadge = Exclude<
 export type ListItemProps = KitProps<'ListItem'> & {
   // An iOS read-only detail field lets a long trailing value share the row.
   labelPlacement?: 'beside';
+  // A control under the title, such as a Slider, spanning the row's content width.
+  control?: ReactNode;
   onPointerDown?: ComponentProps<typeof Pressable>['onPointerDown'];
   onKeyDown?: React.KeyboardEventHandler;
   role?: 'button' | 'link' | 'group';

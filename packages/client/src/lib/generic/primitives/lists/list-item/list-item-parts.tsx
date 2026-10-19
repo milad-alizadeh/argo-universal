@@ -156,3 +156,8 @@ export function Accessory({ children }: { children?: ReactNode }): ReactNode {
     </View>
   ) : null;
 }
+
+// Paper: a control under the row's title and value spans the row's content width, on its own line.
+export function Control({ children }: { children?: ReactNode }): ReactNode {
+  return children ? <View className="w-full">{children}</View> : null;
+}

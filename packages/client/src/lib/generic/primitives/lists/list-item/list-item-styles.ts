@@ -66,16 +66,23 @@ const pressTints = cn(
   Platform.OS !== 'android' && 'active:bg-pressed',
 );
 
+// Paper: a control wraps onto its own line, 12px under a menu row's title and 8px under a sheet row's.
+const controlLines = {
+  row: 'flex-wrap gap-y-2',
+  menu: 'flex-wrap gap-y-3',
+};
+
+type PressDrawing = { menu: boolean; interactive: boolean; control: boolean };
+
+function pressLayout({ menu, control }: PressDrawing): string {
+  const layout = menu ? 'menu' : 'row';
+
+  return cn(pressLayouts[layout], control && controlLines[layout]);
+}
+
 // Only a row that does something takes the hover and pressed tints; a read-only row stays still.
-export function itemPress(press: {
-  menu: boolean;
-  interactive: boolean;
-}): string {
-  return cn(
-    pressLayouts[press.menu ? 'menu' : 'row'],
-    pressFocus,
-    press.interactive && pressTints,
-  );
+export function itemPress(press: PressDrawing): string {
+  return cn(pressLayout(press), pressFocus, press.interactive && pressTints);
 }
 
 function hasSeparator({ appearance, position, menu }: ItemDrawing): boolean {
