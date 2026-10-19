@@ -20,10 +20,17 @@ function rowLabel(props: ListItemProps): string {
     .join(', ');
 }
 
+// A menu trigger's row (a web Picker row) presses through its pointer handler and popup.
 function interactive(props: DrawingProps): boolean {
   if (props.disabled) return false;
 
-  return [props.onPress, props.href, props.onLongPress].some(Boolean);
+  return [
+    props.onPress,
+    props.href,
+    props.onLongPress,
+    props.onPointerDown,
+    props['aria-haspopup'],
+  ].some(Boolean);
 }
 
 function pressClass(props: DrawingProps, menu: boolean): string {
