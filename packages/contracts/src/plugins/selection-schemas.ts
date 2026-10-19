@@ -120,7 +120,7 @@ const splitChoices = menuChoice.omit({ groups: true }).extend({
 });
 
 // Without choices, the secondary menu lists the SplitButton's keyed Action children.
-const splitActions = z.object({
+const splitActionChildren = z.object({
   value: z.never().optional(),
   options: z.never().optional(),
   onValueChange: z.never().optional(),
@@ -128,5 +128,5 @@ const splitActions = z.object({
 
 export const splitButtonSchema = z.union([
   splitBase.extend(splitChoices.shape),
-  splitBase.extend(splitActions.shape),
+  splitBase.extend(splitActionChildren.shape),
 ]);
