@@ -17,14 +17,14 @@ interface ConfigurationComboboxProps {
   choiceLabel?: (choice: SessionConfigSelectOption) => string;
 }
 
-// A Configure row for one select option: on a desktop its choices open beside the menu, with no search, and stay open across picks; a phone pushes a page.
+// A Configure row for one select option, its short list of choices with no search: on a desktop they open beside the menu and stay open across picks; a phone pushes a page.
 export function ConfigurationCombobox(
   props: ConfigurationComboboxProps,
 ): ReactElement {
   return <Combobox<string> {...comboboxProps(props)} />;
 }
 
-// Paper's Configure: picks keep the menu open and the choices have no search.
+// Paper's Configure: picks keep the menu open, and no platform searches the choices.
 const configureRow = {
   variant: 'row',
   keepOpen: true,

@@ -1,3 +1,3 @@
-export { Drill, useDrillBeside } from './drill';
+export { Drill } from './drill';
 
 export type { DrillProps } from './drill-props';

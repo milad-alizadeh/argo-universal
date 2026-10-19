@@ -141,17 +141,21 @@ export const RowSearchesAndClosesByDefaultWide: Story = {
   },
 };
 
-// A phone's page keeps the search, as long lists still need it there.
-export const RowSearchesOnPhone: Story = {
+const phoneRowSearch = (row: RegExp, search: boolean): Story => ({
   render: (): ReactElement => <Rows />,
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.phone);
-    await userEvent.click(
-      canvas.getByRole('button', { name: /^Project, Argo/ }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: row }));
 
     await expect(
-      await page.findByRole('searchbox', { name: 'Search Project' }),
+      await page.findByRole('radio', { name: 'Paper' }),
     ).toBeVisible();
+    await expect(page.queryAllByRole('searchbox')).toHaveLength(search ? 1 : 0);
   },
-};
+});
+
+// On a phone's page too, a row without search shows none.
+export const RowWithoutSearchOnPhone = phoneRowSearch(/^Project, Argo/, false);
+
+// A row keeps its search on a phone by default.
+export const RowSearchesOnPhone = phoneRowSearch(/^Branch,/, true);
