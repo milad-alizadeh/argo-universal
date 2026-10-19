@@ -71,7 +71,7 @@ export class PluginDispatcher {
 
   // Closing sends what the user typed rather than dropping it.
   public close(): void {
-    this.releaseAll();
+    void this.releaseAll();
   }
 }
 
