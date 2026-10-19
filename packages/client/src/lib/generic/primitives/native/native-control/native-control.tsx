@@ -11,6 +11,7 @@ export function NativeControl({
   return <NativeControlContext value>{children}</NativeControlContext>;
 }
 
+// A control never takes the safe area: scrolled under a clear header, SwiftUI would push it out of its own frame and leave it there.
 export function ControlHost({
   children,
   ...props
@@ -18,6 +19,8 @@ export function ControlHost({
   return useContext(NativeControlContext) ? (
     children
   ) : (
-    <Host {...props}>{children}</Host>
+    <Host ignoreSafeArea="all" {...props}>
+      {children}
+    </Host>
   );
 }
