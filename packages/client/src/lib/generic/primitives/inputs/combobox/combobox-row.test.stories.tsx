@@ -125,6 +125,7 @@ export const RowKeepsOpenWithoutSearchWide: Story = {
 export const RowSearchesAndClosesByDefaultWide: Story = {
   play: async (context) => {
     const { choices } = await openRow(context, 'Branch');
+
     const search = within(choices).getByRole('searchbox', {
       name: 'Search Branch',
     });
