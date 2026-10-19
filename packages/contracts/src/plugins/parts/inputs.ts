@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { legacyBinaryProps, legacySliderProps } from '../legacy-control-props';
 import { searchFieldAccessibility } from '../part-accessibility-metadata';
+import { echoes } from '../plugin-part-props';
 import {
   part,
   stringLabel,
@@ -10,8 +11,12 @@ import {
 import { searchFieldProps } from '../presentation-kit-props';
 import { filterPillProps } from '../presentation-kit-props';
 import { selectionPartSchemas } from '../selection-parts';
-import { textareaProps } from '../text-field-kit-props';
-import { textFieldProps } from '../text-field-kit-props';
+import {
+  textChangeEvents,
+  textareaProps,
+  textEvents,
+  textFieldProps,
+} from '../text-field-kit-props';
 import {
   selectionControlV1,
   switchProps,
@@ -38,7 +43,7 @@ export const inputsPartSchemas = {
         onChangeText: z.string().optional(),
       }),
     ],
-    events: { onChangeText: z.string() },
+    events: textEvents(textFieldProps),
   }),
   Textarea: part('A multi-line text input.', textareaProps, {
     label: 'The surrounding Field or control supplies the accessible name.',
@@ -50,7 +55,7 @@ export const inputsPartSchemas = {
         onChangeText: z.string().optional(),
       }),
     ],
-    events: { onChangeText: z.string() },
+    events: textChangeEvents(textareaProps),
   }),
   SearchField: part(
     'Search input for Page headers and Lists.',
@@ -67,7 +72,7 @@ export const inputsPartSchemas = {
           }))
           .pipe(legacySearchField),
       ],
-      events: { onChangeText: z.string() },
+      events: textChangeEvents(searchFieldProps),
       slots: { title: ['Text', 'Stack'], actions: ['Button', 'IconButton'] },
     },
   ),
@@ -90,7 +95,7 @@ export const inputsPartSchemas = {
       previous: [
         checkboxProps.transform(legacyBinaryProps).pipe(selectionControlV1),
       ],
-      events: { onValueChange: z.boolean() },
+      events: { onValueChange: echoes(checkboxProps, 'value') },
       label: 'The label names the control and is announced with its value.',
     },
   ),
@@ -98,13 +103,18 @@ export const inputsPartSchemas = {
     previous: [
       switchProps.transform(legacyBinaryProps).pipe(selectionControlV1),
     ],
-    events: { onValueChange: z.boolean() },
+    events: { onValueChange: echoes(switchProps, 'value') },
     label:
       'Set accessibilityLabel when the surrounding row does not name the control.',
   }),
   Slider: part('A labeled numeric range control.', sliderProps, {
     previous: [sliderProps.transform(legacySliderProps).pipe(sliderV1)],
-    events: { onValueChange: z.number() },
+    events: {
+      onValueChange: echoes(sliderProps, 'value', {
+        throttleMs: 150,
+        blocks: false,
+      }),
+    },
     label:
       'The accessibilityLabel names the control; its value and range are announced.',
   }),

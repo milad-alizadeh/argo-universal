@@ -8,7 +8,7 @@ export type ListPosition = 'only' | 'first' | 'middle' | 'last';
 export interface ListSelection {
   selectionMode?: 'single' | 'multiple';
   selection?: readonly string[];
-  onSelectionChange?: (selection: string[]) => void;
+  onSelectionChange?: (selection: readonly string[]) => void;
 }
 
 export const ListContext = createContext<

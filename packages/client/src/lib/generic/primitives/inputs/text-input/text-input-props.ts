@@ -14,6 +14,7 @@ import type { KitProps } from '../../kit-props';
  * Kit-only: local validation, hint and blur handling.
  */
 export type TextFieldProps = KitProps<'TextInput'> & {
+  onFocus?: () => void;
   onBlur?: () => void;
   errors?: FieldErrors;
   hint?: string;
@@ -77,3 +78,17 @@ export const keyboardOf = ({
   keyboardType: numeric ? 'numbers-and-punctuation' : 'default',
   secureTextEntry: secure,
 });
+
+export function focusOf(
+  props: TextFieldProps,
+): Pick<
+  NativeTextInputProps,
+  'onFocus' | 'onBlur' | 'autoFocus' | 'selectTextOnFocus'
+> {
+  return {
+    onFocus: props.onFocus,
+    onBlur: props.onBlur,
+    autoFocus: props.focusOnOpen,
+    selectTextOnFocus: props.selectOnFocus,
+  };
+}

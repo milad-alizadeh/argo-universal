@@ -1,8 +1,7 @@
 import {
   Button,
-  Column,
+  Stack,
   Label,
-  Row,
   Text,
   useEffect,
   useState,
@@ -14,9 +13,9 @@ export function ProjectDetails({ context, storage, trackers }) {
   const props = useProjectTracker(storage, context.projectId);
 
   return (
-    <Column gap={2}>
+    <Stack direction="column" gap={2}>
       <TrackerChoices {...props} trackers={trackers} />
-    </Column>
+    </Stack>
   );
 }
 
@@ -123,7 +122,7 @@ function TrackerButton({ tracker, selection, choose }) {
   const selected = selection === tracker.id;
 
   return (
-    <Row gap={2}>
+    <Stack direction="row" gap={2}>
       <Label text={tracker.name} icon={tracker.icon} />
       <Button
         label={`${selected ? 'Selected' : 'Select'} ${tracker.name}`}
@@ -131,6 +130,6 @@ function TrackerButton({ tracker, selection, choose }) {
         disabled={selection === 'loading'}
         onPress={() => choose(tracker.id)}
       />
-    </Row>
+    </Stack>
   );
 }

@@ -23,7 +23,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       message: removeMessage,
       actions: [
         { label: removeAgent, tone: 'danger' },
-        { label: 'Cancel', cancel: true },
+        { label: 'Cancel', role: 'cancel' },
       ],
     },
   },
@@ -33,7 +33,10 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
     alert: {
       title: 'Discard your changes?',
       message: 'The Agent keeps its saved launch settings.',
-      actions: [{ label: 'Keep editing', cancel: true }, { label: 'Discard' }],
+      actions: [
+        { label: 'Keep editing', role: 'cancel' },
+        { label: 'Discard' },
+      ],
     },
   },
   {
@@ -43,7 +46,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       title: 'Update Example ACP?',
       message: 'Stop its running Sessions before updating it.',
       actions: [
-        { label: 'Cancel', cancel: true },
+        { label: 'Cancel', role: 'cancel' },
         { label: 'Update', disabled: true },
       ],
     },
@@ -57,7 +60,7 @@ const alerts: { state: string; trigger: string; alert: AlertContent }[] = [
       message: removeMessage,
       actions: [
         { label: removeAgent, tone: 'danger', loading: true },
-        { label: 'Cancel', cancel: true },
+        { label: 'Cancel', role: 'cancel' },
       ],
     },
   },

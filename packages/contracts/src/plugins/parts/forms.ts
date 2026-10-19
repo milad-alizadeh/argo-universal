@@ -31,6 +31,9 @@ export const formsPartSchemas = {
   Form: part(
     'A stacked form with a submit action and App-held drafts.',
     z.object({ submitLabel: stringLabel, onSubmit: handler('onSubmit') }),
-    { slots: { fields: ['Field'] } },
+    {
+      slots: { fields: ['Field'] },
+      events: { onSubmit: z.undefined().meta({ flush: true }) },
+    },
   ),
 };

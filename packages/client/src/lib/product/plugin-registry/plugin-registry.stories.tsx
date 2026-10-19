@@ -39,7 +39,7 @@ function rowWithCount(count: number): WireNode {
   return applyPatch(slottedRow, [
     {
       op: 'setProps',
-      key: [{ slot: 'accessories', key: 'count' }],
+      key: [{ slot: 'trailing', key: 'count' }],
       props: { label: `Count ${count}` },
     },
   ]);
@@ -86,6 +86,11 @@ export const Controls: StoryObj<typeof meta> = {
 
 export const Overlays: StoryObj<typeof meta> = {
   render: () => (
-    <PluginTree root={WireNode.parse(overlays)} onEvent={() => {}} />
+    <PluginTree
+      root={applyPatch(WireNode.parse(overlays), [
+        { op: 'setProps', key: ['sheet'], props: { open: true } },
+      ])}
+      onEvent={() => {}}
+    />
   ),
 };

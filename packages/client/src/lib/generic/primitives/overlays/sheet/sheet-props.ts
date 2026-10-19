@@ -13,6 +13,8 @@ export type SheetProps = KitProps<'Sheet'> & {
   bottomEdge?: boolean;
   contentScrolls?: boolean;
   footer?: ReactNode;
+  // Pads composed content, such as a form or a Plugin's, with the standard sheet inset; lists and pages that draw their own margins leave it off.
+  inset?: boolean;
 };
 
 export interface SheetPageProps {

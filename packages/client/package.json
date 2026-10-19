@@ -90,7 +90,6 @@
     "react-native": "catalog:"
   },
   "devDependencies": {
-    "@argo/plugin-kit": "workspace:*",
     "@lexical/headless": "catalog:",
     "@lexical/html": "catalog:",
     "@repo/engine": "workspace:*",

@@ -1,4 +1,4 @@
-import { Button, Column, Text } from '@argo/plugin-kit';
+import { Button, Stack, Text } from '@argo/plugin-kit';
 import { githubError, githubRepositoryFromOrigin } from './github-tracker.js';
 import { loadIssue } from './issue-data.js';
 import { IssueDetail } from './issue-detail.js';
@@ -7,12 +7,12 @@ const headingRole = 'heading';
 
 export function IssueList(props) {
   return (
-    <Column gap={3}>
+    <Stack direction="column" gap={3}>
       <IssueHeading />
       <ProjectChoices {...props} />
       <ProjectSummary {...props} />
       <IssueGroups {...props} />
-    </Column>
+    </Stack>
   );
 }
 
@@ -22,7 +22,7 @@ function IssueHeading() {
 
 function ProjectChoices({ projects, projectId, onIssue }) {
   return (
-    <Column gap={2}>
+    <Stack direction="column" gap={2}>
       {projects.map((project) => (
         <Button
           key={project.id}
@@ -31,7 +31,7 @@ function ProjectChoices({ projects, projectId, onIssue }) {
           onPress={() => onIssue({ type: 'project', id: project.id })}
         />
       ))}
-    </Column>
+    </Stack>
   );
 }
 
@@ -73,10 +73,10 @@ function IssueGroup({ title, issues, ...props }) {
   );
 
   return (
-    <Column gap={2}>
+    <Stack direction="column" gap={2}>
       <Text role={headingRole}>{title}</Text>
       <IssueRows issues={visible} title={title} {...props} />
-    </Column>
+    </Stack>
   );
 }
 

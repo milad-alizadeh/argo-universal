@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { handler } from './plugin-part-props';
+import { echoes, handler } from './plugin-part-props';
 
 export const textFieldProps = z.object({
   label: z.string().describe('Spoken and visible field name.'),
@@ -27,4 +27,24 @@ export const textareaProps = z.object({
     .optional()
     .describe('Reports value edits.'),
   disabled: z.boolean().optional().describe('Disable edits.'),
+});
+
+type TextProps = Record<string, z.ZodType> & { value: z.ZodType };
+
+type TextChangeEvents<Fields extends TextProps> = {
+  onChangeText: z.ZodNonOptional<Fields['value']>;
+};
+
+// Typed text echoes at once and coalesces; Return sends it before submitting.
+export const textChangeEvents = <Fields extends TextProps>(
+  props: z.ZodObject<Fields>,
+): TextChangeEvents<Fields> => ({
+  onChangeText: echoes(props, 'value', { throttleMs: 150, blocks: false }),
+});
+
+export const textEvents = <Fields extends TextProps>(
+  props: z.ZodObject<Fields>,
+): TextChangeEvents<Fields> & { onSubmit: z.ZodUndefined } => ({
+  ...textChangeEvents(props),
+  onSubmit: z.undefined().meta({ flush: true }),
 });

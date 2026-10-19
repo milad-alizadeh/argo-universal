@@ -6,6 +6,7 @@ import {
 } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
+import { sheetInsetClass } from './sheet-inset';
 import { backLabel } from './sheet-page-label';
 import {
   useLeavingPage,
@@ -17,6 +18,7 @@ import { SheetTitleRow } from './sheet-title-row';
 
 interface StackProps {
   hideRootTitle?: boolean;
+  inset?: boolean;
   stack: SheetStack;
   label?: string;
   children: ReactNode;
@@ -24,8 +26,7 @@ interface StackProps {
 
 // The web's pages: a pushed page slides in from the trailing edge over the one below, and slides back out on Back.
 export function SheetPageStack(props: StackProps): ReactElement {
-  if (props.stack.pages.length === 0)
-    return <SheetScroll label={props.label}>{props.children}</SheetScroll>;
+  if (props.stack.pages.length === 0) return <SheetScroll {...props} />;
 
   return <StackPages {...props} />;
 }
@@ -100,7 +101,7 @@ function PageFrame(props: PageProps): ReactElement {
       className={pageClass(props)}
     >
       <PageHeader {...props} />
-      <SheetScroll label={props.page.title ?? props.label}>
+      <SheetScroll label={props.page.title ?? props.label} inset={props.inset}>
         {props.page.content}
       </SheetScroll>
     </div>
@@ -161,10 +162,9 @@ function pageBackLabel(props: PageProps): string | undefined {
   return props.index === 0 ? undefined : backLabel(props.stack);
 }
 
-function SheetScroll(props: {
-  label?: string;
-  children: ReactNode;
-}): ReactElement {
+type ScrollProps = Pick<StackProps, 'label' | 'inset' | 'children'>;
+
+function SheetScroll(props: ScrollProps): ReactElement {
   return (
     <ScrollView
       className="min-h-0 shrink"
@@ -172,7 +172,7 @@ function SheetScroll(props: {
       role="region"
       accessibilityLabel={props.label}
     >
-      <View>{props.children}</View>
+      <View className={sheetInsetClass(props.inset)}>{props.children}</View>
     </ScrollView>
   );
 }

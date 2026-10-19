@@ -18,8 +18,9 @@ function isProp(value: ElementProps[string]): value is Prop {
   return isPropData(value);
 }
 
+// Handlers go only in top-level props, so nested data is plain JSON.
 function isPropData(value: ElementProps[string]): boolean {
-  if (Array.isArray(value)) return value.every(isProp);
+  if (Array.isArray(value)) return value.every(isPropData);
 
   if (value === null) return true;
 
@@ -37,7 +38,7 @@ function isPropObject(
 ): boolean {
   return (
     Object.getPrototypeOf(value) === Object.prototype &&
-    Object.values(value).every(isProp)
+    Object.values(value).every(isPropData)
   );
 }
 
@@ -49,7 +50,9 @@ function checked(
   value: ElementProps[string],
 ): Prop {
   if (!isProp(value))
-    throw new Error(`${type}: prop ${name} must be JSON or a function`);
+    throw new Error(
+      `${type}: prop ${name} must be JSON or a top-level function`,
+    );
 
   return value;
 }

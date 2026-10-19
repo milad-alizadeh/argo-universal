@@ -29,7 +29,7 @@ it.each([
   {
     scenario: 'refuse',
     parts: currentPartVersions,
-    body: `return jsx(Column, { children: [jsx(Text, ${JSON.stringify(refusedTreeFixture.children[0]?.props)}), jsx('FuturePart', {})] })`,
+    body: `return jsx(Stack, { direction: 'column', children: [jsx(Text, ${JSON.stringify(refusedTreeFixture.children[0]?.props)}), jsx('FuturePart', {})] })`,
     expected: { type: 'core', input: traySlotFixture },
     fallbacks: 1,
   },
@@ -47,6 +47,13 @@ it.each([
     expected: { type: 'core', input: traySlotFixture },
     fallbacks: 1,
   },
+  {
+    scenario: 'nested handler',
+    parts: currentPartVersions,
+    body: `return jsx(Text, { children: 'Go', data: { onPress: () => {} } })`,
+    expected: { type: 'core', input: traySlotFixture },
+    fallbacks: 1,
+  },
 ])(
   'handles a $scenario tree at one Replaceable Slot',
   async ({ scenario, parts, body, expected, fallbacks }) => {
@@ -58,7 +65,7 @@ it.each([
         hooks: ['ui.render'],
         slots: [composerAboveSlotId],
         source: `
-    import { Text, Column } from '@argo/plugin-kit';
+    import { Text, Stack } from '@argo/plugin-kit';
     import { jsx } from '@argo/plugin-kit/jsx-runtime';
     function Replacement() { ${body} }
     export async function register(argo) { await argo.on('ui.render', () => ${renderAnswer(scenario)}); }

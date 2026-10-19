@@ -1,15 +1,21 @@
 import { z } from 'zod';
+import { echoes } from './plugin-part-props';
 import { part, stringLabel, onPress } from './plugin-part-schema-utils';
 import {
   pickerSchema,
   comboboxSchema,
+  menuChoice,
   menuSchema,
   splitButtonSchema,
 } from './selection-schemas';
-import { selectionValue } from './selection-value';
 
-const events = {
-  onValueChange: selectionValue,
+const pickerEvents = {
+  onValueChange: echoes(pickerSchema, 'value'),
+  onPress: z.undefined(),
+};
+
+const menuEvents = {
+  onValueChange: echoes(menuChoice, 'value'),
   onPress: z.undefined(),
 };
 
@@ -37,11 +43,11 @@ function oldPicker(
 
 export const selectionPartSchemas = {
   Picker: part('A selection control.', pickerSchema, {
-    events,
+    events: pickerEvents,
     previous: [pickerSchema.transform(oldPicker).pipe(legacyPicker)],
   }),
   Combobox: part('A searchable Picker.', comboboxSchema, {
-    events,
+    events: pickerEvents,
     previous: [
       z.object({
         label: stringLabel,
@@ -52,14 +58,15 @@ export const selectionPartSchemas = {
     ],
   }),
   Menu: part('A choice or action menu.', menuSchema, {
-    events,
+    events: menuEvents,
     previous: [z.object({})],
   }),
   SplitButton: part(
     'A primary action with a secondary action menu.',
     splitButtonSchema,
     {
-      events,
+      children: true,
+      events: menuEvents,
       previous: [
         z.object({
           label: stringLabel,

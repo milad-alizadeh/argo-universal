@@ -33,6 +33,6 @@ export function ArchiveSessionAlert(
 }
 
 const archiveActions = (onArchive: () => void): AlertAction[] => [
-  { label: archiveSessionCopy.cancel, cancel: true },
+  { label: archiveSessionCopy.cancel, role: 'cancel' },
   { label: archiveSessionCopy.archive, tone: 'danger', onPress: onArchive },
 ];

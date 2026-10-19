@@ -10,5 +10,3 @@ export {
   type SheetPageProps,
   type SheetProps,
 } from './sheet-props';
-
-export { SheetContent } from './sheet-content-inset';

@@ -153,7 +153,9 @@ export function part(
 ): WirePartDefinition {
   describeProps(schema);
 
-  return definition(summary, schema, resolveOptions(schema, options));
+  const config = resolveOptions(schema, options);
+
+  return definition(summary, schema, config);
 }
 
 export {

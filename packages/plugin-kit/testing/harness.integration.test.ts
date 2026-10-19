@@ -25,7 +25,7 @@ it('delivers a text event through the worker and applies its keyed patch to the 
     .toBeDefined();
   await page.dispatch({
     key: '0/search',
-    event: 'onSearchTextChange',
+    event: 'onChangeText',
     payload: 'typed text',
   });
   await expect

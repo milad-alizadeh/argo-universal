@@ -1,31 +1,34 @@
-import {
-  actionInteraction,
-  handlerPath,
-} from '@repo/contracts/plugins/action-handler-path';
 import { wirePart } from '@repo/contracts/plugins/kit';
-import type {
-  PluginDispatchInput,
-  PluginInteraction,
-  WireNode,
-} from '@repo/contracts/plugins/wire';
 import {
-  findWireHandler,
-  type WireHandler,
-} from '@repo/contracts/plugins/wire-handler';
+  partEventPayload,
+  WireEvent,
+  type PluginDispatchInput,
+  type WireNode,
+} from '@repo/contracts/plugins/wire';
 import { findWireNode } from '@repo/contracts/plugins/wire-node-key';
+import type { z } from 'zod';
 
 const missingHandler = 'Plugin handler is no longer available';
 
+// A Part event names its node by key and its handler prop by event name.
 export function requireViewHandler(
   root: WireNode | null,
   input: PluginDispatchInput,
 ): void {
   const node = requireNode(root, input.key);
-  const path = handlerPath(input);
-  const located = requireHandler(node, path);
-  requireEventName(located.handler.$event, path.at(-1) ?? '');
-  requirePayload(located.node, actionInteraction(input));
+
+  if (!hasHandler(node, input.event)) throw new Error(missingHandler);
+  partEventPayload(eventSchema(node.type, input.event), input.payload);
 }
+
+function eventSchema(type: string, event: string): z.ZodType | undefined {
+  const events = partEvents(type);
+
+  return Object.hasOwn(events, event) ? events[event] : undefined;
+}
+
+const partEvents = (type: string): Record<string, z.ZodType> =>
+  wirePart(type)?.events ?? {};
 
 function requireNode(root: WireNode | null, key: string): WireNode {
   if (!root) throw new Error('Plugin view is no longer available');
@@ -36,33 +39,5 @@ function requireNode(root: WireNode | null, key: string): WireNode {
   return node;
 }
 
-function requireHandler(node: WireNode, path: string[]): WireHandler {
-  const located = findWireHandler(node, path);
-
-  if (!located) throw new Error(missingHandler);
-
-  return located;
-}
-
-function requirePayload(node: WireNode, interaction: PluginInteraction): void {
-  if (isOverlayAnswer(interaction)) return;
-  requireValidPayload(validPayload(node, interaction));
-}
-
-function validPayload(node: WireNode, interaction: PluginInteraction): boolean {
-  const schema = wirePart(node.type)?.events[interaction.event];
-
-  return !schema || schema.safeParse(interaction.payload).success;
-}
-
-function isOverlayAnswer(interaction: PluginInteraction): boolean {
-  return interaction.event === 'onConfirm' || interaction.event === 'onDismiss';
-}
-
-function requireValidPayload(valid: boolean): void {
-  if (!valid) throw new Error('Invalid Plugin event payload');
-}
-
-function requireEventName(actual: string, expected: string): void {
-  if (actual !== expected) throw new Error(missingHandler);
-}
+const hasHandler = (node: WireNode, event: string): boolean =>
+  WireEvent.safeParse(node.props[event]).data?.$event === event;

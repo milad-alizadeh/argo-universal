@@ -20,36 +20,31 @@ export type WireSchemaHints = {
     "direction": PropValue<"Stack", "direction">;
   };
   "Spacer": {
-    /** Minimum token length. */
-    "minLength": PropValue<"Spacer", "minLength">;
+
   };
   "Grid": {
-    /** Column count, optionally by Size class. */
+    /** Equal columns, optionally per Size class. Phones draw at most two. */
     "columns": PropValue<"Grid", "columns">;
     /** Spacing token between cells. */
     "gap": PropValue<"Grid", "gap">;
   };
   "Surface": {
-    /** Surface treatment. */
+    /** Named Surface with its fill, radius and depth. */
     "kind": PropValue<"Surface", "kind">;
-    /** Semantic fill role. */
-    "fill": PropValue<"Surface", "fill">;
-    /** Semantic shape token. */
-    "radius": PropValue<"Surface", "radius">;
-    /** Semantic depth token. */
-    "depth": PropValue<"Surface", "depth">;
-    /** on Press for this part. */
+    /** Spacing token inside the Surface. */
+    "padding": PropValue<"Surface", "padding">;
+    /** Action run on activation. */
     "onPress": PropValue<"Surface", "onPress">;
-    /** Actions available from this surface. */
-    "actions": PropValue<"Surface", "actions">;
   };
   "Card": {
     /** on Press for this part. */
     "onPress": PropValue<"Card", "onPress">;
   };
   "ScrollView": {
+    /** Spoken name of the scroll region. */
+    "accessibilityLabel": PropValue<"ScrollView", "accessibilityLabel">;
     /** Scroll direction. */
-    "axis": PropValue<"ScrollView", "axis">;
+    "direction": PropValue<"ScrollView", "direction">;
   };
   "Collapsible": {
     /** Controlled open state. */
@@ -267,8 +262,6 @@ export type WireSchemaHints = {
     "options": PropValue<"SplitButton", "options">;
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"SplitButton", "onValueChange">;
-    /** actions for this part. */
-    "actions": PropValue<"SplitButton", "actions">;
   };
   "ActionList": {
     /** Header buttons and overflow, or a row context menu. */
@@ -283,7 +276,7 @@ export type WireSchemaHints = {
   "Action": {
     /** The Action label and accessible name. */
     "label": PropValue<"Action", "label">;
-    /** The leading Argo icon. */
+    /** The leading Argo icon; a header ActionList shows only Actions with one as buttons. */
     "icon": PropValue<"Action", "icon">;
     /** Desktop shortcut; Plugins cannot take reserved keys. */
     "shortcut": PropValue<"Action", "shortcut">;
@@ -293,6 +286,8 @@ export type WireSchemaHints = {
     "disabled": PropValue<"Action", "disabled">;
     /** The Plugin handler or built-in App Action. */
     "onPress": PropValue<"Action", "onPress">;
+    /** An Alert answer that dismisses the question, or one that destroys data. */
+    "role": PropValue<"Action", "role">;
   };
   "TextInput": {
     /** Spoken and visible field name. */
@@ -540,8 +535,6 @@ export type WireSchemaHints = {
     "title": PropValue<"Alert", "title">;
     /** Question detail. */
     "message": PropValue<"Alert", "message">;
-    /** Answers offered by the alert. */
-    "actions": PropValue<"Alert", "actions">;
   };
   "Dialog": {
     /** Controlled open state. */
@@ -982,28 +975,6 @@ export type WireSchemaHints = {
     /** on Press for this part. */
     "onPress": PropValue<"ListItem.Button", "onPress">;
   };
-  "GroupedListItem": {
-    /** The row label and accessible name. */
-    "label": PropValue<"GroupedListItem", "label">;
-    /** Optional secondary row value. */
-    "value": PropValue<"GroupedListItem", "value">;
-    /** Whether row activation is disabled. */
-    "disabled": PropValue<"GroupedListItem", "disabled">;
-    /** The action run on activation. */
-    "onPress": PropValue<"GroupedListItem", "onPress">;
-  };
-  "VirtualList": {
-    /** Input items, expanded in the worker; pair with renderItem. */
-    "items": PropValue<"VirtualList", "items">;
-    /** Renders one keyed child for each item; receives the item and its index. */
-    "renderItem": PropValue<"VirtualList", "renderItem">;
-  };
-  "GroupedList": {
-    /** Input items, expanded in the worker; pair with renderItem. */
-    "items": PropValue<"GroupedList", "items">;
-    /** Renders one keyed child for each item; receives the item and its index. */
-    "renderItem": PropValue<"GroupedList", "renderItem">;
-  };
   "Text": {
     /** Text content in source order. */
     "children": PropValue<"Text", "children">;
@@ -1013,17 +984,5 @@ export type WireSchemaHints = {
     "tone": PropValue<"Text", "tone">;
     /** Optional spoken label; defaults to the text content. */
     "accessibilityLabel": PropValue<"Text", "accessibilityLabel">;
-  };
-  "Row": {
-    /** A spacing token between children. */
-    "gap": PropValue<"Row", "gap">;
-    /** Cross-axis alignment. */
-    "align": PropValue<"Row", "align">;
-  };
-  "Column": {
-    /** A spacing token between children. */
-    "gap": PropValue<"Column", "gap">;
-    /** Cross-axis alignment. */
-    "align": PropValue<"Column", "align">;
   };
 };

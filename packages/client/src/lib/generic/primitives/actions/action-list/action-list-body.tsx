@@ -7,7 +7,7 @@ import type { ActionListProps } from './action-list-props';
 type BodyProps = ActionListProps & { groups: ActionGroup[] };
 
 export function ActionListBody(props: BodyProps): ReactElement | null {
-  if (props.variant === 'context') return <ContextActions {...props} />;
+  if (props.variant === 'context') return <ContextBody {...props} />;
 
   return (
     <HeaderActions
@@ -17,7 +17,7 @@ export function ActionListBody(props: BodyProps): ReactElement | null {
   );
 }
 
-function ContextActions(props: BodyProps): ReactElement | null {
+function ContextBody(props: BodyProps): ReactElement | null {
   if (!props.trigger) return null;
 
   return (

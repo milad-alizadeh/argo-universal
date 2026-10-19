@@ -19,6 +19,9 @@ export const contentListProps = z.object({
   isLoading: z.boolean().optional().describe('Whether the list is loading.'),
 });
 
+// A row press never holds the row disabled while the Plugin answers.
+export const rowPress = z.undefined().meta({ blocks: false });
+
 export const listSectionProps = z.object({
   selectionMode: z
     .enum(['single', 'multiple'])

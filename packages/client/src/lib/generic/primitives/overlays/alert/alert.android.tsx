@@ -15,8 +15,12 @@ import {
   alertActionPress,
   ignoreCloseWhileBusy,
   isAlertActionEnabled,
+  isCancel,
+  isDestructive,
   type AlertAction,
+  answeredAlert,
   type AlertProps,
+  type AnsweredAlertProps,
 } from './alert-props';
 
 // Material's AlertDialog shows while it is drawn, so a closed alert draws nothing.
@@ -25,12 +29,12 @@ export function Alert(props: AlertProps): React.JSX.Element | null {
 
   return (
     <Host matchContents>
-      <OpenAlert {...props} />
+      <OpenAlert {...answeredAlert(props)} />
     </Host>
   );
 }
 
-function OpenAlert(props: AlertProps): React.JSX.Element {
+function OpenAlert(props: AnsweredAlertProps): React.JSX.Element {
   return (
     <AlertDialog
       colors={useMaterialPalette().dialogColors}
@@ -44,7 +48,9 @@ function OpenAlert(props: AlertProps): React.JSX.Element {
   );
 }
 
-function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
+function AlertTitle(
+  props: Pick<AnsweredAlertProps, 'title'>,
+): React.JSX.Element {
   return (
     <AlertDialog.Title>
       <Text style={{ typography: 'headlineSmall' }}>{props.title}</Text>
@@ -52,8 +58,8 @@ function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
   );
 }
 
-function AlertAnswers(props: AlertProps): React.JSX.Element {
-  const answers = props.actions.filter((action) => !action.cancel);
+function AlertAnswers(props: AnsweredAlertProps): React.JSX.Element {
+  const answers = props.actions.filter((action) => !isCancel(action));
 
   return (
     <AlertDialog.ConfirmButton>
@@ -79,9 +85,9 @@ function AlertMessage(props: {
 }
 
 function AlertCancel(
-  props: Pick<AlertProps, 'actions' | 'onOpenChange'>,
+  props: Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'>,
 ): React.JSX.Element | null {
-  const action = props.actions.find((candidate) => candidate.cancel);
+  const action = props.actions.find(isCancel);
 
   if (!action) return null;
 
@@ -92,7 +98,7 @@ function AlertCancel(
   );
 }
 
-type AlertButtonProps = Pick<AlertProps, 'actions' | 'onOpenChange'> & {
+type AlertButtonProps = Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'> & {
   action: AlertAction;
 };
 
@@ -115,7 +121,7 @@ function useAnswerColors(
 ): React.ComponentProps<typeof TextButton>['colors'] {
   const palette = useMaterialPalette();
 
-  return action.tone === 'danger'
+  return isDestructive(action)
     ? palette.dialogDangerColors
     : palette.dialogAnswerColors;
 }

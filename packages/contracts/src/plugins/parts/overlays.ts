@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { toastProps } from '../overlay-kit-props';
 import { tooltipProps } from '../overlay-kit-props';
-import { sheetProps } from '../overlay-kit-props';
 import { openStateProps } from '../overlay-kit-props';
-import { alertProps } from '../overlay-kit-props';
+import { openChange } from '../overlay-kit-props';
 import { dialogAccessibility } from '../part-accessibility-metadata';
 import {
   part,
@@ -12,6 +11,7 @@ import {
   tone,
 } from '../plugin-part-schema-utils';
 import { selectionPartSchemas } from '../selection-parts';
+import { wireParts } from '../wire-parts';
 
 const legacyTooltip = z.object({ text: stringLabel });
 
@@ -21,45 +21,23 @@ const legacyToast = z.object({
   tone,
 });
 
-const legacySheet = z.object({ title: optionalLabel });
-
 export const overlaysPartSchemas = {
-  Alert: part('A confirmation overlay opened through an Action.', alertProps, {
-    previous: [
-      z.object({
-        title: stringLabel,
-        message: optionalLabel,
-        confirmLabel: stringLabel,
-        cancelLabel: optionalLabel,
-      }),
-    ],
-    events: { onOpenChange: z.boolean(), onPress: z.undefined() },
-  }),
+  Alert: wireParts.Alert,
   Dialog: part(
-    'A form overlay opened through an Action; presented as a sheet on phone.',
+    'A form overlay; presented as a sheet on phone.',
     openStateProps,
     {
       children: true,
       accessibility: dialogAccessibility,
       previous: [z.object({ title: stringLabel })],
-      events: { onOpenChange: z.boolean() },
+      events: { onOpenChange: openChange(openStateProps) },
     },
   ),
-  Sheet: part('A sheet overlay opened through an Action.', sheetProps, {
-    children: true,
-    previous: [
-      sheetProps
-        .transform((props): z.input<typeof legacySheet> =>
-          props.label === undefined ? {} : { title: props.label },
-        )
-        .pipe(legacySheet),
-    ],
-    events: { onOpenChange: z.boolean() },
-  }),
-  Popover: part('A popover overlay opened through an Action.', openStateProps, {
+  Sheet: wireParts.Sheet,
+  Popover: part('A popover overlay.', openStateProps, {
     children: true,
     previous: [z.object({})],
-    events: { onOpenChange: z.boolean() },
+    events: { onOpenChange: openChange(openStateProps) },
   }),
   Menu: selectionPartSchemas.Menu,
   Tooltip: part('A short description attached to a control.', tooltipProps, {

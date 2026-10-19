@@ -102,17 +102,23 @@
       "menuLabel": "More deployments",
       "onPress": {
         "$event": "onPress"
-      },
-      "actions": [
-        {
+      }
+    },
+    "children": [
+      {
+        "type": "Action",
+        "key": "preview",
+        "props": {
           "label": "Deploy preview",
+          "icon": "add",
           "onPress": {
             "$event": "onPress"
           }
-        }
-      ]
-    },
-    "children": [],
+        },
+        "children": [],
+        "slots": {}
+      }
+    ],
     "slots": {}
   }
 ]
