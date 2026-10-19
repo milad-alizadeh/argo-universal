@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { View } from 'react-native';
 import {
   agentRows,
   filterAgents,
@@ -10,7 +11,11 @@ import {
   type FieldListSection,
 } from '#lib/product/field-list/field-list';
 import type { AgentListViewProps } from './agent-list-view';
-import type { AgentsFilterProps, AgentsSearchProps } from './agents-toolbar';
+import {
+  AgentsFilterPills,
+  type AgentsFilterProps,
+  type AgentsSearchProps,
+} from './agents-toolbar';
 import { RegistryState } from './catalog-states';
 
 type CatalogProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
@@ -23,6 +28,11 @@ export function AgentCatalog(props: CatalogProps): React.JSX.Element {
       gap="sm"
       testID={agentsCatalogTestId}
       sections={catalogSections(props)}
+      header={
+        <View className="pb-3">
+          <AgentsFilterPills {...props} />
+        </View>
+      }
     />
   );
 }

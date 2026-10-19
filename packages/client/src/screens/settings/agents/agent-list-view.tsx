@@ -1,10 +1,8 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { View } from 'react-native';
 import { type AgentRows, type AgentsFilter } from '#features/agents';
-import { Page, PageColumn, type PageProps } from '#primitives/scaffolds/page';
+import { Page, type PageProps } from '#primitives/scaffolds/page';
 import {
-  AgentsFilterPills,
   type AgentsFilterProps,
   type AgentsSearchProps,
   agentsTitle,
@@ -40,11 +38,6 @@ const initialFilter = (props: AgentListViewProps): AgentsFilter =>
 function AgentsPage(props: ListProps): React.JSX.Element {
   return (
     <Page {...pageProps(props)}>
-      <PageColumn>
-        <View className="pb-3">
-          <AgentsFilterPills {...props} />
-        </View>
-      </PageColumn>
       <AgentCatalog {...props} />
     </Page>
   );
