@@ -58,8 +58,9 @@ const contentClassName =
 function contentPlacement({
   align = 'center',
   sideOffset = 4,
-}: ContentProps): Pick<ContentProps, 'align' | 'sideOffset'> {
-  return { align, sideOffset };
+  alignOffset,
+}: ContentProps): Pick<ContentProps, 'align' | 'sideOffset' | 'alignOffset'> {
+  return { align, sideOffset, alignOffset };
 }
 
 // A ref handed to the content still reaches Radix's element: the close transition waits on it.
