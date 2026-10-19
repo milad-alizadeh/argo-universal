@@ -16,8 +16,9 @@ const updateInterval = 250;
 
 // expo-audio plays the clip on every platform: AVPlayer on iOS, Media3 on Android, an audio element on the web.
 export function Audio(props: AudioProps): React.JSX.Element {
-  const url = useMediaUrl()(props.source);
-  const { player, status } = useClip(url);
+  const mediaUrl = useMediaUrl();
+  const url = (): string | number => mediaUrl(props.source);
+  const { player, status } = useClip(url());
 
   return (
     <AudioTransport
@@ -53,13 +54,13 @@ function phase(status: AudioStatus): AudioPhase {
 const playback = (status: AudioStatus): AudioPhase =>
   status.playing ? 'playing' : 'paused';
 
-// After an error, the play button loads the clip again.
+// After an error, the play button asks for the URL again and loads the clip.
 function toggle(
   player: AudioPlayer,
   status: AudioStatus,
-  url: string | number,
+  url: () => string | number,
 ): void {
-  if (status.error) return player.replace(url);
+  if (status.error) return player.replace(url());
 
   if (status.playing) return player.pause();
 

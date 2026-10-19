@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { expect, fireEvent, fn, waitFor } from 'storybook/test';
-import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
+import { MediaUrlContext, useMediaUrl } from '#primitives/content/media-url';
 import { Audio } from './audio';
 import { AudioTransport } from './audio-transport';
 
@@ -16,7 +17,20 @@ const chime = {
   format: 'mp3',
 } as const;
 
-const missing: MediaUrl = () => 'http://127.0.0.1:9/missing.mp3';
+// Refuses the clip until a test mends it, so a retry proves it loads again.
+let mended = false;
+
+function Flaky(props: { children: React.ReactNode }): React.JSX.Element {
+  const real = useMediaUrl();
+
+  return (
+    <MediaUrlContext.Provider
+      value={(asset) => (mended ? real(asset) : 'data:audio/mpeg;base64,AAAA')}
+    >
+      {props.children}
+    </MediaUrlContext.Provider>
+  );
+}
 
 const loadTimeout = { timeout: 5000 };
 
@@ -110,21 +124,23 @@ export const LoadingWaits: Story = {
   },
 };
 
-export const ErrorKeepsPlayToRetry: Story = {
+export const ErrorRetriesWithPlay: Story = {
+  beforeEach: () => {
+    mended = false;
+  },
   render: () => (
-    <MediaUrlContext.Provider value={missing}>
+    <Flaky>
       <Audio source={chime} accessibilityLabel="Chime" />
-    </MediaUrlContext.Provider>
+    </Flaky>
   ),
   play: async ({ canvas, userEvent }) => {
     await canvas.findByText(unplayable, undefined, loadTimeout);
     await expect(canvas.queryByRole('slider')).not.toBeInTheDocument();
-    const retry = canvas.getByRole('button', playChime);
-
-    await expect(retry).toBeEnabled();
-    await userEvent.click(retry);
+    mended = true;
+    await userEvent.click(canvas.getByRole('button', playChime));
     await expect(
-      await canvas.findByText(unplayable, undefined, loadTimeout),
+      await canvas.findByText('0:00 / 0:06', undefined, loadTimeout),
     ).toBeVisible();
+    await expect(canvas.queryByText(unplayable)).not.toBeInTheDocument();
   },
 };

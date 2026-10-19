@@ -35,11 +35,7 @@ export function VideoFrame(
 }
 
 // The poster with the platform Spinner, until the first frame draws.
-function VideoLoading({
-  poster,
-}: {
-  poster?: MediaAsset;
-}): React.JSX.Element {
+function VideoLoading({ poster }: { poster?: MediaAsset }): React.JSX.Element {
   return (
     <View className="pointer-events-none absolute inset-0 items-center justify-center">
       {poster && <Poster poster={poster} />}
@@ -60,8 +56,10 @@ function Poster({ poster }: { poster: MediaAsset }): React.JSX.Element {
   );
 }
 
-const errorClass =
-  'items-center justify-center border border-border bg-muted web:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
+const focusRing =
+  'web:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
+
+const errorClass = 'items-center justify-center border border-border bg-muted';
 
 // A muted frame with a broken image; pressing it loads the video again.
 type VideoErrorProps = FrameProps &
@@ -72,7 +70,7 @@ export function VideoError(props: VideoErrorProps): React.JSX.Element {
     <Pressable
       {...retryLabels(props.accessibilityLabel)}
       onPress={props.onRetry}
-      className={cn(frameClass(props), errorClass)}
+      className={cn(frameClass(props), errorClass, focusRing)}
     >
       <Icon name="image-broken" role="row" tone="muted" />
     </Pressable>
@@ -94,7 +92,7 @@ export interface VideoOverlaysProps {
   label: string;
 }
 
-// Over the player: the loading poster, and the press that shows a quiet video's controls.
+// Over the player: the loading poster, and the press that shows an autoplaying video's controls.
 export function VideoOverlays(props: VideoOverlaysProps): React.JSX.Element {
   return (
     <>
@@ -106,7 +104,7 @@ export function VideoOverlays(props: VideoOverlaysProps): React.JSX.Element {
   );
 }
 
-// Over a quiet video: pressing it, or Enter or Space on the web, shows the player's controls.
+// Over an autoplaying video: pressing it, or Enter or Space on the web, shows the player's controls.
 function RevealControls(props: {
   label: string;
   onPress: () => void;
@@ -117,7 +115,7 @@ function RevealControls(props: {
       accessibilityLabel={props.label}
       accessibilityHint="Shows the video controls"
       onPress={props.onPress}
-      className="absolute inset-0 web:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50"
+      className={cn('absolute inset-0', focusRing)}
     />
   );
 }

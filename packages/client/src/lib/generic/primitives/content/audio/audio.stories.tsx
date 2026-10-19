@@ -19,8 +19,8 @@ const chime = {
   format: 'mp3',
 } as const;
 
-// Nothing listens on the discard port, so the load fails at once.
-const missing: MediaUrl = () => 'http://127.0.0.1:9/missing.mp3';
+// A source the browser refuses at once, with no network.
+const missing: MediaUrl = () => 'data:audio/mpeg;base64,AAAA';
 
 const ignore = (): void => undefined;
 

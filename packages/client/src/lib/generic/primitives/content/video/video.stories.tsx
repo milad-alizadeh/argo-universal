@@ -18,8 +18,8 @@ const clip = { pluginId: 'hello', hash, format: 'mp4' } as const;
 
 const poster = { pluginId: 'hello', hash, format: 'jpeg' } as const;
 
-// Nothing listens on the discard port, so the load fails at once.
-const missing: MediaUrl = () => 'http://127.0.0.1:9/missing.mp4';
+// A source the browser refuses at once, with no network.
+const missing: MediaUrl = () => 'data:video/mp4;base64,AAAA';
 
 const examples: { label: string; example: React.JSX.Element }[] = [
   {

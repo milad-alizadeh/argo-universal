@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { expect, waitFor } from 'storybook/test';
-import { type MediaUrl, MediaUrlContext } from '#primitives/content/media-url';
+import { MediaUrlContext, useMediaUrl } from '#primitives/content/media-url';
 import { Video } from './video';
 
 const meta = { title: 'Tests/Video' } satisfies Meta;
@@ -13,7 +14,20 @@ const hash = 'a'.repeat(64);
 
 const clip = { pluginId: 'hello', hash, format: 'mp4' } as const;
 
-const missing: MediaUrl = () => 'http://127.0.0.1:9/missing.mp4';
+// Refuses the clip until a test mends it, so a retry proves it loads again.
+let mended = false;
+
+function Flaky(props: { children: React.ReactNode }): React.JSX.Element {
+  const real = useMediaUrl();
+
+  return (
+    <MediaUrlContext.Provider
+      value={(asset) => (mended ? real(asset) : 'data:video/mp4;base64,AAAA')}
+    >
+      {props.children}
+    </MediaUrlContext.Provider>
+  );
+}
 
 const loadTimeout = { timeout: 5000 };
 
@@ -59,17 +73,26 @@ export const AutoPlayIsMutedAndLoopingUntilPressed: Story = {
 };
 
 export const ErrorFrameRetries: Story = {
+  beforeEach: () => {
+    mended = false;
+  },
   render: () => (
-    <MediaUrlContext.Provider value={missing}>
+    <Flaky>
       <Video source={clip} accessibilityLabel="Demo clip" />
-    </MediaUrlContext.Provider>
+    </Flaky>
   ),
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', retryDemo, loadTimeout),
+    const retry = await canvas.findByRole('button', retryDemo, loadTimeout);
+
+    mended = true;
+    await userEvent.click(retry);
+    await waitFor(
+      () => expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument(),
+      loadTimeout,
     );
+    await expect(canvas.getByLabelText('Demo clip', video)).toBeVisible();
     await expect(
-      await canvas.findByRole('button', retryDemo, loadTimeout),
-    ).toBeVisible();
+      canvas.queryByRole('button', retryDemo),
+    ).not.toBeInTheDocument();
   },
 };

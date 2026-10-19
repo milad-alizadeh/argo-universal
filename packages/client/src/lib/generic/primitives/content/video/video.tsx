@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { useMediaUrl } from '#primitives/content/media-url';
 import {
-  useQuietPlay,
+  useMutedAutoPlay,
   useVideoControls,
   type VideoControls,
 } from './video-controls';
@@ -14,11 +14,18 @@ type VideoAttributes = React.VideoHTMLAttributes<HTMLVideoElement>;
 // The browser's own player: its controls take focus, Space plays or pauses and the arrow keys seek.
 export function Video(props: VideoProps): React.JSX.Element {
   const attempt = useAttempt();
+  const autoPlay = useMutedAutoPlay(props.autoPlay);
 
   if (attempt.failed) return <VideoError {...props} onRetry={attempt.retry} />;
 
+  // A fresh element when Reduce Motion changes, since autoplay only applies on load.
   return (
-    <BrowserPlayer key={attempt.count} {...props} onError={attempt.fail} />
+    <BrowserPlayer
+      key={`${attempt.count}:${autoPlay}`}
+      {...props}
+      autoPlay={autoPlay}
+      onError={attempt.fail}
+    />
   );
 }
 
@@ -71,14 +78,14 @@ interface BrowserPlayer {
 
 function useBrowserPlayer(props: BrowserPlayerProps): BrowserPlayer {
   const [loading, setLoading] = useState(true);
-  const quiet = useQuietPlay(props.autoPlay);
-  const controls = useVideoControls(quiet);
+  const autoPlay = props.autoPlay === true;
+  const controls = useVideoControls(autoPlay);
   const source = useSourceAttributes(props);
 
   return {
     attributes: {
       ...source,
-      ...playAttributes(quiet, controls.shown),
+      ...playAttributes(autoPlay, controls.shown),
       onLoadedData: (): void => setLoading(false),
     },
     loading,
@@ -99,12 +106,13 @@ function useSourceAttributes(props: BrowserPlayerProps): VideoAttributes {
 }
 
 const playAttributes = (
-  quiet: boolean,
+  autoPlay: boolean,
   controls: boolean,
 ): VideoAttributes => ({
   controls,
-  autoPlay: quiet,
-  muted: quiet,
-  loop: quiet,
+  autoPlay,
+  muted: autoPlay,
+  loop: autoPlay,
   playsInline: true,
+  preload: 'auto',
 });

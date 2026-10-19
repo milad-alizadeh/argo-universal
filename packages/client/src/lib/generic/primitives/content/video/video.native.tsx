@@ -9,7 +9,7 @@ import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useMediaUrl } from '#primitives/content/media-url';
 import {
-  useQuietPlay,
+  useMutedAutoPlay,
   useVideoControls,
   type VideoControls,
 } from './video-controls';
@@ -19,7 +19,7 @@ import type { VideoProps } from './video-props';
 // expo-video draws the stock player inline: AVPlayerViewController on iOS, Media3 on Android.
 export function Video(props: VideoProps): React.JSX.Element {
   const url = useMediaUrl()(props.source);
-  const player = useVideoPlayer(url, (created) => quietly(created, props));
+  const player = useVideoPlayer(url, (created) => muteAndLoop(created, props));
 
   const { status } = useEvent(player, 'statusChange', {
     status: player.status,
@@ -36,7 +36,7 @@ export function Video(props: VideoProps): React.JSX.Element {
   return <StockPlayer {...props} player={player} />;
 }
 
-function quietly(player: VideoPlayer, props: VideoProps): void {
+function muteAndLoop(player: VideoPlayer, props: VideoProps): void {
   player.muted = props.autoPlay === true;
   player.loop = props.autoPlay === true;
 }
@@ -80,16 +80,16 @@ function useStockPlayer(props: StockPlayerProps): StockPlayer {
   };
 }
 
-// A quiet video plays at once, and pauses if Reduce Motion turns on.
+// An autoplaying video plays at once, and pauses if Reduce Motion turns on.
 function useAutoPlay(player: VideoPlayer, autoPlay?: boolean): boolean {
-  const quiet = useQuietPlay(autoPlay);
+  const playing = useMutedAutoPlay(autoPlay);
 
   useEffect(() => {
-    if (quiet) player.play();
+    if (playing) player.play();
     else if (autoPlay) player.pause();
-  }, [player, autoPlay, quiet]);
+  }, [player, autoPlay, playing]);
 
-  return quiet;
+  return playing;
 }
 
 const viewProps = (
