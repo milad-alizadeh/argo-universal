@@ -8,8 +8,8 @@ const Page = () => {
   return jsxs(Stack, {
     direction: 'column',
     children: [
-      jsx('Page', { onSearchTextChange: setSearch }, 'page'),
-      jsx('List', { onSelectionChange: setSelection }, 'list'),
+      jsx('SearchField', { onChangeText: setSearch }, 'page'),
+      jsx('List.Section', { onSelectionChange: setSelection }, 'list'),
       jsx(Text, { children: JSON.stringify({ search, selection }) }, 'heard'),
     ],
   });

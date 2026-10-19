@@ -1,5 +1,5 @@
 import type {
-  PluginInteraction,
+  PartEvent,
   PluginDispatchInput,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
@@ -13,7 +13,7 @@ const page = { pluginId: 'inputs', path: '/' };
 function event(
   view: ViewMessage | undefined,
   key: string,
-  interaction: PluginInteraction,
+  interaction: PartEvent,
 ): PluginDispatchInput {
   if (!view?.viewId) throw new Error('Expected a view identity');
 
@@ -39,7 +39,7 @@ it(
     await expect.poll(() => first.messages.length, { timeout: 10_000 }).toBe(1);
     await first.client.plugins.dispatch.mutate(
       event(first.messages[0], '0/page', {
-        event: 'onSearchTextChange',
+        event: 'onChangeText',
         payload: 'Argo',
       }),
     );

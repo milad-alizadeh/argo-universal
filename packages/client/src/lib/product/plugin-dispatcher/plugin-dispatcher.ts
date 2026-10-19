@@ -1,14 +1,13 @@
-import { handlerPath } from '@repo/contracts/plugins/action-handler-path';
+import { partEventRules, type PartEvent } from '@repo/contracts/plugins/wire';
 import {
-  partEventRules,
-  type PluginInteraction,
-} from '@repo/contracts/plugins/wire';
-import { checkedEvent, type PluginEvent } from './plugin-event';
-import type { PluginOnEvent } from './plugin-event';
+  checkedPartEvent,
+  type PartEventInput,
+  type PluginOnEvent,
+} from './plugin-event';
 
 type Queued = {
   key: string;
-  interaction: PluginInteraction;
+  event: PartEvent;
   deliver: PluginOnEvent;
   timer?: ReturnType<typeof setTimeout>;
   reply: PromiseWithResolvers<void>;
@@ -23,40 +22,33 @@ export class PluginDispatcher {
     this.deliver = deliver;
   }
 
-  public dispatch(
-    key: string,
-    interaction: PluginInteraction,
-  ): void | Promise<void> {
-    const delivery = this.deliver(key, interaction);
+  public dispatch(key: string, event: PartEvent): void | Promise<void> {
+    const delivery = this.deliver(key, event);
 
     if (delivery) this.track(delivery);
 
     return delivery;
   }
 
-  public send(key: string, event: PluginEvent): void | Promise<void> {
-    const interaction = checkedEvent(event);
-    const rules = partEventRules(event.schema);
+  public send(key: string, input: PartEventInput): void | Promise<void> {
+    const event = checkedPartEvent(input);
+    const rules = partEventRules(input.schema);
 
     if (rules.flush)
-      return this.flushPending().then(() => this.dispatch(key, interaction));
+      return this.flushPending().then(() => this.dispatch(key, event));
 
-    if (!rules.throttleMs) return this.dispatch(key, interaction);
-    const pending = this.pending(key, interaction, rules.throttleMs);
-    pending.interaction = interaction;
+    if (!rules.throttleMs) return this.dispatch(key, event);
+    const pending = this.pending(key, event, rules.throttleMs);
+    pending.event = event;
     pending.deliver = this.deliver;
 
     return pending.reply.promise;
   }
 
-  private pending(
-    key: string,
-    interaction: PluginInteraction,
-    delay: number,
-  ): Queued {
-    const id = JSON.stringify([key, ...handlerPath(interaction)]);
+  private pending(key: string, event: PartEvent, delay: number): Queued {
+    const id = JSON.stringify([key, event.event]);
     const reply = Promise.withResolvers<void>();
-    const queued = { key, interaction, deliver: this.deliver, reply };
+    const queued = { key, event, deliver: this.deliver, reply };
 
     return this.queued.get(id) ?? this.enqueue(id, queued, delay);
   }
@@ -105,7 +97,7 @@ export class PluginDispatcher {
 
 async function deliverQueued(pending: Queued): Promise<void> {
   try {
-    await pending.deliver(pending.key, pending.interaction);
+    await pending.deliver(pending.key, pending.event);
     pending.reply.resolve();
   } catch (error) {
     pending.reply.reject(error);

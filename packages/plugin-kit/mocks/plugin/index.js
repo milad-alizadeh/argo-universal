@@ -6,7 +6,7 @@ function Page({ argo }) {
 
   return (
     <Stack direction="column">
-      {jsx('Page', { onSearchTextChange: setValue }, 'search')}
+      {jsx('SearchField', { onChangeText: setValue }, 'search')}
       <Button label="Run fixture" onPress={runFixture(argo, setValue)} />
       <Text>{value}</Text>
     </Stack>

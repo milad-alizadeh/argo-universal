@@ -57,10 +57,5 @@ async function deliver(
   if (!handler) return;
 
   if (!('$event' in handler)) return runAction(handler);
-  const path = referencePath(handler);
-  await context.ui.send(context.key, { event: name, payload, schema, path });
-}
-
-function referencePath(handler: { $path?: string[] }): string[] | undefined {
-  return handler.$path;
+  await context.ui.send(context.key, { event: name, payload, schema });
 }

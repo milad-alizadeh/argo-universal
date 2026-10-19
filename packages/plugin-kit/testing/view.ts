@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
 import type {
-  PluginInteraction,
+  PartEvent,
   PluginSlotInput,
   SlotMessage,
   ViewMessage,
@@ -25,7 +25,7 @@ export type PluginMount = { surface: PluginSurface } & (
 
 const viewLimitMs = 3000;
 
-type Event = PluginInteraction & { key: string };
+type Event = PartEvent & { key: string };
 
 // Observes production snapshots and patches; events use the same checked dispatch as an App.
 export class PluginTestView {

@@ -1,30 +1,23 @@
-import {
-  actionInteraction,
-  handlerPath,
-} from '@repo/contracts/plugins/action-handler-path';
 import { wirePart } from '@repo/contracts/plugins/kit';
-import type {
-  PluginDispatchInput,
-  PluginInteraction,
-  WireNode,
-} from '@repo/contracts/plugins/wire';
 import {
-  findWireHandler,
-  type WireHandler,
-} from '@repo/contracts/plugins/wire-handler';
+  partEventPayload,
+  WireEvent,
+  type PluginDispatchInput,
+  type WireNode,
+} from '@repo/contracts/plugins/wire';
 import { findWireNode } from '@repo/contracts/plugins/wire-node-key';
 
 const missingHandler = 'Plugin handler is no longer available';
 
+// A Part event names its node by key and its handler prop by event name.
 export function requireViewHandler(
   root: WireNode | null,
   input: PluginDispatchInput,
 ): void {
   const node = requireNode(root, input.key);
-  const path = handlerPath(input);
-  const located = requireHandler(node, path);
-  requireEventName(located.handler.$event, path.at(-1) ?? '');
-  requirePayload(located.node, actionInteraction(input));
+
+  if (!hasHandler(node, input.event)) throw new Error(missingHandler);
+  partEventPayload(wirePart(node.type)?.events[input.event], input.payload);
 }
 
 function requireNode(root: WireNode | null, key: string): WireNode {
@@ -36,28 +29,5 @@ function requireNode(root: WireNode | null, key: string): WireNode {
   return node;
 }
 
-function requireHandler(node: WireNode, path: string[]): WireHandler {
-  const located = findWireHandler(node, path);
-
-  if (!located) throw new Error(missingHandler);
-
-  return located;
-}
-
-function requirePayload(node: WireNode, interaction: PluginInteraction): void {
-  requireValidPayload(validPayload(node, interaction));
-}
-
-function validPayload(node: WireNode, interaction: PluginInteraction): boolean {
-  const schema = wirePart(node.type)?.events[interaction.event];
-
-  return !schema || schema.safeParse(interaction.payload).success;
-}
-
-function requireValidPayload(valid: boolean): void {
-  if (!valid) throw new Error('Invalid Plugin event payload');
-}
-
-function requireEventName(actual: string, expected: string): void {
-  if (actual !== expected) throw new Error(missingHandler);
-}
+const hasHandler = (node: WireNode, event: string): boolean =>
+  WireEvent.safeParse(node.props[event]).data?.$event === event;

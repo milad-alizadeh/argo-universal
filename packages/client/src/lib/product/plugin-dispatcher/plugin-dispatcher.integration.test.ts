@@ -1,4 +1,4 @@
-import type { PluginInteraction } from '@repo/contracts/plugins/wire';
+import type { PartEvent } from '@repo/contracts/plugins/wire';
 import { expect, it, onTestFinished } from 'vitest';
 import { z } from 'zod';
 import { PluginDispatcher } from './plugin-dispatcher';
@@ -6,8 +6,8 @@ import { PluginDispatcher } from './plugin-dispatcher';
 it.each(['onSearchTextChange', 'onChangeText'] as const)(
   'throttles %s and retains the latest typed value with its originating delivery',
   async (event) => {
-    const delivered: PluginInteraction[] = [];
-    const later: PluginInteraction[] = [];
+    const delivered: PartEvent[] = [];
+    const later: PartEvent[] = [];
 
     const events = new PluginDispatcher((_key, interaction) => {
       delivered.push(interaction);

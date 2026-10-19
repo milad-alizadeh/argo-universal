@@ -30,10 +30,9 @@ export const WireNode: z.ZodType<WireNode> = z.lazy(() =>
   }),
 );
 
-// Nested callbacks retain their original prop path when adaptation removes or reorders content.
+// A handler prop on the wire; the App sends it back as a Part event by node key and event name.
 export const WireEvent = z.strictObject({
   $event: z.string().min(1),
-  $path: z.array(z.string()).optional(),
 });
 
 export type WireEvent = z.infer<typeof WireEvent>;
@@ -118,7 +117,8 @@ export {
   PluginViewId,
   PluginDispatchId,
   PluginDispatchInput,
-  PluginInteraction,
+  PartEvent,
+  partEventPayload,
   PluginDispatchResult,
   PluginViewInput,
   PluginEvent,

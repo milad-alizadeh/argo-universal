@@ -1,8 +1,5 @@
 import { currentPartVersions } from '@repo/contracts/plugins/kit';
-import {
-  ViewMessage,
-  type PluginInteraction,
-} from '@repo/contracts/plugins/wire';
+import { ViewMessage, type PartEvent } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { connectPluginApp } from '#mocks/plugin-app';
@@ -12,7 +9,7 @@ const page = { pluginId: 'overlays', path: '/' };
 
 async function overlayApp(): Promise<ReturnType<typeof connectPluginApp>> {
   const home = await createRuntimePlugins([
-    { id: page.pluginId, fixture: 'overlays' },
+    { id: page.pluginId, fixture: 'overlay-actions' },
   ]);
 
   const { url } = await startEngineTestHost({ home });
@@ -28,7 +25,7 @@ type App = Awaited<ReturnType<typeof overlayApp>>;
 
 async function dispatch(
   app: App,
-  event: { key: string } & PluginInteraction,
+  event: { key: string } & PartEvent,
 ): Promise<void> {
   const latest = ViewMessage.parse(app.messages.at(-1));
 
@@ -57,8 +54,14 @@ it(
     await expect
       .poll(() => latestText(app), { timeout: 10_000 })
       .toContain('Confirmed');
-    const close = { event: 'onOpenChange', payload: false } as const;
-    await dispatch(app, { key: '0/sheet', ...close });
+    await expect(
+      dispatch(app, { key: '0/sheet', event: 'onOpenChange', payload: 'no' }),
+    ).rejects.toThrow('Invalid Plugin event payload');
+    await dispatch(app, {
+      key: '0/sheet',
+      event: 'onOpenChange',
+      payload: false,
+    });
     await expect
       .poll(() => latestText(app), { timeout: 10_000 })
       .toContain('Dismissed');

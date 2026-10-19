@@ -50,12 +50,13 @@ type Expansion<Name extends WirePart> = (typeof wireParts)[Name] extends {
   ? z.output<Schema>
   : Record<never, never>;
 
+// Handlers go only in top-level props; a nested handler is a built-in Action.
 type ExpansionValue<Value, Item> = Value extends WireNode
   ? PluginWireNode
   : Value extends KitChoiceValue
     ? string
     : Value extends WireEvent
-      ? Callback<undefined> | Value
+      ? never
       : Value extends KitListItem
         ? Item
         : Value extends KitNode
