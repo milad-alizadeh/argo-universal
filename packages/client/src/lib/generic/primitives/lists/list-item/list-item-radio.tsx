@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../../utils';
+import { useMarkHighlight, type MarkHighlight } from './list-item-highlight';
 import type { DrawingProps } from './list-item-press';
 import { itemPress } from './list-item-styles';
 
@@ -10,7 +11,26 @@ export function RadioPress({
   row: DrawingProps;
   children: ReactNode;
 }): ReactElement {
-  return <button {...radioProps(row)}>{children}</button>;
+  const mark = useMarkHighlight();
+
+  return (
+    <button {...radioProps(row)} {...pointerProps(mark)}>
+      {children}
+    </button>
+  );
+}
+
+// A plain button has no Pressable hover or press, so its pointer events mark the row instead.
+function pointerProps(mark: MarkHighlight): React.ComponentProps<'button'> {
+  return {
+    onPointerEnter: () => mark('hover', true),
+    onPointerLeave: () => {
+      mark('hover', false);
+      mark('press', false);
+    },
+    onPointerDown: () => mark('press', true),
+    onPointerUp: () => mark('press', false),
+  };
 }
 
 function radioProps(
