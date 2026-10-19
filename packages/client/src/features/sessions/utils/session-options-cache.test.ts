@@ -12,7 +12,7 @@ import {
   sessionOptionsKey,
   sessionOptionsQuery,
   writeSessionOptions,
-} from './use-session-options';
+} from './session-options-cache';
 
 const agent = 'agent-one';
 

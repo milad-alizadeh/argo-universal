@@ -9,6 +9,7 @@ export interface OpenedSession {
   session: EmptySession;
   agent: string | undefined;
   projectId: string | undefined;
+  inNewWorktree: boolean;
 }
 
 export const openedSession = ({
@@ -18,6 +19,7 @@ export const openedSession = ({
   session: sessionOpening.session,
   agent: data.choices.agent?.id,
   projectId: data.choices.project?.id,
+  inNewWorktree: data.choices.inNewWorktree,
 });
 
 // The cached options with the reader's choices; the open Session is brought to them, and a New worktree opens with them.

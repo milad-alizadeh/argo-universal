@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { readSessionCheckouts } from '@repo/mocks/git/test-repository';
 import { expect } from '../fixtures';
-import { type LoggedRequest, requests } from './agent-requests';
+import { type LoggedRequest, localRequests } from './agent-requests';
 import { readAgent } from './agents';
 import { When, Then } from './fixtures';
 import {
@@ -16,14 +16,14 @@ const argoBranches = async (projectPath: string): Promise<string[]> =>
   (await readSessionCheckouts(projectPath)).branches;
 
 export const openRequests = (requestLogPath: string): LoggedRequest[] =>
-  requests(requestLogPath, 'session/new');
+  localRequests(requestLogPath, 'session/new');
 
 // The folder a Session opened in; temporary folders are reached through symlinks on macOS.
 const openedIn = ({ params }: LoggedRequest): string | undefined =>
   params?.cwd === undefined ? undefined : realpathSync(params.cwd);
 
 const closeRequests = (requestLogPath: string): number =>
-  requests(requestLogPath, 'session/close').length;
+  localRequests(requestLogPath, 'session/close').length;
 
 // A Local New Session opens its empty Session in the Project folder at once.
 When('the empty Session is open', async ({ page, app }): Promise<void> => {
@@ -78,16 +78,28 @@ Then(
   },
 );
 
-Then('the Agent opened no Session', async ({ app }): Promise<void> => {
-  expect(openRequests(app.requestLogPath)).toEqual([]);
+// Sessions the Agent opened outside the Project folder: only a New worktree's, at Send.
+const worktreeOpens = (app: {
+  requestLogPath: string;
+  projectPath: string;
+}): LoggedRequest[] =>
+  openRequests(app.requestLogPath).filter(
+    (request) => openedIn(request) !== realpathSync(app.projectPath),
+  );
+
+// Reading a never-opened Agent's options may open an ACP session in the Project folder, but it closes it and leaves no Session or worktree.
+Then('no Session or worktree exists yet', async ({ app }): Promise<void> => {
+  await expect
+    .poll(() => closeRequests(app.requestLogPath))
+    .toBe(openRequests(app.requestLogPath).length);
+  expect(worktreeOpens(app)).toEqual([]);
+  expect(await argoBranches(app.projectPath)).toEqual([]);
 });
 
 Then(
   'the Agent opened one Session in a new worktree',
   async ({ app }): Promise<void> => {
-    const [opened, ...others] = openRequests(app.requestLogPath);
-    expect(others).toEqual([]);
-    expect(opened && openedIn(opened)).not.toBe(realpathSync(app.projectPath));
+    expect(worktreeOpens(app)).toHaveLength(1);
     expect(await argoBranches(app.projectPath)).toHaveLength(1);
   },
 );

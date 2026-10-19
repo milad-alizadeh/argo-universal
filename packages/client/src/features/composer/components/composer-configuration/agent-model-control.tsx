@@ -126,10 +126,10 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
   };
 }
 
-// A spinner while the Session opens; wide, the Agent's icon otherwise.
+// A spinner while the options load; wide, the Agent's icon otherwise.
 function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
   if (props.configuration.opening)
-    return <Spinner accessibilityLabel="Opening the Session" />;
+    return <Spinner accessibilityLabel="Loading options" />;
 
   return props.wide ? (
     <AgentIcon agent={props.configuration.agent} />

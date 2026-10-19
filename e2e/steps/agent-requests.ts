@@ -47,6 +47,23 @@ export const requests = (
   method: string,
 ): LoggedRequest[] => requestsIn(loggedMessages(requestLogPath), method);
 
+// Where a scenario's Local Session requests begin, per request log: New Session first reads an uncached Agent's options for its default New worktree (ADR-0023).
+const localStarts = new Map<string, number>();
+
+export const markLocalStart = (requestLogPath: string): void => {
+  localStarts.set(requestLogPath, loggedMessages(requestLogPath).length);
+};
+
+// The requests since the Local checkout was chosen, or all of them when it never was.
+export const localRequests = (
+  requestLogPath: string,
+  method: string,
+): LoggedRequest[] =>
+  requestsIn(
+    loggedMessages(requestLogPath).slice(localStarts.get(requestLogPath) ?? 0),
+    method,
+  );
+
 // Where the Agent received the request.
 export const receivedAt = (
   messages: LoggedMessage[],

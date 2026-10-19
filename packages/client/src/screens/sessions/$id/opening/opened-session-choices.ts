@@ -83,11 +83,12 @@ const useConfiguration = (
 
 // The reader's saved choices and picks over the cached options.
 export function useOptionChoices(opened: OpenedSession): Choices {
-  const { session, agent, projectId } = opened;
-  const saved = useSaved(agent);
-  const [picks, pick] = usePicks(agent);
-  const choice = { agent, projectId, saved, picks, opening: session.opening };
-  const options = useSessionOptions(choice);
+  const { session, ...owner } = opened;
+  const saved = useSaved(owner.agent);
+  const [picks, pick] = usePicks(owner.agent);
+
+  const opening = session.opening;
+  const options = useSessionOptions({ ...owner, saved, picks, opening });
 
   return {
     configuration: useConfiguration(saved, picks, options.configOptions),
