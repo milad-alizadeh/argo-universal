@@ -11,10 +11,11 @@ export function AgentDrill(props: Props): ReactElement {
   return <ListItem {...agentRow(props)} />;
 }
 
+// Paper: the desktop menu's Agent row is text only; the phone sheet keeps the Agent's icon.
 const agentRow = ({ configuration, wide }: Props): ListItemProps => ({
   title: 'Agent',
   value: agentName(configuration.agent, configuration.agentId),
-  leading: (
-    <AgentIcon agent={configuration.agent} role={wide ? 'control' : 'row'} />
+  leading: wide ? undefined : (
+    <AgentIcon agent={configuration.agent} role="row" />
   ),
 });
