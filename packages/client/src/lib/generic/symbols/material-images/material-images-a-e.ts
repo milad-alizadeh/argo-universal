@@ -12,6 +12,7 @@ import Article from '@expo/material-symbols/article.xml';
 import AttachFile from '@expo/material-symbols/attach_file.xml';
 import Block from '@expo/material-symbols/block.xml';
 import Bolt from '@expo/material-symbols/bolt.xml';
+import BrokenImage from '@expo/material-symbols/broken_image.xml';
 import Build from '@expo/material-symbols/build.xml';
 import CalendarToday from '@expo/material-symbols/calendar_today.xml';
 import Cancel from '@expo/material-symbols/cancel.xml';
@@ -56,6 +57,7 @@ export const materialImagesAE = {
   attach_file: AttachFile,
   block: Block,
   bolt: Bolt,
+  broken_image: BrokenImage,
   build: Build,
   calendar_today: CalendarToday,
   cancel: Cancel,

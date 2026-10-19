@@ -1,5 +1,8 @@
 import type * as ActionListKit from '#primitives/actions/action-list';
+import type * as AudioKit from '#primitives/content/audio';
 import type * as KbdKit from '#primitives/content/kbd';
+import type * as MediaUrlKit from '#primitives/content/media-url';
+import type * as VideoKit from '#primitives/content/video';
 import type * as FieldDescriptionKit from '#primitives/fields/field-description';
 import type * as FormKit from '#primitives/fields/form';
 import type * as DatePickerKit from '#primitives/inputs/date-picker';
@@ -51,4 +54,8 @@ export type AdditionalPrimitives = {
   DatePickerProps: DatePickerKit.DatePickerProps;
   DescribedField: FieldDescriptionKit.DescribedField;
   FormProps: FormKit.FormProps;
+  VideoProps: VideoKit.VideoProps;
+  AudioProps: AudioKit.AudioProps;
+  MediaUrl: MediaUrlKit.MediaUrl;
+  MediaAsset: MediaUrlKit.MediaAsset;
 };

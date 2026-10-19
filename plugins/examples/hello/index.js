@@ -15,6 +15,7 @@ import {
 import { HelloDashboard } from './dashboard.js';
 import { HelloForm } from './form.js';
 import { HelloItemPage } from './item-page.js';
+import { helloMedia } from './media.js';
 
 const headingRole = 'heading';
 
@@ -162,5 +163,6 @@ export function register(argo) {
   argo.pages.register('/dashboard', HelloDashboard);
   argo.pages.register('/form', HelloForm);
   argo.pages.register('/item', HelloItemPage);
+  argo.pages.register('/media', helloMedia(argo.assets));
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }

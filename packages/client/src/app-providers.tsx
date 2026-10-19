@@ -4,9 +4,14 @@ import type * as React from 'react';
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from 'react';
 import { ConnectionContext } from '#features/connection';
 import { openConnection } from '#features/connection';
-import { BlobUrlContext, createServerBlobUrl } from '#features/connection';
+import {
+  BlobUrlContext,
+  createServerBlobUrl,
+  createServerMediaUrl,
+} from '#features/connection';
 import { TRPCProvider } from '#features/connection';
 import { sessionOptionsKey } from '#features/sessions';
+import { MediaUrlContext } from '#primitives/content/media-url';
 import { queryPersistOptions } from './lib/product/query-persister';
 
 const persistOptions = queryPersistOptions(sessionOptionsKey);
@@ -85,14 +90,29 @@ function ServerProviders({
   connection,
   children,
 }: ServerProvidersProps): React.JSX.Element {
-  const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
-
   return (
     <ConnectionContext.Provider value={connection.connection}>
-      <BlobUrlContext.Provider value={blobUrl}>
-        {children}
-      </BlobUrlContext.Provider>
+      <ServerUrls serverUrl={serverUrl}>{children}</ServerUrls>
     </ConnectionContext.Provider>
+  );
+}
+
+type ServerUrlsProps = { serverUrl: string; children: ReactNode };
+
+// Images and Plugin media load over HTTP from the Server's own routes.
+function ServerUrls({
+  serverUrl,
+  children,
+}: ServerUrlsProps): React.JSX.Element {
+  const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
+  const mediaUrl = useMemo(() => createServerMediaUrl(serverUrl), [serverUrl]);
+
+  return (
+    <BlobUrlContext.Provider value={blobUrl}>
+      <MediaUrlContext.Provider value={mediaUrl}>
+        {children}
+      </MediaUrlContext.Provider>
+    </BlobUrlContext.Provider>
   );
 }
 

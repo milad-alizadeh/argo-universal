@@ -31,6 +31,18 @@ The call rejects upstream errors, unsupported media types, and compressed respon
 Each asset can contain at most 64 MiB. Remote requests use the same 30-second deadline as `argo.fetch`.
 A Plugin reload, crash, or disable action aborts its remote requests.
 
+## Play a video or a sound
+
+`Video` and `Audio` take a resolved reference as their `source`; a URL or a Plugin path is refused on the wire.
+
+```jsx
+const clip = await argo.assets.resolve({ asset: 'assets/clip.mp4' });
+
+<Video source={clip} accessibilityLabel="Release demo" />;
+```
+
+The Hello example's `/media` page resolves a clip, a poster and a sound this way.
+
 ## Load a reference in an App
 
 `pluginAssetPath(reference)`, from `@repo/contracts/plugins/assets`, returns the Server route:

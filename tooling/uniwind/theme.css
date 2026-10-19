@@ -1,5 +1,6 @@
 @theme static {
-  /* A modal backdrop in both themes; the overlay sets its opacity. */
+  /* A modal backdrop in both themes, the overlay setting its opacity; and the
+     letterbox behind a video. */
   --color-scrim: var(--color-black);
   /* The centred content column: Feed, Composer and request cards. */
   --container-column: 800px;

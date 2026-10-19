@@ -2,6 +2,7 @@ import { fileSymbols } from './file-symbols';
 import { formatSymbols } from './format-symbols';
 import { gitSymbols } from './git-symbols';
 import { listViewSymbols } from './list-view-symbols';
+import { mediaSymbols } from './media-symbols';
 import { statusSymbols } from './status-symbols';
 import { timeSymbols } from './time-symbols';
 
@@ -10,6 +11,7 @@ export const iconSymbols = {
   ...formatSymbols,
   ...gitSymbols,
   ...listViewSymbols,
+  ...mediaSymbols,
   ...statusSymbols,
   ...timeSymbols,
   activity: { sf: 'waveform.path.ecg', material: 'monitor_heart' },
@@ -30,7 +32,6 @@ export const iconSymbols = {
   },
   attach: { sf: 'paperclip', material: 'attach_file' },
   'question-bubble': { sf: 'questionmark.bubble', material: 'help' },
-  camera: { sf: 'camera', material: 'photo_camera' },
   check: { sf: 'checkmark', material: 'check' },
   checklist: { sf: 'checklist', material: 'checklist' },
   'chevron-down': { sf: 'chevron.down', material: 'expand_more' },
@@ -95,11 +96,8 @@ export const iconSymbols = {
   'new-session': { sf: 'square.and.pencil', material: 'edit_square' },
   notifications: { sf: 'bell', material: 'notifications' },
   pair: { sf: 'qrcode', material: 'qr_code' },
-  pause: { sf: 'pause.fill', material: 'pause' },
   phone: { sf: 'iphone', material: 'smartphone' },
-  photos: { sf: 'photo.on.rectangle', material: 'photo_library' },
   'plan-mode': { sf: 'map', material: 'map' },
-  play: { sf: 'play.fill', material: 'play_arrow' },
   plug: { sf: 'powerplug', material: 'power' },
   private: { sf: 'lock', material: 'lock' },
   read: { sf: 'book', material: 'menu_book' },

@@ -30,7 +30,10 @@ export default defineProject({
     browser: {
       enabled: true,
       headless: true,
-      provider: playwright({}),
+      // Audio and Video stories press play from synthetic events, which Chromium's autoplay policy refuses.
+      provider: playwright({
+        launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
+      }),
       instances: [{ browser: 'chromium' }],
     },
   },

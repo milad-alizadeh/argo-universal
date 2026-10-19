@@ -1,0 +1,53 @@
+{
+  "type": "Stack",
+  "key": "media",
+  "props": {
+    "direction": "column"
+  },
+  "children": [
+    {
+      "type": "Video",
+      "key": "clip",
+      "props": {
+        "source": {
+          "pluginId": "hello",
+          "hash": "1111111111111111111111111111111111111111111111111111111111111111",
+          "format": "mp4"
+        },
+        "poster": {
+          "pluginId": "hello",
+          "hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "format": "jpeg"
+        },
+        "accessibilityLabel": "Demo clip"
+      },
+      "children": [],
+      "slots": {}
+    },
+    {
+      "type": "Audio",
+      "key": "chime",
+      "props": {
+        "source": {
+          "pluginId": "hello",
+          "hash": "3333333333333333333333333333333333333333333333333333333333333333",
+          "format": "mp3"
+        },
+        "accessibilityLabel": "Chime"
+      },
+      "children": [],
+      "slots": {}
+    },
+    {
+      "type": "Video",
+      "key": "remote",
+      "props": {
+        "source": "https://example.com/clip.mp4",
+        "accessibilityLabel": "Unresolved clip"
+      },
+      "children": [],
+      "slots": {}
+    }
+  ],
+  "slots": {}
+}

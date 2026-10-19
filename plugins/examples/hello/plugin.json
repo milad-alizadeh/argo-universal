@@ -36,6 +36,11 @@
         "id": "hello-item",
         "title": "Hello item",
         "path": "/item"
+      },
+      {
+        "id": "hello-media",
+        "title": "Hello media",
+        "path": "/media"
       }
     ],
     "settings": [

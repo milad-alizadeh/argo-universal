@@ -12,6 +12,7 @@ export { openConnection } from './api/open-connection';
 export {
   BlobUrlContext,
   createServerBlobUrl,
+  createServerMediaUrl,
   useBlobUrl,
 } from './api/trpc/blob-url';
 
