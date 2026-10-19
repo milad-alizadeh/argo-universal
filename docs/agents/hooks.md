@@ -16,9 +16,9 @@ Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/set
 `pnpm verify` (`tools/verify.mts`) checks the change since the merge base with `origin/main`, uncommitted files included:
 
 - oxfmt `--check` and type-aware oxlint on the changed files, and `turbo run check-types --affected` when TypeScript changed.
-- The test files that import a changed file, found by `vitest list --changed`. Past 40 of them (a primitive's edit reaches about 280 of 328 story files; a `package.json` or Vitest config edit reaches every test), it runs only those in the touched folders and below, and says how many it left to CI.
+- The test files that import a changed file, found by `vitest list --changed`. Past `DEPENDENT_LIMIT` in `tools/verify-scope.mts` (a primitive's edit reaches most story files; a `package.json` or Vitest config edit reaches every test), it runs only those in the touched folders and below, and says how many it left to CI.
 
-CI runs the full suites on every PR; run `pnpm quality` locally only when the owner asks.
+Run `pnpm quality` locally only when the owner asks.
 
 ## Trust
 

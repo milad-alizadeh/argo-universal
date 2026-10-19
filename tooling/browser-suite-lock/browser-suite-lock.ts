@@ -21,9 +21,9 @@ const Taken = z.object({ code: z.literal('EEXIST') });
 
 type Report = (holder: BrowserSuiteHolder) => void;
 
-interface LockOptions {
-  directory?: string;
-  pollMs?: number;
+interface LockSettings {
+  directory: string;
+  pollMs: number;
   onWait?: Report;
 }
 
@@ -72,8 +72,7 @@ function onlyOnce(onWait: Report | undefined): Report {
 }
 
 async function waitTurn(
-  directory: string,
-  pollMs: number,
+  { directory, pollMs }: LockSettings,
   report: Report,
 ): Promise<void> {
   const holder = readHolder(directory);
@@ -88,24 +87,26 @@ async function waitTurn(
   await delay(pollMs);
 }
 
-async function takeTurn(
-  directory: string,
-  pollMs: number,
-  onWait: Report | undefined,
-): Promise<void> {
-  const report = onlyOnce(onWait);
+async function takeTurn(settings: LockSettings): Promise<void> {
+  const report = onlyOnce(settings.onWait);
 
-  while (!tryTake(directory)) await waitTurn(directory, pollMs, report);
+  while (!tryTake(settings.directory)) await waitTurn(settings, report);
 }
 
-function newTurn(
-  directory: string,
-  pollMs: number,
-  onWait: Report | undefined,
-): Turn {
-  const turn = { taken: takeTurn(directory, pollMs, onWait), holds: 0 };
+// A turn that failed, such as on a folder it may not write, is dropped so the next call tries afresh.
+async function takeOrForget(settings: LockSettings): Promise<void> {
+  try {
+    await takeTurn(settings);
+  } catch (error) {
+    turns.delete(settings.directory);
+    throw error;
+  }
+}
 
-  turns.set(directory, turn);
+function newTurn(settings: LockSettings): Turn {
+  const turn = { taken: takeOrForget(settings), holds: 0 };
+
+  turns.set(settings.directory, turn);
 
   return turn;
 }
@@ -130,15 +131,11 @@ function releaser(directory: string, turn: Turn): () => void {
 
 // Waits until no other browser suite on this Mac runs, then holds the lock until the returned release or process exit.
 export async function acquireBrowserSuiteLock(
-  options: LockOptions = {},
+  options: Partial<LockSettings> = {},
 ): Promise<() => void> {
-  const { directory, pollMs, onWait } = {
-    directory: SHARED_DIRECTORY,
-    pollMs: POLL_MS,
-    ...options,
-  };
-
-  const turn = turns.get(directory) ?? newTurn(directory, pollMs, onWait);
+  const settings = { directory: SHARED_DIRECTORY, pollMs: POLL_MS, ...options };
+  const { directory } = settings;
+  const turn = turns.get(directory) ?? newTurn(settings);
 
   turn.holds += 1;
   await turn.taken;

@@ -3,16 +3,13 @@ import path from 'node:path';
 import { z } from 'zod';
 import {
   block,
-  checkTypes,
+  changedFiles,
+  checkChanged,
   format,
-  FORMATTED_FILE,
   lint,
   LINTED_FILE,
   parseJson,
-  type Result,
   root,
-  run,
-  TYPESCRIPT_FILE,
 } from './hook-checks.mts';
 
 const PATCH_FILE_LINE = /^\*\*\* (?:Add File|Update File|Move to): (.+)$/;
@@ -86,36 +83,8 @@ function afterEdit(input: HookInput): number {
   return block([lint({ files, typeAware: false, skipped: UNUSED_RULES })]);
 }
 
-function changedFiles(): string[] {
-  const tracked = run('git', ['diff', '--name-only', 'HEAD']).output;
-  const untracked = run('git', ['ls-files', '--others', '--exclude-standard']);
-
-  const names = `${tracked}\n${untracked.output}`
-    .split('\n')
-    .filter((name): boolean => FORMATTED_FILE.test(name));
-
-  return [...new Set(names)].filter((name): boolean =>
-    existsSync(path.join(root, name)),
-  );
-}
-
-function checkChanged(files: string[]): Result[] {
-  const linted = files.filter((name): boolean => LINTED_FILE.test(name));
-
-  const lintRun = {
-    files: linted,
-    typeAware: true,
-    skipped: new Set<string>(),
-  };
-
-  const lints = linted.length > 0 ? [lint(lintRun)] : [];
-  const typed = files.some((name): boolean => TYPESCRIPT_FILE.test(name));
-
-  return typed ? [...lints, checkTypes()] : lints;
-}
-
 function beforeStop(input: HookInput): number {
-  const files = input.stop_hook_active === true ? [] : changedFiles();
+  const files = input.stop_hook_active === true ? [] : changedFiles('HEAD');
 
   if (files.length === 0) return 0;
   format(files);

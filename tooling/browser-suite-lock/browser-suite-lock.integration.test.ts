@@ -21,10 +21,12 @@ const POLL_MS = 10;
 const lockModule = new URL('browser-suite-lock.ts', import.meta.url).href;
 
 // Another suite, loaded through tsx as the lock's modules import each other without extensions: holds the lock, says so on stdout, and releases when its stdin closes.
-const holdInAnotherProcess = (
-  directory: string,
-): ChildProcessByStdio<Writable, Readable, null> =>
-  spawn(
+type OtherSuite = ChildProcessByStdio<Writable, Readable, null>;
+
+const others: OtherSuite[] = [];
+
+const holdInAnotherProcess = (directory: string): OtherSuite => {
+  const other = spawn(
     process.execPath,
     [
       '--import',
@@ -39,6 +41,11 @@ const holdInAnotherProcess = (
     { stdio: ['pipe', 'pipe', 'inherit'] },
   );
 
+  others.push(other);
+
+  return other;
+};
+
 let scratch: string;
 
 let directory: string;
@@ -48,7 +55,13 @@ beforeEach((): void => {
   directory = path.join(scratch, 'lock');
 });
 
-afterEach((): void => {
+afterEach(async (): Promise<void> => {
+  const running = others
+    .splice(0)
+    .filter((other): boolean => other.exitCode === null);
+
+  for (const other of running) other.kill();
+  await Promise.all(running.map((other) => once(other, 'exit')));
   rmSync(scratch, { recursive: true, force: true });
 });
 

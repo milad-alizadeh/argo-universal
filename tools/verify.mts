@@ -1,20 +1,17 @@
 // `pnpm verify`: an agent's checks before it hands back, sized to its change; CI runs the full suites (docs/agents/hooks.md).
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { z } from 'zod';
 import {
+  changedFiles,
+  checkChanged,
   checkFormat,
-  checkTypes,
-  FORMATTED_FILE,
-  lint,
-  LINTED_FILE,
   parseJson,
   type Result,
   root,
   run,
-  TYPESCRIPT_FILE,
 } from './hook-checks.mts';
 import {
   chooseTests,
@@ -41,46 +38,16 @@ function mergeBase(): string {
   return 'HEAD';
 }
 
-function changedSince(base: string): string[] {
-  const tracked = run('git', ['diff', '--name-only', base]).output;
-  const untracked = run('git', ['ls-files', '--others', '--exclude-standard']);
-
-  const names = `${tracked}\n${untracked.output}`
-    .split('\n')
-    .filter((name): boolean => name !== '');
-
-  return [...new Set(names)].filter((name): boolean =>
-    existsSync(path.join(root, name)),
-  );
-}
-
 function staticChecks(changed: string[]): Result[] {
-  const formatted = changed.filter((name): boolean =>
-    FORMATTED_FILE.test(name),
-  );
-
-  const linted = changed.filter((name): boolean => LINTED_FILE.test(name));
-  const typed = changed.some((name): boolean => TYPESCRIPT_FILE.test(name));
-
-  const lintRun = {
-    files: linted,
-    typeAware: true,
-    skipped: new Set<string>(),
-  };
-
-  const checks: [boolean, () => Result][] = [
-    [formatted.length > 0, (): Result => checkFormat(formatted)],
-    [linted.length > 0, (): Result => lint(lintRun)],
-    [typed, checkTypes],
-  ];
-
-  return checks.flatMap(([applies, check]): Result[] =>
-    applies ? [check()] : [],
-  );
+  return [checkFormat(changed), ...checkChanged(changed)];
 }
+
+type Listing =
+  | { listed: true; tests: ListedTest[] }
+  | { listed: false; failure: Result };
 
 // Vitest's module graph names every test that imports a changed file, without starting a browser.
-function dependentTests(base: string): ListedTest[] | Result {
+function dependentTests(base: string): Listing {
   const scratch = mkdtempSync(path.join(tmpdir(), 'verify-'));
   const report = path.join(scratch, 'tests.json');
 
@@ -88,12 +55,15 @@ function dependentTests(base: string): ListedTest[] | Result {
     const args = ['list', '--filesOnly', '--changed', base, `--json=${report}`];
     const listing = run(vitest, args);
 
-    if (listing.status !== 0) return listing;
+    if (listing.status !== 0) return { listed: false, failure: listing };
     const parsed = parseJson(listedTests, readFileSync(report, 'utf8'));
 
-    return parsed.success
-      ? parsed.data
-      : { status: 1, output: 'vitest list wrote an unreadable report' };
+    if (parsed.success) return { listed: true, tests: parsed.data };
+
+    return {
+      listed: false,
+      failure: { status: 1, output: 'vitest list wrote an unreadable report' },
+    };
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
@@ -127,17 +97,20 @@ function reportFailure({ status, output }: Result): number {
 }
 
 function runTests(base: string, changed: string[]): number {
-  const listed = dependentTests(base);
+  const listing = dependentTests(base);
   const absolute = changed.map((name): string => path.join(root, name));
 
-  return Array.isArray(listed)
-    ? runScope(chooseTests({ listed, changed: absolute, root }))
-    : reportFailure(listed);
+  return listing.listed
+    ? runScope(chooseTests({ listed: listing.tests, changed: absolute, root }))
+    : reportFailure(listing.failure);
 }
 
 const base = mergeBase();
 
-const changed = changedSince(base);
+// Turbo's --affected compares with local main; this keeps the type checks on the same base as the tests.
+process.env.TURBO_SCM_BASE = base;
+
+const changed = changedFiles(base);
 
 if (changed.length === 0) {
   say('nothing changed since main.');

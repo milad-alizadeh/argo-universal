@@ -1,5 +1,6 @@
-// The checks tools/agent-hook-run.mts runs; read docs/agents/hooks.md before changing them.
+// The checks tools/agent-hook-run.mts and tools/verify.mts run; read docs/agents/hooks.md before changing them.
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
@@ -123,6 +124,36 @@ export function checkTypes(): Result {
   ];
 
   return run(binary('turbo'), args);
+}
+
+// Changed and untracked files since `base` that the checks read and that still exist.
+export function changedFiles(base: string): string[] {
+  const tracked = run('git', ['diff', '--name-only', base]).output;
+  const untracked = run('git', ['ls-files', '--others', '--exclude-standard']);
+
+  const names = `${tracked}\n${untracked.output}`
+    .split('\n')
+    .filter((name): boolean => FORMATTED_FILE.test(name));
+
+  return [...new Set(names)].filter((name): boolean =>
+    existsSync(path.join(root, name)),
+  );
+}
+
+// Type-aware lint on the changed files, and the affected type checks when TypeScript changed.
+export function checkChanged(files: string[]): Result[] {
+  const linted = files.filter((name): boolean => LINTED_FILE.test(name));
+
+  const lintRun = {
+    files: linted,
+    typeAware: true,
+    skipped: new Set<string>(),
+  };
+
+  const lints = linted.length > 0 ? [lint(lintRun)] : [];
+  const typed = files.some((name): boolean => TYPESCRIPT_FILE.test(name));
+
+  return typed ? [...lints, checkTypes()] : lints;
 }
 
 // Prints the first lines of every failed check and returns the exit code that blocks the agent.
