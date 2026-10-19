@@ -117,7 +117,7 @@ export const answerCall = <Name extends Api>(
   );
 
 // The log names the call and where it points, never a secret value or a file's content.
-export const describeCall = <Name extends Api>(
+const describeCall = <Name extends Api>(
   request: RequestOf<Name> & { api: Name },
 ): string => calls[request.api].describe(request);
 

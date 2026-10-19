@@ -32,7 +32,7 @@ export function applyStatus(result: PluginList, runtime: PluginRuntime): void {
 }
 
 // Each admitted Plugin with its folder and whether it's turned on.
-export async function locatePlugins(
+async function locatePlugins(
   deps: PluginServiceDeps,
 ): Promise<LocatedPlugin[]> {
   const locations = new Map<string, string>();
