@@ -8,7 +8,7 @@ import {
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
 import { PluginService, type PluginServiceDeps } from './service';
-import { createPluginViewRouter, requireSignal } from './view-router';
+import { createPluginViewRouter, requireSignal } from './views/router';
 
 const createLifecycleRouter = routerFactory((plugins: PluginService) =>
   router({

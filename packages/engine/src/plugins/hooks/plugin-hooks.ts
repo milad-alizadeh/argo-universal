@@ -5,12 +5,12 @@ import type {
   JsonObject,
 } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
-import { replyError } from '../plugin-calls';
 import {
   runtimeError,
   type PluginReply,
   type PluginValue,
-} from '../runtime-protocol';
+} from '../protocol/runtime-protocol';
+import { replyError } from '../services/plugin-calls';
 import { HookChain, type HookCaller, type HookChainInput } from './hook-chain';
 import {
   HookRegistry,

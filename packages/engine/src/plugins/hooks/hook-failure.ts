@@ -1,5 +1,5 @@
 import { ReplaceableInput } from '@repo/contracts/plugins/replaceable';
-import { renderFallbackLine } from '../render-fallback';
+import { renderFallbackLine } from '../runtime/render-fallback';
 import type { RunningHook } from './running-hook';
 
 export function failureLine(

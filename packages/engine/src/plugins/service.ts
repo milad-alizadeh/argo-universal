@@ -21,8 +21,7 @@ import {
   type ViewMessage,
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
-import { callerOf } from './hooks/hook-rules';
-import { discoverPlugins } from './loader';
+import { discoverPlugins } from './discovery/loader';
 import {
   applyEnabled,
   applyStatus,
@@ -32,13 +31,18 @@ import {
   requireSettings,
   type LocatedPlugin,
   type PluginServiceDeps,
-} from './located-plugins';
-import { startPlugin, startPlugins } from './plugin-activation';
-import { fillsSlot, hooksEvent, rendersSlot } from './plugin-contributions';
-import { renderSlot } from './render-slot';
-import { slotViews } from './slot-views';
+} from './discovery/located-plugins';
+import { startPlugin, startPlugins } from './discovery/plugin-activation';
+import {
+  fillsSlot,
+  hooksEvent,
+  rendersSlot,
+} from './discovery/plugin-contributions';
+import { callerOf } from './hooks/hook-rules';
+import { renderSlot } from './views/render-slot';
+import { slotViews } from './views/slot-views';
 
-export type { PluginServiceDeps } from './located-plugins';
+export type { PluginServiceDeps } from './discovery/located-plugins';
 
 export class PluginService {
   constructor(private readonly deps: PluginServiceDeps) {}
