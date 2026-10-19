@@ -13,7 +13,12 @@
     "./registry/*": "./registry/*.ts",
     "./plugins/controls.json": "./plugins/controls.json",
     "./plugins/overlays.json": "./plugins/overlays.json",
-    "./plugins/page.json": "./plugins/page.json"
+    "./plugins/page.json": "./plugins/page.json",
+    "./media/*": {
+      "types": "./media/*.d.ts",
+      "default": "./media/*"
+    },
+    "./plugins/media.json": "./plugins/media.json"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

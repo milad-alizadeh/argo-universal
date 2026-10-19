@@ -1,7 +1,9 @@
 // Material Symbols P–Z as @expo/material-symbols' outlined Android XML drawings, by Material name.
 
+import Pause from '@expo/material-symbols/pause.xml';
 import PhotoCamera from '@expo/material-symbols/photo_camera.xml';
 import PhotoLibrary from '@expo/material-symbols/photo_library.xml';
+import PlayArrow from '@expo/material-symbols/play_arrow.xml';
 import Power from '@expo/material-symbols/power.xml';
 import QrCode from '@expo/material-symbols/qr_code.xml';
 import QrCodeScanner from '@expo/material-symbols/qr_code_scanner.xml';
@@ -47,8 +49,10 @@ import ZoomIn from '@expo/material-symbols/zoom_in.xml';
 import ZoomOut from '@expo/material-symbols/zoom_out.xml';
 
 export const materialImagesPZ = {
+  pause: Pause,
   photo_camera: PhotoCamera,
   photo_library: PhotoLibrary,
+  play_arrow: PlayArrow,
   power: Power,
   qr_code: QrCode,
   qr_code_scanner: QrCodeScanner,

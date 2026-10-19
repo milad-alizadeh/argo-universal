@@ -6,12 +6,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Uniwind } from 'uniwind';
+import { MediaUrlContext } from '#primitives/content/media-url';
 import { PortalProvider } from '#primitives/overlays/portal';
 import { dismissToasts, Toaster } from '#primitives/overlays/toast';
 import { PageNavigationEnabled } from '#primitives/scaffolds/page';
 import { BlobUrlContext } from './features/connection/api/trpc/blob-url';
 import { cn } from './lib/generic/utils';
 import { recordedImageUrl } from './lib/product/feed-message.mocks';
+import { storyMediaUrl } from './lib/product/media-url.mocks';
 
 interface PreviewContext {
   id: string;
@@ -69,7 +71,9 @@ function PreviewProviders({ children }: PropsWithChildren): React.JSX.Element {
       <SafeAreaProvider initialMetrics={initialMetrics}>
         <KeyboardProvider>
           <BlobUrlContext.Provider value={recordedImageUrl}>
-            {children}
+            <MediaUrlContext.Provider value={storyMediaUrl}>
+              {children}
+            </MediaUrlContext.Provider>
           </BlobUrlContext.Provider>
         </KeyboardProvider>
       </SafeAreaProvider>

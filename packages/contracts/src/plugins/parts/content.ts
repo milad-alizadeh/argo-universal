@@ -65,30 +65,8 @@ export const contentPartSchemas = {
         'Use `sources.light` and `sources.dark` for appearance-specific assets. The App requests images only through the Server asset route or image proxy; it never fetches a Plugin host directly.',
     },
   ),
-  Video: part(
-    'A stock video player whose source is served through the Server.',
-    z.object({
-      source: imageSource.describe(
-        'Video URL or Plugin asset routed through the Server.',
-      ),
-      accessibilityLabel: stringLabel,
-      controls: z
-        .boolean()
-        .optional()
-        .describe('Show native playback controls.'),
-    }),
-    { label: 'The required `accessibilityLabel` names the video.' },
-  ),
-  Audio: part(
-    'Audio with an Argo transport row, scrubber, and elapsed time.',
-    z.object({
-      source: imageSource.describe(
-        'Audio URL or Plugin asset routed through the Server.',
-      ),
-      accessibilityLabel: stringLabel,
-    }),
-    { label: 'The required `accessibilityLabel` names the audio.' },
-  ),
+  Video: wireParts.Video,
+  Audio: wireParts.Audio,
   Label: wireParts.Label,
   Kbd: part(
     'A keyboard shortcut key or chord for desktop and web.',

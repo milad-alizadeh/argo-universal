@@ -5,6 +5,7 @@ import {
   useState,
   type RefObject,
 } from 'react';
+import { useReducedMotionNow } from '#lib/generic/use-reduced-motion-now';
 import {
   drawnHeight,
   durationFor,
@@ -12,7 +13,6 @@ import {
   elapsedFraction,
   type CollapsibleLayoutSync,
 } from './collapsible-context';
-import { useReducedMotionNow } from './use-reduced-motion-now';
 
 interface MotionOptions {
   open: boolean;

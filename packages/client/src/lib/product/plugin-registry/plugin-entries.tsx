@@ -4,8 +4,10 @@ import { ActionList, Action } from '#primitives/actions/action-list';
 import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
 import { SplitButton } from '#primitives/actions/split-button';
+import { Audio } from '#primitives/content/audio';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
+import { Video } from '#primitives/content/video';
 import { Form } from '#primitives/fields/form';
 import { Checkbox } from '#primitives/inputs/checkbox';
 import { DatePicker } from '#primitives/inputs/date-picker';
@@ -81,6 +83,8 @@ export const pluginEntries = {
   Surface,
   ScrollView,
   Svg,
+  Video,
+  Audio,
   Alert,
   Sheet,
 } satisfies {

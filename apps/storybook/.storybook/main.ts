@@ -35,6 +35,7 @@ const PREBUNDLED_DEPENDENCIES = [
   '@repo/client > expo-document-picker',
   '@repo/client > expo-image-picker',
   '@repo/client > expo-symbols',
+  '@repo/client > expo-audio',
   '@repo/client > expo-symbols/androidWeights/extraLight',
   'storybook/actions',
 ];
