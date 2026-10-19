@@ -85,7 +85,7 @@ const placements = {
   field: {
     side: 'bottom',
     sideOffset: fieldOffset,
-    className: 'w-80 overflow-hidden p-0',
+    list: true,
   },
 } as const satisfies Record<string, PopoverContentProps>;
 
