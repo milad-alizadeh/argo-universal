@@ -1,0 +1,71 @@
+import { useLayoutEffect, useRef, useSyncExternalStore } from 'react';
+import { listenerSet } from './listener-set';
+
+/*
+ * A place in the App that a part elsewhere in the tree fills, such as the Frame's sidebar or its Inspector column:
+ * the newest claim shows, and a claim gives the place back only while it still holds it.
+ */
+export interface ClaimStore<Value> {
+  // Holds the place, showing `empty` until the claim shows its own value.
+  claim: () => Claim<Value>;
+  subscribe: (listener: () => void) => () => void;
+  // The holding claim's value; undefined while nothing holds the place.
+  current: () => Value | undefined;
+}
+
+export interface Claim<Value> {
+  // Shows the value as it is now, while this claim holds the place.
+  show: (value: Value) => void;
+  release: () => void;
+}
+
+interface Held<Value> {
+  value: Value;
+}
+
+export function createClaimStore<Value>(empty: Value): ClaimStore<Value> {
+  const listeners = listenerSet();
+  let held: Held<Value> | undefined;
+
+  const claim = (): Claim<Value> => {
+    const own: Held<Value> = { value: empty };
+    held = own;
+    listeners.notify();
+
+    return {
+      show: (value) => {
+        own.value = value;
+
+        if (held === own) listeners.notify();
+      },
+      release: () => {
+        if (held !== own) return;
+
+        held = undefined;
+        listeners.notify();
+      },
+    };
+  };
+
+  return { claim, subscribe: listeners.subscribe, current: () => held?.value };
+}
+
+// Holds the place while mounted, and shows the value as each render has it.
+export function useClaim<Value>(store: ClaimStore<Value>, value: Value): void {
+  const claim = useRef<Claim<Value>>(null);
+
+  useLayoutEffect(() => {
+    const held = store.claim();
+    claim.current = held;
+
+    return held.release;
+  }, [store]);
+
+  // Runs after the claim above, in the same commit.
+  useLayoutEffect(() => claim.current?.show(value), [store, value]);
+}
+
+// The holding claim's value, for the place to draw.
+export function useClaimed<Value>(store: ClaimStore<Value>): Value | undefined {
+  return useSyncExternalStore(store.subscribe, store.current);
+}
