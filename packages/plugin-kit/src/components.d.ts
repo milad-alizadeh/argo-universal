@@ -9,6 +9,8 @@ export const Surface: PluginComponents['Surface'];
 
 export const ScrollView: PluginComponents['ScrollView'];
 
+export const Page: PluginComponents['Page'];
+
 export const List: PluginComponents['List'] & {
   Section: PluginComponents['List.Section'];
 };

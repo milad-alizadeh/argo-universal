@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
 import { pressHandler } from './kit-event-props';
+import { rowBadgeProps } from './status-kit-props';
 
 export const shortcutProps = z.object({
   modifiers: z
@@ -42,6 +43,20 @@ export const actionProps = actionPropsV1.extend({
       'An Alert answer that dismisses the question, or one that destroys data.',
     ),
 });
+
+// An Action that opens a menu of its own: its keyed ActionList.Section children hold the entries, and a full header folds it into the overflow menu as a nested menu.
+export const submenuActionProps = z.object({
+  label: actionPropsV1.shape.label,
+  icon: iconName.describe(
+    'The leading Argo icon; a header ActionList shows only Actions with one as buttons, and a submenu needs one.',
+  ),
+  badge: rowBadgeProps
+    .optional()
+    .describe('A count or status dot on the icon.'),
+});
+
+// An Action runs on press or opens a submenu; only a press Action has `onPress`.
+export const actionEntryProps = z.union([actionProps, submenuActionProps]);
 
 export const actionListProps = z.object({
   variant: z

@@ -1,5 +1,6 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import fixtures from '@repo/mocks/plugins/controls.json' with { type: 'json' };
+import page from '@repo/mocks/plugins/page.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
@@ -27,8 +28,14 @@ function textRoot(): WireNode {
   return root;
 }
 
-function PatchedDraft(): React.JSX.Element {
-  const [root, setRoot] = useState(textRoot);
+interface Draft {
+  root: WireNode;
+  label: string;
+  key: string;
+}
+
+function PatchedDraft({ draft }: { draft: Draft }): React.JSX.Element {
+  const [root, setRoot] = useState(draft.root);
 
   return (
     <PluginTree
@@ -44,23 +51,55 @@ function PatchedDraft(): React.JSX.Element {
   );
 }
 
+type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
+// The focused field keeps the user's draft when the Plugin's patch replaces its value.
+async function editFocusedDraft(
+  { canvas, userEvent }: PlayContext,
+  draft: Draft,
+): Promise<HTMLElement> {
+  const field = canvas.getByRole('textbox', { name: draft.label });
+  await userEvent.clear(field);
+  await userEvent.type(field, localEdit);
+  await waitFor(() =>
+    expect(onEvent).toHaveBeenCalledWith(draft.key, {
+      event: 'onChangeText',
+      payload: localEdit,
+    }),
+  );
+  await expect(field).toHaveFocus();
+  await expect(field).toHaveValue(localEdit);
+
+  return field;
+}
+
+const textDraft = { root: textRoot(), label: projectName, key: 'textinput' };
+
 // The Server's value waits while the field has focus and shows once it blurs.
 export const FocusedDraftSurvivesPatch: Story = {
-  render: PatchedDraft,
-  play: async ({ canvas, userEvent }) => {
-    const field = canvas.getByRole('textbox', { name: projectName });
-    await userEvent.clear(field);
-    await userEvent.type(field, localEdit);
-    await waitFor(() =>
-      expect(onEvent).toHaveBeenCalledWith('textinput', {
-        event: 'onChangeText',
-        payload: localEdit,
-      }),
-    );
-    await expect(field).toHaveFocus();
-    await expect(field).toHaveValue(localEdit);
-    await userEvent.tab();
+  render: () => <PatchedDraft draft={textDraft} />,
+  play: async (context) => {
+    const field = await editFocusedDraft(context, textDraft);
+    await context.userEvent.tab();
     await waitFor(() => expect(field).toHaveValue('Server replacement'));
+  },
+};
+
+const searchDraft = {
+  root: WireNode.parse(page),
+  label: 'Search Issues',
+  key: 'page',
+};
+
+// A Page's search field shows once its search button is pressed.
+export const FocusedPageSearchSurvivesPatch: Story = {
+  render: () => <PatchedDraft draft={searchDraft} />,
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+    await userEvent.click(
+      canvas.getByRole('button', { name: searchDraft.label }),
+    );
+    await editFocusedDraft(context, searchDraft);
   },
 };
 

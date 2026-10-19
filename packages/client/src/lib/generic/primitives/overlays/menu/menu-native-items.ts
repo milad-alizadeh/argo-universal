@@ -1,10 +1,12 @@
 import type { IconName } from '../../../symbols/icon-names';
 import {
-  type ActionMenuProps,
   type MenuAction,
   type MenuChoiceGroup,
+  type MenuEntry,
+  type MenuSubmenu,
   type MenuChoiceRows,
   type MenuProps,
+  isMenuSubmenu,
   menuChoiceGroups,
   menuLoadingLabel,
 } from './menu-props';
@@ -22,6 +24,10 @@ export interface NativeMenuItem {
   divided?: boolean;
   icon?: IconName;
   tone?: 'danger';
+  // A row that opens a nested menu: its own sections, and no `choose` of its own.
+  submenu?: NativeMenuSection[];
+  // A nested menu's count, shown after its title.
+  count?: string;
 }
 
 // A run of a system menu's rows, set apart from the run before it; iOS heads it with its title.
@@ -33,13 +39,13 @@ export interface NativeMenuSection {
 // What a menu lists: its options with the chosen value, its groups, or its actions, and whether they are still loading.
 export type MenuRows<Value extends string = string> = (
   | MenuChoiceRows<Value>
-  | { actions: readonly MenuAction[] }
+  | { actions: readonly MenuEntry[] }
 ) &
   Pick<MenuProps<Value>, 'loading'>;
 
 const listsActions = <Value extends string>(
   rows: MenuRows<Value>,
-): rows is { actions: readonly MenuAction[] } =>
+): rows is { actions: readonly MenuEntry[] } =>
   'actions' in rows && rows.actions !== undefined;
 
 export function nativeMenuSections<Value extends string>(
@@ -99,10 +105,24 @@ const loadingItem: NativeMenuItem = {
   choose: nothing,
 };
 
+function entryItem(entry: MenuEntry): NativeMenuItem {
+  return isMenuSubmenu(entry) ? submenuItem(entry) : actionItem(entry);
+}
+
+function submenuItem(submenu: MenuSubmenu): NativeMenuItem {
+  return {
+    id: submenu.id ?? submenu.label,
+    title: submenu.label,
+    disabled: false,
+    icon: submenu.icon,
+    count: submenu.count,
+    choose: nothing,
+    submenu: actionSections(submenu.actions),
+  };
+}
+
 // An action that can be the selected one carries the check.
-function actionItem(
-  action: ActionMenuProps['actions'][number],
-): NativeMenuItem {
+function actionItem(action: MenuAction): NativeMenuItem {
   return {
     id: action.id ?? action.label,
     title: action.label,
@@ -128,7 +148,7 @@ function choiceItems(
   }));
 }
 
-function actionSections(actions: readonly MenuAction[]): NativeMenuSection[] {
+function actionSections(actions: readonly MenuEntry[]): NativeMenuSection[] {
   const sections: NativeMenuSection[] = [];
 
   for (const action of actions) appendAction(sections, action);
@@ -136,18 +156,25 @@ function actionSections(actions: readonly MenuAction[]): NativeMenuSection[] {
   return sections;
 }
 
-function appendAction(sections: NativeMenuSection[], action: MenuAction): void {
+function appendAction(sections: NativeMenuSection[], action: MenuEntry): void {
   if (!sections.length || action.section) sections.push(actionSection(action));
   appendToLastSection(sections, action);
 }
 
-function actionSection(action: MenuAction): NativeMenuSection {
+function actionSection(action: MenuEntry): NativeMenuSection {
   return { title: action.section?.title, items: [] };
 }
 
 function appendToLastSection(
   sections: NativeMenuSection[],
-  action: MenuAction,
+  action: MenuEntry,
 ): void {
-  sections.at(-1)?.items.push(actionItem(action));
+  sections.at(-1)?.items.push(entryItem(action));
 }
+
+// Every row a choice can come from, a nested menu's rows included.
+export const choosableItems = (items: NativeMenuItem[]): NativeMenuItem[] =>
+  items.flatMap((item) => [item, ...choosableItems(nestedItems(item))]);
+
+const nestedItems = (item: NativeMenuItem): NativeMenuItem[] =>
+  item.submenu?.flatMap((section) => section.items) ?? [];

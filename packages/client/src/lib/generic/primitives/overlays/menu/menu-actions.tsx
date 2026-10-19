@@ -2,12 +2,19 @@ import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
-import { TextClassContext } from '#primitives/content/text';
+import { Icon } from '#primitives/content/icon';
+import { Text, TextClassContext } from '#primitives/content/text';
 import { MenuActionLabel } from './menu-action-label';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
-import type { ActionMenuProps, MenuAction } from './menu-props';
+import {
+  isMenuSubmenu,
+  type ActionMenuProps,
+  type MenuAction,
+  type MenuEntry,
+  type MenuSubmenu,
+} from './menu-props';
 import { MenuSection } from './menu-section';
 import {
   actionContentClassName,
@@ -42,15 +49,69 @@ function actionContentProps(
   };
 }
 
-function actionItem(action: MenuAction, index: number): React.JSX.Element {
+function actionItem(entry: MenuEntry, index: number): React.JSX.Element {
   return (
     <Fragment key={index}>
-      {action.section && (
-        <MenuSection divided={index > 0} title={action.section.title} />
+      {entry.section && (
+        <MenuSection divided={index > 0} title={entry.section.title} />
       )}
-      <MenuActionItem action={action} />
+      {isMenuSubmenu(entry) ? (
+        <MenuSubmenuItem submenu={entry} />
+      ) : (
+        <MenuActionItem action={entry} />
+      )}
     </Fragment>
   );
+}
+
+type SubmenuProps = { submenu: MenuSubmenu };
+
+// Radix's Sub: its trigger row opens the nested rows beside it, by pointer or by the arrow key.
+function MenuSubmenuItem({ submenu }: SubmenuProps): React.JSX.Element {
+  return (
+    <RadixMenu.Sub>
+      <SubmenuTrigger submenu={submenu} />
+      <SubmenuRows actions={submenu.actions} />
+    </RadixMenu.Sub>
+  );
+}
+
+// The nested rows open in their own portal, drawn as the menu they came from.
+function SubmenuRows({
+  actions,
+}: {
+  actions: readonly MenuEntry[];
+}): React.JSX.Element {
+  return (
+    <RadixMenu.Portal>
+      <RadixMenu.SubContent className="z-50" sideOffset={4}>
+        <View className={actionContentClassName}>
+          {actions.map(actionItem)}
+        </View>
+      </RadixMenu.SubContent>
+    </RadixMenu.Portal>
+  );
+}
+
+// The row names the submenu, then its count, its trailing chevron pointing to where the rows open.
+function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
+  const label = submenu.accessibilityLabel ?? submenu.label;
+
+  return (
+    <RadixMenu.SubTrigger asChild aria-label={label}>
+      <View className={menuRowClass()}>
+        <MenuActionLabel {...submenu} />
+        <SubmenuCount count={submenu.count} />
+        <Icon name="chevron-right" role="chevron" tone="muted" />
+      </View>
+    </RadixMenu.SubTrigger>
+  );
+}
+
+function SubmenuCount({
+  count,
+}: Pick<MenuSubmenu, 'count'>): React.JSX.Element | null {
+  return count ? <Text tone="muted">{count}</Text> : null;
 }
 
 function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {

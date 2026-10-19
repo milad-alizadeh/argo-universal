@@ -17,6 +17,7 @@ import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
 import { listWireParts } from './list-wire-parts';
 import { overlayWireParts } from './overlay-wire-parts';
+import { pageWirePart } from './page-wire-part';
 import { textForApp } from './text-for-app';
 import type { WirePartDefinition } from './wire-part-definition';
 import { wirePartReferences } from './wire-part-reference';
@@ -28,6 +29,7 @@ export { listPartNames } from './list-expansion';
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
   ...layoutWireParts,
+  Page: pageWirePart,
   ...listWireParts,
   ...actionListWireParts,
   ...controlWireParts,

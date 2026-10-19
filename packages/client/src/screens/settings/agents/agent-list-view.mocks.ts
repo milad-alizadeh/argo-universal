@@ -1,16 +1,13 @@
 import type { AgentServer, AgentsRegistryOutput } from '@repo/contracts';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { Platform } from 'react-native';
 import { fn } from 'storybook/test';
 import {
   type AgentRows,
   agentsPage,
   type RegistryLoad,
 } from '#features/agents';
-import { mockHeader } from '../../../../mocks/screen-header-mock';
 import { loaded } from '../../../features/agents/utils/installed-agents.mocks.ts';
 import type { AgentListViewProps } from './agent-list-view';
-import { agentsHeader } from './agents-phone-header';
 
 export const catalog: AgentsRegistryOutput = {
   error: null,
@@ -59,5 +56,4 @@ export const agentListArgs = (): AgentListViewProps => ({
   onInstall: fn(),
   onRemove: fn(),
   onRetry: fn(),
-  renderHeader: Platform.OS === 'web' ? mockHeader(agentsHeader) : undefined,
 });

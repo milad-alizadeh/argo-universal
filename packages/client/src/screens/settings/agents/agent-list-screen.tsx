@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { useRegistryAgents } from '#features/agents';
 import { AgentListView } from './agent-list-view';
-import { AgentsPhoneHeader } from './agents-phone-header';
 
 export function AgentListScreen(): React.JSX.Element {
   const agents = useRegistryAgents();
@@ -12,7 +11,6 @@ export function AgentListScreen(): React.JSX.Element {
       onInstall={agents.install}
       onRemove={agents.remove}
       onRetry={agents.retry}
-      renderHeader={(header) => <AgentsPhoneHeader {...header} />}
     />
   );
 }

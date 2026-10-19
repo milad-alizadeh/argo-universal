@@ -5,7 +5,6 @@ import { useTRPC } from '#features/connection';
 import { useServerPageCaption } from '#features/settings';
 import { errorToast } from '#lib/generic/error-toast';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { useErrorToast } from '#primitives/overlays/toast';
 import {
   type PluginEntry,
@@ -100,10 +99,5 @@ export function PluginSettingsDetailScreen({
 }: PluginSettingsDetailScreenProps): React.JSX.Element {
   const props = usePluginDetail(pluginId);
 
-  return (
-    <>
-      <ScreenHeader title={props.title} />
-      <PluginSettingsDetailView {...props} />
-    </>
-  );
+  return <PluginSettingsDetailView {...props} />;
 }

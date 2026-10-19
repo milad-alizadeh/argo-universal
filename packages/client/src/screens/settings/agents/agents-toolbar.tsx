@@ -1,10 +1,8 @@
 import type * as React from 'react';
-import { View } from 'react-native';
 import { type AgentsFilter } from '#features/agents';
 import { cn } from '#lib/generic/utils';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import { FilterPill } from '#primitives/inputs/filter-pill';
-import { SearchFieldInput } from '#primitives/inputs/search-field';
 
 export interface AgentsFilterProps {
   filter: AgentsFilter;
@@ -15,8 +13,6 @@ export interface AgentsSearchProps {
   search: string;
   onSearch: (search: string) => void;
 }
-
-export type AgentsHeaderProps = AgentsSearchProps;
 
 export const agentsTitle = 'Agents';
 
@@ -61,22 +57,7 @@ function FilterPillRow(props: PillRowProps): React.JSX.Element {
   );
 }
 
-// A phone's row spans the screen, so the pills scroll out to its edges; the row's padding holds them at the page's margin at rest.
+// The row sits in the Page's column, inside its side padding, so the pills line up with the page's content and scroll within it.
 export function AgentsFilterPills(props: AgentsFilterProps): React.JSX.Element {
-  return <FilterPillRow {...props} contentClassName="px-4" />;
-}
-
-export function AgentsToolbar(
-  props: AgentsFilterProps & AgentsSearchProps,
-): React.JSX.Element {
-  return (
-    <View className="flex-row items-center justify-between gap-4">
-      <FilterPillRow {...props} className="shrink" />
-      <SearchFieldInput
-        label={searchLabel}
-        value={props.search}
-        onChangeText={props.onSearch}
-      />
-    </View>
-  );
+  return <FilterPillRow {...props} contentClassName="wide:px-0" />;
 }

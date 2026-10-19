@@ -63,6 +63,7 @@ const defaultOptions = {
   slots: noSlots,
   events: noEvents,
   children: false,
+  root: false,
   label: '',
   appearance: defaultAppearance,
   accessibility: {},
@@ -125,17 +126,25 @@ function describeProps(schema: z.core.$ZodType): void {
 function definition(
   summary: string,
   schema: z.ZodType,
-  config: ReturnType<typeof resolveOptions>,
+  config: ResolvedPartOptions,
 ): WirePartDefinition {
   return {
     props: schema,
     versions: [...config.previous, schema],
-    container: config.container,
-    children: config.children,
-    slots: config.slots,
-    events: config.events,
+    ...structure(config),
     reference: partReference({ summary, schema, config }),
   };
+}
+
+type PartStructure = Pick<
+  WirePartDefinition,
+  'container' | 'children' | 'root' | 'slots' | 'events'
+>;
+
+function structure(config: ResolvedPartOptions): PartStructure {
+  const { container, children, root, slots, events } = config;
+
+  return { container, children, root, slots, events };
 }
 
 export function part<
@@ -153,9 +162,7 @@ export function part(
 ): WirePartDefinition {
   describeProps(schema);
 
-  const config = resolveOptions(schema, options);
-
-  return definition(summary, schema, config);
+  return definition(summary, schema, resolveOptions(schema, options));
 }
 
 export {

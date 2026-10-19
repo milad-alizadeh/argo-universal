@@ -13,11 +13,16 @@ export {
 export { MenuTrigger } from './menu-trigger';
 
 export {
+  countedTitle,
   type MenuAction,
   type MenuChoiceGroup,
+  type MenuEntry,
+  type MenuSubmenu,
   type MenuProps,
   type MenuTriggerProps,
 } from './menu-props';
+
+export { MenuDropdown } from './menu-dropdown';
 
 export { MenuDropdownItems } from './menu-dropdown-items';
 

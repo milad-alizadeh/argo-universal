@@ -6,7 +6,12 @@ import type { SFSymbol } from 'sf-symbols-typescript';
 import { isCustomSymbol } from '../../../symbols/custom-symbols';
 import { drawnSymbol } from '../../../symbols/drawn-symbol';
 import { type IconName, iconSymbols } from '../../../symbols/icon-names';
-import type { NativeMenuItem, NativeMenuSection } from './menu-native-items';
+import {
+  choosableItems,
+  type NativeMenuItem,
+  type NativeMenuSection,
+} from './menu-native-items';
+import { countedTitle } from './menu-props';
 
 // The rows of Expo UI's MenuView, shared by the Menu and the long-press ContextMenu.
 
@@ -23,15 +28,28 @@ export function sectionAction(
   };
 }
 
-// MenuView reports the chosen row by its id.
+// MenuView reports the chosen row by its id, a nested menu's rows included.
 export function runAction(
   items: NativeMenuItem[],
   event: NativeActionEvent,
 ): void {
-  items.find((item) => item.id === event.nativeEvent.event)?.choose();
+  choosableItems(items)
+    .find((item) => item.id === event.nativeEvent.event)
+    ?.choose();
+}
+
+// Sections draw as SwiftUI Sections, whose ids are keys among their siblings only; one section needs none.
+export function sectionActions(
+  sections: NativeMenuSection[],
+): NativeMenuAction[] {
+  if (sections.length > 1) return sections.map(sectionAction);
+
+  return sections.flatMap((section) => section.items.map(menuAction));
 }
 
 export function menuAction(item: NativeMenuItem): NativeMenuAction {
+  if (item.submenu) return submenuAction(item, item.submenu);
+
   return {
     id: item.id,
     title: item.title,
@@ -40,6 +58,19 @@ export function menuAction(item: NativeMenuItem): NativeMenuAction {
       disabled: item.disabled,
       destructive: item.tone === 'danger',
     },
+    ...itemImage(item.icon),
+  };
+}
+
+// MenuAction.subactions without displayInline draw a nested SwiftUI Menu, titled and with the row's symbol; MenuAction has no subtitle, so the title carries the count.
+function submenuAction(
+  item: NativeMenuItem,
+  sections: NativeMenuSection[],
+): NativeMenuAction {
+  return {
+    id: item.id,
+    title: countedTitle(item.title, item.count),
+    subactions: sectionActions(sections),
     ...itemImage(item.icon),
   };
 }

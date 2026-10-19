@@ -8,13 +8,12 @@ import {
   metadataAvatarProps,
   metadataChildParts,
 } from '../metadata-props';
-import { builtInPress } from '../plugin-part-props';
 import {
   part,
-  stringLabel,
   optionalLabel,
   containerParts,
 } from '../plugin-part-schema-utils';
+import { wireParts } from '../wire-parts';
 
 export const scaffoldsPartSchemas = {
   Metadata: part(
@@ -37,19 +36,7 @@ export const scaffoldsPartSchemas = {
     metadataStatusDotProps,
   ),
   'Metadata.Avatar': part('A person Metadata field.', metadataAvatarProps),
-  Page: part(
-    'A page scaffold with a title, header actions, and optional search.',
-    z.object({
-      title: stringLabel,
-      actions: z.array(z.string()).optional(),
-      primaryAction: z
-        .object({ label: stringLabel, onPress: builtInPress })
-        .optional()
-        .describe('The Page’s one primary action.'),
-      search: z.boolean().optional(),
-    }),
-    { children: true },
-  ),
+  Page: wireParts.Page,
   ListDetail: part(
     'A list and detail scaffold that splits on wide screens and drills in on compact screens.',
     z.object({}),

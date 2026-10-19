@@ -276,7 +276,7 @@ export type WireSchemaHints = {
   "Action": {
     /** The Action label and accessible name. */
     "label": PropValue<"Action", "label">;
-    /** The leading Argo icon; a header ActionList shows only Actions with one as buttons. */
+    /** The leading Argo icon; a header ActionList shows only Actions with one as buttons, and a submenu needs one. */
     "icon": PropValue<"Action", "icon">;
     /** Desktop shortcut; Plugins cannot take reserved keys. */
     "shortcut": PropValue<"Action", "shortcut">;
@@ -288,6 +288,8 @@ export type WireSchemaHints = {
     "onPress": PropValue<"Action", "onPress">;
     /** An Alert answer that dismisses the question, or one that destroys data. */
     "role": PropValue<"Action", "role">;
+    /** A count or status dot on the icon. */
+    "badge": PropValue<"Action", "badge">;
   };
   "TextInput": {
     /** Spoken and visible field name. */
@@ -659,14 +661,16 @@ export type WireSchemaHints = {
     "src": PropValue<"Metadata.Avatar", "src">;
   };
   "Page": {
-    /** The visible and accessible label. */
+    /** The single-line page title. */
     "title": PropValue<"Page", "title">;
-    /** actions for this part. */
-    "actions": PropValue<"Page", "actions">;
-    /** The Page’s one primary action. */
-    "primaryAction": PropValue<"Page", "primaryAction">;
-    /** search for this part. */
+    /** A muted line under the title on wide windows; phones hide it. */
+    "caption": PropValue<"Page", "caption">;
+    /** Native search on phones; expanding header search on web. */
     "search": PropValue<"Page", "search">;
+    /** The search query; drafts stay in the App. */
+    "value": PropValue<"Page", "value">;
+    /** Receive the search query when it changes. */
+    "onChangeText": PropValue<"Page", "onChangeText">;
   };
   "ListDetail": {
 

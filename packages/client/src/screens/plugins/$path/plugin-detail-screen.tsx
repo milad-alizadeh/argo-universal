@@ -2,7 +2,11 @@ import { Redirect } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useErrorToast } from '#primitives/overlays/toast';
-import { pluginPath, usePluginAt } from '../use-plugin-sections';
+import {
+  pluginPath,
+  usePluginAt,
+  type PluginSection,
+} from '../use-plugin-sections';
 import { usePluginView } from '../use-plugin-view';
 import { PluginDetailView } from './plugin-detail-view';
 
@@ -19,10 +23,7 @@ export function PluginDetailScreen({
 }: PluginDetailScreenProps): React.JSX.Element {
   const { section, loaded } = usePluginAt(pluginPath(path));
 
-  if (section)
-    return (
-      <PluginPage pluginId={section.pluginId} segments={section.segments} />
-    );
+  if (section) return <PluginPage section={section} />;
 
   return loaded ? (
     <PluginUnavailable />
@@ -32,23 +33,32 @@ export function PluginDetailScreen({
 }
 
 function PluginPage({
-  pluginId,
-  segments,
+  section,
 }: {
-  pluginId: string;
-  segments: readonly string[];
+  section: PluginSection;
 }): React.JSX.Element {
-  // The segments after the Plugin id and the nav id are the page's own path.
-  const { root, dispatch, viewId } = usePluginView(
-    pluginId,
-    `/${segments.slice(2).join('/')}`,
+  const view = usePluginView(
+    section.pluginId,
+    `/${section.segments.slice(2).join('/')}`,
   );
 
-  return <PluginDetailView viewId={viewId} root={root} onEvent={dispatch} />;
+  return <PluginDetailView {...pluginPageProps(section, view)} />;
 }
 
 function PluginUnavailable(): React.JSX.Element {
   useErrorToast(unavailable);
 
   return <Redirect href="/sessions" />;
+}
+
+function pluginPageProps(
+  section: PluginSection,
+  view: ReturnType<typeof usePluginView>,
+): React.ComponentProps<typeof PluginDetailView> {
+  return {
+    title: section.title,
+    viewId: view.viewId,
+    root: view.root,
+    onEvent: view.dispatch,
+  };
 }

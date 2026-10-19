@@ -2,9 +2,9 @@ import type { ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
+import { Page } from '#primitives/scaffolds/page';
 import { ScaffoldMock } from '../../../../../mocks/scaffold';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
-import { PageHeader } from '../../../../lib/product/page-header';
 import { EditRow } from './edit-row';
 
 function EditFeed({ row }: { row: ToolCallUpdate }): React.JSX.Element {
@@ -23,10 +23,7 @@ function EditFeed({ row }: { row: ToolCallUpdate }): React.JSX.Element {
 function WidePreview({ children }: { children: ReactNode }): React.JSX.Element {
   return (
     <ScaffoldMock attentionCount={0}>
-      <View className="flex-1">
-        <PageHeader title="Recorded edits" />
-        {children}
-      </View>
+      <Page title="Recorded edits">{children}</Page>
     </ScaffoldMock>
   );
 }
