@@ -26,6 +26,8 @@ export interface NativeMenuItem {
   tone?: 'danger';
   // A row that opens a nested menu: its own sections, and no `choose` of its own.
   submenu?: NativeMenuSection[];
+  // A nested menu's count, shown after its title.
+  count?: string;
 }
 
 // A run of a system menu's rows, set apart from the run before it; iOS heads it with its title.
@@ -113,6 +115,7 @@ function submenuItem(submenu: MenuSubmenu): NativeMenuItem {
     title: submenu.label,
     disabled: false,
     icon: submenu.icon,
+    count: submenu.count,
     choose: nothing,
     submenu: actionSections(submenu.actions),
   };

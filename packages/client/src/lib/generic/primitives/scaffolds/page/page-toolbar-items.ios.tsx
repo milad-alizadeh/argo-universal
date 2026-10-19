@@ -8,6 +8,7 @@ import { tablerAsset } from '#lib/generic/symbols/tabler-symbols';
 import {
   isSubmenu,
   submenuBadgeText,
+  submenuCountText,
   submenuGroups,
   type ActionGroup,
   type ActionProps,
@@ -15,6 +16,7 @@ import {
   type DeclaredEntry,
   type DeclaredSubmenu,
 } from '#primitives/actions/action-list';
+import { countedTitle } from '#primitives/overlays/menu';
 
 type ToolbarButton = ComponentProps<typeof Stack.Toolbar.Button>;
 
@@ -134,14 +136,20 @@ function menuEntry(entry: DeclaredEntry): ReactElement {
   return isSubmenu(entry) ? nestedSubmenu(entry) : menuAction(entry);
 }
 
-// In the overflow menu a submenu is a nested UIMenu: a row under its `title` and icon that opens its Sections.
+/*
+ * In the overflow menu a submenu is a nested UIMenu: a row under its `title` and icon that opens its Sections. A
+ * nested header menu takes only a title and an icon (react-native-screens' HeaderBarButtonItemSubmenu), so the title
+ * carries the count.
+ */
 function nestedSubmenu(submenu: DeclaredSubmenu): ReactElement {
+  const count = submenuCountText(submenu.badge);
+
   return (
     <Stack.Toolbar.Menu
       key={submenu.id}
       {...tinted}
       icon={toolbarIcon(submenu.icon)}
-      title={submenu.label}
+      title={countedTitle(submenu.label, count)}
     >
       {menuSections(submenuGroups(submenu))}
     </Stack.Toolbar.Menu>

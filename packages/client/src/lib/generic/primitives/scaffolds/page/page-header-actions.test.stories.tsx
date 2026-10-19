@@ -1,8 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, within } from 'storybook/test';
+import type { ReactElement } from 'react';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Page } from './index';
-import { exampleSubmenu } from './page-submenu-example.mocks';
+import {
+  exampleSubmenu,
+  type SubmenuBadge,
+} from './page-submenu-example.mocks';
 import { atWidth, pageWidths } from './page-widths.mocks';
 
 const meta = {
@@ -43,24 +47,27 @@ const overflowButton = { name: 'More actions' };
 
 const choose = (label: string) => (): void => chosen(label);
 
+// The overflow menu of a full header, holding the Sort submenu with the given badge.
+const fullHeader = (badge?: SubmenuBadge): ReactElement => (
+  <ActionList>
+    <Action label="Copy link" icon="copy" onPress={choose('Copy link')} />
+    <Action label="Rename" icon="rename" onPress={choose('Rename')} />
+    {exampleSubmenu(chosen, badge)}
+    <Action label="Archive" icon="archive" onPress={choose('Archive')} />
+  </ActionList>
+);
+
 // A full header folds a submenu into the overflow menu, where it opens as a nested menu whose Actions still run.
 const nestedSubmenu: Story = {
-  args: {
-    actions: (
-      <ActionList>
-        <Action label="Copy link" icon="copy" onPress={choose('Copy link')} />
-        <Action label="Rename" icon="rename" onPress={choose('Rename')} />
-        {exampleSubmenu(chosen)}
-        <Action label="Archive" icon="archive" onPress={choose('Archive')} />
-      </ActionList>
-    ),
-  },
+  args: { actions: fullHeader() },
   play: async ({ canvas, canvasElement, userEvent }) => {
     chosen.mockClear();
     const page = within(canvasElement.ownerDocument.body);
     await expect(canvas.queryByRole('button', { name: 'Sort, 2' })).toBeNull();
     await userEvent.click(canvas.getByRole('button', overflowButton));
-    await userEvent.click(await page.findByRole('menuitem', { name: 'Sort' }));
+    await userEvent.click(
+      await page.findByRole('menuitem', { name: 'Sort, 2' }),
+    );
     // The nested row is chosen from the keyboard: a test pointer leaving the Sort row has no path into the nested menu.
     (await page.findByRole('menuitem', { name: 'Oldest' })).focus();
     await userEvent.keyboard('{Enter}');
@@ -71,6 +78,39 @@ const nestedSubmenu: Story = {
 export const NestedSubmenuPhone = atWidth(pageWidths.Phone, nestedSubmenu);
 
 export const NestedSubmenuWide = atWidth(pageWidths.Wide, nestedSubmenu);
+
+type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
+// Opens the overflow menu and finds the folded submenu's row by its spoken name.
+async function foldedRow(
+  { canvas, canvasElement, userEvent }: PlayContext,
+  name: string,
+): Promise<HTMLElement> {
+  await userEvent.click(canvas.getByRole('button', overflowButton));
+  const page = within(canvasElement.ownerDocument.body);
+
+  return page.findByRole('menuitem', { name });
+}
+
+// A submenu folded into the overflow menu keeps its count badge's count after its label.
+export const FoldedSubmenuCount = atWidth(pageWidths.Wide, {
+  args: { actions: fullHeader() },
+  play: async (context) => {
+    const row = await foldedRow(context, 'Sort, 2');
+    // The menu fades in, so the count is visible once the opening animation ends.
+    await waitFor(() => expect(within(row).getByText('2')).toBeVisible());
+  },
+});
+
+// A status dot has no count, so the folded row shows its label alone.
+export const FoldedSubmenuDot = atWidth(pageWidths.Wide, {
+  args: { actions: fullHeader({ kind: 'status', tone: 'warning' }) },
+  play: async (context) => {
+    const row = await foldedRow(context, 'Sort');
+    await expect(row).toHaveTextContent('Sort');
+    await expect(row).not.toHaveTextContent(/\d/);
+  },
+});
 
 // Two ActionLists share one header: three controls at most, one overflow menu, and each list's Actions still run.
 const twoLists: Story = {

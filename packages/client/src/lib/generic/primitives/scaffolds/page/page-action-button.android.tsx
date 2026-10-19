@@ -1,4 +1,3 @@
-import { RNHostView } from '@expo/ui';
 import { IconButton } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
@@ -8,6 +7,7 @@ import type {
   PressActionProps,
 } from '#primitives/actions/action-list';
 import { Icon, type IconProps } from '#primitives/content/icon';
+import { ButtonIcon } from '#primitives/native/button-icon';
 import { Host } from '#primitives/native/host';
 
 // What a header icon button draws and runs; a menu's opens its menu, and the overflow's icon is a symbol pair.
@@ -29,15 +29,19 @@ export function PageActionButton({
   );
 }
 
-// The Compose IconButton alone, for a Host or a DropdownMenu trigger that already holds it.
+// The Compose IconButton alone, for a Host or a DropdownMenu trigger that already holds it; its icon takes the button's content colour.
 export function HeaderIconButton(props: HeaderIconButtonProps): ReactElement {
   const { colors } = useNativeTheme();
 
   return (
     <IconButton {...actionButtonProps(props, colors.foreground)}>
-      <RNHostView matchContents>
+      <ButtonIcon
+        name={props.icon}
+        onPress={props.onPress}
+        disabled={props.disabled}
+      >
         <Icon name={props.icon} role="action" />
-      </RNHostView>
+      </ButtonIcon>
     </IconButton>
   );
 }

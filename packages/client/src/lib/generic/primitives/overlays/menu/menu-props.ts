@@ -21,10 +21,18 @@ export type MenuAction = Actions['actions'][number] & {
 export interface MenuSubmenu {
   id?: string;
   label: string;
+  // The row's spoken name when it says more than the label, such as the count.
+  accessibilityLabel?: string;
   icon?: IconName;
+  // A count badge's text, shown after the label.
+  count?: string;
   section?: { title?: string };
   actions: readonly MenuEntry[];
 }
+
+// A system menu row's title where the row has no place of its own for a count, as iOS menus: the count after the label.
+export const countedTitle = (title: string, count?: string): string =>
+  count ? `${title} (${count})` : title;
 
 export type MenuEntry = MenuAction | MenuSubmenu;
 

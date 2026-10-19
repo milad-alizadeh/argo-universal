@@ -1,4 +1,3 @@
-import ArrowRight from '@expo/material-symbols/arrow_right.xml';
 import Check from '@expo/material-symbols/check.xml';
 import {
   DropdownMenu,
@@ -9,16 +8,13 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-
-type DropdownMenuItemElementColors = NonNullable<
-  React.ComponentProps<typeof DropdownMenuItem>['elementColors']
->;
-
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
 import { MenuDropdownShell } from './menu-dropdown-shell.android';
+import { useItemColors } from './menu-item-colors.android';
 import { ItemLeadingIcon } from './menu-item-icon.android';
 import { dividedItems, type NativeMenuItem } from './menu-native-items';
+import { SubmenuRow } from './menu-submenu-row.android';
 
 // The rows of a Compose DropdownMenu, shared by the Menu and the SplitButton's chevron.
 export function MenuDropdownItems(
@@ -85,22 +81,6 @@ function SubmenuRows({ item, onChoose }: MenuItemProps): React.JSX.Element {
   );
 }
 
-type SubmenuRowProps = { item: NativeMenuItem; onOpen: () => void };
-
-function SubmenuRow({ item, onOpen }: SubmenuRowProps): React.JSX.Element {
-  return (
-    <DropdownMenuItem elementColors={useItemColors(item)} onClick={onOpen}>
-      <ItemLeadingIcon {...item} />
-      <DropdownMenuItem.Text>
-        <Text>{item.title}</Text>
-      </DropdownMenuItem.Text>
-      <DropdownMenuItem.TrailingIcon>
-        <Icon source={ArrowRight} />
-      </DropdownMenuItem.TrailingIcon>
-    </DropdownMenuItem>
-  );
-}
-
 // Material sets a menu's groups apart with a divider and no heading, as MenuView's Android drawing of inline sections does; Argo binds its colour.
 const dividerInset = 8;
 
@@ -129,7 +109,7 @@ function MenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
       elementColors={useItemColors(item)}
       onClick={() => onChoose(item)}
     >
-      <ItemLeadingIcon {...item} />
+      <ItemLeadingIcon {...item} onPress={() => onChoose(item)} />
       <DropdownMenuItem.Text>
         <Text>{item.title}</Text>
       </DropdownMenuItem.Text>
@@ -150,15 +130,3 @@ function ItemCheck(props: { checked?: boolean }): React.JSX.Element | null {
 }
 
 MenuDropdownItems satisfies React.ComponentType<MenuDropdownItemsProps>;
-
-function useItemColors(item: NativeMenuItem): DropdownMenuItemElementColors {
-  const palette = useMaterialPalette();
-
-  return item.tone === 'danger'
-    ? {
-        ...palette.menuItemColors,
-        textColor: palette.roles.error,
-        leadingIconColor: palette.roles.error,
-      }
-    : palette.menuItemColors;
-}

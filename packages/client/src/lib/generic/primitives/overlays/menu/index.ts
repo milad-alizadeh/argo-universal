@@ -13,6 +13,7 @@ export {
 export { MenuTrigger } from './menu-trigger';
 
 export {
+  countedTitle,
   type MenuAction,
   type MenuChoiceGroup,
   type MenuEntry,

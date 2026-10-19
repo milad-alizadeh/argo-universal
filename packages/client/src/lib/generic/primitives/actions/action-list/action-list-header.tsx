@@ -18,7 +18,7 @@ import {
   type HeaderEntry,
   type IconAction,
 } from './header-actions';
-import { submenuLabel } from './submenu-badge';
+import { submenuCountText, submenuLabel } from './submenu-badge';
 
 export interface HeaderActionsProps {
   // Ordered by `orderedGroups`.
@@ -64,13 +64,16 @@ export function headerMenuActions(groups: ActionGroup[]): MenuEntry[] {
   );
 }
 
+// A folded submenu's row keeps its count after the label and in its spoken name.
 function menuEntry(entry: DeclaredEntry): MenuEntry {
   if (!isSubmenu(entry)) return entry;
 
   return {
     id: entry.id,
     label: entry.label,
+    accessibilityLabel: submenuLabel(entry),
     icon: entry.icon,
+    count: submenuCountText(entry.badge),
     actions: headerMenuActions(submenuGroups(entry)),
   };
 }

@@ -11,6 +11,7 @@ import {
   type NativeMenuItem,
   type NativeMenuSection,
 } from './menu-native-items';
+import { countedTitle } from './menu-props';
 
 // The rows of Expo UI's MenuView, shared by the Menu and the long-press ContextMenu.
 
@@ -61,14 +62,14 @@ export function menuAction(item: NativeMenuItem): NativeMenuAction {
   };
 }
 
-// MenuAction.subactions without displayInline draw a nested SwiftUI Menu, titled and with the row's symbol.
+// MenuAction.subactions without displayInline draw a nested SwiftUI Menu, titled and with the row's symbol; MenuAction has no subtitle, so the title carries the count.
 function submenuAction(
   item: NativeMenuItem,
   sections: NativeMenuSection[],
 ): NativeMenuAction {
   return {
     id: item.id,
-    title: item.title,
+    title: countedTitle(item.title, item.count),
     subactions: sectionActions(sections),
     ...itemImage(item.icon),
   };
