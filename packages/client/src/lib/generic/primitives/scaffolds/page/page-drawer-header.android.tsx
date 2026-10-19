@@ -1,8 +1,8 @@
 /*
- * At a narrow Android drawer root the drawer draws the header, with its stock ☰ and title, as a leading item in a
- * native-stack header drops the native title; the Page hands the drawer its title and Actions.
+ * At a narrow Android drawer root the drawer draws the one top app bar, with its stock ☰ and title, as a leading item
+ * in a native-stack header drops the native title; the Page hands the drawer its title, Actions and search.
  */
-import { Stack, useFocusEffect, useNavigation } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
 import type {
   DrawerNavigationOptions,
   DrawerNavigationProp,
@@ -15,9 +15,9 @@ import type {
 import type { ReactElement } from 'react';
 import type { HeaderActionsProps } from '#primitives/actions/action-list';
 import { headerClaims } from './page-header-host';
-import { headerOptions, pageTitleOptions } from './page-header-items.android';
-import type { PageHeaderInput, PageProps } from './page-props';
-import { PageSearchBar } from './page-search-bar.android';
+import { headerOptions } from './page-header-items.android';
+import type { PageHeaderInput } from './page-props';
+import { usePageSearchBar } from './use-page-search-bar';
 
 // What useNavigation returns by default: a stack screen's navigation, whose state may be unset.
 type PageNavigation = Omit<NavigationProp<ParamListBase>, 'getState'> & {
@@ -26,32 +26,57 @@ type PageNavigation = Omit<NavigationProp<ParamListBase>, 'getState'> & {
 
 type DrawerHeader = Pick<
   DrawerNavigationOptions,
-  'headerTitle' | 'headerRight'
+  'headerTitle' | 'headerRight' | 'headerSearchBarOptions'
 >;
+
+type DrawerSearch = DrawerHeader['headerSearchBarOptions'];
 
 // A string `headerTitle` keeps the stock title over the drawer's own `title`, which shows again once the Page is gone.
 const released: DrawerHeader = {
   headerTitle: undefined,
   headerRight: undefined,
+  headerSearchBarOptions: undefined,
 };
 
-export function PageDrawerHeader(props: PageHeaderInput): ReactElement | null {
-  const { groups, label } = props.header;
-
-  // The search icon is on the stack's header, so the drawer's has both of its places for Actions.
-  useDrawerHeader(props.title, { groups, label, slots: 2 });
-
-  return props.search ? <StackSearch {...props} /> : null;
+export function PageDrawerHeader(props: PageHeaderInput): ReactElement {
+  return props.search ? (
+    <SearchingDrawerHeader {...props} />
+  ) : (
+    <PlainDrawerHeader {...props} />
+  );
 }
 
-// Android's search stays the stack's own bar, which shows the stack's header, titled, under the drawer's.
-function StackSearch(props: PageProps): ReactElement {
-  return (
-    <>
-      <Stack.Screen options={{ ...pageTitleOptions, title: props.title }} />
-      <PageSearchBar {...props} />
-    </>
-  );
+function PlainDrawerHeader(props: PageHeaderInput): null {
+  const { groups, label } = props.header;
+  useDrawerHeader(props.title, { groups, label, slots: 2 });
+
+  return null;
+}
+
+// The header's own search icon comes last and takes one of its two places; opened, the bar becomes the search field.
+function SearchingDrawerHeader(props: PageHeaderInput): null {
+  const { groups, label } = props.header;
+  const search = drawerSearch(usePageSearchBar(props));
+  useDrawerHeader(props.title, { groups, label, slots: 1 }, search);
+
+  return null;
+}
+
+type PageSearch = ReturnType<typeof usePageSearchBar>;
+
+// The header's search bar takes the stack bar's text, focus and close; it closes with its own ✕, with no Cancel button.
+function drawerSearch(bar: PageSearch): DrawerSearch {
+  const { ref, placeholder, onChangeText, onClose, onFocus, onBlur } = bar;
+
+  return {
+    ref,
+    placeholder,
+    onChangeText,
+    onClose,
+    onFocus,
+    onBlur,
+    autoCapitalize: 'none',
+  };
 }
 
 const claims = headerClaims();
@@ -61,9 +86,18 @@ const claims = headerClaims();
  * shares that route and stack, so a Page mounted behind the focused one never writes it: `useFocusEffect` writes the
  * header on focus, and when the Page's header changes while focused, and gives it back on blur or unmount.
  */
-function useDrawerHeader(title: string, actions: HeaderActionsProps): void {
+function useDrawerHeader(
+  title: string,
+  actions: HeaderActionsProps,
+  search?: DrawerSearch,
+): void {
   const navigation = useNavigation<PageNavigation>();
-  const header = { headerTitle: title, ...headerOptions(actions) };
+
+  const header = {
+    headerTitle: title,
+    ...headerOptions(actions),
+    headerSearchBarOptions: search,
+  };
 
   useFocusEffect(() => holdDrawerHeader(navigation, header));
 }
