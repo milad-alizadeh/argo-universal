@@ -1,6 +1,7 @@
 import * as WebPopover from '@radix-ui/react-popover';
 import * as React from 'react';
 import { View } from 'react-native';
+import { InMenu } from '#lib/generic/menu-rows-context';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/content/text';
 import { useOpenState } from '#primitives/overlays/open-state';
@@ -11,12 +12,17 @@ import type {
   PopoverContentProps as ContentProps,
   PopoverProps,
 } from './popover-props';
+import {
+  keepTriggerInside,
+  TriggerElementProvider,
+  useTriggerElement,
+} from './popover-trigger-element';
 
 export { PopoverTrigger } from './popover-trigger';
 
 export { PopoverHoverGroup } from './popover-hover-group';
 
-export { usePopoverClose } from './popover-context';
+export { useEnclosingPopoverClose, usePopoverClose } from './popover-context';
 
 /*
  * The web's popover, on Radix Popover (`@radix-ui/react-popover`): Root `open`/`onOpenChange`, Trigger,
@@ -28,13 +34,21 @@ export function Popover(props: PopoverProps): React.JSX.Element {
   return (
     <PopoverContext.Provider value={state}>
       <WebPopover.Root open={state.open} onOpenChange={state.onOpenChange}>
-        <View className={props.className} style={props.style}>
-          <HoverProvider enabled={props.openOnHover}>
-            {props.children}
-          </HoverProvider>
-        </View>
+        <PopoverFrame {...props} />
       </WebPopover.Root>
     </PopoverContext.Provider>
+  );
+}
+
+function PopoverFrame(props: PopoverProps): React.JSX.Element {
+  return (
+    <View className={props.className} style={props.style}>
+      <TriggerElementProvider>
+        <HoverProvider enabled={props.openOnHover}>
+          {props.children}
+        </HoverProvider>
+      </TriggerElementProvider>
+    </View>
   );
 }
 
@@ -44,8 +58,9 @@ const contentClassName =
 function contentPlacement({
   align = 'center',
   sideOffset = 4,
-}: ContentProps): Pick<ContentProps, 'align' | 'sideOffset'> {
-  return { align, sideOffset };
+  alignOffset,
+}: ContentProps): Pick<ContentProps, 'align' | 'sideOffset' | 'alignOffset'> {
+  return { align, sideOffset, alignOffset };
 }
 
 const listContentClassName = 'w-80 overflow-hidden p-0';
@@ -61,6 +76,7 @@ function PopoverBody({ ref, ...props }: BodyProps): React.JSX.Element {
     <WebPopover.Content
       ref={ref}
       {...webContentProps(props)}
+      onInteractOutside={keepTriggerInside(useTriggerElement())}
       {...hoverContentProps(hover, props)}
     >
       <PopoverSurface {...props} open={open} />
@@ -75,12 +91,14 @@ function webContentProps(
     ...contentPlacement(props),
     side: props.side,
     'aria-label': props.accessibilityLabel,
+    onEscapeKeyDown: props.onEscapeKeyDown,
   };
 }
 
 const surfaceClassName = (props: ContentProps): string =>
   cn(contentClassName, props.list && listContentClassName, props.className);
 
+// Lists inside draw menu rows (InMenu); a phone's popover is a Sheet and keeps its grouped rows.
 function PopoverSurface(
   props: ContentProps & { open: boolean },
 ): React.JSX.Element {
@@ -91,7 +109,7 @@ function PopoverSurface(
       data-state={props.open ? 'open' : 'closed'}
     >
       <TextClassContext.Provider value="text-foreground">
-        {props.children}
+        <InMenu value>{props.children}</InMenu>
       </TextClassContext.Provider>
     </View>
   );

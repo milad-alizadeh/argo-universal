@@ -1,13 +1,13 @@
 import type { ReactElement, ComponentProps } from 'react';
 import { Platform, Pressable } from 'react-native';
-import { TextClassContext } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
+import { useInMenu } from '../../../menu-rows-context';
 import { cn } from '../../../utils';
 import { useHighlightHandlers } from './list-item-highlight';
 import { linkPress } from './list-item-link-press';
-import { Accessory, ItemContent, Leading, Trailing } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
 import { RadioPress } from './list-item-radio';
+import { ItemContentSlots } from './list-item-slots';
 import { itemPress } from './list-item-styles';
 
 export type { DrawingProps } from './list-item-press-props';
@@ -20,8 +20,28 @@ function rowLabel(props: ListItemProps): string {
     .join(', ');
 }
 
-function pressClass(disabled?: boolean): string {
-  return cn(itemPress, disabled && 'opacity-50');
+// A menu trigger's row (a web Picker row) presses through its pointer handler and popup.
+function interactive(props: DrawingProps): boolean {
+  if (props.disabled) return false;
+
+  return [
+    props.onPress,
+    props.href,
+    props.onLongPress,
+    props.onPointerDown,
+    props['aria-haspopup'],
+  ].some(Boolean);
+}
+
+function pressClass(props: DrawingProps, menu: boolean): string {
+  return cn(
+    itemPress({
+      menu,
+      interactive: interactive(props),
+      control: props.control !== undefined,
+    }),
+    props.disabled && 'opacity-50',
+  );
 }
 
 function pressHandlers(props: ListItemProps): RowPressProps {
@@ -70,6 +90,8 @@ function accessibilityProps(props: DrawingProps): RowPressProps {
 }
 
 function usePressProps(props: DrawingProps): RowPressProps {
+  const menu = useInMenu();
+
   return {
     ...accessibilityProps(props),
     ...pressHandlers(props),
@@ -79,7 +101,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
     testID: props.testID,
     ...triggerProps(props),
     ...useHighlightHandlers(props),
-    className: pressClass(props.disabled),
+    className: pressClass(props, menu),
   };
 }
 
@@ -114,23 +136,12 @@ function switchKeyDown(props: DrawingProps): React.KeyboardEventHandler {
   };
 }
 
-function ItemContentSlots(props: DrawingProps): ReactElement {
-  return (
-    <TextClassContext value={undefined}>
-      <Leading {...props} />
-      {props.content ?? <ItemContent {...props} />}
-      <Trailing {...props} />
-      <Accessory>{props.accessory}</Accessory>
-    </TextClassContext>
-  );
-}
-
 export function ItemPress(props: DrawingProps): ReactElement {
   const press = usePressProps(props);
 
   if (Platform.OS === 'web' && props.accessibilityRole === 'radio')
     return (
-      <RadioPress row={props}>
+      <RadioPress row={props} className={press.className}>
         <ItemContentSlots {...props} />
       </RadioPress>
     );

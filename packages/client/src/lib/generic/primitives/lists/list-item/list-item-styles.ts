@@ -25,10 +25,35 @@ function corners(
   return appearance === 'grouped' ? groupedCorners[position] : undefined;
 }
 
-export function itemSurface(
-  appearance: ListAppearance,
-  position: ListPosition,
-  { selected, tone }: Pick<ListItemProps, 'selected' | 'tone'>,
+// Paper's Combobox master: a popover's rows sit flat on it, 2px apart, each with the menu-row radius.
+const menuGaps = {
+  only: '',
+  first: 'mb-0.5',
+  middle: 'mb-0.5',
+  last: '',
+} satisfies Record<ListPosition, string>;
+
+export interface ItemDrawing {
+  appearance: ListAppearance;
+  position: ListPosition;
+  menu: boolean;
+}
+
+type SurfaceState = Pick<ListItemProps, 'selected' | 'tone'>;
+
+export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
+  if (drawing.menu)
+    return cn(
+      'relative overflow-hidden rounded-xl',
+      menuGaps[drawing.position],
+    );
+
+  return rowSurface(drawing, state);
+}
+
+function rowSurface(
+  { appearance, position }: ItemDrawing,
+  { selected, tone }: SurfaceState,
 ): string {
   return cn(
     'relative overflow-hidden',
@@ -38,24 +63,57 @@ export function itemSurface(
   );
 }
 
-export const itemPress = cn(
-  'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5 web:select-none web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2',
-  Platform.OS !== 'android' && 'active:bg-pressed',
+const pressLayouts = {
+  row: 'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5',
+  menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
+};
+
+const pressFocus =
+  'web:select-none web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
+
+// Pressed (4%) follows hover (2%) on the web, so a held row is darker than a hovered one.
+const pressTints = cn(
+  'web:hover:bg-hover web:active:bg-pressed',
+  Platform.OS === 'ios' && 'active:bg-pressed',
 );
 
-function hasSeparator(
-  appearance: ListAppearance,
-  position: ListPosition,
-): boolean {
-  return appearance !== 'cards' && ['first', 'middle'].includes(position);
+// The web's Pressable draws a pointer cursor in an unlayered rule; a read-only row takes the page's.
+const readOnlyCursor = 'web:cursor-auto!';
+
+// Paper: a control wraps onto its own line, 12px under a menu row's title and 8px under a sheet row's.
+const controlLines = {
+  row: 'flex-wrap gap-y-2',
+  menu: 'flex-wrap gap-y-3',
+};
+
+type PressDrawing = { menu: boolean; interactive: boolean; control: boolean };
+
+function pressLayout({ menu, control }: PressDrawing): string {
+  const layout = menu ? 'menu' : 'row';
+
+  return cn(pressLayouts[layout], control && controlLines[layout]);
+}
+
+// Only a row that does something takes the hover and pressed tints; a read-only row stays still.
+export function itemPress(press: PressDrawing): string {
+  return cn(
+    pressLayout(press),
+    pressFocus,
+    press.interactive ? pressTints : readOnlyCursor,
+  );
+}
+
+function hasSeparator({ appearance, position, menu }: ItemDrawing): boolean {
+  return (
+    !menu && appearance !== 'cards' && ['first', 'middle'].includes(position)
+  );
 }
 
 export function itemSeparator(
-  appearance: ListAppearance,
-  position: ListPosition,
+  drawing: ItemDrawing,
   leading: boolean,
 ): string | undefined {
-  if (!hasSeparator(appearance, position)) return undefined;
+  if (!hasSeparator(drawing)) return undefined;
 
   return cn(
     'absolute bottom-0 right-4 left-4 bg-border android:hidden',

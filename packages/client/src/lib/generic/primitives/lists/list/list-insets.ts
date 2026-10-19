@@ -7,10 +7,20 @@ type Insets = Pick<
 
 type Options = Insets & Pick<ListProps<never>, 'appearance' | 'fit'>;
 
-export function listInsets(props: Options): Insets {
-  if (props.appearance !== 'grouped') return props;
+// Paper's Combobox master: a grouped list in a popover holds its menu rows 4px inside the popover.
+const menuInset = 1;
+
+export function listInsets(props: Options, menu: boolean): Insets {
+  if (props.appearance !== 'grouped') return plainInsets(props, menu);
+
+  if (menu) return menuInsets(props);
 
   return { padding: horizontalInset(props), ...verticalInsets(props) };
+}
+
+// A plain list in a popover sits in its caller's inset, so it adds no scroll end gap below its last row.
+function plainInsets(props: Options, menu: boolean): Insets {
+  return menu ? { ...props, paddingBottom: props.paddingBottom ?? 0 } : props;
 }
 
 function horizontalInset(props: Options): Insets['padding'] {
@@ -21,5 +31,17 @@ function verticalInsets(props: Options): Omit<Insets, 'padding'> {
   return {
     paddingTop: props.paddingTop ?? { compact: 4, wide: 0 },
     paddingBottom: props.paddingBottom ?? { compact: 8, wide: 6 },
+  };
+}
+
+const orMenuInset = (
+  inset: Insets['padding'],
+): NonNullable<Insets['padding']> => inset ?? menuInset;
+
+function menuInsets(props: Options): Insets {
+  return {
+    padding: orMenuInset(props.padding),
+    paddingTop: orMenuInset(props.paddingTop),
+    paddingBottom: orMenuInset(props.paddingBottom),
   };
 }
