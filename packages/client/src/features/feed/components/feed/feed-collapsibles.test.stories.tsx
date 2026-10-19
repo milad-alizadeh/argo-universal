@@ -8,7 +8,7 @@ import {
   expandedAttribute,
   feedScrollId,
   openRow,
-  restingTopOf,
+  openedRow,
   scrollAwayFromEnd,
   scrolledToEnd,
   scrollToEnd,
@@ -57,6 +57,17 @@ async function lastTwoRowsIn(
   return [trigger, below];
 }
 
+function contentsOf(row: HTMLElement): HTMLElement {
+  const contentId = row.getAttribute('aria-controls');
+  const content =
+    contentId && document.getElementById(contentId)?.firstElementChild;
+
+  if (!(content instanceof HTMLElement))
+    throw new Error('No content controlled by the row');
+
+  return content;
+}
+
 // At the end, closing a row draws the rows above down into its place, while the rows below it hold still on every frame.
 export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
   play: async ({ canvas }) => {
@@ -73,11 +84,13 @@ export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
     if (!lastGroup) throw new Error('No closed row at the end');
     await openRow(lastGroup);
     const [trigger, below] = await lastTwoRowsIn(lastGroup, closedRows);
+    await openedRow(lastGroup, () => contentsOf(lastGroup));
     await openRow(trigger);
-    await restingTopOf(below);
+    await openedRow(trigger, () => contentsOf(trigger));
     await scrollToEnd(scroll);
     await settledTopOf(() => below);
 
+    await expect(scrolledToEnd(scroll)).toBe(true);
     const tops = await sampleEachFrame(
       () => trigger.click(),
       () => below.getBoundingClientRect().top,
