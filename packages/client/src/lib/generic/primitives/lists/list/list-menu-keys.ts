@@ -12,7 +12,7 @@ const menuRows = (menu: HTMLElement): HTMLElement[] =>
   );
 
 /*
- * The arrow keys, Home and End move between a popover's rows, as in a Combobox. A key a control already
+ * The arrow keys, Home and End move between a popover List's rows, as in a Combobox. A key a control already
  * took (a slider, a Combobox's own choices) stays with it, and so does one pressed outside the rows.
  */
 export function moveBetweenRows(event: KeyboardEvent<HTMLElement>): void {

@@ -7,6 +7,7 @@ import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-
 import { childEntries, menuEntries, type ListChild } from './list-children';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import { ListKeyboard } from './list-keyboard';
+import { ListMenuRows } from './list-menu-rows';
 import type { ListProps } from './list-props';
 import { scrollProps } from './list-scroll-props';
 import { ListSection } from './list-section';
@@ -134,13 +135,21 @@ function childMaxHeight(
   return props.maxHeight ?? height;
 }
 
-export function List<Item>(props: ListProps<Item>): ReactElement {
+function ListRows<Item>(props: ListProps<Item>): ReactElement {
   if (props.items !== undefined) return <DataList {...props} />;
 
   return (
     <ListKeyboard fit={props.fit}>
       <ChildrenList {...childrenOptions(props)} />
     </ListKeyboard>
+  );
+}
+
+export function List<Item>(props: ListProps<Item>): ReactElement {
+  return (
+    <ListMenuRows>
+      <ListRows {...props} />
+    </ListMenuRows>
   );
 }
 

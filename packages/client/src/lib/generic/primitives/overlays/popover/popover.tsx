@@ -8,7 +8,6 @@ import { useOpenState } from '#primitives/overlays/open-state';
 import { PopoverContext, usePopoverState } from './popover-context';
 import { HoverProvider, PopoverHover } from './popover-hover';
 import { hoverContentProps } from './popover-hover-focus';
-import { moveBetweenRows } from './popover-menu-keys';
 import type {
   PopoverContentProps as ContentProps,
   PopoverProps,
@@ -76,7 +75,6 @@ function PopoverBody({ ref, ...props }: BodyProps): React.JSX.Element {
       ref={ref}
       {...webContentProps(props)}
       onInteractOutside={keepTriggerInside(useTriggerElement())}
-      onKeyDown={moveBetweenRows}
       {...hoverContentProps(hover, props)}
     >
       <PopoverSurface {...props} open={open} />

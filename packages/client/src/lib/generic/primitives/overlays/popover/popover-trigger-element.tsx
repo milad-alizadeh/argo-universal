@@ -28,8 +28,9 @@ export function TriggerElementProvider(props: {
 export const useTriggerElement = (): TriggerElement | undefined =>
   useContext(PopoverTriggerElement);
 
-const isNode = (target: EventTarget | null): target is Node =>
-  target instanceof Node;
+// Whether the event landed on the trigger or inside it.
+const onTrigger = (element: Node | null | undefined, event: Event): boolean =>
+  event.target instanceof Node && element?.contains(event.target) === true;
 
 /*
  * A popover opened on hover is already open when a click focuses its trigger. Radix counts that focus as
@@ -39,14 +40,6 @@ export function keepTriggerInside(
   trigger: TriggerElement | undefined,
 ): (event: Event) => void {
   return (event) => {
-    if (isTrigger(trigger, event.target)) event.preventDefault();
+    if (onTrigger(trigger?.current, event)) event.preventDefault();
   };
 }
-
-const isTrigger = (
-  trigger: TriggerElement | undefined,
-  target: EventTarget | null,
-): boolean => isNode(target) && contains(trigger?.current, target);
-
-const contains = (element: Node | null | undefined, target: Node): boolean =>
-  element?.contains(target) ?? false;

@@ -68,7 +68,7 @@ const pressTints = cn(
 );
 
 // The web's Pressable draws a pointer cursor in an unlayered rule; a read-only row takes the page's.
-const stillRow = 'web:cursor-auto!';
+const readOnlyCursor = 'web:cursor-auto!';
 
 // Paper: a control wraps onto its own line, 12px under a menu row's title and 8px under a sheet row's.
 const controlLines = {
@@ -89,7 +89,7 @@ export function itemPress(press: PressDrawing): string {
   return cn(
     pressLayout(press),
     pressFocus,
-    press.interactive ? pressTints : stillRow,
+    press.interactive ? pressTints : readOnlyCursor,
   );
 }
 
