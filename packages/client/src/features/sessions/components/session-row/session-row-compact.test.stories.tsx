@@ -1,6 +1,7 @@
 import { expect } from 'storybook/test';
 import {
   meta as sessionRowTestMeta,
+  statusDots,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
@@ -18,7 +19,7 @@ const pullRequestArgs: Story['args'] = {
   session,
   layout: 'compact',
   pullRequest: { number: 45, status: 'open' },
-  trailing: '12m',
+  age: '12m',
 };
 
 const rowName = { name: `${session.title}, Running, Open PR` };
@@ -30,6 +31,7 @@ export const CompactPullRequest: Story = {
     eachLayout(async () => {
       await expect(canvas.getByRole('button', rowName)).toBeVisible();
       await expect(canvas.queryByText('#45')).not.toBeInTheDocument();
+      await expect(canvas.getByTestId('session-status')).toBeVisible();
       await expect(canvas.queryByText('12m')).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(
@@ -58,7 +60,7 @@ export const SelectsCompactRowWide = selectsCompactRow(layoutWidths.wide);
 
 // With no PR, a Compact row ends with how long ago the Session was active.
 export const CompactAge: Story = {
-  args: { session, layout: 'compact', trailing: '12m' },
+  args: { session, layout: 'compact', age: '12m' },
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(canvas.getByText('12m')).toBeVisible();
@@ -67,3 +69,6 @@ export const CompactAge: Story = {
       ).toBeVisible();
     }),
 };
+
+// The PR glyph or the time, then a dot unless the Session is idle.
+export const CompactStatusDots = statusDots('compact');

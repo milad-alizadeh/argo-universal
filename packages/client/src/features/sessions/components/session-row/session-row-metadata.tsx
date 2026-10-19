@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { Label } from '#primitives/content/label';
+import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
 import {
@@ -15,9 +16,10 @@ export interface SessionRowMetadataProps {
   selected: boolean;
   subagentsFailed?: boolean;
   pullRequest?: PullRequestIndicatorProps;
+  age?: string;
 }
 
-export function markSurface(selected: boolean): string {
+function markSurface(selected: boolean): string {
   return cn(
     'border-card bg-card',
     selected && 'web:wide:border-content web:wide:bg-content',
@@ -100,29 +102,13 @@ function SubagentsCount(props: SessionRowMetadataProps): React.ReactNode {
 function PullRequestLabel({
   pullRequest,
 }: Pick<SessionRowMetadataProps, 'pullRequest'>): React.ReactNode {
-  if (!pullRequest) {
-    return null;
-  }
-
-  return (
-    <PullRequestText number={pullRequest.number} status={pullRequest.status} />
-  );
+  return pullRequest ? <Label {...pullRequestLabelProps(pullRequest)} /> : null;
 }
 
-function PullRequestText({
+function pullRequestLabelProps({
   number,
   status,
-}: {
-  number: number;
-  status: PullRequestIndicatorProps['status'];
-}): React.ReactNode {
-  return <Label {...pullRequestLabelProps(number, status)} />;
-}
-
-function pullRequestLabelProps(
-  number: number,
-  status: PullRequestIndicatorProps['status'],
-): React.ComponentProps<typeof Label> {
+}: PullRequestIndicatorProps): React.ComponentProps<typeof Label> {
   return {
     testID: 'session-pull-request-slot',
     icon: pullRequestAppearance[status].icon,
@@ -140,11 +126,22 @@ function archivedContent({
   );
 }
 
+// How long ago the Session was active leads the line.
+function ageContent({ age }: SessionRowMetadataProps): React.ReactNode {
+  return age === undefined ? null : (
+    <Text role="secondary" tone="muted">
+      {age}
+    </Text>
+  );
+}
+
 function hasMetadata({
   session,
   pullRequest,
+  age,
 }: SessionRowMetadataProps): boolean {
   return [
+    age !== undefined,
     session.subagents.total > 0,
     session.archivedAt !== null,
     pullRequest !== undefined,
@@ -159,10 +156,11 @@ export function sessionMetadata(
   }
 
   return (
-    <View className="min-w-0 flex-row items-center gap-3">
+    <View className="min-w-0 flex-row items-center gap-2.5">
+      {ageContent(props)}
+      <PullRequestLabel pullRequest={props.pullRequest} />
       <SubagentsCount {...props} />
       {archivedContent(props)}
-      <PullRequestLabel pullRequest={props.pullRequest} />
     </View>
   );
 }

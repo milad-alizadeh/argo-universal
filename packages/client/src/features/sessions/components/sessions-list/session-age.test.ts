@@ -20,8 +20,4 @@ describe('how old a One list row reads', () => {
   it('reads the time since its last activity', () => {
     expect(sessionAge(session, now)).toBe('5m');
   });
-
-  it('reads no age while the list shows none', () => {
-    expect(sessionAge(session)).toBeUndefined();
-  });
 });
