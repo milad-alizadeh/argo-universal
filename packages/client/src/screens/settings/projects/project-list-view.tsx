@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { useState } from 'react';
+import { RowDrawingContext } from '#lib/generic/row-drawing-context';
 import { Action } from '#primitives/actions/action-list';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -22,7 +23,9 @@ export function ProjectListView(
 function ProjectsPage(props: SearchedProps): React.JSX.Element {
   return (
     <Page {...pageProps(props)}>
-      <ProjectsBody {...props} />
+      <RowDrawingContext value="content">
+        <ProjectsBody {...props} />
+      </RowDrawingContext>
     </Page>
   );
 }

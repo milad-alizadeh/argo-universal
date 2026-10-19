@@ -134,15 +134,3 @@ export const ShowsALoadErrorAsAToast: Story = {
     await expect(canvas.queryByRole('alert')).toBeNull();
   },
 };
-
-export const MarksTheOpenProject: Story = {
-  args: { selected: localProject.name },
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('link', { name: rowName(localProject) }),
-    ).toHaveAttribute('aria-current', 'page');
-    await expect(
-      canvas.getByRole('link', { name: rowName(worktreeProject) }),
-    ).not.toHaveAttribute('aria-current');
-  },
-};

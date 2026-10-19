@@ -6,6 +6,7 @@ import {
   agentsEmptyLabel,
   type RowsLoad,
 } from '#features/agents';
+import { RowDrawingContext } from '#lib/generic/row-drawing-context';
 import {
   FieldList,
   type FieldListSection,
@@ -24,16 +25,22 @@ export const agentsCatalogTestId = 'agents-catalog';
 
 export function AgentCatalog(props: CatalogProps): React.JSX.Element {
   return (
-    <FieldList
-      gap="sm"
-      testID={agentsCatalogTestId}
-      sections={catalogSections(props)}
-      header={
-        <View className="pb-3">
-          <AgentsFilterPills {...props} />
-        </View>
-      }
-    />
+    <RowDrawingContext value="content">
+      <FieldList
+        gap="sm"
+        testID={agentsCatalogTestId}
+        sections={catalogSections(props)}
+        header={<FilterHeader {...props} />}
+      />
+    </RowDrawingContext>
+  );
+}
+
+function FilterHeader(props: CatalogProps): React.JSX.Element {
+  return (
+    <View className="pb-3">
+      <AgentsFilterPills {...props} />
+    </View>
   );
 }
 

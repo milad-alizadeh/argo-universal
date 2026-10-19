@@ -8,7 +8,7 @@ import {
   filterPillSpokenLabel,
 } from './filter-pill-props';
 
-// The web's filter: one toolbar pill with its count; the chosen one uses the primary fill.
+// The web's filter: one toolbar pill with its count; the chosen one takes the selected tint (Paper's Agents page).
 export function FilterPill(props: FilterPillProps): React.JSX.Element {
   return (
     <Pressable
@@ -29,9 +29,9 @@ const pillClass = (selected: boolean): string =>
   cn(
     'h-7 flex-row items-center gap-1.5 rounded-full px-3',
     selected
-      ? 'bg-primary active:bg-primary/77 web:hover:bg-primary/67 web:active:bg-primary/77'
+      ? 'bg-selected active:bg-pressed'
       : 'web:hover:bg-hover active:bg-pressed',
   );
 
 const pillTextClass = (selected: boolean): string =>
-  cn(selected ? 'text-primary-foreground' : 'text-muted-foreground');
+  cn(selected ? 'text-foreground' : 'text-muted-foreground');

@@ -82,9 +82,10 @@ function switchStateClass(
   );
 }
 
+// Paper's dark thumb is neutral-100, the dark tone scale's 900 step, a shade lighter than the foreground.
 function thumbClass(props: Pick<SwitchProps, 'value' | 'size'>): string {
   return cn(
-    'bg-card dark:bg-foreground rounded-full transition-transform',
+    'bg-card dark:bg-tone-neutral-900 rounded-full transition-transform',
     props.size === 'sm' ? 'size-3' : 'size-4.5 shadow-control',
     'web:pointer-events-none web:block web:ring-0',
     thumbPosition(props),

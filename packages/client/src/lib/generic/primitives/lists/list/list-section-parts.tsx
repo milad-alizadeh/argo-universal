@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
@@ -53,14 +53,22 @@ function HeaderLeading(props: HeaderProps): ReactNode {
   ) : null;
 }
 
-function HeaderTitle(props: HeaderProps): ReactNode {
+// The drawing's title colour, or a sidebar section's muted title.
+const titleLook = (
+  props: DrawnHeaderProps,
+): Pick<ComponentProps<typeof Text>, 'className' | 'tone'> => ({
+  className: props.drawing.title,
+  tone: props.sidebar ? ('muted' as const) : undefined,
+});
+
+function HeaderTitle(props: DrawnHeaderProps): ReactNode {
   if (props.isLoading)
     return <SkeletonBar kind="title" text={props.title} textRole="heading" />;
 
   return (
     <Text
       role="heading"
-      tone={props.sidebar ? 'muted' : undefined}
+      {...titleLook(props)}
       numberOfLines={1}
       accessibilityRole="heading"
       aria-level={2}
@@ -70,7 +78,7 @@ function HeaderTitle(props: HeaderProps): ReactNode {
   );
 }
 
-function HeaderContent(props: HeaderProps): ReactElement {
+function HeaderContent(props: DrawnHeaderProps): ReactElement {
   return (
     <View className="min-w-0 flex-1">
       <HeaderTitle {...props} />

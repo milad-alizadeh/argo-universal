@@ -2,56 +2,15 @@ import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { CountBadge } from '#primitives/status/count-badge';
-import { StatusDot } from '#primitives/status/status-dot';
 import { useInMenu } from '../../../menu-rows-context';
-import type { ListItemProps, RowBadge } from './list-item-props';
-
-// A Row badge at the top-end corner of the view it sits in, such as a row's leading icon or a header button.
-export function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
-  if (badge === undefined) return null;
-
-  return (
-    <View className="absolute -right-1 -top-1">{renderRowBadge(badge)}</View>
-  );
-}
-
-function renderRowBadge(
-  badge: NonNullable<ListItemProps['badge']>,
-): ReactElement {
-  if (typeof badge === 'number') return <CountBadge badge={{ count: badge }} />;
-
-  if (badge.kind === 'count')
-    return <CountBadge badge={{ count: badge.count, label: badge.label }} />;
-
-  return <RowStatus badge={badge} />;
-}
-
-function RowStatus({
-  badge,
-}: {
-  badge: Extract<RowBadge, { kind: 'status' }>;
-}): ReactElement {
-  return (
-    <View className="rounded-full bg-card p-0.5">
-      <StatusDot
-        tone={badge.tone}
-        pulse={badge.pulse}
-        accessibilityLabel={badge.label}
-      />
-    </View>
-  );
-}
-
-function hasBadge(badge: ListItemProps['badge']): boolean {
-  return badge !== undefined && hasBadgeContent(badge);
-}
-
-function hasBadgeContent(badge: NonNullable<ListItemProps['badge']>): boolean {
-  if (typeof badge === 'number') return badge > 0;
-
-  return badge.kind !== 'count' || badge.count > 0;
-}
+import { useInSidebar } from '../../../row-drawing-context';
+import {
+  hasBadge,
+  ItemBadge,
+  sidebarStatus,
+  useLeadingBadge,
+} from './list-item-badge';
+import type { ListItemProps } from './list-item-props';
 
 export function hasLeading(
   props: Pick<ListItemProps, 'leading' | 'badge'>,
@@ -76,25 +35,29 @@ function leadingSlot(menu: boolean, sidebar: boolean): string {
 
 export function Leading(props: LeadingProps): ReactNode {
   const menu = useInMenu();
+  const badge = useLeadingBadge(props.badge);
 
   if (!hasLeading(props)) return null;
 
   return (
     <View className={leadingSlot(menu, props.sidebar !== undefined)}>
       {props.leading}
-      <ItemBadge badge={props.badge} />
+      <ItemBadge badge={badge} />
     </View>
   );
 }
 
-function trailingContent(
-  props: Pick<ListItemProps, 'trailing' | 'value'>,
-): ReactNode {
+type TrailingProps = Pick<
+  ListItemProps,
+  'trailing' | 'value' | 'badge' | 'valueTone'
+>;
+
+function trailingContent(props: TrailingProps): ReactNode {
   return props.value === undefined ? (
     props.trailing
   ) : (
     <View className="flex-row items-center gap-3">
-      <Text role="row" tone="muted">
+      <Text role="row" tone={props.valueTone ?? 'muted'}>
         {props.value}
       </Text>
       {props.trailing}
@@ -102,10 +65,22 @@ function trailingContent(
   );
 }
 
-export function Trailing(
-  props: Pick<ListItemProps, 'trailing' | 'value'>,
-): ReactNode {
+function useTrailingContent(props: TrailingProps): ReactNode {
   const content = trailingContent(props);
+  const status = useInSidebar() ? sidebarStatus(props.badge) : undefined;
+
+  if (status === undefined) return content;
+
+  return (
+    <View className="flex-row items-center gap-3">
+      {content}
+      {status}
+    </View>
+  );
+}
+
+export function Trailing(props: TrailingProps): ReactNode {
+  const content = useTrailingContent(props);
 
   return content === undefined ? null : (
     <View className="h-6 wide-type:h-5 shrink-0 flex-row items-center justify-end gap-1">
@@ -127,6 +102,11 @@ export function LinkAccessory(): ReactElement | null {
   return Platform.OS === 'android' ? null : (
     <Icon name="web-disclosure" role="disclosure" className="text-tertiary" />
   );
+}
+
+// A desktop sidebar's rows push no chevron, so its accessory lane stays empty.
+export function useLinkAccessory(): ReactElement | undefined {
+  return useInSidebar() ? undefined : <LinkAccessory />;
 }
 
 // Paper: a control under the row's title and value spans the row's content width, on its own line.
