@@ -87,7 +87,8 @@ Each section uses these artboards on the pages listed in Design files, top-align
 ## Icons
 
 - Icons are SF Symbols, drawn as SVG paths so the design matches iOS and macOS; Android frames use Material Symbols (ADR-0019). The SVGs are Paper mockups only; the app draws the real symbol through expo-symbols.
-- Git icons (branch, pull request, PR states, Merge PR and Changes) are Tabler Icons on every platform, in the SF and the Material cell alike (ADR-0019). Repository uses GitHub's Octicons mark. Their Paper SVGs use the same sources as the app.
+- Git icons (branch, pull request, PR states, Merge PR and Changes) are Tabler Icons on every platform, in the SF and the Material cell alike (ADR-0019). Their Paper SVGs use the same sources as the app.
+- Logos, such as GitHub's Octicons mark on the Agent card, are plain SVG files in `packages/client/src/lib/generic/symbols/assets/logos` (ADR-0019). A logo layer is named `Logo / <key>`, `<key>` being its key in `logoSources` (`logo-source.ts`). Its Paper SVG copies the file, in the role's icon box with the mark filling the share `circle` fills.
 - Where SF Symbols has no symbol, Argo draws its own (`custom.<name>` in `packages/client/src/lib/generic/symbols/custom-symbol-paths.json`, ADR-0019). Its Paper SVG uses the JSON's viewBox and path, so design and app share one outline.
 - An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
 - The library is "Components / Icons" on the Global Components page: one tile per app icon, a Material cell beside the SF cell. Copy icons from it.
