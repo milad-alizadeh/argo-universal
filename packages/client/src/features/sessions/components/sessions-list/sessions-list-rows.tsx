@@ -30,7 +30,7 @@ export type SessionListRowProps = Pick<
   closing?: boolean;
 };
 
-// Each row is held in a container of its own, so the space between rows is the container's: Regular rows sit 8 apart; Compact rows sit 2 apart wide, and a phone's grouped rows space themselves.
+// Each row is held in a container of its own, so the space between rows is the container's: web rows sit 2 apart, flat; a phone's cards and grouped rows space themselves.
 export const SessionListRow = memo(function SessionListRow({
   animate,
   closing,

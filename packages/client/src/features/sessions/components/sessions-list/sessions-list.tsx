@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { hasLiquidGlass } from '#lib/generic/native-header';
 import { cn } from '#lib/generic/utils';
 import { ActionShortcutScope } from '#primitives/actions/action-list';
@@ -94,7 +94,12 @@ const standardTopPadding = { compact: 5, wide: 2 } as const;
 
 const searchTopPadding = { compact: 0, wide: 2 } as const;
 
-function sessionListAppearance(props: SessionsListProps): 'grouped' | 'cards' {
+// Web draws Session rows flat on the sidebar, with no card, edge or separator (Paper "Screen / 1 Porcelain · Ring · Regular"); phones keep their cards and grouped lists.
+function sessionListAppearance(
+  props: SessionsListProps,
+): 'plain' | 'grouped' | 'cards' {
+  if (Platform.OS === 'web') return 'plain';
+
   return props.view.layout === 'compact' ? 'grouped' : 'cards';
 }
 

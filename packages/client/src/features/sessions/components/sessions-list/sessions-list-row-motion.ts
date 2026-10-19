@@ -12,6 +12,13 @@ export function rowFade(animate?: boolean): Partial<typeof fades> {
   return animate ? fades : noFades;
 }
 
+// Web: a flat row, 2 apart, whose hover and selected tints take the menu-row radius (Paper "Screen / 1 Porcelain · Ring · Regular").
+const flatRow = 'web:mb-0.5 web:overflow-hidden web:rounded-xl';
+
 export function rowClassName(closing?: boolean): string {
-  return cn('web:transition-opacity web:duration-150', closing && 'opacity-0');
+  return cn(
+    'web:transition-opacity web:duration-150',
+    flatRow,
+    closing && 'opacity-0',
+  );
 }
