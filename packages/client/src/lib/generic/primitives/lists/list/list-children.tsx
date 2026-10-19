@@ -7,6 +7,7 @@ import {
   type ListSelection,
 } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
+import { useInMenu } from '../../../menu-rows-context';
 import { flattenedChildren } from './list-child-nodes';
 import type { ListSectionProps } from './list-props';
 import { ListSection } from './list-section';
@@ -70,8 +71,18 @@ function sectionEntries(
     ...headerEntries(props, key),
     ...body,
     ...footerEntries(props, key),
-    { key: `${key}:gap`, position: 'only', content: <View className="h-4" /> },
+    { key: `${key}:gap`, position: 'only', content: <SectionGap /> },
   ];
+}
+
+// Paper Combobox 9BM-0: a popover's groups sit 8px apart; other lists keep 16px between sections.
+function SectionGap(): ReactElement {
+  return <View className={useInMenu() ? 'h-2' : 'h-4'} />;
+}
+
+// A popover's last group ends at the popover's own inset, with no gap below it.
+export function menuEntries(entries: ListChild[]): ListChild[] {
+  return entries.at(-1)?.key.endsWith(':gap') ? entries.slice(0, -1) : entries;
 }
 
 function selectedEntries(props: ListSectionProps, key: string): ListChild[] {

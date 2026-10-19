@@ -1,6 +1,7 @@
 import * as WebPopover from '@radix-ui/react-popover';
 import * as React from 'react';
 import { View } from 'react-native';
+import { InMenu } from '#lib/generic/menu-rows-context';
 import { cn } from '#lib/generic/utils';
 import { TextClassContext } from '#primitives/content/text';
 import { useOpenState } from '#primitives/overlays/open-state';
@@ -76,6 +77,7 @@ function webContentProps(
   };
 }
 
+// Lists inside draw menu rows (InMenu); a phone's popover is a Sheet and keeps its grouped rows.
 function PopoverSurface(
   props: ContentProps & { open: boolean },
 ): React.JSX.Element {
@@ -86,7 +88,7 @@ function PopoverSurface(
       data-state={props.open ? 'open' : 'closed'}
     >
       <TextClassContext.Provider value="text-foreground">
-        {props.children}
+        <InMenu value>{props.children}</InMenu>
       </TextClassContext.Provider>
     </View>
   );

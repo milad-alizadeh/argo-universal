@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
+import { useInMenu } from '../../../menu-rows-context';
 import type { ListItemProps, RowBadge } from './list-item-props';
 
 function ItemBadge({ badge }: Pick<ListItemProps, 'badge'>): ReactNode {
@@ -56,13 +57,21 @@ export function hasLeading(
   return [Boolean(props.leading), hasBadge(props.badge)].some(Boolean);
 }
 
+// Paper: a menu row's icon slot is 20px; other rows keep the row icon slot.
+const leadingClasses = {
+  row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',
+  menu: 'relative h-5 w-5 shrink-0 items-center justify-center',
+};
+
 export function Leading(
   props: Pick<ListItemProps, 'leading' | 'badge'>,
 ): ReactNode {
+  const menu = useInMenu();
+
   if (!hasLeading(props)) return null;
 
   return (
-    <View className="relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center">
+    <View className={leadingClasses[menu ? 'menu' : 'row']}>
       {props.leading}
       <ItemBadge badge={props.badge} />
     </View>

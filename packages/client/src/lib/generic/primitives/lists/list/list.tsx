@@ -1,9 +1,10 @@
 import { useId, useMemo, type ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { ListContext } from '../../../list-context';
+import { useInMenu } from '../../../menu-rows-context';
 import { ScrollFadeList } from '../../../scroll-fade/scroll-fade-list';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
-import { childEntries, type ListChild } from './list-children';
+import { childEntries, menuEntries, type ListChild } from './list-children';
 import { ListEmpty, useRenderedRows, useListPadding } from './list-data';
 import { ListKeyboard } from './list-keyboard';
 import type { ListProps } from './list-props';
@@ -51,10 +52,11 @@ function useDataListProps<Item>(
 
 const fill = { flex: 1, minWidth: '100%' } as const;
 
+// Its fades blend into the surface behind the list: a popover's card, else the page.
 function DataList<Item>(props: ListProps<Item>): ReactElement {
   return (
     <ScrollFadeList
-      surfaceClassName="bg-content"
+      surfaceClassName={useInMenu() ? 'bg-card' : 'bg-content'}
       style={fill}
       {...useDataListProps(props)}
     />
@@ -88,9 +90,19 @@ function childContext(
   };
 }
 
-function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
+function useChildEntries(children: ChildrenOptions['children']): ListChild[] {
   const id = useId();
-  const items = useMemo(() => childEntries(children, id), [children, id]);
+  const menu = useInMenu();
+
+  return useMemo(() => {
+    const entries = childEntries(children, id);
+
+    return menu ? menuEntries(entries) : entries;
+  }, [children, id, menu]);
+}
+
+function ChildrenList({ children, ...props }: ChildrenOptions): ReactElement {
+  const items = useChildEntries(children);
   // Fixed children can live inside a scrolling page without a bounded flex height.
   const { height } = useWindowDimensions();
 

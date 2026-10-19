@@ -2,6 +2,7 @@ import type { ReactElement, ComponentProps } from 'react';
 import { Platform, Pressable } from 'react-native';
 import { TextClassContext } from '#primitives/content/text';
 import { usePressRipple } from '#primitives/native/material-palette';
+import { useInMenu } from '../../../menu-rows-context';
 import { cn } from '../../../utils';
 import { linkPress } from './list-item-link-press';
 import { Accessory, ItemContent, Leading, Trailing } from './list-item-parts';
@@ -19,8 +20,17 @@ function rowLabel(props: ListItemProps): string {
     .join(', ');
 }
 
-function pressClass(disabled?: boolean): string {
-  return cn(itemPress, disabled && 'opacity-50');
+function interactive(props: DrawingProps): boolean {
+  if (props.disabled) return false;
+
+  return [props.onPress, props.href, props.onLongPress].some(Boolean);
+}
+
+function pressClass(props: DrawingProps, menu: boolean): string {
+  return cn(
+    itemPress({ menu, interactive: interactive(props) }),
+    props.disabled && 'opacity-50',
+  );
 }
 
 function pressHandlers(props: ListItemProps): RowPressProps {
@@ -69,6 +79,8 @@ function accessibilityProps(props: DrawingProps): RowPressProps {
 }
 
 function usePressProps(props: DrawingProps): RowPressProps {
+  const menu = useInMenu();
+
   return {
     ...accessibilityProps(props),
     ...pressHandlers(props),
@@ -77,7 +89,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
     android_ripple: usePressRipple(),
     testID: props.testID,
     ...triggerProps(props),
-    className: pressClass(props.disabled),
+    className: pressClass(props, menu),
   };
 }
 
@@ -117,6 +129,7 @@ function switchKeyDown(props: DrawingProps): React.KeyboardEventHandler {
 function ItemContentSlots(props: DrawingProps): ReactElement {
   return (
     <TextClassContext value={undefined}>
+      {props.choice}
       <Leading {...props} />
       {props.content ?? <ItemContent {...props} />}
       <Trailing {...props} />
@@ -130,7 +143,7 @@ export function ItemPress(props: DrawingProps): ReactElement {
 
   if (Platform.OS === 'web' && props.accessibilityRole === 'radio')
     return (
-      <RadioPress row={props}>
+      <RadioPress row={props} className={press.className}>
         <ItemContentSlots {...props} />
       </RadioPress>
     );
