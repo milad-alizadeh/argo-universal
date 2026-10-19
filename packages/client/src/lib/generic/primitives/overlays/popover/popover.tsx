@@ -1,3 +1,4 @@
+import { useDismissableLayerSurface } from '@radix-ui/react-dismissable-layer';
 import * as WebPopover from '@radix-ui/react-popover';
 import * as React from 'react';
 import { View } from 'react-native';
@@ -74,7 +75,7 @@ function PopoverBody({ ref, ...props }: BodyProps): React.JSX.Element {
 
   return (
     <WebPopover.Content
-      ref={ref}
+      ref={useSurfaceRef(ref)}
       {...webContentProps(props)}
       onInteractOutside={keepTriggerInside(useTriggerElement())}
       {...hoverContentProps(hover, props)}
@@ -82,6 +83,32 @@ function PopoverBody({ ref, ...props }: BodyProps): React.JSX.Element {
       <PopoverSurface {...props} open={open} />
     </WebPopover.Content>
   );
+}
+
+/*
+ * React Native Web's pressables stop a click's propagation, which Radix reads as a click another control kept. As a
+ * dismissable surface, a click on this popover still counts as outside the popovers opened beside it, and closes them.
+ */
+function useSurfaceRef(
+  ref: React.Ref<HTMLDivElement> | undefined,
+): React.RefCallback<HTMLDivElement> {
+  const surface = useDismissableLayerSurface();
+
+  return React.useCallback(
+    (node: HTMLDivElement | null) => {
+      surface(node);
+      setRef(ref, node);
+    },
+    [surface, ref],
+  );
+}
+
+function setRef(
+  ref: React.Ref<HTMLDivElement> | undefined,
+  node: HTMLDivElement | null,
+): void {
+  if (typeof ref === 'function') ref(node);
+  else if (ref) ref.current = node;
 }
 
 function webContentProps(

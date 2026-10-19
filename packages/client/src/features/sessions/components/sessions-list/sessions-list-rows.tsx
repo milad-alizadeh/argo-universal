@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { memo, useCallback } from 'react';
+import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { ListItem } from '#primitives/lists/list-item';
 import {
@@ -7,10 +8,19 @@ import {
   type ProjectHeadingProps,
 } from '../project-heading/project-heading';
 import { SessionRow, type SessionRowProps } from '../session-row/session-row';
-import { rowClassName, rowFade } from './sessions-list-row-motion';
+import {
+  emptyRowClassName,
+  headingClassName,
+  rowFade,
+  useRowClassName,
+} from './sessions-list-row-motion';
 
 export function NoSessionsYet(): React.JSX.Element {
-  return <ListItem title="No Sessions yet." tone="muted" />;
+  return (
+    <View className={emptyRowClassName}>
+      <ListItem title="No Sessions yet." tone="muted" />
+    </View>
+  );
 }
 
 export type SessionListRowProps = Pick<
@@ -30,7 +40,7 @@ export type SessionListRowProps = Pick<
   closing?: boolean;
 };
 
-// Each row is held in a container of its own, so the space between rows is the container's: Regular rows sit 8 apart; Compact rows sit 2 apart wide, and a phone's grouped rows space themselves.
+// Each row is held in a container of its own, so the space between rows is the container's: web rows sit 2 apart, flat; a phone's cards and grouped rows space themselves.
 export const SessionListRow = memo(function SessionListRow({
   animate,
   closing,
@@ -40,7 +50,7 @@ export const SessionListRow = memo(function SessionListRow({
     <Animated.View
       testID="session-row-surface"
       {...rowFade(animate)}
-      className={rowClassName(closing)}
+      className={useRowClassName(closing)}
     >
       <SessionRow {...props} />
     </Animated.View>
@@ -88,11 +98,13 @@ export const ProjectListHeading = memo(function ProjectListHeading(
   const actions = useHeadingActions(props);
 
   return (
-    <ProjectHeading
-      name={props.name}
-      collapsed={props.collapsed}
-      addLabel={`New Session in ${props.name}`}
-      {...actions}
-    />
+    <View className={headingClassName(props.collapsed)}>
+      <ProjectHeading
+        name={props.name}
+        collapsed={props.collapsed}
+        addLabel={`New Session in ${props.name}`}
+        {...actions}
+      />
+    </View>
   );
 });

@@ -59,55 +59,30 @@ export function hasLeading(
   return [Boolean(props.leading), hasBadge(props.badge)].some(Boolean);
 }
 
-// Paper: a menu row's icon slot is 20px; other rows keep the row icon slot.
+// Paper: a menu row's icon slot is 20px, a sidebar row's 16 wide on its title's 20 line; other rows keep the row icon slot.
 const leadingClasses = {
   row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',
   menu: 'relative h-5 w-5 shrink-0 items-center justify-center',
+  sidebar: 'relative h-5 w-4 shrink-0 items-center justify-center',
 };
 
-export function Leading(
-  props: Pick<ListItemProps, 'leading' | 'badge'>,
-): ReactNode {
+type LeadingProps = Pick<ListItemProps, 'leading' | 'badge' | 'sidebar'>;
+
+function leadingSlot(menu: boolean, sidebar: boolean): string {
+  if (menu) return leadingClasses.menu;
+
+  return sidebar ? leadingClasses.sidebar : leadingClasses.row;
+}
+
+export function Leading(props: LeadingProps): ReactNode {
   const menu = useInMenu();
 
   if (!hasLeading(props)) return null;
 
   return (
-    <View className={leadingClasses[menu ? 'menu' : 'row']}>
+    <View className={leadingSlot(menu, props.sidebar !== undefined)}>
       {props.leading}
       <ItemBadge badge={props.badge} />
-    </View>
-  );
-}
-
-type SubtitleProps = { text?: string; multiline?: boolean };
-
-function Subtitle({ text, multiline }: SubtitleProps): ReactNode {
-  return text === undefined ? null : (
-    <Text
-      role="row-detail"
-      tone="muted"
-      numberOfLines={multiline ? undefined : 1}
-    >
-      {text}
-    </Text>
-  );
-}
-
-function Meta({ children }: { children?: ReactNode }): ReactNode {
-  return children ? (
-    <View className="min-w-0 flex-row items-center gap-3 pt-1">{children}</View>
-  ) : null;
-}
-
-export function ItemContent(props: ListItemProps): ReactElement {
-  return (
-    <View className="min-w-0 flex-1 gap-0.5">
-      <Text role="row" tone={props.tone} numberOfLines={1}>
-        {props.title}
-      </Text>
-      <Subtitle text={props.subtitle} multiline={!!props.description} />
-      <Meta>{props.meta}</Meta>
     </View>
   );
 }

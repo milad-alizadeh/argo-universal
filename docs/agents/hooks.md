@@ -1,6 +1,6 @@
 # Hooks
 
-Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/settings.json` and `.codex/hooks.json`, in two modes: `after-edit` and `before-stop`. Hooks give early feedback only; `pnpm quality` and the required CI check are the gate.
+Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/settings.json` and `.codex/hooks.json`, in two modes: `after-edit` and `before-stop`. Hooks give early feedback only; the required CI check is the gate.
 
 ## What runs
 
@@ -9,13 +9,22 @@ Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/set
 - A finding in a folder that `tooling/oxlint/not-yet-cleared.json` lists is off for that folder; never add a folder or rule to that list: fix the code.
 - Run `node tools/not-yet-cleared.mts prune` after clearing a folder or rule; it removes stale waivers and empty entries.
 - In a Checkout without `node_modules`, such as an Argo Session worktree, both hooks pass quietly.
-- Hooks run no tests. Run the Vitest, Storybook or Playwright tests your change touches yourself, and `pnpm quality` before you hand back.
+- Hooks run no tests. Run the test files you work on yourself, and `pnpm verify` before you hand back.
+
+## Verify
+
+`pnpm verify` (`tools/verify.mts`) checks the change since the merge base with `origin/main`, uncommitted files included:
+
+- oxfmt `--check` and type-aware oxlint on the changed files, and `turbo run check-types --affected` when TypeScript changed.
+- The test files that import a changed file, found by `vitest list --changed`. Past `DEPENDENT_LIMIT` in `tools/verify-scope.mts` (a primitive's edit reaches most story files; a `package.json` or Vitest config edit reaches every test), it runs only those in the touched folders and below, and says how many it left to CI.
+
+CI runs the full suites. Run `pnpm quality` locally only when the owner asks; it holds the browser-suite lock for its whole run ([storybook.md](storybook.md)).
 
 ## Trust
 
 - Claude Code: accept the workspace trust prompt for the folder.
 - Codex: trust the project's `.codex/` folder, then approve both hooks in `/hooks`. Approval is by the hash of the hook entry, so an edit to `.codex/hooks.json` needs a new approval; an edit to `tools/agent-hooks.mts` does not.
-- Untrusted hooks do not run; `pnpm quality` still does.
+- Untrusted hooks do not run; `pnpm verify` and CI still do.
 
 ## Changing the hooks
 

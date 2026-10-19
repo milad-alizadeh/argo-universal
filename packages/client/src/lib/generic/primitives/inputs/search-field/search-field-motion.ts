@@ -44,6 +44,8 @@ export interface SearchFieldGeometry {
   rowWidth: number;
   // The search button's width, where the field grows from.
   triggerWidth: number;
+  // How far the search button's right edge sits in from the row's: 0 when it ends the row.
+  triggerInset: number;
 }
 
 type AnimatedStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
@@ -70,29 +72,34 @@ export function useRestStyle(progress: SharedValue<number>): AnimatedStyle {
   }, [progress]);
 }
 
-// The surface grows leftwards from the search button to the whole row.
+// The surface grows from the search button to the whole row: leftwards, and rightwards over any actions after it.
 export function useSurfaceStyle(
   progress: SharedValue<number>,
   geometry: SearchFieldGeometry,
 ): AnimatedStyle {
-  const { rowWidth, triggerWidth } = geometry;
+  const { rowWidth, triggerWidth, triggerInset } = geometry;
 
   return useAnimatedStyle(() => {
     const p = Math.min(progress.get(), 1);
 
     return {
+      right: triggerInset * (1 - p),
       width: triggerWidth + (rowWidth - triggerWidth) * p,
       opacity: interpolate(p, [0, surfaceShown], [0, 1], Extrapolation.CLAMP),
     };
-  }, [progress, rowWidth, triggerWidth]);
+  }, [progress, rowWidth, triggerWidth, triggerInset]);
 }
+
+// The search button's centre, from the row's left.
+const lensRestCentre = (geometry: SearchFieldGeometry): number =>
+  geometry.rowWidth - geometry.triggerInset - geometry.triggerWidth / 2;
 
 // The lens rides the surface's leading edge from the button to its place in the field.
 export function useLensStyle(
   progress: SharedValue<number>,
   geometry: SearchFieldGeometry,
 ): AnimatedStyle {
-  const restCentre = geometry.rowWidth - geometry.triggerWidth / 2;
+  const restCentre = lensRestCentre(geometry);
 
   return useAnimatedStyle(() => {
     const p = Math.min(progress.get(), 1);

@@ -10,7 +10,7 @@ The canonical files for new designs and implementation evidence:
 
 | File | Owns |
 |---|---|
-| [Foundations](https://app.paper.design/file/01M4RJ2FP7N272AE463G6PT2QD/p-1-0) | Global primitives, icons, typography and windows |
+| [Foundations](https://app.paper.design/file/01M4RJ2FP7N272AE463G6PT2QD/p-2-0) | Global primitives, icons, typography and windows |
 | [Sessions](https://app.paper.design/file/01M4RJRP22R2R2JE20RWDNXR0Q/p-1-0) | Sessions list, filters and shell explorations |
 | [Feed & Inspector](https://app.paper.design/file/01M4RJWCAC00EA21V8BKY91FEV/p-1-0) | Session header, Feed, Inspector and PR views |
 | [Composer](https://app.paper.design/file/01M4RJXN4XTK41J7TDNBBD87G1/p-1-0) | Composer, menus, sheets, attachments and Session entry |
@@ -21,7 +21,7 @@ The canonical files for new designs and implementation evidence:
 | [Issues](https://app.paper.design/file/01M4RJGJ2N1YKV0K3RHF80FKZP/p-1-0) | Issues components and flows |
 | [Landing](https://app.paper.design/file/01M4RJQ4TMAKN1KWAXYNDHK589/p-1-0) | Landing designs and explorations |
 
-Sessions, Feed & Inspector, and Composer keep masters on `Session Components` (`p-1-0`) and flows on `Session` (`p-2-0`). The other files use `p-1-0`.
+Sessions, Feed & Inspector, and Composer keep masters on `Session Components` (`p-1-0`) and flows on `Session` (`p-2-0`). Foundations has one page per family: Tokens & Type (`p-2-0`), Icons (`p-3-0`), Controls (`p-4-0`), Lists (`p-5-0`), Overlays (`p-6-0`), Layout & Shell (`p-7-0`) and Dark (Graphite) (`p-8-0`), with the old Global Components page (`p-1-0`) last. The other files use `p-1-0`.
 
 The original [Argo file](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J) is a historical archive; leave it and its existing issue approvals and links unchanged.
 
@@ -62,7 +62,7 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - `<Section> Components`: a flex row of columns named `Column / <Group>`, each a flex column of family cards `Components / <CodeName>`. A card has its heading, a header of platform columns (see Platforms) and one row per state. A new component is a new card in a column, never a loose artboard.
 - `<Section> Desktop` and `<Section> Mobile`: a flex column of flows named `Flow / <Name>`, each a heading and a row of `Screen / <State>` frames. A screen frame holds a label, then the screen, named `<Section> — <State>`: no device word (the board says it) and no "(light)". Desktop and Mobile use the same flow names in the same order.
 - `<Section> Explorations`, only when needed: option boards, comparisons and A/B variants, wrapped like screens. Finished work never sits here. To promote an exploration frame, move it onto Components, Desktop or Mobile in card format and delete the master it replaces.
-- Foundations keeps the Global Components board, including its Typography references.
+- Foundations keeps its masters on the family pages; the Global Components page holds only `Column / References`.
 - Within one file, use `move_nodes` to move existing layers into place; it keeps their IDs.
 
 ## Tokens
@@ -78,7 +78,7 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - Feed code blocks, inline diffs and tables use `--radius-sheet` on web and have no shadow. Interactive rows and neutral controls use `--color-hover` for hover and option focus, `--color-selected` for persistent selection, and `--color-pressed` while pressed. Light fills use black at 2%, 3% and 4%; dark fills use white at 4%, 6% and 8% (owner, 2026-10-15). Native controls keep their stock state drawings.
 - Fills that sit on the content surface (user message bubbles, the Inspector pane, an icon button's default chip) use `--color-tint`, not `--color-muted`: content and muted are both neutral-100. Tint is black 4% (dark: white 8%) mixed into content (owner, 2026-10-17).
 - Destructive hover and pressed states use a light red background, 10% of `--color-danger`, with danger text (owner, 2026-10-10).
-- Text takes one of four roles from the "Components / Typography" master on the Global Components page: Title, Heading, Body, Secondary. Each role is a set of tokens, `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`; desktop text uses the `-wide` size and leading (`--text-body-wide`), phone text the plain ones. Text nodes reference role tokens, never a scale step such as `--text-sm`. In code they are the `type-title`, `type-heading`, `type-body` and `type-secondary` classes in `theme.css`. Buttons, inputs, chips, the native phone header and mono code keep their own styles.
+- Text takes one of four roles from the "Components / Text" master on the Tokens & Type page: Title, Heading, Body, Secondary. Each role is a set of tokens, `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`; desktop text uses the `-wide` size and leading (`--text-body-wide`), phone text the plain ones. Text nodes reference role tokens, never a scale step such as `--text-sm`. In code they are the `type-title`, `type-heading`, `type-body` and `type-secondary` classes in `theme.css`. Buttons, inputs, chips, the native phone header and mono code keep their own styles.
 - Token values live only in `tooling/uniwind/theme.css`, with no second copy in the repository; each Paper file holds a copy. After a token change in `theme.css`, sync that token by hand in every canonical Paper file. Paper leads how things look; `theme.css` leads token values. A Paper token missing from `theme.css` or holding a different value is drift: report it and fix Paper.
 - Paper stores oklch with one decimal. When that rounding changes the colour, store the exact hex instead.
 - A Paper token value cannot be `color-mix()`: Paper flattens it to the opaque colour. Alpha tokens (`--color-hover`, `--color-glass`…) store the resolved value, such as `rgb(0 0 0 / 2%)`.
@@ -91,7 +91,7 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - Logos, such as GitHub's Octicons mark on the Agent card, are plain SVG files in `packages/client/src/lib/generic/symbols/assets/logos` (ADR-0019). A logo layer is named `Logo / <key>`, `<key>` being its key in `logoSources` (`logo-source.ts`). Its Paper SVG copies the file, in the role's icon box with the mark filling the share `circle` fills.
 - Where SF Symbols has no symbol, Argo draws its own (`custom.<name>` in `packages/client/src/lib/generic/symbols/custom-symbol-paths.json`, ADR-0019). Its Paper SVG uses the JSON's viewBox and path, so design and app share one outline.
 - An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/generic/symbols/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
-- The library is "Components / Icons" on the Global Components page: one tile per app icon, a Material cell beside the SF cell. Copy icons from it.
+- The library is "Components / Icons" on the Icons page: one tile per app icon, a Material cell beside the SF cell. Copy icons from it.
 - `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use that viewBox, a `--color-*` fill, and the dimensions from the icon's role.
 
 ## Building from Paper
@@ -109,3 +109,4 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - A `var(--token)` inside a gradient renders transparent. Write the literal colour there.
 - `z-index` and negative margins apply only through `update_styles`.
 - A CSS `filter` on a parent breaks `backdrop-filter` in its children.
+- Paper serves one MCP connection, so parallel agents' calls take turns and one large read stalls them all. Read the artboard you are editing with `get_children` or `find_nodes`, keep `get_tree_summary` for small nodes, and screenshot only the node you changed.

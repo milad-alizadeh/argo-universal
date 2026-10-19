@@ -1,5 +1,6 @@
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { Platform } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { SessionRow } from '../../src/features/sessions/components/session-row/session-row';
@@ -119,20 +120,23 @@ export const statusParity: Story = {
   },
 };
 
-// Only a Session that is not idle ends its row with a status dot.
-const dotted = {
+// Only a Session that is not idle ends its row with a status dot; the web's Compact sidebar row ends every row on one.
+const dotted = (
+  layout: SessionsLayout,
+): Record<(typeof states)[number][0], boolean> => ({
   needsInput: true,
   running: true,
   failed: true,
   unread: true,
-  idle: false,
-} satisfies Record<(typeof states)[number][0], boolean>;
+  idle: layout === 'compact' && Platform.OS === 'web',
+});
 
 type Canvas = ReturnType<typeof within>;
 
 async function expectRowEnd(
   canvas: Canvas,
   [name, label]: (typeof states)[number],
+  layout: SessionsLayout,
 ): Promise<void> {
   const row = within(
     canvas.getByRole('button', {
@@ -143,7 +147,7 @@ async function expectRowEnd(
   const dot = row.queryByTestId('session-status');
 
   await expect(row.getByText('12m')).toBeVisible();
-  await (dotted[name]
+  await (dotted(layout)[name]
     ? expect(dot).toBeVisible()
     : expect(dot).not.toBeInTheDocument());
 }
@@ -160,7 +164,7 @@ export function statusDots(layout: SessionsLayout): Story {
     ),
     play: async ({ canvas }) =>
       eachLayout(async () => {
-        for (const state of states) await expectRowEnd(canvas, state);
+        for (const state of states) await expectRowEnd(canvas, state, layout);
       }),
   };
 }
