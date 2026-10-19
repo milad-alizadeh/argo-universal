@@ -60,7 +60,7 @@ function inputBehaviour(
     value: props.value ?? '',
     required: props.required,
     disabled: props.disabled,
-    onChange: (event) => props.onValueChange(event.target.value),
+    onChange: (event) => props.onValueChange?.(event.target.value),
     onBlur: props.onBlur,
   };
 }

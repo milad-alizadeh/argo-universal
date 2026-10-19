@@ -66,7 +66,7 @@ export const SubmittingLocksTheFields: Story = {
   render: () => (
     <CentredOverlayScope>
       <IssueForm
-        submitting
+        loading
         initial={{ title: 'Locked', description: '' }}
         onSubmit={submitted}
         onCancel={cancelled}

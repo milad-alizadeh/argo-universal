@@ -49,7 +49,7 @@ function chooseDay(props: DayProps, picked: Date): void {
     return;
   }
 
-  props.onValueChange(isoValue(day, 'date'));
+  props.onValueChange?.(isoValue(day, 'date'));
   props.close();
 }
 
@@ -65,7 +65,9 @@ function DayDialog(props: DayProps): ReactElement {
 
 function TimeDialog(props: DialogProps & { current: Date }): ReactElement {
   const choose = (picked: Date): void => {
-    props.onValueChange(isoValue(withTime(props.current, picked), props.mode));
+    props.onValueChange?.(
+      isoValue(withTime(props.current, picked), props.mode),
+    );
     props.close();
   };
 

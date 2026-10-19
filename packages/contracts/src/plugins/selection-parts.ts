@@ -52,10 +52,10 @@ export const selectionPartSchemas = {
   Picker: part('A selection control.', pickerPartSchema, {
     events: {
       ...pickerEvents,
-      // A multiple Picker echoes its whole list of values.
+      // A multiple Picker echoes its whole list and stays open, so a toggle never locks it.
       onValueChange: z
         .union([selectionValue, z.array(selectionValue)])
-        .meta({ value: 'value' }),
+        .meta({ value: 'value', blocks: false }),
     },
     previous: [pickerPartSchema.transform(oldPicker).pipe(legacyPicker)],
   }),

@@ -13,9 +13,11 @@ import type { ReactNode } from 'react';
 
 type ChoicePayload<Payload, Choice> = Payload extends KitChoiceValue
   ? Choice
-  : Payload extends readonly (infer Element)[]
+  : Payload extends (infer Element)[]
     ? ChoicePayload<Element, Choice>[]
-    : Payload;
+    : Payload extends readonly (infer Element)[]
+      ? readonly ChoicePayload<Element, Choice>[]
+      : Payload;
 
 type Callback<Event, Choice, Props> = Event extends { empty: true }
   ? () => void

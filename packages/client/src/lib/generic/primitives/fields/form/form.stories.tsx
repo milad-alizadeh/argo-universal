@@ -33,7 +33,7 @@ const states: {
   },
   {
     label: 'Submitting',
-    props: { initial: filled, submitting: true, onSubmit: () => {} },
+    props: { initial: filled, loading: true, onSubmit: () => {} },
   },
 ];
 

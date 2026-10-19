@@ -12,6 +12,7 @@ import {
   useState,
 } from '@argo/plugin-kit';
 import { HelloDashboard } from './dashboard.js';
+import { HelloForm } from './form.js';
 
 const headingRole = 'heading';
 
@@ -139,5 +140,6 @@ export function register(argo) {
   argo.pages.register('/', HelloPage);
   argo.pages.register('/lists', HelloListPage);
   argo.pages.register('/dashboard', HelloDashboard);
+  argo.pages.register('/form', HelloForm);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }

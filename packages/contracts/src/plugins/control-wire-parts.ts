@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { iconButtonPart } from './icon-button-part';
+import { formsPartSchemas } from './parts/forms';
 import { inputsPartSchemas as inputs } from './parts/inputs';
 import { selectionPartSchemas } from './selection-parts';
 import type { WirePartDefinition } from './wire-parts';
@@ -43,6 +44,10 @@ const text = inputs.TextInput.props.extend({
   onChangeText: inputs.TextInput.props.shape.onChangeText.optional(),
 });
 
+const datePicker = inputs.DatePicker.props.extend({
+  onValueChange: inputs.DatePicker.props.shape.onValueChange.optional(),
+});
+
 const splitChoices = selectionPartSchemas.SplitButton.props.options[0];
 
 const split = z.union([
@@ -70,6 +75,8 @@ export const controlWireParts = {
   Checkbox: withDraft(inputs.Checkbox, checkbox),
   Slider: withDraft(inputs.Slider, slider),
   TextInput: withDraft(inputs.TextInput, text),
+  DatePicker: withDraft(inputs.DatePicker, datePicker),
+  Form: formsPartSchemas.Form,
   SplitButton: withDraft(selectionPartSchemas.SplitButton, split),
   IconButton: iconButtonPart,
 };

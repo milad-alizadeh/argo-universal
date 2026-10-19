@@ -45,7 +45,7 @@ function CompactPicker(props: PickerProps): ReactElement {
     <DatePicker
       selection={valueDate(props.value, props.mode) ?? today}
       displayedComponents={[...components[props.mode]]}
-      onDateChange={(date) => props.onValueChange(isoValue(date, props.mode))}
+      onDateChange={(date) => props.onValueChange?.(isoValue(date, props.mode))}
       modifiers={pickerModifiers(props)}
     />
   );

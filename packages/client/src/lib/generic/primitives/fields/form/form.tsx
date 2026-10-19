@@ -13,13 +13,13 @@ import type { FormProps } from './form-props';
  */
 export function Form(props: FormProps): ReactElement {
   const submit = (): void => {
-    if (!props.submitting) props.onSubmit();
+    if (!props.loading) props.onSubmit();
   };
 
   return (
     <FormFocusScope>
       <View className="gap-6">
-        <FormFields locked={!!props.submitting} onShortcut={submit}>
+        <FormFields locked={!!props.loading} onShortcut={submit}>
           {props.children}
         </FormFields>
         <FormFooter {...props} submit={submit} />
@@ -36,7 +36,7 @@ function FormFooter(props: FormProps & { submit: () => void }): ReactElement {
       {centred ? <CancelButton {...props} /> : null}
       <Button
         label={props.submitLabel}
-        loading={props.submitting}
+        loading={props.loading}
         fullWidth={!centred}
         onPress={props.submit}
       />
@@ -52,7 +52,7 @@ function CancelButton(props: FormProps): ReactElement | null {
     <Button
       variant="outline"
       label={props.cancelLabel ?? 'Cancel'}
-      disabled={props.submitting}
+      disabled={props.loading}
       onPress={props.onCancel}
     />
   );

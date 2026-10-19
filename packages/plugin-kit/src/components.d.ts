@@ -44,6 +44,10 @@ export const Slider: PluginComponents['Slider'];
 
 export const TextInput: PluginComponents['TextInput'];
 
+export const DatePicker: PluginComponents['DatePicker'];
+
+export const Form: PluginComponents['Form'];
+
 export const SplitButton: PluginComponents['SplitButton'];
 
 export const IconButton: PluginComponents['IconButton'];

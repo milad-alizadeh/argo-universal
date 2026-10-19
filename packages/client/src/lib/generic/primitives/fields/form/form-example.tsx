@@ -26,7 +26,7 @@ export type IssueDraft = {
   labels?: string[];
 };
 
-type ExampleProps = Pick<FormProps, 'submitting' | 'onCancel'> & {
+type ExampleProps = Pick<FormProps, 'loading' | 'onCancel'> & {
   initial?: IssueDraft;
   titleError?: string;
   onSubmit: (draft: IssueDraft) => void;
@@ -89,7 +89,7 @@ export function IssueForm(props: ExampleProps): ReactElement {
   return (
     <Form
       submitLabel="Create"
-      submitting={props.submitting}
+      loading={props.loading}
       onCancel={props.onCancel}
       onSubmit={submit}
     >
