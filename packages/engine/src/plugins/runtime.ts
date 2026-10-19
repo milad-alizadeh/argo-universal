@@ -48,7 +48,7 @@ export class PluginRuntime {
   }
 
   public advanceClock(pluginId: string, ms: number): Promise<void> {
-    return this.host.clock.advance(pluginId, ms);
+    return this.host.tests.send(pluginId, { action: 'advanceClock', ms });
   }
 
   public renderFallback(

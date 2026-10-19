@@ -108,6 +108,23 @@
       "rules": { "sonarjs/code-eval": "off" }
     },
     {
+      // A Plugin test clock replaces the realm's timer globals, so the kit schedules only through kit-scheduler.ts (#824).
+      "files": ["packages/engine/src/plugins/kit/**"],
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          { "name": "setTimeout", "message": "Use kitScheduler.schedule." },
+          { "name": "clearTimeout", "message": "Use kitScheduler.cancel." },
+          { "name": "setInterval", "message": "Use kitScheduler.schedule." },
+          { "name": "clearInterval", "message": "Use kitScheduler.cancel." }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/plugins/kit/kit-scheduler.ts"],
+      "rules": { "no-restricted-globals": "off" }
+    },
+    {
       // #717 keeps the connection in one file; the owner approved this length exception on 2026-10-15.
       "files": ["packages/engine/src/agents/acp/connection/connection.ts"],
       "rules": { "max-lines": "off" }

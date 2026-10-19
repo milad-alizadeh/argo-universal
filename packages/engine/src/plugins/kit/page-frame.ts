@@ -1,15 +1,12 @@
 import { reportFailure } from './host-config';
+import { kitScheduler } from './kit-scheduler';
 import type { OpenView } from './page-view';
 
 const frameMs = 16;
 
-const scheduleFrame = setTimeout;
-
-const cancelFrame = clearTimeout;
-
 export function schedulePage(view: OpenView, commit: () => void): void {
   if (view.frame !== undefined) return;
-  view.frame = scheduleFrame(() => {
+  view.frame = kitScheduler.schedule(() => {
     view.frame = undefined;
     publishCommit(commit);
   }, frameMs);
@@ -24,5 +21,5 @@ function publishCommit(commit: () => void): void {
 }
 
 export function cancelPageFrame(view: OpenView): void {
-  cancelFrame(view.frame);
+  kitScheduler.cancel(view.frame);
 }

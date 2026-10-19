@@ -8,6 +8,7 @@ import type {
   WireNode,
 } from '@repo/contracts/plugins/wire';
 import { diff } from './diff';
+import type { KitTimer } from './kit-scheduler';
 import type { Mounted } from './reconciler';
 import type { Handlers } from './wire-tree';
 
@@ -21,7 +22,7 @@ export interface OpenView {
   mounted?: Mounted;
   broken?: boolean;
   replaceable?: boolean;
-  frame: ReturnType<typeof setTimeout> | undefined;
+  frame: KitTimer | undefined;
   tree: WireNode | null;
   revision: number;
   handlers: Handlers;

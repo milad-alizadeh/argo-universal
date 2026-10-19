@@ -14,8 +14,8 @@ import {
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import * as wire from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
-import { ClockCommand, ClockReply } from '#plugin-clock-protocol';
 import { PluginEntry } from '#plugin-entry';
+import { TestCommand, TestReply } from '#plugin-test-control';
 
 export { PluginEntry } from '#plugin-entry';
 
@@ -83,7 +83,7 @@ export type PluginReply = z.infer<typeof PluginReply>;
 
 export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
-  ClockCommand.extend({ pluginId: z.string() }),
+  TestCommand.extend({ pluginId: z.string() }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
   HookWaiting,
   z.object({
@@ -112,7 +112,7 @@ export type HostHook = Extract<HostCommand, { type: 'hook' }>;
 export type HostWaiting = Extract<HostCommand, { type: 'waiting' }>;
 
 export const HostMessage = z.discriminatedUnion('type', [
-  ClockReply.extend({ pluginId: z.string(), generation: z.number() }),
+  TestReply.extend({ pluginId: z.string(), generation: z.number() }),
   z.object({ type: z.literal('ready') }),
   PluginStatus.extend({
     type: z.literal('status'),
@@ -141,7 +141,7 @@ export type WorkerCall = z.infer<typeof WorkerCall>;
 export const WorkerMessage = z.union([
   z.enum(['ready', 'pong']),
   WorkerCall,
-  ClockReply,
+  TestReply,
 ]);
 
 export const WorkerReply = z.object({
@@ -162,7 +162,7 @@ export const WorkerCommand = z.union([
   WorkerReply,
   WorkerEvent,
   WorkerHookCommand,
-  ClockCommand,
+  TestCommand,
 ]);
 
 export const notStarted: PluginStatus = {

@@ -14,7 +14,7 @@ const realClock: PluginClock = {
   now: Date.now,
 };
 
-// The kit retains its real scheduler; only Plugin timers and dates use a test clock.
+// The kit loads before a test clock replaces the timer globals, so kitScheduler keeps real time; only Plugin timers and dates use the test clock.
 export function createPluginRealm(
   bridge: ArgoBridge,
   kitSource: string,

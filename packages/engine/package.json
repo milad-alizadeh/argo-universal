@@ -5,7 +5,7 @@
   "type": "module",
   "imports": {
     "#mocks/*": "./mocks/*.ts",
-    "#plugin-clock-protocol": "./src/plugins/clock-protocol.ts",
+    "#plugin-test-control": "./src/plugins/test-control.ts",
     "#plugin-entry": "./src/plugins/plugin-entry.ts",
     "#plugin-storage-protocol": "./src/plugins/storage-protocol.ts"
   },

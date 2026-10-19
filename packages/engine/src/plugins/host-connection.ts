@@ -1,6 +1,5 @@
 import { fork, type ChildProcess } from 'node:child_process';
 import { createActor } from 'xstate';
-import { ClockRequests } from './clock-requests';
 import { hostCompletion } from './host-completion';
 import {
   hostLifecycleMachine,
@@ -14,6 +13,7 @@ import {
   type PluginEvent,
   type PluginReply,
 } from './runtime-protocol';
+import { TestRequests } from './test-requests';
 
 export type PluginHostProcess = ChildProcess;
 
@@ -32,7 +32,7 @@ type HostCallbacks = {
 
 export class HostConnection {
   private child: ChildProcess | null = null;
-  readonly clock = new ClockRequests((command) => this.tell(command));
+  readonly tests = new TestRequests((command) => this.tell(command));
   private readonly lifecycle;
   private completion: Promise<void> = Promise.resolve();
 
@@ -119,7 +119,7 @@ export class HostConnection {
   private receive(parsed: ReturnType<typeof HostMessage.safeParse>): void {
     if (!parsed.success) return;
 
-    if (parsed.data.type === 'clock.advanced') this.clock.settle(parsed.data);
+    if (parsed.data.type === 'test.done') this.tests.settle(parsed.data);
     else this.message(parsed.data);
   }
 

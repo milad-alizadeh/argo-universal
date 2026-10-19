@@ -1,5 +1,6 @@
 import type { HostConfig } from 'react-reconciler';
 import type { ElementProps } from './element-props';
+import type { KitTimer } from './kit-scheduler';
 import type { Instance } from './wire-tree';
 
 // Nothing in a Plugin page is a text node, a suspense boundary or a portal: text goes through the `Text` component.
@@ -15,7 +16,7 @@ export type KitHostConfig = HostConfig<
   Instance,
   Record<string, never>,
   never,
-  ReturnType<typeof setTimeout>,
+  KitTimer,
   -1,
   null
 >;

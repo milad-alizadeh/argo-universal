@@ -1,5 +1,4 @@
 import type { Worker } from 'node:worker_threads';
-import type { ClockReply } from './clock-protocol.ts';
 import { startWorker, type WorkerRecord } from './host-worker.ts';
 import {
   pluginAnswerLimitMs,
@@ -15,6 +14,7 @@ import {
   type WorkerCall,
   type HostCommand,
 } from './runtime-protocol.ts';
+import type { TestReply } from './test-control.ts';
 
 const heartbeatIntervalMs = 1000;
 
@@ -44,7 +44,7 @@ export class HostWorkers {
   event({
     pluginId,
     ...command
-  }: HostEvent | Extract<HostCommand, { type: 'clock.advance' }>): void {
+  }: HostEvent | Extract<HostCommand, { type: 'test' }>): void {
     this.workers.get(pluginId)?.worker.postMessage(command);
   }
 
@@ -115,7 +115,7 @@ export class HostWorkers {
   private call(
     pluginId: string,
     record: WorkerRecord,
-    call: WorkerCall | ClockReply,
+    call: WorkerCall | TestReply,
   ): void {
     if (record.heartbeat === null) this.arm(pluginId, record);
 

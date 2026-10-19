@@ -10,7 +10,7 @@ const workers = new HostWorkers((message) => process.send?.(message));
 function lifecycle(
   command: Extract<
     HostCommand,
-    { type: 'event' | 'stop' | 'waiting' | 'clock.advance' }
+    { type: 'event' | 'stop' | 'waiting' | 'test' }
   >,
 ): void {
   if (isWorkerEvent(command)) workers.event(command);
@@ -20,8 +20,8 @@ function lifecycle(
 
 const isWorkerEvent = (
   command: HostCommand,
-): command is Extract<HostCommand, { type: 'event' | 'clock.advance' }> =>
-  command.type === 'event' || command.type === 'clock.advance';
+): command is Extract<HostCommand, { type: 'event' | 'test' }> =>
+  command.type === 'event' || command.type === 'test';
 
 const isDelivery = (command: HostCommand): command is HostReply | HostHook =>
   command.type === 'reply' || command.type === 'hook';
