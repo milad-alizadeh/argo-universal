@@ -1,77 +1,26 @@
-import { labelOf, reconcileBinding } from './bind.mts';
+import { reconcileBinding } from './bind.mts';
 import {
   equalValues,
   getRoot,
-  layoutKeys,
+  required,
   type Binding,
   type DesignNode,
   type Snapshot,
-  type Styles,
 } from './model.mts';
+import { planStyles } from './plan-styles.mts';
+import { planText } from './plan-text.mts';
+import type { SyncPlan } from './plan-types.mts';
 
-export type Creation = {
-  sourceId: string;
-  parentSourceId: string;
-  node: DesignNode;
-};
-export type StyleEdit = { sourceId: string; styles: Styles };
-export type Move = { sourceId: string; parentSourceId: string; index: number };
-export type SyncPlan = {
-  master: Snapshot;
-  before: Snapshot;
-  binding: Binding;
-  creates: Creation[];
-  moves: Move[];
-  removes: string[];
-  styles: StyleEdit[];
-  texts: { sourceId: string; text: string }[];
-  svgReplacements: string[];
-};
-
-function desiredStyles(
-  master: DesignNode,
-  binding: Binding,
-  rootId: string,
-): Styles {
-  if (master.id !== rootId) return master.styles;
-  const styles = Object.fromEntries(
-    Object.entries(master.styles).filter(([key]) => !layoutKeys.has(key)),
-  );
-  return { ...styles, ...binding.layout };
-}
-
-function normalizePadding(styles: Styles): Styles {
-  return Object.fromEntries(
-    Object.entries(styles).filter(
-      ([key, value]) =>
-        !(key.startsWith('padding') && /^(0|0px)$/.test(String(value))),
-    ),
-  );
-}
-
-function stylePatch(expected: Styles, current: Styles): Styles {
-  const desired = normalizePadding(expected);
-  const actual = normalizePadding(current);
-  const patch: Styles = {};
-  for (const [key, value] of Object.entries(desired))
-    if (actual[key] !== value) patch[key] = value;
-  for (const key of Object.keys(actual)) if (!(key in desired)) patch[key] = '';
-  return patch;
-}
-
-function planStyles(
+function planChild(
   plan: SyncPlan,
   source: DesignNode,
-  target: DesignNode,
+  slot: { index: number; target: DesignNode | undefined },
 ): void {
-  const patch = stylePatch(
-    desiredStyles(source, plan.binding, plan.master.rootId),
-    target.styles,
-  );
-  if (Object.keys(patch).length)
-    plan.styles.push({ sourceId: source.id, styles: patch });
-  if (source.svg && source.svg !== target.svg)
-    plan.svgReplacements.push(source.id);
+  const sourceId = required(source.childIds[slot.index]);
+  const copyId = plan.binding.nodes[sourceId];
+
+  if (samePosition(copyId, slot)) return;
+  plan.moves.push({ sourceId, parentSourceId: source.id, index: slot.index });
 }
 
 function planChildren(
@@ -79,23 +28,59 @@ function planChildren(
   source: DesignNode,
   target: DesignNode | undefined,
 ): void {
-  source.childIds.forEach((sourceId, index) => {
-    const copyId = plan.binding.nodes[sourceId];
-    if (!copyId || target?.childIds[index] !== copyId)
-      plan.moves.push({ sourceId, parentSourceId: source.id, index });
+  for (const index of source.childIds.keys())
+    planChild(plan, source, { index, target });
+}
+
+function validateCopy(master: Snapshot, copy: Snapshot, prior: Binding): void {
+  if (getRoot(master).component !== getRoot(copy).component)
+    throw new Error('Root node types differ');
+
+  if (copy.nodes.some((node) => node.isLocked))
+    throw new Error(`${prior.name}: copy contains locked nodes`);
+}
+
+function createPlan(
+  input: Pick<SyncPlan, 'master' | 'before' | 'binding'>,
+): SyncPlan {
+  const structure = { creates: [], moves: [], removes: [] };
+
+  return { ...input, ...structure, styles: [], texts: [], svgReplacements: [] };
+}
+
+function planCreation(plan: SyncPlan, source: DesignNode): void {
+  if (!source.isVisible)
+    throw new Error(`Creating hidden layers is not supported: ${source.name}`);
+  plan.creates.push({
+    sourceId: source.id,
+    parentSourceId: required(source.parentId),
+    node: source,
   });
 }
 
-function planLabel(plan: SyncPlan): void {
-  const label = labelOf(plan.master);
-  if (!label) return;
-  const text = plan.binding.textOverrides.label ?? label.textContent ?? '';
-  const current = plan.before.nodes.find(
-    (node) => node.id === plan.binding.nodes[label.id],
+function planExisting(
+  plan: SyncPlan,
+  source: DesignNode,
+  target: DesignNode,
+): void {
+  if (source.nested) return;
+
+  if (target.component !== source.component)
+    throw new Error(`Mapped node type changed: ${source.name}`);
+  planStyles(plan, source, target);
+}
+
+function planNode(plan: SyncPlan, source: DesignNode): void {
+  if (!['Frame', 'Text', 'SVG'].includes(source.component))
+    throw new Error(`Unsupported component node type: ${source.component}`);
+
+  const target = plan.before.nodes.find(
+    (node) => node.id === plan.binding.nodes[source.id],
   );
-  if (current?.textContent !== text)
-    plan.texts.push({ sourceId: label.id, text });
-  plan.binding.lastText.label = text;
+
+  if (target) planExisting(plan, source, target);
+  else planCreation(plan, source);
+  planChildren(plan, source, target);
 }
 
 export function planSync(
@@ -103,47 +88,16 @@ export function planSync(
   copy: Snapshot,
   prior: Binding,
 ): SyncPlan {
-  if (getRoot(master).component !== getRoot(copy).component)
-    throw new Error('Root node types differ');
-  if (copy.nodes.some((node) => node.isLocked))
-    throw new Error(`${prior.name}: copy contains locked nodes`);
+  validateCopy(master, copy, prior);
   const binding = reconcileBinding(master, copy, prior);
-  const plan: SyncPlan = {
-    master,
-    before: copy,
-    binding,
-    creates: [],
-    moves: [],
-    removes: [],
-    styles: [],
-    texts: [],
-    svgReplacements: [],
-  };
-  for (const source of master.nodes) {
-    if (!['Frame', 'Text', 'SVG'].includes(source.component))
-      throw new Error(`Unsupported Button node type: ${source.component}`);
-    const target = copy.nodes.find(
-      (node) => node.id === binding.nodes[source.id],
-    );
-    if (target && target.component !== source.component)
-      throw new Error(`Mapped node type changed: ${source.name}`);
-    if (!target && !source.isVisible)
-      throw new Error(
-        `Creating hidden layers is not supported: ${source.name}`,
-      );
-    if (target) planStyles(plan, source, target);
-    else
-      plan.creates.push({
-        sourceId: source.id,
-        parentSourceId: source.parentId!,
-        node: source,
-      });
-    planChildren(plan, source, target);
-  }
-  plan.removes = copy.nodes
-    .filter((node) => !Object.values(binding.nodes).includes(node.id))
-    .map((node) => node.id);
-  planLabel(plan);
+  const plan = createPlan({ master, before: copy, binding });
+
+  for (const source of master.nodes) planNode(plan, source);
+  plan.removes = copy.nodes.flatMap((node) =>
+    Object.values(plan.binding.nodes).includes(node.id) ? [] : [node.id],
+  );
+  planText(plan);
+
   return plan;
 }
 
@@ -160,4 +114,11 @@ export function hasChanges(plan: SyncPlan): boolean {
 
 export function sameSnapshot(first: Snapshot, second: Snapshot): boolean {
   return equalValues(first, second);
+}
+
+function samePosition(
+  id: string | undefined,
+  slot: { index: number; target: DesignNode | undefined },
+): boolean {
+  return Boolean(id && slot.target?.childIds[slot.index] === id);
 }

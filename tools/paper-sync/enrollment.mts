@@ -1,93 +1,98 @@
-import { enroll } from './bind.mts';
+import { key, type Catalog } from './catalog.mts';
 import type { PaperClient } from './client.mts';
-import type { IndexedNode } from './discover.mts';
-import type { Registry } from './model.mts';
-import { readSnapshot } from './read.mts';
+import { enrollCopy } from './enroll-copy.mts';
+import type { Enrollment, EnrollmentContext } from './enrollment-model.mts';
+import { repairMissing } from './enrollment-rebind.mts';
+import type { LocatedNode } from './index-model.mts';
+import type { Registry, Snapshot } from './model.mts';
+import { SnapshotReader } from './snapshot-reader.mts';
 
-export const foundations = '01M4RJ2FP7N272AE463G6PT2QD';
-export const composer = '01M4RJXN4XTK41J7TDNBBD87G1';
-export const buttonCard = '1V7-0';
-export const buttonName = /^Button(?: \([^)]*\))?\s*\//;
-
-function inside(
-  node: IndexedNode,
-  ancestor: string,
-  nodes: IndexedNode[],
-): boolean {
-  let current: IndexedNode | undefined = node;
-  const visited = new Set<string>();
-  while (current && !visited.has(current.id)) {
-    if (current.id === ancestor) return true;
-    visited.add(current.id);
-    current = nodes.find((candidate) => candidate.id === current?.parentId);
-  }
-  return false;
+function familyFor(master: LocatedNode): Registry['families'][number] {
+  return {
+    name: master.name,
+    master: { fileId: master.fileId, nodeId: master.id },
+    copies: [],
+  };
 }
 
-export async function enrollButtons(
-  client: PaperClient,
-  indices: Map<string, IndexedNode[]>,
-  previous: Registry,
-): Promise<{ registry: Registry; excluded: object[] }> {
-  const nodes = indices.get(foundations);
-  if (!nodes) throw new Error('Missing Foundations inventory');
-  const masters = nodes.filter(
-    (node) =>
-      buttonName.test(node.name) &&
-      inside(node, buttonCard, nodes) &&
-      !/not applicable|not drawn/.test(node.name),
+async function enrollCopies(
+  context: EnrollmentContext,
+  master: LocatedNode,
+  source: Snapshot,
+): Promise<Registry['families'][number]> {
+  const family = familyFor(master);
+
+  const candidates = context.catalog.nodes.filter(
+    (node) => node.name === master.name && key(node) !== key(master),
   );
-  if (
-    !masters.length ||
-    new Set(masters.map((node) => node.name)).size !== masters.length
-  )
-    throw new Error('Missing or ambiguous Button masters');
-  const registry: Registry = { version: 1, families: [] };
-  const excluded: object[] = [];
-  for (const master of masters) {
-    const source = await readSnapshot(client, foundations, master.id);
-    const family: Registry['families'][number] = {
-      name: master.name,
-      master: { fileId: foundations, nodeId: master.id },
-      copies: [],
-    };
-    for (const [fileId, index] of indices)
-      for (const candidate of index.filter(
-        (node) =>
-          node.name === master.name &&
-          !(fileId === foundations && inside(node, buttonCard, index)),
-      )) {
-        const prior = previous.families
-          .find((item) => item.master.nodeId === master.id)
-          ?.copies.find(
-            (item) => item.fileId === fileId && item.nodeId === candidate.id,
-          );
-        if (prior) {
-          family.copies.push(prior);
-          continue;
-        }
-        try {
-          family.copies.push(
-            enroll(source, await readSnapshot(client, fileId, candidate.id)),
-          );
-        } catch (error) {
-          excluded.push({ fileId, ...candidate, reason: String(error) });
-        }
-      }
-    registry.families.push(family);
-    console.log(`Enrolled ${family.name}: ${family.copies.length} copies`);
+
+  for (const candidate of candidates) {
+    const binding = await enrollCopy(context, source, candidate);
+
+    if (binding) family.copies.push(binding);
   }
-  for (const [fileId, index] of indices)
-    for (const node of index) {
-      if (
-        buttonName.test(node.name) &&
-        !masters.some((master) => master.name === node.name)
-      )
-        excluded.push({
-          fileId,
-          ...node,
-          reason: 'No exact canonical Button state',
-        });
-    }
-  return { registry, excluded };
+
+  return family;
+}
+
+async function tryFamily(
+  context: EnrollmentContext,
+  master: LocatedNode,
+): Promise<void> {
+  try {
+    await readFamily(context, master);
+  } catch (error) {
+    const { fileId, id: nodeId, name } = master;
+    context.result.registry.families.push(familyFor(master));
+    const identity = { fileId, nodeId, name };
+    const reason = `Master: ${String(error)}`;
+    context.result.excluded.push({ ...identity, reason });
+  }
+}
+
+function enrollmentContext(
+  client: PaperClient,
+  catalog: Catalog,
+  options: { previous: Registry; rebind: boolean },
+): EnrollmentContext {
+  const result = emptyEnrollment();
+
+  const names = new Set(
+    [...catalog.masters, ...catalog.duplicates.flat()].map((node) => node.name),
+  );
+
+  const reader = new SnapshotReader(client, names);
+
+  return { ...options, catalog, result, reader };
+}
+
+export async function enrollCatalog(
+  client: PaperClient,
+  catalog: Catalog,
+  options: { previous: Registry; rebind: boolean },
+): Promise<Enrollment> {
+  const context = enrollmentContext(client, catalog, options);
+
+  for (const master of catalog.masters) await tryFamily(context, master);
+  repairMissing(context);
+
+  return context.result;
+}
+
+async function readFamily(
+  context: EnrollmentContext,
+  master: LocatedNode,
+): Promise<void> {
+  const source = await context.reader.read(master.fileId, master.id);
+  const family = await enrollCopies(context, master, source);
+  context.result.registry.families.push(family);
+  console.log(`${master.name}: ${family.copies.length} copies`);
+}
+
+function emptyEnrollment(): Enrollment {
+  return {
+    registry: { version: 1, families: [] },
+    excluded: [],
+    rebindings: [],
+  };
 }

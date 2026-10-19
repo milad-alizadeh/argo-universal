@@ -1,10 +1,13 @@
+import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 
 export const stylesSchema = z.record(
   z.string(),
   z.union([z.string(), z.number()]),
 );
+
 export type Styles = z.infer<typeof stylesSchema>;
+
 export const nodeSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -15,15 +18,23 @@ export const nodeSchema = z.object({
   isVisible: z.boolean(),
   isLocked: z.boolean(),
 });
+
 export type PaperNode = z.infer<typeof nodeSchema>;
-export type DesignNode = PaperNode & { styles: Styles; svg: string | null };
+
 export const snapshotSchema = z.object({
   fileId: z.string(),
   rootId: z.string(),
   nodes: z.array(
-    nodeSchema.extend({ styles: stylesSchema, svg: z.string().nullable() }),
+    nodeSchema.extend({
+      styles: stylesSchema,
+      svg: z.string().nullable(),
+      nested: z.boolean().optional(),
+    }),
   ),
 });
+
+export type DesignNode = z.infer<typeof snapshotSchema>['nodes'][number];
+
 export type Snapshot = z.infer<typeof snapshotSchema>;
 
 export const bindingSchema = z.object({
@@ -34,8 +45,19 @@ export const bindingSchema = z.object({
   textOverrides: z.record(z.string(), z.string()),
   lastText: z.record(z.string(), z.string()),
   layout: stylesSchema,
+  location: z
+    .object({
+      fileId: z.string(),
+      page: z.string(),
+      board: z.string(),
+      flow: z.string(),
+    })
+    .optional(),
+  structure: z.string().optional(),
 });
+
 export type Binding = z.infer<typeof bindingSchema>;
+
 export const registrySchema = z.object({
   version: z.literal(1),
   families: z.array(
@@ -46,6 +68,7 @@ export const registrySchema = z.object({
     }),
   ),
 });
+
 export type Registry = z.infer<typeof registrySchema>;
 
 export const layoutKeys = new Set([
@@ -55,6 +78,9 @@ export const layoutKeys = new Set([
   'right',
   'bottom',
   'width',
+  'height',
+  'minHeight',
+  'maxHeight',
   'minWidth',
   'maxWidth',
   'alignSelf',
@@ -67,23 +93,19 @@ export const layoutKeys = new Set([
 
 export function getRoot(snapshot: Snapshot): DesignNode {
   const root = snapshot.nodes.find((node) => node.id === snapshot.rootId);
+
   if (!root) throw new Error(`Missing root ${snapshot.rootId}`);
+
   return root;
 }
 
-export function equalValues(left: object, right: object): boolean {
-  return JSON.stringify(sortValues(left)) === JSON.stringify(sortValues(right));
+export function equalValues(left: Snapshot, right: Snapshot): boolean {
+  return isDeepStrictEqual(left, right);
 }
 
-function sortValues(value: object): object {
-  if (Array.isArray(value))
-    return value.map((item: object) => sortValues(item));
-  return Object.fromEntries(
-    Object.entries(value)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, item]) => [
-        key,
-        item !== null && typeof item === 'object' ? sortValues(item) : item,
-      ]),
-  );
+export function required<T>(value: T | undefined | null): T {
+  if (value === undefined || value === null)
+    throw new Error('Missing required Paper value');
+
+  return value;
 }
