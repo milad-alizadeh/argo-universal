@@ -5,7 +5,7 @@ import {
   type ReplaceableMessage,
 } from '@repo/contracts/plugins/replaceable';
 import type { RpcConnection } from '../../rpc';
-import type { StartedPlugins } from '../plugin-activation';
+import type { StartedPlugins } from '../located-plugins';
 import type { PluginRuntime } from '../runtime/plugin-runtime';
 import { renderView } from './render-view';
 

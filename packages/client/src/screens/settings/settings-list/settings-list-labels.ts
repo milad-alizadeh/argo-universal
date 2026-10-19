@@ -1,10 +1,10 @@
-import type { SettingsListProps } from './settings-list-props';
+import type { SettingsListViewProps } from './settings-list-props';
 
-type ServerStatus = NonNullable<SettingsListProps['status']>;
+type ServerStatus = NonNullable<SettingsListViewProps['status']>;
 
 const connectionValues: Record<
   ServerStatus,
-  (props: SettingsListProps, wide: boolean) => string
+  (props: SettingsListViewProps, wide: boolean) => string
 > = {
   loading: () => 'Connecting…',
   disconnected: () => 'Disconnected',
@@ -13,14 +13,14 @@ const connectionValues: Record<
 };
 
 export function connectionValue(
-  props: SettingsListProps,
+  props: SettingsListViewProps,
   wide: boolean,
 ): string {
   return connectionValues[props.status ?? 'ready'](props, wide);
 }
 
 export function serverValue(
-  props: SettingsListProps,
+  props: SettingsListViewProps,
   value?: string,
 ): string | undefined {
   return props.status === 'loading' ? '…' : value;
@@ -31,7 +31,7 @@ export function serverValue(
  * disconnected with no answer yet, else the last known count.
  */
 export function countValue(
-  props: SettingsListProps,
+  props: SettingsListViewProps,
   count: number | undefined,
 ): string | undefined {
   if (count !== undefined) return serverValue(props, String(count));

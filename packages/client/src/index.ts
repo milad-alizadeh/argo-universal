@@ -18,9 +18,12 @@ export {
   useNeedsAttention,
   usePhoneDrawerWidth,
   useSectionList,
+  ScreenInspector,
 } from '#features/frame';
 
 export { useSectionLists } from './screens/section-lists';
+
+export { SettingsSection } from './screens/settings/settings-section';
 
 export {
   OnboardingLayout,
@@ -94,7 +97,7 @@ export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
-export { PageAtDrawerRoot } from '#primitives/scaffolds/page';
+export { PageAtDrawerRoot, PageBesideList } from '#primitives/scaffolds/page';
 
 export {
   TableRowDetailHost,

@@ -1,4 +1,8 @@
-import { PhoneConnectionBanner } from '@repo/client';
+import {
+  PageBesideList,
+  PhoneConnectionBanner,
+  ScreenInspector,
+} from '@repo/client';
 import { useWide } from '@repo/client/size-class';
 import type { Stack } from 'expo-router';
 import { useAnimatedHeaderHeight } from 'expo-router/native-stack';
@@ -28,10 +32,16 @@ function NarrowBanner(props: BannerProps): React.JSX.Element | null {
   return useWide() ? null : <UnderHeaderBanner {...props} />;
 }
 
-// The page keeps its place in the tree at every width.
-export const pageLayout: ScreenLayout = ({ children, options }) => (
+// A page under another page of its section, such as a Project under Projects, which keeps its Back beside the list.
+const nestedPage = (route: { name: string }): boolean =>
+  route.name.includes('/') && !route.name.endsWith('/index');
+
+// The page keeps its place in the tree at every width; while shown, its Inspector draws in the Frame's column.
+export const pageLayout: ScreenLayout = ({ children, options, route }) => (
   <View className="flex-1">
-    {children}
+    <PageBesideList value={!nestedPage(route)}>
+      <ScreenInspector>{children}</ScreenInspector>
+    </PageBesideList>
     <NarrowBanner overHeader={options.headerTransparent === true} />
   </View>
 );

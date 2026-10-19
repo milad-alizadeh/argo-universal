@@ -45,7 +45,7 @@ it('persists a Tracker chosen in the Project details Slot across views', async (
       timeout: 10_000,
     })
     .toBe(false);
-  await first.tap(selectTracker);
+  await first.press(selectTracker);
   await expect
     .poll(() => first.findText(selectedTracker), { timeout: 10_000 })
     .toBeDefined();
@@ -67,7 +67,7 @@ it('lists Issues from the selected Tracker and opens an Issue description', asyn
       timeout: 10_000,
     })
     .toBe(false);
-  await details.tap(selectTracker);
+  await details.press(selectTracker);
   await expect
     .poll(() => details.findText(selectedTracker), { timeout: 10_000 })
     .toBeDefined();
@@ -77,7 +77,7 @@ it('lists Issues from the selected Tracker and opens an Issue description', asyn
       timeout: 10_000,
     })
     .toBeDefined();
-  await page.tap(issueTitle);
+  await page.press(issueTitle);
   await expect
     .poll(
       () => page.findText('This Issue came from the fixture gh executable.'),
@@ -89,7 +89,7 @@ it('lists Issues from the selected Tracker and opens an Issue description', asyn
     url: 'https://github.com/owner/repository/issues/42',
   });
   expect(await test.log()).not.toContain('refused');
-  await page.tap('Back to Issues');
+  await page.press('Back to Issues');
   await expect
     .poll(() => page.findText(issueTitle), {
       timeout: 10_000,

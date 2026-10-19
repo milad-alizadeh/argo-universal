@@ -19,7 +19,7 @@ import { newSessionId } from '../lib/product/navigation/new-session';
 import { sections } from '../lib/product/navigation/sections';
 import { LiveSessionList } from './sessions/live-session-list';
 import { SessionsRootPage } from './sessions/sessions-root-page';
-import { SettingsNavigationList } from './settings/settings-navigation-list';
+import { SettingsRootList } from './settings/settings-section';
 
 const searchSettings = 'Search Settings';
 
@@ -97,15 +97,14 @@ const settingsRootHeader = (
 
 const settingsFirstPage: FirstPage = { page: 'accounts' };
 
-// `/settings`: the Settings pages the search narrows; with the list beside the pages, the root opens Accounts.
-function settingsList(
-  { query, onQueryChange }: SettingsQuery,
-  path: string,
-): SectionList {
+// `/settings`: the Settings pages the search narrows, which Settings' SettingsLayout draws; with the list beside the pages, the root opens Accounts.
+function settingsList({ query, onQueryChange }: SettingsQuery): SectionList {
   return {
     header: <SettingsSearch query={query} onQueryChange={onQueryChange} />,
-    list: <SettingsNavigationList selectedPath={path} query={query} />,
+    list: null,
+    query,
     rootHeader: settingsRootHeader(onQueryChange),
+    rootPage: <SettingsRootList query={query} />,
     useFirstPage: () => settingsFirstPage,
   };
 }
@@ -123,6 +122,6 @@ export function useSectionLists(): SectionLists {
 
   return {
     sessions: sessionsList(sessions, path, () => navigate(newSessionHref())),
-    settings: settingsList({ query, onQueryChange }, path),
+    settings: settingsList({ query, onQueryChange }),
   };
 }

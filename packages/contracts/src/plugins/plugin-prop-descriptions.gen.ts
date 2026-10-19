@@ -670,8 +670,18 @@ export type WireSchemaHints = {
 
   };
   "Inspector": {
-    /** label for this part. */
+    /** The Inspector heading; on compact screens, the sheet title. */
     "title": PropValue<"Inspector", "title">;
+    /** Whether the Inspector is shown. */
+    "open": PropValue<"Inspector", "open">;
+    /** Reports the Inspector closing, by its close button, a swipe down, Escape or Back. */
+    "onOpenChange": PropValue<"Inspector", "onOpenChange">;
+  };
+  "SettingsLayout": {
+    /** The settings pages, in groups, optionally by Size class. */
+    "sections": PropValue<"SettingsLayout", "sections">;
+    /** The id of the page shown, whose row a wide window marks. */
+    "selected": PropValue<"SettingsLayout", "selected">;
   };
   "Svg": {
     /** Sanitized SVG markup to draw. */

@@ -1,15 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { SessionHeader } from '#features/sessions';
-import { InspectorProvider } from '#lib/product/inspector';
 import { ListTitle } from '#lib/product/list-title';
+import { Inspector } from '#primitives/scaffolds/inspector';
 import { LayoutListMock } from '../components/layout-list.mocks';
 import { Scaffold } from '../scaffold/scaffold';
 import { useFrameState } from './frame';
+import { FrameInspectorHost, ScreenInspector } from './frame-inspector';
 
 const expanded = 'aria-expanded';
 
@@ -19,21 +20,40 @@ function FrameStatePage({
 }: {
   content: ReactNode;
 }): React.JSX.Element {
-  const { scaffold, inspector } = useFrameState();
+  const { scaffold, inspectorHost } = useFrameState();
 
   return (
     <View className="flex-1">
-      <InspectorProvider value={inspector}>
+      <FrameInspectorHost value={inspectorHost}>
         <Scaffold
           {...scaffold}
           sizeClass="wide"
           sidebar={null}
           listHeader={<ListTitle>Sessions</ListTitle>}
           list={<LayoutListMock name="Sessions" />}
-          page={content}
+          page={<ScreenInspector>{content}</ScreenInspector>}
         />
-      </InspectorProvider>
+      </FrameInspectorHost>
     </View>
+  );
+}
+
+// A Session page's header, whose Changes button holds its Changes Inspector open.
+function SessionPage({ title }: { title: string }): React.JSX.Element {
+  const [open, onOpenChange] = useState(false);
+
+  return (
+    <>
+      <SessionHeader
+        title={title}
+        status="idle"
+        startedAt={null}
+        changes={{ open, onOpenChange }}
+      />
+      <Inspector title="Changes" open={open} onOpenChange={onOpenChange}>
+        {null}
+      </Inspector>
+    </>
   );
 }
 
@@ -54,7 +74,7 @@ type Story = StoryObj<typeof meta>;
 // The open Session's Changes button opens the Inspector beside it and closes it again.
 export const ChangesOpensInspector: Story = {
   args: {
-    content: <SessionHeader title="Fix login" status="idle" startedAt={null} />,
+    content: <SessionPage title="Fix login" />,
   },
   play: async ({ canvas, userEvent }) => {
     const changes = await canvas.findByRole('button', { name: 'Changes' });
@@ -77,7 +97,7 @@ const longTitle =
 // The Session header keeps a long title on one line with its whole text in the heading's name, and never covers the header actions, with the Inspector closed or open.
 export const LongSessionTitle: Story = {
   args: {
-    content: <SessionHeader title={longTitle} status="idle" startedAt={null} />,
+    content: <SessionPage title={longTitle} />,
   },
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('heading', { name: longTitle });

@@ -15,7 +15,7 @@ import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import type { PluginService } from '@repo/engine/plugins';
 
-type Opening = {
+export type Opening = {
   path: string;
   slot?: PluginSlotInput;
   surface?: PluginSurface;
@@ -104,10 +104,6 @@ export class PluginTestView {
     }
   }
 
-  public press(text: string): Promise<void> {
-    return this.tap(text);
-  }
-
   public async dispatch(event: Event): Promise<void> {
     const latest = this.latest;
 
@@ -122,7 +118,7 @@ export class PluginTestView {
     });
   }
 
-  public async tap(text: string): Promise<void> {
+  public async press(text: string): Promise<void> {
     const entry = this.findText(text);
 
     if (!entry) throw new Error(`Plugin control not found: ${text}`);

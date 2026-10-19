@@ -8,6 +8,11 @@ export type SessionHeaderStatus = Extract<
   'running' | 'needs_input' | 'idle'
 >;
 
+export interface SessionChanges {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
 export interface SessionHeaderProps {
   title: string;
   status: SessionHeaderStatus;
@@ -22,6 +27,8 @@ export interface SessionHeaderProps {
   onMergeMethodChange?: (method: MergeMethod) => void;
   // Rename and Archive under ⋯, as the Session's row offers them; absent where the page offers neither.
   menu?: SessionMenu;
+  // The Changes Inspector, which the Changes button opens and closes; absent where the page has none.
+  changes?: SessionChanges;
   // Fixes the clock, for stories and tests.
   now?: number;
 }

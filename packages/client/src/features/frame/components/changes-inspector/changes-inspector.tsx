@@ -4,22 +4,37 @@ import {
   ChangesToolbar,
   type ChangesViewProps,
 } from '#features/changes';
-import { InspectorPane, type InspectorPaneProps } from '../inspector-pane';
+import {
+  InspectorPane,
+  type InspectorPaneProps,
+} from '#primitives/scaffolds/inspector';
 
 export type ChangesInspectorProps = ChangesViewProps &
-  Pick<InspectorPaneProps, 'expanded' | 'onStateChange'>;
+  Pick<
+    InspectorPaneProps,
+    'expanded' | 'onExpandedChange' | 'onOpenChange' | 'inSheet'
+  >;
+
+const paneOf = ({
+  expanded,
+  onExpandedChange,
+  onOpenChange,
+  inSheet,
+}: ChangesInspectorProps): Omit<InspectorPaneProps, 'children'> => ({
+  title: 'Changes',
+  open: true,
+  expanded,
+  onExpandedChange,
+  onOpenChange,
+  inSheet,
+});
 
 // The Changes Inspector: the comparison and totals stay under the header while the files scroll.
 export function ChangesInspector(
   props: ChangesInspectorProps,
 ): React.JSX.Element {
   return (
-    <InspectorPane
-      title="Changes"
-      expanded={props.expanded}
-      onStateChange={props.onStateChange}
-      toolbar={<ChangesToolbar {...props} />}
-    >
+    <InspectorPane {...paneOf(props)} toolbar={<ChangesToolbar {...props} />}>
       <ChangesFiles {...props} />
     </InspectorPane>
   );

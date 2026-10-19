@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
+import { Inspector } from '#primitives/scaffolds/inspector';
 import { sectionOrder } from '../../../lib/product/navigation/sections';
 import { InspectorFilesMock } from './inspector-files.mocks';
 import { ScaffoldMock, type ScaffoldMockProps } from './scaffold.mocks';
@@ -60,11 +61,16 @@ export const InspectorFiles: Story = {
   ),
 };
 
-// A medium window takes the phone shell (ADR-0026): the page fills the window and the Inspector rises as a sheet over it.
+// A medium window takes the phone shell (ADR-0026): the page fills the window and the page's Inspector rises as a sheet over it.
 export const MediumInspector: Story = {
   name: 'Medium Inspector',
-  args: { sizeClass: 'medium', inspectorState: 'open' },
+  args: { sizeClass: 'medium' },
   render: (args) => (
-    <ScaffoldMock {...args} inspector={<InspectorFilesMock />} />
+    <>
+      <ScaffoldMock {...args} />
+      <Inspector open title="Changes" onOpenChange={action('onOpenChange')}>
+        <InspectorFilesMock />
+      </Inspector>
+    </>
   ),
 };

@@ -15,11 +15,9 @@ import {
 } from '@repo/engine/plugins';
 import { configureTest, runtimeFor } from './test-runtime';
 import type { PluginTest, PluginTestOptions } from './test-types';
-import { PluginTestView, type PluginMount } from './view';
+import { PluginTestView, type Opening, type PluginMount } from './view';
 
 export type { PluginTest, PluginTestOptions } from './test-types';
-
-type MountedView = { view: PluginTestView; path: string };
 
 // Starts the production loader, host, worker and SQLite without the composed Engine or an App.
 export async function startPluginTest(
@@ -85,28 +83,19 @@ class HostedPlugin implements PluginTest {
     await this.activate();
 
     const offset = (await this.log()).length;
-    const { view, path } = this.mountView(input);
-    await view.ready();
-    await this.requireAccepted({ offset, path });
 
-    return view;
-  };
-
-  private mountView(input: PluginMount): MountedView {
     const opening =
       'page' in input
         ? { path: input.page }
         : { path: slotPath(input.slot), slot: input.slot };
 
-    const view = new PluginTestView(this.service, this.options.pluginId, {
-      ...opening,
-      surface: input.surface,
-    });
+    const view = this.open({ ...opening, surface: input.surface });
 
-    this.views.add(view);
+    await view.ready();
+    await this.requireAccepted({ offset, path: opening.path });
 
-    return { view, path: opening.path };
-  }
+    return view;
+  };
 
   private async activate(): Promise<void> {
     const status = await this.service.activate(this.options.pluginId);
@@ -137,18 +126,19 @@ class HostedPlugin implements PluginTest {
   }
 
   public page(path = '/'): PluginTestView {
-    return this.open(path);
+    return this.open({ path });
   }
 
   public slot(slot: PluginSlotInput): PluginTestView {
-    return this.open(slotPath(slot), slot);
+    return this.open({ path: slotPath(slot), slot });
   }
 
-  private open(path: string, slot?: PluginSlotInput): PluginTestView {
-    const view = new PluginTestView(this.service, this.options.pluginId, {
-      path,
-      slot,
-    });
+  private open(opening: Opening): PluginTestView {
+    const view = new PluginTestView(
+      this.service,
+      this.options.pluginId,
+      opening,
+    );
 
     this.views.add(view);
 

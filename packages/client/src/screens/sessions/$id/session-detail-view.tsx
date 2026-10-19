@@ -1,4 +1,5 @@
 import type * as React from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
@@ -22,6 +23,7 @@ import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
+import { Inspector } from '#primitives/scaffolds/inspector';
 
 export interface OpenSessionViewProps {
   header: SessionHeaderProps;
@@ -69,18 +71,30 @@ export function SessionDetailView(
   return <Screen edges={['bottom']}>{null}</Screen>;
 }
 
+// The header's Changes button opens the Changes Inspector beside the Session.
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
+  const [open, onOpenChange] = useState(false);
+  const changes = { open, onOpenChange };
+
   return (
-    <SessionLayout
-      header={<SessionHeader {...props.header} />}
-      feed={<Feed {...props.feed} />}
-      composer={sessionBottom(props)}
-      panel={
-        props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />
-      }
-    />
+    <>
+      <SessionLayout {...sessionParts(props, changes)} />
+      <Inspector title="Changes" {...changes}>
+        {null}
+      </Inspector>
+    </>
   );
 }
+
+const sessionParts = (
+  props: OpenSessionViewProps,
+  changes: SessionHeaderProps['changes'],
+): React.ComponentProps<typeof SessionLayout> => ({
+  header: <SessionHeader {...props.header} changes={changes} />,
+  feed: <Feed {...props.feed} />,
+  composer: sessionBottom(props),
+  panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
+});
 
 // The bottom slot: nothing in a preview, the banner for an archived Session, else the Composer.
 function sessionBottom(props: OpenSessionViewProps): React.ReactNode {

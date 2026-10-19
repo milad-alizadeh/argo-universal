@@ -1,8 +1,10 @@
 import { z } from 'zod';
-import { iconSymbol } from '../kit-symbols/icon-schema';
+import {
+  iconSymbol,
+  materialSymbol,
+  sfSymbol,
+} from '../kit-symbols/icon-schema';
 import { tones } from '../kit-tokens';
-import { materialSymbolNames } from './material-symbol-names.gen';
-import { sfSymbolNames } from './sf-symbol-names.gen';
 
 const semanticTone = z
   .enum(tones)
@@ -25,8 +27,8 @@ export const progressBarProps = z.object({
 export const labelV1 = z.object({
   icon: z
     .object({
-      sf: z.enum(sfSymbolNames),
-      material: z.enum(materialSymbolNames),
+      sf: sfSymbol,
+      material: materialSymbol,
     })
     .describe('The SF and Material symbol pair.'),
   text: z.string().describe('The text displayed by the part.'),
