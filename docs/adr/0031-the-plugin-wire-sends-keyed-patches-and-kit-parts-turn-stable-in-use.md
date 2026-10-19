@@ -26,15 +26,17 @@ ADR-0025's stability rule also blocks the spec: a kit part turns stable only onc
 - **Taps name the node, not the path.** A dispatch carries `{ pluginId, path, revision, key, event, payload }`.
   - The Server looks the handler up by the node's `key` and event name in the view's current revision.
   - When that node no longer exists, the tap is refused, never run on another row.
-  - `payload` is typed per event by the part's schema, for example `onChangeText: string` or `onSelectionChange: string[]`.
+  - `payload` is typed per event by the part's schema, for example `onChangeText: string` or `onSelectionChange: string[]`. The App and the Server both check it against that schema.
+  - A node's key and the event name are the whole address; there are no nested paths inside a node. Parts with several tappable entries, such as SplitButton, take them as keyed `Action` children. Amended by the owner on 2026-10-19 (#1052).
   - Dispatch returns when the handler settles: `ok`, or an error the App shows as an error toast. Pending states wait for it. A Switch or Checkbox flips at once and reverts when the handler fails.
 - **Views belong to a Connection.** The Server keeps one view per Connection, Plugin and page, so each App renders its own tree. That makes ADR-0027's `ctx.surface` work per App: a tree is built for the parts that App reported. UI state is the App's own: search text, selection, scroll position, open or closed, and input drafts. The Plugin hears it only through events it opts into:
   - throttled `onSearchTextChange` (otherwise the App filters the list itself);
   - `onSelectionChange`;
   - a field's throttled `onChange`;
-  - a Form's submit, which sends every field's value.
+  - a Form's submit, which sends every field's value;
+  - `onOpenChange` on Alert, Dialog, Sheet, Popover and Collapsible, which never blocks the App.
 
-  The Server never overwrites a field that has focus. Copied from Raycast's built-in filtering and `onSearchTextChange`, and LiveView's `phx-debounce`.
+  Plugin overlays are ordinary tree nodes whose open state the App owns, not a separate wire action: there is no imperative alert, dialog or sheet call. Amended by the owner on 2026-10-19 (#1052). The Server never overwrites a field that has focus. Copied from Raycast's built-in filtering and `onSearchTextChange`, and LiveView's `phx-debounce`.
 - **The schemas live in Contracts.** Every Plugin-tier kit part has one schema in Contracts: its props, Slots and what each Slot accepts, and its events with their payloads.
   - The Server validates each tree before sending it, using ADR-0025's rules for pages and ordinary Slots and ADR-0027's for Replaceable Slots.
   - Plugin JSX types are generated from the schemas, so a wrong prop fails in the author's editor, and `argo plugin validate` (#824) checks trees with them.
