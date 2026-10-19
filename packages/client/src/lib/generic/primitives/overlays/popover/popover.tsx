@@ -17,7 +17,7 @@ export { PopoverTrigger } from './popover-trigger';
 
 export { PopoverHoverGroup } from './popover-hover-group';
 
-export { usePopoverClose } from './popover-context';
+export { useEnclosingPopoverClose, usePopoverClose } from './popover-context';
 
 /*
  * The web's popover, on Radix Popover (`@radix-ui/react-popover`): Root `open`/`onOpenChange`, Trigger,
@@ -74,6 +74,7 @@ function webContentProps(
     ...contentPlacement(props),
     side: props.side,
     'aria-label': props.accessibilityLabel,
+    onEscapeKeyDown: props.onEscapeKeyDown,
   };
 }
 

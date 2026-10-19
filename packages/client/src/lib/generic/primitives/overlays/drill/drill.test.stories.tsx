@@ -129,6 +129,21 @@ export const KeepOpenKeepsBothOpenAfterAPick: Story = {
   },
 };
 
+// After a kept-open pick, Escape closes the choices and their menu together.
+export const KeepOpenEscapeClosesBoth: Story = {
+  play: async ({ userEvent }) => {
+    const { menu, choices } = await openChoices(userEvent, 'Fruit');
+
+    await userEvent.click(
+      within(choices).getByRole('button', { name: 'Banana' }),
+    );
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => expect(choices).not.toBeInTheDocument());
+    await waitFor(() => expect(menu).not.toBeInTheDocument());
+  },
+};
+
 // Paper's drilled row: the choices open beside the menu with no title of their own.
 export const RowChoicesHaveNoTitle: Story = {
   play: async ({ userEvent }) => {

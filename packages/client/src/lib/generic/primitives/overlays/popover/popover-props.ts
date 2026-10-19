@@ -33,5 +33,7 @@ export type PopoverContentProps = {
   onCloseAutoFocus?: (event: Event) => void;
   // After the popover has closed.
   onClosed?: () => void;
+  // Web only: Escape, just before the popover closes.
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
   children?: ReactNode;
 };

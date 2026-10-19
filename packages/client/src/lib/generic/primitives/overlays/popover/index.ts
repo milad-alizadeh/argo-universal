@@ -3,6 +3,7 @@ export {
   PopoverContent,
   PopoverHoverGroup,
   PopoverTrigger,
+  useEnclosingPopoverClose,
   usePopoverClose,
 } from './popover';
 
