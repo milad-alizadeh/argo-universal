@@ -16,15 +16,12 @@ const session = {
 };
 
 describe('how old a One list row reads', () => {
-  it.each([
-    { order: 'activity', age: '5m' },
-    // The age counts from the time the list sorts by, so the ages run in its order.
-    { order: 'created', age: '2h' },
-  ] as const)('reads $age in the $order order', ({ order, age }) => {
-    expect(sessionAge(session, now, order)).toBe(age);
+  // The age counts from the last activity the list sorts by, not from creation, so the ages run in its order.
+  it('reads the time since its last activity', () => {
+    expect(sessionAge(session, now)).toBe('5m');
   });
 
   it('reads no age while the list shows none', () => {
-    expect(sessionAge(session, undefined, 'created')).toBeUndefined();
+    expect(sessionAge(session)).toBeUndefined();
   });
 });

@@ -3,6 +3,7 @@
 import AccountTree from '@expo/material-symbols/account_tree.xml';
 import Add from '@expo/material-symbols/add.xml';
 import Adjust from '@expo/material-symbols/adjust.xml';
+import AllInbox from '@expo/material-symbols/all_inbox.xml';
 import Archive from '@expo/material-symbols/archive.xml';
 import ArrowBack from '@expo/material-symbols/arrow_back.xml';
 import ArrowDownward from '@expo/material-symbols/arrow_downward.xml';
@@ -48,6 +49,7 @@ export const materialImagesAE = {
   account_tree: AccountTree,
   add: Add,
   adjust: Adjust,
+  all_inbox: AllInbox,
   archive: Archive,
   arrow_back: ArrowBack,
   arrow_downward: ArrowDownward,

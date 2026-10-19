@@ -15,25 +15,26 @@ function useMemoryStorage(): ReturnType<typeof memoryStorage> {
   return storage;
 }
 
+// Where this Device keeps the view.
+const viewKey = 'sessions-view';
+
 const loadView = (client = new QueryClient()): Promise<SessionsView> =>
   client.fetchQuery(sessionsViewQuery());
 
 const defaults: SessionsView = {
-  order: 'activity',
   group: 'project',
   status: 'active',
   layout: 'regular',
 };
 
 const chosen: SessionsView = {
-  order: 'created',
   group: 'none',
   status: 'all',
   layout: 'compact',
 };
 
 describe('the Sessions view on this Device', () => {
-  it('is Last activity, By project, Active and Regular when this Device kept none', async () => {
+  it('is By project, Active and Regular when this Device kept none', async () => {
     useMemoryStorage();
     await expect(loadView()).resolves.toEqual(defaults);
   });
@@ -52,11 +53,19 @@ describe('the Sessions view on this Device', () => {
     });
   });
 
+  it('drops the order this Device kept before the list always ordered by last activity', async () => {
+    useMemoryStorage().setItem(
+      viewKey,
+      JSON.stringify({ ...chosen, order: 'created' }),
+    );
+    await expect(loadView()).resolves.toEqual(chosen);
+  });
+
   it.each([
     ['an unknown value', JSON.stringify({ ...chosen, status: 'pinned' })],
     ['a missing field', JSON.stringify({ ...chosen, status: undefined })],
   ])('falls back to the default for a field with %s', async (_case, saved) => {
-    useMemoryStorage().setItem('sessions-view', saved);
+    useMemoryStorage().setItem(viewKey, saved);
     await expect(loadView()).resolves.toEqual({
       ...chosen,
       status: 'active',
@@ -64,7 +73,7 @@ describe('the Sessions view on this Device', () => {
   });
 
   it('falls back to the default view when the kept view is not JSON', async () => {
-    useMemoryStorage().setItem('sessions-view', 'compact');
+    useMemoryStorage().setItem(viewKey, 'compact');
     await expect(loadView()).resolves.toEqual(defaults);
   });
 

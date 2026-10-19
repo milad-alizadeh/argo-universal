@@ -8,7 +8,7 @@ export interface SessionsViewState {
   onViewChange: (view: SessionsView) => void;
 }
 
-// The search and the view, its order, group, status and row layout, that the list header and the list share; the view stays on this Device.
+// The search and the view, its group, status and row layout, that the list header and the list share; the view stays on this Device.
 export function useSessionsViewState(): SessionsViewState {
   const [query, setQuery] = useState('');
   const [view, setView] = useSessionsView();

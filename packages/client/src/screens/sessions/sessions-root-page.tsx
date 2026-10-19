@@ -78,7 +78,7 @@ function filterSubmenu({
 
 type ViewOption = SessionsViewGroup['options'][number];
 
-// Each view field is one Section; its options are text only, the chosen one checked.
+// Each view field is one Section; each option has its icon, the chosen one checked.
 function filterSection(group: SessionsViewGroup): React.JSX.Element {
   const options: readonly ViewOption[] = group.options;
 
@@ -97,6 +97,7 @@ function filterOption(
     <Action
       key={option.value}
       label={option.label}
+      icon={option.icon}
       selected={option.value === group.value}
       onPress={() => group.onValueChange(option.value)}
     />

@@ -1,6 +1,6 @@
 import type { AgentServer } from '@repo/contracts';
 import { useMemo } from 'react';
-import type { SessionsLayout, SessionsOrder } from '../../stores/sessions-view';
+import type { SessionsLayout } from '../../stores/sessions-view';
 import { showsSessionAge } from '../session-row/session-row-props';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import { sessionAge, useAgeFrom } from './session-age';
@@ -11,8 +11,6 @@ import type { SessionListRowProps } from './sessions-list-rows';
 export interface SessionRowContext {
   agentLogos: Map<string, string>;
   layout: SessionsLayout;
-  // The list's order, whose time each row's age counts from.
-  order: SessionsOrder;
   selectedSessionId?: string;
   // When rows show their ages, the time those count to.
   ageFrom?: number;
@@ -54,14 +52,15 @@ function useRowActions(props: SessionsListProps): RowActions {
   );
 }
 
-// The list's order and, while rows show ages, the time they count to.
+// While rows show ages, the time they count to.
 function useRowAge(
   props: SessionsListProps,
-): Pick<SessionRowContext, 'order' | 'ageFrom'> {
-  const { layout, order } = props.view;
-  const ageFrom = useAgeFrom(showsSessionAge(layout, listsFlat(props)));
+): Pick<SessionRowContext, 'ageFrom'> {
+  const ageFrom = useAgeFrom(
+    showsSessionAge(props.view.layout, listsFlat(props)),
+  );
 
-  return useMemo(() => ({ order, ageFrom }), [order, ageFrom]);
+  return useMemo(() => ({ ageFrom }), [ageFrom]);
 }
 
 function useRowInputs(props: SessionsListProps): RowInputs {
@@ -108,7 +107,7 @@ export function sessionRowProps(
     session: item.session,
     logo: context.agentLogos.get(item.session.agent) ?? '',
     selected: context.selectedSessionId === item.id,
-    trailing: sessionAge(item.session, context.ageFrom, context.order),
+    trailing: sessionAge(item.session, context.ageFrom),
     layout: context.layout,
     ...rowMotion(item.session.projectId, context),
     ...rowActions(context),

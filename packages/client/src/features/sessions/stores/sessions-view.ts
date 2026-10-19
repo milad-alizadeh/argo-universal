@@ -9,34 +9,31 @@ import {
 } from '@tanstack/react-query';
 import { z } from 'zod';
 
-// Last activity sorts by `activityAt`, Created by `createdAt`, newest first either way.
-export const sessionsOrderChoices = [
-  { value: 'activity', label: 'Last activity' },
-  { value: 'created', label: 'Created' },
-] as const;
-
 // By project lists each Project's Sessions under its heading; One list has no headings.
 export const sessionsGroupChoices = [
-  { value: 'project', label: 'By project' },
-  { value: 'none', label: 'One list' },
+  { value: 'project', label: 'By project', icon: 'folder' },
+  { value: 'none', label: 'One list', icon: 'one-list' },
 ] as const;
 
 // Each status with the `archived` filter `session.list` takes for it; All asks with none, for active and archived Sessions together.
 export const sessionsStatusChoices = [
-  { value: 'active', label: 'Active', archived: false },
-  { value: 'archived', label: 'Archived', archived: true },
-  { value: 'all', label: 'All', archived: undefined },
+  { value: 'active', label: 'Active', icon: 'triage', archived: false },
+  {
+    value: 'archived',
+    label: 'Archived',
+    icon: 'archived',
+    archived: true,
+  },
+  { value: 'all', label: 'All', icon: 'all-sessions', archived: undefined },
 ] as const;
 
 export const sessionsLayoutChoices = [
-  { value: 'regular', label: 'Regular' },
-  { value: 'compact', label: 'Compact' },
+  { value: 'regular', label: 'Regular', icon: 'regular-layout' },
+  { value: 'compact', label: 'Compact', icon: 'compact-layout' },
 ] as const;
 
 type ChoiceValue<Choices extends readonly { value: string }[]> =
   Choices[number]['value'];
-
-export type SessionsOrder = ChoiceValue<typeof sessionsOrderChoices>;
 
 type SessionsGroup = ChoiceValue<typeof sessionsGroupChoices>;
 
@@ -45,29 +42,26 @@ export type SessionsStatus = ChoiceValue<typeof sessionsStatusChoices>;
 // Regular rows show the activity, metadata and Plan bar; Compact rows show one line each.
 export type SessionsLayout = ChoiceValue<typeof sessionsLayoutChoices>;
 
-// How the Sessions list orders, groups, filters and lays out its rows.
+// How the Sessions list groups, filters and lays out its rows; it always lists the most recently active Sessions first.
 export interface SessionsView {
-  order: SessionsOrder;
   group: SessionsGroup;
   status: SessionsStatus;
   layout: SessionsLayout;
 }
 
 export const defaultSessionsView: SessionsView = {
-  order: 'activity',
   group: 'project',
   status: 'active',
   layout: 'regular',
 };
 
 const viewChoices = {
-  order: sessionsOrderChoices,
   group: sessionsGroupChoices,
   status: sessionsStatusChoices,
   layout: sessionsLayoutChoices,
 } as const;
 
-const fields = ['order', 'group', 'status', 'layout'] as const;
+const fields = ['group', 'status', 'layout'] as const;
 
 export const isDefaultSessionsView = (view: SessionsView): boolean =>
   fields.every((field) => view[field] === defaultSessionsView[field]);
@@ -93,10 +87,12 @@ const keptField = <Field extends ViewField>(
     .custom<SessionsView[Field]>((value) => isChoice(field, value))
     .catch(defaultSessionsView[field]);
 
-// A kept view that is not an object at all falls back to the default view.
+/*
+ * A kept view that is not an object at all falls back to the default view.
+ * Unknown fields are dropped, such as the `order` a Device kept while the list could also order by creation.
+ */
 const KeptView = z
   .object({
-    order: keptField('order'),
     group: keptField('group'),
     status: keptField('status'),
     layout: keptField('layout'),
