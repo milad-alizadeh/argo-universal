@@ -8,22 +8,21 @@ import {
   changedFiles,
   checkChanged,
   checkFormat,
+  failedChecks,
+  joinOutput,
   parseJson,
   type Result,
   root,
   run,
 } from './hook-checks.mts';
-import {
-  chooseTests,
-  type ListedTest,
-  type TestScope,
-} from './verify-scope.mts';
+import { chooseTests, type TestScope } from './verify-scope.mts';
 
 const vitest = path.join(root, 'node_modules/.bin/vitest');
 
-const listedTests = z.array(
-  z.looseObject({ file: z.string(), projectName: z.string() }),
-);
+const listedTests = z.array(z.looseObject({ file: z.string() }));
+
+// The local cap Storybook uses, for the plain Vitest projects too; VITEST_MAX_WORKERS still overrides it.
+const LOCAL_WORKERS = '2';
 
 const say = (text: string): boolean =>
   process.stdout.write(`verify: ${text}\n`);
@@ -43,7 +42,7 @@ function staticChecks(changed: string[]): Result[] {
 }
 
 type Listing =
-  | { listed: true; tests: ListedTest[] }
+  | { listed: true; tests: string[] }
   | { listed: false; failure: Result };
 
 // Vitest's module graph names every test that imports a changed file, without starting a browser.
@@ -58,7 +57,8 @@ function dependentTests(base: string): Listing {
     if (listing.status !== 0) return { listed: false, failure: listing };
     const parsed = parseJson(listedTests, readFileSync(report, 'utf8'));
 
-    if (parsed.success) return { listed: true, tests: parsed.data };
+    if (parsed.success)
+      return { listed: true, tests: parsed.data.map(({ file }) => file) };
 
     return {
       listed: false,
@@ -85,6 +85,7 @@ function runScope(scope: TestScope): number {
   const tests = spawnSync(vitest, ['run', ...scope.files], {
     cwd: root,
     stdio: 'inherit',
+    env: { VITEST_MAX_WORKERS: LOCAL_WORKERS, ...process.env },
   });
 
   return tests.status ?? 1;
@@ -98,10 +99,9 @@ function reportFailure({ status, output }: Result): number {
 
 function runTests(base: string, changed: string[]): number {
   const listing = dependentTests(base);
-  const absolute = changed.map((name): string => path.join(root, name));
 
   return listing.listed
-    ? runScope(chooseTests({ listed: listing.tests, changed: absolute, root }))
+    ? runScope(chooseTests({ tests: listing.tests, changed, root }))
     : reportFailure(listing.failure);
 }
 
@@ -117,11 +117,9 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
-const failed = staticChecks(changed).filter(
-  (result): boolean => result.status !== 0,
-);
+const failed = failedChecks(staticChecks(changed));
 
-for (const result of failed) process.stderr.write(`${result.output}\n`);
+if (failed.length > 0) process.stderr.write(`${joinOutput(failed)}\n`);
 
 say(
   failed.length === 0

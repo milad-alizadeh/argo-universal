@@ -18,7 +18,7 @@ Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/set
 - oxfmt `--check` and type-aware oxlint on the changed files, and `turbo run check-types --affected` when TypeScript changed.
 - The test files that import a changed file, found by `vitest list --changed`. Past `DEPENDENT_LIMIT` in `tools/verify-scope.mts` (a primitive's edit reaches most story files; a `package.json` or Vitest config edit reaches every test), it runs only those in the touched folders and below, and says how many it left to CI.
 
-Run `pnpm quality` locally only when the owner asks.
+CI runs the full suites. Run `pnpm quality` locally only when the owner asks; it holds the browser-suite lock for its whole run ([storybook.md](storybook.md)).
 
 ## Trust
 

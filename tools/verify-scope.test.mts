@@ -1,27 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { chooseTests, type ListedTest } from './verify-scope.mts';
+import { chooseTests } from './verify-scope.mts';
 
 const root = '/repo';
 
-const rowFolder = `${root}/packages/client/src/sessions/session-row`;
+const rowFolder = 'packages/client/src/sessions/session-row';
 
-const rowStory = `${rowFolder}/session-row.test.stories.tsx`;
+const rowStory = `${root}/${rowFolder}/session-row.test.stories.tsx`;
 
-const nestedStory = `${rowFolder}/compact/session-row-compact.test.stories.tsx`;
+const nestedStory = `${root}/${rowFolder}/compact/session-row-compact.test.stories.tsx`;
 
 const feedStory = `${root}/packages/client/src/feed/feed.test.stories.tsx`;
 
-const listed = (files: string[]): ListedTest[] =>
-  files.map((file): ListedTest => ({
-    file,
-    projectName: 'storybook (chromium)',
-  }));
+const rowSource = `${rowFolder}/session-row.tsx`;
 
 describe('chooseTests', () => {
   it('runs every dependent test while they fit the limit', () => {
     const scope = chooseTests({
-      listed: listed([rowStory, feedStory]),
-      changed: [`${rowFolder}/session-row.tsx`],
+      tests: [rowStory, feedStory],
+      changed: [rowSource],
       root,
       limit: 2,
     });
@@ -33,10 +29,21 @@ describe('chooseTests', () => {
     });
   });
 
+  it('counts a test file listed by two projects once', () => {
+    const scope = chooseTests({
+      tests: [rowStory, rowStory],
+      changed: [rowSource],
+      root,
+      limit: 2,
+    });
+
+    expect(scope.files).toEqual([rowStory]);
+  });
+
   it('narrows to the tests in and below the touched folders past the limit', () => {
     const scope = chooseTests({
-      listed: listed([rowStory, nestedStory, feedStory]),
-      changed: [`${rowFolder}/session-row.tsx`],
+      tests: [rowStory, nestedStory, feedStory],
+      changed: [rowSource],
       root,
       limit: 2,
     });
@@ -50,8 +57,8 @@ describe('chooseTests', () => {
 
   it('selects nothing for a change at the repository root, such as the lockfile', () => {
     const scope = chooseTests({
-      listed: listed([rowStory, feedStory]),
-      changed: [`${root}/pnpm-lock.yaml`],
+      tests: [rowStory, feedStory],
+      changed: ['pnpm-lock.yaml'],
       root,
       limit: 1,
     });

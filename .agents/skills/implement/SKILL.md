@@ -8,7 +8,7 @@ Implement the work described by the user in the spec or tickets.
 
 Use /tdd where possible, at pre-agreed seams.
 
-Run typechecking regularly, single test files regularly, and `pnpm verify` once at the end; CI runs the full suites. After review fixes, rerun only the tests the fixes touch.
+Run typechecking regularly, single test files regularly, and `pnpm verify` once at the end. After review fixes, rerun only the tests the fixes touch.
 
 Once done, use /code-review to review the work.
 

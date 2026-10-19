@@ -3,18 +3,13 @@ import { once } from 'node:events';
 import { connect, createServer } from 'node:net';
 import type { Readable, Writable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  acquireBrowserSuiteLock,
-  type BrowserSuiteHolder,
-} from './browser-suite-lock';
+import { acquireBrowserSuiteLock, type WaitReport } from './browser-suite-lock';
 
 const POLL_MS = 10;
 
 const HOST = '127.0.0.1';
 
 const lockModule = new URL('browser-suite-lock.ts', import.meta.url).href;
-
-type OnWait = (holder: BrowserSuiteHolder | undefined) => void;
 
 type OtherSuite = ChildProcessByStdio<Writable, Readable, null>;
 
@@ -78,11 +73,11 @@ afterEach(async (): Promise<void> => {
 });
 
 describe('acquireBrowserSuiteLock on a real port', () => {
-  it('makes a suite wait, naming the other process that holds it, until that one releases', async () => {
+  it('makes a suite wait until the other process holding it releases', async () => {
     const port = await freePort();
     const other = holdInAnotherProcess(port);
     await once(other.stdout, 'data');
-    const onWait = vi.fn<OnWait>();
+    const onWait = vi.fn<WaitReport>();
     let holds = false;
 
     const acquired = acquireBrowserSuiteLock({
@@ -97,9 +92,6 @@ describe('acquireBrowserSuiteLock on a real port', () => {
 
     await vi.waitFor((): void => expect(onWait).toHaveBeenCalledOnce());
     expect(holds).toBe(false);
-    expect(onWait).toHaveBeenCalledWith(
-      expect.objectContaining({ pid: other.pid }),
-    );
 
     other.stdin.end();
     const release = await acquired;
@@ -108,10 +100,48 @@ describe('acquireBrowserSuiteLock on a real port', () => {
     release();
   });
 
+  it('names the process that holds it while a suite waits', async () => {
+    const port = await freePort();
+    const other = holdInAnotherProcess(port);
+    await once(other.stdout, 'data');
+    const onWait = vi.fn<WaitReport>();
+
+    const acquired = acquireBrowserSuiteLock({ port, pollMs: POLL_MS, onWait });
+
+    await vi.waitFor((): void =>
+      expect(onWait).toHaveBeenCalledWith(
+        expect.objectContaining({ pid: other.pid }),
+      ),
+    );
+
+    other.stdin.end();
+    (await acquired)();
+  });
+
+  it('reports an unknown holder when another program holds the port', async () => {
+    const port = await freePort();
+
+    const program = createServer((socket): void => {
+      socket.end('not a holder');
+    }).listen(port, HOST);
+
+    await once(program, 'listening');
+    const onWait = vi.fn<WaitReport>();
+
+    const acquired = acquireBrowserSuiteLock({ port, pollMs: POLL_MS, onWait });
+
+    await vi.waitFor((): void =>
+      expect(onWait).toHaveBeenCalledWith(undefined),
+    );
+
+    program.close();
+    (await acquired)();
+  });
+
   // Vitest runs a project's global setup again for each browser instance, in the same process.
   it('lets the holding process take it again, keeping it until both release', async () => {
     const port = await freePort();
-    const onWait = vi.fn<OnWait>();
+    const onWait = vi.fn<WaitReport>();
 
     const releaseProject = await acquireBrowserSuiteLock({
       port,
@@ -141,7 +171,7 @@ describe('acquireBrowserSuiteLock on a real port', () => {
 
     other.kill('SIGKILL');
     await once(other, 'exit');
-    const onWait = vi.fn<OnWait>();
+    const onWait = vi.fn<WaitReport>();
 
     const release = await acquireBrowserSuiteLock({
       port,

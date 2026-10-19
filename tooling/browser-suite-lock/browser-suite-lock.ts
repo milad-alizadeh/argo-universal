@@ -19,24 +19,28 @@ const holderSchema = z.object({
 
 export type BrowserSuiteHolder = z.infer<typeof holderSchema>;
 
-const InUse = z.object({ code: z.literal('EADDRINUSE') });
+const portInUseSchema = z.object({ code: z.literal('EADDRINUSE') });
+
+// Set for the commands `pnpm quality` runs while it holds the lock, so their own suites do not wait on it.
+export const HELD_VARIABLE = 'ARGO_BROWSER_SUITE_LOCK_HELD';
 
 // Undefined when whatever holds the port does not say who it is.
-type Report = (holder: BrowserSuiteHolder | undefined) => void;
+export type WaitReport = (holder: BrowserSuiteHolder | undefined) => void;
 
 interface LockSettings {
   port: number;
   pollMs: number;
-  onWait?: Report;
+  onWait?: WaitReport;
 }
 
-interface Turn {
-  taken: Promise<Server>;
-  holds: number;
+// One process's hold on the lock, which its callers share.
+interface SharedHold {
+  server: Promise<Server>;
+  holders: number;
 }
 
-// Vitest runs a project's global setup again for each browser instance, in the same process, so those calls share one turn.
-const turns = new Map<number, Turn>();
+// Vitest runs a project's global setup again for each browser instance, in the same process, so those calls share one hold.
+const holds = new Map<number, SharedHold>();
 
 // Tells anyone who connects which suite holds the lock.
 function serveHolder(): Server {
@@ -55,7 +59,7 @@ function serveHolder(): Server {
 async function listen(server: Server, port: number): Promise<boolean> {
   return new Promise((resolve, reject): void => {
     server.once('error', (error): void => {
-      if (InUse.safeParse(error).success) resolve(false);
+      if (portInUseSchema.safeParse(error).success) resolve(false);
       else reject(error);
     });
 
@@ -109,7 +113,7 @@ async function readHolder(
   return parseHolder(await readAll(socket));
 }
 
-function onlyOnce(onWait: Report | undefined): Report {
+function onlyOnce(onWait: WaitReport | undefined): WaitReport {
   let reported = false;
 
   return (holder): void => {
@@ -119,9 +123,9 @@ function onlyOnce(onWait: Report | undefined): Report {
   };
 }
 
-async function takeTurn(
+async function waitForPort(
   settings: LockSettings,
-  report: Report,
+  report: WaitReport,
 ): Promise<Server> {
   const server = await tryTake(settings.port);
 
@@ -129,37 +133,28 @@ async function takeTurn(
   report(await readHolder(settings.port));
   await delay(settings.pollMs);
 
-  return takeTurn(settings, report);
+  return waitForPort(settings, report);
 }
 
-// A turn that failed, such as on a port it may not open, is dropped so the next call tries afresh.
-async function takeOrForget(settings: LockSettings): Promise<Server> {
-  try {
-    return await takeTurn(settings, onlyOnce(settings.onWait));
-  } catch (error) {
-    turns.delete(settings.port);
-    throw error;
-  }
+function newHold(settings: LockSettings): SharedHold {
+  const report = onlyOnce(settings.onWait);
+  const hold = { server: waitForPort(settings, report), holders: 0 };
+
+  holds.set(settings.port, hold);
+
+  return hold;
 }
 
-function newTurn(settings: LockSettings): Turn {
-  const turn = { taken: takeOrForget(settings), holds: 0 };
-
-  turns.set(settings.port, turn);
-
-  return turn;
-}
-
-function releaser(port: number, turn: Turn, server: Server): () => void {
+function releaser(port: number, hold: SharedHold, server: Server): () => void {
   let released = false;
 
   return (): void => {
     if (released) return;
     released = true;
-    turn.holds -= 1;
+    hold.holders -= 1;
 
-    if (turn.holds > 0) return;
-    turns.delete(port);
+    if (hold.holders > 0) return;
+    holds.delete(port);
     server.close();
   };
 }
@@ -169,11 +164,11 @@ export async function acquireBrowserSuiteLock(
   options: Partial<LockSettings> = {},
 ): Promise<() => void> {
   const settings = { port: LOCK_PORT, pollMs: POLL_MS, ...options };
-  const turn = turns.get(settings.port) ?? newTurn(settings);
+  const hold = holds.get(settings.port) ?? newHold(settings);
 
-  turn.holds += 1;
+  hold.holders += 1;
 
-  return releaser(settings.port, turn, await turn.taken);
+  return releaser(settings.port, hold, await hold.server);
 }
 
 const describeHolder = (holder: BrowserSuiteHolder | undefined): string =>
@@ -186,8 +181,8 @@ const printWaiting = (holder: BrowserSuiteHolder | undefined): boolean =>
     `Waiting for ${describeHolder(holder)} to finish; one browser suite runs at a time on this Mac.\n`,
   );
 
-// CI runs one suite per runner, so only local runs queue.
+// CI runs one suite per runner, so only local runs queue, and a run inside a held `pnpm quality` is already in its turn.
 export const lockBrowserSuite = async (): Promise<(() => void) | undefined> =>
-  process.env.CI
+  process.env.CI || process.env[HELD_VARIABLE] === '1'
     ? undefined
     : acquireBrowserSuiteLock({ onWait: printWaiting });
