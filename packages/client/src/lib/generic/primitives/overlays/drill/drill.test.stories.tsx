@@ -129,7 +129,7 @@ export const KeepOpenKeepsBothOpenAfterAPick: Story = {
   },
 };
 
-// After a kept-open pick, Escape closes the choices and their menu together.
+// After a kept-open pick, Escape closes the choices and their menu together and focus returns to the menu's trigger.
 export const KeepOpenEscapeClosesBoth: Story = {
   play: async ({ userEvent }) => {
     const { menu, choices } = await openChoices(userEvent, 'Fruit');
@@ -141,6 +141,9 @@ export const KeepOpenEscapeClosesBoth: Story = {
 
     await waitFor(() => expect(choices).not.toBeInTheDocument());
     await waitFor(() => expect(menu).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(page.getByRole('button', { name: 'Configure' })).toHaveFocus(),
+    );
   },
 };
 
