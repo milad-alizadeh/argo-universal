@@ -5,6 +5,7 @@ import { CopyButton } from '#lib/product/markdown/copy-button';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
 import { Text, TextClassContext } from '#primitives/content/text';
+import { Checkbox } from '#primitives/inputs/checkbox';
 import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
 import type { FileDiff } from '../../view/file-diff';
 
@@ -12,6 +13,8 @@ export interface FileHeaderProps {
   file: FileDiff;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  viewed?: boolean;
+  onViewedChange?: (viewed: boolean) => void;
 }
 
 const toggleClassName = contentActionClass({
@@ -110,7 +113,32 @@ function ChangeCount(props: ChangeCountProps): React.JSX.Element | null {
   );
 }
 
-// The Inspector's file header: folder muted, file name strong, then copy and the change counts.
+function ViewedMark(props: FileHeaderProps): React.JSX.Element | null {
+  if (!props.onViewedChange) return null;
+
+  return (
+    <Checkbox
+      label="Viewed"
+      value={props.viewed ?? false}
+      onValueChange={props.onViewedChange}
+    />
+  );
+}
+
+function ChangeCounts({ file }: Pick<FileHeaderProps, 'file'>): ReactNode {
+  return (
+    <>
+      <ChangeCount count={file.added} className="text-success">
+        +{file.added}
+      </ChangeCount>
+      <ChangeCount count={file.removed} className="text-danger">
+        {`−${file.removed}`}
+      </ChangeCount>
+    </>
+  );
+}
+
+// The Inspector's file header: folder muted, file name strong, then copy, the change counts and the Viewed mark.
 export function FileHeader(props: FileHeaderProps): React.JSX.Element {
   const { file } = props;
 
@@ -118,12 +146,8 @@ export function FileHeader(props: FileHeaderProps): React.JSX.Element {
     <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
       <FileHeaderToggle {...props} />
       <CopyButton value={file.path} label="Copy path" />
-      <ChangeCount count={file.added} className="text-success">
-        +{file.added}
-      </ChangeCount>
-      <ChangeCount count={file.removed} className="text-danger">
-        {`−${file.removed}`}
-      </ChangeCount>
+      <ChangeCounts file={file} />
+      <ViewedMark {...props} />
     </View>
   );
 }

@@ -1,0 +1,76 @@
+import type * as React from 'react';
+import type { FileDiff } from '#features/feed';
+import { Sheet, type SheetProps } from '#primitives/overlays/sheet';
+import { recordedFile } from '../../../../../mocks/feed-edit-mock';
+import { InspectorInSheet } from '../inspector-pane';
+import {
+  ChangesInspector,
+  type ChangesInspectorProps,
+} from './changes-inspector';
+
+export const branchNames = [
+  'main',
+  'release/2.4',
+  'feature/inspector-tabs',
+  'fix/diff-scroll',
+  'chore/bump-expo',
+];
+
+// Recorded edits: a long modified file, a short one, an added file and a deleted one, each at its own path.
+export const fewFiles: FileDiff[] = [
+  recordedFile('agent-2', 'edit-states'),
+  { ...recordedFile('agent-1'), path: '/repo/src/feed.ts' },
+  {
+    ...recordedFile('agent-1', 'edit-and-command', 'add'),
+    path: '/repo/src/new-file.ts',
+  },
+  recordedFile('agent-2', 'edit-states', 'delete'),
+];
+
+export const manyFileCount = 60;
+
+// One recorded edit under many paths: the same list, only longer.
+export const manyFiles: FileDiff[] = Array.from(
+  { length: manyFileCount },
+  (_, index) => ({
+    ...recordedFile('agent-1'),
+    path: `/repo/src/module-${index + 1}/index.ts`,
+  }),
+);
+
+const ignore = (): void => {};
+
+export const changesArgs = {
+  comparison: { kind: 'main' },
+  mainBranch: 'main',
+  branches: { names: branchNames },
+  onComparisonChange: ignore,
+  files: fewFiles,
+  viewed: [fewFiles[1]?.path ?? ''],
+  onViewedChange: ignore,
+  expanded: false,
+  onStateChange: ignore,
+} satisfies ChangesInspectorProps;
+
+const inspectorSheet: Omit<SheetProps, 'children'> = {
+  open: true,
+  onOpenChange: ignore,
+  label: 'Inspector',
+  detents: ['large'],
+  bottomEdge: true,
+};
+
+// The phone shell's Inspector sheet, whose root page Compare Against pushes its branches over.
+export function ChangesInspectorSheet(
+  props: ChangesInspectorProps,
+): React.JSX.Element {
+  return (
+    <Sheet {...inspectorSheet}>
+      <Sheet.Page name="inspector">
+        <InspectorInSheet value>
+          <ChangesInspector {...props} />
+        </InspectorInSheet>
+      </Sheet.Page>
+    </Sheet>
+  );
+}

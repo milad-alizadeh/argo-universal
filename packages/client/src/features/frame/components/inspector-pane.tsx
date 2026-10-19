@@ -12,6 +12,8 @@ export interface InspectorPaneProps {
   // True while the Inspector fills the detail area.
   expanded: boolean;
   onStateChange: (state: InspectorState) => void;
+  // Stays under the header while the content scrolls, such as the Changes comparison and totals.
+  toolbar?: ReactNode;
   children: ReactNode;
 }
 
@@ -98,6 +100,7 @@ export function InspectorPane(props: InspectorPaneProps): React.JSX.Element {
   return (
     <View className={cn(inSheet ? 'h-140' : 'flex-1', surface)}>
       <InspectorHeader {...props} inSheet={inSheet} />
+      {props.toolbar}
       <InspectorScroll surface={surface}>{props.children}</InspectorScroll>
     </View>
   );

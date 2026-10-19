@@ -1,14 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { expect, spyOn, waitFor, within } from 'storybook/test';
+import { expect, fn, spyOn, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { recordedFile } from '../../../../../mocks/feed-edit-mock';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { DiffView } from './diff-view';
+import { DiffView, type DiffViewProps } from './diff-view';
 
 const lastAddedLine = 'new value 60';
+
+const largeHeader = { name: 'Diff for /repo/large.txt' };
+
+const expanded = 'aria-expanded';
 
 const meta = {
   title: 'Tests/DiffView',
@@ -37,9 +42,7 @@ export const InspectorFileShowsEveryLine: Story = {
       await settleViewport(width);
       await expect(canvas.queryByText(/@@/)).toBeNull();
 
-      const header = canvas.getByRole('button', {
-        name: 'Diff for /repo/large.txt',
-      });
+      const header = canvas.getByRole('button', largeHeader);
 
       await expect(
         canvas.getByRole('button', { name: 'Copy path' }),
@@ -53,12 +56,10 @@ export const InspectorFileShowsEveryLine: Story = {
 
       const buttonBounds = header.getBoundingClientRect();
       await expect(buttonBounds.right).toBeLessThanOrEqual(copyBounds.left);
-      await expect(header).toHaveAttribute('aria-expanded', 'true');
+      await expect(header).toHaveAttribute(expanded, 'true');
       const box = canvas.getByTestId('diff-scroll');
       await expect(box.scrollHeight).toBe(box.clientHeight);
-      await expect(
-        canvas.getByRole('button', { name: 'Diff for /repo/large.txt' }),
-      ).toBeVisible();
+      await expect(canvas.getByRole('button', largeHeader)).toBeVisible();
     }
   },
 };
@@ -117,3 +118,52 @@ function inlinePreview(width: number): Story {
 export const InlinePreviewShowsAllPhone = inlinePreview(layoutWidths.phone);
 
 export const InlinePreviewShowsAllWide = inlinePreview(layoutWidths.wide);
+
+// The owner's Viewed mark can arrive after the file, as marks load after the changes; the file folds then too.
+function LateViewedMark(props: DiffViewProps): React.JSX.Element {
+  const [viewed, setViewed] = useState(false);
+
+  useEffect(() => {
+    const load = setTimeout((): void => setViewed(true));
+
+    return (): void => clearTimeout(load);
+  }, []);
+
+  return <DiffView {...props} viewed={viewed} onViewedChange={setViewed} />;
+}
+
+export const ViewedMarkFromOwnerFolds: Story = {
+  render: (args) => <LateViewedMark {...args} />,
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('checkbox', { name: 'Viewed' }),
+    ).toHaveAttribute('aria-checked', 'true');
+    await waitFor(() =>
+      expect(canvas.getByRole('button', largeHeader)).toHaveAttribute(
+        expanded,
+        'false',
+      ),
+    );
+  },
+};
+
+// Clearing the mark opens the file again; the Feed's diffs, which pass no handler, have no mark at all.
+export const ClearingViewedOpens: Story = {
+  args: { viewed: true, onViewedChange: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    const header = canvas.getByRole('button', largeHeader);
+
+    await expect(header).toHaveAttribute(expanded, 'false');
+    await userEvent.click(canvas.getByRole('checkbox', { name: 'Viewed' }));
+    await expect(args.onViewedChange).toHaveBeenCalledWith(false);
+    await expect(header).toHaveAttribute(expanded, 'true');
+  },
+};
+
+export const FeedDiffHasNoViewedMark: Story = {
+  args: { inline: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId('code-block-title')).toBeVisible();
+    await expect(canvas.queryByRole('checkbox')).toBeNull();
+  },
+};

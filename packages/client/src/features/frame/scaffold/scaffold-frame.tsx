@@ -87,8 +87,17 @@ function InspectorSheet(parts: ScaffoldParts): React.JSX.Element {
       detents={['large']}
       bottomEdge
     >
-      <InspectorInSheet value>{scaffold.inspector(false)}</InspectorInSheet>
+      {inspectorPage(scaffold)}
     </Sheet>
+  );
+}
+
+// An untitled root page, so a part of the Inspector can push its own pages over it; Sheet reads it from its direct children.
+function inspectorPage(scaffold: ScaffoldProps): React.JSX.Element {
+  return (
+    <Sheet.Page name="inspector">
+      <InspectorInSheet value>{scaffold.inspector(false)}</InspectorInSheet>
+    </Sheet.Page>
   );
 }
 
