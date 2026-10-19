@@ -1,6 +1,6 @@
 {
   "name": "@repo/universal-app",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@expo/material-symbols": "catalog:",
+    "@expo/metro-runtime": "catalog:",
     "@expo/ui": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/datetimepicker": "catalog:",

@@ -120,14 +120,14 @@ type KitValue<
               ) => KitValue<Result, Events, Drawing>
             : Value extends readonly unknown[]
               ? KitList<Value, Events, Drawing>
-                : Value extends object
-                  ? KitMappedProps<
-                      Value,
-                      NestedEvents<Events, Drawing>,
-                      never,
-                      Drawing
-                    >
-                  : Value;
+              : Value extends object
+                ? KitMappedProps<
+                    Value,
+                    NestedEvents<Events, Drawing>,
+                    never,
+                    Drawing
+                  >
+                : Value;
 
 type EventProp<
   Value,

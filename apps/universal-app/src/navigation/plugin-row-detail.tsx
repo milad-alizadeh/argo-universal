@@ -1,5 +1,5 @@
 import { TableRowDetailHost, type OpenRowDetail } from '@repo/client';
-import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import type * as React from 'react';
 import { useCallback, type ReactElement, type ReactNode } from 'react';
 
@@ -30,11 +30,15 @@ export const hasRowDetail = (row: string | undefined): boolean =>
 
 function useOpenRowDetail(): OpenRowDetail {
   const router = useRouter();
-  const pathname = usePathname();
+  const { path } = useLocalSearchParams<{ path: string[] }>();
 
   return useCallback<OpenRowDetail>(
-    (detail) => router.push({ pathname, params: { row: keep(detail) } }),
-    [router, pathname],
+    (detail) =>
+      router.push({
+        pathname: '/plugins/[...path]',
+        params: { path, row: keep(detail) },
+      }),
+    [router, path],
   );
 }
 

@@ -45,7 +45,7 @@ function settingsLayoutProps(
       wide: sectionsOf(wide),
     },
     selected: shownRow(wide, props.selectedPath)?.href,
-    onSelect: props.onSelect,
+    onSelect: selectPage(props),
   };
 }
 
@@ -61,3 +61,12 @@ function NoMatchingSettings({
     />
   );
 }
+
+// The kit reports a string; only a page from this Settings list can be opened.
+const selectPage =
+  (props: SettingsListViewProps) =>
+  (href: string): void => {
+    const row = settingsRows(props, true).find((item) => item.href === href);
+
+    if (row) props.onSelect(row.href);
+  };
