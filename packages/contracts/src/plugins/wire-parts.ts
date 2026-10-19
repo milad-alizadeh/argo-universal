@@ -116,6 +116,12 @@ export const wireParts = {
   Stack: {
     props: stackProps,
     versions: [stackProps],
+    // Apps before Stack drew Row and Column.
+    lower: ({ direction, ...props }) => ({
+      type: direction === 'row' ? 'Row' : 'Column',
+      props,
+      versions: [layoutProps],
+    }),
     container: true,
     children: true,
     slots: {},
