@@ -109,3 +109,4 @@ Each section uses these artboards on the pages listed in Design files, top-align
 - A `var(--token)` inside a gradient renders transparent. Write the literal colour there.
 - `z-index` and negative margins apply only through `update_styles`.
 - A CSS `filter` on a parent breaks `backdrop-filter` in its children.
+- Paper serves one MCP connection, so parallel agents' calls take turns and one large read stalls them all. Read the artboard you are editing with `get_children` or `find_nodes`, keep `get_tree_summary` for small nodes, and screenshot only the node you changed.

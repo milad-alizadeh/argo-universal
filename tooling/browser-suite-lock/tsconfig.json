@@ -1,0 +1,6 @@
+{
+  "extends": "@repo/typescript/node.json",
+  // hold.ts runs under plain Node, which needs the extension.
+  "compilerOptions": { "allowImportingTsExtensions": true },
+  "include": ["*.ts"]
+}
