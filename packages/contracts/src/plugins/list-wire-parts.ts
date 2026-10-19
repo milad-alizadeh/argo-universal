@@ -84,7 +84,9 @@ export const listWireParts = {
     container: true,
     children: true,
     slots: { leading: ['Text', 'Label'], trailing: ['Text', 'Label', 'Pill'] },
-    events: { onSelectionChange: z.array(z.string()) },
+    events: {
+      onSelectionChange: z.array(z.string()).meta({ value: 'selection' }),
+    },
     reference: part(
       'A titled List section with optional subtitle and footer.',
       listSectionProps,
@@ -103,7 +105,8 @@ export const listWireParts = {
       trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],
       meta: ['Label', 'Pill'],
     },
-    events: { onPress: z.undefined() },
+    // A row press never holds the row disabled while the Plugin answers.
+    events: { onPress: z.undefined().meta({ blocks: false }) },
     reference: part(
       'A slotted list row with up to three text lines and an optional Argo-drawn status or count badge on the leading lane.',
       listItemProps,

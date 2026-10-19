@@ -53,6 +53,24 @@ export const PluginInteraction = z.discriminatedUnion('event', [
 
 export type PluginInteraction = z.infer<typeof PluginInteraction>;
 
+/*
+ * What a Part event's schema metadata asks of the App. `value` names the prop the App echoes the payload into
+ * at once; `blocks` holds the part disabled while the Plugin answers; `flush` sends pending edits first;
+ * `throttleMs` coalesces quick edits.
+ */
+const PartEventRules = z.object({
+  value: z.string().optional(),
+  blocks: z.boolean().default(true),
+  flush: z.boolean().default(false),
+  throttleMs: z.number().default(0),
+});
+
+export type PartEventRules = z.output<typeof PartEventRules>;
+
+export function partEventRules(schema: z.ZodType | undefined): PartEventRules {
+  return PartEventRules.parse(schema?.meta() ?? {});
+}
+
 const target = z.object({
   revision: z.number().int().positive(),
   key: z.string().min(1),

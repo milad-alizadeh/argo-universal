@@ -10,8 +10,12 @@ import {
 import { searchFieldProps } from '../presentation-kit-props';
 import { filterPillProps } from '../presentation-kit-props';
 import { selectionPartSchemas } from '../selection-parts';
-import { textareaProps } from '../text-field-kit-props';
-import { textFieldProps } from '../text-field-kit-props';
+import {
+  textChangeEvents,
+  textareaProps,
+  textEvents,
+  textFieldProps,
+} from '../text-field-kit-props';
 import {
   selectionControlV1,
   switchProps,
@@ -38,7 +42,7 @@ export const inputsPartSchemas = {
         onChangeText: z.string().optional(),
       }),
     ],
-    events: { onChangeText: z.string().meta({ throttleMs: 150 }) },
+    events: textEvents,
   }),
   Textarea: part('A multi-line text input.', textareaProps, {
     label: 'The surrounding Field or control supplies the accessible name.',
@@ -50,7 +54,7 @@ export const inputsPartSchemas = {
         onChangeText: z.string().optional(),
       }),
     ],
-    events: { onChangeText: z.string().meta({ throttleMs: 150 }) },
+    events: textChangeEvents,
   }),
   SearchField: part(
     'Search input for Page headers and Lists.',
@@ -67,7 +71,7 @@ export const inputsPartSchemas = {
           }))
           .pipe(legacySearchField),
       ],
-      events: { onChangeText: z.string().meta({ throttleMs: 150 }) },
+      events: textChangeEvents,
       slots: { title: ['Text', 'Stack'], actions: ['Button', 'IconButton'] },
     },
   ),
@@ -90,7 +94,7 @@ export const inputsPartSchemas = {
       previous: [
         checkboxProps.transform(legacyBinaryProps).pipe(selectionControlV1),
       ],
-      events: { onValueChange: z.boolean() },
+      events: { onValueChange: z.boolean().meta({ value: 'value' }) },
       label: 'The label names the control and is announced with its value.',
     },
   ),
@@ -98,13 +102,17 @@ export const inputsPartSchemas = {
     previous: [
       switchProps.transform(legacyBinaryProps).pipe(selectionControlV1),
     ],
-    events: { onValueChange: z.boolean() },
+    events: { onValueChange: z.boolean().meta({ value: 'value' }) },
     label:
       'Set accessibilityLabel when the surrounding row does not name the control.',
   }),
   Slider: part('A labeled numeric range control.', sliderProps, {
     previous: [sliderProps.transform(legacySliderProps).pipe(sliderV1)],
-    events: { onValueChange: z.number().meta({ throttleMs: 150 }) },
+    events: {
+      onValueChange: z
+        .number()
+        .meta({ throttleMs: 150, value: 'value', blocks: false }),
+    },
     label:
       'The accessibilityLabel names the control; its value and range are announced.',
   }),

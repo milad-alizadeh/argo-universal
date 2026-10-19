@@ -143,6 +143,8 @@ export {
   PluginDispatchResult,
   PluginViewInput,
   PluginEvent,
+  partEventRules,
+  type PartEventRules,
 } from '#plugin-wire-events';
 
 // A Slot's stream: the Plugins that fill it, in list order, then each one's view as it arrives.

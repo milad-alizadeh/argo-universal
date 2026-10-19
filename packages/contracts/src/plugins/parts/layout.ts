@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { collapsibleProps } from '../overlay-kit-props';
+import { collapsibleProps, openChange } from '../overlay-kit-props';
 import {
   part,
   stringLabel,
@@ -51,7 +51,7 @@ export const layoutPartSchemas = {
         }),
       ],
       children: true,
-      events: { onOpenChange: z.boolean() },
+      events: { onOpenChange: openChange },
       slots: {},
     },
   ),

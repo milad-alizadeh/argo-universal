@@ -1,6 +1,9 @@
 import { handlerPath } from '@repo/contracts/plugins/action-handler-path';
-import type { PluginInteraction } from '@repo/contracts/plugins/wire';
-import { checkedEvent, throttle, type PluginEvent } from './plugin-event';
+import {
+  partEventRules,
+  type PluginInteraction,
+} from '@repo/contracts/plugins/wire';
+import { checkedEvent, type PluginEvent } from './plugin-event';
 import type { PluginOnEvent } from './plugin-event';
 
 type Queued = {
@@ -33,13 +36,13 @@ export class PluginDispatcher {
 
   public send(key: string, event: PluginEvent): void | Promise<void> {
     const interaction = checkedEvent(event);
-    const delay = throttle(event.schema);
+    const rules = partEventRules(event.schema);
 
-    if (event.event === 'onSubmit')
+    if (rules.flush)
       return this.flushPending().then(() => this.dispatch(key, interaction));
 
-    if (!delay) return this.dispatch(key, interaction);
-    const pending = this.pending(key, interaction, delay);
+    if (!rules.throttleMs) return this.dispatch(key, interaction);
+    const pending = this.pending(key, interaction, rules.throttleMs);
     pending.interaction = interaction;
     pending.deliver = this.deliver;
 

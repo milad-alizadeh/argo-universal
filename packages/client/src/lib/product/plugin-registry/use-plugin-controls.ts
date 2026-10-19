@@ -1,8 +1,13 @@
-import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
+import type { WirePartDefinition } from '@repo/contracts/plugins/kit';
+import {
+  partEventRules,
+  type PartEventRules,
+  type WireNode,
+  type WireJson,
+} from '@repo/contracts/plugins/wire';
 import { findWireNode } from '@repo/contracts/plugins/wire-node-key';
 import { useEffect, useReducer, useState } from 'react';
-import { throttle } from '../plugin-dispatcher';
-import { eventProps, localEvents, type Change } from './plugin-events';
+import { eventProps, type Change } from './plugin-events';
 import type {
   ControlInput,
   PluginProps,
@@ -15,9 +20,10 @@ type Field = {
   value: Value;
   source?: WireJson;
   type: string;
+  local?: PartEventRules;
   focused: boolean;
   pending: Map<number, WireJson | undefined>;
-  event: string;
+  blocks: boolean;
 };
 
 export function usePluginControls(root: WireNode): PluginControls {
@@ -32,27 +38,37 @@ export function usePluginControls(root: WireNode): PluginControls {
 }
 
 function fieldFor(fields: Map<string, Field>, input: ControlInput): Field {
-  const { node, context } = input;
-  const source = input.source.value ?? input.source.selection;
-  const field = matchingField(fields.get(context.key), node.type, source);
+  const field = matchingField(fields.get(input.context.key), input);
 
-  if (!field.focused) syncField(field, source);
-  fields.set(context.key, field);
+  if (!field.focused) syncField(field, localSource(field, input));
+  fields.set(input.context.key, field);
 
   return field;
 }
 
-function matchingField(
-  field: Field | undefined,
-  type: string,
-  source?: WireJson,
-): Field {
-  if (field?.type === type) return field;
+function matchingField(field: Field | undefined, input: ControlInput): Field {
+  if (field?.type === input.node.type) return field;
 
-  const value: Value = [0, source];
-  const pending = new Map<number, WireJson | undefined>();
+  return {
+    type: input.node.type,
+    value: [0, undefined],
+    local: localRules(input.part),
+    focused: false,
+    pending: new Map(),
+    blocks: false,
+  };
+}
 
-  return { type, value, source, focused: false, pending, event: '' };
+// The Part event whose metadata names a prop the App echoes at once.
+const localRules = (part: WirePartDefinition): PartEventRules | undefined =>
+  Object.values(part.events)
+    .map(partEventRules)
+    .find((rules) => rules.value !== undefined);
+
+function localSource(field: Field, input: ControlInput): WireJson | undefined {
+  const prop = field.local?.value;
+
+  return prop === undefined ? undefined : input.source[prop];
 }
 
 function syncField(field: Field, source?: WireJson): void {
@@ -69,32 +85,29 @@ function propsFor(
   const change = changeFor(field, update);
   const props = { ...input.node.props, ...eventProps(input, change) };
 
-  const prop = localProp(input);
+  Object.assign(props, localValue(field), focusOf(field, update));
 
-  if (prop) props[prop] = currentValue(field);
-
-  if (isPending(input, field))
-    Object.assign(props, { disabled: true, loading: true });
-
-  const text = Boolean(input.part.events.onChangeText);
-
-  return Object.assign(props, focusOf(field, update, text));
+  return Object.assign(props, pendingProps(field));
 }
 
-function localProp({ part }: ControlInput): string | undefined {
-  const event = Object.keys(part.events).find((name) => localEvents.has(name));
+function localValue(field: Field): PluginProps {
+  const prop = field.local?.value;
 
-  if (!event) return undefined;
+  return prop === undefined ? {} : { [prop]: currentValue(field) };
+}
 
-  return event === 'onSelectionChange' ? 'selection' : 'value';
+function pendingProps(field: Field): PluginProps {
+  const blocked = field.pending.size > 0 && field.blocks;
+
+  return blocked ? { disabled: true, loading: true } : {};
 }
 
 function changeFor(field: Field, update: () => void): Change {
-  return ({ event, value, deliver }) => {
+  return ({ rules, value, deliver }) => {
     const id = Math.max(field.value[0], ...field.pending.keys()) + 1;
-    const next = localEvents.has(event) ? value : currentValue(field);
+    const next = rules.value ? value : currentValue(field);
     field.pending.set(id, next);
-    field.event = event;
+    field.blocks = rules.blocks;
     update();
     void deliver()
       .then(() => accept(field, [id, next]))
@@ -121,15 +134,9 @@ function currentRequest(field: Field): Value | undefined {
   return request && request[0] > field.value[0] ? request : undefined;
 }
 
-function isPending(input: ControlInput, field: Field): boolean {
-  return field.pending.size > 0 && blocking(input, field.event);
-}
-
-const blocking = ({ part, node }: ControlInput, event: string): boolean =>
-  node.type !== 'ListItem' && !throttle(part.events[event]);
-
-function focusOf(field: Field, update: () => void, text: boolean): PluginProps {
-  if (!text) return {};
+// A coalesced field keeps what the user types while it has focus.
+function focusOf(field: Field, update: () => void): PluginProps {
+  if (!field.local?.throttleMs) return {};
 
   return {
     onFocus: (): void => {

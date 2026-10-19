@@ -53,7 +53,8 @@ export const wireParts = {
     container: false,
     children: false,
     slots: {},
-    events: { onPress: z.undefined() },
+    // A press sends pending edits first, so a confirming Button acts on what the user typed.
+    events: { onPress: z.undefined().meta({ flush: true }) },
     reference: wirePartReferences.Button,
   },
   Stack: {

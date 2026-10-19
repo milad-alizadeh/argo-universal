@@ -1,4 +1,9 @@
-import { Handler, WireJson } from '@repo/contracts/plugins/wire';
+import {
+  Handler,
+  WireJson,
+  partEventRules,
+  type PartEventRules,
+} from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
 import type {
   ControlInput as Input,
@@ -14,16 +19,10 @@ type Event = {
 };
 
 export type Change = (edit: {
-  event: string;
+  rules: PartEventRules;
   value?: WireJson;
   deliver: () => Promise<void>;
 }) => void;
-
-export const localEvents = new Set([
-  'onValueChange',
-  'onChangeText',
-  'onSelectionChange',
-]);
 
 export function eventProps(input: Input, change: Change): PluginProps {
   const props: PluginProps = Object.fromEntries(
@@ -45,11 +44,13 @@ function callback(
   event: Event,
   change: Change,
 ): ((value?: WireJson) => void) | undefined {
-  if (!event.handler && !localEvents.has(event.name)) return undefined;
+  const rules = partEventRules(event.schema);
+
+  if (!event.handler && !rules.value) return undefined;
 
   return (value) =>
     change({
-      event: event.name,
+      rules,
       value,
       deliver: () => deliver(input, event, value),
     });

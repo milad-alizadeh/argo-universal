@@ -3,7 +3,7 @@ import { toastProps } from '../overlay-kit-props';
 import { tooltipProps } from '../overlay-kit-props';
 import { sheetProps } from '../overlay-kit-props';
 import { openStateProps } from '../overlay-kit-props';
-import { alertProps } from '../overlay-kit-props';
+import { alertProps, openChange } from '../overlay-kit-props';
 import { dialogAccessibility } from '../part-accessibility-metadata';
 import {
   part,
@@ -33,7 +33,7 @@ export const overlaysPartSchemas = {
         cancelLabel: optionalLabel,
       }),
     ],
-    events: { onOpenChange: z.boolean(), onPress: z.undefined() },
+    events: { onOpenChange: openChange, onPress: z.undefined() },
   }),
   Dialog: part(
     'A form overlay opened through an Action; presented as a sheet on phone.',
@@ -42,7 +42,7 @@ export const overlaysPartSchemas = {
       children: true,
       accessibility: dialogAccessibility,
       previous: [z.object({ title: stringLabel })],
-      events: { onOpenChange: z.boolean() },
+      events: { onOpenChange: openChange },
     },
   ),
   Sheet: part('A sheet overlay opened through an Action.', sheetProps, {
@@ -54,12 +54,12 @@ export const overlaysPartSchemas = {
         )
         .pipe(legacySheet),
     ],
-    events: { onOpenChange: z.boolean() },
+    events: { onOpenChange: openChange },
   }),
   Popover: part('A popover overlay opened through an Action.', openStateProps, {
     children: true,
     previous: [z.object({})],
-    events: { onOpenChange: z.boolean() },
+    events: { onOpenChange: openChange },
   }),
   Menu: selectionPartSchemas.Menu,
   Tooltip: part('A short description attached to a control.', tooltipProps, {

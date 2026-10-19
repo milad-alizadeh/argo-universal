@@ -28,3 +28,15 @@ export const textareaProps = z.object({
     .describe('Reports value edits.'),
   disabled: z.boolean().optional().describe('Disable edits.'),
 });
+
+// Typed text echoes at once and coalesces; Return sends it before submitting.
+const editedText = z
+  .string()
+  .meta({ throttleMs: 150, value: 'value', blocks: false });
+
+export const textEvents = {
+  onChangeText: editedText,
+  onSubmit: z.undefined().meta({ flush: true }),
+};
+
+export const textChangeEvents = { onChangeText: editedText };

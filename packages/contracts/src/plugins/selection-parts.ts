@@ -9,7 +9,7 @@ import {
 import { selectionValue } from './selection-value';
 
 const events = {
-  onValueChange: selectionValue,
+  onValueChange: selectionValue.meta({ value: 'value' }),
   onPress: z.undefined(),
 };
 

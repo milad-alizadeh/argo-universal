@@ -27,7 +27,3 @@ export function checkedEvent({
 
   return PluginInteraction.parse({ event, payload: value });
 }
-
-export function throttle(schema?: z.ZodType): number {
-  return z.number().catch(0).parse(schema?.meta()?.throttleMs);
-}

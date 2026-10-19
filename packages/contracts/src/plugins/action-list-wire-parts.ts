@@ -27,6 +27,7 @@ export const actionListWireParts = {
     children: true,
   }),
   Action: part('One Action declared inside ActionList.', actionProps, {
-    events: { onPress: z.undefined() },
+    // A press sends pending edits first, so a confirming Action acts on what the user typed.
+    events: { onPress: z.undefined().meta({ flush: true }) },
   }),
 };
