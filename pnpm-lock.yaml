@@ -167,6 +167,9 @@ catalogs:
     '@agentclientprotocol/sdk':
       specifier: 1.7.0
       version: 1.7.0
+    '@babel/parser':
+      specifier: 7.29.9
+      version: 7.29.9
     '@chromatic-com/storybook':
       specifier: 5.4.0
       version: 5.4.0
@@ -1679,6 +1682,9 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
     devDependencies:
+      '@babel/parser':
+        specifier: 'catalog:'
+        version: 7.29.9
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
