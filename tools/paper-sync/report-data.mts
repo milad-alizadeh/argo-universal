@@ -1,11 +1,4 @@
-import {
-  cardFamily,
-  codeName,
-  key,
-  location,
-  nodeMap,
-  type Catalog,
-} from './catalog.mts';
+import { codeName, key, location, nodeMap, type Catalog } from './catalog.mts';
 import type { Enrollment, Exclusion } from './enrollment-model.mts';
 import type { LocatedNode } from './index-model.mts';
 import type { Binding } from './model.mts';
@@ -53,10 +46,7 @@ function masterReport(master: LocatedNode, result: Enrollment): MasterReport {
   };
 }
 
-function matchingNode(
-  node: LocatedNode,
-  families: Set<string | undefined>,
-): boolean {
+function matchingNode(node: LocatedNode, families: Set<string>): boolean {
   if (node.component === 'Text') return false;
   const name = codeName(node.name);
 
@@ -90,9 +80,11 @@ export function unenrolled(catalog: Catalog, result: Enrollment): Exclusion[] {
   );
 
   for (const master of catalog.masters) linked.add(key(master));
-  const families = new Set(catalog.cards.map((card) => cardFamily(card.name)));
   const index = nodeMap(catalog.nodes);
-  const matches = catalog.nodes.filter((node) => matchingNode(node, families));
+
+  const matches = catalog.nodes.filter((node) =>
+    matchingNode(node, catalog.families),
+  );
 
   return matches.flatMap((node) =>
     linked.has(key(node)) ? [] : [exclusion(node, { catalog, result, index })],

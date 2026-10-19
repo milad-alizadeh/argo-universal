@@ -3,11 +3,13 @@ import { discover } from './catalog.mts';
 import type { PageIndex } from './index-model.mts';
 import { parseSummary } from './summary.mts';
 
-function page(fileId: string, family: string): PageIndex {
+const button = 'Button / Default';
+
+function page(fileId: string, family: string, card = family): PageIndex {
   const nodes = [
     {
       id: 'card',
-      name: `Components / ${family}`,
+      name: `Components / ${card}`,
       component: 'Frame',
       parentId: null,
     },
@@ -19,7 +21,7 @@ function page(fileId: string, family: string): PageIndex {
     },
     {
       id: 'inner',
-      name: 'Button / Default',
+      name: button,
       component: 'Frame',
       parentId: 'master',
     },
@@ -40,11 +42,30 @@ function page(fileId: string, family: string): PageIndex {
 it('discovers families across files without promoting nested copies to masters', () => {
   const catalog = discover([page('one', 'Button'), page('two', 'ListItem')]);
   expect(catalog.masters.map((node) => node.name)).toEqual([
-    'Button / Default',
+    button,
     'ListItem / Default',
   ]);
   expect(catalog.duplicates).toEqual([]);
 });
+
+it.each(['Button', 'Button (ios)', 'Button · states'])(
+  'reads a family from the CodeName card %s',
+  (card) => {
+    const catalog = discover([page('one', 'Button', card)]);
+    expect(catalog.masters.map((node) => node.name)).toEqual([button]);
+    expect(catalog.families).toEqual(new Set(['Button']));
+  },
+);
+
+it.each(['Settings page', 'Issue page (phone)', 'PR bar'])(
+  'reads no family from the descriptive card %s',
+  (card) => {
+    const family = card.split(' ')[0] ?? '';
+    const catalog = discover([page('one', family, card)]);
+    expect(catalog.masters).toEqual([]);
+    expect(catalog.families).toEqual(new Set());
+  },
+);
 
 it('reports duplicate names across files without choosing a master', () => {
   const catalog = discover([page('one', 'Button'), page('two', 'Button')]);
