@@ -1,4 +1,4 @@
-import { useId, useMemo, type ReactElement } from 'react';
+import { useContext, useId, useMemo, type ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { ListContext } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
@@ -71,8 +71,11 @@ function ChildRow({
   item: ListChild;
   appearance: ListProps<never>['appearance'];
 }): ReactElement {
+  // Keeps the row's index and highlights from the List's own row.
+  const row = useContext(ListContext);
+
   return (
-    <ListContext value={childContext(item, appearance)}>
+    <ListContext value={{ ...row, ...childContext(item, appearance) }}>
       {item.content}
     </ListContext>
   );

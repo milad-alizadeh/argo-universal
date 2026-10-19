@@ -14,6 +14,7 @@ import { Slider } from '#primitives/inputs/slider';
 import { Switch } from '#primitives/inputs/switch';
 import { TextInput } from '#primitives/inputs/text-input';
 import type { KitProps } from '#primitives/kit-props';
+import { Card } from '#primitives/layout/card';
 import { Grid } from '#primitives/layout/grid';
 import { ScrollView } from '#primitives/layout/scroll-view';
 import { Spacer } from '#primitives/layout/spacer';
@@ -69,6 +70,7 @@ export const pluginEntries = {
   Button,
   Stack,
   Spacer,
+  Card,
   Grid,
   Surface,
   ScrollView,

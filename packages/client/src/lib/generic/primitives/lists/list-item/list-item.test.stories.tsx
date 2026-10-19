@@ -79,3 +79,12 @@ export const StepperBounds: Story = {
     ).toBeEnabled();
   },
 };
+
+export const Loading: Story = {
+  args: { isLoading: true, subtitle: 'main' },
+  play: async ({ args, canvas, userEvent }) => {
+    await expect(canvas.queryByRole('button')).toBeNull();
+    await userEvent.click(canvas.getByText(title));
+    await expect(args.onPress).not.toHaveBeenCalled();
+  },
+};

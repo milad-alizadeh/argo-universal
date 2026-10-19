@@ -1,5 +1,11 @@
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
-import { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { View } from 'react-native';
 import { useSpacingStep } from '#primitives/layout/spacing';
 import { Spinner } from '#primitives/status/spinner';
@@ -9,6 +15,10 @@ import {
   type ListPosition,
 } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
+import {
+  createRowHighlights,
+  type RowHighlights,
+} from '../../../row-highlights';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 import { listInsets } from './list-insets';
 import type { ListProps } from './list-props';
@@ -69,18 +79,29 @@ interface RowProps<Item> {
   props: ListProps<Item>;
 }
 
-function Row<Item>({ row, props }: RowProps<Item>): ReactElement {
+type HighlightedRowProps<Item> = RowProps<Item> & {
+  highlights: RowHighlights;
+};
+
+function useRowContext<Item>({
+  row,
+  props,
+  highlights,
+}: HighlightedRowProps<Item>): React.ContextType<typeof ListContext> {
   const appearance = props.appearance ?? 'plain';
   const position = positionOf(props, row.index);
+  const index = row.index;
 
-  const context = useMemo(
-    () => ({ appearance, position }),
-    [appearance, position],
+  return useMemo(
+    () => ({ appearance, position, highlights, index }),
+    [appearance, position, highlights, index],
   );
+}
 
+function Row<Item>(rowProps: HighlightedRowProps<Item>): ReactElement {
   return (
-    <ListContext value={context}>
-      <PaddedRow row={row} props={props} />
+    <ListContext value={useRowContext(rowProps)}>
+      <PaddedRow row={rowProps.row} props={rowProps.props} />
     </ListContext>
   );
 }
@@ -101,7 +122,12 @@ function PaddedRow<Item>({ row, props }: RowProps<Item>): ReactNode {
 export function useRenderedRows<Item>(
   props: ListProps<Item>,
 ): (row: LegendListRenderItemProps<Item>) => ReactElement {
-  return useCallback((row) => <Row row={row} props={props} />, [props]);
+  const [highlights] = useState(createRowHighlights);
+
+  return useCallback(
+    (row) => <Row row={row} props={props} highlights={highlights} />,
+    [props, highlights],
+  );
 }
 
 function usePadding(value: ListProps<never>['padding']): number {

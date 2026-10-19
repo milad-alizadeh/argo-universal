@@ -99,9 +99,7 @@ function Meta({ children }: { children?: ReactNode }): ReactNode {
   ) : null;
 }
 
-export function ItemContent(
-  props: ListItemProps & { tone?: 'accent' | 'danger' },
-): ReactElement {
+export function ItemContent(props: ListItemProps): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
       <Text role="row" tone={props.tone} numberOfLines={1}>

@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { memo, useCallback } from 'react';
 import Animated from 'react-native-reanimated';
-import { Text } from '#primitives/content/text';
+import { ListItem } from '#primitives/lists/list-item';
 import {
   ProjectHeading,
   type ProjectHeadingProps,
@@ -10,11 +10,7 @@ import { SessionRow, type SessionRowProps } from '../session-row/session-row';
 import { rowClassName, rowFade } from './sessions-list-row-motion';
 
 export function NoSessionsYet(): React.JSX.Element {
-  return (
-    <Text role="secondary" className="pb-1 pl-8.5 pr-1">
-      No Sessions yet.
-    </Text>
-  );
+  return <ListItem title="No Sessions yet." tone="muted" />;
 }
 
 export type SessionListRowProps = Pick<

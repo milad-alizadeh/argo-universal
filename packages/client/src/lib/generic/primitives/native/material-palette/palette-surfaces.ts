@@ -1,6 +1,7 @@
 import type {
   AlertDialogColors,
   ButtonColors,
+  CardColors,
   DropdownMenuItem,
   FilterChipColors,
   ListItemColors,
@@ -83,6 +84,14 @@ export function chipColors(roles: MaterialRoles): FilterChipColors {
     selectedContainerColor: roles.primary,
     selectedLabelColor: roles.onPrimary,
     selectedLeadingIconColor: roles.onPrimary,
+  };
+}
+
+// Card `colors` (CardColors): the filled card on the card fill.
+export function cardColors(roles: MaterialRoles): CardColors {
+  return {
+    containerColor: roles.surfaceContainer,
+    contentColor: roles.onSurface,
   };
 }
 

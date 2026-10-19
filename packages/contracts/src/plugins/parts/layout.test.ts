@@ -5,6 +5,8 @@ const grid = pluginPartSchemas.Grid.props;
 
 const surface = pluginPartSchemas.Surface.props;
 
+const card = pluginPartSchemas.Card;
+
 describe('layout prop boundary', () => {
   it.each([0, -1, 1.5, { compact: 1, wide: 0 }, { compact: 1 }])(
     'refuses invalid Grid columns %j',
@@ -24,6 +26,22 @@ describe('layout prop boundary', () => {
     expect(
       grid.safeParse({ columns: { compact: 1, medium: 2, wide: 4 }, gap: 3 })
         .success,
+    ).toBe(true);
+  });
+
+  it('refuses a Card without a title', () => {
+    expect(card.props.safeParse({ subtitle: 'Production' }).success).toBe(
+      false,
+    );
+  });
+
+  it('accepts a Card with a title, subtitle and press', () => {
+    expect(
+      card.props.safeParse({
+        title: 'api-gateway',
+        subtitle: 'Production',
+        onPress: { $event: 'onPress' },
+      }).success,
     ).toBe(true);
   });
 });

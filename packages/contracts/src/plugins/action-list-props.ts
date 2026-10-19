@@ -55,8 +55,24 @@ export const submenuActionProps = z.object({
     .describe('A count or status dot on the icon.'),
 });
 
+// The Action every App drew before choices: a press Action had no check.
+export const actionEntryPropsV3 = z.union([actionProps, submenuActionProps]);
+
+// A press Action that can be its Section's chosen option, as a filter's: the check marks it, as UIMenu's state and Material's trailing check do.
+export const choiceActionProps = actionProps.extend({
+  selected: z
+    .boolean()
+    .optional()
+    .describe(
+      "Check this Action as its Section's chosen option; pass false on the others.",
+    ),
+});
+
 // An Action runs on press or opens a submenu; only a press Action has `onPress`.
-export const actionEntryProps = z.union([actionProps, submenuActionProps]);
+export const actionEntryProps = z.union([
+  choiceActionProps,
+  submenuActionProps,
+]);
 
 export const actionListProps = z.object({
   variant: z

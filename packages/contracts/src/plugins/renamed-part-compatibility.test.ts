@@ -33,6 +33,39 @@ it.each([
   expect(prepareWireTree(label, { Label: 2 })).toEqual(label);
 });
 
+it.each([1, 2])(
+  'gives a text-only Label the fallback icon for Label version %i',
+  (version) => {
+    const label: WireNode = {
+      type: 'Label',
+      key: 'version',
+      props: { text: 'v1.2.0' },
+      children: [],
+      slots: {},
+    };
+
+    expect(prepareWireTree(label, { Label: version })).toEqual({
+      ...label,
+      props: {
+        text: 'v1.2.0',
+        icon: { sf: 'questionmark.circle', material: 'help' },
+      },
+    });
+  },
+);
+
+it('keeps a text-only Label without an icon for Label version 3', () => {
+  const label: WireNode = {
+    type: 'Label',
+    key: 'version',
+    props: { text: 'v1.2.0' },
+    children: [],
+    slots: {},
+  };
+
+  expect(prepareWireTree(label, { Label: 3 })).toEqual(label);
+});
+
 it.each(previousAppFixtures)(
   'lowers $type names and values for the previous App',
   ({ type, props, legacy }) => {

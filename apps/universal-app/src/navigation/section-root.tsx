@@ -1,4 +1,5 @@
 import {
+  PageAtDrawerRoot,
   type FirstPage,
   type CoreSection,
   EmptyState,
@@ -11,8 +12,9 @@ import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { Stack, useFocusEffect, useNavigation } from 'expo-router';
 import { CommonActions, DrawerActions } from 'expo-router/react-navigation';
 import type * as React from 'react';
-import { useCallback } from 'react';
+import { useCallback, type PropsWithChildren } from 'react';
 import { Platform, View } from 'react-native';
+import { drawerDrawsRootHeader } from './section-drawer-options';
 
 interface OpenFirstPageProps {
   useFirstPage: NonNullable<SectionList['useFirstPage']>;
@@ -74,34 +76,31 @@ export function MenuToolbar(): React.JSX.Element {
   );
 }
 
-// Only iOS's root header takes stock items: Android's drawer header and the web's JS header draw the section's header props.
-const stockRootItems = Platform.OS === 'ios';
-
-// iOS's narrow root page fills its own header: ☰, then the section's items and search.
-function RootToolbar({ section }: SectionRootProps): React.ReactNode {
-  const { rootToolbar } = useSectionList(section);
-
-  return (
-    <>
-      <MenuToolbar />
-      {rootToolbar}
-    </>
-  );
-}
-
-const RootItems = stockRootItems ? RootToolbar : (): null => null;
+// iOS's narrow root leads with ☰ as a stock item; Android's drawer header and the web's JS header draw their own.
+const RootMenu = Platform.OS === 'ios' ? MenuToolbar : (): null => null;
 
 interface RootListProps extends SectionRootProps {
   narrow: boolean;
 }
 
-// The section's list, under the section's header on a narrow window.
+// The section's list, or on a narrow window its root page when it has one, which fills the header above it.
 function RootList({ section, narrow }: RootListProps): React.JSX.Element {
+  const { list, rootPage } = useSectionList(section);
+
   return (
     <View className="flex-1 bg-content">
-      {useSectionList(section).list}
-      {narrow ? <RootItems section={section} /> : null}
+      {narrow ? <NarrowRoot>{rootPage ?? list}</NarrowRoot> : list}
     </View>
+  );
+}
+
+// A narrow root's page under ☰; on Android its Page fills the drawer's header, which stands in for the stack's.
+export function NarrowRoot({ children }: PropsWithChildren): React.JSX.Element {
+  return (
+    <PageAtDrawerRoot value={drawerDrawsRootHeader}>
+      {children}
+      <RootMenu />
+    </PageAtDrawerRoot>
   );
 }
 

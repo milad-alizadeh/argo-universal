@@ -29,6 +29,9 @@ const stateOf = (agent: AgentRowEntry): State =>
 
 export const unsupportedLabel = 'Not supported on this platform';
 
+// The phone's trailing status icon and desktop's meta note share one glyph.
+export const unavailableIcon: IconName = 'unavailable';
+
 // The card's one trailing item, its glyph flush with the card's padding as the logo is on the other side.
 export function AgentButton(props: AgentCardProps): React.JSX.Element {
   if (props.agent.unavailable) return <UnavailableStatus />;
@@ -55,7 +58,7 @@ const unavailableRole = Platform.OS === 'android' ? 'row' : 'action';
 function UnavailableIcon(): React.JSX.Element {
   return (
     <View accessible accessibilityLabel={unsupportedLabel}>
-      <Icon name="unavailable" role={unavailableRole} tone="muted" />
+      <Icon name={unavailableIcon} role={unavailableRole} tone="muted" />
     </View>
   );
 }

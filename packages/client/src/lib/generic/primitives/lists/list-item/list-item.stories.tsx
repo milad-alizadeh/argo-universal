@@ -103,3 +103,41 @@ export const PaperReference: StoryObj<typeof meta> = {
     </View>
   ),
 };
+
+const loadingRows = (
+  <>
+    <ListItem
+      isLoading
+      leading={null}
+      title="Build the Session layout"
+      subtitle="Claude Code · main"
+      meta="2 hours"
+    />
+    <ListItem isLoading leading={null} title="Answer review comments" />
+  </>
+);
+
+// A loading row keeps the lines it stands in for, each a bar as wide as its placeholder text; a muted row is an empty section's line.
+function LoadingAndEmpty(): React.JSX.Element {
+  return (
+    <List appearance="cards" maxHeight={400}>
+      <List.Section isLoading title="Example Project">
+        {loadingRows}
+      </List.Section>
+      <List.Section title="Empty Project">
+        <ListItem title="No Sessions yet." tone="muted" />
+      </List.Section>
+    </List>
+  );
+}
+
+export const LoadingAndMuted: StoryObj<typeof meta> = {
+  name: 'Loading and muted',
+  render: () => (
+    <Variations>
+      <Variation label="isLoading rows under a loading section header; a muted row">
+        <LoadingAndEmpty />
+      </Variation>
+    </Variations>
+  ),
+};

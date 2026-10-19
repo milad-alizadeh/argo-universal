@@ -2,11 +2,11 @@ import type * as React from 'react';
 import { Linking } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
 import { IconButton } from '#primitives/actions/icon-button';
-import { Text } from '#primitives/content/text';
+import { Label } from '#primitives/content/label';
 import { Tooltip } from '#primitives/overlays/tooltip';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { AgentRowEntry } from '../../utils/agent-rows';
-import { unsupportedLabel } from './agent-button';
+import { unavailableIcon, unsupportedLabel } from './agent-button';
 
 type Link = { url?: string; label: string; icon: IconName };
 
@@ -22,9 +22,7 @@ type AgentMetaProps = { agent: AgentRowEntry };
 export function AgentMeta({ agent }: AgentMetaProps): React.JSX.Element {
   return (
     <>
-      <Text role="secondary" tone="muted">
-        v{agent.version}
-      </Text>
+      <Label text={`v${agent.version}`} />
       <UnsupportedNote agent={agent} />
       {linksOf(agent).map((link) => (
         <AgentLink key={link.label} link={link} />
@@ -33,13 +31,11 @@ export function AgentMeta({ agent }: AgentMetaProps): React.JSX.Element {
   );
 }
 
-// Phones say it with the trailing status icon's label instead.
+// Phones say it with the trailing status icon's label instead; desktop draws the same icon beside the words.
 function UnsupportedNote({ agent }: AgentMetaProps): React.JSX.Element | null {
   return agent.unavailable ? (
     <SizeClass only="wide">
-      <Text role="secondary" tone="muted">
-        {unsupportedLabel}
-      </Text>
+      <Label icon={unavailableIcon} text={unsupportedLabel} />
     </SizeClass>
   ) : null;
 }

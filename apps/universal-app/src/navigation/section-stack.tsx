@@ -1,21 +1,16 @@
 import {
   hasLiquidGlass,
-  SectionMenuButton,
   screenHeaderOptions,
   type CoreSection,
   type SectionList,
   useSectionList,
 } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
-import {
-  type NativeStackNavigationOptions,
-  Stack,
-  useNavigation,
-} from 'expo-router';
-import { DrawerActions } from 'expo-router/react-navigation';
+import { type NativeStackNavigationOptions, Stack } from 'expo-router';
 import type * as React from 'react';
 import type { ComponentProps, PropsWithChildren } from 'react';
 import { Platform } from 'react-native';
+import { DrawerMenuButton } from './drawer-menu-button';
 import { headerTitleOptions } from './header-title';
 import { pageLayout } from './page-layout';
 import { drawerDrawsRootHeader } from './section-drawer-options';
@@ -44,16 +39,6 @@ const framedOptions = {
   freezeOnBlur: true,
 } satisfies StackProps['screenOptions'];
 
-function WebMenuButton(): React.JSX.Element {
-  const navigation = useNavigation();
-
-  return (
-    <SectionMenuButton
-      onOpen={() => navigation.dispatch(DrawerActions.openDrawer())}
-    />
-  );
-}
-
 /*
  * A narrow section root's header on the stack: the web's JS header leads with ☰ and its attention dot; iOS takes the
  * title here, and the root page declares ☰, its items and its search as stock items (`SectionRoot`).
@@ -62,7 +47,7 @@ const stackRootOptions = (
   header: SectionList['rootHeader'],
 ): NativeStackNavigationOptions =>
   Platform.OS === 'web'
-    ? { headerLeft: () => <WebMenuButton />, ...screenHeaderOptions(header) }
+    ? { headerLeft: () => <DrawerMenuButton />, ...screenHeaderOptions(header) }
     : screenHeaderOptions(header);
 
 interface SectionOptions {

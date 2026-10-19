@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import type { ListAppearance, ListPosition } from '../../../list-context';
 import { cn } from '../../../utils';
+import type { ListItemProps } from './list-item-props';
 
 const groupedCorners = {
   only: 'rounded-grouped web:wide:rounded-3xl',
@@ -38,16 +39,25 @@ export interface ItemDrawing {
   menu: boolean;
 }
 
-export function itemSurface(
-  { appearance, position, menu }: ItemDrawing,
-  selected?: boolean,
-): string {
-  if (menu)
-    return cn('relative overflow-hidden rounded-xl', menuGaps[position]);
+type SurfaceState = Pick<ListItemProps, 'selected' | 'tone'>;
 
+export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
+  if (drawing.menu)
+    return cn(
+      'relative overflow-hidden rounded-xl',
+      menuGaps[drawing.position],
+    );
+
+  return rowSurface(drawing, state);
+}
+
+function rowSurface(
+  { appearance, position }: ItemDrawing,
+  { selected, tone }: SurfaceState,
+): string {
   return cn(
     'relative overflow-hidden',
-    appearanceClasses[appearance],
+    tone !== 'muted' && appearanceClasses[appearance],
     corners(appearance, position),
     selected && 'web:wide:shadow-inset',
   );

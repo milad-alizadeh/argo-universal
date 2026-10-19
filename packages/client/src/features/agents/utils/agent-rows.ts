@@ -3,7 +3,6 @@ import type {
   AgentServer,
   AgentsRegistryOutput,
 } from '@repo/contracts';
-import { featuredIds } from './featured-ids';
 import {
   byName,
   type InstalledAgents,
@@ -104,23 +103,3 @@ export const agentsPage = (
   ...combinedLoad(installed, registry),
   rows: pageRows(installed, registry),
 });
-
-const featured: ReadonlySet<string> = new Set(featuredIds);
-
-const isFeatured = (agent: AgentRowEntry): boolean =>
-  featured.has(agent.id) && !agent.unavailable;
-
-// Get started's tiles: the featured Agents this platform can run, in name order.
-export const featuredAgents = (
-  installed: InstalledAgents,
-  registry: RegistryLoad,
-): AgentRows => {
-  const load = combinedLoad(installed, registry);
-
-  if (installed.status !== 'loaded' || registry.status !== 'loaded')
-    return { ...load, rows: [] };
-
-  const rows = registryRows(installed.agents, registry.registry);
-
-  return { ...load, rows: rows.filter(isFeatured) };
-};

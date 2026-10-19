@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { ListItem } from '#primitives/lists/list-item';
 import type { ElicitationAnswer } from './elicitation-form';
 import { elicitationChoices, propertyTitle } from './elicitation-property';
 
@@ -89,7 +90,7 @@ function OutcomeAnswers({
   if (answer.action !== 'accept') return null;
 
   return (
-    <View className="gap-3 pl-5.5">
+    <View className="pl-5.5">
       {properties.map((entry) => (
         <OutcomeAnswer key={entry[0]} entry={entry} content={answer.content} />
       ))}
@@ -97,17 +98,25 @@ function OutcomeAnswers({
   );
 }
 
+// One answer as a read-only field: the question, then what was answered; an empty multi-select reads as the question alone.
 function OutcomeAnswer({ entry, content }: AnswerProps): React.JSX.Element {
   const [name, property] = entry;
+  const title = propertyTitle(name, property);
+  const value = answerTexts(property, recordedAnswer(content, name)).join(', ');
 
   return (
-    <View className="gap-1">
-      <Text role="body">{propertyTitle(name, property)}</Text>
-      {answerTexts(property, recordedAnswer(content, name)).map((text) => (
-        <MutedText key={text}>{text}</MutedText>
-      ))}
-    </View>
+    <ListItem.Field
+      title={title}
+      valueLabel={value}
+      accessibilityLabel={value ? undefined : title}
+    >
+      <AnswerValue value={value} />
+    </ListItem.Field>
   );
+}
+
+function AnswerValue({ value }: { value: string }): React.JSX.Element | null {
+  return value ? <Text role="row">{value}</Text> : null;
 }
 
 function answerTexts(

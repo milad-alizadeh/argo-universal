@@ -23,6 +23,23 @@ test('pressing Tap me updates the hello page', async ({ mount }) => {
   assert.equal((await page.find('Tapped 1 times')).type, 'Text');
 });
 
+// The primary Action is a keyed Action in the Page's `primaryAction` Slot, pressed by its label.
+test('the lists Page primary Action adds a build', async ({ mount }) => {
+  const page = await mount({
+    page: '/lists',
+    surface: {
+      platform: 'web',
+      parts: { Page: 1, List: 2, ListItem: 3, Action: 4, Pill: 2, Label: 2 },
+    },
+  });
+
+  const add = await page.find('Add build');
+  assert.equal(add.type, 'Action');
+  assert.equal(add.props.icon, 'add');
+  await page.press('Add build');
+  assert.equal((await page.find('Build 3')).type, 'ListItem');
+});
+
 test('the dashboard shows the week of Issues', async ({ mount }) => {
   const page = await mount({
     page: '/dashboard',
@@ -31,6 +48,7 @@ test('the dashboard shows the week of Issues', async ({ mount }) => {
       parts: {
         ScrollView: 1,
         Surface: 1,
+        Card: 1,
         Stack: 1,
         Grid: 1,
         Spacer: 1,
@@ -39,8 +57,10 @@ test('the dashboard shows the week of Issues', async ({ mount }) => {
     },
   });
 
-  for (const text of ['Issues', 'Open', 'In progress', 'Done', 'Blocked'])
-    assert.equal((await page.find(text)).type, 'Text');
+  assert.equal((await page.find('Issues')).type, 'Text');
+
+  for (const title of ['Open', 'In progress', 'Done', 'Blocked'])
+    assert.equal((await page.find(title)).type, 'Card');
 });
 
 const formParts = {

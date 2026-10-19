@@ -16,7 +16,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   role?: 'button' | 'link' | 'group';
   onHoverIn?: ComponentProps<typeof Pressable>['onHoverIn'];
   onHoverOut?: ComponentProps<typeof Pressable>['onHoverOut'];
-  tone?: 'accent' | 'danger';
+  // Muted: a placeholder line, such as an empty section's, with no surface of its own.
+  tone?: 'accent' | 'danger' | 'muted';
   href?: string;
   ref?: ComponentProps<typeof Pressable>['ref'];
   'aria-haspopup'?: 'dialog' | 'menu';
@@ -26,4 +27,6 @@ export type ListItemProps = KitProps<'ListItem'> & {
   accessibilityRole?: 'button' | 'radio';
   onLongPress?: () => void;
   testID?: string;
+  // A placeholder while the list loads: bars where the title, subtitle and meta will be, each as wide as its placeholder text; any `leading`, even null, becomes a round mark.
+  isLoading?: boolean;
 };

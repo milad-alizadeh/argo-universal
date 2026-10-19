@@ -6,8 +6,6 @@ import type { SectionList, SectionLists } from '#features/frame';
 import {
   type SessionsViewState,
   SessionsHeader,
-  sessionsHeaderItems,
-  sessionsHeaderSearch,
   useSessionsViewState,
 } from '#features/sessions';
 import { ListTitle } from '#lib/product/list-title';
@@ -20,7 +18,7 @@ import { SearchField } from '#primitives/inputs/search-field';
 import { newSessionId } from '../lib/product/navigation/new-session';
 import { sections } from '../lib/product/navigation/sections';
 import { LiveSessionList } from './sessions/live-session-list';
-import { SessionsRootToolbar } from './sessions/sessions-root-toolbar';
+import { SessionsRootPage } from './sessions/sessions-root-page';
 import { SettingsNavigationList } from './settings/settings-navigation-list';
 
 const searchSettings = 'Search Settings';
@@ -38,46 +36,29 @@ function sessionsList(
   path: string,
   onNewSession: () => void,
 ): SectionList {
-  return {
-    header: <SessionsHeader {...sessions} onNewSession={onNewSession} />,
-    list: (
-      <LiveSessionList {...sessions} selectedSessionId={shownSessionId(path)} />
-    ),
-    ...sessionsRoot(sessions, onNewSession),
-  };
-}
+  const list = sessionsListBody(sessions, path);
+  const root = { ...sessions, onNewSession };
 
-function sessionsRoot(
-  sessions: SessionsViewState,
-  onNewSession: () => void,
-): Pick<SectionList, 'rootHeader' | 'rootToolbar' | 'emptyPage'> {
   return {
-    rootHeader: sessionsRootHeader(sessions),
-    rootToolbar: sessionsRootToolbar(sessions, onNewSession),
+    header: <SessionsHeader {...root} />,
+    list,
+    rootHeader: { title: sections.sessions.title },
+    rootPage: <SessionsRootPage {...root}>{list}</SessionsRootPage>,
     emptyPage: noSessionShown,
   };
 }
+
+const sessionsListBody = (
+  sessions: SessionsViewState,
+  path: string,
+): React.JSX.Element => (
+  <LiveSessionList {...sessions} selectedSessionId={shownSessionId(path)} />
+);
 
 const noSessionShown = {
   title: 'Select a Session',
   description: 'Choose a Session from the list.',
 };
-
-const sessionsRootHeader = (
-  sessions: SessionsViewState,
-): SectionList['rootHeader'] => ({
-  title: sections.sessions.title,
-  right: sessionsHeaderItems(sessions),
-  search: sessionsHeaderSearch(sessions),
-});
-
-// iOS's stock items for the Sessions root: the view menu, New Session and the search bar.
-const sessionsRootToolbar = (
-  sessions: SessionsViewState,
-  onNewSession: () => void,
-): React.JSX.Element => (
-  <SessionsRootToolbar {...sessions} onNewSession={onNewSession} />
-);
 
 // Settings searches only on the web and desktop; native Settings has no search, at any size (#927).
 const settingsSearches = Platform.OS === 'web';

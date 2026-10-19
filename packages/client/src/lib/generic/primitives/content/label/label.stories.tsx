@@ -34,6 +34,10 @@ const samples: { label: string; props: LabelProps }[] = [
     props: { icon: 'check', text: 'Neutral', tone: 'neutral' },
   },
   { label: 'Accent', props: { icon: 'check', text: 'Accent', tone: 'accent' } },
+  {
+    label: 'Text only',
+    props: { text: 'v1.2.0', testID: 'label-text-only' },
+  },
 ];
 
 export const Overview: StoryObj<typeof meta> = {

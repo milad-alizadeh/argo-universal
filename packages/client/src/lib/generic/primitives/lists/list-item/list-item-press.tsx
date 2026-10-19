@@ -3,6 +3,7 @@ import { Platform, Pressable } from 'react-native';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { useInMenu } from '../../../menu-rows-context';
 import { cn } from '../../../utils';
+import { useHighlightHandlers } from './list-item-highlight';
 import { linkPress } from './list-item-link-press';
 import type { ListItemProps } from './list-item-props';
 import { RadioPress } from './list-item-radio';
@@ -99,6 +100,7 @@ function usePressProps(props: DrawingProps): RowPressProps {
     android_ripple: usePressRipple(),
     testID: props.testID,
     ...triggerProps(props),
+    ...useHighlightHandlers(props),
     className: pressClass(props, menu),
   };
 }
@@ -106,8 +108,6 @@ function usePressProps(props: DrawingProps): RowPressProps {
 function triggerProps(props: DrawingProps): RowPressProps {
   return {
     onPointerDown: props.onPointerDown,
-    onHoverIn: props.onHoverIn,
-    onHoverOut: props.onHoverOut,
     ref: props.ref,
     href: props.href,
     'aria-haspopup': props['aria-haspopup'],

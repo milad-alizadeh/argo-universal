@@ -37,7 +37,13 @@ export type WireSchemaHints = {
     "onPress": PropValue<"Surface", "onPress">;
   };
   "Card": {
-    /** on Press for this part. */
+    /** The card title on its header line. */
+    "title": PropValue<"Card", "title">;
+    /** A second line below the title. */
+    "subtitle": PropValue<"Card", "subtitle">;
+    /** The card's spoken name; defaults to title and subtitle. */
+    "accessibilityLabel": PropValue<"Card", "accessibilityLabel">;
+    /** Action run when the card is pressed. */
     "onPress": PropValue<"Card", "onPress">;
   };
   "ScrollView": {
@@ -97,7 +103,7 @@ export type WireSchemaHints = {
     "accessibilityLabel": PropValue<"Audio", "accessibilityLabel">;
   };
   "Label": {
-    /** An Argo icon name or an SF and Material symbol pair. */
+    /** An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text. */
     "icon": PropValue<"Label", "icon">;
     /** The text displayed by the part. */
     "text": PropValue<"Label", "text">;
@@ -288,6 +294,8 @@ export type WireSchemaHints = {
     "onPress": PropValue<"Action", "onPress">;
     /** An Alert answer that dismisses the question, or one that destroys data. */
     "role": PropValue<"Action", "role">;
+    /** Check this Action as its Section's chosen option; pass false on the others. */
+    "selected": PropValue<"Action", "selected">;
     /** A count or status dot on the icon. */
     "badge": PropValue<"Action", "badge">;
   };
