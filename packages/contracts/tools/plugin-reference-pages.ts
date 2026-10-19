@@ -58,10 +58,14 @@ function deprecation(part: WirePartDefinition): string {
   return part.reference.deprecated ?? 'None.';
 }
 
+const code = (type: string): string => `\`${type}\``;
+
 function childrenNote(part: WirePartDefinition): string {
-  return part.children
-    ? 'Accepts child parts in source order.'
-    : 'Does not accept child nodes on the wire.';
+  if (part.children === true) return 'Accepts child parts in source order.';
+
+  if (!part.children) return 'Does not accept child nodes on the wire.';
+
+  return `Accepts ${part.children.map(code).join(', ')} children in source order.`;
 }
 
 function sdkPropNote(part: WirePartDefinition): string {

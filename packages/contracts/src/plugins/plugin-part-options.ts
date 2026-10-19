@@ -5,8 +5,7 @@ import type { WirePartDefinition } from './wire-parts';
 export interface PartOptions {
   slots?: Record<string, readonly string[]>;
   events?: Record<string, z.ZodType>;
-  children?: boolean;
-  childParts?: readonly string[];
+  children?: boolean | readonly string[];
   container?: boolean;
   label?: string;
   appearance?: string;
@@ -14,11 +13,8 @@ export interface PartOptions {
   previous?: readonly z.ZodType[];
 }
 
-export type ResolvedPartOptions = Required<
-  Omit<PartOptions, 'container' | 'childParts'>
-> & {
+export type ResolvedPartOptions = Required<Omit<PartOptions, 'container'>> & {
   container: boolean;
-  childParts?: readonly string[];
 };
 
 type Option<Options, Key extends PropertyKey, Fallback> =

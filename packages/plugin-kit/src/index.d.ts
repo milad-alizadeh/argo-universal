@@ -106,9 +106,9 @@ type SlotProps<Name extends WirePart> = {
 };
 
 type Children<Name extends WirePart> =
-  (typeof wireParts)[Name]['children'] extends true
-    ? { children?: ReactNode }
-    : { children?: never };
+  (typeof wireParts)[Name]['children'] extends false
+    ? { children?: never }
+    : { children?: ReactNode };
 
 type Content<Name extends WirePart> = Name extends 'Text'
   ? EventProps<Name>

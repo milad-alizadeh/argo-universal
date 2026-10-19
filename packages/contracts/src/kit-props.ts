@@ -49,4 +49,4 @@ export type KitSlots<Name extends KitPart> =
   keyof (typeof pluginPartSchemas)[Name]['slots'];
 
 export type KitHasChildren<Name extends KitPart> =
-  (typeof pluginPartSchemas)[Name]['children'];
+  (typeof pluginPartSchemas)[Name]['children'] extends false ? false : true;

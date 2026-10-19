@@ -5,8 +5,9 @@ import { Text, type Tone } from '#primitives/content/text';
 import type { PillProps } from './pill-props';
 
 const fills = {
-  neutral: 'bg-muted',
-  muted: 'bg-muted',
+  // Tint, not muted: a muted fill vanishes on the neutral-100 content surface.
+  neutral: 'bg-tint',
+  muted: 'bg-tint',
   accent: 'bg-accent/10',
   info: 'bg-info/10',
   success: 'bg-success/10',

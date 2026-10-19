@@ -20,7 +20,7 @@ export const scaffoldsPartSchemas = {
   Metadata: part(
     'Read-only label/value fields for a detail view.',
     metadataProps,
-    { children: true, childParts: metadataChildParts },
+    { children: metadataChildParts },
   ),
   'Metadata.Label': part('A text Metadata field.', metadataLabelProps),
   'Metadata.Link': part(
@@ -30,7 +30,7 @@ export const scaffoldsPartSchemas = {
   'Metadata.Pills': part(
     'A Metadata field containing Pills.',
     metadataPillsProps,
-    { children: true, childParts: ['Pill'] },
+    { children: ['Pill'] },
   ),
   'Metadata.StatusDot': part(
     'A labelled status Metadata field.',
