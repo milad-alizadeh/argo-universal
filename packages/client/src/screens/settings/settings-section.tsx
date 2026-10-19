@@ -8,12 +8,12 @@ import { useProjects } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { usePluginEntries } from './plugins/use-plugins';
 import {
-  SettingsPages,
-  type SettingsPagesProps,
-} from './settings-pages/settings-pages';
+  SettingsListView,
+  type SettingsListViewProps,
+} from './settings-list/settings-list-view';
 
 type ServerCounts = Pick<
-  SettingsPagesProps,
+  SettingsListViewProps,
   'projectCount' | 'agentCount' | 'pluginCount'
 >;
 
@@ -38,14 +38,14 @@ function useAgentCount(): number | undefined {
 
 function connectionStatus(
   connection: ReturnType<typeof useConnectionState>,
-): SettingsPagesProps['status'] {
+): SettingsListViewProps['status'] {
   if (connection === 'open') return 'ready';
 
   return connection === 'connecting' ? 'loading' : 'disconnected';
 }
 
 // The Settings pages as the Server and this device know them, narrowed by the search; a row opens its page.
-function useSettingsPages(query?: string): SettingsPagesProps {
+function useSettingsList(query?: string): SettingsListViewProps {
   const navigate = useNavigate();
 
   return {
@@ -64,16 +64,16 @@ function useSettingsPages(query?: string): SettingsPagesProps {
 export function SettingsSection(props: {
   children: ReactNode;
 }): React.JSX.Element {
-  const pages = useSettingsPages(useSectionList('settings').query);
+  const pages = useSettingsList(useSectionList('settings').query);
 
   return (
     <SectionListDetail>
-      <SettingsPages {...pages}>{props.children}</SettingsPages>
+      <SettingsListView {...pages}>{props.children}</SettingsListView>
     </SectionListDetail>
   );
 }
 
 // A narrow window's Settings root: the pages alone.
 export function SettingsRootList(props: { query?: string }): React.JSX.Element {
-  return <SettingsPages {...useSettingsPages(props.query)} />;
+  return <SettingsListView {...useSettingsList(props.query)} />;
 }

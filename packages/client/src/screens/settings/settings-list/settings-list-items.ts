@@ -1,5 +1,5 @@
 import type { SettingsLayoutItem } from '#primitives/scaffolds/settings-layout';
-import type { SettingsRow } from './settings-pages-props';
+import type { SettingsRow } from './settings-list-props';
 
 // A page's row: its link, its value, and a status or attention badge, all in its spoken name.
 export function settingsItem(row: SettingsRow): SettingsLayoutItem {

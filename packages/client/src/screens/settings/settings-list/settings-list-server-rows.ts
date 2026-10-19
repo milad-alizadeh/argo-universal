@@ -3,19 +3,19 @@ import {
   connectionValue,
   countValue,
   serverValue,
-} from './settings-pages-labels';
-import type { SettingsPagesProps, SettingsRow } from './settings-pages-props';
+} from './settings-list-labels';
+import type { SettingsListViewProps, SettingsRow } from './settings-list-props';
 
 type CountedPage = Omit<SettingsRow, 'value' | 'disabled'> & {
   count?: number;
 };
 
-function serverDisabled(props: SettingsPagesProps): boolean {
+function serverDisabled(props: SettingsListViewProps): boolean {
   return props.status !== undefined && props.status !== 'ready';
 }
 
 function countedRow(
-  props: SettingsPagesProps,
+  props: SettingsListViewProps,
   { count, ...page }: CountedPage,
 ): SettingsRow {
   return {
@@ -25,7 +25,7 @@ function countedRow(
   };
 }
 
-export function projectsRow(props: SettingsPagesProps): SettingsRow {
+export function projectsRow(props: SettingsListViewProps): SettingsRow {
   return countedRow(props, {
     label: 'Projects',
     icon: 'folder',
@@ -35,7 +35,7 @@ export function projectsRow(props: SettingsPagesProps): SettingsRow {
   });
 }
 
-export function agentsRow(props: SettingsPagesProps): SettingsRow {
+export function agentsRow(props: SettingsListViewProps): SettingsRow {
   return countedRow(props, {
     label: 'Agents',
     icon: 'agent',
@@ -44,7 +44,7 @@ export function agentsRow(props: SettingsPagesProps): SettingsRow {
   });
 }
 
-export function pluginsRow(props: SettingsPagesProps): SettingsRow {
+export function pluginsRow(props: SettingsListViewProps): SettingsRow {
   return countedRow(props, {
     label: 'Plugins',
     icon: 'plug',
@@ -53,7 +53,7 @@ export function pluginsRow(props: SettingsPagesProps): SettingsRow {
   });
 }
 
-export function accountsRow(props: SettingsPagesProps): SettingsRow {
+export function accountsRow(props: SettingsListViewProps): SettingsRow {
   return {
     label: 'Accounts',
     icon: 'key',
@@ -64,7 +64,7 @@ export function accountsRow(props: SettingsPagesProps): SettingsRow {
 }
 
 const connectionStatuses: Record<
-  NonNullable<SettingsPagesProps['status']>,
+  NonNullable<SettingsListViewProps['status']>,
   Omit<Extract<RowBadge, { kind: 'status' }>, 'kind'>
 > = {
   disconnected: { tone: 'danger', label: 'server unavailable' },
@@ -73,7 +73,7 @@ const connectionStatuses: Record<
 };
 
 export function connectionRow(
-  props: SettingsPagesProps,
+  props: SettingsListViewProps,
   wide: boolean,
 ): SettingsRow {
   return {
@@ -85,7 +85,7 @@ export function connectionRow(
   };
 }
 
-export function devicesRow(props: SettingsPagesProps): SettingsRow {
+export function devicesRow(props: SettingsListViewProps): SettingsRow {
   return {
     label: 'Devices',
     icon: 'phone',

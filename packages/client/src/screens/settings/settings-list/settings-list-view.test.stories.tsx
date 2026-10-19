@@ -5,13 +5,13 @@ import {
   allPagesNavigate,
   searchNarrowsThePages,
   searchSaysWhenNothingMatches,
-} from '../../../../mocks/settings/settings-pages-navigation.test.mocks';
+} from '../../../../mocks/settings/settings-list-navigation.test.mocks';
 import {
   meta as settingsListTestMeta,
   type Story,
-} from '../../../../mocks/settings/settings-pages-story.test.mocks';
+} from '../../../../mocks/settings/settings-list-story.test.mocks';
 
-const meta = { ...settingsListTestMeta, title: 'Tests/SettingsPages' };
+const meta = { ...settingsListTestMeta, title: 'Tests/SettingsListView' };
 
 export default meta;
 

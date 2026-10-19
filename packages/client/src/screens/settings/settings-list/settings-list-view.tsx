@@ -6,18 +6,18 @@ import {
   type SettingsLayoutSections,
 } from '#primitives/scaffolds/settings-layout';
 import { EmptyState } from '#primitives/status/empty-state';
-import { settingsRows } from './settings-pages-data';
-import { settingsItem, shownRow } from './settings-pages-items';
-import type { SettingsPagesProps, SettingsRow } from './settings-pages-props';
+import { settingsRows } from './settings-list-data';
+import { settingsItem, shownRow } from './settings-list-items';
+import type { SettingsListViewProps, SettingsRow } from './settings-list-props';
 
-export type { SettingsPagesProps } from './settings-pages-props';
+export type { SettingsListViewProps } from './settings-list-props';
 
 /*
  * Settings: one group of pages, without a heading, narrowed by the search, beside the page shown on a wide window.
  * A phone leaves out Devices and Notifications.
  */
-export function SettingsPages(
-  props: SettingsPagesProps & { children?: ReactNode },
+export function SettingsListView(
+  props: SettingsListViewProps & { children?: ReactNode },
 ): React.JSX.Element {
   return (
     <SettingsLayout
@@ -33,9 +33,9 @@ const sectionsOf = (rows: SettingsRow[]): SettingsLayoutSections => [
   { items: rows.map(settingsItem) },
 ];
 
-// Each row's id is its path; a wide window lists every page, so its rows answer selection.
+// Each row's id is its path, which onSelect opens; a wide window lists every page, so its rows answer selection.
 function settingsLayoutProps(
-  props: SettingsPagesProps,
+  props: SettingsListViewProps,
 ): Pick<SettingsLayoutProps, 'sections' | 'selected' | 'onSelect'> {
   const wide = settingsRows(props, true);
 
@@ -45,24 +45,14 @@ function settingsLayoutProps(
       wide: sectionsOf(wide),
     },
     selected: shownRow(wide, props.selectedPath)?.href,
-    onSelect: (id) => openRow(wide, id, props.onSelect),
+    onSelect: props.onSelect,
   };
-}
-
-function openRow(
-  rows: SettingsRow[],
-  id: string,
-  open: SettingsPagesProps['onSelect'],
-): void {
-  const row = rows.find(({ href }) => href === id);
-
-  if (row) open(row.href);
 }
 
 // A search that finds nothing says so as the Sessions list does.
 function NoMatchingSettings({
   query = '',
-}: Pick<SettingsPagesProps, 'query'>): React.JSX.Element {
+}: Pick<SettingsListViewProps, 'query'>): React.JSX.Element {
   return (
     <EmptyState
       icon="search"

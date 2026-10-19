@@ -4,13 +4,13 @@ import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
-import { SettingsPages } from './settings-pages';
+import { SettingsListView } from './settings-list-view';
 
 const onSelect = fn();
 
 const meta = {
-  title: 'Tests/SettingsPages status',
-  component: SettingsPages,
+  title: 'Tests/SettingsListView status',
+  component: SettingsListView,
   args: {
     projectCount: 1,
     agentCount: 0,
@@ -19,13 +19,13 @@ const meta = {
   },
   render: (args): React.JSX.Element => (
     <View className="h-175 w-full">
-      <SettingsPages {...args} />
+      <SettingsListView {...args} />
     </View>
   ),
   beforeEach: (): void => {
     onSelect.mockClear();
   },
-} satisfies Meta<typeof SettingsPages>;
+} satisfies Meta<typeof SettingsListView>;
 
 export default meta;
 

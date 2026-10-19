@@ -5,7 +5,7 @@ import type { RowBadge } from '#primitives/lists/list-item';
 // A page's path, one the router knows.
 export type SettingsHref = Extract<Href, string>;
 
-export interface SettingsPagesProps {
+export interface SettingsListViewProps {
   // Undefined until the Server has answered: the row shows "…", or nothing while disconnected.
   projectCount?: number;
   agentCount?: number;
