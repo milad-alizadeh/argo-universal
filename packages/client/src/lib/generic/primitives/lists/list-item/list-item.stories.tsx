@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
-import { List } from '#primitives/lists/list';
 import { Slider } from '#primitives/inputs/slider';
+import { List } from '#primitives/lists/list';
 import { Pill } from '#primitives/status/pill';
 import { Variation, Variations } from '../../../variations';
 import { ListItem } from './index';
