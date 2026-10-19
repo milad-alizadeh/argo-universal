@@ -8,7 +8,7 @@ import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useInMenu } from '../../../menu-rows-context';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { useGroupPosition } from './list-item-group';
-import { hasLeading } from './list-item-parts';
+import { hasLeading, LinkAccessory } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import type { ListItemProps } from './list-item-props';
@@ -126,7 +126,7 @@ export function ListItem(props: ListItemProps): ReactElement {
 }
 
 // A menu row's check leads the row, as in Paper's Combobox; elsewhere only a choosing List draws it, trailing.
-function ChoosingItem(props: ListItemProps): ReactElement {
+function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
   const menu = useInMenu();
 
@@ -134,10 +134,16 @@ function ChoosingItem(props: ListItemProps): ReactElement {
     <ListItemFrame
       {...selected}
       choice={menu ? <ChoiceSlot {...selected} /> : undefined}
-      accessory={useTrailingChoice(menu, selected)}
+      accessory={
+        useTrailingChoice(menu, selected) ?? disclosureAccessory(disclosure)
+      }
     />
   );
 }
+
+// A row that pushes a page outside a choosing List shows the disclosure chevron.
+const disclosureAccessory = (disclosure?: boolean): ReactElement | undefined =>
+  disclosure ? <LinkAccessory /> : undefined;
 
 // An empty trailing choice would hold the trailing lane off the row's edge.
 function useTrailingChoice(

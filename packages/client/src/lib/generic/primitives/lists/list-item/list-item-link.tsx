@@ -1,8 +1,7 @@
 import type { ReactElement } from 'react';
-import { Platform } from 'react-native';
-import { Icon } from '#primitives/content/icon';
 import type { KitProps } from '../../kit-props';
 import { ListItemFrame } from './list-item';
+import { LinkAccessory } from './list-item-parts';
 import type { ListItemProps } from './list-item-props';
 
 type LinkProps = KitProps<'ListItem.Link'> &
@@ -35,10 +34,4 @@ function linkRole(props: LinkProps): 'button' | 'link' | 'group' {
   if (props.role) return props.role;
 
   return props.accessibilityRole === 'button' ? 'button' : 'link';
-}
-
-function LinkAccessory(): ReactElement | null {
-  return Platform.OS === 'android' ? null : (
-    <Icon name="web-disclosure" role="disclosure" className="text-tertiary" />
-  );
 }

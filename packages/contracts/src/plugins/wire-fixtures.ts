@@ -152,3 +152,5 @@ export const slottedRow: WireNode = {
 };
 
 export { runListRoot, emptyRunListRoot } from './list-wire-fixtures';
+
+export { runTableRoot } from './table-wire-fixtures';

@@ -9,6 +9,7 @@ import type * as ScrollViewKit from '#primitives/layout/scroll-view';
 import type * as SpacerKit from '#primitives/layout/spacer';
 import type * as SurfaceKit from '#primitives/layout/surface';
 import type * as ListItemKit from '#primitives/lists/list-item';
+import type * as TableKit from '#primitives/lists/table';
 import type * as DetailKit from '#primitives/scaffolds/detail';
 import type * as ListDetailKit from '#primitives/scaffolds/list-detail';
 import type * as MetadataKit from '#primitives/scaffolds/metadata';
@@ -25,6 +26,10 @@ export type AdditionalPrimitives = {
   MetadataStatusDotProps: MetadataKit.MetadataStatusDotProps;
   MetadataAvatarProps: MetadataKit.MetadataAvatarProps;
   CardProps: CardKit.CardProps;
+  TableProps: TableKit.TableProps;
+  TableRowProps: TableKit.TableRowProps;
+  TableCellProps: TableKit.TableCellProps;
+  OpenRowDetail: TableKit.OpenRowDetail;
   GridProps: GridKit.GridProps;
   SpacerProps: SpacerKit.SpacerProps;
   SurfaceProps: SurfaceKit.SurfaceProps;

@@ -15,6 +15,7 @@ import {
 import { HelloDashboard } from './dashboard.js';
 import { HelloForm } from './form.js';
 import { registerBuilds } from './list-detail.js';
+import { HelloRunsPage } from './runs.js';
 
 const headingRole = 'heading';
 
@@ -162,5 +163,6 @@ export function register(argo) {
   argo.pages.register('/dashboard', HelloDashboard);
   argo.pages.register('/form', HelloForm);
   registerBuilds(argo.pages);
+  argo.pages.register('/runs', HelloRunsPage);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }

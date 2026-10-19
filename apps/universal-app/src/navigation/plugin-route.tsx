@@ -6,16 +6,30 @@ import {
   usePluginAt,
 } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
-import { usePathname } from 'expo-router';
+import {
+  useGlobalSearchParams,
+  useLocalSearchParams,
+  usePathname,
+} from 'expo-router';
 import type * as React from 'react';
 import { Platform } from 'react-native';
+import { hasRowDetail, PluginRowDetails } from './plugin-row-detail';
 import { drawerDrawsRootHeader } from './section-drawer-options';
 import { MenuToolbar } from './section-root';
 import { PageStack } from './section-stack';
 
+type RowParams = { row?: string };
+
+// A Row detail sits on its nav item's path, pushed above it, so only the page showing no Row detail is the root.
+function useNavRoot(path: string, row: string | undefined): boolean {
+  return usePluginAt(path).root && !hasRowDetail(row);
+}
+
 // Each Plugin nav item's pages, under its title on a narrow window; a path whose Plugin is unknown keeps ☰ to leave it.
 export function PluginLayout(): React.JSX.Element {
-  const { section, root } = usePluginAt(usePathname());
+  const pathname = usePathname();
+  const { section } = usePluginAt(pathname);
+  const root = useNavRoot(pathname, useGlobalSearchParams<RowParams>().row);
 
   return (
     <PageStack
@@ -45,7 +59,9 @@ export function PluginRoot({ path }: PluginRootProps): React.JSX.Element {
   return (
     <PageAtDrawerRoot value={drawerRoot}>
       <SectionListDetail>
-        <PluginDetailScreen path={path} />
+        <PluginRowDetails>
+          <PluginDetailScreen path={path} />
+        </PluginRowDetails>
       </SectionListDetail>
       {narrowRoot ? <PluginMenuToolbar /> : null}
     </PageAtDrawerRoot>
@@ -58,7 +74,8 @@ interface RootPlace {
 }
 
 function useRootPlace(path: readonly string[]): RootPlace {
-  const { root } = usePluginAt(pluginPath(path));
+  const { row } = useLocalSearchParams<RowParams>();
+  const root = useNavRoot(pluginPath(path), row);
   const wide = useWide();
 
   return {

@@ -26,6 +26,8 @@ export type ListItemProps = KitProps<'ListItem'> & {
   id?: string;
   accessibilityRole?: 'button' | 'radio';
   onLongPress?: () => void;
+  // Draws the disclosure chevron of a row that pushes a page, outside a choosing section.
+  disclosure?: boolean;
   testID?: string;
   // A placeholder while the list loads: bars where the title, subtitle and meta will be, each as wide as its placeholder text; any `leading`, even null, becomes a round mark.
   isLoading?: boolean;
