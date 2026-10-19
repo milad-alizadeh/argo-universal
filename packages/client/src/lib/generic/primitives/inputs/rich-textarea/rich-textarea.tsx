@@ -31,7 +31,7 @@ import { ReferenceProviders } from './web/rich-textarea-reference-token';
 
 function Placeholder({ text }: { text: string }): React.JSX.Element {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70">
+    <div className="pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70 dark:text-muted-foreground">
       {text}
     </div>
   );

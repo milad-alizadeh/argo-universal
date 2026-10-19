@@ -19,7 +19,8 @@ function plainFieldProps({
   return {
     ...field,
     editable: !disabled,
-    placeholderTextColorClassName: 'accent-muted-foreground/70',
+    placeholderTextColorClassName:
+      'accent-muted-foreground/70 dark:accent-muted-foreground',
   };
 }
 
