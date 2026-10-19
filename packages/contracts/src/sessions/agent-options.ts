@@ -10,7 +10,7 @@ export const SessionAgentOptionsInput = z.strictObject({
 
 export type SessionAgentOptionsInput = z.infer<typeof SessionAgentOptionsInput>;
 
-// The Agent's options as a new ACP session in the Project folder reports them.
+// The Agent's options as a new Agent session in the Project folder reports them.
 export const SessionAgentOptionsOutput = z.array(SessionConfigOption);
 
 export type SessionAgentOptionsOutput = z.infer<

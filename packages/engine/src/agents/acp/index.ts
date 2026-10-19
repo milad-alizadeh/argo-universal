@@ -22,4 +22,9 @@ export type { TerminalRequests } from './shell-commands/terminal-requests';
 
 export { awaitAcpOpening } from './connection/client';
 
+export {
+  cancelledElicitation,
+  cancelledPermission,
+} from './connection/refusals';
+
 export { releaseShellGroups } from './shell-commands/shell-record';
