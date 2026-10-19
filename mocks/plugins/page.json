@@ -10,7 +10,8 @@
       "label": "New Issue",
       "icon": "add",
       "onPress": {
-        "$event": "onPress"
+        "$event": "onPress",
+        "$path": ["primaryAction", "onPress"]
       }
     },
     "value": "",

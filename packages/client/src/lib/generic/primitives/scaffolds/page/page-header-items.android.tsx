@@ -1,4 +1,4 @@
-// Android keeps the stock Toolbar and search; its primary Action is a separate Material FAB above content.
+// Android keeps the stock Toolbar and search; its primary Action is the Material FAB (page-accessory).
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
@@ -33,11 +33,13 @@ export function PageHeaderItems(props: PageProps): ReactElement {
   );
 }
 
-function HeaderActions(props: {
+interface HeaderActionsProps {
   actions: DeclaredAction[];
   label: string;
   search: boolean;
-}): ReactElement {
+}
+
+function HeaderActions(props: HeaderActionsProps): ReactElement {
   const { direct, overflow } = splitHeaderActions(props);
 
   return (

@@ -8,6 +8,8 @@ export type { PluginOnEvent } from '../plugin-dispatcher';
 
 export interface RenderContext {
   key: string;
+  // Set below the tree's root, where a root-only part such as Page is refused.
+  nested?: boolean;
   ui: PluginUi;
   controls: PluginControls;
   actions: PluginActions;

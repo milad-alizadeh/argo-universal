@@ -1,5 +1,5 @@
 import type { PartVersions } from './kit';
-import { supportsWireNode } from './prepare-tree';
+import { isRootOnly, supportsWireNode } from './prepare-tree';
 import type { WireNode } from './wire';
 
 export function replacementTreeReason(
@@ -26,6 +26,8 @@ function invalidReplacementReason(
   node: WireNode,
   parts: PartVersions,
 ): string | null {
+  if (isRootOnly(node)) return `${node.type} cannot replace a core component`;
+
   return supportsWireNode(node, parts)
     ? null
     : `invalid ${node.type} props or children`;

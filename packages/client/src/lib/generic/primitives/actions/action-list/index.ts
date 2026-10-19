@@ -2,7 +2,10 @@ export { ActionList } from './action-list';
 
 export { Action } from './action-declarations';
 
-export { ActionShortcutScope } from './action-shortcut-scope';
+export {
+  ActionShortcutScope,
+  useActionShortcutScope,
+} from './action-shortcut-scope';
 
 export {
   type ActionListProps,

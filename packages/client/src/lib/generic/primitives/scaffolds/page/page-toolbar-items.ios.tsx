@@ -1,16 +1,36 @@
 import { Stack } from 'expo-router';
 import type { ComponentProps, ReactElement } from 'react';
-import type { DeclaredAction } from '#primitives/actions/action-list';
-import type { PageProps } from './page-props';
-import { pageToolbarIcon } from './page-toolbar-icon.ios';
+import type { ImageSourcePropType } from 'react-native';
+import type { SFSymbol } from 'sf-symbols-typescript';
+import { isCustomSymbol } from '#lib/generic/symbols/custom-symbols';
+import { resolveIcon } from '#lib/generic/symbols/icon-symbol';
+import { tablerAsset } from '#lib/generic/symbols/tabler-symbols';
+import type {
+  ActionProps,
+  DeclaredAction,
+} from '#primitives/actions/action-list';
 
 type ToolbarButton = ComponentProps<typeof Stack.Toolbar.Button>;
 
-export function toolbarAction(
-  action: NonNullable<PageProps['primaryAction']>,
-): ToolbarButton {
+// Template rendering tints image icons (Tabler, custom symbols) like SF Symbols, in light and dark.
+const tinted = { iconRenderingMode: 'template' } as const;
+
+function toolbarIcon(
+  icon: ActionProps['icon'],
+): SFSymbol | ImageSourcePropType {
+  const source = resolveIcon(icon).symbol;
+
+  if ('tabler' in source) return { uri: tablerAsset(source.tabler) };
+
+  if (isCustomSymbol(source.sf)) return { uri: source.sf };
+
+  return source.sf;
+}
+
+function toolbarAction(action: DeclaredAction): ToolbarButton {
   return {
-    icon: pageToolbarIcon(action.icon),
+    ...tinted,
+    icon: toolbarIcon(action.icon),
     accessibilityLabel: action.label,
     children: action.label,
     disabled: action.disabled,
@@ -37,7 +57,8 @@ export function overflowMenu(
 
 function menuAction(action: DeclaredAction): ReactElement {
   const props = {
-    icon: pageToolbarIcon(action.icon),
+    ...tinted,
+    icon: toolbarIcon(action.icon),
     onPress: action.onPress,
     disabled: action.disabled,
     destructive: action.tone === 'danger',

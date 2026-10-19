@@ -36,14 +36,7 @@ function pageProps(props: SearchedProps): PageProps {
     search: { label: pageSearch(props).label },
     value: props.search,
     onChangeText: props.onSearch,
-    renderHeader: pageHeader(props),
   };
-}
-
-function pageHeader(props: SearchedProps): PageProps['renderHeader'] {
-  const render = props.renderHeader;
-
-  return render ? () => render({ onSearch: props.onSearch }) : undefined;
 }
 
 function ProjectCaption({ caption }: { caption?: string }): React.ReactNode {

@@ -1,15 +1,20 @@
-import { Stack, Button, Text, useState } from '@argo/plugin-kit';
+import { Page, Button, Text, useState } from '@argo/plugin-kit';
 import { jsx } from '@argo/plugin-kit/jsx-runtime';
 
-function Page({ argo }) {
+function Harness({ argo }) {
   const [value, setValue] = useState('empty');
 
   return (
-    <Stack direction="column">
-      {jsx('Page', { onSearchTextChange: setValue }, 'search')}
+    <Page
+      key="search"
+      title="Harness"
+      search={{ label: 'Search' }}
+      value={value}
+      onChangeText={setValue}
+    >
       <Button label="Run fixture" onPress={runFixture(argo, setValue)} />
       <Text>{value}</Text>
-    </Stack>
+    </Page>
   );
 }
 
@@ -20,5 +25,5 @@ const runFixture = (argo, setValue) => async () => {
 };
 
 export function register(argo) {
-  argo.pages.register('/', () => jsx(Page, { argo }));
+  argo.pages.register('/', () => jsx(Harness, { argo }));
 }

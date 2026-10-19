@@ -1,5 +1,8 @@
 import { wirePart, type WirePartDefinition } from '@repo/contracts/plugins/kit';
-import { isWireContainer } from '@repo/contracts/plugins/prepare-tree';
+import {
+  isRootOnly,
+  isWireContainer,
+} from '@repo/contracts/plugins/prepare-tree';
 import { WireJson, type WireNode } from '@repo/contracts/plugins/wire';
 import {
   childNodeKey,
@@ -20,7 +23,7 @@ export function RenderNode({
   node,
   context,
 }: RenderNodeProps): React.JSX.Element | null {
-  const part = wirePart(node.type);
+  const part = drawablePart(node, context);
 
   if (!part) return refused(node);
   const parsed = parsedProps(node, part);
@@ -32,6 +35,15 @@ export function RenderNode({
   const slots = legacySlots(node.type, renderedSlots(node, part, context));
 
   return renderPrepared(input, slots);
+}
+
+function drawablePart(
+  node: WireNode,
+  { nested }: Rendering.RenderContext,
+): WirePartDefinition | undefined {
+  if (nested && isRootOnly(node)) return undefined;
+
+  return wirePart(node.type);
 }
 
 function parsedProps(
@@ -81,7 +93,7 @@ function renderedChildren(
         ? childNodeKey(context.key, node.key)
         : slotNodeKey(context.key, slot, node.key);
 
-    return RenderNode({ node, context: { ...context, key } });
+    return RenderNode({ node, context: { ...context, key, nested: true } });
   });
 }
 

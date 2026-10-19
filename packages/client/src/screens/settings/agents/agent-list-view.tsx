@@ -1,11 +1,10 @@
 import type * as React from 'react';
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { type AgentRows, type AgentsFilter } from '#features/agents';
 import { Page, PageColumn, type PageProps } from '#primitives/scaffolds/page';
 import {
   AgentsFilterPills,
-  type AgentsHeaderProps,
   type AgentsFilterProps,
   type AgentsSearchProps,
   agentsTitle,
@@ -20,7 +19,6 @@ export type AgentListViewProps = {
   onRetry: () => void;
   initialSearch?: string;
   initialFilter?: AgentsFilter;
-  renderHeader?: (header: AgentsHeaderProps) => ReactNode;
 };
 
 type ListProps = AgentListViewProps & AgentsFilterProps & AgentsSearchProps;
@@ -58,12 +56,5 @@ function pageProps(props: ListProps): PageProps {
     search: { label: searchLabel },
     value: props.search,
     onChangeText: props.onSearch,
-    renderHeader: pageHeader(props),
   };
-}
-
-function pageHeader(props: ListProps): PageProps['renderHeader'] {
-  const render = props.renderHeader;
-
-  return render ? () => render(props) : undefined;
 }

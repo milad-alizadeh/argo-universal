@@ -1,30 +1,21 @@
-import {
-  Button,
-  Detail,
-  Metadata,
-  Page,
-  Pill,
-  Stack,
-  Text,
-  useState,
-} from '@argo/plugin-kit';
+import { Button, Stack, Text, useState } from '@argo/plugin-kit';
+import { Item } from './item.js';
 
 function Counter() {
   const [taps, setTaps] = useState(0);
-  const [details, setDetails] = useState(false);
-  const [item, setItem] = useState(false);
+  const [view, setView] = useState('counter');
 
-  if (details) return <Details onBack={() => setDetails(false)} />;
+  if (view === 'details') return <Details onBack={() => setView('counter')} />;
 
-  if (item) return <Item />;
+  if (view === 'item') return <Item />;
 
   return (
     <Stack direction="column">
       <Text>Counter fixture</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <Button label="Tap me" onPress={() => setTaps(taps + 1)} />
-      <Button label="Open details" onPress={() => setDetails(true)} />
-      <Button label="Open item" onPress={() => setItem(true)} />
+      <Button label="Open details" onPress={() => setView('details')} />
+      <Button label="Open item" onPress={() => setView('item')} />
     </Stack>
   );
 }
@@ -39,32 +30,6 @@ function Details({ onBack }) {
         onPress={{ action: 'openUrl', url: 'https://example.com/fixture' }}
       />
     </Stack>
-  );
-}
-
-// An item page: Detail with every Metadata field kind.
-function Item() {
-  return (
-    <Page title="Fixture item">
-      <Detail
-        markdown="Fixture item content."
-        metadata={
-          <Metadata>
-            <Metadata.StatusDot title="Status" text="Open" tone="info" />
-            <Metadata.Avatar title="Assignee" name="Ana Ruiz" />
-            <Metadata.Pills title="Labels">
-              <Pill text="fixture" />
-            </Metadata.Pills>
-            <Metadata.Label title="Opened" text="Today" />
-            <Metadata.Link
-              title="Docs"
-              text="example.com"
-              href="https://example.com/fixture"
-            />
-          </Metadata>
-        }
-      />
-    </Page>
   );
 }
 

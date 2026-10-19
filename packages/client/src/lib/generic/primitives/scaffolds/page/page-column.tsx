@@ -10,22 +10,23 @@ interface PageColumnStyle {
 }
 
 export function usePageColumn(): PageColumnStyle {
-  const [width, padding] = useCSSVariable([
+  const [width = 0, inset = 0] = useCSSVariable([
     '--container-column',
     usePaddingToken(),
   ]).map(tokenNumber);
 
-  const inset = padding ?? 0;
-
   return {
-    maxWidth: (width ?? 0) + inset * 2,
+    maxWidth: width + inset * 2,
     paddingLeft: inset,
     paddingRight: inset,
   };
 }
 
+// A token a host hasn't defined reads as 0 rather than NaN.
 function tokenNumber(value: string | number | undefined): number {
-  return Number.parseFloat(String(value));
+  const number = Number.parseFloat(String(value));
+
+  return Number.isFinite(number) ? number : 0;
 }
 
 export function PageColumn({

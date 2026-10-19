@@ -2,9 +2,6 @@ import {
   Button,
   ActionList,
   Action,
-  Detail,
-  Metadata,
-  Page,
   List,
   ListItem,
   Label,
@@ -14,6 +11,7 @@ import {
   useEffect,
   useState,
 } from '@argo/plugin-kit';
+import { HelloItemPage } from './item-page.js';
 
 const headingRole = 'heading';
 
@@ -112,52 +110,6 @@ function HelloListPage() {
       items={builds}
       renderItem={renderBuild(selected, setSelected)}
     />
-  );
-}
-
-const itemMetadata = (
-  <Metadata>
-    <Metadata.StatusDot title="Status" text="In progress" tone="info" />
-    <Metadata.Avatar title="Assignee" name="Ana Ruiz" />
-    <Metadata.Pills title="Labels">
-      <Pill text="bug" />
-      <Pill text="sync" />
-    </Metadata.Pills>
-    <Metadata.Label title="Opened" text="2 days ago" />
-    <Metadata.Link
-      title="Docs"
-      text="example.com"
-      href="https://example.com/hello"
-    />
-  </Metadata>
-);
-
-// An item page: its content, with Metadata beside it on wide screens.
-function HelloItemPage() {
-  const [closed, setClosed] = useState(false);
-
-  const actions = (
-    <ActionList>
-      <Action
-        label={closed ? 'Reopen' : 'Close'}
-        icon="check"
-        onPress={() => setClosed(!closed)}
-      />
-    </ActionList>
-  );
-
-  return (
-    <Page title="Sync fails on large repos">
-      <Detail
-        markdown={
-          closed
-            ? 'Closed. Sync now fetches large repositories in batches.'
-            : 'Sync stops after a few minutes on repositories with more than 50,000 files.'
-        }
-        metadata={itemMetadata}
-        actions={actions}
-      />
-    </Page>
   );
 }
 
