@@ -7,7 +7,6 @@ const componentFolders: [string, string[]][] = [
     [
       'composer',
       'composer-configuration',
-      'composer-options',
       'composer-popover',
       'composer-status',
       'start-session-in',

@@ -7,9 +7,14 @@ import { DrillPopover } from './drill-popover';
 import type { DrillProps } from './drill-props';
 import { DrillSheet } from './drill-sheet';
 
+// True where a drill opens its choices in a popover beside the row: a desktop window.
+export function useDrillBeside(): boolean {
+  return useWide() && Platform.OS === 'web';
+}
+
 // Paper: desktop rows open beside their group; phones push within their owning Sheet.
 export function Drill(props: DrillProps): ReactElement {
-  const desktop = useWide() && Platform.OS === 'web';
+  const desktop = useDrillBeside();
   const trigger = useDrillTrigger(props);
 
   return desktop ? (

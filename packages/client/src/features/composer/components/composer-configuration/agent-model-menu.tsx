@@ -1,16 +1,15 @@
 import type * as React from 'react';
+import type { ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
-import { PopoverHoverGroup, PopoverTitle } from '#primitives/overlays/popover';
+import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { AgentDrill } from './agent-drill';
 import { EffortControl, SwitchOptions } from './configuration-tuning';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { currentEffort, switches } from './configuration-values';
 import { ModelPicker } from './model-picker';
-
-// Paper: the desktop popover's title and the phone sheet's page title.
-export const configureTitle = 'Configure';
+import { OptionDrills } from './option-drill';
 
 interface MenuProps {
   configuration: ComposerConfigurationProps;
@@ -21,26 +20,18 @@ interface ContentsProps extends MenuProps {
   wide: boolean;
 }
 
-// Configure's settings: on a desktop the Agent and Model rows open popovers beside the menu; elsewhere they push the sheet's pages.
+/*
+ * Configure's settings: on a desktop a flat menu (Paper 9FK-0) with no titles, whose drill rows open
+ * beside it; elsewhere a sheet page of titled sections whose rows push pages.
+ */
 export function AgentModelMenu(props: ContentsProps): React.JSX.Element {
-  return <ConfigurationContents {...props} />;
-}
-
-function ConfigurationContents(props: ContentsProps): React.JSX.Element {
   return (
     <View className="native:flex-1 bg-content web:wide:bg-card">
-      {props.wide ? <PopoverTitle>{configureTitle}</PopoverTitle> : null}
-      <ConfigurationFields {...props} />
+      <List appearance="grouped" fit={Platform.OS === 'web' || props.wide}>
+        <ConfigurationDrills {...props} />
+        <ConfigurationTuning {...props} />
+      </List>
     </View>
-  );
-}
-
-function ConfigurationFields(props: ContentsProps): React.JSX.Element {
-  return (
-    <List appearance="grouped" fit={Platform.OS === 'web' || props.wide}>
-      <ConfigurationDrills {...props} />
-      <ConfigurationTuning configuration={props.configuration} />
-    </List>
   );
 }
 
@@ -59,6 +50,11 @@ function configurationNotice(
     : undefined;
 }
 
+// A sheet's section title; the desktop menu has none.
+function sectionTitle(props: ContentsProps, title: string): string | undefined {
+  return props.wide ? undefined : title;
+}
+
 function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
   const notice = hasTuning(props.configuration)
     ? undefined
@@ -66,31 +62,37 @@ function ConfigurationDrills(props: ContentsProps): React.JSX.Element {
 
   return (
     <PopoverHoverGroup>
-      <ListSection title="Model" footer={notice}>
-        {configurationDrillRows(props)}
+      <ListSection title={sectionTitle(props, 'Model')} footer={notice}>
+        <AgentDrill configuration={props.configuration} wide={props.wide} />
+        <ModelPicker configuration={props.configuration} />
+        <OptionDrills configuration={props.configuration} />
       </ListSection>
     </PopoverHoverGroup>
   );
 }
 
-function configurationDrillRows(props: ContentsProps): React.JSX.Element {
-  return (
-    <>
-      <AgentDrill configuration={props.configuration} wide={props.wide} />
-      <ModelPicker configuration={props.configuration} />
-    </>
-  );
-}
+// Paper puts Effort before the switches on a desktop; a phone's sheet keeps its switches first.
+function ConfigurationTuning(props: ContentsProps): React.JSX.Element | null {
+  const { configuration } = props;
 
-function ConfigurationTuning({
-  configuration,
-}: Pick<MenuProps, 'configuration'>): React.JSX.Element | null {
   if (!hasTuning(configuration)) return null;
 
   return (
-    <ListSection title="Response" footer={configurationNotice(configuration)}>
-      <SwitchOptions configuration={configuration} />
-      <EffortControl configuration={configuration} />
+    <ListSection
+      title={sectionTitle(props, 'Response')}
+      footer={configurationNotice(configuration)}
+    >
+      {tuningRows(props)}
     </ListSection>
   );
+}
+
+function tuningRows({ configuration, wide }: ContentsProps): ReactElement[] {
+  const switchRows = (
+    <SwitchOptions key="switches" configuration={configuration} />
+  );
+
+  const effort = <EffortControl key="effort" configuration={configuration} />;
+
+  return wide ? [effort, switchRows] : [switchRows, effort];
 }

@@ -6,8 +6,6 @@ export {
   usePopoverClose,
 } from './popover';
 
-export { PopoverTitle } from './popover-title';
-
 export {
   type PopoverContentProps,
   type PopoverProps,

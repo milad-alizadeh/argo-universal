@@ -6,7 +6,6 @@ import {
   ComposerAgentModelControl,
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
-import { ComposerOptions } from '../composer-options/composer-options';
 import { ComposerStatusControls } from '../composer-status/composer-status';
 import { ComposerAttachMenu, composerIconButton } from './composer-attach-menu';
 import type {
@@ -87,12 +86,7 @@ function ComposerConfigurationActions(
     disabled: layout.inactive,
   };
 
-  return (
-    <>
-      <ComposerOptions {...controls} />
-      <ComposerModeControl {...controls} />
-    </>
-  );
+  return <ComposerModeControl {...controls} />;
 }
 
 function ComposerSendButton(layout: SendLayout): React.JSX.Element {

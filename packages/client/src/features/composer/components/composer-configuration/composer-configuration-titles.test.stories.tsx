@@ -5,6 +5,7 @@ import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ComposerAgentModelControl } from './composer-configuration';
 import {
   agentModelLabel,
+  currentModel,
   modelPickerLabel,
   pickerStoryMeta,
 } from './picker-story-fixtures';
@@ -18,7 +19,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ConfigureShowsItsTitle: Story = {
+// Paper 9FK-0: the desktop popover is a flat menu with no title and no section titles.
+export const ConfigureHasNoTitlesWide: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await userEvent.click(
@@ -31,13 +33,17 @@ export const ConfigureShowsItsTitle: Story = {
 
     await waitFor(() =>
       expect(
-        within(configure).getByRole('heading', { name: 'Configure' }),
+        within(configure).getByRole('button', { name: /^Model,/ }),
       ).toBeVisible(),
     );
+    await expect(
+      within(configure).queryByRole('heading'),
+    ).not.toBeInTheDocument();
   },
 };
 
-export const ModelPickerShowsItsTitle: Story = {
+// Paper's drilled row: the models open beside Configure with no title and no search, the current one checked.
+export const ModelPickerHasNoTitleOrSearchWide: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await userEvent.click(
@@ -59,10 +65,15 @@ export const ModelPickerShowsItsTitle: Story = {
     });
 
     await waitFor(() =>
-      expect(
-        within(picker).getByRole('heading', { name: modelPickerLabel }),
-      ).toBeVisible(),
+      expect(within(picker).getAllByRole('radio').length).toBeGreaterThan(1),
     );
+    await expect(
+      within(picker).getByRole('radio', { checked: true }),
+    ).toHaveAccessibleName(currentModel);
+    await expect(within(picker).queryByRole('heading')).not.toBeInTheDocument();
+    await expect(
+      within(picker).queryByRole('searchbox'),
+    ).not.toBeInTheDocument();
   },
 };
 
