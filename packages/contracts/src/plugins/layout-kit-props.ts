@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { stackGaps } from '../kit-tokens';
+import { spacingSteps } from '../kit-tokens';
 import { onPress } from './plugin-part-props';
 import { perSizeClass } from './schema-size-class';
 
@@ -9,7 +9,7 @@ export const gridProps = z.object({
   columns: perSizeClass(z.number().int().positive()).describe(
     'Equal columns, optionally per Size class. Phones draw at most two.',
   ),
-  gap: z.enum(stackGaps).optional().describe('Spacing token between cells.'),
+  gap: z.enum(spacingSteps).optional().describe('Spacing token between cells.'),
 });
 
 export const surfaceProps = z.object({
@@ -17,7 +17,7 @@ export const surfaceProps = z.object({
     .enum(['background', 'card', 'muted', 'glass'])
     .describe('Named Surface with its fill, radius and depth.'),
   padding: z
-    .enum(stackGaps)
+    .enum(spacingSteps)
     .optional()
     .describe('Spacing token inside the Surface.'),
   onPress: onPress.optional().describe('Action run on activation.'),

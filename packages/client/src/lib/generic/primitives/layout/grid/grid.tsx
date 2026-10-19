@@ -6,9 +6,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { useSizeClassValue } from '#lib/generic/use-size-class/use-size-class-value';
-import { useSpacing } from '#lib/generic/use-spacing';
 import { cn } from '#lib/generic/utils';
-import { stackGapClass } from '#primitives/layout/stack';
+import { gapClass, useSpacingStep } from '#primitives/layout/spacing';
 import { useSizeClass } from '../../../use-size-class/use-size-class';
 import type { KitProps } from '../../kit-props';
 
@@ -22,7 +21,7 @@ export function Grid({ gap = 0, ...props }: GridProps): React.JSX.Element {
   return (
     <View
       onLayout={grid.onLayout}
-      className={cn('flex-row flex-wrap items-stretch', stackGapClass[gap])}
+      className={cn('flex-row flex-wrap items-stretch', gapClass[gap])}
     >
       {Children.map(props.children, (child) => (
         <View style={grid.cell}>{child}</View>
@@ -50,7 +49,7 @@ function useGrid(
   gap: NonNullable<GridProps['gap']>,
 ): GridLayout {
   const count = useColumnCount(columns);
-  const spacing = useSpacing(`--spacing-${gap}`) || 0;
+  const spacing = useSpacingStep(gap);
   const [width, setWidth] = useState(0);
 
   return {
