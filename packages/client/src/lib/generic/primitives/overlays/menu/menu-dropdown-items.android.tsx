@@ -8,7 +8,6 @@ import {
   Text,
 } from '@expo/ui/jetpack-compose';
 import { padding } from '@expo/ui/jetpack-compose/modifiers';
-import { useState } from 'react';
 import type * as React from 'react';
 
 type DropdownMenuItemElementColors = NonNullable<
@@ -17,6 +16,7 @@ type DropdownMenuItemElementColors = NonNullable<
 
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
+import { MenuDropdownShell } from './menu-dropdown-shell.android';
 import { ItemLeadingIcon } from './menu-item-icon.android';
 import { dividedItems, type NativeMenuItem } from './menu-native-items';
 
@@ -58,17 +58,13 @@ function ItemRow(props: MenuItemProps): React.JSX.Element {
  * Android; Material's trailing arrow marks it. Choosing one of its rows closes both menus.
  */
 function SubmenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
-  const [expanded, setExpanded] = useState(false);
-  const close = (): void => setExpanded(false);
-  const color = useMaterialPalette().roles.surfaceContainer;
-
   return (
-    <DropdownMenu expanded={expanded} onDismissRequest={close} color={color}>
-      <DropdownMenu.Trigger>
-        <SubmenuRow item={item} onOpen={() => setExpanded(true)} />
-      </DropdownMenu.Trigger>
-      <SubmenuRows item={item} onChoose={closing(close, onChoose)} />
-    </DropdownMenu>
+    <MenuDropdownShell
+      trigger={(open) => <SubmenuRow item={item} onOpen={open} />}
+      items={(close) => (
+        <SubmenuRows item={item} onChoose={closing(close, onChoose)} />
+      )}
+    />
   );
 }
 
