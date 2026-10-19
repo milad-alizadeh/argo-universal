@@ -26,14 +26,9 @@ it('advertises the versions of the parts this App draws', () => {
     Label: 2,
     ProgressBar: 1,
     Pill: 2,
-    VirtualList: 1,
-    GroupedList: 1,
-    GroupedListItem: 1,
     Text: 3,
     Button: 2,
     Stack: 1,
-    Row: 1,
-    Column: 1,
     Svg: 1,
   });
 });

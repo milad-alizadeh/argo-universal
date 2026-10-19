@@ -23,9 +23,9 @@ it('drops refused SVG nodes from an ordinary page and sends canonical markup', (
       type: 'snapshot',
       revision: 1,
       root: {
-        type: 'Column',
+        type: 'Stack',
         key: 'root',
-        props: {},
+        props: { direction: 'column' },
         children: [
           svg(
             '<svg><circle cx="2" cy="3" r="1" fill="currentColor"/></svg>',
@@ -50,7 +50,7 @@ it('drops refused SVG nodes from an ordinary page and sends canonical markup', (
   expect(messages).toHaveLength(1);
   expect(message.type).toBe('snapshot');
   expect(logs).toEqual([
-    'Plugin atlas: refused /map node Column#root/Svg#unsafe: element <script> refused',
+    'Plugin atlas: refused /map node Stack#root/Svg#unsafe: element <script> refused',
   ]);
 });
 
@@ -77,9 +77,9 @@ it('drops refused SVG nodes from an ordinary Slot without refusing its view', ()
       type: 'snapshot',
       revision: 1,
       root: {
-        type: 'Column',
+        type: 'Stack',
         key: 'root',
-        props: {},
+        props: { direction: 'column' },
         children: [],
         slots: {
           leading: [
@@ -99,7 +99,7 @@ it('drops refused SVG nodes from an ordinary Slot without refusing its view', ()
   expect(tree.slots.leading?.map(({ key }) => key)).toEqual(['valid']);
   expect(message.type).toBe('snapshot');
   expect(logs).toEqual([
-    'Plugin atlas: refused /map node Column#root/Svg#unsafe: element <script> refused',
+    'Plugin atlas: refused /map node Stack#root/Svg#unsafe: element <script> refused',
   ]);
 });
 

@@ -5,19 +5,15 @@ import { emptyStateWirePart } from './empty-state-wire-part';
 import {
   buttonProps,
   buttonV1,
-  groupedItemProps,
   layoutProps,
-  listProps,
   stackProps,
   textProps,
   textV1,
   textV2,
   svgProps,
-  groupedItemV1,
 } from './kit-props';
 import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
-import { listExpansion } from './list-expansion';
 import { listWireParts } from './list-wire-parts';
 import { textForApp } from './text-for-app';
 import type { WirePartDefinition } from './wire-part-definition';
@@ -27,66 +23,11 @@ export type { WirePartDefinition } from './wire-part-definition';
 
 export { listPartNames } from './list-expansion';
 
-const contentParts = [
-  'Text',
-  'Button',
-  'Stack',
-  'Row',
-  'Column',
-  'GroupedListItem',
-  'Svg',
-  'Pill',
-] as const;
-
 // Append a schema when a part changes; old versions keep their original props.
 export const wireParts = {
   ...listWireParts,
   ...actionListWireParts,
   ...controlWireParts,
-  GroupedListItem: {
-    props: groupedItemProps,
-    versions: [groupedItemV1],
-    container: true,
-    children: false,
-    slots: {
-      leading: contentParts,
-      accessories: contentParts,
-      footer: contentParts,
-      detail: contentParts,
-    },
-    events: { onPress: z.undefined() },
-    reference: wirePartReferences.GroupedListItem,
-  },
-  VirtualList: {
-    props: listProps,
-    expansion: listExpansion,
-    versions: [listProps],
-    container: true,
-    children: true,
-    slots: {},
-    events: {},
-    reference: wirePartReferences.VirtualList,
-  },
-  Table: {
-    props: listProps,
-    expansion: listExpansion,
-    versions: [listProps],
-    container: true,
-    children: true,
-    slots: {},
-    events: {},
-    reference: wirePartReferences.Table,
-  },
-  GroupedList: {
-    props: listProps,
-    expansion: listExpansion,
-    versions: [listProps],
-    container: true,
-    children: true,
-    slots: {},
-    events: {},
-    reference: wirePartReferences.GroupedList,
-  },
   Text: {
     props: textProps,
     appProps: textForApp,
@@ -127,24 +68,6 @@ export const wireParts = {
     slots: {},
     events: {},
     reference: wirePartReferences.Stack,
-  },
-  Row: {
-    props: layoutProps,
-    versions: [layoutProps],
-    container: true,
-    children: true,
-    slots: {},
-    events: {},
-    reference: wirePartReferences.Row,
-  },
-  Column: {
-    props: layoutProps,
-    versions: [layoutProps],
-    container: true,
-    children: true,
-    slots: {},
-    events: {},
-    reference: wirePartReferences.Column,
   },
   EmptyState: emptyStateWirePart,
   Svg: {

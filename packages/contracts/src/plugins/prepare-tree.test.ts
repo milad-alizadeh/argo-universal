@@ -116,18 +116,17 @@ describe('Plugin wire compatibility', () => {
 
   it('preserves every named-slot node while lowering its parts for the App', () => {
     const root: WireNode = {
-      type: 'GroupedListItem',
-      key: 'item',
-      props: { label: 'Slotted' },
+      type: 'List',
+      key: 'list',
+      props: {},
       children: [],
-      slots: { leading: [stack, label] },
+      slots: { empty: [stack, label] },
     };
 
     expect(
-      prepareWireTree(root, { ...legacyPartVersions, GroupedListItem: 1 })
-        .slots,
+      prepareWireTree(root, { ...legacyPartVersions, List: 2 }).slots,
     ).toEqual({
-      leading: [
+      empty: [
         {
           ...stack,
           type: 'Row',
@@ -141,21 +140,21 @@ describe('Plugin wire compatibility', () => {
 
   it('refuses undeclared slots and parts outside their closed accepted set', () => {
     const root: WireNode = {
-      type: 'GroupedListItem',
-      key: 'item',
-      props: { label: 'Invalid' },
+      type: 'List',
+      key: 'list',
+      props: {},
       children: [],
       slots: { unknown: [label] },
     };
 
-    const parts = { ...legacyPartVersions, GroupedListItem: 1 };
+    const parts = { ...legacyPartVersions, List: 2 };
 
     expect(prepareWireTree(root, parts).props['label']).toBe(
       'Update Argo to see this',
     );
     expect(
       prepareWireTree(
-        { ...root, slots: { leading: [{ ...stack, type: 'VirtualList' }] } },
+        { ...root, slots: { empty: [{ ...stack, type: 'Svg' }] } },
         parts,
       ).props['label'],
     ).toBe(updateMessage);

@@ -39,7 +39,7 @@ function rowWithCount(count: number): WireNode {
   return applyPatch(slottedRow, [
     {
       op: 'setProps',
-      key: [{ slot: 'accessories', key: 'count' }],
+      key: [{ slot: 'trailing', key: 'count' }],
       props: { label: `Count ${count}` },
     },
   ]);

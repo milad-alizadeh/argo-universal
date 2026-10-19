@@ -1,4 +1,3 @@
-import { isLegacyWirePart } from '../src/plugins/plugin-part-names';
 import { pluginPartSchemas } from '../src/plugins/plugin-part-schemas';
 import type { WirePartDefinition } from '../src/plugins/wire-parts';
 import { accessibilitySection } from './plugin-reference-accessibility';
@@ -134,6 +133,4 @@ ${rows.join('\n')}
 `;
 }
 
-export const partNames = Object.keys(pluginPartSchemas)
-  .filter((name) => !isLegacyWirePart(name))
-  .sort();
+export const partNames = Object.keys(pluginPartSchemas).sort();

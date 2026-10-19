@@ -20,9 +20,7 @@ export {
   pillProps,
   textProps,
   buttonProps,
-  layoutProps,
   stackProps,
-  groupedItemProps,
   svgProps,
   emptyStateProps,
 } from './kit-props';
@@ -77,8 +75,5 @@ export const currentPartVersions = versionsOf(Object.keys(wireParts));
 
 export * from './settings-row-props';
 
-export {
-  pluginPartNames,
-  isLegacyWirePart,
-  type PluginPart,
-} from './plugin-part-names';
+// The current App draws every wire part.
+export const pluginPartNames = Object.keys(wireParts);

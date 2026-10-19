@@ -7,14 +7,14 @@ import { expect, it } from 'vitest';
 import { compatibleView } from './compatible-view';
 
 const large: WireNode = {
-  type: 'Column',
+  type: 'Stack',
   key: 'root',
-  props: {},
+  props: { direction: 'column' },
   slots: {},
   children: Array.from({ length: 9000 }, (_, index) => ({
-    type: 'Row',
+    type: 'Stack',
     key: String(index),
-    props: { gap: 7 },
+    props: { direction: 'row', gap: 7 },
     children: [],
     slots: {},
   })),
