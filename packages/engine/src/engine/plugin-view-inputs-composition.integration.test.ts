@@ -1,5 +1,6 @@
+import { currentPartVersions } from '@repo/contracts/plugins/kit';
 import type {
-  PluginInteraction,
+  PartEvent,
   PluginDispatchInput,
   ViewMessage,
 } from '@repo/contracts/plugins/wire';
@@ -13,7 +14,7 @@ const page = { pluginId: 'inputs', path: '/' };
 function event(
   view: ViewMessage | undefined,
   key: string,
-  interaction: PluginInteraction,
+  interaction: PartEvent,
 ): PluginDispatchInput {
   if (!view?.viewId) throw new Error('Expected a view identity');
 
@@ -26,8 +27,11 @@ function event(
   };
 }
 
+const heard = (search: string, selection: string[], added: number): string =>
+  JSON.stringify({ search, selection, added });
+
 it(
-  'keeps opted-in search and selection events on the Connection that sent them',
+  'keeps opted-in search, selection and primary Action events on the Connection that sent them',
   { timeout: 20_000 },
   async () => {
     const home = await createRuntimePlugins([
@@ -35,50 +39,48 @@ it(
     ]);
 
     const { url } = await startEngineTestHost({ home });
-    const first = connectPluginApp(url, page);
+    const first = connectPluginApp(url, page, currentPartVersions);
     await expect.poll(() => first.messages.length, { timeout: 10_000 }).toBe(1);
     await first.client.plugins.dispatch.mutate(
-      event(first.messages[0], '0/page', {
-        event: 'onSearchTextChange',
+      event(first.messages[0], 'page', {
+        event: 'onChangeText',
         payload: 'Argo',
       }),
     );
     await expect.poll(() => first.messages.length, { timeout: 10_000 }).toBe(2);
     await first.client.plugins.dispatch.mutate(
-      event(first.messages[1], '0/list', {
+      event(first.messages[1], 'page/list', {
         event: 'onSelectionChange',
         payload: ['984'],
       }),
     );
+    await expect.poll(() => first.messages.length, { timeout: 10_000 }).toBe(3);
+    await first.client.plugins.dispatch.mutate(
+      event(first.messages[2], 'page#primaryAction/add', { event: 'onPress' }),
+    );
     await expect
       .poll(() => first.messages.at(-1), { timeout: 10_000 })
       .toMatchObject({
-        revision: 3,
-        ops: [{ props: { label: '{"search":"Argo","selection":["984"]}' } }],
+        revision: 4,
+        ops: [{ props: { children: heard('Argo', ['984'], 1) } }],
       });
-    const second = connectPluginApp(url, page);
+    const second = connectPluginApp(url, page, currentPartVersions);
     await expect
       .poll(() => second.messages[0], { timeout: 10_000 })
       .toMatchObject({
-        revision: 4,
+        revision: 5,
         root: {
+          type: 'Page',
+          props: { title: 'Inputs', value: '' },
+          slots: { primaryAction: [{ type: 'Action', key: 'add' }] },
           children: [
-            {
-              type: 'Text',
-              key: 'page',
-              props: { label: 'Update Argo to see this' },
-            },
-            {
-              type: 'Text',
-              key: 'list',
-              props: { label: 'Update Argo to see this' },
-            },
-            { props: { label: '{"search":"","selection":[]}' } },
+            { type: 'List.Section', key: 'list' },
+            { props: { children: heard('', [], 0) } },
           ],
         },
       });
     await second.client.plugins.dispatch.mutate(
-      event(second.messages[0], '0/list', {
+      event(second.messages[0], 'page/list', {
         event: 'onSelectionChange',
         payload: ['982'],
       }),
@@ -86,6 +88,6 @@ it(
     await expect
       .poll(() => second.messages.length, { timeout: 10_000 })
       .toBe(2);
-    expect(first.messages).toHaveLength(3);
+    expect(first.messages).toHaveLength(4);
   },
 );

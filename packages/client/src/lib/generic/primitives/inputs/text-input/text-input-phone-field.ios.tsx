@@ -4,8 +4,8 @@ import type * as React from 'react';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { codeFace, NativeText } from '#primitives/content/native-text';
 import { Field } from '#primitives/fields/field';
+import { requiredLabel } from '#primitives/fields/field';
 import { useFieldText } from './text-input-field-text';
-import { requiredLabel } from './text-input-label';
 import { FieldProgress } from './text-input-progress';
 import { isInvalid, type PhoneFieldProps } from './text-input-props';
 

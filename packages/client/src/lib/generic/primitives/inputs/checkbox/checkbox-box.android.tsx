@@ -11,8 +11,9 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { useMaterialPalette } from '#primitives/native/material-palette';
+import type { CheckboxBoxProps } from './checkbox-box';
 
-export function CheckboxBox(props: CheckboxProps): ReactElement {
+export function CheckboxBox(props: CheckboxBoxProps): ReactElement {
   const box = <MaterialBox {...props} />;
 
   if (props.label == null) return box;
@@ -24,10 +25,13 @@ export function CheckboxBox(props: CheckboxProps): ReactElement {
       modifiers={[clickable(() => toggle(props))]}
     >
       {box}
-      <Text>{props.label}</Text>
+      <Text style={props.inline ? inlineLabel : undefined}>{props.label}</Text>
     </Row>
   );
 }
+
+// Inline sits beside smaller content, so its label takes the secondary size.
+const inlineLabel = { typography: 'bodyMedium' } as const;
 
 function MaterialBox(props: CheckboxProps): ReactElement {
   return (

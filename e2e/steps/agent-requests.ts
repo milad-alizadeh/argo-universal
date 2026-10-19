@@ -17,9 +17,18 @@ const LoggedRequest = z.object({
 
 export type LoggedRequest = z.infer<typeof LoggedRequest>;
 
+const LoggedReply = z.object({
+  agent: z.number(),
+  replied: MessageId,
+  result: z.unknown(),
+});
+
+type LoggedReply = z.infer<typeof LoggedReply>;
+
 const LoggedMessage = z.union([
   LoggedRequest,
   z.object({ agent: z.number(), answered: MessageId }),
+  LoggedReply,
 ]);
 
 export type LoggedMessage = z.infer<typeof LoggedMessage>;
@@ -89,6 +98,12 @@ export const answeredAt = (
     (message, index) => index > received && answers(message, request),
   );
 };
+
+// The App's replies to the Agent's own requests, such as Permission requests, in order.
+export const replies = (requestLogPath: string): LoggedReply[] =>
+  loggedMessages(requestLogPath).filter(
+    (message): message is LoggedReply => 'replied' in message,
+  );
 
 // Lets every step the scripted Agent holds with `wait-for-release` go on.
 export const releaseAgent = (requestLogPath: string): void => {

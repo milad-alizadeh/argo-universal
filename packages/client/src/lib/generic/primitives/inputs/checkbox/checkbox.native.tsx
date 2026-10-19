@@ -1,5 +1,11 @@
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
-import { accessibilityHint, onTapGesture } from '@expo/ui/swift-ui/modifiers';
+import {
+  accessibilityHint,
+  controlSize,
+  type ModifierConfig,
+  onTapGesture,
+  toggleStyle,
+} from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps, ComponentType } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
@@ -33,16 +39,24 @@ function CheckboxControl(props: CheckboxRowProps): React.JSX.Element {
   if (props.selection === 'single') return <RadioControl {...props} />;
 
   return (
-    <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
+    <Host {...hostSize(props.variant === 'inline')}>
       <CheckboxBox
         label={props.label}
         value={props.value}
         disabled={props.disabled}
+        inline={props.variant === 'inline'}
         onValueChange={props.state.toggle}
         modifiers={checkboxModifiers(props)}
       />
     </Host>
   );
+}
+
+// A row fills its width; inline sizes to its label beside other content.
+function hostSize(inline: boolean): ComponentProps<typeof Host> {
+  return inline
+    ? { matchContents: true }
+    : { matchContents: { vertical: true }, style: { width: '100%' } };
 }
 
 function RadioControl(props: CheckboxRowProps): React.JSX.Element {
@@ -66,20 +80,25 @@ function surfaceClass(props: CheckboxProps): string {
   );
 }
 
-// SwiftUI's stock Toggle needs a label tap action; Android's separate mark needs the field name.
+// SwiftUI's stock Toggle needs a label tap action, and inline is its compact button style; Android's separate mark needs the field name.
 function checkboxModifiers(
   props: CheckboxRowProps,
 ): ComponentProps<typeof CheckboxBox>['modifiers'] {
   const description = props.state.description;
-  const name = [props.label, description].filter(Boolean).join('. ');
 
   if (Platform.OS === 'android')
-    return [semantics({ contentDescription: name })];
+    return [semantics({ contentDescription: spokenName(props) })];
 
-  return [
-    onTapGesture(props.state.toggle),
-    accessibilityHint(description ?? ''),
-  ];
+  return [...appleStyle(props), accessibilityHint(description ?? '')];
+}
+
+const spokenName = (props: CheckboxRowProps): string =>
+  [props.label, props.state.description].filter(Boolean).join('. ');
+
+function appleStyle(props: CheckboxRowProps): ModifierConfig[] {
+  return props.variant === 'inline'
+    ? [toggleStyle('button'), controlSize('small')]
+    : [onTapGesture(props.state.toggle)];
 }
 
 export function CheckboxIndicator(

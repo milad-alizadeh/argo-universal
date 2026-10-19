@@ -4,6 +4,7 @@ import { expect } from '../fixtures';
 import { scrollToOldestHistoryMessage } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
 import { reloadApp } from './frame';
+import { framesMatching, responseIds } from './web-socket-frames';
 
 interface HeldRefresh {
   routes: WebSocketRoute[];
@@ -28,25 +29,9 @@ const PageRequest = z.object({
   }),
 });
 
-const Response = z.object({ id: z.number() });
-
-function frames(message: string | Buffer): unknown[] {
-  try {
-    const value: unknown = JSON.parse(message.toString());
-
-    return Array.isArray(value) ? value : [value];
-  } catch {
-    return [];
-  }
-}
-
-function pageRequests(message: string | Buffer): z.infer<typeof PageRequest>[] {
-  return frames(message).flatMap((frame) => {
-    const request = PageRequest.safeParse(frame);
-
-    return request.success ? [request.data] : [];
-  });
-}
+const pageRequests = (
+  message: string | Buffer,
+): z.infer<typeof PageRequest>[] => framesMatching(message, PageRequest);
 
 function observePage(
   refresh: HeldRefresh,
@@ -66,14 +51,6 @@ function observeTail(refresh: HeldRefresh, id: number): void {
     refresh.heldId = id;
     refresh.armed = false;
   }
-}
-
-function responseIds(message: string | Buffer): number[] {
-  return frames(message).flatMap((frame) => {
-    const response = Response.safeParse(frame);
-
-    return response.success ? [response.data.id] : [];
-  });
 }
 
 function holdRefresh(

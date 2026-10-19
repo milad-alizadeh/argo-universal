@@ -10,11 +10,11 @@ import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { codeFace } from '#primitives/content/native-text';
 import type { FieldProps } from '#primitives/fields/field';
+import { requiredLabel } from '#primitives/fields/field';
 import { errorMessage } from '#primitives/fields/field-errors';
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import { useFormFocus } from '../../../form-focus';
 import { useFieldText } from './text-input-field-text';
-import { requiredLabel } from './text-input-label';
 import { FieldProgress } from './text-input-progress';
 import { isInvalid, type PhoneFieldProps } from './text-input-props';
 

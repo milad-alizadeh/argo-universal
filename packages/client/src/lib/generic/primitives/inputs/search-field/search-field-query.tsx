@@ -3,6 +3,8 @@ import type { Ref } from 'react';
 import { TextInput } from 'react-native';
 
 interface QueryInputProps {
+  onFocus?: React.ComponentProps<typeof TextInput>['onFocus'];
+  onBlur?: React.ComponentProps<typeof TextInput>['onBlur'];
   ref: Ref<TextInput>;
   editable: boolean;
   label: string;
@@ -39,6 +41,8 @@ function queryInputProps(
     placeholder: props.label,
     value: props.value,
     onChangeText: props.onChangeText,
+    onFocus: props.onFocus,
+    onBlur: props.onBlur,
     onKeyPress: escapeHandler(props.onEscape),
   };
 }

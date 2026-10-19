@@ -1,5 +1,7 @@
 export { SessionHeader } from './components/session-header';
 
+export { SessionHeaderBar } from './components/session-header-bar';
+
 export {
   SessionsHeader,
   searchSessionsLabel,

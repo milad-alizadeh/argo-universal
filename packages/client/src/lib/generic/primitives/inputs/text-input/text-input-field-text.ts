@@ -9,18 +9,29 @@ interface FieldText {
   onFocusChanged: (focused: boolean) => void;
 }
 
+type FieldCallbacks = Pick<
+  TextFieldProps,
+  'value' | 'onChangeText' | 'onBlur' | 'onFocus'
+>;
+
 export function useFieldText(
   text: ObservableState<string>,
-  {
-    onBlur = () => {},
-    ...props
-  }: Pick<TextFieldProps, 'value' | 'onChangeText' | 'onBlur'>,
+  props: FieldCallbacks,
 ): FieldText {
   const onChangeText = useFollowedText(text, props.value, props.onChangeText);
   const [blurOnLeave] = useState(blurOnFocusLoss);
 
-  return {
-    onChangeText,
-    onFocusChanged: (focused) => blurOnLeave(focused, onBlur),
+  return { onChangeText, onFocusChanged: focusChanged(props, blurOnLeave) };
+}
+
+function focusChanged(
+  props: FieldCallbacks,
+  blurOnLeave: ReturnType<typeof blurOnFocusLoss>,
+): FieldText['onFocusChanged'] {
+  const onBlur = props.onBlur ?? ((): void => {});
+
+  return (focused) => {
+    if (focused) props.onFocus?.();
+    blurOnLeave(focused, onBlur);
   };
 }

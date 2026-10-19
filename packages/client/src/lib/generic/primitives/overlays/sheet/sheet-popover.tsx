@@ -23,7 +23,7 @@ function PopoverSheetContent(props: PresentationProps): ReactElement {
       align="start"
       accessibilityLabel={props.label}
       onClosed={props.stack.reports.closed}
-      className="w-80 overflow-hidden p-0"
+      list
     >
       <SheetPanel {...props} hideRootTitle />
     </PopoverContent>

@@ -5,12 +5,15 @@ import {
   List,
   ListItem,
   Label,
-  Column,
+  Stack,
   Text,
   Pill,
   useEffect,
   useState,
 } from '@argo/plugin-kit';
+import { HelloDashboard } from './dashboard.js';
+import { HelloForm } from './form.js';
+import { HelloItemPage } from './item-page.js';
 
 const headingRole = 'heading';
 
@@ -41,12 +44,12 @@ function HelloPage() {
   }, []);
 
   return (
-    <Column gap={4}>
+    <Stack direction="column" gap={4}>
       <Text role={headingRole}>{greeting}</Text>
       <Text>{`Tapped ${taps} times`}</Text>
       <ExampleBadges />
       <Buttons onTap={() => setTaps(taps + 1)} />
-    </Column>
+    </Stack>
   );
 }
 
@@ -122,14 +125,14 @@ function ProjectDetails({ context }) {
   const [waves, setWaves] = useState(0);
 
   return (
-    <Column gap={2}>
+    <Stack direction="column" gap={2}>
       <Text>{greeting(context.projectId, waves)}</Text>
       <Button
         label="Wave"
         variant="outline"
         onPress={() => setWaves(waves + 1)}
       />
-    </Column>
+    </Stack>
   );
 }
 
@@ -137,5 +140,8 @@ export function register(argo) {
   settings = argo.settings;
   argo.pages.register('/', HelloPage);
   argo.pages.register('/lists', HelloListPage);
+  argo.pages.register('/dashboard', HelloDashboard);
+  argo.pages.register('/form', HelloForm);
+  argo.pages.register('/item', HelloItemPage);
   argo.slots.register('argo/project/details/v1', ProjectDetails);
 }

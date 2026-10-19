@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
-import type { PluginSurface } from '@repo/contracts/plugins/kit';
+import {
+  currentPartVersions,
+  type PluginSurface,
+} from '@repo/contracts/plugins/kit';
 import type {
-  PluginInteraction,
+  PartEvent,
   PluginSlotInput,
   SlotMessage,
   ViewMessage,
@@ -25,7 +28,12 @@ export type PluginMount = { surface: PluginSurface } & (
 
 const viewLimitMs = 3000;
 
-type Event = PluginInteraction & { key: string };
+const currentSurface: PluginSurface = {
+  platform: 'web',
+  parts: currentPartVersions,
+};
+
+type Event = PartEvent & { key: string };
 
 // Observes production snapshots and patches; events use the same checked dispatch as an App.
 export class PluginTestView {
@@ -44,7 +52,8 @@ export class PluginTestView {
     this.connection = {
       id: randomUUID(),
       signal: this.controller.signal,
-      surface: opening.surface,
+      // Without a mount surface, it reports every current part, as an up-to-date App does.
+      surface: opening.surface ?? currentSurface,
     };
     this.path = opening.path;
     void this.receive(opening).catch((error: Error) => {

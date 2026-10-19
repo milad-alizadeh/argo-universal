@@ -30,6 +30,8 @@ export type PopoverContentProps = {
   accessibilityLabel?: string;
   className?: string;
   style?: StyleProp<ViewStyle>;
+  // Web only: a choice list at Paper's 320 width, drawing its own insets, as a Combobox's choices.
+  list?: boolean;
   // Web only: where focus goes as the popover opens and after it closes.
   onOpenAutoFocus?: (event: Event) => void;
   onCloseAutoFocus?: (event: Event) => void;
@@ -39,3 +41,6 @@ export type PopoverContentProps = {
   onEscapeKeyDown?: (event: KeyboardEvent) => void;
   children?: ReactNode;
 };
+
+// Places the content against another control, as for a popover a menu opens.
+export type PopoverAnchorProps = { children: ReactNode };

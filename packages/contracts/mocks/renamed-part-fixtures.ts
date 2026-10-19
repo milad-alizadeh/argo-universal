@@ -76,6 +76,41 @@ export const previousDraftFixtures: {
       variant: 'menu',
     },
   },
+  {
+    type: 'Picker',
+    props: {
+      label: 'Labels',
+      multiple: true,
+      value: ['bug', 'docs'],
+      options: [
+        { value: 'bug', label: 'Bug' },
+        { value: 'docs', label: 'Docs' },
+      ],
+      onValueChange: { $event: 'onValueChange' },
+    },
+    legacy: {
+      label: 'Labels',
+      multiple: true,
+      value: ['bug', 'docs'],
+      options: [
+        { value: 'bug', label: 'Bug' },
+        { value: 'docs', label: 'Docs' },
+      ],
+      variant: 'menu',
+    },
+  },
+  {
+    type: 'DatePicker',
+    props: {
+      label: 'Due date',
+      value: '2026-10-19T14:30',
+      mode: 'datetime',
+      required: true,
+      disabled: true,
+      onValueChange: { $event: 'onValueChange' },
+    },
+    legacy: { label: 'Due date', value: '2026-10-19T14:30', mode: 'datetime' },
+  },
   { type: 'Tooltip', props: { label: 'Save' }, legacy: { text: 'Save' } },
   {
     type: 'Toast',

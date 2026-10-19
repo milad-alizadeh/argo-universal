@@ -1,12 +1,11 @@
 import type * as React from 'react';
-import { View } from 'react-native';
 import { formatServerClock, formatServerStart } from '#features/connection';
 import { errorToast } from '#lib/generic/error-toast';
-import { SettingsPage } from '#lib/product/settings-page';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { useErrorToast } from '#primitives/overlays/toast';
+import { Page } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 
 export type ServerDetails =
@@ -32,14 +31,9 @@ export function ConnectionDetailView({
   server,
 }: ConnectionDetailViewProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-content wide:bg-transparent">
-      <SettingsPage
-        title="Connection"
-        caption="The Argo Server this App is talking to."
-      >
-        <ServerList server={server} />
-      </SettingsPage>
-    </View>
+    <Page title="Connection" caption="The Argo Server this App is talking to.">
+      <ServerList server={server} />
+    </Page>
   );
 }
 

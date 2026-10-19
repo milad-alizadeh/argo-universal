@@ -2,12 +2,13 @@ import type { ComponentProps, ComponentType, ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { Field } from '#primitives/fields/field';
+import { requiredLabel } from '#primitives/fields/field';
 import { useFooterDescription } from '#primitives/fields/field-description';
 import { BareTextInput } from './text-input-bare';
-import { requiredLabel } from './text-input-label';
 import {
   isInvalid,
   keyboardOf,
+  focusOf,
   type StandaloneTextInputProps,
 } from './text-input-props';
 import { FieldSpinner } from './text-input-spinner';
@@ -69,12 +70,10 @@ function inputBehaviour(props: StandaloneTextInputProps): InputProps {
     accessibilityLabel: props.label,
     value: props.value,
     onChangeText: props.onChangeText,
-    onBlur: props.onBlur,
+    ...focusOf(props),
     placeholder: props.placeholder,
     editable: !props.disabled,
     ...keyboardOf(props),
-    autoFocus: props.focusOnOpen,
-    selectTextOnFocus: props.selectOnFocus,
     onSubmitEditing: props.onSubmit,
   };
 }

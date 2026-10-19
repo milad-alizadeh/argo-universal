@@ -78,6 +78,10 @@ _Avoid_: Contribution point, hook, outlet
 A Slot placed around a core component, such as a Tool call in the Feed. A Plugin may pass it through, change its props or draw its own; core draws its own when the Plugin's tree is refused.
 _Avoid_: Override, component override
 
+**Part event**:
+A named handler prop on a kit part, such as `onPress`; the App sends it to the Plugin by node key and event name, checked against the part's schema.
+_Avoid_: Interaction, action (Action is a kit part), handler
+
 **Capability**:
 Something a Plugin's manifest says it needs, such as running `gh` or reaching `api.github.com`. Without any, a Plugin's calls to the machine can only read Projects and use the Plugin's own data.
 _Avoid_: Permission (that is the Agent's Permission request), scope, entitlement

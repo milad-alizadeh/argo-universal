@@ -1,12 +1,32 @@
 import { z } from 'zod';
 import { iconButtonPart } from './icon-button-part';
+import { formsPartSchemas } from './parts/forms';
 import { inputsPartSchemas as inputs } from './parts/inputs';
 import { selectionPartSchemas } from './selection-parts';
 import type { WirePartDefinition } from './wire-parts';
 
-const picker = inputs.Picker.props.extend({
-  onValueChange: inputs.Picker.props.shape.onValueChange.optional(),
+const [onePick, manyPicks] = inputs.Picker.props.options;
+
+const onePickDraft = onePick.extend({
+  onValueChange: onePick.shape.onValueChange.optional(),
 });
+
+const picker = z.union([
+  onePickDraft,
+  manyPicks.extend({ onValueChange: manyPicks.shape.onValueChange.optional() }),
+]);
+
+// Apps from before `multiple` (versions 2 and 3) take one value, so a multiple Picker is left out for them.
+const pickerPart = {
+  ...inputs.Picker,
+  props: picker,
+  versions: [
+    ...inputs.Picker.versions.slice(0, 1),
+    onePick,
+    onePickDraft,
+    picker,
+  ],
+};
 
 const toggle = inputs.Switch.props.extend({
   onValueChange: inputs.Switch.props.shape.onValueChange.optional(),
@@ -22,6 +42,10 @@ const slider = inputs.Slider.props.extend({
 
 const text = inputs.TextInput.props.extend({
   onChangeText: inputs.TextInput.props.shape.onChangeText.optional(),
+});
+
+const datePicker = inputs.DatePicker.props.extend({
+  onValueChange: inputs.DatePicker.props.shape.onValueChange.optional(),
 });
 
 const splitChoices = selectionPartSchemas.SplitButton.props.options[0];
@@ -46,11 +70,13 @@ function withDraft<Part extends WirePartDefinition, Schema extends z.ZodType>(
 }
 
 export const controlWireParts = {
-  Picker: withDraft(inputs.Picker, picker),
+  Picker: pickerPart,
   Switch: withDraft(inputs.Switch, toggle),
   Checkbox: withDraft(inputs.Checkbox, checkbox),
   Slider: withDraft(inputs.Slider, slider),
   TextInput: withDraft(inputs.TextInput, text),
+  DatePicker: withDraft(inputs.DatePicker, datePicker),
+  Form: formsPartSchemas.Form,
   SplitButton: withDraft(selectionPartSchemas.SplitButton, split),
   IconButton: iconButtonPart,
 };

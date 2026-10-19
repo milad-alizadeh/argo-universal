@@ -17,6 +17,29 @@ export type MenuAction = Actions['actions'][number] & {
   tone?: 'danger';
 };
 
+// Kit-only: a row that opens a nested menu of its own rows, as a submenu Action does in a header's overflow menu.
+export interface MenuSubmenu {
+  id?: string;
+  label: string;
+  // The row's spoken name when it says more than the label, such as the count.
+  accessibilityLabel?: string;
+  icon?: IconName;
+  // A count badge's text, shown after the label.
+  count?: string;
+  section?: { title?: string };
+  actions: readonly MenuEntry[];
+}
+
+// A system menu row's title where the row has no place of its own for a count, as iOS menus: the count after the label.
+export const countedTitle = (title: string, count?: string): string =>
+  count ? `${title} (${count})` : title;
+
+export type MenuEntry = MenuAction | MenuSubmenu;
+
+export function isMenuSubmenu(entry: MenuEntry): entry is MenuSubmenu {
+  return 'actions' in entry;
+}
+
 export type MenuOption<Value extends string> = Extract<
   DerivedMenu<Value>,
   { options: readonly unknown[] }
@@ -65,8 +88,8 @@ export type GroupedChoiceMenuProps = Extract<
 > &
   MenuTrigger;
 
-export type ActionMenuProps = Actions &
-  MenuTrigger & { actions: readonly MenuAction[] };
+export type ActionMenuProps = Omit<Actions, 'actions'> &
+  MenuTrigger & { actions: readonly MenuEntry[] };
 
 export type MenuProps<Value extends string = string> =
   | ChoiceMenuProps<Value>

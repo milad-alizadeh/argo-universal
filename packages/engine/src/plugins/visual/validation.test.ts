@@ -38,11 +38,11 @@ it.each([
   expect(result.refused).toEqual([
     { node: expect.stringContaining('#'), reason: expect.any(String) },
   ]);
-  expect(result.root.type).toBe('Column');
+  expect(result.root.type).toBe('Stack');
 });
 
 it('keeps bounded token-based Chart and Canvas data', () => {
-  const root = node('Column', {}, [
+  const root = node('Stack', { direction: 'column' }, [
     node('Chart', chart),
     node('Canvas', canvas, [
       node(rect, {

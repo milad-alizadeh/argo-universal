@@ -14,16 +14,13 @@ import { ChoiceField, ChoiceHost } from '#primitives/native/choice-field';
 import { NativeButton } from '#primitives/native/native-button';
 import { NativeSymbol } from '../../../symbols/native-symbol';
 import type { ComboboxProps } from './combobox-props';
-import { comboboxValue, type ChoiceValue } from './combobox-value';
+import type { TriggerFields } from './combobox-trigger';
 
-type TriggerProps<Value extends string> = ComboboxProps<Value> &
+type TriggerProps = TriggerFields &
+  Pick<ComboboxProps<string>, 'required' | 'variant'> &
   FieldDescription & { onPress?: () => void };
 
-type NamedValue = ChoiceValue & { label: string; description?: string };
-
-export function ComboboxTrigger<Value extends string>(
-  props: TriggerProps<Value>,
-): ReactElement {
+export function ComboboxTrigger(props: TriggerProps): ReactElement {
   return (
     <ChoiceHost>
       {createElement(
@@ -37,8 +34,8 @@ export function ComboboxTrigger<Value extends string>(
   );
 }
 
-function buttonProps<Value extends string>(
-  props: TriggerProps<Value>,
+function buttonProps(
+  props: TriggerProps,
 ): React.ComponentProps<typeof NativeButton> {
   return {
     variant: 'text',
@@ -48,28 +45,28 @@ function buttonProps<Value extends string>(
   };
 }
 
-function TriggerValue(props: ChoiceValue): ReactElement {
+function TriggerValue(props: TriggerFields): ReactElement {
   return (
     <Row alignment="center" spacing={6}>
-      <NativeText>{comboboxValue(props)}</NativeText>
+      <NativeText>{props.valueLabel}</NativeText>
       <NativeSymbol name="chevron-up-down" role="body" />
     </Row>
   );
 }
 
 function triggerModifiers(
-  props: NamedValue,
+  props: TriggerProps,
 ): React.ComponentProps<typeof NativeButton>['modifiers'] {
   if (Platform.OS !== 'ios')
     return [
       semantics({
-        contentDescription: `${props.label}, ${comboboxValue(props)}`,
+        contentDescription: `${props.label}, ${props.valueLabel}`,
       }),
     ];
 
   return [
     accessibilityLabel(props.label),
-    accessibilityValue(comboboxValue(props)),
+    accessibilityValue(props.valueLabel),
     accessibilityHint(props.description ?? ''),
   ];
 }

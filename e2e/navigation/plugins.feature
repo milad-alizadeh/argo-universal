@@ -69,3 +69,14 @@ Feature: Plugin navigation
       | frame |
       | wide  |
       | phone |
+
+  Scenario Outline: A Plugin item page draws its content and Metadata on a <frame> Frame
+    Given a <frame> Frame
+    When I open the Counter Plugin
+    And I press "Open item" on the Plugin page
+    Then the Plugin item shows its content and Metadata
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |

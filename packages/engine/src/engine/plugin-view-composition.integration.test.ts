@@ -89,7 +89,7 @@ it.each([
               badge: { kind: 'count', count: 3, label: '3 queued jobs' },
             },
           },
-          { type: 'Row' },
+          { type: 'Stack', props: { direction: 'row' } },
         ],
       },
     });

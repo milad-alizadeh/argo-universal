@@ -36,6 +36,21 @@ export const pickerSchema = z.object({
   variant: z.enum(['row', 'field']).optional().describe('Selection placement.'),
 });
 
+// One Picker, one value or several: `multiple` switches `value` and its change to a list.
+export const pickerPartSchema = z.union([
+  pickerSchema.extend({
+    multiple: z.literal(false).optional().describe('Pick several values.'),
+  }),
+  pickerSchema.extend({
+    multiple: z.literal(true).describe('Pick several values.'),
+    value: z
+      .array(selectionValue)
+      .readonly()
+      .optional()
+      .describe('Selected values.'),
+  }),
+]);
+
 const comboboxOption = selectionOption.extend({
   accessibilityLabel: z.string().optional(),
   code: z.boolean().optional(),
@@ -119,7 +134,14 @@ const splitChoices = menuChoice.omit({ groups: true }).extend({
     .readonly(),
 });
 
+// Without choices, the secondary menu lists the SplitButton's keyed Action children.
+const splitActionChildren = z.object({
+  value: z.never().optional(),
+  options: z.never().optional(),
+  onValueChange: z.never().optional(),
+});
+
 export const splitButtonSchema = z.union([
   splitBase.extend(splitChoices.shape),
-  splitBase.extend(actionMenu.omit({ groups: true }).shape),
+  splitBase.extend(splitActionChildren.shape),
 ]);

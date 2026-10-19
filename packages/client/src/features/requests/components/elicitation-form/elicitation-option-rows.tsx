@@ -23,7 +23,7 @@ export function OptionRows(props: OptionRowsProps): ReactElement {
   );
 }
 
-function chooseOption(props: OptionRowsProps, next: string[]): void {
+function chooseOption(props: OptionRowsProps, next: readonly string[]): void {
   const changed = props.options.find((option) =>
     props.multiple
       ? props.selected.includes(option.const) !== next.includes(option.const)

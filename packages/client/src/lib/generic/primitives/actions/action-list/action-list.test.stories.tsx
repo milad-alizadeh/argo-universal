@@ -18,6 +18,8 @@ function header(width: number): Story {
     render: () => (
       <ActionList accessibilityLabel="Project actions">
         <ActionList.Section title="Project">
+          {/* With no icon to draw as a header button, it waits in the menu. */}
+          <Action label="Rename" onPress={() => choose('rename')} />
           <Action
             label="Add Project"
             icon="add"
@@ -55,6 +57,7 @@ function header(width: number): Story {
       await expect(
         canvas.getByRole('button', { name: 'Import' }),
       ).toBeDisabled();
+      await expect(canvas.queryByRole('button', { name: 'Rename' })).toBeNull();
       await userEvent.click(
         canvas.getByRole('button', { name: 'Project actions' }),
       );
@@ -65,7 +68,7 @@ function header(width: number): Story {
         menu
           .getAllByRole('menuitem')
           .map((item) => item.getAttribute('aria-label')),
-      ).toEqual(['Show archived', 'Delete']);
+      ).toEqual(['Rename', 'Show archived', 'Delete']);
       await userEvent.click(menu.getByRole('menuitem', { name: 'Delete' }));
       await expect(choose).toHaveBeenLastCalledWith('delete');
       await waitFor(() => expect(page.queryByRole('menu')).toBeNull());

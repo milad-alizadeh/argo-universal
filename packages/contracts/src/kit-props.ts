@@ -50,3 +50,12 @@ export type KitSlots<Name extends KitPart> =
 
 export type KitHasChildren<Name extends KitPart> =
   (typeof pluginPartSchemas)[Name]['children'] extends false ? false : true;
+
+// An event whose payload may take several shapes reports the one its part's own `value` holds, as Picker `multiple` reports a list.
+export type KitValuePayload<Payload, Props> = Props extends {
+  value?: infer Value;
+}
+  ? [Extract<Payload, NonNullable<Value>>] extends [never]
+    ? Payload
+    : Extract<Payload, NonNullable<Value>>
+  : Payload;

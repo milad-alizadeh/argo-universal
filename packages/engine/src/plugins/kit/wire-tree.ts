@@ -8,9 +8,9 @@ import { childKeys } from './wire-keys';
 import { wireProps } from './wire-props';
 
 // A handler a Plugin passes as a prop; the wire carries it as an event id.
-export type PluginFn = (payload?: WireJson) => void | Promise<void>;
+type PluginFn = (payload?: WireJson) => void | Promise<void>;
 
-export type Prop = WireJson | PluginFn | Prop[] | { [key: string]: Prop };
+export type Prop = WireJson | PluginFn;
 
 export type Props = Record<string, Prop>;
 
@@ -125,7 +125,11 @@ function rowContent(instance: Instance): Instance {
 
   if (instance.children.length === 1) return singleRow(only, instance);
 
-  return { ...instance, type: 'Column' };
+  return {
+    ...instance,
+    type: 'Stack',
+    props: { ...instance.props, direction: 'column' },
+  };
 }
 
 const singleRow = (only: Instance | undefined, fallback: Instance): Instance =>

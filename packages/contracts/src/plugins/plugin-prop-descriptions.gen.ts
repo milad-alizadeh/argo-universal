@@ -20,36 +20,31 @@ export type WireSchemaHints = {
     "direction": PropValue<"Stack", "direction">;
   };
   "Spacer": {
-    /** Minimum token length. */
-    "minLength": PropValue<"Spacer", "minLength">;
+
   };
   "Grid": {
-    /** Column count, optionally by Size class. */
+    /** Equal columns, optionally per Size class. Phones draw at most two. */
     "columns": PropValue<"Grid", "columns">;
     /** Spacing token between cells. */
     "gap": PropValue<"Grid", "gap">;
   };
   "Surface": {
-    /** Surface treatment. */
+    /** Named Surface with its fill, radius and depth. */
     "kind": PropValue<"Surface", "kind">;
-    /** Semantic fill role. */
-    "fill": PropValue<"Surface", "fill">;
-    /** Semantic shape token. */
-    "radius": PropValue<"Surface", "radius">;
-    /** Semantic depth token. */
-    "depth": PropValue<"Surface", "depth">;
-    /** on Press for this part. */
+    /** Spacing token inside the Surface. */
+    "padding": PropValue<"Surface", "padding">;
+    /** Action run on activation. */
     "onPress": PropValue<"Surface", "onPress">;
-    /** Actions available from this surface. */
-    "actions": PropValue<"Surface", "actions">;
   };
   "Card": {
     /** on Press for this part. */
     "onPress": PropValue<"Card", "onPress">;
   };
   "ScrollView": {
+    /** Spoken name of the scroll region. */
+    "accessibilityLabel": PropValue<"ScrollView", "accessibilityLabel">;
     /** Scroll direction. */
-    "axis": PropValue<"ScrollView", "axis">;
+    "direction": PropValue<"ScrollView", "direction">;
   };
   "Collapsible": {
     /** Controlled open state. */
@@ -267,8 +262,6 @@ export type WireSchemaHints = {
     "options": PropValue<"SplitButton", "options">;
     /** Action or Plugin event invoked by onValueChange. */
     "onValueChange": PropValue<"SplitButton", "onValueChange">;
-    /** actions for this part. */
-    "actions": PropValue<"SplitButton", "actions">;
   };
   "ActionList": {
     /** Header buttons and overflow, or a row context menu. */
@@ -283,7 +276,7 @@ export type WireSchemaHints = {
   "Action": {
     /** The Action label and accessible name. */
     "label": PropValue<"Action", "label">;
-    /** The leading Argo icon. */
+    /** The leading Argo icon; a header ActionList shows only Actions with one as buttons, and a submenu needs one. */
     "icon": PropValue<"Action", "icon">;
     /** Desktop shortcut; Plugins cannot take reserved keys. */
     "shortcut": PropValue<"Action", "shortcut">;
@@ -293,6 +286,10 @@ export type WireSchemaHints = {
     "disabled": PropValue<"Action", "disabled">;
     /** The Plugin handler or built-in App Action. */
     "onPress": PropValue<"Action", "onPress">;
+    /** An Alert answer that dismisses the question, or one that destroys data. */
+    "role": PropValue<"Action", "role">;
+    /** A count or status dot on the icon. */
+    "badge": PropValue<"Action", "badge">;
   };
   "TextInput": {
     /** Spoken and visible field name. */
@@ -345,7 +342,7 @@ export type WireSchemaHints = {
   "Picker": {
     /** Spoken and visible selection name. */
     "label": PropValue<"Picker", "label">;
-    /** Selected value. */
+    /** Selected values. */
     "value": PropValue<"Picker", "value">;
     /** Available choices. */
     "options": PropValue<"Picker", "options">;
@@ -363,6 +360,8 @@ export type WireSchemaHints = {
     "loadError": PropValue<"Picker", "loadError">;
     /** Selection placement. */
     "variant": PropValue<"Picker", "variant">;
+    /** Pick several values. */
+    "multiple": PropValue<"Picker", "multiple">;
   };
   "FilterPill": {
     /** Filter name. */
@@ -413,7 +412,7 @@ export type WireSchemaHints = {
     "disabled": PropValue<"Checkbox", "disabled">;
     /** The visible and accessible label. */
     "label": PropValue<"Checkbox", "label">;
-    /** The option row treatment. */
+    /** The option row treatment, or inline beside other content and sized to its label. */
     "variant": PropValue<"Checkbox", "variant">;
     /** The selection mode. */
     "selection": PropValue<"Checkbox", "selection">;
@@ -447,12 +446,18 @@ export type WireSchemaHints = {
     "disabled": PropValue<"Slider", "disabled">;
   };
   "DatePicker": {
-    /** The visible and accessible label. */
+    /** Spoken and visible field name. */
     "label": PropValue<"DatePicker", "label">;
-    /** value for this part. */
+    /** Local ISO value: `YYYY-MM-DD`, `HH:mm`, or `YYYY-MM-DDTHH:mm` by mode. */
     "value": PropValue<"DatePicker", "value">;
-    /** mode for this part. */
+    /** Pick a date, a time, or both. */
     "mode": PropValue<"DatePicker", "mode">;
+    /** Reports a picked value. */
+    "onValueChange": PropValue<"DatePicker", "onValueChange">;
+    /** The field requires a value. */
+    "required": PropValue<"DatePicker", "required">;
+    /** Disable picking. */
+    "disabled": PropValue<"DatePicker", "disabled">;
   };
   "Field": {
 
@@ -470,9 +475,9 @@ export type WireSchemaHints = {
     "errors": PropValue<"FieldErrors", "errors">;
   };
   "Form": {
-    /** The visible and accessible label. */
+    /** The submit Button label. */
     "submitLabel": PropValue<"Form", "submitLabel">;
-    /** Action or Plugin event invoked by onSubmit. */
+    /** Submits every field value. */
     "onSubmit": PropValue<"Form", "onSubmit">;
   };
   "List": {
@@ -540,8 +545,6 @@ export type WireSchemaHints = {
     "title": PropValue<"Alert", "title">;
     /** Question detail. */
     "message": PropValue<"Alert", "message">;
-    /** Answers offered by the alert. */
-    "actions": PropValue<"Alert", "actions">;
   };
   "Dialog": {
     /** Controlled open state. */
@@ -607,72 +610,20 @@ export type WireSchemaHints = {
     /** Action offered on the web. */
     "action": PropValue<"Toast", "action">;
   };
-  "Metadata": {
-    /** Optional section heading. */
-    "title": PropValue<"Metadata", "title">;
-  };
-  "Metadata.Label": {
-    /** The field label. */
-    "title": PropValue<"Metadata.Label", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.Label", "accessibilityLabel">;
-    /** The field value. */
-    "text": PropValue<"Metadata.Label", "text">;
-    /** icon for this part. */
-    "icon": PropValue<"Metadata.Label", "icon">;
-  };
-  "Metadata.Link": {
-    /** The field label. */
-    "title": PropValue<"Metadata.Link", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.Link", "accessibilityLabel">;
-    /** The displayed link text; drawn as plain text until kit Link lands. */
-    "text": PropValue<"Metadata.Link", "text">;
-    /** The link destination. */
-    "href": PropValue<"Metadata.Link", "href">;
-  };
-  "Metadata.Pills": {
-    /** The field label. */
-    "title": PropValue<"Metadata.Pills", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.Pills", "accessibilityLabel">;
-  };
-  "Metadata.StatusDot": {
-    /** The field label. */
-    "title": PropValue<"Metadata.StatusDot", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.StatusDot", "accessibilityLabel">;
-    /** The status text. */
-    "text": PropValue<"Metadata.StatusDot", "text">;
-    /** tone for this part. */
-    "tone": PropValue<"Metadata.StatusDot", "tone">;
-  };
-  "Metadata.Avatar": {
-    /** The field label. */
-    "title": PropValue<"Metadata.Avatar", "title">;
-    /** Override the spoken field name and value. */
-    "accessibilityLabel": PropValue<"Metadata.Avatar", "accessibilityLabel">;
-    /** The person’s displayed name. */
-    "name": PropValue<"Metadata.Avatar", "name">;
-    /** Optional avatar image URI. */
-    "src": PropValue<"Metadata.Avatar", "src">;
-  };
   "Page": {
-    /** The visible and accessible label. */
+    /** The single-line page title. */
     "title": PropValue<"Page", "title">;
-    /** actions for this part. */
-    "actions": PropValue<"Page", "actions">;
-    /** The Page’s one primary action. */
-    "primaryAction": PropValue<"Page", "primaryAction">;
-    /** search for this part. */
+    /** A muted line under the title on wide windows; phones hide it. */
+    "caption": PropValue<"Page", "caption">;
+    /** Native search on phones; expanding header search on web. */
     "search": PropValue<"Page", "search">;
+    /** The search query; drafts stay in the App. */
+    "value": PropValue<"Page", "value">;
+    /** Receive the search query when it changes. */
+    "onChangeText": PropValue<"Page", "onChangeText">;
   };
   "ListDetail": {
 
-  };
-  "Detail": {
-    /** label for this part. */
-    "title": PropValue<"Detail", "title">;
   };
   "Inspector": {
     /** label for this part. */
@@ -852,6 +803,62 @@ export type WireSchemaHints = {
     /** rotate for this part. */
     "rotate": PropValue<"Canvas.Group", "rotate">;
   };
+  "Detail": {
+    /** The content as Markdown; drawn as body text until kit Markdown lands. */
+    "markdown": PropValue<"Detail", "markdown">;
+    /** Show the content loading state; the Metadata stays. */
+    "isLoading": PropValue<"Detail", "isLoading">;
+  };
+  "Metadata": {
+    /** Optional section heading. */
+    "title": PropValue<"Metadata", "title">;
+  };
+  "Metadata.Label": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Label", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Label", "accessibilityLabel">;
+    /** The field value. */
+    "text": PropValue<"Metadata.Label", "text">;
+    /** icon for this part. */
+    "icon": PropValue<"Metadata.Label", "icon">;
+  };
+  "Metadata.Link": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Link", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Link", "accessibilityLabel">;
+    /** The displayed link text; drawn as plain text until kit Link lands. */
+    "text": PropValue<"Metadata.Link", "text">;
+    /** The link destination. */
+    "href": PropValue<"Metadata.Link", "href">;
+  };
+  "Metadata.Pills": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Pills", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Pills", "accessibilityLabel">;
+  };
+  "Metadata.StatusDot": {
+    /** The field label. */
+    "title": PropValue<"Metadata.StatusDot", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.StatusDot", "accessibilityLabel">;
+    /** The status text. */
+    "text": PropValue<"Metadata.StatusDot", "text">;
+    /** tone for this part. */
+    "tone": PropValue<"Metadata.StatusDot", "tone">;
+  };
+  "Metadata.Avatar": {
+    /** The field label. */
+    "title": PropValue<"Metadata.Avatar", "title">;
+    /** Override the spoken field name and value. */
+    "accessibilityLabel": PropValue<"Metadata.Avatar", "accessibilityLabel">;
+    /** The person’s displayed name. */
+    "name": PropValue<"Metadata.Avatar", "name">;
+    /** Optional avatar image URI. */
+    "src": PropValue<"Metadata.Avatar", "src">;
+  };
   "ListItem.Link": {
     /** The row or section title. */
     "title": PropValue<"ListItem.Link", "title">;
@@ -982,28 +989,6 @@ export type WireSchemaHints = {
     /** on Press for this part. */
     "onPress": PropValue<"ListItem.Button", "onPress">;
   };
-  "GroupedListItem": {
-    /** The row label and accessible name. */
-    "label": PropValue<"GroupedListItem", "label">;
-    /** Optional secondary row value. */
-    "value": PropValue<"GroupedListItem", "value">;
-    /** Whether row activation is disabled. */
-    "disabled": PropValue<"GroupedListItem", "disabled">;
-    /** The action run on activation. */
-    "onPress": PropValue<"GroupedListItem", "onPress">;
-  };
-  "VirtualList": {
-    /** Input items, expanded in the worker; pair with renderItem. */
-    "items": PropValue<"VirtualList", "items">;
-    /** Renders one keyed child for each item; receives the item and its index. */
-    "renderItem": PropValue<"VirtualList", "renderItem">;
-  };
-  "GroupedList": {
-    /** Input items, expanded in the worker; pair with renderItem. */
-    "items": PropValue<"GroupedList", "items">;
-    /** Renders one keyed child for each item; receives the item and its index. */
-    "renderItem": PropValue<"GroupedList", "renderItem">;
-  };
   "Text": {
     /** Text content in source order. */
     "children": PropValue<"Text", "children">;
@@ -1013,17 +998,5 @@ export type WireSchemaHints = {
     "tone": PropValue<"Text", "tone">;
     /** Optional spoken label; defaults to the text content. */
     "accessibilityLabel": PropValue<"Text", "accessibilityLabel">;
-  };
-  "Row": {
-    /** A spacing token between children. */
-    "gap": PropValue<"Row", "gap">;
-    /** Cross-axis alignment. */
-    "align": PropValue<"Row", "align">;
-  };
-  "Column": {
-    /** A spacing token between children. */
-    "gap": PropValue<"Column", "gap">;
-    /** Cross-axis alignment. */
-    "align": PropValue<"Column", "align">;
   };
 };

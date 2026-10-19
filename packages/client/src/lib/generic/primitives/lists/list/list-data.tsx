@@ -1,6 +1,7 @@
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
+import { useSpacingStep } from '#primitives/layout/spacing';
 import { Spinner } from '#primitives/status/spinner';
 import {
   ListContext,
@@ -9,7 +10,6 @@ import {
 } from '../../../list-context';
 import { useInMenu } from '../../../menu-rows-context';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
-import { useSpacing } from '../../../use-spacing';
 import { listInsets } from './list-insets';
 import type { ListProps } from './list-props';
 
@@ -104,14 +104,8 @@ export function useRenderedRows<Item>(
   return useCallback((row) => <Row row={row} props={props} />, [props]);
 }
 
-function usePaddingStep(step: number): number {
-  const value = useSpacing(`--spacing-${step === 0 ? 1 : step}`);
-
-  return step === 0 ? 0 : value;
-}
-
 function usePadding(value: ListProps<never>['padding']): number {
-  return usePaddingStep(useSizeClassValue(value ?? 0));
+  return useSpacingStep(useSizeClassValue(value ?? 0));
 }
 
 export function useListPadding<Item>(props: ListProps<Item>): {

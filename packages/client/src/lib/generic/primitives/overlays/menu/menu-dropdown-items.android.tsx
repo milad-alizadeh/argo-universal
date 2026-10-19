@@ -8,15 +8,13 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { padding } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-
-type DropdownMenuItemElementColors = NonNullable<
-  React.ComponentProps<typeof DropdownMenuItem>['elementColors']
->;
-
 import { useMaterialPalette } from '#primitives/native/material-palette';
 import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
+import { MenuDropdownShell } from './menu-dropdown-shell.android';
+import { useItemColors } from './menu-item-colors.android';
 import { ItemLeadingIcon } from './menu-item-icon.android';
-import type { NativeMenuItem } from './menu-native-items';
+import { dividedItems, type NativeMenuItem } from './menu-native-items';
+import { SubmenuRow } from './menu-submenu-row.android';
 
 // The rows of a Compose DropdownMenu, shared by the Menu and the SplitButton's chevron.
 export function MenuDropdownItems(
@@ -34,16 +32,53 @@ export function MenuDropdownItems(
   );
 }
 
+type Choose = (item: NativeMenuItem) => void;
+
 // A row, after a divider when it starts a later section.
-function itemRows(
-  item: NativeMenuItem,
-  choose: (item: NativeMenuItem) => void,
-): React.JSX.Element[] {
-  const row = <MenuItem key={item.id} item={item} onChoose={choose} />;
+function itemRows(item: NativeMenuItem, choose: Choose): React.JSX.Element[] {
+  const row = <ItemRow key={item.id} item={item} onChoose={choose} />;
 
   return item.divided
     ? [<SectionDivider key={`divider.${item.id}`} />, row]
     : [row];
+}
+
+function ItemRow(props: MenuItemProps): React.JSX.Element {
+  if (props.item.submenu) return <SubmenuItem {...props} />;
+
+  return <MenuItem {...props} />;
+}
+
+/*
+ * A submenu row opens its own stock DropdownMenu from the row, as Expo UI's MenuView builds a nested menu on
+ * Android; Material's trailing arrow marks it. Choosing one of its rows closes both menus.
+ */
+function SubmenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
+  return (
+    <MenuDropdownShell
+      trigger={(open) => <SubmenuRow item={item} onOpen={open} />}
+      items={(close) => (
+        <SubmenuRows item={item} onChoose={closing(close, onChoose)} />
+      )}
+    />
+  );
+}
+
+const closing =
+  (close: () => void, choose: Choose): Choose =>
+  (item) => {
+    close();
+    choose(item);
+  };
+
+function SubmenuRows({ item, onChoose }: MenuItemProps): React.JSX.Element {
+  const rows = dividedItems(item.submenu ?? []);
+
+  return (
+    <DropdownMenu.Items>
+      {rows.flatMap((row) => itemRows(row, onChoose))}
+    </DropdownMenu.Items>
+  );
 }
 
 // Material sets a menu's groups apart with a divider and no heading, as MenuView's Android drawing of inline sections does; Argo binds its colour.
@@ -63,7 +98,7 @@ function SectionDivider(): React.JSX.Element {
 
 type MenuItemProps = {
   item: NativeMenuItem;
-  onChoose: (item: NativeMenuItem) => void;
+  onChoose: Choose;
 };
 
 // Material's item: `enabled` greys a row that cannot run.
@@ -74,7 +109,7 @@ function MenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
       elementColors={useItemColors(item)}
       onClick={() => onChoose(item)}
     >
-      <ItemLeadingIcon {...item} />
+      <ItemLeadingIcon {...item} onPress={() => onChoose(item)} />
       <DropdownMenuItem.Text>
         <Text>{item.title}</Text>
       </DropdownMenuItem.Text>
@@ -95,15 +130,3 @@ function ItemCheck(props: { checked?: boolean }): React.JSX.Element | null {
 }
 
 MenuDropdownItems satisfies React.ComponentType<MenuDropdownItemsProps>;
-
-function useItemColors(item: NativeMenuItem): DropdownMenuItemElementColors {
-  const palette = useMaterialPalette();
-
-  return item.tone === 'danger'
-    ? {
-        ...palette.menuItemColors,
-        textColor: palette.roles.error,
-        leadingIconColor: palette.roles.error,
-      }
-    : palette.menuItemColors;
-}

@@ -1,4 +1,4 @@
-import type { StackGap } from '@repo/contracts/kit-tokens';
+import type { SpacingStep } from '@repo/contracts/kit-tokens';
 import type { ReactNode } from 'react';
 import type { ListSelection } from '../../../list-context';
 import type { ScrollFadeListProps } from '../../../scroll-fade/scroll-fade-list-props';
@@ -37,12 +37,12 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
   > & {
     header?: ReactNode;
     endContent?: ReactNode;
-    paddingBottom?: SizeClassValue<StackGap>;
+    paddingBottom?: SizeClassValue<SpacingStep>;
     accessibilityRole?: 'list' | 'radiogroup';
     accessibilityLabel?: string;
     fit?: boolean;
-    padding?: SizeClassValue<StackGap>;
-    paddingTop?: SizeClassValue<StackGap>;
+    padding?: SizeClassValue<SpacingStep>;
+    paddingTop?: SizeClassValue<SpacingStep>;
     getSectionKey?: (item: Item) => string | undefined;
   };
 

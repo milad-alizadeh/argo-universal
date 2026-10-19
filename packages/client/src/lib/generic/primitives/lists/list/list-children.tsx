@@ -1,6 +1,7 @@
 import { isValidElement, type ReactNode, type ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import { FooterProvider } from '#primitives/fields/field-description';
+import { flattenedChildren } from '../../../flattened-children';
 import {
   listPosition,
   type ListPosition,
@@ -8,7 +9,6 @@ import {
 } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { useInMenu } from '../../../menu-rows-context';
-import { flattenedChildren } from './list-child-nodes';
 import type { ListSectionProps } from './list-props';
 import { ListSection } from './list-section';
 import { hasSectionHeader, SectionHeader } from './list-section-parts';

@@ -43,19 +43,17 @@ export function PopoverHoverGroup({
   return children;
 }
 
-// Paper's iOS sheet pads its content 16 on every side; Android's drag handle zone already sets the top.
+// The sheet gives the popover's content the standard sheet inset.
 function PopoverContent(props: ContentProps): React.JSX.Element {
-  const { open, onOpenChange } = usePopoverState();
-
   return (
     <Sheet
-      open={open}
-      onOpenChange={onOpenChange}
+      {...usePopoverState()}
       onClosed={props.onClosed}
       label={props.accessibilityLabel}
+      inset
     >
       <TextClassContext.Provider value="text-foreground">
-        <View className="px-4 ios:py-4">{props.children}</View>
+        {props.children}
       </TextClassContext.Provider>
     </Sheet>
   );

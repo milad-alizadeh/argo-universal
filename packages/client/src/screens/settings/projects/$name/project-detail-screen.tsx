@@ -2,7 +2,6 @@ import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { useProjects, useServerPageCaption } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { ScreenHeader } from '#lib/product/navigation/screen-header';
 import { ProjectDetailsSlot } from '../../../plugins/project-details-slot';
 import {
   type ProjectDetailViewProps,
@@ -41,10 +40,5 @@ function useProjectDetail(name: string): ProjectDetailViewProps {
 export function ProjectDetailScreen({
   name,
 }: ProjectDetailScreenProps): React.JSX.Element {
-  return (
-    <>
-      <ScreenHeader title={name} />
-      <ProjectDetailView {...useProjectDetail(name)} />
-    </>
-  );
+  return <ProjectDetailView {...useProjectDetail(name)} />;
 }

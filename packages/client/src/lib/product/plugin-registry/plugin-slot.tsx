@@ -20,14 +20,10 @@ export interface PluginSlotProps {
 // A core page's Slot: one titled section per Plugin, the Plugin's tree inside it. Core owns the frame, so a Plugin never sizes or styles it.
 export function PluginSlot({
   contributions,
-}: PluginSlotProps): React.JSX.Element {
-  return (
-    <>
-      {contributions.map(({ pluginId, name, root, onEvent, viewId }) => (
-        <List.Section key={pluginId} title={name}>
-          <PluginTree key={viewId} root={root} onEvent={onEvent} />
-        </List.Section>
-      ))}
-    </>
-  );
+}: PluginSlotProps): React.ReactNode {
+  return contributions.map(({ pluginId, name, root, onEvent, viewId }) => (
+    <List.Section key={pluginId} title={name}>
+      <PluginTree key={viewId} root={root} onEvent={onEvent} />
+    </List.Section>
+  ));
 }

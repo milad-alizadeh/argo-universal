@@ -1,10 +1,10 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { SettingsPage } from '#lib/product/settings-page';
 import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { Page } from '#primitives/scaffolds/page';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 
 export interface PlaceholderDetailViewProps {
@@ -21,11 +21,9 @@ export function PlaceholderDetailView({
   description,
 }: PlaceholderDetailViewProps): React.JSX.Element {
   return (
-    <View className="flex-1 bg-content wide:bg-transparent">
-      <SettingsPage title={title} caption={caption}>
-        <PlaceholderNote description={description} />
-      </SettingsPage>
-    </View>
+    <Page title={title} caption={caption}>
+      <PlaceholderNote description={description} />
+    </Page>
   );
 }
 

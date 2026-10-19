@@ -5,7 +5,7 @@ import { connectPluginApp } from '#mocks/plugin-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
 it(
-  'dispatches the addressed secondary Action, rejects invalid paths and returns handler failures',
+  'dispatches a keyed Action child of SplitButton, rejects unknown keys and returns handler failures',
   { timeout: 20_000 },
   async () => {
     const page = { pluginId: 'controls', path: '/' };
@@ -25,34 +25,24 @@ it(
       ...page,
       viewId: view.viewId,
       revision: view.revision,
-      key: '0/run',
-      event: 'onAction' as const,
+      event: 'onPress' as const,
     };
 
     await expect(
-      app.client.plugins.dispatch.mutate({
-        ...target,
-        payload: { path: ['actions', '7', 'onPress'] },
-      }),
+      app.client.plugins.dispatch.mutate({ ...target, key: '0/run/missing' }),
     ).rejects.toThrow('Plugin handler is no longer available');
     await expect(
-      app.client.plugins.dispatch.mutate({
-        ...target,
-        payload: { path: ['actions', '2', 'onPress'] },
-      }),
+      app.client.plugins.dispatch.mutate({ ...target, key: '0/run/refuse' }),
     ).rejects.toThrow('Secondary refused');
     await app.client.plugins.dispatch.mutate({
       ...target,
-      payload: { path: ['actions', '1', 'onPress'] },
+      key: '0/run/second',
     });
     await expect
       .poll(() => app.messages.at(-1), { timeout: 10_000 })
       .toMatchObject({ revision: 2, ops: [{ props: { label: 'Second' } }] });
     await expect(
-      app.client.plugins.dispatch.mutate({
-        ...target,
-        payload: { path: ['actions', '0', 'onPress'] },
-      }),
+      app.client.plugins.dispatch.mutate({ ...target, key: '0/run/first' }),
     ).rejects.toThrow('Plugin view changed');
   },
 );

@@ -1,5 +1,9 @@
 import type { Meta } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { expect, screen, waitFor, within } from 'storybook/test';
+import { Button } from '#primitives/actions/button';
+import { Text } from '#primitives/content/text';
+import { useSheet } from '#primitives/overlays/sheet';
 import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import {
@@ -49,6 +53,51 @@ export const InspectorIsASheetOnMedium: ScaffoldStory = {
     await acceptInspector(controlled, 'closed');
     await waitFor(() =>
       expect(screen.queryByRole('dialog', { name: 'Inspector' })).toBeNull(),
+    );
+  }),
+};
+
+const inspectorSheet = { name: 'Inspector' };
+
+// A part of the Inspector, such as Changes' Compare Against, pushing its own page.
+function PushesAPage(): React.JSX.Element {
+  const sheet = useSheet();
+
+  return (
+    <Button
+      label="Show branches"
+      onPress={() =>
+        sheet.push({
+          name: 'branches',
+          title: 'Branches',
+          children: <Text>Branches page</Text>,
+        })
+      }
+    />
+  );
+}
+
+// The Inspector sheet's root page takes a pushed page over it, and Back returns to the Inspector.
+export const InspectorSheetPushesAPage: ScaffoldStory = {
+  play: controlledPlay(async ({ userEvent }, controlled) => {
+    await settleViewport(layoutWidths.tablet);
+    await controlled.render({
+      sizeClass: 'medium',
+      inspectorState: 'open',
+      inspector: <PushesAPage />,
+    });
+    const sheet = await screen.findByRole('dialog', inspectorSheet);
+    await userEvent.click(
+      await within(sheet).findByRole('button', { name: 'Show branches' }),
+    );
+    await expect(
+      await within(sheet).findByRole('heading', { name: 'Branches' }),
+    ).toBeVisible();
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Back' }));
+    await waitFor(() =>
+      expect(
+        within(sheet).getByRole('button', { name: 'Show branches' }),
+      ).toBeVisible(),
     );
   }),
 };

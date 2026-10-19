@@ -1,136 +1,80 @@
-import {
-  contentListProps,
-  listSectionProps,
-  listItemProps,
-  labelProps,
-  progressBarProps,
-  pillProps,
-  listProps,
-  layoutProps,
-  textForApp,
-  groupedItemProps,
-  stackProps,
-  svgProps,
-  emptyStateProps,
-} from '@repo/contracts/plugins/kit';
-import type { Handler } from '@repo/contracts/plugins/wire';
-import type { ReactNode } from 'react';
+import type { WirePart } from '@repo/contracts/plugins/kit';
+import type { ComponentType } from 'react';
+import { ActionList, Action } from '#primitives/actions/action-list';
+import { Button } from '#primitives/actions/button';
+import { IconButton } from '#primitives/actions/icon-button';
+import { SplitButton } from '#primitives/actions/split-button';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
+import { Form } from '#primitives/fields/form';
+import { Checkbox } from '#primitives/inputs/checkbox';
+import { DatePicker } from '#primitives/inputs/date-picker';
+import { Picker } from '#primitives/inputs/picker';
+import { Slider } from '#primitives/inputs/slider';
+import { Switch } from '#primitives/inputs/switch';
+import { TextInput } from '#primitives/inputs/text-input';
+import type { KitProps } from '#primitives/kit-props';
+import { Grid } from '#primitives/layout/grid';
+import { ScrollView } from '#primitives/layout/scroll-view';
+import { Spacer } from '#primitives/layout/spacer';
 import { Stack } from '#primitives/layout/stack';
+import { Surface } from '#primitives/layout/surface';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { Alert } from '#primitives/overlays/alert';
+import { Sheet } from '#primitives/overlays/sheet';
+import { Detail } from '#primitives/scaffolds/detail';
+import { Metadata } from '#primitives/scaffolds/metadata';
+import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
-import { pluginActionEntries } from './plugin-action-entries';
-import { pluginControlEntries } from './plugin-control-entries';
-import type { PluginPart } from './plugin-parts';
-import {
-  entry,
-  handlerOf,
-  payloadHandler,
-  type Entry,
-  type RenderContext,
-} from './plugin-rendering';
-import { pluginSettingsEntries } from './plugin-settings-entries';
 
 export const pluginEntries = {
-  ...pluginActionEntries,
-  ...pluginSettingsEntries,
-  ...pluginControlEntries,
-  EmptyState: entry(emptyStateProps, (props, context) => (
-    <EmptyState {...props} action={context.slots.action} />
-  )),
-  List: entry(contentListProps, (props, context, children) => (
-    <List {...props} empty={context.slots.empty}>
-      {children}
-    </List>
-  )),
-  'List.Section': entry(
-    listSectionProps,
-    ({ onSelectionChange, ...props }, context, children) => (
-      <ListSection
-        {...props}
-        selection={
-          context.ui.state.get(context.key)?.selection ?? props.selection
-        }
-        leading={context.slots.leading}
-        trailing={context.slots.trailing}
-        onSelectionChange={sectionChange(onSelectionChange, context)}
-      >
-        {children}
-      </ListSection>
-    ),
-  ),
-  ListItem: entry(listItemProps, ({ onPress, ...props }, context) => (
-    <ListItem
-      {...props}
-      leading={context.slots.leading}
-      trailing={context.slots.trailing}
-      meta={context.slots.meta}
-      onPress={handlerOf(onPress, context)}
-    />
-  )),
-  Label: entry(labelProps, (props) => <Label {...props} />),
-  ProgressBar: entry(progressBarProps, (props) => <ProgressBar {...props} />),
-  Pill: entry(pillProps, (props) => <Pill {...props} />),
-  VirtualList: entry(listProps, (_props, _context, children) => (
-    <List appearance="plain">{children}</List>
-  )),
-  GroupedList: entry(listProps, (_props, _context, children) => (
-    <List appearance="grouped">{children}</List>
-  )),
-  GroupedListItem: entry(groupedItemProps, (props, context) => (
-    <ListItem
-      title={props.label}
-      value={props.value}
-      disabled={props.disabled}
-      leading={context.slots.leading}
-      trailing={context.slots.accessories}
-      meta={legacyMeta(context)}
-      onPress={handlerOf(props.onPress, context)}
-    />
-  )),
-  Text: entry(textForApp, (props) => <Text {...props} />),
-  Stack: entry(stackProps, ({ direction, ...props }, _context, children) => (
-    <Stack direction={direction} {...props}>
-      {children}
-    </Stack>
-  )),
-  Row: entry(layoutProps, (props, _context, children) => (
-    <Stack direction="row" {...props}>
-      {children}
-    </Stack>
-  )),
-  Column: entry(layoutProps, (props, _context, children) => (
-    <Stack direction="column" {...props}>
-      {children}
-    </Stack>
-  )),
-  Svg: entry(svgProps, ({ onPress, ...props }, context) => (
-    <Svg {...props} onPress={handlerOf(onPress, context)} />
-  )),
-} satisfies Record<PluginPart, Entry>;
-
-function legacyMeta({ slots }: RenderContext): ReactNode {
-  if (!slots.detail && !slots.footer) return undefined;
-
-  return (
-    <Stack direction="column">
-      {slots.detail}
-      {slots.footer}
-    </Stack>
-  );
-}
-
-function sectionChange(
-  handler: Handler | undefined,
-  context: RenderContext,
-): ((payload: string[]) => void) | undefined {
-  return payloadHandler(handler, context, (payload: string[]) => ({
-    event: 'onSelectionChange',
-    payload,
-  }));
-}
+  Page,
+  Detail,
+  Metadata,
+  'Metadata.Label': Metadata.Label,
+  'Metadata.Link': Metadata.Link,
+  'Metadata.Pills': Metadata.Pills,
+  'Metadata.StatusDot': Metadata.StatusDot,
+  'Metadata.Avatar': Metadata.Avatar,
+  ActionList,
+  'ActionList.Section': ActionList.Section,
+  Action,
+  EmptyState,
+  Picker,
+  Switch,
+  Checkbox,
+  Slider,
+  TextInput,
+  DatePicker,
+  Form,
+  IconButton,
+  SplitButton,
+  List,
+  'List.Section': ListSection,
+  'ListItem.Link': ListItem.Link,
+  'ListItem.Button': ListItem.Button,
+  'ListItem.Toggle': ListItem.Toggle,
+  'ListItem.Picker': ListItem.Picker,
+  'ListItem.Stepper': ListItem.Stepper,
+  'ListItem.TextField': ListItem.TextField,
+  ListItem,
+  Label,
+  ProgressBar,
+  Pill,
+  Text,
+  Button,
+  Stack,
+  Spacer,
+  Grid,
+  Surface,
+  ScrollView,
+  Svg,
+  Alert,
+  Sheet,
+} satisfies {
+  [Name in WirePart]: ComponentType<KitProps<Name, string, React.JSX.Element>>;
+};

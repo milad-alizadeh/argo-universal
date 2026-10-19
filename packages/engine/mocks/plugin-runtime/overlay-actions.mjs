@@ -1,58 +1,55 @@
-import { Button, Stack, Text, useState } from '@argo/plugin-kit';
+import {
+  Button,
+  Sheet,
+  Stack,
+  Text,
+  TextInput,
+  useState,
+} from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
-const unsafeSvg = {
-  type: 'Svg',
-  key: 'unsafe',
-  props: { xml: '<svg><script>unsafe()</script></svg>', label: 'Unsafe' },
-  children: [],
-  slots: {},
-};
+function sheetContent(setAnswer) {
+  return [
+    jsx(
+      TextInput,
+      { label: 'Name', value: 'Initial', onChangeText: setAnswer },
+      'field',
+    ),
+    jsx(
+      Button,
+      { label: 'Apply', onPress: () => setAnswer('Confirmed') },
+      'apply',
+    ),
+  ];
+}
 
-function field(setAnswer) {
-  return {
-    type: 'TextInput',
-    key: 'field',
-    props: {
-      label: 'Name',
-      value: 'Initial',
-      onChangeText: (value) => setAnswer(value),
-    },
-    children: [],
-    slots: {},
+// The Plugin owns its overlay's state; the App reports open changes.
+function openChange(setOpen, setAnswer) {
+  return (next) => {
+    setOpen(next);
+
+    if (!next) setAnswer('Dismissed');
   };
 }
 
-function content(setAnswer) {
-  return {
-    type: 'Stack',
-    key: 'content',
-    props: { direction: 'column' },
-    slots: {},
-    children: [unsafeSvg, field(setAnswer)],
-  };
-}
+function editSheet(open, setOpen, setAnswer) {
+  const onOpenChange = openChange(setOpen, setAnswer);
 
-function openButton(setAnswer) {
-  const action = {
-    action: 'dialog',
-    title: 'Edit',
-    onConfirm: () => setAnswer('Confirmed'),
-    onDismiss: () => setAnswer('Dismissed'),
-    content: content(setAnswer),
-  };
+  const props = { open, label: 'Edit', onOpenChange };
 
-  return jsx(Button, { label: 'Open', onPress: action }, 'open');
+  return jsxs(Sheet, { ...props, children: sheetContent(setAnswer) }, 'sheet');
 }
 
 function Page() {
   const [answer, setAnswer] = useState('Waiting');
+  const [open, setOpen] = useState(false);
 
   return jsxs(Stack, {
     direction: 'column',
     children: [
       jsx(Text, { children: answer }, 'answer'),
-      openButton(setAnswer),
+      jsx(Button, { label: 'Open', onPress: () => setOpen(true) }, 'open'),
+      editSheet(open, setOpen, setAnswer),
     ],
   });
 }

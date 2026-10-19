@@ -1,30 +1,56 @@
 import { useMemo, type ReactElement } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import {
   ActionSection,
   actionGroups,
   orderedGroups,
+  isPress,
+  pressActions,
   type ActionGroup,
   type DeclaredAction,
+  type DeclaredEntry,
 } from './action-declarations';
+import { useHeaderRegistration } from './action-header-context';
 import { ActionListBody } from './action-list-body';
 import type { ActionListProps } from './action-list-props';
 import { useActionShortcuts } from './action-shortcut-scope';
 
 function ActionListRoot(props: ActionListProps): ReactElement | null {
-  const { groups, id, actions } = useDeclaredActions(props);
+  const declared = useDeclaredActions(props);
 
-  if (!actions.length) return props.trigger ?? null;
+  const header = useHeaderRegistration({
+    id: declared.id,
+    groups: declared.hinted,
+    label: props.accessibilityLabel,
+    context: props.variant === 'context',
+  });
 
-  return (
-    <View nativeID={id}>
-      <ActionListBody {...props} groups={hintedGroups(groups, actions)} />
-    </View>
-  );
+  if (header) return <ShortcutAnchor id={declared.id} />;
+
+  return <DeclaredActionsBody props={props} declared={declared} />;
+}
+
+// A list its header draws keeps an empty node on the web, where its shortcuts run only while that node is shown.
+function ShortcutAnchor({ id }: { id: string }): ReactElement | null {
+  return Platform.OS === 'web' ? <View nativeID={id} /> : null;
+}
+
+function DeclaredActionsBody({
+  props,
+  declared,
+}: {
+  props: ActionListProps;
+  declared: DeclaredActions;
+}): ReactElement | null {
+  if (!declared.actions.length) return props.trigger ?? null;
+
+  const body = <ActionListBody {...{ ...props, groups: declared.hinted }} />;
+
+  return <View nativeID={declared.id}>{body}</View>;
 }
 
 interface DeclaredActions {
-  groups: ActionGroup[];
+  hinted: ActionGroup[];
   id: string;
   actions: DeclaredAction[];
 }
@@ -33,7 +59,7 @@ function useDeclaredActions(props: ActionListProps): DeclaredActions {
   const groups = useMemo(() => actionGroups(props.children), [props.children]);
 
   const declarations = useMemo(
-    () => groups.flatMap((group) => group.actions),
+    () => pressActions(groups.flatMap((group) => group.actions)),
     [groups],
   );
 
@@ -43,22 +69,49 @@ function useDeclaredActions(props: ActionListProps): DeclaredActions {
     context: props.variant === 'context',
   });
 
-  return { groups, id, actions };
+  const owned = ownedShortcuts(actions);
+  const hinted = useMemo(() => hintedGroups(groups, owned), [groups, owned]);
+
+  return { hinted, id, actions };
 }
 
-function hintedGroups(
-  groups: ActionGroup[],
-  actions: DeclaredAction[],
-): ActionGroup[] {
-  const hints = new Map(actions.map((action) => [action.id, action]));
+// A string, so the groups (and the header registration) only change when the shortcuts this list owns do.
+function ownedShortcuts(actions: DeclaredAction[]): string {
+  return actions
+    .flatMap((action) => (action.shortcut ? [action.id] : []))
+    .join(' ');
+}
+
+function hintedGroups(groups: ActionGroup[], owned: string): ActionGroup[] {
+  const shortcuts = new Set(owned.split(' '));
 
   return orderedGroups(
     groups.map((group) => ({
       ...group,
-      actions: group.actions.map((action) => hints.get(action.id) ?? action),
+      actions: group.actions.map((entry) => hinted(entry, shortcuts)),
     })),
   );
 }
+
+// A submenu's Actions keep their hints too, since they hold shortcuts of their own.
+function hinted(entry: DeclaredEntry, shortcuts: Set<string>): DeclaredEntry {
+  if (isPress(entry)) return ownHint(entry, shortcuts);
+
+  return {
+    ...entry,
+    sections: entry.sections.map((section) => ({
+      ...section,
+      actions: section.actions.map((action) => ownHint(action, shortcuts)),
+    })),
+  };
+}
+
+// An Action shows its shortcut only while this list owns it.
+const ownHint = (
+  action: DeclaredAction,
+  shortcuts: Set<string>,
+): DeclaredAction =>
+  shortcuts.has(action.id) ? action : { ...action, shortcut: undefined };
 
 export const ActionList = Object.assign(ActionListRoot, {
   Section: ActionSection,

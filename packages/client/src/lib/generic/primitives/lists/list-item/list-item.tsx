@@ -79,7 +79,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
   );
 }
 
-// A menu row's check leads the row, as in Paper's Combobox; elsewhere it trails.
+// A menu row's check leads the row, as in Paper's Combobox; elsewhere only a choosing List draws it, trailing.
 export function ListItem(props: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
   const menu = useInMenu();
@@ -88,9 +88,21 @@ export function ListItem(props: ListItemProps): ReactElement {
     <ListItemFrame
       {...selected}
       choice={menu ? <ChoiceSlot {...selected} /> : undefined}
-      accessory={menu ? undefined : <ChoiceAccessory {...selected} />}
+      accessory={useTrailingChoice(menu, selected)}
     />
   );
+}
+
+// An empty trailing choice would hold the trailing lane off the row's edge.
+function useTrailingChoice(
+  menu: boolean,
+  selected: ListItemProps,
+): ReactElement | undefined {
+  const { selectionMode } = useContext(ListContext);
+
+  if (menu || !selectionMode) return undefined;
+
+  return <ChoiceAccessory {...selected} />;
 }
 
 function drawingContent(props: DrawingProps): DrawingProps {

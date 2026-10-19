@@ -1,21 +1,8 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import {
-  IconButton,
-  type IconButtonProps,
-} from '#primitives/actions/icon-button';
+import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
-import { Menu } from '#primitives/overlays/menu';
-import { PageHeader } from '../../../lib/product/page-header';
-
-const moreActionsButton: IconButtonProps = {
-  variant: 'ghost',
-  className: 'size-7 p-0 sm:size-7',
-  accessibilityLabel: 'More actions',
-  icon: 'more',
-  iconClassName: 'text-muted-foreground',
-  size: 'sm',
-};
+import { Page } from '#primitives/scaffolds/page';
 
 export function MockText({
   testID,
@@ -31,26 +18,33 @@ export function MockText({
   );
 }
 
-const exampleActions = [{ label: 'Example action', onPress: (): void => {} }];
+const exampleAction = (
+  <Action
+    key="example"
+    label="Example action"
+    icon="archive"
+    onPress={() => {}}
+  />
+);
 
+// A header menu of its own, so a story can open it without opening the Inspector.
 function MoreActionsMenu(): React.JSX.Element {
   return (
-    <Menu
-      accessibilityLabel={moreActionsButton.accessibilityLabel}
-      trigger={<IconButton {...moreActionsButton} />}
-      actions={exampleActions}
-    />
+    <ActionList>
+      <Action key="more" label="More actions" icon="more">
+        <ActionList.Section key="example">{exampleAction}</ActionList.Section>
+      </Action>
+    </ActionList>
   );
 }
 
-// A stand-in page that names its section, with a header action.
+// A stand-in page that names its section, with a header menu.
 export function MockPage({ title }: { title: string }): React.JSX.Element {
   return (
-    <View className="flex-1">
-      <PageHeader title={`${title} page`} actions={<MoreActionsMenu />} />
+    <Page title={`${title} page`} actions={<MoreActionsMenu />}>
       <View className="flex-1 p-4">
         <Text testID="detail-content">{title} detail</Text>
       </View>
-    </View>
+    </Page>
   );
 }

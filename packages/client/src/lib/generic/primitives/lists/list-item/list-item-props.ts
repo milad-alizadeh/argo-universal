@@ -9,8 +9,6 @@ export type RowBadge = Exclude<
 
 // Kit-only: native selection semantics, long press and test identity.
 export type ListItemProps = KitProps<'ListItem'> & {
-  // An iOS read-only detail field lets a long trailing value share the row.
-  labelPlacement?: 'beside';
   // A control under the title, such as a Slider, spanning the row's content width.
   control?: ReactNode;
   onPointerDown?: ComponentProps<typeof Pressable>['onPointerDown'];

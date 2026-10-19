@@ -1,4 +1,4 @@
-import { Button, Column, Text, useState, useRef } from '@argo/plugin-kit';
+import { Button, Stack, Text, useState, useRef } from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
 const failure = async () => {
@@ -12,21 +12,16 @@ const choices = (reversed, choose) =>
     jsx(Button, { label: name, onPress: () => choose(name) }, name),
   );
 
-const WaitButtons = ({ wait, release }) =>
-  jsxs(
-    Column,
-    {
-      children: [
-        jsx(Button, { label: 'Wait', onPress: wait }, 'wait'),
-        jsx(
-          Button,
-          { label: 'Finish', onPress: () => release.current() },
-          'finish',
-        ),
-      ],
-    },
-    'waiting',
-  );
+const WaitButtons = ({ wait, release }) => {
+  const finish = () => release.current();
+
+  const children = [
+    jsx(Button, { label: 'Wait', onPress: wait }, 'wait'),
+    jsx(Button, { label: 'Finish', onPress: finish }, 'finish'),
+  ];
+
+  return jsxs(Stack, { direction: 'column', children }, 'waiting');
+};
 
 const Waiting = ({ choose }) => {
   const release = useRef(() => {});
@@ -53,7 +48,8 @@ const Page = () => {
   const [reversed, reverse] = useState(false);
   const [chosen, choose] = useState('none');
 
-  return jsxs(Column, {
+  return jsxs(Stack, {
+    direction: 'column',
     children: [
       jsx(Text, { children: chosen }),
       reverseButton(reversed, reverse),

@@ -85,6 +85,7 @@ function childContext(
   return {
     appearance: appearance ?? 'plain',
     position: item.position,
+    inList: true,
     selectionMode: item.selectionMode,
     selection: item.selection,
     onSelectionChange: item.onSelectionChange,

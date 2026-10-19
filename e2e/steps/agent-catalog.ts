@@ -42,20 +42,22 @@ Then('Python Agent is unavailable on this platform', async ({ page }) => {
       name: /^(Install|Remove) Python Agent$/,
     }),
   ).toHaveCount(0);
-  await expect(
-    card.getByLabel('Not supported on this platform', { exact: true }),
-  ).toBeVisible();
+  await expect(unsupportedNote(page, card)).toBeVisible();
 });
+
+// A phone labels its status icon; a wide window writes the note on the meta line.
+const unsupportedNote = (page: Page, card: Locator): Locator =>
+  onPhone(page)
+    ? card.getByLabel(unsupported, { exact: true })
+    : card.getByText(unsupported, { exact: true });
+
+const unsupported = 'Not supported on this platform';
 
 When('I search the catalog for {string}', async ({ page }, search: string) => {
   const options = { name: 'Search Agents' };
 
-  if (onPhone(page)) {
-    await page.getByRole('button', options).click();
-    await page.getByRole('textbox', options).fill(search);
-  } else {
-    await page.getByRole('searchbox', options).fill(search);
-  }
+  await page.getByRole('button', options).click();
+  await page.getByRole('textbox', options).fill(search);
 });
 
 Then('only Python Agent is shown in the catalog', async ({ page }) => {

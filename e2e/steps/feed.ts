@@ -47,12 +47,16 @@ export async function readFeed(page: Page, httpUrl: string): Promise<FeedRows> {
   ).rows;
 }
 
+export async function expectReply(page: Page, reply: string): Promise<void> {
+  await expect(
+    page.getByTestId('feed-scroll').getByText(reply, { exact: true }),
+  ).toBeVisible();
+}
+
 Then(
   'the Agent replies {string}',
   async ({ page }, reply: string): Promise<void> => {
-    await expect(
-      page.getByTestId('feed-scroll').getByText(reply, { exact: true }),
-    ).toBeVisible();
+    await expectReply(page, reply);
   },
 );
 

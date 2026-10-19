@@ -1,51 +1,7 @@
 import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
-import type { Prop, Props, PluginFn, Handlers } from './wire-tree';
+import type { Prop, Props, Handlers } from './wire-tree';
 
-function wireProp(path: string[], value: Prop, handlers: Handlers): WireJson {
-  if (typeof value !== 'function') return wirePropData(path, value, handlers);
-  handlers.set(JSON.stringify(path), value);
-
-  return eventMarker(path);
-}
-
-function wirePropData(
-  path: string[],
-  value: Exclude<Prop, PluginFn>,
-  handlers: Handlers,
-): WireJson {
-  if (Array.isArray(value))
-    return value.map((item, index) =>
-      wireProp([...path, String(index)], item, handlers),
-    );
-
-  if (value === null) return null;
-
-  return wirePropScalar(path, value, handlers);
-}
-
-function wirePropScalar(
-  path: string[],
-  value: Exclude<Prop, PluginFn | null | Prop[] | WireJson[]>,
-  handlers: Handlers,
-): WireJson {
-  return typeof value === 'object'
-    ? wirePropObject(path, value, handlers)
-    : value;
-}
-
-function wirePropObject(
-  path: string[],
-  value: Record<string, Prop>,
-  handlers: Handlers,
-): Record<string, WireJson> {
-  return Object.fromEntries(
-    Object.entries(value).map(([key, item]) => [
-      key,
-      wireProp([...path, key], item, handlers),
-    ]),
-  );
-}
-
+// A handler prop goes on the wire as a Part event the App sends back by node key and event name.
 export function wireProps(
   props: Props,
   id: string,
@@ -59,8 +15,26 @@ export function wireProps(
   );
 }
 
-function eventMarker(path: string[]): WireJson {
-  const $event = path.at(-1) ?? '';
+function wireProp(
+  [id, name]: [string, string],
+  value: Prop,
+  handlers: Handlers,
+): WireJson {
+  if (typeof value !== 'function') return copied(value);
+  handlers.set(JSON.stringify([id, name]), value);
 
-  return path.length > 2 ? { $event, $path: path.slice(1) } : { $event };
+  return { $event: name };
 }
+
+// Data is copied, so a Plugin that mutates it in place still produces a patch.
+function copied(value: WireJson): WireJson {
+  if (Array.isArray(value)) return value.map(copied);
+
+  return typeof value === 'object' ? copiedObject(value) : value;
+}
+
+const copiedObject = (value: { [key: string]: WireJson } | null): WireJson =>
+  value &&
+  Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, copied(item)]),
+  );

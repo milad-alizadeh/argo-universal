@@ -23,7 +23,16 @@ export const iconButtonClasses = cva(
         lg: 'size-11 sm:size-11',
         xl: 'size-12 sm:size-12',
       },
+      // Pulls each edge in by half of (hit area - 16px control glyph): 44 on iOS and a narrow web window, 48 on Android.
+      bleed: { true: '-m-3.5 android:-m-4' },
     },
+    // A wide web window draws the smaller sizes; xl stays 48 everywhere.
+    compoundVariants: [
+      { bleed: true, size: 'xs', className: 'web:sm:-m-1.5' },
+      { bleed: true, size: 'sm', className: 'web:sm:-m-2' },
+      { bleed: true, size: 'md', className: 'web:sm:-m-3' },
+      { bleed: true, size: 'xl', className: '-m-4' },
+    ],
     defaultVariants: { size: 'sm', variant: 'default' },
   },
 );

@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { ListItem } from '#primitives/lists/list-item';
 import { Variation, Variations } from '../../../variations';
-import { Action, ActionList, type ActionProps } from './index';
+import { Action, ActionList, type PressActionProps } from './index';
 
-interface DemoAction extends Omit<ActionProps, 'onPress'> {
+interface DemoAction extends Omit<PressActionProps, 'onPress'> {
   result: string;
 }
 

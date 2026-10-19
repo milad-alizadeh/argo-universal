@@ -3,7 +3,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { pluginTap } from '#mocks/plugin-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-const slotKey = '0#accessories/button';
+const slotKey = '0#trailing/button';
 
 const listFixture = { id: 'list', fixture: 'keyed-list' };
 
@@ -22,13 +22,13 @@ it('carries every node in fragment and array slots', async () => {
   expect(initial).toMatchObject({
     type: 'snapshot',
     root: {
-      props: { label: 'Slotted row' },
+      props: { title: 'Slotted row' },
       slots: {
         leading: [
           { props: { children: 'First' } },
           { props: { children: 'Second' } },
         ],
-        accessories: [
+        trailing: [
           {
             props: {
               label: 'Increment',
@@ -48,7 +48,7 @@ it.each([
     ops: [
       {
         op: 'setProps',
-        key: [{ slot: 'accessories', key: 'count' }],
+        key: [{ slot: 'trailing', key: 'count' }],
         props: { children: 'Count 1' },
       },
     ],
@@ -58,8 +58,8 @@ it.each([
     ops: [
       { op: 'remove', key: [{ slot: 'leading', key: 'First' }] },
       { op: 'remove', key: [{ slot: 'leading', key: 'Second' }] },
-      { op: 'remove', key: [{ slot: 'accessories', key: 'button' }] },
-      { op: 'remove', key: [{ slot: 'accessories', key: 'count' }] },
+      { op: 'remove', key: [{ slot: 'trailing', key: 'button' }] },
+      { op: 'remove', key: [{ slot: 'trailing', key: 'count' }] },
     ],
   },
 ])(

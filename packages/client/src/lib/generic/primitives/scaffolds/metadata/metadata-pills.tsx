@@ -1,9 +1,10 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Pill } from '#primitives/status/pill';
+import { Pill, type PillProps } from '#primitives/status/pill';
 import { withOccurrenceKeys } from '../../../occurrence-keys';
 import { pillIdentity } from './metadata-pill-fit';
-import type { PillValuesProps } from './metadata-props';
+
+type PillValuesProps = { pills: PillProps[] };
 
 export function MetadataPills({ pills }: PillValuesProps): ReactElement {
   return (

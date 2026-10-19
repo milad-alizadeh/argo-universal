@@ -1,30 +1,29 @@
+/* Generated from Contracts part names by `pnpm docs:build`. Do not edit by hand. */
 import type { PluginComponents } from './index';
 
-export const Text: PluginComponents['Text'];
+export const Spacer: PluginComponents['Spacer'];
 
-export const Button: PluginComponents['Button'];
+export const Grid: PluginComponents['Grid'];
 
-export const Stack: PluginComponents['Stack'];
+export const Surface: PluginComponents['Surface'];
 
-export const Row: PluginComponents['Row'];
+export const ScrollView: PluginComponents['ScrollView'];
 
-export const Column: PluginComponents['Column'];
+export const Page: PluginComponents['Page'];
 
-export const GroupedListItem: PluginComponents['GroupedListItem'];
+export const Detail: PluginComponents['Detail'];
 
-export const VirtualList: PluginComponents['VirtualList'];
-
-export const Table: PluginComponents['Table'];
-
-export const GroupedList: PluginComponents['GroupedList'];
-
-export const Svg: PluginComponents['Svg'];
+export const Metadata: PluginComponents['Metadata'] & {
+  Label: PluginComponents['Metadata.Label'];
+  Link: PluginComponents['Metadata.Link'];
+  Pills: PluginComponents['Metadata.Pills'];
+  StatusDot: PluginComponents['Metadata.StatusDot'];
+  Avatar: PluginComponents['Metadata.Avatar'];
+};
 
 export const List: PluginComponents['List'] & {
   Section: PluginComponents['List.Section'];
 };
-
-export const ListSection: PluginComponents['List.Section'];
 
 export const ListItem: PluginComponents['ListItem'] & {
   Link: PluginComponents['ListItem.Link'];
@@ -41,7 +40,11 @@ export const ProgressBar: PluginComponents['ProgressBar'];
 
 export const Pill: PluginComponents['Pill'];
 
-export const EmptyState: PluginComponents['EmptyState'];
+export const ActionList: PluginComponents['ActionList'] & {
+  Section: PluginComponents['ActionList.Section'];
+};
+
+export const Action: PluginComponents['Action'];
 
 export const Picker: PluginComponents['Picker'];
 
@@ -53,14 +56,26 @@ export const Slider: PluginComponents['Slider'];
 
 export const TextInput: PluginComponents['TextInput'];
 
-export const IconButton: PluginComponents['IconButton'];
+export const DatePicker: PluginComponents['DatePicker'];
+
+export const Form: PluginComponents['Form'];
 
 export const SplitButton: PluginComponents['SplitButton'];
 
-export const ActionList: PluginComponents['ActionList'] & {
-  Section: PluginComponents['ActionList.Section'];
-};
+export const IconButton: PluginComponents['IconButton'];
 
-export const ActionListSection: PluginComponents['ActionList.Section'];
+export const Alert: PluginComponents['Alert'];
 
-export const Action: PluginComponents['Action'];
+export const Sheet: PluginComponents['Sheet'];
+
+export const Text: PluginComponents['Text'];
+
+export const Button: PluginComponents['Button'];
+
+export const Stack: PluginComponents['Stack'];
+
+export const EmptyState: PluginComponents['EmptyState'];
+
+export const Svg: PluginComponents['Svg'];
+
+export const ListSection: PluginComponents['List.Section'];

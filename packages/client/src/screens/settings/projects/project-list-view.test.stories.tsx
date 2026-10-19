@@ -4,14 +4,12 @@ import { homePath } from '#features/settings';
 import { eachLayout, layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import { findToast } from '../../../../mocks/find-toast';
-import { mockHeader } from '../../../../mocks/screen-header-mock';
 import {
   localProject,
   missingFolderProject,
   settingsProjects,
   worktreeProject,
 } from '../../../features/settings/components/settings-pages.mocks';
-import { projectsHeader } from './project-list-phone-header';
 import { ProjectListView } from './project-list-view';
 
 const folderNotFound = 'Folder not found';
@@ -42,7 +40,6 @@ const meta = {
   args: {
     projects: { status: 'loaded', projects: settingsProjects },
     onOpenProject: fn(),
-    renderHeader: mockHeader(projectsHeader),
   },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof ProjectListView>;
