@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Text } from '#primitives/content/text';
-import { SettingsList, type SettingsListProps } from './settings-list';
-import { settingsListMocks } from './settings-list.mocks';
+import { SettingsPages, type SettingsPagesProps } from './settings-pages';
+import { settingsPagesMocks } from './settings-pages.mocks';
 
 const meta = {
-  title: 'Settings/SettingsList',
-  component: SettingsList,
+  title: 'Screens/Settings/Settings',
+  component: SettingsPages,
   parameters: { screenPreview: true },
   argTypes: {
     status: {
@@ -18,14 +18,14 @@ const meta = {
     },
   },
   args: {
-    ...settingsListMocks,
+    ...settingsPagesMocks,
     projectsNeedAttention: true,
     accountState: 'GitHub',
     deviceCount: 2,
     selectedPath: '/settings/accounts',
     onSelect: action('select Settings page'),
   },
-} satisfies Meta<typeof SettingsList>;
+} satisfies Meta<typeof SettingsPages>;
 
 export default meta;
 
@@ -42,8 +42,8 @@ function SettingsHeading(): React.JSX.Element {
 }
 
 function useSelectedPage(
-  args: SettingsListProps,
-): Pick<SettingsListProps, 'selectedPath' | 'onSelect'> {
+  args: SettingsPagesProps,
+): Pick<SettingsPagesProps, 'selectedPath' | 'onSelect'> {
   const [selected, setSelected] = useState(args.selectedPath);
 
   return {
@@ -55,13 +55,13 @@ function useSelectedPage(
   };
 }
 
-function SettingsPreview(args: SettingsListProps): React.JSX.Element {
+function SettingsPreview(args: SettingsPagesProps): React.JSX.Element {
   const selection = useSelectedPage(args);
 
   return (
     <View className="w-full bg-content wide:w-frame-list" style={{ flex: 1 }}>
       <SettingsHeading />
-      <SettingsList {...args} {...selection} />
+      <SettingsPages {...args} {...selection} />
     </View>
   );
 }

@@ -2,15 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn } from 'storybook/test';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
-import { settleViewport } from '../../../../lib/generic/settle-viewport';
-import { SettingsList } from './settings-list';
+import { layoutWidths } from '#lib/generic/each-layout';
+import { settleViewport } from '#lib/generic/settle-viewport';
+import { SettingsPages } from './settings-pages';
 
 const onSelect = fn();
 
 const meta = {
-  title: 'Tests/SettingsList status',
-  component: SettingsList,
+  title: 'Tests/SettingsPages status',
+  component: SettingsPages,
   args: {
     projectCount: 1,
     agentCount: 0,
@@ -19,13 +19,13 @@ const meta = {
   },
   render: (args): React.JSX.Element => (
     <View className="h-175 w-full">
-      <SettingsList {...args} />
+      <SettingsPages {...args} />
     </View>
   ),
   beforeEach: (): void => {
     onSelect.mockClear();
   },
-} satisfies Meta<typeof SettingsList>;
+} satisfies Meta<typeof SettingsPages>;
 
 export default meta;
 

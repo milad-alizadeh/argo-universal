@@ -641,6 +641,12 @@ export type WireSchemaHints = {
     /** Reports the Inspector closing, by its close button, a swipe down, Escape or Back. */
     "onOpenChange": PropValue<"Inspector", "onOpenChange">;
   };
+  "SettingsLayout": {
+    /** The settings pages, in groups, optionally by Size class. */
+    "sections": PropValue<"SettingsLayout", "sections">;
+    /** The id of the page shown, whose row a wide window marks. */
+    "selected": PropValue<"SettingsLayout", "selected">;
+  };
   "Svg": {
     /** Sanitized SVG markup to draw. */
     "xml": PropValue<"Svg", "xml">;

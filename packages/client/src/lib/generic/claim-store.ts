@@ -64,15 +64,21 @@ export function createClaimStore<Value>(empty: Value): ClaimStore<Value> {
   };
 }
 
-// Holds the place while mounted, and shows the value as each render has it.
-export function useClaim<Value>(store: ClaimStore<Value>, value: Value): void {
+const claimIn = <Value>(store?: ClaimStore<Value>): Claim<Value> | null =>
+  store?.claim() ?? null;
+
+// Holds the place while mounted with a store, and shows the value as each render has it.
+export function useClaim<Value>(
+  store: ClaimStore<Value> | undefined,
+  value: Value,
+): void {
   const claim = useRef<Claim<Value>>(null);
 
   useLayoutEffect(() => {
-    const held = store.claim();
+    const held = claimIn(store);
     claim.current = held;
 
-    return held.release;
+    return held?.release;
   }, [store]);
 
   // Runs after the claim above, in the same commit.

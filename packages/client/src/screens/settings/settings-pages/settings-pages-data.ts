@@ -1,4 +1,4 @@
-import type { SettingsListProps, SettingsRow } from './settings-list-props';
+import type { SettingsPagesProps, SettingsRow } from './settings-pages-props';
 import {
   accountsRow,
   agentsRow,
@@ -6,12 +6,12 @@ import {
   devicesRow,
   pluginsRow,
   projectsRow,
-} from './settings-list-server-rows';
+} from './settings-pages-server-rows';
 
 const wideOnly = (wide: boolean, row: SettingsRow): SettingsRow[] =>
   wide ? [row] : [];
 
-function serverRows(props: SettingsListProps, wide: boolean): SettingsRow[] {
+function serverRows(props: SettingsPagesProps, wide: boolean): SettingsRow[] {
   return [
     projectsRow(props),
     agentsRow(props),
@@ -22,18 +22,18 @@ function serverRows(props: SettingsListProps, wide: boolean): SettingsRow[] {
   ];
 }
 
-function deviceRows(props: SettingsListProps, wide: boolean): SettingsRow[] {
+function deviceRows(props: SettingsPagesProps, wide: boolean): SettingsRow[] {
   return [appearanceRow(props), ...wideOnly(wide, notificationsRow(props))];
 }
 
-const appearanceRow = (props: SettingsListProps): SettingsRow => ({
+const appearanceRow = (props: SettingsPagesProps): SettingsRow => ({
   label: 'Appearance',
   icon: 'appearance',
   href: '/settings/appearance',
   value: props.appearanceState ?? 'System',
 });
 
-const notificationsRow = (props: SettingsListProps): SettingsRow => ({
+const notificationsRow = (props: SettingsPagesProps): SettingsRow => ({
   label: 'Notifications',
   icon: 'notifications',
   href: '/settings/notifications',
@@ -41,7 +41,7 @@ const notificationsRow = (props: SettingsListProps): SettingsRow => ({
 });
 
 // The rows whose label holds the search, ignoring case.
-export function matchingRows(
+function matchingRows(
   rows: readonly SettingsRow[],
   query = '',
 ): SettingsRow[] {
@@ -51,7 +51,7 @@ export function matchingRows(
 }
 
 export function settingsRows(
-  props: SettingsListProps,
+  props: SettingsPagesProps,
   wide: boolean,
 ): SettingsRow[] {
   return matchingRows(

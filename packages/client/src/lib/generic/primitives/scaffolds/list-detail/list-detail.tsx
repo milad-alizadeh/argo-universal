@@ -21,15 +21,48 @@ export function ListDetail(props: ListDetailProps): ReactElement {
   const wide = useWide();
   const sidebar = use(ListDetailSidebarContext);
 
-  if (!wide) return <Drilled {...props} />;
+  if (wide) return <WithDetail {...props} wide sidebar={sidebar} />;
 
-  if (sidebar) return <BesideSidebar {...props} sidebar={sidebar} />;
+  if (props.detail == null) return <ListOnly {...props} />;
 
-  return <Split {...props} />;
+  return <WithDetail {...props} wide={false} />;
 }
 
-function Drilled(props: ListDetailProps): ReactElement {
-  return <Pane testID={props.testID}>{props.detail ?? props.list}</Pane>;
+function ListOnly(props: ListDetailProps): ReactElement {
+  return <Pane testID={props.testID}>{props.list}</Pane>;
+}
+
+/*
+ * The detail, with the list in a pane of its own beside it when no sidebar takes the list, or in the App's sidebar
+ * for as long as this ListDetail is shown. The detail keeps its place in the tree as the width or the sidebar changes.
+ */
+type WithDetailProps = ListDetailProps & {
+  wide: boolean;
+  sidebar?: ListDetailSidebar;
+};
+
+function WithDetail({
+  wide,
+  sidebar,
+  ...props
+}: WithDetailProps): ReactElement {
+  useClaim(sidebar, props.list);
+
+  return (
+    <View testID={props.testID} className="flex-1 flex-row">
+      {wide && !sidebar && <ListPane list={props.list} />}
+      <DetailPane {...props} />
+    </View>
+  );
+}
+
+function ListPane({ list }: Pick<ListDetailProps, 'list'>): ReactElement {
+  return (
+    <Pane className="w-frame-list shrink-0">
+      {/* The detail's Page names the screen; a list's Page only draws its heading. */}
+      <PageNavigationEnabled value={false}>{list}</PageNavigationEnabled>
+    </Pane>
+  );
 }
 
 // The selected item, or the caller's empty state while nothing is selected.
@@ -38,33 +71,6 @@ function DetailPane(props: ListDetailProps): ReactElement {
     <Pane className="min-w-0 flex-1">
       <PageBesideList value>{props.detail ?? props.empty}</PageBesideList>
     </Pane>
-  );
-}
-
-function Split(props: ListDetailProps): ReactElement {
-  return (
-    <View testID={props.testID} className="flex-1 flex-row">
-      <Pane className="w-frame-list shrink-0">
-        {/* The detail's Page names the screen; a list's Page only draws its heading. */}
-        <PageNavigationEnabled value={false}>
-          {props.list}
-        </PageNavigationEnabled>
-      </Pane>
-      <DetailPane {...props} />
-    </View>
-  );
-}
-
-// The detail fills the page; the list goes to the App's sidebar for as long as this ListDetail is shown.
-function BesideSidebar(
-  props: ListDetailProps & { sidebar: ListDetailSidebar },
-): ReactElement {
-  useClaim(props.sidebar, props.list);
-
-  return (
-    <View testID={props.testID} className="flex-1">
-      <DetailPane {...props} />
-    </View>
   );
 }
 

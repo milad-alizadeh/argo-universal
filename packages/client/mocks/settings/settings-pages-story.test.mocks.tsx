@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { SettingsList } from '../../src/features/settings/components/settings-list/settings-list';
+import { SettingsPages } from '../../src/screens/settings/settings-pages/settings-pages';
 
 export const meta = {
-  title: 'Tests/SettingsList',
-  component: SettingsList,
+  title: 'Tests/SettingsPages',
+  component: SettingsPages,
   args: {
     projectCount: 1,
     agentCount: 1,
@@ -16,10 +16,10 @@ export const meta = {
   },
   render: (args): React.JSX.Element => (
     <View className="h-175 w-full">
-      <SettingsList {...args} />
+      <SettingsPages {...args} />
     </View>
   ),
-} satisfies Meta<typeof SettingsList>;
+} satisfies Meta<typeof SettingsPages>;
 
 export type Story = StoryObj<typeof meta>;
 

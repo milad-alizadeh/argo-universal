@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { Sheet } from '#primitives/overlays/sheet';
 import { InspectorActions, InspectorBody } from './inspector-pane';
 import type { InspectorProps } from './inspector-props';
+import { InspectorSheetFrame } from './inspector-sheet-frame';
 
 /*
  * The stock sheet at its medium detent (a form sheet on iPad), titled like every phone sheet and with no close
@@ -10,16 +10,9 @@ import type { InspectorProps } from './inspector-props';
  */
 export function InspectorSheet(props: InspectorProps): ReactElement {
   return (
-    <Sheet
-      open={props.open}
-      onOpenChange={props.onOpenChange}
-      label={props.title}
-      detents={['medium', 'large']}
-    >
-      <Sheet.Page name="inspector" title={props.title}>
-        <SheetContent {...props} />
-      </Sheet.Page>
-    </Sheet>
+    <InspectorSheetFrame inspector={props} pageTitle={props.title}>
+      <SheetContent {...props} />
+    </InspectorSheetFrame>
   );
 }
 

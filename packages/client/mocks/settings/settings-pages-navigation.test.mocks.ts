@@ -1,7 +1,7 @@
 import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../src/lib/generic/each-layout';
 import { settleViewport } from '../../src/lib/generic/settle-viewport';
-import type { PlayContext, Story } from './settings-list-story.test.mocks';
+import type { PlayContext, Story } from './settings-pages-story.test.mocks';
 
 type Pointer = Pick<PlayContext, 'canvas' | 'userEvent'>;
 
