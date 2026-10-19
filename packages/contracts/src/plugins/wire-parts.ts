@@ -19,6 +19,7 @@ import { listWireParts } from './list-wire-parts';
 import { mediaWireParts } from './media-wire-parts';
 import { overlayWireParts } from './overlay-wire-parts';
 import { scaffoldWireParts } from './scaffold-wire-parts';
+import { tableWireParts } from './table-wire-parts';
 import { textForApp } from './text-for-app';
 import type { WirePartDefinition } from './wire-part-definition';
 import { wirePartReferences } from './wire-part-reference';
@@ -32,6 +33,7 @@ export const wireParts = {
   ...layoutWireParts,
   ...scaffoldWireParts,
   ...listWireParts,
+  ...tableWireParts,
   ...actionListWireParts,
   ...controlWireParts,
   ...overlayWireParts,

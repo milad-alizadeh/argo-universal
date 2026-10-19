@@ -1,6 +1,7 @@
 import type { WireNode } from './wire';
 
-const node = (
+// A childless wire node, for the fixtures' trees.
+export const node = (
   type: string,
   key: string,
   props: WireNode['props'] = {},

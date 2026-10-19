@@ -92,8 +92,6 @@ export const svgProps = z.object({
     .describe('The action run when the artwork is pressed.'),
 });
 
-export const listProps = z.object({});
-
 export {
   contentListProps,
   listSectionProps,

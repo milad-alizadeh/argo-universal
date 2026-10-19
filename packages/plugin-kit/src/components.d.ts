@@ -44,6 +44,11 @@ export const ProgressBar: PluginComponents['ProgressBar'];
 
 export const Pill: PluginComponents['Pill'];
 
+export const Table: PluginComponents['Table'] & {
+  Row: PluginComponents['Table.Row'];
+  Cell: PluginComponents['Table.Cell'];
+};
+
 export const ActionList: PluginComponents['ActionList'] & {
   Section: PluginComponents['ActionList.Section'];
 };

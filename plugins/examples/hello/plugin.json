@@ -41,6 +41,11 @@
         "id": "hello-media",
         "title": "Hello media",
         "path": "/media"
+      },
+      {
+        "id": "hello-runs",
+        "title": "Hello runs",
+        "path": "/runs"
       }
     ],
     "settings": [

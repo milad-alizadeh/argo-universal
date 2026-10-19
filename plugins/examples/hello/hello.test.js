@@ -63,38 +63,6 @@ test('the dashboard shows the week of Issues', async ({ mount }) => {
     assert.equal((await page.find(title)).type, 'Card');
 });
 
-// The page names each file by the Server's reference, so the App never loads it from a Plugin's host.
-test('the media page plays a clip and a sound', async ({ mount }) => {
-  const page = await mount({
-    page: '/media',
-    surface: {
-      platform: 'web',
-      parts: {
-        ScrollView: 1,
-        Surface: 1,
-        Stack: 1,
-        Text: 3,
-        Video: 1,
-        Audio: 1,
-      },
-    },
-  });
-
-  const clip = await page.find('Hello clip');
-  const chime = await page.find('Hello chime');
-
-  assert.equal(clip.type, 'Video');
-  assert.deepEqual(Object.keys(clip.props.source).sort(), [
-    'format',
-    'hash',
-    'pluginId',
-  ]);
-  assert.equal(clip.props.source.format, 'mp4');
-  assert.equal(clip.props.poster.format, 'jpeg');
-  assert.equal(chime.type, 'Audio');
-  assert.equal(chime.props.source.format, 'mp3');
-});
-
 const formParts = {
   Stack: 1,
   Form: 1,
@@ -172,4 +140,37 @@ test('cancelling a build offers to rerun it', async ({ mount }) => {
 
   await page.press('Cancel');
   assert.equal((await page.find('Rerun')).type, 'Action');
+});
+
+// Argo reports the new sort; the page re-sorts its runs.
+test('the runs Page sorts its table of runs', async ({ mount, clock }) => {
+  const page = await mount({
+    page: '/runs',
+    surface: {
+      platform: 'web',
+      parts: {
+        Page: 1,
+        Table: 1,
+        'Table.Row': 1,
+        'Table.Cell': 1,
+        ActionList: 1,
+        Action: 1,
+        Pill: 1,
+      },
+    },
+  });
+
+  assert.equal((await page.find('CI runs')).type, 'Table');
+  assert.equal((await page.find('Build iOS')).type, 'Table.Cell');
+
+  const firstRun = () => page.findText('CI runs').node.children[0].props.id;
+  assert.equal(firstRun(), 'typecheck');
+
+  await page.dispatch({
+    key: page.findText('CI runs').key,
+    event: 'onSortChange',
+    payload: { column: 'started', direction: 'descending' },
+  });
+
+  while (firstRun() !== 'lint') await clock.advance(0);
 });

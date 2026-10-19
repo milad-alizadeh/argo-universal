@@ -96,6 +96,11 @@ export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen
 
 export { PageAtDrawerRoot } from '#primitives/scaffolds/page';
 
+export {
+  TableRowDetailHost,
+  type OpenRowDetail,
+} from '#primitives/lists/table';
+
 export { PluginErrorToasts } from './screens/plugins/plugin-error-toasts';
 
 export {

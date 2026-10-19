@@ -545,10 +545,40 @@ export type WireSchemaHints = {
     "onPress": PropValue<"ListItem", "onPress">;
   };
   "Table": {
+    /** The columns in order; the first one names each row. */
+    "columns": PropValue<"Table", "columns">;
+    /** Compact widths draw a list of rows, or keep the grid and scroll sideways. */
+    "compactLayout": PropValue<"Table", "compactLayout">;
+    /** The sorted column; the Plugin sorts the rows. */
+    "sort": PropValue<"Table", "sort">;
+    /** on Sort Change for this part. */
+    "onSortChange": PropValue<"Table", "onSortChange">;
+    /** The row choice mode. */
+    "selectionMode": PropValue<"Table", "selectionMode">;
+    /** Selected row ids. */
+    "selection": PropValue<"Table", "selection">;
+    /** on Selection Change for this part. */
+    "onSelectionChange": PropValue<"Table", "onSelectionChange">;
+    /** Spoken name of the table. */
+    "accessibilityLabel": PropValue<"Table", "accessibilityLabel">;
     /** Input items, expanded in the worker; pair with renderItem. */
     "items": PropValue<"Table", "items">;
     /** Renders one keyed child for each item; receives the item and its index. */
     "renderItem": PropValue<"Table", "renderItem">;
+  };
+  "Table.Row": {
+    /** The row identity for selection. */
+    "id": PropValue<"Table.Row", "id">;
+    /** Optional spoken label; defaults to the cell texts. */
+    "accessibilityLabel": PropValue<"Table.Row", "accessibilityLabel">;
+    /** The primary action, run on activation at regular widths. */
+    "onPress": PropValue<"Table.Row", "onPress">;
+  };
+  "Table.Cell": {
+    /** The id of the column this cell fills. */
+    "column": PropValue<"Table.Cell", "column">;
+    /** The cell text; also the spoken and compact value. */
+    "text": PropValue<"Table.Cell", "text">;
   };
   "Alert": {
     /** Whether the alert is open. */

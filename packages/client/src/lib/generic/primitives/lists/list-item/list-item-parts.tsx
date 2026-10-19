@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
@@ -144,6 +145,13 @@ export function Accessory({ children }: { children?: ReactNode }): ReactNode {
       {children}
     </View>
   ) : null;
+}
+
+// The disclosure chevron of a row that pushes a page; Android draws none.
+export function LinkAccessory(): ReactElement | null {
+  return Platform.OS === 'android' ? null : (
+    <Icon name="web-disclosure" role="disclosure" className="text-tertiary" />
+  );
 }
 
 // Paper: a control under the row's title and value spans the row's content width, on its own line.

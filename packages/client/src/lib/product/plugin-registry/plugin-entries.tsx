@@ -24,6 +24,7 @@ import { Stack } from '#primitives/layout/stack';
 import { Surface } from '#primitives/layout/surface';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { Table } from '#primitives/lists/table';
 import { Alert } from '#primitives/overlays/alert';
 import { Sheet } from '#primitives/overlays/sheet';
 import { Detail } from '#primitives/scaffolds/detail';
@@ -67,6 +68,9 @@ export const pluginEntries = {
   'ListItem.Stepper': ListItem.Stepper,
   'ListItem.TextField': ListItem.TextField,
   ListItem,
+  Table,
+  'Table.Row': Table.Row,
+  'Table.Cell': Table.Cell,
   Label,
   ProgressBar,
   Pill,

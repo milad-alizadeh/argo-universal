@@ -9,12 +9,18 @@ export const example = fileURLToPath(
   new URL('../../../plugins/examples/hello/', import.meta.url),
 );
 
+const testFile = /\.test\.js$/;
+
 const cli = fileURLToPath(new URL('../bin/argo.mjs', import.meta.url));
 
 export async function fixture(source: string): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'argo-cli-plugin-'));
   onTestFinished(() => rm(directory, { recursive: true, force: true }));
-  await cp(example, directory, { recursive: true });
+  // Each fixture brings its own tests, so the example's tests stay behind.
+  await cp(example, directory, {
+    recursive: true,
+    filter: (path) => !testFile.test(path),
+  });
   await writeFile(join(directory, 'index.js'), source);
 
   return directory;
