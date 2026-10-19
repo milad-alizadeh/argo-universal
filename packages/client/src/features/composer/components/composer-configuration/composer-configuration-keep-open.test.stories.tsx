@@ -85,3 +85,43 @@ export const ModelPicksKeepConfigureOpenWide: Story = {
     await waitFor(() => expect(configure).not.toBeInTheDocument());
   },
 };
+
+/*
+ * Configure opens on hover, so it is already open when its trigger takes focus. Escape from the models beside it
+ * closes both, and focus returns to that trigger.
+ */
+export const EscapeFromModelsReturnsFocusWide: Story = {
+  beforeEach: async (): Promise<void> => {
+    await settleViewport(layoutWidths.wide);
+  },
+  render: () => <ChangingConfiguration />,
+  play: async ({ canvas, userEvent }) => {
+    const overlay = within(document.body);
+    const trigger = canvas.getByRole('button', { name: agentModelLabel });
+    await userEvent.hover(trigger);
+
+    const configure = await overlay.findByRole('dialog', {
+      name: agentModelLabel,
+    });
+
+    // Focus reaches the trigger while Configure is open, as a click right after the hover gives it.
+    trigger.focus();
+    await userEvent.click(trigger);
+    await userEvent.click(
+      within(configure).getByRole('button', { name: /^Model,/ }),
+    );
+
+    const picker = await overlay.findByRole('dialog', {
+      name: modelPickerLabel,
+    });
+
+    await userEvent.click(
+      within(picker).getByRole('radio', { name: otherModel }),
+    );
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => expect(picker).not.toBeInTheDocument());
+    await waitFor(() => expect(configure).not.toBeInTheDocument());
+    await waitFor(() => expect(trigger).toHaveFocus());
+  },
+};

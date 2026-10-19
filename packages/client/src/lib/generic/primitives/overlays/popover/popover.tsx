@@ -12,6 +12,11 @@ import type {
   PopoverContentProps as ContentProps,
   PopoverProps,
 } from './popover-props';
+import {
+  keepTriggerInside,
+  TriggerElementProvider,
+  useTriggerElement,
+} from './popover-trigger-element';
 
 export { PopoverTrigger } from './popover-trigger';
 
@@ -29,13 +34,21 @@ export function Popover(props: PopoverProps): React.JSX.Element {
   return (
     <PopoverContext.Provider value={state}>
       <WebPopover.Root open={state.open} onOpenChange={state.onOpenChange}>
-        <View className={props.className} style={props.style}>
-          <HoverProvider enabled={props.openOnHover}>
-            {props.children}
-          </HoverProvider>
-        </View>
+        <PopoverFrame {...props} />
       </WebPopover.Root>
     </PopoverContext.Provider>
+  );
+}
+
+function PopoverFrame(props: PopoverProps): React.JSX.Element {
+  return (
+    <View className={props.className} style={props.style}>
+      <TriggerElementProvider>
+        <HoverProvider enabled={props.openOnHover}>
+          {props.children}
+        </HoverProvider>
+      </TriggerElementProvider>
+    </View>
   );
 }
 
@@ -60,6 +73,7 @@ function PopoverBody({ ref, ...props }: BodyProps): React.JSX.Element {
     <WebPopover.Content
       ref={ref}
       {...webContentProps(props)}
+      onInteractOutside={keepTriggerInside(useTriggerElement())}
       {...hoverContentProps(hover, props)}
     >
       <PopoverSurface {...props} open={open} />
