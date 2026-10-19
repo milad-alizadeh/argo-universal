@@ -35,10 +35,12 @@ export const composerIconButton =
 const attachTriggerProps = {
   icon: 'add',
   variant: 'ghost',
+  size: 'xs',
   iconRole: 'control',
   hitSlop: 8,
   accessibilityLabel: 'Attach',
-  className: `p-0 ${composerIconButton} wide:w-4 wide:mr-1.5`,
+  // Wide, a 16x28 slot. `wide:sm:` because the CSS orders `wide:` before the size's `sm:`.
+  className: `p-0 ${composerIconButton} wide:sm:w-4 wide:mr-1.5`,
   iconClassName: 'text-muted-foreground',
 } as const;
 

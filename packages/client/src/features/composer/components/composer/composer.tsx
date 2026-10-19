@@ -8,6 +8,7 @@ import { useErrorToast } from '#primitives/overlays/toast';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';
+import { composerTrayClass } from './composer-tray-class';
 import { ComposerTopTray } from './composer-trays';
 import type { ComposerLayout, ComposerProps } from './composer-types';
 
@@ -34,8 +35,10 @@ function useComposerClass(): string {
   return cn('w-full items-center', useSessionFill().filled && filledClass);
 }
 
-const requestTrayClass =
-  'self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass overflow-hidden web:backdrop-blur-tray web:backdrop-saturate-110';
+const requestTrayClass = cn(
+  composerTrayClass,
+  '-mb-3 pb-3 rounded-t-xl overflow-hidden',
+);
 
 const requestClass = (wide: boolean, filled: boolean): string =>
   cn(wide && requestTrayClass, filled && filledClass);

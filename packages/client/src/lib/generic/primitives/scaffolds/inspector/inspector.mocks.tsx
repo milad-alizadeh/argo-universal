@@ -71,7 +71,7 @@ export function ExampleInspector(props: {
   const [open, setOpen] = useState(props.initiallyOpen ?? false);
 
   return (
-    <View className="flex-1 flex-row bg-background">
+    <View className="flex-1 flex-row bg-content">
       <ExamplePage onToggle={() => setOpen(!open)} />
       <Inspector {...example} open={open} onOpenChange={setOpen}>
         <InspectorContent />

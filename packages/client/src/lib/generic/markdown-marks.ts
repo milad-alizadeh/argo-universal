@@ -22,6 +22,8 @@ export const markdownMarkClassNames = {
  */
 export const markdownBlockClassNames = {
   heading: 'font-semibold',
+  // Rendered markdown's heading: Paper's 16/24 on every width, 4 below the block before it.
+  proseHeading: 'font-semibold wide-type:text-base wide-type:leading-6 pt-1',
   quote: 'border-l-2 border-border pl-3',
   listMarker: 'text-muted-foreground',
   domListMarker: 'marker:text-muted-foreground',

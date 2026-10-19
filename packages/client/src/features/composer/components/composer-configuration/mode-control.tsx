@@ -46,6 +46,13 @@ function ModePopover(
   );
 }
 
+// Paper's Composer pickers: control text and radius-md corners.
+const modeTriggerAppearance = {
+  accessibilityLabel: 'Mode',
+  labelRole: { compact: 'row', wide: 'control' },
+  variant: 'toolbar',
+} as const;
+
 // Wide, the icon, label and chevron; narrow, the icon alone. Full access reads red.
 function modeTrigger(
   props: ModeControlProps & { wide: boolean },
@@ -54,7 +61,7 @@ function modeTrigger(
 
   return (
     <MenuTrigger
-      accessibilityLabel="Mode"
+      {...modeTriggerAppearance}
       disabled={props.disabled}
       label={modeLabel(current)}
       icon={modeIcon(current)}
