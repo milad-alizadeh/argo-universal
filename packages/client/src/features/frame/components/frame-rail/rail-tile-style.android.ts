@@ -8,6 +8,7 @@ export const railTiles: RailTiles = {
   corners: 'rounded-xl',
   selected: 'bg-selected',
   column: 'gap-px',
+  collapsedColumn: 'gap-px',
 };
 
 /*

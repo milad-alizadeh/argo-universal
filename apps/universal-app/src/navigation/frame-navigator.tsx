@@ -12,7 +12,6 @@ import {
   PluginErrorToasts,
   coreNavigationSections,
   type PluginSection,
-  usePhoneDrawerWidth,
   useSectionLists,
   useNotifications,
   type SizeClass,
@@ -46,7 +45,6 @@ function NarrowDrawerContent({
       selectedSection={frame.section}
       items={frame.items}
       open={useDrawerStatus() === 'open'}
-      width={usePhoneDrawerWidth()}
       onSectionChange={(section) => pick(drawer, section)}
     />
   );

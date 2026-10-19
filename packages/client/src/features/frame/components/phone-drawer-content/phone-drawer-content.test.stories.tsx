@@ -12,7 +12,6 @@ const meta = {
     selectedSection: 'sessions',
     attentionCount: 0,
     open: true,
-    width: 300,
     onSectionChange: fn(),
   },
 } satisfies Meta<typeof PhoneDrawerContent>;

@@ -17,7 +17,6 @@ const meta = {
     selectedSection: 'sessions',
     attentionCount: 1,
     open: true,
-    width: 300,
     onSectionChange: action('section changed'),
   },
 } satisfies Meta<typeof PhoneDrawerContent>;
@@ -26,5 +25,5 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Paper's "LiveSessionList (phone) / Drawer open": the glass drawer over its warm glow.
+// Paper's "LiveSessionList (phone) / Drawer open": the glass drawer on the window surface.
 export const Overview: Story = { name: 'PhoneDrawerContent' };
