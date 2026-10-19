@@ -171,7 +171,7 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Story tests
-        run: pnpm exec turbo run test:stories --force -- --shard=${{ matrix.shard }}/3
+        run: pnpm exec turbo run test:stories -- --shard=${{ matrix.shard }}/3
 
       # apps/storybook/vitest.setup.ts saves a failed story's screenshot in __screenshots__/failures beside its test file.
       - name: Upload the story failure screenshots
