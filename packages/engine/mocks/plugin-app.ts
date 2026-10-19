@@ -1,7 +1,4 @@
-import {
-  pluginWireVersion,
-  type PluginSurface,
-} from '@repo/contracts/plugins/kit';
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import type {
   ViewMessage,
   PluginDispatchInput,
@@ -21,10 +18,7 @@ export interface PluginApp {
   stop: () => void;
 }
 
-const currentSurface: PluginSurface = {
-  platform: 'web',
-  wireVersion: pluginWireVersion,
-};
+const currentSurface = currentPluginSurface('web');
 
 export function connectPluginApp(
   url: string,

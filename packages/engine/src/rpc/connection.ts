@@ -28,11 +28,15 @@ export function createRpcContext(
   };
 }
 
-// An App that reports no wire version is older than the minimum, not a broken Connection.
+// A missing, non-JSON or malformed surface reports no wire version: that App sees "Update Argo", not a broken Connection.
 function reportedSurface(
   reported: string | undefined,
 ): PluginSurface | undefined {
-  return reported
-    ? PluginSurface.safeParse(JSON.parse(reported)).data
-    : undefined;
+  if (!reported) return undefined;
+
+  try {
+    return PluginSurface.safeParse(JSON.parse(reported)).data;
+  } catch {
+    return undefined;
+  }
 }

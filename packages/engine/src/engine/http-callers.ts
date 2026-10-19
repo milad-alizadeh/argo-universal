@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { pluginWireVersion } from '@repo/contracts/plugins/kit';
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import type { RpcConnection } from '../rpc';
 import type { AppRouter } from './router';
 
@@ -26,6 +26,6 @@ function connectionOf(signal: AbortSignal): RpcConnection {
   return {
     id: randomUUID(),
     signal,
-    surface: { platform: 'web', wireVersion: pluginWireVersion },
+    surface: currentPluginSurface('web'),
   };
 }

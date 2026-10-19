@@ -8,6 +8,7 @@ import {
 import type { RpcConnection } from '../../rpc';
 import type { StartedPlugins } from '../located-plugins';
 import type { PluginRuntime } from '../runtime/plugin-runtime';
+import { belowWireMinimum } from '../views/render-fallback';
 import { renderView } from './render-view';
 
 type RenderRequest = { input: ReplaceableInput; plugins: StartedPlugins };
@@ -63,7 +64,7 @@ async function* drawAnswer(
       replacement: { ...answer, input },
       connection,
     });
-  else yield olderApp(runtime, { ...answer, input });
+  else yield drawCoreForOlderApp(runtime, { ...answer, input });
 }
 
 type Selected = Extract<RenderAnswer, { pluginId: string }> & {
@@ -71,16 +72,12 @@ type Selected = Extract<RenderAnswer, { pluginId: string }> & {
 };
 
 // An App older than the wire minimum draws core's own in every Replaceable Slot (ADR-0034).
-function olderApp(
+function drawCoreForOlderApp(
   runtime: PluginRuntime,
   { pluginId, path, input }: Selected,
 ): ReplaceableMessage {
   runtime.views.discardRender(pluginId, path);
-  runtime.renderFallback(
-    pluginId,
-    input.slotId,
-    'App is below the wire minimum',
-  );
+  runtime.renderFallback(pluginId, input.slotId, belowWireMinimum);
 
   return { type: 'core', input };
 }

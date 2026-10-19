@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pluginWireVersion } from '@repo/contracts/plugins/kit';
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
 import {
   traySlotFixture,
@@ -14,7 +14,7 @@ import { writeHookPlugins } from '#mocks/hook-plugins';
 import { renderApp } from '#mocks/replaceable-app';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
-const current = { platform: 'web', wireVersion: pluginWireVersion } as const;
+const current = currentPluginSurface('web');
 
 it.each([
   {

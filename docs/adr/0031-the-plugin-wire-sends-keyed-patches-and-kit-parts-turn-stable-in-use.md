@@ -67,6 +67,6 @@ ADR-0025's stability rule also blocks the spec: a kit part turns stable only onc
 - **The App fetches images directly.** Rejected: it leaks the user's IP address to the Plugin's host, bypasses ADR-0030's Capabilities, and can't carry the Plugin's credentials.
 - **Schemas stay in the App.** Rejected: the Server could not validate trees, and Plugin authors would have no types.
 - **Kit props declared separately, with a type test keeping them, the schemas and Plugin JSX in step,** as first accepted. Rejected by the owner: two definitions of one part, with a test patching over the gap. Deriving the kit props from the schema leaves one.
-- **Strict schemas without versions.** Rejected: every new optional prop would blank that part on older Apps. ADR-0034 keeps schemas lenient, so an older App ignores a new optional prop, and adds one wire version instead.
+- **Strict schemas without versions.** Rejected: every new optional prop would blank that part on older Apps. Under ADR-0034 an older App ignores props and leaves it does not know, and only a change it can't draw bumps the one Plugin wire version.
 - **Keep "the Issue tracker and Atlas" for kit parts.** Rejected: most of Spec 0017's parts would stay proposed forever.
 - **A proposed-API opt-in for third-party Plugins,** as VS Code's `enabledApiProposals`. Not now: third-party Plugins don't load until ADR-0030's operating-system boundary exists.

@@ -4,12 +4,12 @@ This amends [ADR-0031](0031-the-plugin-wire-sends-keyed-patches-and-kit-parts-tu
 
 ## Decision
 
-- **One wire version and a minimum.** Contracts defines `pluginWireVersion` and `minimumPluginWireVersion`. On connecting, an App sends `{ platform, wireVersion }` as its Plugin surface.
+- **One Plugin wire version and a minimum.** Contracts defines `pluginWireVersion` and `minimumPluginWireVersion`. On connecting, each Connection reports the App's platform and Plugin wire version as `{ platform, wireVersion }`.
   - An App at or above the minimum gets Plugin trees, checked against the one current schema set.
-  - An App that reports no wire version, or one below the minimum, sees "Update Argo to see this" in place of every Plugin page and ordinary Slot. In a Replaceable Slot, core draws its own component.
+  - An App that reports no Plugin wire version, or one below the minimum, sees "Update Argo to see this" in place of every Plugin page and ordinary Slot. In a Replaceable Slot, core draws its own component.
   - `ctx.surface` keeps `platform` and also shows `wireVersion`. Plugins don't build a tree per part.
 - **Each part has one schema.** There are no per-part versions, no legacy schemas and no lowering. The Server still prepares every tree with ADR-0025's rules: unknown leaves are dropped, a container that fails its schema shows "Update Argo to see this", and root-only parts are allowed only at the root. A Replaceable Slot tree is still refused whole when any node fails the current schemas (ADR-0027).
-- **After the first release, wire changes are additive.** A new optional prop or a new part does not change the wire version: an older App ignores props it does not know and drops leaves it does not know. A change an older App can't draw, such as a renamed prop, a removed part or a new required prop, bumps the wire version, and bumps the minimum with it.
+- **After the first release, wire changes are additive.** A new optional prop or a new kit part does not change the Plugin wire version: an older App ignores props it does not know and drops leaves it does not know. A change an older App can't draw, such as a renamed prop, a removed part or a new required prop, bumps the Plugin wire version, and bumps the minimum with it.
 - **Proposed kit parts can still change.** While a kit part is proposed API (ADR-0031), renaming it or its props changes its one schema. Nothing older needs to be kept.
 
 The design copies VS Code:

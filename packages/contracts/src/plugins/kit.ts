@@ -43,6 +43,7 @@ export function wirePart(type: string): WirePartDefinition | undefined {
 
 export {
   PluginSurface,
+  currentPluginSurface,
   pluginWireVersion,
   minimumPluginWireVersion,
   drawsPluginWire,

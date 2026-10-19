@@ -4,6 +4,7 @@ import type { ViewMessage } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../../rpc';
 import type { OpenView } from './open-view';
 import { preparedView } from './prepared-view';
+import { updateArgoLine } from './render-fallback';
 import { messages } from './stream';
 
 export function appView(
@@ -15,7 +16,11 @@ export function appView(
 
   if (view.opening.renderSlot) return source;
 
-  if (!drawsPluginWire(connection.surface)) return updateArgo(source);
+  if (!drawsPluginWire(connection.surface)) {
+    log(updateArgoLine(view.pluginId, view.opening.path));
+
+    return replaceWithUpdateArgo(source);
+  }
 
   return preparedView(source, (reason) =>
     log(`Plugin ${view.pluginId}: refused ${view.opening.path}: ${reason}`),
@@ -23,7 +28,7 @@ export function appView(
 }
 
 // An App older than the wire minimum sees "Update Argo" in place of the page or Slot (ADR-0034).
-async function* updateArgo(
+async function* replaceWithUpdateArgo(
   source: AsyncIterable<ViewMessage>,
 ): AsyncGenerator<ViewMessage> {
   for await (const message of source)

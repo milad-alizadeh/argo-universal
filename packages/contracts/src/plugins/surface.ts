@@ -13,6 +13,11 @@ export const PluginSurface = z.object({
 
 export type PluginSurface = z.infer<typeof PluginSurface>;
 
+// The surface an App reports for its platform when it speaks this build's wire version.
+export const currentPluginSurface = (
+  platform: PluginSurface['platform'],
+): PluginSurface => ({ platform, wireVersion: pluginWireVersion });
+
 // An App that reports no wire version, or one below the minimum, sees "Update Argo" instead of Plugin trees.
 export const drawsPluginWire = (surface: PluginSurface | undefined): boolean =>
   (surface?.wireVersion ?? 0) >= minimumPluginWireVersion;

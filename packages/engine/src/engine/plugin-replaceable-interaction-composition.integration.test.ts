@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pluginWireVersion } from '@repo/contracts/plugins/kit';
+import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import type { ReplaceableMessage } from '@repo/contracts/plugins/replaceable';
 import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
 import { traySlotFixture } from '@repo/contracts/plugins/replaceable-fixtures';
@@ -38,10 +38,7 @@ async function counterHome(): Promise<string> {
 it('retains a replacement handler and restores core when its Plugin is turned off', async () => {
   const { url } = await startEngineTestHost({ home: await counterHome() });
 
-  const app = renderApp(url, traySlotFixture, {
-    platform: 'desktop',
-    wireVersion: pluginWireVersion,
-  });
+  const app = renderApp(url, traySlotFixture, currentPluginSurface('desktop'));
 
   await expect
     .poll(() => app.messages[0], { timeout: 10_000 })
@@ -80,7 +77,7 @@ it('retains a replacement handler and restores core when its Plugin is turned of
 it('accepts drawing failure reports only from the Connection that owns the replacement and logs once', async () => {
   const home = await counterHome();
   const { url } = await startEngineTestHost({ home });
-  const surface = { platform: 'web' as const, wireVersion: pluginWireVersion };
+  const surface = currentPluginSurface('web');
   const app = renderApp(url, traySlotFixture, surface);
   const stranger = renderApp(url, traySlotFixture, surface);
   await expect

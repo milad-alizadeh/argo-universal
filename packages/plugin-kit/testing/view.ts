@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import {
-  pluginWireVersion,
+  currentPluginSurface,
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
 import type {
@@ -31,10 +31,8 @@ export type PluginMount = { surface: MountSurface } & (
 
 const viewLimitMs = 3000;
 
-const testSurface = (mount?: MountSurface): PluginSurface => ({
-  platform: mount?.platform ?? 'web',
-  wireVersion: pluginWireVersion,
-});
+const testSurface = (mount?: MountSurface): PluginSurface =>
+  currentPluginSurface(mount?.platform ?? 'web');
 
 type Event = PartEvent & { key: string };
 

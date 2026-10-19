@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import {
-  iconSymbol,
-} from '../kit-symbols/icon-schema';
+import { iconSymbol } from '../kit-symbols/icon-schema';
 import { tones } from '../kit-tokens';
 
 const semanticTone = z

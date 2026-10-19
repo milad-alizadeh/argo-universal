@@ -1,6 +1,6 @@
 import {
   minimumPluginWireVersion,
-  pluginWireVersion,
+  currentPluginSurface,
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
 import {
@@ -27,13 +27,19 @@ type App = {
   update: (surface: Partial<PluginSurface>) => void;
 };
 
-function app(url: string, initial?: Partial<PluginSurface>): App {
+// A string is sent as reported, so a test can send a surface that is not JSON.
+type Reported = Partial<PluginSurface> | string;
+
+const encoded = (surface: Reported): string =>
+  typeof surface === 'string' ? surface : JSON.stringify(surface);
+
+function app(url: string, initial?: Reported): App {
   let surface = initial;
 
   const socket = createWSClient({
     url: url.replace(/^http/, 'ws'),
     connectionParams: () =>
-      surface ? { pluginSurface: JSON.stringify(surface) } : {},
+      surface ? { pluginSurface: encoded(surface) } : {},
   });
 
   const client = createTRPCClient<AppRouter>({
@@ -105,10 +111,7 @@ function expected(kind: RenderKind, surface: PluginSurface): string {
 
 const updateArgo = 'Update Argo to see this';
 
-const desktop: PluginSurface = {
-  platform: 'desktop',
-  wireVersion: pluginWireVersion,
-};
+const desktop = currentPluginSurface('desktop');
 
 const phoneAtMinimum: PluginSurface = {
   platform: 'ios',
@@ -116,7 +119,7 @@ const phoneAtMinimum: PluginSurface = {
 };
 
 it.each(['page', 'Slot'] as const)(
-  'draws each %s for an App at the wire minimum and Update Argo for an older one, including after an update',
+  'draws each %s for an App at the wire minimum and Update Argo for an older or malformed one, including after an update',
   async (kind) => {
     const home = await createRuntimePlugins([
       { id: 'surface', fixture: 'surface', slots: [projectDetailsSlotId] },
@@ -128,18 +131,31 @@ it.each(['page', 'Slot'] as const)(
     const phone = app(url, { platform: 'ios' });
     const current = app(url, desktop);
     const legacy = app(url);
+    // A surface that is not JSON, or has the wrong shape, reports no wire version.
+    const notJson = app(url, 'not json');
+    const malformed = app(url, '{"platform":"ios","wireVersion":"one"}');
 
-    const views = [phone, current, legacy].map((viewer) => watch(viewer, kind));
+    const views = [phone, current, legacy, notJson, malformed].map((viewer) =>
+      watch(viewer, kind),
+    );
 
     await expect
       .poll(() => views.map(rendered), { timeout: 10_000 })
-      .toEqual([updateArgo, expected(kind, desktop), updateArgo]);
+      .toEqual([
+        updateArgo,
+        expected(kind, desktop),
+        updateArgo,
+        updateArgo,
+        updateArgo,
+      ]);
     phone.update(phoneAtMinimum);
     await expect
       .poll(() => views.map(rendered), { timeout: 10_000 })
       .toEqual([
         expected(kind, phoneAtMinimum),
         expected(kind, desktop),
+        updateArgo,
+        updateArgo,
         updateArgo,
       ]);
   },
