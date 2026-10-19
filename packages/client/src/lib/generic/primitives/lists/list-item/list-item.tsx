@@ -4,6 +4,7 @@ import { ProgressBar } from '#primitives/status/progress-bar';
 import { ListContext } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { InListItem } from '../../../list-item-control-context';
+import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { hasLeading } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
@@ -56,7 +57,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
   const { appearance, position } = useContext(ListContext);
 
   return (
-    <View className={itemSurface(appearance, position, props.selected)}>
+    <View className={itemSurface(appearance, position, props)}>
       <ItemPress {...drawingContent(props)} />
       <Selection selected={props.selected} />
       <ItemSeparator {...props} />
@@ -65,8 +66,25 @@ function ItemSurface(props: DrawingProps): ReactElement {
   );
 }
 
+// A loading row keeps the row's surface, lanes and line heights, with nothing to press or read.
+function LoadingItem(props: ListItemProps): ReactElement {
+  return (
+    <ListItemFrame
+      title={props.title}
+      leading={props.leading === undefined ? undefined : <SkeletonMark />}
+      content={<SkeletonContent {...props} />}
+    />
+  );
+}
+
 // Only a choosing List draws the choice slot; an empty one would hold the trailing lane off the row's edge.
 export function ListItem(props: ListItemProps): ReactElement {
+  if (props.isLoading) return <LoadingItem {...props} />;
+
+  return <ChoosingItem {...props} />;
+}
+
+function ChoosingItem(props: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
   const { selectionMode } = useContext(ListContext);
 

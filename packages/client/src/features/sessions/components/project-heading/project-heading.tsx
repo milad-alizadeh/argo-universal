@@ -1,11 +1,11 @@
 import type * as React from 'react';
 import { memo } from 'react';
-import { Pressable } from '#primitives/actions/pressable';
+import { Icon } from '#primitives/content/icon';
+import { ListSectionHeader } from '#primitives/lists/list';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { ProjectActions } from './project-heading-actions';
 import { ProjectHeadingMenu } from './project-heading-menu';
-import { ProjectToggle } from './project-heading-toggle';
 
 export interface ProjectHeadingProps {
   name: string;
@@ -16,33 +16,40 @@ export interface ProjectHeadingProps {
   onProjectSettings?: () => void;
 }
 
-// The title takes the rows' hover tint on its own; the row's CSS group state reveals the actions, so no pointer event can leave them stuck.
-const rowClassName =
-  'group mb-0.5 min-h-10 web:h-10 wide:min-h-8 web:wide:h-8 flex-row items-center rounded-xl pr-1 web:wide:hover:bg-muted web:wide:focus-within:bg-muted';
+type HeaderProps = ProjectHeadingProps &
+  ContextMenuTriggerProps & { actions?: React.ReactNode };
 
-// Only a wide window's heading draws ⋯ and +, and has no right-click menu; elsewhere its long press opens the same actions.
-function ProjectHeadingRow(
-  props: ProjectHeadingProps & ContextMenuTriggerProps,
-): React.JSX.Element {
+function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {
+  return <Icon role="body" name={collapsed ? 'folder' : 'folder-open'} />;
+}
+
+// The Project's Sessions group: an open or closed folder for its state, its name, then its actions.
+function ProjectHeader(props: HeaderProps): React.JSX.Element {
   return (
-    <Pressable accessible={false} className={rowClassName}>
-      <ProjectToggle {...props} />
-      <SizeClass only="wide">
-        <ProjectActions {...props} />
-      </SizeClass>
-    </Pressable>
+    <ListSectionHeader
+      title={props.name}
+      leading={<FolderIcon collapsed={props.collapsed} />}
+      trailing={props.actions}
+      isExpanded={!props.collapsed}
+      onExpandedChange={props.onToggle}
+      onLongPress={props.onLongPress}
+    />
   );
 }
 
+// A wide window's header draws + and ⋯; below it, a long press opens the same actions, and the header lifts on iOS.
 export const ProjectHeading = memo(function ProjectHeading(
   props: ProjectHeadingProps,
 ): React.JSX.Element {
-  const row = <ProjectHeadingRow {...props} />;
-
-  return (
-    <SizeClass
-      compact={<ProjectHeadingMenu {...props}>{row}</ProjectHeadingMenu>}
-      wide={row}
-    />
+  const compact = (
+    <ProjectHeadingMenu {...props}>
+      <ProjectHeader {...props} />
+    </ProjectHeadingMenu>
   );
+
+  const wide = (
+    <ProjectHeader {...props} actions={<ProjectActions {...props} />} />
+  );
+
+  return <SizeClass compact={compact} wide={wide} />;
 });
