@@ -1,4 +1,7 @@
-import { pluginPartNames } from '@repo/contracts/plugins/kit';
+import {
+  pluginKitExports,
+  type PluginKitExport,
+} from '@repo/contracts/plugins/kit';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
@@ -9,10 +12,6 @@ import {
   type ViewSender,
   type DispatchSender,
 } from './pages';
-
-const components = Object.fromEntries(
-  pluginPartNames.map((name) => [name, name]),
-);
 
 const hooks = {
   useState: React.useState,
@@ -27,32 +26,19 @@ const hooks = {
   memo: React.memo,
 };
 
+// A part with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
+function kitComponent({ part, members }: PluginKitExport): unknown {
+  if (!Object.keys(members).length) return part;
+
+  return Object.assign((props: ElementProps) => jsx(part, props), members);
+}
+
 // What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
-const List = Object.assign((props: ElementProps) => jsx('List', props), {
-  Section: 'List.Section',
-});
-
-const ListItem = Object.assign(
-  (props: ElementProps) => jsx('ListItem', props),
-  {
-    Link: 'ListItem.Link',
-    Toggle: 'ListItem.Toggle',
-    Picker: 'ListItem.Picker',
-    Stepper: 'ListItem.Stepper',
-    TextField: 'ListItem.TextField',
-    Button: 'ListItem.Button',
-  },
-);
-
 const exportsOf = {
-  ...components,
+  ...Object.fromEntries(
+    pluginKitExports.map((entry) => [entry.name, kitComponent(entry)]),
+  ),
   ...hooks,
-  List,
-  ListItem,
-  ActionList: Object.assign((props: ElementProps) => jsx('ActionList', props), {
-    Section: 'ActionList.Section',
-  }),
-  ListSection: 'List.Section',
   Fragment: React.Fragment,
 };
 

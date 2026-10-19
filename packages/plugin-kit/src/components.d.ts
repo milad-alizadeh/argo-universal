@@ -1,18 +1,17 @@
+/* Generated from Contracts part names by `pnpm docs:build`. Do not edit by hand. */
 import type { PluginComponents } from './index';
 
-export const Text: PluginComponents['Text'];
+export const Spacer: PluginComponents['Spacer'];
 
-export const Button: PluginComponents['Button'];
+export const Grid: PluginComponents['Grid'];
 
-export const Stack: PluginComponents['Stack'];
+export const Surface: PluginComponents['Surface'];
 
-export const Svg: PluginComponents['Svg'];
+export const ScrollView: PluginComponents['ScrollView'];
 
 export const List: PluginComponents['List'] & {
   Section: PluginComponents['List.Section'];
 };
-
-export const ListSection: PluginComponents['List.Section'];
 
 export const ListItem: PluginComponents['ListItem'] & {
   Link: PluginComponents['ListItem.Link'];
@@ -29,7 +28,11 @@ export const ProgressBar: PluginComponents['ProgressBar'];
 
 export const Pill: PluginComponents['Pill'];
 
-export const EmptyState: PluginComponents['EmptyState'];
+export const ActionList: PluginComponents['ActionList'] & {
+  Section: PluginComponents['ActionList.Section'];
+};
+
+export const Action: PluginComponents['Action'];
 
 export const Picker: PluginComponents['Picker'];
 
@@ -41,20 +44,18 @@ export const Slider: PluginComponents['Slider'];
 
 export const TextInput: PluginComponents['TextInput'];
 
-export const IconButton: PluginComponents['IconButton'];
-
 export const SplitButton: PluginComponents['SplitButton'];
 
-export const ActionList: PluginComponents['ActionList'] & {
-  Section: PluginComponents['ActionList.Section'];
-};
+export const IconButton: PluginComponents['IconButton'];
 
-export const Action: PluginComponents['Action'];
+export const Text: PluginComponents['Text'];
 
-export const Spacer: PluginComponents['Spacer'];
+export const Button: PluginComponents['Button'];
 
-export const Grid: PluginComponents['Grid'];
+export const Stack: PluginComponents['Stack'];
 
-export const Surface: PluginComponents['Surface'];
+export const EmptyState: PluginComponents['EmptyState'];
 
-export const ScrollView: PluginComponents['ScrollView'];
+export const Svg: PluginComponents['Svg'];
+
+export const ListSection: PluginComponents['List.Section'];
