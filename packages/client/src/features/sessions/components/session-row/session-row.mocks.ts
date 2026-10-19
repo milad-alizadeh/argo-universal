@@ -61,7 +61,7 @@ export const paperSessionMetadata = {
   },
   'session-failed': {
     subagentsFailed: true,
-    pullRequest: { number: 47, status: 'draft' },
+    pullRequest: { number: 40, status: 'closed' },
     age: '1h',
   },
   'session-idle': {
