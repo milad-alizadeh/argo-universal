@@ -19,8 +19,8 @@ interface ContentsProps extends MenuProps {
 }
 
 /*
- * Configure's settings: on a desktop a flat menu, as Paper's Configure, with no titles, whose drill rows open
- * beside it; elsewhere a sheet page of titled sections whose rows push pages.
+ * Configure's settings, with no section titles: on a desktop a flat menu, as Paper's Configure, whose drill rows
+ * open beside it; elsewhere a sheet page, titled with the Agent's name, whose rows push pages.
  */
 export function AgentModelMenu(props: ContentsProps): ReactElement {
   return (
@@ -50,11 +50,6 @@ function configurationNotice(
     : undefined;
 }
 
-// A sheet's section title; the desktop menu has none.
-function sectionTitle(props: ContentsProps, title: string): string | undefined {
-  return props.wide ? undefined : title;
-}
-
 // Calls, as List reads its sections and their rows from its direct children.
 function configurationDrills(props: ContentsProps): ReactElement {
   const notice = hasTuning(props.configuration)
@@ -62,8 +57,8 @@ function configurationDrills(props: ContentsProps): ReactElement {
     : configurationNotice(props.configuration);
 
   return (
-    <ListSection title={sectionTitle(props, 'Model')} footer={notice}>
-      <AgentDrill configuration={props.configuration} wide={props.wide} />
+    <ListSection footer={notice}>
+      {props.wide ? <AgentDrill configuration={props.configuration} /> : null}
       <ModelPicker configuration={props.configuration} />
       {optionDrills(props)}
     </ListSection>
@@ -77,10 +72,7 @@ function configurationTuning(props: ContentsProps): ReactElement | null {
   if (!hasTuning(configuration)) return null;
 
   return (
-    <ListSection
-      title={sectionTitle(props, 'Response')}
-      footer={configurationNotice(configuration)}
-    >
+    <ListSection footer={configurationNotice(configuration)}>
       {tuningRows(props)}
     </ListSection>
   );

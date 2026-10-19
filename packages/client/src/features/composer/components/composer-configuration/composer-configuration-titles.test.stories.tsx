@@ -3,8 +3,10 @@ import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { ComposerAgentModelControl } from './composer-configuration';
+import { agentName } from './configuration-values';
 import {
   agentModelLabel,
+  configuration,
   currentModel,
   modelPickerLabel,
   pickerStoryMeta,
@@ -18,6 +20,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const agentTitle = agentName(configuration.agent, configuration.agentId);
 
 // Paper's Configure: the desktop popover is a flat menu with no title and no section titles.
 export const ConfigureHasNoTitlesWide: Story = {
@@ -101,7 +105,7 @@ export const ConfigureIsASheetBelowWide: Story = {
   },
 };
 
-// A phone keeps its sheet: the Configure page title, titled sections and a read-only Agent row.
+// A phone keeps its sheet, titled with the Agent's name, with no section titles and no Agent row.
 export const ConfigureKeepsItsSheetPhone: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.phone);
@@ -111,8 +115,15 @@ export const ConfigureKeepsItsSheetPhone: Story = {
 
     const overlay = within(document.body);
 
+    await expect(
+      await overlay.findByRole('heading', { name: agentTitle }),
+    ).toBeVisible();
+
     for (const name of ['Configure', 'Model', 'Response'])
-      await expect(await overlay.findByRole('heading', { name })).toBeVisible();
+      await expect(
+        overlay.queryByRole('heading', { name }),
+      ).not.toBeInTheDocument();
+
     await expect(
       overlay.getByRole('button', { name: /^Model,/ }),
     ).toBeVisible();

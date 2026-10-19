@@ -82,7 +82,7 @@ function AgentModelPopover(props: TriggerProps): React.JSX.Element {
   );
 }
 
-// Elsewhere Configure is a sheet whose Agent and Model rows push their choices as pages.
+// Elsewhere Configure is a sheet whose Model and option rows push their choices as pages.
 function AgentModelSheet(props: TriggerProps): React.JSX.Element {
   const [open, setOpen] = useComposerOverlay(props.disabled);
 
@@ -99,12 +99,15 @@ function AgentModelSheet(props: TriggerProps): React.JSX.Element {
   );
 }
 
-// Sheet reads the page declaration from its direct children.
+// Sheet reads the page declaration from its direct children. The title names the Agent, as no row does.
 function configurePage(
   configuration: ComposerConfigurationProps,
 ): React.JSX.Element {
   return (
-    <Sheet.Page name="configure" title="Configure">
+    <Sheet.Page
+      name="configure"
+      title={agentName(configuration.agent, configuration.agentId)}
+    >
       <AgentModelMenu configuration={configuration} wide={false} />
     </Sheet.Page>
   );
