@@ -1,8 +1,8 @@
 import type { WirePartDefinition } from '@repo/contracts/plugins/kit';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
+import type { PluginActions } from '../plugin-actions';
 import type { PluginUi } from '../plugin-dispatcher';
-import type { PluginActions } from './use-plugin-actions';
 
 export type { PluginOnEvent } from '../plugin-dispatcher';
 
