@@ -1248,9 +1248,6 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
     devDependencies:
-      '@argo/plugin-kit':
-        specifier: workspace:*
-        version: link:../plugin-kit
       '@lexical/headless':
         specifier: 'catalog:'
         version: 0.52.0(typescript@7.0.2)
