@@ -1,20 +1,16 @@
-import { DropdownMenu } from '@expo/ui/jetpack-compose';
 import type { ReactElement } from 'react';
 import { MenuDropdownItems } from './menu-dropdown-items';
 import type { MenuDropdownProps } from './menu-dropdown-props';
-import { useDropdownState } from './use-dropdown-state.android';
+import { MenuDropdownShell } from './menu-dropdown-shell.android';
 
-/*
- * The stock Compose DropdownMenu every Android menu opens, inside its caller's Host. It is controlled: `expanded`
- * shows it, `onDismissRequest` closes it on an outside tap or back.
- */
+// The stock Compose DropdownMenu inside its caller's Host, with the caller's rows.
 export function MenuDropdown(props: MenuDropdownProps): ReactElement {
-  const { expanded, open, close, color } = useDropdownState();
-
   return (
-    <DropdownMenu expanded={expanded} onDismissRequest={close} color={color}>
-      <DropdownMenu.Trigger>{props.trigger(open)}</DropdownMenu.Trigger>
-      <MenuDropdownItems items={props.items} onChosen={close} />
-    </DropdownMenu>
+    <MenuDropdownShell
+      trigger={props.trigger}
+      items={(close) => (
+        <MenuDropdownItems items={props.items} onChosen={close} />
+      )}
+    />
   );
 }
