@@ -12,7 +12,9 @@ export function Avatar(props: AvatarProps): React.JSX.Element {
 function AvatarFrame(props: AvatarProps): React.JSX.Element {
   return (
     <View {...avatarFrameProps(props)}>
-      <AvatarMedia>{avatarContent(props)}</AvatarMedia>
+      <AvatarMedia hosted={props.children !== undefined}>
+        {avatarContent(props)}
+      </AvatarMedia>
       <AvatarStatus {...props} />
     </View>
   );
@@ -63,9 +65,18 @@ function avatarSizeClass(size: AvatarProps['size']): string {
   return 'size-10';
 }
 
-function AvatarMedia(props: { children: React.ReactNode }): React.JSX.Element {
+// Avatar's own content sits on tint (Paper Avatar master); hosted content, the Session row's logo, keeps muted.
+function AvatarMedia(props: {
+  hosted: boolean;
+  children: React.ReactNode;
+}): React.JSX.Element {
   return (
-    <View className="size-full items-center justify-center overflow-hidden rounded-full bg-muted">
+    <View
+      className={cn(
+        'size-full items-center justify-center overflow-hidden rounded-full',
+        props.hosted ? 'bg-muted' : 'bg-tint',
+      )}
+    >
       {props.children}
     </View>
   );
@@ -76,7 +87,7 @@ function avatarContent(props: AvatarProps): React.ReactNode {
 
   if (props.source) return <AvatarImage source={props.source} />;
 
-  return <AvatarInitials initials={props.initials} />;
+  return <AvatarInitials initials={props.initials} size={props.size} />;
 }
 
 function AvatarImage({
@@ -91,12 +102,20 @@ function AvatarImage({
   );
 }
 
+// The small circle fits one initial in the Secondary role; the large one shows both in Heading.
 function AvatarInitials({
   initials,
-}: Pick<AvatarProps, 'initials'>): React.JSX.Element {
+  size,
+}: Pick<AvatarProps, 'initials' | 'size'>): React.JSX.Element {
+  const small = size === 'sm';
+
   return (
-    <Text role="body" selectable={false} className="font-semibold">
-      {initials}
+    <Text
+      role={small ? 'secondary' : 'heading'}
+      tone="neutral"
+      selectable={false}
+    >
+      {small ? initials.charAt(0) : initials}
     </Text>
   );
 }
