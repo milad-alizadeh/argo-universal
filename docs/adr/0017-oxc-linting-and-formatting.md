@@ -112,7 +112,7 @@ Spec 421 moves each component, with behaviour unchanged, into its own folder ins
 
 | New folder entries | Original folder entry |
 |---|---|
-| `features/composer/components/<component>/*` for composer, composer-configuration, composer-options, composer-popover, composer-status, start-session-in, written-plan | `features/composer/components/*` |
+| `features/composer/components/<component>/*` for composer, composer-configuration, composer-popover, composer-status, start-session-in, written-plan | `features/composer/components/*` |
 | `features/connection/components/<component>/*` for connection-banner, connection-detail-view | `features/connection/components/*` |
 | `features/feed/components/<component>/*` for agent-message, command-row, diff-view, edit-row, feed, feed-content, feed-notice, live-header, tool-call-group, tool-call-row, user-message | `features/feed/components/*` |
 | `features/frame/components/<component>/*` for desktop-layout-view, desktop-shell, glass-surface, panel-resize-handle, phone-drawer, phone-section-view, phone-shell, phone-shell-card, shell-backdrop, shell-pane | `features/frame/components/*` |

@@ -28,6 +28,16 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return context.resolveRequest(context, primitivePath, platform);
 };
 
+// A logo SVG imports as a react-native-svg component on every platform, so `Icon` draws it with one renderer (ADR-0019).
+config.transformer.babelTransformerPath =
+  require.resolve('react-native-svg-transformer/expo');
+
+config.resolver.assetExts = config.resolver.assetExts.filter(
+  (extension) => extension !== 'svg',
+);
+
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg'];
+
 // Production bundles stub Storybook out; configPath must be absolute for the stub to match.
 const storybookConfig = withStorybook(config, {
   enabled: process.env.NODE_ENV !== 'production',

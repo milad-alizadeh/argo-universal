@@ -26,9 +26,9 @@ function header(width: number): Story {
             onPress={() => choose('add')}
           />
           <Action
-            label="Import"
-            icon="repository"
-            onPress={() => choose('import')}
+            label="Create branch"
+            icon="branch"
+            onPress={() => choose('branch')}
             disabled
           />
           <Action
@@ -55,7 +55,7 @@ function header(width: number): Story {
       );
       await expect(choose).toHaveBeenLastCalledWith('add');
       await expect(
-        canvas.getByRole('button', { name: 'Import' }),
+        canvas.getByRole('button', { name: 'Create branch' }),
       ).toBeDisabled();
       await expect(canvas.queryByRole('button', { name: 'Rename' })).toBeNull();
       await userEvent.click(

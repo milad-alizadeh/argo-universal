@@ -17,7 +17,6 @@ import {
 
 export const pageTitleOptions = {
   headerTitleAlign: 'center',
-  headerTransparent: false,
   headerLargeTitleEnabled: false,
 } as const;
 

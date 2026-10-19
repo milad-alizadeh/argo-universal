@@ -20,7 +20,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const EscapeReturnsToConfigure: Story = {
+// The models stay open across picks, so Escape closes them and Configure together.
+export const EscapeClosesModelsAndConfigure: Story = {
   args: { configuration: { ...configuration, onConfigChange: fn() } },
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
@@ -48,9 +49,7 @@ export const EscapeReturnsToConfigure: Story = {
     await expect(configure).toBeVisible();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(picker).not.toBeInTheDocument());
-    await waitFor(() => expect(model).toHaveFocus());
-    await expect(configure).toBeVisible();
-    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(configure).not.toBeInTheDocument());
     await waitFor(() => expect(trigger).toHaveFocus());
   },
 };

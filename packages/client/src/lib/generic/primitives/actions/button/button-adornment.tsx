@@ -4,9 +4,11 @@ import { Icon, IconSpinner } from '#primitives/content/icon';
 import type { IconProps } from '#primitives/content/icon';
 import type { IconRole } from '../../../symbols/icon-role';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
+import type { LogoSource } from '../../../symbols/logo-source';
 
 interface AdornmentProps {
   icon?: IconSymbol;
+  source?: LogoSource;
   loading?: boolean;
   textClass: string;
   role: IconRole;
@@ -14,21 +16,38 @@ interface AdornmentProps {
   weight?: IconProps['weight'];
 }
 
-export function ButtonAdornment(props: AdornmentProps): ReactElement | null {
-  if (!props.loading && !props.icon) return null;
+type Glyph = { source: LogoSource } | { name: IconSymbol };
 
-  return <HiddenAdornment>{adornment(props)}</HiddenAdornment>;
+function glyphOf({ icon, source }: AdornmentProps): Glyph | undefined {
+  if (source) return { source };
+
+  return icon ? { name: icon } : undefined;
 }
 
-function adornment(props: AdornmentProps): ReactElement {
-  if (props.loading)
+export function ButtonAdornment(props: AdornmentProps): ReactElement | null {
+  const glyph = glyphOf(props);
+
+  if (!props.loading && !glyph) return null;
+
+  return <HiddenAdornment>{adornment(props, glyph)}</HiddenAdornment>;
+}
+
+function adornment(
+  props: AdornmentProps,
+  glyph: Glyph | undefined,
+): ReactElement {
+  if (props.loading || !glyph)
     return (
       <IconSpinner colorClassName={props.textClass} iconRole={props.role} />
     );
 
+  return <AdornmentIcon {...props} glyph={glyph} />;
+}
+
+function AdornmentIcon(props: AdornmentProps & { glyph: Glyph }): ReactElement {
   return (
     <Icon
-      name={props.icon ?? 'more'}
+      {...props.glyph}
       role={props.role}
       filled={props.filled}
       weight={props.weight}

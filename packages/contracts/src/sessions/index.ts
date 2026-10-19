@@ -1,3 +1,5 @@
+export * from './agent-options';
+
 export * from './answer-elicitation';
 
 export * from './answer-permission';

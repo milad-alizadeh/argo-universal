@@ -1,9 +1,7 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import {
-  IconButton,
-  type IconButtonProps,
-} from '#primitives/actions/icon-button';
+import type { IconSymbol } from '#lib/generic/symbols/icon-symbol';
+import { IconButton } from '#primitives/actions/icon-button';
 import { ItemBadge } from '#primitives/lists/list-item';
 import { Menu, type MenuEntry } from '#primitives/overlays/menu';
 import {
@@ -97,7 +95,7 @@ function ActionMenu(props: ActionMenuProps): ReactElement {
 export const overflowIcon = {
   sf: 'ellipsis',
   material: 'more_vert',
-} satisfies IconButtonProps['icon'];
+} satisfies IconSymbol;
 
 function HeaderOverflow({
   groups,
@@ -142,7 +140,7 @@ function HeaderAction({ action }: { action: IconAction }): ReactElement {
 }
 
 function headerButton(
-  icon: IconButtonProps['icon'],
+  icon: IconSymbol,
   label: string,
   badge?: ReactElement,
 ): ReactElement {

@@ -11,7 +11,8 @@ import { FooterProvider } from '#primitives/fields/field-description';
 import { flattenedChildren } from '../../../flattened-children';
 import { ListContext, listPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
-import { createRowHighlights } from '../../../row-highlights';
+import { createRowGroupEnds } from '../../../row-group-ends';
+import { PressedRowProvider } from '../../../row-highlights';
 import type { ListSectionProps } from './list-props';
 import { hasSectionHeader, SectionHeader } from './list-section-parts';
 
@@ -34,12 +35,12 @@ function Header(props: ListSectionProps): ReactNode {
 function Rows(props: ListSectionProps): ReactNode {
   const children = flattenedChildren(props.children);
 
-  const [highlights] = useState(createRowHighlights);
+  const [groupEnds] = useState(createRowGroupEnds);
 
   const section = {
     ...useContext(ListContext),
     ...selectionContext(props),
-    highlights,
+    groupEnds,
   };
 
   if (props.isExpanded === false) return null;
@@ -83,7 +84,9 @@ function SectionBody(props: ListSectionProps & { id: string }): ReactElement {
 
   return (
     <FooterProvider value={footer}>
-      <Rows {...props} />
+      <PressedRowProvider>
+        <Rows {...props} />
+      </PressedRowProvider>
     </FooterProvider>
   );
 }

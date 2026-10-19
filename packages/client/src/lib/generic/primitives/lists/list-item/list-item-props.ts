@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
 import type { KitProps } from '../../kit-props';
 
@@ -9,6 +9,8 @@ export type RowBadge = Exclude<
 
 // Kit-only: native selection semantics, long press and test identity.
 export type ListItemProps = KitProps<'ListItem'> & {
+  // A control under the title, such as a Slider, spanning the row's content width.
+  control?: ReactNode;
   onPointerDown?: ComponentProps<typeof Pressable>['onPointerDown'];
   onKeyDown?: React.KeyboardEventHandler;
   role?: 'button' | 'link' | 'group';

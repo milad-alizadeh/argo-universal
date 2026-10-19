@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Platform, View } from 'react-native';
+import { List } from '#primitives/lists/list';
 import { Variation, Variations } from '../../../variations';
 import { Metadata } from './metadata';
 import { fields } from './metadata.mocks';
@@ -34,5 +35,18 @@ export const Overview: StoryObj<typeof meta> = {
         </Variation>
       ))}
     </Variations>
+  ),
+};
+
+// Inside a grouped List, such as a Settings page, the fields are rows of the section's card.
+export const InAGroupedList: StoryObj<typeof meta> = {
+  render: () => (
+    <View style={{ width: 360 }}>
+      <List appearance="grouped" maxHeight={400}>
+        <Metadata title="Folder">
+          <Metadata.Label title="Path" text="~/Developer/argo-universal" />
+        </Metadata>
+      </List>
+    </View>
   ),
 };

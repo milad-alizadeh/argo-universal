@@ -4,6 +4,7 @@ import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
+import { useInMenu } from '../../../menu-rows-context';
 import type { ListItemProps, RowBadge } from './list-item-props';
 
 // A Row badge at the top-end corner of the view it sits in, such as a row's leading icon or a header button.
@@ -58,13 +59,21 @@ export function hasLeading(
   return [Boolean(props.leading), hasBadge(props.badge)].some(Boolean);
 }
 
+// Paper: a menu row's icon slot is 20px; other rows keep the row icon slot.
+const leadingClasses = {
+  row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',
+  menu: 'relative h-5 w-5 shrink-0 items-center justify-center',
+};
+
 export function Leading(
   props: Pick<ListItemProps, 'leading' | 'badge'>,
 ): ReactNode {
+  const menu = useInMenu();
+
   if (!hasLeading(props)) return null;
 
   return (
-    <View className="relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center">
+    <View className={leadingClasses[menu ? 'menu' : 'row']}>
       {props.leading}
       <ItemBadge badge={props.badge} />
     </View>
@@ -143,4 +152,9 @@ export function LinkAccessory(): ReactElement | null {
   return Platform.OS === 'android' ? null : (
     <Icon name="web-disclosure" role="disclosure" className="text-tertiary" />
   );
+}
+
+// Paper: a control under the row's title and value spans the row's content width, on its own line.
+export function Control({ children }: { children?: ReactNode }): ReactNode {
+  return children ? <View className="w-full">{children}</View> : null;
 }

@@ -1,7 +1,8 @@
 import { wirePart, type WirePartDefinition } from '@repo/contracts/plugins/kit';
 import {
-  isRootOnly,
   isWireContainer,
+  refusedBelowRoot,
+  rootSlotParts,
 } from '@repo/contracts/plugins/prepare-tree';
 import { WireJson, type WireNode } from '@repo/contracts/plugins/wire';
 import {
@@ -34,9 +35,9 @@ export function RenderNode({
 
 function drawablePart(
   node: WireNode,
-  { nested }: Rendering.RenderContext,
+  { roots }: Rendering.RenderContext,
 ): WirePartDefinition | undefined {
-  if (nested && isRootOnly(node)) return undefined;
+  if (roots && refusedBelowRoot(node, roots)) return undefined;
 
   return wirePart(node.type);
 }
@@ -83,18 +84,26 @@ function refused(node: WireNode): React.JSX.Element | null {
   return <Text key={node.key} {...props} />;
 }
 
+interface SlotPlace {
+  name: string;
+  // The root-only parts this slot holds as the screen's own views, such as ListDetail's detail Page.
+  roots: readonly string[];
+}
+
 function renderedChildren(
   nodes: WireNode[],
   context: Rendering.RenderContext,
-  slot?: string,
+  slot?: SlotPlace,
 ): (React.JSX.Element | null)[] {
+  const roots = slot?.roots ?? [];
+
   return nodes.map((node) => {
     const key =
       slot === undefined
         ? childNodeKey(context.key, node.key)
-        : slotNodeKey(context.key, slot, node.key);
+        : slotNodeKey(context.key, slot.name, node.key);
 
-    return RenderNode({ node, context: { ...context, key, nested: true } });
+    return RenderNode({ node, context: { ...context, key, roots } });
   });
 }
 
@@ -109,7 +118,9 @@ function renderedSlots(
     slots.map((name) => {
       const children = node.slots[name] ?? [];
 
-      const nodes = renderedChildren(children, context, name);
+      const roots = rootSlotParts(node, name);
+
+      const nodes = renderedChildren(children, context, { name, roots });
 
       return [name, slotContent(nodes, name)];
     }),

@@ -6,6 +6,7 @@ export { PageColumn } from './page-column';
 
 export {
   PageAtDrawerRoot,
+  PageBesideList,
   PageNavigationEnabled,
 } from './page-navigation-context';
 

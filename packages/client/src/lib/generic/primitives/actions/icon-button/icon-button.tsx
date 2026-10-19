@@ -9,7 +9,12 @@ import { iconButtonClasses } from './icon-button-styles';
 
 type IconAppearance = Pick<
   IconButtonProps,
-  'icon' | 'iconRole' | 'iconClassName' | 'iconFilled' | 'iconWeight'
+  | 'icon'
+  | 'iconSource'
+  | 'iconRole'
+  | 'iconClassName'
+  | 'iconFilled'
+  | 'iconWeight'
 >;
 
 type IconControlProps = Omit<IconButtonProps, keyof IconAppearance | 'badge'>;
@@ -45,6 +50,7 @@ export function IconButton({
 
 function iconDrawing({
   icon,
+  iconSource,
   iconRole,
   iconClassName,
   iconFilled,
@@ -53,7 +59,7 @@ function iconDrawing({
 }: Omit<IconButtonProps, 'badge' | 'iconTone'>): IconDrawing {
   const appearance = { icon, iconRole, iconClassName, iconFilled, iconWeight };
 
-  return createIconDrawing(props, appearance);
+  return createIconDrawing(props, { ...appearance, iconSource });
 }
 
 function createIconDrawing(
@@ -72,6 +78,7 @@ function iconAdornment(
 ): IconDrawing['adornment'] {
   return {
     icon: appearance.icon,
+    source: appearance.iconSource,
     role: appearance.iconRole ?? 'control',
     filled: appearance.iconFilled,
     weight: appearance.iconWeight,

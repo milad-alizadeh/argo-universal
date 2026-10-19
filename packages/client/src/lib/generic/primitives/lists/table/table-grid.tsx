@@ -1,20 +1,16 @@
 import {
   use,
-  useState,
   type ContextType,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { View } from 'react-native';
 import { ListContext, listPosition } from '../../../list-context';
-import {
-  createRowHighlights,
-  type RowHighlights,
-} from '../../../row-highlights';
+import { PressedRowProvider } from '../../../row-highlights';
 import { GridRow, type GridProps } from './table-grid-row';
 import { TableHeader } from './table-header';
 
-// Regular widths: the column titles on a tint tray over a card of rows, each row with List's hover, selection, separators and ActionList.
+// Regular widths: the column titles on a tint tray over a card of rows, each row with List's press, selection, separators and ActionList.
 export function TableGrid(props: GridProps): ReactElement {
   return (
     <View
@@ -32,32 +28,29 @@ export function TableGrid(props: GridProps): ReactElement {
 
 type ListContextValue = ContextType<typeof ListContext>;
 
-interface RowPlace {
-  highlights: RowHighlights;
-  index: number;
-  count: number;
-}
-
 const rowContext = (
   list: ListContextValue,
-  { highlights, index, count }: RowPlace,
+  index: number,
+  count: number,
 ): ListContextValue => ({
   ...list,
-  highlights,
   index,
   position: listPosition(index === 0, index === count - 1),
 });
 
 function GridRows(props: GridProps): ReactNode {
-  const [highlights] = useState(createRowHighlights);
   const list = use(ListContext);
 
-  return props.rows.map((row, index) => (
-    <ListContext
-      key={row.key}
-      value={rowContext(list, { highlights, index, count: props.rows.length })}
-    >
-      <GridRow {...props} row={row} />
-    </ListContext>
-  ));
+  return (
+    <PressedRowProvider>
+      {props.rows.map((row, index) => (
+        <ListContext
+          key={row.key}
+          value={rowContext(list, index, props.rows.length)}
+        >
+          <GridRow {...props} row={row} />
+        </ListContext>
+      ))}
+    </PressedRowProvider>
+  );
 }

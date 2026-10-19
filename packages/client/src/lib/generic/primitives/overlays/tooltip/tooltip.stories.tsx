@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
+import { logoSources } from '#lib/generic/symbols/logo-source';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Tooltip } from './tooltip';
 
@@ -10,7 +11,7 @@ const meta = {
   render: (): ReactElement => (
     <Tooltip label={label}>
       <IconButton
-        icon="repository"
+        iconSource={logoSources.github}
         accessibilityLabel={label}
         variant="ghost"
       />

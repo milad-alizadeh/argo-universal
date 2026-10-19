@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
+import { logoSources } from '../../../symbols/logo-source';
 import { Icon } from './icon';
 
-const meta = { title: 'Tests/IconStatus' } satisfies Meta;
+const meta = { title: 'Tests/Icon' } satisfies Meta;
 
 export default meta;
 
@@ -19,5 +20,12 @@ export const ShowsCornerStatus: Story = {
   ),
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId('agent-icon-warning')).toBeVisible();
+  },
+};
+
+export const SpeaksLogoName: Story = {
+  render: () => <Icon source={logoSources.github} role="control" />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('img', { name: 'GitHub' })).toBeVisible();
   },
 };

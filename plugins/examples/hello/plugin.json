@@ -33,9 +33,9 @@
         "path": "/form"
       },
       {
-        "id": "hello-item",
-        "title": "Hello item",
-        "path": "/item"
+        "id": "hello-builds",
+        "title": "Hello builds",
+        "path": "/builds"
       },
       {
         "id": "hello-runs",

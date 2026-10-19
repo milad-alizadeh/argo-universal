@@ -2,6 +2,7 @@ import {
   PageAtDrawerRoot,
   PluginDetailScreen,
   pluginPath,
+  SectionListDetail,
   usePluginAt,
 } from '@repo/client';
 import { useWide } from '@repo/client/size-class';
@@ -49,16 +50,19 @@ interface PluginRootProps {
 
 /*
  * A Plugin page with, at a narrow root on iOS, ☰ as a stock bar button item, as a section root has. Android's drawer
- * draws a root's header, so its Page hands the drawer its title and Actions.
+ * draws a root's header, so its Page hands the drawer its title and Actions. A ListDetail page puts its list in the
+ * Frame's sidebar on a wide window.
  */
 export function PluginRoot({ path }: PluginRootProps): React.JSX.Element {
   const { narrowRoot, drawerRoot } = useRootPlace(path);
 
   return (
     <PageAtDrawerRoot value={drawerRoot}>
-      <PluginRowDetails>
-        <PluginDetailScreen path={path} />
-      </PluginRowDetails>
+      <SectionListDetail>
+        <PluginRowDetails>
+          <PluginDetailScreen path={path} />
+        </PluginRowDetails>
+      </SectionListDetail>
       {narrowRoot ? <PluginMenuToolbar /> : null}
     </PageAtDrawerRoot>
   );

@@ -1,13 +1,12 @@
 import { use, type ReactElement, type ReactNode } from 'react';
-import { Platform, Pressable, View, type PressableProps } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { ContextActions } from '#primitives/actions/action-list';
-import {
-  useMarkHighlight,
-  useSelectedHighlight,
-} from '#primitives/lists/list-item';
 import { ListContext, type ListPosition } from '../../../list-context';
-import { useSeparatorCovered } from '../../../row-highlights';
+import {
+  usePressedRowHandlers,
+  useSeparatorCovered,
+} from '../../../row-highlights';
 import { GridCell } from './table-cell';
 import type { TableProps } from './table-props';
 import { cellOf, type TableRow } from './table-rows';
@@ -19,13 +18,11 @@ export type GridProps = TableProps & {
 
 type RowProps = GridProps & { row: TableRow };
 
-// One row of the grid, drawn with List's highlights, selection, separators and ActionList.
+// One row of the grid, drawn with List's press, selection, separators and ActionList.
 export function GridRow(props: RowProps): ReactElement {
   const selected = props.selectionMode
     ? isSelected(props, props.row.id)
     : undefined;
-
-  useSelectedHighlight(selected);
 
   return (
     <View className="relative">
@@ -53,24 +50,9 @@ const rowClass = cn(
   Platform.OS !== 'android' && 'active:bg-pressed',
 );
 
-// List's hover and press marks, so a row hides the separators beside it.
-function useRowMarks(): Pick<
-  PressableProps,
-  'onHoverIn' | 'onHoverOut' | 'onPressIn' | 'onPressOut'
-> {
-  const mark = useMarkHighlight();
-
-  return {
-    onHoverIn: () => mark('hover', true),
-    onHoverOut: () => mark('hover', false),
-    onPressIn: () => mark('press', true),
-    onPressOut: () => mark('press', false),
-  };
-}
-
 function RowPress(props: RowProps & { selected?: boolean }): ReactElement {
   const onPress = rowPress(props, props.row);
-  const press = { onPress, disabled: !onPress, ...useRowMarks() };
+  const press = { onPress, disabled: !onPress, ...usePressedRowHandlers() };
 
   return (
     <Pressable
@@ -99,10 +81,10 @@ function RowCells({ columns, row }: RowProps): ReactNode {
 const isLast = (position: ListPosition): boolean =>
   position === 'last' || position === 'only';
 
-// Inset with the cells, and hidden beside a hovered, pressed or selected row, as List's are.
+// Inset with the cells, and hidden beside an iOS press, as List's are.
 function RowSeparator(): ReactNode {
-  const { position, highlights, index } = use(ListContext);
-  const covered = useSeparatorCovered(highlights, index);
+  const { position, index } = use(ListContext);
+  const covered = useSeparatorCovered(index);
 
   return isLast(position) || covered ? null : (
     <View

@@ -11,10 +11,10 @@ export const messageLabel = 'Message';
 // Opening a Session starts the Agent process, which outlasts the default 5s under parallel load.
 export const sessionOpenTimeout = { timeout: 15_000 };
 
-// New Session shows Loading while a Local Session opens for an Agent this device never opened one for.
-export const openingLabel = 'Opening the Session';
+// New Session shows Loading while a Local Session opens, or the Server reads a New worktree's options, for an Agent this device has no options for.
+export const openingLabel = 'Loading options';
 
-// Loading is gone: no Local Session is opening for an Agent without cached options.
+// Loading is gone: nothing is reading options for an Agent without cached ones.
 export async function waitForEmptySession(page: Page): Promise<void> {
   await expect(
     page.getByRole('progressbar', { name: openingLabel }),

@@ -26,6 +26,12 @@ import {
   useScaffoldParts,
 } from '../scaffold/scaffold';
 import { LiveConnectionBanner } from './connection-banner';
+import {
+  type FrameListDetail,
+  FrameListDetailSidebar,
+  sectionScaffold,
+  useFrameListDetail,
+} from './frame-list-detail';
 import { useFrameState } from './frame-state';
 import { SectionListsContext, type SectionLists } from './section-lists';
 
@@ -53,6 +59,8 @@ export interface FrameParts {
   section: Section;
   lists: SectionLists;
   items: readonly NavigationSection[];
+  // The sidebar a Plugin page's ListDetail holds for its list.
+  listDetail: FrameListDetail;
 }
 
 type FrameScaffoldState = ReturnType<typeof useFrameState>['scaffold'];
@@ -61,41 +69,29 @@ type FrameScaffoldState = ReturnType<typeof useFrameState>['scaffold'];
 function frameScaffold(
   state: FrameScaffoldState,
   options: FrameOptions,
+  listDetail: FrameListDetail,
 ): ScaffoldProps {
   return {
     ...state,
-    ...sectionScaffold(options),
+    ...sectionScaffold(options, listDetail),
     sizeClass: options.sizeClass,
     sidebar: null,
     banner: <LiveConnectionBanner />,
   };
 }
 
-type SectionScaffold = Pick<ScaffoldProps, 'listHeader' | 'list'> &
-  Partial<Pick<ScaffoldProps, 'sidebarShown' | 'inspectorState'>>;
-
-function sectionScaffold({ section, lists }: FrameOptions): SectionScaffold {
-  if (!isCoreSection(section))
-    return {
-      listHeader: null,
-      list: null,
-      sidebarShown: false,
-      inspectorState: 'closed',
-    };
-
-  return { listHeader: lists[section].header, list: lists[section].list };
-}
-
 // What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
 export function useFrame(options: FrameOptions): FrameParts {
   const { scaffold, inspector } = useFrameState();
+  const listDetail = useFrameListDetail();
 
   return {
-    scaffold: useScaffoldParts(frameScaffold(scaffold, options)),
+    scaffold: useScaffoldParts(frameScaffold(scaffold, options, listDetail)),
     inspector,
     section: options.section,
     lists: options.lists,
     items: options.items,
+    listDetail,
   };
 }
 
@@ -110,7 +106,9 @@ export function Frame({ frame, children }: FrameProps): React.JSX.Element {
   return (
     <SectionListsContext value={frame.lists}>
       <InspectorProvider value={frame.inspector}>
-        <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
+        <FrameListDetailSidebar value={frame.listDetail.sidebar}>
+          <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
+        </FrameListDetailSidebar>
       </InspectorProvider>
     </SectionListsContext>
   );
@@ -132,7 +130,7 @@ function LiveRail({
     <FrameRail
       selectedSection={frame.section}
       items={frame.items}
-      hasSidebar={isCoreSection(frame.section)}
+      hasSidebar={isCoreSection(frame.section) || frame.listDetail.held}
       attentionCount={useAttentionCount()}
       {...{ sidebarShown, onSidebarShownChange, onSectionChange }}
     />

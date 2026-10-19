@@ -73,10 +73,9 @@ export {
   initialConfigOptions,
 } from './utils/session-option-choices';
 
-export {
-  sessionOptionsKey,
-  useSessionOptions,
-} from './hooks/use-session-options';
+export { sessionOptionsKey } from './api/session-options-cache';
+
+export { useSessionOptions } from './hooks/use-session-options';
 
 export { useCacheSessionOptions } from './hooks/use-cache-session-options';
 

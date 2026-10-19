@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { Linking } from 'react-native';
 import type { IconName } from '#lib/generic/symbols/icon-names';
+import { type LogoSource, logoSources } from '#lib/generic/symbols/logo-source';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Label } from '#primitives/content/label';
 import { Tooltip } from '#primitives/overlays/tooltip';
@@ -8,12 +9,18 @@ import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { AgentRowEntry } from '../../utils/agent-rows';
 import { unavailableIcon, unsupportedLabel } from './agent-button';
 
-type Link = { url?: string; label: string; icon: IconName };
+type LinkGlyph = { icon: IconName } | { iconSource: LogoSource };
+
+type Link = { url?: string; label: string; glyph: LinkGlyph };
 
 // Two links only, the repository and the website (owner, 2026-10-19).
 const linksOf = (agent: AgentRowEntry): Link[] => [
-  { url: agent.repository, label: 'Repository', icon: 'repository' },
-  { url: agent.website, label: 'Website', icon: 'web' },
+  {
+    url: agent.repository,
+    label: 'Repository',
+    glyph: { iconSource: logoSources.github },
+  },
+  { url: agent.website, label: 'Website', glyph: { icon: 'web' } },
 ];
 
 type AgentMetaProps = { agent: AgentRowEntry };
@@ -43,7 +50,7 @@ function UnsupportedNote({ agent }: AgentMetaProps): React.JSX.Element | null {
 // A glyph on the text line with the row's gap around it; its hit area bleeds past it.
 const linkButton = (link: Link, url: string): React.JSX.Element => (
   <IconButton
-    icon={link.icon}
+    {...link.glyph}
     size="xs"
     variant="ghost"
     iconTone="muted"

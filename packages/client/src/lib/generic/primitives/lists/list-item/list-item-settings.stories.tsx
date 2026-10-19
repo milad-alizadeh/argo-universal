@@ -22,6 +22,32 @@ export const Settings: StoryObj<typeof meta> = {
   ),
 };
 
+// A row's description is a footer that ends its group: the rows after it start a new card.
+export const FooterSplitsGroup: StoryObj<typeof meta> = {
+  render: () => (
+    <View className="w-90 flex-1">
+      <List appearance="grouped" maxHeight={1000}>
+        <SplitSection />
+      </List>
+    </View>
+  ),
+};
+
+function SplitSection(): React.JSX.Element {
+  return (
+    <List.Section title="New Sessions">
+      <ListItem.Toggle
+        title="Start in a new worktree"
+        value
+        onValueChange={action('start in')}
+        description="A new worktree keeps each Session's files apart."
+      />
+      <PickerExample />
+      <StepperExample />
+    </List.Section>
+  );
+}
+
 function SettingsRows(): React.JSX.Element {
   return (
     <List appearance="grouped" maxHeight={1000}>
