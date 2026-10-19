@@ -1,6 +1,5 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
-import { IconButtonBleed } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
 import {
@@ -10,8 +9,15 @@ import {
 import { SkeletonBar } from '../../../list-skeleton';
 import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
+import { HeaderActions } from './list-section-actions';
 
-type HeaderProps = Omit<ListSectionProps, 'children'>;
+/*
+ * Kit-only, a data List's header: a desktop sidebar's section (Paper "SessionsList") draws a muted title after a 16
+ * glyph 6 before it, its actions always shown 24 wide and 4 apart, 12 in from the rows' edge; its caller spaces it.
+ */
+export type HeaderProps = Omit<ListSectionProps, 'children'> & {
+  sidebar?: boolean;
+};
 
 type DrawnHeaderProps = HeaderProps & { drawing: SectionDrawing };
 
@@ -33,16 +39,27 @@ function leadingIcon(props: HeaderProps): ReactNode {
   return props.leading === undefined ? disclosure(props) : props.leading;
 }
 
-// The leading icon sits 8 before the title, in the label's colour, the actions' size.
+// The leading icon sits 8 before the title, in the label's colour, the actions' size; a sidebar's 16 glyph sits 6 before it.
+const leadingSlot = (sidebar?: boolean): string =>
+  sidebar
+    ? 'mr-1.5 h-6 w-4 shrink-0 items-center justify-center'
+    : 'h-6 wide-type:h-5 shrink-0 flex-row items-center pr-1';
+
 function HeaderLeading(props: HeaderProps): ReactNode {
   const icon = leadingIcon(props);
 
   return icon ? (
-    <View className="h-6 wide-type:h-5 shrink-0 flex-row items-center pr-1">
-      {icon}
-    </View>
+    <View className={leadingSlot(props.sidebar)}>{icon}</View>
   ) : null;
 }
+
+// The drawing's title colour, or a sidebar section's muted title.
+const titleLook = (
+  props: DrawnHeaderProps,
+): Pick<ComponentProps<typeof Text>, 'className' | 'tone'> => ({
+  className: props.drawing.title,
+  tone: props.sidebar ? ('muted' as const) : undefined,
+});
 
 function HeaderTitle(props: DrawnHeaderProps): ReactNode {
   if (props.isLoading)
@@ -51,7 +68,7 @@ function HeaderTitle(props: DrawnHeaderProps): ReactNode {
   return (
     <Text
       role="heading"
-      className={props.drawing.title}
+      {...titleLook(props)}
       numberOfLines={1}
       accessibilityRole="heading"
       aria-level={2}
@@ -79,14 +96,16 @@ function HeaderLabel(props: DrawnHeaderProps): ReactElement {
   );
 }
 
-const labelClassName = (drawing: SectionDrawing): string =>
-  cn('min-w-0 flex-1 flex-row items-center gap-1', drawing.gap);
+const labelClassName = (props: DrawnHeaderProps): string =>
+  props.sidebar
+    ? 'min-h-6 min-w-0 flex-1 flex-row items-center'
+    : cn('min-w-0 flex-1 flex-row items-center gap-1', props.drawing.gap);
 
 // A collapsible section's whole label toggles it; its actions stay their own buttons beside it.
 function HeaderToggle(props: DrawnHeaderProps): ReactElement {
   if (!props.onExpandedChange || props.isLoading)
     return (
-      <View className={labelClassName(props.drawing)}>
+      <View className={labelClassName(props)}>
         <HeaderLabel {...props} />
       </View>
     );
@@ -114,41 +133,36 @@ function HeaderButton(props: DrawnHeaderProps): ReactElement {
       {...expandedState(isExpanded)}
       onPress={() => props.onExpandedChange?.(!isExpanded)}
       onLongPress={props.onLongPress}
-      className={cn(labelClassName(props.drawing), 'web:select-none')}
+      className={cn(labelClassName(props), 'web:select-none')}
     >
       <HeaderLabel {...props} />
     </Pressable>
   );
 }
 
-/*
- * Up to two IconButtons, each glyph placed as in a 24 box 4 from the next. Desktop and web show them on hover
- * or keyboard focus, never after a click leaves focus behind; phones always show them.
- */
-const actionsClassName =
-  'h-6 shrink-0 flex-row items-center gap-3 px-1 wide-type:h-5 web:wide:opacity-0 web:wide:group-hover:opacity-100 web:wide:has-focus-visible:opacity-100';
-
-function HeaderActions({ trailing }: Pick<HeaderProps, 'trailing'>): ReactNode {
-  return trailing ? (
-    <IconButtonBleed value>
-      <View className={actionsClassName}>{trailing}</View>
-    </IconButtonBleed>
-  ) : null;
-}
+const headerClassName = (
+  props: HeaderProps,
+  drawing: SectionDrawing,
+): string =>
+  props.sidebar
+    ? 'group min-h-6 flex-row items-center gap-1 px-3'
+    : cn('group flex-row items-start gap-1', drawing.inset);
 
 export function SectionHeader(props: HeaderProps): ReactElement {
   const drawing = useSectionDrawing();
 
   return (
-    <View className={cn('group flex-row items-start gap-1', drawing.inset)}>
+    <View className={headerClassName(props, drawing)}>
       <HeaderToggle {...props} drawing={drawing} />
-      <HeaderActions trailing={props.trailing} />
+      <HeaderActions trailing={props.trailing} sidebar={props.sidebar} />
     </View>
   );
 }
 
-// A data List's section header, from its `getSectionKey` sections: 16 below the previous section, as a List.Section's.
+// A data List's section header, from its `getSectionKey` sections: 16 below the previous section, as a List.Section's; a sidebar's caller spaces its own.
 export function ListSectionHeader(props: HeaderProps): ReactElement {
+  if (props.sidebar) return <SectionHeader {...props} />;
+
   return (
     <View className="pt-2">
       <SectionHeader {...props} />

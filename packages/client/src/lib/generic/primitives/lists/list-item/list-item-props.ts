@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
+import type { Tone } from '#primitives/content/text';
 import type { KitProps } from '../../kit-props';
 
 export type RowBadge = Exclude<
@@ -31,6 +32,16 @@ export type ListItemProps = KitProps<'ListItem'> & {
   // Draws the disclosure chevron of a row that pushes a page, outside a choosing section.
   disclosure?: boolean;
   testID?: string;
+  /*
+   * A desktop sidebar row (Paper "SessionsList"): 10 by 12 inside, 10 between lanes, a 16 leading slot and a medium
+   * title. Regular ends its title line with the trailing item and insets the progress bar under the content; Compact
+   * is one 36-tall line.
+   */
+  sidebar?: 'regular' | 'compact';
+  // A sidebar row that holds news for its reader, such as an unread Session: its title is semibold.
+  emphasized?: boolean;
+  // The subtitle's colour; muted unless the row says otherwise.
+  subtitleTone?: Tone;
   // A placeholder while the list loads: bars where the title, subtitle and meta will be, each as wide as its placeholder text; any `leading`, even null, becomes a round mark.
   isLoading?: boolean;
 };

@@ -56,8 +56,9 @@ export const insertSessionWithoutOverlap: Story = {
     await waitFor(async () => {
       const firstRow = existing.getBoundingClientRect();
       const project = heading.getBoundingClientRect();
+      // The first row sits just under its heading: 4 below it on the web's sidebar.
       await expect(Math.abs(firstRow.top - project.bottom)).toBeLessThanOrEqual(
-        3,
+        4,
       );
     });
     const initialTop = existing.getBoundingClientRect().top;

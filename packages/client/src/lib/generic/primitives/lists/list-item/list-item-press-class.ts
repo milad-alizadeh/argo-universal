@@ -19,6 +19,18 @@ function interactive(props: DrawingProps): boolean {
   ].some(Boolean);
 }
 
+// What the row itself asks of its press: tints when it does something, a control's line, a sidebar row's lanes.
+const rowPress = (
+  props: DrawingProps,
+): Pick<
+  Parameters<typeof itemPress>[0],
+  'interactive' | 'control' | 'sidebar'
+> => ({
+  interactive: interactive(props),
+  control: props.control !== undefined,
+  sidebar: props.sidebar,
+});
+
 // The row's press lanes and tints, by where it sits: a menu, a sidebar, or its List's appearance.
 export function usePressClass(props: DrawingProps): string {
   const place = {
@@ -28,11 +40,7 @@ export function usePressClass(props: DrawingProps): string {
   };
 
   return cn(
-    itemPress({
-      ...place,
-      interactive: interactive(props),
-      control: props.control !== undefined,
-    }),
+    itemPress({ ...place, ...rowPress(props) }),
     props.disabled && 'opacity-50',
   );
 }

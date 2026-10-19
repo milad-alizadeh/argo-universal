@@ -1,103 +1,17 @@
-import type { SessionInfo } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { cn } from '#lib/generic/utils';
 import { Label } from '#primitives/content/label';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
-import { StatusDot } from '#primitives/status/status-dot';
 import {
   pullRequestAppearance,
   type PullRequestIndicatorProps,
 } from '../pull-request-indicator/pull-request-indicator';
+import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
+import type { SessionRowMetadataProps } from './session-row-metadata-props';
+import { sidebarRows } from './session-row-sidebar';
 
-export interface SessionRowMetadataProps {
-  session: SessionInfo;
-  selected: boolean;
-  subagentsFailed?: boolean;
-  pullRequest?: PullRequestIndicatorProps;
-  age?: string;
-}
-
-function markSurface(selected: boolean): string {
-  return cn(
-    'border-card bg-card',
-    selected && 'web:wide:border-content web:wide:bg-content',
-  );
-}
-
-function subagentStatus(
-  props: SessionRowMetadataProps,
-): 'failed' | 'running' | undefined {
-  if (props.subagentsFailed) {
-    return 'failed';
-  }
-
-  return props.session.subagents.running > 0 ? 'running' : undefined;
-}
-
-function SubagentsStatus(props: SessionRowMetadataProps): React.ReactNode {
-  const status = subagentStatus(props);
-
-  if (status === undefined) {
-    return null;
-  }
-
-  return <SubagentDot status={status} selected={props.selected} />;
-}
-
-function SubagentDot({
-  status,
-  selected,
-}: {
-  status: 'failed' | 'running';
-  selected: boolean;
-}): React.ReactNode {
-  return (
-    <View testID="subagents-status" className={subagentDotClassName(selected)}>
-      <SubagentMark status={status} />
-    </View>
-  );
-}
-
-function subagentDotClassName(selected: boolean): string {
-  return cn(
-    'absolute -right-0.75 -top-0.75 rounded-full border-2 border-card bg-card p-0.5',
-    markSurface(selected),
-  );
-}
-
-function SubagentMark({
-  status,
-}: {
-  status: 'failed' | 'running';
-}): React.ReactNode {
-  return (
-    <StatusDot
-      tone={status === 'failed' ? 'danger' : 'success'}
-      pulse={status === 'running'}
-      size="sm"
-    />
-  );
-}
-
-function SubagentsCount(props: SessionRowMetadataProps): React.ReactNode {
-  const { total, running } = props.session.subagents;
-
-  if (total <= 0) {
-    return null;
-  }
-
-  return (
-    <View
-      accessibilityLabel={`Subagents: ${total}, ${running} running`}
-      className="relative shrink-0"
-    >
-      <Label icon="agent" text={String(total)} />
-      <SubagentsStatus {...props} />
-    </View>
-  );
-}
+export type { SessionRowMetadataProps } from './session-row-metadata-props';
 
 function PullRequestLabel({
   pullRequest,
@@ -105,6 +19,7 @@ function PullRequestLabel({
   return pullRequest ? <Label {...pullRequestLabelProps(pullRequest)} /> : null;
 }
 
+// A sidebar row's PR number is medium in its state's colour (Paper "SessionsList").
 function pullRequestLabelProps({
   number,
   status,
@@ -115,6 +30,8 @@ function pullRequestLabelProps({
     text: `#${number}`,
     tone: pullRequestAppearance[status].tone,
     accessibilityLabel: `${status} PR #${number}`,
+    sidebar: sidebarRows,
+    emphasized: sidebarRows,
   };
 }
 
@@ -143,22 +60,23 @@ function hasMetadata({
   return [
     age !== undefined,
     session.subagents.total > 0,
+    sidebarRows && session.shells.total > 0,
     session.archivedAt !== null,
     pullRequest !== undefined,
   ].some(Boolean);
 }
 
+// The time, the PR, then on a sidebar row its Shells, then its Subagents (Paper "SessionsList").
 export function sessionMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {
-  if (!hasMetadata(props)) {
-    return null;
-  }
+  if (!hasMetadata(props)) return null;
 
   return (
     <View className="min-w-0 flex-row items-center gap-2.5">
       {ageContent(props)}
       <PullRequestLabel pullRequest={props.pullRequest} />
+      <ShellsCount {...props} />
       <SubagentsCount {...props} />
       {archivedContent(props)}
     </View>

@@ -42,14 +42,22 @@ function ItemSeparator(props: ListItemProps): ReactNode {
   ) : null;
 }
 
+// Paper "SessionsList": a sidebar row's bar runs under its content, 4 above the row's end, on a hairline track.
 function ItemProgress({
   progress,
-}: Pick<ListItemProps, 'progress'>): ReactNode {
-  return progress ? (
+  sidebar,
+}: Pick<ListItemProps, 'progress' | 'sidebar'>): ReactNode {
+  if (!progress) return null;
+
+  return sidebar ? (
+    <View className="absolute bottom-1 left-9.5 right-3">
+      <ProgressBar {...progress} track="hairline" />
+    </View>
+  ) : (
     <View className="absolute inset-x-0 bottom-0">
       <ProgressBar {...progress} />
     </View>
-  ) : null;
+  );
 }
 
 function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
@@ -104,7 +112,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
       <ItemPress {...drawingContent(props)} />
       <Selection selected={props.selected && !drawing.menu} />
       <ItemSeparator {...props} />
-      <ItemProgress progress={props.progress} />
+      <ItemProgress progress={props.progress} sidebar={props.sidebar} />
     </View>
   );
 }

@@ -1,5 +1,4 @@
 import {
-  LegendList,
   type LegendListProps,
   type LegendListRef,
 } from '@legendapp/list/react-native';
@@ -14,6 +13,7 @@ import {
 } from 'react';
 import { Platform } from 'react-native';
 import { useSizeClassValue } from '../use-size-class/use-size-class-value';
+import { MeasuredLegendList } from './remeasure-after-entrance';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import {
   type ScrollFadeListProps,
@@ -162,7 +162,7 @@ export function ScrollFadeList<T>({
 
   return (
     <ScrollFadeFrame {...fading.frame} {...useFrameSize(list, maxHeight)}>
-      <LegendList {...fading.list} ref={listRef} />
+      <MeasuredLegendList {...fading.list} ref={listRef} />
     </ScrollFadeFrame>
   );
 }

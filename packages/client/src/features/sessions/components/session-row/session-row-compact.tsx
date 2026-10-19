@@ -9,23 +9,29 @@ import {
 } from '../pull-request-indicator/pull-request-indicator';
 import { SessionMark } from './session-row-mark';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
-import { rowStatusDot } from './session-row-status';
+import { compactGlyphRole, sidebarDrawing } from './session-row-sidebar';
+import { compactStatusDot } from './session-row-status';
 
 type CompactEndProps = Pick<SessionRowProps, 'session' | 'pullRequest' | 'age'>;
 
 // Its PR's glyph, without the number; with no PR, how long ago the Session was active.
 function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
-  if (pullRequest) return <PullRequestIcon status={pullRequest.status} />;
+  if (pullRequest)
+    return (
+      <PullRequestIcon status={pullRequest.status} role={compactGlyphRole} />
+    );
 
   return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
 }
 
-// A Compact row's end: its detail, then the status dot while the Session is not idle.
+// A Compact row's end: its detail, then the status dot; a phone draws no dot while the Session is idle, a sidebar row a muted one.
 function compactTrailing(props: CompactEndProps): React.ReactNode {
   const detail = compactDetail(props);
-  const status = rowStatusDot(props.session.status);
+  const status = compactStatusDot(props.session.status);
 
-  return detail === undefined && status === undefined ? undefined : (
+  if (detail === undefined && status === undefined) return undefined;
+
+  return (
     <View className="flex-row items-center gap-1.5">
       {detail}
       {status}
@@ -61,6 +67,7 @@ export function CompactSessionRow(props: CompactRowProps): React.JSX.Element {
     <ListItem
       {...compactPresses(props)}
       title={props.session.title}
+      {...sidebarDrawing(props.session.status, 'compact')}
       accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} />}
       trailing={compactTrailing(props)}
