@@ -8,12 +8,12 @@ import {
   expandedAttribute,
   feedScrollId,
   openRow,
-  openedRow,
   scrollAwayFromEnd,
   scrolledToEnd,
   scrollToEnd,
   scrollUp,
   settledTopOf,
+  settleWait,
 } from './feed-reader.mocks';
 import { longRows } from './feed.mocks';
 import { feedArgs, PagedFeed } from './paged-feed.mocks';
@@ -57,15 +57,17 @@ async function lastTwoRowsIn(
   return [trigger, below];
 }
 
-function contentsOf(row: HTMLElement): HTMLElement {
-  const contentId = row.getAttribute('aria-controls');
-  const content =
-    contentId && document.getElementById(contentId)?.firstElementChild;
+async function fullyOpenedRow(row: HTMLElement): Promise<void> {
+  await waitFor(async () => {
+    const contentId = row.getAttribute('aria-controls');
 
-  if (!(content instanceof HTMLElement))
-    throw new Error('No content controlled by the row');
+    const content = contentId && document.getElementById(contentId);
 
-  return content;
+    if (!content) throw new Error('No content controlled by the row');
+
+    await expect(content.clientHeight).toBeGreaterThan(0);
+    await expect(content.scrollHeight).toBe(content.clientHeight);
+  }, settleWait);
 }
 
 // At the end, closing a row draws the rows above down into its place, while the rows below it hold still on every frame.
@@ -84,13 +86,14 @@ export const KeepsRowsBelowStillWhenRowClosesAtEnd: Story = {
     if (!lastGroup) throw new Error('No closed row at the end');
     await openRow(lastGroup);
     const [trigger, below] = await lastTwoRowsIn(lastGroup, closedRows);
-    await openedRow(lastGroup, () => contentsOf(lastGroup));
+    await fullyOpenedRow(lastGroup);
     await openRow(trigger);
-    await openedRow(trigger, () => contentsOf(trigger));
+    await fullyOpenedRow(trigger);
     await scrollToEnd(scroll);
     await settledTopOf(() => below);
 
     await expect(scrolledToEnd(scroll)).toBe(true);
+
     const tops = await sampleEachFrame(
       () => trigger.click(),
       () => below.getBoundingClientRect().top,
