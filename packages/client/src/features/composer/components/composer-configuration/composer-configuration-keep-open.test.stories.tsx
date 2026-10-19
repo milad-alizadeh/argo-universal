@@ -9,8 +9,8 @@ import { ComposerAgentModelControl } from './composer-configuration';
 import {
   agentModelLabel,
   configuration,
-  currentModel,
   modelPickerLabel,
+  otherModel,
   pickerStoryMeta,
 } from './picker-story-fixtures';
 
@@ -70,11 +70,7 @@ export const ModelPicksKeepConfigureOpenWide: Story = {
       name: modelPickerLabel,
     });
 
-    const other = within(picker)
-      .getAllByRole('radio')
-      .find((choice) => choice.getAttribute('aria-checked') === 'false');
-
-    if (!other) throw new Error('Recorded catalog needs a second model.');
+    const other = within(picker).getByRole('radio', { name: otherModel });
     await userEvent.click(other);
 
     await expect(other).toHaveAttribute('aria-checked', 'true');
@@ -82,7 +78,7 @@ export const ModelPicksKeepConfigureOpenWide: Story = {
     await expect(configure).toHaveAttribute(openState, 'open');
     await expect(
       within(configure).getByRole('button', { name: /^Model,/ }),
-    ).not.toHaveTextContent(currentModel);
+    ).toHaveTextContent(otherModel);
 
     await userEvent.click(document.body);
     await waitFor(() => expect(picker).not.toBeInTheDocument());

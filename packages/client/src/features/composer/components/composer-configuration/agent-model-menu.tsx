@@ -1,8 +1,6 @@
-import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { Platform, View } from 'react-native';
-import { List } from '#primitives/lists/list';
-import { ListSection } from '#primitives/lists/list';
+import { List, ListSection } from '#primitives/lists/list';
 import { PopoverHoverGroup } from '#primitives/overlays/popover';
 import { AgentDrill } from './agent-drill';
 import { EffortControl, switchOptions } from './configuration-tuning';
@@ -21,10 +19,10 @@ interface ContentsProps extends MenuProps {
 }
 
 /*
- * Configure's settings: on a desktop a flat menu (Paper 9FK-0) with no titles, whose drill rows open
+ * Configure's settings: on a desktop a flat menu, as Paper's Configure, with no titles, whose drill rows open
  * beside it; elsewhere a sheet page of titled sections whose rows push pages.
  */
-export function AgentModelMenu(props: ContentsProps): React.JSX.Element {
+export function AgentModelMenu(props: ContentsProps): ReactElement {
   return (
     <View className="native:flex-1 bg-content web:wide:bg-card">
       <PopoverHoverGroup>

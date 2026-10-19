@@ -15,7 +15,7 @@ export function ComboboxContent<Value extends string>(
   return createElement(ComboboxResults<Value>, {
     ...props,
     options,
-    search: <Search {...search} />,
+    search: props.searchable === false ? null : <Search {...search} />,
     message: <Status {...props} count={options.length} />,
     footer: <Footer action={props.footerAction} close={props.onClose} />,
   });
