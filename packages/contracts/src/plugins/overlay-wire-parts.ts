@@ -22,15 +22,19 @@ export const overlayWireParts = {
       events: { onOpenChange: openChange },
     },
   ),
-  Sheet: part('A sheet raised over the page.', sheetProps, {
-    children: true,
-    previous: [
-      sheetProps
-        .transform((props): z.input<typeof legacySheet> =>
-          props.label === undefined ? {} : { title: props.label },
-        )
-        .pipe(legacySheet),
-    ],
-    events: { onOpenChange: openChange },
-  }),
+  Sheet: {
+    ...part('A sheet raised over the page.', sheetProps, {
+      children: true,
+      previous: [
+        sheetProps
+          .transform((props): z.input<typeof legacySheet> =>
+            props.label === undefined ? {} : { title: props.label },
+          )
+          .pipe(legacySheet),
+      ],
+      events: { onOpenChange: openChange },
+    }),
+    // A Plugin's sheet holds composed content, so the kit Sheet gives it the standard sheet inset.
+    appProps: sheetProps.transform((props) => ({ ...props, inset: true })),
+  },
 };
