@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Variation, Variations as VariationList } from '../../../variations';
+import { Text } from '../../content/text';
 import { IconButton } from './icon-button';
 
 const sizes = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
@@ -114,6 +115,32 @@ function BadgeExample(): React.JSX.Element {
   );
 }
 
+const metaLink = (icon: 'repository' | 'web'): React.JSX.Element => (
+  <IconButton
+    key={icon}
+    icon={icon}
+    size="xs"
+    variant="ghost"
+    iconTone="muted"
+    bleed
+    accessibilityLabel={icon}
+  />
+);
+
+// Each glyph sits on the text line and the row's gap; its hit area bleeds past it.
+function BleedExample(): React.JSX.Element {
+  return (
+    <Variation label="Bleed">
+      <View className="flex-row items-center gap-3">
+        <Text role="secondary" tone="muted">
+          v1.0.0
+        </Text>
+        {(['repository', 'web'] as const).map(metaLink)}
+      </View>
+    </Variation>
+  );
+}
+
 function IconButtonExamples(): React.JSX.Element {
   return (
     <VariationList>
@@ -123,6 +150,7 @@ function IconButtonExamples(): React.JSX.Element {
       <DisabledExample />
       <LoadingExample />
       <BadgeExample />
+      <BleedExample />
     </VariationList>
   );
 }

@@ -12,14 +12,7 @@ import {
 
 export type AgentRowEntry = Pick<
   ACPAgent,
-  | 'id'
-  | 'name'
-  | 'version'
-  | 'description'
-  | 'icon'
-  | 'repository'
-  | 'website'
-  | 'license_url'
+  'id' | 'name' | 'version' | 'description' | 'icon' | 'repository' | 'website'
 > & {
   installed: boolean;
   // The Registry cannot run it on this platform and it is not installed.
@@ -47,7 +40,6 @@ const registryRow = (
   icon: entry.icon,
   repository: entry.repository,
   website: entry.website,
-  license_url: entry.license_url,
   installed: installed.has(entry.id),
   unavailable: support === 'unavailable' && !installed.has(entry.id),
 });

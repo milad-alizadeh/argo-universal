@@ -19,7 +19,7 @@ export const iconRoles = {
   // A grouped list row's disclosure on the web: its chevron draws iOS's 7x12 in this box at every width.
   disclosure: { wide: 20, phone: 20 },
   // An Agent card's brand mark, aligned with its name.
-  identity: { wide: 24, phone: 22 },
+  identity: { wide: 24, phone: 24 },
   // A header or floating action.
   action: { wide: 20, phone: 20 },
   // Top-level navigation.

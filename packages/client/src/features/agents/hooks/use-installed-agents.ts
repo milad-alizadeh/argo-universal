@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTRPC, type ClientError } from '#features/connection';
+import { showToast } from '#primitives/overlays/toast';
 import {
   type AgentRows,
   agentsPage,
@@ -107,6 +108,30 @@ const registryAgentsData = (
   featured: featuredAgents(installed, registry),
 });
 
+type RegistryEntry = AgentsRegistryOutput['agents'][number];
+
+const registryEntry = (
+  registry: RegistryLoad,
+  id: string,
+): RegistryEntry | undefined =>
+  registry.status === 'loaded'
+    ? registry.registry.agents.find(({ entry }) => entry.id === id)
+    : undefined;
+
+const registryName = (registry: RegistryLoad, id: string): string =>
+  registryEntry(registry, id)?.entry.name ?? id;
+
+// A finished install says so with a success toast naming the Agent.
+const announceInstall =
+  (registry: RegistryLoad, onInstalled?: (id: string) => void) =>
+  (id: string): void => {
+    showToast({
+      title: `${registryName(registry, id)} installed`,
+      tone: 'success',
+    });
+    onInstalled?.(id);
+  };
+
 /*
  * The Registry's Agents marked by what the Server has installed, with Install and Remove.
  * Mounting it refreshes the Registry, so only the surfaces that show the Registry use it.
@@ -124,7 +149,7 @@ export function useRegistryAgents(
 
   return {
     ...registryAgentsData(installedAgents(query), registry.load),
-    ...useAgentChanges(onInstalled),
+    ...useAgentChanges(announceInstall(registry.load, onInstalled)),
     retry,
   };
 }
