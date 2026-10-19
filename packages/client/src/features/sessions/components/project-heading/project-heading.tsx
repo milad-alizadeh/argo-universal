@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { memo } from 'react';
+import { Platform } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { ListSectionHeader } from '#primitives/lists/list';
 import type { ContextMenuTriggerProps } from '#primitives/overlays/menu';
@@ -23,6 +24,9 @@ function FolderIcon({ collapsed }: { collapsed: boolean }): React.JSX.Element {
   return <Icon role="body" name={collapsed ? 'folder' : 'folder-open'} />;
 }
 
+// Desktop and web draw the heading as Paper's sidebar section (Paper "SessionsList").
+const sidebarHeading = Platform.OS === 'web';
+
 // The Project's Sessions group: an open or closed folder for its state, its name, then its actions.
 function ProjectHeader(props: HeaderProps): React.JSX.Element {
   return (
@@ -31,6 +35,7 @@ function ProjectHeader(props: HeaderProps): React.JSX.Element {
       leading={<FolderIcon collapsed={props.collapsed} />}
       trailing={props.actions}
       isExpanded={!props.collapsed}
+      sidebar={sidebarHeading}
       onExpandedChange={props.onToggle}
       onLongPress={props.onLongPress}
     />

@@ -2,7 +2,8 @@ import type * as React from 'react';
 import { type RefObject, useRef } from 'react';
 import { Pressable, type TextInput, View } from 'react-native';
 import { iconButtonClasses } from '#primitives/actions/icon-button';
-import { Lens, type MorphState, OpenField } from './search-field-parts';
+import { Lens } from './search-field-lens';
+import { type MorphState, OpenField } from './search-field-parts';
 import { QueryInput } from './search-field-query';
 
 export type LayoutHandler = NonNullable<

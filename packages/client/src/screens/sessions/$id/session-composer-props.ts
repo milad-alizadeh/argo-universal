@@ -53,10 +53,12 @@ const isTurnRunning = (snapshot: SessionSnapshot): boolean =>
 const isConfiguring = ({ snapshot, commands }: OpenSession): boolean =>
   !isTurnRunning(snapshot) && commands.setConfigOption.isPending;
 
-const isSending = (open: OpenSession): boolean =>
-  open.commands.uploading ||
-  open.commands.promptSession.isPending ||
-  isConfiguring(open);
+const isSending = ({ commands }: OpenSession): boolean =>
+  commands.uploading || commands.promptSession.isPending;
+
+// A pending option change holds Send but leaves the Composer and its open configuration active.
+const isSendable = (open: OpenSession): boolean =>
+  open.connected && !isConfiguring(open);
 
 const writtenPlan = (plan: Plan | null): ComposerProps['writtenPlan'] =>
   plan && plan.type !== 'items' ? plan : undefined;
@@ -142,7 +144,7 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
     ...draftProps(commands),
     onStop: () => commands.cancelTurn.mutate({ sessionId }),
     sending: isSending(open),
-    sendable: open.connected,
+    sendable: isSendable(open),
     ...sendError(commands),
     permissionRequest: open.permission,
     writtenPlan: writtenPlan(view.plan),

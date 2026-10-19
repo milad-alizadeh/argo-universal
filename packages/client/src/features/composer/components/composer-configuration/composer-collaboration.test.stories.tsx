@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../../lib/generic/each-layout';
 import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import {
@@ -90,13 +90,13 @@ export const ModelMenuExcludesCollaboration: Story = {
       canvas.getByRole('button', { name: 'Agent and model' }),
     );
     const overlay = within(document.body);
-    await expect(
-      await overlay.findByRole('switch', { name: 'Fast mode' }),
-    ).toBeVisible();
+    // The menu fades in from opacity 0, so the switch is in the document before it is visible.
+    const fast = await overlay.findByRole('switch', { name: 'Fast mode' });
+    await waitFor(() => expect(fast).toBeVisible());
     await expect(
       overlay.queryByRole('button', { name: /^Collaboration mode/ }),
     ).not.toBeInTheDocument();
-    await userEvent.click(overlay.getByRole('switch', { name: 'Fast mode' }));
+    await userEvent.click(fast);
     await expect(onConfigChange).toHaveBeenCalledWith('fast-mode', false);
   },
 };

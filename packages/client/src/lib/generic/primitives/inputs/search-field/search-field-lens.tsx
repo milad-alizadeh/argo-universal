@@ -1,0 +1,35 @@
+import type * as React from 'react';
+import type { ViewStyle } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { Icon } from '#primitives/content/icon';
+import { type SearchFieldGeometry, useLensStyle } from './search-field-motion';
+import type { MorphState } from './search-field-parts';
+
+// The lens sits over the search button, wherever it is in the row.
+const lensBox = ({
+  triggerWidth,
+  triggerInset,
+}: SearchFieldGeometry): ViewStyle => ({
+  width: triggerWidth,
+  right: triggerInset,
+});
+
+const muted = 'text-muted-foreground';
+
+const lensRole = (sidebar?: boolean): 'action' | 'control' =>
+  sidebar ? 'control' : 'action';
+
+// Drawn above the surface, so the button's lens becomes the field's; a sidebar's is the 16 control glyph.
+export function Lens(props: MorphState): React.JSX.Element {
+  const style = useLensStyle(props.progress, props.geometry);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      className="absolute inset-y-0 right-0 items-center justify-center"
+      style={[lensBox(props.geometry), style]}
+    >
+      <Icon name="search" role={lensRole(props.sidebar)} className={muted} />
+    </Animated.View>
+  );
+}
