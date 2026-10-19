@@ -8,22 +8,29 @@ A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-ki
   "private": true,
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "argo-plugin test .",
     "validate": "argo-plugin validate ."
   },
   "devDependencies": {
     "@argo/plugin-kit": "workspace:*",
+    "@types/node": "catalog:",
     "typescript": "catalog:"
   }
 }
 ```
 
-Its `tsconfig.json` extends the kit's settings:
+Its `tsconfig.json` extends the kit's settings, and its `tsconfig.test.json` the kit's test settings:
 
 ```json
 { "extends": "@argo/plugin-kit/tsconfig.json" }
 ```
+
+```json
+{ "extends": "@argo/plugin-kit/tsconfig.test.json" }
+```
+
+Plugin code runs without Node, so it is checked without Node's types; only `*.test.ts` files see them.
 
 `plugin.json` stays the manifest. Its `main` names the entry, which can be `.ts` or `.tsx`. The entry exports `register`, which receives the Plugin API:
 

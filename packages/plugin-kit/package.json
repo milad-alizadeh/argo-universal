@@ -11,11 +11,13 @@
       "types": "./src/index.d.ts"
     },
     "./cli": "./cli/plugin-command.ts",
+    "./launch": "./bin/launch.mjs",
     "./jsx-runtime": {
       "types": "./src/jsx-runtime.d.ts"
     },
     "./testing": "./testing/index.ts",
-    "./tsconfig.json": "./tsconfig.plugin.json"
+    "./tsconfig.json": "./tsconfig.plugin.json",
+    "./tsconfig.test.json": "./tsconfig.plugin-test.json"
   },
   "dependencies": {
     "@repo/contracts": "workspace:*",

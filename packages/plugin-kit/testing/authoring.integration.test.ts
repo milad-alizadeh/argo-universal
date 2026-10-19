@@ -34,7 +34,7 @@ async function start(source: string): Promise<PluginTest> {
       },
     }),
   );
-  await writeFile(join(directory, 'index.js'), source);
+  await writeFile(join(directory, manifest.main), source);
 
   const kit = await startPluginTest({
     directory,

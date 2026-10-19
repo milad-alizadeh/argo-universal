@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.plugin.json",
+  // A Plugin's tests run in Node.
+  "compilerOptions": { "types": ["node"] },
+  "include": ["${configDir}/**/*.test.ts"],
+  "exclude": ["${configDir}/**/node_modules"]
+}

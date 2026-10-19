@@ -17,6 +17,13 @@ async function start(path: string): Promise<PluginTest> {
   return test;
 }
 
+it("loads the fixture's TypeScript entry through the production loader", async () => {
+  const page = (await start('first')).page();
+  await expect
+    .poll(() => page.findText('Harness'), { timeout: 10_000 })
+    .toBeDefined();
+}, 20_000);
+
 it('delivers a text event through the worker and applies its keyed patch to the observed tree', async () => {
   const test = await start('first');
   const page = test.page();

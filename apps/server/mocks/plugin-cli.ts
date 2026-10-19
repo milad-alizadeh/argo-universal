@@ -19,7 +19,7 @@ export async function fixture(source: string): Promise<string> {
   // Each fixture brings its own tests, so the example's tests stay behind.
   await cp(example, directory, {
     recursive: true,
-    filter: (path) => !testFile.test(path) && !path.includes('node_modules'),
+    filter: (path) => !testFile.test(path),
   });
   await writeFile(join(directory, 'index.tsx'), source);
 
