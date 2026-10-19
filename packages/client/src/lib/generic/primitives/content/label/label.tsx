@@ -13,10 +13,19 @@ export function Label(props: LabelProps): ReactElement {
       testID={props.testID}
       className="shrink-0 flex-row items-center gap-1.5"
     >
-      <Icon name={props.icon} role="secondary" tone={tone} />
+      <LabelIcon icon={props.icon} tone={tone} />
       <Text role="secondary" tone={tone} numberOfLines={1}>
         {props.text}
       </Text>
     </View>
   );
+}
+
+// A text-only Label has no icon, so the row's gap never applies.
+function LabelIcon(
+  props: Pick<LabelProps, 'icon'> & { tone: NonNullable<LabelProps['tone']> },
+): ReactElement | null {
+  if (!props.icon) return null;
+
+  return <Icon name={props.icon} role="secondary" tone={props.tone} />;
 }

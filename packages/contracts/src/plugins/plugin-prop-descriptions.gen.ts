@@ -103,7 +103,7 @@ export type WireSchemaHints = {
     "accessibilityLabel": PropValue<"Audio", "accessibilityLabel">;
   };
   "Label": {
-    /** An Argo icon name or an SF and Material symbol pair. */
+    /** An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text. */
     "icon": PropValue<"Label", "icon">;
     /** The text displayed by the part. */
     "text": PropValue<"Label", "text">;
