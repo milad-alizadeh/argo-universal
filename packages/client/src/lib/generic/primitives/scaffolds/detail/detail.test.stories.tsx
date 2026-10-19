@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { Action, ActionList } from '#primitives/actions/action-list';
 import { Text } from '#primitives/content/text';
 import { Page } from '#primitives/scaffolds/page';
@@ -53,8 +53,21 @@ export const ReadsContentAndMetadata: Story = {
   },
 };
 
-// A narrow container moves the Metadata below the content; nothing is clipped or lost.
-const inContainer = (size: 'h-160 w-90' | 'h-160 w-200'): Story => ({
+// Whether the Metadata starts below the content's last line or beside it.
+function metadataIsBelow(canvas: Parameters<Play>[0]['canvas']): boolean {
+  const content = canvas.getByText(body).getBoundingClientRect();
+
+  const status = canvas
+    .getByRole('group', { name: 'Status, In progress' })
+    .getBoundingClientRect();
+
+  return status.top >= content.bottom;
+}
+
+const inContainer = (
+  size: 'h-160 w-90' | 'h-160 w-200',
+  below: boolean,
+): Story => ({
   render: (args) => (
     <View className={size}>
       <Page title={issue.title}>
@@ -63,14 +76,14 @@ const inContainer = (size: 'h-160 w-90' | 'h-160 w-200'): Story => ({
     </View>
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(body)).toBeVisible();
     await expectMetadata(canvas);
+    await waitFor(() => expect(metadataIsBelow(canvas)).toBe(below));
   },
 });
 
-export const NarrowContainer = inContainer('h-160 w-90');
+export const NarrowContainerStacksMetadata = inContainer('h-160 w-90', true);
 
-export const WideContainer = inContainer('h-160 w-200');
+export const WideContainerSplitsColumns = inContainer('h-160 w-200', false);
 
 export const LoadingKeepsMetadata: Story = {
   args: { ...issue.detail, isLoading: true },
@@ -129,21 +142,31 @@ export const WithoutMetadata: Story = {
 
 const closed = fn();
 
+const closeLabel = 'Close Issue';
+
 export const ActionsJoinThePageHeader: Story = {
   args: {
     ...issue.detail,
     actions: (
       <ActionList>
-        <Action label="Close Issue" icon="check" onPress={closed} />
+        <Action label={closeLabel} icon="check" onPress={closed} />
       </ActionList>
     ),
   },
   play: async ({ canvas, userEvent }) => {
     closed.mockClear();
-    await userEvent.click(canvas.getByRole('button', { name: 'Close Issue' }));
+    const button = canvas.getByRole('button', { name: closeLabel });
+
+    await userEvent.click(button);
     await expect(closed).toHaveBeenCalledOnce();
     await expect(
-      canvas.getAllByRole('button', { name: 'Close Issue' }),
-    ).toHaveLength(1);
+      canvas
+        .getByRole('heading', { name: issue.title })
+        .compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    await expect(
+      button.compareDocumentPosition(canvas.getByText(body)) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   },
 };

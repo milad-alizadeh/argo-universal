@@ -1,4 +1,4 @@
-import { use, type ReactElement } from 'react';
+import { use, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { ScrollColumnContext } from '#lib/generic/scroll-column';
 import { useWide } from '#lib/generic/use-wide/use-wide';
@@ -6,6 +6,11 @@ import { cn } from '#lib/generic/utils';
 import { ActionShortcutScope } from '#primitives/actions/action-list';
 import { PageAccessory } from './page-accessory';
 import { usePageColumn } from './page-column';
+import {
+  PageContentActionsProvider,
+  usePageContentActionsState,
+  type SetContentActions,
+} from './page-content-actions';
 import { PageHeading } from './page-heading';
 import { PageNavigation } from './page-navigation';
 import type { PageProps } from './page-props';
@@ -22,25 +27,46 @@ export function Page(props: PageProps): ReactElement {
 }
 
 function PageSurface(props: PageProps): ReactElement {
+  const content = usePageContentActionsState();
+  const header = { ...props, actions: headerActions(props, content.actions) };
+
   return (
     <View
       testID={props.testID}
       className="min-h-0 flex-1 bg-content wide:mt-frame-inset"
     >
-      <PageNavigation {...props} />
-      <PageHeading {...props} />
-      <PageBody {...props} />
+      <PageNavigation {...header} />
+      <PageHeading {...header} />
+      <PageBody {...props} setContentActions={content.setActions} />
       <PageAccessory {...props} />
     </View>
   );
 }
 
-function PageBody(props: PageProps): ReactElement {
+// The page's own Actions first, then those its content handed up.
+function headerActions(props: PageProps, content: ReactNode): ReactNode {
+  if (!content) return props.actions;
+
+  return (
+    <>
+      {props.actions}
+      {content}
+    </>
+  );
+}
+
+function PageBody(
+  props: PageProps & { setContentActions: SetContentActions },
+): ReactElement {
   const { column, className } = usePageBody(props);
 
   return (
     <View className={className}>
-      <ScrollColumnContext value={column}>{props.children}</ScrollColumnContext>
+      <PageContentActionsProvider value={props.setContentActions}>
+        <ScrollColumnContext value={column}>
+          {props.children}
+        </ScrollColumnContext>
+      </PageContentActionsProvider>
     </View>
   );
 }

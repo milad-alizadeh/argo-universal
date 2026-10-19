@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
+import { usePageContentActions } from '#primitives/scaffolds/page';
 import { Spinner } from '#primitives/status/spinner';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import { DetailColumns } from './detail-columns';
@@ -20,9 +21,16 @@ export function Detail(props: DetailProps): ReactElement {
       <DetailColumns metadata={props.metadata}>
         <DetailContent {...props} />
       </DetailColumns>
-      {props.actions}
+      <DetailActions actions={props.actions} />
     </ScrollFadeView>
   );
+}
+
+// Inside a Page the Actions join its header; on their own they follow the content.
+function DetailActions({ actions }: Pick<DetailProps, 'actions'>): ReactNode {
+  const inPage = usePageContentActions(actions);
+
+  return inPage ? null : actions;
 }
 
 function DetailContent({
