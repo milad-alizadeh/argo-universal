@@ -7,11 +7,9 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react';
-import { View } from 'react-native';
 import {
   Popover,
   PopoverContent,
-  PopoverTitle,
   PopoverTrigger,
   type PopoverContentProps,
 } from '#primitives/overlays/popover';
@@ -27,9 +25,19 @@ export function DrillPopover(props: Props): ReactElement {
   return (
     <Popover open={open} onOpenChange={setOpen} openOnHover={props.row}>
       <PopoverTrigger disabled={props.disabled}>{props.trigger}</PopoverTrigger>
-      <DrillContent {...props} close={() => setOpen(false)} />
+      <DrillContent {...props} close={choiceClose(props, setOpen)} />
     </Popover>
   );
+}
+
+const stayOpen = (): void => {};
+
+// The choices call close after a pick; keepOpen leaves the popover to a click outside or Escape.
+function choiceClose(
+  props: Props,
+  setOpen: Dispatch<SetStateAction<boolean>>,
+): () => void {
+  return props.keepOpen ? stayOpen : () => setOpen(false);
 }
 
 function useOpenState(
@@ -46,23 +54,12 @@ function useOpenState(
   return [open, setOpen];
 }
 
+// Paper: a row's choices open beside the menu with no title; the title names the popover for assistive tech.
 function DrillContent(props: ContentProps): ReactElement {
   return createElement(
     PopoverContent,
     placement(props),
-    <Choices {...props} />,
-  );
-}
-
-// Paper: a row's choices open beside the menu under their own title.
-function Choices(props: ContentProps): ReactElement {
-  if (!props.row) return <>{props.children(props.close)}</>;
-
-  return (
-    <View>
-      <PopoverTitle>{props.title}</PopoverTitle>
-      {props.children(props.close)}
-    </View>
+    props.children(props.close),
   );
 }
 
