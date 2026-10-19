@@ -1,6 +1,7 @@
 import { createContext, runInContext } from 'node:vm';
-import { argoSource, type ArgoBridge } from './argo.ts';
-import { kitPrelude, kitTimersSource } from './kit-prelude.ts';
+import type { ArgoBridge } from './argo.ts';
+import { kitPrelude } from './kit-prelude.ts';
+import type { PluginRealmExports } from './plugin-api.ts';
 
 export type PluginRealm = ReturnType<typeof createContext>;
 
@@ -14,20 +15,27 @@ const realClock: PluginClock = {
   now: Date.now,
 };
 
-// The kit is handed real timers first; only Plugin timers and dates use a test clock.
+type StartedRealm = PluginRealmExports & { context: PluginRealm };
+
+// The kit takes the real timers as it loads; only Plugin timers and dates use a test clock.
 export function createPluginRealm(
   bridge: ArgoBridge,
   kitSource: string,
   clock?: PluginClock,
-): PluginRealm {
+): StartedRealm {
   const context = baseRealm({ __argoBridge: bridge });
-  runInContext(kitTimersSource, context);
   runInContext(kitSource, context);
 
   if (clock) installClock(context, clock);
-  runInContext(`globalThis.argo = ${argoSource}`, context);
 
-  return context;
+  const started: PluginRealmExports = runInContext(
+    'globalThis.__argoRealm',
+    context,
+  );
+
+  runInContext('delete globalThis.__argoRealm', context);
+
+  return { context, ...started };
 }
 
 // The global names a Plugin realm starts with; `argo plugin validate` refuses the Node ones it lacks.

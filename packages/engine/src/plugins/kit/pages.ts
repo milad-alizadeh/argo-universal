@@ -1,3 +1,4 @@
+import type { Page, SlotContent } from '@repo/contracts/plugins/argo-api';
 import type {
   PluginEvent,
   PluginViewId,
@@ -10,7 +11,7 @@ import { startPage, transmit, failedDrawingRoot } from './mounted-page';
 import { cancelPageFrame } from './page-frame';
 import { runHandler, type OpenView, type DispatchSender } from './page-view';
 import { ReplacementPages } from './replacement-pages';
-import { elementOf, type Page, type SlotContent } from './view-content';
+import { elementOf } from './view-content';
 
 export type { DispatchSender } from './page-view';
 

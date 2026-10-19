@@ -5,7 +5,7 @@
   "engines": {
     "argo": ">=0.0.0 <1.0.0"
   },
-  "main": "index.js",
+  "main": "index.tsx",
   "icon": {
     "sf": "ticket",
     "sfFilled": "ticket.fill",

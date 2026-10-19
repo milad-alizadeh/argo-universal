@@ -103,7 +103,7 @@
       "files": [
         "packages/engine/src/plugins/worker/modules.ts",
         "packages/engine/src/plugins/worker/realm.ts",
-        "apps/server/src/plugin-test-files.ts"
+        "packages/plugin-kit/cli/plugin-test-files.ts"
       ],
       "rules": { "sonarjs/code-eval": "off" }
     },

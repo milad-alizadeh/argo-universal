@@ -38,7 +38,7 @@ it.each([
     expect(result.code).toBe(1);
     expect(result.output).toContain(`${type} node:`);
     expect(result.output).toContain(reason);
-    expect(result.output).toContain('index.js:2:');
+    expect(result.output).toContain('index.tsx:2:');
   },
   30_000,
 );

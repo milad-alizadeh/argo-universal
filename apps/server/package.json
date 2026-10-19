@@ -14,7 +14,6 @@
     "@repo/contracts": "workspace:*",
     "@repo/engine": "workspace:*",
     "@repo/machine-log": "workspace:*",
-    "esbuild": "catalog:",
     "tsx": "catalog:",
     "xstate": "catalog:",
     "zod": "catalog:"

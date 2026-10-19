@@ -31,6 +31,10 @@
       // `tools/record-user-messages.mts` runs this recorder by path.
       "entry": ["mocks/user-message-recording.ts"]
     },
+    "packages/plugin-kit": {
+      // The `argo-plugin` bin runs this entry by path through tsx.
+      "entry": ["cli/main.ts"]
+    },
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [

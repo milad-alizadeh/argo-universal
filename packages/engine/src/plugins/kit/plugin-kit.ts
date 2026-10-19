@@ -62,7 +62,7 @@ export interface Kit {
   ) => { treePath: string };
 }
 
-// Bundled by esbuild and run inside a Plugin's context before its code (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
+// Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
 export function createKit(send: ViewSender, settle: DispatchSender): Kit {
   const pages = mountPages(send, settle);
 
@@ -77,8 +77,6 @@ export function createKit(send: ViewSender, settle: DispatchSender): Kit {
       pages.receive(PluginEvent.parse(JSON.parse(json))),
   };
 }
-
-Object.assign(globalThis, { __argoKit: { createKit } });
 
 function replacementOf(pages: Pages): Kit['replacement'] {
   return (invocation, element) => {

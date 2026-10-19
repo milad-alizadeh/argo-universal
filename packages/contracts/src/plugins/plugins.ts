@@ -7,11 +7,7 @@ import { PluginStatus } from './runtime';
 import { sfSymbolNames } from './sf-symbol-names.gen';
 import { SlotId } from './wire';
 
-export type PluginProjectInfo = {
-  id: string;
-  name: string;
-  originUrl: string | null;
-};
+export { PluginProjectInfo } from './argo-calls';
 
 // Zod's default enum error would print every name in the list.
 const notIn =
@@ -52,10 +48,11 @@ export const PluginManifest = z.strictObject({
   name: z.string().trim().min(1),
   version: z.string().min(1),
   engines: z.strictObject({ argo: z.string().trim().min(1) }),
+  // A TypeScript entry is bundled by esbuild as a dev Plugin's is (ADR-0025).
   main: z
     .string()
     .regex(
-      /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.(?:js|mjs|cjs)$/,
+      /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.(?:js|mjs|cjs|ts|tsx)$/,
     ),
   icon: PluginIcon,
   contributes: z.strictObject({

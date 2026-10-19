@@ -107,3 +107,25 @@ export type PluginWireNode = {
     slots: Record<string, PluginWireNode[]>;
   };
 }[WirePart];
+
+// The timers a Plugin realm provides; Plugin code has no other host globals.
+declare global {
+  function setTimeout(callback: () => void, ms?: number): number;
+  function clearTimeout(id: number | undefined): void;
+}
+
+// The Plugin API: the `argo` object a Plugin's `register` receives, inferred from the call schemas in Contracts.
+export type { Argo } from '@repo/contracts/plugins/argo-api';
+
+export type {
+  Hook,
+  HookContext,
+  HookNext,
+  HookOptions,
+} from '@repo/contracts/plugins/hooks';
+
+export type {
+  ProcessResult,
+  StorageQuery,
+  StorageResult,
+} from '@repo/contracts/plugins/argo-calls';
