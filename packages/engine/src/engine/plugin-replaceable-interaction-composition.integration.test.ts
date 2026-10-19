@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
+import { pluginWireVersion } from '@repo/contracts/plugins/kit';
 import type { ReplaceableMessage } from '@repo/contracts/plugins/replaceable';
 import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
 import { traySlotFixture } from '@repo/contracts/plugins/replaceable-fixtures';
@@ -40,7 +40,7 @@ it('retains a replacement handler and restores core when its Plugin is turned of
 
   const app = renderApp(url, traySlotFixture, {
     platform: 'desktop',
-    parts: currentPartVersions,
+    wireVersion: pluginWireVersion,
   });
 
   await expect
@@ -80,7 +80,7 @@ it('retains a replacement handler and restores core when its Plugin is turned of
 it('accepts drawing failure reports only from the Connection that owns the replacement and logs once', async () => {
   const home = await counterHome();
   const { url } = await startEngineTestHost({ home });
-  const surface = { platform: 'web' as const, parts: currentPartVersions };
+  const surface = { platform: 'web' as const, wireVersion: pluginWireVersion };
   const app = renderApp(url, traySlotFixture, surface);
   const stranger = renderApp(url, traySlotFixture, surface);
   await expect

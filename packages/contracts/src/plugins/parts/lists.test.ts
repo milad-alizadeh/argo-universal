@@ -2,8 +2,6 @@ import { expect, it } from 'vitest';
 import { prepareWireTree } from '../prepare-tree';
 import type { WireNode } from '../wire';
 
-const parts = { List: 1, Text: 3, Button: 1, Stack: 1 };
-
 const emptyText: WireNode = {
   type: 'Text',
   key: 'empty',
@@ -31,7 +29,7 @@ it.each(['Text', 'Stack'])('draws %s content in a List empty Slot', (type) => {
     slots: { empty: [content] },
   };
 
-  expect(prepareWireTree(list, parts)).toEqual(list);
+  expect(prepareWireTree(list)).toEqual(list);
 });
 
 it('refuses a control outside the List empty Slot accepted set', () => {
@@ -45,7 +43,7 @@ it('refuses a control outside the List empty Slot accepted set', () => {
     },
   };
 
-  expect(prepareWireTree(list, parts)).toMatchObject({
+  expect(prepareWireTree(list)).toMatchObject({
     type: 'Text',
     props: { children: 'Update Argo to see this' },
   });
@@ -66,9 +64,7 @@ it.each(['Switch', 'Picker', 'TextInput', 'ListItem.Toggle'])(
       },
     };
 
-    expect(
-      prepareWireTree(row, { Text: 3, ListItem: 3, [type]: 1 }),
-    ).toMatchObject({
+    expect(prepareWireTree(row)).toMatchObject({
       type: 'Text',
       props: { children: 'Update Argo to see this' },
     });

@@ -1,7 +1,3 @@
-import {
-  legacyPartVersions,
-  type PartVersions,
-} from '@repo/contracts/plugins/kit';
 import { prepareWireTree } from '@repo/contracts/plugins/prepare-tree';
 import type {
   ReplaceableInput,
@@ -16,10 +12,7 @@ import { sanitizeTree } from '../visual/sanitize-tree';
 
 type Replacement = { pluginId: string; path: string; input: ReplaceableInput };
 
-type DrawingContext = Replacement & {
-  parts: PartVersions;
-  runtime: PluginRuntime;
-};
+type DrawingContext = Replacement & { runtime: PluginRuntime };
 
 type RenderStream = {
   runtime: PluginRuntime;
@@ -32,11 +25,7 @@ export async function* renderView({
   replacement,
   connection,
 }: RenderStream): AsyncGenerator<ReplaceableMessage> {
-  const drawing = new ReplacementDrawing({
-    ...replacement,
-    runtime,
-    parts: reportedParts(connection),
-  });
+  const drawing = new ReplacementDrawing({ ...replacement, runtime });
 
   const source = watchReplacement(runtime, replacement, connection);
 
@@ -73,15 +62,12 @@ class ReplacementDrawing {
   }
 
   private draw(root: WireNode, message: ViewMessage): ReplaceableMessage {
-    const { parts } = this.context;
     const sanitized = sanitizeTree(root);
-
-    const reason =
-      visualRefusal(sanitized) ?? replacementTreeReason(root, parts);
+    const reason = visualRefusal(sanitized) ?? replacementTreeReason(root);
 
     return reason
       ? this.refuse(reason)
-      : this.accept(prepareWireTree(sanitized.root, parts), message);
+      : this.accept(prepareWireTree(sanitized.root), message);
   }
 
   private refuse(reason: string): ReplaceableMessage {
@@ -109,9 +95,6 @@ class ReplacementDrawing {
     };
   }
 }
-
-const reportedParts = (connection: RpcConnection): PartVersions =>
-  connection.surface?.parts ?? legacyPartVersions;
 
 const visualRefusal = (
   sanitized: ReturnType<typeof sanitizeTree>,

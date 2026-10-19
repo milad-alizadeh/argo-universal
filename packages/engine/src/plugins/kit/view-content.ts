@@ -25,7 +25,7 @@ function renderContext(
     ? {
         surface: Object.freeze({
           platform: surface.platform,
-          parts: Object.freeze({ ...surface.parts }),
+          wireVersion: surface.wireVersion,
         }),
       }
     : {};

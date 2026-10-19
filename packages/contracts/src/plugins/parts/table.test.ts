@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest';
-import { currentPartVersions } from '../kit';
 import { prepareWireTree } from '../prepare-tree';
 import { runTableRoot } from '../table-wire-fixtures';
 import type { WireNode } from '../wire';
@@ -7,14 +6,8 @@ import type { WireNode } from '../wire';
 const updateMessage = 'Update Argo to see this';
 
 it('keeps a Table of rows, cells, Pills and row ActionLists', () => {
-  expect(prepareWireTree(runTableRoot, currentPartVersions)).toEqual(
-    runTableRoot,
-  );
+  expect(prepareWireTree(runTableRoot)).toEqual(runTableRoot);
 });
-
-const older = Object.fromEntries(
-  Object.entries(currentPartVersions).filter(([type]) => type !== 'Table'),
-);
 
 const controlInACell: WireNode = {
   type: 'Table.Cell',
@@ -39,11 +32,10 @@ const columnWithoutAnId: WireNode = {
 };
 
 it.each([
-  ['a Table for an App that predates it', runTableRoot, older],
-  ['a control drawn in a cell', controlInACell, currentPartVersions],
-  ['a column without an id', columnWithoutAnId, currentPartVersions],
-])('refuses %s', (_name, tree, versions) => {
-  expect(prepareWireTree(tree, versions)).toMatchObject({
+  ['a control drawn in a cell', controlInACell],
+  ['a column without an id', columnWithoutAnId],
+])('refuses %s', (_name, tree) => {
+  expect(prepareWireTree(tree)).toMatchObject({
     type: 'Text',
     props: { children: updateMessage },
   });

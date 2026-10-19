@@ -47,7 +47,7 @@ it(
     await app.client.plugins.dispatch.mutate(tap(app.messages[1], '0/alpha'));
     await expect
       .poll(() => app.messages.at(-1), { timeout: 10_000 })
-      .toMatchObject({ revision: 3, ops: [{ props: { label: 'alpha' } }] });
+      .toMatchObject({ revision: 3, ops: [{ props: { children: 'alpha' } }] });
   },
 );
 

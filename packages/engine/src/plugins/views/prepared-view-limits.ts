@@ -5,8 +5,8 @@ import {
 } from '@repo/contracts/plugins/wire-limits';
 import { wireSizeReason } from './wire-size';
 
-// Adaptation may grow an otherwise admissible page; each App keeps its own refusal state.
-export class AdaptedViewLimits {
+// Preparation may grow an otherwise admissible page; each App keeps its own refusal state.
+export class PreparedViewLimits {
   private refused = false;
 
   constructor(
@@ -16,8 +16,8 @@ export class AdaptedViewLimits {
 
   accept(root: WireNode, message: ViewMessage): ViewMessage | null {
     const reason =
-      wireSizeReason(root, pluginPageBytes, 'adapted page') ??
-      wireSizeReason(message, pluginMessageBytes, 'adapted message');
+      wireSizeReason(root, pluginPageBytes, 'prepared page') ??
+      wireSizeReason(message, pluginMessageBytes, 'prepared message');
 
     if (reason) return this.refuse(reason, message);
     this.refused = false;

@@ -1,4 +1,3 @@
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
 import type {
   PartEvent,
   PluginDispatchInput,
@@ -39,7 +38,7 @@ it(
     ]);
 
     const { url } = await startEngineTestHost({ home });
-    const first = connectPluginApp(url, page, currentPartVersions);
+    const first = connectPluginApp(url, page);
     await expect.poll(() => first.messages.length, { timeout: 10_000 }).toBe(1);
     await first.client.plugins.dispatch.mutate(
       event(first.messages[0], 'page', {
@@ -64,7 +63,7 @@ it(
         revision: 4,
         ops: [{ props: { children: heard('Argo', ['984'], 1) } }],
       });
-    const second = connectPluginApp(url, page, currentPartVersions);
+    const second = connectPluginApp(url, page);
     await expect
       .poll(() => second.messages[0], { timeout: 10_000 })
       .toMatchObject({

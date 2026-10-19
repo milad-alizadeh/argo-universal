@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import {
   iconSymbol,
-  materialSymbol,
-  sfSymbol,
 } from '../kit-symbols/icon-schema';
 import { tones } from '../kit-tokens';
 
@@ -24,33 +22,18 @@ export const progressBarProps = z.object({
     .describe('Optional spoken description.'),
 });
 
-export const labelV1 = z.object({
-  icon: z
-    .object({
-      sf: sfSymbol,
-      material: materialSymbol,
-    })
-    .describe('The SF and Material symbol pair.'),
+export const labelProps = z.object({
+  icon: iconSymbol
+    .optional()
+    .describe(
+      'An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text.',
+    ),
   text: z.string().describe('The text displayed by the part.'),
   tone: semanticTone,
   accessibilityLabel: z
     .string()
     .optional()
     .describe('Optional spoken description.'),
-});
-
-export const labelV2 = labelV1.extend({
-  icon: iconSymbol.describe(
-    'An Argo icon name or an SF and Material symbol pair.',
-  ),
-});
-
-export const labelProps = labelV2.extend({
-  icon: iconSymbol
-    .optional()
-    .describe(
-      'An optional Argo icon name or an SF and Material symbol pair; without one the Label shows only its text.',
-    ),
 });
 
 export const pillProps = z.object({

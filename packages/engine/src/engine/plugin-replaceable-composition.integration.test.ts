@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
+import { pluginWireVersion } from '@repo/contracts/plugins/kit';
 import { composerAboveSlotId } from '@repo/contracts/plugins/replaceable';
 import {
   messageSlotFixture,
@@ -56,7 +56,7 @@ it.each([traySlotFixture, messageSlotFixture, toolCallSlotFixture])(
 
     const app = renderApp(url, input, {
       platform: 'ios',
-      parts: currentPartVersions,
+      wireVersion: pluginWireVersion,
     });
 
     await expect

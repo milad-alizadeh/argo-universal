@@ -19,11 +19,20 @@ export function createRpcContext(
   const controller = new AbortController();
   socket.once('close', () => controller.abort());
 
-  const surface = params?.['pluginSurface']
-    ? PluginSurface.parse(JSON.parse(params['pluginSurface']))
-    : undefined;
-
   return {
-    connection: { id: randomUUID(), signal: controller.signal, surface },
+    connection: {
+      id: randomUUID(),
+      signal: controller.signal,
+      surface: reportedSurface(params?.['pluginSurface']),
+    },
   };
+}
+
+// An App that reports no wire version is older than the minimum, not a broken Connection.
+function reportedSurface(
+  reported: string | undefined,
+): PluginSurface | undefined {
+  return reported
+    ? PluginSurface.safeParse(JSON.parse(reported)).data
+    : undefined;
 }

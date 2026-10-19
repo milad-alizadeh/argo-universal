@@ -16,18 +16,6 @@ const picker = z.union([
   manyPicks.extend({ onValueChange: manyPicks.shape.onValueChange.optional() }),
 ]);
 
-// Apps from before `multiple` (versions 2 and 3) take one value, so a multiple Picker is left out for them.
-const pickerPart = {
-  ...inputs.Picker,
-  props: picker,
-  versions: [
-    ...inputs.Picker.versions.slice(0, 1),
-    onePick,
-    onePickDraft,
-    picker,
-  ],
-};
-
 const toggle = inputs.Switch.props.extend({
   onValueChange: inputs.Switch.props.shape.onValueChange.optional(),
 });
@@ -57,20 +45,19 @@ const split = z.union([
   selectionPartSchemas.SplitButton.props.options[1],
 ]);
 
-type UpdatedPart<Part, Schema> = Omit<Part, 'props' | 'versions'> & {
+type UpdatedPart<Part, Schema> = Omit<Part, 'props'> & {
   props: Schema;
-  versions: readonly z.ZodType[];
 };
 
 function withDraft<Part extends WirePartDefinition, Schema extends z.ZodType>(
   part: Part,
   props: Schema,
 ): UpdatedPart<Part, Schema> {
-  return { ...part, props, versions: [...part.versions, props] };
+  return { ...part, props };
 }
 
 export const controlWireParts = {
-  Picker: pickerPart,
+  Picker: withDraft(inputs.Picker, picker),
   Switch: withDraft(inputs.Switch, toggle),
   Checkbox: withDraft(inputs.Checkbox, checkbox),
   Slider: withDraft(inputs.Slider, slider),

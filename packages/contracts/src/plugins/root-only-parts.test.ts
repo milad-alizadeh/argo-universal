@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { currentPartVersions } from './kit';
 import { prepareWireTree } from './prepare-tree';
 import { replacementTreeReason } from './replacement-tree';
 import type { WireNode } from './wire';
@@ -22,14 +21,14 @@ const host = (type: string, props: WireNode['props']): WireNode => ({
 
 describe('a root-only part', () => {
   it('stays when it is the tree root', () => {
-    expect(prepareWireTree(page, currentPartVersions)).toEqual(page);
+    expect(prepareWireTree(page)).toEqual(page);
   });
 
   it.each([
     host('Stack', { direction: 'column' }),
     host('Page', { title: 'Host' }),
   ])('is refused as a child of $type', (root) => {
-    expect(prepareWireTree(root, currentPartVersions).children).toEqual([
+    expect(prepareWireTree(root).children).toEqual([
       {
         type: 'Text',
         key: 'page',
@@ -47,7 +46,7 @@ describe('a root-only part', () => {
   it.each([page, host('Stack', { direction: 'column' })])(
     'refuses a Replaceable Slot tree that holds it ($type)',
     (root) => {
-      expect(replacementTreeReason(root, currentPartVersions)).toBe(
+      expect(replacementTreeReason(root)).toBe(
         'Page cannot replace a core component',
       );
     },
@@ -66,17 +65,13 @@ describe("a root-only part in a root part's slot", () => {
   it('stays where the root names it, as the detail Page', () => {
     const root = listDetail({ detail: [page] });
 
-    expect(prepareWireTree(root, currentPartVersions).slots.detail).toEqual([
-      page,
-    ]);
+    expect(prepareWireTree(root).slots.detail).toEqual([page]);
   });
 
   it('is refused as the root itself when ListDetail is nested', () => {
     const root = host('Stack', { direction: 'column' });
     const nested = { ...root, children: [listDetail({ detail: [page] })] };
 
-    expect(
-      prepareWireTree(nested, currentPartVersions).children.at(0)?.type,
-    ).toBe('Text');
+    expect(prepareWireTree(nested).children.at(0)?.type).toBe('Text');
   });
 });

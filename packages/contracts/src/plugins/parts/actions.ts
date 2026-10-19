@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { iconButtonPart } from '../icon-button-part';
 import { part } from '../plugin-part-schema-utils';
 import { selectionPartSchemas } from '../selection-parts';
@@ -11,9 +10,6 @@ export const actionsPartSchemas = {
   ButtonGroup: part('A joined group of buttons.', buttonGroupProps, {
     children: true,
     slots: {},
-    previous: [
-      z.object({ direction: z.enum(['horizontal', 'vertical']).optional() }),
-    ],
   }),
   SplitButton: selectionPartSchemas.SplitButton,
   ActionList: wireParts.ActionList,

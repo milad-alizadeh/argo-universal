@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { legacyPartVersions } from './kit';
 import { prepareWireTree } from './prepare-tree';
 import type { WireNode } from './wire';
 
@@ -18,12 +17,8 @@ const svg: WireNode = {
 };
 
 describe('Svg wire part', () => {
-  it('preserves Svg props for a compatible App', () => {
-    expect(prepareWireTree(svg, { Svg: 1 })).toEqual(svg);
-  });
-
-  it('replaces Svg when the receiving App does not support it', () => {
-    expect(prepareWireTree(svg, {})).toEqual(emptySvg());
+  it('preserves valid Svg props', () => {
+    expect(prepareWireTree(svg)).toEqual(svg);
   });
 
   it.each([
@@ -32,7 +27,7 @@ describe('Svg wire part', () => {
     { ...svg, props: { ...svg.props, tone: 'chart-1' } },
     { ...svg, props: { ...svg.props, aspectRatio: Number.POSITIVE_INFINITY } },
   ])('rejects invalid Svg props through its registered schema', (root) => {
-    expect(prepareWireTree(root, { Svg: 1 })).toEqual(emptySvg());
+    expect(prepareWireTree(root)).toEqual(emptySvg());
   });
 
   it('preserves Svg in an ordinary named Slot', () => {
@@ -52,12 +47,7 @@ describe('Svg wire part', () => {
       slots: { leading: [text, svg] },
     };
 
-    expect(
-      prepareWireTree(root, { ...legacyPartVersions, ListItem: 3, Svg: 1 })
-        .slots,
-    ).toEqual({
-      leading: [{ ...text, props: { label: 'Readable' } }, svg],
-    });
+    expect(prepareWireTree(root).slots).toEqual({ leading: [text, svg] });
   });
 });
 

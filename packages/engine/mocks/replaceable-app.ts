@@ -21,7 +21,7 @@ interface RenderApp {
 export function renderApp(
   url: string,
   input: ReplaceableInput,
-  surface: PluginSurface,
+  surface: Partial<PluginSurface>,
 ): RenderApp {
   const socket = createWSClient({
     url: url.replace('http:', 'ws:'),

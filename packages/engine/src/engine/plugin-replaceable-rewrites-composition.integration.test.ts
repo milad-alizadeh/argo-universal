@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { currentPartVersions } from '@repo/contracts/plugins/kit';
+import { pluginWireVersion } from '@repo/contracts/plugins/kit';
 import {
   messageSlotFixture,
   rewrittenMessage,
@@ -61,7 +61,7 @@ it.each([
 
     const app = renderApp(url, input, {
       platform: 'web',
-      parts: currentPartVersions,
+      wireVersion: pluginWireVersion,
     });
 
     await expect
@@ -102,7 +102,7 @@ it('retains a replacement while an outer Hook waits on a slow argo call', async 
 
   const app = renderApp(url, traySlotFixture, {
     platform: 'web',
-    parts: currentPartVersions,
+    wireVersion: pluginWireVersion,
   });
 
   await expect

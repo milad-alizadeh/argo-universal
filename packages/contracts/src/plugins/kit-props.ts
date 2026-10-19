@@ -11,19 +11,6 @@ import {
 import { pressHandler } from './kit-event-props';
 import { perSizeClass } from './schema-size-class';
 
-export const textV1 = z.object({
-  label: z.string().describe('The text displayed by the part.'),
-  variant: z.enum(textRoles).optional().describe('The Argo typography role.'),
-  tone: z.enum(tones).optional().describe('The Argo semantic text tone.'),
-});
-
-export const textV2 = textV1.extend({
-  accessibilityLabel: z
-    .string()
-    .optional()
-    .describe('Optional spoken label; defaults to label.'),
-});
-
 export const textProps = z.object({
   children: z
     .union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
@@ -39,16 +26,13 @@ export const textProps = z.object({
     .describe('Optional spoken label; defaults to the text content.'),
 });
 
-export const buttonV1 = z.object({
+export const buttonProps = z.object({
   label: z.string().describe('The button label.'),
   variant: z.enum(buttonVariants).optional().describe('The button treatment.'),
   tone: z.literal('danger').optional().describe('Semantic danger treatment.'),
   size: z.enum(buttonSizes).optional().describe('The button size.'),
   disabled: z.boolean().optional().describe('Whether activation is disabled.'),
   onPress: pressHandler.optional().describe('The action run on activation.'),
-});
-
-export const buttonProps = buttonV1.extend({
   icon: iconName.optional().describe('An Argo icon before the label.'),
   fullWidth: z
     .union([z.boolean(), z.literal('narrow')])

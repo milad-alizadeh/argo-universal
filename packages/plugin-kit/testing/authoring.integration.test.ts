@@ -10,10 +10,7 @@ const fixtureDirectory = fileURLToPath(
   new URL('../mocks/plugin/', import.meta.url),
 );
 
-const surface = {
-  platform: 'web' as const,
-  parts: { Column: 1, Text: 3, Button: 3 },
-};
+const surface = { platform: 'web' as const };
 
 async function start(source: string): Promise<PluginTest> {
   const directory = await mkdtemp(join(tmpdir(), 'argo-authoring-kit-'));
@@ -88,21 +85,6 @@ it('advances the Plugin worker clock', async () => {
   expect((await page.find('elapsed')).type).toBe('Text');
 });
 
-it('draws only the chosen App wire types', async () => {
-  const kit =
-    await start(`import { Stack, Text, Button } from '@argo/plugin-kit';
-    export function register(argo) { argo.pages.register('/', () => <Stack direction="column"><Text>Visible</Text><Button label="Unsupported" /></Stack>); }
-  `);
-
-  const limited = await kit.mount({
-    page: '/',
-    surface: { ...surface, parts: { Column: 1, Text: 3 } },
-  });
-
-  expect(limited.findText('Visible')).toBeDefined();
-  expect(limited.findText('Unsupported')).toBeUndefined();
-});
-
 it.each([
   {
     name: 'element subset',
@@ -126,12 +108,7 @@ it.each([
     export function register(argo) { argo.pages.register('/', () => <Svg label="Art" xml={${JSON.stringify(xml)}} />); }
   `);
 
-    await expect(
-      kit.mount({
-        page: '/',
-        surface: { ...surface, parts: { ...surface.parts, Svg: 1 } },
-      }),
-    ).rejects.toThrow(reason);
+    await expect(kit.mount({ page: '/', surface })).rejects.toThrow(reason);
     expect(await kit.log()).toContain('node Svg#');
   },
   30_000,

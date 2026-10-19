@@ -1,5 +1,5 @@
 import {
-  currentPartVersions,
+  pluginWireVersion,
   type PluginSurface,
 } from '@repo/contracts/plugins/kit';
 import type { AppRouter } from '@repo/engine/router';
@@ -55,7 +55,7 @@ function createServerClient(
 
 const appSurface = (): PluginSurface => ({
   platform: pluginPlatform(),
-  parts: currentPartVersions,
+  wireVersion: pluginWireVersion,
 });
 
 // Every tRPC call goes over one WebSocket to the Server, except a call with a file, which goes over HTTP (ADR 0002).

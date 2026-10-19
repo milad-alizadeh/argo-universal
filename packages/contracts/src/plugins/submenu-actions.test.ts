@@ -45,41 +45,24 @@ const actionKeys = (tree: WireNode): string[] =>
     .filter((child) => child.type === 'Action')
     .map((child) => child.key);
 
-it.each([
-  ['keeps a submenu Action for Apps with submenus', 3, ['open', 'sort']],
-  ['drops a submenu Action for Apps before submenus', 2, ['open']],
-])('%s', (_, version, keys) => {
-  const prepared = prepareWireTree(list, {
-    ActionList: 1,
-    'ActionList.Section': 1,
-    Action: version,
-  });
-
-  expect(actionKeys(prepared)).toEqual(keys);
+it('keeps press and submenu Actions side by side', () => {
+  expect(actionKeys(prepareWireTree(list))).toEqual(['open', 'sort']);
 });
 
 it('keeps a submenu’s keyed Sections and Actions', () => {
-  const prepared = prepareWireTree(sort, {
-    'ActionList.Section': 1,
-    Action: 3,
-  });
+  const prepared = prepareWireTree(sort);
 
   expect(prepared.children[0]?.children.map((child) => child.key)).toEqual([
     'newest',
   ]);
 });
 
-const oldest = node('Action', 'oldest', {
-  label: 'Oldest',
-  onPress: { $event: 'onPress' },
-  selected: true,
-});
+it('keeps a choice’s check', () => {
+  const oldest = node('Action', 'oldest', {
+    label: 'Oldest',
+    onPress: { $event: 'onPress' },
+    selected: true,
+  });
 
-it.each([
-  ['keeps a choice’s check for Apps with choices', 4, true],
-  ['drops a choice’s check for Apps before choices', 3, undefined],
-])('%s', (_, version, selected) => {
-  const prepared = prepareWireTree(oldest, { Action: version });
-
-  expect(prepared.props.selected).toBe(selected);
+  expect(prepareWireTree(oldest).props.selected).toBe(true);
 });

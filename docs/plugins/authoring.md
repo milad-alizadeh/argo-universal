@@ -33,13 +33,7 @@ import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
 
 test('a press changes the page', async ({ mount }) => {
-  const page = await mount({
-    page: '/',
-    surface: {
-      platform: 'web',
-      parts: { Column: 1, Text: 3, Button: 3 },
-    },
-  });
+  const page = await mount({ page: '/', surface: { platform: 'web' } });
 
   await page.press('Increment');
   assert.equal((await page.find('Count: 1')).type, 'Text');
@@ -57,7 +51,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 
 | API | Behavior |
 | --- | --- |
-| `mount({ page, surface })` | Opens a page with the chosen App platform and wire-part versions. |
+| `mount({ page, surface })` | Opens a page with the chosen App platform. |
 | `mount({ slot, surface })` | Opens an ordinary Slot with its `slotId` and context. |
 | `view.find(text)` | Waits for a matching node and returns its wire data. |
 | `view.press(text)` | Sends `onPress` through the production dispatch path. |
@@ -68,7 +62,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
 `find` matches a label, title, text, text content, or accessible label. It waits up to three seconds.
-The chosen surface controls which wire types reach the observed tree. The kit does not open an App or draw native pixels.
+The chosen surface sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
 For a Project details Slot, use the same input that the Server receives:
 
@@ -78,7 +72,7 @@ const view = await mount({
     slotId: 'argo/project/details/v1',
     context: { projectId: session.projectId },
   },
-  surface: { platform: 'ios', parts: { Column: 1, Text: 3, Button: 3 } },
+  surface: { platform: 'ios' },
 });
 ```
 

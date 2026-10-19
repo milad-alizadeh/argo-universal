@@ -1,4 +1,8 @@
-import type { PluginSurface } from '@repo/contracts/plugins/kit';
+import {
+  minimumPluginWireVersion,
+  pluginWireVersion,
+  type PluginSurface,
+} from '@repo/contracts/plugins/kit';
 import {
   projectDetailsSlotId,
   type SlotMessage,
@@ -20,10 +24,10 @@ type RenderKind = 'page' | 'Slot';
 
 type App = {
   client: TRPCClient<AppRouter>;
-  update: (surface: PluginSurface) => void;
+  update: (surface: Partial<PluginSurface>) => void;
 };
 
-function app(url: string, initial?: PluginSurface): App {
+function app(url: string, initial?: Partial<PluginSurface>): App {
   let surface = initial;
 
   const socket = createWSClient({
@@ -91,7 +95,7 @@ function renderedText(root: WireNode): string | null {
   return typeof text === 'string' ? text : null;
 }
 
-function expected(kind: RenderKind, surface?: PluginSurface): string {
+function expected(kind: RenderKind, surface: PluginSurface): string {
   return JSON.stringify({
     ...surface,
     projectId: kind === 'Slot' ? 'project-1' : undefined,
@@ -99,8 +103,20 @@ function expected(kind: RenderKind, surface?: PluginSurface): string {
   });
 }
 
+const updateArgo = 'Update Argo to see this';
+
+const desktop: PluginSurface = {
+  platform: 'desktop',
+  wireVersion: pluginWireVersion,
+};
+
+const phoneAtMinimum: PluginSurface = {
+  platform: 'ios',
+  wireVersion: minimumPluginWireVersion,
+};
+
 it.each(['page', 'Slot'] as const)(
-  'gives each %s render its App surface, including after an update',
+  'draws each %s for an App at the wire minimum and Update Argo for an older one, including after an update',
   async (kind) => {
     const home = await createRuntimePlugins([
       { id: 'surface', fixture: 'surface', slots: [projectDetailsSlotId] },
@@ -108,31 +124,23 @@ it.each(['page', 'Slot'] as const)(
 
     const { url } = await startEngineTestHost({ home });
 
-    const phone = app(url, { platform: 'ios', parts: { Text: 1 } });
-
-    const desktop = app(url, {
-      platform: 'desktop',
-      parts: { Text: 3, Button: 2 },
-    });
-
+    // An older App reports no wire version.
+    const phone = app(url, { platform: 'ios' });
+    const current = app(url, desktop);
     const legacy = app(url);
 
-    const views = [phone, desktop, legacy].map((viewer) => watch(viewer, kind));
+    const views = [phone, current, legacy].map((viewer) => watch(viewer, kind));
 
     await expect
       .poll(() => views.map(rendered), { timeout: 10_000 })
-      .toEqual([
-        expected(kind, { platform: 'ios', parts: { Text: 1 } }),
-        expected(kind, { platform: 'desktop', parts: { Text: 3, Button: 2 } }),
-        expected(kind),
-      ]);
-    phone.update({ platform: 'ios', parts: { Text: 3, Stack: 1 } });
+      .toEqual([updateArgo, expected(kind, desktop), updateArgo]);
+    phone.update(phoneAtMinimum);
     await expect
       .poll(() => views.map(rendered), { timeout: 10_000 })
       .toEqual([
-        expected(kind, { platform: 'ios', parts: { Text: 3, Stack: 1 } }),
-        expected(kind, { platform: 'desktop', parts: { Text: 3, Button: 2 } }),
-        expected(kind),
+        expected(kind, phoneAtMinimum),
+        expected(kind, desktop),
+        updateArgo,
       ]);
   },
   20_000,
