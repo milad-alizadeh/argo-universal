@@ -1,3 +1,4 @@
+import type { WirePart } from '@repo/contracts/plugins/kit';
 import type { ComponentType } from 'react';
 import { ActionList, Action } from '#primitives/actions/action-list';
 import { Button } from '#primitives/actions/button';
@@ -18,7 +19,6 @@ import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
 import { Svg } from '#primitives/visual';
-import type { PluginPart } from './plugin-parts';
 
 export const pluginEntries = {
   ActionList,
@@ -49,7 +49,5 @@ export const pluginEntries = {
   Stack,
   Svg,
 } satisfies {
-  [Name in PluginPart]: ComponentType<
-    KitProps<Name, string, React.JSX.Element>
-  >;
+  [Name in WirePart]: ComponentType<KitProps<Name, string, React.JSX.Element>>;
 };

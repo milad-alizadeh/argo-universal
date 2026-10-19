@@ -158,7 +158,9 @@ function nodePath(node: WireNode, path: string[]): string[] {
 }
 
 function emptyTree(): WireNode {
-  return { type: 'Column', key: '0', props: {}, children: [], slots: {} };
+  const props = { direction: 'column' };
+
+  return { type: 'Stack', key: '0', props, children: [], slots: {} };
 }
 
 function withXml(node: WireNode, xml: string): WireNode {

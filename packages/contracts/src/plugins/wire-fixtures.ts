@@ -15,6 +15,8 @@ const withChildren = (parent: WireNode, children: WireNode[]): WireNode => ({
   children,
 });
 
+const column = node('Stack', '0', { direction: 'column' });
+
 const counterButtons = (key: string): WireNode =>
   withChildren(node('Stack', key, { direction: 'row', gap: 2 }), [
     node('Button', '0', {
@@ -43,37 +45,6 @@ const counterTree = (taps: number): WireNode =>
 // The wire-counter fixture Plugin draws this; registry stories render the same wire contract.
 export const counterRoot: WireNode = counterTree(0);
 
-// Equivalent layouts exercise the new Stack vocabulary and its legacy aliases.
-export const stackRowRoot: WireNode = withChildren(
-  node('Stack', '0', { direction: 'row', gap: 2 }),
-  [
-    node('Text', '0', { children: 'First' }),
-    node('Text', '1', { children: 'Second' }),
-  ],
-);
-
-export const rowAliasRoot: WireNode = {
-  ...stackRowRoot,
-  type: 'Row',
-  props: { gap: 2 },
-};
-
-export const stackColumnRoot: WireNode = withChildren(
-  node('Stack', '0', { direction: 'column', gap: 2 }),
-  [
-    node('Text', '0', { children: 'First' }),
-    node('Text', '1', { children: 'Second' }),
-  ],
-);
-
-export const columnAliasRoot: WireNode = withChildren(
-  node('Column', '0', { gap: 2 }),
-  [
-    node('Text', '0', { children: 'First' }),
-    node('Text', '1', { children: 'Second' }),
-  ],
-);
-
 export const counterSnapshot: ViewMessage = {
   type: 'snapshot',
   revision: 1,
@@ -96,7 +67,7 @@ export const counterTapPatch: ViewMessage = {
 export const counterTappedRoot: WireNode = counterTree(1);
 
 // A newer Plugin's component the App does not know: a leaf is dropped, a container shows "Update Argo to see this".
-export const unknownNodesRoot: WireNode = withChildren(node('Column', '0'), [
+export const unknownNodesRoot: WireNode = withChildren(column, [
   node('Text', '0', { children: 'Before' }),
   node('Sparkline', '1', { unit: 'ms' }),
   withChildren(node('Carousel', '2'), [
@@ -112,7 +83,7 @@ export const unknownNodesSnapshot: ViewMessage = {
 };
 
 // Props the node's schema refuses leave that node out and keep its siblings.
-export const invalidPropsRoot: WireNode = withChildren(node('Column', '0'), [
+export const invalidPropsRoot: WireNode = withChildren(column, [
   node('Text', '0', { children: true }),
   node('Text', '1', { children: 'Still here' }),
 ]);
@@ -165,13 +136,13 @@ export const slotCounterWavePatch: ViewMessage = {
 
 // Both multi-node Slots and element-array props retain their order and their events.
 export const slottedRow: WireNode = {
-  ...node('GroupedListItem', 'row', { label: 'Slotted row' }),
+  ...node('ListItem', 'row', { title: 'Slotted row' }),
   slots: {
     leading: [
       node('Text', 'first', { children: 'First' }),
       node('Text', 'second', { children: 'Second' }),
     ],
-    accessories: [
+    trailing: [
       node('Button', 'button', {
         label: 'Increment',
         onPress: { $event: 'onPress' },

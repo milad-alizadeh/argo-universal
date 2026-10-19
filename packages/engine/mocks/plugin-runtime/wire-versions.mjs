@@ -2,8 +2,12 @@ import { Button, Stack, Text, useState } from '@argo/plugin-kit';
 import { jsx, jsxs } from '@argo/plugin-kit/jsx-runtime';
 
 const invalid = jsx(
-  'Row',
-  { gap: 'invalid', children: jsx(Text, { children: 'Hidden' }) },
+  Stack,
+  {
+    direction: 'row',
+    gap: 'invalid',
+    children: jsx(Text, { children: 'Hidden' }),
+  },
   'invalid',
 );
 
