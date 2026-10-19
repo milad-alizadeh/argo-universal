@@ -1,6 +1,10 @@
 import { expect, it } from 'vitest';
 import { enroll } from './bind.mts';
-import { boundaryNames, rejectAmbiguous } from './boundaries.mts';
+import {
+  boundaryNames,
+  isNamedComponent,
+  rejectAmbiguous,
+} from './boundaries.mts';
 import { node, pair } from './fixtures.mts';
 import { required, type Registry } from './model.mts';
 import { htmlFor } from './node-html.mts';
@@ -66,4 +70,13 @@ it('rejects hidden SVG insertion before it can reveal a hidden layer', () => {
   expect(() => htmlFor(hidden)).toThrow(
     'Creating hidden layers is not supported',
   );
+});
+
+it('keeps a text slot whose name is also a component name', () => {
+  const text = {
+    ...node('title', 'root', { text: 'Custom title' }),
+    name: 'Code',
+  };
+
+  expect(isNamedComponent(text, new Set(['Code']))).toBe(false);
 });

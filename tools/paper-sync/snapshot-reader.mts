@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isNamedComponent } from './boundaries.mts';
 import type { PaperClient } from './client.mts';
 import {
   nodeSchema,
@@ -70,7 +71,7 @@ export class SnapshotReader {
     this.queueChildren(node, walk.rootId, walk.queue);
   }
   private isNested(node: PaperNode, rootId: string): boolean {
-    return node.id !== rootId && this.names.has(node.name);
+    return node.id !== rootId && isNamedComponent(node, this.names);
   }
   private queueChildren(
     node: PaperNode,
