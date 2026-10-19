@@ -1,9 +1,5 @@
 import type * as React from 'react';
-import {
-  HeaderButton,
-  headerFilterIcon,
-  ListHeaderButton,
-} from '#lib/product/header-button';
+import { ListHeaderButton } from '#lib/product/header-button';
 import { Menu } from '#primitives/overlays/menu';
 import {
   isDefaultSessionsView,
@@ -29,27 +25,10 @@ function wideFilterTrigger(changed: boolean): React.JSX.Element {
   );
 }
 
-function phoneFilterTrigger(changed: boolean): React.JSX.Element {
-  return (
-    <HeaderButton
-      icon={headerFilterIcon}
-      paired
-      dot={changed ? 'filter' : undefined}
-      accessibilityLabel={triggerLabel}
-    />
-  );
-}
-
-const viewTriggers = (
-  changed: boolean,
-): React.ComponentProps<typeof Menu>['trigger'] => ({
-  compact: phoneFilterTrigger(changed),
-  wide: wideFilterTrigger(changed),
-});
-
 /*
  * How the Sessions list orders, groups, filters and lays out its rows.
- * The trigger carries a dot while the view is not the default; on a phone it is a native header item.
+ * The wide sidebar's header draws it; a phone's Sessions Page declares the same choices as its filter Action.
+ * The trigger carries a dot while the view is not the default.
  */
 export function SessionsViewMenu({
   view,
@@ -59,7 +38,7 @@ export function SessionsViewMenu({
     <Menu
       accessibilityLabel={triggerLabel}
       groups={sessionsViewGroups(view, onViewChange)}
-      trigger={viewTriggers(!isDefaultSessionsView(view))}
+      trigger={wideFilterTrigger(!isDefaultSessionsView(view))}
     />
   );
 }

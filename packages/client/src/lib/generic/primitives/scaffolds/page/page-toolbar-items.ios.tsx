@@ -57,37 +57,47 @@ export function toolbarButton(action: DeclaredAction): ReactElement {
   return <Stack.Toolbar.Button key={action.id} {...toolbarAction(action)} />;
 }
 
-export function toolbarEntry(entry: DeclaredEntry): ReactElement {
-  return isSubmenu(entry) ? toolbarSubmenu(entry) : toolbarButton(entry);
-}
+// A status dot takes Argo's primary colour, which only a component resolves; a count keeps the stock badge.
+export const toolbarEntry =
+  (dotColor: string | undefined) =>
+  (entry: DeclaredEntry): ReactElement =>
+    isSubmenu(entry) ? toolbarSubmenu(entry, dotColor) : toolbarButton(entry);
 
 /*
  * A submenu is a bar item of its own, apart from the others' background, its badge on the icon; its Sections draw as
  * the overflow menu's do.
  */
-function toolbarSubmenu(submenu: DeclaredSubmenu): ReactElement {
+function toolbarSubmenu(
+  submenu: DeclaredSubmenu,
+  dotColor: string | undefined,
+): ReactElement {
   return (
-    <Stack.Toolbar.Menu
-      key={submenu.id}
-      {...tinted}
-      icon={toolbarIcon(submenu.icon)}
-      accessibilityLabel={submenu.label}
-      separateBackground
-    >
-      {toolbarBadge(submenuBadgeText(submenu.badge))}
+    <Stack.Toolbar.Menu key={submenu.id} {...submenuItem(submenu)}>
+      {toolbarBadge(submenuBadgeText(submenu.badge), dotColor)}
       {menuSections(submenuGroups(submenu))}
     </Stack.Toolbar.Menu>
   );
 }
 
+const submenuItem = (submenu: DeclaredSubmenu) =>
+  ({
+    ...tinted,
+    icon: toolbarIcon(submenu.icon),
+    accessibilityLabel: submenu.label,
+    separateBackground: true,
+  }) as const;
+
 // Stack.Toolbar.Badge shows its text, or a dot with none; only a root item in the left or right toolbar draws it.
-function toolbarBadge(text: string | undefined): ReactElement | null {
+function toolbarBadge(
+  text: string | undefined,
+  dotColor: string | undefined,
+): ReactElement | null {
   if (text === undefined) return null;
 
   return text ? (
     <Stack.Toolbar.Badge>{text}</Stack.Toolbar.Badge>
   ) : (
-    <Stack.Toolbar.Badge />
+    <Stack.Toolbar.Badge style={{ backgroundColor: dotColor }} />
   );
 }
 
@@ -163,6 +173,8 @@ function menuAction(action: DeclaredAction): ReactElement {
     onPress: action.onPress,
     disabled: action.disabled,
     destructive: action.tone === 'danger',
+    // A choice's check: UIMenu's on state.
+    isOn: action.selected,
   };
 
   return (

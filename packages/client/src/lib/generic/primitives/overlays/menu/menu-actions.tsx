@@ -2,8 +2,9 @@ import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
+import { Icon, IconSlot } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
+import { SelectedCheck } from '#primitives/status/selected-check';
 import { MenuActionLabel } from './menu-action-label';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
@@ -120,6 +121,7 @@ function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
       <RadixMenu.Item {...actionItemProps(action)}>
         <View {...actionRow(action)}>
           <MenuActionLabel {...action} />
+          <ChoiceCheck selected={action.selected} />
         </View>
       </RadixMenu.Item>
     </TextClassContext.Provider>
@@ -132,13 +134,32 @@ function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
     'aria-label': action.label,
     disabled: action.disabled,
     onSelect: action.onPress,
+    ...choiceRole(action.selected),
   };
 }
 
+// An action that can be the selected one is a radio row, as the native menus check it.
+function choiceRole(
+  selected: boolean | undefined,
+): Pick<RadixMenu.DropdownMenuItemProps, 'role' | 'aria-checked'> {
+  if (selected === undefined) return {};
+
+  return { role: 'menuitemradio', 'aria-checked': selected };
+}
+
+// The trailing check on the selected action; the others keep its place, so labels line up.
+function ChoiceCheck({
+  selected,
+}: Pick<MenuAction, 'selected'>): React.JSX.Element | null {
+  if (selected === undefined) return null;
+
+  return (
+    <IconSlot role="body">
+      {selected ? <SelectedCheck className="text-foreground" /> : null}
+    </IconSlot>
+  );
+}
+
 function actionRow(action: MenuAction): React.ComponentProps<typeof View> {
-  return {
-    className: menuRowClass(action.tone),
-    accessibilityState:
-      action.selected === undefined ? undefined : { selected: action.selected },
-  };
+  return { className: menuRowClass(action.tone) };
 }

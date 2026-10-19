@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { ListItem } from '#primitives/lists/list-item';
 import { Variation, Variations } from '../../../variations';
+import { ChoiceExample } from './action-list-choice.mocks';
 import { Action, ActionList, type PressActionProps } from './index';
 
 interface DemoAction extends Omit<PressActionProps, 'onPress'> {
@@ -60,6 +61,7 @@ type Story = StoryObj<typeof meta>;
 
 const examples = [
   ['On a Page', <PageExample key="page" />],
+  ['Choice (filter)', <ChoiceExample key="choice" />],
   [
     'Argo · Session row',
     <RowExample

@@ -5,8 +5,6 @@ export { SessionHeaderBar } from './components/session-header-bar';
 export {
   SessionsHeader,
   searchSessionsLabel,
-  sessionsHeaderItems,
-  sessionsHeaderSearch,
 } from './components/sessions-header';
 
 export {
@@ -134,8 +132,6 @@ export { type SessionsListProps } from './components/sessions-list/sessions-list
 export { SessionsLoading } from './components/sessions-loading/sessions-loading';
 
 export { type SessionsLoadState } from './utils/sessions-load-state';
-
-export { newSessionBesideSearch } from './components/sessions-header';
 
 export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';
 

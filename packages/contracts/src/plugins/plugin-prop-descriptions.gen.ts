@@ -294,6 +294,8 @@ export type WireSchemaHints = {
     "onPress": PropValue<"Action", "onPress">;
     /** An Alert answer that dismisses the question, or one that destroys data. */
     "role": PropValue<"Action", "role">;
+    /** Check this Action as its Section's chosen option; pass false on the others. */
+    "selected": PropValue<"Action", "selected">;
     /** A count or status dot on the icon. */
     "badge": PropValue<"Action", "badge">;
   };

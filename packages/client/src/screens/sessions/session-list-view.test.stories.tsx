@@ -44,6 +44,8 @@ export const LoadErrorShowsAToastOnce: Story = {
   args: { loadState: 'error' },
   play: async ({ canvas }) => {
     await expect(await findToast(loadFailure)).toBeVisible();
+    await expect(await allToasts(loadFailure)).toHaveLength(1);
+    // A phone's list sits in its Sessions Page, so a width change mounts it again, as the App's root and sidebar lists are separate.
     await eachLayout(async () => {
       await expect(
         canvas.getByRole('status', { name: 'Loading Sessions' }),
@@ -51,7 +53,6 @@ export const LoadErrorShowsAToastOnce: Story = {
       await expect(canvas.queryByRole('button', retry)).toBeNull();
       await expect(canvas.queryByRole('alert')).toBeNull();
     });
-    await expect(await allToasts(loadFailure)).toHaveLength(1);
   },
 };
 
@@ -151,3 +152,25 @@ function archiveFromARowAt(layout: keyof typeof layoutWidths): Story {
 export const ArchiveFromARowOnPhone: Story = archiveFromARowAt('phone');
 
 export const ArchiveFromARowWide: Story = archiveFromARowAt('wide');
+
+// A phone's Sessions Page: New Session is its primary Action, and the filter its one header Action, which marks a changed view.
+export const PhonePageFiltersTheView: Story = {
+  beforeEach: () => settleViewport(layoutWidths.phone),
+  play: async ({ canvas, userEvent }) => {
+    await expect(
+      canvas.getByRole('heading', { name: 'Sessions' }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'New Session' }),
+    ).toBeEnabled();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Filter Sessions' }),
+    );
+    await userEvent.click(
+      await screen.findByRole('menuitemradio', { name: 'Compact' }),
+    );
+    await expect(
+      await canvas.findByRole('button', { name: 'Filter Sessions, Changed' }),
+    ).toBeVisible();
+  },
+};

@@ -23,6 +23,23 @@ test('pressing Tap me updates the hello page', async ({ mount }) => {
   assert.equal((await page.find('Tapped 1 times')).type, 'Text');
 });
 
+// The primary Action is a keyed Action in the Page's `primaryAction` Slot, pressed by its label.
+test('the lists Page primary Action adds a build', async ({ mount }) => {
+  const page = await mount({
+    page: '/lists',
+    surface: {
+      platform: 'web',
+      parts: { Page: 1, List: 2, ListItem: 3, Action: 4, Pill: 2, Label: 2 },
+    },
+  });
+
+  const add = await page.find('Add build');
+  assert.equal(add.type, 'Action');
+  assert.equal(add.props.icon, 'add');
+  await page.press('Add build');
+  assert.equal((await page.find('Build 3')).type, 'ListItem');
+});
+
 test('the dashboard shows the week of Issues', async ({ mount }) => {
   const page = await mount({
     page: '/dashboard',
