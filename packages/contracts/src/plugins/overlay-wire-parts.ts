@@ -19,7 +19,7 @@ export const overlayWireParts = {
           cancelLabel: optionalLabel,
         }),
       ],
-      events: { onOpenChange: openChange },
+      events: { onOpenChange: openChange(alertProps) },
     },
   ),
   Sheet: {
@@ -32,7 +32,7 @@ export const overlayWireParts = {
           )
           .pipe(legacySheet),
       ],
-      events: { onOpenChange: openChange },
+      events: { onOpenChange: openChange(sheetProps) },
     }),
     // A Plugin's sheet holds composed content, so the kit Sheet gives it the standard sheet inset.
     appProps: sheetProps.transform((props) => ({ ...props, inset: true })),

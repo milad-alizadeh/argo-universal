@@ -10,7 +10,9 @@ import {
 } from './kit-props';
 import { legacyLabelProps } from './legacy-label-props';
 import { listExpansion } from './list-expansion';
+import { rowPress } from './list-kit-props';
 import { progressBarAccessibility } from './part-accessibility-metadata';
+import { echoes } from './plugin-part-props';
 import { part } from './plugin-part-schema-utils';
 import { settingsRowWireParts } from './settings-row-wire-parts';
 import { labelV1 } from './status-kit-props';
@@ -85,7 +87,7 @@ export const listWireParts = {
     children: true,
     slots: { leading: ['Text', 'Label'], trailing: ['Text', 'Label', 'Pill'] },
     events: {
-      onSelectionChange: z.array(z.string()).meta({ value: 'selection' }),
+      onSelectionChange: echoes(listSectionProps, 'selection'),
     },
     reference: part(
       'A titled List section with optional subtitle and footer.',
@@ -105,8 +107,7 @@ export const listWireParts = {
       trailing: ['Text', 'Label', 'Pill', 'StatusDot', 'Button'],
       meta: ['Label', 'Pill'],
     },
-    // A row press never holds the row disabled while the Plugin answers.
-    events: { onPress: z.undefined().meta({ blocks: false }) },
+    events: { onPress: rowPress },
     reference: part(
       'A slotted list row with up to three text lines and an optional Argo-drawn status or count badge on the leading lane.',
       listItemProps,

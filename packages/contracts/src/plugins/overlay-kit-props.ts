@@ -1,8 +1,12 @@
 import { z } from 'zod';
-import { handler } from './plugin-part-props';
+import { echoes, handler } from './plugin-part-props';
 
 // The App flips its open state at once and tells the Plugin without waiting.
-export const openChange = z.boolean().meta({ value: 'open', blocks: false });
+export const openChange = <
+  Fields extends Record<string, z.ZodType> & { open: z.ZodType },
+>(
+  props: z.ZodObject<Fields>,
+): z.ZodNonOptional<Fields['open']> => echoes(props, 'open', { blocks: false });
 
 export const openStateProps = z.object({
   open: z.boolean().optional().describe('Controlled open state.'),

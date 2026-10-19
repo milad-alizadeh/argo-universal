@@ -51,7 +51,7 @@ export const layoutPartSchemas = {
         }),
       ],
       children: true,
-      events: { onOpenChange: openChange },
+      events: { onOpenChange: openChange(collapsibleProps) },
       slots: {},
     },
   ),

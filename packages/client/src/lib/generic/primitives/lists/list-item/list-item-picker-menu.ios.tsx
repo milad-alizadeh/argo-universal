@@ -51,8 +51,8 @@ function Trigger({ size }: { size: Size }): ReactElement {
   );
 }
 
-function menuModifiers(
-  props: ListItemPickerProps,
+function menuModifiers<Value extends string>(
+  props: ListItemPickerProps<Value>,
 ): ComponentProps<typeof Menu>['modifiers'] {
   return [
     accessibilityLabel(`${props.title}, ${pickerRowValue(props)}`),

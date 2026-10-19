@@ -30,14 +30,14 @@ export const overlaysPartSchemas = {
       children: true,
       accessibility: dialogAccessibility,
       previous: [z.object({ title: stringLabel })],
-      events: { onOpenChange: openChange },
+      events: { onOpenChange: openChange(openStateProps) },
     },
   ),
   Sheet: wireParts.Sheet,
   Popover: part('A popover overlay.', openStateProps, {
     children: true,
     previous: [z.object({})],
-    events: { onOpenChange: openChange },
+    events: { onOpenChange: openChange(openStateProps) },
   }),
   Menu: selectionPartSchemas.Menu,
   Tooltip: part('A short description attached to a control.', tooltipProps, {
