@@ -151,10 +151,10 @@ export const KeepOpenEscapeClosesBoth: Story = {
 export const RowChoicesHaveNoTitle: Story = {
   play: async ({ userEvent }) => {
     const { choices } = await openChoices(userEvent, 'Fruit');
+    const apple = within(choices).getByRole('button', { name: 'Apple' });
 
-    await expect(
-      within(choices).getByRole('button', { name: 'Apple' }),
-    ).toBeVisible();
+    // The choices fade in from transparent, so a row shows once their entrance starts.
+    await waitFor(() => expect(apple).toBeVisible());
     await expect(
       within(choices).queryByRole('heading'),
     ).not.toBeInTheDocument();
