@@ -181,7 +181,7 @@
      the rows share one plate, and Material's 4 between its row tiles. */
   --radius-grouped-inner: 0px;
   --spacing-frame-bar: 64px;
-  /* The rail, the sidebar control bar and the Inspector bar on a wide window. */
+  /* The rail on a wide window; the web narrows it below. */
   --spacing-frame-rail: 80px;
   --spacing-frame-control: 44px;
   --spacing-frame-list: 312px;
@@ -225,6 +225,10 @@
 
 @layer theme {
   :root {
+    @variant web {
+      /* Paper "Rail · narrow variants", Variant B: the desktop's tinted rail. A tablet keeps Material's 80 rail. */
+      --spacing-frame-rail: 56px;
+    }
     @variant ios {
       --font-sans: System;
       /* React Native resolves ui-monospace to SF Mono on iOS. */

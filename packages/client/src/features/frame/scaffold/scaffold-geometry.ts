@@ -16,6 +16,8 @@ export interface ScaffoldMeasures {
   inspectorWidth: number;
   railWidth: number;
   inset: number;
+  // The shared top bar across the rail and the list, where the window controls sit.
+  barHeight: number;
 }
 
 export interface ScaffoldGeometryInput {

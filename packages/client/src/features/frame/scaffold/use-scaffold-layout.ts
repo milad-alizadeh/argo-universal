@@ -4,6 +4,11 @@ import { type LayoutChangeEvent, useWindowDimensions } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
 import {
+  type FrameMotion,
+  type FrameTiming,
+  frameTiming,
+} from '../utils/frame-timing';
+import {
   type InspectorState,
   type ScaffoldGeometry,
   type ScaffoldMeasures,
@@ -30,11 +35,6 @@ export interface ScaffoldProps {
   onInspectorStateChange: (state: InspectorState) => void;
 }
 
-interface ScaffoldMotion {
-  transitionKey: string;
-  animate: boolean;
-}
-
 interface PreferredWidths {
   preferredListWidth: number;
   preferredInspectorWidth: number;
@@ -50,7 +50,7 @@ interface WindowWidth {
 export interface ScaffoldLayout
   extends ScaffoldGeometry, PreferredWidths, WindowWidth {
   measures: ScaffoldMeasures;
-  motion: ScaffoldMotion;
+  motion: FrameMotion;
   setResizing: (resizing: boolean) => void;
 }
 
@@ -69,6 +69,7 @@ function useScaffoldMeasures(): ScaffoldMeasures {
     inspectorWidth: useCSSPixels('--spacing-frame-inspector'),
     railWidth: useCSSPixels('--spacing-frame-rail'),
     inset: useCSSPixels('--spacing-frame-inset'),
+    barHeight: useCSSPixels('--spacing-frame-control'),
   };
 }
 
@@ -105,6 +106,40 @@ function useScaffoldWidths(): PreferredWidths & { measures: ScaffoldMeasures } {
   return { measures, ...usePreferredWidths(measures) };
 }
 
+interface HeldTiming {
+  transitionKey: string;
+  sidebarShown: boolean;
+  timing: FrameTiming;
+}
+
+// The timing of the Frame's latest change, held until the next: the sidebar collapsing or expanding, or any other pane moving.
+function useFrameTiming(
+  transitionKey: string,
+  sidebarShown: boolean,
+): FrameTiming {
+  const [held, setHeld] = useState<HeldTiming>(() => ({
+    transitionKey,
+    sidebarShown,
+    timing: frameTiming(sidebarShown, sidebarShown),
+  }));
+
+  if (held.transitionKey === transitionKey) return held.timing;
+  const timing = frameTiming(held.sidebarShown, sidebarShown);
+  setHeld({ transitionKey, sidebarShown, timing });
+
+  return timing;
+}
+
+function useFrameMotion(
+  { transitionKey }: ScaffoldGeometry,
+  { sidebarShown }: ScaffoldProps,
+  resizing: boolean,
+): FrameMotion {
+  const timing = useFrameTiming(transitionKey, sidebarShown);
+
+  return { transitionKey, animate: !resizing, timing };
+}
+
 export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
   const widths = useScaffoldWidths();
   const windowWidth = useWindowWidth();
@@ -115,7 +150,7 @@ export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
     ...geometry,
     ...widths,
     ...windowWidth,
-    motion: { transitionKey: geometry.transitionKey, animate: !resizing },
+    motion: useFrameMotion(geometry, scaffold, resizing),
     setResizing,
   };
 }

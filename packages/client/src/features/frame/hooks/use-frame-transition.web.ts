@@ -1,23 +1,11 @@
 import { type RefObject, useLayoutEffect, useRef } from 'react';
-import {
-  cssTransition,
-  easingCurve,
-  motionDuration,
-} from '#lib/generic/motion';
-
-// The Frame's one open and close motion.
-const frameTiming = cssTransition(
-  motionDuration.framePane,
-  easingCurve.decelerate,
-);
+import { cssTransition } from '#lib/generic/motion';
+import type { FrameMotion, FrameTiming } from '../utils/frame-timing';
 
 export type ElementFrame = readonly [HTMLElement | null, Keyframe[]];
 
-export interface FrameTransition<T> {
+export interface FrameTransition<T> extends FrameMotion {
   value: T;
-  // Only a change of key animates, so a window resize or a divider drag moves the Frame at once.
-  transitionKey: string;
-  animate: boolean;
   // The keyframes for each element, from the value before the change to the value now.
   frames: (from: T, to: T) => readonly ElementFrame[];
 }
@@ -34,9 +22,14 @@ export function useCancelOnUnmount(motion: RefObject<Animation[]>): void {
   useLayoutEffect(() => (): void => cancelMotion(motion.current), [motion]);
 }
 
-export function playFrames(frames: readonly ElementFrame[]): Animation[] {
+export function playFrames(
+  frames: readonly ElementFrame[],
+  { duration, curve }: FrameTiming,
+): Animation[] {
+  const timing = cssTransition(duration, curve);
+
   return frames.flatMap(([element, keyframes]) =>
-    element ? [element.animate(keyframes, frameTiming)] : [],
+    element ? [element.animate(keyframes, timing)] : [],
   );
 }
 
@@ -54,17 +47,15 @@ function useKeyChange<T>(
   });
 }
 
-// Plays the Frame's open and close motion on the compositor-friendly properties the caller names; the inline style already holds the end state.
-export function useFrameTransition<T>({
-  value,
-  transitionKey,
-  animate,
-  frames,
-}: FrameTransition<T>): void {
+// Plays the Frame's open and close motion on the properties the caller names; the inline style already holds the end state.
+export function useFrameTransition<T>(transition: FrameTransition<T>): void {
+  const { value, animate, timing, frames } = transition;
   const motion = useRef<Animation[]>([]);
   useCancelOnUnmount(motion);
-  useKeyChange(value, transitionKey, (from) => {
+  useKeyChange(value, transition.transitionKey, (from) => {
     cancelMotion(motion.current);
-    motion.current = mayAnimate(animate) ? playFrames(frames(from, value)) : [];
+    motion.current = mayAnimate(animate)
+      ? playFrames(frames(from, value), timing)
+      : [];
   });
 }

@@ -44,6 +44,15 @@ function ReflowingContent({
   );
 }
 
+// The content takes its final width at once, or keeps its last one while it hides, and only slides and fades (FLIP), so it lays out once per change.
+function reflowingStyle({ contentWidth, hidden }: PaneGeometry): CSSProperties {
+  return {
+    width: contentWidth,
+    opacity: hidden ? 0 : 1,
+    willChange: 'transform, opacity',
+  };
+}
+
 function ReflowingViewport({
   frameRef,
   ...props
@@ -52,7 +61,7 @@ function ReflowingViewport({
     <div
       ref={frameRef}
       className="absolute bottom-0 left-0 top-0"
-      style={{ width: props.geometry.width, willChange: 'transform, width' }}
+      style={reflowingStyle(props.geometry)}
     >
       <ReflowingContent {...props} />
     </div>
@@ -117,10 +126,15 @@ interface PaneState {
 
 function usePane(props: FramePaneProps): PaneState {
   const geometry = usePaneGeometry(props);
-  // Content that reflows with the pane needs real width; a transform would move it twice.
+  // Content that reflows with the pane lays out at its new width and slides there; content with a width of its own slides as the pane's edge moves.
   const reflows = props.contentWidth === undefined;
   const animate = props.animate ?? true;
-  const refs = usePaneMotion(geometry, { animate, reflows });
+
+  const refs = usePaneMotion(geometry, {
+    animate,
+    reflows,
+    timing: props.timing,
+  });
 
   return { geometry, reflows, refs };
 }
@@ -136,12 +150,15 @@ function PaneViewport(props: FramePaneProps): React.JSX.Element {
   );
 }
 
+// Content sliding in from the left stays behind the pane's edge, under the sidebar it slides away from; to the right it may run past, off the window or under the Inspector.
+const leftEdgeClip = 'inset(0 -100vw 0 0)';
+
 export function FramePane(props: FramePaneProps): React.JSX.Element {
   return (
     <div
       data-testid={props.testID}
       className="relative min-w-0 shrink-0"
-      style={{ width: props.width }}
+      style={{ width: props.width, clipPath: leftEdgeClip }}
       aria-hidden={props.hidden}
       inert={props.hidden}
     >

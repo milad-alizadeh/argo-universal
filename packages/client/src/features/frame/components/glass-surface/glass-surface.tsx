@@ -1,9 +1,14 @@
-export interface GlassSurfaceProps {
+import type { FrameMotion } from '../../utils/frame-timing';
+
+export interface GlassSurfaceProps extends FrameMotion {
   // The panel's width now, and its width with the sidebar list shown.
   width: number;
   expandedWidth: number;
-  transitionKey: string;
-  animate: boolean;
+  // The rail at the panel's left, tinted below the shared top bar.
+  railWidth: number;
+  // The shared top bar's height: the panel runs under it while the sidebar shows and starts below it once only the rail is left.
+  barHeight: number;
+  sidebarShown: boolean;
 }
 
 /*
