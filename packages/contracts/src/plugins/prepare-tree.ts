@@ -63,17 +63,17 @@ const allowedContent = (node: WireNode, container: boolean): boolean =>
   container || node.children.length === 0;
 
 interface ContentRules {
-  children: boolean;
-  childParts?: readonly string[];
+  children: boolean | readonly string[];
   slots: SlotRules;
 }
 
+const acceptsChild = (child: WireNode, rules: ContentRules): boolean =>
+  typeof rules.children === 'boolean' || rules.children.includes(child.type);
+
 const validContent = (node: WireNode, rules: ContentRules): boolean =>
   acceptsSlots(node, rules.slots) &&
-  allowedContent(node, rules.children) &&
-  node.children.every(
-    (child) => rules.childParts?.includes(child.type) ?? true,
-  );
+  allowedContent(node, Boolean(rules.children)) &&
+  node.children.every((child) => acceptsChild(child, rules));
 
 const allowedStructure = (node: WireNode, rules: ContentRules): boolean =>
   !styled(node) && validContent(node, rules);

@@ -7,8 +7,8 @@ export interface WirePartDefinition {
   expansion?: z.ZodType;
   versions: readonly z.ZodType[];
   container: boolean;
-  children: boolean;
-  childParts?: readonly string[];
+  // True takes any part; a list takes only those part types.
+  children: boolean | readonly string[];
   // Only a tree's root may be this part, such as a Page that owns the screen's header.
   root?: boolean;
   slots: Record<string, readonly string[]>;

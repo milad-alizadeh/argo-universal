@@ -4,9 +4,9 @@ import { Pill } from '#primitives/status/pill';
 import type { PillProps } from '#primitives/status/pill';
 import { withOccurrenceKeys } from '../../../occurrence-keys';
 
-export type PillValuesProps = { pills: PillProps[] };
+type PillValuesProps = { pills: PillProps[] };
 
-function MetadataPill(pill: PillValuesProps['pills'][number]): ReactElement {
+function MetadataPill(pill: PillProps): ReactElement {
   const neutral = ['neutral', 'muted'].includes(pill.tone ?? 'neutral');
 
   return <Pill {...pill} className={neutral ? 'web:bg-tint' : undefined} />;

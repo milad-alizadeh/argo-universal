@@ -2,7 +2,7 @@ import { Children, isValidElement, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { Avatar } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
-import { Pill, type PillProps } from '#primitives/status/pill';
+import type { PillProps } from '#primitives/status/pill';
 import { StatusDot } from '#primitives/status/status-dot';
 import { MetadataPills } from './metadata-pills';
 import type {
@@ -72,13 +72,11 @@ export function MetadataAvatar(props: MetadataAvatarProps): ReactElement {
   );
 }
 
+// The wire lets only Pills in (`children: ['Pill']`), so each child's props are a Pill's values.
 function pillProps(children: MetadataPillsProps['children']): PillProps[] {
-  return Children.toArray(children)
-    .filter(
-      (child): child is ReactElement<PillProps> =>
-        isValidElement<PillProps>(child) && child.type === Pill,
-    )
-    .map((child) => child.props);
+  return Children.toArray(children).flatMap((child) =>
+    isValidElement<PillProps>(child) ? [child.props] : [],
+  );
 }
 
 export function MetadataPillsField(props: MetadataPillsProps): ReactElement {

@@ -1,6 +1,4 @@
-import type { PillValuesProps } from './metadata-pills';
-
-type Pill = PillValuesProps['pills'][number];
+import type { PillProps as Pill } from '#primitives/status/pill';
 
 export const pillIdentity = (pill: Pill): string => JSON.stringify(pill);
 
@@ -24,6 +22,7 @@ function cumulativeWidths(widths: number[], gap: number): number[] {
   });
 }
 
+// How many Pills fit before the rest collapse into a "+N" Pill; all of them until every width is measured.
 export function fitPills(
   pills: Pill[],
   measurements: PillMeasurements,

@@ -68,7 +68,7 @@ const defaultOptions = {
   appearance: defaultAppearance,
   accessibility: {},
   previous: [],
-} satisfies Required<Omit<PartOptions, 'container' | 'childParts'>>;
+} satisfies Required<Omit<PartOptions, 'container'>>;
 
 function resolveOptions(
   schema: z.ZodType,
@@ -86,7 +86,7 @@ function resolveOptions(
 function inferContainer(
   config: Pick<ResolvedPartOptions, 'children' | 'slots'>,
 ): boolean {
-  return config.children || Object.keys(config.slots).length > 0;
+  return Boolean(config.children) || Object.keys(config.slots).length > 0;
 }
 
 function inferredEvents(schema: z.ZodType): Record<string, z.ZodType> {
@@ -125,16 +125,13 @@ function describeProps(schema: z.core.$ZodType): void {
 
 type PartStructure = Pick<
   WirePartDefinition,
-  'container' | 'children' | 'childParts' | 'root' | 'slots' | 'events'
+  'container' | 'children' | 'root' | 'slots' | 'events'
 >;
 
 function structure(config: ResolvedPartOptions): PartStructure {
   const { container, children, root, slots, events } = config;
-  const parts: PartStructure = { container, children, root, slots, events };
 
-  if (config.childParts) parts.childParts = config.childParts;
-
-  return parts;
+  return { container, children, root, slots, events };
 }
 
 function definition(

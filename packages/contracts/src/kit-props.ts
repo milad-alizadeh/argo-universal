@@ -48,5 +48,6 @@ export type KitEvents<Name extends KitPart> = {
 export type KitSlots<Name extends KitPart> =
   keyof (typeof pluginPartSchemas)[Name]['slots'];
 
+// A part takes children when `children` is true or a list of part types.
 export type KitHasChildren<Name extends KitPart> =
-  (typeof pluginPartSchemas)[Name]['children'];
+  (typeof pluginPartSchemas)[Name]['children'] extends false ? false : true;
