@@ -1,64 +1,112 @@
-import { mkdirSync, renameSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import { connect, createServer, type Server, type Socket } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { z } from 'zod';
-import {
-  type BrowserSuiteHolder,
-  isAbandoned,
-  readHolder,
-  writeHolder,
-} from './holder';
 
-export type { BrowserSuiteHolder } from './holder';
+// The kernel frees a listening port when its process ends however it ends, so a crashed suite never leaves the lock behind; below macOS's ephemeral range.
+const LOCK_PORT = 47_291;
 
-// The user's temporary folder, so every checkout and agent of that user on the Mac shares one lock.
-const SHARED_DIRECTORY = path.join(tmpdir(), 'argo-browser-suite.lock');
+const HOST = '127.0.0.1';
 
 const POLL_MS = 2000;
 
-const Taken = z.object({ code: z.literal('EEXIST') });
+const READ_TIMEOUT_MS = 1000;
 
-type Report = (holder: BrowserSuiteHolder) => void;
+const holderSchema = z.object({
+  pid: z.number(),
+  cwd: z.string(),
+  since: z.string(),
+});
+
+export type BrowserSuiteHolder = z.infer<typeof holderSchema>;
+
+const InUse = z.object({ code: z.literal('EADDRINUSE') });
+
+// Undefined when whatever holds the port does not say who it is.
+type Report = (holder: BrowserSuiteHolder | undefined) => void;
 
 interface LockSettings {
-  directory: string;
+  port: number;
   pollMs: number;
   onWait?: Report;
 }
 
 interface Turn {
-  taken: Promise<void>;
+  taken: Promise<Server>;
   holds: number;
 }
 
 // Vitest runs a project's global setup again for each browser instance, in the same process, so those calls share one turn.
-const turns = new Map<string, Turn>();
+const turns = new Map<number, Turn>();
 
-function tryTake(directory: string): boolean {
-  try {
-    mkdirSync(directory);
-  } catch (error) {
-    if (Taken.safeParse(error).success) return false;
-    throw error;
-  }
+// Tells anyone who connects which suite holds the lock.
+function serveHolder(): Server {
+  const holder = JSON.stringify({
+    pid: process.pid,
+    cwd: process.cwd(),
+    since: new Date().toISOString(),
+  });
 
-  writeHolder(directory);
-
-  return true;
+  return createServer((socket): void => {
+    socket.end(holder);
+  });
 }
 
-// Renaming first means a waiter that loses the race to clear removes nothing.
-function clear(directory: string): void {
-  const doomed = `${directory}.abandoned-${process.pid}`;
+// False when another process already listens on the port.
+async function listen(server: Server, port: number): Promise<boolean> {
+  return new Promise((resolve, reject): void => {
+    server.once('error', (error): void => {
+      if (InUse.safeParse(error).success) resolve(false);
+      else reject(error);
+    });
 
+    server.listen({ port, host: HOST, exclusive: true }, (): void => {
+      resolve(true);
+    });
+  });
+}
+
+async function tryTake(port: number): Promise<Server | undefined> {
+  const server = serveHolder();
+
+  // An open lock never keeps a finished suite's process alive.
+  return (await listen(server, port)) ? server.unref() : undefined;
+}
+
+function parseHolder(text: string): BrowserSuiteHolder | undefined {
   try {
-    renameSync(directory, doomed);
+    return holderSchema.parse(JSON.parse(text));
   } catch {
-    return;
+    return undefined;
   }
+}
 
-  rmSync(doomed, { recursive: true, force: true });
+async function readAll(socket: Socket): Promise<string> {
+  let text = '';
+
+  socket.on('data', (chunk: string): void => {
+    text += chunk;
+  });
+
+  return new Promise((resolve): void => {
+    socket.once('close', (): void => {
+      resolve(text);
+    });
+  });
+}
+
+async function readHolder(
+  port: number,
+): Promise<BrowserSuiteHolder | undefined> {
+  const socket = connect({ port, host: HOST });
+
+  const stop = (): void => {
+    socket.destroy();
+  };
+
+  socket.setEncoding('utf8').setTimeout(READ_TIMEOUT_MS);
+  socket.once('timeout', stop).once('error', stop);
+
+  return parseHolder(await readAll(socket));
 }
 
 function onlyOnce(onWait: Report | undefined): Report {
@@ -71,34 +119,25 @@ function onlyOnce(onWait: Report | undefined): Report {
   };
 }
 
-async function waitTurn(
-  { directory, pollMs }: LockSettings,
+async function takeTurn(
+  settings: LockSettings,
   report: Report,
-): Promise<void> {
-  const holder = readHolder(directory);
+): Promise<Server> {
+  const server = await tryTake(settings.port);
 
-  if (isAbandoned(directory, holder)) {
-    clear(directory);
+  if (server) return server;
+  report(await readHolder(settings.port));
+  await delay(settings.pollMs);
 
-    return;
-  }
-
-  if (holder) report(holder);
-  await delay(pollMs);
+  return takeTurn(settings, report);
 }
 
-async function takeTurn(settings: LockSettings): Promise<void> {
-  const report = onlyOnce(settings.onWait);
-
-  while (!tryTake(settings.directory)) await waitTurn(settings, report);
-}
-
-// A turn that failed, such as on a folder it may not write, is dropped so the next call tries afresh.
-async function takeOrForget(settings: LockSettings): Promise<void> {
+// A turn that failed, such as on a port it may not open, is dropped so the next call tries afresh.
+async function takeOrForget(settings: LockSettings): Promise<Server> {
   try {
-    await takeTurn(settings);
+    return await takeTurn(settings, onlyOnce(settings.onWait));
   } catch (error) {
-    turns.delete(settings.directory);
+    turns.delete(settings.port);
     throw error;
   }
 }
@@ -106,46 +145,45 @@ async function takeOrForget(settings: LockSettings): Promise<void> {
 function newTurn(settings: LockSettings): Turn {
   const turn = { taken: takeOrForget(settings), holds: 0 };
 
-  turns.set(settings.directory, turn);
+  turns.set(settings.port, turn);
 
   return turn;
 }
 
-function releaser(directory: string, turn: Turn): () => void {
+function releaser(port: number, turn: Turn, server: Server): () => void {
   let released = false;
 
-  const release = (): void => {
+  return (): void => {
     if (released) return;
     released = true;
     turn.holds -= 1;
 
     if (turn.holds > 0) return;
-    turns.delete(directory);
-    clear(directory);
+    turns.delete(port);
+    server.close();
   };
-
-  process.once('exit', release);
-
-  return release;
 }
 
 // Waits until no other browser suite on this Mac runs, then holds the lock until the returned release or process exit.
 export async function acquireBrowserSuiteLock(
   options: Partial<LockSettings> = {},
 ): Promise<() => void> {
-  const settings = { directory: SHARED_DIRECTORY, pollMs: POLL_MS, ...options };
-  const { directory } = settings;
-  const turn = turns.get(directory) ?? newTurn(settings);
+  const settings = { port: LOCK_PORT, pollMs: POLL_MS, ...options };
+  const turn = turns.get(settings.port) ?? newTurn(settings);
 
   turn.holds += 1;
-  await turn.taken;
 
-  return releaser(directory, turn);
+  return releaser(settings.port, turn, await turn.taken);
 }
 
-const printWaiting = ({ pid, cwd, since }: BrowserSuiteHolder): boolean =>
+const describeHolder = (holder: BrowserSuiteHolder | undefined): string =>
+  holder
+    ? `the browser suite in ${holder.cwd} (pid ${holder.pid}, since ${holder.since})`
+    : `whatever holds port ${LOCK_PORT}`;
+
+const printWaiting = (holder: BrowserSuiteHolder | undefined): boolean =>
   process.stdout.write(
-    `Waiting for the browser suite in ${cwd} (pid ${pid}, since ${since}) to finish; one runs at a time on this Mac.\n`,
+    `Waiting for ${describeHolder(holder)} to finish; one browser suite runs at a time on this Mac.\n`,
   );
 
 // CI runs one suite per runner, so only local runs queue.

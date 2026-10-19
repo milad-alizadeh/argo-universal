@@ -1,16 +1,8 @@
-import { type ChildProcessByStdio, spawn, spawnSync } from 'node:child_process';
+import { type ChildProcessByStdio, spawn } from 'node:child_process';
 import { once } from 'node:events';
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import { connect, createServer } from 'node:net';
 import type { Readable, Writable } from 'node:stream';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   acquireBrowserSuiteLock,
   type BrowserSuiteHolder,
@@ -18,23 +10,25 @@ import {
 
 const POLL_MS = 10;
 
+const HOST = '127.0.0.1';
+
 const lockModule = new URL('browser-suite-lock.ts', import.meta.url).href;
 
-// Another suite, loaded through tsx as the lock's modules import each other without extensions: holds the lock, says so on stdout, and releases when its stdin closes.
+type OnWait = (holder: BrowserSuiteHolder | undefined) => void;
+
 type OtherSuite = ChildProcessByStdio<Writable, Readable, null>;
 
 const others: OtherSuite[] = [];
 
-const holdInAnotherProcess = (directory: string): OtherSuite => {
+// Another suite: holds the lock, says so on stdout, and releases when its stdin closes.
+const holdInAnotherProcess = (port: number): OtherSuite => {
   const other = spawn(
     process.execPath,
     [
-      '--import',
-      'tsx',
       '--input-type=module',
       '-e',
       `const { acquireBrowserSuiteLock } = await import(${JSON.stringify(lockModule)});
-       const release = await acquireBrowserSuiteLock({ directory: ${JSON.stringify(directory)} });
+       const release = await acquireBrowserSuiteLock({ port: ${port} });
        process.stdout.write('held');
        process.stdin.on('end', release).resume();`,
     ],
@@ -46,34 +40,53 @@ const holdInAnotherProcess = (directory: string): OtherSuite => {
   return other;
 };
 
-let scratch: string;
+async function freePort(): Promise<number> {
+  const server = createServer().listen(0, HOST);
+  await once(server, 'listening');
+  const address = server.address();
+  server.close();
 
-let directory: string;
+  return typeof address === 'object' && address ? address.port : 0;
+}
 
-beforeEach((): void => {
-  scratch = mkdtempSync(path.join(tmpdir(), 'browser-suite-lock-'));
-  directory = path.join(scratch, 'lock');
-});
+async function isHeld(port: number): Promise<boolean> {
+  const socket = connect({ port, host: HOST });
+
+  const connected = await new Promise<boolean>((resolve): void => {
+    socket.once('connect', (): void => {
+      resolve(true);
+    });
+    socket.once('error', (): void => {
+      resolve(false);
+    });
+  });
+
+  socket.destroy();
+
+  return connected;
+}
 
 afterEach(async (): Promise<void> => {
   const running = others
     .splice(0)
-    .filter((other): boolean => other.exitCode === null);
+    .filter(
+      (other): boolean => other.exitCode === null && other.signalCode === null,
+    );
 
   for (const other of running) other.kill();
   await Promise.all(running.map((other) => once(other, 'exit')));
-  rmSync(scratch, { recursive: true, force: true });
 });
 
-describe('acquireBrowserSuiteLock on a real lock directory', () => {
+describe('acquireBrowserSuiteLock on a real port', () => {
   it('makes a suite wait, naming the other process that holds it, until that one releases', async () => {
-    const other = holdInAnotherProcess(directory);
+    const port = await freePort();
+    const other = holdInAnotherProcess(port);
     await once(other.stdout, 'data');
-    const onWait = vi.fn<(holder: BrowserSuiteHolder) => void>();
+    const onWait = vi.fn<OnWait>();
     let holds = false;
 
     const acquired = acquireBrowserSuiteLock({
-      directory,
+      port,
       pollMs: POLL_MS,
       onWait,
     }).then((release): (() => void) => {
@@ -97,40 +110,41 @@ describe('acquireBrowserSuiteLock on a real lock directory', () => {
 
   // Vitest runs a project's global setup again for each browser instance, in the same process.
   it('lets the holding process take it again, keeping it until both release', async () => {
+    const port = await freePort();
+    const onWait = vi.fn<OnWait>();
+
     const releaseProject = await acquireBrowserSuiteLock({
-      directory,
+      port,
       pollMs: POLL_MS,
     });
 
-    const onWait = vi.fn<(holder: BrowserSuiteHolder) => void>();
-
     const releaseInstance = await acquireBrowserSuiteLock({
-      directory,
+      port,
       pollMs: POLL_MS,
       onWait,
     });
 
     releaseInstance();
 
-    expect(existsSync(directory)).toBe(true);
+    await expect(isHeld(port)).resolves.toBe(true);
 
     releaseProject();
 
     expect(onWait).not.toHaveBeenCalled();
-    expect(existsSync(directory)).toBe(false);
+    await expect(isHeld(port)).resolves.toBe(false);
   });
 
-  it('takes over a lock whose holder has exited', async () => {
-    const exitedPid = spawnSync(process.execPath, ['-e', '']).pid;
-    mkdirSync(directory);
-    writeFileSync(
-      path.join(directory, 'holder.json'),
-      JSON.stringify({ pid: exitedPid, cwd: scratch, since: '' }),
-    );
-    const onWait = vi.fn<(holder: BrowserSuiteHolder) => void>();
+  it('frees the lock when its holder is killed without releasing', async () => {
+    const port = await freePort();
+    const other = holdInAnotherProcess(port);
+    await once(other.stdout, 'data');
+
+    other.kill('SIGKILL');
+    await once(other, 'exit');
+    const onWait = vi.fn<OnWait>();
 
     const release = await acquireBrowserSuiteLock({
-      directory,
+      port,
       pollMs: POLL_MS,
       onWait,
     });
