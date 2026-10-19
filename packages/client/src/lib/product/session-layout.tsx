@@ -11,6 +11,7 @@ import {
   useGlassComposer,
   useGlassCover,
 } from './composer-cover';
+import { type DroppedFiles, FileDropPane } from './file-drop/file-drop-pane';
 import { KeyboardAvoidingContent, Screen } from './screen/screen';
 import { ComposerColumn, sessionSurface } from './session-column';
 import {
@@ -27,6 +28,8 @@ export interface SessionLayoutProps {
   composer: ReactNode;
   // Under the Composer at full pane width, such as a sign-in terminal; a phone presents it as a sheet.
   panel?: ReactNode;
+  // Files dropped anywhere on the pane below the header, Composer included, attach to the draft; without it, nothing accepts them.
+  onDropFiles?: (dropped: DroppedFiles) => void;
 }
 
 // One Session in one container on one surface: the header at the top, the Composer pinned to the bottom, and the Feed filling and scrolling between them.
@@ -67,13 +70,25 @@ function OverlapContent(props: SessionLayoutProps): React.JSX.Element {
   return (
     <SessionFillProvider value={fill}>
       <KeyboardAvoidingContent>
-        <View className={cn('relative min-h-0 flex-1', filled && 'hidden')}>
-          {props.feed}
-        </View>
-        <OverlapComposer>{props.composer}</OverlapComposer>
+        <OverlapPane {...props} />
         {props.panel}
       </KeyboardAvoidingContent>
     </SessionFillProvider>
+  );
+}
+
+// The Feed and the Composer, one drop target for files.
+function OverlapPane(props: SessionLayoutProps): React.JSX.Element {
+  const { filled } = useSessionFill();
+
+  return (
+    <FileDropPane
+      feed={props.feed}
+      hideFeed={filled}
+      onDropFiles={props.onDropFiles}
+    >
+      <OverlapComposer>{props.composer}</OverlapComposer>
+    </FileDropPane>
   );
 }
 

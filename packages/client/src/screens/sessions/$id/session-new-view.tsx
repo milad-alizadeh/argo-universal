@@ -18,6 +18,7 @@ import {
   serverSilentMessage,
 } from '#features/sessions';
 import { useContentWide } from '#lib/product/content-layout';
+import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
@@ -42,7 +43,7 @@ export interface ReadySessionNewViewProps {
   onDraftChange: (draft: ComposerDraft) => void;
   onAttachImages: () => void;
   onAttachFiles: () => void;
-  onDropFiles: NonNullable<ComposerProps['onDropFiles']>;
+  onDropFiles: (dropped: DroppedFiles) => void;
   onSend: (draft: ComposerDraft) => void;
   // False until every choice has settled and the Server is reachable; Send also waits for a prompt.
   canOpen: boolean;
@@ -111,7 +112,6 @@ const promptComposerProps = (
   ...composerDraftProps(props),
   onAttachImages: props.onAttachImages,
   onAttachFiles: props.onAttachFiles,
-  onDropFiles: props.onDropFiles,
   onSend: props.onSend,
   configuration: props.configuration,
   placeholder: 'What should the Agent work on?',
@@ -143,6 +143,7 @@ function ReadySessionNewView(
       header={newSessionHeader}
       feed={<NewSessionContent {...props} />}
       composer={<NewSessionComposer {...props} />}
+      onDropFiles={props.onDropFiles}
       panel={
         props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />
       }

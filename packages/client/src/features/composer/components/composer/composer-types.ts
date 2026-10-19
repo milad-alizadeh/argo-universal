@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import type { PermissionRequestProps } from '#features/requests';
-import type { DroppedFiles } from '../../hooks/use-file-drop';
 import type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 import type { ComposerConfigurationProps } from '../composer-configuration/composer-configuration';
 import type { ComposerStatusProps } from '../composer-status/composer-status';
@@ -21,7 +20,6 @@ export interface ComposerProps {
   onAttachImages: () => void;
   onAttachCamera?: () => void;
   onAttachFiles?: () => void;
-  onDropFiles?: (dropped: DroppedFiles) => void;
   onSelectSlashCommand?: () => void;
   onCreateGoal?: () => void;
   onSend: (draft: ComposerDraft) => void;

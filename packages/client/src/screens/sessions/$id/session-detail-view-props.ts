@@ -97,6 +97,7 @@ const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   header: sessionHeaderProps(open),
   feed: sessionFeedProps(open),
   composer: sessionComposerProps(open),
+  onDropFiles: (dropped) => void open.commands.attachDroppedFiles(dropped),
   archived: open.snapshot.archivedAt !== null,
 });
 

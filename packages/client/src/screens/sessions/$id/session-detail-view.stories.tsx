@@ -119,6 +119,18 @@ export const Archived: Story = {
   args: { view: { state: 'open', ...idleSession, archived: true } },
 };
 
+// Files dragged over the window: the pane below the header shows where they land, and the Feed recedes behind the label.
+export const DraggingFiles: Story = {
+  play: async ({ canvasElement }) => {
+    const transfer = new DataTransfer();
+
+    transfer.items.add(new File(['# Notes'], 'notes.md'));
+    canvasElement.dispatchEvent(
+      new DragEvent('dragenter', { bubbles: true, dataTransfer: transfer }),
+    );
+  },
+};
+
 export const Opening: Story = { args: { view: { state: 'opening' } } };
 
 // The page behind the failure's toast stays blank, whether or not the Server gave a reason.
