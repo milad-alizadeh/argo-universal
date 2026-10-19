@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { Platform } from 'react-native';
 import { useSizeClassValue } from '../use-size-class/use-size-class-value';
+import { useRemeasureAfterEntrance } from './remeasure-after-entrance';
 import { ScrollFadeFrame } from './scroll-fade-frame-view';
 import {
   type ScrollFadeListProps,
@@ -159,6 +160,7 @@ export function ScrollFadeList<T>({
   const list = useRef<LegendListRef>(null);
   const listRef = useBothRefs(list, ref);
   const fading = useFadingList(props);
+  useRemeasureAfterEntrance(list);
 
   return (
     <ScrollFadeFrame {...fading.frame} {...useFrameSize(list, maxHeight)}>
