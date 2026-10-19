@@ -1,10 +1,11 @@
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import { findWireNode } from '@repo/contracts/plugins/wire-node-key';
-import { useEffect, useReducer, useState } from 'react';
+import { isValidElement, useEffect, useReducer, useState } from 'react';
 import { throttle } from '../plugin-dispatcher';
 import { eventProps, localEvents, type Change } from './plugin-events';
 import type {
   ControlInput,
+  PluginProp,
   PluginProps,
   PluginControls,
 } from './plugin-rendering';
@@ -16,6 +17,7 @@ type Field = {
   focused: boolean;
   pending: number;
   event: string;
+  path?: string[];
 };
 
 export function usePluginControls(root: WireNode): PluginControls {
@@ -74,12 +76,11 @@ function propsFor(
 
   if (prop) props[prop] = field.value;
 
-  if (isPending(input, field))
-    Object.assign(props, { disabled: true, loading: true });
+  const pending = isPending(input, field) ? pendingProps(props, field) : props;
 
   const text = Boolean(input.part.events.onChangeText);
 
-  return Object.assign(props, focusOf(field, update, text));
+  return Object.assign(pending, focusOf(field, update, text));
 }
 
 function localProp({ part }: ControlInput): string | undefined {
@@ -90,12 +91,50 @@ function localProp({ part }: ControlInput): string | undefined {
   return event === 'onSelectionChange' ? 'selection' : 'value';
 }
 
+// A nested handler, such as a Page's primary Action, disables only the object that holds it.
+function pendingProps(props: PluginProps, { path = [] }: Field): PluginProps {
+  const owner = path.slice(0, -1);
+
+  if (!owner.length) return { ...props, disabled: true, loading: true };
+
+  return disabledAt(props, owner);
+}
+
+function disabledAt(props: PluginProps, path: string[]): PluginProps {
+  const [name, ...rest] = path;
+
+  if (name === undefined) return { ...props, disabled: true };
+
+  return { ...props, [name]: disabledIn(props[name], rest) };
+}
+
+function disabledIn(value: PluginProp, path: string[]): PluginProp {
+  if (Array.isArray(value)) return disabledItem(value, path);
+
+  return isPropsObject(value) ? disabledAt(value, path) : value;
+}
+
+function disabledItem(
+  items: PluginProp[],
+  [index, ...rest]: string[],
+): PluginProp[] {
+  return items.map((child, position) =>
+    String(position) === index ? disabledIn(child, rest) : child,
+  );
+}
+
+// Callers rule out arrays first.
+function isPropsObject(value: PluginProp): value is PluginProps {
+  if (!value || typeof value !== 'object') return false;
+
+  return !isValidElement(value);
+}
+
 function changeFor(field: Field, update: () => void): Change {
-  return ({ event, value, deliver }) => {
+  return ({ event, path, value, deliver }) => {
     const previous = field.value;
     const next = localEvents.has(event) ? value : previous;
-    field.value = next;
-    field.event = event;
+    Object.assign(field, { value: next, event, path });
     field.pending += 1;
     update();
     void deliver()

@@ -102,9 +102,15 @@ function adapted(node: WireNode, parts: PartVersions): WireNode | null {
   return schema ? parsedNode(lowered, schema) : null;
 }
 
+// A root-only part, such as Page, owns its screen; below the root it would take over the host's header.
+export const isRootOnly = (node: WireNode): boolean =>
+  Boolean(wirePart(node.type)?.root);
+
 function prepareNodes(nodes: WireNode[], parts: PartVersions): WireNode[] {
   return nodes.flatMap((child) => {
-    const next = prepare(child, parts);
+    const next = isRootOnly(child)
+      ? unsupported(child, parts)
+      : prepare(child, parts);
 
     return next ? [next] : [];
   });

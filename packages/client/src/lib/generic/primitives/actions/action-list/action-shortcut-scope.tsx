@@ -14,14 +14,20 @@ import { ShortcutRegistry } from './shortcut-registry';
 
 const ShortcutScope = createContext(new ShortcutRegistry());
 
-export function ActionShortcutScope({
-  children,
-}: {
+// A new scope, or an existing one carried into a tree its owner doesn't render, such as a navigator's header.
+export function ActionShortcutScope(props: {
+  scope?: ShortcutRegistry;
   children: ReactNode;
 }): React.JSX.Element {
-  const [scope] = useState(() => new ShortcutRegistry());
+  const [own] = useState(() => new ShortcutRegistry());
 
-  return <ShortcutScope value={scope}>{children}</ShortcutScope>;
+  return (
+    <ShortcutScope value={props.scope ?? own}>{props.children}</ShortcutScope>
+  );
+}
+
+export function useActionShortcutScope(): ShortcutRegistry {
+  return useContext(ShortcutScope);
 }
 
 export interface ShortcutOptions {

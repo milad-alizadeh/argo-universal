@@ -8,6 +8,8 @@ export interface WirePartDefinition {
   versions: readonly z.ZodType[];
   container: boolean;
   children: boolean;
+  // Only a tree's root may be this part, such as a Page that owns the screen's header.
+  root?: boolean;
   slots: Record<string, readonly string[]>;
   events: Record<string, z.ZodType>;
   reference: WirePartReference;

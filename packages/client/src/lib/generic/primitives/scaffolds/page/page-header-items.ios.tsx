@@ -1,4 +1,4 @@
-// iOS uses UIKit bar items and the stock search bar; Android uses its Toolbar and a Compose FAB.
+// iOS draws the Page's Actions as UIKit bar items and its search as the stock search bar.
 import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import {
@@ -8,7 +8,6 @@ import {
 import { headerActions } from './page-action-groups';
 import type { PageProps } from './page-props';
 import { PageSearchBar } from './page-search-bar.ios';
-import { docksSearch } from './page-search-placement';
 import { overflowMenu, toolbarButton } from './page-toolbar-items.ios';
 import { usePageActions } from './use-page-actions';
 
@@ -20,32 +19,22 @@ export const pageTitleOptions = {
 
 export function PageHeaderItems(props: PageProps): ReactElement {
   const { register, actions, label } = usePageActions();
-  const docked = Boolean(props.search && docksSearch);
-
-  const header = { ...props, declared: actions, label, docked };
 
   return (
     <ActionListHeaderContext value={register}>
       {props.actions}
-      <HeaderItems {...header} />
+      <HeaderItems {...props} declared={actions} label={label} />
       {props.search ? <PageSearchBar {...props} /> : null}
     </ActionListHeaderContext>
   );
 }
 
-type HeaderProps = PageProps & {
-  declared: DeclaredAction[];
-  label: string;
-  docked: boolean;
-};
+type HeaderProps = PageProps & { declared: DeclaredAction[]; label: string };
 
+// The primary Action sits top right on every iPhone and iPad, wherever the search bar is.
 function HeaderItems(props: HeaderProps): ReactElement {
-  const primary = props.docked ? undefined : props.primaryAction;
-
-  const { direct, overflow } = headerActions(
-    props.declared,
-    availableSlots(primary),
-  );
+  const primary = props.primaryAction;
+  const { direct, overflow } = headerActions(props.declared, primary ? 1 : 2);
 
   return (
     <Stack.Toolbar placement="right">
@@ -54,8 +43,4 @@ function HeaderItems(props: HeaderProps): ReactElement {
       {primary ? toolbarButton({ ...primary, id: 'primary' }) : null}
     </Stack.Toolbar>
   );
-}
-
-function availableSlots(primary: PageProps['primaryAction']): number {
-  return primary ? 1 : 2;
 }

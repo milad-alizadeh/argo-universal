@@ -12,6 +12,8 @@ type Event = {
 
 export type Change = (edit: {
   event: string;
+  // The handler's prop path, such as ['primaryAction', 'onPress'], when it is nested.
+  path?: string[];
   value?: WireJson;
   deliver: () => Promise<void>;
 }) => void;
@@ -52,6 +54,7 @@ function callback(
   return (value) =>
     change({
       event: event.name,
+      path: event.path,
       value,
       deliver: () => deliver(input, event, value),
     });

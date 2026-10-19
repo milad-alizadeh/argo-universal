@@ -1,25 +1,38 @@
 import { Stack } from 'expo-router';
-import { NavigationContext } from 'expo-router/react-navigation';
-import { use, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useWide } from '#lib/generic/use-wide/use-wide';
+import {
+  ActionShortcutScope,
+  useActionShortcutScope,
+} from '#primitives/actions/action-list';
 import { HeadingRow } from './page-heading-row';
+import { usePageNavigator } from './page-navigation-context';
 import type { PageProps } from './page-props';
 
 export function PageNavigation(props: PageProps): ReactNode {
-  const navigation = use(NavigationContext);
+  const navigator = usePageNavigator();
   const wide = useWide();
+  const headerTitle = useHeaderTitle(props);
 
-  if (props.renderHeader) return props.renderHeader(props);
+  if (!navigator) return null;
 
-  if (!navigation) return null;
+  const options = { ...headerLayout, title: props.title, headerTitle };
 
-  const options = {
-    title: props.title,
-    headerShown: !wide,
-    headerTitle: (): React.ReactElement => <HeadingRow {...props} />,
-    headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1 },
-    headerRightContainerStyle: { flexGrow: 0 },
-  };
-
-  return <Stack.Screen options={options} />;
+  return <Stack.Screen options={{ ...options, headerShown: !wide }} />;
 }
+
+// The navigator draws the header outside the Page's tree, so its Actions join the Page's shortcut scope explicitly.
+function useHeaderTitle(props: PageProps): () => React.ReactElement {
+  const scope = useActionShortcutScope();
+
+  return () => (
+    <ActionShortcutScope scope={scope}>
+      <HeadingRow {...props} />
+    </ActionShortcutScope>
+  );
+}
+
+const headerLayout = {
+  headerTitleContainerStyle: { flexGrow: 1, flexShrink: 1 },
+  headerRightContainerStyle: { flexGrow: 0 },
+};

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { PageProps } from './page-props';
 
+// A Page's search text: the caller's when it passes `value`, otherwise the Page's own.
 export function usePageSearch(
   props: PageProps,
 ): Pick<PageProps, 'value' | 'onChangeText'> {

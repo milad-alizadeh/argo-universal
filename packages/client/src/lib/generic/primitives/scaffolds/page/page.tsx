@@ -64,6 +64,11 @@ interface PageBodyStyle {
 function bodyClass(props: PageProps, wide: boolean): string {
   return cn(
     'min-h-0 flex-1',
-    !wide && props.primaryAction && 'android:pb-safe-offset-22',
+    !wide && hasFab(props) && 'android:pb-safe-offset-22',
   );
+}
+
+// Android's FAB, which the body's end clears; an unavailable primary Action shows none.
+function hasFab(props: PageProps): boolean {
+  return Boolean(props.primaryAction && !props.primaryAction.disabled);
 }

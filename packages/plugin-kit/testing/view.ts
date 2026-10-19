@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { currentPartVersions } from '@repo/contracts/plugins/kit';
 import type {
   PluginInteraction,
   PluginSlotInput,
@@ -17,9 +18,11 @@ type Event = PluginInteraction & { key: string };
 // Observes production snapshots and patches; events use the same checked dispatch as an App.
 export class PluginTestView {
   private readonly controller = new AbortController();
+  // Reports every current part, as an up-to-date App does.
   private readonly connection = {
     id: randomUUID(),
     signal: this.controller.signal,
+    surface: { platform: 'web' as const, parts: currentPartVersions },
   };
   private root: WireNode | null = null;
   private latest: ViewMessage | null = null;
@@ -47,7 +50,9 @@ export class PluginTestView {
     if (!this.tree) return undefined;
 
     return findWireNodeEntry(this.tree, (node) =>
-      ['label', 'title', 'text'].some((prop) => node.props[prop] === text),
+      ['label', 'title', 'text', 'children'].some(
+        (prop) => node.props[prop] === text,
+      ),
     );
   }
 

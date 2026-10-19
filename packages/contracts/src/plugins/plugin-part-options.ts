@@ -6,6 +6,7 @@ export interface PartOptions {
   slots?: Record<string, readonly string[]>;
   events?: Record<string, z.ZodType>;
   children?: boolean;
+  root?: boolean;
   container?: boolean;
   label?: string;
   appearance?: string;

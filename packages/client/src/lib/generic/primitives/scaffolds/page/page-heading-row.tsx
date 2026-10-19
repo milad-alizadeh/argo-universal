@@ -6,7 +6,19 @@ import {
   SearchField,
   type SearchFieldProps,
 } from '#primitives/inputs/search-field';
+import { PageColumn } from './page-column';
 import type { PageProps } from './page-props';
+
+// A wide Page's heading, or any Page's when no navigator draws its header.
+export function PageHeadingBody(props: PageProps): ReactElement {
+  return (
+    <View className="py-6">
+      <PageColumn>
+        <HeadingRow {...props} />
+      </PageColumn>
+    </View>
+  );
+}
 
 type HeadingContent = { title: ReactNode; actions: ReactNode };
 

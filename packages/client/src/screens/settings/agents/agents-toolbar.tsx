@@ -14,8 +14,6 @@ export interface AgentsSearchProps {
   onSearch: (search: string) => void;
 }
 
-export type AgentsHeaderProps = AgentsSearchProps;
-
 export const agentsTitle = 'Agents';
 
 export const searchLabel = 'Search Agents';
