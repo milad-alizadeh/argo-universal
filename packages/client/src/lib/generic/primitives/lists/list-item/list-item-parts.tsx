@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
+import { Icon, IconRoleContext } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { CountBadge } from '#primitives/status/count-badge';
 import { StatusDot } from '#primitives/status/status-dot';
@@ -59,22 +59,26 @@ export function hasLeading(
   return [Boolean(props.leading), hasBadge(props.badge)].some(Boolean);
 }
 
-// Paper: a menu row's icon slot is 20px; other rows keep the row icon slot.
+// Paper: a menu row's icon slot is 20px and sizes its icon with the menu role; other rows keep the row icon slot.
 const leadingClasses = {
   row: 'relative h-6 w-6 wide-type:h-5 shrink-0 items-center justify-center',
   menu: 'relative h-5 w-5 shrink-0 items-center justify-center',
 };
 
+const leadingIconRoles = { row: undefined, menu: 'menu' } as const;
+
 export function Leading(
   props: Pick<ListItemProps, 'leading' | 'badge'>,
 ): ReactNode {
-  const menu = useInMenu();
+  const lane = useInMenu() ? 'menu' : 'row';
 
   if (!hasLeading(props)) return null;
 
   return (
-    <View className={leadingClasses[menu ? 'menu' : 'row']}>
-      {props.leading}
+    <View className={leadingClasses[lane]}>
+      <IconRoleContext value={leadingIconRoles[lane]}>
+        {props.leading}
+      </IconRoleContext>
       <ItemBadge badge={props.badge} />
     </View>
   );

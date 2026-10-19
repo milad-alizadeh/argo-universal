@@ -28,7 +28,7 @@ export function MenuActionLabel(props: LabelProps): React.JSX.Element {
 function LeadingIcon({
   icon,
 }: Pick<LabelProps, 'icon'>): React.JSX.Element | null {
-  return icon ? <Icon name={icon} role="action" /> : null;
+  return icon ? <Icon name={icon} role="menu" /> : null;
 }
 
 function ShortcutHint({
