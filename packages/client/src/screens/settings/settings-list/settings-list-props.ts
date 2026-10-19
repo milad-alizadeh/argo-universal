@@ -1,11 +1,11 @@
 import type { Href } from 'expo-router';
+import type { IconName } from '#lib/generic/symbols/icon-names';
 import type { RowBadge } from '#primitives/lists/list-item';
-import type { IconName } from '../../../../lib/generic/symbols/icon-names';
 
 // A page's path, one the router knows.
 export type SettingsHref = Extract<Href, string>;
 
-export interface SettingsListProps {
+export interface SettingsListViewProps {
   // Undefined until the Server has answered: the row shows "…", or nothing while disconnected.
   projectCount?: number;
   agentCount?: number;

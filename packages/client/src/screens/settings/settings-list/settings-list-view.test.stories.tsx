@@ -1,17 +1,17 @@
 import { expect, waitFor } from 'storybook/test';
 import { page } from 'vitest/browser';
+import { layoutWidths } from '#lib/generic/each-layout';
 import {
   allPagesNavigate,
   searchNarrowsThePages,
   searchSaysWhenNothingMatches,
-} from '../../../../../mocks/settings/settings-list-navigation.test.mocks';
+} from '../../../../mocks/settings/settings-list-navigation.test.mocks';
 import {
   meta as settingsListTestMeta,
   type Story,
-} from '../../../../../mocks/settings/settings-list-story.test.mocks';
-import { layoutWidths } from '../../../../lib/generic/each-layout';
+} from '../../../../mocks/settings/settings-list-story.test.mocks';
 
-const meta = { ...settingsListTestMeta, title: 'Tests/SettingsList' };
+const meta = { ...settingsListTestMeta, title: 'Tests/SettingsListView' };
 
 export default meta;
 

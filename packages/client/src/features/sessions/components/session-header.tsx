@@ -64,17 +64,17 @@ interface WideSessionHeaderProps extends SessionHeaderProps {
 
 function WideSessionHeader({
   shownPullRequest: [shown, show],
-  onMerge,
   mergeChoice,
+  onMerge,
   menu,
   ...props
 }: WideSessionHeaderProps): React.JSX.Element {
-  const actions = { ...mergeChoice, shown, onMerge, menu };
+  const actions = { ...mergeChoice, onMerge, menu, shown };
 
   return (
     <SessionHeaderBar
       title={<SessionHeaderTitle {...props} shown={shown} onShow={show} />}
-      actions={<SessionHeaderActions {...actions} />}
+      actions={<SessionHeaderActions {...actions} changes={props.changes} />}
     />
   );
 }

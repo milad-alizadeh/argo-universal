@@ -9,7 +9,10 @@ import type { CoreSection } from '../../../lib/product/navigation/sections';
 export interface SectionList {
   // The list's own part of the sidebar's header row.
   header: ReactNode;
+  // Null where the section's pages hold the sidebar with their own ListDetail, as Settings' SettingsLayout does.
   list: ReactNode;
+  // The sidebar's search, for the section's pages to narrow their list by.
+  query?: string;
   // The header over the list when the list is the section's root page, as Android's drawer header and the web's JS header draw it.
   rootHeader: ScreenHeaderProps;
   // A narrow window's root page, such as a Page around the list, which then fills the root header itself; without it, the root shows the list under `rootHeader`.

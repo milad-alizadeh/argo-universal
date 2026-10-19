@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { useInspector } from '#lib/product/inspector';
 import { IconButton } from '#primitives/actions/icon-button';
 import type { MergeMethod } from '../stores/merge-method';
 import { MergePrButton, type MergePrButtonProps } from './merge-pr-button';
@@ -19,6 +18,7 @@ export type SessionHeaderActionsProps = Pick<
   shown: SessionPullRequest | undefined;
   onMerge: SessionHeaderProps['onMerge'];
   menu?: SessionMenu;
+  changes?: SessionHeaderProps['changes'];
 };
 
 function mergeShown({
@@ -52,19 +52,24 @@ type InspectorToggle = Pick<
 >;
 
 function inspectorToggle(
-  inspector: ReturnType<typeof useInspector>,
+  changes: SessionHeaderProps['changes'],
 ): InspectorToggle {
-  if (!inspector) return { 'aria-expanded': false };
+  if (!changes) return { 'aria-expanded': false };
 
-  return { 'aria-expanded': inspector.open, onPress: inspector.toggle };
+  return {
+    'aria-expanded': changes.open,
+    onPress: () => changes.onOpenChange(!changes.open),
+  };
 }
 
-function ChangesButton(): React.JSX.Element {
+function ChangesButton({
+  changes,
+}: Pick<SessionHeaderActionsProps, 'changes'>): React.JSX.Element {
   return (
     <IconButton
       {...headerActionAppearance}
       accessibilityLabel="Changes"
-      {...inspectorToggle(useInspector())}
+      {...inspectorToggle(changes)}
       icon="diff"
       className="bg-foreground/7"
     />
@@ -78,7 +83,7 @@ export function SessionHeaderActions(
   return (
     <View className="-mt-1 flex-row items-center gap-3">
       <ShownMergeButton {...props} />
-      <ChangesButton />
+      <ChangesButton changes={props.changes} />
       {props.menu && <SessionHeaderMenu menu={props.menu} />}
     </View>
   );

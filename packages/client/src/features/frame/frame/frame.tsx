@@ -1,10 +1,7 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import type { SizeClass } from '#lib/generic/use-size-class/size-class';
-import {
-  type InspectorControl,
-  InspectorProvider,
-} from '#lib/product/inspector';
+import type { InspectorHost } from '#primitives/scaffolds/inspector';
 import {
   isCoreSection,
   type Section,
@@ -26,6 +23,7 @@ import {
   useScaffoldParts,
 } from '../scaffold/scaffold';
 import { LiveConnectionBanner } from './connection-banner';
+import { FrameInspectorHost } from './frame-inspector';
 import {
   type FrameListDetail,
   FrameListDetailSidebar,
@@ -54,8 +52,8 @@ export interface FrameOptions {
 // What the Frame and its sidebar and pages are drawn from, which the navigator holds and hands to each.
 export interface FrameParts {
   scaffold: ScaffoldParts;
-  // For a page's header button, such as Changes, to open and close the Inspector.
-  inspector: InspectorControl;
+  // The column the shown page's Inspector draws in on a wide window.
+  inspectorHost: InspectorHost;
   section: Section;
   lists: SectionLists;
   items: readonly NavigationSection[];
@@ -82,12 +80,12 @@ function frameScaffold(
 
 // What the Frame, its sidebar and its pages are drawn from, for the navigator to hand to each.
 export function useFrame(options: FrameOptions): FrameParts {
-  const { scaffold, inspector } = useFrameState();
+  const { scaffold, inspectorHost } = useFrameState();
   const listDetail = useFrameListDetail();
 
   return {
     scaffold: useScaffoldParts(frameScaffold(scaffold, options, listDetail)),
-    inspector,
+    inspectorHost,
     section: options.section,
     lists: options.lists,
     items: options.items,
@@ -105,11 +103,11 @@ export interface FrameProps {
 export function Frame({ frame, children }: FrameProps): React.JSX.Element {
   return (
     <SectionListsContext value={frame.lists}>
-      <InspectorProvider value={frame.inspector}>
+      <FrameInspectorHost value={frame.inspectorHost}>
         <FrameListDetailSidebar value={frame.listDetail.sidebar}>
           <ScaffoldFrame parts={frame.scaffold}>{children}</ScaffoldFrame>
         </FrameListDetailSidebar>
-      </InspectorProvider>
+      </FrameInspectorHost>
     </SectionListsContext>
   );
 }

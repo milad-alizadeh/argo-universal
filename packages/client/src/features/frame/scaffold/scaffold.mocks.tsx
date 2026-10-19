@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import { InspectorPane } from '#primitives/scaffolds/inspector';
 import { ListTitle } from '../../../lib/product/list-title';
 import {
   type Section,
@@ -9,7 +10,6 @@ import {
   sections,
 } from '../../../lib/product/navigation/sections';
 import { FrameRail } from '../components/frame-rail/frame-rail';
-import { InspectorPane } from '../components/inspector-pane';
 import { Scaffold, type ScaffoldProps } from './scaffold';
 import { MockPage, MockText } from './scaffold-page.mocks';
 
@@ -94,8 +94,12 @@ function MockInspector(props: MockInspectorProps): React.JSX.Element {
   return (
     <InspectorPane
       title="Inspector"
+      open
+      onOpenChange={() => props.onInspectorStateChange('closed')}
       expanded={props.expanded}
-      onStateChange={props.onInspectorStateChange}
+      onExpandedChange={(expanded) =>
+        props.onInspectorStateChange(expanded ? 'expanded' : 'open')
+      }
     >
       {inspectorContent(props)}
     </InspectorPane>

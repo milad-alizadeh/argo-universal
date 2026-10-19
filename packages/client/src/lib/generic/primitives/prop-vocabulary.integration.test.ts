@@ -17,6 +17,7 @@ function exportedTypes(source: string): string[] {
       names
         .split(',')
         .map((name) => name.trim())
+        .filter((name) => name !== '')
         .filter((name) => typeOnly !== undefined || name.startsWith('type '))
         .map(
           (name) =>

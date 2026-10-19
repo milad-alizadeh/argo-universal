@@ -1,23 +1,13 @@
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
-import type { InspectorControl } from '#lib/product/inspector';
-import { InspectorPane } from '../components/inspector-pane';
+import { useState } from 'react';
+import {
+  createInspectorHost,
+  type InspectorHost,
+  InspectorPane,
+  type InspectorProps,
+  useHostedInspector,
+} from '#primitives/scaffolds/inspector';
 import type { InspectorState } from '../scaffold/scaffold';
-
-function useInspectorControl(
-  inspectorState: InspectorState,
-  setInspectorState: (state: InspectorState) => void,
-): InspectorControl {
-  const inspectorOpen = inspectorState !== 'closed';
-
-  return useMemo(
-    () => ({
-      open: inspectorOpen,
-      toggle: (): void => setInspectorState(inspectorOpen ? 'closed' : 'open'),
-    }),
-    [inspectorOpen, setInspectorState],
-  );
-}
 
 interface FrameScaffoldState {
   sidebarShown: boolean;
@@ -27,49 +17,81 @@ interface FrameScaffoldState {
   inspector: (expanded: boolean) => ReactNode;
 }
 
-// The Inspector shows the open Session's changes.
-const changesInspector =
-  (onStateChange: (state: InspectorState) => void) =>
-  (expanded: boolean): ReactNode => (
-    <InspectorPane
-      title="Changes"
-      expanded={expanded}
-      onStateChange={onStateChange}
-    >
-      {null}
-    </InspectorPane>
-  );
+// Whether the open Inspector fills the detail area; each opening starts beside the page.
+function useExpanded(open: boolean): [boolean, (expanded: boolean) => void] {
+  const [expanded, setExpanded] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
 
-// The sidebar's and the Inspector's state.
-function useScaffoldState(): FrameScaffoldState {
-  const [sidebarShown, onSidebarShownChange] = useState(true);
+  if (wasOpen !== open) {
+    setWasOpen(open);
 
-  const [inspectorState, onInspectorStateChange] =
-    useState<InspectorState>('closed');
+    if (!open) setExpanded(false);
+  }
+
+  return [expanded, setExpanded];
+}
+
+const inspectorStateOf = (open: boolean, expanded: boolean): InspectorState => {
+  if (!open) return 'closed';
+
+  return expanded ? 'expanded' : 'open';
+};
+
+type InspectorColumn = Omit<
+  FrameScaffoldState,
+  'sidebarShown' | 'onSidebarShownChange'
+>;
+
+// The hosted Inspector's pane, whose expand moves the Frame's column between open and expanded.
+const hostedPane =
+  (
+    hosted: InspectorProps | null,
+    onStateChange: (state: InspectorState) => void,
+  ) =>
+  (fills: boolean): ReactNode =>
+    hosted && (
+      <InspectorPane
+        {...hosted}
+        expanded={fills}
+        onExpandedChange={(next) => onStateChange(next ? 'expanded' : 'open')}
+      />
+    );
+
+// The shown page's Inspector in the Frame's column: the page holds it open; the Frame holds its expansion and width.
+function useInspectorColumn(hosted: InspectorProps | null): InspectorColumn {
+  const open = hosted?.open === true;
+  const [expanded, setExpanded] = useExpanded(open);
+
+  const onInspectorStateChange = (state: InspectorState): void => {
+    setExpanded(state === 'expanded');
+
+    if ((state !== 'closed') !== open) hosted?.onOpenChange(state !== 'closed');
+  };
 
   return {
-    sidebarShown,
-    onSidebarShownChange,
-    inspectorState,
+    inspectorState: inspectorStateOf(open, expanded),
     onInspectorStateChange,
-    inspector: changesInspector(onInspectorStateChange),
+    inspector: hostedPane(hosted, onInspectorStateChange),
   };
 }
 
 export interface FrameState {
   scaffold: FrameScaffoldState;
-  // For a page's header button, such as Changes, to open and close the Inspector.
-  inspector: InspectorControl;
+  // The column the shown page's Inspector draws in.
+  inspectorHost: InspectorHost;
 }
 
+// The sidebar's state, and the Inspector the shown page holds.
 export function useFrameState(): FrameState {
-  const scaffold = useScaffoldState();
+  const [sidebarShown, onSidebarShownChange] = useState(true);
+  const [inspectorHost] = useState(createInspectorHost);
 
   return {
-    scaffold,
-    inspector: useInspectorControl(
-      scaffold.inspectorState,
-      scaffold.onInspectorStateChange,
-    ),
+    scaffold: {
+      sidebarShown,
+      onSidebarShownChange,
+      ...useInspectorColumn(useHostedInspector(inspectorHost)),
+    },
+    inspectorHost,
   };
 }
