@@ -1,17 +1,9 @@
 import { useIsPreview } from 'expo-router';
 import type * as React from 'react';
 import { useInstalledAgents } from '#features/agents';
-import {
-  useBlobUrl,
-  useConnectionState,
-  useResubscribeOnReconnect,
-} from '#features/connection';
+import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
-import {
-  useConnectionDropped,
-  useMergeMethod,
-  useSessionOptions,
-} from '#features/sessions';
+import { useConnectionDropped, useMergeMethod } from '#features/sessions';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ReplaceableSlotRenderer } from '../../../lib/product/plugin-registry';
@@ -34,6 +26,7 @@ import {
   type SessionCommands,
   useSessionCommands,
 } from './use-session-commands';
+import { useSessionReadOptions } from './use-session-read-options';
 
 export interface SessionDetailScreenProps {
   id: string;
@@ -80,14 +73,6 @@ function ConnectedSession({
 
 const previewed = (props: SessionDetailViewProps): SessionDetailViewProps =>
   props.state === 'open' ? { ...props, preview: true } : props;
-
-// A Session the Server refused to open tries again when the Connection reopens; its callout already said why.
-function useRetryOpenOnReconnect(feed: SessionFeed): void {
-  useResubscribeOnReconnect({
-    status: feed.openError ? 'error' : 'idle',
-    reset: feed.retryOpen,
-  });
-}
 
 type SessionSurroundings =
   | 'agents'
@@ -151,17 +136,10 @@ function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
   const { sessionId } = page;
   const sources = useConnectedFeed(sessionId);
   const surroundings = useSessionSurroundings(page, sources.feed);
-  const { agents } = surroundings;
-  const callouts = useSessionCallout({ sessionId, agents, ...sources });
 
-  const snapshot = sources.feed.snapshot;
-  const options = useSessionOptions({
-    agent: snapshot?.configOptions.length ? undefined : snapshot?.agent,
-    projectId: snapshot?.projectId,
-    sessionId,
-    picks: {},
-  });
-  useRetryOpenOnReconnect(sources.feed);
+  const callouts = usePageCallout(sessionId, sources, surroundings.agents);
+
+  const options = useSessionReadOptions(sessionId, sources.feed);
 
   return toSessionViewProps({
     sessionId,
@@ -171,3 +149,10 @@ function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
     options,
   });
 }
+
+const usePageCallout = (
+  sessionId: string,
+  sources: ConnectedFeed,
+  agents: SessionDetailViewSources['agents'],
+): ReturnType<typeof useSessionCallout> =>
+  useSessionCallout({ sessionId, agents, ...sources });

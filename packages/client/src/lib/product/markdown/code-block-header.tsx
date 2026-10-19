@@ -25,19 +25,25 @@ function HeaderTitle({
   title,
   resource,
 }: Pick<CodeBlockHeaderProps, 'title' | 'resource'>): React.JSX.Element {
-  return resource ? (
-    <ResourceHeading title={title} resource={resource} />
-  ) : (
+  if (resource) return <ResourceHeading title={title} resource={resource} />;
+
+  return <LanguageTitle title={title} />;
+}
+
+function languageIcon(
+  title: string,
+): NonNullable<React.ComponentProps<typeof Icon>['name']> {
+  if (['bash', 'sh', 'shell', 'zsh'].includes(title)) return 'terminal';
+
+  return fileTypeIcon(title.includes('.') ? title : `snippet.${title}`);
+}
+
+function LanguageTitle({
+  title,
+}: Pick<CodeBlockHeaderProps, 'title'>): React.JSX.Element {
+  return (
     <View className="min-w-0 flex-1 flex-row items-center gap-1.5 pr-2">
-      <Icon
-        name={
-          ['bash', 'sh', 'shell', 'zsh'].includes(title)
-            ? 'terminal'
-            : fileTypeIcon(title.includes('.') ? title : `snippet.${title}`)
-        }
-        role="mark"
-        className="shrink-0 text-muted-foreground"
-      />
+      <Icon name={languageIcon(title)} role="mark" tone="muted" />
       <CodeBlockTitle title={title} />
     </View>
   );

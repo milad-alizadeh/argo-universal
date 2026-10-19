@@ -13,11 +13,14 @@ import {
   dropped,
   serverError,
 } from '../../../../mocks/sessions/open-failure.mocks';
+
 let h: EmptySessionHarness;
+
 beforeEach(() => {
   vi.useFakeTimers();
   h = emptySessionHarness();
 });
+
 afterEach(() => {
   h.store.stop();
   vi.useRealTimers();
@@ -30,10 +33,12 @@ describe.each([local('agent-one'), worktree])(
       h.choose(input);
       await settle();
       expect(h.calls.open).toEqual([]);
+
       const initial = [
         { configId: 'model', value: 'small' },
         { configId: 'effort', value: 'low' },
       ];
+
       h.store.configure({ initial });
       h.store.send(prompt);
       h.store.send(prompt);
@@ -108,6 +113,7 @@ describe.each([local('agent-one'), worktree])(
     });
   },
 );
+
 it('uses the latest Agent and never sends stale incomplete choices', () => {
   h.choose(local('agent-one'));
   h.choose(local('agent-two'));

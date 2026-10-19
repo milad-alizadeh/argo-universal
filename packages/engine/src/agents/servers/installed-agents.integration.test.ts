@@ -48,7 +48,7 @@ it('launches an Installed Agent from its Registry entry, with its row env last',
   const deferred = await installedAgentsOf(host).launch(
     requireInstalled(host, id),
     'project-1',
-    new AbortController().signal,
+    { signal: new AbortController().signal },
   );
 
   expect(deferred).toMatchObject({

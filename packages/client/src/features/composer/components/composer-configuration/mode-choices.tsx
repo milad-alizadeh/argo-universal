@@ -8,6 +8,7 @@ import { List } from '#primitives/lists/list';
 import { ListSection } from '#primitives/lists/list';
 import { ConfigurationChoice } from './configuration-choice';
 import { ConfigurationCombobox } from './configuration-combobox';
+import { ConfigurationRowIcon } from './configuration-row-icon';
 import { configurationIcon, choiceMetadata } from './configuration-values';
 import { selection } from './configuration-values';
 import { isDangerous } from './configuration-values';
@@ -87,26 +88,27 @@ function selectMode({
   close();
 }
 
-function collaborationSection({
-  configuration,
-}: ModeContentsProps): React.JSX.Element | null {
-  const option = selection(configuration, 'collaboration_mode');
+function collaborationSection(
+  props: ModeContentsProps,
+): React.JSX.Element | null {
+  const option = selection(props.configuration, 'collaboration_mode');
+
   if (!option) return null;
+
+  return <ListSection>{collaborationRow(props, option)}</ListSection>;
+}
+
+function collaborationRow(
+  props: ModeContentsProps,
+  option: NonNullable<ReturnType<typeof selection>>,
+): React.JSX.Element {
   return (
-    <ListSection>
-      <ConfigurationCombobox
-        configuration={configuration}
-        option={option}
-        label={option.name}
-        title={option.name}
-        leading={
-          <Icon
-            fitArtwork
-            name="plan-mode"
-            role={{ compact: 'body', wide: 'row' }}
-          />
-        }
-      />
-    </ListSection>
+    <ConfigurationCombobox
+      configuration={props.configuration}
+      option={option}
+      label={option.name}
+      title={option.name}
+      leading={<ConfigurationRowIcon name="plan-mode" />}
+    />
   );
 }

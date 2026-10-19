@@ -5,6 +5,10 @@ import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { expectMessage, messageLabel, sessionOpenTimeout } from './new-session';
 
+const newSessionPath = '/sessions/new';
+
+const configurationSignIn = 'Sign in to load configuration.';
+
 const menuLabel = 'Authentication options';
 
 const signInTerminal = 'Agent sign-in terminal';
@@ -31,8 +35,8 @@ Then(
   async ({ page, server }, ordinal: number, method: string): Promise<void> => {
     const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await expect(
-      page.url().endsWith('/sessions/new')
-        ? page.getByText('Sign in to load configuration.', { exact: true })
+      page.url().endsWith(newSessionPath)
+        ? page.getByText(configurationSignIn, { exact: true })
         : callout(page, `Authenticate to ${label}`),
     ).toBeVisible(sessionOpenTimeout);
     await expect(
@@ -78,7 +82,7 @@ Then(
   async ({ page, server }, ordinal: number): Promise<void> => {
     const { name: label } = await readAgent(page, server.httpUrl, ordinal);
     await expect(
-      page.url().endsWith('/sessions/new')
+      page.url().endsWith(newSessionPath)
         ? page.getByText('Signing in…', { exact: true })
         : callout(page, `Authenticating to ${label}…`),
     ).toBeVisible();
@@ -95,16 +99,9 @@ Then('the sign-in callout is gone', async ({ page }): Promise<void> => {
     sessionOpenTimeout,
   );
   await expect(callout(page, 'Authentication Required')).toHaveCount(0);
-  if (page.url().endsWith('/sessions/new')) {
-    await expect(
-      page.getByText('Sign in to load configuration.', { exact: true }),
-    ).toHaveCount(0, sessionOpenTimeout);
-    await expect(page.getByText('Signing in…', { exact: true })).toHaveCount(
-      0,
-      sessionOpenTimeout,
-    );
-    await page.keyboard.press('Escape');
-  }
+
+  if (page.url().endsWith(newSessionPath))
+    await expectConfigurationSignedIn(page);
 });
 
 Then(
@@ -165,3 +162,14 @@ When('I press Return in the sign-in terminal', async ({ page }) => {
   await terminal.getByRole('textbox').focus();
   await page.keyboard.press('Enter');
 });
+
+async function expectConfigurationSignedIn(page: Page): Promise<void> {
+  await expect(
+    page.getByText(configurationSignIn, { exact: true }),
+  ).toHaveCount(0, sessionOpenTimeout);
+  await expect(page.getByText('Signing in…', { exact: true })).toHaveCount(
+    0,
+    sessionOpenTimeout,
+  );
+  await page.keyboard.press('Escape');
+}

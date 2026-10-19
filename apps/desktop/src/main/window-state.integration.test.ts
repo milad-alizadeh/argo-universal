@@ -7,12 +7,15 @@ import { readWindowState, saveWindowState, windowBounds } from './window-state';
 it('restores saved normal bounds and maximization from disk', () => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-window-'));
   const file = join(directory, 'window-state.json');
+
   try {
     expect(readWindowState(file)).toBeUndefined();
+
     const state = {
       bounds: { x: 100, y: 80, width: 1320, height: 840 },
       maximized: true,
     };
+
     saveWindowState(file, state);
     expect(readWindowState(file)).toEqual(state);
     expect(

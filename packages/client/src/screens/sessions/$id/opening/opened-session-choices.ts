@@ -28,7 +28,10 @@ function usePicks(agent: string | undefined): [ConfigurationPicks, DraftPick] {
   const picks = picked.agent === agent ? picked.picks : noPicks;
 
   const pick: DraftPick = (configId, value, reset) =>
-    setPicked({ agent, picks: { ...(reset ? {} : picks), [configId]: value } });
+    setPicked({
+      agent,
+      picks: { ...(reset ? noPicks : picks), [configId]: value },
+    });
 
   return [picks, pick];
 }
@@ -63,13 +66,11 @@ export function useOptionChoices(opened: OpenedSession): Choices {
     ...options,
     discovery: options,
     pick: (configId, value) =>
-      pick(
-        configId,
-        value,
-        options.configOptions.some(
-          (option) =>
-            option.configId === configId && option.category === 'model',
-        ),
-      ),
+      pick(configId, value, isModel(options.configOptions, configId)),
   };
 }
+
+const isModel = (options: SessionConfigOption[], configId: string): boolean =>
+  options.some(
+    (option) => option.configId === configId && option.category === 'model',
+  );

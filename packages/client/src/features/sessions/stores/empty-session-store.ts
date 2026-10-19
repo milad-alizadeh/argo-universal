@@ -105,8 +105,10 @@ export class EmptySessionStore {
     if (!this.input || this.stopped) {
       this.pending = undefined;
       this.emit();
+
       return;
     }
+
     this.outcome = openingAgain(this.outcome);
     this.handOff.create(this.input, this.configuration.initial, prompt);
   }

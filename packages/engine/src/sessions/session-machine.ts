@@ -595,7 +595,7 @@ const sessionSetup = setup({
           job: new AgentOptionsJob(
             { agent: context.agent, projectId: context.projectId },
             nextOptions,
-            true,
+            { authoritative: true },
           ),
         });
         enqueue.assign({
@@ -772,7 +772,7 @@ const sessionSetup = setup({
       job: new AgentOptionsJob(
         { agent: context.agent, projectId: context.projectId },
         context.configOptions,
-        true,
+        { authoritative: true },
       ),
     })),
     storeAcpSession: sendTo(writer, ({ context }) => ({

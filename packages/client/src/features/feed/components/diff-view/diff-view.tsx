@@ -159,14 +159,14 @@ export function DiffView(props: DiffViewProps): React.JSX.Element {
   return (
     <DiffFrame {...view}>
       <DiffHeader {...view} />
-      <CollapsibleContent
-        className={
-          view.inline ? 'overflow-hidden rounded-xl bg-content' : undefined
-        }
-      >
+      <CollapsibleContent className={diffContentClass(view.inline)}>
         <DiffScroll hunks={view.preview.hunks} inline={view.inline} />
         <ShowAllLines {...view.preview} />
       </CollapsibleContent>
     </DiffFrame>
   );
+}
+
+function diffContentClass(inline: boolean | undefined): string | undefined {
+  return inline ? 'overflow-hidden rounded-xl bg-content' : undefined;
 }

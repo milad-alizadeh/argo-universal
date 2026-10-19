@@ -87,16 +87,26 @@ function IconSymbolGlyph(props: SymbolIconProps): React.JSX.Element {
 
   return (
     <TintedSymbol
-      symbol={iconDrawing(icon, props.filled)}
       className={colorClassName}
-      colorClassName={colorClassName}
-      pixels={useIconPixels(props.role)}
-      glyphScale={glyphScale}
-      fitArtwork={props.fitArtwork}
-      weight={props.weight}
-      testID={props.testID ?? `icon-${icon.key}`}
+      {...useSymbolDrawingProps(props, icon, colorClassName)}
     />
   );
+}
+
+function useSymbolDrawingProps(
+  props: SymbolIconProps,
+  icon: ResolvedIcon,
+  colorClassName: string,
+): React.ComponentProps<typeof TintedSymbol> {
+  return {
+    symbol: iconDrawing(icon, props.filled),
+    colorClassName,
+    pixels: useIconPixels(props.role),
+    glyphScale,
+    fitArtwork: props.fitArtwork,
+    weight: props.weight,
+    testID: props.testID ?? `icon-${icon.key}`,
+  };
 }
 
 function IconWithStatus(

@@ -103,13 +103,31 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
   return {
     agent: sessionAgent(open),
     agentId: snapshot.agent,
-    configOptions: snapshot.configOptions.length
-      ? snapshot.configOptions
-      : (open.options?.configOptions ?? []),
-    opening: !snapshot.configOptions.length && open.options?.loading,
+    ...optionsOf(open),
     onConfigChange: open.commands.changeConfig,
     turnRunning: isTurnRunning(snapshot),
     checkout: checkoutProps(snapshot.checkout),
+  };
+}
+
+function optionsOf({
+  snapshot,
+  options,
+}: OpenSession): Pick<ComposerConfigurationProps, 'configOptions' | 'opening'> {
+  if (snapshot.configOptions.length)
+    return { configOptions: snapshot.configOptions, opening: false };
+
+  return discoveredOptions(options);
+}
+
+function discoveredOptions(
+  options: OpenSession['options'],
+): Pick<ComposerConfigurationProps, 'configOptions' | 'opening'> {
+  if (!options) return { configOptions: [], opening: undefined };
+
+  return {
+    configOptions: options.configOptions,
+    opening: options.loading,
   };
 }
 

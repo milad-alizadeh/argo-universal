@@ -38,16 +38,37 @@ function CodeScroll(props: CodeTextProps): React.JSX.Element {
         className="max-h-75 wide:max-h-100"
         surfaceClassName="bg-content"
       >
-        <ScrollFadeView
-          horizontal
-          className="grow-0 shrink-0"
-          surfaceClassName="bg-content"
-          contentContainerClassName="px-3 py-2.5"
-        >
-          <CodeText {...props} />
-        </ScrollFadeView>
+        <HorizontalCode {...props} />
       </ScrollFadeView>
     </View>
+  );
+}
+
+function HorizontalCode(props: CodeTextProps): React.JSX.Element {
+  return (
+    <ScrollFadeView
+      horizontal
+      className="grow-0 shrink-0"
+      surfaceClassName="bg-content"
+      contentContainerClassName="px-3 py-2.5"
+    >
+      <CodeText {...props} />
+    </ScrollFadeView>
+  );
+}
+
+function CodeDescription({
+  description,
+}: Pick<CodeBlockBodyProps, 'description'>): React.JSX.Element | null {
+  if (!description) return null;
+
+  return (
+    <Text
+      role="body"
+      className="rounded-xl bg-content px-3 py-2.5 text-foreground"
+    >
+      {description}
+    </Text>
   );
 }
 
@@ -60,12 +81,5 @@ export function CodeBlockBody({
   if (code !== undefined)
     return <CodeScroll code={code} textClassName={textClassName} />;
 
-  return description ? (
-    <Text
-      role="body"
-      className="rounded-xl bg-content px-3 py-2.5 text-foreground"
-    >
-      {description}
-    </Text>
-  ) : null;
+  return <CodeDescription description={description} />;
 }

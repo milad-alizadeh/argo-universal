@@ -93,9 +93,11 @@ const trafficLights = { x: 22, y: 24 };
 const createWindow = (url: string): void => {
   const stateFile = path.join(app.getPath('userData'), 'window-state.json');
   const saved = readWindowState(stateFile);
+
   const display = saved
     ? screen.getDisplayMatching(saved.bounds)
     : screen.getPrimaryDisplay();
+
   const mainWindow = new BrowserWindow({
     ...windowBounds(saved?.bounds, display.workArea),
     // Below 600 is a phone's width, the compact size class (ADR-0026).
@@ -136,6 +138,7 @@ const createWindow = (url: string): void => {
   mainWindow.webContents.setWindowOpenHandler(
     ({ url }): WindowOpenHandlerResponse => {
       openBrowserLink(url);
+
       return { action: 'deny' };
     },
   );
@@ -147,8 +150,9 @@ const createWindow = (url: string): void => {
 function openBrowserLink(target: string): void {
   if (!URL.canParse(target)) return;
   const { protocol } = new URL(target);
+
   if (protocol !== 'https:' && protocol !== 'http:') return;
-  void shell.openExternal(target).catch((error: unknown) => {
+  void shell.openExternal(target).catch((error: Error) => {
     console.error('Could not open browser link', error);
   });
 }

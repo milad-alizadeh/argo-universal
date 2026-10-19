@@ -20,5 +20,5 @@ const installedLaunch = (
   deps.installedAgents.launch(
     requireInstalledAgent(deps.installedAgents, subject.agent),
     subject.projectId,
-    deps.sessionCommandSignal ?? new AbortController().signal,
+    { signal: deps.sessionCommandSignal ?? new AbortController().signal },
   );

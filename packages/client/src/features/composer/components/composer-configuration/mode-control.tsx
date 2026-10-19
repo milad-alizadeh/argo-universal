@@ -74,10 +74,11 @@ function modeIcon(
   return configurationIcon(current ? choiceMetadata(current)?.icon : undefined);
 }
 
-function ModeSheet(
-  props: ModeControlProps & { mode: Mode; wide: boolean },
-): React.JSX.Element {
+type ModeSheetProps = ModeControlProps & { mode: Mode; wide: boolean };
+
+function ModeSheet(props: ModeSheetProps): React.JSX.Element {
   const [open, setOpen] = useComposerOverlay(props.disabled);
+
   return (
     <Sheet
       open={open}
@@ -86,9 +87,18 @@ function ModeSheet(
       trigger={modeTrigger(props)}
       contentScrolls
     >
-      <Sheet.Page name="mode" title="Mode">
-        <ModeContents {...props} close={() => setOpen(false)} />
-      </Sheet.Page>
+      {modePage(props, () => setOpen(false))}
     </Sheet>
+  );
+}
+
+function modePage(
+  props: ModeControlProps & { mode: Mode; wide: boolean },
+  close: () => void,
+): React.JSX.Element {
+  return (
+    <Sheet.Page name="mode" title="Mode">
+      <ModeContents {...props} close={close} />
+    </Sheet.Page>
   );
 }

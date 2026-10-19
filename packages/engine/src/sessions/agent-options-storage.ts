@@ -1,11 +1,11 @@
 import {
   AgentConfiguration,
   type SessionAgentOptionsInput,
-  type SessionConfigOption,
+  SessionConfigOption,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agentOptions, agentServers, project } from '@repo/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, type SQL } from 'drizzle-orm';
 import {
   readQueuedJobs,
   type StorageTransaction,
@@ -15,9 +15,10 @@ import {
 import { isOfferedConfigChoice } from './admission/config-admission';
 
 type Stored = AgentConfiguration & { revision: number };
+
 type Sources = { database: Database; writer?: WriterActorRef };
 
-const ownerWhere = (owner: SessionAgentOptionsInput) =>
+const ownerWhere = (owner: SessionAgentOptionsInput): SQL | undefined =>
   and(
     eq(agentOptions.agent, owner.agent),
     eq(agentOptions.projectId, owner.projectId),
@@ -41,10 +42,13 @@ export function readAgentConfiguration(
     .from(agentOptions)
     .where(ownerWhere(owner))
     .get();
+
   let current = row && decode(row);
+
   for (const job of readQueuedJobs(sources.writer))
     if (job instanceof AgentOptionsJob && job.owns(owner))
       current = job.project(current);
+
   return current;
 }
 
@@ -53,8 +57,10 @@ export class AgentOptionsJob implements WriterJob {
   public constructor(
     public readonly owner: SessionAgentOptionsInput,
     private readonly options: SessionConfigOption[],
-    private readonly authoritative: boolean,
-    private readonly expectedRevision?: number,
+    private readonly update: {
+      authoritative: boolean;
+      expectedRevision?: number;
+    },
   ) {}
 
   public describe(): string {
@@ -70,24 +76,26 @@ export class AgentOptionsJob implements WriterJob {
 
   public project(previous: Stored | undefined): Stored | undefined {
     if (
-      this.expectedRevision !== undefined &&
-      (previous?.revision ?? 0) !== this.expectedRevision
+      this.update.expectedRevision !== undefined &&
+      (previous?.revision ?? 0) !== this.update.expectedRevision
     )
       return previous;
+
     return {
       ...this.owner,
-      configOptions: this.authoritative
+      configOptions: this.update.authoritative
         ? this.options
         : this.options.map((option) => {
             const value = previous?.configOptions.find(
               (saved) => saved.configId === option.configId,
             )?.currentValue;
+
             return value !== undefined &&
               isOfferedConfigChoice(this.options, {
                 configId: option.configId,
                 value,
               })
-              ? ({ ...option, currentValue: value } as SessionConfigOption)
+              ? SessionConfigOption.parse({ ...option, currentValue: value })
               : option;
           }),
       revision: (previous?.revision ?? 0) + 1,
@@ -109,12 +117,15 @@ export class AgentOptionsJob implements WriterJob {
         .get()
     )
       return;
+
     const row = transaction
       .select()
       .from(agentOptions)
       .where(ownerWhere(this.owner))
       .get();
+
     const next = this.project(row && decode(row));
+
     if (!next || next.revision === row?.revision) return;
     transaction
       .insert(agentOptions)

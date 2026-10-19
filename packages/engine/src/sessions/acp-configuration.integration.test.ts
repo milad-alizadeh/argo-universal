@@ -871,6 +871,7 @@ it.each(appFixtureAgentIds)(
 
 it('ignores a cached default removed by the selected model before the first prompt', async () => {
   const requests: SetSessionConfigOptionRequest[] = [];
+
   const changed = acpConfiguration
     .filter((option) => option.id !== 'fast')
     .map((option) =>
@@ -878,6 +879,7 @@ it('ignores a cached default removed by the selected model before the first prom
         ? { ...option, currentValue: 'small' }
         : option,
     );
+
   const host = await startAcpEngine({
     steps: [],
     configOptions: acpConfiguration,
@@ -887,6 +889,7 @@ it('ignores a cached default removed by the selected model before the first prom
       ],
     },
   });
+
   await expect(
     host.caller.session.new({
       ...emptySessionInput,

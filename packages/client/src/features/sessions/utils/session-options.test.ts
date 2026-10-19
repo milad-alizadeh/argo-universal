@@ -2,6 +2,7 @@ import type { SessionConfigOption } from '@repo/contracts';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { sessionOptions } from './session-options';
+
 const agent = 'agent-one';
 
 const projectId = 'project-a';

@@ -6,7 +6,7 @@ import { usePressedRowHandlers } from '../../../row-highlights';
 import { cn } from '../../../utils';
 import { linkPress } from './list-item-link-press';
 import type { ListItemProps } from './list-item-props';
-import { RadioPress } from './list-item-radio';
+import { RadioRow } from './list-item-radio';
 import { ItemContentSlots } from './list-item-slots';
 import { itemPress } from './list-item-styles';
 import { useRowFocus } from './use-row-focus';
@@ -144,11 +144,7 @@ export function ItemPress(props: DrawingProps): ReactElement {
   const focus = useRowFocus();
 
   if (Platform.OS === 'web' && props.accessibilityRole === 'radio')
-    return (
-      <RadioPress row={props} className={press.className}>
-        <ItemContentSlots {...props} />
-      </RadioPress>
-    );
+    return <RadioRow row={props} className={press.className} />;
 
   return (
     <Pressable

@@ -171,6 +171,8 @@
   /* The glass sidebar, the Composer and every card, popover and menu. */
   --radius-2xl: calc(var(--radius) + 8px);
   --blur-glass: 28px;
+  --blur-tray: 3px;
+  --radius-inherit: inherit;
   /* Sheets, dialogs and alerts on a wide window. */
   --radius-sheet: 28px;
   /* A phone's grouped card: iOS's inset-grouped section (26) and Material's

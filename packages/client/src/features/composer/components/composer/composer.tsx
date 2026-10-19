@@ -35,7 +35,7 @@ function useComposerClass(): string {
 }
 
 const requestTrayClass =
-  'self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass overflow-hidden web:backdrop-blur-[3px] web:backdrop-saturate-110';
+  'self-stretch mx-1.75 -mb-3 pb-3 rounded-t-xl bg-content/80 shadow-glass overflow-hidden web:backdrop-blur-tray web:backdrop-saturate-110';
 
 const requestClass = (wide: boolean, filled: boolean): string =>
   cn(wide && requestTrayClass, filled && filledClass);
@@ -73,7 +73,5 @@ function hasComposerRequest({ props }: ComposerLayout): boolean {
 }
 
 function ComposerRequestSurface(layout: ComposerLayout): React.ReactNode {
-  const content = composerRequestContent(layout);
-
-  return content;
+  return composerRequestContent(layout);
 }

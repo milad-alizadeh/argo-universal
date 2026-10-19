@@ -12,7 +12,6 @@ import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import { ConnectionAuthentication } from '../../auth/authenticate';
-import { vendorInitialization } from '../../vendor';
 import { authenticationMethods } from '../auth-methods';
 import {
   drainProcessExit,
@@ -33,6 +32,7 @@ import { sessionCapabilities, openProtocolSession } from './open-session';
 import { cancelledElicitation, cancelledPermission } from './refusals';
 import { createAcpResponseReaders } from './response-readers';
 import { SubagentRoutes } from './subagent-routing';
+import { vendorInitialization } from './vendor-initialization';
 
 type AgentSession = {
   destination: AcpSessionDestination;
@@ -156,13 +156,19 @@ export class AcpConnection {
       this.readers,
     ).catch((cause: unknown) => this.rejectOpening(cause));
 
+    this.acceptInitialization(launch, initialization);
+
+    return this;
+  }
+  private acceptInitialization(
+    launch: AgentLaunch,
+    initialization: InitializeResponse,
+  ): void {
     this.initialized = {
       initialization: vendorInitialization(launch, initialization),
       launch,
     };
     this.prepareAuthentication(launch);
-
-    return this;
   }
   // A stopping connection hands out no authentication, so nothing starts after shutdown.
   public getAuthentication(): ConnectionAuthentication | undefined {

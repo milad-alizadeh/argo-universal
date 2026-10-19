@@ -34,8 +34,10 @@ export type InstalledAgents = {
   launch: (
     agent: InstalledAgent,
     projectId: string,
-    signal: AbortSignal,
-    onInstalling?: (progress?: number) => void,
+    options: {
+      signal: AbortSignal;
+      onInstalling?: (progress?: number) => void;
+    },
   ) => Promise<DeferredAgentLaunch>;
 };
 
@@ -57,8 +59,8 @@ export const createInstalledAgents = (
       ? { installed: true, agent }
       : { installed: false, message: `Agent "${id}" is not installed.` };
   },
-  launch: (agent, projectId, signal, onInstalling) =>
-    launchInstalledAgent(input, { agent, projectId, signal, onInstalling }),
+  launch: (agent, projectId, options) =>
+    launchInstalledAgent(input, { agent, projectId, ...options }),
 });
 
 // New Session, Send, open, Retry and sign-in admit only an Installed Agent, and all show this one open failure otherwise.
@@ -128,22 +130,29 @@ const commandInput = async (
   registry: input.registry,
   home: input.home,
   id: agent.id,
-  ports: {
-    runTool: (tool) => {
-      if (tool.args.includes('install')) onInstalling?.();
-      return input.ports.runTool(tool);
-    },
-    download: async (url, signal) => {
-      onInstalling?.();
-      const bytes = await input.ports.download(url, signal, onInstalling);
-      // Extraction and verification have no measurable total.
-      onInstalling?.();
-      return bytes;
-    },
-  },
+  ports: installationPorts(input.ports, onInstalling),
   shellEnv: definedEnvironment(await shellEnvironment(cwd)),
   signal,
   isDirectoryInUse: input.resources.isDirectoryInUse,
+});
+
+const installationPorts = (
+  ports: InstallPorts,
+  onInstalling?: (progress?: number) => void,
+): InstallPorts => ({
+  runTool: (tool) => {
+    if (tool.args.includes('install')) onInstalling?.();
+
+    return ports.runTool(tool);
+  },
+  download: async (url, signal) => {
+    onInstalling?.();
+    const bytes = await ports.download(url, signal, onInstalling);
+    // Extraction and verification have no measurable total.
+    onInstalling?.();
+
+    return bytes;
+  },
 });
 
 // The row's env goes last, over the Registry distribution's and the vendor module's.

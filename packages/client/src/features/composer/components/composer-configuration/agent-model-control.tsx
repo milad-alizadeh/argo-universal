@@ -46,9 +46,11 @@ export function ComposerAgentModelControl(
 function nothingToConfigure(
   configuration: ComposerConfigurationProps,
 ): boolean {
-  if (configuration.agent || configuration.agentChoices) return false;
+  if (configuration.agent) return false;
 
-  return !configuration.agentId || !selection(configuration, 'model');
+  if (configuration.agentChoices) return false;
+
+  return !hasModel(configuration);
 }
 
 // Desktop opens the menu as a popover; everything else opens the Sheet.
@@ -128,13 +130,14 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
 
 // Keep the Agent identity stable while its settings load inside the picker.
 function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
-  return props.wide ? (
-    props.configuration.agent ? (
-      <AgentIcon agent={props.configuration.agent} />
-    ) : (
-      <Icon fitArtwork name="agent" role={{ compact: 'body', wide: 'row' }} />
-    )
-  ) : undefined;
+  if (!props.wide) return undefined;
+
+  if (props.configuration.agent)
+    return <AgentIcon agent={props.configuration.agent} />;
+
+  return (
+    <Icon fitArtwork name="agent" role={{ compact: 'body', wide: 'row' }} />
+  );
 }
 
 // Unlike Configure's Agent row, the trigger shows no id for an Agent that is not installed.
@@ -144,4 +147,8 @@ function triggerLabel({ configuration }: TriggerProps): string {
     agentName(configuration.agent) ||
     'Choose Agent'
   );
+}
+
+function hasModel(configuration: ComposerConfigurationProps): boolean {
+  return !!configuration.agentId && !!selection(configuration, 'model');
 }

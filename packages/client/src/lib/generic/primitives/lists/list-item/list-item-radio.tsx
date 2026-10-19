@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../../utils';
 import type { DrawingProps } from './list-item-press';
+import { ItemContentSlots } from './list-item-slots';
 import { useRowFocus } from './use-row-focus';
 
 // The row's press class comes from the row, so a radio row draws like its siblings.
@@ -38,4 +39,18 @@ function radioProps(
     className: cn('flex w-full text-left', className),
     'data-testid': row.testID,
   };
+}
+
+export function RadioRow({
+  row,
+  className,
+}: {
+  row: DrawingProps;
+  className?: string;
+}): ReactElement {
+  return (
+    <RadioPress row={row} className={className}>
+      <ItemContentSlots {...row} />
+    </RadioPress>
+  );
 }

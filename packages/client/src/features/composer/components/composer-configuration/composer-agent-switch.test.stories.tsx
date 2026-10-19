@@ -12,16 +12,24 @@ import {
 } from './picker-story-fixtures';
 
 const first = configuration.agent;
+
 if (!first) throw new Error('Recorded catalog needs an installed Agent.');
+
 const second = { ...first, id: 'second-agent', name: 'Second Agent' };
+
 const agents = [first, second];
+
 const addAgents = fn();
+
+const loadingLabel = 'Loading configuration…';
 
 const meta = {
   ...pickerStoryMeta,
   title: 'Tests/ComposerAgentSwitch',
 } satisfies Meta<typeof ComposerAgentModelControl>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 let receiveConfiguration = (): void => {};
@@ -30,11 +38,13 @@ function SwitchingAgent(): React.JSX.Element {
   const [agent, setAgent] = useState(first);
   const [loaded, setLoaded] = useState(true);
   useEffect(() => {
-    receiveConfiguration = () => setLoaded(true);
-    return () => {
-      receiveConfiguration = () => {};
+    receiveConfiguration = (): void => setLoaded(true);
+
+    return (): void => {
+      receiveConfiguration = (): void => {};
     };
   }, []);
+
   return (
     <View className="p-4">
       <ComposerAgentModelControl
@@ -75,9 +85,7 @@ export const SwitchKeepsPickerOpenWhileLoading: Story = {
     );
     await waitFor(() => expect(choices).not.toBeInTheDocument());
     await expect(picker).toHaveAttribute('data-state', 'open');
-    await expect(
-      within(picker).getByText('Loading configuration…'),
-    ).toBeVisible();
+    await expect(within(picker).getByText(loadingLabel)).toBeVisible();
     await expect(
       within(picker).queryByRole('button', { name: /^Model,/ }),
     ).not.toBeInTheDocument();
@@ -93,7 +101,7 @@ export const SwitchKeepsPickerOpenWhileLoading: Story = {
     );
     await expect(picker).toHaveAttribute('data-state', 'open');
     await expect(
-      within(picker).queryByText('Loading configuration…'),
+      within(picker).queryByText(loadingLabel),
     ).not.toBeInTheDocument();
   },
 };
@@ -111,16 +119,18 @@ export const SavedOptionsStayVisibleDuringRefresh: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
+
     const picker = await within(document.body).findByRole('dialog', {
       name: agentModelLabel,
     });
+
     await waitFor(() =>
       expect(
         within(picker).getByRole('button', { name: /^Model,/ }),
       ).toBeVisible(),
     );
     await expect(
-      within(picker).queryByText('Loading configuration…'),
+      within(picker).queryByText(loadingLabel),
     ).not.toBeInTheDocument();
   },
 };

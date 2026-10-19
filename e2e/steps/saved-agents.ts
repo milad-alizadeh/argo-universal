@@ -36,12 +36,7 @@ Then(
     await expect(
       page.getByRole('button', { name: 'Claude', exact: true }),
     ).toHaveCount(0);
-    await page.keyboard.press('Escape');
-    await expect(
-      page.getByRole('dialog', { name: 'Select Agent' }),
-    ).toBeHidden();
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog', { name: optionsLabel })).toBeHidden();
+    await closeAgentPicker(page);
   },
 );
 
@@ -102,3 +97,12 @@ Then('the Composer shows Agent options', async ({ page }) => {
     page.getByRole('button', { name: optionsLabel }),
   ).not.toContainText('Loading…');
 });
+
+async function closeAgentPicker(
+  page: Parameters<typeof readAgents>[0],
+): Promise<void> {
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: optionsLabel })).toBeHidden();
+}

@@ -14,7 +14,7 @@ When(
     // Replace only the OS browser boundary; the real window handlers still run.
     await app.desktop.application.evaluate(({ shell }) => {
       globalThis.desktopBrowserLinks = [];
-      shell.openExternal = async (url) => {
+      shell.openExternal = async (url): Promise<void> => {
         globalThis.desktopBrowserLinks.push(url);
       };
     });

@@ -100,7 +100,7 @@ export class AcpSessionLifetime {
     return installedAgents.launch(
       requireInstalledAgent(installedAgents, session.agent),
       session.projectId,
-      this.controller.signal,
+      { signal: this.controller.signal },
     );
   }
   private openLease(

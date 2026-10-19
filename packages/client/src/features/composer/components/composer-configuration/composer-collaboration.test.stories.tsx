@@ -10,6 +10,7 @@ import {
 import { configuration } from './picker-story-fixtures';
 
 const onConfigChange = fn();
+
 const configured = {
   ...configuration,
   onConfigChange,
@@ -35,21 +36,24 @@ const configured = {
     },
   ],
 };
+
 const meta = {
   title: 'Tests/ComposerCollaboration',
   component: ComposerModeControl,
   args: { configuration: configured, disabled: false },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View>
       <ComposerAgentModelControl {...args} />
       <ComposerModeControl {...args} />
     </View>
   ),
-  beforeEach: () => {
+  beforeEach: (): void => {
     onConfigChange.mockClear();
   },
 } satisfies Meta<typeof ComposerModeControl>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function collaboration(width: number): Story {
@@ -73,8 +77,11 @@ function collaboration(width: number): Story {
     },
   };
 }
+
 export const PermissionMenuWide = collaboration(layoutWidths.wide);
+
 export const PermissionMenuPhone = collaboration(layoutWidths.phone);
+
 export const ModelMenuExcludesCollaboration: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);

@@ -9,18 +9,31 @@ const rectangle = z.object({
   width: z.number().int().positive(),
   height: z.number().int().positive(),
 });
+
 const windowState = z.object({
   bounds: rectangle,
   maximized: z.boolean(),
 });
+
 export type WindowState = z.infer<typeof windowState>;
+
+const defaultWidth = 1400;
+
+const defaultHeight = 900;
+
+const minimumWidth = 600;
+
+const minimumHeight = 300;
+
+const fileError = z.object({ code: z.string() });
 
 export function readWindowState(file: string): WindowState | undefined {
   try {
     return windowState.parse(JSON.parse(readFileSync(file, 'utf8')));
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT')
-      console.warn('Could not restore window bounds', error);
+    if (fileError.safeParse(error).data?.code !== 'ENOENT')
+      console.error('Could not restore window bounds', error);
+
     return undefined;
   }
 }
@@ -32,7 +45,7 @@ export function saveWindowState(file: string, state: WindowState): void {
     writeFileSync(temporary, JSON.stringify(state));
     renameSync(temporary, file);
   } catch (error) {
-    console.warn('Could not save window bounds', error);
+    console.error('Could not save window bounds', error);
   }
 }
 
@@ -41,8 +54,16 @@ export function windowBounds(
   saved: Rectangle | undefined,
   area: Rectangle,
 ): Rectangle {
-  const width = Math.min(area.width, Math.max(600, saved?.width ?? 1400));
-  const height = Math.min(area.height, Math.max(300, saved?.height ?? 900));
+  const width = Math.min(
+    area.width,
+    Math.max(minimumWidth, saved?.width ?? defaultWidth),
+  );
+
+  const height = Math.min(
+    area.height,
+    Math.max(minimumHeight, saved?.height ?? defaultHeight),
+  );
+
   return {
     width,
     height,

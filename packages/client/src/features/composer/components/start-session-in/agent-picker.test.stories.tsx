@@ -6,8 +6,11 @@ import { settleViewport } from '#lib/generic/settle-viewport';
 import { ComposerAgentModelControl } from '../composer-configuration/composer-configuration';
 
 const agents = newSessionCatalogs.bothAvailable;
+
 const onAgentChange = fn();
+
 const onAddAgents = fn();
+
 const meta = {
   title: 'Tests/New Session Agent picker',
   component: ComposerAgentModelControl,
@@ -22,7 +25,9 @@ const meta = {
     },
   },
 } satisfies Meta<typeof ComposerAgentModelControl>;
+
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 function selectAgent(width: number): Story {
@@ -31,6 +36,7 @@ function selectAgent(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       const first = agents[0],
         second = agents[1];
+
       if (!first || !second) throw new Error('Picker fixture needs two Agents');
       await userEvent.click(
         canvas.getByRole('button', { name: 'Agent and model' }),
@@ -54,6 +60,7 @@ function selectAgent(width: number): Story {
     },
   };
 }
+
 function addAgents(width: number): Story {
   return {
     args: {
@@ -83,7 +90,11 @@ function addAgents(width: number): Story {
     },
   };
 }
+
 export const SelectWide = selectAgent(layoutWidths.wide);
+
 export const SelectPhone = selectAgent(layoutWidths.phone);
+
 export const AddWithZeroAgentsWide = addAgents(layoutWidths.wide);
+
 export const AddWithZeroAgentsPhone = addAgents(layoutWidths.phone);

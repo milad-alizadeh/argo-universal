@@ -20,10 +20,9 @@ export const openedSession = ({
 });
 
 // Server options and unsent choices; the Feed is read only after Send.
-export function useOpenedConfiguration(opened: OpenedSession): {
-  configuration: NewSessionWiring['configuration'];
-  discovery: NewSessionWiring['discovery'];
-} {
+export function useOpenedConfiguration(
+  opened: OpenedSession,
+): Pick<NewSessionWiring, 'configuration' | 'discovery'> {
   const { view } = useSessionFeed(opened.session.openSessionId);
   const choices = useOptionChoices(opened);
   useShowsPrompt(opened, view?.items.length);
@@ -31,10 +30,14 @@ export function useOpenedConfiguration(opened: OpenedSession): {
 
   return {
     discovery: choices.discovery,
-    configuration: {
-      configOptions: choices.configOptions,
-      opening: choices.loading,
-      onConfigChange: choices.pick,
-    },
+    configuration: configurationOf(choices),
   };
 }
+
+const configurationOf = (
+  choices: ReturnType<typeof useOptionChoices>,
+): NewSessionWiring['configuration'] => ({
+  configOptions: choices.configOptions,
+  opening: choices.loading,
+  onConfigChange: choices.pick,
+});

@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
-import { Icon } from '#primitives/content/icon';
 import { ConfigurationCombobox } from './configuration-combobox';
+import { ConfigurationRowIcon } from './configuration-row-icon';
 import type { ComposerConfigurationProps } from './configuration-types';
 import { otherSelections, isFastMode } from './configuration-values';
 
@@ -16,14 +16,14 @@ export function optionDrills(props: OptionsProps): ReactElement[] {
       configuration={props.configuration}
       option={option}
       label={option.name}
-      leading={
-        <Icon
-          fitArtwork
-          name={isFastMode(option) ? 'fast-mode' : 'filters'}
-          role={{ compact: 'body', wide: 'row' }}
-        />
-      }
+      leading={optionIcon(option)}
       title={option.name}
     />
   ));
+}
+
+function optionIcon(option: Parameters<typeof isFastMode>[0]): ReactElement {
+  return (
+    <ConfigurationRowIcon name={isFastMode(option) ? 'fast-mode' : 'filters'} />
+  );
 }

@@ -1,17 +1,37 @@
 const archiveLimit = 268_435_456;
 
+const percentScale = 100;
+
 class ArchiveChunks {
   private readonly chunks: Uint8Array[] = [];
   private size = 0;
+  private reported = -1;
+  public constructor(
+    private readonly total: number,
+    private readonly progress: (fraction: number) => void = (): void => {},
+  ) {}
   public add(chunk: Uint8Array): void {
     this.size += chunk.length;
 
     if (this.size > archiveLimit)
       throw new Error('Agent download exceeds 256 MiB');
     this.chunks.push(chunk);
+    this.reportProgress();
   }
   public bytes(): Uint8Array {
     return Buffer.concat(this.chunks);
+  }
+  private reportProgress(): void {
+    const percent = Math.min(
+      percentScale,
+      Math.floor((this.size / this.total) * percentScale),
+    );
+
+    const measurable = this.total > 0;
+
+    if (!measurable || percent === this.reported) return;
+    this.reported = percent;
+    this.progress(percent / percentScale);
   }
 }
 
@@ -21,27 +41,26 @@ const readArchiveBody = async (
   progress?: (fraction: number) => void,
 ): Promise<Uint8Array> => {
   const reader = body.getReader(),
-    chunks = new ArchiveChunks();
-  let received = 0;
-  let reported = -1;
+    chunks = new ArchiveChunks(total, progress);
 
   try {
-    for (;;) {
-      const next = await reader.read();
-
-      if (next.done) return chunks.bytes();
-      chunks.add(next.value);
-      received += next.value.length;
-      const percent = Math.min(100, Math.floor((received / total) * 100));
-      if (total > 0 && percent !== reported) {
-        reported = percent;
-        progress?.(percent / 100);
-      }
-    }
+    return await readChunks(reader, chunks);
   } finally {
     await reader.cancel();
   }
 };
+
+async function readChunks(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  chunks: ArchiveChunks,
+): Promise<Uint8Array> {
+  for (;;) {
+    const next = await reader.read();
+
+    if (next.done) return chunks.bytes();
+    chunks.add(next.value);
+  }
+}
 
 export const downloadAgentArchive = async (
   url: string,
@@ -55,11 +74,10 @@ export const downloadAgentArchive = async (
 
   if (!response.body) throw new Error('Agent download is empty');
 
-  return readArchiveBody(
-    response.body,
-    response.headers.get('content-encoding')
-      ? 0
-      : Number(response.headers.get('content-length')),
-    progress,
-  );
+  return readArchiveBody(response.body, archiveLength(response), progress);
 };
+
+const archiveLength = (response: Response): number =>
+  response.headers.get('content-encoding')
+    ? 0
+    : Number(response.headers.get('content-length'));

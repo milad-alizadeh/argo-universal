@@ -9,8 +9,6 @@ import {
   StartSessionIn,
 } from '#features/composer';
 import {
-  SessionCallout,
-  ConfigurationStatus,
   type SessionCalloutProps,
   SessionHeaderBar,
   type StartingFeed,
@@ -22,7 +20,7 @@ import { useContentWide } from '#lib/product/content-layout';
 import { Screen } from '#lib/product/screen/screen';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
-import { composerDraftProps } from './new-session-draft';
+import { promptComposerProps } from './new-session-composer-props';
 import { NewSessionFeed } from './new-session-feed';
 
 export interface ReadySessionNewViewProps {
@@ -99,42 +97,6 @@ function NewSessionStartIn(props: ReadySessionNewViewProps): React.JSX.Element {
 function PromptComposer(props: ReadySessionNewViewProps): React.JSX.Element {
   return <Composer {...promptComposerProps(props)} />;
 }
-
-// A Send held by a failed open presents a phone's dismissed sheet again.
-const calloutOf = ({
-  callout,
-  opening,
-}: ReadySessionNewViewProps): React.ReactNode =>
-  callout && <SessionCallout key={String(opening)} {...callout} />;
-
-const promptComposerProps = (
-  props: ReadySessionNewViewProps,
-): ComposerProps => ({
-  ...composerDraftProps(props),
-  onAttachImages: props.onAttachImages,
-  onAttachFiles: props.onAttachFiles,
-  onDropFiles: props.onDropFiles,
-  onSend: props.onSend,
-  configuration: {
-    ...props.configuration,
-    agentChoices: props.opening
-      ? undefined
-      : {
-          agents: props.agents,
-          onChange: props.onAgentChange,
-          onAdd: props.onAddAgents,
-        },
-    status:
-      props.calloutInConfiguration && props.callout ? (
-        <ConfigurationStatus {...props.callout} />
-      ) : undefined,
-  },
-  placeholder: '',
-  sendable: props.canOpen,
-  callout: props.calloutInConfiguration ? undefined : calloutOf(props),
-  error: props.attachmentError,
-  errorKey: props.attachmentErrorKey,
-});
 
 function NewSessionComposer(
   props: ReadySessionNewViewProps,

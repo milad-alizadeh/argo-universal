@@ -35,4 +35,5 @@ export const AgentOptionsUpdate = z.strictObject({
   stage: z.enum(['installing', 'loading', 'ready']).optional(),
   progress: z.number().min(0).max(1).optional(),
 });
+
 export type AgentOptionsUpdate = z.infer<typeof AgentOptionsUpdate>;

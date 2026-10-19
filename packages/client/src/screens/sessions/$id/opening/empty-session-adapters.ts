@@ -18,6 +18,7 @@ export function useEmptySessionPorts(
   clearDraft: () => void,
 ): EmptySessionPorts {
   const client = useTRPCClient();
+
   return {
     open: (input) => client.session.new.mutate(input),
     // The shown New Session becomes the Session by its params alone: the same screen, no new page, and its Project left behind.

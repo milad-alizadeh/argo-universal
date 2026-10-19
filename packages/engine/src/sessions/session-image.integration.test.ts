@@ -102,6 +102,7 @@ it.each([
   async ({ agent, accepts }) => {
     const requests: PromptRequest[] = [];
     const received = Promise.withResolvers<PromptRequest>();
+
     const host = await startAcpEngine(
       {
         steps: [],
@@ -121,10 +122,12 @@ it.each([
       undefined,
       agent,
     );
+
     const created = await host.caller.session.new({
       ...emptySessionInput,
       agent,
     });
+
     const blob = await uploadBlob(
       {
         databaseWriter: host.databaseWriter,
@@ -134,18 +137,29 @@ it.each([
         type: 'image/png',
       }),
     );
+
     const result = host.caller.session.prompt({
       ...created,
       prompt: [{ type: 'image', mimeType: 'image/png', blob }],
     });
-    if (!accepts) {
-      await expect(result).rejects.toThrow('does not support image');
-      expect(requests).toEqual([]);
-      return;
-    }
-    await result;
-    expect((await received.promise).prompt).toEqual([
-      { type: 'image', mimeType: 'image/png', data: 'iVBORwECA/8=' },
-    ]);
+
+    const outcome = await result.then(
+      () => 'sent',
+      (error: Error) => error.message,
+    );
+
+    const expectedOutcome = accepts
+      ? 'sent'
+      : 'This Agent does not support image prompts';
+
+    expect(outcome).toBe(expectedOutcome);
+
+    if (accepts) await received.promise;
+
+    const expected = accepts
+      ? [[{ type: 'image', mimeType: 'image/png', data: 'iVBORwECA/8=' }]]
+      : [];
+
+    expect(requests.map((request) => request.prompt)).toEqual(expected);
   },
 );

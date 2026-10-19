@@ -70,7 +70,7 @@ const pressLayouts = {
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
 };
 
-const pressFocus = 'web:select-none web:rounded-[inherit]';
+const pressFocus = 'web:select-none web:rounded-inherit';
 
 // Pressed (4%) follows hover (2%) on the web, so a held row is darker than a hovered one.
 const pressTints = cn(
