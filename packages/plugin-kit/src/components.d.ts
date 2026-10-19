@@ -13,6 +13,8 @@ export const ScrollView: PluginComponents['ScrollView'];
 
 export const Page: PluginComponents['Page'];
 
+export const ListDetail: PluginComponents['ListDetail'];
+
 export const Detail: PluginComponents['Detail'];
 
 export const Metadata: PluginComponents['Metadata'] & {

@@ -1,4 +1,5 @@
 import { List, ListItem, Label, Pill, useState } from '@argo/plugin-kit';
+import { registerIssues } from './issues.js';
 
 const builds = [
   { id: 'web', title: 'Deploy web' },
@@ -52,4 +53,5 @@ function HelloListPage() {
 
 export function register(argo) {
   argo.pages.register('/lists', HelloListPage);
+  registerIssues(argo.pages);
 }

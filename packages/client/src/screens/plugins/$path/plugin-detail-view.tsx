@@ -1,3 +1,4 @@
+import { isRootOnly } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode, PluginViewId } from '@repo/contracts/plugins/wire';
 import type * as React from 'react';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
@@ -39,8 +40,9 @@ export function PluginDetailView(
   );
 }
 
+// A root-only part, Page or ListDetail, draws its own screen and header.
 function ownsPage(root: WireNode | null): boolean {
-  return root?.type === 'Page';
+  return root ? isRootOnly(root) : false;
 }
 
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {

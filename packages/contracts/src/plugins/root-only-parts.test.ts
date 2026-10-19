@@ -53,3 +53,30 @@ describe('a root-only part', () => {
     },
   );
 });
+
+const listDetail = (slots: WireNode['slots']): WireNode => ({
+  type: 'ListDetail',
+  key: 'issues',
+  props: {},
+  children: [],
+  slots,
+});
+
+describe("a root-only part in a root part's slot", () => {
+  it('stays where the root names it, as the detail Page', () => {
+    const root = listDetail({ detail: [page] });
+
+    expect(prepareWireTree(root, currentPartVersions).slots.detail).toEqual([
+      page,
+    ]);
+  });
+
+  it('is refused as the root itself when ListDetail is nested', () => {
+    const root = host('Stack', { direction: 'column' });
+    const nested = { ...root, children: [listDetail({ detail: [page] })] };
+
+    expect(
+      prepareWireTree(nested, currentPartVersions).children.at(0)?.type,
+    ).toBe('Text');
+  });
+});

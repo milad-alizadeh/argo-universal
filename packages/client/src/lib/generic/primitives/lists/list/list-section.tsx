@@ -2,6 +2,7 @@ import {
   Children,
   useContext,
   useId,
+  useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -10,6 +11,7 @@ import { FooterProvider } from '#primitives/fields/field-description';
 import { flattenedChildren } from '../../../flattened-children';
 import { ListContext, listPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
+import { createRowGroupEnds } from '../../../row-group-ends';
 import { PressedRowProvider } from '../../../row-highlights';
 import type { ListSectionProps } from './list-props';
 import { hasSectionHeader, SectionHeader } from './list-section-parts';
@@ -33,7 +35,13 @@ function Header(props: ListSectionProps): ReactNode {
 function Rows(props: ListSectionProps): ReactNode {
   const children = flattenedChildren(props.children);
 
-  const section = { ...useContext(ListContext), ...selectionContext(props) };
+  const [groupEnds] = useState(createRowGroupEnds);
+
+  const section = {
+    ...useContext(ListContext),
+    ...selectionContext(props),
+    groupEnds,
+  };
 
   if (props.isExpanded === false) return null;
 

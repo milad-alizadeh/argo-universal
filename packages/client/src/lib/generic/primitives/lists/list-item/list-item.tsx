@@ -1,11 +1,12 @@
 import { useContext, type ReactElement, type ReactNode } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { ProgressBar } from '#primitives/status/progress-bar';
-import { ListContext } from '../../../list-context';
+import { ListContext, type ListPosition } from '../../../list-context';
 import { ListFooter } from '../../../list-footer';
 import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useSeparatorCovered } from '../../../row-highlights';
+import { useGroupPosition } from './list-item-group';
 import { hasLeading } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
@@ -47,13 +48,35 @@ function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
 }
 
 export function ListItemFrame(props: DrawingProps): ReactElement {
+  const list = useContext(ListContext);
+  const position = useGroupPosition(props.description);
+
   return (
     <InListItem value>
-      <ItemSurface {...props} />
-      {props.description && Platform.OS !== 'android' ? (
-        <ListFooter text={props.description} />
-      ) : null}
+      <ListContext value={{ ...list, position }}>
+        <ItemSurface {...props} />
+      </ListContext>
+      <RowFooter description={props.description} position={list.position} />
     </InListItem>
+  );
+}
+
+const sectionEnds = new Set<ListPosition>(['last', 'only']);
+
+const footerGap = (position: ListPosition): string | undefined =>
+  sectionEnds.has(position) ? undefined : 'mb-4';
+
+// A row's description closes its group; a section's gap separates it from the group after it.
+function RowFooter(props: {
+  description?: string;
+  position: ListPosition;
+}): ReactNode {
+  if (!props.description || Platform.OS === 'android') return null;
+
+  return (
+    <View className={footerGap(props.position)}>
+      <ListFooter text={props.description} />
+    </View>
   );
 }
 

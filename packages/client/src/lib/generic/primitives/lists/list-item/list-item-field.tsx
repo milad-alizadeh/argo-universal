@@ -1,6 +1,7 @@
-import type { ReactElement, ReactNode } from 'react';
+import { useContext, type ReactElement, type ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/content/text';
+import { ListContext } from '../../../list-context';
 import { ListItem, ListItemFrame } from './list-item';
 
 export interface ListItemFieldProps {
@@ -15,14 +16,15 @@ export interface ListItemFieldProps {
 type FieldProps = ListItemFieldProps & { label: string };
 
 const Field = Platform.select({
-  web: StackedField,
+  web: WebField,
   android: UnderField,
   default: BesideField,
 });
 
 /*
  * A read-only label/value field, as in a detail view's Metadata.
- * Web stacks the label above the value, iOS sets them side by side (LabeledContent), and Android puts the value under the label.
+ * Web stacks the label above the value, except in a grouped List's card; iOS sets them side by side (LabeledContent),
+ * and Android puts the value under the label.
  */
 export function ListItemField(props: ListItemFieldProps): ReactElement {
   return (
@@ -30,6 +32,17 @@ export function ListItemField(props: ListItemFieldProps): ReactElement {
       {...props}
       label={props.accessibilityLabel ?? `${props.title}, ${props.valueLabel}`}
     />
+  );
+}
+
+// A grouped List, such as a Settings page, draws each field as a row of its card.
+function WebField(props: FieldProps): ReactElement {
+  const { appearance } = useContext(ListContext);
+
+  return appearance === 'grouped' ? (
+    <BesideField {...props} />
+  ) : (
+    <StackedField {...props} />
   );
 }
 
@@ -79,6 +92,7 @@ function BesideContent(props: FieldProps): ReactElement {
   return (
     <View
       accessible
+      role="group"
       accessibilityLabel={props.label}
       className="min-w-0 flex-1 flex-row items-center gap-4"
     >
