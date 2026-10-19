@@ -11,7 +11,6 @@ export type { WirePartDefinition } from './wire-parts';
 export { wireParts, listPartNames } from './wire-parts';
 
 export {
-  listProps,
   contentListProps,
   listSectionProps,
   listItemProps,

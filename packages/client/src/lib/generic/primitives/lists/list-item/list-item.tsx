@@ -7,7 +7,7 @@ import { InListItem } from '../../../list-item-control-context';
 import { SkeletonContent, SkeletonMark } from '../../../list-skeleton';
 import { useSeparatorCovered } from '../../../row-highlights';
 import { useSelectedHighlight } from './list-item-highlight';
-import { hasLeading } from './list-item-parts';
+import { hasLeading, LinkAccessory } from './list-item-parts';
 import { placedContent } from './list-item-placement';
 import { ItemPress, type DrawingProps } from './list-item-press';
 import type { ListItemProps } from './list-item-props';
@@ -90,15 +90,26 @@ export function ListItem(props: ListItemProps): ReactElement {
   return <ChoosingItem {...props} />;
 }
 
-function ChoosingItem(props: ListItemProps): ReactElement {
+function ChoosingItem({ disclosure, ...props }: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
   const { selectionMode } = useContext(ListContext);
 
-  const accessory = selectionMode ? (
-    <ChoiceAccessory {...selected} />
-  ) : undefined;
+  return (
+    <ListItemFrame
+      {...selected}
+      accessory={itemAccessory(selected, !!selectionMode, disclosure)}
+    />
+  );
+}
 
-  return <ListItemFrame {...selected} accessory={accessory} />;
+function itemAccessory(
+  selected: ListItemProps,
+  choosing: boolean,
+  disclosure: boolean | undefined,
+): ReactNode {
+  if (choosing) return <ChoiceAccessory {...selected} />;
+
+  return disclosure ? <LinkAccessory /> : undefined;
 }
 
 function drawingContent(props: DrawingProps): DrawingProps {

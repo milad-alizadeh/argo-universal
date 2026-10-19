@@ -36,6 +36,11 @@
         "id": "hello-item",
         "title": "Hello item",
         "path": "/item"
+      },
+      {
+        "id": "hello-runs",
+        "title": "Hello runs",
+        "path": "/runs"
       }
     ],
     "settings": [

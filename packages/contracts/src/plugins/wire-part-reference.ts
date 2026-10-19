@@ -11,28 +11,6 @@ export interface WirePartReference {
   deprecated?: string;
 }
 
-function listAccessibility(): WirePartReference['accessibility'] {
-  return {
-    label:
-      'The part adds no label. Give each interactive child its own accessible name.',
-    keyboard:
-      'The container adds no focus stop or keyboard shortcut. Keyboard behavior comes from its rendered children.',
-    voiceOver:
-      'The container adds no accessibility element; VoiceOver traverses the rendered children in order.',
-    talkBack:
-      'The container adds no accessibility element; TalkBack traverses the rendered children in order.',
-  };
-}
-
-const listContainer = (summary: string): WirePartReference => ({
-  summary,
-  accessibility: listAccessibility(),
-  appearance:
-    'The container draws no color or image. Child parts use their own semantic tokens and appearance rules.',
-  sdkProps:
-    '`items` and `renderItem` are Plugin SDK props. The worker expands them into keyed children; neither prop crosses the wire.',
-});
-
 const layout = (summary: string): WirePartReference => ({
   summary,
   accessibility: {
@@ -60,9 +38,6 @@ export const wirePartReferences = {
     appearance:
       '`tone` uses semantic colors that adapt to light and dark appearance. `color` is for tracker labels and is preserved as supplied.',
   },
-  Table: listContainer(
-    'A list-style data container whose item renderer runs in the Plugin worker and expands to keyed child nodes.',
-  ),
   Text: {
     summary:
       'Text content with an optional Argo typography role and semantic tone.',
