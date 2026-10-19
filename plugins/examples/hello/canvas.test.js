@@ -1,26 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from '@argo/plugin-kit/testing';
 
-const parts = {
-  Page: 1,
-  Stack: 1,
-  Text: 3,
-  Action: 4,
-  Canvas: 1,
-  'Canvas.Rect': 1,
-  'Canvas.Circle': 1,
-  'Canvas.Line': 1,
-  'Canvas.Path': 1,
-  'Canvas.Text': 1,
-  'Canvas.Group': 1,
-};
-
 for (const platform of ['ios', 'android', 'desktop']) {
   test(`Canvas JSX draws a heatmap and code map on ${platform}`, async ({
     mount,
     clock,
   }) => {
-    const page = await mount({ page: '/canvas', surface: { platform, parts } });
+    const page = await mount({ page: '/canvas', surface: { platform } });
     assert.equal((await page.find('Day 0')).type, 'Canvas.Rect');
     assert.equal((await page.find('packages/file-1.ts')).type, 'Canvas.Rect');
     await page.press('packages/file-1.ts');
@@ -39,7 +25,7 @@ test('one changed heatmap shape sends one keyed patch', async ({
 }) => {
   const page = await mount({
     page: '/canvas',
-    surface: { platform: 'desktop', parts },
+    surface: { platform: 'desktop' },
   });
 
   await page.find('Day 44: 6 builds');
