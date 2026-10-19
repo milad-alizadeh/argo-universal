@@ -1,8 +1,13 @@
+import type { ReactElement } from 'react';
 import { z } from 'zod';
 import { ContentBlock } from '../feed/content-block';
 import { PendingPermission } from '../sessions/snapshot';
 import { StopReason } from '../sessions/turn';
-import { HookEventName } from './hook-protocol';
+import {
+  HookEventName,
+  type HookInvocation,
+  type HookRegistration,
+} from './hook-protocol';
 import { ReplaceableInput, RenderAnswer } from './replaceable';
 
 export { HookEventName } from './hook-protocol';
@@ -89,3 +94,41 @@ export type CoreHooks = {
     event: HookEvent<Name>,
   ) => Promise<HookAnswer<Name>>;
 };
+
+// What a Hook is told besides its event: which event, on which App, and a `ui.render` slot's props.
+export type HookContext<Name extends HookEventName> = Readonly<{
+  name: Name;
+  surface: HookInvocation['surface'];
+  props: Name extends 'ui.render'
+    ? Readonly<HookEvent<'ui.render'>['props']>
+    : undefined;
+}>;
+
+// Passes the event, or a rewrite of it, down the chain and resolves to what the rest of it answered.
+export type HookNext<Name extends HookEventName> = (
+  event?: HookEvent<Name>,
+) => Promise<HookAnswer<Name>>;
+
+// Nothing passes on what `next` answered; a `ui.render` Hook may answer with kit components.
+type HookResult<Name extends HookEventName> =
+  | HookAnswer<Name>
+  | undefined
+  | (Name extends 'ui.render' ? ReactElement : never);
+
+export type Hook<Name extends HookEventName> = (
+  context: HookContext<Name>,
+  event: HookEvent<Name>,
+  next: HookNext<Name>,
+) => HookResult<Name> | Promise<HookResult<Name>>;
+
+// A guard's failure refuses its event instead of skipping the Hook.
+export type HookOptions = Readonly<Partial<Pick<HookRegistration, 'guard'>>>;
+
+// The Hook alone, or after a matcher that narrows it to one slot, command or tool.
+export type HookArgs<Handler> =
+  | [hook: Handler, options?: HookOptions]
+  | [
+      matcher: HookRegistration['matcher'],
+      hook: Handler,
+      options?: HookOptions,
+    ];

@@ -59,7 +59,6 @@
     "./server-runtime": "./src/server-runtime.ts",
     "./shell-runtime": "./src/agents/shell-runtime.ts",
     "./plugins": "./src/plugins/index.ts",
-    "./plugin-api": "./src/plugins/worker/plugin-api.ts",
     "./plugin-validation": "./src/plugins/authoring/validate.ts",
     "./mocks/keychain": "./mocks/memory-keychain.ts"
   }

@@ -47,8 +47,8 @@ export type ArgoBridge = (json: string) => Promise<string>;
 /*
  * The only host function a Plugin's context ever holds, and the context never sees it:
  * it takes and returns JSON strings, so no object, promise or error from this realm
- * reaches Plugin code (and with it no path to this realm's `Function`). The realm's
- * `createPluginApi` wraps it before any Plugin code runs.
+ * reaches Plugin code (and with it no path to this realm's `Function`). The Plugin API
+ * (`plugin-api.ts`) wraps it inside the context, then removes it.
  */
 export const argoBridge =
   (calls: WorkerCalls): ArgoBridge =>

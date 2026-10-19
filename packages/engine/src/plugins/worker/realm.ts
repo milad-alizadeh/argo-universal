@@ -1,7 +1,7 @@
 import { createContext, runInContext } from 'node:vm';
 import type { ArgoBridge } from './argo.ts';
-import { bundleRealm, type RealmSource } from './realm-bundle.ts';
-import type { RealmStart, StartedRealm } from './realm-entry.ts';
+import { kitPrelude } from './kit-prelude.ts';
+import type { PluginRealmExports } from './plugin-api.ts';
 
 export type PluginRealm = ReturnType<typeof createContext>;
 
@@ -10,36 +10,38 @@ export type PluginClock = {
   now: () => number;
 };
 
-export type StartedPluginRealm = StartedRealm & { context: PluginRealm };
-
 const realClock: PluginClock = {
   delay: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
   now: Date.now,
 };
 
+type StartedRealm = PluginRealmExports & { context: PluginRealm };
+
 // The kit takes the real timers as it loads; only Plugin timers and dates use a test clock.
 export function createPluginRealm(
   bridge: ArgoBridge,
-  source: RealmSource,
+  kitSource: string,
   clock?: PluginClock,
-): StartedPluginRealm {
-  const context = baseRealm(source);
+): StartedRealm {
+  const context = baseRealm({ __argoBridge: bridge });
+  runInContext(kitSource, context);
 
-  runInContext(source.api, context);
+  if (clock) installClock(context, clock);
 
-  if (clock) installClock(context, source, clock);
-  const start: RealmStart = runInContext('globalThis.__argoRealm', context);
+  const started: PluginRealmExports = runInContext(
+    'globalThis.__argoRealm',
+    context,
+  );
 
   runInContext('delete globalThis.__argoRealm', context);
 
-  return { context, ...start(bridge) };
+  return { context, ...started };
 }
 
 // The global names a Plugin realm starts with; `argo plugin validate` refuses the Node ones it lacks.
-export async function realmGlobals(): Promise<Set<string>> {
+export function realmGlobals(): Set<string> {
   const names = new Set<string>();
-  const context = baseRealm(await bundleRealm());
-
+  const context = baseRealm({});
   context.__argoGlobal = (name: string): Set<string> => names.add(name);
   runInContext(
     'for (const name of Object.getOwnPropertyNames(globalThis)) __argoGlobal(name)',
@@ -49,23 +51,18 @@ export async function realmGlobals(): Promise<Set<string>> {
   return names;
 }
 
-function baseRealm(source: RealmSource): PluginRealm {
-  const context = createContext(
-    {},
-    { codeGeneration: { strings: false, wasm: false } },
-  );
+function baseRealm(globals: { __argoBridge?: ArgoBridge }): PluginRealm {
+  const context = createContext(globals, {
+    codeGeneration: { strings: false, wasm: false },
+  });
 
-  installClock(context, source, realClock);
+  installClock(context, realClock);
 
   return context;
 }
 
-function installClock(
-  context: PluginRealm,
-  source: RealmSource,
-  clock: PluginClock,
-): void {
+function installClock(context: PluginRealm, clock: PluginClock): void {
   context.__argoDelay = clock.delay;
   context.__argoNow = clock === realClock ? undefined : clock.now;
-  runInContext(source.clock, context);
+  runInContext(kitPrelude, context);
 }

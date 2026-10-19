@@ -2,10 +2,10 @@ import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { SourceTextModule, SyntheticModule, type Module } from 'node:vm';
 import { requirePluginFile } from '../access/plugin-files.ts';
+import { bundleKit } from '../kit/bundle.ts';
 import type { PluginEntry } from '../protocol/runtime.ts';
 import { type ArgoBridge } from './argo.ts';
-import type { PluginApi } from './create-plugin-api.ts';
-import { bundleRealm } from './realm-bundle.ts';
+import type { PluginRealmExports } from './plugin-api.ts';
 import {
   createPluginRealm,
   type PluginClock,
@@ -21,8 +21,11 @@ export async function registerPlugin(
   bridge: ArgoBridge,
   clock?: PluginClock,
 ): Promise<PluginInboxes> {
-  const realm = createPluginRealm(bridge, await bundleRealm(), clock);
-  const { context, inboxes, modules } = realm;
+  const { context, inboxes, modules } = createPluginRealm(
+    bridge,
+    await bundleKit(),
+    clock,
+  );
 
   await bootstrap(context, new PluginModules(entry, context, modules));
 
@@ -43,9 +46,10 @@ async function bootstrap(
   await module.evaluate();
 }
 
-export type PluginInboxes = PluginApi['inboxes'];
+// How the worker reaches a Plugin's pages and Hooks: a JSON string in, nothing out.
+export type PluginInboxes = PluginRealmExports['inboxes'];
 
-type KitModules = PluginApi['modules'];
+type KitModules = PluginRealmExports['modules'];
 
 const registrationModule = (context: PluginRealm): SourceTextModule =>
   new SourceTextModule(

@@ -28,16 +28,12 @@
     "packages/engine": {
       // The OS supplies computer-name lookup and bzip2 archive compression.
       "ignoreBinaries": ["scutil", "bzip2"],
-      // `tools/record-user-messages.mts` runs this recorder by path; the Plugin realm bundle names its clock entry by path.
-      "entry": [
-        "mocks/user-message-recording.ts",
-        "src/plugins/worker/realm-clock.ts"
-      ]
+      // `tools/record-user-messages.mts` runs this recorder by path.
+      "entry": ["mocks/user-message-recording.ts"]
     },
     "packages/plugin-kit": {
       // The `argo-plugin` bin runs this entry by path through tsx.
-      "entry": ["cli/main.ts"],
-      "ignoreDependencies": ["tsx"]
+      "entry": ["cli/main.ts"]
     },
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.

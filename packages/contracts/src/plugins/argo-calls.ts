@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PluginAssetRequest } from '#plugin-assets';
 
 // What a Plugin's `argo` calls send to the Server, and what the Server answers.
 export const FsWrite = z.object({
@@ -109,3 +110,24 @@ export const FetchReply = z.object({
 });
 
 export type FetchReply = z.infer<typeof FetchReply>;
+
+// What `argo.projects.list` tells a Plugin about each Project.
+export const PluginProjectInfo = z.object({
+  id: z.string(),
+  name: z.string(),
+  originUrl: z.string().nullable(),
+});
+
+export type PluginProjectInfo = z.infer<typeof PluginProjectInfo>;
+
+// Each `argo` call as it crosses to the Server; the Plugin host adds Hooks, views and dispatch results.
+export const ArgoRequest = z.discriminatedUnion('api', [
+  PluginAssetRequest,
+  z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
+  z.object({ api: z.literal('projects'), action: z.literal('list') }),
+  z.object({ api: z.literal('secrets'), call: SecretCall }),
+  z.object({ api: z.literal('settings'), key: z.string() }),
+  z.object({ api: z.literal('fs'), call: FsCall }),
+  z.object({ api: z.literal('process'), call: ProcessCall }),
+  z.object({ api: z.literal('fetch'), call: FetchCall }),
+]);

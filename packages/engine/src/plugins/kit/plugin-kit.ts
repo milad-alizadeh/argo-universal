@@ -62,7 +62,7 @@ export interface Kit {
   ) => { treePath: string };
 }
 
-// Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleRealm`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
+// Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
 export function createKit(send: ViewSender, settle: DispatchSender): Kit {
   const pages = mountPages(send, settle);
 
