@@ -84,6 +84,7 @@ export const AccessibleDrawings: Story = {
       { name: 'Native build' },
       canvasReady,
     );
+
     button.focus();
     await userEvent.keyboard('{Enter}');
     await expect(onEvent).toHaveBeenCalledWith('scene/circle', {
