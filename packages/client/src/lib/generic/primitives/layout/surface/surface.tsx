@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, type PressableProps } from 'react-native';
 import { ContextActions } from '#primitives/actions/action-list';
 import { usePressRipple } from '#primitives/native/material-palette';
 import { SurfaceMaterial } from './surface-material';
@@ -25,14 +25,18 @@ function PressableSurface(props: SurfaceProps): ReactElement {
 
   return (
     <SurfaceMaterial {...props} padding={0}>
-      <Pressable
-        role="button"
-        onPress={props.onPress}
-        android_ripple={ripple}
-        className={pressClass(props)}
-      >
-        {props.children}
-      </Pressable>
+      <Pressable {...pressLayer(props, ripple)}>{props.children}</Pressable>
     </SurfaceMaterial>
   );
 }
+
+const pressLayer = (
+  props: SurfaceProps,
+  ripple: PressableProps['android_ripple'],
+): PressableProps & { className: string } => ({
+  role: 'button',
+  accessibilityLabel: props.accessibilityLabel,
+  onPress: props.onPress,
+  android_ripple: ripple,
+  className: pressClass(props),
+});

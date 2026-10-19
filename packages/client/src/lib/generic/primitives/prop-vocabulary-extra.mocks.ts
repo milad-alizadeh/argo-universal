@@ -3,6 +3,7 @@ import type * as KbdKit from '#primitives/content/kbd';
 import type * as FieldDescriptionKit from '#primitives/fields/field-description';
 import type * as FormKit from '#primitives/fields/form';
 import type * as DatePickerKit from '#primitives/inputs/date-picker';
+import type * as CardKit from '#primitives/layout/card';
 import type * as GridKit from '#primitives/layout/grid';
 import type * as ScrollViewKit from '#primitives/layout/scroll-view';
 import type * as SpacerKit from '#primitives/layout/spacer';
@@ -22,6 +23,7 @@ export type AdditionalPrimitives = {
   MetadataPillsProps: MetadataKit.MetadataPillsProps;
   MetadataStatusDotProps: MetadataKit.MetadataStatusDotProps;
   MetadataAvatarProps: MetadataKit.MetadataAvatarProps;
+  CardProps: CardKit.CardProps;
   GridProps: GridKit.GridProps;
   SpacerProps: SpacerKit.SpacerProps;
   SurfaceProps: SurfaceKit.SurfaceProps;

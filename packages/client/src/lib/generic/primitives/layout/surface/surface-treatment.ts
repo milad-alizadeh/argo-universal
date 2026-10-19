@@ -28,10 +28,11 @@ export const glassCorners = 'container' satisfies LiquidGlassProps['corners'];
 type Material = 'drawn' | 'plain';
 
 export function surfaceClass(
-  { kind, padding = 0 }: SurfaceProps,
+  { kind, padding = 0, fill }: SurfaceProps,
   material: Material,
 ): string {
   return cn(
+    fill && 'flex-1',
     treatments[kind].radius,
     fillOf(kind, material),
     paddingClass[padding],
@@ -45,8 +46,9 @@ function fillOf(kind: SurfaceProps['kind'], material: Material): string {
 }
 
 // The pressable layer inside a Surface: its corners and padding, with the press tint.
-export function pressClass({ kind, padding = 0 }: SurfaceProps): string {
+export function pressClass({ kind, padding = 0, fill }: SurfaceProps): string {
   return cn(
+    fill && 'flex-1',
     'overflow-hidden web:hover:bg-hover web:active:bg-pressed ios:active:bg-pressed',
     treatments[kind].radius,
     paddingClass[padding],

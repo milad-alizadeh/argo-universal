@@ -1,8 +1,9 @@
-import type { ComponentProps, ReactElement } from 'react';
+import { useContext, type ComponentProps, type ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { cn } from '#lib/generic/utils';
 import { ButtonAdornment } from '#primitives/actions/button';
 import { buttonInteractionProps } from '#primitives/actions/button';
+import { IconButtonBleed } from './icon-button-bleed';
 import type { IconButtonProps } from './icon-button-props';
 import { iconButtonClasses } from './icon-button-styles';
 
@@ -31,7 +32,8 @@ export function IconButton({
   iconTone,
   ...props
 }: IconButtonProps): ReactElement {
-  const drawing = iconDrawing(props);
+  const bleed = useContext(IconButtonBleed);
+  const drawing = iconDrawing({ ...props, bleed: props.bleed ?? bleed });
 
   return (
     <Pressable {...drawing.pressable}>

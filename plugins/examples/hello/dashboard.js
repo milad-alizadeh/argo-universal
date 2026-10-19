@@ -1,4 +1,5 @@
 import {
+  Card,
   Grid,
   ScrollView,
   Spacer,
@@ -14,6 +15,8 @@ const metrics = [
   { title: 'In progress', value: '3' },
   { title: 'Done', value: '28' },
   { title: 'Blocked', value: '2' },
+  { title: 'In review', value: '5' },
+  { title: 'Reopened', value: '1' },
 ];
 
 export function HelloDashboard() {
@@ -31,14 +34,11 @@ export function HelloDashboard() {
 
 function DashboardMetrics() {
   return (
-    <Grid columns={{ compact: 2, medium: 2, wide: 4 }} gap={3}>
+    <Grid columns={{ compact: 2, medium: 2, wide: 3 }} gap={3}>
       {metrics.map(({ title, value }) => (
-        <Surface key={title} kind="card" padding={4}>
-          <Stack direction="column" gap={2}>
-            <Text role="secondary">{title}</Text>
-            <Text role={headingRole}>{value}</Text>
-          </Stack>
-        </Surface>
+        <Card key={title} title={title}>
+          <Text role={headingRole}>{value}</Text>
+        </Card>
       ))}
     </Grid>
   );
