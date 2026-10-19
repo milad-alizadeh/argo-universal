@@ -18,21 +18,21 @@ function oldIcon(
   return parsed.success ? parsed.data : unavailableIcon;
 }
 
-function legacyLabelProps(
+function labelV1Props(
   props: z.output<typeof labelProps>,
 ): z.input<typeof labelV1> {
   return { ...props, icon: oldIcon(props.icon) };
 }
 
 // Apps before Label v3 need an icon, so a text-only Label gets the fallback symbol.
-function labelV2PropsOf(
+function labelV2Props(
   props: z.output<typeof labelProps>,
 ): z.input<typeof labelV2> {
   return { ...props, icon: props.icon ?? unavailableIcon };
 }
 
 export const labelVersions = [
-  labelProps.transform(legacyLabelProps).pipe(labelV1),
-  labelProps.transform(labelV2PropsOf).pipe(labelV2),
+  labelProps.transform(labelV1Props).pipe(labelV1),
+  labelProps.transform(labelV2Props).pipe(labelV2),
   labelProps,
 ] as const;

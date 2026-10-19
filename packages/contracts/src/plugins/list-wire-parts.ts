@@ -8,7 +8,7 @@ import {
   pillProps,
   rowBadgeProps,
 } from './kit-props';
-import { labelVersions } from './legacy-label-props';
+import { labelVersions } from './label-versions';
 import { listExpansion } from './list-expansion';
 import { rowPress } from './list-kit-props';
 import { progressBarAccessibility } from './part-accessibility-metadata';
