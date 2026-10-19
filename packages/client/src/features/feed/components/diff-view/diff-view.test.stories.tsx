@@ -44,18 +44,6 @@ export const InspectorFileShowsEveryLine: Story = {
 
       const header = canvas.getByRole('button', largeHeader);
 
-      await expect(
-        canvas.getByRole('button', { name: 'Copy path' }),
-      ).toBeVisible();
-      await page.elementLocator(header).hover();
-
-      // The path button fills the header up to the copy button, so there is no dead space to miss.
-      const copyBounds = canvas
-        .getByRole('button', { name: 'Copy path' })
-        .getBoundingClientRect();
-
-      const buttonBounds = header.getBoundingClientRect();
-      await expect(buttonBounds.right).toBeLessThanOrEqual(copyBounds.left);
       await expect(header).toHaveAttribute(expanded, 'true');
       const box = canvas.getByTestId('diff-scroll');
       await expect(box.scrollHeight).toBe(box.clientHeight);

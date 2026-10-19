@@ -413,7 +413,7 @@ export type WireSchemaHints = {
     "disabled": PropValue<"Checkbox", "disabled">;
     /** The visible and accessible label. */
     "label": PropValue<"Checkbox", "label">;
-    /** The option row treatment. */
+    /** The option row treatment, or inline beside other content and sized to its label. */
     "variant": PropValue<"Checkbox", "variant">;
     /** The selection mode. */
     "selection": PropValue<"Checkbox", "selection">;

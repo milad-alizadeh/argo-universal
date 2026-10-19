@@ -55,11 +55,27 @@ function checkboxSemantics(
   };
 }
 
+// Inline sits beside other content, such as a file header, sized to its label in the badge size.
+const rowLayout = {
+  row: {
+    row: 'w-full flex-row items-center gap-2.5',
+    label: 'min-w-0 flex-1',
+    role: 'body',
+  },
+  inline: {
+    row: 'flex-row items-center gap-1.5',
+    label: undefined,
+    role: 'badge',
+  },
+} as const;
+
 function CheckboxRow(props: CheckboxProps): React.JSX.Element {
+  const layout = rowLayout[props.variant === 'inline' ? 'inline' : 'row'];
+
   return (
-    <View className="w-full flex-row items-center gap-2.5">
+    <View className={layout.row}>
       {props.selection !== 'single' && <CheckboxIndicator {...props} />}
-      <Text role="body" className="min-w-0 flex-1">
+      <Text role={layout.role} className={layout.label}>
         {props.label}
       </Text>
       <SelectedMark {...props} />
@@ -75,7 +91,7 @@ export function CheckboxIndicator(
       {props.value && (
         <Icon
           name="check"
-          role={props.variant === 'option' ? 'secondary' : 'mark'}
+          role={props.variant ? 'secondary' : 'mark'}
           className="text-primary-foreground"
         />
       )}
@@ -95,9 +111,16 @@ function markClassName(props: CheckboxIndicatorProps): string {
 function controlClass(props: CheckboxProps): string {
   return cn(
     'flex min-h-13 w-full cursor-default justify-start items-center rounded-md border-0 bg-muted p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-focus',
-    props.variant === 'option' && optionClass(props),
+    variantClass(props),
     props.disabled && 'opacity-50',
   );
+}
+
+function variantClass(props: CheckboxProps): string | undefined {
+  if (props.variant === 'inline')
+    return 'min-h-0 w-auto shrink-0 rounded-xs bg-transparent p-0';
+
+  return props.variant === 'option' ? optionClass(props) : undefined;
 }
 
 function optionClass(props: CheckboxProps): string {
@@ -114,6 +137,9 @@ function SelectedMark(props: CheckboxProps): React.JSX.Element | null {
 }
 
 function optionMarkClass(props: CheckboxIndicatorProps): string | undefined {
+  if (props.variant === 'inline')
+    return 'size-4 rounded-xs border border-border bg-card';
+
   return props.variant === 'option'
     ? 'size-4 rounded-xs border border-focus'
     : undefined;

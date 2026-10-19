@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import type { ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { CopyButton } from '#lib/product/markdown/copy-button';
 import { contentActionClass } from '#primitives/actions/button';
@@ -7,7 +6,9 @@ import { Pressable } from '#primitives/actions/pressable';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { Checkbox } from '#primitives/inputs/checkbox';
 import { DisclosureChevron } from '#primitives/status/disclosure-chevron';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import type { FileDiff } from '../../view/file-diff';
+import { ChangeCounts, hasChangeCounts } from './diff-change-counts';
 
 export interface FileHeaderProps {
   file: FileDiff;
@@ -93,61 +94,56 @@ function FileHeaderToggle(props: FileHeaderProps): React.JSX.Element {
   );
 }
 
-interface ChangeCountProps {
-  count: number;
-  className: string;
-  children: ReactNode;
-}
-
-function ChangeCount(props: ChangeCountProps): React.JSX.Element | null {
-  if (props.count <= 0) return null;
-
-  return (
-    <Text
-      selectable={false}
-      role="badge"
-      className={`select-none ${props.className}`}
-    >
-      {props.children}
-    </Text>
-  );
-}
-
 function ViewedMark(props: FileHeaderProps): React.JSX.Element | null {
   if (!props.onViewedChange) return null;
 
   return (
     <Checkbox
       label="Viewed"
+      variant="inline"
       value={props.viewed ?? false}
       onValueChange={props.onViewedChange}
     />
   );
 }
 
-function ChangeCounts({ file }: Pick<FileHeaderProps, 'file'>): ReactNode {
+// The Inspector's file header: folder muted, file name strong, then copy, the change counts and the Viewed mark.
+export function FileHeader(props: FileHeaderProps): React.JSX.Element {
+  const full = <FullFileHeader {...props} />;
+
   return (
-    <>
-      <ChangeCount count={file.added} className="text-success">
-        +{file.added}
-      </ChangeCount>
-      <ChangeCount count={file.removed} className="text-danger">
-        {`−${file.removed}`}
-      </ChangeCount>
-    </>
+    <SizeClass
+      compact={<CompactFileHeader {...props} />}
+      medium={full}
+      wide={full}
+    />
   );
 }
 
-// The Inspector's file header: folder muted, file name strong, then copy, the change counts and the Viewed mark.
-export function FileHeader(props: FileHeaderProps): React.JSX.Element {
-  const { file } = props;
-
+function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
     <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
       <FileHeaderToggle {...props} />
-      <CopyButton value={file.path} label="Copy path" />
-      <ChangeCounts file={file} />
+      <CopyButton value={props.file.path} label="Copy path" />
+      <ChangeCounts file={props.file} />
       <ViewedMark {...props} />
+    </View>
+  );
+}
+
+// On a phone the path keeps the whole first line, the counts sit under it, and there is no copy.
+function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
+  return (
+    <View className="gap-0.5 bg-muted py-2 pr-3 pl-2">
+      <View className="min-h-5 flex-row items-center gap-2">
+        <FileHeaderToggle {...props} />
+        <ViewedMark {...props} />
+      </View>
+      {hasChangeCounts(props.file) && (
+        <View className="flex-row gap-2 pl-7">
+          <ChangeCounts file={props.file} />
+        </View>
+      )}
     </View>
   );
 }
