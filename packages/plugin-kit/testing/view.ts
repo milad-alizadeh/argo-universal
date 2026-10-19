@@ -67,6 +67,10 @@ export class PluginTestView {
     return this.root;
   }
 
+  public get message(): ViewMessage | null {
+    return this.latest;
+  }
+
   public findText(text: string): ReturnType<typeof findWireNodeEntry> {
     if (!this.tree) return undefined;
 
@@ -90,7 +94,7 @@ export class PluginTestView {
     return entry.node;
   }
 
-  private async waitFor(ready: () => boolean): Promise<void> {
+  public async waitFor(ready: () => boolean): Promise<void> {
     const deadline = Date.now() + viewLimitMs;
 
     while (!ready()) {

@@ -59,6 +59,7 @@ export type AdditionalPrimitives = {
   EmptyStateProps: EmptyStateKit.EmptyStateProps;
   StatusDotProps: StatusDotKit.StatusDotProps;
   SvgProps: SvgKit.SvgProps;
+  CanvasProps: SvgKit.CanvasProps;
   DatePickerProps: DatePickerKit.DatePickerProps;
   DescribedField: FieldDescriptionKit.DescribedField;
   FormProps: FormKit.FormProps;

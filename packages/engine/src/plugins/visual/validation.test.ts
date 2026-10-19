@@ -1,4 +1,5 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import { WireNode } from '@repo/contracts/plugins/wire';
+import canvasFixture from '@repo/mocks/plugins/canvas.json' with { type: 'json' };
 import { expect, it } from 'vitest';
 import { sanitizeTree } from './sanitize-tree';
 
@@ -59,15 +60,18 @@ it('keeps bounded token-based Chart and Canvas data', () => {
   expect(sanitizeTree(root)).toMatchObject({ root, refused: [] });
 });
 
-it('enforces the Canvas shape cap', () => {
+it.each([
+  { count: 20_000, reason: undefined },
+  { count: 20_001, reason: 'shape cap exceeded (20000)' },
+])('checks the Canvas shape boundary at $count', ({ count, reason }) => {
   const drawing = node(group);
 
-  const many = Array.from({ length: 20_001 }, (_, index) => ({
+  const many = Array.from({ length: count }, (_, index) => ({
     ...drawing,
     key: String(index),
   }));
 
-  expect(refusal(node('Canvas', canvas, many))).toContain('shape cap');
+  expect(refusal(node('Canvas', canvas, many))).toEqual(reason);
 });
 
 it('enforces the Canvas nesting cap', () => {
@@ -81,3 +85,8 @@ it('enforces the Canvas nesting cap', () => {
 function refusal(root: WireNode): string | undefined {
   return sanitizeTree(root).refused[0]?.reason;
 }
+
+it('accepts the shared wire scene with all six Canvas drawings', () => {
+  const root = WireNode.parse(canvasFixture);
+  expect(sanitizeTree(root)).toMatchObject({ root, refused: [] });
+});

@@ -1,0 +1,116 @@
+{
+  "type": "Canvas",
+  "key": "scene",
+  "props": {
+    "label": "Build activity",
+    "width": 360,
+    "height": 216,
+    "camera": "pan-zoom"
+  },
+  "children": [
+    {
+      "type": "Canvas.Rect",
+      "key": "box",
+      "props": {
+        "x": 10,
+        "y": 10,
+        "width": 120,
+        "height": 70,
+        "tone": "info",
+        "label": "Web build",
+        "onPress": {
+          "$event": "onPress"
+        }
+      },
+      "children": [],
+      "slots": {}
+    },
+    {
+      "type": "Canvas.Circle",
+      "key": "circle",
+      "props": {
+        "cx": 210,
+        "cy": 45,
+        "r": 25,
+        "tone": "success",
+        "label": "Native build",
+        "onPress": {
+          "$event": "onPress"
+        }
+      },
+      "children": [],
+      "slots": {}
+    },
+    {
+      "type": "Canvas.Line",
+      "key": "line",
+      "props": {
+        "x1": 130,
+        "y1": 45,
+        "x2": 185,
+        "y2": 45,
+        "tone": "muted",
+        "strokeWidth": 3
+      },
+      "children": [],
+      "slots": {}
+    },
+    {
+      "type": "Canvas.Path",
+      "key": "path",
+      "props": {
+        "d": "M 260 10 L 330 10 L 295 80 Z",
+        "tone": "warning",
+        "label": "Pending build",
+        "onPress": {
+          "$event": "onPress"
+        }
+      },
+      "children": [],
+      "slots": {}
+    },
+    {
+      "type": "Canvas.Text",
+      "key": "text",
+      "props": {
+        "x": 18,
+        "y": 18,
+        "text": "Web",
+        "tone": "neutral"
+      },
+      "children": [],
+      "slots": {}
+    },
+    {
+      "type": "Canvas.Group",
+      "key": "group",
+      "props": {
+        "translate": [30, 100],
+        "scale": [1.5, 1],
+        "rotate": 15,
+        "label": "Grouped build"
+      },
+      "children": [
+        {
+          "type": "Canvas.Rect",
+          "key": "nested",
+          "props": {
+            "x": 0,
+            "y": 0,
+            "width": 80,
+            "height": 40,
+            "tone": "accent",
+            "label": "Grouped file",
+            "onPress": {
+              "$event": "onPress"
+            }
+          },
+          "children": [],
+          "slots": {}
+        }
+      ],
+      "slots": {}
+    }
+  ],
+  "slots": {}
+}

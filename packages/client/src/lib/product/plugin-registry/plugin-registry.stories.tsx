@@ -1,6 +1,7 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { slottedRow } from '@repo/contracts/plugins/wire-fixtures';
 import { applyPatch } from '@repo/contracts/plugins/wire-patch';
+import canvasFixture from '@repo/mocks/plugins/canvas.json' with { type: 'json' };
 import controls from '@repo/mocks/plugins/controls.json' with { type: 'json' };
 import overlays from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import svgFixtures from '@repo/mocks/plugins/svg.json' with { type: 'json' };
@@ -51,6 +52,12 @@ export const Slots: StoryObj<typeof meta> = {
 
 export const Svg: StoryObj<typeof meta> = {
   render: SvgPreview,
+};
+
+export const Canvas: StoryObj<typeof meta> = {
+  render: () => (
+    <PluginTree root={WireNode.parse(canvasFixture)} onEvent={() => {}} />
+  ),
 };
 
 function SvgPreview(): ReactElement {

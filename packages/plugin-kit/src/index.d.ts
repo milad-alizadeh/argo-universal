@@ -68,8 +68,13 @@ type ExpansionValue<Value, Item> = Value extends WireNode
                   [Key in keyof Args]: ExpansionValue<Args[Key], Item>;
                 }
               ) => ExpansionValue<Result, Item>
-            : Value extends readonly (infer Element)[]
-              ? readonly ExpansionValue<Element, Item>[]
+            : Value extends readonly unknown[]
+              ? {
+                  readonly [Key in keyof Value]: ExpansionValue<
+                    Value[Key],
+                    Item
+                  >;
+                }
               : Value extends object
                 ? { [Key in keyof Value]: ExpansionValue<Value[Key], Item> }
                 : Value;

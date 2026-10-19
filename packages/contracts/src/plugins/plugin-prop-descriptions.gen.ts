@@ -697,156 +697,6 @@ export type WireSchemaHints = {
     /** series for this part. */
     "series": PropValue<"Chart", "series">;
   };
-  "Canvas": {
-    /** label for this part. */
-    "label": PropValue<"Canvas", "label">;
-    /** width for this part. */
-    "width": PropValue<"Canvas", "width">;
-    /** height for this part. */
-    "height": PropValue<"Canvas", "height">;
-    /** aspect Ratio for this part. */
-    "aspectRatio": PropValue<"Canvas", "aspectRatio">;
-    /** camera for this part. */
-    "camera": PropValue<"Canvas", "camera">;
-    /** selected Key for this part. */
-    "selectedKey": PropValue<"Canvas", "selectedKey">;
-  };
-  "Canvas.Rect": {
-    /** tone for this part. */
-    "tone": PropValue<"Canvas.Rect", "tone">;
-    /** intensity for this part. */
-    "intensity": PropValue<"Canvas.Rect", "intensity">;
-    /** fill for this part. */
-    "fill": PropValue<"Canvas.Rect", "fill">;
-    /** stroke for this part. */
-    "stroke": PropValue<"Canvas.Rect", "stroke">;
-    /** stroke Width for this part. */
-    "strokeWidth": PropValue<"Canvas.Rect", "strokeWidth">;
-    /** label for this part. */
-    "label": PropValue<"Canvas.Rect", "label">;
-    /** The action run when the artwork is pressed. */
-    "onPress": PropValue<"Canvas.Rect", "onPress">;
-    /** x for this part. */
-    "x": PropValue<"Canvas.Rect", "x">;
-    /** y for this part. */
-    "y": PropValue<"Canvas.Rect", "y">;
-    /** width for this part. */
-    "width": PropValue<"Canvas.Rect", "width">;
-    /** height for this part. */
-    "height": PropValue<"Canvas.Rect", "height">;
-    /** rx for this part. */
-    "rx": PropValue<"Canvas.Rect", "rx">;
-    /** ry for this part. */
-    "ry": PropValue<"Canvas.Rect", "ry">;
-  };
-  "Canvas.Circle": {
-    /** tone for this part. */
-    "tone": PropValue<"Canvas.Circle", "tone">;
-    /** intensity for this part. */
-    "intensity": PropValue<"Canvas.Circle", "intensity">;
-    /** fill for this part. */
-    "fill": PropValue<"Canvas.Circle", "fill">;
-    /** stroke for this part. */
-    "stroke": PropValue<"Canvas.Circle", "stroke">;
-    /** stroke Width for this part. */
-    "strokeWidth": PropValue<"Canvas.Circle", "strokeWidth">;
-    /** label for this part. */
-    "label": PropValue<"Canvas.Circle", "label">;
-    /** The action run when the artwork is pressed. */
-    "onPress": PropValue<"Canvas.Circle", "onPress">;
-    /** cx for this part. */
-    "cx": PropValue<"Canvas.Circle", "cx">;
-    /** cx for this part. */
-    "cy": PropValue<"Canvas.Circle", "cy">;
-    /** cx for this part. */
-    "r": PropValue<"Canvas.Circle", "r">;
-  };
-  "Canvas.Line": {
-    /** tone for this part. */
-    "tone": PropValue<"Canvas.Line", "tone">;
-    /** intensity for this part. */
-    "intensity": PropValue<"Canvas.Line", "intensity">;
-    /** fill for this part. */
-    "fill": PropValue<"Canvas.Line", "fill">;
-    /** stroke for this part. */
-    "stroke": PropValue<"Canvas.Line", "stroke">;
-    /** stroke Width for this part. */
-    "strokeWidth": PropValue<"Canvas.Line", "strokeWidth">;
-    /** label for this part. */
-    "label": PropValue<"Canvas.Line", "label">;
-    /** The action run when the artwork is pressed. */
-    "onPress": PropValue<"Canvas.Line", "onPress">;
-    /** cx for this part. */
-    "x1": PropValue<"Canvas.Line", "x1">;
-    /** cx for this part. */
-    "y1": PropValue<"Canvas.Line", "y1">;
-    /** cx for this part. */
-    "x2": PropValue<"Canvas.Line", "x2">;
-    /** cx for this part. */
-    "y2": PropValue<"Canvas.Line", "y2">;
-  };
-  "Canvas.Path": {
-    /** tone for this part. */
-    "tone": PropValue<"Canvas.Path", "tone">;
-    /** intensity for this part. */
-    "intensity": PropValue<"Canvas.Path", "intensity">;
-    /** fill for this part. */
-    "fill": PropValue<"Canvas.Path", "fill">;
-    /** stroke for this part. */
-    "stroke": PropValue<"Canvas.Path", "stroke">;
-    /** stroke Width for this part. */
-    "strokeWidth": PropValue<"Canvas.Path", "strokeWidth">;
-    /** label for this part. */
-    "label": PropValue<"Canvas.Path", "label">;
-    /** The action run when the artwork is pressed. */
-    "onPress": PropValue<"Canvas.Path", "onPress">;
-    /** d for this part. */
-    "d": PropValue<"Canvas.Path", "d">;
-  };
-  "Canvas.Text": {
-    /** tone for this part. */
-    "tone": PropValue<"Canvas.Text", "tone">;
-    /** intensity for this part. */
-    "intensity": PropValue<"Canvas.Text", "intensity">;
-    /** fill for this part. */
-    "fill": PropValue<"Canvas.Text", "fill">;
-    /** stroke for this part. */
-    "stroke": PropValue<"Canvas.Text", "stroke">;
-    /** stroke Width for this part. */
-    "strokeWidth": PropValue<"Canvas.Text", "strokeWidth">;
-    /** label for this part. */
-    "label": PropValue<"Canvas.Text", "label">;
-    /** The action run when the artwork is pressed. */
-    "onPress": PropValue<"Canvas.Text", "onPress">;
-    /** x for this part. */
-    "x": PropValue<"Canvas.Text", "x">;
-    /** y for this part. */
-    "y": PropValue<"Canvas.Text", "y">;
-    /** text for this part. */
-    "text": PropValue<"Canvas.Text", "text">;
-  };
-  "Canvas.Group": {
-    /** tone for this part. */
-    "tone": PropValue<"Canvas.Group", "tone">;
-    /** intensity for this part. */
-    "intensity": PropValue<"Canvas.Group", "intensity">;
-    /** fill for this part. */
-    "fill": PropValue<"Canvas.Group", "fill">;
-    /** stroke for this part. */
-    "stroke": PropValue<"Canvas.Group", "stroke">;
-    /** stroke Width for this part. */
-    "strokeWidth": PropValue<"Canvas.Group", "strokeWidth">;
-    /** label for this part. */
-    "label": PropValue<"Canvas.Group", "label">;
-    /** on Press for this part. */
-    "onPress": PropValue<"Canvas.Group", "onPress">;
-    /** translate for this part. */
-    "translate": PropValue<"Canvas.Group", "translate">;
-    /** scale for this part. */
-    "scale": PropValue<"Canvas.Group", "scale">;
-    /** rotate for this part. */
-    "rotate": PropValue<"Canvas.Group", "rotate">;
-  };
   "Detail": {
     /** The content as Markdown; drawn as body text until kit Markdown lands. */
     "markdown": PropValue<"Detail", "markdown">;
@@ -1032,6 +882,156 @@ export type WireSchemaHints = {
     "tone": PropValue<"ListItem.Button", "tone">;
     /** on Press for this part. */
     "onPress": PropValue<"ListItem.Button", "onPress">;
+  };
+  "Canvas": {
+    /** label for this part. */
+    "label": PropValue<"Canvas", "label">;
+    /** width for this part. */
+    "width": PropValue<"Canvas", "width">;
+    /** height for this part. */
+    "height": PropValue<"Canvas", "height">;
+    /** aspect Ratio for this part. */
+    "aspectRatio": PropValue<"Canvas", "aspectRatio">;
+    /** camera for this part. */
+    "camera": PropValue<"Canvas", "camera">;
+    /** selected Key for this part. */
+    "selectedKey": PropValue<"Canvas", "selectedKey">;
+  };
+  "Canvas.Rect": {
+    /** tone for this part. */
+    "tone": PropValue<"Canvas.Rect", "tone">;
+    /** intensity for this part. */
+    "intensity": PropValue<"Canvas.Rect", "intensity">;
+    /** fill for this part. */
+    "fill": PropValue<"Canvas.Rect", "fill">;
+    /** stroke for this part. */
+    "stroke": PropValue<"Canvas.Rect", "stroke">;
+    /** stroke Width for this part. */
+    "strokeWidth": PropValue<"Canvas.Rect", "strokeWidth">;
+    /** label for this part. */
+    "label": PropValue<"Canvas.Rect", "label">;
+    /** The action run when the artwork is pressed. */
+    "onPress": PropValue<"Canvas.Rect", "onPress">;
+    /** x for this part. */
+    "x": PropValue<"Canvas.Rect", "x">;
+    /** y for this part. */
+    "y": PropValue<"Canvas.Rect", "y">;
+    /** width for this part. */
+    "width": PropValue<"Canvas.Rect", "width">;
+    /** height for this part. */
+    "height": PropValue<"Canvas.Rect", "height">;
+    /** rx for this part. */
+    "rx": PropValue<"Canvas.Rect", "rx">;
+    /** ry for this part. */
+    "ry": PropValue<"Canvas.Rect", "ry">;
+  };
+  "Canvas.Circle": {
+    /** tone for this part. */
+    "tone": PropValue<"Canvas.Circle", "tone">;
+    /** intensity for this part. */
+    "intensity": PropValue<"Canvas.Circle", "intensity">;
+    /** fill for this part. */
+    "fill": PropValue<"Canvas.Circle", "fill">;
+    /** stroke for this part. */
+    "stroke": PropValue<"Canvas.Circle", "stroke">;
+    /** stroke Width for this part. */
+    "strokeWidth": PropValue<"Canvas.Circle", "strokeWidth">;
+    /** label for this part. */
+    "label": PropValue<"Canvas.Circle", "label">;
+    /** The action run when the artwork is pressed. */
+    "onPress": PropValue<"Canvas.Circle", "onPress">;
+    /** cx for this part. */
+    "cx": PropValue<"Canvas.Circle", "cx">;
+    /** cx for this part. */
+    "cy": PropValue<"Canvas.Circle", "cy">;
+    /** cx for this part. */
+    "r": PropValue<"Canvas.Circle", "r">;
+  };
+  "Canvas.Line": {
+    /** tone for this part. */
+    "tone": PropValue<"Canvas.Line", "tone">;
+    /** intensity for this part. */
+    "intensity": PropValue<"Canvas.Line", "intensity">;
+    /** fill for this part. */
+    "fill": PropValue<"Canvas.Line", "fill">;
+    /** stroke for this part. */
+    "stroke": PropValue<"Canvas.Line", "stroke">;
+    /** stroke Width for this part. */
+    "strokeWidth": PropValue<"Canvas.Line", "strokeWidth">;
+    /** label for this part. */
+    "label": PropValue<"Canvas.Line", "label">;
+    /** The action run when the artwork is pressed. */
+    "onPress": PropValue<"Canvas.Line", "onPress">;
+    /** cx for this part. */
+    "x1": PropValue<"Canvas.Line", "x1">;
+    /** cx for this part. */
+    "y1": PropValue<"Canvas.Line", "y1">;
+    /** cx for this part. */
+    "x2": PropValue<"Canvas.Line", "x2">;
+    /** cx for this part. */
+    "y2": PropValue<"Canvas.Line", "y2">;
+  };
+  "Canvas.Path": {
+    /** tone for this part. */
+    "tone": PropValue<"Canvas.Path", "tone">;
+    /** intensity for this part. */
+    "intensity": PropValue<"Canvas.Path", "intensity">;
+    /** fill for this part. */
+    "fill": PropValue<"Canvas.Path", "fill">;
+    /** stroke for this part. */
+    "stroke": PropValue<"Canvas.Path", "stroke">;
+    /** stroke Width for this part. */
+    "strokeWidth": PropValue<"Canvas.Path", "strokeWidth">;
+    /** label for this part. */
+    "label": PropValue<"Canvas.Path", "label">;
+    /** The action run when the artwork is pressed. */
+    "onPress": PropValue<"Canvas.Path", "onPress">;
+    /** d for this part. */
+    "d": PropValue<"Canvas.Path", "d">;
+  };
+  "Canvas.Text": {
+    /** tone for this part. */
+    "tone": PropValue<"Canvas.Text", "tone">;
+    /** intensity for this part. */
+    "intensity": PropValue<"Canvas.Text", "intensity">;
+    /** fill for this part. */
+    "fill": PropValue<"Canvas.Text", "fill">;
+    /** stroke for this part. */
+    "stroke": PropValue<"Canvas.Text", "stroke">;
+    /** stroke Width for this part. */
+    "strokeWidth": PropValue<"Canvas.Text", "strokeWidth">;
+    /** label for this part. */
+    "label": PropValue<"Canvas.Text", "label">;
+    /** The action run when the artwork is pressed. */
+    "onPress": PropValue<"Canvas.Text", "onPress">;
+    /** x for this part. */
+    "x": PropValue<"Canvas.Text", "x">;
+    /** y for this part. */
+    "y": PropValue<"Canvas.Text", "y">;
+    /** text for this part. */
+    "text": PropValue<"Canvas.Text", "text">;
+  };
+  "Canvas.Group": {
+    /** tone for this part. */
+    "tone": PropValue<"Canvas.Group", "tone">;
+    /** intensity for this part. */
+    "intensity": PropValue<"Canvas.Group", "intensity">;
+    /** fill for this part. */
+    "fill": PropValue<"Canvas.Group", "fill">;
+    /** stroke for this part. */
+    "stroke": PropValue<"Canvas.Group", "stroke">;
+    /** stroke Width for this part. */
+    "strokeWidth": PropValue<"Canvas.Group", "strokeWidth">;
+    /** label for this part. */
+    "label": PropValue<"Canvas.Group", "label">;
+    /** on Press for this part. */
+    "onPress": PropValue<"Canvas.Group", "onPress">;
+    /** translate for this part. */
+    "translate": PropValue<"Canvas.Group", "translate">;
+    /** scale for this part. */
+    "scale": PropValue<"Canvas.Group", "scale">;
+    /** rotate for this part. */
+    "rotate": PropValue<"Canvas.Group", "rotate">;
   };
   "Text": {
     /** Text content in source order. */

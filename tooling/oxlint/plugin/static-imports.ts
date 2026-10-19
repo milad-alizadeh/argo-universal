@@ -18,6 +18,25 @@ const isDeferredRenderer = (node: ESTree.ImportExpression): boolean =>
   node.source.type === 'Literal' &&
   deferredRenderers.has(stringValue(node.source));
 
+function isCanvasLoader(
+  filename: string,
+  node: ESTree.ImportExpression,
+): boolean {
+  const canvasLoader =
+    '/packages/client/src/lib/generic/primitives/visual/canvas/canvas-loader.web.tsx';
+
+  return (
+    filename.replaceAll('\\', '/').endsWith(canvasLoader) && canvasImport(node)
+  );
+}
+
+function canvasImport(node: ESTree.ImportExpression): boolean {
+  return (
+    node.source.type === 'Literal' &&
+    stringValue(node.source) === './canvas-renderer'
+  );
+}
+
 export const staticImports = defineRule({
   meta: {
     type: 'problem',
@@ -29,11 +48,19 @@ export const staticImports = defineRule({
   create: (context): Visitor => ({
     ImportExpression: (node): void => {
       // ADR-0017 permits only these two deferred prototype renderers.
-      if (isRendererLoader(context.filename) && isDeferredRenderer(node))
-        return;
+      if (isPrototypeImport(context.filename, node)) return;
+
+      if (isCanvasLoader(context.filename, node)) return;
       context.report({ node, messageId: 'staticImports' });
     },
     TSImportType: (node): void =>
       context.report({ node, messageId: 'staticImports' }),
   }),
 });
+
+function isPrototypeImport(
+  filename: string,
+  node: ESTree.ImportExpression,
+): boolean {
+  return isRendererLoader(filename) && isDeferredRenderer(node);
+}

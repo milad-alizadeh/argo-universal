@@ -81,6 +81,15 @@ export const Video: PluginComponents['Video'];
 
 export const Audio: PluginComponents['Audio'];
 
+export const Canvas: PluginComponents['Canvas'] & {
+  Rect: PluginComponents['Canvas.Rect'];
+  Circle: PluginComponents['Canvas.Circle'];
+  Line: PluginComponents['Canvas.Line'];
+  Path: PluginComponents['Canvas.Path'];
+  Text: PluginComponents['Canvas.Text'];
+  Group: PluginComponents['Canvas.Group'];
+};
+
 export const Text: PluginComponents['Text'];
 
 export const Button: PluginComponents['Button'];

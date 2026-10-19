@@ -80,7 +80,13 @@ const vitePlugins = (): PluginOption[] => [
 ];
 
 const config: StorybookConfig = {
-  staticDirs: [{ from: '../../universal-app/public/fonts', to: '/fonts' }],
+  staticDirs: [
+    { from: '../../universal-app/public/fonts', to: '/fonts' },
+    {
+      from: '../../universal-app/public/canvaskit.wasm',
+      to: '/canvaskit.wasm',
+    },
+  ],
   // Screens live in @repo/client (ADR 0009); globs resolve from this .storybook folder.
   stories: process.env.VITEST
     ? ['../../../packages/client/src/**/*.stories.tsx']

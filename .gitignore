@@ -51,3 +51,5 @@ __screenshots__/
 # Generated local CanvasKit for throwaway #834 export.
 apps/universal-app/public/codemap-834/
 apps/universal-app/dist-codemap-834/
+# CanvasKit is copied from the pinned Skia dependency at install time.
+apps/universal-app/public/canvaskit.wasm

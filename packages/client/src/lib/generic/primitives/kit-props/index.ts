@@ -55,13 +55,19 @@ type KitValue<Value, Events, Node, Choice, Item> = Value extends KitListItem
               >;
             }
           ) => KitValue<Result, Events, Node, Choice, Item>
-        : Value extends (infer Element)[]
-          ? KitValue<Element, Events, Node, Choice, Item>[]
-          : Value extends readonly (infer Element)[]
-            ? readonly KitValue<Element, Events, Node, Choice, Item>[]
-            : Value extends object
-              ? MappedProps<Value, Events, never, Node, Choice, Item>
-              : Value;
+        : Value extends readonly unknown[]
+          ? {
+              [Key in keyof Value]: KitValue<
+                Value[Key],
+                Events,
+                Node,
+                Choice,
+                Item
+              >;
+            }
+          : Value extends object
+            ? MappedProps<Value, Events, never, Node, Choice, Item>
+            : Value;
 
 // Contracts owns every prop, including events inside action and option data.
 type MappedProps<
