@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Text } from '#primitives/content/text';
-import { SettingsListView, type SettingsListViewProps } from './settings-list-view';
+import {
+  SettingsListView,
+  type SettingsListViewProps,
+} from './settings-list-view';
 import { settingsListViewMocks } from './settings-list-view.mocks';
 
 const meta = {

@@ -11,7 +11,10 @@ import {
 const wideOnly = (wide: boolean, row: SettingsRow): SettingsRow[] =>
   wide ? [row] : [];
 
-function serverRows(props: SettingsListViewProps, wide: boolean): SettingsRow[] {
+function serverRows(
+  props: SettingsListViewProps,
+  wide: boolean,
+): SettingsRow[] {
   return [
     projectsRow(props),
     agentsRow(props),
@@ -22,7 +25,10 @@ function serverRows(props: SettingsListViewProps, wide: boolean): SettingsRow[] 
   ];
 }
 
-function deviceRows(props: SettingsListViewProps, wide: boolean): SettingsRow[] {
+function deviceRows(
+  props: SettingsListViewProps,
+  wide: boolean,
+): SettingsRow[] {
   return [appearanceRow(props), ...wideOnly(wide, notificationsRow(props))];
 }
 
@@ -41,10 +47,7 @@ const notificationsRow = (props: SettingsListViewProps): SettingsRow => ({
 });
 
 // The rows whose label holds the search, ignoring case.
-function matchingRows(
-  rows: readonly SettingsRow[],
-  query = '',
-): SettingsRow[] {
+function matchingRows(rows: readonly SettingsRow[], query = ''): SettingsRow[] {
   const search = query.trim().toLowerCase();
 
   return rows.filter(({ label }) => label.toLowerCase().includes(search));
