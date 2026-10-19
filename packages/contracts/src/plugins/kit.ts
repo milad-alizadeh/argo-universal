@@ -79,6 +79,8 @@ export * from './settings-row-props';
 
 export {
   pluginPartNames,
+  kitCompounds,
   isLegacyWirePart,
+  type KitCompoundMember,
   type PluginPart,
 } from './plugin-part-names';

@@ -9,6 +9,7 @@ import type {
   KitNode,
 } from '@repo/contracts/kit-props';
 import type {
+  KitCompoundMember,
   WirePart,
   PluginPart,
   WireProps,
@@ -136,6 +137,14 @@ export type PluginComponents = {
   [Name in PluginPart]: Name extends ListPart
     ? ListComponent<Name>
     : ComponentType<PluginProps[Name]>;
+};
+
+// A compound root with its members, read from the dotted part names: Metadata carries Metadata.Label.
+export type KitCompound<Root extends PluginPart> = PluginComponents[Root] & {
+  [Member in KitCompoundMember<Root>]: PluginComponents[Extract<
+    `${Root}.${Member}`,
+    PluginPart
+  >];
 };
 
 export * from './components';

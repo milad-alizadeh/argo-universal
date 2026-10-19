@@ -1,4 +1,4 @@
-import type { PluginComponents } from './index';
+import type { KitCompound, PluginComponents } from './index';
 
 export const Text: PluginComponents['Text'];
 
@@ -8,20 +8,11 @@ export const Stack: PluginComponents['Stack'];
 
 export const Svg: PluginComponents['Svg'];
 
-export const List: PluginComponents['List'] & {
-  Section: PluginComponents['List.Section'];
-};
+export const List: KitCompound<'List'>;
 
 export const ListSection: PluginComponents['List.Section'];
 
-export const ListItem: PluginComponents['ListItem'] & {
-  Link: PluginComponents['ListItem.Link'];
-  Toggle: PluginComponents['ListItem.Toggle'];
-  Picker: PluginComponents['ListItem.Picker'];
-  Stepper: PluginComponents['ListItem.Stepper'];
-  TextField: PluginComponents['ListItem.TextField'];
-  Button: PluginComponents['ListItem.Button'];
-};
+export const ListItem: KitCompound<'ListItem'>;
 
 export const Label: PluginComponents['Label'];
 
@@ -45,9 +36,7 @@ export const IconButton: PluginComponents['IconButton'];
 
 export const SplitButton: PluginComponents['SplitButton'];
 
-export const ActionList: PluginComponents['ActionList'] & {
-  Section: PluginComponents['ActionList.Section'];
-};
+export const ActionList: KitCompound<'ActionList'>;
 
 export const Action: PluginComponents['Action'];
 
@@ -55,10 +44,4 @@ export const Page: PluginComponents['Page'];
 
 export const Detail: PluginComponents['Detail'];
 
-export const Metadata: PluginComponents['Metadata'] & {
-  Label: PluginComponents['Metadata.Label'];
-  Link: PluginComponents['Metadata.Link'];
-  Pills: PluginComponents['Metadata.Pills'];
-  StatusDot: PluginComponents['Metadata.StatusDot'];
-  Avatar: PluginComponents['Metadata.Avatar'];
-};
+export const Metadata: KitCompound<'Metadata'>;

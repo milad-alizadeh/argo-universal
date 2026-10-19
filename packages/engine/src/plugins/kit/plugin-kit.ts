@@ -1,4 +1,4 @@
-import { pluginPartNames } from '@repo/contracts/plugins/kit';
+import { kitCompounds, pluginPartNames } from '@repo/contracts/plugins/kit';
 import { PluginEvent } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import type { ElementProps } from './element-props';
@@ -27,38 +27,22 @@ const hooks = {
   memo: React.memo,
 };
 
-// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
-const List = Object.assign((props: ElementProps) => jsx('List', props), {
-  Section: 'List.Section',
-});
-
-const ListItem = Object.assign(
-  (props: ElementProps) => jsx('ListItem', props),
-  {
-    Link: 'ListItem.Link',
-    Toggle: 'ListItem.Toggle',
-    Picker: 'ListItem.Picker',
-    Stepper: 'ListItem.Stepper',
-    TextField: 'ListItem.TextField',
-    Button: 'ListItem.Button',
-  },
+// A compound such as Metadata draws its root and carries its members, such as Metadata.Label.
+const compounds = Object.fromEntries(
+  Object.entries(kitCompounds).map(([root, members]) => [
+    root,
+    Object.assign(
+      (props: ElementProps) => jsx(root, props),
+      Object.fromEntries(members.map((member) => [member, `${root}.${member}`])),
+    ),
+  ]),
 );
 
+// What `@argo/plugin-kit` exports to a Plugin: its components, React's hooks and the JSX runtime.
 const exportsOf = {
   ...components,
   ...hooks,
-  List,
-  ListItem,
-  ActionList: Object.assign((props: ElementProps) => jsx('ActionList', props), {
-    Section: 'ActionList.Section',
-  }),
-  Metadata: Object.assign((props: ElementProps) => jsx('Metadata', props), {
-    Label: 'Metadata.Label',
-    Link: 'Metadata.Link',
-    Pills: 'Metadata.Pills',
-    StatusDot: 'Metadata.StatusDot',
-    Avatar: 'Metadata.Avatar',
-  }),
+  ...compounds,
   ListSection: 'List.Section',
   Fragment: React.Fragment,
 };
