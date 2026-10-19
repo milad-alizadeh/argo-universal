@@ -1,4 +1,4 @@
-import type { Keychain } from '../src/plugins/keychain';
+import type { Keychain } from '../src/plugins/services/keychain';
 
 // Stands in for the macOS Keychain, the external boundary; entries are keyed like the real one, by service and account.
 export class MemoryKeychain implements Keychain {

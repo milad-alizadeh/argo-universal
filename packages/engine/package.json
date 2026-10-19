@@ -5,9 +5,9 @@
   "type": "module",
   "imports": {
     "#mocks/*": "./mocks/*.ts",
-    "#plugin-clock-protocol": "./src/plugins/clock-protocol.ts",
-    "#plugin-entry": "./src/plugins/plugin-entry.ts",
-    "#plugin-storage-protocol": "./src/plugins/storage-protocol.ts"
+    "#plugin-test-control": "./src/plugins/protocol/test-control.ts",
+    "#plugin-entry": "./src/plugins/protocol/plugin-entry.ts",
+    "#plugin-storage-protocol": "./src/plugins/protocol/storage.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -60,7 +60,7 @@
     "./server-runtime": "./src/server-runtime.ts",
     "./shell-runtime": "./src/agents/shell-runtime.ts",
     "./plugins": "./src/plugins/index.ts",
-    "./plugin-validation": "./src/plugins/validate.ts",
+    "./plugin-validation": "./src/plugins/authoring/validate.ts",
     "./mocks/keychain": "./mocks/memory-keychain.ts"
   }
 }

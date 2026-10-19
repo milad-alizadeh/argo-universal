@@ -5,7 +5,7 @@ import type {
 } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
 import { reportFailure } from './host-config';
-import { schedulePage } from './page-frame';
+import { cancelPageFrame, schedulePage } from './page-frame';
 import { nextMessage, type OpenView } from './page-view';
 import { mount } from './reconciler';
 import { toWire, type Handlers, type Instance } from './wire-tree';
@@ -67,7 +67,7 @@ export function startPage(
 
 function failDrawing(hub: PageHub, view: OpenView, error: Error): void {
   view.broken = true;
-  clearTimeout(view.frame);
+  cancelPageFrame(view);
   publish(hub, view, failedDrawingRoot(error.message));
 }
 

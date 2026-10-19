@@ -9,6 +9,7 @@ import type {
 } from '@repo/contracts/plugins/wire';
 import { diff } from './diff';
 import type { Mounted } from './reconciler';
+import type { KitTimer } from './scheduler';
 import type { Handlers } from './wire-tree';
 
 export type DispatchSender = (
@@ -21,7 +22,7 @@ export interface OpenView {
   mounted?: Mounted;
   broken?: boolean;
   replaceable?: boolean;
-  frame: ReturnType<typeof setTimeout> | undefined;
+  frame: KitTimer | undefined;
   tree: WireNode | null;
   revision: number;
   handlers: Handlers;
