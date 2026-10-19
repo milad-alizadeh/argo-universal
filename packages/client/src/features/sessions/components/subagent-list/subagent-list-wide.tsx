@@ -24,6 +24,9 @@ type RowProps = {
   onSelect: SubagentListProps['onSelect'];
 };
 
+const rowClasses =
+  'min-h-9 flex-row items-start gap-3 rounded-xl px-3 py-2 web:hover:bg-hover web:active:bg-pressed web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
+
 function WideRowText({
   subagent,
   now,
@@ -40,17 +43,24 @@ function WideRowText({
   );
 }
 
+function WideMark({ subagent }: Pick<RowProps, 'subagent'>): JSX.Element {
+  return (
+    <View className="h-5 w-5 shrink-0 items-center justify-center">
+      <SubagentMark subagent={subagent} />
+    </View>
+  );
+}
+
 function WideRow({ subagent, onSelect, now }: RowProps): JSX.Element {
   return (
     <Pressable
       role="button"
       accessibilityLabel={`${subagent.title}, ${subagentSupporting(subagent, now)}`}
-      onPress={() => onSelect(subagent)}
-      className="min-h-9 flex-row items-start gap-3 rounded-xl px-3 py-2 web:hover:bg-hover web:active:bg-pressed"
+      onPress={onSelect ? () => onSelect(subagent) : undefined}
+      disabled={!onSelect}
+      className={rowClasses}
     >
-      <View className="h-5 w-5 shrink-0 items-center justify-center">
-        <SubagentMark subagent={subagent} />
-      </View>
+      <WideMark subagent={subagent} />
       <WideRowText subagent={subagent} now={now} />
     </Pressable>
   );

@@ -41,9 +41,11 @@ function selectAndClose(
   subagents: SubagentListProps,
   onOpenChange: SheetProps['onOpenChange'],
 ): SubagentListProps['onSelect'] {
+  if (!subagents.onSelect) return undefined;
+
   return (selected) => {
     onOpenChange(false);
-    subagents.onSelect(selected);
+    subagents.onSelect?.(selected);
   };
 }
 

@@ -60,10 +60,27 @@ function HeaderTitle(props: HeaderProps): ReactNode {
   );
 }
 
+function HeaderCount({ count }: Pick<HeaderProps, 'count'>): ReactNode {
+  return count === undefined ? null : (
+    <Text role="secondary" tone="muted">
+      {count}
+    </Text>
+  );
+}
+
+function HeaderTitleLine(props: HeaderProps): ReactElement {
+  return (
+    <View className="flex-row items-baseline gap-1.5">
+      <HeaderTitle {...props} />
+      <HeaderCount count={props.count} />
+    </View>
+  );
+}
+
 function HeaderContent(props: HeaderProps): ReactElement {
   return (
     <View className="min-w-0 flex-1">
-      <HeaderTitle {...props} />
+      <HeaderTitleLine {...props} />
       {props.subtitle ? <Text role="secondary">{props.subtitle}</Text> : null}
     </View>
   );

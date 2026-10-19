@@ -6,7 +6,6 @@ import {
   type SessionHeaderStatus,
 } from '#features/sessions';
 import type { SessionCallouts } from '#features/sessions';
-import { sessionHref } from '#lib/product/navigation/navigation';
 import {
   type OpenSession,
   sessionComposerProps,
@@ -100,7 +99,6 @@ const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   composer: sessionComposerProps(open),
   subagents: {
     subagents: open.snapshot.subagents,
-    onSelect: (subagent) => open.navigate(sessionHref(subagent.sessionId)),
   },
   onDropFiles: (dropped) => void open.commands.attachDroppedFiles(dropped),
   archived: open.snapshot.archivedAt !== null,

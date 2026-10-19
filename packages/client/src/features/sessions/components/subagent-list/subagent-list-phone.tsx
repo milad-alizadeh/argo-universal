@@ -1,7 +1,5 @@
 import type { Subagent } from '@repo/contracts';
 import { type JSX } from 'react';
-import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { subagentSupporting } from './subagent-format';
@@ -22,19 +20,6 @@ type SectionProps = {
 
 type RowProps = SectionProps & { subagent: Subagent };
 
-function PhoneHeader({ section }: { section: SubagentSection }): JSX.Element {
-  return (
-    <View className="flex-row items-baseline gap-1.5 px-4 pb-2 pt-4">
-      <Text role="heading" aria-level={2} tone="muted">
-        {section.title}
-      </Text>
-      <Text role="body" tone="muted">
-        {section.rows.length}
-      </Text>
-    </View>
-  );
-}
-
 function PhoneRow({ subagent, section, now, onSelect }: RowProps): JSX.Element {
   const supporting = subagentSupporting(subagent, now);
 
@@ -43,14 +28,14 @@ function PhoneRow({ subagent, section, now, onSelect }: RowProps): JSX.Element {
       title={subagent.title}
       subtitle={supporting}
       leading={<SubagentMark subagent={subagent} />}
-      disclosure
-      onPress={() => onSelect(subagent)}
+      disclosure={Boolean(onSelect)}
+      onPress={onSelect ? () => onSelect(subagent) : undefined}
       accessibilityLabel={`${subagent.title}, ${section.title}, ${supporting}`}
     />
   );
 }
 
-function PhoneRows({ section, now, onSelect }: SectionProps): JSX.Element[] {
+function phoneRows({ section, now, onSelect }: SectionProps): JSX.Element[] {
   return section.rows.map((subagent) => (
     <PhoneRow
       key={subagent.sessionId}
@@ -62,28 +47,22 @@ function PhoneRows({ section, now, onSelect }: SectionProps): JSX.Element[] {
   ));
 }
 
-function PhoneSection(props: SectionProps): JSX.Element {
-  return (
-    <>
-      <PhoneHeader section={props.section} />
-      <List.Section>
-        <PhoneRows {...props} />
-      </List.Section>
-    </>
-  );
+function phoneSections(props: PhoneProps): JSX.Element[] {
+  return subagentSections(props.subagents).map((section) => (
+    <List.Section
+      key={section.title}
+      title={section.title}
+      count={section.rows.length}
+    >
+      {phoneRows({ section, now: props.now, onSelect: props.onSelect })}
+    </List.Section>
+  ));
 }
 
 export function PhoneSubagentList(props: PhoneProps): JSX.Element {
   return (
     <List appearance="grouped" fit={false} accessibilityLabel="Subagents">
-      {subagentSections(props.subagents).map((section) => (
-        <PhoneSection
-          key={section.title}
-          section={section}
-          now={props.now}
-          onSelect={props.onSelect}
-        />
-      ))}
+      {phoneSections(props)}
     </List>
   );
 }

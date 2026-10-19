@@ -1,14 +1,17 @@
 import type { StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { eachLayout } from '../../../../lib/generic/each-layout';
+import { eachLayout, layoutWidths } from '../../../../lib/generic/each-layout';
+import { settleViewport } from '../../../../lib/generic/settle-viewport';
 import { subagentStates } from './subagent-list.mocks';
-import meta from './subagent-list.stories';
+import listMeta from './subagent-list.stories';
 
-export default {
-  ...meta,
+const meta = {
+  ...listMeta,
   title: 'Tests/SubagentList',
-  args: { ...meta.args, onSelect: fn() },
+  args: { ...listMeta.args, onSelect: fn() },
 };
+
+export default meta;
 
 type Story = StoryObj<typeof meta>;
 
@@ -38,7 +41,7 @@ export const OneRunning: Story = {
 
 export const SeveralMixed: Story = {
   args: { subagents: subagentStates.severalMixed },
-  play: async ({ canvas, userEvent, args }) =>
+  play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(canvas.getByText(/Running/)).toBeVisible();
       await expect(canvas.getByText(/Finished/)).toBeVisible();
@@ -48,13 +51,20 @@ export const SeveralMixed: Story = {
       await expect(
         canvas.getByText('Haiku 4.5 · 2m 18s · 12.9k tokens'),
       ).toBeVisible();
-      await userEvent.click(
-        canvas.getByRole('button', { name: /Port the mock CLIs/ }),
-      );
-      await expect(args.onSelect).toHaveBeenCalledWith(
-        subagentStates.severalMixed[3],
-      );
     }),
+};
+
+export const SelectFinished: Story = {
+  args: { subagents: subagentStates.severalMixed },
+  play: async ({ canvas, userEvent, args }) => {
+    await settleViewport(layoutWidths.phone);
+    await userEvent.click(
+      canvas.getByRole('button', { name: /Port the mock CLIs/ }),
+    );
+    await expect(args.onSelect).toHaveBeenCalledWith(
+      subagentStates.severalMixed[3],
+    );
+  },
 };
 
 export const AllFinished: Story = {

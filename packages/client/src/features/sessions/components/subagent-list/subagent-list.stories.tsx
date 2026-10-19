@@ -6,7 +6,7 @@ import { SubagentList } from './subagent-list';
 import { subagentNow, subagentStates } from './subagent-list.mocks';
 
 const meta = {
-  title: 'Components/Sessions/SubagentList',
+  title: 'Sessions/SubagentList',
   component: SubagentList,
   parameters: { screenPreview: true },
   decorators: [
