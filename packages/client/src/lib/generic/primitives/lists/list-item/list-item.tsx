@@ -17,8 +17,8 @@ import { itemSeparator, itemSurface } from './list-item-styles';
 const hairline = { height: StyleSheet.hairlineWidth };
 
 function ItemSeparator(props: ListItemProps): ReactNode {
-  const { appearance, position, highlights, index } = useContext(ListContext);
-  const covered = useSeparatorCovered(highlights, index);
+  const { appearance, position, index } = useContext(ListContext);
+  const covered = useSeparatorCovered(index);
 
   const separator = itemSeparator(appearance, position, hasLeading(props));
 

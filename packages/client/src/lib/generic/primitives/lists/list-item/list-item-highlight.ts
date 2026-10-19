@@ -1,7 +1,10 @@
-import { useContext, useEffect, type ComponentProps } from 'react';
+import { useCallback, useContext, useEffect, type ComponentProps } from 'react';
 import type { Pressable } from 'react-native';
 import { ListContext } from '../../../list-context';
-import type { HighlightReason } from '../../../row-highlights';
+import {
+  SetRowHighlights,
+  type HighlightReason,
+} from '../../../row-highlights';
 import type { DrawingProps } from './list-item-press-props';
 
 type HighlightHandlers = Pick<
@@ -11,29 +14,32 @@ type HighlightHandlers = Pick<
 
 export type MarkHighlight = (reason: HighlightReason, on: boolean) => void;
 
+// Points the reason at this row, or lets go of it when it still points here.
 export function useMarkHighlight(): MarkHighlight {
-  const { highlights, index } = useContext(ListContext);
+  const setHighlighted = useContext(SetRowHighlights);
+  const { index } = useContext(ListContext);
 
-  return (reason, on) => {
-    if (highlights && index !== undefined) highlights.mark(index, reason, on);
-  };
+  return useCallback(
+    (reason, on) =>
+      setHighlighted?.((rows) => {
+        if (on === (rows[reason] === index)) return rows;
+
+        return { ...rows, [reason]: on ? index : undefined };
+      }),
+    [setHighlighted, index],
+  );
 }
 
-// A selected row stays highlighted; a row that leaves the List, or a recycled cell, takes its marks with it.
 export function useSelectedHighlight(selected: boolean | undefined): void {
-  const { highlights, index } = useContext(ListContext);
+  const mark = useMarkHighlight();
 
   useEffect(() => {
-    if (!highlights || index === undefined) return;
+    if (!selected) return;
 
-    highlights.mark(index, 'selected', !!selected);
-  }, [highlights, index, selected]);
+    mark('selected', true);
 
-  useEffect(() => {
-    if (!highlights || index === undefined) return;
-
-    return (): void => highlights.clear(index);
-  }, [highlights, index]);
+    return (): void => mark('selected', false);
+  }, [selected, mark]);
 }
 
 export function useHighlightHandlers(props: DrawingProps): HighlightHandlers {
