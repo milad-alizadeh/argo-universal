@@ -53,7 +53,7 @@ interface AttachMenuProps {
 
 function ComposerAttachChoices(menu: AttachMenuProps): React.JSX.Element {
   return (
-    <View className="native:flex-1 wide:p-3 bg-content">
+    <View className="native:flex-1 bg-content web:wide:bg-card">
       <List appearance="grouped" fit>
         <ListSection>
           <ComposerAttachItems {...menu} />
