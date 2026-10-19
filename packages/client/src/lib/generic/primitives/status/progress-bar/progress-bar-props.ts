@@ -1,4 +1,7 @@
 import type { KitProps } from '../../kit-props';
 
 // Kit-only: test identity.
-export type ProgressBarProps = KitProps<'ProgressBar'> & { testID?: string };
+export type ProgressBarProps = KitProps<'ProgressBar'> & {
+  testID?: string;
+  indeterminate?: boolean;
+};

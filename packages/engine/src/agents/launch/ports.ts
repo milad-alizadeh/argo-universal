@@ -10,5 +10,9 @@ export type InstallToolInput = {
 
 export type InstallPorts = {
   runTool: (input: InstallToolInput) => Promise<string>;
-  download: (url: string, signal: AbortSignal) => Promise<Uint8Array>;
+  download: (
+    url: string,
+    signal: AbortSignal,
+    progress?: (fraction: number) => void,
+  ) => Promise<Uint8Array>;
 };

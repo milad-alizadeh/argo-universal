@@ -36,11 +36,9 @@ const startConnectionHost = async (
     open: async (signal = new AbortController().signal) =>
       acpResources.open({
         ...createResourceOpening(),
-        launch: await installedAgentsOf(host).launch(
-          agent,
-          'project-1',
+        launch: await installedAgentsOf(host).launch(agent, 'project-1', {
           signal,
-        ),
+        }),
         signal,
       }),
   };

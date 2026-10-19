@@ -25,7 +25,7 @@ export const markdownBlockClassNames = {
   quote: 'border-l-2 border-border pl-3',
   listMarker: 'text-muted-foreground',
   domListMarker: 'marker:text-muted-foreground',
-  codeBlock: 'rounded-2xl border border-border bg-content',
+  codeBlock: 'rounded-2xl bg-content',
   codeText: 'type-code text-foreground',
 } as const;
 

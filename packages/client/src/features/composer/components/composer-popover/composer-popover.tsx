@@ -66,7 +66,6 @@ function WidePopover(props: OverlayProps): React.JSX.Element {
   return (
     <Popover
       open={props.open}
-      openOnHover
       style={props.layout}
       onOpenChange={props.onOpenChange}
     >

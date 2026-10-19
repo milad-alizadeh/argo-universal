@@ -38,7 +38,7 @@ function textClassName(
   inherited?: string,
 ): string {
   return cn(
-    'text-foreground web:select-text',
+    'text-foreground web:[user-select:inherit]',
     role === undefined && 'type-body',
     inherited,
     role && textRoles[role],

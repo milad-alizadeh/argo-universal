@@ -54,13 +54,15 @@ export const EscapeClosesModelsAndConfigure: Story = {
   },
 };
 
-export const HoverOpensModelPicker: Story = {
+export const ClickOpensModelPicker: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     const overlay = within(document.body);
-    await userEvent.hover(
-      canvas.getByRole('button', { name: agentModelLabel }),
-    );
+    const trigger = canvas.getByRole('button', { name: agentModelLabel });
+    await userEvent.hover(trigger);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await expect(overlay.queryByRole('dialog')).not.toBeInTheDocument();
+    await userEvent.click(trigger);
 
     const configure = await overlay.findByRole('dialog', {
       name: agentModelLabel,
@@ -76,6 +78,11 @@ export const HoverOpensModelPicker: Story = {
     ).not.toBeInTheDocument();
     const model = within(configure).getByRole('button', { name: /^Model,/ });
     await userEvent.hover(model);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await expect(
+      overlay.queryByRole('dialog', { name: modelPickerLabel }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(model);
 
     const picker = await overlay.findByRole('dialog', {
       name: modelPickerLabel,
@@ -94,7 +101,7 @@ export const PointerMovesIntoPicker: Story = {
   play: async ({ canvas }) => {
     await settleViewport(layoutWidths.wide);
     const overlay = within(document.body);
-    await browserUserEvent.hover(
+    await browserUserEvent.click(
       canvas.getByRole('button', { name: agentModelLabel }),
     );
 
@@ -103,7 +110,7 @@ export const PointerMovesIntoPicker: Story = {
     });
 
     const model = within(configure).getByRole('button', { name: /^Model,/ });
-    await browserUserEvent.hover(model);
+    await browserUserEvent.click(model);
 
     const picker = await overlay.findByRole('dialog', {
       name: modelPickerLabel,

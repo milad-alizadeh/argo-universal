@@ -66,7 +66,7 @@ export interface ItemDrawing {
   menu: boolean;
 }
 
-type SurfaceState = Pick<ListItemProps, 'tone'>;
+type SurfaceState = Pick<ListItemProps, 'selected' | 'tone'>;
 
 export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
   if (drawing.menu)
@@ -78,11 +78,15 @@ export function itemSurface(drawing: ItemDrawing, state: SurfaceState): string {
   return rowSurface(drawing, state);
 }
 
-function rowSurface(drawing: ItemDrawing, { tone }: SurfaceState): string {
+function rowSurface(
+  drawing: ItemDrawing,
+  { selected, tone }: SurfaceState,
+): string {
   return cn(
     'relative overflow-hidden',
     tone !== 'muted' && appearanceClasses[drawing.appearance],
     corners(drawing, tone),
+    selected && 'web:wide:shadow-none',
   );
 }
 
@@ -93,8 +97,7 @@ const pressLayouts = {
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
 };
 
-const pressFocus =
-  'web:select-none web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
+const pressFocus = 'web:select-none web:rounded-inherit';
 
 // Pressed (4%) follows hover (2%) on the web, so a held row is darker than a hovered one.
 const pressTints = cn(

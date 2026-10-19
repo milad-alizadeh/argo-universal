@@ -84,6 +84,7 @@ Feature: New Session
     Given a phone Frame
     And Agent <agent> refuses to open a Session
     And a Local New Session with Agent <agent>
+    When I try to send the prompt "Start this Session"
     Then the App says the Agent failed to launch
     And the launch failure shows "The Agent refused the Session."
 
@@ -92,33 +93,30 @@ Feature: New Session
       | 1     |
       | 2     |
 
-  Scenario: Leaving New Session without sending discards its empty Session
+  Scenario: Leaving New Session without sending creates no Session
     Given a phone Frame
     And a Local New Session with Agent 1
-    When the empty Session is open
-    And I return to the Sessions list
-    Then the Agent closed the empty Session
-    And the empty Session left no worktree or branch
-    And no Session is listed
+    Then no Session or worktree exists yet
+    When I return to the Sessions list
+    Then no Session is listed
 
-  Scenario: Choosing another Agent closes the previous empty Session
+  Scenario: Choosing another Agent discovers options without creating a Session
     Given a phone Frame
     And a Local New Session with Agent 1
-    When the empty Session is open
-    And I choose Agent 2
-    Then the Agent closed the empty Session
-    And only the new empty Session remains
+    When I choose Agent 2
+    Then no Session or worktree exists yet
 
   @web-only
-  Scenario: A lost Connection keeps the empty Session
+  Scenario: A lost Connection keeps unsent configuration
     Given a phone Frame
     And the App's Connection can be dropped
     And a Local New Session with Agent 1
-    When the empty Session is open
+    When I choose model "Small" and effort "High"
     And the Connection drops and comes back
-    And I send the prompt "Fix the flaky login test"
-    Then the prompt went to the Session opened before the drop
-    And the Agent closed no Session
+    Then the configuration shows model "Small" and effort "High"
+    When I send the prompt "Fix the flaky login test"
+    Then the Agent replies "The shared fixture completed this Turn."
+    And the configuration shows model "Small" and effort "High"
 
   Scenario: Options from an earlier Session show at once after a reload
     Given a phone Frame
@@ -188,3 +186,25 @@ Feature: New Session
       | layout |
       | wide   |
       | phone  |
+
+  Scenario: An existing Session restores its model configuration after the Engine restarts
+    Given a wide Frame
+    And a New Session with Agent 1
+    When I choose model "Small" and effort "Low"
+    And I send the prompt "Remember this Session configuration"
+    Then the Agent replies "The shared fixture completed this Turn."
+    When the Engine restarts
+    And I reload the App and open the Session "Remember this Session configuration"
+    Then the configuration shows model "Small" and effort "Low"
+
+  Scenario: Changing effort keeps the configuration visible and focused
+    Given a wide Frame
+    And a New Session with Agent 1
+    When I adjust effort without the configuration disappearing
+
+  Scenario: Changing effort in an existing Session keeps configuration focused
+    Given a wide Frame
+    And a New Session with Agent 1
+    When I send the prompt "Keep configuration open"
+    Then the Agent replies "The shared fixture completed this Turn."
+    When I adjust effort without the configuration disappearing

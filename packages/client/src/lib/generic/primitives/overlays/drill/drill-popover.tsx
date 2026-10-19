@@ -28,7 +28,7 @@ export function DrillPopover(props: Props): ReactElement {
   const closeMenu = useEnclosingPopoverClose();
 
   return (
-    <Popover open={open} onOpenChange={setOpen} openOnHover={props.row}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger disabled={props.disabled}>{props.trigger}</PopoverTrigger>
       <DrillContent
         {...props}

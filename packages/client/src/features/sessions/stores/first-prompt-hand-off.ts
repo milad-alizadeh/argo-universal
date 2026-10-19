@@ -35,20 +35,7 @@ export class FirstPromptHandOff {
     return this.promptedId;
   }
 
-  public prompt(sessionId: string, prompt: FirstPrompt): void {
-    this.current = 'sending';
-    this.promptedId = sessionId;
-
-    this.host
-      .ports()
-      .prompt(sessionId, prompt)
-      .then(
-        () => this.showPrompt(),
-        (cause: unknown) => this.failed(cause),
-      );
-  }
-
-  // The Server creates the worktree, opens one Session and sends; a failure puts the prompt back.
+  // The Server creates the selected checkout and Session, applies options and sends.
   public create(
     input: SessionNewInput,
     configOptions: InitialConfigOption[],

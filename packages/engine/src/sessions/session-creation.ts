@@ -8,6 +8,7 @@ import { requireInstalledAgent } from '../agents';
 import { findMachineActor } from '../lib/machine-actor';
 import { readProjectPath } from '../projects';
 import { databaseWriterId, writerMachine } from '../storage';
+import { isOfferedConfigChoice } from './admission/config-admission';
 import type { SessionRouterDeps } from './router-deps';
 import {
   submitSessionPrompt,
@@ -176,7 +177,15 @@ const applyInitialConfiguration = async (
 ): Promise<void> => {
   if (!session.getSnapshot().context.acpLease) return;
 
-  for (const choice of input.configOptions)
+  for (const choice of input.configOptions) {
+    if (
+      choice.optional &&
+      !isOfferedConfigChoice(
+        session.getSnapshot().context.configOptions,
+        choice,
+      )
+    )
+      continue;
     await applySessionConfig(session, {
       sessionId: session.getSnapshot().context.sessionId,
       configId: choice.configId,
@@ -184,4 +193,5 @@ const applyInitialConfiguration = async (
         ? { type: 'boolean', value: choice.value }
         : { type: 'id', value: choice.value }),
     });
+  }
 };

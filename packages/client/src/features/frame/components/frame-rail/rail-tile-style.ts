@@ -1,11 +1,11 @@
 import type { ViewStyle } from 'react-native';
 import type { RailTiles } from './rail-tiles';
 
-// A tablet's 80 rail: 48 tiles a hairline apart, the selected one pressed in.
+// A tablet's 80 rail: 48 tiles a hairline apart, the selected one a flat tint.
 export const railTiles: RailTiles = {
   size: 'xl',
   corners: 'rounded-xl',
-  selected: 'bg-selected shadow-inset',
+  selected: 'bg-selected',
   column: 'gap-px',
 };
 

@@ -58,8 +58,8 @@ function progressAccessibility(
     accessibilityLabel: props.accessibilityLabel,
     'aria-valuemin': 0,
     'aria-valuemax': percent,
-    'aria-valuenow': now,
-    accessibilityValue: { min: 0, max: percent, now },
+    'aria-valuenow': props.indeterminate ? undefined : now,
+    accessibilityValue: accessibleValue(props.indeterminate, now),
   };
 }
 
@@ -90,4 +90,11 @@ export function ProgressBar(props: ProgressBarProps): ReactElement {
       <Fill {...props} fill={fill} />
     </View>
   );
+}
+
+function accessibleValue(
+  indeterminate: boolean | undefined,
+  now: number,
+): ComponentProps<typeof View>['accessibilityValue'] {
+  return indeterminate ? undefined : { min: 0, max: percent, now };
 }

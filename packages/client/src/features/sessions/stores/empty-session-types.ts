@@ -1,30 +1,16 @@
 import type {
   InitialConfigOption,
-  SessionCloseOutput,
-  SessionConfigOption,
   SessionNewInput,
   SessionNewOutput,
-  SessionPromptOutput,
 } from '@repo/contracts';
 import type { ConnectionState } from '#features/connection';
-import type { SavedChoices } from '#lib/product/session-configuration';
 import type { NewSessionOutcome } from '../types/new-session-attempt';
-import type { ConfigurationPicks } from '../utils/session-option-choices';
 
 export type FirstPrompt = SessionNewInput['prompt'];
 
 // What New Session asks of the Server and the screen.
 export interface EmptySessionPorts {
   open: (input: SessionNewInput) => Promise<SessionNewOutput>;
-  close: (sessionId: string) => Promise<SessionCloseOutput>;
-  setConfigOption: (
-    sessionId: string,
-    change: InitialConfigOption,
-  ) => Promise<SessionConfigOption[]>;
-  prompt: (
-    sessionId: string,
-    prompt: FirstPrompt,
-  ) => Promise<SessionPromptOutput>;
   // The screen becomes that Session's page in place: no new page, no animation.
   handOff: (sessionId: string) => void;
   // Composer clears the kept Project draft before the Session page takes over.
@@ -33,9 +19,6 @@ export interface EmptySessionPorts {
   connectionState: () => ConnectionState;
 }
 
-// An Agent change settles for this long before the Empty Session reopens for it.
-export const choiceDebounceMs = 300;
-
 // A Feed that never shows the prompt hands the Session on after this long anyway.
 export const promptShowTimeoutMs = 3_000;
 
@@ -43,7 +26,7 @@ export interface EmptySessionState extends NewSessionOutcome {
   pendingPrompt: boolean;
   // The Session the page reads options and the first prompt from, until it hands it on.
   openSessionId: string | undefined;
-  // True while the Local Session opens, reopens or takes the reader's choices.
+  // True while Send creates the Session.
   opening: boolean;
   handedOff: boolean;
 }
@@ -69,16 +52,6 @@ export interface EmptySessionChoices {
 }
 
 export interface EmptySessionConfiguration {
-  saved: SavedChoices;
-  picks: ConfigurationPicks;
-  // The cached options with the reader's choices, which a New worktree Session opens with.
+  // The unsent choices applied before the first prompt, for either checkout.
   initial: InitialConfigOption[];
 }
-
-// The open Session's options as its Feed reads them.
-export interface LiveOptions {
-  sessionId: string;
-  configOptions: SessionConfigOption[];
-}
-
-export const noop = (): void => {};

@@ -20,7 +20,7 @@ import type {
 
 export function ComposerToolbar(layout: ToolbarLayout): React.JSX.Element {
   return (
-    <View className="pointer-events-box-none flex-row items-center justify-between gap-2 pl-2 wide:pl-3.75 pr-2.5 pb-2.5">
+    <View className="pointer-events-box-none flex-row items-center justify-between gap-2 pl-2 pr-2.5 wide:px-4.75 pb-2.5">
       <ComposerLeftControls {...layout} />
       <ComposerRightControls {...layout} />
     </View>

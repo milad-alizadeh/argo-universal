@@ -171,6 +171,8 @@
   /* The glass sidebar, the Composer and every card, popover and menu. */
   --radius-2xl: calc(var(--radius) + 8px);
   --blur-glass: 28px;
+  --blur-tray: 3px;
+  --radius-inherit: inherit;
   /* Sheets, dialogs and alerts on a wide window. */
   --radius-sheet: 28px;
   /* A phone's grouped card: iOS's inset-grouped section (26) and Material's
@@ -390,10 +392,8 @@
       --shadow-tray:
         0 0 0 1px var(--color-shadow-subtle),
         0 12px 32px var(--color-shadow-subtle);
-      /* Hairline: a bare row's 1px edge. Inset: a selected row or tile pressed
-         a little into its surface. */
+      /* Hairline: a resting row's 1px edge. Selected rows use a flat fill. */
       --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
-      --shadow-inset: inset 0 1px 2px var(--color-shadow-subtle);
     }
     @variant dark {
       /* Canvas intensity: 0 is the quietest shade, 1 the strongest. */
@@ -519,7 +519,6 @@
         inset 0 1px 0 var(--color-hairline), 0 0 0 1px var(--color-hairline);
       --shadow-tray: 0 0 0 1px var(--color-hairline);
       --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
-      --shadow-inset: inset 0 1px 2px var(--color-shadow-subtle);
     }
   }
 }
@@ -674,8 +673,4 @@
 
 @utility shadow-hairline {
   box-shadow: var(--shadow-hairline);
-}
-
-@utility shadow-inset {
-  box-shadow: var(--shadow-inset);
 }

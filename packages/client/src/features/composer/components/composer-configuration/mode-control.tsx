@@ -1,7 +1,10 @@
 import type { SessionConfigSelectOption } from '@repo/contracts';
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { MenuTrigger } from '#primitives/overlays/menu';
+import { Sheet } from '#primitives/overlays/sheet';
+import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import type { ComposerConfigurationProps } from './configuration-types';
 import {
@@ -34,6 +37,8 @@ export function ComposerModeControl(
 function ModePopover(
   props: ModeControlProps & { mode: Mode; wide: boolean },
 ): React.JSX.Element {
+  if (!props.wide || Platform.OS !== 'web') return <ModeSheet {...props} />;
+
   return (
     <ComposerPopover listContent label="Mode" trigger={modeTrigger(props)}>
       {(close) => <ModeContents {...props} close={close} />}
@@ -67,4 +72,33 @@ function modeIcon(
   current?: SessionConfigSelectOption,
 ): ReturnType<typeof configurationIcon> {
   return configurationIcon(current ? choiceMetadata(current)?.icon : undefined);
+}
+
+type ModeSheetProps = ModeControlProps & { mode: Mode; wide: boolean };
+
+function ModeSheet(props: ModeSheetProps): React.JSX.Element {
+  const [open, setOpen] = useComposerOverlay(props.disabled);
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={setOpen}
+      label="Mode"
+      trigger={modeTrigger(props)}
+      contentScrolls
+    >
+      {modePage(props, () => setOpen(false))}
+    </Sheet>
+  );
+}
+
+function modePage(
+  props: ModeControlProps & { mode: Mode; wide: boolean },
+  close: () => void,
+): React.JSX.Element {
+  return (
+    <Sheet.Page name="mode" title="Mode">
+      <ModeContents {...props} close={close} />
+    </Sheet.Page>
+  );
 }

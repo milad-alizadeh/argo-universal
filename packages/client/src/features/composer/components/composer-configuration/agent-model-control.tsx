@@ -1,9 +1,9 @@
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
+import { Icon } from '#primitives/content/icon';
 import { MenuTrigger, type MenuTriggerProps } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
-import { Spinner } from '#primitives/status/spinner';
 import { SizeClass } from '../../../../lib/generic/size-class/size-class';
 import { useComposerOverlay } from '../../hooks/use-composer-overlay';
 import { ComposerPopover } from '../composer-popover/composer-popover';
@@ -39,7 +39,7 @@ export function ComposerAgentModelControl(
 
   if (nothingToConfigure(props.configuration)) return null;
 
-  return <AgentModelOverlay {...props} wide={wide} />;
+  return <AgentModelOverlay {...props} disabled={props.disabled} wide={wide} />;
 }
 
 // Hidden until an Agent is chosen, and while neither a model nor an installed Agent can show.
@@ -48,7 +48,9 @@ function nothingToConfigure(
 ): boolean {
   if (configuration.agent) return false;
 
-  return !configuration.agentId || !selection(configuration, 'model');
+  if (configuration.agentChoices) return false;
+
+  return !hasModel(configuration);
 }
 
 // Desktop opens the menu as a popover; everything else opens the Sheet.
@@ -99,15 +101,12 @@ function AgentModelSheet(props: TriggerProps): React.JSX.Element {
   );
 }
 
-// Sheet reads the page declaration from its direct children. The title names the Agent, as no row does.
+// Sheet reads the page declaration from its direct children.
 function configurePage(
   configuration: ComposerConfigurationProps,
 ): React.JSX.Element {
   return (
-    <Sheet.Page
-      name="configure"
-      title={agentName(configuration.agent, configuration.agentId)}
-    >
+    <Sheet.Page name="configure" title="Agent and model">
       <AgentModelMenu configuration={configuration} wide={false} />
     </Sheet.Page>
   );
@@ -129,27 +128,27 @@ function agentModelTriggerProps(props: TriggerProps): MenuTriggerProps {
   };
 }
 
-// A spinner while the options load; wide, the Agent's icon otherwise.
+// Keep the Agent identity stable while its settings load inside the picker.
 function agentModelLeading(props: TriggerProps): React.JSX.Element | undefined {
-  if (props.configuration.opening)
-    return <Spinner accessibilityLabel="Loading options" />;
+  if (!props.wide) return undefined;
 
-  return props.wide ? (
-    <AgentIcon agent={props.configuration.agent} />
-  ) : undefined;
+  if (props.configuration.agent)
+    return <AgentIcon agent={props.configuration.agent} />;
+
+  return (
+    <Icon fitArtwork name="agent" role={{ compact: 'body', wide: 'row' }} />
+  );
 }
 
 // Unlike Configure's Agent row, the trigger shows no id for an Agent that is not installed.
 function triggerLabel({ configuration }: TriggerProps): string {
-  if (optionsAreOpening(configuration)) return 'Loading…';
-
   return (
     modelName(selectedChoice(configuration, 'model')) ||
-    agentName(configuration.agent)
+    agentName(configuration.agent) ||
+    'Choose Agent'
   );
 }
 
-const optionsAreOpening = (
-  configuration: ComposerConfigurationProps,
-): boolean =>
-  Boolean(configuration.opening && !configuration.configOptions.length);
+function hasModel(configuration: ComposerConfigurationProps): boolean {
+  return !!configuration.agentId && !!selection(configuration, 'model');
+}

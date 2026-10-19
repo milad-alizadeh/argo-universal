@@ -62,7 +62,6 @@ export { EmptySessionStore } from './stores/empty-session-store';
 export type {
   EmptySessionChoices,
   EmptySessionConfiguration,
-  LiveOptions,
   EmptySessionPorts,
   EmptySessionState,
 } from './stores/empty-session-types';
@@ -73,11 +72,7 @@ export {
   initialConfigOptions,
 } from './utils/session-option-choices';
 
-export { sessionOptionsKey } from './api/session-options-cache';
-
 export { useSessionOptions } from './hooks/use-session-options';
-
-export { useCacheSessionOptions } from './hooks/use-cache-session-options';
 
 export {
   chooseProject,
@@ -140,6 +135,8 @@ export {
   type MergeMethodChoice,
   useMergeMethod,
 } from './hooks/use-merge-method';
+
+export { ConfigurationStatus } from './components/session-callout/configuration-status';
 
 export { SessionCallout } from './components/session-callout/session-callout';
 

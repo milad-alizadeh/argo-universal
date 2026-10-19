@@ -14,6 +14,7 @@ interface ConfigurationComboboxProps {
   option: SelectConfiguration;
   label: string;
   title: string;
+  leading?: ReactElement;
   choiceLabel?: (choice: SessionConfigSelectOption) => string;
 }
 
@@ -38,6 +39,7 @@ function comboboxProps(
 
   return {
     ...configureRow,
+    valueLeading: props.leading,
     label,
     title,
     value: option.currentValue,

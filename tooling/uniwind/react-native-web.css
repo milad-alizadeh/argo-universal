@@ -8,6 +8,15 @@
 }
 
 @layer base {
+  body {
+    user-select: none;
+  }
+  input,
+  textarea,
+  [contenteditable="true"] {
+    user-select: text;
+  }
+
   /* The primitive focuses its outer Radix wrapper rather than the styled content. */
   :where([role="dialog"]:has(> .composer-popover)) {
     outline: none;
@@ -41,14 +50,10 @@
   /* Rows, controls and headings are chrome, not text to copy. */
   [role="button"],
   [role="button"] *,
-  [role="link"],
-  [role="link"] *,
   [role="menuitem"],
   [role="menuitem"] *,
   [role="tab"],
-  [role="tab"] *,
-  [role="heading"],
-  [role="heading"] * {
+  [role="tab"] * {
     user-select: none;
   }
   :where([role="heading"]) {

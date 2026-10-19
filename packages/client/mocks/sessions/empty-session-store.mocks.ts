@@ -1,19 +1,9 @@
-import type {
-  InitialConfigOption,
-  SessionConfigOption,
-  SessionNewInput,
-  SessionNewOutput,
-  SessionPromptOutput,
-} from '@repo/contracts';
-import { recordedSessionOptions } from '@repo/mocks/app';
+import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
 import { type Mock, vi } from 'vitest';
 import type { ConnectionState } from '../../src/features/connection';
 import { EmptySessionStore } from '../../src/features/sessions/stores/empty-session-store';
 import type { EmptySessionPorts } from '../../src/features/sessions/stores/empty-session-types';
 import { openFailure } from './open-failure.mocks';
-
-// Written out so the store cannot grade itself.
-export const choiceDebounceMs = 300;
 
 export const local = (agent: string): SessionNewInput => ({
   projectId: 'project-a',
@@ -32,9 +22,6 @@ export const prompt = [
   { type: 'text' as const, text: 'Fix the flaky login test' },
 ];
 
-export const options: SessionConfigOption[] =
-  recordedSessionOptions('agent-one');
-
 export const launchFailureMessage = 'The Agent did not start';
 
 // A rejected `session.new` whose Agent failed to launch.
@@ -46,19 +33,11 @@ export const failure = openFailure({
 // A rejected `session.new` whose Agent needs sign-in.
 export const authRequired = openFailure({ type: 'auth-required' });
 
-export const promptOutput: SessionPromptOutput = { messageId: 'message-1' };
-
 // Each open and prompt waits until the test settles it.
 export interface Calls {
   open: {
     input: SessionNewInput;
     call: PromiseWithResolvers<SessionNewOutput>;
-  }[];
-  close: string[];
-  setConfigOption: InitialConfigOption[];
-  prompt: {
-    input: string;
-    call: PromiseWithResolvers<SessionPromptOutput>;
   }[];
   handOff: string[];
   clearDraft: number;
@@ -77,23 +56,8 @@ function deferred<Input, Output>(
   return call.promise;
 }
 
-// A call answered at once, recorded as it is made.
-function answered<Input, Output>(
-  record: Input[],
-  input: Input,
-  output: Output,
-): Promise<Output> {
-  record.push(input);
-
-  return Promise.resolve(output);
-}
-
 const fakePorts = (calls: Calls): EmptySessionPorts => ({
   open: (input) => deferred(calls.open, input),
-  close: (sessionId) => answered(calls.close, sessionId, {}),
-  setConfigOption: (_sessionId, change) =>
-    answered(calls.setConfigOption, change, options),
-  prompt: (sessionId) => deferred(calls.prompt, sessionId),
   handOff: (sessionId) => void calls.handOff.push(sessionId),
   clearDraft: () => {
     calls.clearDraft += 1;
@@ -109,8 +73,6 @@ export interface EmptySessionHarness {
   calls: Calls;
   store: EmptySessionStore;
   choose: (input?: SessionNewInput) => void;
-  // The Local Session opens and its Feed reads its options.
-  openLocal: (sessionId: string) => Promise<void>;
   // The screen's send of the Composer's current draft, which Retry asks for on a New worktree.
   sendDraft: Mock<() => void>;
   // Retry, or a finished sign-in.
@@ -123,28 +85,10 @@ export interface EmptySessionHarness {
 
 const noCalls = (): Calls => ({
   open: [],
-  close: [],
-  setConfigOption: [],
-  prompt: [],
   handOff: [],
   clearDraft: 0,
   connection: 'open',
 });
-
-// The latest Local Session opens and its Feed reads its options, with no saved choices or picks.
-async function openLocal(
-  calls: Calls,
-  store: EmptySessionStore,
-  sessionId: string,
-): Promise<void> {
-  calls.open.at(-1)?.call.resolve({ sessionId });
-  await settle();
-  store.configure(
-    { saved: {}, picks: {}, initial: [] },
-    { sessionId, configOptions: options },
-  );
-  await settle();
-}
 
 // The Connection dropping, and reopening to open the Empty Session again.
 const connectionCauses = (
@@ -183,7 +127,6 @@ export function emptySessionHarness(): EmptySessionHarness {
     calls,
     store,
     choose: (input) => store.choose({ input, connected: true }),
-    openLocal: (sessionId) => openLocal(calls, store, sessionId),
     ...retryCause(store),
     ...connectionCauses(calls, store),
   };

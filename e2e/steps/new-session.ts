@@ -11,14 +11,19 @@ export const messageLabel = 'Message';
 // Opening a Session starts the Agent process, which outlasts the default 5s under parallel load.
 export const sessionOpenTimeout = { timeout: 15_000 };
 
-// New Session shows Loading while a Local Session opens, or the Server reads a New worktree's options, for an Agent this device has no options for.
-export const openingLabel = 'Loading options';
+// Loading appears only when the Server has no saved options.
+export const openingLabel = 'Loading configuration…';
 
 // Loading is gone: nothing is reading options for an Agent without cached ones.
 export async function waitForEmptySession(page: Page): Promise<void> {
+  await openConfiguration(page);
   await expect(
-    page.getByRole('progressbar', { name: openingLabel }),
+    page.getByRole('progressbar', { name: /Loading configuration|Installing/ }),
   ).toHaveCount(0, sessionOpenTimeout);
+  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('dialog', { name: agentModelLabel }),
+  ).toBeHidden();
 }
 
 // The text a Message box shows, whether it draws a plain text area or a rich-text editor.
@@ -51,19 +56,33 @@ export async function chooseLocalCheckout(page: Page): Promise<void> {
   await expect(checkout).not.toContainText('main');
   await checkout.click();
   await page.getByRole('button', { name: 'Local' }).click();
-  // A phone's sign-in or launch callout sheet can cover the Checkout as soon as the Local open fails.
+  // Checkout selection changes the next Send; it opens no Session.
   await expect(
     page.getByRole('button', { name: 'Checkout', includeHidden: true }),
   ).toHaveText(/Local/);
 }
 
+export async function openConfiguration(page: Page): Promise<void> {
+  if (await page.getByRole('dialog', { name: agentModelLabel }).isVisible())
+    return;
+  await page.getByRole('button', { name: agentModelLabel }).click();
+}
+
 export async function chooseAgent(page: Page, label: string): Promise<void> {
-  await page.getByRole('button', { name: 'Select Agent', exact: true }).click();
+  await openConfiguration(page);
+  await page.getByRole('button', { name: /^Agent(?:,|$)/ }).click();
   await page.getByRole('button', { name: label, exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Select Agent' })).toHaveCount(
+    0,
+  );
   await expect(
-    page.getByRole('button', { name: 'Select Agent', exact: true }),
+    page.getByRole('button', { name: /^Agent(?:,|$)/ }),
   ).toContainText(label);
 }
+
+When('I open the configuration picker', async ({ page }) =>
+  openConfiguration(page),
+);
 
 async function startWithAgent(
   page: Page,

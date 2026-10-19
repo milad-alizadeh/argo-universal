@@ -103,7 +103,8 @@ type SignInScenarioName =
   | 'terminal-sign-in-required'
   | 'turn-auth-required'
   | 'turn-terminal-sign-in'
-  | 'open-exit-once';
+  | 'open-exit-once'
+  | 'configuration-exit-once';
 
 // Sign-in fixtures for the App's sign-in and launch callouts; each Agent process starts signed out.
 export const signInScenarios = (
@@ -116,4 +117,13 @@ export const signInScenarios = (
   'turn-auth-required': turnAuthRequired(steps),
   'turn-terminal-sign-in': turnTerminalSignIn(steps),
   'open-exit-once': openExitOnce(steps),
+  'configuration-exit-once': configurationExitOnce(steps),
 });
+
+function configurationExitOnce(steps: Steps): ScriptedScenario {
+  return {
+    ...base(steps),
+    responses: { 'session/new': [{ steps: [agentExit] }] },
+    relaunched: base(steps),
+  };
+}

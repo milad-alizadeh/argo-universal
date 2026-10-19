@@ -39,11 +39,6 @@ const withValue = (
     : withChoice(option, value);
 };
 
-const offers = (
-  option: SessionConfigOption,
-  value: string | boolean,
-): boolean => withValue(option, value) !== option;
-
 // Picks of a model, effort or mode count as saved choices, so effort still follows the chosen model.
 function savedWithPicks(
   options: SessionConfigOption[],
@@ -103,37 +98,13 @@ const rank = (option: SessionConfigOption): number => {
 // The choices a Session is opened with, model before effort before mode.
 export const initialConfigOptions = (
   chosen: SessionConfigOption[],
+  picks: ConfigurationPicks = {},
 ): InitialConfigOption[] =>
   // Hermes on phones lacks toSorted.
   [...chosen]
     .sort((a, b) => rank(a) - rank(b))
-    .map(({ configId, currentValue }) => ({ configId, value: currentValue }));
-
-export const changeKey = ({ configId, value }: InitialConfigOption): string =>
-  `${configId}=${String(value)}`;
-
-// A change the Session still lacks and offers.
-function lacks(
-  current: SessionConfigOption | undefined,
-  change: InitialConfigOption,
-): boolean {
-  if (current === undefined || current.currentValue === change.value)
-    return false;
-
-  return offers(current, change.value);
-}
-
-// The next chosen value the open Session still lacks; each value is tried once, so a refused one stays as the Session has it.
-export const nextConfigChange = (
-  session: SessionConfigOption[],
-  chosen: SessionConfigOption[],
-  tried: ReadonlySet<string>,
-): InitialConfigOption | undefined =>
-  initialConfigOptions(chosen).find(
-    (change) =>
-      !tried.has(changeKey(change)) &&
-      lacks(
-        session.find((option) => option.configId === change.configId),
-        change,
-      ),
-  );
+    .map(({ configId, currentValue }) => ({
+      configId,
+      value: currentValue,
+      optional: picks[configId] === undefined,
+    }));

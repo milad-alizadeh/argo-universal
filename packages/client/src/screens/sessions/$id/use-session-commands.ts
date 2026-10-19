@@ -52,7 +52,6 @@ export function useSessionCommands(
 
 function useConfigCommands({
   sessionId,
-  agent,
   resumeAfterCommand,
 }: SessionCommandTarget): Pick<
   SessionCommands,
@@ -60,7 +59,6 @@ function useConfigCommands({
 > {
   const { setConfigOption, change } = useSessionConfigChange(
     sessionId,
-    agent,
     resumeAfterCommand,
   );
 

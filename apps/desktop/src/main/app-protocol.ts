@@ -13,9 +13,9 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: http://127.0.0.1:*",
+  "img-src 'self' data: blob: https://cdn.agentclientprotocol.com http://127.0.0.1:*",
   "font-src 'self' data:",
-  // Registry SVG icons use fetch for data URIs and the official CDN.
+  // Registry resources may also be fetched from the official CDN.
   "connect-src 'self' data: https://cdn.agentclientprotocol.com ws://127.0.0.1:* http://127.0.0.1:*",
 ].join('; ');
 

@@ -6,6 +6,7 @@ export interface SymbolGlyphProps {
   symbol: DrawnSymbol;
   pixels: number;
   glyphScale: number;
+  fitArtwork?: boolean;
   weight?: SymbolWeight;
   tintColor?: ColorValue;
   // The colour classes again, for web, where CSS resolves state variants such as group-active that tintColor misses.

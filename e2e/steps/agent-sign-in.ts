@@ -5,6 +5,10 @@ import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { expectMessage, messageLabel, sessionOpenTimeout } from './new-session';
 
+const newSessionPath = '/sessions/new';
+
+const configurationSignIn = 'Sign in to load configuration.';
+
 const menuLabel = 'Authentication options';
 
 const signInTerminal = 'Agent sign-in terminal';
@@ -13,9 +17,10 @@ const signInTerminal = 'Agent sign-in terminal';
 export const callout = (page: Page, title: string | RegExp): Locator =>
   page.getByRole('heading', { name: title, exact: typeof title === 'string' });
 
-// Sign-in and launch trouble show only once a Session opens, so these steps check only that the Agent is listed as saved.
+// These steps select scripted Agent behaviour; the Agent must be installed.
 for (const fixture of [
   'Agent {int} needs sign-in',
+  'Agent {int} exits while fetching configuration',
   'Agent {int} offers two sign-in methods',
   'Agent {int} holds its sign-in',
   'Agent {int} signs in through a terminal',
@@ -29,9 +34,11 @@ Then(
   'the App asks to authenticate to Agent {int} with {string}',
   async ({ page, server }, ordinal: number, method: string): Promise<void> => {
     const { name: label } = await readAgent(page, server.httpUrl, ordinal);
-    await expect(callout(page, `Authenticate to ${label}`)).toBeVisible(
-      sessionOpenTimeout,
-    );
+    await expect(
+      page.url().endsWith(newSessionPath)
+        ? page.getByText(configurationSignIn, { exact: true })
+        : callout(page, `Authenticate to ${label}`),
+    ).toBeVisible(sessionOpenTimeout);
     await expect(
       page.getByRole('button').filter({ hasText: method }),
     ).toBeVisible();
@@ -42,7 +49,7 @@ Then(
   'the App offers the sign-in methods {string} then {string}',
   async ({ page }, first: string, second: string): Promise<void> => {
     await expect(
-      page.getByText('Choose one of the following authentication options:'),
+      page.getByText(configurationSignIn, { exact: true }),
     ).toBeVisible(sessionOpenTimeout);
     await expect(page.getByRole('button', { name: first })).toBeVisible();
     await page.getByRole('button', { name: menuLabel }).click();
@@ -74,7 +81,11 @@ Then(
   'the App is authenticating to Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
     const { name: label } = await readAgent(page, server.httpUrl, ordinal);
-    await expect(callout(page, `Authenticating to ${label}…`)).toBeVisible();
+    await expect(
+      page.url().endsWith(newSessionPath)
+        ? page.getByText('Signing in…', { exact: true })
+        : callout(page, `Authenticating to ${label}…`),
+    ).toBeVisible();
   },
 );
 
@@ -88,6 +99,9 @@ Then('the sign-in callout is gone', async ({ page }): Promise<void> => {
     sessionOpenTimeout,
   );
   await expect(callout(page, 'Authentication Required')).toHaveCount(0);
+
+  if (page.url().endsWith(newSessionPath))
+    await expectConfigurationSignedIn(page);
 });
 
 Then(
@@ -148,3 +162,14 @@ When('I press Return in the sign-in terminal', async ({ page }) => {
   await terminal.getByRole('textbox').focus();
   await page.keyboard.press('Enter');
 });
+
+async function expectConfigurationSignedIn(page: Page): Promise<void> {
+  await expect(
+    page.getByText(configurationSignIn, { exact: true }),
+  ).toHaveCount(0, sessionOpenTimeout);
+  await expect(page.getByText('Signing in…', { exact: true })).toHaveCount(
+    0,
+    sessionOpenTimeout,
+  );
+  await page.keyboard.press('Escape');
+}

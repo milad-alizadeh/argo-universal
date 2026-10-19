@@ -17,6 +17,7 @@ type TriggerProps = MenuTriggerProps & OverlayHandlers;
 
 const triggerKeys = [
   'label',
+  'labelRole',
   'icon',
   'leading',
   'trailing',
@@ -98,7 +99,10 @@ function iconTone(tone: MenuTriggerProps['tone']): 'danger' | 'muted' {
 
 // Icon only, the label is read out but not shown, and the chevron goes.
 function TriggerText(
-  props: Pick<MenuTriggerProps, 'label' | 'tone' | 'iconOnly' | 'trailing'>,
+  props: Pick<
+    MenuTriggerProps,
+    'label' | 'labelRole' | 'tone' | 'iconOnly' | 'trailing'
+  >,
 ): ReactElement | null {
   if (props.iconOnly) return null;
 
@@ -112,11 +116,11 @@ function TriggerText(
 }
 
 function TriggerLabel(
-  props: Pick<MenuTriggerProps, 'label' | 'tone'>,
+  props: Pick<MenuTriggerProps, 'label' | 'labelRole' | 'tone'>,
 ): ReactElement {
   return (
     <Text
-      role="row"
+      role={props.labelRole ?? 'row'}
       tone={props.tone}
       numberOfLines={1}
       selectable={false}

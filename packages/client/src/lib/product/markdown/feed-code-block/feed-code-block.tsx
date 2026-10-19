@@ -8,7 +8,6 @@ import { CodeBlockBody } from './code-block-body';
 import {
   type CodeBlockSource,
   copyAction,
-  hasBody,
   headerTitle,
 } from './code-block-source';
 
@@ -23,8 +22,8 @@ function CodeBlockFrame({ children }: { children: ReactNode }): ReactElement {
     <View
       className={cn(
         codeBlockGroup,
-        'cursor-auto overflow-hidden',
         markdownBlockClassNames.codeBlock,
+        'cursor-auto overflow-hidden bg-tint px-1 pb-1',
       )}
     >
       {children}
@@ -41,7 +40,6 @@ function SourceHeader(props: FeedCodeBlockProps): ReactElement {
       copyValue={copy.value}
       copyLabel={copy.label}
       resource={props.resource}
-      hasBody={hasBody(props)}
     />
   );
 }

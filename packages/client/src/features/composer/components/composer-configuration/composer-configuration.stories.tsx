@@ -1,7 +1,9 @@
+import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { fn } from 'storybook/test';
 import {
   composerFastModeConfiguration,
   composerLongListConfiguration,
@@ -93,3 +95,32 @@ function configurationChanged(
     );
   };
 }
+
+// Before Send the same Drill adds Agent selection; after Send its row is read-only.
+export const NewSession: StoryObj<typeof meta> = {
+  args: {
+    configuration: {
+      ...configuration,
+      agentChoices: {
+        agents: newSessionCatalogs.bothAvailable,
+        onChange: fn(),
+        onAdd: fn(),
+      },
+    },
+  },
+};
+
+export const LoadingConfiguration: StoryObj<typeof meta> = {
+  args: {
+    configuration: {
+      ...configuration,
+      configOptions: [],
+      opening: true,
+      agentChoices: {
+        agents: newSessionCatalogs.bothAvailable,
+        onChange: fn(),
+        onAdd: fn(),
+      },
+    },
+  },
+};

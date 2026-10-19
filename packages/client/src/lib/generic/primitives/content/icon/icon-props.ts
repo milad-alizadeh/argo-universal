@@ -12,6 +12,8 @@ type IconDrawing =
 // Kit-only: drawing classes, glyph weight and test identity.
 export type IconProps = IconDrawing & {
   className?: string;
+  // Opt-in for picker artwork that fills the slot independently of text-symbol metrics.
+  fitArtwork?: boolean;
   weight?: SymbolGlyphProps['weight'];
   testID?: string;
 };
