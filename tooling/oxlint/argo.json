@@ -99,8 +99,12 @@
   },
   "overrides": [
     {
-      // ADR-0027: this worker-only loader evaluates first-party Plugin modules in a context without Node globals.
-      "files": ["packages/engine/src/plugins/worker-modules.ts"],
+      // ADR-0027 confines first-party Plugin evaluation to the worker realm. #824 explicitly runs local Plugin tests.
+      "files": [
+        "packages/engine/src/plugins/worker-modules.ts",
+        "packages/engine/src/plugins/worker-realm.ts",
+        "apps/server/src/plugin-test-files.ts"
+      ],
       "rules": { "sonarjs/code-eval": "off" }
     },
     {
@@ -2156,6 +2160,7 @@
       "excludeFiles": [
         "**/*.test.*",
         "**/mocks/**",
+        "apps/server/bin/argo.mjs",
         "apps/server/src/supervisor/engine-process.ts",
         "apps/server/src/supervisor/process-group.ts",
         "packages/engine/src/system/info.ts",

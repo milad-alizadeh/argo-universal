@@ -10,6 +10,7 @@ import {
   type PluginLocation,
 } from './plugin-location';
 import type { PluginServices } from './plugin-services';
+import { PluginTurns } from './plugin-turns';
 import { oncePerRenderFallback, renderFallbackLine } from './render-fallback';
 import { answerPluginCall } from './runtime-calls';
 import { RuntimePlugin } from './runtime-plugin';
@@ -19,6 +20,7 @@ import {
   type PluginStatus,
   type HostMessage,
 } from './runtime-protocol';
+import { hostCrashLine, pluginIdentity } from './runtime-status';
 import { PluginViews } from './views';
 
 export class PluginRuntime {
@@ -29,10 +31,12 @@ export class PluginRuntime {
   readonly hooks: PluginHooks;
   private hostError: string | null = null;
   private closed = false;
+  readonly turns = new PluginTurns(() => this.plugins.values());
 
   constructor(
     private readonly log: (line: string) => void,
     private readonly services: PluginServices,
+    private readonly clockStart?: number,
   ) {
     this.log = oncePerRenderFallback(log);
     this.views = new PluginViews(
@@ -41,6 +45,10 @@ export class PluginRuntime {
     );
     this.host = new HostConnection(this.callbacks());
     this.hooks = hostHooks(this.host, this.log);
+  }
+
+  public advanceClock(pluginId: string, ms: number): Promise<void> {
+    return this.host.clock.advance(pluginId, ms);
   }
 
   public renderFallback(
@@ -113,13 +121,12 @@ export class PluginRuntime {
   }
 
   private createPlugin(location: PluginLocation): RuntimePlugin {
-    const identity = {
-      pluginId: location.entry.pluginId,
-      name: location.name ?? location.entry.pluginId,
-    };
+    const identity = pluginIdentity(location);
 
     return new RuntimePlugin({
       ...location,
+      entry: { ...location.entry, clockStart: this.clockStart },
+      deferReload: () => this.turns.running,
       host: this.host,
       grant: (plugin): void =>
         this.services.activate(location.entry.pluginId, plugin),
@@ -162,13 +169,7 @@ export class PluginRuntime {
   private crashed(message: string): void {
     this.hostError = message;
 
-    const active = [...this.plugins].filter(
-      ([, plugin]) => plugin.status.state === 'running',
-    );
-
-    this.log(
-      `${message}; running Plugins: ${active.map(([id]) => id).join(', ') || '(none)'}`,
-    );
+    this.log(hostCrashLine(message, this.plugins));
 
     for (const plugin of this.plugins.values()) plugin.hostCrashed(message);
   }

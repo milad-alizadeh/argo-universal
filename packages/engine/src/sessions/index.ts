@@ -16,6 +16,8 @@ export {
 
 export { createSessionSnapshotWatcher } from './snapshot';
 
+export { watchTurnActivity } from './turn-activity';
+
 export { createSessionReader } from './session-record';
 
 export { createSessionActorInput } from './session-actor-input';

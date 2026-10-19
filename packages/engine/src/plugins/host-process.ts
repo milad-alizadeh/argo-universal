@@ -8,12 +8,20 @@ import {
 const workers = new HostWorkers((message) => process.send?.(message));
 
 function lifecycle(
-  command: Extract<HostCommand, { type: 'event' | 'stop' | 'waiting' }>,
+  command: Extract<
+    HostCommand,
+    { type: 'event' | 'stop' | 'waiting' | 'clock.advance' }
+  >,
 ): void {
-  if (command.type === 'event') workers.event(command);
+  if (isWorkerEvent(command)) workers.event(command);
   else if (command.type === 'waiting') workers.waiting(command);
   else workers.stop(command.pluginId);
 }
+
+const isWorkerEvent = (
+  command: HostCommand,
+): command is Extract<HostCommand, { type: 'event' | 'clock.advance' }> =>
+  command.type === 'event' || command.type === 'clock.advance';
 
 const isDelivery = (command: HostCommand): command is HostReply | HostHook =>
   command.type === 'reply' || command.type === 'hook';

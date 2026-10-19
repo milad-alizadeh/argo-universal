@@ -14,6 +14,10 @@ import {
 import { PluginStatus } from '@repo/contracts/plugins/runtime';
 import * as wire from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
+import { ClockCommand, ClockReply } from '#plugin-clock-protocol';
+import { PluginEntry } from '#plugin-entry';
+
+export { PluginEntry } from '#plugin-entry';
 
 export { PluginStatus } from '@repo/contracts/plugins/runtime';
 
@@ -26,16 +30,6 @@ export { StorageQuery, StorageResult } from '#plugin-storage-protocol';
 import { StorageQuery, StorageResult } from '#plugin-storage-protocol';
 
 export const pluginAnswerLimitMs = 3000;
-
-export const PluginEntry = z.object({
-  pluginId: z.string(),
-  directory: z.string(),
-  main: z.string(),
-  generation: z.number().int().nonnegative(),
-  source: z.string().optional(),
-});
-
-export type PluginEntry = z.infer<typeof PluginEntry>;
 
 export const SecretCall = z.discriminatedUnion('action', [
   z.object({ action: z.literal('get'), account: z.string() }),
@@ -89,6 +83,7 @@ export type PluginReply = z.infer<typeof PluginReply>;
 
 export const HostCommand = z.discriminatedUnion('type', [
   PluginEntry.extend({ type: z.literal('activate') }),
+  ClockCommand.extend({ pluginId: z.string() }),
   z.object({ type: z.literal('stop'), pluginId: z.string() }),
   HookWaiting,
   z.object({
@@ -117,6 +112,7 @@ export type HostHook = Extract<HostCommand, { type: 'hook' }>;
 export type HostWaiting = Extract<HostCommand, { type: 'waiting' }>;
 
 export const HostMessage = z.discriminatedUnion('type', [
+  ClockReply.extend({ pluginId: z.string(), generation: z.number() }),
   z.object({ type: z.literal('ready') }),
   PluginStatus.extend({
     type: z.literal('status'),
@@ -142,7 +138,11 @@ export const WorkerCall = z.object({
 
 export type WorkerCall = z.infer<typeof WorkerCall>;
 
-export const WorkerMessage = z.union([z.enum(['ready', 'pong']), WorkerCall]);
+export const WorkerMessage = z.union([
+  z.enum(['ready', 'pong']),
+  WorkerCall,
+  ClockReply,
+]);
 
 export const WorkerReply = z.object({
   type: z.literal('reply'),
@@ -162,6 +162,7 @@ export const WorkerCommand = z.union([
   WorkerReply,
   WorkerEvent,
   WorkerHookCommand,
+  ClockCommand,
 ]);
 
 export const notStarted: PluginStatus = {

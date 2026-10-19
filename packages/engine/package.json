@@ -5,6 +5,8 @@
   "type": "module",
   "imports": {
     "#mocks/*": "./mocks/*.ts",
+    "#plugin-clock-protocol": "./src/plugins/clock-protocol.ts",
+    "#plugin-entry": "./src/plugins/plugin-entry.ts",
     "#plugin-storage-protocol": "./src/plugins/storage-protocol.ts"
   },
   "scripts": {
@@ -13,6 +15,7 @@
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "catalog:",
+    "@jridgewell/trace-mapping": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/git": "workspace:*",
@@ -23,7 +26,9 @@
     "drizzle-orm": "catalog:",
     "esbuild": "catalog:",
     "fflate": "catalog:",
+    "jsonc-parser": "catalog:",
     "node-pty": "catalog:",
+    "oxc-parser": "catalog:",
     "react": "catalog:",
     "react-native": "catalog:",
     "react-native-svg": "catalog:",
@@ -55,6 +60,7 @@
     "./server-runtime": "./src/server-runtime.ts",
     "./shell-runtime": "./src/agents/shell-runtime.ts",
     "./plugins": "./src/plugins/index.ts",
+    "./plugin-validation": "./src/plugins/validate.ts",
     "./mocks/keychain": "./mocks/memory-keychain.ts"
   }
 }

@@ -19,3 +19,7 @@ export { pluginManifest } from './located-plugins';
 export { PluginService } from './service';
 
 export type { PluginServiceDeps as PluginsDeps } from './service';
+
+export { readManifest as readPluginManifest } from './manifest';
+
+export { PluginStorage } from './storage';

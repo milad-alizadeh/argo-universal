@@ -9,6 +9,16 @@ const unboundedProbe = '999999.0.0';
 // Dev builds may carry prerelease versions, which ordinary ranges would otherwise exclude.
 const semverOptions = { includePrerelease: true };
 
+// A refusal of one manifest field, named by its path in plugin.json.
+export class ManifestFieldError extends Error {
+  constructor(
+    readonly field: string[],
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 // Validation finishes before any contribution can reach the App.
 export async function readManifest(
   directory: string,
@@ -24,25 +34,31 @@ export async function readManifest(
   return manifest;
 }
 
+const engineError = (message: string): ManifestFieldError =>
+  new ManifestFieldError(['engines', 'argo'], message);
+
 function engineRange(value: string): string {
   const range = validRange(value);
 
-  if (!range) throw new Error('engines.argo must be a semver range');
+  if (!range) throw engineError('engines.argo must be a semver range');
 
   if (satisfies(unboundedProbe, range, semverOptions))
-    throw new Error('engines.argo must never be * or have no upper bound');
+    throw engineError('engines.argo must never be * or have no upper bound');
 
   return range;
 }
 
 function validateVersion(manifest: PluginManifest, version: string): void {
   if (!valid(manifest.version))
-    throw new Error('version must be a semver version');
+    throw new ManifestFieldError(
+      ['version'],
+      'version must be a semver version',
+    );
   const range = engineRange(manifest.engines.argo);
 
   if (satisfies(version, range, semverOptions)) return;
 
-  throw new Error(incompatibility(manifest.engines.argo, range, version));
+  throw engineError(incompatibility(manifest.engines.argo, range, version));
 }
 
 function incompatibility(
@@ -63,5 +79,6 @@ function incompatibility(
 async function requireMain(directory: string, main: string): Promise<void> {
   const file = await stat(join(directory, main)).catch(() => null);
 
-  if (!file?.isFile()) throw new Error(`main file ${main} is missing`);
+  if (!file?.isFile())
+    throw new ManifestFieldError(['main'], `main file ${main} is missing`);
 }

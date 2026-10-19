@@ -1,23 +1,9 @@
 import type { BuildContext } from 'esbuild';
 import { watchPlugin } from './dev-bundle';
-import type { HostConnection } from './host-connection';
 import type { ActivatedPlugin } from './plugin-access';
-import {
-  notStarted,
-  runtimeError,
-  type PluginEntry,
-  type PluginStatus,
-} from './runtime-protocol';
-
-type PluginInput = {
-  entry: Omit<PluginEntry, 'generation'>;
-  host: HostConnection;
-  // Grants the Plugin its Capabilities as each worker loads; `release` takes them away again.
-  grant: (plugin: ActivatedPlugin) => void;
-  release: () => void;
-  log: (line: string) => void;
-  changed: (status: PluginStatus) => void;
-};
+import type { RuntimePluginInput } from './runtime-plugin-input';
+import { notStarted, runtimeError } from './runtime-protocol';
+import type { PluginStatus } from './runtime-protocol';
 
 export class RuntimePlugin {
   status = notStarted;
@@ -25,13 +11,14 @@ export class RuntimePlugin {
   private answer: ((status: PluginStatus) => void) | null = null;
   private build: Promise<BuildContext> | null = null;
   private closed = false;
-  private source: string | undefined;
+  private source = { text: '', version: '' };
   private buildError: string | null = null;
   private generation = 0;
+  private pendingReload = false;
   // Nothing is granted until the first activation names the manifest's Capabilities.
   private granted: ActivatedPlugin;
 
-  constructor(private readonly input: PluginInput) {
+  constructor(private readonly input: RuntimePluginInput) {
     this.granted = { grants: [], codeFolder: input.entry.directory };
   }
 
@@ -105,7 +92,7 @@ export class RuntimePlugin {
   private bundle(): void {
     if (this.build) return this.loadBundled();
     this.build = watchPlugin(this.input.entry, {
-      loaded: (source) => this.reloaded(source),
+      loaded: (source, version) => this.reloaded(source, version),
       failed: (error) => this.buildFailed(error),
     });
     void this.build.catch((cause: unknown) =>
@@ -116,12 +103,34 @@ export class RuntimePlugin {
   private loadBundled(): void {
     if (this.buildError) return this.fail(this.buildError);
 
-    if (this.source !== undefined) this.load();
+    if (this.source.version !== '') this.load();
   }
 
-  private reloaded(source: string): void {
-    if (this.closed) return;
-    this.source = source;
+  public async flushReload(): Promise<void> {
+    if (!this.pendingReload || this.closed) return;
+    this.pendingReload = false;
+
+    await this.rebuild();
+  }
+
+  private async rebuild(): Promise<void> {
+    // Build callbacks publish the refusal; the Turn ending still succeeds.
+    await this.build?.then((build) => build.rebuild()).catch(() => {});
+  }
+
+  private defer(): boolean {
+    if (this.generation === 0 || !this.input.deferReload()) return false;
+    this.pendingReload = true;
+    this.input.log(
+      `Plugin ${this.input.entry.pluginId}: dev build deferred until Turn ends`,
+    );
+
+    return true;
+  }
+
+  private reloaded(source: string, version: string): void {
+    if (this.skipReload(version)) return;
+    this.source = { text: source, version };
     this.buildError = null;
     this.status = notStarted;
     this.input.changed(notStarted);
@@ -129,6 +138,16 @@ export class RuntimePlugin {
     if (!this.answer) void this.awaitActivation();
     this.stopWorker();
     this.load();
+  }
+
+  private skipReload(version: string): boolean {
+    if (this.closed || this.defer()) return true;
+
+    return this.unchanged(version);
+  }
+
+  private unchanged(version: string): boolean {
+    return version === this.source.version && this.buildError === null;
   }
 
   private stopWorker(): void {
@@ -144,7 +163,7 @@ export class RuntimePlugin {
       this.input.grant(this.granted);
       this.input.host.activate({
         ...this.input.entry,
-        source: this.source,
+        source: this.source.text,
         generation: this.generation,
       });
     } catch (error) {
@@ -160,6 +179,7 @@ export class RuntimePlugin {
   }
 
   private buildFailed(error: string): void {
+    if (this.closed || this.defer()) return;
     this.buildError = error;
     this.fail(error);
   }

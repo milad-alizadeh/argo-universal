@@ -143,7 +143,7 @@ const pluginDeps = (setup: HttpSetup): PluginDeps => ({
 async function listenWithPlugins(
   server: Server,
   port: number,
-  setup: Pick<HttpSetup, 'pluginRuntime' | 'hookPort' | 'notifications'>,
+  setup: HttpSetup,
 ): Promise<void> {
   try {
     await listenOnLoopback(server, port);
