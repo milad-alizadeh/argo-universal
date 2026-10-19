@@ -89,17 +89,23 @@ export type WireSchemaHints = {
     "accessibilityLabel": PropValue<"Image", "accessibilityLabel">;
   };
   "Video": {
-    /** Video URL or Plugin asset routed through the Server. */
+    /** The video, from `argo.assets.resolve`: a Plugin file, or a remote URL the Server fetched. */
     "source": PropValue<"Video", "source">;
-    /** The visible and accessible label. */
+    /** poster for this part. */
+    "poster": PropValue<"Video", "poster">;
+    /** Frame aspect: landscape 16:9 (default), square 1:1, portrait 9:16. */
+    "aspect": PropValue<"Video", "aspect">;
+    /** Corner radius token: control (default) or none. */
+    "radius": PropValue<"Video", "radius">;
+    /** Play at once, muted and looping, with the controls hidden until tapped. Stays paused with Reduce Motion. */
+    "autoPlay": PropValue<"Video", "autoPlay">;
+    /** Spoken name of the video. */
     "accessibilityLabel": PropValue<"Video", "accessibilityLabel">;
-    /** Show native playback controls. */
-    "controls": PropValue<"Video", "controls">;
   };
   "Audio": {
-    /** Audio URL or Plugin asset routed through the Server. */
+    /** The audio, from `argo.assets.resolve`: a Plugin file, or a remote URL the Server fetched. */
     "source": PropValue<"Audio", "source">;
-    /** The visible and accessible label. */
+    /** Spoken name of the audio; names its play button and scrubber. */
     "accessibilityLabel": PropValue<"Audio", "accessibilityLabel">;
   };
   "Label": {

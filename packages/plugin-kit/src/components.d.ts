@@ -70,6 +70,10 @@ export const Alert: PluginComponents['Alert'];
 
 export const Sheet: PluginComponents['Sheet'];
 
+export const Video: PluginComponents['Video'];
+
+export const Audio: PluginComponents['Audio'];
+
 export const Text: PluginComponents['Text'];
 
 export const Button: PluginComponents['Button'];

@@ -117,6 +117,8 @@ catalog:
   expo-splash-screen: ~57.0.9
   expo-status-bar: ~57.0.1
   expo-symbols: ~57.0.3
+  expo-audio: ~57.0.5
+  expo-video: ~57.0.5
   expo-system-ui: ~57.0.4
   jscpd: 5.4.0
   jsonc-parser: 3.3.1

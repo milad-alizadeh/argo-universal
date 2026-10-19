@@ -35,12 +35,14 @@
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [
         "@expo/ui",
+        "expo-audio",
         "expo-clipboard",
         "expo-file-system",
         "expo-font",
         "expo-glass-effect",
         "expo-haptics",
         "expo-image-picker",
+        "expo-video",
         "react-native-svg",
         // Knip assumes OTA updates are installed unless Expo config explicitly disables them.
         "expo-updates"
