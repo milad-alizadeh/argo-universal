@@ -16,23 +16,27 @@ export interface ContextActionsProps {
   children: ContextMenuProps['children'];
 }
 
-// Opens the actions on right-click and long press; with no ActionList, the trigger draws alone.
+// Opens the actions on right-click and long press, keeping the first list's menu props; with no ActionList, the trigger draws alone.
 export function ContextActions(props: ContextActionsProps): ReactElement {
   const lists = flattenedChildren(props.actions).filter(isActionList);
+  const [first] = lists;
 
-  if (!lists.length) return props.children;
+  if (!first) return props.children;
 
   return (
     <ActionList
+      {...first.props}
       variant="context"
       trigger={props.children}
       plugin={lists.some((list) => list.props.plugin)}
     >
-      {lists.map((list) => (
-        <Fragment key={list.key}>{list.props.children}</Fragment>
-      ))}
+      {lists.map(listItems)}
     </ActionList>
   );
+}
+
+function listItems(list: ReactElement<ActionListProps>): ReactElement {
+  return <Fragment key={list.key}>{list.props.children}</Fragment>;
 }
 
 function isActionList(

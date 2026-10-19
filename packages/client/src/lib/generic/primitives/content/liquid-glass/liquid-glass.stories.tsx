@@ -10,14 +10,14 @@ const examples: (Omit<LiquidGlassProps, 'children'> & {
   text: string;
 })[] = [
   {
-    label: 'Card',
+    label: 'Sheet',
     text: 'Message the Agent…',
     corners: 'sheet',
     className: 'w-full',
     fallbackClassName: 'rounded-2xl bg-card shadow-glass',
   },
   {
-    label: 'Capsule',
+    label: 'Pill',
     text: '2 Subagents',
     corners: 'pill',
     interactive: true,

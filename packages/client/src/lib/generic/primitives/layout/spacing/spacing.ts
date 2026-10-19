@@ -1,8 +1,6 @@
 import type { SpacingStep } from '@repo/contracts/kit-tokens';
 import { useSpacing } from '#lib/generic/use-spacing';
 
-export type { SpacingStep } from '@repo/contracts/kit-tokens';
-
 // Static classes, so Uniwind can see every one; the keys are the steps of the spacing scale.
 export const gapClass = {
   0: 'gap-0',
@@ -30,9 +28,13 @@ export const paddingClass = {
   12: 'p-12',
 } as const satisfies Record<SpacingStep, string>;
 
-// A step's length in points, for layout that measures. Step 0 has no theme variable, so it reads as 0.
+// A step's length in points, for layout that measures. Step 0, or a variable the theme has not loaded, reads as 0.
 export function useSpacingStep(step: SpacingStep): number {
   const value = useSpacing(`--spacing-${step === 0 ? 1 : step}`);
 
-  return step === 0 ? 0 : value;
+  return step === 0 ? 0 : points(value);
+}
+
+function points(value: number): number {
+  return Number.isFinite(value) ? value : 0;
 }

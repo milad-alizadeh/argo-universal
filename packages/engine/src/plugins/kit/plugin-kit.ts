@@ -26,8 +26,13 @@ const hooks = {
   memo: React.memo,
 };
 
+type KitComponent =
+  | string
+  | (((props: ElementProps) => ReturnType<typeof jsx>) &
+      Record<string, string>);
+
 // A part with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
-function kitComponent({ part, members }: PluginKitExport): unknown {
+function kitComponent({ part, members }: PluginKitExport): KitComponent {
   if (!Object.keys(members).length) return part;
 
   return Object.assign((props: ElementProps) => jsx(part, props), members);

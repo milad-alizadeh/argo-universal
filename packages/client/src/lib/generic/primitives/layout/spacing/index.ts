@@ -1,6 +1,1 @@
-export {
-  gapClass,
-  paddingClass,
-  useSpacingStep,
-  type SpacingStep,
-} from './spacing';
+export { gapClass, paddingClass, useSpacingStep } from './spacing';

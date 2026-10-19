@@ -14,6 +14,7 @@ function declaration({ name, part, members }: PluginKitExport): string {
   const entries = Object.entries(members);
 
   if (!entries.length) return `export const ${name}: ${component(part)};`;
+
   const lines = entries.map(
     ([member, memberPart]) => `  ${member}: ${component(memberPart)};`,
   );
