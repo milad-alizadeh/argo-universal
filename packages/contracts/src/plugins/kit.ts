@@ -70,13 +70,9 @@ export function versionsOf(types: readonly string[]): PartVersions {
   );
 }
 
-// Internal Server callers use the current wire; Apps negotiate their own part versions.
+// This App and internal Server callers draw every wire part at its latest version; older Apps report their own.
 export const currentPartVersions = versionsOf(Object.keys(wireParts));
 
 export * from './settings-row-props';
 
-export {
-  pluginPartNames,
-  pluginKitExports,
-  type PluginKitExport,
-} from './plugin-part-names';
+export { pluginKitExports, type PluginKitExport } from './plugin-part-names';

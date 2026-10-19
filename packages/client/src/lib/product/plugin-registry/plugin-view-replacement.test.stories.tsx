@@ -27,18 +27,18 @@ function delivery(
   id: PluginViewId,
   replace: (id: PluginViewId) => void,
 ): PluginOnEvent {
-  return (key, interaction) => {
-    received(id, key, interaction);
+  return (key, event) => {
+    received(id, key, event);
 
-    if (!isConfirmation(key, interaction)) return;
+    if (!isConfirmation(key, event)) return;
     replace(second);
 
     return confirmation.promise;
   };
 }
 
-function isConfirmation(key: string, interaction: PartEvent): boolean {
-  return key === 'overlays/sheet/body/apply' && interaction.event === 'onPress';
+function isConfirmation(key: string, event: PartEvent): boolean {
+  return key === 'overlays/sheet/body/apply' && event.event === 'onPress';
 }
 
 function Replacement(): React.JSX.Element {

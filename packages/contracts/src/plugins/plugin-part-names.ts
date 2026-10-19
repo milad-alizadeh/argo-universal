@@ -1,7 +1,7 @@
 import { wireParts } from './wire-parts';
 
 // The current App draws every wire part.
-export const pluginPartNames = Object.keys(wireParts);
+const pluginPartNames = Object.keys(wireParts);
 
 // Extra names `@argo/plugin-kit` exports for a part, kept for Plugins written against them.
 const pluginPartAliases = { ListSection: 'List.Section' } as const;
