@@ -1,5 +1,6 @@
 import type * as ActionListKit from '#primitives/actions/action-list';
 import type * as KbdKit from '#primitives/content/kbd';
+import type * as ListItemKit from '#primitives/lists/list-item';
 import type { DetailProps } from '#primitives/scaffolds/detail';
 import type * as MetadataKit from '#primitives/scaffolds/metadata';
 import type { PageProps } from '#primitives/scaffolds/page';
@@ -12,6 +13,8 @@ export type AdditionalPrimitives = {
   DetailProps: DetailProps;
   ActionGroup: ActionListKit.ActionGroup;
   DeclaredAction: ActionListKit.DeclaredAction;
+  HeaderSink: ActionListKit.HeaderSink;
+  ListItemFieldProps: ListItemKit.ListItemFieldProps;
   MetadataProps: MetadataKit.MetadataProps;
   MetadataLabelProps: MetadataKit.MetadataLabelProps;
   MetadataLinkProps: MetadataKit.MetadataLinkProps;
