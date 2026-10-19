@@ -15,12 +15,17 @@ export const iconRole = z
   )
   .register(kitSchemaJson, { type: 'string', enum: Object.keys(iconRoles) });
 
-const appleSymbol = z.union([z.enum(sfSymbolNames), z.literal('custom.robot')]);
+// The one SF Symbols and Material Symbols check for every kit icon.
+export const sfSymbol = z.enum(sfSymbolNames);
+
+export const materialSymbol = z.enum(materialSymbolNames);
+
+const appleSymbol = z.union([sfSymbol, z.literal('custom.robot')]);
 
 export const systemSymbolSource = z.object({
   sf: appleSymbol,
   sfFilled: appleSymbol.optional(),
-  material: z.enum(materialSymbolNames),
+  material: materialSymbol,
 });
 
 export const iconSymbol = z.union([iconName, systemSymbolSource]);

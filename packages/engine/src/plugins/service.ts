@@ -32,13 +32,12 @@ import {
   applyEnabled,
   applyStatus,
   locatePlugin,
-  locatePlugins,
   requireRuntime,
   requireSettings,
-  type LocatedPlugin,
+  startPlugin,
+  startPlugins,
   type PluginServiceDeps,
 } from './located-plugins';
-import { startPlugin, startPlugins } from './plugin-activation';
 import { renderSlot } from './slots/render-slot';
 import { slotViews } from './slots/slot-views';
 
@@ -87,24 +86,13 @@ export class PluginService {
     const { hooks } = requireRuntime(this.deps);
     const exempt = hooks.exempt(callerOf(name, event));
 
-    const declaring = await this.declaring(name, exempt);
-
-    return hooks.run(
-      { ...(await startPlugins(this.deps, declaring)), exempt },
-      name,
-      event,
-    );
-  }
-
-  // One scan finds every Plugin that hooks the event and where it sits.
-  private async declaring(
-    name: HookEventName,
-    exempt: ReadonlySet<string>,
-  ): Promise<LocatedPlugin[]> {
-    return (await locatePlugins(this.deps)).filter(
+    const started = await startPlugins(
+      this.deps,
       ({ plugin }) =>
         hooksEvent(plugin, name) && !exempt.has(plugin.manifest.id),
     );
+
+    return hooks.run({ ...started, exempt }, name, event);
   }
 
   async dispatch(
@@ -135,11 +123,9 @@ export class PluginService {
     slot: PluginSlotInput,
     connection: RpcConnection,
   ): AsyncGenerator<SlotMessage> {
-    const declaring = (await locatePlugins(this.deps)).filter(({ plugin }) =>
+    const { running: pluginIds } = await startPlugins(this.deps, ({ plugin }) =>
       fillsSlot(plugin, slot),
     );
-
-    const pluginIds = (await startPlugins(this.deps, declaring)).running;
 
     yield { type: 'contributors', pluginIds };
     yield* slotViews(
@@ -153,13 +139,13 @@ export class PluginService {
     input: ReplaceableInput,
     connection: RpcConnection,
   ): AsyncGenerator<ReplaceableMessage> {
-    const declaring = (await locatePlugins(this.deps)).filter(({ plugin }) =>
+    const plugins = await startPlugins(this.deps, ({ plugin }) =>
       rendersSlot(plugin, input.slotId),
     );
 
     yield* renderSlot(
       requireRuntime(this.deps),
-      { input, plugins: await startPlugins(this.deps, declaring) },
+      { input, plugins },
       connection,
     );
   }

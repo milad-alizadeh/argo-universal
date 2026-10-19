@@ -44,7 +44,7 @@ it('keeps PATH executable fixtures separate for simultaneous Plugin hosts', asyn
   await expect
     .poll(() => second.findText(runFixture), { timeout: 10_000 })
     .toBeDefined();
-  await Promise.all([first.tap(runFixture), second.tap(runFixture)]);
+  await Promise.all([first.press(runFixture), second.press(runFixture)]);
   await expect
     .poll(() => first.findText('first'), { timeout: 10_000 })
     .toBeDefined();
