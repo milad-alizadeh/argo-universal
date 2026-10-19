@@ -16,7 +16,9 @@ import {
   ignoreCloseWhileBusy,
   isAlertActionEnabled,
   type AlertAction,
+  answeredAlert,
   type AlertProps,
+  type AnsweredAlertProps,
 } from './alert-props';
 
 // Material's AlertDialog shows while it is drawn, so a closed alert draws nothing.
@@ -25,12 +27,12 @@ export function Alert(props: AlertProps): React.JSX.Element | null {
 
   return (
     <Host matchContents>
-      <OpenAlert {...props} />
+      <OpenAlert {...answeredAlert(props)} />
     </Host>
   );
 }
 
-function OpenAlert(props: AlertProps): React.JSX.Element {
+function OpenAlert(props: AnsweredAlertProps): React.JSX.Element {
   return (
     <AlertDialog
       colors={useMaterialPalette().dialogColors}
@@ -44,7 +46,9 @@ function OpenAlert(props: AlertProps): React.JSX.Element {
   );
 }
 
-function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
+function AlertTitle(
+  props: Pick<AnsweredAlertProps, 'title'>,
+): React.JSX.Element {
   return (
     <AlertDialog.Title>
       <Text style={{ typography: 'headlineSmall' }}>{props.title}</Text>
@@ -52,7 +56,7 @@ function AlertTitle(props: Pick<AlertProps, 'title'>): React.JSX.Element {
   );
 }
 
-function AlertAnswers(props: AlertProps): React.JSX.Element {
+function AlertAnswers(props: AnsweredAlertProps): React.JSX.Element {
   const answers = props.actions.filter((action) => !action.cancel);
 
   return (
@@ -79,7 +83,7 @@ function AlertMessage(props: {
 }
 
 function AlertCancel(
-  props: Pick<AlertProps, 'actions' | 'onOpenChange'>,
+  props: Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'>,
 ): React.JSX.Element | null {
   const action = props.actions.find((candidate) => candidate.cancel);
 
@@ -92,7 +96,7 @@ function AlertCancel(
   );
 }
 
-type AlertButtonProps = Pick<AlertProps, 'actions' | 'onOpenChange'> & {
+type AlertButtonProps = Pick<AnsweredAlertProps, 'actions' | 'onOpenChange'> & {
   action: AlertAction;
 };
 

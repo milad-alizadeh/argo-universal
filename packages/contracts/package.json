@@ -36,7 +36,6 @@
     "./kit-props": "./src/kit-props.ts",
     "./kit-symbols": "./src/kit-symbols/index.ts",
     "./plugins/action-handler-path": "./src/plugins/action-handler-path.ts",
-    "./plugins/map-action-content": "./src/plugins/map-action-content.ts",
     "./plugins/wire-handler": "./src/plugins/wire-handler.ts",
     "./desktop-share": "./src/desktop-share.ts",
     "./plugins/visual-props": "./src/plugins/visual-props.ts"

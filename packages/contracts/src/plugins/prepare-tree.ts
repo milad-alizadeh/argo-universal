@@ -5,7 +5,6 @@ import {
   type PartVersions,
   type WirePartDefinition,
 } from './kit';
-import { mapActionContent } from './map-action-content';
 import {
   acceptsChildren,
   acceptsSlots,
@@ -144,9 +143,6 @@ function prepare(node: WireNode, parts: PartVersions): WireNode | null {
 
   return {
     ...compatible,
-    props: mapActionContent(compatible.props, (content) =>
-      prepareWireTree(content, parts),
-    ),
     children: prepareNodes(node.children, parts),
     slots: slotsOf(node, parts),
   };

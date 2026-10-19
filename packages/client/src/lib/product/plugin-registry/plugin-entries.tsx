@@ -19,6 +19,8 @@ import { Stack } from '#primitives/layout/stack';
 import { Surface } from '#primitives/layout/surface';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { Alert } from '#primitives/overlays/alert';
+import { Sheet } from '#primitives/overlays/sheet';
 import { EmptyState } from '#primitives/status/empty-state';
 import { Pill } from '#primitives/status/pill';
 import { ProgressBar } from '#primitives/status/progress-bar';
@@ -56,6 +58,8 @@ export const pluginEntries = {
   Surface,
   ScrollView,
   Svg,
+  Alert,
+  Sheet,
 } satisfies {
   [Name in WirePart]: ComponentType<KitProps<Name, string, React.JSX.Element>>;
 };

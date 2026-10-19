@@ -16,6 +16,7 @@ import { layoutWireParts } from './layout-wire-parts';
 import { legacyButtonProps } from './legacy-button-props';
 import { legacyTextProps } from './legacy-text-props';
 import { listWireParts } from './list-wire-parts';
+import { overlayWireParts } from './overlay-wire-parts';
 import { textForApp } from './text-for-app';
 import type { WirePartDefinition } from './wire-part-definition';
 import { wirePartReferences } from './wire-part-reference';
@@ -30,6 +31,7 @@ export const wireParts = {
   ...listWireParts,
   ...actionListWireParts,
   ...controlWireParts,
+  ...overlayWireParts,
   Text: {
     props: textProps,
     appProps: textForApp,

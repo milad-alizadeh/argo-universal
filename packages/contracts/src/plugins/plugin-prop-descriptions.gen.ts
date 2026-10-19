@@ -535,8 +535,6 @@ export type WireSchemaHints = {
     "title": PropValue<"Alert", "title">;
     /** Question detail. */
     "message": PropValue<"Alert", "message">;
-    /** Answers offered by the alert. */
-    "actions": PropValue<"Alert", "actions">;
   };
   "Dialog": {
     /** Controlled open state. */

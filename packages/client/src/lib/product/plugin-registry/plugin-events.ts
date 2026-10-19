@@ -5,6 +5,7 @@ import {
   type PartEventRules,
 } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
+import { runAction } from '../plugin-actions';
 import type {
   ControlInput as Input,
   PluginProps,
@@ -65,21 +66,9 @@ async function deliver(
 
   if (!handler) return;
 
-  if (!('$event' in handler))
-    return context.actions.run(handler, actionTarget(context, event));
+  if (!('$event' in handler)) return runAction(handler);
   const path = referencePath(handler, event);
   await context.ui.send(context.key, { event: name, payload, schema, path });
-}
-
-function actionTarget(
-  context: Input['context'],
-  event: Event,
-): Parameters<Input['context']['actions']['run']>[1] {
-  return {
-    key: context.key,
-    path: event.path ?? [event.name],
-    send: context.ui.dispatch,
-  };
 }
 
 // SplitButton.actions[].onPress is kit data (Plugin controls / UseSplitButton).

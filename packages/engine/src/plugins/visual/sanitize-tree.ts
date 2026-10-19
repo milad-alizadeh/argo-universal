@@ -1,4 +1,3 @@
-import { mapActionContent } from '@repo/contracts/plugins/map-action-content';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import { parseSvg } from '../svg/parser';
 import { sanitizeSvg } from '../svg/sanitizer';
@@ -48,25 +47,11 @@ function addSanitizedChildren(
 ): WireNode {
   const nextPath = nodePath(node, path);
 
-  const props = sanitizeActionContent(node, nextPath, state);
-
   return {
     ...node,
-    props,
     children: sanitizeChildren(node.children, nextPath, state),
     slots: sanitizeSlots(node.slots, nextPath, state),
   };
-}
-
-function sanitizeActionContent(
-  node: WireNode,
-  path: string[],
-  state: VisitState,
-): WireNode['props'] {
-  return mapActionContent(
-    node.props,
-    (content) => visit(content, path, state) ?? emptyTree(),
-  );
 }
 
 function sanitizeNode(

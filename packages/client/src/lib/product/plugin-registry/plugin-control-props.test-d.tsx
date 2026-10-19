@@ -60,27 +60,33 @@ const choices = [{ value: 'dev', label: 'Development' }];
   actions={[{ label: 'Retry', onPress: (): void => {} }]}
 />;
 
-<Kit.Button
+<Kit.Sheet
+  open
   label="Edit"
-  onPress={{
-    action: 'dialog',
-    title: 'Edit',
-    content: {
-      type: 'TextInput',
-      key: 'name',
-      props: {
-        label: 'Name',
-        value: '',
-        onChangeText: (value): void => {
-          value.toUpperCase();
-        },
-      },
-      children: [],
-      slots: {},
-    },
-    onConfirm: (): void => {},
+  onOpenChange={(open): void => {
+    open.valueOf();
   }}
-/>;
+>
+  <Kit.TextInput label="Name" value="" />
+</Kit.Sheet>;
+
+<Kit.Alert
+  open={false}
+  title="Remove?"
+  onOpenChange={(open): void => {
+    open.valueOf();
+  }}
+>
+  <Kit.Action
+    label="Remove"
+    icon="archive"
+    tone="danger"
+    onPress={(): void => {}}
+  />
+</Kit.Alert>;
+
+// @ts-expect-error Built-in Actions no longer open overlays; a Plugin renders the overlay node.
+<Kit.Button label="Edit" onPress={{ action: 'dialog', title: 'Edit' }} />;
 
 <Kit.Switch value={false} />;
 

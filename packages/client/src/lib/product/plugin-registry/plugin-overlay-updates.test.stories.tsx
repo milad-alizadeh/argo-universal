@@ -1,11 +1,14 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
+import { applyPatch } from '@repo/contracts/plugins/wire-patch';
 import fixture from '@repo/mocks/plugins/overlays.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within, fireEvent } from 'storybook/test';
 import { PluginTree } from './plugin-registry';
 
-const root = WireNode.parse(fixture);
+const root = applyPatch(WireNode.parse(fixture), [
+  { op: 'setProps', key: ['sheet'], props: { open: true } },
+]);
 
 const delivered = fn();
 
@@ -17,9 +20,9 @@ type Story = StoryObj<typeof meta>;
 
 const fieldName = 'Overlay name';
 
-const openDialog = 'Open dialog';
+const field = 'overlays/sheet/body/field';
 
-const dialogTrigger = 'overlays/dialog-trigger';
+const apply = 'overlays/sheet/body/apply';
 
 function UpdatedDelivery(): React.JSX.Element {
   const [revision, update] = useState(1);
@@ -37,77 +40,35 @@ function UpdatedDelivery(): React.JSX.Element {
 
 export const CurrentDeliveryAfterEdit: Story = {
   render: UpdatedDelivery,
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ userEvent }) => {
     const page = within(document.body);
-    await userEvent.click(canvas.getByRole('button', { name: openDialog }));
-    const field = await page.findByRole('textbox', { name: fieldName });
-    await userEvent.clear(field);
-    await userEvent.type(field, 'Atlas');
+    const input = await page.findByRole('textbox', { name: fieldName });
+    await userEvent.clear(input);
+    await userEvent.type(input, 'Atlas');
     await waitFor(() => expect(delivered).toHaveBeenCalled());
-    await userEvent.click(page.getByRole('button', { name: 'Apply dialog' }));
-    await expect(delivered).toHaveBeenLastCalledWith(2, dialogTrigger, {
-      event: 'onAction',
-      payload: { path: ['onPress', 'onConfirm'] },
-    });
+    await userEvent.click(page.getByRole('button', { name: 'Apply sheet' }));
     await waitFor(() =>
-      expect(page.queryByRole('textbox', { name: fieldName })).toBeNull(),
+      expect(delivered).toHaveBeenLastCalledWith(2, apply, {
+        event: 'onPress',
+      }),
     );
   },
 };
 
 const onEvent = fn();
 
-export const FailedDismissalCloses: Story = {
-  render: (): React.JSX.Element => <PluginTree root={root} onEvent={onEvent} />,
-  play: async ({ canvas, userEvent }) => {
-    const page = within(document.body);
-    await userEvent.click(canvas.getByRole('button', { name: openDialog }));
-    const cancel = await page.findByRole('button', { name: 'Cancel dialog' });
-    const answer = Promise.withResolvers<void>();
-    onEvent.mockReturnValueOnce(answer.promise);
-    await userEvent.click(cancel);
-    await expect(cancel).toHaveAttribute('aria-busy', 'true');
-    answer.reject(new Error('Dismiss handler failed'));
-    await waitFor(() =>
-      expect(page.queryByRole('textbox', { name: fieldName })).toBeNull(),
-    );
-    await expect(onEvent).toHaveBeenCalledOnce();
-  },
-};
-
 export const FlushBeforeConfirm: Story = {
   render: (): React.JSX.Element => <PluginTree root={root} onEvent={onEvent} />,
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ userEvent }) => {
     const page = within(document.body);
-    await userEvent.click(canvas.getByRole('button', { name: openDialog }));
-    const field = await page.findByRole('textbox', { name: fieldName });
-    await fireEvent.change(field, { target: { value: 'Atlas' } });
-    await userEvent.click(page.getByRole('button', { name: 'Apply dialog' }));
+    const input = await page.findByRole('textbox', { name: fieldName });
+    await fireEvent.change(input, { target: { value: 'Atlas' } });
+    await userEvent.click(page.getByRole('button', { name: 'Apply sheet' }));
     await waitFor(() =>
-      expect(page.queryByRole('textbox', { name: fieldName })).toBeNull(),
+      expect(onEvent.mock.calls).toEqual([
+        [field, { event: 'onChangeText', payload: 'Atlas' }],
+        [apply, { event: 'onPress' }],
+      ]),
     );
-    await expect(onEvent.mock.calls).toEqual([
-      [
-        dialogTrigger,
-        {
-          event: 'onAction',
-          payload: {
-            path: [
-              'onPress',
-              'content',
-              'children',
-              '0',
-              'props',
-              'onChangeText',
-            ],
-            value: 'Atlas',
-          },
-        },
-      ],
-      [
-        dialogTrigger,
-        { event: 'onAction', payload: { path: ['onPress', 'onConfirm'] } },
-      ],
-    ]);
   },
 };

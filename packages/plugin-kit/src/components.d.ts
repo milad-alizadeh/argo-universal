@@ -48,6 +48,10 @@ export const SplitButton: PluginComponents['SplitButton'];
 
 export const IconButton: PluginComponents['IconButton'];
 
+export const Alert: PluginComponents['Alert'];
+
+export const Sheet: PluginComponents['Sheet'];
+
 export const Text: PluginComponents['Text'];
 
 export const Button: PluginComponents['Button'];

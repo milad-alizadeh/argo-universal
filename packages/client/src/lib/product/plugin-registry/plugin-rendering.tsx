@@ -1,7 +1,6 @@
 import type { WirePartDefinition } from '@repo/contracts/plugins/kit';
 import type { WireNode, WireJson } from '@repo/contracts/plugins/wire';
 import type { ReactNode } from 'react';
-import type { PluginActions } from '../plugin-actions';
 import type { PluginUi } from '../plugin-dispatcher';
 
 export type { PluginOnEvent } from '../plugin-dispatcher';
@@ -10,7 +9,6 @@ export interface RenderContext {
   key: string;
   ui: PluginUi;
   controls: PluginControls;
-  actions: PluginActions;
 }
 
 type Callback = (value?: WireJson) => void;

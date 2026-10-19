@@ -19,35 +19,11 @@ export const collapsibleProps = openStateProps.extend({
   disabled: z.boolean().optional().describe('Disable the disclosure trigger.'),
 });
 
-const alertActionBase = z.object({
-  label: z.string().describe('Answer label.'),
-  onPress: handler('onPress')
-    .optional()
-    .describe('Action run after dismissal.'),
-  disabled: z.boolean().optional().describe('Disable this answer.'),
-  loading: z.boolean().optional().describe('This answer is running.'),
-});
-
-export const alertAction = z.union([
-  alertActionBase.extend({
-    cancel: z.literal(true),
-    tone: z.never().optional(),
-  }),
-  alertActionBase.extend({
-    cancel: z.literal(false).optional(),
-    tone: z.literal('danger').optional(),
-  }),
-]);
-
 export const alertProps = z.object({
   open: z.boolean().describe('Whether the alert is open.'),
   onOpenChange: handler('onOpenChange').describe('Reports dismissal.'),
   title: z.string().describe('Question heading.'),
   message: z.string().optional().describe('Question detail.'),
-  actions: z
-    .array(alertAction)
-    .readonly()
-    .describe('Answers offered by the alert.'),
 });
 
 export const sheetProps = z.object({

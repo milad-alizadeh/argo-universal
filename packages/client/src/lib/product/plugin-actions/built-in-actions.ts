@@ -1,11 +1,9 @@
-import type { Action, OverlayAction } from '@repo/contracts/plugins/wire';
+import type { Action } from '@repo/contracts/plugins/wire';
 import { setStringAsync } from 'expo-clipboard';
 import { router, type Href } from 'expo-router';
 import { Linking } from 'react-native';
 import { showToast } from '#primitives/overlays/toast';
 import { shareContent } from './share';
-
-export type AppAction = Exclude<Action, OverlayAction | { action: 'dismiss' }>;
 
 type External = Extract<Action, { action: 'openUrl' | 'copy' }>;
 
@@ -33,7 +31,7 @@ function openPage(path: string): void {
 
 type LocalAction = Extract<Action, { action: 'toast' | 'navigate' }>;
 
-type DeviceAction = Exclude<AppAction, LocalAction>;
+type DeviceAction = Exclude<Action, LocalAction>;
 
 function runLocal(action: LocalAction): void {
   if (action.action === 'toast')
@@ -50,7 +48,7 @@ async function runDevice(action: DeviceAction): Promise<void> {
 }
 
 // The built-in Actions run here, in the App, with no round trip to the Server.
-export async function runAction(action: AppAction): Promise<void> {
+export async function runAction(action: Action): Promise<void> {
   if (action.action === 'toast' || action.action === 'navigate')
     runLocal(action);
   else await runDevice(action);
