@@ -15,7 +15,7 @@ type IconControlProps = Omit<IconButtonProps, keyof IconAppearance | 'badge'>;
 
 type IconPresentation = Pick<
   IconControlProps,
-  'size' | 'variant' | 'loading' | 'selected'
+  'size' | 'variant' | 'loading' | 'selected' | 'bleed'
 >;
 
 type PressableInput = ComponentProps<typeof Pressable>;
@@ -28,13 +28,14 @@ interface IconDrawing {
 export function IconButton({
   badge,
   tone,
+  iconTone,
   ...props
 }: IconButtonProps): ReactElement {
   const drawing = iconDrawing(props);
 
   return (
     <Pressable {...drawing.pressable}>
-      <ButtonAdornment {...withTone(drawing.adornment, tone)} />
+      <ButtonAdornment {...withTone(drawing.adornment, tone, iconTone)} />
       {badge}
     </Pressable>
   );
@@ -47,7 +48,7 @@ function iconDrawing({
   iconFilled,
   iconWeight,
   ...props
-}: Omit<IconButtonProps, 'badge'>): IconDrawing {
+}: Omit<IconButtonProps, 'badge' | 'iconTone'>): IconDrawing {
   const appearance = { icon, iconRole, iconClassName, iconFilled, iconWeight };
 
   return createIconDrawing(props, appearance);
@@ -82,11 +83,12 @@ function iconPressableProps({
   variant,
   loading,
   selected,
+  bleed,
   ...pressable
 }: IconControlProps): PressableInput {
   return createIconPressable(
     { ...pressable, ...pressedAttribute(selected) },
-    { size, variant, loading, selected },
+    { size, variant, loading, selected, bleed },
   );
 }
 
@@ -111,14 +113,18 @@ function createIconPressable(
 function iconContainerClass(
   props: Pick<
     IconButtonProps,
-    'size' | 'variant' | 'disabled' | 'className' | 'selected'
+    'size' | 'variant' | 'disabled' | 'className' | 'selected' | 'bleed'
   >,
 ): string {
   const { size, variant, className } = props;
   const disabled = !!props.disabled;
   const pressed = props.selected === true;
+  const bleed = !!props.bleed;
 
-  return cn(iconButtonClasses({ size, variant, disabled, pressed }), className);
+  return cn(
+    iconButtonClasses({ size, variant, disabled, pressed, bleed }),
+    className,
+  );
 }
 
 function iconTextClass(
@@ -135,9 +141,14 @@ export type { IconButtonProps } from './icon-button-props';
 function withTone(
   adornment: IconDrawing['adornment'],
   tone: IconButtonProps['tone'],
+  iconTone: IconButtonProps['iconTone'],
 ): IconDrawing['adornment'] {
   return {
     ...adornment,
-    textClass: cn(adornment.textClass, tone === 'danger' && 'text-danger'),
+    textClass: cn(
+      adornment.textClass,
+      iconTone === 'muted' && 'text-muted-foreground',
+      tone === 'danger' && 'text-danger',
+    ),
   };
 }

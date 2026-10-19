@@ -1,5 +1,4 @@
 import type * as React from 'react';
-import { Text } from '#primitives/content/text';
 import { ListItem } from '#primitives/lists/list-item';
 import type { ListItemProps } from '#primitives/lists/list-item';
 import type { AgentRowEntry } from '../../utils/agent-rows';
@@ -9,7 +8,7 @@ import {
   type AgentActions,
   type AgentCardProps,
 } from './agent-button';
-import { AgentFooter } from './agent-links';
+import { AgentMeta } from './agent-meta';
 
 export function AgentListItem(props: AgentCardProps): React.JSX.Element {
   return (
@@ -25,14 +24,7 @@ const cardContent = (agent: AgentRowEntry): ListItemProps => ({
   accessibilityLabel: `${agent.name}, v${agent.version}, ${agent.description}`,
   subtitle: agent.description,
   leading: cardLogo(agent),
-  meta: (
-    <>
-      <Text role="secondary" tone="muted">
-        v{agent.version}
-      </Text>
-      <AgentFooter agent={agent} />
-    </>
-  ),
+  meta: <AgentMeta agent={agent} />,
 });
 
 const cardLogo = (agent: AgentRowEntry): React.JSX.Element => (

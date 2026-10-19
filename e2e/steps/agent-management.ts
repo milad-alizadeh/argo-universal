@@ -3,6 +3,7 @@ import { agentCard, browseAgents } from './agent-catalog';
 import { When, Then } from './fixtures';
 import { onPhone } from './frame';
 import { openNewSession } from './new-session';
+import { toast } from './toasts';
 
 const exampleName = 'Example Agent';
 
@@ -14,6 +15,15 @@ When('I install Example Agent from its card', async ({ page }) => {
     })
     .click();
 });
+
+// The toast then leaves on its own, uncovering the phone header beneath it.
+Then(
+  'a toast says {string} and then dismisses',
+  async ({ page }, text: string) => {
+    await expect(toast(page, text)).toBeVisible();
+    await expect(toast(page, text)).toHaveCount(0, { timeout: 10_000 });
+  },
+);
 
 Then(
   'Example Agent moves into the installed group and picker',

@@ -3,7 +3,8 @@ Feature: Saved Registry Agents
     Given a <layout> Frame
     When I browse available Agents
     And I install Example Agent from its card
-    Then Example Agent moves into the installed group and picker
+    Then a toast says "Example Agent installed" and then dismisses
+    And Example Agent moves into the installed group and picker
     When I remove Example Agent from its card
     Then Example Agent is offered for Install without a confirmation
 

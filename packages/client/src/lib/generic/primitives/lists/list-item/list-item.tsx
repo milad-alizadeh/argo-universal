@@ -65,15 +65,16 @@ function ItemSurface(props: DrawingProps): ReactElement {
   );
 }
 
+// Only a choosing List draws the choice slot; an empty one would hold the trailing lane off the row's edge.
 export function ListItem(props: ListItemProps): ReactElement {
   const selected = useItemSelection(props);
+  const { selectionMode } = useContext(ListContext);
 
-  return (
-    <ListItemFrame
-      {...selected}
-      accessory={<ChoiceAccessory {...selected} />}
-    />
-  );
+  const accessory = selectionMode ? (
+    <ChoiceAccessory {...selected} />
+  ) : undefined;
+
+  return <ListItemFrame {...selected} accessory={accessory} />;
 }
 
 function drawingContent(props: DrawingProps): DrawingProps {
