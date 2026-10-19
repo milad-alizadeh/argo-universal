@@ -1,6 +1,5 @@
 import { useId } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
-import { useFileDrop } from '../../hooks/use-file-drop';
 import { isConfigurationInactive, isInactive } from './composer-conditions';
 import type { ComposerLayout, ComposerProps } from './composer-types';
 
@@ -9,7 +8,6 @@ export function useComposerLayout(
   sendState: ComposerLayout['sendState'],
 ): ComposerLayout {
   const composerId = useId();
-  useFileDrop({ targetId: composerId, onDropFiles: props.onDropFiles });
   const wide = useContentWide();
 
   const send = (): void => {

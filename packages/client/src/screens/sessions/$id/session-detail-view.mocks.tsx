@@ -98,7 +98,6 @@ function recordedComposerProps(
     onDraftChange: fn(),
     onAttachImages: fn(),
     onAttachFiles: fn(),
-    onDropFiles: fn(),
     onSend: fn(),
     onStop: fn(),
     configuration: recordedConfiguration(mock, snapshot),
@@ -116,6 +115,7 @@ function openSessionProps(
     header: recordedHeaderProps(snapshot),
     feed: recordedFeedProps(mock, snapshot),
     composer: recordedComposerProps(mock, snapshot),
+    onDropFiles: fn(),
   };
 }
 

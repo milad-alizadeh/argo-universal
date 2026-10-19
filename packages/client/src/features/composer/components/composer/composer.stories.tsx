@@ -35,7 +35,6 @@ const meta = {
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
     onAttachFiles: action('attach files'),
-    onDropFiles: action('drop files'),
     onSelectSlashCommand: action('slash commands'),
     onCreateGoal: action('create goal'),
     onSend: action('send prompt'),

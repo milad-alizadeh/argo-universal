@@ -19,6 +19,7 @@ import {
   type TerminalSignInProps,
 } from '#features/sessions';
 import { cn } from '#lib/generic/utils';
+import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { Screen } from '#lib/product/screen/screen';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
@@ -29,6 +30,8 @@ export interface OpenSessionViewProps {
   header: SessionHeaderProps;
   feed: FeedProps;
   composer: ComposerProps;
+  // Files dropped on the Session's pane attach to the draft.
+  onDropFiles: (dropped: DroppedFiles) => void;
   elicitation?: ElicitationFormProps;
   // Sign-in or launch trouble, drawn above the Composer.
   callout?: SessionCalloutProps;
@@ -94,7 +97,12 @@ const sessionParts = (
   feed: <Feed {...props.feed} />,
   composer: sessionBottom(props),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
+  onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,
 });
+
+// A preview or an archived Session has no draft to attach files to.
+const hasDraft = (props: OpenSessionViewProps): boolean =>
+  !props.preview && !props.archived;
 
 // The bottom slot: nothing in a preview, the banner for an archived Session, else the Composer.
 function sessionBottom(props: OpenSessionViewProps): React.ReactNode {

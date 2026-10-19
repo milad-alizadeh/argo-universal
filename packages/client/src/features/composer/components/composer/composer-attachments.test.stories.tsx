@@ -8,7 +8,6 @@ import { within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { composerFiles } from '../../../../../mocks/composer-mock';
-import { dragFiles } from '../../../../../mocks/composer/attachment-actions.test.mocks';
 import { attachmentMenus } from '../../../../../mocks/composer/attachment-actions.test.mocks';
 import { withImages } from '../../../../../mocks/composer/attachment-actions.test.mocks';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -22,24 +21,6 @@ import { Composer } from './composer';
 const meta = { ...composerTestMeta, title: 'Tests/Composer' };
 
 export default meta;
-
-export const DropFiles: Story = {
-  args: { onDropFiles: fn() },
-  play: async ({ canvas, args }) => {
-    const message = await canvas.findByRole('textbox');
-    const file = new File(['# Notes'], 'notes.md', { type: 'text/markdown' });
-    const over = dragFiles('dragover', [file]);
-    message.dispatchEvent(over);
-    await expect(over.defaultPrevented).toBe(true);
-    const drop = dragFiles('drop', [file]);
-    message.dispatchEvent(drop);
-    await expect(drop.defaultPrevented).toBe(true);
-    await expect(args.onDropFiles).toHaveBeenCalledWith({
-      files: [file],
-      folders: 0,
-    });
-  },
-};
 
 export const AttachmentMenusPhone = attachmentMenus(layoutWidths.phone);
 
