@@ -1,16 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import {
-  runInContext,
-  SourceTextModule,
-  SyntheticModule,
-  type Module,
-} from 'node:vm';
+import { SourceTextModule, SyntheticModule, type Module } from 'node:vm';
 import { requirePluginFile } from '../access/plugin-files.ts';
-import { bundleKit } from '../kit/bundle.ts';
-import type { Kit } from '../kit/plugin-kit.ts';
 import type { PluginEntry } from '../protocol/runtime.ts';
 import { type ArgoBridge } from './argo.ts';
+import type { PluginApi } from './create-plugin-api.ts';
+import { bundleRealm } from './realm-bundle.ts';
 import {
   createPluginRealm,
   type PluginClock,
@@ -26,10 +21,10 @@ export async function registerPlugin(
   bridge: ArgoBridge,
   clock?: PluginClock,
 ): Promise<PluginInboxes> {
-  const context = createPluginRealm(bridge, await bundleKit(), clock);
-  const { inboxes, kit } = takeKit(context);
+  const realm = createPluginRealm(bridge, await bundleRealm(), clock);
+  const { context, inboxes, modules } = realm;
 
-  await bootstrap(context, new PluginModules(entry, context, kit));
+  await bootstrap(context, new PluginModules(entry, context, modules));
 
   return inboxes;
 }
@@ -48,37 +43,9 @@ async function bootstrap(
   await module.evaluate();
 }
 
-// How the worker reaches a Plugin's pages and Hooks: a JSON string in, nothing out.
-type PluginInbox = (json: string) => void;
+export type PluginInboxes = PluginApi['inboxes'];
 
-export type PluginInboxes = { pages: PluginInbox; hooks: PluginInbox };
-
-interface KitModules {
-  kit: Kit['exports'];
-  jsxRuntime: Kit['jsxRuntime'];
-}
-
-interface TakenKit {
-  inboxes: PluginInboxes;
-  kit: KitModules;
-}
-
-// What the kit and `argo` left behind for the worker: the inboxes for pages and Hooks, and the modules `@argo/plugin-kit` serves.
-function takeKit(context: PluginRealm): TakenKit {
-  const pages: PluginInbox = runInContext('globalThis.__argoInbox', context);
-  const hooks: PluginInbox = runInContext('globalThis.__argoHooks', context);
-  const exported: Kit = runInContext('globalThis.__argoKitExports', context);
-
-  runInContext(
-    'delete globalThis.__argoInbox; delete globalThis.__argoHooks; delete globalThis.__argoKitExports',
-    context,
-  );
-
-  return {
-    inboxes: { pages, hooks },
-    kit: { kit: exported.exports, jsxRuntime: exported.jsxRuntime },
-  };
-}
+type KitModules = PluginApi['modules'];
 
 const registrationModule = (context: PluginRealm): SourceTextModule =>
   new SourceTextModule(
@@ -141,7 +108,7 @@ class PluginModules {
   }
 
   private builtin(specifier: string): SyntheticModule | null {
-    if (specifier === kitSpecifier) return this.synthetic(this.kit.kit);
+    if (specifier === kitSpecifier) return this.synthetic(this.kit.exports);
 
     return specifier === `${kitSpecifier}/jsx-runtime`
       ? this.synthetic(this.kit.jsxRuntime)

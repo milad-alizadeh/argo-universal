@@ -12,8 +12,8 @@ import {
 const moduleNames = ['require', 'module', 'exports', '__dirname', '__filename'];
 
 // Names Plugin code can't reach: those Node gives the Server that a Plugin realm lacks.
-function unavailableGlobals(): string[] {
-  const realm = realmGlobals();
+async function unavailableGlobals(): Promise<string[]> {
+  const realm = await realmGlobals();
 
   return [...Object.getOwnPropertyNames(globalThis), ...moduleNames].filter(
     (name) => !realm.has(name) && /^[A-Za-z_$][\w$]*$/.test(name),
@@ -22,18 +22,37 @@ function unavailableGlobals(): string[] {
 
 const marker = '__argo_forbidden_Node_global_';
 
-const define = Object.fromEntries(
-  unavailableGlobals().flatMap((name) => [
-    [name, marker + name],
-    [`globalThis.${name}`, marker + name],
-  ]),
-);
+type Defines = {
+  esm: Record<string, string>;
+  commonJs: Record<string, string>;
+};
 
-const commonJsDefine = Object.fromEntries(
-  Object.entries(define).filter(
-    ([name]) => !['module', 'exports'].includes(name),
-  ),
-);
+let defines: Promise<Defines> | null = null;
+
+async function definesOf(): Promise<Defines> {
+  const esm = Object.fromEntries(
+    (await unavailableGlobals()).flatMap((name) => [
+      [name, marker + name],
+      [`globalThis.${name}`, marker + name],
+    ]),
+  );
+
+  const commonJs = Object.fromEntries(
+    Object.entries(esm).filter(
+      ([name]) => !['module', 'exports'].includes(name),
+    ),
+  );
+
+  return { esm, commonJs };
+}
+
+// The names are read once, from a realm built the way Plugin workers build theirs.
+async function definesFor(input: SourceFile): Promise<Record<string, string>> {
+  defines ??= definesOf();
+  const { esm, commonJs } = await defines;
+
+  return input.commonJs ? commonJs : esm;
+}
 
 // esbuild resolves lexical bindings before replacing globals, so local names and property names stay legal.
 export async function inspectGlobals(
@@ -42,7 +61,7 @@ export async function inspectGlobals(
   const output = await transform(input.source, {
     loader: extname(input.file) === '.ts' ? 'ts' : 'tsx',
     sourcefile: input.file,
-    define: input.commonJs ? commonJsDefine : define,
+    define: await definesFor(input),
     sourcemap: 'external',
   });
 
