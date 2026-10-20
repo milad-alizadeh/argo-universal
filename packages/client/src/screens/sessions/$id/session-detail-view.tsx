@@ -88,17 +88,22 @@ function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
 
   return (
     <>
-      <SessionLayout
-        {...sessionParts(
-          { ...props, composer: work.composer, feed: work.feed },
-          panels,
-        )}
-      />
+      <SessionLayout {...sessionParts(withWork(props, work), panels)} />
       <SessionInspector {...props} panels={panels} />
       {work.sheets}
     </>
   );
 }
+
+// The Composer carries the work pills, and the Feed's Subagent rows open the Subagents panel.
+const withWork = (
+  props: OpenSessionViewProps,
+  work: ReturnType<typeof useWorkPanels>,
+): OpenSessionViewProps => ({
+  ...props,
+  composer: work.composer,
+  feed: work.feed,
+});
 
 const headerPanels = (
   props: OpenSessionViewProps,
