@@ -9,14 +9,19 @@ interface HeldFeed {
   snapshot: SessionSnapshot | null;
 }
 
-// Long enough for one screen to take over a Session from another, as New Session hands its Session to the Session page.
-export const handOverGraceMs = 2_000;
+// Long enough that switching back to a Session shows it at once while its live subscription catches up.
+export const revisitGraceMs = 600_000;
+
+const revisitMaxSessions = 12;
 
 // One cache per App, so Storybook's and tests' separate Apps never share a Session.
 const heldFeeds = new WeakMap<QueryClient, HeldCache<HeldFeed>>();
 
 const heldFeedsOf = (queryClient: QueryClient): HeldCache<HeldFeed> => {
-  const cache = heldFeeds.get(queryClient) ?? createHeldCache(handOverGraceMs);
+  const cache =
+    heldFeeds.get(queryClient) ??
+    createHeldCache({ graceMs: revisitGraceMs, maxIdle: revisitMaxSessions });
+
   heldFeeds.set(queryClient, cache);
 
   return cache;

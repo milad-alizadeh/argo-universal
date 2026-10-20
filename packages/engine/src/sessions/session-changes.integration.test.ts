@@ -202,7 +202,13 @@ it('keeps Checkout totals in a stored Session snapshot after close', async () =>
   await host.caller.session.close({ sessionId });
 
   expect(
-    (await waitForAcpSnapshot(host, sessionId, () => true)).changes,
+    (
+      await waitForAcpSnapshot(
+        host,
+        sessionId,
+        (snapshot) => snapshot.changes.files === 1,
+      )
+    ).changes,
   ).toEqual({ files: 1, additions: 1, deletions: 0 });
 });
 
@@ -214,7 +220,13 @@ it('recomputes stored Checkout totals after an Engine restart', async () => {
   onTestFinished(() => restarted.stop());
 
   expect(
-    (await waitForAcpSnapshot(restarted, sessionId, () => true)).changes,
+    (
+      await waitForAcpSnapshot(
+        restarted,
+        sessionId,
+        (snapshot) => snapshot.changes.files === 1,
+      )
+    ).changes,
   ).toEqual({ files: 1, additions: 1, deletions: 0 });
 });
 

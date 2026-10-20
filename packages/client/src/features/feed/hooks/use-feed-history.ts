@@ -8,7 +8,7 @@ import {
 import { useCallback } from 'react';
 import { useTRPC, useTRPCClient } from '#features/connection';
 import { type HistoryWindow, needsOlderHistory } from '../view/feed-history';
-import { handOverGraceMs } from './held-feed';
+import { revisitGraceMs } from './held-feed';
 
 type HistoryCursor = Pick<FeedPageInput, 'direction' | 'cursor' | 'epoch'>;
 
@@ -50,7 +50,7 @@ export function useFeedHistory(
     initialPageParam,
     getNextPageParam: olderCursor,
     staleTime: Infinity,
-    gcTime: handOverGraceMs,
+    gcTime: revisitGraceMs,
   });
 
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = history;
