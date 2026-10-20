@@ -24,11 +24,12 @@ const rowPress = (
   props: DrawingProps,
 ): Pick<
   Parameters<typeof itemPress>[0],
-  'interactive' | 'control' | 'sidebar'
+  'interactive' | 'control' | 'sidebar' | 'avatar'
 > => ({
   interactive: interactive(props),
   control: props.control !== undefined,
   sidebar: props.sidebar,
+  avatar: props.avatar !== undefined,
 });
 
 // The row's press lanes and tints, by where it sits: a menu, a sidebar, or its List's appearance.

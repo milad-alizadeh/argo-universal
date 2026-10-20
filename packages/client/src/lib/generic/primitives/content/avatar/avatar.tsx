@@ -149,10 +149,18 @@ function avatarDotTestID(testID: string | undefined): string | undefined {
   return `${testID}-status`;
 }
 
+const statusRings = {
+  card: 'border-card bg-card',
+  muted: 'border-muted bg-muted',
+  selected: 'border-card bg-card web:wide:border-content web:wide:bg-content',
+};
+
+// "none" pins the bare dot to the circle's corner with no ring, as on a Subagent's role avatar.
 function avatarStatusClass(surface: AvatarProps['statusSurface']): string {
+  if (surface === 'none') return 'absolute right-0 top-0';
+
   return cn(
     'absolute -right-0.5 -top-0.5 rounded-full border-2',
-    surface === 'muted' ? 'border-muted bg-muted' : 'border-card bg-card',
-    surface === 'selected' && 'web:wide:border-content web:wide:bg-content',
+    statusRings[surface ?? 'card'],
   );
 }

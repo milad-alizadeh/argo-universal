@@ -1,9 +1,8 @@
 import type { Subagent } from '@repo/contracts';
-import type { JSX, ReactNode } from 'react';
-import { Avatar } from '#primitives/content/avatar';
+import type { JSX } from 'react';
+import { Avatar, type AvatarProps } from '#primitives/content/avatar';
 import { Icon } from '#primitives/content/icon';
 import { ListItem, type ListItemProps } from '#primitives/lists/list-item';
-import { StatusDot } from '#primitives/status/status-dot';
 import { sessionStatusDot } from '../../session-status-dot';
 import { subagentStatusLabel, subagentSupporting } from './subagent-format';
 import { type SubagentRole, subagentRole } from './subagent-role';
@@ -15,28 +14,46 @@ export type SubagentRowProps = {
   onSelect?: (subagent: Subagent) => void;
 };
 
-// Paper "Components / SubagentRow": the role's glyph on a circle tinted by the role's tone.
-function RoleAvatar({ role }: { role: SubagentRole }): JSX.Element {
+type RoleAvatarProps = { role: SubagentRole; subagent: Subagent };
+
+const roleAvatarStatus = ({
+  subagent,
+}: RoleAvatarProps): Pick<
+  AvatarProps,
+  'status' | 'statusSurface' | 'testID'
+> => ({
+  status: avatarStatus(subagent),
+  statusSurface: 'none',
+  testID: 'subagent',
+});
+
+/*
+ * Paper "Components / SubagentRow": the role's glyph on a circle tinted by the role's tone, with the SessionRow status
+ * dot pinned to its top-right corner while the Subagent runs or waits; a finished row has none and dims instead.
+ */
+function RoleAvatar(props: RoleAvatarProps): JSX.Element {
+  const { role } = props;
+
   return (
     <Avatar
       size="md"
       tone={role.tone}
+      {...roleAvatarStatus(props)}
       decorative
       initials=""
       accessibilityLabel={role.name}
     >
-      <Icon name={role.icon} role="body" />
+      <Icon name={role.icon} role="body" weight="light" />
     </Avatar>
   );
 }
 
-// The SessionRow status dot: running and waiting Subagents only; a finished row has none and dims instead.
-function statusDot(subagent: Subagent): ReactNode {
+function avatarStatus(subagent: Subagent): AvatarProps['status'] {
   if (subagent.state === 'idle') return undefined;
 
-  const status = subagent.state === 'running' ? 'running' : 'needs_input';
-
-  return <StatusDot {...sessionStatusDot(status)} testID="subagent-status" />;
+  return sessionStatusDot(
+    subagent.state === 'running' ? 'running' : 'needs_input',
+  );
 }
 
 function rowLabel(subagent: Subagent, role: SubagentRole, now: number): string {
@@ -52,7 +69,7 @@ function rowLabel(subagent: Subagent, role: SubagentRole, now: number): string {
 
 type RowPlacement = Pick<ListItemProps, 'sidebar' | 'disclosure' | 'onPress'>;
 
-// Desktop draws the row as a sidebar row, the dot ending its title line as on SessionRow; phones push a page.
+// Desktop draws the row as a sidebar row; phones push a page.
 function rowPlacement({
   wide,
   onSelect,
@@ -74,8 +91,7 @@ export function SubagentRow(props: SubagentRowProps): JSX.Element {
       {...rowPlacement(props)}
       title={subagent.title}
       subtitle={subagentSupporting(subagent, props.now)}
-      avatar={<RoleAvatar role={role} />}
-      trailing={statusDot(subagent)}
+      avatar={<RoleAvatar role={role} subagent={subagent} />}
       dimmed={subagent.state === 'idle'}
       accessibilityLabel={rowLabel(subagent, role, props.now)}
     />

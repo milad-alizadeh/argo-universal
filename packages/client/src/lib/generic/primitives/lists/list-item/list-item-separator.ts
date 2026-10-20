@@ -34,19 +34,19 @@ const separatorDrawings = {
     colour: 'bg-hairline',
     end: 'right-4',
     pastLeading: 'left-14',
-    pastAvatar: 'left-17 wide-type:left-15',
+    pastAvatar: 'left-16 wide-type:left-14',
   },
   native: {
     colour: 'bg-border',
     end: 'right-4',
     pastLeading: 'left-14 wide:left-15',
-    pastAvatar: 'left-17',
+    pastAvatar: 'left-16',
   },
   content: {
     colour: 'bg-border',
     end: 'right-5',
     pastLeading: 'left-14',
-    pastAvatar: 'left-17',
+    pastAvatar: 'left-16',
   },
 };
 

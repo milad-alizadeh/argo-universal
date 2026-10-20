@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import type { ListItemProps } from './list-item-props';
 
 /*
@@ -7,7 +8,18 @@ import type { ListItemProps } from './list-item-props';
 const sidebarPressLayouts = {
   sidebar: 'w-full flex-row items-start gap-2.5 px-3 py-2.5',
   'sidebar-compact': 'w-full flex-row items-center gap-2.5 px-3 py-2',
+  // Paper "Components / SubagentRow": an avatar row sits 8 by 12 inside, its lanes 12 apart.
+  'sidebar-avatar': 'w-full flex-row items-start gap-3 px-3 py-2',
 };
+
+/*
+ * Paper "Components / SubagentRow": a phone row led by an avatar is the platform's image cell, 60 tall on iOS with
+ * 10 above and below, 72 on Android with 8, centred on the avatar.
+ */
+const avatarRow = Platform.select({
+  android: 'w-full min-h-18 flex-row items-center gap-4 px-4 py-2',
+  default: 'w-full min-h-15 flex-row items-center gap-3 px-4 py-2.5',
+});
 
 export const sidebarLayouts = {
   regular: 'sidebar',
@@ -28,6 +40,7 @@ export const pressLayouts = {
   content: 'w-full flex-row items-start gap-4 px-5 py-4',
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
   'sidebar-tile': 'w-full min-h-12 flex-row items-center gap-3 px-4 py-1.5',
+  avatar: avatarRow,
   ...sidebarPressLayouts,
 };
 
@@ -42,6 +55,8 @@ export const controlLines = {
   content: controlLine,
   menu: 'flex-wrap gap-y-3',
   'sidebar-tile': controlLine,
+  avatar: controlLine,
+  'sidebar-avatar': controlLine,
   sidebar: controlLine,
   'sidebar-compact': controlLine,
 } satisfies Record<PressLayout, string>;

@@ -28,6 +28,7 @@ type PressDrawing = {
   interactive: boolean;
   control: boolean;
   appearance: ListAppearance;
+  avatar: boolean;
 } & Pick<ListItemProps, 'sidebar'>;
 
 const webCard = (appearance: ListAppearance): boolean =>
@@ -44,8 +45,14 @@ function listLayout(press: PressDrawing): PressLayout {
   return press.rows === 'sidebar' ? 'sidebar-tile' : cardLayout(press);
 }
 
+// An avatar row (Paper "Components / SubagentRow") has its own lanes, in a sidebar or on a phone.
+const avatarLayout = (press: PressDrawing): PressLayout =>
+  press.sidebar ? 'sidebar-avatar' : 'avatar';
+
 // A row's own sidebar option (Paper "SessionsList") comes before its List's drawing.
 function rowLayout(press: PressDrawing): PressLayout {
+  if (press.avatar) return avatarLayout(press);
+
   return press.sidebar ? sidebarLayouts[press.sidebar] : listLayout(press);
 }
 

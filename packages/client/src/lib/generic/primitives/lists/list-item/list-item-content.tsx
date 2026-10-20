@@ -78,9 +78,18 @@ export const trailsTitle = (
   props: Pick<ListItemProps, 'sidebar' | 'value'>,
 ): boolean => props.sidebar === 'regular' && props.value === undefined;
 
+// Paper "Components / SubagentRow": a phone avatar row's subtitle sits right under its title.
+const contentClass = (
+  props: Pick<ListItemProps, 'avatar' | 'sidebar'>,
+): string =>
+  cn(
+    'min-w-0 flex-1',
+    props.avatar !== undefined && !props.sidebar ? 'gap-0' : 'gap-0.5',
+  );
+
 export function ItemContent(props: ListItemProps): ReactElement {
   return (
-    <View className="min-w-0 flex-1 gap-0.5">
+    <View className={contentClass(props)}>
       <TitleLine {...props} />
       <Subtitle
         text={props.subtitle}
