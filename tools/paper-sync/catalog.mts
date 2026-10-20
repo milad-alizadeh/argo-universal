@@ -14,7 +14,7 @@ export type Catalog = {
   nodes: LocatedNode[];
   masters: LocatedNode[];
   duplicates: LocatedNode[][];
-  cards: LocatedNode[];
+  families: Set<string>;
 };
 
 export function codeName(name: string): string | undefined {
@@ -23,7 +23,7 @@ export function codeName(name: string): string | undefined {
   )?.[1];
 }
 
-export function cardFamily(name: string): string | undefined {
+function cardFamily(name: string): string | undefined {
   return /^Components \/ ([A-Z][A-Za-z0-9]*)(?:$|[ (·])/.exec(name)?.[1];
 }
 
@@ -77,10 +77,12 @@ export function discover(pages: PageIndex[]): Catalog {
     group.length === 1 ? [required(group[0])] : [],
   );
 
+  const names = candidates.map((group) => codeName(required(group[0]).name));
+
   return {
     nodes,
     masters,
     duplicates: candidates.filter((group) => group.length > 1),
-    cards: nodes.filter((node) => node.name.startsWith('Components / ')),
+    families: new Set(names.filter((name) => name !== undefined)),
   };
 }
