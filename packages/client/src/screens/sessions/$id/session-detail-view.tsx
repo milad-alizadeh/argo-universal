@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useState } from 'react';
+import { createElement, useState } from 'react';
 import { View } from 'react-native';
 import { Composer, type ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
@@ -15,6 +15,7 @@ import {
   sessionOpenFailedTitle,
   SessionHeader,
   type SessionHeaderProps,
+  type SubagentListProps,
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
@@ -25,11 +26,13 @@ import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { SessionLayout } from '#lib/product/session-layout';
 import { type ErrorToast, useErrorToast } from '#primitives/overlays/toast';
 import { Inspector } from '#primitives/scaffolds/inspector';
+import { useSessionSubagents } from './session-subagents';
 
 export interface OpenSessionViewProps {
   header: SessionHeaderProps;
   feed: FeedProps;
   composer: ComposerProps;
+  subagents?: SubagentListProps;
   // Files dropped on the Session's pane attach to the draft.
   onDropFiles: (dropped: DroppedFiles) => void;
   elicitation?: ElicitationFormProps;
@@ -77,14 +80,16 @@ export function SessionDetailView(
 // The header's Changes button opens the Changes Inspector beside the Session.
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
   const [open, onOpenChange] = useState(false);
+  const subagents = useSessionSubagents(props.composer, props.subagents);
   const changes = { open, onOpenChange };
 
   return (
     <>
-      <SessionLayout {...sessionParts(props, changes)} />
-      <Inspector title="Changes" {...changes}>
-        {null}
-      </Inspector>
+      <SessionLayout
+        {...sessionParts({ ...props, composer: subagents.composer }, changes)}
+      />
+      {createElement(Inspector, { title: 'Changes', ...changes })}
+      {subagents.sheet}
     </>
   );
 }

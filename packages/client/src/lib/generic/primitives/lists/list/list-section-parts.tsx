@@ -10,6 +10,7 @@ import { SkeletonBar } from '../../../list-skeleton';
 import { cn } from '../../../utils';
 import type { ListSectionProps } from './list-props';
 import { HeaderActions } from './list-section-actions';
+import { HeaderTitleLine } from './list-section-title-line';
 
 /*
  * Kit-only, a data List's header: a desktop sidebar's section (Paper "SessionsList") draws a muted title after a 16
@@ -81,7 +82,7 @@ function HeaderTitle(props: DrawnHeaderProps): ReactNode {
 function HeaderContent(props: DrawnHeaderProps): ReactElement {
   return (
     <View className="min-w-0 flex-1">
-      <HeaderTitle {...props} />
+      <HeaderTitleLine title={<HeaderTitle {...props} />} count={props.count} />
       {props.subtitle ? <Text role="secondary">{props.subtitle}</Text> : null}
     </View>
   );

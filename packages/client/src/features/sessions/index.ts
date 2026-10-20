@@ -1,5 +1,11 @@
 export { SessionHeader } from './components/session-header';
 
+export { SubagentList } from './components/subagent-list/subagent-list';
+
+export { type SubagentListProps } from './components/subagent-list/subagent-list';
+
+export { SubagentSheet } from './components/subagent-list/subagent-sheet';
+
 export { SessionHeaderBar } from './components/session-header-bar';
 
 export {
