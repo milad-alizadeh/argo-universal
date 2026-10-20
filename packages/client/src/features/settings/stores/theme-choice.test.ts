@@ -28,4 +28,18 @@ describe('the theme on this Device', () => {
 
     await expect(loadThemeChoice()).resolves.toBe('system');
   });
+
+  it('is System when storage cannot be read', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubGlobal('window', {
+      localStorage: {
+        ...memoryStorage(),
+        getItem: (): never => {
+          throw new Error('storage is locked');
+        },
+      },
+    });
+
+    await expect(loadThemeChoice()).resolves.toBe('system');
+  });
 });

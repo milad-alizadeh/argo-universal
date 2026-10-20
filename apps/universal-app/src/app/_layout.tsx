@@ -2,11 +2,11 @@ import {
   AppProviders,
   PortalProvider,
   NavigationProvider,
-  restoreThemeChoice,
   type DesktopBridge,
   SymbolImagesProvider,
   Toaster,
   useConnection,
+  useRestoredThemeChoice,
 } from '@repo/client';
 import '../../global.css';
 import { registerDevMenuItems } from 'expo-dev-client';
@@ -41,9 +41,6 @@ if (__DEV__ && Platform.OS !== 'web') {
 
 holdPhonesInPortrait();
 
-// The theme chosen in Settings › Appearance, before the first screen draws where storage answers in time.
-void restoreThemeChoice();
-
 declare global {
   interface Window {
     // Set by the desktop preload script.
@@ -62,16 +59,21 @@ const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 const RootView = withUniwind(GestureHandlerRootView);
 
 export default function RootLayout(): React.JSX.Element {
+  // The first screen waits for the theme chosen in Settings › Appearance, so it never flashes the system one.
+  const themeRestored = useRestoredThemeChoice();
+
   return (
     // The phone drawer's gestures need this root; it sits on the content surface, as the window does.
     <RootView className="flex-1 bg-content">
       {/* Screens follow the keyboard frame by frame through this. */}
       <KeyboardProvider>
         <SymbolImagesProvider render={renderSymbolImage}>
-          <AppProviders serverUrl={serverUrl}>
-            <ForegroundSignal />
-            <ThemedApp />
-          </AppProviders>
+          {themeRestored && (
+            <AppProviders serverUrl={serverUrl}>
+              <ForegroundSignal />
+              <ThemedApp />
+            </AppProviders>
+          )}
         </SymbolImagesProvider>
       </KeyboardProvider>
     </RootView>

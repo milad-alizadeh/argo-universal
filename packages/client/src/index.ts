@@ -36,7 +36,7 @@ export { AccountListScreen } from './screens/settings/accounts/account-list-scre
 
 export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
 
-export { restoreThemeChoice } from '#features/settings';
+export { useRestoredThemeChoice } from '#features/settings';
 
 export { AppearanceDetailScreen } from './screens/settings/appearance/appearance-detail-screen';
 

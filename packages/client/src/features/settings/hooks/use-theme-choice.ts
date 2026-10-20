@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Uniwind, useUniwind } from 'uniwind';
 import {
   loadThemeChoice,
@@ -21,18 +21,28 @@ export function useThemeChoice(): ThemeChoiceState {
   }, []);
 
   return {
-    choice: hasAdaptiveThemes ? 'system' : asFixedTheme(theme),
+    choice: hasAdaptiveThemes ? 'system' : lightOrDark(theme),
     choose,
   };
 }
 
-function asFixedTheme(theme: string): ThemeChoice {
+function lightOrDark(theme: string): ThemeChoice {
   return theme === 'dark' ? 'dark' : 'light';
 }
 
-// At App start, draws the theme this Device chose last.
-export async function restoreThemeChoice(): Promise<void> {
-  const choice = await loadThemeChoice();
+/*
+ * At App start, draws the theme this Device chose last. False until storage has answered, so the App can hold its
+ * first screen rather than flash the system theme.
+ */
+export function useRestoredThemeChoice(): boolean {
+  const [restored, setRestored] = useState(false);
 
-  if (choice !== 'system') Uniwind.setTheme(choice);
+  useEffect(() => {
+    void loadThemeChoice().then((choice) => {
+      Uniwind.setTheme(choice);
+      setRestored(true);
+    });
+  }, []);
+
+  return restored;
 }

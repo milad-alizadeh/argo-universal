@@ -9,18 +9,21 @@ export const themeChoices = [
 
 export type ThemeChoice = (typeof themeChoices)[number]['value'];
 
+// What a Device draws until it chooses.
+const defaultThemeChoice: ThemeChoice = 'system';
+
 const storageKey = 'theme-choice';
 
 let writes = Promise.resolve();
 
 function asThemeChoice(value: string | null): ThemeChoice {
   return (
-    themeChoices.find((choice) => choice.value === value)?.value ?? 'system'
+    themeChoices.find((choice) => choice.value === value)?.value ?? defaultThemeChoice
   );
 }
 
 export function themeChoiceLabel(choice: ThemeChoice): string {
-  return themeChoices.find((item) => item.value === choice)?.label ?? 'System';
+  return themeChoices.find((item) => item.value === choice)?.label ?? '';
 }
 
 // The theme this Device chose last; System until it chooses, or when its storage cannot be read.
@@ -32,7 +35,7 @@ export async function loadThemeChoice(): Promise<ThemeChoice> {
   } catch (cause) {
     console.error('Could not load the theme', cause);
 
-    return 'system';
+    return defaultThemeChoice;
   }
 }
 
