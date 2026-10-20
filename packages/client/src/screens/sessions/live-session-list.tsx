@@ -8,12 +8,12 @@ import {
 import { useConnectionState, useTRPC } from '#features/connection';
 import {
   ArchiveSessionAlert,
-  liveUpdatesStopped,
   type QueryProgress,
   RenameSessionDialog,
   type SessionsView,
   sessionsLoadState,
-} from '#features/sessions';
+} from '#features/session-list';
+import { liveUpdatesStopped } from '#features/sessions';
 import {
   newSessionHref,
   projectHref,

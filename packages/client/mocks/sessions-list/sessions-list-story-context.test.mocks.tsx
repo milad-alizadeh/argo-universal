@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { SessionsList } from '../../src/features/sessions/components/sessions-list/sessions-list';
-import { sessionsListProps } from '../../src/features/sessions/components/sessions-list/sessions-list.mocks';
+import { SessionsList } from '../../src/features/session-list/components/sessions-list/sessions-list';
+import { sessionsListProps } from '../../src/features/session-list/components/sessions-list/sessions-list.mocks';
 
 export const exampleProjectName = 'Example Project';
 

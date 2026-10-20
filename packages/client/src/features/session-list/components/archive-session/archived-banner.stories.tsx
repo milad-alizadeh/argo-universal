@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ArchivedBanner } from './archived-banner';
 
 const meta = {
-  title: 'Sessions/ArchivedBanner',
+  title: 'SessionList/ArchivedBanner',
   component: ArchivedBanner,
 } satisfies Meta<typeof ArchivedBanner>;
 

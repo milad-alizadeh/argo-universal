@@ -3,7 +3,7 @@ import { action } from 'storybook/actions';
 import { ArchiveSessionAlert } from './archive-session-alert';
 
 const meta = {
-  title: 'Sessions/ArchiveSessionAlert',
+  title: 'SessionList/ArchiveSessionAlert',
   component: ArchiveSessionAlert,
   args: {
     open: true,

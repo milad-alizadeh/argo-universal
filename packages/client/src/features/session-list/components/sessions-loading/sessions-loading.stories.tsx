@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { SessionsLoading } from './sessions-loading';
 
 const meta = {
-  title: 'Sessions/SessionsLoading',
+  title: 'SessionList/SessionsLoading',
   component: SessionsLoading,
   parameters: { previewPadding: false },
   render: (): React.JSX.Element => (

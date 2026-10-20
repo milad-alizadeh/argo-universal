@@ -12,7 +12,7 @@ const paperView: SessionsView = {
 };
 
 const meta = {
-  title: 'Sessions/SessionsHeader',
+  title: 'SessionList/SessionsHeader',
   component: SessionsHeader,
   parameters: { previewPadding: false },
   args: {

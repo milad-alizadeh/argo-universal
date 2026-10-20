@@ -1,5 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
-import type { PullRequestIndicatorProps } from '../pull-request-indicator/pull-request-indicator';
+import type { PullRequestIndicatorProps } from '#features/sessions';
 
 export interface SessionRowMetadataProps {
   session: SessionInfo;

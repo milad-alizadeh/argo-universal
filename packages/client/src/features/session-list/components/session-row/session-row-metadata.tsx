@@ -1,12 +1,12 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { Label } from '#primitives/content/label';
-import { Text } from '#primitives/content/text';
-import { Pill } from '#primitives/status/pill';
 import {
   pullRequestAppearance,
   type PullRequestIndicatorProps,
-} from '../pull-request-indicator/pull-request-indicator';
+} from '#features/sessions';
+import { Label } from '#primitives/content/label';
+import { Text } from '#primitives/content/text';
+import { Pill } from '#primitives/status/pill';
 import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
 import { sidebarRows } from './session-row-sidebar';

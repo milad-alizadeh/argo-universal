@@ -9,7 +9,7 @@ import { useTRPC } from '#features/connection';
 import {
   type ArchiveSessionAlertProps,
   archivedToast,
-} from '#features/sessions';
+} from '#features/session-list';
 import { errorToast } from '#lib/generic/error-toast';
 import { showToast } from '#primitives/overlays/toast';
 import { archiveAsksFirst } from './archive-asks-first';
