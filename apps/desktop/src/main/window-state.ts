@@ -17,9 +17,9 @@ const windowState = z.object({
 
 export type WindowState = z.infer<typeof windowState>;
 
-const defaultWidth = 1400;
+export const defaultWidth = 1400;
 
-const defaultHeight = 900;
+export const defaultHeight = 900;
 
 const minimumWidth = 600;
 

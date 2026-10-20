@@ -1,5 +1,5 @@
 // Badges show counts above this as "99+".
-const maximumBadgeCount = 99;
+export const maximumBadgeCount = 99;
 
 // A count a row or tile shows as a badge.
 export interface BadgeCount {

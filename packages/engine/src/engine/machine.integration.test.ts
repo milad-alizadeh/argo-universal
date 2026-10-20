@@ -23,6 +23,7 @@ import { paths, title } from '#mocks/engine-model-paths';
 import * as model from '#mocks/engine-model-state';
 import { startModelEngine } from '#mocks/engine-model-state';
 import { executeStep } from '#mocks/engine-model-walk';
+import { sessionStopLimit } from './setup.machine';
 
 const startRunningEngine = async (logic = machine): Promise<void> => {
   startModelEngine(logic);
@@ -51,7 +52,11 @@ it('closes Agent resources before draining the writer when Sessions exceed their
   await startRunningEngine();
   model.engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
   await settle((): void => latest(model.closeHttpServerCalls).resolve());
-  vi.advanceTimersByTime(10000);
+  vi.advanceTimersByTime(sessionStopLimit - 1);
+  expect(model.logs).not.toContain(
+    'Session stop limit reached; closing Agent resources',
+  );
+  vi.advanceTimersByTime(1);
   expect(model.logs).toContain(
     'Session stop limit reached; closing Agent resources',
   );

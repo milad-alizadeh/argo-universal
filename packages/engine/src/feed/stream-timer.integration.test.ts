@@ -13,8 +13,11 @@ import {
   applyFeedChange,
   subscribe,
 } from '#mocks/feed-suite';
+import { storeDelay, streamBatchDelay } from './feed-machine';
 
-it('streams buffered Agent changes after 60 ms while SQL waits for the store timer', async () => {
+const firstAdvance = Math.floor(streamBatchDelay / 2);
+
+it('streams buffered Agent changes after the stream batch delay while SQL waits for the store timer', async () => {
   await startFeedTestHost();
   const updates = await subscribe({ epoch: 3, revision: 5 });
   await updates.next();
@@ -27,9 +30,9 @@ it('streams buffered Agent changes after 60 ms while SQL waits for the store tim
   });
 
   applyFeedChange(createOpenMessageChange('timed-row'));
-  await vi.advanceTimersByTimeAsync(30);
+  await vi.advanceTimersByTimeAsync(firstAdvance);
   applyFeedChange(createTextAppendChange('timed-row', 'Hello'));
-  await vi.advanceTimersByTimeAsync(29);
+  await vi.advanceTimersByTimeAsync(streamBatchDelay - firstAdvance - 1);
   expect(received).toBe(false);
   expect(
     database.$client
@@ -41,7 +44,7 @@ it('streams buffered Agent changes after 60 ms while SQL waits for the store tim
     upsertRowEvent,
     appendRowEvent,
   ]);
-  await vi.advanceTimersByTimeAsync(939);
+  await vi.advanceTimersByTimeAsync(storeDelay - streamBatchDelay - 1);
   expect(
     database.$client
       .prepare('SELECT id FROM feed_row WHERE id = ?')

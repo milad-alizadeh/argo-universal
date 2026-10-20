@@ -10,6 +10,7 @@ import {
 } from '../kit-tokens';
 import { pressHandler } from './kit-event-props';
 import { perSizeClass } from './schema-size-class';
+import { svgCharacterLimit } from './wire-limits';
 
 export const textProps = z.object({
   children: z
@@ -56,12 +57,10 @@ export const layoutProps = z.object({
   align: z.enum(stackAlignments).optional().describe('Cross-axis alignment.'),
 });
 
-const svgXmlCharacterLimit = 131_072;
-
 export const svgProps = z.object({
   xml: z
     .string()
-    .max(svgXmlCharacterLimit)
+    .max(svgCharacterLimit)
     .describe('Sanitized SVG markup to draw.'),
   label: z.string().min(1).describe('The accessible name of the artwork.'),
   tone: z.enum(tones).optional().describe('The semantic artwork color.'),

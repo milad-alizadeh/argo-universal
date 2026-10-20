@@ -76,11 +76,11 @@ export interface CheckRunningInput {
   pid: number;
 }
 
-const pollDelayMs = 200;
+export const pollDelayMs = 200;
 
-const startLimitMs = 30_000;
+export const startLimitMs = 30_000;
 
-const stopLimitMs = 5000;
+export const stopLimitMs = 5000;
 
 const millisecondsPerSecond = 1000;
 

@@ -31,4 +31,4 @@ App fixtures use the Registry ids `claude-acp` and `codex-acp`. Their options ch
 
 Structural machine tests use symbolic actor results to walk transitions. These graph tests do not replace public integration journeys.
 
-These fixtures prove Argo behavior for supplied scenarios. They do not prove upstream Agent compatibility, authentication, descendant isolation or resource savings. See [ADR-0018](../../docs/adr/0018-app-e2e-uses-shared-agent-fixtures.md) and [Testing seams](../../docs/agents/testing-seams.md).
+These fixtures prove Argo behavior for supplied scenarios. They do not prove upstream Agent compatibility, authentication, descendant isolation or resource savings. See [ADR-0018](../../docs/adr/0018-app-e2e-uses-shared-agent-fixtures.md).

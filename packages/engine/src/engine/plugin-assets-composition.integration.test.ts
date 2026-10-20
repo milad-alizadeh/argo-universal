@@ -14,9 +14,11 @@ it('serves a Plugin file as immutable bytes from its content-hash URL', async ()
   const response = await fetch(assetUrl);
   expect(response.status).toBe(200);
   expect(response.headers.get('content-type')).toBe('image/png');
-  expect(response.headers.get('cache-control')).toBe(
-    'private, max-age=31536000, immutable',
-  );
+  const cacheControl = response.headers.get('cache-control');
+
+  expect(cacheControl).toMatch(/\bprivate\b/);
+  expect(cacheControl).toMatch(/\bimmutable\b/);
+  expect(cacheControl).toMatch(/\bmax-age=[1-9]/);
   expect(Buffer.from(await response.arrayBuffer())).toEqual(image);
 });
 

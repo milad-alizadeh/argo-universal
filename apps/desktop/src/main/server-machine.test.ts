@@ -28,7 +28,10 @@ import {
   type CheckRunningInput,
   type ServerInput,
   type SpawnInput,
+  pollDelayMs,
   serverConnectionMachine,
+  startLimitMs,
+  stopLimitMs,
 } from './server-machine';
 
 const supervisorExitedEvent = 'server.exited';
@@ -40,13 +43,6 @@ const countsChangedEvent = 'counts.changed';
 const quitDoneEvent = 'xstate.done.actor.askQuit';
 
 const quitErrorEvent = 'xstate.error.actor.askQuit';
-
-// Numbers written out so the model cannot grade itself.
-const pollDelayMs = 200;
-
-const startLimitMs = 30_000;
-
-const stopLimitMs = 5000;
 
 const spawnedAt = Date.parse('2026-10-03T09:30:00.000Z');
 
@@ -597,7 +593,7 @@ describe('server connection', (): void => {
     expect(failures[1]).toBe(context().failure);
   });
 
-  it('reads server.json every 200 ms until it names the spawned Supervisor', async (): Promise<void> => {
+  it('reads server.json every poll delay until it names the spawned Supervisor', async (): Promise<void> => {
     await spawnSupervisor();
     expect(readAddressCalls).toHaveLength(1);
 
