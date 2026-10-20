@@ -68,7 +68,7 @@ it.each([
   20_000,
 );
 
-it('retains a replacement while an outer Hook waits on a slow argo call', async () => {
+it('retains a downstream replacement when an outer Hook exhausts its budget on an argo call', async () => {
   const home = await createRuntimePlugins([]);
   await writeHookPlugins(home, [
     {
@@ -100,12 +100,18 @@ it('retains a replacement while an outer Hook waits on a slow argo call', async 
   const app = renderApp(url, traySlotFixture, currentPluginSurface('web'));
 
   await expect
-    .poll(() => app.messages[0], { timeout: 50_000 })
+    .poll(() => app.messages[0], { timeout: 15_000 })
     .toMatchObject({
       type: 'replacement',
       message: { root: { props: { children: 'Retained tree' } } },
     });
-  expect(await readFile(join(home, 'logs/plugins.log'), 'utf8')).not.toContain(
-    'core fallback',
-  );
-}, 60_000);
+  const log = await readFile(join(home, 'logs/plugins.log'), 'utf8');
+
+  expect(
+    log.split('\n').filter((line) => line.includes('10000 ms budget')),
+  ).toEqual([
+    expect.stringContaining(
+      'Plugin a-delay: core fallback argo/composer/above/v1: ui.render Hook: missed its 10000 ms budget',
+    ),
+  ]);
+}, 20_000);
