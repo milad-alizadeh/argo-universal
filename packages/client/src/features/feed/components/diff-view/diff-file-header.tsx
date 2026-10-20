@@ -1,6 +1,5 @@
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
-import { CopyButton } from '#lib/product/markdown/copy-button';
 import { contentActionClass } from '#primitives/actions/button';
 import { Pressable } from '#primitives/actions/pressable';
 import { Text, TextClassContext } from '#primitives/content/text';
@@ -89,7 +88,7 @@ function FileHeaderToggle(props: FileHeaderProps): React.JSX.Element {
   );
 }
 
-// The Inspector's file header: folder muted, file name strong, then copy, the change counts and the Viewed mark.
+// The Inspector's file header: folder muted, file name strong, then the change counts and the Viewed mark.
 export function FileHeader(props: FileHeaderProps): React.JSX.Element {
   const full = <FullFileHeader {...props} />;
 
@@ -106,7 +105,6 @@ function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
     <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
       <FileHeaderToggle {...props} />
-      <CopyButton value={props.file.path} label="Copy path" />
       <ChangeCounts file={props.file} />
       <ViewedMark {...props} />
     </View>
