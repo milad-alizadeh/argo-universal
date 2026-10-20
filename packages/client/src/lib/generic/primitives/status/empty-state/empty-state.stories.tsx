@@ -36,7 +36,8 @@ const examples = [
       ...sessions,
       icon: 'search',
       title: 'No matching Sessions',
-      description: 'No Session has “deploy” in its title.',
+      description:
+        'Nothing in all Sessions matches “deploy”. Try a different title.',
       action: undefined,
     },
   ],
