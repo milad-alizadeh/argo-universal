@@ -1,0 +1,23 @@
+import type * as React from 'react';
+import { View } from 'react-native';
+import { Feed } from '#features/feed';
+import { SizeClass } from '../../../../lib/generic/size-class/size-class';
+import { SubagentFeedHeader } from './subagent-feed-header';
+import type { SubagentFeedProps } from './subagent-feed-props';
+
+export type { SubagentFeedProps } from './subagent-feed-props';
+
+/*
+ * One Subagent's Feed, read-only. In the Inspector it carries its own header, with Back to the
+ * Subagents list; in the phone Sheet the pushed page's header draws the title and Back instead.
+ */
+export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
+  return (
+    <View className="min-h-0 flex-1">
+      <SizeClass only="wide">
+        <SubagentFeedHeader {...props} />
+      </SizeClass>
+      <Feed {...props.feed} />
+    </View>
+  );
+}

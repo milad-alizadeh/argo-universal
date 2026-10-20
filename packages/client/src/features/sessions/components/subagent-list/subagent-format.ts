@@ -11,7 +11,11 @@ function tokensLabel(tokens: number | null): string {
   return `${Number((tokens / thousand).toFixed(1))}k tokens`;
 }
 
-function elapsedMs(subagent: Subagent, now: number): number | null {
+// How long the Subagent has been working, or how long it took once it finished.
+export function subagentElapsedMs(
+  subagent: Subagent,
+  now: number,
+): number | null {
   if (subagent.state === 'idle') return subagent.durationMs;
 
   if (subagent.startedAt === null) return null;
@@ -23,7 +27,7 @@ const modelLabel = (subagent: Subagent): string =>
   subagent.model ?? 'Unknown model';
 
 function durationLabel(subagent: Subagent, now: number): string {
-  const elapsed = elapsedMs(subagent, now);
+  const elapsed = subagentElapsedMs(subagent, now);
 
   return elapsed === null ? '—' : formatElapsed(elapsed);
 }
