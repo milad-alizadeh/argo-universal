@@ -1,27 +1,6 @@
 export { SessionHeader } from './components/session-header';
 
-export { SubagentList } from './components/subagent-list/subagent-list';
-
-export { type SubagentListProps } from './components/subagent-list/subagent-list';
-
-export {
-  SubagentSheet,
-  type SubagentSheetProps,
-} from './components/subagent-list/subagent-sheet';
-
-export {
-  SubagentFeed,
-  type SubagentFeedProps,
-} from './components/subagent-feed/subagent-feed';
-
-export {
-  ShellPanel,
-  type ShellPanelProps,
-} from './components/shell-list/shell-panel';
-
-export { ShellSheet } from './components/shell-list/shell-sheet';
-
-export { shellsRunning } from './components/shell-list/shell-format';
+export * from './components/session-work';
 
 export { SessionHeaderBar } from './components/session-header-bar';
 
