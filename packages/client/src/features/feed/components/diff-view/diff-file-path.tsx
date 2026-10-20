@@ -6,26 +6,21 @@ import { ScrollFadeGradient } from '../../../../lib/generic/scroll-fade/scroll-f
 
 function FolderName({ folder }: { folder: string }): React.JSX.Element {
   return (
-    <Text
-      selectable={false}
-      role="code"
-      className="shrink-0 text-muted-foreground"
-    >
-      {folder}
-    </Text>
+    <View className="shrink-0">
+      <Text selectable={false} role="code" tone="muted">
+        {folder}
+      </Text>
+    </View>
   );
 }
 
 function FileBaseName({ name }: { name: string }): React.JSX.Element {
   return (
-    <Text
-      selectable={false}
-      numberOfLines={1}
-      role="code"
-      className="shrink-0 text-foreground"
-    >
-      {name}
-    </Text>
+    <View className="shrink-0">
+      <Text selectable={false} numberOfLines={1} role="code">
+        {name}
+      </Text>
+    </View>
   );
 }
 
@@ -54,23 +49,27 @@ function PathFade(): React.JSX.Element {
 function PathScroll({ path }: { path: string }): React.JSX.Element {
   const scroll = useRef<ScrollView>(null);
 
+  const showFileName = (): void =>
+    scroll.current?.scrollToEnd({ animated: false });
+
   return (
-    <ScrollView ref={scroll} {...scrollProps(scroll)}>
+    <ScrollView
+      {...pathScrollProps}
+      ref={scroll}
+      onContentSizeChange={showFileName}
+      onLayout={showFileName}
+    >
       <PathText path={path} />
     </ScrollView>
   );
 }
 
-const scrollProps = (
-  scroll: React.RefObject<ScrollView | null>,
-): React.ComponentProps<typeof ScrollView> => ({
+const pathScrollProps: React.ComponentProps<typeof ScrollView> = {
   horizontal: true,
   showsHorizontalScrollIndicator: false,
   className: 'min-w-0 grow-0 shrink',
   contentContainerClassName: 'min-w-full',
-  onContentSizeChange: () => scroll.current?.scrollToEnd({ animated: false }),
-  onLayout: () => scroll.current?.scrollToEnd({ animated: false }),
-});
+};
 
 function PathText({ path }: { path: string }): React.JSX.Element {
   const slash = path.lastIndexOf('/');

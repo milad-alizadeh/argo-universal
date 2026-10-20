@@ -21,13 +21,18 @@ export interface FileHeaderProps {
 const toggleClassName = contentActionClass({
   variant: 'link',
   className:
-    'h-5 min-w-0 flex-1 basis-6 justify-start gap-3 rounded-none p-0 sm:h-5 medium:basis-0 medium:gap-2',
+    'h-5 min-w-0 flex-1 basis-7 justify-start gap-3 rounded-none p-0 sm:h-5 medium:basis-0 medium:gap-2',
 });
 
 function ToggleLabel(props: FileHeaderProps): React.JSX.Element {
   return (
     <TextClassContext.Provider value="select-none no-underline">
-      <DisclosureChevron open={props.open} role="code" />
+      <DisclosureChevron
+        open={props.open}
+        role="control"
+        fitArtwork
+        weight="light"
+      />
       <FilePath path={props.file.path} />
     </TextClassContext.Provider>
   );
@@ -62,7 +67,7 @@ export function FileHeader(props: FileHeaderProps): React.JSX.Element {
 
 function FullFileHeader(props: FileHeaderProps): React.JSX.Element {
   return (
-    <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
+    <View className="h-9 flex-row items-center gap-2 border-b border-border bg-muted pr-3 pl-2">
       <FileHeaderToggle {...props} />
       <ChangeCounts file={props.file} />
       <ViewedMark {...props} />
@@ -81,7 +86,7 @@ function CompactFileHeader(props: FileHeaderProps): React.JSX.Element {
         </View>
         <ViewedMark {...props} compact />
       </View>
-      <View className="mr-4 ml-10 h-px bg-border" />
+      <View className="h-px bg-border" />
     </View>
   );
 }
