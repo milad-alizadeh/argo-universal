@@ -1,16 +1,16 @@
 /*
  * Every desktop and web popover and menu, with or without drill-in, draws Paper's Configure popover (owner,
- * 2026-10-20): a card with no edge in light mode, plain rows 12px in from its sides and 4px from its top and bottom,
+ * 2026-10-20): a card with no edge in light mode, plain rows 4px in from every side,
  * rows 2px apart and groups 8px apart with no line between them. Phone sheets keep their grouped list.
  */
 export const menuSurfaceClassName =
   'bg-card rounded-2xl shadow-card dark:border dark:border-border';
 
 // The card's own inset around its rows.
-export const menuInsetClassName = 'px-3 py-1';
+export const menuInsetClassName = 'p-1';
 
 // The same inset where only the wide layout is a popover.
-export const wideMenuInsetClassName = 'wide:px-3 wide:py-1';
+export const wideMenuInsetClassName = 'wide:p-1';
 
 // A row: at least 36 tall, 8 padding, 8 between its parts, the menu-row radius.
 export const menuRowClassName =

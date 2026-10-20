@@ -7,8 +7,8 @@ type Insets = Pick<
 
 type Options = Insets & Pick<ListProps<never>, 'appearance' | 'fit'>;
 
-// Paper's Configure popover (menu-surface.ts): a grouped list in a popover holds its rows 12px in from the sides, 4px from the top and bottom.
-const menuInset = { sides: 3, ends: 1 } as const;
+// Paper's Configure popover (menu-surface.ts): a grouped list in a popover holds its rows 4px in from every side.
+const menuInset = { sides: 1, ends: 1 } as const;
 
 export function listInsets(props: Options, menu: boolean): Insets {
   if (props.appearance !== 'grouped') return plainInsets(props, menu);
