@@ -45,16 +45,21 @@ const liveToolCallHeader = recording.liveHeaders.findLast(
   (header) => header.source.type === 'tool_call',
 );
 
-if (!liveToolCallHeader) throw new Error('Recorded catalog needs a tool call');
+const liveSource = liveToolCallHeader?.source;
+
+const liveToolCallId =
+  liveSource?.type === 'tool_call' ? liveSource.toolCallId : undefined;
 
 const liveToolCall = recording.rows.findLast(
   (row): row is ToolCallUpdate =>
     row.sessionUpdate === 'tool_call_update' &&
-    liveToolCallHeader.source.type === 'tool_call' &&
-    row.toolCallId === liveToolCallHeader.source.toolCallId,
+    row.toolCallId === liveToolCallId,
 );
 
-const turnStartedAt = liveToolCallHeader.startedAt ?? 0;
+if (!liveToolCallHeader?.startedAt || !liveToolCall)
+  throw new Error('Recorded catalog needs a started tool call');
+
+const turnStartedAt = liveToolCallHeader.startedAt;
 
 // 34s into the Subagent's Turn, as the Paper design draws it.
 export const subagentFeedNow = turnStartedAt + 34_000;
@@ -115,6 +120,14 @@ export const startingSubagent: Subagent = {
   ...subagent,
   startedAt: subagentFeedNow - 2_000,
   tokens: null,
+};
+
+export const cancelledSubagent: Subagent = {
+  ...subagent,
+  state: 'idle',
+  stopReason: 'cancelled',
+  endedAt: turnStartedAt + 34_000,
+  durationMs: 34_000,
 };
 
 export const finishedSubagent: Subagent = {

@@ -55,3 +55,16 @@ it("starts with the child's own output when the Agent reported no incoming messa
 
   expect(item?.sessionUpdate).not.toBe('user_message');
 });
+
+// A message the child itself sent on, which the Feed leaves undrawn as a Session's own does.
+it('draws no later message as a prompt', () => {
+  const rows = [...recording.rows.slice(1), incoming];
+  const drawn = toSubagentFeedView(rows, recording.snapshot).items;
+
+  expect(
+    drawn.some(
+      (item) =>
+        item.type === 'row' && item.row.sessionUpdate === 'user_message',
+    ),
+  ).toBe(false);
+});

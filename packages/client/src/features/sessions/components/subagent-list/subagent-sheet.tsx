@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useLayoutEffect, useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import {
   Sheet,
   useSheet,
@@ -39,13 +39,31 @@ function useFeedDestination(
 
 type PageProps = SubagentListProps & { feed?: SubagentFeedProps };
 
-// The list, with the open Subagent's Feed pushed over it as soon as the Session hands it over.
-function SubagentListPage({ feed, ...list }: PageProps): React.JSX.Element {
+/*
+ * The Feed is pushed once per Subagent: pushing again on a later render would reopen the page the
+ * person just went Back from. While it stays open its content follows the Subagent's own props.
+ */
+function useFeedPage(feed: SubagentFeedProps | undefined): void {
   const sheet = useSheet();
   const destination = useFeedDestination(feed);
+  const pushed = useRef(false);
+
   useLayoutEffect(() => {
-    if (destination) sheet.push(destination);
+    pushed.current = false;
+  }, [feed?.subagent.sessionId]);
+  useLayoutEffect(() => {
+    if (!destination) return;
+
+    if (pushed.current) return sheet.update(destination);
+
+    pushed.current = true;
+    sheet.push(destination);
   }, [sheet, destination]);
+}
+
+// The list, with the open Subagent's Feed pushed over it as soon as the Session hands it over.
+function SubagentListPage({ feed, ...list }: PageProps): React.JSX.Element {
+  useFeedPage(feed);
 
   return <SubagentList {...list} />;
 }

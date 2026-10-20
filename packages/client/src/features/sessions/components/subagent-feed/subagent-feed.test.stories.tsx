@@ -8,6 +8,7 @@ import {
   SubagentFeedSheet,
 } from './subagent-feed-presentations.mocks';
 import {
+  cancelledSubagent,
   emptyFeed,
   finishedFeed,
   finishedSubagent,
@@ -63,6 +64,15 @@ export const Finished: Story = {
       await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
       await expect(canvas.queryByRole('status', liveRow)).toBeNull();
       await metaLine(canvas, wide, 'Finished · 1m 41s');
+    }),
+};
+
+// Stopped part way: the meta line names that instead of Finished.
+export const Cancelled: Story = {
+  args: { subagent: cancelledSubagent, feed: finishedFeed },
+  play: async ({ canvas }) =>
+    eachLayout(async (wide) => {
+      await metaLine(canvas, wide, 'Cancelled · 34s');
     }),
 };
 
