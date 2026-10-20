@@ -1,7 +1,6 @@
-import type { NewSessionAttempt } from '../types/new-session-attempt';
+import type { NewSessionAttempt, SessionProblem } from '#features/new-session';
 import type { SessionCalloutProps } from '../types/session-callout';
 import type { TurnSignIn } from '../types/turn-sign-in';
-import type { SessionProblem } from './session-problem';
 
 type Problem<Type extends SessionProblem['type']> = Extract<
   SessionProblem,

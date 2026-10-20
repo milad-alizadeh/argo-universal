@@ -1,8 +1,8 @@
 import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
 import { type Mock, vi } from 'vitest';
 import type { ConnectionState } from '../../src/features/connection';
-import { EmptySessionStore } from '../../src/features/sessions/stores/empty-session-store';
-import type { EmptySessionPorts } from '../../src/features/sessions/stores/empty-session-types';
+import { EmptySessionStore } from '../../src/features/new-session/stores/empty-session-store';
+import type { EmptySessionPorts } from '../../src/features/new-session/stores/empty-session-types';
 import { openFailure } from './open-failure.mocks';
 
 export const local = (agent: string): SessionNewInput => ({

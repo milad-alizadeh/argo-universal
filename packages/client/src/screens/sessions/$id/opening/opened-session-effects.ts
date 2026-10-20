@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { type EmptySessionConfiguration } from '#features/sessions';
+import { type EmptySessionConfiguration } from '#features/new-session';
 import type { OpenedSession } from './opened-session';
 
 export function useShowsPrompt(

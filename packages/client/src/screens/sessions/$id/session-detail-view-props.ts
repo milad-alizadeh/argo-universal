@@ -1,7 +1,7 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import type { FeedProps, useSessionFeed } from '#features/feed';
+import { openFailureText } from '#features/new-session';
 import {
-  openFailureText,
   type SessionHeaderProps,
   type SessionHeaderStatus,
 } from '#features/sessions';

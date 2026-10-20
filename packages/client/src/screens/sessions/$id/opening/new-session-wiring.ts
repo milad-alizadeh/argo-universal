@@ -1,4 +1,5 @@
-import type { useSessionOptions, SessionCallouts } from '#features/sessions';
+import type { useSessionOptions } from '#features/new-session';
+import type { SessionCallouts } from '#features/sessions';
 import type { Navigate } from '#lib/product/navigation/navigation';
 import type { ReadySessionNewViewProps } from '../session-new-view';
 import type { NewSessionData } from './use-new-session-data';

@@ -1,4 +1,4 @@
-import { canOpenSession } from '#features/sessions';
+import { canOpenSession } from '#features/new-session';
 import type { NewSessionWiring, ReadyProps } from './new-session-wiring';
 
 type DraftProps = ReadyProps<

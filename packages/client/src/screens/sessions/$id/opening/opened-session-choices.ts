@@ -5,7 +5,7 @@ import {
   type EmptySessionConfiguration,
   initialConfigOptions,
   useSessionOptions,
-} from '#features/sessions';
+} from '#features/new-session';
 import type { OpenedSession } from './opened-session';
 
 export type ConfigPick = (configId: string, value: string | boolean) => void;

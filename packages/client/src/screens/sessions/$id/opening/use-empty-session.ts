@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useResubscribeOnReconnect } from '#features/connection';
 import {
-  droppedOpenToast,
   type EmptySessionChoices,
   type EmptySessionState,
   EmptySessionStore,
-  opensOnReconnect,
-} from '#features/sessions';
+} from '#features/new-session';
+import { droppedOpenToast, opensOnReconnect } from '#features/new-session';
 import { useErrorToast } from '#primitives/overlays/toast';
 import { useEmptySessionPorts } from './empty-session-adapters';
 

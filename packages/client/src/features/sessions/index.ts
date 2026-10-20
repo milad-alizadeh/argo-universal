@@ -13,50 +13,6 @@ export {
   useSessionPanels,
 } from './stores/session-panels';
 
-export { type StartingFeed, startingFeed } from './utils/starting-feed';
-
-export {
-  decodeOpenFailure,
-  openFailureText,
-  serverSilentMessage,
-  sessionOpenFailedTitle,
-} from './utils/open-failure';
-
-export { droppedOpenToast, pastSessionDropToast } from './utils/session-toasts';
-
-export { useConnectionDropped } from './hooks/use-connection-dropped';
-
-export { opensOnReconnect } from './utils/new-session-attempt';
-
-export { canOpenSession, toNewSessionInput } from './utils/open-session';
-
-export {
-  chooseAnotherProject,
-  chooseProject,
-  type ChosenSettings,
-  type SessionChoices,
-  toSessionChoices,
-} from './utils/session-choices';
-
-export { useSessionConfigChange } from './hooks/use-session-config-change';
-
-export { EmptySessionStore } from './stores/empty-session-store';
-
-export type {
-  EmptySessionChoices,
-  EmptySessionConfiguration,
-  EmptySessionPorts,
-  EmptySessionState,
-} from './stores/empty-session-types';
-
-export {
-  chosenOptions,
-  type ConfigurationPicks,
-  initialConfigOptions,
-} from './utils/session-option-choices';
-
-export { useSessionOptions } from './hooks/use-session-options';
-
 export { composerStatus } from './utils/composer-status';
 
 export { toSendError } from './utils/send-error';
@@ -84,8 +40,6 @@ export { SessionMenuToolbar } from './components/session-menu-toolbar';
 
 export { type SessionPullRequest } from './components/session-pull-request';
 
-export { type SessionConfigChange } from './hooks/use-session-config-change';
-
 export { liveUpdatesStopped } from './utils/live-updates-stopped';
 
 export {
@@ -109,13 +63,6 @@ export {
   type SessionAuthSubject,
   useSessionAuth,
 } from './hooks/use-session-auth';
-
-export {
-  type OpenAttempt,
-  type SessionProblem,
-  type SessionProblemSources,
-  sessionProblem,
-} from './utils/session-problem';
 
 export { openCallout, openProblem, signsIn } from './utils/session-callouts';
 

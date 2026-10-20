@@ -1,6 +1,7 @@
 import type { SessionOpenError } from '@repo/contracts';
 import { describe, expect, it, vi } from 'vitest';
-import type { NewSessionAttempt } from '../types/new-session-attempt';
+import type { NewSessionAttempt } from '#features/new-session';
+import type { SessionProblem } from '#features/new-session';
 import type { SessionCalloutProps } from '../types/session-callout';
 import {
   type OpenProblem,
@@ -9,7 +10,6 @@ import {
   signsIn,
   turnCallout,
 } from './session-callouts';
-import type { SessionProblem } from './session-problem';
 
 const signIn: SessionCalloutProps = { kind: 'loading' };
 

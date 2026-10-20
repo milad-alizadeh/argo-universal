@@ -5,7 +5,7 @@ import {
   toNewSessionInput,
   type StartingFeed,
   startingFeed,
-} from '#features/sessions';
+} from '#features/new-session';
 import { type EmptySession, useEmptySession } from './use-empty-session';
 import type { NewSessionData } from './use-new-session-data';
 

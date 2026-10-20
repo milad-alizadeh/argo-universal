@@ -4,7 +4,7 @@ import { type ServerMutation, type TRPC, useTRPC } from '#features/connection';
 import {
   type SessionConfigChange,
   useSessionConfigChange,
-} from '#features/sessions';
+} from '#features/new-session';
 
 type SessionMutation<Name extends 'prompt' | 'cancel'> = ServerMutation<
   TRPC['session'][Name]

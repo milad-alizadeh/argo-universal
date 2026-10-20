@@ -1,3 +1,4 @@
+import type { SessionProblem } from '#features/new-session';
 import type { SessionCalloutProps } from '../types/session-callout';
 import type { TurnSignIn } from '../types/turn-sign-in';
 import {
@@ -7,7 +8,6 @@ import {
   type TurnAnswers,
   turnCallout,
 } from './session-callouts';
-import type { SessionProblem } from './session-problem';
 
 // What a finished sign-in does (ADR-0004): clear the `auth_required` Turn's card, or open a refused Session again.
 export type AfterSignIn =

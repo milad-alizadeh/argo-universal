@@ -19,7 +19,7 @@ import {
   chooseProject,
   type SessionChoices,
   toSessionChoices,
-} from '#features/sessions';
+} from '#features/new-session';
 
 export interface NewSessionData {
   serverInfo: UseQueryResult<SystemInfo, unknown>;

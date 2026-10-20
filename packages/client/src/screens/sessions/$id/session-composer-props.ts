@@ -6,6 +6,7 @@ import type {
 } from '#features/composer';
 import type { useBlobUrl } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
+import { decodeOpenFailure } from '#features/new-session';
 import type {
   ElicitationFormProps,
   PermissionRequestProps,
@@ -13,7 +14,6 @@ import type {
 import {
   type MergeMethodChoice,
   composerStatus,
-  decodeOpenFailure,
   toSendError,
 } from '#features/sessions';
 import { type Navigate } from '#lib/product/navigation/navigation';

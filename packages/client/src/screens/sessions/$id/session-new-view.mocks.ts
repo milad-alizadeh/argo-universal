@@ -6,7 +6,7 @@ import {
 } from '@repo/mocks/app';
 import { fn } from 'storybook/test';
 import type { ComposerDraft } from '#features/composer';
-import { startingFeed } from '#features/sessions';
+import { startingFeed } from '#features/new-session';
 import type { ReadySessionNewViewProps } from './session-new-view';
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;

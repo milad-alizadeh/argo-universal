@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import type { SessionProblem } from '#features/new-session';
 import type { SessionCalloutProps } from '../types/session-callout';
-import type { SessionProblem } from './session-problem';
 import {
   type AfterSignIn,
   pastSessionCallout,
