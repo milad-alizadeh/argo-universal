@@ -51,7 +51,7 @@ The owner is the only approver. Each ticket's Paper is approved in its issue or 
 
 ## Changing a design
 
-Paper-sync carries a master's changes to its copies. [`tools/paper-sync/README.md`](../../tools/paper-sync/README.md) explains what it syncs and how.
+Paper-sync carries a master's changes to its copies. [`tools/paper-sync/README.md`](../../tools/paper-sync/README.md) explains what it syncs and how. Its registry (`.paper-sync/registry.json`) is local and gitignored, like Paper itself: run paper-sync from the main checkout, never from a worktree.
 
 1. Edit the master on its `Components / <CodeName>` card (Foundations or the area file) first. Never hand-edit or hand-copy screens to propagate a change, and never restyle copies by script.
 2. Run `pnpm paper:sync check`. Run `pnpm paper:sync scan` and `pnpm paper:sync enroll --rebind` first only when what is linked changed: a new master or state, new copies, or renamed or new layers and text slots. A style or text change to an enrolled master needs only `check` and `apply`.

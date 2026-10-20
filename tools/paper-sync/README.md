@@ -47,7 +47,7 @@ The glyph belongs to the copy: its SVG artwork and the name after `Icon / `. `ch
 The icon's own styles still sync: size, colour token such as `fill`, and placement are drift, and `apply` sets them on the copy's icon.
 To change a copy's glyph, edit that copy. SVG layers with other names keep the old rule: their artwork comes from the master.
 
-The registry lives in `.paper-sync/registry.json`. It stores links, slot overrides and each copy's location; Paper remains the design source.
+The registry lives in `.paper-sync/registry.json`, which is gitignored: it stays on the machine that runs Paper, so run paper-sync from the main checkout. It stores links, slot overrides and each copy's location; Paper remains the design source.
 Use `--registry=path` to select a separate registry for temporary clone tests.
 
 ## Sync behavior
