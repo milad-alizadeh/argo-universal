@@ -21,6 +21,7 @@ import {
 import {
   itemSeparator,
   itemSurface,
+  selectionTint,
   type ItemDrawing,
 } from './list-item-styles';
 
@@ -63,13 +64,12 @@ function ItemProgress({
   );
 }
 
-function Selection({ selected }: Pick<ListItemProps, 'selected'>): ReactNode {
+function Selection({
+  selected,
+  drawing,
+}: Pick<ListItemProps, 'selected'> & { drawing: ItemDrawing }): ReactNode {
   return selected ? (
-    <View
-      pointerEvents="none"
-      aria-hidden
-      className="absolute inset-0 bg-selected"
-    />
+    <View pointerEvents="none" aria-hidden className={selectionTint(drawing)} />
   ) : null;
 }
 
@@ -113,7 +113,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
   return (
     <View className={itemSurface(drawing, props)}>
       <ItemPress {...drawingContent(props)} />
-      <Selection selected={props.selected && !drawing.menu} />
+      <Selection selected={props.selected && !drawing.menu} drawing={drawing} />
       <ItemSeparator {...props} />
       <ItemProgress progress={props.progress} sidebar={props.sidebar} />
     </View>

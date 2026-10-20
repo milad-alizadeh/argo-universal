@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Icon } from '#primitives/content/icon';
@@ -15,7 +16,10 @@ const tabClassName = 'h-7 flex-row items-center gap-1.5 rounded-md pl-2';
 const tabState = {
   selected: { className: 'bg-card pr-1 shadow-control', tone: 'neutral' },
   unselected: {
-    className: 'pr-2 web:hover:bg-hover web:active:bg-pressed',
+    className: cn(
+      'pr-2 web:hover:bg-hover web:active:bg-pressed',
+      tintTransitionClassName,
+    ),
     tone: 'muted',
   },
 } as const;

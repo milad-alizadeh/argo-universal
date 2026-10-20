@@ -7,7 +7,7 @@ import type { DrawingProps } from './list-item-press-props';
 import { itemPress } from './list-item-press-styles';
 
 // A menu trigger's row (a web Picker row) presses through its pointer handler and popup.
-function interactive(props: DrawingProps): boolean {
+export function interactive(props: DrawingProps): boolean {
   if (props.disabled) return false;
 
   return [

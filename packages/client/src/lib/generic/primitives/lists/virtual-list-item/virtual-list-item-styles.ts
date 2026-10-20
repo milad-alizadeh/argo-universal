@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { cn } from '../../../utils';
 import type { VirtualListPosition } from './virtual-list-item-props';
 
@@ -36,6 +37,7 @@ const rowGeometryClasses =
 export const rowClasses = cn(
   rowGeometryClasses,
   'web:hover:bg-hover web:select-none',
+  tintTransitionClassName,
   pressedTint,
 );
 

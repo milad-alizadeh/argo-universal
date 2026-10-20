@@ -1,3 +1,4 @@
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { cn } from '#lib/generic/utils';
 
 // Rows keep a gap, as Android's grouped rows do, so hovered, pressed and checked tiles never touch.
@@ -12,6 +13,7 @@ export const actionContentClassName = cn(
 
 export const actionItemClassName = cn(
   'active:bg-pressed group relative flex flex-row items-center gap-2 rounded-xl px-3 py-2',
+  tintTransitionClassName,
   'web:focus:bg-hover web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
 );
 

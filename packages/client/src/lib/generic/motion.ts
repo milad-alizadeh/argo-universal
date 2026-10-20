@@ -33,3 +33,10 @@ export function cssTransition(
 export const fullTurnDegrees = 360;
 
 export const quarterTurnDegrees = 90;
+
+/*
+ * Every hover, pressed and selected tint fades rather than snaps, so a pointer crossing a list, the rail or a menu
+ * doesn't make the tints flicker. Web only: a finger's tint follows the touch, with nothing to cross.
+ */
+export const tintTransitionClassName =
+  'web:transition-colors web:duration-150 web:ease-out';

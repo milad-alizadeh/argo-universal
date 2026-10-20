@@ -11,48 +11,107 @@ import { Platform, type PressableProps } from 'react-native';
 import { ListContext } from './list-context';
 
 /*
- * The List's pressed row on iOS. Its tint covers the separators either side of it, as a stock
- * iOS cell's does; the one above belongs to the row above. Android and web draw no separators.
+ * The row the pointer or finger is on: the web's hovered row, iOS's pressed one. Its tint covers the separators
+ * either side of it, as a stock iOS cell's does, so no line ever touches a tint. Android draws no separators.
  */
-const PressedRow = createContext<number | undefined>(undefined);
+const HighlightedRow = createContext<number | undefined>(undefined);
 
 // Apart from the row, so a row that only marks itself does not redraw on every press.
-const SetPressedRow = createContext<
+const SetHighlightedRow = createContext<
   Dispatch<SetStateAction<number | undefined>> | undefined
 >(undefined);
 
-export function PressedRowProvider({
+export function RowHighlightProvider({
   children,
 }: {
   children: ReactNode;
 }): ReactElement {
-  const [pressed, setPressed] = useState<number>();
+  const [highlighted, setHighlighted] = useState<number>();
 
   return (
-    <SetPressedRow value={setPressed}>
-      <PressedRow value={pressed}>{children}</PressedRow>
-    </SetPressedRow>
+    <SetHighlightedRow value={setHighlighted}>
+      <HighlightedRow value={highlighted}>{children}</HighlightedRow>
+    </SetHighlightedRow>
   );
 }
 
-// True when the separator under row `index` sits against the pressed row, above or below it.
+// True when the separator under row `index` sits against the highlighted row, above or below it.
 export function useSeparatorCovered(index?: number): boolean {
-  const pressed = useContext(PressedRow);
+  const highlighted = useContext(HighlightedRow);
 
-  return index !== undefined && (pressed === index || pressed === index + 1);
+  return (
+    index !== undefined && (highlighted === index || highlighted === index + 1)
+  );
 }
 
-export function usePressedRowHandlers(): Pick<
+type RowHighlightHandlers = Pick<
   PressableProps,
-  'onPressIn' | 'onPressOut'
-> {
-  const setPressed = useContext(SetPressedRow);
+  'onPressIn' | 'onPressOut' | 'onHoverIn' | 'onHoverOut'
+>;
+
+/*
+ * Marks the row as the pointer arrives and leaves it, keeping the row's own handlers. A row that does nothing takes
+ * no tint, so it marks nothing either.
+ */
+export function useRowHighlightHandlers(
+  row: RowHighlightHandlers,
+  interactive: boolean,
+): RowHighlightHandlers {
+  const setHighlighted = useContext(SetHighlightedRow);
+  const mark = useRowMark(setHighlighted);
+
+  return mark && interactive ? marking(row, mark) : row;
+}
+
+// A row that draws a tint and keeps no hover or press handlers of its own.
+export const useRowHighlight = (): RowHighlightHandlers =>
+  useRowHighlightHandlers({}, true);
+
+// A finger holds iOS's row; a pointer passes over the web's. Android has no separators to cover.
+const marksRows = Platform.OS === 'web' || Platform.OS === 'ios';
+
+type Mark = (held: boolean) => void;
+
+function useRowMark(
+  setHighlighted: Dispatch<SetStateAction<number | undefined>> | undefined,
+): Mark | undefined {
   const { index } = useContext(ListContext);
 
-  if (Platform.OS !== 'ios' || !setPressed) return {};
+  if (!setHighlighted || !marksRows) return undefined;
 
+  return (held) => setHighlighted(held ? index : undefined);
+}
+
+const marking = (
+  row: RowHighlightHandlers,
+  mark: Mark,
+): RowHighlightHandlers =>
+  Platform.OS === 'web' ? hovering(row, mark) : holding(row, mark);
+
+function hovering(row: RowHighlightHandlers, mark: Mark): RowHighlightHandlers {
   return {
-    onPressIn: () => setPressed(index),
-    onPressOut: () => setPressed(undefined),
+    ...row,
+    onHoverIn: (event) => {
+      mark(true);
+      row.onHoverIn?.(event);
+    },
+    onHoverOut: (event) => {
+      mark(false);
+      row.onHoverOut?.(event);
+    },
+  };
+}
+
+function holding(row: RowHighlightHandlers, mark: Mark): RowHighlightHandlers {
+  return {
+    ...row,
+    onPressIn: (event) => {
+      mark(true);
+      row.onPressIn?.(event);
+    },
+    onPressOut: (event) => {
+      mark(false);
+      row.onPressOut?.(event);
+    },
   };
 }
