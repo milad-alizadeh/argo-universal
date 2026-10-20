@@ -13,6 +13,10 @@ export interface RichTextareaProps {
   accessibilityLabel: string;
   // The Issues and pull requests `#` offers; the web editor only, as the phone area has no tokens.
   references?: readonly ReferenceOption[];
+  // Padding for the field itself, so a press anywhere in its padded area focuses the editor.
+  fieldClassName?: string;
+  // Focus the field when it mounts; the web editor only, as a phone keyboard should not open unasked.
+  autoFocus?: boolean;
 }
 
 // The text field's own look, shared by the web editor and the phone text area.

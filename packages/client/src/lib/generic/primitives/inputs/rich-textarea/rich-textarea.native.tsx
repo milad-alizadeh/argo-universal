@@ -14,6 +14,8 @@ const lineHeight = 20;
 function plainFieldProps({
   onSubmit: _onSubmit,
   disabled = false,
+  fieldClassName: _fieldClassName,
+  autoFocus: _autoFocus,
   ...field
 }: RichTextareaProps): TextInputProps {
   return {
@@ -24,6 +26,14 @@ function plainFieldProps({
   };
 }
 
+const fieldClassName = (props: RichTextareaProps): string =>
+  cn(
+    'w-full text-foreground',
+    plainFieldClassName,
+    props.fieldClassName,
+    props.disabled === true && 'opacity-50',
+  );
+
 function RichTextarea(props: RichTextareaProps): React.JSX.Element {
   return (
     <TextInput
@@ -31,11 +41,7 @@ function RichTextarea(props: RichTextareaProps): React.JSX.Element {
       multiline
       textAlignVertical="top"
       style={{ maxHeight: maximumVisibleLines * lineHeight }}
-      className={cn(
-        'w-full text-foreground',
-        plainFieldClassName,
-        props.disabled === true && 'opacity-50',
-      )}
+      className={fieldClassName(props)}
     />
   );
 }
