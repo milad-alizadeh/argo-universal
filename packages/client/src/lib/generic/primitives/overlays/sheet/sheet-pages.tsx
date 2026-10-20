@@ -13,6 +13,7 @@ import {
 import { ListItem } from '#primitives/lists/list-item';
 import {
   pushDestination,
+  registerDestination,
   updateDestination,
   usePageExits,
 } from './sheet-destinations';
@@ -43,6 +44,8 @@ export interface SheetPageEntry {
   content: ReactNode;
   contentScrolls?: boolean;
   onExit?: () => void;
+  // Drawn from the moment the sheet opens, so pushing it moves a page that is already there.
+  standby?: boolean;
 }
 
 // The sheet's Sheet.Page children, the first one its root; none when the sheet has a single page.
@@ -177,6 +180,7 @@ function navigationFor({
 }: NavigationOwners): SheetNavigation {
   return {
     push: (page): void => pushDestination(setDestinations, setPath, page),
+    standby: (page): void => registerDestination(setDestinations, page),
     update: (page): void => updateDestination(setDestinations, page),
     back: (): void => setPath(popPage),
     close: (): void => latest().onOpenChange(false),

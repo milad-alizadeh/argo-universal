@@ -36,22 +36,23 @@ export interface Slide {
 }
 
 /*
- * The pages sit side by side in one row, and the row slides by a page's width for each page pushed over the
- * root. The transform is the whole animation, so a page already drawn is never laid out again to move it.
+ * The pages sit side by side in one row, and the row slides by a page's width for each place between the
+ * one it rests at and the one the reader is going to. The transform is the whole animation, so a page
+ * already drawn is never laid out again to move it.
  */
-export function useSlide(depth: number, width: number): Slide {
-  const offset = useSharedValue(-depth * width);
+export function useSlide(slot: number, width: number): Slide {
+  const offset = useSharedValue(-slot * width);
   const [settled, setSettled] = useState(true);
   const settle = useCallback(() => setSettled(true), []);
-  const shown = useRef(depth);
+  const shown = useRef(slot);
 
   useEffect(() => {
-    if (shown.current === depth) return offset.set(-depth * width);
+    if (shown.current === slot) return offset.set(-slot * width);
 
-    shown.current = depth;
+    shown.current = slot;
     setSettled(false);
-    offset.set(withTiming(-depth * width, slide, finish(settle)));
-  }, [offset, depth, width, settle]);
+    offset.set(withTiming(-slot * width, slide, finish(settle)));
+  }, [offset, slot, width, settle]);
 
   return { style: useSlideStyle(offset), settled };
 }

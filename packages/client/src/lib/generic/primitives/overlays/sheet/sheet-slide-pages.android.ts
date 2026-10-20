@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import type { SheetPageEntry, SheetStack } from './sheet-pages';
 
+export interface RetainedPages {
+  // The pages the row holds, in the order they take their places in it.
+  pages: SheetPageEntry[];
+  // The place the row stops at: where in it the page the reader is on sits.
+  slot: number;
+}
+
 /*
- * The pages the row draws: the root, then the pushed pages in order. A popped page stays until the slide
- * back has finished, so the reader watches it leave rather than seeing it vanish under the one below.
+ * The pages the row draws: the root, then every page the sheet is carrying — those on standby from the
+ * moment it opened, and those pushed since. A popped page stays until the slide back has finished, so the
+ * reader watches it leave rather than seeing it vanish under the one below.
  */
 export function useRetainedPages(
   stack: SheetStack,
   open: boolean,
-): SheetPageEntry[] {
+): RetainedPages {
   const path = useRetainedPath(stack.path, open);
+  const pages = slidePages(stack.pages, path);
 
-  return slidePages(stack.pages, path);
+  return { pages, slot: slotOf(pages, stack.path) };
 }
 
 /*
@@ -48,25 +57,30 @@ function useOpening(open: boolean): boolean {
   return open && !shown;
 }
 
-// A page is drawn once, however often its name appears, because React drops a repeated key.
+/*
+ * A page keeps its place for as long as the sheet is open: the pages come in the order the sheet was given
+ * them and that order only grows, so a page the reader slid to does not move under them when another
+ * arrives. The root leads, because it is the page the sheet opens on.
+ */
 function slidePages(pages: SheetPageEntry[], path: string[]): SheetPageEntry[] {
-  const root = pages.slice(0, 1);
-  const drawn = new Set(root.map((page) => page.name));
+  const [root, ...rest] = pages;
 
-  return [...root, ...path.flatMap((name) => pushedPage(pages, name, drawn))];
+  if (!root) return [];
+
+  return [root, ...rest.filter((page) => carried(page, path))];
 }
 
-function pushedPage(
-  pages: SheetPageEntry[],
-  name: string,
-  drawn: Set<string>,
-): SheetPageEntry[] {
-  const page = drawn.has(name)
-    ? undefined
-    : pages.find((entry) => entry.name === name);
+const carried = (page: SheetPageEntry, path: string[]): boolean =>
+  page.standby === true || path.includes(page.name);
 
-  if (!page) return [];
-  drawn.add(name);
+// Where the row stops: the place of the page the path ends on, the root when nothing is pushed.
+function slotOf(pages: SheetPageEntry[], path: string[]): number {
+  const name = path.at(-1);
 
-  return [page];
+  if (name === undefined) return 0;
+
+  return Math.max(
+    pages.findIndex((page) => page.name === name),
+    0,
+  );
 }

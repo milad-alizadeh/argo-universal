@@ -66,9 +66,8 @@ function SheetPane(props: FrameProps): ReactElement {
 }
 
 function SlidingPages(props: FrameProps): ReactElement {
-  const pages = useRetainedPages(props.stack, props.open);
-  const depth = Math.min(props.stack.path.length, pages.length - 1);
-  const slide = useSlide(depth, props.width);
+  const { pages, slot } = useRetainedPages(props.stack, props.open);
+  const slide = useSlide(slot, props.width);
 
   return (
     <View className={cn('overflow-hidden', props.fill && 'flex-1')}>
@@ -153,9 +152,12 @@ function PageContent(props: PageProps): ReactElement {
   );
 }
 
-// The root page is drawn before the sheet is shown, so only a pushed page stands in for itself.
-const sliding = (props: Pick<PageProps, 'root' | 'settled'>): boolean =>
-  !props.root && !props.settled;
+/*
+ * The root page is drawn before the sheet is shown, and a page on standby was drawn with it, so only a page
+ * the sheet mounts on the way in has anything to stand in for.
+ */
+const sliding = (props: Pick<PageProps, 'root' | 'settled' | 'page'>): boolean =>
+  !props.root && !props.settled && props.page.standby !== true;
 
 const loadingLabel = 'Loading';
 
