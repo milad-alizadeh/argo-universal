@@ -4,6 +4,7 @@ import type { PluginEntry, PluginStatus } from '../protocol/runtime';
 
 export type RuntimePluginInput = {
   deferReload: () => boolean;
+  clockStart: () => number | undefined;
   entry: Omit<PluginEntry, 'generation'>;
   host: HostConnection;
   // Grants the Plugin its Capabilities as each worker loads; `release` takes them away again.

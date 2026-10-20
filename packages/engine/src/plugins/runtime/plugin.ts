@@ -163,6 +163,7 @@ export class RuntimePlugin {
       this.input.grant(this.granted);
       this.input.host.activate({
         ...this.input.entry,
+        clockStart: this.input.clockStart(),
         source: this.source.text,
         generation: this.generation,
       });

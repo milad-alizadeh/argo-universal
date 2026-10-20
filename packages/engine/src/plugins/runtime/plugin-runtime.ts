@@ -40,7 +40,7 @@ export class PluginRuntime {
   constructor(
     private readonly log: (line: string) => void,
     private readonly services: PluginServices,
-    private readonly clockStart?: number,
+    clockStart?: number,
   ) {
     this.log = oncePerRenderFallback(log);
     this.views = new PluginViews(
@@ -132,7 +132,7 @@ export class PluginRuntime {
 
     return new RuntimePlugin({
       ...location,
-      entry: { ...location.entry, clockStart: this.clockStart },
+      clockStart: () => this.clock.workerStart(),
       deferReload: () => this.turns.running,
       host: this.host,
       grant: (plugin): void =>

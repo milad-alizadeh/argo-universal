@@ -15,6 +15,12 @@ export class RuntimeClock {
     this.source = start === undefined ? realClock : new PluginTestClock(start);
   }
 
+  workerStart(): number | undefined {
+    return this.source instanceof PluginTestClock
+      ? this.source.now()
+      : undefined;
+  }
+
   async during<T>(call: () => Promise<T>): Promise<T> {
     this.activity += 1;
 
