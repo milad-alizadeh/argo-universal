@@ -114,10 +114,14 @@ export function Accessory({ children }: { children?: ReactNode }): ReactNode {
   ) : null;
 }
 
-// The disclosure chevron of a row that pushes a page; Android draws none.
+// The disclosure chevron of a row that pushes a page; Android draws none. iOS draws SF's, since the iOS asset catalog leaves out Tabler's `web-disclosure`.
 export function LinkAccessory(): ReactElement | null {
   return Platform.OS === 'android' ? null : (
-    <Icon name="web-disclosure" role="disclosure" className="text-tertiary" />
+    <Icon
+      name={Platform.OS === 'ios' ? 'disclosure' : 'web-disclosure'}
+      role="disclosure"
+      className="text-tertiary"
+    />
   );
 }
 
