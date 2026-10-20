@@ -18,7 +18,8 @@ let writes = Promise.resolve();
 
 function asThemeChoice(value: string | null): ThemeChoice {
   return (
-    themeChoices.find((choice) => choice.value === value)?.value ?? defaultThemeChoice
+    themeChoices.find((choice) => choice.value === value)?.value ??
+    defaultThemeChoice
   );
 }
 

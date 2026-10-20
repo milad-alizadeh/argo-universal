@@ -59,24 +59,28 @@ const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 const RootView = withUniwind(GestureHandlerRootView);
 
 export default function RootLayout(): React.JSX.Element {
-  // The first screen waits for the theme chosen in Settings › Appearance, so it never flashes the system one.
-  const themeRestored = useRestoredThemeChoice();
-
   return (
     // The phone drawer's gestures need this root; it sits on the content surface, as the window does.
     <RootView className="flex-1 bg-content">
       {/* Screens follow the keyboard frame by frame through this. */}
       <KeyboardProvider>
         <SymbolImagesProvider render={renderSymbolImage}>
-          {themeRestored && (
-            <AppProviders serverUrl={serverUrl}>
-              <ForegroundSignal />
-              <ThemedApp />
-            </AppProviders>
-          )}
+          <RestoredApp />
         </SymbolImagesProvider>
       </KeyboardProvider>
     </RootView>
+  );
+}
+
+// The first screen waits for the theme chosen in Settings › Appearance, so it never flashes the system one.
+function RestoredApp(): React.JSX.Element | null {
+  if (!useRestoredThemeChoice()) return null;
+
+  return (
+    <AppProviders serverUrl={serverUrl}>
+      <ForegroundSignal />
+      <ThemedApp />
+    </AppProviders>
   );
 }
 

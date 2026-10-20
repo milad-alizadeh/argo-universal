@@ -26,7 +26,9 @@ export const ShowsTheChosenThemeAndWhatSystemFollows: Story = {
 
 export const ChoosingAThemeReportsIt: Story = {
   play: async ({ args, canvas }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Theme, System' }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Theme, System' }),
+    );
     await userEvent.click(
       await screen.findByRole('menuitemradio', { name: 'Light' }),
     );

@@ -8,7 +8,10 @@ export { homePath } from './utils/home-path';
 
 export { systemThemeSource } from './utils/system-theme-source';
 
-export { useRestoredThemeChoice, useThemeChoice } from './hooks/use-theme-choice';
+export {
+  useRestoredThemeChoice,
+  useThemeChoice,
+} from './hooks/use-theme-choice';
 
 export {
   type ThemeChoice,
