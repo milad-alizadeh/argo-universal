@@ -46,7 +46,7 @@ const archiveItem = ({
 const isItem = (item: SessionMenuItem | undefined): item is SessionMenuItem =>
   item !== undefined;
 
-// Rename, then Archive, each only when the page offers it; an archived Session offers neither.
+// The header can offer changed files before Rename and Archive; archived Sessions keep only changed files.
 export function sessionMenuItems(menu: SessionMenu): SessionMenuItem[] {
   const changes: SessionMenuItem[] = menu.changes
     ? [

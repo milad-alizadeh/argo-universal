@@ -1,5 +1,4 @@
 import type {
-  SessionComparison,
   SessionDiffOutput,
   SessionSnapshot,
   SessionChangesOutput,
@@ -13,13 +12,15 @@ import {
 } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import type { ChangesComparison, ChangesViewProps } from '#features/changes';
-import { useTRPC } from '#features/connection';
+import { useTRPC, type ClientError } from '#features/connection';
 import { toFileDiffs } from '#features/feed';
+import { comparisonInput } from './changes-comparison-input';
 
 type ChangesInput = {
   sessionId: string;
   open: boolean;
   comparison: ChangesComparison;
+  branches?: SessionBranchesOutput;
 };
 
 type ChangesData = Pick<
@@ -27,12 +28,9 @@ type ChangesData = Pick<
   'files' | 'loadError' | 'branches' | 'mainBranch'
 >;
 
-type DiffResult = UseQueryResult<SessionDiffOutput>;
+type Query<T> = UseQueryResult<T, Pick<ClientError, 'message'>>;
 
-const comparisonInput = (comparison: ChangesComparison): SessionComparison =>
-  comparison.kind === 'branch'
-    ? { branch: comparison.branch }
-    : comparison.kind;
+type DiffResult = Query<SessionDiffOutput>;
 
 function diffFiles(diffs: DiffResult[]): ChangesViewProps['files'] {
   if (diffs.length > 0 && !diffs.some((diff) => diff.data)) return undefined;
@@ -46,7 +44,7 @@ function diffFiles(diffs: DiffResult[]): ChangesViewProps['files'] {
 
 function useDiffs(input: ChangesInput, paths: string[]): DiffResult[] {
   const trpc = useTRPC();
-  const comparison = comparisonInput(input.comparison);
+  const comparison = comparisonInput(input.comparison, input.branches);
 
   return useQueries({
     queries: paths.map((path) =>
@@ -58,14 +56,12 @@ function useDiffs(input: ChangesInput, paths: string[]): DiffResult[] {
   });
 }
 
-function useFileQuery(
-  input: ChangesInput,
-): UseQueryResult<SessionChangesOutput> {
+function useFileQuery(input: ChangesInput): Query<SessionChangesOutput> {
   const trpc = useTRPC();
 
   const query = {
     sessionId: input.sessionId,
-    comparison: comparisonInput(input.comparison),
+    comparison: comparisonInput(input.comparison, input.branches),
   };
 
   return useQuery(
@@ -73,9 +69,7 @@ function useFileQuery(
   );
 }
 
-function useBranchQuery(
-  input: ChangesInput,
-): UseQueryResult<SessionBranchesOutput> {
+function useBranchQuery(input: ChangesInput): Query<SessionBranchesOutput> {
   const trpc = useTRPC();
 
   return useQuery(
@@ -87,16 +81,17 @@ function useBranchQuery(
 }
 
 type Queries = {
-  files: UseQueryResult<SessionChangesOutput>;
-  branches: UseQueryResult<SessionBranchesOutput>;
+  files: Query<SessionChangesOutput>;
+  branches: Query<SessionBranchesOutput>;
   diffs: DiffResult[];
 };
 
 function useChangesQueries(input: ChangesInput): Queries {
-  const files = useFileQuery(input);
   const branches = useBranchQuery(input);
+  const selected = { ...input, branches: branches.data };
+  const files = useFileQuery(selected);
   const paths = files.data?.files.map(({ path }) => path) ?? [];
-  const diffs = useDiffs(input, paths);
+  const diffs = useDiffs(selected, paths);
 
   return { files, branches, diffs };
 }
@@ -122,7 +117,9 @@ function loadError(
   return error?.message;
 }
 
-const firstDiffError = (diffs: DiffResult[]): Error | null =>
+const firstDiffError = (
+  diffs: DiffResult[],
+): Pick<ClientError, 'message'> | null =>
   diffs.find((diff) => diff.error)?.error ?? null;
 
 const branchNames = (data: SessionBranchesOutput | undefined): string[] =>

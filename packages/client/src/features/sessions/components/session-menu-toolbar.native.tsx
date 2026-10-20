@@ -7,7 +7,7 @@ import { type SessionMenuItem, sessionMenuItems } from './session-menu-items';
 import type { SessionMenuToolbarProps } from './session-menu-toolbar';
 
 /*
- * A phone's Session header: the stock ⋯ item opens Rename and Archive, as the Session's row offers them, in the
+ * A phone's Session header: the stock ⋯ item opens changed files, Rename and Archive in the
  * system's own menu: a SwiftUI pull-down on iOS, Compose's DropdownMenu on Android. A wide window's page header
  * draws ⋯ itself.
  */
@@ -34,31 +34,32 @@ function moreMenu(items: SessionMenuItem[]): React.JSX.Element {
 }
 
 function menuAction(item: SessionMenuItem): React.JSX.Element {
-  if (item.icon === 'diff')
-    return <ChangesMenuAction key={item.label} item={item} />;
+  if (item.icon === 'diff') return changesMenuAction({ item });
 
-  return <NamedMenuAction key={item.label} item={item} icon={item.icon} />;
+  return namedMenuAction({ item, icon: item.icon });
 }
 
 const changesMenuIcon =
-  process.env.EXPO_OS === 'ios'
-    ? { xcasset: 'custom.file-diff' }
-    : { src: fileDiff };
+  process.env.EXPO_OS === 'android' ? fileDiff : undefined;
 
 type MenuActionProps = { item: SessionMenuItem };
 
-function ChangesMenuAction({ item }: MenuActionProps): React.JSX.Element {
+function changesMenuAction({ item }: MenuActionProps): React.JSX.Element {
   return (
-    <Stack.Toolbar.MenuAction key={item.label} onPress={item.onPress}>
-      <Stack.Toolbar.Icon {...changesMenuIcon} />
-      {item.label}
+    <Stack.Toolbar.MenuAction
+      key={item.label}
+      icon={changesMenuIcon}
+      onPress={item.onPress}
+    >
+      <Stack.Toolbar.Icon xcasset="custom.file-diff" />
+      <Stack.Toolbar.Label>{item.label}</Stack.Toolbar.Label>
     </Stack.Toolbar.MenuAction>
   );
 }
 
 type NamedMenuActionProps = MenuActionProps & { icon: 'rename' | 'archive' };
 
-function NamedMenuAction({
+function namedMenuAction({
   item,
   icon,
 }: NamedMenuActionProps): React.JSX.Element {

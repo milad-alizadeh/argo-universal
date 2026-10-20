@@ -23,9 +23,12 @@ Given(
 );
 
 async function capture(page: Page, name: string): Promise<void> {
-  await test
+  const file = test
     .info()
-    .attach(name, { body: await page.screenshot(), contentType: 'image/png' });
+    .outputPath(`${name}-${test.info().attachments.length}.png`);
+
+  await page.screenshot({ path: file });
+  await test.info().attach(name, { path: file, contentType: 'image/png' });
 }
 
 Given('the Project has a committed greeting', async ({ app }) => {
@@ -34,20 +37,13 @@ Given('the Project has a committed greeting', async ({ app }) => {
   await commitGreeting(app.projectPath);
 });
 
+const gitAuthor = ['-c', 'user.name=Test', '-c', 'user.email=test@example.com'];
+
 async function commitGreeting(cwd: string): Promise<void> {
-  await execute(
-    'git',
-    [
-      '-c',
-      'user.name=Test',
-      '-c',
-      'user.email=test@example.com',
-      'commit',
-      '-qm',
-      'Greeting',
-    ],
-    { cwd },
-  );
+  await execute('git', [...gitAuthor, 'commit', '-qm', 'Greeting'], { cwd });
+  await execute('git', ['update-ref', 'refs/remotes/origin/main', 'HEAD'], {
+    cwd,
+  });
 }
 
 Given(
@@ -105,7 +101,9 @@ When('the Agent edits the greeting', async ({ app }) => {
   releaseAgent(app.requestLogPath);
 });
 
-When('I open the changed files', async ({ page }) => {
+When('I open the changed files', async ({ page }) => openChangedFiles(page));
+
+export async function openChangedFiles(page: Page): Promise<void> {
   if (onPhone(page)) {
     await page.getByRole('button', { name: 'More', exact: true }).click();
     await page
@@ -116,7 +114,7 @@ When('I open the changed files', async ({ page }) => {
       .getByRole('button', { name: /^Changed files · 1(?:,|$)/ })
       .click();
   }
-});
+}
 
 Then(
   'the changed greeting diff opens while the Turn runs',
@@ -145,7 +143,9 @@ async function reopenDiff(diff: Locator): Promise<void> {
   await file.click();
   await expect(diff.getByText(updatedGreeting, { exact: true })).toBeHidden();
   await file.click();
-  await expect(diff.getByText(updatedGreeting, { exact: true })).toBeVisible();
+  await expect(diff.getByText(updatedGreeting, { exact: true })).toBeInViewport(
+    { ratio: 1 },
+  );
 }
 
 function greetingDiff(page: Page): Locator {
