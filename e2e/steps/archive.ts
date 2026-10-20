@@ -1,9 +1,55 @@
+import { realpathSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
-import { When, Then } from './fixtures';
-import { liveSessionRow } from './live-session';
+import { localRequests } from './agent-requests';
+import { Given, When, Then } from './fixtures';
+import { liveSessionRow, sessionRow } from './live-session';
 
 const archivedToastTitle = 'Session archived';
+
+const uncommittedFile = 'pending.txt';
+
+const uncommittedContents = 'Uncommitted work\n';
+
+const checkoutPath = (app: {
+  projectPath: string;
+  requestLogPath: string;
+}): string => {
+  const projectPath = realpathSync(app.projectPath);
+
+  const checkout = localRequests(app, 'session/new')
+    .map((request) => request.params?.cwd)
+    .findLast((cwd) => cwd !== undefined && realpathSync(cwd) !== projectPath);
+
+  if (!checkout) throw new Error('The Agent did not open a worktree Checkout');
+
+  return checkout;
+};
+
+Given(
+  "an uncommitted file in the Session's Checkout",
+  async ({ app }): Promise<void> => {
+    await writeFile(
+      join(checkoutPath(app), uncommittedFile),
+      uncommittedContents,
+    );
+  },
+);
+
+Then(
+  "the uncommitted file remains in the Session's Checkout",
+  async ({ app }): Promise<void> => {
+    // A cancelled archive must not remove the Checkout at its five-second deadline.
+    await setTimeout(5_500);
+
+    expect(
+      await readFile(join(checkoutPath(app), uncommittedFile), 'utf8'),
+    ).toBe(uncommittedContents);
+  },
+);
 
 // The right-click menu on the Session's row.
 async function openRowMenu(page: Page, title: string): Promise<Locator> {
@@ -45,6 +91,22 @@ When('I undo the archive', async ({ page }): Promise<void> => {
     0,
   );
 });
+
+Then(
+  'the Archived filter shows the Session {string}',
+  async ({ page }, title: string): Promise<void> => {
+    const row = sessionRow(page, title);
+    await expect(row).toBeVisible();
+    await expect(row).toContainText('Archived');
+  },
+);
+
+When(
+  'I open the archived Session {string}',
+  async ({ page }, title: string): Promise<void> => {
+    await sessionRow(page, title).click();
+  },
+);
 
 Then(
   'the Session page shows {string} instead of the Composer',
