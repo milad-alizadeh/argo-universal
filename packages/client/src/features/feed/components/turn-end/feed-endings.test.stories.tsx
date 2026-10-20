@@ -8,7 +8,7 @@ import { recordedFeedMock } from '../../../../lib/product/feed-message.mocks';
 import { toFeedView } from '../../view/to-feed-view';
 import { feedContentArgs } from '../feed-content/feed-content.mocks';
 import { Feed } from '../feed/feed';
-import { endings, stoppedTurn } from './turn-end.mocks';
+import { endings, stoppedTurn, turnEndItems } from './turn-end.mocks';
 
 const recording = recordedFeedMock('agent-1', 'edit-and-command');
 
@@ -108,13 +108,8 @@ export const SettledThoughtPhone = thinking(layoutWidths.phone, 'settled');
 export const SettledThoughtWide = thinking(layoutWidths.wide, 'settled');
 
 function hiddenEnding(width: number, end: TurnEnd): Story {
-  const marker: Notice = {
-    ...stoppedTurn.row,
-    _meta: { argo: { turnEnd: end } },
-  };
-
   return {
-    args: { items: toFeedView([marker], recording.snapshot).items },
+    args: { items: turnEndItems(end) },
     play: async ({ canvas }) => {
       await settleViewport(width);
       await expect(
@@ -133,22 +128,20 @@ export const CompletedPhone = hiddenEnding(
 
 export const CompletedWide = hiddenEnding(layoutWidths.wide, endings.completed);
 
-export const InterruptedPhone = hiddenEnding(
-  layoutWidths.phone,
-  endings.interrupted,
-);
-
-export const InterruptedWide = hiddenEnding(
-  layoutWidths.wide,
-  endings.interrupted,
-);
-
 function crashNotice(width: number): Story {
   const notice: Notice = {
     ...stoppedTurn.row,
+    turnId: commandRow.turnId,
     severity: 'warning',
     title: 'Agent exited with status 1',
     description: 'Last stderr line',
+  };
+
+  const interruption: Notice = {
+    ...notice,
+    id: `${notice.turnId}:interrupted`,
+    title: 'Output may be missing',
+    description: undefined,
   };
 
   const marker: Notice = {
@@ -160,9 +153,17 @@ function crashNotice(width: number): Story {
   };
 
   return {
-    args: { items: toFeedView([notice, marker], recording.snapshot).items },
-    play: async ({ canvas }) => {
+    args: {
+      items: toFeedView(
+        [commandRow, notice, interruption, marker],
+        recording.snapshot,
+      ).items,
+    },
+    play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Ran 1 command' }),
+      );
       await expect(
         canvas.getAllByText('Agent exited with status 1'),
       ).toHaveLength(1);

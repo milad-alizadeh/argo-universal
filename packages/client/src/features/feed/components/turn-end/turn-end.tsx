@@ -1,6 +1,7 @@
 import type { StopReason, TurnEnd, TurnError } from '@repo/contracts';
 import type { ReactElement } from 'react';
 import { formatElapsed } from '#lib/generic/format-elapsed';
+import type { FeedViewItem } from '../../view/feed-view';
 import {
   NoticeMessage,
   type NoticeMessageProps,
@@ -14,7 +15,7 @@ const notices: Record<StopReason, (end: TurnEnd) => NoticeMessageProps | null> =
       icon: 'cancelled',
       title: `You stopped after ${formatElapsed(end.durationMs)}`,
     }),
-    error: errorNotice,
+    error: (end) => errorDetails(end.error),
     max_tokens: () => ({
       severity: 'warning',
       title: 'Stopped at the output limit. Send “continue” to pick up.',
@@ -44,9 +45,27 @@ function errorDetails(error: TurnError | null): NoticeMessageProps {
   };
 }
 
-// Lifecycle endings already leave their own Notice, including crash output.
-function errorNotice(end: TurnEnd): NoticeMessageProps | null {
-  return end.error?.code === 'interrupted' ? null : errorDetails(end.error);
+function rowIds(item: FeedViewItem): string[] {
+  if (item.type === 'group') return item.items.flatMap(rowIds);
+
+  return 'row' in item ? [item.row.id] : [];
+}
+
+function isDisclosedEnd(item: FeedViewItem, ids: Set<string>): boolean {
+  return (
+    item.type === 'turn_end' &&
+    item.end.stopReason === 'error' &&
+    ids.has(`${item.row.turnId}:interrupted`)
+  );
+}
+
+// A lifecycle disclosure covers its Turn's interrupted ending, even inside a Tool call group.
+export function withoutDisclosedTurnEnds(
+  items: readonly FeedViewItem[],
+): FeedViewItem[] {
+  const ids = new Set(items.flatMap(rowIds));
+
+  return items.filter((item) => !isDisclosedEnd(item, ids));
 }
 
 export const turnEndNotice = (end: TurnEnd): NoticeMessageProps | null =>

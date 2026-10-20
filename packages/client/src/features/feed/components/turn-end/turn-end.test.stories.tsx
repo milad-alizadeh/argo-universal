@@ -110,3 +110,21 @@ export const AuthenticationRequiredWide = ending(
   endings.authenticationRequired,
   { title: 'Authentication required' },
 );
+
+export const StorageFailurePhone = ending(
+  layoutWidths.phone,
+  endings.storageFailure,
+  {
+    title: errorTitle,
+    description: 'Storage is failing, so the Turn was cancelled',
+  },
+);
+
+export const StorageFailureWide = ending(
+  layoutWidths.wide,
+  endings.storageFailure,
+  {
+    title: errorTitle,
+    description: 'Storage is failing, so the Turn was cancelled',
+  },
+);

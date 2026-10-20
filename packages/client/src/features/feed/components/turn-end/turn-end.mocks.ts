@@ -35,6 +35,14 @@ export const endings = {
   },
   errorWithoutDetails: { ...stoppedTurn.end, stopReason: 'error' },
   authenticationRequired: { ...stoppedTurn.end, stopReason: 'auth_required' },
+  storageFailure: {
+    ...stoppedTurn.end,
+    stopReason: 'error',
+    error: {
+      code: 'interrupted',
+      message: 'Storage is failing, so the Turn was cancelled',
+    },
+  },
   completed: { ...stoppedTurn.end, stopReason: 'end_turn' },
   interrupted: {
     ...stoppedTurn.end,
