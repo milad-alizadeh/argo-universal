@@ -1,6 +1,6 @@
 import type { HookOutcome, Json } from '@repo/contracts/plugins/hook-protocol';
 import { failureLine } from './hook-failure';
-import { guardRefusal, isAnswer } from './hook-rules';
+import { isAnswer } from './hook-rules';
 import { readRenderAnswer, type AcceptedHookAnswer } from './render-answer';
 import type { RunningHook } from './running-hook';
 
@@ -38,19 +38,15 @@ async function answered(
     : failed(running, 'answered the wrong shape', log);
 }
 
-// A failed Hook is skipped, unless it guards: then its event's refusal is the answer.
+// A failed Hook leaves the chain to answer without it.
 async function failed(
   running: RunningHook,
   reason: string,
   log: Log,
 ): Promise<Json> {
-  const refusal = running.hook.guard
-    ? guardRefusal(running.step.name)
-    : undefined;
+  log(failureLine(running, reason));
 
-  log(failureLine(running, reason, refusal !== undefined));
-
-  return refusal ?? skipped(running);
+  return skipped(running);
 }
 
 // A skipped Hook leaves the event as it came: the chain goes on beneath it, once.

@@ -4,7 +4,11 @@ import {
   WorkerCommand,
   type WorkerCall,
 } from '../protocol/runtime.ts';
-import type { TestAction, TestReply } from '../protocol/test-control.ts';
+import type {
+  TestAction,
+  TestReply,
+  TestClockState,
+} from '../protocol/test-control.ts';
 import { argoBridge, WorkerCalls } from './argo.ts';
 import { registerPlugin, type PluginInboxes } from './modules.ts';
 import { PluginTestClock } from './test-clock.ts';
@@ -64,15 +68,17 @@ async function runTest(
   command: Extract<Delivery, { type: 'test' }>,
 ): Promise<void> {
   try {
-    await runTestAction(command.action);
-    post({ type: 'test.done', id: command.id });
+    const state = await runTestAction(command.action);
+    post({ type: 'test.done', id: command.id, clock: state });
   } catch (error) {
     post({ type: 'test.done', id: command.id, error: String(error) });
   }
 }
 
-function runTestAction(action: TestAction): Promise<void> {
+async function runTestAction(action: TestAction): Promise<TestClockState> {
   if (!clock) throw new Error('Plugin has no test clock');
 
-  return clock.advance(action.ms);
+  await clock.advance(action.action === 'advanceClock' ? action.ms : 0);
+
+  return { now: clock.now(), nextAt: clock.nextAt() };
 }

@@ -1,19 +1,12 @@
 import { createContext, runInContext } from 'node:vm';
+import { realClock, type PluginClock } from '../clock.ts';
 import type { ArgoBridge } from './argo.ts';
 import { kitPrelude } from './kit-prelude.ts';
 import type { PluginRealmExports } from './plugin-api.ts';
 
 export type PluginRealm = ReturnType<typeof createContext>;
 
-export type PluginClock = {
-  delay: (ms: number) => Promise<void>;
-  now: () => number;
-};
-
-const realClock: PluginClock = {
-  delay: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
-  now: Date.now,
-};
+export type { PluginClock } from '../clock.ts';
 
 type StartedRealm = PluginRealmExports & { context: PluginRealm };
 

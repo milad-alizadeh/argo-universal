@@ -12,17 +12,14 @@ const manifest = PluginManifest.parse({
   capabilities: [],
   contributes: {
     nav: [],
-    hooks: ['prompt.submit', 'session.start', 'process.spawn'],
+    hooks: ['prompt.submit', 'process.spawn'],
   },
 });
 
 it.each([
   ["api.on('unknown.event', () => {})", 'Unknown Hook event'],
   ["api.on('prompt.submit', 'matcher', () => {})", 'takes no matcher'],
-  [
-    "api.on('session.start', () => {}, {guard:true})",
-    'has no refusal to guard with',
-  ],
+  ["api.on('prompt.submit', () => {}, {guard:true})", 'guard'],
   ["api.on('process.spawn', () => {})", 'needs its Capability'],
 ])('reports production Hook registration refusal for %s', (body, reason) => {
   const report = inspectSource(

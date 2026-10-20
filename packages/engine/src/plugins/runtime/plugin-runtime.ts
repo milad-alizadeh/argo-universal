@@ -1,7 +1,6 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
 import { hostHooks } from '../hooks/host-hooks';
 import { keepWaiting } from '../hooks/keep-waiting';
-import type { PluginHooks } from '../hooks/plugin-hooks';
 import { HostConnection } from '../host/connection';
 import type { PluginReply } from '../protocol/runtime';
 import {
@@ -24,6 +23,7 @@ import {
   type PluginLocation,
 } from './plugin-location';
 import { PluginTurns } from './plugin-turns';
+import { RuntimeClock } from './runtime-clock';
 import { hostCrashLine, pluginIdentity } from './status';
 
 export class PluginRuntime {
@@ -31,9 +31,10 @@ export class PluginRuntime {
   private readonly plugins = new Map<string, RuntimePlugin>();
   private readonly host: HostConnection;
   readonly views: PluginViews;
-  readonly hooks: PluginHooks;
+  readonly hooks;
   private hostError: string | null = null;
   private closed = false;
+  private readonly clock;
   readonly turns = new PluginTurns(() => this.plugins.values());
 
   constructor(
@@ -47,11 +48,12 @@ export class PluginRuntime {
       this.log,
     );
     this.host = new HostConnection(this.callbacks());
-    this.hooks = hostHooks(this.host, this.log);
+    this.clock = new RuntimeClock(this.host.tests, clockStart);
+    this.hooks = hostHooks(this.host, this.log, this.clock.source);
   }
 
   public advanceClock(pluginId: string, ms: number): Promise<void> {
-    return this.host.tests.send(pluginId, { action: 'advanceClock', ms });
+    return this.clock.advance(pluginId, ms);
   }
 
   public renderFallback(
@@ -66,9 +68,11 @@ export class PluginRuntime {
     return {
       log: this.log,
       call: (message): Promise<PluginReply> =>
-        answerPluginCall(
-          { hooks: this.hooks, services: this.services, views: this.views },
-          message,
+        this.clock.during(() =>
+          answerPluginCall(
+            { hooks: this.hooks, services: this.services, views: this.views },
+            message,
+          ),
         ),
       status: (message): void => this.update(message),
       crash: (message): void => this.crashed(message),

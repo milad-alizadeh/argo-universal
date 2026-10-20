@@ -41,6 +41,7 @@ function decidedOption(
 type PermissionHookInput = {
   hooks: CoreHooks;
   sessionId: string;
+  projectId: string;
   request: PendingPermission;
   // The Session the answer goes back to.
   session: Pick<AnyActorRef, 'send'>;
@@ -48,8 +49,12 @@ type PermissionHookInput = {
 
 // Runs `tool.check` Hooks on one Permission request and reports how they ended.
 export const toolCallHooks = fromPromise<void, PermissionHookInput>(
-  async ({ input: { hooks, sessionId, request, session } }) => {
-    const { decision } = await hooks['tool.check']({ sessionId, request });
+  async ({ input: { hooks, sessionId, projectId, request, session } }) => {
+    const { decision } = await hooks['tool.check']({
+      sessionId,
+      projectId,
+      request,
+    });
 
     session.send({
       type: permissionHookedEvent,

@@ -2,16 +2,20 @@ import { z } from 'zod';
 import { PluginSurface } from '#plugin-surface';
 
 // The core events a Plugin may hook (ADR-0027). A Plugin names the ones it hooks under `contributes.hooks`.
-export const HookEventName = z.enum([
-  'session.start',
-  'prompt.submit',
-  'tool.check',
-  'turn.complete',
-  'process.spawn',
-  'ui.render',
-]);
+export const HookEventName = z.enum(
+  ['prompt.submit', 'tool.check', 'process.spawn', 'ui.render'],
+  { error: (issue) => `Unknown Hook event ${String(issue.input)}` },
+);
 
 export type HookEventName = z.infer<typeof HookEventName>;
+
+// Argo owns every Hook deadline; adding an event requires choosing its limit (ADR-0038).
+export const hookBudgetMs: Readonly<Record<HookEventName, number>> = {
+  'prompt.submit': 2000,
+  'tool.check': 10_000,
+  'process.spawn': 10_000,
+  'ui.render': 10_000,
+};
 
 // What crosses between the Server and a Plugin worker while Hooks register and run.
 export const Json = z.json();
@@ -24,11 +28,10 @@ export const JsonObject = z.record(z.string(), Json);
 export type JsonObject = z.infer<typeof JsonObject>;
 
 // `hookId` is the Plugin's own count of its `argo.on` calls, so each Hook is named within its worker.
-export const HookRegistration = z.object({
+export const HookRegistration = z.strictObject({
   hookId: z.number().int().nonnegative(),
   name: HookEventName,
   matcher: z.string().optional(),
-  guard: z.boolean(),
 });
 
 export type HookRegistration = z.infer<typeof HookRegistration>;

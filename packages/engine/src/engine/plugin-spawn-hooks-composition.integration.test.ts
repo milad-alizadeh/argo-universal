@@ -1,7 +1,7 @@
+import { hookBudgetMs } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
 import { refusal } from '#mocks/probe-run';
 import { appending, runWithHooks, spawnHook } from '#mocks/spawn-hooks';
-import { hookBudgetMs } from '../plugins/hooks/hook-chain';
 
 // Each journey starts the calling Plugin and every Plugin that hooks its command.
 const journeyMs = 20_000;
@@ -73,7 +73,7 @@ it.each([
   {
     name: 'misses its budget',
     hook: `() => new Promise(() => {})`,
-    reason: `${hookBudgetMs} ms budget`,
+    reason: `${hookBudgetMs['process.spawn']} ms budget`,
   },
 ])(
   'skips a Hook that $name, logs it once, and goes on',
@@ -88,29 +88,6 @@ it.each([
       expect.stringContaining(`Plugin a-broken: skipped process.spawn Hook: `),
     ]);
     expect(hookLines(log, 'skipped')[0]).toContain(reason);
-  },
-  journeyMs,
-);
-
-it(
-  'refuses with the event instead of skipping a guard Hook that fails',
-  async () => {
-    const { results, log } = await runWithHooks([
-      spawnHook(
-        'guard',
-        `() => { throw new Error('broken'); }`,
-        '{ guard: true }',
-      ),
-    ]);
-
-    expect(results).toEqual({
-      echo: refusal('a process.spawn Hook blocked it: A guard Hook failed'),
-    });
-    expect(hookLines(log, 'guard refused')).toEqual([
-      expect.stringContaining(
-        'Plugin guard: guard refused process.spawn Hook: broken',
-      ),
-    ]);
   },
   journeyMs,
 );

@@ -9,8 +9,22 @@ export class PluginTestClock {
   readonly now = (): number => this.time;
   readonly delay = (ms: number): Promise<void> =>
     new Promise((resolve) => {
-      this.pending.push({ at: this.time + Math.max(0, ms), resolve });
+      this.schedule(resolve, ms);
     });
+
+  readonly schedule = (resolve: () => void, ms: number): (() => void) => {
+    const timer = { at: this.time + Math.max(0, ms), resolve };
+    this.pending.push(timer);
+
+    return () => {
+      const index = this.pending.indexOf(timer);
+
+      if (index >= 0) this.pending.splice(index, 1);
+    };
+  };
+
+  readonly nextAt = (): number | null =>
+    this.pending.length ? Math.min(...this.pending.map(({ at }) => at)) : null;
 
   async advance(ms: number): Promise<void> {
     requireAdvance(ms);
@@ -37,7 +51,7 @@ export class PluginTestClock {
   }
 }
 
-function requireAdvance(ms: number): void {
+export function requireAdvance(ms: number): void {
   if (!Number.isFinite(ms) || ms < 0)
     throw new Error('Clock advance must be finite and nonnegative');
 }

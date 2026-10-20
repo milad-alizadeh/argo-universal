@@ -5,6 +5,7 @@ import type {
   JsonObject,
 } from '@repo/contracts/plugins/hook-protocol';
 import type { PluginSurface } from '@repo/contracts/plugins/kit';
+import type { PluginClock } from '../clock';
 import { HookBudget } from './hook-budget';
 import type { RegisteredHook } from './hook-registry';
 import { readRewrite } from './hook-rules';
@@ -23,6 +24,7 @@ type RunningHookInput = {
   hook: RegisteredHook;
   step: HookStep;
   budgetMs: number;
+  clock: PluginClock;
   // The Plugins whose Hooks this chain runs inside of.
   ancestors: ReadonlySet<string>;
 };
@@ -37,12 +39,16 @@ export class RunningHook {
   private nextAnswer: Promise<Json> | null = null;
   private ended = false;
 
-  public constructor({ hook, step, budgetMs, ancestors }: RunningHookInput) {
+  public constructor(input: RunningHookInput) {
+    const { hook, step, budgetMs, ancestors, clock } = input;
+
     this.hook = hook;
     this.step = step;
     this.ancestors = ancestors;
-    this.budget = new HookBudget(budgetMs, () =>
-      this.fail(`missed its ${budgetMs} ms budget`),
+    this.budget = new HookBudget(
+      budgetMs,
+      () => this.fail(`missed its ${budgetMs} ms budget`),
+      clock,
     );
     this.budget.start();
   }
@@ -66,8 +72,8 @@ export class RunningHook {
     return this.waitingOn(this.nextAnswer);
   }
 
-  // Time the Hook spends waiting on `next` or an `argo` call isn't its own.
-  public async waitingOn<T>(work: Promise<T>): Promise<T> {
+  // Only the time spent waiting on `next` belongs to the rest of the chain.
+  private async waitingOn<T>(work: Promise<T>): Promise<T> {
     this.budget.hold();
 
     try {

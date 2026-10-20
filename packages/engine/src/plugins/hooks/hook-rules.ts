@@ -9,8 +9,6 @@ import {
 type EventRule = {
   // What core answers at the bottom of the chain: a fixed answer, or the event's fields it carries on.
   core: { answer: Json } | { carries: readonly string[] };
-  // What a guard answers when its Hook fails; an event without one can't be guarded.
-  refusal?: Json;
   // What a matcher is compared with; an event without one takes no matcher.
   subject?: (event: JsonObject) => string | undefined;
   // The fields a Hook may rewrite with `next({ ...e })`; the rest stay as core gave them.
@@ -28,23 +26,18 @@ const hookRules: HookRules = {
       typeof event.slotId === 'string' ? event.slotId : undefined,
     rewritable: ['props'],
   },
-  'session.start': { core: { answer: null }, rewritable: [] },
   'prompt.submit': {
     core: { carries: ['prompt'] },
-    refusal: { drop: 'A guard Hook failed' },
     rewritable: ['prompt'],
   },
   'tool.check': {
     core: { answer: { decision: 'ask' } },
-    refusal: { decision: 'deny' },
     subject: (event) =>
       hookEvents['tool.check'].event.safeParse(event).data?.request.title,
     rewritable: [],
   },
-  'turn.complete': { core: { answer: null }, rewritable: [] },
   'process.spawn': {
     core: { carries: ['argv', 'cwd'] },
-    refusal: { blocked: 'A guard Hook failed' },
     subject: (event) =>
       hookEvents['process.spawn'].event.safeParse(event).data?.argv[0],
     rewritable: ['argv', 'cwd'],
@@ -64,9 +57,6 @@ const carried = (event: JsonObject, keys: readonly string[]): JsonObject =>
   Object.fromEntries(
     Object.entries(event).filter(([key]) => keys.includes(key)),
   );
-
-export const guardRefusal = (name: HookEventName): Json | undefined =>
-  hookRules[name].refusal;
 
 export const callerOf = (
   name: HookEventName,

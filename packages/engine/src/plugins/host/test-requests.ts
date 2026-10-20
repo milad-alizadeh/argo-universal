@@ -2,12 +2,13 @@ import type { HostCommand } from '../protocol/runtime';
 import {
   TestCommand,
   type TestAction,
+  type TestClockState,
   type TestReply,
 } from '../protocol/test-control';
 
 const testLimitMs = 3000;
 
-type PendingTest = ReturnType<typeof Promise.withResolvers<void>>;
+type PendingTest = ReturnType<typeof Promise.withResolvers<TestClockState>>;
 
 type HostTest = Extract<HostCommand, { type: 'test' }>;
 
@@ -18,13 +19,17 @@ export class TestRequests {
   private readonly pending = new Map<number, PendingTest>();
   constructor(private readonly tell: (command: HostTest) => void) {}
 
-  public async send(pluginId: string, action: TestAction): Promise<void> {
+  public async send(
+    pluginId: string,
+    action: TestAction,
+  ): Promise<TestClockState> {
     const { command, pending } = this.request(pluginId, action);
     const timeout = testDeadline(pending.reject);
 
     try {
       this.tell(command);
-      await pending.promise;
+
+      return await pending.promise;
     } finally {
       clearTimeout(timeout);
       this.pending.delete(command.id);
@@ -39,7 +44,7 @@ export class TestRequests {
       pluginId,
     };
 
-    const pending = Promise.withResolvers<void>();
+    const pending = Promise.withResolvers<TestClockState>();
     this.pending.set(id, pending);
 
     return { command, pending };
@@ -51,7 +56,7 @@ export class TestRequests {
     if (!pending) return;
 
     if (reply.error) pending.reject(new Error(reply.error));
-    else pending.resolve();
+    else settleClock(pending, reply.clock);
   }
 }
 
@@ -62,4 +67,12 @@ function testDeadline(
     () => reject(new Error('Plugin test request timed out')),
     testLimitMs,
   );
+}
+
+function settleClock(
+  pending: PendingTest,
+  clock: TestClockState | undefined,
+): void {
+  if (clock) pending.resolve(clock);
+  else pending.reject(new Error('Plugin test reply has no clock'));
 }

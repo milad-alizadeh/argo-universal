@@ -132,19 +132,12 @@ export async function createSession(
   return { sessionId };
 }
 
-// Once stored, the Session is started: `session.start` Hooks, its first choices, then its first prompt.
+// Once stored, the Session applies its first choices, then submits its first prompt.
 async function startSession(
   deps: Pick<SessionRouterDeps, 'hooks'>,
   session: SessionActorRef,
   newSession: SessionNewInput,
 ): Promise<void> {
-  const { sessionId } = session.getSnapshot().context;
-
-  await deps.hooks['session.start']({
-    sessionId,
-    projectId: newSession.projectId,
-    agent: newSession.agent,
-  });
   await applyInitialConfiguration(session, newSession);
   await submitInitialAcpPrompt(session, deps.hooks);
 }
@@ -160,6 +153,7 @@ const submitInitialAcpPrompt = async (
 
   const answer = await hooks['prompt.submit']({
     sessionId,
+    projectId: input.projectId,
     prompt: input.prompt,
   });
 
