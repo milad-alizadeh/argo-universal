@@ -46,6 +46,19 @@ it('rejects nested master cycles', () => {
   expect(() => insideOut(families, snapshots)).toThrow('Nested master cycle');
 });
 
+it('ignores a layer named after its own master', () => {
+  const { families, snapshots, nested } = orderingFixture();
+  snapshots.set('ListItem', {
+    fileId: 'f',
+    rootId: 'inner',
+    nodes: [nested],
+  });
+  expect(insideOut(families, snapshots).map((family) => family.name)).toEqual([
+    'ListItem',
+    'SessionsList',
+  ]);
+});
+
 it('moves a nested copy while leaving its independently owned content and state alone', () => {
   const { master, copy } = pair();
   master.nodes.push({

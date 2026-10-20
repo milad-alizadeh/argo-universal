@@ -34,10 +34,13 @@ function visit(name: string, context: Ordering): void {
   if (!context.done.has(name)) traverse(name, context);
 }
 
-function children(snapshot: Snapshot | undefined): string[] {
+function children(name: string, snapshot: Snapshot | undefined): string[] {
   if (!snapshot) return [];
 
-  return snapshot.nodes.flatMap((node) => (node.nested ? [node.name] : []));
+  // A layer named after its own master is part of it, not a nested copy.
+  return snapshot.nodes.flatMap((node) =>
+    node.nested && node.name !== name ? [node.name] : [],
+  );
 }
 
 export function insideOut(
@@ -47,7 +50,7 @@ export function insideOut(
   const dependencies = new Map(
     families.map((family) => [
       family.name,
-      children(snapshots.get(family.name)),
+      children(family.name, snapshots.get(family.name)),
     ]),
   );
 
