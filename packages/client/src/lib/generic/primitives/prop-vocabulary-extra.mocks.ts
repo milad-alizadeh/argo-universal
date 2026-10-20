@@ -44,6 +44,8 @@ export type AdditionalPrimitives = {
   ListDetailProps: ListDetailKit.ListDetailProps;
   ListDetailSidebar: ListDetailKit.ListDetailSidebar;
   InspectorProps: InspectorKit.InspectorProps;
+  InspectorTab: InspectorKit.InspectorTab;
+  InspectorTabsProps: InspectorKit.InspectorTabsProps;
   InspectorPaneProps: InspectorKit.InspectorPaneProps;
   InspectorHost: InspectorKit.InspectorHost;
   SettingsLayoutProps: SettingsLayoutKit.SettingsLayoutProps;

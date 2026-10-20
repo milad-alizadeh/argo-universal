@@ -42,6 +42,12 @@ export type ListItemProps = KitProps<'ListItem'> & {
   emphasized?: boolean;
   // The subtitle's colour; muted unless the row says otherwise.
   subtitleTone?: Tone;
+  // De-emphasized secondary text on a completed row.
+  subtitleDimmed?: boolean;
+  // A completed row can dim its text without losing the grouped surface.
+  titleTone?: Tone;
+  // A role avatar occupies its own 36px lane instead of the icon lane.
+  leadingSize?: 'avatar';
   // A placeholder while the list loads: bars where the title, subtitle and meta will be, each as wide as its placeholder text; any `leading`, even null, becomes a round mark.
   isLoading?: boolean;
 };

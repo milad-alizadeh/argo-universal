@@ -4,6 +4,7 @@ import { Icon, IconRoleContext } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
 import { useInMenu } from '../../../menu-rows-context';
 import { useInSidebar } from '../../../row-drawing-context';
+import { cn } from '../../../utils';
 import {
   hasBadge,
   ItemBadge,
@@ -36,7 +37,10 @@ const leadingIconRoles = {
   sidebar: undefined,
 } as const satisfies Record<LeadingLane, 'menu' | undefined>;
 
-type LeadingProps = Pick<ListItemProps, 'leading' | 'badge' | 'sidebar'>;
+type LeadingProps = Pick<
+  ListItemProps,
+  'leading' | 'badge' | 'sidebar' | 'leadingSize'
+>;
 
 function leadingLane(menu: boolean, sidebar: boolean): LeadingLane {
   if (menu) return 'menu';
@@ -51,7 +55,7 @@ export function Leading(props: LeadingProps): ReactNode {
   if (!hasLeading(props)) return null;
 
   return (
-    <View className={leadingClasses[lane]}>
+    <View className={leadingClass(lane, props.leadingSize)}>
       <IconRoleContext value={leadingIconRoles[lane]}>
         {props.leading}
       </IconRoleContext>
@@ -126,3 +130,17 @@ export function useLinkAccessory(): ReactElement | undefined {
 export function Control({ children }: { children?: ReactNode }): ReactNode {
   return children ? <View className="w-full">{children}</View> : null;
 }
+
+const leadingClass = (
+  lane: LeadingLane,
+  size: LeadingProps['leadingSize'],
+): string =>
+  cn(
+    leadingClasses[lane],
+    size === 'avatar' && 'size-9 wide-type:size-7 self-center',
+  );
+
+export const separatorClass = (
+  separator: string,
+  size: ListItemProps['leadingSize'],
+): string => cn(separator, size === 'avatar' && 'left-16');

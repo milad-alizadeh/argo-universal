@@ -33,8 +33,13 @@ const TextClassContext = React.createContext<string | undefined>(undefined);
 
 type RoleTextProps = Omit<TextProps, 'role'> & { role?: TextRole };
 
+type TextDrawing = Pick<
+  RoleTextProps,
+  'role' | 'tone' | 'dimmed' | 'className'
+>;
+
 function textClassName(
-  { role, tone, className }: Pick<RoleTextProps, 'role' | 'tone' | 'className'>,
+  { role, tone, dimmed, className }: TextDrawing,
   inherited?: string,
 ): string {
   return cn(
@@ -42,7 +47,7 @@ function textClassName(
     role === undefined && 'type-body',
     inherited,
     role && textRoles[role],
-    toneClass(tone),
+    textToneClass(tone, dimmed),
     className,
   );
 }
@@ -64,14 +69,15 @@ function useNativeTextKey(): number | undefined {
 }
 
 function RoleText(options: RoleTextProps): ReactElement {
-  const { className, role, tone, accessibilityRole, ...props } = options;
+  const { className, role, tone, dimmed, accessibilityRole, ...props } =
+    options;
 
   const key = useNativeTextKey();
   const textClass = React.useContext(TextClassContext);
 
   return React.createElement(RNText, {
     key,
-    className: textClassName({ role, tone, className }, textClass),
+    className: textClassName({ role, tone, dimmed, className }, textClass),
     role: accessibilityRole,
     ...props,
   });
@@ -91,3 +97,8 @@ function Text(options: TextProps): ReactElement {
 }
 
 export { Text, TextClassContext };
+
+const textToneClass = (
+  tone: TextProps['tone'],
+  dimmed?: boolean,
+): string | undefined => (dimmed ? 'text-tertiary' : toneClass(tone));
