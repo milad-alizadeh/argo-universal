@@ -6,6 +6,7 @@ import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
 import type { InspectorProps } from './inspector-props';
+import { InspectorTabs } from './inspector-tabs';
 
 export type InspectorPaneProps = InspectorProps & {
   // Only the wide column expands over the detail; a sheet rests where it is.
@@ -18,7 +19,7 @@ export type InspectorPaneProps = InspectorProps & {
 // The header's expand and close: small ghost buttons with muted icons.
 const controlProps = {
   variant: 'ghost',
-  className: 'size-7 p-0 sm:size-7',
+  className: 'size-8 p-0 sm:size-8',
   iconClassName: 'text-muted-foreground',
   size: 'sm',
 } as const;
@@ -95,13 +96,24 @@ function InspectorTitle(props: { title: string }): ReactElement {
   );
 }
 
+// Tabs take the title's place; the column's controls stay outside their scroll.
+function InspectorHeading(props: InspectorPaneProps): ReactElement {
+  if (props.tabs) return <InspectorTabs tabs={props.tabs} />;
+
+  return <InspectorTitle title={props.title} />;
+}
+
 function InspectorHeader(props: InspectorPaneProps): ReactElement {
   return (
-    <View className="mt-frame-inset h-frame-control flex-row items-center gap-1 pl-4 pr-2.5">
-      <InspectorTitle title={props.title} />
+    <View
+      className={cn(
+        'h-frame-bar flex-row items-center gap-2 pr-1',
+        props.tabs ? 'pl-3' : 'pl-4',
+      )}
+    >
+      <InspectorHeading {...props} />
       <InspectorActions>{props.actions}</InspectorActions>
-      <ExpandButton {...props} />
-      <CloseButton {...props} />
+      <InspectorControls {...props} />
     </View>
   );
 }
@@ -142,6 +154,15 @@ export function InspectorPane(props: InspectorPaneProps): ReactElement {
     >
       <InspectorHeader {...props} />
       <InspectorBody {...props} surface={surface} />
+    </View>
+  );
+}
+
+function InspectorControls(props: InspectorPaneProps): ReactElement {
+  return (
+    <View className="shrink-0 flex-row items-center gap-0.5">
+      <ExpandButton {...props} />
+      <CloseButton {...props} />
     </View>
   );
 }

@@ -1,4 +1,6 @@
-import { expect, fn, within } from 'storybook/test';
+import type { Meta } from '@storybook/react-native-web-vite';
+import type { JSX } from 'react';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '#lib/generic/each-layout';
 import { settleViewport } from '#lib/generic/settle-viewport';
 import {
@@ -9,36 +11,129 @@ import {
   subagentNow,
   subagentStates,
 } from '../../../features/sessions/components/subagent-list/subagent-list.mocks';
+import type { SessionDetailViewProps } from './session-detail-view';
+import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { runningSession } from './session-detail-view.mocks';
+
+const subagentsName = 'Subagents';
+
+const selected = ['aria-selected', 'true'] as const;
+
+const triggerName = (wide: boolean, count: number): string =>
+  wide ? subagentsName : `Subagents: ${count}`;
 
 const meta = {
   ...sessionDetailViewTestMeta,
   title: 'Tests/SessionDetailViewSubagents',
-};
+  render: ({ view }): JSX.Element => <FramedSessionPreview {...view} />,
+} satisfies Meta<{ view: SessionDetailViewProps }>;
 
 export default meta;
 
-export const ComposerSubagentsOpenSheet: Story = {
-  args: {
-    view: {
-      state: 'open',
-      ...runningSession,
-      subagents: {
-        subagents: subagentStates.severalMixed,
-        onSelect: fn(),
-        now: subagentNow,
+type State = keyof typeof subagentStates;
+
+type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
+type Interaction = Pick<PlayContext, 'canvas' | 'userEvent'>;
+
+async function assertPresentation(
+  { canvas, userEvent }: Interaction,
+  wide: boolean,
+  count: number,
+): Promise<void> {
+  const page = within(document.body);
+
+  if (wide) {
+    const tab = await canvas.findByRole('tab', { name: /^Subagents:/ });
+    await expect(tab).toHaveAttribute(...selected);
+    await expect(within(tab).getByText(String(count))).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: subagentsName }));
+    await expect(tab).toHaveAttribute(...selected);
+    await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
+
+    return;
+  }
+
+  await waitFor(() =>
+    expect(page.getByRole('dialog', { name: subagentsName })).toBeVisible(),
+  );
+  await expect(
+    canvas.queryByRole('button', { name: subagentsName }),
+  ).not.toBeInTheDocument();
+  await expect(page.queryByRole('tab')).not.toBeInTheDocument();
+}
+
+// The same props contract at both presentations: header/Inspector wide, Composer/Sheet below wide.
+function subagentsAt(width: number, state: State): Story {
+  const subagents = subagentStates[state];
+  const onSelect = fn();
+  const wide = width === layoutWidths.wide;
+
+  return {
+    beforeEach: () => settleViewport(width),
+    args: {
+      view: {
+        state: 'open',
+        ...runningSession,
+        subagents: { subagents, onSelect, now: subagentNow },
       },
     },
-  },
-  play: async ({ canvas, userEvent }) => {
-    await settleViewport(layoutWidths.phone);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Subagents: 4' }),
-    );
-    const page = within(document.body);
+    play: async ({ canvas, userEvent }) => {
+      await expect(
+        canvas.queryByRole('button', { name: 'Shells' }),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByRole('tab', { name: /^Subagents:/ }),
+      ).not.toBeInTheDocument();
 
-    await expect(await page.findByText('Find every Feed reader')).toBeVisible();
-    await expect(page.getByText('Migrate tokens to kit roles')).toBeVisible();
-    await expect(page.getByText('Draft the Plan schema')).toBeVisible();
-  },
-};
+      if (!subagents.length) {
+        await expect(
+          canvas.queryByRole('button', { name: /^Subagents/ }),
+        ).not.toBeInTheDocument();
+
+        return;
+      }
+
+      const trigger = triggerName(wide, subagents.length);
+
+      await userEvent.click(
+        await canvas.findByRole('button', { name: trigger }),
+      );
+
+      const page = within(document.body);
+
+      for (const item of subagents) {
+        await waitFor(() => expect(page.getByText(item.title)).toBeVisible());
+      }
+
+      await assertPresentation({ canvas, userEvent }, wide, subagents.length);
+    },
+  };
+}
+
+export const WideNone = subagentsAt(layoutWidths.wide, 'none');
+
+export const WideOneRunning = subagentsAt(layoutWidths.wide, 'oneRunning');
+
+export const WideSeveralMixed = subagentsAt(layoutWidths.wide, 'severalMixed');
+
+export const WideAllFinished = subagentsAt(layoutWidths.wide, 'allFinished');
+
+export const MediumNone = subagentsAt(layoutWidths.tablet, 'none');
+
+export const MediumOneRunning = subagentsAt(layoutWidths.tablet, 'oneRunning');
+
+export const MediumSeveralMixed = subagentsAt(
+  layoutWidths.tablet,
+  'severalMixed',
+);
+
+export const MediumAllFinished = subagentsAt(
+  layoutWidths.tablet,
+  'allFinished',
+);
+
+export const PhoneSubagentsOpenSheet = subagentsAt(
+  layoutWidths.phone,
+  'severalMixed',
+);

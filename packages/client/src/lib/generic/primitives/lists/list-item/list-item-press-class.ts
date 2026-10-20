@@ -41,6 +41,8 @@ export function usePressClass(props: DrawingProps): string {
 
   return cn(
     itemPress({ ...place, ...rowPress(props) }),
+    props.leadingSize === 'avatar' &&
+      'min-h-15 items-center gap-3 py-2.5 android:min-h-18 android:gap-4 android:py-2',
     props.disabled && 'opacity-50',
   );
 }

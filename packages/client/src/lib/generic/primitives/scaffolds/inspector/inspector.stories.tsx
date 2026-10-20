@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations } from '../../../variations';
 import { Inspector, type InspectorProps } from './index';
-import { ExamplePane, inspectorTitle } from './inspector.mocks';
+import {
+  ExamplePane,
+  ExampleTabsPane,
+  inspectorTitle,
+} from './inspector.mocks';
 
 // Each variation draws its own pane; the story's args only satisfy the component's type.
 const args: InspectorProps = {
@@ -31,6 +35,20 @@ export const Overview: StoryObj<typeof meta> = {
       </Variation>
       <Variation label="Expanded">
         <ExamplePane expanded />
+      </Variation>
+    </Variations>
+  ),
+};
+
+// Tabs in place of the title; the ones that do not fit scroll behind the faded edge.
+export const Tabs: StoryObj<typeof meta> = {
+  render: () => (
+    <Variations>
+      <Variation label="Tabs">
+        <ExampleTabsPane />
+      </Variation>
+      <Variation label="Overflowing">
+        <ExampleTabsPane narrow />
       </Variation>
     </Variations>
   ),

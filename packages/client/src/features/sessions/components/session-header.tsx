@@ -74,7 +74,7 @@ function WideSessionHeader({
   return (
     <SessionHeaderBar
       title={<SessionHeaderTitle {...props} shown={shown} onShow={show} />}
-      actions={<SessionHeaderActions {...actions} changes={props.changes} />}
+      actions={<SessionHeaderActions {...actions} panels={props.panels} />}
     />
   );
 }
