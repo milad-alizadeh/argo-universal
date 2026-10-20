@@ -1,3 +1,9 @@
+import {
+  menuInsetClassName,
+  menuRowClassName,
+  menuRowsClassName,
+  menuSurfaceClassName,
+} from '#lib/generic/menu-surface';
 import { cn } from '#lib/generic/utils';
 
 const triggerClassName =
@@ -6,8 +12,11 @@ const triggerClassName =
 const plainTriggerClassName =
   'flex h-8 flex-row items-center gap-1.5 rounded-control pl-2 web:hover:bg-hover web:focus-visible:outline-2 web:focus-visible:outline-focus web:w-fit web:whitespace-nowrap web:outline-none web:disabled:cursor-not-allowed';
 
-const itemClassName =
-  'active:bg-pressed group relative flex w-full flex-row items-center gap-2 rounded-xl py-2 pl-2 pr-8 sm:py-1.5 web:focus:bg-hover web:*:last:flex web:*:last:items-center web:*:last:gap-2 web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:**:pointer-events-none';
+// A menu row, its right padding kept for the absolute check.
+const itemClassName = cn(
+  menuRowClassName,
+  'active:bg-pressed group relative flex w-full pr-8 web:focus:bg-hover web:*:last:flex web:*:last:items-center web:*:last:gap-2 web:cursor-default web:outline-none web:data-disabled:pointer-events-none web:**:pointer-events-none',
+);
 
 type TriggerStyle = {
   className?: string;
@@ -72,7 +81,8 @@ function popperClassName({ position, side }: ContentStyle): string | undefined {
 
 export function selectContentClassName(props: ContentStyle): string {
   return cn(
-    'bg-card border-border relative z-50 min-w-32 rounded-2xl web:shadow-card border shadow-raised',
+    menuSurfaceClassName,
+    'relative z-50 min-w-32 shadow-raised web:shadow-card',
     'web:animate-in web:fade-in-0 web:zoom-in-95 web:origin-(--radix-select-content-transform-origin) web:max-h-52 web:overflow-y-auto web:overflow-x-hidden',
     slideClassName(props.side),
     popperClassName(props),
@@ -84,8 +94,9 @@ export function selectViewportClassName(
   position: ContentStyle['position'],
 ): string {
   return cn(
-    // Rows keep a gap, as Android's grouped rows do, so hovered, pressed and selected tiles never touch.
-    'flex flex-col gap-0.5 p-1',
+    'flex flex-col',
+    menuRowsClassName,
+    menuInsetClassName,
     position === 'popper' &&
       'w-full web:h-(--radix-select-trigger-height) web:min-w-(--radix-select-trigger-width)',
   );

@@ -57,11 +57,10 @@ export function focusTracking(focus: KeyboardFocus): FocusTracking {
   };
 }
 
-// A choice menu's radio row: its icon, label and check 6px apart, as Paper's View options rows.
+// A choice menu's radio row: its icon, label and trailing check, as Paper's Menu rows.
 function choiceItemClassName(keyboardFocus: boolean): string {
   return cn(
     choiceRowClassName,
-    'gap-1.5',
     'cursor-default rounded-xl outline-0 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
     keyboardFocus &&
       'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',

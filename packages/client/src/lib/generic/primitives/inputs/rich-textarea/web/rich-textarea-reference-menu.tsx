@@ -2,6 +2,11 @@ import type { MenuRenderFn } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import { MenuOption } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import type * as React from 'react';
 import { createPortal } from 'react-dom';
+import {
+  menuInsetClassName,
+  menuRowsClassName,
+  menuSurfaceClassName,
+} from '#lib/generic/menu-surface';
 import { cn } from '#lib/generic/utils';
 import type { ReferenceOption } from '../rich-textarea-references';
 import { ReferenceGlyph } from './rich-textarea-reference-token';
@@ -90,13 +95,20 @@ function MenuRows(props: MenuProps): React.JSX.Element[] {
   ));
 }
 
+const referenceMenuClassName = cn(
+  menuSurfaceClassName,
+  menuInsetClassName,
+  menuRowsClassName,
+  'absolute bottom-full left-0 mb-7 flex w-100 flex-col overflow-clip',
+);
+
 // The popover of the Composer editor design: a header, then a row for each match.
 function ReferenceMenu(props: MenuProps): React.JSX.Element {
   return (
     <div
       role="group"
       aria-label="Issues and pull requests"
-      className="absolute bottom-full left-0 mb-7 flex w-100 flex-col gap-0.5 overflow-clip rounded-2xl border border-border bg-card p-1 shadow-card"
+      className={referenceMenuClassName}
     >
       <div className="px-2 pt-1.5 pb-1 text-badge font-medium text-muted-foreground">
         Issues and pull requests
