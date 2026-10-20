@@ -7,7 +7,7 @@ import { Icon } from '#primitives/content/icon';
 import { List, ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { ListDetail } from '#primitives/scaffolds/list-detail';
-import { RowDrawingContext, useInSidebar } from '../../../row-drawing-context';
+import { RowDrawingContext } from '../../../row-drawing-context';
 import type {
   SettingsLayoutItem,
   SettingsLayoutProps,
@@ -33,39 +33,62 @@ export function SettingsLayout(props: SettingsLayoutProps): ReactElement {
 const hasPages = (sections: SettingsLayoutSections): boolean =>
   sections.some((section) => section.items.length > 0);
 
-// The grouped pages at this Size class, or the caller's empty state when no group has one, as when a search matches none.
+// The grouped pages at this Size class and any pinned section, or the caller's empty state when there is neither, as when a search matches none.
 function SettingsPages(props: SettingsLayoutProps): ReactNode {
   const sections = useSizeClassValue(props.sections);
   const wide = useWide();
 
-  if (!hasPages(sections)) return props.empty;
+  if (!hasPages(sections) && !props.pinned) return props.empty;
+
+  return <PlacedPages {...props} sections={sections} wide={wide} />;
+}
+
+type Placed = Omit<SettingsLayoutProps, 'sections'> & {
+  sections: SettingsLayoutSections;
+  wide: boolean;
+};
+
+// A wide web sidebar pins the pinned section to its bottom, below the pages' scroll; elsewhere it ends the list.
+const pinnedPlace = (
+  pinned: ReactNode,
+  sidebar: boolean,
+): { end?: ReactNode; bottom?: ReactNode } =>
+  sidebar ? { bottom: pinned } : { end: pinned };
+
+function PlacedPages({ sections, wide, ...props }: Placed): ReactElement {
+  const sidebar = wide && Platform.OS === 'web';
+  const place = pinnedPlace(props.pinned, sidebar);
+  const selection = pageSelection(props, wide);
 
   return (
-    <SidebarRows shown={wide && Platform.OS === 'web'}>
-      <SettingsGroups sections={sections} {...pageSelection(props, wide)} />
+    <SidebarRows shown={sidebar}>
+      <SettingsGroups sections={sections} end={place.end} {...selection} />
+      {place.bottom}
     </SidebarRows>
   );
 }
 
-type GroupsProps = RowSelection & { sections: SettingsLayoutSections };
+type GroupsProps = RowSelection & {
+  sections: SettingsLayoutSections;
+  end?: ReactNode;
+};
 
-function SettingsGroups({ sections, ...selection }: GroupsProps): ReactElement {
+function SettingsGroups({ sections, end, ...rows }: GroupsProps): ReactElement {
+  const groups = sections.map((section, index) => (
+    <SettingsGroup key={section.title ?? index} section={section} {...rows} />
+  ));
+
   return (
     <List appearance="grouped">
-      {sections.map((section, index) => (
-        <SettingsGroup
-          key={section.title ?? index}
-          section={section}
-          {...selection}
-        />
-      ))}
+      {groups}
+      {end}
     </List>
   );
 }
 
 // Only a wide window shows a page beside the list, so only its rows mark one.
 const pageSelection = (
-  props: SettingsLayoutProps,
+  props: Pick<SettingsLayoutProps, 'selected' | 'onSelect'>,
   wide: boolean,
 ): RowSelection => ({
   selected: wide ? props.selected : undefined,
@@ -111,27 +134,9 @@ function SettingsPageRow({
   return (
     <ListItem.Link
       {...row}
-      leading={icon && <RowIcon name={icon} shown={shown} />}
+      leading={icon && <Icon name={icon} role="row" />}
       selected={shown}
       onPress={onSelect && (() => onSelect(row.href))}
-    />
-  );
-}
-
-type RowIconProps = {
-  name: NonNullable<SettingsLayoutItem['icon']>;
-  shown: boolean;
-};
-
-// Paper's SettingsList: a sidebar row's icon is muted until its page is shown.
-function RowIcon({ name, shown }: RowIconProps): ReactElement {
-  const muted = useInSidebar() && !shown;
-
-  return (
-    <Icon
-      name={name}
-      role="row"
-      className={muted ? 'text-muted-foreground' : undefined}
     />
   );
 }

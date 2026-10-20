@@ -38,8 +38,6 @@ export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
 
 export { useRestoredThemeChoice } from '#features/settings';
 
-export { AppearanceDetailScreen } from './screens/settings/appearance/appearance-detail-screen';
-
 export { ConnectionDetailScreen } from './screens/settings/connection/connection-detail-screen';
 
 export { DeviceListScreen } from './screens/settings/devices/device-list-screen';

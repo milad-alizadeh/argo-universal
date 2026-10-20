@@ -4,11 +4,7 @@ import type { ReactNode } from 'react';
 import { useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
 import { SectionListDetail, useSectionList } from '#features/frame';
-import {
-  themeChoiceLabel,
-  useProjects,
-  useThemeChoice,
-} from '#features/settings';
+import { useProjects, useThemeChoice } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { usePluginEntries } from './plugins/use-plugins';
 import {
@@ -51,6 +47,7 @@ function connectionStatus(
 // The Settings pages as the Server and this device know them, narrowed by the search; a row opens its page.
 function useSettingsList(query?: string): SettingsListViewProps {
   const navigate = useNavigate();
+  const theme = useThemeChoice();
 
   return {
     ...useServerCounts(),
@@ -58,7 +55,8 @@ function useSettingsList(query?: string): SettingsListViewProps {
     query,
     onSelect: (href) => navigate(href),
     status: connectionStatus(useConnectionState()),
-    appearanceState: themeChoiceLabel(useThemeChoice().choice),
+    theme: theme.choice,
+    onThemeChange: theme.choose,
   };
 }
 

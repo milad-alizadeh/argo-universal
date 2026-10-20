@@ -60,10 +60,16 @@ function groupedDrawing(content: boolean): SectionDrawing {
   return content ? drawings.content : drawings.card;
 }
 
+// Paper's SettingsList: a sidebar's groups head their flat rows as a page's grouped List does, inset as the rows.
 export function useSectionDrawing(): SectionDrawing {
   const grouped = use(ListContext).appearance === 'grouped';
   const menu = useInMenu();
-  const content = useRowDrawing() === 'content';
+  const drawing = useRowDrawing();
 
-  return grouped && !menu ? groupedDrawing(content) : drawings.plain;
+  if (drawing === 'sidebar') return drawings.content;
+
+  return listDrawing(grouped && !menu, drawing === 'content');
 }
+
+const listDrawing = (grouped: boolean, content: boolean): SectionDrawing =>
+  grouped ? groupedDrawing(content) : drawings.plain;

@@ -10,6 +10,10 @@ import {
   meta as settingsListTestMeta,
   type Story,
 } from '../../../../mocks/settings/settings-list-story.test.mocks';
+import {
+  searchFindsAppearance,
+  themeChoosesInPlace,
+} from '../../../../mocks/settings/settings-list-theme.test.mocks';
 
 const meta = { ...settingsListTestMeta, title: 'Tests/SettingsListView' };
 
@@ -97,5 +101,17 @@ export const TheSearchSaysWhenNothingMatchesPhone =
   searchSaysWhenNothingMatches(layoutWidths.phone);
 
 export const TheSearchSaysWhenNothingMatchesWide = searchSaysWhenNothingMatches(
+  layoutWidths.wide,
+);
+
+export const ThemeChoosesInPlacePhone = themeChoosesInPlace(layoutWidths.phone);
+
+export const ThemeChoosesInPlaceWide = themeChoosesInPlace(layoutWidths.wide);
+
+export const TheSearchFindsAppearancePhone = searchFindsAppearance(
+  layoutWidths.phone,
+);
+
+export const TheSearchFindsAppearanceWide = searchFindsAppearance(
   layoutWidths.wide,
 );

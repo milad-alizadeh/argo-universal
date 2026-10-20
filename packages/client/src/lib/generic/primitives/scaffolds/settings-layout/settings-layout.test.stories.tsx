@@ -8,7 +8,9 @@ import {
   deviceGroup,
   ExampleSettingsLayout,
   exampleSections,
+  examplePinned,
   noPages,
+  pinnedGroup,
   serverGroup,
 } from './settings-layout.mocks';
 
@@ -87,5 +89,38 @@ export const EmptyShowsTheEmptyState = at(layoutWidths.wide, {
     await expect(await canvas.findByText(noPages)).toBeVisible();
     await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
     await expect(canvas.getByText(pageText('Projects'))).toBeVisible();
+  },
+});
+
+const headings = (canvas: Canvas): (string | null)[] =>
+  canvas.getAllByRole('heading').map((heading) => heading.textContent);
+
+// A pinned group ends the list at every width: below the pages' groups, on a wide sidebar pinned to its bottom.
+const pinnedEndsTheList = (width: number): Story =>
+  at(width, {
+    render: () => <ExampleSettingsLayout pinned={examplePinned} />,
+    play: async ({ canvas }) => {
+      await expect(await canvas.findByText('Version')).toBeVisible();
+      await expect(headings(canvas)).toEqual([
+        serverGroup,
+        deviceGroup,
+        pinnedGroup,
+      ]);
+    },
+  });
+
+export const PinnedEndsTheListPhone = pinnedEndsTheList(layoutWidths.phone);
+
+export const PinnedEndsTheListWide = pinnedEndsTheList(layoutWidths.wide);
+
+// A search that leaves only the pinned group shows it, not the empty state.
+export const PinnedAloneIsNotEmpty = at(layoutWidths.wide, {
+  render: () => (
+    <ExampleSettingsLayout sections={[{ items: [] }]} pinned={examplePinned} />
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('Version')).toBeVisible();
+    await expect(canvas.queryByText(noPages)).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
   },
 });

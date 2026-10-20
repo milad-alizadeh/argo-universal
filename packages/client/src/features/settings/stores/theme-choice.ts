@@ -23,10 +23,6 @@ function asThemeChoice(value: string | null): ThemeChoice {
   );
 }
 
-export function themeChoiceLabel(choice: ThemeChoice): string {
-  return themeChoices.find((item) => item.value === choice)?.label ?? '';
-}
-
 // The theme this Device chose last; System until it chooses, or when its storage cannot be read.
 export async function loadThemeChoice(): Promise<ThemeChoice> {
   await writes;

@@ -13,6 +13,7 @@ export const meta = {
     accountState: 'GitHub',
     deviceCount: 2,
     onSelect: fn(),
+    onThemeChange: fn(),
   },
   render: (args): React.JSX.Element => (
     <View className="h-175 w-full">
