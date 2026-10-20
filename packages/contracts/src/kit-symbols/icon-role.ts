@@ -10,8 +10,8 @@ export const iconRoles = {
   secondary: { wide: 12, phone: 16 },
   // Inside a control.
   control: { wide: 16, phone: 16 },
-  // A disclosure chevron after a label: steps up with the text beside it.
-  chevron: { wide: 12, phone: 14 },
+  // A disclosure chevron after a label: steps up with the text beside it (owner, 2026-10-20: a step larger on wide).
+  chevron: { wide: 14, phone: 14 },
   // Beside the fixed-size mono text in a file diff.
   code: { wide: 12, phone: 12 },
   // A shape that fills its whole box, one step inside a control's slot.
