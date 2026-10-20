@@ -1,8 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { markdownBlockClassNames } from '#lib/generic/markdown-marks';
 import { cn } from '#lib/generic/utils';
-import { CodeBlockHeader } from '../code-block-header';
+import { CodeBlockHeader, codeBlockTray } from '../code-block-header';
 import { codeBlockGroup } from '../copy-button';
 import { CodeBlockBody } from './code-block-body';
 import {
@@ -19,13 +18,7 @@ export type FeedCodeBlockProps = {
 
 function CodeBlockFrame({ children }: { children: ReactNode }): ReactElement {
   return (
-    <View
-      className={cn(
-        codeBlockGroup,
-        markdownBlockClassNames.codeBlock,
-        'cursor-auto overflow-hidden border border-hairline px-1 pb-1',
-      )}
-    >
+    <View className={cn(codeBlockGroup, codeBlockTray, 'cursor-auto')}>
       {children}
     </View>
   );
