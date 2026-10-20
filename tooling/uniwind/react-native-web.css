@@ -137,6 +137,27 @@
   background: var(--color-neutral-200);
 }
 
+/* Paper's phone Git sheet keeps an eight-pixel gap around its rounded surface. */
+.sheet-floating {
+  inset-inline: calc(var(--spacing) * 2);
+  bottom: calc(var(--spacing) * 2);
+  border-radius: calc(var(--spacing) * 9);
+  min-height: 0;
+}
+.sheet-floating [data-vaul-handle] {
+  width: 36px;
+  height: 5px;
+  flex-shrink: 0;
+  margin: 6px auto 8px;
+  background: var(--color-muted-foreground);
+  opacity: 0.4;
+}
+.segment-selected {
+  box-shadow:
+    0 0 0 1px var(--color-shadow-subtle),
+    0 2px 6px var(--color-shadow);
+}
+
 /* ScrollFadeFrame: a scroll view's content fades to nothing at each edge with
    content past it, over whatever lies behind. The scroll view's own scroll
    position drives each depth, so scrolling runs no JavaScript. The frame sets

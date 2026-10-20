@@ -2,6 +2,7 @@ import type * as React from 'react';
 import {
   ChangesFiles,
   ChangesToolbar,
+  ChangesSheetHeader,
   type ChangesViewProps,
 } from '#features/changes';
 import {
@@ -27,6 +28,7 @@ const paneOf = ({
   onExpandedChange,
   onOpenChange,
   inSheet,
+  sheetHeader: <ChangesSheetHeader />,
 });
 
 // The Changes Inspector: the comparison and totals stay under the header while the files scroll.

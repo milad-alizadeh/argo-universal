@@ -15,7 +15,6 @@ import {
   SessionHeader,
   type SessionHeaderProps,
   type SessionPanels,
-  useSessionPanels,
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
@@ -31,11 +30,13 @@ import {
   type SessionInspectorContent,
 } from './session-inspector';
 import { useSessionSubagents } from './session-subagents';
+import { useInspectorPanels } from './use-inspector-panels';
 
 export interface OpenSessionViewProps extends SessionInspectorContent {
   header: SessionHeaderProps;
   feed: FeedProps;
   composer: ComposerProps;
+  inspectorPanels?: SessionPanels;
   // Files dropped on the Session's pane attach to the draft.
   onDropFiles: (dropped: DroppedFiles) => void;
   elicitation?: ElicitationFormProps;
@@ -82,7 +83,7 @@ export function SessionDetailView(
 
 // The header's triggers open Subagents, Shells and Changes as tabs in the Inspector beside the Session.
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
-  const panels = useSessionPanels(offeredSessionPanels(props));
+  const panels = useInspectorPanels(props);
 
   const subagents = useSubagentPanel(props, panels);
 
@@ -117,6 +118,7 @@ const headerPanels = (
 ): SessionHeaderProps['panels'] => ({
   offered: offeredSessionPanels(props),
   shown: panels.state.shown,
+  changesSummary: props.header.changes?.summary,
   onToggle: (panel) =>
     panel === 'changes' ? panels.toggle(panel) : panels.select(panel),
 });

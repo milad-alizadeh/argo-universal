@@ -19,12 +19,8 @@ interface LineProps {
   inline: boolean;
 }
 
-const lineNumberClassName = ({ line, inline }: LineProps): string =>
-  cn(
-    'shrink-0 text-right',
-    lineStyles[line.kind].color,
-    inline ? 'w-7' : 'w-9',
-  );
+const lineNumberClassName = ({ inline }: LineProps): string =>
+  cn('shrink-0 text-right', 'text-focus', inline ? 'w-7' : 'w-9');
 
 const lineKey = (line: DiffLine): string => `${line.kind}:${line.text}`;
 
@@ -78,7 +74,7 @@ function DiffHunk({
 
 function HunkList({ hunks, inline }: HunksProps): React.JSX.Element {
   return (
-    <View className="min-w-full">
+    <View className="min-w-full gap-6">
       {withOccurrenceKeys(hunks, (hunk) => hunk.header).map(
         ({ item: hunk, key }) => (
           <DiffHunk key={key} hunk={hunk} inline={inline} />

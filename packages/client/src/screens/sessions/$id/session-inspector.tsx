@@ -3,6 +3,7 @@ import { createElement, type JSX } from 'react';
 import {
   ChangesFiles,
   ChangesToolbar,
+  ChangesSheetHeader,
   type ChangesViewProps,
 } from '#features/changes';
 import {
@@ -132,12 +133,16 @@ function inspectorProps(props: SessionInspectorProps): InspectorProps {
     open: tabs.length > 0,
     onOpenChange: (open) => !open && props.panels.closeAll(),
     tabs: inspectorTabs(props),
+    sheetHeader: changesSheetHeader(shown),
     toolbar: shown && panelContent[shown](props)?.toolbar,
   };
 }
 
 const panelTitle = (shown: SessionPanel | undefined): string =>
   shown ? sessionPanelLabels[shown].label : '';
+
+const changesSheetHeader = (shown: SessionPanel | undefined): ReactNode =>
+  shown === 'changes' ? createElement(ChangesSheetHeader) : undefined;
 
 // The Session's Inspector: a tab for each panel opened from the header, showing one at a time.
 export function SessionInspector(

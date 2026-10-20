@@ -22,6 +22,7 @@ import { useSessionPageMenu } from './session-page-menu';
 import { useFeedRequests } from './use-feed-requests';
 import { useMarkSeen } from './use-mark-seen';
 import { useSessionCallout } from './use-session-callout';
+import { useChangedSession } from './use-session-changes';
 import {
   type SessionCommands,
   useSessionCommands,
@@ -136,15 +137,16 @@ function useSessionViewProps(page: SessionPage): SessionDetailViewProps {
   const { sessionId } = page;
   const sources = useConnectedFeed(sessionId);
   const surroundings = useSessionSurroundings(page, sources.feed);
-
   const reads = usePageCallout(sessionId, sources, surroundings.agents);
 
-  return toSessionViewProps({
+  const props = toSessionViewProps({
     sessionId,
     ...sources,
     ...surroundings,
     ...reads,
   });
+
+  return useChangedSession(sessionId, props, sources.feed);
 }
 
 function usePageCallout(

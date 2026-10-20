@@ -5,6 +5,7 @@ import { ActionListHeaderContext } from '#primitives/actions/action-list';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Text } from '#primitives/content/text';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
+import { isFittedSheet, paneSizing } from './inspector-pane-sizing';
 import type { InspectorProps } from './inspector-props';
 import { InspectorTabs } from './inspector-tabs';
 
@@ -125,20 +126,35 @@ const scrollProps = {
   contentContainerClassName: 'grow',
 };
 
+type InspectorBodyProps = InspectorProps & {
+  surface: string;
+  fitContent?: boolean;
+};
+
 export function InspectorBody({
   toolbar,
   children,
-  surface,
-}: InspectorProps & { surface: string }): ReactElement {
+  ...props
+}: InspectorBodyProps): ReactElement {
   return (
     <>
       {toolbar}
-      <ScrollFadeView {...scrollProps} surfaceClassName={surface}>
-        {children}
-      </ScrollFadeView>
+      <ScrollFadeView {...inspectorScroll(props)}>{children}</ScrollFadeView>
     </>
   );
 }
+
+const inspectorScroll = ({
+  surface,
+  fitContent,
+}: Pick<InspectorBodyProps, 'surface' | 'fitContent'>): React.ComponentProps<
+  typeof ScrollFadeView
+> => ({
+  ...scrollProps,
+  fitContent,
+  surfaceClassName: surface,
+  className: cn(scrollProps.className, fitContent && 'min-h-0 shrink'),
+});
 
 /*
  * Foundations / Inspector: its header with the title, its Actions, expand on a wide window and close, then its
@@ -146,14 +162,12 @@ export function InspectorBody({
  */
 export function InspectorPane(props: InspectorPaneProps): ReactElement {
   const surface = props.inSheet ? 'bg-content' : 'bg-tint';
+  const fittedSheet = isFittedSheet(props);
 
   return (
-    <View
-      testID={props.testID}
-      className={cn(props.inSheet ? 'h-140' : 'flex-1', surface)}
-    >
-      <InspectorHeader {...props} />
-      <InspectorBody {...props} surface={surface} />
+    <View testID={props.testID} className={cn(paneSizing(props), surface)}>
+      {fittedSheet ? props.sheetHeader : <InspectorHeader {...props} />}
+      <InspectorBody {...props} surface={surface} fitContent={fittedSheet} />
     </View>
   );
 }

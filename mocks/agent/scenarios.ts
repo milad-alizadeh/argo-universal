@@ -4,6 +4,7 @@ import {
   heldModeSteps,
   smallModelUpdate,
 } from './acp-configuration.ts';
+import { changedFilesSteps } from './changed-files-scenario.ts';
 import { contextUsageScenarios } from './context-usage.ts';
 import { feedHistorySteps } from './feed-history-scenario.ts';
 import {
@@ -72,6 +73,7 @@ export const scenarios = {
   ...notificationScenarios,
   ...shellScenarios,
   ...subagentScenarios,
+  'changed-files': scenario(changedFilesSteps),
   'feed-history': scenario(feedHistorySteps),
   'feed-work': scenario([
     ...feedWorkSteps,

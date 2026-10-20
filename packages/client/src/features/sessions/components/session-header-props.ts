@@ -1,4 +1,4 @@
-import type { SessionStatus } from '@repo/contracts';
+import type { ChangesSummary, SessionStatus } from '@repo/contracts';
 import type { MergeMethod } from '../stores/merge-method';
 import type { SessionPanel } from '../stores/session-panels';
 import type { SessionMenu } from './session-menu-items';
@@ -9,11 +9,18 @@ export type SessionHeaderStatus = Extract<
   'running' | 'needs_input' | 'idle'
 >;
 
+export interface SessionChanges {
+  summary?: ChangesSummary;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
 // The Inspector panels the header's triggers open: those the Session has, the one shown, and pressing a trigger.
 export interface SessionHeaderPanels {
   offered: readonly SessionPanel[];
   shown?: SessionPanel;
   onToggle: (panel: SessionPanel) => void;
+  changesSummary?: ChangesSummary;
 }
 
 export interface SessionHeaderProps {
@@ -32,6 +39,7 @@ export interface SessionHeaderProps {
   menu?: SessionMenu;
   // Subagents, Shells and Changes in the Inspector, which the header's triggers open; absent where the page has none.
   panels?: SessionHeaderPanels;
+  changes?: SessionChanges;
   // Fixes the clock, for stories and tests.
   now?: number;
 }

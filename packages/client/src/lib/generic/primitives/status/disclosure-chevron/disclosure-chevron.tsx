@@ -11,22 +11,26 @@ import { motionDuration, quarterTurnDegrees } from '../../../motion';
 import { cn } from '../../../utils';
 import type { DisclosureChevronProps } from './disclosure-chevron-props';
 
-export function DisclosureChevron({
-  open,
-  role = 'body',
-  className,
-}: DisclosureChevronProps): React.JSX.Element {
-  const chevron = (
+export function DisclosureChevron(
+  props: DisclosureChevronProps,
+): React.JSX.Element {
+  const chevron = <ChevronGlyph {...props} />;
+
+  if (props.open === undefined) return chevron;
+
+  return <Turning open={props.open}>{chevron}</Turning>;
+}
+
+function ChevronGlyph(props: DisclosureChevronProps): React.JSX.Element {
+  return (
     <Icon
-      role={role}
+      role={props.role ?? 'body'}
       name="chevron-right"
-      className={cn('text-muted-foreground', className)}
+      fitArtwork={props.fitArtwork}
+      weight={props.weight}
+      className={cn('text-muted-foreground', props.className)}
     />
   );
-
-  if (open === undefined) return chevron;
-
-  return <Turning open={open}>{chevron}</Turning>;
 }
 
 function Turning({

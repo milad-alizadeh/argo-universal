@@ -1,4 +1,6 @@
+import type { ChangesSummary } from '@repo/contracts';
 import type * as React from 'react';
+import { Button } from '#primitives/actions/button';
 import { IconButton } from '#primitives/actions/icon-button';
 import type { IconName } from '../../../lib/generic/symbols/icon-names';
 import { sessionPanelOrder, type SessionPanel } from '../stores/session-panels';
@@ -18,18 +20,52 @@ interface PanelTriggerProps {
 }
 
 function PanelTrigger({ panel, panels }: PanelTriggerProps): React.JSX.Element {
-  const { label, icon } = sessionPanelLabels[panel];
+  const props = panelTriggerProps({ panel, panels });
 
-  return (
-    <IconButton
-      {...headerActionAppearance}
-      accessibilityLabel={label}
-      selected={panels.shown === panel}
-      aria-expanded={panels.shown === panel}
-      onPress={() => panels.onToggle(panel)}
-      icon={icon}
-    />
-  );
+  if (panel === 'changes' && panels.changesSummary)
+    return (
+      <Button
+        variant="ghost"
+        size="xs"
+        {...props}
+        {...countedChangeLabels(panels.changesSummary)}
+      />
+    );
+
+  return <IconButton {...headerActionAppearance} {...props} />;
+}
+
+interface PanelTriggerControl {
+  accessibilityLabel: string;
+  selected: boolean;
+  'aria-expanded': boolean;
+  onPress: () => void;
+  icon: IconName;
+}
+
+const panelTriggerProps = ({
+  panel,
+  panels,
+}: PanelTriggerProps): PanelTriggerControl => ({
+  accessibilityLabel: sessionPanelLabels[panel].label,
+  selected: panels.shown === panel,
+  'aria-expanded': panels.shown === panel,
+  onPress: () => panels.onToggle(panel),
+  icon: sessionPanelLabels[panel].icon,
+});
+
+function countedChangeLabels({
+  files,
+  additions,
+  deletions,
+}: ChangesSummary): Pick<
+  React.ComponentProps<typeof Button>,
+  'label' | 'accessibilityLabel'
+> {
+  return {
+    label: `${files} +${additions} −${deletions}`,
+    accessibilityLabel: `Changed files · ${files}, +${additions}, −${deletions}`,
+  };
 }
 
 // Subagents, Shells and Changes, each pressed while the Inspector shows its tab; a panel the Session lacks has none.

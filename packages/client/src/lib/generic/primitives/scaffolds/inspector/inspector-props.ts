@@ -25,6 +25,8 @@ export interface InspectorTabsProps {
  * tabs in place of the title, for an Inspector that shows one of several panels.
  */
 export type InspectorProps = KitProps<'Inspector'> & {
+  // A phone Inspector can own its header, such as the Git sheet's PR / File changes switcher.
+  sheetHeader?: ReactNode;
   toolbar?: ReactNode;
   tabs?: InspectorTabsProps;
   testID?: string;
