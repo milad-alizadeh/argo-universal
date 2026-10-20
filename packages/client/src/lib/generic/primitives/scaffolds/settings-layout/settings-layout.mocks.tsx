@@ -1,5 +1,7 @@
-import { useState, type ReactElement } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { Text } from '#primitives/content/text';
+import { ListSection } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { Page } from '#primitives/scaffolds/page';
 import { EmptyState } from '#primitives/status/empty-state';
 import { SettingsLayout } from './settings-layout';
@@ -77,9 +79,19 @@ function ExamplePage({ id }: { id: string }): ReactElement {
 
 const empty = <EmptyState icon="search" title={noPages} />;
 
+export const pinnedGroup = 'Pinned';
+
+// A group whose row opens no page, as Settings' Theme with its inline Picker.
+export const examplePinned = (
+  <ListSection title={pinnedGroup}>
+    <ListItem title="Version" value="1.0" />
+  </ListSection>
+);
+
 interface ExampleProps {
   initial?: string;
   sections?: SettingsLayoutProps['sections'];
+  pinned?: ReactNode;
 }
 
 // Settings holding the page it shows; a row opens its page, as the App's router does.
@@ -90,6 +102,7 @@ export function ExampleSettingsLayout(props: ExampleProps): ReactElement {
   return (
     <SettingsLayout
       {...{ sections, empty }}
+      pinned={props.pinned}
       selected={shown}
       onSelect={(href) => setShown(href.split('/').at(-1))}
     >

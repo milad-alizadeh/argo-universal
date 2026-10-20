@@ -26,13 +26,6 @@ export const Devices: Story = {
   },
 };
 
-export const Appearance: Story = {
-  args: {
-    title: 'Appearance',
-    description: 'Appearance will appear here.',
-  },
-};
-
 export const Notifications: Story = {
   args: {
     title: 'Notifications',

@@ -20,14 +20,14 @@ export const sidebarLayouts = {
 /*
  * A desktop or web grouped card holds its rows 16 from its edge (Paper "Settings · Porcelain"); other rows keep 20 on
  * wide, as a page's content card (Paper's List / Grouped) does. A sidebar List's row (Paper's SettingsList) is a
- * 48-high tile.
+ * 52-high tile whose 24 icon slot centres its glyph where Paper's 20 box does, 20 in, and starts the title 56 in.
  */
 export const pressLayouts = {
   row: 'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5',
   card: 'w-full flex-row items-start gap-4 px-4 py-4',
   content: 'w-full flex-row items-start gap-4 px-5 py-4',
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
-  'sidebar-tile': 'w-full min-h-12 flex-row items-center gap-3 px-4 py-1.5',
+  'sidebar-tile': 'w-full min-h-13 flex-row items-center gap-3.5 px-4.5 py-1.5',
   ...sidebarPressLayouts,
 };
 

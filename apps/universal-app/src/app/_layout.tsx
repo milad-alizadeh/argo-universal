@@ -6,6 +6,7 @@ import {
   SymbolImagesProvider,
   Toaster,
   useConnection,
+  useRestoredThemeChoice,
 } from '@repo/client';
 import '../../global.css';
 import { registerDevMenuItems } from 'expo-dev-client';
@@ -64,13 +65,22 @@ export default function RootLayout(): React.JSX.Element {
       {/* Screens follow the keyboard frame by frame through this. */}
       <KeyboardProvider>
         <SymbolImagesProvider render={renderSymbolImage}>
-          <AppProviders serverUrl={serverUrl}>
-            <ForegroundSignal />
-            <ThemedApp />
-          </AppProviders>
+          <RestoredApp />
         </SymbolImagesProvider>
       </KeyboardProvider>
     </RootView>
+  );
+}
+
+// The first screen waits for the theme chosen in Settings › Appearance, so it never flashes the system one.
+function RestoredApp(): React.JSX.Element | null {
+  if (!useRestoredThemeChoice()) return null;
+
+  return (
+    <AppProviders serverUrl={serverUrl}>
+      <ForegroundSignal />
+      <ThemedApp />
+    </AppProviders>
   );
 }
 
