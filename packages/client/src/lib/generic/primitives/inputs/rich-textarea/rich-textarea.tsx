@@ -1,3 +1,4 @@
+import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import {
   type InitialConfigType,
   LexicalComposer,
@@ -29,35 +30,41 @@ import {
 import { ReferencePlugin } from './web/rich-textarea-reference-plugin';
 import { ReferenceProviders } from './web/rich-textarea-reference-token';
 
-function Placeholder({ text }: { text: string }): React.JSX.Element {
-  return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70 dark:text-muted-foreground">
-      {text}
-    </div>
-  );
+const placeholderClassName =
+  'pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70 dark:text-muted-foreground';
+
+function Placeholder({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}): React.JSX.Element {
+  return <div className={cn(placeholderClassName, className)}>{text}</div>;
 }
 
 type MessageFieldProps = Pick<
   RichTextareaProps,
-  'accessibilityLabel' | 'placeholder'
+  'accessibilityLabel' | 'placeholder' | 'fieldClassName'
 >;
 
+// Ten 20px lines, plus the 20px of vertical padding the Composer puts on the field.
 const editableClassName = cn(
   plainFieldClassName,
-  'max-h-50 overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
+  'max-h-55 overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
 );
 
-function MessageEditable({
-  accessibilityLabel,
-  placeholder = '',
-}: MessageFieldProps): React.JSX.Element {
+function MessageEditable(props: MessageFieldProps): React.JSX.Element {
+  const { accessibilityLabel, placeholder = '', fieldClassName } = props;
+  const hint = <Placeholder text={placeholder} className={fieldClassName} />;
+
   return (
     <ContentEditable
       aria-label={accessibilityLabel}
       aria-multiline
       aria-placeholder={placeholder}
-      placeholder={<Placeholder text={placeholder} />}
-      className={editableClassName}
+      placeholder={hint}
+      className={cn(editableClassName, fieldClassName)}
     />
   );
 }
@@ -111,6 +118,7 @@ function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
       <EditingPlugins />
       <KeyboardPlugin onSubmit={props.onSubmit} />
       <EditablePlugin editable={props.editable} />
+      {props.autoFocus && <AutoFocusPlugin />}
       <MarkdownValuePlugin {...props} />
     </>
   );

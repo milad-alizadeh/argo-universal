@@ -47,18 +47,12 @@ export class OpenGroup {
   public add(row: GroupRow): void {
     if (row.sessionUpdate === 'tool_call_update') return this.addToolCall(row);
 
-    if (row.sessionUpdate === 'notice') {
-      this.activities.push({ type: 'row', row });
-
-      return;
-    }
-
-    this.activities.push({ type: 'thought', row });
-    this.noteThought(row.state);
-  }
-
-  private noteThought(state: GroupRow['state']): void {
-    if (state === 'open') this.liveTitle = 'Thinking';
+    // Thoughts keep their position in the projection; only the Live header draws their activity.
+    this.activities.push(
+      row.sessionUpdate === 'notice'
+        ? { type: 'row', row }
+        : { type: 'thought', row },
+    );
   }
 
   private addToolCall(row: ToolCallUpdate): void {

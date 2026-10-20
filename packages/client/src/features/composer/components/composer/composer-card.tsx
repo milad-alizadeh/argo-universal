@@ -90,13 +90,14 @@ function removeAttachment(draft: ComposerDraft, id: string): ComposerDraft {
 }
 
 function ComposerText(layout: TextLayout): React.JSX.Element {
-  return (
-    // The card's layout lets touches through, so a press on its open space reaches the glass.
-    <View className="pointer-events-box-none px-4 wide:px-4.75 pt-3 pb-2">
-      <RichTextarea {...textInputProps(layout)} />
-    </View>
-  );
+  return <RichTextarea {...textInputProps(layout)} />;
 }
+
+// The padding sits on the field, so a press anywhere in the white area focuses it.
+const textFieldLook = {
+  accessibilityLabel: 'Message',
+  fieldClassName: 'px-4 wide:px-4.75 pt-3 pb-2',
+} as const;
 
 function textInputProps({
   props,
@@ -104,7 +105,8 @@ function textInputProps({
   send,
 }: TextLayout): React.ComponentProps<typeof RichTextarea> {
   return {
-    accessibilityLabel: 'Message',
+    ...textFieldLook,
+    autoFocus: !inactive,
     placeholder: props.placeholder ?? '',
     value: props.draft.text,
     disabled: inactive,
