@@ -121,3 +121,26 @@ export const shellsPanel: WorkPanel<ShellPanelProps> = {
   running: (props) => shellsRunning(props.shells),
   sheet: (props, sheet) => createElement(ShellSheet, { ...props, ...sheet }),
 };
+
+// What a Subagent row in the Feed asks for: the child's own Feed, named by its session.
+export type OpenSubagent = (subagentSessionId: string) => void;
+
+const selectNamed = (
+  props: SubagentListProps,
+  subagentSessionId: string,
+): void => {
+  const named = props.subagents.find(
+    (one) => one.sessionId === subagentSessionId,
+  );
+
+  if (named) props.onSelect?.(named);
+};
+
+// A Feed row opens the same place its Subagents list row does: the panel, then the child it names.
+export const selectSubagent =
+  (props: SubagentListProps | undefined, sheet: WorkSheet): OpenSubagent =>
+  (subagentSessionId) => {
+    sheet.onOpenChange(true);
+
+    if (props) selectNamed(props, subagentSessionId);
+  };

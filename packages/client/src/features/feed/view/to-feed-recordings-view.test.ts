@@ -20,9 +20,11 @@ it.each(recordedFeedMocks)(
 
     const presentedRows = view.items
       .flatMap((item) => (item.type === 'group' ? item.items : [item]))
-      .flatMap((item) =>
-        item.type === 'exploration' ? item.toolCalls : [item.row],
-      )
+      .flatMap((item) => {
+        if (item.type === 'exploration') return item.toolCalls;
+
+        return item.type === 'subagent' ? [] : [item.row];
+      })
       .sort((first, second) => first.position - second.position);
 
     expect(presentedRows).toEqual(mock.rows);

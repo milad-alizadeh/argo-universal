@@ -41,13 +41,14 @@ export const BackAndReopen: Story = {
       await page.findByRole('button', { name: fruitTrigger }),
     );
     await userEvent.click(await page.findByRole('radio', { name: 'Cherry' }));
-    await expect(
-      await page.findByRole('button', { name: cherryTrigger }),
-    ).toBeVisible();
+
+    const field = await page.findByRole('button', { name: cherryTrigger });
+
+    // The page closes on its own clock, and closing it is the blur the form hears.
+    await waitFor(() => expect(blurred).toHaveBeenCalledTimes(2));
     await expect(changed).toHaveBeenCalledTimes(1);
     await expect(changed).toHaveBeenCalledWith('Cherry');
-    await expect(blurred).toHaveBeenCalledTimes(2);
-    await userEvent.click(page.getByRole('button', { name: cherryTrigger }));
+    await userEvent.click(field);
     await waitFor(() =>
       expect(page.getByRole('radio', { name: 'Cherry' })).toHaveAttribute(
         'aria-checked',
@@ -55,7 +56,7 @@ export const BackAndReopen: Story = {
       ),
     );
     await userEvent.keyboard('{Escape}');
-    await expect(blurred).toHaveBeenCalledTimes(3);
+    await waitFor(() => expect(blurred).toHaveBeenCalledTimes(3));
     await expect(changed).toHaveBeenCalledTimes(1);
   },
 };
