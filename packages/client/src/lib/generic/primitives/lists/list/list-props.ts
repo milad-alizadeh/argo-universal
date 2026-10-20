@@ -25,6 +25,7 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'depth'
     | 'inset'
     | 'initialScrollIndex'
+    | 'initialScrollAtEnd'
     | 'alignItemsAtEnd'
     | 'maintainScrollAtEnd'
     | 'maintainScrollAtEndThreshold'

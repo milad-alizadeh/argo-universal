@@ -157,6 +157,7 @@ function PageHeader(props: PageProps): ReactElement | null {
   return (
     <SheetTitleRow
       title={props.page.title}
+      action={props.page.action}
       backLabel={pageBackLabel(props)}
       onBack={props.stack.navigation.back}
     />

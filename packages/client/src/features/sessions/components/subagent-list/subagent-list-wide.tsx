@@ -1,6 +1,8 @@
 import type { Subagent } from '@repo/contracts';
 import type { JSX } from 'react';
 import { Pressable, View } from 'react-native';
+import { tintTransitionClassName } from '#lib/generic/motion';
+import { cn } from '#lib/generic/utils';
 import { Text } from '#primitives/content/text';
 import { subagentSupporting } from './subagent-format';
 import type { SubagentListProps } from './subagent-list-types';
@@ -14,8 +16,10 @@ type RowProps = {
   onSelect: SubagentListProps['onSelect'];
 };
 
-const rowClasses =
-  'min-h-9 flex-row items-start gap-3 rounded-lg px-3 py-2 web:hover:bg-hover web:active:bg-pressed web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
+const rowClasses = cn(
+  'min-h-9 flex-row items-start gap-3 rounded-lg px-3 py-2 web:hover:bg-hover web:active:bg-pressed web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2',
+  tintTransitionClassName,
+);
 
 function WideRowText({
   subagent,

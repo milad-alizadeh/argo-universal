@@ -23,7 +23,16 @@ export interface SheetPageProps {
   name: string;
   // Shown in the page's title row; a pushed page also gets a back button.
   title?: string;
+  // The page's one header action, at the trailing end of its title row.
+  action?: SheetPageAction;
   children: ReactNode;
+}
+
+// A text action in a page's header, such as Stop; destructive draws it in the danger colour.
+export interface SheetPageAction {
+  label: string;
+  onPress: () => void;
+  destructive?: boolean;
 }
 
 // A row that pushes another page of the same sheet.

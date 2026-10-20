@@ -1,0 +1,59 @@
+import type * as React from 'react';
+import { View } from 'react-native';
+import { InspectorPane } from '#primitives/scaffolds/inspector';
+import { sessionPanelLabels } from '../session-panel-triggers';
+import { subagentStates } from '../subagent-list/subagent-list.mocks';
+import { SubagentSheet } from '../subagent-list/subagent-sheet';
+import { SubagentFeed } from './subagent-feed';
+import type { SubagentFeedProps } from './subagent-feed-props';
+
+const ignore = (): void => {};
+
+const tabs = {
+  items: [
+    { key: 'changes', ...sessionPanelLabels.changes },
+    {
+      key: 'subagents',
+      ...sessionPanelLabels.subagents,
+      count: subagentStates.severalMixed.length,
+      countTone: 'success' as const,
+    },
+  ],
+  selected: 'subagents',
+  onSelect: ignore,
+  onClose: ignore,
+};
+
+const paneProps = {
+  title: sessionPanelLabels.subagents.label,
+  open: true,
+  onOpenChange: ignore,
+  tabs,
+};
+
+// The Inspector's Subagents tab, drilled in to one Subagent's Feed.
+export function SubagentFeedInspector(
+  props: SubagentFeedProps,
+): React.JSX.Element {
+  return (
+    <View className="h-175 w-frame-inspector self-end">
+      <InspectorPane {...paneProps}>
+        <SubagentFeed {...props} />
+      </InspectorPane>
+    </View>
+  );
+}
+
+// The phone Sheet: the Subagents list with the open Subagent's Feed pushed over it.
+export function SubagentFeedSheet(props: SubagentFeedProps): React.JSX.Element {
+  return (
+    <SubagentSheet
+      subagents={subagentStates.severalMixed}
+      open
+      onOpenChange={ignore}
+      onSelect={ignore}
+      now={props.now}
+      feed={props}
+    />
+  );
+}

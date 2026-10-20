@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { Pressable } from 'react-native';
+import { tintTransitionClassName } from '#lib/generic/motion';
 import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import {
@@ -28,6 +29,7 @@ export function FilterPill(props: FilterPillProps): React.JSX.Element {
 const pillClass = (selected: boolean): string =>
   cn(
     'h-7 flex-row items-center gap-1.5 rounded-full px-3',
+    tintTransitionClassName,
     selected
       ? 'bg-selected active:bg-pressed'
       : 'web:hover:bg-hover active:bg-pressed',
